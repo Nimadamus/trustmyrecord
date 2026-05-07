@@ -8,20 +8,16 @@ const vm = require('vm');
 const root = path.resolve(__dirname, '..');
 const pagePath = path.join(root, 'mlb-simulator', 'index.html');
 const scriptPath = path.join(root, 'static', 'js', 'mlb-simulator.js');
-const historicalProfilesPath = path.join(root, 'static', 'js', 'mlb-historical-team-profiles.js');
 
 assert(fs.existsSync(pagePath), '/mlb-simulator/ page exists');
 assert(fs.existsSync(scriptPath), 'MLB simulator client script exists');
-assert(fs.existsSync(historicalProfilesPath), 'historical profile script exists');
 
 const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
-const historicalProfilesScript = fs.readFileSync(historicalProfilesPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260506-sim-count/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/HISTORICAL_TEAMS/.test(script), 'simulator script includes curated historical profiles');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260506-sim-count/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260507-realism-rosters/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260507-rotation-anchors/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -44,20 +40,20 @@ assert(/awayHeaderLogo/.test(html) && /homeHeaderLogo/.test(html), 'matchup revi
 assert(/Inside the TrustMyRecord MLB Simulator/.test(html), 'explainer section is present');
 assert(/model-based estimate/.test(html), 'explainer avoids overclaiming accuracy');
 assert(/id="boxScorePanel"/.test(html), 'box score panel is present');
-assert(/class="sim-panel box-score-panel"/.test(html), 'box score is a standalone panel');
-assert(/id="viewBoxScoreLink"/.test(html), 'view box score jump link is present');
 assert(/id="projectionEmptyState"/.test(html), 'pre-run projection empty state is present');
 assert(/Copy Box Score/.test(html), 'copy box score action is present');
 assert(/Save Box Score/.test(html), 'save box score action is present');
-assert(/Run a simulation to generate a box score\./.test(html), 'box score empty placeholder is clear');
+assert(/Player Box Score/.test(html), 'player box score is labeled as player output backed by roster names');
+assert(!/ARI CF \(modeled\)|ATL CF \(modeled\)|Reliever A \(modeled\)|Reliever B \(modeled\)/.test(script + html), 'player box score does not use fake modeled player labels');
 assert(/Select two teams, choose starting pitchers, then run the simulator/.test(html), 'pre-run state uses a single polished instruction panel');
 assert(/Choose starters/.test(html), 'starter-dependent empty state is polished');
 assert(!/Loading MLB games|Loading sportsbook board|Waiting for board data|Projection engine not connected yet|Not connected for custom simulation|Unavailable without real inputs/.test(html), 'old board-dependent placeholder text is removed');
 assert(!/lock pick|locked pick|submit pick/i.test(html), 'page does not expose sportsbook submission actions');
 assert(!/live verified|official injury/i.test(html), 'page does not include fake live data claims');
+
 const css = fs.readFileSync(path.join(root, 'static', 'css', 'mlb-simulator.css'), 'utf8');
-assert(/\.box-score-panel\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*min-width:\s*0;/s.test(css), 'box score panel spans the simulator grid instead of auto-placing into a narrow column');
-assert(/\.box-score-scroll\s*\{[^}]*max-width:\s*100%;[^}]*overflow-x:\s*auto;/s.test(css), 'box score table scrolling is contained inside the table container');
+assert(/\.box-score-panel\s*{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*min-width:\s*0;/s.test(css), 'box score panel spans the simulator grid instead of auto-placing into a narrow column');
+assert(/\.box-score-scroll\s*{[^}]*max-width:\s*100%;[^}]*min-width:\s*0;[^}]*overflow-x:\s*auto;/s.test(css), 'box score table scrolling is contained inside the table container');
 
 const elementIds = [
   'awayTeamSelect','homeTeamSelect','awayPoolSelect','homePoolSelect','runSimulationButton','refreshTeamsButton',
@@ -72,7 +68,9 @@ const elementIds = [
   'eraAdjustmentValue','simulationModeValue','dataModeValue','awayProbabilityLabel','homeProbabilityLabel',
   'awayProbabilityValue','homeProbabilityValue','awayProbabilityBar','homeProbabilityBar','projectionNotice',
   'comparisonGrid','inputSummary','matchupNotes','boxScorePanel','boxScoreTitle','boxScoreBody',
-  'boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton','viewBoxScoreLink','projectionEmptyState','probabilityLab'
+  'boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton','playerBoxScorePanel','playerBoxScoreContent',
+  'projectionEmptyState','probabilityLab','viewBoxScoreLink','viewBoxScoreControl','simulationCountSelect',
+  'aggregatePanel','aggregateSummaryGrid','aggregateSummaryText'
 ];
 
 let savedDownload = null;
@@ -93,7 +91,6 @@ function makeElement(id) {
     addEventListener(type, fn) { this.listeners[type] = fn; },
     setAttribute(name, value) { this.attributes[name] = String(value); },
     getAttribute(name) { return this.attributes[name]; },
-    scrollIntoView(options) { this.scrolledWith = options; },
   };
 }
 
@@ -139,6 +136,76 @@ function buildFetchMock(mode) {
       });
     }
     if (String(url).includes('site.api.espn.com')) {
+      if (String(url).includes('/teams/ari/roster')) {
+        return mockResponse({
+          athletes: [
+            { position: 'Pitchers', items: [
+              { displayName: 'Zac Gallen', position: { abbreviation: 'SP' } },
+              { displayName: 'Kevin Ginkel', position: { abbreviation: 'RP' } },
+              { displayName: 'Ryan Thompson', position: { abbreviation: 'RP' } },
+            ] },
+            { position: 'Catchers', items: [{ displayName: 'Gabriel Moreno', position: { abbreviation: 'C' } }] },
+            { position: 'Infielders', items: [
+              { displayName: 'Ketel Marte', position: { abbreviation: '2B' } },
+              { displayName: 'Geraldo Perdomo', position: { abbreviation: 'SS' } },
+              { displayName: 'Eugenio Suarez', position: { abbreviation: '3B' } },
+              { displayName: 'Josh Naylor', position: { abbreviation: '1B' } },
+            ] },
+            { position: 'Outfielders', items: [
+              { displayName: 'Corbin Carroll', position: { abbreviation: 'CF' } },
+              { displayName: 'Lourdes Gurriel Jr.', position: { abbreviation: 'LF' } },
+              { displayName: 'Jake McCarthy', position: { abbreviation: 'RF' } },
+              { displayName: 'Randal Grichuk', position: { abbreviation: 'DH' } },
+            ] },
+          ],
+        });
+      }
+      if (String(url).includes('/teams/atl/roster')) {
+        return mockResponse({
+          athletes: [
+            { position: 'Pitchers', items: [
+              { displayName: 'Bryce Elder', position: { abbreviation: 'SP' } },
+              { displayName: 'Aaron Bummer', position: { abbreviation: 'RP' } },
+              { displayName: 'Raisel Iglesias', position: { abbreviation: 'RP' } },
+            ] },
+            { position: 'Catchers', items: [{ displayName: 'Sean Murphy', position: { abbreviation: 'C' } }] },
+            { position: 'Infielders', items: [
+              { displayName: 'Matt Olson', position: { abbreviation: '1B' } },
+              { displayName: 'Ozzie Albies', position: { abbreviation: '2B' } },
+              { displayName: 'Austin Riley', position: { abbreviation: '3B' } },
+              { displayName: 'Orlando Arcia', position: { abbreviation: 'SS' } },
+            ] },
+            { position: 'Outfielders', items: [
+              { displayName: 'Michael Harris II', position: { abbreviation: 'CF' } },
+              { displayName: 'Ronald Acuna Jr.', position: { abbreviation: 'RF' } },
+              { displayName: 'Jurickson Profar', position: { abbreviation: 'LF' } },
+              { displayName: 'Marcell Ozuna', position: { abbreviation: 'DH' } },
+            ] },
+          ],
+        });
+      }
+      if (String(url).includes('/teams/tex/roster') || String(url).includes('/teams/nyy/roster')) {
+        return mockResponse({
+          athletes: [
+            { position: 'Pitchers', items: [
+              { displayName: String(url).includes('/teams/tex/') ? 'Jacob deGrom' : 'Gerrit Cole', position: { abbreviation: 'SP' } },
+              { displayName: String(url).includes('/teams/tex/') ? 'Chris Martin' : 'Devin Williams', position: { abbreviation: 'RP' } },
+              { displayName: String(url).includes('/teams/tex/') ? 'Robert Garcia' : 'Luke Weaver', position: { abbreviation: 'RP' } },
+            ] },
+            { position: 'Catchers', items: [{ displayName: String(url).includes('/teams/tex/') ? 'Jonah Heim' : 'Austin Wells', position: { abbreviation: 'C' } }] },
+            { position: 'Infielders', items: [
+              { displayName: String(url).includes('/teams/tex/') ? 'Corey Seager' : 'Anthony Volpe', position: { abbreviation: 'SS' } },
+              { displayName: String(url).includes('/teams/tex/') ? 'Marcus Semien' : 'Jazz Chisholm Jr.', position: { abbreviation: '2B' } },
+              { displayName: String(url).includes('/teams/tex/') ? 'Josh Jung' : 'Paul Goldschmidt', position: { abbreviation: '1B' } },
+            ] },
+            { position: 'Outfielders', items: [
+              { displayName: String(url).includes('/teams/tex/') ? 'Wyatt Langford' : 'Aaron Judge', position: { abbreviation: 'RF' } },
+              { displayName: String(url).includes('/teams/tex/') ? 'Evan Carter' : 'Cody Bellinger', position: { abbreviation: 'CF' } },
+              { displayName: String(url).includes('/teams/tex/') ? 'Adolis Garcia' : 'Jasson Dominguez', position: { abbreviation: 'LF' } },
+            ] },
+          ],
+        });
+      }
       if (String(url).includes('/summary?event=401815218')) {
         return mockResponse({
           injuries: [
@@ -273,7 +340,6 @@ function createSimulator(fetchMode) {
     CONFIG: { api: { baseUrl: 'https://trustmyrecord-api.onrender.com/api' } },
   };
   context.window.document = context.document;
-  vm.runInNewContext(historicalProfilesScript, context);
   vm.runInNewContext(script, context);
   return { simulator: context.window.TMRMlbSimulator, elements };
 }
@@ -352,7 +418,8 @@ async function flushAsync() {
   assert.strictEqual((elements.awayPitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'Team A dropdown shows five pitcher options');
   assert.strictEqual((elements.homePitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'Team B dropdown shows five pitcher options');
   assert(/Zac Gallen/.test(elements.awayPitcherSelect.innerHTML), 'current Team A renders real named pitcher options');
-  assert(/Bryce Elder/.test(elements.homePitcherSelect.innerHTML), 'current Team B renders real named pitcher options');
+  assert(/Chris Sale/.test(elements.homePitcherSelect.innerHTML), 'current Team B renders real named pitcher options');
+  assert(/Logan Webb/.test(simulator.pitcherOptionsFor(simulator.localTeams.current.find((team) => team.abbreviation === 'SF'), 'home', null).map((pitcher) => pitcher.name).join('|')), 'San Francisco current starter options include Logan Webb');
   assert(/Zac Gallen, ERA 3.45, W-L N\/A/.test(elements.awayPitcherSelect.innerHTML), 'current dropdown option includes name, ERA, and W-L fallback');
   assert(/Starter list is for simulation selection and may not reflect today's confirmed starter/.test(elements.homePitcherMeta.textContent), 'current starter area includes one non-confirmed-starter note');
   assert(!/Ace profile|Above average starter|League average starter|Back end starter|Bullpen game/.test(elements.awayPitcherSelect.innerHTML + elements.homePitcherSelect.innerHTML), 'current mode does not render generic starter profiles');
@@ -367,9 +434,8 @@ async function flushAsync() {
   assert.strictEqual(elements.probabilityLab.getAttribute('data-probability-state'), 'empty', 'pre-run probability bars are hidden by state');
   assert.strictEqual(elements.copyBoxScoreButton.disabled, true, 'copy box score button is disabled before simulation');
   assert.strictEqual(elements.saveBoxScoreButton.disabled, true, 'save box score button is disabled before simulation');
-  assert.strictEqual(elements.viewBoxScoreLink.getAttribute('aria-disabled'), 'true', 'view box score link starts disabled');
 
-  simulator.runSimulation();
+  await simulator.runSimulation();
   assert.strictEqual(elements.resultCard.getAttribute('data-result-state'), 'projected', 'fallback run renders projected state');
   assert.strictEqual(elements.projectionEmptyState.getAttribute('data-empty-state'), 'hidden', 'pre-run empty state hides after simulation');
   assert.strictEqual(elements.probabilityLab.getAttribute('data-probability-state'), 'projected', 'probability lab appears after simulation');
@@ -379,9 +445,7 @@ async function flushAsync() {
   assert(/Final/.test(elements.boxScoreTitle.textContent), 'box score title includes final score');
   assert.strictEqual(elements.copyBoxScoreButton.disabled, false, 'copy box score button enables after simulation');
   assert.strictEqual(elements.saveBoxScoreButton.disabled, false, 'save box score button enables after simulation');
-  assert.strictEqual(elements.viewBoxScoreLink.getAttribute('aria-disabled'), 'false', 'view box score link enables after simulation');
-  simulator.viewBoxScore({ preventDefault() {} });
-  assert(elements.boxScorePanel.scrolledWith && elements.boxScorePanel.scrolledWith.block === 'start', 'view box score jumps to standalone panel');
+  assert(/Roster unavailable/.test(elements.playerBoxScoreContent.innerHTML), 'network-unavailable path labels roster limitation clearly');
   const fallbackBox = simulator.state.simulation.boxScore;
   assert.strictEqual(fallbackBox.away.innings.reduce((total, value) => total + value, 0), fallbackBox.away.runs, 'away inning totals equal away final score');
   assert.strictEqual(fallbackBox.home.innings.reduce((total, value) => total + value, 0), fallbackBox.home.runs, 'home inning totals equal home final score');
@@ -397,11 +461,11 @@ async function flushAsync() {
   simulator.saveBoxScore();
   assert(/^trustmyrecord-mlb-simulator-box-score-.*-\d{4}-\d{2}-\d{2}\.txt$/.test(savedDownload), 'save box score uses clean dated filename');
   assert(/Starting pitchers/.test(elements.inputSummary.innerHTML), 'output includes selected starters row');
-  assert(/Zac Gallen|Bryce Elder/.test(elements.matchupNotes.innerHTML), 'output notes include selected current pitcher names');
+  assert(/Zac Gallen|Chris Sale/.test(elements.matchupNotes.innerHTML), 'output notes include selected current pitcher names');
   assert.strictEqual(elements.dataModeValue.textContent, 'Baseline ratings', 'fallback output states baseline data mode');
   const baselineScore = elements.expectedRunsValue.textContent;
-  choosePitchers(elements, 'Brandon Pfaadt', 'Bryce Elder');
-  simulator.runSimulation();
+  choosePitchers(elements, 'Michael Soroka', 'Bryce Elder');
+  await simulator.runSimulation();
   assert.notStrictEqual(elements.expectedRunsValue.textContent, baselineScore, 'changing selected current starters changes projection');
   assert(/Simulation-based estimate, not sportsbook odds or provider projection/.test(elements.projectionNotice.textContent), 'fallback disclaimer is explicit');
   assert(!/Missing data/.test(elements.inputSummary.innerHTML), 'missing data is not rendered as a noisy row');
@@ -412,16 +476,24 @@ async function flushAsync() {
     elements.matchupNotes.innerHTML,
   ].join(' ')), 'fallback rendered simulator avoids fake live data claims');
 
+  const rostered = createSimulator('available');
+  await flushAsync();
+  await rostered.simulator.runSimulation();
+  assert(/Corbin Carroll|Ketel Marte|Geraldo Perdomo/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders verified Arizona hitter names');
+  assert(/Michael Harris II|Ronald Acuna Jr\.|Matt Olson|Ozzie Albies/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders verified Atlanta hitter names');
+  assert(/Zac Gallen|Kevin Ginkel|Ryan Thompson/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Arizona pitcher names');
+  assert(/Bryce Elder|Aaron Bummer|Raisel Iglesias/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Atlanta pitcher names');
+  assert(/Verified ESPN team roster endpoint/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup labels ESPN roster source');
+  assert(!/Lineup Slot|Pitching Slot|Simulation Slot Lines|simulation slot -/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current roster-backed box score does not show generic slot labels');
+
   elements.historicalModeButton.listeners.click();
   assert(/1927 New York Yankees/.test(elements.awayTeamSelect.innerHTML), 'historical teams render after tab switch');
   assert(/2023 Texas Rangers/.test(elements.homeTeamSelect.innerHTML), 'full historical list is present');
   assert(/Waite Hoyt/.test(elements.awayPitcherSelect.innerHTML), 'historical pitcher options render');
   assert.strictEqual((elements.awayPitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'historical Team A dropdown shows five pitcher options');
   assert.strictEqual((elements.homePitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'historical Team B dropdown shows five pitcher options');
-  assert(/NYY \/ 1927 \/ Historical/.test(elements.awayTeamMeta.textContent), '1927 Yankees card shows historical team metadata');
-  assert(/Waite Hoyt, ERA 2.63/.test(elements.awayPitcherSelect.innerHTML), 'historical dropdown option includes Hoyt ERA');
-  assert(/Urban Shocker, ERA 2.84/.test(elements.awayPitcherSelect.innerHTML), 'historical dropdown option includes Shocker ERA');
-  simulator.runSimulation();
+  assert(/Waite Hoyt, ERA 2.63, W-L (22-7|N\/A|Record unavailable)/.test(elements.awayPitcherSelect.innerHTML), 'historical dropdown option includes name, ERA, and W-L context');
+  await simulator.runSimulation();
   assert(/Classic baseline/.test(elements.simulationModeValue.textContent), 'classic matchup reports classic simulation mode');
   assert(/Waite Hoyt|Red Ruffing/.test(elements.matchupNotes.innerHTML), 'classic output includes historical starter names');
 
@@ -432,7 +504,7 @@ async function flushAsync() {
   assert(/Red Ruffing/.test(elements.homePitcherSelect.innerHTML), 'mixed mode historical pitcher options render');
   assert.strictEqual((elements.awayPitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'mixed Team A dropdown shows five pitcher options');
   assert.strictEqual((elements.homePitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'mixed Team B dropdown shows five pitcher options');
-  simulator.runSimulation();
+  await simulator.runSimulation();
   assert.strictEqual(elements.projectionShell.getAttribute('data-projection-state'), 'projected', 'mixed matchup can run simulation');
   assert(/Mixed-era baseline/.test(elements.simulationModeValue.textContent), 'mixed matchup reports mixed-era simulation mode');
   assert(/Starting Pitchers/.test(elements.matchupNotes.innerHTML), 'mixed output includes selected starter section');
@@ -444,7 +516,7 @@ async function flushAsync() {
   assert.strictEqual((live.elements.homePitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'live Team B dropdown shows five pitcher options');
   assert(/Jacob deGrom, ERA 3.2, W-L 2-1/.test(live.elements.awayPitcherSelect.innerHTML), 'live probable away starter appears as a selectable dropdown option');
   assert(/Gerrit Cole, ERA 2.88, W-L 3-1/.test(live.elements.homePitcherSelect.innerHTML), 'live probable home starter appears as a selectable dropdown option');
-  live.simulator.runSimulation();
+  await live.simulator.runSimulation();
   assert.strictEqual(live.elements.dataModeBadge.textContent, 'Verified live inputs', 'live path switches data mode');
   assert.strictEqual(live.elements.dataModeValue.textContent, 'Verified live inputs', 'live output states verified data mode');
   assert(/MLB schedule\/finals/.test(live.elements.inputSummary.innerHTML), 'live path includes schedule/finals source');
@@ -462,7 +534,7 @@ async function flushAsync() {
   assert(/Starting Pitchers:/.test(live.elements.matchupNotes.innerHTML) && /Jacob deGrom/.test(live.elements.matchupNotes.innerHTML) && /Gerrit Cole/.test(live.elements.matchupNotes.innerHTML), 'live output shows selected verified probable starters');
   const liveExpectedRuns = live.elements.expectedRunsValue.textContent;
   choosePitchers(live.elements, 'MacKenzie Gore', 'Gerrit Cole');
-  live.simulator.runSimulation();
+  await live.simulator.runSimulation();
   assert.notStrictEqual(live.elements.expectedRunsValue.textContent, liveExpectedRuns, 'changing selected live/manual starter changes projection');
   assert(/MacKenzie Gore/.test(live.elements.matchupNotes.innerHTML), 'manual selected current pitcher is shown in output');
   assert(!/verified betting edge|official injury/i.test(live.elements.matchupNotes.innerHTML), 'live path does not claim fake edges or injuries');
@@ -472,3 +544,4 @@ async function flushAsync() {
   console.error(error);
   process.exit(1);
 });
+

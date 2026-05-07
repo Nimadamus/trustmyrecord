@@ -61,35 +61,35 @@
     ];
 
     var CURRENT_PITCHERS = {
-        ARI: [['gallen', 'Zac Gallen', 112, 3.45], ['kelly', 'Merrill Kelly', 106, 3.75], ['nelson', 'Ryne Nelson', 100, 4.15], ['pfaadt', 'Brandon Pfaadt', 99, 4.25], ['rodriguez', 'Eduardo Rodriguez', 102, 4.05]],
-        ATL: [['elder', 'Bryce Elder', 101, 4.10], ['fuentes', 'Didier Fuentes', 96, 4.45], ['holmes', 'Grant Holmes', 98, 4.30], ['lopez', 'Reynaldo Lopez', 108, 3.65], ['perez', 'Martin Perez', 97, 4.35]],
-        BAL: [['bassitt', 'Chris Bassitt', 104, 3.95], ['baz', 'Shane Baz', 106, 3.80], ['bradish', 'Kyle Bradish', 108, 3.70], ['povich', 'Cade Povich', 97, 4.35], ['young', 'Brandon Young', 94, 4.60]],
-        BOS: [['bello', 'Brayan Bello', 102, 4.05], ['bennett', 'Jake Bennett', 94, 4.55], ['early', 'Connelly Early', 95, 4.50], ['suarez', 'Ranger Suarez', 108, 3.65], ['tolle', 'Payton Tolle', 93, 4.65]],
-        CHC: [['assad', 'Javier Assad', 100, 4.20], ['boyd', 'Matthew Boyd', 101, 4.10], ['cabrera', 'Edward Cabrera', 102, 4.05], ['imanaga', 'Shota Imanaga', 110, 3.55], ['rea', 'Colin Rea', 97, 4.35]],
+        ARI: [['gallen', 'Zac Gallen', 112, 3.45], ['rodriguez', 'Eduardo Rodriguez', 102, 4.05], ['soroka', 'Michael Soroka', 100, 4.15], ['kelly', 'Merrill Kelly', 106, 3.75], ['nelson', 'Ryne Nelson', 100, 4.15]],
+        ATL: [['sale', 'Chris Sale', 116, 3.25], ['strider', 'Spencer Strider', 115, 3.30], ['elder', 'Bryce Elder', 101, 4.10], ['holmes', 'Grant Holmes', 98, 4.30], ['ritchie', 'JR Ritchie', 96, 4.45]],
+        BAL: [['rogers', 'Trevor Rogers', 102, 4.05], ['bradish', 'Kyle Bradish', 108, 3.70], ['baz', 'Shane Baz', 106, 3.80], ['bassitt', 'Chris Bassitt', 104, 3.95], ['kremer', 'Dean Kremer', 100, 4.20]],
+        BOS: [['crochet', 'Garrett Crochet', 114, 3.35], ['gray', 'Sonny Gray', 109, 3.60], ['suarez', 'Ranger Suarez', 108, 3.65], ['early', 'Connelly Early', 95, 4.50], ['bello', 'Brayan Bello', 102, 4.05]],
+        CHC: [['imanaga', 'Shota Imanaga', 110, 3.55], ['cabrera', 'Edward Cabrera', 102, 4.05], ['taillon', 'Jameson Taillon', 100, 4.20], ['rea', 'Colin Rea', 97, 4.35], ['wicks', 'Jordan Wicks', 96, 4.45]],
         CWS: [['burke', 'Sean Burke', 96, 4.45], ['fedde', 'Erick Fedde', 101, 4.10], ['kay', 'Anthony Kay', 92, 4.75], ['martin', 'Davis Martin', 94, 4.60], ['schultz', 'Noah Schultz', 98, 4.30]],
-        CIN: [['abbott', 'Andrew Abbott', 103, 4.00], ['burns', 'Chase Burns', 101, 4.10], ['lowder', 'Rhett Lowder', 98, 4.30], ['petty', 'Chase Petty', 94, 4.60], ['singer', 'Brady Singer', 100, 4.20]],
+        CIN: [['lodolo', 'Nick Lodolo', 106, 3.80], ['abbott', 'Andrew Abbott', 103, 4.00], ['singer', 'Brady Singer', 100, 4.20], ['burns', 'Chase Burns', 101, 4.10], ['lowder', 'Rhett Lowder', 98, 4.30]],
         CLE: [['bibee', 'Tanner Bibee', 108, 3.65], ['cantillo', 'Joey Cantillo', 96, 4.45], ['cecconi', 'Slade Cecconi', 95, 4.50], ['messick', 'Parker Messick', 97, 4.35], ['williams', 'Gavin Williams', 104, 3.95]],
-        COL: [['dollander', 'Chase Dollander', 99, 4.25], ['freeland', 'Kyle Freeland', 96, 4.45], ['lorenzen', 'Michael Lorenzen', 97, 4.35], ['quintana', 'Jose Quintana', 98, 4.30], ['sugano', 'Tomoyuki Sugano', 100, 4.20]],
-        DET: [['flaherty', 'Jack Flaherty', 108, 3.65], ['madden', 'Ty Madden', 96, 4.45], ['montero', 'Keider Montero', 95, 4.50], ['valdez', 'Framber Valdez', 112, 3.45], ['anderson', 'Drew Anderson', 92, 4.75]],
-        HOU: [['arrighetti', 'Spencer Arrighetti', 99, 4.25], ['bolton', 'Cody Bolton', 92, 4.75], ['burrows', 'Mike Burrows', 94, 4.60], ['lambert', 'Peter Lambert', 93, 4.65], ['mccullers', 'Lance McCullers Jr.', 102, 4.05]],
+        COL: [['freeland', 'Kyle Freeland', 96, 4.45], ['lorenzen', 'Michael Lorenzen', 97, 4.35], ['quintana', 'Jose Quintana', 98, 4.30], ['sugano', 'Tomoyuki Sugano', 100, 4.20], ['feltner', 'Ryan Feltner', 96, 4.45]],
+        DET: [['skubal', 'Tarik Skubal', 118, 3.15], ['valdez', 'Framber Valdez', 112, 3.45], ['flaherty', 'Jack Flaherty', 108, 3.65], ['mize', 'Casey Mize', 101, 4.10], ['verlander', 'Justin Verlander', 104, 3.95]],
+        HOU: [['brown', 'Hunter Brown', 110, 3.55], ['imai', 'Tatsuya Imai', 104, 3.95], ['burrows', 'Mike Burrows', 94, 4.60], ['javier', 'Cristian Javier', 106, 3.80], ['mccullers', 'Lance McCullers Jr.', 102, 4.05]],
         KC: [['bubic', 'Kris Bubic', 101, 4.10], ['cameron', 'Noah Cameron', 97, 4.35], ['lugo', 'Seth Lugo', 109, 3.60], ['ragans', 'Cole Ragans', 113, 3.40], ['wacha', 'Michael Wacha', 103, 4.00]],
-        LAA: [['aldegheri', 'Sam Aldegheri', 94, 4.60], ['detmers', 'Reid Detmers', 100, 4.20], ['farris', 'Mitch Farris', 92, 4.75], ['kochanowicz', 'Jack Kochanowicz', 96, 4.45], ['soriano', 'Jose Soriano', 101, 4.10]],
-        LAD: [['glasnow', 'Tyler Glasnow', 113, 3.40], ['sasaki', 'Roki Sasaki', 112, 3.45], ['sheehan', 'Emmet Sheehan', 101, 4.10], ['wrobleski', 'Justin Wrobleski', 96, 4.45], ['yamamoto', 'Yoshinobu Yamamoto', 114, 3.35]],
-        MIA: [['alcantara', 'Sandy Alcantara', 110, 3.55], ['junk', 'Janson Junk', 94, 4.60], ['meyer', 'Max Meyer', 101, 4.10], ['paddack', 'Chris Paddack', 98, 4.30], ['perez', 'Eury Perez', 107, 3.70]],
-        MIL: [['drohan', 'Shane Drohan', 94, 4.60], ['harrison', 'Kyle Harrison', 99, 4.25], ['henderson', 'Logan Henderson', 97, 4.35], ['misiorowski', 'Jacob Misiorowski', 104, 3.95], ['patrick', 'Chad Patrick', 96, 4.45]],
-        MIN: [['bradley', 'Taj Bradley', 101, 4.10], ['klein', 'John Klein', 92, 4.75], ['ober', 'Bailey Ober', 105, 3.90], ['prielipp', 'Connor Prielipp', 94, 4.60], ['ryan', 'Joe Ryan', 108, 3.65]],
-        NYM: [['holmes', 'Clay Holmes', 101, 4.10], ['mclean', 'Nolan McLean', 98, 4.30], ['peralta', 'Freddy Peralta', 109, 3.60], ['peterson', 'David Peterson', 103, 4.00], ['scott', 'Christian Scott', 99, 4.25]],
-        NYY: [['fried', 'Max Fried', 114, 3.35], ['rodriguez', 'Elmer Rodriguez', 94, 4.60], ['schlittler', 'Cam Schlittler', 96, 4.45], ['warren', 'Will Warren', 97, 4.35], ['weathers', 'Ryan Weathers', 99, 4.25]],
+        LAA: [['soriano', 'Jose Soriano', 101, 4.10], ['detmers', 'Reid Detmers', 100, 4.20], ['grayson-rodriguez', 'Grayson Rodriguez', 106, 3.80], ['kochanowicz', 'Jack Kochanowicz', 96, 4.45], ['ryan-johnson', 'Ryan Johnson', 94, 4.60]],
+        LAD: [['yamamoto', 'Yoshinobu Yamamoto', 114, 3.35], ['ohtani', 'Shohei Ohtani', 116, 3.25], ['snell', 'Blake Snell', 112, 3.45], ['glasnow', 'Tyler Glasnow', 113, 3.40], ['sheehan', 'Emmet Sheehan', 101, 4.10]],
+        MIA: [['alcantara', 'Sandy Alcantara', 110, 3.55], ['perez', 'Eury Perez', 107, 3.70], ['meyer', 'Max Meyer', 101, 4.10], ['junk', 'Janson Junk', 94, 4.60], ['snelling', 'Robby Snelling', 98, 4.30]],
+        MIL: [['misiorowski', 'Jacob Misiorowski', 104, 3.95], ['woodruff', 'Brandon Woodruff', 108, 3.65], ['harrison', 'Kyle Harrison', 99, 4.25], ['priester', 'Quinn Priester', 98, 4.30], ['patrick', 'Chad Patrick', 96, 4.45]],
+        MIN: [['ryan', 'Joe Ryan', 108, 3.65], ['ober', 'Bailey Ober', 105, 3.90], ['bradley', 'Taj Bradley', 101, 4.10], ['woods-richardson', 'Simeon Woods Richardson', 99, 4.25], ['abel', 'Mick Abel', 97, 4.35]],
+        NYM: [['peralta', 'Freddy Peralta', 109, 3.60], ['mclean', 'Nolan McLean', 98, 4.30], ['holmes', 'Clay Holmes', 101, 4.10], ['peterson', 'David Peterson', 103, 4.00], ['senga', 'Kodai Senga', 108, 3.65]],
+        NYY: [['fried', 'Max Fried', 114, 3.35], ['cole', 'Gerrit Cole', 113, 3.40], ['rodon', 'Carlos Rodon', 107, 3.70], ['schlittler', 'Cam Schlittler', 96, 4.45], ['weathers', 'Ryan Weathers', 99, 4.25]],
         ATH: [['civale', 'Aaron Civale', 100, 4.20], ['ginn', 'J.T. Ginn', 95, 4.50], ['lopez', 'Jacob Lopez', 97, 4.35], ['severino', 'Luis Severino', 103, 4.00], ['springs', 'Jeffrey Springs', 104, 3.95]],
         PHI: [['luzardo', 'Jesus Luzardo', 107, 3.70], ['nola', 'Aaron Nola', 110, 3.55], ['painter', 'Andrew Painter', 103, 4.00], ['sanchez', 'Cristopher Sanchez', 109, 3.60], ['wheeler', 'Zack Wheeler', 116, 3.25]],
-        PIT: [['ashcraft', 'Braxton Ashcraft', 96, 4.45], ['chandler', 'Bubba Chandler', 99, 4.25], ['keller', 'Mitch Keller', 102, 4.05], ['mlodzinski', 'Carmen Mlodzinski', 94, 4.60], ['skenes', 'Paul Skenes', 118, 3.15]],
-        SD: [['buehler', 'Walker Buehler', 104, 3.95], ['canning', 'Griffin Canning', 98, 4.30], ['darvish', 'Yu Darvish', 106, 3.80], ['king', 'Michael King', 110, 3.55], ['vasquez', 'Randy Vasquez', 95, 4.50]],
-        SF: [['houser', 'Adrian Houser', 98, 4.30], ['mahle', 'Tyler Mahle', 102, 4.05], ['mcdonald', 'Trevor McDonald', 94, 4.60], ['ray', 'Robbie Ray', 104, 3.95], ['roupp', 'Landen Roupp', 96, 4.45]],
-        SEA: [['castillo', 'Luis Castillo', 110, 3.55], ['gilbert', 'Logan Gilbert', 111, 3.50], ['hancock', 'Emerson Hancock', 97, 4.35], ['kirby', 'George Kirby', 112, 3.45], ['woo', 'Bryan Woo', 108, 3.65]],
+        PIT: [['skenes', 'Paul Skenes', 118, 3.15], ['keller', 'Mitch Keller', 102, 4.05], ['jones', 'Jared Jones', 104, 3.95], ['ashcraft', 'Braxton Ashcraft', 96, 4.45], ['chandler', 'Bubba Chandler', 99, 4.25]],
+        SD: [['pivetta', 'Nick Pivetta', 104, 3.95], ['king', 'Michael King', 110, 3.55], ['musgrove', 'Joe Musgrove', 106, 3.80], ['vasquez', 'Randy Vasquez', 95, 4.50], ['giolito', 'Lucas Giolito', 100, 4.20]],
+        SF: [['webb', 'Logan Webb', 113, 3.40], ['ray', 'Robbie Ray', 104, 3.95], ['roupp', 'Landen Roupp', 96, 4.45], ['mahle', 'Tyler Mahle', 102, 4.05], ['houser', 'Adrian Houser', 98, 4.30]],
+        SEA: [['gilbert', 'Logan Gilbert', 111, 3.50], ['kirby', 'George Kirby', 112, 3.45], ['woo', 'Bryan Woo', 108, 3.65], ['castillo', 'Luis Castillo', 110, 3.55], ['miller', 'Bryce Miller', 106, 3.80]],
         STL: [['leahy', 'Kyle Leahy', 94, 4.60], ['liberatore', 'Matthew Liberatore', 98, 4.30], ['may', 'Dustin May', 103, 4.00], ['mcgreevy', 'Michael McGreevy', 96, 4.45], ['pallante', 'Andre Pallante', 97, 4.35]],
-        TB: [['martinez', 'Nick Martinez', 101, 4.10], ['matz', 'Steven Matz', 98, 4.30], ['mcclanahan', 'Shane McClanahan', 114, 3.35], ['rasmussen', 'Drew Rasmussen', 108, 3.65], ['baker', 'Bryan Baker', 92, 4.75]],
+        TB: [['rasmussen', 'Drew Rasmussen', 108, 3.65], ['mcclanahan', 'Shane McClanahan', 114, 3.35], ['matz', 'Steven Matz', 98, 4.30], ['martinez', 'Nick Martinez', 101, 4.10], ['boyle', 'Joe Boyle', 96, 4.45]],
         TEX: [['degrom', 'Jacob deGrom', 118, 3.15], ['eovaldi', 'Nathan Eovaldi', 106, 3.80], ['gore', 'MacKenzie Gore', 105, 3.90], ['leiter', 'Jack Leiter', 98, 4.30], ['rocker', 'Kumar Rocker', 99, 4.25]],
-        TOR: [['cease', 'Dylan Cease', 110, 3.55], ['corbin', 'Patrick Corbin', 95, 4.50], ['gausman', 'Kevin Gausman', 109, 3.60], ['lauer', 'Eric Lauer', 96, 4.45], ['yesavage', 'Trey Yesavage', 98, 4.30]],
+        TOR: [['gausman', 'Kevin Gausman', 109, 3.60], ['cease', 'Dylan Cease', 110, 3.55], ['bieber', 'Shane Bieber', 108, 3.65], ['yesavage', 'Trey Yesavage', 98, 4.30], ['scherzer', 'Max Scherzer', 105, 3.90]],
         WSH: [['cavalli', 'Cade Cavalli', 97, 4.35], ['griffin', 'Foster Griffin', 94, 4.60], ['irvin', 'Jake Irvin', 100, 4.20], ['littell', 'Zack Littell', 98, 4.30], ['mikolas', 'Miles Mikolas', 99, 4.25]]
     };
 
@@ -140,7 +140,12 @@
         HOU: 'hou', KC: 'kc', LAA: 'laa', LAD: 'lad', MIA: 'mia', MIL: 'mil', MIN: 'min', NYM: 'nym', NYY: 'nyy', ATH: 'oak',
         PHI: 'phi', PIT: 'pit', SD: 'sd', SF: 'sf', SEA: 'sea', STL: 'stl', TB: 'tb', TEX: 'tex', TOR: 'tor', WSH: 'wsh'
     };
-    var ESPN_TEAM_ROSTER_SLUGS = Object.assign({}, ESPN_TEAM_LOGO_SLUGS, { ATH: 'ath' });
+
+    var ESPN_ROSTER_SLUGS = {
+        ARI: 'ari', ATL: 'atl', BAL: 'bal', BOS: 'bos', CHC: 'chc', CWS: 'chw', CIN: 'cin', CLE: 'cle', COL: 'col', DET: 'det',
+        HOU: 'hou', KC: 'kc', LAA: 'laa', LAD: 'lad', MIA: 'mia', MIL: 'mil', MIN: 'min', NYM: 'nym', NYY: 'nyy', ATH: 'ath',
+        PHI: 'phi', PIT: 'pit', SD: 'sd', SF: 'sf', SEA: 'sea', STL: 'stl', TB: 'tb', TEX: 'tex', TOR: 'tor', WSH: 'wsh'
+    };
 
     var TEAM_COLORS = {
         ARI: ['#a71930', '#e3d4ad'], ATL: ['#ce1141', '#13274f'], BAL: ['#df4601', '#000000'], BOS: ['#bd3039', '#0c2340'],
@@ -258,14 +263,75 @@
             return res.json();
         });
     }
-    function fetchTeamRoster(team) {
-        var slug = team && team.era === 'current' ? ESPN_TEAM_ROSTER_SLUGS[team.abbreviation] : '';
-        if (!slug) return Promise.resolve(null);
-        return fetchJson('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams/' + encodeURIComponent(slug) + '/roster').then(function (payload) {
-            return { abbreviation: team.abbreviation, roster: teamRosterFromPayload(team, payload) };
-        }).catch(function () {
-            return { abbreviation: team.abbreviation, roster: null };
+
+    function playerPositionLabel(player) {
+        return String(player && player.position || '').toUpperCase();
+    }
+    function rosterSortValue(player) {
+        var position = playerPositionLabel(player);
+        var order = { CF: 1, SS: 2, RF: 3, '1B': 4, '3B': 5, LF: 6, DH: 7, '2B': 8, C: 9, OF: 10, IF: 11 };
+        return order[position] || 20;
+    }
+    function collectEspnTeamRoster(data) {
+        var players = [];
+        var groups = Array.isArray(data && data.athletes) ? data.athletes : [];
+        groups.forEach(function (group) {
+            var groupPosition = group && (group.position || group.displayName || group.name) || '';
+            (group.items || group.athletes || []).forEach(function (item) {
+                var name = item && (item.displayName || item.fullName || item.name);
+                if (!name) return;
+                var position = item.position && (item.position.abbreviation || item.position.displayName || item.position.name) || groupPosition;
+                players.push({ name: name, position: position });
+            });
         });
+        var seen = {};
+        players = players.filter(function (player) {
+            var key = normalizeName(player.name);
+            if (seen[key]) return false;
+            seen[key] = true;
+            return true;
+        });
+        var hitters = players.filter(function (player) { return !/Pitcher|P$|SP|RP|CP/i.test(player.position); }).sort(function (a, b) { return rosterSortValue(a) - rosterSortValue(b); });
+        var pitchers = players.filter(function (player) { return /Pitcher|P$|SP|RP|CP/i.test(player.position); });
+        return {
+            count: players.length,
+            relievers: pitchers.length,
+            players: hitters.concat(pitchers),
+            summary: players.length + ' ESPN roster players',
+            source: 'Verified ESPN team roster endpoint'
+        };
+    }
+    function teamRosterUrl(team) {
+        var slug = team && ESPN_ROSTER_SLUGS[team.abbreviation];
+        return slug ? 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams/' + slug + '/roster' : '';
+    }
+    function fetchTeamRoster(team) {
+        if (!team || team.era !== 'current') return Promise.resolve(null);
+        state.liveContext.teamRosters = state.liveContext.teamRosters || {};
+        if (state.liveContext.teamRosters[team.abbreviation]) return Promise.resolve(state.liveContext.teamRosters[team.abbreviation]);
+        var url = teamRosterUrl(team);
+        if (!url) return Promise.resolve(null);
+        return fetchJson(url).then(function (data) {
+            var roster = collectEspnTeamRoster(data);
+            state.liveContext.teamRosters[team.abbreviation] = roster;
+            return roster;
+        }).catch(function () {
+            state.liveContext.teamRosters[team.abbreviation] = null;
+            return null;
+        });
+    }
+    function rostersForTeams(away, home, context) {
+        var rosters = context && context.extraContext && context.extraContext.rosters ? {
+            away: context.extraContext.rosters.away,
+            home: context.extraContext.rosters.home
+        } : {};
+        state.liveContext.teamRosters = state.liveContext.teamRosters || {};
+        if (!rosters.away && away && away.era === 'current') rosters.away = state.liveContext.teamRosters[away.abbreviation] || null;
+        if (!rosters.home && home && home.era === 'current') rosters.home = state.liveContext.teamRosters[home.abbreviation] || null;
+        return rosters.away || rosters.home ? rosters : null;
+    }
+    function ensureRostersForTeams(away, home) {
+        return Promise.all([fetchTeamRoster(away), fetchTeamRoster(home)]);
     }
 
     function poolTeams(pool) { return state.teams[pool] || []; }
@@ -462,78 +528,119 @@
         }
         return values;
     }
-    function allocateByWeights(total, weights, random) {
+    function weightedAllocate(total, weights, random, caps, minimums) {
         var count = weights.length;
         var values = [];
         var remaining = Math.max(0, Math.round(total));
-        for (var i = 0; i < count; i += 1) values.push(0);
-        while (remaining > 0) {
-            var sumWeights = weights.reduce(function (sum, weight, index) {
-                return sum + Math.max(0.1, weight - (values[index] * 0.32));
-            }, 0);
-            var roll = random() * sumWeights;
-            var cursor = 0;
+        for (var i = 0; i < count; i += 1) {
+            var min = minimums && minimums[i] ? minimums[i] : 0;
+            values[i] = min;
+            remaining -= min;
+        }
+        remaining = Math.max(0, remaining);
+        var guard = 0;
+        while (remaining > 0 && guard < 1000) {
+            guard += 1;
+            var available = [];
+            var totalWeight = 0;
             for (var j = 0; j < count; j += 1) {
-                cursor += Math.max(0.1, weights[j] - (values[j] * 0.32));
-                if (roll <= cursor) {
-                    values[j] += 1;
+                var cap = caps && Number.isFinite(caps[j]) ? caps[j] : 99;
+                if (values[j] < cap) {
+                    var weight = Math.max(0.01, Number(weights[j] || 1));
+                    available.push({ index: j, weight: weight });
+                    totalWeight += weight;
+                }
+            }
+            if (!available.length) break;
+            var pick = random() * totalWeight;
+            for (var k = 0; k < available.length; k += 1) {
+                pick -= available[k].weight;
+                if (pick <= 0 || k === available.length - 1) {
+                    values[available[k].index] += 1;
+                    remaining -= 1;
                     break;
                 }
             }
-            remaining -= 1;
         }
         return values;
     }
-    function isPitcherPosition(position) {
-        return /(^|[^A-Z])(P|SP|RP)([^A-Z]|$)|Pitcher/i.test(String(position || ''));
+    function sumAllocated(rows, key) {
+        return rows.reduce(function (total, row) { return total + Number(row[key] || 0); }, 0);
     }
-    function positionMatchesSlot(playerPosition, slot) {
-        var player = String(playerPosition || '').toUpperCase();
-        var wanted = String(slot || '').toUpperCase();
-        if (!player || !wanted) return false;
-        if (player === wanted) return true;
-        if (/^(LF|CF|RF)$/.test(wanted) && /^(OF|LF|CF|RF)$/.test(player)) return true;
-        if (wanted === 'DH' && !isPitcherPosition(player)) return true;
-        return false;
+    function capBaserunnerOutliers(rows) {
+        rows.forEach(function (row) {
+            var outs = Number(row.outs || 0);
+            var maxNoDamageHits = outs <= 3 ? 2 : (outs <= 6 ? 3 : 5);
+            if (!row.r && row.h > maxNoDamageHits) row.r = Math.min(row.h - maxNoDamageHits, 2);
+            if (row.er > row.r) row.er = row.r;
+        });
     }
-    function rosterNamesForPositions(rosterContext, positions, random) {
-        var players = Array.isArray(rosterContext && rosterContext.players) ? rosterContext.players.slice() : [];
-        var used = {};
-        function take(match) {
-            for (var i = 0; i < players.length; i += 1) {
-                var player = players[i];
-                var key = normalizeName(player.name);
-                if (!used[key] && (!match || match(player))) {
-                    used[key] = true;
-                    return player.name + (player.position ? ' (' + player.position + ')' : '');
-                }
-            }
-            return '';
-        }
-        return positions.map(function (position) {
-            return take(function (player) { return positionMatchesSlot(player.position, position); }) ||
-                take(function (player) { return isPitcherPosition(position) === isPitcherPosition(player.position); }) ||
-                take(null);
-        }).filter(Boolean);
+    function rosterNamesForBatters(roster) {
+        var players = Array.isArray(roster && roster.players) ? roster.players : [];
+        var pitchers = /^(P|SP|RP|CP|Relief|Pitcher)$/i;
+        return players.filter(function (player) { return !pitchers.test(String(player.position || '')); }).map(function (player) {
+            var pos = playerPositionLabel(player);
+            return player.name + (pos ? ' (' + pos + ')' : '');
+        }).slice(0, 9);
     }
-    function simulationSlotLabel(type, index, position) {
-        return type + ' Slot ' + (index + 1) + (position ? ' (' + position + ')' : '');
+    function rosterNamesForPitchers(roster, starter) {
+        var players = Array.isArray(roster && roster.players) ? roster.players : [];
+        var names = [];
+        if (starter && starter.name) names.push(starter.name);
+        players.filter(function (player) { return /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')); }).forEach(function (player) {
+            if (names.map(normalizeName).indexOf(normalizeName(player.name)) === -1) names.push(player.name);
+        });
+        return names.slice(0, 3);
     }
-    function modeledBatterLines(team, line, random, rosterContext) {
+    function historicalRosterForTeam(team) {
+        var key = team && (team.id || '').replace(/^classic-/, '');
+        var batters = {
+            '1927-nyy': ['Earle Combs (CF)', 'Mark Koenig (SS)', 'Babe Ruth (RF)', 'Lou Gehrig (1B)', 'Bob Meusel (LF)', 'Tony Lazzeri (2B)', 'Joe Dugan (3B)', 'Pat Collins (C)', 'Benny Bengough (C)'],
+            '1939-nyy': ['Frankie Crosetti (SS)', 'Red Rolfe (3B)', 'Charlie Keller (RF)', 'Joe DiMaggio (CF)', 'Bill Dickey (C)', 'Joe Gordon (2B)', 'Tommy Henrich (1B)', 'George Selkirk (LF)', 'Babe Dahlgren (1B)'],
+            '1955-bkn': ['Jim Gilliam (2B)', 'Pee Wee Reese (SS)', 'Duke Snider (CF)', 'Roy Campanella (C)', 'Gil Hodges (1B)', 'Jackie Robinson (3B)', 'Carl Furillo (RF)', 'Sandy Amoros (LF)', 'Don Zimmer (2B)'],
+            '1961-nyy': ['Bobby Richardson (2B)', 'Tony Kubek (SS)', 'Roger Maris (RF)', 'Mickey Mantle (CF)', 'Elston Howard (C)', 'Yogi Berra (LF)', 'Bill Skowron (1B)', 'Clete Boyer (3B)', 'Hector Lopez (LF)'],
+            '1969-nym': ['Tommie Agee (CF)', 'Bud Harrelson (SS)', 'Cleon Jones (LF)', 'Art Shamsky (RF)', 'Ed Kranepool (1B)', 'Ken Boswell (2B)', 'Jerry Grote (C)', 'Wayne Garrett (3B)', 'Ron Swoboda (RF)'],
+            '1975-cin': ['Pete Rose (3B)', 'Ken Griffey (RF)', 'Joe Morgan (2B)', 'Johnny Bench (C)', 'Tony Perez (1B)', 'George Foster (LF)', 'Dave Concepcion (SS)', 'Cesar Geronimo (CF)', 'Dan Driessen (1B)'],
+            '1984-det': ['Lou Whitaker (2B)', 'Alan Trammell (SS)', 'Kirk Gibson (RF)', 'Lance Parrish (C)', 'Darrell Evans (1B)', 'Chet Lemon (CF)', 'Larry Herndon (LF)', 'Tom Brookens (3B)', 'Dave Bergman (1B)'],
+            '1986-nym': ['Lenny Dykstra (CF)', 'Wally Backman (2B)', 'Keith Hernandez (1B)', 'Gary Carter (C)', 'Darryl Strawberry (RF)', 'George Foster (LF)', 'Ray Knight (3B)', 'Rafael Santana (SS)', 'Mookie Wilson (OF)'],
+            '1988-lad': ['Steve Sax (2B)', 'Mickey Hatcher (LF)', 'Kirk Gibson (RF)', 'Mike Marshall (1B)', 'John Shelby (CF)', 'Mike Scioscia (C)', 'Jeff Hamilton (3B)', 'Alfredo Griffin (SS)', 'Franklin Stubbs (1B)'],
+            '1995-atl': ['Marquis Grissom (CF)', 'Mark Lemke (2B)', 'Chipper Jones (3B)', 'Fred McGriff (1B)', 'David Justice (RF)', 'Ryan Klesko (LF)', 'Javy Lopez (C)', 'Jeff Blauser (SS)', 'Mike Devereaux (OF)'],
+            '1998-nyy': ['Chuck Knoblauch (2B)', 'Derek Jeter (SS)', 'Paul ONeill (RF)', 'Bernie Williams (CF)', 'Tino Martinez (1B)', 'Darryl Strawberry (DH)', 'Jorge Posada (C)', 'Scott Brosius (3B)', 'Chad Curtis (LF)'],
+            '2001-sea': ['Ichiro Suzuki (RF)', 'Mark McLemore (LF)', 'Bret Boone (2B)', 'Edgar Martinez (DH)', 'John Olerud (1B)', 'Mike Cameron (CF)', 'David Bell (3B)', 'Dan Wilson (C)', 'Carlos Guillen (SS)'],
+            '2004-bos': ['Johnny Damon (CF)', 'Orlando Cabrera (SS)', 'Manny Ramirez (LF)', 'David Ortiz (DH)', 'Kevin Millar (1B)', 'Trot Nixon (RF)', 'Jason Varitek (C)', 'Bill Mueller (3B)', 'Mark Bellhorn (2B)'],
+            '2016-chc': ['Dexter Fowler (CF)', 'Kris Bryant (3B)', 'Anthony Rizzo (1B)', 'Ben Zobrist (LF)', 'Addison Russell (SS)', 'Willson Contreras (C)', 'Jason Heyward (RF)', 'Javier Baez (2B)', 'Kyle Schwarber (DH)'],
+            '2017-hou': ['George Springer (CF)', 'Alex Bregman (3B)', 'Jose Altuve (2B)', 'Carlos Correa (SS)', 'Yuli Gurriel (1B)', 'Brian McCann (C)', 'Marwin Gonzalez (LF)', 'Josh Reddick (RF)', 'Carlos Beltran (DH)'],
+            '2019-wsh': ['Trea Turner (SS)', 'Adam Eaton (RF)', 'Anthony Rendon (3B)', 'Juan Soto (LF)', 'Howie Kendrick (1B)', 'Asdrubal Cabrera (2B)', 'Victor Robles (CF)', 'Yan Gomes (C)', 'Kurt Suzuki (C)'],
+            '2020-lad': ['Mookie Betts (RF)', 'Corey Seager (SS)', 'Justin Turner (3B)', 'Max Muncy (1B)', 'Will Smith (C)', 'Cody Bellinger (CF)', 'AJ Pollock (LF)', 'Chris Taylor (2B)', 'Joc Pederson (DH)'],
+            '2021-atl': ['Jorge Soler (RF)', 'Freddie Freeman (1B)', 'Ozzie Albies (2B)', 'Austin Riley (3B)', 'Eddie Rosario (LF)', 'Adam Duvall (CF)', 'Dansby Swanson (SS)', 'Travis dArnaud (C)', 'Joc Pederson (DH)'],
+            '2022-hou': ['Jose Altuve (2B)', 'Jeremy Pena (SS)', 'Yordan Alvarez (DH)', 'Alex Bregman (3B)', 'Kyle Tucker (RF)', 'Yuli Gurriel (1B)', 'Chas McCormick (CF)', 'Martin Maldonado (C)', 'Trey Mancini (LF)'],
+            '2023-tex': ['Marcus Semien (2B)', 'Corey Seager (SS)', 'Adolis Garcia (RF)', 'Evan Carter (LF)', 'Josh Jung (3B)', 'Nathaniel Lowe (1B)', 'Mitch Garver (DH)', 'Jonah Heim (C)', 'Leody Taveras (CF)']
+        };
+        var pitchers = (HISTORICAL_PITCHERS[team && team.id] || []).map(function (row) { return { name: row[1], position: 'P' }; });
+        return batters[key] ? { players: batters[key].map(function (name) { return { name: name.replace(/\s+\([A-Z0-9]+\)$/, ''), position: (name.match(/\(([A-Z0-9]+)\)$/) || [null, ''])[1] }; }).concat(pitchers), source: 'Curated historical roster names' } : null;
+    }
+    function rosterForTeam(team, roster) {
+        if (roster && roster.players && roster.players.length) return roster;
+        if (team && team.era === 'historical') return historicalRosterForTeam(team);
+        return null;
+    }
+    function modeledBatterLines(team, line, random, roster) {
         var slots = ['CF', 'SS', 'RF', '1B', '3B', 'LF', 'DH', '2B', 'C'];
-        var rosterNames = rosterNamesForPositions(rosterContext, slots, random);
-        var useRosterNames = rosterNames.length >= slots.length;
-        var hits = allocateWhole(line.hits, 9, random);
-        var runs = allocateWhole(line.runs, 9, random);
+        var rosterNames = rosterNamesForBatters(roster);
+        var hitWeights = [1.12, 1.02, 1.2, 1.15, 1.04, 0.98, 0.9, 0.86, 0.72];
+        var runWeights = [1.2, 1.1, 1.18, 1.05, 0.92, 0.9, 0.78, 0.78, 0.58];
+        var hits = weightedAllocate(line.hits, hitWeights, random, [5, 5, 5, 5, 4, 4, 4, 4, 4]);
+        var runs = weightedAllocate(line.runs, runWeights, random, [4, 4, 4, 3, 3, 3, 3, 3, 3]);
         var rbiTotal = Math.max(0, line.runs - (random() < 0.35 ? 1 : 0));
-        var rbi = allocateWhole(rbiTotal, 9, random);
-        var walks = allocateWhole(clamp(Math.round(2 + random() * 4 + (team.offense - 100) * 0.04), 1, 8), 9, random);
-        var strikeouts = allocateWhole(clamp(Math.round(6 + random() * 5 - (team.offense - 100) * 0.03), 3, 14), 9, random);
+        var rbi = weightedAllocate(rbiTotal, hitWeights.map(function (weight, index) { return weight + hits[index] * 0.45; }), random, [5, 5, 6, 6, 5, 5, 4, 4, 3]);
+        var walks = weightedAllocate(clamp(Math.round(2 + random() * 4 + (team.offense - 100) * 0.04), 1, 8), runWeights, random, [3, 3, 3, 3, 3, 3, 2, 2, 2]);
+        var strikeouts = weightedAllocate(clamp(Math.round(6 + random() * 5 - (team.offense - 100) * 0.03), 3, 14), [0.75, 0.9, 0.85, 0.95, 1.05, 1.1, 1.18, 1.2, 1.12], random, [3, 3, 3, 4, 4, 4, 4, 4, 4]);
         return slots.map(function (slot, index) {
-            var ab = clamp(3 + Math.floor(random() * 3), 2, 6);
+            var ab = clamp(3 + Math.floor(random() * 2) + (index < 5 && random() < 0.45 ? 1 : 0), 2, 6);
             if (ab < hits[index]) ab = hits[index];
+            if (strikeouts[index] > ab - hits[index]) strikeouts[index] = Math.max(0, ab - hits[index]);
             return {
-                name: useRosterNames ? rosterNames[index] : simulationSlotLabel('Lineup', index, slot),
+                name: rosterNames[index] || '',
                 ab: ab,
                 r: runs[index],
                 h: hits[index],
@@ -541,139 +648,72 @@
                 bb: walks[index],
                 so: strikeouts[index]
             };
-        });
+        }).filter(function (row) { return row.name; });
     }
     function outsToIp(outs) {
         var innings = Math.floor(outs / 3);
         var remainder = outs % 3;
         return innings + (remainder ? '.' + remainder : '.0');
     }
-    function pitcherStressScore(opponentLine, starter, random) {
-        var quality = starter && Number.isFinite(starter.quality) ? starter.quality : 100;
-        var stress = (opponentLine.runs * 1.35) + (opponentLine.hits * 0.42) + random() * 1.6 - ((quality - 100) * 0.045);
-        return clamp(stress, 0, 18);
-    }
-    function starterOutsForLine(opponentLine, starter, random) {
-        var quality = starter && Number.isFinite(starter.quality) ? starter.quality : 100;
-        var stress = pitcherStressScore(opponentLine, starter, random);
-        var base = 18 + Math.floor(random() * 3) + Math.round((quality - 100) / 18);
-        var outs = base - Math.round(stress * 0.45);
-        if (opponentLine.runs >= 7 || opponentLine.hits >= 12) outs -= 2 + Math.floor(random() * 3);
-        if (opponentLine.runs <= 2 && opponentLine.hits <= 6 && quality >= 108 && random() < 0.45) outs += 2;
-        if (opponentLine.runs <= 1 && opponentLine.hits <= 5 && quality >= 112 && random() < 0.14) outs += 2;
-        if (opponentLine.runs >= 9 || opponentLine.hits >= 15) return clamp(outs, 8, 14);
-        if (stress >= 12) return clamp(outs, 10, 15);
-        return clamp(outs, 14, 22);
-    }
-    function reliefPitcherCount(starterOuts, opponentLine, random) {
+    function modeledPitcherLines(team, opponentLine, starter, random, roster) {
+        if (!roster || !roster.players || !roster.players.length) return [];
+        var expectedDamage = opponentLine.runs + Math.max(0, opponentLine.hits - 7) * 0.35;
+        var starterOuts = clamp(18 - Math.floor(expectedDamage * 0.8) + Math.floor(random() * 4), 12, 21);
+        if (opponentLine.runs >= 7 || opponentLine.hits >= 13) starterOuts = clamp(starterOuts - 3, 9, 18);
         var reliefOuts = 27 - starterOuts;
-        var stress = (opponentLine.runs * 1.1) + (opponentLine.hits * 0.35);
-        if (reliefOuts <= 6 && opponentLine.runs <= 2 && random() < 0.18) return 1;
-        if (starterOuts <= 11 || stress >= 12) return clamp(4 + Math.floor(random() * 3), 4, 6);
-        if (starterOuts <= 14 || stress >= 9) return 4 + (random() < 0.35 ? 1 : 0);
-        if (reliefOuts <= 9) return 2 + (random() < 0.55 ? 1 : 0);
-        return 3 + (random() < 0.45 ? 1 : 0);
-    }
-    function distributeReliefOuts(reliefOuts, relieverCount, longReliefAllowed, random) {
-        var count = clamp(relieverCount, 1, 6);
-        while (count < 6 && reliefOuts > count * (longReliefAllowed ? 5 : 4)) count += 1;
-        var outs = [];
-        for (var i = 0; i < count; i += 1) outs.push(1);
-        var remaining = reliefOuts - count;
-        var longIndex = longReliefAllowed && random() < 0.42 ? Math.floor(random() * count) : -1;
-        var guard = 0;
-        while (remaining > 0 && guard < 80) {
-            var idx = remaining > 4 && longIndex !== -1 ? longIndex : Math.floor(random() * count);
-            var maxOuts = idx === longIndex ? (reliefOuts >= 15 ? 8 : 6) : 4;
-            if (outs[idx] < maxOuts) {
-                outs[idx] += 1;
-                remaining -= 1;
-            }
-            guard += 1;
-            if (guard === 80 && remaining > 0 && count < 6) {
-                outs.push(1);
-                count += 1;
-                remaining -= 1;
-                guard = 0;
-            }
-        }
-        return outs.filter(function (value) { return value > 0; });
-    }
-    function moveStat(values, from, to, amount) {
-        var moved = Math.min(values[from], amount);
-        values[from] -= moved;
-        values[to] += moved;
-        return moved;
-    }
-    function normalizePitchingStats(outs, hits, runs, walks, homers) {
-        var starterIndex = 0;
-        for (var i = 1; i < outs.length; i += 1) {
-            if (outs[i] <= 4 && hits[i] > 4) moveStat(hits, i, starterIndex, hits[i] - 4);
-            if (outs[i] <= 3 && hits[i] > 3) moveStat(hits, i, starterIndex, hits[i] - 3);
-            var baserunnerCapacity = hits[i] + walks[i] + homers[i] + (outs[i] <= 4 ? 1 : 2);
-            if (runs[i] > baserunnerCapacity) moveStat(runs, i, starterIndex, runs[i] - baserunnerCapacity);
-            if (outs[i] <= 4 && hits[i] === 0 && runs[i] > 1) moveStat(runs, i, starterIndex, runs[i] - 1);
-        }
-    }
-    function modeledPitcherLines(team, opponentLine, starter, random, rosterContext) {
-        var starterOuts = starterOutsForLine(opponentLine, starter, random);
-        var reliefOuts = 27 - starterOuts;
-        var longReliefAllowed = starterOuts <= 12 || opponentLine.runs >= 8 || opponentLine.hits >= 13;
-        var reliefOutDistribution = distributeReliefOuts(reliefOuts, reliefPitcherCount(starterOuts, opponentLine, random), longReliefAllowed, random);
-        var outs = [starterOuts].concat(reliefOutDistribution);
-        var pitcherCount = outs.length;
-        var stressWeights = outs.map(function (value, index) {
-            var starterBump = index === 0 ? 1.35 : 0.78;
-            return Math.max(0.45, value * starterBump);
+        var secondRelief = reliefOuts >= 9 ? clamp(3 + Math.floor(random() * 3), 3, reliefOuts - 3) : Math.floor(reliefOuts / 2);
+        var outs = [starterOuts, secondRelief, reliefOuts - secondRelief];
+        var outWeights = outs.map(function (out) { return Math.max(1, out / 3); });
+        var runs = weightedAllocate(opponentLine.runs, outWeights.map(function (weight, index) { return weight * (index === 0 ? 1.05 : 0.95); }), random, outs.map(function (out) { return clamp(Math.ceil(out / 3) + 3, 1, 8); }));
+        var hitCaps = outs.map(function (out, index) {
+            var cap = Math.ceil(out * 0.72) + runs[index] * 2 + (index === 0 ? 3 : 1);
+            var max = index === 0 ? 12 : (out <= 3 ? 4 : 5);
+            if (!runs[index] && out <= 6) max = Math.min(max, out <= 3 ? 3 : 4);
+            return clamp(cap, 1, max);
         });
-        var hits = allocateByWeights(opponentLine.hits, stressWeights, random);
-        var runs = allocateByWeights(opponentLine.runs, stressWeights, random);
-        var walks = allocateByWeights(clamp(Math.round(2 + random() * 3 + (opponentLine.hits > 11 ? 1 : 0)), 1, 8), stressWeights, random);
-        var strikeouts = allocateByWeights(clamp(Math.round(7 + random() * 5 + ((starter ? starter.quality : 100) - 100) * 0.05), 3, 16), outs.map(function (value) { return Math.max(0.6, value); }), random);
-        var homers = allocateByWeights(clamp(Math.round(opponentLine.runs * 0.22 + random()), 0, 4), stressWeights, random);
-        normalizePitchingStats(outs, hits, runs, walks, homers);
-        var reliefSlots = reliefOutDistribution.map(function () { return 'RP'; });
-        var rosterRelievers = rosterNamesForPositions(rosterContext, reliefSlots, random);
-        var names = [starter && starter.name ? starter.name : simulationSlotLabel('Pitching', 0, 'Starter')];
-        reliefOutDistribution.forEach(function (_, index) {
-            names.push(rosterRelievers[index] || simulationSlotLabel('Pitching', index + 1, longReliefAllowed && outs[index + 1] >= 6 ? 'Long Relief' : 'Relief'));
-        });
-        return names.map(function (name, index) {
+        var hits = weightedAllocate(opponentLine.hits, outWeights.map(function (weight, index) { return weight + runs[index] * 1.1; }), random, hitCaps);
+        var walks = weightedAllocate(clamp(Math.round(2 + random() * 3), 1, 7), outWeights, random, outs.map(function (out) { return clamp(Math.ceil(out / 4) + 1, 1, 4); }));
+        var strikeouts = weightedAllocate(clamp(Math.round(7 + random() * 5 + ((starter ? starter.quality : 100) - 100) * 0.05), 3, 15), outWeights.map(function (weight, index) { return weight * (index === 0 ? 1.15 : 0.9); }), random, outs.map(function (out) { return Math.max(1, out); }));
+        var homers = weightedAllocate(clamp(Math.round(opponentLine.runs * 0.22 + random()), 0, 4), runs.map(function (run) { return run + 0.35; }), random, runs.map(function (run) { return Math.min(3, run); }));
+        var rosterNames = rosterNamesForPitchers(roster, starter);
+        var names = [rosterNames[0] || (starter && starter.name) || '', rosterNames[1] || '', rosterNames[2] || ''];
+        var rows = names.map(function (name, index) {
             return {
                 name: name,
+                outs: outs[index],
                 ip: outsToIp(outs[index]),
                 h: hits[index],
                 r: runs[index],
-                er: Math.max(0, runs[index] - (random() < 0.18 ? 1 : 0)),
+                er: Math.max(0, runs[index] - (runs[index] && random() < 0.16 ? 1 : 0)),
                 bb: walks[index],
                 so: strikeouts[index],
                 hr: homers[index]
             };
-        });
+        }).filter(function (row) { return row.name && row.outs > 0; });
+        return rows;
     }
     function modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random, rosterContext) {
-        var awayRoster = rosterContext && rosterContext.away;
-        var homeRoster = rosterContext && rosterContext.home;
+        var awayRoster = rosterForTeam(away, rosterContext && rosterContext.away);
+        var homeRoster = rosterForTeam(home, rosterContext && rosterContext.home);
         return {
             away: {
-                identitySource: awayRoster && Array.isArray(awayRoster.players) && awayRoster.players.length >= 12 ? 'verified-roster' : 'simulation-slots',
                 batters: modeledBatterLines(away, awayLine, random, awayRoster),
-                pitchers: modeledPitcherLines(away, homeLine, awayPitcher, random, awayRoster)
+                pitchers: modeledPitcherLines(away, homeLine, awayPitcher, random, awayRoster),
+                rosterSource: awayRoster && awayRoster.players && awayRoster.players.length ? (awayRoster.source || 'Verified ESPN roster names') : 'Roster unavailable: player lines hidden'
             },
             home: {
-                identitySource: homeRoster && Array.isArray(homeRoster.players) && homeRoster.players.length >= 12 ? 'verified-roster' : 'simulation-slots',
                 batters: modeledBatterLines(home, homeLine, random, homeRoster),
-                pitchers: modeledPitcherLines(home, awayLine, homePitcher, random, homeRoster)
+                pitchers: modeledPitcherLines(home, awayLine, homePitcher, random, homeRoster),
+                rosterSource: homeRoster && homeRoster.players && homeRoster.players.length ? (homeRoster.source || 'Verified ESPN roster names') : 'Roster unavailable: player lines hidden'
             }
         };
     }
     function buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext) {
-        var seed = seededHash([away.id, home.id, awayPitcher && awayPitcher.id, homePitcher && homePitcher.id, round1(awayRuns), round1(homeRuns), round1(awayWin), state.preset, seedSalt || 'single'].join('|'));
-        var random = seededRandom(seed);
+        var random = Math.random;
         var awayScore = controlledFinalScore(awayRuns, homeRuns, awayWin, random);
         var homeScore = controlledFinalScore(homeRuns, awayRuns, homeWin, random);
         if (awayScore === homeScore) {
-            if (homeWin >= awayWin) homeScore += 1;
+            if (random() < homeWin) homeScore += 1;
             else awayScore += 1;
         }
         var combined = awayScore + homeScore;
@@ -685,7 +725,7 @@
                 excess -= 1;
             }
             if (awayScore === homeScore) {
-                if (homeWin >= awayWin && awayScore > 0) awayScore -= 1;
+                if (random() < homeWin && awayScore > 0) awayScore -= 1;
                 else if (homeScore > 0) homeScore -= 1;
             }
         }
@@ -697,7 +737,7 @@
             else break;
         }
         if (awayScore === homeScore) {
-            if (homeWin >= awayWin) {
+            if (random() < homeWin) {
                 if (homeScore < 20 && awayScore + homeScore < 30) homeScore += 1;
                 else if (awayScore > 0) awayScore -= 1;
             } else {
@@ -705,16 +745,9 @@
                 else if (homeScore > 0) homeScore -= 1;
             }
         }
-        if (!allowUpset && homeWin >= awayWin && homeScore <= awayScore) {
-            if (homeScore < 20 && homeScore + awayScore < 30) homeScore = awayScore + 1;
-            else awayScore = Math.max(0, homeScore - 1);
-        } else if (!allowUpset && awayWin > homeWin && awayScore <= homeScore) {
-            if (awayScore < 20 && homeScore + awayScore < 30) awayScore = homeScore + 1;
-            else homeScore = Math.max(0, awayScore - 1);
-        }
         while (awayScore + homeScore > 30) {
-            if (homeWin >= awayWin && awayScore > 0) awayScore -= 1;
-            else if (awayWin > homeWin && homeScore > 0) homeScore -= 1;
+            if (awayScore >= homeScore && awayScore > 0) awayScore -= 1;
+            else if (homeScore > 0) homeScore -= 1;
             else break;
         }
         var awayInnings = distributeRuns(awayScore, awayRuns, random, false);
@@ -732,7 +765,7 @@
         var awayLine = { team: away, innings: awayInnings, runs: awayScore, hits: awayHits, errors: awayErrors, starter: awayPitcher };
         var homeLine = { team: home, innings: homeInnings, runs: homeScore, hits: homeHits, errors: homeErrors, starter: homePitcher };
         return {
-            seed: seed,
+            runId: String(Date.now()) + '-' + Math.floor(random() * 1000000),
             away: awayLine,
             home: homeLine,
             winner: winner,
@@ -906,15 +939,12 @@
             if (!name) return;
             players.push({
                 name: name,
-                position: athlete.position && (athlete.position.abbreviation || athlete.position.displayName) || item.position && (item.position.abbreviation || item.position.displayName || item.position.name) || item.groupPosition || ''
+                position: athlete.position && (athlete.position.abbreviation || athlete.position.displayName) || item.position && item.position.abbreviation || ''
             });
         }
         (entry.roster || []).forEach(add);
         (entry.athletes || []).forEach(add);
-        (entry.groups || []).forEach(function (group) { (group.athletes || group.roster || group.items || []).forEach(function (item) {
-            if (item && !item.groupPosition) item.groupPosition = group.position || '';
-            add(item);
-        }); });
+        (entry.groups || []).forEach(function (group) { (group.athletes || group.roster || []).forEach(add); });
         var seen = {};
         return players.filter(function (player) {
             var key = normalizeName(player.name);
@@ -923,35 +953,13 @@
             return true;
         });
     }
-    function teamRosterFromPayload(team, payload) {
-        if (!team || !payload) return null;
-        var players = collectRosterPlayers({ groups: payload.athletes || payload.rosters || payload.groups || [] });
-        if (!players.length) players = collectRosterPlayers(payload);
-        if (!players.length) return null;
-        var relievers = players.filter(function (player) { return /RP|Relief/i.test(player.position); }).length;
-        return { count: players.length, relievers: relievers, players: players, teamName: team.name, source: 'ESPN team roster', summary: players.length + ' roster players' + (relievers ? ', ' + relievers + ' RP' : '') };
-    }
-    function rosterContextForTeam(team) {
-        if (!team || team.era !== 'current') return null;
-        var rosters = state.liveContext && state.liveContext.teamRosters || {};
-        return rosters[team.abbreviation] || null;
-    }
-    function mergeRosterContext(summaryContextValue, away, home) {
-        var merged = summaryContextValue || {};
-        var rosters = Object.assign({}, merged.rosters || {});
-        rosters.away = rosters.away || rosterContextForTeam(away);
-        rosters.home = rosters.home || rosterContextForTeam(home);
-        if (rosters.away || rosters.home) merged.rosters = rosters;
-        if (!merged.injuries && !merged.rosters) return null;
-        return merged;
-    }
     function teamRosterContext(summary, team) {
         var groups = Array.isArray(summary && summary.rosters) ? summary.rosters : [];
         var group = groups.filter(function (entry) { return entry && entry.team && normalizeName(entry.team.displayName) === normalizeName(team.name); })[0];
         var players = group ? collectRosterPlayers(group) : [];
         if (!players.length) return null;
         var relievers = players.filter(function (player) { return /RP|Relief/i.test(player.position); }).length;
-        return { count: players.length, relievers: relievers, players: players, teamName: team.name, source: 'ESPN game summary roster', summary: players.length + ' roster players' + (relievers ? ', ' + relievers + ' RP' : '') };
+        return { count: players.length, relievers: relievers, players: players, summary: players.length + ' roster players' + (relievers ? ', ' + relievers + ' RP' : '') };
     }
     function summaryContext(summary, away, home) {
         if (!summary) return null;
@@ -1010,7 +1018,7 @@
         var boardGame = (state.liveContext.boardGames || []).filter(function (game) { return teamsMatch(game, away, home); })[0] || null;
         var recentForm = buildRecentForm(away, home);
         var summary = summaryForEvent(espnGame && espnGame.id);
-        var extraContext = mergeRosterContext(summaryContext(summary, away, home), away, home);
+        var extraContext = summaryContext(summary, away, home);
         if (!espnGame && !scheduleGame && !boardGame && !recentForm && !extraContext) return null;
         var odds = boardGame ? marketOddsFor(boardGame, away, home) : null;
         return { espnGame: espnGame, scheduleGame: scheduleGame, boardGame: boardGame, odds: odds, recentForm: recentForm, summary: summary, extraContext: extraContext };
@@ -1137,7 +1145,7 @@
                 detail: recentAvailable ? 'Last ' + recentForm.away.games + ': ' + recentForm.away.summary + ' / Last ' + recentForm.home.games + ': ' + recentForm.home.summary : 'No verified recent final-score sample matched both teams.',
                 verified: recentAvailable
             },
-            { key: 'rosterContext', label: 'Roster context', status: rosterAvailable ? 'Available from ESPN roster payload' : 'Unavailable', detail: rosterAvailable ? (extra.rosters.away.teamName || espnGame && espnGame.awayTeam || 'Away') + ': ' + extra.rosters.away.summary + ' / ' + (extra.rosters.home.teamName || espnGame && espnGame.homeTeam || 'Home') + ': ' + extra.rosters.home.summary : 'No verified player roster list is connected for this matchup.', verified: rosterAvailable },
+            { key: 'rosterContext', label: 'Roster context', status: rosterAvailable ? 'Available from ESPN roster payload' : 'Unavailable', detail: rosterAvailable ? espnGame.awayTeam + ': ' + extra.rosters.away.summary + ' / ' + espnGame.homeTeam + ': ' + extra.rosters.home.summary : 'No verified player roster list is connected for this matchup.', verified: rosterAvailable },
             { key: 'bullpenContext', label: 'Bullpen context', status: bullpenAvailable ? 'Bullpen injury/depth context available' : 'Unavailable', detail: bullpenAvailable ? 'Derived from ESPN roster/injury context only; workload and availability are not connected.' : 'No verified bullpen depth, workload, or availability feed is connected.', verified: bullpenAvailable }
         ];
     }
@@ -1254,12 +1262,11 @@
         var volatility = clamp((away.volatility + home.volatility) / 2, 0.92, 1.16);
         var spread = round1(1.1 * volatility);
         var totalRuns = awayRuns + homeRuns;
-        var rosterContext = context && context.extraContext && context.extraContext.rosters ? context.extraContext.rosters : null;
+        var rosterContext = rostersForTeams(away, home, context);
         var boxScore = buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext);
         var projectedAwayScore = boxScore.away.runs;
         var projectedHomeScore = boxScore.home.runs;
-        winner = boxScore.winner;
-        winnerPct = winner.id === home.id ? homeWin : awayWin;
+        var finalWinner = boxScore.winner;
         var reasonParts = [];
         reasonParts.push(winner.name + ' projects ahead because the run expectation and composite team rating lean their way.');
         if (Math.abs(away.offense - home.offense) >= 4) reasonParts.push(edgeLabel('offense', away, home) + ' on offense.');
@@ -1278,6 +1285,7 @@
             homeRuns: round1(homeRuns),
             projectedAwayScore: projectedAwayScore,
             projectedHomeScore: projectedHomeScore,
+            finalWinner: finalWinner,
             boxScore: boxScore,
             awayRange: [round1(Math.max(0.5, awayRuns - spread)), round1(awayRuns + spread)],
             homeRange: [round1(Math.max(0.5, homeRuns - spread)), round1(homeRuns + spread)],
@@ -1508,12 +1516,13 @@
         }).join('');
     }
     function playerTeamBox(team, players) {
-        var rosterNames = players.identitySource === 'verified-roster';
-        var sourceText = rosterNames ?
-            'Player names are from the connected verified roster payload; stat lines remain simulation-modeled.' :
-            'No verified roster names are connected for this matchup, so these are neutral modeled lineup and pitching slots.';
-        return '<section class="player-team-box"><h4>' + escapeHtml(team.name) + (rosterNames ? ' Roster-Name Simulation Lines' : ' Simulation Slot Lines') + '</h4>' +
-            '<p class="player-source-note">' + escapeHtml(sourceText) + '</p>' +
+        var source = players && players.rosterSource ? players.rosterSource : 'Roster unavailable: player lines hidden';
+        var hasBatters = players && players.batters && players.batters.length;
+        var hasPitchers = players && players.pitchers && players.pitchers.length;
+        if (!hasBatters || !hasPitchers) {
+            return '<section class="player-team-box"><h4>' + escapeHtml(team.name) + ' Box Score Lines</h4><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p><div class="sim-empty">Verified roster names are unavailable for this team, so player stat rows are hidden instead of filled with placeholders.</div></section>';
+        }
+        return '<section class="player-team-box"><h4>' + escapeHtml(team.name) + ' Box Score Lines</h4><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
             '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>SO</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div>' +
             '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>HR</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers) + '</tbody></table></div></section>';
     }
@@ -1523,7 +1532,7 @@
         if (!panel || !content) return;
         if (!result || !result.boxScore || !result.boxScore.players) {
             panel.setAttribute('data-player-box-state', 'empty');
-            content.innerHTML = '<div class="sim-empty">Run a simulation to generate modeled batter and pitcher lines.</div>';
+            content.innerHTML = '<div class="sim-empty">Run a simulation to generate batter and pitcher simulation lines.</div>';
             return;
         }
         panel.setAttribute('data-player-box-state', 'projected');
@@ -1538,7 +1547,7 @@
         lines.push('Generated: ' + generatedAt);
         lines.push(result.away.name + ' at ' + result.home.name);
         lines.push('Mode: ' + result.simulationMode + ' / Data: ' + result.dataMode);
-        lines.push('Projected final: ' + result.away.name + ' ' + box.away.runs + ', ' + result.home.name + ' ' + box.home.runs);
+        lines.push('Simulated final: ' + result.away.name + ' ' + box.away.runs + ', ' + result.home.name + ' ' + box.home.runs);
         lines.push('Win probability: ' + result.away.name + ' ' + roundPct(result.awayWin) + ' / ' + result.home.name + ' ' + roundPct(result.homeWin));
         lines.push('Expected runs: ' + result.away.name + ' ' + result.awayRuns + ' / ' + result.home.name + ' ' + result.homeRuns);
         lines.push('Starting Pitchers: ' + result.away.name + ': ' + result.awayPitcher.name + ' | ' + result.home.name + ': ' + result.homePitcher.name);
@@ -1554,13 +1563,12 @@
         lines.push('Key performers: ' + box.keyPerformers.join(' / '));
         if (box.players) {
             lines.push('');
-            lines.push('Player Simulation Lines');
+            lines.push('Player Box Score');
             [
                 [result.away.name, box.players.away],
                 [result.home.name, box.players.home]
             ].forEach(function (group) {
-                lines.push(group[0] + ' identity source: ' + (group[1].identitySource === 'verified-roster' ? 'verified roster names; stat lines are simulation-modeled' : 'modeled simulation slots; no verified roster names connected'));
-                lines.push(group[0] + ' batters');
+                lines.push(group[0] + ' batters - ' + (group[1].rosterSource || 'Roster unavailable: player lines hidden'));
                 lines.push('Batter, AB, R, H, RBI, BB, SO');
                 group[1].batters.forEach(function (row) {
                     lines.push([row.name, row.ab, row.r, row.h, row.rbi, row.bb, row.so].join(', '));
@@ -1800,20 +1808,25 @@
         var home = findTeamInPool(state.homeTeamId, state.homePool);
         if (!away || !home || away.id === home.id) {
             setText('projectionNotice', 'Select two different teams to run a simulation. No output was generated.');
-            return;
+            return Promise.resolve(null);
         }
         renderLoading(away, home);
         setLiveInputsForMatchup(away, home);
-        state.simulationCount = selectedSimulationCount();
-        var count = state.simulationCount;
-        var stamp = Date.now();
-        var results = [];
-        for (var i = 0; i < count; i += 1) {
-            results.push(simulate(away, home, state.activeLiveContext, count === 1 ? 'single-' + stamp : 'batch-' + stamp + '-' + i, count > 1));
-        }
-        state.aggregate = count > 1 ? buildAggregate(results, away, home) : null;
-        state.simulation = results[results.length - 1];
-        renderResult(state.simulation);
+        setText('projectionNotice', 'Loading verified ESPN roster names before rendering the player box score.');
+        return ensureRostersForTeams(away, home).then(function () {
+            setLiveInputsForMatchup(away, home);
+            state.simulationCount = selectedSimulationCount();
+            var count = state.simulationCount;
+            var stamp = Date.now();
+            var results = [];
+            for (var i = 0; i < count; i += 1) {
+                results.push(simulate(away, home, state.activeLiveContext, count === 1 ? 'single-' + stamp : 'batch-' + stamp + '-' + i, count > 1));
+            }
+            state.aggregate = count > 1 ? buildAggregate(results, away, home) : null;
+            state.simulation = results[results.length - 1];
+            renderResult(state.simulation);
+            return state.simulation;
+        });
     }
     function copyBoxScore() {
         if (!state.simulation) return;
@@ -1891,31 +1904,19 @@
                     return { id: event.id, summary: summary };
                 });
             });
-            var rosterRequests = LOCAL_TEAMS.current.map(fetchTeamRoster);
-            return Promise.all([
-                Promise.allSettled(summaryRequests),
-                Promise.allSettled(rosterRequests)
-            ]).then(function (settledGroups) {
-                var summaryResults = settledGroups[0];
-                var rosterResults = settledGroups[1];
+            return Promise.allSettled(summaryRequests).then(function (summaryResults) {
                 var summaries = {};
                 summaryResults.forEach(function (result) {
                     if (result.status === 'fulfilled' && result.value && result.value.id) summaries[result.value.id] = result.value.summary;
                 });
-                var teamRosters = {};
-                rosterResults.forEach(function (result) {
-                    if (result.status === 'fulfilled' && result.value && result.value.abbreviation && result.value.roster) {
-                        teamRosters[result.value.abbreviation] = result.value.roster;
-                    }
-                });
                 state.liveContext = {
-                    status: schedule.length || board.length || espnEvents.length || Object.keys(teamRosters).length ? 'available' : 'unavailable',
+                    status: schedule.length || board.length || espnEvents.length ? 'available' : 'unavailable',
                     loadedAt: new Date().toISOString(),
                     scheduleGames: schedule,
                     boardGames: board,
                     espnEvents: espnEvents,
                     espnSummaries: summaries,
-                    teamRosters: teamRosters,
+                    teamRosters: state.liveContext.teamRosters || {},
                     recentEvents: recentEvents,
                     error: null
                 };
