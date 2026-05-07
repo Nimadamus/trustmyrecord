@@ -403,7 +403,7 @@
             var isMoneyline = market === 'h2h'
                 || market === 'moneyline'
                 || /_h2h$/.test(market)
-                || /(ml|moneyline)/.test(selection);
+                || /\b(ml|moneyline)\b/.test(selection);
             if (isMoneyline) return '-';
             if (value == null || value === '') return '-';
             var n = Number(value);
@@ -418,12 +418,12 @@
                 || market === 'team_totals'
                 || market === 'team_total'
                 || market.indexOf('total') !== -1
-                || /(over|under)/.test(selection)
-                || /(over|under|teamover|teamunder|f5over|f5under)/.test(sideText);
+                || /\b(over|under)\b/.test(selection)
+                || /\b(over|under|teamover|teamunder|f5over|f5under)\b/.test(sideText);
             if (isTotal) {
                 var line = fmtBareLine(Math.abs(n));
-                var side = /under|teamunder|f5under/.test(selection + ' ' + sideText) ? 'U'
-                    : (/over|teamover|f5over/.test(selection + ' ' + sideText) ? 'O' : '');
+                var side = /\bunder\b|teamunder|f5under/.test(selection + ' ' + sideText) ? 'U'
+                    : (/\bover\b|teamover|f5over/.test(selection + ' ' + sideText) ? 'O' : '');
                 return side ? side + ' ' + line : line;
             }
             if (isSpread) return fmtLine(n);
