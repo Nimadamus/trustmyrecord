@@ -2482,20 +2482,12 @@
                 <table class="picks-table">
                     <thead>
                         <tr>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="date" onclick="setTableSort('date')">Date</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="date" onclick="setTableSort('date')">Date / Time</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="sport" onclick="setTableSort('sport')">Sport</button></th>
-                            <th>Game</th>
                             <th>Pick</th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="market" onclick="setTableSort('market')">Market</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="line" onclick="setTableSort('line')">Line</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="odds" onclick="setTableSort('odds')">Odds</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Units</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="odds" onclick="setTableSort('odds')">Line</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="result" onclick="setTableSort('result')">Result</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="net_units" onclick="setTableSort('net_units')">Net Units</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="closing_line" onclick="setTableSort('closing_line')">Closing Line</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="clv" onclick="setTableSort('clv')">CLV</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="book" onclick="setTableSort('book')">Book</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="status" onclick="setTableSort('status')">Status</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Units</button></th>
                         </tr>
                     </thead>
                     <tbody id="picksTableBody"></tbody>
@@ -5504,7 +5496,7 @@
     function formatPickDisplayValue(pick) {
         if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
             const formatted = window.TMR.formatPickDisplay(pick);
-            if (formatted && !/^(over|under)$/i.test(String(formatted).trim())) return formatted;
+            if (formatted && !/^(over|under)$/i.test(String(formatted).trim())) return normalizeProfilePickDescription(formatted, pick);
         }
         const selection = String(pick && pick.selection || 'Pick').trim();
         const line = formatLineValue(pick && pick.line_snapshot);
@@ -5532,9 +5524,24 @@
         if (line !== '--' && !/\b(over|under|ml)\b/i.test(selection) && selection.indexOf(line) === -1) {
             return selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + line;
         }
-        return selection || 'Pick';
+        return normalizeProfilePickDescription(selection, pick);
     }
 
+    
+    function normalizeProfilePickDescription(description, pick) {
+        const market = String(pick && pick.market_type || '').toLowerCase();
+        let text = String(description || 'Pick').replace(/\s+/g, ' ').trim();
+        if (market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h')) {
+            text = text.replace(/\s+ML$/i, ' Moneyline');
+            if (!/\bmoneyline\b/i.test(text)) text += ' Moneyline';
+        }
+        if (market === 'team_totals' || market === 'team_total') {
+            text = text.replace(/\b(Team\s+Total\s+)?(Over|Under)\s+\+(\d+(?:\.\d+)?)\b/i, function(_, prefix, side, number) {
+                return (prefix || '') + side + ' ' + number;
+            });
+        }
+        return text;
+    }
     function formatUnitsValue(value) {
         if (value == null || value === '' || isNaN(Number(value))) return '--';
         return Number(value).toFixed(Number(value) % 1 === 0 ? 0 : 2) + 'u';
@@ -8334,44 +8341,17 @@
         const sport = fmtSport(p.sport_key);
         const sc = sport.toLowerCase().replace(/\s/g, '');
         const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
-        const line = formatPickLineValue(p);
         const sel = formatPickDisplayValue(p);
-        const matchup = (p.away_team && p.home_team) ? p.away_team + ' @ ' + p.home_team : (p.event_name || '--');
-        const units = formatUnitsValue(p.units);
         const status = normalizeStatus(p.status);
-        const market = marketTypeLabel(p.market_type);
-        const closingLine = getClosingLineValue(p);
-        const clvValue = calculatePickClv(p);
-        const book = deriveBookName(p);
-
-        let pl = '', plc = 'zero';
-        if (status === 'won' || status === 'lost') {
-            const v = pickPL(p);
-            pl = formatSignedUnits(v);
-            plc = v > 0 ? 'positive' : v < 0 ? 'negative' : 'zero';
-        } else if (status === 'push') { pl = '+0.00u'; }
-        else { pl = '--'; }
-
-        const r = rtMap.get(p.id || (p.game_id + '|' + p.selection));
-        const rd = r != null ? formatSignedUnits(r) : '--';
-        const clvClass = clvValue > 0 ? 'positive' : clvValue < 0 ? 'negative' : 'zero';
 
         const rowClass = 'row-' + status;
         return '<tr class="' + rowClass + '">' +
-            '<td data-label="Date"><div>' + dateStr + '</div><div class="ledger-muted">' + timeStr + '</div></td>' +
+            '<td data-label="Date / Time"><div>' + dateStr + '</div><div class="ledger-muted">' + timeStr + '</div></td>' +
             '<td data-label="Sport"><span class="pick-sport ' + sc + '">' + sport + '</span></td>' +
-            '<td data-label="Game" class="col-game"><div class="ledger-pick-title">' + matchup + '</div><div class="ledger-game-meta">' + (p.event_name || 'Tracked pick') + '</div></td>' +
-            '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div><div class="ledger-pick-meta">' + (p.notes || '') + '</div></td>' +
-            '<td data-label="Market"><span class="ledger-type">' + market + '</span></td>' +
-            '<td data-label="Line">' + line + '</td>' +
-            '<td data-label="Odds">' + odds + '</td>' +
-            '<td data-label="Units">' + units + '</td>' +
+            '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div></td>' +
+            '<td data-label="Line">' + odds + '</td>' +
             '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
-            '<td data-label="Net Units" class="profit-cell ' + plc + '">' + pl + '<div class="ledger-subline">' + rd + '</div></td>' +
-            '<td data-label="Closing Line" class="ledger-closing">' + formatLineValue(closingLine) + '</td>' +
-            '<td data-label="CLV" class="profit-cell ' + clvClass + '">' + formatClvValue(clvValue) + '</td>' +
-            '<td data-label="Book">' + book + '</td>' +
-            '<td data-label="Status"><span class="ledger-status">' + (status === 'pending' ? 'Open' : 'Final') + '</span></td>' +
+            '<td data-label="Units">' + formatUnitsValue(p.units) + '</td>' +
             '</tr>';
     }
 
@@ -12074,6 +12054,61 @@
   body.profile-page .breakdown-winrate,
   body.profile-page .profile-rail-value {
     white-space: nowrap;
+  }
+</style>
+<style id="profile-picks-six-column-fit">
+  body.profile-page.tmr-social-profile #picksTableWrapper {
+    overflow-x: hidden !important;
+  }
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    font-size: 15px !important;
+  }
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table thead th {
+    padding: 14px 14px !important;
+    font-size: 11px !important;
+    letter-spacing: .09em !important;
+  }
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table tbody td {
+    padding: 15px 14px !important;
+    font-size: 14px !important;
+    line-height: 1.42 !important;
+    vertical-align: middle !important;
+  }
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table th:nth-child(1),
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table td:nth-child(1) { width: 14% !important; }
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table th:nth-child(2),
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table td:nth-child(2) { width: 11% !important; }
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table th:nth-child(3),
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table td:nth-child(3) { width: 45% !important; }
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table th:nth-child(4),
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table td:nth-child(4) { width: 10% !important; }
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table th:nth-child(5),
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table td:nth-child(5) { width: 10% !important; }
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table th:nth-child(6),
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table td:nth-child(6) { width: 10% !important; }
+  body.profile-page.tmr-social-profile #picksTableWrapper .picks-table td.col-pick {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+  body.profile-page.tmr-social-profile #picksTableWrapper .ledger-pick-title {
+    font-size: 14.5px !important;
+    line-height: 1.34 !important;
+  }
+  body.profile-page.tmr-social-profile #picksTableWrapper .result-badge.pending,
+  body.profile-page.tmr-social-profile #picksTableWrapper .result-badge.push,
+  body.profile-page.tmr-social-profile #picksTableWrapper .result-badge.void,
+  body.profile-page.tmr-social-profile #picksTableWrapper .result-badge.cancelled {
+    background: rgba(148, 163, 184, 0.16) !important;
+    color: #cbd5e1 !important;
+    border-color: rgba(148, 163, 184, 0.32) !important;
+  }
+  @media (max-width: 760px) {
+    body.profile-page.tmr-social-profile #picksTableWrapper {
+      overflow-x: auto !important;
+    }
   }
 </style>
 </body>
