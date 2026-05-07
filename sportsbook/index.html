@@ -11072,24 +11072,11 @@ window.toggleSportFamily = function (family) {
                         '</div>';
             } else {
                 rendered++;
-                // Two stacked rows per game (away on top, home on bottom).
                 var awayOver = split.away.over || {};
                 var awayUnder = split.away.under || {};
                 var homeOver = split.home.over || {};
                 var homeUnder = split.home.under || {};
-                var awayBookLabel = (awayOver.book || awayUnder.book || '').toString();
-                var homeBookLabel = (homeOver.book || homeUnder.book || '').toString();
                 html +=
-                    '<div class="sb-board-col" data-col="team">' +
-                        '<div class="sb-tt-team-stack">' +
-                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.away_team) + '</b>' +
-                                (awayBookLabel ? '<small>' + _ttHtmlEsc(awayBookLabel) + '</small>' : '') +
-                            '</div>' +
-                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.home_team) + '</b>' +
-                                (homeBookLabel ? '<small>' + _ttHtmlEsc(homeBookLabel) + '</small>' : '') +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
                     '<div class="sb-board-col" data-col="tt-over">' +
                         '<div class="sb-odds-stack">' +
                             _ttButton(idx, 'over', game.away_team, awayOver.line, awayOver.odds, game.away_team, game.home_team) +
@@ -28186,7 +28173,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     </style>
     <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430pickslipexp1">
-    <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=20260430hidedup1">
+    <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=20260506boardclean1">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260505nocommandfinal">
     <style id="tmr-redesign-tail-guard">
