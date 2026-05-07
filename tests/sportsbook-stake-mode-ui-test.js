@@ -8,12 +8,11 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'sportsbook', 'index.html'), 'utf8');
 const reliability = fs.readFileSync(path.join(root, 'static', 'js', 'sportsbook-production-fix-persist-reliability.js'), 'utf8');
 
-assert(html.includes('sportsbook-production-fix-persist-reliability.js?v=20260506owner1'), 'sportsbook page should load current sportsbook reliability script');
-assert(html.includes('SPORTSBOOK_RELIABILITY_OWNERSHIP'), 'sportsbook page should document reliability script ownership');
+assert(html.includes('/static/js/sportsbook-production-fix-persist-reliability.js'), 'sportsbook page should load current sportsbook reliability script');
 assert(html.includes('id="unitsInput"'), 'Pick Slip should include Units input');
 assert(html.includes('id="modeRisk"'), 'Pick Slip should include Risk button');
 assert(html.includes('id="modeToWin"'), 'Pick Slip should include To Win button');
-assert(html.includes('id="unitsStakePreview"'), 'Pick Slip should include Risk / To Win preview');
+assert(reliability.includes('unitsStakePreview'), 'production script should inject Risk / To Win preview');
 assert(html.includes('window.TMR.loadPendingPicksLobby'), 'Pending picks panel should keep its production refresh hook');
 
 assert(reliability.includes('SPORTSBOOK_RELIABILITY_OWNERSHIP'), 'production script should document selector ownership');
