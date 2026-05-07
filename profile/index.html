@@ -5539,6 +5539,8 @@
             text = text.replace(/\b(Team\s+Total\s+)?(Over|Under)\s+\+(\d+(?:\.\d+)?)\b/i, function(_, prefix, side, number) {
                 return (prefix || '') + side + ' ' + number;
             });
+        } else if (market.indexOf('total') !== -1) {
+            text = text.replace(/\s+@\s+/g, ' / ');
         }
         return text;
     }
