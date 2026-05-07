@@ -380,12 +380,54 @@
             if (!Number.isFinite(n)) return '-';
             return n > 0 ? '+' + n : String(n);
         }
-        function fmtLine(value) {
+        // PENDING_PICK_LINE_FORMAT_FIX_20260507: only spread-style markets get signed positive lines.
+        function fmtBareLine(value) {
             if (value == null || value === '') return '-';
             var n = Number(value);
-            if (!Number.isFinite(n)) return String(value);
-            if (n === 0) return '0';
-            return n > 0 ? '+' + n : String(n);
+            if (!Number.isFinite(n)) return String(value).trim();
+            var text = String(n);
+            return text.indexOf('.') !== -1 ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
+        }
+        function fmtLine(value) {
+            var text = fmtBareLine(value);
+            if (text === '-') return '-';
+            var n = Number(value);
+            return Number.isFinite(n) && n > 0 ? '+' + text : text;
+        }
+        function fmtPickLine(pick) {
+            pick = pick || {};
+            var market = String(pick.market_type || pick.market || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
+            var selection = String(pick.selection_label || pick.selection || pick.pick || pick.side || '').toLowerCase();
+            var sideText = String(pick.side || pick.total_side || pick.bet_side || pick.type || pick.bet_type || pick.betType || '').toLowerCase();
+            var value = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
+            var isMoneyline = market === 'h2h'
+                || market === 'moneyline'
+                || /_h2h$/.test(market)
+                || /(ml|moneyline)/.test(selection);
+            if (isMoneyline) return '-';
+            if (value == null || value === '') return '-';
+            var n = Number(value);
+            if (!Number.isFinite(n)) return String(value).trim();
+            var isSpread = market === 'spreads'
+                || market === 'spread'
+                || market.indexOf('spread') !== -1
+                || market.indexOf('run_line') !== -1
+                || market.indexOf('puck_line') !== -1;
+            var isTotal = market === 'totals'
+                || market === 'total'
+                || market === 'team_totals'
+                || market === 'team_total'
+                || market.indexOf('total') !== -1
+                || /(over|under)/.test(selection)
+                || /(over|under|teamover|teamunder|f5over|f5under)/.test(sideText);
+            if (isTotal) {
+                var line = fmtBareLine(Math.abs(n));
+                var side = /under|teamunder|f5under/.test(selection + ' ' + sideText) ? 'U'
+                    : (/over|teamover|f5over/.test(selection + ' ' + sideText) ? 'O' : '');
+                return side ? side + ' ' + line : line;
+            }
+            if (isSpread) return fmtLine(n);
+            return fmtBareLine(n);
         }
         function fmtUnits(value) {
             var n = Number(value);
@@ -429,7 +471,7 @@
                 + '<td>' + esc(fmtDate(pick.commence_time)) + '<span class="pick-sub">' + esc(matchup(pick)) + '</span></td>'
                 + '<td><span class="league-chip">' + esc(sportLabel(pick.sport_key)) + '</span></td>'
                 + '<td><span class="pick-main">' + esc(pickLabel) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span></td>'
-                + '<td>' + esc(fmtLine(pick.line_snapshot)) + '</td>'
+                + '<td>' + esc(fmtPickLine(pick)) + '</td>'
                 + '<td>' + esc(fmtOdds(pick.odds_snapshot)) + '</td>'
                 + '<td>' + esc(fmtUnits(pick.units)) + '</td>'
                 + '<td>' + esc(fmtDate(pick.locked_at || pick.created_at)) + '</td>'
@@ -444,7 +486,7 @@
                 + cardRow('Date of Game', esc(fmtDate(pick.commence_time)) + '<span class="pick-sub">' + esc(matchup(pick)) + '</span>')
                 + cardRow('League', '<span class="league-chip">' + esc(sportLabel(pick.sport_key)) + '</span>')
                 + cardRow('Pick', '<span class="pick-main">' + esc(pickText(pick)) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span>')
-                + cardRow('Line', esc(fmtLine(pick.line_snapshot)))
+                + cardRow('Line', esc(fmtPickLine(pick)))
                 + cardRow('Odds', esc(fmtOdds(pick.odds_snapshot)))
                 + cardRow('Units', esc(fmtUnits(pick.units)))
                 + cardRow('Time Submitted', esc(fmtDate(pick.locked_at || pick.created_at)))
