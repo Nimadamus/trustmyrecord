@@ -441,10 +441,10 @@
             var isTeamTotal = market === 'team_totals' || market === 'team_total';
             var isTotal = isTeamTotal || market === 'totals' || market === 'total' || /_totals$/.test(market) || market.indexOf('total') !== -1;
             var isSpread = market === 'spreads' || market === 'spread' || market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1;
-            var linePattern = line !== '-' ? line.replace(/[.*+?^${}()|[\]\]/g, '\$&') : '';
             var cleaned = selection;
-            if (linePattern) {
-                cleaned = cleaned.replace(new RegExp('\s+[+-]?' + linePattern + '$', 'i'), '').trim();
+            if (line !== '-') {
+                var escapedLine = line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                cleaned = cleaned.replace(new RegExp('\\s+[+-]?' + escapedLine + '$', 'i'), '').trim();
             }
             if (isMoneyline) {
                 return /\bML\b$/i.test(selection) ? selection : selection.replace(/\s+moneyline$/i, '') + ' ML';
@@ -464,7 +464,7 @@
                 return line !== '-' ? 'Full Game Total ' + line : (selection || 'Full Game Total');
             }
             if (isSpread && line !== '-') {
-                if (new RegExp('(?:^|\s)' + linePattern + '$').test(selection)) return selection;
+                if (selection.indexOf(line) !== -1) return selection;
                 return cleaned + ' ' + line;
             }
             return selection || 'Pick';
