@@ -1621,6 +1621,11 @@
                 <label class="profile-avatar-uploader__btn" for="profileAvatarFile"><i class="fas fa-camera"></i> Change avatar</label>
                 <input id="profileAvatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
                 <span class="profile-avatar-uploader__hint" id="profileAvatarHint" aria-live="polite"></span>
+                <label class="profile-pending-share-toggle" for="profilePendingShareToggle">
+                    <input id="profilePendingShareToggle" type="checkbox">
+                    <span>Allow pending pick sharing</span>
+                </label>
+                <span class="profile-pending-share-status" id="profilePendingShareStatus" aria-live="polite"></span>
             </div>
         </div>
     </section>
@@ -1715,6 +1720,13 @@
         .profile-avatar-uploader__btn{cursor:pointer;padding:8px 14px;border-radius:8px;background:rgba(0,255,255,0.10);border:1px solid rgba(0,255,255,0.32);color:#00ffff;font:700 12px/1 'Inter',sans-serif;letter-spacing:.04em;text-transform:uppercase;}
         .profile-avatar-uploader__btn:hover{background:rgba(0,255,255,0.18);}
         .profile-avatar-uploader__hint{color:#64748b;font-size:11.5px;}
+        .profile-pending-share-toggle{display:inline-flex;align-items:center;gap:8px;margin-left:auto;padding:8px 12px;border-radius:8px;border:1px solid rgba(148,163,184,0.18);background:rgba(2,6,23,0.34);color:#e2e8f0;font:800 12px/1.2 'Inter',sans-serif;letter-spacing:.02em;cursor:pointer;}
+        .profile-pending-share-toggle input{width:16px;height:16px;accent-color:#2dd4bf;cursor:pointer;}
+        .profile-pending-share-status{min-width:86px;color:#64748b;font-size:11.5px;font-weight:700;}
+        @media(max-width:720px){
+            .profile-pending-share-toggle{width:100%;margin-left:0;justify-content:flex-start;}
+            .profile-pending-share-status{width:100%;}
+        }
 
         .profile-advanced-strip-section{padding:18px 0 0;background:transparent;}
         .profile-advanced-strip-section .container{width:min(100% - 44px,1260px);max-width:1260px;margin:0 auto;padding:0;}
@@ -1786,8 +1798,47 @@
             var msgEl       = document.getElementById('profileSetupMsg');
             var fileInput   = document.getElementById('profileAvatarFile');
             var avatarHint  = document.getElementById('profileAvatarHint');
+            var pendingToggle = document.getElementById('profilePendingShareToggle');
+            var pendingStatus = document.getElementById('profilePendingShareStatus');
 
             if (uploaderEl) uploaderEl.hidden = false;
+
+            function setPendingShareStatus(text, kind) {
+                if (!pendingStatus) return;
+                pendingStatus.textContent = text || '';
+                pendingStatus.style.color = kind === 'error' ? '#ffd0d6' : kind === 'success' ? '#bef0ce' : '#94a3b8';
+            }
+
+            if (pendingToggle) {
+                pendingToggle.checked = !!p.public_pending_picks_enabled;
+                setPendingShareStatus(pendingToggle.checked ? 'Sharing on' : 'Private');
+                pendingToggle.addEventListener('change', async function() {
+                    var nextEnabled = !!pendingToggle.checked;
+                    pendingToggle.disabled = true;
+                    setPendingShareStatus('Saving...');
+                    try {
+                        if (!window.api || typeof window.api.updateProfile !== 'function') {
+                            throw new Error('Profile save service unavailable.');
+                        }
+                        var result = await window.api.updateProfile({ public_pending_picks_enabled: nextEnabled });
+                        var nextUser = result && result.user ? result.user : {};
+                        window.profileData.public_pending_picks_enabled = !!nextUser.public_pending_picks_enabled;
+                        profileData.public_pending_picks_enabled = window.profileData.public_pending_picks_enabled;
+                        if (window.currentUser) window.currentUser.public_pending_picks_enabled = window.profileData.public_pending_picks_enabled;
+                        pendingToggle.checked = window.profileData.public_pending_picks_enabled;
+                        setPendingShareStatus(pendingToggle.checked ? 'Sharing on' : 'Private', 'success');
+                        if (typeof showToast === 'function') {
+                            showToast(pendingToggle.checked ? 'Pending pick sharing enabled.' : 'Pending pick sharing disabled.', 'success');
+                        }
+                    } catch (err) {
+                        pendingToggle.checked = !nextEnabled;
+                        setPendingShareStatus(err && err.message ? err.message : 'Save failed.', 'error');
+                        if (typeof showToast === 'function') showToast('Could not update pending pick sharing.', 'error');
+                    } finally {
+                        pendingToggle.disabled = false;
+                    }
+                });
+            }
 
             // Make the avatar in the profile header clickable so the file
             // picker is one tap away — owners no longer need to scroll to the
@@ -5522,20 +5573,9 @@
         return s;
     }
 
-    function formatPickLineValue(pick) {
-        const value = pick && pick.line_snapshot;
-        if (value == null || value === '' || isNaN(Number(value))) return '--';
-        const selection = String(pick && pick.selection || '').toLowerCase();
-        const market = String(pick && pick.market_type || '').toLowerCase();
-        const isTotal = market.indexOf('total') !== -1 || /(over|under)/.test(selection);
-        const isMoneyline = market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h') || /(moneyline|ml)/.test(selection);
-        if (isMoneyline) return '--';
-        return isTotal ? formatTotalLineValue(value) : formatLineValue(value);
-    }
-
     function formatPickDisplayValue(pick) {
         const selection = String(pick && pick.selection || 'Pick').trim();
-        const line = formatPickLineValue(pick);
+        const line = formatLineValue(pick && pick.line_snapshot);
         const market = String(pick && pick.market_type || '').toLowerCase();
         const home = String(pick && pick.home_team || '').trim();
         const away = String(pick && pick.away_team || '').trim();
@@ -10024,6 +10064,7 @@
         const sources = [profileData];
         if (isOwnProfile && currentUser) sources.push(currentUser);
         const shareEnabled = tmrBooleanFieldEnabled(sources, [
+            'public_pending_picks_enabled',
             'pending_picks_sharing_enabled',
             'pending_pick_sharing_enabled',
             'pending_sharing_enabled',
@@ -10036,6 +10077,7 @@
             'expose_pending_picks'
         ]);
         const embedEnabled = tmrBooleanFieldEnabled(sources, [
+            'public_pending_picks_enabled',
             'pending_picks_embedding_enabled',
             'pending_pick_embedding_enabled',
             'pending_embedding_enabled',
