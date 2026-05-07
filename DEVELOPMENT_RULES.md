@@ -67,3 +67,67 @@ Known examples that require caution include:
 - `approved-design-previews/sportsbook-preview-dk.html`
 
 These files may be useful as references, but they are not production source of truth.
+
+## Sportsbook Regression Risk Files
+
+Future agents must inspect the current production files first. Do not copy from the files below into production sportsbook work without explicit user approval. If a listed file contains a useful visual idea or implementation detail, manually patch the current production file forward with only the needed change.
+
+### Production protected
+
+These files are active production source or protected runtime/style files. Patch them carefully and only when the task requires it.
+
+- `sportsbook/index.html` - production sportsbook page and current source of truth.
+- `static/js/sportsbook-production-fix-persist-reliability.js` - protected sportsbook runtime for logo rows, pick selection, pick slip, and stake mode.
+- `static/css/sportsbook-pro.css` - production sportsbook styling.
+- `static/css/tmr-redesign-overrides-sportsbook.css` - production sportsbook override styling.
+- `sportsbook.html` - legacy redirect stub to `/sportsbook/`; keep as a redirect, never use as page source.
+- `pick/index.html` - legacy redirect stub to `/sportsbook/`; keep as a redirect, never use as page source.
+- `picks/index.html` - separate production picks/SEO page; do not confuse with the sportsbook app.
+
+### Reference only
+
+These files are visual references or proof artifacts. They are not production source.
+
+- `_design-source/sportsbook-preview-dk.html`
+- `approved-design-previews/sportsbook-preview-dk.html`
+- `sportsbook-live-layout-proof.png`
+- `sportsbook-live-logo-layout-proof.png`
+- `sportsbook-live-polish-proof.png`
+- `sportsbook-live-source-proof.json`
+- `sportsbook-live-stability-proof-current.png`
+
+### Test only
+
+These files are for regression checks or isolated test routes. Do not use them as live sportsbook source.
+
+- `sportsbook-test/index.html`
+- `tests/sportsbook-header-regression-test.js`
+- `tests/sportsbook-reliability-guard-test.js`
+- `tests/sportsbook-stake-mode-ui-test.js`
+
+### Quarantine candidate
+
+These files look like old previews, obsolete runtime variants, or staged copies that could cause regressions if copied back into production. Do not delete them without explicit approval, but do not use them as source for production fixes.
+
+- `sportsbook-new.html`
+- `static/js/tmr-redesign-test-sportsbook-logos.js`
+- `static/js/sportsbook-board-hotfix.js`
+- `static/js/sportsbook-production-fix.js`
+- `static/js/sportsbook-production-fix-persist.js`
+- `.codex-stage/**/sportsbook.html`
+- `.codex-stage/**/sportsbook-new.html`
+- `.codex-stage/**/static/js/sportsbook-*.js`
+- `.codex-stage/**/static/css/sportsbook*.css`
+
+### Temporary artifact
+
+These files are generated proof, API, or temporary working artifacts. They may be useful for audit history, but they are not production source and should never be copied into production code.
+
+- `sportsbook-live-microlink-json.json`
+- `sportsbook-live-polish-microlink.json`
+- `.tmp/sportsbook-blob.json`
+- `.tmp/sportsbook-commit.json`
+- `.tmp/sportsbook-payload.json`
+- `.tmp/sportsbook-ref.json`
+- `.tmp/sportsbook-test-payload.json`
+- `.tmp/sportsbook-tree.json`
