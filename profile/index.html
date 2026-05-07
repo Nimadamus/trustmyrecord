@@ -392,7 +392,7 @@
             box-shadow: 0 20px 46px rgba(4, 10, 18, 0.24);
         }
 
-        .picks-table { width: 100%; min-width: 1500px; border-collapse: collapse; font-size: 0.78rem; }
+        .picks-table { width: 100%; min-width: 0; table-layout: fixed; border-collapse: collapse; font-size: 0.78rem; }
 
         .picks-table thead {
             background: #09111c;
@@ -803,7 +803,7 @@
             .summary-stat:nth-last-child(-n + 2) { border-bottom: none; }
             .workspace-nav-head { align-items: flex-start; }
             .picks-table-wrapper { overflow-x: auto; }
-            .picks-table { min-width: 1280px; }
+            .picks-table { min-width: 0; }
             .stats-summary-table { min-width: 720px; }
             nav { display: none; }
             .analytics-grid { grid-template-columns: repeat(2, 1fr); }
@@ -10668,7 +10668,8 @@
         min-width: 1120px !important;
       }
       body.profile-page.tmr-social-profile .picks-table {
-        min-width: 1500px !important;
+        min-width: 0 !important;
+        table-layout: fixed !important;
       }
       .tmrx-ribbon {
         grid-template-columns: repeat(5, minmax(180px, 1fr)) !important;
