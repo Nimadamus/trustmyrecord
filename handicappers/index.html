@@ -750,9 +750,7 @@
                 </div>
                 <span class="hm-production-note">Showing <strong id="hmVisibleMembers">0</strong> filtered members</span>
             </div>
-            <div class="hm-featured" id="hmFeaturedLeaders">
-                <div class="hm-leader-card hm-leader-card--empty"><b>Loading</b><strong>--</strong><span>Waiting for qualified member data</span></div>
-            </div>
+            <div class="hm-featured" id="hmFeaturedLeaders" hidden></div>
         </section>
 
         <section class="hm-controls" aria-label="Search and filters">
@@ -1475,14 +1473,7 @@
                 ))[0] || null;
         }
 
-        function renderLeaderCard(label, member, formatter, metricGetter, emptyTitle, emptyMeta) {
-            if (!member) {
-                return '<div class="hm-leader-card hm-leader-card--empty">' +
-                    '<b>' + escapeHtml(label) + '</b>' +
-                    '<strong>' + escapeHtml(emptyTitle) + '</strong>' +
-                    '<span>' + escapeHtml(emptyMeta) + '</span>' +
-                '</div>';
-            }
+        function renderLeaderCard(label, member, formatter, metricGetter) {
             const metricValue = typeof metricGetter === 'function' ? metricGetter(member) : null;
             const metricClass = statClass(metricValue);
             return '<div class="hm-leader-card">' +
@@ -1521,15 +1512,16 @@
             const winRateLeader = qualifiedWinRateLeader(qualified);
             const mostVerified = bestBy(qualified, member => gradedCount(member) > 0, compareBy(gradedCount, member => Number(member.stats.units || 0)));
             const newestActive = bestBy(qualified, member => getActivityTime(member) > 0, getActivityTime);
-            const minLabel = 'Minimum ' + MIN_TOP_PERFORMER_GRADED_PICKS + ' graded picks, recent activity, and positive net units required.';
+            const leaderCards = [
+                unitsLeader && renderLeaderCard('Units Leader', unitsLeader, member => formatUnits(member.stats.units, true), member => member.stats.units),
+                roiLeader && renderLeaderCard('Best ROI', roiLeader, member => formatPercent(member.stats.roi, true), member => member.stats.roi),
+                winRateLeader && renderLeaderCard('Best Win Percentage', winRateLeader, member => formatPercent(member.stats.winRate, true), member => member.stats.winRate == null ? null : Number(member.stats.winRate) - 50),
+                mostVerified && renderLeaderCard('Most Verified Picks', mostVerified, member => gradedCount(member) + ' graded picks', () => null),
+                newestActive && renderLeaderCard('Newest Active Capper', newestActive, member => formatLastActive(member.stats.lastActivity || member.lastActive), () => null)
+            ].filter(Boolean);
 
-            els.featured.innerHTML = [
-                renderLeaderCard('Units Leader', unitsLeader, member => formatUnits(member.stats.units, true), member => member.stats.units, 'No positive units leader yet', minLabel),
-                renderLeaderCard('Best ROI', roiLeader, member => formatPercent(member.stats.roi, true), member => member.stats.roi, 'No positive ROI leader yet', minLabel),
-                renderLeaderCard('Best Win Percentage', winRateLeader, member => formatPercent(member.stats.winRate, true), member => member.stats.winRate == null ? null : Number(member.stats.winRate) - 50, 'Not enough graded picks yet', minLabel),
-                renderLeaderCard('Most Verified Picks', mostVerified, member => gradedCount(member) + ' graded picks', () => null, 'Not enough graded picks yet', minLabel),
-                renderLeaderCard('Newest Active Capper', newestActive, member => formatLastActive(member.stats.lastActivity || member.lastActive), () => null, 'No qualifying activity yet', minLabel)
-            ].join('');
+            els.featured.hidden = leaderCards.length === 0;
+            els.featured.innerHTML = leaderCards.join('');
         }
 
         function fillSports() {
