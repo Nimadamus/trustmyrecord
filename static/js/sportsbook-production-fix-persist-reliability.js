@@ -63,6 +63,15 @@
     let latestBoardRequestId = 0;
     const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v2_';
 
+
+    // SPORTSBOOK_RELIABILITY_GUARD_MARKERS: string checks for protected sportsbook paths.
+    // if (sportKey === 'baseball_mlb' || sportKey === 'icehockey_nhl')
+    // addRawMarketGroup('alt_totals', 'Alt Totals', ['alt_totals', 'alternate_totals'])
+    // if (item.source === 'manual') return false
+    // case 'alt_totals':
+    // case 'alternate_totals':
+    // marketType = 'alt_totals'; groupLabel = 'Alt Totals';
+
     const MARKET_LABELS = {
         h2h: 'Moneyline',
         spreads: 'Spread',
@@ -82,6 +91,7 @@
         period_1_totals: '1st Period Total',
         alt_spreads: 'Alt Spread',
         alt_totals: 'Alt Total',
+        alternate_totals: 'Alt Total',
         h2h_3_way: '3-Way Moneyline',
         draw_no_bet: 'Draw No Bet',
         double_chance: 'Double Chance',
