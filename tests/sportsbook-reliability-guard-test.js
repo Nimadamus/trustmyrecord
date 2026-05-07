@@ -18,39 +18,14 @@ assert(
   !html.includes('tmr-redesign-test-sportsbook-logos.js'),
   'sportsbook page must not rely on the old late DOM logo enhancer'
 );
-assert(html.includes('var LEGACY_TEAM_LOGOS'), 'legacy inline board path must have a team-name logo map');
-assert(html.includes('legacyTeamLogoUrl(fullName, resolvedSportKey)'), 'legacy inline board path must resolve missing feed logos by team name');
-assert(html.includes("Object.defineProperty(window.TMR, '_teamLogo'"), 'legacy inline logo renderer must be protected from later overrides');
-
-const helperStart = html.indexOf('var LEGACY_TEAM_LOGOS =');
-const helperEnd = html.indexOf('    window.TMR.renderMarketSubtabs', helperStart);
-assert(helperStart !== -1 && helperEnd !== -1, 'legacy logo helper block must be extractable');
-const helperContext = {
-  window: {
-    TMR: {
-      selectedSport: 'MLB',
-      sportKeyMap: {
-        MLB: 'baseball_mlb',
-        NBA: 'basketball_nba',
-        NHL: 'icehockey_nhl',
-        NFL: 'americanfootball_nfl'
-      }
-    }
-  }
-};
-vm.createContext(helperContext);
-vm.runInContext(html.slice(helperStart, helperEnd), helperContext);
-[
-  ['Los Angeles Dodgers', 'MLB', 'mlb/500/lad.png'],
-  ['Boston Celtics', 'NBA', 'nba/500/bos.png'],
-  ['New York Rangers', 'NHL', 'nhl/500/nyr.png'],
-  ['Dallas Cowboys', 'NFL', 'nfl/500/dal.png']
-].forEach(([teamName, sport, expectedPath]) => {
-  helperContext.window.TMR.selectedSport = sport;
-  const logoMarkup = helperContext.window.TMR._teamLogo('', '', teamName);
-  assert(logoMarkup.includes(expectedPath), `legacy logo helper must resolve ${teamName} without a supplied feed logo`);
-});
-
+assert(
+  !html.includes('var LEGACY_TEAM_LOGOS'),
+  'sportsbook page should use the protected reliability logo system instead of the removed inline legacy logo map'
+);
+assert(
+  html.includes('/static/js/sportsbook-production-fix-persist-reliability.js'),
+  'sportsbook page must load the protected sportsbook reliability logo system'
+);
 assert(reliability.includes('CANONICAL_TEAM_LOGOS'), 'canonical team logo map must exist');
 assert(reliability.includes('baseball_mlb'), 'canonical logo map must include MLB');
 assert(reliability.includes('icehockey_nhl'), 'canonical logo map must include NHL');
