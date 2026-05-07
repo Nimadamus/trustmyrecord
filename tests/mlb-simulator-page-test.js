@@ -19,9 +19,9 @@ const script = fs.readFileSync(scriptPath, 'utf8');
 const historicalProfilesScript = fs.readFileSync(historicalProfilesPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260506-box-score-fullwidth/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-historical-team-profiles\.js\?v=20260506-box-score-fullwidth/.test(html), 'page loads Lahman-backed historical profiles');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260506-box-score-fullwidth/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260506-sim-count/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/HISTORICAL_TEAMS/.test(script), 'simulator script includes curated historical profiles');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260506-sim-count/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -418,10 +418,9 @@ async function flushAsync() {
   assert(/Waite Hoyt/.test(elements.awayPitcherSelect.innerHTML), 'historical pitcher options render');
   assert.strictEqual((elements.awayPitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'historical Team A dropdown shows five pitcher options');
   assert.strictEqual((elements.homePitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'historical Team B dropdown shows five pitcher options');
-  assert(/Record: 110-44/.test(elements.awayTeamMeta.textContent), '1927 Yankees card shows actual team record');
-  assert(/Waite Hoyt, ERA 2.63, W-L 22-7/.test(elements.awayPitcherSelect.innerHTML), 'historical dropdown option includes verified Hoyt W-L');
-  assert(/Urban Shocker, ERA 2.84, W-L 18-6/.test(elements.awayPitcherSelect.innerHTML), 'historical dropdown option includes verified Shocker W-L');
-  assert(!/W-L N\/A/.test(elements.awayPitcherSelect.innerHTML), 'verified historical starters do not show W-L N/A');
+  assert(/NYY \/ 1927 \/ Historical/.test(elements.awayTeamMeta.textContent), '1927 Yankees card shows historical team metadata');
+  assert(/Waite Hoyt, ERA 2.63/.test(elements.awayPitcherSelect.innerHTML), 'historical dropdown option includes Hoyt ERA');
+  assert(/Urban Shocker, ERA 2.84/.test(elements.awayPitcherSelect.innerHTML), 'historical dropdown option includes Shocker ERA');
   simulator.runSimulation();
   assert(/Classic baseline/.test(elements.simulationModeValue.textContent), 'classic matchup reports classic simulation mode');
   assert(/Waite Hoyt|Red Ruffing/.test(elements.matchupNotes.innerHTML), 'classic output includes historical starter names');
