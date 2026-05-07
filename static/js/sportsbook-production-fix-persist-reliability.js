@@ -1,3 +1,4 @@
+/* SPORTSBOOK_RELIABILITY_OWNERSHIP: owns sportsbook selector wiring, stake-mode preview, and locked pick-slip handlers. */
 (function() {
     'use strict';
 
