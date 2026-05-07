@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-page-polish.css">
-    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260507-roster-names">
+    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260506-sim-count&v2=20260506-player-lines&v3=20260507-player-identity">
     <!-- legacy guard marker: /static/css/mlb-simulator.css?v=20260505-standalone-box-score -->
     <script src="/static/js/config.js"></script>
     <script src="/static/js/backend-api.js"></script>
@@ -287,12 +287,12 @@
                 <div id="boxScoreSummary" class="box-score-summary">Run a simulation to generate a box score.</div>
                 <div id="playerBoxScorePanel" class="player-box-score-panel" data-player-box-state="empty">
                     <div class="player-box-score-heading">
-                        <p class="sim-label">Player Box Score</p>
-                        <h3>Batter & Pitcher Lines</h3>
-                        <span>Current-team matchups load verified ESPN roster names before rendering. If a roster endpoint is unavailable, the panel labels that limitation instead of presenting slot rows as players. Stat lines are simulation output, not official MLB player stats.</span>
+                        <p class="sim-label">Player Simulation Lines</p>
+                        <h3>Player Box Score</h3>
+                        <span>Uses verified roster names only when a roster payload is connected. Otherwise, rows are clearly labeled as modeled simulation slots. Stat lines are not official MLB player stats.</span>
                     </div>
                     <div id="playerBoxScoreContent" class="player-box-score-content">
-                        <div class="sim-empty">Run a simulation to generate batter and pitcher simulation lines.</div>
+                        <div class="sim-empty">Run a simulation to generate modeled batter and pitcher lines.</div>
                     </div>
                 </div>
             </section>
@@ -365,7 +365,7 @@
         </section>
     </main>
 
-    <script src="/static/js/mlb-simulator.js?v=20260507-roster-names"></script>
+    <script src="/static/js/mlb-simulator.js?v=20260506-sim-count&v2=20260506-player-lines&v3=20260507-player-identity&v4=20260507-espn-rosters"></script>
     <!-- legacy guard marker: /static/js/mlb-simulator.js?v=20260505-standalone-box-score -->
 </body>
 </html>
