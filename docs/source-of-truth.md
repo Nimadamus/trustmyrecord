@@ -13,7 +13,7 @@ Do not deploy from old local folders, staging copies, screenshots, or partial pa
 - Sportsbook logos, odds rendering protection, Risk/To Win behavior: `static/js/sportsbook-production-fix-persist-reliability.js`
 - MLB simulator page shell: `mlb-simulator/index.html`
 - MLB simulator layout and box score containment: `static/css/mlb-simulator.css`
-- MLB simulator runtime and box score rendering: `static/js/mlb-simulator.js`
+- MLB simulator runtime, current/historical team data, and box score rendering: `static/js/mlb-simulator.js`
 
 Backend source of truth lives in `Nimadamus/trustmyrecord-backend` branch `master`.
 
