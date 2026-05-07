@@ -2432,3 +2432,109 @@ body[data-tmr-test-route="sportsbook"] #picks .sportsbook-ticket-preview-submit{
     max-height: 49px !important;
   }
 }
+
+/* Layout containment guard: keep the board and pick slip inside the viewport.
+   This preserves the compact polish while preventing the desktop grid from
+   pushing the right rail off-screen. */
+html,
+body[data-tmr-test-route="sportsbook"]{
+  overflow-x: clip !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks{
+  max-width: min(100vw, 1480px) !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+  padding-left: clamp(10px, 1.2vw, 18px) !important;
+  padding-right: clamp(10px, 1.2vw, 18px) !important;
+  overflow-x: clip !important;
+  box-sizing: border-box !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .picks-container-modern,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-page-shell,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-selector-shell,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-shell,
+body[data-tmr-test-route="sportsbook"] #picks .games-board-wrap{
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout{
+  grid-template-columns: minmax(190px, 218px) minmax(0, 1fr) minmax(260px, 292px) !important;
+  gap: 12px !important;
+  overflow: visible !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > *{
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > aside:last-of-type,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > .sportsbook-slip-rail{
+  width: 100% !important;
+  max-width: 292px !important;
+  justify-self: stretch !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid,
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head,
+body[data-tmr-test-route="sportsbook"] #picks .sb-board-row{
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-grid-head,
+body[data-tmr-test-route="sportsbook"] #picks .sb-board-row{
+  grid-template-columns: minmax(170px, 1.38fr) minmax(78px, .78fr) minmax(78px, .78fr) minmax(92px, .9fr) !important;
+  gap: 8px !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sb-board-row > .sb-board-col{
+  min-width: 0 !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sb-board-matchup,
+body[data-tmr-test-route="sportsbook"] #picks .sb-board-teams,
+body[data-tmr-test-route="sportsbook"] #picks .sb-board-team,
+body[data-tmr-test-route="sportsbook"] #picks .sb-odds-stack,
+body[data-tmr-test-route="sportsbook"] #picks .sb-odds{
+  min-width: 0 !important;
+}
+
+@media (max-width: 1320px){
+  body[data-tmr-test-route="sportsbook"] #picks{
+    max-width: 100vw !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  body[data-tmr-test-route="sportsbook"] #picks .picks-container-modern{
+    padding: 10px !important;
+  }
+
+  body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout{
+    grid-template-columns: minmax(170px, 198px) minmax(0, 1fr) minmax(238px, 270px) !important;
+    gap: 10px !important;
+  }
+
+  body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > aside:last-of-type,
+  body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > .sportsbook-slip-rail{
+    max-width: 270px !important;
+  }
+}
+
+@media (max-width: 1180px){
+  body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout{
+    grid-template-columns: 1fr !important;
+  }
+
+  body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > aside:last-of-type,
+  body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout > .sportsbook-slip-rail{
+    max-width: none !important;
+  }
+}
