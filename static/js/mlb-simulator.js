@@ -451,8 +451,26 @@
         }
         return values;
     }
-    function modeledBatterLines(team, line, random) {
+    function rosterNamesForBatters(roster) {
+        var players = Array.isArray(roster && roster.players) ? roster.players : [];
+        var pitchers = /^(P|SP|RP|CP|Relief|Pitcher)$/i;
+        return players.filter(function (player) { return !pitchers.test(String(player.position || '')); }).map(function (player) { return player.name; }).slice(0, 9);
+    }
+    function rosterNamesForPitchers(roster, starter) {
+        var players = Array.isArray(roster && roster.players) ? roster.players : [];
+        var names = [];
+        if (starter && starter.name) names.push(starter.name);
+        players.filter(function (player) { return /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')); }).forEach(function (player) {
+            if (names.map(normalizeName).indexOf(normalizeName(player.name)) === -1) names.push(player.name);
+        });
+        return names.slice(0, 3);
+    }
+    function simulationSlotName(team, slot) {
+        return team.abbreviation + ' simulation slot - ' + slot;
+    }
+    function modeledBatterLines(team, line, random, roster) {
         var slots = ['CF', 'SS', 'RF', '1B', '3B', 'LF', 'DH', '2B', 'C'];
+        var rosterNames = rosterNamesForBatters(roster);
         var hits = allocateWhole(line.hits, 9, random);
         var runs = allocateWhole(line.runs, 9, random);
         var rbiTotal = Math.max(0, line.runs - (random() < 0.35 ? 1 : 0));
@@ -463,7 +481,7 @@
             var ab = clamp(3 + Math.floor(random() * 3), 2, 6);
             if (ab < hits[index]) ab = hits[index];
             return {
-                name: team.abbreviation + ' ' + slot + ' (modeled)',
+                name: rosterNames[index] || simulationSlotName(team, slot),
                 ab: ab,
                 r: runs[index],
                 h: hits[index],
@@ -478,7 +496,7 @@
         var remainder = outs % 3;
         return innings + (remainder ? '.' + remainder : '.0');
     }
-    function modeledPitcherLines(team, opponentLine, starter, random) {
+    function modeledPitcherLines(team, opponentLine, starter, random, roster) {
         var starterOuts = clamp(15 + Math.floor(random() * 5), 12, 20);
         var reliefOuts = 27 - starterOuts;
         var outs = [starterOuts, Math.floor(reliefOuts / 2), reliefOuts - Math.floor(reliefOuts / 2)];
@@ -487,11 +505,8 @@
         var walks = allocateWhole(clamp(Math.round(2 + random() * 3), 1, 7), 3, random);
         var strikeouts = allocateWhole(clamp(Math.round(7 + random() * 5 + ((starter ? starter.quality : 100) - 100) * 0.05), 3, 15), 3, random);
         var homers = allocateWhole(clamp(Math.round(opponentLine.runs * 0.22 + random()), 0, 4), 3, random);
-        var names = [
-            starter && starter.name ? starter.name + ' (modeled)' : team.abbreviation + ' Starter (modeled)',
-            team.abbreviation + ' Reliever A (modeled)',
-            team.abbreviation + ' Reliever B (modeled)'
-        ];
+        var rosterNames = rosterNamesForPitchers(roster, starter);
+        var names = [rosterNames[0] || simulationSlotName(team, 'starting pitcher'), rosterNames[1] || simulationSlotName(team, 'bullpen arm 1'), rosterNames[2] || simulationSlotName(team, 'bullpen arm 2')];
         return names.map(function (name, index) {
             return {
                 name: name,
@@ -505,25 +520,28 @@
             };
         });
     }
-    function modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random) {
+    function modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random, rosterContext) {
+        var awayRoster = rosterContext && rosterContext.away;
+        var homeRoster = rosterContext && rosterContext.home;
         return {
             away: {
-                batters: modeledBatterLines(away, awayLine, random),
-                pitchers: modeledPitcherLines(away, homeLine, awayPitcher, random)
+                batters: modeledBatterLines(away, awayLine, random, awayRoster),
+                pitchers: modeledPitcherLines(away, homeLine, awayPitcher, random, awayRoster),
+                rosterSource: awayRoster && awayRoster.players && awayRoster.players.length ? 'Verified ESPN roster names' : 'Non-player simulation slots'
             },
             home: {
-                batters: modeledBatterLines(home, homeLine, random),
-                pitchers: modeledPitcherLines(home, awayLine, homePitcher, random)
+                batters: modeledBatterLines(home, homeLine, random, homeRoster),
+                pitchers: modeledPitcherLines(home, awayLine, homePitcher, random, homeRoster),
+                rosterSource: homeRoster && homeRoster.players && homeRoster.players.length ? 'Verified ESPN roster names' : 'Non-player simulation slots'
             }
         };
     }
-    function buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset) {
-        var seed = seededHash([away.id, home.id, awayPitcher && awayPitcher.id, homePitcher && homePitcher.id, round1(awayRuns), round1(homeRuns), round1(awayWin), state.preset, seedSalt || 'single'].join('|'));
-        var random = seededRandom(seed);
+    function buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext) {
+        var random = Math.random;
         var awayScore = controlledFinalScore(awayRuns, homeRuns, awayWin, random);
         var homeScore = controlledFinalScore(homeRuns, awayRuns, homeWin, random);
         if (awayScore === homeScore) {
-            if (homeWin >= awayWin) homeScore += 1;
+            if (random() < homeWin) homeScore += 1;
             else awayScore += 1;
         }
         var combined = awayScore + homeScore;
@@ -535,7 +553,7 @@
                 excess -= 1;
             }
             if (awayScore === homeScore) {
-                if (homeWin >= awayWin && awayScore > 0) awayScore -= 1;
+                if (random() < homeWin && awayScore > 0) awayScore -= 1;
                 else if (homeScore > 0) homeScore -= 1;
             }
         }
@@ -547,7 +565,7 @@
             else break;
         }
         if (awayScore === homeScore) {
-            if (homeWin >= awayWin) {
+            if (random() < homeWin) {
                 if (homeScore < 20 && awayScore + homeScore < 30) homeScore += 1;
                 else if (awayScore > 0) awayScore -= 1;
             } else {
@@ -555,16 +573,9 @@
                 else if (homeScore > 0) homeScore -= 1;
             }
         }
-        if (!allowUpset && homeWin >= awayWin && homeScore <= awayScore) {
-            if (homeScore < 20 && homeScore + awayScore < 30) homeScore = awayScore + 1;
-            else awayScore = Math.max(0, homeScore - 1);
-        } else if (!allowUpset && awayWin > homeWin && awayScore <= homeScore) {
-            if (awayScore < 20 && homeScore + awayScore < 30) awayScore = homeScore + 1;
-            else homeScore = Math.max(0, awayScore - 1);
-        }
         while (awayScore + homeScore > 30) {
-            if (homeWin >= awayWin && awayScore > 0) awayScore -= 1;
-            else if (awayWin > homeWin && homeScore > 0) homeScore -= 1;
+            if (awayScore >= homeScore && awayScore > 0) awayScore -= 1;
+            else if (homeScore > 0) homeScore -= 1;
             else break;
         }
         var awayInnings = distributeRuns(awayScore, awayRuns, random, false);
@@ -582,12 +593,12 @@
         var awayLine = { team: away, innings: awayInnings, runs: awayScore, hits: awayHits, errors: awayErrors, starter: awayPitcher };
         var homeLine = { team: home, innings: homeInnings, runs: homeScore, hits: homeHits, errors: homeErrors, starter: homePitcher };
         return {
-            seed: seed,
+            runId: String(Date.now()) + '-' + Math.floor(random() * 1000000),
             away: awayLine,
             home: homeLine,
             winner: winner,
             loser: loser,
-            players: modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random),
+            players: modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random, rosterContext),
             summary: winner.name + ' defeats ' + loser.name + ', ' + Math.max(awayScore, homeScore) + '-' + Math.min(awayScore, homeScore) + '. ' + (winnerPitcher ? winnerPitcher.name + ' gives the winning side the stronger starter profile. ' : '') + turningPoint,
             pitcherLines: [
                 away.name + ': ' + (awayPitcher ? awayPitcher.name : 'Starter unavailable') + ' / ' + clamp(5 + Math.round(random() * 2), 4, 7) + ' IP model line',
@@ -776,7 +787,7 @@
         var players = group ? collectRosterPlayers(group) : [];
         if (!players.length) return null;
         var relievers = players.filter(function (player) { return /RP|Relief/i.test(player.position); }).length;
-        return { count: players.length, relievers: relievers, summary: players.length + ' roster players' + (relievers ? ', ' + relievers + ' RP' : '') };
+        return { count: players.length, relievers: relievers, players: players, summary: players.length + ' roster players' + (relievers ? ', ' + relievers + ' RP' : '') };
     }
     function summaryContext(summary, away, home) {
         if (!summary) return null;
@@ -1079,11 +1090,11 @@
         var volatility = clamp((away.volatility + home.volatility) / 2, 0.92, 1.16);
         var spread = round1(1.1 * volatility);
         var totalRuns = awayRuns + homeRuns;
-        var boxScore = buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset);
+        var rosterContext = context && context.extraContext && context.extraContext.rosters ? context.extraContext.rosters : null;
+        var boxScore = buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext);
         var projectedAwayScore = boxScore.away.runs;
         var projectedHomeScore = boxScore.home.runs;
-        winner = boxScore.winner;
-        winnerPct = winner.id === home.id ? homeWin : awayWin;
+        var finalWinner = boxScore.winner;
         var reasonParts = [];
         reasonParts.push(winner.name + ' projects ahead because the run expectation and composite team rating lean their way.');
         if (Math.abs(away.offense - home.offense) >= 4) reasonParts.push(edgeLabel('offense', away, home) + ' on offense.');
@@ -1102,6 +1113,7 @@
             homeRuns: round1(homeRuns),
             projectedAwayScore: projectedAwayScore,
             projectedHomeScore: projectedHomeScore,
+            finalWinner: finalWinner,
             boxScore: boxScore,
             awayRange: [round1(Math.max(0.5, awayRuns - spread)), round1(awayRuns + spread)],
             homeRange: [round1(Math.max(0.5, homeRuns - spread)), round1(homeRuns + spread)],
@@ -1332,7 +1344,8 @@
         }).join('');
     }
     function playerTeamBox(team, players) {
-        return '<section class="player-team-box"><h4>' + escapeHtml(team.name) + ' Modeled Player Lines</h4>' +
+        var source = players && players.rosterSource ? players.rosterSource : 'Non-player simulation slots';
+        return '<section class="player-team-box"><h4>' + escapeHtml(team.name) + ' Box Score Lines</h4><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
             '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>SO</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div>' +
             '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>HR</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers) + '</tbody></table></div></section>';
     }
@@ -1342,7 +1355,7 @@
         if (!panel || !content) return;
         if (!result || !result.boxScore || !result.boxScore.players) {
             panel.setAttribute('data-player-box-state', 'empty');
-            content.innerHTML = '<div class="sim-empty">Run a simulation to generate modeled batter and pitcher lines.</div>';
+            content.innerHTML = '<div class="sim-empty">Run a simulation to generate batter and pitcher simulation lines.</div>';
             return;
         }
         panel.setAttribute('data-player-box-state', 'projected');
@@ -1357,7 +1370,7 @@
         lines.push('Generated: ' + generatedAt);
         lines.push(result.away.name + ' at ' + result.home.name);
         lines.push('Mode: ' + result.simulationMode + ' / Data: ' + result.dataMode);
-        lines.push('Projected final: ' + result.away.name + ' ' + box.away.runs + ', ' + result.home.name + ' ' + box.home.runs);
+        lines.push('Simulated final: ' + result.away.name + ' ' + box.away.runs + ', ' + result.home.name + ' ' + box.home.runs);
         lines.push('Win probability: ' + result.away.name + ' ' + roundPct(result.awayWin) + ' / ' + result.home.name + ' ' + roundPct(result.homeWin));
         lines.push('Expected runs: ' + result.away.name + ' ' + result.awayRuns + ' / ' + result.home.name + ' ' + result.homeRuns);
         lines.push('Starting Pitchers: ' + result.away.name + ': ' + result.awayPitcher.name + ' | ' + result.home.name + ': ' + result.homePitcher.name);
@@ -1373,12 +1386,12 @@
         lines.push('Key performers: ' + box.keyPerformers.join(' / '));
         if (box.players) {
             lines.push('');
-            lines.push('Modeled Player Box Score');
+            lines.push('Player / Simulation Slot Box Score');
             [
                 [result.away.name, box.players.away],
                 [result.home.name, box.players.home]
             ].forEach(function (group) {
-                lines.push(group[0] + ' batters');
+                lines.push(group[0] + ' batters - ' + (group[1].rosterSource || 'Non-player simulation slots'));
                 lines.push('Batter, AB, R, H, RBI, BB, SO');
                 group[1].batters.forEach(function (row) {
                     lines.push([row.name, row.ab, row.r, row.h, row.rbi, row.bb, row.so].join(', '));
