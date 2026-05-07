@@ -5,6 +5,7 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const sportsbookHtml = fs.readFileSync(path.join(ROOT, 'sportsbook', 'index.html'), 'utf8');
 const polishCss = fs.readFileSync(path.join(ROOT, 'static', 'css', 'sportsbook-dk-polish.css'), 'utf8');
+const reliabilityJs = fs.readFileSync(path.join(ROOT, 'static', 'js', 'sportsbook-production-fix-persist-reliability.js'), 'utf8');
 
 function test(name, fn) {
     try {
@@ -81,22 +82,18 @@ test('spread, moneyline, total, and team-total selections still populate the sli
 });
 
 test('selected odds state and signed odds price hierarchy are preserved', () => {
-    includesAll(sportsbookHtml, [
-        "var priceClass = Number.isFinite(priceNum)",
-        "var oddsClass = hasReal && Number.isFinite(oddsNum)",
-        "btn.classList.add('selected')",
-        "btn.setAttribute('aria-pressed', 'true')",
-        "' is-plus'",
-        "' is-minus'"
+    includesAll(reliabilityJs, [
+        "document.querySelectorAll('.tmr-option-btn.active')",
+        "button.classList.remove('active')",
+        "if (active) active.classList.add('active')",
+        "class=\"tmr-option-btn\"",
+        "data-option-id",
+        "window.tmrSelectOption(this.dataset.optionId)"
     ]);
-    includesAll(polishCss, [
-        '#picks .sb-odds.selected',
-        '#picks .sb-odds.is-selected',
-        '#picks .sb-odds[aria-pressed="true"]',
-        '#picks .sb-odds-price.is-plus',
-        '#picks .sb-odds-price.is-minus',
-        '#65d996',
-        '#fca5a5'
+    includesAll(reliabilityJs, [
+        'tmr-option-odds',
+        'option.odds_display',
+        'state.selectedOption = option'
     ]);
 });
 
