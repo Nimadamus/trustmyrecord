@@ -19,9 +19,9 @@ const script = fs.readFileSync(scriptPath, 'utf8');
 const historicalProfilesScript = fs.readFileSync(historicalProfilesPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260506-historical-profiles/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-historical-team-profiles\.js\?v=20260506-historical-profiles/.test(html), 'page loads Lahman-backed historical profiles');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260506-historical-profiles/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260506-box-score-fullwidth/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-historical-team-profiles\.js\?v=20260506-box-score-fullwidth/.test(html), 'page loads Lahman-backed historical profiles');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260506-box-score-fullwidth/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -55,6 +55,9 @@ assert(/Choose starters/.test(html), 'starter-dependent empty state is polished'
 assert(!/Loading MLB games|Loading sportsbook board|Waiting for board data|Projection engine not connected yet|Not connected for custom simulation|Unavailable without real inputs/.test(html), 'old board-dependent placeholder text is removed');
 assert(!/lock pick|locked pick|submit pick/i.test(html), 'page does not expose sportsbook submission actions');
 assert(!/live verified|official injury/i.test(html), 'page does not include fake live data claims');
+const css = fs.readFileSync(path.join(root, 'static', 'css', 'mlb-simulator.css'), 'utf8');
+assert(/\.box-score-panel\s*\{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*min-width:\s*0;/s.test(css), 'box score panel spans the simulator grid instead of auto-placing into a narrow column');
+assert(/\.box-score-scroll\s*\{[^}]*max-width:\s*100%;[^}]*overflow-x:\s*auto;/s.test(css), 'box score table scrolling is contained inside the table container');
 
 const elementIds = [
   'awayTeamSelect','homeTeamSelect','awayPoolSelect','homePoolSelect','runSimulationButton','refreshTeamsButton',
