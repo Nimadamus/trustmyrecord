@@ -85,7 +85,7 @@ async function main() {
   assert(profilePage.includes('sidebarLeaderboard'), 'profile sidebar rank slot should be present');
 
   const handicappersPage = await getText(`${SITE}/handicappers/`);
-  assert(handicappersPage.includes('sortBy=net_units'), 'handicappers page should consume net-unit leaderboard policy');
+  assert(handicappersPage.includes('/users/handicappers/summary?'), 'handicappers page should consume the summary ranking endpoint');
   assert(handicappersPage.includes('Minimum 20 graded picks'), 'handicappers page should show the public rank threshold');
   assert(handicappersPage.includes('positive net units'), 'handicappers page should explain positive-unit rank eligibility');
 
