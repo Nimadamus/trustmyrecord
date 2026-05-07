@@ -5,6 +5,20 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Assert-Match {
+    param([string]$Name, [string]$Content, [string]$Pattern, [string]$Message)
+    if ($Content -notmatch $Pattern) {
+        throw "$Name guard failed: $Message"
+    }
+}
+
+function Assert-NoMatch {
+    param([string]$Name, [string]$Content, [string]$Pattern, [string]$Message)
+    if ($Content -match $Pattern) {
+        throw "$Name guard failed: $Message"
+    }
+}
+
 $rootPath = (Resolve-Path -LiteralPath $Root).Path
 Push-Location $rootPath
 try {
@@ -33,42 +47,82 @@ try {
         }
     }
 
+    $treePaths = @(git ls-tree -r --name-only HEAD)
+    $invalidPaths = $treePaths | Where-Object { $_ -match "\\" }
+    if ($invalidPaths) {
+        throw "Repository contains Windows-unsafe paths: $($invalidPaths -join ', ')"
+    }
+
+    $requiredFiles = @(
+        "profile/index.html",
+        "handicappers/index.html",
+        "sportsbook/index.html",
+        "mlb-simulator/index.html",
+        "static/js/backend-api.js",
+        "static/js/sportsbook-production-fix-persist-reliability.js",
+        "static/js/mlb-simulator.js",
+        "static/css/mlb-simulator.css",
+        "tests/line-formatting-regression-test.js",
+        "tests/profile-page-lookup-test.js",
+        "tests/mlb-simulator-page-test.js",
+        "tests/mlb-simulator-boxscore-test.js",
+        "tests/mlb-simulator-realism-test.js",
+        "tests/sportsbook-reliability-guard-test.js",
+        "tests/sportsbook-stake-mode-ui-test.js"
+    )
+    foreach ($file in $requiredFiles) {
+        if (-not (Test-Path -LiteralPath $file)) {
+            throw "Required source/test file missing: $file"
+        }
+    }
+
     node tests/line-formatting-regression-test.js
+    node tests/profile-page-lookup-test.js
+    node tests/mlb-simulator-page-test.js
+    node tests/mlb-simulator-boxscore-test.js
+    node tests/mlb-simulator-realism-test.js
+    node tests/sportsbook-reliability-guard-test.js
+    node tests/sportsbook-stake-mode-ui-test.js
 
     $profile = Get-Content -LiteralPath "profile/index.html" -Raw
     $backend = Get-Content -LiteralPath "static/js/backend-api.js" -Raw
     $simCss = Get-Content -LiteralPath "static/css/mlb-simulator.css" -Raw
     $simPage = Get-Content -LiteralPath "mlb-simulator/index.html" -Raw
+    $sportsbook = Get-Content -LiteralPath "sportsbook/index.html" -Raw
+    $handicappers = Get-Content -LiteralPath "handicappers/index.html" -Raw
+    $reliability = Get-Content -LiteralPath "static/js/sportsbook-production-fix-persist-reliability.js" -Raw
 
-    if ($profile -notmatch "backend-api\.js\?v=20260506linefix[0-9]+") {
-        throw "Profile is not loading a permanent linefix backend-api cache key."
-    }
-    if ($profile -notmatch "function formatPickLineValue\(pick\)") {
-        throw "Profile direct Line-column formatter is missing."
-    }
-    if ($profile -match "formatLineValue\(p\.line_snapshot\)") {
-        throw "Profile still has a raw signed line formatter call for pick rows."
-    }
-    if ($backend -notmatch "if \(isTotal \|\| /\\b\(over\|under\)\\b/\.test\(selection\)\)") {
-        throw "Shared formatter does not force totals/team totals through unsigned total formatting."
-    }
-    if ($profile -match "PNG\s*/\s*JPG\s*/\s*WebP") {
-        throw "Profile avatar upload helper text regressed."
-    }
-    if ($profile -notmatch "Share Profile") {
-        throw "Profile Share Profile button label is missing."
-    }
-    if ($profile -notmatch "Embed Profile") {
-        throw "Profile Embed Profile button label is missing."
-    }
-    if ($simPage -notmatch "boxScorePanel" -or $simPage -notmatch "viewBoxScoreLink") {
-        throw "MLB simulator box score panel or View Box Score link is missing."
-    }
-    if ($simCss -notmatch "grid-column:\s*1\s*/\s*-1" -or $simCss -notmatch "\.box-score-scroll") {
-        throw "MLB simulator box score full-width/contained-scroll CSS guard failed."
-    }
+    Assert-Match "Profile" $profile "backend-api\.js\?v=20260506linefix[0-9]+" "profile must load the protected backend-api cache key."
+    Assert-Match "Profile" $profile "function formatPickLineValue\(pick\)" "direct Line-column formatter is missing."
+    Assert-NoMatch "Profile" $profile "formatLineValue\(p\.line_snapshot\)" "raw signed line formatter call for pick rows returned."
+    Assert-NoMatch "Profile" $profile "PNG\s*/\s*JPG\s*/\s*WebP" "avatar upload helper text regressed."
+    Assert-Match "Profile" $profile "Share Profile" "Share Profile label is missing."
+    Assert-Match "Profile" $profile "Embed Profile" "Embed Profile label is missing."
+    Assert-Match "Profile" $profile "platform-production-fix\.js\?v=20260415d" "known profile patch include changed; inspect before deploy."
 
-    Write-Output "Predeploy guard passed: current clean main, profile, simulator, line formatting, and cache-key checks are intact."
+    Assert-Match "Backend API" $backend "if \(isTotal \|\| /\\b\(over\|under\)\\b/\.test\(selection\)\)" "totals/team totals must use unsigned total formatting."
+
+    Assert-Match "MLB simulator" $simPage "boxScorePanel" "box score panel is missing."
+    Assert-Match "MLB simulator" $simPage "viewBoxScoreLink" "View Box Score link is missing."
+    Assert-Match "MLB simulator CSS" $simCss "grid-column:\s*1\s*/\s*-1" "box score must span the simulator grid."
+    Assert-Match "MLB simulator CSS" $simCss "\.box-score-scroll" "box score scroll container is missing."
+    Assert-Match "MLB simulator CSS" $simCss "overflow-x:\s*auto" "box score horizontal scrolling must stay inside the table container."
+
+    Assert-Match "Sportsbook" $sportsbook "sportsbook-production-fix-persist-reliability\.js\?v=20260501reliability1" "current reliability script include is missing."
+    Assert-NoMatch "Sportsbook" $sportsbook "tmr-redesign-test-sportsbook-logos\.js" "obsolete logo patch script was reintroduced."
+    Assert-NoMatch "Sportsbook" $sportsbook "sportsbook-production-fix\.js" "stale non-reliability sportsbook patch was reintroduced."
+    Assert-NoMatch "Sportsbook" $sportsbook "sportsbook-production-fix-persist\.js" "stale persist sportsbook patch was reintroduced."
+    Assert-NoMatch "Sportsbook" $sportsbook "sportsbook-board-hotfix\.js" "stale sportsbook board hotfix was reintroduced."
+    Assert-NoMatch "Sportsbook" $sportsbook "sportsbook-dashboard-sync\.js" "stale sportsbook dashboard sync script was reintroduced."
+    Assert-Match "Sportsbook reliability" $reliability "SPORTSBOOK_RELIABILITY_OWNERSHIP" "ownership marker is missing."
+    Assert-Match "Sportsbook reliability" $reliability "CANONICAL_TEAM_LOGOS" "canonical logo map is missing."
+    Assert-Match "Sportsbook reliability" $reliability "modeRisk" "Risk stake mode control is missing."
+    Assert-Match "Sportsbook reliability" $reliability "modeToWin" "To Win stake mode control is missing."
+
+    Assert-Match "Handicappers" $handicappers "<div>Active</div>" "Active column header is missing."
+    Assert-Match "Handicappers" $handicappers "formatLastActive" "Active column formatter is missing."
+
+    Write-Output "Predeploy guard passed: clean current main, Windows-safe tree, profile, handicappers, simulator, sportsbook, and regression tests are intact."
 }
 finally {
     Pop-Location
