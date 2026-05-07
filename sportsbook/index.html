@@ -30043,6 +30043,74 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
     
+
+    <style id="tmr-sportsbook-stable-route-right-rail">
+        /* SPORTSBOOK_STABLE_ROUTE_RIGHT_RAIL_20260507
+           Use the stable body[data-tmr-test-route] attribute present in static
+           HTML so desktop containment does not depend on later shell stamping. */
+        body[data-tmr-test-route="sportsbook"],
+        body[data-tmr-test-route="sportsbook"] #picks,
+        body[data-tmr-test-route="sportsbook"] #picks .picks-container-modern,
+        body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout {
+            max-width: 100% !important;
+            min-width: 0 !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
+        }
+        body[data-tmr-test-route="sportsbook"] #picks .picks-container-modern {
+            width: 100% !important;
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+        }
+        @media (min-width: 901px) {
+            body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout {
+                display: grid !important;
+                grid-template-columns: minmax(138px, 170px) minmax(0, 1fr) minmax(204px, 236px) !important;
+                gap: 8px !important;
+                padding: 8px !important;
+                align-items: start !important;
+            }
+            body[data-tmr-test-route="sportsbook"] #picks .sportsbook-league-rail {
+                grid-column: 1 !important;
+                grid-row: 1 !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+            }
+            body[data-tmr-test-route="sportsbook"] #picks .sportsbook-selector-shell,
+            body[data-tmr-test-route="sportsbook"] #picks .sportsbook-board-shell {
+                grid-column: 2 !important;
+                grid-row: 1 !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                overflow-x: hidden !important;
+            }
+            body[data-tmr-test-route="sportsbook"] #picks .sportsbook-ticket-preview {
+                grid-column: 3 !important;
+                grid-row: 1 !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 236px !important;
+                overflow-x: hidden !important;
+                justify-self: stretch !important;
+            }
+        }
+        @media (max-width: 900px) {
+            body[data-tmr-test-route="sportsbook"] #picks .sportsbook-picks-layout {
+                grid-template-columns: 1fr !important;
+                overflow: visible !important;
+            }
+        }
+        body[data-tmr-test-route="sportsbook"] #picks .sportsbook-ticket-preview *,
+        body[data-tmr-test-route="sportsbook"] #picks .tmr-pending-picks-panel *,
+        body[data-tmr-test-route="sportsbook"] #picks .pending-picks-compact-link,
+        body[data-tmr-test-route="sportsbook"] #picks .sportsbook-rail-board,
+        body[data-tmr-test-route="sportsbook"] #picks .sportsbook-rail-board * {
+            min-width: 0 !important;
+            max-width: 100% !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
+        }
+    </style>
     // Stamp body[data-tmr-auth] so the Make Picks page can hide the
     // logged-out prompt the moment auth flips. Re-runs on auth events.
     (function(){
