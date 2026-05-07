@@ -37,3 +37,29 @@ jobs:
 
       - name: Run sportsbook stake-mode guard
         run: node tests/sportsbook-stake-mode-ui-test.js
+  profile-and-simulator-guards:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run profile lookup guard
+        run: node tests/profile-page-lookup-test.js
+
+      - name: Run MLB simulator page guard
+        run: node tests/mlb-simulator-page-test.js
+
+      - name: Run MLB simulator box score guard
+        run: node tests/mlb-simulator-boxscore-test.js
+
+      - name: Run MLB simulator realism guard
+        run: node tests/mlb-simulator-realism-test.js
+
+      - name: Run predeploy stale-source guard
+        shell: pwsh
+        run: ./scripts/predeploy-guard.ps1 -SkipRemoteCheck
