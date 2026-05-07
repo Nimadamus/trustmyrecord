@@ -1191,29 +1191,100 @@
     color: var(--sim-muted);
 }
 
-.player-box-score-note {
+.player-box-score-panel {
     display: grid;
-    gap: 6px;
+    gap: 12px;
     padding: 14px;
-    border: 1px dashed rgba(148, 163, 184, 0.24);
+    border: 1px solid rgba(148, 163, 184, 0.18);
     border-radius: 8px;
-    background: rgba(15, 23, 42, 0.36);
+    background: rgba(15, 23, 42, 0.42);
     color: #dbeafe;
-    cursor: default;
     font-size: 13px;
     line-height: 1.5;
-    pointer-events: none;
 }
 
-.player-box-score-note strong {
-    color: var(--sim-muted);
+.player-box-score-panel[data-player-box-state="empty"] {
+    border-style: dashed;
+}
+
+.player-box-score-heading {
+    display: grid;
+    gap: 5px;
+}
+
+.player-box-score-heading h3 {
+    margin: 0;
+    color: var(--sim-text);
     font-family: Barlow, Inter, sans-serif;
-    font-size: 18px;
-    letter-spacing: 0;
+    font-size: 24px;
+    line-height: 1;
 }
 
-.player-box-score-note span {
+.player-box-score-heading span {
     color: var(--sim-muted);
+}
+
+.player-box-score-content {
+    display: grid;
+    gap: 14px;
+}
+
+.player-team-box {
+    display: grid;
+    gap: 10px;
+}
+
+.player-team-box h4 {
+    margin: 0;
+    color: var(--sim-gold);
+    font-family: Barlow, Inter, sans-serif;
+    font-size: 20px;
+    line-height: 1;
+}
+
+.player-table-wrap {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 8px;
+    background: rgba(2, 6, 23, 0.58);
+    -webkit-overflow-scrolling: touch;
+}
+
+.player-box-table {
+    width: 100%;
+    min-width: 620px;
+    border-collapse: collapse;
+    color: var(--sim-text);
+}
+
+.player-box-table th,
+.player-box-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    text-align: right;
+    font-size: 13px;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+.player-box-table th:first-child,
+.player-box-table td:first-child {
+    text-align: left;
+}
+
+.player-box-table thead th {
+    color: var(--sim-muted);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.player-box-table tbody tr:last-child th,
+.player-box-table tbody tr:last-child td {
+    border-bottom: 0;
 }
 
 .comparison-grid {
