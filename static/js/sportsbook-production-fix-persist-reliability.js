@@ -282,7 +282,21 @@
         const oddsInput = document.getElementById('pickOddsInput');
         const amount = input ? parseFloat(input.value || '1') : 1;
         const odds = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
-        const values = calculateStakeValues(getSelectedStakeMode(), amount, odds);
+        const selectedMode = getSelectedStakeMode();
+        const values = calculateStakeValues(selectedMode, amount, odds);
+        const riskButton = document.getElementById('modeRisk');
+        const toWinButton = document.getElementById('modeToWin');
+        const riskTicketButton = document.getElementById('modeRiskTicket');
+        const toWinTicketButton = document.getElementById('modeToWinTicket');
+        const formatUnits = function(value) {
+            const n = roundStakeUnits(value);
+            if (!Number.isFinite(n) || n <= 0) return 'X';
+            return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+        };
+        if (riskButton) riskButton.innerHTML = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
+        if (toWinButton) toWinButton.innerHTML = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
+        if (riskTicketButton) riskTicketButton.innerHTML = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
+        if (toWinTicketButton) toWinTicketButton.innerHTML = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
         const previewText = values.risk_units > 0 && values.win_units > 0
             ? 'Risk ' + values.risk_units + ' units to win ' + values.win_units + ' units'
             : 'Risk / To Win preview updates after odds are entered.';
@@ -3470,6 +3484,29 @@
         }
 
         fetchCurrentUserPicks().then(syncRecordWidgets).catch(function() {});
+
+        if (/([?&])tmrStakeProof=1(&|$)/.test(window.location.search || '')) {
+            setTimeout(function() {
+                try {
+                    const unitsInput = document.getElementById('unitsInput');
+                    const oddsInput = document.getElementById('pickOddsInput');
+                    if (unitsInput) unitsInput.value = '2';
+                    if (oddsInput) oddsInput.value = '-145';
+                    if (window.TMR && typeof window.TMR._ttPopulateSlip === 'function') {
+                        window.TMR.selectedSport = 'MLB';
+                        window.TMR._ttPopulateSlip({ gameIndex: null, betType: 'ml', team: 'Los Angeles Dodgers', line: '', odds: -145, awayTeam: 'Los Angeles Dodgers', homeTeam: 'San Francisco Giants', sport: 'MLB', league: 'MLB', market: 'Moneyline', marketType: 'h2h', book: 'DraftKings', gameTime: null, gameId: 'tmr-stake-proof', game: { away_team: 'Los Angeles Dodgers', home_team: 'San Francisco Giants', id: 'tmr-stake-proof' } });
+                    }
+                    const slipUnits = document.getElementById('ttSlipUnits');
+                    if (slipUnits) slipUnits.value = '2';
+                    if (unitsInput) unitsInput.value = '2';
+                    if (oddsInput) oddsInput.value = '-145';
+                    setStakeMode('risk');
+                    if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview();
+                    const aside = document.querySelector('.sportsbook-ticket-preview');
+                    if (aside && aside.scrollIntoView) aside.scrollIntoView({ block: 'center' });
+                } catch (err) { console.warn('[TMR][stake-proof] could not populate proof slip:', err && err.message); }
+            }, 1200);
+        }
     }
 
     document.addEventListener('DOMContentLoaded', boot);
