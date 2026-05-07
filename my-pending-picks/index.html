@@ -493,11 +493,26 @@
         }
         function render(picks, meta) {
             meta = meta || {};
-            var pending = (Array.isArray(picks) ? picks : []).filter(function (pick) {
-                return pick && String(pick.status || 'pending').toLowerCase() === 'pending';
-            });
+            var apiRows = Array.isArray(picks) ? picks.filter(Boolean) : [];
+            // PENDING_PICK_RENDER_COUNT_FIX_20260507: the API endpoint is already pending-scoped;
+            // do not hide returned rows with a second exact-status frontend filter.
+            var pending = apiRows;
+            var filteredOut = [];
             var totalUnits = pending.reduce(function (sum, pick) { return sum + Number(pick.units || 0); }, 0);
             var earliest = pending.map(function (pick) { return pick.commence_time; }).filter(Boolean).sort()[0] || null;
+            window.__tmrPendingPicksDebug = {
+                apiCount: apiRows.length,
+                renderedCount: pending.length,
+                filteredOutCount: filteredOut.length,
+                filteredOut: filteredOut,
+                apiSummary: meta && meta.summary || null,
+                pagination: meta && meta.pagination || null,
+                statuses: apiRows.reduce(function (acc, pick) {
+                    var key = String(pick.status || 'pending').toLowerCase();
+                    acc[key] = (acc[key] || 0) + 1;
+                    return acc;
+                }, {})
+            };
 
             document.getElementById('summaryCount').textContent = String(pending.length);
             document.getElementById('summaryUnits').textContent = fmtUnits(totalUnits);
