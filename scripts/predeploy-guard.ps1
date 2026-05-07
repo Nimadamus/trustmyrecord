@@ -17,6 +17,11 @@ try {
         throw "Refusing deploy from branch '$branch'. Deploy from current origin/main only."
     }
 
+    $dirty = (git status --porcelain=v1)
+    if ($dirty) {
+        throw "Refusing deploy from a dirty worktree. Commit/push exact changes to origin/main first; do not deploy local edits or untracked files."
+    }
+
     if (-not $SkipRemoteCheck) {
         $localHead = (git rev-parse HEAD).Trim()
         $remoteHead = ((git ls-remote origin refs/heads/main) -split "\s+")[0]
@@ -32,6 +37,8 @@ try {
 
     $profile = Get-Content -LiteralPath "profile/index.html" -Raw
     $backend = Get-Content -LiteralPath "static/js/backend-api.js" -Raw
+    $simCss = Get-Content -LiteralPath "static/css/mlb-simulator.css" -Raw
+    $simPage = Get-Content -LiteralPath "mlb-simulator/index.html" -Raw
 
     if ($profile -notmatch "backend-api\.js\?v=20260506linefix[0-9]+") {
         throw "Profile is not loading a permanent linefix backend-api cache key."
@@ -45,8 +52,23 @@ try {
     if ($backend -notmatch "if \(isTotal \|\| /\\b\(over\|under\)\\b/\.test\(selection\)\)") {
         throw "Shared formatter does not force totals/team totals through unsigned total formatting."
     }
+    if ($profile -match "PNG\s*/\s*JPG\s*/\s*WebP") {
+        throw "Profile avatar upload helper text regressed."
+    }
+    if ($profile -notmatch "Share Profile") {
+        throw "Profile Share Profile button label is missing."
+    }
+    if ($profile -notmatch "Embed Profile") {
+        throw "Profile Embed Profile button label is missing."
+    }
+    if ($simPage -notmatch "boxScorePanel" -or $simPage -notmatch "viewBoxScoreLink") {
+        throw "MLB simulator box score panel or View Box Score link is missing."
+    }
+    if ($simCss -notmatch "grid-column:\s*1\s*/\s*-1" -or $simCss -notmatch "\.box-score-scroll") {
+        throw "MLB simulator box score full-width/contained-scroll CSS guard failed."
+    }
 
-    Write-Output "Predeploy guard passed: current main, line formatter regression, profile direct guard, and cache key are intact."
+    Write-Output "Predeploy guard passed: current clean main, profile, simulator, line formatting, and cache-key checks are intact."
 }
 finally {
     Pop-Location
