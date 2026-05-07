@@ -710,9 +710,6 @@
                 <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Total Members</span><small>Public members only</small></div>
                 <div class="hm-count"><strong id="hmActiveMembers">0</strong><span>Active Pick Makers</span><small>Members with real picks</small></div>
                 <div class="hm-count"><strong id="hmTotalPicks">0</strong><span>Total Verified Picks</span><small>Graded picks only</small></div>
-                <div class="hm-count" id="hmBestWinRateCard" hidden><strong id="hmBestWinRate" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Best Win Percentage</span><small id="hmBestWinRateUser"></small></div>
-                <div class="hm-count" id="hmTopUnitsCard" hidden><strong id="hmTopUnits" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Units Leader</span><small id="hmTopUnitsUser"></small></div>
-                <div class="hm-count" id="hmRecentActivityCard" hidden><strong id="hmRecentActivity" class="is-muted" title="Recent pick activity">--</strong><span>Most Recent Pick Activity</span><small id="hmRecentActivityUser"></small></div>
             </div>
         </section>
 
@@ -800,15 +797,6 @@
             active: document.getElementById('hmActiveMembers'),
             visible: document.getElementById('hmVisibleMembers'),
             totalPicks: document.getElementById('hmTotalPicks'),
-            bestWinRateCard: document.getElementById('hmBestWinRateCard'),
-            bestWinRate: document.getElementById('hmBestWinRate'),
-            bestWinRateUser: document.getElementById('hmBestWinRateUser'),
-            topUnitsCard: document.getElementById('hmTopUnitsCard'),
-            topUnits: document.getElementById('hmTopUnits'),
-            topUnitsUser: document.getElementById('hmTopUnitsUser'),
-            recentActivityCard: document.getElementById('hmRecentActivityCard'),
-            recentActivity: document.getElementById('hmRecentActivity'),
-            recentActivityUser: document.getElementById('hmRecentActivityUser'),
             featured: document.getElementById('hmFeaturedLeaders')
         };
 
@@ -1366,29 +1354,6 @@
             if (el) el.textContent = value;
         }
 
-        function setMetricText(el, value, metricValue) {
-            if (!el) return;
-            el.textContent = value;
-            el.classList.remove('is-positive', 'is-negative', 'is-muted', 'is-neutral');
-            el.classList.add(statClass(metricValue));
-        }
-
-        function setSummaryLeaderCard(card, metricEl, detailEl, member, metricText, metricValue, detailText) {
-            if (!card) return;
-            card.hidden = !member;
-            if (!member) {
-                setMetricText(metricEl, '--', null);
-                setText(detailEl, '');
-                return;
-            }
-            setMetricText(metricEl, metricText, metricValue);
-            setText(detailEl, detailText);
-        }
-
-        function leaderValue(value, formatter) {
-            return value ? formatter(value) : '--';
-        }
-
         function gradedCount(member) {
             const stats = member && member.stats ? member.stats : {};
             return Number(stats.gradedPicks != null ? stats.gradedPicks : (Number(stats.wins || 0) + Number(stats.losses || 0) + Number(stats.pushes || 0))) || 0;
@@ -1474,43 +1439,11 @@
 
         function renderSummary() {
             const pickedMembers = members.filter(member => Number(member.stats.totalPicks || 0) > 0);
-            const gradedMembers = members.filter(member => gradedCount(member) > 0);
-            const qualifiedMembers = gradedMembers.filter(isQualifiedTopPerformer);
             const totalGradedPicks = members.reduce((sum, member) => sum + gradedCount(member), 0);
-            const bestWinRate = qualifiedWinRateLeader(qualifiedMembers);
-            const topUnits = qualifiedUnitsLeader(qualifiedMembers);
-            const recent = bestBy(pickedMembers, () => true, getActivityTime);
 
             setText(els.total, String(serverSummary?.total_members ?? members.length));
             setText(els.active, String(serverSummary?.active_members ?? pickedMembers.length));
             setText(els.totalPicks, String(serverSummary?.total_graded_picks ?? totalGradedPicks));
-            setSummaryLeaderCard(
-                els.bestWinRateCard,
-                els.bestWinRate,
-                els.bestWinRateUser,
-                bestWinRate,
-                bestWinRate ? formatPercent(bestWinRate.stats.winRate, true) : '--',
-                bestWinRate ? Number(bestWinRate.stats.winRate) - 50 : null,
-                bestWinRate ? '@' + bestWinRate.username + ' · ' + gradedCount(bestWinRate) + ' graded picks' : ''
-            );
-            setSummaryLeaderCard(
-                els.topUnitsCard,
-                els.topUnits,
-                els.topUnitsUser,
-                topUnits,
-                topUnits ? formatUnits(topUnits.stats.units, true) : '--',
-                topUnits ? topUnits.stats.units : null,
-                topUnits ? '@' + topUnits.username + ' · ' + gradedCount(topUnits) + ' graded picks' : ''
-            );
-            setSummaryLeaderCard(
-                els.recentActivityCard,
-                els.recentActivity,
-                els.recentActivityUser,
-                recent,
-                leaderValue(recent, member => formatLastActive(member.stats.lastActivity || member.lastActive)),
-                null,
-                recent ? '@' + recent.username : ''
-            );
             renderFeaturedLeaders();
         }
 
