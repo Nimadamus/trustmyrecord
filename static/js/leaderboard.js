@@ -1,5 +1,5 @@
 // Leaderboard Data Loader - TrustMyRecord
-// Prefers backend leaderboard APIs and falls back to static JSON only when unavailable.
+// Uses backend leaderboard APIs only. Production must never substitute static/mock users.
 
 (function() {
     let leaderboardData = null;
@@ -13,10 +13,8 @@
                 return;
             }
 
-            const resp = await fetch('static/data/leaderboard.json?v=' + Date.now());
-            if (!resp.ok) throw new Error('Failed to load leaderboard data');
-            leaderboardData = await resp.json();
-            backendLeaderboardState = null;
+            leaderboardData = null;
+            backendLeaderboardState = { cappers: [], trivia: [], polls: [] };
             renderAllLeaderboards();
         } catch (err) {
             console.error('[Leaderboard] Error loading data:', err);
@@ -37,7 +35,7 @@
 
         try {
             const [capperData, triviaData, pollsData] = await Promise.all([
-                api.getLeaderboard({ sortBy: 'net_units', limit: 25 }),
+                api.getLeaderboard({ sortBy: 'roi', limit: 25 }),
                 api.request('/trivia/leaderboard?period=all&limit=25'),
                 api.request('/polls/leaderboard?period=all&limit=25')
             ]);
@@ -50,7 +48,7 @@
             leaderboardData = null;
             return true;
         } catch (err) {
-            console.warn('[Leaderboard] Backend leaderboard fetch failed, using static fallback:', err);
+            console.warn('[Leaderboard] Backend leaderboard fetch failed. Static/mock leaderboard fallback is disabled in production:', err);
             backendLeaderboardState = null;
             return false;
         }
@@ -94,11 +92,6 @@
         if (wins > losses) return COLOR_GREEN;
         if (wins < losses) return COLOR_RED;
         return COLOR_NEUTRAL;
-    }
-
-    function qualifiedCapperFromStatic(user) {
-        const picks = user && user.picks ? user.picks : {};
-        return Number(picks.total || 0) >= 20 && Number(picks.units || 0) > 0;
     }
 
     function renderRow(rank, cols) {
@@ -193,11 +186,8 @@
 
         if (!leaderboardData) return;
 
-        const sorted = leaderboardData.users.filter(qualifiedCapperFromStatic).slice().sort(function(a, b) {
-            return (b.picks.units - a.picks.units) ||
-                ((b.picks.roi || 0) - (a.picks.roi || 0)) ||
-                (b.picks.winRate - a.picks.winRate) ||
-                (b.picks.total - a.picks.total);
+        const sorted = leaderboardData.users.slice().sort(function(a, b) {
+            return b.picks.winRate - a.picks.winRate;
         });
 
         let html = '<div class="leaderboard-table"><div class="lb-table-header">' +
@@ -225,7 +215,7 @@
         });
 
         html += '</div></div>';
-        body.innerHTML = sorted.length ? html : emptyState();
+        body.innerHTML = html;
     }
 
     // 3. Trivia Champions
@@ -397,7 +387,7 @@
 
         if (!leaderboardData) return;
 
-        const sorted = leaderboardData.users.filter(qualifiedCapperFromStatic).slice().sort(function(a, b) {
+        const sorted = leaderboardData.users.slice().sort(function(a, b) {
             return b.picks.units - a.picks.units;
         });
 
@@ -423,7 +413,7 @@
         });
 
         html += '</div></div>';
-        body.innerHTML = sorted.length ? html : emptyState();
+        body.innerHTML = html;
     }
 
     function emptyState() {
