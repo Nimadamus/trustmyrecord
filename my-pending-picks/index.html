@@ -381,6 +381,7 @@
             return n > 0 ? '+' + n : String(n);
         }
         // PENDING_PICK_LINE_FORMAT_FIX_20260507: only spread-style markets get signed positive lines.
+        // PENDING_PICK_TOTAL_LINE_NUMERIC_ONLY_20260507: totals keep O/U in Pick; Line is threshold only.
         function fmtBareLine(value) {
             if (value == null || value === '') return '-';
             var n = Number(value);
@@ -421,10 +422,7 @@
                 || /\b(over|under)\b/.test(selection)
                 || /\b(over|under|teamover|teamunder|f5over|f5under)\b/.test(sideText);
             if (isTotal) {
-                var line = fmtBareLine(Math.abs(n));
-                var side = /\bunder\b|teamunder|f5under/.test(selection + ' ' + sideText) ? 'U'
-                    : (/\bover\b|teamover|f5over/.test(selection + ' ' + sideText) ? 'O' : '');
-                return side ? side + ' ' + line : line;
+                return fmtBareLine(Math.abs(n));
             }
             if (isSpread) return fmtLine(n);
             return fmtBareLine(n);
