@@ -5573,9 +5573,20 @@
         return s;
     }
 
+    function formatPickLineValue(pick) {
+        const value = pick && pick.line_snapshot;
+        if (value == null || value === '' || isNaN(Number(value))) return '--';
+        const selection = String(pick && pick.selection || '').toLowerCase();
+        const market = String(pick && pick.market_type || '').toLowerCase();
+        const isTotal = market.indexOf('total') !== -1 || /(over|under)/.test(selection);
+        const isMoneyline = market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h') || /(moneyline|ml)/.test(selection);
+        if (isMoneyline) return '--';
+        return isTotal ? formatTotalLineValue(value) : formatLineValue(value);
+    }
+
     function formatPickDisplayValue(pick) {
         const selection = String(pick && pick.selection || 'Pick').trim();
-        const line = formatLineValue(pick && pick.line_snapshot);
+        const line = formatPickLineValue(pick);
         const market = String(pick && pick.market_type || '').toLowerCase();
         const home = String(pick && pick.home_team || '').trim();
         const away = String(pick && pick.away_team || '').trim();
