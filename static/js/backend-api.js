@@ -1025,6 +1025,7 @@ if (typeof window !== 'undefined') {
     window.TMR.formatPickLine = function (pick) {
         pick = pick || {};
         const market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
+        const selection = String(pick.selection_label || pick.selection || pick.pick || pick.side || '').toLowerCase();
         const rawLine = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
         if (rawLine == null || rawLine === '') return '-';
 
@@ -1043,11 +1044,12 @@ if (typeof window !== 'undefined') {
             || market === 'team_total';
         const isMoneyline = market === 'h2h'
             || market === 'moneyline'
-            || market.endsWith('_h2h');
+            || market.endsWith('_h2h')
+            || /(moneyline|ml)/.test(selection);
 
         if (isMoneyline) return '-';
+        if (isTotal || /\b(over|under)\b/.test(selection)) return window.TMR.formatLine(Math.abs(num)) || '-';
         if (isSpread) return window.TMR.formatLine(num, { signed: true }) || '-';
-        if (isTotal) return window.TMR.formatLine(Math.abs(num)) || '-';
         return window.TMR.formatLine(num) || '-';
     };
 
