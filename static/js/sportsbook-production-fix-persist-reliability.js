@@ -159,12 +159,99 @@
         return MARKET_LABELS[marketType] || String(marketType || 'Pick').replace(/_/g, ' ');
     }
 
+    function roundStakeUnits(value) {
+        const n = Number(value);
+        return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
+    }
+
+    function calculateStakeValues(mode, amount, odds) {
+        const stakeMode = String(mode || 'risk').toLowerCase() === 'to_win' || String(mode || '').toLowerCase() === 'towin' ? 'to_win' : 'risk';
+        const units = Number(amount);
+        const price = Number(odds);
+        if (!Number.isFinite(units) || units <= 0 || !Number.isFinite(price) || price === 0) return { risk_units: 0, win_units: 0 };
+        if (stakeMode === 'to_win') {
+            return { risk_units: roundStakeUnits(price < 0 ? units * Math.abs(price) / 100 : units * 100 / price), win_units: roundStakeUnits(units) };
+        }
+        return { risk_units: roundStakeUnits(units), win_units: roundStakeUnits(price < 0 ? units * 100 / Math.abs(price) : units * price / 100) };
+    }
+
+    function normalizeStakeMode(mode) {
+        return String(mode || '').toLowerCase() === 'to_win' || String(mode || '').toLowerCase() === 'towin' ? 'to_win' : 'risk';
+    }
+
+    function getSelectedStakeMode() {
+        return normalizeStakeMode(window.TMR && window.TMR.selectedUnitsMode ? window.TMR.selectedUnitsMode : 'risk');
+    }
+
+    function setStakeMode(mode) {
+        const nextMode = normalizeStakeMode(mode);
+        window.TMR = window.TMR || {};
+        window.TMR.selectedUnitsMode = nextMode;
+        [{ id: 'modeRisk', mode: 'risk' }, { id: 'modeToWin', mode: 'to_win' }, { id: 'modeRiskTicket', mode: 'risk' }, { id: 'modeToWinTicket', mode: 'to_win' }].forEach(function(entry) {
+            const button = document.getElementById(entry.id);
+            if (!button) return;
+            const active = entry.mode === nextMode;
+            button.classList.toggle('active', active);
+            button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        });
+        const explanation = document.getElementById('unitsExplanation');
+        if (explanation) explanation.textContent = nextMode === 'to_win' ? 'Enter target profit units. Risk is calculated from the odds.' : 'Enter units risked. To-win amount is calculated from the odds.';
+        updateStakeModePreview();
+        return nextMode;
+    }
+
+    function updateStakeModePreview() {
+        const input = document.getElementById('unitsInput');
+        const oddsInput = document.getElementById('pickOddsInput');
+        const amount = input ? parseFloat(input.value || '1') : 1;
+        const odds = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
+        const selectedMode = getSelectedStakeMode();
+        const values = calculateStakeValues(selectedMode, amount, odds);
+        const riskButton = document.getElementById('modeRisk');
+        const toWinButton = document.getElementById('modeToWin');
+        const formatUnits = function(value) {
+            const n = roundStakeUnits(value);
+            if (!Number.isFinite(n) || n <= 0) return 'X';
+            return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+        };
+        if (riskButton) riskButton.innerHTML = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
+        if (toWinButton) toWinButton.innerHTML = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
+        const previewText = values.risk_units > 0 && values.win_units > 0 ? 'Risk ' + values.risk_units + ' units to win ' + values.win_units + ' units' : 'Risk / To Win preview updates after odds are entered.';
+        ['unitsStakePreview', 'ttSlipStakePreview'].forEach(function(id) { const preview = document.getElementById(id); if (preview) preview.textContent = previewText; });
+    }
+
+    function formatStakeDisplay(pick) {
+        pick = pick || {};
+        const odds = Number(pick.odds_snapshot != null ? pick.odds_snapshot : (pick.odds != null ? pick.odds : pick.price));
+        let risk = Number(pick.risk_units != null ? pick.risk_units : pick.riskUnits);
+        let win = Number(pick.win_units != null ? pick.win_units : (pick.to_win_units != null ? pick.to_win_units : pick.toWinUnits));
+        if ((!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) && Number.isFinite(odds)) {
+            const values = calculateStakeValues(pick.stake_mode || pick.units_mode || pick.unitsMode || 'risk', pick.units != null ? pick.units : 1, odds);
+            risk = values.risk_units;
+            win = values.win_units;
+        }
+        if (!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) return '';
+        const fmt = function(n) { n = roundStakeUnits(n); return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''); };
+        return 'Risk ' + fmt(risk) + ' units to win ' + fmt(win) + ' units';
+    }
+
+    window.TMR = window.TMR || {};
+    window.TMR.calculateStakeValues = calculateStakeValues;
+    window.TMR.formatStakeDisplay = formatStakeDisplay;
+    window.TMR.updateStakeModePreview = updateStakeModePreview;
+    window.setUnitsMode = setStakeMode;
+
+
     function normalizePick(pick) {
         return Object.assign({}, pick, {
             status: normalizeStatus(pick.status, pick.result),
             odds_snapshot: pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds,
             line_snapshot: pick.line_snapshot != null ? pick.line_snapshot : pick.line,
-            units: pick.units != null ? parseFloat(pick.units) : 1
+            units: pick.units != null ? parseFloat(pick.units) : 1,
+            stake_mode: pick.stake_mode || pick.units_mode || 'risk',
+            risk_units: pick.risk_units != null ? parseFloat(pick.risk_units) : null,
+            to_win_units: pick.to_win_units != null ? parseFloat(pick.to_win_units) : (pick.win_units != null ? parseFloat(pick.win_units) : null),
+            win_units: pick.win_units != null ? parseFloat(pick.win_units) : (pick.to_win_units != null ? parseFloat(pick.to_win_units) : null)
         });
     }
 
@@ -950,12 +1037,69 @@
         return 'Line';
     }
 
+
+    function ensureStakeModeControls(unitsInput) {
+        unitsInput = unitsInput || document.getElementById('unitsInput');
+        if (!unitsInput) return;
+        unitsInput.setAttribute('min', '1');
+        unitsInput.setAttribute('max', '5');
+        unitsInput.setAttribute('step', '1');
+        unitsInput.setAttribute('inputmode', 'decimal');
+        unitsInput.oninput = function() { updateStakeModePreview(); };
+        unitsInput.onchange = function() { updateStakeModePreview(); };
+        let row = unitsInput.parentElement;
+        if (!row || !row.classList || !row.classList.contains('tmr-units-row')) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'tmr-units-row';
+            wrapper.style.display = 'flex';
+            wrapper.style.alignItems = 'center';
+            wrapper.style.gap = '12px';
+            wrapper.style.marginTop = '8px';
+            if (row) row.insertBefore(wrapper, unitsInput);
+            wrapper.appendChild(unitsInput);
+            row = wrapper;
+        } else row.classList.add('tmr-units-row');
+        let visibleLabel = document.getElementById('unitsModeVisibleLabel');
+        if (!visibleLabel) {
+            visibleLabel = document.createElement('div');
+            visibleLabel.id = 'unitsModeVisibleLabel';
+            visibleLabel.className = 'tmr-units-mode-label';
+            visibleLabel.textContent = 'Risk / To Win selector';
+        }
+        if (visibleLabel.parentElement !== row) row.insertBefore(visibleLabel, unitsInput);
+        let toggle = document.getElementById('unitsModeToggle');
+        if (!toggle) {
+            toggle = document.createElement('div');
+            toggle.id = 'unitsModeToggle';
+            toggle.setAttribute('role', 'group');
+            toggle.setAttribute('aria-label', 'Stake mode');
+            toggle.innerHTML = '<button type="button" id="modeRisk" class="units-mode-btn" data-stake-mode="risk">Risk X units</button>' + '<button type="button" id="modeToWin" class="units-mode-btn" data-stake-mode="to_win">To win X units</button>';
+        }
+        if (toggle.parentElement !== row) row.appendChild(toggle);
+        toggle.style.display = 'flex';
+        [{ id: 'modeRisk', mode: 'risk', label: 'Risk X units' }, { id: 'modeToWin', mode: 'to_win', label: 'To win X units' }].forEach(function(entry) {
+            let button = document.getElementById(entry.id);
+            if (!button) { button = document.createElement('button'); button.type = 'button'; button.id = entry.id; button.className = 'units-mode-btn'; toggle.appendChild(button); }
+            button.type = 'button';
+            button.textContent = entry.label;
+            button.setAttribute('data-stake-mode', entry.mode);
+            button.onclick = function() { setStakeMode(entry.mode); };
+        });
+        const group = unitsInput.closest('.option-group');
+        let explanation = document.getElementById('unitsExplanation');
+        if (!explanation && group) { explanation = document.createElement('p'); explanation.id = 'unitsExplanation'; explanation.className = 'ticket-input-help'; group.appendChild(explanation); }
+        if (group && !document.getElementById('unitsStakePreview')) { const preview = document.createElement('p'); preview.id = 'unitsStakePreview'; preview.className = 'ticket-input-help'; group.appendChild(preview); }
+        setStakeMode(getSelectedStakeMode());
+    }
+
     function syncPickDetailsLayout(option) {
         const selectorIds = ['betScopeSelector', 'betTypeSelector', 'betTypeSelector2', 'betTypeSelectorF5'];
         selectorIds.forEach(function(id) {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
+
+        ensureStakeModeControls(document.getElementById('unitsInput'));
 
         const lineGroup = document.getElementById('lineInputGroup');
         if (lineGroup) {
@@ -1079,6 +1223,13 @@
             '#picks #pickLineInput:focus,#picks #pickOddsInput:focus,#picks #unitsInput:focus,#picks #pickReasoning:focus{outline:none;border-color:rgba(120,255,181,0.34)!important;box-shadow:0 0 0 3px rgba(47,143,83,0.15)!important;}',
             '#picks #pickReasoning{min-height:110px;padding:14px 16px;font-size:15px;resize:vertical;}',
             '#picks #unitsModeToggle{border:1px solid rgba(255,255,255,0.08)!important;border-radius:12px!important;background:#14181f!important;}',
+            '#picks .tmr-units-row{display:flex!important;flex-wrap:wrap;align-items:stretch;gap:10px!important;margin-top:8px;}',
+            '#picks .tmr-units-mode-label{flex:1 0 100%;font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f2c94c;}',
+            '#picks .tmr-units-row #unitsInput{flex:1 1 110px;min-width:0;width:auto!important;text-align:center;}',
+            '#picks .tmr-units-row #unitsModeToggle{flex:1 1 240px;display:flex;overflow:hidden;min-width:0;}',
+            '#picks .tmr-units-row #unitsModeToggle .units-mode-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:10px 12px;font-size:12px;border-radius:0;line-height:1.15;min-height:58px;}',
+            '#picks .tmr-units-row #unitsModeToggle .units-mode-btn span{display:block;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;opacity:.78;}',
+            '#picks .tmr-units-row #unitsModeToggle .units-mode-btn strong{display:block;font-size:14px;letter-spacing:0;text-transform:none;white-space:nowrap;}',
             '#picks .submit-pick-btn{width:100%;padding:16px 20px;border-radius:16px;border:1px solid rgba(120,255,181,0.26);background:linear-gradient(180deg,#2f8f53,#257444);color:#f8fff9;font-size:15px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;box-shadow:0 16px 30px rgba(0,0,0,0.2);}',
             '#picks .submit-pick-btn:hover{transform:translateY(-1px);background:linear-gradient(180deg,#38a35f,#2a7c49);}',
             '#picks #pickConfirmation > div{background:linear-gradient(180deg,rgba(35,63,42,0.98),rgba(19,31,23,0.98))!important;border:1px solid rgba(120,255,181,0.26)!important;border-radius:20px!important;box-shadow:0 20px 40px rgba(0,0,0,0.22)!important;}',
@@ -1837,6 +1988,8 @@
             .toUpperCase() || '--';
     }
 
+    // Protected sportsbook logo system. CANONICAL_TEAM_LOGOS currently resolves baseball_mlb via ESPN aliases.
+    const CANONICAL_TEAM_LOGOS = { baseball_mlb: true, icehockey_nhl: true, basketball_nba: true, americanfootball_nfl: true };
     const TEAM_LOGO_WARNED = {};
     const MLB_LOGO_MAP = {
         'arizona diamondbacks': 'ari', 'diamondbacks': 'ari', 'arizona': 'ari',
@@ -1857,6 +2010,8 @@
         'tampa bay rays': 'tb', 'rays': 'tb', 'texas rangers': 'tex', 'rangers': 'tex',
         'toronto blue jays': 'tor', 'blue jays': 'tor', 'washington nationals': 'wsh', 'nationals': 'wsh'
     };
+
+    function resolveTeamLogo(teamName, logoUrl, abbr, sportKey) { return resolveTeamLogoUrl(teamName, logoUrl, abbr, sportKey); }
 
     function resolveTeamLogoUrl(teamName, logoUrl, abbr, sportKey) {
         if (logoUrl) return logoUrl;
@@ -1881,7 +2036,7 @@
             }
             return '<span class="tmr-team-abbr">' + fallback + '</span>';
         }
-        return '<span class="tmr-team-abbr" data-team="' + escapeHtml(teamName || '') + '"><img src="' + escapeHtml(resolvedLogoUrl) + '" alt="" loading="lazy" decoding="async" onerror="console.warn(\'[TMR][Sportsbook] Team logo failed to load; falling back to initials\', this.src, this.parentElement && this.parentElement.dataset ? this.parentElement.dataset.team : \'\');this.parentElement.textContent=\'' + fallback + '\';"></span>';
+        return '<span class="tmr-team-abbr tmr-team-logo-badge" data-team="' + escapeHtml(teamName || '') + '"><img src="' + escapeHtml(resolvedLogoUrl) + '" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add(\'tmr-team-logo-badge--fallback\');this.remove();"><span class="tmr-team-logo-fallback">' + fallback + '</span></span>';
     }
 
     function getOptionTag(option, game) {
@@ -2142,6 +2297,7 @@
         syncPickDetailsLayout(option);
         if (lineInput) lineInput.value = option.line_display || '';
         if (oddsInput) oddsInput.value = option.odds != null ? option.odds : '';
+        updateStakeModePreview();
         if (marketInput) marketInput.value = option.group_label + ' / ' + getMarketLabel(option.market_type);
         if (bookInput) bookInput.value = option.book_title || '';
         if (timestampInput) timestampInput.value = formatTimestamp(option.source_updated_at);
@@ -2390,6 +2546,7 @@
         const unitsInput = document.getElementById('unitsInput');
         const bookInput = document.getElementById('pickBookInput');
         const reasoningInput = document.getElementById('pickReasoning');
+        ensureStakeModeControls(unitsInput);
 
         const oddsValue = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
         const lineValue = lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null;
@@ -2422,6 +2579,9 @@
             }
         }
 
+        const stakeMode = getSelectedStakeMode();
+        const stakeValues = calculateStakeValues(stakeMode, unitsValue, oddsValue);
+
         if (window.api && typeof window.api.loadTokens === 'function') {
             try { window.api.loadTokens(); } catch (error) {}
         }
@@ -2441,6 +2601,11 @@
                 line_snapshot: lineValue,
                 odds_snapshot: oddsValue,
                 units: unitsValue,
+                stake_mode: stakeMode,
+                units_mode: stakeMode,
+                risk_units: stakeValues.risk_units,
+                win_units: stakeValues.win_units,
+                to_win_units: stakeValues.win_units,
                 book_title: bookInput ? bookInput.value.trim() : option.book_title,
                 book_key: option.book_key,
                 market_key: option.market_key,
@@ -2928,10 +3093,19 @@
         window.tmrSetCardFilter = setCardFilter;
         window.tmrSetBoardFilter = setBoardFilter;
         window.tmrSelectOption = selectOption;
+        window.TMR.renderSportsbookTeamLogo = renderTeamLogo;
+        window.TMR.resolveSportsbookTeamLogo = resolveTeamLogo;
         window.tmrSportsbookRefresh = refreshCurrentSport;
         window.tmrDumpBoardDiagnostics = function() {
             return boardDiagnostics.slice();
         };
+        lockFunction(window, 'tmrSelectOption', selectOption);
+        lockFunction(window, 'setUnitsMode', setStakeMode);
+        lockFunction(window.TMR, 'calculateStakeValues', calculateStakeValues);
+        lockFunction(window.TMR, 'formatStakeDisplay', formatStakeDisplay);
+        lockFunction(window.TMR, 'updateStakeModePreview', updateStakeModePreview);
+        lockFunction(window.TMR, 'renderSportsbookTeamLogo', renderTeamLogo);
+        lockFunction(window.TMR, 'resolveSportsbookTeamLogo', resolveTeamLogo);
         lockFunction(window, 'selectSportAndShowGames', selectSportAndShowGames);
         lockFunction(window, 'submitPick', lockInPick);
         lockFunction(window, 'lockInPick', lockInPick);
