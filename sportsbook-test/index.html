@@ -486,11 +486,66 @@
     window.TMR._cachedGames = [];
     window.TMR._cachedSport = null;
 
-    // Build team-logo markup for the matchup column. Real ESPN logo when we
-    // have a URL; clean dark initials chip otherwise. <img> onerror flips back
-    // to initials so a 404'd logo never leaves a broken-image icon on the row.
+    window.TMR._teamLogoMissingWarned = window.TMR._teamLogoMissingWarned || {};
+    window.TMR._teamLogoMap = window.TMR._teamLogoMap || {
+        MLB: {
+            'arizona diamondbacks': 'ari', 'diamondbacks': 'ari', 'arizona': 'ari',
+            'atlanta braves': 'atl', 'braves': 'atl', 'atlanta': 'atl',
+            'baltimore orioles': 'bal', 'orioles': 'bal', 'baltimore': 'bal',
+            'boston red sox': 'bos', 'red sox': 'bos', 'boston': 'bos',
+            'chicago cubs': 'chc', 'cubs': 'chc',
+            'chicago white sox': 'chw', 'white sox': 'chw',
+            'cincinnati reds': 'cin', 'reds': 'cin', 'cincinnati': 'cin',
+            'cleveland guardians': 'cle', 'guardians': 'cle', 'cleveland': 'cle',
+            'colorado rockies': 'col', 'rockies': 'col', 'colorado': 'col',
+            'detroit tigers': 'det', 'tigers': 'det', 'detroit': 'det',
+            'houston astros': 'hou', 'astros': 'hou', 'houston': 'hou',
+            'kansas city royals': 'kc', 'royals': 'kc', 'kansas city': 'kc',
+            'los angeles angels': 'laa', 'angels': 'laa', 'la angels': 'laa',
+            'los angeles dodgers': 'lad', 'dodgers': 'lad', 'la dodgers': 'lad',
+            'miami marlins': 'mia', 'marlins': 'mia', 'miami': 'mia',
+            'milwaukee brewers': 'mil', 'brewers': 'mil', 'milwaukee': 'mil',
+            'minnesota twins': 'min', 'twins': 'min', 'minnesota': 'min',
+            'new york mets': 'nym', 'mets': 'nym',
+            'new york yankees': 'nyy', 'yankees': 'nyy',
+            'athletics': 'ath', 'oakland athletics': 'oak', "a's": 'ath',
+            'philadelphia phillies': 'phi', 'phillies': 'phi', 'philadelphia': 'phi',
+            'pittsburgh pirates': 'pit', 'pirates': 'pit', 'pittsburgh': 'pit',
+            'san diego padres': 'sd', 'padres': 'sd', 'san diego': 'sd',
+            'seattle mariners': 'sea', 'mariners': 'sea', 'seattle': 'sea',
+            'san francisco giants': 'sf', 'giants': 'sf', 'san francisco': 'sf',
+            'st. louis cardinals': 'stl', 'st louis cardinals': 'stl', 'cardinals': 'stl',
+            'tampa bay rays': 'tb', 'rays': 'tb', 'tampa bay': 'tb',
+            'texas rangers': 'tex', 'rangers': 'tex', 'texas': 'tex',
+            'toronto blue jays': 'tor', 'blue jays': 'tor', 'toronto': 'tor',
+            'washington nationals': 'wsh', 'nationals': 'wsh', 'washington': 'wsh', 'nats': 'wsh'
+        }
+    };
+    window.TMR._resolveTeamLogoUrl = function(logoUrl, abbr, fullName) {
+        if (logoUrl) return logoUrl;
+        var sport = String(window.TMR.selectedSport || window.TMR._cachedSport || '').toUpperCase();
+        var map = window.TMR._teamLogoMap && window.TMR._teamLogoMap[sport];
+        var nameKey = String(fullName || '').toLowerCase().trim();
+        var code = map && (map[nameKey] || map[nameKey.replace(/\s+/g, ' ')]);
+        if (!code && map && nameKey) {
+            var parts = nameKey.split(/\s+/);
+            var lastWord = parts[parts.length - 1];
+            code = map[lastWord];
+        }
+        if (!code && sport === 'MLB') {
+            var cleanAbbr = String(abbr || '').toLowerCase().replace(/[^a-z]/g, '');
+            var espnAbbr = { ari:'ari', atl:'atl', bal:'bal', bos:'bos', chc:'chc', chw:'chw', cin:'cin', cle:'cle', col:'col', det:'det', hou:'hou', kc:'kc', laa:'laa', lad:'lad', mia:'mia', mil:'mil', min:'min', nym:'nym', nyy:'nyy', oak:'oak', ath:'ath', phi:'phi', pit:'pit', sd:'sd', sea:'sea', sf:'sf', stl:'stl', tb:'tb', tex:'tex', tor:'tor', wsh:'wsh' };
+            code = espnAbbr[cleanAbbr];
+        }
+        return code ? ('https://a.espncdn.com/i/teamlogos/' + sport.toLowerCase() + '/500/' + code + '.png') : null;
+    };
+    // Build team-logo markup for the matchup column. Resolve real ESPN logo
+    // URLs from the active sport/team mapping before falling back to initials.
+    // <img> onerror flips back to initials so a genuinely missing asset never
+    // leaves a broken-image icon on the row.
     window.TMR._teamLogo = function(logoUrl, abbr, fullName) {
         var safeAttr = function(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+        var resolvedLogoUrl = window.TMR._resolveTeamLogoUrl ? window.TMR._resolveTeamLogoUrl(logoUrl, abbr, fullName) : logoUrl;
         var initials = '';
         if (abbr) {
             initials = ('' + abbr).toUpperCase().slice(0, 3);
@@ -500,12 +555,17 @@
             else initials = (parts[parts.length - 1][0] || '').toUpperCase() + (parts[parts.length - 2] ? parts[parts.length - 2][0].toUpperCase() : '');
         }
         var initialsHtml = '<span class="team-logo__initials">' + safeAttr(initials || '?') + '</span>';
-        if (logoUrl) {
-            return '<div class="team-logo" aria-hidden="true">'
-                + '<img class="team-logo__img" src="' + safeAttr(logoUrl) + '" alt="" loading="lazy" decoding="async"'
-                + ' onerror="this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">'
+        if (resolvedLogoUrl) {
+            return '<div class="team-logo" aria-hidden="true" data-team="' + safeAttr(fullName || '') + '">'
+                + '<img class="team-logo__img" src="' + safeAttr(resolvedLogoUrl) + '" alt="" loading="lazy" decoding="async"'
+                + ' onerror="console.warn(\'[TMR][Sportsbook] Team logo failed to load; falling back to initials\', this.src, this.parentElement && this.parentElement.dataset ? this.parentElement.dataset.team : \'\');this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">'
                 + initialsHtml
                 + '</div>';
+        }
+        var warnKey = String(window.TMR.selectedSport || '') + '|' + String(fullName || abbr || '');
+        if (!window.TMR._teamLogoMissingWarned[warnKey]) {
+            window.TMR._teamLogoMissingWarned[warnKey] = true;
+            console.warn('[TMR][Sportsbook] Missing team logo URL; using initials fallback', { sport: window.TMR.selectedSport || window.TMR._cachedSport || '', team: fullName || '', abbr: abbr || '' });
         }
         return '<div class="team-logo team-logo--fallback" aria-hidden="true">' + initialsHtml + '</div>';
     };
