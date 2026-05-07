@@ -503,12 +503,11 @@
         return errors;
     }
     function buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin) {
-        var seed = seededHash([away.id, home.id, awayPitcher && awayPitcher.id, homePitcher && homePitcher.id, round1(awayRuns), round1(homeRuns), round1(awayWin), state.preset].join('|'));
-        var random = seededRandom(seed);
+        var random = Math.random;
         var awayScore = controlledFinalScore(awayRuns, homeRuns, awayWin, random);
         var homeScore = controlledFinalScore(homeRuns, awayRuns, homeWin, random);
         if (awayScore === homeScore) {
-            if (homeWin >= awayWin) homeScore += 1;
+            if (random() < homeWin) homeScore += 1;
             else awayScore += 1;
         }
         var combined = awayScore + homeScore;
@@ -520,7 +519,7 @@
                 excess -= 1;
             }
             if (awayScore === homeScore) {
-                if (homeWin >= awayWin && awayScore > 0) awayScore -= 1;
+                if (random() < homeWin && awayScore > 0) awayScore -= 1;
                 else if (homeScore > 0) homeScore -= 1;
             }
         }
@@ -532,7 +531,7 @@
             else break;
         }
         if (awayScore === homeScore) {
-            if (homeWin >= awayWin) {
+            if (random() < homeWin) {
                 if (homeScore < 20 && awayScore + homeScore < 24) homeScore += 1;
                 else if (awayScore > 0) awayScore -= 1;
             } else {
@@ -540,17 +539,19 @@
                 else if (homeScore > 0) homeScore -= 1;
             }
         }
-        if (homeWin >= awayWin && homeScore <= awayScore) {
-            if (homeScore < 20 && homeScore + awayScore < 24) homeScore = awayScore + 1;
-            else awayScore = Math.max(0, homeScore - 1);
-        } else if (awayWin > homeWin && awayScore <= homeScore) {
-            if (awayScore < 20 && homeScore + awayScore < 24) awayScore = homeScore + 1;
-            else homeScore = Math.max(0, awayScore - 1);
-        }
         while (awayScore + homeScore > 24) {
-            if (homeWin >= awayWin && awayScore > 0) awayScore -= 1;
-            else if (awayWin > homeWin && homeScore > 0) homeScore -= 1;
+            if (awayScore >= homeScore && awayScore > 0) awayScore -= 1;
+            else if (homeScore > 0) homeScore -= 1;
             else break;
+        }
+        if (awayScore === homeScore) {
+            if (random() < homeWin) {
+                if (homeScore < 20 && homeScore + awayScore < 24) homeScore += 1;
+                else awayScore = Math.max(0, awayScore - 1);
+            } else {
+                if (awayScore < 20 && homeScore + awayScore < 24) awayScore += 1;
+                else homeScore = Math.max(0, homeScore - 1);
+            }
         }
         var awayInnings = distributeRuns(awayScore, awayRuns, random, false);
         var homeInnings = distributeRuns(homeScore, homeRuns, random, true);
@@ -565,7 +566,7 @@
         var homeLate = homeInnings[6] + homeInnings[7] + homeInnings[8];
         var turningPoint = (awayLate || homeLate) ? 'Late innings swung ' + (homeLate >= awayLate ? home.abbreviation : away.abbreviation) + ' with a ' + Math.max(awayLate, homeLate) + '-run finish.' : 'The game stayed controlled after the starters set the run environment.';
         return {
-            seed: seed,
+            runId: String(Date.now()) + '-' + Math.floor(random() * 1000000),
             away: { team: away, innings: awayInnings, runs: awayScore, hits: awayHits, errors: awayErrors, starter: awayPitcher },
             home: { team: home, innings: homeInnings, runs: homeScore, hits: homeHits, errors: homeErrors, starter: homePitcher },
             winner: winner,
@@ -1064,8 +1065,7 @@
         var boxScore = buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin);
         var projectedAwayScore = boxScore.away.runs;
         var projectedHomeScore = boxScore.home.runs;
-        winner = boxScore.winner;
-        winnerPct = winner.id === home.id ? homeWin : awayWin;
+        var finalWinner = boxScore.winner;
         var reasonParts = [];
         reasonParts.push(winner.name + ' projects ahead because the run expectation and composite team rating lean their way.');
         if (Math.abs(away.offense - home.offense) >= 4) reasonParts.push(edgeLabel('offense', away, home) + ' on offense.');
@@ -1078,6 +1078,7 @@
             home: home,
             winner: winner,
             winnerPct: winnerPct,
+            finalWinner: finalWinner,
             awayWin: awayWin,
             homeWin: homeWin,
             awayRuns: round1(awayRuns),
@@ -1312,7 +1313,7 @@
         lines.push('Generated: ' + generatedAt);
         lines.push(result.away.name + ' at ' + result.home.name);
         lines.push('Mode: ' + result.simulationMode + ' / Data: ' + result.dataMode);
-        lines.push('Projected final: ' + result.away.name + ' ' + box.away.runs + ', ' + result.home.name + ' ' + box.home.runs);
+        lines.push('Simulated final: ' + result.away.name + ' ' + box.away.runs + ', ' + result.home.name + ' ' + box.home.runs);
         lines.push('Win probability: ' + result.away.name + ' ' + roundPct(result.awayWin) + ' / ' + result.home.name + ' ' + roundPct(result.homeWin));
         lines.push('Expected runs: ' + result.away.name + ' ' + result.awayRuns + ' / ' + result.home.name + ' ' + result.homeRuns);
         lines.push('Starting Pitchers: ' + result.away.name + ': ' + result.awayPitcher.name + ' | ' + result.home.name + ': ' + result.homePitcher.name);
@@ -1437,7 +1438,7 @@
         var homeBar = byId('homeProbabilityBar');
         if (awayBar) awayBar.style.width = clamp(result.awayWin * 100, 2, 98) + '%';
         if (homeBar) homeBar.style.width = clamp(result.homeWin * 100, 2, 98) + '%';
-        setText('projectionNotice', result.dataSourcesUsed.length ? 'Verified live inputs are included where listed. No SportsDataIO data, betting edge, or official record is created.' : 'Simulation-based estimate, not sportsbook odds or provider projection. No SportsDataIO data, betting edge, or official record is created.');
+        setText('projectionNotice', (result.dataSourcesUsed.length ? 'Verified live inputs are included where listed. ' : 'Simulation-based estimate, not sportsbook odds or provider projection. ') + 'Projected win probability and expected runs stay stable for the same inputs; the final score and box score are a fresh stochastic simulation each run. No official record is created.');
         renderComparison(result);
         renderInputStatus(result);
         renderNotes(result);
