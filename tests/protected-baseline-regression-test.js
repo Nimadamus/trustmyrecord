@@ -1,0 +1,65 @@
+#!/usr/bin/env node
+
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+
+const root = path.resolve(__dirname, '..');
+const rules = fs.readFileSync(path.join(root, 'DEVELOPMENT_RULES.md'), 'utf8');
+const sportsbook = fs.readFileSync(path.join(root, 'sportsbook', 'index.html'), 'utf8');
+const pending = fs.readFileSync(path.join(root, 'my-pending-picks', 'index.html'), 'utf8');
+const sitewide = fs.readFileSync(path.join(root, 'static', 'js', 'tmr-sitewide.js'), 'utf8');
+const reliability = fs.readFileSync(path.join(root, 'static', 'js', 'sportsbook-production-fix-persist-reliability.js'), 'utf8');
+
+for (const required of [
+  'Protected Baseline and Regression Policy',
+  'Risky File Classification Inventory',
+  'Standard Completion Checklist',
+  'production protected',
+  'reference only',
+  'test only',
+  'quarantine candidate',
+  'temporary artifact',
+]) {
+  assert(rules.toLowerCase().includes(required.toLowerCase()), `DEVELOPMENT_RULES missing ${required}`);
+}
+
+for (const file of [
+  'sportsbook/index.html',
+  'my-pending-picks/index.html',
+  'static/js/tmr-sitewide.js',
+  'static/js/sportsbook-production-fix-persist-reliability.js',
+]) {
+  assert(rules.includes(file), `DEVELOPMENT_RULES must classify ${file}`);
+}
+
+assert(sportsbook.includes('SPORTSBOOK_RIGHT_RAIL_NO_OVERFLOW_FINAL_20260507'), 'sportsbook right rail containment guard must remain');
+assert(sportsbook.includes('grid-column: 3 / 4'), 'sportsbook right rail must remain pinned to desktop column 3');
+assert(sportsbook.includes('SPORTSBOOK_AUTH_ODDS_POLISH_20260507'), 'sportsbook auth display guard must remain');
+assert(sportsbook.includes('tmr-sportsbook-auth-display-sync'), 'sportsbook logged-in auth display sync must remain');
+assert(sportsbook.includes('data-tmr-auth="logged-in"'), 'sportsbook must have logged-in CTA hiding CSS');
+assert(sportsbook.includes('modeRisk'), 'Risk mode control must remain');
+assert(sportsbook.includes('modeToWin'), 'To Win mode control must remain');
+assert(!sportsbook.includes('RISK TO WIN'), 'stale RISK TO WIN copy must not return');
+assert(!sportsbook.includes('tmr-redesign-test-sportsbook-logos.js'), 'old sportsbook logo enhancer script must not return');
+assert(!sportsbook.includes('var LEGACY_TEAM_LOGOS'), 'legacy inline logo map must not return');
+
+assert(reliability.includes('function renderTeamLogo'), 'protected logo renderer must remain');
+assert(reliability.includes('window.TMR.renderSportsbookTeamLogo = renderTeamLogo'), 'protected logo renderer exposure must remain');
+assert(reliability.includes('lockFunction(window.TMR, \'renderSportsbookTeamLogo\', renderTeamLogo)'), 'logo renderer lock must remain');
+assert(reliability.includes('stake_mode: stakeMode'), 'stake mode payload must remain');
+assert(reliability.includes('risk_units: stakeValues.risk_units'), 'risk_units payload must remain');
+assert(reliability.includes('to_win_units: stakeValues.win_units'), 'to_win_units payload must remain');
+
+assert(sitewide.includes('buildLoggedOutActions'), 'sitewide nav must still define guest actions');
+assert(sitewide.includes('buildLoggedInActions'), 'sitewide nav must still define logged-in profile actions');
+assert(sitewide.includes('Log Out'), 'logged-in nav must still expose Log Out');
+assert(sitewide.includes('Join Free') && sitewide.includes('Log In'), 'guest nav CTA labels must remain available for guests');
+
+assert(pending.includes('PENDING_PICK_TOTAL_LINE_NUMERIC_ONLY_20260507'), 'pending numeric-only total line guard must remain');
+assert(pending.includes('PENDING_PICK_RENDER_COUNT_FIX_20260507'), 'pending render count guard must remain');
+assert(pending.includes('Full Game Total'), 'pending full-game total label must remain');
+assert(pending.includes('Team Total'), 'pending team total label must remain');
+assert(!/side\s*\?\s*side\s*\+\s*['"]\s['"]\s*\+\s*line/.test(pending), 'pending Line column must not prefix totals with U/O');
+
+console.log('protected baseline regression test passed');

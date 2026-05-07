@@ -21,6 +21,9 @@ jobs:
       - name: Run line formatting guard
         run: node tests/line-formatting-regression-test.js
 
+      - name: Run pending picks guard
+        run: node tests/pending-picks-regression-test.js
+
   sportsbook-guards:
     runs-on: ubuntu-latest
     steps:
@@ -37,6 +40,9 @@ jobs:
 
       - name: Run sportsbook stake-mode guard
         run: node tests/sportsbook-stake-mode-ui-test.js
+
+      - name: Run protected baseline guard
+        run: node tests/protected-baseline-regression-test.js
   profile-and-simulator-guards:
     runs-on: ubuntu-latest
     steps:
