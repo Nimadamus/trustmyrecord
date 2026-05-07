@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-page-polish.css">
-    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260506-box-score-fullwidth">
+    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260506-sim-count">
     <script src="/static/js/config.js"></script>
     <script src="/static/js/backend-api.js"></script>
 </head>
@@ -117,8 +117,19 @@
                     </article>
                 </div>
 
-                <div class="sim-actions">
+                <div class="sim-actions sim-actions-expanded">
+                    <label class="sim-count-field" for="simulationCountSelect">
+                        <span>Number of simulations</span>
+                        <select id="simulationCountSelect" class="sim-select">
+                            <option value="1" selected>1</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </label>
                     <button id="runSimulationButton" class="sim-button primary" type="button">Run Simulation</button>
+                    <a id="viewBoxScoreControl" class="sim-button secondary compact-action view-box-score-link" href="#boxScorePanel" aria-disabled="true">View Box Score</a>
                     <button id="refreshTeamsButton" class="sim-button secondary" type="button">Reset</button>
                 </div>
                 <p class="sim-article-link"><a href="/trustmyrecord-tools/mlb-simulator/">How this simulator works</a></p>
@@ -187,7 +198,7 @@
                     </div>
                     <div>
                         <span id="winProbabilityValue" class="projection-value muted">Select teams</span>
-                        <small>Projected Winner / Win %</small>
+                        <small>Simulated Winner / Win %</small>
                     </div>
                     <div>
                         <span id="expectedRunsValue" class="projection-value muted">Choose starters</span>
@@ -218,6 +229,17 @@
                         <small>Data Mode Used</small>
                     </div>
                 </div>
+
+                <section id="aggregatePanel" class="sim-aggregate-panel" data-aggregate-state="empty" aria-live="polite">
+                    <div class="sim-panel-heading compact">
+                        <p class="sim-label">Simulation Batch</p>
+                        <h3>Aggregate Summary</h3>
+                    </div>
+                    <div id="aggregateSummaryGrid" class="aggregate-summary-grid">
+                        <div><strong>Runs</strong><span>Choose 10, 25, 50, or 100 simulations.</span></div>
+                    </div>
+                    <p id="aggregateSummaryText">Multiple-simulation output is simulation-based, not official prediction certainty.</p>
+                </section>
 
                 <div id="probabilityLab" class="probability-lab" data-probability-state="empty">
                     <div class="probability-row">
@@ -336,7 +358,6 @@
         </section>
     </main>
 
-    <script src="/static/js/mlb-historical-team-profiles.js?v=20260506-box-score-fullwidth"></script>
-    <script src="/static/js/mlb-simulator.js?v=20260506-box-score-fullwidth"></script>
+    <script src="/static/js/mlb-simulator.js?v=20260506-sim-count"></script>
 </body>
 </html>
