@@ -326,7 +326,7 @@
 
         .hm-row {
             display: grid;
-            grid-template-columns: minmax(220px, 1.35fr) 74px 80px 72px 76px 58px 70px minmax(92px, 0.55fr) minmax(150px, 0.95fr) minmax(118px, 0.7fr);
+            grid-template-columns: minmax(240px, 1.55fr) 82px 92px 84px 88px 68px 82px minmax(150px, 0.8fr) minmax(150px, 0.85fr);
             column-gap: 8px;
             row-gap: 12px;
             align-items: center;
@@ -355,7 +355,7 @@
         }
 
         .hm-head > div:nth-child(n+2):nth-child(-n+7),
-        .hm-head > div:nth-child(10) {
+        .hm-head > div:nth-child(9) {
             text-align: center;
         }
 
@@ -510,32 +510,6 @@
             font-weight: 900;
         }
 
-        .hm-last-pick {
-            min-width: 0;
-            display: grid;
-            gap: 6px;
-        }
-
-        .hm-last-pick strong {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: #dce8f5;
-            font-size: 0.96rem;
-            line-height: 1.18;
-            font-weight: 900;
-        }
-
-        .hm-last-pick span {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            color: var(--muted);
-            font-size: 0.82rem;
-            line-height: 1.18;
-            font-weight: 800;
-        }
-
         .hm-empty,
         .hm-error {
             padding: 34px 18px;
@@ -574,8 +548,7 @@
 
         .hm-skeleton .hm-user,
         .hm-skeleton .hm-stat,
-        .hm-skeleton .hm-sports,
-        .hm-skeleton .hm-last-pick {
+        .hm-skeleton .hm-sports {
             min-height: 16px;
             border-radius: 8px;
             color: transparent;
@@ -586,8 +559,6 @@
 
         .hm-skeleton .hm-user { min-height: 66px; }
         .hm-skeleton .hm-sports { min-height: 28px; }
-        .hm-skeleton .hm-last-pick { min-height: 38px; }
-
         @keyframes hmShimmer {
             0% { background-position: 100% 0; }
             100% { background-position: -100% 0; }
@@ -630,7 +601,7 @@
             .hm-scroll-hint { display: inline; }
 
             .hm-table {
-                min-width: 1080px;
+                min-width: 980px;
             }
         }
 
@@ -704,7 +675,6 @@
             }
 
             .hm-stat::before,
-            .hm-last-pick::before,
             .hm-sports::before {
                 content: attr(data-label);
                 display: block;
@@ -716,7 +686,6 @@
                 text-transform: uppercase;
             }
 
-            .hm-last-pick::before,
             .hm-sports::before {
                 width: 100%;
             }
@@ -736,9 +705,9 @@
                 <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Total Members</span><small>Public members only</small></div>
                 <div class="hm-count"><strong id="hmActiveMembers">0</strong><span>Active Pick Makers</span><small>Members with real picks</small></div>
                 <div class="hm-count"><strong id="hmTotalPicks">0</strong><span>Total Verified Picks</span><small>Graded picks only</small></div>
-                <div class="hm-count"><strong id="hmBestWinRate" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Best Win Percentage</span><small id="hmBestWinRateUser">Not enough graded picks yet</small></div>
-                <div class="hm-count"><strong id="hmTopUnits" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Units Leader</span><small id="hmTopUnitsUser">No positive units leader yet</small></div>
-                <div class="hm-count"><strong id="hmRecentActivity" class="is-muted" title="Not enough graded picks yet">--</strong><span>Most Recent Pick Activity</span><small id="hmRecentActivityUser">No pick activity yet</small></div>
+                <div class="hm-count" id="hmBestWinRateCard" hidden><strong id="hmBestWinRate" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Best Win Percentage</span><small id="hmBestWinRateUser"></small></div>
+                <div class="hm-count" id="hmTopUnitsCard" hidden><strong id="hmTopUnits" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Units Leader</span><small id="hmTopUnitsUser"></small></div>
+                <div class="hm-count" id="hmRecentActivityCard" hidden><strong id="hmRecentActivity" class="is-muted" title="Recent pick activity">--</strong><span>Most Recent Pick Activity</span><small id="hmRecentActivityUser"></small></div>
             </div>
         </section>
 
@@ -799,13 +768,12 @@
                     <div>Picks</div>
                     <div>Streak</div>
                     <div>Sports</div>
-                    <div>Last pick</div>
                     <div>Active</div>
                 </div>
                 <div id="hmRows">
-                    <div class="hm-row hm-member-row hm-skeleton" aria-hidden="true"><div class="hm-user"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-sports"></div><div class="hm-last-pick"></div><div class="hm-stat"></div></div>
-                    <div class="hm-row hm-member-row hm-skeleton" aria-hidden="true"><div class="hm-user"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-sports"></div><div class="hm-last-pick"></div><div class="hm-stat"></div></div>
-                    <div class="hm-row hm-member-row hm-skeleton" aria-hidden="true"><div class="hm-user"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-sports"></div><div class="hm-last-pick"></div><div class="hm-stat"></div></div>
+                    <div class="hm-row hm-member-row hm-skeleton" aria-hidden="true"><div class="hm-user"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-sports"></div><div class="hm-stat"></div></div>
+                    <div class="hm-row hm-member-row hm-skeleton" aria-hidden="true"><div class="hm-user"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-sports"></div><div class="hm-stat"></div></div>
+                    <div class="hm-row hm-member-row hm-skeleton" aria-hidden="true"><div class="hm-user"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-sports"></div><div class="hm-stat"></div></div>
                 </div>
             </div>
         </section>
@@ -827,10 +795,13 @@
             active: document.getElementById('hmActiveMembers'),
             visible: document.getElementById('hmVisibleMembers'),
             totalPicks: document.getElementById('hmTotalPicks'),
+            bestWinRateCard: document.getElementById('hmBestWinRateCard'),
             bestWinRate: document.getElementById('hmBestWinRate'),
             bestWinRateUser: document.getElementById('hmBestWinRateUser'),
+            topUnitsCard: document.getElementById('hmTopUnitsCard'),
             topUnits: document.getElementById('hmTopUnits'),
             topUnitsUser: document.getElementById('hmTopUnitsUser'),
+            recentActivityCard: document.getElementById('hmRecentActivityCard'),
             recentActivity: document.getElementById('hmRecentActivity'),
             recentActivityUser: document.getElementById('hmRecentActivityUser'),
             featured: document.getElementById('hmFeaturedLeaders')
@@ -1182,7 +1153,7 @@
 
         function renderSkeletonRows() {
             els.rows.innerHTML = Array.from({ length: 6 }).map(() =>
-                '<div class="hm-row hm-member-row hm-skeleton" aria-hidden="true"><div class="hm-user"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-sports"></div><div class="hm-last-pick"></div><div class="hm-stat"></div></div>'
+                '<div class="hm-row hm-member-row hm-skeleton" aria-hidden="true"><div class="hm-user"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-stat"></div><div class="hm-sports"></div><div class="hm-stat"></div></div>'
             ).join('');
         }
 
@@ -1397,6 +1368,18 @@
             el.classList.add(statClass(metricValue));
         }
 
+        function setSummaryLeaderCard(card, metricEl, detailEl, member, metricText, metricValue, detailText) {
+            if (!card) return;
+            card.hidden = !member;
+            if (!member) {
+                setMetricText(metricEl, '--', null);
+                setText(detailEl, '');
+                return;
+            }
+            setMetricText(metricEl, metricText, metricValue);
+            setText(detailEl, detailText);
+        }
+
         function leaderValue(value, formatter) {
             return value ? formatter(value) : '--';
         }
@@ -1496,12 +1479,33 @@
             setText(els.total, String(serverSummary?.total_members ?? members.length));
             setText(els.active, String(serverSummary?.active_members ?? pickedMembers.length));
             setText(els.totalPicks, String(serverSummary?.total_graded_picks ?? totalGradedPicks));
-            setMetricText(els.bestWinRate, bestWinRate ? formatPercent(bestWinRate.stats.winRate, true) : 'Not enough graded picks yet', bestWinRate ? Number(bestWinRate.stats.winRate) - 50 : null);
-            setText(els.bestWinRateUser, bestWinRate ? '@' + bestWinRate.username + ' · ' + gradedCount(bestWinRate) + ' graded picks' : 'Not enough graded picks yet');
-            setMetricText(els.topUnits, topUnits ? formatUnits(topUnits.stats.units, true) : 'No positive units leader yet', topUnits ? topUnits.stats.units : null);
-            setText(els.topUnitsUser, topUnits ? '@' + topUnits.username + ' · ' + gradedCount(topUnits) + ' graded picks' : 'No positive units leader yet');
-            setText(els.recentActivity, leaderValue(recent, member => formatLastActive(member.stats.lastActivity || member.lastActive)));
-            setText(els.recentActivityUser, recent ? '@' + recent.username : 'No pick activity yet');
+            setSummaryLeaderCard(
+                els.bestWinRateCard,
+                els.bestWinRate,
+                els.bestWinRateUser,
+                bestWinRate,
+                bestWinRate ? formatPercent(bestWinRate.stats.winRate, true) : '--',
+                bestWinRate ? Number(bestWinRate.stats.winRate) - 50 : null,
+                bestWinRate ? '@' + bestWinRate.username + ' · ' + gradedCount(bestWinRate) + ' graded picks' : ''
+            );
+            setSummaryLeaderCard(
+                els.topUnitsCard,
+                els.topUnits,
+                els.topUnitsUser,
+                topUnits,
+                topUnits ? formatUnits(topUnits.stats.units, true) : '--',
+                topUnits ? topUnits.stats.units : null,
+                topUnits ? '@' + topUnits.username + ' · ' + gradedCount(topUnits) + ' graded picks' : ''
+            );
+            setSummaryLeaderCard(
+                els.recentActivityCard,
+                els.recentActivity,
+                els.recentActivityUser,
+                recent,
+                leaderValue(recent, member => formatLastActive(member.stats.lastActivity || member.lastActive)),
+                null,
+                recent ? '@' + recent.username : ''
+            );
             renderFeaturedLeaders();
         }
 
@@ -1577,7 +1581,6 @@
                 const sports = (stats.sports && stats.sports.length ? stats.sports : ['None yet'])
                     .map(sport => '<span class="hm-sport">' + escapeHtml(sport) + '</span>')
                     .join('');
-                const lastPick = formatPickSummary(stats.lastPick);
                 return '<div class="hm-row hm-member-row" data-username="' + escapeHtml(member.username) + '" data-profile-href="' + profileHref + '" role="link" tabindex="0" aria-label="' + escapeHtml(profileLabel) + '">' +
                     '<div class="hm-user">' +
                         '<a class="hm-avatar-link" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '">' +
@@ -1592,7 +1595,6 @@
                     '<div class="hm-stat" data-label="Total picks">' + Number(stats.totalPicks || 0) + '</div>' +
                     '<div class="hm-stat ' + statClass(stats.currentStreak) + '" data-label="Current streak">' + escapeHtml(formatStreak(stats.currentStreak)) + '</div>' +
                     '<div class="hm-sports" data-label="Primary sports">' + sports + '</div>' +
-                    '<div class="hm-last-pick" data-label="Last pick"><strong>' + escapeHtml(lastPick.title) + '</strong><span>' + escapeHtml(lastPick.meta) + '</span></div>' +
                     '<div class="hm-stat hm-active is-muted" data-label="Last active">' + escapeHtml(formatLastActive(member.lastActive)) + '</div>' +
                 '</div>';
             }).join('');
