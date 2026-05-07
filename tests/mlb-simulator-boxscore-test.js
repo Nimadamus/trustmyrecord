@@ -123,7 +123,7 @@ function assertBoxScore(result) {
     assert(/<tr/.test(elements.boxScoreBody.innerHTML), mode + ' renders box score rows');
     assert(/Starting Pitchers:/.test(simulator.boxScoreText(result)), mode + ' export includes starters');
     assert(/Generated: \d{4}-\d{2}-\d{2}T/.test(simulator.boxScoreText(result)), mode + ' export includes generated timestamp');
-    assert(/Simulated final:/.test(simulator.boxScoreText(result)), mode + ' export includes simulated final score');
+    assert(/Projected final:/.test(simulator.boxScoreText(result)), mode + ' export includes projected final score');
     assert(/Win probability:/.test(simulator.boxScoreText(result)), mode + ' export includes win probability');
     assert(/Expected runs:/.test(simulator.boxScoreText(result)), mode + ' export includes expected runs');
     assert(/Matchup notes:/.test(simulator.boxScoreText(result)), mode + ' export includes matchup notes');
