@@ -433,28 +433,41 @@
             return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')) + 'u';
         }
         function pickText(pick) {
-            if (window.TMR && typeof window.TMR.formatPickDisplayLabel === 'function') {
-                return window.TMR.formatPickDisplayLabel(pick);
+            pick = pick || {};
+            var selection = String(pick.selection_label || pick.selection || pick.pick || 'Pick').replace(/\s+/g, ' ').trim();
+            var market = String(pick.market_type || pick.market || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
+            var line = fmtPickLine(pick);
+            var isMoneyline = market === 'h2h' || market === 'moneyline' || /_h2h$/.test(market);
+            var isTeamTotal = market === 'team_totals' || market === 'team_total';
+            var isTotal = isTeamTotal || market === 'totals' || market === 'total' || /_totals$/.test(market) || market.indexOf('total') !== -1;
+            var isSpread = market === 'spreads' || market === 'spread' || market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1;
+            var linePattern = line !== '-' ? line.replace(/[.*+?^${}()|[\]\]/g, '\$&') : '';
+            var cleaned = selection;
+            if (linePattern) {
+                cleaned = cleaned.replace(new RegExp('\s+[+-]?' + linePattern + '$', 'i'), '').trim();
             }
-            var selection = String(pick.selection_label || pick.selection || 'Pick').trim();
-            var market = String(pick.market_type || pick.market || '').toLowerCase();
-            var line = pick.line_snapshot != null ? pick.line_snapshot : pick.line;
-            if (market === 'h2h' || market.indexOf('moneyline') !== -1) {
-                return /\bML\b$/i.test(selection) ? selection : selection + ' ML';
+            if (isMoneyline) {
+                return /\bML\b$/i.test(selection) ? selection : selection.replace(/\s+moneyline$/i, '') + ' ML';
             }
-            if (line == null || line === '') return selection || 'Pick';
-            var n = Number(line);
-            var s = Number.isFinite(n) ? String(n) : String(line).trim();
-            if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
-            if ((market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1) && Number.isFinite(n) && n > 0) {
-                s = '+' + s;
+            if (isTeamTotal) {
+                var teamText = cleaned.replace(/\bteam\s+total\b/ig, '').replace(/\b(over|under)\b.*$/i, '').trim();
+                var sideMatch = selection.match(/\b(Over|Under)\b/i) || String(pick.side || pick.total_side || pick.bet_side || pick.type || '').match(/\b(Over|Under)\b/i);
+                var side = sideMatch ? sideMatch[1].charAt(0).toUpperCase() + sideMatch[1].slice(1).toLowerCase() : '';
+                if (teamText && side && line !== '-') return teamText + ' Team Total ' + side + ' ' + line;
+                if (side && line !== '-') return 'Team Total ' + side + ' ' + line;
+                return selection || 'Team Total';
             }
-            var escaped = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            if (new RegExp('(?:^|\\s)' + escaped + '$').test(selection)) return selection;
-            var totalSide = market.indexOf('total') !== -1 && !/\b(over|under)\b/i.test(selection)
-                ? (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : ''))
-                : '';
-            return (selection || 'Pick').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim() + totalSide + ' ' + s;
+            if (isTotal) {
+                var totalSideMatch = selection.match(/\b(Over|Under)\b/i) || String(pick.side || pick.total_side || pick.bet_side || pick.type || '').match(/\b(Over|Under)\b/i);
+                var totalSide = totalSideMatch ? totalSideMatch[1].charAt(0).toUpperCase() + totalSideMatch[1].slice(1).toLowerCase() : '';
+                if (totalSide && line !== '-') return 'Full Game Total ' + totalSide + ' ' + line;
+                return line !== '-' ? 'Full Game Total ' + line : (selection || 'Full Game Total');
+            }
+            if (isSpread && line !== '-') {
+                if (new RegExp('(?:^|\s)' + linePattern + '$').test(selection)) return selection;
+                return cleaned + ' ' + line;
+            }
+            return selection || 'Pick';
         }
         function matchup(pick) {
             if (pick.away_team || pick.home_team) return [pick.away_team, pick.home_team].filter(Boolean).join(' @ ');

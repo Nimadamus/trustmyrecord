@@ -51,6 +51,18 @@ Before marking any sportsbook, logo, profile, or shared-rendering task complete,
 - Live or local visual proof is captured for visual tasks when possible.
 - Relevant sportsbook regression tests or guards are run when touched behavior can affect sportsbook flow.
 
+
+## Pending Picks Display Rules
+
+- Totals and team totals must never show a plus sign in the Line column.
+- Totals and team totals must never show U or O in the Line column.
+- Totals and team totals use numeric-only Line values.
+- The Pick column must carry the direction, such as Under or Over.
+- Full game totals must not display as only “Under 5.5” or “Over 5.5”; they must include “Full Game Total” or the matchup context.
+- Moneylines show Line as “-”.
+- Spread, run line, and puck line keep signed values.
+- Summary pending count must match API count and rendered row count.
+
 ## Suspicious Duplicate Inventory Policy
 
 Duplicate, staging, backup, proof, and temporary sportsbook files must be listed and reviewed before removal. Do not delete them during feature or visual polish work unless the user explicitly approves the deletion list.
