@@ -3507,7 +3507,13 @@
                     setStakeMode('risk');
                     if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview();
                     const aside = document.querySelector('.sportsbook-ticket-preview');
-                    if (aside && aside.scrollIntoView) aside.scrollIntoView({ block: 'center' });
+                    if (aside && aside.scrollIntoView) aside.scrollIntoView({ block: 'center', inline: 'center' });
+                    if (aside) {
+                        const rect = aside.getBoundingClientRect();
+                        const targetLeft = Math.max(0, window.scrollX + rect.left - 40);
+                        const targetTop = Math.max(0, window.scrollY + rect.top - 80);
+                        window.scrollTo(targetLeft, targetTop);
+                    }
                 } catch (err) { console.warn('[TMR][stake-proof] could not populate proof slip:', err && err.message); }
             }, 1200);
         }
