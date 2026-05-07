@@ -5061,7 +5061,7 @@
     </script>
     <script src="/static/js/config.js?v=20260330"></script>
     <script src="/static/js/analytics.js?v=20260405"></script>
-    <script src="/static/js/backend-api.js?v=20260506linefix1"></script>
+    <script src="/static/js/backend-api.js?v=20260506linefix2"></script>
     <script src="/static/js/nav-badges.js"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
     <script src="/static/js/auto-grader-fixed.js?v=20260405b"></script>
@@ -5484,6 +5484,21 @@
         let s = String(Math.abs(num));
         if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
         return s;
+    }
+
+    function formatPickLineValue(pick) {
+        pick = pick || {};
+        const raw = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
+        if (raw == null || raw === '' || isNaN(Number(raw))) return '--';
+        const market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
+        const selection = String(pick.selection_label || pick.selection || pick.pick || pick.side || '').toLowerCase();
+        const isMoneyline = market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h') || /\b(moneyline|ml)\b/.test(selection);
+        const isTotal = market === 'totals' || market === 'total' || market.endsWith('_totals') || market === 'team_totals' || market === 'team_total' || /\b(over|under)\b/.test(selection);
+        const isSpread = market === 'spreads' || market === 'spread' || market.endsWith('_spreads') || market.includes('run_line') || market.includes('puck_line');
+        if (isMoneyline) return '--';
+        if (isTotal) return formatTotalLineValue(raw);
+        if (isSpread) return formatLineValue(raw);
+        return formatTotalLineValue(raw);
     }
 
     function formatPickDisplayValue(pick) {
@@ -7844,7 +7859,7 @@
                 + '<td>' + escHtml(pmSportLabel(p.sport_key)) + '</td>'
                 + '<td>' + escHtml(pmMarketLabel(p.market_type)) + '</td>'
                 + '<td class="pm-cell-pick">' + escHtml(formatPickDisplayValue(p)) + '</td>'
-                + '<td class="num">' + escHtml(fmtLine(p.line_snapshot)) + '</td>'
+                + '<td class="num">' + escHtml(formatPickLineValue(p)) + '</td>'
                 + '<td class="num">' + escHtml(fmtOdds(p.odds_snapshot)) + '</td>'
                 + '<td class="num">' + escHtml(fmtUnits(p.units)) + '</td>'
                 + '<td>' + resultBadge + '</td>'
@@ -8320,7 +8335,7 @@
         const sport = fmtSport(p.sport_key);
         const sc = sport.toLowerCase().replace(/\s/g, '');
         const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
-        const line = formatLineValue(p.line_snapshot);
+        const line = formatPickLineValue(p);
         const sel = formatPickDisplayValue(p);
         const matchup = (p.away_team && p.home_team) ? p.away_team + ' @ ' + p.home_team : (p.event_name || '--');
         const units = formatUnitsValue(p.units);
