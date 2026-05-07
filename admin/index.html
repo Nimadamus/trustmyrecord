@@ -55,10 +55,10 @@
     </section>
 
     <section class="grid">
-      <div class="panel stat"><div class="label">Health</div><div class="value" id="health">-</div></div>
+      <div class="panel stat"><div class="label">Completed Backlog</div><div class="value" id="health">-</div></div>
       <div class="panel stat"><div class="label">Pending</div><div class="value" id="pending">-</div></div>
       <div class="panel stat"><div class="label">Pending Completed</div><div class="value" id="pendingCompleted">-</div></div>
-      <div class="panel stat"><div class="label">Graded 24h</div><div class="value" id="graded24">-</div></div>
+      <div class="panel stat"><div class="label">Graded Rolling 24h</div><div class="value" id="graded24">-</div></div>
     </section>
 
     <section class="two">
@@ -131,7 +131,7 @@
     async function loadStatus() {
       const data = await request('/admin/autograder/status');
       document.getElementById('updated').textContent = 'Updated ' + new Date().toLocaleString();
-      document.getElementById('health').textContent = data.ok ? 'OK' : 'Attention';
+      document.getElementById('health').textContent = data.ok ? 'Clear' : 'Needs Review';
       document.getElementById('health').className = 'value ' + (data.ok ? 'ok' : 'bad');
       document.getElementById('pending').textContent = data.counts.pending ?? 0;
       document.getElementById('pendingCompleted').textContent = data.counts.pending_completed ?? 0;
