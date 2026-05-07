@@ -28,8 +28,13 @@ assert(reliability.includes('class="tmr-option-btn"'), 'board option buttons sho
 assert(reliability.includes('data-option-id'), 'board option buttons should keep option ids for pick slip selection');
 assert(reliability.includes('onclick="window.tmrSelectOption(this.dataset.optionId)"'), 'board option buttons should route to locked selection handler');
 assert(reliability.includes('unitsModeVisibleLabel'), 'production script should inject visible Risk / To Win selector label');
+assert(reliability.includes("riskButton.innerHTML = '<span>Risk</span><strong>'"), 'Risk option should display the current risk units clearly');
+assert(reliability.includes("toWinButton.innerHTML = '<span>To win</span><strong>'"), 'To win option should display the current win units clearly');
 assert(reliability.includes("stake_mode: stakeMode"), 'submitted payload should include stake_mode');
 assert(reliability.includes("units_mode: stakeMode"), 'submitted payload should include units_mode');
+assert(reliability.includes('risk_units: stakeValues.risk_units'), 'submitted payload should include calculated risk_units');
+assert(reliability.includes('win_units: stakeValues.win_units'), 'submitted payload should include calculated win_units');
+assert(reliability.includes('to_win_units: stakeValues.win_units'), 'submitted payload should include calculated to_win_units alias');
 
 function calculateStakeValues(mode, amount, odds) {
   const stakeMode = String(mode || 'risk').toLowerCase() === 'to_win' || String(mode || '').toLowerCase() === 'towin' ? 'to_win' : 'risk';
@@ -49,6 +54,8 @@ function calculateStakeValues(mode, amount, odds) {
 
 assert.deepStrictEqual(calculateStakeValues('risk', 2, -110), { risk_units: 2, win_units: 1.82 });
 assert.deepStrictEqual(calculateStakeValues('to_win', 2, -110), { risk_units: 2.2, win_units: 2 });
+assert.deepStrictEqual(calculateStakeValues('risk', 2, -145), { risk_units: 2, win_units: 1.38 });
+assert.deepStrictEqual(calculateStakeValues('to_win', 2, -145), { risk_units: 2.9, win_units: 2 });
 assert.deepStrictEqual(calculateStakeValues('risk', 1.5, 150), { risk_units: 1.5, win_units: 2.25 });
 assert.deepStrictEqual(calculateStakeValues('to_win', 1.5, 150), { risk_units: 1, win_units: 1.5 });
 

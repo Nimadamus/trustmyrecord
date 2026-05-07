@@ -282,7 +282,21 @@
         const oddsInput = document.getElementById('pickOddsInput');
         const amount = input ? parseFloat(input.value || '1') : 1;
         const odds = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
-        const values = calculateStakeValues(getSelectedStakeMode(), amount, odds);
+        const selectedMode = getSelectedStakeMode();
+        const values = calculateStakeValues(selectedMode, amount, odds);
+        const riskButton = document.getElementById('modeRisk');
+        const toWinButton = document.getElementById('modeToWin');
+        const formatUnits = function(value) {
+            const n = roundStakeUnits(value);
+            if (!Number.isFinite(n) || n <= 0) return 'X';
+            return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+        };
+        if (riskButton) {
+            riskButton.innerHTML = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
+        }
+        if (toWinButton) {
+            toWinButton.innerHTML = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
+        }
         const previewText = values.risk_units > 0 && values.win_units > 0
             ? 'Risk ' + values.risk_units + ' units to win ' + values.win_units + ' units'
             : 'Risk / To Win preview updates after odds are entered.';
@@ -1155,8 +1169,8 @@
         toggle.style.display = 'flex';
 
         [
-            { id: 'modeRisk', mode: 'risk', label: 'Risk' },
-            { id: 'modeToWin', mode: 'to_win', label: 'To Win' }
+            { id: 'modeRisk', mode: 'risk', label: 'Risk X units' },
+            { id: 'modeToWin', mode: 'to_win', label: 'To win X units' }
         ].forEach(function(entry) {
             let button = document.getElementById(entry.id);
             if (!button) {
@@ -1374,7 +1388,9 @@
             ,'#pickDetails .tmr-units-mode-label{flex:1 0 100%;font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f2c94c;}'
             ,'#pickDetails .tmr-units-row #unitsInput{flex:1 1 120px;min-width:0;width:auto!important;font-size:18px!important;font-weight:800;text-align:center;}'
             ,'#pickDetails .tmr-units-row #unitsModeToggle{flex:1 1 220px;display:flex;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);min-width:0;}'
-            ,'#pickDetails .tmr-units-row #unitsModeToggle .units-mode-btn{flex:1;padding:12px 14px;font-size:13px;border-radius:0;}'
+            ,'#pickDetails .tmr-units-row #unitsModeToggle .units-mode-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:10px 12px;font-size:12px;border-radius:0;line-height:1.15;min-height:58px;}'
+            ,'#pickDetails .tmr-units-row #unitsModeToggle .units-mode-btn span{display:block;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;opacity:.78;}'
+            ,'#pickDetails .tmr-units-row #unitsModeToggle .units-mode-btn strong{display:block;font-size:14px;letter-spacing:0;text-transform:none;white-space:nowrap;}'
             ,'@media (max-width:560px){#pickDetails .tmr-units-row{flex-direction:column;}#pickDetails .tmr-units-row #unitsInput,#pickDetails .tmr-units-row #unitsModeToggle{flex:1 1 auto;width:100%;}}'
             ,'#pickDetails #pickReasoning,#pickDetails .tmr-reasoning-clean{width:100%!important;box-sizing:border-box;min-height:120px!important;padding:14px 16px!important;background:#14181f!important;border:1px solid rgba(255,255,255,0.08)!important;border-radius:12px!important;color:#f8fafc!important;font-size:15px!important;line-height:1.5;resize:vertical;font-family:inherit;}'
             ,'#pickDetails #pickReasoning::placeholder{color:#6b7280;}'
@@ -2697,6 +2713,7 @@
         }
 
         const stakeMode = getSelectedStakeMode();
+        const stakeValues = calculateStakeValues(stakeMode, unitsValue, oddsValue);
         let finalPayload = null;
         try {
             const api = await getApiClientOrFallback();
@@ -2715,6 +2732,9 @@
                 units: unitsValue,
                 stake_mode: stakeMode,
                 units_mode: stakeMode,
+                risk_units: stakeValues.risk_units,
+                win_units: stakeValues.win_units,
+                to_win_units: stakeValues.win_units,
                 book_title: bookInput ? bookInput.value.trim() : option.book_title,
                 book_key: option.book_key,
                 market_key: option.market_key,
