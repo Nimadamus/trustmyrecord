@@ -19,6 +19,14 @@ function Assert-NoMatch {
     }
 }
 
+function Invoke-GuardCommand {
+    param([string]$Label, [string[]]$Command)
+    & $Command[0] @($Command | Select-Object -Skip 1)
+    if ($LASTEXITCODE -ne 0) {
+        throw "$Label failed with exit code $LASTEXITCODE."
+    }
+}
+
 $rootPath = (Resolve-Path -LiteralPath $Root).Path
 Push-Location $rootPath
 try {
@@ -76,13 +84,13 @@ try {
         }
     }
 
-    node tests/line-formatting-regression-test.js
-    node tests/profile-page-lookup-test.js
-    node tests/mlb-simulator-page-test.js
-    node tests/mlb-simulator-boxscore-test.js
-    node tests/mlb-simulator-realism-test.js
-    node tests/sportsbook-reliability-guard-test.js
-    node tests/sportsbook-stake-mode-ui-test.js
+    Invoke-GuardCommand "line formatting regression test" @("node", "tests/line-formatting-regression-test.js")
+    Invoke-GuardCommand "profile lookup regression test" @("node", "tests/profile-page-lookup-test.js")
+    Invoke-GuardCommand "MLB simulator page regression test" @("node", "tests/mlb-simulator-page-test.js")
+    Invoke-GuardCommand "MLB simulator box score regression test" @("node", "tests/mlb-simulator-boxscore-test.js")
+    Invoke-GuardCommand "MLB simulator realism regression test" @("node", "tests/mlb-simulator-realism-test.js")
+    Invoke-GuardCommand "sportsbook reliability regression test" @("node", "tests/sportsbook-reliability-guard-test.js")
+    Invoke-GuardCommand "sportsbook stake-mode regression test" @("node", "tests/sportsbook-stake-mode-ui-test.js")
 
     $profile = Get-Content -LiteralPath "profile/index.html" -Raw
     $backend = Get-Content -LiteralPath "static/js/backend-api.js" -Raw
@@ -109,6 +117,7 @@ try {
     Assert-Match "MLB simulator CSS" $simCss "overflow-x:\s*auto" "box score horizontal scrolling must stay inside the table container."
 
     Assert-Match "Sportsbook" $sportsbook "sportsbook-production-fix-persist-reliability\.js\?v=20260501reliability1" "current reliability script include is missing."
+    Assert-NoMatch "Sportsbook" $sportsbook "awayBookLabel|homeBookLabel|sb-tt-team-cell|data-col=`"team`"" "legacy duplicate team/book renderer was reintroduced."
     Assert-NoMatch "Sportsbook" $sportsbook "tmr-redesign-test-sportsbook-logos\.js" "obsolete logo patch script was reintroduced."
     Assert-NoMatch "Sportsbook" $sportsbook "sportsbook-production-fix\.js" "stale non-reliability sportsbook patch was reintroduced."
     Assert-NoMatch "Sportsbook" $sportsbook "sportsbook-production-fix-persist\.js" "stale persist sportsbook patch was reintroduced."
