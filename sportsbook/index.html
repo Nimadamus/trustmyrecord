@@ -11221,16 +11221,16 @@ window.toggleSportFamily = function (family) {
                 var awayUnder = split.away.under || {};
                 var homeOver = split.home.over || {};
                 var homeUnder = split.home.under || {};
-                var awayBookLabel = (awayOver.book || awayUnder.book || '').toString();
-                var homeBookLabel = (homeOver.book || homeUnder.book || '').toString();
+                var awayBookText = (awayOver.book || awayUnder.book || '').toString();
+                var homeBookText = (homeOver.book || homeUnder.book || '').toString();
                 html +=
-                    '<div class="sb-board-col" data-col="team">' +
+                    '<div class="sb-board-col" data-col="tt-team">' +
                         '<div class="sb-tt-team-stack">' +
-                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.away_team) + '</b>' +
-                                (awayBookLabel ? '<small>' + _ttHtmlEsc(awayBookLabel) + '</small>' : '') +
+                            '<div class="sb-tt-team-name"><b>' + _ttHtmlEsc(game.away_team) + '</b>' +
+                                (awayBookText ? '<small>' + _ttHtmlEsc(awayBookText) + '</small>' : '') +
                             '</div>' +
-                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.home_team) + '</b>' +
-                                (homeBookLabel ? '<small>' + _ttHtmlEsc(homeBookLabel) + '</small>' : '') +
+                            '<div class="sb-tt-team-name"><b>' + _ttHtmlEsc(game.home_team) + '</b>' +
+                                (homeBookText ? '<small>' + _ttHtmlEsc(homeBookText) + '</small>' : '') +
                             '</div>' +
                         '</div>' +
                     '</div>' +
