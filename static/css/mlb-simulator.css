@@ -737,6 +737,24 @@
     margin-top: 14px;
 }
 
+.sim-actions-expanded {
+    grid-template-columns: minmax(190px, 240px) minmax(180px, 1fr) minmax(150px, 190px) minmax(120px, 160px);
+    align-items: end;
+}
+
+.sim-count-field {
+    display: grid;
+    gap: 8px;
+}
+
+.sim-count-field span {
+    color: #dbeafe;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
 .sim-button {
     border: 1px solid rgba(45, 212, 191, 0.42);
 }
@@ -925,6 +943,69 @@
 
 .projection-shell[data-projection-state="loading"] .projection-value {
     color: var(--sim-gold);
+}
+
+.sim-aggregate-panel {
+    display: grid;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 14px;
+    border: 1px solid rgba(244, 201, 93, 0.24);
+    border-radius: 8px;
+    background:
+        linear-gradient(135deg, rgba(244, 201, 93, 0.08), rgba(45, 212, 191, 0.05)),
+        rgba(3, 7, 14, 0.42);
+}
+
+.sim-aggregate-panel[data-aggregate-state="empty"] {
+    display: none;
+}
+
+.sim-aggregate-panel h3 {
+    margin: 0;
+    color: var(--sim-text);
+    font-family: Barlow, Inter, sans-serif;
+    font-size: 24px;
+    line-height: 1;
+}
+
+.aggregate-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.aggregate-summary-grid div {
+    display: grid;
+    gap: 6px;
+    min-height: 82px;
+    padding: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.52);
+}
+
+.aggregate-summary-grid strong {
+    color: var(--sim-muted);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.aggregate-summary-grid span {
+    color: var(--sim-text);
+    font-family: Barlow, Inter, sans-serif;
+    font-size: clamp(20px, 2vw, 30px);
+    font-weight: 800;
+    line-height: 1.05;
+}
+
+#aggregateSummaryText {
+    margin: 0;
+    color: #dbeafe;
+    font-size: 13px;
+    line-height: 1.5;
 }
 
 .probability-lab {
@@ -1439,6 +1520,7 @@
     }
 
     .sim-actions,
+    .sim-actions-expanded,
     .comparison-grid,
     .probability-row {
         grid-template-columns: 1fr;
@@ -1666,6 +1748,11 @@
     .projection-shell {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+
+    .sim-actions-expanded,
+    .aggregate-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 920px) {
@@ -1685,7 +1772,8 @@
     }
 
     .pitcher-options,
-    .projection-shell {
+    .projection-shell,
+    .aggregate-summary-grid {
         grid-template-columns: 1fr;
     }
 }
