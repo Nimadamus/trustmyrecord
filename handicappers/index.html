@@ -313,21 +313,24 @@
             border: 1px solid var(--line);
             border-radius: 14px;
             background: rgba(7, 13, 24, 0.72);
+            max-width: 100%;
             overflow-x: auto;
             overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
         }
 
         .hm-table {
-            min-width: 1240px;
+            width: 100%;
+            min-width: 0;
         }
 
         .hm-row {
             display: grid;
-            grid-template-columns: minmax(300px, 1.25fr) 86px 96px 128px 112px 68px 82px 112px minmax(190px, 0.9fr) 96px;
-            column-gap: 16px;
+            grid-template-columns: minmax(220px, 1.35fr) 74px 80px 72px 76px 58px 70px minmax(92px, 0.55fr) minmax(150px, 0.95fr) minmax(118px, 0.7fr);
+            column-gap: 8px;
             row-gap: 12px;
             align-items: center;
-            padding: 20px 18px;
+            padding: 18px 12px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.12);
         }
 
@@ -457,7 +460,7 @@
             font-weight: 850;
             white-space: nowrap;
             min-width: 0;
-            padding: 0 8px;
+            padding: 0 4px;
             text-align: center;
         }
 
@@ -472,6 +475,13 @@
         .hm-stat.is-positive { color: var(--green); }
         .hm-stat.is-negative { color: var(--red); }
         .hm-stat.is-muted { color: var(--muted); }
+
+        .hm-active {
+            font-size: 0.9rem;
+            line-height: 1.2;
+            white-space: normal;
+            overflow-wrap: anywhere;
+        }
 
         .hm-count strong.is-negative,
         .hm-leader-card span.is-negative {
@@ -590,7 +600,7 @@
             font-weight: 800;
         }
 
-        @media (max-width: 1120px) {
+        @media (max-width: 1180px) {
             .hm-hero {
                 grid-template-columns: 1fr;
                 align-items: start;
@@ -618,6 +628,10 @@
             }
 
             .hm-scroll-hint { display: inline; }
+
+            .hm-table {
+                min-width: 1080px;
+            }
         }
 
         @media (max-width: 720px) {
@@ -654,6 +668,10 @@
 
             .hm-table {
                 min-width: 0;
+            }
+
+            .hm-table-wrap {
+                overflow-x: hidden;
             }
 
             .hm-head {
@@ -827,7 +845,7 @@
         const DIRECTORY_API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
         const DIRECTORY_TIMEOUT_MS = 9000;
         const SUMMARY_PAGE_SIZE = 50;
-        const SUMMARY_CACHE_KEY = 'tmr_handicappers_summary_v2';
+        const SUMMARY_CACHE_KEY = 'tmr_handicappers_summary_v3_active';
         const SUMMARY_CACHE_MAX_AGE_MS = 5 * 60 * 1000;
         let pageOffset = 0;
         let hasMoreMembers = false;
@@ -976,14 +994,30 @@
             const displayName = String(user.display_name || user.displayName || username || 'Member');
             const createdAt = user.created_at || user.createdAt || user.joined_at || user.inserted_at || '';
             const lastActive = firstValidDate(
-                user.last_login_date,
-                user.lastLoginDate,
-                user.last_active_date,
-                user.lastActiveDate,
+                stats.lastActivity,
+                stats.lastActive,
+                stats.last_active_at,
+                stats.last_active,
+                stats.last_seen_at,
+                stats.lastSeenAt,
+                user.last_active_at,
+                user.lastActiveAt,
+                user.last_activity_at,
+                user.lastActivityAt,
+                user.last_seen_at,
+                user.lastSeenAt,
                 user.last_login_at,
                 user.lastLoginAt,
-                user.last_active_at,
-                user.lastActiveAt
+                user.last_pick_at,
+                user.lastPickAt,
+                user.updated_at,
+                user.updatedAt,
+                user.last_active_date,
+                user.last_login_date,
+                user.last_pick_date,
+                stats.lastPick && (stats.lastPick.locked_at || stats.lastPick.created_at),
+                stats.lastPickAt,
+                stats.last_pick_at
             );
             const currentUser = getCurrentUser();
             const localFollowing = currentUser && social ? social.isFollowing(String(currentUser.username || ''), username) : false;
@@ -1118,7 +1152,23 @@
                 currentStreak: numberFrom(user.streak, user.current_streak) || 0,
                 sports: Array.isArray(user.sports) ? user.sports.map(normalizeSportName).filter(Boolean) : [],
                 lastPick,
-                lastActivity: firstValidDate(user.last_pick_at, lastPick && (lastPick.locked_at || lastPick.created_at))
+                lastActivity: firstValidDate(
+                    user.last_active_at,
+                    user.lastActiveAt,
+                    user.last_active,
+                    user.lastActive,
+                    user.last_seen_at,
+                    user.lastSeenAt,
+                    user.last_login_at,
+                    user.lastLoginAt,
+                    user.last_pick_at,
+                    user.lastPickAt,
+                    user.updated_at,
+                    user.updatedAt,
+                    lastPick && (lastPick.locked_at || lastPick.created_at),
+                    user.last_active_date,
+                    user.last_login_date
+                )
             };
             return normalizeMember(user, stats);
         }
@@ -1209,15 +1259,26 @@
         }
 
         function formatLastActive(value) {
-            if (!value) return 'Not available';
+            if (!value) return 'No recent activity';
             const date = new Date(value);
-            if (!Number.isFinite(date.getTime())) return 'Not available';
+            if (!Number.isFinite(date.getTime())) return 'No recent activity';
             const diff = Date.now() - date.getTime();
             const day = 24 * 60 * 60 * 1000;
-            if (diff < day) return 'Today';
-            if (diff < day * 2) return 'Yesterday';
-            if (diff < day * 30) return Math.floor(diff / day) + ' days ago';
-            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined });
+            if (diff < 0) return 'Active today';
+            if (diff < 60 * 60 * 1000) {
+                const minutes = Math.max(1, Math.floor(diff / (60 * 1000)));
+                return 'Active ' + minutes + ' ' + (minutes === 1 ? 'minute' : 'minutes') + ' ago';
+            }
+            if (diff < day) {
+                const hours = Math.floor(diff / (60 * 60 * 1000));
+                return 'Active ' + hours + ' ' + (hours === 1 ? 'hour' : 'hours') + ' ago';
+            }
+            if (diff < day * 2) return 'Active yesterday';
+            if (diff < day * 30) {
+                const days = Math.floor(diff / day);
+                return 'Active ' + days + ' ' + (days === 1 ? 'day' : 'days') + ' ago';
+            }
+            return 'Active ' + date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined });
         }
 
         function firstValidDate(...values) {
@@ -1540,7 +1601,7 @@
                     '<div class="hm-stat ' + statClass(stats.currentStreak) + '" data-label="Current streak">' + escapeHtml(formatStreak(stats.currentStreak)) + '</div>' +
                     '<div class="hm-sports" data-label="Primary sports">' + sports + '</div>' +
                     '<div class="hm-last-pick" data-label="Last pick"><strong>' + escapeHtml(lastPick.title) + '</strong><span>' + escapeHtml(lastPick.meta) + '</span></div>' +
-                    '<div class="hm-stat is-muted" data-label="Last active">' + escapeHtml(formatLastActive(member.lastActive)) + '</div>' +
+                    '<div class="hm-stat hm-active is-muted" data-label="Last active">' + escapeHtml(formatLastActive(member.lastActive)) + '</div>' +
                 '</div>';
             }).join('');
             els.rows.innerHTML = rowHtml + (hasMoreMembers
