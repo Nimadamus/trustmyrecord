@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-page-polish.css">
-    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260506-player-placeholder">
+    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260506-player-lines">
     <script src="/static/js/config.js"></script>
     <script src="/static/js/backend-api.js"></script>
 </head>
@@ -284,9 +284,15 @@
                     </table>
                 </div>
                 <div id="boxScoreSummary" class="box-score-summary">Run a simulation to generate a box score.</div>
-                <div class="player-box-score-note">
-                    <strong>Player Box Score Coming Soon</strong>
-                    <span>Player-level batter and pitcher stat lines are not available yet. Current box score includes team inning line score, final R/H/E, pitcher summary, key performers, and matchup notes.</span>
+                <div id="playerBoxScorePanel" class="player-box-score-panel" data-player-box-state="empty">
+                    <div class="player-box-score-heading">
+                        <p class="sim-label">Modeled Player Box Score</p>
+                        <h3>Player Lines</h3>
+                        <span>Modeled lineup and pitcher stat lines generated from the simulated final. These are not official MLB player stats.</span>
+                    </div>
+                    <div id="playerBoxScoreContent" class="player-box-score-content">
+                        <div class="sim-empty">Run a simulation to generate modeled batter and pitcher lines.</div>
+                    </div>
                 </div>
             </section>
 
@@ -358,6 +364,6 @@
         </section>
     </main>
 
-    <script src="/static/js/mlb-simulator.js?v=20260506-player-placeholder"></script>
+    <script src="/static/js/mlb-simulator.js?v=20260506-player-lines"></script>
 </body>
 </html>
