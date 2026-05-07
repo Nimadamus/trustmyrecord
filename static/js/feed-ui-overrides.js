@@ -15,6 +15,16 @@ function getUsername(item) {
     return item.username || item.creator_username || item.user_username || item.handle || '';
 }
 
+const TMR_GENERATED_USER_RE = /^(qa_|test|audit|tmrverify|tmrtest|tmrcheck|tmrflow|tmrhangout|tmrlogin|tmrfast|tmrnhl|tmrlive|tmrpick|tmrprobe|tmrtokens|tmr_ui_|tmr_probe_|nhlverify|flowverify|cleanprobe|freshcool|freshafter|sportsbook_|user_|probe|signup_test|smoke_|playwright|cypress|demo)|(^|[_-])(test|demo|mock|seed|sample|fixture|dummy|placeholder|synthetic|fake)([_-]|[0-9]|$)/i;
+
+function isRealPublicFeedUser(item) {
+    const username = String(getUsername(item) || '').trim();
+    const display = String(getDisplayName(item) || '').trim();
+    if (username && TMR_GENERATED_USER_RE.test(username)) return false;
+    if (display && TMR_GENERATED_USER_RE.test(display)) return false;
+    return true;
+}
+
 function getAvatarHtml(item, className) {
     const display = getDisplayName(item);
     const src = item.avatar_url || item.avatar || item.profile_image || item.profile_image_url || item.user_avatar_url;
@@ -392,7 +402,7 @@ async function loadFeed() {
         if (api && typeof api.request === 'function') {
             const filterParam = currentFilter === 'hot-takes' ? 'posts' : currentFilter;
             const data = await api.request('/feed?limit=' + FEED_LIMIT + '&offset=' + feedOffset + '&filter=' + encodeURIComponent(filterParam));
-            items = (data.feed || []).map(item => {
+            items = (data.feed || []).filter(isRealPublicFeedUser).map(item => {
                 if (item.item_type === 'pick' || item.post_type === 'pick' || item.post_type === 'pick_share') return normalizePublicPick(item);
                 return item;
             });
@@ -401,6 +411,7 @@ async function loadFeed() {
                 try {
                     const discover = await api.request('/social/discover?limit=12');
                     const picks = (discover.picks || [])
+                        .filter(isRealPublicFeedUser)
                         .filter(p => p && p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()))
                         .map(normalizePublicPick);
                     const seen = new Map(items.map((i, idx) => [String(i.pick_id || i.item_id || i.id), idx]));
@@ -419,7 +430,7 @@ async function loadFeed() {
             if (currentFilter === 'all' || currentFilter === 'polls') {
                 try {
                     const pollData = await api.request('/polls/active?limit=5');
-                    (pollData.polls || []).forEach(p => items.push({
+                    (pollData.polls || []).filter(isRealPublicFeedUser).forEach(p => items.push({
                         item_type: 'poll',
                         post_type: 'poll',
                         item_id: 'poll_' + p.id,
@@ -455,7 +466,7 @@ async function loadFeed() {
 
     updateHeroCounts(items.length);
     if (!items.length) {
-        c.innerHTML = '<div class="empty-state"><i class="fas fa-stream"></i><h3>No public activity in this filter yet.</h3><p>Real graded picks, posts, polls, challenges, and trivia will appear here once available.</p></div>';
+        c.innerHTML = '<div class="empty-state"><i class="fas fa-stream"></i><h3>No activity yet.</h3><p>Follow handicappers or make your first pick to start building the feed.</p></div>';
         const lm = document.getElementById('loadMore');
         if (lm) lm.style.display = 'none';
         return;
@@ -493,7 +504,7 @@ async function loadTrending() {
     if (!el) return;
     try {
         const data = await api.request('/social/discover?limit=5');
-        const picks = (data.picks || []).filter(p => p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()));
+        const picks = (data.picks || []).filter(isRealPublicFeedUser).filter(p => p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()));
         if (picks.length) {
             const grouped = {};
             picks.forEach(p => {
@@ -515,7 +526,7 @@ async function loadTopCappers() {
     if (!el) return;
     try {
         const data = await api.request('/users?limit=10');
-        const users = (data.users || []).filter(u => Number(u.total_picks || 0) > 0);
+        const users = (data.users || []).filter(isRealPublicFeedUser).filter(u => Number(u.total_picks || 0) > 0);
         if (users.length) {
             users.sort((a, b) => Number(b.net_units || 0) - Number(a.net_units || 0));
             el.innerHTML = users.slice(0, 3).map(u => {
@@ -536,7 +547,7 @@ async function loadArenaWatch() {
     if (!el) return;
     try {
         const data = await api.request('/social/discover?limit=3');
-        const picks = (data.picks || []).filter(p => p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()));
+        const picks = (data.picks || []).filter(isRealPublicFeedUser).filter(p => p.is_public !== false && !p.is_private && !['pending', 'locked'].includes(String(p.status || '').toLowerCase()));
         if (picks.length) {
             const grouped = {};
             picks.forEach(p => {
