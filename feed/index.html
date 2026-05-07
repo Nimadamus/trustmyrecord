@@ -15,22 +15,22 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="/static/css/social-home.css?v=20260504feedenergy1">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260504feedenergy1">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260504feedenergy1"></script>
+    <link rel="stylesheet" href="/static/css/social-home.css?v=20260503feedpolish1">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260503feedpolish1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260503feedpolish1"></script>
     <style>
         /* Trivia-aligned design tokens (override social-home.css) */
         :root {
-            --neon-cyan: #22d3ee;
-            --neon-purple: #64748b;
-            --neon-green: #22c55e;
+            --neon-cyan: #00ffff;
+            --neon-purple: #ff00ff;
+            --neon-green: #39ff14;
             --neon-gold: #ffd700;
             --neon-red: #ff073a;
-            --dark-bg: #060a12;
-            --darker-bg: #03060b;
-            --card-bg: rgba(13, 20, 31, 0.86);
-            --card-bg-solid: rgba(13, 20, 31, 0.96);
-            --glass-border: rgba(100, 116, 139, 0.22);
+            --dark-bg: #0a0a0f;
+            --darker-bg: #050508;
+            --card-bg: rgba(20, 20, 35, 0.8);
+            --card-bg-solid: rgba(20, 20, 35, 0.95);
+            --glass-border: rgba(0, 255, 255, 0.2);
             --text-primary: #ffffff;
             --text-secondary: #b0b0c0;
             --text-muted: #808090;
@@ -42,8 +42,8 @@
             --bg-secondary: rgba(20, 20, 35, 0.6);
             --bg-card: rgba(20, 20, 35, 0.8);
             --bg-card-hover: rgba(28, 28, 50, 0.92);
-            --border-color: rgba(100, 116, 139, 0.22);
-            --border-light: rgba(34, 211, 238, 0.24);
+            --border-color: rgba(0, 255, 255, 0.18);
+            --border-light: rgba(0, 255, 255, 0.32);
             --accent-blue-bg: rgba(56, 189, 248, 0.14);
             --accent-green-bg: rgba(57, 255, 20, 0.12);
             --accent-red-bg: rgba(255, 7, 58, 0.14);
@@ -75,8 +75,8 @@
         /* ===== PAGE LAYOUT ===== */
         .page-layout {
             display: grid;
-            grid-template-columns: 196px minmax(590px, 1fr) 280px;
-            gap: 18px;
+            grid-template-columns: 210px minmax(560px, 1fr) 310px;
+            gap: 20px;
             max-width: 1280px;
             margin: 0 auto;
             padding: 20px 18px 56px;
@@ -91,9 +91,9 @@
         body.tmr-site-shell[data-tmr-route="feed"] .page-layout {
             width: min(1260px, calc(100% - 36px)) !important;
             max-width: 1260px !important;
-            grid-template-columns: 196px minmax(590px, 1fr) 280px !important;
-            gap: 18px !important;
-            padding: 14px 0 56px !important;
+            grid-template-columns: 210px minmax(560px, 1fr) 300px !important;
+            gap: 20px !important;
+            padding: 20px 0 56px !important;
         }
 
         body.tmr-site-shell[data-tmr-route="feed"] .sidebar-link.active {
@@ -113,9 +113,9 @@
         .feed-hero {
             display: block;
             text-align: left;
-            padding: 14px 16px !important;
-            margin-bottom: 10px !important;
-            border-radius: 14px !important;
+            padding: 20px 22px !important;
+            margin-bottom: 14px !important;
+            border-radius: 16px !important;
             border: 1px solid rgba(148, 163, 184, 0.14) !important;
             background:
                 linear-gradient(135deg, rgba(45, 212, 191, 0.055), rgba(56, 189, 248, 0.025)),
@@ -141,11 +141,11 @@
             background: transparent;
             border: 0;
             color: #7dd3fc;
-            font-size: 9px;
+            font-size: 10px;
             font-weight: 700;
             letter-spacing: 0.12em;
             text-transform: uppercase;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
         .feed-hero-eyebrow .pip {
             width: 6px; height: 6px; border-radius: 50%;
@@ -154,40 +154,40 @@
         }
         .feed-hero h1 {
             font-family: 'Barlow', sans-serif;
-            font-size: clamp(1.48rem, 1.75vw, 2rem) !important;
+            font-size: clamp(1.82rem, 2.2vw, 2.55rem) !important;
             font-weight: 800;
             line-height: 1.02 !important;
             letter-spacing: 0 !important;
             background: none;
             -webkit-text-fill-color: #f8fafc;
             color: #f8fafc;
-            margin: 0 0 5px;
+            margin: 0 0 8px;
             max-width: none;
         }
         .feed-hero p {
             color: #a7b4c5 !important;
-            font-size: 0.84rem !important;
-            line-height: 1.42;
-            max-width: 76ch;
-            margin: 0 0 10px !important;
+            font-size: 0.92rem !important;
+            line-height: 1.48;
+            max-width: 68ch;
+            margin: 0 0 12px !important;
         }
         .feed-hero-points {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 7px;
-            margin: 0;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin: 0 0 14px;
         }
         .feed-hero-point {
             display: flex;
             align-items: center;
             gap: 8px;
-            min-height: 30px;
-            padding: 7px 9px;
-            border: 1px solid rgba(148, 163, 184, 0.10);
-            border-radius: 9px;
+            min-height: 34px;
+            padding: 8px 10px;
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 10px;
             background: rgba(2, 8, 18, 0.24);
             color: #d7e8f7;
-            font-size: 0.76rem;
+            font-size: 0.8rem;
             font-weight: 700;
             line-height: 1.25;
         }
@@ -249,7 +249,7 @@
             line-height: 1.25;
         }
         .feed-hero-actions {
-            display: none;
+            display: flex;
             gap: 8px;
             flex-wrap: wrap;
         }
@@ -293,7 +293,7 @@
             backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
             border-radius: 14px !important;
-            padding: 9px !important;
+            padding: 10px !important;
             display: flex;
             flex-direction: column;
             gap: 5px !important;
@@ -305,11 +305,11 @@
             gap: 9px;
             width: 100%;
             min-width: 0;
-            min-height: 38px;
-            padding: 8px 9px !important;
+            min-height: 40px;
+            padding: 9px 10px !important;
             border-radius: 9px;
             color: var(--text-secondary);
-            font-size: 0.74rem !important;
+            font-size: 0.78rem !important;
             font-weight: 800;
             letter-spacing: 0.045em !important;
             text-transform: uppercase;
@@ -370,15 +370,15 @@
             backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
             border-radius: 16px !important;
-            padding: 11px 12px 10px;
-            margin-bottom: 10px;
+            padding: 14px;
+            margin-bottom: 12px;
             box-shadow: 0 12px 28px rgba(2, 8, 18, 0.22) !important;
         }
         .composer-login-state {
             display: none;
             align-items: center;
             justify-content: space-between;
-            gap: 10px;
+            gap: 14px;
             background:
                 linear-gradient(135deg, rgba(45, 212, 191, 0.08), rgba(56, 189, 248, 0.04)),
                 rgba(9, 18, 32, 0.88);
@@ -419,13 +419,13 @@
             align-items: flex-start;
         }
         .composer-avatar {
-            width: 34px; height: 34px;
+            width: 40px; height: 40px;
             border-radius: 50%;
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
             color: #000;
             font-family: 'Barlow', sans-serif;
             font-weight: 800;
-            font-size: 0.96rem;
+            font-size: 1.1rem;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -433,14 +433,14 @@
         }
         .composer-textarea {
             flex: 1;
-            min-height: 44px !important;
-            padding: 9px 11px;
-            border-radius: 10px !important;
+            min-height: 58px !important;
+            padding: 10px 12px;
+            border-radius: 12px !important;
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass-border);
             color: var(--text-primary);
             font-family: 'Inter', sans-serif;
-            font-size: 0.88rem;
+            font-size: 0.92rem;
             resize: vertical;
         }
         .composer-textarea::placeholder { color: var(--text-muted); }
@@ -453,9 +453,9 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 8px;
-            padding-left: 46px;
-            gap: 8px;
+            margin-top: 10px;
+            padding-left: 52px;
+            gap: 10px;
             flex-wrap: wrap;
         }
         .composer-actions {
@@ -467,9 +467,9 @@
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass-border);
             color: var(--text-secondary);
-            padding: 6px 9px;
-            border-radius: 8px;
-            font-size: 0.76rem;
+            padding: 7px 10px;
+            border-radius: 9px;
+            font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.15s ease;
@@ -490,11 +490,11 @@
             background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass-border);
             color: var(--text-secondary);
-            padding: 6px 9px;
-            border-radius: 8px;
-            font-size: 0.78rem;
+            padding: 7px 10px;
+            border-radius: 9px;
+            font-size: 0.82rem;
         }
-        .poll-builder { display: none; margin-top: 8px; padding-left: 46px; }
+        .poll-builder { display: none; margin-top: 10px; padding-left: 52px; }
         .poll-builder.is-shown,
         .poll-builder.show { display: block; }
         .poll-row {
@@ -532,9 +532,9 @@
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
             color: #000;
             border: 0;
-            min-height: 32px;
-            padding: 7px 16px;
-            border-radius: 9px;
+            min-height: 36px;
+            padding: 8px 18px;
+            border-radius: 10px;
             font-weight: 800;
             font-size: 0.85rem;
             cursor: pointer;
@@ -545,12 +545,12 @@
 
         .feed-tabs {
             display: flex;
-            gap: 3px;
-            background: rgba(10, 18, 31, 0.88);
+            gap: 4px;
+            background: var(--card-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 11px !important;
-            padding: 3px;
-            margin-bottom: 10px;
+            border-radius: 12px !important;
+            padding: 4px;
+            margin-bottom: 12px;
             box-shadow: none !important;
             overflow-x: auto;
             scrollbar-width: none;
@@ -559,14 +559,14 @@
         .feed-tab {
             flex: 1;
             min-width: max-content;
-            padding: 8px 12px;
+            padding: 9px 14px;
             border: none;
             background: transparent;
             color: var(--text-muted);
-            font-size: 0.8rem;
-            font-weight: 800;
+            font-size: 0.85rem;
+            font-weight: 600;
             cursor: pointer;
-            border-radius: 8px;
+            border-radius: 9px;
             transition: all 0.15s ease;
             display: inline-flex;
             align-items: center;
@@ -584,16 +584,16 @@
             background: var(--card-bg);
             backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 15px 16px;
-            margin-bottom: 10px;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.24);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
             transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
         }
         .feed-item:hover {
-            transform: translateY(-1px);
-            border-color: rgba(34, 211, 238, 0.26);
-            box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32);
+            transform: translateY(-2px);
+            border-color: rgba(0, 255, 255, 0.35);
+            box-shadow: 0 20px 44px rgba(0, 0, 0, 0.4);
         }
         .fi-header {
             display: flex;
@@ -602,10 +602,10 @@
             margin-bottom: 10px;
         }
         .fi-avatar {
-            width: 38px; height: 38px;
+            width: 44px; height: 44px;
             border-radius: 50%;
-            background: linear-gradient(135deg, rgba(34, 211, 238, 0.20), rgba(34, 197, 94, 0.12));
-            color: #dff7ff;
+            background: linear-gradient(135deg, var(--accent-blue), var(--neon-purple));
+            color: #fff;
             font-family: 'Barlow', sans-serif;
             font-weight: 800;
             display: flex;
@@ -614,14 +614,14 @@
             font-size: 1rem;
             flex-shrink: 0;
             overflow: hidden;
-            border: 1px solid rgba(148, 163, 184, 0.22);
+            border: 1px solid rgba(255,255,255,0.14);
         }
         .fi-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .fi-meta { flex: 1; min-width: 0; }
         .fi-top-row {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             min-width: 0;
             flex-wrap: wrap;
         }
@@ -657,17 +657,17 @@
             display: inline-flex;
             align-items: center;
             gap: 7px;
-            margin: 2px 0 10px 50px;
+            margin: 2px 0 10px 56px;
             color: #dff7ff;
-            font-size: 0.88rem;
+            font-size: 0.86rem;
             font-weight: 800;
         }
         .fi-action-label i { color: #2dd4bf; }
         .fi-content {
             color: var(--text-primary);
-            font-size: 0.96rem;
+            font-size: 0.95rem;
             line-height: 1.55;
-            margin: 0 0 10px 50px;
+            margin: 0 0 12px 56px;
             white-space: pre-wrap;
             word-break: break-word;
         }
@@ -681,7 +681,7 @@
             border-radius: 12px;
             padding: 14px;
             margin-bottom: 12px;
-            margin-left: 50px;
+            margin-left: 56px;
         }
         .pick-embed.is-private {
             border-style: dashed;
@@ -736,18 +736,18 @@
         .fi-actions {
             display: flex;
             gap: 4px;
-            border-top: 1px solid rgba(100, 116, 139, 0.14);
-            padding-top: 8px;
-            margin-left: 50px;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 10px;
+            margin-left: 56px;
             flex-wrap: wrap;
         }
         .fi-action {
             background: transparent;
             border: 0;
             color: var(--text-muted);
-            padding: 5px 9px;
-            border-radius: 8px;
-            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 9px;
+            font-size: 0.85rem;
             font-weight: 600;
             cursor: pointer;
             display: inline-flex;
@@ -756,29 +756,10 @@
             transition: color 0.15s, background 0.15s;
         }
         .fi-action:hover {
-            color: #a5f3fc;
-            background: rgba(34, 211, 238, 0.07);
+            color: var(--neon-cyan);
+            background: rgba(0, 255, 255, 0.06);
         }
         .fi-action.is-liked { color: var(--accent-red); }
-        .fi-badge-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
-        .profile-badge { display:inline-flex; align-items:center; gap:6px; width:fit-content; padding:3px 8px; border-radius:999px; border:1px solid rgba(125,211,252,0.32); background:rgba(125,211,252,0.08); color:#bae6fd; font-size:0.72rem; font-weight:700; }
-        .activity-card { display:flex; flex-direction:column; gap:8px; }
-        .activity-card .fi-header { margin-bottom:0; }
-        .activity-card .fi-avatar { background:rgba(15,23,42,0.92); color:#67e8f9; }
-        .activity-card.is-graded .fi-avatar { color:#86efac; }
-        .activity-main { min-width:0; }
-        .activity-line { color:#eef6ff; font-size:0.94rem; font-weight:800; margin:-13px 0 8px 50px; }
-        .privacy-badge { display:inline-flex; align-items:center; gap:6px; margin-left:50px; padding:5px 9px; border-radius:999px; border:1px solid rgba(100,116,139,0.22); background:rgba(15,23,42,0.64); color:#9aa8ba; font-size:0.78rem; font-weight:700; line-height:1.2; }
-        .privacy-badge i { color:#67e8f9; font-size:0.72rem; }
-        .privacy-badge.is-graded { color:#bbf7d0; border-color:rgba(34,197,94,0.24); background:rgba(34,197,94,0.07); }
-        .privacy-badge.is-graded i { color:#22c55e; }
-        .privacy-safe { border-color:rgba(125,211,252,0.24); background:rgba(2,8,18,0.34); }
-        .record-strip { display:flex; gap:7px; flex-wrap:wrap; color:var(--text-secondary); font-size:0.76rem; margin:8px 0 0 50px; }
-        .record-strip span { display:inline-flex; gap:4px; padding:4px 7px; border-radius:7px; background:rgba(255,255,255,0.035); border:1px solid rgba(148,163,184,0.12); }
-        .link-preview { display:inline-flex; align-items:center; gap:8px; max-width:100%; margin-bottom:12px; padding:9px 11px; border-radius:10px; border:1px solid var(--glass-border); color:#7dd3fc; background:rgba(125,211,252,0.06); text-decoration:none; font-size:0.84rem; word-break:break-all; }
-        .reply-link { border:0; background:transparent; color:#7dd3fc; font:inherit; font-weight:700; cursor:pointer; }
-        .reply-list { margin-top:8px; padding-left:10px; border-left:1px solid var(--glass-border); }
-        .reply-item { color:var(--text-secondary); font-size:0.82rem; padding:4px 0; }
         .comments-section {
             display: none;
             margin: 12px 0 0 56px;
@@ -901,7 +882,7 @@
             backdrop-filter: blur(10px);
             border: 1px solid var(--glass-border);
             border-radius: 16px !important;
-            padding: 13px !important;
+            padding: 16px !important;
             box-shadow: 0 12px 28px rgba(2, 8, 18, 0.22) !important;
             position: relative;
             overflow: hidden;
@@ -921,7 +902,7 @@
             text-transform: uppercase;
             letter-spacing: 0.08em !important;
             color: var(--text-primary);
-            margin-bottom: 10px;
+            margin-bottom: 13px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -1026,43 +1007,6 @@
             margin-top: 3px;
             flex-shrink: 0;
         }
-        .rs-soon-panel {
-            display: grid;
-            gap: 10px;
-        }
-        .rs-soon-row {
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-            padding: 9px 0;
-            border-top: 1px solid rgba(148, 163, 184, 0.08);
-        }
-        .rs-soon-row:first-child { border-top: 0; padding-top: 0; }
-        .rs-soon-row i {
-            width: 22px;
-            height: 22px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 7px;
-            background: rgba(45, 212, 191, 0.08);
-            color: #7dd3fc;
-            font-size: 0.76rem;
-            flex-shrink: 0;
-        }
-        .rs-soon-row strong {
-            display: block;
-            color: #edf7ff;
-            font-size: 0.82rem;
-            line-height: 1.25;
-        }
-        .rs-soon-row span {
-            display: block;
-            margin-top: 2px;
-            color: var(--text-muted);
-            font-size: 0.74rem;
-            line-height: 1.35;
-        }
 
         /* ===== LOAD MORE ===== */
         .load-more {
@@ -1083,475 +1027,6 @@
         }
         .load-more-btn:hover { border-color: var(--neon-cyan); color: var(--neon-cyan); transform: translateY(-1px); }
 
-        /* ===== READABILITY PASS ===== */
-        body.tmr-site-shell[data-tmr-route="feed"] .page-layout {
-            width: min(1500px, calc(100% - 48px)) !important;
-            max-width: 1500px !important;
-            grid-template-columns: 176px minmax(760px, 1fr) 250px !important;
-            gap: 24px !important;
-            padding-top: 16px !important;
-        }
-        .feed-hero {
-            padding: 16px 18px !important;
-            margin-bottom: 14px !important;
-        }
-        .feed-hero-eyebrow {
-            font-size: 0.76rem !important;
-            letter-spacing: 0.08em !important;
-            margin-bottom: 4px !important;
-        }
-        .feed-hero h1 {
-            font-size: clamp(1.85rem, 1.9vw, 2.35rem) !important;
-            line-height: 1.05 !important;
-            margin-bottom: 4px !important;
-        }
-        .feed-hero p {
-            font-size: 1rem !important;
-            line-height: 1.5 !important;
-            margin-bottom: 12px !important;
-            color: #c5d4e6 !important;
-        }
-        .feed-hero-point {
-            min-height: 38px !important;
-            padding: 9px 12px !important;
-            font-size: 0.94rem !important;
-            line-height: 1.25 !important;
-            color: #eef7ff !important;
-        }
-        .sidebar-link {
-            min-height: 42px !important;
-            padding: 10px 9px !important;
-            font-size: 0.86rem !important;
-            letter-spacing: 0.01em !important;
-            text-transform: none !important;
-            line-height: 1.2 !important;
-        }
-        .sidebar-link i {
-            font-size: 1rem !important;
-        }
-        .composer-card {
-            padding: 14px !important;
-            margin-bottom: 14px !important;
-            border-radius: 14px !important;
-        }
-        .composer-avatar {
-            width: 40px !important;
-            height: 40px !important;
-            font-size: 1.05rem !important;
-        }
-        .composer-textarea {
-            min-height: 50px !important;
-            font-size: 1rem !important;
-            line-height: 1.45 !important;
-            padding: 11px 12px !important;
-        }
-        .composer-bottom {
-            padding-left: 52px !important;
-            margin-top: 10px !important;
-        }
-        .composer-actions {
-            gap: 8px !important;
-        }
-        .composer-action,
-        .composer-sport,
-        .btn-post {
-            min-height: 36px !important;
-            font-size: 0.92rem !important;
-            border-radius: 10px !important;
-        }
-        .composer-action,
-        .composer-sport {
-            padding: 8px 12px !important;
-        }
-        .btn-post {
-            padding: 8px 20px !important;
-        }
-        .feed-tabs {
-            padding: 5px !important;
-            margin-bottom: 14px !important;
-            border-radius: 14px !important;
-            background: rgba(8, 15, 26, 0.78) !important;
-        }
-        .feed-tab {
-            padding: 10px 14px !important;
-            font-size: 0.96rem !important;
-            font-weight: 800 !important;
-            border-radius: 11px !important;
-            color: #b9c8da !important;
-        }
-        .feed-summary-strip {
-            display: none;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin: 0 0 12px;
-        }
-        .feed-summary-strip.is-shown { display: grid; }
-        .feed-summary-item {
-            display: grid;
-            grid-template-columns: 32px minmax(0, 1fr);
-            gap: 10px;
-            align-items: center;
-            min-height: 58px;
-            padding: 10px 12px;
-            border-radius: 14px;
-            border: 1px solid rgba(148, 163, 184, 0.14);
-            background: rgba(10, 18, 31, 0.78);
-        }
-        .feed-summary-item i {
-            width: 32px;
-            height: 32px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            background: rgba(125, 211, 252, 0.10);
-            color: #7dd3fc;
-            font-size: 0.9rem;
-        }
-        .feed-summary-item b {
-            display: block;
-            color: #f8fafc;
-            font-family: 'Barlow', sans-serif;
-            font-size: 1.28rem;
-            line-height: 1;
-        }
-        .feed-summary-item span {
-            display: block;
-            margin-top: 4px;
-            color: #b7c6d8;
-            font-size: 0.9rem;
-            line-height: 1.25;
-            font-weight: 700;
-        }
-        .feed-low-activity {
-            display: none;
-            margin: 0 0 12px;
-        }
-        .feed-low-activity.is-shown { display: block; }
-        .feed-explain-card,
-        .feed-more-placeholder {
-            border: 1px solid rgba(148, 163, 184, 0.14);
-            border-radius: 16px;
-            background:
-                linear-gradient(135deg, rgba(45, 212, 191, 0.055), rgba(125, 211, 252, 0.025)),
-                rgba(10, 18, 31, 0.84);
-            padding: 14px 16px;
-            color: #c7d6e8;
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-        .feed-next-actions {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 10px;
-            margin-top: 10px;
-        }
-        .feed-next-card {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-height: 54px;
-            padding: 10px 12px;
-            border-radius: 14px;
-            border: 1px solid rgba(148, 163, 184, 0.14);
-            background: rgba(2, 8, 18, 0.24);
-            color: #eef7ff;
-            text-decoration: none;
-            font-weight: 800;
-            font-size: 0.94rem;
-            line-height: 1.25;
-        }
-        .feed-next-card:hover {
-            border-color: rgba(125, 211, 252, 0.30);
-            color: #ffffff;
-            transform: translateY(-1px);
-        }
-        .feed-next-card i {
-            width: 28px;
-            height: 28px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 9px;
-            background: rgba(125, 211, 252, 0.12);
-            color: #7dd3fc;
-            flex-shrink: 0;
-        }
-        .feed-item {
-            padding: 18px 20px !important;
-            margin-bottom: 14px !important;
-            border-radius: 16px !important;
-            background: rgba(12, 20, 33, 0.92) !important;
-        }
-        .feed-item.is-featured-card {
-            padding: 20px 22px !important;
-            border-color: rgba(125, 211, 252, 0.22) !important;
-            background:
-                linear-gradient(180deg, rgba(125, 211, 252, 0.045), rgba(45, 212, 191, 0.015)),
-                rgba(12, 20, 33, 0.96) !important;
-        }
-        .feed-item.is-featured-card .fi-avatar {
-            width: 58px !important;
-            height: 58px !important;
-            font-size: 1.32rem !important;
-        }
-        .feed-item.is-featured-card .fi-action-label,
-        .feed-item.is-featured-card .activity-line,
-        .feed-item.is-featured-card .fi-content,
-        .feed-item.is-featured-card .pick-embed,
-        .feed-item.is-featured-card .fi-actions,
-        .feed-item.is-featured-card .privacy-badge,
-        .feed-item.is-featured-card .record-strip,
-        .feed-item.is-featured-card .comments-section,
-        .feed-item.is-featured-card .activity-result-label {
-            margin-left: 71px !important;
-        }
-        .activity-result-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            margin-bottom: 8px !important;
-            padding: 6px 10px;
-            border-radius: 999px;
-            background: rgba(45, 212, 191, 0.10);
-            border: 1px solid rgba(45, 212, 191, 0.18);
-            color: #bfffe1;
-            font-size: 0.82rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .fi-header {
-            gap: 13px !important;
-            margin-bottom: 12px !important;
-        }
-        .fi-avatar {
-            width: 48px !important;
-            height: 48px !important;
-            font-size: 1.12rem !important;
-            background: linear-gradient(135deg, rgba(125, 211, 252, 0.20), rgba(45, 212, 191, 0.14)) !important;
-            color: #e8fbff !important;
-        }
-        .fi-name {
-            font-size: 1.05rem !important;
-            font-weight: 800 !important;
-        }
-        .fi-handle,
-        .fi-time,
-        .fi-dot,
-        .fi-user-subline {
-            font-size: 0.9rem !important;
-            line-height: 1.35 !important;
-            color: #aab8ca !important;
-        }
-        .fi-action-label,
-        .activity-line,
-        .fi-content,
-        .pick-embed,
-        .fi-actions,
-        .privacy-badge,
-        .record-strip,
-        .comments-section {
-            margin-left: 61px !important;
-        }
-        .activity-line {
-            display: flex !important;
-            align-items: center !important;
-            gap: 10px !important;
-            margin-top: 0 !important;
-            margin-bottom: 10px !important;
-            font-size: 1.12rem !important;
-            line-height: 1.35 !important;
-            color: #f4f9ff !important;
-        }
-        .activity-type-icon {
-            width: 30px;
-            height: 30px;
-            min-width: 30px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 10px;
-            background: rgba(125, 211, 252, 0.10);
-            border: 1px solid rgba(125, 211, 252, 0.22);
-            color: #7dd3fc;
-            font-size: 0.86rem;
-        }
-        .fi-content {
-            padding: 12px 14px !important;
-            border-radius: 12px !important;
-            background: rgba(2, 8, 18, 0.28) !important;
-            border: 1px solid rgba(148, 163, 184, 0.10) !important;
-            font-size: 1rem !important;
-            line-height: 1.6 !important;
-        }
-        .privacy-badge {
-            padding: 8px 12px !important;
-            font-size: 0.94rem !important;
-            line-height: 1.35 !important;
-            color: #c5d4e6 !important;
-        }
-        .privacy-badge.is-graded {
-            color: #d8ffe6 !important;
-        }
-        .record-strip {
-            gap: 8px !important;
-            font-size: 0.92rem !important;
-            margin-top: 10px !important;
-        }
-        .record-strip span {
-            padding: 7px 10px !important;
-            border-radius: 10px !important;
-        }
-        .fi-actions {
-            gap: 8px !important;
-            padding-top: 12px !important;
-            margin-top: 14px !important;
-        }
-        .fi-action {
-            font-size: 0.94rem !important;
-            padding: 8px 11px !important;
-            color: #aebccd !important;
-            text-decoration: none !important;
-        }
-        .fi-profile-link {
-            margin-left: auto !important;
-            color: #bfefff !important;
-        }
-        .right-sidebar {
-            gap: 12px !important;
-        }
-        .rs-card {
-            padding: 16px !important;
-            border-radius: 14px !important;
-        }
-        .rs-title {
-            font-size: 0.96rem !important;
-            letter-spacing: 0.04em !important;
-            margin-bottom: 12px !important;
-        }
-        .rs-getting-started-list,
-        .rs-soon-panel {
-            gap: 8px !important;
-        }
-        .rs-getting-started-list li,
-        .rs-soon-row {
-            font-size: 0.95rem !important;
-            line-height: 1.45 !important;
-        }
-        .rs-soon-row {
-            padding: 10px 0 !important;
-        }
-        .rs-soon-row strong {
-            font-size: 0.98rem !important;
-        }
-        .rs-soon-row span {
-            font-size: 0.9rem !important;
-            line-height: 1.4 !important;
-            color: #aab8ca !important;
-        }
-        .rs-live-list {
-            display: grid;
-            gap: 8px;
-        }
-        .rs-live-row {
-            display: grid;
-            grid-template-columns: 24px minmax(0, 1fr) auto;
-            align-items: center;
-            gap: 10px;
-            min-height: 38px;
-            padding: 8px 0;
-            border-top: 1px solid rgba(148, 163, 184, 0.08);
-            color: #dce8f6;
-            font-size: 0.96rem;
-            line-height: 1.3;
-        }
-        .rs-live-row:first-child { border-top: 0; padding-top: 0; }
-        .rs-live-row i {
-            width: 24px;
-            height: 24px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            background: rgba(45, 212, 191, 0.10);
-            color: #7dd3fc;
-            font-size: 0.78rem;
-        }
-        .rs-live-row span {
-            min-width: 0;
-            color: #dce8f6;
-            font-weight: 700;
-        }
-        .rs-live-row b {
-            color: #03110d;
-            background: linear-gradient(135deg, #7dd3fc, #2dd4bf);
-            border-radius: 999px;
-            min-width: 28px;
-            padding: 3px 8px;
-            text-align: center;
-            font-size: 0.82rem;
-        }
-        .rs-thread-row,
-        .rs-member-row {
-            display: grid;
-            grid-template-columns: 28px minmax(0, 1fr);
-            gap: 10px;
-            align-items: center;
-            min-height: 42px;
-            padding: 9px 0;
-            border-top: 1px solid rgba(148, 163, 184, 0.08);
-            text-decoration: none;
-        }
-        .rs-thread-row:first-child,
-        .rs-member-row:first-child { border-top: 0; padding-top: 0; }
-        .rs-thread-row i,
-        .rs-member-avatar {
-            width: 28px;
-            height: 28px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 9px;
-            background: rgba(45, 212, 191, 0.10);
-            color: #7dd3fc;
-            font-size: 0.82rem;
-            font-weight: 800;
-            overflow: hidden;
-        }
-        .rs-member-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .rs-thread-title,
-        .rs-member-name {
-            color: #eef7ff;
-            font-size: 0.94rem;
-            font-weight: 800;
-            line-height: 1.25;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .rs-thread-meta,
-        .rs-member-meta {
-            color: #9fb0c4;
-            font-size: 0.82rem;
-            line-height: 1.35;
-            margin-top: 2px;
-        }
-        .feed-more-placeholder {
-            margin: 4px 0 14px;
-            text-align: left;
-        }
-        .feed-more-placeholder strong {
-            display: block;
-            color: #f8fafc;
-            font-size: 1.05rem;
-            margin-bottom: 4px;
-        }
-
         /* ===== MOBILE ===== */
         @media (max-width: 1080px) {
             .page-layout { grid-template-columns: minmax(0, 1fr) 280px; gap: 18px; }
@@ -1571,11 +1046,10 @@
                 padding: 14px 0 40px !important;
             }
             .right-sidebar { position: static; }
-            .feed-hero { padding: 13px 14px !important; }
-            .feed-hero h1 { font-size: 1.52rem !important; max-width: none; }
-            .feed-hero p { font-size: 0.84rem; }
+            .feed-hero { padding: 20px 16px !important; }
+            .feed-hero h1 { font-size: 1.72rem !important; max-width: none; }
+            .feed-hero p { font-size: 0.9rem; }
             .feed-hero-points { grid-template-columns: 1fr; }
-            .feed-next-actions { grid-template-columns: 1fr; }
             .feed-tabs { padding: 3px; }
             .feed-tab { padding: 8px 10px; font-size: 0.78rem; }
             .composer-bottom { flex-direction: column; align-items: stretch; padding-left: 0; }
@@ -1585,9 +1059,6 @@
             .fi-content,
             .pick-embed,
             .fi-actions,
-            .activity-line,
-            .privacy-badge,
-            .record-strip,
             .comments-section { margin-left: 0; }
             .btn-post { width: 100%; }
         }
@@ -1626,11 +1097,17 @@
                 <div class="feed-hero-copy">
                     <div class="feed-hero-eyebrow"><span class="pip"></span>Sports Social Feed</div>
                     <h1>Your Sports Network</h1>
-                    <p>A live sports feed for locked picks, verified records, and the takes that matter after the results are graded.</p>
+                    <p>Submit picks without exposing pending details, build a verified public record, and post the takes, polls, recaps, links, comments, and replies that shape your reputation.</p>
                     <div class="feed-hero-points">
                         <div class="feed-hero-point"><i class="fas fa-lock"></i> Pending picks stay hidden</div>
                         <div class="feed-hero-point"><i class="fas fa-chart-line"></i> Records update after grading</div>
                         <div class="feed-hero-point"><i class="fas fa-comments"></i> Takes, blogs, polls, and replies</div>
+                        <div class="feed-hero-point"><i class="fas fa-trophy"></i> Leaderboards, arena, trivia, forums</div>
+                    </div>
+                    <div class="feed-hero-actions">
+                        <a href="/sportsbook/" class="btn btn-primary"><i class="fas fa-bolt"></i> Lock a Pick</a>
+                        <a href="/forum/" class="btn btn-ghost"><i class="fas fa-comments"></i> Forums</a>
+                        <a href="/leaderboards/" class="btn btn-ghost"><i class="fas fa-chart-line"></i> Leaderboards</a>
                     </div>
                 </div>
             </section>
@@ -1651,6 +1128,7 @@
                     <div class="composer-actions">
                         <button class="composer-action" id="takeBtn" onclick="toggleType('hot-take')"><i class="fas fa-fire"></i> Hot Take</button>
                         <button class="composer-action" id="pollBtn" onclick="toggleType('poll')"><i class="fas fa-poll"></i> Poll</button>
+                        <button class="composer-action" id="recapBtn" onclick="toggleType('pick-recap')"><i class="fas fa-receipt"></i> Pick Recap</button>
                         <select class="composer-sport" id="sportPick">
                             <option value="">Sport</option>
                             <option value="NFL">NFL</option>
@@ -1673,9 +1151,6 @@
                 <a href="/login/">Log In</a>
             </div>
 
-            <div class="feed-summary-strip" id="feedSummaryStrip"></div>
-            <div class="feed-low-activity" id="feedLowActivity"></div>
-
             <div class="feed-tabs">
                 <button class="feed-tab active" onclick="setFilter('all',this)"><i class="fas fa-stream"></i> For You</button>
                 <button class="feed-tab" onclick="setFilter('picks',this)"><i class="fas fa-crosshairs"></i> Picks</button>
@@ -1685,37 +1160,73 @@
             </div>
 
             <div class="feed-list" id="feedList">
-                <div class="tmr-loading-state"><div class="tmr-spinner"></div><p>Loading feed...</p></div>
+                <div class="feed-item" data-id="betlegend-graded-2026-05-03" data-type="pick">
+                    <div class="fi-header">
+                        <div class="fi-avatar"><img src="/static/media/TMR-avatar-256.jpg" alt="BetLegend avatar" loading="lazy"></div>
+                        <div class="fi-meta">
+                            <div class="fi-top-row">
+                                <span class="fi-name"><a href="/profile/?user=BetLegend">BetLegend</a></span>
+                                <span class="fi-handle">@BetLegend</span>
+                                <span class="fi-dot">&bull;</span>
+                                <span class="fi-time">May 3</span>
+                            </div>
+                            <div class="fi-user-subline">
+                                <span class="fi-record">Record: 4-2, +6.20u, 66.7%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fi-action-label"><i class="fas fa-clipboard-check"></i> Picks graded</div>
+                    <div class="pick-embed">
+                        <div class="pe-row">
+                            <span class="pe-chip is-sport">Verified record update</span>
+                            <span class="pe-chip is-won">6 picks graded</span>
+                        </div>
+                        <div class="pe-team">Verified record updated.</div>
+                        <div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;">Current record: 4-2, +6.20u</div>
+                        <div style="margin-top:8px;color:var(--text-secondary);font-size:0.82rem;">Pick details hidden until eligible for public record.</div>
+                    </div>
+                    <div class="fi-actions">
+                        <button class="fi-action"><i class="fas fa-heart"></i> Like <span>0</span></button>
+                        <button class="fi-action"><i class="fas fa-comment"></i> Comment <span>0</span></button>
+                        <button class="fi-action"><i class="fas fa-reply"></i> Reply</button>
+                        <button class="fi-action"><i class="fas fa-share"></i> Share</button>
+                    </div>
+                    <div class="comments-section"></div>
+                </div>
             </div>
 
             <div class="load-more" id="loadMore" style="display:none;"><button class="load-more-btn" onclick="loadMorePosts()">Load More</button></div>
         </main>
 
         <aside class="right-sidebar">
-            <div class="rs-card" id="feedRulesCard">
-                <div class="rs-title"><i class="fas fa-shield-alt" style="color:var(--accent-blue);"></i>Feed Rules</div>
-                <div class="rs-soon-panel">
-                    <div class="rs-soon-row" id="trendingList"><i class="fas fa-lock"></i><div><strong>Locked stays locked</strong><span>Pending pick details are hidden.</span></div></div>
-                    <div class="rs-soon-row" id="topCappersList"><i class="fas fa-circle-check"></i><div><strong>Records update after grading</strong><span>Only graded outcomes affect public records.</span></div></div>
-                    <div class="rs-soon-row" id="arenaWatchList"><i class="fas fa-users"></i><div><strong>Real activity only</strong><span>Only real accounts and verified record data.</span></div></div>
-                    <div id="suggestedList" style="display:none;"></div>
+            <div class="rs-card is-getting-started">
+                <div class="rs-title"><i class="fas fa-rocket" style="color:var(--neon-gold);"></i>Start Building</div>
+                <ul class="rs-getting-started-list">
+                    <li><i class="fas fa-lock"></i><span>Submit picks now; pending details stay private.</span></li>
+                    <li><i class="fas fa-circle-check"></i><span>Graded outcomes build your verified public record.</span></li>
+                    <li><i class="fas fa-pen-nib"></i><span>Add hot takes, blogs, links, polls, recaps, and replies.</span></li>
+                </ul>
+            </div>
+            <div class="rs-card">
+                <div class="rs-title"><i class="fas fa-fire" style="color:var(--accent-red);"></i>Record Activity</div>
+                <div id="trendingList"><div class="rs-item"><span class="rs-rank"><i class="fas fa-clipboard-check"></i></span><span class="rs-text">BetLegend had picks graded <span class="rs-count">Verified record updated; pending pick details remain hidden.</span></span></div></div>
+            </div>
+            <div class="rs-card">
+                <div class="rs-title"><i class="fas fa-chart-line" style="color:var(--accent-green);"></i>Top Cappers</div>
+                <div id="topCappersList">
+                    <div class="rs-user">
+                        <div class="rs-user-avatar"><img src="/static/media/TMR-avatar-256.jpg" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
+                        <div class="rs-user-info"><div class="rs-user-name"><a href="/profile/?user=BetLegend">BetLegend</a></div><div class="rs-user-detail">4-2 - <span style="color:var(--accent-green);font-weight:700;">+6.20u</span> - 66.7%</div></div>
+                    </div>
                 </div>
             </div>
-            <div class="rs-card" id="liveActivityCard" style="display:none;">
-                <div class="rs-title"><i class="fas fa-signal"></i>Live Activity</div>
-                <div class="rs-live-list" id="liveActivityList"></div>
+            <div class="rs-card">
+                <div class="rs-title"><i class="fas fa-bolt" style="color:var(--accent-gold);"></i>Community Queue</div>
+                <div id="arenaWatchList"><div class="rs-item"><span class="rs-rank"><i class="fas fa-circle-check"></i></span><span class="rs-text">BetLegend verified record updated <span class="rs-count">4-2, +6.20u after grading</span></span></div></div>
             </div>
-            <div class="rs-card" id="trendingSportsCard" style="display:none;">
-                <div class="rs-title"><i class="fas fa-fire"></i>Trending Sports</div>
-                <div class="rs-live-list" id="trendingSportsList"></div>
-            </div>
-            <div class="rs-card" id="recentForumsCard" style="display:none;">
-                <div class="rs-title"><i class="fas fa-comments"></i>Recent Forums</div>
-                <div class="rs-live-list" id="recentForumsList"></div>
-            </div>
-            <div class="rs-card" id="newMembersCard" style="display:none;">
-                <div class="rs-title"><i class="fas fa-user-plus"></i>New Members</div>
-                <div class="rs-live-list" id="newMembersList"></div>
+            <div class="rs-card">
+                <div class="rs-title"><i class="fas fa-user-plus" style="color:var(--accent-blue);"></i>Who to Follow</div>
+                <div id="suggestedList"><div class="rs-empty">Real production users will appear here when follow suggestions are available. No fake users or synthetic records are shown.</div></div>
             </div>
         </aside>
     </div>
@@ -1724,9 +1235,7 @@
     <script src="/static/js/analytics.js?v=20260405"></script>
     <script src="/static/js/backend-api.js?v=20260423a"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
-    <script src="/static/js/social-home.js?v=20260504feedenergy1"></script>
-    <script src="/static/js/feed-ui-overrides.js?v=20260504feedenergy1"></script>
-    <script src="/static/js/feed-cleanup.js?v=20260504feedenergy1"></script>
+    <script src="/static/js/social-home.js?v=20260507feedclean1"></script>
+    <script src="/static/js/feed-ui-overrides.js?v=20260507feedclean1"></script>
 </body>
 </html>
-
