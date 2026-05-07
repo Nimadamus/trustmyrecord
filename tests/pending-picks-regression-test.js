@@ -16,7 +16,7 @@ assert(html.includes('Team Total'), 'pending page formatter must label team tota
 assert(!/side\s*\?\s*side\s*\+\s*['"]\s['"]\s*\+\s*line/.test(html), 'Line column formatter must not prefix totals with U/O');
 
 const start = html.indexOf('function fmtBareLine');
-const end = html.indexOf('function matchup', start);
+const end = html.indexOf('function statusText', start);
 assert(start !== -1 && end !== -1, 'pending formatter function block must be extractable');
 const formatterSource = html.slice(start, end) + '\n({ fmtBareLine, fmtLine, fmtPickLine, pickText });';
 const formatters = vm.runInNewContext(formatterSource, {});
@@ -42,9 +42,9 @@ const cases = [
   },
   {
     name: 'full game total under',
-    pick: { market_type: 'totals', selection: 'Under 5.5', line_snapshot: 5.5, odds_snapshot: -141 },
+    pick: { market_type: 'totals', selection: 'Under 5.5', line_snapshot: 5.5, odds_snapshot: -141, away_team: 'Carolina Hurricanes', home_team: 'Philadelphia Flyers' },
     line: '5.5',
-    pickText: 'Full Game Total Under 5.5',
+    pickText: 'Carolina Hurricanes at Philadelphia Flyers Full Game Total Under 5.5',
   },
   {
     name: 'moneyline',
