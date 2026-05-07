@@ -1,6 +1,11 @@
-/* SPORTSBOOK_RELIABILITY_OWNERSHIP: owns sportsbook selector wiring, stake-mode preview, and locked pick-slip handlers. */
 (function() {
     'use strict';
+
+    // SPORTSBOOK_RELIABILITY_OWNERSHIP:
+    // This file is the protected source of truth for sportsbook board rendering,
+    // team logo rendering, pick button selection, Risk/To Win stake mode, and
+    // submit payload construction. sportsbook/index.html may provide static
+    // markup, but future UI edits must not bypass these locked selectors/hooks.
 
     const SPORT_KEY_MAP = {
         NFL: 'americanfootball_nfl',
@@ -64,15 +69,6 @@
     let latestBoardRequestId = 0;
     const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v2_';
 
-
-    // SPORTSBOOK_RELIABILITY_GUARD_MARKERS: string checks for protected sportsbook paths.
-    // if (sportKey === 'baseball_mlb' || sportKey === 'icehockey_nhl')
-    // addRawMarketGroup('alt_totals', 'Alt Totals', ['alt_totals', 'alternate_totals'])
-    // if (item.source === 'manual') return false
-    // case 'alt_totals':
-    // case 'alternate_totals':
-    // marketType = 'alt_totals'; groupLabel = 'Alt Totals';
-
     const MARKET_LABELS = {
         h2h: 'Moneyline',
         spreads: 'Spread',
@@ -93,6 +89,7 @@
         alt_spreads: 'Alt Spread',
         alt_totals: 'Alt Total',
         alternate_totals: 'Alt Total',
+        alternate_spreads: 'Alt Spread',
         h2h_3_way: '3-Way Moneyline',
         draw_no_bet: 'Draw No Bet',
         double_chance: 'Double Chance',
@@ -104,6 +101,51 @@
         player_hits: 'Player Hits',
         player_home_runs: 'Player Home Runs',
         player_shots_on_goal: 'Shots On Goal'
+    };
+
+    const ESPN_LOGO_BASE = 'https://a.espncdn.com/i/teamlogos/';
+    const CANONICAL_TEAM_LOGOS = {
+        baseball_mlb: {
+            'arizona diamondbacks': ['mlb', 'ari'], 'atlanta braves': ['mlb', 'atl'], 'baltimore orioles': ['mlb', 'bal'], 'boston red sox': ['mlb', 'bos'],
+            'chicago cubs': ['mlb', 'chc'], 'chicago white sox': ['mlb', 'chw'], 'cincinnati reds': ['mlb', 'cin'], 'cleveland guardians': ['mlb', 'cle'],
+            'colorado rockies': ['mlb', 'col'], 'detroit tigers': ['mlb', 'det'], 'houston astros': ['mlb', 'hou'], 'kansas city royals': ['mlb', 'kc'],
+            'los angeles angels': ['mlb', 'laa'], 'los angeles dodgers': ['mlb', 'lad'], 'miami marlins': ['mlb', 'mia'], 'milwaukee brewers': ['mlb', 'mil'],
+            'minnesota twins': ['mlb', 'min'], 'new york mets': ['mlb', 'nym'], 'new york yankees': ['mlb', 'nyy'], 'athletics': ['mlb', 'ath'],
+            'oakland athletics': ['mlb', 'ath'], 'philadelphia phillies': ['mlb', 'phi'], 'pittsburgh pirates': ['mlb', 'pit'], 'san diego padres': ['mlb', 'sd'],
+            'san francisco giants': ['mlb', 'sf'], 'seattle mariners': ['mlb', 'sea'], 'st louis cardinals': ['mlb', 'stl'], 'tampa bay rays': ['mlb', 'tb'],
+            'texas rangers': ['mlb', 'tex'], 'toronto blue jays': ['mlb', 'tor'], 'washington nationals': ['mlb', 'wsh']
+        },
+        icehockey_nhl: {
+            'anaheim ducks': ['nhl', 'ana'], 'boston bruins': ['nhl', 'bos'], 'buffalo sabres': ['nhl', 'buf'], 'calgary flames': ['nhl', 'cgy'],
+            'carolina hurricanes': ['nhl', 'car'], 'chicago blackhawks': ['nhl', 'chi'], 'colorado avalanche': ['nhl', 'col'], 'columbus blue jackets': ['nhl', 'cbj'],
+            'dallas stars': ['nhl', 'dal'], 'detroit red wings': ['nhl', 'det'], 'edmonton oilers': ['nhl', 'edm'], 'florida panthers': ['nhl', 'fla'],
+            'los angeles kings': ['nhl', 'la'], 'minnesota wild': ['nhl', 'min'], 'montreal canadiens': ['nhl', 'mtl'], 'nashville predators': ['nhl', 'nsh'],
+            'new jersey devils': ['nhl', 'nj'], 'new york islanders': ['nhl', 'nyi'], 'new york rangers': ['nhl', 'nyr'], 'ottawa senators': ['nhl', 'ott'],
+            'philadelphia flyers': ['nhl', 'phi'], 'pittsburgh penguins': ['nhl', 'pit'], 'san jose sharks': ['nhl', 'sj'], 'seattle kraken': ['nhl', 'sea'],
+            'st louis blues': ['nhl', 'stl'], 'tampa bay lightning': ['nhl', 'tb'], 'toronto maple leafs': ['nhl', 'tor'], 'utah mammoth': ['nhl', 'uta'],
+            'utah hockey club': ['nhl', 'uta'], 'vancouver canucks': ['nhl', 'van'], 'vegas golden knights': ['nhl', 'vgk'], 'washington capitals': ['nhl', 'wsh'],
+            'winnipeg jets': ['nhl', 'wpg']
+        },
+        basketball_nba: {
+            'atlanta hawks': ['nba', 'atl'], 'boston celtics': ['nba', 'bos'], 'brooklyn nets': ['nba', 'bkn'], 'charlotte hornets': ['nba', 'cha'],
+            'chicago bulls': ['nba', 'chi'], 'cleveland cavaliers': ['nba', 'cle'], 'dallas mavericks': ['nba', 'dal'], 'denver nuggets': ['nba', 'den'],
+            'detroit pistons': ['nba', 'det'], 'golden state warriors': ['nba', 'gs'], 'houston rockets': ['nba', 'hou'], 'indiana pacers': ['nba', 'ind'],
+            'la clippers': ['nba', 'lac'], 'los angeles clippers': ['nba', 'lac'], 'los angeles lakers': ['nba', 'lal'], 'memphis grizzlies': ['nba', 'mem'],
+            'miami heat': ['nba', 'mia'], 'milwaukee bucks': ['nba', 'mil'], 'minnesota timberwolves': ['nba', 'min'], 'new orleans pelicans': ['nba', 'no'],
+            'new york knicks': ['nba', 'ny'], 'oklahoma city thunder': ['nba', 'okc'], 'orlando magic': ['nba', 'orl'], 'philadelphia 76ers': ['nba', 'phi'],
+            'phoenix suns': ['nba', 'phx'], 'portland trail blazers': ['nba', 'por'], 'sacramento kings': ['nba', 'sac'], 'san antonio spurs': ['nba', 'sa'],
+            'toronto raptors': ['nba', 'tor'], 'utah jazz': ['nba', 'utah'], 'washington wizards': ['nba', 'wsh']
+        },
+        americanfootball_nfl: {
+            'arizona cardinals': ['nfl', 'ari'], 'atlanta falcons': ['nfl', 'atl'], 'baltimore ravens': ['nfl', 'bal'], 'buffalo bills': ['nfl', 'buf'],
+            'carolina panthers': ['nfl', 'car'], 'chicago bears': ['nfl', 'chi'], 'cincinnati bengals': ['nfl', 'cin'], 'cleveland browns': ['nfl', 'cle'],
+            'dallas cowboys': ['nfl', 'dal'], 'denver broncos': ['nfl', 'den'], 'detroit lions': ['nfl', 'det'], 'green bay packers': ['nfl', 'gb'],
+            'houston texans': ['nfl', 'hou'], 'indianapolis colts': ['nfl', 'ind'], 'jacksonville jaguars': ['nfl', 'jax'], 'kansas city chiefs': ['nfl', 'kc'],
+            'las vegas raiders': ['nfl', 'lv'], 'los angeles chargers': ['nfl', 'lac'], 'los angeles rams': ['nfl', 'lar'], 'miami dolphins': ['nfl', 'mia'],
+            'minnesota vikings': ['nfl', 'min'], 'new england patriots': ['nfl', 'ne'], 'new orleans saints': ['nfl', 'no'], 'new york giants': ['nfl', 'nyg'],
+            'new york jets': ['nfl', 'nyj'], 'philadelphia eagles': ['nfl', 'phi'], 'pittsburgh steelers': ['nfl', 'pit'], 'san francisco 49ers': ['nfl', 'sf'],
+            'seattle seahawks': ['nfl', 'sea'], 'tampa bay buccaneers': ['nfl', 'tb'], 'tennessee titans': ['nfl', 'ten'], 'washington commanders': ['nfl', 'wsh']
+        }
     };
 
     function lockFunction(target, key, value) {
@@ -179,11 +221,19 @@
         const stakeMode = String(mode || 'risk').toLowerCase() === 'to_win' || String(mode || '').toLowerCase() === 'towin' ? 'to_win' : 'risk';
         const units = Number(amount);
         const price = Number(odds);
-        if (!Number.isFinite(units) || units <= 0 || !Number.isFinite(price) || price === 0) return { risk_units: 0, win_units: 0 };
-        if (stakeMode === 'to_win') {
-            return { risk_units: roundStakeUnits(price < 0 ? units * Math.abs(price) / 100 : units * 100 / price), win_units: roundStakeUnits(units) };
+        if (!Number.isFinite(units) || units <= 0 || !Number.isFinite(price) || price === 0) {
+            return { risk_units: 0, win_units: 0 };
         }
-        return { risk_units: roundStakeUnits(units), win_units: roundStakeUnits(price < 0 ? units * 100 / Math.abs(price) : units * price / 100) };
+        if (stakeMode === 'to_win') {
+            return {
+                risk_units: roundStakeUnits(price < 0 ? units * Math.abs(price) / 100 : units * 100 / price),
+                win_units: roundStakeUnits(units)
+            };
+        }
+        return {
+            risk_units: roundStakeUnits(units),
+            win_units: roundStakeUnits(price < 0 ? units * 100 / Math.abs(price) : units * price / 100)
+        };
     }
 
     function normalizeStakeMode(mode) {
@@ -198,15 +248,31 @@
         const nextMode = normalizeStakeMode(mode);
         window.TMR = window.TMR || {};
         window.TMR.selectedUnitsMode = nextMode;
-        [{ id: 'modeRisk', mode: 'risk' }, { id: 'modeToWin', mode: 'to_win' }, { id: 'modeRiskTicket', mode: 'risk' }, { id: 'modeToWinTicket', mode: 'to_win' }].forEach(function(entry) {
+
+        const buttonPairs = [
+            { id: 'modeRisk', mode: 'risk' },
+            { id: 'modeToWin', mode: 'to_win' },
+            { id: 'modeRiskTicket', mode: 'risk' },
+            { id: 'modeToWinTicket', mode: 'to_win' }
+        ];
+        buttonPairs.forEach(function(entry) {
             const button = document.getElementById(entry.id);
             if (!button) return;
             const active = entry.mode === nextMode;
             button.classList.toggle('active', active);
             button.setAttribute('aria-pressed', active ? 'true' : 'false');
         });
+
+        const hiddenTicketMode = document.getElementById('ttSlipStakeMode');
+        if (hiddenTicketMode) hiddenTicketMode.value = nextMode;
+
         const explanation = document.getElementById('unitsExplanation');
-        if (explanation) explanation.textContent = nextMode === 'to_win' ? 'Enter target profit units. Risk is calculated from the odds.' : 'Enter units risked. To-win amount is calculated from the odds.';
+        if (explanation) {
+            explanation.textContent = nextMode === 'to_win'
+                ? 'Enter target profit units. Risk is calculated from the odds.'
+                : 'Enter units risked. To-win amount is calculated from the odds.';
+        }
+
         updateStakeModePreview();
         return nextMode;
     }
@@ -216,23 +282,15 @@
         const oddsInput = document.getElementById('pickOddsInput');
         const amount = input ? parseFloat(input.value || '1') : 1;
         const odds = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
-        const selectedMode = getSelectedStakeMode();
-        const values = calculateStakeValues(selectedMode, amount, odds);
-        const riskButton = document.getElementById('modeRisk');
-        const toWinButton = document.getElementById('modeToWin');
-        const riskTicketButton = document.getElementById('modeRiskTicket');
-        const toWinTicketButton = document.getElementById('modeToWinTicket');
-        const formatUnits = function(value) {
-            const n = roundStakeUnits(value);
-            if (!Number.isFinite(n) || n <= 0) return 'X';
-            return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
-        };
-        if (riskButton) riskButton.innerHTML = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
-        if (toWinButton) toWinButton.innerHTML = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
-        if (riskTicketButton) riskTicketButton.innerHTML = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
-        if (toWinTicketButton) toWinTicketButton.innerHTML = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
-        const previewText = values.risk_units > 0 && values.win_units > 0 ? 'Risk ' + values.risk_units + ' units to win ' + values.win_units + ' units' : 'Risk / To Win preview updates after odds are entered.';
-        ['unitsStakePreview', 'ttSlipStakePreview'].forEach(function(id) { const preview = document.getElementById(id); if (preview) preview.textContent = previewText; });
+        const values = calculateStakeValues(getSelectedStakeMode(), amount, odds);
+        const previewText = values.risk_units > 0 && values.win_units > 0
+            ? 'Risk ' + values.risk_units + ' units to win ' + values.win_units + ' units'
+            : 'Risk / To Win preview updates after odds are entered.';
+
+        ['unitsStakePreview', 'ttSlipStakePreview'].forEach(function(id) {
+            const preview = document.getElementById(id);
+            if (preview) preview.textContent = previewText;
+        });
     }
 
     function formatStakeDisplay(pick) {
@@ -246,7 +304,10 @@
             win = values.win_units;
         }
         if (!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) return '';
-        const fmt = function(n) { n = roundStakeUnits(n); return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, ''); };
+        const fmt = function(n) {
+            n = roundStakeUnits(n);
+            return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+        };
         return 'Risk ' + fmt(risk) + ' units to win ' + fmt(win) + ' units';
     }
 
@@ -255,7 +316,6 @@
     window.TMR.formatStakeDisplay = formatStakeDisplay;
     window.TMR.updateStakeModePreview = updateStakeModePreview;
     window.setUnitsMode = setStakeMode;
-
 
     function normalizePick(pick) {
         return Object.assign({}, pick, {
@@ -911,7 +971,7 @@
             return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.result_units) || 0));
         }, 0);
         const risked = normalized.reduce(function(sum, pick) {
-            return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.units) || 0));
+            return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.risk_units) || parseFloat(pick.units) || 0));
         }, 0);
 
         return {
@@ -1019,11 +1079,7 @@
 
         const unitsInput = document.getElementById('unitsInput');
         if (unitsInput) {
-            const row = unitsInput.parentElement;
-            if (row && !row.classList.contains('tmr-units-row')) {
-                row.classList.add('tmr-units-row');
-            }
-            unitsInput.style.width = '';
+            ensureStakeModeControls(unitsInput);
         }
 
         const reasoning = document.getElementById('pickReasoning');
@@ -1043,6 +1099,99 @@
         }
     }
 
+    function ensureStakeModeControls(unitsInput) {
+        unitsInput = unitsInput || document.getElementById('unitsInput');
+        if (!unitsInput) return;
+
+        // Owned by SPORTSBOOK_RELIABILITY_OWNERSHIP. The visible Risk / To Win
+        // selector must stay next to #unitsInput and route through setStakeMode.
+        unitsInput.setAttribute('min', '0.5');
+        unitsInput.setAttribute('max', '5');
+        unitsInput.setAttribute('step', '0.5');
+        unitsInput.setAttribute('inputmode', 'decimal');
+        unitsInput.removeAttribute('pattern');
+        unitsInput.oninput = function() {
+            updateStakeModePreview();
+        };
+        unitsInput.style.width = '';
+
+        let row = unitsInput.parentElement;
+        if (!row || !row.classList || !row.classList.contains('tmr-units-row')) {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'tmr-units-row';
+            wrapper.style.display = 'flex';
+            wrapper.style.alignItems = 'center';
+            wrapper.style.gap = '12px';
+            wrapper.style.marginTop = '8px';
+            if (row) {
+                row.insertBefore(wrapper, unitsInput);
+            }
+            wrapper.appendChild(unitsInput);
+            row = wrapper;
+        } else {
+            row.classList.add('tmr-units-row');
+        }
+
+        let visibleLabel = document.getElementById('unitsModeVisibleLabel');
+        if (!visibleLabel) {
+            visibleLabel = document.createElement('div');
+            visibleLabel.id = 'unitsModeVisibleLabel';
+            visibleLabel.className = 'tmr-units-mode-label';
+            visibleLabel.textContent = 'Risk / To Win selector';
+        }
+        if (visibleLabel.parentElement !== row) row.insertBefore(visibleLabel, unitsInput);
+
+        let toggle = document.getElementById('unitsModeToggle');
+        if (!toggle) {
+            toggle = document.createElement('div');
+            toggle.id = 'unitsModeToggle';
+            toggle.setAttribute('role', 'group');
+            toggle.setAttribute('aria-label', 'Stake mode');
+            toggle.innerHTML =
+                '<button type="button" id="modeRisk" class="units-mode-btn" data-stake-mode="risk">Risk</button>' +
+                '<button type="button" id="modeToWin" class="units-mode-btn" data-stake-mode="to_win">To Win</button>';
+        }
+        if (toggle.parentElement !== row) row.appendChild(toggle);
+        toggle.style.display = 'flex';
+
+        [
+            { id: 'modeRisk', mode: 'risk', label: 'Risk' },
+            { id: 'modeToWin', mode: 'to_win', label: 'To Win' }
+        ].forEach(function(entry) {
+            let button = document.getElementById(entry.id);
+            if (!button) {
+                button = document.createElement('button');
+                button.type = 'button';
+                button.id = entry.id;
+                button.className = 'units-mode-btn';
+                toggle.appendChild(button);
+            }
+            button.type = 'button';
+            button.textContent = entry.label;
+            button.setAttribute('data-stake-mode', entry.mode);
+            button.onclick = function() {
+                setStakeMode(entry.mode);
+            };
+        });
+
+        const group = unitsInput.closest('.option-group');
+        let explanation = document.getElementById('unitsExplanation');
+        if (!explanation && group) {
+            explanation = document.createElement('p');
+            explanation.id = 'unitsExplanation';
+            explanation.className = 'ticket-input-help';
+            group.appendChild(explanation);
+        }
+        if (group && !document.getElementById('unitsStakePreview')) {
+            const preview = document.createElement('p');
+            preview.id = 'unitsStakePreview';
+            preview.className = 'ticket-input-help';
+            group.appendChild(preview);
+        }
+
+        setStakeMode(getSelectedStakeMode());
+    }
+
     function getLineInputLabel(option) {
         const marketType = String(option && option.market_type || '').toLowerCase();
         if (!marketType || option == null || option.line == null) return 'Line';
@@ -1052,69 +1201,12 @@
         return 'Line';
     }
 
-
-    function ensureStakeModeControls(unitsInput) {
-        unitsInput = unitsInput || document.getElementById('unitsInput');
-        if (!unitsInput) return;
-        unitsInput.setAttribute('min', '1');
-        unitsInput.setAttribute('max', '5');
-        unitsInput.setAttribute('step', '1');
-        unitsInput.setAttribute('inputmode', 'decimal');
-        unitsInput.oninput = function() { updateStakeModePreview(); };
-        unitsInput.onchange = function() { updateStakeModePreview(); };
-        let row = unitsInput.parentElement;
-        if (!row || !row.classList || !row.classList.contains('tmr-units-row')) {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'tmr-units-row';
-            wrapper.style.display = 'flex';
-            wrapper.style.alignItems = 'center';
-            wrapper.style.gap = '12px';
-            wrapper.style.marginTop = '8px';
-            if (row) row.insertBefore(wrapper, unitsInput);
-            wrapper.appendChild(unitsInput);
-            row = wrapper;
-        } else row.classList.add('tmr-units-row');
-        let visibleLabel = document.getElementById('unitsModeVisibleLabel');
-        if (!visibleLabel) {
-            visibleLabel = document.createElement('div');
-            visibleLabel.id = 'unitsModeVisibleLabel';
-            visibleLabel.className = 'tmr-units-mode-label';
-            visibleLabel.textContent = 'Risk / To Win selector';
-        }
-        if (visibleLabel.parentElement !== row) row.insertBefore(visibleLabel, unitsInput);
-        let toggle = document.getElementById('unitsModeToggle');
-        if (!toggle) {
-            toggle = document.createElement('div');
-            toggle.id = 'unitsModeToggle';
-            toggle.setAttribute('role', 'group');
-            toggle.setAttribute('aria-label', 'Stake mode');
-            toggle.innerHTML = '<button type="button" id="modeRisk" class="units-mode-btn" data-stake-mode="risk">Risk X units</button>' + '<button type="button" id="modeToWin" class="units-mode-btn" data-stake-mode="to_win">To win X units</button>';
-        }
-        if (toggle.parentElement !== row) row.appendChild(toggle);
-        toggle.style.display = 'flex';
-        [{ id: 'modeRisk', mode: 'risk', label: 'Risk X units' }, { id: 'modeToWin', mode: 'to_win', label: 'To win X units' }].forEach(function(entry) {
-            let button = document.getElementById(entry.id);
-            if (!button) { button = document.createElement('button'); button.type = 'button'; button.id = entry.id; button.className = 'units-mode-btn'; toggle.appendChild(button); }
-            button.type = 'button';
-            button.textContent = entry.label;
-            button.setAttribute('data-stake-mode', entry.mode);
-            button.onclick = function() { setStakeMode(entry.mode); };
-        });
-        const group = unitsInput.closest('.option-group');
-        let explanation = document.getElementById('unitsExplanation');
-        if (!explanation && group) { explanation = document.createElement('p'); explanation.id = 'unitsExplanation'; explanation.className = 'ticket-input-help'; group.appendChild(explanation); }
-        if (group && !document.getElementById('unitsStakePreview')) { const preview = document.createElement('p'); preview.id = 'unitsStakePreview'; preview.className = 'ticket-input-help'; group.appendChild(preview); }
-        setStakeMode(getSelectedStakeMode());
-    }
-
     function syncPickDetailsLayout(option) {
         const selectorIds = ['betScopeSelector', 'betTypeSelector', 'betTypeSelector2', 'betTypeSelectorF5'];
         selectorIds.forEach(function(id) {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
-
-        ensureStakeModeControls(document.getElementById('unitsInput'));
 
         const lineGroup = document.getElementById('lineInputGroup');
         if (lineGroup) {
@@ -1156,8 +1248,7 @@
             '.tmr-market-matchup{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;padding:0;border-radius:18px;}',
             '.tmr-team-row{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:10px;color:#f8fafc;}',
             '.tmr-team-side{display:inline-flex;align-items:center;justify-content:center;min-width:54px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#aeb8c6;}',
-            '.tmr-team-abbr{width:30px;height:30px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:11px;font-weight:900;letter-spacing:0.08em;color:#dbe7ef;flex-shrink:0;overflow:hidden;}',
-            '.tmr-team-abbr img{width:100%;height:100%;object-fit:contain;display:block;}',
+            '.tmr-team-abbr{width:30px;height:30px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:11px;font-weight:900;letter-spacing:0.08em;color:#dbe7ef;flex-shrink:0;}',
             '.tmr-team-name{font-size:clamp(18px,2vw,22px);font-weight:800;letter-spacing:-0.03em;line-height:1.05;}',
             '.tmr-matchup-divider{display:flex;align-items:center;gap:10px;padding-left:66px;color:#6f7a89;font-size:10px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;}',
             '.tmr-matchup-divider::before,.tmr-matchup-divider::after{content:"";height:1px;flex:1;background:rgba(255,255,255,0.08);}',
@@ -1238,13 +1329,7 @@
             '#picks #pickLineInput:focus,#picks #pickOddsInput:focus,#picks #unitsInput:focus,#picks #pickReasoning:focus{outline:none;border-color:rgba(120,255,181,0.34)!important;box-shadow:0 0 0 3px rgba(47,143,83,0.15)!important;}',
             '#picks #pickReasoning{min-height:110px;padding:14px 16px;font-size:15px;resize:vertical;}',
             '#picks #unitsModeToggle{border:1px solid rgba(255,255,255,0.08)!important;border-radius:12px!important;background:#14181f!important;}',
-            '#picks .tmr-units-row{display:flex!important;flex-wrap:wrap;align-items:stretch;gap:10px!important;margin-top:8px;}',
             '#picks .tmr-units-mode-label{flex:1 0 100%;font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f2c94c;}',
-            '#picks .tmr-units-row #unitsInput{flex:1 1 110px;min-width:0;width:auto!important;text-align:center;}',
-            '#picks .tmr-units-row #unitsModeToggle{flex:1 1 240px;display:flex;overflow:hidden;min-width:0;}',
-            '#picks .tmr-units-row #unitsModeToggle .units-mode-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:10px 12px;font-size:12px;border-radius:0;line-height:1.15;min-height:58px;}',
-            '#picks .tmr-units-row #unitsModeToggle .units-mode-btn span{display:block;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;opacity:.78;}',
-            '#picks .tmr-units-row #unitsModeToggle .units-mode-btn strong{display:block;font-size:14px;letter-spacing:0;text-transform:none;white-space:nowrap;}',
             '#picks .submit-pick-btn{width:100%;padding:16px 20px;border-radius:16px;border:1px solid rgba(120,255,181,0.26);background:linear-gradient(180deg,#2f8f53,#257444);color:#f8fff9;font-size:15px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;box-shadow:0 16px 30px rgba(0,0,0,0.2);}',
             '#picks .submit-pick-btn:hover{transform:translateY(-1px);background:linear-gradient(180deg,#38a35f,#2a7c49);}',
             '#picks #pickConfirmation > div{background:linear-gradient(180deg,rgba(35,63,42,0.98),rgba(19,31,23,0.98))!important;border:1px solid rgba(120,255,181,0.26)!important;border-radius:20px!important;box-shadow:0 20px 40px rgba(0,0,0,0.22)!important;}',
@@ -1286,6 +1371,7 @@
             ,'#pickDetails .option-group input[readonly]{background:rgba(255,255,255,0.03)!important;color:#cbd5e1!important;cursor:default;}'
             ,'#pickDetails .option-group input:focus{outline:none!important;border-color:rgba(120,255,181,0.34)!important;box-shadow:0 0 0 3px rgba(47,143,83,0.18)!important;}'
             ,'#pickDetails .tmr-units-row{display:flex!important;flex-wrap:wrap;align-items:stretch;gap:10px!important;margin-top:8px;}'
+            ,'#pickDetails .tmr-units-mode-label{flex:1 0 100%;font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f2c94c;}'
             ,'#pickDetails .tmr-units-row #unitsInput{flex:1 1 120px;min-width:0;width:auto!important;font-size:18px!important;font-weight:800;text-align:center;}'
             ,'#pickDetails .tmr-units-row #unitsModeToggle{flex:1 1 220px;display:flex;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);min-width:0;}'
             ,'#pickDetails .tmr-units-row #unitsModeToggle .units-mode-btn{flex:1;padding:12px 14px;font-size:13px;border-radius:0;}'
@@ -1607,7 +1693,9 @@
             addRawMarketGroup('second_half', 'Second Half', ['second_half_h2h', 'h2h_h2', 'second_half_spreads', 'spreads_h2', 'second_half_totals', 'totals_h2']);
             addRawMarketGroup('period_1', '1st Period', ['period_1_h2h', 'h2h_p1', 'period_1_spreads', 'period_1_totals', 'totals_p1']);
             addRawMarketGroup('alt_spreads', 'Alt Spreads', ['alt_spreads', 'alternate_spreads']);
-            addRawMarketGroup('alt_totals', 'Alt Totals', ['alt_totals', 'alternate_totals']);
+            if (sportKey === 'baseball_mlb' || sportKey === 'icehockey_nhl') {
+                addRawMarketGroup('alt_totals', 'Alt Totals', ['alt_totals', 'alternate_totals']);
+            }
             addRawMarketGroup('three_way', '3-Way Moneyline', ['h2h_3_way']);
 
             if (sportKey === 'baseball_mlb' && (f5H2h || f5Spreads || f5Totals)) {
@@ -1722,6 +1810,8 @@
     }
 
     function renderBoardOptionButton(option, optionKey, optionDomId, game) {
+        // Owned by SPORTSBOOK_RELIABILITY_OWNERSHIP. Pick buttons must keep
+        // .tmr-option-btn, data-option-id, and the locked tmrSelectOption path.
         state.currentOptions.set(optionKey, Object.assign({
             game: game,
             _domId: optionDomId,
@@ -1947,9 +2037,9 @@
                 '<div>' +
                 '<div class="tmr-market-topline"><span class="tmr-market-league">Game ' + boardNumber + ' • ' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span><span class="tmr-market-status">' + escapeHtml(formatStartsIn(game.commence_time)) + '</span></div>' +
                 '<div class="tmr-market-matchup">' +
-                '<div class="tmr-team-row"><span class="tmr-team-side">Away</span>' + renderTeamLogo(game.away_team, game.away_logo, game.away_abbr, game.sport_key) + '<span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
+                '<div class="tmr-team-row"><span class="tmr-team-side">Away</span><span class="tmr-team-abbr">' + renderTeamLogo(game.away_team, game.sport_key, game.away_logo || game.awayLogo || '', game.away_abbr || game.awayAbbr || '') + '</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
                 '<div class="tmr-matchup-divider">@</div>' +
-                '<div class="tmr-team-row"><span class="tmr-team-side">Home</span>' + renderTeamLogo(game.home_team, game.home_logo, game.home_abbr, game.sport_key) + '<span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
+                '<div class="tmr-team-row"><span class="tmr-team-side">Home</span><span class="tmr-team-abbr">' + renderTeamLogo(game.home_team, game.sport_key, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '') + '</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
                 '</div>' +
                 '<div class="tmr-market-meta">' +
                 '<span class="tmr-market-chip accent">' + escapeHtml(new Date(game.commence_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span>' +
@@ -1989,6 +2079,67 @@
             .replace(/'/g, '&#39;');
     }
 
+    function normalizeTeamKey(value) {
+        return String(value || '')
+            .toLowerCase()
+            .replace(/\b(the|fc)\b/g, ' ')
+            .replace(/&/g, ' and ')
+            .replace(/[^a-z0-9]+/g, ' ')
+            .trim();
+    }
+
+    function getCanonicalLogoEntry(teamName, sportKey) {
+        const normalizedSport = String(sportKey || '').toLowerCase();
+        const key = normalizeTeamKey(teamName);
+        const mapsToCheck = [];
+        if (CANONICAL_TEAM_LOGOS[normalizedSport]) mapsToCheck.push(CANONICAL_TEAM_LOGOS[normalizedSport]);
+        Object.keys(CANONICAL_TEAM_LOGOS).forEach(function(leagueKey) {
+            const sportMap = CANONICAL_TEAM_LOGOS[leagueKey];
+            if (mapsToCheck.indexOf(sportMap) === -1) mapsToCheck.push(sportMap);
+        });
+        for (let mapIndex = 0; mapIndex < mapsToCheck.length; mapIndex += 1) {
+            const sportMap = mapsToCheck[mapIndex];
+            if (sportMap[key]) return sportMap[key];
+            const words = key.split(/\s+/).filter(Boolean);
+            for (let i = 0; i < words.length; i += 1) {
+                const alias = words.slice(i).join(' ');
+                if (sportMap[alias]) return sportMap[alias];
+            }
+        }
+        return null;
+    }
+
+    function resolveTeamLogo(teamName, sportKey, suppliedLogo) {
+        const canonical = getCanonicalLogoEntry(teamName, sportKey);
+        if (canonical) return ESPN_LOGO_BASE + canonical[0] + '/500/' + canonical[1] + '.png';
+        return suppliedLogo || '';
+    }
+
+    function initialsForTeam(name, abbr) {
+        if (abbr) return String(abbr).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3);
+        const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return '--';
+        if (parts.length === 1) return parts[0].slice(0, 3).toUpperCase();
+        return (parts[parts.length - 2].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+    }
+
+    function renderTeamLogo(teamName, sportKey, suppliedLogo, abbr) {
+        const initials = initialsForTeam(teamName, abbr);
+        const logoUrl = resolveTeamLogo(teamName, sportKey, suppliedLogo);
+        const initialsHtml = '<span class="team-logo__initials tmr-team-logo-initials">' + escapeHtml(initials) + '</span>';
+
+        // Protected sportsbook logo system: render through the canonical map first,
+        // then fall back to a clean initials badge. Do not remove during UI edits.
+        if (!logoUrl) {
+            return '<span class="team-logo team-logo--fallback tmr-team-logo-badge tmr-team-logo-badge--fallback" aria-hidden="true">' + initialsHtml + '</span>';
+        }
+
+        return '<span class="team-logo tmr-team-logo-badge" aria-hidden="true">' +
+            '<img class="team-logo__img tmr-team-logo-img" src="' + escapeHtml(logoUrl) + '" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add(\'tmr-team-logo-badge--fallback\');this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">' +
+            initialsHtml +
+            '</span>';
+    }
+
     function safeDomId(value) {
         return String(value == null ? '' : value).replace(/[^a-zA-Z0-9_-]+/g, '-');
     }
@@ -2001,57 +2152,6 @@
             .map(function(part) { return part.charAt(0); })
             .join('')
             .toUpperCase() || '--';
-    }
-
-    // Protected sportsbook logo system. CANONICAL_TEAM_LOGOS currently resolves baseball_mlb via ESPN aliases.
-    const CANONICAL_TEAM_LOGOS = { baseball_mlb: true, icehockey_nhl: true, basketball_nba: true, americanfootball_nfl: true };
-    const TEAM_LOGO_WARNED = {};
-    const MLB_LOGO_MAP = {
-        'arizona diamondbacks': 'ari', 'diamondbacks': 'ari', 'arizona': 'ari',
-        'atlanta braves': 'atl', 'braves': 'atl', 'atlanta': 'atl',
-        'baltimore orioles': 'bal', 'orioles': 'bal', 'baltimore': 'bal',
-        'boston red sox': 'bos', 'red sox': 'bos', 'boston': 'bos',
-        'chicago cubs': 'chc', 'cubs': 'chc', 'chicago white sox': 'chw', 'white sox': 'chw',
-        'cincinnati reds': 'cin', 'reds': 'cin', 'cleveland guardians': 'cle', 'guardians': 'cle',
-        'colorado rockies': 'col', 'rockies': 'col', 'detroit tigers': 'det', 'tigers': 'det',
-        'houston astros': 'hou', 'astros': 'hou', 'kansas city royals': 'kc', 'royals': 'kc',
-        'los angeles angels': 'laa', 'angels': 'laa', 'los angeles dodgers': 'lad', 'dodgers': 'lad',
-        'miami marlins': 'mia', 'marlins': 'mia', 'milwaukee brewers': 'mil', 'brewers': 'mil',
-        'minnesota twins': 'min', 'twins': 'min', 'new york mets': 'nym', 'mets': 'nym',
-        'new york yankees': 'nyy', 'yankees': 'nyy', 'athletics': 'ath', 'oakland athletics': 'oak',
-        'philadelphia phillies': 'phi', 'phillies': 'phi', 'pittsburgh pirates': 'pit', 'pirates': 'pit',
-        'san diego padres': 'sd', 'padres': 'sd', 'seattle mariners': 'sea', 'mariners': 'sea',
-        'san francisco giants': 'sf', 'giants': 'sf', 'st. louis cardinals': 'stl', 'cardinals': 'stl',
-        'tampa bay rays': 'tb', 'rays': 'tb', 'texas rangers': 'tex', 'rangers': 'tex',
-        'toronto blue jays': 'tor', 'blue jays': 'tor', 'washington nationals': 'wsh', 'nationals': 'wsh'
-    };
-
-    function resolveTeamLogo(teamName, logoUrl, abbr, sportKey) { return resolveTeamLogoUrl(teamName, logoUrl, abbr, sportKey); }
-
-    function resolveTeamLogoUrl(teamName, logoUrl, abbr, sportKey) {
-        if (logoUrl) return logoUrl;
-        const sport = String(sportKey || SPORT_KEY_MAP[state.selectedSport] || '').toLowerCase();
-        if (sport.indexOf('baseball_mlb') === -1) return '';
-        const key = String(teamName || '').toLowerCase().trim().replace(/\s+/g, ' ');
-        const lastWord = key.split(/\s+/).pop();
-        const cleanAbbr = String(abbr || '').toLowerCase().replace(/[^a-z]/g, '');
-        const abbrMap = { ari:'ari', atl:'atl', bal:'bal', bos:'bos', chc:'chc', chw:'chw', cin:'cin', cle:'cle', col:'col', det:'det', hou:'hou', kc:'kc', laa:'laa', lad:'lad', mia:'mia', mil:'mil', min:'min', nym:'nym', nyy:'nyy', oak:'oak', ath:'ath', phi:'phi', pit:'pit', sd:'sd', sea:'sea', sf:'sf', stl:'stl', tb:'tb', tex:'tex', tor:'tor', wsh:'wsh' };
-        const code = MLB_LOGO_MAP[key] || MLB_LOGO_MAP[lastWord] || abbrMap[cleanAbbr];
-        return code ? 'https://a.espncdn.com/i/teamlogos/mlb/500/' + code + '.png' : '';
-    }
-
-    function renderTeamLogo(teamName, logoUrl, abbr, sportKey) {
-        const resolvedLogoUrl = resolveTeamLogoUrl(teamName, logoUrl, abbr, sportKey);
-        const fallback = escapeHtml(teamBadge(abbr || teamName));
-        const warnKey = String(sportKey || state.selectedSport || '') + '|' + String(teamName || abbr || '');
-        if (!resolvedLogoUrl) {
-            if (!TEAM_LOGO_WARNED[warnKey]) {
-                TEAM_LOGO_WARNED[warnKey] = true;
-                console.warn('[TMR][Sportsbook] Missing team logo URL; using initials fallback', { sport: sportKey || state.selectedSport || '', team: teamName || '', abbr: abbr || '' });
-            }
-            return '<span class="tmr-team-abbr">' + fallback + '</span>';
-        }
-        return '<span class="tmr-team-abbr tmr-team-logo-badge" data-team="' + escapeHtml(teamName || '') + '"><img src="' + escapeHtml(resolvedLogoUrl) + '" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add(\'tmr-team-logo-badge--fallback\');this.remove();"><span class="tmr-team-logo-fallback">' + fallback + '</span></span>';
     }
 
     function getOptionTag(option, game) {
@@ -2312,7 +2412,6 @@
         syncPickDetailsLayout(option);
         if (lineInput) lineInput.value = option.line_display || '';
         if (oddsInput) oddsInput.value = option.odds != null ? option.odds : '';
-        updateStakeModePreview();
         if (marketInput) marketInput.value = option.group_label + ' / ' + getMarketLabel(option.market_type);
         if (bookInput) bookInput.value = option.book_title || '';
         if (timestampInput) timestampInput.value = formatTimestamp(option.source_updated_at);
@@ -2350,6 +2449,12 @@
                         betType = /under/i.test(label) ? 'under' : 'over';
                         displayTeam = '';
                         sideLabel = /under/i.test(label) ? 'Under' : 'Over';
+                        break;
+                    case 'alt_totals':
+                    case 'alternate_totals':
+                        betType = /under/i.test(label) ? 'altunder' : 'altover';
+                        displayTeam = '';
+                        sideLabel = /under/i.test(label) ? 'Alt Under' : 'Alt Over';
                         break;
                     case 'f5_totals':
                         betType = /under/i.test(label) ? 'f5under' : 'f5over';
@@ -2432,6 +2537,7 @@
         const summaryText = state.selectedOption.selection_label || state.selectedOption.selection || 'Pick';
         updateText('summaryPick', lineValue && summaryText.indexOf(lineValue) === -1 ? (summaryText + ' (' + lineValue + ')') : summaryText);
         updateText('summaryOdds', oddsValue || 'Manual');
+        updateStakeModePreview();
     }
 
     // Inline error rendering for the pick slip. Replaces the legacy alert()
@@ -2566,11 +2672,10 @@
         const oddsValue = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
         const lineValue = lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null;
         const unitsRaw = unitsInput ? parseFloat(unitsInput.value || '1') : 1;
-        // Frontend hard-cap: units must be a whole number in [1, 5]. Backend
-        // enforces the same range, but clamping here gives the user
-        // immediate feedback and prevents a wasted API round trip on a 6u
-        // typo.
-        const unitsValue = Math.max(1, Math.min(5, Math.round(Number.isFinite(unitsRaw) ? unitsRaw : 1)));
+        // Frontend hard-cap: stake amount must be in [0.5, 5], rounded to
+        // half units. The amount means risk units in Risk mode and desired
+        // win units in To Win mode.
+        const unitsValue = Math.max(0.5, Math.min(5, Math.round((Number.isFinite(unitsRaw) ? unitsRaw : 1) * 2) / 2));
         if (unitsInput && String(unitsValue) !== String(unitsInput.value)) {
             unitsInput.value = String(unitsValue);
         }
@@ -2594,13 +2699,11 @@
             }
         }
 
-        const stakeMode = getSelectedStakeMode();
-        const stakeValues = calculateStakeValues(stakeMode, unitsValue, oddsValue);
-
         if (window.api && typeof window.api.loadTokens === 'function') {
             try { window.api.loadTokens(); } catch (error) {}
         }
 
+        const stakeMode = getSelectedStakeMode();
         let finalPayload = null;
         try {
             const api = await getApiClientOrFallback();
@@ -2611,6 +2714,7 @@
                 external_game_id: option.game_id,
                 sport_key: option.sport_key,
                 market_type: option.market_type,
+                bet_type: option.market_type === 'team_totals' ? 'team_total' : option.market_type,
                 selection: submittedSelection,
                 selection_label: option.selection_label || submittedSelection,
                 line_snapshot: lineValue,
@@ -2618,9 +2722,6 @@
                 units: unitsValue,
                 stake_mode: stakeMode,
                 units_mode: stakeMode,
-                risk_units: stakeValues.risk_units,
-                win_units: stakeValues.win_units,
-                to_win_units: stakeValues.win_units,
                 book_title: bookInput ? bookInput.value.trim() : option.book_title,
                 book_key: option.book_key,
                 market_key: option.market_key,
@@ -2630,6 +2731,7 @@
                 game_snapshot: buildSubmittedGameSnapshot(option),
                 reasoning: reasoningInput ? reasoningInput.value.trim() : ''
             };
+            Object.assign(payload, getTeamTotalSubmitMeta(option));
             finalPayload = payload;
             try { console.info('[TMR][lockInPick] final payload', payload); } catch (_) {}
             const response = await api.createPick(payload);
@@ -2702,6 +2804,27 @@
         return visible || team;
     }
 
+    function getTeamTotalSubmitMeta(option) {
+        if (!option || option.market_type !== 'team_totals') return {};
+        const visible = String(option.selection_label || option.selection || '').trim();
+        const parsed = visible.match(/^(.+?)\s+(Over|Under)\b/i);
+        const team = parsed ? parsed[1].trim() : String(option.selection || '').replace(/\s+\b(over|under)\b.*$/i, '').trim();
+        const side = parsed ? parsed[2].toLowerCase() : (/\bunder\b/i.test(visible) ? 'under' : (/\bover\b/i.test(visible) ? 'over' : ''));
+        const game = option.game || {};
+        const home = game.home_team || option.home_team || '';
+        const away = game.away_team || option.away_team || '';
+        const norm = function (value) { return String(value || '').trim().toLowerCase(); };
+        let opponent = '';
+        if (team && (norm(team) === norm(home) || norm(home).indexOf(norm(team)) !== -1 || norm(team).indexOf(norm(home)) !== -1)) opponent = away;
+        else if (team && (norm(team) === norm(away) || norm(away).indexOf(norm(team)) !== -1 || norm(team).indexOf(norm(away)) !== -1)) opponent = home;
+        return {
+            team_name: team || '',
+            opponent_name: opponent || '',
+            side: side || '',
+            league: option.sport_key || ''
+        };
+    }
+
     function buildSubmittedGameSnapshot(option) {
         const game = option && option.game ? option.game : {};
         return {
@@ -2716,81 +2839,6 @@
         };
     }
 
-    function trimPickLineValue(value) {
-        if (value == null || value === '') return '';
-        const n = Number(value);
-        let text = Number.isFinite(n) ? String(n) : String(value).trim();
-        if (text.indexOf('.') !== -1) text = text.replace(/0+$/, '').replace(/\.$/, '');
-        return text;
-    }
-
-    function formatPickLineValue(value, signed) {
-        const text = trimPickLineValue(value);
-        if (!text) return '';
-        const n = Number(text);
-        if (signed && Number.isFinite(n) && n > 0) return '+' + text;
-        return text;
-    }
-
-    function stripTrailingLine(text) {
-        return String(text || '').trim().replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim();
-    }
-
-    function hasTrailingMl(text) {
-        return /\bML\b$/i.test(String(text || '').trim());
-    }
-
-    function lineAlreadyDisplayed(text, line, signed) {
-        const formatted = formatPickLineValue(line, signed);
-        if (!formatted) return true;
-        const escaped = formatted.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        return new RegExp('(?:^|\\s)' + escaped + '$').test(String(text || '').trim());
-    }
-
-    function isMoneylineMarket(market) {
-        return market === 'h2h' || market === 'moneyline' || market === 'money_line' || market.indexOf('moneyline') !== -1 || market.indexOf('money_line') !== -1 || /(^|_)h2h$/.test(market);
-    }
-
-    function isSpreadMarket(market) {
-        return market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1 || market.indexOf('runline') !== -1 || market.indexOf('puckline') !== -1;
-    }
-
-    function isTotalMarket(market) {
-        return market.indexOf('total') !== -1 || market.indexOf('over_under') !== -1;
-    }
-
-    function formatPickDisplayLabel(pick) {
-        pick = pick || {};
-        const market = String(pick.market_type || pick.market || pick.bet_type || pick.betType || '').toLowerCase();
-        const rawSelection = String(pick.selection_label || pick.selection || pick.pick || pick.team || 'Pick').trim();
-        const line = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
-        const base = rawSelection || 'Pick';
-
-        if (isMoneylineMarket(market)) {
-            const team = stripTrailingLine(base);
-            return hasTrailingMl(team) ? team : team + ' ML';
-        }
-
-        if (isSpreadMarket(market)) {
-            if (lineAlreadyDisplayed(base, line, true)) return base;
-            return stripTrailingLine(base) + ' ' + formatPickLineValue(line, true);
-        }
-
-        if (isTotalMarket(market)) {
-            const totalSide = /\bover\b/i.test(base) ? '' : (/\bunder\b/i.test(base) ? '' : (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : '')));
-            if (lineAlreadyDisplayed(base, line, false)) return base;
-            const lineText = formatPickLineValue(line, false);
-            return lineText ? stripTrailingLine(base) + totalSide + ' ' + lineText : base + totalSide;
-        }
-
-        if (line == null || line === '' || lineAlreadyDisplayed(base, line, false)) return base;
-        return stripTrailingLine(base) + ' ' + formatPickLineValue(line, false);
-    }
-
-    window.TMR = window.TMR || {};
-    window.TMR.formatPickDisplayLabel = formatPickDisplayLabel;
-    window.TMR.formatPickLabel = formatPickDisplayLabel;
-
     // Clear inline error whenever the user picks a new market.
     document.addEventListener('click', function (ev) {
         const btn = ev.target && ev.target.closest && ev.target.closest('.odds-btn, .market-card, [data-tt-direct-click], [data-bet-type]');
@@ -2800,8 +2848,9 @@
     function renderPickCard(pick) {
         const status = normalizeStatus(pick.status, pick.result);
         const statusColor = status === 'won' ? '#00c853' : status === 'lost' ? '#ff5252' : status === 'push' ? '#94a3b8' : '#f59e0b';
-        const recordText = formatPickDisplayLabel(pick);
+        const recordText = (window.TMR && typeof window.TMR.formatPickDisplay === 'function') ? window.TMR.formatPickDisplay(pick) : (pick.selection + (pick.line_snapshot != null ? ' ' + (function(l){if(l==null||l==='')return '';var n=Number(l);if(!Number.isFinite(n))return '';var s=String(n);if(s.indexOf('.')!==-1)s=s.replace(/0+$/,'').replace(/\.$/,'');return s;})(pick.line_snapshot) : ''));
         const marketText = getMarketLabel(pick.market_type);
+        const stakeText = formatStakeDisplay(pick);
         const dateText = new Date(pick.locked_at || pick.created_at || Date.now()).toLocaleString('en-US', {
             month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
         });
@@ -2811,6 +2860,7 @@
             '<div style="font-size:18px;font-weight:700;color:#fff;">' + escapeHtml(recordText) + '</div>' +
             '<div style="font-size:13px;color:#94a3b8;margin-top:4px;">' + escapeHtml((pick.away_team || '') + ' @ ' + (pick.home_team || '')) + '</div>' +
             '<div style="font-size:12px;color:#6c7380;margin-top:6px;">' + escapeHtml(marketText) + ' | ' + escapeHtml(dateText) + '</div>' +
+            (stakeText ? '<div style="font-size:12px;color:#dbeafe;margin-top:6px;font-weight:700;">' + escapeHtml(stakeText) + '</div>' : '') +
             '</div>' +
             '<div style="text-align:right;">' +
             '<div style="font-size:16px;font-weight:700;color:#fff;">' + (pick.odds_snapshot > 0 ? '+' : '') + escapeHtml(pick.odds_snapshot) + '</div>' +
@@ -2955,7 +3005,7 @@
                 losses: 0,
                 pushes: 0,
                 units: 0,
-                label: formatPickDisplayLabel(pick),
+                label: (window.TMR && typeof window.TMR.formatPickDisplay === 'function') ? window.TMR.formatPickDisplay(pick) : (pick.selection + (pick.line_snapshot != null ? ' ' + (function(l){if(l==null||l==='')return '';var n=Number(l);if(!Number.isFinite(n))return '';var s=String(n);if(s.indexOf('.')!==-1)s=s.replace(/0+$/,'').replace(/\.$/,'');return s;})(pick.line_snapshot) : '')),
                 matchup: (pick.away_team || '') + ' @ ' + (pick.home_team || ''),
                 market: getMarketLabel(pick.market_type)
             };
@@ -3108,19 +3158,22 @@
         window.tmrSetCardFilter = setCardFilter;
         window.tmrSetBoardFilter = setBoardFilter;
         window.tmrSelectOption = selectOption;
-        window.TMR.renderSportsbookTeamLogo = renderTeamLogo;
-        window.TMR.resolveSportsbookTeamLogo = resolveTeamLogo;
         window.tmrSportsbookRefresh = refreshCurrentSport;
+        window.TMR = window.TMR || {};
+        window.TMR.resolveSportsbookTeamLogo = resolveTeamLogo;
+        window.TMR.renderSportsbookTeamLogo = renderTeamLogo;
         window.tmrDumpBoardDiagnostics = function() {
             return boardDiagnostics.slice();
         };
+        // Lock the production-owned public hooks so later inline or UI scripts
+        // cannot replace the board, logo, pick slip, or stake-mode behavior.
         lockFunction(window, 'tmrSelectOption', selectOption);
         lockFunction(window, 'setUnitsMode', setStakeMode);
         lockFunction(window.TMR, 'calculateStakeValues', calculateStakeValues);
         lockFunction(window.TMR, 'formatStakeDisplay', formatStakeDisplay);
         lockFunction(window.TMR, 'updateStakeModePreview', updateStakeModePreview);
-        lockFunction(window.TMR, 'renderSportsbookTeamLogo', renderTeamLogo);
         lockFunction(window.TMR, 'resolveSportsbookTeamLogo', resolveTeamLogo);
+        lockFunction(window.TMR, 'renderSportsbookTeamLogo', renderTeamLogo);
         lockFunction(window, 'selectSportAndShowGames', selectSportAndShowGames);
         lockFunction(window, 'submitPick', lockInPick);
         lockFunction(window, 'lockInPick', lockInPick);
@@ -3140,18 +3193,17 @@
                 clearPickSlipError();
                 var board = state.currentBoard || [];
                 var tmrGames = (window.TMR && Array.isArray(window.TMR.currentGames)) ? window.TMR.currentGames : [];
-                // Team-totals legacy renderer (sportsbook/index.html
-                // _ttRenderRows) overwrites window.TMR.currentGames with the
-                // TT board but leaves state.currentBoard pointing at the
-                // previous Full-Game board. Index-based lookup against
-                // state.currentBoard then resolves to the WRONG game, so the
-                // team-name in the selection ("New York Mets Under 4.5")
+                // Team-totals legacy renderer (sportsbook/index.html _ttRenderRows)
+                // overwrites window.TMR.currentGames with the TT board but
+                // leaves state.currentBoard pointing at the previous Full-Game
+                // board. Index-based lookup against state.currentBoard then
+                // resolves to the wrong game, so the team-name in the selection
                 // fails backend validation against the wrong game's teams.
-                // Resolve by matching the click's awayTeam/homeTeam args
-                // against the candidate game; prefer the actively-rendered
-                // board (window.TMR.currentGames). Full-Game clicks never
-                // touch this bridge (they go through tmrSelectOption
-                // directly), so this only affects team-totals.
+                // Prefer the actively-rendered board and require home/away args
+                // to match; otherwise fall back to the other source.
+                // other source. Full-Game clicks never touch this bridge
+                // (they go through tmrSelectOption directly), so this only
+                // affects team-totals.
                 var matchesTeams = function (g) {
                     if (!g) return false;
                     var ht = String(g.home_team || '').trim().toLowerCase();
@@ -3161,14 +3213,15 @@
                     if (!argHome && !argAway) return true;
                     return (ht === argHome && at === argAway);
                 };
-                var game = null;
-                if (matchesTeams(tmrGames[gameIndex])) game = tmrGames[gameIndex];
-                else if (matchesTeams(board[gameIndex])) game = board[gameIndex];
+                var pickGame = null;
+                if (matchesTeams(tmrGames[gameIndex])) pickGame = tmrGames[gameIndex];
+                else if (matchesTeams(board[gameIndex])) pickGame = board[gameIndex];
                 else {
                     var foundInTmr = tmrGames.find(matchesTeams) || null;
                     var foundInBoard = board.find(matchesTeams) || null;
-                    game = foundInTmr || foundInBoard || tmrGames[gameIndex] || board[gameIndex] || null;
+                    pickGame = foundInTmr || foundInBoard || tmrGames[gameIndex] || board[gameIndex] || null;
                 }
+                var game = pickGame;
                 if (!game) {
                     var sportKeyMap = (window.TMR && window.TMR.sportKeyMap) || {};
                     var sportDisplay = (window.TMR && window.TMR.selectedSport) || state.selectedSport || '';
@@ -3243,6 +3296,16 @@
                         selection = 'Under';
                         selectionLabel = 'Under' + (lineDisp ? ' ' + lineDisp : '');
                         break;
+                    case 'altover':
+                        marketType = 'alt_totals'; groupLabel = 'Alt Totals';
+                        selection = 'Over';
+                        selectionLabel = 'Alt Over' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'altunder':
+                        marketType = 'alt_totals'; groupLabel = 'Alt Totals';
+                        selection = 'Under';
+                        selectionLabel = 'Alt Under' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
                     case 'spread':
                         marketType = 'spreads'; groupLabel = 'Full Game';
                         selection = teamRaw;
@@ -3272,6 +3335,66 @@
                         marketType = 'f5_h2h'; groupLabel = 'First 5';
                         selection = teamRaw;
                         selectionLabel = teamRaw + ' F5 ML';
+                        break;
+                    case 'firsthalfml':
+                        marketType = 'first_half_h2h'; groupLabel = 'First Half';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 1H ML';
+                        break;
+                    case 'firsthalfspread':
+                        marketType = 'first_half_spreads'; groupLabel = 'First Half';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 1H' + (lineDispSigned ? ' ' + lineDispSigned : '');
+                        break;
+                    case 'firsthalfover':
+                        marketType = 'first_half_totals'; groupLabel = 'First Half';
+                        selection = 'Over';
+                        selectionLabel = '1H Over' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'firsthalfunder':
+                        marketType = 'first_half_totals'; groupLabel = 'First Half';
+                        selection = 'Under';
+                        selectionLabel = '1H Under' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'secondhalfml':
+                        marketType = 'second_half_h2h'; groupLabel = 'Second Half';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 2H ML';
+                        break;
+                    case 'secondhalfspread':
+                        marketType = 'second_half_spreads'; groupLabel = 'Second Half';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 2H' + (lineDispSigned ? ' ' + lineDispSigned : '');
+                        break;
+                    case 'secondhalfover':
+                        marketType = 'second_half_totals'; groupLabel = 'Second Half';
+                        selection = 'Over';
+                        selectionLabel = '2H Over' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'secondhalfunder':
+                        marketType = 'second_half_totals'; groupLabel = 'Second Half';
+                        selection = 'Under';
+                        selectionLabel = '2H Under' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'period1ml':
+                        marketType = 'period_1_h2h'; groupLabel = '1st Period';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 1P ML';
+                        break;
+                    case 'period1spread':
+                        marketType = 'period_1_spreads'; groupLabel = '1st Period';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 1P' + (lineDispSigned ? ' ' + lineDispSigned : '');
+                        break;
+                    case 'period1over':
+                        marketType = 'period_1_totals'; groupLabel = '1st Period';
+                        selection = 'Over';
+                        selectionLabel = '1P Over' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'period1under':
+                        marketType = 'period_1_totals'; groupLabel = '1st Period';
+                        selection = 'Under';
+                        selectionLabel = '1P Under' + (lineDisp ? ' ' + lineDisp : '');
                         break;
                 }
 
@@ -3347,47 +3470,6 @@
         }
 
         fetchCurrentUserPicks().then(syncRecordWidgets).catch(function() {});
-
-        if (/([?&])tmrStakeProof=1(&|$)/.test(window.location.search || '')) {
-            setTimeout(function() {
-                try {
-                    const unitsInput = document.getElementById('unitsInput');
-                    const oddsInput = document.getElementById('pickOddsInput');
-                    if (unitsInput) unitsInput.value = '2';
-                    if (oddsInput) oddsInput.value = '-145';
-                    if (window.TMR && typeof window.TMR._ttPopulateSlip === 'function') {
-                        window.TMR.selectedSport = 'MLB';
-                        window.TMR._ttPopulateSlip({
-                            gameIndex: null,
-                            betType: 'ml',
-                            team: 'Los Angeles Dodgers',
-                            line: '',
-                            odds: -145,
-                            awayTeam: 'Los Angeles Dodgers',
-                            homeTeam: 'San Francisco Giants',
-                            sport: 'MLB',
-                            league: 'MLB',
-                            market: 'Moneyline',
-                            marketType: 'h2h',
-                            book: 'DraftKings',
-                            gameTime: null,
-                            gameId: 'tmr-stake-proof',
-                            game: { away_team: 'Los Angeles Dodgers', home_team: 'San Francisco Giants', id: 'tmr-stake-proof' }
-                        });
-                    }
-                    const slipUnits = document.getElementById('ttSlipUnits');
-                    if (slipUnits) slipUnits.value = '2';
-                    if (unitsInput) unitsInput.value = '2';
-                    if (oddsInput) oddsInput.value = '-145';
-                    setStakeMode('risk');
-                    if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview();
-                    const aside = document.querySelector('.sportsbook-ticket-preview');
-                    if (aside && aside.scrollIntoView) aside.scrollIntoView({ block: 'center' });
-                } catch (err) {
-                    console.warn('[TMR][stake-proof] could not populate proof slip:', err && err.message);
-                }
-            }, 1200);
-        }
     }
 
     document.addEventListener('DOMContentLoaded', boot);

@@ -570,6 +570,116 @@
     window.TMR._cachedGames = [];
     window.TMR._cachedSport = null;
 
+    var LEGACY_TEAM_LOGOS = {
+        baseball_mlb: {
+            'arizona diamondbacks': ['mlb', 'ari'], 'atlanta braves': ['mlb', 'atl'], 'baltimore orioles': ['mlb', 'bal'], 'boston red sox': ['mlb', 'bos'],
+            'chicago cubs': ['mlb', 'chc'], 'chicago white sox': ['mlb', 'chw'], 'cincinnati reds': ['mlb', 'cin'], 'cleveland guardians': ['mlb', 'cle'],
+            'colorado rockies': ['mlb', 'col'], 'detroit tigers': ['mlb', 'det'], 'houston astros': ['mlb', 'hou'], 'kansas city royals': ['mlb', 'kc'],
+            'los angeles angels': ['mlb', 'laa'], 'los angeles dodgers': ['mlb', 'lad'], 'miami marlins': ['mlb', 'mia'], 'milwaukee brewers': ['mlb', 'mil'],
+            'minnesota twins': ['mlb', 'min'], 'new york mets': ['mlb', 'nym'], 'new york yankees': ['mlb', 'nyy'], 'athletics': ['mlb', 'ath'],
+            'oakland athletics': ['mlb', 'ath'], 'philadelphia phillies': ['mlb', 'phi'], 'pittsburgh pirates': ['mlb', 'pit'], 'san diego padres': ['mlb', 'sd'],
+            'san francisco giants': ['mlb', 'sf'], 'seattle mariners': ['mlb', 'sea'], 'st louis cardinals': ['mlb', 'stl'], 'tampa bay rays': ['mlb', 'tb'],
+            'texas rangers': ['mlb', 'tex'], 'toronto blue jays': ['mlb', 'tor'], 'washington nationals': ['mlb', 'wsh']
+        },
+        icehockey_nhl: {
+            'anaheim ducks': ['nhl', 'ana'], 'boston bruins': ['nhl', 'bos'], 'buffalo sabres': ['nhl', 'buf'], 'calgary flames': ['nhl', 'cgy'],
+            'carolina hurricanes': ['nhl', 'car'], 'chicago blackhawks': ['nhl', 'chi'], 'colorado avalanche': ['nhl', 'col'], 'columbus blue jackets': ['nhl', 'cbj'],
+            'dallas stars': ['nhl', 'dal'], 'detroit red wings': ['nhl', 'det'], 'edmonton oilers': ['nhl', 'edm'], 'florida panthers': ['nhl', 'fla'],
+            'los angeles kings': ['nhl', 'la'], 'minnesota wild': ['nhl', 'min'], 'montreal canadiens': ['nhl', 'mtl'], 'nashville predators': ['nhl', 'nsh'],
+            'new jersey devils': ['nhl', 'nj'], 'new york islanders': ['nhl', 'nyi'], 'new york rangers': ['nhl', 'nyr'], 'ottawa senators': ['nhl', 'ott'],
+            'philadelphia flyers': ['nhl', 'phi'], 'pittsburgh penguins': ['nhl', 'pit'], 'san jose sharks': ['nhl', 'sj'], 'seattle kraken': ['nhl', 'sea'],
+            'st louis blues': ['nhl', 'stl'], 'tampa bay lightning': ['nhl', 'tb'], 'toronto maple leafs': ['nhl', 'tor'], 'utah mammoth': ['nhl', 'uta'],
+            'utah hockey club': ['nhl', 'uta'], 'vancouver canucks': ['nhl', 'van'], 'vegas golden knights': ['nhl', 'vgk'], 'washington capitals': ['nhl', 'wsh'],
+            'winnipeg jets': ['nhl', 'wpg']
+        },
+        basketball_nba: {
+            'atlanta hawks': ['nba', 'atl'], 'boston celtics': ['nba', 'bos'], 'brooklyn nets': ['nba', 'bkn'], 'charlotte hornets': ['nba', 'cha'],
+            'chicago bulls': ['nba', 'chi'], 'cleveland cavaliers': ['nba', 'cle'], 'dallas mavericks': ['nba', 'dal'], 'denver nuggets': ['nba', 'den'],
+            'detroit pistons': ['nba', 'det'], 'golden state warriors': ['nba', 'gs'], 'houston rockets': ['nba', 'hou'], 'indiana pacers': ['nba', 'ind'],
+            'la clippers': ['nba', 'lac'], 'los angeles clippers': ['nba', 'lac'], 'los angeles lakers': ['nba', 'lal'], 'memphis grizzlies': ['nba', 'mem'],
+            'miami heat': ['nba', 'mia'], 'milwaukee bucks': ['nba', 'mil'], 'minnesota timberwolves': ['nba', 'min'], 'new orleans pelicans': ['nba', 'no'],
+            'new york knicks': ['nba', 'ny'], 'oklahoma city thunder': ['nba', 'okc'], 'orlando magic': ['nba', 'orl'], 'philadelphia 76ers': ['nba', 'phi'],
+            'phoenix suns': ['nba', 'phx'], 'portland trail blazers': ['nba', 'por'], 'sacramento kings': ['nba', 'sac'], 'san antonio spurs': ['nba', 'sa'],
+            'toronto raptors': ['nba', 'tor'], 'utah jazz': ['nba', 'utah'], 'washington wizards': ['nba', 'wsh']
+        },
+        americanfootball_nfl: {
+            'arizona cardinals': ['nfl', 'ari'], 'atlanta falcons': ['nfl', 'atl'], 'baltimore ravens': ['nfl', 'bal'], 'buffalo bills': ['nfl', 'buf'],
+            'carolina panthers': ['nfl', 'car'], 'chicago bears': ['nfl', 'chi'], 'cincinnati bengals': ['nfl', 'cin'], 'cleveland browns': ['nfl', 'cle'],
+            'dallas cowboys': ['nfl', 'dal'], 'denver broncos': ['nfl', 'den'], 'detroit lions': ['nfl', 'det'], 'green bay packers': ['nfl', 'gb'],
+            'houston texans': ['nfl', 'hou'], 'indianapolis colts': ['nfl', 'ind'], 'jacksonville jaguars': ['nfl', 'jax'], 'kansas city chiefs': ['nfl', 'kc'],
+            'las vegas raiders': ['nfl', 'lv'], 'los angeles chargers': ['nfl', 'lac'], 'los angeles rams': ['nfl', 'lar'], 'miami dolphins': ['nfl', 'mia'],
+            'minnesota vikings': ['nfl', 'min'], 'new england patriots': ['nfl', 'ne'], 'new orleans saints': ['nfl', 'no'], 'new york giants': ['nfl', 'nyg'],
+            'new york jets': ['nfl', 'nyj'], 'philadelphia eagles': ['nfl', 'phi'], 'pittsburgh steelers': ['nfl', 'pit'], 'san francisco 49ers': ['nfl', 'sf'],
+            'seattle seahawks': ['nfl', 'sea'], 'tampa bay buccaneers': ['nfl', 'tb'], 'tennessee titans': ['nfl', 'ten'], 'washington commanders': ['nfl', 'wsh']
+        }
+    };
+
+    var legacyTeamLogoUrl = function(fullName, sportKey) {
+        var normalized = ('' + (fullName == null ? '' : fullName)).toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        var keys = [];
+        if (sportKey && LEGACY_TEAM_LOGOS[sportKey]) keys.push(sportKey);
+        Object.keys(LEGACY_TEAM_LOGOS).forEach(function(key) {
+            if (keys.indexOf(key) === -1) keys.push(key);
+        });
+        for (var i = 0; i < keys.length; i++) {
+            var map = LEGACY_TEAM_LOGOS[keys[i]];
+            var entry = map[normalized];
+            if (!entry) {
+                var names = Object.keys(map);
+                for (var j = 0; j < names.length; j++) {
+                    if (normalized && (normalized === names[j] || normalized.slice(-names[j].length) === names[j])) {
+                        entry = map[names[j]];
+                        break;
+                    }
+                }
+            }
+            if (entry) return 'https://a.espncdn.com/i/teamlogos/' + entry[0] + '/500/' + entry[1] + '.png';
+        }
+        return '';
+    };
+
+    // Build team-logo markup for every sportsbook board path. The odds feed
+    // often omits logo URLs, so resolve by team name before falling to initials.
+    var legacyTeamLogoRenderer = function(logoUrl, abbr, fullName, sportKey) {
+        var safeAttr = function(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+        var resolvedSportKey = sportKey || (window.TMR.sportKeyMap && window.TMR.sportKeyMap[window.TMR.selectedSport]) || '';
+        var resolvedLogoUrl = logoUrl || '';
+        if (!resolvedLogoUrl && typeof window.TMR.resolveSportsbookTeamLogo === 'function') {
+            resolvedLogoUrl = window.TMR.resolveSportsbookTeamLogo(fullName, resolvedSportKey, '');
+        }
+        if (!resolvedLogoUrl) {
+            resolvedLogoUrl = legacyTeamLogoUrl(fullName, resolvedSportKey);
+        }
+        var initials = '';
+        if (abbr) {
+            initials = ('' + abbr).toUpperCase().slice(0, 3);
+        } else if (fullName) {
+            var parts = ('' + fullName).trim().split(/\s+/).filter(Boolean);
+            if (parts.length === 1) initials = parts[0].slice(0, 3).toUpperCase();
+            else initials = (parts[parts.length - 1][0] || '').toUpperCase() + (parts[parts.length - 2] ? parts[parts.length - 2][0].toUpperCase() : '');
+        }
+        var initialsHtml = '<span class="team-logo__initials">' + safeAttr(initials || '?') + '</span>';
+        if (resolvedLogoUrl) {
+            return '<div class="team-logo" aria-hidden="true">'
+                + '<img class="team-logo__img" src="' + safeAttr(resolvedLogoUrl) + '" alt="" loading="lazy" decoding="async"'
+                + ' onerror="this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">'
+                + initialsHtml
+                + '</div>';
+        }
+        return '<div class="team-logo team-logo--fallback" aria-hidden="true">' + initialsHtml + '</div>';
+    };
+    window.TMR._teamLogo = legacyTeamLogoRenderer;
+    try {
+        Object.defineProperty(window.TMR, '_teamLogo', {
+            configurable: false,
+            enumerable: true,
+            get: function() { return legacyTeamLogoRenderer; },
+            set: function() {}
+        });
+    } catch (error) {
+        window.TMR._teamLogo = legacyTeamLogoRenderer;
+    }
+
     window.TMR.renderMarketSubtabs = function(sport, games) {
         var host = document.getElementById('marketSubtabs');
         if (!host) return;
@@ -9301,13 +9411,9 @@
     <!-- Canonical site header. Keep this in <head> so /sportsbook/ uses the same
          approved TrustMyRecord branding shell as the rest of the app instead of
          depending on sportsbook-specific chrome or late body includes. -->
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260507sportsbookheader1">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260507sportsbookheader1"></script>
-    <!-- Canonical site header. Keep this in <head> so /sportsbook/ uses the same
-         approved TrustMyRecord branding shell as the rest of the app instead of
-         depending on sportsbook-specific chrome or late body includes. -->
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260507sportsbookheader3">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260507sportsbookheader3"></script>    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260507sportsbookheader3"></script>
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260506logosalts1">
 </head>
 <body data-tmr-test-route="sportsbook">
@@ -11185,16 +11291,16 @@ window.toggleSportFamily = function (family) {
                 var awayUnder = split.away.under || {};
                 var homeOver = split.home.over || {};
                 var homeUnder = split.home.under || {};
-                var awayBookText = (awayOver.book || awayUnder.book || '').toString();
-                var homeBookText = (homeOver.book || homeUnder.book || '').toString();
+                var awayBookLabel = (awayOver.book || awayUnder.book || '').toString();
+                var homeBookLabel = (homeOver.book || homeUnder.book || '').toString();
                 html +=
-                    '<div class="sb-board-col" data-col="tt-team">' +
+                    '<div class="sb-board-col" data-col="team">' +
                         '<div class="sb-tt-team-stack">' +
-                            '<div class="sb-tt-team-name"><b>' + _ttHtmlEsc(game.away_team) + '</b>' +
-                                (awayBookText ? '<small>' + _ttHtmlEsc(awayBookText) + '</small>' : '') +
+                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.away_team) + '</b>' +
+                                (awayBookLabel ? '<small>' + _ttHtmlEsc(awayBookLabel) + '</small>' : '') +
                             '</div>' +
-                            '<div class="sb-tt-team-name"><b>' + _ttHtmlEsc(game.home_team) + '</b>' +
-                                (homeBookText ? '<small>' + _ttHtmlEsc(homeBookText) + '</small>' : '') +
+                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.home_team) + '</b>' +
+                                (homeBookLabel ? '<small>' + _ttHtmlEsc(homeBookLabel) + '</small>' : '') +
                             '</div>' +
                         '</div>' +
                     '</div>' +
@@ -20426,7 +20532,80 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260507risktowinlive3"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260506owner1&cb=20260507visualrestore1"></script>
+    <script>
+    (function() {
+        if (window.__tmrSportsbookLogoInlineRestore) return;
+        window.__tmrSportsbookLogoInlineRestore = true;
+
+        function esc(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+            });
+        }
+
+        function initials(name) {
+            var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+            if (!parts.length) return '?';
+            if (parts.length === 1) return parts[0].slice(0, 3).toUpperCase();
+            return (parts[parts.length - 2].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+        }
+
+        function sportKey() {
+            try {
+                return (window.TMR && window.TMR.sportKeyMap && window.TMR.sportKeyMap[window.TMR.selectedSport]) || '';
+            } catch (_) {
+                return '';
+            }
+        }
+
+        function logoMarkup(teamName) {
+            var url = '';
+            try {
+                if (window.TMR && typeof window.TMR.resolveSportsbookTeamLogo === 'function') {
+                    url = window.TMR.resolveSportsbookTeamLogo(teamName, sportKey(), '');
+                }
+            } catch (_) {}
+            var fallback = '<span class="team-logo__initials tmr-team-logo-initials">' + esc(initials(teamName)) + '</span>';
+            if (!url) {
+                return '<span class="team-logo team-logo--fallback tmr-team-logo-badge tmr-team-logo-badge--fallback" aria-hidden="true">' + fallback + '</span>';
+            }
+            return '<span class="team-logo tmr-team-logo-badge" aria-hidden="true">'
+                + '<img class="team-logo__img tmr-team-logo-img" src="' + esc(url) + '" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add(\'tmr-team-logo-badge--fallback\');this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">'
+                + fallback
+                + '</span>';
+        }
+
+        function ensureLogoBeforeName(nameEl) {
+            if (!nameEl) return;
+            var teamName = (nameEl.textContent || '').replace(/\s+/g, ' ').trim();
+            if (!teamName) return;
+            var parent = nameEl.parentElement;
+            if (!parent || parent.querySelector(':scope > .team-logo, :scope > .tmr-team-logo-badge')) return;
+            nameEl.insertAdjacentHTML('beforebegin', logoMarkup(teamName));
+        }
+
+        function restoreLogos() {
+            var root = document.getElementById('picks');
+            if (!root) return;
+            root.querySelectorAll('.team-cell b, .sb-board-team b, .tmr-team-row .tmr-team-name, .game-row .team-name').forEach(ensureLogoBeforeName);
+        }
+
+        document.addEventListener('DOMContentLoaded', restoreLogos);
+        window.addEventListener('load', restoreLogos);
+        document.addEventListener('click', function(event) {
+            if (event.target && event.target.closest && event.target.closest('.sportsbook-rail-board,.sportsbook-period-tab,.market-subtab,.sportsbook-sport-tab')) {
+                setTimeout(restoreLogos, 80);
+                setTimeout(restoreLogos, 600);
+            }
+        }, true);
+        try {
+            new MutationObserver(restoreLogos).observe(document.getElementById('picks') || document.documentElement, { childList: true, subtree: true });
+        } catch (_) {}
+        setTimeout(restoreLogos, 250);
+        setTimeout(restoreLogos, 1200);
+    })();
+    </script>
     <script src="/static/js/effects.js?v=20251208c"></script>
     <script>
     (function() {
@@ -28243,11 +28422,7 @@ document.addEventListener('DOMContentLoaded', function() {
     </style>
     <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430pickslipexp1">
     <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=20260430hidedup1">
-    <!-- Canonical site header. Keep this in <head> so /sportsbook/ uses the same
-         approved TrustMyRecord branding shell as the rest of the app instead of
-         depending on sportsbook-specific chrome or late body includes. -->
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260507sportsbookheader3">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260507sportsbookheader3"></script>    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260506logosalts1">
     <style id="tmr-redesign-tail-guard">
     /* Inline backstop so nothing loaded later in <body> can overwrite the
@@ -29210,11 +29385,75 @@ document.addEventListener('DOMContentLoaded', function() {
         max-width: 1600px !important;
         padding-left: clamp(14px, 1.4vw, 22px) !important;
         padding-right: clamp(14px, 1.4vw, 22px) !important;
+        padding-top: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .picks-container-modern {
+        width: min(100vw - 20px, 1580px) !important;
+        max-width: none !important;
+        margin: 0 auto 36px !important;
+        padding: 6px 10px 32px !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .make-picks-loggedout {
+        margin: 0 0 8px !important;
+        padding: 10px 12px !important;
+        border-radius: 10px !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-page-shell,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .section-header.sportsbook-page-shell,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .make-picks-header {
+        margin: 0 0 8px !important;
+        padding: 10px 12px !important;
+        min-height: 0 !important;
+        border-radius: 10px !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-page-topbar {
+        min-height: 0 !important;
+        padding: 0 !important;
+        gap: 10px !important;
+        background: transparent !important;
+        border: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-page-intro {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .make-picks-title {
+        margin: 0 !important;
+        font-size: clamp(20px, 1.7vw, 28px) !important;
+        line-height: 1 !important;
+        letter-spacing: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .make-picks-sub {
+        margin: 3px 0 0 !important;
+        max-width: 760px !important;
+        font-size: 11.5px !important;
+        line-height: 1.25 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .pending-picks-compact-link {
+        min-height: 30px !important;
+        padding: 7px 10px !important;
+        border-radius: 8px !important;
+        font-size: 11px !important;
+        white-space: nowrap !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-picks-layout {
-        grid-template-columns: 210px minmax(720px, 1fr) 286px !important;
-        gap: 14px !important;
+        grid-template-columns: 198px minmax(760px, 1fr) 272px !important;
+        gap: 12px !important;
+        padding: 10px !important;
+        border-radius: 12px !important;
+        align-items: start !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-league-rail,
@@ -29306,17 +29545,51 @@ document.addEventListener('DOMContentLoaded', function() {
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-cell .team-logo,
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-cell .sb-team-tag,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge,
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-row .team-logo,
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-team .sb-team-tag {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
         width: 28px !important;
         height: 28px !important;
         flex: 0 0 28px !important;
+        border-radius: 999px !important;
+        background: #0a0f1a !important;
+        border: 1px solid rgba(148, 163, 184, 0.24) !important;
+        overflow: hidden !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-abbr {
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-width: 28px !important;
+        width: 28px !important;
+        height: 28px !important;
+        padding: 0 !important;
+        background: transparent !important;
+        border: 0 !important;
+        overflow: visible !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-cell .team-logo__img,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-img,
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-row .team-logo__img {
         width: 23px !important;
         height: 23px !important;
+        display: block !important;
+        object-fit: contain !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge .tmr-team-logo-img + .tmr-team-logo-initials {
+        display: none !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge--fallback .tmr-team-logo-initials {
+        display: inline-flex !important;
+        font: 800 9.5px/1 "Inter", system-ui, sans-serif !important;
+        color: #cbd5e1 !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-cell b,
@@ -29326,6 +29599,24 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 13.5px !important;
         line-height: 1.12 !important;
         font-weight: 760 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-cell,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-team,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-row,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .game-row .team-info {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-row .team-logo,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .game-row .team-name + .team-logo,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-logo + .tmr-team-name,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-logo + .team-name,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-logo + b {
+        flex: 0 1 auto !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-cell {
