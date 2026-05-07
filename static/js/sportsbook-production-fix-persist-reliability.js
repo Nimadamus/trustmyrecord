@@ -227,12 +227,10 @@
             if (!Number.isFinite(n) || n <= 0) return 'X';
             return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
         };
-        const riskHtml = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
-        const toWinHtml = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
-        if (riskButton) riskButton.innerHTML = riskHtml;
-        if (toWinButton) toWinButton.innerHTML = toWinHtml;
-        if (riskTicketButton) riskTicketButton.innerHTML = riskHtml;
-        if (toWinTicketButton) toWinTicketButton.innerHTML = toWinHtml;
+        if (riskButton) riskButton.innerHTML = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
+        if (toWinButton) toWinButton.innerHTML = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
+        if (riskTicketButton) riskTicketButton.innerHTML = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
+        if (toWinTicketButton) toWinTicketButton.innerHTML = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
         const previewText = values.risk_units > 0 && values.win_units > 0 ? 'Risk ' + values.risk_units + ' units to win ' + values.win_units + ' units' : 'Risk / To Win preview updates after odds are entered.';
         ['unitsStakePreview', 'ttSlipStakePreview'].forEach(function(id) { const preview = document.getElementById(id); if (preview) preview.textContent = previewText; });
     }
