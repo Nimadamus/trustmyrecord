@@ -1045,7 +1045,7 @@ if (typeof window !== 'undefined') {
         const isMoneyline = market === 'h2h'
             || market === 'moneyline'
             || market.endsWith('_h2h')
-            || /(moneyline|ml)/.test(selection);
+            || /\b(moneyline|ml)\b/.test(selection);
 
         if (isMoneyline) return '-';
         if (isTotal || /\b(over|under)\b/.test(selection)) return window.TMR.formatLine(Math.abs(num)) || '-';
