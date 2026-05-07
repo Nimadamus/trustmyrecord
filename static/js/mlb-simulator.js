@@ -140,12 +140,7 @@
         HOU: 'hou', KC: 'kc', LAA: 'laa', LAD: 'lad', MIA: 'mia', MIL: 'mil', MIN: 'min', NYM: 'nym', NYY: 'nyy', ATH: 'oak',
         PHI: 'phi', PIT: 'pit', SD: 'sd', SF: 'sf', SEA: 'sea', STL: 'stl', TB: 'tb', TEX: 'tex', TOR: 'tor', WSH: 'wsh'
     };
-
-    var ESPN_ROSTER_SLUGS = {
-        ARI: 'ari', ATL: 'atl', BAL: 'bal', BOS: 'bos', CHC: 'chc', CWS: 'chw', CIN: 'cin', CLE: 'cle', COL: 'col', DET: 'det',
-        HOU: 'hou', KC: 'kc', LAA: 'laa', LAD: 'lad', MIA: 'mia', MIL: 'mil', MIN: 'min', NYM: 'nym', NYY: 'nyy', ATH: 'ath',
-        PHI: 'phi', PIT: 'pit', SD: 'sd', SF: 'sf', SEA: 'sea', STL: 'stl', TB: 'tb', TEX: 'tex', TOR: 'tor', WSH: 'wsh'
-    };
+    var ESPN_TEAM_ROSTER_SLUGS = Object.assign({}, ESPN_TEAM_LOGO_SLUGS, { ATH: 'ath' });
 
     var TEAM_COLORS = {
         ARI: ['#a71930', '#e3d4ad'], ATL: ['#ce1141', '#13274f'], BAL: ['#df4601', '#000000'], BOS: ['#bd3039', '#0c2340'],
@@ -263,75 +258,14 @@
             return res.json();
         });
     }
-
-    function playerPositionLabel(player) {
-        return String(player && player.position || '').toUpperCase();
-    }
-    function rosterSortValue(player) {
-        var position = playerPositionLabel(player);
-        var order = { CF: 1, SS: 2, RF: 3, '1B': 4, '3B': 5, LF: 6, DH: 7, '2B': 8, C: 9, OF: 10, IF: 11 };
-        return order[position] || 20;
-    }
-    function collectEspnTeamRoster(data) {
-        var players = [];
-        var groups = Array.isArray(data && data.athletes) ? data.athletes : [];
-        groups.forEach(function (group) {
-            var groupPosition = group && (group.position || group.displayName || group.name) || '';
-            (group.items || group.athletes || []).forEach(function (item) {
-                var name = item && (item.displayName || item.fullName || item.name);
-                if (!name) return;
-                var position = item.position && (item.position.abbreviation || item.position.displayName || item.position.name) || groupPosition;
-                players.push({ name: name, position: position });
-            });
-        });
-        var seen = {};
-        players = players.filter(function (player) {
-            var key = normalizeName(player.name);
-            if (seen[key]) return false;
-            seen[key] = true;
-            return true;
-        });
-        var hitters = players.filter(function (player) { return !/Pitcher|P$|SP|RP|CP/i.test(player.position); }).sort(function (a, b) { return rosterSortValue(a) - rosterSortValue(b); });
-        var pitchers = players.filter(function (player) { return /Pitcher|P$|SP|RP|CP/i.test(player.position); });
-        return {
-            count: players.length,
-            relievers: pitchers.length,
-            players: hitters.concat(pitchers),
-            summary: players.length + ' ESPN roster players',
-            source: 'Verified ESPN team roster endpoint'
-        };
-    }
-    function teamRosterUrl(team) {
-        var slug = team && ESPN_ROSTER_SLUGS[team.abbreviation];
-        return slug ? 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams/' + slug + '/roster' : '';
-    }
     function fetchTeamRoster(team) {
-        if (!team || team.era !== 'current') return Promise.resolve(null);
-        state.liveContext.teamRosters = state.liveContext.teamRosters || {};
-        if (state.liveContext.teamRosters[team.abbreviation]) return Promise.resolve(state.liveContext.teamRosters[team.abbreviation]);
-        var url = teamRosterUrl(team);
-        if (!url) return Promise.resolve(null);
-        return fetchJson(url).then(function (data) {
-            var roster = collectEspnTeamRoster(data);
-            state.liveContext.teamRosters[team.abbreviation] = roster;
-            return roster;
+        var slug = team && team.era === 'current' ? ESPN_TEAM_ROSTER_SLUGS[team.abbreviation] : '';
+        if (!slug) return Promise.resolve(null);
+        return fetchJson('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams/' + encodeURIComponent(slug) + '/roster').then(function (payload) {
+            return { abbreviation: team.abbreviation, roster: teamRosterFromPayload(team, payload) };
         }).catch(function () {
-            state.liveContext.teamRosters[team.abbreviation] = null;
-            return null;
+            return { abbreviation: team.abbreviation, roster: null };
         });
-    }
-    function rostersForTeams(away, home, context) {
-        var rosters = context && context.extraContext && context.extraContext.rosters ? {
-            away: context.extraContext.rosters.away,
-            home: context.extraContext.rosters.home
-        } : {};
-        state.liveContext.teamRosters = state.liveContext.teamRosters || {};
-        if (!rosters.away && away && away.era === 'current') rosters.away = state.liveContext.teamRosters[away.abbreviation] || null;
-        if (!rosters.home && home && home.era === 'current') rosters.home = state.liveContext.teamRosters[home.abbreviation] || null;
-        return rosters.away || rosters.home ? rosters : null;
-    }
-    function ensureRostersForTeams(away, home) {
-        return Promise.all([fetchTeamRoster(away), fetchTeamRoster(home)]);
     }
 
     function poolTeams(pool) { return state.teams[pool] || []; }
@@ -528,29 +462,45 @@
         }
         return values;
     }
-    function rosterNamesForBatters(roster) {
-        var players = Array.isArray(roster && roster.players) ? roster.players : [];
-        var pitchers = /^(P|SP|RP|CP|Relief|Pitcher)$/i;
-        return players.filter(function (player) { return !pitchers.test(String(player.position || '')); }).map(function (player) {
-            var pos = playerPositionLabel(player);
-            return player.name + (pos ? ' (' + pos + ')' : '');
-        }).slice(0, 9);
+    function isPitcherPosition(position) {
+        return /(^|[^A-Z])(P|SP|RP)([^A-Z]|$)|Pitcher/i.test(String(position || ''));
     }
-    function rosterNamesForPitchers(roster, starter) {
-        var players = Array.isArray(roster && roster.players) ? roster.players : [];
-        var names = [];
-        if (starter && starter.name) names.push(starter.name);
-        players.filter(function (player) { return /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')); }).forEach(function (player) {
-            if (names.map(normalizeName).indexOf(normalizeName(player.name)) === -1) names.push(player.name);
-        });
-        return names.slice(0, 3);
+    function positionMatchesSlot(playerPosition, slot) {
+        var player = String(playerPosition || '').toUpperCase();
+        var wanted = String(slot || '').toUpperCase();
+        if (!player || !wanted) return false;
+        if (player === wanted) return true;
+        if (/^(LF|CF|RF)$/.test(wanted) && /^(OF|LF|CF|RF)$/.test(player)) return true;
+        if (wanted === 'DH' && !isPitcherPosition(player)) return true;
+        return false;
     }
-    function simulationSlotName(team, slot) {
-        return team.abbreviation + ' simulation slot - ' + slot;
+    function rosterNamesForPositions(rosterContext, positions, random) {
+        var players = Array.isArray(rosterContext && rosterContext.players) ? rosterContext.players.slice() : [];
+        var used = {};
+        function take(match) {
+            for (var i = 0; i < players.length; i += 1) {
+                var player = players[i];
+                var key = normalizeName(player.name);
+                if (!used[key] && (!match || match(player))) {
+                    used[key] = true;
+                    return player.name + (player.position ? ' (' + player.position + ')' : '');
+                }
+            }
+            return '';
+        }
+        return positions.map(function (position) {
+            return take(function (player) { return positionMatchesSlot(player.position, position); }) ||
+                take(function (player) { return isPitcherPosition(position) === isPitcherPosition(player.position); }) ||
+                take(null);
+        }).filter(Boolean);
     }
-    function modeledBatterLines(team, line, random, roster) {
+    function simulationSlotLabel(type, index, position) {
+        return type + ' Slot ' + (index + 1) + (position ? ' (' + position + ')' : '');
+    }
+    function modeledBatterLines(team, line, random, rosterContext) {
         var slots = ['CF', 'SS', 'RF', '1B', '3B', 'LF', 'DH', '2B', 'C'];
-        var rosterNames = rosterNamesForBatters(roster);
+        var rosterNames = rosterNamesForPositions(rosterContext, slots, random);
+        var useRosterNames = rosterNames.length >= slots.length;
         var hits = allocateWhole(line.hits, 9, random);
         var runs = allocateWhole(line.runs, 9, random);
         var rbiTotal = Math.max(0, line.runs - (random() < 0.35 ? 1 : 0));
@@ -561,7 +511,7 @@
             var ab = clamp(3 + Math.floor(random() * 3), 2, 6);
             if (ab < hits[index]) ab = hits[index];
             return {
-                name: rosterNames[index] || simulationSlotName(team, slot),
+                name: useRosterNames ? rosterNames[index] : simulationSlotLabel('Lineup', index, slot),
                 ab: ab,
                 r: runs[index],
                 h: hits[index],
@@ -576,7 +526,7 @@
         var remainder = outs % 3;
         return innings + (remainder ? '.' + remainder : '.0');
     }
-    function modeledPitcherLines(team, opponentLine, starter, random, roster) {
+    function modeledPitcherLines(team, opponentLine, starter, random, rosterContext) {
         var starterOuts = clamp(15 + Math.floor(random() * 5), 12, 20);
         var reliefOuts = 27 - starterOuts;
         var outs = [starterOuts, Math.floor(reliefOuts / 2), reliefOuts - Math.floor(reliefOuts / 2)];
@@ -585,8 +535,13 @@
         var walks = allocateWhole(clamp(Math.round(2 + random() * 3), 1, 7), 3, random);
         var strikeouts = allocateWhole(clamp(Math.round(7 + random() * 5 + ((starter ? starter.quality : 100) - 100) * 0.05), 3, 15), 3, random);
         var homers = allocateWhole(clamp(Math.round(opponentLine.runs * 0.22 + random()), 0, 4), 3, random);
-        var rosterNames = rosterNamesForPitchers(roster, starter);
-        var names = [rosterNames[0] || simulationSlotName(team, 'starting pitcher'), rosterNames[1] || simulationSlotName(team, 'bullpen arm 1'), rosterNames[2] || simulationSlotName(team, 'bullpen arm 2')];
+        var rosterRelievers = rosterNamesForPositions(rosterContext, ['RP', 'RP'], random);
+        var useRosterRelievers = rosterRelievers.length >= 2;
+        var names = [
+            starter && starter.name ? starter.name : simulationSlotLabel('Pitching', 0, 'Starter'),
+            useRosterRelievers ? rosterRelievers[0] : simulationSlotLabel('Pitching', 1, 'Relief'),
+            useRosterRelievers ? rosterRelievers[1] : simulationSlotLabel('Pitching', 2, 'Relief')
+        ];
         return names.map(function (name, index) {
             return {
                 name: name,
@@ -605,23 +560,24 @@
         var homeRoster = rosterContext && rosterContext.home;
         return {
             away: {
+                identitySource: awayRoster && Array.isArray(awayRoster.players) && awayRoster.players.length >= 12 ? 'verified-roster' : 'simulation-slots',
                 batters: modeledBatterLines(away, awayLine, random, awayRoster),
-                pitchers: modeledPitcherLines(away, homeLine, awayPitcher, random, awayRoster),
-                rosterSource: awayRoster && awayRoster.players && awayRoster.players.length ? (awayRoster.source || 'Verified ESPN roster names') : 'Roster unavailable: non-player simulation slots'
+                pitchers: modeledPitcherLines(away, homeLine, awayPitcher, random, awayRoster)
             },
             home: {
+                identitySource: homeRoster && Array.isArray(homeRoster.players) && homeRoster.players.length >= 12 ? 'verified-roster' : 'simulation-slots',
                 batters: modeledBatterLines(home, homeLine, random, homeRoster),
-                pitchers: modeledPitcherLines(home, awayLine, homePitcher, random, homeRoster),
-                rosterSource: homeRoster && homeRoster.players && homeRoster.players.length ? (homeRoster.source || 'Verified ESPN roster names') : 'Roster unavailable: non-player simulation slots'
+                pitchers: modeledPitcherLines(home, awayLine, homePitcher, random, homeRoster)
             }
         };
     }
     function buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext) {
-        var random = Math.random;
+        var seed = seededHash([away.id, home.id, awayPitcher && awayPitcher.id, homePitcher && homePitcher.id, round1(awayRuns), round1(homeRuns), round1(awayWin), state.preset, seedSalt || 'single'].join('|'));
+        var random = seededRandom(seed);
         var awayScore = controlledFinalScore(awayRuns, homeRuns, awayWin, random);
         var homeScore = controlledFinalScore(homeRuns, awayRuns, homeWin, random);
         if (awayScore === homeScore) {
-            if (random() < homeWin) homeScore += 1;
+            if (homeWin >= awayWin) homeScore += 1;
             else awayScore += 1;
         }
         var combined = awayScore + homeScore;
@@ -633,7 +589,7 @@
                 excess -= 1;
             }
             if (awayScore === homeScore) {
-                if (random() < homeWin && awayScore > 0) awayScore -= 1;
+                if (homeWin >= awayWin && awayScore > 0) awayScore -= 1;
                 else if (homeScore > 0) homeScore -= 1;
             }
         }
@@ -645,7 +601,7 @@
             else break;
         }
         if (awayScore === homeScore) {
-            if (random() < homeWin) {
+            if (homeWin >= awayWin) {
                 if (homeScore < 20 && awayScore + homeScore < 30) homeScore += 1;
                 else if (awayScore > 0) awayScore -= 1;
             } else {
@@ -653,9 +609,16 @@
                 else if (homeScore > 0) homeScore -= 1;
             }
         }
+        if (!allowUpset && homeWin >= awayWin && homeScore <= awayScore) {
+            if (homeScore < 20 && homeScore + awayScore < 30) homeScore = awayScore + 1;
+            else awayScore = Math.max(0, homeScore - 1);
+        } else if (!allowUpset && awayWin > homeWin && awayScore <= homeScore) {
+            if (awayScore < 20 && homeScore + awayScore < 30) awayScore = homeScore + 1;
+            else homeScore = Math.max(0, awayScore - 1);
+        }
         while (awayScore + homeScore > 30) {
-            if (awayScore >= homeScore && awayScore > 0) awayScore -= 1;
-            else if (homeScore > 0) homeScore -= 1;
+            if (homeWin >= awayWin && awayScore > 0) awayScore -= 1;
+            else if (awayWin > homeWin && homeScore > 0) homeScore -= 1;
             else break;
         }
         var awayInnings = distributeRuns(awayScore, awayRuns, random, false);
@@ -673,7 +636,7 @@
         var awayLine = { team: away, innings: awayInnings, runs: awayScore, hits: awayHits, errors: awayErrors, starter: awayPitcher };
         var homeLine = { team: home, innings: homeInnings, runs: homeScore, hits: homeHits, errors: homeErrors, starter: homePitcher };
         return {
-            runId: String(Date.now()) + '-' + Math.floor(random() * 1000000),
+            seed: seed,
             away: awayLine,
             home: homeLine,
             winner: winner,
@@ -847,12 +810,15 @@
             if (!name) return;
             players.push({
                 name: name,
-                position: athlete.position && (athlete.position.abbreviation || athlete.position.displayName) || item.position && item.position.abbreviation || ''
+                position: athlete.position && (athlete.position.abbreviation || athlete.position.displayName) || item.position && (item.position.abbreviation || item.position.displayName || item.position.name) || item.groupPosition || ''
             });
         }
         (entry.roster || []).forEach(add);
         (entry.athletes || []).forEach(add);
-        (entry.groups || []).forEach(function (group) { (group.athletes || group.roster || []).forEach(add); });
+        (entry.groups || []).forEach(function (group) { (group.athletes || group.roster || group.items || []).forEach(function (item) {
+            if (item && !item.groupPosition) item.groupPosition = group.position || '';
+            add(item);
+        }); });
         var seen = {};
         return players.filter(function (player) {
             var key = normalizeName(player.name);
@@ -861,13 +827,35 @@
             return true;
         });
     }
+    function teamRosterFromPayload(team, payload) {
+        if (!team || !payload) return null;
+        var players = collectRosterPlayers({ groups: payload.athletes || payload.rosters || payload.groups || [] });
+        if (!players.length) players = collectRosterPlayers(payload);
+        if (!players.length) return null;
+        var relievers = players.filter(function (player) { return /RP|Relief/i.test(player.position); }).length;
+        return { count: players.length, relievers: relievers, players: players, teamName: team.name, source: 'ESPN team roster', summary: players.length + ' roster players' + (relievers ? ', ' + relievers + ' RP' : '') };
+    }
+    function rosterContextForTeam(team) {
+        if (!team || team.era !== 'current') return null;
+        var rosters = state.liveContext && state.liveContext.teamRosters || {};
+        return rosters[team.abbreviation] || null;
+    }
+    function mergeRosterContext(summaryContextValue, away, home) {
+        var merged = summaryContextValue || {};
+        var rosters = Object.assign({}, merged.rosters || {});
+        rosters.away = rosters.away || rosterContextForTeam(away);
+        rosters.home = rosters.home || rosterContextForTeam(home);
+        if (rosters.away || rosters.home) merged.rosters = rosters;
+        if (!merged.injuries && !merged.rosters) return null;
+        return merged;
+    }
     function teamRosterContext(summary, team) {
         var groups = Array.isArray(summary && summary.rosters) ? summary.rosters : [];
         var group = groups.filter(function (entry) { return entry && entry.team && normalizeName(entry.team.displayName) === normalizeName(team.name); })[0];
         var players = group ? collectRosterPlayers(group) : [];
         if (!players.length) return null;
         var relievers = players.filter(function (player) { return /RP|Relief/i.test(player.position); }).length;
-        return { count: players.length, relievers: relievers, players: players, summary: players.length + ' roster players' + (relievers ? ', ' + relievers + ' RP' : '') };
+        return { count: players.length, relievers: relievers, players: players, teamName: team.name, source: 'ESPN game summary roster', summary: players.length + ' roster players' + (relievers ? ', ' + relievers + ' RP' : '') };
     }
     function summaryContext(summary, away, home) {
         if (!summary) return null;
@@ -926,7 +914,7 @@
         var boardGame = (state.liveContext.boardGames || []).filter(function (game) { return teamsMatch(game, away, home); })[0] || null;
         var recentForm = buildRecentForm(away, home);
         var summary = summaryForEvent(espnGame && espnGame.id);
-        var extraContext = summaryContext(summary, away, home);
+        var extraContext = mergeRosterContext(summaryContext(summary, away, home), away, home);
         if (!espnGame && !scheduleGame && !boardGame && !recentForm && !extraContext) return null;
         var odds = boardGame ? marketOddsFor(boardGame, away, home) : null;
         return { espnGame: espnGame, scheduleGame: scheduleGame, boardGame: boardGame, odds: odds, recentForm: recentForm, summary: summary, extraContext: extraContext };
@@ -1053,7 +1041,7 @@
                 detail: recentAvailable ? 'Last ' + recentForm.away.games + ': ' + recentForm.away.summary + ' / Last ' + recentForm.home.games + ': ' + recentForm.home.summary : 'No verified recent final-score sample matched both teams.',
                 verified: recentAvailable
             },
-            { key: 'rosterContext', label: 'Roster context', status: rosterAvailable ? 'Available from ESPN roster payload' : 'Unavailable', detail: rosterAvailable ? espnGame.awayTeam + ': ' + extra.rosters.away.summary + ' / ' + espnGame.homeTeam + ': ' + extra.rosters.home.summary : 'No verified player roster list is connected for this matchup.', verified: rosterAvailable },
+            { key: 'rosterContext', label: 'Roster context', status: rosterAvailable ? 'Available from ESPN roster payload' : 'Unavailable', detail: rosterAvailable ? (extra.rosters.away.teamName || espnGame && espnGame.awayTeam || 'Away') + ': ' + extra.rosters.away.summary + ' / ' + (extra.rosters.home.teamName || espnGame && espnGame.homeTeam || 'Home') + ': ' + extra.rosters.home.summary : 'No verified player roster list is connected for this matchup.', verified: rosterAvailable },
             { key: 'bullpenContext', label: 'Bullpen context', status: bullpenAvailable ? 'Bullpen injury/depth context available' : 'Unavailable', detail: bullpenAvailable ? 'Derived from ESPN roster/injury context only; workload and availability are not connected.' : 'No verified bullpen depth, workload, or availability feed is connected.', verified: bullpenAvailable }
         ];
     }
@@ -1170,11 +1158,12 @@
         var volatility = clamp((away.volatility + home.volatility) / 2, 0.92, 1.16);
         var spread = round1(1.1 * volatility);
         var totalRuns = awayRuns + homeRuns;
-        var rosterContext = rostersForTeams(away, home, context);
+        var rosterContext = context && context.extraContext && context.extraContext.rosters ? context.extraContext.rosters : null;
         var boxScore = buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext);
         var projectedAwayScore = boxScore.away.runs;
         var projectedHomeScore = boxScore.home.runs;
-        var finalWinner = boxScore.winner;
+        winner = boxScore.winner;
+        winnerPct = winner.id === home.id ? homeWin : awayWin;
         var reasonParts = [];
         reasonParts.push(winner.name + ' projects ahead because the run expectation and composite team rating lean their way.');
         if (Math.abs(away.offense - home.offense) >= 4) reasonParts.push(edgeLabel('offense', away, home) + ' on offense.');
@@ -1193,7 +1182,6 @@
             homeRuns: round1(homeRuns),
             projectedAwayScore: projectedAwayScore,
             projectedHomeScore: projectedHomeScore,
-            finalWinner: finalWinner,
             boxScore: boxScore,
             awayRange: [round1(Math.max(0.5, awayRuns - spread)), round1(awayRuns + spread)],
             homeRange: [round1(Math.max(0.5, homeRuns - spread)), round1(homeRuns + spread)],
@@ -1424,8 +1412,12 @@
         }).join('');
     }
     function playerTeamBox(team, players) {
-        var source = players && players.rosterSource ? players.rosterSource : 'Non-player simulation slots';
-        return '<section class="player-team-box"><h4>' + escapeHtml(team.name) + ' Box Score Lines</h4><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
+        var rosterNames = players.identitySource === 'verified-roster';
+        var sourceText = rosterNames ?
+            'Player names are from the connected verified roster payload; stat lines remain simulation-modeled.' :
+            'No verified roster names are connected for this matchup, so these are neutral modeled lineup and pitching slots.';
+        return '<section class="player-team-box"><h4>' + escapeHtml(team.name) + (rosterNames ? ' Roster-Name Simulation Lines' : ' Simulation Slot Lines') + '</h4>' +
+            '<p class="player-source-note">' + escapeHtml(sourceText) + '</p>' +
             '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>SO</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div>' +
             '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>HR</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers) + '</tbody></table></div></section>';
     }
@@ -1435,7 +1427,7 @@
         if (!panel || !content) return;
         if (!result || !result.boxScore || !result.boxScore.players) {
             panel.setAttribute('data-player-box-state', 'empty');
-            content.innerHTML = '<div class="sim-empty">Run a simulation to generate batter and pitcher simulation lines.</div>';
+            content.innerHTML = '<div class="sim-empty">Run a simulation to generate modeled batter and pitcher lines.</div>';
             return;
         }
         panel.setAttribute('data-player-box-state', 'projected');
@@ -1450,7 +1442,7 @@
         lines.push('Generated: ' + generatedAt);
         lines.push(result.away.name + ' at ' + result.home.name);
         lines.push('Mode: ' + result.simulationMode + ' / Data: ' + result.dataMode);
-        lines.push('Simulated final: ' + result.away.name + ' ' + box.away.runs + ', ' + result.home.name + ' ' + box.home.runs);
+        lines.push('Projected final: ' + result.away.name + ' ' + box.away.runs + ', ' + result.home.name + ' ' + box.home.runs);
         lines.push('Win probability: ' + result.away.name + ' ' + roundPct(result.awayWin) + ' / ' + result.home.name + ' ' + roundPct(result.homeWin));
         lines.push('Expected runs: ' + result.away.name + ' ' + result.awayRuns + ' / ' + result.home.name + ' ' + result.homeRuns);
         lines.push('Starting Pitchers: ' + result.away.name + ': ' + result.awayPitcher.name + ' | ' + result.home.name + ': ' + result.homePitcher.name);
@@ -1466,12 +1458,13 @@
         lines.push('Key performers: ' + box.keyPerformers.join(' / '));
         if (box.players) {
             lines.push('');
-            lines.push('Player Box Score');
+            lines.push('Player Simulation Lines');
             [
                 [result.away.name, box.players.away],
                 [result.home.name, box.players.home]
             ].forEach(function (group) {
-                lines.push(group[0] + ' batters - ' + (group[1].rosterSource || 'Non-player simulation slots'));
+                lines.push(group[0] + ' identity source: ' + (group[1].identitySource === 'verified-roster' ? 'verified roster names; stat lines are simulation-modeled' : 'modeled simulation slots; no verified roster names connected'));
+                lines.push(group[0] + ' batters');
                 lines.push('Batter, AB, R, H, RBI, BB, SO');
                 group[1].batters.forEach(function (row) {
                     lines.push([row.name, row.ab, row.r, row.h, row.rbi, row.bb, row.so].join(', '));
@@ -1711,25 +1704,20 @@
         var home = findTeamInPool(state.homeTeamId, state.homePool);
         if (!away || !home || away.id === home.id) {
             setText('projectionNotice', 'Select two different teams to run a simulation. No output was generated.');
-            return Promise.resolve(null);
+            return;
         }
         renderLoading(away, home);
         setLiveInputsForMatchup(away, home);
-        setText('projectionNotice', 'Loading verified ESPN roster names before rendering the player box score.');
-        return ensureRostersForTeams(away, home).then(function () {
-            setLiveInputsForMatchup(away, home);
-            state.simulationCount = selectedSimulationCount();
-            var count = state.simulationCount;
-            var stamp = Date.now();
-            var results = [];
-            for (var i = 0; i < count; i += 1) {
-                results.push(simulate(away, home, state.activeLiveContext, count === 1 ? 'single-' + stamp : 'batch-' + stamp + '-' + i, count > 1));
-            }
-            state.aggregate = count > 1 ? buildAggregate(results, away, home) : null;
-            state.simulation = results[results.length - 1];
-            renderResult(state.simulation);
-            return state.simulation;
-        });
+        state.simulationCount = selectedSimulationCount();
+        var count = state.simulationCount;
+        var stamp = Date.now();
+        var results = [];
+        for (var i = 0; i < count; i += 1) {
+            results.push(simulate(away, home, state.activeLiveContext, count === 1 ? 'single-' + stamp : 'batch-' + stamp + '-' + i, count > 1));
+        }
+        state.aggregate = count > 1 ? buildAggregate(results, away, home) : null;
+        state.simulation = results[results.length - 1];
+        renderResult(state.simulation);
     }
     function copyBoxScore() {
         if (!state.simulation) return;
@@ -1807,19 +1795,31 @@
                     return { id: event.id, summary: summary };
                 });
             });
-            return Promise.allSettled(summaryRequests).then(function (summaryResults) {
+            var rosterRequests = LOCAL_TEAMS.current.map(fetchTeamRoster);
+            return Promise.all([
+                Promise.allSettled(summaryRequests),
+                Promise.allSettled(rosterRequests)
+            ]).then(function (settledGroups) {
+                var summaryResults = settledGroups[0];
+                var rosterResults = settledGroups[1];
                 var summaries = {};
                 summaryResults.forEach(function (result) {
                     if (result.status === 'fulfilled' && result.value && result.value.id) summaries[result.value.id] = result.value.summary;
                 });
+                var teamRosters = {};
+                rosterResults.forEach(function (result) {
+                    if (result.status === 'fulfilled' && result.value && result.value.abbreviation && result.value.roster) {
+                        teamRosters[result.value.abbreviation] = result.value.roster;
+                    }
+                });
                 state.liveContext = {
-                    status: schedule.length || board.length || espnEvents.length ? 'available' : 'unavailable',
+                    status: schedule.length || board.length || espnEvents.length || Object.keys(teamRosters).length ? 'available' : 'unavailable',
                     loadedAt: new Date().toISOString(),
                     scheduleGames: schedule,
                     boardGames: board,
                     espnEvents: espnEvents,
                     espnSummaries: summaries,
-                    teamRosters: state.liveContext.teamRosters || {},
+                    teamRosters: teamRosters,
                     recentEvents: recentEvents,
                     error: null
                 };
