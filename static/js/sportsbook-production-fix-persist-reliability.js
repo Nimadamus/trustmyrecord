@@ -2718,6 +2718,7 @@
         }
 
         const stakeMode = getSelectedStakeMode();
+        const stakeValues = calculateStakeValues(stakeMode, unitsValue, oddsValue);
         let finalPayload = null;
         try {
             const api = await getApiClientOrFallback();
@@ -2736,6 +2737,9 @@
                 units: unitsValue,
                 stake_mode: stakeMode,
                 units_mode: stakeMode,
+                risk_units: stakeValues.risk_units,
+                win_units: stakeValues.win_units,
+                to_win_units: stakeValues.win_units,
                 book_title: bookInput ? bookInput.value.trim() : option.book_title,
                 book_key: option.book_key,
                 market_key: option.market_key,
