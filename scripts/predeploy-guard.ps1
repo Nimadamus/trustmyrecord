@@ -77,7 +77,7 @@ try {
         "tests/mlb-simulator-boxscore-test.js",
         "tests/mlb-simulator-realism-test.js",
         "tests/sportsbook-reliability-guard-test.js",
-        "tests/sportsbook-stake-mode-ui-test.js"
+        "tests/sportsbook-stake-mode-ui-test.js",`r`n        "tests/auto-grader-regression-test.js"
     )
     foreach ($file in $requiredFiles) {
         if (-not (Test-Path -LiteralPath $file)) {
@@ -91,7 +91,7 @@ try {
     Invoke-GuardCommand "MLB simulator box score regression test" @("node", "tests/mlb-simulator-boxscore-test.js")
     Invoke-GuardCommand "MLB simulator realism regression test" @("node", "tests/mlb-simulator-realism-test.js")
     Invoke-GuardCommand "sportsbook reliability regression test" @("node", "tests/sportsbook-reliability-guard-test.js")
-    Invoke-GuardCommand "sportsbook stake-mode regression test" @("node", "tests/sportsbook-stake-mode-ui-test.js")
+    Invoke-GuardCommand "sportsbook stake-mode regression test" @("node", "tests/sportsbook-stake-mode-ui-test.js")`r`n    Invoke-GuardCommand "auto-grader regression test" @("node", "tests/auto-grader-regression-test.js")
 
     $productSystem = Get-Content -LiteralPath "TRUSTMYRECORD_PRODUCT_UPGRADE_SYSTEM.md" -Raw
     $profile = Get-Content -LiteralPath "profile/index.html" -Raw
