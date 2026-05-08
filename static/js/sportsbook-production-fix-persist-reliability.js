@@ -277,14 +277,36 @@
         return nextMode;
     }
 
+    function formatStakePreviewUnits(value) {
+        const n = roundStakeUnits(value);
+        if (!Number.isFinite(n)) return '0';
+        return Number.isInteger(n) ? String(n) : n.toFixed(2);
+    }
+
+    function formatStakeUnitLabel(value) {
+        return Math.abs(roundStakeUnits(value) - 1) < 0.005 ? 'unit' : 'units';
+    }
+
+    function getCurrentStakeAmount() {
+        const ticketInput = document.getElementById('ttSlipUnits');
+        const hiddenInput = document.getElementById('unitsInput');
+        const input = ticketInput || hiddenInput;
+        const rawAmount = input ? parseFloat(input.value || '1') : 1;
+        const amount = Math.max(0.5, Math.min(5, Math.round((Number.isFinite(rawAmount) ? rawAmount : 1) * 2) / 2));
+        [ticketInput, hiddenInput].forEach(function(el) {
+            if (el && String(el.value) !== String(amount)) el.value = String(amount);
+        });
+        return amount;
+    }
+
     function updateStakeModePreview() {
-        const input = document.getElementById('unitsInput');
         const oddsInput = document.getElementById('pickOddsInput');
-        const amount = input ? parseFloat(input.value || '1') : 1;
+        const amount = getCurrentStakeAmount();
         const odds = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
         const values = calculateStakeValues(getSelectedStakeMode(), amount, odds);
         const previewText = values.risk_units > 0 && values.win_units > 0
-            ? 'Risk ' + values.risk_units + ' units to win ' + values.win_units + ' units'
+            ? 'Risk ' + formatStakePreviewUnits(values.risk_units) + ' ' + formatStakeUnitLabel(values.risk_units)
+                + ' to win ' + formatStakePreviewUnits(values.win_units) + ' ' + formatStakeUnitLabel(values.win_units)
             : 'Risk / To Win preview updates after odds are entered.';
 
         ['unitsStakePreview', 'ttSlipStakePreview'].forEach(function(id) {
@@ -315,6 +337,7 @@
     window.TMR.calculateStakeValues = calculateStakeValues;
     window.TMR.formatStakeDisplay = formatStakeDisplay;
     window.TMR.updateStakeModePreview = updateStakeModePreview;
+    window.TMR.getCurrentStakeAmount = getCurrentStakeAmount;
     window.setUnitsMode = setStakeMode;
 
     function normalizePick(pick) {
@@ -2680,14 +2703,11 @@
 
         const oddsValue = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
         const lineValue = lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null;
-        const unitsRaw = unitsInput ? parseFloat(unitsInput.value || '1') : 1;
         // Frontend hard-cap: stake amount must be in [0.5, 5], rounded to
-        // half units. The amount means risk units in Risk mode and desired
-        // win units in To Win mode.
-        const unitsValue = Math.max(0.5, Math.min(5, Math.round((Number.isFinite(unitsRaw) ? unitsRaw : 1) * 2) / 2));
-        if (unitsInput && String(unitsValue) !== String(unitsInput.value)) {
-            unitsInput.value = String(unitsValue);
-        }
+        // half units. Read from the visible ticket input when present, then
+        // mirror to #unitsInput so preview text and submit payload cannot
+        // drift apart.
+        const unitsValue = getCurrentStakeAmount();
         const submittedSelection = buildSubmittedSelection(option, lineValue);
 
         if (Number.isNaN(oddsValue) || (oddsValue > -100 && oddsValue < 100)) {
@@ -3486,3 +3506,4 @@
 
     document.addEventListener('DOMContentLoaded', boot);
 })();
+
