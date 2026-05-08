@@ -204,6 +204,21 @@ body.tmr-site-shell .tmr-fb-action-btn {
     letter-spacing: 0;
 }
 
+body.tmr-site-shell .btn,
+body.tmr-site-shell .button,
+body.tmr-site-shell .tmr-btn,
+body.tmr-site-shell .fbtn,
+body.tmr-site-shell .load-more-btn,
+body.tmr-site-shell .tmr-fb-action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 14px;
+    line-height: 1.1;
+    text-decoration: none;
+}
+
 body.tmr-site-shell button,
 body.tmr-site-shell .btn,
 body.tmr-site-shell .tmr-btn,
@@ -250,6 +265,29 @@ body.tmr-site-shell .tmr-global-nav button:hover {
     transform: none;
 }
 
+body.tmr-site-shell button:focus-visible,
+body.tmr-site-shell .btn:focus-visible,
+body.tmr-site-shell .button:focus-visible,
+body.tmr-site-shell .tmr-btn:focus-visible,
+body.tmr-site-shell .fbtn:focus-visible,
+body.tmr-site-shell a:focus-visible {
+    outline: 2px solid rgba(45, 212, 191, 0.9);
+    outline-offset: 3px;
+}
+
+body.tmr-site-shell button:disabled,
+body.tmr-site-shell .btn:disabled,
+body.tmr-site-shell .button:disabled,
+body.tmr-site-shell input[type="submit"]:disabled,
+body.tmr-site-shell .tmr-btn:disabled,
+body.tmr-site-shell .fbtn:disabled,
+body.tmr-site-shell [aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.52;
+    transform: none;
+    filter: grayscale(0.18);
+}
+
 body.tmr-site-shell input,
 body.tmr-site-shell textarea,
 body.tmr-site-shell select {
@@ -263,6 +301,24 @@ body.tmr-site-shell select {
     font-family: var(--tmr-font);
     font-size: 0.95rem;
     outline: none;
+}
+
+body.tmr-site-shell select {
+    appearance: none;
+    background-image:
+        linear-gradient(45deg, transparent 50%, var(--tmr-accent) 50%),
+        linear-gradient(135deg, var(--tmr-accent) 50%, transparent 50%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.84), rgba(5, 10, 20, 0.82));
+    background-position:
+        calc(100% - 18px) 50%,
+        calc(100% - 12px) 50%,
+        0 0;
+    background-size:
+        6px 6px,
+        6px 6px,
+        100% 100%;
+    background-repeat: no-repeat;
+    padding-right: 38px;
 }
 
 body.tmr-site-shell input[type="checkbox"],
