@@ -73,6 +73,7 @@ try {
         "static/css/mlb-simulator.css",
         "tests/line-formatting-regression-test.js",
         "tests/profile-page-lookup-test.js",
+        "tests/profile-source-regression-test.js",
         "tests/mlb-simulator-page-test.js",
         "tests/mlb-simulator-boxscore-test.js",
         "tests/mlb-simulator-realism-test.js",
@@ -88,6 +89,7 @@ try {
 
     Invoke-GuardCommand "line formatting regression test" @("node", "tests/line-formatting-regression-test.js")
     Invoke-GuardCommand "profile lookup regression test" @("node", "tests/profile-page-lookup-test.js")
+    Invoke-GuardCommand "profile source regression test" @("node", "tests/profile-source-regression-test.js")
     Invoke-GuardCommand "MLB simulator page regression test" @("node", "tests/mlb-simulator-page-test.js")
     Invoke-GuardCommand "MLB simulator box score regression test" @("node", "tests/mlb-simulator-boxscore-test.js")
     Invoke-GuardCommand "MLB simulator realism regression test" @("node", "tests/mlb-simulator-realism-test.js")
