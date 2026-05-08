@@ -45,6 +45,10 @@ for (const selector of [
 assert(css.includes('linear-gradient') && css.includes('rgba(45, 212, 191'), 'sitewide design system must keep dark premium accent treatments');
 assert(css.includes('body.tmr-site-shell .btn-primary') && css.includes('body.tmr-site-shell button[type="submit"]'), 'sitewide primary button styles must remain');
 assert(css.includes('body.tmr-site-shell input') && css.includes('body.tmr-site-shell select') && css.includes('body.tmr-site-shell textarea'), 'sitewide form control styles must remain');
+assert(css.includes('body.tmr-site-shell select') && css.includes('appearance: none') && css.includes('padding-right: 38px'), 'sitewide select controls must remain branded');
+assert(css.includes(':focus-visible') && css.includes('outline-offset: 3px'), 'sitewide keyboard focus ring must remain visible');
+assert(css.includes('[aria-disabled="true"]') && css.includes('cursor: not-allowed'), 'sitewide disabled control treatment must remain');
+assert(css.includes('display: inline-flex') && css.includes('justify-content: center'), 'sitewide button alignment must remain stable');
 assert(css.includes('body.tmr-site-shell table') && css.includes('body.tmr-site-shell th') && css.includes('body.tmr-site-shell td'), 'sitewide table styles must remain');
 assert(css.includes('body.tmr-site-shell .empty-state') && css.includes('body.tmr-site-shell .loading-state') && css.includes('body.tmr-site-shell .error-state'), 'sitewide empty/loading/error styles must remain');
 assert(css.includes('body.tmr-site-shell .tmr-empty-state') && css.includes('body.tmr-site-shell .tmr-loading-state'), 'legacy live empty/loading state variants must remain styled');
