@@ -282,21 +282,7 @@
         const oddsInput = document.getElementById('pickOddsInput');
         const amount = input ? parseFloat(input.value || '1') : 1;
         const odds = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
-        const selectedMode = getSelectedStakeMode();
-        const values = calculateStakeValues(selectedMode, amount, odds);
-        const riskButton = document.getElementById('modeRisk');
-        const toWinButton = document.getElementById('modeToWin');
-        const riskTicketButton = document.getElementById('modeRiskTicket');
-        const toWinTicketButton = document.getElementById('modeToWinTicket');
-        const formatUnits = function(value) {
-            const n = roundStakeUnits(value);
-            if (!Number.isFinite(n) || n <= 0) return 'X';
-            return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
-        };
-        if (riskButton) riskButton.innerHTML = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
-        if (toWinButton) toWinButton.innerHTML = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
-        if (riskTicketButton) riskTicketButton.innerHTML = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
-        if (toWinTicketButton) toWinTicketButton.innerHTML = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
+        const values = calculateStakeValues(getSelectedStakeMode(), amount, odds);
         const previewText = values.risk_units > 0 && values.win_units > 0
             ? 'Risk ' + values.risk_units + ' units to win ' + values.win_units + ' units'
             : 'Risk / To Win preview updates after odds are entered.';
@@ -312,9 +298,8 @@
         const odds = Number(pick.odds_snapshot != null ? pick.odds_snapshot : (pick.odds != null ? pick.odds : pick.price));
         let risk = Number(pick.risk_units != null ? pick.risk_units : pick.riskUnits);
         let win = Number(pick.win_units != null ? pick.win_units : (pick.to_win_units != null ? pick.to_win_units : pick.toWinUnits));
-        const mode = pick.stake_mode || pick.units_mode || pick.unitsMode;
-        if ((!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) && mode && Number.isFinite(odds)) {
-            const values = calculateStakeValues(mode, pick.units != null ? pick.units : 1, odds);
+        if ((!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) && Number.isFinite(odds)) {
+            const values = calculateStakeValues(pick.stake_mode || pick.units_mode || pick.unitsMode || 'risk', pick.units != null ? pick.units : 1, odds);
             risk = values.risk_units;
             win = values.win_units;
         }
@@ -338,7 +323,7 @@
             odds_snapshot: pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds,
             line_snapshot: pick.line_snapshot != null ? pick.line_snapshot : pick.line,
             units: pick.units != null ? parseFloat(pick.units) : 1,
-            stake_mode: pick.stake_mode || pick.units_mode || '',
+            stake_mode: pick.stake_mode || pick.units_mode || 'risk',
             risk_units: pick.risk_units != null ? parseFloat(pick.risk_units) : null,
             to_win_units: pick.to_win_units != null ? parseFloat(pick.to_win_units) : (pick.win_units != null ? parseFloat(pick.win_units) : null),
             win_units: pick.win_units != null ? parseFloat(pick.win_units) : (pick.to_win_units != null ? parseFloat(pick.to_win_units) : null)
@@ -986,7 +971,16 @@
             return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.result_units) || 0));
         }, 0);
         const risked = normalized.reduce(function(sum, pick) {
-            return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.risk_units) || 0));
+            if (pick.status === 'pending') return sum;
+            const risk = parseFloat(pick.risk_units);
+            if (Number.isFinite(risk) && risk > 0) return sum + risk;
+            const win = parseFloat(pick.to_win_units || pick.win_units);
+            const odds = parseFloat(pick.odds_snapshot || pick.odds || pick.price);
+            if (Number.isFinite(win) && win > 0 && Number.isFinite(odds) && odds !== 0) {
+                return sum + (odds < 0 ? win * Math.abs(odds) / 100 : win * 100 / odds);
+            }
+            const values = calculateStakeValues(pick.stake_mode || pick.units_mode || 'risk', pick.units, odds);
+            return sum + values.risk_units;
         }, 0);
 
         return {
@@ -2719,7 +2713,6 @@
         }
 
         const stakeMode = getSelectedStakeMode();
-        const stakeValues = calculateStakeValues(stakeMode, unitsValue, oddsValue);
         let finalPayload = null;
         try {
             const api = await getApiClientOrFallback();
@@ -2738,9 +2731,6 @@
                 units: unitsValue,
                 stake_mode: stakeMode,
                 units_mode: stakeMode,
-                risk_units: stakeValues.risk_units,
-                win_units: stakeValues.win_units,
-                to_win_units: stakeValues.win_units,
                 book_title: bookInput ? bookInput.value.trim() : option.book_title,
                 book_key: option.book_key,
                 market_key: option.market_key,
@@ -3489,35 +3479,6 @@
         }
 
         fetchCurrentUserPicks().then(syncRecordWidgets).catch(function() {});
-
-        if (/([?&])tmrStakeProof=1(&|$)/.test(window.location.search || '')) {
-            setTimeout(function() {
-                try {
-                    const unitsInput = document.getElementById('unitsInput');
-                    const oddsInput = document.getElementById('pickOddsInput');
-                    if (unitsInput) unitsInput.value = '2';
-                    if (oddsInput) oddsInput.value = '-145';
-                    if (window.TMR && typeof window.TMR._ttPopulateSlip === 'function') {
-                        window.TMR.selectedSport = 'MLB';
-                        window.TMR._ttPopulateSlip({ gameIndex: null, betType: 'ml', team: 'Los Angeles Dodgers', line: '', odds: -145, awayTeam: 'Los Angeles Dodgers', homeTeam: 'San Francisco Giants', sport: 'MLB', league: 'MLB', market: 'Moneyline', marketType: 'h2h', book: 'DraftKings', gameTime: null, gameId: 'tmr-stake-proof', game: { away_team: 'Los Angeles Dodgers', home_team: 'San Francisco Giants', id: 'tmr-stake-proof' } });
-                    }
-                    const slipUnits = document.getElementById('ttSlipUnits');
-                    if (slipUnits) slipUnits.value = '2';
-                    if (unitsInput) unitsInput.value = '2';
-                    if (oddsInput) oddsInput.value = '-145';
-                    setStakeMode('risk');
-                    if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview();
-                    const aside = document.querySelector('.sportsbook-ticket-preview');
-                    if (aside && aside.scrollIntoView) aside.scrollIntoView({ block: 'center', inline: 'center' });
-                    if (aside) {
-                        const rect = aside.getBoundingClientRect();
-                        const targetLeft = Math.max(0, window.scrollX + rect.left - 40);
-                        const targetTop = Math.max(0, window.scrollY + rect.top - 80);
-                        window.scrollTo(targetLeft, targetTop);
-                    }
-                } catch (err) { console.warn('[TMR][stake-proof] could not populate proof slip:', err && err.message); }
-            }, 1200);
-        }
     }
 
     document.addEventListener('DOMContentLoaded', boot);

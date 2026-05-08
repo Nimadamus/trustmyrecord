@@ -809,7 +809,21 @@
             return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.result_units) || 0));
         }, 0);
         const risked = normalized.reduce(function(sum, pick) {
-            return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.units) || 0));
+            if (pick.status === 'pending') return sum;
+            const risk = parseFloat(pick.risk_units);
+            if (Number.isFinite(risk) && risk > 0) return sum + risk;
+            const win = parseFloat(pick.to_win_units || pick.win_units);
+            const odds = parseFloat(pick.odds_snapshot || pick.odds || pick.price);
+            if (Number.isFinite(win) && win > 0 && Number.isFinite(odds) && odds !== 0) {
+                return sum + (odds < 0 ? win * Math.abs(odds) / 100 : win * 100 / odds);
+            }
+            const units = parseFloat(pick.units || pick.stake);
+            if (Number.isFinite(units) && units > 0 && Number.isFinite(odds) && odds !== 0) {
+                return sum + ((pick.stake_mode || pick.units_mode) === 'to_win'
+                    ? (odds < 0 ? units * Math.abs(odds) / 100 : units * 100 / odds)
+                    : units);
+            }
+            return sum;
         }, 0);
 
         return {
@@ -935,8 +949,7 @@
             '.tmr-market-matchup{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;padding:0;border-radius:18px;}',
             '.tmr-team-row{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:10px;color:#f8fafc;}',
             '.tmr-team-side{display:inline-flex;align-items:center;justify-content:center;min-width:54px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#aeb8c6;}',
-            '.tmr-team-abbr{width:30px;height:30px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:11px;font-weight:900;letter-spacing:0.08em;color:#dbe7ef;flex-shrink:0;overflow:hidden;}',
-            '.tmr-team-abbr img{width:100%;height:100%;object-fit:contain;display:block;}',
+            '.tmr-team-abbr{width:30px;height:30px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:11px;font-weight:900;letter-spacing:0.08em;color:#dbe7ef;flex-shrink:0;}',
             '.tmr-team-name{font-size:clamp(18px,2vw,22px);font-weight:800;letter-spacing:-0.03em;line-height:1.05;}',
             '.tmr-matchup-divider{display:flex;align-items:center;gap:10px;padding-left:66px;color:#6f7a89;font-size:10px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;}',
             '.tmr-matchup-divider::before,.tmr-matchup-divider::after{content:"";height:1px;flex:1;background:rgba(255,255,255,0.08);}',
@@ -1623,9 +1636,9 @@
                 '<div>' +
                 '<div class="tmr-market-topline"><span class="tmr-market-league">Game ' + boardNumber + ' • ' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span><span class="tmr-market-status">' + escapeHtml(formatStartsIn(game.commence_time)) + '</span></div>' +
                 '<div class="tmr-market-matchup">' +
-                '<div class="tmr-team-row"><span class="tmr-team-side">Away</span>' + renderTeamLogo(game.away_team, game.away_logo, game.away_abbr, game.sport_key) + '<span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
+                '<div class="tmr-team-row"><span class="tmr-team-side">Away</span><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.away_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
                 '<div class="tmr-matchup-divider">@</div>' +
-                '<div class="tmr-team-row"><span class="tmr-team-side">Home</span>' + renderTeamLogo(game.home_team, game.home_logo, game.home_abbr, game.sport_key) + '<span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
+                '<div class="tmr-team-row"><span class="tmr-team-side">Home</span><span class="tmr-team-abbr">' + escapeHtml(teamBadge(game.home_team)) + '</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
                 '</div>' +
                 '<div class="tmr-market-meta">' +
                 '<span class="tmr-market-chip accent">' + escapeHtml(new Date(game.commence_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span>' +
@@ -1677,53 +1690,6 @@
             .map(function(part) { return part.charAt(0); })
             .join('')
             .toUpperCase() || '--';
-    }
-
-    const TEAM_LOGO_WARNED = {};
-    const MLB_LOGO_MAP = {
-        'arizona diamondbacks': 'ari', 'diamondbacks': 'ari', 'arizona': 'ari',
-        'atlanta braves': 'atl', 'braves': 'atl', 'atlanta': 'atl',
-        'baltimore orioles': 'bal', 'orioles': 'bal', 'baltimore': 'bal',
-        'boston red sox': 'bos', 'red sox': 'bos', 'boston': 'bos',
-        'chicago cubs': 'chc', 'cubs': 'chc', 'chicago white sox': 'chw', 'white sox': 'chw',
-        'cincinnati reds': 'cin', 'reds': 'cin', 'cleveland guardians': 'cle', 'guardians': 'cle',
-        'colorado rockies': 'col', 'rockies': 'col', 'detroit tigers': 'det', 'tigers': 'det',
-        'houston astros': 'hou', 'astros': 'hou', 'kansas city royals': 'kc', 'royals': 'kc',
-        'los angeles angels': 'laa', 'angels': 'laa', 'los angeles dodgers': 'lad', 'dodgers': 'lad',
-        'miami marlins': 'mia', 'marlins': 'mia', 'milwaukee brewers': 'mil', 'brewers': 'mil',
-        'minnesota twins': 'min', 'twins': 'min', 'new york mets': 'nym', 'mets': 'nym',
-        'new york yankees': 'nyy', 'yankees': 'nyy', 'athletics': 'ath', 'oakland athletics': 'oak',
-        'philadelphia phillies': 'phi', 'phillies': 'phi', 'pittsburgh pirates': 'pit', 'pirates': 'pit',
-        'san diego padres': 'sd', 'padres': 'sd', 'seattle mariners': 'sea', 'mariners': 'sea',
-        'san francisco giants': 'sf', 'giants': 'sf', 'st. louis cardinals': 'stl', 'cardinals': 'stl',
-        'tampa bay rays': 'tb', 'rays': 'tb', 'texas rangers': 'tex', 'rangers': 'tex',
-        'toronto blue jays': 'tor', 'blue jays': 'tor', 'washington nationals': 'wsh', 'nationals': 'wsh'
-    };
-
-    function resolveTeamLogoUrl(teamName, logoUrl, abbr, sportKey) {
-        if (logoUrl) return logoUrl;
-        const sport = String(sportKey || SPORT_KEY_MAP[state.selectedSport] || '').toLowerCase();
-        if (sport.indexOf('baseball_mlb') === -1) return '';
-        const key = String(teamName || '').toLowerCase().trim().replace(/\s+/g, ' ');
-        const lastWord = key.split(/\s+/).pop();
-        const cleanAbbr = String(abbr || '').toLowerCase().replace(/[^a-z]/g, '');
-        const abbrMap = { ari:'ari', atl:'atl', bal:'bal', bos:'bos', chc:'chc', chw:'chw', cin:'cin', cle:'cle', col:'col', det:'det', hou:'hou', kc:'kc', laa:'laa', lad:'lad', mia:'mia', mil:'mil', min:'min', nym:'nym', nyy:'nyy', oak:'oak', ath:'ath', phi:'phi', pit:'pit', sd:'sd', sea:'sea', sf:'sf', stl:'stl', tb:'tb', tex:'tex', tor:'tor', wsh:'wsh' };
-        const code = MLB_LOGO_MAP[key] || MLB_LOGO_MAP[lastWord] || abbrMap[cleanAbbr];
-        return code ? 'https://a.espncdn.com/i/teamlogos/mlb/500/' + code + '.png' : '';
-    }
-
-    function renderTeamLogo(teamName, logoUrl, abbr, sportKey) {
-        const resolvedLogoUrl = resolveTeamLogoUrl(teamName, logoUrl, abbr, sportKey);
-        const fallback = escapeHtml(teamBadge(abbr || teamName));
-        const warnKey = String(sportKey || state.selectedSport || '') + '|' + String(teamName || abbr || '');
-        if (!resolvedLogoUrl) {
-            if (!TEAM_LOGO_WARNED[warnKey]) {
-                TEAM_LOGO_WARNED[warnKey] = true;
-                console.warn('[TMR][Sportsbook] Missing team logo URL; using initials fallback', { sport: sportKey || state.selectedSport || '', team: teamName || '', abbr: abbr || '' });
-            }
-            return '<span class="tmr-team-abbr">' + fallback + '</span>';
-        }
-        return '<span class="tmr-team-abbr" data-team="' + escapeHtml(teamName || '') + '"><img src="' + escapeHtml(resolvedLogoUrl) + '" alt="" loading="lazy" decoding="async" onerror="console.warn(\'[TMR][Sportsbook] Team logo failed to load; falling back to initials\', this.src, this.parentElement && this.parentElement.dataset ? this.parentElement.dataset.team : \'\');this.parentElement.textContent=\'' + fallback + '\';"></span>';
     }
 
     function getOptionTag(option, game) {
@@ -2382,7 +2348,7 @@
     function renderPickCard(pick) {
         const status = normalizeStatus(pick.status, pick.result);
         const statusColor = status === 'won' ? '#00c853' : status === 'lost' ? '#ff5252' : status === 'push' ? '#94a3b8' : '#f59e0b';
-        const recordText = pick.selection + (pick.line_snapshot != null ? ' ' + (function(l){if(l==null||l==='')return '';var n=Number(l);if(!Number.isFinite(n))return '';var s=String(n);if(s.indexOf('.')!==-1)s=s.replace(/0+$/,'').replace(/\.$/,'');return s;})(pick.line_snapshot) : '');
+        const recordText = (window.TMR && typeof window.TMR.formatPickDisplay === 'function') ? window.TMR.formatPickDisplay(pick) : (pick.selection + (pick.line_snapshot != null ? ' ' + (function(l){if(l==null||l==='')return '';var n=Number(l);if(!Number.isFinite(n))return '';var s=String(n);if(s.indexOf('.')!==-1)s=s.replace(/0+$/,'').replace(/\.$/,'');return s;})(pick.line_snapshot) : ''));
         const marketText = getMarketLabel(pick.market_type);
         const dateText = new Date(pick.locked_at || pick.created_at || Date.now()).toLocaleString('en-US', {
             month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
@@ -2537,7 +2503,7 @@
                 losses: 0,
                 pushes: 0,
                 units: 0,
-                label: pick.selection + (pick.line_snapshot != null ? ' ' + (function(l){if(l==null||l==='')return '';var n=Number(l);if(!Number.isFinite(n))return '';var s=String(n);if(s.indexOf('.')!==-1)s=s.replace(/0+$/,'').replace(/\.$/,'');return s;})(pick.line_snapshot) : ''),
+                label: (window.TMR && typeof window.TMR.formatPickDisplay === 'function') ? window.TMR.formatPickDisplay(pick) : (pick.selection + (pick.line_snapshot != null ? ' ' + (function(l){if(l==null||l==='')return '';var n=Number(l);if(!Number.isFinite(n))return '';var s=String(n);if(s.indexOf('.')!==-1)s=s.replace(/0+$/,'').replace(/\.$/,'');return s;})(pick.line_snapshot) : '')),
                 matchup: (pick.away_team || '') + ' @ ' + (pick.home_team || ''),
                 market: getMarketLabel(pick.market_type)
             };

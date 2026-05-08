@@ -21,21 +21,45 @@
     function normalizeRecordPick(pick) {
         const normalized = { ...(pick || {}) };
         normalized.status = normalizeStatus(normalized.status);
-        normalized.units = Number(normalized.units || normalized.stake || 1);
-        normalized.odds_value = Number(normalized.odds_snapshot || normalized.odds || normalized.price || -110);
+        normalized.units = Number(normalized.units || normalized.stake || 0);
+        normalized.odds_value = Number(normalized.odds_snapshot || normalized.odds || normalized.price);
+        normalized.risk_units_value = Number(normalized.risk_units);
+        normalized.to_win_units_value = Number(normalized.to_win_units || normalized.win_units);
         normalized.result_units_value = normalized.result_units != null && !Number.isNaN(Number(normalized.result_units))
             ? Number(normalized.result_units)
             : null;
         return normalized;
     }
 
+    function calculatePickRisk(normalizedPick) {
+        if (Number.isFinite(normalizedPick.risk_units_value) && normalizedPick.risk_units_value > 0) {
+            return normalizedPick.risk_units_value;
+        }
+        if (Number.isFinite(normalizedPick.to_win_units_value) && normalizedPick.to_win_units_value > 0 && Number.isFinite(normalizedPick.odds_value)) {
+            return normalizedPick.odds_value < 0
+                ? normalizedPick.to_win_units_value * Math.abs(normalizedPick.odds_value) / 100
+                : normalizedPick.to_win_units_value * 100 / normalizedPick.odds_value;
+        }
+        if (Number.isFinite(normalizedPick.units) && normalizedPick.units > 0 && Number.isFinite(normalizedPick.odds_value)) {
+            return normalizedPick.stake_mode === 'to_win'
+                ? (normalizedPick.odds_value < 0 ? normalizedPick.units * Math.abs(normalizedPick.odds_value) / 100 : normalizedPick.units * 100 / normalizedPick.odds_value)
+                : normalizedPick.units;
+        }
+        return 0;
+    }
+
     function calculatePickUnits(normalizedPick) {
         if (normalizedPick.result_units_value != null) return normalizedPick.result_units_value;
         if (normalizedPick.status === 'won') {
-            return normalizedPick.odds_value < 0 ? normalizedPick.units : (normalizedPick.units * normalizedPick.odds_value / 100);
+            if (Number.isFinite(normalizedPick.to_win_units_value) && normalizedPick.to_win_units_value > 0) return normalizedPick.to_win_units_value;
+            if (Number.isFinite(normalizedPick.risk_units_value) && normalizedPick.risk_units_value > 0 && Number.isFinite(normalizedPick.odds_value)) {
+                return normalizedPick.odds_value < 0
+                    ? normalizedPick.risk_units_value * 100 / Math.abs(normalizedPick.odds_value)
+                    : normalizedPick.risk_units_value * normalizedPick.odds_value / 100;
+            }
         }
         if (normalizedPick.status === 'lost') {
-            return normalizedPick.odds_value < 0 ? -(normalizedPick.units * Math.abs(normalizedPick.odds_value) / 100) : -normalizedPick.units;
+            return -calculatePickRisk(normalizedPick);
         }
         return 0;
     }
@@ -114,7 +138,7 @@
             return sum + calculatePickUnits(pick);
         }, 0);
         const risked = graded.reduce(function(sum, pick) {
-            return sum + (Number.isFinite(pick.units) ? pick.units : 0);
+            return sum + calculatePickRisk(pick);
         }, 0);
         const streaks = window.TMR && typeof window.TMR.calculateStreaks === 'function'
             ? window.TMR.calculateStreaks(normalized)

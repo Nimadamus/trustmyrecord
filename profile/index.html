@@ -2268,7 +2268,7 @@
                           <table class="tmrx-table" id="tmrxTablePicks">
                             <thead><tr>
                               <th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Market</th>
-                              <th class="num">Odds</th><th class="num">Risked</th><th class="num">To Win</th>
+                              <th class="num">Odds</th><th class="num">Units</th>
                               <th>Result</th><th class="num">Net</th>
                             </tr></thead>
                             <tbody><tr class="empty"><td colspan="9">Loading pick history&hellip;</td></tr></tbody>
@@ -2354,8 +2354,8 @@
                             </div>
                             <div class="capper-history-scroll">
                                 <table class="capper-history-table">
-                                    <thead><tr><th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Odds</th><th>Risked</th><th>To Win</th><th>Result</th><th>Profit/Loss</th></tr></thead>
-                                    <tbody id="capHistoryBody"><tr><td colspan="9">Loading picks...</td></tr></tbody>
+                                    <thead><tr><th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Odds</th><th>Units</th><th>Result</th><th>Profit/Loss</th></tr></thead>
+                                    <tbody id="capHistoryBody"><tr><td colspan="8">Loading picks...</td></tr></tbody>
                                 </table>
                             </div>
                         </section>
@@ -2553,7 +2553,7 @@
                             <th>Pick</th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="odds" onclick="setTableSort('odds')">Line</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="result" onclick="setTableSort('result')">Result</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Stake / P&amp;L</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Units</button></th>
                         </tr>
                     </thead>
                     <tbody id="picksTableBody"></tbody>
@@ -5297,20 +5297,16 @@
         const total = picks.length;
         const winRate = (w + l) > 0 ? (w / (w + l)) * 100 : 0;
 
-        // Net units using result_units if available, else calculate
+        // Net/risk units prefer canonical settled fields, then locked stake fields.
         let netUnits = 0;
         graded.forEach(pick => {
-            if (pick.result_units != null && !isNaN(pick.result_units)) {
-                netUnits += parseFloat(pick.result_units);
-            } else {
-                netUnits += pickPL(pick);
-            }
+            netUnits += pickPL(pick);
         });
 
         // ROI
         let totalRisked = 0;
         graded.forEach(pick => {
-            totalRisked += getPickRiskUnits(pick) || 0;
+            totalRisked += pickRiskUnits(pick);
         });
         const roi = totalRisked > 0 ? (netUnits / totalRisked) * 100 : 0;
 
@@ -5363,57 +5359,10 @@
         return Number.isFinite(value) && value > 0 ? value : 1;
     }
 
-    function normalizeStakeModeValue(value) {
-        const mode = String(value || '').trim().toLowerCase();
-        if (mode === 'to_win' || mode === 'towin') return 'to_win';
-        if (mode === 'risk') return 'risk';
-        return '';
-    }
-
-    function calculateStakeValuesForPick(mode, amount, odds) {
-        const units = Number(amount);
-        const price = Number(odds);
-        if (!Number.isFinite(units) || units <= 0 || !Number.isFinite(price) || Math.abs(price) < 100) {
-            return { riskUnits: null, toWinUnits: null };
-        }
-        if (mode === 'to_win') {
-            return {
-                riskUnits: price < 0 ? units * Math.abs(price) / 100 : units * 100 / price,
-                toWinUnits: units
-            };
-        }
-        return {
-            riskUnits: units,
-            toWinUnits: price < 0 ? units * 100 / Math.abs(price) : units * price / 100
-        };
-    }
-
-    function getPickStakeInfo(pick) {
-        const mode = normalizeStakeModeValue(pick && (pick.stake_mode || pick.units_mode));
-        if (mode) {
-            const values = calculateStakeValuesForPick(mode, pick && pick.units, getPickOdds(pick));
-            if (Number.isFinite(values.riskUnits) && values.riskUnits > 0 && Number.isFinite(values.toWinUnits) && values.toWinUnits > 0) {
-                values.mode = mode;
-                return values;
-            }
-        }
-        const risk = Number(pick && pick.risk_units);
-        const toWinRaw = pick && (pick.to_win_units != null ? pick.to_win_units : pick.win_units);
-        const toWin = Number(toWinRaw);
-        if (Number.isFinite(risk) && risk > 0 && Number.isFinite(toWin) && toWin > 0) {
-            return { mode: mode || 'stored', riskUnits: risk, toWinUnits: toWin };
-        }
-        return { mode: 'legacy_unknown', riskUnits: null, toWinUnits: null };
-    }
-
     function getPickRiskUnits(pick) {
-        const stake = getPickStakeInfo(pick);
-        return Number.isFinite(stake.riskUnits) ? stake.riskUnits : null;
-    }
-
-    function getPickToWinUnits(pick) {
-        const stake = getPickStakeInfo(pick);
-        return Number.isFinite(stake.toWinUnits) ? stake.toWinUnits : null;
+        const units = getPickUnits(pick);
+        const odds = getPickOdds(pick);
+        return odds < 0 ? units * Math.abs(odds) / 100 : units;
     }
 
     function computeCoreLedgerStatsFromPicks(picks) {
@@ -5433,7 +5382,7 @@
         const netUnits = graded.reduce(function(total, pick) { return total + pickPL(pick); }, 0);
         const riskedUnits = graded.reduce(function(total, pick) { return total + getPickRiskUnits(pick); }, 0);
         const avgUnits = graded.length
-            ? graded.reduce(function(total, pick) { return total + (getPickRiskUnits(pick) || 0); }, 0) / graded.length
+            ? graded.reduce(function(total, pick) { return total + getPickUnits(pick); }, 0) / graded.length
             : 0;
         const validProbabilities = graded
             .map(function(pick) { return oddsToProbability(getPickOdds(pick)); })
@@ -5442,7 +5391,7 @@
             ? probabilityToAmerican(validProbabilities.reduce(function(total, value) { return total + value; }, 0) / validProbabilities.length)
             : null;
         const effectiveUnits = graded.reduce(function(total, pick) {
-            const units = getPickRiskUnits(pick);
+            const units = getPickUnits(pick);
             if (!units) return total;
             return total + (pickPL(pick) / units) * 3;
         }, 0);
@@ -5581,12 +5530,56 @@
     }
 
     // ======================== PROFIT/LOSS FOR A SINGLE PICK ========================
+    function roundUnitValue(value) {
+        const n = Number(value);
+        if (!Number.isFinite(n)) return 0;
+        const sign = n < 0 ? -1 : 1;
+        return sign * (Math.round((Math.abs(n) + 1e-9) * 100) / 100);
+    }
+
+    function pickOddsValue(pick) {
+        const o = Number(pick && (pick.odds_snapshot || pick.odds || pick.price));
+        return Number.isFinite(o) && o !== 0 ? o : null;
+    }
+
+    function pickRiskUnits(pick) {
+        const risk = Number(pick && pick.risk_units);
+        if (Number.isFinite(risk) && risk > 0) return risk;
+        const toWin = Number(pick && pick.to_win_units);
+        const odds = pickOddsValue(pick);
+        if (Number.isFinite(toWin) && toWin > 0 && odds != null) {
+            return odds < 0 ? toWin * Math.abs(odds) / 100 : toWin * 100 / odds;
+        }
+        const units = Number(pick && (pick.stake || pick.units));
+        if (Number.isFinite(units) && units > 0 && odds != null) {
+            return (pick.stake_mode || pick.units_mode) === 'to_win'
+                ? (odds < 0 ? units * Math.abs(odds) / 100 : units * 100 / odds)
+                : units;
+        }
+        return 0;
+    }
+
+    function pickToWinUnits(pick) {
+        const toWin = Number(pick && pick.to_win_units);
+        if (Number.isFinite(toWin) && toWin > 0) return toWin;
+        const risk = Number(pick && pick.risk_units);
+        const odds = pickOddsValue(pick);
+        if (Number.isFinite(risk) && risk > 0 && odds != null) {
+            return odds < 0 ? risk * 100 / Math.abs(odds) : risk * odds / 100;
+        }
+        const units = Number(pick && (pick.stake || pick.units));
+        if (Number.isFinite(units) && units > 0 && odds != null) {
+            return (pick.stake_mode || pick.units_mode) === 'to_win'
+                ? units
+                : (odds < 0 ? units * 100 / Math.abs(odds) : units * odds / 100);
+        }
+        return 0;
+    }
+
     function pickPL(pick) {
-        const status = normalizeStatus(pick && pick.status);
-        const hasExplicitMode = !!normalizeStakeModeValue(pick && (pick.stake_mode || pick.units_mode));
-        if (status === 'won') return getPickToWinUnits(pick) || 0;
-        if (status === 'lost') return -(getPickRiskUnits(pick) || 0);
-        if (!hasExplicitMode && pick && pick.result_units != null && !isNaN(pick.result_units)) return parseFloat(pick.result_units);
+        if (pick.result_units != null && !isNaN(pick.result_units)) return roundUnitValue(pick.result_units);
+        if (pick.status === 'won') return roundUnitValue(pickToWinUnits(pick));
+        if (pick.status === 'lost') return roundUnitValue(-pickRiskUnits(pick));
         return 0;
     }
 
@@ -5616,20 +5609,9 @@
         return s;
     }
 
-    function formatPickLineValue(pick) {
-        const value = pick && pick.line_snapshot;
-        if (value == null || value === '' || isNaN(Number(value))) return '--';
-        const selection = String(pick && pick.selection || '').toLowerCase();
-        const market = String(pick && pick.market_type || '').toLowerCase();
-        const isTotal = market.indexOf('total') !== -1 || /(over|under)/.test(selection);
-        const isMoneyline = market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h') || /(moneyline|ml)/.test(selection);
-        if (isMoneyline) return '--';
-        return isTotal ? formatTotalLineValue(value) : formatLineValue(value);
-    }
-
     function formatPickDisplayValue(pick) {
         const selection = String(pick && pick.selection || 'Pick').trim();
-        const line = formatPickLineValue(pick);
+        const line = formatLineValue(pick && pick.line_snapshot);
         const market = String(pick && pick.market_type || '').toLowerCase();
         const home = String(pick && pick.home_team || '').trim();
         const away = String(pick && pick.away_team || '').trim();
@@ -5698,14 +5680,6 @@
         if (value == null || isNaN(Number(value))) return '--';
         const num = Number(value);
         return (num >= 0 ? '+' : '') + num.toFixed(2) + 'u';
-    }
-
-    function formatStakeBreakdown(pick) {
-        const stake = getPickStakeInfo(pick);
-        const riskText = Number.isFinite(stake.riskUnits) ? formatUnitsValue(stake.riskUnits) : 'Needs review';
-        const winText = Number.isFinite(stake.toWinUnits) ? formatUnitsValue(stake.toWinUnits) : 'Needs review';
-        return '<div class="ledger-subline">Risked: ' + riskText + '</div>'
-            + '<div class="ledger-subline">To Win: ' + winText + '</div>';
     }
 
     function normalizeStatus(status) {
@@ -5943,30 +5917,6 @@
         return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
     }
 
-    function isProfileTimeoutError(error) {
-        return !!(error && (error.code === 'TMR_TIMEOUT' || /timed out/i.test(error.message || '')));
-    }
-
-    function keepProfileHeaderPending(message) {
-        const el = document.getElementById('profileHeader');
-        if (!el) return;
-        const status = el.querySelector('.profile-bio-empty');
-        if (status) status.textContent = message || 'Profile is still loading verified data...';
-    }
-
-    async function fetchProfileDirect(profileLookup) {
-        const username = normalizeProfileLookup(profileLookup || requestedProfileLookup || profileUsername || '');
-        if (!username) throw new Error('Profile username is missing.');
-        const response = await withTimeout(fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(username), {
-            headers: { 'Accept': 'application/json' }
-        }), 15000, 'Direct profile request');
-        const data = await response.json().catch(function() { return null; });
-        if (!response.ok || !data || !(data.user || data.username)) {
-            throw new Error((data && (data.message || data.error)) || 'Profile not found');
-        }
-        return data;
-    }
-
     function setProfileHeaderFallback(message) {
         const el = document.getElementById('profileHeader');
         if (!el) return;
@@ -6105,8 +6055,9 @@
         if (!el || el.dataset.profileShellRendered === '1') return;
         const name = normalizeProfileLookup(requestedProfileLookup || profileUsername || 'Profile');
         const letter = (name || '?').charAt(0).toUpperCase();
+        const escTxt = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         el.dataset.profileShellRendered = '1';
-        el.innerHTML = '<div class="profile-info profile-info-loading">' +
+        el.innerHTML = '<div class="profile-info">' +
             '<div class="profile-identity-row">' +
             '<div class="profile-avatar">' + escTxt(letter) + '</div>' +
             '<div class="profile-identity-copy">' +
@@ -6128,10 +6079,11 @@
         profileData.avatarUrl = profileData.avatar_url;
         profileData.avatar = profileData.avatar_url;
         profileUsername = normalizeProfileLookup(profileData.username || profileUsername || requestedProfileLookup);
-        const headerEl = document.getElementById('profileHeader');
-        if (headerEl) headerEl.dataset.profileShellRendered = '';
         window.profileData = profileData;
         profileUserId = profileData.id;
+        isOwnProfile = !!(currentUser && profileLookupMatchesUser(profileUsername, currentUser));
+        const headerEl = document.getElementById('profileHeader');
+        if (headerEl) headerEl.dataset.profileShellRendered = '0';
         updateProfileSeoMeta(profileData);
 
         if (currentUser && !isOwnProfile) {
@@ -6172,7 +6124,7 @@
         const candidates = profileLookupCandidates();
         for (const candidate of candidates) {
             try {
-                const data = await withTimeout(api.getUserProfile(candidate), 12000, 'Profile request');
+                const data = await withTimeout(api.getUserProfile(candidate), 6000, 'Profile request');
                 profileUsername = normalizeProfileLookup((data && data.user && data.user.username) || (data && data.username) || candidate);
                 writeCachedProfile((data && data.user) || data);
                 return data;
@@ -6182,7 +6134,7 @@
             }
             try {
                 if (typeof api.searchUsers === 'function') {
-                    const searchData = await withTimeout(api.searchUsers(candidate, { limit: 8 }), 12000, 'Profile search request');
+                    const searchData = await withTimeout(api.searchUsers(candidate, { limit: 8 }), 3500, 'Profile search request');
                     const users = (searchData && searchData.users) || [];
                     const match = users.find(function(user) {
                         return profileLookupMatchesUser(candidate, user);
@@ -6205,6 +6157,7 @@
         }
         throw lastError || new Error('Profile not found');
     }
+
     function setAdvancedMetricsEmpty(message) {
         const statusEl = document.getElementById('profileAdvancedMetricsStatus');
         if (statusEl) statusEl.textContent = message || 'No verified metrics yet';
@@ -6263,8 +6216,12 @@
                 currentUser = auth.getCurrentUser();
                 window.currentUser = currentUser;
             }
+            if (!currentUser) {
+                currentUser = getSessionProfileUser();
+                if (currentUser) window.currentUser = currentUser;
+            }
 
-            if (!profileUsername && currentUser) profileUsername = currentUser.username;
+            if (!profileUsername && currentUser) profileUsername = getCanonicalProfileHandle(currentUser);
 
             if (!profileUsername) {
                 document.getElementById('profileHeader').innerHTML = '<div class="error-message"><h3>Not Logged In</h3><p>Please log in or specify a user.</p><a href="/" class="btn btn-primary" style="margin-top:16px;">Go Home</a></div>';
@@ -6308,34 +6265,12 @@
                 startProfileBackgroundLoads();
                 return;
             }
-            if (isProfileTimeoutError(error)) {
-                console.warn('[Profile] Profile lookup timed out; keeping identity shell visible:', error);
-                keepProfileHeaderPending('Profile is still loading verified data...');
-                setTimeout(function() {
-                    fetchProfileWithFallbacks().then(function(data) {
-                        applyLoadedProfile(data);
-                        startProfileBackgroundLoads();
-                    }).catch(function(retryError) {
-                        console.warn('[Profile] Deferred profile retry failed:', retryError);
-                        keepProfileHeaderPending('Verified profile data is taking longer than expected.');
-                    });
-                }, 1500);
-                return;
-            }
-            try {
-                const directData = await fetchProfileDirect(requestedProfileLookup || profileUsername);
-                console.warn('[Profile] API wrapper lookup failed; direct public profile fetch recovered:', error);
-                applyLoadedProfile(directData);
-                startProfileBackgroundLoads();
-                return;
-            } catch (directError) {
-                console.warn('[Profile] Direct public profile recovery failed:', directError);
-            }
             console.error('[Profile] Profile load failed:', error);
             document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
             setProfileHeaderFallback('We could not find a profile for "' + (requestedProfileLookup || profileUsername || 'this user') + '".');
         }
     }
+
     async function loadProfileSecondaryData() {
         if (!profileData || !profileUsername) return;
         const renderUpdatedHeader = function() {
@@ -7270,12 +7205,11 @@
                 return '<tr><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td></tr>';
             }
             const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : '—';
+            const units = p.units != null ? Number(p.units).toFixed(1) + 'u' : '—';
             const result = String(p.status || 'pending').toLowerCase();
             const net = p.result_units != null ? Number(p.result_units) : null;
             const netCls = net == null ? 'zero' : (net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero');
             const netTxt = net == null ? '—' : (net > 0 ? '+' : '') + net.toFixed(2) + 'u';
-            const risk = getPickRiskUnits(p);
-            const toWin = getPickToWinUnits(p);
             return '<tr>' +
                 '<td>' + fmtDate(p.created_at || p.locked_at) + '</td>' +
                 '<td>' + sportLabel(p.sport_key) + '</td>' +
@@ -7283,8 +7217,7 @@
                 '<td class="name">' + capEsc(formatPickDisplayValue(p)) + '</td>' +
                 '<td>' + marketLabel(p.market_type) + '</td>' +
                 '<td class="num">' + fmtAmericanOdds(p.odds_snapshot) + '</td>' +
-                '<td class="num">' + (Number.isFinite(risk) ? risk.toFixed(2) + 'u' : 'Needs review') + '</td>' +
-                '<td class="num">' + (Number.isFinite(toWin) ? toWin.toFixed(2) + 'u' : 'Needs review') + '</td>' +
+                '<td class="num">' + units + '</td>' +
                 '<td>' + resultTag(p.status) + '</td>' +
                 '<td class="num ' + netCls + '">' + netTxt + '</td>' +
             '</tr>';
@@ -7811,8 +7744,7 @@
     function isCapGraded(p) { return ['won','lost','push'].includes(capStatus(p)); }
     function capDateMs(p) { return new Date((p && (p.locked_at || p.created_at || p.graded_at)) || 0).getTime(); }
     function capOdds(p) { return Number(p && (p.odds_snapshot != null ? p.odds_snapshot : p.odds)); }
-    function capUnits(p) { const n = getPickRiskUnits(p); return Number.isFinite(n) ? n : 0; }
-    function capToWinUnits(p) { const n = getPickToWinUnits(p); return Number.isFinite(n) ? n : 0; }
+    function capUnits(p) { const n = Number(p && p.units); return Number.isFinite(n) ? n : 0; }
     function capPL(p) { const n = Number(p && p.result_units); return Number.isFinite(n) ? n : 0; }
 
     function getCapperFilteredPicks() {
@@ -8066,7 +7998,7 @@
         if (meta) meta.textContent = rows.length + ' picks';
         if (!tbody) return;
         if (!rows.length) {
-            tbody.innerHTML = '<tr><td colspan="9">No picks match these filters.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8">No picks match these filters.</td></tr>';
             return;
         }
         tbody.innerHTML = rows.slice(0, 100).map(p => {
@@ -8081,7 +8013,6 @@
                 + '<td>' + capEsc(formatPickDisplayValue(p)) + '</td>'
                 + '<td>' + (Number.isFinite(odds) ? (odds > 0 ? '+' : '') + odds : '—') + '</td>'
                 + '<td>' + capUnits(p).toFixed(2) + 'u</td>'
-                + '<td>' + capToWinUnits(p).toFixed(2) + 'u</td>'
                 + '<td><span class="capper-result ' + status + '">' + (status === 'won' ? 'Win' : status === 'lost' ? 'Loss' : status === 'push' ? 'Push' : 'Pending') + '</span></td>'
                 + '<td class="' + capValueClass(pl) + '">' + (isCapGraded(p) ? capUnitsText(pl) : '—') + '</td>'
                 + '</tr>';
@@ -8136,10 +8067,10 @@
             if (r === 'won') wins++;
             else if (r === 'lost') losses++;
             else if (r === 'push') pushes++;
-            const u = getPickRiskUnits(p) || 0;
-            const ru = pickPL(p);
+            const u = Number(p.units) || 0;
+            const ru = Number(p.result_units);
             risked += u;
-            net += ru;
+            if (Number.isFinite(ru)) net += ru;
             const ip = impliedProb(p.odds_snapshot);
             if (ip != null) { probSum += ip; probCount++; }
         });
@@ -8191,8 +8122,9 @@
         const fmtUnits = (u) => Number.isFinite(Number(u)) ? Number(u).toFixed(2) + 'u' : '—';
         const fmtPL = (p) => {
             const r = pmResultClass(p);
+            const ru = Number(p.result_units);
             if (r === 'pending') return '<span class="pm-pending">—</span>';
-            const ru = pickPL(p);
+            if (!Number.isFinite(ru)) return '<span class="pm-pending">—</span>';
             const cls = ru > 0 ? 'pm-pos' : ru < 0 ? 'pm-neg' : '';
             return '<span class="' + cls + '">' + (ru >= 0 ? '+' : '') + ru.toFixed(2) + 'u</span>';
         };
@@ -8212,7 +8144,7 @@
                 + '<td class="pm-cell-pick">' + escHtml(formatPickDisplayValue(p)) + '</td>'
                 + '<td class="num">' + escHtml(fmtLine(p)) + '</td>'
                 + '<td class="num">' + escHtml(fmtOdds(p.odds_snapshot)) + '</td>'
-                + '<td class="num">Risked: ' + escHtml(fmtUnits(getPickRiskUnits(p))) + '<br>To Win: ' + escHtml(fmtUnits(getPickToWinUnits(p))) + '</td>'
+                + '<td class="num">' + escHtml(fmtUnits(p.units)) + '</td>'
                 + '<td>' + resultBadge + '</td>'
                 + '<td class="num">' + fmtPL(p) + '</td>'
                 + '</tr>';
@@ -8349,7 +8281,7 @@
         // visitor can broadcast or embed a public profile.
         const shareActions =
             '<button type="button" class="btn btn-secondary" onclick="openShareModal()" title="Share this profile" data-tmr-share-btn><i class="fas fa-share-alt" style="margin-right:6px;"></i>Share Profile</button>' +
-            '<button type="button" class="btn btn-secondary" onclick="showEmbedModal(\'stats\')" title="Embed public profile stats" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed Profile</button>' +
+            '<button type="button" class="btn btn-secondary" onclick="showEmbedModal(\'stats\')" title="Embed public profile stats" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed Stats</button>' +
             '<button type="button" class="btn btn-secondary" onclick="copyPendingPicksLink()" title="Share pending picks"><i class="fas fa-link" style="margin-right:6px;"></i>Share Pending Picks</button>' +
             '<button type="button" class="btn btn-secondary" onclick="showEmbedModal(\'pending\')" title="Embed pending picks"><i class="fas fa-code" style="margin-right:6px;"></i>Embed Pending Picks</button>';
         const actions = '<div class="profile-actions">' + primaryActions + shareActions + '</div>';
@@ -8675,9 +8607,6 @@
         const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
         const sel = formatPickDisplayValue(p);
         const status = normalizeStatus(p.status);
-        const pl = status === 'pending' ? null : pickPL(p);
-        const plClass = pl == null ? 'zero' : pl > 0 ? 'positive' : pl < 0 ? 'negative' : 'zero';
-        const plText = pl == null ? '--' : formatSignedUnits(pl);
 
         const rowClass = 'row-' + status;
         return '<tr class="' + rowClass + '">' +
@@ -8686,7 +8615,7 @@
             '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div></td>' +
             '<td data-label="Line">' + odds + '</td>' +
             '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
-            '<td data-label="Stake / P&L">' + formatStakeBreakdown(p) + '<div class="profit-cell ' + plClass + '">Result Profit/Loss: ' + plText + '</div></td>' +
+            '<td data-label="Units">' + formatUnitsValue(p.units) + '</td>' +
             '</tr>';
     }
 
@@ -9138,10 +9067,7 @@
         const winRate = w / n;
         let netUnits = 0, totalRisked = 0;
         graded.forEach(p => { netUnits += pickPL(p); });
-        graded.forEach(p => {
-            const u = p.units || 1, o = p.odds_snapshot || p.odds || -110;
-            totalRisked += o < 0 ? (u * Math.abs(o) / 100) : u;
-        });
+        graded.forEach(p => { totalRisked += pickRiskUnits(p); });
         const roi = totalRisked > 0 ? (netUnits / totalRisked) * 100 : 0;
 
         // Average Units Risked (AUR)
@@ -9248,8 +9174,7 @@
             else if (p.status === 'lost') sportMap[sk].losses++;
             else sportMap[sk].pushes++;
             sportMap[sk].units += pickPL(p);
-            const u = p.units || 1, o = p.odds_snapshot || p.odds || -110;
-            sportMap[sk].risked += o < 0 ? (u * Math.abs(o) / 100) : u;
+            sportMap[sk].risked += pickRiskUnits(p);
         });
 
         // Bet type breakdown with units
@@ -9264,8 +9189,7 @@
             else if (p.status === 'lost') typeMap[label].losses++;
             else typeMap[label].pushes++;
             typeMap[label].units += pickPL(p);
-            const u = p.units || 1, o = p.odds_snapshot || p.odds || -110;
-            typeMap[label].risked += o < 0 ? (u * Math.abs(o) / 100) : u;
+            typeMap[label].risked += pickRiskUnits(p);
         });
 
         return {

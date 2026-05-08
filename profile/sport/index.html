@@ -8,6 +8,7 @@
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260501navspacing">
   <script defer src="/static/js/tmr-sitewide.js?v=20260501navspacing"></script>
+  <script src="/static/js/streaks.js?v=20260506streak1"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -243,6 +244,7 @@
       return s;
     }
     function formatPickDisplay(p) {
+      if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') return window.TMR.formatPickDisplay(p);
       const selection = String(p && p.selection || 'Pick').trim();
       const line = fmtLine(p && p.line_snapshot);
       const market = String(p && p.market_type || '').toLowerCase();
@@ -251,6 +253,13 @@
       const matchup = away && home ? away + ' @ ' + home : '';
       const sideOnly = /^(over|under)$/i.test(selection);
       const isTotal = market.indexOf('total') !== -1 || /\b(over|under)\b/i.test(selection);
+      if ((market === 'team_totals' || market === 'team_total') && /\b(over|under)\b/i.test(selection)) {
+        const totalLine = fmtTotalLine(p && p.line_snapshot);
+        const base = /\bteam\s+total\b/i.test(selection)
+          ? selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '').trim()
+          : selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '').trim().replace(/\b(over|under)\b/i, 'Team Total $1');
+        return totalLine && base.indexOf(totalLine) === -1 ? base + ' ' + totalLine : base;
+      }
       if (isTotal && sideOnly) {
         const totalLine = fmtTotalLine(p && p.line_snapshot);
         const base = matchup ? matchup + ' ' + selection : (market === 'team_totals' ? 'Team Total ' + selection : 'Total ' + selection);
@@ -274,11 +283,38 @@
       if (!Number.isFinite(p) || p <= 0 || p >= 1) return 0;
       return p >= 0.5 ? -Math.round((p / (1 - p)) * 100) : Math.round(((1 - p) / p) * 100);
     }
-    function actualStake(units, odds) {
-      const stake = Number(units) || 0;
+    function actualStake(pickOrUnits, odds) {
+      if (pickOrUnits && typeof pickOrUnits === 'object') {
+        const pick = pickOrUnits;
+        const risk = Number(pick.risk_units);
+        if (Number.isFinite(risk) && risk > 0) return risk;
+        const toWin = Number(pick.to_win_units);
+        const price = Number(pick.odds_snapshot || pick.odds || odds);
+        if (Number.isFinite(toWin) && toWin > 0 && Number.isFinite(price) && price !== 0) {
+          return price < 0 ? toWin * Math.abs(price) / 100 : toWin * 100 / price;
+        }
+        const units = Number(pick.units || pick.stake);
+        if (Number.isFinite(units) && units > 0 && Number.isFinite(price) && price !== 0) {
+          return (pick.stake_mode || pick.units_mode) === 'to_win'
+            ? (price < 0 ? units * Math.abs(price) / 100 : units * 100 / price)
+            : units;
+        }
+        return 0;
+      }
+      const stake = Number(pickOrUnits) || 0;
       const price = Number(odds);
-      if (!Number.isFinite(price)) return stake;
+      if (!Number.isFinite(price) || price === 0) return 0;
       return price < 0 ? stake * (Math.abs(price) / 100) : stake;
+    }
+    function resultUnits(pick) {
+      const stored = Number(pick && pick.result_units);
+      if (Number.isFinite(stored)) return Number(stored.toFixed(2));
+      const status = String(pick && pick.status || '').toLowerCase();
+      const risk = actualStake(pick);
+      const toWin = Number(pick && pick.to_win_units);
+      if (status === 'won' && Number.isFinite(toWin) && toWin > 0) return Number(toWin.toFixed(2));
+      if (status === 'lost') return Number((-risk).toFixed(2));
+      return 0;
     }
     function marketLabel(key) {
       return MARKET_LABELS[key] || String(key || 'Unknown Market').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -297,9 +333,9 @@
         else if (isLossStatus(status)) losses += 1;
         else if (isPushStatus(status)) pushes += 1;
         const units = Number(p.units || 0);
-        const stake = actualStake(units, p.odds_snapshot);
+        const stake = actualStake(p);
         risked += stake;
-        net += Number(p.result_units || 0);
+        net += resultUnits(p);
         unitSum += units;
         if (units > maxUnit) maxUnit = units;
         const ip = impliedProb(p.odds_snapshot);
@@ -323,17 +359,9 @@
         const variance = decisions * avgImplied * (1 - avgImplied);
         if (variance > 0) zScore = (wins - decisions * avgImplied) / Math.sqrt(variance);
       }
-      let currentStreak = 0, bestStreak = 0, worstStreak = 0, runWin = 0, runLoss = 0;
-      ordered.forEach(p => {
-        const status = String(p.status || '').toLowerCase();
-        if (isWinStatus(status)) {
-          runWin += 1; runLoss = 0; bestStreak = Math.max(bestStreak, runWin);
-        } else if (isLossStatus(status)) {
-          runLoss += 1; runWin = 0; worstStreak = Math.max(worstStreak, runLoss);
-        }
-      });
-      if (runWin > 0) currentStreak = runWin;
-      else if (runLoss > 0) currentStreak = -runLoss;
+      const streakStats = window.TMR && typeof window.TMR.calculateStreaks === 'function'
+        ? window.TMR.calculateStreaks(ordered)
+        : { currentStreak: 0, longestWinStreak: 0, longestLossStreak: 0 };
       let cumulative = 0, peak = 0, maxDrawdown = 0;
       ordered.forEach(p => {
         cumulative += Number(p.result_units || 0);
@@ -353,9 +381,9 @@
         effectiveWinRate,
         zScore,
         avgDailyPicks: activeDays.size > 0 ? total / activeDays.size : null,
-        currentStreak,
-        bestStreak,
-        worstStreak: -worstStreak,
+        currentStreak: streakStats.currentStreak,
+        bestStreak: streakStats.longestWinStreak,
+        worstStreak: -streakStats.longestLossStreak,
         maxDrawdown,
         peakUnits: peak,
         firstAt,
@@ -579,10 +607,8 @@
         if (isWinStatus(status)) cell.wins += 1;
         else if (isLossStatus(status)) cell.losses += 1;
         else if (isPushStatus(status)) cell.pushes += 1;
-        const odds = Number(p.odds_snapshot);
-        const units = Number(p.units || 0);
-        cell.risked += Number.isFinite(odds) && odds < 0 ? units * (Math.abs(odds) / 100) : units;
-        cell.net += Number(p.result_units || 0);
+        cell.risked += actualStake(p);
+        cell.net += resultUnits(p);
         map.set(key, cell);
       });
       return Array.from(map.values()).map(c => ({
@@ -599,10 +625,8 @@
         if (isWinStatus(status)) cell.wins += 1;
         else if (isLossStatus(status)) cell.losses += 1;
         else if (isPushStatus(status)) cell.pushes += 1;
-        const odds = Number(p.odds_snapshot);
-        const units = Number(p.units || 0);
-        cell.risked += Number.isFinite(odds) && odds < 0 ? units * (Math.abs(odds) / 100) : units;
-        cell.net += Number(p.result_units || 0);
+        cell.risked += actualStake(p);
+        cell.net += resultUnits(p);
       });
       return {
         key: label,

@@ -48,4 +48,13 @@ assert(
   'sportsbook page must keep the current sportsbook reliability script'
 );
 
+let openScriptLine = null;
+html.split(/\r?\n/).forEach((line, index) => {
+  if (/<script\b/i.test(line)) openScriptLine = index + 1;
+  if (openScriptLine && /<style\b/i.test(line)) {
+    assert.fail(`sportsbook page has <style> inside an open <script> from line ${openScriptLine} to line ${index + 1}`);
+  }
+  if (/<\/script>/i.test(line)) openScriptLine = null;
+});
+
 console.log('sportsbook header regression test passed');

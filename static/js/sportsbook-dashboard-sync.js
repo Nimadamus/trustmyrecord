@@ -70,11 +70,35 @@
     }
 
     function calculateWinUnits(pick) {
-        const units = Number(pick.units || pick.stake || 1);
+        const toWin = Number(pick.to_win_units || pick.win_units);
+        if (Number.isFinite(toWin) && toWin > 0) return toWin;
+        const risk = Number(pick.risk_units);
+        const units = Number(pick.units || pick.stake || 0);
         const odds = Number(pick.odds_snapshot || pick.odds || pick.price || -110);
-        if (!Number.isFinite(units)) return 1;
-        if (!Number.isFinite(odds)) return units;
+        if (Number.isFinite(risk) && risk > 0 && Number.isFinite(odds)) {
+            return odds < 0 ? (risk * 100 / Math.abs(odds)) : (risk * odds / 100);
+        }
+        if (!Number.isFinite(units) || units <= 0) return 0;
+        if (!Number.isFinite(odds)) return 0;
+        if ((pick.stake_mode || pick.units_mode) === 'to_win') return units;
         return odds < 0 ? (units * 100 / Math.abs(odds)) : (units * odds / 100);
+    }
+
+    function calculateRiskUnits(pick) {
+        const risk = Number(pick.risk_units);
+        if (Number.isFinite(risk) && risk > 0) return risk;
+        const toWin = Number(pick.to_win_units || pick.win_units);
+        const odds = Number(pick.odds_snapshot || pick.odds || pick.price);
+        if (Number.isFinite(toWin) && toWin > 0 && Number.isFinite(odds) && odds !== 0) {
+            return odds < 0 ? toWin * Math.abs(odds) / 100 : toWin * 100 / odds;
+        }
+        const units = Number(pick.units || pick.stake);
+        if (Number.isFinite(units) && units > 0 && Number.isFinite(odds) && odds !== 0) {
+            return (pick.stake_mode || pick.units_mode) === 'to_win'
+                ? (odds < 0 ? units * Math.abs(odds) / 100 : units * 100 / odds)
+                : units;
+        }
+        return 0;
     }
 
     function normalizePick(pick) {
@@ -148,7 +172,7 @@
         }, 0);
         const risked = picks.reduce(function(sum, pick) {
             if (pick.status === 'pending') return sum;
-            return sum + (Number(pick.units) || 0);
+            return sum + calculateRiskUnits(pick);
         }, 0);
         return {
             wins: wins,
@@ -390,7 +414,9 @@
         const clusters = {};
         picks.forEach(function(pick) {
             const matchup = (pick.away_team || '') + ' vs ' + (pick.home_team || '');
-            const selection = pick.selection || 'Pick';
+            const selection = (window.TMR && typeof window.TMR.formatPickDisplay === 'function')
+                ? window.TMR.formatPickDisplay(pick)
+                : (pick.selection || 'Pick');
             const key = matchup + '|' + selection;
             if (!clusters[key]) {
                 clusters[key] = {
