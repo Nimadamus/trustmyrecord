@@ -23,7 +23,8 @@ assert(profile.includes("document.body.classList.add('tmrx-is-own-profile')"), '
 assert(profile.includes("avatarBox.setAttribute('aria-label', 'Change avatar')"), 'clickable avatar edit affordance must remain accessible');
 assert(profile.includes("body.tmrx-is-own-profile #profileHeader .profile-avatar"), 'avatar edit overlay CSS must stay owner-scoped');
 
-assert(profile.includes("var avatarUrl = escTxt(p.avatar_url || p.avatarUrl || p.avatar || '')"), 'profile header must read avatar_url/avatarUrl/avatar fields');
+assert(profile.includes('function profileAvatarUrlFrom(user)') && profile.includes('user.avatar_url || user.avatarUrl || user.avatar || user.profile_image_url || user.profileImageUrl'), 'profile avatar helper must read supported avatar fields');
+assert(profile.includes('const avatarUrl = profileAvatarUrlFrom(p);'), 'profile header must read avatars through the shared avatar helper');
 assert(profile.includes('avatarUrl ? \'<img src="\' + escTxt(avatarUrl)'), 'profile header must render loaded avatar image when available');
 assert(profile.includes('loading="eager"'), 'profile avatar should load eagerly in the header');
 assert(profile.includes('decoding="async"'), 'profile avatar should use async decoding');
