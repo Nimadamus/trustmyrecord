@@ -15,6 +15,10 @@ for (const token of [
   '--tmr-border',
   '--tmr-text-strong',
   '--tmr-accent',
+  '--tmr-gap-sm',
+  '--tmr-gap-md',
+  '--tmr-gap-lg',
+  '--tmr-card-pad',
   '--tmr-radius-sm',
   '--tmr-radius-md',
   '--tmr-shadow-card',
@@ -33,6 +37,12 @@ for (const selector of [
   '.tmr-loading-state',
   '.tmr-spinner',
   '.tmr-table-wrap',
+  '.tmr-page-head',
+  '.tmr-page-title',
+  '.tmr-page-subtitle',
+  '.tmr-stack',
+  '.tmr-cluster',
+  '.tmr-grid',
   '.tmr-cap-card',
   '.tmr-pick-table',
   '.tmr-sport-tag--mlb',
@@ -50,6 +60,10 @@ assert(css.includes('body.tmr-site-shell select') && css.includes('appearance: n
 assert(css.includes(':focus-visible') && css.includes('outline-offset: 3px'), 'sitewide keyboard focus ring must remain visible');
 assert(css.includes('[aria-disabled="true"]') && css.includes('cursor: not-allowed'), 'sitewide disabled control treatment must remain');
 assert(css.includes('display: inline-flex') && css.includes('justify-content: center'), 'sitewide button alignment must remain stable');
+assert(css.includes('.tmr-page-head') && css.includes('.tmr-page-title') && css.includes('.tmr-page-subtitle'), 'sitewide page title primitives must remain');
+assert(css.includes('.tmr-grid') && css.includes('repeat(auto-fit') && css.includes('minmax(min(100%, 260px), 1fr)'), 'sitewide responsive grid primitive must remain');
+assert(css.includes('.tmr-cluster') && css.includes('flex-wrap: wrap') && css.includes('.tmr-stack'), 'sitewide stack and cluster layout primitives must remain');
+assert(css.includes('body.tmr-site-shell .section-header > *') && css.includes('body.tmr-site-shell .sportsbook-board-toolbar > *'), 'sitewide header children must keep overflow protection');
 assert(css.includes('body.tmr-site-shell table') && css.includes('body.tmr-site-shell th') && css.includes('body.tmr-site-shell td'), 'sitewide table styles must remain');
 assert(css.includes('body.tmr-site-shell .tmr-table-wrap') && css.includes('overflow-x: auto'), 'sitewide table wrapper must keep responsive scrolling');
 assert(css.includes('font-variant-numeric: tabular-nums') && css.includes('td[data-type="number"]'), 'sitewide numeric table alignment must remain');
