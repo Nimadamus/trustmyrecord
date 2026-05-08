@@ -47,6 +47,10 @@ for (const selector of [
   '.tmr-stack',
   '.tmr-cluster',
   '.tmr-grid',
+  '.tmr-segmented',
+  '.tmr-tab',
+  '.tmr-filter-bar',
+  '.tmr-filter-chip',
   '.tmr-badge',
   '.tmr-status',
   '.tmr-result-chip',
@@ -71,6 +75,8 @@ assert(css.includes('display: inline-flex') && css.includes('justify-content: ce
 assert(css.includes('.tmr-page-head') && css.includes('.tmr-page-title') && css.includes('.tmr-page-subtitle'), 'sitewide page title primitives must remain');
 assert(css.includes('.tmr-grid') && css.includes('repeat(auto-fit') && css.includes('minmax(min(100%, 260px), 1fr)'), 'sitewide responsive grid primitive must remain');
 assert(css.includes('.tmr-cluster') && css.includes('flex-wrap: wrap') && css.includes('.tmr-stack'), 'sitewide stack and cluster layout primitives must remain');
+assert(css.includes('.tmr-segmented') && css.includes('.tmr-filter-bar') && css.includes('.tmr-tab.is-active') && css.includes('.tmr-filter-chip[aria-pressed="true"]'), 'sitewide segmented tab/filter primitives must remain');
+assert(css.includes('.tmr-tab[aria-selected="true"]') && css.includes('white-space: nowrap'), 'sitewide tab active state and wrapping protection must remain');
 assert(css.includes('body.tmr-site-shell .section-header > *') && css.includes('body.tmr-site-shell .sportsbook-board-toolbar > *'), 'sitewide header children must keep overflow protection');
 assert(css.includes('.tmr-badge--verified') && css.includes('.tmr-status--private') && css.includes('.tmr-result-chip--win') && css.includes('.tmr-result-chip--loss'), 'sitewide badge/status/result primitives must remain');
 assert(css.includes('white-space: nowrap') && css.includes('max-width: 100%'), 'sitewide badge primitives must resist broken wrapping');
