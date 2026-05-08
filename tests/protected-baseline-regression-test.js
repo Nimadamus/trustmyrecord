@@ -11,6 +11,7 @@ const sportsbook = fs.readFileSync(path.join(root, 'sportsbook', 'index.html'), 
 const pending = fs.readFileSync(path.join(root, 'my-pending-picks', 'index.html'), 'utf8');
 const sitewide = fs.readFileSync(path.join(root, 'static', 'js', 'tmr-sitewide.js'), 'utf8');
 const reliability = fs.readFileSync(path.join(root, 'static', 'js', 'sportsbook-production-fix-persist-reliability.js'), 'utf8');
+const autoGrader = fs.readFileSync(path.join(root, 'static', 'js', 'auto-grader-fixed.js'), 'utf8');
 
 for (const required of [
   'Protected Baseline and Regression Policy',
@@ -30,6 +31,7 @@ for (const file of [
   'my-pending-picks/index.html',
   'static/js/tmr-sitewide.js',
   'static/js/sportsbook-production-fix-persist-reliability.js',
+  'static/js/auto-grader-fixed.js',
 ]) {
   assert(rules.includes(file), `DEVELOPMENT_RULES must classify ${file}`);
 }
@@ -69,6 +71,11 @@ assert(reliability.includes('lockFunction(window.TMR, \'renderSportsbookTeamLogo
 assert(reliability.includes('stake_mode: stakeMode'), 'stake mode payload must remain');
 assert(reliability.includes('risk_units: stakeValues.risk_units'), 'risk_units payload must remain');
 assert(reliability.includes('to_win_units: stakeValues.win_units'), 'to_win_units payload must remain');
+
+assert(autoGrader.includes('function shouldUseBackendGrading()'), 'auto-grader backend skip detector must remain');
+assert(autoGrader.includes('if (!scores.completed)'), 'auto-grader must not grade incomplete games');
+assert(autoGrader.includes('window.TMR_GRADER = TMR_GRADER'), 'auto-grader global exposure must remain');
+assert(autoGrader.includes("localStorage.removeItem('tmr_picks_v2')"), 'auto-grader legacy local-pick cleanup must remain');
 
 assert(sitewide.includes('buildLoggedOutActions'), 'sitewide nav must still define guest actions');
 assert(sitewide.includes('buildLoggedInActions'), 'sitewide nav must still define logged-in profile actions');
