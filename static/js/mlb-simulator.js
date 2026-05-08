@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'sim-count-box-score-20260506';
+    var UI_BUILD = 'mlb-roster-guard-20260508';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -147,6 +147,16 @@
         PHI: 'phi', PIT: 'pit', SD: 'sd', SF: 'sf', SEA: 'sea', STL: 'stl', TB: 'tb', TEX: 'tex', TOR: 'tor', WSH: 'wsh'
     };
 
+    var MLB_TEAM_IDS = {
+        ARI: 109, ATL: 144, BAL: 110, BOS: 111, CHC: 112, CWS: 145, CIN: 113, CLE: 114, COL: 115, DET: 116,
+        HOU: 117, KC: 118, LAA: 108, LAD: 119, MIA: 146, MIL: 158, MIN: 142, NYM: 121, NYY: 147, ATH: 133,
+        PHI: 143, PIT: 134, SD: 135, SF: 137, SEA: 136, STL: 138, TB: 139, TEX: 140, TOR: 141, WSH: 120
+    };
+
+    var REPORTED_MISMATCHED_CURRENT_NAMES = {
+        ARI: { nolanarenado: true }
+    };
+
     var TEAM_COLORS = {
         ARI: ['#a71930', '#e3d4ad'], ATL: ['#ce1141', '#13274f'], BAL: ['#df4601', '#000000'], BOS: ['#bd3039', '#0c2340'],
         CHC: ['#0e3386', '#cc3433'], CWS: ['#c4ced4', '#27251f'], CIN: ['#c6011f', '#ffffff'], CLE: ['#e31937', '#0c2340'],
@@ -256,9 +266,10 @@
         if (typeof CONFIG !== 'undefined' && CONFIG && CONFIG.api && CONFIG.api.baseUrl) return CONFIG.api.baseUrl;
         return 'https://trustmyrecord-api.onrender.com/api';
     }
-    function fetchJson(url) {
+    function fetchJson(url, options) {
         if (typeof fetch !== 'function') return Promise.reject(new Error('fetch unavailable'));
-        return fetch(url, { headers: { 'Accept': 'application/json' } }).then(function (res) {
+        options = options || {};
+        return fetch(url, { headers: { 'Accept': 'application/json' }, cache: options.cache || 'default' }).then(function (res) {
             if (!res.ok) throw new Error('HTTP ' + res.status);
             return res.json();
         });
@@ -272,7 +283,30 @@
         var order = { CF: 1, SS: 2, RF: 3, '1B': 4, '3B': 5, LF: 6, DH: 7, '2B': 8, C: 9, OF: 10, IF: 11 };
         return order[position] || 20;
     }
-    function collectEspnTeamRoster(data) {
+    function playerBlockedForTeam(team, name) {
+        var blocked = team && REPORTED_MISMATCHED_CURRENT_NAMES[team.abbreviation];
+        return !!(blocked && blocked[normalizeName(name)]);
+    }
+    function playerBelongsToTeam(player, team) {
+        if (!team || team.era !== 'current' || !player) return !!player;
+        var expectedId = MLB_TEAM_IDS[team.abbreviation];
+        if (!expectedId) return false;
+        if (playerBlockedForTeam(team, player.name)) return false;
+        return String(player.teamId || '') === String(expectedId);
+    }
+    function validatedRosterForTeam(team, roster) {
+        if (!roster || !Array.isArray(roster.players)) return null;
+        if (team && team.era === 'current' && String(roster.teamId || '') !== String(MLB_TEAM_IDS[team.abbreviation] || '')) return null;
+        var players = roster.players.filter(function (player) { return playerBelongsToTeam(player, team); });
+        if (!players.length) return null;
+        return Object.assign({}, roster, {
+            count: players.length,
+            relievers: players.filter(function (player) { return /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')); }).length,
+            players: players,
+            summary: players.length + ' verified active roster players'
+        });
+    }
+    function collectEspnTeamRoster(data, team) {
         var players = [];
         var groups = Array.isArray(data && data.athletes) ? data.athletes : [];
         groups.forEach(function (group) {
@@ -281,7 +315,7 @@
                 var name = item && (item.displayName || item.fullName || item.name);
                 if (!name) return;
                 var position = item.position && (item.position.abbreviation || item.position.displayName || item.position.name) || groupPosition;
-                players.push({ name: name, position: position });
+                players.push({ name: name, position: position, teamId: String(MLB_TEAM_IDS[team && team.abbreviation] || '') });
             });
         });
         var seen = {};
@@ -293,26 +327,56 @@
         });
         var hitters = players.filter(function (player) { return !/Pitcher|P$|SP|RP|CP/i.test(player.position); }).sort(function (a, b) { return rosterSortValue(a) - rosterSortValue(b); });
         var pitchers = players.filter(function (player) { return /Pitcher|P$|SP|RP|CP/i.test(player.position); });
-        return {
+        return validatedRosterForTeam(team, {
+            teamId: String(MLB_TEAM_IDS[team && team.abbreviation] || ''),
             count: players.length,
             relievers: pitchers.length,
             players: hitters.concat(pitchers),
             summary: players.length + ' ESPN roster players',
             source: 'Verified ESPN team roster endpoint'
-        };
+        });
+    }
+    function collectMlbTeamRoster(data, team) {
+        var expectedId = MLB_TEAM_IDS[team && team.abbreviation];
+        var players = [];
+        (Array.isArray(data && data.roster) ? data.roster : []).forEach(function (entry) {
+            var name = entry && entry.person && entry.person.fullName;
+            var position = entry && entry.position && (entry.position.abbreviation || entry.position.name);
+            var teamId = entry && entry.parentTeamId;
+            if (!name || !position) return;
+            players.push({ name: name, position: position, teamId: String(teamId || '') });
+        });
+        var seen = {};
+        players = players.filter(function (player) {
+            var key = normalizeName(player.name);
+            if (seen[key]) return false;
+            seen[key] = true;
+            return true;
+        });
+        var hitters = players.filter(function (player) { return !/Pitcher|P$|SP|RP|CP/i.test(player.position); }).sort(function (a, b) { return rosterSortValue(a) - rosterSortValue(b); });
+        var pitchers = players.filter(function (player) { return /Pitcher|P$|SP|RP|CP/i.test(player.position); });
+        return validatedRosterForTeam(team, {
+            teamId: String(expectedId || ''),
+            count: players.length,
+            relievers: pitchers.length,
+            players: hitters.concat(pitchers),
+            summary: players.length + ' MLB active roster players',
+            source: 'Verified MLB active roster endpoint'
+        });
     }
     function teamRosterUrl(team) {
-        var slug = team && ESPN_ROSTER_SLUGS[team.abbreviation];
-        return slug ? 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/teams/' + slug + '/roster' : '';
+        var teamId = team && MLB_TEAM_IDS[team.abbreviation];
+        return teamId ? 'https://statsapi.mlb.com/api/v1/teams/' + teamId + '/roster?rosterType=active&_=' + encodeURIComponent(UI_BUILD) : '';
     }
     function fetchTeamRoster(team) {
         if (!team || team.era !== 'current') return Promise.resolve(null);
         state.liveContext.teamRosters = state.liveContext.teamRosters || {};
-        if (state.liveContext.teamRosters[team.abbreviation]) return Promise.resolve(state.liveContext.teamRosters[team.abbreviation]);
+        if (state.liveContext.teamRosters[team.abbreviation] && state.liveContext.teamRosters[team.abbreviation].uiBuild === UI_BUILD) return Promise.resolve(state.liveContext.teamRosters[team.abbreviation]);
         var url = teamRosterUrl(team);
         if (!url) return Promise.resolve(null);
-        return fetchJson(url).then(function (data) {
-            var roster = collectEspnTeamRoster(data);
+        return fetchJson(url, { cache: 'no-store' }).then(function (data) {
+            var roster = collectMlbTeamRoster(data, team);
+            if (roster) roster.uiBuild = UI_BUILD;
             state.liveContext.teamRosters[team.abbreviation] = roster;
             return roster;
         }).catch(function () {
@@ -325,9 +389,11 @@
             away: context.extraContext.rosters.away,
             home: context.extraContext.rosters.home
         } : {};
+        rosters.away = validatedRosterForTeam(away, rosters.away);
+        rosters.home = validatedRosterForTeam(home, rosters.home);
         state.liveContext.teamRosters = state.liveContext.teamRosters || {};
-        if (!rosters.away && away && away.era === 'current') rosters.away = state.liveContext.teamRosters[away.abbreviation] || null;
-        if (!rosters.home && home && home.era === 'current') rosters.home = state.liveContext.teamRosters[home.abbreviation] || null;
+        if (!rosters.away && away && away.era === 'current') rosters.away = validatedRosterForTeam(away, state.liveContext.teamRosters[away.abbreviation]);
+        if (!rosters.home && home && home.era === 'current') rosters.home = validatedRosterForTeam(home, state.liveContext.teamRosters[home.abbreviation]);
         return rosters.away || rosters.home ? rosters : null;
     }
     function ensureRostersForTeams(away, home) {
@@ -389,7 +455,15 @@
     function currentPitchersForTeam(team, side, context) {
         var liveStarter = context && context.espnGame ? (side === 'away' ? context.espnGame.awayStarter : context.espnGame.homeStarter) : null;
         var options = [];
-        if (liveStarter && liveStarter.name) {
+        var verifiedRoster = validatedRosterForTeam(team, state.liveContext.teamRosters && state.liveContext.teamRosters[team.abbreviation]);
+        var verifiedPitchers = verifiedRoster ? verifiedRoster.players.filter(function (player) {
+            return /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || ''));
+        }) : [];
+        var curatedPitchers = CURRENT_PITCHERS[team.abbreviation] || [];
+        function curatedMatch(name) {
+            return curatedPitchers.filter(function (row) { return normalizeName(row[1]) === normalizeName(name); })[0] || null;
+        }
+        if (liveStarter && liveStarter.name && verifiedPitchers.filter(function (player) { return normalizeName(player.name) === normalizeName(liveStarter.name); }).length) {
             options.push({
                 id: pitcherId(side, 'live-' + slugify(liveStarter.name)),
                 name: liveStarter.name,
@@ -400,19 +474,20 @@
                 note: liveStarter.record || 'Listed by ESPN as probable'
             });
         }
-        var rosterRows = (CURRENT_PITCHERS[team.abbreviation] || []).filter(function (row) {
-            return !liveStarter || !liveStarter.name || normalizeName(row[1]) !== normalizeName(liveStarter.name);
+        var rosterRows = verifiedPitchers.filter(function (player) {
+            return !liveStarter || !liveStarter.name || normalizeName(player.name) !== normalizeName(liveStarter.name);
         });
         if (!rosterRows.length && !options.length) return [];
-        rosterRows.slice(0, liveStarter && liveStarter.name ? 4 : 5).forEach(function (row) {
+        rosterRows.slice(0, liveStarter && liveStarter.name ? 4 : 5).forEach(function (player) {
+            var row = curatedMatch(player.name);
             options.push({
-                id: pitcherId(side, team.id + '-' + row[0]),
-                name: row[1],
-                quality: row[2],
-                era: row[3],
-                source: 'Starter list selection',
-                verified: false,
-                note: 'Starter list is for simulation selection and may not reflect today\'s confirmed starter'
+                id: pitcherId(side, team.id + '-' + slugify(player.name)),
+                name: player.name,
+                quality: row ? row[2] : 100,
+                era: row ? row[3] : null,
+                source: verifiedRoster.source,
+                verified: true,
+                note: 'Verified on the selected team active roster'
             });
         });
         return options;
@@ -443,7 +518,7 @@
     }
     function pitcherMeta(pitcher) {
         if (!pitcher) return 'No pitcher selected.';
-        return 'Starter list is for simulation selection and may not reflect today\'s confirmed starter.';
+        return pitcher.verified ? 'Verified on the selected team active roster.' : 'Starter list is for simulation selection and may not reflect today\'s confirmed starter.';
     }
     function pitcherRecord(pitcher) {
         var match = String(pitcher && pitcher.note ? pitcher.note : '').match(/(\d+\s*-\s*\d+)/);
@@ -620,7 +695,8 @@
         return batters[key] ? { players: batters[key].map(function (name) { return { name: name.replace(/\s+\([A-Z0-9]+\)$/, ''), position: (name.match(/\(([A-Z0-9]+)\)$/) || [null, ''])[1] }; }).concat(pitchers), source: 'Curated historical roster names' } : null;
     }
     function rosterForTeam(team, roster) {
-        if (roster && roster.players && roster.players.length) return roster;
+        var validated = validatedRosterForTeam(team, roster);
+        if (validated && validated.players && validated.players.length) return validated;
         if (team && team.era === 'historical') return historicalRosterForTeam(team);
         return null;
     }
@@ -699,12 +775,12 @@
             away: {
                 batters: modeledBatterLines(away, awayLine, random, awayRoster),
                 pitchers: modeledPitcherLines(away, homeLine, awayPitcher, random, awayRoster),
-                rosterSource: awayRoster && awayRoster.players && awayRoster.players.length ? (awayRoster.source || 'Verified ESPN roster names') : 'Roster unavailable: player lines hidden'
+                rosterSource: awayRoster && awayRoster.players && awayRoster.players.length ? (awayRoster.source || 'Verified active roster names') : 'Roster temporarily unavailable'
             },
             home: {
                 batters: modeledBatterLines(home, homeLine, random, homeRoster),
                 pitchers: modeledPitcherLines(home, awayLine, homePitcher, random, homeRoster),
-                rosterSource: homeRoster && homeRoster.players && homeRoster.players.length ? (homeRoster.source || 'Verified ESPN roster names') : 'Roster unavailable: player lines hidden'
+                rosterSource: homeRoster && homeRoster.players && homeRoster.players.length ? (homeRoster.source || 'Verified active roster names') : 'Roster temporarily unavailable'
             }
         };
     }
@@ -1145,7 +1221,7 @@
                 detail: recentAvailable ? 'Last ' + recentForm.away.games + ': ' + recentForm.away.summary + ' / Last ' + recentForm.home.games + ': ' + recentForm.home.summary : 'No verified recent final-score sample matched both teams.',
                 verified: recentAvailable
             },
-            { key: 'rosterContext', label: 'Roster context', status: rosterAvailable ? 'Available from ESPN roster payload' : 'Unavailable', detail: rosterAvailable ? espnGame.awayTeam + ': ' + extra.rosters.away.summary + ' / ' + espnGame.homeTeam + ': ' + extra.rosters.home.summary : 'No verified player roster list is connected for this matchup.', verified: rosterAvailable },
+            { key: 'rosterContext', label: 'Roster context', status: rosterAvailable ? 'Available from active roster payload' : 'Unavailable', detail: rosterAvailable ? espnGame.awayTeam + ': ' + extra.rosters.away.summary + ' / ' + espnGame.homeTeam + ': ' + extra.rosters.home.summary : 'No verified player roster list is connected for this matchup.', verified: rosterAvailable },
             { key: 'bullpenContext', label: 'Bullpen context', status: bullpenAvailable ? 'Bullpen injury/depth context available' : 'Unavailable', detail: bullpenAvailable ? 'Derived from ESPN roster/injury context only; workload and availability are not connected.' : 'No verified bullpen depth, workload, or availability feed is connected.', verified: bullpenAvailable }
         ];
     }
@@ -1445,7 +1521,7 @@
         var usedSources = result && result.dataSourcesUsed && result.dataSourcesUsed.length ? result.dataSourcesUsed.join(', ') : 'Internal baseline team ratings';
         var rows = result ? [
             ['Winner', result.winner.name + ' ' + roundPct(result.winnerPct)],
-            ['Starting pitchers', result.away.name + ': ' + result.awayPitcher.name + ' / ' + result.home.name + ': ' + result.homePitcher.name],
+            ['Starting pitchers', result.away.name + ': ' + (result.awayPitcher ? result.awayPitcher.name : 'Roster temporarily unavailable') + ' / ' + result.home.name + ': ' + (result.homePitcher ? result.homePitcher.name : 'Roster temporarily unavailable')],
             ['Run environment', result.runEnvironment + ' / ' + result.totalRange[0] + '-' + result.totalRange[1] + ' runs'],
             ['Simulation mode', result.simulationMode],
             ['Data mode', result.dataMode],
@@ -1480,7 +1556,7 @@
         var notes = result ? [
             result.dataSourcesUsed.indexOf('Sportsbook odds') !== -1 ? 'Simulation-based estimate with a verified market snapshot included as context; this is not a betting edge.' : 'Simulation-based estimate, not sportsbook odds or provider projection.',
             result.winner.name + ' grades as the simulated winner because of baseline run expectation and team-strength weighting.',
-            'Starting Pitchers: ' + result.away.name + ': ' + result.awayPitcher.name + '; ' + result.home.name + ': ' + result.homePitcher.name + '.',
+            'Starting Pitchers: ' + result.away.name + ': ' + (result.awayPitcher ? result.awayPitcher.name : 'Roster temporarily unavailable') + '; ' + result.home.name + ': ' + (result.homePitcher ? result.homePitcher.name : 'Roster temporarily unavailable') + '.',
             'Average simulated score: ' + result.away.abbreviation + ' ' + result.awayRuns + ', ' + result.home.abbreviation + ' ' + result.homeRuns + '.',
             'Projected score range: ' + result.away.abbreviation + ' ' + result.awayRange[0] + '-' + result.awayRange[1] + ', ' + result.home.abbreviation + ' ' + result.homeRange[0] + '-' + result.homeRange[1] + '.',
             'Simulation mode used: ' + result.simulationMode + '.',
@@ -1516,7 +1592,7 @@
         }).join('');
     }
     function playerTeamBox(team, players) {
-        var source = players && players.rosterSource ? players.rosterSource : 'Roster unavailable: player lines hidden';
+        var source = players && players.rosterSource ? players.rosterSource : 'Roster temporarily unavailable';
         var hasBatters = players && players.batters && players.batters.length;
         var hasPitchers = players && players.pitchers && players.pitchers.length;
         if (!hasBatters || !hasPitchers) {
@@ -1550,7 +1626,7 @@
         lines.push('Simulated final: ' + result.away.name + ' ' + box.away.runs + ', ' + result.home.name + ' ' + box.home.runs);
         lines.push('Win probability: ' + result.away.name + ' ' + roundPct(result.awayWin) + ' / ' + result.home.name + ' ' + roundPct(result.homeWin));
         lines.push('Expected runs: ' + result.away.name + ' ' + result.awayRuns + ' / ' + result.home.name + ' ' + result.homeRuns);
-        lines.push('Starting Pitchers: ' + result.away.name + ': ' + result.awayPitcher.name + ' | ' + result.home.name + ': ' + result.homePitcher.name);
+        lines.push('Starting Pitchers: ' + result.away.name + ': ' + (result.awayPitcher ? result.awayPitcher.name : 'Roster temporarily unavailable') + ' | ' + result.home.name + ': ' + (result.homePitcher ? result.homePitcher.name : 'Roster temporarily unavailable'));
         lines.push('');
         lines.push('Team        1 2 3 4 5 6 7 8 9 | R H E');
         [box.away, box.home].forEach(function (line) {
@@ -1568,7 +1644,7 @@
                 [result.away.name, box.players.away],
                 [result.home.name, box.players.home]
             ].forEach(function (group) {
-                lines.push(group[0] + ' batters - ' + (group[1].rosterSource || 'Roster unavailable: player lines hidden'));
+                lines.push(group[0] + ' batters - ' + (group[1].rosterSource || 'Roster temporarily unavailable'));
                 lines.push('Batter, AB, R, H, RBI, BB, SO');
                 group[1].batters.forEach(function (row) {
                     lines.push([row.name, row.ab, row.r, row.h, row.rbi, row.bb, row.so].join(', '));
@@ -1812,9 +1888,11 @@
         }
         renderLoading(away, home);
         setLiveInputsForMatchup(away, home);
-        setText('projectionNotice', 'Loading verified ESPN roster names before rendering the player box score.');
+        setText('projectionNotice', 'Loading verified MLB active roster names before rendering the player box score.');
         return ensureRostersForTeams(away, home).then(function () {
             setLiveInputsForMatchup(away, home);
+            renderPitcherOptions('away', away, state.activeLiveContext);
+            renderPitcherOptions('home', home, state.activeLiveContext);
             state.simulationCount = selectedSimulationCount();
             var count = state.simulationCount;
             var stamp = Date.now();
