@@ -75,7 +75,8 @@ assert(reliability.includes('to_win_units: stakeValues.win_units'), 'to_win_unit
 assert(autoGrader.includes('function shouldUseBackendGrading()'), 'auto-grader backend skip detector must remain');
 assert(autoGrader.includes('if (!scores.completed)'), 'auto-grader must not grade incomplete games');
 assert(autoGrader.includes('window.TMR_GRADER = TMR_GRADER'), 'auto-grader global exposure must remain');
-assert(autoGrader.includes("localStorage.removeItem('tmr_picks_v2')"), 'auto-grader legacy local-pick cleanup must remain');
+assert(autoGrader.includes("['tmr_picks', 'trustmyrecord_picks', 'tmr_picks_legacy']"), 'auto-grader legacy local-pick cleanup keys must remain');
+assert(autoGrader.includes('localStorage.removeItem(key)'), 'auto-grader legacy local-pick cleanup must remain');
 
 assert(sitewide.includes('buildLoggedOutActions'), 'sitewide nav must still define guest actions');
 assert(sitewide.includes('buildLoggedInActions'), 'sitewide nav must still define logged-in profile actions');
