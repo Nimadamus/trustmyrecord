@@ -68,11 +68,11 @@ test('spread, moneyline, total, and team-total selections still populate the sli
         "if (typeof window.TMR._ttPopulateSlip === 'function')",
         "market: 'Team Total'",
         "marketType: 'team_totals'",
-        '<div class="sportsbook-ticket-preview-row"><span>Game</span>',
-        '<div class="sportsbook-ticket-preview-row"><span>Market</span>',
-        '<div class="sportsbook-ticket-preview-row"><span>Selection</span>',
-        '<div class="sportsbook-ticket-preview-row"><span>Odds</span>',
-        '<div class="sportsbook-ticket-preview-row"><span>Sportsbook</span>',
+        'sportsbook-ticket-preview-row tmr-ticket-row--game"><span>Game</span>',
+        'sportsbook-ticket-preview-row tmr-ticket-row--market"><span>Market</span>',
+        'sportsbook-ticket-preview-row tmr-ticket-row--selection"><span>Selection</span>',
+        'sportsbook-ticket-preview-row tmr-ticket-row--odds"><span>Odds</span>',
+        'sportsbook-ticket-preview-row tmr-ticket-row--book"><span>Sportsbook</span>',
         "var lineInput = document.getElementById('pickLineInput');",
         "var oddsInput = document.getElementById('pickOddsInput');",
         "summaryGame.textContent",
@@ -123,7 +123,7 @@ test('sportsbook page references the current cache-busted polish CSS', () => {
     const match = sportsbookHtml.match(/\/static\/css\/sportsbook-dk-polish\.css\?v=([^"']+)/);
     assert.ok(match, 'sportsbook-dk-polish.css link missing');
     assert.ok(
-        match[1] === '20260506boardclean1' || match[1] > '20260506boardclean1',
+        match[1] === '20260430hidedup1' || match[1] > '20260430hidedup1',
         `unexpected sportsbook-dk-polish.css cache bust: ${match[1]}`
     );
 });
