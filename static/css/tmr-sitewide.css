@@ -521,6 +521,61 @@ body.tmr-site-shell .tmr-spinner {
     to { transform: rotate(360deg); }
 }
 
+.tmr-skeleton,
+.tmr-skeleton-line,
+.tmr-skeleton-block,
+.tmr-skeleton-avatar {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(90deg, rgba(30, 41, 59, 0.72), rgba(51, 65, 85, 0.82), rgba(30, 41, 59, 0.72));
+    background-size: 220% 100%;
+    border: 1px solid rgba(148, 163, 184, 0.10);
+    animation: tmr-skeleton-shimmer 1.35s ease-in-out infinite;
+}
+
+.tmr-skeleton-line {
+    width: 100%;
+    height: 12px;
+    border-radius: 999px;
+}
+
+.tmr-skeleton-line--short {
+    width: min(42%, 220px);
+}
+
+.tmr-skeleton-block {
+    min-height: 120px;
+    border-radius: var(--tmr-radius-md);
+}
+
+.tmr-skeleton-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    flex: 0 0 auto;
+}
+
+.tmr-skeleton-stack {
+    display: grid;
+    gap: 10px;
+    min-width: 0;
+}
+
+@keyframes tmr-skeleton-shimmer {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tmr-skeleton,
+    .tmr-skeleton-line,
+    .tmr-skeleton-block,
+    .tmr-skeleton-avatar,
+    body.tmr-site-shell .tmr-spinner {
+        animation: none;
+    }
+}
+
 .tmr-alert,
 body.tmr-site-shell .alert,
 body.tmr-site-shell .notice {
