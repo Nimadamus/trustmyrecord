@@ -2074,6 +2074,18 @@
         renderSelectors();
         renderResult(null);
         loadLiveContext();
+        if (typeof window !== 'undefined' && window.location && /[?&]tmrAutoRun=ari-atl\b/.test(window.location.search || '')) {
+            setTimeout(function () {
+                state.awayPool = 'current';
+                state.homePool = 'current';
+                state.awayTeamId = 'current-ari';
+                state.homeTeamId = 'current-atl';
+                state.awayPitcherId = '';
+                state.homePitcherId = '';
+                renderSelectors();
+                runSimulation();
+            }, 350);
+        }
     }
 
     window.TMRMlbSimulator = {
