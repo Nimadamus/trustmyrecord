@@ -5903,6 +5903,19 @@
         if (status) status.textContent = message || 'Profile is still loading verified data...';
     }
 
+    async function fetchProfileDirect(profileLookup) {
+        const username = normalizeProfileLookup(profileLookup || requestedProfileLookup || profileUsername || '');
+        if (!username) throw new Error('Profile username is missing.');
+        const response = await withTimeout(fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(username), {
+            headers: { 'Accept': 'application/json' }
+        }), 15000, 'Direct profile request');
+        const data = await response.json().catch(function() { return null; });
+        if (!response.ok || !data || !(data.user || data.username)) {
+            throw new Error((data && (data.message || data.error)) || 'Profile not found');
+        }
+        return data;
+    }
+
     function setProfileHeaderFallback(message) {
         const el = document.getElementById('profileHeader');
         if (!el) return;
@@ -6215,6 +6228,15 @@
                     });
                 }, 1500);
                 return;
+            }
+            try {
+                const directData = await fetchProfileDirect(requestedProfileLookup || profileUsername);
+                console.warn('[Profile] API wrapper lookup failed; direct public profile fetch recovered:', error);
+                applyLoadedProfile(directData);
+                startProfileBackgroundLoads();
+                return;
+            } catch (directError) {
+                console.warn('[Profile] Direct public profile recovery failed:', directError);
             }
             console.error('[Profile] Profile load failed:', error);
             document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
