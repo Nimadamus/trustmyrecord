@@ -70,6 +70,31 @@ function createSimulator() {
   return context.window.TMRMlbSimulator;
 }
 
+function teamIdFor(simulator, team) {
+  const source = simulator.rosterSourceForTeam(team);
+  const match = String(source && source.url || '').match(/\/teams\/(\d+)\/roster/);
+  assert(match, team.name + ' exposes a roster source team id');
+  return match[1];
+}
+
+function seedVerifiedCurrentRosters(simulator) {
+  const hitters = [
+    ['Alex Carter', 'CF'], ['Ben Walker', 'SS'], ['Cal Brooks', 'RF'], ['Drew Mason', '1B'],
+    ['Evan Reed', '3B'], ['Frank Ellis', 'LF'], ['Grant Cole', 'DH'], ['Henry Stone', '2B'], ['Ian Price', 'C']
+  ];
+  const pitchers = [
+    ['Jack Morris', 'P'], ['Kevin Ryan', 'P'], ['Liam Parker', 'P'], ['Miles Turner', 'P'], ['Nathan Ross', 'P']
+  ];
+  simulator.localTeams.current.forEach((team) => {
+    const teamId = teamIdFor(simulator, team);
+    simulator.state.liveContext.teamRosters[team.abbreviation] = {
+      teamId,
+      source: 'Verified test active roster context',
+      players: hitters.concat(pitchers).map(([name, position]) => ({ name, position, teamId })),
+    };
+  });
+}
+
 function sum(values) {
   return values.reduce((total, value) => total + Number(value || 0), 0);
 }
@@ -133,6 +158,7 @@ function runCase(simulator, mode, away, home, awayPitcherIndex, homePitcherIndex
 }
 
 const simulator = createSimulator();
+seedVerifiedCurrentRosters(simulator);
 const current = simulator.localTeams.current.slice();
 const historical = simulator.localTeams.historical.slice();
 const all = current.concat(historical);
