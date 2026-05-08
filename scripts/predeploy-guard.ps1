@@ -69,11 +69,13 @@ try {
         "mlb-simulator/index.html",
         "static/js/backend-api.js",
         "static/js/sportsbook-production-fix-persist-reliability.js",
+        "static/js/pick-display-format.js",
         "static/js/mlb-simulator.js",
         "static/css/mlb-simulator.css",
         "tests/line-formatting-regression-test.js",
         "tests/profile-page-lookup-test.js",
         "tests/pending-picks-regression-test.js",
+        "tests/pick-display-format.test.js",
         "tests/profile-source-regression-test.js",
         "tests/mlb-simulator-page-test.js",
         "tests/mlb-simulator-boxscore-test.js",
@@ -92,6 +94,7 @@ try {
     Invoke-GuardCommand "line formatting regression test" @("node", "tests/line-formatting-regression-test.js")
     Invoke-GuardCommand "profile lookup regression test" @("node", "tests/profile-page-lookup-test.js")
     Invoke-GuardCommand "pending picks privacy regression test" @("node", "tests/pending-picks-regression-test.js")
+    Invoke-GuardCommand "pick display format regression test" @("node", "tests/pick-display-format.test.js")
     Invoke-GuardCommand "profile source regression test" @("node", "tests/profile-source-regression-test.js")
     Invoke-GuardCommand "MLB simulator page regression test" @("node", "tests/mlb-simulator-page-test.js")
     Invoke-GuardCommand "MLB simulator box score regression test" @("node", "tests/mlb-simulator-boxscore-test.js")
