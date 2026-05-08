@@ -81,6 +81,7 @@ try {
         "tests/mlb-simulator-page-test.js",
         "tests/mlb-simulator-boxscore-test.js",
         "tests/mlb-simulator-realism-test.js",
+        "tests/mlb-simulator-live-roster-validation-test.js",
         "tests/sportsbook-header-regression-test.js",
         "tests/sportsbook-reliability-guard-test.js",
         "tests/sportsbook-stake-mode-ui-test.js",
@@ -101,6 +102,7 @@ try {
     Invoke-GuardCommand "MLB simulator page regression test" @("node", "tests/mlb-simulator-page-test.js")
     Invoke-GuardCommand "MLB simulator box score regression test" @("node", "tests/mlb-simulator-boxscore-test.js")
     Invoke-GuardCommand "MLB simulator realism regression test" @("node", "tests/mlb-simulator-realism-test.js")
+    Invoke-GuardCommand "MLB simulator live roster regression test" @("node", "tests/mlb-simulator-live-roster-validation-test.js")
     Invoke-GuardCommand "sportsbook header regression test" @("node", "tests/sportsbook-header-regression-test.js")
     Invoke-GuardCommand "sportsbook reliability regression test" @("node", "tests/sportsbook-reliability-guard-test.js")
     Invoke-GuardCommand "sportsbook stake-mode regression test" @("node", "tests/sportsbook-stake-mode-ui-test.js")
