@@ -66,16 +66,20 @@ try {
         "profile/index.html",
         "handicappers/index.html",
         "sportsbook/index.html",
+        "trendspotter/index.html",
         "mlb-simulator/index.html",
         "static/js/backend-api.js",
         "static/js/sportsbook-production-fix-persist-reliability.js",
         "static/js/pick-display-format.js",
+        "static/js/trendspotter.js",
+        "static/css/trendspotter.css",
         "static/js/mlb-simulator.js",
         "static/css/mlb-simulator.css",
         "tests/line-formatting-regression-test.js",
         "tests/profile-page-lookup-test.js",
         "tests/pending-picks-regression-test.js",
         "tests/pick-display-format.test.js",
+        "tests/trendspotter-source-regression-test.js",
         "tests/profile-source-regression-test.js",
         "tests/profile-market-drilldown-page-test.js",
         "tests/mlb-simulator-page-test.js",
@@ -97,6 +101,7 @@ try {
     Invoke-GuardCommand "profile lookup regression test" @("node", "tests/profile-page-lookup-test.js")
     Invoke-GuardCommand "pending picks privacy regression test" @("node", "tests/pending-picks-regression-test.js")
     Invoke-GuardCommand "pick display format regression test" @("node", "tests/pick-display-format.test.js")
+    Invoke-GuardCommand "Trendspotter source regression test" @("node", "tests/trendspotter-source-regression-test.js")
     Invoke-GuardCommand "profile source regression test" @("node", "tests/profile-source-regression-test.js")
     Invoke-GuardCommand "profile market drilldown regression test" @("node", "tests/profile-market-drilldown-page-test.js")
     Invoke-GuardCommand "MLB simulator page regression test" @("node", "tests/mlb-simulator-page-test.js")
