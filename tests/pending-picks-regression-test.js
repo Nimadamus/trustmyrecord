@@ -7,6 +7,7 @@ const vm = require('vm');
 
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'my-pending-picks', 'index.html'), 'utf8');
+const profile = fs.readFileSync(path.join(root, 'profile', 'index.html'), 'utf8');
 const rules = fs.readFileSync(path.join(root, 'DEVELOPMENT_RULES.md'), 'utf8');
 
 assert(html.includes('PENDING_PICK_TOTAL_LINE_NUMERIC_ONLY_20260507'), 'pending page must keep numeric-only total line marker');
@@ -70,5 +71,18 @@ assert(rules.includes('Totals and team totals must never show a plus sign in the
 assert(rules.includes('Totals and team totals must never show U or O in the Line column.'), 'pending rules must forbid U/O in line');
 assert(rules.includes('Full game totals must not display as only'), 'pending rules must require explicit full-game total labels');
 assert(rules.includes('Summary pending count must match API count and rendered row count.'), 'pending rules must protect count parity');
+
+assert(
+  /let\s+shareActions\s*=[\s\S]*Share Profile[\s\S]*Embed Stats[\s\S]*if\s*\(isOwnProfile\)\s*\{[\s\S]*shareActions\s*\+=[\s\S]*copyPendingPicksLink\(\)[\s\S]*showEmbedModal\('pending'\)/.test(profile),
+  'profile pending share/embed buttons must stay behind the owner-only render gate'
+);
+assert(
+  /function\s+getPendingPicksAccess\(kind\)\s*\{[\s\S]*if\s*\(!isOwnProfile\)\s*\{[\s\S]*enabled:\s*false[\s\S]*Pending picks are private for public profile views\./.test(profile),
+  'profile pending access helper must deny public/non-owner profile views'
+);
+assert(
+  !/const\s+shareActions\s*=[\s\S]{0,800}copyPendingPicksLink\(\)/.test(profile),
+  'profile public share action block must not include pending-pick sharing before owner gate'
+);
 
 console.log('pending picks regression test passed');
