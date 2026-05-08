@@ -5979,12 +5979,41 @@
         } catch (_) {}
     }
 
+    function profileAvatarUrlFrom(user) {
+        if (!user) return '';
+        return user.avatar_url || user.avatarUrl || user.avatar || user.profile_image_url || user.profileImageUrl || '';
+    }
+
+    function renderProfileIdentityShell() {
+        const el = document.getElementById('profileHeader');
+        if (!el || el.dataset.profileShellRendered === '1') return;
+        const name = normalizeProfileLookup(requestedProfileLookup || profileUsername || 'Profile');
+        const letter = (name || '?').charAt(0).toUpperCase();
+        el.dataset.profileShellRendered = '1';
+        el.innerHTML = '<div class="profile-info profile-info-loading">' +
+            '<div class="profile-identity-row">' +
+            '<div class="profile-avatar">' + escTxt(letter) + '</div>' +
+            '<div class="profile-identity-copy">' +
+            '<div class="profile-eyebrow">Trust My Record profile</div>' +
+            '<div class="profile-name">' + escTxt(name) + '</div>' +
+            '<div class="profile-handle">@' + escTxt(name) + '</div>' +
+            '<div class="profile-bio profile-bio-empty">Loading verified profile...</div>' +
+            '</div>' +
+            '</div>' +
+            '</div>';
+    }
+
     function applyLoadedProfile(data) {
         profileData = data && data.user ? data.user : data;
         if (!profileData) {
             throw new Error('User not found.');
         }
+        profileData.avatar_url = profileAvatarUrlFrom(profileData) || null;
+        profileData.avatarUrl = profileData.avatar_url;
+        profileData.avatar = profileData.avatar_url;
         profileUsername = normalizeProfileLookup(profileData.username || profileUsername || requestedProfileLookup);
+        const headerEl = document.getElementById('profileHeader');
+        if (headerEl) headerEl.dataset.profileShellRendered = '';
         window.profileData = profileData;
         profileUserId = profileData.id;
         updateProfileSeoMeta(profileData);
@@ -6027,7 +6056,7 @@
         const candidates = profileLookupCandidates();
         for (const candidate of candidates) {
             try {
-                const data = await withTimeout(api.getUserProfile(candidate), 9000, 'Profile request');
+                const data = await withTimeout(api.getUserProfile(candidate), 6000, 'Profile request');
                 profileUsername = normalizeProfileLookup((data && data.user && data.user.username) || (data && data.username) || candidate);
                 writeCachedProfile((data && data.user) || data);
                 return data;
@@ -6037,7 +6066,7 @@
             }
             try {
                 if (typeof api.searchUsers === 'function') {
-                    const searchData = await withTimeout(api.searchUsers(candidate, { limit: 8 }), 9000, 'Profile search request');
+                    const searchData = await withTimeout(api.searchUsers(candidate, { limit: 8 }), 3500, 'Profile search request');
                     const users = (searchData && searchData.users) || [];
                     const match = users.find(function(user) {
                         return profileLookupMatchesUser(candidate, user);
@@ -6139,6 +6168,8 @@
             if (!api || typeof api.getUserProfile !== 'function') {
                 throw new Error('Profile service is unavailable.');
             }
+
+            renderProfileIdentityShell();
 
             const cachedProfile = readCachedProfile(profileUsername || requestedProfileLookup);
             if (cachedProfile) {
@@ -8074,7 +8105,7 @@
             ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
             : 'N/A';
         const name = p.display_name || p.username;
-        const avatarUrl = p.avatar_url || p.avatarUrl || p.avatar || p.profile_image_url || p.profileImageUrl || '';
+        const avatarUrl = profileAvatarUrlFrom(p);
         const letter = (p.username || '?').charAt(0).toUpperCase();
         const rankText = p.ranking_status || (currentLeaderboardRank != null ? 'Ranked #' + currentLeaderboardRank : 'Unranked');
         const ledgerStats = getProfileLedgerStats();
