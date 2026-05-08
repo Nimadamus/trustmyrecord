@@ -36,6 +36,10 @@ for (const selector of [
   '.tmr-empty-state',
   '.tmr-loading-state',
   '.tmr-spinner',
+  '.tmr-skeleton',
+  '.tmr-skeleton-line',
+  '.tmr-skeleton-block',
+  '.tmr-skeleton-avatar',
   '.tmr-table-wrap',
   '.tmr-page-head',
   '.tmr-page-title',
@@ -77,6 +81,8 @@ assert(css.includes('body.tmr-site-shell tbody tr:hover td') && css.includes('rg
 assert(css.includes('body.tmr-site-shell .empty-state') && css.includes('body.tmr-site-shell .loading-state') && css.includes('body.tmr-site-shell .error-state'), 'sitewide empty/loading/error styles must remain');
 assert(css.includes('body.tmr-site-shell .tmr-empty-state') && css.includes('body.tmr-site-shell .tmr-loading-state'), 'legacy live empty/loading state variants must remain styled');
 assert(css.includes('@keyframes tmr-spin') && css.includes('border-top-color: var(--tmr-accent)'), 'sitewide loading spinner style must remain branded');
+assert(css.includes('@keyframes tmr-skeleton-shimmer') && css.includes('.tmr-skeleton-stack') && css.includes('prefers-reduced-motion: reduce'), 'sitewide skeleton loading primitives must remain');
+assert(css.includes('background-size: 220% 100%') && css.includes('.tmr-skeleton-line--short'), 'sitewide skeleton shimmer and variants must remain');
 assert(css.includes('.tmr-alert--success') && css.includes('.tmr-alert--warning') && css.includes('.tmr-alert--danger') && css.includes('.tmr-alert--info'), 'sitewide alert variants must remain');
 assert(css.includes('body.tmr-site-shell .verify-success') && css.includes('body.tmr-site-shell .verify-error') && css.includes('body.tmr-site-shell .message.error'), 'legacy live message classes must remain styled');
 
