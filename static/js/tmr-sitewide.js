@@ -161,8 +161,8 @@
     }
 
     function buildLoggedInActions(user) {
-        const username = String(user.username || user.displayName || user.email || "user");
-        const displayName = String(user.displayName || user.username || user.email || "User");
+        const username = String(user.username || user.handle || user.slug || user.displayName || user.display_name || user.email || "user");
+        const displayName = String(user.displayName || user.display_name || user.name || user.username || user.handle || user.email || "User");
         const avatar = getUserAvatar(user);
         const profileHref = "/profile/?user=" + encodeURIComponent(username);
 
