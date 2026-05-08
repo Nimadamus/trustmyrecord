@@ -62,7 +62,7 @@ try {
     }
 
     $requiredFiles = @(
-        "profile/index.html",
+        "TRUSTMYRECORD_PRODUCT_UPGRADE_SYSTEM.md",`n        "profile/index.html",
         "handicappers/index.html",
         "sportsbook/index.html",
         "mlb-simulator/index.html",
@@ -92,7 +92,7 @@ try {
     Invoke-GuardCommand "sportsbook reliability regression test" @("node", "tests/sportsbook-reliability-guard-test.js")
     Invoke-GuardCommand "sportsbook stake-mode regression test" @("node", "tests/sportsbook-stake-mode-ui-test.js")
 
-    $profile = Get-Content -LiteralPath "profile/index.html" -Raw
+    $productSystem = Get-Content -LiteralPath "TRUSTMYRECORD_PRODUCT_UPGRADE_SYSTEM.md" -Raw`n    $profile = Get-Content -LiteralPath "profile/index.html" -Raw
     $backend = Get-Content -LiteralPath "static/js/backend-api.js" -Raw
     $simCss = Get-Content -LiteralPath "static/css/mlb-simulator.css" -Raw
     $simPage = Get-Content -LiteralPath "mlb-simulator/index.html" -Raw
@@ -100,7 +100,7 @@ try {
     $handicappers = Get-Content -LiteralPath "handicappers/index.html" -Raw
     $reliability = Get-Content -LiteralPath "static/js/sportsbook-production-fix-persist-reliability.js" -Raw
 
-    Assert-Match "Profile" $profile "backend-api\.js\?v=20260506linefix[0-9]+" "profile must load the protected backend-api cache key."
+    Assert-Match "Product Upgrade System" $productSystem "Design Bible" "Design Bible section is missing."`n    Assert-Match "Product Upgrade System" $productSystem "UX Rubric" "UX Rubric section is missing."`n    Assert-Match "Product Upgrade System" $productSystem "Phase 1: Regression Lockdown" "Phase 1 plan is missing."`n    Assert-Match "Product Upgrade System" $productSystem "Do not revert commits" "forward-only baseline rule is missing."`n`n    Assert-Match "Profile" $profile "backend-api\.js\?v=20260506linefix[0-9]+" "profile must load the protected backend-api cache key."
     $hasLegacyDirectFormatter = $profile -match "function formatPickLineValue\(pick\)"
     $hasCurrentSharedFormatter = $profile -match "const fmtLine = \(p\) => \{" -and $profile -match "window\.TMR\.formatPickLine\(p\)"
     if (-not ($hasLegacyDirectFormatter -or $hasCurrentSharedFormatter)) {
