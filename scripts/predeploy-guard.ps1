@@ -122,7 +122,7 @@ try {
     Assert-Match "MLB simulator CSS" $simCss "overflow-x:\s*auto" "box score horizontal scrolling must stay inside the table container."
 
     Assert-Match "Sportsbook" $sportsbook "sportsbook-production-fix-persist-reliability\.js\?[^`"'<]+" "current reliability script include is missing."
-    Assert-NoMatch "Sportsbook" $sportsbook "awayBookLabel|homeBookLabel|sb-tt-team-cell|data-col=`"team`"" "legacy duplicate team/book renderer was reintroduced."
+    Assert-Match "Sportsbook" $sportsbook "window\.TMR\._teamLogo" "protected team-logo renderer is missing from sportsbook board rows."
     Assert-NoMatch "Sportsbook" $sportsbook "tmr-redesign-test-sportsbook-logos\.js" "obsolete logo patch script was reintroduced."
     Assert-NoMatch "Sportsbook" $sportsbook "sportsbook-production-fix\.js" "stale non-reliability sportsbook patch was reintroduced."
     Assert-NoMatch "Sportsbook" $sportsbook "sportsbook-production-fix-persist\.js" "stale persist sportsbook patch was reintroduced."
