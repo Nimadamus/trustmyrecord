@@ -5945,6 +5945,83 @@
         return candidates;
     }
 
+    const PROFILE_CACHE_TTL_MS = 2 * 60 * 1000;
+    let profileBackgroundLoadsStarted = false;
+
+    function profileCacheKey(value) {
+        const key = profileLookupKey(normalizeProfileLookup(value || ''));
+        return key ? 'tmr_profile_cache_' + key : '';
+    }
+
+    function readCachedProfile(value) {
+        const key = profileCacheKey(value);
+        if (!key) return null;
+        try {
+            const cached = JSON.parse(sessionStorage.getItem(key) || 'null');
+            if (!cached || !cached.user || !cached.cached_at) return null;
+            if (Date.now() - Number(cached.cached_at) > PROFILE_CACHE_TTL_MS) {
+                sessionStorage.removeItem(key);
+                return null;
+            }
+            return cached.user;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    function writeCachedProfile(user) {
+        if (!user) return;
+        const username = normalizeProfileLookup(user.username || user.handle || user.display_name || user.displayName || profileUsername || requestedProfileLookup);
+        const key = profileCacheKey(username);
+        if (!key) return;
+        try {
+            sessionStorage.setItem(key, JSON.stringify({ cached_at: Date.now(), user: user }));
+        } catch (_) {}
+    }
+
+    function applyLoadedProfile(data) {
+        profileData = data && data.user ? data.user : data;
+        if (!profileData) {
+            throw new Error('User not found.');
+        }
+        profileUsername = normalizeProfileLookup(profileData.username || profileUsername || requestedProfileLookup);
+        window.profileData = profileData;
+        profileUserId = profileData.id;
+        updateProfileSeoMeta(profileData);
+
+        if (currentUser && !isOwnProfile) {
+            isFollowingProfile = !!profileData.is_following;
+        }
+
+        renderProfileHeader(profileData);
+    }
+
+    function deferProfileWork(fn, delay) {
+        const run = function() { setTimeout(fn, delay || 0); };
+        if (window.requestAnimationFrame) {
+            window.requestAnimationFrame(run);
+        } else {
+            run();
+        }
+    }
+
+    function startProfileBackgroundLoads() {
+        if (profileBackgroundLoadsStarted || !profileData) return;
+        profileBackgroundLoadsStarted = true;
+        deferProfileWork(function() {
+            loadProfileSecondaryData();
+        }, 0);
+        deferProfileWork(function() {
+            loadAllPicks().catch(function(error) {
+                console.warn('[Profile] Verified pick history unavailable:', error);
+                renderProfileStatsLoadError('Verified pick stats could not be loaded from the public ledger, so record metrics are hidden instead of showing zeroes.');
+            });
+        }, 25);
+        deferProfileWork(function() {
+            loadAdvancedMetrics(profileData.username || profileUsername || '');
+        }, 75);
+    }
+
     async function fetchProfileWithFallbacks() {
         let lastError = null;
         const candidates = profileLookupCandidates();
@@ -5952,6 +6029,7 @@
             try {
                 const data = await withTimeout(api.getUserProfile(candidate), 9000, 'Profile request');
                 profileUsername = normalizeProfileLookup((data && data.user && data.user.username) || (data && data.username) || candidate);
+                writeCachedProfile((data && data.user) || data);
                 return data;
             } catch (error) {
                 lastError = error;
@@ -5966,6 +6044,7 @@
                     });
                     if (match) {
                         profileUsername = normalizeProfileLookup(match.username || candidate);
+                        writeCachedProfile(match);
                         return { user: match };
                     }
                 }
@@ -5980,7 +6059,6 @@
         }
         throw lastError || new Error('Profile not found');
     }
-
     function setAdvancedMetricsEmpty(message) {
         const statusEl = document.getElementById('profileAdvancedMetricsStatus');
         if (statusEl) statusEl.textContent = message || 'No verified metrics yet';
@@ -6056,45 +6134,37 @@
 
     // ======================== LOAD PROFILE ========================
     async function loadProfile() {
+        let renderedCachedProfile = false;
         try {
             if (!api || typeof api.getUserProfile !== 'function') {
                 throw new Error('Profile service is unavailable.');
             }
 
+            const cachedProfile = readCachedProfile(profileUsername || requestedProfileLookup);
+            if (cachedProfile) {
+                applyLoadedProfile({ user: cachedProfile });
+                renderedCachedProfile = true;
+            }
+
             const data = await fetchProfileWithFallbacks();
-            profileData = data.user || data;
-            if (!profileData) {
-                throw new Error('User not found.');
-            }
-            // Expose globally so inline onclick handlers (affiliation CTA, etc)
-            // can read the username for per-user localStorage keys.
-            window.profileData = profileData;
-            profileUserId = profileData.id;
-            updateProfileSeoMeta(profileData);
-
-            if (currentUser && !isOwnProfile) {
-                isFollowingProfile = !!profileData.is_following;
-            }
-
-            renderProfileHeader(profileData);
-            loadProfileSecondaryData();
-            loadAllPicks().catch(function(error) {
-                console.warn('[Profile] Verified pick history unavailable:', error);
-                renderProfileStatsLoadError('Verified pick stats could not be loaded from the public ledger, so record metrics are hidden instead of showing zeroes.');
-            });
-            loadAdvancedMetrics(profileData.username || profileUsername || '');
+            applyLoadedProfile(data);
+            startProfileBackgroundLoads();
             analyticsTrackPickHistoryView({
                 view_type: isOwnProfile ? 'own' : 'public',
                 username: profileData.username || profileUsername || '',
                 display_name: profileData.display_name || profileData.username || ''
             });
         } catch (error) {
+            if (renderedCachedProfile && profileData) {
+                console.warn('[Profile] Fresh profile refresh failed; keeping cached profile:', error);
+                startProfileBackgroundLoads();
+                return;
+            }
             console.error('[Profile] Profile load failed:', error);
             document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
             setProfileHeaderFallback('We could not find a profile for "' + (requestedProfileLookup || profileUsername || 'this user') + '".');
         }
     }
-
     async function loadProfileSecondaryData() {
         if (!profileData || !profileUsername) return;
         const renderUpdatedHeader = function() {
