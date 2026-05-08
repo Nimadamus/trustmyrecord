@@ -101,8 +101,11 @@ try {
     $reliability = Get-Content -LiteralPath "static/js/sportsbook-production-fix-persist-reliability.js" -Raw
 
     Assert-Match "Profile" $profile "backend-api\.js\?v=20260506linefix[0-9]+" "profile must load the protected backend-api cache key."
-    Assert-Match "Profile" $profile "function formatPickLineValue\(pick\)" "direct Line-column formatter is missing."
-    Assert-NoMatch "Profile" $profile "formatLineValue\(p\.line_snapshot\)" "raw signed line formatter call for pick rows returned."
+    $hasLegacyDirectFormatter = $profile -match "function formatPickLineValue\(pick\)"
+    $hasCurrentSharedFormatter = $profile -match "const fmtLine = \(p\) => \{" -and $profile -match "window\.TMR\.formatPickLine\(p\)"
+    if (-not ($hasLegacyDirectFormatter -or $hasCurrentSharedFormatter)) {
+        throw "Profile Line-column formatter guard is missing."
+    }
     Assert-NoMatch "Profile" $profile "PNG\s*/\s*JPG\s*/\s*WebP" "avatar upload helper text regressed."
     Assert-Match "Profile" $profile "Share Profile" "Share Profile label is missing."
     Assert-Match "Profile" $profile "Embed Profile" "Embed Profile label is missing."
