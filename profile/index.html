@@ -5389,17 +5389,21 @@
     }
 
     function getPickStakeInfo(pick) {
+        const mode = normalizeStakeModeValue(pick && (pick.stake_mode || pick.units_mode));
+        if (mode) {
+            const values = calculateStakeValuesForPick(mode, pick && pick.units, getPickOdds(pick));
+            if (Number.isFinite(values.riskUnits) && values.riskUnits > 0 && Number.isFinite(values.toWinUnits) && values.toWinUnits > 0) {
+                values.mode = mode;
+                return values;
+            }
+        }
         const risk = Number(pick && pick.risk_units);
         const toWinRaw = pick && (pick.to_win_units != null ? pick.to_win_units : pick.win_units);
         const toWin = Number(toWinRaw);
-        const mode = normalizeStakeModeValue(pick && (pick.stake_mode || pick.units_mode));
         if (Number.isFinite(risk) && risk > 0 && Number.isFinite(toWin) && toWin > 0) {
             return { mode: mode || 'stored', riskUnits: risk, toWinUnits: toWin };
         }
-        if (!mode) return { mode: 'legacy_unknown', riskUnits: null, toWinUnits: null };
-        const values = calculateStakeValuesForPick(mode, pick && pick.units, getPickOdds(pick));
-        values.mode = mode;
-        return values;
+        return { mode: 'legacy_unknown', riskUnits: null, toWinUnits: null };
     }
 
     function getPickRiskUnits(pick) {
@@ -5578,10 +5582,11 @@
 
     // ======================== PROFIT/LOSS FOR A SINGLE PICK ========================
     function pickPL(pick) {
-        if (pick.result_units != null && !isNaN(pick.result_units)) return parseFloat(pick.result_units);
         const status = normalizeStatus(pick && pick.status);
+        const hasExplicitMode = !!normalizeStakeModeValue(pick && (pick.stake_mode || pick.units_mode));
         if (status === 'won') return getPickToWinUnits(pick) || 0;
         if (status === 'lost') return -(getPickRiskUnits(pick) || 0);
+        if (!hasExplicitMode && pick && pick.result_units != null && !isNaN(pick.result_units)) return parseFloat(pick.result_units);
         return 0;
     }
 

@@ -160,30 +160,30 @@ class StatsEngine {
     }
 
     getStakeValues(pick) {
+        const modeRaw = String(pick && (pick.stake_mode || pick.units_mode) || '').toLowerCase();
+        const mode = modeRaw === 'to_win' || modeRaw === 'towin' ? 'to_win' : modeRaw === 'risk' ? 'risk' : '';
+        const units = Number(pick && (pick.stake || pick.units));
+        const odds = Number(pick && (pick.odds || pick.price || pick.odds_snapshot));
+        if (mode && Number.isFinite(units) && units > 0 && Number.isFinite(odds) && Math.abs(odds) >= 100) {
+            if (mode === 'to_win') {
+                return { riskUnits: odds < 0 ? units * Math.abs(odds) / 100 : units * 100 / odds, toWinUnits: units };
+            }
+            return { riskUnits: units, toWinUnits: odds < 0 ? units * 100 / Math.abs(odds) : units * odds / 100 };
+        }
         const risk = Number(pick && pick.risk_units);
         const toWin = Number(pick && (pick.to_win_units != null ? pick.to_win_units : pick.win_units));
         if (Number.isFinite(risk) && risk > 0 && Number.isFinite(toWin) && toWin > 0) {
             return { riskUnits: risk, toWinUnits: toWin };
         }
-        const modeRaw = String(pick && (pick.stake_mode || pick.units_mode) || '').toLowerCase();
-        const mode = modeRaw === 'to_win' || modeRaw === 'towin' ? 'to_win' : modeRaw === 'risk' ? 'risk' : '';
-        const units = Number(pick && (pick.stake || pick.units || 1));
-        const odds = Number(pick && (pick.odds || pick.price || pick.odds_snapshot || -110));
-        if (!mode) {
-            if (pick && typeof pick === 'object') pick.stake_review_required = true;
-            return { riskUnits: 0, toWinUnits: 0 };
-        }
-        if (mode === 'to_win') {
-            return { riskUnits: odds < 0 ? units * Math.abs(odds) / 100 : units * 100 / odds, toWinUnits: units };
-        }
-        return { riskUnits: units, toWinUnits: odds < 0 ? units * 100 / Math.abs(odds) : units * odds / 100 };
+        if (pick && typeof pick === 'object') pick.stake_review_required = true;
+        return { riskUnits: 0, toWinUnits: 0 };
     }
 
     calculatePickNet(pick, stake = this.getStakeValues(pick)) {
-        if (pick && pick.result_units != null && !Number.isNaN(Number(pick.result_units))) return Number(pick.result_units);
         const status = String(pick && pick.status || '').toLowerCase();
         if (status === 'won') return stake.toWinUnits;
         if (status === 'lost') return -stake.riskUnits;
+        if (pick && !pick.stake_review_required && pick.result_units != null && !Number.isNaN(Number(pick.result_units))) return Number(pick.result_units);
         return 0;
     }
 
