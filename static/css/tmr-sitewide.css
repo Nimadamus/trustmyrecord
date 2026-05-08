@@ -308,17 +308,55 @@ body.tmr-site-shell td {
 }
 
 body.tmr-site-shell .empty-state,
+body.tmr-site-shell .tmr-empty-state,
 body.tmr-site-shell .tmr-empty-msg,
 body.tmr-site-shell .fempty,
 body.tmr-site-shell .no-data-message,
 body.tmr-site-shell .loading-state,
+body.tmr-site-shell .tmr-loading-state,
 body.tmr-site-shell .error-state {
     border: 1px dashed rgba(148, 163, 184, 0.26);
     border-radius: var(--tmr-radius-md);
-    background: rgba(15, 23, 42, 0.48);
+    background:
+        linear-gradient(180deg, rgba(18, 31, 52, 0.78), rgba(8, 14, 28, 0.74));
     color: var(--tmr-text-muted);
     padding: clamp(18px, 3vw, 34px);
     text-align: center;
+}
+
+body.tmr-site-shell .tmr-empty-state,
+body.tmr-site-shell .tmr-loading-state {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+body.tmr-site-shell .tmr-empty-state h2,
+body.tmr-site-shell .tmr-empty-state h3,
+body.tmr-site-shell .tmr-empty-state strong,
+body.tmr-site-shell .empty-state h2,
+body.tmr-site-shell .empty-state h3,
+body.tmr-site-shell .empty-state strong {
+    color: var(--tmr-text-strong);
+}
+
+body.tmr-site-shell .tmr-empty-state p,
+body.tmr-site-shell .empty-state p,
+body.tmr-site-shell .tmr-loading-state p {
+    color: var(--tmr-text-muted);
+    margin-bottom: 0;
+}
+
+body.tmr-site-shell .tmr-spinner {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    border: 3px solid rgba(148, 163, 184, 0.2);
+    border-top-color: var(--tmr-accent);
+    margin: 0 auto 12px;
+    animation: tmr-spin 0.8s linear infinite;
+}
+
+@keyframes tmr-spin {
+    to { transform: rotate(360deg); }
 }
 
 body.tmr-site-shell .stat,
