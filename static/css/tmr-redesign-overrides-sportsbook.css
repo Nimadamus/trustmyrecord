@@ -2419,17 +2419,31 @@ body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board-c
 
 body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-period-bar,
 body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #lobbyPeriodBar{
+  display:flex !important;
+  flex-wrap:nowrap !important;
+  align-items:center !important;
   padding:10px !important;
   gap:8px !important;
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  scrollbar-width:none !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-period-bar::-webkit-scrollbar,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #lobbyPeriodBar::-webkit-scrollbar{
+  display:none !important;
 }
 
 body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-period-tab,
 body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #lobbyPeriodBar button{
-  min-height:40px !important;
-  padding:0 13px !important;
+  flex:0 0 auto !important;
+  min-height:38px !important;
+  padding:0 11px !important;
   border-radius:8px !important;
-  font-size:12px !important;
-  letter-spacing:.08em !important;
+  font-size:11.5px !important;
+  line-height:1 !important;
+  letter-spacing:.07em !important;
+  white-space:nowrap !important;
 }
 
 body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-grid-head,
