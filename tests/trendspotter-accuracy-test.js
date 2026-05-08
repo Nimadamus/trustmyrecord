@@ -10,6 +10,11 @@ const html = fs.readFileSync(path.join(root, 'trendspotter', 'index.html'), 'utf
 const js = fs.readFileSync(path.join(root, 'static', 'js', 'trendspotter.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'static', 'css', 'trendspotter.css'), 'utf8');
 
+function currentDateIso() {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+}
+
 function makeTrend(overrides = {}) {
   return {
     rank: 4,
@@ -30,7 +35,7 @@ function makeTrend(overrides = {}) {
     game_log: ['2026-04-05  @ New Orleans Pelicans            112-108  W'],
     is_current: true,
     is_archived: false,
-    artifact_slate_date: '2026-05-06',
+    artifact_slate_date: currentDateIso(),
     ...overrides,
   };
 }
@@ -83,7 +88,7 @@ function changeSelect(doc, selector, value) {
   const validData = {
     NBA: {
       status: 'fresh',
-      generated_at: '2026-05-06T10:00:00.000Z',
+      generated_at: `${currentDateIso()}T10:00:00.000Z`,
       trends: [
         makeTrend(),
         makeTrend({
@@ -158,6 +163,7 @@ function changeSelect(doc, selector, value) {
   await new Promise((resolve) => setTimeout(resolve, 10));
   assert.strictEqual(doc.querySelectorAll('.ts-result-item').length, 2, 'sport filter should render sport trends');
   assert.match(doc.querySelector('.ts-result-item').textContent, /Current Slate/, 'current trends should be visibly labeled');
+  assert.match(doc.querySelector('#slateDateIndicator').textContent, new RegExp(currentDateIso()), 'selected query should display current slate date');
   assert.strictEqual(doc.querySelectorAll('.ts-rank').length, 0, 'rank numbers should be removed from cards');
 
   assert(!doc.querySelector('.ts-result-item').textContent.includes('ROI / units'), 'ROI hidden when odds/results/unit basis are unavailable');
@@ -233,13 +239,13 @@ function changeSelect(doc, selector, value) {
       is_current: false,
       is_archived: true,
       artifact_slate_date: '2026-04-29',
-      staleness_reason: 'Artifact slate date 2026-04-29 is before current date 2026-05-06.',
+      staleness_reason: `Artifact slate date 2026-04-29 is before current date ${currentDateIso()}.`,
       trends: [
         makeTrend({
           is_current: false,
           is_archived: true,
           artifact_slate_date: '2026-04-29',
-          staleness_reason: 'Artifact slate date 2026-04-29 is before current date 2026-05-06.',
+          staleness_reason: `Artifact slate date 2026-04-29 is before current date ${currentDateIso()}.`,
         }),
       ],
     },

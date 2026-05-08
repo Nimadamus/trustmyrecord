@@ -98,6 +98,7 @@
     sortBy: document.getElementById("sortBy"),
     currentMatchupOnly: document.getElementById("currentMatchupOnly"),
     selectionSummary: document.getElementById("selectionSummary"),
+    slateDateIndicator: document.getElementById("slateDateIndicator"),
     runButton: document.getElementById("runTrendspotter"),
     resultsSection: document.getElementById("resultsSection"),
     resultsTitle: document.getElementById("resultsTitle"),
@@ -132,6 +133,30 @@
 
   function unique(values) {
     return Array.from(new Set(values.filter(Boolean))).sort();
+  }
+
+  function currentDateIso() {
+    var now = new Date();
+    var year = now.getFullYear();
+    var month = String(now.getMonth() + 1).padStart(2, "0");
+    var day = String(now.getDate()).padStart(2, "0");
+    return year + "-" + month + "-" + day;
+  }
+
+  function slateDateOf(item) {
+    var raw = item && (item.slate_date || item.artifact_slate_date || item.game_date || item.matchup_date || item.date);
+    var match = String(raw || "").match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return match ? match[1] + "-" + match[2] + "-" + match[3] : "";
+  }
+
+  function isCurrentSlateItem(item) {
+    return slateDateOf(item) === currentDateIso();
+  }
+
+  function currentSlateDates(matchups) {
+    return unique(matchups.map(slateDateOf).filter(function (date) {
+      return date === currentDateIso();
+    }));
   }
 
   function trendsForSport(sport) {
@@ -169,6 +194,10 @@
     var liveSlate = Array.isArray(data.live_matchups) ? data.live_matchups : [];
     var derived = trendsForSport(sport).map(matchupFromTrend);
     var verifiedSlate = data.is_archived === true && state.researchMode === "current" ? [] : listed.concat(derived);
+    if (state.researchMode === "current") {
+      verifiedSlate = verifiedSlate.filter(isCurrentSlateItem);
+      liveSlate = liveSlate.filter(isCurrentSlateItem);
+    }
     var byKey = new Map();
     verifiedSlate.concat(liveSlate).forEach(function (matchup) {
       if (!matchup || !matchup.matchup || !matchup.away_abbr || !matchup.home_abbr) return;
@@ -501,9 +530,9 @@
       return;
     }
     if (!matchups.length) {
-      els.matchupFilter.innerHTML = optionHtml("", "No verified slate matchups available", true);
+      els.matchupFilter.innerHTML = optionHtml("", "No current slate matchups available", true);
       els.matchupFilter.disabled = true;
-      els.matchupDataSource.textContent = "No verified Trendspotter slate artifact contains matchup data for " + state.sport + ".";
+      els.matchupDataSource.textContent = "No current slate is available for this sport today.";
       return;
     }
     if (!matchups.some(function (matchup) { return matchup.key === state.matchup; })) {
@@ -516,7 +545,8 @@
     }).join("");
     var data = cache[state.sport] || {};
     var source = data.matchup_source || "Verified Trendspotter artifact slate matchups";
-    var date = data.artifact_slate_date ? " Slate date: " + data.artifact_slate_date + "." : "";
+    var dates = currentSlateDates(matchups);
+    var date = dates.length ? " Slate date: " + dates.join(", ") + "." : "";
     els.matchupDataSource.textContent = source + "." + date;
   }
 
@@ -555,6 +585,16 @@
     ];
     els.selectionSummary.textContent = parts.join(" / ");
     els.runButton.disabled = !state.sport || !state.matchup;
+    if (els.slateDateIndicator) {
+      var slateDate = matchup ? slateDateOf(matchup) : "";
+      if (slateDate) {
+        els.slateDateIndicator.textContent = "Slate date: " + slateDate;
+      } else if (state.sport) {
+        els.slateDateIndicator.textContent = "Slate date: No current slate is available for this sport today.";
+      } else {
+        els.slateDateIndicator.textContent = "Slate date: Select a current matchup.";
+      }
+    }
   }
 
   async function loadSport(sport) {
@@ -568,7 +608,7 @@
     els.loadingMessage.textContent = "Loading verified " + sport + " trends...";
     els.loadingMessage.classList.remove("is-hidden");
     try {
-      var response = await fetch(apiBase() + "/trendspotter/verified?sport=" + encodeURIComponent(sport), {
+      var response = await fetch(apiBase() + "/trendspotter/verified?sport=" + encodeURIComponent(sport) + "&_=" + Date.now(), {
         headers: { "Accept": "application/json" },
         cache: "no-store"
       });
@@ -600,7 +640,7 @@
       var games = Array.isArray(data.games) ? data.games : Array.isArray(data) ? data : [];
       cache[sport] = cache[sport] || {};
       cache[sport].live_matchups = games.filter(function (game) {
-        return game && game.away_team && game.home_team;
+        return game && game.away_team && game.home_team && slateDateOf({ slate_date: game.commence_time }) === currentDateIso();
       }).map(function (game) {
         return {
           sport: sport,
@@ -615,6 +655,8 @@
       });
       if (cache[sport].live_matchups.length) {
         cache[sport].matchup_source = "Live schedule board matchups from the TrustMyRecord games board; verified trend results still require matching Trendspotter artifact rows";
+      } else if (!matchupsForSport(sport).length) {
+        cache[sport].matchup_source = "No current slate is available for this sport today";
       }
     } catch (error) {
       cache[sport] = cache[sport] || {};
