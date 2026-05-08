@@ -675,7 +675,7 @@
     renderMatchupFilter();
     renderTeamFilters();
     updateSummary();
-    loadSport(sport);
+    return loadSport(sport);
   }
 
   function clearResults() {
@@ -1136,9 +1136,28 @@
   });
   els.runButton.addEventListener("click", renderResults);
 
+  async function applyUrlSelection() {
+    var params = new URLSearchParams(window.location.search || "");
+    var sport = normalize(params.get("sport"));
+    if (!sport || !DEFAULT_SPORTS.map(normalize).includes(sport)) return;
+    await selectSport(sport);
+    var firstMatchup = matchupsForSport(sport).find(function (matchup) {
+      return matchup && matchup.key;
+    });
+    if (firstMatchup) {
+      state.matchup = firstMatchup.key;
+      state.team = "both";
+      renderMatchupFilter();
+      renderTeamFilters();
+      updateSummary();
+      if (params.get("autorun") === "1") renderResults();
+    }
+  }
+
   renderSelects();
   renderSportOptions();
   renderMatchupFilter();
   renderTeamFilters();
   updateSummary();
+  applyUrlSelection();
 })();
