@@ -136,26 +136,16 @@ class StatsEngine {
         if (graded.length === 0) return 0;
 
         let totalRisk = 0;
-        let totalReturn = 0;
+        let net = 0;
 
         graded.forEach(pick => {
-            const stake = pick.stake || pick.units || 1;
-            const odds = pick.odds || pick.price || pick.odds_snapshot || -110;
-
-            // Risk depends on favorite vs underdog
-            const risk = odds < 0 ? (stake * Math.abs(odds) / 100) : stake;
-            totalRisk += risk;
-
-            if (pick.status === 'won') {
-                totalReturn += risk + this.calculatePayout(stake, odds);
-            } else if (pick.status === 'pushed' || pick.status === 'push') {
-                totalReturn += risk; // Push = risk returned
-            }
-            // Loss = 0 return
+            const stake = this.getStakeValues(pick);
+            totalRisk += stake.riskUnits;
+            net += this.calculatePickNet(pick, stake);
         });
 
         if (totalRisk === 0) return 0;
-        return ((totalReturn - totalRisk) / totalRisk) * 100;
+        return (net / totalRisk) * 100;
     }
 
     /**
@@ -165,22 +155,36 @@ class StatsEngine {
         const graded = picks.filter(p => p.status !== 'pending');
 
         return graded.reduce((total, pick) => {
-            const stake = pick.stake || pick.units || 1;
-            const odds = pick.odds || pick.price || pick.odds_snapshot || -110;
-
-            if (pick.status === 'won') {
-                return total + this.calculatePayout(stake, odds);
-            } else if (pick.status === 'lost') {
-                // Match autograder: favorite loss = stake * |odds|/100, underdog loss = stake
-                if (odds < 0) {
-                    return total - (stake * Math.abs(odds) / 100);
-                } else {
-                    return total - stake;
-                }
-            }
-            // Push = no change
-            return total;
+            return total + this.calculatePickNet(pick);
         }, 0);
+    }
+
+    getStakeValues(pick) {
+        const risk = Number(pick && pick.risk_units);
+        const toWin = Number(pick && (pick.to_win_units != null ? pick.to_win_units : pick.win_units));
+        if (Number.isFinite(risk) && risk > 0 && Number.isFinite(toWin) && toWin > 0) {
+            return { riskUnits: risk, toWinUnits: toWin };
+        }
+        const modeRaw = String(pick && (pick.stake_mode || pick.units_mode) || '').toLowerCase();
+        const mode = modeRaw === 'to_win' || modeRaw === 'towin' ? 'to_win' : modeRaw === 'risk' ? 'risk' : '';
+        const units = Number(pick && (pick.stake || pick.units || 1));
+        const odds = Number(pick && (pick.odds || pick.price || pick.odds_snapshot || -110));
+        if (!mode) {
+            if (pick && typeof pick === 'object') pick.stake_review_required = true;
+            return { riskUnits: 0, toWinUnits: 0 };
+        }
+        if (mode === 'to_win') {
+            return { riskUnits: odds < 0 ? units * Math.abs(odds) / 100 : units * 100 / odds, toWinUnits: units };
+        }
+        return { riskUnits: units, toWinUnits: odds < 0 ? units * 100 / Math.abs(odds) : units * odds / 100 };
+    }
+
+    calculatePickNet(pick, stake = this.getStakeValues(pick)) {
+        if (pick && pick.result_units != null && !Number.isNaN(Number(pick.result_units))) return Number(pick.result_units);
+        const status = String(pick && pick.status || '').toLowerCase();
+        if (status === 'won') return stake.toWinUnits;
+        if (status === 'lost') return -stake.riskUnits;
+        return 0;
     }
 
     /**

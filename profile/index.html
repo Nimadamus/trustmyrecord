@@ -2268,7 +2268,7 @@
                           <table class="tmrx-table" id="tmrxTablePicks">
                             <thead><tr>
                               <th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Market</th>
-                              <th class="num">Odds</th><th class="num">Units</th>
+                              <th class="num">Odds</th><th class="num">Risked</th><th class="num">To Win</th>
                               <th>Result</th><th class="num">Net</th>
                             </tr></thead>
                             <tbody><tr class="empty"><td colspan="9">Loading pick history&hellip;</td></tr></tbody>
@@ -2354,8 +2354,8 @@
                             </div>
                             <div class="capper-history-scroll">
                                 <table class="capper-history-table">
-                                    <thead><tr><th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Odds</th><th>Units</th><th>Result</th><th>Profit/Loss</th></tr></thead>
-                                    <tbody id="capHistoryBody"><tr><td colspan="8">Loading picks...</td></tr></tbody>
+                                    <thead><tr><th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Odds</th><th>Risked</th><th>To Win</th><th>Result</th><th>Profit/Loss</th></tr></thead>
+                                    <tbody id="capHistoryBody"><tr><td colspan="9">Loading picks...</td></tr></tbody>
                                 </table>
                             </div>
                         </section>
@@ -2553,7 +2553,7 @@
                             <th>Pick</th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="odds" onclick="setTableSort('odds')">Line</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="result" onclick="setTableSort('result')">Result</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Units</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Stake / P&amp;L</button></th>
                         </tr>
                     </thead>
                     <tbody id="picksTableBody"></tbody>
@@ -5303,19 +5303,14 @@
             if (pick.result_units != null && !isNaN(pick.result_units)) {
                 netUnits += parseFloat(pick.result_units);
             } else {
-                const units = pick.units || 1;
-                const odds = pick.odds_snapshot || pick.odds || -110;
-                if (pick.status === 'won') netUnits += odds < 0 ? units : (units * odds / 100);
-                else if (pick.status === 'lost') netUnits += odds < 0 ? -(units * Math.abs(odds) / 100) : -units;
+                netUnits += pickPL(pick);
             }
         });
 
         // ROI
         let totalRisked = 0;
         graded.forEach(pick => {
-            const units = pick.units || 1;
-            const odds = pick.odds_snapshot || pick.odds || -110;
-            totalRisked += odds < 0 ? (units * Math.abs(odds) / 100) : units;
+            totalRisked += getPickRiskUnits(pick) || 0;
         });
         const roi = totalRisked > 0 ? (netUnits / totalRisked) * 100 : 0;
 
@@ -5368,10 +5363,53 @@
         return Number.isFinite(value) && value > 0 ? value : 1;
     }
 
+    function normalizeStakeModeValue(value) {
+        const mode = String(value || '').trim().toLowerCase();
+        if (mode === 'to_win' || mode === 'towin') return 'to_win';
+        if (mode === 'risk') return 'risk';
+        return '';
+    }
+
+    function calculateStakeValuesForPick(mode, amount, odds) {
+        const units = Number(amount);
+        const price = Number(odds);
+        if (!Number.isFinite(units) || units <= 0 || !Number.isFinite(price) || Math.abs(price) < 100) {
+            return { riskUnits: null, toWinUnits: null };
+        }
+        if (mode === 'to_win') {
+            return {
+                riskUnits: price < 0 ? units * Math.abs(price) / 100 : units * 100 / price,
+                toWinUnits: units
+            };
+        }
+        return {
+            riskUnits: units,
+            toWinUnits: price < 0 ? units * 100 / Math.abs(price) : units * price / 100
+        };
+    }
+
+    function getPickStakeInfo(pick) {
+        const risk = Number(pick && pick.risk_units);
+        const toWinRaw = pick && (pick.to_win_units != null ? pick.to_win_units : pick.win_units);
+        const toWin = Number(toWinRaw);
+        const mode = normalizeStakeModeValue(pick && (pick.stake_mode || pick.units_mode));
+        if (Number.isFinite(risk) && risk > 0 && Number.isFinite(toWin) && toWin > 0) {
+            return { mode: mode || 'stored', riskUnits: risk, toWinUnits: toWin };
+        }
+        if (!mode) return { mode: 'legacy_unknown', riskUnits: null, toWinUnits: null };
+        const values = calculateStakeValuesForPick(mode, pick && pick.units, getPickOdds(pick));
+        values.mode = mode;
+        return values;
+    }
+
     function getPickRiskUnits(pick) {
-        const units = getPickUnits(pick);
-        const odds = getPickOdds(pick);
-        return odds < 0 ? units * Math.abs(odds) / 100 : units;
+        const stake = getPickStakeInfo(pick);
+        return Number.isFinite(stake.riskUnits) ? stake.riskUnits : null;
+    }
+
+    function getPickToWinUnits(pick) {
+        const stake = getPickStakeInfo(pick);
+        return Number.isFinite(stake.toWinUnits) ? stake.toWinUnits : null;
     }
 
     function computeCoreLedgerStatsFromPicks(picks) {
@@ -5391,7 +5429,7 @@
         const netUnits = graded.reduce(function(total, pick) { return total + pickPL(pick); }, 0);
         const riskedUnits = graded.reduce(function(total, pick) { return total + getPickRiskUnits(pick); }, 0);
         const avgUnits = graded.length
-            ? graded.reduce(function(total, pick) { return total + getPickUnits(pick); }, 0) / graded.length
+            ? graded.reduce(function(total, pick) { return total + (getPickRiskUnits(pick) || 0); }, 0) / graded.length
             : 0;
         const validProbabilities = graded
             .map(function(pick) { return oddsToProbability(getPickOdds(pick)); })
@@ -5400,7 +5438,7 @@
             ? probabilityToAmerican(validProbabilities.reduce(function(total, value) { return total + value; }, 0) / validProbabilities.length)
             : null;
         const effectiveUnits = graded.reduce(function(total, pick) {
-            const units = getPickUnits(pick);
+            const units = getPickRiskUnits(pick);
             if (!units) return total;
             return total + (pickPL(pick) / units) * 3;
         }, 0);
@@ -5541,9 +5579,9 @@
     // ======================== PROFIT/LOSS FOR A SINGLE PICK ========================
     function pickPL(pick) {
         if (pick.result_units != null && !isNaN(pick.result_units)) return parseFloat(pick.result_units);
-        const u = pick.units || 1, o = pick.odds_snapshot || pick.odds || -110;
-        if (pick.status === 'won') return o < 0 ? u : (u * o / 100);
-        if (pick.status === 'lost') return o < 0 ? -(u * Math.abs(o) / 100) : -u;
+        const status = normalizeStatus(pick && pick.status);
+        if (status === 'won') return getPickToWinUnits(pick) || 0;
+        if (status === 'lost') return -(getPickRiskUnits(pick) || 0);
         return 0;
     }
 
@@ -5655,6 +5693,14 @@
         if (value == null || isNaN(Number(value))) return '--';
         const num = Number(value);
         return (num >= 0 ? '+' : '') + num.toFixed(2) + 'u';
+    }
+
+    function formatStakeBreakdown(pick) {
+        const stake = getPickStakeInfo(pick);
+        const riskText = Number.isFinite(stake.riskUnits) ? formatUnitsValue(stake.riskUnits) : 'Needs review';
+        const winText = Number.isFinite(stake.toWinUnits) ? formatUnitsValue(stake.toWinUnits) : 'Needs review';
+        return '<div class="ledger-subline">Risked: ' + riskText + '</div>'
+            + '<div class="ledger-subline">To Win: ' + winText + '</div>';
     }
 
     function normalizeStatus(status) {
@@ -7177,11 +7223,12 @@
                 return '<tr><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td></tr>';
             }
             const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : '—';
-            const units = p.units != null ? Number(p.units).toFixed(1) + 'u' : '—';
             const result = String(p.status || 'pending').toLowerCase();
             const net = p.result_units != null ? Number(p.result_units) : null;
             const netCls = net == null ? 'zero' : (net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero');
             const netTxt = net == null ? '—' : (net > 0 ? '+' : '') + net.toFixed(2) + 'u';
+            const risk = getPickRiskUnits(p);
+            const toWin = getPickToWinUnits(p);
             return '<tr>' +
                 '<td>' + fmtDate(p.created_at || p.locked_at) + '</td>' +
                 '<td>' + sportLabel(p.sport_key) + '</td>' +
@@ -7189,7 +7236,8 @@
                 '<td class="name">' + capEsc(formatPickDisplayValue(p)) + '</td>' +
                 '<td>' + marketLabel(p.market_type) + '</td>' +
                 '<td class="num">' + fmtAmericanOdds(p.odds_snapshot) + '</td>' +
-                '<td class="num">' + units + '</td>' +
+                '<td class="num">' + (Number.isFinite(risk) ? risk.toFixed(2) + 'u' : 'Needs review') + '</td>' +
+                '<td class="num">' + (Number.isFinite(toWin) ? toWin.toFixed(2) + 'u' : 'Needs review') + '</td>' +
                 '<td>' + resultTag(p.status) + '</td>' +
                 '<td class="num ' + netCls + '">' + netTxt + '</td>' +
             '</tr>';
@@ -7716,7 +7764,8 @@
     function isCapGraded(p) { return ['won','lost','push'].includes(capStatus(p)); }
     function capDateMs(p) { return new Date((p && (p.locked_at || p.created_at || p.graded_at)) || 0).getTime(); }
     function capOdds(p) { return Number(p && (p.odds_snapshot != null ? p.odds_snapshot : p.odds)); }
-    function capUnits(p) { const n = Number(p && p.units); return Number.isFinite(n) ? n : 0; }
+    function capUnits(p) { const n = getPickRiskUnits(p); return Number.isFinite(n) ? n : 0; }
+    function capToWinUnits(p) { const n = getPickToWinUnits(p); return Number.isFinite(n) ? n : 0; }
     function capPL(p) { const n = Number(p && p.result_units); return Number.isFinite(n) ? n : 0; }
 
     function getCapperFilteredPicks() {
@@ -7970,7 +8019,7 @@
         if (meta) meta.textContent = rows.length + ' picks';
         if (!tbody) return;
         if (!rows.length) {
-            tbody.innerHTML = '<tr><td colspan="8">No picks match these filters.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9">No picks match these filters.</td></tr>';
             return;
         }
         tbody.innerHTML = rows.slice(0, 100).map(p => {
@@ -7985,6 +8034,7 @@
                 + '<td>' + capEsc(formatPickDisplayValue(p)) + '</td>'
                 + '<td>' + (Number.isFinite(odds) ? (odds > 0 ? '+' : '') + odds : '—') + '</td>'
                 + '<td>' + capUnits(p).toFixed(2) + 'u</td>'
+                + '<td>' + capToWinUnits(p).toFixed(2) + 'u</td>'
                 + '<td><span class="capper-result ' + status + '">' + (status === 'won' ? 'Win' : status === 'lost' ? 'Loss' : status === 'push' ? 'Push' : 'Pending') + '</span></td>'
                 + '<td class="' + capValueClass(pl) + '">' + (isCapGraded(p) ? capUnitsText(pl) : '—') + '</td>'
                 + '</tr>';
@@ -8039,10 +8089,10 @@
             if (r === 'won') wins++;
             else if (r === 'lost') losses++;
             else if (r === 'push') pushes++;
-            const u = Number(p.units) || 0;
-            const ru = Number(p.result_units);
+            const u = getPickRiskUnits(p) || 0;
+            const ru = pickPL(p);
             risked += u;
-            if (Number.isFinite(ru)) net += ru;
+            net += ru;
             const ip = impliedProb(p.odds_snapshot);
             if (ip != null) { probSum += ip; probCount++; }
         });
@@ -8094,9 +8144,8 @@
         const fmtUnits = (u) => Number.isFinite(Number(u)) ? Number(u).toFixed(2) + 'u' : '—';
         const fmtPL = (p) => {
             const r = pmResultClass(p);
-            const ru = Number(p.result_units);
             if (r === 'pending') return '<span class="pm-pending">—</span>';
-            if (!Number.isFinite(ru)) return '<span class="pm-pending">—</span>';
+            const ru = pickPL(p);
             const cls = ru > 0 ? 'pm-pos' : ru < 0 ? 'pm-neg' : '';
             return '<span class="' + cls + '">' + (ru >= 0 ? '+' : '') + ru.toFixed(2) + 'u</span>';
         };
@@ -8116,7 +8165,7 @@
                 + '<td class="pm-cell-pick">' + escHtml(formatPickDisplayValue(p)) + '</td>'
                 + '<td class="num">' + escHtml(fmtLine(p)) + '</td>'
                 + '<td class="num">' + escHtml(fmtOdds(p.odds_snapshot)) + '</td>'
-                + '<td class="num">' + escHtml(fmtUnits(p.units)) + '</td>'
+                + '<td class="num">Risked: ' + escHtml(fmtUnits(getPickRiskUnits(p))) + '<br>To Win: ' + escHtml(fmtUnits(getPickToWinUnits(p))) + '</td>'
                 + '<td>' + resultBadge + '</td>'
                 + '<td class="num">' + fmtPL(p) + '</td>'
                 + '</tr>';
@@ -8579,6 +8628,9 @@
         const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
         const sel = formatPickDisplayValue(p);
         const status = normalizeStatus(p.status);
+        const pl = status === 'pending' ? null : pickPL(p);
+        const plClass = pl == null ? 'zero' : pl > 0 ? 'positive' : pl < 0 ? 'negative' : 'zero';
+        const plText = pl == null ? '--' : formatSignedUnits(pl);
 
         const rowClass = 'row-' + status;
         return '<tr class="' + rowClass + '">' +
@@ -8587,7 +8639,7 @@
             '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div></td>' +
             '<td data-label="Line">' + odds + '</td>' +
             '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
-            '<td data-label="Units">' + formatUnitsValue(p.units) + '</td>' +
+            '<td data-label="Stake / P&L">' + formatStakeBreakdown(p) + '<div class="profit-cell ' + plClass + '">Result Profit/Loss: ' + plText + '</div></td>' +
             '</tr>';
     }
 

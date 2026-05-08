@@ -56,6 +56,11 @@ assert.deepStrictEqual(calculateStakeValues('risk', 2, -110), { risk_units: 2, w
 assert.deepStrictEqual(calculateStakeValues('to_win', 2, -110), { risk_units: 2.2, win_units: 2 });
 assert.deepStrictEqual(calculateStakeValues('risk', 2, -145), { risk_units: 2, win_units: 1.38 });
 assert.deepStrictEqual(calculateStakeValues('to_win', 2, -145), { risk_units: 2.9, win_units: 2 });
+assert.deepStrictEqual(calculateStakeValues('to_win', 2.5, -142), { risk_units: 3.55, win_units: 2.5 });
+assert.deepStrictEqual(calculateStakeValues('to_win', 5, -141), { risk_units: 7.05, win_units: 5 });
+assert.deepStrictEqual(calculateStakeValues('risk', 2, -105), { risk_units: 2, win_units: 1.9 });
+assert.deepStrictEqual(calculateStakeValues('risk', 2, 150), { risk_units: 2, win_units: 3 });
+assert.deepStrictEqual(calculateStakeValues('to_win', 3, 150), { risk_units: 2, win_units: 3 });
 assert.deepStrictEqual(calculateStakeValues('risk', 1.5, 150), { risk_units: 1.5, win_units: 2.25 });
 assert.deepStrictEqual(calculateStakeValues('to_win', 1.5, 150), { risk_units: 1, win_units: 1.5 });
 

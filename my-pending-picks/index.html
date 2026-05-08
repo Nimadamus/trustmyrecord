@@ -327,7 +327,8 @@
                                 <th>Pick</th>
                                 <th>Line</th>
                                 <th>Odds</th>
-                                <th>Units</th>
+                                <th>Risked</th>
+                                <th>To Win</th>
                                 <th>Time Submitted</th>
                                 <th>Status</th>
                             </tr>
@@ -477,6 +478,34 @@
             if (!Number.isFinite(n)) return '-';
             return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')) + 'u';
         }
+        function stakeMode(pick) {
+            var mode = String((pick && (pick.stake_mode || pick.units_mode)) || '').toLowerCase();
+            if (mode === 'to_win' || mode === 'towin') return 'to_win';
+            if (mode === 'risk') return 'risk';
+            return '';
+        }
+        function oddsValue(pick) {
+            var n = Number(pick && (pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds));
+            return Number.isFinite(n) && Math.abs(n) >= 100 ? n : null;
+        }
+        function riskUnits(pick) {
+            var stored = Number(pick && pick.risk_units);
+            if (Number.isFinite(stored) && stored > 0) return stored;
+            var mode = stakeMode(pick);
+            var units = Number(pick && pick.units);
+            var odds = oddsValue(pick);
+            if (!mode || !Number.isFinite(units) || units <= 0 || odds == null) return null;
+            return mode === 'to_win' ? (odds < 0 ? units * Math.abs(odds) / 100 : units * 100 / odds) : units;
+        }
+        function toWinUnits(pick) {
+            var stored = Number(pick && (pick.to_win_units != null ? pick.to_win_units : pick.win_units));
+            if (Number.isFinite(stored) && stored > 0) return stored;
+            var mode = stakeMode(pick);
+            var units = Number(pick && pick.units);
+            var odds = oddsValue(pick);
+            if (!mode || !Number.isFinite(units) || units <= 0 || odds == null) return null;
+            return mode === 'to_win' ? units : (odds < 0 ? units * 100 / Math.abs(odds) : units * odds / 100);
+        }
         function pickText(pick) {
             pick = pick || {};
             var selection = pickSelection(pick) || 'Pick';
@@ -552,7 +581,8 @@
                 + '<td><span class="pick-main">' + esc(pickLabel) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span></td>'
                 + '<td>' + esc(fmtPickLine(pick)) + '</td>'
                 + '<td>' + esc(fmtOdds(pick.odds_snapshot)) + '</td>'
-                + '<td>' + esc(fmtUnits(pick.units)) + '</td>'
+                + '<td>' + esc(riskUnits(pick) == null ? 'Needs review' : fmtUnits(riskUnits(pick))) + '</td>'
+                + '<td>' + esc(toWinUnits(pick) == null ? 'Needs review' : fmtUnits(toWinUnits(pick))) + '</td>'
                 + '<td>' + esc(fmtDate(pick.locked_at || pick.created_at)) + '</td>'
                 + '<td><span class="status-pill">' + esc(statusText(pick)) + '</span></td>'
                 + '</tr>';
@@ -567,7 +597,8 @@
                 + cardRow('Pick', '<span class="pick-main">' + esc(pickText(pick)) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span>')
                 + cardRow('Line', esc(fmtPickLine(pick)))
                 + cardRow('Odds', esc(fmtOdds(pick.odds_snapshot)))
-                + cardRow('Units', esc(fmtUnits(pick.units)))
+                + cardRow('Risked', esc(riskUnits(pick) == null ? 'Needs review' : fmtUnits(riskUnits(pick))))
+                + cardRow('To Win', esc(toWinUnits(pick) == null ? 'Needs review' : fmtUnits(toWinUnits(pick))))
                 + cardRow('Time Submitted', esc(fmtDate(pick.locked_at || pick.created_at)))
                 + cardRow('Status', '<span class="status-pill">' + esc(statusText(pick)) + '</span>')
                 + '</article>';
@@ -579,7 +610,7 @@
             // do not hide returned rows with a second exact-status frontend filter.
             var pending = apiRows;
             var filteredOut = [];
-            var totalUnits = pending.reduce(function (sum, pick) { return sum + Number(pick.units || 0); }, 0);
+            var totalUnits = pending.reduce(function (sum, pick) { return sum + Number(riskUnits(pick) || 0); }, 0);
             var earliest = pending.map(function (pick) { return pick.commence_time; }).filter(Boolean).sort()[0] || null;
             window.__tmrPendingPicksDebug = {
                 apiCount: apiRows.length,

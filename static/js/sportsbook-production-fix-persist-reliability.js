@@ -312,8 +312,9 @@
         const odds = Number(pick.odds_snapshot != null ? pick.odds_snapshot : (pick.odds != null ? pick.odds : pick.price));
         let risk = Number(pick.risk_units != null ? pick.risk_units : pick.riskUnits);
         let win = Number(pick.win_units != null ? pick.win_units : (pick.to_win_units != null ? pick.to_win_units : pick.toWinUnits));
-        if ((!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) && Number.isFinite(odds)) {
-            const values = calculateStakeValues(pick.stake_mode || pick.units_mode || pick.unitsMode || 'risk', pick.units != null ? pick.units : 1, odds);
+        const mode = pick.stake_mode || pick.units_mode || pick.unitsMode;
+        if ((!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) && mode && Number.isFinite(odds)) {
+            const values = calculateStakeValues(mode, pick.units != null ? pick.units : 1, odds);
             risk = values.risk_units;
             win = values.win_units;
         }
@@ -337,7 +338,7 @@
             odds_snapshot: pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds,
             line_snapshot: pick.line_snapshot != null ? pick.line_snapshot : pick.line,
             units: pick.units != null ? parseFloat(pick.units) : 1,
-            stake_mode: pick.stake_mode || pick.units_mode || 'risk',
+            stake_mode: pick.stake_mode || pick.units_mode || '',
             risk_units: pick.risk_units != null ? parseFloat(pick.risk_units) : null,
             to_win_units: pick.to_win_units != null ? parseFloat(pick.to_win_units) : (pick.win_units != null ? parseFloat(pick.win_units) : null),
             win_units: pick.win_units != null ? parseFloat(pick.win_units) : (pick.to_win_units != null ? parseFloat(pick.to_win_units) : null)
@@ -985,7 +986,7 @@
             return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.result_units) || 0));
         }, 0);
         const risked = normalized.reduce(function(sum, pick) {
-            return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.risk_units) || parseFloat(pick.units) || 0));
+            return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.risk_units) || 0));
         }, 0);
 
         return {
