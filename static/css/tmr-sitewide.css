@@ -81,6 +81,10 @@ body.tmr-site-shell .tmr-global-nav__links a[href*="trendspotter"] {
     --tmr-danger: #ef4444;
     --tmr-page-max: 1440px;
     --tmr-page-pad: clamp(16px, 2.4vw, 34px);
+    --tmr-gap-sm: 10px;
+    --tmr-gap-md: 16px;
+    --tmr-gap-lg: 24px;
+    --tmr-card-pad: clamp(16px, 2vw, 24px);
     --tmr-radius-sm: 8px;
     --tmr-radius-md: 12px;
     --tmr-radius-lg: 16px;
@@ -151,6 +155,59 @@ body.tmr-site-shell a {
     color: inherit;
 }
 
+.tmr-page-head {
+    display: grid;
+    gap: var(--tmr-gap-sm);
+    margin-bottom: var(--tmr-gap-lg);
+    min-width: 0;
+}
+
+.tmr-kicker {
+    color: var(--tmr-accent);
+    font: 800 0.78rem/1 var(--tmr-font);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.tmr-page-title {
+    color: var(--tmr-text-strong);
+    font-family: var(--tmr-display);
+    font-size: clamp(2rem, 4vw, 4rem);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: 0;
+    margin: 0;
+}
+
+.tmr-page-subtitle {
+    color: var(--tmr-text-soft);
+    font-size: clamp(0.98rem, 1.5vw, 1.1rem);
+    line-height: 1.55;
+    max-width: 760px;
+    margin: 0;
+}
+
+.tmr-stack {
+    display: grid;
+    gap: var(--tmr-gap-md);
+    min-width: 0;
+}
+
+.tmr-cluster {
+    display: flex;
+    align-items: center;
+    gap: var(--tmr-gap-sm);
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.tmr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+    gap: var(--tmr-gap-md);
+    min-width: 0;
+}
+
 body.tmr-site-shell .card,
 body.tmr-site-shell .sidebar-card,
 body.tmr-site-shell .composer-card,
@@ -173,6 +230,7 @@ body.tmr-site-shell .game-tile {
     border: 1px solid var(--tmr-border);
     border-radius: var(--tmr-radius-md);
     box-shadow: var(--tmr-shadow-card);
+    min-width: 0;
 }
 
 body.tmr-site-shell .section-header,
@@ -186,6 +244,16 @@ body.tmr-site-shell .sportsbook-board-toolbar {
     justify-content: space-between;
     gap: 14px;
     flex-wrap: wrap;
+    min-width: 0;
+}
+
+body.tmr-site-shell .section-header > *,
+body.tmr-site-shell .card-header > *,
+body.tmr-site-shell .tmr-section-header > *,
+body.tmr-site-shell .factionrow > *,
+body.tmr-site-shell .tmr-fb-topbar > *,
+body.tmr-site-shell .sportsbook-board-toolbar > * {
+    min-width: 0;
 }
 
 body.tmr-site-shell .btn,
