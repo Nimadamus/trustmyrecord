@@ -18,7 +18,7 @@ function currentDateIso() {
 function makeTrend(overrides = {}) {
   return {
     rank: 4,
-    sport: 'NBA',
+    sport: 'MLB',
     matchup: 'Magic @ Pistons',
     team_abbr: 'ORL',
     opponent_abbr: 'DET',
@@ -30,7 +30,7 @@ function makeTrend(overrides = {}) {
     sample: 50,
     dominance: 0.86,
     date_range: '2024-03-05 to 2026-04-05',
-    source_url: 'https://www.espn.com/nba/team/schedule/_/name/orl',
+    source_url: 'https://www.espn.com/mlb/team/schedule/_/name/orl',
     game_dates: ['2026-04-05'],
     game_log: ['2026-04-05  @ New Orleans Pelicans            112-108  W'],
     is_current: true,
@@ -65,7 +65,7 @@ async function bootWithData(dataBySport) {
   return dom;
 }
 
-async function selectSport(dom, sport = 'NBA') {
+async function selectSport(dom, sport = 'MLB') {
   const doc = dom.window.document;
   doc.querySelector(`[data-sport="${sport}"]`).click();
   await new Promise((resolve) => setTimeout(resolve, 30));
@@ -86,7 +86,7 @@ function changeSelect(doc, selector, value) {
 
 (async () => {
   const validData = {
-    NBA: {
+    MLB: {
       status: 'fresh',
       generated_at: `${currentDateIso()}T10:00:00.000Z`,
       trends: [
@@ -112,7 +112,7 @@ function changeSelect(doc, selector, value) {
               unit_basis: '1 unit flat stake',
               raw_game_log: '2026-04-05 vs Orlando Magic 110-101 W',
               why_counted: 'Matched after-win moneyline selector.',
-              source_url: 'https://www.espn.com/nba/team/schedule/_/name/det',
+              source_url: 'https://www.espn.com/mlb/team/schedule/_/name/det',
             },
             {
               date: '2026-04-02',
@@ -122,7 +122,7 @@ function changeSelect(doc, selector, value) {
               unit_basis: '1 unit flat stake',
               raw_game_log: '2026-04-02 @ Boston Celtics 101-106 L',
               why_counted: 'Matched after-win moneyline selector.',
-              source_url: 'https://www.espn.com/nba/team/schedule/_/name/det',
+              source_url: 'https://www.espn.com/mlb/team/schedule/_/name/det',
             },
           ],
           excluded_games: [
@@ -130,7 +130,7 @@ function changeSelect(doc, selector, value) {
               date: '2026-03-29',
               opponent: 'vs Miami Heat',
               reason: 'missing odds',
-              source_url: 'https://www.espn.com/nba/team/schedule/_/name/det',
+              source_url: 'https://www.espn.com/mlb/team/schedule/_/name/det',
             },
           ],
         }),
@@ -165,6 +165,15 @@ function changeSelect(doc, selector, value) {
   assert.match(doc.querySelector('.ts-result-item').textContent, /Current Slate/, 'current trends should be visibly labeled');
   assert.match(doc.querySelector('#slateDateIndicator').textContent, new RegExp(currentDateIso()), 'selected query should display current slate date');
   assert.strictEqual(doc.querySelectorAll('.ts-rank').length, 0, 'rank numbers should be removed from cards');
+
+  await selectSport(dom, 'NHL');
+  assert.strictEqual(doc.querySelector('#matchupFilter').disabled, true, 'non-MLB current sports should not show live-board matchups in MLB-only release');
+  assert.match(doc.querySelector('#matchupDataSource').textContent, /MLB-only in this release/, 'non-MLB current sports should be explicitly labeled unavailable');
+  assert.match(doc.querySelector('#slateDateIndicator').textContent, /MLB-only release/, 'query slate indicator should not imply non-MLB current support');
+  assert.strictEqual(doc.querySelector('#runTrendspotter').disabled, true, 'non-MLB unavailable sports cannot generate current trends');
+  await selectSport(dom, 'MLB');
+  selectFirstMatchup(doc);
+  doc.querySelector('#runTrendspotter').click();
 
   assert(!doc.querySelector('.ts-result-item').textContent.includes('ROI / units'), 'ROI hidden when odds/results/unit basis are unavailable');
   assert.match(doc.querySelector('.ts-result-item').textContent, /Applies because/, 'cards should explain why a trend applies today');
@@ -218,7 +227,7 @@ function changeSelect(doc, selector, value) {
   assert.match(doc.querySelector('.ts-detail-panel').textContent, /Strength formula/);
 
   const corruptedData = {
-    NBA: {
+    MLB: {
       status: 'fresh',
       trends: [
         makeTrend({ claim: '' }),
@@ -234,7 +243,7 @@ function changeSelect(doc, selector, value) {
   assert.strictEqual(corruptedDom.window.document.querySelectorAll('.ts-result-item').length, 0, 'incomplete trends must not render results');
 
   const archivedDom = await bootWithData({
-    NBA: {
+    MLB: {
       status: 'archived',
       is_current: false,
       is_archived: true,

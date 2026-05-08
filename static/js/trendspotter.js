@@ -2,6 +2,7 @@
   "use strict";
 
   var DEFAULT_SPORTS = ["MLB", "NBA", "NHL", "NFL", "NCAAB", "NCAAF", "Soccer"];
+  var CURRENT_SUPPORTED_SPORTS = ["MLB"];
   var MARKET_TYPES = [
     { id: "all", label: "Any market" },
     { id: "moneyline", label: "Moneyline", aliases: ["MONEYLINE", "ML"] },
@@ -151,6 +152,10 @@
 
   function isCurrentSlateItem(item) {
     return slateDateOf(item) === currentDateIso();
+  }
+
+  function isCurrentSupportedSport(sport) {
+    return CURRENT_SUPPORTED_SPORTS.includes(normalize(sport));
   }
 
   function currentSlateDates(matchups) {
@@ -512,10 +517,11 @@
       var trends = trendsForSport(sport);
       var currentCount = trends.filter(trendIsCurrent).length;
       var archiveCount = trends.filter(trendIsArchived).length;
+      var unsupported = !isCurrentSupportedSport(sport);
       return [
-        "<button class=\"ts-option" + (state.sport === sport ? " is-selected" : "") + "\" type=\"button\" data-sport=\"" + escapeHtml(sport) + "\">",
+        "<button class=\"ts-option" + (state.sport === sport ? " is-selected" : "") + (unsupported ? " is-unavailable" : "") + "\" type=\"button\" data-sport=\"" + escapeHtml(sport) + "\">",
         "  <strong>" + escapeHtml(sport) + "</strong>",
-        "  <span>" + (currentCount ? currentCount + " current trend" + (currentCount === 1 ? "" : "s") : archiveCount ? archiveCount + " archived trend" + (archiveCount === 1 ? "" : "s") : "No current artifact") + "</span>",
+        "  <span>" + (unsupported ? "MLB-only release" : currentCount ? currentCount + " current trend" + (currentCount === 1 ? "" : "s") : archiveCount ? archiveCount + " archived trend" + (archiveCount === 1 ? "" : "s") : "No current artifact") + "</span>",
         "</button>"
       ].join("");
     }).join("");
@@ -532,7 +538,9 @@
     if (!matchups.length) {
       els.matchupFilter.innerHTML = optionHtml("", "No current slate matchups available", true);
       els.matchupFilter.disabled = true;
-      els.matchupDataSource.textContent = "No current slate is available for this sport today.";
+      els.matchupDataSource.textContent = isCurrentSupportedSport(state.sport)
+        ? "No current slate is available for this sport today."
+        : "Current Trendspotter is MLB-only in this release. Stale " + state.sport + " artifacts are blocked and not shown as current slate data.";
       return;
     }
     if (!matchups.some(function (matchup) { return matchup.key === state.matchup; })) {
@@ -590,7 +598,9 @@
       if (slateDate) {
         els.slateDateIndicator.textContent = "Slate date: " + slateDate;
       } else if (state.sport) {
-        els.slateDateIndicator.textContent = "Slate date: No current slate is available for this sport today.";
+        els.slateDateIndicator.textContent = isCurrentSupportedSport(state.sport)
+          ? "Slate date: No current slate is available for this sport today."
+          : "Slate date: MLB-only release; no current " + state.sport + " slate is enabled.";
       } else {
         els.slateDateIndicator.textContent = "Slate date: Select a current matchup.";
       }
@@ -598,6 +608,24 @@
   }
 
   async function loadSport(sport) {
+    if (sport && !isCurrentSupportedSport(sport) && state.researchMode === "current") {
+      cache[sport] = {
+        status: "intentionally_unavailable",
+        intentional_unavailable: true,
+        current_release_scope: "MLB Trendspotter only",
+        supported_sports: CURRENT_SUPPORTED_SPORTS.slice(),
+        trends: [],
+        matchups: [],
+        live_matchups: [],
+        matchup_source: "Current Trendspotter is MLB-only in this release",
+        unavailable_reason: "Current " + sport + " Trendspotter is intentionally unavailable in this MLB-only release."
+      };
+      renderSportOptions();
+      renderMatchupFilter();
+      renderTeamFilters();
+      updateSummary();
+      return;
+    }
     if (!sport || cache[sport]) {
       renderSportOptions();
       renderMatchupFilter();
@@ -1023,6 +1051,8 @@
         var hasCurrentTrends = trendsForSport(state.sport).some(trendIsCurrent);
         if (hasCurrentTrends) {
           els.resultsList.innerHTML = "<div class=\"ts-no-results\">No verified trends match the selected filters yet.</div>";
+        } else if (data.intentional_unavailable) {
+          els.resultsList.innerHTML = "<div class=\"ts-no-results\"><strong>Current Trendspotter is MLB-only in this release.</strong><span>" + escapeHtml(data.unavailable_reason || "This sport is intentionally unavailable for current-slate Trendspotter today.") + "</span></div>";
         } else {
           els.resultsList.innerHTML = "<div class=\"ts-no-results\"><strong>No verified current slate trends are available for this sport right now.</strong><span>" + escapeHtml(data.staleness_reason || ("No verified current " + state.sport + " Trendspotter artifact available.")) + "</span></div>";
         }
