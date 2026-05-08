@@ -104,6 +104,7 @@ Production protected:
 - `static/js/tmr-sitewide.js`
 - `static/css/tmr-sitewide.css`
 - `static/js/backend-api.js`
+- `static/js/auto-grader-fixed.js`
 - `static/js/sportsbook-production-fix-persist-reliability.js`
 - `static/css/tmr-redesign-overrides-sportsbook.css`
 - `static/css/sportsbook-dk-polish.css`
