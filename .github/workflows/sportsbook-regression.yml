@@ -81,6 +81,9 @@ jobs:
       - name: Run MLB simulator realism guard
         run: node tests/mlb-simulator-realism-test.js
 
+      - name: Run MLB live roster guard
+        run: node tests/mlb-simulator-live-roster-validation-test.js
+
       - name: Run predeploy stale-source guard
         shell: pwsh
         run: ./scripts/predeploy-guard.ps1 -SkipRemoteCheck
