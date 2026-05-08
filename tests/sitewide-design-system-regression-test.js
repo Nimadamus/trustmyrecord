@@ -29,6 +29,9 @@ for (const selector of [
   '.tmr-global-nav__button--primary',
   '.tmr-empty',
   '.tmr-empty__icon',
+  '.tmr-empty-state',
+  '.tmr-loading-state',
+  '.tmr-spinner',
   '.tmr-cap-card',
   '.tmr-pick-table',
   '.tmr-sport-tag--mlb',
@@ -44,6 +47,8 @@ assert(css.includes('body.tmr-site-shell .btn-primary') && css.includes('body.tm
 assert(css.includes('body.tmr-site-shell input') && css.includes('body.tmr-site-shell select') && css.includes('body.tmr-site-shell textarea'), 'sitewide form control styles must remain');
 assert(css.includes('body.tmr-site-shell table') && css.includes('body.tmr-site-shell th') && css.includes('body.tmr-site-shell td'), 'sitewide table styles must remain');
 assert(css.includes('body.tmr-site-shell .empty-state') && css.includes('body.tmr-site-shell .loading-state') && css.includes('body.tmr-site-shell .error-state'), 'sitewide empty/loading/error styles must remain');
+assert(css.includes('body.tmr-site-shell .tmr-empty-state') && css.includes('body.tmr-site-shell .tmr-loading-state'), 'legacy live empty/loading state variants must remain styled');
+assert(css.includes('@keyframes tmr-spin') && css.includes('border-top-color: var(--tmr-accent)'), 'sitewide loading spinner style must remain branded');
 
 for (const required of [
   'tmr-global-nav',
