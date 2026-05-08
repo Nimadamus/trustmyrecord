@@ -17,7 +17,7 @@ const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
 assert(/\/static\/css\/mlb-simulator\.css\?v=20260507-realism-rosters/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260508-roster-guard/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260508-roster-full-guard/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -107,11 +107,11 @@ function buildFetchMock(mode) {
     if (String(url).includes('statsapi.mlb.com/api/v1/teams/')) {
       const teamId = (String(url).match(/teams\/(\d+)\/roster/) || [])[1];
       const rosters = {
-        109: ['Zac Gallen|P', 'Kevin Ginkel|P', 'Ryan Thompson|P', 'Gabriel Moreno|C', 'Ketel Marte|2B', 'Geraldo Perdomo|SS', 'Eugenio Suarez|3B', 'Josh Naylor|1B', 'Corbin Carroll|CF', 'Lourdes Gurriel Jr.|LF', 'Jake McCarthy|RF', 'Randal Grichuk|DH'],
-        144: ['Bryce Elder|P', 'Aaron Bummer|P', 'Raisel Iglesias|P', 'Sean Murphy|C', 'Matt Olson|1B', 'Ozzie Albies|2B', 'Austin Riley|3B', 'Orlando Arcia|SS', 'Michael Harris II|CF', 'Ronald Acuna Jr.|RF', 'Jurickson Profar|LF', 'Marcell Ozuna|DH'],
-        140: ['Jacob deGrom|P', 'MacKenzie Gore|P', 'Chris Martin|P', 'Robert Garcia|P', 'Nathan Eovaldi|P', 'Jonah Heim|C', 'Corey Seager|SS', 'Marcus Semien|2B', 'Josh Jung|1B', 'Wyatt Langford|RF', 'Evan Carter|CF', 'Adolis Garcia|LF'],
-        147: ['Gerrit Cole|P', 'Devin Williams|P', 'Luke Weaver|P', 'Max Fried|P', 'Carlos Rodon|P', 'Austin Wells|C', 'Anthony Volpe|SS', 'Jazz Chisholm Jr.|2B', 'Paul Goldschmidt|1B', 'Aaron Judge|RF', 'Cody Bellinger|CF', 'Jasson Dominguez|LF'],
-        137: ['Logan Webb|P', 'Robbie Ray|P', 'Landen Roupp|P', 'Jung Hoo Lee|CF', 'Heliot Ramos|LF', 'Casey Schmitt|1B', 'Matt Chapman|3B', 'Patrick Bailey|C', 'Willy Adames|SS'],
+        109: ['Zac Gallen|P', 'Kevin Ginkel|P', 'Ryan Thompson|P', 'Brandon Pfaadt|P', 'Eduardo Rodriguez|P', 'Gabriel Moreno|C', 'Ketel Marte|2B', 'Geraldo Perdomo|SS', 'Eugenio Suarez|3B', 'Josh Naylor|1B', 'Corbin Carroll|CF', 'Lourdes Gurriel Jr.|LF', 'Jake McCarthy|RF', 'Randal Grichuk|DH'],
+        144: ['Bryce Elder|P', 'Aaron Bummer|P', 'Raisel Iglesias|P', 'Chris Sale|P', 'Spencer Strider|P', 'Sean Murphy|C', 'Matt Olson|1B', 'Ozzie Albies|2B', 'Austin Riley|3B', 'Orlando Arcia|SS', 'Michael Harris II|CF', 'Ronald Acuna Jr.|RF', 'Jurickson Profar|LF', 'Marcell Ozuna|DH'],
+        140: ['Jacob deGrom|P', 'MacKenzie Gore|P', 'Chris Martin|P', 'Robert Garcia|P', 'Nathan Eovaldi|P', 'Jonah Heim|C', 'Corey Seager|SS', 'Marcus Semien|2B', 'Josh Jung|1B', 'Wyatt Langford|RF', 'Evan Carter|CF', 'Adolis Garcia|LF', 'Josh Smith|3B'],
+        147: ['Gerrit Cole|P', 'Devin Williams|P', 'Luke Weaver|P', 'Max Fried|P', 'Carlos Rodon|P', 'Austin Wells|C', 'Anthony Volpe|SS', 'Jazz Chisholm Jr.|2B', 'Paul Goldschmidt|1B', 'Aaron Judge|RF', 'Cody Bellinger|CF', 'Jasson Dominguez|LF', 'Ben Rice|1B'],
+        137: ['Logan Webb|P', 'Robbie Ray|P', 'Landen Roupp|P', 'Tyler Mahle|P', 'Adrian Houser|P', 'Jung Hoo Lee|CF', 'Heliot Ramos|LF', 'Casey Schmitt|1B', 'Matt Chapman|3B', 'Patrick Bailey|C', 'Willy Adames|SS', 'Mike Yastrzemski|RF', 'Wilmer Flores|DH'],
       };
       return mockResponse({
         roster: (rosters[teamId] || []).map((entry, index) => {

@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-roster-guard-20260508';
+    var UI_BUILD = 'mlb-roster-full-guard-20260508';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -156,6 +156,8 @@
     var REPORTED_MISMATCHED_CURRENT_NAMES = {
         ARI: { nolanarenado: true }
     };
+    var MIN_CURRENT_ROSTER_BATTERS = 8;
+    var MIN_CURRENT_ROSTER_PITCHERS = 5;
 
     var TEAM_COLORS = {
         ARI: ['#a71930', '#e3d4ad'], ATL: ['#ce1141', '#13274f'], BAL: ['#df4601', '#000000'], BOS: ['#bd3039', '#0c2340'],
@@ -299,9 +301,12 @@
         if (team && team.era === 'current' && String(roster.teamId || '') !== String(MLB_TEAM_IDS[team.abbreviation] || '')) return null;
         var players = roster.players.filter(function (player) { return playerBelongsToTeam(player, team); });
         if (!players.length) return null;
+        var pitchers = players.filter(function (player) { return /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')); });
+        var hitters = players.filter(function (player) { return !/^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')); });
+        if (team && team.era === 'current' && (hitters.length < MIN_CURRENT_ROSTER_BATTERS || pitchers.length < MIN_CURRENT_ROSTER_PITCHERS)) return null;
         return Object.assign({}, roster, {
             count: players.length,
-            relievers: players.filter(function (player) { return /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')); }).length,
+            relievers: pitchers.length,
             players: players,
             summary: players.length + ' verified active roster players'
         });
@@ -367,6 +372,16 @@
     function teamRosterUrl(team) {
         var teamId = team && MLB_TEAM_IDS[team.abbreviation];
         return teamId ? 'https://statsapi.mlb.com/api/v1/teams/' + teamId + '/roster?rosterType=active&_=' + encodeURIComponent(UI_BUILD) : '';
+    }
+    function rosterSourceForTeam(team) {
+        return {
+            teamId: team && MLB_TEAM_IDS[team.abbreviation] || null,
+            url: teamRosterUrl(team),
+            source: 'MLB Stats API active roster',
+            cache: 'no-store plus UI build cache-buster',
+            minimumBatters: MIN_CURRENT_ROSTER_BATTERS,
+            minimumPitchers: MIN_CURRENT_ROSTER_PITCHERS
+        };
     }
     function fetchTeamRoster(team) {
         if (!team || team.era !== 'current') return Promise.resolve(null);
@@ -2108,7 +2123,10 @@
         boxScoreText: boxScoreText,
         copyBoxScore: copyBoxScore,
         saveBoxScore: saveBoxScore,
-        viewBoxScore: viewBoxScore
+        viewBoxScore: viewBoxScore,
+        rosterSourceForTeam: rosterSourceForTeam,
+        fetchTeamRoster: fetchTeamRoster,
+        validatedRosterForTeam: validatedRosterForTeam
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

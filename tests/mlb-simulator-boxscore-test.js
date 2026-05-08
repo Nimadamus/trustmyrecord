@@ -97,9 +97,9 @@ function chooseTeams(simulator, mode, awayIndex, homeIndex) {
 
 const teamIds = { ARI: 109, ATL: 144, BAL: 110 };
 const rosterNames = {
-  ARI: ['Corbin Carroll|RF', 'Ketel Marte|2B', 'Gabriel Moreno|C', 'Geraldo Perdomo|SS', 'Alek Thomas|CF', 'Lourdes Gurriel Jr.|LF', 'Ildemaro Vargas|1B', 'Tim Tawa|3B', 'Jorge Barrosa|LF', 'Zac Gallen|P', 'Brandon Pfaadt|P', 'Eduardo Rodriguez|P'],
-  ATL: ['Michael Harris II|CF', 'Ozzie Albies|2B', 'Austin Riley|3B', 'Matt Olson|1B', 'Drake Baldwin|C', 'Jurickson Profar|LF', 'Eli White|RF', 'Nacho Alvarez Jr.|SS', 'Dominic Smith|DH', 'Chris Sale|P', 'Spencer Strider|P', 'Bryce Elder|P', 'Grant Holmes|P'],
-  BAL: ['Gunnar Henderson|SS', 'Adley Rutschman|C', 'Jackson Holliday|2B', 'Ryan Mountcastle|1B', 'Colton Cowser|LF', 'Jordan Westburg|3B', 'Cedric Mullins|CF', 'Heston Kjerstad|RF', 'Ryan O Hearn|DH', 'Kyle Bradish|P', 'Dean Kremer|P', 'Trevor Rogers|P'],
+  ARI: ['Corbin Carroll|RF', 'Ketel Marte|2B', 'Gabriel Moreno|C', 'Geraldo Perdomo|SS', 'Alek Thomas|CF', 'Lourdes Gurriel Jr.|LF', 'Ildemaro Vargas|1B', 'Tim Tawa|3B', 'Jorge Barrosa|LF', 'Zac Gallen|P', 'Brandon Pfaadt|P', 'Eduardo Rodriguez|P', 'Merrill Kelly|P', 'Ryne Nelson|P'],
+  ATL: ['Michael Harris II|CF', 'Ozzie Albies|2B', 'Austin Riley|3B', 'Matt Olson|1B', 'Drake Baldwin|C', 'Jurickson Profar|LF', 'Eli White|RF', 'Nacho Alvarez Jr.|SS', 'Dominic Smith|DH', 'Chris Sale|P', 'Spencer Strider|P', 'Bryce Elder|P', 'Grant Holmes|P', 'Raisel Iglesias|P'],
+  BAL: ['Gunnar Henderson|SS', 'Adley Rutschman|C', 'Jackson Holliday|2B', 'Ryan Mountcastle|1B', 'Colton Cowser|LF', 'Jordan Westburg|3B', 'Cedric Mullins|CF', 'Heston Kjerstad|RF', 'Ryan O Hearn|DH', 'Kyle Bradish|P', 'Dean Kremer|P', 'Trevor Rogers|P', 'Shane Baz|P', 'Chris Bassitt|P'],
 };
 
 function preloadVerifiedRoster(simulator, team) {

@@ -354,7 +354,7 @@
                 <article>
                     <h3>Why starter selection matters</h3>
                     <p>Starting pitching is one of the biggest drivers of a baseball game projection. The starter dropdown changes both run expectation and win probability, so users can compare how different rotation options affect the matchup.</p>
-                    <p>Starter lists are simulation inputs unless a probable starter is explicitly matched from a verified live source. If a field like WHIP, handedness, or win-loss record is not available, it is not fabricated.</p>
+                    <p>Current-team player names are loaded from the MLB Stats API active roster endpoint for the selected team, fetched with no-store behavior and a simulator build cache-buster. If that roster cannot be verified with enough hitters and pitchers for the selected team, the player box score says the roster is temporarily unavailable instead of filling rows with fallback names.</p>
                 </article>
                 <article>
                     <h3>How to read the output</h3>
@@ -365,7 +365,7 @@
         </section>
     </main>
 
-    <script src="/static/js/mlb-simulator.js?v=20260508-roster-guard"></script>
+    <script src="/static/js/mlb-simulator.js?v=20260508-roster-full-guard"></script>
     <!-- legacy guard marker: /static/js/mlb-simulator.js?v=20260505-standalone-box-score -->
 </body>
 </html>
