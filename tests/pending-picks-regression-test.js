@@ -72,10 +72,14 @@ assert(rules.includes('Totals and team totals must never show U or O in the Line
 assert(rules.includes('Full game totals must not display as only'), 'pending rules must require explicit full-game total labels');
 assert(rules.includes('Summary pending count must match API count and rendered row count.'), 'pending rules must protect count parity');
 
-assert(
-  /let\s+shareActions\s*=[\s\S]*Share Profile[\s\S]*Embed Stats[\s\S]*if\s*\(isOwnProfile\)\s*\{[\s\S]*shareActions\s*\+=[\s\S]*copyPendingPicksLink\(\)[\s\S]*showEmbedModal\('pending'\)/.test(profile),
-  'profile pending share/embed buttons must stay behind the owner-only render gate'
-);
+const shareStart = profile.indexOf('let shareActions =');
+const ownerGate = profile.indexOf('if (isOwnProfile)', shareStart);
+const actionsEnd = profile.indexOf("const actions = '<div class=\"profile-actions\">'", shareStart);
+const pendingShareCall = profile.indexOf('copyPendingPicksLink()', shareStart);
+const pendingEmbedCall = profile.indexOf("showEmbedModal(\\'pending\\')", shareStart);
+assert(shareStart !== -1 && ownerGate !== -1 && actionsEnd !== -1, 'profile share action block must be extractable');
+assert(pendingShareCall > ownerGate && pendingShareCall < actionsEnd, 'profile pending share button must stay behind owner gate');
+assert(pendingEmbedCall > ownerGate && pendingEmbedCall < actionsEnd, 'profile pending embed button must stay behind owner gate');
 assert(
   /function\s+getPendingPicksAccess\(kind\)\s*\{[\s\S]*if\s*\(!isOwnProfile\)\s*\{[\s\S]*enabled:\s*false[\s\S]*Pending picks are private for public profile views\./.test(profile),
   'profile pending access helper must deny public/non-owner profile views'
