@@ -499,7 +499,19 @@
             if (bCurated) return 1;
             return 0;
         });
-        if (!rosterRows.length && !options.length) return [];
+        if (!rosterRows.length && !options.length) {
+            return curatedPitchers.map(function (row) {
+                return {
+                    id: pitcherId(side, team.id + '-' + row[0]),
+                    name: row[1],
+                    quality: row[2],
+                    era: row[3],
+                    source: 'Curated current simulator input',
+                    verified: false,
+                    note: 'Curated current simulator input; not live verified starter data'
+                };
+            });
+        }
         rosterRows.slice(0, liveStarter && liveStarter.name ? 4 : 5).forEach(function (player) {
             var row = curatedMatch(player.name);
             options.push({
