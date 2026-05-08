@@ -349,6 +349,18 @@ body.tmr-site-shell table {
     width: 100%;
     border-collapse: separate;
     border-spacing: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+body.tmr-site-shell .table-wrap,
+body.tmr-site-shell .tmr-table-wrap,
+body.tmr-site-shell .picks-table-wrapper,
+body.tmr-site-shell .stats-table-card,
+body.tmr-site-shell .leaderboard-table-wrapper,
+body.tmr-site-shell .ledger-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-color: rgba(45, 212, 191, 0.42) rgba(15, 23, 42, 0.74);
 }
 
 body.tmr-site-shell th {
@@ -357,10 +369,36 @@ body.tmr-site-shell th {
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.06em;
+    background: rgba(8, 14, 28, 0.72);
+    border-bottom: 1px solid var(--tmr-border);
+    white-space: nowrap;
 }
 
 body.tmr-site-shell td {
     color: var(--tmr-text-soft);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    vertical-align: middle;
+}
+
+body.tmr-site-shell th,
+body.tmr-site-shell td {
+    padding: 10px 12px;
+}
+
+body.tmr-site-shell tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+body.tmr-site-shell .td-num,
+body.tmr-site-shell .col-num,
+body.tmr-site-shell .metric-num,
+body.tmr-site-shell td[data-type="number"] {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+body.tmr-site-shell tbody tr:hover td {
+    background: rgba(45, 212, 191, 0.035);
 }
 
 body.tmr-site-shell .empty-state,
