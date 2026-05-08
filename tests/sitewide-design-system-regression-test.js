@@ -46,6 +46,7 @@ for (const selector of [
   '.tmr-badge',
   '.tmr-status',
   '.tmr-result-chip',
+  '.tmr-alert',
   '.tmr-cap-card',
   '.tmr-pick-table',
   '.tmr-sport-tag--mlb',
@@ -76,6 +77,8 @@ assert(css.includes('body.tmr-site-shell tbody tr:hover td') && css.includes('rg
 assert(css.includes('body.tmr-site-shell .empty-state') && css.includes('body.tmr-site-shell .loading-state') && css.includes('body.tmr-site-shell .error-state'), 'sitewide empty/loading/error styles must remain');
 assert(css.includes('body.tmr-site-shell .tmr-empty-state') && css.includes('body.tmr-site-shell .tmr-loading-state'), 'legacy live empty/loading state variants must remain styled');
 assert(css.includes('@keyframes tmr-spin') && css.includes('border-top-color: var(--tmr-accent)'), 'sitewide loading spinner style must remain branded');
+assert(css.includes('.tmr-alert--success') && css.includes('.tmr-alert--warning') && css.includes('.tmr-alert--danger') && css.includes('.tmr-alert--info'), 'sitewide alert variants must remain');
+assert(css.includes('body.tmr-site-shell .verify-success') && css.includes('body.tmr-site-shell .verify-error') && css.includes('body.tmr-site-shell .message.error'), 'legacy live message classes must remain styled');
 
 for (const required of [
   'tmr-global-nav',
