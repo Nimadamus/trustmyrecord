@@ -1609,19 +1609,19 @@
         }
 
         // Validate line for spread/total bets (including team totals and F5 totals)
-        var needsLine = ['spread', 'over', 'under', 'teamover', 'teamunder', 'f5spread', 'f5over', 'f5under'];
+        var needsLine = ['spread', 'over', 'under', 'teamover', 'teamunder', 'f5spread', 'f5over', 'f5under', 'f5teamover', 'f5teamunder'];
         if (needsLine.indexOf(betType) !== -1 && !finalLine && finalLine !== '0') {
             alert('Please enter the line/total from your sportsbook.');
             if (lineInput) lineInput.focus();
             return;
         }
 
-        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
+        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals', f5teamover: 'f5_team_totals', f5teamunder: 'f5_team_totals' };
         var marketType = marketTypeMap[betType] || 'h2h';
 
         // Determine line snapshot (spread number or total number, null for ML/F5ML)
         var lineSnapshot = null;
-        if (betType === 'spread' || betType === 'over' || betType === 'under' || betType === 'teamover' || betType === 'teamunder' || betType === 'f5spread' || betType === 'f5over' || betType === 'f5under') {
+        if (betType === 'spread' || betType === 'over' || betType === 'under' || betType === 'teamover' || betType === 'teamunder' || betType === 'f5spread' || betType === 'f5over' || betType === 'f5under' || betType === 'f5teamover' || betType === 'f5teamunder') {
             lineSnapshot = parseFloat(finalLine) || null;
         }
 
@@ -1637,10 +1637,10 @@
             selection = _line ? ('Over ' + _line) : 'Over';
         } else if (betType === 'under' || betType === 'f5under') {
             selection = _line ? ('Under ' + _line) : 'Under';
-        } else if (betType === 'teamover') {
+        } else if (betType === 'teamover' || betType === 'f5teamover') {
             teamTotalSide = 'over';
             selection = (rawTeam + ' Over' + (_line ? ' ' + _line : '')).trim();
-        } else if (betType === 'teamunder') {
+        } else if (betType === 'teamunder' || betType === 'f5teamunder') {
             teamTotalSide = 'under';
             selection = (rawTeam + ' Under' + (_line ? ' ' + _line : '')).trim();
         } else if (betType === 'f5ml' || betType === 'f5spread') {
@@ -11333,6 +11333,7 @@ window.toggleSportFamily = function (family) {
         marketType = String(marketType || '').toLowerCase();
         var isOver = /\bover\b/i.test(label);
         var isUnder = /\bunder\b/i.test(label);
+        if (marketType === 'f5_team_totals') return isUnder ? 'f5teamunder' : 'f5teamover';
         if (marketType.indexOf('first_half') === 0) return isOver ? 'firsthalfover' : (isUnder ? 'firsthalfunder' : (marketType.indexOf('spread') !== -1 ? 'firsthalfspread' : 'firsthalfml'));
         if (marketType.indexOf('second_half') === 0) return isOver ? 'secondhalfover' : (isUnder ? 'secondhalfunder' : (marketType.indexOf('spread') !== -1 ? 'secondhalfspread' : 'secondhalfml'));
         if (marketType.indexOf('period_1') === 0) return isOver ? 'period1over' : (isUnder ? 'period1under' : (marketType.indexOf('spread') !== -1 ? 'period1spread' : 'period1ml'));
@@ -11347,9 +11348,11 @@ window.toggleSportFamily = function (family) {
         var marketType = item.market_type || item.market_key || '';
         var betType = periodBetType(marketType, label);
         var isOver = /\bover\b/i.test(label), isUnder = /\bunder\b/i.test(label);
-        var selection = isOver ? 'Over' : (isUnder ? 'Under' : String(item.selection || label).replace(/\s+[+-]?\d+(\.\d+)?$/,'').trim());
+        var selection = marketType === 'f5_team_totals'
+            ? String(item.selection || label).replace(/\s+[+-]?\d+(\.\d+)?$/,'').trim()
+            : (isOver ? 'Over' : (isUnder ? 'Under' : String(item.selection || label).replace(/\s+[+-]?\d+(\.\d+)?$/,'').trim()));
         var line = item.line == null ? '' : item.line;
-        var lineText = item.line_display || (line === '' ? (betType.indexOf('ml') !== -1 ? 'ML' : '—') : ((isOver ? 'O ' : isUnder ? 'U ' : '') + window.TMR.formatLine(line, { signed: String(marketType).indexOf('spread') !== -1 })));
+        var lineText = item.selection_label || item.line_display || (line === '' ? (betType.indexOf('ml') !== -1 ? 'ML' : '—') : ((isOver ? 'O ' : isUnder ? 'U ' : '') + window.TMR.formatLine(line, { signed: String(marketType).indexOf('spread') !== -1 })));
         var onclick = "window.selectGameBet && window.selectGameBet(" + (gameIndex | 0) + ",'" + _ttEsc(betType) + "','" + _ttEsc(selection) + "','" + _ttEsc(line) + "','" + _ttEsc(item.odds) + "','" + _ttEsc(game.away_team || '') + "','" + _ttEsc(game.home_team || '') + "')";
         return '<button type="button" class="sb-odds" onclick="' + onclick + '"><span class="sb-odds-line">' + _ttHtmlEsc(lineText) + '</span><span class="sb-odds-price">' + _ttHtmlEsc(_ttFmtOdds(item.odds)) + '</span></button>';
     }
@@ -11364,7 +11367,7 @@ window.toggleSportFamily = function (family) {
             (game.market_groups || []).forEach(function (group) {
                 if (keys.indexOf(group.key) !== -1) items = items.concat(group.items || []);
             });
-            items = items.filter(function (item) { return item && item.odds != null; }).slice(0, 6);
+            items = items.filter(function (item) { return item && item.odds != null; });
             var d = game.commence_time ? new Date(game.commence_time) : null;
             var commence = d && !isNaN(d.getTime()) ? d.toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) : '';
             html += '<div class="sb-board-row sb-period-row"><div class="sb-board-matchup"><div class="sb-board-when">' + (commence ? '<span>' + _ttHtmlEsc(commence) + '</span>' : '') + '</div><div class="sb-board-teams"><div class="sb-board-team">' + ((window.TMR && typeof window.TMR._teamLogo === 'function') ? window.TMR._teamLogo(sportsbookTeamLogoUrl(game.away_team || '', game.away_logo || game.awayLogo || ''), game.away_abbr || game.awayAbbr || '', game.away_team || 'Away') : '') + '<b>' + _ttHtmlEsc(game.away_team || 'Away') + '</b></div><div class="sb-board-team">' + ((window.TMR && typeof window.TMR._teamLogo === 'function') ? window.TMR._teamLogo(sportsbookTeamLogoUrl(game.home_team || '', game.home_logo || game.homeLogo || ''), game.home_abbr || game.homeAbbr || '', game.home_team || 'Home') : '') + '<b>' + _ttHtmlEsc(game.home_team || 'Home') + '</b></div></div></div><div class="sb-board-col sb-period-lines" style="grid-column:span 3;">' + (items.length ? '<div class="sb-odds-stack sb-odds-stack--period">' + items.map(function (item) { return renderPeriodOddsButton(idx, item, game); }).join('') + '</div>' : '<div class="market-empty" style="margin:0;">' + _ttHtmlEsc(label) + ' unavailable for this game.</div>') + '</div><button type="button" class="sb-board-action" onclick="window.selectSportAndShowGames(\'' + _ttEsc(sport) + '\')">Open Board</button></div>';
@@ -21051,8 +21054,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 first5Items = first5Group && Array.isArray(first5Group.items) ? first5Group.items : [];
                 const escAway = game.away_team.replace(/'/g, "\\'");
                 const escHome = game.home_team.replace(/'/g, "\\'");
-                const f5Buttons = first5Items.map(item => {
-                    const type = item.market_type === 'f5_h2h' ? 'f5ml' : (item.market_type === 'f5_totals' && item.selection === 'Over' ? 'f5over' : (item.market_type === 'f5_totals' ? 'f5under' : 'f5spread'));
+            const f5Buttons = first5Items.map(item => {
+                    const type = item.market_type === 'f5_h2h' ? 'f5ml'
+                        : (item.market_type === 'f5_team_totals' && /under/i.test(item.selection_label || item.selection || '') ? 'f5teamunder'
+                        : (item.market_type === 'f5_team_totals' ? 'f5teamover'
+                        : (item.market_type === 'f5_totals' && item.selection === 'Over' ? 'f5over' : (item.market_type === 'f5_totals' ? 'f5under' : 'f5spread'))));
                     const line = item.line != null ? item.line : '';
                     const odds = item.odds != null ? item.odds : '';
                     const label = item.selection_label || item.selection || 'First 5';
@@ -21557,6 +21563,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (lower.indexOf('over') !== -1) return 'Over';
             if (lower.indexOf('under') !== -1) return 'Under';
         }
+        if (betType === 'teamover' || betType === 'teamunder' || betType === 'f5teamover' || betType === 'f5teamunder') {
+            return summaryPick.replace(/\s*[\(\)]?[-+]?\d+\.?\d*[\(\)]?/g, '').replace(/\s+F5\b/i, '').trim();
+        }
         if (game && (betType === 'ml' || betType === 'spread' || betType === 'f5ml' || betType === 'f5spread')) {
             if (summaryPick.indexOf(game.away_team) !== -1) return game.away_team;
             if (summaryPick.indexOf(game.home_team) !== -1) return game.home_team;
@@ -21597,7 +21606,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Save to localStorage
         if (window.auth && window.auth.isLoggedIn()) {
-            const marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', total: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals' };
+            const marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', total: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals', f5teamover: 'f5_team_totals', f5teamunder: 'f5_team_totals' };
             const marketType = marketTypeMap[pick.betType] || 'h2h';
             const selection = extractSelection(pick.pick, pick.betType, pick.game);
             const units = Math.max(0.5, Math.min(10, parseFloat(pick.units) || 1));
