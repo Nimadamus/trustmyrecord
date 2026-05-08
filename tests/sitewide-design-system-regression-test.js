@@ -32,6 +32,7 @@ for (const selector of [
   '.tmr-empty-state',
   '.tmr-loading-state',
   '.tmr-spinner',
+  '.tmr-table-wrap',
   '.tmr-cap-card',
   '.tmr-pick-table',
   '.tmr-sport-tag--mlb',
@@ -50,6 +51,9 @@ assert(css.includes(':focus-visible') && css.includes('outline-offset: 3px'), 's
 assert(css.includes('[aria-disabled="true"]') && css.includes('cursor: not-allowed'), 'sitewide disabled control treatment must remain');
 assert(css.includes('display: inline-flex') && css.includes('justify-content: center'), 'sitewide button alignment must remain stable');
 assert(css.includes('body.tmr-site-shell table') && css.includes('body.tmr-site-shell th') && css.includes('body.tmr-site-shell td'), 'sitewide table styles must remain');
+assert(css.includes('body.tmr-site-shell .tmr-table-wrap') && css.includes('overflow-x: auto'), 'sitewide table wrapper must keep responsive scrolling');
+assert(css.includes('font-variant-numeric: tabular-nums') && css.includes('td[data-type="number"]'), 'sitewide numeric table alignment must remain');
+assert(css.includes('body.tmr-site-shell tbody tr:hover td') && css.includes('rgba(45, 212, 191, 0.035)'), 'sitewide table row hover treatment must remain branded');
 assert(css.includes('body.tmr-site-shell .empty-state') && css.includes('body.tmr-site-shell .loading-state') && css.includes('body.tmr-site-shell .error-state'), 'sitewide empty/loading/error styles must remain');
 assert(css.includes('body.tmr-site-shell .tmr-empty-state') && css.includes('body.tmr-site-shell .tmr-loading-state'), 'legacy live empty/loading state variants must remain styled');
 assert(css.includes('@keyframes tmr-spin') && css.includes('border-top-color: var(--tmr-accent)'), 'sitewide loading spinner style must remain branded');
