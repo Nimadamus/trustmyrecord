@@ -2718,6 +2718,7 @@
             const api = await getApiClientOrFallback();
             await ensureBackendAccessToken(api);
             showSubmitTrace('Submitting pick to API: ' + option.game_id + ' / ' + option.market_type + '.');
+            const stakeValues = calculateStakeValues(stakeMode, unitsValue, oddsValue);
             const payload = {
                 game_id: option.game_id,
                 external_game_id: option.game_id,
@@ -2731,6 +2732,8 @@
                 units: unitsValue,
                 stake_mode: stakeMode,
                 units_mode: stakeMode,
+                risk_units: stakeValues.risk_units,
+                to_win_units: stakeValues.win_units,
                 book_title: bookInput ? bookInput.value.trim() : option.book_title,
                 book_key: option.book_key,
                 market_key: option.market_key,
