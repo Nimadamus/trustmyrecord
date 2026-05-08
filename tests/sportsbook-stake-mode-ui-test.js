@@ -8,7 +8,7 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'sportsbook', 'index.html'), 'utf8');
 const reliability = fs.readFileSync(path.join(root, 'static', 'js', 'sportsbook-production-fix-persist-reliability.js'), 'utf8');
 
-assert(html.includes('sportsbook-production-fix-persist-reliability.js?v=20260506owner1'), 'sportsbook page should load current sportsbook reliability script');
+assert(html.includes('sportsbook-production-fix-persist-reliability.js?v=20260508stakepreview1'), 'sportsbook page should load current sportsbook reliability script');
 assert(html.includes('SPORTSBOOK_RELIABILITY_OWNERSHIP'), 'sportsbook page should document reliability script ownership');
 assert(html.includes('id="unitsInput"'), 'Pick Slip should include Units input');
 assert(html.includes('id="modeRisk"'), 'Pick Slip should include Risk button');
@@ -54,3 +54,4 @@ assert.deepStrictEqual(calculateStakeValues('risk', 1.5, 150), { risk_units: 1.5
 assert.deepStrictEqual(calculateStakeValues('to_win', 1.5, 150), { risk_units: 1, win_units: 1.5 });
 
 console.log('sportsbook stake-mode UI test passed');
+
