@@ -9344,7 +9344,7 @@
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260507sportsbookheader3">
     <script defer src="/static/js/tmr-sitewide.js?v=20260507sportsbookheader3"></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260508crisp2">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260508wagers1">
 </head>
 <body data-tmr-test-route="sportsbook">
     <script>
@@ -9676,7 +9676,6 @@
                         <div class="tmr-pending-picks-list" id="tmrPendingPicksList">
                             <div class="tmr-pending-empty">Loading your pending picks…</div>
                         </div>
-                        <a href="/my-pending-picks/" class="sportsbook-lobby-secondary-btn sportsbook-lobby-secondary-btn--wide" style="margin-top:10px;">Open My Pending Picks</a>
                     </div>
                 </aside>
             </div>
@@ -10988,7 +10987,7 @@ window.toggleSportFamily = function (family) {
             '</div>' +
             '<div class="sportsbook-ticket-preview-row" style="align-items:center;">' +
                 '<span><label for="ttSlipUnits" style="cursor:pointer;">Units</label></span>' +
-                '<strong><input id="ttSlipUnits" type="number" min="0.5" max="5" step="0.5" value="1" aria-label="Stake units" oninput="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview()"' +
+                '<strong><input id="ttSlipUnits" type="number" min="0.5" max="5" step="0.5" value="1" aria-label="Stake units" oninput="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview()" onchange="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview()"' +
                     ' style="width:64px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:4px 8px;color:#f8fafc;font-weight:800;text-align:right;"></strong>' +
             '</div>' +
             '<div id="ttSlipStakePreview" class="sportsbook-ticket-preview-note" style="margin-top:-2px;color:#dbeafe;">Risk 1 units to win 0.91 units</div>' +
@@ -11028,6 +11027,7 @@ window.toggleSportFamily = function (family) {
         if (summaryPick) summaryPick.textContent = selectionText;
         var summaryOdds = document.getElementById('summaryOdds');
         if (summaryOdds) summaryOdds.textContent = oddsTxt;
+        if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview();
 
         var submit = document.getElementById('ttSlipSubmit');
         if (submit) {
@@ -28353,12 +28353,12 @@ document.addEventListener('DOMContentLoaded', function() {
     <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430pickslipexp1">
     <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=20260430hidedup1">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260508crisp2">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260508wagers1">
     <style id="tmr-redesign-tail-guard">
     /* Inline backstop so nothing loaded later in <body> can overwrite the
        redesign. Source-order LAST + !important = absolute cascade win. */
     @import url("/static/css/tmr-redesign-overrides.css?v=20260501f");
-    @import url("/static/css/tmr-redesign-overrides-sportsbook.css?v=20260508crisp2");
+    @import url("/static/css/tmr-redesign-overrides-sportsbook.css?v=20260508wagers1");
     </style>
     <style id="tmr-sportsbook-readability-boost">
     /* Sportsbook board readability only: modest type increase without changing pick flow. */
@@ -30417,13 +30417,13 @@ document.addEventListener('DOMContentLoaded', function() {
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-period-bar,
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #lobbyPeriodBar {
         display: flex !important;
-        flex-wrap: nowrap !important;
+        flex-wrap: wrap !important;
         align-items: center !important;
-        padding: 10px !important;
-        gap: 8px !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        scrollbar-width: none !important;
+        justify-content: flex-start !important;
+        padding: 8px 10px !important;
+        gap: 7px !important;
+        overflow: visible !important;
+        scrollbar-width: auto !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-period-bar::-webkit-scrollbar,
@@ -30433,13 +30433,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-period-tab,
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #lobbyPeriodBar button {
-        flex: 0 0 auto !important;
-        min-height: 38px !important;
-        padding: 0 11px !important;
+        flex: 0 1 auto !important;
+        min-height: 34px !important;
+        padding: 0 9px !important;
         border-radius: 8px !important;
-        font-size: 11.5px !important;
+        font-size: 10.75px !important;
         line-height: 1 !important;
-        letter-spacing: 0.07em !important;
+        letter-spacing: 0.055em !important;
         white-space: nowrap !important;
     }
 
