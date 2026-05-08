@@ -6,6 +6,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const rules = fs.readFileSync(path.join(root, 'DEVELOPMENT_RULES.md'), 'utf8');
+const productSystem = fs.readFileSync(path.join(root, 'TRUSTMYRECORD_PRODUCT_UPGRADE_SYSTEM.md'), 'utf8');
 const sportsbook = fs.readFileSync(path.join(root, 'sportsbook', 'index.html'), 'utf8');
 const pending = fs.readFileSync(path.join(root, 'my-pending-picks', 'index.html'), 'utf8');
 const sitewide = fs.readFileSync(path.join(root, 'static', 'js', 'tmr-sitewide.js'), 'utf8');
@@ -31,6 +32,24 @@ for (const file of [
   'static/js/sportsbook-production-fix-persist-reliability.js',
 ]) {
   assert(rules.includes(file), `DEVELOPMENT_RULES must classify ${file}`);
+}
+
+for (const required of [
+  'Protected Baseline',
+  'Product Identity',
+  'Design Bible',
+  'UX Rubric',
+  'Current Audit Summary',
+  'Master Punch List',
+  'Phase 1: Regression Lockdown',
+  'Phase 2: Shared Design System Cleanup',
+  'Phase 3: Page-By-Page Visual Overhaul',
+  'Phase 4: QA And Proof',
+  'Batch Acceptance Checklist',
+  'Pending picks must not be publicly exposed',
+  'Do not revert commits',
+]) {
+  assert(productSystem.includes(required), `TRUSTMYRECORD_PRODUCT_UPGRADE_SYSTEM missing ${required}`);
 }
 
 assert(sportsbook.includes('SPORTSBOOK_RIGHT_RAIL_NO_OVERFLOW_FINAL_20260507'), 'sportsbook right rail containment guard must remain');
