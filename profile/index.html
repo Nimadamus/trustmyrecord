@@ -5892,6 +5892,17 @@
         return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
     }
 
+    function isProfileTimeoutError(error) {
+        return !!(error && (error.code === 'TMR_TIMEOUT' || /timed out/i.test(error.message || '')));
+    }
+
+    function keepProfileHeaderPending(message) {
+        const el = document.getElementById('profileHeader');
+        if (!el) return;
+        const status = el.querySelector('.profile-bio-empty');
+        if (status) status.textContent = message || 'Profile is still loading verified data...';
+    }
+
     function setProfileHeaderFallback(message) {
         const el = document.getElementById('profileHeader');
         if (!el) return;
@@ -6056,7 +6067,7 @@
         const candidates = profileLookupCandidates();
         for (const candidate of candidates) {
             try {
-                const data = await withTimeout(api.getUserProfile(candidate), 6000, 'Profile request');
+                const data = await withTimeout(api.getUserProfile(candidate), 12000, 'Profile request');
                 profileUsername = normalizeProfileLookup((data && data.user && data.user.username) || (data && data.username) || candidate);
                 writeCachedProfile((data && data.user) || data);
                 return data;
@@ -6066,7 +6077,7 @@
             }
             try {
                 if (typeof api.searchUsers === 'function') {
-                    const searchData = await withTimeout(api.searchUsers(candidate, { limit: 8 }), 3500, 'Profile search request');
+                    const searchData = await withTimeout(api.searchUsers(candidate, { limit: 8 }), 12000, 'Profile search request');
                     const users = (searchData && searchData.users) || [];
                     const match = users.find(function(user) {
                         return profileLookupMatchesUser(candidate, user);
@@ -6189,6 +6200,20 @@
             if (renderedCachedProfile && profileData) {
                 console.warn('[Profile] Fresh profile refresh failed; keeping cached profile:', error);
                 startProfileBackgroundLoads();
+                return;
+            }
+            if (isProfileTimeoutError(error)) {
+                console.warn('[Profile] Profile lookup timed out; keeping identity shell visible:', error);
+                keepProfileHeaderPending('Profile is still loading verified data...');
+                setTimeout(function() {
+                    fetchProfileWithFallbacks().then(function(data) {
+                        applyLoadedProfile(data);
+                        startProfileBackgroundLoads();
+                    }).catch(function(retryError) {
+                        console.warn('[Profile] Deferred profile retry failed:', retryError);
+                        keepProfileHeaderPending('Verified profile data is taking longer than expected.');
+                    });
+                }, 1500);
                 return;
             }
             console.error('[Profile] Profile load failed:', error);
