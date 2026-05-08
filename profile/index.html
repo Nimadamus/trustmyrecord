@@ -5986,14 +5986,52 @@
     function profileLookupMatchesUser(value, user) {
         const key = profileLookupKey(value);
         if (!key || !user) return false;
-        return [user.username, user.displayName, user.display_name, user.handle, user.slug].some(function(candidate) {
-            return profileLookupKey(candidate) === key || profileLookupSlug(candidate) === key;
+        return [user.username, user.handle, user.slug, user.displayName, user.display_name, user.name, user.email].some(function(candidate) {
+            const candidateKey = profileLookupKey(candidate);
+            return candidateKey === key || profileLookupSlug(candidate) === key;
         });
     }
 
+    function getSessionProfileUser() {
+        const fromAuth = function() {
+            try {
+                if (typeof auth !== 'undefined' && auth && typeof auth.getCurrentUser === 'function') {
+                    return auth.getCurrentUser();
+                }
+            } catch (_) {}
+            try {
+                if (typeof auth !== 'undefined' && auth && auth.currentUser) return auth.currentUser;
+            } catch (_) {}
+            return null;
+        };
+        const direct = currentUser || fromAuth() || (window.api && window.api._cachedUser) || null;
+        if (direct && (direct.username || direct.handle || direct.displayName || direct.display_name || direct.name || direct.email)) {
+            return direct;
+        }
+        const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser', 'tmr_user'];
+        const stores = [];
+        try { stores.push(localStorage); } catch (_) {}
+        try { stores.push(sessionStorage); } catch (_) {}
+        for (const store of stores) {
+            for (const keyName of keys) {
+                try {
+                    const parsed = JSON.parse(store.getItem(keyName) || 'null');
+                    const user = parsed && (parsed.user || parsed.backendUser || parsed);
+                    if (user && (user.username || user.handle || user.displayName || user.display_name || user.name || user.email)) {
+                        return user;
+                    }
+                } catch (_) {}
+            }
+        }
+        return null;
+    }
+
+    function getCanonicalProfileHandle(user) {
+        return normalizeProfileLookup(user && (user.username || user.handle || user.slug || user.displayName || user.display_name || user.name));
+    }
+
     function buildMyProfileUrl() {
-        const user = currentUser || (typeof auth !== 'undefined' && auth.getCurrentUser ? auth.getCurrentUser() : null);
-        const username = normalizeProfileLookup(user && (user.username || user.handle || user.displayName || user.display_name));
+        const username = getCanonicalProfileHandle(getSessionProfileUser());
         return username ? '/profile/?user=' + encodeURIComponent(username) : '';
     }
 
@@ -6009,8 +6047,11 @@
         add(requestedProfileLookup);
         add(profileUsername);
         if (profileUsername) add(profileUsername.toLowerCase());
-        if (currentUser && profileLookupMatchesUser(requestedProfileLookup || profileUsername, currentUser)) {
-            add(currentUser.username || currentUser.handle || currentUser.displayName || currentUser.display_name);
+        const sessionUser = getSessionProfileUser();
+        if (sessionUser && profileLookupMatchesUser(requestedProfileLookup || profileUsername, sessionUser)) {
+            add(getCanonicalProfileHandle(sessionUser));
+            if (sessionUser.username) add(sessionUser.username);
+            if (sessionUser.handle) add(sessionUser.handle);
         }
         return candidates;
     }
@@ -6152,9 +6193,10 @@
                 console.warn('[Profile] Profile search fallback failed for "' + candidate + '":', error && error.message ? error.message : error);
             }
         }
-        if (currentUser && profileLookupMatchesUser(requestedProfileLookup || profileUsername, currentUser)) {
-            profileUsername = normalizeProfileLookup(currentUser.username || currentUser.handle || currentUser.displayName || currentUser.display_name);
-            return { user: currentUser };
+        const sessionUser = getSessionProfileUser();
+        if (sessionUser && profileLookupMatchesUser(requestedProfileLookup || profileUsername, sessionUser)) {
+            profileUsername = getCanonicalProfileHandle(sessionUser);
+            return { user: sessionUser };
         }
         throw lastError || new Error('Profile not found');
     }
@@ -6224,7 +6266,7 @@
                 return;
             }
 
-            isOwnProfile = currentUser && currentUser.username && currentUser.username.toLowerCase() === profileUsername.toLowerCase();
+            isOwnProfile = !!(currentUser && profileLookupMatchesUser(profileUsername, currentUser));
             await loadProfile();
         } catch (e) {
             setProfileHeaderFallback(e.message);
