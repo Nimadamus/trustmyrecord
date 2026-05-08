@@ -476,6 +476,13 @@
         }
         var rosterRows = verifiedPitchers.filter(function (player) {
             return !liveStarter || !liveStarter.name || normalizeName(player.name) !== normalizeName(liveStarter.name);
+        }).sort(function (a, b) {
+            var aCurated = curatedMatch(a.name);
+            var bCurated = curatedMatch(b.name);
+            if (aCurated && bCurated) return curatedPitchers.indexOf(aCurated) - curatedPitchers.indexOf(bCurated);
+            if (aCurated) return -1;
+            if (bCurated) return 1;
+            return 0;
         });
         if (!rosterRows.length && !options.length) return [];
         rosterRows.slice(0, liveStarter && liveStarter.name ? 4 : 5).forEach(function (player) {
