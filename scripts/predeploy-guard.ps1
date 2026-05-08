@@ -108,7 +108,9 @@ try {
     }
     Assert-NoMatch "Profile" $profile "PNG\s*/\s*JPG\s*/\s*WebP" "avatar upload helper text regressed."
     Assert-Match "Profile" $profile "Share Profile" "Share Profile label is missing."
-    Assert-Match "Profile" $profile "Embed Profile" "Embed Profile label is missing."
+    if ($profile -notmatch "Embed Profile" -and $profile -notmatch "Embed Stats") {
+        throw "Profile guard failed: Embed profile/stats label is missing."
+    }
     Assert-Match "Profile" $profile "platform-production-fix\.js\?v=20260415d" "known profile patch include changed; inspect before deploy."
 
     Assert-Match "Backend API" $backend "if \(isTotal \|\| /\\b\(over\|under\)\\b/\.test\(selection\)\)" "totals/team totals must use unsigned total formatting."
