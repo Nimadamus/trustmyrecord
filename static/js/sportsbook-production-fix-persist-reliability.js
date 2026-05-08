@@ -2493,6 +2493,11 @@
                         displayTeam = '';
                         sideLabel = /under/i.test(label) ? 'F5 Under' : 'F5 Over';
                         break;
+                    case 'f5_team_totals':
+                        betType = /under/i.test(label) ? 'f5teamunder' : 'f5teamover';
+                        displayTeam = option.selection || label.replace(/\s+[+-]?\d+(\.\d+)?\s*$/,'').trim();
+                        sideLabel = /under/i.test(label) ? 'F5 Team Under' : 'F5 Team Over';
+                        break;
                     case 'spreads':
                         betType = 'spread';
                         displayTeam = option.selection || label.split(' ')[0] || '';
@@ -2501,7 +2506,7 @@
                     case 'f5_spreads':
                         betType = 'f5spread';
                         displayTeam = option.selection || '';
-                        sideLabel = 'F5';
+                        sideLabel = '';
                         break;
                     case 'h2h':
                         betType = 'ml';
@@ -2511,7 +2516,7 @@
                     case 'f5_h2h':
                         betType = 'f5ml';
                         displayTeam = option.selection || '';
-                        sideLabel = 'F5 ML';
+                        sideLabel = 'ML';
                         break;
                     default:
                         betType = 'ml';
@@ -3357,6 +3362,16 @@
                         marketType = 'f5_totals'; groupLabel = 'First 5';
                         selection = 'Under';
                         selectionLabel = 'F5 Under' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'f5teamover':
+                        marketType = 'f5_team_totals'; groupLabel = 'First 5 Team Total';
+                        selection = (teamRaw + ' Over' + (lineDisp ? ' ' + lineDisp : '')).trim();
+                        selectionLabel = selection;
+                        break;
+                    case 'f5teamunder':
+                        marketType = 'f5_team_totals'; groupLabel = 'First 5 Team Total';
+                        selection = (teamRaw + ' Under' + (lineDisp ? ' ' + lineDisp : '')).trim();
+                        selectionLabel = selection;
                         break;
                     case 'f5spread':
                         marketType = 'f5_spreads'; groupLabel = 'First 5';
