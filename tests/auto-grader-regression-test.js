@@ -11,7 +11,8 @@ const source = fs.readFileSync(path.join(root, 'static', 'js', 'auto-grader-fixe
 assert(source.includes('function shouldUseBackendGrading()'), 'grader must keep backend-grading detection');
 assert(source.includes('[Grader] Backend API detected; skipping local auto-grader.'), 'local grader must skip when backend API is active');
 assert(source.includes('if (!scores.completed)'), 'grader must not grade unfinished games');
-assert(source.includes("localStorage.removeItem('tmr_picks_v2')"), 'grader must clear legacy local pick storage');
+assert(source.includes("['tmr_picks', 'trustmyrecord_picks', 'tmr_picks_legacy']"), 'grader must list legacy local pick storage keys');
+assert(source.includes('localStorage.removeItem(key)'), 'grader must clear each legacy local pick storage key');
 assert(source.includes('window.TMR_GRADER = TMR_GRADER'), 'grader must expose TMR_GRADER for guarded pages');
 
 const storage = new Map();
