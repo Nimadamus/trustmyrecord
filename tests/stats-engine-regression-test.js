@@ -100,7 +100,8 @@ assert.strictEqual(stats.units, 0, 'pending result_units must not leak into publ
 assert.strictEqual(stats.roi, 0, 'ROI uses settled risk only and excludes pending risk');
 assert.strictEqual(stats.sportBreakdown.NFL.pending, 1, 'sport breakdown keeps pending count separate');
 assert.strictEqual(Number(stats.sportBreakdown.NFL.units), 0, 'pending sport units remain zero');
-assert.strictEqual(stats.streaks.current, 0, 'push resets current streak');
+assert.strictEqual(stats.streaks.current, -1, 'pushes remain neutral and preserve the latest W/L streak');
+assert.strictEqual(stats.streaks.type, 'loss', 'current streak type follows the latest non-push result');
 assert.strictEqual(stats.streaks.best, 1, 'best streak reads chronological graded wins');
 assert.strictEqual(stats.streaks.worst, 1, 'worst streak reads chronological graded losses');
 
