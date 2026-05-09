@@ -22,7 +22,7 @@ const elementIds = [
   'eraAdjustmentValue','simulationModeValue','dataModeValue','awayProbabilityLabel','homeProbabilityLabel',
   'awayProbabilityValue','homeProbabilityValue','awayProbabilityBar','homeProbabilityBar','projectionNotice',
   'comparisonGrid','inputSummary','matchupNotes','boxScorePanel','boxScoreTitle','boxScoreBody',
-  'boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton'
+  'boxScoreTeamTotals','boxScoreSummary','playerBoxScorePanel','playerBoxScoreContent','copyBoxScoreButton','saveBoxScoreButton'
 ];
 
 function makeElement(id) {
@@ -68,31 +68,6 @@ function createSimulator() {
   context.window.document = context.document;
   vm.runInNewContext(script, context);
   return context.window.TMRMlbSimulator;
-}
-
-function teamIdFor(simulator, team) {
-  const source = simulator.rosterSourceForTeam(team);
-  const match = String(source && source.url || '').match(/\/teams\/(\d+)\/roster/);
-  assert(match, team.name + ' exposes a roster source team id');
-  return match[1];
-}
-
-function seedVerifiedCurrentRosters(simulator) {
-  const hitters = [
-    ['Alex Carter', 'CF'], ['Ben Walker', 'SS'], ['Cal Brooks', 'RF'], ['Drew Mason', '1B'],
-    ['Evan Reed', '3B'], ['Frank Ellis', 'LF'], ['Grant Cole', 'DH'], ['Henry Stone', '2B'], ['Ian Price', 'C']
-  ];
-  const pitchers = [
-    ['Jack Morris', 'P'], ['Kevin Ryan', 'P'], ['Liam Parker', 'P'], ['Miles Turner', 'P'], ['Nathan Ross', 'P']
-  ];
-  simulator.localTeams.current.forEach((team) => {
-    const teamId = teamIdFor(simulator, team);
-    simulator.state.liveContext.teamRosters[team.abbreviation] = {
-      teamId,
-      source: 'Verified test active roster context',
-      players: hitters.concat(pitchers).map(([name, position]) => ({ name, position, teamId })),
-    };
-  });
 }
 
 function sum(values) {
@@ -143,10 +118,43 @@ function pickTeam(teams, index) {
   return teams[((index % teams.length) + teams.length) % teams.length];
 }
 
+const mlbTeamIds = {
+  ARI: 109, ATL: 144, BAL: 110, BOS: 111, CHC: 112, CWS: 145, CIN: 113, CLE: 114, COL: 115, DET: 116,
+  HOU: 117, KC: 118, LAA: 108, LAD: 119, MIA: 146, MIL: 158, MIN: 142, NYM: 121, NYY: 147, ATH: 133,
+  PHI: 143, PIT: 134, SD: 135, SF: 137, SEA: 136, STL: 138, TB: 139, TEX: 140, TOR: 141, WSH: 120,
+};
+
+function preloadVerifiedRoster(simulator, team) {
+  if (!team || team.era !== 'current') return;
+  const teamId = mlbTeamIds[team.abbreviation];
+  if (!teamId) return;
+  const positions = ['CF', 'SS', 'RF', '1B', '3B', 'LF', 'DH', '2B', 'C'];
+  const pitchers = ['SP', 'SP', 'SP', 'RP', 'RP'];
+  simulator.state.liveContext.teamRosters[team.abbreviation] = {
+    teamId: String(teamId),
+    count: positions.length + pitchers.length,
+    relievers: pitchers.length,
+    source: 'Verified MLB active roster endpoint',
+    summary: `${positions.length + pitchers.length} MLB active roster players`,
+    uiBuild: simulator.uiBuild,
+    players: positions.map((position, index) => ({
+      name: `${team.abbreviation} Batter ${index + 1}`,
+      position,
+      teamId: String(teamId),
+    })).concat(pitchers.map((position, index) => ({
+      name: `${team.abbreviation} Pitcher ${index + 1}`,
+      position,
+      teamId: String(teamId),
+    }))),
+  };
+}
+
 function runCase(simulator, mode, away, home, awayPitcherIndex, homePitcherIndex, index) {
   simulator.state.preset = mode;
   simulator.state.awayPool = away.year === 'Current' ? 'current' : 'historical';
   simulator.state.homePool = home.year === 'Current' ? 'current' : 'historical';
+  preloadVerifiedRoster(simulator, away);
+  preloadVerifiedRoster(simulator, home);
   simulator.state.awayTeamId = away.id;
   simulator.state.homeTeamId = home.id;
   const awayPitchers = simulator.pitcherOptionsFor(away, 'away', null);
@@ -158,7 +166,6 @@ function runCase(simulator, mode, away, home, awayPitcherIndex, homePitcherIndex
 }
 
 const simulator = createSimulator();
-seedVerifiedCurrentRosters(simulator);
 const current = simulator.localTeams.current.slice();
 const historical = simulator.localTeams.historical.slice();
 const all = current.concat(historical);

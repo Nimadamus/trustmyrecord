@@ -20,7 +20,8 @@ const ids = [
   'totalRangeValue','runEnvironmentValue','simulationConfidenceValue','eraAdjustmentValue','simulationModeValue',
   'dataModeValue','awayProbabilityLabel','homeProbabilityLabel','awayProbabilityValue','homeProbabilityValue',
   'awayProbabilityBar','homeProbabilityBar','projectionNotice','comparisonGrid','inputSummary','matchupNotes',
-  'boxScorePanel','boxScoreTitle','boxScoreBody','boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton'
+  'boxScorePanel','boxScoreTitle','boxScoreBody','boxScoreTeamTotals','boxScoreSummary','playerBoxScorePanel',
+  'playerBoxScoreContent','copyBoxScoreButton','saveBoxScoreButton'
 ];
 
 let clipboard = '';
@@ -134,6 +135,16 @@ function assertBoxScore(result) {
   assert(box.away.hits >= box.away.runs && box.home.hits >= box.home.runs, 'hits are compatible with runs');
   assert(box.away.hits <= 25 && box.home.hits <= 25, 'hits remain plausible');
   assert(box.away.errors <= 4 && box.home.errors <= 4, 'errors remain plausible');
+  [box.away, box.home].forEach((line) => {
+    assert(line.summaryStats, 'team summary stats exist');
+    ['doubles', 'triples', 'homeRuns', 'rbi', 'walks', 'strikeouts', 'stolenBases', 'caughtStealing', 'leftOnBase', 'totalPitches', 'totalStrikes', 'hits', 'runs', 'errors'].forEach((key) => {
+      assert(Number.isFinite(line.summaryStats[key]), `${key} is numeric`);
+    });
+    assert(line.summaryStats.totalPitches >= line.summaryStats.totalStrikes, 'pitches are greater than or equal to strikes');
+    assert(line.summaryStats.hits === line.hits, 'summary hits mirror line score');
+    assert(line.summaryStats.runs === line.runs, 'summary runs mirror line score');
+    assert(line.summaryStats.errors === line.errors, 'summary errors mirror line score');
+  });
   assert(box.winner.id === (box.away.runs > box.home.runs ? result.away.id : result.home.id), 'winner matches line score');
   assert(result.winner.id === (result.homeWin >= result.awayWin ? result.home.id : result.away.id), 'projected winner matches higher win probability');
 }
@@ -149,7 +160,19 @@ function assertBoxScore(result) {
     await simulator.runSimulation();
     assert.strictEqual(elements.boxScorePanel.getAttribute('data-box-score-state'), 'projected', mode + ' renders box score panel');
     assert(/<tr/.test(elements.boxScoreBody.innerHTML), mode + ' renders box score rows');
+    assert(/LOB/.test(elements.boxScoreTeamTotals.innerHTML), mode + ' renders left on base totals');
+    assert(/P-S/.test(elements.boxScoreTeamTotals.innerHTML), mode + ' renders pitches-strikes totals');
+    assert(/<th>2B<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders doubles column');
+    assert(/<th>3B<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders triples column');
+    assert(/<th>HR<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders home run column');
+    assert(/<th>SB<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders stolen base column');
+    assert(/<th>CS<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders caught stealing column');
+    assert(/<th>NP<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders total pitches column');
+    assert(/<th>P-S<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders pitches-strikes column');
     assert(/Starting Pitchers:/.test(simulator.boxScoreText(result)), mode + ' export includes starters');
+    assert(/Team summary:/.test(simulator.boxScoreText(result)), mode + ' export includes team summary stats');
+    assert(/LOB/.test(simulator.boxScoreText(result)), mode + ' export includes left on base');
+    assert(/Pitches/.test(simulator.boxScoreText(result)), mode + ' export includes total pitches');
     assert(/Generated: \d{4}-\d{2}-\d{2}T/.test(simulator.boxScoreText(result)), mode + ' export includes generated timestamp');
     assert(/Simulated final:/.test(simulator.boxScoreText(result)), mode + ' export includes simulated final score');
     assert(/Win probability:/.test(simulator.boxScoreText(result)), mode + ' export includes win probability');
