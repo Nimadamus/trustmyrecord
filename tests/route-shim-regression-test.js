@@ -25,6 +25,13 @@ const shims = [
     forbiddenTargets: ['/hangout/']
   },
   {
+    file: 'predictions/index.html',
+    target: '/polls/',
+    canonical: 'https://trustmyrecord.com/polls/',
+    label: 'Continue to Polls',
+    forbiddenTargets: ['/hangout/']
+  },
+  {
     file: 'forums/index.html',
     target: '/forum/',
     canonical: 'https://trustmyrecord.com/forum/',
@@ -81,5 +88,7 @@ for (const shim of shims) {
 
 assert(sportsbookReliability.includes("'polls-trivia': 'polls.html'"), 'sportsbook legacy polls-trivia route must target polls');
 assert(!sportsbookReliability.includes("'polls-trivia': 'hangout.html'"), 'sportsbook legacy polls-trivia route regressed to hangout');
+assert(sportsbookReliability.includes("predictions: 'polls.html'"), 'sportsbook legacy predictions route must target polls');
+assert(!sportsbookReliability.includes("predictions: 'hangout.html'"), 'sportsbook legacy predictions route regressed to hangout');
 
 console.log('route shim regression test passed');

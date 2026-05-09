@@ -3213,7 +3213,7 @@
             arena: 'arena.html',
             trivia: 'trivia.html',
             'polls-trivia': 'polls.html',
-            predictions: 'hangout.html',
+            predictions: 'polls.html',
             contests: 'arena.html',
             profile: 'profile.html',
             messages: 'messages.html',
