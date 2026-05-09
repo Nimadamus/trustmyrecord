@@ -79,6 +79,7 @@ try {
         "static/js/mlb-simulator.js",
         "static/css/mlb-simulator.css",
         "tests/line-formatting-regression-test.js",
+        "tests/workflow-regression-test.js",
         "tests/protected-baseline-regression-test.js",
         "tests/publish-guard-regression-test.js",
         "tests/stats-engine-regression-test.js",
@@ -121,6 +122,7 @@ try {
     }
 
     Invoke-GuardCommand "line formatting regression test" @("node", "tests/line-formatting-regression-test.js")
+    Invoke-GuardCommand "workflow regression test" @("node", "tests/workflow-regression-test.js")
     Invoke-GuardCommand "protected baseline regression test" @("node", "tests/protected-baseline-regression-test.js")
     Invoke-GuardCommand "publish guard regression test" @("node", "tests/publish-guard-regression-test.js")
     Invoke-GuardCommand "stats engine regression test" @("node", "tests/stats-engine-regression-test.js")
