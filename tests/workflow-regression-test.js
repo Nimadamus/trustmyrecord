@@ -9,6 +9,7 @@ const workflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'sports
 const referencedTests = [
   'publish-guard-regression-test.js',
   'pending-picks-regression-test.js',
+  'local-api-no-seed-regression-test.js',
   'trendspotter-accuracy-test.js',
   'route-shim-regression-test.js',
   'sitemap-route-regression-test.js',
@@ -50,6 +51,7 @@ for (const required of [
   "if: github.event_name == 'workflow_dispatch'",
   'node tests/publish-guard-regression-test.js',
   'node tests/pending-picks-regression-test.js',
+  'node tests/local-api-no-seed-regression-test.js',
   'node tests/trendspotter-accuracy-test.js',
   'node tests/route-shim-regression-test.js',
   'node tests/sitemap-route-regression-test.js',
