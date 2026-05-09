@@ -86,6 +86,7 @@ try {
         "tests/polls-page-visual-regression-test.js",
         "tests/arena-page-visual-regression-test.js",
         "tests/leaderboards-page-visual-regression-test.js",
+        "tests/forum-page-visual-regression-test.js",
         "tests/profile-no-old-theme-flash-test.js",
         "tests/profile-source-regression-test.js",
         "tests/profile-market-drilldown-page-test.js",
@@ -114,6 +115,7 @@ try {
     Invoke-GuardCommand "polls page visual regression test" @("node", "tests/polls-page-visual-regression-test.js")
     Invoke-GuardCommand "arena page visual regression test" @("node", "tests/arena-page-visual-regression-test.js")
     Invoke-GuardCommand "leaderboards page visual regression test" @("node", "tests/leaderboards-page-visual-regression-test.js")
+    Invoke-GuardCommand "forum page visual regression test" @("node", "tests/forum-page-visual-regression-test.js")
     Invoke-GuardCommand "profile no-old-theme-flash regression test" @("node", "tests/profile-no-old-theme-flash-test.js")
     Invoke-GuardCommand "profile source regression test" @("node", "tests/profile-source-regression-test.js")
     Invoke-GuardCommand "profile market drilldown regression test" @("node", "tests/profile-market-drilldown-page-test.js")
