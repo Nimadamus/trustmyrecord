@@ -85,6 +85,7 @@ try {
         "tests/sitewide-design-system-regression-test.js",
         "tests/polls-page-visual-regression-test.js",
         "tests/arena-page-visual-regression-test.js",
+        "tests/profile-no-old-theme-flash-test.js",
         "tests/profile-source-regression-test.js",
         "tests/profile-market-drilldown-page-test.js",
         "tests/mlb-simulator-page-test.js",
@@ -111,6 +112,7 @@ try {
     Invoke-GuardCommand "sitewide design system regression test" @("node", "tests/sitewide-design-system-regression-test.js")
     Invoke-GuardCommand "polls page visual regression test" @("node", "tests/polls-page-visual-regression-test.js")
     Invoke-GuardCommand "arena page visual regression test" @("node", "tests/arena-page-visual-regression-test.js")
+    Invoke-GuardCommand "profile no-old-theme-flash regression test" @("node", "tests/profile-no-old-theme-flash-test.js")
     Invoke-GuardCommand "profile source regression test" @("node", "tests/profile-source-regression-test.js")
     Invoke-GuardCommand "profile market drilldown regression test" @("node", "tests/profile-market-drilldown-page-test.js")
     Invoke-GuardCommand "MLB simulator page regression test" @("node", "tests/mlb-simulator-page-test.js")
