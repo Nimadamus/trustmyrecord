@@ -16,7 +16,7 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260507-realism-rosters/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260508-boxscore-sports-table/.test(html), 'live page uses versioned simulator stylesheet');
 assert(/\/static\/js\/mlb-simulator\.js\?v=20260508-roster-full-guard/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
