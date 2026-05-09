@@ -3,6 +3,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const api = fs.readFileSync(path.join(root, 'static', 'js', 'api.js'), 'utf8');
+const socialFeed = fs.readFileSync(path.join(root, 'static', 'js', 'social-feed.js'), 'utf8');
 
 function assert(condition, message) {
   if (!condition) {
@@ -33,5 +34,32 @@ assert(api.includes("this.setLocal('tmr_posts', samplePosts);"), 'empty local po
 
 assert(/const\s+sampleThreads\s*=\s*\[\s*\];/.test(api), 'sampleThreads must remain an empty array');
 assert(/const\s+samplePosts\s*=\s*\[\s*\];/.test(api), 'samplePosts must remain an empty array');
+
+[
+  'pruneSeedData()',
+  "post.id.indexOf('seed_') === 0",
+  "like.targetId.indexOf('seed_') === 0",
+  "comment.id.indexOf('scmt_') === 0",
+  "comment.postId.indexOf('seed_') === 0",
+  "String(like.userId || '').toLowerCase() !== 'user_demo'",
+  "String(comment.userId || '').toLowerCase() !== 'user_demo'",
+  'this.save(this.POSTS_KEY, this.posts)',
+  'this.save(this.LIKES_KEY, this.likes)',
+  'this.save(this.COMMENTS_KEY, this.comments)'
+].forEach((token) => {
+  assert(socialFeed.includes(token), `social feed seed cleanup token missing: ${token}`);
+});
+
+[
+  'seed_post',
+  'seed_user',
+  'demo_user',
+  'fake_user',
+  'sample_posts',
+  'starterPosts',
+  'defaultPosts = ['
+].forEach((token) => {
+  assert(!socialFeed.includes(token), `social feed must not reintroduce seeded local content token: ${token}`);
+});
 
 console.log('local API no-seed regression test passed');
