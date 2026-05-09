@@ -78,8 +78,23 @@ assertRegex(
 );
 
 assertRegex(
+  /\.tmr-pending-picks-panel \*,[\s\S]*?\.tmr-pending-pick \*\s*\{[\s\S]*?max-inline-size:\s*100%\s*!important;[\s\S]*?min-width:\s*0\s*!important;[\s\S]*?overflow-wrap:\s*anywhere\s*!important;[\s\S]*?word-break:\s*break-word\s*!important;/,
+  'all pending pick child text must shrink and wrap for real long pending-pick data'
+);
+
+assertRegex(
+  /\.tmr-pending-picks-list\s*\{[\s\S]*?overflow:\s*hidden auto\s*!important;/,
+  'pending picks list must allow vertical scrolling without a horizontal scrollbar'
+);
+
+assertRegex(
   /\.tmr-pending-pick\s*\{[\s\S]*?display:\s*flex\s*!important;[\s\S]*?flex-direction:\s*column\s*!important;/,
   'pending picks must remain a vertical card stack inside the pick slip'
+);
+
+assertRegex(
+  /\.tmr-pending-pick > \*\s*\{[\s\S]*?flex:\s*0 1 auto\s*!important;[\s\S]*?width:\s*100%\s*!important;/,
+  'pending pick card children must fit inside the card width'
 );
 
 assertRegex(
