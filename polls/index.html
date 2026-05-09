@@ -19,11 +19,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --tmr-fb-bg: #07111F;
-            --tmr-fb-content: rgba(11, 20, 34, 0.94);
-            --tmr-fb-row-alt: rgba(15, 27, 45, 0.92);
-            --tmr-fb-row-hover: rgba(21, 40, 65, 0.96);
-            --tmr-fb-sidebar: rgba(10, 18, 31, 0.96);
+            --tmr-fb-bg: #050A12;
+            --tmr-fb-content: rgba(9, 18, 31, 0.96);
+            --tmr-fb-row-alt: rgba(14, 25, 42, 0.86);
+            --tmr-fb-row-hover: rgba(18, 38, 61, 0.96);
+            --tmr-fb-sidebar: rgba(6, 12, 22, 0.98);
             --tmr-fb-sidebar-active: rgba(34, 211, 238, 0.14);
             --tmr-fb-header: #060B14;
             --tmr-fb-text: #EAF2FF;
@@ -39,27 +39,39 @@
             --tmr-fb-green: #22C55E;
             --tmr-fb-amber: #B58200;
             --tmr-fb-red: #F87171;
-            --tmr-fb-panel: rgba(9, 17, 30, 0.86);
-            --tmr-fb-panel-2: rgba(15, 27, 45, 0.88);
-            --tmr-fb-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+            --tmr-fb-panel: rgba(7, 14, 25, 0.90);
+            --tmr-fb-panel-2: rgba(13, 27, 45, 0.90);
+            --tmr-fb-shadow: 0 26px 80px rgba(0, 0, 0, 0.42);
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html body {
             font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important;
             background:
-                radial-gradient(circle at 20% 0%, rgba(34, 211, 238, 0.13), transparent 31rem),
-                radial-gradient(circle at 86% 8%, rgba(34, 197, 94, 0.10), transparent 28rem),
-                linear-gradient(180deg, #081321 0%, #050A12 56%, #04070D 100%) !important;
+                radial-gradient(circle at 18% -8%, rgba(34, 211, 238, 0.16), transparent 33rem),
+                radial-gradient(circle at 88% 2%, rgba(34, 197, 94, 0.13), transparent 30rem),
+                linear-gradient(135deg, rgba(15, 23, 42, 0.96), rgba(5, 10, 18, 0.98) 46%, #030712 100%) !important;
             color: var(--tmr-fb-text) !important;
             font-size: 14px;
             min-height: 100vh;
+        }
+        html body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(rgba(148, 163, 184, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.018) 1px, transparent 1px);
+            background-size: 44px 44px;
+            mask-image: linear-gradient(180deg, rgba(0,0,0,0.78), transparent 70%);
+            z-index: -1;
         }
         body.tmr-site-shell > header { display: none !important; }
         a { color: var(--tmr-fb-link); text-decoration: none; }
         a:hover { color: var(--tmr-fb-link-hover); text-decoration: underline; }
 
         /* Top bar (matches forum redesign) */
-        .tmr-fb-topbar { background: rgba(6, 11, 20, 0.92); color: #F1F5F9; border-bottom: 1px solid rgba(148, 163, 184, 0.16); box-shadow: 0 16px 44px rgba(0,0,0,0.22); backdrop-filter: blur(16px); }
+        .tmr-fb-topbar { background: rgba(4, 9, 17, 0.94); color: #F1F5F9; border-bottom: 1px solid rgba(34, 211, 238, 0.12); box-shadow: 0 16px 44px rgba(0,0,0,0.30); backdrop-filter: blur(16px); }
         .tmr-fb-topbar-inner { max-width: 1340px; margin: 0 auto; padding: 12px 20px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
         .tmr-fb-brand { display: inline-flex; align-items: center; gap: 8px; color: #FFFFFF; font-weight: 800; font-size: 1.02rem; text-decoration: none; }
         .tmr-fb-brand:hover { color: #FFFFFF; text-decoration: none; }
@@ -77,16 +89,18 @@
         .tmr-fb-cta:hover { background: linear-gradient(135deg, #4ADE80, #67E8F9) !important; }
 
         /* Shell */
-        .tmr-fb-shell { max-width: 1320px; margin: 0 auto; padding: 26px 20px 70px; display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 24px; align-items: start; }
-        .tmr-fb-sidebar { position: sticky; top: 18px; background: linear-gradient(180deg, rgba(13, 24, 40, 0.96), rgba(7, 13, 23, 0.96)); border: 1px solid var(--tmr-fb-border); border-radius: 18px; overflow: hidden; box-shadow: var(--tmr-fb-shadow); }
+        .tmr-fb-shell { max-width: 1280px; margin: 0 auto; padding: 28px 20px 72px; display: grid; grid-template-columns: 268px minmax(0, 1fr); gap: 24px; align-items: start; }
+        .tmr-fb-sidebar { position: sticky; top: 18px; background: linear-gradient(180deg, rgba(8, 17, 30, 0.98), rgba(4, 9, 17, 0.98)); border: 1px solid rgba(34,211,238,0.14); border-radius: 20px; overflow: hidden; box-shadow: var(--tmr-fb-shadow); }
+        .tmr-fb-sidebar::before { content: ""; display: block; height: 3px; background: linear-gradient(90deg, var(--tmr-fb-green), var(--tmr-fb-cyan), var(--tmr-fb-blue)); }
         .tmr-fb-sidebar-toggle { display: none; width: 100%; padding: 12px 14px; background: rgba(34,211,238,0.08); color: #F1F5F9; border: none; font-family: inherit; font-weight: 800; font-size: 0.88rem; text-align: left; cursor: pointer; }
         .tmr-fb-sidebar-toggle::after { content: "\25BC"; float: right; font-size: 0.72rem; opacity: 0.7; }
         .tmr-fb-sidebar-section { padding: 16px 14px 12px; }
         .tmr-fb-sidebar-label { color: #67E8F9; font-size: 0.66rem; font-weight: 900; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 10px; }
         .tmr-fb-sidebar-list { list-style: none; }
-        .tmr-fb-sidebar-list a { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 9px 11px; border-radius: 11px; color: #B6C4D7; font-size: 0.86rem; font-weight: 700; cursor: pointer; border: 1px solid transparent; transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease; }
+        .tmr-fb-sidebar-list a { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 11px; border-radius: 12px; color: #B6C4D7; font-size: 0.86rem; font-weight: 750; cursor: pointer; border: 1px solid transparent; transition: background 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.16s ease; }
         .tmr-fb-sidebar-list a:hover { background: rgba(148,163,184,0.09); color: #F8FAFC; text-decoration: none; border-color: rgba(148,163,184,0.16); }
-        .tmr-fb-sidebar-list a.is-active { background: linear-gradient(135deg, rgba(34,211,238,0.18), rgba(34,197,94,0.12)); color: #F8FAFC; font-weight: 900; border-color: rgba(34,211,238,0.34); box-shadow: inset 3px 0 0 var(--tmr-fb-cyan), 0 10px 26px rgba(34,211,238,0.08); }
+        .tmr-fb-sidebar-list a:hover { transform: translateX(2px); }
+        .tmr-fb-sidebar-list a.is-active { background: linear-gradient(135deg, rgba(34,211,238,0.20), rgba(34,197,94,0.13)); color: #F8FAFC; font-weight: 900; border-color: rgba(34,211,238,0.38); box-shadow: inset 3px 0 0 var(--tmr-fb-cyan), 0 10px 26px rgba(34,211,238,0.10); }
         .tmr-fb-sidebar-count { color: #67E8F9; font-weight: 900; }
         .tmr-fb-sidebar-divider { height: 1px; background: rgba(148,163,184,0.12); margin: 2px 14px; }
 
@@ -95,30 +109,35 @@
         .tmr-fb-breadcrumb { color: var(--tmr-fb-muted); font-size: 0.84rem; margin-bottom: 10px; }
         .tmr-fb-breadcrumb a { color: var(--tmr-fb-link); font-weight: 600; cursor: pointer; }
         .tmr-fb-breadcrumb .sep { margin: 0 6px; color: var(--tmr-fb-muted); }
-        .tmr-fb-page-title { font-size: 2.15rem; font-weight: 900; color: #F8FAFC; letter-spacing: 0; margin-bottom: 5px; }
-        .tmr-fb-page-subtitle { color: #A9B9CC; font-size: 0.96rem; line-height: 1.55; max-width: 760px; margin-bottom: 18px; }
+        .tmr-fb-page-title { font-size: 2.25rem; font-weight: 900; color: #F8FAFC; letter-spacing: 0; margin-bottom: 6px; }
+        .tmr-fb-page-subtitle { color: #A9B9CC; font-size: 0.98rem; line-height: 1.55; max-width: 760px; margin-bottom: 20px; }
 
-        .tmr-fb-banner { position: relative; padding: 24px 26px; border-radius: 18px; background: linear-gradient(135deg, rgba(10, 22, 38, 0.98) 0%, rgba(13, 43, 68, 0.94) 58%, rgba(8, 26, 31, 0.98) 100%); color: #F1F5F9; border: 1px solid rgba(34,211,238,0.22); margin-bottom: 18px; overflow: hidden; box-shadow: var(--tmr-fb-shadow); }
+        .tmr-fb-banner { position: relative; padding: 26px; border-radius: 22px; background: linear-gradient(135deg, rgba(8, 19, 35, 0.98) 0%, rgba(12, 40, 64, 0.94) 57%, rgba(4, 23, 29, 0.98) 100%); color: #F1F5F9; border: 1px solid rgba(34,211,238,0.24); margin-bottom: 20px; overflow: hidden; box-shadow: var(--tmr-fb-shadow); }
         .tmr-fb-banner::before { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,0.045), transparent 55%); pointer-events: none; }
         .tmr-fb-banner::after { content: ""; position: absolute; right: -70px; top: -80px; width: 280px; height: 280px; border-radius: 50%; background: radial-gradient(circle, rgba(34,211,238,.24), transparent 68%); pointer-events: none; }
         .tmr-fb-banner-eyebrow { display: inline-block; color: var(--tmr-fb-cyan); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; margin-bottom: 6px; }
-        .tmr-fb-banner-headline { font-size: 1.34rem; font-weight: 900; line-height: 1.28; color: #fff; margin-bottom: 8px; position: relative; }
+        .tmr-fb-banner-grid { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 250px; gap: 22px; align-items: center; }
+        .tmr-fb-banner-headline { font-size: clamp(1.35rem, 2vw, 1.72rem); font-weight: 900; line-height: 1.18; color: #fff; margin-bottom: 8px; position: relative; }
         .tmr-fb-banner-sub { color: #C8D4E4; font-size: 0.92rem; line-height: 1.55; max-width: 760px; position: relative; }
+        .tmr-fb-banner-stats { display: grid; gap: 10px; }
+        .tmr-fb-banner-stat { padding: 12px 13px; border-radius: 16px; border: 1px solid rgba(148,163,184,0.16); background: rgba(2, 8, 16, 0.34); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); }
+        .tmr-fb-banner-stat b { display: block; color: #EAF2FF; font-size: 0.92rem; font-weight: 900; }
+        .tmr-fb-banner-stat span { display: block; color: #91A4BB; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-top: 3px; }
 
         /* Action row + tab bar */
-        .tmr-polls-panel { background: linear-gradient(180deg, rgba(10, 20, 34, 0.96), rgba(7, 13, 23, 0.96)); border: 1px solid var(--tmr-fb-border); border-radius: 18px; overflow: hidden; box-shadow: var(--tmr-fb-shadow); }
-        .tmr-fb-actionrow { display: flex; align-items: end; gap: 10px; flex-wrap: wrap; padding: 16px; background: linear-gradient(180deg, rgba(15, 27, 45, 0.74), rgba(10, 18, 31, 0.82)); border: none; border-bottom: 1px solid rgba(148,163,184,0.14); border-radius: 0; }
+        .tmr-polls-panel { background: linear-gradient(180deg, rgba(8, 17, 30, 0.98), rgba(5, 10, 18, 0.98)); border: 1px solid rgba(34,211,238,0.16); border-radius: 22px; overflow: hidden; box-shadow: var(--tmr-fb-shadow); }
+        .tmr-fb-actionrow { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; padding: 17px; background: linear-gradient(180deg, rgba(14, 27, 46, 0.82), rgba(8, 17, 30, 0.90)); border: none; border-bottom: 1px solid rgba(148,163,184,0.14); border-radius: 0; }
         .tmr-filter-control { display: inline-flex; flex-direction: column; gap: 6px; min-width: 142px; }
         .tmr-filter-control label { color: #7DD3FC; font-size: 0.66rem; font-weight: 900; letter-spacing: 0.11em; text-transform: uppercase; }
-        .tmr-fb-action-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 38px; padding: 0 13px; border-radius: 999px; border: 1px solid var(--tmr-fb-border-strong); background: rgba(15, 23, 42, 0.82); color: #DDE9F7; font-family: inherit; font-size: 0.82rem; font-weight: 800; cursor: pointer; text-decoration: none; }
+        .tmr-fb-action-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--tmr-fb-border-strong); background: rgba(15, 23, 42, 0.82); color: #DDE9F7; font-family: inherit; font-size: 0.82rem; font-weight: 800; cursor: pointer; text-decoration: none; }
         select.tmr-fb-action-btn { min-width: 142px; appearance: none; background-image: linear-gradient(180deg, rgba(15,23,42,0.86), rgba(12,20,34,0.86)), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 7.5l5 5 5-5' stroke='%2367E8F9' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat, no-repeat; background-position: center, right 12px center; padding-right: 34px !important; }
         .tmr-fb-action-btn:hover { background-color: rgba(22, 35, 55, 0.92); color: #F8FAFC; border-color: rgba(34,211,238,0.36); }
         .tmr-fb-action-btn.is-primary { background: linear-gradient(135deg, var(--tmr-fb-green), var(--tmr-fb-cyan)); color: #06111F; border-color: rgba(34,211,238,0.52); box-shadow: 0 12px 28px rgba(34,211,238,0.18); }
         .tmr-fb-action-btn.is-primary:hover { background: linear-gradient(135deg, #4ADE80, #67E8F9); color: #06111F; }
         .tmr-fb-actionrow-spacer { flex: 1; }
         .tmr-polls-count { align-self: center; padding: 8px 12px; border: 1px solid rgba(148,163,184,0.16); border-radius: 999px; background: rgba(148,163,184,0.07); color: #AABBD0 !important; font-size: 0.78rem !important; font-weight: 900; white-space: nowrap; }
-        .tmr-fb-tabs { display: flex; gap: 8px; padding: 14px 16px; background: rgba(6, 12, 22, 0.55); border: none; border-bottom: 1px solid rgba(148,163,184,0.12); flex-wrap: wrap; }
-        .tmr-fb-tab { min-height: 36px; padding: 0 14px; border: 1px solid rgba(148,163,184,0.16); border-radius: 999px; background: rgba(15, 23, 42, 0.56); color: #AABBD0; font-family: inherit; font-size: 0.82rem; font-weight: 850; cursor: pointer; }
+        .tmr-fb-tabs { display: flex; gap: 6px; padding: 14px 16px; background: rgba(4, 9, 17, 0.64); border: none; border-bottom: 1px solid rgba(148,163,184,0.12); flex-wrap: wrap; }
+        .tmr-fb-tab { min-height: 36px; padding: 0 14px; border: 1px solid rgba(148,163,184,0.16); border-radius: 999px; background: rgba(15, 23, 42, 0.58); color: #AABBD0; font-family: inherit; font-size: 0.82rem; font-weight: 850; cursor: pointer; }
         .tmr-fb-tab:hover { color: #F8FAFC; border-color: rgba(34,211,238,0.28); background: rgba(20, 34, 54, 0.82); }
         .tmr-fb-tab.is-active { color: #06111F; border-color: rgba(34,211,238,0.55); background: linear-gradient(135deg, #22C55E, #22D3EE); box-shadow: 0 10px 24px rgba(34,211,238,0.16); }
 
@@ -182,8 +201,9 @@
         .tmr-poll-vote-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .tmr-poll-vote-btn:hover:not(:disabled) { background: #1E4FCD; }
 
-        .tmr-empty-msg { margin: 18px; padding: 44px 24px; text-align: center; color: #AABBD0; border: 1px solid rgba(148,163,184,0.16); border-radius: 18px; background: linear-gradient(180deg, rgba(15,27,45,0.68), rgba(8,15,26,0.74)); }
-        .tmr-empty-msg .icon { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 18px; font-size: 1.55rem; opacity: 1; margin-bottom: 14px; color: #67E8F9; background: rgba(34,211,238,0.10); border: 1px solid rgba(34,211,238,0.24); }
+        .tmr-empty-msg { margin: 18px; padding: 46px 24px; text-align: center; color: #AABBD0; border: 1px solid rgba(34,211,238,0.16); border-radius: 20px; background: radial-gradient(circle at 50% 0%, rgba(34,211,238,0.11), transparent 18rem), linear-gradient(180deg, rgba(13,27,45,0.78), rgba(5,10,18,0.84)); }
+        .tmr-empty-msg .icon { display: inline-flex; align-items: center; justify-content: center; width: 58px; height: 58px; border-radius: 18px; font-size: 1.55rem; opacity: 1; margin-bottom: 14px; color: #67E8F9; background: rgba(34,211,238,0.10); border: 1px solid rgba(34,211,238,0.24); box-shadow: 0 14px 34px rgba(34,211,238,0.10); }
+        .tmr-empty-msg strong { display: block; color: #F8FAFC; font-size: 1.02rem; margin-bottom: 5px; }
         .tmr-empty-msg a { color: #86EFAC; font-weight: 900; }
         .tmr-loading { padding: 34px; text-align: center; color: var(--tmr-fb-muted); }
 
@@ -229,12 +249,16 @@
         @media (max-width: 960px) {
             .tmr-fb-shell { grid-template-columns: 1fr; padding: 14px 14px 40px; }
             .tmr-fb-sidebar { position: static; }
+            .tmr-fb-banner-grid { grid-template-columns: 1fr; }
+            .tmr-fb-banner-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .tmr-fb-sidebar-toggle { display: block; }
             .tmr-fb-sidebar-collapsible { display: none; }
             .tmr-fb-sidebar.is-open .tmr-fb-sidebar-collapsible { display: block; }
             .tmr-fb-sidebar.is-open .tmr-fb-sidebar-toggle::after { content: "\25B2"; }
         }
         @media (max-width: 640px) {
+            .tmr-fb-banner { padding: 20px; border-radius: 18px; }
+            .tmr-fb-banner-stats { grid-template-columns: 1fr; }
             .tmr-poll-card { grid-template-columns: 1fr; }
             .tmr-poll-card-action { justify-self: flex-start; }
             .tmr-fb-page-title { font-size: 1.4rem; }
@@ -317,9 +341,18 @@
             <p class="tmr-fb-page-subtitle">Sports debate, market angles, and prediction calls from the TrustMyRecord board.</p>
 
             <div class="tmr-fb-banner">
-                <span class="tmr-fb-banner-eyebrow">Polls &amp; Predictions</span>
-                <div class="tmr-fb-banner-headline">Ask the Board. Lock Your Take. See Who's With You.</div>
-                <div class="tmr-fb-banner-sub">Run polls on tonight's matchups, MVP races, who's hot on the card, or anything bettors actually argue about. Every vote ties to a TrustMyRecord profile, so consensus has receipts.</div>
+                <div class="tmr-fb-banner-grid">
+                    <div class="tmr-fb-banner-copy">
+                        <span class="tmr-fb-banner-eyebrow">Polls &amp; Predictions</span>
+                        <div class="tmr-fb-banner-headline">Ask the Board. Lock Your Take. See Who's With You.</div>
+                        <div class="tmr-fb-banner-sub">Run polls on tonight's matchups, MVP races, who's hot on the card, or anything bettors actually argue about. Every vote ties to a TrustMyRecord profile, so consensus has receipts.</div>
+                    </div>
+                    <div class="tmr-fb-banner-stats" aria-label="Poll standards">
+                        <div class="tmr-fb-banner-stat"><b>Verified</b><span>Profile-tied votes</span></div>
+                        <div class="tmr-fb-banner-stat"><b>Live</b><span>Market debates</span></div>
+                        <div class="tmr-fb-banner-stat"><b>Receipts</b><span>Public consensus</span></div>
+                    </div>
+                </div>
             </div>
 
             <div class="tmr-polls-panel">
@@ -743,7 +776,7 @@
         var polls = state.polls;
         document.getElementById('pollsCount').textContent = polls.length + ' poll' + (polls.length === 1 ? '' : 's');
         if (!polls.length) {
-            listEl.innerHTML = '<div class="tmr-empty-msg"><div class="icon"><i class="fas fa-square-poll-vertical"></i></div><div>No polls in this view yet.<br><a href="#" onclick="event.preventDefault();openCreatePollModal()">Be the first to create one</a>.</div></div>';
+            listEl.innerHTML = '<div class="tmr-empty-msg"><div class="icon"><i class="fas fa-square-poll-vertical"></i></div><div><strong>No polls in this view yet.</strong><a href="#" onclick="event.preventDefault();openCreatePollModal()">Be the first to create one.</a></div></div>';
             return;
         }
         listEl.innerHTML = polls.map(function(p) {

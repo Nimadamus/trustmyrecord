@@ -83,6 +83,7 @@ try {
         "tests/pick-display-format.test.js",
         "tests/trendspotter-source-regression-test.js",
         "tests/sitewide-design-system-regression-test.js",
+        "tests/polls-page-visual-regression-test.js",
         "tests/profile-source-regression-test.js",
         "tests/profile-market-drilldown-page-test.js",
         "tests/mlb-simulator-page-test.js",
@@ -107,6 +108,7 @@ try {
     Invoke-GuardCommand "pick display format regression test" @("node", "tests/pick-display-format.test.js")
     Invoke-GuardCommand "Trendspotter source regression test" @("node", "tests/trendspotter-source-regression-test.js")
     Invoke-GuardCommand "sitewide design system regression test" @("node", "tests/sitewide-design-system-regression-test.js")
+    Invoke-GuardCommand "polls page visual regression test" @("node", "tests/polls-page-visual-regression-test.js")
     Invoke-GuardCommand "profile source regression test" @("node", "tests/profile-source-regression-test.js")
     Invoke-GuardCommand "profile market drilldown regression test" @("node", "tests/profile-market-drilldown-page-test.js")
     Invoke-GuardCommand "MLB simulator page regression test" @("node", "tests/mlb-simulator-page-test.js")
