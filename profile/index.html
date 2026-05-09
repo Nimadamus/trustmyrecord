@@ -2268,8 +2268,8 @@
                           <table class="tmrx-table" id="tmrxTablePicks">
                             <thead><tr>
                               <th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Market</th>
-                              <th class="num">Odds</th><th class="num">Units</th>
-                              <th>Result</th><th class="num">Net</th>
+                              <th class="num">Odds</th><th class="num">Risk / To Win</th>
+                              <th>Result</th><th class="num">Result Units</th>
                             </tr></thead>
                             <tbody><tr class="empty"><td colspan="9">Loading pick history&hellip;</td></tr></tbody>
                           </table>
@@ -2501,8 +2501,8 @@
                         <option value="net_units_asc">Worst Net Units</option>
                         <option value="odds_desc">Highest Odds</option>
                         <option value="odds_asc">Lowest Odds</option>
-                        <option value="units_desc">Highest Units</option>
-                        <option value="units_asc">Lowest Units</option>
+                        <option value="units_desc">Best Result Units</option>
+                        <option value="units_asc">Worst Result Units</option>
                         <option value="clv_desc">Best CLV</option>
                         <option value="clv_asc">Worst CLV</option>
                         <option value="sport_asc">Sport A-Z</option>
@@ -2553,7 +2553,7 @@
                             <th>Pick</th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="odds" onclick="setTableSort('odds')">Line</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="result" onclick="setTableSort('result')">Result</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Units</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Result Units</button></th>
                         </tr>
                     </thead>
                     <tbody id="picksTableBody"></tbody>
@@ -5320,10 +5320,15 @@
         const worstStreak = streakStats.longestLossStreak;
 
         // Averages
-        const oddsArr = picks.filter(p => p.odds_snapshot != null).map(p => Number(p.odds_snapshot));
-        const avgOdds = oddsArr.length > 0 ? Math.round(oddsArr.reduce((a, b) => a + b, 0) / oddsArr.length) : null;
-        const unitsArr = picks.filter(p => p.units != null).map(p => Number(p.units));
-        const avgUnits = unitsArr.length > 0 ? (unitsArr.reduce((a, b) => a + b, 0) / unitsArr.length) : 0;
+        const decisions = graded.filter(function(p) { return p.status === 'won' || p.status === 'lost'; });
+        const validProbabilities = decisions
+            .map(function(p) { return oddsToProbability(getPickOdds(p)); })
+            .filter(function(value) { return value != null; });
+        const avgOdds = validProbabilities.length
+            ? probabilityToAmerican(validProbabilities.reduce(function(total, value) { return total + value; }, 0) / validProbabilities.length)
+            : null;
+        const riskArr = decisions.map(pickRiskUnits).filter(function(value) { return value > 0; });
+        const avgUnits = riskArr.length > 0 ? (riskArr.reduce((a, b) => a + b, 0) / riskArr.length) : 0;
 
         const marketTypeRecords = buildMarketTypeBreakdown(graded);
 
@@ -5379,26 +5384,26 @@
         const losses = graded.filter(function(pick) { return normalizeStatus(pick && pick.status) === 'lost'; }).length;
         const pushes = graded.filter(function(pick) { return normalizeStatus(pick && pick.status) === 'push'; }).length;
         const pending = source.filter(function(pick) { return normalizeStatus(pick && pick.status) === 'pending'; }).length;
+        const nonPushSettled = graded.filter(function(pick) {
+            const status = normalizeStatus(pick && pick.status);
+            return status === 'won' || status === 'lost';
+        });
         const netUnits = graded.reduce(function(total, pick) { return total + pickPL(pick); }, 0);
-        const riskedUnits = graded.reduce(function(total, pick) { return total + getPickRiskUnits(pick); }, 0);
-        const avgUnits = graded.length
-            ? graded.reduce(function(total, pick) { return total + getPickUnits(pick); }, 0) / graded.length
+        const riskedUnits = nonPushSettled.reduce(function(total, pick) { return total + pickRiskUnits(pick); }, 0);
+        const avgUnits = nonPushSettled.length
+            ? nonPushSettled.reduce(function(total, pick) { return total + pickRiskUnits(pick); }, 0) / nonPushSettled.length
             : 0;
-        const validProbabilities = graded
+        const validProbabilities = nonPushSettled
             .map(function(pick) { return oddsToProbability(getPickOdds(pick)); })
             .filter(function(value) { return value != null; });
         const avgOdds = validProbabilities.length
             ? probabilityToAmerican(validProbabilities.reduce(function(total, value) { return total + value; }, 0) / validProbabilities.length)
             : null;
-        const effectiveUnits = graded.reduce(function(total, pick) {
-            const units = getPickUnits(pick);
-            if (!units) return total;
-            return total + (pickPL(pick) / units) * 3;
-        }, 0);
+        const effectiveUnits = avgUnits > 0 ? (netUnits / avgUnits) * 3 : 0;
 
         const chronological = graded.slice().sort(function(a, b) {
-            return new Date(a.graded_at || a.settled_at || a.event_completed_at || a.completed_at || a.locked_at || a.created_at || 0) -
-                new Date(b.graded_at || b.settled_at || b.event_completed_at || b.completed_at || b.locked_at || b.created_at || 0);
+            return new Date(a.locked_at || a.created_at || a.settled_at || a.graded_at || a.event_completed_at || a.completed_at || 0) -
+                new Date(b.locked_at || b.created_at || b.settled_at || b.graded_at || b.event_completed_at || b.completed_at || 0);
         });
         const streakStats = window.TMR && typeof window.TMR.calculateStreaks === 'function'
             ? window.TMR.calculateStreaks(graded)
@@ -5510,6 +5515,32 @@
         setBoth('tmrxGraded', String(stats.graded));
         setBoth('tmrxStreak', stats.currentStreak > 0 ? stats.currentStreak + 'W' : stats.currentStreak < 0 ? Math.abs(stats.currentStreak) + 'L' : '0', stats.currentStreak);
         setBoth('tmrxBestStreak', stats.bestStreak + 'W', stats.bestStreak);
+
+        const setStreakRow = function(selector, label, total, wins, losses) {
+            document.querySelectorAll(selector).forEach(function(tr) {
+                const cells = tr.querySelectorAll('td');
+                if (cells.length < 6) return;
+                cells[0].textContent = label;
+                cells[1].textContent = String(total);
+                cells[2].textContent = wins + '-' + losses;
+                cells[3].textContent = total > 0 ? (wins > 0 ? '100.0%' : '0.0%') : '—';
+                cells[4].textContent = '—';
+                cells[5].textContent = '—';
+                cells.forEach(function(td, idx) {
+                    td.classList.remove('zero', 'pos', 'neg');
+                    if (idx > 0) td.classList.add(total > 0 ? (wins > losses ? 'pos' : losses > wins ? 'neg' : 'zero') : 'zero');
+                });
+            });
+        };
+        setStreakRow('[data-tmrx-streak="best"],[data-tmrx-streak-top="best"]', 'Best Win Streak', stats.bestStreak, stats.bestStreak, 0);
+        setStreakRow('[data-tmrx-streak="worst"],[data-tmrx-streak-top="worst"]', 'Worst Loss Streak', stats.worstStreak, 0, stats.worstStreak);
+        if (stats.currentStreak > 0) {
+            setStreakRow('[data-tmrx-streak="current"],[data-tmrx-streak-top="current"]', 'Current Streak (W)', stats.currentStreak, stats.currentStreak, 0);
+        } else if (stats.currentStreak < 0) {
+            setStreakRow('[data-tmrx-streak="current"],[data-tmrx-streak-top="current"]', 'Current Streak (L)', Math.abs(stats.currentStreak), 0, Math.abs(stats.currentStreak));
+        } else {
+            setStreakRow('[data-tmrx-streak="current"],[data-tmrx-streak-top="current"]', 'Current Streak', 0, 0, 0);
+        }
 
         ['tmrxLastGraded', 'tmrxLastGradedTop'].forEach(function(id) {
             const el = document.getElementById(id);
@@ -5680,6 +5711,28 @@
         if (value == null || isNaN(Number(value))) return '--';
         const num = Number(value);
         return (num >= 0 ? '+' : '') + num.toFixed(2) + 'u';
+    }
+
+    function formatLedgerResultUnits(pick) {
+        const status = normalizeStatus(pick && pick.status);
+        if (status === 'pending') return { text: '--', className: 'zero' };
+        if (status === 'push' || status === 'void' || status === 'voided' || status === 'cancelled' || status === 'canceled') {
+            return { text: '0.00u', className: 'zero' };
+        }
+        const value = pickPL(pick);
+        return {
+            text: (value >= 0 ? '+' : '') + value.toFixed(2) + 'u',
+            className: value > 0 ? 'positive' : value < 0 ? 'negative' : 'zero'
+        };
+    }
+
+    function formatLedgerStakeDetails(pick) {
+        const risk = pickRiskUnits(pick);
+        const toWin = pickToWinUnits(pick);
+        const parts = [];
+        if (risk > 0) parts.push('Risk ' + risk.toFixed(2) + 'u');
+        if (toWin > 0) parts.push('To win ' + toWin.toFixed(2) + 'u');
+        return parts.join(' / ');
     }
 
     function normalizeStatus(status) {
@@ -6832,21 +6885,20 @@
         const sportLeagueOf = (raw) => {
             const key = String(raw || '').toLowerCase();
             const known = {
-                baseball_mlb: ['Baseball', 'MLB'],
-                basketball_nba: ['Basketball', 'NBA'],
-                basketball_ncaab: ['Basketball', 'NCAAB'],
-                icehockey_nhl: ['Hockey', 'NHL'],
-                americanfootball_nfl: ['Football', 'NFL'],
-                americanfootball_ncaaf: ['Football', 'NCAAF'],
-                soccer_epl: ['Soccer', 'EPL'],
+                baseball_mlb: ['MLB', 'MLB'],
+                basketball_nba: ['NBA', 'NBA'],
+                basketball_ncaab: ['NCAAB', 'NCAAB'],
+                icehockey_nhl: ['NHL', 'NHL'],
+                americanfootball_nfl: ['NFL', 'NFL'],
+                americanfootball_ncaaf: ['NCAAF', 'NCAAF'],
+                soccer_epl: ['EPL', 'EPL'],
                 mma_mixed_martial_arts: ['MMA', 'MMA']
             };
             if (known[key]) return known[key];
             const parts = key.split('_').filter(Boolean);
             if (parts.length > 1) {
                 const league = parts[parts.length - 1].toUpperCase();
-                const sport = parts.slice(0, -1).join(' ').replace(/\b\w/g, c => c.toUpperCase());
-                return [sport || 'Other', league || 'Other'];
+                return [league || 'Other', league || 'Other'];
             }
             return [labelOf('by_sport', raw), '—'];
         };
@@ -6877,14 +6929,10 @@
                     ? (function() {
                         const parts = sportLeagueOf(b.key);
                         const sportHref = escapeHtml(buildProfileSportBreakdownUrl(b.key));
-                        const sportKey = escapeHtml(String(b.key || ''));
-                        const sportLabel = escapeHtml(parts[0]);
-                        const leagueLabel = escapeHtml(parts[1]);
-                        const linkedSport = '<a class="profile-sport-filter-link profile-sport-breakdown-link" href="' + sportHref + '" title="View ' + escapeHtml(fmtSport(b.key)) + ' breakdown">' + sportLabel + '</a>';
+                        const leagueLabel = escapeHtml(parts[1] && parts[1] !== '—' ? parts[1] : parts[0]);
                         const linkedLeague = '<a class="profile-sport-filter-link profile-sport-breakdown-link" href="' + sportHref + '" title="View ' + escapeHtml(fmtSport(b.key)) + ' breakdown">' + leagueLabel + '<span class="profile-sport-view-indicator">View Breakdown</span></a>';
                         return [
-                            '<td class="name">' + linkedSport + '</td>',
-                            '<td class="league">' + linkedLeague + '</td>'
+                            '<td class="name league" colspan="2">' + linkedLeague + '</td>'
                         ];
                     })()
                     : ['<td class="name">' + labelOf('by_' + splitKey, b.key) + '</td>'];
@@ -7146,6 +7194,9 @@
             eqShellDst.classList.toggle('tmrx-equity-shell--empty',
                 eqShellSrc.classList.contains('tmrx-equity-shell--empty'));
         }
+        if (Array.isArray(allLoadedPicks) && allLoadedPicks.length) {
+            renderCoreHandicapperStatsFromPicks(allLoadedPicks);
+        }
     }
 
     // ============================================================
@@ -7158,19 +7209,19 @@
         const meta = document.getElementById('tmrxPickMeta');
         if (!tbody) return;
         if (!username || !window.api || typeof window.api.request !== 'function') {
-            tbody.innerHTML = '<tr class="empty"><td colspan="10">Pick history unavailable.</td></tr>';
+            tbody.innerHTML = '<tr class="empty"><td colspan="9">Pick history unavailable.</td></tr>';
             return;
         }
         let resp;
         try {
             resp = await window.api.request('/picks?username=' + encodeURIComponent(username) + '&limit=25');
         } catch (err) {
-            tbody.innerHTML = '<tr class="empty"><td colspan="10">Pick history unavailable.</td></tr>';
+            tbody.innerHTML = '<tr class="empty"><td colspan="9">Pick history unavailable.</td></tr>';
             return;
         }
         const picks = (resp && Array.isArray(resp.picks)) ? resp.picks : [];
         if (!picks.length) {
-            tbody.innerHTML = '<tr class="empty"><td colspan="10">No picks locked yet.</td></tr>';
+            tbody.innerHTML = '<tr class="empty"><td colspan="9">No picks locked yet.</td></tr>';
             if (meta) meta.textContent = '0 picks';
             return;
         }
@@ -7202,14 +7253,11 @@
         };
         tbody.innerHTML = picks.map(p => {
             if (p.redacted) {
-                return '<tr><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td></tr>';
+                return '<tr><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="5" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td></tr>';
             }
             const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : '—';
-            const units = p.units != null ? Number(p.units).toFixed(1) + 'u' : '—';
-            const result = String(p.status || 'pending').toLowerCase();
-            const net = p.result_units != null ? Number(p.result_units) : null;
-            const netCls = net == null ? 'zero' : (net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero');
-            const netTxt = net == null ? '—' : (net > 0 ? '+' : '') + net.toFixed(2) + 'u';
+            const resultUnits = formatLedgerResultUnits(p);
+            const stakeDetails = formatLedgerStakeDetails(p);
             return '<tr>' +
                 '<td>' + fmtDate(p.created_at || p.locked_at) + '</td>' +
                 '<td>' + sportLabel(p.sport_key) + '</td>' +
@@ -7217,9 +7265,9 @@
                 '<td class="name">' + capEsc(formatPickDisplayValue(p)) + '</td>' +
                 '<td>' + marketLabel(p.market_type) + '</td>' +
                 '<td class="num">' + fmtAmericanOdds(p.odds_snapshot) + '</td>' +
-                '<td class="num">' + units + '</td>' +
+                '<td class="num zero">' + (stakeDetails || '—') + '</td>' +
                 '<td>' + resultTag(p.status) + '</td>' +
-                '<td class="num ' + netCls + '">' + netTxt + '</td>' +
+                '<td class="num ' + (resultUnits.className === 'positive' ? 'pos' : resultUnits.className === 'negative' ? 'neg' : 'zero') + '">' + resultUnits.text + '</td>' +
             '</tr>';
         }).join('');
         if (meta) {
@@ -7274,7 +7322,7 @@
     window.formatBucketLabel = (typeof formatBucketLabel === 'function') ? formatBucketLabel : function(splitKey, bucketKey) {
         if (bucketKey == null || bucketKey === '') return '—';
         const k = String(bucketKey);
-        if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
+        if (splitKey === 'by_sport')        return ({baseball_mlb:'MLB',basketball_nba:'NBA',basketball_ncaab:'NCAAB',icehockey_nhl:'NHL',americanfootball_nfl:'NFL',americanfootball_ncaaf:'NCAAF',soccer_epl:'EPL'})[k] || k.toUpperCase().replace(/_/g, ' ');
         if (splitKey === 'by_market')       return marketTypeLabel(k);
         if (splitKey === 'by_odds_bucket')  return ({favorite:'Favorite (-101 or lower)',underdog:'Dog (+100 or higher)',even_money:'Even Money (-100)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
@@ -7286,7 +7334,7 @@
     function formatBucketLabel(splitKey, bucketKey) {
         if (bucketKey == null || bucketKey === '') return '—';
         const k = String(bucketKey);
-        if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
+        if (splitKey === 'by_sport')        return ({baseball_mlb:'MLB',basketball_nba:'NBA',basketball_ncaab:'NCAAB',icehockey_nhl:'NHL',americanfootball_nfl:'NFL',americanfootball_ncaaf:'NCAAF',soccer_epl:'EPL'})[k] || k.toUpperCase().replace(/_/g, ' ');
         if (splitKey === 'by_market')       return marketTypeLabel(k);
         if (splitKey === 'by_odds_bucket')  return ({favorite:'Favorite (-101 or lower)',underdog:'Dog (+100 or higher)',even_money:'Even Money (-100)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
@@ -8609,6 +8657,8 @@
         const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
         const sel = formatPickDisplayValue(p);
         const status = normalizeStatus(p.status);
+        const resultUnits = formatLedgerResultUnits(p);
+        const stakeDetails = formatLedgerStakeDetails(p);
 
         const rowClass = 'row-' + status;
         return '<tr class="' + rowClass + '">' +
@@ -8617,7 +8667,7 @@
             '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div></td>' +
             '<td data-label="Line">' + odds + '</td>' +
             '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
-            '<td data-label="Units">' + formatUnitsValue(p.units) + '</td>' +
+            '<td data-label="Result Units" class="profit-cell ' + resultUnits.className + '">' + resultUnits.text + (stakeDetails ? '<div class="ledger-subline">' + stakeDetails + '</div>' : '') + '</td>' +
             '</tr>';
     }
 
@@ -9467,8 +9517,8 @@
         return {
             'date_desc': 'Newest first',
             'date_asc': 'Oldest first',
-            'units_desc': 'Highest units',
-            'units_asc': 'Lowest units',
+            'units_desc': 'Best result units',
+            'units_asc': 'Worst result units',
             'odds_desc': 'Highest odds',
             'odds_asc': 'Lowest odds',
             'net_units_desc': 'Best net units',
@@ -9640,7 +9690,7 @@
                 market: marketTypeLabel(a.market_type || ''),
                 line: Number(a.line_snapshot || 0),
                 odds: Number(a.odds_snapshot || a.odds || -110),
-                units: Number(a.units || 0),
+                units: pickPL(a),
                 result: resultRank[aStatus] || 0,
                 net: pickPL(a),
                 net_units: pickPL(a),
@@ -9656,7 +9706,7 @@
                 market: marketTypeLabel(b.market_type || ''),
                 line: Number(b.line_snapshot || 0),
                 odds: Number(b.odds_snapshot || b.odds || -110),
-                units: Number(b.units || 0),
+                units: pickPL(b),
                 result: resultRank[bStatus] || 0,
                 net: pickPL(b),
                 net_units: pickPL(b),
@@ -12379,9 +12429,9 @@
         body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(4)::before { content: "Pick"; }
         body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(5)::before { content: "Market"; }
         body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(6)::before { content: "Odds"; }
-        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(7)::before { content: "Units"; }
+        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(7)::before { content: "Risk / To Win"; }
         body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(8)::before { content: "Result"; }
-        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(9)::before { content: "Profit/Loss"; }
+        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(9)::before { content: "Result Units"; }
         body.profile-page.tmr-social-profile #tmrxTablePicks td.name {
           text-align: right !important;
         }

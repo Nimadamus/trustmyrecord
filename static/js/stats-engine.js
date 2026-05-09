@@ -183,13 +183,19 @@ class StatsEngine {
 
     calculateROI(picks) {
         const graded = picks.filter(p => p.status !== 'pending');
+        const risked = graded.filter(p => {
+            const status = String(p && p.status || '').toLowerCase();
+            return status === 'won' || status === 'lost';
+        });
         if (graded.length === 0) return 0;
 
         let totalRisk = 0;
         let netUnits = 0;
 
-        graded.forEach(pick => {
+        risked.forEach(pick => {
             totalRisk += this.actualRiskUnits(pick);
+        });
+        graded.forEach(pick => {
             netUnits += this.pickResultUnits(pick);
         });
 
@@ -346,7 +352,7 @@ class StatsEngine {
 
         const graded = (picks || [])
             .filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed')
-            .sort((a, b) => new Date(a.commence_time || a.event_start_time || a.start_time || a.event_completed_at || a.completed_at || a.settled_at || a.graded_at || a.locked_at || a.created_at || 0) - new Date(b.commence_time || b.event_start_time || b.start_time || b.event_completed_at || b.completed_at || b.settled_at || b.graded_at || b.locked_at || b.created_at || 0));
+            .sort((a, b) => new Date(a.locked_at || a.created_at || a.settled_at || a.graded_at || a.event_completed_at || a.completed_at || a.commence_time || a.event_start_time || a.start_time || 0) - new Date(b.locked_at || b.created_at || b.settled_at || b.graded_at || b.event_completed_at || b.completed_at || b.commence_time || b.event_start_time || b.start_time || 0));
 
         if (graded.length === 0) {
             return { current: 0, best: 0, worst: 0, type: 'none' };
@@ -389,7 +395,7 @@ class StatsEngine {
             currentStreak = latest.status === 'won' ? 1 : -1;
             for (let i = graded.length - 2; i >= 0; i--) {
                 const status = graded[i].status;
-                if (status === 'push' || status === 'pushed') continue;
+                if (status === 'push' || status === 'pushed') break;
                 if (status !== latest.status) break;
                 currentStreak += latest.status === 'won' ? 1 : -1;
             }

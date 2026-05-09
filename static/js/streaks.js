@@ -21,19 +21,19 @@
 
     function pickTimestamp(pick) {
         const candidates = [
-            pick && pick.commence_time,
-            pick && pick.event_start_time,
-            pick && pick.start_time,
-            pick && pick.game && pick.game.commence_time,
-            pick && pick.game && pick.game.start_time,
+            pick && pick.locked_at,
+            pick && pick.created_at,
+            pick && pick.settled_at,
+            pick && pick.graded_at,
             pick && pick.finalized_at,
             pick && pick.event_completed_at,
             pick && pick.completed_at,
             pick && pick.game_final_at,
-            pick && pick.settled_at,
-            pick && pick.graded_at,
-            pick && pick.locked_at,
-            pick && pick.created_at
+            pick && pick.commence_time,
+            pick && pick.event_start_time,
+            pick && pick.start_time,
+            pick && pick.game && pick.game.commence_time,
+            pick && pick.game && pick.game.start_time
         ];
         for (const value of candidates) {
             const time = new Date(value || 0).getTime();
@@ -85,7 +85,8 @@
                 winRun = 0;
                 longestLossStreak = Math.max(longestLossStreak, lossRun);
             } else {
-                // Pushes are graded picks, but they are neutral for active W/L streaks.
+                winRun = 0;
+                lossRun = 0;
             }
         });
 
@@ -97,7 +98,7 @@
             currentStreak = latest.status === 'won' ? 1 : -1;
             for (let i = ordered.length - 2; i >= 0; i -= 1) {
                 const status = ordered[i].status;
-                if (status === 'push') continue;
+                if (status === 'push') break;
                 if (status !== latest.status) break;
                 currentStreak += latest.status === 'won' ? 1 : -1;
             }
@@ -132,8 +133,8 @@
 
     function formatStreak(value) {
         const streak = Number(value) || 0;
-        if (streak > 0) return 'W' + streak;
-        if (streak < 0) return 'L' + Math.abs(streak);
+        if (streak > 0) return streak + 'W';
+        if (streak < 0) return Math.abs(streak) + 'L';
         return '0';
     }
 
