@@ -67,7 +67,22 @@
     const boardRequests = new Map();
     const boardDiagnostics = [];
     let latestBoardRequestId = 0;
-    const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v2_';
+    const LEGACY_BOARD_CACHE_PREFIXES = ['tmr_sportsbook_board_v2_'];
+    const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v3_oddsrepair_';
+
+    function clearLegacyBoardCaches() {
+        if (typeof window === 'undefined') return;
+        [window.sessionStorage, window.localStorage].forEach(function(storage) {
+            if (!storage) return;
+            LEGACY_BOARD_CACHE_PREFIXES.forEach(function(prefix) {
+                for (let i = storage.length - 1; i >= 0; i -= 1) {
+                    const key = storage.key(i);
+                    if (key && key.indexOf(prefix) === 0) storage.removeItem(key);
+                }
+            });
+        });
+    }
+    try { clearLegacyBoardCaches(); } catch (error) {}
 
     const MARKET_LABELS = {
         h2h: 'Moneyline',
@@ -1552,13 +1567,37 @@
             summary.severity = summary.severity || 'info';
         }
 
+        const hasPricedMarkets = function(game) {
+            return game && Array.isArray(game.market_groups) && game.market_groups.some(function(group) {
+                return group && Array.isArray(group.items) && group.items.some(function(item) {
+                    return item && item.source !== 'manual' && item.odds != null && Number.isFinite(Number(item.odds));
+                });
+            });
+        };
+        const pricedGames = normalizedGames.filter(hasPricedMarkets);
+        const pendingBehindPricedCount = pricedGames.length ? normalizedGames.length - pricedGames.length : 0;
+        const displayGames = normalizedGames.slice().sort(function(a, b) {
+            const aPriced = hasPricedMarkets(a) ? 0 : 1;
+            const bPriced = hasPricedMarkets(b) ? 0 : 1;
+            if (aPriced !== bPriced) return aPriced - bPriced;
+            return new Date(a && a.commence_time || 0) - new Date(b && b.commence_time || 0);
+        });
+        if (pendingBehindPricedCount > 0) {
+            summary.severity = 'info';
+            summary.message = 'Showing sportsbook-priced games first. ' + pendingBehindPricedCount + ' lines-pending matchup' + (pendingBehindPricedCount === 1 ? ' remains' : 's remain') + ' available below until verified prices are posted.';
+            summary.total_games = displayGames.length;
+            summary.sportsbook_games = pricedGames.length;
+            summary.fallback_games = pendingBehindPricedCount;
+        }
+
         return {
             sport_key: response && response.sport_key ? response.sport_key : '',
             summary: summary,
-            games: normalizedGames,
+            games: displayGames,
             diagnostics: Object.assign({}, response && response.diagnostics ? response.diagnostics : {}, {
                 frontend_repaired_games: repairedCount,
-                frontend_dropped_games: droppedCount
+                frontend_dropped_games: droppedCount,
+                frontend_pending_games_sorted_after_priced: pendingBehindPricedCount
             })
         };
     }
