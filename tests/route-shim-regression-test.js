@@ -4,6 +4,8 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const navigation = read('static/js/navigation.js');
 const sportsbookReliability = read('static/js/sportsbook-production-fix-persist-reliability.js');
+const sportsbookPersist = read('static/js/sportsbook-production-fix-persist.js');
+const sportsbookLegacy = read('static/js/sportsbook-production-fix.js');
 
 function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), 'utf8');
@@ -90,5 +92,12 @@ assert(sportsbookReliability.includes("'polls-trivia': 'polls.html'"), 'sportsbo
 assert(!sportsbookReliability.includes("'polls-trivia': 'hangout.html'"), 'sportsbook legacy polls-trivia route regressed to hangout');
 assert(sportsbookReliability.includes("predictions: 'polls.html'"), 'sportsbook legacy predictions route must target polls');
 assert(!sportsbookReliability.includes("predictions: 'hangout.html'"), 'sportsbook legacy predictions route regressed to hangout');
+
+[sportsbookReliability, sportsbookPersist, sportsbookLegacy].forEach((script, index) => {
+  assert(script.includes("'polls-trivia': 'polls.html'"), `sportsbook route map ${index} must keep polls-trivia on polls`);
+  assert(script.includes("predictions: 'polls.html'"), `sportsbook route map ${index} must keep predictions on polls`);
+  assert(!script.includes("'polls-trivia': 'hangout.html'"), `sportsbook route map ${index} regressed polls-trivia to hangout`);
+  assert(!script.includes("predictions: 'hangout.html'"), `sportsbook route map ${index} regressed predictions to hangout`);
+});
 
 console.log('route shim regression test passed');
