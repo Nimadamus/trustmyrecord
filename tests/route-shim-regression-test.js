@@ -20,6 +20,48 @@ function assert(condition, message) {
 
 const shims = [
   {
+    file: 'account/index.html',
+    target: '/profile/',
+    canonical: null,
+    label: 'Profile',
+    forbiddenTargets: []
+  },
+  {
+    file: 'community/index.html',
+    target: '/feed/',
+    canonical: null,
+    label: 'Feed',
+    forbiddenTargets: []
+  },
+  {
+    file: 'dashboard/index.html',
+    target: '/profile/',
+    canonical: null,
+    label: 'Profile',
+    forbiddenTargets: []
+  },
+  {
+    file: 'directory/index.html',
+    target: '/handicappers/',
+    canonical: null,
+    label: 'Handicappers',
+    forbiddenTargets: []
+  },
+  {
+    file: 'challenges/index.html',
+    target: '/arena/',
+    canonical: 'https://trustmyrecord.com/arena/',
+    label: 'Continue to Arena',
+    forbiddenTargets: []
+  },
+  {
+    file: 'consensus/index.html',
+    target: '/sportsbook/#consensus',
+    canonical: 'https://trustmyrecord.com/sportsbook/#consensus',
+    label: 'Continue',
+    forbiddenTargets: []
+  },
+  {
     file: 'polls-trivia/index.html',
     target: '/polls/',
     canonical: 'https://trustmyrecord.com/polls/',
@@ -32,6 +74,20 @@ const shims = [
     canonical: 'https://trustmyrecord.com/polls/',
     label: 'Continue to Polls',
     forbiddenTargets: ['/hangout/']
+  },
+  {
+    file: 'groups/index.html',
+    target: '/friends/',
+    canonical: 'https://trustmyrecord.com/friends/',
+    label: 'Continue',
+    forbiddenTargets: []
+  },
+  {
+    file: 'live/index.html',
+    target: '/sportsbook/',
+    canonical: 'https://trustmyrecord.com/sportsbook/',
+    label: 'Continue',
+    forbiddenTargets: []
   },
   {
     file: 'forums/index.html',
@@ -48,10 +104,80 @@ const shims = [
     forbiddenTargets: []
   },
   {
+    file: 'make-picks/index.html',
+    target: '/sportsbook/',
+    canonical: null,
+    label: 'Make Picks',
+    forbiddenTargets: []
+  },
+  {
     file: 'cappers/index.html',
     target: '/handicappers/',
     canonical: null,
     label: 'Handicappers',
+    forbiddenTargets: []
+  },
+  {
+    file: 'members/index.html',
+    target: '/handicappers/',
+    canonical: null,
+    label: 'Handicappers',
+    forbiddenTargets: []
+  },
+  {
+    file: 'my-record/index.html',
+    target: '/sportsbook/#my-record',
+    canonical: 'https://trustmyrecord.com/sportsbook/#my-record',
+    label: 'Continue',
+    forbiddenTargets: []
+  },
+  {
+    file: 'mypicks/index.html',
+    target: '/sportsbook/#mypicks',
+    canonical: 'https://trustmyrecord.com/sportsbook/#mypicks',
+    label: 'Continue',
+    forbiddenTargets: []
+  },
+  {
+    file: 'pick/index.html',
+    target: '/sportsbook/',
+    canonical: null,
+    label: 'Make Picks',
+    forbiddenTargets: []
+  },
+  {
+    file: 'promos/index.html',
+    target: '/sportsbook/#promos',
+    canonical: 'https://trustmyrecord.com/sportsbook/#promos',
+    label: 'Continue',
+    forbiddenTargets: []
+  },
+  {
+    file: 'signin/index.html',
+    target: '/login/',
+    canonical: null,
+    label: 'Login',
+    forbiddenTargets: []
+  },
+  {
+    file: 'signup/index.html',
+    target: '/register/',
+    canonical: null,
+    label: 'Register',
+    forbiddenTargets: []
+  },
+  {
+    file: 'submit/index.html',
+    target: '/sportsbook/',
+    canonical: null,
+    label: 'Make Picks',
+    forbiddenTargets: []
+  },
+  {
+    file: 'submit-pick/index.html',
+    target: '/sportsbook/',
+    canonical: null,
+    label: 'Make Picks',
     forbiddenTargets: []
   }
 ];
