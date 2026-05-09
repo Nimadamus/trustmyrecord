@@ -57,6 +57,7 @@ for (const required of [
   'push:',
   'pull_request:',
   'workflow_dispatch:',
+  "node-version: '24'",
   'line-formatting-guard:',
   'sportsbook-guards:',
   'profile-and-simulator-guards:',
@@ -107,6 +108,8 @@ for (const required of [
 ]) {
   assert(workflow.includes(required), `workflow guard missing: ${required}`);
 }
+
+assert(!workflow.includes("node-version: '20'"), 'workflow must not pin deprecated Node 20');
 
 const liveJobIndex = workflow.indexOf('live-public-ranking-proof:');
 const dispatchGuardIndex = workflow.indexOf("if: github.event_name == 'workflow_dispatch'", liveJobIndex);
