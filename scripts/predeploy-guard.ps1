@@ -78,6 +78,7 @@ try {
         "static/js/mlb-simulator.js",
         "static/css/mlb-simulator.css",
         "tests/line-formatting-regression-test.js",
+        "tests/protected-baseline-regression-test.js",
         "tests/profile-page-lookup-test.js",
         "tests/local-api-no-seed-regression-test.js",
         "tests/pending-picks-regression-test.js",
@@ -113,6 +114,7 @@ try {
     }
 
     Invoke-GuardCommand "line formatting regression test" @("node", "tests/line-formatting-regression-test.js")
+    Invoke-GuardCommand "protected baseline regression test" @("node", "tests/protected-baseline-regression-test.js")
     Invoke-GuardCommand "profile lookup regression test" @("node", "tests/profile-page-lookup-test.js")
     Invoke-GuardCommand "local API no-seed regression test" @("node", "tests/local-api-no-seed-regression-test.js")
     Invoke-GuardCommand "pending picks privacy regression test" @("node", "tests/pending-picks-regression-test.js")
