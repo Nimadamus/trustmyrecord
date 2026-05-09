@@ -5515,6 +5515,14 @@
         setBoth('tmrxGraded', String(stats.graded));
         setBoth('tmrxStreak', stats.currentStreak > 0 ? stats.currentStreak + 'W' : stats.currentStreak < 0 ? Math.abs(stats.currentStreak) + 'L' : '0', stats.currentStreak);
         setBoth('tmrxBestStreak', stats.bestStreak + 'W', stats.bestStreak);
+        ['tmrxDdWorst', 'tmrxDdWorstTop'].forEach(function(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.textContent = stats.worstStreak > 0 ? 'L' + stats.worstStreak : '0';
+            el.classList.toggle('pos', false);
+            el.classList.toggle('neg', stats.worstStreak > 0);
+            el.classList.toggle('zero', stats.worstStreak <= 0);
+        });
 
         if (document.getElementById('profileAdvRecord')) {
             const setAdvancedCard = function(id, text, sub, signed) {
