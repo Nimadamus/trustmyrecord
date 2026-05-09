@@ -85,6 +85,7 @@ try {
         "tests/sitewide-design-system-regression-test.js",
         "tests/polls-page-visual-regression-test.js",
         "tests/arena-page-visual-regression-test.js",
+        "tests/leaderboards-page-visual-regression-test.js",
         "tests/profile-no-old-theme-flash-test.js",
         "tests/profile-source-regression-test.js",
         "tests/profile-market-drilldown-page-test.js",
@@ -112,6 +113,7 @@ try {
     Invoke-GuardCommand "sitewide design system regression test" @("node", "tests/sitewide-design-system-regression-test.js")
     Invoke-GuardCommand "polls page visual regression test" @("node", "tests/polls-page-visual-regression-test.js")
     Invoke-GuardCommand "arena page visual regression test" @("node", "tests/arena-page-visual-regression-test.js")
+    Invoke-GuardCommand "leaderboards page visual regression test" @("node", "tests/leaderboards-page-visual-regression-test.js")
     Invoke-GuardCommand "profile no-old-theme-flash regression test" @("node", "tests/profile-no-old-theme-flash-test.js")
     Invoke-GuardCommand "profile source regression test" @("node", "tests/profile-source-regression-test.js")
     Invoke-GuardCommand "profile market drilldown regression test" @("node", "tests/profile-market-drilldown-page-test.js")
@@ -174,6 +176,8 @@ try {
 
     Assert-Match "Handicappers" $handicappers "<div>Active</div>" "Active column header is missing."
     Assert-Match "Handicappers" $handicappers "formatLastActive" "Active column formatter is missing."
+    Assert-Match "Handicappers" $handicappers "Minimum 20 graded picks" "public rank threshold copy is missing."
+    Assert-Match "Handicappers" $handicappers "positive net units" "positive-unit rank eligibility copy is missing."
 
     Write-Output "Predeploy guard passed: clean current main, Windows-safe tree, profile, handicappers, simulator, sportsbook, and regression tests are intact."
 }

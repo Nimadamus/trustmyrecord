@@ -55,6 +55,22 @@
                 linear-gradient(180deg, #07111c 0%, #0a1421 48%, #0d1726 100%);
         }
 
+        /* LEADERBOARDS_PREMIUM_DARK_UI_20260508
+           Visual-only hardening for the rankings hub. Data eligibility,
+           routing, and challenge/profile actions stay untouched. */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            pointer-events: none;
+            background:
+                linear-gradient(90deg, rgba(148,163,184,0.025) 1px, transparent 1px),
+                linear-gradient(180deg, rgba(148,163,184,0.018) 1px, transparent 1px);
+            background-size: 64px 64px;
+            mask-image: linear-gradient(180deg, rgba(0,0,0,0.42), transparent 72%);
+        }
+
         a { color: inherit; text-decoration: none; }
 
         .page {
@@ -65,16 +81,30 @@
 
         /* ---------- HERO (compact) ---------- */
         .hero {
+            position: relative;
             display: grid;
             gap: 14px;
-            padding: 20px 22px 18px;
-            margin-bottom: 14px;
+            padding: 24px 24px 22px;
+            margin: 4px 0 16px;
             border: 1px solid var(--line);
             border-radius: 18px;
             background:
                 radial-gradient(circle at 6% 0%, rgba(45,212,191,0.14), transparent 36%),
+                linear-gradient(90deg, rgba(45,212,191,0.06), transparent 48%),
                 linear-gradient(155deg, rgba(15, 27, 42, 0.97), rgba(8, 15, 26, 0.99));
             box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            left: 24px;
+            right: 24px;
+            bottom: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(45,212,191,0.52), transparent);
+            opacity: 0.85;
         }
 
         .hero-kicker {
@@ -115,16 +145,20 @@
 
         .quick-stats {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(150px, 1fr));
             gap: 10px;
             margin-top: 4px;
         }
 
         .qs-card {
-            padding: 10px 12px;
+            min-height: 78px;
+            padding: 12px 13px;
             border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.07);
-            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015));
+            border: 1px solid rgba(148,163,184,0.14);
+            background:
+                radial-gradient(circle at top right, rgba(45,212,191,0.08), transparent 44%),
+                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
         }
 
         .qs-card b {
@@ -150,10 +184,12 @@
             flex-wrap: wrap;
             gap: 6px;
             padding: 6px;
-            margin-bottom: 14px;
+            margin-bottom: 16px;
             border: 1px solid var(--line);
             border-radius: 14px;
-            background: rgba(11, 20, 34, 0.85);
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012)),
+                rgba(8, 15, 27, 0.92);
             box-shadow: var(--shadow-soft);
             overflow-x: auto;
         }
@@ -216,8 +252,8 @@
                 linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012)),
                 var(--card);
             box-shadow: var(--shadow);
-            padding: 16px;
-            margin-bottom: 14px;
+            padding: 18px;
+            margin-bottom: 16px;
         }
 
         .card-head {
@@ -248,7 +284,7 @@
         /* ---------- FILTERS ---------- */
         .filters-grid {
             display: grid;
-            grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
+            grid-template-columns: minmax(220px, 1.35fr) repeat(3, minmax(160px, 1fr));
             gap: 10px;
             margin-top: 8px;
         }
@@ -266,14 +302,27 @@
         .field input,
         .field select {
             width: 100%;
-            min-height: 40px;
+            min-height: 42px;
             border: 1px solid rgba(148, 163, 184, 0.18);
             border-radius: 11px;
             padding: 0 12px;
             color: var(--text);
-            background: rgba(255,255,255,0.04);
+            background: rgba(5, 12, 23, 0.72);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
             font: 600 0.86rem/1 'Inter', sans-serif;
+        }
+
+        .field select {
+            appearance: none;
+            padding-right: 34px;
+            background-image:
+                linear-gradient(45deg, transparent 50%, #7dd3fc 50%),
+                linear-gradient(135deg, #7dd3fc 50%, transparent 50%);
+            background-position:
+                calc(100% - 18px) 18px,
+                calc(100% - 13px) 18px;
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
         }
 
         .field input::placeholder { color: #7a8ea4; }
@@ -521,8 +570,10 @@
             place-items: center;
             min-height: 140px;
             border-radius: 13px;
-            border: 1px dashed rgba(148,163,184,0.22);
-            background: rgba(255,255,255,0.025);
+            border: 1px solid rgba(148,163,184,0.16);
+            background:
+                radial-gradient(circle at top, rgba(45,212,191,0.06), transparent 48%),
+                rgba(5, 12, 23, 0.56);
             color: var(--muted);
             text-align: center;
             font-size: 0.86rem;
@@ -534,7 +585,12 @@
             gap: 10px;
             justify-items: center;
             text-align: center;
-            padding: 28px 18px;
+            padding: 30px 20px;
+            border: 1px solid rgba(148,163,184,0.16);
+            border-radius: 14px;
+            background:
+                radial-gradient(circle at top, rgba(45,212,191,0.07), transparent 48%),
+                rgba(5, 12, 23, 0.62);
         }
 
         .empty-state .icon {
@@ -715,6 +771,7 @@
             .layout-2col { grid-template-columns: 1fr; }
             .preview-grid { grid-template-columns: 1fr; }
             .quick-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .filters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
 
         @media (max-width: 720px) {
