@@ -5,6 +5,7 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 jobs:
   line-formatting-guard:
@@ -120,3 +121,18 @@ jobs:
       - name: Run predeploy stale-source guard
         shell: pwsh
         run: ./scripts/predeploy-guard.ps1 -SkipRemoteCheck
+
+  live-public-ranking-proof:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run live public ranking proof
+        run: node tests/public-ranking-ui-live-test.js
