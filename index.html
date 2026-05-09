@@ -3,18 +3,28 @@
 <head>
 <meta charset="UTF-8">
 <link rel="canonical" href="https://trustmyrecord.com/">
+<script>
+  (function () {
+    var canonicalHomepage = "https://trustmyrecord.com/";
+    var isHomepageVariant = (
+      window.location.hostname === "www.trustmyrecord.com" ||
+      window.location.protocol === "http:" ||
+      window.location.pathname === "/index.html"
+    );
+    if (isHomepageVariant) {
+      window.location.replace(canonicalHomepage);
+    }
+  }());
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>TrustMyRecord | Sports Handicapper Tracking, Verified Picks & Sports Social Network</title>
 <meta name="description" content="TrustMyRecord is the sports social network for verified handicappers. Track sports picks with a public, locked record, follow ranked cappers by ROI and units, sell picks in the marketplace, and challenge rivals in polls, trivia, forums, and PS5 sports games.">
-<meta name="keywords" content="sports handicapper tracking, verified sports picks, sports betting record tracker, public pick record, sports betting social network, handicapper leaderboard, ROI tracker, units tracker, pick tracking app, sports picks marketplace, buy sports picks, sell sports picks, MLB picks tracker, NBA picks tracker, NFL picks tracker, NHL picks tracker, MLB simulator, sports trend tool, verified betting trends, public handicapper records">
-<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
-<meta name="theme-color" content="#07101f">
+<meta name="keywords" content="sports handicapper tracking, verified sports picks, sports betting social network, public pick record, handicapper leaderboard, ROI tracker, units tracker, buy sports picks, sell sports picks, sports forum, sports polls, sports trivia, MLB picks, NBA picks, NFL picks, NHL picks">
 <meta property="og:title" content="TrustMyRecord | Sports Handicapper Tracking & Verified Picks Social Network">
 <meta property="og:description" content="Track sports picks with a public, locked record. Follow ranked handicappers, sell or buy picks, and challenge rivals in polls, trivia, forums, and PS5 sports games.">
 <meta property="og:url" content="https://trustmyrecord.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TrustMyRecord">
-<meta property="og:image" content="https://trustmyrecord.com/static/favicon.svg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="TrustMyRecord | Sports Handicapper Tracking & Verified Picks">
 <meta name="twitter:description" content="Sports social network for verified handicappers. Public pick records, ranked cappers, marketplace, forums, polls, trivia, and PS5 sports challenges.">
@@ -29,16 +39,6 @@
       "url": "https://trustmyrecord.com/",
       "logo": "https://trustmyrecord.com/static/favicon.svg",
       "description": "Sports social network for verified handicappers, public pick tracking, ranked leaderboards, a pick marketplace, forums, polls, trivia, and PS5 sports gaming challenges.",
-      "foundingDate": "2026",
-      "knowsAbout": [
-        "sports pick tracking",
-        "verified handicapper records",
-        "sports betting record keeping",
-        "handicapper leaderboards",
-        "MLB simulation tools",
-        "verified matchup trends",
-        "sports social networking"
-      ],
       "sameAs": []
     },
     {
@@ -46,7 +46,6 @@
       "@id": "https://trustmyrecord.com/#website",
       "url": "https://trustmyrecord.com/",
       "name": "TrustMyRecord",
-      "alternateName": "TMR",
       "publisher": {"@id": "https://trustmyrecord.com/#org"},
       "potentialAction": {
         "@type": "SearchAction",
@@ -73,54 +72,11 @@
         "Verified public sports pick tracking",
         "Handicapper leaderboards by ROI and units",
         "Sports pick marketplace",
-        "MLB matchup simulator",
-        "Verified matchup trend tool",
         "Sports debate forums",
         "Sports polls and prediction polls",
         "Sports trivia",
         "PS5 sports gaming challenges (MLB The Show, NBA 2K, Madden, EA FC, NHL)",
         "Public records with locked, timestamped picks"
-      ]
-    },
-    {
-      "@type": "ItemList",
-      "@id": "https://trustmyrecord.com/#primary-tools",
-      "name": "TrustMyRecord sports analysis tools",
-      "itemListElement": [
-        {
-          "@type": "ListItem",
-          "position": 1,
-          "name": "MLB Simulator",
-          "url": "https://trustmyrecord.com/mlb-simulator/"
-        },
-        {
-          "@type": "ListItem",
-          "position": 2,
-          "name": "Trendspotter",
-          "url": "https://trustmyrecord.com/trendspotter/"
-        }
-      ]
-    },
-    {
-      "@type": "SiteNavigationElement",
-      "@id": "https://trustmyrecord.com/#site-navigation",
-      "name": [
-        "Make Picks",
-        "Tools",
-        "Feed",
-        "Find Handicappers",
-        "Arena",
-        "Forums",
-        "Sell Picks"
-      ],
-      "url": [
-        "https://trustmyrecord.com/sportsbook/",
-        "https://trustmyrecord.com/trustmyrecord-tools/",
-        "https://trustmyrecord.com/feed/",
-        "https://trustmyrecord.com/handicappers/",
-        "https://trustmyrecord.com/arena/",
-        "https://trustmyrecord.com/forum/",
-        "https://trustmyrecord.com/marketplace/"
       ]
     }
   ]
@@ -1054,6 +1010,15 @@ button{font:inherit;cursor:pointer}
 .footer-support a:hover{color:#fff;text-decoration:underline}
 .copyright{border-top:1px solid #2a3148;padding-top:16px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:11.5px;color:#7c849a}
 .copyright p{margin:0;max-width:780px;line-height:1.55}
+
+@media(min-width:1081px){
+  .footer-cols{
+    box-sizing:border-box;
+    grid-template-columns:minmax(250px,1.22fr) repeat(4,minmax(120px,1fr));
+    gap:34px;
+    padding-left:clamp(34px,4vw,64px);
+  }
+}
 
 @media(max-width:1080px){
   .hero-inner{grid-template-columns:1fr}
@@ -2061,195 +2026,6 @@ button{font:inherit;cursor:pointer}
     .tmr-final-cta .btn { width: 100%; }
 }
 </style>
-<style id="tmr-home-premium-dark-ui-20260508">
-/* HOMEPAGE_PREMIUM_DARK_UI_20260508
-   Forward-only homepage visual layer. Keeps routes and scripts unchanged. */
-html,
-body {
-  background:
-    radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.12), transparent 30%),
-    radial-gradient(circle at 86% 10%, rgba(59, 130, 246, 0.10), transparent 34%),
-    linear-gradient(180deg, #050a14 0%, #07111f 44%, #050812 100%) !important;
-  color: #eef6ff !important;
-}
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-  background-size: 44px 44px;
-  mask-image: linear-gradient(180deg, rgba(0,0,0,0.68), transparent 74%);
-  -webkit-mask-image: linear-gradient(180deg, rgba(0,0,0,0.68), transparent 74%);
-}
-.header {
-  background: rgba(6, 13, 25, 0.92) !important;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.16) !important;
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.28);
-}
-.brand .mark {
-  background: linear-gradient(135deg, #22d3ee 0%, #2dd4bf 55%, #16a34a 100%) !important;
-  color: #031018 !important;
-  box-shadow: 0 14px 32px rgba(34, 211, 238, 0.22), inset 0 1px 0 rgba(255,255,255,0.35) !important;
-}
-.brand .word,
-.header .brand .word,
-.header-search input {
-  color: #f8fbff !important;
-}
-.brand .my,
-.tmr-home-support__label,
-.tmr-home-toplinks a:hover {
-  color: #67e8f9 !important;
-}
-.brand .tagline {
-  color: #93a4b8 !important;
-}
-.tmr-home-toplinks a {
-  color: #c4d2e4 !important;
-}
-.tmr-home-support {
-  background: rgba(15, 23, 42, 0.78) !important;
-  border-color: rgba(103, 232, 249, 0.20) !important;
-}
-.tmr-home-toplinks .tmr-home-support a {
-  color: #dce9f8 !important;
-}
-.header-right .btn,
-.btn {
-  min-height: 40px;
-  border-radius: 10px !important;
-  border-color: rgba(148, 163, 184, 0.22) !important;
-  background: rgba(15, 23, 42, 0.72) !important;
-  color: #eef6ff !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
-}
-.btn:hover {
-  background: rgba(30, 41, 59, 0.82) !important;
-  border-color: rgba(103, 232, 249, 0.32) !important;
-}
-.btn.accent,
-.btn.primary,
-.tmr-social-actions .primary,
-.tmr-social-tools-cta,
-.tmr-tools-btn--primary,
-.tmr-loop-cta .hero-action--primary,
-.tmr-final-cta .btn.accent {
-  background: linear-gradient(135deg, #67e8f9 0%, #2dd4bf 64%, #35dc80 100%) !important;
-  border-color: rgba(103, 232, 249, 0.58) !important;
-  color: #04111a !important;
-  box-shadow: 0 18px 42px rgba(45, 212, 191, 0.25), inset 0 1px 0 rgba(255,255,255,0.34) !important;
-}
-.tmr-social-hero {
-  background:
-    radial-gradient(circle at 82% 16%, rgba(45, 212, 191, 0.16), transparent 30%),
-    radial-gradient(circle at 18% 8%, rgba(59, 130, 246, 0.18), transparent 34%),
-    linear-gradient(115deg, #050a14 0%, #071424 48%, rgba(7, 20, 36, 0.62) 100%) !important;
-  border-bottom-color: rgba(103, 232, 249, 0.16) !important;
-}
-.tmr-social-hero .hero-bg {
-  opacity: 0.30 !important;
-}
-.tmr-social-hero .hero-bg-gradient {
-  background:
-    linear-gradient(90deg, rgba(5, 10, 20, 0.98) 0%, rgba(5, 10, 20, 0.86) 48%, rgba(5, 10, 20, 0.36) 100%),
-    radial-gradient(circle at 72% 28%, rgba(45, 212, 191, 0.22), transparent 34%) !important;
-}
-.tmr-social-kicker,
-.tmr-social-tools-eyebrow,
-.tmr-tools-card__eyebrow,
-.tmr-loop-eyebrow,
-.tmr-integrity-eyebrow,
-.tmr-final-eyebrow {
-  color: #67e8f9 !important;
-}
-.tmr-social-hero h1 {
-  max-width: 840px;
-  color: #ffffff !important;
-  text-shadow: 0 24px 70px rgba(0,0,0,0.62);
-}
-.tmr-social-hero .lead,
-.tmr-section-sub,
-.tmr-tools-home__head p,
-.tmr-social-tools-card p,
-.tmr-feature-card p,
-.tmr-loop-step p,
-.tmr-integrity p,
-.tmr-final > .tmr-final-inner > p {
-  color: #b9c8dc !important;
-}
-.tmr-social-actions .secondary,
-.tmr-loop-cta .hero-action--ghost,
-.tmr-final-cta .btn.ghost-light {
-  background: rgba(15, 23, 42, 0.72) !important;
-  border: 1px solid rgba(148, 163, 184, 0.20) !important;
-  color: #e7f0fb !important;
-}
-.tmr-social-feature-line span,
-.tmr-home-beta-strip nav a {
-  border-color: rgba(103, 232, 249, 0.18) !important;
-  background: rgba(8, 18, 34, 0.72) !important;
-  color: #e7f0fb !important;
-}
-.tmr-social-tools-card,
-.tmr-tools-home__inner,
-.tmr-tools-card,
-.tmr-feature-card,
-.tmr-loop-step {
-  background:
-    linear-gradient(135deg, rgba(103, 232, 249, 0.06), transparent 42%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.88), rgba(4, 9, 18, 0.96)) !important;
-  border-color: rgba(148, 163, 184, 0.16) !important;
-  border-top-color: rgba(103, 232, 249, 0.34) !important;
-  box-shadow: 0 24px 68px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04) !important;
-}
-.tmr-tools-home,
-.tmr-loop,
-.tmr-integrity,
-.tmr-features,
-.tmr-final {
-  background:
-    radial-gradient(circle at 18% 0%, rgba(45, 212, 191, 0.08), transparent 30%),
-    linear-gradient(180deg, rgba(7, 17, 31, 0.96), rgba(5, 10, 20, 0.98)) !important;
-  border-top: 1px solid rgba(148, 163, 184, 0.10) !important;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.10) !important;
-}
-.tmr-home-beta-strip {
-  background: linear-gradient(90deg, rgba(5, 10, 20, 0.96), rgba(7, 17, 31, 0.96)) !important;
-  border-color: rgba(103, 232, 249, 0.14) !important;
-}
-.tmr-section-head h2,
-.tmr-tools-home__head h2,
-.tmr-feature-card h3,
-.tmr-loop-head h2,
-.tmr-integrity h2,
-.tmr-final h2 {
-  color: #ffffff !important;
-}
-.tmr-feature-link,
-.tmr-home-beta-strip strong {
-  color: #67e8f9 !important;
-}
-.tmr-final {
-  overflow: hidden;
-}
-.footer {
-  background: #030711 !important;
-  border-top: 1px solid rgba(103, 232, 249, 0.12);
-}
-@media (max-width: 820px) {
-  .header-inner {
-    background: transparent !important;
-  }
-  .tmr-home-toplinks > a {
-    background: rgba(15, 23, 42, 0.72) !important;
-    border: 1px solid rgba(148, 163, 184, 0.18) !important;
-  }
-}
-</style>
 </head>
 <body>
 
@@ -2265,7 +2041,7 @@ body::before {
     </a>
     <nav class="tmr-home-toplinks" aria-label="Homepage sections">
       <a href="/sportsbook/">Make Picks</a>
-      <a href="/trustmyrecord-tools/">Tools</a>
+      <a href="/#tools">Tools</a>
       <a href="/handicappers/">Find Handicappers</a>
       <a href="/marketplace/">Sell Your Picks</a>
       <span class="tmr-home-support">
@@ -2327,7 +2103,7 @@ body::before {
         <span>Public Records</span>
         <span>Verified Pick Tracking</span>
       </div>
-      <a class="tmr-social-tools-cta" href="/trustmyrecord-tools/">Explore Tools</a>
+      <a class="tmr-social-tools-cta" href="/#tools">Explore Tools</a>
     </aside>
   </div>
 </section>
@@ -2418,218 +2194,6 @@ body::before {
   }
   @media (max-width: 760px) {
     .tmr-home-beta-strip__inner { align-items: flex-start; flex-direction: column; }
-  }
-</style>
-
-<section class="tmr-tools-home" aria-label="TrustMyRecord Tools">
-  <div class="tmr-tools-home__inner">
-    <header class="tmr-tools-home__head">
-      <span>TrustMyRecord Tools</span>
-      <h2>Sports Analysis Tools</h2>
-      <p>Use verified data, simulations, and matchup tools before you post a pick.</p>
-    </header>
-    <div class="tmr-tools-card-grid">
-      <article class="tmr-tools-card">
-        <div class="tmr-tools-card__meta">
-          <span class="tmr-tools-card__eyebrow">Simulator</span>
-          <h3>MLB Simulator</h3>
-          <p>Simulate current teams, classic teams, and mixed era matchups with starter context and projected box score output.</p>
-        </div>
-        <div class="tmr-tools-card__actions">
-          <a class="tmr-tools-btn tmr-tools-btn--primary" href="/mlb-simulator/">Use Simulator</a>
-        </div>
-      </article>
-      <article class="tmr-tools-card">
-        <div class="tmr-tools-card__meta">
-          <span class="tmr-tools-card__eyebrow">Trend Tool</span>
-          <h3>Trendspotter</h3>
-          <p>Select a sport and matchup to surface verified trends from available data artifacts.</p>
-        </div>
-        <div class="tmr-tools-card__actions">
-          <a class="tmr-tools-btn tmr-tools-btn--primary" href="/trendspotter/">Open Trendspotter</a>
-        </div>
-      </article>
-      <article class="tmr-tools-card">
-        <div class="tmr-tools-card__meta">
-          <span class="tmr-tools-card__eyebrow">Tool Directory</span>
-          <h3>Tools Hub</h3>
-          <p>Open the TrustMyRecord tools hub for current tools, explainers, and upcoming analysis products.</p>
-        </div>
-        <div class="tmr-tools-card__actions">
-          <a class="tmr-tools-btn tmr-tools-btn--primary" href="/trustmyrecord-tools/">View Tools Hub</a>
-        </div>
-      </article>
-    </div>
-  </div>
-</section>
-
-<style>
-  .tmr-tools-home {
-    padding: 58px 24px 62px;
-    background:
-      linear-gradient(180deg, rgba(8, 17, 31, .98) 0%, rgba(5, 10, 18, .99) 100%);
-    border-top: 1px solid rgba(255,255,255,.06);
-    border-bottom: 1px solid rgba(255,255,255,.06);
-  }
-  .tmr-tools-home__inner {
-    width: min(1160px, 100%);
-    margin: 0 auto;
-    padding: 28px;
-    border: 1px solid rgba(148, 163, 184, .16);
-    border-top-color: rgba(103, 232, 249, .34);
-    border-radius: 12px;
-    background:
-      linear-gradient(135deg, rgba(103, 232, 249, .07), transparent 38%),
-      linear-gradient(180deg, rgba(13, 22, 38, .84), rgba(4, 8, 13, .94));
-    box-shadow: 0 24px 70px rgba(0,0,0,.34), inset 0 1px 0 rgba(255,255,255,.05);
-  }
-  .tmr-tools-home__head {
-    max-width: 760px;
-    margin: 0 auto 26px;
-    text-align: center;
-  }
-  .tmr-tools-home__head span {
-    display: inline-flex;
-    align-items: center;
-    min-height: 26px;
-    padding: 0 10px;
-    margin-bottom: 12px;
-    border: 1px solid rgba(244, 201, 93, .32);
-    border-radius: 999px;
-    color: #f4c95d;
-    background: rgba(244, 201, 93, .08);
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-  }
-  .tmr-tools-home__head h2 {
-    margin: 0 0 10px;
-    color: #fff;
-    font-family: 'Barlow', 'Inter', sans-serif;
-    font-size: clamp(34px, 4vw, 48px);
-    line-height: 1;
-    letter-spacing: -.02em;
-  }
-  .tmr-tools-home__head p {
-    margin: 0 auto;
-    color: #c4d1e5;
-    font-size: 16px;
-    line-height: 1.55;
-  }
-  .tmr-tools-card-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px;
-    align-items: stretch;
-  }
-  .tmr-tools-card {
-    min-height: 258px;
-    padding: 22px;
-    border: 1px solid rgba(148, 163, 184, .2);
-    border-radius: 8px;
-    background:
-      linear-gradient(180deg, rgba(13, 22, 38, .96), rgba(4, 8, 13, .98));
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .tmr-tools-card__eyebrow {
-    display: inline-flex;
-    align-items: center;
-    min-height: 26px;
-    padding: 0 9px;
-    border: 1px solid rgba(45, 212, 191, .34);
-    border-radius: 999px;
-    color: #67e8f9;
-    background: rgba(45, 212, 191, .08);
-    font-size: 10px;
-    font-weight: 900;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-  }
-  .tmr-tools-card h3 {
-    margin: 14px 0 10px;
-    color: #fff;
-    font-family: 'Barlow', 'Inter', sans-serif;
-    font-size: clamp(26px, 2.4vw, 32px);
-    line-height: 1;
-  }
-  .tmr-tools-card p {
-    margin: 0;
-    color: #a7b4c7;
-    font-size: 15px;
-    line-height: 1.6;
-  }
-  .tmr-tools-card__flow {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 9px;
-    margin: 22px 0;
-    padding: 14px;
-    border: 1px solid rgba(148, 163, 184, .14);
-    border-radius: 8px;
-    background: rgba(3, 7, 14, .36);
-  }
-  .tmr-tools-card__flow span {
-    display: inline-flex;
-    align-items: center;
-    min-height: 30px;
-    padding: 0 10px;
-    border-radius: 7px;
-    color: #e8f2ff;
-    background: rgba(255,255,255,.06);
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-  }
-  .tmr-tools-card__flow i {
-    width: 18px;
-    height: 2px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #2dd4bf, #60a5fa);
-  }
-  .tmr-tools-card__actions {
-    display: flex;
-    margin-top: 22px;
-  }
-  .tmr-tools-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    min-height: 44px;
-    padding: 0 16px;
-    border: 1px solid rgba(148, 163, 184, .26);
-    border-radius: 8px;
-    color: #e8f2ff;
-    background: rgba(255,255,255,.05);
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    text-decoration: none;
-  }
-  .tmr-tools-btn:hover { background: rgba(255,255,255,.08); text-decoration: none; }
-  .tmr-tools-btn--primary {
-    color: #04111a;
-    border-color: transparent;
-    background: linear-gradient(135deg, #2dd4bf, #67e8f9);
-    box-shadow: 0 14px 30px rgba(45, 212, 191, .16);
-  }
-  @media (max-width: 980px) {
-    .tmr-tools-card-grid { grid-template-columns: 1fr; }
-    .tmr-tools-card { min-height: 0; }
-  }
-  @media (max-width: 560px) {
-    .tmr-tools-home { padding: 34px 16px 42px; }
-    .tmr-tools-home__inner { padding: 20px; }
-    .tmr-tools-home__head { text-align: left; }
-    .tmr-tools-home__head h2 { font-size: 34px; }
-    .tmr-tools-card__flow i { display: none; }
   }
 </style>
 
@@ -2857,6 +2421,229 @@ body::before {
     color: #c4cfdc;
     margin: 0 auto;
     max-width: 760px;
+  }
+</style>
+
+<!-- ===========================================================
+     ADVANCED METRICS BY SPORT
+     Descriptive platform capabilities only. No fabricated live stats.
+=========================================================== -->
+<section class="tmr-sport-analytics" id="advanced-metrics" aria-label="Advanced metrics by sport">
+  <div class="tmr-section-inner">
+    <header class="tmr-section-head tmr-sport-analytics-head">
+      <span class="tmr-sport-analytics-eyebrow">Advanced Metrics By Sport</span>
+      <h2>Every sport tells a different betting story.</h2>
+      <p class="tmr-section-sub">Every sport has different markets, volatility, and ways to judge performance. TrustMyRecord breaks records down by sport and wager type so users can see where a handicapper is actually strong instead of relying on one vague overall record.</p>
+    </header>
+
+    <div class="tmr-sport-analytics-grid">
+      <article class="tmr-sport-card">
+        <div class="tmr-sport-card-top">
+          <span class="tmr-sport-code">MLB</span>
+          <h3>MLB Advanced Metrics</h3>
+        </div>
+        <p>Baseball records need market-level context, from moneyline volatility to team totals and run-line exposure.</p>
+        <div class="tmr-metric-badges" aria-label="MLB metric types">
+          <span>ROI by market</span><span>Units won/lost</span><span>Win percentage</span><span>Moneyline</span><span>Run line</span><span>Totals</span><span>Team totals</span><span>Pitcher context</span><span>Matchup context</span><span>CLV when available</span>
+        </div>
+        <p class="tmr-sport-note">Built to stay compatible with the MLB simulator and future Trendspotter-style research without inventing results.</p>
+      </article>
+
+      <article class="tmr-sport-card">
+        <div class="tmr-sport-card-top">
+          <span class="tmr-sport-code">NBA</span>
+          <h3>NBA Advanced Metrics</h3>
+        </div>
+        <p>Basketball performance is separated across spreads, totals, moneylines, team totals, recent form, and market type.</p>
+        <div class="tmr-metric-badges" aria-label="NBA metric types">
+          <span>Spread ROI</span><span>Moneyline ROI</span><span>Totals ROI</span><span>Team totals</span><span>ATS record</span><span>Over/under performance</span><span>Units</span><span>Streaks</span><span>Recent form</span><span>Pace/injury context ready</span>
+        </div>
+      </article>
+
+      <article class="tmr-sport-card">
+        <div class="tmr-sport-card-top">
+          <span class="tmr-sport-code">NHL</span>
+          <h3>NHL Advanced Metrics</h3>
+        </div>
+        <p>Hockey tracking separates moneyline, puck line, totals, regulation/full-game context, and goalie-sensitive matchups when data exists.</p>
+        <div class="tmr-metric-badges" aria-label="NHL metric types">
+          <span>Moneyline ROI</span><span>Puck line ROI</span><span>Totals ROI</span><span>Team totals</span><span>Regulation tracking</span><span>Full game markets</span><span>Units</span><span>Over/under performance</span><span>Goalie context</span><span>Recent form</span>
+        </div>
+      </article>
+
+      <article class="tmr-sport-card">
+        <div class="tmr-sport-card-top">
+          <span class="tmr-sport-code">NFL</span>
+          <h3>NFL Advanced Metrics</h3>
+        </div>
+        <p>Football records need weekly visibility and market-specific performance across sides, totals, team totals, and props when supported.</p>
+        <div class="tmr-metric-badges" aria-label="NFL metric types">
+          <span>Spread ROI</span><span>Moneyline ROI</span><span>Totals ROI</span><span>Team totals</span><span>Props when supported</span><span>ATS record</span><span>Over/under performance</span><span>Weekly tracking</span><span>Units</span><span>Market breakdown</span>
+        </div>
+      </article>
+
+      <article class="tmr-sport-card tmr-sport-card--wide">
+        <div class="tmr-sport-card-top">
+          <span class="tmr-sport-code">ALL</span>
+          <h3>All Sports / Platform Metrics</h3>
+        </div>
+        <p>Every public profile is designed around transparency: verified records, sport splits, wager-type splits, recent performance, and long-term credibility.</p>
+        <div class="tmr-metric-badges" aria-label="Platform metric types">
+          <span>Verified record</span><span>Win percentage</span><span>ROI</span><span>Units</span><span>Market breakdown</span><span>Sport breakdown</span><span>Recent performance</span><span>Long-term transparency</span><span>Public profile credibility</span>
+        </div>
+      </article>
+    </div>
+
+    <div class="tmr-analytics-links" aria-label="Advanced metrics links">
+      <a href="/leaderboards/">View Leaderboards</a>
+      <a href="/handicappers/">Browse Public Profiles</a>
+      <a href="/sportsbook/">Make Picks</a>
+      <a href="/model-builder/">Open Model Builder</a>
+      <a href="/mlb-simulator/">MLB Simulator</a>
+    </div>
+  </div>
+</section>
+
+<style>
+  .tmr-sport-analytics {
+    padding: 76px 24px;
+    background:
+      radial-gradient(circle at 8% 8%, rgba(45, 212, 191, 0.12), transparent 34%),
+      radial-gradient(circle at 92% 18%, rgba(253, 80, 0, 0.10), transparent 32%),
+      linear-gradient(180deg, rgba(5, 11, 20, 0.96), rgba(8, 17, 31, 0.98));
+    border-top: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+  .tmr-sport-analytics-head { max-width: 900px; margin: 0 auto 30px; text-align: center; }
+  .tmr-sport-analytics-eyebrow {
+    display: inline-flex;
+    margin-bottom: 12px;
+    color: #67e8f9;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 2.4px;
+    text-transform: uppercase;
+  }
+  .tmr-sport-analytics h2 {
+    margin: 0 0 12px;
+    color: #fff;
+    font: 900 clamp(30px, 4vw, 48px)/1.05 'Barlow', 'Inter', sans-serif;
+    letter-spacing: -0.02em;
+  }
+  .tmr-sport-analytics .tmr-section-sub {
+    max-width: 820px;
+    margin: 0 auto;
+    color: #b9c7d9;
+    font-size: 15.5px;
+    line-height: 1.65;
+  }
+  .tmr-sport-analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    max-width: 1160px;
+    margin: 0 auto;
+  }
+  .tmr-sport-card {
+    min-width: 0;
+    padding: 22px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(15, 28, 48, 0.92), rgba(8, 17, 31, 0.94));
+    box-shadow: 0 18px 44px rgba(0,0,0,0.26);
+  }
+  .tmr-sport-card--wide { grid-column: 1 / -1; }
+  .tmr-sport-card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .tmr-sport-code {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 52px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 9px;
+    color: #04111a;
+    background: linear-gradient(135deg, #67e8f9, #2dd4bf);
+    font-size: 13px;
+    font-weight: 950;
+    letter-spacing: .08em;
+  }
+  .tmr-sport-card h3 {
+    margin: 0;
+    color: #fff;
+    font: 900 22px/1.1 'Barlow', 'Inter', sans-serif;
+    letter-spacing: 0;
+  }
+  .tmr-sport-card p {
+    margin: 0 0 14px;
+    color: #aebbd0;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .tmr-sport-note { color: #8fb3d9 !important; font-size: 13px !important; }
+  .tmr-metric-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .tmr-metric-badges span {
+    display: inline-flex;
+    max-width: 100%;
+    padding: 7px 9px;
+    border: 1px solid rgba(103, 232, 249, 0.18);
+    border-radius: 999px;
+    color: #d9eefb;
+    background: rgba(103, 232, 249, 0.06);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.1;
+    white-space: nowrap;
+  }
+  .tmr-analytics-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    max-width: 980px;
+    margin: 28px auto 0;
+  }
+  .tmr-analytics-links a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 42px;
+    padding: 0 14px;
+    border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 10px;
+    color: #f4f8ff;
+    background: rgba(255,255,255,0.05);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    text-decoration: none;
+  }
+  .tmr-analytics-links a:hover {
+    border-color: rgba(103, 232, 249, 0.46);
+    background: rgba(103, 232, 249, 0.08);
+  }
+  @media (max-width: 860px) {
+    .tmr-sport-analytics-grid { grid-template-columns: 1fr; }
+    .tmr-sport-card--wide { grid-column: auto; }
+  }
+  @media (max-width: 560px) {
+    .tmr-sport-analytics { padding: 56px 16px; }
+    .tmr-sport-card { padding: 18px; }
+    .tmr-sport-card-top { align-items: flex-start; flex-direction: column; }
+    .tmr-metric-badges span { white-space: normal; }
+    .tmr-analytics-links { flex-direction: column; align-items: stretch; }
+    .tmr-analytics-links a { width: 100%; }
   }
 </style>
 
