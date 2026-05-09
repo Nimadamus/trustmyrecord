@@ -4,6 +4,8 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const api = fs.readFileSync(path.join(root, 'static', 'js', 'api.js'), 'utf8');
 const socialFeed = fs.readFileSync(path.join(root, 'static', 'js', 'social-feed.js'), 'utf8');
+const social = fs.readFileSync(path.join(root, 'static', 'js', 'social.js'), 'utf8');
+const socialSystem = fs.readFileSync(path.join(root, 'static', 'js', 'social-system.js'), 'utf8');
 
 function assert(condition, message) {
   if (!condition) {
@@ -60,6 +62,30 @@ assert(/const\s+samplePosts\s*=\s*\[\s*\];/.test(api), 'samplePosts must remain 
   'defaultPosts = ['
 ].forEach((token) => {
   assert(!socialFeed.includes(token), `social feed must not reintroduce seeded local content token: ${token}`);
+});
+
+[
+  [
+    social,
+    'social.js loadAllPicks cleanup',
+    'loadAllPicks()',
+    'local picks must never appear as if they',
+    'social surfaces to use the backend feed only'
+  ],
+  [
+    socialSystem,
+    'social-system.js getFollowingPicks cleanup',
+    'getFollowingPicks(username, limit = 20)',
+    'local picks must never feed the following',
+    'Real following picks come from the backend /feed endpoint'
+  ]
+].forEach(([source, label, functionToken, privacyToken, backendToken]) => {
+  assert(source.includes(functionToken), `${label} function token missing`);
+  assert(source.includes(privacyToken), `${label} privacy comment missing`);
+  assert(source.includes(backendToken), `${label} backend-only comment missing`);
+  assert(source.includes("['tmr_picks', 'trustmyrecord_picks', 'tmr_picks_legacy']"), `${label} must list legacy local pick storage keys`);
+  assert(source.includes('localStorage.removeItem(key)'), `${label} must clear legacy local pick storage keys`);
+  assert(/return\s+\[\s*\];/.test(source), `${label} must return an empty array instead of local picks`);
 });
 
 console.log('local API no-seed regression test passed');
