@@ -47,6 +47,11 @@ for (const selector of [
   '.tmr-stack',
   '.tmr-cluster',
   '.tmr-grid',
+  '.tmr-card',
+  '.tmr-card__head',
+  '.tmr-card__title',
+  '.tmr-card__body',
+  '.tmr-card__foot',
   '.tmr-segmented',
   '.tmr-tab',
   '.tmr-filter-bar',
@@ -107,6 +112,8 @@ assert(css.includes('[aria-disabled="true"]') && css.includes('cursor: not-allow
 assert(css.includes('display: inline-flex') && css.includes('justify-content: center'), 'sitewide button alignment must remain stable');
 assert(css.includes('.tmr-page-head') && css.includes('.tmr-page-title') && css.includes('.tmr-page-subtitle'), 'sitewide page title primitives must remain');
 assert(css.includes('.tmr-grid') && css.includes('repeat(auto-fit') && css.includes('minmax(min(100%, 260px), 1fr)'), 'sitewide responsive grid primitive must remain');
+assert(css.includes('.tmr-card--soft') && css.includes('.tmr-card--accent') && css.includes('var(--tmr-card-pad)'), 'sitewide card primitives must remain');
+assert(css.includes('.tmr-card__head') && css.includes('.tmr-card__foot') && css.includes('justify-content: space-between'), 'sitewide card header/footer primitives must remain');
 assert(css.includes('.tmr-cluster') && css.includes('flex-wrap: wrap') && css.includes('.tmr-stack'), 'sitewide stack and cluster layout primitives must remain');
 assert(css.includes('.tmr-segmented') && css.includes('.tmr-filter-bar') && css.includes('.tmr-tab.is-active') && css.includes('.tmr-filter-chip[aria-pressed="true"]'), 'sitewide segmented tab/filter primitives must remain');
 assert(css.includes('.tmr-tab[aria-selected="true"]') && css.includes('white-space: nowrap'), 'sitewide tab active state and wrapping protection must remain');
