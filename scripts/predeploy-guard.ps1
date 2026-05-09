@@ -86,6 +86,7 @@ try {
         "tests/pending-picks-regression-test.js",
         "tests/pick-display-format.test.js",
         "tests/trendspotter-source-regression-test.js",
+        "tests/trendspotter-accuracy-test.js",
         "tests/sitewide-design-system-regression-test.js",
         "tests/homepage-visual-regression-test.js",
         "tests/feed-page-regression-test.js",
@@ -125,6 +126,7 @@ try {
     Invoke-GuardCommand "pending picks privacy regression test" @("node", "tests/pending-picks-regression-test.js")
     Invoke-GuardCommand "pick display format regression test" @("node", "tests/pick-display-format.test.js")
     Invoke-GuardCommand "Trendspotter source regression test" @("node", "tests/trendspotter-source-regression-test.js")
+    Invoke-GuardCommand "Trendspotter accuracy regression test" @("node", "tests/trendspotter-accuracy-test.js")
     Invoke-GuardCommand "sitewide design system regression test" @("node", "tests/sitewide-design-system-regression-test.js")
     Invoke-GuardCommand "homepage visual regression test" @("node", "tests/homepage-visual-regression-test.js")
     Invoke-GuardCommand "feed page regression test" @("node", "tests/feed-page-regression-test.js")
