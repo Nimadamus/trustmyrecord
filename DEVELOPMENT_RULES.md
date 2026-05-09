@@ -32,6 +32,7 @@ Protected baseline surfaces:
 - Pending picks page: `my-pending-picks/index.html`.
 - Homepage and public conversion shell: `index.html`.
 - Community pages with visual/data guards: `feed/index.html`, `forum/index.html`, `arena/index.html`, `polls/index.html`, `leaderboards/index.html`, and `handicappers/index.html`.
+- Route shims and canonical redirects: `account/index.html`, `community/index.html`, `dashboard/index.html`, `directory/index.html`, `challenges/index.html`, `consensus/index.html`, `polls-trivia/index.html`, `predictions/index.html`, `forums/index.html`, `leaderboard/index.html`, `make-picks/index.html`, `cappers/index.html`, `members/index.html`, `my-record/index.html`, `mypicks/index.html`, `pick/index.html`, `picks/index.html`, `promos/index.html`, and `signin/index.html`.
 - Logged-in header state: `static/js/tmr-sitewide.js`, `static/css/tmr-sitewide.css`, and any route-scoped auth display guards.
 - Logo rendering: `static/js/sportsbook-production-fix-persist-reliability.js` and current logo CSS.
 - Stake mode logic: the protected Risk / To Win controls and payload fields in the sportsbook reliability runtime.
@@ -112,6 +113,25 @@ Production protected:
 - `polls/index.html`
 - `leaderboards/index.html`
 - `handicappers/index.html`
+- `account/index.html`
+- `community/index.html`
+- `dashboard/index.html`
+- `directory/index.html`
+- `challenges/index.html`
+- `consensus/index.html`
+- `polls-trivia/index.html`
+- `predictions/index.html`
+- `forums/index.html`
+- `leaderboard/index.html`
+- `make-picks/index.html`
+- `cappers/index.html`
+- `members/index.html`
+- `my-record/index.html`
+- `mypicks/index.html`
+- `pick/index.html`
+- `picks/index.html`
+- `promos/index.html`
+- `signin/index.html`
 - `static/js/tmr-sitewide.js`
 - `static/css/tmr-sitewide.css`
 - `static/js/backend-api.js`
