@@ -67,8 +67,8 @@
     const boardRequests = new Map();
     const boardDiagnostics = [];
     let latestBoardRequestId = 0;
-    const LEGACY_BOARD_CACHE_PREFIXES = ['tmr_sportsbook_board_v2_'];
-    const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v3_oddsrepair_';
+    const LEGACY_BOARD_CACHE_PREFIXES = ['tmr_sportsbook_board_v2_', 'tmr_sportsbook_board_v3_oddsrepair_'];
+    const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v4_boardshape_';
 
     function clearLegacyBoardCaches() {
         if (typeof window === 'undefined') return;
@@ -179,8 +179,31 @@
         }
     }
 
+    function extractBoardGames(response) {
+        if (Array.isArray(response)) return response;
+        if (!response || typeof response !== 'object') return [];
+
+        const candidates = [
+            response.games,
+            response.data,
+            response.events,
+            response.board,
+            response.payload && response.payload.games,
+            response.data && response.data.games,
+            response.data && response.data.events,
+            response.board && response.board.games,
+            response.result && response.result.games,
+            response.response && response.response.games
+        ];
+
+        for (let i = 0; i < candidates.length; i += 1) {
+            if (Array.isArray(candidates[i])) return candidates[i];
+        }
+        return [];
+    }
+
     function snapshotBoardPayload(response) {
-        const games = Array.isArray(response && response.games) ? response.games : [];
+        const games = extractBoardGames(response);
         return {
             sport_key: response && response.sport_key ? response.sport_key : '',
             game_count: games.length,
@@ -918,15 +941,16 @@
     function renderBoardIfCurrent(requestId, sport, badge, response) {
         const renderStartedAt = nowMs();
         if (state.selectedSport !== sport) return false;
+        const boardResponse = normalizeBoardResponse(response, sport);
         if (requestId !== latestBoardRequestId) {
             recordBoardEvent('board_render_recovered', {
                 sport: sport,
                 request_id: requestId,
                 latest_request_id: latestBoardRequestId,
-                snapshot: snapshotBoardPayload(response)
+                snapshot: snapshotBoardPayload(boardResponse)
             });
         }
-        state.currentBoard = response.games || [];
+        state.currentBoard = boardResponse.games || [];
         window.TMR = window.TMR || {};
         window.TMR.currentGames = state.currentBoard;
         state.lastBoardRenderAt = Date.now();
@@ -935,9 +959,9 @@
         recordBoardEvent('board_rendered', {
             sport: sport,
             render_duration_ms: elapsedMs(renderStartedAt),
-            snapshot: snapshotBoardPayload(response)
+            snapshot: snapshotBoardPayload(boardResponse)
         });
-        renderBoard(response.summary || null, state.currentBoard);
+        renderBoard(boardResponse.summary || null, state.currentBoard);
         return true;
     }
 
@@ -1491,6 +1515,41 @@
         return !normalized || ['tbd', 'unknown', 'team a', 'team b', 'home', 'away'].includes(normalized);
     }
 
+    function firstReadableTeamName() {
+        for (let i = 0; i < arguments.length; i += 1) {
+            const candidate = arguments[i];
+            let value = '';
+            if (typeof candidate === 'string') {
+                value = candidate;
+            } else if (candidate && typeof candidate === 'object') {
+                value = candidate.name || candidate.team || candidate.displayName || candidate.shortName || candidate.fullName || '';
+            }
+            value = String(value || '').trim();
+            if (value && !isPlaceholderTeamName(value)) return value;
+        }
+        return '';
+    }
+
+    function normalizeBoardGameShape(game) {
+        if (!game || typeof game !== 'object') return game;
+        const teams = game.teams || {};
+        const competitors = Array.isArray(game.competitors) ? game.competitors : [];
+        const homeCompetitor = competitors.find(function(team) {
+            return team && (team.homeAway === 'home' || team.side === 'home');
+        });
+        const awayCompetitor = competitors.find(function(team) {
+            return team && (team.homeAway === 'away' || team.side === 'away');
+        });
+        const homeTeam = firstReadableTeamName(game.home_team, game.homeTeam, game.home, teams.home, homeCompetitor);
+        const awayTeam = firstReadableTeamName(game.away_team, game.awayTeam, game.away, teams.away, awayCompetitor);
+
+        if (!homeTeam && !awayTeam) return game;
+        return Object.assign({}, game, {
+            home_team: homeTeam || game.home_team,
+            away_team: awayTeam || game.away_team
+        });
+    }
+
     function deriveTeamsFromBookmakers(game) {
         const bookmakers = Array.isArray(game && game.bookmakers) ? game.bookmakers : [];
         for (let i = 0; i < bookmakers.length; i += 1) {
@@ -1524,7 +1583,7 @@
     }
 
     function boardHasBrokenTeamPlaceholders(response) {
-        const games = Array.isArray(response && response.games) ? response.games : [];
+        const games = extractBoardGames(response).map(normalizeBoardGameShape);
         return games.some(function(game) {
             if (!game || (!isPlaceholderTeamName(game.home_team) && !isPlaceholderTeamName(game.away_team))) {
                 return false;
@@ -1534,7 +1593,7 @@
     }
 
     function normalizeBoardResponse(response, sport) {
-        const games = Array.isArray(response && response.games) ? response.games : [];
+        const games = extractBoardGames(response).map(normalizeBoardGameShape);
         let repairedCount = 0;
         let droppedCount = 0;
         const normalizedGames = games.map(function(game, index) {

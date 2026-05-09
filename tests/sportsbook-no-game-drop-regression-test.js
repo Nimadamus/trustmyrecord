@@ -17,16 +17,38 @@ assert(
   'primary reliability renderer should report pending games sorted after priced games'
 );
 assert(
-  reliability.includes("const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v3_oddsrepair_'"),
+  reliability.includes("const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v4_boardshape_'"),
   'sportsbook board cache namespace must be bumped after odds/game visibility repairs'
 );
 assert(
-  reliability.includes("LEGACY_BOARD_CACHE_PREFIXES = ['tmr_sportsbook_board_v2_']"),
-  'sportsbook runtime must clear stale board caches from the broken v2 namespace'
+  reliability.includes("LEGACY_BOARD_CACHE_PREFIXES = ['tmr_sportsbook_board_v2_', 'tmr_sportsbook_board_v3_oddsrepair_']"),
+  'sportsbook runtime must clear stale board caches from broken v2/v3 namespaces'
 );
 assert(
-  html.includes('sportsbook-production-fix-persist-reliability.js?v=20260508oddsrepair2&cb=20260508gamesrestore1'),
+  html.includes('sportsbook-production-fix-persist-reliability.js?v=20260508boardshape1&cb=20260508gamesrestore2'),
   'sportsbook page must request the repaired reliability runtime, not a stale cached script'
+);
+assert(
+  reliability.includes('function extractBoardGames(response)'),
+  'sportsbook board runtime must normalize API board envelopes before rendering'
+);
+assert(
+  reliability.includes('response.data && response.data.games') &&
+    reliability.includes('response.board && response.board.games') &&
+    reliability.includes('response.result && response.result.games'),
+  'sportsbook board runtime must preserve games from common nested API response shapes'
+);
+assert(
+  reliability.includes('function normalizeBoardGameShape(game)') &&
+    reliability.includes('game.homeTeam') &&
+    reliability.includes('game.awayTeam') &&
+    reliability.includes('game.competitors'),
+  'sportsbook board runtime must normalize common team-name fields before dropping games'
+);
+assert(
+  reliability.includes('const boardResponse = normalizeBoardResponse(response, sport);') &&
+    reliability.includes('state.currentBoard = boardResponse.games || [];'),
+  'cached board renders must use the same normalization as fresh board responses'
 );
 
 const fixture = [
