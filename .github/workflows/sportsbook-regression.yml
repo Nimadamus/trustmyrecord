@@ -33,6 +33,9 @@ jobs:
       - name: Run sitewide design system guard
         run: node tests/sitewide-design-system-regression-test.js
 
+      - name: Run stats engine record math guard
+        run: node tests/stats-engine-regression-test.js
+
   sportsbook-guards:
     runs-on: ubuntu-latest
     steps:
@@ -49,6 +52,9 @@ jobs:
 
       - name: Run sportsbook header guard
         run: node tests/sportsbook-header-regression-test.js
+
+      - name: Run sportsbook no-game-drop guard
+        run: node tests/sportsbook-no-game-drop-regression-test.js
 
       - name: Run sportsbook polish guard
         run: node tests/sportsbook-polish-regression.test.js
@@ -74,6 +80,9 @@ jobs:
 
       - name: Run profile lookup guard
         run: node tests/profile-page-lookup-test.js
+
+      - name: Run profile no-old-theme-flash guard
+        run: node tests/profile-no-old-theme-flash-test.js
 
       - name: Run profile source guard
         run: node tests/profile-source-regression-test.js
