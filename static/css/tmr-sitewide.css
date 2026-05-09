@@ -595,6 +595,60 @@ body.tmr-site-shell .game-tile {
     font: 800 0.78rem/1 var(--tmr-font);
 }
 
+.tmr-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--tmr-gap-sm);
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.tmr-action-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.tmr-action-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-height: 32px;
+    max-width: 100%;
+    padding: 7px 10px;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: var(--tmr-radius-sm);
+    background: rgba(15, 23, 42, 0.44);
+    color: var(--tmr-text-soft);
+    font: 800 0.76rem/1 var(--tmr-font);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.tmr-action-link:hover,
+.tmr-action-link:focus-visible,
+.tmr-action-link[aria-pressed="true"] {
+    color: var(--tmr-text-strong);
+    border-color: rgba(45, 212, 191, 0.28);
+    background: rgba(45, 212, 191, 0.08);
+}
+
+.tmr-action-link--primary {
+    color: #03131a;
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--tmr-accent), var(--tmr-accent-2));
+}
+
+.tmr-action-link--danger {
+    color: #fecaca;
+    border-color: rgba(239, 68, 68, 0.24);
+    background: rgba(239, 68, 68, 0.08);
+}
+
 @media (max-width: 520px) {
     .tmr-feed-item {
         grid-template-columns: 1fr;
