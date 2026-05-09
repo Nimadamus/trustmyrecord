@@ -29,6 +29,26 @@ assert(
   'sportsbook page must request the repaired reliability runtime, not a stale cached script'
 );
 assert(
+  html.includes('window.TMR.fetchGamesFromESPN = function(sportKey, callback)'),
+  'sportsbook page must keep the ESPN game fallback path wired'
+);
+assert(
+  html.includes('var maxDays = 7;') &&
+    html.includes('/scoreboard?dates=') &&
+    html.includes('tryFetch(daysOffset + 1);'),
+  'ESPN fallback must keep pinned-date scoreboard requests and 7-day lookahead for upcoming games'
+);
+assert(
+  html.includes('gameStart.getTime() <= nowTime'),
+  'ESPN fallback must continue excluding already-started games from the pick board'
+);
+assert(
+  html.includes('Never synthesize betting lines') &&
+    html.includes('window.TMR.fetchOddsFromSummary(games, espnPath') &&
+    html.includes('callback(enrichedGames, daysOffset > 0 ? daysOffset : null);'),
+  'ESPN fallback must enrich missing real odds from summary endpoints without inventing lines'
+);
+assert(
   reliability.includes('function extractBoardGames(response)'),
   'sportsbook board runtime must normalize API board envelopes before rendering'
 );
