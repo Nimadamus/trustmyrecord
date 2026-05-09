@@ -63,6 +63,9 @@ for (const selector of [
   '.tmr-tooltip',
   '.tmr-help-text',
   '.tmr-sr-only',
+  '.tmr-pagination',
+  '.tmr-page-button',
+  '.tmr-count-summary',
   '.tmr-badge',
   '.tmr-status',
   '.tmr-result-chip',
@@ -96,6 +99,8 @@ assert(css.includes('.tmr-menu__item--danger') && css.includes('.tmr-menu__item[
 assert(css.includes('min-width: min(260px, calc(100vw - 32px))') && css.includes('max-width: min(360px, calc(100vw - 32px))'), 'sitewide menu responsive sizing must remain');
 assert(css.includes('.tmr-tooltip[data-tooltip]::after') && css.includes('content: attr(data-tooltip)') && css.includes('.tmr-tooltip:focus-within[data-tooltip]::after'), 'sitewide tooltip primitive must remain accessible');
 assert(css.includes('.tmr-help-text') && css.includes('.tmr-sr-only') && css.includes('clip: rect(0, 0, 0, 0)'), 'sitewide help text and screen-reader utility must remain');
+assert(css.includes('.tmr-pagination__controls') && css.includes('.tmr-page-button[aria-current="page"]'), 'sitewide pagination active state must remain');
+assert(css.includes('.tmr-page-button[aria-disabled="true"]') && css.includes('.tmr-count-summary'), 'sitewide pagination disabled state and count summary must remain');
 assert(css.includes('body.tmr-site-shell .section-header > *') && css.includes('body.tmr-site-shell .sportsbook-board-toolbar > *'), 'sitewide header children must keep overflow protection');
 assert(css.includes('.tmr-badge--verified') && css.includes('.tmr-status--private') && css.includes('.tmr-result-chip--win') && css.includes('.tmr-result-chip--loss'), 'sitewide badge/status/result primitives must remain');
 assert(css.includes('white-space: nowrap') && css.includes('max-width: 100%'), 'sitewide badge primitives must resist broken wrapping');
