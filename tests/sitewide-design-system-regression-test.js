@@ -65,6 +65,12 @@ for (const selector of [
   '.tmr-field__label',
   '.tmr-field__hint',
   '.tmr-field__error',
+  '.tmr-stepper',
+  '.tmr-step',
+  '.tmr-step__index',
+  '.tmr-step__label',
+  '.tmr-progress',
+  '.tmr-progress__bar',
   '.tmr-segmented',
   '.tmr-tab',
   '.tmr-filter-bar',
@@ -132,6 +138,8 @@ assert(css.includes('.tmr-avatar img') && css.includes('object-fit: cover') && c
 assert(css.includes('.tmr-identity') && css.includes('.tmr-identity__body') && css.includes('overflow-wrap: anywhere'), 'sitewide identity primitive must remain wrap-safe');
 assert(css.includes('.tmr-form-grid') && css.includes('minmax(min(100%, 220px), 1fr)') && css.includes('.tmr-field--full'), 'sitewide form grid primitives must remain responsive');
 assert(css.includes('.tmr-field[data-invalid="true"] input') && css.includes('.tmr-field__error') && css.includes('rgba(239, 68, 68'), 'sitewide form field error state must remain');
+assert(css.includes('.tmr-stepper') && css.includes('.tmr-step[aria-current="step"]') && css.includes('.tmr-step.is-complete .tmr-step__index'), 'sitewide stepper primitives must remain');
+assert(css.includes('.tmr-progress__bar') && css.includes('--tmr-progress-value') && css.includes('linear-gradient(90deg, var(--tmr-accent)'), 'sitewide progress primitive must remain');
 assert(css.includes('.tmr-cluster') && css.includes('flex-wrap: wrap') && css.includes('.tmr-stack'), 'sitewide stack and cluster layout primitives must remain');
 assert(css.includes('.tmr-segmented') && css.includes('.tmr-filter-bar') && css.includes('.tmr-tab.is-active') && css.includes('.tmr-filter-chip[aria-pressed="true"]'), 'sitewide segmented tab/filter primitives must remain');
 assert(css.includes('.tmr-tab[aria-selected="true"]') && css.includes('white-space: nowrap'), 'sitewide tab active state and wrapping protection must remain');
