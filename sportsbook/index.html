@@ -31444,10 +31444,12 @@ document.addEventListener('DOMContentLoaded', function() {
         body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-btn .odds-line,
         body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #gamesListContainer .tmr-option-btn .tmr-option-line,
         body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #gamesListContainer .tmr-option-btn .tmr-option-market {
-            font: 700 18px/1.05 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
+            font: 600 18px/1.05 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
             letter-spacing: 0 !important;
             text-align: center !important;
             transform: none !important;
+            font-variant-numeric: tabular-nums !important;
+            font-feature-settings: "tnum" 1, "kern" 1 !important;
         }
 
         body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-cell .sb-odds .sb-odds-price,
@@ -31455,10 +31457,12 @@ document.addEventListener('DOMContentLoaded', function() {
         body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds .sb-odds-price,
         body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-btn .odds-value,
         body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #gamesListContainer .tmr-option-btn .tmr-option-odds {
-            font: 700 16px/1.05 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
+            font: 600 16px/1.05 "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif !important;
             letter-spacing: 0 !important;
             text-align: center !important;
             transform: none !important;
+            font-variant-numeric: tabular-nums !important;
+            font-feature-settings: "tnum" 1, "kern" 1 !important;
         }
     }
 
@@ -31481,6 +31485,56 @@ document.addEventListener('DOMContentLoaded', function() {
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-row {
         grid-template-columns: 76px minmax(0, 1fr) !important;
         gap: 10px !important;
+    }
+
+    /* PENDING_PICKS_NO_HORIZONTAL_OVERFLOW_20260509: keep awaiting-grade cards inside the pick slip. */
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-picks-panel,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-picks-head,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-picks-list,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-pick {
+        box-sizing: border-box !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-picks-list {
+        overflow-y: auto !important;
+        padding-right: 2px !important;
+        overscroll-behavior: contain !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-pick {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 7px !important;
+        padding: 11px 12px !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-pick-sport,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-pick strong,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-pick-meta,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-pick-odds,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-status {
+        max-width: 100% !important;
+        min-width: 0 !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-pick-odds {
+        display: block !important;
+        color: #8ee7ef !important;
+        line-height: 1.25 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-status {
+        align-self: flex-start !important;
+        width: auto !important;
+        line-height: 1.15 !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-topline strong,
