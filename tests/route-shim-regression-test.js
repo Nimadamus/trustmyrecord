@@ -2,6 +2,8 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
+const navigation = read('static/js/navigation.js');
+const sportsbookReliability = read('static/js/sportsbook-production-fix-persist-reliability.js');
 
 function read(relativePath) {
   return fs.readFileSync(path.join(root, relativePath), 'utf8');
@@ -60,5 +62,24 @@ for (const shim of shims) {
     assert(!html.includes(forbidden), `${shim.file} still references ${forbidden}`);
   }
 }
+
+[
+  "leaderboards: 'leaderboards/'",
+  "forums: 'forum/'",
+  "'polls-trivia': 'polls/'"
+].forEach((token) => {
+  assert(navigation.includes(token), `navigation legacy route target missing: ${token}`);
+});
+
+[
+  "leaderboards: 'handicappers/'",
+  "forums: 'forums/'",
+  "'polls-trivia': 'polls-trivia/'"
+].forEach((token) => {
+  assert(!navigation.includes(token), `navigation legacy route drift returned: ${token}`);
+});
+
+assert(sportsbookReliability.includes("'polls-trivia': 'polls.html'"), 'sportsbook legacy polls-trivia route must target polls');
+assert(!sportsbookReliability.includes("'polls-trivia': 'hangout.html'"), 'sportsbook legacy polls-trivia route regressed to hangout');
 
 console.log('route shim regression test passed');

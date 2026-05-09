@@ -3212,7 +3212,7 @@
             forums: 'forum.html',
             arena: 'arena.html',
             trivia: 'trivia.html',
-            'polls-trivia': 'hangout.html',
+            'polls-trivia': 'polls.html',
             predictions: 'hangout.html',
             contests: 'arena.html',
             profile: 'profile.html',

@@ -6,7 +6,7 @@ const legacyRouteTargets = {
     'my-record': 'my-record/',
     promos: 'promos/',
     consensus: 'consensus/',
-    leaderboards: 'handicappers/',
+    leaderboards: 'leaderboards/',
     live: 'live/',
     'mlb-simulator': 'mlb-simulator/',
     marketplace: 'marketplace/',
@@ -14,9 +14,9 @@ const legacyRouteTargets = {
     messages: 'messages/',
     profile: 'profile/',
     premium: 'premium/',
-    forums: 'forums/',
+    forums: 'forum/',
     notifications: 'notifications/',
-    'polls-trivia': 'polls-trivia/'
+    'polls-trivia': 'polls/'
 };
 
 function getCanonicalRoute(route) {
