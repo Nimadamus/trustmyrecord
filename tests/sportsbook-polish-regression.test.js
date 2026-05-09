@@ -115,8 +115,20 @@ test('MLB and NHL matchup identifiers/logos remain wired', () => {
         "MLB:    { kicker: 'MLB Board'",
         "NHL:    { kicker: 'NHL Board'",
         "window.TMR._teamLogo(game.away_logo, game.away_abbr, game.away_team)",
-        "window.TMR._teamLogo(game.home_logo, game.home_abbr, game.home_team)"
+        "window.TMR._teamLogo(game.home_logo, game.home_abbr, game.home_team)",
+        "var mlb = {",
+        "'arizona diamondbacks':'ari'",
+        "'new york yankees':'nyy'",
+        "var nhl = {",
+        "'boston bruins':'bos'",
+        "'new york rangers':'nyr'",
+        "https://a.espncdn.com/i/teamlogos/mlb/500/",
+        "https://a.espncdn.com/i/teamlogos/nhl/500/",
+        "window.TMR.resolveSportsbookTeamLogo"
     ]);
+    assert.ok(sportsbookHtml.includes('data-tmr-logo-src'), 'inline sportsbook logo renderer must expose resolved logo source');
+    assert.ok(sportsbookHtml.includes('loading="eager"'), 'inline sportsbook logo renderer must eagerly load logos');
+    assert.ok(sportsbookHtml.includes('tmr-team-logo-badge'), 'inline sportsbook logo renderer must use protected logo badge class');
 });
 
 test('sportsbook page references the current cache-busted polish CSS', () => {

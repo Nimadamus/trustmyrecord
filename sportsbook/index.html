@@ -502,15 +502,15 @@
             if (parts.length === 1) initials = parts[0].slice(0, 3).toUpperCase();
             else initials = (parts[parts.length - 1][0] || '').toUpperCase() + (parts[parts.length - 2] ? parts[parts.length - 2][0].toUpperCase() : '');
         }
-        var initialsHtml = '<span class="team-logo__initials">' + safeAttr(initials || '?') + '</span>';
+        var initialsHtml = '<span class="team-logo__initials tmr-team-logo-initials">' + safeAttr(initials || '?') + '</span>';
         if (logoUrl) {
-            return '<div class="team-logo" aria-hidden="true">'
-                + '<img class="team-logo__img" src="' + safeAttr(logoUrl) + '" alt="" loading="lazy" decoding="async"'
+            return '<div class="team-logo tmr-team-logo-badge" aria-hidden="true" data-tmr-logo-team="' + safeAttr(fullName || initials) + '">'
+                + '<img class="team-logo__img tmr-team-logo-img" src="' + safeAttr(logoUrl) + '" data-tmr-logo-src="' + safeAttr(logoUrl) + '" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer"'
                 + ' onerror="this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">'
                 + initialsHtml
                 + '</div>';
         }
-        return '<div class="team-logo team-logo--fallback" aria-hidden="true">' + initialsHtml + '</div>';
+        return '<div class="team-logo team-logo--fallback tmr-team-logo-badge tmr-team-logo-badge--fallback" aria-hidden="true">' + initialsHtml + '</div>';
     };
 
     window.TMR.renderMarketSubtabs = function(sport, games) {
@@ -10048,7 +10048,18 @@ window.toggleSportFamily = function (family) {
 
     function sportsbookTeamLogoUrl(teamName, explicitLogo) {
         if (explicitLogo) return explicitLogo;
+        if (window.TMR && typeof window.TMR.resolveSportsbookTeamLogo === 'function') {
+            var sportForLogo = (typeof currentSport !== 'undefined' && currentSport) ? currentSport : (window.TMR.currentSport || '');
+            var resolved = window.TMR.resolveSportsbookTeamLogo(teamName, sportForLogo, '');
+            if (resolved) return resolved;
+        }
         var key = String(teamName || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        var mlb = {
+            'arizona diamondbacks':'ari','atlanta braves':'atl','baltimore orioles':'bal','boston red sox':'bos','chicago cubs':'chc','chicago white sox':'chw','cincinnati reds':'cin','cleveland guardians':'cle','colorado rockies':'col','detroit tigers':'det','houston astros':'hou','kansas city royals':'kc','los angeles angels':'laa','los angeles dodgers':'lad','miami marlins':'mia','milwaukee brewers':'mil','minnesota twins':'min','new york mets':'nym','new york yankees':'nyy','athletics':'ath','oakland athletics':'ath','philadelphia phillies':'phi','pittsburgh pirates':'pit','san diego padres':'sd','san francisco giants':'sf','seattle mariners':'sea','st louis cardinals':'stl','tampa bay rays':'tb','texas rangers':'tex','toronto blue jays':'tor','washington nationals':'wsh'
+        };
+        var nhl = {
+            'anaheim ducks':'ana','boston bruins':'bos','buffalo sabres':'buf','calgary flames':'cgy','carolina hurricanes':'car','chicago blackhawks':'chi','colorado avalanche':'col','columbus blue jackets':'cbj','dallas stars':'dal','detroit red wings':'det','edmonton oilers':'edm','florida panthers':'fla','los angeles kings':'la','minnesota wild':'min','montreal canadiens':'mtl','nashville predators':'nsh','new jersey devils':'nj','new york islanders':'nyi','new york rangers':'nyr','ottawa senators':'ott','philadelphia flyers':'phi','pittsburgh penguins':'pit','san jose sharks':'sj','seattle kraken':'sea','st louis blues':'stl','tampa bay lightning':'tb','toronto maple leafs':'tor','utah mammoth':'uta','utah hockey club':'uta','vancouver canucks':'van','vegas golden knights':'vgk','washington capitals':'wsh','winnipeg jets':'wpg'
+        };
         var nba = {
             'atlanta hawks': 'atl',
             'boston celtics': 'bos',
@@ -10082,6 +10093,8 @@ window.toggleSportFamily = function (family) {
             'utah jazz': 'utah',
             'washington wizards': 'wsh'
         };
+        if (mlb[key]) return 'https://a.espncdn.com/i/teamlogos/mlb/500/' + mlb[key] + '.png';
+        if (nhl[key]) return 'https://a.espncdn.com/i/teamlogos/nhl/500/' + nhl[key] + '.png';
         return nba[key] ? 'https://a.espncdn.com/i/teamlogos/nba/500/' + nba[key] + '.png' : '';
     }
     function sportsbookTeamLogoMarkup(teamName, logoUrl, abbr) {
