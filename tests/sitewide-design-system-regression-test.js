@@ -56,6 +56,10 @@ for (const selector of [
   '.tmr-modal__head',
   '.tmr-modal__body',
   '.tmr-modal__actions',
+  '.tmr-menu',
+  '.tmr-menu__item',
+  '.tmr-menu__label',
+  '.tmr-menu__divider',
   '.tmr-badge',
   '.tmr-status',
   '.tmr-result-chip',
@@ -85,6 +89,8 @@ assert(css.includes('.tmr-tab[aria-selected="true"]') && css.includes('white-spa
 assert(css.includes('.tmr-modal-backdrop.is-open') && css.includes('.tmr-modal-backdrop[aria-hidden="false"]'), 'sitewide modal open states must remain');
 assert(css.includes('.tmr-modal__head') && css.includes('.tmr-modal__body') && css.includes('.tmr-modal__actions'), 'sitewide modal structure primitives must remain');
 assert(css.includes('grid-template-rows: auto minmax(0, 1fr) auto') && css.includes('max-height: min(86vh, 820px)'), 'sitewide modal sizing must remain responsive');
+assert(css.includes('.tmr-menu__item--danger') && css.includes('.tmr-menu__item[aria-current="page"]'), 'sitewide menu states must remain');
+assert(css.includes('min-width: min(260px, calc(100vw - 32px))') && css.includes('max-width: min(360px, calc(100vw - 32px))'), 'sitewide menu responsive sizing must remain');
 assert(css.includes('body.tmr-site-shell .section-header > *') && css.includes('body.tmr-site-shell .sportsbook-board-toolbar > *'), 'sitewide header children must keep overflow protection');
 assert(css.includes('.tmr-badge--verified') && css.includes('.tmr-status--private') && css.includes('.tmr-result-chip--win') && css.includes('.tmr-result-chip--loss'), 'sitewide badge/status/result primitives must remain');
 assert(css.includes('white-space: nowrap') && css.includes('max-width: 100%'), 'sitewide badge primitives must resist broken wrapping');
