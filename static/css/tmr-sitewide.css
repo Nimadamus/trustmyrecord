@@ -474,6 +474,54 @@ body.tmr-site-shell .game-tile {
     letter-spacing: 0;
 }
 
+.tmr-metric-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+    gap: var(--tmr-gap-sm);
+    min-width: 0;
+}
+
+.tmr-metric-card {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: var(--tmr-radius-md);
+    background:
+        linear-gradient(180deg, rgba(15, 27, 46, 0.88), rgba(8, 14, 28, 0.84)),
+        rgba(8, 14, 28, 0.82);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.tmr-metric-label {
+    color: var(--tmr-text-muted);
+    font: 800 0.68rem/1.15 var(--tmr-font);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.tmr-metric-value {
+    color: var(--tmr-text-strong);
+    font: 900 clamp(1.25rem, 2vw, 1.75rem)/1 var(--tmr-display);
+    letter-spacing: 0;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
+.tmr-metric-value.is-positive {
+    color: var(--tmr-success);
+}
+
+.tmr-metric-value.is-negative {
+    color: var(--tmr-danger);
+}
+
+.tmr-metric-note {
+    color: var(--tmr-text-muted);
+    font: 700 0.78rem/1.35 var(--tmr-font);
+}
+
 body.tmr-site-shell .section-header,
 body.tmr-site-shell .card-header,
 body.tmr-site-shell .tmr-section-header,
