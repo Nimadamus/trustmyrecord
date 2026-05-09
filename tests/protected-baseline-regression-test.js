@@ -19,6 +19,8 @@ for (const required of [
   'Protected Baseline and Regression Policy',
   'Risky File Classification Inventory',
   'Standard Completion Checklist',
+  'Git diff summary for the patch',
+  'Live source, local source, screenshot, or browser proof for any changed protected surface',
   'production protected',
   'reference only',
   'test only',

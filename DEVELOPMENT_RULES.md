@@ -205,8 +205,10 @@ Every future Codex workstream must include:
 
 - Exact files changed.
 - Exact behavior changed.
+- Git diff summary for the patch.
 - Tests run, including command names and results.
 - Visual proof or browser proof when UI is affected.
+- Live source, local source, screenshot, or browser proof for any changed protected surface.
 - Confirmation that no old files were restored.
 - Confirmation that no recent fixes were reverted.
 - Confirmation that unrelated pages were not touched unless explicitly approved.
