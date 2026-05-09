@@ -6,6 +6,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const css = fs.readFileSync(path.join(root, 'static', 'css', 'tmr-sitewide.css'), 'utf8');
+const pagePolish = fs.readFileSync(path.join(root, 'static', 'css', 'tmr-page-polish.css'), 'utf8');
 const nav = fs.readFileSync(path.join(root, 'static', 'js', 'tmr-sitewide.js'), 'utf8');
 const productSystem = fs.readFileSync(path.join(root, 'TRUSTMYRECORD_PRODUCT_UPGRADE_SYSTEM.md'), 'utf8');
 
@@ -183,6 +184,29 @@ assert(css.includes('background-size: 220% 100%') && css.includes('.tmr-skeleton
 assert(css.includes('.tmr-alert--success') && css.includes('.tmr-alert--warning') && css.includes('.tmr-alert--danger') && css.includes('.tmr-alert--info'), 'sitewide alert variants must remain');
 assert(css.includes('body.tmr-site-shell .verify-success') && css.includes('body.tmr-site-shell .verify-error') && css.includes('body.tmr-site-shell .message.error'), 'legacy live message classes must remain styled');
 
+for (const selector of [
+  'body.tmr-polished-page',
+  'body.tmr-polished-page::before',
+  '.tmr-shell',
+  '.tmr-page-header',
+  '.tmr-h1',
+  '.tmr-h2',
+  '.tmr-glass',
+  '.tmr-cta-primary',
+  '.tmr-cta-secondary',
+  '.tmr-empty-state',
+  '.tmr-input',
+  '.tmr-textarea',
+  '.tmr-select',
+  '@media (max-width: 720px)'
+]) {
+  assert(pagePolish.includes(selector), `page polish selector missing: ${selector}`);
+}
+
+assert(pagePolish.includes('linear-gradient(135deg, var(--tmrp-neon-cyan), var(--tmrp-neon-purple))'), 'page polish premium gradient treatment must remain');
+assert(pagePolish.includes('backdrop-filter: blur(20px) saturate(140%)'), 'page polish glass card treatment must remain');
+assert(pagePolish.includes('border-color: var(--tmrp-neon-cyan)') && pagePolish.includes('background: rgba(0, 255, 255, 0.04)'), 'page polish form focus treatment must remain');
+
 for (const required of [
   'tmr-global-nav',
   'tmr-global-nav__brand',
@@ -212,6 +236,18 @@ for (const page of [
   const html = fs.readFileSync(path.join(root, page), 'utf8');
   assert(/tmr-sitewide\.css\?v=/.test(html), `${page} must load cache-busted sitewide CSS`);
   assert(/tmr-sitewide\.js\?v=/.test(html), `${page} must load cache-busted sitewide nav JS`);
+}
+
+for (const page of [
+  'about/index.html',
+  'contact/index.html',
+  'report-bug/index.html',
+  'privacy/index.html',
+  'terms/index.html',
+]) {
+  const html = fs.readFileSync(path.join(root, page), 'utf8');
+  assert(/tmr-page-polish\.css\?v=/.test(html), `${page} must load cache-busted page polish CSS`);
+  assert(html.includes('body class="tmr-polished-page"'), `${page} must opt into the polished page shell`);
 }
 
 for (const section of [
