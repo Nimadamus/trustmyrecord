@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260505finalnocommandlogos">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260505finalnocommandlogos"></script>
     <!-- CRITICAL: Early script to define core functions BEFORE anything else loads -->
     <script>
     // This runs FIRST, before any other scripts
@@ -9880,6 +9882,7 @@
                             <button type="button" id="modeToWin" class="units-mode-btn" onclick="setUnitsMode('towin')" style="padding: 12px 18px; background: var(--card-bg); border: none; color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;">TO WIN</button>
                         </div>
                     </div>
+                    <div id="unitsStakePreview" class="ticket-input-help">Risk 1u to win based on selected odds.</div>
                     <p id="unitsExplanation" class="ticket-input-help">Whole units only. Choose between 1 and 5. Winnings calculated from odds.</p>
                 </div>
 
@@ -10839,12 +10842,12 @@ window.toggleSportFamily = function (family) {
                 '<strong>' + safeSelection + '</strong>' +
                 '<span>1 pick</span>' +
             '</div>' +
-            '<div class="sportsbook-ticket-preview-row"><span>Sport</span><strong>' + safe(sport || '—') + '</strong></div>' +
-            '<div class="sportsbook-ticket-preview-row"><span>Game</span><strong>' + safe(matchup) + '</strong></div>' +
-            '<div class="sportsbook-ticket-preview-row"><span>Market</span><strong>' + safe(marketLabel) + '</strong></div>' +
-            '<div class="sportsbook-ticket-preview-row"><span>Selection</span><strong>' + safeSelection + '</strong></div>' +
-            '<div class="sportsbook-ticket-preview-row"><span>Odds</span><strong>' + oddsTxt + '</strong></div>' +
-            '<div class="sportsbook-ticket-preview-row"><span>Sportsbook</span><strong>' + safeBook + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row tmr-ticket-row--sport"><span>Sport</span><strong>' + safe(sport || '—') + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row tmr-ticket-row--game"><span>Game</span><strong>' + safe(matchup) + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row tmr-ticket-row--market"><span>Market</span><strong>' + safe(marketLabel) + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row tmr-ticket-row--selection"><span>Selection</span><strong>' + safeSelection + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row tmr-ticket-row--odds"><span>Odds</span><strong>' + oddsTxt + '</strong></div>' +
+            '<div class="sportsbook-ticket-preview-row tmr-ticket-row--book"><span>Sportsbook</span><strong>' + safeBook + '</strong></div>' +
             '<div class="sportsbook-ticket-preview-row" style="align-items:center;">' +
                 '<span><label for="ttSlipUnits" style="cursor:pointer;">Units</label></span>' +
                 '<strong><input id="ttSlipUnits" type="number" min="0.5" max="5" step="0.5" value="1" aria-label="Units to risk"' +
@@ -11068,24 +11071,12 @@ window.toggleSportFamily = function (family) {
                         '</div>';
             } else {
                 rendered++;
-                // Two stacked rows per game (away on top, home on bottom).
+                // Matchup/team names stay in the left matchup cell; TT rows only show odds actions.
                 var awayOver = split.away.over || {};
                 var awayUnder = split.away.under || {};
                 var homeOver = split.home.over || {};
                 var homeUnder = split.home.under || {};
-                var awayBookLabel = (awayOver.book || awayUnder.book || '').toString();
-                var homeBookLabel = (homeOver.book || homeUnder.book || '').toString();
                 html +=
-                    '<div class="sb-board-col" data-col="team">' +
-                        '<div class="sb-tt-team-stack">' +
-                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.away_team) + '</b>' +
-                                (awayBookLabel ? '<small>' + _ttHtmlEsc(awayBookLabel) + '</small>' : '') +
-                            '</div>' +
-                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.home_team) + '</b>' +
-                                (homeBookLabel ? '<small>' + _ttHtmlEsc(homeBookLabel) + '</small>' : '') +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
                     '<div class="sb-board-col" data-col="tt-over">' +
                         '<div class="sb-odds-stack">' +
                             _ttButton(idx, 'over', game.away_team, awayOver.line, awayOver.odds, game.away_team, game.home_team) +
@@ -20328,7 +20319,8 @@ document.addEventListener('DOMContentLoaded', function() {
          containers that don't exist on the picks board, throwing console
          noise. They're loaded on /feed/ and /forum/ where they belong. -->
     <script src="/static/js/navigation.js?v=20260430routefix1"></script>
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260501reliability1"></script>
+    <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: protected runtime owns board rendering, logos, stake mode, and pick selection. -->
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260508boardshape1&cb=20260508gamesrestore2"></script>
     <script src="/static/js/effects.js?v=20251208c"></script>
     <script>
     (function() {
@@ -24458,8 +24450,6 @@ document.addEventListener('DOMContentLoaded', function() {
     </style>
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260505finalnocommandlogos">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260505finalnocommandlogos"></script>
     <style>
         /* Make Your Picks polish: visual-only overrides, no pick-flow logic changes. */
         #picks.page-section {
@@ -29168,7 +29158,6 @@ document.addEventListener('DOMContentLoaded', function() {
     })();
     </script>
     <script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
-    <script src="/static/js/tmr-redesign-test-sportsbook-logos.js?v=20260501a" defer></script>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->
