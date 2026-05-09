@@ -1,6 +1,6 @@
 # TrustMyRecord Product Upgrade System
 
-Last updated: 2026-05-08
+Last updated: 2026-05-09
 
 This document is the operating standard for upgrading TrustMyRecord without repeating one-off visual fixes or regressing protected betting, profile, ledger, navigation, or grading behavior.
 
@@ -321,6 +321,14 @@ For every page or component, record:
 - Risk: medium.
 - Patch priority: after shared cards/buttons/empty states.
 
+### Forum Post Pages
+
+- Issue: thread detail pages must not drift into cramped table/comment dumps or fake activity.
+- Target: readable post/reply hierarchy with clear author, timestamp, reply, moderation, and empty/error states.
+- Likely files: `forum/index.html`, `forums/index.html`, `static/js/forums.js`.
+- Risk: medium for API thread loading and reply actions.
+- Patch priority: after forum list/feed shell remains guarded.
+
 ### Arena
 
 - Issue: challenge loading and empty states need consistency.
@@ -351,6 +359,22 @@ For every page or component, record:
 - Likely files: `leaderboards/index.html`, `handicappers/index.html`.
 - Risk: high for data accuracy.
 - Patch priority: guard eligibility and fake-data rules first.
+
+### Any Leaderboard Pages
+
+- Issue: ranking routes can mislead users if eligibility, sort, or data source is unclear.
+- Target: verified rank tables/cards with visible thresholds, positive-unit eligibility, and no invented standings.
+- Likely files: `leaderboards/index.html`, `leaderboard/index.html`, `static/js/leaderboard.js`.
+- Risk: high for public ranking accuracy.
+- Patch priority: keep ranking endpoint, threshold copy, and fake-data guards green before visual changes.
+
+### Any Capper Ranking Pages
+
+- Issue: capper directories can regress into generic profile tables or stale fake records.
+- Target: professional capper discovery with verified record, ROI/units, recent activity, eligibility copy, and clean profile links.
+- Likely files: `handicappers/index.html`, `cappers/index.html`, `members/index.html`.
+- Risk: high for fake users, profile links, and ledger-derived stats.
+- Patch priority: protect live summary endpoint, profile links, and eligibility copy before layout work.
 
 ### Mobile
 
