@@ -203,6 +203,11 @@ for (const page of [
   'handicappers/index.html',
   'feed/index.html',
   'marketplace/index.html',
+  'about/index.html',
+  'contact/index.html',
+  'report-bug/index.html',
+  'privacy/index.html',
+  'terms/index.html',
 ]) {
   const html = fs.readFileSync(path.join(root, page), 'utf8');
   assert(/tmr-sitewide\.css\?v=/.test(html), `${page} must load cache-busted sitewide CSS`);
