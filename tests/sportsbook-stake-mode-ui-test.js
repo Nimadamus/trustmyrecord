@@ -8,7 +8,7 @@ const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'sportsbook', 'index.html'), 'utf8');
 const reliability = fs.readFileSync(path.join(root, 'static', 'js', 'sportsbook-production-fix-persist-reliability.js'), 'utf8');
 
-assert(html.includes('sportsbook-production-fix-persist-reliability.js?v=20260508boardshape1&cb=20260508gamesrestore2'), 'sportsbook page should load current sportsbook reliability script');
+assert(html.includes('sportsbook-production-fix-persist-reliability.js?v=20260509logorestore1&cb=20260509logorestore1'), 'sportsbook page should load current logo-restored sportsbook reliability script');
 assert(html.includes('SPORTSBOOK_RELIABILITY_OWNERSHIP'), 'sportsbook page should document reliability script ownership');
 assert(html.includes('id="unitsInput"'), 'Pick Slip should include Units input');
 assert(html.includes('id="modeRisk"'), 'Pick Slip should include Risk button');

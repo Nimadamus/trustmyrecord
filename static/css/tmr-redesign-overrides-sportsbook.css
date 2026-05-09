@@ -2144,3 +2144,60 @@ body[data-tmr-test-route="sportsbook"] #picks .sb-tt-row .sb-odds.selected{
   background:linear-gradient(180deg,rgba(83,211,55,.20),rgba(83,211,55,.08)),#10211e !important;
   box-shadow:0 10px 24px rgba(83,211,55,.18), inset 0 0 0 1px rgba(83,211,55,.24) !important;
 }
+
+/* SPORTSBOOK_LOGO_VISIBILITY_RESTORE_20260509
+   Final protected logo layer. Keep after all board compacting rules so team
+   logos cannot be collapsed, hidden, or replaced by blank initials during
+   sportsbook visual edits. */
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-logo.tmr-team-logo-badge,
+body[data-tmr-test-route="sportsbook"] #picks .team-logo.tmr-team-logo-badge,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge,
+body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge{
+  display:inline-flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  align-items:center !important;
+  justify-content:center !important;
+  flex:0 0 36px !important;
+  width:36px !important;
+  min-width:36px !important;
+  max-width:36px !important;
+  height:36px !important;
+  min-height:36px !important;
+  max-height:36px !important;
+  overflow:hidden !important;
+  position:relative !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge .tmr-team-logo-img,
+body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge .tmr-team-logo-img,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge .team-logo__img,
+body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge .team-logo__img{
+  display:block !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  width:100% !important;
+  height:100% !important;
+  max-width:100% !important;
+  max-height:100% !important;
+  object-fit:contain !important;
+  object-position:center !important;
+  position:relative !important;
+  z-index:2 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge:not(.team-logo--fallback) .tmr-team-logo-initials,
+body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge:not(.team-logo--fallback) .tmr-team-logo-initials{
+  display:none !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge.team-logo--fallback .tmr-team-logo-initials,
+body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge.team-logo--fallback .tmr-team-logo-initials,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge--fallback .tmr-team-logo-initials,
+body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge--fallback .tmr-team-logo-initials{
+  display:inline-flex !important;
+  visibility:visible !important;
+  opacity:1 !important;
+  align-items:center !important;
+  justify-content:center !important;
+}

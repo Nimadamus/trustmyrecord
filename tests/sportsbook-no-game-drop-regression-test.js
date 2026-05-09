@@ -25,8 +25,12 @@ assert(
   'sportsbook runtime must clear stale board caches from broken v2/v3 namespaces'
 );
 assert(
-  html.includes('sportsbook-production-fix-persist-reliability.js?v=20260508boardshape1&cb=20260508gamesrestore2'),
-  'sportsbook page must request the repaired reliability runtime, not a stale cached script'
+  html.includes('sportsbook-production-fix-persist-reliability.js?v=20260509logorestore1&cb=20260509logorestore1'),
+  'sportsbook page must request the logo-restored reliability runtime, not a stale cached script'
+);
+assert(
+  html.includes('tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1'),
+  'sportsbook page must request the logo-restored stylesheet, not stale cached CSS'
 );
 assert(
   html.includes('window.TMR.fetchGamesFromESPN = function(sportKey, callback)'),

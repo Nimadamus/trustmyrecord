@@ -32,8 +32,10 @@ async function main() {
   assert(profile.includes('ranking_status'), 'live profile should render backend ranking_status source');
 
   assert(sportsbook.includes('window.TMR.fetchGamesFromESPN = function(sportKey, callback)'), 'live sportsbook should keep ESPN fallback path');
-  assert(sportsbook.includes('sportsbook-production-fix-persist-reliability.js?v=20260508boardshape1&cb=20260508gamesrestore2'), 'live sportsbook should keep reliability script include');
+  assert(sportsbook.includes('sportsbook-production-fix-persist-reliability.js?v=20260509logorestore1&cb=20260509logorestore1'), 'live sportsbook should keep logo-restored reliability script include');
+  assert(sportsbook.includes('tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1'), 'live sportsbook should keep logo-restored stylesheet include');
   assert(sportsbook.includes('window.TMR._teamLogo'), 'live sportsbook should keep team-logo renderer');
+  assert(sportsbook.includes('SPORTSBOOK_LOGO_VISIBILITY_RESTORE_20260509'), 'live sportsbook should keep final logo visibility restore CSS');
 
   assert(polls.includes('tmr-polls-panel'), 'live polls should keep premium dark panel source');
   assert(polls.includes('Create Poll'), 'live polls should keep Create Poll entry point');

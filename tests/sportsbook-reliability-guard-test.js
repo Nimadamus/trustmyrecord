@@ -38,10 +38,19 @@ assert(reliability.includes('window.TMR.renderSportsbookTeamLogo = renderTeamLog
 assert(reliability.includes("lockFunction(window.TMR, 'renderSportsbookTeamLogo', renderTeamLogo)"), 'logo renderer exposure must be locked');
 assert(reliability.includes("this.parentElement.classList.add(\\'tmr-team-logo-badge--fallback\\')"), 'logo image must mark fallback on load failure');
 assert(reliability.includes('this.remove();'), 'broken logo image must be removed on load failure');
+assert(reliability.includes('data-tmr-logo-src'), 'logo image must expose its resolved source for live visibility checks');
+assert(reliability.includes('loading="eager"'), 'sportsbook logo images must not be lazy-hidden on first board paint');
+assert(reliability.includes('referrerpolicy="no-referrer"'), 'sportsbook logo images must keep the ESPN-safe referrer policy');
 assert(reliability.includes('renderTeamLogo(game.away_team'), 'away matchup logo must render in the primary board');
 assert(reliability.includes('renderTeamLogo(game.home_team'), 'home matchup logo must render in the primary board');
 assert(css.includes('.tmr-team-logo-badge'), 'logo badge CSS must exist');
 assert(css.includes('.tmr-team-logo-badge--fallback'), 'logo fallback CSS must exist');
+assert(css.includes('SPORTSBOOK_LOGO_VISIBILITY_RESTORE_20260509'), 'final logo visibility restore CSS must remain');
+assert(css.includes('.tmr-team-logo-badge .tmr-team-logo-img'), 'logo visibility CSS must target image elements directly');
+assert(css.includes('visibility:visible !important'), 'logo visibility CSS must force visible logos');
+assert(css.includes('opacity:1 !important'), 'logo visibility CSS must force opaque logos');
+assert(css.includes('display:block !important'), 'logo image CSS must force rendered images');
+assert(html.includes('20260509logorestore1'), 'sportsbook page must load the cache-busted logo restore assets');
 
 assert(
   reliability.includes("if (sportKey === 'baseball_mlb' || sportKey === 'icehockey_nhl')"),
