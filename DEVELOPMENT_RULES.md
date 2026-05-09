@@ -2,9 +2,11 @@
 
 ## Current Baseline
 
-The current live sportsbook baseline is commit `572a29bc38ae4a0aed048752188c8c737a2a4559`.
+The protected baseline is the latest commit on `origin/main` at the start of each task, after inspecting the current remote head, local status, recent commits, and relevant diffs.
 
-This baseline includes the working sportsbook page with visible team logos, the current cache-busted sportsbook reliability runtime, the wager slip fixes, the Risk / To Win stake mode behavior, pending-pick visibility fixes, and recent fake-profile cleanup work.
+Do not pin future work to an older hard-coded commit. A historical commit can be inspected only as reference; it is never the source of truth for sportsbook, profile, logo, ledger, autograder, pick slip, risk/to-win, navigation, avatar, or pending-pick privacy behavior.
+
+The protected baseline includes the currently deployed sportsbook page with visible team logos, the current cache-busted sportsbook reliability runtime, the wager slip fixes, the Risk / To Win stake mode behavior, pending-pick visibility fixes, profile loading/avatar protections, navigation fixes, ledger/record protections, and fake-data cleanup work.
 
 
 ## Protected Baseline and Regression Policy

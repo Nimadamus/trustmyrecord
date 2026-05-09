@@ -14,6 +14,8 @@ const reliability = fs.readFileSync(path.join(root, 'static', 'js', 'sportsbook-
 const autoGrader = fs.readFileSync(path.join(root, 'static', 'js', 'auto-grader-fixed.js'), 'utf8');
 
 for (const required of [
+  'latest commit on `origin/main`',
+  'Do not pin future work to an older hard-coded commit',
   'Protected Baseline and Regression Policy',
   'Risky File Classification Inventory',
   'Standard Completion Checklist',
@@ -25,6 +27,11 @@ for (const required of [
 ]) {
   assert(rules.toLowerCase().includes(required.toLowerCase()), `DEVELOPMENT_RULES missing ${required}`);
 }
+
+assert(
+  !rules.includes('572a29bc38ae4a0aed048752188c8c737a2a4559'),
+  'DEVELOPMENT_RULES must not pin protected baseline to the stale May 2026 sportsbook commit'
+);
 
 for (const file of [
   'sportsbook/index.html',
