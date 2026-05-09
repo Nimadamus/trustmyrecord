@@ -22,11 +22,13 @@
     function pickTimestamp(pick) {
         const candidates = [
             pick && pick.graded_at,
-            pick && pick.settled_at,
+            pick && pick.grade_verified_at,
             pick && pick.finalized_at,
             pick && pick.event_completed_at,
             pick && pick.completed_at,
             pick && pick.game_final_at,
+            pick && pick.analytics_settled_at,
+            pick && pick.settled_at,
             pick && pick.commence_time,
             pick && pick.event_start_time,
             pick && pick.start_time,
@@ -69,6 +71,9 @@
                 return pick.status === 'won' || pick.status === 'lost' || pick.status === 'push';
             })
             .sort(compareChronological);
+        ordered.forEach(function(pick, index) {
+            pick.indexInOrdered = index;
+        });
 
         let longestWinStreak = 0;
         let longestLossStreak = 0;
@@ -84,23 +89,24 @@
                 lossRun += 1;
                 winRun = 0;
                 longestLossStreak = Math.max(longestLossStreak, lossRun);
+            } else {
+                // Pushes are neutral for W/L streaks.
             }
         });
 
         let currentStreak = 0;
         let currentType = 'none';
-        let latestIndex = -1;
+        let latest = null;
         for (let i = ordered.length - 1; i >= 0; i -= 1) {
             if (ordered[i].status === 'won' || ordered[i].status === 'lost') {
-                latestIndex = i;
+                latest = ordered[i];
                 break;
             }
         }
-        const latest = latestIndex >= 0 ? ordered[latestIndex] : null;
         if (latest) {
             currentType = latest.status === 'won' ? 'win' : 'loss';
             currentStreak = latest.status === 'won' ? 1 : -1;
-            for (let i = latestIndex - 1; i >= 0; i -= 1) {
+            for (let i = latest.indexInOrdered - 1; i >= 0; i -= 1) {
                 const status = ordered[i].status;
                 if (status === 'push') continue;
                 if (status !== latest.status) break;
