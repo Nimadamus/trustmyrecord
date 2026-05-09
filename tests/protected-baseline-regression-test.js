@@ -39,6 +39,13 @@ for (const file of [
   'static/js/tmr-sitewide.js',
   'static/js/sportsbook-production-fix-persist-reliability.js',
   'static/js/auto-grader-fixed.js',
+  'index.html',
+  'feed/index.html',
+  'forum/index.html',
+  'arena/index.html',
+  'polls/index.html',
+  'leaderboards/index.html',
+  'handicappers/index.html',
 ]) {
   assert(rules.includes(file), `DEVELOPMENT_RULES must classify ${file}`);
 }
