@@ -80,6 +80,7 @@ try {
         "tests/line-formatting-regression-test.js",
         "tests/protected-baseline-regression-test.js",
         "tests/stats-engine-regression-test.js",
+        "tests/streaks-test.js",
         "tests/streaks-regression-test.js",
         "tests/profile-page-lookup-test.js",
         "tests/local-api-no-seed-regression-test.js",
@@ -120,6 +121,7 @@ try {
     Invoke-GuardCommand "line formatting regression test" @("node", "tests/line-formatting-regression-test.js")
     Invoke-GuardCommand "protected baseline regression test" @("node", "tests/protected-baseline-regression-test.js")
     Invoke-GuardCommand "stats engine regression test" @("node", "tests/stats-engine-regression-test.js")
+    Invoke-GuardCommand "streaks unit test" @("node", "tests/streaks-test.js")
     Invoke-GuardCommand "streaks regression test" @("node", "tests/streaks-regression-test.js")
     Invoke-GuardCommand "profile lookup regression test" @("node", "tests/profile-page-lookup-test.js")
     Invoke-GuardCommand "local API no-seed regression test" @("node", "tests/local-api-no-seed-regression-test.js")
