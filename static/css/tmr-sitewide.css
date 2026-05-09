@@ -355,6 +355,63 @@ body.tmr-site-shell .game-tile {
     background: rgba(148, 163, 184, 0.14);
 }
 
+.tmr-tooltip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tmr-tooltip[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    z-index: 9200;
+    width: max-content;
+    max-width: min(260px, calc(100vw - 32px));
+    transform: translateX(-50%) translateY(4px);
+    padding: 7px 9px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: var(--tmr-radius-sm);
+    background: rgba(8, 14, 28, 0.98);
+    color: var(--tmr-text-strong);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
+    font: 800 0.74rem/1.25 var(--tmr-font);
+    letter-spacing: 0;
+    text-align: center;
+    white-space: normal;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.14s ease, transform 0.14s ease;
+}
+
+.tmr-tooltip:hover[data-tooltip]::after,
+.tmr-tooltip:focus-visible[data-tooltip]::after,
+.tmr-tooltip:focus-within[data-tooltip]::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.tmr-help-text {
+    color: var(--tmr-text-muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin: 6px 0 0;
+}
+
+.tmr-sr-only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
 body.tmr-site-shell .section-header,
 body.tmr-site-shell .card-header,
 body.tmr-site-shell .tmr-section-header,
