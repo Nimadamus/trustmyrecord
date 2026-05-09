@@ -890,13 +890,30 @@
             padding: clamp(54px, 8vw, 92px) 24px 42px;
             border-bottom: 1px solid rgba(45, 212, 191, 0.18);
             background:
-                linear-gradient(135deg, rgba(45, 212, 191, 0.13), rgba(14, 165, 233, 0.08) 42%, rgba(2, 6, 23, 0)),
+                radial-gradient(circle at 82% 10%, rgba(34, 211, 238, 0.16), transparent 28rem),
+                linear-gradient(135deg, rgba(45, 212, 191, 0.14), rgba(14, 165, 233, 0.09) 42%, rgba(2, 6, 23, 0)),
                 linear-gradient(180deg, #020611 0%, #06101d 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .arena-clean-hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background:
+                linear-gradient(rgba(148, 163, 184, 0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.025) 1px, transparent 1px);
+            background-size: 44px 44px;
+            mask-image: linear-gradient(180deg, rgba(0,0,0,0.72), transparent 78%);
         }
 
         .arena-clean-inner {
             width: min(1180px, 100%);
             margin: 0 auto;
+            position: relative;
+            z-index: 1;
         }
 
         .arena-clean-kicker {
@@ -938,6 +955,31 @@
             margin-top: 26px;
         }
 
+        .arena-clean-proof {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .arena-clean-proof span {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            min-height: 36px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            background: rgba(2, 8, 18, 0.46);
+            color: #b8c8d9;
+            font-size: 0.8rem;
+            font-weight: 800;
+        }
+
+        .arena-clean-proof i {
+            color: #67e8f9;
+        }
+
         .arena-clean-actions .btn,
         .arena-clean-section .section-header .btn {
             display: inline-flex;
@@ -962,12 +1004,13 @@
 
         .arena-hub-card {
             min-height: 250px;
-            padding: 20px;
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            border-radius: 8px;
+            padding: 22px;
+            border: 1px solid rgba(45, 212, 191, 0.16);
+            border-radius: 18px;
             background:
-                linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.018)),
-                rgba(6, 16, 31, 0.94);
+                radial-gradient(circle at 20% 0%, rgba(45, 212, 191, 0.10), transparent 16rem),
+                linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)),
+                rgba(6, 16, 31, 0.96);
             color: #eef7ff;
             cursor: pointer;
             text-align: left;
@@ -991,10 +1034,11 @@
             height: 46px;
             display: grid;
             place-items: center;
-            border-radius: 8px;
+            border-radius: 14px;
             background: linear-gradient(135deg, #2dd4bf, #67e8f9);
             color: #03111a;
             font-size: 1.16rem;
+            box-shadow: 0 14px 34px rgba(45, 212, 191, 0.16);
         }
 
         .arena-hub-card h2 {
@@ -1020,9 +1064,9 @@
 
         .arena-clean-section {
             margin-top: 24px;
-            padding: 20px;
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            border-radius: 8px;
+            padding: 22px;
+            border: 1px solid rgba(45, 212, 191, 0.14);
+            border-radius: 20px;
             background:
                 linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012)),
                 rgba(6, 16, 31, 0.9);
@@ -1052,6 +1096,39 @@
             min-height: 0;
         }
 
+        .arena-list-grid .challenge-card,
+        #myChallengesList .challenge-card {
+            border-radius: 18px;
+            border-color: rgba(45, 212, 191, 0.14);
+            background:
+                linear-gradient(180deg, rgba(45, 212, 191, 0.055), rgba(255,255,255,0.016)),
+                rgba(5, 13, 26, 0.96);
+        }
+
+        .arena-list-grid .challenge-card.pending,
+        #myChallengesList .challenge-card.pending {
+            border-left: 4px solid #67e8f9;
+        }
+
+        .arena-list-grid .challenge-card.accepted,
+        .arena-list-grid .challenge-card.in_progress,
+        #myChallengesList .challenge-card.accepted,
+        #myChallengesList .challenge-card.in_progress {
+            border-left: 4px solid #2dd4bf;
+        }
+
+        .cc-status {
+            border-radius: 999px;
+            letter-spacing: 0.08em;
+        }
+
+        .cc-actions .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
         .panel {
             margin-top: 24px;
         }
@@ -1062,19 +1139,32 @@
         #panel-mlb-the-show,
         #panel-my-stats {
             padding: 20px;
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            border-radius: 8px;
+            border: 1px solid rgba(45, 212, 191, 0.14);
+            border-radius: 20px;
             background: rgba(6, 16, 31, 0.9);
         }
 
         .empty-state {
-            padding: 34px 20px;
+            padding: 42px 22px;
+            border: 1px solid rgba(45, 212, 191, 0.16);
+            border-radius: 18px;
+            background:
+                radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.10), transparent 17rem),
+                linear-gradient(180deg, rgba(13, 27, 45, 0.72), rgba(5, 12, 24, 0.82));
         }
 
         .empty-state i {
-            font-size: 30px;
-            margin-bottom: 10px;
-            color: rgba(103, 232, 249, 0.42);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 54px;
+            height: 54px;
+            border-radius: 18px;
+            font-size: 1.35rem;
+            margin-bottom: 12px;
+            color: #67e8f9;
+            background: rgba(34, 211, 238, 0.10);
+            border: 1px solid rgba(34, 211, 238, 0.22);
         }
 
         .empty-state h3 {
@@ -1085,6 +1175,17 @@
         .empty-state p {
             color: #9fb0c5;
             margin: 6px 0 0;
+        }
+
+        .empty-state .arena-empty-action {
+            margin-top: 16px;
+        }
+
+        .loading {
+            min-height: 180px;
+            border: 1px solid rgba(45, 212, 191, 0.12);
+            border-radius: 18px;
+            background: rgba(5, 12, 24, 0.62);
         }
 
         @media (max-width: 980px) {
@@ -1111,6 +1212,11 @@
                 width: 100%;
             }
 
+            .arena-clean-proof span {
+                width: 100%;
+                justify-content: center;
+            }
+
             .arena-clean-section .section-header {
                 display: block;
             }
@@ -1134,6 +1240,11 @@
         <div class="arena-clean-actions">
             <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Create Challenge</button>
             <button class="btn btn-outline" onclick="scrollToChallenges(event)"><i class="fas fa-list"></i> View Open Challenges</button>
+        </div>
+        <div class="arena-clean-proof" aria-label="Arena standards">
+            <span><i class="fas fa-shield-halved"></i> Verified outcomes only</span>
+            <span><i class="fas fa-user-group"></i> Rivalry-ready matchups</span>
+            <span><i class="fas fa-chart-line"></i> Records tied to activity</span>
         </div>
     </div>
 </section>
@@ -1684,17 +1795,17 @@ function renderOpenChallengesEmptyState(filtered) {
     if (!container) return;
 
     if (filtered) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-circle-info"></i><h3>No open challenges yet. Create the first Arena challenge.</h3></div>';
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-filter"></i><h3>No challenges match this view yet.</h3><p>Try another Arena filter or post an open challenge for the room.</p><button class="btn btn-gold arena-empty-action" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Create Challenge</button></div>';
         return;
     }
 
-    container.innerHTML = '<div class="empty-state"><i class="fas fa-circle-info"></i><h3>No open challenges yet. Create the first Arena challenge.</h3></div>';
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-user-shield"></i><h3>No open challenges yet.</h3><p>Create the first Arena challenge and give the room something real to compete over.</p><button class="btn btn-gold arena-empty-action" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Create Challenge</button></div>';
 }
 
 function renderOpenChallengesErrorState() {
     const container = document.getElementById('challengesList');
     if (!container) return;
-    container.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><h3>Open challenges could not be loaded.</h3><p>Try again in a moment.</p></div>';
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><h3>Open challenges could not be loaded.</h3><p>The Arena feed may be warming up. Try again in a moment.</p><button class="btn btn-outline arena-empty-action" onclick="loadChallenges()"><i class="fas fa-rotate-right"></i> Retry</button></div>';
 }
 
 async function loadChallenges() {
@@ -1811,12 +1922,12 @@ function renderMyChallenges() {
     const container = document.getElementById('myChallengesList');
     if (!container) return;
     if (!currentUser) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-lock"></i><h3>Sign in to see your challenges</h3><p>Your direct challenges, accepted matchups, and pending responses will appear here.</p><a href="/login/" class="btn btn-primary" style="margin-top:12px;">Log In</a></div>';
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-lock"></i><h3>Sign in to see your challenges</h3><p>Your direct challenges, accepted matchups, and pending responses will appear here.</p><a href="/login/" class="btn btn-primary arena-empty-action">Log In</a></div>';
         return;
     }
     const mine = (allChallenges || []).filter(ch => ch.challenger_id === currentUser.id || ch.challenged_id === currentUser.id);
     if (mine.length === 0) {
-        container.innerHTML = '<div class="empty-state"><i class="fas fa-user-shield"></i><h3>No challenges on your board yet</h3><p>Issue a challenge or accept an open challenge to start building your rivalry history.</p><button class="btn btn-gold" style="margin-top:12px;" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
+        container.innerHTML = '<div class="empty-state"><i class="fas fa-user-shield"></i><h3>No challenges on your board yet</h3><p>Issue a challenge or accept an open challenge to start building your rivalry history.</p><button class="btn btn-gold arena-empty-action" onclick="openCreateChallenge()"><i class="fas fa-bolt"></i> Issue a Challenge</button></div>';
         return;
     }
     container.innerHTML = mine.map(ch => {
