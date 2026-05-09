@@ -412,6 +412,68 @@ body.tmr-site-shell .game-tile {
     border: 0 !important;
 }
 
+.tmr-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--tmr-gap-sm);
+    flex-wrap: wrap;
+    min-width: 0;
+    padding: 10px 0;
+}
+
+.tmr-pagination__controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    min-width: 0;
+}
+
+.tmr-page-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    min-height: 34px;
+    padding: 7px 10px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: var(--tmr-radius-sm);
+    background: rgba(8, 14, 28, 0.62);
+    color: var(--tmr-text-soft);
+    font: 800 0.78rem/1 var(--tmr-font);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.tmr-page-button:hover,
+.tmr-page-button:focus-visible {
+    color: var(--tmr-text-strong);
+    border-color: rgba(45, 212, 191, 0.28);
+    background: rgba(45, 212, 191, 0.08);
+}
+
+.tmr-page-button.is-active,
+.tmr-page-button[aria-current="page"] {
+    color: #03131a;
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--tmr-accent), var(--tmr-accent-2));
+}
+
+.tmr-page-button:disabled,
+.tmr-page-button[aria-disabled="true"] {
+    cursor: not-allowed;
+    opacity: 0.5;
+    color: var(--tmr-text-muted);
+    background: rgba(15, 23, 42, 0.42);
+}
+
+.tmr-count-summary {
+    color: var(--tmr-text-muted);
+    font: 800 0.78rem/1.3 var(--tmr-font);
+    letter-spacing: 0;
+}
+
 body.tmr-site-shell .section-header,
 body.tmr-site-shell .card-header,
 body.tmr-site-shell .tmr-section-header,
