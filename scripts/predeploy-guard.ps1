@@ -95,6 +95,7 @@ try {
         "tests/trendspotter-source-regression-test.js",
         "tests/trendspotter-accuracy-test.js",
         "tests/sitewide-design-system-regression-test.js",
+        "tests/homepage-canonical-regression-test.js",
         "tests/homepage-visual-regression-test.js",
         "tests/feed-page-regression-test.js",
         "tests/route-shim-regression-test.js",
@@ -138,6 +139,7 @@ try {
     Invoke-GuardCommand "Trendspotter source regression test" @("node", "tests/trendspotter-source-regression-test.js")
     Invoke-GuardCommand "Trendspotter accuracy regression test" @("node", "tests/trendspotter-accuracy-test.js")
     Invoke-GuardCommand "sitewide design system regression test" @("node", "tests/sitewide-design-system-regression-test.js")
+    Invoke-GuardCommand "homepage canonical regression test" @("node", "tests/homepage-canonical-regression-test.js")
     Invoke-GuardCommand "homepage visual regression test" @("node", "tests/homepage-visual-regression-test.js")
     Invoke-GuardCommand "feed page regression test" @("node", "tests/feed-page-regression-test.js")
     Invoke-GuardCommand "route shim regression test" @("node", "tests/route-shim-regression-test.js")
