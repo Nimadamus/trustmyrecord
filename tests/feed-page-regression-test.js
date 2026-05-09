@@ -51,9 +51,14 @@ assert(!html.includes('6 picks graded'), 'hard-coded graded-pick count was reint
 assert(!html.includes('No fake users or synthetic records are shown.') || html.includes('Real production users will appear here'), 'no-fake copy changed unexpectedly');
 
 assert(override.includes('TMR_GENERATED_USER_RE'), 'generated/test user filter is missing');
+assert(override.includes('test|demo|mock|seed|sample|fixture|dummy|placeholder|synthetic|fake'), 'generated-user filter must cover fake/demo/seed/sample tokens');
 assert(override.includes("!['pending', 'locked'].includes(String(p.status || '').toLowerCase())"), 'feed override must filter pending/locked public discovery picks');
+assert((override.match(/!\['pending', 'locked'\]\.includes\(String\(p\.status \|\| ''\)\.toLowerCase\(\)\)/g) || []).length >= 3, 'feed override must filter pending/locked picks in feed, trending, and arena discovery paths');
+assert((override.match(/\.filter\(isRealPublicFeedUser\)/g) || []).length >= 5, 'feed override must apply generated-user filtering to feed, picks, polls, trending, and rail modules');
 assert(override.includes("api.request('/feed?limit=' + FEED_LIMIT"), 'feed override must request backend feed activity');
 assert(override.includes("api.request('/polls/active?limit=5')"), 'feed override must request real active polls');
+assert(override.includes('TrustMyRecord does not substitute fake feed posts'), 'feed override must keep no-fake backend-unavailable copy');
+assert(override.includes('Public graded picks will surface here as real records update. Pending pick details stay private.'), 'feed trending empty state must keep pending privacy copy');
 assert(social.includes('TrustMyRecord does not substitute fake feed posts'), 'base feed script must keep no-fake fallback copy');
 
 console.log('Feed page regression test passed.');
