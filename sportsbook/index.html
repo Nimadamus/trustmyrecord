@@ -593,13 +593,13 @@
         }
         var initialsHtml = '<span class="team-logo__initials">' + safeAttr(initials || '?') + '</span>';
         if (resolvedLogoUrl) {
-            return '<div class="team-logo" aria-hidden="true">'
-                + '<img class="team-logo__img" src="' + safeAttr(resolvedLogoUrl) + '" alt="" loading="lazy" decoding="async"'
+            return '<div class="team-logo tmr-team-logo-badge" aria-hidden="true">'
+                + '<img class="team-logo__img tmr-team-logo-img" src="' + safeAttr(resolvedLogoUrl) + '" data-tmr-logo-src="' + safeAttr(resolvedLogoUrl) + '" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer"'
                 + ' onerror="this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">'
                 + initialsHtml
                 + '</div>';
         }
-        return '<div class="team-logo team-logo--fallback" aria-hidden="true">' + initialsHtml + '</div>';
+        return '<div class="team-logo team-logo--fallback tmr-team-logo-badge tmr-team-logo-badge--fallback" aria-hidden="true">' + initialsHtml + '</div>';
     };
     window.TMR._teamLogo = legacyTeamLogoRenderer;
     try {
@@ -10270,6 +10270,15 @@ window.toggleSportFamily = function (family) {
         }
         if (explicitLogo) return explicitLogo;
         var key = String(teamName || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        var mlb = {
+            'arizona diamondbacks':'ari',
+            'los angeles dodgers':'lad',
+            'new york yankees':'nyy'
+        };
+        var nhl = {
+            'boston bruins':'bos',
+            'new york rangers':'nyr'
+        };
         var nba = {
             'atlanta hawks': 'atl',
             'boston celtics': 'bos',
@@ -10303,6 +10312,8 @@ window.toggleSportFamily = function (family) {
             'utah jazz': 'utah',
             'washington wizards': 'wsh'
         };
+        if (mlb[key]) return 'https://a.espncdn.com/i/teamlogos/mlb/500/' + mlb[key] + '.png';
+        if (nhl[key]) return 'https://a.espncdn.com/i/teamlogos/nhl/500/' + nhl[key] + '.png';
         return nba[key] ? 'https://a.espncdn.com/i/teamlogos/nba/500/' + nba[key] + '.png' : '';
     }
     function sportsbookTeamLogoMarkup(teamName, logoUrl, abbr) {
@@ -11353,19 +11364,7 @@ window.toggleSportFamily = function (family) {
                 var awayUnder = split.away.under || {};
                 var homeOver = split.home.over || {};
                 var homeUnder = split.home.under || {};
-                var awayBookLabel = (awayOver.book || awayUnder.book || '').toString();
-                var homeBookLabel = (homeOver.book || homeUnder.book || '').toString();
                 html +=
-                    '<div class="sb-board-col" data-col="team">' +
-                        '<div class="sb-tt-team-stack">' +
-                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.away_team) + '</b>' +
-                                (awayBookLabel ? '<small>' + _ttHtmlEsc(awayBookLabel) + '</small>' : '') +
-                            '</div>' +
-                            '<div class="sb-tt-team-cell"><b>' + _ttHtmlEsc(game.home_team) + '</b>' +
-                                (homeBookLabel ? '<small>' + _ttHtmlEsc(homeBookLabel) + '</small>' : '') +
-                            '</div>' +
-                        '</div>' +
-                    '</div>' +
                     '<div class="sb-board-col" data-col="tt-over">' +
                         '<div class="sb-odds-stack">' +
                             _ttButton(idx, 'over', game.away_team, awayOver.line, awayOver.odds, game.away_team, game.home_team) +
