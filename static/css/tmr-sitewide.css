@@ -345,6 +345,51 @@ body.tmr-site-shell a {
     overflow-wrap: anywhere;
 }
 
+.tmr-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: var(--tmr-gap-md);
+    min-width: 0;
+}
+
+.tmr-field {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+}
+
+.tmr-field--full {
+    grid-column: 1 / -1;
+}
+
+.tmr-field__label {
+    color: var(--tmr-text-soft);
+    font: 850 0.78rem/1.2 var(--tmr-font);
+    letter-spacing: 0;
+}
+
+.tmr-field__hint,
+.tmr-field__error {
+    margin: 0;
+    font: 700 0.78rem/1.35 var(--tmr-font);
+    overflow-wrap: anywhere;
+}
+
+.tmr-field__hint {
+    color: var(--tmr-text-muted);
+}
+
+.tmr-field__error {
+    color: #fecaca;
+}
+
+.tmr-field[data-invalid="true"] input,
+.tmr-field[data-invalid="true"] select,
+.tmr-field[data-invalid="true"] textarea {
+    border-color: rgba(239, 68, 68, 0.42);
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.10);
+}
+
 body.tmr-site-shell .card,
 body.tmr-site-shell .sidebar-card,
 body.tmr-site-shell .composer-card,
