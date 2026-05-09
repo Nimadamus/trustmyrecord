@@ -1,6 +1,7 @@
 param(
     [switch]$AllowDirty,
-    [switch]$SkipRemoteAncestryCheck
+    [switch]$SkipRemoteAncestryCheck,
+    [switch]$SkipPredeployGuard
 )
 
 $ErrorActionPreference = "Stop"
@@ -72,6 +73,17 @@ if (-not $SkipRemoteAncestryCheck) {
     $MergeBase = ((git merge-base $LocalHead $RemoteHead) 2>$null).Trim()
     if ($MergeBase -ne $LocalHead -and $MergeBase -ne $RemoteHead) {
         Fail "Local and remote histories diverged. Refusing publish."
+    }
+}
+
+if (-not $SkipPredeployGuard) {
+    $PredeployGuard = Join-Path $Root "scripts\predeploy-guard.ps1"
+    if (-not (Test-Path -LiteralPath $PredeployGuard)) {
+        Fail "Missing predeploy guard: $PredeployGuard"
+    }
+    & pwsh -File $PredeployGuard -Root $Root -SkipRemoteCheck
+    if ($LASTEXITCODE -ne 0) {
+        Fail "Predeploy guard failed. Refusing publish."
     }
 }
 

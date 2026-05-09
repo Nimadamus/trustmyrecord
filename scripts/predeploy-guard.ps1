@@ -63,6 +63,7 @@ try {
 
     $requiredFiles = @(
         "TRUSTMYRECORD_PRODUCT_UPGRADE_SYSTEM.md",
+        "scripts/guard-trustmyrecord-publish.ps1",
         "profile/index.html",
         "handicappers/index.html",
         "sportsbook/index.html",
@@ -79,6 +80,7 @@ try {
         "static/css/mlb-simulator.css",
         "tests/line-formatting-regression-test.js",
         "tests/protected-baseline-regression-test.js",
+        "tests/publish-guard-regression-test.js",
         "tests/stats-engine-regression-test.js",
         "tests/streaks-test.js",
         "tests/streaks-regression-test.js",
@@ -120,6 +122,7 @@ try {
 
     Invoke-GuardCommand "line formatting regression test" @("node", "tests/line-formatting-regression-test.js")
     Invoke-GuardCommand "protected baseline regression test" @("node", "tests/protected-baseline-regression-test.js")
+    Invoke-GuardCommand "publish guard regression test" @("node", "tests/publish-guard-regression-test.js")
     Invoke-GuardCommand "stats engine regression test" @("node", "tests/stats-engine-regression-test.js")
     Invoke-GuardCommand "streaks unit test" @("node", "tests/streaks-test.js")
     Invoke-GuardCommand "streaks regression test" @("node", "tests/streaks-regression-test.js")
