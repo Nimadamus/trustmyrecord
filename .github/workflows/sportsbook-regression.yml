@@ -30,6 +30,9 @@ jobs:
       - name: Run Trendspotter source guard
         run: node tests/trendspotter-source-regression-test.js
 
+      - name: Install jsdom test dependency
+        run: npm install --no-save jsdom@24.1.3
+
       - name: Run Trendspotter accuracy guard
         run: node tests/trendspotter-accuracy-test.js
 
@@ -107,6 +110,9 @@ jobs:
 
       - name: Run MLB live roster guard
         run: node tests/mlb-simulator-live-roster-validation-test.js
+
+      - name: Install jsdom test dependency
+        run: npm install --no-save jsdom@24.1.3
 
       - name: Run predeploy stale-source guard
         shell: pwsh
