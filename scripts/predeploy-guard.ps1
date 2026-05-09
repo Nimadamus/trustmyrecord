@@ -85,6 +85,7 @@ try {
         "tests/sitewide-design-system-regression-test.js",
         "tests/homepage-visual-regression-test.js",
         "tests/feed-page-regression-test.js",
+        "tests/trivia-page-regression-test.js",
         "tests/polls-page-visual-regression-test.js",
         "tests/arena-page-visual-regression-test.js",
         "tests/leaderboards-page-visual-regression-test.js",
@@ -116,6 +117,7 @@ try {
     Invoke-GuardCommand "sitewide design system regression test" @("node", "tests/sitewide-design-system-regression-test.js")
     Invoke-GuardCommand "homepage visual regression test" @("node", "tests/homepage-visual-regression-test.js")
     Invoke-GuardCommand "feed page regression test" @("node", "tests/feed-page-regression-test.js")
+    Invoke-GuardCommand "trivia page regression test" @("node", "tests/trivia-page-regression-test.js")
     Invoke-GuardCommand "polls page visual regression test" @("node", "tests/polls-page-visual-regression-test.js")
     Invoke-GuardCommand "arena page visual regression test" @("node", "tests/arena-page-visual-regression-test.js")
     Invoke-GuardCommand "leaderboards page visual regression test" @("node", "tests/leaderboards-page-visual-regression-test.js")
