@@ -57,6 +57,8 @@ for (const required of [
   'push:',
   'pull_request:',
   'workflow_dispatch:',
+  'uses: actions/checkout@v5',
+  'uses: actions/setup-node@v5',
   "node-version: '24'",
   'line-formatting-guard:',
   'sportsbook-guards:',
@@ -110,6 +112,8 @@ for (const required of [
 }
 
 assert(!workflow.includes("node-version: '20'"), 'workflow must not pin deprecated Node 20');
+assert(!workflow.includes('uses: actions/checkout@v4'), 'workflow must not use Node 20-backed checkout@v4');
+assert(!workflow.includes('uses: actions/setup-node@v4'), 'workflow must not use Node 20-backed setup-node@v4');
 
 const liveJobIndex = workflow.indexOf('live-public-ranking-proof:');
 const dispatchGuardIndex = workflow.indexOf("if: github.event_name == 'workflow_dispatch'", liveJobIndex);
