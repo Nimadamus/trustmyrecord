@@ -12,10 +12,12 @@ async function getText(path) {
 }
 
 async function main() {
-  const [predeploy, profile, sportsbook, polls, handicappers, leaderboards, streaks] = await Promise.all([
+  const [predeploy, profile, sportsbook, sportsbookCss, sportsbookReliability, polls, handicappers, leaderboards, streaks] = await Promise.all([
     getText('/scripts/predeploy-guard.ps1'),
     getText('/profile/'),
     getText('/sportsbook/'),
+    getText('/static/css/tmr-redesign-overrides-sportsbook.css'),
+    getText('/static/js/sportsbook-production-fix-persist-reliability.js'),
     getText('/polls/'),
     getText('/handicappers/'),
     getText('/leaderboards/'),
@@ -35,7 +37,13 @@ async function main() {
   assert(sportsbook.includes('sportsbook-production-fix-persist-reliability.js?v=20260509logorestore1&cb=20260509logorestore1'), 'live sportsbook should keep logo-restored reliability script include');
   assert(sportsbook.includes('tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1'), 'live sportsbook should keep logo-restored stylesheet include');
   assert(sportsbook.includes('window.TMR._teamLogo'), 'live sportsbook should keep team-logo renderer');
-  assert(sportsbook.includes('SPORTSBOOK_LOGO_VISIBILITY_RESTORE_20260509'), 'live sportsbook should keep final logo visibility restore CSS');
+  assert(sportsbookCss.includes('SPORTSBOOK_LOGO_VISIBILITY_RESTORE_20260509'), 'live sportsbook CSS should keep final logo visibility restore marker');
+  assert(sportsbookCss.includes('visibility:visible !important'), 'live sportsbook CSS should force logo visibility');
+  assert(sportsbookCss.includes('opacity:1 !important'), 'live sportsbook CSS should force logo opacity');
+  assert(sportsbookCss.includes('display:block !important'), 'live sportsbook CSS should force logo images to render');
+  assert(sportsbookReliability.includes('data-tmr-logo-src'), 'live sportsbook reliability JS should expose resolved logo sources');
+  assert(sportsbookReliability.includes('loading="eager"'), 'live sportsbook reliability JS should eagerly load logo images');
+  assert(sportsbookReliability.includes('referrerpolicy="no-referrer"'), 'live sportsbook reliability JS should keep ESPN logo referrer policy');
 
   assert(polls.includes('tmr-polls-panel'), 'live polls should keep premium dark panel source');
   assert(polls.includes('Create Poll'), 'live polls should keep Create Poll entry point');
