@@ -576,26 +576,6 @@
     // Build team-logo markup for every sportsbook board path. The protected
     // reliability runtime owns team-name logo resolution; this helper only
     // delegates to it and falls back to initials when no image is available.
-    var LEGACY_TEAM_LOGOS = {
-        baseball_mlb: {
-            'los angeles dodgers': ['mlb', 'lad']
-        },
-        basketball_nba: {
-            'boston celtics': ['nba', 'bos']
-        },
-        icehockey_nhl: {
-            'new york rangers': ['nhl', 'nyr']
-        },
-        americanfootball_nfl: {
-            'dallas cowboys': ['nfl', 'dal']
-        }
-    };
-    function legacyTeamLogoUrl(fullName, sportKey) {
-        var key = String(fullName || '').trim().toLowerCase();
-        var sportMap = LEGACY_TEAM_LOGOS[sportKey] || {};
-        var pair = sportMap[key];
-        return pair ? ('https://a.espncdn.com/i/teamlogos/' + pair[0] + '/500/' + pair[1] + '.png') : '';
-    }
     var legacyTeamLogoRenderer = function(logoUrl, abbr, fullName, sportKey) {
         var safeAttr = function(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
         var resolvedSportKey = sportKey || (window.TMR.sportKeyMap && window.TMR.sportKeyMap[window.TMR.selectedSport]) || '';
@@ -603,7 +583,6 @@
         if (!resolvedLogoUrl && typeof window.TMR.resolveSportsbookTeamLogo === 'function') {
             resolvedLogoUrl = window.TMR.resolveSportsbookTeamLogo(fullName, resolvedSportKey, '');
         }
-        if (!resolvedLogoUrl) resolvedLogoUrl = legacyTeamLogoUrl(fullName, resolvedSportKey);
         var initials = '';
         if (abbr) {
             initials = ('' + abbr).toUpperCase().slice(0, 3);
