@@ -60,6 +60,11 @@ for (const selector of [
   '.tmr-identity',
   '.tmr-identity__name',
   '.tmr-identity__meta',
+  '.tmr-form-grid',
+  '.tmr-field',
+  '.tmr-field__label',
+  '.tmr-field__hint',
+  '.tmr-field__error',
   '.tmr-segmented',
   '.tmr-tab',
   '.tmr-filter-bar',
@@ -125,6 +130,8 @@ assert(css.includes('.tmr-card__head') && css.includes('.tmr-card__foot') && css
 assert(css.includes('.tmr-divider--strong') && css.includes('.tmr-divider-label::before') && css.includes('.tmr-divider-label::after'), 'sitewide divider primitives must remain');
 assert(css.includes('.tmr-avatar img') && css.includes('object-fit: cover') && css.includes('.tmr-avatar--lg'), 'sitewide avatar primitives must remain');
 assert(css.includes('.tmr-identity') && css.includes('.tmr-identity__body') && css.includes('overflow-wrap: anywhere'), 'sitewide identity primitive must remain wrap-safe');
+assert(css.includes('.tmr-form-grid') && css.includes('minmax(min(100%, 220px), 1fr)') && css.includes('.tmr-field--full'), 'sitewide form grid primitives must remain responsive');
+assert(css.includes('.tmr-field[data-invalid="true"] input') && css.includes('.tmr-field__error') && css.includes('rgba(239, 68, 68'), 'sitewide form field error state must remain');
 assert(css.includes('.tmr-cluster') && css.includes('flex-wrap: wrap') && css.includes('.tmr-stack'), 'sitewide stack and cluster layout primitives must remain');
 assert(css.includes('.tmr-segmented') && css.includes('.tmr-filter-bar') && css.includes('.tmr-tab.is-active') && css.includes('.tmr-filter-chip[aria-pressed="true"]'), 'sitewide segmented tab/filter primitives must remain');
 assert(css.includes('.tmr-tab[aria-selected="true"]') && css.includes('white-space: nowrap'), 'sitewide tab active state and wrapping protection must remain');
