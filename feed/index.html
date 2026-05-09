@@ -1062,6 +1062,67 @@
             .comments-section { margin-left: 0; }
             .btn-post { width: 100%; }
         }
+
+        /* FEED_REAL_ACTIVITY_STARTUP_20260509
+           Initial HTML must not flash seeded users or invented records before
+           the backend-powered feed renderer hydrates. */
+        body.tmr-site-shell[data-tmr-route="feed"] {
+            --feed-accent: #2dd4bf;
+            --feed-accent-2: #67e8f9;
+            --feed-line: rgba(148, 163, 184, 0.16);
+            --feed-card: rgba(9, 16, 29, 0.86);
+        }
+        .feed-startup-state {
+            min-height: 210px;
+            padding: 34px 24px;
+            border: 1px solid var(--feed-line);
+            border-top-color: rgba(103, 232, 249, 0.32);
+            border-radius: 16px;
+            background:
+                linear-gradient(135deg, rgba(103, 232, 249, 0.07), transparent 42%),
+                linear-gradient(180deg, rgba(15, 23, 42, 0.86), rgba(4, 9, 18, 0.94));
+            display: grid;
+            place-items: center;
+            text-align: center;
+            color: #c7d4e6;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+        }
+        .feed-startup-state i {
+            display: inline-grid;
+            place-items: center;
+            width: 46px;
+            height: 46px;
+            margin-bottom: 14px;
+            border-radius: 14px;
+            color: #04111a;
+            background: linear-gradient(135deg, var(--feed-accent-2), var(--feed-accent));
+        }
+        .feed-startup-state strong {
+            display: block;
+            color: #f8fbff;
+            font-family: 'Barlow', sans-serif;
+            font-size: 1.08rem;
+            margin-bottom: 6px;
+        }
+        .feed-startup-state span {
+            display: block;
+            max-width: 520px;
+            color: #9fb0c4;
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+        .rs-live-placeholder {
+            color: #9fb0c4;
+            font-size: 0.84rem;
+            line-height: 1.5;
+        }
+        .rs-live-placeholder strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #e8f7ff;
+            font-family: 'Barlow', sans-serif;
+            font-size: 0.94rem;
+        }
     </style>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -1160,38 +1221,12 @@
             </div>
 
             <div class="feed-list" id="feedList">
-                <div class="feed-item" data-id="betlegend-graded-2026-05-03" data-type="pick">
-                    <div class="fi-header">
-                        <div class="fi-avatar"><img src="/static/media/TMR-avatar-256.jpg" alt="BetLegend avatar" loading="lazy"></div>
-                        <div class="fi-meta">
-                            <div class="fi-top-row">
-                                <span class="fi-name"><a href="/profile/?user=BetLegend">BetLegend</a></span>
-                                <span class="fi-handle">@BetLegend</span>
-                                <span class="fi-dot">&bull;</span>
-                                <span class="fi-time">May 3</span>
-                            </div>
-                            <div class="fi-user-subline">
-                                <span class="fi-record">Record: 4-2, +6.20u, 66.7%</span>
-                            </div>
-                        </div>
+                <div class="feed-startup-state" id="feedStartupState">
+                    <div>
+                        <i class="fas fa-satellite-dish" aria-hidden="true"></i>
+                        <strong>Loading real feed activity</strong>
+                        <span>TrustMyRecord only renders backend activity, verified public records, and privacy-safe pick summaries. Pending pick details stay hidden.</span>
                     </div>
-                    <div class="fi-action-label"><i class="fas fa-clipboard-check"></i> Picks graded</div>
-                    <div class="pick-embed">
-                        <div class="pe-row">
-                            <span class="pe-chip is-sport">Verified record update</span>
-                            <span class="pe-chip is-won">6 picks graded</span>
-                        </div>
-                        <div class="pe-team">Verified record updated.</div>
-                        <div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;">Current record: 4-2, +6.20u</div>
-                        <div style="margin-top:8px;color:var(--text-secondary);font-size:0.82rem;">Pick details hidden until eligible for public record.</div>
-                    </div>
-                    <div class="fi-actions">
-                        <button class="fi-action"><i class="fas fa-heart"></i> Like <span>0</span></button>
-                        <button class="fi-action"><i class="fas fa-comment"></i> Comment <span>0</span></button>
-                        <button class="fi-action"><i class="fas fa-reply"></i> Reply</button>
-                        <button class="fi-action"><i class="fas fa-share"></i> Share</button>
-                    </div>
-                    <div class="comments-section"></div>
                 </div>
             </div>
 
@@ -1209,20 +1244,17 @@
             </div>
             <div class="rs-card">
                 <div class="rs-title"><i class="fas fa-fire" style="color:var(--accent-red);"></i>Record Activity</div>
-                <div id="trendingList"><div class="rs-item"><span class="rs-rank"><i class="fas fa-clipboard-check"></i></span><span class="rs-text">BetLegend had picks graded <span class="rs-count">Verified record updated; pending pick details remain hidden.</span></span></div></div>
+                <div id="trendingList"><div class="rs-live-placeholder"><strong>Loading real activity</strong>Verified graded picks and public activity appear here when the backend returns them.</div></div>
             </div>
             <div class="rs-card">
                 <div class="rs-title"><i class="fas fa-chart-line" style="color:var(--accent-green);"></i>Top Cappers</div>
                 <div id="topCappersList">
-                    <div class="rs-user">
-                        <div class="rs-user-avatar"><img src="/static/media/TMR-avatar-256.jpg" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"></div>
-                        <div class="rs-user-info"><div class="rs-user-name"><a href="/profile/?user=BetLegend">BetLegend</a></div><div class="rs-user-detail">4-2 - <span style="color:var(--accent-green);font-weight:700;">+6.20u</span> - 66.7%</div></div>
-                    </div>
+                    <div class="rs-live-placeholder"><strong>Loading verified records</strong>Ranked cappers appear after real public records are available.</div>
                 </div>
             </div>
             <div class="rs-card">
                 <div class="rs-title"><i class="fas fa-bolt" style="color:var(--accent-gold);"></i>Community Queue</div>
-                <div id="arenaWatchList"><div class="rs-item"><span class="rs-rank"><i class="fas fa-circle-check"></i></span><span class="rs-text">BetLegend verified record updated <span class="rs-count">4-2, +6.20u after grading</span></span></div></div>
+                <div id="arenaWatchList"><div class="rs-live-placeholder"><strong>Loading arena activity</strong>Live challenges and results appear here when users compete.</div></div>
             </div>
             <div class="rs-card">
                 <div class="rs-title"><i class="fas fa-user-plus" style="color:var(--accent-blue);"></i>Who to Follow</div>
