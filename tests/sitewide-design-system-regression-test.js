@@ -71,6 +71,12 @@ for (const selector of [
   '.tmr-metric-label',
   '.tmr-metric-value',
   '.tmr-metric-note',
+  '.tmr-feed-list',
+  '.tmr-feed-item',
+  '.tmr-feed-avatar',
+  '.tmr-feed-title',
+  '.tmr-feed-meta',
+  '.tmr-feed-actions',
   '.tmr-badge',
   '.tmr-status',
   '.tmr-result-chip',
@@ -108,6 +114,8 @@ assert(css.includes('.tmr-pagination__controls') && css.includes('.tmr-page-butt
 assert(css.includes('.tmr-page-button[aria-disabled="true"]') && css.includes('.tmr-count-summary'), 'sitewide pagination disabled state and count summary must remain');
 assert(css.includes('.tmr-metric-grid') && css.includes('minmax(min(100%, 150px), 1fr)') && css.includes('.tmr-metric-value'), 'sitewide metric grid primitive must remain responsive');
 assert(css.includes('font-variant-numeric: tabular-nums') && css.includes('.tmr-metric-value.is-positive') && css.includes('.tmr-metric-value.is-negative'), 'sitewide metric value states must remain readable');
+assert(css.includes('.tmr-feed-item') && css.includes('grid-template-columns: auto minmax(0, 1fr)') && css.includes('.tmr-feed-text'), 'sitewide feed/list item primitive must remain');
+assert(css.includes('@media (max-width: 520px)') && css.includes('.tmr-feed-avatar') && css.includes('overflow-wrap: anywhere'), 'sitewide feed/list primitive must stay mobile-safe');
 assert(css.includes('body.tmr-site-shell .section-header > *') && css.includes('body.tmr-site-shell .sportsbook-board-toolbar > *'), 'sitewide header children must keep overflow protection');
 assert(css.includes('.tmr-badge--verified') && css.includes('.tmr-status--private') && css.includes('.tmr-result-chip--win') && css.includes('.tmr-result-chip--loss'), 'sitewide badge/status/result primitives must remain');
 assert(css.includes('white-space: nowrap') && css.includes('max-width: 100%'), 'sitewide badge primitives must resist broken wrapping');
