@@ -19,6 +19,7 @@ const referencedTests = [
   'profile-no-old-theme-flash-test.js',
   'profile-source-regression-test.js',
   'public-ranking-ui-live-test.js',
+  'live-protected-sources-test.js',
 ];
 
 for (const testFile of referencedTests) {
@@ -34,6 +35,7 @@ for (const required of [
   'sportsbook-guards:',
   'profile-and-simulator-guards:',
   'live-public-ranking-proof:',
+  'live-protected-sources-proof:',
   "if: github.event_name == 'workflow_dispatch'",
   'node tests/publish-guard-regression-test.js',
   'node tests/pending-picks-regression-test.js',
@@ -49,6 +51,7 @@ for (const required of [
   'node tests/profile-source-regression-test.js',
   './scripts/predeploy-guard.ps1 -SkipRemoteCheck',
   'node tests/public-ranking-ui-live-test.js',
+  'node tests/live-protected-sources-test.js',
 ]) {
   assert(workflow.includes(required), `workflow guard missing: ${required}`);
 }
@@ -58,6 +61,12 @@ const dispatchGuardIndex = workflow.indexOf("if: github.event_name == 'workflow_
 const liveTestIndex = workflow.indexOf('node tests/public-ranking-ui-live-test.js', liveJobIndex);
 assert(liveJobIndex >= 0 && dispatchGuardIndex > liveJobIndex, 'live ranking proof must be workflow_dispatch-only');
 assert(liveTestIndex > dispatchGuardIndex, 'live ranking test must remain inside the manual proof job');
+
+const liveSourcesJobIndex = workflow.indexOf('live-protected-sources-proof:');
+const liveSourcesDispatchGuardIndex = workflow.indexOf("if: github.event_name == 'workflow_dispatch'", liveSourcesJobIndex);
+const liveSourcesTestIndex = workflow.indexOf('node tests/live-protected-sources-test.js', liveSourcesJobIndex);
+assert(liveSourcesJobIndex >= 0 && liveSourcesDispatchGuardIndex > liveSourcesJobIndex, 'live protected sources proof must be workflow_dispatch-only');
+assert(liveSourcesTestIndex > liveSourcesDispatchGuardIndex, 'live protected sources test must remain inside the manual proof job');
 
 const trendInstallIndex = workflow.indexOf('npm install --no-save jsdom@24.1.3');
 const trendAccuracyIndex = workflow.indexOf('node tests/trendspotter-accuracy-test.js');

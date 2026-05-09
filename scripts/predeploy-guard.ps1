@@ -82,6 +82,7 @@ try {
         "tests/line-formatting-regression-test.js",
         "tests/workflow-regression-test.js",
         "tests/public-ranking-ui-live-test.js",
+        "tests/live-protected-sources-test.js",
         "tests/protected-baseline-regression-test.js",
         "tests/publish-guard-regression-test.js",
         "tests/stats-engine-regression-test.js",
