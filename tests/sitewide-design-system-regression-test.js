@@ -80,6 +80,10 @@ for (const selector of [
   '.tmr-action-bar',
   '.tmr-action-group',
   '.tmr-action-link',
+  '.tmr-breadcrumb',
+  '.tmr-breadcrumb__link',
+  '.tmr-breadcrumb__sep',
+  '.tmr-breadcrumb__current',
   '.tmr-badge',
   '.tmr-status',
   '.tmr-result-chip',
@@ -121,6 +125,8 @@ assert(css.includes('.tmr-feed-item') && css.includes('grid-template-columns: au
 assert(css.includes('@media (max-width: 520px)') && css.includes('.tmr-feed-avatar') && css.includes('overflow-wrap: anywhere'), 'sitewide feed/list primitive must stay mobile-safe');
 assert(css.includes('.tmr-action-bar') && css.includes('.tmr-action-group') && css.includes('.tmr-action-link[aria-pressed="true"]'), 'sitewide action bar primitives must remain');
 assert(css.includes('.tmr-action-link--primary') && css.includes('.tmr-action-link--danger') && css.includes('white-space: nowrap'), 'sitewide action link variants must remain readable');
+assert(css.includes('.tmr-breadcrumb') && css.includes('.tmr-breadcrumb__current') && css.includes('.tmr-breadcrumb__sep'), 'sitewide breadcrumb primitive must remain');
+assert(css.includes('.tmr-breadcrumb a:focus-visible') && css.includes('overflow-wrap: anywhere'), 'sitewide breadcrumb links must remain accessible and wrap-safe');
 assert(css.includes('body.tmr-site-shell .section-header > *') && css.includes('body.tmr-site-shell .sportsbook-board-toolbar > *'), 'sitewide header children must keep overflow protection');
 assert(css.includes('.tmr-badge--verified') && css.includes('.tmr-status--private') && css.includes('.tmr-result-chip--win') && css.includes('.tmr-result-chip--loss'), 'sitewide badge/status/result primitives must remain');
 assert(css.includes('white-space: nowrap') && css.includes('max-width: 100%'), 'sitewide badge primitives must resist broken wrapping');
