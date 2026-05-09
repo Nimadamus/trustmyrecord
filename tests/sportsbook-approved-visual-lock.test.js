@@ -38,13 +38,13 @@ assertRegex(
 );
 
 assertRegex(
-  /\.tmr-option-btn \.tmr-option-line,[\s\S]*?\.tmr-option-btn \.tmr-option-market\s*\{[\s\S]*?font:\s*700\s+18px\/1\.05/,
-  'approved odds label typography must remain readable'
+  /\.tmr-option-btn \.tmr-option-line,[\s\S]*?\.tmr-option-btn \.tmr-option-market\s*\{[\s\S]*?font:\s*600\s+18px\/1\.05[\s\S]*?font-variant-numeric:\s*tabular-nums/,
+  'approved odds label typography must remain readable and crisp'
 );
 
 assertRegex(
-  /\.tmr-option-btn \.tmr-option-odds\s*\{[\s\S]*?font:\s*700\s+16px\/1\.05/,
-  'approved odds price typography must remain readable'
+  /\.tmr-option-btn \.tmr-option-odds\s*\{[\s\S]*?font:\s*600\s+16px\/1\.05[\s\S]*?font-variant-numeric:\s*tabular-nums/,
+  'approved odds price typography must remain readable and centered'
 );
 
 assertRegex(
@@ -65,6 +65,26 @@ assertRegex(
 assertRegex(
   /body\.tmr-site-shell\[data-tmr-route="sportsbook"\]\s+#picks,[\s\S]*?\.picks-container-modern\s*\{[\s\S]*?width:\s*100%\s*!important;[\s\S]*?max-width:\s*100%\s*!important;[\s\S]*?overflow-x:\s*hidden\s*!important;/,
   'outer sportsbook wrapper must prevent horizontal clipping'
+);
+
+assertIncludes(
+  'PENDING_PICKS_NO_HORIZONTAL_OVERFLOW_20260509',
+  'pending picks no-horizontal-overflow marker'
+);
+
+assertRegex(
+  /\.tmr-pending-picks-panel,[\s\S]*?\.tmr-pending-pick\s*\{[\s\S]*?max-width:\s*100%\s*!important;[\s\S]*?overflow-x:\s*hidden\s*!important;/,
+  'pending picks panel and cards must not create horizontal overflow'
+);
+
+assertRegex(
+  /\.tmr-pending-pick\s*\{[\s\S]*?display:\s*flex\s*!important;[\s\S]*?flex-direction:\s*column\s*!important;/,
+  'pending picks must remain a vertical card stack inside the pick slip'
+);
+
+assertRegex(
+  /\.tmr-pending-pick-odds,[\s\S]*?\.tmr-pending-status\s*\{[\s\S]*?white-space:\s*normal\s*!important;[\s\S]*?overflow-wrap:\s*anywhere\s*!important;/,
+  'pending pick odds, units, and status text must wrap instead of overflowing'
 );
 
 console.log('sportsbook approved visual lock test passed');
