@@ -1,4 +1,4 @@
-﻿// Advanced Statistics Engine for Trust My Record
+// Advanced Statistics Engine for Trust My Record
 // Calculates ROI, CLV, streaks, sport breakdowns, and all handicapping metrics
 
 class StatsEngine {
@@ -352,7 +352,7 @@ class StatsEngine {
 
         const graded = (picks || [])
             .filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed')
-            .sort((a, b) => new Date(a.locked_at || a.created_at || a.settled_at || a.graded_at || a.event_completed_at || a.completed_at || a.commence_time || a.event_start_time || a.start_time || 0) - new Date(b.locked_at || b.created_at || b.settled_at || b.graded_at || b.event_completed_at || b.completed_at || b.commence_time || b.event_start_time || b.start_time || 0));
+            .sort((a, b) => new Date(a.graded_at || a.settled_at || a.event_completed_at || a.completed_at || a.commence_time || a.event_start_time || a.start_time || a.locked_at || a.created_at || 0) - new Date(b.graded_at || b.settled_at || b.event_completed_at || b.completed_at || b.commence_time || b.event_start_time || b.start_time || b.locked_at || b.created_at || 0));
 
         if (graded.length === 0) {
             return { current: 0, best: 0, worst: 0, type: 'none' };
@@ -389,13 +389,20 @@ class StatsEngine {
         }
 
         // Pushes are graded but ignored for current W/L streaks.
-        const latest = graded[graded.length - 1];
-        if (latest && latest.status !== 'push' && latest.status !== 'pushed') {
+        let latestIndex = -1;
+        for (let i = graded.length - 1; i >= 0; i--) {
+            if (graded[i].status === 'won' || graded[i].status === 'lost') {
+                latestIndex = i;
+                break;
+            }
+        }
+        const latest = latestIndex >= 0 ? graded[latestIndex] : null;
+        if (latest) {
             currentType = latest.status === 'won' ? 'win' : 'loss';
             currentStreak = latest.status === 'won' ? 1 : -1;
-            for (let i = graded.length - 2; i >= 0; i--) {
+            for (let i = latestIndex - 1; i >= 0; i--) {
                 const status = graded[i].status;
-                if (status === 'push' || status === 'pushed') break;
+                if (status === 'push' || status === 'pushed') continue;
                 if (status !== latest.status) break;
                 currentStreak += latest.status === 'won' ? 1 : -1;
             }

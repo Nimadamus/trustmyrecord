@@ -13,58 +13,11 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260506navcommunity1">
 <script defer src="/static/js/tmr-sitewide.js?v=20260508profilefix1"></script>
-<script src="/static/js/streaks.js?v=20260506streak1"></script>
+<script src="/static/js/streaks.js?v=20260509streak2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
-        /* PROFILE_NO_OLD_THEME_FLASH_20260508
-           Keep the initial profile paint on the current dark shell while the
-           older compatibility styles below remain in the file. */
-        html body.profile-page.tmr-social-profile {
-            background:
-                radial-gradient(920px 520px at 86% -12%, rgba(31, 184, 217, 0.10), transparent 58%),
-                radial-gradient(780px 500px at -12% 20%, rgba(29, 78, 216, 0.10), transparent 62%),
-                #050a14 !important;
-            color: #eef2f8 !important;
-        }
-
-        html body.profile-page.tmr-social-profile .profile-top-strip {
-            background: rgba(7, 14, 26, 0.94) !important;
-            border: 1px solid rgba(148, 163, 184, 0.14) !important;
-            color: #d8e2f2 !important;
-            box-shadow: 0 16px 42px rgba(0, 0, 0, 0.26) !important;
-        }
-
-        html body.profile-page.tmr-social-profile header {
-            background: rgba(6, 12, 22, 0.92) !important;
-            border-color: rgba(148, 163, 184, 0.16) !important;
-            color: #edf5ff !important;
-        }
-
-        html body.profile-page.tmr-social-profile .profile-header-section,
-        html body.profile-page.tmr-social-profile .profile-advanced-strip-section,
-        html body.profile-page.tmr-social-profile .profile-tabs-section,
-        html body.profile-page.tmr-social-profile .profile-body-section,
-        html body.profile-page.tmr-social-profile .analytics-section,
-        html body.profile-page.tmr-social-profile .advanced-glossary-bottom {
-            background: transparent !important;
-        }
-
-        html body.profile-page.tmr-social-profile .profile-header,
-        html body.profile-page.tmr-social-profile .workspace-panel,
-        html body.profile-page.tmr-social-profile .summary-bar-inner {
-            background: linear-gradient(180deg, #111b2e 0%, #0a1322 100%) !important;
-            border: 1px solid rgba(148, 163, 184, 0.16) !important;
-            color: #eef6ff !important;
-            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34) !important;
-        }
-
-        html body.profile-page.tmr-social-profile .profile-header .loading,
-        html body.profile-page.tmr-social-profile .profile-header .loading p {
-            color: #9fb0c8 !important;
-        }
-
         :root {
             --bg-primary: #f3f5f8;
             --bg-secondary: #ffffff;
@@ -5358,7 +5311,7 @@
         const roi = totalRisked > 0 ? (netUnits / totalRisked) * 100 : 0;
 
         // Streaks are calculated from chronological graded picks only.
-        // Pushes are graded but break/reset streaks; pending and void/canceled picks do not affect streaks.
+        // Pushes are graded but neutral; pending and void/canceled picks do not affect streaks.
         const streakStats = window.TMR && typeof window.TMR.calculateStreaks === 'function'
             ? window.TMR.calculateStreaks(graded)
             : { currentStreak: 0, longestWinStreak: 0, longestLossStreak: 0 };
@@ -5449,8 +5402,8 @@
         const effectiveUnits = avgUnits > 0 ? (netUnits / avgUnits) * 3 : 0;
 
         const chronological = graded.slice().sort(function(a, b) {
-            return new Date(a.locked_at || a.created_at || a.settled_at || a.graded_at || a.event_completed_at || a.completed_at || 0) -
-                new Date(b.locked_at || b.created_at || b.settled_at || b.graded_at || b.event_completed_at || b.completed_at || 0);
+            return new Date(a.graded_at || a.settled_at || a.event_completed_at || a.completed_at || a.locked_at || a.created_at || 0) -
+                new Date(b.graded_at || b.settled_at || b.event_completed_at || b.completed_at || b.locked_at || b.created_at || 0);
         });
         const streakStats = window.TMR && typeof window.TMR.calculateStreaks === 'function'
             ? window.TMR.calculateStreaks(graded)

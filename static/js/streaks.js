@@ -21,10 +21,8 @@
 
     function pickTimestamp(pick) {
         const candidates = [
-            pick && pick.locked_at,
-            pick && pick.created_at,
-            pick && pick.settled_at,
             pick && pick.graded_at,
+            pick && pick.settled_at,
             pick && pick.finalized_at,
             pick && pick.event_completed_at,
             pick && pick.completed_at,
@@ -33,7 +31,9 @@
             pick && pick.event_start_time,
             pick && pick.start_time,
             pick && pick.game && pick.game.commence_time,
-            pick && pick.game && pick.game.start_time
+            pick && pick.game && pick.game.start_time,
+            pick && pick.locked_at,
+            pick && pick.created_at
         ];
         for (const value of candidates) {
             const time = new Date(value || 0).getTime();
@@ -84,21 +84,25 @@
                 lossRun += 1;
                 winRun = 0;
                 longestLossStreak = Math.max(longestLossStreak, lossRun);
-            } else {
-                winRun = 0;
-                lossRun = 0;
             }
         });
 
         let currentStreak = 0;
         let currentType = 'none';
-        const latest = ordered[ordered.length - 1];
-        if (latest && latest.status !== 'push') {
+        let latestIndex = -1;
+        for (let i = ordered.length - 1; i >= 0; i -= 1) {
+            if (ordered[i].status === 'won' || ordered[i].status === 'lost') {
+                latestIndex = i;
+                break;
+            }
+        }
+        const latest = latestIndex >= 0 ? ordered[latestIndex] : null;
+        if (latest) {
             currentType = latest.status === 'won' ? 'win' : 'loss';
             currentStreak = latest.status === 'won' ? 1 : -1;
-            for (let i = ordered.length - 2; i >= 0; i -= 1) {
+            for (let i = latestIndex - 1; i >= 0; i -= 1) {
                 const status = ordered[i].status;
-                if (status === 'push') break;
+                if (status === 'push') continue;
                 if (status !== latest.status) break;
                 currentStreak += latest.status === 'won' ? 1 : -1;
             }
