@@ -63,6 +63,7 @@ try {
 
     $requiredFiles = @(
         "TRUSTMYRECORD_PRODUCT_UPGRADE_SYSTEM.md",
+        ".github/workflows/sportsbook-regression.yml",
         "scripts/guard-trustmyrecord-publish.ps1",
         "profile/index.html",
         "handicappers/index.html",
@@ -80,6 +81,7 @@ try {
         "static/css/mlb-simulator.css",
         "tests/line-formatting-regression-test.js",
         "tests/workflow-regression-test.js",
+        "tests/public-ranking-ui-live-test.js",
         "tests/protected-baseline-regression-test.js",
         "tests/publish-guard-regression-test.js",
         "tests/stats-engine-regression-test.js",

@@ -6,6 +6,24 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const workflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'sportsbook-regression.yml'), 'utf8');
+const referencedTests = [
+  'publish-guard-regression-test.js',
+  'pending-picks-regression-test.js',
+  'trendspotter-accuracy-test.js',
+  'stats-engine-regression-test.js',
+  'streaks-test.js',
+  'streaks-regression-test.js',
+  'sportsbook-no-game-drop-regression-test.js',
+  'sportsbook-reliability-guard-test.js',
+  'auto-grader-regression-test.js',
+  'profile-no-old-theme-flash-test.js',
+  'profile-source-regression-test.js',
+  'public-ranking-ui-live-test.js',
+];
+
+for (const testFile of referencedTests) {
+  assert(fs.existsSync(path.join(root, 'tests', testFile)), `workflow-referenced test file is missing: ${testFile}`);
+}
 
 for (const required of [
   'name: Sportsbook Regression Guards',
