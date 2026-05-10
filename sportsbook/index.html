@@ -9764,23 +9764,6 @@
                     </div>
 
                     <button class="sportsbook-lobby-secondary-btn sportsbook-lobby-secondary-btn--wide" onclick="window.showPickStep('picksList')">Open Pick History</button>
-
-                    <!-- Pending Picks panel: lists every pick the user has
-                         locked but not yet graded. Populated by
-                         window.TMR.loadPendingPicksLobby() on lobby render
-                         and after every successful lockInPick. Apr 30 2026. -->
-                    <div class="tmr-pending-picks-panel" id="tmrPendingPicksPanel" aria-live="polite">
-                        <div class="tmr-pending-picks-head">
-                            <div>
-                                <span class="sportsbook-lobby-label">Pending Picks</span>
-                                <h3 style="margin:0;">Awaiting grade</h3>
-                            </div>
-                            <span class="tmr-pending-pill" id="tmrPendingCount">—</span>
-                        </div>
-                        <div class="tmr-pending-picks-list" id="tmrPendingPicksList">
-                            <div class="tmr-pending-empty">Loading your pending picks…</div>
-                        </div>
-                    </div>
                 </aside>
             </div>
         </div>
@@ -10726,6 +10709,7 @@ window.toggleSportFamily = function (family) {
         }
 
         async function loadPendingPicksLobby(opts) {
+            if (!document.getElementById('tmrPendingPicksList') || !document.getElementById('tmrPendingCount')) return;
             if (loading) return;
             var force = opts && opts.force === true;
             if (!force && (Date.now() - lastFetched < REFRESH_THROTTLE_MS)) return;
