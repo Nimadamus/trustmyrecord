@@ -1720,7 +1720,7 @@
             return;
         }
 
-        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals', f5teamover: 'f5_team_totals', f5teamunder: 'f5_team_totals' };
+        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals', f5teamover: 'f5_team_totals', f5teamunder: 'f5_team_totals', firsthalfml: 'first_half_h2h', firsthalfspread: 'first_half_spreads', firsthalfover: 'first_half_totals', firsthalfunder: 'first_half_totals', secondhalfml: 'second_half_h2h', secondhalfspread: 'second_half_spreads', secondhalfover: 'second_half_totals', secondhalfunder: 'second_half_totals', period1ml: 'period_1_h2h', period1spread: 'period_1_spreads', period1over: 'period_1_totals', period1under: 'period_1_totals', period2ml: 'period_2_h2h', period2spread: 'period_2_spreads', period2over: 'period_2_totals', period2under: 'period_2_totals', period3ml: 'period_3_h2h', period3spread: 'period_3_spreads', period3over: 'period_3_totals', period3under: 'period_3_totals', period4ml: 'period_4_h2h', period4spread: 'period_4_spreads', period4over: 'period_4_totals', period4under: 'period_4_totals' };
         var marketType = marketTypeMap[betType] || 'h2h';
 
         // Determine line snapshot (spread number or total number, null for ML/F5ML)
@@ -10291,6 +10291,68 @@ window.toggleSportFamily = function (family) {
         '</article>';
     }
 
+    // Shared table-style board for every non-full market tab. Game Lines keeps
+    // its current renderRow path; these tabs use the same card/header/row system
+    // so halves, quarters, periods, F5, and team totals cannot drift back into
+    // floating-button layouts.
+    function renderMarketBoardCard(game, gameIndex, config) {
+        config = config || {};
+        var home = game.home_team || game.homeTeam || (game.teams && game.teams.home) || 'Home';
+        var away = game.away_team || game.awayTeam || (game.teams && game.teams.away) || 'Away';
+        var commence = game.commence_time || game.commenceTime || game.start_time || game.date || '';
+        var dateStr = '', timeStr = '';
+        try {
+            if (commence) {
+                var d = new Date(commence);
+                if (!isNaN(d)) {
+                    dateStr = d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+                    timeStr = d.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' });
+                }
+            }
+        } catch (e) {}
+        var whenText = [dateStr, timeStr].filter(Boolean).join(' • ');
+        var headers = config.headers || ['Spread', 'Moneyline', 'Total'];
+        var marketLabel = config.marketLabel || 'Market';
+        var awayLogo = sportsbookTeamLogoMarkup(away, game.away_logo || game.awayLogo || '', game.away_abbr || game.awayAbbr || '');
+        var homeLogo = sportsbookTeamLogoMarkup(home, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '');
+        var awayButtons = config.awayButtons || [oddsButton('—', '—'), oddsButton('—', '—'), oddsButton('—', '—')];
+        var homeButtons = config.homeButtons || [oddsButton('—', '—'), oddsButton('—', '—'), oddsButton('—', '—')];
+        while (awayButtons.length < 3) awayButtons.push(oddsButton('—', '—'));
+        while (homeButtons.length < 3) homeButtons.push(oddsButton('—', '—'));
+        var awayMeta = config.awayMeta || '';
+        var homeMeta = config.homeMeta || '';
+
+        function teamCell(side, logo, name, meta) {
+            return '<div class="team-cell">' + logo +
+                '<span class="team-side-badge">' + side + '</span>' +
+                '<span class="team-meta-stack"><b>' + _ttHtmlEsc(name) + '</b>' +
+                (meta ? '<small class="team-record-small">' + _ttHtmlEsc(meta) + '</small>' : '') +
+                '</span></div>';
+        }
+
+        return '<article class="sportsbook-game-card sportsbook-game-card--shared-market" data-market-tab="' + _ttHtmlEsc(marketLabel) + '">' +
+            '<div class="game-meta-row">' + (whenText || '&nbsp;') + '<span class="board-meta-chip">' + _ttHtmlEsc(marketLabel) + '</span></div>' +
+            '<div class="market-grid-row market-header-row">' +
+                '<div class="market-header-cell">Matchup</div>' +
+                '<div class="market-header-cell">' + _ttHtmlEsc(headers[0] || 'Option') + '</div>' +
+                '<div class="market-header-cell">' + _ttHtmlEsc(headers[1] || 'Option') + '</div>' +
+                '<div class="market-header-cell">' + _ttHtmlEsc(headers[2] || 'Option') + '</div>' +
+            '</div>' +
+            '<div class="market-grid-row team-market-row away-team-row">' +
+                teamCell('Away', awayLogo, away, awayMeta) +
+                '<div class="odds-cell">' + awayButtons[0] + '</div>' +
+                '<div class="odds-cell">' + awayButtons[1] + '</div>' +
+                '<div class="odds-cell">' + awayButtons[2] + '</div>' +
+            '</div>' +
+            '<div class="market-grid-row team-market-row home-team-row">' +
+                teamCell('Home', homeLogo, home, homeMeta) +
+                '<div class="odds-cell">' + homeButtons[0] + '</div>' +
+                '<div class="odds-cell">' + homeButtons[1] + '</div>' +
+                '<div class="odds-cell">' + homeButtons[2] + '</div>' +
+            '</div>' +
+        '</article>';
+    }
+
     function setHeader(sport) {
         var meta = SPORT_LABELS[sport] || { kicker: sport + ' Board', title: sport + ' · Game Board', tagline: 'Tap a line to add it to your slip.', cols: ['Spread', 'Moneyline', 'Total'] };
         var k = document.getElementById('boardKicker'); if (k) k.textContent = meta.kicker;
@@ -10548,6 +10610,9 @@ window.toggleSportFamily = function (family) {
                ' onclick="window.TMR &amp;&amp; window.TMR._ttDirectClick &amp;&amp; window.TMR._ttDirectClick(this, event)">' +
                '<span class="sb-odds-line">' + _ttHtmlEsc(lineTxt) + '</span>' +
                '<span class="sb-odds-price">' + _ttHtmlEsc(oddsTxt) + '</span></button>';
+    }
+    function _ttOpenBoardButton(sport) {
+        return '<button type="button" class="sb-board-action" onclick="window.selectSportAndShowGames(\'' + _ttEsc(sport) + '\')">Open Board</button>';
     }
 
     // Direct click path — invoked by inline onclick on every team-total
@@ -10974,31 +11039,26 @@ window.toggleSportFamily = function (family) {
                 }
             } catch (e) { /* noop */ }
 
-            html += '<div class="sb-board-row sb-tt-row">' +
-                '<div class="sb-board-matchup">' +
-                    '<div class="sb-board-when">' + (commence ? '<span>' + _ttHtmlEsc(commence) + '</span>' : '') + '</div>' +
-                    '<div class="sb-board-teams">' +
-                        '<div class="sb-board-team">' + ((window.TMR && typeof window.TMR._teamLogo === 'function') ? window.TMR._teamLogo(sportsbookTeamLogoUrl(game.away_team || '', game.away_logo || game.awayLogo || ''), game.away_abbr || game.awayAbbr || '', game.away_team || 'Away') : '') + '<b>' + _ttHtmlEsc(game.away_team || 'Away') + '</b></div>' +
-                        '<div class="sb-board-team">' + ((window.TMR && typeof window.TMR._teamLogo === 'function') ? window.TMR._teamLogo(sportsbookTeamLogoUrl(game.home_team || '', game.home_logo || game.homeLogo || ''), game.home_abbr || game.homeAbbr || '', game.home_team || 'Home') : '') + '<b>' + _ttHtmlEsc(game.home_team || 'Home') + '</b></div>' +
-                    '</div>' +
-                '</div>';
-
             if (started) {
                 pending++;
-                html += '<div class="sb-board-col" data-col="tt" style="grid-column: span 3; color:#fca5a5; font-size:13px; padding:6px 4px;">' +
-                            'Started - picks locked for this game.' +
-                        '</div>' +
-                        '<div class="sb-board-col" data-col="action">' +
-                            '<button type="button" class="sb-board-action" disabled aria-disabled="true">Started</button>' +
-                        '</div>';
+                html += renderMarketBoardCard(game, idx, {
+                    marketLabel: 'Team Totals',
+                    headers: ['Team Total Over', 'Team Total Under', 'Board'],
+                    awayMeta: 'Started - picks locked',
+                    homeMeta: 'Started - picks locked',
+                    awayButtons: [oddsButton('Started', '—'), oddsButton('Started', '—'), '<button type="button" class="sb-board-action" disabled aria-disabled="true">Started</button>'],
+                    homeButtons: [oddsButton('Started', '—'), oddsButton('Started', '—'), '<button type="button" class="sb-board-action" disabled aria-disabled="true">Started</button>']
+                });
             } else if (!hasAny) {
                 pending++;
-                html += '<div class="sb-board-col" data-col="tt" style="grid-column: span 3; color:#94a3b8; font-size:13px; padding:6px 4px;">' +
-                            'Team total lines not posted yet for this game.' +
-                        '</div>' +
-                        '<div class="sb-board-col" data-col="action">' +
-                            '<button type="button" class="sb-board-action" onclick="window.selectSportAndShowGames(\'' + _ttEsc(sport) + '\')">Open Board</button>' +
-                        '</div>';
+                html += renderMarketBoardCard(game, idx, {
+                    marketLabel: 'Team Totals',
+                    headers: ['Team Total Over', 'Team Total Under', 'Board'],
+                    awayMeta: 'Team totals not posted yet',
+                    homeMeta: 'Team totals not posted yet',
+                    awayButtons: [oddsButton('Over', '—'), oddsButton('Under', '—'), _ttOpenBoardButton(sport)],
+                    homeButtons: [oddsButton('Over', '—'), oddsButton('Under', '—'), _ttOpenBoardButton(sport)]
+                });
             } else {
                 rendered++;
                 // Two stacked rows per game (away on top, home on bottom).
@@ -11006,22 +11066,21 @@ window.toggleSportFamily = function (family) {
                 var awayUnder = split.away.under || {};
                 var homeOver = split.home.over || {};
                 var homeUnder = split.home.under || {};
-                html +=
-                    '<div class="sb-board-col" data-col="tt-over">' +
-                        '<div class="sb-odds-stack">' +
-                            _ttButton(idx, 'over', game.away_team, awayOver.line, awayOver.odds, game.away_team, game.home_team) +
-                            _ttButton(idx, 'over', game.home_team, homeOver.line, homeOver.odds, game.away_team, game.home_team) +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="sb-board-col" data-col="tt-under">' +
-                        '<div class="sb-odds-stack">' +
-                            _ttButton(idx, 'under', game.away_team, awayUnder.line, awayUnder.odds, game.away_team, game.home_team) +
-                            _ttButton(idx, 'under', game.home_team, homeUnder.line, homeUnder.odds, game.away_team, game.home_team) +
-                        '</div>' +
-                    '</div>' +
-                    '<button type="button" class="sb-board-action" onclick="window.selectSportAndShowGames(\'' + _ttEsc(sport) + '\')">Open Board</button>';
+                html += renderMarketBoardCard(game, idx, {
+                    marketLabel: 'Team Totals',
+                    headers: ['Team Total Over', 'Team Total Under', 'Board'],
+                    awayButtons: [
+                        _ttButton(idx, 'over', game.away_team, awayOver.line, awayOver.odds, game.away_team, game.home_team),
+                        _ttButton(idx, 'under', game.away_team, awayUnder.line, awayUnder.odds, game.away_team, game.home_team),
+                        _ttOpenBoardButton(sport)
+                    ],
+                    homeButtons: [
+                        _ttButton(idx, 'over', game.home_team, homeOver.line, homeOver.odds, game.away_team, game.home_team),
+                        _ttButton(idx, 'under', game.home_team, homeUnder.line, homeUnder.odds, game.away_team, game.home_team),
+                        _ttOpenBoardButton(sport)
+                    ]
+                });
             }
-            html += '</div>';
         });
 
         if (!html) {
@@ -11122,6 +11181,9 @@ window.toggleSportFamily = function (family) {
         if (marketType.indexOf('first_half') === 0) return isOver ? 'firsthalfover' : (isUnder ? 'firsthalfunder' : (marketType.indexOf('spread') !== -1 ? 'firsthalfspread' : 'firsthalfml'));
         if (marketType.indexOf('second_half') === 0) return isOver ? 'secondhalfover' : (isUnder ? 'secondhalfunder' : (marketType.indexOf('spread') !== -1 ? 'secondhalfspread' : 'secondhalfml'));
         if (marketType.indexOf('period_1') === 0) return isOver ? 'period1over' : (isUnder ? 'period1under' : (marketType.indexOf('spread') !== -1 ? 'period1spread' : 'period1ml'));
+        if (marketType.indexOf('period_2') === 0) return isOver ? 'period2over' : (isUnder ? 'period2under' : (marketType.indexOf('spread') !== -1 ? 'period2spread' : 'period2ml'));
+        if (marketType.indexOf('period_3') === 0) return isOver ? 'period3over' : (isUnder ? 'period3under' : (marketType.indexOf('spread') !== -1 ? 'period3spread' : 'period3ml'));
+        if (marketType.indexOf('period_4') === 0) return isOver ? 'period4over' : (isUnder ? 'period4under' : (marketType.indexOf('spread') !== -1 ? 'period4spread' : 'period4ml'));
         if (marketType.indexOf('f5_') === 0) return isOver ? 'f5over' : (isUnder ? 'f5under' : (marketType.indexOf('spread') !== -1 ? 'f5spread' : 'f5ml'));
         if (marketType.indexOf('spread') !== -1) return 'spread';
         if (marketType.indexOf('total') !== -1) return isUnder ? 'under' : 'over';
@@ -11141,6 +11203,73 @@ window.toggleSportFamily = function (family) {
         var onclick = "window.selectGameBet && window.selectGameBet(" + (gameIndex | 0) + ",'" + _ttEsc(betType) + "','" + _ttEsc(selection) + "','" + _ttEsc(line) + "','" + _ttEsc(item.odds) + "','" + _ttEsc(game.away_team || '') + "','" + _ttEsc(game.home_team || '') + "')";
         return '<button type="button" class="sb-odds" onclick="' + onclick + '"><span class="sb-odds-line">' + _ttHtmlEsc(lineText) + '</span><span class="sb-odds-price">' + _ttHtmlEsc(_ttFmtOdds(item.odds)) + '</span></button>';
     }
+    function renderPeriodCellButton(gameIndex, item, game, fallbackLine) {
+        if (!item || item.odds == null) return oddsButton(fallbackLine || '—', '—');
+        var label = String(item.selection_label || item.selection || 'Pick');
+        var marketType = item.market_type || item.market_key || '';
+        var betType = periodBetType(marketType, label);
+        var isOver = /\bover\b/i.test(label);
+        var isUnder = /\bunder\b/i.test(label);
+        var selection = isOver ? 'Over' : (isUnder ? 'Under' : String(item.selection || label).replace(/\s+[+-]?\d+(\.\d+)?$/,'').trim());
+        var isSpread = String(marketType).indexOf('spread') !== -1;
+        var isMl = String(marketType).indexOf('h2h') !== -1 || betType.indexOf('ml') !== -1;
+        var line = item.line == null ? '' : item.line;
+        var lineText = isMl ? 'ML' : (item.line_display || (line === '' ? (fallbackLine || '—') : ((isOver ? 'O ' : isUnder ? 'U ' : '') + window.TMR.formatLine(line, { signed: isSpread }))));
+        return oddsButton(lineText, _ttFmtOdds(item.odds), {
+            gameIndex: gameIndex,
+            betType: betType,
+            team: selection,
+            line: line,
+            odds: item.odds,
+            awayTeam: game.away_team || '',
+            homeTeam: game.home_team || ''
+        });
+    }
+    function periodItemMatchesTeam(item, team) {
+        var text = String((item && (item.selection || item.selection_label)) || '').toLowerCase();
+        return text && text.indexOf(String(team || '').toLowerCase()) !== -1;
+    }
+    function buildPeriodBoardConfig(game, gameIndex, items, label) {
+        var away = game.away_team || '';
+        var home = game.home_team || '';
+        var spreadItems = [], mlItems = [], totalItems = [];
+        (items || []).forEach(function (item) {
+            var type = String((item && (item.market_type || item.market_key)) || '').toLowerCase();
+            if (type.indexOf('spread') !== -1) spreadItems.push(item);
+            else if (type.indexOf('total') !== -1) totalItems.push(item);
+            else if (type.indexOf('h2h') !== -1) mlItems.push(item);
+        });
+        function teamItem(list, team, fallbackIndex) {
+            return list.find(function (item) { return periodItemMatchesTeam(item, team); }) || list[fallbackIndex] || null;
+        }
+        function totalSide(side, fallbackIndex) {
+            var re = side === 'over' ? /\bover\b/i : /\bunder\b/i;
+            return totalItems.find(function (item) { return re.test(item.selection_label || item.selection || ''); }) || totalItems[fallbackIndex] || null;
+        }
+        var awaySpread = teamItem(spreadItems, away, 0);
+        var homeSpread = teamItem(spreadItems, home, 1);
+        var awayMl = teamItem(mlItems, away, 0);
+        var homeMl = teamItem(mlItems, home, 1);
+        var over = totalSide('over', 0);
+        var under = totalSide('under', 1);
+        var unavailable = label + ' unavailable';
+        return {
+            marketLabel: label,
+            headers: [label + ' Spread', label + ' Moneyline', label + ' Total'],
+            awayMeta: items.length ? '' : unavailable,
+            homeMeta: items.length ? '' : unavailable,
+            awayButtons: [
+                renderPeriodCellButton(gameIndex, awaySpread, game, 'Spread'),
+                renderPeriodCellButton(gameIndex, awayMl, game, 'ML'),
+                renderPeriodCellButton(gameIndex, over, game, 'Over')
+            ],
+            homeButtons: [
+                renderPeriodCellButton(gameIndex, homeSpread, game, 'Spread'),
+                renderPeriodCellButton(gameIndex, homeMl, game, 'ML'),
+                renderPeriodCellButton(gameIndex, under, game, 'Under')
+            ]
+        };
+    }
     function renderPeriodRows(sport, rowsEl, games, period, sourceLabel) {
         var keys = PERIOD_GROUP_KEYS[period] || [];
         var label = PERIOD_LABELS[period] || 'Market';
@@ -11153,9 +11282,7 @@ window.toggleSportFamily = function (family) {
                 if (keys.indexOf(group.key) !== -1) items = items.concat(group.items || []);
             });
             items = items.filter(function (item) { return item && item.odds != null; });
-            var d = game.commence_time ? new Date(game.commence_time) : null;
-            var commence = d && !isNaN(d.getTime()) ? d.toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit' }) : '';
-            html += '<div class="sb-board-row sb-period-row"><div class="sb-board-matchup"><div class="sb-board-when">' + (commence ? '<span>' + _ttHtmlEsc(commence) + '</span>' : '') + '</div><div class="sb-board-teams"><div class="sb-board-team">' + ((window.TMR && typeof window.TMR._teamLogo === 'function') ? window.TMR._teamLogo(sportsbookTeamLogoUrl(game.away_team || '', game.away_logo || game.awayLogo || ''), game.away_abbr || game.awayAbbr || '', game.away_team || 'Away') : '') + '<b>' + _ttHtmlEsc(game.away_team || 'Away') + '</b></div><div class="sb-board-team">' + ((window.TMR && typeof window.TMR._teamLogo === 'function') ? window.TMR._teamLogo(sportsbookTeamLogoUrl(game.home_team || '', game.home_logo || game.homeLogo || ''), game.home_abbr || game.homeAbbr || '', game.home_team || 'Home') : '') + '<b>' + _ttHtmlEsc(game.home_team || 'Home') + '</b></div></div></div><div class="sb-board-col sb-period-lines" style="grid-column:span 3;">' + (items.length ? '<div class="sb-odds-stack sb-odds-stack--period">' + items.map(function (item) { return renderPeriodOddsButton(idx, item, game); }).join('') + '</div>' : '<div class="market-empty" style="margin:0;">' + _ttHtmlEsc(label) + ' unavailable for this game.</div>') + '</div><button type="button" class="sb-board-action" onclick="window.selectSportAndShowGames(\'' + _ttEsc(sport) + '\')">Open Board</button></div>';
+            html += renderMarketBoardCard(game, idx, buildPeriodBoardConfig(game, idx, items, label));
         });
         rowsEl.innerHTML = html || emptyState(sport, 'No ' + label + ' ' + sport + ' odds available right now.', 'closed');
         if (html) console.log('[TMR][period] ' + sport + ' ' + label + ' rendered from ' + sourceLabel + '.');
@@ -21411,7 +21538,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Save to localStorage
         if (window.auth && window.auth.isLoggedIn()) {
-            const marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', total: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals', f5teamover: 'f5_team_totals', f5teamunder: 'f5_team_totals' };
+            const marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', total: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals', f5teamover: 'f5_team_totals', f5teamunder: 'f5_team_totals', firsthalfml: 'first_half_h2h', firsthalfspread: 'first_half_spreads', firsthalfover: 'first_half_totals', firsthalfunder: 'first_half_totals', secondhalfml: 'second_half_h2h', secondhalfspread: 'second_half_spreads', secondhalfover: 'second_half_totals', secondhalfunder: 'second_half_totals', period1ml: 'period_1_h2h', period1spread: 'period_1_spreads', period1over: 'period_1_totals', period1under: 'period_1_totals', period2ml: 'period_2_h2h', period2spread: 'period_2_spreads', period2over: 'period_2_totals', period2under: 'period_2_totals', period3ml: 'period_3_h2h', period3spread: 'period_3_spreads', period3over: 'period_3_totals', period3under: 'period_3_totals', period4ml: 'period_4_h2h', period4spread: 'period_4_spreads', period4over: 'period_4_totals', period4under: 'period_4_totals' };
             const marketType = marketTypeMap[pick.betType] || 'h2h';
             const selection = extractSelection(pick.pick, pick.betType, pick.game);
             const units = Math.max(0.5, Math.min(10, parseFloat(pick.units) || 1));

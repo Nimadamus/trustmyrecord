@@ -3541,6 +3541,66 @@
                         selection = 'Under';
                         selectionLabel = '1P Under' + (lineDisp ? ' ' + lineDisp : '');
                         break;
+                    case 'period2ml':
+                        marketType = 'period_2_h2h'; groupLabel = '2nd Period';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 2P ML';
+                        break;
+                    case 'period2spread':
+                        marketType = 'period_2_spreads'; groupLabel = '2nd Period';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 2P' + (lineDispSigned ? ' ' + lineDispSigned : '');
+                        break;
+                    case 'period2over':
+                        marketType = 'period_2_totals'; groupLabel = '2nd Period';
+                        selection = 'Over';
+                        selectionLabel = '2P Over' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'period2under':
+                        marketType = 'period_2_totals'; groupLabel = '2nd Period';
+                        selection = 'Under';
+                        selectionLabel = '2P Under' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'period3ml':
+                        marketType = 'period_3_h2h'; groupLabel = '3rd Period';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 3P ML';
+                        break;
+                    case 'period3spread':
+                        marketType = 'period_3_spreads'; groupLabel = '3rd Period';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 3P' + (lineDispSigned ? ' ' + lineDispSigned : '');
+                        break;
+                    case 'period3over':
+                        marketType = 'period_3_totals'; groupLabel = '3rd Period';
+                        selection = 'Over';
+                        selectionLabel = '3P Over' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'period3under':
+                        marketType = 'period_3_totals'; groupLabel = '3rd Period';
+                        selection = 'Under';
+                        selectionLabel = '3P Under' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'period4ml':
+                        marketType = 'period_4_h2h'; groupLabel = '4th Period';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 4P ML';
+                        break;
+                    case 'period4spread':
+                        marketType = 'period_4_spreads'; groupLabel = '4th Period';
+                        selection = teamRaw;
+                        selectionLabel = teamRaw + ' 4P' + (lineDispSigned ? ' ' + lineDispSigned : '');
+                        break;
+                    case 'period4over':
+                        marketType = 'period_4_totals'; groupLabel = '4th Period';
+                        selection = 'Over';
+                        selectionLabel = '4P Over' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
+                    case 'period4under':
+                        marketType = 'period_4_totals'; groupLabel = '4th Period';
+                        selection = 'Under';
+                        selectionLabel = '4P Under' + (lineDisp ? ' ' + lineDisp : '');
+                        break;
                 }
 
                 var option = createFallbackOption(
