@@ -1745,21 +1745,29 @@
         var stats = line.summaryStats || {};
         return line.team.abbreviation + ': 2B ' + (stats.doubles || 0) + ', 3B ' + (stats.triples || 0) + ', HR ' + (stats.homeRuns || 0) + ', RBI ' + (stats.rbi || 0) + ', BB ' + (stats.walks || 0) + ', SO ' + (stats.strikeouts || 0) + ', SB ' + (stats.stolenBases || 0) + ', CS ' + (stats.caughtStealing || 0) + ', LOB ' + (stats.leftOnBase || 0) + ', Pitches ' + (stats.totalPitches || 0) + ' (' + (stats.totalPitches || 0) + '-' + (stats.totalStrikes || 0) + ' P-S)';
     }
-    function summaryMarkup(box) {
-        return '<div class="box-score-summary-head"><strong>Game Summary</strong><span>Key simulated moments</span></div>' +
-            '<ol><li>' + escapeHtml(box.summary) + '</li><li>' + escapeHtml(summaryLine(box.away)) + '</li><li>' + escapeHtml(summaryLine(box.home)) + '</li><li>' + escapeHtml(box.pitcherLines.join(' / ')) + '</li></ol>';
+    function summaryMarkup() {
+        return '<p>Simulation output only. These modeled batter and pitcher lines are not official MLB stats or official game results.</p>';
     }
-    function playerTeamBox(team, players) {
+    function teamBattingTable(team, players) {
         var source = players && players.rosterSource ? players.rosterSource : 'Roster temporarily unavailable';
         var hasBatters = players && players.batters && players.batters.length;
-        var hasPitchers = players && players.pitchers && players.pitchers.length;
-        if (!hasBatters || !hasPitchers) {
-            return '<section class="player-team-box"><div class="espn-box-group"><h4>' + escapeHtml(team.name) + ' Box Score Lines</h4><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p><div class="sim-empty">Verified roster names are unavailable for this team, so player stat rows are hidden instead of filled with placeholders.</div></div></section>';
+        if (!hasBatters) {
+            return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p><div class="sim-empty">Verified roster names are unavailable for this team, so batter rows are hidden instead of filled with placeholders.</div></section>';
         }
-        return '<section class="player-team-box"><div class="espn-box-group"><h4>' + escapeHtml(team.name) + ' Hitting</h4><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
-            '<div class="player-table-wrap"><table class="player-box-table batting-table"><thead><tr><th>Hitters</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>K</th><th>AVG</th><th>OPS</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div></div>' +
-            '<div class="espn-box-group"><h4>' + escapeHtml(team.name) + ' Pitching</h4>' +
-            '<div class="player-table-wrap"><table class="player-box-table pitching-table"><thead><tr><th>Pitchers</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th><th>HR</th><th>ERA</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers) + '</tbody></table></div></div></section>';
+        return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
+            '<div class="player-table-wrap"><table class="player-box-table batting-table"><thead><tr><th>Hitters</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>K</th><th>AVG</th><th>OPS</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div></section>';
+    }
+    function teamPitchingTable(team, players) {
+        var source = players && players.rosterSource ? players.rosterSource : 'Roster temporarily unavailable';
+        var hasPitchers = players && players.pitchers && players.pitchers.length;
+        if (!hasPitchers) {
+            return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p><div class="sim-empty">Verified roster names are unavailable for this team, so pitcher rows are hidden instead of filled with placeholders.</div></section>';
+        }
+        return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
+            '<div class="player-table-wrap"><table class="player-box-table pitching-table"><thead><tr><th>Pitchers</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th><th>HR</th><th>ERA</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers) + '</tbody></table></div></section>';
+    }
+    function statSection(title, content) {
+        return '<section class="box-score-stat-section"><h4>' + escapeHtml(title) + '</h4><div class="box-score-stat-grid">' + content + '</div></section>';
     }
     function renderPlayerBoxScore(result) {
         var panel = byId('playerBoxScorePanel');
@@ -1771,7 +1779,8 @@
             return;
         }
         panel.setAttribute('data-player-box-state', 'projected');
-        content.innerHTML = playerTeamBox(result.away, result.boxScore.players.away) + playerTeamBox(result.home, result.boxScore.players.home);
+        content.innerHTML = statSection('Batting', teamBattingTable(result.away, result.boxScore.players.away) + teamBattingTable(result.home, result.boxScore.players.home)) +
+            statSection('Pitching', teamPitchingTable(result.away, result.boxScore.players.away) + teamPitchingTable(result.home, result.boxScore.players.home));
     }
     function boxScoreText(result) {
         if (!result || !result.boxScore) return '';
@@ -1906,7 +1915,7 @@
             panel.setAttribute('data-box-score-state', 'empty');
             title.textContent = 'Run a simulation to generate a box score.';
             body.innerHTML = '<tr><td colspan="13">Run a simulation to generate a box score.</td></tr>';
-            if (totals) totals.innerHTML = '<div class="sim-empty">Run a simulation to generate team totals.</div>';
+            if (totals) totals.innerHTML = '';
             if (matchup) matchup.innerHTML = '<div class="sim-empty">Run a simulation to generate a game summary card.</div>';
             summary.textContent = 'Run a simulation to generate a box score.';
             setExportButtons(false);
@@ -1918,7 +1927,7 @@
         title.textContent = result.away.name + ' at ' + result.home.name;
         if (matchup) matchup.innerHTML = renderScoreboardCard(result, box);
         body.innerHTML = boxRow(box.away, box.winner.id) + boxRow(box.home, box.winner.id);
-        if (totals) totals.innerHTML = renderTeamTotals(box);
+        if (totals) totals.innerHTML = '';
         summary.innerHTML = summaryMarkup(box);
         renderPlayerBoxScore(result);
         setExportButtons(true);

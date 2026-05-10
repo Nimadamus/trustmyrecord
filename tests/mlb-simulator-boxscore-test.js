@@ -160,10 +160,11 @@ function assertBoxScore(result) {
     await simulator.runSimulation();
     assert.strictEqual(elements.boxScorePanel.getAttribute('data-box-score-state'), 'projected', mode + ' renders box score panel');
     assert(/<tr/.test(elements.boxScoreBody.innerHTML), mode + ' renders box score rows');
-    assert(/LOB/.test(elements.boxScoreTeamTotals.innerHTML), mode + ' renders left on base totals');
-    assert(/P-S/.test(elements.boxScoreTeamTotals.innerHTML), mode + ' renders pitches-strikes totals');
     assert(/FINAL/.test(elements.boxScoreMatchupCard.innerHTML), mode + ' renders final-status scoreboard card');
     assert(/not official MLB stats/.test(elements.boxScoreMatchupCard.innerHTML), mode + ' renders honest simulation label');
+    assert(!/Key simulated moments/i.test(elements.boxScoreSummary.innerHTML + elements.playerBoxScoreContent.innerHTML), mode + ' does not render key simulated moments block');
+    assert(/<h4>Batting<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders batting section directly under line score');
+    assert(/<h4>Pitching<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders pitching section directly under batting');
     assert(/<th>AVG<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders batting average column');
     assert(/<th>OPS<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders OPS column');
     assert(/<th>ERA<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders simulated ERA column');
