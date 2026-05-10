@@ -21824,6 +21824,27 @@ document.addEventListener('DOMContentLoaded', function() {
     async function updateGameCounts() {
         // Fetch real board counts from the same backend feed used by the pick board.
         var sportMap = window.TMR.sportKeyMap || {};
+        var apiBase = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        var normalizedApiBase = String(apiBase).replace(/\/$/, '');
+        var countCache = window.TMR._boardCountCache || (window.TMR._boardCountCache = {});
+        function fetchBoardCountPayload(sportKey) {
+            var cacheKey = normalizedApiBase + '|' + sportKey;
+            var cached = countCache[cacheKey];
+            if (cached && cached.data && Date.now() - cached.fetchedAt < 60000) return Promise.resolve(cached.data);
+            if (cached && cached.promise) return cached.promise;
+            var promise = fetch(normalizedApiBase + '/games/board/' + encodeURIComponent(sportKey)).then(function(r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                return r.json();
+            }).then(function(data) {
+                countCache[cacheKey] = { data: data, fetchedAt: Date.now() };
+                return data;
+            }).catch(function(err) {
+                delete countCache[cacheKey];
+                throw err;
+            });
+            countCache[cacheKey] = { promise: promise, fetchedAt: Date.now() };
+            return promise;
+        }
         var sportCards = document.querySelectorAll('.sport-card');
         sportCards.forEach(function(card) {
             var sport = card.getAttribute('data-sport');
@@ -21832,11 +21853,7 @@ document.addEventListener('DOMContentLoaded', function() {
             gamesSpan.textContent = 'Checking...';
             var sportKey = sportMap[sport];
             if (!sportKey) { gamesSpan.textContent = 'No data'; return; }
-            var apiBase = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
-            fetch(String(apiBase).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(sportKey)).then(function(r) {
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                return r.json();
-            }).then(function(data) {
+            fetchBoardCountPayload(sportKey).then(function(data) {
                 var games = data.games || [];
                 if (games.length > 0) {
                     gamesSpan.textContent = games.length + ' board' + (games.length !== 1 ? 's' : '') + ' live';
@@ -21855,7 +21872,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // game counts from the same /games/board/<sportKey> endpoint and flip
         // the row Status to Closed when the league has nothing scheduled.
         var lobbyTargets = document.querySelectorAll('[data-sport-count]');
-        var apiBase2 = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
         lobbyTargets.forEach(function(cell) {
             var sport = cell.getAttribute('data-sport-count');
             var sportKey = sportMap[sport];
@@ -21864,10 +21880,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var statusEl = row ? row.querySelector('.sportsbook-lobby-status') : null;
             var railCell = document.getElementById((sport.toLowerCase()) + '-game-count');
             cell.textContent = 'Checking…';
-            fetch(String(apiBase2).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(sportKey)).then(function(r) {
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                return r.json();
-            }).then(function(data) {
+            fetchBoardCountPayload(sportKey).then(function(data) {
                 var games = (data && data.games) || [];
                 if (games.length > 0) {
                     cell.textContent = games.length + ' Board' + (games.length !== 1 ? 's' : '') + ' Live';
