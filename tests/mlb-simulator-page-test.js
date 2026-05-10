@@ -16,8 +16,8 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260508-boxscore-sports-table/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260508-roster-full-guard/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260510-compact-mlb-boxscore/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260510-compact-mlb-boxscore/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -55,8 +55,9 @@ const css = fs.readFileSync(path.join(root, 'static', 'css', 'mlb-simulator.css'
 assert(/\.box-score-panel\s*{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*min-width:\s*0;/s.test(css), 'box score panel spans the simulator grid instead of auto-placing into a narrow column');
 assert(/\.box-score-scroll\s*{[^}]*max-width:\s*100%;[^}]*min-width:\s*0;[^}]*overflow-x:\s*auto;/s.test(css), 'box score table scrolling is contained inside the table container');
 assert(!/id="boxScoreTeamTotals"|id="boxScoreSummary"/.test(html), 'generic totals and game summary containers are removed');
-assert(/\.mlb-simulator-page \.sim-hero h1\s*{[^}]*font-size:\s*clamp\(32px,\s*4vw,\s*54px\)/s.test(css), 'hero title is compact tool-scale');
-assert(/\.mlb-simulator-page \.sim-workflow div\s*{[^}]*min-height:\s*54px/s.test(css), 'workflow cards are compact');
+assert(/\.mlb-simulator-page \.sim-hero h1\s*{[^}]*font-size:\s*clamp\(28px,\s*3\.1vw,\s*42px\)/s.test(css), 'hero title is compact tool-scale');
+assert(/\.mlb-simulator-page \.sim-workflow div\s*{[^}]*min-height:\s*42px/s.test(css), 'workflow cards are compact');
+assert(/\.mlb-simulator-page \.sim-control-panel\s*{[^}]*grid-column:\s*span 5/s.test(css), 'team selection moves into compact desktop grid');
 
 const elementIds = [
   'awayTeamSelect','homeTeamSelect','awayPoolSelect','homePoolSelect','runSimulationButton','refreshTeamsButton',
