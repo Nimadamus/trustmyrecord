@@ -149,6 +149,19 @@ function assertBoxScore(result) {
   assert(result.winner.id === (result.homeWin >= result.awayWin ? result.home.id : result.away.id), 'projected winner matches higher win probability');
 }
 
+function assertCleanProjectedLineups(html, label) {
+  const positions = [...html.matchAll(/<tr><th scope="row">[^<]+ \((C|1B|2B|3B|SS|LF|CF|RF|DH)\)<\/th><td>/g)].map((match) => match[1]);
+  assert(positions.length >= 18, label + ' renders two nine-player batting orders');
+  const required = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
+  [positions.slice(0, 9), positions.slice(9, 18)].forEach((lineup, index) => {
+    assert.strictEqual(lineup.length, 9, label + ' team ' + (index + 1) + ' has nine hitters');
+    required.forEach((position) => {
+      assert(lineup.includes(position), label + ' team ' + (index + 1) + ' includes ' + position);
+    });
+    assert.strictEqual(new Set(lineup).size, 9, label + ' team ' + (index + 1) + ' avoids duplicate projected positions');
+  });
+}
+
 (async () => {
   const { simulator, elements } = simulatorContext();
   const modes = ['current', 'historical', 'mixed'];
@@ -178,6 +191,7 @@ function assertBoxScore(result) {
     assert(/<th>AVG<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders batting average column');
     assert(/<th>OPS<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders OPS column');
     assert(/<th>ERA<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders simulated ERA column');
+    assertCleanProjectedLineups(elements.playerBoxScoreContent.innerHTML, mode);
     assert(/\(W\)/.test(elements.playerBoxScoreContent.innerHTML), mode + ' winning pitcher is labeled in pitching table');
     assert(/\(L\)/.test(elements.playerBoxScoreContent.innerHTML), mode + ' losing pitcher is labeled in pitching table');
     assert(/\(SV\)/.test(elements.playerBoxScoreContent.innerHTML), mode + ' simulated save pitcher is labeled when a relief row exists');

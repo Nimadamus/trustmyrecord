@@ -684,13 +684,127 @@
             if (row.er > row.r) row.er = row.r;
         });
     }
-    function rosterNamesForBatters(roster) {
+    function lineupPositionLabel(position) {
+        var value = String(position || '').toUpperCase().replace(/\./g, '').trim();
+        if (value === 'OUTFIELD') return 'OF';
+        if (value === 'INFIELD') return 'IF';
+        if (value === 'DESIGNATED HITTER') return 'DH';
+        return value;
+    }
+    function isPitcherPosition(position) {
+        return /^(P|SP|RP|CP|RELIEF|PITCHER)$/i.test(lineupPositionLabel(position));
+    }
+    function positionFamily(position) {
+        var pos = lineupPositionLabel(position);
+        if (/^(LF|CF|RF|OF)$/.test(pos)) return 'OF';
+        if (/^(1B|2B|3B|SS|IF)$/.test(pos)) return 'IF';
+        return pos;
+    }
+    function stableLineupSeed(player) {
+        var text = normalizeName(player && player.name || '');
+        var seed = 0;
+        for (var index = 0; index < text.length; index += 1) seed = (seed + text.charCodeAt(index) * (index + 3)) % 97;
+        return seed;
+    }
+    function positionFitScore(player, targetPosition) {
+        var primary = lineupPositionLabel(player && player.position);
+        if (primary === targetPosition) return 100;
+        if (targetPosition === 'DH') return primary === 'DH' ? 100 : 38 + stableLineupSeed(player) % 12;
+        if (/^(LF|CF|RF)$/.test(targetPosition) && primary === 'OF') return 82;
+        if (/^(1B|2B|3B|SS)$/.test(targetPosition) && primary === 'IF') return 74;
+        if (positionFamily(primary) === positionFamily(targetPosition) && primary !== 'C') return 48;
+        return 0;
+    }
+    function chooseLineupPlayer(players, used, targetPosition) {
+        var best = null;
+        var bestScore = -1;
+        players.forEach(function (player) {
+            var key = normalizeName(player.name);
+            if (!key || used[key]) return;
+            var score = positionFitScore(player, targetPosition) * 1000 - Number(player.rosterIndex || 0) * 5 + stableLineupSeed(player);
+            if (score > bestScore) {
+                best = player;
+                bestScore = score;
+            }
+        });
+        return best;
+    }
+    function batterProfile(row) {
+        var pos = row.assignedPosition;
+        var seed = stableLineupSeed(row.player || row);
+        var speed = { CF: 92, SS: 84, RF: 68, LF: 64, '2B': 78, '3B': 56, '1B': 42, DH: 38, C: 30 }[pos] || 55;
+        var contact = { CF: 78, SS: 82, RF: 74, LF: 72, '2B': 84, '3B': 72, '1B': 66, DH: 68, C: 58 }[pos] || 66;
+        var power = { CF: 58, SS: 62, RF: 86, LF: 78, '2B': 60, '3B': 82, '1B': 88, DH: 90, C: 64 }[pos] || 64;
+        return {
+            speed: speed + seed % 9,
+            contact: contact + seed % 7,
+            power: power + seed % 11,
+            overall: speed * 0.24 + contact * 0.34 + power * 0.42 + seed % 6
+        };
+    }
+    function lineupSlotScore(row, slotIndex) {
+        var profile = batterProfile(row);
+        var posPenalty = row.assignedPosition === 'C' && slotIndex < 5 ? 18 : 0;
+        var weights = [
+            { speed: 0.46, contact: 0.38, power: 0.12, overall: 0.04 },
+            { speed: 0.18, contact: 0.48, power: 0.18, overall: 0.16 },
+            { speed: 0.08, contact: 0.25, power: 0.35, overall: 0.32 },
+            { speed: 0.02, contact: 0.12, power: 0.58, overall: 0.28 },
+            { speed: 0.05, contact: 0.18, power: 0.44, overall: 0.33 },
+            { speed: 0.12, contact: 0.28, power: 0.28, overall: 0.32 },
+            { speed: 0.12, contact: 0.30, power: 0.20, overall: 0.38 },
+            { speed: 0.08, contact: 0.28, power: 0.18, overall: 0.46 },
+            { speed: 0.34, contact: 0.34, power: 0.10, overall: 0.22 }
+        ][slotIndex];
+        return profile.speed * weights.speed + profile.contact * weights.contact + profile.power * weights.power + profile.overall * weights.overall - posPenalty;
+    }
+    function orderProjectedLineup(selected) {
+        var remaining = selected.slice();
+        var ordered = [];
+        for (var slot = 0; slot < 9 && remaining.length; slot += 1) {
+            var bestIndex = 0;
+            var bestScore = -999;
+            remaining.forEach(function (row, index) {
+                var score = lineupSlotScore(row, slot);
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestIndex = index;
+                }
+            });
+            ordered.push(remaining.splice(bestIndex, 1)[0]);
+        }
+        return ordered;
+    }
+    function projectedLineupRows(roster, team) {
         var players = Array.isArray(roster && roster.players) ? roster.players : [];
-        var pitchers = /^(P|SP|RP|CP|Relief|Pitcher)$/i;
-        return players.filter(function (player) { return !pitchers.test(String(player.position || '')); }).map(function (player) {
-            var pos = playerPositionLabel(player);
-            return player.name + (pos ? ' (' + pos + ')' : '');
-        }).slice(0, 9);
+        var hitters = players.filter(function (player) { return player && player.name && !isPitcherPosition(player.position); }).map(function (player, index) {
+            return Object.assign({ rosterIndex: index }, player);
+        });
+        var targetPositions = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
+        var used = {};
+        var selected = [];
+        targetPositions.forEach(function (position) {
+            var player = chooseLineupPlayer(hitters, used, position);
+            if (!player) return;
+            used[normalizeName(player.name)] = true;
+            selected.push({ player: player, assignedPosition: position });
+        });
+        targetPositions.forEach(function (position) {
+            if (selected.some(function (row) { return row.assignedPosition === position; })) return;
+            var player = chooseLineupPlayer(hitters, used, 'DH');
+            if (player) {
+                used[normalizeName(player.name)] = true;
+                selected.push({ player: player, assignedPosition: position });
+            } else if (roster && players.length) {
+                selected.push({ player: { name: (team && team.abbreviation || 'Team') + ' projected ' + position, position: position }, assignedPosition: position, simulatedFallback: true });
+            }
+        });
+        return orderProjectedLineup(selected.slice(0, 9));
+    }
+    function rosterNamesForBatters(roster, team) {
+        return projectedLineupRows(roster, team).map(function (row) {
+            return row.player.name + ' (' + row.assignedPosition + ')';
+        });
     }
     function rosterNamesForPitchers(roster, starter) {
         var players = Array.isArray(roster && roster.players) ? roster.players : [];
@@ -736,7 +850,7 @@
     }
     function modeledBatterLines(team, line, random, roster) {
         var slots = ['CF', 'SS', 'RF', '1B', '3B', 'LF', 'DH', '2B', 'C'];
-        var rosterNames = rosterNamesForBatters(roster);
+        var rosterNames = rosterNamesForBatters(roster, team);
         var hitWeights = [1.12, 1.02, 1.2, 1.15, 1.04, 0.98, 0.9, 0.86, 0.72];
         var runWeights = [1.2, 1.1, 1.18, 1.05, 0.92, 0.9, 0.78, 0.78, 0.58];
         var hits = weightedAllocate(line.hits, hitWeights, random, [5, 5, 5, 5, 4, 4, 4, 4, 4]);
