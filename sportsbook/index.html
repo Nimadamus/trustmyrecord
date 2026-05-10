@@ -10320,19 +10320,13 @@ window.toggleSportFamily = function (family) {
         while (awayButtons.length < 3) awayButtons.push(oddsButton('—', '—'));
         while (homeButtons.length < 3) homeButtons.push(oddsButton('—', '—'));
         var columnKeys = config.columnKeys || ['spread', 'ml', 'total'];
-        var awayMeta = config.awayMeta || '';
-        var homeMeta = config.homeMeta || '';
 
-        function teamCell(side, logo, name, meta) {
-            return '<div class="team-cell">' + logo +
-                '<span class="team-side-badge">' + side + '</span>' +
-                '<span class="team-meta-stack"><b>' + _ttHtmlEsc(name) + '</b>' +
-                (meta ? '<small class="team-record-small">' + _ttHtmlEsc(meta) + '</small>' : '') +
-                '</span></div>';
+        function teamCell(logo, name) {
+            return '<div class="team-cell">' + logo + '<b>' + _ttHtmlEsc(name) + '</b></div>';
         }
 
         return '<article class="sportsbook-game-card sportsbook-game-card--shared-market" data-market-tab="' + _ttHtmlEsc(marketLabel) + '">' +
-            '<div class="game-meta-row">' + (whenText || '&nbsp;') + '<span class="board-meta-chip">' + _ttHtmlEsc(marketLabel) + '</span></div>' +
+            '<div class="game-meta-row">' + (whenText || '&nbsp;') + '</div>' +
             '<div class="market-grid-row market-header-row">' +
                 '<div class="market-header-cell">Matchup</div>' +
                 '<div class="market-header-cell">' + _ttHtmlEsc(headers[0] || 'Option') + '</div>' +
@@ -10340,13 +10334,13 @@ window.toggleSportFamily = function (family) {
                 '<div class="market-header-cell">' + _ttHtmlEsc(headers[2] || 'Option') + '</div>' +
             '</div>' +
             '<div class="market-grid-row team-market-row away-team-row">' +
-                teamCell('Away', awayLogo, away, awayMeta) +
+                teamCell(awayLogo, away) +
                 '<div class="odds-cell" data-col="' + _ttHtmlEsc(columnKeys[0]) + '">' + awayButtons[0] + '</div>' +
                 '<div class="odds-cell" data-col="' + _ttHtmlEsc(columnKeys[1]) + '">' + awayButtons[1] + '</div>' +
                 '<div class="odds-cell" data-col="' + _ttHtmlEsc(columnKeys[2]) + '">' + awayButtons[2] + '</div>' +
             '</div>' +
             '<div class="market-grid-row team-market-row home-team-row">' +
-                teamCell('Home', homeLogo, home, homeMeta) +
+                teamCell(homeLogo, home) +
                 '<div class="odds-cell" data-col="' + _ttHtmlEsc(columnKeys[0]) + '">' + homeButtons[0] + '</div>' +
                 '<div class="odds-cell" data-col="' + _ttHtmlEsc(columnKeys[1]) + '">' + homeButtons[1] + '</div>' +
                 '<div class="odds-cell" data-col="' + _ttHtmlEsc(columnKeys[2]) + '">' + homeButtons[2] + '</div>' +
