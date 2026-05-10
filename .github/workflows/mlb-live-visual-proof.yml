@@ -1,0 +1,83 @@
+name: MLB Simulator Live Visual Proof
+
+on:
+  workflow_dispatch:
+
+jobs:
+  live-visual-proof:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run live MLB simulator visual proof
+        run: |
+          node <<'NODE'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+          const path = require('path');
+
+          (async () => {
+            const outDir = path.join(process.cwd(), 'live-visual-confirmation');
+            fs.mkdirSync(outDir, { recursive: true });
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage({ viewport: { width: 1440, height: 1800 } });
+            const url = `https://trustmyrecord.com/mlb-simulator/?proof=${Date.now()}`;
+            await page.goto(url, { waitUntil: 'networkidle', timeout: 60000 });
+            const html = await page.content();
+            await page.locator('#runSimulationButton').click({ timeout: 30000 });
+            await page.locator('.game-note-section').waitFor({ state: 'visible', timeout: 60000 });
+            await page.locator('.game-note-section').scrollIntoViewIfNeeded();
+            await page.screenshot({ path: path.join(outDir, 'mlb-simulator-live-notes-cleanup-proof.png'), fullPage: false });
+            const notesText = await page.locator('.game-note-section').innerText();
+            const topDisclaimer = await page.locator('#boxScoreMatchupCard .box-score-honesty').innerText();
+            const badTerms = [
+              'Not verified for simulated output',
+              'Simulated neutral MLB environment',
+              'Simulated run time',
+              'Not used in this simulation',
+              'ABS Challenge',
+              'Umpires:',
+              'Attendance:',
+              'Venue:',
+              'First pitch:',
+              'Weather:',
+              'Wind:'
+            ];
+            const proof = {
+              url: page.url(),
+              assetCacheBusted: html.includes('20260510-notes-cleanup'),
+              simulationRan: true,
+              notesText,
+              topDisclaimer,
+              badTermsPresent: badTerms.filter((term) => notesText.includes(term)),
+              screenshot: 'live-visual-confirmation/mlb-simulator-live-notes-cleanup-proof.png'
+            };
+            fs.writeFileSync(path.join(outDir, 'mlb-simulator-live-notes-cleanup-proof.json'), JSON.stringify(proof, null, 2));
+            await browser.close();
+            if (!proof.assetCacheBusted) throw new Error('Live page did not load notes-cleanup asset.');
+            if (proof.badTermsPresent.length) throw new Error(`Placeholder terms still visible: ${proof.badTermsPresent.join(', ')}`);
+            if (!/Simulation output from TrustMyRecord/.test(topDisclaimer)) throw new Error('Top simulation disclaimer missing.');
+            for (const label of ['Pitches-strikes', 'Groundouts-flyouts', 'Batters faced', 'Inherited runners-scored']) {
+              if (!notesText.includes(label)) throw new Error(`Missing note label: ${label}`);
+            }
+            console.log(JSON.stringify(proof, null, 2));
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+
+      - name: Upload live visual proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: mlb-simulator-live-notes-cleanup-proof
+          path: live-visual-confirmation/
