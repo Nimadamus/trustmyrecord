@@ -54,6 +54,9 @@ assert(!/live verified|official injury/i.test(html), 'page does not include fake
 const css = fs.readFileSync(path.join(root, 'static', 'css', 'mlb-simulator.css'), 'utf8');
 assert(/\.box-score-panel\s*{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*min-width:\s*0;/s.test(css), 'box score panel spans the simulator grid instead of auto-placing into a narrow column');
 assert(/\.box-score-scroll\s*{[^}]*max-width:\s*100%;[^}]*min-width:\s*0;[^}]*overflow-x:\s*auto;/s.test(css), 'box score table scrolling is contained inside the table container');
+assert(!/id="boxScoreTeamTotals"|id="boxScoreSummary"/.test(html), 'generic totals and game summary containers are removed');
+assert(/\.mlb-simulator-page \.sim-hero h1\s*{[^}]*font-size:\s*clamp\(32px,\s*4vw,\s*54px\)/s.test(css), 'hero title is compact tool-scale');
+assert(/\.mlb-simulator-page \.sim-workflow div\s*{[^}]*min-height:\s*54px/s.test(css), 'workflow cards are compact');
 
 const elementIds = [
   'awayTeamSelect','homeTeamSelect','awayPoolSelect','homePoolSelect','runSimulationButton','refreshTeamsButton',
@@ -68,7 +71,7 @@ const elementIds = [
   'eraAdjustmentValue','simulationModeValue','dataModeValue','awayProbabilityLabel','homeProbabilityLabel',
   'awayProbabilityValue','homeProbabilityValue','awayProbabilityBar','homeProbabilityBar','projectionNotice',
   'comparisonGrid','inputSummary','matchupNotes','boxScorePanel','boxScoreTitle','boxScoreBody',
-  'boxScoreMatchupCard','boxScoreTeamTotals','boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton','playerBoxScorePanel','playerBoxScoreContent',
+  'boxScoreMatchupCard','copyBoxScoreButton','saveBoxScoreButton','playerBoxScorePanel','playerBoxScoreContent',
   'projectionEmptyState','probabilityLab','viewBoxScoreLink','viewBoxScoreControl','simulationCountSelect',
   'aggregatePanel','aggregateSummaryGrid','aggregateSummaryText'
 ];
@@ -454,7 +457,7 @@ async function flushAsync() {
   assert(/ at /.test(elements.boxScoreTitle.textContent), 'box score title includes matchup');
   assert(/FINAL/.test(elements.boxScoreMatchupCard.innerHTML), 'box score renders final-status matchup card');
   assert(/not official MLB stats/.test(elements.boxScoreMatchupCard.innerHTML), 'box score keeps honest simulation label');
-  assert(!/Key simulated moments/i.test(elements.boxScoreSummary.innerHTML + elements.playerBoxScoreContent.innerHTML), 'key simulated moments block is not rendered');
+  assert(!/Key simulated moments|Game Summary|[A-Z]{2,3} Totals/i.test(elements.playerBoxScoreContent.innerHTML), 'removed summary/totals blocks are not rendered');
   assert(/<h4>Batting<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), 'batting section renders under line score');
   const battingDetailsIndex = elements.playerBoxScoreContent.innerHTML.search(/Batting, Baserunning (?:&amp;|&) Fielding/);
   assert(battingDetailsIndex >= 0, 'batting detail block renders before pitchers');

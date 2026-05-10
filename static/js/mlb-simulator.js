@@ -2001,17 +2001,13 @@
         var panel = byId('boxScorePanel');
         var title = byId('boxScoreTitle');
         var body = byId('boxScoreBody');
-        var summary = byId('boxScoreSummary');
-        var totals = byId('boxScoreTeamTotals');
         var matchup = byId('boxScoreMatchupCard');
-        if (!panel || !title || !body || !summary) return;
+        if (!panel || !title || !body) return;
         if (!result || !result.boxScore) {
             panel.setAttribute('data-box-score-state', 'empty');
             title.textContent = 'Run a simulation to generate a box score.';
             body.innerHTML = '<tr><td colspan="13">Run a simulation to generate a box score.</td></tr>';
-            if (totals) totals.innerHTML = '';
             if (matchup) matchup.innerHTML = '<div class="sim-empty">Run a simulation to generate a game summary card.</div>';
-            summary.textContent = 'Run a simulation to generate a box score.';
             setExportButtons(false);
             renderPlayerBoxScore(null);
             return;
@@ -2021,8 +2017,6 @@
         title.textContent = result.away.name + ' at ' + result.home.name;
         if (matchup) matchup.innerHTML = renderScoreboardCard(result, box);
         body.innerHTML = boxRow(box.away, box.winner.id) + boxRow(box.home, box.winner.id);
-        if (totals) totals.innerHTML = '';
-        summary.innerHTML = summaryMarkup(box);
         renderPlayerBoxScore(result);
         setExportButtons(true);
     }

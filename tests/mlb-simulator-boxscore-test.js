@@ -20,7 +20,7 @@ const ids = [
   'totalRangeValue','runEnvironmentValue','simulationConfidenceValue','eraAdjustmentValue','simulationModeValue',
   'dataModeValue','awayProbabilityLabel','homeProbabilityLabel','awayProbabilityValue','homeProbabilityValue',
   'awayProbabilityBar','homeProbabilityBar','projectionNotice','comparisonGrid','inputSummary','matchupNotes',
-  'boxScorePanel','boxScoreTitle','boxScoreMatchupCard','boxScoreBody','boxScoreTeamTotals','boxScoreSummary','playerBoxScorePanel',
+  'boxScorePanel','boxScoreTitle','boxScoreMatchupCard','boxScoreBody','playerBoxScorePanel',
   'playerBoxScoreContent','copyBoxScoreButton','saveBoxScoreButton'
 ];
 
@@ -162,7 +162,7 @@ function assertBoxScore(result) {
     assert(/<tr/.test(elements.boxScoreBody.innerHTML), mode + ' renders box score rows');
     assert(/FINAL/.test(elements.boxScoreMatchupCard.innerHTML), mode + ' renders final-status scoreboard card');
     assert(/not official MLB stats/.test(elements.boxScoreMatchupCard.innerHTML), mode + ' renders honest simulation label');
-    assert(!/Key simulated moments/i.test(elements.boxScoreSummary.innerHTML + elements.playerBoxScoreContent.innerHTML), mode + ' does not render key simulated moments block');
+    assert(!/Key simulated moments|Game Summary|[A-Z]{2,3} Totals/i.test(elements.playerBoxScoreContent.innerHTML), mode + ' does not render removed summary/totals blocks');
     assert(/<h4>Batting<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders batting section directly under line score');
     const battingDetailsIndex = elements.playerBoxScoreContent.innerHTML.search(/Batting, Baserunning (?:&amp;|&) Fielding/);
     assert(battingDetailsIndex >= 0, mode + ' renders batting details before pitching');
