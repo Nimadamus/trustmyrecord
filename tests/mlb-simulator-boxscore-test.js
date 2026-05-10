@@ -178,6 +178,10 @@ function assertBoxScore(result) {
     assert(/<th>AVG<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders batting average column');
     assert(/<th>OPS<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders OPS column');
     assert(/<th>ERA<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders simulated ERA column');
+    assert(/\(W\)/.test(elements.playerBoxScoreContent.innerHTML), mode + ' winning pitcher is labeled in pitching table');
+    assert(/\(L\)/.test(elements.playerBoxScoreContent.innerHTML), mode + ' losing pitcher is labeled in pitching table');
+    assert(/\(SV\)/.test(elements.playerBoxScoreContent.innerHTML), mode + ' simulated save pitcher is labeled when a relief row exists');
+    assert(!/\(H\)/.test(elements.playerBoxScoreContent.innerHTML), mode + ' hold labels are not faked without hold data');
     assert(/Totals/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders table totals rows');
     assert(/Starting Pitchers:/.test(simulator.boxScoreText(result)), mode + ' export includes starters');
     assert(/Team summary:/.test(simulator.boxScoreText(result)), mode + ' export includes team summary stats');

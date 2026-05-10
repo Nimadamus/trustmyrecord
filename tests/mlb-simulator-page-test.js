@@ -502,6 +502,9 @@ async function flushAsync() {
   assert(/Zac Gallen|Kevin Ginkel|Ryan Thompson/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Arizona pitcher names');
   assert(/Bryce Elder|Aaron Bummer|Raisel Iglesias/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Atlanta pitcher names');
   assert(/Verified MLB active roster endpoint/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup labels MLB roster source');
+  assert(/\(W\)/.test(rostered.elements.playerBoxScoreContent.innerHTML) && /\(L\)/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching table labels winning and losing pitchers');
+  assert(/\(SV\)/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching table labels simulated save pitcher when relief row exists');
+  assert(!/\(H\)/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching table does not fake hold labels');
   assert(!/Nolan Arenado/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'Arizona box score blocks reported wrong-team Nolan Arenado row');
   assert(!/Lineup Slot|Pitching Slot|Simulation Slot Lines|simulation slot -/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current roster-backed box score does not show generic slot labels');
 
