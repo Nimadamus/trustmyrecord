@@ -185,9 +185,10 @@ function assertCleanProjectedLineups(html, label) {
     ['2B:', '3B:', 'HR:', 'TB:', 'RBI:', '2-out RBI:', 'Runners left in scoring position, 2 out:', 'GIDP:', 'Team RISP:', 'Team LOB:', 'SB:', 'CS:', 'Pickoffs:', 'E:', 'Outfield assists:', 'DP:'].forEach((label) => {
       assert(elements.playerBoxScoreContent.innerHTML.includes(label), mode + ' batting details include ' + label);
     });
-    ['Balk:', 'ABS Challenge:', 'Pitches-strikes:', 'Groundouts-flyouts:', 'Batters faced:', 'Inherited runners-scored:', 'Umpires:', 'Weather:', 'Wind:', 'First pitch:', 'Attendance:', 'Venue:', 'Date:'].forEach((label) => {
+    ['Pitches-strikes:', 'Groundouts-flyouts:', 'Batters faced:', 'Inherited runners-scored:'].forEach((label) => {
       assert(elements.playerBoxScoreContent.innerHTML.includes(label), mode + ' game notes include ' + label);
     });
+    assert(!/Not verified for simulated output|Simulated neutral MLB environment|Simulated run time|Not used in this simulation|ABS Challenge|Umpires:|Weather:|Wind:|First pitch:|Attendance:|Venue:|Date:/.test(elements.playerBoxScoreContent.innerHTML), mode + ' game notes omit placeholder metadata');
     assert(/<th>AVG<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders batting average column');
     assert(/<th>OPS<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders OPS column');
     assert(/<th>ERA<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders simulated ERA column');

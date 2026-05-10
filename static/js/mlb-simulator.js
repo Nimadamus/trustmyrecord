@@ -1969,25 +1969,16 @@
         var inherited = Math.max(0, pitchers.length - 1);
         var inheritedScored = clamp(Math.round(playerSum(pitchers.slice(1), 'r') * 0.45), 0, inherited + 2);
         return '<section class="box-score-team-details"><h5>' + escapeHtml(line.team.abbreviation) + ' Pitching Notes</h5><div class="box-score-detail-group">' +
-            playerDetail('Balk:', '0 simulated') +
-            playerDetail('ABS Challenge:', 'Not used in this simulation') +
             playerDetail('Pitches-strikes:', (stats.totalPitches || 0) + '-' + (stats.totalStrikes || 0)) +
-            playerDetail('Groundouts-flyouts:', groundouts + '-' + flyouts + ' simulated') +
+            playerDetail('Groundouts-flyouts:', groundouts + '-' + flyouts) +
             playerDetail('Batters faced:', battersFaced) +
-            playerDetail('Inherited runners-scored:', inherited + '-' + inheritedScored + ' simulated') + '</div></section>';
+            playerDetail('Inherited runners-scored:', inherited + '-' + inheritedScored) + '</div></section>';
     }
     function gameNotesSection(result) {
         var box = result.boxScore;
-        var generatedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
         return '<section class="box-score-detail-section game-note-section"><h4>Pitching & Game Notes</h4><div class="box-score-stat-grid">' +
             pitcherGameNoteBlock(box.away, box.players.away) + pitcherGameNoteBlock(box.home, box.players.home) +
-            '</div><div class="box-score-game-meta">' + playerDetail('Umpires:', 'Not verified for simulated output') +
-            playerDetail('Weather:', 'Not verified for simulated output') +
-            playerDetail('Wind:', 'Not verified for simulated output') +
-            playerDetail('First pitch:', 'Simulated run time') +
-            playerDetail('Attendance:', 'Not official / not simulated') +
-            playerDetail('Venue:', 'Simulated neutral MLB environment') +
-            playerDetail('Date:', generatedDate + ' simulated run') + '</div></section>';
+            '</div></section>';
     }
     function statSection(title, content) {
         return '<section class="box-score-stat-section"><h4>' + escapeHtml(title) + '</h4><div class="box-score-stat-grid">' + content + '</div></section>';

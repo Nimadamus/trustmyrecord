@@ -16,8 +16,8 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260510-realistic-lineups/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260510-realistic-lineups/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260510-notes-cleanup/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260510-notes-cleanup/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -466,6 +466,11 @@ async function flushAsync() {
   assert(/<h4>Pitching<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), 'pitching section renders after batting details');
   assert(/Pitching (?:&amp;|&) Game Notes/.test(elements.playerBoxScoreContent.innerHTML), 'game notes render under pitching');
   assert(/Team RISP/.test(elements.playerBoxScoreContent.innerHTML) && /Pitches-strikes/.test(elements.playerBoxScoreContent.innerHTML), 'details include team RISP and pitch counts');
+  const gameNotesHtml = (elements.playerBoxScoreContent.innerHTML.match(/<section class="box-score-detail-section game-note-section">[\s\S]*?<\/section>$/) || [''])[0];
+  assert(/Groundouts-flyouts/.test(gameNotesHtml), 'pitching notes include groundouts-flyouts');
+  assert(/Batters faced/.test(gameNotesHtml), 'pitching notes include batters faced');
+  assert(/Inherited runners-scored/.test(gameNotesHtml), 'pitching notes include inherited runners-scored');
+  assert(!/Not verified for simulated output|Simulated neutral MLB environment|Simulated run time|Not used in this simulation|0 simulated|ABS Challenge|Umpires|Attendance|Venue|First pitch|Weather|Wind/.test(gameNotesHtml), 'pitching and game notes omit placeholder metadata and unused ABS lines');
   assert.strictEqual(elements.copyBoxScoreButton.disabled, false, 'copy box score button enables after simulation');
   assert.strictEqual(elements.saveBoxScoreButton.disabled, false, 'save box score button enables after simulation');
   assert(/Roster temporarily unavailable/.test(elements.playerBoxScoreContent.innerHTML), 'network-unavailable path labels roster limitation clearly');
