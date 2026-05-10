@@ -1,14 +1,407 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting to Polls...</title>
-    <link rel="canonical" href="https://trustmyrecord.com/polls/">
-    <meta name="robots" content="noindex, follow">
-    <meta http-equiv="refresh" content="0; url=/polls/">
-    <script>window.location.replace('/polls/' + window.location.search + window.location.hash);</script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MLB Run Prediction Model | TrustMyRecord</title>
+  <link rel="canonical" href="https://trustmyrecord.com/predictions/">
+  <link rel="stylesheet" href="/static/css/tmr-sitewide.css">
+  <style>
+    :root {
+      --page-bg: #f5f7fa;
+      --ink: #15202b;
+      --muted: #667586;
+      --line: #dbe3ec;
+      --panel: #ffffff;
+      --accent: #0f766e;
+      --accent-soft: #e7f5f2;
+      --warn-bg: #fff8e6;
+      --warn-line: #efd38b;
+    }
+
+    body.tmr-site-shell {
+      margin: 0;
+      background: var(--page-bg);
+      color: var(--ink);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .predictions-shell {
+      min-height: 100vh;
+    }
+
+    .predictions-header {
+      background: #101820;
+      color: #fff;
+      padding: 28px max(18px, 6vw) 24px;
+      border-bottom: 1px solid #22313f;
+    }
+
+    .predictions-header h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    .predictions-header p {
+      max-width: 920px;
+      margin: 4px 0;
+      color: #d8e1ea;
+      line-height: 1.45;
+    }
+
+    .model-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .model-meta span {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 10px;
+      border: 1px solid rgba(255, 255, 255, .22);
+      border-radius: 6px;
+      color: #edf4f8;
+      font-size: 13px;
+    }
+
+    .predictions-content {
+      max-width: 1180px;
+      margin: 22px auto 46px;
+      padding: 0 18px;
+    }
+
+    .status-panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      color: #344255;
+      line-height: 1.45;
+    }
+
+    .status-panel.warning {
+      background: var(--warn-bg);
+      border-color: var(--warn-line);
+    }
+
+    .prediction-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .backtest-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .backtest-stat {
+      border: 1px solid #e1e8ef;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fbfcfe;
+    }
+
+    .backtest-stat strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 20px;
+      line-height: 1.15;
+    }
+
+    .backtest-stat span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .model-caution {
+      margin: 12px 0 0;
+      color: #5b6673;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .prediction-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+      box-shadow: 0 1px 2px rgba(16, 24, 32, .04);
+    }
+
+    .game-kicker {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 7px;
+    }
+
+    .prediction-card h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      letter-spacing: 0;
+      line-height: 1.2;
+    }
+
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .score-box {
+      min-height: 82px;
+      border: 1px solid #e1e8ef;
+      border-radius: 8px;
+      padding: 12px;
+      background: #fbfcfe;
+    }
+
+    .score-label {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .score-value {
+      display: block;
+      margin: 5px 0;
+      font-size: 24px;
+      font-weight: 800;
+      line-height: 1.18;
+      color: #111827;
+      overflow-wrap: anywhere;
+    }
+
+    .score-note {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .factor-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 12px;
+    }
+
+    .factor-panel {
+      border-top: 1px solid #e5ebf2;
+      padding-top: 12px;
+    }
+
+    .factor-panel h3 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .factor-panel p,
+    .explanation-list li {
+      margin: 6px 0;
+      color: #354357;
+      line-height: 1.42;
+    }
+
+    .explanation-list {
+      margin: 14px 0 0;
+      padding-left: 20px;
+    }
+
+    .warning-list {
+      margin: 12px 0 0;
+      padding: 10px 12px 10px 30px;
+      background: var(--warn-bg);
+      border: 1px solid var(--warn-line);
+      border-radius: 8px;
+      color: #5d4a12;
+    }
+
+    @media (max-width: 760px) {
+      .score-grid,
+      .factor-grid,
+      .backtest-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .predictions-header h1 {
+        font-size: 25px;
+      }
+    }
+  </style>
 </head>
-<body class="tmr-site-shell"><a href="/polls/">Continue to Polls</a><script src="/static/js/analytics.js?v=20260504a"></script>
+<body class="tmr-site-shell">
+  <main class="predictions-shell">
+    <header class="predictions-header">
+      <h1>MLB Run Prediction Model</h1>
+      <p>Team run projections, predicted final scores, and matchup factors from the current model run.</p>
+      <p>Historical backtest only. Not production trusted until timestamped pregame weather, park, umpire, lineup, confirmed starter, and market snapshot feeds are connected. These are not guaranteed outcomes or automatic betting signals.</p>
+      <div class="model-meta" id="modelMeta">
+        <span>Loading model output</span>
+      </div>
+    </header>
+
+    <section class="predictions-content">
+      <div class="status-panel" id="statusPanel">Loading latest run predictions...</div>
+      <div class="prediction-grid" id="predictionGrid"></div>
+    </section>
+  </main>
+
+  <script>
+    const DATA_URL = '/static/data/mlb-run-predictions-latest.json?v=20260510';
+    const BACKTEST_URL = '/static/data/mlb-run-prediction-backtest.json?v=20260510';
+
+    const fmt = (value, digits = 1) => {
+      const number = Number(value);
+      return Number.isFinite(number) ? number.toFixed(digits) : 'N/A';
+    };
+
+    const pct = (value) => {
+      const number = Number(value);
+      return Number.isFinite(number) ? `${(number * 100).toFixed(1)}%` : 'N/A';
+    };
+
+    const text = (value) => {
+      if (value === null || value === undefined || value === '') return 'N/A';
+      return String(value);
+    };
+
+    const escapeHtml = (value) => text(value)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+    function renderMeta(payload) {
+      document.getElementById('modelMeta').innerHTML = [
+        `Date: ${escapeHtml(payload.game_date)}`,
+        `Generated: ${escapeHtml(payload.generated_at)}`,
+        `Model: ${escapeHtml(payload.model)}`,
+        `Matchups: ${escapeHtml(payload.prediction_count)}`
+      ].map(item => `<span>${item}</span>`).join('');
+    }
+
+    function sidePanel(prediction, sideKey) {
+      const side = prediction.factors?.[sideKey] || {};
+      const offense = side.offense || {};
+      const starter = side.opposing_starter || {};
+      const bullpen = side.opposing_bullpen || {};
+      const form = side.recent_form || {};
+      return `
+        <section class="factor-panel">
+          <h3>${escapeHtml(side.team || prediction[`${sideKey}_team`])} Factors</h3>
+          <p>Offense: ${fmt(offense.lineup_wrc_plus_vs_hand, 0)} wRC+ vs hand, ${fmt(offense.woba_vs_hand, 3)} wOBA, ${fmt(offense.iso_vs_hand, 3)} ISO.</p>
+          <p>Pitching matchup: ${escapeHtml(starter.name || 'TBD')} (${escapeHtml(starter.hand || 'N/A')}), ${fmt(starter.fip, 2)} FIP, ${fmt(starter.k_minus_bb_pct, 3)} K-BB.</p>
+          <p>Bullpen: ${fmt(bullpen.fip_last_30d, 2)} FIP last 30 days, ${fmt(bullpen.pitches_last_3d, 0)} pitches last 3 days, ${fmt(bullpen.unavailable_high_leverage_count, 0)} high-leverage unavailable.</p>
+          <p>Recent form: ${fmt(form.last_14_days_runs_per_game, 2)} runs per game over ${text(form.last_14_days_games)} recent team-games.</p>
+        </section>
+      `;
+    }
+
+    function renderPrediction(prediction) {
+      const score = prediction.predicted_final_score || {};
+      const env = prediction.factors?.run_environment || {};
+      const market = prediction.market || {};
+      const warnings = Array.isArray(prediction.warnings) && prediction.warnings.length
+        ? `<ul class="warning-list">${prediction.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>`
+        : '';
+      const explanation = Array.isArray(prediction.explanation)
+        ? prediction.explanation.map(item => `<li>${escapeHtml(item)}</li>`).join('')
+        : '';
+
+      return `
+        <article class="prediction-card">
+          <div class="game-kicker">${escapeHtml(prediction.start_time || prediction.game_date)} | Market total ${fmt(market.total, 1)} | Park ${fmt(env.park_factor, 2)}</div>
+          <h2>${escapeHtml(prediction.away_team)} @ ${escapeHtml(prediction.home_team)}</h2>
+          <div class="score-grid">
+            <div class="score-box">
+              <span class="score-label">${escapeHtml(prediction.away_team)} projected runs</span>
+              <strong class="score-value">${fmt(prediction.projected_runs?.away, 2)}</strong>
+              <span class="score-note">Win probability ${pct(prediction.win_probability?.away)}</span>
+            </div>
+            <div class="score-box">
+              <span class="score-label">${escapeHtml(prediction.home_team)} projected runs</span>
+              <strong class="score-value">${fmt(prediction.projected_runs?.home, 2)}</strong>
+              <span class="score-note">Win probability ${pct(prediction.win_probability?.home)}</span>
+            </div>
+            <div class="score-box">
+              <span class="score-label">Predicted final score</span>
+              <strong class="score-value">${escapeHtml(score.away_team)} ${text(score.away_runs)} - ${escapeHtml(score.home_team)} ${text(score.home_runs)}</strong>
+              <span class="score-note">${escapeHtml(score.winner)} win lean; ${escapeHtml(market.model_total_lean || 'No total lean')}</span>
+            </div>
+          </div>
+          <div class="factor-grid">
+            ${sidePanel(prediction, 'away')}
+            ${sidePanel(prediction, 'home')}
+          </div>
+          <ul class="explanation-list">${explanation}</ul>
+          ${warnings}
+        </article>
+      `;
+    }
+
+    function renderBacktest(payload) {
+      if (!payload || !payload.team_run || !payload.game_level) return '';
+      const team = payload.team_run;
+      const game = payload.game_level;
+      const total = payload.total_direction_threshold_1_run_real_results || {};
+      return `
+        <div class="status-panel">
+          <strong>Backtest snapshot:</strong> ${escapeHtml(payload.sample || 'Historical out-of-sample model audit')}
+          <div class="backtest-grid">
+            <div class="backtest-stat"><strong>${fmt(team.mae, 3)}</strong><span>Team-run MAE over ${text(team.rows)} team-games</span></div>
+            <div class="backtest-stat"><strong>${fmt(game.winner_accuracy * 100, 1)}%</strong><span>Winner accuracy over ${text(game.games)} games</span></div>
+            <div class="backtest-stat"><strong>${fmt(game.exact_final_score_rate * 100, 1)}%</strong><span>Exact rounded final-score hit rate</span></div>
+            <div class="backtest-stat"><strong>${fmt(total.win_rate_ex_push * 100, 1)}%</strong><span>Total direction win rate at 1.0-run edge, pushes excluded</span></div>
+          </div>
+          <p class="model-caution">Historical backtest only. Not production trusted until timestamped pregame weather, park, umpire, lineup, confirmed starter, and market snapshot feeds are connected. These are not guaranteed outcomes or automatic betting signals.</p>
+        </div>
+      `;
+    }
+
+    async function loadPredictions() {
+      const status = document.getElementById('statusPanel');
+      const grid = document.getElementById('predictionGrid');
+      try {
+        const response = await fetch(DATA_URL, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const payload = await response.json();
+        let backtest = null;
+        try {
+          const backtestResponse = await fetch(BACKTEST_URL, { cache: 'no-store' });
+          if (backtestResponse.ok) backtest = await backtestResponse.json();
+        } catch (_) {
+          backtest = null;
+        }
+        renderMeta(payload);
+        const warnings = Array.isArray(payload.warnings) ? payload.warnings : [];
+        status.className = warnings.length ? 'status-panel warning' : 'status-panel';
+        status.innerHTML = `<strong>Inputs:</strong> ${escapeHtml((payload.data_sources || []).join('; '))}` +
+          (warnings.length ? `<ul>${warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>` : '');
+        grid.innerHTML = renderBacktest(backtest) + (payload.predictions || []).map(renderPrediction).join('');
+        if (!grid.innerHTML) {
+          grid.innerHTML = '<div class="status-panel warning">No complete predictions are available for the latest model run.</div>';
+        }
+      } catch (error) {
+        status.className = 'status-panel warning';
+        status.textContent = `Could not load run prediction model output: ${error.message}`;
+      }
+    }
+
+    loadPredictions();
+  </script>
+  <script src="/static/js/analytics.js?v=20260504a"></script>
 </body>
 </html>
