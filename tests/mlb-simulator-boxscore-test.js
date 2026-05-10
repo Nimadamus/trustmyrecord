@@ -20,7 +20,7 @@ const ids = [
   'totalRangeValue','runEnvironmentValue','simulationConfidenceValue','eraAdjustmentValue','simulationModeValue',
   'dataModeValue','awayProbabilityLabel','homeProbabilityLabel','awayProbabilityValue','homeProbabilityValue',
   'awayProbabilityBar','homeProbabilityBar','projectionNotice','comparisonGrid','inputSummary','matchupNotes',
-  'boxScorePanel','boxScoreTitle','boxScoreBody','boxScoreTeamTotals','boxScoreSummary','playerBoxScorePanel',
+  'boxScorePanel','boxScoreTitle','boxScoreMatchupCard','boxScoreBody','boxScoreTeamTotals','boxScoreSummary','playerBoxScorePanel',
   'playerBoxScoreContent','copyBoxScoreButton','saveBoxScoreButton'
 ];
 
@@ -162,8 +162,12 @@ function assertBoxScore(result) {
     assert(/<tr/.test(elements.boxScoreBody.innerHTML), mode + ' renders box score rows');
     assert(/LOB/.test(elements.boxScoreTeamTotals.innerHTML), mode + ' renders left on base totals');
     assert(/P-S/.test(elements.boxScoreTeamTotals.innerHTML), mode + ' renders pitches-strikes totals');
-    assert(/<th>HR<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders home run column');
-    assert(/<th>PC-ST<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders ESPN-style pitches-strikes column');
+    assert(/FINAL/.test(elements.boxScoreMatchupCard.innerHTML), mode + ' renders final-status scoreboard card');
+    assert(/not official MLB stats/.test(elements.boxScoreMatchupCard.innerHTML), mode + ' renders honest simulation label');
+    assert(/<th>AVG<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders batting average column');
+    assert(/<th>OPS<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders OPS column');
+    assert(/<th>ERA<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders simulated ERA column');
+    assert(/Totals/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders table totals rows');
     assert(/Starting Pitchers:/.test(simulator.boxScoreText(result)), mode + ' export includes starters');
     assert(/Team summary:/.test(simulator.boxScoreText(result)), mode + ' export includes team summary stats');
     assert(/LOB/.test(simulator.boxScoreText(result)), mode + ' export includes left on base');

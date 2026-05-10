@@ -1068,13 +1068,13 @@
 
 .box-score-panel {
     display: grid;
-    gap: 7px;
-    padding: 10px;
+    gap: 10px;
+    padding: 12px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
-    background: #f8fafc;
+    background: #eef2f7;
     scroll-margin-top: 86px;
-    box-shadow: 0 14px 36px rgba(2, 6, 23, 0.2);
+    box-shadow: 0 16px 42px rgba(2, 6, 23, 0.18);
 }
 
 .box-score-panel[data-box-score-state="empty"] {
@@ -1090,6 +1090,10 @@
     display: none;
 }
 
+.box-score-panel[data-box-score-state="empty"] .box-score-matchup-card {
+    display: none;
+}
+
 .box-score-panel[data-box-score-state="empty"] .box-score-heading strong {
     font-size: clamp(18px, 2vw, 24px);
 }
@@ -1099,7 +1103,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 10px;
-    padding: 7px 8px;
+    padding: 9px 10px;
     border: 1px solid #d7dee8;
     border-radius: 6px;
     background: #ffffff;
@@ -1119,9 +1123,9 @@
     margin-top: 3px;
     color: #334155;
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
-    line-height: 1.1;
+    line-height: 1.25;
     overflow-wrap: anywhere;
 }
 
@@ -1155,6 +1159,138 @@
     color: #0f172a;
 }
 
+.box-score-matchup-card {
+    display: grid;
+    gap: 10px;
+    padding: 12px;
+    border: 1px solid #d7dee8;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #111827;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.box-score-status {
+    justify-self: center;
+    padding: 3px 10px;
+    border: 1px solid #d7dee8;
+    border-radius: 999px;
+    color: #475569;
+    background: #f8fafc;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+}
+
+.box-score-matchup-main {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
+}
+
+.box-score-team-card {
+    display: grid;
+    grid-template-columns: 46px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.box-score-team-card.home {
+    grid-template-columns: minmax(0, 1fr) 46px;
+    text-align: right;
+}
+
+.box-score-team-card.home .team-logo-mark {
+    order: 2;
+}
+
+.scoreboard-logo {
+    width: 46px;
+    height: 46px;
+    border-color: #dbe4ee;
+    background: #f8fafc;
+    box-shadow: none;
+}
+
+.box-score-team-card strong {
+    display: block;
+    color: #0f172a;
+    font: 900 20px/1 Barlow, Inter, Arial, sans-serif;
+}
+
+.box-score-team-card span,
+.box-score-team-card small {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.box-score-team-card small {
+    color: #64748b;
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.box-score-final {
+    display: grid;
+    justify-items: center;
+    min-width: 140px;
+}
+
+.box-score-final strong {
+    color: #0f172a;
+    font: 900 42px/0.95 Barlow, Inter, Arial, sans-serif;
+    letter-spacing: 0;
+}
+
+.box-score-final em {
+    padding: 0 8px;
+    color: #94a3b8;
+    font-style: normal;
+}
+
+.box-score-final span {
+    color: #64748b;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+}
+
+.box-score-decisions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 14px;
+    padding-top: 8px;
+    border-top: 1px solid #e5e7eb;
+    color: #334155;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.box-score-decisions strong {
+    color: #0f172a;
+    font-weight: 900;
+}
+
+.box-score-honesty {
+    margin: 0;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
+    text-align: center;
+}
+
 .box-score-scroll {
     width: 100%;
     max-width: 100%;
@@ -1162,14 +1298,14 @@
     overflow-x: auto;
     overflow-y: hidden;
     border: 1px solid #d7dee8;
-    border-radius: 6px;
+    border-radius: 4px;
     background: #ffffff;
     -webkit-overflow-scrolling: touch;
 }
 
 .box-score-table {
     width: 100%;
-    min-width: 680px;
+    min-width: 720px;
     border-collapse: collapse;
     color: #111827;
     background: #ffffff;
@@ -1178,36 +1314,66 @@
 
 .box-score-table th,
 .box-score-table td {
-    padding: 4px 6px;
+    height: 32px;
+    padding: 5px 8px;
     border-bottom: 1px solid #e5e7eb;
     text-align: center;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
 }
 
 .box-score-table th:first-child,
 .box-score-table td:first-child {
     text-align: left;
-    min-width: 94px;
+    min-width: 160px;
 }
 
 .box-score-table thead th {
     border-bottom: 1px solid #cbd5e1;
     color: #475569;
     background: #eef2f7;
-    font-size: 9px;
+    font-size: 10px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
 .box-score-table .winner-row {
-    background: #eaf3ff;
+    background: #f5f9ff;
 }
 
 .box-score-table .total-runs {
     color: #111827;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 900;
+}
+
+.line-score-team {
+    display: inline-grid;
+    grid-template-columns: 28px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.line-score-logo {
+    width: 28px;
+    height: 28px;
+    border-color: #dbe4ee;
+    background: #f8fafc;
+    box-shadow: none;
+}
+
+.line-score-team strong,
+.line-score-team small {
+    display: block;
+}
+
+.line-score-team small {
+    color: #64748b;
+    font-size: 9px;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
 }
 
 .box-score-team-totals {
@@ -1267,24 +1433,48 @@
 
 .box-score-summary {
     display: grid;
-    gap: 3px;
-    padding: 6px 7px;
+    gap: 8px;
+    padding: 10px 12px;
     border: 1px solid #d7dee8;
     border-radius: 6px;
     background: #ffffff;
     color: #1f2937;
     font-family: Arial, Helvetica, sans-serif;
-    font-size: 11px;
-    line-height: 1.28;
+    font-size: 12px;
+    line-height: 1.4;
 }
 
-.box-score-summary strong,
-.box-score-summary span {
-    display: block;
+.box-score-summary-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
 }
 
-.box-score-summary span {
+.box-score-summary-head strong {
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.box-score-summary-head span {
     color: #475569;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.box-score-summary ol {
+    display: grid;
+    gap: 6px;
+    margin: 0;
+    padding-left: 18px;
+}
+
+.box-score-summary li {
+    color: #334155;
+    padding-left: 2px;
 }
 
 .player-box-score-panel {
@@ -1323,12 +1513,14 @@
 
 .player-box-score-content {
     display: grid;
-    gap: 8px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
 }
 
 .player-team-box {
     display: grid;
     gap: 10px;
+    min-width: 0;
 }
 
 .espn-box-group {
@@ -1374,7 +1566,7 @@
 
 .player-box-table {
     width: 100%;
-    min-width: 660px;
+    min-width: 600px;
     border-collapse: collapse;
     color: #111827;
     font-family: Arial, Helvetica, sans-serif;
@@ -1382,7 +1574,7 @@
 
 .player-box-table th,
 .player-box-table td {
-    padding: 4px 6px;
+    padding: 5px 7px;
     border-bottom: 1px solid #e5e7eb;
     text-align: right;
     font-size: 11px;
@@ -1408,6 +1600,14 @@
 .player-box-table tbody tr:last-child th,
 .player-box-table tbody tr:last-child td {
     border-bottom: 0;
+}
+
+.player-box-table .player-total-row th,
+.player-box-table .player-total-row td {
+    border-top: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #0f172a;
+    font-weight: 900;
 }
 
 .comparison-grid {
@@ -1982,13 +2182,27 @@
     .box-score-team-totals dl {
         grid-template-columns: repeat(4, minmax(52px, 1fr));
     }
+
+    .box-score-matchup-main,
+    .player-box-score-content {
+        grid-template-columns: 1fr;
+    }
+
+    .box-score-team-card.home {
+        grid-template-columns: 46px minmax(0, 1fr);
+        text-align: left;
+    }
+
+    .box-score-team-card.home .team-logo-mark {
+        order: 0;
+    }
 }
 
 /* Box score compact pass: keep the full-width simulator layout but make this
    section read like a sports data table instead of a bulky content panel. */
 .sim-panel.box-score-panel {
-    gap: 8px;
-    padding: 10px;
+    gap: 10px;
+    padding: 12px;
 }
 
 .sim-panel.box-score-panel .box-score-heading h2 {

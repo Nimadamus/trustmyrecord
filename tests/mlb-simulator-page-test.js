@@ -68,7 +68,7 @@ const elementIds = [
   'eraAdjustmentValue','simulationModeValue','dataModeValue','awayProbabilityLabel','homeProbabilityLabel',
   'awayProbabilityValue','homeProbabilityValue','awayProbabilityBar','homeProbabilityBar','projectionNotice',
   'comparisonGrid','inputSummary','matchupNotes','boxScorePanel','boxScoreTitle','boxScoreBody',
-  'boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton','playerBoxScorePanel','playerBoxScoreContent',
+  'boxScoreMatchupCard','boxScoreTeamTotals','boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton','playerBoxScorePanel','playerBoxScoreContent',
   'projectionEmptyState','probabilityLab','viewBoxScoreLink','viewBoxScoreControl','simulationCountSelect',
   'aggregatePanel','aggregateSummaryGrid','aggregateSummaryText'
 ];
@@ -451,7 +451,9 @@ async function flushAsync() {
   assert(/%/.test(elements.winProbabilityValue.textContent), 'estimated win percentage renders after simulation');
   assert.strictEqual(elements.boxScorePanel.getAttribute('data-box-score-state'), 'projected', 'box score panel renders after simulation');
   assert(/<tr/.test(elements.boxScoreBody.innerHTML), 'box score table rows render after simulation');
-  assert(/Final/.test(elements.boxScoreTitle.textContent), 'box score title includes final score');
+  assert(/ at /.test(elements.boxScoreTitle.textContent), 'box score title includes matchup');
+  assert(/FINAL/.test(elements.boxScoreMatchupCard.innerHTML), 'box score renders final-status matchup card');
+  assert(/not official MLB stats/.test(elements.boxScoreMatchupCard.innerHTML), 'box score keeps honest simulation label');
   assert.strictEqual(elements.copyBoxScoreButton.disabled, false, 'copy box score button enables after simulation');
   assert.strictEqual(elements.saveBoxScoreButton.disabled, false, 'save box score button enables after simulation');
   assert(/Roster temporarily unavailable/.test(elements.playerBoxScoreContent.innerHTML), 'network-unavailable path labels roster limitation clearly');

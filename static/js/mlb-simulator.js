@@ -1649,21 +1649,58 @@
     function sum(values) {
         return values.reduce(function (total, value) { return total + Number(value || 0); }, 0);
     }
+    function formatAverage(value) {
+        if (!Number.isFinite(value)) return '.000';
+        var text = Math.max(0, value).toFixed(3);
+        return text.replace(/^0/, '');
+    }
+    function batterAverage(row) {
+        return formatAverage(Number(row && row.h || 0) / Math.max(1, Number(row && row.ab || 0)));
+    }
+    function batterOps(row) {
+        var ab = Math.max(1, Number(row && row.ab || 0));
+        var hits = Number(row && row.h || 0);
+        var walks = Number(row && row.bb || 0);
+        var doubles = Number(row && row.doubles || 0);
+        var triples = Number(row && row.triples || 0);
+        var homers = Number(row && row.hr || 0);
+        var singles = Math.max(0, hits - doubles - triples - homers);
+        var totalBases = singles + doubles * 2 + triples * 3 + homers * 4;
+        return formatAverage((hits + walks) / Math.max(1, ab + walks) + totalBases / ab);
+    }
+    function pitcherEra(row) {
+        var outs = Number(row && row.outs || 0);
+        if (!outs) return '--';
+        return ((Number(row.er || 0) * 27) / outs).toFixed(2);
+    }
     function boxRow(line, winnerId) {
         var isWinner = line.team.id === winnerId;
-        return '<tr class="' + (isWinner ? 'winner-row' : '') + '"><th scope="row">' + escapeHtml(line.team.abbreviation) + '</th>' +
+        return '<tr class="' + (isWinner ? 'winner-row' : '') + '"><th scope="row"><span class="line-score-team">' + logoMarkup(line.team, 'line-score-logo') + '<span><strong>' + escapeHtml(line.team.abbreviation) + '</strong><small>' + escapeHtml(line.team.era === 'historical' ? line.team.season : line.team.division) + '</small></span></span></th>' +
             line.innings.map(function (runs) { return '<td>' + runs + '</td>'; }).join('') +
             '<td class="total-runs">' + line.runs + '</td><td>' + line.hits + '</td><td>' + line.errors + '</td></tr>';
     }
+    function batterTotals(rows) {
+        return {
+            ab: playerSum(rows, 'ab'),
+            r: playerSum(rows, 'r'),
+            h: playerSum(rows, 'h'),
+            rbi: playerSum(rows, 'rbi'),
+            bb: playerSum(rows, 'bb'),
+            so: playerSum(rows, 'so')
+        };
+    }
     function batterTableRows(rows) {
-        return rows.map(function (row) {
-            return '<tr><th scope="row">' + escapeHtml(row.name) + '</th><td>' + row.ab + '</td><td>' + row.r + '</td><td>' + row.h + '</td><td>' + row.rbi + '</td><td>' + (row.hr || 0) + '</td><td>' + row.bb + '</td><td>' + row.so + '</td></tr>';
+        var body = rows.map(function (row) {
+            return '<tr><th scope="row">' + escapeHtml(row.name) + '</th><td>' + row.ab + '</td><td>' + row.r + '</td><td>' + row.h + '</td><td>' + row.rbi + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + batterAverage(row) + '</td><td>' + batterOps(row) + '</td></tr>';
         }).join('');
+        var totals = batterTotals(rows);
+        return body + '<tr class="player-total-row"><th scope="row">Totals</th><td>' + totals.ab + '</td><td>' + totals.r + '</td><td>' + totals.h + '</td><td>' + totals.rbi + '</td><td>' + totals.bb + '</td><td>' + totals.so + '</td><td></td><td></td></tr>';
     }
     function pitcherTableRows(rows) {
-        return rows.map(function (row) {
-            return '<tr><th scope="row">' + escapeHtml(row.name) + '</th><td>' + escapeHtml(row.ip) + '</td><td>' + row.h + '</td><td>' + row.r + '</td><td>' + row.er + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + row.hr + '</td><td>' + escapeHtml(row.ps || ((row.pitches || 0) + '-' + (row.strikes || 0))) + '</td></tr>';
+        var body = rows.map(function (row) {
+            return '<tr><th scope="row">' + escapeHtml(row.name) + '</th><td>' + escapeHtml(row.ip) + '</td><td>' + row.h + '</td><td>' + row.r + '</td><td>' + row.er + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + row.hr + '</td><td>' + pitcherEra(row) + '</td></tr>';
         }).join('');
+        return body + '<tr class="player-total-row"><th scope="row">Totals</th><td>9.0</td><td>' + playerSum(rows, 'h') + '</td><td>' + playerSum(rows, 'r') + '</td><td>' + playerSum(rows, 'er') + '</td><td>' + playerSum(rows, 'bb') + '</td><td>' + playerSum(rows, 'so') + '</td><td>' + playerSum(rows, 'hr') + '</td><td></td></tr>';
     }
     function teamTotalCard(line) {
         var stats = line.summaryStats || {};
@@ -1690,21 +1727,39 @@
     function renderTeamTotals(box) {
         return teamTotalCard(box.away) + teamTotalCard(box.home);
     }
+    function pitcherDecisionLine(result, box) {
+        var winnerPitcher = box.winner.id === result.home.id ? result.homePitcher : result.awayPitcher;
+        var loserPitcher = box.loser.id === result.home.id ? result.homePitcher : result.awayPitcher;
+        return '<div class="box-score-decisions"><span><strong>W</strong> ' + escapeHtml(winnerPitcher && winnerPitcher.name || 'Simulated starter') + '</span><span><strong>L</strong> ' + escapeHtml(loserPitcher && loserPitcher.name || 'Simulated starter') + '</span><span><strong>SV</strong> Simulated bullpen line</span></div>';
+    }
+    function teamScoreBlock(line, side) {
+        return '<div class="box-score-team-card ' + side + '">' + logoMarkup(line.team, 'scoreboard-logo') + '<div><strong>' + escapeHtml(line.team.abbreviation) + '</strong><span>' + escapeHtml(line.team.name) + '</span><small>' + escapeHtml(line.team.era === 'historical' ? 'Classic ' + line.team.season : line.team.league + ' ' + line.team.division) + '</small></div></div>';
+    }
+    function renderScoreboardCard(result, box) {
+        return '<div class="box-score-status">FINAL</div><div class="box-score-matchup-main">' + teamScoreBlock(box.away, 'away') +
+            '<div class="box-score-final"><span>' + escapeHtml(result.away.abbreviation) + '</span><strong>' + box.away.runs + '<em>-</em>' + box.home.runs + '</strong><span>' + escapeHtml(result.home.abbreviation) + '</span></div>' +
+            teamScoreBlock(box.home, 'home') + '</div>' + pitcherDecisionLine(result, box) +
+            '<p class="box-score-honesty">Simulation output from TrustMyRecord. Player stat lines are modeled from the selected matchup and are not official MLB stats.</p>';
+    }
     function summaryLine(line) {
         var stats = line.summaryStats || {};
         return line.team.abbreviation + ': 2B ' + (stats.doubles || 0) + ', 3B ' + (stats.triples || 0) + ', HR ' + (stats.homeRuns || 0) + ', RBI ' + (stats.rbi || 0) + ', BB ' + (stats.walks || 0) + ', SO ' + (stats.strikeouts || 0) + ', SB ' + (stats.stolenBases || 0) + ', CS ' + (stats.caughtStealing || 0) + ', LOB ' + (stats.leftOnBase || 0) + ', Pitches ' + (stats.totalPitches || 0) + ' (' + (stats.totalPitches || 0) + '-' + (stats.totalStrikes || 0) + ' P-S)';
+    }
+    function summaryMarkup(box) {
+        return '<div class="box-score-summary-head"><strong>Game Summary</strong><span>Key simulated moments</span></div>' +
+            '<ol><li>' + escapeHtml(box.summary) + '</li><li>' + escapeHtml(summaryLine(box.away)) + '</li><li>' + escapeHtml(summaryLine(box.home)) + '</li><li>' + escapeHtml(box.pitcherLines.join(' / ')) + '</li></ol>';
     }
     function playerTeamBox(team, players) {
         var source = players && players.rosterSource ? players.rosterSource : 'Roster temporarily unavailable';
         var hasBatters = players && players.batters && players.batters.length;
         var hasPitchers = players && players.pitchers && players.pitchers.length;
         if (!hasBatters || !hasPitchers) {
-            return '<section class="player-team-box"><h4>' + escapeHtml(team.name) + ' Box Score Lines</h4><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p><div class="sim-empty">Verified roster names are unavailable for this team, so player stat rows are hidden instead of filled with placeholders.</div></section>';
+            return '<section class="player-team-box"><div class="espn-box-group"><h4>' + escapeHtml(team.name) + ' Box Score Lines</h4><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p><div class="sim-empty">Verified roster names are unavailable for this team, so player stat rows are hidden instead of filled with placeholders.</div></div></section>';
         }
         return '<section class="player-team-box"><div class="espn-box-group"><h4>' + escapeHtml(team.name) + ' Hitting</h4><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
-            '<div class="player-table-wrap"><table class="player-box-table batting-table"><thead><tr><th>hitters</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>HR</th><th>BB</th><th>K</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div></div>' +
+            '<div class="player-table-wrap"><table class="player-box-table batting-table"><thead><tr><th>Hitters</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>K</th><th>AVG</th><th>OPS</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div></div>' +
             '<div class="espn-box-group"><h4>' + escapeHtml(team.name) + ' Pitching</h4>' +
-            '<div class="player-table-wrap"><table class="player-box-table pitching-table"><thead><tr><th>pitchers</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th><th>HR</th><th>PC-ST</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers) + '</tbody></table></div></div></section>';
+            '<div class="player-table-wrap"><table class="player-box-table pitching-table"><thead><tr><th>Pitchers</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th><th>HR</th><th>ERA</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers) + '</tbody></table></div></div></section>';
     }
     function renderPlayerBoxScore(result) {
         var panel = byId('playerBoxScorePanel');
@@ -1845,12 +1900,14 @@
         var body = byId('boxScoreBody');
         var summary = byId('boxScoreSummary');
         var totals = byId('boxScoreTeamTotals');
+        var matchup = byId('boxScoreMatchupCard');
         if (!panel || !title || !body || !summary) return;
         if (!result || !result.boxScore) {
             panel.setAttribute('data-box-score-state', 'empty');
             title.textContent = 'Run a simulation to generate a box score.';
             body.innerHTML = '<tr><td colspan="13">Run a simulation to generate a box score.</td></tr>';
             if (totals) totals.innerHTML = '<div class="sim-empty">Run a simulation to generate team totals.</div>';
+            if (matchup) matchup.innerHTML = '<div class="sim-empty">Run a simulation to generate a game summary card.</div>';
             summary.textContent = 'Run a simulation to generate a box score.';
             setExportButtons(false);
             renderPlayerBoxScore(null);
@@ -1858,10 +1915,11 @@
         }
         var box = result.boxScore;
         panel.setAttribute('data-box-score-state', 'projected');
-        title.textContent = result.away.name + ' at ' + result.home.name + ' / Final ' + result.away.abbreviation + ' ' + box.away.runs + ', ' + result.home.abbreviation + ' ' + box.home.runs;
+        title.textContent = result.away.name + ' at ' + result.home.name;
+        if (matchup) matchup.innerHTML = renderScoreboardCard(result, box);
         body.innerHTML = boxRow(box.away, box.winner.id) + boxRow(box.home, box.winner.id);
         if (totals) totals.innerHTML = renderTeamTotals(box);
-        summary.innerHTML = '<strong>' + escapeHtml(box.summary) + '</strong><span>' + escapeHtml(summaryLine(box.away)) + '</span><span>' + escapeHtml(summaryLine(box.home)) + '</span><span>' + escapeHtml(box.pitcherLines.join(' / ')) + '</span>';
+        summary.innerHTML = summaryMarkup(box);
         renderPlayerBoxScore(result);
         setExportButtons(true);
     }

@@ -22,7 +22,7 @@ const elementIds = [
   'eraAdjustmentValue','simulationModeValue','dataModeValue','awayProbabilityLabel','homeProbabilityLabel',
   'awayProbabilityValue','homeProbabilityValue','awayProbabilityBar','homeProbabilityBar','projectionNotice',
   'comparisonGrid','inputSummary','matchupNotes','boxScorePanel','boxScoreTitle','boxScoreBody',
-  'boxScoreTeamTotals','boxScoreSummary','playerBoxScorePanel','playerBoxScoreContent','copyBoxScoreButton','saveBoxScoreButton'
+  'boxScoreMatchupCard','boxScoreTeamTotals','boxScoreSummary','playerBoxScorePanel','playerBoxScoreContent','copyBoxScoreButton','saveBoxScoreButton'
 ];
 
 function makeElement(id) {
