@@ -457,6 +457,8 @@ async function flushAsync() {
   assert(!/Key simulated moments/i.test(elements.boxScoreSummary.innerHTML + elements.playerBoxScoreContent.innerHTML), 'key simulated moments block is not rendered');
   assert(/<h4>Batting<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), 'batting section renders under line score');
   assert(/<h4>Pitching<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), 'pitching section renders under batting');
+  assert(/Box Score Details/.test(elements.playerBoxScoreContent.innerHTML), 'miscellaneous box score details render under pitching');
+  assert(/LOB/.test(elements.playerBoxScoreContent.innerHTML) && /P-S/.test(elements.playerBoxScoreContent.innerHTML), 'details include left on base and pitch counts');
   assert.strictEqual(elements.copyBoxScoreButton.disabled, false, 'copy box score button enables after simulation');
   assert.strictEqual(elements.saveBoxScoreButton.disabled, false, 'save box score button enables after simulation');
   assert(/Roster temporarily unavailable/.test(elements.playerBoxScoreContent.innerHTML), 'network-unavailable path labels roster limitation clearly');

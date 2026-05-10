@@ -165,6 +165,10 @@ function assertBoxScore(result) {
     assert(!/Key simulated moments/i.test(elements.boxScoreSummary.innerHTML + elements.playerBoxScoreContent.innerHTML), mode + ' does not render key simulated moments block');
     assert(/<h4>Batting<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders batting section directly under line score');
     assert(/<h4>Pitching<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders pitching section directly under batting');
+    assert(/Box Score Details/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders compact details section under pitching');
+    ['2B', '3B', 'HR', 'RBI', 'BB', 'K', 'SB', 'CS', 'LOB', 'E', 'Pitches', 'P-S'].forEach((label) => {
+      assert(elements.playerBoxScoreContent.innerHTML.includes(label), mode + ' details include ' + label);
+    });
     assert(/<th>AVG<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders batting average column');
     assert(/<th>OPS<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders OPS column');
     assert(/<th>ERA<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders simulated ERA column');

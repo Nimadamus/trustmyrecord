@@ -1766,6 +1766,46 @@
         return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
             '<div class="player-table-wrap"><table class="player-box-table pitching-table"><thead><tr><th>Pitchers</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th><th>HR</th><th>ERA</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers) + '</tbody></table></div></section>';
     }
+    function detailValue(label, awayValue, homeValue) {
+        return '<div class="box-score-detail-row"><dt>' + escapeHtml(label) + '</dt><dd><strong>' + escapeHtml(awayValue != null && awayValue !== '' ? awayValue : 0) + '</strong><strong>' + escapeHtml(homeValue != null && homeValue !== '' ? homeValue : 0) + '</strong></dd></div>';
+    }
+    function detailsForLine(line) {
+        var stats = line.summaryStats || {};
+        return {
+            doubles: stats.doubles || 0,
+            triples: stats.triples || 0,
+            homeRuns: stats.homeRuns || 0,
+            rbi: stats.rbi || 0,
+            walks: stats.walks || 0,
+            strikeouts: stats.strikeouts || 0,
+            stolenBases: stats.stolenBases || 0,
+            caughtStealing: stats.caughtStealing || 0,
+            leftOnBase: stats.leftOnBase || 0,
+            errors: line.errors || 0,
+            pitches: stats.totalPitches || 0,
+            pitchStrikes: (stats.totalPitches || 0) + '-' + (stats.totalStrikes || 0)
+        };
+    }
+    function boxScoreDetails(box) {
+        var away = detailsForLine(box.away);
+        var home = detailsForLine(box.home);
+        var rows = [
+            ['2B', away.doubles, home.doubles],
+            ['3B', away.triples, home.triples],
+            ['HR', away.homeRuns, home.homeRuns],
+            ['RBI', away.rbi, home.rbi],
+            ['BB', away.walks, home.walks],
+            ['K', away.strikeouts, home.strikeouts],
+            ['SB', away.stolenBases, home.stolenBases],
+            ['CS', away.caughtStealing, home.caughtStealing],
+            ['LOB', away.leftOnBase, home.leftOnBase],
+            ['E', away.errors, home.errors],
+            ['Pitches', away.pitches, home.pitches],
+            ['P-S', away.pitchStrikes, home.pitchStrikes]
+        ];
+        return '<section class="box-score-detail-section"><h4>Box Score Details</h4><div class="box-score-detail-teams"><span></span><strong>' + escapeHtml(box.away.team.abbreviation) + '</strong><strong>' + escapeHtml(box.home.team.abbreviation) + '</strong></div><dl>' +
+            rows.map(function (row) { return detailValue(row[0], row[1], row[2]); }).join('') + '</dl></section>';
+    }
     function statSection(title, content) {
         return '<section class="box-score-stat-section"><h4>' + escapeHtml(title) + '</h4><div class="box-score-stat-grid">' + content + '</div></section>';
     }
@@ -1780,7 +1820,8 @@
         }
         panel.setAttribute('data-player-box-state', 'projected');
         content.innerHTML = statSection('Batting', teamBattingTable(result.away, result.boxScore.players.away) + teamBattingTable(result.home, result.boxScore.players.home)) +
-            statSection('Pitching', teamPitchingTable(result.away, result.boxScore.players.away) + teamPitchingTable(result.home, result.boxScore.players.home));
+            statSection('Pitching', teamPitchingTable(result.away, result.boxScore.players.away) + teamPitchingTable(result.home, result.boxScore.players.home)) +
+            boxScoreDetails(result.boxScore);
     }
     function boxScoreText(result) {
         if (!result || !result.boxScore) return '';
