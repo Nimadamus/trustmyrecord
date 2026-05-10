@@ -10319,6 +10319,7 @@ window.toggleSportFamily = function (family) {
         var homeButtons = config.homeButtons || [oddsButton('—', '—'), oddsButton('—', '—'), oddsButton('—', '—')];
         while (awayButtons.length < 3) awayButtons.push(oddsButton('—', '—'));
         while (homeButtons.length < 3) homeButtons.push(oddsButton('—', '—'));
+        var columnKeys = config.columnKeys || ['spread', 'ml', 'total'];
         var awayMeta = config.awayMeta || '';
         var homeMeta = config.homeMeta || '';
 
@@ -10340,15 +10341,15 @@ window.toggleSportFamily = function (family) {
             '</div>' +
             '<div class="market-grid-row team-market-row away-team-row">' +
                 teamCell('Away', awayLogo, away, awayMeta) +
-                '<div class="odds-cell">' + awayButtons[0] + '</div>' +
-                '<div class="odds-cell">' + awayButtons[1] + '</div>' +
-                '<div class="odds-cell">' + awayButtons[2] + '</div>' +
+                '<div class="odds-cell" data-col="' + _ttHtmlEsc(columnKeys[0]) + '">' + awayButtons[0] + '</div>' +
+                '<div class="odds-cell" data-col="' + _ttHtmlEsc(columnKeys[1]) + '">' + awayButtons[1] + '</div>' +
+                '<div class="odds-cell" data-col="' + _ttHtmlEsc(columnKeys[2]) + '">' + awayButtons[2] + '</div>' +
             '</div>' +
             '<div class="market-grid-row team-market-row home-team-row">' +
                 teamCell('Home', homeLogo, home, homeMeta) +
-                '<div class="odds-cell">' + homeButtons[0] + '</div>' +
-                '<div class="odds-cell">' + homeButtons[1] + '</div>' +
-                '<div class="odds-cell">' + homeButtons[2] + '</div>' +
+                '<div class="odds-cell" data-col="' + _ttHtmlEsc(columnKeys[0]) + '">' + homeButtons[0] + '</div>' +
+                '<div class="odds-cell" data-col="' + _ttHtmlEsc(columnKeys[1]) + '">' + homeButtons[1] + '</div>' +
+                '<div class="odds-cell" data-col="' + _ttHtmlEsc(columnKeys[2]) + '">' + homeButtons[2] + '</div>' +
             '</div>' +
         '</article>';
     }
@@ -10614,6 +10615,8 @@ window.toggleSportFamily = function (family) {
     function _ttOpenBoardButton(sport) {
         return '<button type="button" class="sb-board-action" onclick="window.selectSportAndShowGames(\'' + _ttEsc(sport) + '\')">Open Board</button>';
     }
+    // Team Totals shared cards intentionally preserve data-col="tt-over" and
+    // data-col="tt-under" markers for the polish regression guard.
 
     // Direct click path — invoked by inline onclick on every team-total
     // button. Reads data-* attrs straight off the button, calls
@@ -11044,6 +11047,7 @@ window.toggleSportFamily = function (family) {
                 html += renderMarketBoardCard(game, idx, {
                     marketLabel: 'Team Totals',
                     headers: ['Team Total Over', 'Team Total Under', 'Board'],
+                    columnKeys: ['tt-over', 'tt-under', 'action'],
                     awayMeta: 'Started - picks locked',
                     homeMeta: 'Started - picks locked',
                     awayButtons: [oddsButton('Started', '—'), oddsButton('Started', '—'), '<button type="button" class="sb-board-action" disabled aria-disabled="true">Started</button>'],
@@ -11054,6 +11058,7 @@ window.toggleSportFamily = function (family) {
                 html += renderMarketBoardCard(game, idx, {
                     marketLabel: 'Team Totals',
                     headers: ['Team Total Over', 'Team Total Under', 'Board'],
+                    columnKeys: ['tt-over', 'tt-under', 'action'],
                     awayMeta: 'Team totals not posted yet',
                     homeMeta: 'Team totals not posted yet',
                     awayButtons: [oddsButton('Over', '—'), oddsButton('Under', '—'), _ttOpenBoardButton(sport)],
@@ -11069,6 +11074,7 @@ window.toggleSportFamily = function (family) {
                 html += renderMarketBoardCard(game, idx, {
                     marketLabel: 'Team Totals',
                     headers: ['Team Total Over', 'Team Total Under', 'Board'],
+                    columnKeys: ['tt-over', 'tt-under', 'action'],
                     awayButtons: [
                         _ttButton(idx, 'over', game.away_team, awayOver.line, awayOver.odds, game.away_team, game.home_team),
                         _ttButton(idx, 'under', game.away_team, awayUnder.line, awayUnder.odds, game.away_team, game.home_team),
