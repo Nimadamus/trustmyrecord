@@ -1766,45 +1766,97 @@
         return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
             '<div class="player-table-wrap"><table class="player-box-table pitching-table"><thead><tr><th>Pitchers</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th><th>HR</th><th>ERA</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers) + '</tbody></table></div></section>';
     }
-    function detailValue(label, awayValue, homeValue) {
-        return '<div class="box-score-detail-row"><dt>' + escapeHtml(label) + '</dt><dd><strong>' + escapeHtml(awayValue != null && awayValue !== '' ? awayValue : 0) + '</strong><strong>' + escapeHtml(homeValue != null && homeValue !== '' ? homeValue : 0) + '</strong></dd></div>';
+    function statPlayerNames(rows, key) {
+        return (rows || []).filter(function (row) { return Number(row && row[key] || 0) > 0; }).map(function (row) {
+            var value = Number(row[key] || 0);
+            return row.name + (value > 1 ? ' ' + value : '');
+        }).join(', ');
     }
-    function detailsForLine(line) {
+    function totalBases(rows) {
+        return (rows || []).reduce(function (total, row) {
+            var doubles = Number(row.doubles || 0);
+            var triples = Number(row.triples || 0);
+            var homers = Number(row.hr || 0);
+            var singles = Math.max(0, Number(row.h || 0) - doubles - triples - homers);
+            return total + singles + doubles * 2 + triples * 3 + homers * 4;
+        }, 0);
+    }
+    function teamRisp(line, players) {
         var stats = line.summaryStats || {};
-        return {
-            doubles: stats.doubles || 0,
-            triples: stats.triples || 0,
-            homeRuns: stats.homeRuns || 0,
-            rbi: stats.rbi || 0,
-            walks: stats.walks || 0,
-            strikeouts: stats.strikeouts || 0,
-            stolenBases: stats.stolenBases || 0,
-            caughtStealing: stats.caughtStealing || 0,
-            leftOnBase: stats.leftOnBase || 0,
-            errors: line.errors || 0,
-            pitches: stats.totalPitches || 0,
-            pitchStrikes: (stats.totalPitches || 0) + '-' + (stats.totalStrikes || 0)
-        };
+        var batters = players && players.batters || [];
+        var hitsWithRisp = clamp(Math.round((stats.rbi || 0) * 0.45 + (stats.homeRuns || 0) * 0.25), 0, Math.max(0, line.hits || 0));
+        var chances = clamp(hitsWithRisp + Math.max(1, Math.round((stats.leftOnBase || 0) * 0.42 + (stats.rbi || 0) * 0.35)), hitsWithRisp, Math.max(hitsWithRisp, playerSum(batters, 'ab')));
+        return hitsWithRisp + '-for-' + chances;
     }
-    function boxScoreDetails(box) {
-        var away = detailsForLine(box.away);
-        var home = detailsForLine(box.home);
-        var rows = [
-            ['2B', away.doubles, home.doubles],
-            ['3B', away.triples, home.triples],
-            ['HR', away.homeRuns, home.homeRuns],
-            ['RBI', away.rbi, home.rbi],
-            ['BB', away.walks, home.walks],
-            ['K', away.strikeouts, home.strikeouts],
-            ['SB', away.stolenBases, home.stolenBases],
-            ['CS', away.caughtStealing, home.caughtStealing],
-            ['LOB', away.leftOnBase, home.leftOnBase],
-            ['E', away.errors, home.errors],
-            ['Pitches', away.pitches, home.pitches],
-            ['P-S', away.pitchStrikes, home.pitchStrikes]
-        ];
-        return '<section class="box-score-detail-section"><h4>Box Score Details</h4><div class="box-score-detail-teams"><span></span><strong>' + escapeHtml(box.away.team.abbreviation) + '</strong><strong>' + escapeHtml(box.home.team.abbreviation) + '</strong></div><dl>' +
-            rows.map(function (row) { return detailValue(row[0], row[1], row[2]); }).join('') + '</dl></section>';
+    function playerDetail(label, value) {
+        return '<p><strong>' + escapeHtml(label) + '</strong> ' + escapeHtml(value != null && value !== '' ? value : 'None') + '</p>';
+    }
+    function battingDetailBlock(line, players) {
+        var stats = line.summaryStats || {};
+        var batters = players && players.batters || [];
+        var doubles = statPlayerNames(batters, 'doubles');
+        var triples = statPlayerNames(batters, 'triples');
+        var homers = statPlayerNames(batters, 'hr');
+        var rbiNames = statPlayerNames(batters, 'rbi');
+        var sbNames = statPlayerNames(batters, 'sb');
+        var csNames = statPlayerNames(batters, 'cs');
+        var derivedTwoOutRbi = clamp(Math.round((stats.rbi || 0) * 0.32), 0, stats.rbi || 0);
+        var derivedRispsTwoOut = clamp(Math.round((stats.leftOnBase || 0) * 0.28), 0, stats.leftOnBase || 0);
+        var derivedGidp = clamp(Math.round(((stats.leftOnBase || 0) + (stats.walks || 0)) / 9), 0, 3);
+        var derivedDp = clamp(Math.round(((line.hits || 0) + (stats.walks || 0)) / 11), 0, 3);
+        return '<section class="box-score-team-details"><h5>' + escapeHtml(line.team.abbreviation) + ' Details</h5><div class="box-score-detail-group"><h6>Batting</h6>' +
+            playerDetail('2B:', doubles || 'None') +
+            playerDetail('3B:', triples || 'None') +
+            playerDetail('HR:', homers || 'None') +
+            playerDetail('TB:', totalBases(batters)) +
+            playerDetail('RBI:', rbiNames || (stats.rbi || 0)) +
+            playerDetail('2-out RBI:', derivedTwoOutRbi + ' simulated') +
+            playerDetail('Runners left in scoring position, 2 out:', derivedRispsTwoOut + ' simulated') +
+            playerDetail('GIDP:', derivedGidp + ' simulated') +
+            playerDetail('Team RISP:', teamRisp(line, players) + ' simulated') +
+            playerDetail('Team LOB:', stats.leftOnBase || 0) + '</div><div class="box-score-detail-group"><h6>Baserunning</h6>' +
+            playerDetail('SB:', sbNames || (stats.stolenBases || 0)) +
+            playerDetail('CS:', csNames || (stats.caughtStealing || 0)) +
+            playerDetail('Pickoffs:', '0 simulated') + '</div><div class="box-score-detail-group"><h6>Fielding</h6>' +
+            playerDetail('E:', line.errors ? line.errors + ' simulated team error' + (line.errors > 1 ? 's' : '') : 'None') +
+            playerDetail('Outfield assists:', '0 simulated') +
+            playerDetail('DP:', derivedDp + ' simulated') + '</div></section>';
+    }
+    function battingDetailsSection(result) {
+        var box = result.boxScore;
+        return '<section class="box-score-detail-section batting-detail-section"><h4>Batting, Baserunning & Fielding</h4><div class="box-score-stat-grid">' +
+            battingDetailBlock(box.away, box.players.away) + battingDetailBlock(box.home, box.players.home) + '</div></section>';
+    }
+    function pitcherGameNoteBlock(line, players) {
+        var stats = line.summaryStats || {};
+        var pitchers = players && players.pitchers || [];
+        var outs = playerSum(pitchers, 'outs');
+        var strikeouts = playerSum(pitchers, 'so');
+        var groundouts = Math.max(0, Math.round((outs - strikeouts) * 0.56));
+        var flyouts = Math.max(0, outs - strikeouts - groundouts);
+        var battersFaced = outs + playerSum(pitchers, 'h') + playerSum(pitchers, 'bb');
+        var inherited = Math.max(0, pitchers.length - 1);
+        var inheritedScored = clamp(Math.round(playerSum(pitchers.slice(1), 'r') * 0.45), 0, inherited + 2);
+        return '<section class="box-score-team-details"><h5>' + escapeHtml(line.team.abbreviation) + ' Pitching Notes</h5><div class="box-score-detail-group">' +
+            playerDetail('Balk:', '0 simulated') +
+            playerDetail('ABS Challenge:', 'Not used in this simulation') +
+            playerDetail('Pitches-strikes:', (stats.totalPitches || 0) + '-' + (stats.totalStrikes || 0)) +
+            playerDetail('Groundouts-flyouts:', groundouts + '-' + flyouts + ' simulated') +
+            playerDetail('Batters faced:', battersFaced) +
+            playerDetail('Inherited runners-scored:', inherited + '-' + inheritedScored + ' simulated') + '</div></section>';
+    }
+    function gameNotesSection(result) {
+        var box = result.boxScore;
+        var generatedDate = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        return '<section class="box-score-detail-section game-note-section"><h4>Pitching & Game Notes</h4><div class="box-score-stat-grid">' +
+            pitcherGameNoteBlock(box.away, box.players.away) + pitcherGameNoteBlock(box.home, box.players.home) +
+            '</div><div class="box-score-game-meta">' + playerDetail('Umpires:', 'Not verified for simulated output') +
+            playerDetail('Weather:', 'Not verified for simulated output') +
+            playerDetail('Wind:', 'Not verified for simulated output') +
+            playerDetail('First pitch:', 'Simulated run time') +
+            playerDetail('Attendance:', 'Not official / not simulated') +
+            playerDetail('Venue:', 'Simulated neutral MLB environment') +
+            playerDetail('Date:', generatedDate + ' simulated run') + '</div></section>';
     }
     function statSection(title, content) {
         return '<section class="box-score-stat-section"><h4>' + escapeHtml(title) + '</h4><div class="box-score-stat-grid">' + content + '</div></section>';
@@ -1820,8 +1872,9 @@
         }
         panel.setAttribute('data-player-box-state', 'projected');
         content.innerHTML = statSection('Batting', teamBattingTable(result.away, result.boxScore.players.away) + teamBattingTable(result.home, result.boxScore.players.home)) +
+            battingDetailsSection(result) +
             statSection('Pitching', teamPitchingTable(result.away, result.boxScore.players.away) + teamPitchingTable(result.home, result.boxScore.players.home)) +
-            boxScoreDetails(result.boxScore);
+            gameNotesSection(result);
     }
     function boxScoreText(result) {
         if (!result || !result.boxScore) return '';

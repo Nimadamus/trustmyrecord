@@ -164,10 +164,16 @@ function assertBoxScore(result) {
     assert(/not official MLB stats/.test(elements.boxScoreMatchupCard.innerHTML), mode + ' renders honest simulation label');
     assert(!/Key simulated moments/i.test(elements.boxScoreSummary.innerHTML + elements.playerBoxScoreContent.innerHTML), mode + ' does not render key simulated moments block');
     assert(/<h4>Batting<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders batting section directly under line score');
-    assert(/<h4>Pitching<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders pitching section directly under batting');
-    assert(/Box Score Details/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders compact details section under pitching');
-    ['2B', '3B', 'HR', 'RBI', 'BB', 'K', 'SB', 'CS', 'LOB', 'E', 'Pitches', 'P-S'].forEach((label) => {
-      assert(elements.playerBoxScoreContent.innerHTML.includes(label), mode + ' details include ' + label);
+    const battingDetailsIndex = elements.playerBoxScoreContent.innerHTML.search(/Batting, Baserunning (?:&amp;|&) Fielding/);
+    assert(battingDetailsIndex >= 0, mode + ' renders batting details before pitching');
+    assert(battingDetailsIndex < elements.playerBoxScoreContent.innerHTML.indexOf('<h4>Pitching</h4>'), mode + ' batting details appear above pitching');
+    assert(/<h4>Pitching<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders pitching section after batting details');
+    assert(/Pitching (?:&amp;|&) Game Notes/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders compact game notes under pitching');
+    ['2B:', '3B:', 'HR:', 'TB:', 'RBI:', '2-out RBI:', 'Runners left in scoring position, 2 out:', 'GIDP:', 'Team RISP:', 'Team LOB:', 'SB:', 'CS:', 'Pickoffs:', 'E:', 'Outfield assists:', 'DP:'].forEach((label) => {
+      assert(elements.playerBoxScoreContent.innerHTML.includes(label), mode + ' batting details include ' + label);
+    });
+    ['Balk:', 'ABS Challenge:', 'Pitches-strikes:', 'Groundouts-flyouts:', 'Batters faced:', 'Inherited runners-scored:', 'Umpires:', 'Weather:', 'Wind:', 'First pitch:', 'Attendance:', 'Venue:', 'Date:'].forEach((label) => {
+      assert(elements.playerBoxScoreContent.innerHTML.includes(label), mode + ' game notes include ' + label);
     });
     assert(/<th>AVG<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders batting average column');
     assert(/<th>OPS<\/th>/.test(elements.playerBoxScoreContent.innerHTML), mode + ' renders OPS column');

@@ -456,9 +456,12 @@ async function flushAsync() {
   assert(/not official MLB stats/.test(elements.boxScoreMatchupCard.innerHTML), 'box score keeps honest simulation label');
   assert(!/Key simulated moments/i.test(elements.boxScoreSummary.innerHTML + elements.playerBoxScoreContent.innerHTML), 'key simulated moments block is not rendered');
   assert(/<h4>Batting<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), 'batting section renders under line score');
-  assert(/<h4>Pitching<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), 'pitching section renders under batting');
-  assert(/Box Score Details/.test(elements.playerBoxScoreContent.innerHTML), 'miscellaneous box score details render under pitching');
-  assert(/LOB/.test(elements.playerBoxScoreContent.innerHTML) && /P-S/.test(elements.playerBoxScoreContent.innerHTML), 'details include left on base and pitch counts');
+  const battingDetailsIndex = elements.playerBoxScoreContent.innerHTML.search(/Batting, Baserunning (?:&amp;|&) Fielding/);
+  assert(battingDetailsIndex >= 0, 'batting detail block renders before pitchers');
+  assert(battingDetailsIndex < elements.playerBoxScoreContent.innerHTML.indexOf('<h4>Pitching</h4>'), 'batting details appear above pitching section');
+  assert(/<h4>Pitching<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), 'pitching section renders after batting details');
+  assert(/Pitching (?:&amp;|&) Game Notes/.test(elements.playerBoxScoreContent.innerHTML), 'game notes render under pitching');
+  assert(/Team RISP/.test(elements.playerBoxScoreContent.innerHTML) && /Pitches-strikes/.test(elements.playerBoxScoreContent.innerHTML), 'details include team RISP and pitch counts');
   assert.strictEqual(elements.copyBoxScoreButton.disabled, false, 'copy box score button enables after simulation');
   assert.strictEqual(elements.saveBoxScoreButton.disabled, false, 'save box score button enables after simulation');
   assert(/Roster temporarily unavailable/.test(elements.playerBoxScoreContent.innerHTML), 'network-unavailable path labels roster limitation clearly');

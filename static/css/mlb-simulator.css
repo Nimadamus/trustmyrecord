@@ -1592,60 +1592,62 @@
     font: 900 13px/1 Inter, Arial, sans-serif;
 }
 
-.box-score-detail-teams,
-.box-score-detail-row {
-    display: grid;
-    grid-template-columns: minmax(92px, 0.8fr) minmax(0, 1fr) minmax(0, 1fr);
-    align-items: center;
+.box-score-team-details {
+    min-width: 0;
+    padding: 8px 10px 10px;
+    border-right: 1px solid #d1d5db;
 }
 
-.box-score-detail-teams {
-    padding: 7px 12px;
-    border-bottom: 1px solid #e5e7eb;
+.box-score-team-details:nth-child(2n) {
+    border-right: 0;
+}
+
+.box-score-team-details h5 {
+    margin: 0 0 7px;
+    color: #111827;
+    font: 900 12px/1 Inter, Arial, sans-serif;
+}
+
+.box-score-detail-group {
+    display: grid;
+    gap: 2px;
+    padding: 7px 0;
+    border-top: 1px solid #edf0f3;
+}
+
+.box-score-detail-group:first-of-type {
+    border-top: 0;
+    padding-top: 0;
+}
+
+.box-score-detail-group h6 {
+    margin: 0 0 2px;
     color: #475569;
-    background: #ffffff;
-    font-size: 11px;
-    font-weight: 900;
-    letter-spacing: 0.05em;
+    font: 900 10px/1 Inter, Arial, sans-serif;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
-.box-score-detail-section dl {
+.box-score-team-details p,
+.box-score-game-meta p {
     margin: 0;
-}
-
-.box-score-detail-row {
-    min-height: 30px;
-    margin: 0;
-    padding: 0 12px;
-    border-bottom: 1px solid #edf0f3;
     color: #334155;
-    font-size: 12px;
-    line-height: 1.35;
+    font-size: 11px;
+    line-height: 1.38;
 }
 
-.box-score-detail-row:last-child {
-    border-bottom: 0;
-}
-
-.box-score-detail-row dt {
-    color: #64748b;
+.box-score-team-details p strong,
+.box-score-game-meta p strong {
+    color: #111827;
     font-weight: 900;
 }
 
-.box-score-detail-row dd {
-    display: contents;
-    margin: 0;
-}
-
-.box-score-detail-row strong,
-.box-score-detail-teams strong {
-    text-align: right;
-}
-
-.box-score-detail-row strong {
-    color: #111827;
-    font-weight: 800;
+.box-score-game-meta {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2px 18px;
+    padding: 8px 10px 10px;
+    border-top: 1px solid #d1d5db;
 }
 
 .espn-box-group h4 {
@@ -2305,7 +2307,8 @@
 
     .box-score-matchup-main,
     .player-box-score-content,
-    .box-score-stat-grid {
+    .box-score-stat-grid,
+    .box-score-game-meta {
         grid-template-columns: 1fr;
     }
 
