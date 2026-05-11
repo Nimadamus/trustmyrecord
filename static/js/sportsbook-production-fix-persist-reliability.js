@@ -67,8 +67,8 @@
     const boardRequests = new Map();
     const boardDiagnostics = [];
     let latestBoardRequestId = 0;
-    const LEGACY_BOARD_CACHE_PREFIXES = ['tmr_sportsbook_board_v2_'];
-    const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v3_oddsrepair_';
+    const LEGACY_BOARD_CACHE_PREFIXES = ['tmr_sportsbook_board_v2_', 'tmr_sportsbook_board_v3_oddsrepair_'];
+    const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v4_boardshape_';
 
     function clearLegacyBoardCaches() {
         if (typeof window === 'undefined') return;
