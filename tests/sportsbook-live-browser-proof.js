@@ -45,7 +45,7 @@ async function main() {
   const cards = page.locator('#gamesListContainer .tmr-market-card');
   await cards.first().waitFor({ state: 'visible', timeout: 30000 });
   const lakersCard = cards.filter({ hasText: /Lakers|Thunder/i }).first();
-  const perGameCard = await lakersCard.count() ? lakersCard : cards.nth(1);
+  const perGameCard = await lakersCard.count() ? lakersCard : cards.first();
   await perGameCard.scrollIntoViewIfNeeded();
   await perGameCard.getByRole('button', { name: /Team Totals/i }).first().click();
   await page.waitForTimeout(500);
