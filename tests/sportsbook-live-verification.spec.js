@@ -43,28 +43,33 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
 
   await expect(primaryGrid, 'Moneyline must be visible in the primary grid').toContainText(/Moneyline/i);
   await expect(primaryGrid, 'Puck Line must be visible in the primary grid').toContainText(/Puck Line/i);
-  await expect(primaryGrid, 'NHL and MLB use line-moneyline-total column order').toHaveAttribute('data-column-order', 'line-moneyline-total');
+  await expect(primaryGrid, 'primary board should use team-moneyline-line-total order').toHaveAttribute('data-column-order', 'moneyline-line-total');
   await expect(primaryGrid, 'Total must be visible in the primary grid').toContainText(/Total/i);
   await expect(primaryGrid, 'generic spread labels must not appear in the primary grid').not.toContainText(/Away\s+(Spread|Run Line|Puck Line)|Home\s+(Spread|Run Line|Puck Line)/i);
   await expect(primaryGrid, 'spread/run-line/puck-line cells must show actual line values').toContainText(/[+-]\d+(?:\.\d+)?/);
   await expect(primaryGrid, 'generic moneyline labels must not clutter the primary grid').not.toContainText(/Away\s+Money|Home\s+Money/i);
   await expect(primaryGrid, 'primary odds tiles must not show clipped book/team detail text').not.toContainText(/D\.\.\.|[A-Z]\.\.\./);
-  await expect.poll(async () => card.evaluate((node) => {
-    const matchup = node.querySelector('.tmr-market-matchup');
-    const grid = node.querySelector('.tmr-primary-market-grid');
-    if (!matchup || !grid) return false;
-    const a = matchup.getBoundingClientRect();
-    const b = grid.getBoundingClientRect();
-    return b.left >= a.right + 8 || b.top >= a.bottom + 8;
-  }), { message: 'primary grid must not overlap the team matchup column' }).toBe(true);
-  await expect.poll(async () => card.evaluate((node) => {
-    const matchup = node.querySelector('.tmr-market-matchup');
-    const grid = node.querySelector('.tmr-primary-market-grid');
-    if (!matchup || !grid) return false;
-    const a = matchup.getBoundingClientRect();
-    const b = grid.getBoundingClientRect();
-    return b.left > a.left && b.top < a.bottom;
-  }), { message: 'primary grid should sit to the right of the team matchup on desktop, not below it' }).toBe(true);
+  await expect(primaryGrid.locator('.tmr-primary-team-cell--away'), 'away team should be part of the shared primary board row').toBeVisible();
+  await expect(primaryGrid.locator('.tmr-primary-team-cell--home'), 'home team should be part of the shared primary board row').toBeVisible();
+  await expect
+    .poll(async () => primaryGrid.evaluate((grid) => {
+      const cells = Array.from(grid.children);
+      if (cells.length < 12) return false;
+      const awayTeam = grid.querySelector('.tmr-primary-team-cell--away');
+      const homeTeam = grid.querySelector('.tmr-primary-team-cell--home');
+      const buttons = Array.from(grid.querySelectorAll('button:not([disabled])'));
+      if (!awayTeam || !homeTeam || buttons.length < 6) return false;
+      const centerY = (node) => {
+        const rect = node.getBoundingClientRect();
+        return rect.top + rect.height / 2;
+      };
+      const awayY = centerY(awayTeam);
+      const homeY = centerY(homeTeam);
+      const awayAligned = buttons.slice(0, 3).every((button) => Math.abs(centerY(button) - awayY) <= 2);
+      const homeAligned = buttons.slice(3, 6).every((button) => Math.abs(centerY(button) - homeY) <= 2);
+      return awayAligned && homeAligned;
+    }), { message: 'away/home odds must align horizontally with the matching team rows' })
+    .toBe(true);
   await expect(primaryGrid.locator('.tmr-option-detail').first(), 'primary detail text should be hidden to prevent clipped labels').not.toBeVisible();
 
 

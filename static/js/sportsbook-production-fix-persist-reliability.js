@@ -1310,7 +1310,7 @@
             '.tmr-board-filter-tab:disabled,.tmr-board-filter-tab.disabled{cursor:not-allowed;opacity:0.42;color:#6f7d90;background:rgba(255,255,255,0.02);border-color:rgba(255,255,255,0.06);box-shadow:none;transform:none;}',
             '.tmr-market-card{position:relative;background:linear-gradient(180deg,rgba(17,21,28,0.99),rgba(10,13,18,0.99));border:1px solid rgba(255,255,255,0.08);border-radius:22px;margin-bottom:18px;overflow:hidden;box-shadow:0 22px 48px rgba(0,0,0,0.28);--tmr-accent:#2f8f53;--tmr-accent-soft:#f2c94c;}',
             '.tmr-market-card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--tmr-accent),var(--tmr-accent-soft),#f2c94c);pointer-events:none;}',
-            '.tmr-market-head{display:grid;grid-template-columns:minmax(300px,40%) minmax(0,1fr);gap:24px;padding:20px 22px 16px;align-items:start;cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0));overflow:visible;}',
+            '.tmr-market-head{display:grid;grid-template-columns:1fr;gap:14px;padding:20px 22px 16px;align-items:start;cursor:pointer;background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0));overflow:visible;}',
             '.tmr-market-topline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}',
             '.tmr-market-league{font-size:11px;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:var(--tmr-accent-soft);}',
             '.tmr-market-status{padding:7px 11px;border-radius:999px;background:color-mix(in srgb, var(--tmr-accent) 18%, rgba(255,255,255,0.02));border:1px solid color-mix(in srgb, var(--tmr-accent) 40%, rgba(255,255,255,0.08));font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f8fafc;}',
@@ -1435,8 +1435,13 @@
             '.tmr-option-odds-wrap{gap:6px;align-items:flex-end;justify-content:center;}',
             '.tmr-option-odds{min-width:94px;padding:13px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(63,72,88,0.98),rgba(40,46,58,0.98));font-size:30px;letter-spacing:-0.05em;}',
             '.tmr-market-side{display:block;width:100%;min-width:0;overflow:visible;}',
-            '.tmr-primary-market-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;width:100%;min-width:0;max-width:none;padding:12px;border-radius:16px;background:rgba(5,8,13,0.48);border:1px solid rgba(255,255,255,0.07);box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);}',
-            '.tmr-primary-market{display:grid;grid-template-rows:auto 86px 86px;gap:8px;min-width:0;}',
+            '.tmr-primary-market-grid{display:grid;grid-template-columns:minmax(280px,1.35fr) repeat(3,minmax(130px,1fr));grid-template-rows:auto 86px 86px;gap:10px;width:100%;min-width:0;max-width:none;padding:12px;border-radius:16px;background:rgba(5,8,13,0.48);border:1px solid rgba(255,255,255,0.07);box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);align-items:stretch;}',
+            '.tmr-primary-market{display:contents;}',
+            '.tmr-primary-team-header{min-width:0;}',
+            '.tmr-primary-team-cell{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:10px;min-width:0;padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,rgba(22,29,39,0.74),rgba(14,20,29,0.74));border:1px solid rgba(255,255,255,0.055);}',
+            '.tmr-primary-team-cell .tmr-team-side{min-width:54px;}',
+            '.tmr-primary-team-cell .tmr-team-abbr{align-self:center;justify-self:center;margin:0;}',
+            '.tmr-primary-team-cell .tmr-team-name{min-width:0;white-space:normal;}',
             '.tmr-primary-market-title{font-size:10px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#9aa7b8;text-align:center;white-space:nowrap;}',
             '.tmr-primary-market .tmr-option-btn{position:relative;box-sizing:border-box;min-height:86px;height:86px;padding:10px 12px;border-radius:12px;grid-template-columns:1fr;grid-template-rows:auto auto;gap:7px;justify-items:center;align-items:center;text-align:center;background:linear-gradient(180deg,rgba(35,41,51,0.98),rgba(22,27,35,0.98));transform:none!important;}',
             '.tmr-primary-market .tmr-option-btn.active{height:86px;min-height:86px;padding:10px 12px;border-color:rgba(86,240,163,0.52);box-shadow:inset 0 0 0 1px rgba(86,240,163,0.20),0 8px 18px rgba(0,0,0,0.18);}',
@@ -1469,7 +1474,7 @@
             '.tmr-market-card.secondary-open .tmr-group-title{font-size:13px;}',
             '.tmr-market-card.secondary-open .tmr-option-grid{gap:8px;padding:10px;}',
             '.tmr-market-card.secondary-open .tmr-option-row{min-height:42px;padding:9px 10px;border-radius:10px;}',
-            '@media (max-width:1020px){.tmr-market-head{grid-template-columns:1fr;}.tmr-market-side{display:block;}.tmr-primary-market-grid{max-width:none;width:100%;min-width:0;grid-template-columns:repeat(3,minmax(0,1fr));}.tmr-market-summary{justify-content:space-between;}}',
+            '@media (max-width:1020px){.tmr-market-head{grid-template-columns:1fr;}.tmr-market-side{display:block;}.tmr-primary-market-grid{max-width:none;width:100%;min-width:0;grid-template-columns:minmax(220px,1fr) repeat(3,minmax(104px,1fr));overflow-x:auto;}.tmr-market-summary{justify-content:space-between;}}',
             '@keyframes tmrShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}',
             '@media (max-width: 700px){.tmr-loading-topline{padding:14px 14px 12px;align-items:flex-start;flex-direction:column;}.tmr-loading-tabs{width:100%;}.tmr-loading-tab{flex:1 1 calc(50% - 6px);min-width:unset;}.tmr-loading-matchup,.tmr-loading-lines{grid-template-columns:1fr;}.tmr-market-head{padding:16px;grid-template-columns:1fr;align-items:flex-start;}.tmr-market-body{padding:0 16px 16px;}.tmr-market-summary{width:100%;justify-content:space-between;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-team-name{font-size:16px;}.tmr-team-side{min-width:46px;padding:4px 7px;}.tmr-matchup-divider{padding-left:56px;}.tmr-option-btn{min-height:auto;padding:12px 13px;grid-template-columns:minmax(0,1fr) auto;}.tmr-market-count{width:100%;text-align:center;}.tmr-market-caret{display:none;}.tmr-board-filter-tab{min-width:unset;flex:1 1 calc(50% - 6px);}.tmr-group-header{grid-template-columns:minmax(0,1fr) auto;}.tmr-group-metahead{display:none;}#picks .pick-options{grid-template-columns:1fr;}#picks .games-header{align-items:flex-start;flex-direction:column;}#picks .sport-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}#picks .sport-card{min-height:132px;padding:16px 14px!important;}#picks .sport-name{font-size:16px!important;}#picks .submit-pick-btn{padding:15px 16px;font-size:14px;}}'
             ,'#pickDetails .pick-options{display:flex!important;flex-direction:column!important;gap:20px!important;margin:24px 0!important;}'
@@ -2105,12 +2110,26 @@
             const optionDomId = 'option-' + safeDomId(optionKey);
             return renderBoardOptionButton(Object.assign({}, option, { display_label: displayLabel, book_title: option.book_title || option.source_label || 'DraftKings' }), optionKey, optionDomId, game);
         };
-        const spreadColumn = '<div class="tmr-primary-market"><div class="tmr-primary-market-title">' + escapeHtml(spreadLabel) + '</div>' + renderPrimaryButton(picks.awaySpread, lineValue(picks.awaySpread.item, true), 'away-spread') + renderPrimaryButton(picks.homeSpread, lineValue(picks.homeSpread.item, true), 'home-spread') + '</div>';
-        const moneylineColumn = '<div class="tmr-primary-market"><div class="tmr-primary-market-title">Moneyline</div>' + renderPrimaryButton(picks.awayMoneyline, '', 'away-ml') + renderPrimaryButton(picks.homeMoneyline, '', 'home-ml') + '</div>';
-        const totalColumn = '<div class="tmr-primary-market"><div class="tmr-primary-market-title">Total</div>' + renderPrimaryButton(picks.overTotal, totalLabel(picks.overTotal, 'Over'), 'over-total') + renderPrimaryButton(picks.underTotal, totalLabel(picks.underTotal, 'Under'), 'under-total') + '</div>';
-        const lineFirstSports = sportKey.indexOf('icehockey_nhl') !== -1 || sportKey.indexOf('baseball_mlb') !== -1;
-        return '<div class="tmr-primary-market-grid" data-testid="primary-market-grid" data-column-order="' + (lineFirstSports ? 'line-moneyline-total' : 'moneyline-line-total') + '" onclick="event.stopPropagation()">' +
-            (lineFirstSports ? (spreadColumn + moneylineColumn + totalColumn) : (moneylineColumn + spreadColumn + totalColumn)) +
+        const teamCell = function(side, teamName, logoUrl, abbr) {
+            return '<div class="tmr-primary-team-cell tmr-primary-team-cell--' + side + '">' +
+                '<span class="tmr-team-side">' + (side === 'away' ? 'Away' : 'Home') + '</span>' +
+                '<span class="tmr-team-abbr">' + renderTeamLogo(teamName, game.sport_key, logoUrl || '', abbr || '') + '</span>' +
+                '<span class="tmr-team-name">' + escapeHtml(teamName || '') + '</span>' +
+                '</div>';
+        };
+        return '<div class="tmr-primary-market-grid tmr-primary-market-grid--aligned" data-testid="primary-market-grid" data-column-order="moneyline-line-total" onclick="event.stopPropagation()">' +
+            '<div class="tmr-primary-team-header"></div>' +
+            '<div class="tmr-primary-market-title">Moneyline</div>' +
+            '<div class="tmr-primary-market-title">' + escapeHtml(spreadLabel) + '</div>' +
+            '<div class="tmr-primary-market-title">Total</div>' +
+            teamCell('away', game.away_team, game.away_logo || game.awayLogo || '', game.away_abbr || game.awayAbbr || '') +
+            renderPrimaryButton(picks.awayMoneyline, '', 'away-ml') +
+            renderPrimaryButton(picks.awaySpread, lineValue(picks.awaySpread.item, true), 'away-spread') +
+            renderPrimaryButton(picks.overTotal, totalLabel(picks.overTotal, 'Over'), 'over-total') +
+            teamCell('home', game.home_team, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '') +
+            renderPrimaryButton(picks.homeMoneyline, '', 'home-ml') +
+            renderPrimaryButton(picks.homeSpread, lineValue(picks.homeSpread.item, true), 'home-spread') +
+            renderPrimaryButton(picks.underTotal, totalLabel(picks.underTotal, 'Under'), 'under-total') +
             '</div>';
     }
 
@@ -2287,11 +2306,6 @@
                 '<div class="tmr-market-head" onclick="window.tmrToggleCard(\'' + cardId + '\')">' +
                 '<div>' +
                 '<div class="tmr-market-topline"><span class="tmr-market-league">Game ' + boardNumber + ' • ' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span><span class="tmr-market-status">' + escapeHtml(formatStartsIn(game.commence_time)) + '</span></div>' +
-                '<div class="tmr-market-matchup">' +
-                '<div class="tmr-team-row"><span class="tmr-team-side">Away</span><span class="tmr-team-abbr">' + renderTeamLogo(game.away_team, game.sport_key, game.away_logo || game.awayLogo || '', game.away_abbr || game.awayAbbr || '') + '</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
-                '<div class="tmr-matchup-divider">@</div>' +
-                '<div class="tmr-team-row"><span class="tmr-team-side">Home</span><span class="tmr-team-abbr">' + renderTeamLogo(game.home_team, game.sport_key, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '') + '</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
-                '</div>' +
                 '<div class="tmr-market-meta">' +
                 '<span class="tmr-market-chip accent">' + escapeHtml(new Date(game.commence_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span>' +
                 '<span class="tmr-market-chip ' + sourceClass + '">' + sourceText + '</span>' +
