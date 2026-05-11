@@ -21,6 +21,8 @@ assert(reliability.includes('window.TMR.calculateStakeValues = calculateStakeVal
 assert(reliability.includes('window.TMR.updateStakeModePreview = updateStakeModePreview'), 'production script should own stake preview updates');
 assert(reliability.includes('window.setUnitsMode = setStakeMode'), 'production script should own visible Risk / To Win selector');
 assert(reliability.includes('function bindStakeAmountInputEvents()'), 'visible and hidden units inputs should both trigger stake preview updates');
+assert(reliability.includes("document.querySelectorAll('[data-stake-mode]')"), 'visible Risk and To Win buttons should be delegated to setStakeMode');
+assert(reliability.includes("button.addEventListener('click'"), 'stake-mode buttons should update the preview immediately on click');
 assert(reliability.includes("document.getElementById('ttSlipStakePreview') ? 'ttSlipStakePreview' : 'unitsStakePreview'"), 'ticket stake preview should be the single visible Risk / To Win summary');
 assert(reliability.includes("preview.hidden = true"), 'duplicate stake preview containers should be hidden');
 assert(reliability.includes("lockFunction(window, 'setUnitsMode', setStakeMode)"), 'production script should lock Risk / To Win selector ownership');
