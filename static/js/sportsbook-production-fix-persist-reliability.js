@@ -292,6 +292,18 @@
         return nextMode;
     }
 
+    function bindStakeModeClickHandlers() {
+        if (document.documentElement.dataset.tmrStakeModeDelegated === '1') return;
+        document.documentElement.dataset.tmrStakeModeDelegated = '1';
+        document.addEventListener('click', function(event) {
+            const button = event.target && event.target.closest && event.target.closest('#modeRisk,#modeToWin,#modeRiskTicket,#modeToWinTicket,[data-stake-mode]');
+            if (!button) return;
+            const mode = button.getAttribute('data-stake-mode') || (button.id === 'modeToWin' || button.id === 'modeToWinTicket' ? 'to_win' : 'risk');
+            event.preventDefault();
+            setStakeMode(mode);
+        }, true);
+    }
+
     function formatStakePreviewUnits(value) {
         const n = roundStakeUnits(value);
         if (!Number.isFinite(n)) return '0';
@@ -322,19 +334,12 @@
     }
 
     function bindStakeAmountInputEvents() {
+        bindStakeModeClickHandlers();
         [document.getElementById('ttSlipUnits'), document.getElementById('unitsInput')].forEach(function(input) {
             if (!input || input.dataset.tmrStakePreviewBound === '1') return;
             input.dataset.tmrStakePreviewBound = '1';
             input.addEventListener('input', updateStakeModePreview);
             input.addEventListener('change', updateStakeModePreview);
-        });
-        document.querySelectorAll('[data-stake-mode]').forEach(function(button) {
-            if (!button || button.dataset.tmrStakeModeBound === '1') return;
-            button.dataset.tmrStakeModeBound = '1';
-            button.addEventListener('click', function(event) {
-                event.preventDefault();
-                setStakeMode(button.getAttribute('data-stake-mode'));
-            });
         });
     }
 
@@ -1270,6 +1275,7 @@
                 setStakeMode(entry.mode);
             };
         });
+        bindStakeModeClickHandlers();
 
         const group = unitsInput.closest('.option-group');
         let explanation = document.getElementById('unitsExplanation');
