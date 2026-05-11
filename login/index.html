@@ -252,17 +252,17 @@
             <div class="brand">
                 <a href="/">TRUST<span>MY</span>RECORD</a>
             </div>
-            <h2>Welcome back to TrustMyRecord.</h2>
-            <p>Build your verified sports record by posting your first pick.</p>
+            <h2>Log in to your real record.</h2>
+            <p>Clean auth flow, direct backend session, and no sportsbook screen getting in the way.</p>
             <div class="trust-list">
-                <div class="trust-item"><strong>Make your first pick</strong><span>If your record is empty, we will take you straight to the board.</span></div>
                 <div class="trust-item"><strong>Locked history</strong><span>Your record stays tied to the same public profile.</span></div>
                 <div class="trust-item"><strong>Live picks flow</strong><span>Jump back into the board and keep submitting picks from the same account.</span></div>
+                <div class="trust-item"><strong>Public profile</strong><span>Profile, alerts, and receipts all stay connected after login.</span></div>
             </div>
         </aside>
         <div class="content">
             <h1>Welcome <span class="accent">Back</span></h1>
-            <p class="sub">Log in and keep building your verified record.</p>
+            <p class="sub">Log in directly to your real TrustMyRecord account.</p>
 
             <form id="direct-login-form">
                 <div class="field">
@@ -323,13 +323,6 @@
             }
 
             async function loginWithBackend(login, password, rememberMe) {
-                if (window.api && typeof window.api.login === 'function') {
-                    if (window.api.ready) {
-                        try { await window.api.ready; } catch (error) {}
-                    }
-                    return window.api.login(login, password, rememberMe);
-                }
-
                 const baseUrl = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl)
                     ? String(CONFIG.api.baseUrl).replace(/\/+$/, '')
                     : 'https://trustmyrecord-api.onrender.com/api';
@@ -355,28 +348,6 @@
                 };
             }
 
-            function getKnownPickCount(user) {
-                user = user || {};
-                var stats = user.stats || {};
-                var candidates = [
-                    user.total_picks,
-                    user.totalPicks,
-                    user.pick_count,
-                    user.pickCount,
-                    user.locked_picks,
-                    stats.total_picks,
-                    stats.totalPicks,
-                    stats.pick_count,
-                    stats.pickCount
-                ];
-                for (var i = 0; i < candidates.length; i += 1) {
-                    if (candidates[i] === 0 || candidates[i] === '0') return 0;
-                    var n = Number(candidates[i]);
-                    if (Number.isFinite(n) && n > 0) return n;
-                }
-                return null;
-            }
-
             function finishLoginRedirect(user) {
                 var redirect = '';
                 try {
@@ -385,12 +356,7 @@
                 } catch (error) {}
 
                 if (redirect === 'picks' || redirect === 'sportsbook') {
-                    window.location.replace('/sportsbook/?first_pick=1');
-                    return;
-                }
-
-                if (getKnownPickCount(user) === 0) {
-                    window.location.replace('/sportsbook/?first_pick=1');
+                    window.location.replace('/sportsbook/');
                     return;
                 }
 
@@ -424,6 +390,5 @@
             });
         })();
     </script>
-<script src="/static/js/analytics.js?v=20260504a"></script>
 </body>
 </html>
