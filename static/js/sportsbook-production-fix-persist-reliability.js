@@ -1442,6 +1442,21 @@
             '.tmr-primary-market .tmr-option-odds-wrap{align-items:flex-end;}',
             '.tmr-primary-market .tmr-option-odds-label{display:none;}',
             '.tmr-primary-market .tmr-option-odds{font-size:17px;min-width:56px;padding:7px 8px;border-radius:9px;}',
+            '.tmr-card-filter-bar{margin-top:12px;padding:10px 0 0;border-top:1px solid rgba(148,163,184,0.14);}',
+            '.tmr-card-filter-tabs{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}',
+            '.tmr-card-filter-tab{appearance:none;border:1px solid rgba(148,163,184,0.24);background:rgba(15,23,42,0.78);color:#cbd5e1;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;letter-spacing:.02em;line-height:1;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);}',
+            '.tmr-card-filter-tab:hover{border-color:rgba(34,197,94,0.44);color:#f8fafc;background:rgba(22,101,52,0.24);}',
+            '.tmr-card-filter-tab.active{border-color:rgba(34,197,94,0.62);background:linear-gradient(180deg,rgba(34,197,94,0.28),rgba(21,128,61,0.18));color:#f8fafc;box-shadow:0 0 0 1px rgba(34,197,94,0.12),inset 0 1px 0 rgba(255,255,255,0.08);}',
+            '.tmr-market-card:not(.secondary-open) .tmr-group{display:none!important;}',
+            '.tmr-market-card.secondary-open[data-market-filter="game-lines"] .tmr-group:not([data-category="game-lines"]){display:none!important;}',
+            '.tmr-market-card.secondary-open[data-market-filter="team-totals"] .tmr-group:not([data-category="team-totals"]){display:none!important;}',
+            '.tmr-market-card.secondary-open[data-market-filter="quarters"] .tmr-group:not([data-category="quarters"]){display:none!important;}',
+            '.tmr-market-card.secondary-open[data-market-filter="props"] .tmr-group:not([data-category="props"]){display:none!important;}',
+            '.tmr-market-card.secondary-open .tmr-group{margin-top:10px;border-radius:12px;border-color:rgba(148,163,184,0.16);background:rgba(15,23,42,0.56);}',
+            '.tmr-market-card.secondary-open .tmr-group-head{padding:10px 12px;min-height:0;}',
+            '.tmr-market-card.secondary-open .tmr-group-title{font-size:13px;}',
+            '.tmr-market-card.secondary-open .tmr-option-grid{gap:8px;padding:10px;}',
+            '.tmr-market-card.secondary-open .tmr-option-row{min-height:42px;padding:9px 10px;border-radius:10px;}',
             '@media (max-width:1020px){.tmr-market-side{grid-template-columns:1fr;}.tmr-primary-market-grid{max-width:none;width:100%;min-width:0;}.tmr-market-summary{justify-content:space-between;}}',
             '@keyframes tmrShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}',
             '@media (max-width: 700px){.tmr-loading-topline{padding:14px 14px 12px;align-items:flex-start;flex-direction:column;}.tmr-loading-tabs{width:100%;}.tmr-loading-tab{flex:1 1 calc(50% - 6px);min-width:unset;}.tmr-loading-matchup,.tmr-loading-lines{grid-template-columns:1fr;}.tmr-market-head{padding:16px;grid-template-columns:1fr;align-items:flex-start;}.tmr-market-body{padding:0 16px 16px;}.tmr-market-summary{width:100%;justify-content:space-between;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-team-name{font-size:16px;}.tmr-team-side{min-width:46px;padding:4px 7px;}.tmr-matchup-divider{padding-left:56px;}.tmr-option-btn{min-height:auto;padding:12px 13px;grid-template-columns:minmax(0,1fr) auto;}.tmr-market-count{width:100%;text-align:center;}.tmr-market-caret{display:none;}.tmr-board-filter-tab{min-width:unset;flex:1 1 calc(50% - 6px);}.tmr-group-header{grid-template-columns:minmax(0,1fr) auto;}.tmr-group-metahead{display:none;}#picks .pick-options{grid-template-columns:1fr;}#picks .games-header{align-items:flex-start;flex-direction:column;}#picks .sport-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}#picks .sport-card{min-height:132px;padding:16px 14px!important;}#picks .sport-name{font-size:16px!important;}#picks .submit-pick-btn{padding:15px 16px;font-size:14px;}}'
@@ -1944,6 +1959,7 @@
         const card = document.getElementById(cardId);
         if (!card) return;
         card.dataset.marketFilter = filter;
+        card.classList.add('secondary-open');
         card.querySelectorAll('.tmr-family-tab, .tmr-filter-pill').forEach(function(button) {
             button.classList.toggle('active', button.dataset.filter === filter);
         });

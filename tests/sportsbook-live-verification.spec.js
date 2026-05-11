@@ -37,6 +37,17 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   await expect(primaryGrid, 'Puck Line must be visible in the primary grid').toContainText(/Puck Line/i);
   await expect(primaryGrid, 'Total must be visible in the primary grid').toContainText(/Total/i);
 
+
+  await expect
+    .poll(
+      async () => card.locator('.tmr-group').evaluateAll((nodes) => nodes.filter((node) => {
+        const style = window.getComputedStyle(node);
+        return style.display !== 'none' && style.visibility !== 'hidden' && node.getClientRects().length > 0;
+      }).length),
+      { message: 'duplicate full-width secondary market groups must be hidden by default' }
+    )
+    .toBe(0);
+
   const primaryButtons = primaryGrid.locator('button:not([disabled]), [role="button"]:not([aria-disabled="true"])');
   await expect(primaryButtons, 'away/home moneyline, puck line, and total prices should all be clickable').toHaveCount(6, { timeout: 15000 });
 
@@ -54,6 +65,26 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
 
   await expect(card.getByRole('button', { name: /Game Lines/i }).first()).toBeVisible();
   await expect(card.getByRole('button', { name: /Team Totals/i }).first()).toBeVisible();
+
+  await expect
+    .poll(
+      async () => card.locator('.tmr-card-filter-tab').evaluateAll((nodes) => nodes.filter((node) => {
+        const style = window.getComputedStyle(node);
+        const bg = style.backgroundColor;
+        const border = style.borderTopColor;
+        return style.display !== 'none' && node.getClientRects().length > 0 && (bg === 'rgb(255, 255, 255)' || border === 'rgb(0, 0, 0)');
+      }).length),
+      { message: 'plain white default market buttons must not be visible' }
+    )
+    .toBe(0);
+
+  await card.getByRole('button', { name: /Team Totals/i }).first().click();
+  await expect
+    .poll(async () => card.locator('.tmr-group').evaluateAll((nodes) => nodes.filter((node) => {
+      const style = window.getComputedStyle(node);
+      return style.display !== 'none' && style.visibility !== 'hidden' && node.getClientRects().length > 0;
+    }).length), { message: 'secondary markets should reveal compact groups only after a tab click' })
+    .toBeGreaterThan(0);
 
   await primaryButtons.first().click();
 

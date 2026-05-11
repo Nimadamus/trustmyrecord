@@ -56,11 +56,33 @@ async function main() {
   assert(/Over|O\s*\d/i.test(gridText), 'Over total must be visible in the primary grid');
   assert(/Under|U\s*\d/i.test(gridText), 'Under total must be visible in the primary grid');
 
+
+  const visibleSecondaryGroupsBeforeTab = await card.locator('.tmr-group').evaluateAll((nodes) => nodes.filter((node) => {
+    const style = window.getComputedStyle(node);
+    return style.display !== 'none' && style.visibility !== 'hidden' && node.getClientRects().length > 0;
+  }).length);
+  assert.strictEqual(visibleSecondaryGroupsBeforeTab, 0, 'duplicate full-width secondary market groups must be hidden by default');
+
   const primaryButtons = primaryGrid.locator('button:not([disabled]), [role="button"]:not([aria-disabled="true"])');
   assert.strictEqual(await primaryButtons.count(), 6, 'six primary prices should be clickable');
 
   await expectVisible(card.getByRole('button', { name: /Game Lines/i }).first(), 'Game Lines tab should remain visible');
   await expectVisible(card.getByRole('button', { name: /Team Totals/i }).first(), 'Team Totals tab should remain visible');
+
+  const plainDefaultTabs = await card.locator('.tmr-card-filter-tab').evaluateAll((nodes) => nodes.filter((node) => {
+    const style = window.getComputedStyle(node);
+    const bg = style.backgroundColor;
+    const border = style.borderTopColor;
+    return style.display !== 'none' && node.getClientRects().length > 0 && (bg === 'rgb(255, 255, 255)' || border === 'rgb(0, 0, 0)');
+  }).length);
+  assert.strictEqual(plainDefaultTabs, 0, 'plain white default market buttons must not be visible');
+
+  await card.getByRole('button', { name: /Team Totals/i }).first().click();
+  const visibleSecondaryGroupsAfterTab = await card.locator('.tmr-group').evaluateAll((nodes) => nodes.filter((node) => {
+    const style = window.getComputedStyle(node);
+    return style.display !== 'none' && style.visibility !== 'hidden' && node.getClientRects().length > 0;
+  }).length);
+  assert(visibleSecondaryGroupsAfterTab > 0, 'secondary markets should reveal compact groups only after a tab click');
 
   await primaryButtons.first().click();
   const oddsInput = page.locator('#pickOddsInput');
