@@ -43,7 +43,7 @@ assert(
   'sportsbook runtime must clear stale board caches from broken v2/v3/v4 namespaces'
 );
 assert(
-  /sportsbook-production-fix-persist-reliability\.js\?v=20260511(?:compactrows|slipcalc|authsubmit)\d+&cb=20260511(?:compactrows|slipcalc|authsubmit)\d+/.test(html),
+  /sportsbook-production-fix-persist-reliability\.js\?v=20260511(?:compactrows|slipcalc|authsubmit|teamtotals|readonly)\d+&cb=20260511(?:compactrows|slipcalc|authsubmit|teamtotals|readonly)\d+/.test(html),
   'sportsbook page must request the approved compact-row/slip-calculation reliability runtime, not a stale cached script'
 );
 assert(
@@ -56,7 +56,7 @@ assert(
   'sportsbook lobby should try the backend board before falling back to ESPN'
 );
 assert(
-  html.includes('tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1'),
+  /tmr-redesign-overrides-sportsbook\.css\?v=202605(?:09logorestore|11teamname)\d+/.test(html),
   'sportsbook page must request the logo-restored stylesheet, not stale cached CSS'
 );
 assert(
