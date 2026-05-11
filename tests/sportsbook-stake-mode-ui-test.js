@@ -35,6 +35,10 @@ assert(reliability.includes("stake_mode: stakeMode"), 'submitted payload should 
 assert(reliability.includes("units_mode: stakeMode"), 'submitted payload should include units_mode');
 assert(reliability.includes("risk_units: stakeValues.risk_units"), 'submitted payload should store calculated risk units');
 assert(reliability.includes("to_win_units: stakeValues.win_units"), 'submitted payload should store calculated to-win units');
+assert(
+  /const unitsValue = getCurrentStakeAmount\(\);[\s\S]*const stakeMode = getSelectedStakeMode\(\);[\s\S]*const stakeValues = calculateStakeValues\(stakeMode, unitsValue, oddsValue\);[\s\S]*units: unitsValue,[\s\S]*stake_mode: stakeMode,[\s\S]*units_mode: stakeMode,[\s\S]*risk_units: stakeValues\.risk_units,[\s\S]*to_win_units: stakeValues\.win_units,/.test(reliability),
+  'lock payload must use the same live units input, selected stake mode, and calculated risk/to-win values'
+);
 assert(html.includes('tmr-ticket-stake-mode-label'), 'ticket stake mode should have non-cramped professional label styling hook');
 assert(html.includes('tmr-ticket-stake-summary-cell'), 'ticket summary should render separated Risk and To Win cells');
 
@@ -60,5 +64,60 @@ assert.deepStrictEqual(calculateStakeValues('risk', 1.5, 150), { risk_units: 1.5
 assert.deepStrictEqual(calculateStakeValues('to_win', 1.5, 150), { risk_units: 1, win_units: 1.5 });
 assert.deepStrictEqual(calculateStakeValues('risk', 3, -105), { risk_units: 3, win_units: 2.86 });
 assert.deepStrictEqual(calculateStakeValues('to_win', 3, -105), { risk_units: 3.15, win_units: 3 });
+
+function formatStakePreviewUnits(value) {
+  const n = Math.round(Number(value) * 100) / 100;
+  return Number.isInteger(n) ? String(n) : n.toFixed(2);
+}
+
+function renderStakeSummaryText(mode, amount, odds) {
+  const values = calculateStakeValues(mode, amount, odds);
+  return {
+    riskLabel: `Risk ${formatStakePreviewUnits(values.risk_units)} units`,
+    toWinLabel: `To Win ${formatStakePreviewUnits(values.win_units)} units`,
+    values,
+  };
+}
+
+function buildSubmitStakePayload(mode, amount, odds) {
+  const stakeMode = String(mode || '').toLowerCase() === 'to_win' || String(mode || '').toLowerCase() === 'towin' ? 'to_win' : 'risk';
+  const unitsValue = Number(amount);
+  const stakeValues = calculateStakeValues(stakeMode, unitsValue, odds);
+  return {
+    units: unitsValue,
+    stake_mode: stakeMode,
+    units_mode: stakeMode,
+    risk_units: stakeValues.risk_units,
+    to_win_units: stakeValues.win_units,
+  };
+}
+
+const riskPreview = renderStakeSummaryText('risk', 3, -105);
+assert.strictEqual(riskPreview.riskLabel, 'Risk 3 units');
+assert.strictEqual(riskPreview.toWinLabel, 'To Win 2.86 units');
+assert.deepStrictEqual(buildSubmitStakePayload('risk', 3, -105), {
+  units: 3,
+  stake_mode: 'risk',
+  units_mode: 'risk',
+  risk_units: 3,
+  to_win_units: 2.86,
+});
+
+const toWinPreview = renderStakeSummaryText('to_win', 3, -105);
+assert.strictEqual(toWinPreview.riskLabel, 'Risk 3.15 units');
+assert.strictEqual(toWinPreview.toWinLabel, 'To Win 3 units');
+assert.deepStrictEqual(buildSubmitStakePayload('to_win', 3, -105), {
+  units: 3,
+  stake_mode: 'to_win',
+  units_mode: 'to_win',
+  risk_units: 3.15,
+  to_win_units: 3,
+});
+
+assert.notStrictEqual(
+  buildSubmitStakePayload('risk', 3, -105).risk_units,
+  buildSubmitStakePayload('to_win', 3, -105).risk_units,
+  'Risk and To Win modes must not collapse to the same risk amount'
+);
 
 console.log('sportsbook stake-mode UI test passed');
