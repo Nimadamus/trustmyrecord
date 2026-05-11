@@ -74,5 +74,8 @@ assert(reliability.includes('units_mode: stakeMode'), 'submit payload must prese
 assert(reliability.includes('market_key: option.market_key'), 'submit payload must preserve market_key');
 assert(reliability.includes('market_label: option.group_label'), 'submit payload must preserve market label');
 assert(reliability.includes('game_snapshot: buildSubmittedGameSnapshot(option)'), 'submit payload must preserve game context');
+assert(reliability.includes('const outcomeTeam = outcome.description || outcome.team || outcome.team_name || outcome.participant'), 'team totals must keep feed team metadata instead of treating Over/Under as the team');
+assert(reliability.includes("option.team = outcome.description || outcome.team || outcome.team_name || outcome.participant || option.selection"), 'team totals fallback options must carry the actual team for away/home row matching');
+assert(reliability.includes('option.description, option.selection, option.selection_label'), 'team totals matcher must inspect description/team metadata when assigning prices to rows');
 
 console.log('sportsbook reliability guard test passed');
