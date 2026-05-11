@@ -1548,6 +1548,7 @@
             '.tmr-market-card.secondary-open[data-market-filter="team-totals"] .tmr-group:not([data-category="team-totals"]){display:none!important;}',
             '.tmr-market-card.secondary-open[data-market-filter="segments"] .tmr-group:not([data-category="segments"]){display:none!important;}',
             '.tmr-market-card.secondary-open[data-market-filter="quarters"] .tmr-group:not([data-category="quarters"]){display:none!important;}',
+            '.tmr-market-card.secondary-open:not([data-market-filter="game-lines"]) .tmr-primary-market-grid{display:none!important;}',
             '.tmr-market-card.secondary-open .tmr-group{margin-top:10px;border-radius:12px;border-color:rgba(148,163,184,0.16);background:rgba(15,23,42,0.56);}',
             '.tmr-market-card.secondary-open .tmr-group-head{padding:10px 12px;min-height:0;}',
             '.tmr-market-card.secondary-open .tmr-group-title{font-size:13px;}',
@@ -2055,6 +2056,7 @@
         if (!card) return;
         card.dataset.marketFilter = filter;
         card.classList.add('secondary-open');
+        card.classList.add('open');
         card.querySelectorAll('.tmr-family-tab, .tmr-filter-pill').forEach(function(button) {
             button.classList.toggle('active', button.dataset.filter === filter);
         });
