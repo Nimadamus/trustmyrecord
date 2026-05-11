@@ -124,6 +124,10 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
 
   const slip = page.locator('#pickDetails, .tmr-slip-panel').first();
   await expect(slip, 'pick slip should be visible').toBeVisible();
+  await expect.poll(async () => slip.evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    return rect.left >= 0 && rect.right <= window.innerWidth;
+  }), { message: 'pick slip should not be cut off horizontally at the tested viewport' }).toBe(true);
   await expect(page.locator('#pickOddsInput'), 'clicking a visible price should fill odds').not.toHaveValue('', { timeout: 10000 });
   await expect(page.locator('#ttSlipUnits'), 'single visible units input should remain available').toBeVisible();
   await expect(page.locator('#unitsInput'), 'internal units input should be hidden to avoid duplicate visible unit boxes').not.toBeVisible();
