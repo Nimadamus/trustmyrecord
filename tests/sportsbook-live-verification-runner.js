@@ -60,6 +60,7 @@ async function main() {
   assert(!/Away\s+(Spread|Run Line|Puck Line)|Home\s+(Spread|Run Line|Puck Line)/i.test(gridText), 'generic spread labels must not appear in the primary grid');
   assert(/[+-]\d+(?:\.\d+)?/.test(gridText), 'spread/run-line/puck-line cells must show actual line values');
   assert(!/Away\s+Money|Home\s+Money/i.test(gridText), 'generic moneyline labels must not clutter the primary grid');
+  assert(!/D\.\.\.|[A-Z]\.\.\./.test(gridText), 'primary odds tiles must not show clipped book/team detail text');
   assert(/Over|O\s*\d/i.test(gridText), 'Over total must be visible in the primary grid');
   assert(/Under|U\s*\d/i.test(gridText), 'Under total must be visible in the primary grid');
 
@@ -98,7 +99,8 @@ async function main() {
     const input = document.querySelector('#pickOddsInput');
     return input && String(input.value || '').trim().length > 0;
   }, null, { timeout: 10000 });
-  await expectVisible(page.locator('#unitsInput'), 'units input should remain visible');
+  await expectVisible(page.locator('#ttSlipUnits'), 'single visible units input should remain visible');
+  assert(!(await page.locator('#unitsInput').isVisible()), 'internal units input should be hidden to avoid duplicate visible unit boxes');
   await expectVisible(page.locator('#unitsModeToggle, [data-testid="stake-mode-toggle"]').first(), 'stake mode toggle should remain visible');
   const preview = page.locator('#unitsStakePreview, #ttSlipStakePreview, [data-testid="stake-preview"]').first();
   await expectVisible(preview, 'risk/to win preview should be visible');

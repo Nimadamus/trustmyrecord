@@ -42,6 +42,8 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   await expect(primaryGrid, 'generic spread labels must not appear in the primary grid').not.toContainText(/Away\s+(Spread|Run Line|Puck Line)|Home\s+(Spread|Run Line|Puck Line)/i);
   await expect(primaryGrid, 'spread/run-line/puck-line cells must show actual line values').toContainText(/[+-]\d+(?:\.\d+)?/);
   await expect(primaryGrid, 'generic moneyline labels must not clutter the primary grid').not.toContainText(/Away\s+Money|Home\s+Money/i);
+  await expect(primaryGrid, 'primary odds tiles must not show clipped book/team detail text').not.toContainText(/D\.\.\.|[A-Z]\.\.\./);
+  await expect(primaryGrid.locator('.tmr-option-detail').first(), 'primary detail text should be hidden to prevent clipped labels').not.toBeVisible();
 
 
   await expect
@@ -97,7 +99,8 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   const slip = page.locator('#pickDetails, .tmr-slip-panel').first();
   await expect(slip, 'pick slip should be visible').toBeVisible();
   await expect(page.locator('#pickOddsInput'), 'clicking a visible price should fill odds').not.toHaveValue('', { timeout: 10000 });
-  await expect(page.locator('#unitsInput'), 'units input should remain available').toBeVisible();
+  await expect(page.locator('#ttSlipUnits'), 'single visible units input should remain available').toBeVisible();
+  await expect(page.locator('#unitsInput'), 'internal units input should be hidden to avoid duplicate visible unit boxes').not.toBeVisible();
   await expect(page.locator('#unitsModeToggle, [data-testid="stake-mode-toggle"]').first(), 'stake mode toggle should remain available').toBeVisible();
   const stakePreview = page.locator('#unitsStakePreview, #ttSlipStakePreview, [data-testid="stake-preview"]').first();
   await expect(stakePreview, 'risk/to win preview should be present').toContainText(/Risk/i);
