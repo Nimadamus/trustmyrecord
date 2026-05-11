@@ -489,24 +489,22 @@
             return Number.isFinite(n) && Math.abs(n) >= 100 ? n : null;
         }
         function riskUnits(pick) {
+            var stored = Number(pick && pick.risk_units);
+            if (Number.isFinite(stored) && stored > 0) return stored;
             var mode = stakeMode(pick);
             var units = Number(pick && pick.units);
             var odds = oddsValue(pick);
-            if (mode && Number.isFinite(units) && units > 0 && odds != null) {
-                return mode === 'to_win' ? (odds < 0 ? units * Math.abs(odds) / 100 : units * 100 / odds) : units;
-            }
-            var stored = Number(pick && pick.risk_units);
-            return Number.isFinite(stored) && stored > 0 ? stored : null;
+            if (!mode || !Number.isFinite(units) || units <= 0 || odds == null) return null;
+            return mode === 'to_win' ? (odds < 0 ? units * Math.abs(odds) / 100 : units * 100 / odds) : units;
         }
         function toWinUnits(pick) {
+            var stored = Number(pick && (pick.to_win_units != null ? pick.to_win_units : pick.win_units));
+            if (Number.isFinite(stored) && stored > 0) return stored;
             var mode = stakeMode(pick);
             var units = Number(pick && pick.units);
             var odds = oddsValue(pick);
-            if (mode && Number.isFinite(units) && units > 0 && odds != null) {
-                return mode === 'to_win' ? units : (odds < 0 ? units * 100 / Math.abs(odds) : units * odds / 100);
-            }
-            var stored = Number(pick && (pick.to_win_units != null ? pick.to_win_units : pick.win_units));
-            return Number.isFinite(stored) && stored > 0 ? stored : null;
+            if (!mode || !Number.isFinite(units) || units <= 0 || odds == null) return null;
+            return mode === 'to_win' ? units : (odds < 0 ? units * 100 / Math.abs(odds) : units * odds / 100);
         }
         function pickText(pick) {
             pick = pick || {};

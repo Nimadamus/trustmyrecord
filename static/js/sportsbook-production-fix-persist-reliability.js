@@ -67,22 +67,7 @@
     const boardRequests = new Map();
     const boardDiagnostics = [];
     let latestBoardRequestId = 0;
-    const LEGACY_BOARD_CACHE_PREFIXES = ['tmr_sportsbook_board_v2_', 'tmr_sportsbook_board_v3_oddsrepair_'];
-    const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v4_boardshape_';
-
-    function clearLegacyBoardCaches() {
-        if (typeof window === 'undefined') return;
-        [window.sessionStorage, window.localStorage].forEach(function(storage) {
-            if (!storage) return;
-            LEGACY_BOARD_CACHE_PREFIXES.forEach(function(prefix) {
-                for (let i = storage.length - 1; i >= 0; i -= 1) {
-                    const key = storage.key(i);
-                    if (key && key.indexOf(prefix) === 0) storage.removeItem(key);
-                }
-            });
-        });
-    }
-    try { clearLegacyBoardCaches(); } catch (error) {}
+    const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v2_';
 
     const MARKET_LABELS = {
         h2h: 'Moneyline',
@@ -179,31 +164,8 @@
         }
     }
 
-    function extractBoardGames(response) {
-        if (Array.isArray(response)) return response;
-        if (!response || typeof response !== 'object') return [];
-
-        const candidates = [
-            response.games,
-            response.data,
-            response.events,
-            response.board,
-            response.payload && response.payload.games,
-            response.data && response.data.games,
-            response.data && response.data.events,
-            response.board && response.board.games,
-            response.result && response.result.games,
-            response.response && response.response.games
-        ];
-
-        for (let i = 0; i < candidates.length; i += 1) {
-            if (Array.isArray(candidates[i])) return candidates[i];
-        }
-        return [];
-    }
-
     function snapshotBoardPayload(response) {
-        const games = extractBoardGames(response);
+        const games = Array.isArray(response && response.games) ? response.games : [];
         return {
             sport_key: response && response.sport_key ? response.sport_key : '',
             game_count: games.length,
@@ -315,36 +277,28 @@
         return nextMode;
     }
 
-    function formatStakePreviewUnits(value) {
-        const n = roundStakeUnits(value);
-        if (!Number.isFinite(n)) return '0';
-        return Number.isInteger(n) ? String(n) : n.toFixed(2);
-    }
-
-    function formatStakeUnitLabel(value) {
-        return Math.abs(roundStakeUnits(value) - 1) < 0.005 ? 'unit' : 'units';
-    }
-
-    function getCurrentStakeAmount() {
-        const ticketInput = document.getElementById('ttSlipUnits');
-        const hiddenInput = document.getElementById('unitsInput');
-        const input = ticketInput || hiddenInput;
-        const rawAmount = input ? parseFloat(input.value || '1') : 1;
-        const amount = Math.max(0.5, Math.min(5, Math.round((Number.isFinite(rawAmount) ? rawAmount : 1) * 2) / 2));
-        [ticketInput, hiddenInput].forEach(function(el) {
-            if (el && String(el.value) !== String(amount)) el.value = String(amount);
-        });
-        return amount;
-    }
-
     function updateStakeModePreview() {
+        const input = document.getElementById('unitsInput');
         const oddsInput = document.getElementById('pickOddsInput');
-        const amount = getCurrentStakeAmount();
+        const amount = input ? parseFloat(input.value || '1') : 1;
         const odds = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
-        const values = calculateStakeValues(getSelectedStakeMode(), amount, odds);
+        const selectedMode = getSelectedStakeMode();
+        const values = calculateStakeValues(selectedMode, amount, odds);
+        const riskButton = document.getElementById('modeRisk');
+        const toWinButton = document.getElementById('modeToWin');
+        const riskTicketButton = document.getElementById('modeRiskTicket');
+        const toWinTicketButton = document.getElementById('modeToWinTicket');
+        const formatUnits = function(value) {
+            const n = roundStakeUnits(value);
+            if (!Number.isFinite(n) || n <= 0) return 'X';
+            return Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+        };
+        if (riskButton) riskButton.innerHTML = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
+        if (toWinButton) toWinButton.innerHTML = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
+        if (riskTicketButton) riskTicketButton.innerHTML = '<span>Risk</span><strong>' + formatUnits(values.risk_units || (selectedMode === 'risk' ? amount : 0)) + ' units</strong>';
+        if (toWinTicketButton) toWinTicketButton.innerHTML = '<span>To win</span><strong>' + formatUnits(values.win_units || (selectedMode === 'to_win' ? amount : 0)) + ' units</strong>';
         const previewText = values.risk_units > 0 && values.win_units > 0
-            ? 'Risk ' + formatStakePreviewUnits(values.risk_units) + ' ' + formatStakeUnitLabel(values.risk_units)
-                + ' to win ' + formatStakePreviewUnits(values.win_units) + ' ' + formatStakeUnitLabel(values.win_units)
+            ? 'Risk ' + values.risk_units + ' units to win ' + values.win_units + ' units'
             : 'Risk / To Win preview updates after odds are entered.';
 
         ['unitsStakePreview', 'ttSlipStakePreview'].forEach(function(id) {
@@ -358,8 +312,9 @@
         const odds = Number(pick.odds_snapshot != null ? pick.odds_snapshot : (pick.odds != null ? pick.odds : pick.price));
         let risk = Number(pick.risk_units != null ? pick.risk_units : pick.riskUnits);
         let win = Number(pick.win_units != null ? pick.win_units : (pick.to_win_units != null ? pick.to_win_units : pick.toWinUnits));
-        if ((!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) && Number.isFinite(odds)) {
-            const values = calculateStakeValues(pick.stake_mode || pick.units_mode || pick.unitsMode || 'risk', pick.units != null ? pick.units : 1, odds);
+        const mode = pick.stake_mode || pick.units_mode || pick.unitsMode;
+        if ((!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(win) || win <= 0) && mode && Number.isFinite(odds)) {
+            const values = calculateStakeValues(mode, pick.units != null ? pick.units : 1, odds);
             risk = values.risk_units;
             win = values.win_units;
         }
@@ -375,7 +330,6 @@
     window.TMR.calculateStakeValues = calculateStakeValues;
     window.TMR.formatStakeDisplay = formatStakeDisplay;
     window.TMR.updateStakeModePreview = updateStakeModePreview;
-    window.TMR.getCurrentStakeAmount = getCurrentStakeAmount;
     window.setUnitsMode = setStakeMode;
 
     function normalizePick(pick) {
@@ -384,7 +338,7 @@
             odds_snapshot: pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds,
             line_snapshot: pick.line_snapshot != null ? pick.line_snapshot : pick.line,
             units: pick.units != null ? parseFloat(pick.units) : 1,
-            stake_mode: pick.stake_mode || pick.units_mode || 'risk',
+            stake_mode: pick.stake_mode || pick.units_mode || '',
             risk_units: pick.risk_units != null ? parseFloat(pick.risk_units) : null,
             to_win_units: pick.to_win_units != null ? parseFloat(pick.to_win_units) : (pick.win_units != null ? parseFloat(pick.win_units) : null),
             win_units: pick.win_units != null ? parseFloat(pick.win_units) : (pick.to_win_units != null ? parseFloat(pick.to_win_units) : null)
@@ -941,16 +895,15 @@
     function renderBoardIfCurrent(requestId, sport, badge, response) {
         const renderStartedAt = nowMs();
         if (state.selectedSport !== sport) return false;
-        const boardResponse = normalizeBoardResponse(response, sport);
         if (requestId !== latestBoardRequestId) {
             recordBoardEvent('board_render_recovered', {
                 sport: sport,
                 request_id: requestId,
                 latest_request_id: latestBoardRequestId,
-                snapshot: snapshotBoardPayload(boardResponse)
+                snapshot: snapshotBoardPayload(response)
             });
         }
-        state.currentBoard = boardResponse.games || [];
+        state.currentBoard = response.games || [];
         window.TMR = window.TMR || {};
         window.TMR.currentGames = state.currentBoard;
         state.lastBoardRenderAt = Date.now();
@@ -959,9 +912,9 @@
         recordBoardEvent('board_rendered', {
             sport: sport,
             render_duration_ms: elapsedMs(renderStartedAt),
-            snapshot: snapshotBoardPayload(boardResponse)
+            snapshot: snapshotBoardPayload(response)
         });
-        renderBoard(boardResponse.summary || null, state.currentBoard);
+        renderBoard(response.summary || null, state.currentBoard);
         return true;
     }
 
@@ -1033,16 +986,7 @@
             return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.result_units) || 0));
         }, 0);
         const risked = normalized.reduce(function(sum, pick) {
-            if (pick.status === 'pending') return sum;
-            const risk = parseFloat(pick.risk_units);
-            if (Number.isFinite(risk) && risk > 0) return sum + risk;
-            const win = parseFloat(pick.to_win_units || pick.win_units);
-            const odds = parseFloat(pick.odds_snapshot || pick.odds || pick.price);
-            if (Number.isFinite(win) && win > 0 && Number.isFinite(odds) && odds !== 0) {
-                return sum + (odds < 0 ? win * Math.abs(odds) / 100 : win * 100 / odds);
-            }
-            const values = calculateStakeValues(pick.stake_mode || pick.units_mode || 'risk', pick.units, odds);
-            return sum + values.risk_units;
+            return sum + (pick.status === 'pending' ? 0 : (parseFloat(pick.risk_units) || 0));
         }, 0);
 
         return {
@@ -1515,41 +1459,6 @@
         return !normalized || ['tbd', 'unknown', 'team a', 'team b', 'home', 'away'].includes(normalized);
     }
 
-    function firstReadableTeamName() {
-        for (let i = 0; i < arguments.length; i += 1) {
-            const candidate = arguments[i];
-            let value = '';
-            if (typeof candidate === 'string') {
-                value = candidate;
-            } else if (candidate && typeof candidate === 'object') {
-                value = candidate.name || candidate.team || candidate.displayName || candidate.shortName || candidate.fullName || '';
-            }
-            value = String(value || '').trim();
-            if (value && !isPlaceholderTeamName(value)) return value;
-        }
-        return '';
-    }
-
-    function normalizeBoardGameShape(game) {
-        if (!game || typeof game !== 'object') return game;
-        const teams = game.teams || {};
-        const competitors = Array.isArray(game.competitors) ? game.competitors : [];
-        const homeCompetitor = competitors.find(function(team) {
-            return team && (team.homeAway === 'home' || team.side === 'home');
-        });
-        const awayCompetitor = competitors.find(function(team) {
-            return team && (team.homeAway === 'away' || team.side === 'away');
-        });
-        const homeTeam = firstReadableTeamName(game.home_team, game.homeTeam, game.home, teams.home, homeCompetitor);
-        const awayTeam = firstReadableTeamName(game.away_team, game.awayTeam, game.away, teams.away, awayCompetitor);
-
-        if (!homeTeam && !awayTeam) return game;
-        return Object.assign({}, game, {
-            home_team: homeTeam || game.home_team,
-            away_team: awayTeam || game.away_team
-        });
-    }
-
     function deriveTeamsFromBookmakers(game) {
         const bookmakers = Array.isArray(game && game.bookmakers) ? game.bookmakers : [];
         for (let i = 0; i < bookmakers.length; i += 1) {
@@ -1583,7 +1492,7 @@
     }
 
     function boardHasBrokenTeamPlaceholders(response) {
-        const games = extractBoardGames(response).map(normalizeBoardGameShape);
+        const games = Array.isArray(response && response.games) ? response.games : [];
         return games.some(function(game) {
             if (!game || (!isPlaceholderTeamName(game.home_team) && !isPlaceholderTeamName(game.away_team))) {
                 return false;
@@ -1593,7 +1502,7 @@
     }
 
     function normalizeBoardResponse(response, sport) {
-        const games = extractBoardGames(response).map(normalizeBoardGameShape);
+        const games = Array.isArray(response && response.games) ? response.games : [];
         let repairedCount = 0;
         let droppedCount = 0;
         const normalizedGames = games.map(function(game, index) {
@@ -1626,37 +1535,13 @@
             summary.severity = summary.severity || 'info';
         }
 
-        const hasPricedMarkets = function(game) {
-            return game && Array.isArray(game.market_groups) && game.market_groups.some(function(group) {
-                return group && Array.isArray(group.items) && group.items.some(function(item) {
-                    return item && item.source !== 'manual' && item.odds != null && Number.isFinite(Number(item.odds));
-                });
-            });
-        };
-        const pricedGames = normalizedGames.filter(hasPricedMarkets);
-        const pendingBehindPricedCount = pricedGames.length ? normalizedGames.length - pricedGames.length : 0;
-        const displayGames = normalizedGames.slice().sort(function(a, b) {
-            const aPriced = hasPricedMarkets(a) ? 0 : 1;
-            const bPriced = hasPricedMarkets(b) ? 0 : 1;
-            if (aPriced !== bPriced) return aPriced - bPriced;
-            return new Date(a && a.commence_time || 0) - new Date(b && b.commence_time || 0);
-        });
-        if (pendingBehindPricedCount > 0) {
-            summary.severity = 'info';
-            summary.message = 'Showing sportsbook-priced games first. ' + pendingBehindPricedCount + ' lines-pending matchup' + (pendingBehindPricedCount === 1 ? ' remains' : 's remain') + ' available below until verified prices are posted.';
-            summary.total_games = displayGames.length;
-            summary.sportsbook_games = pricedGames.length;
-            summary.fallback_games = pendingBehindPricedCount;
-        }
-
         return {
             sport_key: response && response.sport_key ? response.sport_key : '',
             summary: summary,
-            games: displayGames,
+            games: normalizedGames,
             diagnostics: Object.assign({}, response && response.diagnostics ? response.diagnostics : {}, {
                 frontend_repaired_games: repairedCount,
-                frontend_dropped_games: droppedCount,
-                frontend_pending_games_sorted_after_priced: pendingBehindPricedCount
+                frontend_dropped_games: droppedCount
             })
         };
     }
@@ -2264,8 +2149,8 @@
             return '<span class="team-logo team-logo--fallback tmr-team-logo-badge tmr-team-logo-badge--fallback" aria-hidden="true">' + initialsHtml + '</span>';
         }
 
-        return '<span class="team-logo tmr-team-logo-badge" aria-hidden="true" data-tmr-logo-team="' + escapeHtml(teamName || initials) + '">' +
-            '<img class="team-logo__img tmr-team-logo-img" src="' + escapeHtml(logoUrl) + '" data-tmr-logo-src="' + escapeHtml(logoUrl) + '" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add(\'tmr-team-logo-badge--fallback\');this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">' +
+        return '<span class="team-logo tmr-team-logo-badge" aria-hidden="true">' +
+            '<img class="team-logo__img tmr-team-logo-img" src="' + escapeHtml(logoUrl) + '" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add(\'tmr-team-logo-badge--fallback\');this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">' +
             initialsHtml +
             '</span>';
     }
@@ -2591,11 +2476,6 @@
                         displayTeam = '';
                         sideLabel = /under/i.test(label) ? 'F5 Under' : 'F5 Over';
                         break;
-                    case 'f5_team_totals':
-                        betType = /under/i.test(label) ? 'f5teamunder' : 'f5teamover';
-                        displayTeam = option.selection || label.replace(/\s+[+-]?\d+(\.\d+)?\s*$/,'').trim();
-                        sideLabel = /under/i.test(label) ? 'F5 Team Under' : 'F5 Team Over';
-                        break;
                     case 'spreads':
                         betType = 'spread';
                         displayTeam = option.selection || label.split(' ')[0] || '';
@@ -2604,7 +2484,7 @@
                     case 'f5_spreads':
                         betType = 'f5spread';
                         displayTeam = option.selection || '';
-                        sideLabel = '';
+                        sideLabel = 'F5';
                         break;
                     case 'h2h':
                         betType = 'ml';
@@ -2614,7 +2494,7 @@
                     case 'f5_h2h':
                         betType = 'f5ml';
                         displayTeam = option.selection || '';
-                        sideLabel = 'ML';
+                        sideLabel = 'F5 ML';
                         break;
                     default:
                         betType = 'ml';
@@ -2806,11 +2686,14 @@
 
         const oddsValue = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
         const lineValue = lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null;
+        const unitsRaw = unitsInput ? parseFloat(unitsInput.value || '1') : 1;
         // Frontend hard-cap: stake amount must be in [0.5, 5], rounded to
-        // half units. Read from the visible ticket input when present, then
-        // mirror to #unitsInput so preview text and submit payload cannot
-        // drift apart.
-        const unitsValue = getCurrentStakeAmount();
+        // half units. The amount means risk units in Risk mode and desired
+        // win units in To Win mode.
+        const unitsValue = Math.max(0.5, Math.min(5, Math.round((Number.isFinite(unitsRaw) ? unitsRaw : 1) * 2) / 2));
+        if (unitsInput && String(unitsValue) !== String(unitsInput.value)) {
+            unitsInput.value = String(unitsValue);
+        }
         const submittedSelection = buildSubmittedSelection(option, lineValue);
 
         if (Number.isNaN(oddsValue) || (oddsValue > -100 && oddsValue < 100)) {
@@ -2836,12 +2719,12 @@
         }
 
         const stakeMode = getSelectedStakeMode();
+        const stakeValues = calculateStakeValues(stakeMode, unitsValue, oddsValue);
         let finalPayload = null;
         try {
             const api = await getApiClientOrFallback();
             await ensureBackendAccessToken(api);
             showSubmitTrace('Submitting pick to API: ' + option.game_id + ' / ' + option.market_type + '.');
-            const stakeValues = calculateStakeValues(stakeMode, unitsValue, oddsValue);
             const payload = {
                 game_id: option.game_id,
                 external_game_id: option.game_id,
@@ -2856,6 +2739,7 @@
                 stake_mode: stakeMode,
                 units_mode: stakeMode,
                 risk_units: stakeValues.risk_units,
+                win_units: stakeValues.win_units,
                 to_win_units: stakeValues.win_units,
                 book_title: bookInput ? bookInput.value.trim() : option.book_title,
                 book_key: option.book_key,
@@ -3212,8 +3096,8 @@
             forums: 'forum.html',
             arena: 'arena.html',
             trivia: 'trivia.html',
-            'polls-trivia': 'polls.html',
-            predictions: 'polls.html',
+            'polls-trivia': 'hangout.html',
+            predictions: 'hangout.html',
             contests: 'arena.html',
             profile: 'profile.html',
             messages: 'messages.html',
@@ -3461,16 +3345,6 @@
                         selection = 'Under';
                         selectionLabel = 'F5 Under' + (lineDisp ? ' ' + lineDisp : '');
                         break;
-                    case 'f5teamover':
-                        marketType = 'f5_team_totals'; groupLabel = 'First 5 Team Total';
-                        selection = (teamRaw + ' Over' + (lineDisp ? ' ' + lineDisp : '')).trim();
-                        selectionLabel = selection;
-                        break;
-                    case 'f5teamunder':
-                        marketType = 'f5_team_totals'; groupLabel = 'First 5 Team Total';
-                        selection = (teamRaw + ' Under' + (lineDisp ? ' ' + lineDisp : '')).trim();
-                        selectionLabel = selection;
-                        break;
                     case 'f5spread':
                         marketType = 'f5_spreads'; groupLabel = 'First 5';
                         selection = teamRaw;
@@ -3540,66 +3414,6 @@
                         marketType = 'period_1_totals'; groupLabel = '1st Period';
                         selection = 'Under';
                         selectionLabel = '1P Under' + (lineDisp ? ' ' + lineDisp : '');
-                        break;
-                    case 'period2ml':
-                        marketType = 'period_2_h2h'; groupLabel = '2nd Period';
-                        selection = teamRaw;
-                        selectionLabel = teamRaw + ' 2P ML';
-                        break;
-                    case 'period2spread':
-                        marketType = 'period_2_spreads'; groupLabel = '2nd Period';
-                        selection = teamRaw;
-                        selectionLabel = teamRaw + ' 2P' + (lineDispSigned ? ' ' + lineDispSigned : '');
-                        break;
-                    case 'period2over':
-                        marketType = 'period_2_totals'; groupLabel = '2nd Period';
-                        selection = 'Over';
-                        selectionLabel = '2P Over' + (lineDisp ? ' ' + lineDisp : '');
-                        break;
-                    case 'period2under':
-                        marketType = 'period_2_totals'; groupLabel = '2nd Period';
-                        selection = 'Under';
-                        selectionLabel = '2P Under' + (lineDisp ? ' ' + lineDisp : '');
-                        break;
-                    case 'period3ml':
-                        marketType = 'period_3_h2h'; groupLabel = '3rd Period';
-                        selection = teamRaw;
-                        selectionLabel = teamRaw + ' 3P ML';
-                        break;
-                    case 'period3spread':
-                        marketType = 'period_3_spreads'; groupLabel = '3rd Period';
-                        selection = teamRaw;
-                        selectionLabel = teamRaw + ' 3P' + (lineDispSigned ? ' ' + lineDispSigned : '');
-                        break;
-                    case 'period3over':
-                        marketType = 'period_3_totals'; groupLabel = '3rd Period';
-                        selection = 'Over';
-                        selectionLabel = '3P Over' + (lineDisp ? ' ' + lineDisp : '');
-                        break;
-                    case 'period3under':
-                        marketType = 'period_3_totals'; groupLabel = '3rd Period';
-                        selection = 'Under';
-                        selectionLabel = '3P Under' + (lineDisp ? ' ' + lineDisp : '');
-                        break;
-                    case 'period4ml':
-                        marketType = 'period_4_h2h'; groupLabel = '4th Period';
-                        selection = teamRaw;
-                        selectionLabel = teamRaw + ' 4P ML';
-                        break;
-                    case 'period4spread':
-                        marketType = 'period_4_spreads'; groupLabel = '4th Period';
-                        selection = teamRaw;
-                        selectionLabel = teamRaw + ' 4P' + (lineDispSigned ? ' ' + lineDispSigned : '');
-                        break;
-                    case 'period4over':
-                        marketType = 'period_4_totals'; groupLabel = '4th Period';
-                        selection = 'Over';
-                        selectionLabel = '4P Over' + (lineDisp ? ' ' + lineDisp : '');
-                        break;
-                    case 'period4under':
-                        marketType = 'period_4_totals'; groupLabel = '4th Period';
-                        selection = 'Under';
-                        selectionLabel = '4P Under' + (lineDisp ? ' ' + lineDisp : '');
                         break;
                 }
 
@@ -3675,8 +3489,36 @@
         }
 
         fetchCurrentUserPicks().then(syncRecordWidgets).catch(function() {});
+
+        if (/([?&])tmrStakeProof=1(&|$)/.test(window.location.search || '')) {
+            setTimeout(function() {
+                try {
+                    const unitsInput = document.getElementById('unitsInput');
+                    const oddsInput = document.getElementById('pickOddsInput');
+                    if (unitsInput) unitsInput.value = '2';
+                    if (oddsInput) oddsInput.value = '-145';
+                    if (window.TMR && typeof window.TMR._ttPopulateSlip === 'function') {
+                        window.TMR.selectedSport = 'MLB';
+                        window.TMR._ttPopulateSlip({ gameIndex: null, betType: 'ml', team: 'Los Angeles Dodgers', line: '', odds: -145, awayTeam: 'Los Angeles Dodgers', homeTeam: 'San Francisco Giants', sport: 'MLB', league: 'MLB', market: 'Moneyline', marketType: 'h2h', book: 'DraftKings', gameTime: null, gameId: 'tmr-stake-proof', game: { away_team: 'Los Angeles Dodgers', home_team: 'San Francisco Giants', id: 'tmr-stake-proof' } });
+                    }
+                    const slipUnits = document.getElementById('ttSlipUnits');
+                    if (slipUnits) slipUnits.value = '2';
+                    if (unitsInput) unitsInput.value = '2';
+                    if (oddsInput) oddsInput.value = '-145';
+                    setStakeMode('risk');
+                    if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview();
+                    const aside = document.querySelector('.sportsbook-ticket-preview');
+                    if (aside && aside.scrollIntoView) aside.scrollIntoView({ block: 'center', inline: 'center' });
+                    if (aside) {
+                        const rect = aside.getBoundingClientRect();
+                        const targetLeft = Math.max(0, window.scrollX + rect.left - 40);
+                        const targetTop = Math.max(0, window.scrollY + rect.top - 80);
+                        window.scrollTo(targetLeft, targetTop);
+                    }
+                } catch (err) { console.warn('[TMR][stake-proof] could not populate proof slip:', err && err.message); }
+            }, 1200);
+        }
     }
 
     document.addEventListener('DOMContentLoaded', boot);
 })();
-
