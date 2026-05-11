@@ -26,10 +26,14 @@ jobs:
       - run: npm run verify:sportsbook-live
         env:
           TMR_SPORTSBOOK_URL: https://trustmyrecord.com/sportsbook/
+      - run: xvfb-run --auto-servernum npm run verify:sportsbook-live:browser-proof
+        env:
+          TMR_SPORTSBOOK_URL: https://trustmyrecord.com/sportsbook/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: sportsbook-live-verification
           path: |
             artifacts/sportsbook-live-verification.png
+            artifacts/sportsbook-live-browser-proof.png
             artifacts/playwright-results/**
