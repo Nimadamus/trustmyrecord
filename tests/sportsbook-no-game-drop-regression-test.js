@@ -43,7 +43,7 @@ assert(
   'sportsbook runtime must clear stale board caches from broken v2/v3/v4 namespaces'
 );
 assert(
-  html.includes('sportsbook-production-fix-persist-reliability.js?v=20260511gamesvisible1&cb=20260511gamesvisible1'),
+  html.includes('sportsbook-production-fix-persist-reliability.js?v=20260511linesvisible2&cb=20260511linesvisible2'),
   'sportsbook page must request the logo-restored reliability runtime, not a stale cached script'
 );
 assert(
@@ -100,6 +100,12 @@ assert(
   reliability.includes('const boardResponse = normalizeBoardResponse(response, sport);') &&
     reliability.includes('state.currentBoard = boardResponse.games || [];'),
   'cached board renders must use the same normalization as fresh board responses'
+);
+assert(
+  reliability.includes('function ensureVisibleMarketGroups(card)') &&
+    reliability.includes("card.dataset.marketFilter = fallbackFilter") &&
+    reliability.includes("group.getAttribute('data-category') === 'game-lines'"),
+  'sportsbook board renderer must recover visible priced lines when a stale market filter hides the active group'
 );
 
 

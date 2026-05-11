@@ -1935,6 +1935,37 @@
         card.querySelectorAll('.tmr-family-tab, .tmr-filter-pill').forEach(function(button) {
             button.classList.toggle('active', button.dataset.filter === filter);
         });
+        card.querySelectorAll('.tmr-card-filter-tab').forEach(function(button) {
+            button.classList.toggle('active', button.dataset.filter === filter);
+        });
+        ensureVisibleMarketGroups(card);
+    }
+
+    function ensureVisibleMarketGroups(card) {
+        if (!card) return;
+        const groups = Array.from(card.querySelectorAll('.tmr-group'));
+        if (!groups.length) return;
+        const activeFilter = card.dataset.marketFilter || 'game-lines';
+        const matching = groups.filter(function(group) {
+            return group.getAttribute('data-category') === activeFilter;
+        });
+        const visibleMatching = matching.filter(function(group) {
+            return group.querySelector('.tmr-option-btn');
+        });
+        if (visibleMatching.length) return;
+
+        const fallback = groups.find(function(group) {
+            return group.getAttribute('data-category') === 'game-lines' && group.querySelector('.tmr-option-btn');
+        }) || groups.find(function(group) {
+            return group.querySelector('.tmr-option-btn');
+        });
+        if (!fallback) return;
+
+        const fallbackFilter = fallback.getAttribute('data-category') || activeFilter;
+        card.dataset.marketFilter = fallbackFilter;
+        card.querySelectorAll('.tmr-card-filter-tab').forEach(function(button) {
+            button.classList.toggle('active', button.dataset.filter === fallbackFilter);
+        });
     }
 
     function renderBoardOptionButton(option, optionKey, optionDomId, game) {
@@ -2182,6 +2213,7 @@
         }).join('');
 
         container.innerHTML = html;
+        Array.from(container.querySelectorAll('.tmr-market-card')).forEach(ensureVisibleMarketGroups);
     }
 
     function recoverRenderedBoardIfBlank() {
