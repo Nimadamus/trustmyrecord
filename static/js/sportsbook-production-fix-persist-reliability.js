@@ -328,6 +328,14 @@
             input.addEventListener('input', updateStakeModePreview);
             input.addEventListener('change', updateStakeModePreview);
         });
+        document.querySelectorAll('[data-stake-mode]').forEach(function(button) {
+            if (!button || button.dataset.tmrStakeModeBound === '1') return;
+            button.dataset.tmrStakeModeBound = '1';
+            button.addEventListener('click', function(event) {
+                event.preventDefault();
+                setStakeMode(button.getAttribute('data-stake-mode'));
+            });
+        });
     }
 
     function getCurrentStakeAmount() {
