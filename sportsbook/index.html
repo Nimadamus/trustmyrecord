@@ -474,6 +474,27 @@
         return 'Risk ' + fmt(risk) + ' units to win ' + fmt(win) + ' units';
     };
 
+    window.TMR.renderStakeSummaryHtml = function(values) {
+        function esc(s) {
+            var d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
+        }
+        var riskText = window.TMR.roundStakeUnits(values.risk_units);
+        var winText = window.TMR.roundStakeUnits(values.win_units);
+        riskText = Number.isInteger(riskText) ? String(riskText) : riskText.toFixed(2);
+        winText = Number.isInteger(winText) ? String(winText) : winText.toFixed(2);
+        return '<span class="tmr-ticket-stake-summary-cell">' +
+            '<span class="tmr-ticket-stake-summary-label">Risk</span>' +
+            '<strong class="tmr-ticket-stake-summary-value">' + esc(riskText + ' units') + '</strong>' +
+            '</span>' +
+            '<span class="tmr-ticket-stake-summary-divider" aria-hidden="true"></span>' +
+            '<span class="tmr-ticket-stake-summary-cell">' +
+            '<span class="tmr-ticket-stake-summary-label">To Win</span>' +
+            '<strong class="tmr-ticket-stake-summary-value">' + esc(winText + ' units') + '</strong>' +
+            '</span>';
+    };
+
     window.TMR.updateStakeModePreview = function() {
         var unitsEl = document.getElementById('ttSlipUnits') || document.getElementById('unitsInput');
         var oddsEl = document.getElementById('pickOddsInput');
@@ -489,9 +510,13 @@
         if (hiddenUnits) hiddenUnits.value = String(amount);
         if (!preview) return;
         var values = window.TMR.calculateStakeValues(window.TMR.selectedUnitsMode || 'risk', amount, odds);
-        preview.textContent = values.risk_units && values.win_units
-            ? window.TMR.formatStakeDisplay({ risk_units: values.risk_units, win_units: values.win_units, odds: odds })
-            : 'Risk and win units will calculate from the odds.';
+        if (values.risk_units && values.win_units) {
+            preview.classList.add('tmr-ticket-stake-summary');
+            preview.innerHTML = window.TMR.renderStakeSummaryHtml(values);
+        } else {
+            preview.classList.remove('tmr-ticket-stake-summary');
+            preview.textContent = 'Risk and win units will calculate from the odds.';
+        }
     };
 
     // Core function - Select Sport and Show Games (ESPN free API, no server needed)
@@ -10824,11 +10849,11 @@ window.toggleSportFamily = function (family) {
             '<div class="sportsbook-ticket-preview-row tmr-ticket-row--selection"><span>Selection</span><strong>' + safeSelection + '</strong></div>' +
             '<div class="sportsbook-ticket-preview-row tmr-ticket-row--odds"><span>Odds</span><strong>' + oddsTxt + '</strong></div>' +
             '<div class="sportsbook-ticket-preview-row tmr-ticket-row--book"><span>Sportsbook</span><strong>' + safeBook + '</strong></div>' +
-            '<div class="sportsbook-ticket-preview-row tmr-ticket-stake-mode-row" style="align-items:center;display:grid;grid-template-columns:1fr;gap:8px;">' +
-                '<span style="font-size:11px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#f2c94c;">Stake Mode</span>' +
-                '<div id="ttSlipStakeModeToggle" class="tmr-ticket-stake-mode-toggle" role="group" aria-label="Stake mode" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">' +
-                    '<button type="button" id="modeRiskTicket" class="tmr-ticket-stake-mode-btn active" aria-pressed="true" onclick="setUnitsMode(\'risk\')" style="padding:9px 10px;border-radius:8px;border:1px solid rgba(120,255,181,0.34);background:rgba(47,143,83,0.34);color:#f8fafc;font-size:12px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Risk</button>' +
-                    '<button type="button" id="modeToWinTicket" class="tmr-ticket-stake-mode-btn" aria-pressed="false" onclick="setUnitsMode(\'to_win\')" style="padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.05);color:#cbd5e1;font-size:12px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">To Win</button>' +
+            '<div class="sportsbook-ticket-preview-row tmr-ticket-stake-mode-row">' +
+                '<span class="tmr-ticket-stake-mode-label">Stake Mode</span>' +
+                '<div id="ttSlipStakeModeToggle" class="tmr-ticket-stake-mode-toggle" role="group" aria-label="Stake mode">' +
+                    'risk\)" style="padding:9px 10px;border-radius:8px;border:1px solid rgba(120,255,181,0.34);background:rgba(47,143,83,0.34);color:#f8fafc;font-size:12px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Risk</button>'risk\')" style="padding:9px 10px;border-radius:8px;border:1px solid rgba(120,255,181,0.34);background:rgba(47,143,83,0.34);color:#f8fafc;font-size:12px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">Risk</button>' +
+                    'to_win\)" style="padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.05);color:#cbd5e1;font-size:12px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">To Win</button>'to_win\')" style="padding:9px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.16);background:rgba(255,255,255,0.05);color:#cbd5e1;font-size:12px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;">To Win</button>' +
                 '</div>' +
                 '<input type="hidden" id="ttSlipStakeMode" value="risk">' +
             '</div>' +
@@ -10837,7 +10862,7 @@ window.toggleSportFamily = function (family) {
                 '<strong><input id="ttSlipUnits" type="number" min="0.5" max="5" step="0.5" value="1" aria-label="Stake units" oninput="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview()" onchange="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview()"' +
                     ' style="width:64px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:4px 8px;color:#f8fafc;font-weight:800;text-align:right;"></strong>' +
             '</div>' +
-            '<div id="ttSlipStakePreview" class="sportsbook-ticket-preview-note" style="margin-top:-2px;color:#dbeafe;">Risk 1 units to win 0.91 units</div>' +
+            '<div id="ttSlipStakePreview" class="sportsbook-ticket-preview-note tmr-ticket-stake-summary"><span class="tmr-ticket-stake-summary-cell"><span class="tmr-ticket-stake-summary-label">Risk</span><strong class="tmr-ticket-stake-summary-value">1 unit</strong></span><span class="tmr-ticket-stake-summary-divider" aria-hidden="true"></span><span class="tmr-ticket-stake-summary-cell"><span class="tmr-ticket-stake-summary-label">To Win</span><strong class="tmr-ticket-stake-summary-value">0.91 units</strong></span></div>' +
             '<div class="sportsbook-ticket-preview-note">Real DraftKings line. Tap Lock Pick to add it to your public record.</div>' +
             '<button type="button" id="ttSlipSubmit" class="sportsbook-ticket-preview-submit">Lock Pick</button>';
 
@@ -30610,14 +30635,23 @@ document.addEventListener('DOMContentLoaded', function() {
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-ticket-stake-mode-row {
         display: grid !important;
         grid-template-columns: 1fr !important;
-        gap: 9px !important;
-        padding: 10px 0 9px !important;
+        gap: 10px !important;
+        padding: 11px 0 10px !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-ticket-stake-mode-label {
+        display: block !important;
+        font-size: 11px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase !important;
+        color: #f2c94c !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-ticket-stake-mode-toggle {
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
-        gap: 8px !important;
+        gap: 10px !important;
         width: 100% !important;
     }
 
@@ -30629,12 +30663,12 @@ document.addEventListener('DOMContentLoaded', function() {
         justify-content: center !important;
         min-width: 0 !important;
         width: 100% !important;
-        min-height: 38px !important;
-        padding: 0 12px !important;
+        min-height: 42px !important;
+        padding: 0 14px !important;
         border-radius: 8px !important;
-        font-size: 13px !important;
+        font-size: 13.5px !important;
         line-height: 1 !important;
-        font-weight: 820 !important;
+        font-weight: 800 !important;
         letter-spacing: 0 !important;
         text-transform: none !important;
         white-space: nowrap !important;
@@ -30667,9 +30701,51 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #ttSlipStakePreview {
-        color: #d8f7ff !important;
-        background: rgba(34, 211, 238, 0.08) !important;
-        border-color: rgba(34, 211, 238, 0.18) !important;
+        color: #e5edf7 !important;
+        background: rgba(8, 16, 28, 0.86) !important;
+        border-color: rgba(125, 223, 100, 0.22) !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-ticket-stake-summary {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+        padding: 10px !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-ticket-stake-summary-cell {
+        display: grid !important;
+        align-content: center !important;
+        gap: 4px !important;
+        min-width: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-ticket-stake-summary-cell:last-child {
+        text-align: right !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-ticket-stake-summary-label {
+        color: #94a3b8 !important;
+        font-size: 10.5px !important;
+        font-weight: 800 !important;
+        letter-spacing: 0.08em !important;
+        line-height: 1 !important;
+        text-transform: uppercase !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-ticket-stake-summary-value {
+        color: #f8fafc !important;
+        font-size: 15px !important;
+        font-weight: 850 !important;
+        line-height: 1.1 !important;
+        white-space: nowrap !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-ticket-stake-summary-divider {
+        width: 1px !important;
+        min-height: 38px !important;
+        background: rgba(148, 163, 184, 0.2) !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-submit,
