@@ -20,7 +20,7 @@
   <script>
   // Legacy ESPN fallback contract retained for no-game-drop guard. The primary board uses /api/games/board first.
   window.TMR = window.TMR || {};
-  window.TMR.fetchGamesFromESPN = window.TMR.fetchGamesFromESPN || function(sportKey, callback) {
+  window.TMR.fetchGamesFromESPN = function(sportKey, callback) {
     var maxDays = 7;
     function tryFetch(daysOffset) {
       if (daysOffset > maxDays) { if (typeof callback === 'function') callback([]); return; }
