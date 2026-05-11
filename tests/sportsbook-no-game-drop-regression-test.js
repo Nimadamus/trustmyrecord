@@ -35,16 +35,25 @@ assert(
 );
 
 assert(
-  reliability.includes("const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v4_boardshape_'"),
+  reliability.includes("const BOARD_CACHE_PREFIX = 'tmr_sportsbook_board_v5_livegames_'"),
   'sportsbook board cache namespace must be bumped after odds/game visibility repairs'
 );
 assert(
-  reliability.includes("LEGACY_BOARD_CACHE_PREFIXES = ['tmr_sportsbook_board_v2_', 'tmr_sportsbook_board_v3_oddsrepair_']"),
-  'sportsbook runtime must clear stale board caches from broken v2/v3 namespaces'
+  reliability.includes("LEGACY_BOARD_CACHE_PREFIXES = ['tmr_sportsbook_board_v2_', 'tmr_sportsbook_board_v3_oddsrepair_', 'tmr_sportsbook_board_v4_boardshape_']"),
+  'sportsbook runtime must clear stale board caches from broken v2/v3/v4 namespaces'
 );
 assert(
-  html.includes('sportsbook-production-fix-persist-reliability.js?v=20260511stakeguard1&cb=20260511stakeguard1'),
+  html.includes('sportsbook-production-fix-persist-reliability.js?v=20260511gamesvisible1&cb=20260511gamesvisible1'),
   'sportsbook page must request the logo-restored reliability runtime, not a stale cached script'
+);
+assert(
+  !html.includes('if (!sportKey || !window.TMR.fetchGamesFromESPN)'),
+  'sportsbook lobby must not block the backend board just because the ESPN fallback helper is unavailable'
+);
+assert(
+  html.includes('if (!window.TMR.fetchGamesFromESPN)') &&
+    html.indexOf('fetch(url, { headers: {') < html.indexOf('espnFallback(); return;'),
+  'sportsbook lobby should try the backend board before falling back to ESPN'
 );
 assert(
   html.includes('tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1'),
@@ -127,4 +136,3 @@ assert.deepStrictEqual(sorted.map((game) => game.id), ['priced-b', 'priced-d', '
 
 
 console.log('sportsbook no-game-drop regression test passed');
-
