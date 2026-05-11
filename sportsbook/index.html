@@ -11391,7 +11391,7 @@ window.toggleSportFamily = function (family) {
                          '<span>Real matchups, lines, and prices populate here as soon as the feed responds.</span></div>';
 
         var sportKey = (window.TMR && window.TMR.sportKeyMap && window.TMR.sportKeyMap[sport]);
-        if (!sportKey || !window.TMR.fetchGamesFromESPN) {
+        if (!sportKey) {
             rows.innerHTML = emptyState(sport, 'No ' + sport + ' board available right now.', 'closed');
             return;
         }
@@ -11420,6 +11420,10 @@ window.toggleSportFamily = function (family) {
         };
 
         var espnFallback = function () {
+            if (!window.TMR.fetchGamesFromESPN) {
+                rows.innerHTML = emptyState(sport, 'No ' + sport + ' board available right now.', 'closed');
+                return;
+            }
             try {
                 window.TMR.fetchGamesFromESPN(sportKey, function (games) {
                     paintBoard(games, 'ESPN');
@@ -20390,7 +20394,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260511stakeguard1&cb=20260511stakeguard1"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260511gamesvisible1&cb=20260511gamesvisible1"></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
