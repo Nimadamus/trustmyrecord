@@ -1554,6 +1554,7 @@
             '.tmr-market-card.secondary-open .tmr-group-head{padding:10px 12px;min-height:0;}',
             '.tmr-market-card.secondary-open .tmr-group-title{font-size:13px;}',
             '.tmr-market-card.secondary-open .tmr-option-grid{gap:8px;padding:10px;}',
+            '.tmr-market-card.secondary-open .tmr-team-total-market-grid{grid-template-columns:minmax(280px,1.35fr) repeat(2,minmax(130px,1fr));grid-template-rows:auto 62px 62px;}',
             '.tmr-market-card.secondary-open .tmr-option-row{min-height:42px;padding:9px 10px;border-radius:10px;}',
             '@media (max-width:1020px){.tmr-market-head{grid-template-columns:1fr;}.tmr-market-side{display:block;}.tmr-primary-market-grid{max-width:none;width:100%;min-width:0;grid-template-columns:minmax(220px,1fr) repeat(3,minmax(104px,1fr));overflow-x:auto;}.tmr-market-summary{justify-content:space-between;}}',
             '@keyframes tmrShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}',
@@ -2096,7 +2097,7 @@
     function applyCardMarketFilterDisplay(card) {
         if (!card) return;
         const activeFilter = card.dataset.marketFilter || 'game-lines';
-        const primaryGrid = card.querySelector('.tmr-primary-market-grid');
+        const primaryGrid = card.querySelector('.tmr-market-side > .tmr-primary-market-grid');
         if (primaryGrid) {
             primaryGrid.style.display = activeFilter === 'game-lines' ? '' : 'none';
         }
@@ -2142,6 +2143,9 @@
 
     function renderBoardGroup(group, groupIndex, game, cardIndex) {
         const groupItems = group.items || [];
+        if (getGroupCategory(group) === 'team-totals') {
+            return renderTeamTotalsGroup(group, groupIndex, game, cardIndex);
+        }
         const buttons = groupItems.map(function(option, optionIndex) {
             const optionKey = [
                 game.id || ('game-' + cardIndex),
@@ -2235,6 +2239,65 @@
             renderPrimaryButton(picks.homeSpread, lineValue(picks.homeSpread.item, true), 'home-spread') +
             renderPrimaryButton(picks.underTotal, totalLabel(picks.underTotal, 'Under'), 'under-total') +
             '</div>';
+    }
+
+    function renderTeamTotalsGroup(group, groupIndex, game, cardIndex) {
+        const groupItems = group.items || [];
+        const teamKey = function(value) { return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
+        const sideKey = function(option) {
+            return /\bunder\b/i.test(String((option && (option.side || option.bet_side || option.selection_label || option.selection)) || '')) ? 'under' : 'over';
+        };
+        const findTeamSide = function(teamName, side) {
+            const key = teamKey(teamName);
+            return groupItems.find(function(option) {
+                const text = teamKey(option ? [option.team, option.team_name, option.participant, option.selection, option.selection_label].filter(Boolean).join(' ') : '');
+                return text && key && (text === key || text.indexOf(key) !== -1 || key.indexOf(text) !== -1) && sideKey(option) === side;
+            }) || null;
+        };
+        const lineValue = function(option) {
+            const raw = option && option.line != null && option.line !== '' ? option.line : (option && option.line_display != null ? option.line_display : '');
+            const match = String(raw == null ? '' : raw).match(/[+-]?\d+(?:\.\d+)?/);
+            if (!match) return '';
+            const value = Number(match[0]);
+            if (!Number.isFinite(value)) return '';
+            return String(Math.abs(value)).replace(/0+$/, '').replace(/\.$/, '');
+        };
+        const teamCell = function(side, teamName, logoUrl, abbr) {
+            const renderedLogo = side === 'away'
+                ? renderTeamLogo(game.away_team || teamName, game.sport_key, logoUrl || '', abbr || '')
+                : renderTeamLogo(game.home_team || teamName, game.sport_key, logoUrl || '', abbr || '');
+            return '<div class="tmr-primary-team-cell tmr-primary-team-cell--' + side + '">' +
+                '<span class="tmr-team-side">' + (side === 'away' ? 'Away' : 'Home') + '</span>' +
+                '<span class="tmr-team-abbr">' + renderedLogo + '</span>' +
+                '<span class="tmr-team-name">' + escapeHtml(teamName || '') + '</span>' +
+                '</div>';
+        };
+        const renderTeamTotalButton = function(option, side, suffix) {
+            if (!option) return '<button class="tmr-option-btn tmr-option-btn--pending" type="button" disabled aria-disabled="true"><div class="tmr-option-main"><div class="tmr-option-market">Unavailable</div></div><div class="tmr-option-odds-wrap"><div class="tmr-option-odds">--</div></div></button>';
+            const optionKey = [game.id || ('game-' + cardIndex), group.key || ('group-' + groupIndex), option.id || suffix].join('|');
+            const optionDomId = 'option-' + safeDomId(optionKey);
+            const total = lineValue(option);
+            const label = (side === 'over' ? 'Over' : 'Under') + (total ? ' ' + total : '');
+            return renderBoardOptionButton(Object.assign({}, option, { display_label: label, book_title: option.book_title || option.source_label || 'DraftKings' }), optionKey, optionDomId, game);
+        };
+        const awayOver = findTeamSide(game.away_team, 'over');
+        const awayUnder = findTeamSide(game.away_team, 'under');
+        const homeOver = findTeamSide(game.home_team, 'over');
+        const homeUnder = findTeamSide(game.home_team, 'under');
+        if (!awayOver && !awayUnder && !homeOver && !homeUnder) return '';
+
+        return '<div class="tmr-group" data-scope="full" data-category="team-totals">' +
+            '<div class="tmr-primary-market-grid tmr-primary-market-grid--aligned tmr-team-total-market-grid" data-testid="team-total-market-grid" onclick="event.stopPropagation()">' +
+            '<div class="tmr-primary-team-header"></div>' +
+            '<div class="tmr-primary-market-title">Over</div>' +
+            '<div class="tmr-primary-market-title">Under</div>' +
+            teamCell('away', game.away_team, game.away_logo || game.awayLogo || '', game.away_abbr || game.awayAbbr || '') +
+            renderTeamTotalButton(awayOver, 'over', 'away-team-over') +
+            renderTeamTotalButton(awayUnder, 'under', 'away-team-under') +
+            teamCell('home', game.home_team, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '') +
+            renderTeamTotalButton(homeOver, 'over', 'home-team-over') +
+            renderTeamTotalButton(homeUnder, 'under', 'home-team-under') +
+            '</div></div>';
     }
 
     function rawMarketHasPricedOutcomes(game, marketKey) {
