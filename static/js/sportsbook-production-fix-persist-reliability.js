@@ -2121,9 +2121,12 @@
             return renderBoardOptionButton(Object.assign({}, option, { display_label: displayLabel, book_title: option.book_title || option.source_label || 'DraftKings' }), optionKey, optionDomId, game);
         };
         const teamCell = function(side, teamName, logoUrl, abbr) {
+            const renderedLogo = side === 'away'
+                ? renderTeamLogo(game.away_team || teamName, game.sport_key, logoUrl || '', abbr || '')
+                : renderTeamLogo(game.home_team || teamName, game.sport_key, logoUrl || '', abbr || '');
             return '<div class="tmr-primary-team-cell tmr-primary-team-cell--' + side + '">' +
                 '<span class="tmr-team-side">' + (side === 'away' ? 'Away' : 'Home') + '</span>' +
-                '<span class="tmr-team-abbr">' + renderTeamLogo(teamName, game.sport_key, logoUrl || '', abbr || '') + '</span>' +
+                '<span class="tmr-team-abbr">' + renderedLogo + '</span>' +
                 '<span class="tmr-team-name">' + escapeHtml(teamName || '') + '</span>' +
                 '</div>';
         };
