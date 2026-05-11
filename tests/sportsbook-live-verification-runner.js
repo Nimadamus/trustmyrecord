@@ -59,8 +59,8 @@ async function main() {
   const primaryButtons = primaryGrid.locator('button:not([disabled]), [role="button"]:not([aria-disabled="true"])');
   assert.strictEqual(await primaryButtons.count(), 6, 'six primary prices should be clickable');
 
-  await expectVisible(card.locator('text=/Game Lines/i'), 'Game Lines tab should remain visible');
-  await expectVisible(card.locator('text=/Team Totals/i'), 'Team Totals tab should remain visible');
+  await expectVisible(card.getByRole('button', { name: /Game Lines/i }).first(), 'Game Lines tab should remain visible');
+  await expectVisible(card.getByRole('button', { name: /Team Totals/i }).first(), 'Team Totals tab should remain visible');
 
   await primaryButtons.first().click();
   const oddsInput = page.locator('#pickOddsInput');

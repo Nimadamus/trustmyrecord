@@ -52,8 +52,8 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
     await expect(primaryGrid, `primary grid is missing ${label}`).toContainText(label);
   }
 
-  await expect(card.locator('text=/Game Lines/i')).toBeVisible();
-  await expect(card.locator('text=/Team Totals/i')).toBeVisible();
+  await expect(card.getByRole('button', { name: /Game Lines/i }).first()).toBeVisible();
+  await expect(card.getByRole('button', { name: /Team Totals/i }).first()).toBeVisible();
 
   await primaryButtons.first().click();
 
