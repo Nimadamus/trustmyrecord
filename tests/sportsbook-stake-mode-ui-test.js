@@ -20,6 +20,9 @@ assert(reliability.includes('SPORTSBOOK_RELIABILITY_OWNERSHIP'), 'production scr
 assert(reliability.includes('window.TMR.calculateStakeValues = calculateStakeValues'), 'production script should own stake value calculation');
 assert(reliability.includes('window.TMR.updateStakeModePreview = updateStakeModePreview'), 'production script should own stake preview updates');
 assert(reliability.includes('window.setUnitsMode = setStakeMode'), 'production script should own visible Risk / To Win selector');
+assert(reliability.includes('function bindStakeAmountInputEvents()'), 'visible and hidden units inputs should both trigger stake preview updates');
+assert(reliability.includes("document.getElementById('ttSlipStakePreview') ? 'ttSlipStakePreview' : 'unitsStakePreview'"), 'ticket stake preview should be the single visible Risk / To Win summary');
+assert(reliability.includes("preview.hidden = true"), 'duplicate stake preview containers should be hidden');
 assert(reliability.includes("lockFunction(window, 'setUnitsMode', setStakeMode)"), 'production script should lock Risk / To Win selector ownership');
 assert(reliability.includes("lockFunction(window, 'tmrSelectOption', selectOption)"), 'production script should lock pick button selection ownership');
 assert(reliability.includes("lockFunction(window.TMR, 'renderSportsbookTeamLogo', renderTeamLogo)"), 'production script should lock logo rendering ownership');
@@ -28,6 +31,16 @@ assert(reliability.includes('function renderBoardOptionButton'), 'production scr
 assert(reliability.includes('class="tmr-option-btn"'), 'board option buttons should keep the clickable selector class');
 assert(reliability.includes('data-option-id'), 'board option buttons should keep option ids for pick slip selection');
 assert(reliability.includes('onclick="window.tmrSelectOption(this.dataset.optionId)"'), 'board option buttons should route to locked selection handler');
+assert(!reliability.includes("specials: 'Props'"), 'Props tab label must not render until props are supported');
+assert(!reliability.includes('data-market-filter="props"'), 'Props filter must not be part of the visible sportsbook market UI');
+assert(reliability.includes("return getGroupCategory(group) !== 'specials';"), 'unsupported props/specials groups should be excluded from rendered game-card market groups');
+assert(reliability.includes('function renderUnavailableMarketGroup(filter, game)'), 'per-game unavailable market state should render when Team Totals or Quarters are missing');
+assert(reliability.includes('data-market-filter="segments"] .tmr-group:not([data-category="segments"])'), 'Quarters/segments filter should scope visible markets to the selected game card');
+assert(
+  /return availableCategories\.has\(filter\) \|\| filter === 'game-lines' \|\| filter === 'team-totals' \|\| filter === 'segments'/.test(reliability),
+  'Game Lines, Team Totals, and Quarters/segments controls should remain available per game card'
+);
+assert(reliability.includes('const cardTabFilters = getPreferredFilters(game, cardCategorySet);'), 'per-game market tabs should not disappear just because a game lacks that market');
 assert(reliability.includes('unitsModeVisibleLabel'), 'production script should inject visible Risk / To Win selector label');
 assert(reliability.includes('renderStakeSummaryHtml'), 'production script should render split Risk / To Win summary cells');
 assert(reliability.includes("preview.classList.add('tmr-ticket-stake-summary')"), 'stake preview should use the polished ticket summary layout');
@@ -60,6 +73,8 @@ function calculateStakeValues(mode, amount, odds) {
 
 assert.deepStrictEqual(calculateStakeValues('risk', 2, -110), { risk_units: 2, win_units: 1.82 });
 assert.deepStrictEqual(calculateStakeValues('to_win', 2, -110), { risk_units: 2.2, win_units: 2 });
+assert.deepStrictEqual(calculateStakeValues('risk', 3, -110), { risk_units: 3, win_units: 2.73 });
+assert.deepStrictEqual(calculateStakeValues('to_win', 3, -110), { risk_units: 3.3, win_units: 3 });
 assert.deepStrictEqual(calculateStakeValues('risk', 1.5, 150), { risk_units: 1.5, win_units: 2.25 });
 assert.deepStrictEqual(calculateStakeValues('to_win', 1.5, 150), { risk_units: 1, win_units: 1.5 });
 assert.deepStrictEqual(calculateStakeValues('risk', 3, -105), { risk_units: 3, win_units: 2.86 });
@@ -119,5 +134,27 @@ assert.notStrictEqual(
   buildSubmitStakePayload('to_win', 3, -105).risk_units,
   'Risk and To Win modes must not collapse to the same risk amount'
 );
+
+const minus110RiskPreview = renderStakeSummaryText('risk', 3, -110);
+assert.strictEqual(minus110RiskPreview.riskLabel, 'Risk 3 units');
+assert.strictEqual(minus110RiskPreview.toWinLabel, 'To Win 2.73 units');
+assert.deepStrictEqual(buildSubmitStakePayload('risk', 3, -110), {
+  units: 3,
+  stake_mode: 'risk',
+  units_mode: 'risk',
+  risk_units: 3,
+  to_win_units: 2.73,
+});
+
+const minus110ToWinPreview = renderStakeSummaryText('to_win', 3, -110);
+assert.strictEqual(minus110ToWinPreview.riskLabel, 'Risk 3.30 units');
+assert.strictEqual(minus110ToWinPreview.toWinLabel, 'To Win 3 units');
+assert.deepStrictEqual(buildSubmitStakePayload('to_win', 3, -110), {
+  units: 3,
+  stake_mode: 'to_win',
+  units_mode: 'to_win',
+  risk_units: 3.3,
+  to_win_units: 3,
+});
 
 console.log('sportsbook stake-mode UI test passed');
