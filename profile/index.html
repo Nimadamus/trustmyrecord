@@ -10275,6 +10275,13 @@
     }
 
     function getPendingPicksAccess(kind) {
+        if (!isOwnProfile) {
+            return {
+                enabled: false,
+                pendingCount: 0,
+                message: 'Pending picks are private for public profile views.'
+            };
+        }
         const sources = [profileData];
         if (isOwnProfile && currentUser) sources.push(currentUser);
         const shareEnabled = tmrBooleanFieldEnabled(sources, [
