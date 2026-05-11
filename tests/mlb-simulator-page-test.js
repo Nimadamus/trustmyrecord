@@ -16,8 +16,8 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260511-source-guard/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260511-source-guard/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260511-batting-order-guard/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260511-batting-order-guard/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -506,7 +506,7 @@ async function flushAsync() {
   assert(/Michael Harris II|Ronald Acuna Jr\.|Matt Olson|Ozzie Albies/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders verified Atlanta hitter names');
   assert(/Zac Gallen|Kevin Ginkel|Ryan Thompson/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Arizona pitcher names');
   assert(/Bryce Elder|Aaron Bummer|Raisel Iglesias/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Atlanta pitcher names');
-  assert(/Projected lineup from verified MLB active roster endpoint/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup labels MLB roster source');
+  assert(/Projected batting order from verified MLB active roster endpoint/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup labels MLB roster source');
   assert(!/Verified ESPN team roster endpoint|ESPN roster endpoint|Jose Fernandez|Jorge Mateo|Dominic Smith|Kyle Farmer|Mike Yastrzemski/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup does not render ESPN/stale wrong-team roster names');
   assert(/\(W\)/.test(rostered.elements.playerBoxScoreContent.innerHTML) && /\(L\)/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching table labels winning and losing pitchers');
   assert(/\(SV\)/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching table labels simulated save pitcher when relief row exists');

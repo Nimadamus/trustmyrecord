@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-roster-source-guard-20260511';
+    var UI_BUILD = 'mlb-batting-order-guard-20260511';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -368,7 +368,7 @@
             relievers: pitchers.length,
             players: hitters.concat(pitchers),
             summary: players.length + ' MLB active roster players',
-            source: 'Projected lineup from verified MLB active roster endpoint'
+            source: 'Projected batting order from verified MLB active roster endpoint'
         });
     }
     function teamRosterUrl(team) {
@@ -778,11 +778,22 @@
         }
         return ordered;
     }
+    function hasCompleteVerifiedLineup(rows) {
+        if (!Array.isArray(rows) || rows.length < 9) return false;
+        var names = {};
+        return rows.slice(0, 9).every(function (row) {
+            var name = normalizeName(row && row.player && row.player.name);
+            if (!name || names[name] || row.simulatedFallback) return false;
+            names[name] = true;
+            return !!row.assignedPosition;
+        });
+    }
     function projectedLineupRows(roster, team) {
         var players = Array.isArray(roster && roster.players) ? roster.players : [];
         var hitters = players.filter(function (player) { return player && player.name && !isPitcherPosition(player.position); }).map(function (player, index) {
             return Object.assign({ rosterIndex: index }, player);
         });
+        if (hitters.length < 9) return [];
         var targetPositions = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
         var used = {};
         var selected = [];
@@ -798,11 +809,10 @@
             if (player) {
                 used[normalizeName(player.name)] = true;
                 selected.push({ player: player, assignedPosition: position });
-            } else if (roster && players.length) {
-                selected.push({ player: { name: (team && team.abbreviation || 'Team') + ' projected ' + position, position: position }, assignedPosition: position, simulatedFallback: true });
             }
         });
-        return orderProjectedLineup(selected.slice(0, 9));
+        var ordered = orderProjectedLineup(selected.slice(0, 9));
+        return hasCompleteVerifiedLineup(ordered) ? ordered : [];
     }
     function rosterNamesForBatters(roster, team) {
         return projectedLineupRows(roster, team).map(function (row) {
@@ -854,6 +864,7 @@
     function modeledBatterLines(team, line, random, roster) {
         var slots = ['CF', 'SS', 'RF', '1B', '3B', 'LF', 'DH', '2B', 'C'];
         var rosterNames = rosterNamesForBatters(roster, team);
+        if (rosterNames.length < 9) return [];
         var hitWeights = [1.12, 1.02, 1.2, 1.15, 1.04, 0.98, 0.9, 0.86, 0.72];
         var runWeights = [1.2, 1.1, 1.18, 1.05, 0.92, 0.9, 0.78, 0.78, 0.58];
         var hits = weightedAllocate(line.hits, hitWeights, random, [5, 5, 5, 5, 4, 4, 4, 4, 4]);
@@ -959,16 +970,20 @@
     function modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random, rosterContext) {
         var awayRoster = rosterForTeam(away, rosterContext && rosterContext.away);
         var homeRoster = rosterForTeam(home, rosterContext && rosterContext.home);
+        var awayBatters = modeledBatterLines(away, awayLine, random, awayRoster);
+        var homeBatters = modeledBatterLines(home, homeLine, random, homeRoster);
+        var awaySource = awayBatters.length >= 9 && awayRoster && awayRoster.source ? awayRoster.source : 'Lineup unavailable. Verified roster data could not be loaded.';
+        var homeSource = homeBatters.length >= 9 && homeRoster && homeRoster.source ? homeRoster.source : 'Lineup unavailable. Verified roster data could not be loaded.';
         return {
             away: {
-                batters: modeledBatterLines(away, awayLine, random, awayRoster),
+                batters: awayBatters,
                 pitchers: modeledPitcherLines(away, homeLine, awayPitcher, random, awayRoster),
-                rosterSource: awayRoster && awayRoster.players && awayRoster.players.length ? (awayRoster.source || 'Projected lineup from verified active roster names') : 'Lineup unavailable. Verified roster data could not be loaded.'
+                rosterSource: awaySource
             },
             home: {
-                batters: modeledBatterLines(home, homeLine, random, homeRoster),
+                batters: homeBatters,
                 pitchers: modeledPitcherLines(home, awayLine, homePitcher, random, homeRoster),
-                rosterSource: homeRoster && homeRoster.players && homeRoster.players.length ? (homeRoster.source || 'Projected lineup from verified active roster names') : 'Lineup unavailable. Verified roster data could not be loaded.'
+                rosterSource: homeSource
             }
         };
     }
@@ -2492,7 +2507,8 @@
         viewBoxScore: viewBoxScore,
         rosterSourceForTeam: rosterSourceForTeam,
         fetchTeamRoster: fetchTeamRoster,
-        validatedRosterForTeam: validatedRosterForTeam
+        validatedRosterForTeam: validatedRosterForTeam,
+        projectedLineupRows: projectedLineupRows
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
