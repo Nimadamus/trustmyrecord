@@ -426,6 +426,33 @@
         if (window.auth && typeof window.auth.getCurrentUser === 'function' && window.auth.isLoggedIn()) {
             return window.auth.getCurrentUser();
         }
+        try {
+            if (window.auth && window.auth.currentUser && (window.auth.currentUser.username || window.auth.currentUser.email)) {
+                return window.auth.currentUser;
+            }
+        } catch (error) {}
+        try {
+            if (window.api && window.api._cachedUser && (window.api._cachedUser.username || window.api._cachedUser.email)) {
+                return window.api._cachedUser;
+            }
+        } catch (error) {}
+        const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
+        const stores = [];
+        try { stores.push(localStorage); } catch (error) {}
+        try { stores.push(sessionStorage); } catch (error) {}
+        for (const store of stores) {
+            for (const key of keys) {
+                try {
+                    const raw = store.getItem(key);
+                    if (!raw) continue;
+                    const parsed = JSON.parse(raw);
+                    const user = parsed && (parsed.user || parsed);
+                    if (user && (user.username || user.email)) {
+                        return user;
+                    }
+                } catch (error) {}
+            }
+        }
         return null;
     }
 
