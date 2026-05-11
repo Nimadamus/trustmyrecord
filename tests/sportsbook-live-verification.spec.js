@@ -52,6 +52,14 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
     const b = grid.getBoundingClientRect();
     return b.left >= a.right + 8 || b.top >= a.bottom + 8;
   }), { message: 'primary grid must not overlap the team matchup column' }).toBe(true);
+  await expect.poll(async () => card.evaluate((node) => {
+    const matchup = node.querySelector('.tmr-market-matchup');
+    const grid = node.querySelector('.tmr-primary-market-grid');
+    if (!matchup || !grid) return false;
+    const a = matchup.getBoundingClientRect();
+    const b = grid.getBoundingClientRect();
+    return b.left > a.left && b.top < a.bottom;
+  }), { message: 'primary grid should sit to the right of the team matchup on desktop, not below it' }).toBe(true);
   await expect(primaryGrid.locator('.tmr-option-detail').first(), 'primary detail text should be hidden to prevent clipped labels').not.toBeVisible();
 
 
