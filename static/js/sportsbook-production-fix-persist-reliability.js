@@ -1431,6 +1431,18 @@
             '.tmr-option-detail{font-size:10px;letter-spacing:0.05em;color:#8fa0b5;text-transform:uppercase;}',
             '.tmr-option-odds-wrap{gap:6px;align-items:flex-end;justify-content:center;}',
             '.tmr-option-odds{min-width:94px;padding:13px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(63,72,88,0.98),rgba(40,46,58,0.98));font-size:30px;letter-spacing:-0.05em;}',
+            '.tmr-market-side{display:grid;grid-template-columns:minmax(340px,430px) auto;align-items:start;gap:12px;}',
+            '.tmr-primary-market-grid{display:grid;grid-template-columns:repeat(3,minmax(104px,1fr));gap:8px;min-width:340px;max-width:430px;padding:10px;border-radius:16px;background:rgba(5,8,13,0.48);border:1px solid rgba(255,255,255,0.07);box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);}',
+            '.tmr-primary-market{display:grid;gap:7px;min-width:0;}',
+            '.tmr-primary-market-title{font-size:10px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#9aa7b8;text-align:center;white-space:nowrap;}',
+            '.tmr-primary-market .tmr-option-btn{min-height:56px;height:auto;padding:8px 8px 8px 10px;border-radius:10px;grid-template-columns:minmax(0,1fr) auto;gap:8px;background:linear-gradient(180deg,rgba(35,41,51,0.98),rgba(22,27,35,0.98));}',
+            '.tmr-primary-market .tmr-option-topline{display:none;}',
+            '.tmr-primary-market .tmr-option-market{font-size:12px;line-height:1.1;font-weight:850;letter-spacing:0;white-space:normal;}',
+            '.tmr-primary-market .tmr-option-detail{font-size:9px;line-height:1.1;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
+            '.tmr-primary-market .tmr-option-odds-wrap{align-items:flex-end;}',
+            '.tmr-primary-market .tmr-option-odds-label{display:none;}',
+            '.tmr-primary-market .tmr-option-odds{font-size:17px;min-width:56px;padding:7px 8px;border-radius:9px;}',
+            '@media (max-width:1020px){.tmr-market-side{grid-template-columns:1fr;}.tmr-primary-market-grid{max-width:none;width:100%;min-width:0;}.tmr-market-summary{justify-content:space-between;}}',
             '@keyframes tmrShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}',
             '@media (max-width: 700px){.tmr-loading-topline{padding:14px 14px 12px;align-items:flex-start;flex-direction:column;}.tmr-loading-tabs{width:100%;}.tmr-loading-tab{flex:1 1 calc(50% - 6px);min-width:unset;}.tmr-loading-matchup,.tmr-loading-lines{grid-template-columns:1fr;}.tmr-market-head{padding:16px;grid-template-columns:1fr;align-items:flex-start;}.tmr-market-body{padding:0 16px 16px;}.tmr-market-summary{width:100%;justify-content:space-between;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-team-name{font-size:16px;}.tmr-team-side{min-width:46px;padding:4px 7px;}.tmr-matchup-divider{padding-left:56px;}.tmr-option-btn{min-height:auto;padding:12px 13px;grid-template-columns:minmax(0,1fr) auto;}.tmr-market-count{width:100%;text-align:center;}.tmr-market-caret{display:none;}.tmr-board-filter-tab{min-width:unset;flex:1 1 calc(50% - 6px);}.tmr-group-header{grid-template-columns:minmax(0,1fr) auto;}.tmr-group-metahead{display:none;}#picks .pick-options{grid-template-columns:1fr;}#picks .games-header{align-items:flex-start;flex-direction:column;}#picks .sport-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}#picks .sport-card{min-height:132px;padding:16px 14px!important;}#picks .sport-name{font-size:16px!important;}#picks .submit-pick-btn{padding:15px 16px;font-size:14px;}}'
             ,'#pickDetails .pick-options{display:flex!important;flex-direction:column!important;gap:20px!important;margin:24px 0!important;}'
@@ -2023,6 +2035,41 @@
             '</div>';
     }
 
+
+    function renderPrimaryMarketGrid(game, groups, cardIndex) {
+        const sportKey = String(game && game.sport_key || '').toLowerCase();
+        const spreadLabel = sportKey.indexOf('icehockey_nhl') !== -1 ? 'Puck Line' : (sportKey.indexOf('baseball_mlb') !== -1 ? 'Run Line' : 'Spread');
+        const allItems = [];
+        (Array.isArray(groups) ? groups : []).forEach(function(group) {
+            (group && Array.isArray(group.items) ? group.items : []).forEach(function(item, itemIndex) { allItems.push({ group: group, item: item, itemIndex: itemIndex }); });
+        });
+        const teamKey = function(value) { return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
+        const awayKey = teamKey(game && game.away_team);
+        const homeKey = teamKey(game && game.home_team);
+        const isPriced = function(entry) { const item = entry && entry.item; return item && item.source === 'sportsbook' && item.odds != null && !Number.isNaN(Number(item.odds)); };
+        const matchesTeam = function(entry, key) { const item = entry && entry.item; const text = teamKey((item && (item.selection || item.selection_label)) || ''); return key && text && (text === key || text.indexOf(key) !== -1 || key.indexOf(text) !== -1); };
+        const byType = function(type) { return allItems.filter(function(entry) { const item = entry.item || {}; return isPriced(entry) && String(item.market_type || item.market_key || '').toLowerCase() === type; }); };
+        const moneylineItems = byType('h2h');
+        const spreadItems = byType('spreads');
+        const totalItems = byType('totals');
+        const findSide = function(items, sideKey, fallbackIndex) { return items.find(function(entry) { return matchesTeam(entry, sideKey); }) || items[fallbackIndex] || null; };
+        const findTotal = function(items, side, fallbackIndex) { return items.find(function(entry) { const text = String((entry.item && (entry.item.selection || entry.item.selection_label)) || '').toLowerCase(); return text.indexOf(side) !== -1; }) || items[fallbackIndex] || null; };
+        const picks = { awayMoneyline: findSide(moneylineItems, awayKey, 0), homeMoneyline: findSide(moneylineItems, homeKey, 1), awaySpread: findSide(spreadItems, awayKey, 0), homeSpread: findSide(spreadItems, homeKey, 1), overTotal: findTotal(totalItems, 'over', 0), underTotal: findTotal(totalItems, 'under', 1) };
+        if (!picks.awayMoneyline || !picks.homeMoneyline || !picks.awaySpread || !picks.homeSpread || !picks.overTotal || !picks.underTotal) return '';
+        const renderPrimaryButton = function(entry, label, suffix) {
+            const group = entry.group || {};
+            const option = entry.item || {};
+            const optionKey = [game.id || ('game-' + cardIndex), 'primary', group.key || option.market_key || option.market_type || 'market', option.id || suffix].join('|');
+            const optionDomId = 'option-' + safeDomId(optionKey);
+            return renderBoardOptionButton(Object.assign({}, option, { selection_label: label, book_title: option.book_title || option.source_label || 'DraftKings' }), optionKey, optionDomId, game);
+        };
+        return '<div class="tmr-primary-market-grid" data-testid="primary-market-grid" onclick="event.stopPropagation()">' +
+            '<div class="tmr-primary-market"><div class="tmr-primary-market-title">Moneyline</div>' + renderPrimaryButton(picks.awayMoneyline, 'Away Moneyline', 'away-ml') + renderPrimaryButton(picks.homeMoneyline, 'Home Moneyline', 'home-ml') + '</div>' +
+            '<div class="tmr-primary-market"><div class="tmr-primary-market-title">' + escapeHtml(spreadLabel) + '</div>' + renderPrimaryButton(picks.awaySpread, 'Away ' + spreadLabel, 'away-spread') + renderPrimaryButton(picks.homeSpread, 'Home ' + spreadLabel, 'home-spread') + '</div>' +
+            '<div class="tmr-primary-market"><div class="tmr-primary-market-title">Total</div>' + renderPrimaryButton(picks.overTotal, 'Over Total', 'over-total') + renderPrimaryButton(picks.underTotal, 'Under Total', 'under-total') + '</div>' +
+            '</div>';
+    }
+
     function rawMarketHasPricedOutcomes(game, marketKey) {
         const bookmakers = Array.isArray(game && game.bookmakers) ? game.bookmakers : [];
         return bookmakers.some(function(bookmaker) {
@@ -2168,6 +2215,7 @@
             const groupsHtml = orderedGroups.map(function(group, groupIndex) {
                 return renderBoardGroup(group, groupIndex, game, index);
             }).join('');
+            const primaryMarketGridHtml = renderPrimaryMarketGrid(game, orderedGroups, index);
             const missingCoreHtml = renderMissingCoreMarkets(game, orderedGroups);
             const pendingHtml = game.lines_pending || game.odds_source_status === 'schedule_only'
                 ? '<div class="tmr-group" data-scope="full" data-category="game-lines">' +
@@ -2206,7 +2254,7 @@
                 '<span class="tmr-market-chip">Updated ' + escapeHtml(formatTimestamp(game.updated_at)) + '</span>' +
                 '</div>' +
                 '</div>' +
-                '<div class="tmr-market-summary"><div class="tmr-market-count">' + (game.lines_pending ? 'Lines pending' : ((game.market_groups || []).length + ' markets')) + '</div><div class="tmr-market-caret">⌄</div></div>' +
+                '<div class="tmr-market-side">' + primaryMarketGridHtml + '<div class="tmr-market-summary"><div class="tmr-market-count">' + (game.lines_pending ? 'Lines pending' : ((game.market_groups || []).length + ' markets')) + '</div><div class="tmr-market-caret">⌄</div></div></div>' +
                 '</div>' +
                 '<div class="tmr-market-body">' + cardTabsHtml + missingCoreHtml + (groupsHtml || pendingHtml) + '</div>' +
                 '</div>';
