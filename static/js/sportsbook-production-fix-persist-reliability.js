@@ -321,6 +321,15 @@
         return ticketInput || document.getElementById('unitsInput');
     }
 
+    function bindStakeAmountInputEvents() {
+        [document.getElementById('ttSlipUnits'), document.getElementById('unitsInput')].forEach(function(input) {
+            if (!input || input.dataset.tmrStakePreviewBound === '1') return;
+            input.dataset.tmrStakePreviewBound = '1';
+            input.addEventListener('input', updateStakeModePreview);
+            input.addEventListener('change', updateStakeModePreview);
+        });
+    }
+
     function getCurrentStakeAmount() {
         const ticketInput = document.getElementById('ttSlipUnits');
         const hiddenInput = document.getElementById('unitsInput');
@@ -334,13 +343,24 @@
     }
 
     function updateStakeModePreview() {
+        bindStakeAmountInputEvents();
         const oddsInput = document.getElementById('pickOddsInput');
         const amount = getCurrentStakeAmount();
         const odds = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
         const values = calculateStakeValues(getSelectedStakeMode(), amount, odds);
+        const canonicalPreviewId = document.getElementById('ttSlipStakePreview') ? 'ttSlipStakePreview' : 'unitsStakePreview';
         ['unitsStakePreview', 'ttSlipStakePreview'].forEach(function(id) {
             const preview = document.getElementById(id);
             if (!preview) return;
+            if (id !== canonicalPreviewId) {
+                preview.classList.remove('tmr-ticket-stake-summary');
+                preview.innerHTML = '';
+                preview.hidden = true;
+                preview.setAttribute('aria-hidden', 'true');
+                return;
+            }
+            preview.hidden = false;
+            preview.removeAttribute('aria-hidden');
             if (values.risk_units > 0 && values.win_units > 0) {
                 preview.classList.add('tmr-ticket-stake-summary');
                 preview.innerHTML = renderStakeSummaryHtml(values);
@@ -1485,8 +1505,8 @@
             '.tmr-market-card:not(.secondary-open) .tmr-group{display:none!important;}',
             '.tmr-market-card.secondary-open[data-market-filter="game-lines"] .tmr-group:not([data-category="game-lines"]){display:none!important;}',
             '.tmr-market-card.secondary-open[data-market-filter="team-totals"] .tmr-group:not([data-category="team-totals"]){display:none!important;}',
+            '.tmr-market-card.secondary-open[data-market-filter="segments"] .tmr-group:not([data-category="segments"]){display:none!important;}',
             '.tmr-market-card.secondary-open[data-market-filter="quarters"] .tmr-group:not([data-category="quarters"]){display:none!important;}',
-            '.tmr-market-card.secondary-open[data-market-filter="props"] .tmr-group:not([data-category="props"]){display:none!important;}',
             '.tmr-market-card.secondary-open .tmr-group{margin-top:10px;border-radius:12px;border-color:rgba(148,163,184,0.16);background:rgba(15,23,42,0.56);}',
             '.tmr-market-card.secondary-open .tmr-group-head{padding:10px 12px;min-height:0;}',
             '.tmr-market-card.secondary-open .tmr-group-title{font-size:13px;}',
@@ -1955,21 +1975,20 @@
         const labels = {
             'game-lines': 'Game Lines',
             'team-totals': 'Team Totals',
-            'alt-lines': 'Alt Lines',
-            specials: 'Props'
+            'alt-lines': 'Alt Lines'
         };
         return labels[category] || 'Markets';
     }
 
     function getPreferredFilters(game, availableCategories) {
         const sportKey = String(game && game.sport_key || '').toLowerCase();
-        let preferred = ['game-lines', 'team-totals', 'first-5', 'segments', 'alt-lines', 'specials'];
+        let preferred = ['game-lines', 'team-totals', 'first-5', 'segments', 'alt-lines'];
         if (sportKey.indexOf('icehockey_nhl') !== -1) {
-            preferred = ['game-lines', 'team-totals', 'segments', 'alt-lines', 'specials'];
+            preferred = ['game-lines', 'team-totals', 'segments', 'alt-lines'];
         } else if (sportKey.indexOf('basketball_') !== -1 || sportKey.indexOf('football_') !== -1) {
-            preferred = ['game-lines', 'team-totals', 'segments', 'alt-lines', 'specials'];
+            preferred = ['game-lines', 'team-totals', 'segments', 'alt-lines'];
         } else if (sportKey.indexOf('baseball_mlb') !== -1) {
-            preferred = ['game-lines', 'team-totals', 'first-5', 'alt-lines', 'specials'];
+            preferred = ['game-lines', 'team-totals', 'first-5', 'alt-lines'];
         }
 
         if (!availableCategories || !availableCategories.size) {
@@ -1977,7 +1996,7 @@
         }
 
         return preferred.filter(function(filter) {
-            return availableCategories.has(filter) || filter === 'game-lines' || filter === 'team-totals' || filter === 'first-5';
+            return availableCategories.has(filter) || filter === 'game-lines' || filter === 'team-totals' || filter === 'segments' || filter === 'first-5';
         });
     }
 
@@ -2012,10 +2031,7 @@
         const matching = groups.filter(function(group) {
             return group.getAttribute('data-category') === activeFilter;
         });
-        const visibleMatching = matching.filter(function(group) {
-            return group.querySelector('.tmr-option-btn');
-        });
-        if (visibleMatching.length) return;
+        if (matching.length) return;
 
         const fallback = groups.find(function(group) {
             return group.getAttribute('data-category') === 'game-lines' && group.querySelector('.tmr-option-btn');
@@ -2086,6 +2102,14 @@
             '</div>';
     }
 
+    function renderUnavailableMarketGroup(filter, game) {
+        const label = getFilterLabel(filter, game);
+        return '<div class="tmr-group tmr-group--unavailable" data-scope="full" data-category="' + escapeHtml(filter) + '">' +
+            '<div class="tmr-group-header"><div class="tmr-group-title"><span>' + escapeHtml(label) + '</span><small class="tmr-group-subtitle">This market is not available for this game yet</small></div><div class="tmr-group-metahead">Unavailable</div><div class="tmr-group-count">0 prices</div></div>' +
+            '<div class="tmr-option-grid">' +
+            '<button class="tmr-option-btn tmr-option-btn--pending" type="button" disabled aria-disabled="true"><div class="tmr-option-main"><div class="tmr-option-topline"><span class="tmr-option-tag">' + escapeHtml(label) + '</span></div><div class="tmr-option-market">Market unavailable</div><div class="tmr-option-detail">No verified sportsbook price yet</div></div><div class="tmr-option-odds-wrap"><span class="tmr-option-odds-label">Status</span><div class="tmr-option-odds">Unavailable</div></div></button>' +
+            '</div></div>';
+    }
 
     function renderPrimaryMarketGrid(game, groups, cardIndex) {
         const sportKey = String(game && game.sport_key || '').toLowerCase();
@@ -2285,19 +2309,23 @@
             const orderedGroups = (game.market_groups || []).slice().sort(function(a, b) {
                 const order = { full_game: 1, spread: 2, total: 3, team_totals: 4, first_half: 5, second_half: 6, period_1: 7, first_5: 8, alt_spreads: 9, alt_totals: 10 };
                 return (order[a && a.key] || 99) - (order[b && b.key] || 99);
+            }).filter(function(group) {
+                return getGroupCategory(group) !== 'specials';
             });
             const cardCategorySet = new Set();
             orderedGroups.forEach(function(group) {
                 cardCategorySet.add(getGroupCategory(group));
             });
-            const cardTabFilters = getPreferredFilters(game, cardCategorySet).filter(function(filter) {
-                return cardCategorySet.has(filter);
-            });
+            const cardTabFilters = getPreferredFilters(game, cardCategorySet);
             const activeCardFilter = cardCategorySet.has(activeBoardFilter)
                 ? activeBoardFilter
                 : (cardTabFilters[0] || 'game-lines');
             const groupsHtml = orderedGroups.map(function(group, groupIndex) {
                 return renderBoardGroup(group, groupIndex, game, index);
+            }).join('') + cardTabFilters.filter(function(filter) {
+                return !cardCategorySet.has(filter);
+            }).map(function(filter) {
+                return renderUnavailableMarketGroup(filter, game);
             }).join('');
             const primaryMarketGridHtml = renderPrimaryMarketGrid(game, orderedGroups, index);
             const missingCoreHtml = renderMissingCoreMarkets(game, orderedGroups);
