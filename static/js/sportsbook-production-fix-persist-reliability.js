@@ -1460,6 +1460,7 @@
             '#picks .option-group label{font-size:11px!important;font-weight:800!important;letter-spacing:0.12em!important;text-transform:uppercase;color:#f2c94c!important;margin-bottom:10px!important;}',
             '#picks #pickLineInput,#picks #pickOddsInput,#picks #unitsInput,#picks #pickReasoning{background:#14181f!important;border:1px solid rgba(255,255,255,0.08)!important;border-radius:12px!important;color:#f8fafc!important;box-shadow:none!important;}',
             '#picks #pickLineInput:focus,#picks #pickOddsInput:focus,#picks #unitsInput:focus,#picks #pickReasoning:focus{outline:none;border-color:rgba(120,255,181,0.34)!important;box-shadow:0 0 0 3px rgba(47,143,83,0.15)!important;}',
+            '#picks #pickLineInput.tmr-verified-line-field,#picks #pickOddsInput.tmr-verified-line-field{cursor:not-allowed!important;background:rgba(15,23,42,0.72)!important;color:#cbd5e1!important;border-color:rgba(120,255,181,0.20)!important;}',
             '#picks #pickReasoning{min-height:110px;padding:14px 16px;font-size:15px;resize:vertical;}',
             '#picks #unitsModeToggle{border:1px solid rgba(255,255,255,0.08)!important;border-radius:12px!important;background:#14181f!important;}',
             '#picks .tmr-units-mode-label{flex:1 0 100%;font-size:11px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f2c94c;}',
@@ -2773,6 +2774,7 @@
         syncPickDetailsLayout(option);
         if (lineInput) lineInput.value = option.line_display || '';
         if (oddsInput) oddsInput.value = option.odds != null ? option.odds : '';
+        lockSelectedLineOddsFields(option);
         if (marketInput) marketInput.value = option.group_label + ' / ' + getMarketLabel(option.market_type);
         if (bookInput) bookInput.value = option.book_title || '';
         if (timestampInput) timestampInput.value = formatTimestamp(option.source_updated_at);
@@ -2894,6 +2896,24 @@
                 window.showPickStep('pickDetails');
             }
         }
+    }
+
+    function lockSelectedLineOddsFields(option) {
+        const lockFields = !!(option && option.source === 'sportsbook' && option.odds != null);
+        [
+            document.getElementById('pickLineInput'),
+            document.getElementById('pickOddsInput')
+        ].forEach(function(input) {
+            if (!input) return;
+            input.readOnly = lockFields;
+            input.setAttribute('aria-readonly', lockFields ? 'true' : 'false');
+            input.classList.toggle('tmr-verified-line-field', lockFields);
+            if (lockFields) {
+                input.setAttribute('title', 'Verified sportsbook line. Select a different price to change it.');
+            } else {
+                input.removeAttribute('title');
+            }
+        });
     }
 
     function updatePickSummary() {
@@ -3037,8 +3057,11 @@
         const reasoningInput = document.getElementById('pickReasoning');
         ensureStakeModeControls(unitsInput);
 
-        const oddsValue = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
-        const lineValue = lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null;
+        const verifiedSportsbookOption = !!(option && option.source === 'sportsbook' && option.odds != null);
+        const oddsValue = verifiedSportsbookOption ? parseInt(option.odds, 10) : (oddsInput ? parseInt(oddsInput.value, 10) : NaN);
+        const lineValue = verifiedSportsbookOption
+            ? (option.line != null && option.line !== '' ? parseFloat(option.line) : null)
+            : (lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null);
         // Frontend hard-cap: stake amount must be in [0.5, 5], rounded to
         // half units. Read from the visible ticket input when present, then
         // mirror to #unitsInput so preview text and submit payload cannot
