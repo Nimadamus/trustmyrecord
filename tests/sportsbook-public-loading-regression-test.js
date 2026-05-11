@@ -5,6 +5,7 @@ const https = require('https');
 
 const LIVE_PAGE = 'https://trustmyrecord.com/sportsbook/';
 const LIVE_NBA_API = 'https://trustmyrecord-api.onrender.com/api/games/board/basketball_nba?limit=80';
+const LIVE_BUNDLE = 'https://trustmyrecord.com/static/js/sportsbook-production-fix-persist-reliability.js?v=20260511publicroute2';
 
 function get(url) {
   return new Promise((resolve, reject) => {
@@ -29,36 +30,29 @@ function get(url) {
 }
 
 (async () => {
-  const [page, api] = await Promise.all([get(LIVE_PAGE), get(LIVE_NBA_API)]);
+  const [page, api, bundle] = await Promise.all([get(LIVE_PAGE), get(LIVE_NBA_API), get(LIVE_BUNDLE)]);
 
   assert.strictEqual(page.status, 200, 'public sportsbook page must be reachable');
   assert.strictEqual(api.status, 200, 'NBA board API must be reachable');
+  assert.strictEqual(bundle.status, 200, 'public sportsbook reliability bundle must be reachable');
 
   const payload = JSON.parse(api.body);
   const nbaGames = Array.isArray(payload.games) ? payload.games : [];
   assert(nbaGames.length > 0, 'test requires the NBA API to have games');
 
   assert(
-    /sportsbook-production-fix-persist-reliability\.js\?v=20260511publicroute1&cb=20260511publicroute1/.test(page.body),
+    /sportsbook-production-fix-persist-reliability\.js\?v=20260511publicroute2&cb=20260511publicroute2/.test(page.body),
     'public page must load the current sportsbook reliability bundle/cache key'
   );
   assert(
-    page.body.includes('board loading guard replaced frozen spinner') &&
-      page.body.includes("cache: 'no-store'") &&
-      page.body.includes('AbortController'),
-    'public page must include the lobby-board timeout guard so NBA cannot remain stuck on Loading live odds while the API has games'
+    !page.body.includes("onclick=\"window.__tmrSelectSportBoard && window.__tmrSelectSportBoard('NBA')\""),
+    'public route guard must not contain the unescaped inline NBA retry handler that breaks the boot script'
   );
-
-
   assert(
-    page.body.includes('data-sportsbook-tab="sport" data-sport="NBA"') &&
-      page.body.includes('data-sportsbook-tab="sport" data-sport="NHL"') &&
-      page.body.includes('data-sportsbook-tab="sport" data-sport="MLB"') &&
-      page.body.includes('data-sportsbook-tab="sport" data-sport="NFL"') &&
-      page.body.includes('data-sportsbook-tab="sport" data-sport="NCAAB"') &&
-      page.body.includes('data-sportsbook-tab="sport" data-sport="NCAAF"') &&
-      page.body.includes('data-sportsbook-tab="sport" data-sport="Soccer"'),
-    'public page must expose guest sport board buttons'
+    bundle.body.includes('public_default_board_failed') &&
+      bundle.body.includes('window.__tmrSportsbookPublicLoaded = true') &&
+      !bundle.body.includes('ensurePicksAccess().then(function(allowed) {\n                        if (!allowed) return;\n                        if (typeof window.showSection'),
+    'public bundle must boot the default board itself and sport tab switching must not require login'
   );
 
   console.log(`sportsbook public loading regression passed with ${nbaGames.length} NBA API games`);

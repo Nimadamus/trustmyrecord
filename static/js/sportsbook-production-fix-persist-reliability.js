@@ -3350,6 +3350,29 @@
         lockFunction(window, 'lockInPick', lockInPick);
         window.__tmrProductionLockInPick = lockInPick;
 
+        // The public /sportsbook/ route starts with a visible NBA loading
+        // state. Boot the board from this protected bundle so a broken inline
+        // helper cannot leave the public page frozen on the spinner.
+        window.setTimeout(function() {
+            if (window.__tmrSportsbookPublicLoaded) return;
+            const container = document.getElementById('gamesListContainer');
+            if (!container) return;
+            const stillLoading = container.querySelector('.tmr-board-loading') ||
+                container.querySelector('.tmr-loading-slate') ||
+                /Loading live odds/i.test(container.textContent || '');
+            if (!stillLoading) return;
+            const activeSport = document.querySelector('[data-sportsbook-tab="sport"].active, [data-sportsbook-tab="sport"].selected');
+            const sport = (activeSport && activeSport.getAttribute('data-sport')) || state.selectedSport || 'NBA';
+            window.__tmrSportsbookPublicLoaded = true;
+            forceSectionActive('picks');
+            selectSportAndShowGames(sport).catch(function(error) {
+                recordBoardEvent('public_default_board_failed', {
+                    sport: sport,
+                    message: error && error.message ? error.message : String(error || 'Unknown error')
+                });
+            });
+        }, 0);
+
         // Bridge: the legacy team-totals / F5 / fallback renderers in
         // sportsbook/index.html still emit odds buttons that call
         // window.selectGameBet(gameIndex, betType, team, line, odds,
