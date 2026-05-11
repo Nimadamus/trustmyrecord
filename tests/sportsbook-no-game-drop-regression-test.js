@@ -43,8 +43,8 @@ assert(
   'sportsbook runtime must clear stale board caches from broken v2/v3/v4 namespaces'
 );
 assert(
-  /sportsbook-production-fix-persist-reliability\.js\?v=20260511compactrows\d+&cb=20260511compactrows\d+/.test(html),
-  'sportsbook page must request the compact aligned-row reliability runtime, not a stale cached script'
+  /sportsbook-production-fix-persist-reliability\.js\?v=20260511(?:compactrows|slipcalc)\d+&cb=20260511(?:compactrows|slipcalc)\d+/.test(html),
+  'sportsbook page must request the approved compact-row/slip-calculation reliability runtime, not a stale cached script'
 );
 assert(
   !html.includes('if (!sportKey || !window.TMR.fetchGamesFromESPN)'),
