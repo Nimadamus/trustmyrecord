@@ -1885,17 +1885,26 @@
                     key: 'team_totals',
                     label: 'Team Totals',
                     items: teamTotals.outcomes.map(function(outcome) {
+                        const outcomeTeam = outcome.description || outcome.team || outcome.team_name || outcome.participant || '';
+                        const outcomeSide = /\bunder\b/i.test(String(outcome.name || outcome.side || '')) ? 'Under' : 'Over';
+                        const selectionTeam = outcomeTeam || outcome.name;
+                        const selectionLabel = (outcomeTeam ? outcomeTeam + ' ' : '') + outcomeSide + (outcome.point != null ? ' ' + outcome.point : '');
                         return createFallbackOption(
                             game,
                             index,
                             'Team Totals',
                             'team_totals',
-                            outcome.name,
-                            outcome.point != null ? (outcome.name + ' ' + outcome.point) : outcome.name,
+                            selectionTeam,
+                            selectionLabel,
                             outcome.price,
                             outcome.point != null ? outcome.point : null,
                             bookmaker ? bookmaker.title : 'Sportsbook feed'
                         );
+                    }).map(function(option, outcomeIndex) {
+                        const outcome = teamTotals.outcomes[outcomeIndex] || {};
+                        option.team = outcome.description || outcome.team || outcome.team_name || outcome.participant || option.selection;
+                        option.side = /\bunder\b/i.test(String(outcome.name || outcome.side || '')) ? 'under' : 'over';
+                        return option;
                     })
                 });
             }
@@ -2245,12 +2254,12 @@
         const groupItems = group.items || [];
         const teamKey = function(value) { return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim(); };
         const sideKey = function(option) {
-            return /\bunder\b/i.test(String((option && (option.side || option.bet_side || option.selection_label || option.selection)) || '')) ? 'under' : 'over';
+            return /\bunder\b/i.test(String((option && (option.side || option.bet_side || option.name || option.selection_label || option.selection)) || '')) ? 'under' : 'over';
         };
         const findTeamSide = function(teamName, side) {
             const key = teamKey(teamName);
             return groupItems.find(function(option) {
-                const text = teamKey(option ? [option.team, option.team_name, option.participant, option.selection, option.selection_label].filter(Boolean).join(' ') : '');
+                const text = teamKey(option ? [option.team, option.team_name, option.participant, option.description, option.selection, option.selection_label].filter(Boolean).join(' ') : '');
                 return text && key && (text === key || text.indexOf(key) !== -1 || key.indexOf(text) !== -1) && sideKey(option) === side;
             }) || null;
         };
