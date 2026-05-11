@@ -50,7 +50,10 @@ assert(css.includes('.tmr-team-logo-badge .tmr-team-logo-img'), 'logo visibility
 assert(css.includes('visibility:visible !important'), 'logo visibility CSS must force visible logos');
 assert(css.includes('opacity:1 !important'), 'logo visibility CSS must force opaque logos');
 assert(css.includes('display:block !important'), 'logo image CSS must force rendered images');
-assert(html.includes('20260509logorestore1'), 'sportsbook page must load the cache-busted logo restore assets');
+assert(
+  /tmr-redesign-overrides-sportsbook\.css\?v=202605(?:09logorestore|11teamname)\d+/.test(html),
+  'sportsbook page must load the cache-busted logo restore assets'
+);
 
 assert(
   reliability.includes("if (sportKey === 'baseball_mlb' || sportKey === 'icehockey_nhl')"),
