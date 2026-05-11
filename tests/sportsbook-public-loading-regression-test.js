@@ -39,7 +39,7 @@ function get(url) {
   assert(nbaGames.length > 0, 'test requires the NBA API to have games');
 
   assert(
-    /sportsbook-production-fix-persist-reliability\.js\?v=20260511linesvisible2&cb=20260511linesvisible2/.test(page.body),
+    /sportsbook-production-fix-persist-reliability\.js\?v=20260511publicroute1&cb=20260511publicroute1/.test(page.body),
     'public page must load the current sportsbook reliability bundle/cache key'
   );
   assert(
@@ -47,6 +47,18 @@ function get(url) {
       page.body.includes("cache: 'no-store'") &&
       page.body.includes('AbortController'),
     'public page must include the lobby-board timeout guard so NBA cannot remain stuck on Loading live odds while the API has games'
+  );
+
+
+  assert(
+    page.body.includes('data-sportsbook-tab="sport" data-sport="NBA"') &&
+      page.body.includes('data-sportsbook-tab="sport" data-sport="NHL"') &&
+      page.body.includes('data-sportsbook-tab="sport" data-sport="MLB"') &&
+      page.body.includes('data-sportsbook-tab="sport" data-sport="NFL"') &&
+      page.body.includes('data-sportsbook-tab="sport" data-sport="NCAAB"') &&
+      page.body.includes('data-sportsbook-tab="sport" data-sport="NCAAF"') &&
+      page.body.includes('data-sportsbook-tab="sport" data-sport="Soccer"'),
+    'public page must expose guest sport board buttons'
   );
 
   console.log(`sportsbook public loading regression passed with ${nbaGames.length} NBA API games`);

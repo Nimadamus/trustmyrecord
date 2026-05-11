@@ -3213,10 +3213,16 @@
 
                 if (tab === 'sport') {
                     const sport = button.getAttribute('data-sport') || 'MLB';
-                    ensurePicksAccess().then(function(allowed) {
-                        if (!allowed) return;
-                        if (typeof window.showSection === 'function') window.showSection('picks');
-                        selectSportAndShowGames(sport).catch(function() {});
+                    if (typeof window.showSection === 'function') window.showSection('picks');
+                    selectSportAndShowGames(sport).catch(function(error) {
+                        const container = document.getElementById('gamesListContainer');
+                        if (container) {
+                            container.innerHTML = '<div class="tmr-empty-state">Unable to load live odds for ' + escapeHtml(sport) + '. <button class="tmr-board-button" type="button" onclick="window.__tmrSelectSportBoard && window.__tmrSelectSportBoard(\'' + escapeHtml(sport) + '\')">Retry</button></div>';
+                        }
+                        recordBoardEvent('board_sport_button_failed', {
+                            sport: sport,
+                            message: error && error.message ? error.message : String(error || 'Unknown error')
+                        });
                     });
                     return;
                 }
