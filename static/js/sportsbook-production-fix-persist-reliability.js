@@ -2745,6 +2745,8 @@
             }
         }
 
+        updateStakeModePreview();
+
         // showPickStep would HIDE the lobby (#sportSelection) and the lobby
         // slip the user is actually looking at, then "advance" them to
         // #pickDetails which on desktop is below the fold and on mobile is

@@ -5,7 +5,7 @@ const https = require('https');
 
 const LIVE_PAGE = 'https://trustmyrecord.com/sportsbook/';
 const LIVE_NBA_API = 'https://trustmyrecord-api.onrender.com/api/games/board/basketball_nba?limit=80';
-const LIVE_BUNDLE = 'https://trustmyrecord.com/static/js/sportsbook-production-fix-persist-reliability.js?v=20260511cleanmarket1';
+const LIVE_BUNDLE = 'https://trustmyrecord.com/static/js/sportsbook-production-fix-persist-reliability.js?v=20260511cleanmarket2';
 
 function get(url) {
   return new Promise((resolve, reject) => {
@@ -41,7 +41,7 @@ function get(url) {
   assert(nbaGames.length > 0, 'test requires the NBA API to have games');
 
   assert(
-    /sportsbook-production-fix-persist-reliability\.js\?v=20260511cleanmarket1&cb=20260511cleanmarket1/.test(page.body),
+    /sportsbook-production-fix-persist-reliability\.js\?v=20260511cleanmarket2&cb=20260511cleanmarket2/.test(page.body),
     'public page must load the current sportsbook reliability bundle/cache key'
   );
   assert(

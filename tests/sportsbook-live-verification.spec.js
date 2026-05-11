@@ -96,6 +96,8 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   const stakePreview = page.locator('#unitsStakePreview, #ttSlipStakePreview, [data-testid="stake-preview"]').first();
   await expect(stakePreview, 'risk/to win preview should be present').toContainText(/Risk/i);
   await expect(stakePreview, 'risk/to win preview should be present').toContainText(/To Win/i);
+  await expect(stakePreview, 'risk/to win preview should not be stale').not.toContainText(/updates after odds are entered/i);
+  await expect(stakePreview, 'risk/to win preview should show calculated unit values').toContainText(/unit/i);
 
   for (const sport of ['NBA', 'MLB', 'NFL', 'NCAAB', 'NCAAF', 'Soccer']) {
     await clickSport(page, sport);

@@ -98,6 +98,8 @@ async function main() {
   const previewText = await preview.innerText();
   assert(/Risk/i.test(previewText), 'risk preview should include Risk');
   assert(/To Win/i.test(previewText), 'risk preview should include To Win');
+  assert(!/updates after odds are entered/i.test(previewText), 'risk/to win preview should not be stale');
+  assert(/unit/i.test(previewText), 'risk/to win preview should show calculated unit values');
 
   for (const sport of ['NBA', 'MLB', 'NFL', 'NCAAB', 'NCAAF', 'Soccer']) {
     await clickSport(page, sport);
