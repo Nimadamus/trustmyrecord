@@ -2226,7 +2226,7 @@
         }
 
         return '<span class="team-logo tmr-team-logo-badge" aria-hidden="true">' +
-            '<img class="team-logo__img tmr-team-logo-img" src="' + escapeHtml(logoUrl) + '" alt="" loading="lazy" decoding="async" onerror="this.parentElement.classList.add(\'tmr-team-logo-badge--fallback\');this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">' +
+            '<img class="team-logo__img tmr-team-logo-img" src="' + escapeHtml(logoUrl) + '" data-tmr-logo-src="' + escapeHtml(logoUrl) + '" alt="" loading="eager" decoding="async" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add(\'tmr-team-logo-badge--fallback\');this.parentElement.classList.add(\'team-logo--fallback\');this.remove();">' +
             initialsHtml +
             '</span>';
     }
