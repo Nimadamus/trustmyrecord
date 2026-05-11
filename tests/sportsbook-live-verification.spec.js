@@ -16,6 +16,7 @@ async function waitForBoardSettled(page) {
 }
 
 test('live sportsbook NHL primary markets and pick slip are usable', async ({ page }) => {
+  await page.setViewportSize({ width: 1360, height: 1040 });
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await waitForBoardSettled(page);
   await expect(page.locator('.tmr-global-nav'), 'global TrustMyRecord nav should be visible above sportsbook content').toBeVisible({ timeout: 15000 });
