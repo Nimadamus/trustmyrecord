@@ -50,6 +50,12 @@ assert(reliability.includes("stake_mode: stakeMode"), 'submitted payload should 
 assert(reliability.includes("units_mode: stakeMode"), 'submitted payload should include units_mode');
 assert(reliability.includes("risk_units: stakeValues.risk_units"), 'submitted payload should store calculated risk units');
 assert(reliability.includes("to_win_units: stakeValues.win_units"), 'submitted payload should store calculated to-win units');
+assert(reliability.includes("const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];"), 'sportsbook submit auth should read the same stored user session sources as the global header');
+assert(reliability.includes('const stores = [];') && reliability.includes('stores.push(localStorage)') && reliability.includes('stores.push(sessionStorage)'), 'sportsbook submit auth should inspect localStorage and sessionStorage user sessions');
+assert(
+  /const user = getCurrentUser\(\);[\s\S]*if \(!user\)[\s\S]*Please log in to submit a pick[\s\S]*const apiClient = await waitForApi\(\);[\s\S]*const token = getStoredAuthToken\(\);[\s\S]*if \(token\) \{[\s\S]*return true;/.test(reliability),
+  'logged-in stored user plus backend token should pass sportsbook submit auth instead of showing the login alert'
+);
 assert(
   /const unitsValue = getCurrentStakeAmount\(\);[\s\S]*const stakeMode = getSelectedStakeMode\(\);[\s\S]*const stakeValues = calculateStakeValues\(stakeMode, unitsValue, oddsValue\);[\s\S]*units: unitsValue,[\s\S]*stake_mode: stakeMode,[\s\S]*units_mode: stakeMode,[\s\S]*risk_units: stakeValues\.risk_units,[\s\S]*to_win_units: stakeValues\.win_units,/.test(reliability),
   'lock payload must use the same live units input, selected stake mode, and calculated risk/to-win values'
@@ -135,6 +141,38 @@ assert.notStrictEqual(
   buildSubmitStakePayload('risk', 3, -105).risk_units,
   buildSubmitStakePayload('to_win', 3, -105).risk_units,
   'Risk and To Win modes must not collapse to the same risk amount'
+);
+
+function getSessionUserFromStores(stores) {
+  const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
+  for (const store of stores) {
+    for (const key of keys) {
+      const raw = store[key];
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      const user = parsed && (parsed.user || parsed);
+      if (user && (user.username || user.email)) return user;
+    }
+  }
+  return null;
+}
+
+function canSubmitPickFromSession(stores, token) {
+  const user = getSessionUserFromStores(stores);
+  if (!user) return { allowed: false, reason: 'Please log in to submit a pick.' };
+  if (token) return { allowed: true, username: user.username || user.email };
+  return { allowed: false, reason: 'Your login session expired. Please log in again before making picks.' };
+}
+
+assert.deepStrictEqual(
+  canSubmitPickFromSession([{ trustmyrecord_session: JSON.stringify({ user: { username: 'BetLegend' } }) }], 'live-access-token'),
+  { allowed: true, username: 'BetLegend' },
+  'logged-in header/session user with a backend token should be allowed to lock a sportsbook pick'
+);
+assert.deepStrictEqual(
+  canSubmitPickFromSession([{}], ''),
+  { allowed: false, reason: 'Please log in to submit a pick.' },
+  'logged-out users should still be blocked from locking sportsbook picks'
 );
 
 const minus110RiskPreview = renderStakeSummaryText('risk', 3, -110);
