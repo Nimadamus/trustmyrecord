@@ -2065,6 +2065,7 @@
             button.classList.toggle('active', button.dataset.filter === filter);
         });
         ensureVisibleMarketGroups(card);
+        applyCardMarketFilterDisplay(card);
     }
 
     function ensureVisibleMarketGroups(card) {
@@ -2088,6 +2089,20 @@
         card.dataset.marketFilter = fallbackFilter;
         card.querySelectorAll('.tmr-card-filter-tab').forEach(function(button) {
             button.classList.toggle('active', button.dataset.filter === fallbackFilter);
+        });
+        applyCardMarketFilterDisplay(card);
+    }
+
+    function applyCardMarketFilterDisplay(card) {
+        if (!card) return;
+        const activeFilter = card.dataset.marketFilter || 'game-lines';
+        const primaryGrid = card.querySelector('.tmr-primary-market-grid');
+        if (primaryGrid) {
+            primaryGrid.style.display = activeFilter === 'game-lines' ? '' : 'none';
+        }
+        card.querySelectorAll('.tmr-group').forEach(function(group) {
+            const category = group.getAttribute('data-category') || '';
+            group.style.display = category === activeFilter ? '' : 'none';
         });
     }
 
