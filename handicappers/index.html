@@ -52,18 +52,23 @@
         button, input, select { font: inherit; }
 
         .hm-page {
-            width: min(1460px, calc(100% - 36px));
+            width: min(1180px, calc(100% - 40px));
             margin: 0 auto;
-            padding: 28px 0 62px;
+            padding: 22px 0 54px;
         }
 
         .hm-hero {
             display: grid;
-            grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
-            gap: 22px;
-            align-items: stretch;
-            padding: 30px 0 18px;
-            border-bottom: 1px solid var(--line);
+            grid-template-columns: minmax(0, 1fr) minmax(390px, 0.78fr);
+            gap: 20px;
+            align-items: center;
+            padding: 22px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 16px;
+            background:
+                linear-gradient(135deg, rgba(45, 212, 191, 0.08), rgba(96, 165, 250, 0.035)),
+                rgba(8, 15, 27, 0.82);
+            box-shadow: 0 18px 46px rgba(0, 0, 0, 0.22);
         }
 
         .hm-kicker {
@@ -78,35 +83,35 @@
         .hm-hero h1 {
             margin: 0;
             font-family: "Barlow", "Inter", sans-serif;
-            font-size: clamp(2.25rem, 5vw, 4.7rem);
-            line-height: 0.96;
+            font-size: clamp(2.2rem, 4.4vw, 3.8rem);
+            line-height: 0.98;
             letter-spacing: 0;
             font-weight: 900;
         }
 
         .hm-hero p {
-            max-width: 850px;
-            margin: 12px 0 0;
+            max-width: 640px;
+            margin: 10px 0 0;
             color: #b8c5d7;
-            font-size: 1rem;
-            line-height: 1.65;
+            font-size: 0.98rem;
+            line-height: 1.5;
         }
 
         .hm-counts {
             display: grid;
-            grid-template-columns: repeat(3, minmax(132px, 1fr));
-            gap: 10px;
-            align-self: stretch;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            align-self: center;
         }
 
         .hm-count {
             border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 14px 15px;
+            border-radius: 10px;
+            padding: 11px 12px;
             background:
                 radial-gradient(circle at top right, rgba(45, 212, 191, 0.08), transparent 48%),
                 rgba(15, 26, 44, 0.76);
-            min-height: 86px;
+            min-height: 74px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -115,26 +120,26 @@
         .hm-count strong {
             display: block;
             color: var(--text);
-            font-size: 1.45rem;
+            font-size: 1.3rem;
             font-weight: 900;
             line-height: 1;
         }
 
         .hm-count span {
             display: block;
-            margin-top: 7px;
+            margin-top: 6px;
             color: var(--muted);
-            font-size: 0.68rem;
+            font-size: 0.64rem;
             font-weight: 900;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
         }
 
         .hm-count small {
             display: block;
-            margin-top: 6px;
+            margin-top: 4px;
             color: #7f8da3;
-            font-size: 0.74rem;
+            font-size: 0.68rem;
             font-weight: 800;
             line-height: 1.25;
         }
@@ -149,13 +154,13 @@
             justify-content: space-between;
             align-items: end;
             gap: 16px;
-            margin: 18px 0 10px;
+            margin: 16px 0 8px;
         }
 
         .hm-section-head h2 {
             margin: 0;
             font-family: "Barlow", "Inter", sans-serif;
-            font-size: clamp(1.35rem, 2.1vw, 2rem);
+            font-size: clamp(1.25rem, 1.8vw, 1.65rem);
             line-height: 1;
             letter-spacing: 0;
         }
@@ -163,7 +168,7 @@
         .hm-section-head p {
             margin: 5px 0 0;
             color: var(--muted);
-            font-size: 0.86rem;
+            font-size: 0.82rem;
             font-weight: 700;
         }
 
@@ -226,19 +231,19 @@
 
         .hm-controls {
             display: grid;
-            grid-template-columns: minmax(260px, 1.25fr) minmax(160px, 0.65fr) minmax(210px, 0.85fr);
-            gap: 12px;
+            grid-template-columns: minmax(260px, 1fr) minmax(150px, 0.48fr) minmax(190px, 0.58fr);
+            gap: 10px;
             align-items: end;
-            margin: 18px 0 14px;
-            padding: 14px;
+            margin: 10px 0;
+            padding: 12px;
             border: 1px solid var(--line);
-            border-radius: 14px;
+            border-radius: 12px;
             background: rgba(8, 15, 27, 0.78);
         }
 
         .hm-field {
             display: grid;
-            gap: 7px;
+            gap: 6px;
             min-width: 0;
         }
 
@@ -253,14 +258,14 @@
         .hm-input,
         .hm-select {
             width: 100%;
-            min-height: 44px;
+            min-height: 40px;
             border: 1px solid rgba(148, 163, 184, 0.22);
-            border-radius: 9px;
+            border-radius: 8px;
             outline: none;
             background: #0b1526;
             color: var(--text);
-            padding: 0 13px;
-            font-size: 0.94rem;
+            padding: 0 12px;
+            font-size: 0.9rem;
             font-weight: 700;
         }
 
@@ -275,35 +280,28 @@
             justify-content: space-between;
             gap: 12px;
             align-items: center;
-            margin: 10px 0 10px;
+            margin: 8px 0;
             color: var(--muted);
-            font-size: 0.86rem;
+            font-size: 0.8rem;
             font-weight: 700;
         }
 
         .hm-trust-notes {
             display: flex;
             flex-wrap: wrap;
-            gap: 10px;
-            margin: 0 0 16px;
-            padding: 13px 14px;
-            border: 1px solid rgba(45, 212, 191, 0.24);
-            border-radius: 13px;
-            background:
-                linear-gradient(135deg, rgba(45, 212, 191, 0.12), rgba(96, 165, 250, 0.07)),
-                rgba(8, 15, 27, 0.88);
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
+            gap: 8px;
+            margin: 0 0 10px;
         }
 
         .hm-trust-note {
-            padding: 10px 13px;
-            border: 1px solid rgba(148, 163, 184, 0.22);
+            padding: 6px 9px;
+            border: 1px solid rgba(96, 165, 250, 0.18);
             border-radius: 999px;
-            background: rgba(7, 13, 24, 0.72);
-            color: #e8f7ff;
-            font-size: 0.9rem;
+            background: rgba(96, 165, 250, 0.07);
+            color: #b8c8dd;
+            font-size: 0.76rem;
             font-weight: 800;
-            line-height: 1.35;
+            line-height: 1.25;
         }
 
         .hm-production-note {
@@ -316,7 +314,7 @@
 
         .hm-table-wrap {
             border: 1px solid var(--line);
-            border-radius: 14px;
+            border-radius: 12px;
             background: rgba(7, 13, 24, 0.72);
             max-width: 100%;
             overflow-x: auto;
@@ -333,16 +331,16 @@
             display: grid;
             grid-template-columns: minmax(240px, 1.55fr) 82px 92px 84px 88px 68px 82px minmax(150px, 0.8fr) minmax(150px, 0.85fr);
             column-gap: 8px;
-            row-gap: 12px;
+            row-gap: 10px;
             align-items: center;
-            padding: 18px 12px;
+            padding: 15px 12px;
             border-bottom: 1px solid rgba(148, 163, 184, 0.12);
         }
 
         .hm-row:last-child { border-bottom: 0; }
 
         .hm-head {
-            min-height: 46px;
+            min-height: 40px;
             background: rgba(15, 26, 44, 0.95);
             color: #8798ae;
             font-size: 0.68rem;
@@ -365,7 +363,7 @@
         }
 
         .hm-member-row {
-            min-height: 96px;
+            min-height: 84px;
             background:
                 linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)),
                 rgba(10, 18, 32, 0.78);
@@ -387,13 +385,13 @@
         .hm-user {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 12px;
             min-width: 0;
         }
 
         .hm-avatar {
-            width: 66px;
-            height: 66px;
+            width: 54px;
+            height: 54px;
             border-radius: 50%;
             object-fit: cover;
             flex-shrink: 0;
@@ -404,8 +402,8 @@
 
         .hm-avatar-link {
             display: inline-flex;
-            width: 66px;
-            height: 66px;
+            width: 54px;
+            height: 54px;
             border-radius: 50%;
             flex-shrink: 0;
             cursor: pointer;
@@ -443,7 +441,7 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             color: #f7fbff;
-            font-size: 1.14rem;
+            font-size: 1.03rem;
             line-height: 1.08;
             font-weight: 900;
         }
@@ -453,14 +451,14 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             color: var(--muted);
-            font-size: 0.86rem;
+            font-size: 0.8rem;
             line-height: 1.15;
             font-weight: 800;
         }
 
         .hm-stat {
             color: #dbe7f5;
-            font-size: 1.02rem;
+            font-size: 0.94rem;
             line-height: 1.18;
             font-weight: 850;
             white-space: nowrap;
@@ -505,12 +503,12 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            padding: 6px 9px;
+            padding: 5px 8px;
             border: 1px solid rgba(96, 165, 250, 0.20);
             border-radius: 999px;
             background: rgba(96, 165, 250, 0.10);
             color: #d8eaff;
-            font-size: 0.76rem;
+            font-size: 0.72rem;
             line-height: 1;
             font-weight: 900;
         }
@@ -612,8 +610,13 @@
 
         @media (max-width: 720px) {
             .hm-page {
-                width: min(100% - 24px, 1460px);
-                padding-top: 18px;
+                width: min(100% - 24px, 1180px);
+                padding-top: 14px;
+            }
+
+            .hm-hero {
+                padding: 18px 16px;
+                gap: 16px;
             }
 
             .hm-counts,
@@ -623,7 +626,36 @@
             }
 
             .hm-hero h1 {
-                font-size: clamp(2rem, 13vw, 3.2rem);
+                font-size: clamp(2rem, 12vw, 3rem);
+            }
+
+            .hm-counts {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 7px;
+            }
+
+            .hm-count {
+                min-height: 68px;
+                padding: 9px 8px;
+            }
+
+            .hm-count strong {
+                font-size: 1.06rem;
+            }
+
+            .hm-count span {
+                font-size: 0.56rem;
+                line-height: 1.15;
+            }
+
+            .hm-count small {
+                display: none;
+            }
+
+            .hm-section-head {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 8px;
             }
 
             .hm-toolbar {
@@ -632,14 +664,12 @@
             }
 
             .hm-trust-notes {
-                display: grid;
-                gap: 9px;
-                padding: 12px;
+                gap: 7px;
             }
 
             .hm-trust-note {
-                border-radius: 10px;
-                font-size: 0.88rem;
+                border-radius: 999px;
+                font-size: 0.72rem;
             }
 
             .hm-table {
@@ -656,8 +686,8 @@
 
             .hm-row {
                 grid-template-columns: 1fr;
-                gap: 14px;
-                padding: 18px;
+                gap: 12px;
+                padding: 16px;
             }
 
             .hm-member-row {
@@ -703,8 +733,8 @@
         <section class="hm-hero">
             <div>
                 <p class="hm-kicker">Member Discovery</p>
-                <h1>Handicappers</h1>
-                <p>Discover members with real locked-pick activity, compare verified records, follow cappers, and open public pick histories.</p>
+                <h1>Find Handicappers</h1>
+                <p>Search members, compare verified records, and open public profiles backed by locked-pick activity.</p>
             </div>
             <div class="hm-counts" aria-label="Directory summary">
                 <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Total Members</span><small>Public members only</small></div>
@@ -717,7 +747,7 @@
             <div class="hm-section-head">
                 <div>
                     <h2>Leaderboard</h2>
-                    <p>Minimum 20 graded picks, recent graded activity, and positive net units are required for promoted rankings. Thin samples stay visible in discovery but stay out of the leaderboard.</p>
+                    <p>Compare public members by record, units, ROI, win rate, streaks, sport, and recent activity.</p>
                 </div>
                 <span class="hm-production-note">Showing <strong id="hmVisibleMembers">0</strong> filtered members</span>
             </div>
@@ -755,8 +785,8 @@
         </div>
 
         <div class="hm-trust-notes">
-            <span class="hm-trust-note">Only public members with real locked-pick activity are shown.</span>
-            <span class="hm-trust-note">Stats are based on graded picks only. Pending picks are not included until graded.</span>
+            <span class="hm-trust-note">Public members with locked-pick activity only.</span>
+            <span class="hm-trust-note">Graded picks power records, units, ROI, and win rate.</span>
         </div>
 
         <section class="hm-table-wrap" aria-live="polite">
