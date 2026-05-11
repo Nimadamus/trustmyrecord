@@ -70,6 +70,20 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
       return awayAligned && homeAligned;
     }), { message: 'away/home odds must align horizontally with the matching team rows' })
     .toBe(true);
+  await expect
+    .poll(async () => primaryGrid.locator('button:not([disabled])').evaluateAll((buttons) => {
+      return Math.max(...buttons.map((button) => Math.round(button.getBoundingClientRect().height)));
+    }), { message: 'primary odds cells should be compact row buttons, not oversized floating tiles' })
+    .toBeLessThanOrEqual(70);
+  await expect
+    .poll(async () => primaryGrid.evaluate((grid) => {
+      const awayTeam = grid.querySelector('.tmr-primary-team-cell--away');
+      const buttons = Array.from(grid.querySelectorAll('button:not([disabled])')).slice(0, 3);
+      if (!awayTeam || buttons.length !== 3) return false;
+      const teamHeight = awayTeam.getBoundingClientRect().height;
+      return buttons.every((button) => Math.abs(button.getBoundingClientRect().height - teamHeight) <= 2);
+    }), { message: 'away odds row should share the same row height as the away team cell' })
+    .toBe(true);
   await expect(primaryGrid.locator('.tmr-option-detail').first(), 'primary detail text should be hidden to prevent clipped labels').not.toBeVisible();
 
 

@@ -1435,24 +1435,27 @@
             '.tmr-option-odds-wrap{gap:6px;align-items:flex-end;justify-content:center;}',
             '.tmr-option-odds{min-width:94px;padding:13px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(63,72,88,0.98),rgba(40,46,58,0.98));font-size:30px;letter-spacing:-0.05em;}',
             '.tmr-market-side{display:block;width:100%;min-width:0;overflow:visible;}',
-            '.tmr-primary-market-grid{display:grid;grid-template-columns:minmax(280px,1.35fr) repeat(3,minmax(130px,1fr));grid-template-rows:auto 86px 86px;gap:10px;width:100%;min-width:0;max-width:none;padding:12px;border-radius:16px;background:rgba(5,8,13,0.48);border:1px solid rgba(255,255,255,0.07);box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);align-items:stretch;}',
+            '.tmr-primary-market-grid{display:grid;grid-template-columns:minmax(280px,1.35fr) repeat(3,minmax(130px,1fr));grid-template-rows:auto 62px 62px;gap:8px 10px;width:100%;min-width:0;max-width:none;padding:12px;border-radius:16px;background:rgba(5,8,13,0.48);border:1px solid rgba(255,255,255,0.07);box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);align-items:stretch;}',
             '.tmr-primary-market{display:contents;}',
             '.tmr-primary-team-header{min-width:0;}',
-            '.tmr-primary-team-cell{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:10px;min-width:0;padding:10px 12px;border-radius:12px;background:linear-gradient(180deg,rgba(22,29,39,0.74),rgba(14,20,29,0.74));border:1px solid rgba(255,255,255,0.055);}',
+            '.tmr-primary-team-cell{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:10px;min-width:0;min-height:62px;padding:8px 12px;border-radius:12px;background:linear-gradient(180deg,rgba(22,29,39,0.74),rgba(14,20,29,0.74));border:1px solid rgba(255,255,255,0.055);}',
             '.tmr-primary-team-cell .tmr-team-side{min-width:54px;}',
             '.tmr-primary-team-cell .tmr-team-abbr{align-self:center;justify-self:center;margin:0;}',
             '.tmr-primary-team-cell .tmr-team-name{min-width:0;white-space:normal;}',
             '.tmr-primary-market-title{font-size:10px;font-weight:900;letter-spacing:0.14em;text-transform:uppercase;color:#9aa7b8;text-align:center;white-space:nowrap;}',
-            '.tmr-primary-market-grid > .tmr-option-btn{position:relative;box-sizing:border-box;min-height:86px;height:86px;padding:10px 12px;border-radius:12px;grid-template-columns:1fr!important;grid-template-rows:auto auto;gap:7px;justify-items:center;align-items:center;text-align:center;background:linear-gradient(180deg,rgba(35,41,51,0.98),rgba(22,27,35,0.98));transform:none!important;}',
-            '.tmr-primary-market-grid > .tmr-option-btn.active{height:86px;min-height:86px;padding:10px 12px;border-color:rgba(86,240,163,0.52);box-shadow:inset 0 0 0 1px rgba(86,240,163,0.20),0 8px 18px rgba(0,0,0,0.18);}',
+            '.tmr-primary-market-grid > .tmr-option-btn{position:relative;box-sizing:border-box;min-height:62px;height:62px;padding:9px 12px;border-radius:12px;grid-template-columns:minmax(0,1fr) auto!important;grid-template-rows:1fr;gap:10px;justify-items:stretch;align-items:center;text-align:left;background:linear-gradient(180deg,rgba(29,36,47,0.96),rgba(18,24,34,0.96));transform:none!important;}',
+            '.tmr-primary-market-grid > .tmr-option-btn.active{height:62px;min-height:62px;padding:9px 12px;border-color:rgba(86,240,163,0.52);box-shadow:inset 0 0 0 1px rgba(86,240,163,0.20),0 8px 18px rgba(0,0,0,0.18);}',
             '.tmr-primary-market-grid > .tmr-option-btn.active::before,.tmr-primary-market-grid > .tmr-option-btn.active::after{display:none!important;content:none!important;}',
             '.tmr-primary-market-grid > .tmr-option-btn .tmr-option-topline{display:none;}',
-            '.tmr-primary-market-grid > .tmr-option-btn .tmr-option-market{display:flex;align-items:end;justify-content:center;min-height:16px;font-size:13px;line-height:1.12;font-weight:900;letter-spacing:0;white-space:normal;text-align:center;color:#f8fafc;}',
-            '.tmr-primary-market-grid > .tmr-option-btn .tmr-option-market:empty{display:block;min-height:0;}',
+            '.tmr-primary-market-grid > .tmr-option-btn .tmr-option-main{display:flex;align-items:center;justify-content:flex-start;min-width:0;}',
+            '.tmr-primary-market-grid > .tmr-option-btn .tmr-option-market{display:flex;align-items:center;justify-content:flex-start;min-height:0;font-size:14px;line-height:1.1;font-weight:900;letter-spacing:0;white-space:nowrap;text-align:left;color:#f8fafc;}',
+            '.tmr-primary-market-grid > .tmr-option-btn .tmr-option-market:empty{display:none;}',
+            '.tmr-primary-market-grid > .tmr-option-btn:has(.tmr-option-market:empty){grid-template-columns:1fr!important;justify-items:center;text-align:center;}',
+            '.tmr-primary-market-grid > .tmr-option-btn:has(.tmr-option-market:empty) .tmr-option-main{display:none;}',
             '.tmr-primary-market-grid > .tmr-option-btn .tmr-option-detail{display:none!important;}',
-            '.tmr-primary-market-grid > .tmr-option-btn .tmr-option-odds-wrap{align-items:center;justify-content:center;width:100%;}',
+            '.tmr-primary-market-grid > .tmr-option-btn .tmr-option-odds-wrap{align-items:center;justify-content:center;width:auto;min-width:0;}',
             '.tmr-primary-market-grid > .tmr-option-btn .tmr-option-odds-label{display:none;}',
-            '.tmr-primary-market-grid > .tmr-option-btn .tmr-option-odds{box-sizing:border-box;font-size:20px;line-height:1;min-width:82px;max-width:100%;padding:9px 12px;border-radius:10px;text-align:center;}',
+            '.tmr-primary-market-grid > .tmr-option-btn .tmr-option-odds{box-sizing:border-box;font-size:18px;line-height:1;font-weight:900;min-width:auto;max-width:100%;padding:0;border:0;border-radius:0;background:transparent!important;text-align:center;color:#e8fbff;}',
             '.tmr-primary-market .tmr-option-btn{position:relative;box-sizing:border-box;min-height:86px;height:86px;padding:10px 12px;border-radius:12px;grid-template-columns:1fr;grid-template-rows:auto auto;gap:7px;justify-items:center;align-items:center;text-align:center;background:linear-gradient(180deg,rgba(35,41,51,0.98),rgba(22,27,35,0.98));transform:none!important;}',
             '.tmr-primary-market .tmr-option-btn.active{height:86px;min-height:86px;padding:10px 12px;border-color:rgba(86,240,163,0.52);box-shadow:inset 0 0 0 1px rgba(86,240,163,0.20),0 8px 18px rgba(0,0,0,0.18);}',
             '.tmr-primary-market .tmr-option-btn.active::before,.tmr-primary-market .tmr-option-btn.active::after{display:none!important;content:none!important;}',
@@ -2121,12 +2124,9 @@
             return renderBoardOptionButton(Object.assign({}, option, { display_label: displayLabel, book_title: option.book_title || option.source_label || 'DraftKings' }), optionKey, optionDomId, game);
         };
         const teamCell = function(side, teamName, logoUrl, abbr) {
-            const renderedLogo = side === 'away'
-                ? renderTeamLogo(game.away_team || teamName, game.sport_key, logoUrl || '', abbr || '')
-                : renderTeamLogo(game.home_team || teamName, game.sport_key, logoUrl || '', abbr || '');
             return '<div class="tmr-primary-team-cell tmr-primary-team-cell--' + side + '">' +
                 '<span class="tmr-team-side">' + (side === 'away' ? 'Away' : 'Home') + '</span>' +
-                '<span class="tmr-team-abbr">' + renderedLogo + '</span>' +
+                '<span class="tmr-team-abbr">' + renderTeamLogo(teamName, game.sport_key, logoUrl || '', abbr || '') + '</span>' +
                 '<span class="tmr-team-name">' + escapeHtml(teamName || '') + '</span>' +
                 '</div>';
         };
