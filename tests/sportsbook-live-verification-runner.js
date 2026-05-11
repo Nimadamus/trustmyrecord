@@ -36,6 +36,10 @@ async function main() {
 
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await waitForBoardSettled(page);
+  await expectVisible(page.locator('.tmr-global-nav'), 'global TrustMyRecord nav should be visible above sportsbook content');
+  const pendingHref = await page.getByRole('link', { name: /Click Here to See Pending Picks/i }).first().getAttribute('href');
+  assert(/\/my-pending-picks\//.test(pendingHref || ''), 'pending picks link should target /my-pending-picks/');
+  assert.strictEqual(await page.getByText(/Open Pick History/i).count(), 0, 'old Open Pick History label should be gone');
 
   await clickSport(page, 'NHL');
   await waitForBoardSettled(page);

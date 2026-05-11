@@ -18,6 +18,9 @@ async function waitForBoardSettled(page) {
 test('live sportsbook NHL primary markets and pick slip are usable', async ({ page }) => {
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await waitForBoardSettled(page);
+  await expect(page.locator('.tmr-global-nav'), 'global TrustMyRecord nav should be visible above sportsbook content').toBeVisible({ timeout: 15000 });
+  await expect(page.getByRole('link', { name: /Click Here to See Pending Picks/i }), 'pending picks link text should replace old pick history label').toHaveAttribute('href', /\/my-pending-picks\//);
+  await expect(page.getByText(/Open Pick History/i)).toHaveCount(0);
 
   await clickSport(page, 'NHL');
   await waitForBoardSettled(page);
