@@ -41,7 +41,7 @@ function get(url) {
   assert(nbaGames.length > 0, 'test requires the NBA API to have games');
 
   assert(
-    /sportsbook-production-fix-persist-reliability\.js\?v=20260511publicroute2&cb=20260511publicroute2/.test(page.body),
+    /sportsbook-production-fix-persist-reliability\.js\?v=20260511publicroute3&cb=20260511publicroute3/.test(page.body),
     'public page must load the current sportsbook reliability bundle/cache key'
   );
   assert(

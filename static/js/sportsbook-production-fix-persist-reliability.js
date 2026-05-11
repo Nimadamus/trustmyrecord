@@ -2358,8 +2358,11 @@
         const selectionStartedAt = nowMs();
         const requestId = ++latestBoardRequestId;
         state.selectedSport = sport;
+        state.currentBoard = [];
+        state.currentBoardSummary = null;
         window.TMR = window.TMR || {};
         window.TMR.selectedSport = sport;
+        window.TMR.currentGames = [];
         forceSectionActive('picks');
         const sportKey = SPORT_KEY_MAP[sport];
         const container = document.getElementById('gamesListContainer');
