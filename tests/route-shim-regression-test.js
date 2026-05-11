@@ -69,13 +69,6 @@ const shims = [
     forbiddenTargets: ['/hangout/']
   },
   {
-    file: 'predictions/index.html',
-    target: '/polls/',
-    canonical: 'https://trustmyrecord.com/polls/',
-    label: 'Continue to Polls',
-    forbiddenTargets: ['/hangout/']
-  },
-  {
     file: 'groups/index.html',
     target: '/friends/',
     canonical: 'https://trustmyrecord.com/friends/',
@@ -197,6 +190,12 @@ for (const shim of shims) {
     assert(!html.includes(forbidden), `${shim.file} still references ${forbidden}`);
   }
 }
+
+const predictionsHtml = read('predictions/index.html');
+assert(predictionsHtml.includes('<title>MLB Run Prediction Model | TrustMyRecord</title>'), 'predictions page should remain the MLB prediction model page');
+assert(predictionsHtml.includes('href="https://trustmyrecord.com/predictions/"'), 'predictions page canonical should stay on /predictions/');
+assert(!predictionsHtml.includes('url=/polls/'), 'predictions page must not regress into the polls shim');
+assert(!predictionsHtml.includes('url=/hangout/'), 'predictions page must not regress into the hangout shim');
 
 [
   "leaderboards: 'leaderboards/'",

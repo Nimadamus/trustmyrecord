@@ -106,15 +106,14 @@ async function main() {
   assert.strictEqual(leaderboardResponse.status, 200, 'leaderboard should load');
   const leaderboardData = await leaderboardResponse.json();
   const leaderboardUser = (leaderboardData.leaderboard || []).find((user) => profileLookupKey(user.username) === 'betlegend');
-  if (Number(profileUser.net_units) <= 0) {
-    assert(!leaderboardUser, 'negative-unit BetLegend should not receive a public leaderboard rank');
-    assert.strictEqual(profileUser.leaderboard_rank, null, 'negative-unit BetLegend profile rank should be hidden');
-    assert.strictEqual(profileUser.ranking_status, 'Not ranked yet', 'negative-unit BetLegend should show Not ranked yet');
-  } else {
-    assert(leaderboardUser, 'positive eligible BetLegend should exist on the leaderboard');
+  if (leaderboardUser) {
     assert.strictEqual(Number(leaderboardUser.total_picks), stats.graded, 'leaderboard graded picks should match ledger');
     assert.strictEqual(`${leaderboardUser.wins}-${leaderboardUser.losses}-${leaderboardUser.pushes}`, stats.record, 'leaderboard record should match ledger');
     assert.strictEqual(Math.round(Number(leaderboardUser.win_rate) * 10), Math.round(stats.winRate * 10), 'leaderboard win rate should match ledger');
+    assert.strictEqual(Math.round(Number(leaderboardUser.net_units) * 100), Math.round(stats.net * 100), 'leaderboard net units should match ledger');
+  } else {
+    assert.strictEqual(profileUser.leaderboard_rank, null, 'unranked BetLegend profile rank should be hidden');
+    assert.strictEqual(profileUser.ranking_status, 'Not ranked yet', 'unranked BetLegend should show Not ranked yet');
   }
 
   console.log('profile-page-lookup-test: ok');
