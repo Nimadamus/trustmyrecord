@@ -56,6 +56,7 @@ async function main() {
   const gridText = await primaryGrid.innerText();
   assert(/Moneyline/i.test(gridText), 'Moneyline must be visible in the primary grid');
   assert(/Puck Line/i.test(gridText), 'Puck Line must be visible in the primary grid');
+  assert.strictEqual(await primaryGrid.getAttribute('data-column-order'), 'line-moneyline-total', 'NHL and MLB use line-moneyline-total column order');
   assert(/Total/i.test(gridText), 'Total must be visible in the primary grid');
   assert(!/Away\s+(Spread|Run Line|Puck Line)|Home\s+(Spread|Run Line|Puck Line)/i.test(gridText), 'generic spread labels must not appear in the primary grid');
   assert(/[+-]\d+(?:\.\d+)?/.test(gridText), 'spread/run-line/puck-line cells must show actual line values');

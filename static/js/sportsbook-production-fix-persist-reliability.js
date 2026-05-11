@@ -2102,10 +2102,12 @@
             const optionDomId = 'option-' + safeDomId(optionKey);
             return renderBoardOptionButton(Object.assign({}, option, { display_label: displayLabel, book_title: option.book_title || option.source_label || 'DraftKings' }), optionKey, optionDomId, game);
         };
-        return '<div class="tmr-primary-market-grid" data-testid="primary-market-grid" onclick="event.stopPropagation()">' +
-            '<div class="tmr-primary-market"><div class="tmr-primary-market-title">Moneyline</div>' + renderPrimaryButton(picks.awayMoneyline, '', 'away-ml') + renderPrimaryButton(picks.homeMoneyline, '', 'home-ml') + '</div>' +
-            '<div class="tmr-primary-market"><div class="tmr-primary-market-title">' + escapeHtml(spreadLabel) + '</div>' + renderPrimaryButton(picks.awaySpread, lineValue(picks.awaySpread.item, true), 'away-spread') + renderPrimaryButton(picks.homeSpread, lineValue(picks.homeSpread.item, true), 'home-spread') + '</div>' +
-            '<div class="tmr-primary-market"><div class="tmr-primary-market-title">Total</div>' + renderPrimaryButton(picks.overTotal, totalLabel(picks.overTotal, 'Over'), 'over-total') + renderPrimaryButton(picks.underTotal, totalLabel(picks.underTotal, 'Under'), 'under-total') + '</div>' +
+        const spreadColumn = '<div class="tmr-primary-market"><div class="tmr-primary-market-title">' + escapeHtml(spreadLabel) + '</div>' + renderPrimaryButton(picks.awaySpread, lineValue(picks.awaySpread.item, true), 'away-spread') + renderPrimaryButton(picks.homeSpread, lineValue(picks.homeSpread.item, true), 'home-spread') + '</div>';
+        const moneylineColumn = '<div class="tmr-primary-market"><div class="tmr-primary-market-title">Moneyline</div>' + renderPrimaryButton(picks.awayMoneyline, '', 'away-ml') + renderPrimaryButton(picks.homeMoneyline, '', 'home-ml') + '</div>';
+        const totalColumn = '<div class="tmr-primary-market"><div class="tmr-primary-market-title">Total</div>' + renderPrimaryButton(picks.overTotal, totalLabel(picks.overTotal, 'Over'), 'over-total') + renderPrimaryButton(picks.underTotal, totalLabel(picks.underTotal, 'Under'), 'under-total') + '</div>';
+        const lineFirstSports = sportKey.indexOf('icehockey_nhl') !== -1 || sportKey.indexOf('baseball_mlb') !== -1;
+        return '<div class="tmr-primary-market-grid" data-testid="primary-market-grid" data-column-order="' + (lineFirstSports ? 'line-moneyline-total' : 'moneyline-line-total') + '" onclick="event.stopPropagation()">' +
+            (lineFirstSports ? (spreadColumn + moneylineColumn + totalColumn) : (moneylineColumn + spreadColumn + totalColumn)) +
             '</div>';
     }
 

@@ -38,6 +38,7 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
 
   await expect(primaryGrid, 'Moneyline must be visible in the primary grid').toContainText(/Moneyline/i);
   await expect(primaryGrid, 'Puck Line must be visible in the primary grid').toContainText(/Puck Line/i);
+  await expect(primaryGrid, 'NHL and MLB use line-moneyline-total column order').toHaveAttribute('data-column-order', 'line-moneyline-total');
   await expect(primaryGrid, 'Total must be visible in the primary grid').toContainText(/Total/i);
   await expect(primaryGrid, 'generic spread labels must not appear in the primary grid').not.toContainText(/Away\s+(Spread|Run Line|Puck Line)|Home\s+(Spread|Run Line|Puck Line)/i);
   await expect(primaryGrid, 'spread/run-line/puck-line cells must show actual line values').toContainText(/[+-]\d+(?:\.\d+)?/);
