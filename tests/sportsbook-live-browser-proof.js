@@ -44,8 +44,7 @@ async function main() {
   await waitForBoardSettled(page);
   const cards = page.locator('#gamesListContainer .tmr-market-card');
   await cards.first().waitFor({ state: 'visible', timeout: 30000 });
-  const lakersCard = cards.filter({ hasText: /Lakers|Thunder/i }).first();
-  const perGameCard = await lakersCard.count() ? lakersCard : cards.first();
+  const perGameCard = cards.first();
   await perGameCard.scrollIntoViewIfNeeded();
   await perGameCard.getByRole('button', { name: /Team Totals/i }).first().click();
   await page.waitForTimeout(500);
@@ -72,6 +71,12 @@ async function main() {
     const previewText = await preview.innerText();
     if (!/Risk\s*3\s*units/i.test(previewText) || !/To Win\s*2\.73\s*units/i.test(previewText)) {
       throw new Error(`Units=3 preview did not update correctly: ${previewText}`);
+    }
+    await page.locator('#modeToWin').click();
+    await page.waitForTimeout(500);
+    const toWinPreviewText = await preview.innerText();
+    if (!/Risk\s*3\.30\s*units/i.test(toWinPreviewText) || !/To Win\s*3\s*units/i.test(toWinPreviewText)) {
+      throw new Error(`To Win mode preview did not update correctly: ${toWinPreviewText}`);
     }
     const visiblePreviewCount = await page.locator('#unitsStakePreview, #ttSlipStakePreview, [data-testid="stake-preview"]').evaluateAll((nodes) => nodes.filter((node) => {
       const style = window.getComputedStyle(node);
