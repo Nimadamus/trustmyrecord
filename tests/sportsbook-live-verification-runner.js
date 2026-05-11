@@ -62,6 +62,14 @@ async function main() {
   assert(/[+-]\d+(?:\.\d+)?/.test(gridText), 'spread/run-line/puck-line cells must show actual line values');
   assert(!/Away\s+Money|Home\s+Money/i.test(gridText), 'generic moneyline labels must not clutter the primary grid');
   assert(!/D\.\.\.|[A-Z]\.\.\./.test(gridText), 'primary odds tiles must not show clipped book/team detail text');
+  assert(await card.evaluate((node) => {
+    const matchup = node.querySelector('.tmr-market-matchup');
+    const grid = node.querySelector('.tmr-primary-market-grid');
+    if (!matchup || !grid) return false;
+    const a = matchup.getBoundingClientRect();
+    const b = grid.getBoundingClientRect();
+    return b.left >= a.right + 8 || b.top >= a.bottom + 8;
+  }), 'primary grid must not overlap the team matchup column');
   assert(/Over|O\s*\d/i.test(gridText), 'Over total must be visible in the primary grid');
   assert(/Under|U\s*\d/i.test(gridText), 'Under total must be visible in the primary grid');
 

@@ -44,6 +44,14 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   await expect(primaryGrid, 'spread/run-line/puck-line cells must show actual line values').toContainText(/[+-]\d+(?:\.\d+)?/);
   await expect(primaryGrid, 'generic moneyline labels must not clutter the primary grid').not.toContainText(/Away\s+Money|Home\s+Money/i);
   await expect(primaryGrid, 'primary odds tiles must not show clipped book/team detail text').not.toContainText(/D\.\.\.|[A-Z]\.\.\./);
+  await expect.poll(async () => card.evaluate((node) => {
+    const matchup = node.querySelector('.tmr-market-matchup');
+    const grid = node.querySelector('.tmr-primary-market-grid');
+    if (!matchup || !grid) return false;
+    const a = matchup.getBoundingClientRect();
+    const b = grid.getBoundingClientRect();
+    return b.left >= a.right + 8 || b.top >= a.bottom + 8;
+  }), { message: 'primary grid must not overlap the team matchup column' }).toBe(true);
   await expect(primaryGrid.locator('.tmr-option-detail').first(), 'primary detail text should be hidden to prevent clipped labels').not.toBeVisible();
 
 
