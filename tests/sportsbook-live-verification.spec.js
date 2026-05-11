@@ -140,7 +140,7 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   await expect(card, 'Team Totals should show prices or a clean unavailable state for this card').toContainText(/Team Totals|Market unavailable|Unavailable/i);
 
   const lakersCard = page.locator('#gamesListContainer .tmr-market-card').filter({ hasText: /Lakers|Thunder/i }).first();
-  const perGameCard = await lakersCard.count() ? lakersCard : cards.nth(1);
+  const perGameCard = await lakersCard.count() ? lakersCard : card;
   await expect(perGameCard, 'Lakers/Thunder or another individual game card should be available for per-card market checks').toBeVisible();
   await perGameCard.getByRole('button', { name: /Team Totals/i }).first().click();
   await expect(perGameCard, 'Team Totals should be scoped to the selected game card').toContainText(/Team Totals|Market unavailable|Unavailable/i);
