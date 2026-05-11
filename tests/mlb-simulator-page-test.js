@@ -16,8 +16,8 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260510-notes-cleanup/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260510-notes-cleanup/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260511-source-guard/.test(html), 'live page uses versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260511-source-guard/.test(html), 'live page uses versioned simulator script');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -30,7 +30,7 @@ assert(/Classic Teams/.test(html), 'classic-team preset is present');
 assert(/Mixed Era Matchup/.test(html), 'mixed-era preset is present');
 assert(/class="sim-workflow"/.test(html), 'flagship workflow strip is present');
 assert(/Step 1/.test(html) && /Step 5/.test(html), 'step-based simulator workflow is visible');
-assert(/Projection and input notes/.test(html), 'projection review workflow step is present');
+assert(/<strong>Review<\/strong><small>Results<\/small>/.test(html), 'compact results workflow step is present');
 assert(/Data Notes/.test(html), 'compact data notes area is present');
 assert(/Verified live inputs appear when available/.test(html), 'compact live-input limitation text is present');
 assert(!/No matching current MLB game found|No verified record match available|No verified injury report match available|No verified player roster list is connected|No verified bullpen depth|No verified sportsbook odds match available/.test(html), 'unavailable source wall is not rendered in initial HTML');
@@ -113,8 +113,8 @@ function buildFetchMock(mode) {
       const rosters = {
         109: ['Zac Gallen|P', 'Kevin Ginkel|P', 'Ryan Thompson|P', 'Brandon Pfaadt|P', 'Eduardo Rodriguez|P', 'Gabriel Moreno|C', 'Ketel Marte|2B', 'Geraldo Perdomo|SS', 'Eugenio Suarez|3B', 'Josh Naylor|1B', 'Corbin Carroll|CF', 'Lourdes Gurriel Jr.|LF', 'Jake McCarthy|RF', 'Randal Grichuk|DH'],
         144: ['Bryce Elder|P', 'Aaron Bummer|P', 'Raisel Iglesias|P', 'Chris Sale|P', 'Spencer Strider|P', 'Sean Murphy|C', 'Matt Olson|1B', 'Ozzie Albies|2B', 'Austin Riley|3B', 'Orlando Arcia|SS', 'Michael Harris II|CF', 'Ronald Acuna Jr.|RF', 'Jurickson Profar|LF', 'Marcell Ozuna|DH'],
-        140: ['Jacob deGrom|P', 'MacKenzie Gore|P', 'Chris Martin|P', 'Robert Garcia|P', 'Nathan Eovaldi|P', 'Jonah Heim|C', 'Corey Seager|SS', 'Marcus Semien|2B', 'Josh Jung|1B', 'Wyatt Langford|RF', 'Evan Carter|CF', 'Adolis Garcia|LF', 'Josh Smith|3B'],
-        147: ['Gerrit Cole|P', 'Devin Williams|P', 'Luke Weaver|P', 'Max Fried|P', 'Carlos Rodon|P', 'Austin Wells|C', 'Anthony Volpe|SS', 'Jazz Chisholm Jr.|2B', 'Paul Goldschmidt|1B', 'Aaron Judge|RF', 'Cody Bellinger|CF', 'Jasson Dominguez|LF', 'Ben Rice|1B'],
+        140: ['Jacob deGrom|P', 'MacKenzie Gore|P', 'Chris Martin|P', 'Robert Garcia|P', 'Nathan Eovaldi|P', 'Jonah Heim|C', 'Corey Seager|SS', 'Marcus Semien|2B', 'Josh Jung|1B', 'Wyatt Langford|RF', 'Evan Carter|CF', 'Adolis Garcia|LF', 'Josh Smith|3B', 'Ezequiel Duran|DH'],
+        147: ['Gerrit Cole|P', 'Devin Williams|P', 'Luke Weaver|P', 'Max Fried|P', 'Carlos Rodon|P', 'Austin Wells|C', 'Anthony Volpe|SS', 'Jazz Chisholm Jr.|2B', 'Paul Goldschmidt|1B', 'Aaron Judge|RF', 'Cody Bellinger|CF', 'Jasson Dominguez|LF', 'Ben Rice|1B', 'Giancarlo Stanton|DH'],
         137: ['Logan Webb|P', 'Robbie Ray|P', 'Landen Roupp|P', 'Tyler Mahle|P', 'Adrian Houser|P', 'Jung Hoo Lee|CF', 'Heliot Ramos|LF', 'Casey Schmitt|1B', 'Matt Chapman|3B', 'Patrick Bailey|C', 'Willy Adames|SS', 'Mike Yastrzemski|RF', 'Wilmer Flores|DH'],
       };
       return mockResponse({
@@ -473,7 +473,7 @@ async function flushAsync() {
   assert(!/Not verified for simulated output|Simulated neutral MLB environment|Simulated run time|Not used in this simulation|0 simulated|ABS Challenge|Umpires|Attendance|Venue|First pitch|Weather|Wind/.test(gameNotesHtml), 'pitching and game notes omit placeholder metadata and unused ABS lines');
   assert.strictEqual(elements.copyBoxScoreButton.disabled, false, 'copy box score button enables after simulation');
   assert.strictEqual(elements.saveBoxScoreButton.disabled, false, 'save box score button enables after simulation');
-  assert(/Roster temporarily unavailable/.test(elements.playerBoxScoreContent.innerHTML), 'network-unavailable path labels roster limitation clearly');
+  assert(/Lineup unavailable\. Verified roster data could not be loaded\./.test(elements.playerBoxScoreContent.innerHTML), 'network-unavailable path labels roster limitation clearly');
   const fallbackBox = simulator.state.simulation.boxScore;
   assert.strictEqual(fallbackBox.away.innings.reduce((total, value) => total + value, 0), fallbackBox.away.runs, 'away inning totals equal away final score');
   assert.strictEqual(fallbackBox.home.innings.reduce((total, value) => total + value, 0), fallbackBox.home.runs, 'home inning totals equal home final score');
@@ -506,7 +506,8 @@ async function flushAsync() {
   assert(/Michael Harris II|Ronald Acuna Jr\.|Matt Olson|Ozzie Albies/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders verified Atlanta hitter names');
   assert(/Zac Gallen|Kevin Ginkel|Ryan Thompson/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Arizona pitcher names');
   assert(/Bryce Elder|Aaron Bummer|Raisel Iglesias/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Atlanta pitcher names');
-  assert(/Verified MLB active roster endpoint/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup labels MLB roster source');
+  assert(/Projected lineup from verified MLB active roster endpoint/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup labels MLB roster source');
+  assert(!/Verified ESPN team roster endpoint|ESPN roster endpoint|Jose Fernandez|Jorge Mateo|Dominic Smith|Kyle Farmer|Mike Yastrzemski/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup does not render ESPN/stale wrong-team roster names');
   assert(/\(W\)/.test(rostered.elements.playerBoxScoreContent.innerHTML) && /\(L\)/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching table labels winning and losing pitchers');
   assert(/\(SV\)/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching table labels simulated save pitcher when relief row exists');
   assert(!/\(H\)/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching table does not fake hold labels');

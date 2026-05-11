@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-page-polish.css">
-    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260510-notes-cleanup">
+    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260511-source-guard">
     <!-- legacy guard marker: /static/css/mlb-simulator.css?v=20260505-standalone-box-score -->
     <script src="/static/js/config.js"></script>
     <script src="/static/js/backend-api.js"></script>
@@ -31,7 +31,7 @@
             <div>
                 <p class="sim-kicker">Data Lab</p>
                 <h1>MLB Simulator</h1>
-                <p class="sim-subtitle">Build current-team, classic-team, or mixed-era MLB matchups, choose starter profiles for both clubs, and run a clearly labeled projection with score range, win probability, expected runs, key factors, and data-source transparency.</p>
+                <p class="sim-subtitle">Pick two teams, choose starters, and run a projected matchup.</p>
             </div>
             <div class="sim-status-card" aria-live="polite">
                 <span class="sim-status-dot" aria-hidden="true"></span>
@@ -43,17 +43,17 @@
         </section>
 
         <section class="sim-workflow" aria-label="Simulator workflow">
-            <div><span>Step 1</span><strong>Mode</strong><small>Current, classic, or mixed era</small></div>
-            <div><span>Step 2</span><strong>Teams</strong><small>Pick Team A and Team B</small></div>
-            <div><span>Step 3</span><strong>Starters</strong><small>Choose one profile per side</small></div>
-            <div><span>Step 4</span><strong>Run</strong><small>Generate the matchup</small></div>
-            <div><span>Step 5</span><strong>Review</strong><small>Projection and input notes</small></div>
+            <div><span>Step 1</span><strong>Mode</strong><small>Choose format</small></div>
+            <div><span>Step 2</span><strong>Teams</strong><small>Away and home</small></div>
+            <div><span>Step 3</span><strong>Starters</strong><small>Pick pitchers</small></div>
+            <div><span>Step 4</span><strong>Run</strong><small>Simulate</small></div>
+            <div><span>Step 5</span><strong>Review</strong><small>Results</small></div>
         </section>
 
         <section class="sim-workspace" aria-label="MLB simulator controls">
             <section class="sim-panel sim-control-panel">
                 <div class="sim-panel-heading">
-                    <p class="sim-label">Step 1-4</p>
+                    <p class="sim-label">Simulator</p>
                     <h2>Team Selection</h2>
                 </div>
 
@@ -66,7 +66,7 @@
 
                 <div class="team-picker-grid">
                     <article class="team-picker-card">
-                        <span class="team-side">Team A</span>
+                        <span class="team-side">Away Team</span>
                         <div id="awayPickerIdentity" class="team-picker-identity" aria-live="polite"></div>
                         <label class="sim-field compact-field">
                             <span>Team pool</span>
@@ -92,7 +92,7 @@
                     </article>
 
                     <article class="team-picker-card">
-                        <span class="team-side">Team B</span>
+                        <span class="team-side">Home Team</span>
                         <div id="homePickerIdentity" class="team-picker-identity" aria-live="polite"></div>
                         <label class="sim-field compact-field">
                             <span>Team pool</span>
@@ -133,9 +133,7 @@
                     <a id="viewBoxScoreControl" class="sim-button secondary compact-action view-box-score-link" href="#boxScorePanel" aria-disabled="true">View Box Score</a>
                     <button id="refreshTeamsButton" class="sim-button secondary" type="button">Reset</button>
                 </div>
-                <p class="sim-article-link"><a href="/trustmyrecord-tools/mlb-simulator/">How this simulator works</a></p>
                 <div id="simBoardMessage" class="sim-message" role="status">Local simulator baselines are ready even when provider data is unavailable.</div>
-                <p class="sim-explainer">This simulator uses internal baseline team ratings and historical context. Verified live inputs appear only when matched; unavailable roster lists, confirmed starter status, bullpen workload, and betting-edge claims are not used.</p>
             </section>
 
             <section class="sim-panel sim-score-panel" aria-label="Simulation results">
@@ -180,7 +178,7 @@
                             <small id="homeExpectedTile">Choose team and starter</small>
                         </article>
                     </div>
-                    <p id="keyExplanationValue" class="key-explanation">Select a matchup and run the simulator to generate a projected winner, score range, win probability, and notes.</p>
+                    <p id="keyExplanationValue" class="key-explanation">Run the simulator to generate winner, score range, win probability, and notes.</p>
                     <div class="result-jump-actions">
                         <a id="viewBoxScoreLink" class="sim-button secondary compact-action view-box-score-link" href="#boxScorePanel" aria-disabled="true">View Box Score</a>
                     </div>
@@ -189,7 +187,7 @@
                 <div id="projectionEmptyState" class="projection-empty-state" data-empty-state="ready">
                     <span>Ready to simulate</span>
                     <strong>Select two teams, choose starting pitchers, then run the simulator.</strong>
-                    <p>Generated results will include projected score range, win probability, expected runs, confidence band, and a full inning-by-inning box score.</p>
+                    <p>Results and box score appear here after simulation.</p>
                 </div>
 
                 <div id="projectionShell" class="projection-shell" data-projection-state="not-connected">
@@ -367,7 +365,7 @@
         </section>
     </main>
 
-    <script src="/static/js/mlb-simulator.js?v=20260510-notes-cleanup"></script>
+    <script src="/static/js/mlb-simulator.js?v=20260511-source-guard"></script>
     <!-- legacy guard marker: /static/js/mlb-simulator.js?v=20260505-standalone-box-score -->
 </body>
 </html>

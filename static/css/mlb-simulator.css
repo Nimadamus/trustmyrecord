@@ -2529,3 +2529,256 @@ select.pitcher-select option {
     font-size: 15px !important;
     font-weight: 700 !important;
 }
+
+/* Compact top simulator pass: keep the sportsbook shell, but make team picking
+   the clear primary action before the smaller preview/results area. */
+.mlb-simulator-page .sim-shell {
+    width: min(1180px, calc(100% - 32px));
+    padding: 24px 0 56px;
+}
+
+.mlb-simulator-page .sim-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+    align-items: center;
+    gap: 18px;
+    padding: 6px 0 10px;
+    margin-bottom: 8px;
+}
+
+.mlb-simulator-page .sim-hero h1 {
+    max-width: none;
+    font-size: clamp(36px, 5vw, 62px);
+    line-height: 0.96;
+}
+
+.mlb-simulator-page .sim-subtitle {
+    max-width: 560px;
+    margin-top: 8px;
+    color: var(--sim-muted);
+    font-size: 14px;
+    line-height: 1.45;
+}
+
+.mlb-simulator-page .sim-status-card {
+    min-height: 0;
+    padding: 12px 14px;
+    box-shadow: none;
+}
+
+.mlb-simulator-page .sim-workflow {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.mlb-simulator-page .sim-workflow div {
+    min-height: 0;
+    padding: 8px 10px;
+    background: rgba(3, 7, 14, 0.5);
+}
+
+.mlb-simulator-page .sim-workflow strong {
+    margin: 4px 0 1px;
+    font-size: 15px;
+}
+
+.mlb-simulator-page .sim-workflow span,
+.mlb-simulator-page .sim-workflow small {
+    font-size: 9px;
+}
+
+.mlb-simulator-page .sim-control-panel {
+    grid-column: 1 / -1;
+    max-width: 960px;
+    justify-self: center;
+    width: 100%;
+}
+
+.mlb-simulator-page .sim-score-panel,
+.mlb-simulator-page .box-score-panel {
+    grid-column: 1 / -1;
+}
+
+.mlb-simulator-page .sim-panel {
+    padding: 16px;
+}
+
+.mlb-simulator-page .sim-panel-heading {
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.mlb-simulator-page .sim-toggle.three-up {
+    max-width: 620px;
+    margin: 0 auto 8px;
+    gap: 6px;
+}
+
+.mlb-simulator-page .sim-toggle.three-up button {
+    min-height: 38px;
+    padding: 0 8px;
+    font-size: 12px;
+}
+
+.mlb-simulator-page .sim-mode-help {
+    max-width: 620px;
+    margin: 0 auto 12px;
+    padding: 8px 10px;
+    font-size: 11px;
+    text-align: center;
+}
+
+.mlb-simulator-page .team-picker-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.mlb-simulator-page .team-picker-card {
+    gap: 10px;
+    padding: 12px;
+}
+
+.mlb-simulator-page .team-side {
+    min-height: 0;
+    padding: 4px 8px;
+    border-radius: 8px;
+    font-size: 11px;
+}
+
+.mlb-simulator-page .team-picker-identity {
+    grid-template-columns: 42px minmax(0, 1fr);
+    min-height: 48px;
+    gap: 9px;
+    padding: 8px;
+}
+
+.mlb-simulator-page .picker-logo {
+    width: 38px;
+    height: 38px;
+}
+
+.mlb-simulator-page .team-picker-identity strong {
+    font-size: 16px;
+    line-height: 1.05;
+}
+
+.mlb-simulator-page .team-picker-identity span,
+.mlb-simulator-page .team-meta,
+.mlb-simulator-page .pitcher-meta {
+    font-size: 11px;
+}
+
+.mlb-simulator-page .team-meta,
+.mlb-simulator-page .pitcher-meta {
+    min-height: 0;
+    padding: 7px 8px;
+    line-height: 1.3;
+}
+
+.mlb-simulator-page .sim-actions,
+.mlb-simulator-page .sim-actions-expanded {
+    grid-template-columns: minmax(160px, 220px) minmax(180px, 240px) minmax(130px, 160px) minmax(100px, 130px);
+    align-items: end;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.mlb-simulator-page .matchup-header {
+    grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+    max-width: 780px;
+    margin: 0 auto 10px;
+    gap: 8px;
+}
+
+.mlb-simulator-page .matchup-header article {
+    min-height: 76px;
+    padding: 10px;
+    gap: 4px;
+}
+
+.mlb-simulator-page .matchup-team-logo,
+.mlb-simulator-page .header-logo {
+    width: 38px;
+    height: 38px;
+}
+
+.mlb-simulator-page .matchup-header strong {
+    font-size: clamp(18px, 2.6vw, 28px);
+    line-height: 1.02;
+}
+
+.mlb-simulator-page .matchup-header span,
+.mlb-simulator-page .matchup-header small {
+    font-size: 9px;
+}
+
+.mlb-simulator-page .result-card {
+    max-width: 900px;
+    margin: 0 auto 10px;
+}
+
+.mlb-simulator-page .winner-strip {
+    padding: 10px 12px;
+}
+
+.mlb-simulator-page .winner-strip strong {
+    font-size: clamp(20px, 2.6vw, 32px);
+}
+
+.mlb-simulator-page .scoreboard-readout {
+    grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+    padding: 12px;
+}
+
+.mlb-simulator-page .scoreboard-readout article {
+    min-height: 96px;
+    padding: 10px;
+}
+
+.mlb-simulator-page .scoreboard-readout strong {
+    font-size: clamp(36px, 5vw, 70px);
+}
+
+.mlb-simulator-page .key-explanation,
+.mlb-simulator-page .result-card[data-result-state="empty"] .key-explanation {
+    padding: 10px 12px;
+    font-size: 13px;
+}
+
+.mlb-simulator-page .projection-empty-state {
+    max-width: 760px;
+    margin: 0 auto 10px;
+    padding: 12px;
+}
+
+.mlb-simulator-page .projection-shell {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.mlb-simulator-page .projection-shell > div {
+    min-height: 72px;
+    padding: 10px;
+}
+
+.mlb-simulator-page .projection-value {
+    font-size: clamp(16px, 1.6vw, 22px);
+}
+
+@media (max-width: 920px) {
+    .mlb-simulator-page .sim-workflow,
+    .mlb-simulator-page .team-picker-grid,
+    .mlb-simulator-page .sim-toggle.three-up,
+    .mlb-simulator-page .sim-actions,
+    .mlb-simulator-page .sim-actions-expanded,
+    .mlb-simulator-page .matchup-header,
+    .mlb-simulator-page .scoreboard-readout,
+    .mlb-simulator-page .projection-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .mlb-simulator-page .sim-panel-heading {
+        text-align: left;
+    }
+}

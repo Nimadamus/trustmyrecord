@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-roster-full-guard-20260508';
+    var UI_BUILD = 'mlb-roster-source-guard-20260511';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -156,7 +156,7 @@
     var REPORTED_MISMATCHED_CURRENT_NAMES = {
         ARI: { nolanarenado: true }
     };
-    var MIN_CURRENT_ROSTER_BATTERS = 8;
+    var MIN_CURRENT_ROSTER_BATTERS = 9;
     var MIN_CURRENT_ROSTER_PITCHERS = 5;
 
     var TEAM_COLORS = {
@@ -338,7 +338,7 @@
             relievers: pitchers.length,
             players: hitters.concat(pitchers),
             summary: players.length + ' ESPN roster players',
-            source: 'Verified ESPN team roster endpoint'
+            source: 'ESPN roster endpoint'
         });
     }
     function collectMlbTeamRoster(data, team) {
@@ -347,8 +347,10 @@
         (Array.isArray(data && data.roster) ? data.roster : []).forEach(function (entry) {
             var name = entry && entry.person && entry.person.fullName;
             var position = entry && entry.position && (entry.position.abbreviation || entry.position.name);
-            var teamId = entry && entry.parentTeamId;
+            var teamId = entry && (entry.parentTeamId || entry.teamId || expectedId);
+            var statusCode = entry && entry.status && entry.status.code;
             if (!name || !position) return;
+            if (statusCode && statusCode !== 'A') return;
             players.push({ name: name, position: position, teamId: String(teamId || '') });
         });
         var seen = {};
@@ -366,7 +368,7 @@
             relievers: pitchers.length,
             players: hitters.concat(pitchers),
             summary: players.length + ' MLB active roster players',
-            source: 'Verified MLB active roster endpoint'
+            source: 'Projected lineup from verified MLB active roster endpoint'
         });
     }
     function teamRosterUrl(team) {
@@ -400,10 +402,11 @@
         });
     }
     function rostersForTeams(away, home, context) {
-        var rosters = context && context.extraContext && context.extraContext.rosters ? {
-            away: context.extraContext.rosters.away,
-            home: context.extraContext.rosters.home
-        } : {};
+        var rosters = {};
+        if (context && context.extraContext && context.extraContext.rosters) {
+            if (away && away.era !== 'current') rosters.away = context.extraContext.rosters.away;
+            if (home && home.era !== 'current') rosters.home = context.extraContext.rosters.home;
+        }
         rosters.away = validatedRosterForTeam(away, rosters.away);
         rosters.home = validatedRosterForTeam(home, rosters.home);
         state.liveContext.teamRosters = state.liveContext.teamRosters || {};
@@ -960,12 +963,12 @@
             away: {
                 batters: modeledBatterLines(away, awayLine, random, awayRoster),
                 pitchers: modeledPitcherLines(away, homeLine, awayPitcher, random, awayRoster),
-                rosterSource: awayRoster && awayRoster.players && awayRoster.players.length ? (awayRoster.source || 'Verified active roster names') : 'Roster temporarily unavailable'
+                rosterSource: awayRoster && awayRoster.players && awayRoster.players.length ? (awayRoster.source || 'Projected lineup from verified active roster names') : 'Lineup unavailable. Verified roster data could not be loaded.'
             },
             home: {
                 batters: modeledBatterLines(home, homeLine, random, homeRoster),
                 pitchers: modeledPitcherLines(home, awayLine, homePitcher, random, homeRoster),
-                rosterSource: homeRoster && homeRoster.players && homeRoster.players.length ? (homeRoster.source || 'Verified active roster names') : 'Roster temporarily unavailable'
+                rosterSource: homeRoster && homeRoster.players && homeRoster.players.length ? (homeRoster.source || 'Projected lineup from verified active roster names') : 'Lineup unavailable. Verified roster data could not be loaded.'
             }
         };
     }
@@ -1223,7 +1226,7 @@
         var players = group ? collectRosterPlayers(group) : [];
         if (!players.length) return null;
         var relievers = players.filter(function (player) { return /RP|Relief/i.test(player.position); }).length;
-        return { count: players.length, relievers: relievers, players: players, summary: players.length + ' roster players' + (relievers ? ', ' + relievers + ' RP' : '') };
+        return { count: players.length, relievers: relievers, players: players, summary: players.length + ' ESPN summary roster players' + (relievers ? ', ' + relievers + ' RP' : ''), source: 'ESPN summary roster - not used for current player rows' };
     }
     function summaryContext(summary, away, home) {
         if (!summary) return null;
@@ -1489,7 +1492,7 @@
             }
         }
         if (context && context.extraContext && context.extraContext.rosters && context.extraContext.rosters.away && context.extraContext.rosters.home) {
-            liveFactors.push('Roster context from ESPN: ' + away.abbreviation + ' ' + context.extraContext.rosters.away.summary + '; ' + home.abbreviation + ' ' + context.extraContext.rosters.home.summary + '.');
+            liveFactors.push('ESPN summary roster context was detected but is not used for current-team player rows; player identities require the MLB active roster endpoint.');
         }
         if (context && context.extraContext && context.extraContext.injuries && ((context.extraContext.injuries.away && context.extraContext.injuries.away.relieverCount) || (context.extraContext.injuries.home && context.extraContext.injuries.home.relieverCount))) {
             liveFactors.push('Bullpen context is limited to reliever injury listings; live workload and availability are not connected.');
@@ -1870,7 +1873,7 @@
         var source = players && players.rosterSource ? players.rosterSource : 'Roster temporarily unavailable';
         var hasBatters = players && players.batters && players.batters.length;
         if (!hasBatters) {
-            return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p><div class="sim-empty">Verified roster names are unavailable for this team, so batter rows are hidden instead of filled with placeholders.</div></section>';
+            return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p><div class="sim-empty">Lineup unavailable. Verified roster data could not be loaded.</div></section>';
         }
         return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
             '<div class="player-table-wrap"><table class="player-box-table batting-table"><thead><tr><th>Hitters</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>K</th><th>AVG</th><th>OPS</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div></section>';
@@ -1892,7 +1895,7 @@
         var source = players && players.rosterSource ? players.rosterSource : 'Roster temporarily unavailable';
         var hasPitchers = players && players.pitchers && players.pitchers.length;
         if (!hasPitchers) {
-            return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p><div class="sim-empty">Verified roster names are unavailable for this team, so pitcher rows are hidden instead of filled with placeholders.</div></section>';
+            return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p><div class="sim-empty">Lineup unavailable. Verified roster data could not be loaded.</div></section>';
         }
         return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
             '<div class="player-table-wrap"><table class="player-box-table pitching-table"><thead><tr><th>Pitchers</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th><th>HR</th><th>ERA</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers, pitcherDecisionsForTeam(team, players, result)) + '</tbody></table></div></section>';

@@ -68,7 +68,7 @@ function renderedNames(group) {
     const roster = await simulator.fetchTeamRoster(team);
     assert(roster, team.name + ' loaded a verified current active roster');
     assert.strictEqual(String(roster.teamId), String(team.source.teamId), team.name + ' roster has the selected MLB team id');
-    assert.strictEqual(roster.source, 'Verified MLB active roster endpoint', team.name + ' labels the live roster source');
+    assert.strictEqual(roster.source, 'Projected lineup from verified MLB active roster endpoint', team.name + ' labels the live roster source');
 
     const pitchers = roster.players.filter((player) => /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')));
     const hitters = roster.players.filter((player) => !/^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')));
@@ -93,7 +93,7 @@ function renderedNames(group) {
     LAD: ['Shohei Ohtani'],
     NYY: ['Aaron Judge'],
     SEA: ['Cal Raleigh'],
-    SF: ['Logan Webb'],
+    SF: ['Robbie Ray'],
     WSH: ['CJ Abrams'],
   };
   Object.entries(sentinels).forEach(([abbr, names]) => {
@@ -110,8 +110,8 @@ function renderedNames(group) {
     simulator.state.awayPitcherId = '';
     simulator.state.homePitcherId = '';
     const result = simulator.simulate(team, opponent, null, 'full-roster-' + team.abbreviation, false);
-    assert(result.boxScore.players.away.rosterSource === 'Verified MLB active roster endpoint', team.name + ' rendered away player rows from the verified roster source');
-    assert(result.boxScore.players.home.rosterSource === 'Verified MLB active roster endpoint', opponent.name + ' rendered home player rows from the verified roster source');
+    assert(result.boxScore.players.away.rosterSource === 'Projected lineup from verified MLB active roster endpoint', team.name + ' rendered away player rows from the verified roster source');
+    assert(result.boxScore.players.home.rosterSource === 'Projected lineup from verified MLB active roster endpoint', opponent.name + ' rendered home player rows from the verified roster source');
 
     const awayRosterNames = new Set(rosters[team.abbreviation].players.map((player) => normalizeName(player.name)));
     const homeRosterNames = new Set(rosters[opponent.abbreviation].players.map((player) => normalizeName(player.name)));

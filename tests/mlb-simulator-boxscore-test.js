@@ -112,7 +112,7 @@ function preloadVerifiedRoster(simulator, team) {
     teamId: String(id),
     count: names.length,
     relievers: 3,
-    source: 'Verified MLB active roster endpoint',
+    source: 'Projected lineup from verified MLB active roster endpoint',
     summary: `${names.length} MLB active roster players`,
     uiBuild: simulator.uiBuild,
     players: names.map((entry) => {
