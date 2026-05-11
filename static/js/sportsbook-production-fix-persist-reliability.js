@@ -1316,6 +1316,8 @@
             '.tmr-market-status{padding:7px 11px;border-radius:999px;background:color-mix(in srgb, var(--tmr-accent) 18%, rgba(255,255,255,0.02));border:1px solid color-mix(in srgb, var(--tmr-accent) 40%, rgba(255,255,255,0.08));font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f8fafc;}',
             '.tmr-market-matchup{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;padding:0;border-radius:18px;}',
             '.tmr-team-row{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:10px;color:#f8fafc;}',
+            '.tmr-market-matchup .tmr-team-abbr{align-self:center;justify-self:center;display:inline-flex;align-items:center;justify-content:center;transform:none;margin:0;}',
+            '.tmr-market-matchup .tmr-team-abbr img,.tmr-team-abbr img{display:block;width:100%;height:100%;object-fit:contain;object-position:center;}',
             '.tmr-team-side{display:inline-flex;align-items:center;justify-content:center;min-width:54px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#aeb8c6;}',
             '.tmr-team-abbr{width:30px;height:30px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:11px;font-weight:900;letter-spacing:0.08em;color:#dbe7ef;flex-shrink:0;}',
             '.tmr-team-name{font-size:clamp(18px,2vw,22px);font-weight:800;letter-spacing:-0.03em;line-height:1.05;}',
@@ -1438,6 +1440,7 @@
             '.tmr-primary-market .tmr-option-btn{min-height:56px;height:auto;padding:8px 8px 8px 10px;border-radius:10px;grid-template-columns:minmax(0,1fr) auto;gap:8px;background:linear-gradient(180deg,rgba(35,41,51,0.98),rgba(22,27,35,0.98));}',
             '.tmr-primary-market .tmr-option-topline{display:none;}',
             '.tmr-primary-market .tmr-option-market{font-size:12px;line-height:1.1;font-weight:850;letter-spacing:0;white-space:normal;}',
+            '.tmr-primary-market .tmr-option-market:empty{display:none;}',
             '.tmr-primary-market .tmr-option-detail{font-size:9px;line-height:1.1;text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
             '.tmr-primary-market .tmr-option-odds-wrap{align-items:flex-end;}',
             '.tmr-primary-market .tmr-option-odds-label{display:none;}',
@@ -2013,7 +2016,7 @@
         return '<button class="tmr-option-btn" id="' + optionDomId + '" data-option-id="' + escapeHtml(optionKey) + '" onclick="window.tmrSelectOption(this.dataset.optionId)">' +
             '<div class="tmr-option-main">' +
             '<div class="tmr-option-topline"><span class="tmr-option-tag">' + escapeHtml(optionTag) + '</span>' + (optionLine ? '<span class="tmr-option-line">' + escapeHtml(optionLine) + '</span>' : '') + '</div>' +
-            '<div class="tmr-option-market">' + escapeHtml(option.selection_label) + '</div>' +
+            '<div class="tmr-option-market">' + escapeHtml(option.display_label != null ? option.display_label : option.selection_label) + '</div>' +
             '<div class="' + detailClass + '">' + escapeHtml(detailLabel) + '</div>' +
             '</div>' +
             '<div class="tmr-option-odds-wrap"><span class="tmr-option-odds-label">American</span><div class="tmr-option-odds">' + escapeHtml(option.odds_display || 'Manual') + '</div></div>' +
@@ -2072,17 +2075,31 @@
         const findTotal = function(items, side, fallbackIndex) { return items.find(function(entry) { const text = String((entry.item && (entry.item.selection || entry.item.selection_label)) || '').toLowerCase(); return text.indexOf(side) !== -1; }) || items[fallbackIndex] || null; };
         const picks = { awayMoneyline: findSide(moneylineItems, awayKey, 0), homeMoneyline: findSide(moneylineItems, homeKey, 1), awaySpread: findSide(spreadItems, awayKey, 0), homeSpread: findSide(spreadItems, homeKey, 1), overTotal: findTotal(totalItems, 'over', 0), underTotal: findTotal(totalItems, 'under', 1) };
         if (!picks.awayMoneyline || !picks.homeMoneyline || !picks.awaySpread || !picks.homeSpread || !picks.overTotal || !picks.underTotal) return '';
-        const renderPrimaryButton = function(entry, label, suffix) {
+        const lineValue = function(option, signed) {
+            const raw = option && option.line != null && option.line !== '' ? option.line : (option && option.line_display != null ? option.line_display : '');
+            const match = String(raw == null ? '' : raw).match(/[+-]?\d+(?:\.\d+)?/);
+            if (!match) return '';
+            const number = Number(match[0]);
+            if (!Number.isFinite(number)) return '';
+            const absValue = Math.abs(number);
+            const clean = Math.abs(absValue % 1) < 0.001 ? String(Math.trunc(absValue)) : String(absValue).replace(/0+$/, '').replace(/\.$/, '');
+            return signed ? ((number > 0 ? '+' : number < 0 ? '-' : '') + clean) : clean;
+        };
+        const totalLabel = function(entry, side) {
+            const total = lineValue(entry && entry.item, false);
+            return side + (total ? ' ' + total : '');
+        };
+        const renderPrimaryButton = function(entry, displayLabel, suffix) {
             const group = entry.group || {};
             const option = entry.item || {};
             const optionKey = [game.id || ('game-' + cardIndex), 'primary', group.key || option.market_key || option.market_type || 'market', option.id || suffix].join('|');
             const optionDomId = 'option-' + safeDomId(optionKey);
-            return renderBoardOptionButton(Object.assign({}, option, { selection_label: label, book_title: option.book_title || option.source_label || 'DraftKings' }), optionKey, optionDomId, game);
+            return renderBoardOptionButton(Object.assign({}, option, { display_label: displayLabel, book_title: option.book_title || option.source_label || 'DraftKings' }), optionKey, optionDomId, game);
         };
         return '<div class="tmr-primary-market-grid" data-testid="primary-market-grid" onclick="event.stopPropagation()">' +
-            '<div class="tmr-primary-market"><div class="tmr-primary-market-title">Moneyline</div>' + renderPrimaryButton(picks.awayMoneyline, 'Away Moneyline', 'away-ml') + renderPrimaryButton(picks.homeMoneyline, 'Home Moneyline', 'home-ml') + '</div>' +
-            '<div class="tmr-primary-market"><div class="tmr-primary-market-title">' + escapeHtml(spreadLabel) + '</div>' + renderPrimaryButton(picks.awaySpread, 'Away ' + spreadLabel, 'away-spread') + renderPrimaryButton(picks.homeSpread, 'Home ' + spreadLabel, 'home-spread') + '</div>' +
-            '<div class="tmr-primary-market"><div class="tmr-primary-market-title">Total</div>' + renderPrimaryButton(picks.overTotal, 'Over Total', 'over-total') + renderPrimaryButton(picks.underTotal, 'Under Total', 'under-total') + '</div>' +
+            '<div class="tmr-primary-market"><div class="tmr-primary-market-title">Moneyline</div>' + renderPrimaryButton(picks.awayMoneyline, '', 'away-ml') + renderPrimaryButton(picks.homeMoneyline, '', 'home-ml') + '</div>' +
+            '<div class="tmr-primary-market"><div class="tmr-primary-market-title">' + escapeHtml(spreadLabel) + '</div>' + renderPrimaryButton(picks.awaySpread, lineValue(picks.awaySpread.item, true), 'away-spread') + renderPrimaryButton(picks.homeSpread, lineValue(picks.homeSpread.item, true), 'home-spread') + '</div>' +
+            '<div class="tmr-primary-market"><div class="tmr-primary-market-title">Total</div>' + renderPrimaryButton(picks.overTotal, totalLabel(picks.overTotal, 'Over'), 'over-total') + renderPrimaryButton(picks.underTotal, totalLabel(picks.underTotal, 'Under'), 'under-total') + '</div>' +
             '</div>';
     }
 

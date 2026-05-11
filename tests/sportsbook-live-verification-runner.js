@@ -53,6 +53,9 @@ async function main() {
   assert(/Moneyline/i.test(gridText), 'Moneyline must be visible in the primary grid');
   assert(/Puck Line/i.test(gridText), 'Puck Line must be visible in the primary grid');
   assert(/Total/i.test(gridText), 'Total must be visible in the primary grid');
+  assert(!/Away\s+(Spread|Run Line|Puck Line)|Home\s+(Spread|Run Line|Puck Line)/i.test(gridText), 'generic spread labels must not appear in the primary grid');
+  assert(/[+-]\d+(?:\.\d+)?/.test(gridText), 'spread/run-line/puck-line cells must show actual line values');
+  assert(!/Away\s+Money|Home\s+Money/i.test(gridText), 'generic moneyline labels must not clutter the primary grid');
   assert(/Over|O\s*\d/i.test(gridText), 'Over total must be visible in the primary grid');
   assert(/Under|U\s*\d/i.test(gridText), 'Under total must be visible in the primary grid');
 
