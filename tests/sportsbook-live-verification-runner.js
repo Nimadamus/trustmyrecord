@@ -70,7 +70,7 @@ async function main() {
     return input && String(input.value || '').trim().length > 0;
   }, null, { timeout: 10000 });
   await expectVisible(page.locator('#unitsInput'), 'units input should remain visible');
-  await expectVisible(page.locator('#unitsModeToggle, [data-stake-mode]').first(), 'stake mode toggle should remain visible');
+  await expectVisible(page.locator('#unitsModeToggle, [data-testid="stake-mode-toggle"]').first(), 'stake mode toggle should remain visible');
   const preview = page.locator('#unitsStakePreview, #ttSlipStakePreview, [data-testid="stake-preview"]').first();
   await expectVisible(preview, 'risk/to win preview should be visible');
   const previewText = await preview.innerText();
