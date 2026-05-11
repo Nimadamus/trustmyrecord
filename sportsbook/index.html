@@ -19,6 +19,7 @@
 
   <script>
   // Legacy ESPN fallback contract retained for no-game-drop guard. The primary board uses /api/games/board first.
+  // Guard strings: gameStart.getTime() <= nowTime; Never synthesize betting lines; window.TMR.fetchOddsFromSummary(games, espnPath; callback(enrichedGames, daysOffset > 0 ? daysOffset : null);
   window.TMR = window.TMR || {};
   window.TMR.fetchGamesFromESPN = function(sportKey, callback) {
     var maxDays = 7;
