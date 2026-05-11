@@ -21,6 +21,10 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   await expect(page.locator('.tmr-global-nav'), 'global TrustMyRecord nav should be visible above sportsbook content').toBeVisible({ timeout: 15000 });
   await expect(page.getByRole('link', { name: /Click Here to See Pending Picks/i }), 'pending picks link text should replace old pick history label').toHaveAttribute('href', /\/my-pending-picks\//);
   await expect(page.getByText(/Open Pick History/i)).toHaveCount(0);
+  await expect.poll(async () => page.getByRole('link', { name: /Click Here to See Pending Picks/i }).first().evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    return rect.left >= 0 && rect.right <= window.innerWidth;
+  }), { message: 'pending picks link should not be clipped' }).toBe(true);
 
   await clickSport(page, 'NHL');
   await waitForBoardSettled(page);
@@ -112,6 +116,11 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
     .toBeGreaterThan(0);
 
   await primaryButtons.first().click();
+  await expect.poll(async () => primaryGrid.locator('button:not([disabled])').evaluateAll((buttons) => {
+    const heights = buttons.map((button) => Math.round(button.getBoundingClientRect().height));
+    return Math.max(...heights) - Math.min(...heights);
+  }), { message: 'primary odds buttons should keep uniform dimensions after selection' }).toBeLessThanOrEqual(1);
+  await expect(primaryGrid, 'selected state should not add a visible selected badge inside primary odds cells').not.toContainText(/selected/i);
 
   const slip = page.locator('#pickDetails, .tmr-slip-panel').first();
   await expect(slip, 'pick slip should be visible').toBeVisible();

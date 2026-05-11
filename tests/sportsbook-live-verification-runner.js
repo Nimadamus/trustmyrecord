@@ -40,6 +40,10 @@ async function main() {
   const pendingHref = await page.getByRole('link', { name: /Click Here to See Pending Picks/i }).first().getAttribute('href');
   assert(/\/my-pending-picks\//.test(pendingHref || ''), 'pending picks link should target /my-pending-picks/');
   assert.strictEqual(await page.getByText(/Open Pick History/i).count(), 0, 'old Open Pick History label should be gone');
+  assert(await page.getByRole('link', { name: /Click Here to See Pending Picks/i }).first().evaluate((node) => {
+    const rect = node.getBoundingClientRect();
+    return rect.left >= 0 && rect.right <= window.innerWidth;
+  }), 'pending picks link should not be clipped');
 
   await clickSport(page, 'NHL');
   await waitForBoardSettled(page);
@@ -110,6 +114,12 @@ async function main() {
   assert(visibleSecondaryGroupsAfterTab > 0, 'secondary markets should reveal compact groups only after a tab click');
 
   await primaryButtons.first().click();
+  const primaryHeightDelta = await primaryGrid.locator('button:not([disabled])').evaluateAll((buttons) => {
+    const heights = buttons.map((button) => Math.round(button.getBoundingClientRect().height));
+    return Math.max(...heights) - Math.min(...heights);
+  });
+  assert(primaryHeightDelta <= 1, 'primary odds buttons should keep uniform dimensions after selection');
+  assert(!/selected/i.test(await primaryGrid.innerText()), 'selected state should not add a visible selected badge inside primary odds cells');
   const oddsInput = page.locator('#pickOddsInput');
   await expectVisible(oddsInput, 'pick slip odds input should be visible');
   await page.waitForFunction(() => {
