@@ -45,6 +45,7 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   await expect(primaryGrid, 'Puck Line must be visible in the primary grid').toContainText(/Puck Line/i);
   await expect(primaryGrid, 'primary board should use team-moneyline-line-total order').toHaveAttribute('data-column-order', 'moneyline-line-total');
   await expect(primaryGrid, 'Total must be visible in the primary grid').toContainText(/Total/i);
+  await expect(page.getByRole('button', { name: /^Props$/i }), 'Props must stay hidden until sportsbook props are supported').toHaveCount(0);
   await expect(primaryGrid, 'generic spread labels must not appear in the primary grid').not.toContainText(/Away\s+(Spread|Run Line|Puck Line)|Home\s+(Spread|Run Line|Puck Line)/i);
   await expect(primaryGrid, 'spread/run-line/puck-line cells must show actual line values').toContainText(/[+-]\d+(?:\.\d+)?/);
   await expect(primaryGrid, 'generic moneyline labels must not clutter the primary grid').not.toContainText(/Away\s+Money|Home\s+Money/i);
@@ -114,6 +115,8 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
 
   await expect(card.getByRole('button', { name: /Game Lines/i }).first()).toBeVisible();
   await expect(card.getByRole('button', { name: /Team Totals/i }).first()).toBeVisible();
+  await expect(card.getByRole('button', { name: /Quarters|Periods|Halves|1H Lines/i }).first()).toBeVisible();
+  await expect(card.getByRole('button', { name: /^Props$/i }), 'per-game Props button must not render').toHaveCount(0);
 
   await expect
     .poll(
@@ -134,6 +137,16 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
       return style.display !== 'none' && style.visibility !== 'hidden' && node.getClientRects().length > 0;
     }).length), { message: 'secondary markets should reveal compact groups only after a tab click' })
     .toBeGreaterThan(0);
+  await expect(card, 'Team Totals should show prices or a clean unavailable state for this card').toContainText(/Team Totals|Market unavailable|Unavailable/i);
+
+  const lakersCard = page.locator('#gamesListContainer .tmr-market-card').filter({ hasText: /Lakers|Thunder/i }).first();
+  const perGameCard = await lakersCard.count() ? lakersCard : cards.nth(1);
+  await expect(perGameCard, 'Lakers/Thunder or another individual game card should be available for per-card market checks').toBeVisible();
+  await perGameCard.getByRole('button', { name: /Team Totals/i }).first().click();
+  await expect(perGameCard, 'Team Totals should be scoped to the selected game card').toContainText(/Team Totals|Market unavailable|Unavailable/i);
+  await expect(perGameCard.getByRole('button', { name: /^Props$/i }), 'Props must stay hidden on every game card').toHaveCount(0);
+  await perGameCard.getByRole('button', { name: /Quarters|Periods|Halves|1H Lines/i }).first().click();
+  await expect(perGameCard, 'Quarters/segments should show prices or a clean unavailable state for the selected game card').toContainText(/Quarters|Periods|Halves|1H Lines|Market unavailable|Unavailable/i);
 
   await primaryButtons.first().click();
   await expect.poll(async () => primaryGrid.locator('button:not([disabled])').evaluateAll((buttons) => {
@@ -152,11 +165,26 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   await expect(page.locator('#ttSlipUnits'), 'single visible units input should remain available').toBeVisible();
   await expect(page.locator('#unitsInput'), 'internal units input should be hidden to avoid duplicate visible unit boxes').not.toBeVisible();
   await expect(page.locator('#unitsModeToggle, [data-testid="stake-mode-toggle"]').first(), 'stake mode toggle should remain available').toBeVisible();
-  const stakePreview = page.locator('#unitsStakePreview, #ttSlipStakePreview, [data-testid="stake-preview"]').first();
+  const stakePreview = page.locator('#ttSlipStakePreview, [data-testid="stake-preview"]').first();
   await expect(stakePreview, 'risk/to win preview should be present').toContainText(/Risk/i);
   await expect(stakePreview, 'risk/to win preview should be present').toContainText(/To Win/i);
   await expect(stakePreview, 'risk/to win preview should not be stale').not.toContainText(/updates after odds are entered/i);
   await expect(stakePreview, 'risk/to win preview should show calculated unit values').toContainText(/unit/i);
+  await page.locator('#pickOddsInput').fill('-110');
+  await page.locator('#ttSlipUnits').fill('3');
+  await page.locator('#ttSlipUnits').dispatchEvent('input');
+  await expect(stakePreview, 'risk mode should update immediately when visible units changes').toContainText(/Risk\s*3\s*units/i);
+  await expect(stakePreview, 'risk mode should calculate To Win from the updated visible units').toContainText(/To Win\s*2\.73\s*units/i);
+  await expect
+    .poll(async () => page.locator('#unitsStakePreview, #ttSlipStakePreview, [data-testid="stake-preview"]').evaluateAll((nodes) => nodes.filter((node) => {
+      const style = window.getComputedStyle(node);
+      return !node.hidden && style.display !== 'none' && style.visibility !== 'hidden' && node.textContent.trim().length > 0;
+    }).length), { message: 'Risk / To Win summary should render once, not as duplicate repeated text' })
+    .toBe(1);
+  await page.locator('#modeToWin').click();
+  await expect(stakePreview, 'to-win mode should calculate required risk for 3 units won').toContainText(/Risk\s*3\.30\s*units/i);
+  await expect(stakePreview, 'to-win mode should keep the target win amount at 3 units').toContainText(/To Win\s*3\s*units/i);
+  await page.screenshot({ path: path.join(process.cwd(), 'artifacts', 'sportsbook-slip-units-3-proof.png'), fullPage: true });
 
   for (const sport of ['NBA', 'MLB', 'NFL', 'NCAAB', 'NCAAF', 'Soccer']) {
     await clickSport(page, sport);
