@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="canonical" href="https://trustmyrecord.com/tools/">
+    <title>Tools Hub | TrustMyRecord</title>
+    <meta name="description" content="TrustMyRecord tools hub for simulations, trend research, model building, public records, verified pick tracking, and handicapper discovery.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260512-tools-hub">
+    <style>
+        :root {
+            --tools-bg: #07101f;
+            --tools-panel: rgba(15, 27, 46, 0.88);
+            --tools-panel-strong: rgba(18, 31, 52, 0.96);
+            --tools-border: rgba(148, 163, 184, 0.2);
+            --tools-text: #f8fafc;
+            --tools-muted: #a8b3c5;
+            --tools-teal: #2dd4bf;
+            --tools-blue: #38bdf8;
+            --tools-gold: #f59e0b;
+        }
+
+        body {
+            margin: 0;
+            background:
+                radial-gradient(circle at 12% 8%, rgba(45, 212, 191, 0.15), transparent 32%),
+                radial-gradient(circle at 88% 10%, rgba(56, 189, 248, 0.12), transparent 28%),
+                linear-gradient(180deg, var(--tools-bg) 0%, #0b1220 100%);
+            color: var(--tools-text);
+            font-family: "Inter", system-ui, sans-serif;
+        }
+
+        .tools-shell {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 112px 0 64px;
+        }
+
+        .tools-hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr);
+            gap: 28px;
+            align-items: stretch;
+            margin-bottom: 28px;
+        }
+
+        .tools-hero-copy {
+            padding: clamp(28px, 4vw, 46px);
+            border: 1px solid var(--tools-border);
+            background: linear-gradient(135deg, rgba(15, 27, 46, 0.9), rgba(9, 17, 32, 0.94));
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+        }
+
+        .tools-kicker,
+        .tool-card span,
+        .tools-stat span {
+            color: var(--tools-teal);
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 12px 0 16px;
+            max-width: 780px;
+            color: #fff;
+            font-family: "Barlow", "Inter", system-ui, sans-serif;
+            font-size: clamp(44px, 6vw, 76px);
+            line-height: 0.94;
+            letter-spacing: 0;
+        }
+
+        .tools-lead {
+            max-width: 720px;
+            margin: 0;
+            color: #dbe8f8;
+            font-size: clamp(17px, 2vw, 21px);
+            line-height: 1.55;
+            font-weight: 600;
+        }
+
+        .tools-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 24px;
+        }
+
+        .tools-actions a,
+        .tool-card a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            padding: 0 16px;
+            border-radius: 8px;
+            color: #06111f;
+            background: linear-gradient(135deg, var(--tools-teal), var(--tools-blue));
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+
+        .tools-actions a.secondary {
+            color: #e8f2ff;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .tools-status {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 18px;
+            border: 1px solid var(--tools-border);
+            background: var(--tools-panel);
+        }
+
+        .tools-stat {
+            min-height: 118px;
+            padding: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 8px;
+            background: rgba(8, 16, 31, 0.72);
+        }
+
+        .tools-stat strong {
+            display: block;
+            margin-top: 12px;
+            color: #fff;
+            font-size: 26px;
+            line-height: 1;
+        }
+
+        .tools-stat p {
+            margin: 8px 0 0;
+            color: var(--tools-muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+
+        .tool-card {
+            min-height: 238px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 22px;
+            border: 1px solid var(--tools-border);
+            border-radius: 8px;
+            background: var(--tools-panel-strong);
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+        }
+
+        .tool-card h2 {
+            margin: 0;
+            color: #fff;
+            font-size: 22px;
+            line-height: 1.12;
+        }
+
+        .tool-card p {
+            flex: 1;
+            margin: 0;
+            color: #cbd5e1;
+            line-height: 1.55;
+            font-size: 14px;
+        }
+
+        .tool-card a.is-muted {
+            color: #dbe8f8;
+            border: 1px solid rgba(148, 163, 184, 0.24);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tools-note {
+            margin-top: 18px;
+            padding: 16px 18px;
+            border: 1px solid rgba(245, 158, 11, 0.28);
+            border-radius: 8px;
+            background: rgba(245, 158, 11, 0.08);
+            color: #f8e7bd;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        @media (max-width: 920px) {
+            .tools-shell { padding-top: 94px; }
+            .tools-hero,
+            .tools-grid { grid-template-columns: 1fr; }
+            .tools-status { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 560px) {
+            .tools-shell { width: min(100% - 24px, 1180px); }
+            .tools-status { grid-template-columns: 1fr; }
+            .tools-actions a { width: 100%; }
+        }
+    </style>
+</head>
+<body class="tmr-site-shell">
+    <main class="tools-shell">
+        <section class="tools-hero" aria-labelledby="tools-title">
+            <div class="tools-hero-copy">
+                <p class="tools-kicker">Tools Hub</p>
+                <h1 id="tools-title">TrustMyRecord tools for public sports records.</h1>
+                <p class="tools-lead">A dedicated hub for simulations, trend research, model building, verified pick tracking, public records, and handicapper discovery.</p>
+                <div class="tools-actions" aria-label="Primary tools">
+                    <a href="/mlb-simulator/">Open MLB Simulator</a>
+                    <a class="secondary" href="/trendspotter/">Open Trendspotter</a>
+                    <a class="secondary" href="/model-builder/">Open Model Builder</a>
+                </div>
+            </div>
+            <aside class="tools-status" aria-label="Tools coverage">
+                <div class="tools-stat">
+                    <span>Records</span>
+                    <strong>Public</strong>
+                    <p>Profiles and leaderboards keep performance visible instead of buried in screenshots.</p>
+                </div>
+                <div class="tools-stat">
+                    <span>Picks</span>
+                    <strong>Locked</strong>
+                    <p>Pick tracking is designed around timestamped records and transparent results.</p>
+                </div>
+                <div class="tools-stat">
+                    <span>Research</span>
+                    <strong>Tools</strong>
+                    <p>Simulator, trend, and model workflows live beside the record product.</p>
+                </div>
+                <div class="tools-stat">
+                    <span>Discovery</span>
+                    <strong>Ranked</strong>
+                    <p>Find handicappers by public performance, not marketing claims.</p>
+                </div>
+            </aside>
+        </section>
+
+        <section class="tools-grid" aria-label="TrustMyRecord tool cards">
+            <article class="tool-card">
+                <span>Simulator</span>
+                <h2>MLB Simulator</h2>
+                <p>Run matchup estimates with current and classic team profiles, starters, and projected outcomes.</p>
+                <a href="/mlb-simulator/">Open Tool</a>
+            </article>
+            <article class="tool-card">
+                <span>Trends</span>
+                <h2>Trendspotter</h2>
+                <p>Scan market and team patterns that can support research before a pick is locked.</p>
+                <a href="/trendspotter/">Open Tool</a>
+            </article>
+            <article class="tool-card">
+                <span>Models</span>
+                <h2>Model Builder</h2>
+                <p>Build and compare model assumptions in a dedicated workspace for betting research.</p>
+                <a href="/model-builder/">Open Tool</a>
+            </article>
+            <article class="tool-card">
+                <span>Records</span>
+                <h2>Public Records</h2>
+                <p>Open verified profiles and inspect records, sport splits, and performance history.</p>
+                <a href="/handicappers/" class="is-muted">Find Handicappers</a>
+            </article>
+            <article class="tool-card">
+                <span>Tracking</span>
+                <h2>Verified Pick Tracking</h2>
+                <p>Lock picks before games start and build a permanent public record tied to your profile.</p>
+                <a href="/sportsbook/" class="is-muted">Make Picks</a>
+            </article>
+            <article class="tool-card">
+                <span>Discovery</span>
+                <h2>Leaderboards</h2>
+                <p>Use rankings and handicapper discovery tools to compare performance across public records.</p>
+                <a href="/leaderboards/" class="is-muted">View Rankings</a>
+            </article>
+        </section>
+
+        <p class="tools-note">Tools are informational and record-focused. TrustMyRecord does not guarantee betting outcomes.</p>
+    </main>
+
+    <script src="/static/js/tmr-sitewide.js?v=20260512-tools-hub"></script>
+</body>
+</html>
