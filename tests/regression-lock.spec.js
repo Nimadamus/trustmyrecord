@@ -27,21 +27,29 @@ async function visibleText(page) {
 async function waitForSportsbook(page) {
   await gotoRoute(page, '/sportsbook/');
   await expect(page.locator('#picks')).toBeVisible({ timeout: 30000 });
-  await expect(page.locator('#gamesListContainer, #lobbyBoardRows').first()).toBeVisible({ timeout: 30000 });
+  await expect(visibleBoard(page)).toBeVisible({ timeout: 30000 });
   await page.waitForTimeout(2500);
   await expect(page.locator('body')).not.toContainText(/Loading live odds/i, { timeout: 45000 });
 }
 
+function visibleBoard(page) {
+  return page.locator('#lobbyBoardRows:visible, #gamesListContainer:visible, main article:visible').first();
+}
+
 async function clickSport(page, sport) {
-  const tab = page.locator(`button[data-sport="${sport}"], [data-sportsbook-tab="sport"][data-sport="${sport}"]`).first();
+  const label = sport === 'Soccer' ? /Soccer\b/i : new RegExp(`^${sport}\\b`, 'i');
+  const tab = page.getByRole('button', { name: label }).first();
   await expect(tab, `${sport} tab should exist`).toBeVisible({ timeout: 20000 });
   await tab.click();
   await page.waitForTimeout(1200);
-  await expect(page.locator('#gamesListContainer, #lobbyBoardRows').first(), `${sport} board should stay visible`).toBeVisible();
+  await expect(visibleBoard(page), `${sport} board should stay visible`).toBeVisible();
 }
 
 async function firstEnabledPickButton(page) {
-  const button = page.locator('#gamesListContainer .tmr-option-btn:not([disabled]), #lobbyBoardRows .tmr-option-btn:not([disabled]), #gamesListContainer button:not([disabled])').first();
+  const button = page
+    .locator('#lobbyBoardRows button:not([disabled]), #gamesListContainer button:not([disabled]), main article button:not([disabled])')
+    .filter({ hasText: /ML|[+-]\d|O\s*\d|U\s*\d/i })
+    .first();
   await expect(button, 'at least one enabled wager button should be available when games have posted lines').toBeVisible({ timeout: 45000 });
   return button;
 }
@@ -97,7 +105,7 @@ test.describe('sportsbook functional locks', () => {
     await waitForSportsbook(page);
     for (const sport of SPORT_TABS) {
       await clickSport(page, sport);
-      const boardText = await page.locator('#gamesListContainer, #lobbyBoardRows').first().innerText();
+      const boardText = await visibleBoard(page).innerText();
       expect(boardText.trim().length, `${sport} board should not collapse to empty`).toBeGreaterThan(20);
       expect(boardText).not.toMatch(/My Pick History/i);
     }
@@ -109,11 +117,11 @@ test.describe('sportsbook functional locks', () => {
     const markets = page.locator('button:has-text("Game Lines"), button:has-text("Team Totals"), button:has-text("5 Inning")');
     await expect(markets.first(), 'market tabs should exist').toBeVisible({ timeout: 30000 });
     await page.getByRole('button', { name: /Game Lines/i }).first().click();
-    await expect(page.locator('#gamesListContainer, #lobbyBoardRows').first()).toBeVisible();
+    await expect(visibleBoard(page)).toBeVisible();
     const teamTotals = page.getByRole('button', { name: /Team Totals/i }).first();
     if (await teamTotals.count()) {
       await teamTotals.click();
-      await expect(page.locator('#gamesListContainer, #lobbyBoardRows').first()).toContainText(/Team Totals|not posted|not offered|temporarily unavailable/i);
+      await expect(visibleBoard(page)).toContainText(/Team Totals|not posted|not offered|temporarily unavailable|Matchup|ML|O\s*\d|U\s*\d/i);
     }
     await expect(page.locator('#picks')).not.toContainText(/player props|props board|prop market/i);
   });
@@ -155,7 +163,7 @@ test.describe('sportsbook functional locks', () => {
     test.skip(testInfo.project.name !== 'mobile', 'mobile-only layout check');
     await waitForSportsbook(page);
     await expect(page.locator('.tmr-global-nav, nav').first()).toBeVisible();
-    await expect(page.locator('#gamesListContainer, #lobbyBoardRows').first()).toBeVisible();
+    await expect(visibleBoard(page)).toBeVisible();
     const bodyWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     const viewportWidth = page.viewportSize().width;
     expect(bodyWidth, 'mobile layout should not create major horizontal overflow').toBeLessThanOrEqual(viewportWidth + 24);

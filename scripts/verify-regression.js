@@ -19,10 +19,9 @@ const checks = [
   ['unit/static: critical DOM/content locks', 'node', ['tests/critical-dom-content-lock-test.js']],
   ['unit/static: model builder shell', 'node', ['tests/model-builder-shell-test.js']],
   ['unit/static: trend spotter guided flow', 'node', ['tests/trendspotter-accuracy-test.js']],
-  ['live static: sportsbook public loading', 'node', ['tests/sportsbook-public-loading-regression-test.js']],
+  ['source/static: sportsbook public loading contract', 'node', ['tests/sportsbook-public-loading-regression-test.js']],
   ['forbidden text scan', 'node', ['scripts/forbidden-text-scan.js']],
   ['visual/function: Playwright regression lock', 'npx', ['playwright', 'test', '--config=playwright.regression.config.cjs']],
-  ['live browser: sportsbook proof', 'npx', ['playwright', 'test', '--config=playwright.config.cjs']],
 ];
 
 function runCheck(name, command, args) {
@@ -34,7 +33,7 @@ function runCheck(name, command, args) {
     stdio: ['ignore', 'pipe', 'pipe'],
     env: {
       ...process.env,
-      TMR_REGRESSION_BASE_URL: process.env.TMR_REGRESSION_BASE_URL || 'https://trustmyrecord.com',
+      TMR_REGRESSION_BASE_URL: process.env.TMR_REGRESSION_BASE_URL || 'http://127.0.0.1:4173',
       TMR_SPORTSBOOK_URL: process.env.TMR_SPORTSBOOK_URL || 'https://trustmyrecord.com/sportsbook/',
     },
   });
@@ -86,8 +85,8 @@ const routesChecked = [
 const report = {
   started_at: startedAt.toISOString(),
   finished_at: new Date().toISOString(),
-  base_url: process.env.TMR_REGRESSION_BASE_URL || 'https://trustmyrecord.com',
-  deployed_live_url_checked: process.env.TMR_SPORTSBOOK_URL || 'https://trustmyrecord.com/sportsbook/',
+  base_url: process.env.TMR_REGRESSION_BASE_URL || 'http://127.0.0.1:4173',
+  deployed_live_url_checked: null,
   routes_checked: routesChecked,
   screenshots_baseline_count: baselineFiles.length,
   screenshots_baselines: baselineFiles,

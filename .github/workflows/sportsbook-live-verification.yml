@@ -2,18 +2,15 @@ name: Sportsbook Live Verification
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - 'sportsbook/**'
-      - 'static/js/sportsbook-production-fix-persist-reliability.js'
-      - 'static/css/**sportsbook**'
-      - 'tests/sportsbook-live-verification.*'
-      - 'playwright.config.cjs'
-      - 'package.json'
-      - '.github/workflows/sportsbook-live-verification.yml'
+  workflow_run:
+    workflows:
+      - pages-build-deployment
+    types:
+      - completed
 
 jobs:
   verify-live-sportsbook:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

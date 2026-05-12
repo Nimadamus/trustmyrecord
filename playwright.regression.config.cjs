@@ -1,5 +1,8 @@
 const { defineConfig, devices } = require('@playwright/test');
 
+const localBaseURL = 'http://127.0.0.1:4173';
+const baseURL = process.env.TMR_REGRESSION_BASE_URL || localBaseURL;
+
 module.exports = defineConfig({
   testDir: './tests',
   testMatch: /regression-lock\.spec\.js/,
@@ -14,8 +17,14 @@ module.exports = defineConfig({
   outputDir: 'artifacts/regression-playwright-results',
   reporter: [['line']],
   snapshotPathTemplate: 'tests/visual-baselines/{arg}{ext}',
+  webServer: process.env.TMR_REGRESSION_SKIP_SERVER === '1' ? undefined : {
+    command: 'node scripts/serve-static-regression.js',
+    url: localBaseURL,
+    reuseExistingServer: true,
+    timeout: 120000,
+  },
   use: {
-    baseURL: process.env.TMR_REGRESSION_BASE_URL || 'https://trustmyrecord.com',
+    baseURL,
     browserName: 'chromium',
     actionTimeout: 20000,
     navigationTimeout: 45000,
