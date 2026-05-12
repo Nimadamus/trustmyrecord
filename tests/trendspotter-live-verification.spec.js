@@ -8,6 +8,18 @@ const ARTIFACT_DIR = path.join(process.cwd(), 'artifacts');
 const SCREENSHOT_PATH = path.join(ARTIFACT_DIR, 'trendspotter-live-verification.png');
 const REPORT_PATH = path.join(ARTIFACT_DIR, 'trendspotter-live-verification.json');
 
+async function selectFirstLiveMatchup(page) {
+  await expect(page.locator('#matchupSelect')).toBeEnabled({ timeout: 30000 });
+  await expect.poll(async () => page.locator('#matchupSelect').evaluate((select) => {
+    return Array.from(select.options).filter((option) => option.value).length;
+  }), { message: 'live matchup options should load' }).toBeGreaterThan(0);
+  const value = await page.locator('#matchupSelect').evaluate((select) => {
+    return Array.from(select.options).find((option) => option.value)?.value || '';
+  });
+  await page.selectOption('#matchupSelect', value);
+  return value;
+}
+
 test('live Trend Spotter guided flow and safe output', async ({ page }) => {
   fs.mkdirSync(ARTIFACT_DIR, { recursive: true });
 
@@ -26,9 +38,7 @@ test('live Trend Spotter guided flow and safe output', async ({ page }) => {
   await expect(page.locator('body')).toContainText('Select Trend Type');
 
   await page.selectOption('#sportSelect', 'MLB');
-  await expect(page.locator('#matchupSelect option[value]').nth(1)).toBeAttached({ timeout: 30000 });
-  const matchupValue = await page.locator('#matchupSelect option[value]').nth(1).getAttribute('value');
-  await page.selectOption('#matchupSelect', matchupValue);
+  await selectFirstLiveMatchup(page);
 
   await page.locator('[data-market="moneyline"]').click();
   await expect(page.locator('#trendKindSelect')).toContainText(/Team win trend/i);
@@ -63,14 +73,12 @@ test('live Trend Spotter guided flow and safe output', async ({ page }) => {
   await expect(page.locator('[data-market="props"]')).toBeDisabled();
 
   await page.selectOption('#sportSelect', 'MLB');
-  await expect(page.locator('#matchupSelect option[value]').nth(1)).toBeAttached({ timeout: 30000 });
-  const secondMatchupValue = await page.locator('#matchupSelect option[value]').nth(1).getAttribute('value');
-  await page.selectOption('#matchupSelect', secondMatchupValue);
+  await selectFirstLiveMatchup(page);
   await page.locator('[data-market="total"]').click();
   await page.selectOption('#trendKindSelect', 'full_game_over_under');
   await page.selectOption('#sideSelect', 'over');
   await page.fill('#thresholdInput', '8.5');
-  await expect(page.locator('#generateTrend')).toBeEnabled();
+  await expect(page.locator('#generateTrend')).toBeEnabled({ timeout: 10000 });
   await page.click('#generateTrend');
 
   const result = page.locator('#resultsList');
