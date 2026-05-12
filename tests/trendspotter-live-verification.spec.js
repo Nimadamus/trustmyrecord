@@ -31,6 +31,8 @@ test('live Trend Spotter guided flow and safe output', async ({ page }) => {
   await page.selectOption('#matchupSelect', matchupValue);
 
   await page.locator('[data-market="moneyline"]').click();
+  await expect(page.locator('#trendKindSelect')).toContainText(/Team win trend/i);
+  await expect(page.locator('#trendKindSelect')).not.toContainText(/Full game over/i);
   await expect(page.locator('#thresholdField')).toBeHidden();
   await expect(page.locator('#teamField')).toBeHidden();
   await expect(page.locator('#sideSelect')).toContainText(/away|home/i);
@@ -40,6 +42,7 @@ test('live Trend Spotter guided flow and safe output', async ({ page }) => {
   await expect(page.locator('#sideSelect')).toContainText(/away|home/i);
 
   await page.locator('[data-market="total"]').click();
+  await expect(page.locator('#trendKindSelect')).toContainText(/Full game over \/ under/i);
   await expect(page.locator('#thresholdField')).toBeVisible();
   await expect(page.locator('#teamField')).toBeHidden();
   await expect(page.locator('#sideSelect')).toContainText(/Over/);
@@ -64,12 +67,15 @@ test('live Trend Spotter guided flow and safe output', async ({ page }) => {
   const secondMatchupValue = await page.locator('#matchupSelect option[value]').nth(1).getAttribute('value');
   await page.selectOption('#matchupSelect', secondMatchupValue);
   await page.locator('[data-market="total"]').click();
+  await page.selectOption('#trendKindSelect', 'full_game_over_under');
   await page.selectOption('#sideSelect', 'over');
   await page.fill('#thresholdInput', '8.5');
+  await expect(page.locator('#generateTrend')).toBeEnabled();
   await page.click('#generateTrend');
 
   const result = page.locator('#resultsList');
-  await expect(result).toContainText(/No strong trend found|No verified trend|Verified source rows/i);
+  await expect(result).toContainText(/No strong trend found|No verified trend|Verified source rows|Trend Found/i);
+  await expect(result).toContainText(/Full game over \/ under|No verified trend|No strong trend found/i);
   await expect(page.locator('body')).not.toContainText(/fake stats|fake projections|fake confidence|fake ROI|fake records|fake win percentage|betting edge/i);
 
   await page.evaluate((url) => {
