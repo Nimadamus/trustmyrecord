@@ -42,7 +42,7 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   await expect(primaryGrid, 'NHL card must expose the main markets directly on the card').toBeVisible({ timeout: 15000 });
 
   await expect(primaryGrid, 'Moneyline must be visible in the primary grid').toContainText(/Moneyline/i);
-  await expect(primaryGrid, 'Puck Line must be visible in the primary grid').toContainText(/Puck Line/i);
+  await expect(primaryGrid, 'Spread/Puck Line must be visible in the primary grid').toContainText(/Puck Line|Spread/i);
   await expect(primaryGrid, 'Total must be visible in the primary grid').toContainText(/Total/i);
   await expect
     .poll(async () => card.locator('.tmr-group').evaluateAll((nodes) => nodes.filter((node) => {

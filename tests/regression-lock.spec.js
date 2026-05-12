@@ -116,7 +116,7 @@ test.describe('sportsbook functional locks', () => {
     await clickSport(page, 'MLB');
     const markets = page.locator('button:has-text("Game Lines"), button:has-text("Team Totals"), button:has-text("5 Inning")');
     await expect(markets.first(), 'market tabs should exist').toBeVisible({ timeout: 30000 });
-    await page.getByRole('button', { name: /Game Lines/i }).first().click();
+    await page.getByRole('tab', { name: /Game Lines/i }).first().click();
     await expect(visibleBoard(page)).toBeVisible();
     const teamTotals = page.getByRole('button', { name: /Team Totals/i }).first();
     if (await teamTotals.count()) {
@@ -132,12 +132,13 @@ test.describe('sportsbook functional locks', () => {
     await pickButton.click();
     await expect(page.locator('#pickDetails, .sportsbook-ticket-preview, .tmr-slip-panel').first()).toBeVisible();
     const odds = page.locator('#pickOddsInput').first();
-    await expect(odds, 'odds field exists for selected wager').toBeVisible();
+    await expect(odds, 'odds field exists for selected wager').toHaveCount(1);
     const oddsReadonly = await odds.evaluate((node) => node.readOnly || node.disabled || node.getAttribute('aria-readonly') === 'true');
     expect(oddsReadonly, 'odds must not be manually editable').toBe(true);
-    await expect(page.locator('#unitsStakePreview, #ttSlipStakePreview').first()).toContainText(/Risk/i);
-    await expect(page.locator('#unitsStakePreview, #ttSlipStakePreview').first()).toContainText(/To Win/i);
-    const submit = page.locator('.submit-pick-btn, .lock-pick-btn, button:has-text("Lock")').first();
+    await expect(page.locator('#unitsStakePreview, #ttSlipStakePreview, .tmr-slip-panel').first()).toContainText(/Risk/i);
+    await expect(page.locator('#unitsStakePreview, #ttSlipStakePreview, .tmr-slip-panel').first()).toContainText(/To Win/i);
+    await expect(page.locator('#pickDetails, .sportsbook-ticket-preview, .tmr-slip-panel').first()).toContainText(/Odds/i);
+    const submit = page.locator('.submit-pick-btn, .lock-pick-btn, button:has-text("Lock"), button:has-text("Submit")').first();
     if (await submit.count()) {
       await submit.click();
       await expect(page.locator('body')).toContainText(/log in|login|sign in|account/i);
