@@ -5,6 +5,31 @@
         return value == null ? '' : String(value).trim();
     }
 
+    function formatLeagueLabel(value) {
+        var key = text(value).toLowerCase().replace(/[\s-]+/g, '_');
+        var labels = {
+            baseball_mlb: 'MLB',
+            mlb: 'MLB',
+            icehockey_nhl: 'NHL',
+            hockey_nhl: 'NHL',
+            nhl: 'NHL',
+            basketball_nba: 'NBA',
+            nba: 'NBA',
+            americanfootball_nfl: 'NFL',
+            football_nfl: 'NFL',
+            nfl: 'NFL',
+            americanfootball_ncaaf: 'College Football',
+            football_ncaaf: 'College Football',
+            ncaaf: 'College Football',
+            college_football: 'College Football',
+            basketball_ncaab: 'College Basketball',
+            ncaab: 'College Basketball',
+            college_basketball: 'College Basketball'
+        };
+        if (labels[key]) return labels[key];
+        return key ? text(value).replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }) : 'League';
+    }
+
     function marketOf(pick) {
         return text(pick && (pick.market_type || pick.market || pick.bet_type || pick.betType || pick.pick_type || pick.pickType)).toLowerCase();
     }
@@ -140,5 +165,6 @@
     window.TMR.formatPickLineLabel = function (pick) {
         return formatPickDisplay(pick).lineLabel;
     };
+    window.TMR.formatLeagueLabel = formatLeagueLabel;
     window.TMR.formatPickLabel = window.TMR.formatPickDisplayLabel;
 }());

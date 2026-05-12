@@ -9,6 +9,15 @@ vm.createContext(context);
 vm.runInContext(source, context);
 
 const format = context.window.TMR.formatPickDisplay;
+const formatLeague = context.window.TMR.formatLeagueLabel;
+
+assert.strictEqual(formatLeague('baseball_mlb'), 'MLB');
+assert.strictEqual(formatLeague('icehockey_nhl'), 'NHL');
+assert.strictEqual(formatLeague('basketball_nba'), 'NBA');
+assert.strictEqual(formatLeague('americanfootball_nfl'), 'NFL');
+assert.strictEqual(formatLeague('americanfootball_ncaaf'), 'College Football');
+assert.strictEqual(formatLeague('basketball_ncaab'), 'College Basketball');
+assert.notStrictEqual(formatLeague('baseball_mlb'), 'Baseball Mlb');
 
 const fixtures = [
     {

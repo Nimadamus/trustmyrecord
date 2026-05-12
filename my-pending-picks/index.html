@@ -338,10 +338,31 @@
             });
         }
         function sportLabel(value) {
-            var key = String(value || '').toLowerCase().trim();
-            if (key === 'icehockey_nhl') return 'NHL';
-            var raw = String(value || '').replace(/_/g, ' ').trim();
-            return raw ? raw.replace(/\b\w/g, function (c) { return c.toUpperCase(); }) : 'League';
+            if (window.TMR && typeof window.TMR.formatLeagueLabel === 'function') {
+                return window.TMR.formatLeagueLabel(value);
+            }
+            var key = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
+            var labels = {
+                baseball_mlb: 'MLB',
+                mlb: 'MLB',
+                icehockey_nhl: 'NHL',
+                hockey_nhl: 'NHL',
+                nhl: 'NHL',
+                basketball_nba: 'NBA',
+                nba: 'NBA',
+                americanfootball_nfl: 'NFL',
+                football_nfl: 'NFL',
+                nfl: 'NFL',
+                americanfootball_ncaaf: 'College Football',
+                football_ncaaf: 'College Football',
+                ncaaf: 'College Football',
+                college_football: 'College Football',
+                basketball_ncaab: 'College Basketball',
+                ncaab: 'College Basketball',
+                college_basketball: 'College Basketball'
+            };
+            if (labels[key]) return labels[key];
+            return key ? String(value).replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }) : 'League';
         }
         function marketLabel(value) {
             switch (String(value || '').toLowerCase()) {

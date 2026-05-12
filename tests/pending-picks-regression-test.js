@@ -16,6 +16,18 @@ assert(html.includes('Full Game Total'), 'pending page formatter must label full
 assert(html.includes('Team Total'), 'pending page formatter must label team totals clearly');
 assert(!/side\s*\?\s*side\s*\+\s*['"]\s['"]\s*\+\s*line/.test(html), 'Line column formatter must not prefix totals with U/O');
 
+const sportStart = html.indexOf('function sportLabel');
+const sportEnd = html.indexOf('function marketLabel', sportStart);
+assert(sportStart !== -1 && sportEnd !== -1, 'pending sport label formatter must be extractable');
+const sportLabel = vm.runInNewContext(html.slice(sportStart, sportEnd) + '\nsportLabel;', { window: {} });
+assert.strictEqual(sportLabel('baseball_mlb'), 'MLB', 'pending league label for MLB');
+assert.strictEqual(sportLabel('icehockey_nhl'), 'NHL', 'pending league label for NHL');
+assert.strictEqual(sportLabel('basketball_nba'), 'NBA', 'pending league label for NBA');
+assert.strictEqual(sportLabel('americanfootball_nfl'), 'NFL', 'pending league label for NFL');
+assert.strictEqual(sportLabel('americanfootball_ncaaf'), 'College Football', 'pending league label for college football');
+assert.strictEqual(sportLabel('basketball_ncaab'), 'College Basketball', 'pending league label for college basketball');
+assert.notStrictEqual(sportLabel('baseball_mlb'), 'Baseball Mlb', 'pending league label must not combine category and league');
+
 const start = html.indexOf('function fmtBareLine');
 const end = html.indexOf('function statusText', start);
 assert(start !== -1 && end !== -1, 'pending formatter function block must be extractable');
