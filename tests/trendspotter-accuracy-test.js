@@ -30,6 +30,8 @@ const verifiedTrend = {
   sample: 14,
   date_range: `${today()} to ${today()}`,
   source_url: 'https://example.test/source',
+  source_classification: 'source_backed',
+  source_classification_detail: 'completed_mlb_games_with_final_scores',
   artifact_slate_date: today(),
   source_rows: [
     { date: today(), raw_game_log: 'Mets @ Rockies verified source row', why_counted: 'Matched selected market and matchup.' },
@@ -48,6 +50,13 @@ const teamTotalTrend = {
   source_rows: [
     { date: today(), raw_game_log: 'Rockies team-total verified source row', why_counted: 'Matched team total selector.' },
   ],
+};
+
+const estimatedTrend = {
+  ...verifiedTrend,
+  claim: 'Estimated total line should never render as a verified trend.',
+  estimated_line: true,
+  source_classification: 'estimated',
 };
 
 async function boot(dataBySport = {}) {
@@ -124,6 +133,15 @@ function chooseTrendKind(doc, value) {
   const dom = await boot({
     MLB: {
       status: 'current',
+      source: 'source_backed_historical_database',
+      source_classification: 'source_backed',
+      source_classification_detail: 'completed_mlb_games_with_final_scores',
+      estimated_totals_policy: {
+        status: 'blocked',
+        applies_to: ['MLB', 'NFL'],
+        blocked_rows: 0,
+        message: 'Estimated total lines are excluded from source-backed Trendspotter trend generation.',
+      },      
       matchup_source: 'Verified test artifact',
       matchups: [
         {
@@ -150,6 +168,9 @@ function chooseTrendKind(doc, value) {
   assert(doc.querySelector('[data-market="first_five"]'), 'first five market should render');
   assert(doc.querySelector('[data-market="props"]').disabled, 'unsupported props must be disabled');
   assert.match(doc.querySelector('#rangeSelect').textContent, /Last 5 games - requires time-window dataset/, 'unsupported time-window filters should be visible but disabled');
+  assert.match(doc.body.textContent, /Source-backed/, 'data policy should show source-backed classification');
+  assert.match(doc.body.textContent, /Partial \/ blocked/, 'data policy should show partial and blocked classification');
+  assert.match(doc.body.textContent, /Unsupported \/ estimated/, 'data policy should show unsupported and estimated classification');
 
   await chooseSport(doc, 'MLB');
   chooseFirstMatchup(doc);
@@ -179,6 +200,8 @@ function chooseTrendKind(doc, value) {
   assert.match(doc.querySelector('#resultsList').textContent, /Selected side\s*over/, 'result should reflect selected side');
   assert.match(doc.querySelector('#resultsList').textContent, /line=8.5/, 'result should reflect selected threshold');
   assert.match(doc.querySelector('#resultsList').textContent, /Sample size\s*14/, 'result should show sample size');
+  assert.match(doc.querySelector('#resultsList').textContent, /Source classification\s*Source-backed/, 'result should expose source classification');
+  assert.strictEqual(doc.querySelector('[data-result="verified-trend"]').getAttribute('data-source-label'), 'source-backed', 'verified result should carry source-backed label');
   assert.match(doc.querySelector('#resultsList').textContent, /This is a trend, not a betting recommendation/, 'result should include non-pick note');
 
   clickMarket(doc, 'team_total');
@@ -209,6 +232,39 @@ function chooseTrendKind(doc, value) {
   change(noDataDoc, '#thresholdInput', '8.5');
   noDataDoc.querySelector('#generateTrend').click();
   assert.match(noDataDoc.querySelector('[data-state="safe-no-data"]').textContent, /No verified trend available|No strong trend found|Verified trend data source not connected/, 'safe no-data state should render');
+  assert.match(noDataDoc.querySelector('[data-state="safe-no-data"]').textContent, /Source classification:\s*(Partial|Blocked|Source-backed)/, 'safe state should expose source classification');
+  assert(noDataDoc.querySelector('[data-state="safe-no-data"]').getAttribute('data-source-label'), 'safe state should carry a source label attribute');
+
+  const estimatedDom = await boot({
+    MLB: {
+      status: 'current',
+      source_classification: 'estimated',
+      matchup_source: 'Estimated test source',
+      matchups: [
+        {
+          sport: 'MLB',
+          matchup: 'New York Mets @ Colorado Rockies',
+          away_abbr: 'New York Mets',
+          home_abbr: 'Colorado Rockies',
+          slate_date: today(),
+          game_time: `${today()}T19:10:00Z`,
+        },
+      ],
+      trends: [estimatedTrend],
+    },
+  });
+  const estimatedDoc = estimatedDom.window.document;
+  await chooseSport(estimatedDoc, 'MLB');
+  chooseFirstMatchup(estimatedDoc);
+  clickMarket(estimatedDoc, 'total');
+  chooseTrendKind(estimatedDoc, 'full_game_over_under');
+  change(estimatedDoc, '#sideSelect', 'over');
+  change(estimatedDoc, '#thresholdInput', '8.5');
+  estimatedDoc.querySelector('#generateTrend').click();
+  assert.strictEqual(estimatedDoc.querySelectorAll('[data-result="verified-trend"]').length, 0, 'estimated trends must not render as verified/source-backed results');
+  assert.strictEqual(estimatedDoc.querySelector('[data-state="safe-no-data"]').getAttribute('data-source-label'), 'estimated', 'estimated source should be labeled estimated');
+  assert.match(estimatedDoc.querySelector('[data-state="safe-no-data"]').textContent, /Source classification:\s*Estimated/, 'estimated source should be visibly labeled');
+  assert(!/Source classification:\s*Source-backed/i.test(estimatedDoc.querySelector('[data-state="safe-no-data"]').textContent), 'estimated source must not masquerade as source-backed');
 
   const blockedDom = await boot();
   blockedDom.window.document.querySelector('#generateTrend').click();
