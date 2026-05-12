@@ -470,8 +470,8 @@ class TrustMyRecordAPI {
     }
 
     // ==================== MODEL BUILDER ROUTES ====================
-    // Private saved configuration objects only. No Model Tracker, picks,
-    // public performance fields, leaderboard/profile stats, or marketplace data.
+    // Private saved configuration objects only. The backend API is /api/models;
+    // this client passes /models because baseUrl already includes /api.
 
     sanitizeModelDefinitionPayload(payload = {}) {
         const forbidden = new Set([
@@ -521,35 +521,41 @@ class TrustMyRecordAPI {
         if (options.status) params.set('status', options.status);
         if (options.include_archived != null) params.set('include_archived', String(Boolean(options.include_archived)));
         const query = params.toString();
-        return this.request(`/model-builder/models${query ? `?${query}` : ''}`);
+        return this.request(`/models${query ? `?${query}` : ''}`);
     }
 
     async getModelDefinition(modelId) {
-        return this.request(`/model-builder/models/${encodeURIComponent(modelId)}`);
+        return this.request(`/models/${encodeURIComponent(modelId)}`);
     }
 
     async createModelDefinition(modelDefinition) {
-        return this.request('/model-builder/models', {
+        return this.request('/models', {
             method: 'POST',
             body: this.sanitizeModelDefinitionPayload(modelDefinition)
         });
     }
 
     async updateModelDefinition(modelId, updates) {
-        return this.request(`/model-builder/models/${encodeURIComponent(modelId)}`, {
-            method: 'PUT',
+        return this.request(`/models/${encodeURIComponent(modelId)}`, {
+            method: 'PATCH',
             body: this.sanitizeModelDefinitionPayload(updates)
         });
     }
 
     async archiveModelDefinition(modelId) {
-        return this.request(`/model-builder/models/${encodeURIComponent(modelId)}/archive`, {
+        return this.request(`/models/${encodeURIComponent(modelId)}/archive`, {
+            method: 'POST'
+        });
+    }
+
+    async restoreModelDefinition(modelId) {
+        return this.request(`/models/${encodeURIComponent(modelId)}/restore`, {
             method: 'POST'
         });
     }
 
     async deleteModelDefinition(modelId) {
-        return this.request(`/model-builder/models/${encodeURIComponent(modelId)}`, {
+        return this.request(`/models/${encodeURIComponent(modelId)}`, {
             method: 'DELETE'
         });
     }

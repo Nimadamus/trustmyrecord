@@ -1,19 +1,17 @@
 (function () {
     var FACTORS = [
         { id: 'recent_form', label: 'Recent form', help: 'Recent team/player performance when real data is connected.' },
-        { id: 'market_line', label: 'Market line', help: 'Current odds or line context from the sportsbook board.' },
+        { id: 'market_line', label: 'Market line', help: 'Current odds or line context from connected sportsbook data.' },
         { id: 'matchup', label: 'Matchup fit', help: 'Team, player, or style matchup inputs supplied by real data.' },
-        { id: 'availability', label: 'Availability', help: 'Injuries, starters, rest, or lineup inputs when connected.' },
-        { id: 'venue_context', label: 'Venue/context', help: 'Home/away, park, weather, travel, or schedule context when connected.' }
+        { id: 'availability', label: 'Availability', help: 'Injuries, starters, rest, or confirmed lineup inputs when available.' },
+        { id: 'venue_context', label: 'Venue/context', help: 'Home/away, park, weather, travel, or schedule context when available.' }
     ];
 
     var state = {
         models: [],
-        boardGames: [],
-        boardError: null,
         editingId: null,
-        loading: false,
-        boardLoading: false
+        selectedId: null,
+        loading: false
     };
 
     var forbiddenKeys = new Set([
@@ -87,11 +85,6 @@
         if (el) el.value = value == null ? '' : value;
     }
 
-    function numberValue(id, fallback) {
-        var value = Number(getValue(id, fallback));
-        return Number.isFinite(value) ? value : fallback;
-    }
-
     function formatSport(value) {
         var map = {
             baseball_mlb: 'MLB',
@@ -108,6 +101,11 @@
         return map[value] || value || 'Market';
     }
 
+    function numberValue(id, fallback) {
+        var value = Number(getValue(id, fallback));
+        return Number.isFinite(value) ? value : fallback;
+    }
+
     function selectedFactors() {
         return FACTORS.map(function (factor) {
             var weight = numberValue('factor_' + factor.id, factor.id === 'market_line' ? 30 : 20);
@@ -115,59 +113,20 @@
                 id: factor.id,
                 label: factor.label,
                 weight: Math.max(0, Math.min(100, weight)),
-                data_status: factor.id === 'market_line' && state.boardGames.length ? 'connected' : 'unavailable_until_connected',
-                source: factor.id === 'market_line' && state.boardGames.length
-                    ? 'TrustMyRecord sportsbook board'
-                    : 'No verified source connected for this factor in the current session'
+                data_status: 'unavailable_until_connected',
+                source: 'No real data source connected in this builder session'
             };
         }).filter(function (factor) {
             return factor.weight > 0;
         });
     }
 
-    function boardInputSnapshot() {
-        var sport = getValue('modelSport', 'baseball_mlb');
-        var games = state.boardGames.filter(function (game) {
-            return !game.sport_key || game.sport_key === sport;
-        });
-        return {
-            source: 'TrustMyRecord sportsbook board',
-            sport_key: sport,
-            status: state.boardLoading ? 'loading' : (games.length ? 'connected' : 'unavailable'),
-            game_count: games.length,
-            unavailable_reason: games.length ? null : (state.boardError || 'No real sportsbook board games returned for this sport'),
-            sample_inputs: games.slice(0, 5).map(function (game) {
-                var markets = [];
-                (game.bookmakers || []).forEach(function (book) {
-                    (book.markets || []).forEach(function (market) {
-                        if (markets.indexOf(market.key) === -1) markets.push(market.key);
-                    });
-                });
-                return {
-                    game_id: game.id || game.game_id || null,
-                    home_team: game.home_team,
-                    away_team: game.away_team,
-                    commence_time: game.commence_time || null,
-                    markets: markets,
-                    bookmakers: (game.bookmakers || []).map(function (book) { return book.title || book.key; }).filter(Boolean)
-                };
-            })
-        };
-    }
-
     function criteriaFromForm() {
-        var board = boardInputSnapshot();
         return stripForbidden({
             schema_version: 2,
             builder_mode: 'guided',
             data_mode: 'real_data_required',
-            data_inputs: {
-                sportsbook_board: board,
-                injuries: { status: 'unavailable', source: null },
-                starters: { status: 'unavailable', source: null },
-                weather: { status: 'unavailable', source: null },
-                historical_results: { status: 'unavailable', source: null }
-            },
+            data_status: 'unavailable_until_connected',
             sport_key: getValue('modelSport', 'baseball_mlb'),
             market_type: getValue('modelMarket', 'totals'),
             side_preference: getValue('modelSide', 'any'),
@@ -175,7 +134,7 @@
             filters: {
                 min_odds: numberValue('minOdds', -150),
                 max_odds: numberValue('maxOdds', 150),
-                min_score_to_show: numberValue('minConfidence', 0)
+                min_confidence_to_show: numberValue('minConfidence', 0)
             },
             output: {
                 type: getValue('modelOutput', 'ranked_shortlist'),
@@ -192,7 +151,7 @@
             unit_mode: getValue('unitMode', 'flat'),
             default_units: numberValue('defaultUnits', 1),
             max_units: numberValue('maxUnits', 1),
-            risk_note: 'Configuration only. This is not ROI, record, or betting performance.'
+            risk_note: 'Configuration only. This is not a betting result or public claim.'
         });
     }
 
@@ -225,64 +184,47 @@
         }).join('');
     }
 
-    function renderDataInputs() {
-        var summary = document.getElementById('dataInputSummary');
-        var list = document.getElementById('realInputList');
-        var pill = document.getElementById('marketBoardStatus');
-        var board = boardInputSnapshot();
-
-        if (pill) {
-            pill.textContent = board.status === 'connected'
-                ? board.game_count + ' real board input(s)'
-                : (board.status === 'loading' ? 'Real inputs loading' : 'Real inputs unavailable');
-        }
-        if (summary) {
-            summary.className = 'data-card' + (board.status === 'connected' ? ' connected' : '');
-            summary.textContent = board.status === 'connected'
-                ? board.game_count + ' real sportsbook board game(s) available for ' + formatSport(board.sport_key) + '. These are inputs only, not model output.'
-                : (board.status === 'loading' ? 'Loading real sportsbook board inputs...' : 'Sportsbook board inputs unavailable: ' + board.unavailable_reason);
-        }
-        if (!list) return;
-        if (board.status === 'loading') {
-            list.innerHTML = '<article><strong>Loading</strong><span>Checking the TrustMyRecord sportsbook board.</span></article>';
-            return;
-        }
-        if (board.status !== 'connected') {
-            list.innerHTML = [
-                '<article><strong>Sportsbook board</strong><span>Unavailable. No odds or game rows are used.</span></article>',
-                '<article><strong>Injuries / starters / weather</strong><span>Unavailable in this builder page. Not used.</span></article>',
-                '<article><strong>Historical results</strong><span>Unavailable in this builder page. No backtest is shown.</span></article>'
-            ].join('');
-            return;
-        }
-        list.innerHTML = board.sample_inputs.map(function (game) {
-            return [
-                '<article>',
-                '<strong>' + escapeHtml((game.away_team || 'Away') + ' at ' + (game.home_team || 'Home')) + '</strong>',
-                '<span>Markets: ' + escapeHtml(game.markets.join(', ') || 'none listed') + '</span>',
-                '<span>Books: ' + escapeHtml(game.bookmakers.join(', ') || 'none listed') + '</span>',
-                '<span>Game ID: ' + escapeHtml(game.game_id || 'unavailable') + '</span>',
-                '</article>'
-            ].join('');
-        }).join('');
-    }
-
     function renderSummary() {
         var host = document.getElementById('modelSummary');
         if (!host) return;
         var criteria = criteriaFromForm();
         var bankroll = bankrollFromForm();
         var totalWeight = criteria.factors.reduce(function (sum, factor) { return sum + Number(factor.weight || 0); }, 0);
-        var board = criteria.data_inputs.sportsbook_board;
         host.innerHTML = [
             '<div><strong>Inputs</strong><span>' + escapeHtml(formatSport(criteria.sport_key)) + ' · ' + escapeHtml(formatMarket(criteria.market_type)) + ' · ' + escapeHtml(criteria.side_preference) + '</span></div>',
-            '<div><strong>Real data</strong><span>Sportsbook board: ' + escapeHtml(board.status) + (board.game_count ? ' · ' + board.game_count + ' game(s)' : '') + '. Injuries, starters, weather, and historical results: unavailable.</span></div>',
             '<div><strong>Factors</strong><span>' + escapeHtml(criteria.factors.map(function (factor) { return factor.label + ' ' + factor.weight; }).join(', ') || 'None selected') + '</span></div>',
             '<div><strong>Weights</strong><span>' + escapeHtml(String(totalWeight)) + ' total points. Values are configuration weights, not confidence or win probability.</span></div>',
-            '<div><strong>Output</strong><span>' + escapeHtml(criteria.output.type.replace(/_/g, ' ')) + '. No score, prediction, backtest, ROI, or record is generated here.</span></div>',
+            '<div><strong>Output</strong><span>' + escapeHtml(criteria.output.type.replace(/_/g, ' ')) + '. No result or public claim is generated here.</span></div>',
             '<div><strong>Bankroll</strong><span>' + escapeHtml(bankroll.unit_mode + ' · default ' + bankroll.default_units + ' unit(s), max ' + bankroll.max_units + ' unit(s)') + '</span></div>'
         ].join('');
-        renderDataInputs();
+    }
+
+    function renderDetail(model) {
+        var panel = document.getElementById('modelBuilderDetail');
+        if (!panel) return;
+        if (!model) {
+            panel.hidden = true;
+            panel.innerHTML = '';
+            return;
+        }
+        var criteria = stripForbidden(model.criteria_json || {});
+        var bankroll = stripForbidden(model.bankroll_json || {});
+        var factors = Array.isArray(criteria.factors) ? criteria.factors : [];
+        panel.hidden = false;
+        panel.innerHTML = [
+            '<h3>' + escapeHtml(model.name) + '</h3>',
+            '<p class="model-meta">' + escapeHtml(model.description || 'No description saved.') + '</p>',
+            '<div class="detail-grid">',
+            '<div><strong>Sport</strong><span>' + escapeHtml(formatSport(model.sport_key)) + '</span></div>',
+            '<div><strong>Status</strong><span>' + escapeHtml(model.status || 'draft') + '</span></div>',
+            '<div><strong>Market</strong><span>' + escapeHtml(formatMarket(criteria.market_type)) + '</span></div>',
+            '<div><strong>Side</strong><span>' + escapeHtml(criteria.side_preference || 'any') + '</span></div>',
+            '<div><strong>Factors</strong><span>' + escapeHtml(factors.map(function (factor) { return factor.label + ' ' + factor.weight; }).join(', ') || 'Not configured') + '</span></div>',
+            '<div><strong>Units</strong><span>' + escapeHtml((bankroll.unit_mode || 'flat') + ' · default ' + (bankroll.default_units == null ? 1 : bankroll.default_units) + ', max ' + (bankroll.max_units == null ? 1 : bankroll.max_units)) + '</span></div>',
+            '<div><strong>Notes</strong><span>' + escapeHtml(criteria.notes || 'No strategy notes saved.') + '</span></div>',
+            '<div><strong>Data Mode</strong><span>Private configuration only; real inputs are not connected here yet.</span></div>',
+            '</div>'
+        ].join('');
     }
 
     function renderList() {
@@ -309,11 +251,13 @@
                 '<div class="model-breakdown">',
                 '<span>Market: ' + escapeHtml(formatMarket(criteria.market_type)) + '</span>',
                 '<span>Factors: ' + escapeHtml(factors.map(function (factor) { return factor.label + ' ' + factor.weight; }).join(', ') || 'not configured') + '</span>',
-                '<span>Output: no predictions or backtest claims</span>',
+                '<span>Output: setup details only</span>',
                 '</div>',
                 '<div class="button-row">',
+                '<button type="button" data-action="view" data-id="' + id + '">View</button>',
                 archived ? '' : '<button type="button" data-action="edit" data-id="' + id + '">Edit</button>',
                 archived ? '' : '<button type="button" data-action="archive" data-id="' + id + '">Archive</button>',
+                archived ? '<button type="button" data-action="restore" data-id="' + id + '">Restore</button>' : '',
                 '<button class="danger" type="button" data-action="delete" data-id="' + id + '">Delete</button>',
                 '</div>',
                 '</article>'
@@ -323,6 +267,8 @@
 
     function resetForm() {
         state.editingId = null;
+        state.selectedId = null;
+        setValue('formTitle', 'New model');
         var title = document.getElementById('formTitle');
         if (title) title.textContent = 'New model';
         var form = document.getElementById('modelBuilderForm');
@@ -332,6 +278,19 @@
         });
         renderSummary();
         setMessage('');
+    }
+
+    async function viewModel(id) {
+        if (!apiReady()) return setMessage('Private Model Builder API is not available yet.', 'error');
+        try {
+            var data = await window.api.getModelDefinition(id);
+            var model = stripForbidden(data && data.model ? data.model : state.models.find(function (entry) { return String(entry.id) === String(id); }));
+            state.selectedId = model && model.id;
+            renderDetail(model);
+            setMessage('Viewing private model definition.', 'ok');
+        } catch (error) {
+            setMessage(error && error.message ? error.message : 'Unable to view private model.', 'error');
+        }
     }
 
     function editModel(id) {
@@ -346,11 +305,11 @@
         setValue('modelDescription', model.description || '');
         setValue('modelSport', model.sport_key || criteria.sport_key || 'baseball_mlb');
         setValue('modelStatus', model.status === 'active' ? 'active' : 'draft');
-        setValue('modelMarket', criteria.market_type || 'totals');
-        setValue('modelSide', criteria.side_preference || 'any');
+        setValue('modelMarket', criteria.market_type || (criteria.markets && criteria.markets[0]) || 'totals');
+        setValue('modelSide', criteria.side_preference || criteria.side || 'any');
         setValue('minOdds', criteria.filters && criteria.filters.min_odds != null ? criteria.filters.min_odds : -150);
         setValue('maxOdds', criteria.filters && criteria.filters.max_odds != null ? criteria.filters.max_odds : 150);
-        setValue('minConfidence', criteria.filters && criteria.filters.min_score_to_show != null ? criteria.filters.min_score_to_show : 0);
+        setValue('minConfidence', criteria.filters && criteria.filters.min_confidence_to_show != null ? criteria.filters.min_confidence_to_show : 0);
         setValue('modelOutput', criteria.output && criteria.output.type ? criteria.output.type : 'ranked_shortlist');
         setValue('modelNotes', criteria.notes || '');
         setValue('unitMode', bankroll.unit_mode || 'flat');
@@ -363,47 +322,11 @@
             setValue('factor_' + factor.id, saved && saved.weight != null ? saved.weight : (factor.id === 'market_line' ? 30 : 20));
         });
         renderSummary();
-        setMessage('Editing private model definition. No historical results or predictions are loaded.', 'ok');
+        setMessage('Editing private model definition. No historical results are loaded.', 'ok');
     }
 
     function apiReady() {
-        return window.api && (
-            typeof window.api.listModelDefinitions === 'function' ||
-            typeof window.api.request === 'function'
-        );
-    }
-
-    function apiCall(methodName, endpoint, options) {
-        if (window.api && typeof window.api[methodName] === 'function') {
-            return window.api[methodName].apply(window.api, options && options.args ? options.args : []);
-        }
-        return window.api.request(endpoint, options && options.request ? options.request : {});
-    }
-
-    async function loadMarketBoard() {
-        if (!window.api || typeof window.api.getMarketBoard !== 'function') {
-            state.boardGames = [];
-            state.boardError = 'Market board API client is unavailable';
-            renderSummary();
-            return;
-        }
-        state.boardLoading = true;
-        state.boardError = null;
-        renderSummary();
-        try {
-            if (window.api.ready) {
-                try { await window.api.ready; } catch (error) {}
-            }
-            var sport = getValue('modelSport', 'baseball_mlb');
-            var data = await window.api.getMarketBoard(sport);
-            state.boardGames = Array.isArray(data && data.games) ? data.games : [];
-        } catch (error) {
-            state.boardGames = [];
-            state.boardError = error && error.message ? error.message : 'Unable to load sportsbook board inputs';
-        } finally {
-            state.boardLoading = false;
-            renderSummary();
-        }
+        return window.api && typeof window.api.listModelDefinitions === 'function';
     }
 
     async function loadModels() {
@@ -419,10 +342,11 @@
             if (window.api.ready) {
                 try { await window.api.ready; } catch (error) {}
             }
-            var data = await apiCall('listModelDefinitions', '/model-builder/models?include_archived=true', {
-                args: [{ include_archived: true }]
-            });
+            var data = await window.api.listModelDefinitions({ include_archived: true });
             state.models = Array.isArray(data && data.models) ? data.models.map(stripForbidden) : [];
+            if (state.selectedId) {
+                renderDetail(state.models.find(function (model) { return String(model.id) === String(state.selectedId); }));
+            }
             setMessage('');
         } catch (error) {
             state.models = [];
@@ -439,16 +363,10 @@
         try {
             var payload = modelPayloadFromForm();
             if (state.editingId) {
-                await apiCall('updateModelDefinition', '/model-builder/models/' + encodeURIComponent(state.editingId), {
-                    args: [state.editingId, payload],
-                    request: { method: 'PUT', body: payload }
-                });
+                await window.api.updateModelDefinition(state.editingId, payload);
                 setMessage('Private model updated.', 'ok');
             } else {
-                await apiCall('createModelDefinition', '/model-builder/models', {
-                    args: [payload],
-                    request: { method: 'POST', body: payload }
-                });
+                await window.api.createModelDefinition(payload);
                 setMessage('Private model created.', 'ok');
             }
             resetForm();
@@ -461,10 +379,7 @@
     async function archiveModel(id) {
         if (!apiReady()) return setMessage('Private Model Builder API is not available yet.', 'error');
         try {
-            await apiCall('archiveModelDefinition', '/model-builder/models/' + encodeURIComponent(id) + '/archive', {
-                args: [id],
-                request: { method: 'POST' }
-            });
+            await window.api.archiveModelDefinition(id);
             setMessage('Private model archived.', 'ok');
             await loadModels();
         } catch (error) {
@@ -472,14 +387,29 @@
         }
     }
 
-    async function deleteModel(id) {
+    async function restoreModel(id) {
         if (!apiReady()) return setMessage('Private Model Builder API is not available yet.', 'error');
         try {
-            await apiCall('deleteModelDefinition', '/model-builder/models/' + encodeURIComponent(id), {
-                args: [id],
-                request: { method: 'DELETE' }
-            });
+            await window.api.restoreModelDefinition(id);
+            setMessage('Private model restored.', 'ok');
+            await loadModels();
+        } catch (error) {
+            setMessage(error && error.message ? error.message : 'Unable to restore private model.', 'error');
+        }
+    }
+
+    async function deleteModel(id) {
+        if (!apiReady()) return setMessage('Private Model Builder API is not available yet.', 'error');
+        if (typeof window.confirm === 'function' && !window.confirm('Delete this private model definition? This cannot be undone.')) {
+            return;
+        }
+        try {
+            await window.api.deleteModelDefinition(id);
             if (String(state.editingId) === String(id)) resetForm();
+            if (String(state.selectedId) === String(id)) {
+                state.selectedId = null;
+                renderDetail(null);
+            }
             setMessage('Private model deleted.', 'ok');
             await loadModels();
         } catch (error) {
@@ -499,26 +429,21 @@
                 if (!button) return;
                 var action = button.getAttribute('data-action');
                 var id = button.getAttribute('data-id');
+                if (action === 'view') viewModel(id);
                 if (action === 'edit') editModel(id);
                 if (action === 'archive') archiveModel(id);
+                if (action === 'restore') restoreModel(id);
                 if (action === 'delete') deleteModel(id);
             });
         }
         [
-            'modelMarket', 'modelSide', 'modelOutput', 'unitMode',
+            'modelSport', 'modelMarket', 'modelSide', 'modelOutput', 'unitMode',
             'defaultUnits', 'maxUnits', 'minOdds', 'maxOdds', 'minConfidence', 'modelNotes'
         ].concat(FACTORS.map(function (factor) { return 'factor_' + factor.id; })).forEach(function (id) {
             var el = document.getElementById(id);
             if (el) el.addEventListener('input', renderSummary);
             if (el) el.addEventListener('change', renderSummary);
         });
-        var sport = document.getElementById('modelSport');
-        if (sport) {
-            sport.addEventListener('change', function () {
-                renderSummary();
-                loadMarketBoard();
-            });
-        }
     }
 
     function renderPrivateShell() {
@@ -532,7 +457,6 @@
         wireEvents();
         renderSummary();
         renderList();
-        loadMarketBoard();
         loadModels();
     }
 
@@ -556,10 +480,11 @@
     window.TMRModelBuilderShell = {
         hasPrivateSession: hasPrivateSession,
         renderPrivateShell: renderPrivateShell,
-        loadMarketBoard: loadMarketBoard,
         loadModels: loadModels,
+        viewModel: viewModel,
         saveModel: saveModel,
         archiveModel: archiveModel,
+        restoreModel: restoreModel,
         deleteModel: deleteModel,
         init: init
     };

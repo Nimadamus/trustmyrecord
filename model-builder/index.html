@@ -1,46 +1,540 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="robots" content="noindex,nofollow">
-  <link rel="canonical" href="https://trustmyrecord.com/model-builder/">
-  <title>Model Builder | TrustMyRecord</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    :root{--bg:#050913;--panel:#0f1724;--text:#f8fafc;--muted:#9aa8ba;--line:rgba(148,163,184,.18);--accent:#2dd4bf;--gold:#f4c95d;--danger:#f87171}*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at 18% 0%,rgba(45,212,191,.14),transparent 28%),linear-gradient(180deg,#07111d 0%,var(--bg) 100%)}.model-builder-page{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:52px 0}.auth-check{min-height:100vh;display:grid;place-items:center;color:var(--muted);font-size:14px}.login-card,.empty-shell,.builder-panel,.step-card,.model-card{border:1px solid var(--line);border-radius:8px;background:linear-gradient(180deg,rgba(17,29,45,.94),rgba(8,14,24,.94))}.login-card{width:min(520px,calc(100% - 32px));padding:24px;text-align:center}.login-card h1{margin:0;font-family:Barlow,Inter,sans-serif;font-size:34px}.login-card a,button{min-height:40px;display:inline-flex;align-items:center;justify-content:center;padding:0 14px;border:1px solid rgba(45,212,191,.34);border-radius:8px;background:rgba(45,212,191,.12);color:#dffcf8;font-weight:800;text-decoration:none;cursor:pointer}.login-card a,button.primary{border-color:rgba(45,212,191,.72);background:#14b8a6;color:#031312}button.danger{border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.1);color:#fecaca}button:disabled{cursor:not-allowed;opacity:.6}.model-builder-top{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:end;margin-bottom:18px}.kicker,.panel-label{margin:0 0 8px;color:var(--gold);font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}h1{margin:0;font-family:Barlow,Inter,sans-serif;font-size:clamp(38px,7vw,72px);line-height:.95;letter-spacing:0}h2{margin:0;font-family:Barlow,Inter,sans-serif;font-size:24px;line-height:1.05}h3{margin:0 0 10px;font-size:15px}.subtitle,.builder-panel p,.empty-copy,.notice,.model-meta{color:var(--muted);font-size:14px;line-height:1.55}.subtitle{max-width:760px;margin:14px 0 0;font-size:15px}.status-pill{display:inline-flex;align-items:center;min-height:36px;padding:0 12px;border:1px solid rgba(244,201,93,.28);border-radius:999px;color:#fef3c7;background:rgba(244,201,93,.08);font-size:12px;font-weight:800;white-space:nowrap}.empty-shell{min-height:210px;display:grid;place-items:center;padding:28px;margin-bottom:16px;text-align:center}.empty-title{margin:0;font-size:22px;font-weight:800}.empty-copy{max-width:620px;margin:10px auto 0}.builder-grid{display:grid;grid-template-columns:minmax(340px,.9fr) minmax(0,1.1fr);gap:16px}.builder-panel{padding:18px}.builder-panel.full{grid-column:1/-1}.form-grid{display:grid;gap:12px;margin-top:16px}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.step-card{padding:14px;background:rgba(5,9,18,.28)}label{display:grid;gap:7px;color:#dbeafe;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}input,select,textarea{width:100%;border:1px solid rgba(148,163,184,.22);border-radius:8px;background:rgba(5,9,18,.72);color:var(--text);font:500 14px/1.45 Inter,system-ui,sans-serif;padding:11px 12px}textarea{min-height:92px;resize:vertical}.factor-control{grid-template-columns:minmax(0,1fr) 86px;align-items:center;gap:12px;margin-top:10px;padding:10px;border:1px solid rgba(148,163,184,.14);border-radius:8px;background:rgba(15,23,36,.62);text-transform:none;letter-spacing:0}.factor-control small{display:block;margin-top:4px;color:var(--muted);font-weight:500;line-height:1.35}.data-warning,.data-card{padding:12px;border:1px solid rgba(244,201,93,.32);border-radius:8px;background:rgba(244,201,93,.08);color:#fef3c7;font-size:13px;line-height:1.5}.data-card.connected{border-color:rgba(45,212,191,.34);background:rgba(45,212,191,.08);color:#ccfbf1}.data-grid,.summary-box,.model-list{display:grid;gap:10px;margin-top:16px}.summary-box div,.data-grid article{display:grid;gap:4px;padding:12px;border:1px solid rgba(148,163,184,.14);border-radius:8px;background:rgba(5,9,18,.38)}.summary-box strong,.data-grid strong{color:#e5e7eb;font-size:12px;text-transform:uppercase;letter-spacing:.08em}.summary-box span,.data-grid span,.model-breakdown{color:var(--muted);font-size:13px;line-height:1.45}.button-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:4px}.model-card{padding:14px;background:rgba(5,9,18,.44)}.model-card h3{margin:0;font-size:17px}.notice{min-height:18px;margin:12px 0 0}.notice.error{color:#fecaca}.notice.ok{color:#99f6e4}@media(max-width:820px){.model-builder-top,.builder-grid,.two-col{grid-template-columns:1fr}.status-pill{justify-self:start}}[hidden]{display:none!important}
-  </style>
-  <script src="/static/js/config.js"></script>
-  <script src="/static/js/backend-api.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="canonical" href="https://trustmyrecord.com/model-builder/index.html">
+    <title>Model Builder | TrustMyRecord</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #07111d;
+            --panel: #0f1724;
+            --panel-2: #111d2d;
+            --text: #f8fafc;
+            --muted: #9aa8ba;
+            --line: rgba(148, 163, 184, 0.18);
+            --accent: #2dd4bf;
+            --gold: #f4c95d;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.14), transparent 30%),
+                linear-gradient(180deg, #07111d 0%, #050912 100%);
+        }
+        .model-builder-page {
+            width: min(1040px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 72px 0;
+        }
+        .model-builder-top {
+            margin-bottom: 18px;
+        }
+        .kicker {
+            margin: 0 0 10px;
+            color: var(--gold);
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+        h1 {
+            margin: 0;
+            font-family: Barlow, Inter, sans-serif;
+            font-size: clamp(38px, 7vw, 72px);
+            line-height: 0.95;
+            letter-spacing: 0;
+        }
+        .subtitle {
+            max-width: 680px;
+            margin: 14px 0 0;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+        .empty-shell {
+            min-height: 280px;
+            display: grid;
+            place-items: center;
+            padding: 34px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background:
+                linear-gradient(180deg, rgba(17, 29, 45, 0.96), rgba(9, 15, 25, 0.96));
+        }
+        .empty-shell-inner {
+            max-width: 560px;
+            text-align: center;
+        }
+        .empty-icon {
+            width: 54px;
+            height: 54px;
+            display: inline-grid;
+            place-items: center;
+            margin-bottom: 18px;
+            border: 1px solid rgba(45, 212, 191, 0.34);
+            border-radius: 8px;
+            color: var(--accent);
+            font-size: 28px;
+            font-weight: 800;
+        }
+        .empty-title {
+            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+        }
+        .empty-copy {
+            margin: 10px 0 0;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.55;
+        }
+        .auth-check {
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            color: var(--muted);
+            font-size: 14px;
+        }
+        .builder-grid {
+            display: grid;
+            grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.1fr);
+            gap: 16px;
+            margin-top: 18px;
+        }
+        .builder-panel.full {
+            grid-column: 1 / -1;
+        }
+        .builder-panel {
+            padding: 18px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: linear-gradient(180deg, rgba(17, 29, 45, 0.88), rgba(8, 14, 24, 0.92));
+        }
+        .builder-panel h2 {
+            margin: 0;
+            font-family: Barlow, Inter, sans-serif;
+            font-size: 24px;
+            line-height: 1.05;
+        }
+        .builder-panel p {
+            margin: 10px 0 0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .panel-label {
+            margin: 0 0 8px !important;
+            color: var(--gold) !important;
+            font-size: 11px !important;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .form-grid {
+            display: grid;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        label {
+            display: grid;
+            gap: 7px;
+            color: #dbeafe;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        input, select, textarea {
+            width: 100%;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 8px;
+            background: rgba(5, 9, 18, 0.72);
+            color: var(--text);
+            font: 500 14px/1.45 Inter, system-ui, sans-serif;
+            padding: 11px 12px;
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .step-card {
+            padding: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 8px;
+            background: rgba(5, 9, 18, 0.32);
+        }
+        .step-card + .step-card {
+            margin-top: 12px;
+        }
+        .step-card h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+        }
+        .factor-control {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 86px;
+            align-items: center;
+            gap: 12px;
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 8px;
+            background: rgba(15, 23, 36, 0.62);
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .factor-control small {
+            display: block;
+            margin-top: 4px;
+            color: var(--muted);
+            font-weight: 500;
+            line-height: 1.35;
+        }
+        .data-warning {
+            margin-top: 14px;
+            padding: 12px;
+            border: 1px solid rgba(244, 201, 93, 0.32);
+            border-radius: 8px;
+            background: rgba(244, 201, 93, 0.08);
+            color: #fef3c7;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        .summary-box {
+            display: grid;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .summary-box div {
+            display: grid;
+            gap: 4px;
+            padding: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 8px;
+            background: rgba(5, 9, 18, 0.38);
+        }
+        .summary-box strong {
+            color: #e5e7eb;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .summary-box span {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        textarea {
+            min-height: 92px;
+            resize: vertical;
+            font-family: Consolas, "Liberation Mono", monospace;
+            font-size: 13px;
+        }
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 4px;
+        }
+        button {
+            min-height: 40px;
+            padding: 0 14px;
+            border: 1px solid rgba(45, 212, 191, 0.3);
+            border-radius: 8px;
+            background: rgba(45, 212, 191, 0.12);
+            color: #dffcf8;
+            font-weight: 800;
+            cursor: pointer;
+        }
+        button.primary {
+            border-color: rgba(45, 212, 191, 0.72);
+            background: #14b8a6;
+            color: #031312;
+        }
+        button.danger {
+            border-color: rgba(248, 113, 113, 0.4);
+            background: rgba(248, 113, 113, 0.1);
+            color: #fecaca;
+        }
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .model-list {
+            display: grid;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .model-card {
+            padding: 14px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 8px;
+            background: rgba(5, 9, 18, 0.44);
+        }
+        .model-card h3 {
+            margin: 0;
+            font-size: 17px;
+        }
+        .model-meta {
+            margin-top: 7px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .model-breakdown {
+            display: grid;
+            gap: 6px;
+            margin-top: 10px;
+            color: #cbd5e1;
+            font-size: 12px;
+            line-height: 1.45;
+        }
+        .notice {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+        .notice.error { color: #fecaca; }
+        .notice.ok { color: #99f6e4; }
+        .detail-panel {
+            margin-top: 14px;
+            padding: 14px;
+            border: 1px solid rgba(45, 212, 191, 0.24);
+            border-radius: 8px;
+            background: rgba(5, 9, 18, 0.44);
+        }
+        .detail-panel h3 {
+            margin: 0;
+            font-size: 17px;
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .detail-grid div {
+            padding: 10px;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 8px;
+            background: rgba(15, 23, 36, 0.56);
+        }
+        .detail-grid strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #e5e7eb;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .detail-grid span {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        .login-card {
+            width: min(520px, calc(100% - 32px));
+            padding: 24px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: linear-gradient(180deg, rgba(17, 29, 45, 0.96), rgba(9, 15, 25, 0.96));
+            text-align: center;
+        }
+        .login-card h1 {
+            font-size: 34px;
+        }
+        .login-card a {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            margin-top: 16px;
+            padding: 0 14px;
+            border-radius: 8px;
+            background: #14b8a6;
+            color: #031312;
+            font-weight: 900;
+            text-decoration: none;
+        }
+        @media (max-width: 760px) {
+            .builder-grid { grid-template-columns: 1fr; }
+            .two-col { grid-template-columns: 1fr; }
+            .detail-grid { grid-template-columns: 1fr; }
+        }
+        [hidden] { display: none !important; }
+    </style>
+    <script src="/static/js/config.js"></script>
+    <script src="/static/js/backend-api.js"></script>
 </head>
 <body>
-  <main id="authCheck" class="auth-check">Checking access...</main>
-  <main id="loginRequired" class="auth-check" hidden><section class="login-card"><p class="panel-label">Private Model Builder</p><h1>Login required</h1><p class="notice">Model Builder is private to your account.</p><a href="/login/?next=/model-builder/">Log in</a></section></main>
-  <main id="modelBuilderShell" class="model-builder-page" hidden>
-    <section class="model-builder-top"><div><p class="kicker">Private Tools</p><h1>Model Builder</h1><p class="subtitle">Build a private sports model configuration with clear inputs, weights, factors, and output rules. This workspace does not generate fake predictions, fake backtests, fake ROI, or fake records.</p></div><div id="marketBoardStatus" class="status-pill">Real inputs loading</div></section>
-    <section class="empty-shell" aria-label="Model Builder empty state"><div><p class="empty-title">Guided private model setup</p><p class="empty-copy">Define what a model should look at, how much each factor should matter, and what kind of output it may produce once real data is connected.</p></div></section>
-    <section class="builder-grid" aria-label="Private Model Builder workspace">
-      <form id="modelBuilderForm" class="builder-panel"><p class="panel-label">Private Model Definition</p><h2 id="formTitle">New model</h2><p>Use the guided fields below. Saved models are private configuration objects only.</p><div class="form-grid">
-        <div class="step-card"><h3>1. Basics</h3><label>Name<input id="modelName" name="name" maxlength="120" required placeholder="MLB totals filter"></label><label>Description<input id="modelDescription" name="description" maxlength="5000" placeholder="Private notes for this configuration"></label><div class="two-col"><label>Sport<select id="modelSport" name="sport_key" required><option value="baseball_mlb">MLB</option><option value="basketball_nba">NBA</option><option value="icehockey_nhl">NHL</option><option value="americanfootball_nfl">NFL</option><option value="basketball_ncaab">NCAAB</option></select></label><label>Status<select id="modelStatus" name="status"><option value="draft">Draft</option><option value="active">Active</option></select></label></div></div>
-        <div class="step-card"><h3>2. Market and filters</h3><div class="two-col"><label>Market<select id="modelMarket" name="market_type"><option value="totals">Total</option><option value="h2h">Moneyline</option><option value="spreads">Spread / run line</option><option value="team_totals">Team total</option></select></label><label>Side preference<select id="modelSide" name="side_preference"><option value="any">Any side</option><option value="over">Over only</option><option value="under">Under only</option><option value="favorite">Favorite only</option><option value="underdog">Underdog only</option></select></label></div><div class="two-col"><label>Minimum odds<input id="minOdds" type="number" step="1" value="-150"></label><label>Maximum odds<input id="maxOdds" type="number" step="1" value="150"></label></div></div>
-        <div class="step-card"><h3>3. Factor weights</h3><div id="factorControls"></div></div>
-        <div class="step-card"><h3>4. Output rules</h3><div class="two-col"><label>Output type<select id="modelOutput"><option value="ranked_shortlist">Ranked shortlist</option><option value="pass_fail_filter">Pass/fail filter</option><option value="watchlist_only">Watchlist only</option></select></label><label>Minimum score to show<input id="minConfidence" type="number" min="0" max="100" step="5" value="0"></label></div><label>Builder notes<textarea id="modelNotes" placeholder="Real input requirements, exclusions, or review notes"></textarea></label></div>
-        <div class="step-card"><h3>5. Unit settings</h3><div class="two-col"><label>Unit mode<select id="unitMode"><option value="flat">Flat</option><option value="manual_review">Manual review</option></select></label><label>Default units<input id="defaultUnits" type="number" min="0" max="10" step="0.25" value="1"></label></div><label>Max units<input id="maxUnits" type="number" min="0" max="10" step="0.25" value="1"></label></div>
-        <div class="data-warning">Real data is read from the TrustMyRecord sportsbook board when available. Saved models are configurations only. If a score is added later, it must show the exact real inputs used and label unavailable data as unavailable.</div><div class="button-row"><button class="primary" type="submit" id="saveModelBtn">Save private model</button><button type="button" id="resetModelBtn">New draft</button></div><p id="modelBuilderMessage" class="notice" aria-live="polite"></p>
-      </div></form>
-      <section class="builder-panel"><p class="panel-label">Real Input Status</p><h2>Connected inputs</h2><p>Only verified API inputs are shown. Unavailable inputs are labeled unavailable and are not converted into picks or results.</p><div id="dataInputSummary" class="data-card">Loading real sportsbook board inputs...</div><div id="realInputList" class="data-grid"></div><p class="panel-label" style="margin-top:18px;">Your Private Models</p><h2>Saved definitions</h2><p>No public pages or shared rankings are created from this workspace.</p><div id="modelBuilderList" class="model-list"></div></section>
-      <section class="builder-panel full"><p class="panel-label">Configuration Preview</p><h2>What this model will do</h2><p>This preview explains the saved configuration. It is not a prediction, score, backtest, ROI, or tracked record.</p><div id="modelSummary" class="summary-box"></div></section>
-    </section>
-  </main>
-  <script>
-    (function(){
-      var local = '/static/js/model-builder-shell.js?v=dd44a487';
-      var raw = 'https://raw.githubusercontent.com/Nimadamus/trustmyrecord/main/static/js/model-builder-shell.js';
-      function loadText(url){return fetch(url,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();});}
-      loadText(local).catch(function(){return loadText(raw);}).then(function(code){(0,eval)(code);}).catch(function(error){var el=document.getElementById('modelBuilderMessage')||document.getElementById('authCheck');if(el){el.textContent='Model Builder script unavailable: '+error.message;el.className='notice error';}});
-    })();
-  </script>
+    <main id="authCheck" class="auth-check">Checking access...</main>
+    <main id="loginRequired" class="auth-check" hidden>
+        <section class="login-card">
+            <p class="panel-label">Private Model Builder Phase 1</p>
+            <h1>Login required</h1>
+            <p class="notice">Model Builder is private to your account.</p>
+            <a href="/login/?next=/model-builder/">Log in</a>
+        </section>
+    </main>
+
+    <main id="modelBuilderShell" class="model-builder-page" hidden>
+        <section class="model-builder-top">
+            <p class="kicker">Private Tools</p>
+            <h1>Model Builder</h1>
+            <p class="subtitle">Build a private sports model configuration with clear inputs, weights, factors, and output rules. This workspace saves setup details only; results and public claims come later after real grading exists.</p>
+        </section>
+
+        <section class="empty-shell" aria-label="Model Builder empty state">
+            <div class="empty-shell-inner">
+                <div class="empty-icon" aria-hidden="true">MB</div>
+                <p class="empty-title">Guided private model setup</p>
+                <p class="empty-copy">Define what a model should look at, how much each factor should matter, and what kind of output it may produce once real data is connected.</p>
+            </div>
+        </section>
+
+        <section class="builder-grid" aria-label="Private Model Builder workspace">
+            <form id="modelBuilderForm" class="builder-panel">
+                <p class="panel-label">Private Model Definition</p>
+                <h2 id="formTitle">New model</h2>
+                <p>Use the guided fields below. Saved models are private configuration objects only.</p>
+                <div class="form-grid">
+                    <div class="step-card">
+                        <h3>1. Basics</h3>
+                        <label>Name
+                            <input id="modelName" name="name" maxlength="120" required placeholder="MLB totals filter">
+                        </label>
+                        <label>Description
+                            <input id="modelDescription" name="description" maxlength="5000" placeholder="Private notes for this configuration">
+                        </label>
+                        <div class="two-col">
+                            <label>Sport
+                                <select id="modelSport" name="sport_key" required>
+                                    <option value="baseball_mlb">MLB</option>
+                                    <option value="basketball_nba">NBA</option>
+                                    <option value="icehockey_nhl">NHL</option>
+                                    <option value="americanfootball_nfl">NFL</option>
+                                    <option value="basketball_ncaab">NCAAB</option>
+                                </select>
+                            </label>
+                            <label>Status
+                                <select id="modelStatus" name="status">
+                                    <option value="draft">Draft</option>
+                                    <option value="active">Active</option>
+                                </select>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h3>2. Market and filters</h3>
+                        <div class="two-col">
+                            <label>Market
+                                <select id="modelMarket" name="market_type">
+                                    <option value="totals">Total</option>
+                                    <option value="h2h">Moneyline</option>
+                                    <option value="spreads">Spread / run line</option>
+                                    <option value="team_totals">Team total</option>
+                                </select>
+                            </label>
+                            <label>Side preference
+                                <select id="modelSide" name="side_preference">
+                                    <option value="any">Any side</option>
+                                    <option value="over">Over only</option>
+                                    <option value="under">Under only</option>
+                                    <option value="favorite">Favorite only</option>
+                                    <option value="underdog">Underdog only</option>
+                                </select>
+                            </label>
+                        </div>
+                        <div class="two-col">
+                            <label>Minimum odds
+                                <input id="minOdds" type="number" step="1" value="-150">
+                            </label>
+                            <label>Maximum odds
+                                <input id="maxOdds" type="number" step="1" value="150">
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="step-card">
+                        <h3>3. Factor weights</h3>
+                        <div id="factorControls"></div>
+                    </div>
+
+                    <div class="step-card">
+                        <h3>4. Output rules</h3>
+                        <div class="two-col">
+                            <label>Output type
+                                <select id="modelOutput">
+                                    <option value="ranked_shortlist">Ranked shortlist</option>
+                                    <option value="pass_fail_filter">Pass/fail filter</option>
+                                    <option value="watchlist_only">Watchlist only</option>
+                                </select>
+                            </label>
+                            <label>Minimum score to show
+                                <input id="minConfidence" type="number" min="0" max="100" step="5" value="0">
+                            </label>
+                        </div>
+                        <label>Builder notes
+                            <textarea id="modelNotes" placeholder="Real input requirements, exclusions, or review notes"></textarea>
+                        </label>
+                    </div>
+
+                    <div class="step-card">
+                        <h3>5. Unit settings</h3>
+                        <div class="two-col">
+                            <label>Unit mode
+                                <select id="unitMode">
+                                    <option value="flat">Flat</option>
+                                    <option value="manual_review">Manual review</option>
+                                </select>
+                            </label>
+                            <label>Default units
+                                <input id="defaultUnits" type="number" min="0" max="10" step="0.25" value="1">
+                            </label>
+                        </div>
+                        <label>Max units
+                            <input id="maxUnits" type="number" min="0" max="10" step="0.25" value="1">
+                        </label>
+                    </div>
+
+                    <div class="data-warning">Real data is not connected inside this builder page yet. Saved models are configurations only. If scoring is added later, it must show the exact real inputs used and label unavailable data as unavailable.</div>
+                    <div class="button-row">
+                        <button class="primary" type="submit" id="saveModelBtn">Save private model</button>
+                        <button type="button" id="resetModelBtn">New draft</button>
+                    </div>
+                    <p id="modelBuilderMessage" class="notice" aria-live="polite"></p>
+                </div>
+            </form>
+
+            <section class="builder-panel">
+                <p class="panel-label">Your Private Models</p>
+                <h2>Saved definitions</h2>
+                <p>No public pages or shared rankings are created from this workspace.</p>
+                <div id="modelBuilderList" class="model-list"></div>
+                <div id="modelBuilderDetail" class="detail-panel" hidden></div>
+            </section>
+
+            <section class="builder-panel full">
+                <p class="panel-label">Configuration Preview</p>
+                <h2>What this model will do</h2>
+                <p>This preview explains the saved configuration. It is not a result, score, or public claim.</p>
+                <div id="modelSummary" class="summary-box"></div>
+            </section>
+        </section>
+    </main>
+
+    <script src="/static/js/model-builder-shell.js"></script>
 </body>
 </html>
