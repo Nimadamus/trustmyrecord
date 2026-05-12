@@ -58,8 +58,8 @@ assertRegex(
 );
 
 assertRegex(
-  /\.pending-picks-compact-link\s*\{[\s\S]*?min-width:\s*236px\s*!important;[\s\S]*?min-height:\s*42px\s*!important;[\s\S]*?white-space:\s*nowrap\s*!important;/,
-  'pending picks button must remain visible and unclipped'
+  /\.pending-picks-compact-link\s*\{[\s\S]*?min-width:\s*286px\s*!important;[\s\S]*?min-height:\s*50px\s*!important;[\s\S]*?font-size:\s*14px\s*!important;[\s\S]*?white-space:\s*nowrap\s*!important;[\s\S]*?display:\s*inline-flex\s*!important;/,
+  'top pending picks button must remain larger, visible, and unclipped'
 );
 
 assertRegex(
@@ -70,6 +70,16 @@ assertRegex(
 assertIncludes(
   'PENDING_PICKS_NO_HORIZONTAL_OVERFLOW_20260509',
   'pending picks no-horizontal-overflow marker'
+);
+
+assertIncludes(
+  'PENDING_PICKS_SINGLE_ENTRY_20260509',
+  'single pending-picks entry marker'
+);
+
+assertRegex(
+  /\.sportsbook-ticket-preview \.tmr-pending-picks-panel\s*\{[\s\S]*?display:\s*none\s*!important;/,
+  'bottom-right pending picks widget must remain hidden from the pick slip'
 );
 
 assertRegex(

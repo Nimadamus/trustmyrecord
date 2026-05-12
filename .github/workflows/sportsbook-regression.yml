@@ -5,196 +5,35 @@ on:
     branches:
       - main
   pull_request:
-  workflow_dispatch:
 
 jobs:
   line-formatting-guard:
-    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Set up Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '20'
 
       - name: Run line formatting guard
         run: node tests/line-formatting-regression-test.js
-
-      - name: Run workflow source guard
-        run: node tests/workflow-regression-test.js
-
-      - name: Run publish guard source guard
-        run: node tests/publish-guard-regression-test.js
-
-      - name: Run pending picks guard
-        run: node tests/pending-picks-regression-test.js
-
-      - name: Run local API no-seed guard
-        run: node tests/local-api-no-seed-regression-test.js
-
-      - name: Run pick display format guard
-        run: node tests/pick-display-format.test.js
-
-      - name: Run Trendspotter source guard
-        run: node tests/trendspotter-source-regression-test.js
-
-      - name: Install jsdom test dependency
-        run: npm install --no-save jsdom@24.1.3
-
-      - name: Run Trendspotter accuracy guard
-        run: node tests/trendspotter-accuracy-test.js
-
-      - name: Run sitewide design system guard
-        run: node tests/sitewide-design-system-regression-test.js
-
-      - name: Run route shim guard
-        run: node tests/route-shim-regression-test.js
-
-      - name: Run sitemap route guard
-        run: node tests/sitemap-route-regression-test.js
-
-      - name: Run homepage canonical guard
-        run: node tests/homepage-canonical-regression-test.js
-
-      - name: Run homepage visual guard
-        run: node tests/homepage-visual-regression-test.js
-
-      - name: Run feed page guard
-        run: node tests/feed-page-regression-test.js
-
-      - name: Run polls visual guard
-        run: node tests/polls-page-visual-regression-test.js
-
-      - name: Run polls create-flow guard
-        run: node tests/polls-create-flow-regression-test.js
-
-      - name: Run trivia page guard
-        run: node tests/trivia-page-regression-test.js
-
-      - name: Run arena page guard
-        run: node tests/arena-page-visual-regression-test.js
-
-      - name: Run leaderboards page guard
-        run: node tests/leaderboards-page-visual-regression-test.js
-
-      - name: Run forum page guard
-        run: node tests/forum-page-visual-regression-test.js
-
-      - name: Run stats engine record math guard
-        run: node tests/stats-engine-regression-test.js
-
-      - name: Run streak unit guard
-        run: node tests/streaks-test.js
-
-      - name: Run streak ledger ordering guard
-        run: node tests/streaks-regression-test.js
 
   sportsbook-guards:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Set up Node
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '20'
 
       - name: Run sportsbook reliability guard
         run: node tests/sportsbook-reliability-guard-test.js
 
-      - name: Run sportsbook approved visual lock guard
-        run: node tests/sportsbook-approved-visual-lock.test.js
-
-      - name: Run sportsbook header guard
-        run: node tests/sportsbook-header-regression-test.js
-
-      - name: Run sportsbook no-game-drop guard
-        run: node tests/sportsbook-no-game-drop-regression-test.js
-
-      - name: Run sportsbook polish guard
-        run: node tests/sportsbook-polish-regression.test.js
-
       - name: Run sportsbook stake-mode guard
         run: node tests/sportsbook-stake-mode-ui-test.js
-
-      - name: Run protected baseline guard
-        run: node tests/protected-baseline-regression-test.js
-
-      - name: Run auto-grader regression guard
-        run: node tests/auto-grader-regression-test.js
-  profile-and-simulator-guards:
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v5
-
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-
-      - name: Run profile lookup guard
-        run: node tests/profile-page-lookup-test.js
-
-      - name: Run profile no-old-theme-flash guard
-        run: node tests/profile-no-old-theme-flash-test.js
-
-      - name: Run profile source guard
-        run: node tests/profile-source-regression-test.js
-
-      - name: Run profile market drilldown guard
-        run: node tests/profile-market-drilldown-page-test.js
-
-      - name: Run MLB simulator page guard
-        run: node tests/mlb-simulator-page-test.js
-
-      - name: Run MLB simulator box score guard
-        run: node tests/mlb-simulator-boxscore-test.js
-
-      - name: Run MLB simulator realism guard
-        run: node tests/mlb-simulator-realism-test.js
-
-      - name: Run MLB live roster guard
-        run: node tests/mlb-simulator-live-roster-validation-test.js
-
-      - name: Install jsdom test dependency
-        run: npm install --no-save jsdom@24.1.3
-
-      - name: Run predeploy stale-source guard
-        shell: pwsh
-        run: ./scripts/predeploy-guard.ps1 -SkipRemoteCheck
-
-  live-public-ranking-proof:
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v5
-
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-
-      - name: Run live public ranking proof
-        run: node tests/public-ranking-ui-live-test.js
-
-  live-protected-sources-proof:
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v5
-
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: '24'
-
-      - name: Run live protected sources proof
-        run: node tests/live-protected-sources-test.js

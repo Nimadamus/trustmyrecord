@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pending Picks | TrustMyRecord</title>
-    <meta name="robots" content="noindex,nofollow">
-    <link rel="canonical" href="https://trustmyrecord.com/my-pending-picks/">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://trustmyrecord.com/my-pending-picks/index.html">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -208,18 +208,6 @@
             color: var(--muted);
             line-height: 1.55;
         }
-        .pending-debug {
-            margin: 0 0 18px;
-            padding: 14px 16px;
-            border: 1px solid rgba(244, 201, 93, 0.35);
-            border-radius: 8px;
-            background: rgba(244, 201, 93, 0.09);
-            color: #ffe7a6;
-            font-size: 12px;
-            font-weight: 800;
-            line-height: 1.6;
-        }
-        .pending-debug b { color: #fff7d6; }
         [hidden] { display: none !important; }
         @media (max-width: 820px) {
             .pending-page { width: min(100% - 22px, 620px); padding-top: 92px; }
@@ -268,9 +256,9 @@
     <main class="pending-page">
         <header class="pending-head">
             <div>
-                <p class="pending-kicker" id="pendingKicker">Private ledger</p>
-                <h1 id="pendingTitle">Pending Picks</h1>
-                <p class="pending-subtitle" id="pendingSubtitle">Locked picks waiting for final grading.</p>
+                <p class="pending-kicker">Private ledger</p>
+                <h1>Pending Picks</h1>
+                <p class="pending-subtitle">Locked picks waiting for final grading.</p>
             </div>
             <nav class="pending-actions" aria-label="Pending picks actions">
                 <a class="btn" href="/profile/">Profile</a>
@@ -303,18 +291,10 @@
                 </div>
             </div>
 
-            <div id="pendingDebug" class="pending-debug" hidden></div>
-
             <div id="emptyState" class="empty-state" hidden>
-                <h2>No pending picks</h2>
+                <h2>No pending picks right now.</h2>
                 <p>Locked picks will appear here after you submit them and before the grader settles the final result.</p>
                 <a class="btn btn-primary" href="/sportsbook/">Make a Pick</a>
-            </div>
-
-            <div id="privacyState" class="empty-state" hidden>
-                <h2>Pending picks are private</h2>
-                <p>This capper has chosen not to make pending picks public.</p>
-                <a class="btn btn-primary" href="/profile/">View Profile</a>
             </div>
 
             <section id="pendingPanel" class="pending-panel" hidden aria-label="My pending pick details">
@@ -327,7 +307,7 @@
                                 <th>Pick</th>
                                 <th>Line</th>
                                 <th>Odds</th>
-                                <th>Risked</th>
+                                <th>Risk</th>
                                 <th>To Win</th>
                                 <th>Time Submitted</th>
                                 <th>Status</th>
@@ -342,21 +322,15 @@
     </main>
 
     <script src="/static/js/config.js?v=20260430a"></script>
-    <script src="/static/js/backend-api.js?v=20260503pending1"></script>
+    <script src="/static/js/backend-api.js?v=20260507pendingline1"></script>
     <script>
     (function () {
         var authState = document.getElementById('authState');
         var content = document.getElementById('pendingContent');
         var emptyState = document.getElementById('emptyState');
-        var privacyState = document.getElementById('privacyState');
         var panel = document.getElementById('pendingPanel');
         var rows = document.getElementById('pendingRows');
         var cards = document.getElementById('pendingCards');
-        var debugPanel = document.getElementById('pendingDebug');
-        var params = new URLSearchParams(window.location.search);
-        var publicUsername = (params.get('user') || params.get('u') || '').trim();
-        var debugRequested = params.get('debug') === '1';
-        var currentUser = null;
 
         function esc(value) {
             return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
@@ -364,6 +338,8 @@
             });
         }
         function sportLabel(value) {
+            var key = String(value || '').toLowerCase().trim();
+            if (key === 'icehockey_nhl') return 'NHL';
             var raw = String(value || '').replace(/_/g, ' ').trim();
             return raw ? raw.replace(/\b\w/g, function (c) { return c.toUpperCase(); }) : 'League';
         }
@@ -398,35 +374,23 @@
             if (!Number.isFinite(n)) return '-';
             return n > 0 ? '+' + n : String(n);
         }
-        // PENDING_PICK_LINE_FORMAT_FIX_20260507: only spread-style markets get signed positive lines.
-        // PENDING_PICK_TOTAL_LINE_NUMERIC_ONLY_20260507: totals keep O/U in Pick; Line is threshold only.
-        function fmtBareLine(value) {
+        function fmtLine(value) {
             if (value == null || value === '') return '-';
             var n = Number(value);
-            if (!Number.isFinite(n)) return String(value).trim();
-            var text = String(n);
-            return text.indexOf('.') !== -1 ? text.replace(/0+$/, '').replace(/\.$/, '') : text;
-        }
-        function fmtLine(value) {
-            var text = fmtBareLine(value);
-            if (text === '-') return '-';
-            var n = Number(value);
-            return Number.isFinite(n) && n > 0 ? '+' + text : text;
+            if (!Number.isFinite(n)) return String(value);
+            if (n === 0) return '0';
+            return n > 0 ? '+' + n : String(n);
         }
         function fmtPickLine(pick) {
+            if (window.TMR && typeof window.TMR.formatPickLine === 'function') {
+                return window.TMR.formatPickLine(pick);
+            }
             pick = pick || {};
-            var market = String(pick.market_type || pick.market || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
-            var selection = String(pick.selection_label || pick.selection || pick.pick || pick.side || '').toLowerCase();
-            var sideText = String(pick.side || pick.total_side || pick.bet_side || pick.type || pick.bet_type || pick.betType || '').toLowerCase();
+            var market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
             var value = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
-            var isMoneyline = market === 'h2h'
-                || market === 'moneyline'
-                || /_h2h$/.test(market)
-                || /\b(ml|moneyline)\b/.test(selection);
-            if (isMoneyline) return '-';
             if (value == null || value === '') return '-';
             var n = Number(value);
-            if (!Number.isFinite(n)) return String(value).trim();
+            if (!Number.isFinite(n)) return String(value);
             var isSpread = market === 'spreads'
                 || market === 'spread'
                 || market.indexOf('spread') !== -1
@@ -434,155 +398,91 @@
                 || market.indexOf('puck_line') !== -1;
             var isTotal = market === 'totals'
                 || market === 'total'
-                || market === 'team_totals'
-                || market === 'team_total'
-                || market.indexOf('total') !== -1
-                || /\b(over|under)\b/.test(selection)
-                || /\b(over|under|teamover|teamunder|f5over|f5under)\b/.test(sideText);
+                || market.indexOf('total') !== -1;
+            var isMoneyline = market === 'h2h'
+                || market === 'moneyline'
+                || market.indexOf('moneyline') !== -1
+                || /_h2h$/.test(market);
+            if (isMoneyline) return '-';
             if (isTotal) {
-                return fmtBareLine(Math.abs(n));
+                var totalLine = fmtLine(Math.abs(n)).replace(/^\+/, '');
+                var selection = String(pick.selection_label || pick.selection || pick.pick || pick.side || '').toLowerCase();
+                if (/\bover\b/.test(selection)) return 'O ' + totalLine;
+                if (/\bunder\b/.test(selection)) return 'U ' + totalLine;
+                return totalLine;
             }
             if (isSpread) return fmtLine(n);
-            return fmtBareLine(n);
-        }
-        function pickMarket(pick) {
-            return String(pick && (pick.market_type || pick.market || pick.marketType || pick.bet_type || pick.betType) || '').toLowerCase();
-        }
-        function pickSelection(pick) {
-            return String(pick && (pick.selection_label || pick.selection || pick.pick || pick.side) || '').replace(/\s+/g, ' ').trim();
-        }
-        function totalSideLabel(pick) {
-            var raw = [
-                pickSelection(pick),
-                pick && pick.side,
-                pick && pick.total_side,
-                pick && pick.bet_side,
-                pick && pick.type,
-                pick && pick.bet_type,
-                pick && pick.betType
-            ].join(' ').toLowerCase();
-            if (/\bunder\b|teamunder|f5under/.test(raw)) return 'Under';
-            if (/\bover\b|teamover|f5over/.test(raw)) return 'Over';
-            return '';
-        }
-        function matchupLabel(pick) {
-            var away = String(pick && pick.away_team || '').trim();
-            var home = String(pick && pick.home_team || '').trim();
-            return away && home ? away + ' at ' + home : '';
-        }
-        function stripTrailingLine(value) {
-            return String(value || '').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim();
+            return fmtLine(n).replace(/^\+/, '');
         }
         function fmtUnits(value) {
             var n = Number(value);
             if (!Number.isFinite(n)) return '-';
             return (Number.isInteger(n) ? String(n) : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')) + 'u';
         }
-        function stakeMode(pick) {
-            var mode = String((pick && (pick.stake_mode || pick.units_mode)) || '').toLowerCase();
-            if (mode === 'to_win' || mode === 'towin') return 'to_win';
-            if (mode === 'risk') return 'risk';
-            return '';
+        function stakeAmountFromRisk(riskUnits, odds) {
+            var risk = Number(riskUnits);
+            var price = Number(odds);
+            if (!Number.isFinite(risk) || risk <= 0 || !Number.isFinite(price) || Math.abs(price) < 100) return null;
+            return {
+                risk: risk,
+                toWin: price < 0 ? risk * 100 / Math.abs(price) : risk * price / 100
+            };
         }
-        function oddsValue(pick) {
-            var n = Number(pick && (pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds));
-            return Number.isFinite(n) && Math.abs(n) >= 100 ? n : null;
+        function stakeAmountFromToWin(toWinUnits, odds) {
+            var toWin = Number(toWinUnits);
+            var price = Number(odds);
+            if (!Number.isFinite(toWin) || toWin <= 0 || !Number.isFinite(price) || Math.abs(price) < 100) return null;
+            return {
+                risk: price < 0 ? toWin * Math.abs(price) / 100 : toWin * 100 / price,
+                toWin: toWin
+            };
         }
-        function riskUnits(pick) {
-            var stored = Number(pick && pick.risk_units);
-            if (Number.isFinite(stored) && stored > 0) return stored;
-            var mode = stakeMode(pick);
-            var units = Number(pick && pick.units);
-            var odds = oddsValue(pick);
-            if (!mode || !Number.isFinite(units) || units <= 0 || odds == null) return null;
-            return mode === 'to_win' ? (odds < 0 ? units * Math.abs(odds) / 100 : units * 100 / odds) : units;
-        }
-        function toWinUnits(pick) {
-            var stored = Number(pick && (pick.to_win_units != null ? pick.to_win_units : pick.win_units));
-            if (Number.isFinite(stored) && stored > 0) return stored;
-            var mode = stakeMode(pick);
-            var units = Number(pick && pick.units);
-            var odds = oddsValue(pick);
-            if (!mode || !Number.isFinite(units) || units <= 0 || odds == null) return null;
-            return mode === 'to_win' ? units : (odds < 0 ? units * 100 / Math.abs(odds) : units * odds / 100);
+        function stakeAmounts(pick) {
+            pick = pick || {};
+            var risk = Number(pick.risk_units);
+            var toWin = Number(pick.to_win_units != null ? pick.to_win_units : pick.win_units);
+            if (Number.isFinite(risk) && risk > 0 && Number.isFinite(toWin) && toWin > 0) {
+                return { risk: risk, toWin: toWin };
+            }
+            if (Number.isFinite(risk) && risk > 0) return stakeAmountFromRisk(risk, pick.odds_snapshot) || { risk: risk, toWin: null };
+            if (Number.isFinite(toWin) && toWin > 0) return stakeAmountFromToWin(toWin, pick.odds_snapshot) || { risk: null, toWin: toWin };
+            return String(pick.stake_mode || pick.units_mode || 'risk').toLowerCase() === 'to_win'
+                ? stakeAmountFromToWin(pick.units, pick.odds_snapshot) || { risk: null, toWin: pick.units }
+                : stakeAmountFromRisk(pick.units, pick.odds_snapshot) || { risk: pick.units, toWin: null };
         }
         function pickText(pick) {
-            pick = pick || {};
-            var selection = pickSelection(pick) || 'Pick';
-            var market = pickMarket(pick);
-            var line = pick.line_snapshot != null ? pick.line_snapshot : pick.line;
-            if (market === 'h2h' || market.indexOf('moneyline') !== -1) {
-                return /\bML\b$/i.test(selection) ? selection : selection + ' ML';
+            if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
+                return window.TMR.formatPickDisplay(pick);
             }
-            if (line == null || line === '') return selection || 'Pick';
-            var n = Number(line);
-            var s = Number.isFinite(n) ? String(n) : String(line).trim();
-            if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
-            var isTeamTotal = market === 'team_totals' || market === 'team_total';
-            var isFullGameTotal = !isTeamTotal && (market === 'totals' || market === 'total' || market.indexOf('total') !== -1);
-            if (isTeamTotal || isFullGameTotal) {
-                var side = totalSideLabel(pick);
-                var cleanSelection = stripTrailingLine(selection);
-                if (isTeamTotal) {
-                    if (/\bteam\s+total\b/i.test(cleanSelection)) return cleanSelection + ' ' + s;
-                    if (side) {
-                        var teamLabel = cleanSelection.replace(/\b(over|under)\b.*$/i, '').trim();
-                        return (teamLabel ? teamLabel + ' ' : '') + 'Team Total ' + side + ' ' + s;
-                    }
-                    return cleanSelection + ' Team Total ' + s;
-                }
-                var totalLabel = 'Full Game Total' + (side ? ' ' + side : '') + ' ' + s;
-                var gameLabel = matchupLabel(pick);
-                return gameLabel ? gameLabel + ' ' + totalLabel : totalLabel;
+            if (window.TMR && typeof window.TMR.formatPickSelection === 'function') {
+                return window.TMR.formatPickSelection(pick);
             }
-            if ((market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1) && Number.isFinite(n) && n > 0) {
-                s = '+' + s;
+            var selection = String(pick.selection || 'Pick').trim();
+            var line = fmtPickLine(pick);
+            if (line !== '-') {
+                selection = selection.replace(new RegExp('\\s+' + line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), '').trim();
+                selection = selection.replace(new RegExp('\\s+[+-]?' + line.replace(/^\+/, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), '').trim();
             }
-            var escaped = s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            if (new RegExp('(?:^|\\s)' + escaped + '$').test(selection)) return selection;
-            var totalSide = market.indexOf('total') !== -1 && !/\b(over|under)\b/i.test(selection)
-                ? (/\bover\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Over' : (/\bunder\b/i.test(String(pick.side || pick.total_side || pick.bet_side || pick.type || '')) ? ' Under' : ''))
-                : '';
-            return (selection || 'Pick').replace(/\s+[+-]?\d+(?:\.\d+)?\s*$/i, '').trim() + totalSide + ' ' + s;
+            return selection || 'Pick';
         }
         function matchup(pick) {
             if (pick.away_team || pick.home_team) return [pick.away_team, pick.home_team].filter(Boolean).join(' @ ');
             return 'Matchup pending';
         }
         function statusText(pick) {
-            return 'PENDING';
-        }
-        function canShowDebug() {
-            var username = String(currentUser && (currentUser.username || currentUser.user_name || currentUser.handle) || '').toLowerCase();
-            return debugRequested && !publicUsername && username === 'betlegend';
-        }
-        function renderDebug(debug) {
-            if (!debugPanel) return;
-            if (!canShowDebug()) {
-                debugPanel.hidden = true;
-                debugPanel.innerHTML = '';
-                return;
-            }
-            var summary = document.getElementById('summaryCount').textContent || '0';
-            debugPanel.innerHTML = [
-                '<b>Pending diagnostics</b>',
-                'API pending count: ' + esc(debug.apiCount),
-                'Rendered row count: ' + esc(debug.renderedCount),
-                'Filtered out count: ' + esc(debug.filteredOutCount),
-                'Summary count: ' + esc(summary)
-            ].join('<br>');
-            debugPanel.hidden = false;
+            return 'Pending';
         }
         function rowHtml(pick) {
             var pickLabel = pickText(pick);
+            var stake = stakeAmounts(pick);
             return '<tr>'
                 + '<td>' + esc(fmtDate(pick.commence_time)) + '<span class="pick-sub">' + esc(matchup(pick)) + '</span></td>'
                 + '<td><span class="league-chip">' + esc(sportLabel(pick.sport_key)) + '</span></td>'
                 + '<td><span class="pick-main">' + esc(pickLabel) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span></td>'
                 + '<td>' + esc(fmtPickLine(pick)) + '</td>'
                 + '<td>' + esc(fmtOdds(pick.odds_snapshot)) + '</td>'
-                + '<td>' + esc(riskUnits(pick) == null ? 'Needs review' : fmtUnits(riskUnits(pick))) + '</td>'
-                + '<td>' + esc(toWinUnits(pick) == null ? 'Needs review' : fmtUnits(toWinUnits(pick))) + '</td>'
+                + '<td>' + esc(fmtUnits(stake.risk)) + '</td>'
+                + '<td>' + esc(fmtUnits(stake.toWin)) + '</td>'
                 + '<td>' + esc(fmtDate(pick.locked_at || pick.created_at)) + '</td>'
                 + '<td><span class="status-pill">' + esc(statusText(pick)) + '</span></td>'
                 + '</tr>';
@@ -591,49 +491,32 @@
             return '<div class="pending-card-row"><div class="pending-card-label">' + esc(label) + '</div><div class="pending-card-value">' + value + '</div></div>';
         }
         function cardHtml(pick) {
+            var stake = stakeAmounts(pick);
             return '<article class="pending-card">'
                 + cardRow('Date of Game', esc(fmtDate(pick.commence_time)) + '<span class="pick-sub">' + esc(matchup(pick)) + '</span>')
                 + cardRow('League', '<span class="league-chip">' + esc(sportLabel(pick.sport_key)) + '</span>')
                 + cardRow('Pick', '<span class="pick-main">' + esc(pickText(pick)) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span>')
                 + cardRow('Line', esc(fmtPickLine(pick)))
                 + cardRow('Odds', esc(fmtOdds(pick.odds_snapshot)))
-                + cardRow('Risked', esc(riskUnits(pick) == null ? 'Needs review' : fmtUnits(riskUnits(pick))))
-                + cardRow('To Win', esc(toWinUnits(pick) == null ? 'Needs review' : fmtUnits(toWinUnits(pick))))
+                + cardRow('Risk', esc(fmtUnits(stake.risk)))
+                + cardRow('To Win', esc(fmtUnits(stake.toWin)))
                 + cardRow('Time Submitted', esc(fmtDate(pick.locked_at || pick.created_at)))
                 + cardRow('Status', '<span class="status-pill">' + esc(statusText(pick)) + '</span>')
                 + '</article>';
         }
-        function render(picks, meta) {
-            meta = meta || {};
-            var apiRows = Array.isArray(picks) ? picks.filter(Boolean) : [];
-            // PENDING_PICK_RENDER_COUNT_FIX_20260507: the API endpoint is already pending-scoped;
-            // do not hide returned rows with a second exact-status frontend filter.
-            var pending = apiRows;
-            var filteredOut = [];
-            var totalUnits = pending.reduce(function (sum, pick) { return sum + Number(riskUnits(pick) || 0); }, 0);
+        function render(picks) {
+            var pending = (Array.isArray(picks) ? picks : []).filter(function (pick) {
+                return pick && String(pick.status || 'pending').toLowerCase() === 'pending';
+            });
+            var totalUnits = pending.reduce(function (sum, pick) { return sum + Number(pick.units || 0); }, 0);
             var earliest = pending.map(function (pick) { return pick.commence_time; }).filter(Boolean).sort()[0] || null;
-            window.__tmrPendingPicksDebug = {
-                apiCount: apiRows.length,
-                renderedCount: pending.length,
-                filteredOutCount: filteredOut.length,
-                filteredOut: filteredOut,
-                apiSummary: meta && meta.summary || null,
-                pagination: meta && meta.pagination || null,
-                statuses: apiRows.reduce(function (acc, pick) {
-                    var key = String(pick.status || 'pending').toLowerCase();
-                    acc[key] = (acc[key] || 0) + 1;
-                    return acc;
-                }, {})
-            };
 
             document.getElementById('summaryCount').textContent = String(pending.length);
             document.getElementById('summaryUnits').textContent = fmtUnits(totalUnits);
             document.getElementById('summaryEarliest').textContent = fmtShortDate(earliest);
             document.getElementById('summaryEarliestHint').textContent = earliest ? fmtDate(earliest) : 'No pending starts';
-            renderDebug(window.__tmrPendingPicksDebug);
 
             content.hidden = false;
-            if (privacyState) privacyState.hidden = true;
             if (!pending.length) {
                 emptyState.hidden = false;
                 panel.hidden = true;
@@ -646,30 +529,10 @@
         }
         async function boot() {
             try {
-                if (publicUsername) {
-                    document.getElementById('pendingKicker').textContent = 'Public pending picks';
-                    document.getElementById('pendingTitle').textContent = '@' + publicUsername + ' Pending Picks';
-                    document.getElementById('pendingSubtitle').textContent = 'Ungraded picks shared publicly by this capper.';
-                    var publicData = await window.api.getPublicPendingPicks(publicUsername, { limit: 100 });
-                    if (publicData && publicData.public_pending_picks_enabled === false) {
-                        content.hidden = false;
-                        emptyState.hidden = true;
-                        panel.hidden = true;
-                        privacyState.hidden = false;
-                        document.getElementById('summaryCount').textContent = '0';
-                        document.getElementById('summaryUnits').textContent = '0u';
-                        document.getElementById('summaryEarliest').textContent = 'None';
-                        document.getElementById('summaryEarliestHint').textContent = 'Pending picks are private';
-                        return;
-                    }
-                    render(publicData && publicData.picks, publicData);
-                    return;
-                }
                 if (!window.api || !window.api.isLoggedIn()) throw new Error('not authenticated');
-                var currentUserData = await window.api.getCurrentUser();
-                currentUser = currentUserData && (currentUserData.user || currentUserData) || null;
+                await window.api.getCurrentUser();
                 var data = await window.api.getPendingPicks({ limit: 100 });
-                render(data && data.picks, data);
+                render(data && data.picks);
             } catch (error) {
                 authState.hidden = false;
                 content.hidden = true;
@@ -686,6 +549,5 @@
         boot();
     })();
     </script>
-<script src="/static/js/analytics.js?v=20260504a"></script>
 </body>
 </html>

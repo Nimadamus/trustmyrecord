@@ -369,6 +369,10 @@ body > .container > main {
     text-transform: none !important;
 }
 
+/* Hide duplicate sport selectors. The left rail is the single visible sport selector. */
+body.tmr-site-shell[data-tmr-route="sportsbook"] .sportsbook-sports-nav,
+body[data-tmr-test-route="sportsbook"] .sportsbook-sports-nav { display: none !important; }
+
 /* Hide any leftover decorative strips inside #picks */
 #picks .market-chip-row { display: none !important; }
 #picks .sportsbook-sport-toolbar { display: none !important; }
@@ -898,6 +902,42 @@ body > .container > main {
 }
 
 /* Team Totals tab: per-team stacked rows in the team column */
+#picks .sb-tt-row {
+    grid-template-columns: minmax(260px, 1.7fr) repeat(2, minmax(124px, 1fr)) 150px !important;
+    position: relative !important;
+    padding-top: 42px !important;
+    min-height: 150px !important;
+}
+#picks .sb-tt-row .sb-board-matchup {
+    justify-content: stretch !important;
+}
+#picks .sb-tt-row .sb-board-when {
+    position: absolute !important;
+    top: 14px !important;
+    left: 22px !important;
+    right: 22px !important;
+    min-height: 14px !important;
+}
+#picks .sb-tt-row .sb-board-teams,
+#picks .sb-tt-row .sb-odds-stack {
+    gap: 6px !important;
+    height: 94px !important;
+}
+#picks .sb-tt-row .sb-board-team,
+#picks .sb-tt-row .sb-odds {
+    height: 44px !important;
+    min-height: 44px !important;
+    align-items: center !important;
+}
+#picks .sb-tt-row .sb-board-team .team-logo {
+    width: 30px !important;
+    height: 30px !important;
+    flex: 0 0 30px !important;
+}
+#picks .sb-tt-row .sb-board-team .team-logo__img {
+    width: 26px !important;
+    height: 26px !important;
+}
 #picks .sb-tt-row .sb-board-col[data-col="team"] {
     align-items: stretch !important;
     justify-content: stretch !important;
@@ -1397,76 +1437,27 @@ section.hero { background: var(--sb-bg-deep); }
     }
     #picks .sb-odds-line { font-size: 11.5px !important; }
     #picks .sb-odds-price { font-size: 14.5px !important; }
-}
-
-/* Sportsbook header fit fix: keep links, Support, and account actions in
-   separate grid tracks so Support cannot cover Sell Picks. */
-@media (min-width: 901px) {
-    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
-        display: grid !important;
-        grid-template-columns: max-content minmax(0, 1fr) max-content max-content !important;
-        grid-template-areas: "brand links support actions" !important;
-        align-items: center !important;
-        column-gap: clamp(12px, 1.1vw, 24px) !important;
-    }
-
-    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__brand {
-        grid-area: brand !important;
-    }
-
-    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__panel {
-        display: contents !important;
-    }
-
-    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
-        grid-area: links !important;
-        justify-content: center !important;
-        gap: clamp(6px, 0.7vw, 14px) !important;
-        padding: 0 !important;
-        min-width: 0 !important;
-        overflow: visible !important;
-    }
-
-    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a {
-        min-width: max-content !important;
-        padding-left: clamp(9px, 0.72vw, 14px) !important;
-        padding-right: clamp(9px, 0.72vw, 14px) !important;
-        white-space: nowrap !important;
-    }
-
-    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-support-menu {
-        grid-area: support !important;
-        justify-self: end !important;
-        min-width: max-content !important;
-        z-index: 100001 !important;
-    }
-
-    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__actions {
-        grid-area: actions !important;
-        justify-self: end !important;
-        justify-content: flex-end !important;
-        min-width: max-content !important;
-        max-width: max-content !important;
-        overflow: visible !important;
-        flex-wrap: nowrap !important;
-    }
-}
-
-@media (min-width: 901px) and (max-width: 1560px) {
-    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
-        grid-template-columns: minmax(0, 1fr) max-content max-content !important;
+    #picks .sb-tt-row {
+        grid-template-columns: 1fr 1fr !important;
+        grid-template-rows: auto auto auto !important;
         grid-template-areas:
-            "brand support actions"
-            "links links links" !important;
-        row-gap: 8px !important;
-        min-height: 82px !important;
-        padding: 10px 0 !important;
+            "match match"
+            "over  under"
+            "action action" !important;
+        padding-top: 42px !important;
     }
-
-    body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links {
-        justify-content: center !important;
-        flex-wrap: wrap !important;
-        row-gap: 6px !important;
+    #picks .sb-tt-row > .sb-board-matchup { grid-area: match; }
+    #picks .sb-tt-row > .sb-board-col[data-col="tt-over"] { grid-area: over; }
+    #picks .sb-tt-row > .sb-board-col[data-col="tt-under"] { grid-area: under; }
+    #picks .sb-tt-row > .sb-board-action { grid-area: action; }
+    #picks .sb-tt-row .sb-board-teams,
+    #picks .sb-tt-row .sb-odds-stack {
+        height: 86px !important;
+    }
+    #picks .sb-tt-row .sb-board-team,
+    #picks .sb-tt-row .sb-odds {
+        height: 40px !important;
+        min-height: 40px !important;
     }
 }
 

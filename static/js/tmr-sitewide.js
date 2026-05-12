@@ -7,7 +7,7 @@
     const sportsbookPicksHref = "/sportsbook/";
     const routes = [
         [sportsbookPicksHref, "Make Picks"],
-        ["/trustmyrecord-tools/", "Tools"],
+        ["/#tools", "Tools"],
         ["/handicappers/", "Find Handicappers"],
         ["/marketplace/", "Sell Your Picks"]
     ];
@@ -18,18 +18,16 @@
         ["/polls/", "Polls"],
         ["/trivia/", "Trivia"]
     ];
-    const visibleRoutes = routes;
+    const blockedNavHrefs = new Set(["/trendspotter/"]);
+    const visibleRoutes = routes.filter(([href]) => !blockedNavHrefs.has(href));
 
     // Pages that should highlight Arena in the top nav even though they
     // have their own URL.
-    const COMMUNITY_GROUP = new Set(["feed.html", "arena.html", "forum.html", "polls.html", "trivia.html", "hangout.html"]);
     const ARENA_GROUP = new Set(["arena.html", "challenges.html"]);
+    const COMMUNITY_GROUP = new Set(["feed.html", "arena.html", "forum.html", "polls.html", "trivia.html", "hangout.html"]);
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
-        "trustmyrecord-tools.html": ["Tools", "Run simulations, surface verified trends, and build sharper sports analysis from structured data."],
-        "mlb-simulator.html": ["Tools", "Simulate baseball matchups with starter context and projected box score output."],
-        "trendspotter.html": ["Trendspotter", "Select a matchup and generate verified betting trends from real artifact data."],
         "leaderboards.html": ["Leaderboards", "Handicapping records, trivia points, polls, online challenges, and handicapper challenges &mdash; every leaderboard in one hub."],
         "handicappers.html": ["Find Handicappers", "Search members, compare verified records, follow cappers, and open public profiles."],
         "arena.html": ["Arena", "Challenge rivals in sports picks, MLB The Show, Madden, NBA 2K, EA FC, and NHL."],
@@ -294,8 +292,7 @@
                                 ? segs[segs.length - 1]
                                 : segs[segs.length - 1] + ".html")
                             : "index.html";
-                        const active = currentFile === hrefFile ||
-                            (hrefFile === "trustmyrecord-tools.html" && location.pathname.indexOf("/trustmyrecord-tools/") === 0);
+                        const active = href.includes("#") ? location.hash === href.slice(href.indexOf("#")) : currentFile === hrefFile;
                         return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
                     }).join("")}
                 </div>
@@ -331,7 +328,7 @@
         </div>
     `;
     document.body.prepend(nav);
-
+    nav.querySelectorAll('a[href*="trendspotter"]').forEach((element) => element.remove());
     const actions = nav.querySelector(".tmr-global-nav__actions");
     const toggleButton = nav.querySelector(".tmr-global-nav__toggle");
     const communityMenu = nav.querySelector(".tmr-community-menu");

@@ -423,15 +423,6 @@ class TrustMyRecordAPI {
         return this.request(`/users/${encodeURIComponent(username)}`);
     }
 
-    async getUserPublicStats(username) {
-        return this.request(`/users/${encodeURIComponent(username)}/public-stats`);
-    }
-
-    async getPublicPendingPicks(username, options = {}) {
-        const { limit = 100, offset = 0 } = options || {};
-        return this.request(`/users/${encodeURIComponent(username)}/pending?limit=${limit}&offset=${offset}`);
-    }
-
     async updateProfile(updates) {
         return this.request('/users/profile', {
             method: 'PUT',
@@ -1048,13 +1039,17 @@ if (typeof window !== 'undefined') {
             || market.endsWith('_totals')
             || market === 'team_totals'
             || market === 'team_total';
+        const isTeamTotal = market === 'team_totals' || market === 'team_total';
         const isMoneyline = market === 'h2h'
             || market === 'moneyline'
             || market.endsWith('_h2h')
             || /\b(moneyline|ml)\b/.test(selection);
 
         if (isMoneyline) return '-';
-        if (isTotal || /\b(over|under)\b/.test(selection)) return window.TMR.formatLine(Math.abs(num)) || '-';
+        if (isTotal || /\b(over|under)\b/.test(selection)) {
+            const totalLine = window.TMR.formatLine(Math.abs(num)) || '-';
+            return totalLine;
+        }
         if (isSpread) return window.TMR.formatLine(num, { signed: true }) || '-';
         return window.TMR.formatLine(num) || '-';
     };
@@ -1080,14 +1075,20 @@ if (typeof window !== 'undefined') {
         const isTotal = isTeamTotal || market === 'totals' || market === 'total' || market.endsWith('_totals');
 
         if (!selection) return 'Pick';
-        if (isMoneyline) return /\b(ml|moneyline)\b/i.test(selection) ? selection : selection + ' ML';
+        if (isMoneyline) return /\bmoneyline\b/i.test(selection) ? selection : selection.replace(/\s+\bML\b$/i, '') + ' Moneyline';
 
         let cleaned = selection;
         if (signedLine) cleaned = cleaned.replace(new RegExp('\\s+' + signedLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), '').trim();
         if (escapedPlainLine) cleaned = cleaned.replace(new RegExp('\\s+[+-]?' + escapedPlainLine + '$'), '').trim();
 
-        if (isTeamTotal && hasTotalSide && !/\bteam\s+total\b/i.test(cleaned)) {
-            return cleaned.replace(/\b(over|under)\b/i, 'Team Total $1');
+        if (isTeamTotal && hasTotalSide) {
+            const withTeamTotal = /\bteam\s+total\b/i.test(cleaned)
+                ? cleaned
+                : cleaned.replace(/\b(over|under)\b/i, 'Team Total $1');
+            if (plainLine && !withTeamTotal.match(new RegExp('\\b' + plainLine.replace('.', '\\.') + '\\b'))) {
+                return withTeamTotal + ' ' + plainLine;
+            }
+            return withTeamTotal;
         }
 
         if (isTotal && hasTotalSide) {
@@ -1106,7 +1107,7 @@ if (typeof window !== 'undefined') {
         const lineValue = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
         const hasLine = lineValue != null && lineValue !== '' && Number.isFinite(Number(lineValue));
         const signedLine = hasLine ? window.TMR.formatLine(lineValue, { signed: true }) : '';
-        const plainLine = hasLine ? window.TMR.formatLine(lineValue) : '';
+        const plainLine = hasLine ? window.TMR.formatLine(Math.abs(Number(lineValue))) : '';
         const lowerSelection = selection.toLowerCase();
         const awayTeam = String(pick.away_team || (pick.game && pick.game.away_team) || '').trim();
         const homeTeam = String(pick.home_team || (pick.game && pick.game.home_team) || '').trim();
@@ -1117,7 +1118,7 @@ if (typeof window !== 'undefined') {
         if (!selection) return 'Pick';
 
         if (market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h')) {
-            return /\bml\b$/i.test(selection) ? selection : selection + ' ML';
+            return /\bmoneyline\b/i.test(selection) ? selection : selection.replace(/\s+\bML\b$/i, '') + ' Moneyline';
         }
 
         if (market === 'spreads' || market === 'spread' || market.endsWith('_spreads') || market.includes('run_line') || market.includes('puck_line')) {

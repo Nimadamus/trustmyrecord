@@ -4,10 +4,14 @@
   "scripts": {
     "verify:sportsbook-live": "playwright test --config=playwright.config.cjs",
     "verify:sportsbook-live:runner": "node tests/sportsbook-live-verification-runner.js",
-    "verify:sportsbook-live:browser-proof": "node tests/sportsbook-live-browser-proof.js"
+    "verify:sportsbook-live:browser-proof": "node tests/sportsbook-live-browser-proof.js",
+    "verify:regression": "node scripts/verify-regression.js",
+    "verify:regression:visual": "playwright test --config=playwright.regression.config.cjs",
+    "baseline:regression": "playwright test --config=playwright.regression.config.cjs --update-snapshots"
   },
   "devDependencies": {
-    "@playwright/test": "^1.57.0"
+    "@playwright/test": "^1.57.0",
+    "jsdom": "^26.1.0"
   },
   "dependencies": {
     "trustmyrecord-verification": "file:"

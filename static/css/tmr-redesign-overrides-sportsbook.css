@@ -414,34 +414,6 @@ html body #picks .sb-board-team .sb-team-tag{
   overflow: hidden !important;
 }
 /* Real ESPN team logos injected by tmr-redesign-test-sportsbook-logos.js */
-.tmr-team-logo-badge{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  flex:0 0 34px;
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  overflow:hidden;
-  background:linear-gradient(135deg, rgba(15,23,42,.96), rgba(30,41,59,.96));
-  border:1px solid rgba(148,163,184,.28);
-  color:#dbeafe;
-  font-size:11px;
-  font-weight:900;
-  letter-spacing:.02em;
-  box-shadow:0 8px 22px rgba(0,0,0,.22);
-}
-.tmr-team-logo-badge img{
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  display:block;
-}
-.tmr-team-logo-badge--fallback{
-  background:linear-gradient(135deg, rgba(34,197,94,.18), rgba(34,211,238,.16));
-  border-color:rgba(34,211,238,.32);
-  color:#e0f2fe;
-}
 html body #picks .sb-board-team .sb-team-tag .tmr-team-logo{
   width: 28px !important;
   height: 28px !important;
@@ -959,7 +931,7 @@ body.tmr-site-shell[data-tmr-route="sportsbook"]{
   --sb2-blue:#38bdf8;
   --sb2-green:#7ddf64;
   --sb2-gold:#d6a13a;
-  --sb2-red:#fb7185;
+  --sb2-red:#ef4444;
   --sb2-shadow:0 22px 55px rgba(0,0,0,.34);
   --sb2-card-radius:14px;
   background:
@@ -1155,6 +1127,38 @@ body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-name{
   letter-spacing:0 !important;
 }
 
+body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge{
+  width:100% !important;
+  height:100% !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  position:relative !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-img,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  display:block !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-initials,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-initials{
+  display:none !important;
+  color:#dbe7ef !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  letter-spacing:.06em !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge--fallback .tmr-team-logo-initials,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge--fallback .tmr-team-logo-initials{
+  display:inline-flex !important;
+}
+
 body[data-tmr-test-route="sportsbook"] #picks .tmr-option-grid,
 body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-option-grid{
   gap:10px !important;
@@ -1205,15 +1209,23 @@ body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-row{
 body[data-tmr-test-route="sportsbook"] #picks .sb-odds,
 body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds{
   min-height:42px !important;
-  border-radius:10px !important;
-  background:linear-gradient(180deg,#142238,#0b1627) !important;
-  border:1px solid rgba(126,157,198,.20) !important;
+  border-radius:9px !important;
+  padding:7px 10px !important;
+  gap:2px !important;
+  background:
+    linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.01)),
+    #0d1728 !important;
+  border:1px solid rgba(148,163,184,.22) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05) !important;
 }
 
 body[data-tmr-test-route="sportsbook"] #picks .sb-odds:hover,
 body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds:hover{
-  border-color:rgba(34,211,238,.50) !important;
-  background:linear-gradient(180deg,#18304f,#0e2036) !important;
+  border-color:rgba(83,211,55,.42) !important;
+  background:
+    linear-gradient(180deg,rgba(83,211,55,.11),rgba(255,255,255,.018)),
+    #101d31 !important;
+  box-shadow:0 8px 20px rgba(0,0,0,.24), inset 0 0 0 1px rgba(83,211,55,.10) !important;
 }
 
 body[data-tmr-test-route="sportsbook"] #picks .sb-odds[disabled],
@@ -1224,6 +1236,37 @@ body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .no-odds-btn{
   background:#0a1322 !important;
   border-color:rgba(126,157,198,.12) !important;
   cursor:not-allowed !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sb-tt-row .sb-odds-line,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-tt-row .sb-odds-line{
+  color:#aebbd0 !important;
+  font:800 11px/1.05 'Inter', sans-serif !important;
+  letter-spacing:.08em !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sb-tt-row .sb-odds-price,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-tt-row .sb-odds-price{
+  color:#f8fafc !important;
+  font:950 15px/1.08 'JetBrains Mono','Inter', monospace !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sb-tt-row .sb-odds.is-selected,
+body[data-tmr-test-route="sportsbook"] #picks .sb-tt-row .sb-odds.selected,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-tt-row .sb-odds.is-selected,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-tt-row .sb-odds.selected{
+  border-color:rgba(83,211,55,.68) !important;
+  background:
+    linear-gradient(180deg,rgba(83,211,55,.20),rgba(83,211,55,.08)),
+    #10211e !important;
+  box-shadow:0 10px 24px rgba(83,211,55,.18), inset 0 0 0 1px rgba(83,211,55,.24) !important;
+}
+
+body[data-tmr-test-route="sportsbook"] #picks .sb-tt-row .sb-odds.is-selected .sb-odds-line,
+body[data-tmr-test-route="sportsbook"] #picks .sb-tt-row .sb-odds.selected .sb-odds-line,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-tt-row .sb-odds.is-selected .sb-odds-line,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-tt-row .sb-odds.selected .sb-odds-line{
+  color:#d9ffd0 !important;
 }
 
 /* Ticket rail / hidden legacy pickDetails state. */
@@ -1463,7 +1506,7 @@ body.tmr-site-shell[data-tmr-route="sportsbook"]{
   --sb2-blue:#38bdf8;
   --sb2-green:#8cff6a;
   --sb2-gold:#e4b74e;
-  --sb2-red:#ff6b86;
+  --sb2-red:#ef4444;
   --sb2-shadow:0 26px 70px rgba(0,0,0,.48);
   --sb2-card-radius:16px;
   background:
@@ -1691,8 +1734,7 @@ body[data-tmr-test-route="sportsbook"] #picks .sb-board-team b,
 body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-name,
 body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-team b{
   color:var(--sb2-ink) !important;
-  font-size:19px !important;
-  font-weight:900 !important;
+  font-size:17px !important;
   line-height:1.16 !important;
 }
 
@@ -2104,6 +2146,419 @@ body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #pickSlipEmpty strong{
   }
 }
 
+/* ============================================================================
+   LIVE SPORTSBOOK CLEANUP — May 8, 2026
+
+   Small visual patch only. Keep the current three-column sportsbook, widen the
+   sport rail labels, give the board more room, and quiet the nested neon boxes.
+============================================================================ */
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] main,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks{
+  max-width:1760px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks{
+  padding-top:0 !important;
+  padding-left:clamp(16px,2vw,32px) !important;
+  padding-right:clamp(16px,2vw,32px) !important;
+  box-sizing:border-box !important;
+  overflow-x:hidden !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .picks-container-modern{
+  width:100% !important;
+  max-width:min(1540px,100%) !important;
+  box-sizing:border-box !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-page-topbar{
+  align-items:center !important;
+  padding:10px 0 12px !important;
+  margin:8px 0 14px !important;
+  border-bottom:1px solid rgba(148,163,184,.14) !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .make-picks-title{
+  font-size:20px !important;
+  line-height:1.12 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .make-picks-sub{
+  max-width:620px !important;
+  margin-top:2px !important;
+  font-size:12.5px !important;
+  line-height:1.35 !important;
+  color:#9fb0c7 !important;
+}
+
+@media (min-width:1181px){
+  body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-picks-layout{
+    grid-template-columns:minmax(276px,292px) minmax(0,1fr) minmax(272px,300px) !important;
+    gap:14px !important;
+    align-items:start !important;
+    width:100% !important;
+    max-width:100% !important;
+    box-sizing:border-box !important;
+    overflow:hidden !important;
+  }
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-league-rail,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-shell,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview{
+  min-width:0 !important;
+  max-width:100% !important;
+  box-sizing:border-box !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-league-rail,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-shell,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-stage-panel,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-selector-shell,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-picks-card{
+  border-color:rgba(148,163,184,.16) !important;
+  box-shadow:none !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-league-rail,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-shell,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview{
+  background:#0d1728 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-head,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-selector-head,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-head,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-picks-head{
+  background:#101b30 !important;
+  border-bottom-color:rgba(148,163,184,.14) !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board{
+  min-height:50px !important;
+  padding:10px 12px !important;
+  gap:12px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board-main{
+  min-width:0 !important;
+  flex:1 1 auto !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board-main b{
+  font-size:13px !important;
+  line-height:1.12 !important;
+  white-space:nowrap !important;
+  overflow:visible !important;
+  word-break:normal !important;
+  hyphens:none !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board-main small{
+  white-space:nowrap !important;
+  overflow:hidden !important;
+  text-overflow:ellipsis !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board-count{
+  padding:3px 7px !important;
+  border-color:rgba(148,163,184,.14) !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-selector-head{
+  padding:13px 18px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-period-bar,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #lobbyPeriodBar,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-grid-head{
+  background:#0b1424 !important;
+  border-color:rgba(148,163,184,.12) !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-row{
+  background:#0d1728 !important;
+  border-bottom-color:rgba(148,163,184,.12) !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-row:hover{
+  background:#101b30 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-option-btn{
+  border-color:rgba(148,163,184,.14) !important;
+  box-shadow:none !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds:hover,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-option-btn:hover{
+  border-color:rgba(83,211,55,.30) !important;
+  box-shadow:inset 0 0 0 1px rgba(83,211,55,.08) !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds.is-selected,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-option-btn.active{
+  border-color:rgba(83,211,55,.48) !important;
+  box-shadow:inset 0 0 0 1px rgba(83,211,55,.16) !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview{
+  border-top:1px solid rgba(148,163,184,.16) !important;
+  padding:0 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-head{
+  padding:14px 16px 12px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-card{
+  padding:14px 16px 16px !important;
+  background:#0d1728 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-topline{
+  padding-bottom:11px !important;
+  margin-bottom:4px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-row{
+  padding:9px 0 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-note{
+  margin-top:10px !important;
+  padding:12px 13px !important;
+  background:rgba(255,255,255,.035) !important;
+  border:1px solid rgba(148,163,184,.12) !important;
+  border-radius:10px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-submit{
+  margin-top:12px !important;
+  box-shadow:none !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-pending-picks-card{
+  background:#0d1728 !important;
+}
+
+@media (max-width:1180px){
+  body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-page-topbar{
+    align-items:flex-start !important;
+  }
+
+  body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board-main b{
+    white-space:normal !important;
+  }
+}
+
+/* CRISP SPORTSBOOK TUNE — May 8, 2026
+   Manual density pass from the current page only. */
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .picks-container-modern{
+  max-width:min(1500px,100%) !important;
+  padding:0 8px 24px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .make-picks-loggedout{
+  min-height:0 !important;
+  padding:12px 14px !important;
+  margin-bottom:8px !important;
+  border-radius:10px !important;
+  font-size:13px !important;
+  line-height:1.35 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-page-shell,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .section-header.sportsbook-page-shell,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .make-picks-header{
+  padding:10px 12px !important;
+  margin-bottom:10px !important;
+  border-radius:10px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .make-picks-title{
+  font:900 clamp(21px,1.55vw,28px)/.98 "Barlow Condensed","Inter",system-ui,sans-serif !important;
+  letter-spacing:0 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .make-picks-sub{
+  max-width:760px !important;
+  font-size:12px !important;
+  line-height:1.25 !important;
+  letter-spacing:.01em !important;
+}
+
+@media (min-width:1181px){
+  body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-picks-layout{
+    grid-template-columns:minmax(280px,292px) minmax(0,1fr) minmax(276px,296px) !important;
+    gap:12px !important;
+    padding:8px !important;
+    border-radius:10px !important;
+  }
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-head,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-selector-head,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-head{
+  padding:12px 14px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-lobby-label{
+  font-size:11px !important;
+  letter-spacing:.18em !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-head h3,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-selector-head h3,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-head h3{
+  font-size:20px !important;
+  line-height:1.05 !important;
+  letter-spacing:-.01em !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-selector-copy,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-subtitle{
+  font-size:12.5px !important;
+  line-height:1.28 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board{
+  min-height:46px !important;
+  padding:8px 10px !important;
+  border-radius:9px !important;
+  gap:10px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board-main{
+  gap:2px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board-main b{
+  font-size:13px !important;
+  line-height:1.05 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board-main small{
+  font-size:10.5px !important;
+  line-height:1.05 !important;
+  letter-spacing:.11em !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-rail-board-count{
+  min-width:52px !important;
+  min-height:24px !important;
+  padding:4px 8px !important;
+  border-radius:999px !important;
+  font-size:10px !important;
+  letter-spacing:.10em !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-period-bar,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #lobbyPeriodBar{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  padding:8px 10px !important;
+  gap:7px !important;
+  overflow:visible !important;
+  scrollbar-width:auto !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-period-bar::-webkit-scrollbar,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #lobbyPeriodBar::-webkit-scrollbar{
+  display:none !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-period-tab,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #lobbyPeriodBar button{
+  flex:0 1 auto !important;
+  min-height:34px !important;
+  padding:0 9px !important;
+  border-radius:8px !important;
+  font-size:10.75px !important;
+  line-height:1 !important;
+  letter-spacing:.055em !important;
+  white-space:nowrap !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-grid-head,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-when{
+  min-height:34px !important;
+  padding:8px 10px !important;
+  font-size:11.5px !important;
+  letter-spacing:.08em !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-team b,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .game-row .team-name,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #gamesListContainer .tmr-team-name{
+  font-size:18px !important;
+  line-height:1.16 !important;
+  font-weight:850 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-logo,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-board-row .team-logo{
+  width:32px !important;
+  height:32px !important;
+  flex-basis:32px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-btn,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-option-btn{
+  min-height:42px !important;
+  height:42px !important;
+  padding:6px 8px !important;
+  border-radius:7px !important;
+  gap:2px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds-line,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-line,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-option-line,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-option-market{
+  font-size:12px !important;
+  line-height:1.05 !important;
+  font-weight:800 !important;
+  letter-spacing:.02em !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-odds-price,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-value,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-option-odds{
+  font:900 13px/1.05 "JetBrains Mono","Inter",monospace !important;
+  letter-spacing:-.01em !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-card{
+  padding:12px !important;
+  border-radius:8px !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-card::before{
+  margin-bottom:9px !important;
+  font-size:10px !important;
+  letter-spacing:.16em !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-note{
+  padding:10px 11px !important;
+  border-radius:8px !important;
+  font-size:12.5px !important;
+  line-height:1.38 !important;
+}
+
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-submit,
+body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #ttSlipSubmit{
+  min-height:44px !important;
+  border-radius:9px !important;
+}
+
 /* Final pass: compact sportsbook-quality team-total odds cells. */
 body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-tt-row .sb-odds,
 body[data-tmr-test-route="sportsbook"] #picks .sb-tt-row .sb-odds{
@@ -2144,61 +2599,4 @@ body[data-tmr-test-route="sportsbook"] #picks .sb-tt-row .sb-odds.selected{
   border-color:rgba(83,211,55,.68) !important;
   background:linear-gradient(180deg,rgba(83,211,55,.20),rgba(83,211,55,.08)),#10211e !important;
   box-shadow:0 10px 24px rgba(83,211,55,.18), inset 0 0 0 1px rgba(83,211,55,.24) !important;
-}
-
-/* SPORTSBOOK_LOGO_VISIBILITY_RESTORE_20260509
-   Final protected logo layer. Keep after all board compacting rules so team
-   logos cannot be collapsed, hidden, or replaced by blank initials during
-   sportsbook visual edits. */
-body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-logo.tmr-team-logo-badge,
-body[data-tmr-test-route="sportsbook"] #picks .team-logo.tmr-team-logo-badge,
-body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge,
-body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge{
-  display:inline-flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  align-items:center !important;
-  justify-content:center !important;
-  flex:0 0 36px !important;
-  width:36px !important;
-  min-width:36px !important;
-  max-width:36px !important;
-  height:36px !important;
-  min-height:36px !important;
-  max-height:36px !important;
-  overflow:hidden !important;
-  position:relative !important;
-}
-
-body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge .tmr-team-logo-img,
-body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge .tmr-team-logo-img,
-body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge .team-logo__img,
-body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge .team-logo__img{
-  display:block !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  width:100% !important;
-  height:100% !important;
-  max-width:100% !important;
-  max-height:100% !important;
-  object-fit:contain !important;
-  object-position:center !important;
-  position:relative !important;
-  z-index:2 !important;
-}
-
-body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge:not(.team-logo--fallback) .tmr-team-logo-initials,
-body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge:not(.team-logo--fallback) .tmr-team-logo-initials{
-  display:none !important;
-}
-
-body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge.team-logo--fallback .tmr-team-logo-initials,
-body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge.team-logo--fallback .tmr-team-logo-initials,
-body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-team-logo-badge--fallback .tmr-team-logo-initials,
-body[data-tmr-test-route="sportsbook"] #picks .tmr-team-logo-badge--fallback .tmr-team-logo-initials{
-  display:inline-flex !important;
-  visibility:visible !important;
-  opacity:1 !important;
-  align-items:center !important;
-  justify-content:center !important;
 }

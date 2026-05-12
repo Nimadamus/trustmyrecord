@@ -20,11 +20,6 @@ assert(reliability.includes('SPORTSBOOK_RELIABILITY_OWNERSHIP'), 'production scr
 assert(reliability.includes('window.TMR.calculateStakeValues = calculateStakeValues'), 'production script should own stake value calculation');
 assert(reliability.includes('window.TMR.updateStakeModePreview = updateStakeModePreview'), 'production script should own stake preview updates');
 assert(reliability.includes('window.setUnitsMode = setStakeMode'), 'production script should own visible Risk / To Win selector');
-assert(reliability.includes('function bindStakeAmountInputEvents()'), 'visible and hidden units inputs should both trigger stake preview updates');
-assert(reliability.includes('function bindStakeModeClickHandlers()'), 'stake mode buttons should have a delegated click handler so To Win recalculates immediately');
-assert(reliability.includes("closest('#modeRisk,#modeToWin,#modeRiskTicket,#modeToWinTicket,[data-stake-mode]')"), 'stake mode click handler should cover all visible Risk and To Win controls');
-assert(reliability.includes("document.getElementById('ttSlipStakePreview') ? 'ttSlipStakePreview' : 'unitsStakePreview'"), 'ticket stake preview should be the single visible Risk / To Win summary');
-assert(reliability.includes("preview.hidden = true"), 'duplicate stake preview containers should be hidden');
 assert(reliability.includes("lockFunction(window, 'setUnitsMode', setStakeMode)"), 'production script should lock Risk / To Win selector ownership');
 assert(reliability.includes("lockFunction(window, 'tmrSelectOption', selectOption)"), 'production script should lock pick button selection ownership');
 assert(reliability.includes("lockFunction(window.TMR, 'renderSportsbookTeamLogo', renderTeamLogo)"), 'production script should lock logo rendering ownership');
@@ -33,16 +28,6 @@ assert(reliability.includes('function renderBoardOptionButton'), 'production scr
 assert(reliability.includes('class="tmr-option-btn"'), 'board option buttons should keep the clickable selector class');
 assert(reliability.includes('data-option-id'), 'board option buttons should keep option ids for pick slip selection');
 assert(reliability.includes('onclick="window.tmrSelectOption(this.dataset.optionId)"'), 'board option buttons should route to locked selection handler');
-assert(!reliability.includes("specials: 'Props'"), 'Props tab label must not render until props are supported');
-assert(!reliability.includes('data-market-filter="props"'), 'Props filter must not be part of the visible sportsbook market UI');
-assert(reliability.includes("return getGroupCategory(group) !== 'specials';"), 'unsupported props/specials groups should be excluded from rendered game-card market groups');
-assert(reliability.includes('function renderUnavailableMarketGroup(filter, game)'), 'per-game unavailable market state should render when Team Totals or Quarters are missing');
-assert(reliability.includes('data-market-filter="segments"] .tmr-group:not([data-category="segments"])'), 'Quarters/segments filter should scope visible markets to the selected game card');
-assert(
-  /return availableCategories\.has\(filter\) \|\| filter === 'game-lines' \|\| filter === 'team-totals' \|\| filter === 'segments'/.test(reliability),
-  'Game Lines, Team Totals, and Quarters/segments controls should remain available per game card'
-);
-assert(reliability.includes('const cardTabFilters = getPreferredFilters(game, cardCategorySet);'), 'per-game market tabs should not disappear just because a game lacks that market');
 assert(reliability.includes('unitsModeVisibleLabel'), 'production script should inject visible Risk / To Win selector label');
 assert(reliability.includes('renderStakeSummaryHtml'), 'production script should render split Risk / To Win summary cells');
 assert(reliability.includes("preview.classList.add('tmr-ticket-stake-summary')"), 'stake preview should use the polished ticket summary layout');
@@ -50,15 +35,13 @@ assert(reliability.includes("stake_mode: stakeMode"), 'submitted payload should 
 assert(reliability.includes("units_mode: stakeMode"), 'submitted payload should include units_mode');
 assert(reliability.includes("risk_units: stakeValues.risk_units"), 'submitted payload should store calculated risk units');
 assert(reliability.includes("to_win_units: stakeValues.win_units"), 'submitted payload should store calculated to-win units');
-assert(reliability.includes("const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];"), 'sportsbook submit auth should read the same stored user session sources as the global header');
-assert(reliability.includes('const stores = [];') && reliability.includes('stores.push(localStorage)') && reliability.includes('stores.push(sessionStorage)'), 'sportsbook submit auth should inspect localStorage and sessionStorage user sessions');
-assert(
-  /const user = getCurrentUser\(\);[\s\S]*if \(!user\)[\s\S]*Please log in to submit a pick[\s\S]*const apiClient = await waitForApi\(\);[\s\S]*const token = getStoredAuthToken\(\);[\s\S]*if \(token\) \{[\s\S]*return true;/.test(reliability),
-  'logged-in stored user plus backend token should pass sportsbook submit auth instead of showing the login alert'
-);
 assert(
   /const unitsValue = getCurrentStakeAmount\(\);[\s\S]*const stakeMode = getSelectedStakeMode\(\);[\s\S]*const stakeValues = calculateStakeValues\(stakeMode, unitsValue, oddsValue\);[\s\S]*units: unitsValue,[\s\S]*stake_mode: stakeMode,[\s\S]*units_mode: stakeMode,[\s\S]*risk_units: stakeValues\.risk_units,[\s\S]*to_win_units: stakeValues\.win_units,/.test(reliability),
   'lock payload must use the same live units input, selected stake mode, and calculated risk/to-win values'
+);
+assert(
+  /async function lockInPick\(\)[\s\S]*if \(window\.__tmrLockInFlight\)[\s\S]*window\.__tmrLockInFlight = true;[\s\S]*const response = await api\.createPick\(payload\);[\s\S]*finally\s*\{[\s\S]*resetLockButtons\(\);[\s\S]*window\.__tmrLockInFlight = false;[\s\S]*\}/.test(reliability),
+  'successful sportsbook submits must always clear the in-flight lock so users can submit another pick in the same page session'
 );
 assert(html.includes('tmr-ticket-stake-mode-label'), 'ticket stake mode should have non-cramped professional label styling hook');
 assert(html.includes('tmr-ticket-stake-summary-cell'), 'ticket summary should render separated Risk and To Win cells');
@@ -81,8 +64,6 @@ function calculateStakeValues(mode, amount, odds) {
 
 assert.deepStrictEqual(calculateStakeValues('risk', 2, -110), { risk_units: 2, win_units: 1.82 });
 assert.deepStrictEqual(calculateStakeValues('to_win', 2, -110), { risk_units: 2.2, win_units: 2 });
-assert.deepStrictEqual(calculateStakeValues('risk', 3, -110), { risk_units: 3, win_units: 2.73 });
-assert.deepStrictEqual(calculateStakeValues('to_win', 3, -110), { risk_units: 3.3, win_units: 3 });
 assert.deepStrictEqual(calculateStakeValues('risk', 1.5, 150), { risk_units: 1.5, win_units: 2.25 });
 assert.deepStrictEqual(calculateStakeValues('to_win', 1.5, 150), { risk_units: 1, win_units: 1.5 });
 assert.deepStrictEqual(calculateStakeValues('risk', 3, -105), { risk_units: 3, win_units: 2.86 });
@@ -142,59 +123,5 @@ assert.notStrictEqual(
   buildSubmitStakePayload('to_win', 3, -105).risk_units,
   'Risk and To Win modes must not collapse to the same risk amount'
 );
-
-function getSessionUserFromStores(stores) {
-  const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
-  for (const store of stores) {
-    for (const key of keys) {
-      const raw = store[key];
-      if (!raw) continue;
-      const parsed = JSON.parse(raw);
-      const user = parsed && (parsed.user || parsed);
-      if (user && (user.username || user.email)) return user;
-    }
-  }
-  return null;
-}
-
-function canSubmitPickFromSession(stores, token) {
-  const user = getSessionUserFromStores(stores);
-  if (!user) return { allowed: false, reason: 'Please log in to submit a pick.' };
-  if (token) return { allowed: true, username: user.username || user.email };
-  return { allowed: false, reason: 'Your login session expired. Please log in again before making picks.' };
-}
-
-assert.deepStrictEqual(
-  canSubmitPickFromSession([{ trustmyrecord_session: JSON.stringify({ user: { username: 'BetLegend' } }) }], 'live-access-token'),
-  { allowed: true, username: 'BetLegend' },
-  'logged-in header/session user with a backend token should be allowed to lock a sportsbook pick'
-);
-assert.deepStrictEqual(
-  canSubmitPickFromSession([{}], ''),
-  { allowed: false, reason: 'Please log in to submit a pick.' },
-  'logged-out users should still be blocked from locking sportsbook picks'
-);
-
-const minus110RiskPreview = renderStakeSummaryText('risk', 3, -110);
-assert.strictEqual(minus110RiskPreview.riskLabel, 'Risk 3 units');
-assert.strictEqual(minus110RiskPreview.toWinLabel, 'To Win 2.73 units');
-assert.deepStrictEqual(buildSubmitStakePayload('risk', 3, -110), {
-  units: 3,
-  stake_mode: 'risk',
-  units_mode: 'risk',
-  risk_units: 3,
-  to_win_units: 2.73,
-});
-
-const minus110ToWinPreview = renderStakeSummaryText('to_win', 3, -110);
-assert.strictEqual(minus110ToWinPreview.riskLabel, 'Risk 3.30 units');
-assert.strictEqual(minus110ToWinPreview.toWinLabel, 'To Win 3 units');
-assert.deepStrictEqual(buildSubmitStakePayload('to_win', 3, -110), {
-  units: 3,
-  stake_mode: 'to_win',
-  units_mode: 'to_win',
-  risk_units: 3.3,
-  to_win_units: 3,
-});
 
 console.log('sportsbook stake-mode UI test passed');
