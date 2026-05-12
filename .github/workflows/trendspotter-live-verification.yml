@@ -1,0 +1,36 @@
+name: Trendspotter Live Verification
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'trendspotter/**'
+      - 'static/js/trendspotter.js'
+      - 'static/css/trendspotter.css'
+      - 'tests/trendspotter-live-verification.spec.js'
+      - 'playwright.trendspotter.config.cjs'
+      - '.github/workflows/trendspotter-live-verification.yml'
+
+jobs:
+  verify-live-trendspotter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test --config=playwright.trendspotter.config.cjs
+        env:
+          TMR_TRENDSPOTTER_URL: https://trustmyrecord.com/trendspotter/
+          TMR_TRENDSPOTTER_API_URL: https://trustmyrecord-api.onrender.com/api/trendspotter/verified?sport=MLB
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trendspotter-live-verification
+          path: |
+            artifacts/trendspotter-live-verification.png
+            artifacts/trendspotter-live-verification.json
+            artifacts/trendspotter-playwright-results/**
