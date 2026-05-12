@@ -84,6 +84,7 @@ test('live Trend Spotter guided flow and safe output', async ({ page }) => {
   const result = page.locator('#resultsList');
   await expect(result).toContainText(/No strong trend found|No verified trend|Verified source rows|Trend Found/i);
   await expect(result).toContainText(/Full game over \/ under|No verified trend|No strong trend found/i);
+  await expect(result).toContainText(/Source classification:\s*(Source-backed|Partial|Blocked|Unsupported|Estimated)|Source-backed/i);
   await expect(page.locator('body')).not.toContainText(/fake stats|fake projections|fake confidence|fake ROI|fake records|fake win percentage|betting edge/i);
 
   await page.evaluate((url) => {
