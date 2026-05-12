@@ -73,7 +73,7 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   await waitForBoardSettled(page);
   await expect(visibleBoard(page)).toContainText(/Team Totals|not posted|not offered|temporarily unavailable|Matchup|Total/i);
 
-  const slip = page.locator('#pickDetails, .tmr-slip-panel').first();
+  const slip = page.locator('.tmr-slip-panel:visible, #pickDetails:visible, aside:has-text("Pick Slip"):visible').first();
   await expect(slip, 'pick slip should be visible').toBeVisible();
   await expect(slip, 'clicking a visible price should show odds in the slip').toContainText(/Odds/i);
   await expect(page.locator('#unitsInput, #ttSlipUnits').first(), 'units input should remain available').toBeVisible();
