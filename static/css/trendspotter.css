@@ -361,6 +361,7 @@ button { font: inherit; }
   background: rgba(3, 5, 10, .32);
 }
 
+.is-hidden,
 .ts-loading.is-hidden,
 .ts-empty.is-hidden,
 .ts-results.is-hidden,
@@ -368,6 +369,61 @@ button { font: inherit; }
 .ts-detail-panel.is-hidden,
 .ts-modal.is-hidden {
   display: none;
+}
+
+.ts-market-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ts-market-card {
+  min-height: 106px;
+  padding: 16px;
+  border: 1px solid var(--ts-border-2);
+  border-radius: var(--ts-radius);
+  color: var(--ts-text);
+  background: rgba(3, 5, 10, .38);
+  text-align: left;
+  cursor: pointer;
+}
+
+.ts-market-card strong,
+.ts-market-card span {
+  display: block;
+}
+
+.ts-market-card strong {
+  font-size: 19px;
+  line-height: 1.2;
+}
+
+.ts-market-card span {
+  margin-top: 9px;
+  color: var(--ts-muted-2);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.ts-market-card:hover,
+.ts-market-card:focus-visible {
+  border-color: rgba(34, 211, 238, .78);
+  outline: 0;
+}
+
+.ts-market-card.is-selected {
+  border-color: rgba(45, 212, 191, .9);
+  background: linear-gradient(180deg, rgba(45, 212, 191, .2), rgba(34, 211, 238, .1));
+  box-shadow: 0 0 0 3px rgba(45, 212, 191, .12);
+}
+
+.ts-market-card.is-disabled,
+.ts-market-card:disabled {
+  border-color: rgba(148, 163, 184, .18);
+  color: rgba(203, 213, 225, .62);
+  background: rgba(3, 5, 10, .22);
+  cursor: not-allowed;
+  opacity: .68;
 }
 
 .ts-loading span {
@@ -581,6 +637,10 @@ button { font: inherit; }
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+.ts-filter-grid .ts-wide-field {
+  grid-column: span 2;
 }
 
 .ts-filter-grid label {
@@ -818,10 +878,15 @@ button { font: inherit; }
   .ts-sport-grid,
   .ts-matchup-grid,
   .ts-type-grid,
+  .ts-market-grid,
   .ts-result-meta,
   .ts-filter-grid,
   .ts-detail-grid {
     grid-template-columns: 1fr;
+  }
+
+  .ts-filter-grid .ts-wide-field {
+    grid-column: auto;
   }
 
   .ts-run-panel,
