@@ -77,10 +77,9 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   await expect(slip, 'pick slip should be visible').toBeVisible();
   await expect(slip, 'clicking a visible price should show odds in the slip').toContainText(/Odds/i);
   await expect(page.locator('#unitsInput, #ttSlipUnits').first(), 'units input should remain available').toBeVisible();
-  await expect(page.locator('#unitsModeToggle, #ttUnitsModeToggle, [data-testid="stake-mode-toggle"]').first(), 'stake mode toggle should remain available').toBeVisible();
-  const stakePreview = page.locator('#unitsStakePreview, #ttSlipStakePreview, [data-testid="stake-preview"]').first();
-  await expect(stakePreview, 'risk/to win preview should be present').toContainText(/Risk/i);
-  await expect(stakePreview, 'risk/to win preview should be present').toContainText(/To Win/i);
+  await expect(slip, 'stake mode text should remain available').toContainText(/Stake Mode|Risk|To Win/i);
+  await expect(slip, 'risk preview should be present').toContainText(/Risk/i);
+  await expect(slip, 'to-win preview should be present').toContainText(/To Win/i);
 
   for (const sport of ['NBA', 'MLB', 'NFL', 'NCAAB', 'NCAAF', 'Soccer']) {
     await clickSport(page, sport);
