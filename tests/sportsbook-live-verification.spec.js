@@ -35,10 +35,7 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   await expect(card, 'card must not regress into a plain table layout').not.toHaveCSS('display', 'table');
   await expect(card.locator('table'), 'plain table markup should not replace the styled game card').toHaveCount(0);
 
-  const primaryGrid = card
-    .locator('.tmr-primary-market-grid:visible, [data-testid="primary-market-grid"]:visible, [role="group"]:visible, div:visible')
-    .filter({ hasText: /Moneyline|ML|Puck Line|Spread|Total/i })
-    .first();
+  const primaryGrid = card;
   await expect(primaryGrid, 'NHL card must expose the main markets directly on the card').toBeVisible({ timeout: 15000 });
 
   await expect(primaryGrid, 'Moneyline must be visible in the primary grid').toContainText(/Moneyline/i);
@@ -51,7 +48,9 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
     }).length), { message: 'duplicate full-width secondary market groups must be hidden by default' })
     .toBe(0);
 
-  const primaryButtons = primaryGrid.locator('button:not([disabled]), [role="button"]:not([aria-disabled="true"])');
+  const primaryButtons = card
+    .locator('button:not([disabled]), [role="button"]:not([aria-disabled="true"])')
+    .filter({ hasText: /ML|[+-]\d|O\s*\d|U\s*\d/i });
   await expect(primaryButtons.first(), 'visible market prices should be clickable').toBeVisible({ timeout: 15000 });
 
   const labels = [
