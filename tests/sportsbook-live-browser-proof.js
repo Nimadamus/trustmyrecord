@@ -9,9 +9,9 @@ const LIVE_URL = process.env.TMR_SPORTSBOOK_URL || 'https://trustmyrecord.com/sp
 const OUT = path.join(process.cwd(), 'artifacts', 'sportsbook-live-browser-proof.png');
 
 async function waitForBoardSettled(page) {
-  await page.locator('#gamesListContainer').waitFor({ state: 'visible', timeout: 30000 });
+  await page.locator('#lobbyBoardRows:visible, #gamesListContainer:visible, main article:visible').first().waitFor({ state: 'visible', timeout: 30000 });
   await page.waitForFunction(() => {
-    const board = document.querySelector('#gamesListContainer');
+    const board = document.querySelector('#lobbyBoardRows') || document.querySelector('#gamesListContainer') || document.querySelector('main article');
     return board && !/Loading live odds/i.test(board.textContent || '');
   }, null, { timeout: 30000 });
 }
@@ -25,10 +25,15 @@ async function main() {
   const page = await browser.newPage({ viewport: { width: 1360, height: 1040 } });
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await waitForBoardSettled(page);
-  await page.locator('[data-sportsbook-tab="sport"][data-sport="NHL"], [data-sport="NHL"]').first().click();
+  await page.getByRole('button', { name: /^NHL\b/i }).first().click();
   await waitForBoardSettled(page);
-  await page.locator('.tmr-primary-market-grid, [data-testid="primary-market-grid"]').first().waitFor({ state: 'visible', timeout: 15000 });
-  await page.locator('.tmr-primary-market-grid button:not([disabled])').first().click();
+  const boardButton = page
+    .locator('#lobbyBoardRows button:not([disabled]), #gamesListContainer button:not([disabled]), main article button:not([disabled])')
+    .filter({ hasText: /ML|[+-]\d|O\s*\d|U\s*\d/i })
+    .first();
+  await boardButton.waitFor({ state: 'visible', timeout: 15000 });
+  await boardButton.click();
+  await page.locator('.tmr-slip-panel:visible, #pickDetails:visible, aside:has-text("Pick Slip"):visible').first().waitFor({ state: 'visible', timeout: 15000 });
   await page.waitForTimeout(1000);
 
   try {
