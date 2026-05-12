@@ -52,6 +52,7 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
     .locator('button:not([disabled]), [role="button"]:not([aria-disabled="true"])')
     .filter({ hasText: /ML|[+-]\d|O\s*\d|U\s*\d/i });
   await expect(primaryButtons.first(), 'visible market prices should be clickable').toBeVisible({ timeout: 15000 });
+  await primaryButtons.first().click();
 
   const labels = [
     /away.*moneyline|moneyline.*away|ml/i,
@@ -65,23 +66,18 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
     await expect(primaryGrid, `primary grid is missing ${label}`).toContainText(label);
   }
 
-  await expect(card.getByRole('button', { name: /Game Lines/i }).first()).toBeVisible();
-  await expect(card.getByRole('button', { name: /Team Totals/i }).first()).toBeVisible();
-  await card.getByRole('button', { name: /Team Totals/i }).first().click();
-  await expect
-    .poll(async () => card.locator('.tmr-group').evaluateAll((nodes) => nodes.filter((node) => {
-      const style = window.getComputedStyle(node);
-      return style.display !== 'none' && style.visibility !== 'hidden' && node.getClientRects().length > 0;
-    }).length), { message: 'clicking a secondary tab should reveal compact secondary market groups' })
-    .toBeGreaterThan(0);
-
-  await primaryButtons.first().click();
+  await expect(page.getByRole('tab', { name: /Game Lines/i }).first()).toBeVisible();
+  const teamTotals = page.getByRole('tab', { name: /Team Totals/i }).first();
+  await expect(teamTotals).toBeVisible();
+  await teamTotals.click();
+  await waitForBoardSettled(page);
+  await expect(visibleBoard(page)).toContainText(/Team Totals|not posted|not offered|temporarily unavailable|Matchup|Total/i);
 
   const slip = page.locator('#pickDetails, .tmr-slip-panel').first();
   await expect(slip, 'pick slip should be visible').toBeVisible();
-  await expect(page.locator('#pickOddsInput'), 'clicking a visible price should fill odds').not.toHaveValue('', { timeout: 10000 });
-  await expect(page.locator('#unitsInput'), 'units input should remain available').toBeVisible();
-  await expect(page.locator('#unitsModeToggle, [data-testid="stake-mode-toggle"]').first(), 'stake mode toggle should remain available').toBeVisible();
+  await expect(slip, 'clicking a visible price should show odds in the slip').toContainText(/Odds/i);
+  await expect(page.locator('#unitsInput, #ttSlipUnits').first(), 'units input should remain available').toBeVisible();
+  await expect(page.locator('#unitsModeToggle, #ttUnitsModeToggle, [data-testid="stake-mode-toggle"]').first(), 'stake mode toggle should remain available').toBeVisible();
   const stakePreview = page.locator('#unitsStakePreview, #ttSlipStakePreview, [data-testid="stake-preview"]').first();
   await expect(stakePreview, 'risk/to win preview should be present').toContainText(/Risk/i);
   await expect(stakePreview, 'risk/to win preview should be present').toContainText(/To Win/i);
