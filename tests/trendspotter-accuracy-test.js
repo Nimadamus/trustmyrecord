@@ -23,6 +23,8 @@ const verifiedTrend = {
   team_abbr: 'New York Mets',
   opponent_abbr: 'Colorado Rockies',
   bet_type: 'TOTAL',
+  kind: 'SCORING',
+  trend_type: 'SCORING',
   side: 'OVER',
   claim: 'Verified source rows matched this total-market query.',
   sample: 14,
@@ -37,6 +39,8 @@ const verifiedTrend = {
 const teamTotalTrend = {
   ...verifiedTrend,
   bet_type: 'TEAM_TOTAL',
+  kind: 'TEAM_TOTAL',
+  trend_type: 'TEAM_TOTAL',
   side: 'OVER',
   claim: 'Verified source rows matched this team-total query.',
   team_abbr: 'Colorado Rockies',
@@ -112,6 +116,10 @@ function clickMarket(doc, market) {
   button.click();
 }
 
+function chooseTrendKind(doc, value) {
+  change(doc, '#trendKindSelect', value);
+}
+
 (async () => {
   const dom = await boot({
     MLB: {
@@ -141,32 +149,42 @@ function clickMarket(doc, market) {
   assert(doc.querySelector('[data-market="first_half"]'), 'first half market should render');
   assert(doc.querySelector('[data-market="first_five"]'), 'first five market should render');
   assert(doc.querySelector('[data-market="props"]').disabled, 'unsupported props must be disabled');
+  assert.match(doc.querySelector('#rangeSelect').textContent, /Last 5 games - requires time-window dataset/, 'unsupported time-window filters should be visible but disabled');
 
   await chooseSport(doc, 'MLB');
   chooseFirstMatchup(doc);
   assert.match(doc.querySelector('#selectionSummary').textContent, /New York Mets @ Colorado Rockies/, 'matchup selection should update summary');
 
   clickMarket(doc, 'moneyline');
+  assert.match(doc.querySelector('#trendKindSelect').textContent, /Team win trend/, 'moneyline trend search should render moneyline options');
+  assert(!/Full game over/i.test(doc.querySelector('#trendKindSelect').textContent), 'moneyline trend search should not show total-only trend options');
   assert.strictEqual(doc.querySelector('#thresholdField').classList.contains('is-hidden'), true, 'moneyline should not show total threshold');
   assert.strictEqual(doc.querySelector('#teamField').classList.contains('is-hidden'), true, 'moneyline should not require team-total team field');
   assert.match(doc.querySelector('#sideSelect').textContent, /New York Mets away/, 'moneyline side should use matchup teams');
 
   clickMarket(doc, 'total');
+  assert.match(doc.querySelector('#trendKindSelect').textContent, /Full game over \/ under/, 'total trend search should render over-under options');
+  assert(!/After a win/i.test(doc.querySelector('#trendKindSelect').textContent), 'total trend search should not show moneyline-only sequence options');
   assert.strictEqual(doc.querySelector('#thresholdField').classList.contains('is-hidden'), false, 'total should show threshold');
   assert.strictEqual(doc.querySelector('#teamField').classList.contains('is-hidden'), true, 'game total should not require team selector');
   assert.match(doc.querySelector('#sideSelect').textContent, /Over/, 'total should show over/under side');
+  assert.strictEqual(doc.querySelector('#generateTrend').disabled, true, 'total should block generation until trend search is selected');
+  chooseTrendKind(doc, 'full_game_over_under');
   change(doc, '#sideSelect', 'over');
   change(doc, '#thresholdInput', '8.5');
   doc.querySelector('#generateTrend').click();
   assert.strictEqual(doc.querySelectorAll('[data-result="verified-trend"]').length, 1, 'total query should generate matching verified result');
   assert.match(doc.querySelector('#resultsList').textContent, /Selected market\s*Total/, 'result should reflect selected market');
+  assert.match(doc.querySelector('#resultsList').textContent, /Trend search\s*Full game over \/ under/, 'result should reflect selected trend search');
   assert.match(doc.querySelector('#resultsList').textContent, /Selected side\s*over/, 'result should reflect selected side');
   assert.match(doc.querySelector('#resultsList').textContent, /line=8.5/, 'result should reflect selected threshold');
   assert.match(doc.querySelector('#resultsList').textContent, /Sample size\s*14/, 'result should show sample size');
+  assert.match(doc.querySelector('#resultsList').textContent, /This is a trend, not a betting recommendation/, 'result should include non-pick note');
 
   clickMarket(doc, 'team_total');
   assert.strictEqual(doc.querySelector('#teamField').classList.contains('is-hidden'), false, 'team total must require team selection');
   assert.strictEqual(doc.querySelector('#generateTrend').disabled, true, 'team total should block generation without team');
+  chooseTrendKind(doc, 'team_total_over_under');
   change(doc, '#sideSelect', 'over');
   change(doc, '#teamSelect', 'Colorado Rockies');
   change(doc, '#thresholdInput', '4.5');
@@ -186,6 +204,7 @@ function clickMarket(doc, market) {
   await chooseSport(noDataDoc, 'MLB');
   chooseFirstMatchup(noDataDoc);
   clickMarket(noDataDoc, 'total');
+  chooseTrendKind(noDataDoc, 'full_game_over_under');
   change(noDataDoc, '#sideSelect', 'over');
   change(noDataDoc, '#thresholdInput', '8.5');
   noDataDoc.querySelector('#generateTrend').click();

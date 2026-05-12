@@ -44,6 +44,40 @@
     /\bpublic claim\b/i,
     /\bbetting edge\b/i
   ];
+  var TREND_KINDS = {
+    moneyline: [
+      { id: "team_win", label: "Team win trend", tokens: ["RECENT_FORM", "MONEYLINE"] },
+      { id: "home_road", label: "Home / road split", tokens: ["HOME", "AWAY"] },
+      { id: "favorite", label: "Favorite trend", disabled: true, reason: "Favorite/underdog role data is not connected yet." },
+      { id: "underdog", label: "Underdog trend", disabled: true, reason: "Favorite/underdog role data is not connected yet." },
+      { id: "after_win", label: "After a win", disabled: true, reason: "Previous-result sequence data is not connected yet." },
+      { id: "after_loss", label: "After a loss", disabled: true, reason: "Previous-result sequence data is not connected yet." },
+      { id: "head_to_head", label: "Head to head", disabled: true, reason: "Head-to-head dataset is not connected yet." }
+    ],
+    spread: [
+      { id: "ats", label: "ATS trend", tokens: ["SPREAD", "ATS", "RUN_LINE", "PUCK_LINE"] },
+      { id: "home_road_ats", label: "Home / road ATS", tokens: ["HOME", "AWAY", "SPREAD", "ATS"] },
+      { id: "favorite_ats", label: "Favorite ATS", disabled: true, reason: "Favorite/underdog role data is not connected yet." },
+      { id: "underdog_ats", label: "Underdog ATS", disabled: true, reason: "Favorite/underdog role data is not connected yet." },
+      { id: "head_to_head_ats", label: "Head to head ATS", disabled: true, reason: "Head-to-head dataset is not connected yet." }
+    ],
+    total: [
+      { id: "full_game_over_under", label: "Full game over / under", tokens: ["TOTAL", "SCORING"] },
+      { id: "recent_over_under", label: "Recent games over / under", tokens: ["RECENT_FORM", "SCORING", "TOTAL"] },
+      { id: "home_road_over_under", label: "Home / road over / under", tokens: ["HOME", "AWAY", "TOTAL"] },
+      { id: "head_to_head_over_under", label: "Head to head over / under", disabled: true, reason: "Head-to-head dataset is not connected yet." }
+    ],
+    team_total: [
+      { id: "team_total_over_under", label: "Team total over / under", tokens: ["TEAM_TOTAL", "TEAM TOTAL"] },
+      { id: "home_road_team_total", label: "Home / road team total", disabled: true, reason: "Team-total split data is not connected yet." }
+    ],
+    first_half: [
+      { id: "first_half_market", label: "First half trend", tokens: ["FIRST_HALF", "FIRST HALF", "1H", "HALF"] }
+    ],
+    first_five: [
+      { id: "first_five_market", label: "First five trend", tokens: ["FIRST_FIVE", "FIRST 5", "F5"] }
+    ]
+  };
 
   var state = {
     sport: "",
@@ -52,8 +86,9 @@
     side: "",
     team: "",
     threshold: "",
+    trendKind: "",
     period: "full_game",
-    range: "current",
+    range: "source_window",
     minSample: 10,
     location: "all",
     loading: false,
@@ -73,6 +108,8 @@
     team: document.getElementById("teamSelect"),
     thresholdField: document.getElementById("thresholdField"),
     threshold: document.getElementById("thresholdInput"),
+    trendKindField: document.getElementById("trendKindField"),
+    trendKind: document.getElementById("trendKindSelect"),
     periodField: document.getElementById("periodField"),
     period: document.getElementById("periodSelect"),
     range: document.getElementById("rangeSelect"),
@@ -122,6 +159,14 @@
 
   function selectedMarket() {
     return marketById(state.market);
+  }
+
+  function trendKindsForMarket(marketId) {
+    return TREND_KINDS[marketId] || [];
+  }
+
+  function selectedTrendKind() {
+    return trendKindsForMarket(state.market).find(function (kind) { return kind.id === state.trendKind; }) || null;
   }
 
   function matchupKey(matchup) {
@@ -204,13 +249,18 @@
   function trendMatchesQuery(trend) {
     var matchup = selectedMatchup();
     var market = selectedMarket();
-    if (!matchup || !market || market.disabled) return false;
+    var trendKind = selectedTrendKind();
+    if (!matchup || !market || market.disabled || !trendKind || trendKind.disabled) return false;
     var home = normalize(matchup.home_abbr);
     var away = normalize(matchup.away_abbr);
     var team = normalize(trend.team_abbr);
     if (normalize(trend.matchup) !== normalize(matchup.matchup)) return false;
     if (![home, away].includes(team)) return false;
     if (!marketMatches(trend, market)) return false;
+    if (trendKind.tokens && trendKind.tokens.length) {
+      var kindBody = normalize([trend.kind, trend.trend_type, trend.subset, trend.label, trend.claim, trend.bet_type, trend.market].join(" "));
+      if (!trendKind.tokens.some(function (token) { return kindBody.indexOf(normalize(token)) !== -1; })) return false;
+    }
     if (state.team && normalize(state.team) !== team) return false;
     if (state.side && ["home", "away"].includes(state.side)) {
       if (state.side === "home" && team !== home) return false;
@@ -222,6 +272,9 @@
     }
     if (state.location === "home" && team !== home) return false;
     if (state.location === "away" && team !== away) return false;
+    if (state.range !== "source_window") return false;
+    if (market.id === "first_half" && state.period !== "first_half") return false;
+    if (market.id === "first_five" && state.period !== "first_five") return false;
     if ((Number(trend.sample) || 0) < Number(state.minSample || 0)) return false;
     return true;
   }
@@ -329,6 +382,24 @@
     }
   }
 
+  function renderTrendKinds() {
+    var market = selectedMarket();
+    var kinds = market && !market.disabled ? trendKindsForMarket(market.id) : [];
+    els.trendKind.disabled = !kinds.length;
+    if (!kinds.length) {
+      els.trendKind.innerHTML = "<option value=\"\">Select trend type first</option>";
+      state.trendKind = "";
+      return;
+    }
+    if (!kinds.some(function (kind) { return kind.id === state.trendKind && !kind.disabled; })) {
+      state.trendKind = "";
+    }
+    els.trendKind.innerHTML = "<option value=\"\">Choose trend search</option>" + kinds.map(function (kind) {
+      var label = kind.label + (kind.disabled && kind.reason ? " - " + kind.reason : "");
+      return "<option value=\"" + escapeHtml(kind.id) + "\"" + (state.trendKind === kind.id ? " selected" : "") + (kind.disabled ? " disabled" : "") + ">" + escapeHtml(label) + "</option>";
+    }).join("");
+  }
+
   function renderPeriods() {
     var market = selectedMarket();
     var periods = market && market.periods ? market.periods.slice() : ["full_game"];
@@ -343,14 +414,18 @@
   function validationErrors() {
     var errors = [];
     var market = selectedMarket();
+    var trendKind = selectedTrendKind();
     if (!state.sport) errors.push("no matchup selected");
     if (state.sport && !state.matchupKey) errors.push("no matchup selected");
     if (!state.market) errors.push("no trend type selected");
     if (market && market.disabled) errors.push("invalid combination");
     if (market && market.sportOnly && state.sport !== market.sportOnly) errors.push("invalid combination");
+    if (market && !market.disabled && !state.trendKind) errors.push("missing trend search");
+    if (trendKind && trendKind.disabled) errors.push("invalid combination");
     if (market && !market.disabled && !state.side) errors.push("missing required variables");
     if (market && market.requiresTeam && !state.team) errors.push("missing required variables");
     if (market && market.needsThreshold && state.threshold !== "" && !Number.isFinite(Number(state.threshold))) errors.push("invalid combination");
+    if (state.range !== "source_window") errors.push("invalid combination");
     if (Number(state.minSample) < 1) errors.push("missing required variables");
     return errors;
   }
@@ -358,10 +433,12 @@
   function querySummary() {
     var matchup = selectedMatchup();
     var market = selectedMarket();
+    var trendKind = selectedTrendKind();
     return [
       state.sport || "Sport not selected",
       matchup ? matchup.matchup : "Matchup not selected",
       market ? market.label : "Trend type not selected",
+      trendKind ? "Search: " + trendKind.label : "Trend search not selected",
       state.side ? "Side: " + state.side : "Side not selected",
       state.team ? "Team: " + state.team : "",
       state.threshold !== "" ? "Line: " + state.threshold : "",
@@ -376,6 +453,7 @@
     renderMarketOptions();
     renderMatchups();
     renderSides();
+    renderTrendKinds();
     renderPeriods();
     var errors = validationErrors();
     els.summary.textContent = querySummary();
@@ -389,6 +467,7 @@
   function validationMessage(error) {
     if (error === "no matchup selected") return "Select a sport and matchup before generating.";
     if (error === "no trend type selected") return "Select a trend type before generating.";
+    if (error === "missing trend search") return "Select the kind of trend you want to search for.";
     if (error === "missing required variables") return "Missing required variables for this market.";
     if (error === "invalid combination") return "Invalid combination for the selected sport or market.";
     return "Trend calculation unavailable until dataset is connected.";
@@ -489,29 +568,64 @@
     ].join("");
   }
 
+  function resultCounts(rows) {
+    var wins = 0;
+    var losses = 0;
+    var pushes = 0;
+    rows.forEach(function (row) {
+      var result = normalize(row.market_result || row.result);
+      if (result === "WIN") wins += 1;
+      else if (result === "LOSS") losses += 1;
+      else if (result === "PUSH") pushes += 1;
+    });
+    return {
+      wins: wins,
+      losses: losses,
+      pushes: pushes,
+      text: wins + " matching, " + losses + " non-matching" + (pushes ? ", " + pushes + " pushes" : "")
+    };
+  }
+
+  function usefulnessLabel(sample) {
+    var size = Number(sample) || 0;
+    if (size < Number(state.minSample || 0)) return "Small sample";
+    if (size >= 20) return "Moderate";
+    if (size >= 10) return "Limited";
+    return "Small sample";
+  }
+
   function trendResultHtml(trend) {
     var matchup = selectedMatchup();
     var rows = sourceRows(trend);
-    var claim = safeText(trend.safe_summary || trend.summary || trend.claim);
-    var note = claim || "Verified trend data matched the selected inputs. Detailed performance claims are hidden until the dataset contract explicitly supports them.";
+    var counts = resultCounts(rows);
+    var market = selectedMarket();
+    var trendKind = selectedTrendKind();
+    var sample = Number(trend.sample || rows.length || 0);
+    var plainSummary = "Verified " + market.label + " source rows matched " + (trend.team_abbr || state.team || state.side || "the selected side") + " for " + (matchup && matchup.matchup) + " using " + (trendKind ? trendKind.label : "the selected trend search") + ".";
+    var note = sample ? plainSummary : safeText(trend.safe_summary || trend.summary || trend.claim) || "Verified trend data matched the selected inputs. Detailed performance claims are hidden until the dataset contract explicitly supports them.";
     return [
       "<article class=\"ts-result-item\" data-result=\"verified-trend\">",
       "  <div class=\"ts-result-label-row\">",
-      "    <span class=\"ts-type-label\">" + escapeHtml(selectedMarket().label) + "</span>",
+      "    <span class=\"ts-type-label\">" + escapeHtml(market.label) + "</span>",
       "    <span class=\"ts-status-label is-current\">Verified data matched</span>",
       "  </div>",
-      "  <p class=\"ts-claim\">" + escapeHtml(note) + "</p>",
+      "  <p class=\"ts-claim\"><strong>Trend Found:</strong> " + escapeHtml(note) + "</p>",
       "  <dl class=\"ts-result-meta\">",
       supportedValue("Selected matchup", matchup && matchup.matchup),
-      supportedValue("Selected market", selectedMarket().label),
+      supportedValue("Selected market", market.label),
+      supportedValue("Trend search", trendKind && trendKind.label),
       supportedValue("Selected side", state.side),
       supportedValue("Selected team", state.team || "Not required"),
       supportedValue("Selected period", PERIODS[state.period]),
       supportedValue("Time range", state.range),
       supportedValue("Selected filters", "location=" + state.location + " | min_sample=" + state.minSample + (state.threshold !== "" ? " | line=" + state.threshold : "")),
-      supportedValue("Sample size", Number(trend.sample || rows.length || 0)),
+      supportedValue("Result", rows.length ? counts.text : "Verified source rows available"),
+      supportedValue("Sample size", sample),
+      supportedValue("Usefulness", usefulnessLabel(sample)),
+      sample < Number(state.minSample || 0) ? supportedValue("Warning", SAFE_MESSAGES.smallSample) : "",
       supportedValue("Data state", "Verified source rows available"),
       supportedValue("Source", trend.source_url || "Verified Trend Spotter artifact"),
+      supportedValue("Note", "This is a trend, not a betting recommendation."),
       "  </dl>",
       rows.length ? sourceRowsHtml(rows.slice(0, 8)) : "<p class=\"ts-muted-line\">Verified source rows are not available for display.</p>",
       "</article>"
@@ -547,7 +661,9 @@
     state.side = "";
     state.team = "";
     state.threshold = "";
+    state.trendKind = "";
     state.period = "full_game";
+    state.range = "source_window";
     state.generated = false;
     els.resultsSection.classList.add("is-hidden");
   }
@@ -563,6 +679,7 @@
       state.matchupKey = els.matchup.value;
       state.side = "";
       state.team = "";
+      state.trendKind = "";
       state.generated = false;
       els.resultsSection.classList.add("is-hidden");
       updateUi();
@@ -574,13 +691,14 @@
       state.side = "";
       state.team = "";
       state.threshold = "";
+      state.trendKind = "";
       var market = selectedMarket();
       state.period = market && market.periods ? market.periods[0] : "full_game";
       state.generated = false;
       els.resultsSection.classList.add("is-hidden");
       updateUi();
     });
-    [els.side, els.team, els.threshold, els.period, els.range, els.sample, els.location].forEach(function (el) {
+    [els.side, els.team, els.threshold, els.trendKind, els.period, els.range, els.sample, els.location].forEach(function (el) {
       el.addEventListener("change", onInput);
       el.addEventListener("input", onInput);
     });
@@ -592,6 +710,7 @@
     if (target === els.side) state.side = target.value;
     if (target === els.team) state.team = target.value;
     if (target === els.threshold) state.threshold = target.value;
+    if (target === els.trendKind) state.trendKind = target.value;
     if (target === els.period) state.period = target.value;
     if (target === els.range) state.range = target.value;
     if (target === els.sample) state.minSample = Number(target.value) || 0;
