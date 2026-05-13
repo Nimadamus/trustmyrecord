@@ -2083,7 +2083,7 @@ button{font:inherit;cursor:pointer}
             <img id="tmrHeroUserAvatar" src="static/media/TMR-avatar-256.jpg" alt="">
             <div>
               <h2 id="tmrHeroUserName">Real User Profiles <span>◆</span></h2>
-              <a id="tmrHeroProfileLink" href="/profile/">Public Profile</a>
+              <a id="tmrHeroProfileLink" href="/handicappers/">Browse Handicappers</a>
               <p id="tmrHeroUserMeta">Showing real app users only</p>
               <div class="tmr-follow-stats"><b id="tmrHeroTotalUsers">--</b><b id="tmrHeroTotalPicks">--</b><small>Real users</small><small>Tracked picks</small></div>
             </div>
@@ -2096,15 +2096,15 @@ button{font:inherit;cursor:pointer}
 
         <div class="tmr-dashboard-grid">
           <section class="tmr-board-card">
-            <header><h3>Leaderboard</h3><a href="/leaderboards/">View All</a></header>
-            <div class="tmr-board-tabs"><span>All Time</span><span>This Month</span><span>This Week</span></div>
+            <header><h3>Public Profiles</h3><a href="/handicappers/">View All</a></header>
+            <div class="tmr-board-tabs"><span>Verified</span><span>Public</span><span>Records</span></div>
             <table>
-              <thead><tr><th>#</th><th>User</th><th>ROI</th><th>Units</th></tr></thead>
+              <thead><tr><th></th><th>User</th><th>ROI</th><th>Units</th></tr></thead>
               <tbody id="tmrHeroLeaderboardBody">
-                <tr class="tmr-empty-table-row"><td colspan="4">Leaderboard will populate after users submit locked picks.</td></tr>
+                <tr class="tmr-empty-table-row"><td colspan="4">Public profiles will populate after users submit locked picks.</td></tr>
               </tbody>
             </table>
-            <a class="tmr-see-more" href="/leaderboards/">See full leaderboard →</a>
+            <a class="tmr-see-more" href="/handicappers/">Browse public profiles →</a>
           </section>
 
           <section class="tmr-board-card tmr-picks-card">
@@ -4993,7 +4993,6 @@ button{font:inherit;cursor:pointer}
             .filter(function (user) { return realHomepageUsers.has(String(user.username).toLowerCase()); })
             .slice(0, 4);
 
-        const lead = cleanUsers[0];
         const totalPicks = cleanUsers.reduce(function (sum, user) {
             return sum + number(user.total_picks || user.totalPicks, 0);
         }, 0);
@@ -5003,30 +5002,23 @@ button{font:inherit;cursor:pointer}
         if (totalUsersEl) totalUsersEl.textContent = String(cleanUsers.length || 4);
         if (totalPicksEl) totalPicksEl.textContent = totalPicks ? String(totalPicks) : 'No verified picks yet';
 
-        if (lead) {
-            const username = String(lead.username);
-            const displayName = lead.display_name || lead.displayName || username;
-            const avatar = lead.avatar_url || lead.avatarUrl || fallbackAvatar;
-            const total = number(lead.total_picks || lead.totalPicks, 0);
-
-            const avatarEl = document.getElementById('tmrHeroUserAvatar');
-            const nameEl = document.getElementById('tmrHeroUserName');
-            const linkEl = document.getElementById('tmrHeroProfileLink');
-            const metaEl = document.getElementById('tmrHeroUserMeta');
-            if (avatarEl) avatarEl.src = avatar;
-            if (nameEl) nameEl.innerHTML = escapeHtml(displayName) + ' <span>◆</span>';
-            if (linkEl) linkEl.href = '/profile/?user=' + encodeURIComponent(username);
-            if (metaEl) metaEl.textContent = '@' + username;
-            document.getElementById('tmrHeroRoi').textContent = total ? signed(lead.roi, '%') : 'No verified picks yet';
-            document.getElementById('tmrHeroUnits').textContent = total ? signed(lead.net_units || lead.netUnits, 'u') : 'No verified picks yet';
-            document.getElementById('tmrHeroPicks').textContent = total ? String(total) : 'No verified picks yet';
-            document.getElementById('tmrHeroRecord').textContent = total ? 'Public record' : 'No verified picks yet';
-        }
+        const avatarEl = document.getElementById('tmrHeroUserAvatar');
+        const nameEl = document.getElementById('tmrHeroUserName');
+        const linkEl = document.getElementById('tmrHeroProfileLink');
+        const metaEl = document.getElementById('tmrHeroUserMeta');
+        if (avatarEl) avatarEl.src = fallbackAvatar;
+        if (nameEl) nameEl.innerHTML = 'Public Profile Records <span>◆</span>';
+        if (linkEl) linkEl.href = '/handicappers/';
+        if (metaEl) metaEl.textContent = 'No featured account or implied top rank';
+        document.getElementById('tmrHeroRoi').textContent = 'By profile';
+        document.getElementById('tmrHeroUnits').textContent = 'By profile';
+        document.getElementById('tmrHeroPicks').textContent = totalPicks ? String(totalPicks) : 'No verified picks yet';
+        document.getElementById('tmrHeroRecord').textContent = 'Public ledgers';
 
         const body = document.getElementById('tmrHeroLeaderboardBody');
         if (!body) return;
         if (!cleanUsers.length) {
-            body.innerHTML = '<tr class="tmr-empty-table-row"><td colspan="4">Leaderboard will populate after users submit locked picks.</td></tr>';
+            body.innerHTML = '<tr class="tmr-empty-table-row"><td colspan="4">Public profiles will populate after users submit locked picks.</td></tr>';
             return;
         }
         body.innerHTML = cleanUsers.map(function (user, index) {
@@ -5038,7 +5030,7 @@ button{font:inherit;cursor:pointer}
                 ? '<img src="' + escapeHtml(avatarUrl) + '" alt="">'
                 : '<span class="avatar-sm">' + escapeHtml(username.slice(0, 2).toUpperCase()) + '</span>';
             return '<tr class="tmr-real-user-row">'
-                + '<td>' + (index + 1) + '</td>'
+                + '<td>•</td>'
                 + '<td><a class="tmr-real-user" href="/profile/?user=' + encodeURIComponent(username) + '">'
                 + avatarHtml
                 + '<span>' + escapeHtml(displayName) + '<small>@' + escapeHtml(username) + ' · ' + (total ? total + ' picks' : 'No verified picks yet') + '</small></span></a></td>'
