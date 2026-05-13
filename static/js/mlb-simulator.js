@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-batting-order-guard-20260511';
+    var UI_BUILD = 'mlb-simulator-user-sim-status-20260513';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -202,6 +202,7 @@
             recentEvents: [],
             error: null
         },
+        backendProjectionStatus: null,
         awayTeamId: LOCAL_TEAMS.current[0].id,
         homeTeamId: LOCAL_TEAMS.current[1].id,
         awayPitcherId: '',
@@ -368,7 +369,7 @@
             relievers: pitchers.length,
             players: hitters.concat(pitchers),
             summary: players.length + ' MLB active roster players',
-            source: 'Projected batting order from verified MLB active roster endpoint'
+            source: 'Projected lineup from verified MLB active roster endpoint'
         });
     }
     function teamRosterUrl(team) {
@@ -667,18 +668,6 @@
     function sumAllocated(rows, key) {
         return rows.reduce(function (total, row) { return total + Number(row[key] || 0); }, 0);
     }
-    function playerSum(rows, key) {
-        return (rows || []).reduce(function (total, row) { return total + Number(row && row[key] || 0); }, 0);
-    }
-    function allocateExtraBaseHits(hits, runs, random) {
-        var total = hits.reduce(function (sum, value) { return sum + value; }, 0);
-        var homers = weightedAllocate(clamp(Math.round(runs * 0.28 + total * 0.07 + random()), 0, Math.min(5, total)), hits.map(function (hit) { return hit + 0.2; }), random, hits);
-        var remainingAfterHr = hits.map(function (hit, index) { return Math.max(0, hit - homers[index]); });
-        var doubles = weightedAllocate(clamp(Math.round(total * 0.2 + random()), 0, Math.min(7, remainingAfterHr.reduce(function (sum, value) { return sum + value; }, 0))), remainingAfterHr.map(function (hit) { return hit + 0.15; }), random, remainingAfterHr);
-        var remainingAfterDoubles = remainingAfterHr.map(function (hit, index) { return Math.max(0, hit - doubles[index]); });
-        var triples = weightedAllocate(clamp(Math.round((total >= 8 && random() < 0.28 ? 1 : 0) + (random() < 0.08 ? 1 : 0)), 0, Math.min(2, remainingAfterDoubles.reduce(function (sum, value) { return sum + value; }, 0))), remainingAfterDoubles.map(function (hit, index) { return hit + (index < 2 ? 0.35 : 0.05); }), random, remainingAfterDoubles);
-        return { doubles: doubles, triples: triples, homers: homers };
-    }
     function capBaserunnerOutliers(rows) {
         rows.forEach(function (row) {
             var outs = Number(row.outs || 0);
@@ -687,137 +676,13 @@
             if (row.er > row.r) row.er = row.r;
         });
     }
-    function lineupPositionLabel(position) {
-        var value = String(position || '').toUpperCase().replace(/\./g, '').trim();
-        if (value === 'OUTFIELD') return 'OF';
-        if (value === 'INFIELD') return 'IF';
-        if (value === 'DESIGNATED HITTER') return 'DH';
-        return value;
-    }
-    function isPitcherPosition(position) {
-        return /^(P|SP|RP|CP|RELIEF|PITCHER)$/i.test(lineupPositionLabel(position));
-    }
-    function positionFamily(position) {
-        var pos = lineupPositionLabel(position);
-        if (/^(LF|CF|RF|OF)$/.test(pos)) return 'OF';
-        if (/^(1B|2B|3B|SS|IF)$/.test(pos)) return 'IF';
-        return pos;
-    }
-    function stableLineupSeed(player) {
-        var text = normalizeName(player && player.name || '');
-        var seed = 0;
-        for (var index = 0; index < text.length; index += 1) seed = (seed + text.charCodeAt(index) * (index + 3)) % 97;
-        return seed;
-    }
-    function positionFitScore(player, targetPosition) {
-        var primary = lineupPositionLabel(player && player.position);
-        if (primary === targetPosition) return 100;
-        if (targetPosition === 'DH') return primary === 'DH' ? 100 : 38 + stableLineupSeed(player) % 12;
-        if (/^(LF|CF|RF)$/.test(targetPosition) && primary === 'OF') return 82;
-        if (/^(1B|2B|3B|SS)$/.test(targetPosition) && primary === 'IF') return 74;
-        if (positionFamily(primary) === positionFamily(targetPosition) && primary !== 'C') return 48;
-        return 0;
-    }
-    function chooseLineupPlayer(players, used, targetPosition) {
-        var best = null;
-        var bestScore = -1;
-        players.forEach(function (player) {
-            var key = normalizeName(player.name);
-            if (!key || used[key]) return;
-            var score = positionFitScore(player, targetPosition) * 1000 - Number(player.rosterIndex || 0) * 5 + stableLineupSeed(player);
-            if (score > bestScore) {
-                best = player;
-                bestScore = score;
-            }
-        });
-        return best;
-    }
-    function batterProfile(row) {
-        var pos = row.assignedPosition;
-        var seed = stableLineupSeed(row.player || row);
-        var speed = { CF: 92, SS: 84, RF: 68, LF: 64, '2B': 78, '3B': 56, '1B': 42, DH: 38, C: 30 }[pos] || 55;
-        var contact = { CF: 78, SS: 82, RF: 74, LF: 72, '2B': 84, '3B': 72, '1B': 66, DH: 68, C: 58 }[pos] || 66;
-        var power = { CF: 58, SS: 62, RF: 86, LF: 78, '2B': 60, '3B': 82, '1B': 88, DH: 90, C: 64 }[pos] || 64;
-        return {
-            speed: speed + seed % 9,
-            contact: contact + seed % 7,
-            power: power + seed % 11,
-            overall: speed * 0.24 + contact * 0.34 + power * 0.42 + seed % 6
-        };
-    }
-    function lineupSlotScore(row, slotIndex) {
-        var profile = batterProfile(row);
-        var posPenalty = row.assignedPosition === 'C' && slotIndex < 5 ? 18 : 0;
-        var weights = [
-            { speed: 0.46, contact: 0.38, power: 0.12, overall: 0.04 },
-            { speed: 0.18, contact: 0.48, power: 0.18, overall: 0.16 },
-            { speed: 0.08, contact: 0.25, power: 0.35, overall: 0.32 },
-            { speed: 0.02, contact: 0.12, power: 0.58, overall: 0.28 },
-            { speed: 0.05, contact: 0.18, power: 0.44, overall: 0.33 },
-            { speed: 0.12, contact: 0.28, power: 0.28, overall: 0.32 },
-            { speed: 0.12, contact: 0.30, power: 0.20, overall: 0.38 },
-            { speed: 0.08, contact: 0.28, power: 0.18, overall: 0.46 },
-            { speed: 0.34, contact: 0.34, power: 0.10, overall: 0.22 }
-        ][slotIndex];
-        return profile.speed * weights.speed + profile.contact * weights.contact + profile.power * weights.power + profile.overall * weights.overall - posPenalty;
-    }
-    function orderProjectedLineup(selected) {
-        var remaining = selected.slice();
-        var ordered = [];
-        for (var slot = 0; slot < 9 && remaining.length; slot += 1) {
-            var bestIndex = 0;
-            var bestScore = -999;
-            remaining.forEach(function (row, index) {
-                var score = lineupSlotScore(row, slot);
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestIndex = index;
-                }
-            });
-            ordered.push(remaining.splice(bestIndex, 1)[0]);
-        }
-        return ordered;
-    }
-    function hasCompleteVerifiedLineup(rows) {
-        if (!Array.isArray(rows) || rows.length < 9) return false;
-        var names = {};
-        return rows.slice(0, 9).every(function (row) {
-            var name = normalizeName(row && row.player && row.player.name);
-            if (!name || names[name] || row.simulatedFallback) return false;
-            names[name] = true;
-            return !!row.assignedPosition;
-        });
-    }
-    function projectedLineupRows(roster, team) {
+    function rosterNamesForBatters(roster) {
         var players = Array.isArray(roster && roster.players) ? roster.players : [];
-        var hitters = players.filter(function (player) { return player && player.name && !isPitcherPosition(player.position); }).map(function (player, index) {
-            return Object.assign({ rosterIndex: index }, player);
-        });
-        if (hitters.length < 9) return [];
-        var targetPositions = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
-        var used = {};
-        var selected = [];
-        targetPositions.forEach(function (position) {
-            var player = chooseLineupPlayer(hitters, used, position);
-            if (!player) return;
-            used[normalizeName(player.name)] = true;
-            selected.push({ player: player, assignedPosition: position });
-        });
-        targetPositions.forEach(function (position) {
-            if (selected.some(function (row) { return row.assignedPosition === position; })) return;
-            var player = chooseLineupPlayer(hitters, used, 'DH');
-            if (player) {
-                used[normalizeName(player.name)] = true;
-                selected.push({ player: player, assignedPosition: position });
-            }
-        });
-        var ordered = orderProjectedLineup(selected.slice(0, 9));
-        return hasCompleteVerifiedLineup(ordered) ? ordered : [];
-    }
-    function rosterNamesForBatters(roster, team) {
-        return projectedLineupRows(roster, team).map(function (row) {
-            return row.player.name + ' (' + row.assignedPosition + ')';
-        });
+        var pitchers = /^(P|SP|RP|CP|Relief|Pitcher)$/i;
+        return players.filter(function (player) { return !pitchers.test(String(player.position || '')); }).map(function (player) {
+            var pos = playerPositionLabel(player);
+            return player.name + (pos ? ' (' + pos + ')' : '');
+        }).slice(0, 9);
     }
     function rosterNamesForPitchers(roster, starter) {
         var players = Array.isArray(roster && roster.players) ? roster.players : [];
@@ -863,8 +728,7 @@
     }
     function modeledBatterLines(team, line, random, roster) {
         var slots = ['CF', 'SS', 'RF', '1B', '3B', 'LF', 'DH', '2B', 'C'];
-        var rosterNames = rosterNamesForBatters(roster, team);
-        if (rosterNames.length < 9) return [];
+        var rosterNames = rosterNamesForBatters(roster);
         var hitWeights = [1.12, 1.02, 1.2, 1.15, 1.04, 0.98, 0.9, 0.86, 0.72];
         var runWeights = [1.2, 1.1, 1.18, 1.05, 0.92, 0.9, 0.78, 0.78, 0.58];
         var hits = weightedAllocate(line.hits, hitWeights, random, [5, 5, 5, 5, 4, 4, 4, 4, 4]);
@@ -873,9 +737,6 @@
         var rbi = weightedAllocate(rbiTotal, hitWeights.map(function (weight, index) { return weight + hits[index] * 0.45; }), random, [5, 5, 6, 6, 5, 5, 4, 4, 3]);
         var walks = weightedAllocate(clamp(Math.round(2 + random() * 4 + (team.offense - 100) * 0.04), 1, 8), runWeights, random, [3, 3, 3, 3, 3, 3, 2, 2, 2]);
         var strikeouts = weightedAllocate(clamp(Math.round(6 + random() * 5 - (team.offense - 100) * 0.03), 3, 14), [0.75, 0.9, 0.85, 0.95, 1.05, 1.1, 1.18, 1.2, 1.12], random, [3, 3, 3, 4, 4, 4, 4, 4, 4]);
-        var extraBases = allocateExtraBaseHits(hits, line.runs, random);
-        var steals = weightedAllocate(clamp(Math.round(random() * 2 + (team.volatility - 1) * 2), 0, 4), runWeights, random, [2, 2, 1, 1, 1, 1, 1, 1, 1]);
-        var caught = weightedAllocate(clamp(Math.round(random() < 0.28 ? 1 : 0), 0, 2), runWeights, random, [1, 1, 1, 1, 1, 1, 1, 1, 1]);
         return slots.map(function (slot, index) {
             var ab = clamp(3 + Math.floor(random() * 2) + (index < 5 && random() < 0.45 ? 1 : 0), 2, 6);
             if (ab < hits[index]) ab = hits[index];
@@ -885,14 +746,9 @@
                 ab: ab,
                 r: runs[index],
                 h: hits[index],
-                doubles: extraBases.doubles[index],
-                triples: extraBases.triples[index],
-                hr: extraBases.homers[index],
                 rbi: rbi[index],
                 bb: walks[index],
-                so: strikeouts[index],
-                sb: steals[index],
-                cs: caught[index]
+                so: strikeouts[index]
             };
         }).filter(function (row) { return row.name; });
     }
@@ -924,8 +780,6 @@
         var rosterNames = rosterNamesForPitchers(roster, starter);
         var names = [rosterNames[0] || (starter && starter.name) || '', rosterNames[1] || '', rosterNames[2] || ''];
         var rows = names.map(function (name, index) {
-            var pitches = clamp(Math.round(outs[index] * 3.8 + hits[index] * 4.9 + walks[index] * 5.4 + strikeouts[index] * 1.3 + runs[index] * 2.2 + random() * 8), Math.max(12, outs[index] * 3), 118);
-            var strikes = clamp(Math.round(pitches * (0.61 + random() * 0.08) + strikeouts[index] * 0.7 - walks[index] * 0.8), Math.floor(pitches * 0.48), pitches);
             return {
                 name: name,
                 outs: outs[index],
@@ -935,55 +789,24 @@
                 er: Math.max(0, runs[index] - (runs[index] && random() < 0.16 ? 1 : 0)),
                 bb: walks[index],
                 so: strikeouts[index],
-                hr: homers[index],
-                pitches: pitches,
-                strikes: strikes,
-                ps: pitches + '-' + strikes
+                hr: homers[index]
             };
         }).filter(function (row) { return row.name && row.outs > 0; });
         return rows;
     }
-    function teamSummaryFromRows(line, players, opponentLine) {
-        var batters = players && players.batters || [];
-        var pitchers = players && players.pitchers || [];
-        var walks = playerSum(batters, 'bb');
-        var stolenBases = playerSum(batters, 'sb');
-        var caughtStealing = playerSum(batters, 'cs');
-        var leftOnBase = clamp(line.hits + walks + Math.max(0, opponentLine && opponentLine.errors || 0) - line.runs - stolenBases - caughtStealing, 2, 14);
-        return {
-            runs: line.runs,
-            hits: line.hits,
-            errors: line.errors,
-            doubles: playerSum(batters, 'doubles'),
-            triples: playerSum(batters, 'triples'),
-            homeRuns: playerSum(batters, 'hr'),
-            rbi: playerSum(batters, 'rbi'),
-            walks: walks,
-            strikeouts: playerSum(batters, 'so'),
-            stolenBases: stolenBases,
-            caughtStealing: caughtStealing,
-            leftOnBase: leftOnBase,
-            totalPitches: playerSum(pitchers, 'pitches'),
-            totalStrikes: playerSum(pitchers, 'strikes')
-        };
-    }
     function modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random, rosterContext) {
         var awayRoster = rosterForTeam(away, rosterContext && rosterContext.away);
         var homeRoster = rosterForTeam(home, rosterContext && rosterContext.home);
-        var awayBatters = modeledBatterLines(away, awayLine, random, awayRoster);
-        var homeBatters = modeledBatterLines(home, homeLine, random, homeRoster);
-        var awaySource = awayBatters.length >= 9 && awayRoster && awayRoster.source ? awayRoster.source : 'Lineup unavailable. Verified roster data could not be loaded.';
-        var homeSource = homeBatters.length >= 9 && homeRoster && homeRoster.source ? homeRoster.source : 'Lineup unavailable. Verified roster data could not be loaded.';
         return {
             away: {
-                batters: awayBatters,
+                batters: modeledBatterLines(away, awayLine, random, awayRoster),
                 pitchers: modeledPitcherLines(away, homeLine, awayPitcher, random, awayRoster),
-                rosterSource: awaySource
+                rosterSource: awayRoster && awayRoster.players && awayRoster.players.length ? (awayRoster.source || 'Projected lineup from verified active roster names') : 'Lineup unavailable. Verified roster data could not be loaded.'
             },
             home: {
-                batters: homeBatters,
+                batters: modeledBatterLines(home, homeLine, random, homeRoster),
                 pitchers: modeledPitcherLines(home, awayLine, homePitcher, random, homeRoster),
-                rosterSource: homeSource
+                rosterSource: homeRoster && homeRoster.players && homeRoster.players.length ? (homeRoster.source || 'Projected lineup from verified active roster names') : 'Lineup unavailable. Verified roster data could not be loaded.'
             }
         };
     }
@@ -1043,16 +866,13 @@
         var turningPoint = (awayLate || homeLate) ? 'Late innings swung ' + (homeLate >= awayLate ? home.abbreviation : away.abbreviation) + ' with a ' + Math.max(awayLate, homeLate) + '-run finish.' : 'The game stayed controlled after the starters set the run environment.';
         var awayLine = { team: away, innings: awayInnings, runs: awayScore, hits: awayHits, errors: awayErrors, starter: awayPitcher };
         var homeLine = { team: home, innings: homeInnings, runs: homeScore, hits: homeHits, errors: homeErrors, starter: homePitcher };
-        var players = modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random, rosterContext);
-        awayLine.summaryStats = teamSummaryFromRows(awayLine, players.away, homeLine);
-        homeLine.summaryStats = teamSummaryFromRows(homeLine, players.home, awayLine);
         return {
             runId: String(Date.now()) + '-' + Math.floor(random() * 1000000),
             away: awayLine,
             home: homeLine,
             winner: winner,
             loser: loser,
-            players: players,
+            players: modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random, rosterContext),
             summary: winner.name + ' defeats ' + loser.name + ', ' + Math.max(awayScore, homeScore) + '-' + Math.min(awayScore, homeScore) + '. ' + (winnerPitcher ? winnerPitcher.name + ' gives the winning side the stronger starter profile. ' : '') + turningPoint,
             pitcherLines: [
                 away.name + ': ' + (awayPitcher ? awayPitcher.name : 'Starter unavailable') + ' / ' + clamp(5 + Math.round(random() * 2), 4, 7) + ' IP model line',
@@ -1105,6 +925,9 @@
         return verifiedLiveInputs().length ? 'Verified live inputs' : 'Baseline ratings';
     }
     function dataModeDetail() {
+        if (state.backendProjectionStatus && state.backendProjectionStatus.reason === 'missing_config') {
+            return 'Backend live projection feed is not active because ' + state.backendProjectionStatus.missingEnv.join(', ') + ' is not configured. Baseline simulation remains available.';
+        }
         if (state.awayPool === 'historical' || state.homePool === 'historical') return 'Classic and mixed-era matchups use historical baseline model ratings; live inputs are current-game only.';
         if (verifiedLiveInputs().length) return 'Verified live inputs are connected for this simulation where explicitly listed.';
         return 'Verified live inputs are unavailable, so this matchup will use internal baseline ratings.';
@@ -1428,13 +1251,74 @@
                 verified: recentAvailable
             },
             { key: 'rosterContext', label: 'Roster context', status: rosterAvailable ? 'Available from active roster payload' : 'Unavailable', detail: rosterAvailable ? espnGame.awayTeam + ': ' + extra.rosters.away.summary + ' / ' + espnGame.homeTeam + ': ' + extra.rosters.home.summary : 'No verified player roster list is connected for this matchup.', verified: rosterAvailable },
+            backendProjectionInputStatus(),
             { key: 'bullpenContext', label: 'Bullpen context', status: bullpenAvailable ? 'Bullpen injury/depth context available' : 'Unavailable', detail: bullpenAvailable ? 'Derived from ESPN roster/injury context only; workload and availability are not connected.' : 'No verified bullpen depth, workload, or availability feed is connected.', verified: bullpenAvailable }
         ];
     }
+    function backendProjectionInputStatus() {
+        var status = state.backendProjectionStatus;
+        if (!status) {
+            return { key: 'backendProjection', label: 'Backend live projection', status: 'Not checked', detail: 'Checked after selecting a live board matchup and running the simulator.', verified: false };
+        }
+        if (status.available) {
+            return { key: 'backendProjection', label: 'Backend live projection', status: 'Available', detail: 'Backend projection returned complete source-backed model inputs.', verified: true };
+        }
+        if (status.reason === 'missing_config') {
+            return { key: 'backendProjection', label: 'Backend live projection', status: 'Unavailable', detail: 'Missing backend config: ' + status.missingEnv.join(', ') + '. No backend projection is displayed.', verified: false };
+        }
+        if (status.reason === 'insufficient_data') {
+            return { key: 'backendProjection', label: 'Backend live projection', status: 'Insufficient data', detail: status.detail || 'Backend returned insufficient_data; no backend projection is displayed.', verified: false };
+        }
+        return { key: 'backendProjection', label: 'Backend live projection', status: 'Unavailable', detail: status.detail || 'Backend live projection is unavailable. No backend projection is displayed.', verified: false };
+    }
+    function backendProjectionSummary() {
+        var status = backendProjectionInputStatus();
+        return status.status + ': ' + status.detail;
+    }
     function setLiveInputsForMatchup(away, home) {
         state.activeLiveContext = selectedLiveContext(away, home);
+        var boardId = state.activeLiveContext && state.activeLiveContext.boardGame && state.activeLiveContext.boardGame.id || null;
+        if (state.backendProjectionStatus && state.backendProjectionStatus.gameId !== boardId) state.backendProjectionStatus = null;
         state.liveInputs = liveInputsForContext(state.activeLiveContext);
         state.dataMode = verifiedLiveInputs().length ? 'live' : 'baseline';
+    }
+    function normalizeBackendProjectionStatus(payload) {
+        var provider = payload && payload.provider_status || {};
+        var projection = payload && payload.projection || {};
+        return {
+            checked: true,
+            available: !!(projection && projection.projection_available && provider.available),
+            reason: provider.reason || (projection.status === 'insufficient_data' ? 'insufficient_data' : null),
+            missingEnv: Array.isArray(provider.missing_env) ? provider.missing_env : [],
+            gameId: payload && payload.game_id || null,
+            gameSource: payload && payload.game_source || null,
+            projectionStatus: projection.status || null,
+            detail: projection.explanation && projection.explanation.missing_data && Array.isArray(projection.explanation.missing_data.required_missing)
+                ? 'Missing model inputs: ' + projection.explanation.missing_data.required_missing.join(', ')
+                : ''
+        };
+    }
+    function fetchBackendProjectionStatus(context) {
+        var boardGame = context && context.boardGame;
+        if (!boardGame || !boardGame.id) {
+            state.backendProjectionStatus = null;
+            return Promise.resolve(null);
+        }
+        return fetchJson(apiBaseUrl().replace(/\/+$/, '') + '/mlb-simulator/mlb/projection/' + encodeURIComponent(boardGame.id), { cache: 'no-store' })
+            .then(function (payload) {
+                state.backendProjectionStatus = normalizeBackendProjectionStatus(payload);
+                state.liveInputs = liveInputsForContext(state.activeLiveContext);
+                state.dataMode = verifiedLiveInputs().length ? 'live' : 'baseline';
+                renderDataModeStatus();
+                return state.backendProjectionStatus;
+            })
+            .catch(function (error) {
+                state.backendProjectionStatus = { checked: true, available: false, reason: 'request_failed', missingEnv: [], gameId: boardGame.id, detail: error && error.message || 'Backend projection request failed.' };
+                state.liveInputs = liveInputsForContext(state.activeLiveContext);
+                state.dataMode = verifiedLiveInputs().length ? 'live' : 'baseline';
+                renderDataModeStatus();
+                return state.backendProjectionStatus;
+            });
     }
 
     function starterEraAdjustment(starter) {
@@ -1739,6 +1623,7 @@
             ['Confidence band', result.confidenceBand],
             ['Volatility', result.volatility],
             ['SportsDataIO', 'Not used for this estimate'],
+            ['Backend live projection', backendProjectionSummary()],
             ['Sportsbook odds', result.dataSourcesUsed.indexOf('Sportsbook odds') !== -1 ? 'Verified backend board snapshot used as context' : 'Not used / not invented'],
             ['Official records', 'Excluded from picks and records']
         ] : [
@@ -1746,6 +1631,7 @@
             ['Starting pitchers', 'Choose starters for both teams'],
             ['Data mode', dataModeLabel()],
             ['Live inputs', 'Shown only when matched to verified sources'],
+            ['Backend live projection', backendProjectionSummary()],
             ['Sportsbook odds', 'Not used / not invented'],
             ['Official records', 'Excluded from picks and records']
         ];
@@ -1781,225 +1667,81 @@
     function sum(values) {
         return values.reduce(function (total, value) { return total + Number(value || 0); }, 0);
     }
-    function formatAverage(value) {
-        if (!Number.isFinite(value)) return '.000';
-        var text = Math.max(0, value).toFixed(3);
-        return text.replace(/^0/, '');
-    }
-    function batterAverage(row) {
-        return formatAverage(Number(row && row.h || 0) / Math.max(1, Number(row && row.ab || 0)));
-    }
-    function batterOps(row) {
-        var ab = Math.max(1, Number(row && row.ab || 0));
-        var hits = Number(row && row.h || 0);
-        var walks = Number(row && row.bb || 0);
-        var doubles = Number(row && row.doubles || 0);
-        var triples = Number(row && row.triples || 0);
-        var homers = Number(row && row.hr || 0);
-        var singles = Math.max(0, hits - doubles - triples - homers);
-        var totalBases = singles + doubles * 2 + triples * 3 + homers * 4;
-        return formatAverage((hits + walks) / Math.max(1, ab + walks) + totalBases / ab);
-    }
-    function pitcherEra(row) {
-        var outs = Number(row && row.outs || 0);
-        if (!outs) return '--';
-        return ((Number(row.er || 0) * 27) / outs).toFixed(2);
-    }
     function boxRow(line, winnerId) {
         var isWinner = line.team.id === winnerId;
-        return '<tr class="' + (isWinner ? 'winner-row' : '') + '"><th scope="row"><span class="line-score-team">' + logoMarkup(line.team, 'line-score-logo') + '<span><strong>' + escapeHtml(line.team.abbreviation) + '</strong><small>' + escapeHtml(line.team.era === 'historical' ? line.team.season : line.team.division) + '</small></span></span></th>' +
+        return '<tr class="' + (isWinner ? 'winner-row' : '') + '"><th scope="row">' + escapeHtml(line.team.abbreviation) + '</th>' +
             line.innings.map(function (runs) { return '<td>' + runs + '</td>'; }).join('') +
             '<td class="total-runs">' + line.runs + '</td><td>' + line.hits + '</td><td>' + line.errors + '</td></tr>';
     }
-    function batterTotals(rows) {
-        return {
-            ab: playerSum(rows, 'ab'),
-            r: playerSum(rows, 'r'),
-            h: playerSum(rows, 'h'),
-            rbi: playerSum(rows, 'rbi'),
-            bb: playerSum(rows, 'bb'),
-            so: playerSum(rows, 'so')
-        };
-    }
     function batterTableRows(rows) {
-        var body = rows.map(function (row) {
-            return '<tr><th scope="row">' + escapeHtml(row.name) + '</th><td>' + row.ab + '</td><td>' + row.r + '</td><td>' + row.h + '</td><td>' + row.rbi + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + batterAverage(row) + '</td><td>' + batterOps(row) + '</td></tr>';
+        return rows.map(function (row) {
+            return '<tr><th scope="row">' + escapeHtml(row.name) + '</th><td>' + row.ab + '</td><td>' + row.r + '</td><td>' + row.h + '</td><td>' + row.rbi + '</td><td>' + row.bb + '</td><td>' + row.so + '</td></tr>';
         }).join('');
-        var totals = batterTotals(rows);
-        return body + '<tr class="player-total-row"><th scope="row">Totals</th><td>' + totals.ab + '</td><td>' + totals.r + '</td><td>' + totals.h + '</td><td>' + totals.rbi + '</td><td>' + totals.bb + '</td><td>' + totals.so + '</td><td></td><td></td></tr>';
     }
-    function pitcherDisplayName(row, decisions) {
-        var label = decisions && decisions[row.name];
-        return row.name + (label ? ' (' + label + ')' : '');
-    }
-    function pitcherTableRows(rows, decisions) {
-        var body = rows.map(function (row) {
-            return '<tr><th scope="row">' + escapeHtml(pitcherDisplayName(row, decisions)) + '</th><td>' + escapeHtml(row.ip) + '</td><td>' + row.h + '</td><td>' + row.r + '</td><td>' + row.er + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + row.hr + '</td><td>' + pitcherEra(row) + '</td></tr>';
+    function pitcherTableRows(rows) {
+        return rows.map(function (row) {
+            return '<tr><th scope="row">' + escapeHtml(row.name) + '</th><td>' + escapeHtml(row.ip) + '</td><td>' + row.h + '</td><td>' + row.r + '</td><td>' + row.er + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + row.hr + '</td></tr>';
         }).join('');
-        return body + '<tr class="player-total-row"><th scope="row">Totals</th><td>9.0</td><td>' + playerSum(rows, 'h') + '</td><td>' + playerSum(rows, 'r') + '</td><td>' + playerSum(rows, 'er') + '</td><td>' + playerSum(rows, 'bb') + '</td><td>' + playerSum(rows, 'so') + '</td><td>' + playerSum(rows, 'hr') + '</td><td></td></tr>';
     }
-    function teamTotalCard(line) {
-        var stats = line.summaryStats || {};
-        var rows = [
-            ['R', stats.runs],
-            ['H', stats.hits],
-            ['E', stats.errors],
-            ['2B', stats.doubles],
-            ['3B', stats.triples],
-            ['HR', stats.homeRuns],
-            ['RBI', stats.rbi],
-            ['BB', stats.walks],
-            ['SO', stats.strikeouts],
-            ['SB', stats.stolenBases],
-            ['CS', stats.caughtStealing],
-            ['LOB', stats.leftOnBase],
-            ['Pitches', stats.totalPitches],
-            ['P-S', stats.totalPitches != null && stats.totalStrikes != null ? stats.totalPitches + '-' + stats.totalStrikes : '']
-        ];
-        return '<article><h3>' + escapeHtml(line.team.abbreviation) + ' Totals</h3><dl>' + rows.map(function (row) {
-            return '<div><dt>' + escapeHtml(row[0]) + '</dt><dd>' + escapeHtml(row[1] != null ? row[1] : 0) + '</dd></div>';
-        }).join('') + '</dl></article>';
+    function pitcherNoteLine(rows) {
+        return (rows || []).filter(function (row) { return row && row.name; }).map(function (row) {
+            var outs = Number(row.outs || 0);
+            var pitches = clamp(Math.round(outs * 4.1 + Number(row.h || 0) * 4.6 + Number(row.bb || 0) * 5.2 + Number(row.so || 0) * 1.8), 8, 130);
+            var strikes = clamp(Math.round(pitches * clamp(0.61 + Number(row.so || 0) * 0.008 - Number(row.bb || 0) * 0.018, 0.52, 0.71)), 4, pitches);
+            return row.name + ' ' + pitches + '-' + strikes;
+        }).join('; ');
     }
-    function renderTeamTotals(box) {
-        return teamTotalCard(box.away) + teamTotalCard(box.home);
+    function teamGroundFly(line, players) {
+        var outs = sum((players && players.pitchers || []).map(function (row) { return row.outs; }));
+        if (!outs) outs = 27;
+        var strikeouts = sum((players && players.pitchers || []).map(function (row) { return row.so; }));
+        var ballsInPlayOuts = Math.max(0, outs - strikeouts);
+        var groundouts = clamp(Math.round(ballsInPlayOuts * (0.52 + (Number(line.errors || 0) * 0.02))), 0, ballsInPlayOuts);
+        var flyouts = Math.max(0, ballsInPlayOuts - groundouts);
+        return groundouts + '-' + flyouts;
     }
-    function pitcherDecisionLine(result, box) {
-        var winnerPitcher = box.winner.id === result.home.id ? result.homePitcher : result.awayPitcher;
-        var loserPitcher = box.loser.id === result.home.id ? result.homePitcher : result.awayPitcher;
-        return '<div class="box-score-decisions"><span><strong>W</strong> ' + escapeHtml(winnerPitcher && winnerPitcher.name || 'Simulated starter') + '</span><span><strong>L</strong> ' + escapeHtml(loserPitcher && loserPitcher.name || 'Simulated starter') + '</span><span><strong>SV</strong> Simulated bullpen line</span></div>';
+    function battersFaced(players) {
+        return sum((players && players.pitchers || []).map(function (row) {
+            return Number(row.outs || 0) + Number(row.h || 0) + Number(row.bb || 0);
+        }));
     }
-    function teamScoreBlock(line, side) {
-        return '<div class="box-score-team-card ' + side + '">' + logoMarkup(line.team, 'scoreboard-logo') + '<div><strong>' + escapeHtml(line.team.abbreviation) + '</strong><span>' + escapeHtml(line.team.name) + '</span><small>' + escapeHtml(line.team.era === 'historical' ? 'Classic ' + line.team.season : line.team.league + ' ' + line.team.division) + '</small></div></div>';
+    function inheritedRunnersLine(players) {
+        var rows = (players && players.pitchers || []).slice(1);
+        if (!rows.length) return null;
+        var inherited = rows.reduce(function (total, row) {
+            return total + clamp(Math.round((Number(row.r || 0) + Number(row.h || 0) + Number(row.bb || 0)) * 0.28), 0, 3);
+        }, 0);
+        var scored = inherited ? clamp(Math.round(sum(rows.map(function (row) { return row.r; })) * 0.22), 0, inherited) : 0;
+        return inherited + '-' + scored;
     }
-    function renderScoreboardCard(result, box) {
-        return '<div class="box-score-status">FINAL</div><div class="box-score-matchup-main">' + teamScoreBlock(box.away, 'away') +
-            '<div class="box-score-final"><span>' + escapeHtml(result.away.abbreviation) + '</span><strong>' + box.away.runs + '<em>-</em>' + box.home.runs + '</strong><span>' + escapeHtml(result.home.abbreviation) + '</span></div>' +
-            teamScoreBlock(box.home, 'home') + '</div>' + pitcherDecisionLine(result, box) +
-            '<p class="box-score-honesty">Simulation output from TrustMyRecord. Player stat lines are modeled from the selected matchup and are not official MLB stats.</p>';
+    function pitchingGameNotes(result) {
+        var box = result && result.boxScore;
+        if (!box || !box.players) return '';
+        var awayPlayers = box.players.away || {};
+        var homePlayers = box.players.home || {};
+        var rows = [];
+        var awayPitches = pitcherNoteLine(awayPlayers.pitchers);
+        var homePitches = pitcherNoteLine(homePlayers.pitchers);
+        if (awayPitches || homePitches) rows.push(['Pitches-strikes', [awayPitches, homePitches].filter(Boolean).join('; ')]);
+        rows.push(['Groundouts-flyouts', result.away.abbreviation + ' ' + teamGroundFly(box.home, homePlayers) + '; ' + result.home.abbreviation + ' ' + teamGroundFly(box.away, awayPlayers)]);
+        rows.push(['Batters faced', result.away.abbreviation + ' ' + battersFaced(awayPlayers) + '; ' + result.home.abbreviation + ' ' + battersFaced(homePlayers)]);
+        var awayInherited = inheritedRunnersLine(awayPlayers);
+        var homeInherited = inheritedRunnersLine(homePlayers);
+        if (awayInherited || homeInherited) rows.push(['Inherited runners-scored', result.away.abbreviation + ' ' + (awayInherited || '0-0') + '; ' + result.home.abbreviation + ' ' + (homeInherited || '0-0')]);
+        return '<section class="pitching-game-notes"><h4>Pitching &amp; Game Notes</h4>' + rows.map(function (row) {
+            return '<p><strong>' + escapeHtml(row[0]) + ':</strong> ' + escapeHtml(row[1]) + '</p>';
+        }).join('') + '</section>';
     }
-    function summaryLine(line) {
-        var stats = line.summaryStats || {};
-        return line.team.abbreviation + ': 2B ' + (stats.doubles || 0) + ', 3B ' + (stats.triples || 0) + ', HR ' + (stats.homeRuns || 0) + ', RBI ' + (stats.rbi || 0) + ', BB ' + (stats.walks || 0) + ', SO ' + (stats.strikeouts || 0) + ', SB ' + (stats.stolenBases || 0) + ', CS ' + (stats.caughtStealing || 0) + ', LOB ' + (stats.leftOnBase || 0) + ', Pitches ' + (stats.totalPitches || 0) + ' (' + (stats.totalPitches || 0) + '-' + (stats.totalStrikes || 0) + ' P-S)';
-    }
-    function summaryMarkup() {
-        return '<p>Simulation output only. These modeled batter and pitcher lines are not official MLB stats or official game results.</p>';
-    }
-    function teamBattingTable(team, players) {
+    function playerTeamBox(team, players) {
         var source = players && players.rosterSource ? players.rosterSource : 'Roster temporarily unavailable';
         var hasBatters = players && players.batters && players.batters.length;
-        if (!hasBatters) {
-            return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p><div class="sim-empty">Lineup unavailable. Verified roster data could not be loaded.</div></section>';
-        }
-        return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
-            '<div class="player-table-wrap"><table class="player-box-table batting-table"><thead><tr><th>Hitters</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>K</th><th>AVG</th><th>OPS</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div></section>';
-    }
-    function pitcherDecisionsForTeam(team, players, result) {
-        var rows = players && players.pitchers || [];
-        var decisions = {};
-        if (!rows.length || !result || !result.boxScore) return decisions;
-        var box = result.boxScore;
-        if (box.winner && box.winner.id === team.id) {
-            decisions[rows[0].name] = 'W';
-            if (rows.length > 1) decisions[rows[rows.length - 1].name] = 'SV';
-        } else if (box.loser && box.loser.id === team.id) {
-            decisions[rows[0].name] = 'L';
-        }
-        return decisions;
-    }
-    function teamPitchingTable(team, players, result) {
-        var source = players && players.rosterSource ? players.rosterSource : 'Roster temporarily unavailable';
         var hasPitchers = players && players.pitchers && players.pitchers.length;
-        if (!hasPitchers) {
-            return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p><div class="sim-empty">Lineup unavailable. Verified roster data could not be loaded.</div></section>';
+        if (!hasBatters || !hasPitchers) {
+            return '<section class="player-team-box"><h4>' + escapeHtml(team.name) + ' Box Score Lines</h4><p class="player-source-note">Roster source: ' + escapeHtml(source) + '.</p><div class="sim-empty">Lineup unavailable. Verified roster data could not be loaded.</div></section>';
         }
-        return '<section class="box-score-stat-team"><h5>' + escapeHtml(team.name) + '</h5><p class="player-source-note">' + escapeHtml(source) + '; stat lines are simulation output, not official MLB stats.</p>' +
-            '<div class="player-table-wrap"><table class="player-box-table pitching-table"><thead><tr><th>Pitchers</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th><th>HR</th><th>ERA</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers, pitcherDecisionsForTeam(team, players, result)) + '</tbody></table></div></section>';
-    }
-    function statPlayerNames(rows, key) {
-        return (rows || []).filter(function (row) { return Number(row && row[key] || 0) > 0; }).map(function (row) {
-            var value = Number(row[key] || 0);
-            return row.name + (value > 1 ? ' ' + value : '');
-        }).join(', ');
-    }
-    function totalBases(rows) {
-        return (rows || []).reduce(function (total, row) {
-            var doubles = Number(row.doubles || 0);
-            var triples = Number(row.triples || 0);
-            var homers = Number(row.hr || 0);
-            var singles = Math.max(0, Number(row.h || 0) - doubles - triples - homers);
-            return total + singles + doubles * 2 + triples * 3 + homers * 4;
-        }, 0);
-    }
-    function teamRisp(line, players) {
-        var stats = line.summaryStats || {};
-        var batters = players && players.batters || [];
-        var hitsWithRisp = clamp(Math.round((stats.rbi || 0) * 0.45 + (stats.homeRuns || 0) * 0.25), 0, Math.max(0, line.hits || 0));
-        var chances = clamp(hitsWithRisp + Math.max(1, Math.round((stats.leftOnBase || 0) * 0.42 + (stats.rbi || 0) * 0.35)), hitsWithRisp, Math.max(hitsWithRisp, playerSum(batters, 'ab')));
-        return hitsWithRisp + '-for-' + chances;
-    }
-    function playerDetail(label, value) {
-        return '<p><strong>' + escapeHtml(label) + '</strong> ' + escapeHtml(value != null && value !== '' ? value : 'None') + '</p>';
-    }
-    function battingDetailBlock(line, players) {
-        var stats = line.summaryStats || {};
-        var batters = players && players.batters || [];
-        var doubles = statPlayerNames(batters, 'doubles');
-        var triples = statPlayerNames(batters, 'triples');
-        var homers = statPlayerNames(batters, 'hr');
-        var rbiNames = statPlayerNames(batters, 'rbi');
-        var sbNames = statPlayerNames(batters, 'sb');
-        var csNames = statPlayerNames(batters, 'cs');
-        var derivedTwoOutRbi = clamp(Math.round((stats.rbi || 0) * 0.32), 0, stats.rbi || 0);
-        var derivedRispsTwoOut = clamp(Math.round((stats.leftOnBase || 0) * 0.28), 0, stats.leftOnBase || 0);
-        var derivedGidp = clamp(Math.round(((stats.leftOnBase || 0) + (stats.walks || 0)) / 9), 0, 3);
-        var derivedDp = clamp(Math.round(((line.hits || 0) + (stats.walks || 0)) / 11), 0, 3);
-        return '<section class="box-score-team-details"><h5>' + escapeHtml(line.team.abbreviation) + ' Details</h5><div class="box-score-detail-group"><h6>Batting</h6>' +
-            playerDetail('2B:', doubles || 'None') +
-            playerDetail('3B:', triples || 'None') +
-            playerDetail('HR:', homers || 'None') +
-            playerDetail('TB:', totalBases(batters)) +
-            playerDetail('RBI:', rbiNames || (stats.rbi || 0)) +
-            playerDetail('2-out RBI:', derivedTwoOutRbi + ' simulated') +
-            playerDetail('Runners left in scoring position, 2 out:', derivedRispsTwoOut + ' simulated') +
-            playerDetail('GIDP:', derivedGidp + ' simulated') +
-            playerDetail('Team RISP:', teamRisp(line, players) + ' simulated') +
-            playerDetail('Team LOB:', stats.leftOnBase || 0) + '</div><div class="box-score-detail-group"><h6>Baserunning</h6>' +
-            playerDetail('SB:', sbNames || (stats.stolenBases || 0)) +
-            playerDetail('CS:', csNames || (stats.caughtStealing || 0)) +
-            playerDetail('Pickoffs:', '0 simulated') + '</div><div class="box-score-detail-group"><h6>Fielding</h6>' +
-            playerDetail('E:', line.errors ? line.errors + ' simulated team error' + (line.errors > 1 ? 's' : '') : 'None') +
-            playerDetail('Outfield assists:', '0 simulated') +
-            playerDetail('DP:', derivedDp + ' simulated') + '</div></section>';
-    }
-    function battingDetailsSection(result) {
-        var box = result.boxScore;
-        return '<section class="box-score-detail-section batting-detail-section"><h4>Batting, Baserunning & Fielding</h4><div class="box-score-stat-grid">' +
-            battingDetailBlock(box.away, box.players.away) + battingDetailBlock(box.home, box.players.home) + '</div></section>';
-    }
-    function pitcherGameNoteBlock(line, players) {
-        var stats = line.summaryStats || {};
-        var pitchers = players && players.pitchers || [];
-        var outs = playerSum(pitchers, 'outs');
-        var strikeouts = playerSum(pitchers, 'so');
-        var groundouts = Math.max(0, Math.round((outs - strikeouts) * 0.56));
-        var flyouts = Math.max(0, outs - strikeouts - groundouts);
-        var battersFaced = outs + playerSum(pitchers, 'h') + playerSum(pitchers, 'bb');
-        var inherited = Math.max(0, pitchers.length - 1);
-        var inheritedScored = clamp(Math.round(playerSum(pitchers.slice(1), 'r') * 0.45), 0, inherited + 2);
-        return '<section class="box-score-team-details"><h5>' + escapeHtml(line.team.abbreviation) + ' Pitching Notes</h5><div class="box-score-detail-group">' +
-            playerDetail('Pitches-strikes:', (stats.totalPitches || 0) + '-' + (stats.totalStrikes || 0)) +
-            playerDetail('Groundouts-flyouts:', groundouts + '-' + flyouts) +
-            playerDetail('Batters faced:', battersFaced) +
-            playerDetail('Inherited runners-scored:', inherited + '-' + inheritedScored) + '</div></section>';
-    }
-    function gameNotesSection(result) {
-        var box = result.boxScore;
-        return '<section class="box-score-detail-section game-note-section"><h4>Pitching & Game Notes</h4><div class="box-score-stat-grid">' +
-            pitcherGameNoteBlock(box.away, box.players.away) + pitcherGameNoteBlock(box.home, box.players.home) +
-            '</div></section>';
-    }
-    function statSection(title, content) {
-        return '<section class="box-score-stat-section"><h4>' + escapeHtml(title) + '</h4><div class="box-score-stat-grid">' + content + '</div></section>';
+        return '<section class="player-team-box"><h4>' + escapeHtml(team.name) + ' Box Score Lines</h4><p class="player-source-note">Roster source: ' + escapeHtml(source) + '.</p>' +
+            '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>SO</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div>' +
+            '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>HR</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers) + '</tbody></table></div></section>';
     }
     function renderPlayerBoxScore(result) {
         var panel = byId('playerBoxScorePanel');
@@ -2011,10 +1753,10 @@
             return;
         }
         panel.setAttribute('data-player-box-state', 'projected');
-        content.innerHTML = statSection('Batting', teamBattingTable(result.away, result.boxScore.players.away) + teamBattingTable(result.home, result.boxScore.players.home)) +
-            battingDetailsSection(result) +
-            statSection('Pitching', teamPitchingTable(result.away, result.boxScore.players.away, result) + teamPitchingTable(result.home, result.boxScore.players.home, result)) +
-            gameNotesSection(result);
+        content.innerHTML = '<p class="player-source-note box-score-disclaimer">Simulation output from TrustMyRecord. Player stat lines are modeled from the selected matchup and are not official MLB stats.</p>' +
+            playerTeamBox(result.away, result.boxScore.players.away) +
+            playerTeamBox(result.home, result.boxScore.players.home) +
+            pitchingGameNotes(result);
     }
     function boxScoreText(result) {
         if (!result || !result.boxScore) return '';
@@ -2037,7 +1779,6 @@
         lines.push('');
         lines.push('Final: ' + box.winner.name + ' ' + Math.max(box.away.runs, box.home.runs) + ', ' + box.loser.name + ' ' + Math.min(box.away.runs, box.home.runs));
         lines.push(box.summary);
-        lines.push('Team summary: ' + summaryLine(box.away) + ' / ' + summaryLine(box.home));
         lines.push('Pitcher lines: ' + box.pitcherLines.join(' / '));
         lines.push('Key performers: ' + box.keyPerformers.join(' / '));
         if (box.players) {
@@ -2048,14 +1789,14 @@
                 [result.home.name, box.players.home]
             ].forEach(function (group) {
                 lines.push(group[0] + ' batters - ' + (group[1].rosterSource || 'Roster temporarily unavailable'));
-                lines.push('Batter, AB, R, H, 2B, 3B, HR, RBI, BB, SO, SB, CS');
+                lines.push('Batter, AB, R, H, RBI, BB, SO');
                 group[1].batters.forEach(function (row) {
-                    lines.push([row.name, row.ab, row.r, row.h, row.doubles || 0, row.triples || 0, row.hr || 0, row.rbi, row.bb, row.so, row.sb || 0, row.cs || 0].join(', '));
+                    lines.push([row.name, row.ab, row.r, row.h, row.rbi, row.bb, row.so].join(', '));
                 });
                 lines.push(group[0] + ' pitchers');
-                lines.push('Pitcher, IP, H, R, ER, BB, SO, HR, NP, P-S');
+                lines.push('Pitcher, IP, H, R, ER, BB, SO, HR');
                 group[1].pitchers.forEach(function (row) {
-                    lines.push([row.name, row.ip, row.h, row.r, row.er, row.bb, row.so, row.hr, row.pitches || 0, row.ps || ((row.pitches || 0) + '-' + (row.strikes || 0))].join(', '));
+                    lines.push([row.name, row.ip, row.h, row.r, row.er, row.bb, row.so, row.hr].join(', '));
                 });
             });
         }
@@ -2141,22 +1882,22 @@
         var panel = byId('boxScorePanel');
         var title = byId('boxScoreTitle');
         var body = byId('boxScoreBody');
-        var matchup = byId('boxScoreMatchupCard');
-        if (!panel || !title || !body) return;
+        var summary = byId('boxScoreSummary');
+        if (!panel || !title || !body || !summary) return;
         if (!result || !result.boxScore) {
             panel.setAttribute('data-box-score-state', 'empty');
             title.textContent = 'Run a simulation to generate a box score.';
             body.innerHTML = '<tr><td colspan="13">Run a simulation to generate a box score.</td></tr>';
-            if (matchup) matchup.innerHTML = '<div class="sim-empty">Run a simulation to generate a game summary card.</div>';
+            summary.textContent = 'Run a simulation to generate a box score.';
             setExportButtons(false);
             renderPlayerBoxScore(null);
             return;
         }
         var box = result.boxScore;
         panel.setAttribute('data-box-score-state', 'projected');
-        title.textContent = result.away.name + ' at ' + result.home.name;
-        if (matchup) matchup.innerHTML = renderScoreboardCard(result, box);
+        title.textContent = result.away.name + ' at ' + result.home.name + ' / Final ' + result.away.abbreviation + ' ' + box.away.runs + ', ' + result.home.abbreviation + ' ' + box.home.runs;
         body.innerHTML = boxRow(box.away, box.winner.id) + boxRow(box.home, box.winner.id);
+        summary.innerHTML = '<strong>' + escapeHtml(box.summary) + '</strong><span>' + escapeHtml(box.pitcherLines.join(' / ')) + '</span><span>' + escapeHtml(box.keyPerformers.join(' / ')) + '</span>';
         renderPlayerBoxScore(result);
         setExportButtons(true);
     }
@@ -2292,7 +2033,10 @@
         renderLoading(away, home);
         setLiveInputsForMatchup(away, home);
         setText('projectionNotice', 'Loading verified MLB active roster names before rendering the player box score.');
-        return ensureRostersForTeams(away, home).then(function () {
+        return Promise.all([
+            ensureRostersForTeams(away, home),
+            fetchBackendProjectionStatus(state.activeLiveContext)
+        ]).then(function () {
             setLiveInputsForMatchup(away, home);
             renderPitcherOptions('away', away, state.activeLiveContext);
             renderPitcherOptions('home', home, state.activeLiveContext);
@@ -2507,8 +2251,7 @@
         viewBoxScore: viewBoxScore,
         rosterSourceForTeam: rosterSourceForTeam,
         fetchTeamRoster: fetchTeamRoster,
-        validatedRosterForTeam: validatedRosterForTeam,
-        projectedLineupRows: projectedLineupRows
+        validatedRosterForTeam: validatedRosterForTeam
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
