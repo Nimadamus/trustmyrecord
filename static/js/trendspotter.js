@@ -293,7 +293,7 @@
     var fields = market && market.id === "total"
       ? ["total_line", "line", "threshold", "closing_total", "source_total_line"]
       : market && market.id === "team_total"
-        ? ["team_total_line", "total_line", "line", "threshold", "source_team_total_line"]
+        ? ["team_total_line", "source_team_total_line"]
         : ["spread_line", "line", "threshold", "source_spread_line"];
     fields.forEach(function (field) {
       var value = numericLine(trend && trend[field]);
@@ -326,7 +326,9 @@
   function marketHasSourceRows(market) {
     if (!market || !market.requiresSourceRows || !state.sport) return !market || !market.requiresSourceRows;
     return trendsForSport(state.sport).some(function (trend) {
-      return trend.source_classification === "source_backed" && marketMatches(trend, market) && sourceRows(trend).length > 0;
+      if (trend.source_classification !== "source_backed" || !marketMatches(trend, market) || !sourceRows(trend).length) return false;
+      if (market.id === "team_total") return lineValuesForTrend(trend, market).length > 0;
+      return true;
     });
   }
 
