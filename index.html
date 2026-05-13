@@ -2553,7 +2553,7 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-dashboard-grid {
     display: grid;
-    grid-template-columns: minmax(300px, .82fr) minmax(430px, 1.18fr);
+    grid-template-columns: minmax(250px, .76fr) minmax(0, 1.24fr);
     border: 1px solid rgba(134, 162, 190, .17);
     border-radius: 7px;
     overflow: hidden;
@@ -2638,14 +2638,33 @@ button{font:inherit;cursor:pointer}
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    max-width: 100%;
     color: #fff;
     font-weight: 900;
+  }
+  .tmr-board-card .tmr-real-user img,
+  .tmr-board-card .tmr-real-user .avatar-sm {
+    width: 28px;
+    height: 28px;
+    flex: 0 0 28px;
+    border: 1px solid rgba(255,255,255,.18);
+  }
+  .tmr-board-card .tmr-real-user img {
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(255,255,255,.08);
+  }
+  .tmr-board-card .tmr-real-user span:last-child {
+    min-width: 0;
   }
   .tmr-board-card .tmr-real-user small {
     display: block;
     margin-top: 2px;
+    overflow: hidden;
     color: var(--premium-muted);
     font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .tmr-board-card td img,
   .avatar-sm { width: 24px; height: 24px; font-size: 9px; }
@@ -2668,27 +2687,27 @@ button{font:inherit;cursor:pointer}
   .tmr-pick-line,
   .tmr-mini-ticket {
     display: grid;
-    grid-template-columns: minmax(160px, 1.35fr) minmax(126px, 1fr) 58px 78px 62px;
-    gap: 12px;
+    grid-template-columns: minmax(118px, 1.12fr) minmax(104px, .96fr) 44px 58px 48px;
+    gap: 8px;
     align-items: center;
     color: #edf5ff;
     font-size: 13px;
   }
   .tmr-pick-table-head {
     min-height: 32px;
-    padding: 0 8px;
+    padding: 0 6px;
     color: var(--premium-muted);
     border-top: 1px solid rgba(134, 162, 190, .10);
     border-bottom: 1px solid rgba(134, 162, 190, .10);
     background: rgba(255,255,255,.025);
-    font-size: 10px;
+    font-size: 9px;
     font-weight: 900;
     letter-spacing: .08em;
     text-transform: uppercase;
   }
   .tmr-pick-line {
     min-height: 68px;
-    padding: 10px 8px;
+    padding: 10px 6px;
     border-top: 1px solid rgba(134, 162, 190, .10);
   }
   .tmr-pick-game,
@@ -2700,7 +2719,7 @@ button{font:inherit;cursor:pointer}
     display: block;
     overflow: hidden;
     color: #fff;
-    font-size: 13px;
+    font-size: 12px;
     line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -2711,7 +2730,7 @@ button{font:inherit;cursor:pointer}
     margin-top: 4px;
     overflow: hidden;
     color: var(--premium-muted);
-    font-size: 11px;
+    font-size: 10px;
     line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -2720,19 +2739,19 @@ button{font:inherit;cursor:pointer}
   .tmr-pick-units {
     color: #dfe8f4;
     font-family: var(--mono, "JetBrains Mono", monospace);
-    font-size: 12px;
+    font-size: 11px;
     font-style: normal;
     text-align: right;
   }
   .tmr-pick-units { color: var(--premium-green); font-weight: 900; }
   .tmr-pick-result {
     justify-self: start;
-    min-width: 66px;
-    padding: 6px 9px;
+    min-width: 54px;
+    padding: 6px 7px;
     border-radius: 999px;
     color: #042019;
     background: var(--premium-green);
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 950;
     text-align: center;
     text-transform: uppercase;
@@ -4162,7 +4181,7 @@ button{font:inherit;cursor:pointer}
             if (avatarEl) avatarEl.src = avatar;
             if (nameEl) nameEl.innerHTML = escapeHtml(displayName) + ' <span>◆</span>';
             if (linkEl) linkEl.href = '/profile/?user=' + encodeURIComponent(username);
-            if (metaEl) metaEl.textContent = '@' + username + ' · real TrustMyRecord user';
+            if (metaEl) metaEl.textContent = '@' + username;
             document.getElementById('tmrHeroRoi').textContent = total ? signed(lead.roi, '%') : 'No tracked picks yet';
             document.getElementById('tmrHeroUnits').textContent = total ? signed(lead.net_units || lead.netUnits, 'u') : 'No tracked picks yet';
             document.getElementById('tmrHeroPicks').textContent = total ? String(total) : 'No tracked picks yet';
@@ -4179,10 +4198,14 @@ button{font:inherit;cursor:pointer}
             const username = String(user.username);
             const displayName = user.display_name || user.displayName || username;
             const total = number(user.total_picks || user.totalPicks, 0);
+            const avatarUrl = user.avatar_url || user.avatarUrl || '';
+            const avatarHtml = avatarUrl
+                ? '<img src="' + escapeHtml(avatarUrl) + '" alt="">'
+                : '<span class="avatar-sm">' + escapeHtml(username.slice(0, 2).toUpperCase()) + '</span>';
             return '<tr class="tmr-real-user-row">'
                 + '<td>' + (index + 1) + '</td>'
                 + '<td><a class="tmr-real-user" href="/profile/?user=' + encodeURIComponent(username) + '">'
-                + '<span class="avatar-sm">' + escapeHtml(username.slice(0, 2).toUpperCase()) + '</span>'
+                + avatarHtml
                 + '<span>' + escapeHtml(displayName) + '<small>@' + escapeHtml(username) + ' · ' + (total ? total + ' picks' : 'No tracked picks yet') + '</small></span></a></td>'
                 + '<td>' + escapeHtml(total ? signed(user.roi, '%') : 'No tracked picks yet') + '</td>'
                 + '<td>' + escapeHtml(total ? signed(user.net_units || user.netUnits, 'u') : 'No tracked picks yet') + '</td>'
