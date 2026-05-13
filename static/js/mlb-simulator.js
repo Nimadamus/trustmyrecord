@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-realism-20260513b';
+    var UI_BUILD = 'mlb-simulator-realism-runs-20260513';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -249,8 +249,8 @@
             return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
         };
     }
-    function poisson(lambda, random) {
-        lambda = clamp(lambda, 0.02, 3.4);
+    function poisson(lambda, random, maxLambda) {
+        lambda = clamp(lambda, 0.02, Number.isFinite(maxLambda) ? maxLambda : 3.4);
         var limit = Math.exp(-lambda);
         var k = 0;
         var product = 1;
@@ -603,14 +603,16 @@
         return isHome ? [0.108, 0.111, 0.114, 0.113, 0.112, 0.112, 0.112, 0.109, 0.109] : [0.111, 0.112, 0.114, 0.113, 0.112, 0.111, 0.109, 0.109, 0.109];
     }
     function controlledFinalScore(expected, opponentExpected, winShare, random) {
-        var base = clamp(expected, 1.4, 8.6);
-        var lambda = clamp(base * (0.78 + random() * 0.44), 1.0, 9.6);
-        var score = poisson(lambda, random);
-        if (random() < 0.18) score += poisson(clamp(base * 0.22, 0.1, 2.1), random);
-        if (base >= 5.2 && winShare > 0.62 && random() < 0.14) score += 2 + poisson(0.85, random);
-        if (base >= 6.3 && random() < 0.08) score += 1 + poisson(0.65, random);
+        var base = clamp(expected, 1.6, 8.9);
+        var lambda = clamp(base * (0.74 + random() * 0.28), 0.9, 7.2);
+        var score = poisson(lambda, random, 4.85);
+        if (random() < 0.12) score += poisson(clamp(base * 0.14, 0.1, 1.4), random);
+        if (base >= 4.6 && score <= 2 && random() < 0.24) score += 1;
+        if (base >= 5.0 && score <= 3 && random() < 0.14) score += 1;
+        if (base >= 5.4 && winShare > 0.62 && random() < 0.12) score += 2 + poisson(0.75, random);
+        if (base >= 6.5 && random() < 0.08) score += 1 + poisson(0.6, random);
         if (winShare > 0.58 && random() < 0.22) score += 1;
-        if (winShare < 0.38 && random() < 0.16) score = Math.max(0, score - 1);
+        if (winShare < 0.38 && random() < 0.08) score = Math.max(0, score - 1);
         var rareOutlier = random() < 0.006 && base >= 5.7;
         var cap = rareOutlier ? 20 : (base >= 6.6 ? 16 : (base <= 3.2 ? 10 : 13));
         if (opponentExpected >= 6.2 && score > 14 && !rareOutlier) cap = Math.min(cap, 14);
@@ -930,11 +932,11 @@
         };
     }
     function expectedRunsFor(offenseTeam, defenseTeam, homeBonus) {
-        var offenseLift = (offenseTeam.offense - 100) * 0.047;
-        var starterDrag = (100 - defenseTeam.startingPitching) * 0.029;
-        var bullpenDrag = (100 - defenseTeam.bullpen) * 0.019;
+        var offenseLift = (offenseTeam.offense - 100) * 0.05;
+        var starterDrag = (100 - defenseTeam.startingPitching) * 0.025;
+        var bullpenDrag = (100 - defenseTeam.bullpen) * 0.021;
         var preventionDrag = (100 - defenseTeam.runPrevention) * 0.021;
-        return clamp(4.3 + offenseLift + starterDrag + bullpenDrag + preventionDrag + homeBonus, 1.7, 9.2);
+        return clamp(4.45 + offenseLift + starterDrag + bullpenDrag + preventionDrag + homeBonus, 2.0, 9.7);
     }
     function volatilityLabel(value) {
         if (value >= 1.07) return 'High';
@@ -1368,11 +1370,11 @@
 
     function starterEraAdjustment(starter) {
         if (!starter || !Number.isFinite(starter.era)) return 0;
-        return clamp((starter.era - 4.2) * 0.22, -0.45, 0.55);
+        return clamp((starter.era - 4.2) * 0.16, -0.32, 0.48);
     }
     function selectedPitcherRunAdjustment(pitcher) {
         if (!pitcher) return 0;
-        return clamp((100 - pitcher.quality) * 0.028, -0.58, 0.52);
+        return clamp((100 - pitcher.quality) * 0.022, -0.45, 0.48);
     }
     function selectedPitcherStrengthAdjustment(pitcher) {
         if (!pitcher) return 0;
@@ -1387,19 +1389,19 @@
         return clamp((report.ilCount * 0.32) + (report.dayToDay * 0.12) + (report.relieverCount * 0.12), 0, 2.8);
     }
     function simulate(away, home, context, seedSalt, allowUpset) {
-        var awayRuns = expectedRunsFor(away, home, 0);
-        var homeRuns = expectedRunsFor(home, away, 0.18);
+        var awayRuns = expectedRunsFor(away, home, 0.38);
+        var homeRuns = expectedRunsFor(home, away, 0.12);
         var liveFactors = [];
         var awayPitcher = selectedPitcher('away', away, context);
         var homePitcher = selectedPitcher('home', home, context);
-        awayRuns = clamp(awayRuns + selectedPitcherRunAdjustment(homePitcher), 1.7, 9.2);
-        homeRuns = clamp(homeRuns + selectedPitcherRunAdjustment(awayPitcher), 1.7, 9.2);
-        awayRuns = clamp(awayRuns + starterEraAdjustment(homePitcher), 1.6, 8.9);
-        homeRuns = clamp(homeRuns + starterEraAdjustment(awayPitcher), 1.6, 8.9);
+        awayRuns = clamp(awayRuns + selectedPitcherRunAdjustment(homePitcher), 1.9, 9.4);
+        homeRuns = clamp(homeRuns + selectedPitcherRunAdjustment(awayPitcher), 1.9, 9.4);
+        awayRuns = clamp(awayRuns + starterEraAdjustment(homePitcher), 1.8, 9.2);
+        homeRuns = clamp(homeRuns + starterEraAdjustment(awayPitcher), 1.8, 9.2);
         var parkFactor = parkRunFactor(home);
         if (parkFactor !== 1) {
-            awayRuns = clamp(awayRuns * parkFactor, 1.6, 8.9);
-            homeRuns = clamp(homeRuns * parkFactor, 1.6, 8.9);
+            awayRuns = clamp(awayRuns * parkFactor, 1.8, 9.2);
+            homeRuns = clamp(homeRuns * parkFactor, 1.8, 9.2);
             liveFactors.push('Park factor: ' + home.name + ' home environment adjusts the run model by ' + Math.round((parkFactor - 1) * 100) + '%.');
         }
         var awayStrength = strength(away);
@@ -1424,8 +1426,8 @@
             if (context.espnGame.weather) {
                 var weather = context.espnGame.weather;
                 var weatherAdjustment = weatherRunAdjustment(weather);
-                awayRuns = clamp(awayRuns + weatherAdjustment, 1.6, 8.9);
-                homeRuns = clamp(homeRuns + weatherAdjustment, 1.6, 8.9);
+                awayRuns = clamp(awayRuns + weatherAdjustment, 1.8, 9.2);
+                homeRuns = clamp(homeRuns + weatherAdjustment, 1.8, 9.2);
                 liveFactors.push('Weather context from ESPN: ' + [weather.temperature != null ? weather.temperature + 'F' : '', weather.display || '', Number.isFinite(weather.gust) ? 'gust ' + weather.gust + ' mph' : ''].filter(Boolean).join(' / ') + '.');
             }
         }
