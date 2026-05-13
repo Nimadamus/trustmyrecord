@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const URL = 'https://trustmyrecord.com/';
+const BASE_URL = 'https://trustmyrecord.com/';
 const OUT = path.join(process.cwd(), 'artifacts', 'homepage-polish-live-browser-proof.png');
 const MOBILE = path.join(process.cwd(), 'artifacts', 'homepage-polish-mobile-page-proof.png');
 const META = path.join(process.cwd(), 'artifacts', 'homepage-polish-live-proof.json');
@@ -12,10 +12,18 @@ async function main(){
   const browser = await chromium.launch({ headless: false, args: ['--window-size=1440,1100', '--no-sandbox'] });
   const page = await browser.newPage({ viewport: { width: 1360, height: 960 } });
   try {
-    await page.goto(URL, { waitUntil: 'networkidle', timeout: 60000 });
-    await page.waitForLoadState('domcontentloaded');
-    await page.waitForTimeout(2500);
-    const source = await page.content();
+    let source = '';
+    let loadedUrl = BASE_URL;
+    const requiredMarker = 'Emergency homepage composition fix: control-room layout, no cramped dashboard.';
+    for (let attempt = 0; attempt < 24; attempt++) {
+      loadedUrl = BASE_URL + '?proof=' + Date.now();
+      await page.goto(loadedUrl, { waitUntil: 'networkidle', timeout: 60000 });
+      await page.waitForLoadState('domcontentloaded');
+      await page.waitForTimeout(1500);
+      source = await page.content();
+      if (source.includes(requiredMarker)) break;
+      await page.waitForTimeout(5000);
+    }
     const bodyText = await page.locator('body').innerText({ timeout: 10000 }).catch(() => '');
     const required = ['Emergency homepage composition fix: control-room layout, no cramped dashboard.', 'BetLegend', 'Recent Locked Picks'];
     const missing = required.filter((term) => !source.includes(term) && !bodyText.includes(term));
