@@ -2114,7 +2114,7 @@ button{font:inherit;cursor:pointer}
             </div>
             <div id="tmrHeroPicksList" class="tmr-pick-empty">
               <span>▣</span>
-              <strong>No tracked picks yet</strong>
+              <strong>No verified picks yet</strong>
               <p>Recent locked picks will appear here once users lock picks before game start.</p>
             </div>
             <footer>▣ All picks are locked before game start</footer>
@@ -3080,6 +3080,116 @@ button{font:inherit;cursor:pointer}
     .tmr-pick-result { justify-self: end; }
     .tmr-premium-proof-cards { grid-template-columns: 1fr; }
   }
+
+
+  /* Emergency homepage composition fix: control-room layout, no cramped dashboard. */
+  .tmr-premium-nav {
+    height: 72px;
+    grid-template-columns: minmax(250px, auto) minmax(320px, 1fr) auto;
+    padding: 0 clamp(28px, 4vw, 56px);
+    gap: clamp(22px, 3vw, 40px);
+    background: rgba(2, 8, 17, .97);
+    box-shadow: 0 1px 0 rgba(255,255,255,.04) inset, 0 18px 54px rgba(0,0,0,.28);
+  }
+  .tmr-premium-brand { gap: 12px; font-size: 23px; letter-spacing: -.035em; }
+  .tmr-premium-shield { width: 38px; height: 38px; border-width: 2px; background: radial-gradient(circle at 50% 35%, rgba(55,214,193,.26), transparent 62%); filter: drop-shadow(0 0 16px rgba(55,214,193,.22)); }
+  .tmr-premium-links { gap: clamp(22px, 2.6vw, 38px); font-size: 14px; }
+  .tmr-premium-actions { gap: 18px; }
+  .tmr-premium-signup { height: 40px; min-width: 88px; border-radius: 8px; }
+
+  .tmr-premium-hero {
+    min-height: 728px;
+    grid-template-columns: minmax(0, 530px) minmax(0, 790px);
+    justify-content: center;
+    align-items: start;
+    gap: clamp(34px, 4.5vw, 64px);
+    padding: 50px clamp(28px, 4vw, 56px) 34px;
+  }
+  .tmr-premium-bg {
+    opacity: .62;
+    background:
+      radial-gradient(circle at 74% 24%, rgba(55,214,193,.16), transparent 22rem),
+      radial-gradient(circle at 90% 46%, rgba(58,107,255,.13), transparent 24rem),
+      linear-gradient(90deg, rgba(3,9,18,.98) 0%, rgba(3,9,18,.82) 39%, rgba(3,9,18,.48) 100%),
+      url("static/media/steph-curry-hero.gif") center / cover no-repeat;
+  }
+  .tmr-premium-hero-copy { max-width: 530px; padding: 48px 0 0; }
+  .tmr-premium-hero h1 { margin: 22px 0 18px; font-size: clamp(58px, 5.15vw, 82px); line-height: .98; letter-spacing: -.055em; }
+  .tmr-premium-hero-copy > p { max-width: 510px; font-size: clamp(18px, 1.55vw, 20px); line-height: 1.52; }
+  .tmr-premium-cta { margin-top: 30px; }
+  .tmr-premium-primary, .tmr-premium-secondary { min-height: 52px; padding: 0 28px; }
+  .tmr-premium-proof-row { max-width: 525px; gap: 16px; margin-top: 38px; }
+  .tmr-premium-trustline { margin-top: 58px; }
+
+  .tmr-premium-dashboard {
+    width: 100%;
+    max-width: 790px;
+    min-width: 0;
+    margin-top: 0;
+    overflow: hidden;
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(8,18,32,.91), rgba(4,11,22,.88));
+    box-shadow: 0 34px 94px rgba(0,0,0,.50), 0 0 0 1px rgba(55,214,193,.07) inset, 0 0 70px rgba(55,214,193,.09);
+  }
+  .tmr-premium-dashboard::before {
+    content: "";
+    position: absolute;
+    inset: 50px 0 auto 0;
+    height: 190px;
+    pointer-events: none;
+    opacity: .32;
+    background:
+      linear-gradient(rgba(55,214,193,.10) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(55,214,193,.08) 1px, transparent 1px),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 760 180'%3E%3Cpath d='M0 130 C70 118 96 92 162 104 S250 152 320 118 420 54 500 76 600 146 760 72' fill='none' stroke='%2337d6c1' stroke-width='3' stroke-linecap='round' opacity='.75'/%3E%3Cpath d='M0 152 C78 148 134 132 202 136 S326 166 408 132 522 96 602 110 684 136 760 112' fill='none' stroke='%23436cff' stroke-width='2' stroke-linecap='round' opacity='.38'/%3E%3C/svg%3E") center / cover no-repeat;
+    mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  }
+  .tmr-sport-tabs, .tmr-dashboard-shell { position: relative; z-index: 1; }
+  .tmr-sport-tabs { justify-content: flex-start; gap: 9px; min-height: 50px; padding: 10px 16px; overflow: hidden; font-size: 12px; }
+  .tmr-dashboard-shell { padding: 16px; }
+  .tmr-profile-summary {
+    grid-template-columns: minmax(236px, 1.05fr) repeat(2, minmax(120px, .72fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .tmr-profile-main { grid-row: span 2; min-height: 226px; align-items: flex-start; flex-direction: column; gap: 14px; padding: 16px; border-radius: 10px; }
+  .tmr-profile-main > div { width: 100%; min-width: 0; }
+  .tmr-profile-main img { width: 58px; height: 58px; }
+  .tmr-profile-main h2 { max-width: 100%; overflow: hidden; font-size: 28px; line-height: 1.02; text-overflow: ellipsis; white-space: nowrap; }
+  .tmr-profile-main p { margin: 8px 0 14px; }
+  .tmr-follow-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tmr-stat-card { min-height: 108px; padding: 14px 12px 11px; border-radius: 10px; }
+  .tmr-stat-card span { min-height: 22px; margin-bottom: 8px; font-size: 9.5px; line-height: 1.22; }
+  .tmr-stat-card b { font-size: clamp(18px, 1.55vw, 23px); }
+  .tmr-stat-card i { height: 26px; margin-top: 12px; background: linear-gradient(135deg, transparent 0 18%, rgba(55,214,193,.88) 19% 23%, transparent 24% 38%, rgba(105,238,143,.72) 39% 44%, transparent 45% 100%); border-radius: 6px; box-shadow: inset 0 0 0 1px rgba(134,162,190,.10); }
+  .tmr-stat-card:nth-of-type(3) i { background: repeating-linear-gradient(90deg, rgba(55,214,193,.82) 0 8px, rgba(55,214,193,.18) 8px 13px, rgba(105,238,143,.68) 13px 22px, transparent 22px 28px); }
+  .tmr-stat-card:nth-of-type(4) i { background: repeating-linear-gradient(90deg, rgba(67,108,255,.36) 0 8px, rgba(55,214,193,.82) 8px 15px, rgba(134,162,190,.18) 15px 23px); }
+  .tmr-stat-card:nth-of-type(5) i { width: 28px; height: 28px; margin-top: 8px; border-radius: 50%; background: radial-gradient(circle, rgba(105,238,143,.9) 0 38%, transparent 40%), conic-gradient(from 30deg, rgba(55,214,193,.95), rgba(67,108,255,.45), rgba(55,214,193,.95)); }
+
+  .tmr-dashboard-grid { grid-template-columns: minmax(250px, .82fr) minmax(0, 1.18fr); border-radius: 10px; background: rgba(3,10,19,.40); }
+  .tmr-board-card { min-width: 0; padding: 16px; }
+  .tmr-board-card h3 { font-size: 18px; letter-spacing: -.02em; }
+  .tmr-board-card table { table-layout: fixed; }
+  .tmr-board-card th, .tmr-board-card td { padding: 8px 5px; vertical-align: middle; }
+  .tmr-board-card th:nth-child(1), .tmr-board-card td:nth-child(1) { width: 26px; }
+  .tmr-board-card th:nth-child(3), .tmr-board-card td:nth-child(3) { width: 56px; }
+  .tmr-board-card th:nth-child(4), .tmr-board-card td:nth-child(4) { width: 62px; }
+  .tmr-board-card .tmr-real-user { width: 100%; min-width: 0; }
+  .tmr-board-card .tmr-real-user span:last-child { min-width: 0; overflow: hidden; }
+  .tmr-board-card .tmr-real-user span:last-child > :first-child, .tmr-board-card .tmr-real-user small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tmr-pick-table-head, .tmr-pick-line { grid-template-columns: minmax(94px, 1.06fr) minmax(100px, 1fr) 40px 52px 44px; gap: 7px; }
+  .tmr-pick-table-head { padding: 0 8px; font-size: 8.5px; }
+  .tmr-pick-line { min-height: 64px; padding: 9px 8px; }
+  .tmr-pick-game strong, .tmr-pick-market strong { font-size: 12px; }
+  .tmr-pick-game small, .tmr-pick-market small { font-size: 10px; }
+  .tmr-pick-result { min-width: 48px; padding: 6px 6px; }
+  .tmr-pick-odds, .tmr-pick-units { font-size: 10.5px; }
+  .tmr-source-strip { justify-content: space-between; gap: 18px; padding: 13px 16px; white-space: normal; }
+  .tmr-source-strip span { max-width: 360px; line-height: 1.35; }
+  .tmr-source-strip b { font-size: 15px; }
+  @media (max-width: 1260px) { .tmr-premium-hero { grid-template-columns: 1fr; } .tmr-premium-hero-copy { max-width: 720px; padding-top: 24px; } .tmr-premium-dashboard { max-width: 940px; } }
+  @media (max-width: 760px) { .tmr-premium-nav { height: auto; grid-template-columns: 1fr; gap: 14px; padding: 18px; } .tmr-premium-links { justify-content: flex-start; overflow-x: auto; padding-bottom: 2px; } .tmr-premium-actions { justify-content: space-between; } .tmr-premium-hero { padding: 26px 18px 22px; } .tmr-premium-hero h1 { font-size: clamp(42px, 13vw, 58px); } .tmr-premium-proof-row { grid-template-columns: 1fr; } .tmr-profile-summary { grid-template-columns: 1fr 1fr; } .tmr-profile-main { grid-column: 1 / -1; grid-row: auto; min-height: 0; } .tmr-dashboard-grid { grid-template-columns: 1fr; } .tmr-board-card + .tmr-board-card { border-left: 0; border-top: 1px solid rgba(134,162,190,.17); } .tmr-source-strip { align-items: flex-start; flex-direction: column; } }
+
 </style>
 
 <!-- Header -->
@@ -4217,7 +4327,7 @@ button{font:inherit;cursor:pointer}
 
     function signed(value, suffix) {
         const parsed = Number(value);
-        if (!Number.isFinite(parsed)) return 'No tracked picks yet';
+        if (!Number.isFinite(parsed)) return 'No verified picks yet';
         return (parsed > 0 ? '+' : '') + parsed.toFixed(2).replace(/\.00$/, '') + (suffix || '');
     }
 
@@ -4253,7 +4363,7 @@ button{font:inherit;cursor:pointer}
         const totalUsersEl = document.getElementById('tmrHeroTotalUsers');
         const totalPicksEl = document.getElementById('tmrHeroTotalPicks');
         if (totalUsersEl) totalUsersEl.textContent = String(cleanUsers.length || 4);
-        if (totalPicksEl) totalPicksEl.textContent = totalPicks ? String(totalPicks) : 'No tracked picks yet';
+        if (totalPicksEl) totalPicksEl.textContent = totalPicks ? String(totalPicks) : 'No verified picks yet';
 
         if (lead) {
             const username = String(lead.username);
@@ -4269,10 +4379,10 @@ button{font:inherit;cursor:pointer}
             if (nameEl) nameEl.innerHTML = escapeHtml(displayName) + ' <span>◆</span>';
             if (linkEl) linkEl.href = '/profile/?user=' + encodeURIComponent(username);
             if (metaEl) metaEl.textContent = '@' + username;
-            document.getElementById('tmrHeroRoi').textContent = total ? signed(lead.roi, '%') : 'No tracked picks yet';
-            document.getElementById('tmrHeroUnits').textContent = total ? signed(lead.net_units || lead.netUnits, 'u') : 'No tracked picks yet';
-            document.getElementById('tmrHeroPicks').textContent = total ? String(total) : 'No tracked picks yet';
-            document.getElementById('tmrHeroRecord').textContent = total ? 'Public record' : 'No tracked picks yet';
+            document.getElementById('tmrHeroRoi').textContent = total ? signed(lead.roi, '%') : 'No verified picks yet';
+            document.getElementById('tmrHeroUnits').textContent = total ? signed(lead.net_units || lead.netUnits, 'u') : 'No verified picks yet';
+            document.getElementById('tmrHeroPicks').textContent = total ? String(total) : 'No verified picks yet';
+            document.getElementById('tmrHeroRecord').textContent = total ? 'Public record' : 'No verified picks yet';
         }
 
         const body = document.getElementById('tmrHeroLeaderboardBody');
@@ -4293,9 +4403,9 @@ button{font:inherit;cursor:pointer}
                 + '<td>' + (index + 1) + '</td>'
                 + '<td><a class="tmr-real-user" href="/profile/?user=' + encodeURIComponent(username) + '">'
                 + avatarHtml
-                + '<span>' + escapeHtml(displayName) + '<small>@' + escapeHtml(username) + ' · ' + (total ? total + ' picks' : 'No tracked picks yet') + '</small></span></a></td>'
-                + '<td>' + escapeHtml(total ? signed(user.roi, '%') : 'No tracked picks yet') + '</td>'
-                + '<td>' + escapeHtml(total ? signed(user.net_units || user.netUnits, 'u') : 'No tracked picks yet') + '</td>'
+                + '<span>' + escapeHtml(displayName) + '<small>@' + escapeHtml(username) + ' · ' + (total ? total + ' picks' : 'No verified picks yet') + '</small></span></a></td>'
+                + '<td>' + escapeHtml(total ? signed(user.roi, '%') : 'No verified picks yet') + '</td>'
+                + '<td>' + escapeHtml(total ? signed(user.net_units || user.netUnits, 'u') : 'No verified picks yet') + '</td>'
                 + '</tr>';
         }).join('');
     }
@@ -4324,7 +4434,7 @@ button{font:inherit;cursor:pointer}
             .slice(0, 5);
         if (!cleanPicks.length) {
             list.className = 'tmr-pick-empty';
-            list.innerHTML = '<span>▣</span><strong>No tracked picks yet</strong><p>Recent locked picks will appear here once users lock picks before game start.</p>';
+            list.innerHTML = '<span>▣</span><strong>No verified picks yet</strong><p>Recent locked picks will appear here once users lock picks before game start.</p>';
             return;
         }
         list.className = '';
