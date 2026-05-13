@@ -14,7 +14,7 @@
     { id: "moneyline", label: "Moneyline", aliases: ["MONEYLINE", "ML", "H2H"], sides: "teams", requiresTeam: false, needsThreshold: false, periods: ["full_game", "first_half"] },
     { id: "spread", label: "Spread", aliases: ["SPREAD", "ATS", "RUN_LINE", "PUCK_LINE"], sides: "teams", requiresTeam: false, needsThreshold: true, periods: ["full_game", "first_half"] },
     { id: "total", label: "Total", aliases: ["TOTAL", "GAME_TOTAL"], sides: "over_under", requiresTeam: false, needsThreshold: true, periods: ["full_game", "first_half"] },
-    { id: "team_total", label: "Team Total", aliases: ["TEAM_TOTAL", "TEAM TOTAL"], sides: "over_under", requiresTeam: true, needsThreshold: true, periods: ["full_game", "first_half"], disabled: true, disabledReason: "Team total trends are disabled until verified team-total source rows are connected." },
+    { id: "team_total", label: "Team Total", aliases: ["TEAM_TOTAL", "TEAM TOTAL"], sides: "over_under", requiresTeam: true, needsThreshold: true, periods: ["full_game"], requiresSourceRows: true, disabledReason: "Team total trends require verified team-total source rows for the selected sport." },
     { id: "first_half", label: "First Half", aliases: ["FIRST_HALF", "FIRST HALF", "1H", "HALF"], sides: "market_side", requiresTeam: false, needsThreshold: false, periods: ["first_half"], disabled: true, disabledReason: "First half trends are disabled until verified period-specific source rows are connected." },
     { id: "first_five", label: "First Five", aliases: ["FIRST_FIVE", "FIRST 5", "F5"], sides: "market_side", requiresTeam: false, needsThreshold: false, periods: ["first_five"], sportOnly: "MLB", disabled: true, disabledReason: "First Five trends are disabled until verified MLB F5 source rows are connected." },
     { id: "props", label: "Props", disabled: true, disabledReason: "Props are hidden until verified support exists." }
@@ -323,11 +323,30 @@
     return market.aliases.some(function (alias) { return body.indexOf(normalize(alias)) !== -1; });
   }
 
+  function marketHasSourceRows(market) {
+    if (!market || !market.requiresSourceRows || !state.sport) return !market || !market.requiresSourceRows;
+    return trendsForSport(state.sport).some(function (trend) {
+      return trend.source_classification === "source_backed" && marketMatches(trend, market) && sourceRows(trend).length > 0;
+    });
+  }
+
+  function marketDisabledReason(market) {
+    if (!market) return "";
+    if (market.disabled) return market.disabledReason || SOURCE_LABELS.unsupported.label;
+    if (market.sportOnly && state.sport && state.sport !== market.sportOnly) return market.label + " is supported only for " + market.sportOnly + ".";
+    if (market.requiresSourceRows && !marketHasSourceRows(market)) return market.disabledReason || "Verified source rows are not available for this market.";
+    return "";
+  }
+
+  function marketIsDisabled(market) {
+    return Boolean(marketDisabledReason(market));
+  }
+
   function trendMatchesQuery(trend) {
     var matchup = selectedMatchup();
     var market = selectedMarket();
     var trendKind = selectedTrendKind();
-    if (!matchup || !market || market.disabled || !trendKind || trendKind.disabled) return false;
+    if (!matchup || !market || marketIsDisabled(market) || !trendKind || trendKind.disabled) return false;
     var home = normalize(matchup.home_abbr);
     var away = normalize(matchup.away_abbr);
     var team = normalize(trend.team_abbr);
@@ -364,8 +383,8 @@
 
   function renderMarketOptions() {
     els.marketOptions.innerHTML = MARKETS.map(function (market) {
-      var disabled = market.disabled || (market.sportOnly && state.sport && state.sport !== market.sportOnly);
-      var reason = market.disabledReason || (market.sportOnly ? market.label + " is supported only for " + market.sportOnly + "." : "");
+      var reason = marketDisabledReason(market);
+      var disabled = Boolean(reason);
       return [
         "<button class=\"ts-market-card" + (state.market === market.id ? " is-selected" : "") + (disabled ? " is-disabled" : "") + "\" type=\"button\" role=\"radio\" aria-checked=\"" + (state.market === market.id ? "true" : "false") + "\" data-market=\"" + escapeHtml(market.id) + "\"" + (disabled ? " disabled" : "") + ">",
         "  <strong>" + escapeHtml(market.label) + "</strong>",
@@ -416,7 +435,7 @@
     els.thresholdField.classList.add("is-hidden");
     els.side.disabled = true;
     els.team.disabled = true;
-    if (!matchup || !market || market.disabled) {
+    if (!matchup || !market || marketIsDisabled(market)) {
       els.side.innerHTML = "<option value=\"\">Select matchup and trend type first</option>";
       els.team.innerHTML = "";
       return;
@@ -461,7 +480,7 @@
 
   function renderTrendKinds() {
     var market = selectedMarket();
-    var kinds = market && !market.disabled ? trendKindsForMarket(market.id) : [];
+    var kinds = market && !marketIsDisabled(market) ? trendKindsForMarket(market.id) : [];
     els.trendKind.disabled = !kinds.length;
     if (!kinds.length) {
       els.trendKind.innerHTML = "<option value=\"\">Select trend type first</option>";
@@ -495,11 +514,11 @@
     if (!state.sport) errors.push("no matchup selected");
     if (state.sport && !state.matchupKey) errors.push("no matchup selected");
     if (!state.market) errors.push("no trend type selected");
-    if (market && market.disabled) errors.push("invalid combination");
+    if (market && marketIsDisabled(market)) errors.push("invalid combination");
     if (market && market.sportOnly && state.sport !== market.sportOnly) errors.push("invalid combination");
-    if (market && !market.disabled && !state.trendKind) errors.push("missing trend search");
+    if (market && !marketIsDisabled(market) && !state.trendKind) errors.push("missing trend search");
     if (trendKind && trendKind.disabled) errors.push("invalid combination");
-    if (market && !market.disabled && !state.side) errors.push("missing required variables");
+    if (market && !marketIsDisabled(market) && !state.side) errors.push("missing required variables");
     if (market && market.requiresTeam && !state.team) errors.push("missing required variables");
     if (market && market.needsThreshold && state.threshold === "") errors.push("missing required variables");
     if (market && market.needsThreshold && state.threshold !== "" && !Number.isFinite(Number(state.threshold))) errors.push("invalid combination");
@@ -818,7 +837,7 @@
       if (first) {
         state.matchupKey = first.key;
         var market = params.get("market") || "";
-        if (MARKETS.some(function (item) { return item.id === market && !item.disabled; })) state.market = market;
+        if (MARKETS.some(function (item) { return item.id === market && !marketIsDisabled(item); })) state.market = market;
         updateUi();
         if (params.get("autorun") === "1") renderResults();
       }
