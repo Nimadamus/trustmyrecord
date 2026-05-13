@@ -2059,7 +2059,7 @@ button{font:inherit;cursor:pointer}
       <div class="tmr-premium-proof-row" aria-label="Trust features">
         <div><span class="tmr-proof-icon tmr-proof-icon-lock" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2"/><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M12 14v3"/></svg></span><p>Picks are locked<br>before games start</p></div>
         <div><span class="tmr-proof-icon tmr-proof-icon-grade" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/><path d="M4 20h16"/></svg></span><p>Results update<br>after scores post</p></div>
-        <div><span class="tmr-proof-icon tmr-proof-icon-profile" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 20c1.7-4 12.3-4 14 0"/></svg></span><p>Profiles show<br>recorded activity</p></div>
+        <div><span class="tmr-proof-icon tmr-proof-icon-chart" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 16v-5"/><path d="M12 16V7"/><path d="M17 16v-8"/></svg></span><p>Records track<br>public activity</p></div>
       </div>
       <div class="tmr-premium-trustline">
         <span>Designed for transparent pick tracking across every major sport</span>
@@ -2078,20 +2078,34 @@ button{font:inherit;cursor:pointer}
         <span>More⌄</span>
       </div>
       <div class="tmr-dashboard-shell">
-        <div class="tmr-profile-summary">
-          <div class="tmr-profile-main">
-            <img id="tmrHeroUserAvatar" src="static/media/TMR-avatar-256.jpg" alt="">
-            <div>
-              <h2 id="tmrHeroUserName">Public Record Hub <span>◆</span></h2>
-              <a id="tmrHeroProfileLink" href="/handicappers/">Browse Handicappers</a>
-              <p id="tmrHeroUserMeta">Compare records without featured placement</p>
-              <div class="tmr-follow-stats"><b id="tmrHeroTotalUsers">--</b><b id="tmrHeroTotalPicks">--</b><small>Profiles</small><small>Locked picks</small></div>
+        <div class="tmr-ledger-preview">
+          <div class="tmr-ledger-main">
+            <div class="tmr-ledger-title-row">
+              <span class="tmr-ledger-kicker">Verified Record Snapshot</span>
+              <span class="tmr-ledger-live">Timestamped before kickoff</span>
             </div>
+            <div class="tmr-ledger-profile">
+              <img id="tmrHeroUserAvatar" src="static/media/TMR-avatar-256.jpg" alt="">
+              <div>
+                <h2 id="tmrHeroUserName">Verified Pick Ledger <span>â—†</span></h2>
+                <a id="tmrHeroProfileLink" href="/profile/">Open public profile</a>
+                <p id="tmrHeroUserMeta">Locked picks, graded results, units, ROI, and history in one public record.</p>
+              </div>
+            </div>
+            <div class="tmr-ledger-metrics" aria-label="Verified record snapshot">
+              <div><span>ROI</span><b id="tmrHeroRoi">--</b></div>
+              <div><span>Units</span><b id="tmrHeroUnits">--</b></div>
+              <div><span>Picks</span><b id="tmrHeroPicks">--</b></div>
+              <div><span>Record</span><b id="tmrHeroRecord">Pending</b></div>
+            </div>
+            <div class="tmr-follow-stats"><b id="tmrHeroTotalUsers">--</b><b id="tmrHeroTotalPicks">--</b><small>Real users</small><small>Tracked picks</small></div>
           </div>
-          <div class="tmr-stat-card"><span>Locked Picks</span><b id="tmrHeroRoi">Before game start</b><i></i></div>
-          <div class="tmr-stat-card"><span>Final Results</span><b id="tmrHeroUnits">Graded after final</b><i></i></div>
-          <div class="tmr-stat-card"><span>Tracked Picks</span><b id="tmrHeroPicks">--</b><i></i></div>
-          <div class="tmr-stat-card"><span>Browse Records</span><b id="tmrHeroRecord">Compare profiles</b><i></i></div>
+          <div class="tmr-ledger-actions" aria-label="Platform verification features">
+            <article><span class="tmr-ledger-icon tmr-ledger-icon-lock"></span><div><b>Locked Before Start</b><p>Picks are timestamped before the game begins.</p></div></article>
+            <article><span class="tmr-ledger-icon tmr-ledger-icon-grade"></span><div><b>Auto-Graded Results</b><p>Final scores update the public record after games close.</p></div></article>
+            <article><span class="tmr-ledger-icon tmr-ledger-icon-roi"></span><div><b>Public ROI Tracking</b><p>Wins, losses, units, ROI, and history stay visible.</p></div></article>
+            <article><span class="tmr-ledger-icon tmr-ledger-icon-market"></span><div><b>Buy &amp; Sell Verified Picks</b><p>Marketplace-ready records for serious handicappers.</p></div></article>
+          </div>
         </div>
 
         <div class="tmr-dashboard-grid">
@@ -2187,7 +2201,7 @@ button{font:inherit;cursor:pointer}
         <div class="tmr-ledger-top"><span>Public Ledger</span><b>Verified workflow</b></div>
         <div class="tmr-ledger-row"><span>Timestamp</span><strong>Created before start</strong></div>
         <div class="tmr-ledger-row"><span>Line Snapshot</span><strong>Stored with pick</strong></div>
-        <div class="tmr-ledger-row"><span>Result</span><strong>Graded after final</strong></div>
+        <div class="tmr-ledger-row"><span>Result</span><strong>Auto-graded result</strong></div>
         <div class="tmr-ledger-stamp">Record Updated</div>
       </aside>
     </div>
@@ -2513,7 +2527,8 @@ button{font:inherit;cursor:pointer}
   .tmr-proof-icon-grade {
     background: linear-gradient(135deg, #1f6feb 0%, #7dd3fc 100%);
   }
-  .tmr-proof-icon-profile {
+  .tmr-proof-icon-profile,
+  .tmr-proof-icon-chart {
     background: linear-gradient(135deg, #e85a30 0%, #f2c94c 100%);
     color: #1a1206 !important;
   }
@@ -2579,85 +2594,61 @@ button{font:inherit;cursor:pointer}
     background: rgba(55, 214, 193, .18);
   }
   .tmr-dashboard-shell { padding: 16px; }
-  .tmr-profile-summary {
+  .tmr-ledger-preview {
     display: grid;
-    grid-template-columns: minmax(305px, 1.42fr) repeat(4, minmax(82px, .56fr));
-    gap: 10px;
+    grid-template-columns: minmax(310px, .95fr) minmax(300px, 1.05fr);
+    gap: 14px;
     margin-bottom: 16px;
   }
-  .tmr-profile-main {
-    display: flex;
-    gap: 16px;
-    align-items: center;
-    overflow: hidden;
-    min-width: 0;
-    min-height: 116px;
-    padding: 15px;
+  .tmr-ledger-main,
+  .tmr-ledger-actions article {
     border: 1px solid rgba(134, 162, 190, .17);
     border-radius: 8px;
     background:
-      linear-gradient(135deg, rgba(55,214,193,.10), transparent 42%),
-      linear-gradient(180deg, rgba(9, 22, 39, .90), rgba(7, 17, 31, .88));
+      radial-gradient(circle at 15% 0%, rgba(55,214,193,.14), transparent 12rem),
+      linear-gradient(180deg, rgba(9, 22, 39, .94), rgba(6, 15, 28, .92));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.055);
   }
-  .tmr-profile-main > div {
-    min-width: 0;
-  }
-  .tmr-profile-main img,
+  .tmr-ledger-main { min-width: 0; padding: 16px; }
+  .tmr-ledger-title-row { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 15px; }
+  .tmr-ledger-kicker,
+  .tmr-ledger-live,
+  .tmr-ledger-metrics span { color: var(--premium-muted); font-size: 10.5px; font-weight: 950; letter-spacing: .08em; text-transform: uppercase; }
+  .tmr-ledger-live { display: inline-flex; align-items: center; gap: 7px; padding: 7px 9px; border: 1px solid rgba(55, 214, 193, .25); border-radius: 999px; color: #dffff9; background: rgba(55, 214, 193, .12); white-space: nowrap; }
+  .tmr-ledger-live::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--premium-teal); box-shadow: 0 0 16px rgba(55,214,193,.62); }
+  .tmr-ledger-profile { display: flex; gap: 15px; align-items: center; min-width: 0; }
+  .tmr-ledger-profile > div { min-width: 0; }
+  .tmr-ledger-profile img,
   .tmr-board-card td img,
-  .tmr-profile-chip img {
-    width: 56px;
-    height: 56px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 1px solid rgba(255,255,255,.2);
-  }
-  .tmr-profile-main h2 {
-    margin: 0 0 4px;
-    color: #fff;
-    font-size: 18px;
-    line-height: 1.1;
-    letter-spacing: -.02em;
-    white-space: nowrap;
-  }
-  .tmr-profile-main h2 span,
+  .tmr-profile-chip img { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,.2); }
+  .tmr-ledger-profile h2 { margin: 0 0 4px; color: #fff; font-size: 23px; line-height: 1.1; letter-spacing: -.035em; }
+  .tmr-ledger-profile h2 span,
   .tmr-profile-chip span { color: var(--premium-teal); }
-  .tmr-profile-main a {
-    color: var(--premium-teal);
-    font-size: 12px;
-    font-weight: 850;
-  }
-  .tmr-profile-main p {
-    margin: 8px 0 13px;
-    color: var(--premium-muted);
-    font-size: 12px;
-  }
+  .tmr-ledger-profile a { color: var(--premium-teal); font-size: 13px; font-weight: 850; }
+  .tmr-ledger-profile p { margin: 8px 0 0; color: #d5deeb; font-size: 13.5px; line-height: 1.42; }
+  .tmr-ledger-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 16px; }
+  .tmr-ledger-metrics div { min-height: 74px; padding: 12px 11px; border: 1px solid rgba(134, 162, 190, .16); border-radius: 7px; background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.025)); }
+  .tmr-ledger-metrics span { display: block; margin-bottom: 9px; }
+  .tmr-ledger-metrics b { display: block; color: #f9fcff; font-size: clamp(17px, 1.35vw, 23px); line-height: 1.08; letter-spacing: -.035em; overflow-wrap: anywhere; }
+  .tmr-ledger-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .tmr-ledger-actions article { display: grid; grid-template-columns: 40px 1fr; gap: 11px; min-height: 105px; padding: 14px; }
+  .tmr-ledger-actions b { display: block; color: #fff; font-size: 14px; line-height: 1.15; }
+  .tmr-ledger-actions p { margin: 7px 0 0; color: #c8d4e3; font-size: 12.5px; line-height: 1.35; }
+  .tmr-ledger-icon { position: relative; display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid rgba(255,255,255,.2); border-radius: 9px; box-shadow: 0 14px 28px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.16); }
+  .tmr-ledger-icon::before { display: grid; place-items: center; width: 100%; height: 100%; font-weight: 950; }
+  .tmr-ledger-icon-lock { background: linear-gradient(135deg, #2f8f53 0%, #54e3cf 100%); }
+  .tmr-ledger-icon-lock::before { content: "L"; color: #eafffb; }
+  .tmr-ledger-icon-grade { background: linear-gradient(135deg, #1f6feb 0%, #7dd3fc 100%); }
+  .tmr-ledger-icon-grade::before { content: "âœ“"; color: #fff; font-size: 20px; }
+  .tmr-ledger-icon-roi,
+  .tmr-ledger-icon-market { background: linear-gradient(135deg, #e85a30 0%, #f2c94c 100%); color: #1a1206; }
+  .tmr-ledger-icon-roi::before { content: "%"; }
+  .tmr-ledger-icon-market::before { content: "$"; }
   .tmr-follow-stats {
     display: grid;
     grid-template-columns: repeat(2, minmax(70px, 1fr));
     gap: 8px;
-  }
-  .tmr-follow-stats b {
-    display: block;
-    padding: 8px 8px 3px;
-    border: 1px solid rgba(134, 162, 190, .13);
-    border-bottom: 0;
-    border-radius: 6px 6px 0 0;
-    background: rgba(255,255,255,.035);
-    color: #fff;
-    font-size: 16px;
-  }
-  .tmr-follow-stats small {
-    display: block;
-    padding: 0 8px 8px;
-    border: 1px solid rgba(134, 162, 190, .13);
-    border-top: 0;
-    border-radius: 0 0 6px 6px;
-    background: rgba(255,255,255,.035);
-    color: var(--premium-muted);
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: .05em;
-    text-transform: uppercase;
+    margin-top: 12px;
   }
   .tmr-stat-card {
     display: grid;
@@ -2719,7 +2710,7 @@ button{font:inherit;cursor:pointer}
   .tmr-board-card h3 {
     margin: 0;
     color: #fff;
-    font-size: 16px;
+    font-size: 17px;
   }
   .tmr-board-card header a,
   .tmr-see-more {
@@ -2747,7 +2738,7 @@ button{font:inherit;cursor:pointer}
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
-    font-size: 12px;
+    font-size: 12.5px;
   }
   .tmr-board-card th:nth-child(1),
   .tmr-board-card td:nth-child(1) { width: 30px; }
@@ -2885,7 +2876,7 @@ button{font:inherit;cursor:pointer}
     display: block;
     overflow: hidden;
     color: #fff;
-    font-size: 11.5px;
+    font-size: 12.5px;
     line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -2896,7 +2887,7 @@ button{font:inherit;cursor:pointer}
     margin-top: 4px;
     overflow: hidden;
     color: var(--premium-muted);
-    font-size: 10px;
+    font-size: 11px;
     line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -3149,7 +3140,7 @@ button{font:inherit;cursor:pointer}
     .tmr-premium-links { gap: 18px; }
     .tmr-premium-hero { grid-template-columns: 1fr; }
     .tmr-premium-dashboard { margin-top: 0; }
-    .tmr-profile-summary,
+    .tmr-ledger-preview,
     .tmr-dashboard-grid { grid-template-columns: 1fr; }
     .tmr-board-card + .tmr-board-card { border-left: 0; border-top: 1px solid rgba(134, 162, 190, .17); }
     .tmr-premium-proof-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -5067,13 +5058,13 @@ button{font:inherit;cursor:pointer}
         const linkEl = document.getElementById('tmrHeroProfileLink');
         const metaEl = document.getElementById('tmrHeroUserMeta');
         if (avatarEl) avatarEl.src = fallbackAvatar;
-        if (nameEl) nameEl.innerHTML = 'Public Record Hub <span>◆</span>';
+        if (nameEl) nameEl.innerHTML = 'Verified Pick Ledger <span>◆</span>';
         if (linkEl) linkEl.href = '/handicappers/';
-        if (metaEl) metaEl.textContent = 'Compare records without featured placement';
-        document.getElementById('tmrHeroRoi').textContent = 'Before game start';
-        document.getElementById('tmrHeroUnits').textContent = 'Graded after final';
+        if (metaEl) metaEl.textContent = 'Locked picks, graded results, units, ROI, and history in one public record.';
+        document.getElementById('tmrHeroRoi').textContent = 'Locked before start';
+        document.getElementById('tmrHeroUnits').textContent = 'Auto-graded result';
         document.getElementById('tmrHeroPicks').textContent = totalPicks ? String(totalPicks) : 'No verified picks yet';
-        document.getElementById('tmrHeroRecord').textContent = 'Compare profiles';
+        document.getElementById('tmrHeroRecord').textContent = 'Public record';
 
         const body = document.getElementById('tmrHeroLeaderboardBody');
         if (!body) return;
