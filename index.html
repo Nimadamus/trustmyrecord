@@ -2082,16 +2082,16 @@ button{font:inherit;cursor:pointer}
           <div class="tmr-profile-main">
             <img id="tmrHeroUserAvatar" src="static/media/TMR-avatar-256.jpg" alt="">
             <div>
-              <h2 id="tmrHeroUserName">Real User Profiles <span>◆</span></h2>
+              <h2 id="tmrHeroUserName">Record Dashboard <span>◆</span></h2>
               <a id="tmrHeroProfileLink" href="/handicappers/">Browse Handicappers</a>
-              <p id="tmrHeroUserMeta">Showing real app users only</p>
-              <div class="tmr-follow-stats"><b id="tmrHeroTotalUsers">--</b><b id="tmrHeroTotalPicks">--</b><small>Real users</small><small>Tracked picks</small></div>
+              <p id="tmrHeroUserMeta">Compare records without featured placement</p>
+              <div class="tmr-follow-stats"><b id="tmrHeroTotalUsers">--</b><b id="tmrHeroTotalPicks">--</b><small>Profiles</small><small>Locked picks</small></div>
             </div>
           </div>
-          <div class="tmr-stat-card"><span>ROI (All Time)</span><b id="tmrHeroRoi">--</b><i></i></div>
-          <div class="tmr-stat-card"><span>Units (All Time)</span><b id="tmrHeroUnits">--</b><i></i></div>
-          <div class="tmr-stat-card"><span>Total Picks</span><b id="tmrHeroPicks">--</b><i></i></div>
-          <div class="tmr-stat-card"><span>Record</span><b id="tmrHeroRecord">Will appear after grading</b><i></i></div>
+          <div class="tmr-stat-card"><span>Profile Records</span><b id="tmrHeroRoi">Public</b><i></i></div>
+          <div class="tmr-stat-card"><span>Pick History</span><b id="tmrHeroUnits">Locked</b><i></i></div>
+          <div class="tmr-stat-card"><span>Tracked Picks</span><b id="tmrHeroPicks">--</b><i></i></div>
+          <div class="tmr-stat-card"><span>Rankings</span><b id="tmrHeroRecord">Handicappers page</b><i></i></div>
         </div>
 
         <div class="tmr-dashboard-grid">
@@ -5007,13 +5007,13 @@ button{font:inherit;cursor:pointer}
         const linkEl = document.getElementById('tmrHeroProfileLink');
         const metaEl = document.getElementById('tmrHeroUserMeta');
         if (avatarEl) avatarEl.src = fallbackAvatar;
-        if (nameEl) nameEl.innerHTML = 'Public Profile Records <span>◆</span>';
+        if (nameEl) nameEl.innerHTML = 'Record Dashboard <span>◆</span>';
         if (linkEl) linkEl.href = '/handicappers/';
-        if (metaEl) metaEl.textContent = 'No featured account or implied top rank';
-        document.getElementById('tmrHeroRoi').textContent = 'By profile';
-        document.getElementById('tmrHeroUnits').textContent = 'By profile';
+        if (metaEl) metaEl.textContent = 'Compare records without featured placement';
+        document.getElementById('tmrHeroRoi').textContent = 'Public';
+        document.getElementById('tmrHeroUnits').textContent = 'Locked';
         document.getElementById('tmrHeroPicks').textContent = totalPicks ? String(totalPicks) : 'No verified picks yet';
-        document.getElementById('tmrHeroRecord').textContent = 'Public ledgers';
+        document.getElementById('tmrHeroRecord').textContent = 'Handicappers page';
 
         const body = document.getElementById('tmrHeroLeaderboardBody');
         if (!body) return;
