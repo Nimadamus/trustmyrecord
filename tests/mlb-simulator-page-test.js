@@ -16,9 +16,9 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260513-user-sims1/.test(html), 'live page uses current versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260513-user-sims1/.test(html), 'live page uses current versioned simulator script');
-assert(/data-mlb-simulator-build="mlb-simulator-user-sim-status-20260513"/.test(html), 'page carries the current simulator build marker');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260513-realism1/.test(html), 'live page uses current versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260513-realism1/.test(html), 'live page uses current versioned simulator script');
+assert(/data-mlb-simulator-build="mlb-simulator-realism-20260513"/.test(html), 'page carries the current simulator build marker');
 assert(!/legacy guard marker|standalone-box-score-20260505/.test(html + script), 'stale simulator deployment markers are removed');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
@@ -571,6 +571,8 @@ async function flushAsync() {
   assert(!/No verified player roster list is connected|No verified bullpen depth|No verified sportsbook odds match available/.test(live.elements.inputSummary.innerHTML + live.elements.liveInputGrid.innerHTML), 'live path does not show noisy unavailable-source messages');
   assert(/Recent scoring form from ESPN finals/.test(live.elements.matchupNotes.innerHTML), 'live path factors recent final scores');
   assert(/Gerrit Cole|Jacob deGrom|Yankee Stadium|Weather context from ESPN|ESPN injury report|Bullpen context is limited/.test(live.elements.matchupNotes.innerHTML), 'live path renders verified context as factors');
+  assert(/Park factor: New York Yankees home environment/.test(live.elements.matchupNotes.innerHTML), 'live path applies park factor to the run model');
+  assert(/Run environment calibration: sportsbook total is used only to anchor the scoring environment/.test(live.elements.matchupNotes.innerHTML), 'live path labels market-total calibration without claiming an edge');
   assert(/Starting Pitchers:/.test(live.elements.matchupNotes.innerHTML) && /Jacob deGrom/.test(live.elements.matchupNotes.innerHTML) && /Gerrit Cole/.test(live.elements.matchupNotes.innerHTML), 'live output shows selected verified probable starters');
   const liveExpectedRuns = live.elements.expectedRunsValue.textContent;
   choosePitchers(live.elements, 'MacKenzie Gore', 'Gerrit Cole');
