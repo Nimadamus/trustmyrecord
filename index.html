@@ -4248,6 +4248,239 @@ button{font:inherit;cursor:pointer}
     .tmr-premium-hero { grid-template-columns: 1fr; }
     .tmr-premium-dashboard { max-width: 940px; }
     .tmr-profile-summary .tmr-stat-card:last-child { display: block; }
+  }
+  /* Homepage elite control-room polish: sharper sportsbook dashboard without fake data. */
+  .tmr-premium-home {
+    background:
+      linear-gradient(90deg, rgba(55,214,193,.08) 0 1px, transparent 1px 100%),
+      linear-gradient(180deg, rgba(55,214,193,.055) 0 1px, transparent 1px 100%),
+      linear-gradient(180deg, #020713 0%, #050b16 42%, #08111f 100%);
+    background-size: 56px 56px, 56px 56px, auto;
+    color: var(--premium-text);
+  }
+  .tmr-premium-home::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(115deg, transparent 0 42%, rgba(55,214,193,.08) 42.2% 42.55%, transparent 42.8% 100%),
+      linear-gradient(245deg, transparent 0 58%, rgba(40,98,255,.07) 58.2% 58.55%, transparent 58.8% 100%);
+    opacity: .9;
+    mix-blend-mode: screen;
+  }
+  .tmr-premium-home .header {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: rgba(2, 7, 19, .78) !important;
+    border-bottom: 1px solid rgba(148,163,184,.16) !important;
+    box-shadow: 0 14px 36px rgba(0,0,0,.28);
+    backdrop-filter: blur(18px);
+  }
+  .tmr-premium-home .header-inner {
+    max-width: 1200px;
+    min-height: 68px;
+    padding: 12px 24px !important;
+  }
+  .tmr-premium-home .brand {
+    gap: 10px;
+  }
+  .tmr-premium-home .brand .mark {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 11px !important;
+    background: linear-gradient(180deg, rgba(55,214,193,.96), rgba(15,118,110,.9)) !important;
+    box-shadow: 0 0 0 1px rgba(103,232,249,.2), 0 12px 26px rgba(45,212,191,.22) !important;
+  }
+  .tmr-premium-home .brand .word {
+    color: #f8fafc !important;
+    font-size: 22px !important;
+    letter-spacing: -.045em !important;
+  }
+  .tmr-premium-home .mainnav a,
+  .tmr-premium-home .header-right a:not(.btn) {
+    color: #d8e4f5 !important;
+  }
+  .tmr-premium-home .btn.accent,
+  .tmr-premium-home .tmr-premium-cta a:first-child {
+    border: 0 !important;
+    background: linear-gradient(135deg, #53e4d1 0%, #20bfae 100%) !important;
+    color: #04111f !important;
+    box-shadow: 0 0 0 1px rgba(103,232,249,.18), 0 18px 42px rgba(45,212,191,.24) !important;
+  }
+  .tmr-premium-home .btn.accent:hover,
+  .tmr-premium-home .tmr-premium-cta a:first-child:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 0 1px rgba(103,232,249,.22), 0 24px 58px rgba(45,212,191,.32) !important;
+  }
+  .tmr-premium-hero {
+    position: relative;
+    max-width: 1210px !important;
+    min-height: calc(100vh - 70px);
+    padding: clamp(48px, 7vh, 76px) 24px 44px !important;
+    align-items: center;
+  }
+  .tmr-premium-hero::before {
+    content: "";
+    position: absolute;
+    inset: 26px 0 auto 50.5%;
+    height: 78%;
+    pointer-events: none;
+    background:
+      linear-gradient(90deg, rgba(55,214,193,.14) 0 1px, transparent 1px 100%),
+      linear-gradient(180deg, rgba(103,232,249,.12) 0 1px, transparent 1px 100%);
+    background-size: 44px 44px;
+    mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent), linear-gradient(180deg, transparent, #000 14%, #000 82%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 16%, #000 84%, transparent), linear-gradient(180deg, transparent, #000 14%, #000 82%, transparent);
+    opacity: .48;
+    animation: tmr-data-wall 16s linear infinite;
+  }
+  @keyframes tmr-data-wall { to { background-position: 44px 0, 0 44px; } }
+  .tmr-premium-copy {
+    position: relative;
+    z-index: 2;
+    max-width: 475px;
+  }
+  .tmr-premium-kicker {
+    border-color: rgba(103,232,249,.28) !important;
+    background: rgba(5,17,30,.7) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 12px 28px rgba(0,0,0,.22);
+  }
+  .tmr-premium-copy h1 {
+    max-width: 520px;
+    font-size: clamp(54px, 6vw, 82px) !important;
+    line-height: .92 !important;
+    letter-spacing: -.07em !important;
+    text-wrap: balance;
+  }
+  .tmr-premium-copy .lead {
+    max-width: 510px !important;
+    color: #c6d4e8 !important;
+    font-size: 19px !important;
+    line-height: 1.58 !important;
+  }
+  .tmr-premium-actions {
+    gap: 12px !important;
+  }
+  .tmr-premium-proofpoints {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    max-width: 520px;
+    margin-top: 28px !important;
+    gap: 16px !important;
+  }
+  .tmr-premium-proofpoints div span {
+    border-color: rgba(103,232,249,.32) !important;
+    background: rgba(7,18,33,.72) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 12px 26px rgba(0,0,0,.22);
+  }
+  .tmr-premium-proofpoints p { color: #c4d2e4 !important; }
+  .tmr-premium-trustline span {
+    color: #b9c8dc !important;
+    letter-spacing: .08em !important;
+  }
+  .tmr-premium-dashboard {
+    position: relative;
+    z-index: 2;
+    border: 1px solid rgba(103,232,249,.22) !important;
+    border-radius: 14px !important;
+    background: rgba(3, 10, 21, .72) !important;
+    box-shadow: 0 28px 90px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.035), 0 0 58px rgba(45,212,191,.09) !important;
+    backdrop-filter: blur(18px) saturate(1.1);
+    overflow: hidden;
+  }
+  .tmr-premium-dashboard::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(100deg, transparent 0 18%, rgba(103,232,249,.10) 22%, transparent 28% 100%),
+      linear-gradient(180deg, rgba(255,255,255,.055), transparent 18%);
+    opacity: .9;
+  }
+  .tmr-premium-dashboard::after {
+    content: "";
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    top: 64px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(103,232,249,.48), transparent);
+    pointer-events: none;
+  }
+  .tmr-sport-tabs {
+    position: relative;
+    z-index: 1;
+    gap: 10px !important;
+    padding: 10px 14px !important;
+    background: rgba(3,10,21,.55) !important;
+    border-bottom: 1px solid rgba(103,232,249,.16) !important;
+  }
+  .tmr-sport-tabs span {
+    min-height: 28px;
+    padding: 7px 10px !important;
+    border-radius: 8px !important;
+    color: #c9d6e8 !important;
+  }
+  .tmr-sport-tabs .is-active {
+    background: rgba(55,214,193,.16) !important;
+    color: #eaffff !important;
+    box-shadow: inset 0 0 0 1px rgba(103,232,249,.28);
+  }
+  .tmr-dashboard-shell { padding: 16px !important; position: relative; z-index: 1; }
+  .tmr-profile-main,
+  .tmr-stat-card,
+  .tmr-board-card {
+    border-color: rgba(103,232,249,.15) !important;
+    background: linear-gradient(180deg, rgba(10,26,44,.86), rgba(6,16,30,.92)) !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 14px 32px rgba(0,0,0,.18);
+  }
+  .tmr-profile-main h2 { font-size: clamp(28px, 2.2vw, 34px) !important; letter-spacing: -.045em !important; text-shadow: 0 0 24px rgba(103,232,249,.16); }
+  .tmr-profile-main a { color: #f8fafc !important; font-weight: 900 !important; }
+  .tmr-profile-main p { color: #9fb0c8 !important; }
+  .tmr-profile-main img {
+    border: 1px solid rgba(251,191,36,.34) !important;
+    box-shadow: 0 0 0 4px rgba(251,191,36,.08), 0 12px 28px rgba(0,0,0,.28) !important;
+  }
+  .tmr-follow-stats b,
+  .tmr-follow-stats small { background: rgba(255,255,255,.035) !important; border-color: rgba(148,163,184,.13) !important; }
+  .tmr-stat-card span { color: #aebcd0 !important; letter-spacing: .08em !important; }
+  .tmr-stat-card b { color: #ffffff !important; font-size: clamp(20px, 1.55vw, 25px) !important; font-variant-numeric: tabular-nums; }
+  .tmr-stat-card i { background: linear-gradient(90deg, rgba(55,214,193,.92) 0 38%, rgba(105,238,143,.75) 38% 58%, rgba(255,255,255,.08) 58% 100%) !important; box-shadow: 0 0 18px rgba(55,214,193,.18) !important; }
+  .tmr-dashboard-grid { border-color: rgba(103,232,249,.16) !important; background: rgba(2,8,18,.42) !important; }
+  .tmr-board-card header { align-items: start !important; margin-bottom: 14px !important; }
+  .tmr-board-card h3 { font-size: 20px !important; letter-spacing: -.035em !important; color: #f8fafc !important; }
+  .tmr-board-card header a { color: #55e6d4 !important; font-weight: 900 !important; }
+  .tmr-board-tabs span { background: rgba(255,255,255,.035) !important; border-color: rgba(148,163,184,.10) !important; color: #aebcd0 !important; }
+  .tmr-board-tabs span:first-child { background: rgba(45,212,191,.18) !important; color: #65f1de !important; }
+  .tmr-board-card th { color: #b9c7d9 !important; letter-spacing: .1em !important; font-size: 10px !important; }
+  .tmr-board-card td { border-top-color: rgba(148,163,184,.10) !important; color: #e9f1fb !important; }
+  .tmr-real-user { color: #ffffff !important; font-weight: 950 !important; }
+  .tmr-picks-card .tmr-pick-line { border-top-color: rgba(148,163,184,.10) !important; transition: background .16s, transform .16s; }
+  .tmr-picks-card .tmr-pick-line:hover { background: rgba(45,212,191,.055); transform: translateX(2px); }
+  .tmr-pick-game strong,
+  .tmr-pick-market strong { color: #ffffff !important; font-size: 12.5px !important; line-height: 1.28 !important; }
+  .tmr-pick-game small,
+  .tmr-pick-market small { color: #91a2ba !important; font-size: 10.5px !important; }
+  .tmr-see-more { color: #ffffff !important; opacity: .94; }
+  .tmr-premium-proof-cards,
+  .tmr-marketplace-preview,
+  .tmr-sport-analytics,
+  .tmr-loop,
+  .tmr-integrity,
+  .tmr-final {
+    border-top: 1px solid rgba(148,163,184,.10);
+  }
+  .tmr-loop-step::before,
+  .tmr-feature-card::before,
+  .tmr-sport-card::before {
+    background: linear-gradient(90deg, rgba(55,214,193,.55), transparent) !important;
+  }
+  @media (max-width: 760px) {
+    .tmr-premium-copy h1 { font-size: clamp(42px, 13vw, 58px) !important; }
+    .tmr-premium-copy .lead { font-size: 16px !important; }
+    .tmr-premium-proofpoints { grid-template-columns: 1fr; }
   }</style>
 
 
