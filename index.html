@@ -2109,6 +2109,9 @@ button{font:inherit;cursor:pointer}
 
           <section class="tmr-board-card tmr-picks-card">
             <header><h3>Recent Locked Picks</h3><a href="/sportsbook/">View All</a></header>
+            <div class="tmr-pick-table-head" aria-hidden="true">
+              <span>Game</span><span>Pick</span><span>Odds</span><span>Result</span><span>Units</span>
+            </div>
             <div id="tmrHeroPicksList" class="tmr-pick-empty">
               <span>▣</span>
               <strong>No tracked picks yet</strong>
@@ -2150,6 +2153,19 @@ button{font:inherit;cursor:pointer}
         <p>Profile pages show recorded activity, totals, and history from the app.</p>
       </div>
       <div class="tmr-profile-chip"><img src="static/media/TMR-avatar-256.jpg" alt=""><strong>Your Profile <span>◆</span></strong><small>Public activity · record history</small><i></i></div>
+    </article>
+    <article class="tmr-buyer-card">
+      <div class="tmr-card-icon">◎</div>
+      <div>
+        <h2>Find Verified Experts Before You Buy</h2>
+        <p>Follow or buy picks from handicappers whose public records, locked picks, tracked results, units, ROI, and long-term performance can be reviewed first.</p>
+      </div>
+      <div class="tmr-buyer-panel">
+        <span>Buyer workflow</span>
+        <b>Review profile</b>
+        <b>Compare history</b>
+        <b>Follow or buy</b>
+      </div>
     </article>
   </section>
 </main>
@@ -2423,32 +2439,39 @@ button{font:inherit;cursor:pointer}
     color: #e8fffb;
     background: rgba(55, 214, 193, .18);
   }
-  .tmr-dashboard-shell { padding: 18px 12px 10px; }
+  .tmr-dashboard-shell { padding: 18px 14px 12px; }
   .tmr-profile-summary {
     display: grid;
-    grid-template-columns: 1.5fr repeat(4, 1fr);
-    gap: 8px;
+    grid-template-columns: minmax(230px, 1.45fr) repeat(4, minmax(112px, 1fr));
+    gap: 10px;
     margin-bottom: 20px;
   }
   .tmr-profile-main {
     display: flex;
-    gap: 14px;
-    align-items: flex-start;
+    gap: 16px;
+    align-items: center;
     min-width: 0;
+    min-height: 124px;
+    padding: 14px;
+    border: 1px solid rgba(134, 162, 190, .17);
+    border-radius: 8px;
+    background:
+      linear-gradient(135deg, rgba(55,214,193,.10), transparent 42%),
+      linear-gradient(180deg, rgba(9, 22, 39, .90), rgba(7, 17, 31, .88));
   }
   .tmr-profile-main img,
   .tmr-board-card td img,
   .tmr-profile-chip img {
-    width: 52px;
-    height: 52px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     object-fit: cover;
     border: 1px solid rgba(255,255,255,.2);
   }
   .tmr-profile-main h2 {
-    margin: 3px 0 3px;
+    margin: 0 0 4px;
     color: #fff;
-    font-size: 16px;
+    font-size: 20px;
     line-height: 1.1;
     letter-spacing: -.02em;
   }
@@ -2457,58 +2480,80 @@ button{font:inherit;cursor:pointer}
   .tmr-profile-main a {
     color: var(--premium-teal);
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 850;
   }
   .tmr-profile-main p {
-    margin: 24px 0 12px;
+    margin: 8px 0 13px;
     color: var(--premium-muted);
     font-size: 12px;
   }
   .tmr-follow-stats {
     display: grid;
-    grid-template-columns: 64px 64px;
-    gap: 0;
+    grid-template-columns: repeat(2, minmax(70px, 1fr));
+    gap: 8px;
   }
   .tmr-follow-stats b {
+    display: block;
+    padding: 8px 8px 3px;
+    border: 1px solid rgba(134, 162, 190, .13);
+    border-bottom: 0;
+    border-radius: 6px 6px 0 0;
+    background: rgba(255,255,255,.035);
     color: #fff;
     font-size: 16px;
   }
   .tmr-follow-stats small {
+    display: block;
+    padding: 0 8px 8px;
+    border: 1px solid rgba(134, 162, 190, .13);
+    border-top: 0;
+    border-radius: 0 0 6px 6px;
+    background: rgba(255,255,255,.035);
     color: var(--premium-muted);
-    font-size: 12px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .05em;
+    text-transform: uppercase;
   }
   .tmr-stat-card {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
     min-height: 124px;
-    padding: 15px 12px 10px;
+    padding: 16px 13px 12px;
     border: 1px solid rgba(134, 162, 190, .17);
-    border-radius: 6px;
-    background: linear-gradient(180deg, rgba(9, 22, 39, .86), rgba(7, 17, 31, .86));
+    border-radius: 8px;
+    background:
+      linear-gradient(180deg, rgba(10, 24, 42, .95), rgba(7, 17, 31, .90));
   }
   .tmr-stat-card span {
     display: block;
-    color: #b7c2d2;
-    font-size: 12px;
+    color: #aeb9ca;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .06em;
     margin-bottom: 12px;
+    text-transform: uppercase;
   }
   .tmr-stat-card b {
     color: #f8fbff;
-    font-size: 22px;
+    font-size: clamp(18px, 1.4vw, 24px);
+    line-height: 1.05;
     letter-spacing: -.03em;
+    overflow-wrap: anywhere;
   }
   .tmr-stat-card i,
   .tmr-profile-chip i {
     display: block;
-    height: 32px;
+    height: 6px;
     margin-top: 14px;
+    border-radius: 999px;
     background:
-      linear-gradient(135deg, transparent 0 10%, rgba(55,214,193,.26) 11% 100%),
-      linear-gradient(145deg, transparent 0 9%, var(--premium-teal) 10% 12%, transparent 13% 20%, var(--premium-teal) 21% 24%, transparent 25% 35%, var(--premium-teal) 36% 39%, transparent 40% 49%, var(--premium-teal) 50% 53%, transparent 54% 64%, var(--premium-teal) 65% 68%, transparent 69% 77%, var(--premium-teal) 78% 82%, transparent 83%);
-    clip-path: polygon(0 84%, 8% 64%, 14% 75%, 22% 47%, 28% 61%, 36% 34%, 45% 50%, 54% 23%, 60% 36%, 69% 18%, 76% 30%, 86% 8%, 100% 0, 100% 100%, 0 100%);
-    opacity: .9;
+      linear-gradient(90deg, rgba(55,214,193,.88), rgba(105,238,143,.62) 46%, rgba(134,162,190,.18) 46% 100%);
+    box-shadow: 0 0 18px rgba(55,214,193,.16);
   }
   .tmr-dashboard-grid {
     display: grid;
-    grid-template-columns: .86fr 1.14fr;
+    grid-template-columns: minmax(300px, .82fr) minmax(430px, 1.18fr);
     border: 1px solid rgba(134, 162, 190, .17);
     border-radius: 7px;
     overflow: hidden;
@@ -2619,30 +2664,98 @@ button{font:inherit;cursor:pointer}
     text-align: center;
     margin-top: 12px;
   }
+  .tmr-pick-table-head,
   .tmr-pick-line,
   .tmr-mini-ticket {
     display: grid;
-    grid-template-columns: 22px 1.3fr 1fr 48px 58px;
-    gap: 10px;
+    grid-template-columns: minmax(160px, 1.35fr) minmax(126px, 1fr) 58px 78px 62px;
+    gap: 12px;
     align-items: center;
-    min-height: 50px;
-    border-top: 1px solid rgba(134, 162, 190, .10);
     color: #edf5ff;
     font-size: 13px;
+  }
+  .tmr-pick-table-head {
+    min-height: 32px;
+    padding: 0 8px;
+    color: var(--premium-muted);
+    border-top: 1px solid rgba(134, 162, 190, .10);
+    border-bottom: 1px solid rgba(134, 162, 190, .10);
+    background: rgba(255,255,255,.025);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .tmr-pick-line {
+    min-height: 68px;
+    padding: 10px 8px;
+    border-top: 1px solid rgba(134, 162, 190, .10);
+  }
+  .tmr-pick-game,
+  .tmr-pick-market {
+    min-width: 0;
+  }
+  .tmr-pick-game strong,
+  .tmr-pick-market strong {
+    display: block;
+    overflow: hidden;
+    color: #fff;
+    font-size: 13px;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tmr-pick-game small,
+  .tmr-pick-market small {
+    display: block;
+    margin-top: 4px;
+    overflow: hidden;
+    color: var(--premium-muted);
+    font-size: 11px;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tmr-pick-odds,
+  .tmr-pick-units {
+    color: #dfe8f4;
+    font-family: var(--mono, "JetBrains Mono", monospace);
+    font-size: 12px;
+    font-style: normal;
+    text-align: right;
+  }
+  .tmr-pick-units { color: var(--premium-green); font-weight: 900; }
+  .tmr-pick-result {
+    justify-self: start;
+    min-width: 66px;
+    padding: 6px 9px;
+    border-radius: 999px;
+    color: #042019;
+    background: var(--premium-green);
+    font-size: 11px;
+    font-weight: 950;
+    text-align: center;
+    text-transform: uppercase;
+  }
+  .tmr-pick-result.loss {
+    color: #fff;
+    background: rgba(255,95,109,.82);
+  }
+  .tmr-pick-result.push,
+  .tmr-pick-result.pending {
+    color: #f5f9ff;
+    background: rgba(134,162,190,.24);
   }
   .tmr-pick-line small,
   .tmr-mini-ticket small { color: var(--premium-muted); line-height: 1.25; }
   .tmr-pick-line small b,
   .tmr-mini-ticket small b { color: #fff; }
-  .tmr-pick-line strong,
   .tmr-mini-ticket strong { font-size: 13px; }
-  .tmr-pick-line em,
   .tmr-mini-ticket em {
     color: var(--premium-muted);
     font-style: normal;
     text-align: right;
   }
-  .tmr-pick-line mark,
   .tmr-mini-ticket mark {
     padding: 4px 6px;
     border-radius: 5px;
@@ -2652,7 +2765,6 @@ button{font:inherit;cursor:pointer}
     font-weight: 900;
     text-align: right;
   }
-  .tmr-pick-line mark.loss { color: var(--premium-red); background: rgba(255,95,109,.08); }
   .tmr-pick-empty {
     min-height: 250px;
     display: grid;
@@ -2720,7 +2832,7 @@ button{font:inherit;cursor:pointer}
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
     padding: 4px 40px 40px;
     margin-top: -10px;
@@ -2807,10 +2919,59 @@ button{font:inherit;cursor:pointer}
     margin: 0;
     height: 48px;
   }
+  .tmr-buyer-card {
+    border-color: rgba(55,214,193,.34) !important;
+    background:
+      radial-gradient(circle at 92% 0%, rgba(105,238,143,.10), transparent 18rem),
+      linear-gradient(180deg, rgba(10,26,43,.96), rgba(6,15,28,.98)) !important;
+  }
+  .tmr-buyer-panel {
+    display: grid;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid rgba(134, 162, 190, .14);
+    border-radius: 6px;
+    background: rgba(4, 12, 23, .58);
+  }
+  .tmr-buyer-panel span {
+    color: var(--premium-muted);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .tmr-buyer-panel b {
+    display: flex;
+    justify-content: space-between;
+    padding: 9px 10px;
+    border: 1px solid rgba(134, 162, 190, .12);
+    border-radius: 5px;
+    color: #fff;
+    background: rgba(255,255,255,.035);
+    font-size: 13px;
+  }
+  .tmr-buyer-panel b::after {
+    content: "→";
+    color: var(--premium-teal);
+  }
 
   @media (max-width: 1180px) {
     .tmr-premium-hero { grid-template-columns: 1fr; }
     .tmr-premium-dashboard { margin-top: 0; }
+    .tmr-profile-summary,
+    .tmr-dashboard-grid { grid-template-columns: 1fr; }
+    .tmr-board-card + .tmr-board-card { border-left: 0; border-top: 1px solid rgba(134, 162, 190, .17); }
+    .tmr-premium-proof-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 760px) {
+    .tmr-pick-table-head { display: none; }
+    .tmr-pick-line {
+      grid-template-columns: 1fr auto;
+      gap: 8px 14px;
+    }
+    .tmr-pick-game,
+    .tmr-pick-market { grid-column: 1 / -1; }
+    .tmr-pick-result { justify-self: end; }
     .tmr-premium-proof-cards { grid-template-columns: 1fr; }
   }
 </style>
@@ -4029,11 +4190,19 @@ button{font:inherit;cursor:pointer}
         }).join('');
     }
 
-    function pickTitle(pick) {
-        const matchup = [pick.away_team, pick.home_team].filter(Boolean).join(' at ');
-        const selection = pick.selection || pick.pick || pick.market_type || 'Locked pick';
+    function gameLabel(pick) {
+        return [pick.away_team, pick.home_team].filter(Boolean).join(' at ') || pick.game_id || 'Tracked game';
+    }
+
+    function marketLabel(pick) {
+        const market = String(pick.market_type || 'Pick').replace(/_/g, ' ');
+        return market.charAt(0).toUpperCase() + market.slice(1);
+    }
+
+    function pickLabel(pick) {
+        const selection = pick.selection || pick.pick || 'Locked pick';
         const line = pick.line_snapshot != null ? ' ' + pick.line_snapshot : '';
-        return (matchup ? matchup + ' · ' : '') + selection + line;
+        return selection + line;
     }
 
     function renderPicks(picks) {
@@ -4052,14 +4221,18 @@ button{font:inherit;cursor:pointer}
         list.innerHTML = cleanPicks.map(function (pick) {
             const result = statusLabel(pick.status);
             const isLoss = /^loss|lost$/i.test(result);
+            const isPush = /^push$/i.test(result);
+            const isPending = /^pending$/i.test(result);
             const resultUnits = signed(pick.result_units, 'u');
             const odds = pick.odds_snapshot != null ? String(pick.odds_snapshot) : '--';
             const username = pick.display_name || pick.username;
-            return '<div class="tmr-pick-line"><span>▣</span>'
-                + '<small>' + escapeHtml(username) + '<br><b>' + escapeHtml(pickTitle(pick)) + '</b></small>'
-                + '<strong>' + escapeHtml(pick.market_type || 'Pick') + '</strong>'
-                + '<em>' + escapeHtml(odds) + '</em>'
-                + '<mark' + (isLoss ? ' class="loss"' : '') + '>' + escapeHtml(result) + '<br>' + escapeHtml(resultUnits) + '</mark></div>';
+            const resultClass = isLoss ? ' loss' : isPush ? ' push' : isPending ? ' pending' : '';
+            return '<div class="tmr-pick-line">'
+                + '<div class="tmr-pick-game"><strong>' + escapeHtml(gameLabel(pick)) + '</strong><small>' + escapeHtml(username) + '</small></div>'
+                + '<div class="tmr-pick-market"><strong>' + escapeHtml(pickLabel(pick)) + '</strong><small>' + escapeHtml(marketLabel(pick)) + '</small></div>'
+                + '<em class="tmr-pick-odds">' + escapeHtml(odds) + '</em>'
+                + '<mark class="tmr-pick-result' + resultClass + '">' + escapeHtml(result) + '</mark>'
+                + '<strong class="tmr-pick-units">' + escapeHtml(resultUnits) + '</strong></div>';
         }).join('');
     }
 
