@@ -4398,8 +4398,8 @@ button{font:inherit;cursor:pointer}
     position: relative;
     max-width: 1210px !important;
     min-height: calc(100vh - 70px);
-    padding: clamp(48px, 7vh, 76px) 24px 44px !important;
-    align-items: center;
+    padding: clamp(28px, 4.8vh, 48px) 24px 44px !important;
+    align-items: start;
   }
   .tmr-premium-hero::before {
     content: "";
@@ -4421,6 +4421,9 @@ button{font:inherit;cursor:pointer}
     position: relative;
     z-index: 2;
     max-width: 475px;
+  }
+  .tmr-premium-hero-copy {
+    transform: translate(clamp(18px, 2.2vw, 36px), clamp(-44px, -4.8vh, -24px)) !important;
   }
   .tmr-premium-kicker {
     border-color: rgba(103,232,249,.28) !important;
@@ -4462,6 +4465,8 @@ button{font:inherit;cursor:pointer}
   .tmr-premium-dashboard {
     position: relative;
     z-index: 2;
+    margin-top: 0 !important;
+    transform: translate(clamp(54px, 5.4vw, 88px), clamp(-52px, -5vh, -30px)) !important;
     border: 1px solid rgba(103,232,249,.22) !important;
     border-radius: 14px !important;
     background: rgba(3, 10, 21, .72) !important;
@@ -4557,7 +4562,13 @@ button{font:inherit;cursor:pointer}
   .tmr-sport-card::before {
     background: linear-gradient(90deg, rgba(55,214,193,.55), transparent) !important;
   }
+  @media (max-width: 1260px) {
+    .tmr-premium-hero-copy,
+    .tmr-premium-dashboard { transform: none !important; }
+  }
   @media (max-width: 760px) {
+    .tmr-premium-hero-copy,
+    .tmr-premium-dashboard { transform: none !important; }
     .tmr-premium-copy h1 { font-size: clamp(42px, 13vw, 58px) !important; }
     .tmr-premium-copy .lead { font-size: 16px !important; }
     .tmr-premium-proofpoints { grid-template-columns: 1fr; }
