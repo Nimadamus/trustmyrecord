@@ -17,7 +17,8 @@ async function main() {
     await page.goto(LIVE_URL, { waitUntil: 'networkidle', timeout: 60000 });
     await page.getByText('Mike', { exact: false }).first().waitFor({ state: 'visible', timeout: 30000 });
     await page.waitForTimeout(1500);
-    execFileSync('bash', ['-lc', 'import -window root "' + OUT.replace(/\/g, '/') + '"'], { stdio: 'inherit' });
+    const outForShell = OUT.split(path.sep).join('/');
+    execFileSync('bash', ['-lc', 'import -window root "' + outForShell + '"'], { stdio: 'inherit' });
     fs.writeFileSync(META, JSON.stringify({ url: page.url(), title: await page.title(), generated_at: new Date().toISOString(), screenshot: OUT }, null, 2));
   } finally {
     await browser.close();
