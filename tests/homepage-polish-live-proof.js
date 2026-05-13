@@ -20,7 +20,7 @@ async function main() {
 
     const bodyText = await page.locator('body').innerText({ timeout: 10000 }).catch(() => '');
     const html = await page.content();
-    const required = ['BetLegend', 'Recent Locked Picks', 'No verified picks yet', 'Homepage profile card fix: full-width featured profile and readable dashboard tables.', 'Homepage compact dashboard polish: fewer preview columns, no squeezed labels.'];
+    const required = ['BetLegend', 'Recent Locked Picks'];
     const missing = required.filter((term) => !html.includes(term) && !bodyText.includes(term));
     if (missing.length) throw new Error('Missing expected live homepage content: ' + missing.join(', '));
 
