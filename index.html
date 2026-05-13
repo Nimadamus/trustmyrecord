@@ -2454,7 +2454,7 @@ button{font:inherit;cursor:pointer}
   .tmr-dashboard-shell { padding: 16px; }
   .tmr-profile-summary {
     display: grid;
-    grid-template-columns: minmax(260px, 1.34fr) repeat(4, minmax(94px, .66fr));
+    grid-template-columns: minmax(220px, 1.05fr) repeat(4, minmax(96px, .74fr));
     gap: 10px;
     margin-bottom: 16px;
   }
@@ -2555,8 +2555,8 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-stat-card b {
     color: #f8fbff;
-    font-size: clamp(18px, 1.4vw, 24px);
-    line-height: 1.05;
+    font-size: clamp(16px, 1.25vw, 22px);
+    line-height: 1.1;
     letter-spacing: -.03em;
     overflow-wrap: anywhere;
   }
@@ -2572,7 +2572,7 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-dashboard-grid {
     display: grid;
-    grid-template-columns: minmax(260px, .72fr) minmax(0, 1.28fr);
+    grid-template-columns: minmax(230px, .58fr) minmax(0, 1.42fr);
     border: 1px solid rgba(134, 162, 190, .17);
     border-radius: 8px;
     overflow: hidden;
@@ -2620,7 +2620,17 @@ button{font:inherit;cursor:pointer}
   .tmr-board-card table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
     font-size: 12px;
+  }
+  .tmr-board-card th:nth-child(1),
+  .tmr-board-card td:nth-child(1) { width: 30px; }
+  .tmr-board-card th:nth-child(3),
+  .tmr-board-card td:nth-child(3),
+  .tmr-board-card th:nth-child(4),
+  .tmr-board-card td:nth-child(4) {
+    width: 58px;
+    white-space: nowrap;
   }
   .tmr-board-card th {
     color: var(--premium-muted);
@@ -2710,8 +2720,8 @@ button{font:inherit;cursor:pointer}
   .tmr-pick-line,
   .tmr-mini-ticket {
     display: grid;
-    grid-template-columns: minmax(128px, 1.16fr) minmax(108px, 1fr) 48px 60px 52px;
-    gap: 7px;
+    grid-template-columns: minmax(108px, 1.05fr) minmax(96px, .95fr) 42px 54px 44px;
+    gap: 6px;
     align-items: center;
     color: #edf5ff;
     font-size: 13px;
@@ -2723,7 +2733,7 @@ button{font:inherit;cursor:pointer}
     border-top: 1px solid rgba(134, 162, 190, .10);
     border-bottom: 1px solid rgba(134, 162, 190, .10);
     background: rgba(255,255,255,.025);
-    font-size: 9px;
+    font-size: 8.5px;
     font-weight: 900;
     letter-spacing: .08em;
     text-transform: uppercase;
@@ -2742,7 +2752,7 @@ button{font:inherit;cursor:pointer}
     display: block;
     overflow: hidden;
     color: #fff;
-    font-size: 12px;
+    font-size: 11.5px;
     line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -2762,7 +2772,7 @@ button{font:inherit;cursor:pointer}
   .tmr-pick-units {
     color: #dfe8f4;
     font-family: var(--mono, "JetBrains Mono", monospace);
-    font-size: 11px;
+    font-size: 10.5px;
     font-style: normal;
     text-align: right;
   }
@@ -2770,8 +2780,8 @@ button{font:inherit;cursor:pointer}
   .tmr-pick-units { padding-right: 2px; }
   .tmr-pick-result {
     justify-self: stretch;
-    min-width: 54px;
-    padding: 6px 7px;
+    min-width: 0;
+    padding: 6px 5px;
     border-radius: 999px;
     color: #042019;
     background: var(--premium-green);
