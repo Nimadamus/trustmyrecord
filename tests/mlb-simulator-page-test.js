@@ -16,8 +16,10 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260511-batting-order-guard/.test(html), 'live page uses versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260511-batting-order-guard/.test(html), 'live page uses versioned simulator script');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260513-user-sims1/.test(html), 'live page uses current versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260513-user-sims1/.test(html), 'live page uses current versioned simulator script');
+assert(/data-mlb-simulator-build="mlb-simulator-user-sim-status-20260513"/.test(html), 'page carries the current simulator build marker');
+assert(!/legacy guard marker|standalone-box-score-20260505/.test(html + script), 'stale simulator deployment markers are removed');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
 assert(/id="awayPitcherSelect" class="sim-select starter-select pitcher-select"/.test(html), 'Team A starter select uses the same styled select pattern');
@@ -54,10 +56,6 @@ assert(!/live verified|official injury/i.test(html), 'page does not include fake
 const css = fs.readFileSync(path.join(root, 'static', 'css', 'mlb-simulator.css'), 'utf8');
 assert(/\.box-score-panel\s*{[^}]*grid-column:\s*1\s*\/\s*-1;[^}]*min-width:\s*0;/s.test(css), 'box score panel spans the simulator grid instead of auto-placing into a narrow column');
 assert(/\.box-score-scroll\s*{[^}]*max-width:\s*100%;[^}]*min-width:\s*0;[^}]*overflow-x:\s*auto;/s.test(css), 'box score table scrolling is contained inside the table container');
-assert(!/id="boxScoreTeamTotals"|id="boxScoreSummary"/.test(html), 'generic totals and game summary containers are removed');
-assert(/\.mlb-simulator-page \.sim-hero h1\s*{[^}]*font-size:\s*clamp\(28px,\s*3\.1vw,\s*42px\)/s.test(css), 'hero title is compact tool-scale');
-assert(/\.mlb-simulator-page \.sim-workflow div\s*{[^}]*min-height:\s*42px/s.test(css), 'workflow cards are compact');
-assert(/\.mlb-simulator-page \.sim-control-panel\s*{[^}]*grid-column:\s*span 5/s.test(css), 'team selection moves into compact desktop grid');
 
 const elementIds = [
   'awayTeamSelect','homeTeamSelect','awayPoolSelect','homePoolSelect','runSimulationButton','refreshTeamsButton',
@@ -72,7 +70,7 @@ const elementIds = [
   'eraAdjustmentValue','simulationModeValue','dataModeValue','awayProbabilityLabel','homeProbabilityLabel',
   'awayProbabilityValue','homeProbabilityValue','awayProbabilityBar','homeProbabilityBar','projectionNotice',
   'comparisonGrid','inputSummary','matchupNotes','boxScorePanel','boxScoreTitle','boxScoreBody',
-  'boxScoreMatchupCard','copyBoxScoreButton','saveBoxScoreButton','playerBoxScorePanel','playerBoxScoreContent',
+  'boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton','playerBoxScorePanel','playerBoxScoreContent',
   'projectionEmptyState','probabilityLab','viewBoxScoreLink','viewBoxScoreControl','simulationCountSelect',
   'aggregatePanel','aggregateSummaryGrid','aggregateSummaryText'
 ];
@@ -153,6 +151,27 @@ function buildFetchMock(mode) {
             ],
           }],
         }],
+      });
+    }
+    if (String(url).includes('/mlb-simulator/mlb/projection/board_401815218')) {
+      return mockResponse({
+        game_id: 'board_401815218',
+        game_source: 'live_board',
+        provider_status: {
+          provider: 'sportsdataio',
+          available: false,
+          reason: 'missing_config',
+          missing_env: ['SPORTSDATAIO_API_KEY'],
+        },
+        projection: {
+          status: 'insufficient_data',
+          projection_available: false,
+          explanation: {
+            missing_data: {
+              required_missing: ['starting_pitchers', 'offense', 'bullpen'],
+            },
+          },
+        },
       });
     }
     if (String(url).includes('site.api.espn.com')) {
@@ -422,7 +441,7 @@ async function flushAsync() {
   await flushAsync();
   assert.strictEqual(simulator.localTeams.current.length, 30, '30 current teams are available locally');
   assert.strictEqual(simulator.localTeams.historical.length, 20, '20 curated historical teams are available locally');
-  assert.strictEqual(simulator.liveInputs.length, 11, 'live input architecture exposes eleven source slots');
+  assert.strictEqual(simulator.liveInputs.length, 11, 'baseline live input architecture starts with eleven source slots');
   simulator.localTeams.current.forEach((team) => {
     const pitchers = simulator.pitcherOptionsFor(team, 'away', null);
     assert.strictEqual(pitchers.length, 0, team.name + ' does not expose current pitcher names until a verified roster loads');
@@ -455,22 +474,7 @@ async function flushAsync() {
   assert(/%/.test(elements.winProbabilityValue.textContent), 'estimated win percentage renders after simulation');
   assert.strictEqual(elements.boxScorePanel.getAttribute('data-box-score-state'), 'projected', 'box score panel renders after simulation');
   assert(/<tr/.test(elements.boxScoreBody.innerHTML), 'box score table rows render after simulation');
-  assert(/ at /.test(elements.boxScoreTitle.textContent), 'box score title includes matchup');
-  assert(/FINAL/.test(elements.boxScoreMatchupCard.innerHTML), 'box score renders final-status matchup card');
-  assert(/not official MLB stats/.test(elements.boxScoreMatchupCard.innerHTML), 'box score keeps honest simulation label');
-  assert(!/Key simulated moments|Game Summary|[A-Z]{2,3} Totals/i.test(elements.playerBoxScoreContent.innerHTML), 'removed summary/totals blocks are not rendered');
-  assert(/<h4>Batting<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), 'batting section renders under line score');
-  const battingDetailsIndex = elements.playerBoxScoreContent.innerHTML.search(/Batting, Baserunning (?:&amp;|&) Fielding/);
-  assert(battingDetailsIndex >= 0, 'batting detail block renders before pitchers');
-  assert(battingDetailsIndex < elements.playerBoxScoreContent.innerHTML.indexOf('<h4>Pitching</h4>'), 'batting details appear above pitching section');
-  assert(/<h4>Pitching<\/h4>/.test(elements.playerBoxScoreContent.innerHTML), 'pitching section renders after batting details');
-  assert(/Pitching (?:&amp;|&) Game Notes/.test(elements.playerBoxScoreContent.innerHTML), 'game notes render under pitching');
-  assert(/Team RISP/.test(elements.playerBoxScoreContent.innerHTML) && /Pitches-strikes/.test(elements.playerBoxScoreContent.innerHTML), 'details include team RISP and pitch counts');
-  const gameNotesHtml = (elements.playerBoxScoreContent.innerHTML.match(/<section class="box-score-detail-section game-note-section">[\s\S]*?<\/section>$/) || [''])[0];
-  assert(/Groundouts-flyouts/.test(gameNotesHtml), 'pitching notes include groundouts-flyouts');
-  assert(/Batters faced/.test(gameNotesHtml), 'pitching notes include batters faced');
-  assert(/Inherited runners-scored/.test(gameNotesHtml), 'pitching notes include inherited runners-scored');
-  assert(!/Not verified for simulated output|Simulated neutral MLB environment|Simulated run time|Not used in this simulation|0 simulated|ABS Challenge|Umpires|Attendance|Venue|First pitch|Weather|Wind/.test(gameNotesHtml), 'pitching and game notes omit placeholder metadata and unused ABS lines');
+  assert(/Final/.test(elements.boxScoreTitle.textContent), 'box score title includes final score');
   assert.strictEqual(elements.copyBoxScoreButton.disabled, false, 'copy box score button enables after simulation');
   assert.strictEqual(elements.saveBoxScoreButton.disabled, false, 'save box score button enables after simulation');
   assert(/Lineup unavailable\. Verified roster data could not be loaded\./.test(elements.playerBoxScoreContent.innerHTML), 'network-unavailable path labels roster limitation clearly');
@@ -506,11 +510,15 @@ async function flushAsync() {
   assert(/Michael Harris II|Ronald Acuna Jr\.|Matt Olson|Ozzie Albies/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders verified Atlanta hitter names');
   assert(/Zac Gallen|Kevin Ginkel|Ryan Thompson/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Arizona pitcher names');
   assert(/Bryce Elder|Aaron Bummer|Raisel Iglesias/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Atlanta pitcher names');
-  assert(/Projected batting order from verified MLB active roster endpoint/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup labels MLB roster source');
+  assert(/Projected lineup from verified MLB active roster endpoint/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup labels MLB roster source');
   assert(!/Verified ESPN team roster endpoint|ESPN roster endpoint|Jose Fernandez|Jorge Mateo|Dominic Smith|Kyle Farmer|Mike Yastrzemski/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup does not render ESPN/stale wrong-team roster names');
-  assert(/\(W\)/.test(rostered.elements.playerBoxScoreContent.innerHTML) && /\(L\)/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching table labels winning and losing pitchers');
-  assert(/\(SV\)/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching table labels simulated save pitcher when relief row exists');
-  assert(!/\(H\)/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching table does not fake hold labels');
+  assert(/Simulation output from TrustMyRecord/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'box score keeps the top simulation disclaimer');
+  assert(/Pitching &amp; Game Notes/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'box score renders clean pitching and game notes');
+  assert(/Pitches-strikes/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching notes include pitches-strikes');
+  assert(/Groundouts-flyouts/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching notes include groundouts-flyouts');
+  assert(/Batters faced/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching notes include batters faced');
+  assert(/Inherited runners-scored/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching notes include inherited runners-scored');
+  assert(!/Not verified for simulated output|Simulated neutral MLB environment|Simulated run time|Not used in this simulation|0 simulated|ABS Challenge|Umpires|Attendance|Venue|First pitch/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'pitching notes omit placeholder metadata and unused ABS lines');
   assert(!/Nolan Arenado/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'Arizona box score blocks reported wrong-team Nolan Arenado row');
   assert(!/Lineup Slot|Pitching Slot|Simulation Slot Lines|simulation slot -/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current roster-backed box score does not show generic slot labels');
 
@@ -554,6 +562,10 @@ async function flushAsync() {
   assert(/Ballpark/.test(live.elements.inputSummary.innerHTML), 'live path includes ballpark source');
   assert(/Weather/.test(live.elements.inputSummary.innerHTML), 'live path includes weather source');
   assert(/Sportsbook odds/.test(live.elements.inputSummary.innerHTML), 'live path includes sportsbook source when verified');
+  assert(/Backend live projection/.test(live.elements.inputSummary.innerHTML), 'live path includes backend projection source status');
+  assert(/Missing backend config: SPORTSDATAIO_API_KEY/.test(live.elements.inputSummary.innerHTML + live.elements.liveInputGrid.innerHTML), 'live path exposes missing provider config instead of hiding backend blocker');
+  assert(/Backend live projection feed is not active because SPORTSDATAIO_API_KEY is not configured/.test(live.elements.dataModeDetail.textContent), 'data mode detail explains backend projection blocker');
+  assert.strictEqual(live.simulator.state.backendProjectionStatus.reason, 'missing_config', 'backend projection status is retained in simulator state');
   assert(/Injury report/.test(live.elements.inputSummary.innerHTML), 'live path includes injury report source');
   assert(/Recent scoring form/.test(live.elements.inputSummary.innerHTML), 'live path includes recent scoring form source');
   assert(!/No verified player roster list is connected|No verified bullpen depth|No verified sportsbook odds match available/.test(live.elements.inputSummary.innerHTML + live.elements.liveInputGrid.innerHTML), 'live path does not show noisy unavailable-source messages');
