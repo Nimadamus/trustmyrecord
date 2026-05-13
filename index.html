@@ -4393,6 +4393,50 @@ button{font:inherit;cursor:pointer}
     .tmr-pick-line {
       grid-template-columns: 1fr;
     }
+  }
+  /* Homepage compact dashboard polish: fewer preview columns, no squeezed labels. */
+  .tmr-board-card table {
+    table-layout: auto;
+  }
+  .tmr-board-card .tmr-real-user {
+    overflow: visible;
+    max-width: none;
+  }
+  .tmr-board-card .tmr-real-user span:last-child,
+  .tmr-board-card .tmr-real-user strong,
+  .tmr-board-card .tmr-real-user b {
+    overflow: visible;
+    max-width: none;
+    text-overflow: clip;
+    white-space: normal;
+    word-break: break-word;
+  }
+  .tmr-board-card .tmr-real-user small {
+    display: none;
+  }
+  .tmr-picks-card .tmr-pick-table-head,
+  .tmr-picks-card .tmr-pick-line {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 14px;
+  }
+  .tmr-picks-card .tmr-pick-table-head span:nth-child(n+3),
+  .tmr-picks-card .tmr-pick-odds,
+  .tmr-picks-card .tmr-pick-units,
+  .tmr-picks-card .tmr-pick-result {
+    display: none;
+  }
+  .tmr-picks-card .tmr-pick-line {
+    min-height: 72px;
+    align-items: center;
+  }
+  .tmr-picks-card .tmr-pick-game strong,
+  .tmr-picks-card .tmr-pick-market strong,
+  .tmr-picks-card .tmr-pick-game small,
+  .tmr-picks-card .tmr-pick-market small {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    word-break: normal;
   }</style>
 
 
