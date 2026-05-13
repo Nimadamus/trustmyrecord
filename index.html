@@ -2114,7 +2114,7 @@ button{font:inherit;cursor:pointer}
             </div>
             <div id="tmrHeroPicksList" class="tmr-pick-empty">
               <span>▣</span>
-              <strong>No verified picks yet</strong>
+              <strong>No tracked picks yet</strong>
               <p>Recent locked picks will appear here once users lock picks before game start.</p>
             </div>
             <footer>▣ All picks are locked before game start</footer>
@@ -2454,7 +2454,7 @@ button{font:inherit;cursor:pointer}
   .tmr-dashboard-shell { padding: 16px; }
   .tmr-profile-summary {
     display: grid;
-    grid-template-columns: minmax(220px, 1.05fr) repeat(4, minmax(96px, .74fr));
+    grid-template-columns: minmax(305px, 1.42fr) repeat(4, minmax(82px, .56fr));
     gap: 10px;
     margin-bottom: 16px;
   }
@@ -2486,12 +2486,10 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-profile-main h2 {
     margin: 0 0 4px;
-    overflow: hidden;
     color: #fff;
-    font-size: 20px;
+    font-size: 18px;
     line-height: 1.1;
     letter-spacing: -.02em;
-    text-overflow: ellipsis;
     white-space: nowrap;
   }
   .tmr-profile-main h2 span,
@@ -2630,7 +2628,7 @@ button{font:inherit;cursor:pointer}
   .tmr-board-card td:nth-child(3),
   .tmr-board-card th:nth-child(4),
   .tmr-board-card td:nth-child(4) {
-    width: 58px;
+    width: 54px;
     white-space: nowrap;
   }
   .tmr-board-card th {
@@ -3080,186 +3078,6 @@ button{font:inherit;cursor:pointer}
     .tmr-pick-result { justify-self: end; }
     .tmr-premium-proof-cards { grid-template-columns: 1fr; }
   }
-
-
-  /* Homepage profile card fix: full-width featured profile and readable dashboard tables. */
-  .tmr-premium-hero {
-    grid-template-columns: minmax(0, 500px) minmax(0, 850px);
-    justify-content: center;
-    gap: clamp(36px, 4vw, 64px);
-  }
-  .tmr-premium-dashboard {
-    max-width: 850px;
-    width: 100%;
-    min-width: 0;
-    overflow: hidden;
-  }
-  .tmr-dashboard-shell { padding: 16px; }
-  .tmr-profile-summary {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .tmr-profile-main {
-    grid-column: 1 / -1;
-    grid-row: auto;
-    min-height: 122px;
-    display: grid;
-    grid-template-columns: 72px minmax(0, 1fr);
-    align-items: center;
-    gap: 16px;
-    padding: 18px;
-    border-radius: 12px;
-  }
-  .tmr-profile-main img {
-    width: 64px;
-    height: 64px;
-    align-self: center;
-  }
-  .tmr-profile-main > div {
-    min-width: 0;
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "name stats"
-      "link stats"
-      "meta stats";
-    column-gap: 20px;
-    align-items: center;
-  }
-  .tmr-profile-main h2 {
-    grid-area: name;
-    max-width: none;
-    margin: 0 0 2px;
-    overflow: visible;
-    color: #fff;
-    font-size: clamp(28px, 2.5vw, 36px);
-    line-height: 1;
-    letter-spacing: -.04em;
-    text-overflow: clip;
-    white-space: normal;
-    word-break: normal;
-  }
-  .tmr-profile-main a { grid-area: link; width: fit-content; }
-  .tmr-profile-main p {
-    grid-area: meta;
-    margin: 6px 0 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .tmr-follow-stats {
-    grid-area: stats;
-    display: grid;
-    grid-template-columns: repeat(2, 88px);
-    gap: 8px;
-    align-self: center;
-  }
-  .tmr-follow-stats b {
-    min-height: 34px;
-    padding: 8px 9px 3px;
-    text-align: left;
-  }
-  .tmr-follow-stats small {
-    min-height: 28px;
-    padding: 0 9px 8px;
-    line-height: 1.15;
-  }
-  .tmr-stat-card {
-    min-height: 112px;
-    padding: 14px 13px 12px;
-    border-radius: 10px;
-  }
-  .tmr-stat-card span {
-    min-height: 22px;
-    margin-bottom: 8px;
-    font-size: 9.5px;
-    line-height: 1.22;
-  }
-  .tmr-stat-card b {
-    font-size: clamp(18px, 1.55vw, 24px);
-    line-height: 1.08;
-  }
-  .tmr-stat-card i {
-    height: 22px;
-    margin-top: 12px;
-    border-radius: 7px;
-    background: linear-gradient(135deg, transparent 0 16%, rgba(55,214,193,.9) 17% 22%, transparent 23% 40%, rgba(105,238,143,.7) 41% 47%, transparent 48% 100%);
-    box-shadow: inset 0 0 0 1px rgba(134,162,190,.12), 0 0 18px rgba(55,214,193,.12);
-  }
-  .tmr-dashboard-grid {
-    grid-template-columns: minmax(270px, .82fr) minmax(0, 1.18fr);
-    border-radius: 10px;
-  }
-  .tmr-board-card { min-width: 0; padding: 16px; }
-  .tmr-board-card h3 { font-size: 18px; letter-spacing: -.02em; }
-  .tmr-board-card table { table-layout: fixed; }
-  .tmr-board-card th,
-  .tmr-board-card td {
-    padding: 8px 6px;
-    vertical-align: middle;
-  }
-  .tmr-board-card th:nth-child(1), .tmr-board-card td:nth-child(1) { width: 28px; }
-  .tmr-board-card th:nth-child(3), .tmr-board-card td:nth-child(3) { width: 58px; }
-  .tmr-board-card th:nth-child(4), .tmr-board-card td:nth-child(4) { width: 64px; }
-  .tmr-board-card .tmr-real-user {
-    width: 100%;
-    min-width: 0;
-  }
-  .tmr-board-card .tmr-real-user span:last-child {
-    min-width: 0;
-    overflow: hidden;
-  }
-  .tmr-board-card .tmr-real-user small {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .tmr-pick-table-head,
-  .tmr-pick-line {
-    grid-template-columns: minmax(112px, 1.1fr) minmax(112px, 1fr) 46px 56px 46px;
-    gap: 8px;
-  }
-  .tmr-pick-table-head {
-    padding: 0 8px;
-    font-size: 8.5px;
-  }
-  .tmr-pick-line {
-    min-height: 64px;
-    padding: 9px 8px;
-  }
-  .tmr-pick-game strong,
-  .tmr-pick-market strong {
-    font-size: 12px;
-    line-height: 1.22;
-  }
-  .tmr-pick-game small,
-  .tmr-pick-market small {
-    font-size: 10px;
-  }
-  .tmr-pick-result {
-    min-width: 50px;
-    padding: 6px 6px;
-  }
-  .tmr-pick-odds,
-  .tmr-pick-units {
-    font-size: 10.5px;
-  }
-  @media (max-width: 1260px) {
-    .tmr-premium-hero { grid-template-columns: 1fr; }
-    .tmr-premium-dashboard { max-width: 940px; }
-  }
-  @media (max-width: 760px) {
-    .tmr-profile-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .tmr-profile-main { grid-template-columns: 56px minmax(0, 1fr); }
-    .tmr-profile-main img { width: 52px; height: 52px; }
-    .tmr-profile-main > div { grid-template-columns: 1fr; grid-template-areas: "name" "link" "meta" "stats"; }
-    .tmr-follow-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 10px; }
-    .tmr-dashboard-grid { grid-template-columns: 1fr; }
-    .tmr-board-card + .tmr-board-card { border-left: 0; border-top: 1px solid rgba(134,162,190,.17); }
-  }
-
 </style>
 
 <!-- Header -->
@@ -4336,144 +4154,7 @@ button{font:inherit;cursor:pointer}
       padding: 58px 16px !important;
     }
   }
-
-  /* Homepage table anti-truncation polish: readable public preview rows. */
-  .tmr-board-card .tmr-real-user,
-  .tmr-board-card .tmr-real-user span:last-child,
-  .tmr-board-card .tmr-real-user small,
-  .tmr-pick-game strong,
-  .tmr-pick-market strong,
-  .tmr-pick-game small,
-  .tmr-pick-market small {
-    overflow: visible;
-    text-overflow: clip;
-    white-space: normal;
-  }
-  .tmr-board-card .tmr-real-user {
-    align-items: flex-start;
-    line-height: 1.15;
-  }
-  .tmr-board-card .tmr-real-user span:last-child {
-    display: grid;
-    gap: 2px;
-  }
-  .tmr-board-card .tmr-real-user small {
-    line-height: 1.2;
-    word-break: break-word;
-  }
-  .tmr-board-card .tmr-real-user img,
-  .tmr-board-card .tmr-real-user .avatar-sm {
-    margin-top: 1px;
-  }
-  .tmr-pick-table-head,
-  .tmr-pick-line {
-    grid-template-columns: minmax(130px, 1.18fr) minmax(118px, 1fr) 44px 52px 44px;
-    gap: 10px;
-  }
-  .tmr-pick-line {
-    min-height: 74px;
-    align-items: start;
-  }
-  .tmr-pick-game strong,
-  .tmr-pick-market strong {
-    line-height: 1.25;
-    word-break: normal;
-  }
-  .tmr-pick-game small,
-  .tmr-pick-market small {
-    line-height: 1.25;
-  }
-  .tmr-pick-odds,
-  .tmr-pick-units,
-  .tmr-pick-result {
-    align-self: center;
-  }
-  @media (max-width: 760px) {
-    .tmr-pick-table-head,
-    .tmr-pick-line {
-      grid-template-columns: 1fr;
-    }
-  }
-  /* Homepage compact dashboard polish: fewer preview columns, no squeezed labels. */
-  .tmr-board-card table {
-    table-layout: auto;
-  }
-  .tmr-board-card .tmr-real-user {
-    overflow: visible;
-    max-width: none;
-  }
-  .tmr-board-card .tmr-real-user span:last-child,
-  .tmr-board-card .tmr-real-user strong,
-  .tmr-board-card .tmr-real-user b {
-    overflow: visible;
-    max-width: none;
-    text-overflow: clip;
-    white-space: normal;
-    word-break: break-word;
-  }
-  .tmr-board-card .tmr-real-user small {
-    display: none;
-  }
-  .tmr-picks-card .tmr-pick-table-head,
-  .tmr-picks-card .tmr-pick-line {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-    gap: 14px;
-  }
-  .tmr-picks-card .tmr-pick-table-head span:nth-child(n+3),
-  .tmr-picks-card .tmr-pick-odds,
-  .tmr-picks-card .tmr-pick-units,
-  .tmr-picks-card .tmr-pick-result {
-    display: none;
-  }
-  .tmr-picks-card .tmr-pick-line {
-    min-height: 72px;
-    align-items: center;
-  }
-  .tmr-picks-card .tmr-pick-game strong,
-  .tmr-picks-card .tmr-pick-market strong,
-  .tmr-picks-card .tmr-pick-game small,
-  .tmr-picks-card .tmr-pick-market small {
-    overflow: visible;
-    text-overflow: clip;
-    white-space: normal;
-    word-break: normal;
-  }
-  /* Homepage leaderboard preview polish: keep usernames readable in the compact hero card. */
-  .tmr-board-card:not(.tmr-picks-card) table {
-    table-layout: fixed;
-  }
-  .tmr-board-card:not(.tmr-picks-card) th:nth-child(1),
-  .tmr-board-card:not(.tmr-picks-card) td:nth-child(1) {
-    width: 24px;
-  }
-  .tmr-board-card:not(.tmr-picks-card) th:nth-child(3),
-  .tmr-board-card:not(.tmr-picks-card) td:nth-child(3) {
-    width: 66px;
-    text-align: right;
-  }
-  .tmr-board-card:not(.tmr-picks-card) th:nth-child(4),
-  .tmr-board-card:not(.tmr-picks-card) td:nth-child(4) {
-    display: none;
-  }
-  .tmr-board-card:not(.tmr-picks-card) .tmr-real-user {
-    gap: 7px;
-    align-items: center;
-    font-size: 11px;
-    line-height: 1.05;
-  }
-  .tmr-board-card:not(.tmr-picks-card) .tmr-real-user img,
-  .tmr-board-card:not(.tmr-picks-card) .tmr-real-user .avatar-sm {
-    width: 24px;
-    height: 24px;
-    flex-basis: 24px;
-  }
-  .tmr-board-card:not(.tmr-picks-card) .tmr-real-user span:last-child,
-  .tmr-board-card:not(.tmr-picks-card) .tmr-real-user strong,
-  .tmr-board-card:not(.tmr-picks-card) .tmr-real-user b {
-    overflow-wrap: normal;
-    word-break: normal;
-    white-space: normal;
-  }</style>
+</style>
 
 
 <footer class="footer">
@@ -4534,7 +4215,7 @@ button{font:inherit;cursor:pointer}
 
     function signed(value, suffix) {
         const parsed = Number(value);
-        if (!Number.isFinite(parsed)) return 'No verified picks yet';
+        if (!Number.isFinite(parsed)) return 'No tracked picks yet';
         return (parsed > 0 ? '+' : '') + parsed.toFixed(2).replace(/\.00$/, '') + (suffix || '');
     }
 
@@ -4570,7 +4251,7 @@ button{font:inherit;cursor:pointer}
         const totalUsersEl = document.getElementById('tmrHeroTotalUsers');
         const totalPicksEl = document.getElementById('tmrHeroTotalPicks');
         if (totalUsersEl) totalUsersEl.textContent = String(cleanUsers.length || 4);
-        if (totalPicksEl) totalPicksEl.textContent = totalPicks ? String(totalPicks) : 'No verified picks yet';
+        if (totalPicksEl) totalPicksEl.textContent = totalPicks ? String(totalPicks) : 'No tracked picks yet';
 
         if (lead) {
             const username = String(lead.username);
@@ -4586,10 +4267,10 @@ button{font:inherit;cursor:pointer}
             if (nameEl) nameEl.innerHTML = escapeHtml(displayName) + ' <span>◆</span>';
             if (linkEl) linkEl.href = '/profile/?user=' + encodeURIComponent(username);
             if (metaEl) metaEl.textContent = '@' + username;
-            document.getElementById('tmrHeroRoi').textContent = total ? signed(lead.roi, '%') : 'No verified picks yet';
-            document.getElementById('tmrHeroUnits').textContent = total ? signed(lead.net_units || lead.netUnits, 'u') : 'No verified picks yet';
-            document.getElementById('tmrHeroPicks').textContent = total ? String(total) : 'No verified picks yet';
-            document.getElementById('tmrHeroRecord').textContent = total ? 'Public record' : 'No verified picks yet';
+            document.getElementById('tmrHeroRoi').textContent = total ? signed(lead.roi, '%') : 'No tracked picks yet';
+            document.getElementById('tmrHeroUnits').textContent = total ? signed(lead.net_units || lead.netUnits, 'u') : 'No tracked picks yet';
+            document.getElementById('tmrHeroPicks').textContent = total ? String(total) : 'No tracked picks yet';
+            document.getElementById('tmrHeroRecord').textContent = total ? 'Public record' : 'No tracked picks yet';
         }
 
         const body = document.getElementById('tmrHeroLeaderboardBody');
@@ -4610,9 +4291,9 @@ button{font:inherit;cursor:pointer}
                 + '<td>' + (index + 1) + '</td>'
                 + '<td><a class="tmr-real-user" href="/profile/?user=' + encodeURIComponent(username) + '">'
                 + avatarHtml
-                + '<span>' + escapeHtml(displayName) + '<small>@' + escapeHtml(username) + ' · ' + (total ? total + ' picks' : 'No verified picks yet') + '</small></span></a></td>'
-                + '<td>' + escapeHtml(total ? signed(user.roi, '%') : 'No verified picks yet') + '</td>'
-                + '<td>' + escapeHtml(total ? signed(user.net_units || user.netUnits, 'u') : 'No verified picks yet') + '</td>'
+                + '<span>' + escapeHtml(displayName) + '<small>@' + escapeHtml(username) + ' · ' + (total ? total + ' picks' : 'No tracked picks yet') + '</small></span></a></td>'
+                + '<td>' + escapeHtml(total ? signed(user.roi, '%') : 'No tracked picks yet') + '</td>'
+                + '<td>' + escapeHtml(total ? signed(user.net_units || user.netUnits, 'u') : 'No tracked picks yet') + '</td>'
                 + '</tr>';
         }).join('');
     }
@@ -4641,7 +4322,7 @@ button{font:inherit;cursor:pointer}
             .slice(0, 5);
         if (!cleanPicks.length) {
             list.className = 'tmr-pick-empty';
-            list.innerHTML = '<span>▣</span><strong>No verified picks yet</strong><p>Recent locked picks will appear here once users lock picks before game start.</p>';
+            list.innerHTML = '<span>▣</span><strong>No tracked picks yet</strong><p>Recent locked picks will appear here once users lock picks before game start.</p>';
             return;
         }
         list.className = '';
