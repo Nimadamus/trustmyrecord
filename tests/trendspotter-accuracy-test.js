@@ -11,8 +11,8 @@ const html = rawHtml
 const js = fs.readFileSync(path.join(root, 'static', 'js', 'trendspotter.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'static', 'css', 'trendspotter.css'), 'utf8');
 
-assert(/\/static\/css\/trendspotter\.css\?v=20260512-cleanup/.test(rawHtml), 'Trend Spotter page uses the current stylesheet cache key');
-assert(/\/static\/js\/trendspotter\.js\?v=20260512-cleanup/.test(rawHtml), 'Trend Spotter page uses the current script cache key');
+assert(/\/static\/css\/trendspotter\.css\?v=20260512-(cleanup|readiness1)/.test(rawHtml), 'Trend Spotter page uses the current stylesheet cache key');
+assert(/\/static\/js\/trendspotter\.js\?v=20260512-(cleanup|readiness1)/.test(rawHtml), 'Trend Spotter page uses the current script cache key');
 assert(!/20260512labels1/.test(rawHtml + js + css), 'stale Trend Spotter deployment labels are removed');
 
 function today() {
