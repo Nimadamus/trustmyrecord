@@ -14,9 +14,9 @@
     { id: "moneyline", label: "Moneyline", aliases: ["MONEYLINE", "ML", "H2H"], sides: "teams", requiresTeam: false, needsThreshold: false, periods: ["full_game", "first_half"] },
     { id: "spread", label: "Spread", aliases: ["SPREAD", "ATS", "RUN_LINE", "PUCK_LINE"], sides: "teams", requiresTeam: false, needsThreshold: true, periods: ["full_game", "first_half"] },
     { id: "total", label: "Total", aliases: ["TOTAL", "GAME_TOTAL"], sides: "over_under", requiresTeam: false, needsThreshold: true, periods: ["full_game", "first_half"] },
-    { id: "team_total", label: "Team Total", aliases: ["TEAM_TOTAL", "TEAM TOTAL"], sides: "over_under", requiresTeam: true, needsThreshold: true, periods: ["full_game", "first_half"] },
-    { id: "first_half", label: "First Half", aliases: ["FIRST_HALF", "FIRST HALF", "1H", "HALF"], sides: "market_side", requiresTeam: false, needsThreshold: false, periods: ["first_half"] },
-    { id: "first_five", label: "First Five", aliases: ["FIRST_FIVE", "FIRST 5", "F5"], sides: "market_side", requiresTeam: false, needsThreshold: false, periods: ["first_five"], sportOnly: "MLB" },
+    { id: "team_total", label: "Team Total", aliases: ["TEAM_TOTAL", "TEAM TOTAL"], sides: "over_under", requiresTeam: true, needsThreshold: true, periods: ["full_game", "first_half"], disabled: true, disabledReason: "Team total trends are disabled until verified team-total source rows are connected." },
+    { id: "first_half", label: "First Half", aliases: ["FIRST_HALF", "FIRST HALF", "1H", "HALF"], sides: "market_side", requiresTeam: false, needsThreshold: false, periods: ["first_half"], disabled: true, disabledReason: "First half trends are disabled until verified period-specific source rows are connected." },
+    { id: "first_five", label: "First Five", aliases: ["FIRST_FIVE", "FIRST 5", "F5"], sides: "market_side", requiresTeam: false, needsThreshold: false, periods: ["first_five"], sportOnly: "MLB", disabled: true, disabledReason: "First Five trends are disabled until verified MLB F5 source rows are connected." },
     { id: "props", label: "Props", disabled: true, disabledReason: "Props are hidden until verified support exists." }
   ];
   var PERIODS = {
@@ -283,6 +283,40 @@
     return [];
   }
 
+  function numericLine(value) {
+    var parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  function lineValuesForTrend(trend, market) {
+    var values = [];
+    var fields = market && market.id === "total"
+      ? ["total_line", "line", "threshold", "closing_total", "source_total_line"]
+      : market && market.id === "team_total"
+        ? ["team_total_line", "total_line", "line", "threshold", "source_team_total_line"]
+        : ["spread_line", "line", "threshold", "source_spread_line"];
+    fields.forEach(function (field) {
+      var value = numericLine(trend && trend[field]);
+      if (value !== null) values.push(value);
+    });
+    sourceRows(trend).forEach(function (row) {
+      fields.forEach(function (field) {
+        var value = numericLine(row && row[field]);
+        if (value !== null) values.push(value);
+      });
+    });
+    return values;
+  }
+
+  function thresholdMatchesTrend(trend, market) {
+    if (!market || !market.needsThreshold) return true;
+    var selected = numericLine(state.threshold);
+    if (selected === null) return false;
+    var values = lineValuesForTrend(trend, market);
+    if (!values.length) return false;
+    return values.some(function (value) { return Math.abs(value - selected) <= 0.001; });
+  }
+
   function marketMatches(trend, market) {
     if (!market || !market.aliases) return false;
     var body = normalize([trend.bet_type, trend.market, trend.trend_type, trend.kind, trend.claim].join(" "));
@@ -300,6 +334,7 @@
     if (normalize(trend.matchup) !== normalize(matchup.matchup)) return false;
     if (![home, away].includes(team)) return false;
     if (!marketMatches(trend, market)) return false;
+    if (!thresholdMatchesTrend(trend, market)) return false;
     if (trendKind.tokens && trendKind.tokens.length) {
       var kindBody = normalize([trend.kind, trend.trend_type, trend.subset, trend.label, trend.claim, trend.bet_type, trend.market].join(" "));
       if (!trendKind.tokens.some(function (token) { return kindBody.indexOf(normalize(token)) !== -1; })) return false;
@@ -318,7 +353,6 @@
     if (state.range !== "source_window") return false;
     if (market.id === "first_half" && state.period !== "first_half") return false;
     if (market.id === "first_five" && state.period !== "first_five") return false;
-    if ((Number(trend.sample) || 0) < Number(state.minSample || 0)) return false;
     return true;
   }
 
@@ -467,6 +501,7 @@
     if (trendKind && trendKind.disabled) errors.push("invalid combination");
     if (market && !market.disabled && !state.side) errors.push("missing required variables");
     if (market && market.requiresTeam && !state.team) errors.push("missing required variables");
+    if (market && market.needsThreshold && state.threshold === "") errors.push("missing required variables");
     if (market && market.needsThreshold && state.threshold !== "" && !Number.isFinite(Number(state.threshold))) errors.push("invalid combination");
     if (state.range !== "source_window") errors.push("invalid combination");
     if (Number(state.minSample) < 1) errors.push("missing required variables");
