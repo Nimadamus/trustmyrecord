@@ -4,11 +4,16 @@ const assert = require('assert');
 const { JSDOM, VirtualConsole } = require('jsdom');
 
 const root = path.resolve(__dirname, '..');
-const html = fs.readFileSync(path.join(root, 'trendspotter', 'index.html'), 'utf8')
+const rawHtml = fs.readFileSync(path.join(root, 'trendspotter', 'index.html'), 'utf8');
+const html = rawHtml
   .replace(/<script src="\/static\/js\/config\.js[^>]*><\/script>/, '')
   .replace(/<script src="\/static\/js\/trendspotter\.js[^>]*><\/script>/, '');
 const js = fs.readFileSync(path.join(root, 'static', 'js', 'trendspotter.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'static', 'css', 'trendspotter.css'), 'utf8');
+
+assert(/\/static\/css\/trendspotter\.css\?v=20260512-cleanup/.test(rawHtml), 'Trend Spotter page uses the current stylesheet cache key');
+assert(/\/static\/js\/trendspotter\.js\?v=20260512-cleanup/.test(rawHtml), 'Trend Spotter page uses the current script cache key');
+assert(!/20260512labels1/.test(rawHtml + js + css), 'stale Trend Spotter deployment labels are removed');
 
 function today() {
   const now = new Date();
@@ -34,21 +39,46 @@ const verifiedTrend = {
   source_classification_detail: 'completed_mlb_games_with_final_scores',
   artifact_slate_date: today(),
   source_rows: [
-    { date: today(), raw_game_log: 'Mets @ Rockies verified source row', why_counted: 'Matched selected market and matchup.' },
+    { date: today(), raw_game_log: 'Mets @ Rockies verified source row', total_line: 8.5, why_counted: 'Matched selected market and matchup.' },
   ],
 };
 
-const teamTotalTrend = {
+const moneylineTrend = {
   ...verifiedTrend,
-  bet_type: 'TEAM_TOTAL',
-  kind: 'TEAM_TOTAL',
-  trend_type: 'TEAM_TOTAL',
-  side: 'OVER',
-  claim: 'Verified source rows matched this team-total query.',
-  team_abbr: 'Colorado Rockies',
-  opponent_abbr: 'New York Mets',
+  bet_type: 'MONEYLINE',
+  market: 'MONEYLINE',
+  kind: 'RECENT_FORM',
+  trend_type: 'RECENT_FORM',
+  side: 'all',
+  claim: 'Verified source rows matched this moneyline query.',
   source_rows: [
-    { date: today(), raw_game_log: 'Rockies team-total verified source row', why_counted: 'Matched team total selector.' },
+    { date: today(), raw_game_log: 'Mets @ Braves verified moneyline row WIN', market_result: 'WIN', why_counted: 'Matched selected moneyline team trend.' },
+    { date: today(), raw_game_log: 'Mets @ Phillies verified moneyline row LOSS', market_result: 'LOSS', why_counted: 'Matched selected moneyline team trend.' },
+    { date: today(), raw_game_log: 'Mets @ Marlins verified moneyline row WIN', market_result: 'WIN', why_counted: 'Matched selected moneyline team trend.' },
+  ],
+  sample: 3,
+};
+
+const spreadTrend = {
+  ...verifiedTrend,
+  bet_type: 'SPREAD',
+  market: 'SPREAD',
+  kind: 'SPREAD',
+  trend_type: 'SPREAD',
+  side: 'all',
+  claim: 'Verified source rows matched this spread query.',
+  source_rows: [
+    { date: today(), raw_game_log: 'Mets @ Braves verified spread row WIN', line: 1.5, market_result: 'WIN', why_counted: 'Matched selected spread line.' },
+    { date: today(), raw_game_log: 'Mets @ Phillies verified spread row WIN', line: 1.5, market_result: 'WIN', why_counted: 'Matched selected spread line.' },
+    { date: today(), raw_game_log: 'Mets @ Marlins verified spread row LOSS', line: 1.5, market_result: 'LOSS', why_counted: 'Matched selected spread line.' },
+  ],
+  sample: 3,
+};
+
+const unlinedTotalTrend = {
+  ...verifiedTrend,
+  source_rows: [
+    { date: today(), raw_game_log: 'Mets @ Rockies unlined source row', why_counted: 'No line was supplied.' },
   ],
 };
 
@@ -153,7 +183,7 @@ function chooseTrendKind(doc, value) {
           game_time: `${today()}T19:10:00Z`,
         },
       ],
-      trends: [verifiedTrend, teamTotalTrend],
+      trends: [moneylineTrend, spreadTrend, verifiedTrend],
     },
   });
   const doc = dom.window.document;
@@ -166,6 +196,9 @@ function chooseTrendKind(doc, value) {
   assert(doc.querySelector('[data-market="team_total"]'), 'team total market should render');
   assert(doc.querySelector('[data-market="first_half"]'), 'first half market should render');
   assert(doc.querySelector('[data-market="first_five"]'), 'first five market should render');
+  assert(doc.querySelector('[data-market="team_total"]').disabled, 'team totals must be disabled until verified source support exists');
+  assert(doc.querySelector('[data-market="first_half"]').disabled, 'first half trends must be disabled until verified source support exists');
+  assert(doc.querySelector('[data-market="first_five"]').disabled, 'first five trends must be disabled until verified source support exists');
   assert(doc.querySelector('[data-market="props"]').disabled, 'unsupported props must be disabled');
   assert.match(doc.querySelector('#rangeSelect').textContent, /Last 5 games - requires time-window dataset/, 'unsupported time-window filters should be visible but disabled');
   assert.match(doc.body.textContent, /Source-backed/, 'data policy should show source-backed classification');
@@ -182,6 +215,27 @@ function chooseTrendKind(doc, value) {
   assert.strictEqual(doc.querySelector('#thresholdField').classList.contains('is-hidden'), true, 'moneyline should not show total threshold');
   assert.strictEqual(doc.querySelector('#teamField').classList.contains('is-hidden'), true, 'moneyline should not require team-total team field');
   assert.match(doc.querySelector('#sideSelect').textContent, /New York Mets away/, 'moneyline side should use matchup teams');
+  chooseTrendKind(doc, 'team_win');
+  change(doc, '#sideSelect', 'away');
+  change(doc, '#sampleInput', '3');
+  assert.strictEqual(doc.querySelector('#generateTrend').disabled, false, 'moneyline should allow verified generation after team side and trend search');
+  doc.querySelector('#generateTrend').click();
+  assert.match(doc.querySelector('#resultsList').textContent, /Selected market\s*Moneyline/, 'moneyline result should reflect selected market');
+  assert.match(doc.querySelector('#resultsList').textContent, /Sample size\s*3/, 'moneyline result should show sample size');
+
+  clickMarket(doc, 'spread');
+  chooseTrendKind(doc, 'ats');
+  change(doc, '#sideSelect', 'away');
+  assert.strictEqual(doc.querySelector('#generateTrend').disabled, true, 'spread should require a numeric threshold before generation');
+  change(doc, '#thresholdInput', '1.5');
+  assert.strictEqual(doc.querySelector('#generateTrend').disabled, false, 'spread should allow generation when a matching source line exists');
+  doc.querySelector('#generateTrend').click();
+  assert.match(doc.querySelector('#resultsList').textContent, /Selected market\s*Spread/, 'spread result should reflect selected market');
+  assert.match(doc.querySelector('#resultsList').textContent, /line=1.5/, 'spread result should reflect selected source-matched threshold');
+  change(doc, '#thresholdInput', '2.5');
+  doc.querySelector('#generateTrend').click();
+  assert.strictEqual(doc.querySelectorAll('[data-result="verified-trend"]').length, 0, 'spread should not render when selected line does not match source line data');
+  change(doc, '#thresholdInput', '1.5');
 
   clickMarket(doc, 'total');
   assert.match(doc.querySelector('#trendKindSelect').textContent, /Full game over \/ under/, 'total trend search should render over-under options');
@@ -192,6 +246,7 @@ function chooseTrendKind(doc, value) {
   assert.strictEqual(doc.querySelector('#generateTrend').disabled, true, 'total should block generation until trend search is selected');
   chooseTrendKind(doc, 'full_game_over_under');
   change(doc, '#sideSelect', 'over');
+  assert.strictEqual(doc.querySelector('#generateTrend').disabled, true, 'threshold markets should block generation until a numeric line is supplied');
   change(doc, '#thresholdInput', '8.5');
   doc.querySelector('#generateTrend').click();
   assert.strictEqual(doc.querySelectorAll('[data-result="verified-trend"]').length, 1, 'total query should generate matching verified result');
@@ -204,19 +259,18 @@ function chooseTrendKind(doc, value) {
   assert.strictEqual(doc.querySelector('[data-result="verified-trend"]').getAttribute('data-source-label'), 'source-backed', 'verified result should carry source-backed label');
   assert.match(doc.querySelector('#resultsList').textContent, /This is a trend, not a betting recommendation/, 'result should include non-pick note');
 
-  clickMarket(doc, 'team_total');
-  assert.strictEqual(doc.querySelector('#teamField').classList.contains('is-hidden'), false, 'team total must require team selection');
-  assert.strictEqual(doc.querySelector('#generateTrend').disabled, true, 'team total should block generation without team');
-  chooseTrendKind(doc, 'team_total_over_under');
-  change(doc, '#sideSelect', 'over');
-  change(doc, '#teamSelect', 'Colorado Rockies');
-  change(doc, '#thresholdInput', '4.5');
-  assert.strictEqual(doc.querySelector('#generateTrend').disabled, false, 'team total should allow generation after required variables');
+  change(doc, '#sampleInput', '15');
   doc.querySelector('#generateTrend').click();
-  assert.match(doc.querySelector('#resultsList').textContent, /Selected team\s*Colorado Rockies/, 'team total result should reflect selected team');
+  assert.match(doc.querySelector('#resultsList').textContent, /Small sample warning/, 'above-sample query should render the small-sample state instead of hiding the matching trend');
+  change(doc, '#sampleInput', '10');
+
+  clickMarket(doc, 'team_total');
+  assert.notStrictEqual(doc.querySelector('#selectionSummary').textContent.includes('Team Total'), true, 'disabled team total should not become the selected market');
+  assert.strictEqual(doc.querySelector('[data-market="team_total"]').disabled, true, 'disabled team total must not be usable');
 
   clickMarket(doc, 'first_five');
-  assert.match(doc.querySelector('#periodSelect').textContent, /First five innings/, 'first five should appear for MLB');
+  assert.notStrictEqual(doc.querySelector('#selectionSummary').textContent.includes('First Five'), true, 'disabled first five should not become the selected market');
+  assert.strictEqual(doc.querySelector('[data-market="first_five"]').disabled, true, 'disabled first five must not be usable');
 
   await chooseSport(doc, 'NBA');
   assert.strictEqual(doc.querySelector('[data-market="first_five"]').disabled, true, 'first five must be disabled outside MLB');
@@ -234,6 +288,35 @@ function chooseTrendKind(doc, value) {
   assert.match(noDataDoc.querySelector('[data-state="safe-no-data"]').textContent, /No verified trend available|No strong trend found|Verified trend data source not connected/, 'safe no-data state should render');
   assert.match(noDataDoc.querySelector('[data-state="safe-no-data"]').textContent, /Source classification:\s*(Partial|Blocked|Source-backed)/, 'safe state should expose source classification');
   assert(noDataDoc.querySelector('[data-state="safe-no-data"]').getAttribute('data-source-label'), 'safe state should carry a source label attribute');
+
+  const unlinedDom = await boot({
+    MLB: {
+      status: 'current',
+      source: 'source_backed_historical_database',
+      source_classification: 'source_backed',
+      matchups: [
+        {
+          sport: 'MLB',
+          matchup: 'New York Mets @ Colorado Rockies',
+          away_abbr: 'New York Mets',
+          home_abbr: 'Colorado Rockies',
+          slate_date: today(),
+          game_time: `${today()}T19:10:00Z`,
+        },
+      ],
+      trends: [unlinedTotalTrend],
+    },
+  });
+  const unlinedDoc = unlinedDom.window.document;
+  await chooseSport(unlinedDoc, 'MLB');
+  chooseFirstMatchup(unlinedDoc);
+  clickMarket(unlinedDoc, 'total');
+  chooseTrendKind(unlinedDoc, 'full_game_over_under');
+  change(unlinedDoc, '#sideSelect', 'over');
+  change(unlinedDoc, '#thresholdInput', '8.5');
+  unlinedDoc.querySelector('#generateTrend').click();
+  assert.strictEqual(unlinedDoc.querySelectorAll('[data-result="verified-trend"]').length, 0, 'threshold-specific output must not render when source rows do not carry matching line data');
+  assert.match(unlinedDoc.querySelector('[data-state="safe-no-data"]').textContent, /No strong trend found|No verified trend available/, 'unlined threshold trend should degrade to safe no-data');
 
   const estimatedDom = await boot({
     MLB: {
