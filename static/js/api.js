@@ -45,23 +45,12 @@ class TrustMyRecordAPI {
                 localStorage.setItem(key, JSON.stringify(value));
             }
         }
-
-        // Seed demo users if no users exist
-        const users = this.getLocal('tmr_users');
-        if (users.length === 0) {
-            this.seedDemoData();
-        }
         
         // Seed forums if empty
         const forums = this.getLocal('tmr_forums');
         if (forums.length === 0) {
             this.seedForums();
         }
-    }
-
-    // No demo data - all data comes from real user activity
-    seedDemoData() {
-        // No seeded data. Everything starts at zero.
     }
 
     // LocalStorage helpers
