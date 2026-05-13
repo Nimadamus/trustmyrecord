@@ -6,16 +6,21 @@
     <link rel="canonical" href="https://trustmyrecord.com/mlb-simulator/">
     <title>MLB Simulator | TrustMyRecord</title>
     <meta name="description" content="Select current or classic MLB teams and run a clearly labeled TrustMyRecord simulator estimate.">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+    <meta property="og:title" content="MLB Simulator | TrustMyRecord">
+    <meta property="og:description" content="Select current or classic MLB teams, choose starters, and review a clearly labeled simulator estimate.">
+    <meta property="og:url" content="https://trustmyrecord.com/mlb-simulator/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-page-polish.css">
-    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260511-batting-order-guard">
-    <!-- legacy guard marker: /static/css/mlb-simulator.css?v=20260505-standalone-box-score -->
+    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260513-user-sims1">
     <script src="/static/js/config.js"></script>
     <script src="/static/js/backend-api.js"></script>
 </head>
-<body class="tmr-polished-page mlb-simulator-page" data-mlb-simulator-build="standalone-box-score-20260505">
+<body class="tmr-polished-page mlb-simulator-page" data-mlb-simulator-build="mlb-simulator-user-sim-status-20260513">
     <header class="sim-topbar" aria-label="TrustMyRecord navigation">
         <a class="sim-brand" href="/">TrustMyRecord</a>
         <nav class="sim-nav" aria-label="Primary">
@@ -259,7 +264,7 @@
             <section id="boxScorePanel" class="sim-panel box-score-panel" data-box-score-state="empty" aria-label="Simulated box score">
                 <div class="box-score-heading">
                     <div>
-                        <p class="sim-label">Simulation Output</p>
+                        <p class="sim-label">Full Box Score</p>
                         <h2>Box Score</h2>
                         <strong id="boxScoreTitle">Run a simulation to generate a box score.</strong>
                     </div>
@@ -268,14 +273,11 @@
                         <button id="saveBoxScoreButton" class="sim-button secondary compact-action" type="button" disabled>Save Box Score</button>
                     </div>
                 </div>
-                <div id="boxScoreMatchupCard" class="box-score-matchup-card">
-                    <div class="sim-empty">Run a simulation to generate a game summary card.</div>
-                </div>
                 <div class="box-score-scroll">
                     <table class="box-score-table">
                         <thead>
                             <tr>
-                                <th></th>
+                                <th>Team</th>
                                 <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
                                 <th>R</th><th>H</th><th>E</th>
                             </tr>
@@ -285,6 +287,7 @@
                         </tbody>
                     </table>
                 </div>
+                <div id="boxScoreSummary" class="box-score-summary">Run a simulation to generate a box score.</div>
                 <div id="playerBoxScorePanel" class="player-box-score-panel" data-player-box-state="empty">
                     <div class="player-box-score-heading">
                         <p class="sim-label">Player Box Score</p>
@@ -365,7 +368,6 @@
         </section>
     </main>
 
-    <script src="/static/js/mlb-simulator.js?v=20260511-batting-order-guard"></script>
-    <!-- legacy guard marker: /static/js/mlb-simulator.js?v=20260505-standalone-box-score -->
+    <script src="/static/js/mlb-simulator.js?v=20260513-user-sims1"></script>
 </body>
 </html>
