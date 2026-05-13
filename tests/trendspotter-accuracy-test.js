@@ -91,6 +91,13 @@ const teamTotalTrend = {
   sample: 3,
 };
 
+const genericTeamTotalTrend = {
+  ...teamTotalTrend,
+  source_rows: [
+    { date: today(), raw_game_log: 'Mets @ Braves generic total-line row WIN', team: 'New York Mets', total_line: 8.5, market_result: 'WIN', why_counted: 'This row intentionally lacks team-total line data.' },
+  ],
+};
+
 const unlinedTotalTrend = {
   ...verifiedTrend,
   source_rows: [
@@ -307,6 +314,33 @@ function chooseTrendKind(doc, value) {
   assert.strictEqual(doc.querySelector('[data-market="first_five"]').disabled, true, 'first five must be disabled outside MLB');
   assert.strictEqual(doc.querySelector('[data-market="team_total"]').disabled, true, 'team totals must be disabled when the loaded sport has no verified team-total source rows');
   assert.strictEqual(doc.querySelector('[data-market="props"]').disabled, true, 'props stay disabled for unsupported markets');
+
+  const genericTeamTotalDom = await boot({
+    MLB: {
+      status: 'current',
+      source: 'source_backed_historical_database',
+      source_classification: 'source_backed',
+      matchups: [
+        {
+          sport: 'MLB',
+          matchup: 'New York Mets @ Colorado Rockies',
+          away_abbr: 'New York Mets',
+          home_abbr: 'Colorado Rockies',
+          slate_date: today(),
+          game_time: `${today()}T19:10:00Z`,
+        },
+      ],
+      trends: [genericTeamTotalTrend],
+    },
+  });
+  const genericTeamTotalDoc = genericTeamTotalDom.window.document;
+  await chooseSport(genericTeamTotalDoc, 'MLB');
+  chooseFirstMatchup(genericTeamTotalDoc);
+  assert.strictEqual(
+    genericTeamTotalDoc.querySelector('[data-market="team_total"]').disabled,
+    true,
+    'team-total market must not unlock from generic game-total line fields'
+  );
 
   const noDataDom = await boot({ MLB: { status: 'missing', trends: [], matchups: [] } });
   const noDataDoc = noDataDom.window.document;
