@@ -40,8 +40,14 @@ async function verifyTrendspotter(page) {
   await page.waitForFunction(() => Array.from(document.querySelector('#matchupSelect')?.options || []).some((option) => option.value), null, { timeout: 30000 });
   await selectFirstOption(page, '#matchupSelect');
 
-  for (const selector of ['[data-market="team_total"]', '[data-market="first_half"]', '[data-market="first_five"]', '[data-market="props"]']) {
+  for (const selector of ['[data-market="first_half"]', '[data-market="first_five"]', '[data-market="props"]']) {
     if (!(await page.locator(selector).isDisabled())) throw new Error(`${selector} is not disabled`);
+  }
+  if (!(await page.locator('[data-market="team_total"]').isDisabled())) {
+    await page.locator('[data-market="team_total"]').click();
+    if ((await page.locator('#periodSelect').inputValue()) !== 'full_game') throw new Error('Team totals exposed unsupported period options.');
+    const teamTotalOptions = await page.locator('#trendKindSelect').innerText();
+    if (!/Team total over \/ under/i.test(teamTotalOptions)) throw new Error('Team totals did not expose the verified team-total trend option.');
   }
 
   await page.locator('[data-market="total"]').click();
