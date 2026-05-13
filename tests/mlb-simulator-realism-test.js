@@ -22,7 +22,7 @@ const elementIds = [
   'eraAdjustmentValue','simulationModeValue','dataModeValue','awayProbabilityLabel','homeProbabilityLabel',
   'awayProbabilityValue','homeProbabilityValue','awayProbabilityBar','homeProbabilityBar','projectionNotice',
   'comparisonGrid','inputSummary','matchupNotes','boxScorePanel','boxScoreTitle','boxScoreBody',
-  'boxScoreMatchupCard','playerBoxScorePanel','playerBoxScoreContent','copyBoxScoreButton','saveBoxScoreButton'
+  'boxScoreSummary','copyBoxScoreButton','saveBoxScoreButton'
 ];
 
 function makeElement(id) {
@@ -70,6 +70,31 @@ function createSimulator() {
   return context.window.TMRMlbSimulator;
 }
 
+function teamIdFor(simulator, team) {
+  const source = simulator.rosterSourceForTeam(team);
+  const match = String(source && source.url || '').match(/\/teams\/(\d+)\/roster/);
+  assert(match, team.name + ' exposes a roster source team id');
+  return match[1];
+}
+
+function seedVerifiedCurrentRosters(simulator) {
+  const hitters = [
+    ['Alex Carter', 'CF'], ['Ben Walker', 'SS'], ['Cal Brooks', 'RF'], ['Drew Mason', '1B'],
+    ['Evan Reed', '3B'], ['Frank Ellis', 'LF'], ['Grant Cole', 'DH'], ['Henry Stone', '2B'], ['Ian Price', 'C']
+  ];
+  const pitchers = [
+    ['Jack Morris', 'P'], ['Kevin Ryan', 'P'], ['Liam Parker', 'P'], ['Miles Turner', 'P'], ['Nathan Ross', 'P']
+  ];
+  simulator.localTeams.current.forEach((team) => {
+    const teamId = teamIdFor(simulator, team);
+    simulator.state.liveContext.teamRosters[team.abbreviation] = {
+      teamId,
+      source: 'Verified test active roster context',
+      players: hitters.concat(pitchers).map(([name, position]) => ({ name, position, teamId })),
+    };
+  });
+}
+
 function sum(values) {
   return values.reduce((total, value) => total + Number(value || 0), 0);
 }
@@ -100,6 +125,34 @@ function validateResult(result, label) {
   if (away.runs === home.runs) invalid.push('simulation ended tied');
   if (result.boxScore.winner.id !== (away.runs > home.runs ? result.away.id : result.home.id)) invalid.push('winner does not match final score');
   if (result.winner.id !== (result.homeWin >= result.awayWin ? result.home.id : result.away.id)) invalid.push('projected winner does not match higher win probability');
+  if (result.boxScore.players) {
+    [['away', away, home], ['home', home, away]].forEach(([side, battingLine, opponentLine]) => {
+      const group = result.boxScore.players[side];
+      if (!group) return;
+      if (group.batters && group.batters.length) {
+        if (sum(group.batters.map((row) => row.h)) !== battingLine.hits) invalid.push(side + ' batter hit total mismatch');
+        if (sum(group.batters.map((row) => row.r)) !== battingLine.runs) invalid.push(side + ' batter run total mismatch');
+        group.batters.forEach((row) => {
+          if (!row.name || /Lineup Slot|Simulation Slot|modeled/i.test(row.name)) invalid.push(side + ' batter uses placeholder name');
+          if (row.h > row.ab) invalid.push(side + ' batter has more hits than at-bats');
+          if (row.so > row.ab - row.h) invalid.push(side + ' batter strikeouts exceed hitless at-bats');
+        });
+      }
+      if (group.pitchers && group.pitchers.length) {
+        if (sum(group.pitchers.map((row) => row.h)) !== opponentLine.hits) invalid.push(side + ' pitcher hit total mismatch');
+        if (sum(group.pitchers.map((row) => row.r)) !== opponentLine.runs) invalid.push(side + ' pitcher run total mismatch');
+        if (sum(group.pitchers.map((row) => row.outs)) !== 27) invalid.push(side + ' pitcher outs do not equal 27');
+        group.pitchers.forEach((row) => {
+          const outs = Number(row.outs || 0);
+          if (!row.name || /Pitching Slot|Simulation Slot|Reliever [AB]|modeled/i.test(row.name)) invalid.push(side + ' pitcher uses placeholder name');
+          if (outs > 23) invalid.push(side + ' starter/reliever outs exceed modern workload cap');
+          if (row.er > row.r) invalid.push(side + ' pitcher earned runs exceed runs');
+          if (outs <= 6 && row.r === 0 && row.h > 4) invalid.push(side + ' short outing has implausible no-damage hit total');
+          if (outs <= 3 && row.h > 4) invalid.push(side + ' one-inning reliever hit total too high');
+        });
+      }
+    });
+  }
   const rendered = [
     result.away.name,
     result.home.name,
@@ -118,43 +171,10 @@ function pickTeam(teams, index) {
   return teams[((index % teams.length) + teams.length) % teams.length];
 }
 
-const mlbTeamIds = {
-  ARI: 109, ATL: 144, BAL: 110, BOS: 111, CHC: 112, CWS: 145, CIN: 113, CLE: 114, COL: 115, DET: 116,
-  HOU: 117, KC: 118, LAA: 108, LAD: 119, MIA: 146, MIL: 158, MIN: 142, NYM: 121, NYY: 147, ATH: 133,
-  PHI: 143, PIT: 134, SD: 135, SF: 137, SEA: 136, STL: 138, TB: 139, TEX: 140, TOR: 141, WSH: 120,
-};
-
-function preloadVerifiedRoster(simulator, team) {
-  if (!team || team.era !== 'current') return;
-  const teamId = mlbTeamIds[team.abbreviation];
-  if (!teamId) return;
-  const positions = ['CF', 'SS', 'RF', '1B', '3B', 'LF', 'DH', '2B', 'C'];
-  const pitchers = ['SP', 'SP', 'SP', 'RP', 'RP'];
-  simulator.state.liveContext.teamRosters[team.abbreviation] = {
-    teamId: String(teamId),
-    count: positions.length + pitchers.length,
-    relievers: pitchers.length,
-    source: 'Projected batting order from verified MLB active roster endpoint',
-    summary: `${positions.length + pitchers.length} MLB active roster players`,
-    uiBuild: simulator.uiBuild,
-    players: positions.map((position, index) => ({
-      name: `${team.abbreviation} Batter ${index + 1}`,
-      position,
-      teamId: String(teamId),
-    })).concat(pitchers.map((position, index) => ({
-      name: `${team.abbreviation} Pitcher ${index + 1}`,
-      position,
-      teamId: String(teamId),
-    }))),
-  };
-}
-
 function runCase(simulator, mode, away, home, awayPitcherIndex, homePitcherIndex, index) {
   simulator.state.preset = mode;
   simulator.state.awayPool = away.year === 'Current' ? 'current' : 'historical';
   simulator.state.homePool = home.year === 'Current' ? 'current' : 'historical';
-  preloadVerifiedRoster(simulator, away);
-  preloadVerifiedRoster(simulator, home);
   simulator.state.awayTeamId = away.id;
   simulator.state.homeTeamId = home.id;
   const awayPitchers = simulator.pitcherOptionsFor(away, 'away', null);
@@ -166,6 +186,7 @@ function runCase(simulator, mode, away, home, awayPitcherIndex, homePitcherIndex
 }
 
 const simulator = createSimulator();
+seedVerifiedCurrentRosters(simulator);
 const current = simulator.localTeams.current.slice();
 const historical = simulator.localTeams.historical.slice();
 const all = current.concat(historical);
@@ -174,6 +195,20 @@ const currentStrong = current.slice().sort(byStrength);
 const historicalStrong = historical.slice().sort(byStrength);
 const currentWeak = currentStrong.slice().reverse();
 const historicalWeak = historicalStrong.slice().reverse();
+
+historical.forEach((team, index) => {
+  const opponent = historical[(index + 1) % historical.length];
+  const { result, label } = runCase(simulator, 'historical', team, opponent, index, index + 1, 'coverage-' + index);
+  const group = result.boxScore.players.away;
+  const invalid = validateResult(result, label);
+  assert.strictEqual(invalid.length, 0, label + ' historical coverage output is valid: ' + invalid.join('; '));
+  assert.strictEqual(group.rosterSource, 'Curated historical roster names', team.name + ' uses curated historical roster source');
+  assert.strictEqual(group.batters.length, 9, team.name + ' has nine historical batter names');
+  assert(group.pitchers.length >= 2, team.name + ' has historical pitcher names in the box score');
+  assert(group.batters.every((row) => /^[A-Z][A-Za-z'. -]+/.test(row.name)), team.name + ' batter rows use real-looking names');
+  assert(group.pitchers.every((row) => /^[A-Z][A-Za-z'. -]+/.test(row.name)), team.name + ' pitcher rows use real-looking names');
+  assert(!/Lineup Slot|Pitching Slot|Simulation Slot|modeled/i.test(group.batters.concat(group.pitchers).map((row) => row.name).join('|')), team.name + ' has no placeholder player rows');
+});
 
 const totalSimulations = 12000;
 const summary = {
@@ -195,6 +230,8 @@ const summary = {
 
 let homeRunTotal = 0;
 let awayRunTotal = 0;
+let expectedHomeRunTotal = 0;
+let expectedAwayRunTotal = 0;
 const extremeKeys = new Set();
 
 for (let i = 0; i < totalSimulations; i += 1) {
@@ -226,6 +263,8 @@ for (let i = 0; i < totalSimulations; i += 1) {
   const awayScore = result.boxScore.away.runs;
   const homeScore = result.boxScore.home.runs;
   const combined = awayScore + homeScore;
+  expectedAwayRunTotal += Number(result.awayRuns);
+  expectedHomeRunTotal += Number(result.homeRuns);
   awayRunTotal += awayScore;
   homeRunTotal += homeScore;
   summary.highestScoreObserved = Math.max(summary.highestScoreObserved, awayScore, homeScore);
@@ -249,6 +288,10 @@ for (let i = 0; i < totalSimulations; i += 1) {
 
 summary.averageHomeRunsScored = Number((homeRunTotal / totalSimulations).toFixed(2));
 summary.averageAwayRunsScored = Number((awayRunTotal / totalSimulations).toFixed(2));
+summary.averageTotalRunsScored = Number((summary.averageHomeRunsScored + summary.averageAwayRunsScored).toFixed(2));
+summary.averageExpectedHomeRuns = Number((expectedHomeRunTotal / totalSimulations).toFixed(2));
+summary.averageExpectedAwayRuns = Number((expectedAwayRunTotal / totalSimulations).toFixed(2));
+summary.averageExpectedTotalRuns = Number((summary.averageExpectedHomeRuns + summary.averageExpectedAwayRuns).toFixed(2));
 summary.percentageGamesAbove15TotalRuns = Number(((summary.gamesAbove15TotalRuns / totalSimulations) * 100).toFixed(2));
 summary.percentageGamesAbove20TotalRuns = Number(((summary.gamesAbove20TotalRuns / totalSimulations) * 100).toFixed(2));
 summary.percentageTeamScoresAbove15 = Number(((summary.teamScoresAbove15 / totalSimulations) * 100).toFixed(2));
@@ -258,12 +301,19 @@ summary.extremeValidOutputs = summary.extremeValidOutputs
   .sort((a, b) => b.totalRuns - a.totalRuns)
   .slice(0, 8);
 
+if (summary.invalidOutputs) console.log(JSON.stringify(summary.invalidExamples, null, 2));
 assert.strictEqual(summary.invalidOutputs, 0, 'realism batch has zero invalid outputs');
 assert(summary.modeCounts.current > 0 && summary.modeCounts.historical > 0 && summary.modeCounts.mixed > 0, 'all simulator modes are represented');
 assert(summary.highestScoreObserved <= 20, 'highest individual score stays under hard cap');
 assert(summary.highestCombinedScoreObserved <= 30, 'highest combined score stays under hard cap');
 assert.strictEqual(summary.teamScoresAbove18, 0, 'no team score exceeds extreme outlier threshold');
 assert.strictEqual(summary.combinedScoresAbove25, 0, 'no combined score exceeds conservative high-total threshold');
+assert(summary.averageHomeRunsScored >= 4.1 && summary.averageHomeRunsScored <= 5.2, 'home scoring average stays in MLB-like range');
+assert(summary.averageAwayRunsScored >= 3.9 && summary.averageAwayRunsScored <= 5.0, 'away scoring average stays in MLB-like range');
+assert(summary.averageTotalRunsScored >= 8.2 && summary.averageTotalRunsScored <= 9.8, 'total run average stays in realistic MLB range');
+assert(summary.averageExpectedTotalRuns >= 8.0 && summary.averageExpectedTotalRuns <= 9.5, 'displayed expected-run average stays in realistic MLB range');
+assert(summary.percentageGamesAbove15TotalRuns <= 3.5, 'high-total outlier rate stays controlled');
+assert(summary.percentageGamesAbove20TotalRuns <= 0.5, '20+ run games stay rare');
 
 console.log('mlb-simulator-realism-test: ok');
 console.log(JSON.stringify(summary, null, 2));
