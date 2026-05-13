@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-user-sim-status-20260513';
+    var UI_BUILD = 'mlb-simulator-realism-20260513';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -168,6 +168,12 @@
         PHI: ['#e81828', '#002d72'], PIT: ['#fdb827', '#27251f'], SD: ['#2f241d', '#ffc425'], SF: ['#fd5a1e', '#27251f'],
         SEA: ['#0c2c56', '#005c5c'], STL: ['#c41e3a', '#0c2340'], TB: ['#092c5c', '#8fbce6'], TEX: ['#003278', '#c0111f'],
         TOR: ['#134a8e', '#1d2d5c'], WSH: ['#ab0003', '#14225a'], BKN: ['#003087', '#ffffff']
+    };
+    var PARK_RUN_FACTORS = {
+        COL: 1.13, BOS: 1.05, CIN: 1.05, TEX: 1.04, PHI: 1.03, BAL: 1.02, CHC: 1.02, NYY: 1.02,
+        ARI: 1.01, ATL: 1.01, HOU: 1.00, KC: 1.00, LAA: 1.00, LAD: 1.00, MIN: 1.00, TOR: 1.00,
+        MIL: 0.99, NYM: 0.99, STL: 0.99, WSH: 0.99, CWS: 0.98, DET: 0.98, MIA: 0.98, SD: 0.98,
+        SEA: 0.97, SF: 0.97, TB: 0.97, ATH: 0.96, CLE: 0.96, PIT: 0.96
     };
 
     var LIVE_INPUT_SOURCES = [
@@ -563,6 +569,35 @@
         var gap = away[metric] - home[metric];
         if (Math.abs(gap) < 2.5) return 'Near even';
         return (gap > 0 ? away.name : home.name) + ' +' + Math.abs(Math.round(gap));
+    }
+    function parkRunFactor(homeTeam) {
+        return PARK_RUN_FACTORS[homeTeam && homeTeam.abbreviation] || 1;
+    }
+    function weatherRunAdjustment(weather) {
+        if (!weather) return 0;
+        var adjustment = 0;
+        if (Number.isFinite(weather.temperature)) {
+            if (weather.temperature >= 85) adjustment += 0.12;
+            else if (weather.temperature >= 78) adjustment += 0.06;
+            else if (weather.temperature <= 48) adjustment -= 0.09;
+        }
+        if (Number.isFinite(weather.gust) && weather.gust >= 18) adjustment += 0.04;
+        if (Number.isFinite(weather.precipitation) && weather.precipitation > 0) adjustment -= 0.08;
+        return clamp(adjustment, -0.16, 0.18);
+    }
+    function applyMarketTotalCalibration(awayRuns, homeRuns, total, strengthShare) {
+        var marketTotal = Number(total);
+        if (!Number.isFinite(marketTotal) || marketTotal < 5.5 || marketTotal > 14.5) return { awayRuns: awayRuns, homeRuns: homeRuns, applied: false };
+        var currentTotal = awayRuns + homeRuns;
+        if (!Number.isFinite(currentTotal) || currentTotal <= 0) return { awayRuns: awayRuns, homeRuns: homeRuns, applied: false };
+        var targetTotal = (currentTotal * 0.78) + (marketTotal * 0.22);
+        var scale = clamp(targetTotal / currentTotal, 0.9, 1.1);
+        var awayShare = clamp(strengthShare || 0.5, 0.38, 0.62);
+        return {
+            awayRuns: clamp((awayRuns * scale * 0.88) + (targetTotal * awayShare * 0.12), 1.5, 8.8),
+            homeRuns: clamp((homeRuns * scale * 0.88) + (targetTotal * (1 - awayShare) * 0.12), 1.5, 8.8),
+            applied: true
+        };
     }
     function inningWeights(isHome) {
         return isHome ? [0.108, 0.111, 0.114, 0.113, 0.112, 0.112, 0.112, 0.109, 0.109] : [0.111, 0.112, 0.114, 0.113, 0.112, 0.111, 0.109, 0.109, 0.109];
@@ -1349,6 +1384,14 @@
         var homePitcher = selectedPitcher('home', home, context);
         awayRuns = clamp(awayRuns + selectedPitcherRunAdjustment(homePitcher), 1.7, 9.2);
         homeRuns = clamp(homeRuns + selectedPitcherRunAdjustment(awayPitcher), 1.7, 9.2);
+        awayRuns = clamp(awayRuns + starterEraAdjustment(homePitcher), 1.6, 8.9);
+        homeRuns = clamp(homeRuns + starterEraAdjustment(awayPitcher), 1.6, 8.9);
+        var parkFactor = parkRunFactor(home);
+        if (parkFactor !== 1) {
+            awayRuns = clamp(awayRuns * parkFactor, 1.6, 8.9);
+            homeRuns = clamp(homeRuns * parkFactor, 1.6, 8.9);
+            liveFactors.push('Park factor: ' + home.name + ' home environment adjusts the run model by ' + Math.round((parkFactor - 1) * 100) + '%.');
+        }
         var awayStrength = strength(away);
         var homeStrength = strength(home) + 1.7;
         awayStrength += selectedPitcherStrengthAdjustment(awayPitcher);
@@ -1370,14 +1413,9 @@
             }
             if (context.espnGame.weather) {
                 var weather = context.espnGame.weather;
-                if (weather.temperature != null && weather.temperature >= 80) {
-                    awayRuns = clamp(awayRuns + 0.08, 1.7, 9.2);
-                    homeRuns = clamp(homeRuns + 0.08, 1.7, 9.2);
-                }
-                if (Number.isFinite(weather.precipitation) && weather.precipitation > 0) {
-                    awayRuns = clamp(awayRuns - 0.04, 1.7, 9.2);
-                    homeRuns = clamp(homeRuns - 0.04, 1.7, 9.2);
-                }
+                var weatherAdjustment = weatherRunAdjustment(weather);
+                awayRuns = clamp(awayRuns + weatherAdjustment, 1.6, 8.9);
+                homeRuns = clamp(homeRuns + weatherAdjustment, 1.6, 8.9);
                 liveFactors.push('Weather context from ESPN: ' + [weather.temperature != null ? weather.temperature + 'F' : '', weather.display || '', Number.isFinite(weather.gust) ? 'gust ' + weather.gust + ' mph' : ''].filter(Boolean).join(' / ') + '.');
             }
         }
@@ -1419,7 +1457,11 @@
                 liveFactors.push('Market context: ' + context.odds.book + ' moneyline snapshot is included, but no betting edge is claimed.');
             }
             if (context.odds.total != null) {
+                var calibrated = applyMarketTotalCalibration(awayRuns, homeRuns, context.odds.total, awayStrength / (awayStrength + homeStrength));
+                awayRuns = calibrated.awayRuns;
+                homeRuns = calibrated.homeRuns;
                 liveFactors.push('Market total snapshot: ' + context.odds.total + ' runs.');
+                if (calibrated.applied) liveFactors.push('Run environment calibration: sportsbook total is used only to anchor the scoring environment, not to create a betting edge.');
             }
         }
         var awayWin = 1 - homeWin;
