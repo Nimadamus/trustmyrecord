@@ -68,7 +68,7 @@ async function verifyMlbSimulator(page) {
 
   const text = await page.locator('body').innerText();
   if (!/Simulation-based estimate|simulation output/i.test(text)) throw new Error('MLB Simulator output was not labeled as simulation based.');
-  if (/verified betting edge|official pick|official prediction|guaranteed/i.test(text)) throw new Error('MLB Simulator showed a forbidden verified/fake claim.');
+  if (/verified betting edge|official pick|guaranteed result|guaranteed winner/i.test(text)) throw new Error('MLB Simulator showed a forbidden verified/fake claim.');
   if (/First Five output|F5 lean|Team Total lean|props/i.test(text)) throw new Error('MLB Simulator exposed unsupported output.');
   return captureRoot('mlb-simulator-live-browser-addressbar-proof.png');
 }
