@@ -2114,7 +2114,7 @@ button{font:inherit;cursor:pointer}
             </div>
             <div id="tmrHeroPicksList" class="tmr-pick-empty">
               <span>▣</span>
-              <strong>No tracked picks yet</strong>
+              <strong>No verified picks yet</strong>
               <p>Recent locked picks will appear here once users lock picks before game start.</p>
             </div>
             <footer>▣ All picks are locked before game start</footer>
@@ -4154,7 +4154,71 @@ button{font:inherit;cursor:pointer}
       padding: 58px 16px !important;
     }
   }
-</style>
+
+  /* Homepage compact dashboard readability fix. */
+  .tmr-board-card table {
+    table-layout: fixed;
+  }
+  .tmr-board-card:not(.tmr-picks-card) th:nth-child(1),
+  .tmr-board-card:not(.tmr-picks-card) td:nth-child(1) {
+    width: 24px;
+  }
+  .tmr-board-card:not(.tmr-picks-card) th:nth-child(3),
+  .tmr-board-card:not(.tmr-picks-card) td:nth-child(3) {
+    width: 66px;
+    text-align: right;
+  }
+  .tmr-board-card:not(.tmr-picks-card) th:nth-child(4),
+  .tmr-board-card:not(.tmr-picks-card) td:nth-child(4) {
+    display: none;
+  }
+  .tmr-board-card:not(.tmr-picks-card) .tmr-real-user {
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    font-size: 11px;
+    line-height: 1.08;
+  }
+  .tmr-board-card:not(.tmr-picks-card) .tmr-real-user img,
+  .tmr-board-card:not(.tmr-picks-card) .tmr-real-user .avatar-sm {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
+  }
+  .tmr-board-card:not(.tmr-picks-card) .tmr-real-user span:last-child {
+    min-width: 0;
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    word-break: normal;
+  }
+  .tmr-board-card:not(.tmr-picks-card) .tmr-real-user small {
+    display: none;
+  }
+  .tmr-picks-card .tmr-pick-table-head,
+  .tmr-picks-card .tmr-pick-line {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+    gap: 14px;
+  }
+  .tmr-picks-card .tmr-pick-table-head span:nth-child(n+3),
+  .tmr-picks-card .tmr-pick-odds,
+  .tmr-picks-card .tmr-pick-units,
+  .tmr-picks-card .tmr-pick-result {
+    display: none;
+  }
+  .tmr-picks-card .tmr-pick-line {
+    min-height: 72px;
+    align-items: center;
+  }
+  .tmr-picks-card .tmr-pick-game strong,
+  .tmr-picks-card .tmr-pick-market strong,
+  .tmr-picks-card .tmr-pick-game small,
+  .tmr-picks-card .tmr-pick-market small {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    word-break: normal;
+  }</style>
 
 
 <footer class="footer">
@@ -4215,7 +4279,7 @@ button{font:inherit;cursor:pointer}
 
     function signed(value, suffix) {
         const parsed = Number(value);
-        if (!Number.isFinite(parsed)) return 'No tracked picks yet';
+        if (!Number.isFinite(parsed)) return 'No verified picks yet';
         return (parsed > 0 ? '+' : '') + parsed.toFixed(2).replace(/\.00$/, '') + (suffix || '');
     }
 
@@ -4251,7 +4315,7 @@ button{font:inherit;cursor:pointer}
         const totalUsersEl = document.getElementById('tmrHeroTotalUsers');
         const totalPicksEl = document.getElementById('tmrHeroTotalPicks');
         if (totalUsersEl) totalUsersEl.textContent = String(cleanUsers.length || 4);
-        if (totalPicksEl) totalPicksEl.textContent = totalPicks ? String(totalPicks) : 'No tracked picks yet';
+        if (totalPicksEl) totalPicksEl.textContent = totalPicks ? String(totalPicks) : 'No verified picks yet';
 
         if (lead) {
             const username = String(lead.username);
@@ -4267,10 +4331,10 @@ button{font:inherit;cursor:pointer}
             if (nameEl) nameEl.innerHTML = escapeHtml(displayName) + ' <span>◆</span>';
             if (linkEl) linkEl.href = '/profile/?user=' + encodeURIComponent(username);
             if (metaEl) metaEl.textContent = '@' + username;
-            document.getElementById('tmrHeroRoi').textContent = total ? signed(lead.roi, '%') : 'No tracked picks yet';
-            document.getElementById('tmrHeroUnits').textContent = total ? signed(lead.net_units || lead.netUnits, 'u') : 'No tracked picks yet';
-            document.getElementById('tmrHeroPicks').textContent = total ? String(total) : 'No tracked picks yet';
-            document.getElementById('tmrHeroRecord').textContent = total ? 'Public record' : 'No tracked picks yet';
+            document.getElementById('tmrHeroRoi').textContent = total ? signed(lead.roi, '%') : 'No verified picks yet';
+            document.getElementById('tmrHeroUnits').textContent = total ? signed(lead.net_units || lead.netUnits, 'u') : 'No verified picks yet';
+            document.getElementById('tmrHeroPicks').textContent = total ? String(total) : 'No verified picks yet';
+            document.getElementById('tmrHeroRecord').textContent = total ? 'Public record' : 'No verified picks yet';
         }
 
         const body = document.getElementById('tmrHeroLeaderboardBody');
@@ -4291,9 +4355,9 @@ button{font:inherit;cursor:pointer}
                 + '<td>' + (index + 1) + '</td>'
                 + '<td><a class="tmr-real-user" href="/profile/?user=' + encodeURIComponent(username) + '">'
                 + avatarHtml
-                + '<span>' + escapeHtml(displayName) + '<small>@' + escapeHtml(username) + ' · ' + (total ? total + ' picks' : 'No tracked picks yet') + '</small></span></a></td>'
-                + '<td>' + escapeHtml(total ? signed(user.roi, '%') : 'No tracked picks yet') + '</td>'
-                + '<td>' + escapeHtml(total ? signed(user.net_units || user.netUnits, 'u') : 'No tracked picks yet') + '</td>'
+                + '<span>' + escapeHtml(displayName) + '<small>@' + escapeHtml(username) + ' · ' + (total ? total + ' picks' : 'No verified picks yet') + '</small></span></a></td>'
+                + '<td>' + escapeHtml(total ? signed(user.roi, '%') : 'No verified picks yet') + '</td>'
+                + '<td>' + escapeHtml(total ? signed(user.net_units || user.netUnits, 'u') : 'No verified picks yet') + '</td>'
                 + '</tr>';
         }).join('');
     }
@@ -4322,7 +4386,7 @@ button{font:inherit;cursor:pointer}
             .slice(0, 5);
         if (!cleanPicks.length) {
             list.className = 'tmr-pick-empty';
-            list.innerHTML = '<span>▣</span><strong>No tracked picks yet</strong><p>Recent locked picks will appear here once users lock picks before game start.</p>';
+            list.innerHTML = '<span>▣</span><strong>No verified picks yet</strong><p>Recent locked picks will appear here once users lock picks before game start.</p>';
             return;
         }
         list.className = '';
