@@ -1,0 +1,41 @@
+name: Tools Live Verification
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'trendspotter/**'
+      - 'mlb-simulator/**'
+      - 'static/js/trendspotter.js'
+      - 'static/js/mlb-simulator.js'
+      - 'tests/trendspotter-accuracy-test.js'
+      - 'tests/trendspotter-live-verification.spec.js'
+      - 'tests/mlb-simulator-live-verification.spec.js'
+      - 'scripts/tools-live-browser-proof.js'
+      - '.github/workflows/tools-live-verification.yml'
+
+jobs:
+  verify-live-tools:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: sudo apt-get update && sudo apt-get install -y imagemagick
+      - run: node tests/trendspotter-accuracy-test.js
+      - run: xvfb-run --auto-servernum node scripts/tools-live-browser-proof.js
+        env:
+          TMR_TRENDSPOTTER_URL: https://trustmyrecord.com/trendspotter/
+          TMR_MLB_SIMULATOR_URL: https://trustmyrecord.com/mlb-simulator/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tools-live-browser-proof
+          path: |
+            artifacts/trendspotter-live-browser-addressbar-proof.png
+            artifacts/mlb-simulator-live-browser-addressbar-proof.png
+            artifacts/tools-live-browser-proof.json
