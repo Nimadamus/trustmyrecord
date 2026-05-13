@@ -159,6 +159,15 @@
         return MARKET_LABELS[marketType] || String(marketType || 'Pick').replace(/_/g, ' ');
     }
 
+    function formatLine(value, options) {
+        if (value == null || value === '') return '';
+        const n = Number(value);
+        if (!Number.isFinite(n)) return '';
+        let text = n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+        if (options && options.signed && n > 0) text = '+' + text;
+        return text;
+    }
+
     function normalizePick(pick) {
         return Object.assign({}, pick, {
             status: normalizeStatus(pick.status, pick.result),
@@ -1289,10 +1298,10 @@
 
             if (awayMl) fullGameItems.push(createFallbackOption(game, index, 'Full Game', 'h2h', game.away_team, game.away_team + ' ML', awayMl.price, null));
             if (homeMl) fullGameItems.push(createFallbackOption(game, index, 'Full Game', 'h2h', game.home_team, game.home_team + ' ML', homeMl.price, null));
-            if (awaySpread) fullGameItems.push(createFallbackOption(game, index, 'Full Game', 'spreads', game.away_team, game.away_team + ' ' + (awaySpread.point > 0 ? '+' : '') + awaySpread.point, awaySpread.price, awaySpread.point));
-            if (homeSpread) fullGameItems.push(createFallbackOption(game, index, 'Full Game', 'spreads', game.home_team, game.home_team + ' ' + (homeSpread.point > 0 ? '+' : '') + homeSpread.point, homeSpread.price, homeSpread.point));
-            if (over) fullGameItems.push(createFallbackOption(game, index, 'Game Total', 'totals', 'Over', 'Over ' + over.point, over.price, over.point));
-            if (under) fullGameItems.push(createFallbackOption(game, index, 'Game Total', 'totals', 'Under', 'Under ' + under.point, under.price, under.point));
+            if (awaySpread) fullGameItems.push(createFallbackOption(game, index, 'Full Game', 'spreads', game.away_team, game.away_team + ' ' + formatLine(awaySpread.point, { signed: true }), awaySpread.price, awaySpread.point));
+            if (homeSpread) fullGameItems.push(createFallbackOption(game, index, 'Full Game', 'spreads', game.home_team, game.home_team + ' ' + formatLine(homeSpread.point, { signed: true }), homeSpread.price, homeSpread.point));
+            if (over) fullGameItems.push(createFallbackOption(game, index, 'Game Total', 'totals', 'Over', 'Over ' + formatLine(over.point), over.price, over.point));
+            if (under) fullGameItems.push(createFallbackOption(game, index, 'Game Total', 'totals', 'Under', 'Under ' + formatLine(under.point), under.price, under.point));
 
             if (fullGameItems.length) {
                 marketGroups.push({
@@ -1313,7 +1322,7 @@
                             'Team Totals',
                             'team_totals',
                             outcome.name,
-                            outcome.point != null ? (outcome.name + ' ' + outcome.point) : outcome.name,
+                            outcome.point != null ? (outcome.name + ' ' + formatLine(outcome.point)) : outcome.name,
                             outcome.price,
                             outcome.point != null ? outcome.point : null,
                             bookmaker ? bookmaker.title : 'Sportsbook feed'
@@ -1335,9 +1344,9 @@
                         let label = outcome.name || groupLabel;
 
                         if (isTotal && line != null) {
-                            label = outcome.name + ' ' + line;
+                            label = outcome.name + ' ' + formatLine(line);
                         } else if (!isMoneyline && line != null) {
-                            label = outcome.name + ' ' + (line > 0 ? '+' : '') + line;
+                            label = outcome.name + ' ' + formatLine(line, { signed: true });
                         } else if (isMoneyline) {
                             label = outcome.name + ' ML';
                         }
@@ -1380,12 +1389,12 @@
                 const f5Over = f5Totals && f5Totals.outcomes ? f5Totals.outcomes.find(function(outcome) { return outcome.name === 'Over'; }) : null;
                 const f5Under = f5Totals && f5Totals.outcomes ? f5Totals.outcomes.find(function(outcome) { return outcome.name === 'Under'; }) : null;
                 const first5Items = [];
-                if (f5AwaySpread) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_spreads', game.away_team, game.away_team + ' ' + (f5AwaySpread.point > 0 ? '+' : '') + f5AwaySpread.point, f5AwaySpread.price, f5AwaySpread.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
-                if (f5HomeSpread) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_spreads', game.home_team, game.home_team + ' ' + (f5HomeSpread.point > 0 ? '+' : '') + f5HomeSpread.point, f5HomeSpread.price, f5HomeSpread.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
+                if (f5AwaySpread) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_spreads', game.away_team, game.away_team + ' ' + formatLine(f5AwaySpread.point, { signed: true }), f5AwaySpread.price, f5AwaySpread.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
+                if (f5HomeSpread) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_spreads', game.home_team, game.home_team + ' ' + formatLine(f5HomeSpread.point, { signed: true }), f5HomeSpread.price, f5HomeSpread.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
                 if (f5AwayMl) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_h2h', game.away_team, game.away_team + ' F5 ML', f5AwayMl.price, null, bookmaker ? bookmaker.title : 'Sportsbook feed'));
                 if (f5HomeMl) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_h2h', game.home_team, game.home_team + ' F5 ML', f5HomeMl.price, null, bookmaker ? bookmaker.title : 'Sportsbook feed'));
-                if (f5Over) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_totals', 'Over', 'F5 Over ' + f5Over.point, f5Over.price, f5Over.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
-                if (f5Under) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_totals', 'Under', 'F5 Under ' + f5Under.point, f5Under.price, f5Under.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
+                if (f5Over) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_totals', 'Over', 'F5 Over ' + formatLine(f5Over.point), f5Over.price, f5Over.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
+                if (f5Under) first5Items.push(createFallbackOption(game, index, 'First 5', 'f5_totals', 'Under', 'F5 Under ' + formatLine(f5Under.point), f5Under.price, f5Under.point, bookmaker ? bookmaker.title : 'Sportsbook feed'));
                 if (first5Items.length) {
                     marketGroups.push({
                         key: 'first_5',
