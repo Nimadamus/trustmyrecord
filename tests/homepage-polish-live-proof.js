@@ -14,7 +14,7 @@ async function main(){
   try {
     let source = '';
     let loadedUrl = BASE_URL;
-    const requiredMarker = 'Emergency homepage composition fix: control-room layout, no cramped dashboard.';
+    const requiredMarker = 'Homepage profile card fix: full-width featured profile and readable dashboard tables.';
     for (let attempt = 0; attempt < 24; attempt++) {
       loadedUrl = BASE_URL + '?proof=' + Date.now();
       await page.goto(loadedUrl, { waitUntil: 'networkidle', timeout: 60000 });
@@ -25,7 +25,7 @@ async function main(){
       await page.waitForTimeout(5000);
     }
     const bodyText = await page.locator('body').innerText({ timeout: 10000 }).catch(() => '');
-    const required = ['Emergency homepage composition fix: control-room layout, no cramped dashboard.', 'BetLegend', 'Recent Locked Picks'];
+    const required = ['Homepage profile card fix: full-width featured profile and readable dashboard tables.', 'BetLegend', 'Recent Locked Picks', 'No verified picks yet'];
     const missing = required.filter((term) => !source.includes(term) && !bodyText.includes(term));
     if (missing.length) throw new Error('Missing expected homepage polish/content: ' + missing.join(', '));
     const banned = ['SharpLedger','StatsProfits','ParlayPapi','GreenDot','NumbersNeverLie','Featured In','No mock picks shown','fake endorsements','No tracked picks yet'];
@@ -34,7 +34,7 @@ async function main(){
     execFileSync('bash', ['-lc', 'import -window root "' + OUT.split(path.sep).join('/') + '"'], { stdio: 'inherit' });
 
     const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true });
-    await mobile.goto(URL, { waitUntil: 'networkidle', timeout: 60000 });
+    await mobile.goto(BASE_URL + '?proofMobile=' + Date.now(), { waitUntil: 'networkidle', timeout: 60000 });
     await mobile.waitForLoadState('domcontentloaded');
     await mobile.waitForTimeout(1000);
     await mobile.screenshot({ path: MOBILE, fullPage: false });
