@@ -1,0 +1,30 @@
+name: Homepage Polish Live Proof
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'tests/homepage-polish-live-proof.js'
+      - '.github/workflows/homepage-polish-live-proof.yml'
+
+jobs:
+  homepage-polish-browser-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: sudo apt-get update && sudo apt-get install -y imagemagick
+      - run: xvfb-run --auto-servernum node tests/homepage-polish-live-proof.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: homepage-polish-live-proof
+          path: |
+            artifacts/homepage-polish-live-browser-proof.png
+            artifacts/homepage-polish-mobile-page-proof.png
+            artifacts/homepage-polish-live-proof.json
