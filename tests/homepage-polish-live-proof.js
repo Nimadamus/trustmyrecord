@@ -17,7 +17,7 @@ async function main(){
     await page.waitForTimeout(2500);
     const source = await page.content();
     const bodyText = await page.locator('body').innerText({ timeout: 10000 }).catch(() => '');
-    const required = ['Homepage visual polish: tightened header, balanced hero grid, aligned dashboard.', 'BetLegend', 'Recent Locked Picks'];
+    const required = ['Emergency homepage composition fix: control-room layout, no cramped dashboard.', 'BetLegend', 'Recent Locked Picks'];
     const missing = required.filter((term) => !source.includes(term) && !bodyText.includes(term));
     if (missing.length) throw new Error('Missing expected homepage polish/content: ' + missing.join(', '));
     const banned = ['SharpLedger','StatsProfits','ParlayPapi','GreenDot','NumbersNeverLie','Featured In','No mock picks shown','fake endorsements','No tracked picks yet'];
