@@ -2067,51 +2067,10 @@ button{font:inherit;cursor:pointer}
     </div>
 
     <aside class="tmr-premium-dashboard" aria-label="TrustMyRecord product dashboard preview">
-      <div class="tmr-sport-tabs" aria-label="Sports filters">
-        <span class="is-active">▣ All Sports</span>
-        <span>◌ NBA</span>
-        <span>♘ NFL</span>
-        <span>◈ NHL</span>
-        <span>▰ MLB</span>
-        <span>◎ NCAAB</span>
-        <span>◉ Soccer</span>
-        <span>More⌄</span>
-      </div>
       <div class="tmr-dashboard-shell">
-        <div class="tmr-ledger-preview">
-          <div class="tmr-ledger-main">
-            <div class="tmr-ledger-title-row">
-              <span class="tmr-ledger-kicker">Verified Record Snapshot</span>
-              <span class="tmr-ledger-live">Timestamped before kickoff</span>
-            </div>
-            <div class="tmr-ledger-profile">
-              <img id="tmrHeroUserAvatar" src="static/media/TMR-avatar-256.jpg" alt="">
-              <div>
-                <h2 id="tmrHeroUserName">Verified Pick Ledger <span>â—†</span></h2>
-                <a id="tmrHeroProfileLink" href="/profile/">Open public profile</a>
-                <p id="tmrHeroUserMeta">Locked picks, graded results, units, ROI, and history in one public record.</p>
-              </div>
-            </div>
-            <div class="tmr-ledger-metrics" aria-label="Verified record snapshot">
-              <div><span>ROI</span><b id="tmrHeroRoi">--</b></div>
-              <div><span>Units</span><b id="tmrHeroUnits">--</b></div>
-              <div><span>Picks</span><b id="tmrHeroPicks">--</b></div>
-              <div><span>Record</span><b id="tmrHeroRecord">Pending</b></div>
-            </div>
-            <div class="tmr-follow-stats"><b id="tmrHeroTotalUsers">--</b><b id="tmrHeroTotalPicks">--</b><small>Real users</small><small>Tracked picks</small></div>
-          </div>
-          <div class="tmr-ledger-actions" aria-label="Platform verification features">
-            <article><span class="tmr-ledger-icon tmr-ledger-icon-lock"></span><div><b>Locked Before Start</b><p>Picks are timestamped before the game begins.</p></div></article>
-            <article><span class="tmr-ledger-icon tmr-ledger-icon-grade"></span><div><b>Auto-Graded Results</b><p>Final scores update the public record after games close.</p></div></article>
-            <article><span class="tmr-ledger-icon tmr-ledger-icon-roi"></span><div><b>Public ROI Tracking</b><p>Wins, losses, units, ROI, and history stay visible.</p></div></article>
-            <article><span class="tmr-ledger-icon tmr-ledger-icon-market"></span><div><b>Buy &amp; Sell Verified Picks</b><p>Marketplace-ready records for serious handicappers.</p></div></article>
-          </div>
-        </div>
-
         <div class="tmr-dashboard-grid">
           <section class="tmr-board-card">
             <header><h3>Public Profiles</h3><a href="/handicappers/">View All</a></header>
-            <div class="tmr-board-tabs"><span>Verified</span><span>Public</span><span>Records</span></div>
             <table>
               <thead><tr><th></th><th>User</th><th>ROI</th><th>Units</th></tr></thead>
               <tbody id="tmrHeroLeaderboardBody">
@@ -2136,7 +2095,7 @@ button{font:inherit;cursor:pointer}
         </div>
 
         <div class="tmr-source-strip">
-          <span>Verified records. Locked picks. Public accountability.</span>
+          <span>Verified picks. Public records. Transparent results.</span>
           <b>No press claims</b><b>Real users only</b><b>Public history</b>
         </div>
       </div>
@@ -2689,7 +2648,7 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-dashboard-grid {
     display: grid;
-    grid-template-columns: minmax(300px, .82fr) minmax(0, 1.18fr);
+    grid-template-columns: minmax(310px, .82fr) minmax(380px, 1.18fr);
     border: 1px solid rgba(134, 162, 190, .17);
     border-radius: 8px;
     overflow: hidden;
@@ -2697,7 +2656,7 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-board-card {
     min-width: 0;
-    padding: 15px;
+    padding: 18px;
     background: rgba(5, 14, 26, .38);
   }
   .tmr-board-card + .tmr-board-card { border-left: 1px solid rgba(134, 162, 190, .17); }
@@ -2710,7 +2669,8 @@ button{font:inherit;cursor:pointer}
   .tmr-board-card h3 {
     margin: 0;
     color: #fff;
-    font-size: 17px;
+    font-size: 18px;
+    letter-spacing: -.02em;
   }
   .tmr-board-card header a,
   .tmr-see-more {
@@ -2772,7 +2732,7 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-board-card .tmr-empty-table-row td {
     display: table-cell;
-    height: 176px;
+    height: 236px;
     padding: 26px;
     color: #d7e0ec;
     text-align: center;
@@ -2844,8 +2804,8 @@ button{font:inherit;cursor:pointer}
   .tmr-pick-line,
   .tmr-mini-ticket {
     display: grid;
-    grid-template-columns: minmax(108px, 1.05fr) minmax(96px, .95fr) 42px 54px 44px;
-    gap: 6px;
+    grid-template-columns: minmax(134px, 1.1fr) minmax(126px, 1fr) 58px 66px 54px;
+    gap: 8px;
     align-items: center;
     color: #edf5ff;
     font-size: 13px;
@@ -2857,14 +2817,14 @@ button{font:inherit;cursor:pointer}
     border-top: 1px solid rgba(134, 162, 190, .10);
     border-bottom: 1px solid rgba(134, 162, 190, .10);
     background: rgba(255,255,255,.025);
-    font-size: 8.5px;
+    font-size: 9px;
     font-weight: 900;
     letter-spacing: .08em;
     text-transform: uppercase;
   }
   .tmr-pick-line {
-    min-height: 66px;
-    padding: 10px 8px;
+    min-height: 72px;
+    padding: 11px 8px;
     border-top: 1px solid rgba(134, 162, 190, .10);
   }
   .tmr-pick-game,
@@ -2896,7 +2856,7 @@ button{font:inherit;cursor:pointer}
   .tmr-pick-units {
     color: #dfe8f4;
     font-family: var(--mono, "JetBrains Mono", monospace);
-    font-size: 10.5px;
+    font-size: 11px;
     font-style: normal;
     text-align: right;
   }
@@ -4552,7 +4512,7 @@ button{font:inherit;cursor:pointer}
     color: #eaffff !important;
     box-shadow: inset 0 0 0 1px rgba(103,232,249,.28);
   }
-  .tmr-dashboard-shell { padding: 16px !important; position: relative; z-index: 1; }
+  .tmr-dashboard-shell { padding: 18px !important; position: relative; z-index: 1; }
   .tmr-profile-main,
   .tmr-stat-card,
   .tmr-board-card {
@@ -5061,10 +5021,14 @@ button{font:inherit;cursor:pointer}
         if (nameEl) nameEl.innerHTML = 'Verified Pick Ledger <span>◆</span>';
         if (linkEl) linkEl.href = '/handicappers/';
         if (metaEl) metaEl.textContent = 'Locked picks, graded results, units, ROI, and history in one public record.';
-        document.getElementById('tmrHeroRoi').textContent = 'Locked before start';
-        document.getElementById('tmrHeroUnits').textContent = 'Auto-graded result';
-        document.getElementById('tmrHeroPicks').textContent = totalPicks ? String(totalPicks) : 'No verified picks yet';
-        document.getElementById('tmrHeroRecord').textContent = 'Public record';
+        const roiEl = document.getElementById('tmrHeroRoi');
+        const unitsEl = document.getElementById('tmrHeroUnits');
+        const picksEl = document.getElementById('tmrHeroPicks');
+        const recordEl = document.getElementById('tmrHeroRecord');
+        if (roiEl) roiEl.textContent = 'Locked before start';
+        if (unitsEl) unitsEl.textContent = 'Auto-graded result';
+        if (picksEl) picksEl.textContent = totalPicks ? String(totalPicks) : 'No verified picks yet';
+        if (recordEl) recordEl.textContent = 'Public record';
 
         const body = document.getElementById('tmrHeroLeaderboardBody');
         if (!body) return;
