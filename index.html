@@ -2212,6 +2212,41 @@ button{font:inherit;cursor:pointer}
       <p>Use your verified profile as the storefront. Verified seller profiles will populate from real accounts only.</p>
       <a href="/marketplace/">Open Marketplace</a>
     </article>
+  </section>
+  <section class="tmr-marketplace-closeout" aria-label="Verified marketplace preview">
+    <div class="tmr-market-copy">
+      <span>Verified Marketplace</span>
+      <h2>Buy picks from people whose record can be inspected first.</h2>
+      <p>Marketplace cards should come from real seller profiles only. When seller profiles are not verified yet, TrustMyRecord shows an honest empty state instead of inventing experts, records, followers, or picks.</p>
+      <div class="tmr-market-actions">
+        <a href="/marketplace/">Open Marketplace</a>
+        <a href="/leaderboards/">Compare Records</a>
+      </div>
+    </div>
+    <div class="tmr-seller-preview" aria-label="Seller profile preview empty states">
+      <div class="tmr-seller-card is-ready">
+        <span>Real profiles only</span>
+        <strong>Verified seller profiles coming soon</strong>
+        <p>Seller cards will populate after real accounts enable marketplace profiles.</p>
+      </div>
+      <div class="tmr-seller-metrics">
+        <div><small>ROI</small><b>No verified picks yet</b></div>
+        <div><small>Units</small><b>No verified picks yet</b></div>
+        <div><small>Recent locked picks</small><b>Appear after users lock picks</b></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tmr-final-conversion" aria-label="Final homepage call to action">
+    <div>
+      <span>No screenshots. No deleted losses. No fake winning streaks.</span>
+      <h2>The public scoreboard for sports bettors.</h2>
+      <p>Start with a clean record, lock picks before game time, and let the profile speak for itself.</p>
+    </div>
+    <div class="tmr-final-actions">
+      <a href="/register/">Start Tracking</a>
+      <a href="/leaderboards/">View Leaderboards</a>
+    </div>
   </section></main>
 
 <style>
@@ -4667,6 +4702,196 @@ button{font:inherit;cursor:pointer}
     .tmr-lifecycle-flow::before { left: 30px; right: auto; top: 28px; bottom: 28px; width: 2px; height: auto; background: linear-gradient(180deg, rgba(55,214,193,.15), rgba(55,214,193,.86), rgba(251,191,36,.42)); }
     .tmr-lifecycle-flow article { min-height: 0; padding-left: 68px; }
     .tmr-lifecycle-flow b { position: absolute; left: 14px; top: 18px; margin: 0; }
+  }
+  /* Homepage finish pass: verified marketplace and final conversion. */
+  .tmr-marketplace-closeout,
+  .tmr-final-conversion {
+    position: relative;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 78px 24px;
+  }
+  .tmr-marketplace-closeout {
+    display: grid;
+    grid-template-columns: minmax(0, .95fr) minmax(360px, 1.05fr);
+    gap: 28px;
+    align-items: center;
+  }
+  .tmr-marketplace-closeout::before,
+  .tmr-final-conversion::before {
+    content: "";
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(103,232,249,.34), transparent);
+  }
+  .tmr-market-copy {
+    display: grid;
+    gap: 14px;
+  }
+  .tmr-market-copy span,
+  .tmr-seller-card span,
+  .tmr-final-conversion span {
+    color: #67e8f9;
+    font-size: 11px;
+    font-weight: 950;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+  .tmr-market-copy h2,
+  .tmr-final-conversion h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: clamp(36px, 4.6vw, 64px);
+    line-height: 1;
+    letter-spacing: -.06em;
+    text-wrap: balance;
+  }
+  .tmr-market-copy p,
+  .tmr-final-conversion p,
+  .tmr-seller-card p {
+    margin: 0;
+    color: #b9c7d9;
+    font-size: 16px;
+    line-height: 1.65;
+  }
+  .tmr-market-actions,
+  .tmr-final-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .tmr-market-actions a,
+  .tmr-final-actions a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-weight: 950;
+    font-size: 14px;
+  }
+  .tmr-market-actions a:first-child,
+  .tmr-final-actions a:first-child {
+    color: #04111f;
+    background: linear-gradient(135deg, #53e4d1, #20bfae);
+    box-shadow: 0 18px 42px rgba(45,212,191,.22);
+  }
+  .tmr-market-actions a:last-child,
+  .tmr-final-actions a:last-child {
+    color: #f8fafc;
+    border: 1px solid rgba(148,163,184,.24);
+    background: rgba(255,255,255,.035);
+  }
+  .tmr-seller-preview {
+    position: relative;
+    display: grid;
+    gap: 14px;
+    padding: 18px;
+    border: 1px solid rgba(103,232,249,.18);
+    border-radius: 16px;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(55,214,193,.12), transparent 22rem),
+      linear-gradient(180deg, rgba(10,25,44,.86), rgba(5,14,27,.95));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 24px 64px rgba(0,0,0,.28);
+    overflow: hidden;
+  }
+  .tmr-seller-preview::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(90deg, rgba(55,214,193,.06) 0 1px, transparent 1px 100%),
+      linear-gradient(180deg, rgba(55,214,193,.05) 0 1px, transparent 1px 100%);
+    background-size: 32px 32px;
+  }
+  .tmr-seller-card,
+  .tmr-seller-metrics {
+    position: relative;
+    z-index: 1;
+  }
+  .tmr-seller-card {
+    padding: 22px;
+    border: 1px solid rgba(148,163,184,.16);
+    border-radius: 13px;
+    background: rgba(3,10,21,.54);
+  }
+  .tmr-seller-card strong {
+    display: block;
+    margin: 10px 0 8px;
+    color: #ffffff;
+    font-size: clamp(24px, 2.5vw, 34px);
+    line-height: 1.05;
+    letter-spacing: -.045em;
+  }
+  .tmr-seller-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .tmr-seller-metrics div {
+    min-height: 96px;
+    padding: 14px;
+    border: 1px solid rgba(148,163,184,.14);
+    border-radius: 12px;
+    background: rgba(255,255,255,.035);
+  }
+  .tmr-seller-metrics small {
+    display: block;
+    min-height: 30px;
+    color: #91a2ba;
+    font-size: 10px;
+    font-weight: 950;
+    letter-spacing: .09em;
+    text-transform: uppercase;
+  }
+  .tmr-seller-metrics b {
+    display: block;
+    color: #f8fafc;
+    font-size: 13px;
+    line-height: 1.25;
+  }
+  .tmr-final-conversion {
+    margin-bottom: 36px;
+    padding: 58px 24px 70px;
+  }
+  .tmr-final-conversion > div:first-child {
+    max-width: 820px;
+  }
+  .tmr-final-conversion {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 28px;
+    border: 1px solid rgba(103,232,249,.16);
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 76% 0%, rgba(251,191,36,.12), transparent 28rem),
+      radial-gradient(circle at 12% 10%, rgba(55,214,193,.14), transparent 26rem),
+      linear-gradient(180deg, rgba(10,25,44,.86), rgba(4,12,24,.96));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 26px 70px rgba(0,0,0,.28);
+  }
+  .tmr-final-conversion h2 {
+    margin: 12px 0 14px;
+  }
+  .tmr-final-actions {
+    justify-content: flex-end;
+    min-width: 330px;
+  }
+  @media (max-width: 980px) {
+    .tmr-marketplace-closeout,
+    .tmr-final-conversion { grid-template-columns: 1fr; }
+    .tmr-final-actions { justify-content: flex-start; min-width: 0; }
+  }
+  @media (max-width: 620px) {
+    .tmr-seller-metrics { grid-template-columns: 1fr; }
+    .tmr-marketplace-closeout,
+    .tmr-final-conversion { padding-left: 16px; padding-right: 16px; }
   }</style>
 
 
