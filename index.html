@@ -4336,7 +4336,64 @@ button{font:inherit;cursor:pointer}
       padding: 58px 16px !important;
     }
   }
-</style>
+
+  /* Homepage table anti-truncation polish: readable public preview rows. */
+  .tmr-board-card .tmr-real-user,
+  .tmr-board-card .tmr-real-user span:last-child,
+  .tmr-board-card .tmr-real-user small,
+  .tmr-pick-game strong,
+  .tmr-pick-market strong,
+  .tmr-pick-game small,
+  .tmr-pick-market small {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+  }
+  .tmr-board-card .tmr-real-user {
+    align-items: flex-start;
+    line-height: 1.15;
+  }
+  .tmr-board-card .tmr-real-user span:last-child {
+    display: grid;
+    gap: 2px;
+  }
+  .tmr-board-card .tmr-real-user small {
+    line-height: 1.2;
+    word-break: break-word;
+  }
+  .tmr-board-card .tmr-real-user img,
+  .tmr-board-card .tmr-real-user .avatar-sm {
+    margin-top: 1px;
+  }
+  .tmr-pick-table-head,
+  .tmr-pick-line {
+    grid-template-columns: minmax(130px, 1.18fr) minmax(118px, 1fr) 44px 52px 44px;
+    gap: 10px;
+  }
+  .tmr-pick-line {
+    min-height: 74px;
+    align-items: start;
+  }
+  .tmr-pick-game strong,
+  .tmr-pick-market strong {
+    line-height: 1.25;
+    word-break: normal;
+  }
+  .tmr-pick-game small,
+  .tmr-pick-market small {
+    line-height: 1.25;
+  }
+  .tmr-pick-odds,
+  .tmr-pick-units,
+  .tmr-pick-result {
+    align-self: center;
+  }
+  @media (max-width: 760px) {
+    .tmr-pick-table-head,
+    .tmr-pick-line {
+      grid-template-columns: 1fr;
+    }
+  }</style>
 
 
 <footer class="footer">
