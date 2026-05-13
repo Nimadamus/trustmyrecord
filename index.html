@@ -2053,23 +2053,18 @@ button{font:inherit;cursor:pointer}
     <div class="tmr-premium-hero-copy">
       <span class="tmr-premium-badge"><span>✓</span> Verified. Transparent. Trusted.</span>
       <h1>Prove Every<br>Pick In <em>Public</em></h1>
-      <p>Locked records, verified results, and leaderboards built for sports bettors who want receipts.</p>
+      <p>Locked records, verified results, and public profiles built for sports bettors who want receipts.</p>
       <div class="tmr-premium-cta">
         <a class="tmr-premium-primary auth-link" href="/register/">Start Tracking <span>→</span></a>
         <a class="tmr-premium-secondary" href="/leaderboards/">View Leaderboards</a>
       </div>
       <div class="tmr-premium-proof-row" aria-label="Trust features">
         <div><span>▢</span><p>All picks locked<br>before games start</p></div>
-        <div><span>◇</span><p>Results verified<br>from trusted sources</p></div>
+        <div><span>◇</span><p>Results verified<br>when official scores post</p></div>
         <div><span>⌁</span><p>100% public<br>records &amp; stats</p></div>
       </div>
-      <div class="tmr-premium-featured">
-        <span>Featured in</span>
-        <b>yahoo! sports</b>
-        <b>ESPN</b>
-        <b>The Action Network</b>
-        <b>COVERS</b>
-        <b>SBR</b>
+      <div class="tmr-premium-trustline">
+        <span>Designed for transparent pick tracking across every major sport</span>
       </div>
     </div>
 
@@ -2087,18 +2082,18 @@ button{font:inherit;cursor:pointer}
       <div class="tmr-dashboard-shell">
         <div class="tmr-profile-summary">
           <div class="tmr-profile-main">
-            <img src="static/media/TMR-avatar-256.jpg" alt="">
+            <img id="tmrHeroUserAvatar" src="static/media/TMR-avatar-256.jpg" alt="">
             <div>
-              <h2>SharpLedger <span>◆</span></h2>
-              <a href="/profile/?user=betlegend">Public Profile</a>
-              <p>Member since Mar 2022</p>
-              <div class="tmr-follow-stats"><b>1,248</b><b>86</b><small>Followers</small><small>Following</small></div>
+              <h2 id="tmrHeroUserName">Real User Profiles <span>◆</span></h2>
+              <a id="tmrHeroProfileLink" href="/profile/">Public Profile</a>
+              <p id="tmrHeroUserMeta">Showing real app users only</p>
+              <div class="tmr-follow-stats"><b id="tmrHeroTotalUsers">--</b><b id="tmrHeroTotalPicks">--</b><small>Users</small><small>Picks</small></div>
             </div>
           </div>
-          <div class="tmr-stat-card"><span>ROI (All Time)</span><b>+24.37%</b><i></i></div>
-          <div class="tmr-stat-card"><span>Units (All Time)</span><b>+1,842.6</b><i></i></div>
-          <div class="tmr-stat-card"><span>Win Rate</span><b>58.7%</b><i></i></div>
-          <div class="tmr-stat-card"><span>Record</span><b>1,523-1,073</b><i></i></div>
+          <div class="tmr-stat-card"><span>ROI (All Time)</span><b id="tmrHeroRoi">--</b><i></i></div>
+          <div class="tmr-stat-card"><span>Units (All Time)</span><b id="tmrHeroUnits">--</b><i></i></div>
+          <div class="tmr-stat-card"><span>Total Picks</span><b id="tmrHeroPicks">--</b><i></i></div>
+          <div class="tmr-stat-card"><span>Record</span><b id="tmrHeroRecord">Will appear after grading</b><i></i></div>
         </div>
 
         <div class="tmr-dashboard-grid">
@@ -2107,12 +2102,8 @@ button{font:inherit;cursor:pointer}
             <div class="tmr-board-tabs"><span>All Time</span><span>This Month</span><span>This Week</span></div>
             <table>
               <thead><tr><th>#</th><th>User</th><th>ROI</th><th>Units</th></tr></thead>
-              <tbody>
-                <tr><td>🏆</td><td><img src="static/media/TMR-avatar-256.jpg" alt="">SharpLedger</td><td>+24.37%</td><td>+1,842.6</td></tr>
-                <tr><td>🥈</td><td><span class="avatar-sm">SP</span>StatsProfits</td><td>+21.11%</td><td>+1,256.4</td></tr>
-                <tr><td>3</td><td><span class="avatar-sm gold">PP</span>ParlayPapi</td><td>+19.22%</td><td>+987.3</td></tr>
-                <tr><td>4</td><td><span class="avatar-sm">GD</span>GreenDot</td><td>+18.35%</td><td>+754.1</td></tr>
-                <tr><td>5</td><td><span class="avatar-sm">NL</span>NumbersNeverLie</td><td>+17.81%</td><td>+689.2</td></tr>
+              <tbody id="tmrHeroLeaderboardBody">
+                <tr class="tmr-empty-table-row"><td colspan="4">Verified leaderboard data appears here after records are tracked.</td></tr>
               </tbody>
             </table>
             <a class="tmr-see-more" href="/leaderboards/">See full leaderboard →</a>
@@ -2120,18 +2111,18 @@ button{font:inherit;cursor:pointer}
 
           <section class="tmr-board-card tmr-picks-card">
             <header><h3>Recent Locked Picks</h3><a href="/sportsbook/">View All</a></header>
-            <div class="tmr-pick-line"><span>▣</span><small>May 15 · 6:30 PM<br><b>DEN vs OKC</b></small><strong>OKC -6.5</strong><em>-110</em><mark>Win<br>+1.00u</mark></div>
-            <div class="tmr-pick-line"><span>▣</span><small>May 15 · 7:05 PM<br><b>NYY vs BOS</b></small><strong>NYY ML</strong><em>-125</em><mark>Win<br>+0.80u</mark></div>
-            <div class="tmr-pick-line"><span>▣</span><small>May 15 · 8:30 PM<br><b>DAL vs MIN</b></small><strong>DAL +3.5</strong><em>-105</em><mark class="loss">Loss<br>-1.00u</mark></div>
-            <div class="tmr-pick-line"><span>▣</span><small>May 15 · 9:10 PM<br><b>LAD vs SD</b></small><strong>Over 8.5</strong><em>-115</em><mark>Win<br>+0.87u</mark></div>
-            <div class="tmr-pick-line"><span>▣</span><small>May 14 · 7:00 PM<br><b>MIA vs NYK</b></small><strong>NYK -4</strong><em>-110</em><mark>Win<br>+1.00u</mark></div>
+            <div id="tmrHeroPicksList" class="tmr-pick-empty">
+              <span>▣</span>
+              <strong>No mock picks shown</strong>
+              <p>Locked picks and graded results appear here only after they are submitted and verified.</p>
+            </div>
             <footer>▣ All picks are locked before game start</footer>
           </section>
         </div>
 
         <div class="tmr-source-strip">
-          <span>Verified results from trusted sources</span>
-          <b>FEED</b><b>the odds</b><b>sportradar</b><b>Opta</b><b>NBA Advanced Stats</b><b>NHL.com</b><b>statmuse</b>
+          <span>No press logos or fake endorsements</span>
+          <b>Locked records</b><b>Real users only</b><b>Public history</b>
         </div>
       </div>
     </aside>
@@ -2144,15 +2135,15 @@ button{font:inherit;cursor:pointer}
         <h2>Locked Picks</h2>
         <p>All picks are timestamped and locked before games start. No edits. No excuses.</p>
       </div>
-      <div class="tmr-mini-ticket"><span>▣</span><small>May 15 · 6:30 PM<br><b>DEN vs OKC</b></small><strong>OKC -6.5</strong><em>-110</em><mark>Win<br>+1.00u</mark></div>
+      <div class="tmr-mini-ticket"><span>▣</span><small>Before start time<br><b>Pick locked</b></small><strong>Private until locked</strong><em>--</em><mark>Tracked<br>publicly</mark></div>
     </article>
     <article>
       <div class="tmr-card-icon">◇</div>
       <div>
         <h2>Auto Grading</h2>
-        <p>Results are graded automatically using trusted sources. Zero manual input.</p>
+        <p>Results are graded after official scores are available. No manual performance claims.</p>
       </div>
-      <div class="tmr-result-table"><span>Pick</span><span>Result</span><span>Score</span><span>Units</span><b>OKC -6.5</b><b>Win</b><b>112-105</b><b>+1.00u</b></div>
+      <div class="tmr-result-table"><span>Pick</span><span>Result</span><span>Score</span><span>Units</span><b>Locked pick</b><b>Verified</b><b>Official</b><b>Tracked</b></div>
     </article>
     <article>
       <div class="tmr-card-icon">⌁</div>
@@ -2160,7 +2151,7 @@ button{font:inherit;cursor:pointer}
         <h2>Public Profiles</h2>
         <p>Every record is public. Build credibility. Climb the leaderboards.</p>
       </div>
-      <div class="tmr-profile-chip"><img src="static/media/TMR-avatar-256.jpg" alt=""><strong>SharpLedger <span>◆</span></strong><small>+24.37% ROI · 1,523-1,073 Record</small><i></i></div>
+      <div class="tmr-profile-chip"><img src="static/media/TMR-avatar-256.jpg" alt=""><strong>Your Profile <span>◆</span></strong><small>Verified ROI · Public record</small><i></i></div>
     </article>
   </section>
 </main>
@@ -2386,24 +2377,19 @@ button{font:inherit;cursor:pointer}
     font-size: 14px;
     line-height: 1.35;
   }
-  .tmr-premium-featured {
+  .tmr-premium-trustline {
     display: flex;
     align-items: center;
-    gap: 24px;
     margin-top: 74px;
     color: rgba(216,226,238,.62);
-    filter: grayscale(1);
   }
-  .tmr-premium-featured span {
-    font-size: 12px;
+  .tmr-premium-trustline span {
+    max-width: 520px;
+    color: rgba(235,242,250,.78);
+    font-size: 13px;
+    font-weight: 900;
     letter-spacing: .08em;
     text-transform: uppercase;
-  }
-  .tmr-premium-featured b {
-    color: rgba(235,242,250,.7);
-    font-size: 17px;
-    font-weight: 950;
-    letter-spacing: -.03em;
   }
 
   .tmr-premium-dashboard {
@@ -2591,6 +2577,33 @@ button{font:inherit;cursor:pointer}
     gap: 8px;
     font-weight: 800;
   }
+  .tmr-board-card .tmr-empty-table-row td {
+    display: table-cell;
+    height: 176px;
+    padding: 26px;
+    color: #d7e0ec;
+    text-align: center;
+    line-height: 1.45;
+    background:
+      linear-gradient(135deg, rgba(55,214,193,.08), transparent 42%),
+      rgba(4, 12, 23, .34);
+  }
+  .tmr-board-card .tmr-real-user-row td:nth-child(2) {
+    display: table-cell;
+  }
+  .tmr-board-card .tmr-real-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #fff;
+    font-weight: 900;
+  }
+  .tmr-board-card .tmr-real-user small {
+    display: block;
+    margin-top: 2px;
+    color: var(--premium-muted);
+    font-weight: 700;
+  }
   .tmr-board-card td img,
   .avatar-sm { width: 24px; height: 24px; font-size: 9px; }
   .avatar-sm {
@@ -2642,6 +2655,39 @@ button{font:inherit;cursor:pointer}
     text-align: right;
   }
   .tmr-pick-line mark.loss { color: var(--premium-red); background: rgba(255,95,109,.08); }
+  .tmr-pick-empty {
+    min-height: 250px;
+    display: grid;
+    place-items: center;
+    align-content: center;
+    gap: 10px;
+    padding: 30px;
+    border-top: 1px solid rgba(134, 162, 190, .10);
+    color: #d7e0ec;
+    text-align: center;
+    background:
+      radial-gradient(circle at 50% 28%, rgba(55,214,193,.13), transparent 8rem),
+      rgba(4, 12, 23, .22);
+  }
+  .tmr-pick-empty span {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border: 1px solid rgba(55, 214, 193, .28);
+    border-radius: 9px;
+    color: var(--premium-teal);
+    background: rgba(55, 214, 193, .10);
+  }
+  .tmr-pick-empty strong { color: #fff; font-size: 16px; }
+  .tmr-pick-empty p {
+    max-width: 310px;
+    margin: 0;
+    color: var(--premium-muted);
+    font-size: 13px;
+    line-height: 1.45;
+  }
+  .tmr-picks-card .tmr-pick-line:first-of-type { border-top: 0; }
   .tmr-picks-card footer {
     padding-top: 11px;
     border-top: 1px solid rgba(134, 162, 190, .10);
@@ -3882,6 +3928,162 @@ button{font:inherit;cursor:pointer}
 <script src="static/js/auth-persistent.js?v=20260421a"></script>
 <script defer src="static/js/tmr-sitewide.js?v=20260506navcommunity1"></script>
 <script src="static/js/analytics.js?v=20260417"></script>
+<script>
+(function () {
+    const apiBase = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    const fallbackAvatar = 'static/media/TMR-avatar-256.jpg';
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
+        });
+    }
+
+    function number(value, fallback) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
+    }
+
+    function signed(value, suffix) {
+        const parsed = Number(value);
+        if (!Number.isFinite(parsed)) return '--';
+        return (parsed > 0 ? '+' : '') + parsed.toFixed(2).replace(/\.00$/, '') + (suffix || '');
+    }
+
+    function statusLabel(status) {
+        const clean = String(status || '').toLowerCase();
+        if (clean === 'won' || clean === 'win') return 'Win';
+        if (clean === 'lost' || clean === 'loss') return 'Loss';
+        if (clean === 'push') return 'Push';
+        if (clean === 'pending') return 'Pending';
+        return clean ? clean.charAt(0).toUpperCase() + clean.slice(1) : 'Tracked';
+    }
+
+    async function request(path) {
+        if (window.api && typeof window.api.request === 'function') {
+            return window.api.request(path);
+        }
+        const response = await fetch(apiBase + path, { headers: { 'Accept': 'application/json' } });
+        if (!response.ok) throw new Error('Request failed: ' + path);
+        return response.json();
+    }
+
+    function renderUsers(users) {
+        const cleanUsers = users
+            .filter(function (user) { return user && user.username; })
+            .filter(function (user) { return !/^codexqa|^demo$|^testuser$|^admin$/i.test(String(user.username)); })
+            .slice(0, 4);
+
+        const lead = cleanUsers[0];
+        const totalPicks = cleanUsers.reduce(function (sum, user) {
+            return sum + number(user.total_picks || user.totalPicks, 0);
+        }, 0);
+
+        const totalUsersEl = document.getElementById('tmrHeroTotalUsers');
+        const totalPicksEl = document.getElementById('tmrHeroTotalPicks');
+        if (totalUsersEl) totalUsersEl.textContent = String(cleanUsers.length || '--');
+        if (totalPicksEl) totalPicksEl.textContent = totalPicks ? String(totalPicks) : '--';
+
+        if (lead) {
+            const username = String(lead.username);
+            const displayName = lead.display_name || lead.displayName || username;
+            const avatar = lead.avatar_url || lead.avatarUrl || fallbackAvatar;
+            const total = number(lead.total_picks || lead.totalPicks, 0);
+
+            const avatarEl = document.getElementById('tmrHeroUserAvatar');
+            const nameEl = document.getElementById('tmrHeroUserName');
+            const linkEl = document.getElementById('tmrHeroProfileLink');
+            const metaEl = document.getElementById('tmrHeroUserMeta');
+            if (avatarEl) avatarEl.src = avatar;
+            if (nameEl) nameEl.innerHTML = escapeHtml(displayName) + ' <span>◆</span>';
+            if (linkEl) linkEl.href = '/profile/?user=' + encodeURIComponent(username);
+            if (metaEl) metaEl.textContent = '@' + username + ' · real TrustMyRecord user';
+            document.getElementById('tmrHeroRoi').textContent = signed(lead.roi, '%');
+            document.getElementById('tmrHeroUnits').textContent = signed(lead.net_units || lead.netUnits, 'u');
+            document.getElementById('tmrHeroPicks').textContent = total ? String(total) : '--';
+            document.getElementById('tmrHeroRecord').textContent = total ? 'Public record' : 'No verified picks yet';
+        }
+
+        const body = document.getElementById('tmrHeroLeaderboardBody');
+        if (!body) return;
+        if (!cleanUsers.length) {
+            body.innerHTML = '<tr class="tmr-empty-table-row"><td colspan="4">Leaderboard populates as users submit verified picks.</td></tr>';
+            return;
+        }
+        body.innerHTML = cleanUsers.map(function (user, index) {
+            const username = String(user.username);
+            const displayName = user.display_name || user.displayName || username;
+            const total = number(user.total_picks || user.totalPicks, 0);
+            return '<tr class="tmr-real-user-row">'
+                + '<td>' + (index + 1) + '</td>'
+                + '<td><a class="tmr-real-user" href="/profile/?user=' + encodeURIComponent(username) + '">'
+                + '<span class="avatar-sm">' + escapeHtml(username.slice(0, 2).toUpperCase()) + '</span>'
+                + '<span>' + escapeHtml(displayName) + '<small>@' + escapeHtml(username) + ' · ' + (total ? total + ' picks' : 'No verified picks yet') + '</small></span></a></td>'
+                + '<td>' + escapeHtml(signed(user.roi, '%')) + '</td>'
+                + '<td>' + escapeHtml(signed(user.net_units || user.netUnits, 'u')) + '</td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    function pickTitle(pick) {
+        const matchup = [pick.away_team, pick.home_team].filter(Boolean).join(' at ');
+        const selection = pick.selection || pick.pick || pick.market_type || 'Locked pick';
+        const line = pick.line_snapshot != null ? ' ' + pick.line_snapshot : '';
+        return (matchup ? matchup + ' · ' : '') + selection + line;
+    }
+
+    function renderPicks(picks) {
+        const list = document.getElementById('tmrHeroPicksList');
+        if (!list) return;
+        const cleanPicks = picks
+            .filter(function (pick) { return pick && pick.username && pick.status; })
+            .filter(function (pick) { return !/^codexqa|^demo$|^testuser$|^admin$/i.test(String(pick.username)); })
+            .slice(0, 5);
+        if (!cleanPicks.length) {
+            list.className = 'tmr-pick-empty';
+            list.innerHTML = '<span>▣</span><strong>No verified picks yet</strong><p>Recent locked picks appear here after real users submit picks and grading is available.</p>';
+            return;
+        }
+        list.className = '';
+        list.innerHTML = cleanPicks.map(function (pick) {
+            const result = statusLabel(pick.status);
+            const isLoss = /^loss|lost$/i.test(result);
+            const resultUnits = signed(pick.result_units, 'u');
+            const odds = pick.odds_snapshot != null ? String(pick.odds_snapshot) : '--';
+            const username = pick.display_name || pick.username;
+            return '<div class="tmr-pick-line"><span>▣</span>'
+                + '<small>' + escapeHtml(username) + '<br><b>' + escapeHtml(pickTitle(pick)) + '</b></small>'
+                + '<strong>' + escapeHtml(pick.market_type || 'Pick') + '</strong>'
+                + '<em>' + escapeHtml(odds) + '</em>'
+                + '<mark' + (isLoss ? ' class="loss"' : '') + '>' + escapeHtml(result) + '<br>' + escapeHtml(resultUnits) + '</mark></div>';
+        }).join('');
+    }
+
+    async function hydrateHomepagePreview() {
+        try {
+            const usersData = await request('/users?limit=100');
+            renderUsers(Array.isArray(usersData && usersData.users) ? usersData.users : []);
+        } catch (error) {
+            console.warn('[TMR] Homepage real users preview unavailable:', error);
+            renderUsers([]);
+        }
+
+        try {
+            const picksData = await request('/picks?limit=20');
+            renderPicks(Array.isArray(picksData && picksData.picks) ? picksData.picks : []);
+        } catch (error) {
+            console.warn('[TMR] Homepage real picks preview unavailable:', error);
+            renderPicks([]);
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', hydrateHomepagePreview);
+    } else {
+        hydrateHomepagePreview();
+    }
+}());
+</script>
 <script>
 // Smooth scroll for any "Tour the Site" / scroll-cue CTA
 (function () {
