@@ -75,6 +75,22 @@ const spreadTrend = {
   sample: 3,
 };
 
+const teamTotalTrend = {
+  ...verifiedTrend,
+  bet_type: 'TEAM_TOTAL',
+  market: 'TEAM_TOTAL',
+  kind: 'TEAM_TOTAL',
+  trend_type: 'TEAM_TOTAL',
+  side: 'OVER',
+  claim: 'New York Mets team total OVER is source-backed by verified team-total rows.',
+  source_rows: [
+    { date: today(), raw_game_log: 'Mets @ Braves verified team-total row WIN', team: 'New York Mets', team_total_line: 4.5, team_total_score: 6, market_result: 'WIN', why_counted: 'Matched selected team-total line.' },
+    { date: today(), raw_game_log: 'Mets @ Phillies verified team-total row WIN', team: 'New York Mets', team_total_line: 4.5, team_total_score: 5, market_result: 'WIN', why_counted: 'Matched selected team-total line.' },
+    { date: today(), raw_game_log: 'Mets @ Marlins verified team-total row LOSS', team: 'New York Mets', team_total_line: 4.5, team_total_score: 3, market_result: 'LOSS', why_counted: 'Matched selected team-total line.' },
+  ],
+  sample: 3,
+};
+
 const unlinedTotalTrend = {
   ...verifiedTrend,
   source_rows: [
@@ -183,7 +199,7 @@ function chooseTrendKind(doc, value) {
           game_time: `${today()}T19:10:00Z`,
         },
       ],
-      trends: [moneylineTrend, spreadTrend, verifiedTrend],
+      trends: [moneylineTrend, spreadTrend, verifiedTrend, teamTotalTrend],
     },
   });
   const doc = dom.window.document;
@@ -196,7 +212,7 @@ function chooseTrendKind(doc, value) {
   assert(doc.querySelector('[data-market="team_total"]'), 'team total market should render');
   assert(doc.querySelector('[data-market="first_half"]'), 'first half market should render');
   assert(doc.querySelector('[data-market="first_five"]'), 'first five market should render');
-  assert(doc.querySelector('[data-market="team_total"]').disabled, 'team totals must be disabled until verified source support exists');
+  assert(doc.querySelector('[data-market="team_total"]').disabled, 'team totals must be disabled until a sport with verified team-total rows is loaded');
   assert(doc.querySelector('[data-market="first_half"]').disabled, 'first half trends must be disabled until verified source support exists');
   assert(doc.querySelector('[data-market="first_five"]').disabled, 'first five trends must be disabled until verified source support exists');
   assert(doc.querySelector('[data-market="props"]').disabled, 'unsupported props must be disabled');
@@ -208,6 +224,7 @@ function chooseTrendKind(doc, value) {
   await chooseSport(doc, 'MLB');
   chooseFirstMatchup(doc);
   assert.match(doc.querySelector('#selectionSummary').textContent, /New York Mets @ Colorado Rockies/, 'matchup selection should update summary');
+  assert.strictEqual(doc.querySelector('[data-market="team_total"]').disabled, false, 'team totals should be usable when verified team-total source rows exist');
 
   clickMarket(doc, 'moneyline');
   assert.match(doc.querySelector('#trendKindSelect').textContent, /Team win trend/, 'moneyline trend search should render moneyline options');
@@ -265,8 +282,22 @@ function chooseTrendKind(doc, value) {
   change(doc, '#sampleInput', '10');
 
   clickMarket(doc, 'team_total');
-  assert.notStrictEqual(doc.querySelector('#selectionSummary').textContent.includes('Team Total'), true, 'disabled team total should not become the selected market');
-  assert.strictEqual(doc.querySelector('[data-market="team_total"]').disabled, true, 'disabled team total must not be usable');
+  change(doc, '#sampleInput', '3');
+  assert.match(doc.querySelector('#trendKindSelect').textContent, /Team total over \/ under/, 'team-total trend search should render only source-backed team-total options');
+  assert.strictEqual(doc.querySelector('#periodSelect').value, 'full_game', 'team totals should only expose full-game period until period-specific rows exist');
+  chooseTrendKind(doc, 'team_total_over_under');
+  change(doc, '#sideSelect', 'over');
+  change(doc, '#teamSelect', 'New York Mets');
+  assert.strictEqual(doc.querySelector('#generateTrend').disabled, true, 'team totals should require a numeric team-total line before generation');
+  change(doc, '#thresholdInput', '4.5');
+  assert.strictEqual(doc.querySelector('#generateTrend').disabled, false, 'team totals should allow generation when verified source line data exists');
+  doc.querySelector('#generateTrend').click();
+  assert.match(doc.querySelector('#resultsList').textContent, /Selected market\s*Team Total/, 'team-total result should reflect selected market');
+  assert.match(doc.querySelector('#resultsList').textContent, /Selected team\s*New York Mets/, 'team-total result should reflect selected team');
+  assert.match(doc.querySelector('#resultsList').textContent, /line=4.5/, 'team-total result should reflect selected source-matched threshold');
+  change(doc, '#thresholdInput', '5.5');
+  doc.querySelector('#generateTrend').click();
+  assert.strictEqual(doc.querySelectorAll('[data-result="verified-trend"]').length, 0, 'team totals should not render when selected line does not match source team-total data');
 
   clickMarket(doc, 'first_five');
   assert.notStrictEqual(doc.querySelector('#selectionSummary').textContent.includes('First Five'), true, 'disabled first five should not become the selected market');
@@ -274,6 +305,7 @@ function chooseTrendKind(doc, value) {
 
   await chooseSport(doc, 'NBA');
   assert.strictEqual(doc.querySelector('[data-market="first_five"]').disabled, true, 'first five must be disabled outside MLB');
+  assert.strictEqual(doc.querySelector('[data-market="team_total"]').disabled, true, 'team totals must be disabled when the loaded sport has no verified team-total source rows');
   assert.strictEqual(doc.querySelector('[data-market="props"]').disabled, true, 'props stay disabled for unsupported markets');
 
   const noDataDom = await boot({ MLB: { status: 'missing', trends: [], matchups: [] } });
