@@ -16,9 +16,9 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260513-realism2/.test(html), 'live page uses current versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260513-realism2/.test(html), 'live page uses current versioned simulator script');
-assert(/data-mlb-simulator-build="mlb-simulator-realism-20260513b"/.test(html), 'page carries the current simulator build marker');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260513-runs1/.test(html), 'live page uses current versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260513-runs1/.test(html), 'live page uses current versioned simulator script');
+assert(/data-mlb-simulator-build="mlb-simulator-realism-runs-20260513"/.test(html), 'page carries the current simulator build marker');
 assert(!/legacy guard marker|standalone-box-score-20260505/.test(html + script), 'stale simulator deployment markers are removed');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
