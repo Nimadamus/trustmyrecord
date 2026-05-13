@@ -990,7 +990,7 @@
                     + '<div class="team-row">'
                     + '<div class="team-info" data-mkt="matchup">' + awayLogoHtmlF5 + '<div class="team-details"><div class="team-name">' + escHtml(game.away_team) + '</div>' + awayPitcherHtml + '</div></div>'
                     + cell(awaySpread, 'spread', 'f5spread', '5IP RL', spreadFmt)
-                    + cell(overItem,   'total',  'f5over',   'O',     totalFmt('O'))
+                    + cell(overItem,   'total',  'f5over',   'Over',  totalFmt('Over'))
                     + cell(awayML,     'ml',     'f5ml',     'F5 ML', mlFmt)
                     + '<button class="odds-btn odds-more-btn" data-mkt="more"'
                     + ' onclick="window.TMR.setMarket(\'team_totals\'); var st=document.getElementById(\'marketSubtabs\'); if(st){window.scrollTo({top: st.offsetTop - 80, behavior: \'smooth\'});}"'
@@ -1001,7 +1001,7 @@
                     + '<div class="team-row">'
                     + '<div class="team-info" data-mkt="matchup">' + homeLogoHtmlF5 + '<div class="team-details"><div class="team-name">' + escHtml(game.home_team) + '</div>' + homePitcherHtml + '</div></div>'
                     + cell(homeSpread, 'spread', 'f5spread', '5IP RL', spreadFmt)
-                    + cell(underItem,  'total',  'f5under',  'U',     totalFmt('U'))
+                    + cell(underItem,  'total',  'f5under',  'Under', totalFmt('Under'))
                     + cell(homeML,     'ml',     'f5ml',     'F5 ML', mlFmt)
                     + '<div class="odds-more-spacer" data-mkt="more" aria-hidden="true"></div>'
                     + '</div>'
@@ -28613,8 +28613,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         /* Market header strip — flush against first row, tight spacing. */
         #picks .games-board-wrap[data-cols="5"] .market-headers {
-            grid-template-columns: minmax(260px, 1fr) 124px 124px 124px 130px !important;
-            gap: 10px !important;
+            grid-template-columns: minmax(260px, 1fr) minmax(132px, .86fr) minmax(118px, .78fr) minmax(142px, .92fr) minmax(112px, .72fr) !important;
+            gap: 12px !important;
         }
         #picks .games-board-wrap[data-cols="4"] .market-headers {
             grid-template-columns: minmax(260px, 1fr) 124px 124px 124px !important;
@@ -28631,9 +28631,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         #picks .market-headers .market-label {
             color: #8595b0 !important;
-            font: 800 11px/1 'Inter', sans-serif !important;
+            font: 800 10.5px/1.15 'Inter', sans-serif !important;
             letter-spacing: 1px !important;
             text-transform: uppercase !important;
+            white-space: normal !important;
+            overflow-wrap: normal !important;
         }
         #picks .market-headers .market-label:first-child {
             text-align: left !important;
