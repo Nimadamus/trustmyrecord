@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-realism-20260513';
+    var UI_BUILD = 'mlb-simulator-realism-20260513b';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -795,22 +795,32 @@
     function modeledPitcherLines(team, opponentLine, starter, random, roster) {
         if (!roster || !roster.players || !roster.players.length) return [];
         var expectedDamage = opponentLine.runs + Math.max(0, opponentLine.hits - 7) * 0.35;
-        var starterOuts = clamp(18 - Math.floor(expectedDamage * 0.8) + Math.floor(random() * 4), 12, 21);
-        if (opponentLine.runs >= 7 || opponentLine.hits >= 13) starterOuts = clamp(starterOuts - 3, 9, 18);
+        var starterQuality = Number(starter && starter.quality);
+        if (!Number.isFinite(starterQuality)) starterQuality = 100;
+        var starterEra = Number(starter && starter.era);
+        var qualityOuts = clamp(Math.round((starterQuality - 100) * 0.08), -3, 3);
+        var eraOuts = Number.isFinite(starterEra) ? clamp(Math.round((4.2 - starterEra) * 0.9), -2, 2) : 0;
+        var bullpenTrust = clamp(Math.round((team.bullpen - 100) * 0.04), -2, 2);
+        var starterOuts = clamp(17 - Math.floor(expectedDamage * 0.65) + Math.floor(random() * 4) + qualityOuts + eraOuts - Math.max(0, bullpenTrust), 9, 22);
+        if (opponentLine.runs >= 7 || opponentLine.hits >= 13) starterOuts = clamp(starterOuts - 2 - Math.max(0, bullpenTrust), 8, 18);
+        if (starterQuality >= 112 && opponentLine.runs <= 3 && opponentLine.hits <= 8) starterOuts = clamp(starterOuts + 2, 15, 23);
+        if (starterQuality <= 92 || (Number.isFinite(starterEra) && starterEra >= 4.9)) starterOuts = clamp(starterOuts - 1, 8, 19);
         var reliefOuts = 27 - starterOuts;
         var secondRelief = reliefOuts >= 9 ? clamp(3 + Math.floor(random() * 3), 3, reliefOuts - 3) : Math.floor(reliefOuts / 2);
         var outs = [starterOuts, secondRelief, reliefOuts - secondRelief];
         var outWeights = outs.map(function (out) { return Math.max(1, out / 3); });
-        var runs = weightedAllocate(opponentLine.runs, outWeights.map(function (weight, index) { return weight * (index === 0 ? 1.05 : 0.95); }), random, outs.map(function (out) { return clamp(Math.ceil(out / 3) + 3, 1, 8); }));
+        var starterRunRisk = clamp(1 + ((100 - starterQuality) * 0.012) + (Number.isFinite(starterEra) ? (starterEra - 4.2) * 0.16 : 0), 0.58, 1.55);
+        var reliefRunRisk = clamp(1 + ((100 - team.bullpen) * 0.014), 0.72, 1.45);
+        var runs = weightedAllocate(opponentLine.runs, outWeights.map(function (weight, index) { return weight * (index === 0 ? starterRunRisk : reliefRunRisk); }), random, outs.map(function (out) { return clamp(Math.ceil(out / 3) + 3, 1, 8); }));
         var hitCaps = outs.map(function (out, index) {
             var cap = Math.ceil(out * 0.72) + runs[index] * 2 + (index === 0 ? 3 : 1);
             var max = index === 0 ? 12 : (out <= 3 ? 4 : 5);
             if (!runs[index] && out <= 6) max = Math.min(max, out <= 3 ? 3 : 4);
             return clamp(cap, 1, max);
         });
-        var hits = weightedAllocate(opponentLine.hits, outWeights.map(function (weight, index) { return weight + runs[index] * 1.1; }), random, hitCaps);
-        var walks = weightedAllocate(clamp(Math.round(2 + random() * 3), 1, 7), outWeights, random, outs.map(function (out) { return clamp(Math.ceil(out / 4) + 1, 1, 4); }));
-        var strikeouts = weightedAllocate(clamp(Math.round(7 + random() * 5 + ((starter ? starter.quality : 100) - 100) * 0.05), 3, 15), outWeights.map(function (weight, index) { return weight * (index === 0 ? 1.15 : 0.9); }), random, outs.map(function (out) { return Math.max(1, out); }));
+        var hits = weightedAllocate(opponentLine.hits, outWeights.map(function (weight, index) { return weight * (index === 0 ? starterRunRisk : reliefRunRisk) + runs[index] * 1.1; }), random, hitCaps);
+        var walks = weightedAllocate(clamp(Math.round(2 + random() * 3 + (100 - team.bullpen) * 0.015), 1, 8), outWeights.map(function (weight, index) { return weight * (index === 0 ? starterRunRisk : reliefRunRisk); }), random, outs.map(function (out) { return clamp(Math.ceil(out / 4) + 1, 1, 4); }));
+        var strikeouts = weightedAllocate(clamp(Math.round(7 + random() * 5 + (starterQuality - 100) * 0.05 + (team.bullpen - 100) * 0.018), 3, 16), outWeights.map(function (weight, index) { return weight * (index === 0 ? clamp(1 + (starterQuality - 100) * 0.01, 0.75, 1.35) : clamp(1 + (team.bullpen - 100) * 0.008, 0.8, 1.25)); }), random, outs.map(function (out) { return Math.max(1, out); }));
         var homers = weightedAllocate(clamp(Math.round(opponentLine.runs * 0.22 + random()), 0, 4), runs.map(function (run) { return run + 0.35; }), random, runs.map(function (run) { return Math.min(3, run); }));
         var rosterNames = rosterNamesForPitchers(roster, starter);
         var names = [rosterNames[0] || (starter && starter.name) || '', rosterNames[1] || '', rosterNames[2] || ''];
