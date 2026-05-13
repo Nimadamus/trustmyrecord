@@ -11594,29 +11594,37 @@ window.toggleSportFamily = function (family) {
     function renderPeriodOddsButton(gameIndex, item, game) {
         if (!item || item.odds == null) return '<button type="button" class="sb-odds is-empty" tabindex="-1" disabled><span class="sb-odds-line">—</span><span class="sb-odds-price">—</span></button>';
         var label = String(item.selection_label || item.selection || 'Pick');
+        var sideLabel = String(item.selection || '') + ' ' + label;
         var marketType = item.market_type || item.market_key || '';
-        var betType = periodBetType(marketType, label);
-        var isOver = /\bover\b/i.test(label), isUnder = /\bunder\b/i.test(label);
+        var betType = periodBetType(marketType, sideLabel);
+        var isOver = /\bover\b/i.test(sideLabel), isUnder = /\bunder\b/i.test(sideLabel);
         var selection = marketType === 'f5_team_totals'
             ? String(item.selection || label).replace(/\s+[+-]?\d+(\.\d+)?$/,'').trim()
             : (isOver ? 'Over' : (isUnder ? 'Under' : String(item.selection || label).replace(/\s+[+-]?\d+(\.\d+)?$/,'').trim()));
         var line = item.line == null ? '' : item.line;
-        var lineText = item.selection_label || item.line_display || (line === '' ? (betType.indexOf('ml') !== -1 ? 'ML' : '—') : ((isOver ? 'O ' : isUnder ? 'U ' : '') + window.TMR.formatLine(line, { signed: String(marketType).indexOf('spread') !== -1 })));
+        var isF5Total = String(marketType).toLowerCase() === 'f5_totals';
+        var lineText = isF5Total && line !== ''
+            ? ((isUnder ? 'Under ' : 'Over ') + window.TMR.formatLine(line))
+            : (item.selection_label || item.line_display || (line === '' ? (betType.indexOf('ml') !== -1 ? 'ML' : '—') : ((isOver ? 'O ' : isUnder ? 'U ' : '') + window.TMR.formatLine(line, { signed: String(marketType).indexOf('spread') !== -1 }))));
         var onclick = "window.selectGameBet && window.selectGameBet(" + (gameIndex | 0) + ",'" + _ttEsc(betType) + "','" + _ttEsc(selection) + "','" + _ttEsc(line) + "','" + _ttEsc(item.odds) + "','" + _ttEsc(game.away_team || '') + "','" + _ttEsc(game.home_team || '') + "')";
         return '<button type="button" class="sb-odds" onclick="' + onclick + '"><span class="sb-odds-line">' + _ttHtmlEsc(lineText) + '</span><span class="sb-odds-price">' + _ttHtmlEsc(_ttFmtOdds(item.odds)) + '</span></button>';
     }
     function renderPeriodCellButton(gameIndex, item, game, fallbackLine) {
         if (!item || item.odds == null) return oddsButton(fallbackLine || '—', '—');
         var label = String(item.selection_label || item.selection || 'Pick');
+        var sideLabel = String(item.selection || '') + ' ' + label;
         var marketType = item.market_type || item.market_key || '';
-        var betType = periodBetType(marketType, label);
-        var isOver = /\bover\b/i.test(label);
-        var isUnder = /\bunder\b/i.test(label);
+        var betType = periodBetType(marketType, sideLabel);
+        var isOver = /\bover\b/i.test(sideLabel);
+        var isUnder = /\bunder\b/i.test(sideLabel);
         var selection = isOver ? 'Over' : (isUnder ? 'Under' : String(item.selection || label).replace(/\s+[+-]?\d+(\.\d+)?$/,'').trim());
         var isSpread = String(marketType).indexOf('spread') !== -1;
         var isMl = String(marketType).indexOf('h2h') !== -1 || betType.indexOf('ml') !== -1;
         var line = item.line == null ? '' : item.line;
-        var lineText = isMl ? 'ML' : (item.line_display || (line === '' ? (fallbackLine || '—') : ((isOver ? 'O ' : isUnder ? 'U ' : '') + window.TMR.formatLine(line, { signed: isSpread }))));
+        var isF5Total = String(marketType).toLowerCase() === 'f5_totals';
+        var lineText = isMl ? 'ML' : (isF5Total && line !== ''
+            ? ((isUnder ? 'Under ' : 'Over ') + window.TMR.formatLine(line))
+            : (item.line_display || (line === '' ? (fallbackLine || '—') : ((isOver ? 'O ' : isUnder ? 'U ' : '') + window.TMR.formatLine(line, { signed: isSpread })))));
         return oddsButton(lineText, _ttFmtOdds(item.odds), {
             gameIndex: gameIndex,
             betType: betType,
@@ -29800,6 +29808,8 @@ document.addEventListener('DOMContentLoaded', function() {
         padding: 0 8px !important;
         font-size: 10px !important;
         letter-spacing: 0.08em !important;
+        line-height: 1.15 !important;
+        white-space: normal !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-market-row,
