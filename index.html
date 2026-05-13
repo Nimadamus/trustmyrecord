@@ -2057,9 +2057,9 @@ button{font:inherit;cursor:pointer}
         <a class="tmr-premium-secondary" href="/leaderboards/">View Leaderboards</a>
       </div>
       <div class="tmr-premium-proof-row" aria-label="Trust features">
-        <div><span class="tmr-proof-icon tmr-proof-icon-lock">T</span><p>Picks are locked<br>before games start</p></div>
-        <div><span class="tmr-proof-icon tmr-proof-icon-grade">✓</span><p>Results update<br>after scores post</p></div>
-        <div><span class="tmr-proof-icon tmr-proof-icon-profile">R</span><p>Profiles show<br>recorded activity</p></div>
+        <div><span class="tmr-proof-icon tmr-proof-icon-lock" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2"/><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M12 14v3"/></svg></span><p>Picks are locked<br>before games start</p></div>
+        <div><span class="tmr-proof-icon tmr-proof-icon-grade" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/><path d="M4 20h16"/></svg></span><p>Results update<br>after scores post</p></div>
+        <div><span class="tmr-proof-icon tmr-proof-icon-profile" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M5 20c1.7-4 12.3-4 14 0"/></svg></span><p>Profiles show<br>recorded activity</p></div>
       </div>
       <div class="tmr-premium-trustline">
         <span>Designed for transparent pick tracking across every major sport</span>
@@ -2474,10 +2474,18 @@ button{font:inherit;cursor:pointer}
     overflow: hidden;
     border: 1px solid rgba(255,255,255,.2);
     color: #fff;
-    font-size: 15px;
-    font-weight: 1000;
-    letter-spacing: .02em;
     box-shadow: 0 18px 34px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.24);
+  }
+  .tmr-premium-proof-row .tmr-proof-icon svg {
+    position: relative;
+    z-index: 1;
+    width: 23px;
+    height: 23px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
   .tmr-premium-proof-row .tmr-proof-icon::before,
   .tmr-premium-proof-row .tmr-proof-icon::after {
@@ -2507,7 +2515,7 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-proof-icon-profile {
     background: linear-gradient(135deg, #e85a30 0%, #f2c94c 100%);
-    color: #1a1206;
+    color: #1a1206 !important;
   }
   .tmr-premium-proof-row p {
     margin: 0;
@@ -4463,7 +4471,7 @@ button{font:inherit;cursor:pointer}
     max-width: 475px;
   }
   .tmr-premium-hero-copy {
-    transform: translate(clamp(18px, 2.2vw, 36px), clamp(-58px, -5.8vh, -36px)) !important;
+    transform: translate(clamp(24px, 2.8vw, 44px), clamp(-76px, -7vh, -52px)) !important;
   }
   .tmr-premium-kicker {
     border-color: rgba(103,232,249,.28) !important;
@@ -4561,7 +4569,19 @@ button{font:inherit;cursor:pointer}
     background: linear-gradient(180deg, rgba(10,26,44,.86), rgba(6,16,30,.92)) !important;
     box-shadow: inset 0 1px 0 rgba(255,255,255,.055), 0 14px 32px rgba(0,0,0,.18);
   }
-  .tmr-profile-main h2 { font-size: clamp(28px, 2.2vw, 34px) !important; letter-spacing: -.045em !important; text-shadow: 0 0 24px rgba(103,232,249,.16); }
+  .tmr-profile-main { overflow: visible !important; }
+  .tmr-profile-main > div { min-width: 0 !important; width: 100% !important; }
+  .tmr-profile-main h2 {
+    display: block !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    text-overflow: clip !important;
+    white-space: normal !important;
+    font-size: clamp(21px, 1.45vw, 25px) !important;
+    line-height: 1.05 !important;
+    letter-spacing: -.035em !important;
+    text-shadow: 0 0 24px rgba(103,232,249,.16);
+  }
   .tmr-profile-main a { color: #f8fafc !important; font-weight: 900 !important; }
   .tmr-profile-main p { color: #9fb0c8 !important; }
   .tmr-profile-main img {
