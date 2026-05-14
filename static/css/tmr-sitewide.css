@@ -4000,3 +4000,335 @@ body.tmr-site-shell .tmr-global-nav__links a[href*="trendspotter"] {
         white-space: nowrap !important;
     }
 }
+/* Sitewide mobile hardening pass - 2026-05-14
+   Additive responsive guardrails only: no data, auth, grading, or pick logic changes. */
+@media (max-width: 768px) {
+    html,
+    body.tmr-site-shell {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden !important;
+    }
+
+    body.tmr-site-shell {
+        --tmr-page-pad: 12px;
+        font-size: 15px;
+    }
+
+    body.tmr-site-shell main,
+    body.tmr-site-shell .page-shell,
+    body.tmr-site-shell .content-shell,
+    body.tmr-site-shell .profile-shell,
+    body.tmr-site-shell .sportsbook-shell,
+    body.tmr-site-shell .page-container,
+    body.tmr-site-shell .container,
+    body.tmr-site-shell .content-wrapper,
+    body.tmr-site-shell .messages-wrapper,
+    body.tmr-site-shell .arena-shell,
+    body.tmr-site-shell .tmr-fb-shell {
+        width: min(100%, calc(100% - 20px)) !important;
+        max-width: calc(100% - 20px) !important;
+        min-width: 0 !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav {
+        position: static !important;
+        width: 100% !important;
+        overflow: visible !important;
+        z-index: 100000 !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__inner {
+        width: min(100%, calc(100% - 20px)) !important;
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 44px !important;
+        grid-template-areas:
+            "brand toggle"
+            "panel panel" !important;
+        align-items: center !important;
+        gap: 10px !important;
+        padding: 10px 0 !important;
+        min-height: 0 !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__brand {
+        grid-area: brand !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        white-space: nowrap !important;
+        font-size: clamp(1.35rem, 8vw, 1.8rem) !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__toggle {
+        grid-area: toggle !important;
+        display: inline-flex !important;
+        width: 44px !important;
+        height: 40px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        justify-self: end !important;
+        border: 1px solid rgba(148, 163, 184, 0.18) !important;
+        border-radius: 10px !important;
+        background: rgba(15, 23, 42, 0.86) !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__panel,
+    body.tmr-site-shell .tmr-global-nav:not(.is-open) .tmr-global-nav__panel {
+        grid-area: panel !important;
+        display: none !important;
+        min-width: 0 !important;
+        width: 100% !important;
+        padding: 10px !important;
+        border: 1px solid rgba(148, 163, 184, 0.16) !important;
+        border-radius: 14px !important;
+        background: rgba(5, 11, 23, 0.96) !important;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.34) !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav.is-open .tmr-global-nav__panel {
+        display: grid !important;
+        gap: 10px !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__links,
+    body.tmr-site-shell .tmr-global-nav__actions {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+        width: 100% !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        white-space: normal !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__links a,
+    body.tmr-site-shell .tmr-global-nav__button,
+    body.tmr-site-shell .tmr-global-nav__user,
+    body.tmr-site-shell .tmr-community-menu__trigger,
+    body.tmr-site-shell .tmr-support-menu__trigger,
+    body.tmr-site-shell .tmr-community-menu__panel a,
+    body.tmr-site-shell .tmr-support-menu__panel a {
+        width: 100% !important;
+        min-height: 42px !important;
+        justify-content: center !important;
+        padding: 10px 12px !important;
+        border-radius: 10px !important;
+        font-size: 0.82rem !important;
+        line-height: 1.15 !important;
+        text-align: center !important;
+        white-space: normal !important;
+    }
+
+    body.tmr-site-shell .tmr-community-menu,
+    body.tmr-site-shell .tmr-support-menu {
+        width: 100% !important;
+        display: grid !important;
+        min-width: 0 !important;
+    }
+
+    body.tmr-site-shell .tmr-community-menu__panel,
+    body.tmr-site-shell .tmr-support-menu__panel {
+        position: static !important;
+        display: none !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        margin-top: 6px !important;
+        transform: none !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        border-radius: 12px !important;
+    }
+
+    body.tmr-site-shell .tmr-community-menu.is-open .tmr-community-menu__panel,
+    body.tmr-site-shell .tmr-support-menu.is-open .tmr-support-menu__panel {
+        display: grid !important;
+    }
+
+    body.tmr-site-shell .hero,
+    body.tmr-site-shell .feed-hero,
+    body.tmr-site-shell .about-hero,
+    body.tmr-site-shell .premium-hero,
+    body.tmr-site-shell .profile-header,
+    body.tmr-site-shell .user-stats-card,
+    body.tmr-site-shell .summary-grid,
+    body.tmr-site-shell .workspace-nav-card,
+    body.tmr-site-shell .stats-table-card,
+    body.tmr-site-shell .sidebar-nav,
+    body.tmr-site-shell .sidebar-card,
+    body.tmr-site-shell .composer-card,
+    body.tmr-site-shell .rs-card,
+    body.tmr-site-shell .feed-item,
+    body.tmr-site-shell .feed-tabs,
+    body.tmr-site-shell .poll-card,
+    body.tmr-site-shell .trivia-card,
+    body.tmr-site-shell .challenge-card,
+    body.tmr-site-shell .friend-card,
+    body.tmr-site-shell .analytics-card,
+    body.tmr-site-shell .content-wrapper,
+    body.tmr-site-shell .feature-card,
+    body.tmr-site-shell .stat-card,
+    body.tmr-site-shell .card,
+    body.tmr-site-shell .profile-card,
+    body.tmr-site-shell .leaderboard-card {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        padding: clamp(16px, 4vw, 22px) !important;
+        border-radius: 14px !important;
+        overflow: hidden !important;
+    }
+
+    body.tmr-site-shell h1,
+    body.tmr-site-shell .page-title,
+    body.tmr-site-shell .hero-title,
+    body.tmr-site-shell .profile-name {
+        font-size: clamp(2rem, 9vw, 2.75rem) !important;
+        line-height: 1.02 !important;
+        letter-spacing: -0.025em !important;
+        overflow-wrap: anywhere !important;
+    }
+
+    body.tmr-site-shell h2,
+    body.tmr-site-shell .section-title {
+        font-size: clamp(1.35rem, 6vw, 1.9rem) !important;
+        line-height: 1.08 !important;
+    }
+
+    body.tmr-site-shell p,
+    body.tmr-site-shell li,
+    body.tmr-site-shell label,
+    body.tmr-site-shell .page-subtitle,
+    body.tmr-site-shell .profile-bio {
+        font-size: 0.95rem !important;
+        line-height: 1.52 !important;
+    }
+
+    body.tmr-site-shell .profile-header,
+    body.tmr-site-shell .profile-main,
+    body.tmr-site-shell .profile-info,
+    body.tmr-site-shell .profile-meta,
+    body.tmr-site-shell .profile-actions,
+    body.tmr-site-shell .page-header,
+    body.tmr-site-shell .section-header,
+    body.tmr-site-shell .action-bar,
+    body.tmr-site-shell .toolbar,
+    body.tmr-site-shell .filters,
+    body.tmr-site-shell .search-box,
+    body.tmr-site-shell .feed-hero-actions {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        justify-items: stretch !important;
+        gap: 10px !important;
+        min-width: 0 !important;
+    }
+
+    body.tmr-site-shell .profile-avatar,
+    body.tmr-site-shell .avatar,
+    body.tmr-site-shell .user-avatar {
+        max-width: min(96px, 28vw) !important;
+        max-height: min(96px, 28vw) !important;
+    }
+
+    body.tmr-site-shell .summary-grid,
+    body.tmr-site-shell .stats-grid,
+    body.tmr-site-shell .user-stats-card,
+    body.tmr-site-shell .features-grid,
+    body.tmr-site-shell .polls-grid,
+    body.tmr-site-shell .challenges-grid,
+    body.tmr-site-shell .friends-grid,
+    body.tmr-site-shell .analytics-grid,
+    body.tmr-site-shell .workspace-grid {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    body.tmr-site-shell input,
+    body.tmr-site-shell select,
+    body.tmr-site-shell textarea,
+    body.tmr-site-shell button,
+    body.tmr-site-shell .btn,
+    body.tmr-site-shell .btn-primary,
+    body.tmr-site-shell .btn-secondary,
+    body.tmr-site-shell .submit-pick-btn,
+    body.tmr-site-shell .auth-submit {
+        max-width: 100% !important;
+        min-height: 44px !important;
+    }
+
+    body.tmr-site-shell input,
+    body.tmr-site-shell select,
+    body.tmr-site-shell textarea {
+        width: 100% !important;
+        font-size: 16px !important;
+    }
+
+    body.tmr-site-shell .stats-table-card,
+    body.tmr-site-shell .picks-table-wrapper,
+    body.tmr-site-shell .table-wrapper,
+    body.tmr-site-shell .table-container,
+    body.tmr-site-shell .hm-table-wrap,
+    body.tmr-site-shell .leaderboard-table-wrapper {
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body.tmr-site-shell table,
+    body.tmr-site-shell .picks-table,
+    body.tmr-site-shell .stats-table,
+    body.tmr-site-shell .leaderboard-table,
+    body.tmr-site-shell .hm-table {
+        min-width: 640px;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .picks-container-modern,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-picks-layout,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-board-shell,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-stage-panel,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-selector-shell,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #pickDetails {
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        overflow-x: hidden !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-picks-layout {
+        display: grid !important;
+        grid-template-columns: 1fr !important;
+        gap: 14px !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-page-topbar,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sport-tabs,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .league-tabs,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .market-tabs {
+        max-width: 100% !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (min-width: 390px) and (max-width: 430px) {
+    body.tmr-site-shell .summary-grid,
+    body.tmr-site-shell .stats-grid,
+    body.tmr-site-shell .analytics-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+
+    body.tmr-site-shell .summary-grid > *,
+    body.tmr-site-shell .stats-grid > *,
+    body.tmr-site-shell .analytics-grid > * {
+        min-width: 0 !important;
+    }
+}
