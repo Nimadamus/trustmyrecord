@@ -2057,9 +2057,9 @@ button{font:inherit;cursor:pointer}
         <a class="tmr-premium-secondary" href="/leaderboards/">View Leaderboards</a>
       </div>
       <div class="tmr-premium-proof-row" aria-label="Trust features">
-        <div><span class="tmr-proof-icon tmr-proof-icon-lock" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2"/><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M12 14v3"/></svg></span><p>Picks are locked<br>before games start</p></div>
-        <div><span class="tmr-proof-icon tmr-proof-icon-grade" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/><path d="M4 20h16"/></svg></span><p>Results update<br>after scores post</p></div>
-        <div><span class="tmr-proof-icon tmr-proof-icon-chart" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 19h16"/><path d="M7 16v-5"/><path d="M12 16V7"/><path d="M17 16v-8"/></svg></span><p>Records track<br>public activity</p></div>
+        <div><span class="tmr-proof-icon tmr-proof-icon-lock" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 10V8a5 5 0 0 1 10 0v2"/><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M12 14v3"/></svg></span><p>Picks lock when entered</p></div>
+        <div><span class="tmr-proof-icon tmr-proof-icon-grade" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h10"/><path d="M4 18h6"/><path d="M16 17l2 2 4-5"/></svg></span><p>Results grade after final</p></div>
+        <div><span class="tmr-proof-icon tmr-proof-icon-record" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"/><path d="M4 21a8 8 0 0 1 16 0"/><path d="M17 4l1.4 1.4L22 2"/></svg></span><p>Records stay public</p></div>
       </div>
       <div class="tmr-premium-trustline">
         <span>Designed for transparent pick tracking across every major sport</span>
@@ -2071,21 +2071,21 @@ button{font:inherit;cursor:pointer}
         <section class="tmr-hero-board-intro" aria-label="Homepage verified board summary">
           <div class="tmr-hero-board-copy">
             <span>Verified record system</span>
-            <h2>The Anti-Fake Handicapper Board</h2>
-            <p>Every pick is locked before game time, graded after the final, and tied to a public profile.</p>
+            <h2>Where False Handicapping Claims Go to Die</h2>
+            <p>Restoring integrity to a shady industry. Every pick is locked, graded, and tied to a public record that cannot be rewritten after the result.</p>
           </div>
           <div class="tmr-hero-proof-badges" aria-label="TrustMyRecord proof points">
             <article>
-              <b>Locked Before Start</b>
-              <p>No editing after the game begins.</p>
+              <b>Locked Picks</b>
+              <p>No editing picks once they are entered. Once a pick is in, it is saved forever.</p>
             </article>
             <article>
               <b>Auto-Graded Results</b>
-              <p>Wins, losses, ROI, and units update publicly.</p>
+              <p>Wins, losses, ROI, units, and advanced stats update publicly so every bettor can see strengths and weaknesses.</p>
             </article>
             <article>
               <b>Public Profiles</b>
-              <p>Every record is visible and tied to a real account.</p>
+              <p>All records are visible, tied to real profiles, and updated daily.</p>
             </article>
           </div>
         </section>
@@ -2437,22 +2437,29 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-premium-proof-row {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(3, minmax(150px, 1fr));
+    gap: 12px;
     margin-top: 36px;
   }
   .tmr-premium-proof-row div {
     display: grid;
-    grid-template-columns: 44px 1fr;
-    gap: 12px;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 10px;
     align-items: center;
+    min-width: 0;
+    min-height: 62px;
+    padding: 10px;
+    border: 1px solid rgba(148, 163, 184, .16);
+    border-radius: 9px;
+    background: rgba(7, 17, 31, .52);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.055);
   }
   .tmr-premium-proof-row span,
   .tmr-card-icon {
     display: grid;
     place-items: center;
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border: 1px solid rgba(134, 162, 190, .34);
     border-radius: 9px;
     background: rgba(7, 17, 31, .78);
@@ -2464,7 +2471,7 @@ button{font:inherit;cursor:pointer}
     overflow: hidden;
     border: 1px solid rgba(255,255,255,.2);
     color: #fff;
-    box-shadow: 0 18px 34px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.24);
+    box-shadow: 0 16px 30px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.22);
   }
   .tmr-premium-proof-row .tmr-proof-icon svg {
     position: relative;
@@ -2486,33 +2493,34 @@ button{font:inherit;cursor:pointer}
   .tmr-premium-proof-row .tmr-proof-icon::before {
     inset: 7px;
     border-radius: 7px;
-    border: 1px solid rgba(255,255,255,.34);
+    border: 1px solid rgba(255,255,255,.22);
   }
   .tmr-premium-proof-row .tmr-proof-icon::after {
-    right: 7px;
-    bottom: 7px;
-    width: 9px;
-    height: 9px;
+    right: 6px;
+    bottom: 6px;
+    width: 8px;
+    height: 8px;
     border-radius: 999px;
     background: rgba(255,255,255,.92);
     box-shadow: 0 0 18px rgba(255,255,255,.38);
   }
   .tmr-proof-icon-lock {
-    background: linear-gradient(135deg, #2f8f53 0%, #54e3cf 100%);
+    background: linear-gradient(135deg, #0f766e 0%, #54e3cf 100%);
   }
   .tmr-proof-icon-grade {
-    background: linear-gradient(135deg, #1f6feb 0%, #7dd3fc 100%);
+    background: linear-gradient(135deg, #15803d 0%, #8ff0a4 100%);
   }
-  .tmr-proof-icon-chart,
-  .tmr-proof-icon-chart {
-    background: linear-gradient(135deg, #e85a30 0%, #f2c94c 100%);
+  .tmr-proof-icon-record {
+    background: linear-gradient(135deg, #b7791f 0%, #f6d365 100%);
     color: #1a1206 !important;
   }
   .tmr-premium-proof-row p {
     margin: 0;
-    color: #c7d1de;
-    font-size: 14px;
-    line-height: 1.35;
+    color: #dce7f5;
+    font-size: 13.5px;
+    font-weight: 850;
+    line-height: 1.22;
+    text-wrap: balance;
   }
   .tmr-premium-trustline {
     display: flex;
