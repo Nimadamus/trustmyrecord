@@ -3038,6 +3038,10 @@
             finalPayload = payload;
             try { console.info('[TMR][lockInPick] final payload', payload); } catch (_) {}
             const response = await api.createPick(payload);
+            if (!response || !response.pick || response.pick.id == null) {
+                showSubmitTrace('Submit failed: API did not return a saved pick id.');
+                throw new Error('Pick was not saved. Please try again.');
+            }
             if (response && response.duplicate) {
                 showSubmitTrace('Pick was already locked. Refreshing pick history.');
                 await fetchCurrentUserPicks();
