@@ -492,6 +492,10 @@
             letter-spacing: 0.08em;
         }
         .result-badge.won { background: var(--accent-green-bg); color: var(--accent-green); }
+        .result-badge.result-win { color: #86efac; }
+        .result-badge.result-loss { color: #f05252; }
+        .result-badge.result-push,
+        .result-badge.result-pending { color: var(--accent-gray); }
         .result-badge.lost { background: var(--accent-red-bg); color: var(--accent-red); }
         .result-badge.push,
         .result-badge.void,
@@ -7215,7 +7219,8 @@
         const resultTag = (status) => {
             const s = String(status || 'pending').toLowerCase();
             const cls = s === 'won' ? 'pos' : s === 'lost' ? 'neg' : 'zero';
-            return '<span class="' + cls + '" style="font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:11px;">' + s + '</span>';
+            const resultCls = s === 'won' ? 'result-win' : s === 'lost' ? 'result-loss' : s === 'push' || s === 'pushed' ? 'result-push' : 'result-pending';
+            return '<span class="' + cls + ' ' + resultCls + '" style="font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:11px;">' + s + '</span>';
         };
         tbody.innerHTML = picks.map(p => {
             if (p.redacted) {
@@ -8640,7 +8645,7 @@
             '<td data-label="Sport"><span class="pick-sport ' + sc + '">' + sport + '</span></td>' +
             '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div></td>' +
             '<td data-label="Line">' + odds + '</td>' +
-            '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
+            '<td data-label="Result"><span class="result-badge ' + status + ' ' + (status === 'won' ? 'result-win' : status === 'lost' ? 'result-loss' : status === 'push' ? 'result-push' : 'result-pending') + '">' + status.toUpperCase() + '</span></td>' +
             '<td data-label="Result Units"><div class="profit-cell ' + plClass + '">' + plText + '</div>' + formatStakeBreakdown(p) + '</td>' +
             '</tr>';
     }
@@ -10997,6 +11002,14 @@
       .tmrx-table .name { font-weight: 800; color: #f1f5fb; }
       .tmrx-table .pos { color: #86efac; }
       .tmrx-table .neg { color: #ff3333; }
+      body.profile-page.tmr-social-profile #tmrxTablePicks .result-win,
+      body.profile-page.tmr-social-profile .picks-table .result-win { color: #86efac !important; }
+      body.profile-page.tmr-social-profile #tmrxTablePicks .result-loss,
+      body.profile-page.tmr-social-profile .picks-table .result-loss { color: #f05252 !important; }
+      body.profile-page.tmr-social-profile #tmrxTablePicks .result-push,
+      body.profile-page.tmr-social-profile #tmrxTablePicks .result-pending,
+      body.profile-page.tmr-social-profile .picks-table .result-push,
+      body.profile-page.tmr-social-profile .picks-table .result-pending { color: #94a3b8 !important; }
       .tmrx-table .zero { color: #94a3b8; }
       .tmrx-table .empty td { padding: 22px 16px; text-align: center; color: #64748b; font-style: italic; }
 
