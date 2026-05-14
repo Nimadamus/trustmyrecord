@@ -1011,15 +1011,26 @@
 
         const api = await getApiClientOrFallback();
         let response;
+        let privatePendingResponse = null;
         try {
             response = await api.getPicks({ userId: user.id, limit: 100 });
+            if (typeof api.getPendingPicks === 'function') {
+                privatePendingResponse = await api.getPendingPicks({ limit: 100 });
+            }
         } catch (error) {
             if (error && (error.status === 401 || error.status === 403)) {
                 clearFrontendAuthState();
             }
             throw error;
         }
-        const picks = (response.picks || []).map(normalizePick).sort(function(a, b) {
+        const mergedById = new Map();
+        (response.picks || response || []).forEach(function(pick) {
+            if (pick && pick.id != null) mergedById.set(String(pick.id), pick);
+        });
+        ((privatePendingResponse && privatePendingResponse.picks) || []).forEach(function(pick) {
+            if (pick && pick.id != null) mergedById.set(String(pick.id), pick);
+        });
+        const picks = Array.from(mergedById.values()).map(normalizePick).sort(function(a, b) {
             return new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0);
         });
         state.currentUserPicks = picks;
