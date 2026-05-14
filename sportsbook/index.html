@@ -20782,7 +20782,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260514pendingfix3&cb=20260514pendingfix3"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260514pendingfix4&cb=20260514pendingfix4"></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
@@ -23897,6 +23897,34 @@ document.addEventListener('DOMContentLoaded', function() {
         'baseball_mlb': 'MLB', 'basketball_wnba': 'WNBA', 'soccer_epl': 'EPL', 'soccer_usa_mls': 'MLS', 'soccer_uefa_champs_league': 'UCL', 'soccer_spain_la_liga': 'La Liga', 'soccer_italy_serie_a': 'Serie A', 'soccer_germany_bundesliga': 'Bundesliga', 'soccer_france_ligue_one': 'Ligue 1', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB', 'tennis_atp': 'ATP', 'tennis_wta': 'WTA'
     };
 
+    async function loadPrivatePendingPicksForSportsbook(apiClient) {
+        if (apiClient && apiClient.ready) {
+            try { await apiClient.ready; } catch (e) {}
+        }
+        if (apiClient && typeof apiClient.loadTokens === 'function') {
+            try { apiClient.loadTokens(); } catch (e) {}
+        }
+        if (apiClient && typeof apiClient.request === 'function') {
+            return apiClient.request('/picks/pending?limit=100&offset=0');
+        }
+        const token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken') || localStorage.getItem('access_token') || localStorage.getItem('token') || localStorage.getItem('tmr_token');
+        if (!token) {
+            const error = new Error('Authentication required');
+            error.status = 401;
+            throw error;
+        }
+        const response = await fetch('https://trustmyrecord-api.onrender.com/api/picks/pending?limit=100&offset=0', {
+            headers: { Authorization: 'Bearer ' + token }
+        });
+        const data = await response.json().catch(function() { return {}; });
+        if (!response.ok) {
+            const error = new Error(data.error || 'Failed to load pending picks');
+            error.status = response.status;
+            throw error;
+        }
+        return data;
+    }
+
     async function loadMyPicks(tab = 'pending') {
         currentPicksTab = tab;
         window.currentPicksTab = tab;
@@ -23904,41 +23932,9 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!container) return;
 
         const apiClient = window.api || window.backendAPI || null;
-        if (apiClient && typeof apiClient.loadTokens === 'function') {
-            try { apiClient.loadTokens(); } catch (e) {}
-        }
-        if (!apiClient || typeof apiClient.isLoggedIn !== 'function' || !apiClient.isLoggedIn()) {
-            container.innerHTML = `
-                <div style="text-align: center; padding: 40px; color: #6c7380;">
-                    <div style="font-size: 48px; margin-bottom: 16px;">&#128274;</div>
-                    <h3 style="color: #fff; margin-bottom: 10px;">Login Required</h3>
-                    <p>Please log in to view your picks.</p>
-                    <button onclick="showSection('login')" style="margin-top: 20px; background: linear-gradient(135deg, #00ffff, #0088cc); border: none; padding: 12px 24px; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer;">
-                        Log In
-                    </button>
-                </div>`;
-            return;
-        }
-
         try {
-            const mergedById = new Map();
-            const currentUserResponse = typeof apiClient.getCurrentUser === 'function' ? await apiClient.getCurrentUser() : null;
-            const currentUser = (currentUserResponse && (currentUserResponse.user || currentUserResponse)) || {};
-
-            if (typeof apiClient.getPicks === 'function') {
-                const historyResponse = await apiClient.getPicks({ userId: currentUser.id, limit: 100 });
-                (historyResponse.picks || historyResponse || []).forEach(function(pick) {
-                    if (pick && pick.id != null) mergedById.set(String(pick.id), pick);
-                });
-            }
-            if (typeof apiClient.getPendingPicks === 'function') {
-                const pendingResponse = await apiClient.getPendingPicks({ limit: 100 });
-                ((pendingResponse && pendingResponse.picks) || []).forEach(function(pick) {
-                    if (pick && pick.id != null) mergedById.set(String(pick.id), pick);
-                });
-            }
-
-            let allUserPicks = Array.from(mergedById.values()).map(function(pick) {
+            const pendingResponse = await loadPrivatePendingPicksForSportsbook(apiClient);
+            const allUserPicks = ((pendingResponse && pendingResponse.picks) || []).map(function(pick) {
                 return Object.assign({}, pick, {
                     away_team: pick.away_team || (pick.game && pick.game.away_team),
                     home_team: pick.home_team || (pick.game && pick.game.home_team),
@@ -23949,22 +23945,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 return new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0);
             });
 
-            let picks = allUserPicks;
-            if (tab === 'pending') picks = allUserPicks.filter(function(p) { return p.status === 'pending'; });
-            else if (tab === 'graded') picks = allUserPicks.filter(function(p) { return p.status !== 'pending'; });
-
+            const picks = tab === 'pending' ? allUserPicks.filter(function(p) { return p.status === 'pending'; }) : allUserPicks;
             const pendingPicks = allUserPicks.filter(function(p) { return p.status === 'pending'; });
             const pendingCountEl = document.getElementById('pendingCount');
             const myStatsPendingEl = document.getElementById('myStatsPending');
             if (pendingCountEl) pendingCountEl.textContent = pendingPicks.length;
             if (myStatsPendingEl) myStatsPendingEl.textContent = pendingPicks.length;
-
             updateMyPicksStats(allUserPicks);
 
             if (picks.length === 0) {
                 const emoji = tab === 'pending' ? '&#128197;' : '&#128202;';
                 const title = tab === 'pending' ? 'No Pending Picks' : 'No Graded Picks';
-                const msg = tab === 'pending' ? 'Make a pick to get started!' : 'Your graded picks will appear here.';
+                const msg = tab === 'pending' ? 'No pending picks are saved on your account right now.' : 'Your graded picks will appear here.';
                 const btn = tab === 'pending' ? '<button onclick="showSection(\'picks\')" style="margin-top: 20px; background: linear-gradient(135deg, #00c853, #00a648); border: none; padding: 12px 24px; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer;">Make a Pick</button>' : '';
                 container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c7380;"><div style="font-size: 48px; margin-bottom: 16px;">' + emoji + '</div><h3 style="color: #fff; margin-bottom: 10px;">' + title + '</h3><p>' + msg + '</p>' + btn + '</div>';
                 return;
@@ -23973,7 +23965,10 @@ document.addEventListener('DOMContentLoaded', function() {
             container.innerHTML = picks.map(pick => renderPickCard(pick)).join('');
         } catch (error) {
             console.error('[TMR] loadMyPicks failed', error);
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c7380;"><h3 style="color: #fff; margin-bottom: 10px;">Unable to load picks</h3><p>Refresh and try again. Your pending picks were not changed.</p></div>';
+            const isAuth = error && (error.status === 401 || error.status === 403);
+            container.innerHTML = isAuth
+                ? '<div style="text-align: center; padding: 40px; color: #6c7380;"><div style="font-size: 48px; margin-bottom: 16px;">&#128274;</div><h3 style="color: #fff; margin-bottom: 10px;">Login Required</h3><p>Please log in to view your pending picks.</p></div>'
+                : '<div style="text-align: center; padding: 40px; color: #6c7380;"><h3 style="color: #fff; margin-bottom: 10px;">Unable to load picks</h3><p>Refresh and try again. Your pending picks were not changed.</p></div>';
         }
     }
 
