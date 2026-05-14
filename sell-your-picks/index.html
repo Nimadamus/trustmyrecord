@@ -169,6 +169,98 @@
       .hero { grid-template-columns: 1fr; gap: 30px; padding-top: 98px; }
       h1 { font-size: 46px; }
     }
+  
+    /* Standalone mobile hardening pass - 2026-05-14 */
+    @media (max-width: 640px) {
+      html, body { overflow-x: hidden; }
+      .shell {
+        width: min(100%, calc(100vw - 20px));
+        gap: 24px;
+        padding: 86px 0 28px;
+      }
+      .nav-inner {
+        width: min(100%, calc(100vw - 20px));
+        gap: 12px;
+      }
+      .links {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: 10px;
+        font-size: 13px;
+      }
+      .links a {
+        min-width: 0;
+        padding: 8px 10px;
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 8px;
+        background: rgba(255,255,255,.035);
+        text-align: center;
+      }
+      .hero {
+        gap: 24px;
+        padding-top: 18px;
+      }
+      .eyebrow {
+        max-width: 100%;
+        white-space: normal;
+        line-height: 1.25;
+      }
+      h1 {
+        margin-top: 18px;
+        font-size: clamp(38px, 12vw, 46px);
+        line-height: 0.98;
+        letter-spacing: -0.035em;
+      }
+      p {
+        font-size: 16px;
+        line-height: 1.55;
+      }
+      .actions {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 10px;
+        margin-top: 24px;
+      }
+      .btn {
+        width: 100%;
+        min-height: 52px;
+        padding: 0 14px;
+        text-align: center;
+      }
+      .panel {
+        padding: 18px;
+      }
+      .panel-top {
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .logo-mark {
+        width: 48px;
+        height: 48px;
+        font-size: 18px;
+      }
+      .soon {
+        text-align: right;
+        line-height: 1.25;
+      }
+      .step {
+        grid-template-columns: 34px 1fr;
+        gap: 10px;
+        padding: 12px;
+      }
+      .step b {
+        width: 34px;
+        height: 34px;
+      }
+      .step strong {
+        font-size: 14px;
+        line-height: 1.25;
+      }
+      .step span {
+        font-size: 13px;
+      }
+    }
   </style>
 </head>
 <body>

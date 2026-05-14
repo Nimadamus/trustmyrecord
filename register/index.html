@@ -215,7 +215,88 @@
                 border-bottom: 1px solid rgba(255,255,255,0.06);
             }
         }
-    </style>
+    
+    /* Standalone mobile hardening pass - 2026-05-14 */
+        @media (max-width: 640px) {
+            html, body { overflow-x: hidden; }
+            body {
+                align-items: flex-start;
+                padding: 12px 10px 22px;
+            }
+            .shell {
+                width: min(100%, calc(100vw - 20px));
+                border-radius: 18px;
+            }
+            .side,
+            .content {
+                padding: 22px 18px;
+            }
+            .brand a {
+                font-size: 30px;
+                letter-spacing: -0.02em;
+            }
+            .side h2 {
+                font-size: clamp(2rem, 13vw, 2.65rem);
+                line-height: 0.98;
+            }
+            h1 {
+                font-size: clamp(2.35rem, 14vw, 3rem);
+                line-height: 0.96;
+            }
+            p.sub,
+            .side p,
+            .trust-item span {
+                font-size: 0.95rem;
+                line-height: 1.5;
+            }
+            .trust-list {
+                gap: 10px;
+                margin-top: 18px;
+            }
+            .trust-item {
+                padding: 12px;
+                border-radius: 14px;
+            }
+            .field {
+                margin-bottom: 14px;
+            }
+            label {
+                font-size: 12px;
+                line-height: 1.25;
+            }
+            input {
+                min-height: 52px;
+                border-radius: 14px;
+                padding: 14px 15px;
+                font-size: 16px;
+            }
+            .meta {
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 10px;
+            }
+            .remember {
+                width: 100%;
+            }
+            .submit {
+                min-height: 52px;
+                padding: 15px 18px;
+                white-space: normal;
+            }
+            .switch {
+                font-size: 14px;
+                line-height: 1.45;
+            }
+            #favSportsGrid {
+                gap: 8px !important;
+            }
+            #favSportsGrid button {
+                min-height: 36px;
+                padding: 8px 11px !important;
+                font-size: 0.84rem !important;
+            }
+        }
+  </style>
 </head>
 <body>
     <div class="shell">
