@@ -1925,7 +1925,10 @@
 
         api.createPick(backendPick).then(function(result) {
             console.log('[TMR] Pick saved to backend:', result);
-            newPick.id = result.pick ? result.pick.id : result.id;
+            if (!result || !result.pick || result.pick.id == null) {
+                throw new Error('Backend did not return a saved pick id. Pick was not saved.');
+            }
+            newPick.id = result.pick.id;
             newPick._backendSynced = true;
             newPick.locked = true;
 
@@ -20782,7 +20785,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260514submitfix1&cb=20260514submitfix1"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260514submitfix2&cb=20260514submitfix2"></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
@@ -21985,7 +21988,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 away_score: null
             };
 
-            // Try backend API first, localStorage as fallback
+            // Backend-only save. Never create local phantom picks.
             if (typeof api !== 'undefined' && typeof api.createPick === 'function') {
                 try {
                     api.createPick({
@@ -21998,35 +22001,23 @@ document.addEventListener('DOMContentLoaded', function() {
                         units_mode: (window.TMR && window.TMR.selectedUnitsMode) || 'risk'
                     }).then(function(result) {
                         console.log('Pick saved to backend:', result);
-                        newPick.id = result.pick ? result.pick.id : result.id;
+                        if (!result || !result.pick || result.pick.id == null) {
+                            throw new Error('Backend did not return a saved pick id. Pick was not saved.');
+                        }
+                        newPick.id = result.pick.id;
                         newPick._backendSynced = true;
-                        // Cache in localStorage too
-                        let cached = [];
-                        try { cached = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { cached = []; }
-                        cached.unshift(newPick);
-                        localStorage.setItem('tmr_picks', JSON.stringify(cached));
                         if (typeof window.loadPicksHistory === 'function') window.loadPicksHistory();
+                        alert('Pick submitted and saved to your permanent record!');
                     }).catch(function(err) {
-                        console.error('Backend save failed, using localStorage:', err);
-                        let allPicks = [];
-                        try { allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { allPicks = []; }
-                        allPicks.unshift(newPick);
-                        localStorage.setItem('tmr_picks', JSON.stringify(allPicks));
+                        console.error('Backend save failed:', err);
+                        alert('Pick was not saved: ' + ((err && err.message) || 'Please try again.'));
                     });
                 } catch(e) {
-                    let allPicks = [];
-                    try { allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e2) { allPicks = []; }
-                    allPicks.unshift(newPick);
-                    localStorage.setItem('tmr_picks', JSON.stringify(allPicks));
+                    alert('Pick was not saved: ' + ((e && e.message) || 'Please try again.'));
                 }
             } else {
-                let allPicks = [];
-                try { allPicks = JSON.parse(localStorage.getItem('tmr_picks') || '[]'); } catch(e) { allPicks = []; }
-                allPicks.unshift(newPick);
-                localStorage.setItem('tmr_picks', JSON.stringify(allPicks));
-                console.log('Pick saved to localStorage (backend unavailable):', newPick);
+                alert('Pick was not saved: pick service unavailable. Please refresh and try again.');
             }
-            alert('Pick submitted and saved to your permanent record!');
         } else {
             alert('Please log in to submit picks.');
             return;
