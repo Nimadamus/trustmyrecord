@@ -3036,6 +3036,18 @@
             finalPayload = payload;
             try { console.info('[TMR][lockInPick] final payload', payload); } catch (_) {}
             const response = await api.createPick(payload);
+            if (response && response.duplicate) {
+                showSubmitTrace('Pick was already locked. Refreshing pick history.');
+                await fetchCurrentUserPicks();
+                syncRecordWidgets(state.currentUserPicks);
+                const confirmationTitle = document.querySelector('#pickConfirmation h3');
+                if (confirmationTitle) confirmationTitle.textContent = 'Pick Already Locked';
+                updateText('confirmPickDetail', option.selection_label || submittedSelection || 'Pick');
+                updateText('confirmPickMeta', response.message || 'This pick was already on your record. No new pending pick was added.');
+                showPickSlipSuccess('Pick Already Locked', response.message || 'This pick was already on your record.');
+                if (typeof window.showPickStep === 'function') window.showPickStep('pickConfirmation');
+                return;
+            }
 
             showSubmitTrace('API saved pick. Refreshing pick history.');
             // Notify any aside / panel that listens for "a pick just locked"
