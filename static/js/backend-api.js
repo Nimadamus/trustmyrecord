@@ -1,4 +1,4 @@
-/**
+﻿/**
  * TrustMyRecord Backend API Client
  * Connects frontend to Node.js/Express backend
  */
@@ -420,7 +420,7 @@ class TrustMyRecordAPI {
     // ==================== USER ROUTES ====================
 
     async getUserProfile(username) {
-        return this.request(`/users/${encodeURIComponent(username)}`);
+        return this.request(`/users/${username}`);
     }
 
     async updateProfile(updates) {
@@ -439,9 +439,11 @@ class TrustMyRecordAPI {
         const normalizedOptions = typeof options === 'string'
             ? { ...legacyOptions, sortBy: options }
             : (options || {});
-        const { sport, sortBy = 'net_units', limit = 50 } = normalizedOptions;
+        const { sport, sortBy = 'roi', limit = 50, minPicks, min_picks } = normalizedOptions;
         let url = `/users/leaderboard?sortBy=${sortBy}&limit=${limit}`;
         if (sport) url += `&sport=${sport}`;
+        const minimumPicks = minPicks != null ? minPicks : min_picks;
+        if (minimumPicks != null) url += `&minPicks=${encodeURIComponent(minimumPicks)}`;
         return this.request(url);
     }
 
@@ -460,95 +462,13 @@ class TrustMyRecordAPI {
         return this.request(`/users/${encodeURIComponent(username)}/stats/advanced${query ? `?${query}` : ''}`);
     }
 
-    // ==================== MODEL BUILDER ROUTES ====================
-    // Private saved configuration objects only. The backend API is /api/models;
-    // this client passes /models because baseUrl already includes /api.
-
-    sanitizeModelDefinitionPayload(payload = {}) {
-        const forbidden = new Set([
-            'roi',
-            'win_rate',
-            'sample_size',
-            'wins',
-            'losses',
-            'pushes',
-            'net_units',
-            'result_units',
-            'performance',
-            'stats',
-            'analytics',
-            'comparison',
-            'record',
-            'marketplace',
-            'marketplace_id',
-            'leaderboard',
-            'grading_stats',
-            'public_profile',
-            'tracker_id',
-            'model_tracker_id',
-            'tracked_pick_id',
-            'prediction',
-            'predictions',
-            'backtest',
-            'backtest_results'
-        ]);
-        const stripForbidden = (value) => {
-            if (Array.isArray(value)) return value.map(stripForbidden);
-            if (!value || typeof value !== 'object') return value;
-            const out = {};
-            Object.entries(value).forEach(([key, childValue]) => {
-                if (!forbidden.has(key)) out[key] = stripForbidden(childValue);
-            });
-            return out;
-        };
-        const clean = stripForbidden(payload || {});
-        clean.visibility = 'private';
-        clean.source_type = 'manual_builder';
-        return clean;
+    async getUserPublicStats(username) {
+        return this.request(`/users/${encodeURIComponent(username)}/public-stats`);
     }
 
-    async listModelDefinitions(options = {}) {
-        const params = new URLSearchParams();
-        if (options.status) params.set('status', options.status);
-        if (options.include_archived != null) params.set('include_archived', String(Boolean(options.include_archived)));
-        const query = params.toString();
-        return this.request(`/models${query ? `?${query}` : ''}`);
-    }
-
-    async getModelDefinition(modelId) {
-        return this.request(`/models/${encodeURIComponent(modelId)}`);
-    }
-
-    async createModelDefinition(modelDefinition) {
-        return this.request('/models', {
-            method: 'POST',
-            body: this.sanitizeModelDefinitionPayload(modelDefinition)
-        });
-    }
-
-    async updateModelDefinition(modelId, updates) {
-        return this.request(`/models/${encodeURIComponent(modelId)}`, {
-            method: 'PATCH',
-            body: this.sanitizeModelDefinitionPayload(updates)
-        });
-    }
-
-    async archiveModelDefinition(modelId) {
-        return this.request(`/models/${encodeURIComponent(modelId)}/archive`, {
-            method: 'POST'
-        });
-    }
-
-    async restoreModelDefinition(modelId) {
-        return this.request(`/models/${encodeURIComponent(modelId)}/restore`, {
-            method: 'POST'
-        });
-    }
-
-    async deleteModelDefinition(modelId) {
-        return this.request(`/models/${encodeURIComponent(modelId)}`, {
-            method: 'DELETE'
-        });
+    async getPublicPendingPicks(username, options = {}) {
+        const { limit = 100, offset = 0 } = options || {};
+        return this.request(`/users/${encodeURIComponent(username)}/pending?limit=${limit}&offset=${offset}`);
     }
 
     // ==================== PICKS ROUTES ====================
@@ -821,6 +741,7 @@ class TrustMyRecordAPI {
     // ==================== UTILITY ====================
 
     isLoggedIn() {
+        this.loadTokens();
         return !!(this.token || this.refreshToken);
     }
 
@@ -843,6 +764,10 @@ class TrustMyRecordAPI {
     }
 
     async checkAuth() {
+        this.loadTokens();
+        if (!this.token && this.refreshToken) {
+            await this.refreshAccessToken();
+        }
         if (!this.token) return false;
         try {
             await this.getCurrentUser();
@@ -1004,176 +929,6 @@ class TrustMyRecordAPI {
             return { activity: [] };
         }
     }
-}
-
-if (typeof window !== 'undefined') {
-    window.TMR = window.TMR || {};
-    window.TMR.formatLeagueLabel = function (value) {
-        const key = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
-        const labels = {
-            baseball_mlb: 'MLB',
-            mlb: 'MLB',
-            icehockey_nhl: 'NHL',
-            hockey_nhl: 'NHL',
-            nhl: 'NHL',
-            basketball_nba: 'NBA',
-            nba: 'NBA',
-            americanfootball_nfl: 'NFL',
-            football_nfl: 'NFL',
-            nfl: 'NFL',
-            americanfootball_ncaaf: 'College Football',
-            football_ncaaf: 'College Football',
-            ncaaf: 'College Football',
-            college_football: 'College Football',
-            basketball_ncaab: 'College Basketball',
-            ncaab: 'College Basketball',
-            college_basketball: 'College Basketball'
-        };
-        if (labels[key]) return labels[key];
-        return key ? String(value).replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }) : 'League';
-    };
-    if (typeof window.TMR.formatLine !== 'function') {
-        window.TMR.formatLine = function (value, options) {
-            if (value == null || value === '') return '';
-            const num = Number(value);
-            if (!Number.isFinite(num)) return String(value).trim();
-            let text = String(num);
-            if (text.indexOf('.') !== -1) text = text.replace(/0+$/, '').replace(/\.$/, '');
-            return options && options.signed && num > 0 ? '+' + text : text;
-        };
-    }
-
-    window.TMR.formatPickLine = function (pick) {
-        pick = pick || {};
-        const market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
-        const selection = String(pick.selection_label || pick.selection || pick.pick || pick.side || '').toLowerCase();
-        const rawLine = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
-        if (rawLine == null || rawLine === '') return '-';
-
-        const num = Number(rawLine);
-        if (!Number.isFinite(num)) return String(rawLine).trim();
-
-        const isSpread = market === 'spreads'
-            || market === 'spread'
-            || market.endsWith('_spreads')
-            || market.includes('run_line')
-            || market.includes('puck_line');
-        const isTotal = market === 'totals'
-            || market === 'total'
-            || market.endsWith('_totals')
-            || market === 'team_totals'
-            || market === 'team_total';
-        const isTeamTotal = market === 'team_totals' || market === 'team_total';
-        const isMoneyline = market === 'h2h'
-            || market === 'moneyline'
-            || market.endsWith('_h2h')
-            || /\b(moneyline|ml)\b/.test(selection);
-
-        if (isMoneyline) return '-';
-        if (isTotal || /\b(over|under)\b/.test(selection)) {
-            const totalLine = window.TMR.formatLine(Math.abs(num)) || '-';
-            return totalLine;
-        }
-        if (isSpread) return window.TMR.formatLine(num, { signed: true }) || '-';
-        return window.TMR.formatLine(num) || '-';
-    };
-
-    window.TMR.formatPickSelection = function (pick) {
-        pick = pick || {};
-        const market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
-        const rawSelection = String(pick.selection_label || pick.selection || pick.pick || pick.side || pick.team || 'Pick').trim();
-        const selection = rawSelection.replace(/\s+/g, ' ');
-        const lineValue = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
-        const hasLine = lineValue != null && lineValue !== '' && Number.isFinite(Number(lineValue));
-        const signedLine = hasLine ? window.TMR.formatLine(lineValue, { signed: true }) : '';
-        const plainLine = hasLine ? window.TMR.formatLine(Math.abs(Number(lineValue))) : '';
-        const escapedPlainLine = plainLine ? plainLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') : '';
-        const awayTeam = String(pick.away_team || (pick.game && pick.game.away_team) || '').trim();
-        const homeTeam = String(pick.home_team || (pick.game && pick.game.home_team) || '').trim();
-        const matchup = awayTeam && homeTeam ? awayTeam + ' @ ' + homeTeam : '';
-        const hasTotalSide = /\b(over|under)\b/i.test(selection);
-        const hasMatchup = matchup && selection.indexOf(matchup) !== -1;
-        const isMoneyline = market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h');
-        const isSpread = market === 'spreads' || market === 'spread' || market.endsWith('_spreads') || market.includes('run_line') || market.includes('puck_line');
-        const isTeamTotal = market === 'team_totals' || market === 'team_total';
-        const isTotal = isTeamTotal || market === 'totals' || market === 'total' || market.endsWith('_totals');
-
-        if (!selection) return 'Pick';
-        if (isMoneyline) return /\bmoneyline\b/i.test(selection) ? selection : selection.replace(/\s+\bML\b$/i, '') + ' Moneyline';
-
-        let cleaned = selection;
-        if (signedLine) cleaned = cleaned.replace(new RegExp('\\s+' + signedLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), '').trim();
-        if (escapedPlainLine) cleaned = cleaned.replace(new RegExp('\\s+[+-]?' + escapedPlainLine + '$'), '').trim();
-
-        if (isTeamTotal && hasTotalSide) {
-            const withTeamTotal = /\bteam\s+total\b/i.test(cleaned)
-                ? cleaned
-                : cleaned.replace(/\b(over|under)\b/i, 'Team Total $1');
-            if (plainLine && !withTeamTotal.match(new RegExp('\\b' + plainLine.replace('.', '\\.') + '\\b'))) {
-                return withTeamTotal + ' ' + plainLine;
-            }
-            return withTeamTotal;
-        }
-
-        if (isTotal && hasTotalSide) {
-            return matchup && !hasMatchup ? matchup + ' ' + cleaned : cleaned;
-        }
-
-        if (isSpread) return cleaned || selection;
-        return cleaned || selection;
-    };
-
-    window.TMR.formatPickDisplay = function (pick) {
-        pick = pick || {};
-        const market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
-        const rawSelection = String(pick.selection_label || pick.selection || pick.pick || pick.side || pick.team || 'Pick').trim();
-        const selection = rawSelection.replace(/\s+/g, ' ');
-        const lineValue = pick.line_snapshot != null ? pick.line_snapshot : (pick.line != null ? pick.line : pick.point);
-        const hasLine = lineValue != null && lineValue !== '' && Number.isFinite(Number(lineValue));
-        const signedLine = hasLine ? window.TMR.formatLine(lineValue, { signed: true }) : '';
-        const plainLine = hasLine ? window.TMR.formatLine(Math.abs(Number(lineValue))) : '';
-        const lowerSelection = selection.toLowerCase();
-        const awayTeam = String(pick.away_team || (pick.game && pick.game.away_team) || '').trim();
-        const homeTeam = String(pick.home_team || (pick.game && pick.game.home_team) || '').trim();
-        const matchup = awayTeam && homeTeam ? awayTeam + ' @ ' + homeTeam : '';
-        const hasTotalSide = /\b(over|under)\b/i.test(selection);
-        const hasMatchup = matchup && selection.indexOf(matchup) !== -1;
-
-        if (!selection) return 'Pick';
-
-        if (market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h')) {
-            return /\bmoneyline\b/i.test(selection) ? selection : selection.replace(/\s+\bML\b$/i, '') + ' Moneyline';
-        }
-
-        if (market === 'spreads' || market === 'spread' || market.endsWith('_spreads') || market.includes('run_line') || market.includes('puck_line')) {
-            if (!signedLine) return selection;
-            return selection.indexOf(signedLine) !== -1 ? selection : selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + signedLine;
-        }
-
-        if (market === 'team_totals' || market === 'team_total') {
-            if (!plainLine || !hasTotalSide) return selection;
-            const withoutLine = selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '').trim();
-            const withTeamTotal = /\bteam\s+total\b/i.test(withoutLine)
-                ? withoutLine
-                : withoutLine.replace(/\b(over|under)\b/i, 'Team Total $1');
-            return withTeamTotal.match(new RegExp('\\b' + plainLine.replace('.', '\\.') + '\\b')) ? withTeamTotal : withTeamTotal + ' ' + plainLine;
-        }
-
-        if (market === 'totals' || market === 'total' || market.endsWith('_totals')) {
-            if (!plainLine) return matchup && hasTotalSide && !hasMatchup ? matchup + ' ' + selection : selection;
-            if (hasTotalSide) {
-                const selectionWithLine = selection.match(new RegExp('\\b' + plainLine.replace('.', '\\.') + '\\b')) ? selection : selection + ' ' + plainLine;
-                return matchup && !hasMatchup ? matchup + ' ' + selectionWithLine : selectionWithLine;
-            }
-            if (lowerSelection === 'over' || lowerSelection === 'under') return selection + ' ' + plainLine;
-            return selection;
-        }
-
-        if (signedLine && selection.indexOf(signedLine) === -1 && !/\b(over|under|ml)\b/i.test(selection)) {
-            return selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + signedLine;
-        }
-        return selection;
-    };
 }
 
 // Create global API instance
