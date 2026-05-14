@@ -548,22 +548,31 @@
             rows.innerHTML = pending.map(rowHtml).join('');
             cards.innerHTML = pending.map(cardHtml).join('');
         }
+
+        async function loadPrivatePendingPagePicks() {
+            var apiClient = window.api || window.backendAPI || null;
+            if (apiClient && apiClient.ready) { try { await apiClient.ready; } catch (e) {} }
+            if (apiClient && typeof apiClient.loadTokens === 'function') { try { apiClient.loadTokens(); } catch (e) {} }
+            if (apiClient && typeof apiClient.request === 'function') return apiClient.request('/picks/pending?limit=100&offset=0');
+            var token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken') || localStorage.getItem('access_token') || localStorage.getItem('token') || localStorage.getItem('tmr_token');
+            if (!token) { var authError = new Error('Authentication required'); authError.status = 401; throw authError; }
+            var response = await fetch('https://trustmyrecord-api.onrender.com/api/picks/pending?limit=100&offset=0', { headers: { Authorization: 'Bearer ' + token } });
+            var data = await response.json().catch(function () { return {}; });
+            if (!response.ok) { var error = new Error(data.error || 'Failed to load pending picks'); error.status = response.status; throw error; }
+            return data;
+        }
         async function boot() {
             try {
-                if (!window.api || !window.api.isLoggedIn()) throw new Error('not authenticated');
-                await window.api.getCurrentUser();
-                var data = await window.api.getPendingPicks({ limit: 100 });
-                render(data && data.picks);
+                var data = await loadPrivatePendingPagePicks();
+                render(data && data.picks, data);
             } catch (error) {
                 authState.hidden = false;
                 content.hidden = true;
-                if (!window.api || !window.api.isLoggedIn() || error.status === 401 || error.status === 403) {
-                    setTimeout(function () {
-                        window.location.href = '/login/?next=/my-pending-picks/';
-                    }, 900);
+                if (error.status === 401 || error.status === 403) {
+                    setTimeout(function () { window.location.href = '/login/?next=/my-pending-picks/'; }, 900);
                 } else {
                     authState.querySelector('h2').textContent = 'Could not load pending picks';
-                    authState.querySelector('p').textContent = 'Refresh in a moment. Your public record privacy filters were not changed.';
+                    authState.querySelector('p').textContent = 'Refresh in a moment. Your pending picks were not changed.';
                 }
             }
         }
