@@ -2924,6 +2924,8 @@
         // a request is mid-flight; the finally{} below clears the flag.
         if (window.__tmrLockInFlight) {
             try { console.info('[TMR submit] re-entry blocked (lock already in flight).'); } catch (_) {}
+            showPickSlipError('Previous pick is still saving. Wait for the confirmation before locking another pick.');
+            showSubmitTrace('Submit stopped: previous pick is still saving.');
             return;
         }
         window.__tmrLockInFlight = true;
