@@ -12,6 +12,7 @@ const checks = [
   ['unit/static: sportsbook visual marker lock', 'node', ['tests/sportsbook-approved-visual-lock.test.js']],
   ['unit/static: sportsbook reliability guard', 'node', ['tests/sportsbook-reliability-guard-test.js']],
   ['unit/static: sportsbook stake mode guard', 'node', ['tests/sportsbook-stake-mode-ui-test.js']],
+  ['unit/static: sportsbook submit flow guard', 'node', ['tests/sportsbook-submit-flow-guard-test.js']],
   ['unit/static: sportsbook no game drop guard', 'node', ['tests/sportsbook-no-game-drop-regression-test.js']],
   ['unit/static: sportsbook header guard', 'node', ['tests/sportsbook-header-regression-test.js']],
   ['unit/static: sportsbook backend board contract', 'node', ['tests/sportsbook-backend-board-render-contract-test.js']],
