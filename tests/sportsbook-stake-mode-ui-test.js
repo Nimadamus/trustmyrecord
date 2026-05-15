@@ -28,6 +28,14 @@ assert(reliability.includes('function renderBoardOptionButton'), 'production scr
 assert(reliability.includes('class="tmr-option-btn"'), 'board option buttons should keep the clickable selector class');
 assert(reliability.includes('data-option-id'), 'board option buttons should keep option ids for pick slip selection');
 assert(reliability.includes('onclick="window.tmrSelectOption(this.dataset.optionId)"'), 'board option buttons should route to locked selection handler');
+assert(reliability.includes('.tmr-option-btn.active::after{content:"Added"'), 'selected sportsbook odds buttons must show visible added-state feedback');
+assert(reliability.includes('function showSelectionFeedback'), 'pick selection must keep the visible feedback handoff');
+assert(reliability.includes('tmrSlipCue'), 'pick selection must keep the fixed View Slip cue when the slip is off-screen');
+assert(reliability.includes('scrollPickSlipIntoView'), 'pick selection must keep the slip scroll helper');
+assert(
+  /function selectOption\(optionId\)[\s\S]*active\.classList\.add\('active'\)[\s\S]*showSelectionFeedback\(option, active\);[\s\S]*function updatePickSummary\(\)/.test(reliability),
+  'selecting an odds button must visibly mark the button and expose the pick slip'
+);
 assert(reliability.includes('unitsModeVisibleLabel'), 'production script should inject visible Risk / To Win selector label');
 assert(reliability.includes('renderStakeSummaryHtml'), 'production script should render split Risk / To Win summary cells');
 assert(reliability.includes("preview.classList.add('tmr-ticket-stake-summary')"), 'stake preview should use the polished ticket summary layout');
