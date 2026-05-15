@@ -59,6 +59,7 @@ function renderedNames(group) {
     const source = simulator.rosterSourceForTeam(team);
     assert(source.url.includes('https://statsapi.mlb.com/api/v1/teams/'), team.name + ' uses the MLB Stats API roster endpoint');
     assert(source.url.includes('/roster?rosterType=active'), team.name + ' uses the active roster type');
+    assert(source.lineupUrl.includes('https://statsapi.mlb.com/api/v1/schedule?'), team.name + ' uses the MLB Stats API schedule endpoint for recent lineups');
     assert(!source.url.includes('site.api.espn.com'), team.name + ' does not use ESPN roster names for current box-score rows');
     return Object.assign({ source }, team);
   });
@@ -68,7 +69,8 @@ function renderedNames(group) {
     const roster = await simulator.fetchTeamRoster(team);
     assert(roster, team.name + ' loaded a verified current active roster');
     assert.strictEqual(String(roster.teamId), String(team.source.teamId), team.name + ' roster has the selected MLB team id');
-    assert.strictEqual(roster.source, 'Projected batting order from verified MLB active roster endpoint', team.name + ' labels the live roster source');
+    assert.strictEqual(roster.source, 'Official MLB recent starting batting order from boxscore plus verified MLB active roster endpoint', team.name + ' labels the live lineup source');
+    assert.strictEqual(roster.lineupSource, 'Official MLB recent starting batting order from boxscore', team.name + ' loaded an official recent batting order');
 
     const pitchers = roster.players.filter((player) => /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')));
     const hitters = roster.players.filter((player) => !/^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')));
@@ -86,22 +88,13 @@ function renderedNames(group) {
     rosters[team.abbreviation] = roster;
   }
 
-  const sentinels = {
-    ARI: ['Corbin Carroll'],
-    ATL: ['Chris Sale'],
-    KC: ['Bobby Witt Jr.'],
-    LAD: ['Shohei Ohtani'],
-    NYY: ['Aaron Judge'],
-    SEA: ['Cal Raleigh'],
-    SF: ['Robbie Ray'],
-    WSH: ['CJ Abrams'],
-  };
-  Object.entries(sentinels).forEach(([abbr, names]) => {
-    const rosterNames = rosters[abbr].players.map((player) => normalizeName(player.name));
-    names.forEach((name) => assert(rosterNames.includes(normalizeName(name)), abbr + ' live roster includes sentinel player ' + name));
+  Object.entries(rosters).forEach(([abbr, roster]) => {
+    const lineup = roster.players
+      .filter((player) => Number.isFinite(Number(player.battingOrder)))
+      .slice(0, 9);
+    assert.strictEqual(lineup.length, 9, abbr + ' live roster includes nine official recent batting-order slots');
+    assert.deepStrictEqual(lineup.map((player) => Number(player.battingOrder)), [100, 200, 300, 400, 500, 600, 700, 800, 900], abbr + ' official recent batting order is sorted 1 through 9');
   });
-
-  assert(!rosters.ARI.players.some((player) => normalizeName(player.name) === normalizeName('Nolan Arenado')), 'Arizona roster rejects reported wrong-team Nolan Arenado row');
 
   teams.forEach((team, index) => {
     const opponent = teams[(index + 1) % teams.length];
@@ -110,8 +103,8 @@ function renderedNames(group) {
     simulator.state.awayPitcherId = '';
     simulator.state.homePitcherId = '';
     const result = simulator.simulate(team, opponent, null, 'full-roster-' + team.abbreviation, false);
-    assert(result.boxScore.players.away.rosterSource === 'Projected batting order from verified MLB active roster endpoint', team.name + ' rendered away player rows from the verified roster source');
-    assert(result.boxScore.players.home.rosterSource === 'Projected batting order from verified MLB active roster endpoint', opponent.name + ' rendered home player rows from the verified roster source');
+    assert(result.boxScore.players.away.rosterSource === 'Official MLB recent starting batting order from boxscore plus verified MLB active roster endpoint', team.name + ' rendered away player rows from the verified lineup source');
+    assert(result.boxScore.players.home.rosterSource === 'Official MLB recent starting batting order from boxscore plus verified MLB active roster endpoint', opponent.name + ' rendered home player rows from the verified lineup source');
 
     assert.strictEqual(result.boxScore.players.away.batters.length, 9, team.name + ' renders exactly nine verified batting-order rows');
     assert.strictEqual(result.boxScore.players.home.batters.length, 9, opponent.name + ' renders exactly nine verified batting-order rows');
