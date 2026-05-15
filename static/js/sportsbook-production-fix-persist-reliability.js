@@ -1364,7 +1364,9 @@
             '.tmr-option-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;padding:10px;}',
             '.tmr-option-btn{background:linear-gradient(180deg,rgba(33,38,47,0.98),rgba(24,28,35,0.98));border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px 14px;text-align:left;color:#fff;cursor:pointer;transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease,background .15s ease;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;min-height:82px;}',
             '.tmr-option-btn:hover{transform:translateY(-1px);border-color:color-mix(in srgb, var(--tmr-accent) 35%, white 65%);box-shadow:0 0 0 1px color-mix(in srgb, var(--tmr-accent) 15%, transparent) inset,0 12px 24px rgba(0,0,0,0.18);}',
-            '.tmr-option-btn.active{border-color:var(--tmr-accent);box-shadow:0 0 0 1px color-mix(in srgb, var(--tmr-accent) 24%, transparent) inset,0 10px 22px rgba(0,0,0,0.2);background:linear-gradient(180deg,color-mix(in srgb, var(--tmr-accent) 18%, rgba(45,60,49,0.98)),rgba(22,31,26,0.98));}',
+            '.tmr-option-btn.active{position:relative;border-color:var(--tmr-accent);box-shadow:0 0 0 2px color-mix(in srgb, var(--tmr-accent) 34%, transparent) inset,0 0 0 1px color-mix(in srgb, var(--tmr-accent) 24%, transparent),0 10px 22px rgba(0,0,0,0.2);background:linear-gradient(180deg,color-mix(in srgb, var(--tmr-accent) 22%, rgba(45,60,49,0.98)),rgba(22,31,26,0.98));}',
+            '.tmr-option-btn.active::after{content:"Added";position:absolute;top:8px;right:8px;padding:4px 7px;border-radius:999px;background:#f2c94c;color:#111827;font-size:10px;font-weight:950;letter-spacing:0.1em;text-transform:uppercase;box-shadow:0 8px 18px rgba(0,0,0,0.24);}',
+            '.tmr-option-btn.tmr-just-selected{animation:tmrPickSelectedPulse .7s ease-out 1;}',
             '.tmr-option-main{display:flex;flex-direction:column;gap:6px;min-width:0;}',
             '.tmr-option-topline{display:flex;align-items:center;justify-content:space-between;gap:8px;}',
             '.tmr-option-tag{display:inline-flex;align-items:center;justify-content:center;padding:4px 7px;border-radius:999px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:10px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:#c8d0dc;}',
@@ -1443,7 +1445,7 @@
             '.tmr-option-grid{display:grid;grid-template-columns:1fr;gap:8px;padding:12px;}',
             '.tmr-option-btn{min-height:78px;padding:12px 12px 12px 14px;border-radius:14px;background:linear-gradient(180deg,rgba(35,41,52,0.98),rgba(24,29,37,0.98));border:1px solid rgba(255,255,255,0.05);box-shadow:inset 0 1px 0 rgba(255,255,255,0.03);grid-template-columns:minmax(0,1fr) auto;}',
             '.tmr-option-btn:hover{transform:translateY(-1px);border-color:rgba(86,240,163,0.18);background:linear-gradient(180deg,rgba(38,45,57,1),rgba(27,32,40,1));}',
-            '.tmr-option-btn.active{border-color:rgba(86,240,163,0.34);box-shadow:0 14px 30px rgba(0,0,0,0.24), inset 0 0 0 1px rgba(86,240,163,0.14);}',
+            '.tmr-option-btn.active{position:relative;border-color:rgba(86,240,163,0.46);box-shadow:0 14px 30px rgba(0,0,0,0.24), inset 0 0 0 2px rgba(86,240,163,0.2),0 0 0 1px rgba(86,240,163,0.18);}',
             '.tmr-option-main{display:grid;grid-template-columns:minmax(0,1fr);gap:5px;min-width:0;}',
             '.tmr-option-topline{gap:10px;justify-content:flex-start;}',
             '.tmr-option-tag{background:rgba(255,255,255,0.07);min-width:56px;padding:5px 8px;}',
@@ -1474,7 +1476,12 @@
             '.tmr-market-card.secondary-open .tmr-group{margin-top:10px;}',
             '@media (max-width:1020px){.tmr-market-side{grid-template-columns:1fr;}.tmr-primary-market-grid{max-width:none;width:100%;min-width:0;}.tmr-market-summary{justify-content:space-between;}}',
             '@keyframes tmrShimmer{0%{background-position:200% 0;}100%{background-position:-200% 0;}}',
-            '@media (max-width: 700px){.tmr-loading-topline{padding:14px 14px 12px;align-items:flex-start;flex-direction:column;}.tmr-loading-tabs{width:100%;}.tmr-loading-tab{flex:1 1 calc(50% - 6px);min-width:unset;}.tmr-loading-matchup,.tmr-loading-lines{grid-template-columns:1fr;}.tmr-market-head{padding:16px;grid-template-columns:1fr;align-items:flex-start;}.tmr-market-body{padding:0 16px 16px;}.tmr-market-summary{width:100%;justify-content:space-between;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-team-name{font-size:16px;}.tmr-team-side{min-width:46px;padding:4px 7px;}.tmr-matchup-divider{padding-left:56px;}.tmr-option-btn{min-height:auto;padding:12px 13px;grid-template-columns:minmax(0,1fr) auto;}.tmr-market-count{width:100%;text-align:center;}.tmr-market-caret{display:none;}.tmr-board-filter-tab{min-width:unset;flex:1 1 calc(50% - 6px);}.tmr-group-header{grid-template-columns:minmax(0,1fr) auto;}.tmr-group-metahead{display:none;}#picks .pick-options{grid-template-columns:1fr;}#picks .games-header{align-items:flex-start;flex-direction:column;}#picks .sport-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}#picks .sport-card{min-height:132px;padding:16px 14px!important;}#picks .sport-name{font-size:16px!important;}#picks .submit-pick-btn{padding:15px 16px;font-size:14px;}}'
+            '@keyframes tmrPickSelectedPulse{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(86,240,163,0.42);}45%{transform:scale(1.012);box-shadow:0 0 0 8px rgba(86,240,163,0.14);}100%{transform:scale(1);box-shadow:0 0 0 0 rgba(86,240,163,0);}}',
+            '.tmr-slip-cue{position:fixed;left:50%;bottom:18px;z-index:9999;transform:translate(-50%,18px);opacity:0;pointer-events:none;display:flex;align-items:center;gap:12px;max-width:min(92vw,520px);padding:12px 14px;border-radius:14px;border:1px solid rgba(86,240,163,0.34);background:linear-gradient(180deg,rgba(13,18,26,0.98),rgba(7,11,17,0.98));box-shadow:0 18px 42px rgba(0,0,0,0.38);transition:opacity .16s ease,transform .16s ease;color:#eef7f1;}',
+            '.tmr-slip-cue.show{opacity:1;transform:translate(-50%,0);pointer-events:auto;}',
+            '.tmr-slip-cue-text{min-width:0;font-size:13px;font-weight:800;line-height:1.25;}',
+            '.tmr-slip-cue-sub{display:block;margin-top:2px;color:#9fb0c4;font-size:11px;font-weight:700;}',
+            '.tmr-slip-cue-action{appearance:none;border:1px solid rgba(242,201,76,0.45);background:#f2c94c;color:#111827;border-radius:10px;padding:9px 11px;font-size:11px;font-weight:950;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap;}',            '@media (max-width: 700px){.tmr-loading-topline{padding:14px 14px 12px;align-items:flex-start;flex-direction:column;}.tmr-loading-tabs{width:100%;}.tmr-loading-tab{flex:1 1 calc(50% - 6px);min-width:unset;}.tmr-loading-matchup,.tmr-loading-lines{grid-template-columns:1fr;}.tmr-market-head{padding:16px;grid-template-columns:1fr;align-items:flex-start;}.tmr-market-body{padding:0 16px 16px;}.tmr-market-summary{width:100%;justify-content:space-between;}.tmr-option-grid{grid-template-columns:1fr;}.tmr-team-name{font-size:16px;}.tmr-team-side{min-width:46px;padding:4px 7px;}.tmr-matchup-divider{padding-left:56px;}.tmr-option-btn{min-height:auto;padding:12px 13px;grid-template-columns:minmax(0,1fr) auto;}.tmr-market-count{width:100%;text-align:center;}.tmr-market-caret{display:none;}.tmr-board-filter-tab{min-width:unset;flex:1 1 calc(50% - 6px);}.tmr-group-header{grid-template-columns:minmax(0,1fr) auto;}.tmr-group-metahead{display:none;}#picks .pick-options{grid-template-columns:1fr;}#picks .games-header{align-items:flex-start;flex-direction:column;}#picks .sport-cards-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}#picks .sport-card{min-height:132px;padding:16px 14px!important;}#picks .sport-name{font-size:16px!important;}#picks .submit-pick-btn{padding:15px 16px;font-size:14px;}}'
             ,'#pickDetails .pick-options{display:flex!important;flex-direction:column!important;gap:20px!important;margin:24px 0!important;}'
             ,'#pickDetails .option-group{margin-bottom:0!important;width:100%;box-sizing:border-box;}'
             ,'#pickDetails .option-group label{display:block;color:#9aa7b8;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;font-size:11px;margin-bottom:8px;}'
@@ -2665,6 +2672,62 @@
         return selectSportAndShowGames(sport);
     }
 
+    function isMostlyInViewport(element) {
+        if (!element || typeof element.getBoundingClientRect !== 'function') return false;
+        const rect = element.getBoundingClientRect();
+        const height = window.innerHeight || document.documentElement.clientHeight || 0;
+        const width = window.innerWidth || document.documentElement.clientWidth || 0;
+        return rect.bottom > 120 && rect.top < height - 120 && rect.right > 0 && rect.left < width;
+    }
+
+    function scrollPickSlipIntoView() {
+        const slip = document.getElementById('pickDetails');
+        if (!slip || typeof slip.scrollIntoView !== 'function') return;
+        slip.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+        try { slip.focus({ preventScroll: true }); } catch (_) {}
+    }
+
+    function ensureSlipCue() {
+        let cue = document.getElementById('tmrSlipCue');
+        if (cue) return cue;
+        cue = document.createElement('div');
+        cue.id = 'tmrSlipCue';
+        cue.className = 'tmr-slip-cue';
+        cue.setAttribute('role', 'status');
+        cue.setAttribute('aria-live', 'polite');
+        cue.innerHTML = '<div class="tmr-slip-cue-text">Pick added<span class="tmr-slip-cue-sub" id="tmrSlipCueSub">Ready in the slip</span></div><button type="button" class="tmr-slip-cue-action">View Slip</button>';
+        const action = cue.querySelector('.tmr-slip-cue-action');
+        if (action) action.addEventListener('click', scrollPickSlipIntoView);
+        document.body.appendChild(cue);
+        return cue;
+    }
+
+    function showSelectionFeedback(option, activeButton) {
+        if (activeButton) {
+            activeButton.classList.remove('tmr-just-selected');
+            void activeButton.offsetWidth;
+            activeButton.classList.add('tmr-just-selected');
+            window.setTimeout(function() {
+                activeButton.classList.remove('tmr-just-selected');
+            }, 850);
+        }
+
+        const cue = ensureSlipCue();
+        const cueSub = document.getElementById('tmrSlipCueSub');
+        if (cueSub) cueSub.textContent = option && option.selection_label ? option.selection_label : 'Ready in the slip';
+        cue.classList.add('show');
+        window.clearTimeout(showSelectionFeedback._hideTimer);
+        showSelectionFeedback._hideTimer = window.setTimeout(function() {
+            cue.classList.remove('show');
+        }, 4200);
+
+        const slip = document.getElementById('pickDetails');
+        const narrow = (window.innerWidth || document.documentElement.clientWidth || 0) < 900;
+        if (narrow || !isMostlyInViewport(slip)) {
+            window.clearTimeout(showSelectionFeedback._scrollTimer);
+            showSelectionFeedback._scrollTimer = window.setTimeout(scrollPickSlipIntoView, 80);
+        }
+    }
     function selectOption(optionId) {
         const option = state.currentOptions.get(optionId);
         if (!option) return;
@@ -2827,6 +2890,8 @@
                 window.showPickStep('pickDetails');
             }
         }
+        showSelectionFeedback(option, active);
+
     }
 
     function updatePickSummary() {
