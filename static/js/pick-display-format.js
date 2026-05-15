@@ -59,6 +59,12 @@
         return Number.isFinite(n) && n > 0 ? '+' + s : s;
     }
 
+    function totalLine(value) {
+        if (value == null || value === '') return '';
+        var n = Number(value);
+        return Number.isFinite(n) ? trimLine(Math.abs(n)) : trimLine(value);
+    }
+
     function isMoneyline(market) {
         return market === 'h2h' || market === 'ml' || market === 'moneyline' || market.indexOf('moneyline') !== -1 || /(^|_)h2h$/.test(market);
     }
@@ -120,7 +126,8 @@
 
         if (isTeamTotal(market)) {
             var team = teamOf(pick, raw);
-            var ttLine = side && lineText ? side + ' ' + lineText : (side || lineText || '');
+            var ttLineText = totalLine(line);
+            var ttLine = side && ttLineText ? side + ' ' + ttLineText : (side || ttLineText || '');
             return {
                 pickLabel: ttLine ? team + ' Team Total ' + ttLine : team + ' Team Total',
                 lineLabel: ttLine || '-'
@@ -144,10 +151,11 @@
         }
 
         if (isTotal(market)) {
-            var totalLine = side && lineText ? side + ' ' + lineText : (side || lineText || raw);
+            var gameTotalLine = totalLine(line);
+            var totalLineLabel = side && gameTotalLine ? side + ' ' + gameTotalLine : (side || gameTotalLine || raw);
             return {
-                pickLabel: totalLine || raw,
-                lineLabel: totalLine || '-'
+                pickLabel: totalLineLabel || raw,
+                lineLabel: totalLineLabel || '-'
             };
         }
 
