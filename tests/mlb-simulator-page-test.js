@@ -16,9 +16,9 @@ const html = fs.readFileSync(pagePath, 'utf8');
 const script = fs.readFileSync(scriptPath, 'utf8');
 
 assert(/<link rel="canonical" href="https:\/\/trustmyrecord\.com\/mlb-simulator\/">/.test(html), 'canonical route is /mlb-simulator/');
-assert(/\/static\/css\/mlb-simulator\.css\?v=20260513-runs1/.test(html), 'live page uses current versioned simulator stylesheet');
-assert(/\/static\/js\/mlb-simulator\.js\?v=20260513-runs1/.test(html), 'live page uses current versioned simulator script');
-assert(/data-mlb-simulator-build="mlb-simulator-realism-runs-20260513"/.test(html), 'page carries the current simulator build marker');
+assert(/\/static\/css\/mlb-simulator\.css\?v=20260515-lineups1/.test(html), 'live page uses current versioned simulator stylesheet');
+assert(/\/static\/js\/mlb-simulator\.js\?v=20260515-lineups1/.test(html), 'live page uses current versioned simulator script');
+assert(/data-mlb-simulator-build="mlb-simulator-official-lineups-20260515"/.test(html), 'page carries the current simulator build marker');
 assert(!/legacy guard marker|standalone-box-score-20260505/.test(html + script), 'stale simulator deployment markers are removed');
 assert(/awayTeamSelect/.test(html), 'Team A selector is present');
 assert(/homeTeamSelect/.test(html), 'Team B selector is present');
@@ -120,6 +120,47 @@ function buildFetchMock(mode) {
           const [name, position] = entry.split('|');
           return { person: { id: index + 1, fullName: name }, position: { abbreviation: position }, parentTeamId: Number(teamId), status: { code: 'A' } };
         }),
+      });
+    }
+    if (String(url).includes('statsapi.mlb.com/api/v1/schedule?')) {
+      const teamId = Number((String(url).match(/teamId=(\d+)/) || [])[1]);
+      return mockResponse({
+        dates: [{
+          games: [{
+            gamePk: 900000 + teamId,
+            gameDate: '2026-05-14T23:05:00Z',
+            status: { abstractGameState: 'Final', detailedState: 'Final' },
+          }],
+        }],
+      });
+    }
+    if (String(url).includes('statsapi.mlb.com/api/v1/game/')) {
+      const gamePk = Number((String(url).match(/game\/(\d+)\/boxscore/) || [])[1]);
+      const teamId = gamePk - 900000;
+      const lineups = {
+        109: ['Ketel Marte|2B', 'Corbin Carroll|CF', 'Josh Naylor|1B', 'Eugenio Suarez|3B', 'Lourdes Gurriel Jr.|LF', 'Gabriel Moreno|C', 'Geraldo Perdomo|SS', 'Jake McCarthy|RF', 'Randal Grichuk|DH'],
+        144: ['Ronald Acuna Jr.|RF', 'Ozzie Albies|2B', 'Austin Riley|3B', 'Matt Olson|1B', 'Marcell Ozuna|DH', 'Michael Harris II|CF', 'Sean Murphy|C', 'Jurickson Profar|LF', 'Orlando Arcia|SS'],
+        140: ['Marcus Semien|2B', 'Corey Seager|SS', 'Wyatt Langford|RF', 'Adolis Garcia|LF', 'Josh Jung|1B', 'Evan Carter|CF', 'Josh Smith|3B', 'Jonah Heim|C', 'Ezequiel Duran|DH'],
+        147: ['Ben Rice|1B', 'Aaron Judge|RF', 'Cody Bellinger|CF', 'Giancarlo Stanton|DH', 'Jazz Chisholm Jr.|2B', 'Paul Goldschmidt|1B', 'Jasson Dominguez|LF', 'Anthony Volpe|SS', 'Austin Wells|C'],
+        137: ['Jung Hoo Lee|CF', 'Heliot Ramos|LF', 'Willy Adames|SS', 'Matt Chapman|3B', 'Patrick Bailey|C', 'Mike Yastrzemski|RF', 'Wilmer Flores|DH', 'Casey Schmitt|1B', 'Logan Webb|P'],
+      };
+      const players = {};
+      const batters = [];
+      (lineups[teamId] || []).forEach((entry, index) => {
+        const [name, position] = entry.split('|');
+        const id = teamId * 100 + index + 1;
+        batters.push(id);
+        players['ID' + id] = {
+          person: { id, fullName: name },
+          position: { abbreviation: position },
+          battingOrder: String((index + 1) * 100),
+        };
+      });
+      return mockResponse({
+        teams: {
+          away: { team: { id: teamId, name: 'Mock Team' }, batters, players },
+          home: { team: { id: 999, name: 'Opponent' }, batters: [], players: {} },
+        },
       });
     }
     if (String(url).includes('/games?sport=baseball_mlb')) {
@@ -508,9 +549,11 @@ async function flushAsync() {
   await rostered.simulator.runSimulation();
   assert(/Corbin Carroll|Ketel Marte|Geraldo Perdomo/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders verified Arizona hitter names');
   assert(/Michael Harris II|Ronald Acuna Jr\.|Matt Olson|Ozzie Albies/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders verified Atlanta hitter names');
+  assert(/Ketel Marte[\s\S]*Corbin Carroll[\s\S]*Josh Naylor/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup uses official recent Arizona batting order instead of generic position sorting');
+  assert(/Ronald Acuna Jr\.[\s\S]*Ozzie Albies[\s\S]*Austin Riley/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup uses official recent Atlanta batting order instead of generic position sorting');
   assert(/Zac Gallen|Kevin Ginkel|Ryan Thompson/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Arizona pitcher names');
   assert(/Bryce Elder|Aaron Bummer|Raisel Iglesias/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup renders Atlanta pitcher names');
-  assert(/Projected lineup from verified MLB active roster endpoint/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup labels MLB roster source');
+  assert(/Official MLB recent starting batting order from boxscore plus verified MLB active roster endpoint/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup labels MLB lineup and roster sources');
   assert(!/Verified ESPN team roster endpoint|ESPN roster endpoint|Jose Fernandez|Jorge Mateo|Dominic Smith|Kyle Farmer|Mike Yastrzemski/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'current matchup does not render ESPN/stale wrong-team roster names');
   assert(/Simulation output from TrustMyRecord/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'box score keeps the top simulation disclaimer');
   assert(/Pitching &amp; Game Notes/.test(rostered.elements.playerBoxScoreContent.innerHTML), 'box score renders clean pitching and game notes');
