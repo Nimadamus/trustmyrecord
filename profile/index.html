@@ -2088,7 +2088,7 @@
                         </div>
                         <div class="tmrx-filter-bar">
                           <label><span>Sport</span><select data-tmrx-filter="sport"><option value="">All</option><option value="baseball_mlb">MLB</option><option value="basketball_nba">NBA</option><option value="icehockey_nhl">NHL</option><option value="americanfootball_nfl">NFL</option></select></label>
-                          <label><span>Market</span><select data-tmrx-filter="market"><option value="">All</option><option value="h2h">Moneyline</option><option value="spreads">Spread</option><option value="totals">Total</option><option value="team_totals">Team Total</option><option value="f5_h2h,f5_spreads,f5_totals">First Five</option></select></label>
+                          <label><span>Market</span><select data-tmrx-filter="market"><option value="">All</option><option value="h2h">Moneyline</option><option value="spreads">Spread</option><option value="totals">Total</option><option value="team_totals">Team Total</option><option value="f5_h2h,f5_spreads,f5_totals,f5_team_totals">First Five</option></select></label>
                           <label><span>Result</span><select data-tmrx-filter="result"><option value="">All</option><option value="won">Won</option><option value="lost">Lost</option><option value="push">Push</option><option value="pending">Pending</option></select></label>
                           <label><span>Odds</span><select data-tmrx-filter="odds"><option value="">All</option><option value="favorite">Favorite (-101 or lower)</option><option value="underdog">Dog (+100 or higher)</option><option value="even_money">Even Money (-100)</option></select></label>
                           <label><span>Unit Size</span><select data-tmrx-filter="unit_size"><option value="">All</option><option value="0.5_to_1u">0.5u-1u</option><option value="1.5_to_2u">1.5u-2u</option><option value="2.5_to_3u">2.5u-3u</option><option value="3u_plus">3u+</option></select></label>
@@ -2463,7 +2463,7 @@
                         <option value="spreads,spread">Spread</option>
                         <option value="totals,total">Totals</option>
                         <option value="team_totals">Team Totals</option>
-                        <option value="f5_h2h,f5_spreads,f5_totals">First 5</option>
+                        <option value="f5_h2h,f5_spreads,f5_totals,f5_team_totals">First 5 Innings</option>
                         <option value="first_half_h2h,first_half_spreads,first_half_totals">First Half</option>
                         <option value="second_half_h2h,second_half_spreads,second_half_totals">Second Half</option>
                         <option value="period_1_h2h,period_1_spreads,period_1_totals">1st Period</option>
@@ -5151,7 +5151,7 @@
         { key: 'spreads', label: 'Spread', types: ['spreads', 'spread'] },
         { key: 'totals', label: 'Totals', types: ['totals', 'total'] },
         { key: 'team_totals', label: 'Team Totals', types: ['team_totals'] },
-        { key: 'first5', label: 'First 5', types: ['f5_h2h', 'f5_spreads', 'f5_totals'] },
+        { key: 'first5', label: 'First 5 Innings', types: ['f5_h2h', 'f5_spreads', 'f5_totals', 'f5_team_totals'] },
         { key: 'first_half', label: 'First Half', types: ['first_half_h2h', 'first_half_spreads', 'first_half_totals'] },
         { key: 'second_half', label: 'Second Half', types: ['second_half_h2h', 'second_half_spreads', 'second_half_totals'] },
         { key: 'period_1', label: '1st Period', types: ['period_1_h2h', 'period_1_spreads', 'period_1_totals'] },
@@ -6825,7 +6825,7 @@
             // markets
             h2h: 'Moneyline', spreads: 'Spreads', totals: 'Totals',
             team_totals: 'Team Totals',
-            f5_h2h: 'F5 Moneyline', f5_spreads: 'F5 Run Line', f5_totals: 'F5 Total',
+            f5_h2h: 'First 5 Innings Moneyline', f5_spreads: 'First 5 Innings Run Line', f5_totals: 'First 5 Innings Total', f5_team_totals: 'First 5 Innings Team Total',
             first_half_h2h: '1H ML', first_half_spreads: '1H Spread', first_half_totals: '1H Total',
             second_half_h2h: '2H ML', second_half_spreads: '2H Spread', second_half_totals: '2H Total',
             period_1_h2h: 'P1 ML', period_1_spreads: 'P1 Spread', period_1_totals: 'P1 Total',
@@ -9457,9 +9457,10 @@
             second_half: 'Second Half',
             period_1: '1st Period',
             alt_lines: 'Alt Lines',
-            f5_h2h: 'First 5 Moneyline',
-            f5_spreads: 'First 5 Spread',
-            f5_totals: 'First 5 Totals',
+            f5_h2h: 'First 5 Innings Moneyline',
+            f5_spreads: 'First 5 Innings Run Line',
+            f5_totals: 'First 5 Innings Total',
+            f5_team_totals: 'First 5 Innings Team Total',
             first_half_h2h: 'First Half ML',
             first_half_spreads: 'First Half Spread',
             first_half_totals: 'First Half Totals',
@@ -9488,7 +9489,7 @@
             'spreads,spread': 'Spreads',
             'totals,total': 'Totals',
             'team_totals': 'Team Totals',
-            'f5_h2h,f5_spreads,f5_totals': 'First 5',
+            'f5_h2h,f5_spreads,f5_totals,f5_team_totals': 'First 5 Innings',
             'first_half_h2h,first_half_spreads,first_half_totals': 'First Half',
             'second_half_h2h,second_half_spreads,second_half_totals': 'Second Half',
             'period_1_h2h,period_1_spreads,period_1_totals': '1st Period',
