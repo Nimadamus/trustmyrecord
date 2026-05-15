@@ -46,10 +46,11 @@ function captureRoot(out) {
   const page = await browser.newPage({ viewport: { width: 1320, height: 940 } });
   try {
     await waitForPage(page);
-    await page.locator('text=Browse Verified Records').click();
     await page.waitForTimeout(800);
     captureRoot(DESKTOP_OUT);
     const desktopChecks = await collectChecks(page);
+    await page.locator('text=Browse Verified Records').click();
+    await page.waitForTimeout(800);
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
