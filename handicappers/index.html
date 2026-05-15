@@ -101,6 +101,56 @@
             line-height: 1.5;
         }
 
+        .hm-value-line {
+            max-width: 660px;
+            margin: 12px 0 0;
+            color: #dffbf7;
+            font-size: 0.94rem;
+            line-height: 1.45;
+            font-weight: 850;
+        }
+
+        .hm-hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .hm-cta {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 42px;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 9px;
+            padding: 0 15px;
+            color: #eef6ff;
+            font-size: 0.9rem;
+            font-weight: 900;
+            line-height: 1.1;
+            text-align: center;
+            transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+        }
+
+        .hm-cta:hover,
+        .hm-cta:focus-visible {
+            transform: translateY(-1px);
+            border-color: rgba(45, 212, 191, 0.42);
+            outline: none;
+        }
+
+        .hm-cta--primary {
+            border-color: rgba(45, 212, 191, 0.52);
+            background: linear-gradient(135deg, rgba(45, 212, 191, 0.95), rgba(34, 197, 94, 0.88));
+            color: #04111d;
+            box-shadow: 0 14px 28px rgba(45, 212, 191, 0.14);
+        }
+
+        .hm-cta--secondary {
+            background: rgba(96, 165, 250, 0.10);
+        }
+
         .hm-counts {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -151,6 +201,40 @@
         .hm-count[hidden],
         .hm-featured[hidden] {
             display: none !important;
+        }
+
+        .hm-value-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin: 18px 0 8px;
+        }
+
+        .hm-value-card {
+            min-height: 132px;
+            padding: 15px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 12px;
+            background:
+                radial-gradient(circle at top right, rgba(45, 212, 191, 0.08), transparent 48%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012)),
+                rgba(9, 17, 31, 0.88);
+        }
+
+        .hm-value-card b {
+            display: block;
+            color: #f6fbff;
+            font-size: 1rem;
+            font-weight: 900;
+            line-height: 1.15;
+        }
+
+        .hm-value-card p {
+            margin: 8px 0 0;
+            color: #9fb0c6;
+            font-size: 0.84rem;
+            font-weight: 700;
+            line-height: 1.45;
         }
 
         .hm-section-head {
@@ -245,6 +329,13 @@
             background: rgba(8, 15, 27, 0.78);
         }
 
+        .hm-filter-copy {
+            margin: 12px 0 0;
+            color: #9fb0c6;
+            font-size: 0.84rem;
+            font-weight: 750;
+        }
+
         .hm-field {
             display: grid;
             gap: 6px;
@@ -314,6 +405,37 @@
             font-weight: 900;
             letter-spacing: 0.06em;
             text-transform: uppercase;
+        }
+
+        .hm-founding-strip {
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            margin: 0 0 12px;
+            padding: 13px 14px;
+            border: 1px solid rgba(45, 212, 191, 0.24);
+            border-radius: 12px;
+            background:
+                linear-gradient(135deg, rgba(45, 212, 191, 0.12), rgba(96, 165, 250, 0.07)),
+                rgba(8, 15, 27, 0.88);
+        }
+
+        .hm-founding-strip.is-visible {
+            display: flex;
+        }
+
+        .hm-founding-strip p {
+            margin: 0;
+            color: #d8eaff;
+            font-size: 0.88rem;
+            font-weight: 800;
+            line-height: 1.45;
+        }
+
+        .hm-founding-strip .hm-cta {
+            flex: 0 0 auto;
+            min-height: 38px;
         }
 
         .hm-table-wrap {
@@ -593,6 +715,10 @@
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
+            .hm-value-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
             .hm-controls {
                 grid-template-columns: 1fr 1fr;
             }
@@ -625,8 +751,19 @@
 
             .hm-counts,
             .hm-controls,
-            .hm-featured {
+            .hm-featured,
+            .hm-value-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .hm-hero-actions,
+            .hm-founding-strip {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .hm-cta {
+                width: 100%;
             }
 
             .hm-hero h1 {
@@ -634,7 +771,7 @@
             }
 
             .hm-counts {
-                grid-template-columns: repeat(3, minmax(0, 1fr));
+                grid-template-columns: 1fr;
                 gap: 7px;
             }
 
@@ -736,27 +873,61 @@
     <main class="hm-page">
         <section class="hm-hero">
             <div>
-                <p class="hm-kicker">Member Discovery</p>
-                <h1>Find Handicappers</h1>
-                <p>Search members, compare verified records, and open public profiles backed by locked-pick activity.</p>
+                <p class="hm-kicker">Verified Sports Records</p>
+                <h1>Find Verified Sports Handicappers</h1>
+                <p>Compare real public records, locked picks, ROI, win rate, streaks, sport history, and verified performance before trusting anyone's picks.</p>
+                <div class="hm-value-line">No fake screenshots. No deleted losers. No edited records. Every graded pick builds a public profile.</div>
+                <div class="hm-hero-actions" aria-label="Handicapper actions">
+                    <a class="hm-cta hm-cta--primary auth-link" href="/register/">Start Tracking Your Picks Free</a>
+                    <a class="hm-cta hm-cta--secondary" href="#hmLeaderboard">Browse Verified Records</a>
+                </div>
             </div>
             <div class="hm-counts" aria-label="Directory summary">
-                <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Total Members</span><small>Public members only</small></div>
-                <div class="hm-count"><strong id="hmActiveMembers">0</strong><span>Active Pick Makers</span><small>Members with real picks</small></div>
-                <div class="hm-count"><strong id="hmTotalPicks">0</strong><span>Total Verified Picks</span><small>Graded picks only</small></div>
+                <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Public Members</span><small>Profiles visible in the public directory</small></div>
+                <div class="hm-count"><strong id="hmActiveMembers">0</strong><span>Verified Pick Makers</span><small>Members with locked-pick activity</small></div>
+                <div class="hm-count"><strong id="hmTotalPicks">0</strong><span>Graded Picks Tracked</span><small>Finished picks counted in records</small></div>
             </div>
         </section>
 
-        <section aria-label="Featured leaders">
+        <section aria-label="Why use TrustMyRecord">
             <div class="hm-section-head">
                 <div>
-                    <h2>Leaderboard</h2>
-                    <p>Compare public members by record, units, ROI, win rate, streaks, sport, and recent activity.</p>
+                    <h2>Why Use TrustMyRecord?</h2>
+                    <p>Build a verified sports betting reputation from real locked picks, public stats, and transparent results.</p>
+                </div>
+            </div>
+            <div class="hm-value-grid">
+                <article class="hm-value-card">
+                    <b>Track Your Picks Free</b>
+                    <p>Lock in picks, build a public record, and let your stats update automatically.</p>
+                </article>
+                <article class="hm-value-card">
+                    <b>Compare Real Handicappers</b>
+                    <p>Sort users by units, ROI, win percentage, sports, streaks, and verified pick history.</p>
+                </article>
+                <article class="hm-value-card">
+                    <b>Sell Picks With Proof</b>
+                    <p>Build credibility through a verified public record before selling premium picks.</p>
+                </article>
+                <article class="hm-value-card">
+                    <b>Compete With Other Bettors</b>
+                    <p>Challenge other users, climb leaderboards, and turn your picks into a public reputation.</p>
+                </article>
+            </div>
+        </section>
+
+        <section id="hmLeaderboard" aria-label="Featured leaders">
+            <div class="hm-section-head">
+                <div>
+                    <h2>Verified Leaderboard</h2>
+                    <p>Leaderboard highlights are based only on graded, locked-pick activity.</p>
                 </div>
                 <span class="hm-production-note">Showing <strong id="hmVisibleMembers">0</strong> filtered members</span>
             </div>
             <div class="hm-featured" id="hmFeaturedLeaders" hidden></div>
         </section>
+
+        <p class="hm-filter-copy">Search by username, filter by sport, or sort by the metrics that matter most to you.</p>
 
         <section class="hm-controls" aria-label="Search and filters">
             <div class="hm-field">
@@ -782,6 +953,11 @@
                 </select>
             </div>
         </section>
+
+        <div class="hm-founding-strip" id="hmFoundingStrip">
+            <p>Only a few public records are live right now. Start tracking today and become one of the first verified handicappers on TrustMyRecord.</p>
+            <a class="hm-cta hm-cta--primary auth-link" href="/register/">Create Your Free Record</a>
+        </div>
 
         <div class="hm-toolbar">
             <span id="hmStatus">Loading members...</span>
@@ -831,7 +1007,8 @@
             active: document.getElementById('hmActiveMembers'),
             visible: document.getElementById('hmVisibleMembers'),
             totalPicks: document.getElementById('hmTotalPicks'),
-            featured: document.getElementById('hmFeaturedLeaders')
+            featured: document.getElementById('hmFeaturedLeaders'),
+            foundingStrip: document.getElementById('hmFoundingStrip')
         };
 
         let members = [];
@@ -1463,11 +1640,18 @@
         function renderLeaderCard(label, member, formatter, metricGetter) {
             const metricValue = typeof metricGetter === 'function' ? metricGetter(member) : null;
             const metricClass = statClass(metricValue);
+            const descriptions = {
+                'Units Leader': 'Highest positive net units from qualified graded picks',
+                'Best ROI': 'Best return on risk from qualified graded picks',
+                'Best Win Percentage': 'Highest win rate with enough graded picks',
+                'Most Verified Picks': 'Largest graded locked-pick sample',
+                'Newest Active Capper': 'Most recent qualified locked-pick activity'
+            };
             return '<div class="hm-leader-card">' +
                 '<b>' + escapeHtml(label) + '</b>' +
                 '<strong>' + escapeHtml(member.displayName) + '</strong>' +
                 '<span class="' + metricClass + '">@' + escapeHtml(member.username) + ' · ' + escapeHtml(formatter(member)) + '</span>' +
-                '<span>' + gradedCount(member) + ' graded picks</span>' +
+                '<span>' + escapeHtml(descriptions[label] || (gradedCount(member) + ' graded picks')) + '</span>' +
             '</div>';
         }
 
@@ -1538,6 +1722,10 @@
             els.status.textContent = visibleMembers.length === members.length
                 ? 'Showing all ' + members.length + ' members.'
                 : 'Showing ' + visibleMembers.length + ' of ' + members.length + ' members.';
+            if (els.foundingStrip) {
+                const showFoundingStrip = members.length > 0 && visibleMembers.length > 0 && visibleMembers.length <= 6;
+                els.foundingStrip.classList.toggle('is-visible', showFoundingStrip);
+            }
 
             if (!visibleMembers.length) {
                 els.rows.innerHTML = '<div class="hm-empty"><strong>Founding records are being built now.</strong>Early members will appear here once they have locked pick activity. Search by username to find a specific production member.</div>';
