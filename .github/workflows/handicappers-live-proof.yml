@@ -1,0 +1,33 @@
+name: Handicappers Live Proof
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'handicappers/index.html'
+      - 'tests/handicappers-live-proof.js'
+      - '.github/workflows/handicappers-live-proof.yml'
+
+jobs:
+  handicappers-live-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: sudo apt-get update && sudo apt-get install -y imagemagick
+      - run: xvfb-run --auto-servernum node tests/handicappers-live-proof.js
+        env:
+          TMR_HANDICAPPERS_URL: https://trustmyrecord.com/handicappers/?proof=${{ github.sha }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: handicappers-live-proof
+          path: |
+            artifacts/handicappers-live-browser-addressbar-proof.png
+            artifacts/handicappers-live-mobile-proof.png
+            artifacts/handicappers-live-proof.json
