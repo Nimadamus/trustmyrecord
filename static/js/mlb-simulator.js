@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-realism-runs-20260513';
+    var UI_BUILD = 'mlb-simulator-official-lineups-20260515';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -153,9 +153,7 @@
         PHI: 143, PIT: 134, SD: 135, SF: 137, SEA: 136, STL: 138, TB: 139, TEX: 140, TOR: 141, WSH: 120
     };
 
-    var REPORTED_MISMATCHED_CURRENT_NAMES = {
-        ARI: { nolanarenado: true }
-    };
+    var REPORTED_MISMATCHED_CURRENT_NAMES = {};
     var MIN_CURRENT_ROSTER_BATTERS = 9;
     var MIN_CURRENT_ROSTER_PITCHERS = 5;
 
@@ -205,6 +203,7 @@
             espnEvents: [],
             espnSummaries: {},
             teamRosters: {},
+            teamLineups: {},
             recentEvents: [],
             error: null
         },
@@ -288,6 +287,8 @@
         return String(player && player.position || '').toUpperCase();
     }
     function rosterSortValue(player) {
+        var battingOrder = Number(player && player.battingOrder);
+        if (Number.isFinite(battingOrder) && battingOrder > 0) return battingOrder / 100;
         var position = playerPositionLabel(player);
         var order = { CF: 1, SS: 2, RF: 3, '1B': 4, '3B': 5, LF: 6, DH: 7, '2B': 8, C: 9, OF: 10, IF: 11 };
         return order[position] || 20;
@@ -382,10 +383,118 @@
         var teamId = team && MLB_TEAM_IDS[team.abbreviation];
         return teamId ? 'https://statsapi.mlb.com/api/v1/teams/' + teamId + '/roster?rosterType=active&_=' + encodeURIComponent(UI_BUILD) : '';
     }
+    function isoDateParts(date) {
+        return date.toISOString().slice(0, 10);
+    }
+    function daysAgo(count) {
+        var date = new Date();
+        date.setUTCDate(date.getUTCDate() - count);
+        return date;
+    }
+    function teamScheduleUrl(team) {
+        var teamId = team && MLB_TEAM_IDS[team.abbreviation];
+        if (!teamId) return '';
+        return 'https://statsapi.mlb.com/api/v1/schedule?sportId=1&teamId=' + encodeURIComponent(teamId) +
+            '&startDate=' + encodeURIComponent(isoDateParts(daysAgo(21))) +
+            '&endDate=' + encodeURIComponent(isoDateParts(new Date())) +
+            '&_=' + encodeURIComponent(UI_BUILD);
+    }
+    function gameBoxscoreUrl(gamePk) {
+        return 'https://statsapi.mlb.com/api/v1/game/' + encodeURIComponent(gamePk) + '/boxscore?_=' + encodeURIComponent(UI_BUILD);
+    }
+    function recentFinalGamePks(data) {
+        return (Array.isArray(data && data.dates) ? data.dates : [])
+            .reduce(function (games, dateGroup) { return games.concat(dateGroup.games || []); }, [])
+            .filter(function (game) {
+                var status = game && game.status || {};
+                return game.gamePk && (status.abstractGameState === 'Final' || status.detailedState === 'Final');
+            })
+            .sort(function (a, b) { return new Date(b.gameDate || 0) - new Date(a.gameDate || 0); })
+            .map(function (game) { return game.gamePk; });
+    }
+    function extractOfficialBattingOrder(data, team) {
+        var expectedId = MLB_TEAM_IDS[team && team.abbreviation];
+        var sides = ['away', 'home'];
+        for (var i = 0; i < sides.length; i += 1) {
+            var side = data && data.teams && data.teams[sides[i]];
+            if (!side || String(side.team && side.team.id || '') !== String(expectedId || '')) continue;
+            var players = side.players || {};
+            var rows = (side.batters || []).map(function (id) { return players['ID' + id]; }).filter(function (player) {
+                var order = Number(player && player.battingOrder);
+                return player && player.person && player.person.fullName && Number.isFinite(order) && order >= 100 && order <= 900 && order % 100 === 0;
+            }).sort(function (a, b) { return Number(a.battingOrder) - Number(b.battingOrder); }).map(function (player) {
+                return {
+                    name: player.person.fullName,
+                    position: player.position && (player.position.abbreviation || player.position.name) || '',
+                    battingOrder: Number(player.battingOrder),
+                    teamId: String(expectedId || '')
+                };
+            });
+            var seen = {};
+            rows = rows.filter(function (player) {
+                var key = normalizeName(player.name);
+                if (seen[key]) return false;
+                seen[key] = true;
+                return true;
+            }).slice(0, 9);
+            if (rows.length === 9) {
+                return {
+                    teamId: String(expectedId || ''),
+                    players: rows,
+                    source: 'Official MLB recent starting batting order from boxscore'
+                };
+            }
+        }
+        return null;
+    }
+    function fetchFirstOfficialLineup(team, gamePks, index) {
+        if (!team || !gamePks || index >= Math.min(gamePks.length, 8)) return Promise.resolve(null);
+        return fetchJson(gameBoxscoreUrl(gamePks[index]), { cache: 'no-store' }).then(function (boxscore) {
+            return extractOfficialBattingOrder(boxscore, team) || fetchFirstOfficialLineup(team, gamePks, index + 1);
+        }).catch(function () {
+            return fetchFirstOfficialLineup(team, gamePks, index + 1);
+        });
+    }
+    function fetchTeamBattingOrder(team) {
+        if (!team || team.era !== 'current') return Promise.resolve(null);
+        state.liveContext.teamLineups = state.liveContext.teamLineups || {};
+        var cached = state.liveContext.teamLineups[team.abbreviation];
+        if (cached && cached.uiBuild === UI_BUILD) return Promise.resolve(cached);
+        var url = teamScheduleUrl(team);
+        if (!url) return Promise.resolve(null);
+        return fetchJson(url, { cache: 'no-store' }).then(function (data) {
+            return fetchFirstOfficialLineup(team, recentFinalGamePks(data), 0);
+        }).then(function (lineup) {
+            if (lineup) lineup.uiBuild = UI_BUILD;
+            state.liveContext.teamLineups[team.abbreviation] = lineup;
+            return lineup;
+        }).catch(function () {
+            state.liveContext.teamLineups[team.abbreviation] = null;
+            return null;
+        });
+    }
+    function applyOfficialBattingOrder(roster, lineup) {
+        if (!roster || !Array.isArray(roster.players) || !lineup || !Array.isArray(lineup.players) || lineup.players.length < 9) return roster;
+        var used = {};
+        var ordered = lineup.players.map(function (player) {
+            used[normalizeName(player.name)] = true;
+            return player;
+        });
+        roster.players.forEach(function (player) {
+            if (!used[normalizeName(player.name)]) ordered.push(player);
+        });
+        return Object.assign({}, roster, {
+            players: ordered,
+            lineupSource: lineup.source,
+            source: lineup.source + ' plus verified MLB active roster endpoint',
+            summary: roster.summary + ', official recent batting order loaded'
+        });
+    }
     function rosterSourceForTeam(team) {
         return {
             teamId: team && MLB_TEAM_IDS[team.abbreviation] || null,
             url: teamRosterUrl(team),
+            lineupUrl: teamScheduleUrl(team),
             source: 'MLB Stats API active roster',
             cache: 'no-store plus UI build cache-buster',
             minimumBatters: MIN_CURRENT_ROSTER_BATTERS,
@@ -398,8 +507,9 @@
         if (state.liveContext.teamRosters[team.abbreviation] && state.liveContext.teamRosters[team.abbreviation].uiBuild === UI_BUILD) return Promise.resolve(state.liveContext.teamRosters[team.abbreviation]);
         var url = teamRosterUrl(team);
         if (!url) return Promise.resolve(null);
-        return fetchJson(url, { cache: 'no-store' }).then(function (data) {
-            var roster = collectMlbTeamRoster(data, team);
+        return Promise.all([fetchJson(url, { cache: 'no-store' }), fetchTeamBattingOrder(team)]).then(function (results) {
+            var roster = collectMlbTeamRoster(results[0], team);
+            roster = applyOfficialBattingOrder(roster, results[1]);
             if (roster) roster.uiBuild = UI_BUILD;
             state.liveContext.teamRosters[team.abbreviation] = roster;
             return roster;
@@ -857,6 +967,32 @@
             }
         };
     }
+    function simulatedTeamSummaryStats(line, players, random) {
+        var batters = players && players.batters || [];
+        var pitchers = players && players.pitchers || [];
+        var walks = sum(batters.map(function (row) { return row.bb; }));
+        var strikeouts = sum(batters.map(function (row) { return row.so; }));
+        var totalPitches = sum(pitchers.map(function (row) {
+            return clamp(Math.round((row.outs || 0) * 5.2 + (row.h || 0) * 5 + (row.bb || 0) * 6 + (row.so || 0) * 1.5), 8, 120);
+        }));
+        if (!totalPitches) totalPitches = clamp(132 + Math.round(random() * 34) + line.runs * 5, 105, 205);
+        return {
+            doubles: clamp(Math.round(line.hits * 0.18 + random()), 0, line.hits),
+            triples: random() < 0.12 && line.hits >= 3 ? 1 : 0,
+            homeRuns: clamp(Math.round(line.runs * 0.22 + random() * 0.6), 0, line.hits),
+            rbi: Math.max(0, line.runs - (line.runs && random() < 0.22 ? 1 : 0)),
+            walks: walks || clamp(Math.round(2 + random() * 4), 1, 8),
+            strikeouts: strikeouts || clamp(Math.round(6 + random() * 5), 3, 14),
+            stolenBases: random() < 0.28 ? 1 : 0,
+            caughtStealing: random() < 0.12 ? 1 : 0,
+            leftOnBase: clamp(line.hits + (walks || 3) - line.runs + Math.round(random() * 3), 0, 14),
+            totalPitches: totalPitches,
+            totalStrikes: clamp(Math.round(totalPitches * (0.61 + random() * 0.08)), 0, totalPitches),
+            hits: line.hits,
+            runs: line.runs,
+            errors: line.errors
+        };
+    }
     function buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext) {
         var random = Math.random;
         var awayScore = controlledFinalScore(awayRuns, homeRuns, awayWin, random);
@@ -913,13 +1049,16 @@
         var turningPoint = (awayLate || homeLate) ? 'Late innings swung ' + (homeLate >= awayLate ? home.abbreviation : away.abbreviation) + ' with a ' + Math.max(awayLate, homeLate) + '-run finish.' : 'The game stayed controlled after the starters set the run environment.';
         var awayLine = { team: away, innings: awayInnings, runs: awayScore, hits: awayHits, errors: awayErrors, starter: awayPitcher };
         var homeLine = { team: home, innings: homeInnings, runs: homeScore, hits: homeHits, errors: homeErrors, starter: homePitcher };
+        var playerBox = modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random, rosterContext);
+        awayLine.summaryStats = simulatedTeamSummaryStats(awayLine, playerBox.away, random);
+        homeLine.summaryStats = simulatedTeamSummaryStats(homeLine, playerBox.home, random);
         return {
             runId: String(Date.now()) + '-' + Math.floor(random() * 1000000),
             away: awayLine,
             home: homeLine,
             winner: winner,
             loser: loser,
-            players: modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random, rosterContext),
+            players: playerBox,
             summary: winner.name + ' defeats ' + loser.name + ', ' + Math.max(awayScore, homeScore) + '-' + Math.min(awayScore, homeScore) + '. ' + (winnerPitcher ? winnerPitcher.name + ' gives the winning side the stronger starter profile. ' : '') + turningPoint,
             pitcherLines: [
                 away.name + ': ' + (awayPitcher ? awayPitcher.name : 'Starter unavailable') + ' / ' + clamp(5 + Math.round(random() * 2), 4, 7) + ' IP model line',
@@ -2196,6 +2335,7 @@
                     espnEvents: espnEvents,
                     espnSummaries: summaries,
                     teamRosters: state.liveContext.teamRosters || {},
+                    teamLineups: state.liveContext.teamLineups || {},
                     recentEvents: recentEvents,
                     error: null
                 };
@@ -2305,6 +2445,8 @@
         viewBoxScore: viewBoxScore,
         rosterSourceForTeam: rosterSourceForTeam,
         fetchTeamRoster: fetchTeamRoster,
+        fetchTeamBattingOrder: fetchTeamBattingOrder,
+        extractOfficialBattingOrder: extractOfficialBattingOrder,
         validatedRosterForTeam: validatedRosterForTeam
     };
 
