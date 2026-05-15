@@ -2076,12 +2076,12 @@
         var title = byId('boxScoreTitle');
         var body = byId('boxScoreBody');
         var summary = byId('boxScoreSummary');
-        if (!panel || !title || !body || !summary) return;
+        if (!panel || !title || !body) return;
         if (!result || !result.boxScore) {
             panel.setAttribute('data-box-score-state', 'empty');
             title.textContent = 'Run a simulation to generate a box score.';
             body.innerHTML = '<tr><td colspan="13">Run a simulation to generate a box score.</td></tr>';
-            summary.textContent = 'Run a simulation to generate a box score.';
+            if (summary) summary.textContent = 'Run a simulation to generate a box score.';
             setExportButtons(false);
             renderPlayerBoxScore(null);
             return;
@@ -2090,7 +2090,7 @@
         panel.setAttribute('data-box-score-state', 'projected');
         title.textContent = result.away.name + ' at ' + result.home.name + ' / Final ' + result.away.abbreviation + ' ' + box.away.runs + ', ' + result.home.abbreviation + ' ' + box.home.runs;
         body.innerHTML = boxRow(box.away, box.winner.id) + boxRow(box.home, box.winner.id);
-        summary.innerHTML = '<strong>' + escapeHtml(box.summary) + '</strong><span>' + escapeHtml(box.pitcherLines.join(' / ')) + '</span><span>' + escapeHtml(box.keyPerformers.join(' / ')) + '</span>';
+        if (summary) summary.innerHTML = '<strong>' + escapeHtml(box.summary) + '</strong><span>' + escapeHtml(box.pitcherLines.join(' / ')) + '</span><span>' + escapeHtml(box.keyPerformers.join(' / ')) + '</span>';
         renderPlayerBoxScore(result);
         setExportButtons(true);
     }
