@@ -17,6 +17,7 @@ const checks = [
   ['unit/static: sportsbook header guard', 'node', ['tests/sportsbook-header-regression-test.js']],
   ['unit/static: sportsbook backend board contract', 'node', ['tests/sportsbook-backend-board-render-contract-test.js']],
   ['unit/static: sportsbook market hydration', 'node', ['tests/sportsbook-market-groups-hydration-test.js']],
+  ['unit/static: sportsbook team totals rendering', 'node', ['tests/sportsbook-team-totals-rendering-regression-test.js']],
   ['unit/static: critical DOM/content locks', 'node', ['tests/critical-dom-content-lock-test.js']],
   ['unit/static: model builder shell', 'node', ['tests/model-builder-shell-test.js']],
   ['unit/static: trend spotter guided flow', 'node', ['tests/trendspotter-accuracy-test.js']],
