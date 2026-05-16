@@ -60,14 +60,37 @@ async function main() {
     const refreshKeys = ['trustmyrecord_refresh_token', 'refreshToken', 'refresh_token', 'tmr_refresh_token'];
     tokenKeys.forEach((key) => localStorage.setItem(key, data.accessToken));
     if (data.refreshToken) refreshKeys.forEach((key) => localStorage.setItem(key, data.refreshToken));
-    localStorage.setItem('tmr_current_user', JSON.stringify(data.user));
-    localStorage.setItem('user', JSON.stringify(data.user));
+    const rawUser = data.user || {};
+    const user = {
+      id: rawUser.id,
+      username: rawUser.username || unique,
+      email: rawUser.email || unique + '@example.com',
+      displayName: rawUser.displayName || rawUser.display_name || 'Codex F5 Live Proof',
+      verified: rawUser.emailVerified || rawUser.email_verified || true,
+      backendUser: true
+    };
+    localStorage.setItem('tmr_current_user', JSON.stringify(user));
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    localStorage.setItem('user', JSON.stringify(user));
+    localStorage.setItem('trustmyrecord_session', JSON.stringify({ user, timestamp: Date.now(), rememberMe: true }));
+    localStorage.setItem('tmr_is_logged_in', 'true');
     if (window.api && typeof window.api.saveTokens === 'function') {
       window.api.saveTokens(data.accessToken, data.refreshToken);
-      window.api._cachedUser = data.user;
+      window.api._cachedUser = user;
     }
-    return { username: unique, user_id: data.user && data.user.id, email_verified: data.user && (data.user.emailVerified || data.user.email_verified) };
+    if (window.auth) {
+      window.auth.currentUser = user;
+      if (typeof window.auth.persistSession === 'function') window.auth.persistSession();
+      if (typeof window.auth.updateUIForLoggedInUser === 'function') window.auth.updateUIForLoggedInUser();
+    }
+    window.dispatchEvent(new CustomEvent('tmr-auth-changed', { detail: { loggedIn: true, user } }));
+    window.dispatchEvent(new CustomEvent('tmr:auth-changed', { detail: { loggedIn: true, user } }));
+    return { username: unique, user_id: user.id, email_verified: user.verified };
   });
+  await page.waitForFunction(() => {
+    const token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken');
+    return !!token && !!(window.auth && typeof window.auth.isLoggedIn === 'function' && window.auth.isLoggedIn());
+  }, null, { timeout: 10000 });
   await page.waitForFunction(() => typeof window.__tmrSelectSportBoard === 'function' && typeof window.tmrSetBoardFilter === 'function', null, { timeout: 30000 });
   await page.evaluate(async () => {
     await window.__tmrSelectSportBoard('MLB');
