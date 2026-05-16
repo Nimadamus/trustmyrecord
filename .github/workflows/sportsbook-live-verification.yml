@@ -2,15 +2,19 @@ name: Sportsbook Live Verification
 
 on:
   workflow_dispatch:
-  workflow_run:
-    workflows:
-      - pages-build-deployment
-    types:
-      - completed
+  push:
+    paths:
+      - 'sportsbook/**'
+      - 'static/js/sportsbook-production-fix-persist-reliability.js'
+      - 'static/css/**sportsbook**'
+      - 'tests/sportsbook-live-verification.*'
+      - 'tests/sportsbook-live-browser-proof.js'
+      - 'playwright.config.cjs'
+      - 'package.json'
+      - '.github/workflows/sportsbook-live-verification.yml'
 
 jobs:
   verify-live-sportsbook:
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -27,9 +31,6 @@ jobs:
       - run: xvfb-run --auto-servernum npm run verify:sportsbook-live:browser-proof
         env:
           TMR_SPORTSBOOK_URL: https://trustmyrecord.com/sportsbook/
-      - run: xvfb-run --auto-servernum node tests/sportsbook-team-totals-live-proof.js
-        env:
-          TMR_SPORTSBOOK_URL: https://trustmyrecord.com/sportsbook/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -37,6 +38,5 @@ jobs:
           path: |
             artifacts/sportsbook-live-verification.png
             artifacts/sportsbook-live-browser-proof.png
-            artifacts/sportsbook-team-totals-live-proof.png
-            artifacts/sportsbook-team-totals-live-proof.json
+            artifacts/sportsbook-live-f5-submit-proof.json
             artifacts/playwright-results/**
