@@ -21,7 +21,11 @@ async function pollLiveProof(page, callback, { timeout = 30000, interval = 1000,
   const started = Date.now();
   let lastResult = null;
   while (Date.now() - started < timeout) {
-    lastResult = await callback();
+    try {
+      lastResult = await callback();
+    } catch (error) {
+      lastResult = { ok: false, error: error.message };
+    }
     if (lastResult && lastResult.ok !== false) return lastResult;
     await page.waitForTimeout(interval);
   }
@@ -113,17 +117,23 @@ async function main() {
       && selected && /^f5/i.test(String(selected.marketType || selected.market_type || selected.betType || ''))
       && /F5|First 5/i.test(ticketText + ' ' + selectedText);
   }, null, { timeout: 15000 });
+  const selectedBeforeSubmit = await page.evaluate(() => {
+    const selected = window.TMR && window.TMR.currentSelectedPick;
+    return {
+      market_type: selected && (selected.marketType || selected.market_type || selected.betType),
+      selection: selected && (selected.selection || selected.label || selected.teamName),
+      title: selected && (selected.title || selected.marketTitle || selected.displayTitle)
+    };
+  });
   await page.evaluate(async () => {
     if (typeof window.__tmrProductionLockInPick !== 'function') {
       throw new Error('Production lockInPick hook unavailable');
     }
     await window.__tmrProductionLockInPick();
   });
-  const submitProof = await pollLiveProof(page, () => page.evaluate(async () => {
+  const submitProof = await pollLiveProof(page, () => page.evaluate(async (selectedMarketType) => {
     const token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken');
-    const selected = window.TMR && window.TMR.currentSelectedPick;
-    const selectedMarketType = selected && (selected.marketType || selected.market_type || selected.betType);
-    if (!token || !selected || !/^f5/i.test(String(selectedMarketType || ''))) return null;
+    if (!token || !/^f5/i.test(String(selectedMarketType || ''))) return null;
     const response = await fetch('https://trustmyrecord-api.onrender.com/api/picks/pending?limit=100', {
       headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
     });
@@ -150,7 +160,7 @@ async function main() {
       pending_count: picks.length,
       selected_market_type: selectedMarketType
     };
-  }), { timeout: 30000, label: 'authenticated F5 pending pick' });
+  }, selectedBeforeSubmit.market_type), { timeout: 30000, label: 'authenticated F5 pending pick' });
 
   if (!submitProof || !submitProof.pick_id) {
     throw new Error('Authenticated F5 submit did not return a pending pick proof');
@@ -200,6 +210,7 @@ async function main() {
   const report = {
     live_url: LIVE_URL,
     account,
+    selected_before_submit: selectedBeforeSubmit,
     submitted_pick: submitProof,
     post_refresh: postRefreshProof,
     f5_market_preserved: /^f5_/.test(String(submitProof.market_type || '')),
