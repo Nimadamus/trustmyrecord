@@ -79,6 +79,11 @@ Before marking any sportsbook, logo, profile, or shared-rendering task complete,
 - Team Totals render from the main `team_totals` market, not silent alternate team-total ladders.
 - Desktop sportsbook boards keep full team names readable.
 - Sportsbook market tables do not leave empty placeholder columns.
+- The Team Totals board keeps the `sportsbook-game-card--two-market-cols` layout marker.
+- The old Team Totals `Board` column/header must never return.
+- The Red Sox/Braves fixture resolves Boston Red Sox Team Total to 3.5, not 4.5.
+- Alternate team totals never silently render as the default/main Team Totals row.
+- Any future sportsbook odds/table/display change preserves the Team Totals regression guards before completion is claimed.
 - Wager slip still supports both Risk X units and To Win X units.
 - Pending picks remain visible only where appropriate.
 - Public profile pending-pick privacy is not loosened.
