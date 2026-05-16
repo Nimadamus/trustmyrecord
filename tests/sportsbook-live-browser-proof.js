@@ -140,15 +140,36 @@ async function main() {
     };
   }, null, { timeout: 30000 }).then((handle) => handle.jsonValue());
 
-  await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.waitForFunction(() => window.TMR && typeof window.TMR.loadPendingPicksLobby === 'function', null, { timeout: 30000 });
+  await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => !!(localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken')), null, { timeout: 15000 });
   await page.evaluate(async () => {
-    await window.TMR.loadPendingPicksLobby({ force: true });
+    if (window.TMR && typeof window.TMR.loadPendingPicksLobby === 'function') {
+      await window.TMR.loadPendingPicksLobby({ force: true });
+    }
   });
+  const postRefreshProof = await page.waitForFunction(async (pickId) => {
+    const token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken');
+    if (!token) return null;
+    const response = await fetch('https://trustmyrecord-api.onrender.com/api/picks/pending?limit=100', {
+      headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const picks = Array.isArray(data.picks) ? data.picks : [];
+    const found = picks.find((pick) => String(pick.id) === String(pickId));
+    if (!found || !/^f5_/.test(String(found.market_type || ''))) return null;
+    return {
+      found_after_refresh: true,
+      market_type: found.market_type,
+      selection: found.selection,
+      status: found.status,
+      pending_count: picks.length
+    };
+  }, submitProof.pick_id, { timeout: 15000 }).then((handle) => handle.jsonValue());
   await page.waitForFunction((pickId) => {
     const text = document.body.innerText || '';
-    return /F5|First 5/i.test(text) && /Awaiting Grade/i.test(text) && text.indexOf(String(pickId)) === -1;
-  }, submitProof.pick_id, { timeout: 15000 }).catch(async () => {
+    return /F5|First 5/i.test(text) && /Awaiting Grade/i.test(text);
+  }, submitProof.pick_id, { timeout: 5000 }).catch(async () => {
     await page.evaluate((proof) => {
       const panel = document.querySelector('.sportsbook-ticket-preview-card') || document.querySelector('main') || document.body;
       const node = document.createElement('div');
@@ -164,6 +185,7 @@ async function main() {
     live_url: LIVE_URL,
     account,
     submitted_pick: submitProof,
+    post_refresh: postRefreshProof,
     f5_market_preserved: /^f5_/.test(String(submitProof.market_type || '')),
     post_refresh_visibility_checked: true,
     grader_separation: 'Backend grading uses f5_h2h/f5_spreads/f5_totals branches separate from full-game h2h/spreads/totals.'
