@@ -30,17 +30,19 @@ async function main() {
   await waitForBoardSettled(page);
   await page.waitForFunction(() => /MLB|Baseball/i.test(document.querySelector('#selectedSportTitle, .tmr-board-title, main')?.textContent || document.body.innerText), null, { timeout: 15000 });
 
-  const f5Tab = page.locator('.tmr-board-filter-tab[data-filter="first-5"], .tmr-card-filter-tab[data-filter="first-5"]').first();
+  const f5Tab = page.locator('.sportsbook-period-tab[data-period="first_5"], #lobbyPeriodBar [data-period="first_5"], #marketSubtabs [data-market="first_5"], button:has-text("5 Inning"), button:has-text("1st 5"), button:has-text("First 5")').first();
   await f5Tab.waitFor({ state: 'visible', timeout: 30000 });
   await f5Tab.click();
   await page.waitForTimeout(1000);
 
   await page.waitForFunction(() => {
+    const legacy = document.querySelector('.games-board-wrap[data-market="first_5"] button.odds-btn:not(.no-odds-btn)');
     const card = document.querySelector('.tmr-market-card[data-market-filter="first-5"]');
-    return card && card.dataset.scope === 'f5' && card.querySelector('.tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])');
+    const modern = card && card.dataset.scope === 'f5' && card.querySelector('.tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])');
+    return legacy || modern;
   }, null, { timeout: 30000 });
 
-  const f5Button = page.locator('.tmr-market-card[data-market-filter="first-5"] .tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])').first();
+  const f5Button = page.locator('.games-board-wrap[data-market="first_5"] button.odds-btn:not(.no-odds-btn), .tmr-market-card[data-market-filter="first-5"] .tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])').first();
   await f5Button.click();
   await page.locator('.tmr-slip-panel:visible, #pickDetails:visible, aside:has-text("Pick Slip"):visible').first().waitFor({ state: 'visible', timeout: 15000 });
 
