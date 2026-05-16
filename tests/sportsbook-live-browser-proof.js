@@ -39,54 +39,42 @@ async function main() {
     args: ['--window-size=1440,1200', '--no-sandbox'],
   });
   const page = await browser.newPage({ viewport: { width: 1360, height: 1040 } });
-  await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
-  const account = await page.evaluate(async () => {
-    const unique = 'codex_f5_live_' + Date.now();
-    const response = await fetch('https://trustmyrecord-api.onrender.com/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({
-        username: unique,
-        email: unique + '@example.com',
-        password: 'CodexF5LiveProof!2026',
-        displayName: 'Codex F5 Live Proof'
-      })
-    });
-    const data = await response.json();
-    if (!response.ok || !data.accessToken) {
-      throw new Error('Live signup failed: ' + response.status + ' ' + JSON.stringify(data));
+  const unique = 'codex_f5_live_' + Date.now();
+  const signupResponse = await page.request.post('https://trustmyrecord-api.onrender.com/api/auth/signup', {
+    headers: { 'Accept': 'application/json' },
+    data: {
+      username: unique,
+      email: unique + '@example.com',
+      password: 'CodexF5LiveProof!2026',
+      displayName: 'Codex F5 Live Proof'
     }
+  });
+  const signupData = await signupResponse.json();
+  if (!signupResponse.ok() || !signupData.accessToken) {
+    throw new Error('Live signup failed: ' + signupResponse.status() + ' ' + JSON.stringify(signupData));
+  }
+  const rawUser = signupData.user || {};
+  const proofUser = {
+    id: rawUser.id,
+    username: rawUser.username || unique,
+    email: rawUser.email || unique + '@example.com',
+    displayName: rawUser.displayName || rawUser.display_name || 'Codex F5 Live Proof',
+    verified: rawUser.emailVerified || rawUser.email_verified || true,
+    backendUser: true
+  };
+  const account = { username: unique, user_id: proofUser.id, email_verified: proofUser.verified };
+  await page.addInitScript(({ accessToken, refreshToken, user }) => {
     const tokenKeys = ['trustmyrecord_token', 'accessToken', 'access_token', 'token', 'tmr_token'];
     const refreshKeys = ['trustmyrecord_refresh_token', 'refreshToken', 'refresh_token', 'tmr_refresh_token'];
-    tokenKeys.forEach((key) => localStorage.setItem(key, data.accessToken));
-    if (data.refreshToken) refreshKeys.forEach((key) => localStorage.setItem(key, data.refreshToken));
-    const rawUser = data.user || {};
-    const user = {
-      id: rawUser.id,
-      username: rawUser.username || unique,
-      email: rawUser.email || unique + '@example.com',
-      displayName: rawUser.displayName || rawUser.display_name || 'Codex F5 Live Proof',
-      verified: rawUser.emailVerified || rawUser.email_verified || true,
-      backendUser: true
-    };
+    tokenKeys.forEach((key) => localStorage.setItem(key, accessToken));
+    if (refreshToken) refreshKeys.forEach((key) => localStorage.setItem(key, refreshToken));
     localStorage.setItem('tmr_current_user', JSON.stringify(user));
     localStorage.setItem('currentUser', JSON.stringify(user));
     localStorage.setItem('user', JSON.stringify(user));
     localStorage.setItem('trustmyrecord_session', JSON.stringify({ user, timestamp: Date.now(), rememberMe: true }));
     localStorage.setItem('tmr_is_logged_in', 'true');
-    if (window.api && typeof window.api.saveTokens === 'function') {
-      window.api.saveTokens(data.accessToken, data.refreshToken);
-      window.api._cachedUser = user;
-    }
-    if (window.auth) {
-      window.auth.currentUser = user;
-      if (typeof window.auth.persistSession === 'function') window.auth.persistSession();
-      if (typeof window.auth.updateUIForLoggedInUser === 'function') window.auth.updateUIForLoggedInUser();
-    }
-    window.dispatchEvent(new CustomEvent('tmr-auth-changed', { detail: { loggedIn: true, user } }));
-    window.dispatchEvent(new CustomEvent('tmr:auth-changed', { detail: { loggedIn: true, user } }));
-    return { username: unique, user_id: user.id, email_verified: user.verified };
-  });
+  }, { accessToken: signupData.accessToken, refreshToken: signupData.refreshToken, user: proofUser });
+  await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => {
     const token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken');
     return !!token && !!(window.auth && typeof window.auth.isLoggedIn === 'function' && window.auth.isLoggedIn());
