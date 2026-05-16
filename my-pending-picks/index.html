@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260514mobile1">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260501navspacing">
     <script defer src="/static/js/tmr-sitewide.js?v=20260501navspacing"></script>
     <style>
         :root {
@@ -338,31 +338,10 @@
             });
         }
         function sportLabel(value) {
-            if (window.TMR && typeof window.TMR.formatLeagueLabel === 'function') {
-                return window.TMR.formatLeagueLabel(value);
-            }
-            var key = String(value || '').trim().toLowerCase().replace(/[\s-]+/g, '_');
-            var labels = {
-                baseball_mlb: 'MLB',
-                mlb: 'MLB',
-                icehockey_nhl: 'NHL',
-                hockey_nhl: 'NHL',
-                nhl: 'NHL',
-                basketball_nba: 'NBA',
-                nba: 'NBA',
-                americanfootball_nfl: 'NFL',
-                football_nfl: 'NFL',
-                nfl: 'NFL',
-                americanfootball_ncaaf: 'College Football',
-                football_ncaaf: 'College Football',
-                ncaaf: 'College Football',
-                college_football: 'College Football',
-                basketball_ncaab: 'College Basketball',
-                ncaab: 'College Basketball',
-                college_basketball: 'College Basketball'
-            };
-            if (labels[key]) return labels[key];
-            return key ? String(value).replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }) : 'League';
+            var key = String(value || '').toLowerCase().trim();
+            if (key === 'icehockey_nhl') return 'NHL';
+            var raw = String(value || '').replace(/_/g, ' ').trim();
+            return raw ? raw.replace(/\b\w/g, function (c) { return c.toUpperCase(); }) : 'League';
         }
         function marketLabel(value) {
             switch (String(value || '').toLowerCase()) {
@@ -370,10 +349,9 @@
                 case 'spreads': return 'Spread';
                 case 'totals': return 'Total';
                 case 'team_totals': return 'Team Total';
-                case 'f5_h2h': return 'First 5 Innings Moneyline';
-                case 'f5_spreads': return 'First 5 Innings Run Line';
-                case 'f5_totals': return 'First 5 Innings Total';
-                case 'f5_team_totals': return 'First 5 Innings Team Total';
+                case 'f5_h2h': return 'F5 Moneyline';
+                case 'f5_spreads': return 'F5 Spread';
+                case 'f5_totals': return 'F5 Total';
                 case 'period_1_h2h': return '1st Period Moneyline';
                 case 'period_1_totals': return '1st Period Total';
                 default: return sportLabel(value);
@@ -480,11 +458,15 @@
                 return window.TMR.formatPickSelection(pick);
             }
             var selection = String(pick.selection || 'Pick').trim();
+            var market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
+            if (market === 'f5_h2h') return /\bf5\s+ml\b$/i.test(selection) ? selection : selection.replace(/\s+\bml\b$/i, '') + ' F5 ML';
             var line = fmtPickLine(pick);
             if (line !== '-') {
                 selection = selection.replace(new RegExp('\\s+' + line.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), '').trim();
                 selection = selection.replace(new RegExp('\\s+[+-]?' + line.replace(/^\+/, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), '').trim();
             }
+            if (market === 'f5_spreads') return selection.replace(/\s+\bf5\b/i, '') + ' F5' + (line !== '-' ? ' ' + line : '');
+            if (market === 'f5_totals') return /\bf5|first\s*5/i.test(selection) ? selection : 'F5 ' + selection;
             return selection || 'Pick';
         }
         function matchup(pick) {
@@ -549,31 +531,22 @@
             rows.innerHTML = pending.map(rowHtml).join('');
             cards.innerHTML = pending.map(cardHtml).join('');
         }
-
-        async function loadPrivatePendingPagePicks() {
-            var apiClient = window.api || window.backendAPI || null;
-            if (apiClient && apiClient.ready) { try { await apiClient.ready; } catch (e) {} }
-            if (apiClient && typeof apiClient.loadTokens === 'function') { try { apiClient.loadTokens(); } catch (e) {} }
-            if (apiClient && typeof apiClient.request === 'function') return apiClient.request('/picks/pending?limit=100&offset=0');
-            var token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken') || localStorage.getItem('access_token') || localStorage.getItem('token') || localStorage.getItem('tmr_token');
-            if (!token) { var authError = new Error('Authentication required'); authError.status = 401; throw authError; }
-            var response = await fetch('https://trustmyrecord-api.onrender.com/api/picks/pending?limit=100&offset=0', { headers: { Authorization: 'Bearer ' + token } });
-            var data = await response.json().catch(function () { return {}; });
-            if (!response.ok) { var error = new Error(data.error || 'Failed to load pending picks'); error.status = response.status; throw error; }
-            return data;
-        }
         async function boot() {
             try {
-                var data = await loadPrivatePendingPagePicks();
-                render(data && data.picks, data);
+                if (!window.api || !window.api.isLoggedIn()) throw new Error('not authenticated');
+                await window.api.getCurrentUser();
+                var data = await window.api.getPendingPicks({ limit: 100 });
+                render(data && data.picks);
             } catch (error) {
                 authState.hidden = false;
                 content.hidden = true;
-                if (error.status === 401 || error.status === 403) {
-                    setTimeout(function () { window.location.href = '/login/?next=/my-pending-picks/'; }, 900);
+                if (!window.api || !window.api.isLoggedIn() || error.status === 401 || error.status === 403) {
+                    setTimeout(function () {
+                        window.location.href = '/login/?next=/my-pending-picks/';
+                    }, 900);
                 } else {
                     authState.querySelector('h2').textContent = 'Could not load pending picks';
-                    authState.querySelector('p').textContent = 'Refresh in a moment. Your pending picks were not changed.';
+                    authState.querySelector('p').textContent = 'Refresh in a moment. Your public record privacy filters were not changed.';
                 }
             }
         }
