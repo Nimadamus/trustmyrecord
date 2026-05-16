@@ -1515,3 +1515,34 @@ body.tmr-social-profile .modal-box{
   box-shadow:0 30px 80px rgba(0,0,0,.6) !important;
   color:#eef2f8 !important;
 }
+
+
+/* Sportsbook team totals: render only useful columns and keep full team names visible. */
+#picks .games-board-wrap[data-market="team_totals"][data-cols="4"] .market-headers,
+#picks .games-board-wrap[data-market="team_totals"][data-cols="4"] .game-row .team-row {
+  grid-template-columns:minmax(340px,1.8fr) minmax(118px,.58fr) minmax(118px,.58fr) minmax(126px,.62fr) !important;
+}
+
+#picks .games-board-wrap[data-market="team_totals"] [data-mkt="ml"] {
+  display:none !important;
+}
+
+#picks .games-board-wrap[data-market="team_totals"] .team-info,
+#picks .games-board-wrap[data-market="team_totals"] .team-details,
+#picks .games-board-wrap[data-market="team_totals"] .team-name {
+  min-width:0 !important;
+}
+
+#picks .games-board-wrap[data-market="team_totals"] .team-name {
+  white-space:normal !important;
+  overflow:visible !important;
+  text-overflow:clip !important;
+  line-height:1.2 !important;
+}
+
+@media (max-width: 900px) {
+  #picks .games-board-wrap[data-market="team_totals"][data-cols="4"] .market-headers,
+  #picks .games-board-wrap[data-market="team_totals"][data-cols="4"] .game-row .team-row {
+    grid-template-columns:minmax(0,1fr) 80px 80px 80px !important;
+  }
+}

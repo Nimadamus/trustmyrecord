@@ -171,3 +171,13 @@ Once user approves this mapping, the next step is to create:
 - `profile-test/index.html` — PickMonitor or social preview design ported into the real profile markup
 
 Each test route uses real backend, real auth, real APIs. The only difference vs. the live page is the visual layout. Test at `https://trustmyrecord.com/sportsbook-test/` etc., then promote when approved.
+
+
+## Sportsbook Rendering Rules
+
+- Sportsbook tables must render main/default lines before alternate lines.
+- Alternate lines may only appear when the UI clearly labels them as alternate.
+- Team totals must not pull lopsided alternate total rows into the main Team Totals table.
+- Full team names must remain readable on desktop; do not narrow the matchup/team column until names like Boston Red Sox, Atlanta Braves, and New York Yankees truncate.
+- Do not ship empty placeholder columns. Remove unused columns or populate them with real, useful actions.
+- Completion requires live public browser verification on `https://trustmyrecord.com/sportsbook/` with the URL visible, not just local tests or API checks.
