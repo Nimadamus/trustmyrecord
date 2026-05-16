@@ -64,8 +64,14 @@ async function main() {
   await page.locator('.tmr-slip-panel:visible, #pickDetails:visible, aside:has-text("Pick Slip"):visible').first().waitFor({ state: 'visible', timeout: 15000 });
   await page.waitForFunction(() => {
     const board = document.querySelector('#gamesListContainer') || document.querySelector('main article');
-    const slip = document.querySelector('.sportsbook-ticket-preview, .tmr-slip-panel, #pickDetails, aside');
-    return board && board.innerText.length > 200 && /F5|First 5/i.test((slip && slip.innerText) || '');
+    const ticketCard = document.querySelector('.sportsbook-ticket-preview-card');
+    const summaryPick = document.getElementById('summaryPick');
+    const selected = window.TMR && window.TMR.currentSelectedPick;
+    const selectedText = JSON.stringify(selected || {});
+    const ticketText = ((ticketCard && ticketCard.innerText) || '') + ' ' + ((summaryPick && summaryPick.innerText) || '');
+    return board && board.innerText.length > 200
+      && selected && /^f5/i.test(String(selected.marketType || selected.market_type || selected.betType || ''))
+      && /F5|First 5/i.test(ticketText + ' ' + selectedText);
   }, null, { timeout: 15000 });
   await page.waitForTimeout(1000);
 
