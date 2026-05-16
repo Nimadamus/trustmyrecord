@@ -9,6 +9,7 @@ on:
       - 'static/css/**sportsbook**'
       - 'tests/sportsbook-live-verification.*'
       - 'tests/sportsbook-live-browser-proof.js'
+      - 'tests/sportsbook-team-totals-browser-proof.js'
       - 'playwright.config.cjs'
       - 'package.json'
       - '.github/workflows/sportsbook-live-verification.yml'
@@ -31,6 +32,9 @@ jobs:
       - run: xvfb-run --auto-servernum npm run verify:sportsbook-live:browser-proof
         env:
           TMR_SPORTSBOOK_URL: https://trustmyrecord.com/sportsbook/
+      - run: xvfb-run --auto-servernum node tests/sportsbook-team-totals-browser-proof.js
+        env:
+          TMR_SPORTSBOOK_URL: https://trustmyrecord.com/sportsbook/
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -38,5 +42,7 @@ jobs:
           path: |
             artifacts/sportsbook-live-verification.png
             artifacts/sportsbook-live-browser-proof.png
+            artifacts/sportsbook-team-totals-browser-proof.png
+            artifacts/sportsbook-team-totals-browser-proof.json
             artifacts/sportsbook-live-f5-submit-proof.json
             artifacts/playwright-results/**
