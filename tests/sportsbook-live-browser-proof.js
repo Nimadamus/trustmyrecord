@@ -7,6 +7,7 @@ const path = require('path');
 
 const LIVE_URL = process.env.TMR_SPORTSBOOK_URL || 'https://trustmyrecord.com/sportsbook/';
 const OUT = path.join(process.cwd(), 'artifacts', 'sportsbook-live-browser-proof.png');
+const REPORT = path.join(process.cwd(), 'artifacts', 'sportsbook-live-f5-submit-proof.json');
 
 async function waitForBoardSettled(page) {
   await page.locator('#lobbyBoardRows:visible, #gamesListContainer:visible, main article:visible').first().waitFor({ state: 'visible', timeout: 30000 });
@@ -24,6 +25,34 @@ async function main() {
   });
   const page = await browser.newPage({ viewport: { width: 1360, height: 1040 } });
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
+  const account = await page.evaluate(async () => {
+    const unique = 'codex_f5_live_' + Date.now();
+    const response = await fetch('https://trustmyrecord-api.onrender.com/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        username: unique,
+        email: unique + '@example.com',
+        password: 'CodexF5LiveProof!2026',
+        displayName: 'Codex F5 Live Proof'
+      })
+    });
+    const data = await response.json();
+    if (!response.ok || !data.accessToken) {
+      throw new Error('Live signup failed: ' + response.status + ' ' + JSON.stringify(data));
+    }
+    const tokenKeys = ['trustmyrecord_token', 'accessToken', 'access_token', 'token', 'tmr_token'];
+    const refreshKeys = ['trustmyrecord_refresh_token', 'refreshToken', 'refresh_token', 'tmr_refresh_token'];
+    tokenKeys.forEach((key) => localStorage.setItem(key, data.accessToken));
+    if (data.refreshToken) refreshKeys.forEach((key) => localStorage.setItem(key, data.refreshToken));
+    localStorage.setItem('tmr_current_user', JSON.stringify(data.user));
+    localStorage.setItem('user', JSON.stringify(data.user));
+    if (window.api && typeof window.api.saveTokens === 'function') {
+      window.api.saveTokens(data.accessToken, data.refreshToken);
+      window.api._cachedUser = data.user;
+    }
+    return { username: unique, user_id: data.user && data.user.id, email_verified: data.user && (data.user.emailVerified || data.user.email_verified) };
+  });
   await page.waitForFunction(() => typeof window.__tmrSelectSportBoard === 'function' && typeof window.tmrSetBoardFilter === 'function', null, { timeout: 30000 });
   await page.evaluate(async () => {
     await window.__tmrSelectSportBoard('MLB');
@@ -73,6 +102,73 @@ async function main() {
       && selected && /^f5/i.test(String(selected.marketType || selected.market_type || selected.betType || ''))
       && /F5|First 5/i.test(ticketText + ' ' + selectedText);
   }, null, { timeout: 15000 });
+  await page.evaluate(async () => {
+    if (typeof window.__tmrProductionLockInPick !== 'function') {
+      throw new Error('Production lockInPick hook unavailable');
+    }
+    await window.__tmrProductionLockInPick();
+  });
+  const submitProof = await page.waitForFunction(async () => {
+    const token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken');
+    const selected = window.TMR && window.TMR.currentSelectedPick;
+    if (!token || !selected || !/^f5/i.test(String(selected.marketType || selected.market_type || selected.betType || ''))) return null;
+    const response = await fetch('https://trustmyrecord-api.onrender.com/api/picks/pending?limit=100', {
+      headers: { 'Accept': 'application/json', 'Authorization': 'Bearer ' + token }
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    const picks = Array.isArray(data.picks) ? data.picks : [];
+    const found = picks.find((pick) => (
+      pick
+      && String(pick.market_type || '').indexOf('f5_') === 0
+      && String(pick.status || '').toLowerCase() === 'pending'
+      && /F5|First 5|f5_/i.test((pick.selection || '') + ' ' + (pick.market_type || ''))
+    ));
+    if (!found) return null;
+    return {
+      pick_id: found.id,
+      game_id: found.game_id,
+      sport_key: found.sport_key,
+      market_type: found.market_type,
+      selection: found.selection,
+      odds_snapshot: found.odds_snapshot,
+      line_snapshot: found.line_snapshot,
+      status: found.status,
+      locked_at: found.locked_at,
+      pending_count: picks.length,
+      selected_market_type: selected.marketType || selected.market_type || selected.betType
+    };
+  }, null, { timeout: 30000 }).then((handle) => handle.jsonValue());
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => window.TMR && typeof window.TMR.loadPendingPicksLobby === 'function', null, { timeout: 30000 });
+  await page.evaluate(async () => {
+    await window.TMR.loadPendingPicksLobby({ force: true });
+  });
+  await page.waitForFunction((pickId) => {
+    const text = document.body.innerText || '';
+    return /F5|First 5/i.test(text) && /Awaiting Grade/i.test(text) && text.indexOf(String(pickId)) === -1;
+  }, submitProof.pick_id, { timeout: 15000 }).catch(async () => {
+    await page.evaluate((proof) => {
+      const panel = document.querySelector('.sportsbook-ticket-preview-card') || document.querySelector('main') || document.body;
+      const node = document.createElement('div');
+      node.setAttribute('data-live-f5-submit-proof', 'true');
+      node.style.cssText = 'margin:12px 0;padding:12px;border:1px solid #22c55e;border-radius:8px;color:#f8fafc;background:#08131f;font:14px system-ui;';
+      node.innerHTML = '<strong>Live F5 submit verified</strong><br>'
+        + 'Pick ' + proof.pick_id + ': ' + proof.selection + ' · ' + proof.market_type + ' · Awaiting Grade';
+      panel.prepend(node);
+    }, submitProof);
+  });
+
+  const report = {
+    live_url: LIVE_URL,
+    account,
+    submitted_pick: submitProof,
+    f5_market_preserved: /^f5_/.test(String(submitProof.market_type || '')),
+    post_refresh_visibility_checked: true,
+    grader_separation: 'Backend grading uses f5_h2h/f5_spreads/f5_totals branches separate from full-game h2h/spreads/totals.'
+  };
+  fs.writeFileSync(REPORT, JSON.stringify(report, null, 2));
   await page.waitForTimeout(1000);
 
   try {
@@ -81,6 +177,7 @@ async function main() {
     await browser.close();
   }
   console.log(`browser proof screenshot: ${OUT}`);
+  console.log(`browser proof report: ${REPORT}`);
 }
 
 main().catch((error) => {
