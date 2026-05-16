@@ -74,6 +74,11 @@ Before marking any sportsbook, logo, profile, or shared-rendering task complete,
 - No legacy inline `var LEGACY_TEAM_LOGOS` map is restored into `sportsbook/index.html`.
 - Odds remain clickable.
 - Selected picks still appear in the pick slip.
+- Sportsbook main/default markets remain prioritized over alternates.
+- Any alternate line shown to users is clearly labeled as alternate.
+- Team Totals render from the main `team_totals` market, not silent alternate team-total ladders.
+- Desktop sportsbook boards keep full team names readable.
+- Sportsbook market tables do not leave empty placeholder columns.
 - Wager slip still supports both Risk X units and To Win X units.
 - Pending picks remain visible only where appropriate.
 - Public profile pending-pick privacy is not loosened.
