@@ -29,10 +29,10 @@ jobs:
         env:
           TMR_SPORTSBOOK_URL: https://trustmyrecord.com/sportsbook/
       - run: sudo apt-get update && sudo apt-get install -y imagemagick
-      - run: xvfb-run --auto-servernum npm run verify:sportsbook-live:browser-proof
+      - run: xvfb-run --auto-servernum node tests/sportsbook-team-totals-browser-proof.js
         env:
           TMR_SPORTSBOOK_URL: https://trustmyrecord.com/sportsbook/
-      - run: xvfb-run --auto-servernum node tests/sportsbook-team-totals-browser-proof.js
+      - run: xvfb-run --auto-servernum npm run verify:sportsbook-live:browser-proof
         env:
           TMR_SPORTSBOOK_URL: https://trustmyrecord.com/sportsbook/
       - uses: actions/upload-artifact@v4
