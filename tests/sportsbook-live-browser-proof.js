@@ -26,28 +26,44 @@ async function main() {
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await waitForBoardSettled(page);
   await page.waitForFunction(() => window.TMR && typeof window.TMR.setSport === 'function', null, { timeout: 15000 });
-  await page.evaluate(() => window.TMR.setSport('MLB'));
+  await page.evaluate(() => {
+    const mlbButton = Array.from(document.querySelectorAll('[data-sport="MLB"]')).find((el) => {
+      const rect = el.getBoundingClientRect();
+      const style = window.getComputedStyle(el);
+      return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+    });
+    if (mlbButton) mlbButton.click();
+    else window.TMR.setSport('MLB');
+  });
   await waitForBoardSettled(page);
-  await page.waitForFunction(() => /MLB|Baseball/i.test(document.querySelector('#selectedSportTitle, .tmr-board-title, main')?.textContent || document.body.innerText), null, { timeout: 15000 });
-
-  const f5Tab = page.locator('.sportsbook-period-tab[data-period="first_5"], #lobbyPeriodBar [data-period="first_5"], #marketSubtabs [data-market="first_5"], button:has-text("5 Inning"), button:has-text("1st 5"), button:has-text("First 5")').first();
-  await f5Tab.waitFor({ state: 'visible', timeout: 30000 });
-  await f5Tab.click();
-  await page.waitForTimeout(1000);
-
   await page.waitForFunction(() => {
-    const legacy = document.querySelector('.games-board-wrap[data-market="first_5"] button.odds-btn:not(.no-odds-btn)');
-    const card = document.querySelector('.tmr-market-card[data-market-filter="first-5"]');
-    const modern = card && card.dataset.scope === 'f5' && card.querySelector('.tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])');
-    return legacy || modern;
+    const rows = document.querySelector('#lobbyBoardRows');
+    const title = document.querySelector('#boardTitle');
+    return rows && rows.getAttribute('data-sport') === 'MLB' && /MLB/i.test((title && title.textContent) || '');
+  }, null, { timeout: 15000 });
+  await page.evaluate(() => {
+    if (window.TMR && typeof window.TMR.setPeriod === 'function') {
+      window.TMR.setPeriod('f5');
+    } else {
+      const f5Button = document.querySelector('#lobbyPeriodBar [data-period="f5"], button[data-market="first_5"]');
+      if (f5Button) f5Button.click();
+    }
+  });
+  await page.waitForFunction(() => {
+    const rows = document.querySelector('#lobbyBoardRows');
+    return rows && rows.getAttribute('data-sport') === 'MLB' && !/Loading/i.test(rows.textContent || '');
+  }, null, { timeout: 30000 });
+  await page.waitForFunction(() => {
+    const rows = document.querySelector('#lobbyBoardRows');
+    const f5Cards = Array.from(document.querySelectorAll('.sportsbook-game-card--shared-market[data-market-tab="First 5"]'));
+    const f5Buttons = f5Cards.flatMap((card) => Array.from(card.querySelectorAll('.sb-odds:not(.is-empty):not([disabled])')));
+    return rows && rows.innerText.length > 200 && f5Buttons.length > 0;
   }, null, { timeout: 30000 });
 
-  const f5Button = page.locator('.games-board-wrap[data-market="first_5"] button.odds-btn:not(.no-odds-btn), .tmr-market-card[data-market-filter="first-5"] .tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])').first();
-  await f5Button.click();
+  await page.locator('.sportsbook-game-card--shared-market[data-market-tab="First 5"] .sb-odds:not(.is-empty):not([disabled])').first().click();
   await page.locator('.tmr-slip-panel:visible, #pickDetails:visible, aside:has-text("Pick Slip"):visible').first().waitFor({ state: 'visible', timeout: 15000 });
-
   await page.waitForFunction(() => {
-    const board = document.querySelector('#gamesListContainer') || document.querySelector('#lobbyBoardRows') || document.querySelector('main article');
+    const board = document.querySelector('#lobbyBoardRows') || document.querySelector('#gamesListContainer') || document.querySelector('main article');
     const slip = document.querySelector('.sportsbook-ticket-preview, .tmr-slip-panel, #pickDetails, aside');
     return board && board.innerText.length > 200 && /F5|First 5/i.test((slip && slip.innerText) || '');
   }, null, { timeout: 15000 });
