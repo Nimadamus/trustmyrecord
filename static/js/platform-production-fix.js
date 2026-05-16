@@ -176,10 +176,9 @@
             spreads: 'Spread',
             totals: 'Game Total',
             team_totals: 'Team Total',
-            f5_h2h: 'First 5 Innings Moneyline',
-            f5_spreads: 'First 5 Innings Run Line',
-            f5_totals: 'First 5 Innings Total',
-            f5_team_totals: 'First 5 Innings Team Total',
+            f5_h2h: 'First 5 ML',
+            f5_spreads: 'First 5 Spread',
+            f5_totals: 'First 5 Total',
             first_half_h2h: 'First Half ML',
             first_half_spreads: 'First Half Spread',
             first_half_totals: 'First Half Total',
@@ -333,11 +332,17 @@
         }
         const selection = pick.selection || pick.side || pick.team || 'Selection';
         const line = pick.line_snapshot ?? pick.line;
+        const market = String(pick.market_type || pick.marketType || pick.bet_type || pick.betType || '').toLowerCase();
+        if (market === 'f5_h2h') {
+            return /\bf5\s+ml\b$/i.test(selection) ? selection : String(selection).replace(/\s+\bml\b$/i, '') + ' F5 ML';
+        }
         if (line == null || line === '') return selection;
         // Trim trailing zeros so totals never display 5.50/4.50/9.00.
         const n = Number(line);
         let s = Number.isFinite(n) ? String(n) : String(line);
         if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
+        if (market === 'f5_spreads') return String(selection).replace(/\s+\bf5\b/i, '').replace(/\s+[+-]?\d+(\.\d+)?$/, '').trim() + ' F5 ' + s;
+        if (market === 'f5_totals') return (/\bf5|first\s*5/i.test(selection) ? selection : 'F5 ' + selection) + ' ' + s;
         return selection + ' ' + s;
     }
 
