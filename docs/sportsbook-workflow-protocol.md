@@ -29,3 +29,14 @@ Any future F5 sportsbook change must verify the complete workflow:
 - post-refresh pending/history visibility still shows the pick
 - display labels keep F5 visible for ML, totals, and run line
 - grader/admin handling separates `f5_h2h`, `f5_spreads`, and `f5_totals` from full-game `h2h`, `spreads`, and `totals`
+
+## Market Label Normalization Before Stats
+
+Market labels must be normalized before any stat aggregation, cache rebuild, profile split, leaderboard split, or displayed performance table is calculated. Singular/plural or wording variants must never create duplicate stat rows.
+
+Required canonical examples:
+
+- `Team Total`, `Team Totals`, and `team_total` aggregate as `team_totals` and display as `Team Totals`
+- `First 5 Innings Total`, `First Five Totals`, `First 5 Total`, and `First Five Total` aggregate as `f5_totals`
+
+This normalization must happen before records, pick counts, W-L-P, units, ROI, and win percentage are computed. Do not solve duplicate market rows by only renaming labels in the UI.

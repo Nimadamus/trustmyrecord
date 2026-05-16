@@ -5150,7 +5150,7 @@
         { key: 'moneyline', label: 'Moneyline', types: ['h2h', 'moneyline'] },
         { key: 'spreads', label: 'Spread', types: ['spreads', 'spread'] },
         { key: 'totals', label: 'Totals', types: ['totals', 'total'] },
-        { key: 'team_totals', label: 'Team Totals', types: ['team_totals'] },
+        { key: 'team_totals', label: 'Team Totals', types: ['team_totals', 'team_total'] },
         { key: 'first5', label: 'First 5 Innings', types: ['f5_h2h', 'f5_spreads', 'f5_totals', 'f5_team_totals'] },
         { key: 'first_half', label: 'First Half', types: ['first_half_h2h', 'first_half_spreads', 'first_half_totals'] },
         { key: 'second_half', label: 'Second Half', types: ['second_half_h2h', 'second_half_spreads', 'second_half_totals'] },
@@ -5247,13 +5247,37 @@
 
     // ======================== UNIFIED STATS ========================
     function getMarketTypeGroup(marketType) {
-        return MARKET_TYPE_GROUPS.find(group => group.types.includes(marketType)) || null;
+        const canonical = canonicalMarketType(marketType);
+        return MARKET_TYPE_GROUPS.find(group => group.types.includes(canonical)) || null;
+    }
+
+    function canonicalMarketType(value) {
+        const key = String(value || '').trim().toLowerCase()
+            .replace(/&/g, ' and ')
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+        if (!key) return '';
+        const compact = key.replace(/_/g, '');
+        const hasF5 = /(^|_)f5(_|$)/.test(key)
+            || /(^|_)first_?5(_|$)/.test(key)
+            || /(^|_)first_five(_|$)/.test(key)
+            || compact.indexOf('first5') !== -1
+            || compact.indexOf('firstfive') !== -1;
+        if (hasF5 && key.indexOf('team') !== -1 && key.indexOf('total') !== -1) return 'f5_team_totals';
+        if (hasF5 && key.indexOf('total') !== -1) return 'f5_totals';
+        if (key === 'team_total' || key === 'team_totals' || (key.indexOf('team') !== -1 && key.indexOf('total') !== -1)) return 'team_totals';
+        if (key === 'moneyline' || key === 'ml') return 'h2h';
+        if (key === 'spread') return 'spreads';
+        if (key === 'total') return 'totals';
+        if (key === 'f5_moneyline' || key === 'f5_ml' || key === 'first_five_moneyline' || key === 'first_5_moneyline') return 'f5_h2h';
+        if (key === 'f5_spread' || key === 'first_five_spread' || key === 'first_5_spread') return 'f5_spreads';
+        return key;
     }
 
     function buildMarketTypeBreakdown(picks) {
         const graded = (picks || []).filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
         return MARKET_TYPE_GROUPS.map(group => {
-            const groupPicks = graded.filter(p => group.types.includes(p.market_type));
+            const groupPicks = graded.filter(p => group.types.includes(canonicalMarketType(p.market_type)));
             const wins = groupPicks.filter(p => p.status === 'won').length;
             const losses = groupPicks.filter(p => p.status === 'lost').length;
             const pushes = groupPicks.filter(p => p.status === 'push' || p.status === 'pushed').length;
@@ -7733,7 +7757,7 @@
     }
 
     function normalizeCapMarket(market) {
-        const m = String(market || '').toLowerCase();
+        const m = canonicalMarketType(market);
         if (['h2h','moneyline'].includes(m)) return 'moneyline';
         if (m.includes('spread')) return 'spread';
         if (m === 'team_totals' || m === 'team_total') return 'team_total';
@@ -7984,12 +8008,12 @@
     function buildCapMarketBuckets(rows) {
         const markets = Array.from(new Set((rows || [])
             .filter(isCapGraded)
-            .map(p => String(p.market_type || '').trim())
+            .map(p => canonicalMarketType(p.market_type))
             .filter(Boolean)));
         return markets
             .map(marketType => [
                 marketTypeLabel(marketType),
-                p => String(p.market_type || '') === marketType,
+                p => canonicalMarketType(p.market_type) === marketType,
                 buildProfileMarketUrl(marketType)
             ])
             .sort((a, b) => a[0].localeCompare(b[0]));
@@ -9443,7 +9467,7 @@
     }
 
     function marketTypeLabel(value) {
-        const key = String(value || '').toLowerCase();
+        const key = canonicalMarketType(value);
         return {
             h2h: 'Moneyline',
             moneyline: 'Moneyline',
