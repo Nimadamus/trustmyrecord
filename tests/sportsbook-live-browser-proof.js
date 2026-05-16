@@ -25,15 +25,28 @@ async function main() {
   const page = await browser.newPage({ viewport: { width: 1360, height: 1040 } });
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await waitForBoardSettled(page);
-  await page.getByRole('button', { name: /^NHL\b/i }).first().click();
+  await page.getByRole('button', { name: /^MLB\b/i }).first().click();
   await waitForBoardSettled(page);
-  const boardButton = page
-    .locator('#lobbyBoardRows button:not([disabled]), #gamesListContainer button:not([disabled]), main article button:not([disabled])')
-    .filter({ hasText: /ML|[+-]\d|O\s*\d|U\s*\d/i })
-    .first();
-  await boardButton.waitFor({ state: 'visible', timeout: 15000 });
-  await boardButton.click();
+
+  const f5Tab = page.locator('.tmr-board-filter-tab[data-filter="first-5"], .tmr-card-filter-tab[data-filter="first-5"]').first();
+  await f5Tab.waitFor({ state: 'visible', timeout: 30000 });
+  await f5Tab.click();
+  await page.waitForTimeout(1000);
+
+  await page.waitForFunction(() => {
+    const card = document.querySelector('.tmr-market-card[data-market-filter="first-5"]');
+    return card && card.dataset.scope === 'f5' && card.querySelector('.tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])');
+  }, null, { timeout: 30000 });
+
+  const f5Button = page.locator('.tmr-market-card[data-market-filter="first-5"] .tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])').first();
+  await f5Button.click();
   await page.locator('.tmr-slip-panel:visible, #pickDetails:visible, aside:has-text("Pick Slip"):visible').first().waitFor({ state: 'visible', timeout: 15000 });
+
+  await page.waitForFunction(() => {
+    const board = document.querySelector('#gamesListContainer') || document.querySelector('#lobbyBoardRows') || document.querySelector('main article');
+    const slip = document.querySelector('.sportsbook-ticket-preview, .tmr-slip-panel, #pickDetails, aside');
+    return board && board.innerText.length > 200 && /F5|First 5/i.test((slip && slip.innerText) || '');
+  }, null, { timeout: 15000 });
   await page.waitForTimeout(1000);
 
   try {
