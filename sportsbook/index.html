@@ -846,7 +846,6 @@
                 + '<div class="market-label" data-mkt="matchup">Team</div>'
                 + '<div class="market-label" data-mkt="spread">Team Total Over</div>'
                 + '<div class="market-label" data-mkt="total">Team Total Under</div>'
-                + '<div class="market-label" data-mkt="ml">Action</div>'
                 + '<div class="market-label" data-mkt="more">More Bets</div>'
                 + '</div>';
             games.forEach(function(game, index) {
@@ -862,14 +861,12 @@
                         + '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + escHtml(game.away_team) + '</div></div></div>'
                         + '<div class="odds-btn no-odds-btn" data-mkt="spread"><span class="odds-line">Over</span><span class="odds-value">Unavailable</span></div>'
                         + '<div class="odds-btn no-odds-btn" data-mkt="total"><span class="odds-line">Under</span><span class="odds-value">Unavailable</span></div>'
-                        + '<div class="odds-btn no-odds-btn" data-mkt="ml" style="background:transparent;border:0;cursor:default;"><span class="odds-line" style="opacity:0.5;">—</span></div>'
                         + '<button class="odds-btn odds-more-btn" data-mkt="more" onclick="window.TMR.setMarket(\'game\'); var st=document.getElementById(\'marketSubtabs\'); if(st){window.scrollTo({top: st.offsetTop - 80, behavior: \'smooth\'});}"><span class="odds-line">Game Lines</span><span class="odds-value">More &rsaquo;</span></button>'
                         + '</div>'
                         + '<div class="team-row">'
                         + '<div class="team-info" data-mkt="matchup"><div class="team-details"><div class="team-name">' + escHtml(game.home_team) + '</div></div></div>'
                         + '<div class="odds-btn no-odds-btn" data-mkt="spread"><span class="odds-line">Over</span><span class="odds-value">Unavailable</span></div>'
                         + '<div class="odds-btn no-odds-btn" data-mkt="total"><span class="odds-line">Under</span><span class="odds-value">Unavailable</span></div>'
-                        + '<div class="odds-btn no-odds-btn" data-mkt="ml" style="background:transparent;border:0;cursor:default;"><span class="odds-line" style="opacity:0.5;">—</span></div>'
                         + '<div class="odds-more-spacer" data-mkt="more" aria-hidden="true"></div>'
                         + '</div></div>';
                     return;
@@ -920,7 +917,6 @@
                         + (under
                             ? '<button class="odds-btn" data-mkt="total" onclick="window.selectGameBet(' + index + ',\'teamunder\',\'' + esc(teamName) + ' Under\',\'' + esc(pv(under.line)) + '\',\'' + esc(pv(under.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + uLine + '</span><span class="odds-value' + (Number(under.odds) > 0 ? ' positive' : '') + '">' + uOdds + '</span></button>'
                             : '<div class="odds-btn no-odds-btn" data-mkt="total"><span class="odds-line">Under</span><span class="odds-value">—</span></div>')
-                        + '<div class="odds-btn no-odds-btn" data-mkt="ml" style="background:transparent;border:0;cursor:default;"><span class="odds-line" style="opacity:0.5;">—</span></div>'
                         + moreCell
                         + '</div>';
                 });
@@ -9499,7 +9495,7 @@
          depending on sportsbook-specific chrome or late body includes. -->
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260514mobile1">
     <script defer src="/static/js/tmr-sitewide.js?v=20260507sportsbookheader3"></script>
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260516teamtotals1">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260516teamtotals2">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1">
 </head>
 <body data-tmr-test-route="sportsbook">
@@ -28809,12 +28805,12 @@ document.addEventListener('DOMContentLoaded', function() {
     </style>
     <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260430pickslipexp1">
     <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=20260430hidedup1">
-    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260516teamtotals1">
+    <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260516teamtotals2">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1">
     <style id="tmr-redesign-tail-guard">
     /* Inline backstop so nothing loaded later in <body> can overwrite the
        redesign. Source-order LAST + !important = absolute cascade win. */
-    @import url("/static/css/tmr-redesign-overrides.css?v=20260516teamtotals1");
+    @import url("/static/css/tmr-redesign-overrides.css?v=20260516teamtotals2");
     @import url("/static/css/tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1");
     </style>
     <style id="tmr-sportsbook-readability-boost">
