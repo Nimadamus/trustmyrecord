@@ -25,8 +25,11 @@ async function main() {
   const page = await browser.newPage({ viewport: { width: 1360, height: 1040 } });
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await waitForBoardSettled(page);
-  await page.getByRole('button', { name: /^MLB\b/i }).first().click();
+  const mlbButton = page.locator('[data-sportsbook-tab="sport"][data-sport="MLB"], [data-sport="MLB"], button:has-text("MLB")').first();
+  await mlbButton.waitFor({ state: 'visible', timeout: 15000 });
+  await mlbButton.click();
   await waitForBoardSettled(page);
+  await page.waitForFunction(() => /MLB|Baseball/i.test(document.querySelector('#selectedSportTitle, .tmr-board-title, main')?.textContent || document.body.innerText), null, { timeout: 15000 });
 
   const f5Tab = page.locator('.tmr-board-filter-tab[data-filter="first-5"], .tmr-card-filter-tab[data-filter="first-5"]').first();
   await f5Tab.waitFor({ state: 'visible', timeout: 30000 });
