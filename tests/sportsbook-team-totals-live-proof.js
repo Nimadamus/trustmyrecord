@@ -66,13 +66,20 @@ async function main() {
         whiteSpace: getComputedStyle(el).whiteSpace,
         textOverflow: getComputedStyle(el).textOverflow,
       }));
+      const rows = [...node.querySelectorAll('.team-market-row')].map((row) => ({
+        team: row.querySelector('.team-cell b')?.textContent.trim() || '',
+        lines: [...row.querySelectorAll('.sb-odds-line')].map((el) => el.textContent.trim()),
+        prices: [...row.querySelectorAll('.sb-odds-price')].map((el) => el.textContent.trim()),
+      }));
+      const bostonRow = rows.find((row) => row.team === 'Boston Red Sox');
       return {
         text: node.innerText,
         headers,
         teamNames,
+        rows,
         hasBoardHeader: headers.includes('Board'),
-        hasBostonMainTotal: /\bBoston Red Sox\b[\s\S]*\bO 3\.5\b[\s\S]*\bU 3\.5\b/.test(node.innerText),
-        hasBostonAltTotal: /\bBoston Red Sox\b[\s\S]*\bO 4\.5\b[\s\S]*\bU 4\.5\b/.test(node.innerText),
+        hasBostonMainTotal: Boolean(bostonRow && bostonRow.lines.includes('O 3.5') && bostonRow.lines.includes('U 3.5')),
+        hasBostonAltTotal: Boolean(bostonRow && (bostonRow.lines.includes('O 4.5') || bostonRow.lines.includes('U 4.5'))),
       };
     });
 
