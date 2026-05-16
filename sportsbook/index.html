@@ -10468,13 +10468,16 @@ window.toggleSportFamily = function (family) {
         } catch (e) {}
         var whenText = [dateStr, timeStr].filter(Boolean).join(' • ');
         var headers = config.headers || ['Spread', 'Moneyline', 'Total'];
+        var marketColCount = Math.max(1, Math.min(3, headers.length || 3));
         var marketLabel = config.marketLabel || 'Market';
         var awayLogo = sportsbookTeamLogoMarkup(away, game.away_logo || game.awayLogo || '', game.away_abbr || game.awayAbbr || '');
         var homeLogo = sportsbookTeamLogoMarkup(home, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '');
         var awayButtons = config.awayButtons || [oddsButton('—', '—'), oddsButton('—', '—'), oddsButton('—', '—')];
         var homeButtons = config.homeButtons || [oddsButton('—', '—'), oddsButton('—', '—'), oddsButton('—', '—')];
-        while (awayButtons.length < 3) awayButtons.push(oddsButton('—', '—'));
-        while (homeButtons.length < 3) homeButtons.push(oddsButton('—', '—'));
+        while (awayButtons.length < marketColCount) awayButtons.push(oddsButton('—', '—'));
+        while (homeButtons.length < marketColCount) homeButtons.push(oddsButton('—', '—'));
+        awayButtons = awayButtons.slice(0, marketColCount);
+        homeButtons = homeButtons.slice(0, marketColCount);
         var awayMeta = config.awayMeta || '';
         var homeMeta = config.homeMeta || '';
 
@@ -10486,25 +10489,25 @@ window.toggleSportFamily = function (family) {
                 '</span></div>';
         }
 
-        return '<article class="sportsbook-game-card sportsbook-game-card--shared-market" data-market-tab="' + _ttHtmlEsc(marketLabel) + '">' +
+        return '<article class="sportsbook-game-card sportsbook-game-card--shared-market' + (marketColCount === 2 ? ' sportsbook-game-card--two-market-cols' : '') + '" data-market-tab="' + _ttHtmlEsc(marketLabel) + '">' +
             '<div class="game-meta-row">' + (whenText || '&nbsp;') + '<span class="board-meta-chip">' + _ttHtmlEsc(marketLabel) + '</span></div>' +
             '<div class="market-grid-row market-header-row">' +
                 '<div class="market-header-cell">Matchup</div>' +
                 '<div class="market-header-cell">' + _ttHtmlEsc(headers[0] || 'Option') + '</div>' +
-                '<div class="market-header-cell">' + _ttHtmlEsc(headers[1] || 'Option') + '</div>' +
-                '<div class="market-header-cell">' + _ttHtmlEsc(headers[2] || 'Option') + '</div>' +
+                (marketColCount > 1 ? '<div class="market-header-cell">' + _ttHtmlEsc(headers[1] || 'Option') + '</div>' : '') +
+                (marketColCount > 2 ? '<div class="market-header-cell">' + _ttHtmlEsc(headers[2] || 'Option') + '</div>' : '') +
             '</div>' +
             '<div class="market-grid-row team-market-row away-team-row">' +
                 teamCell('Away', awayLogo, away, awayMeta) +
                 '<div class="odds-cell">' + awayButtons[0] + '</div>' +
-                '<div class="odds-cell">' + awayButtons[1] + '</div>' +
-                '<div class="odds-cell">' + awayButtons[2] + '</div>' +
+                (marketColCount > 1 ? '<div class="odds-cell">' + awayButtons[1] + '</div>' : '') +
+                (marketColCount > 2 ? '<div class="odds-cell">' + awayButtons[2] + '</div>' : '') +
             '</div>' +
             '<div class="market-grid-row team-market-row home-team-row">' +
                 teamCell('Home', homeLogo, home, homeMeta) +
                 '<div class="odds-cell">' + homeButtons[0] + '</div>' +
-                '<div class="odds-cell">' + homeButtons[1] + '</div>' +
-                '<div class="odds-cell">' + homeButtons[2] + '</div>' +
+                (marketColCount > 1 ? '<div class="odds-cell">' + homeButtons[1] + '</div>' : '') +
+                (marketColCount > 2 ? '<div class="odds-cell">' + homeButtons[2] + '</div>' : '') +
             '</div>' +
         '</article>';
     }
@@ -10922,10 +10925,106 @@ window.toggleSportFamily = function (family) {
     }
 
     function _ttChooseMainLine(lines) {
-        for (var i = 0; i < lines.length; i++) {
-            if (lines[i].over && lines[i].under) return lines[i];
+        var priced = (lines || []).filter(function (line) {
+            return line && line.over && line.under;
+        });
+        if (!priced.length) return (lines || [])[0] || null;
+
+        var exactMain = priced.filter(function (line) {
+            return line.source === 'team_totals' && !line.isAlternate;
+        });
+        if (exactMain.length) return exactMain[0];
+
+        var nonAlternate = priced.filter(function (line) { return !line.isAlternate; });
+        return nonAlternate[0] || priced[0];
+    }
+
+    function _ttIsAlternateItem(it) {
+        var parts = [
+            it && it.market_type,
+            it && it.market_key,
+            it && it.group_key,
+            it && it.group_label,
+            it && it.selection_label,
+            it && it.source_label,
+            it && it.id
+        ].map(function (v) { return String(v || '').toLowerCase(); });
+        return parts.some(function (v) {
+            return /\balternate\b|\balt[_ -]?team|\balt[_ -]?total|^alt_|:alt_/.test(v);
+        });
+    }
+
+    function _ttIsMainTeamTotalItem(it) {
+        if (!it) return false;
+        if (_ttIsAlternateItem(it)) return false;
+        var market = String(it.market_type || it.market_key || '').toLowerCase();
+        var key = String(it.market_key || it.market_type || '').toLowerCase();
+        var group = String(it.group_key || '').toLowerCase();
+        return market === 'team_totals' || key === 'team_totals' || group === 'team_totals';
+    }
+
+    function _ttTeamKey(name) {
+        return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    }
+
+    function _ttFindRawMarket(game, marketKey) {
+        var books = Array.isArray(game && game.bookmakers) ? game.bookmakers : [];
+        for (var b = 0; b < books.length; b++) {
+            var markets = Array.isArray(books[b] && books[b].markets) ? books[b].markets : [];
+            for (var m = 0; m < markets.length; m++) {
+                if (markets[m] && markets[m].key === marketKey) return markets[m];
+            }
         }
-        return lines[0] || null;
+        return null;
+    }
+
+    function _ttFavoriteSlot(game) {
+        var awayKey = _ttTeamKey(game && game.away_team);
+        var homeKey = _ttTeamKey(game && game.home_team);
+        var spread = _ttFindRawMarket(game, 'spreads');
+        var h2h = _ttFindRawMarket(game, 'h2h');
+        var favorite = '';
+        if (spread && Array.isArray(spread.outcomes)) {
+            spread.outcomes.forEach(function (o) {
+                if (!o || o.point == null || Number(o.point) >= 0) return;
+                favorite = _ttTeamKey(o.name);
+            });
+        }
+        if (!favorite && h2h && Array.isArray(h2h.outcomes)) {
+            var priced = h2h.outcomes.filter(function (o) {
+                return o && o.price != null && Number.isFinite(Number(o.price));
+            }).sort(function (a, b) { return Number(a.price) - Number(b.price); });
+            favorite = priced[0] ? _ttTeamKey(priced[0].name) : '';
+        }
+        if (favorite && favorite === awayKey) return 'away';
+        if (favorite && favorite === homeKey) return 'home';
+        return '';
+    }
+
+    function _ttApplyMainLineSanity(game, bucket) {
+        if (!game || !bucket || !bucket.away || !bucket.home) return bucket;
+        if (!bucket.away.over || !bucket.away.under || !bucket.home.over || !bucket.home.under) return bucket;
+        var favorite = _ttFavoriteSlot(game);
+        if (!favorite) return bucket;
+        var dog = favorite === 'away' ? 'home' : 'away';
+        var favLine = Number(bucket[favorite].over.line);
+        var dogLine = Number(bucket[dog].over.line);
+        if (!Number.isFinite(favLine) || !Number.isFinite(dogLine) || favLine >= dogLine) return bucket;
+
+        var totals = _ttFindRawMarket(game, 'totals');
+        var gameTotal = totals && Array.isArray(totals.outcomes) && totals.outcomes[0] ? Number(totals.outcomes[0].point) : NaN;
+        var linesSumToGameTotal = Number.isFinite(gameTotal) && Math.abs((favLine + dogLine) - gameTotal) < 0.01;
+        var lineGapLooksLikeSwap = Math.abs(favLine - dogLine) >= 1;
+        if (!linesSumToGameTotal || !lineGapLooksLikeSwap) return bucket;
+
+        var favOver = bucket[favorite].over;
+        var favUnder = bucket[favorite].under;
+        bucket[favorite].over = bucket[dog].over;
+        bucket[favorite].under = bucket[dog].under;
+        bucket[dog].over = favOver;
+        bucket[dog].under = favUnder;
+        console.warn('[TMR][TT] corrected main team-total team ordering for', game.away_team, '@', game.home_team);
+        return bucket;
     }
 
     // Split a game's team_totals items into Away/Home Over/Under buckets.
@@ -10939,7 +11038,7 @@ window.toggleSportFamily = function (family) {
             home: { team: game.home_team, lines: [] }
         };
         (items || []).forEach(function (it) {
-            if (!it) return;
+            if (!it || !_ttIsMainTeamTotalItem(it)) return;
             var sel = String(it.selection || it.selection_label || '').toLowerCase();
             var isOver = sel.indexOf('over') !== -1;
             var isUnder = sel.indexOf('under') !== -1;
@@ -10962,7 +11061,13 @@ window.toggleSportFamily = function (family) {
             var slot = bucket[teamSlot];
             var line = slot.lines.find(function (row) { return row.line === entry.line; });
             if (!line) {
-                line = { line: entry.line, over: null, under: null };
+                line = {
+                    line: entry.line,
+                    over: null,
+                    under: null,
+                    source: String(it.market_key || it.market_type || it.group_key || '').toLowerCase(),
+                    isAlternate: _ttIsAlternateItem(it)
+                };
                 slot.lines.push(line);
             }
             if (isOver && !line.over) line.over = entry;
@@ -10974,7 +11079,7 @@ window.toggleSportFamily = function (family) {
             bucket[slotKey].under = selected && selected.under ? selected.under : null;
             delete bucket[slotKey].lines;
         });
-        return bucket;
+        return _ttApplyMainLineSanity(game, bucket);
     }
 
     function _ttButton(gameIndex, side, team, line, odds, awayTeam, homeTeam) {
@@ -11437,21 +11542,21 @@ window.toggleSportFamily = function (family) {
                 pending++;
                 html += renderMarketBoardCard(game, idx, {
                     marketLabel: 'Team Totals',
-                    headers: ['Team Total Over', 'Team Total Under', 'Board'],
+                    headers: ['Team Total Over', 'Team Total Under'],
                     awayMeta: 'Started - picks locked',
                     homeMeta: 'Started - picks locked',
-                    awayButtons: [oddsButton('Started', '—'), oddsButton('Started', '—'), '<button type="button" class="sb-board-action" disabled aria-disabled="true">Started</button>'],
-                    homeButtons: [oddsButton('Started', '—'), oddsButton('Started', '—'), '<button type="button" class="sb-board-action" disabled aria-disabled="true">Started</button>']
+                    awayButtons: [oddsButton('Started', '—'), oddsButton('Started', '—')],
+                    homeButtons: [oddsButton('Started', '—'), oddsButton('Started', '—')]
                 });
             } else if (!hasAny) {
                 pending++;
                 html += renderMarketBoardCard(game, idx, {
                     marketLabel: 'Team Totals',
-                    headers: ['Team Total Over', 'Team Total Under', 'Board'],
+                    headers: ['Team Total Over', 'Team Total Under'],
                     awayMeta: 'Team totals not posted yet',
                     homeMeta: 'Team totals not posted yet',
-                    awayButtons: [oddsButton('Over', '—'), oddsButton('Under', '—'), _ttOpenBoardButton(sport)],
-                    homeButtons: [oddsButton('Over', '—'), oddsButton('Under', '—'), _ttOpenBoardButton(sport)]
+                    awayButtons: [oddsButton('Over', '—'), oddsButton('Under', '—')],
+                    homeButtons: [oddsButton('Over', '—'), oddsButton('Under', '—')]
                 });
             } else {
                 rendered++;
@@ -11462,16 +11567,14 @@ window.toggleSportFamily = function (family) {
                 var homeUnder = split.home.under || {};
                 html += renderMarketBoardCard(game, idx, {
                     marketLabel: 'Team Totals',
-                    headers: ['Team Total Over', 'Team Total Under', 'Board'],
+                    headers: ['Team Total Over', 'Team Total Under'],
                     awayButtons: [
                         _ttButton(idx, 'over', game.away_team, awayOver.line, awayOver.odds, game.away_team, game.home_team),
-                        _ttButton(idx, 'under', game.away_team, awayUnder.line, awayUnder.odds, game.away_team, game.home_team),
-                        _ttOpenBoardButton(sport)
+                        _ttButton(idx, 'under', game.away_team, awayUnder.line, awayUnder.odds, game.away_team, game.home_team)
                     ],
                     homeButtons: [
                         _ttButton(idx, 'over', game.home_team, homeOver.line, homeOver.odds, game.away_team, game.home_team),
-                        _ttButton(idx, 'under', game.home_team, homeUnder.line, homeUnder.odds, game.away_team, game.home_team),
-                        _ttOpenBoardButton(sport)
+                        _ttButton(idx, 'under', game.home_team, homeUnder.line, homeUnder.odds, game.away_team, game.home_team)
                     ]
                 });
             }
@@ -31900,6 +32003,35 @@ document.addEventListener('DOMContentLoaded', function() {
             box-sizing: border-box !important;
         }
     }
+
+    /* TEAM_TOTALS_MAIN_MARKET_PROTOCOL_20260516:
+       Team Totals are a two-market board. Do not reserve an empty Board
+       column, and keep full team names readable on desktop. */
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-game-card--two-market-cols {
+        --tmr-game-grid: minmax(320px, 1.7fr) repeat(2, minmax(150px, 1fr)) !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-game-card--two-market-cols .team-cell {
+        overflow: visible !important;
+        min-width: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-game-card--two-market-cols .team-cell b {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        overflow-wrap: normal !important;
+        word-break: normal !important;
+        max-width: none !important;
+    }
+
+    @media (min-width: 861px) {
+        body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-game-card--two-market-cols {
+            --tmr-game-grid: minmax(360px, 1.85fr) repeat(2, minmax(154px, 1fr)) !important;
+        }
+    }
+
+
 
     @media (max-width: 860px) {
         body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-page-topbar {
