@@ -131,6 +131,11 @@ Do not copy another brand directly.
 - Spreads should display signed line values.
 - Totals and team totals should display unsigned total values in the line column; side belongs in the pick text.
 - Odds buttons must show odds and line in a stable scan pattern.
+- Sportsbook rendering must prioritize main/default lines over alternate markets. Alternate lines may only appear when clearly labeled as alternate.
+- Team Totals must render from the main `team_totals` market, not alternate team-total ladders.
+- Full team names must remain readable on desktop sportsbook boards.
+- Empty placeholder columns are not allowed in sportsbook market tables.
+- Live visual verification of the public sportsbook page is required before marking sportsbook rendering work complete.
 
 ### Profile Pages
 
