@@ -29,10 +29,22 @@ async function main() {
     await page.goto(`${LIVE_URL}?teamtotals_live_proof=${Date.now()}`, { waitUntil: 'domcontentloaded', timeout: 60000 });
     await waitForBoardSettled(page);
 
-    await page.locator('[data-sportsbook-tab="sport"][data-sport="MLB"], [data-sport="MLB"]').first().click();
+    await page.evaluate(() => {
+      if (window.TMR && typeof window.TMR.setSport === 'function') {
+        window.TMR.setSport('MLB');
+      } else {
+        throw new Error('window.TMR.setSport is unavailable on the public sportsbook page');
+      }
+    });
     await waitForBoardSettled(page);
 
-    await page.locator('#lobbyPeriodBar .sportsbook-period-tab', { hasText: 'Team Totals' }).first().click();
+    await page.evaluate(() => {
+      if (window.TMR && typeof window.TMR.setPeriod === 'function') {
+        window.TMR.setPeriod('tt');
+      } else {
+        throw new Error('window.TMR.setPeriod is unavailable on the public sportsbook page');
+      }
+    });
     await page.locator('#lobbyBoardRows article.sportsbook-game-card', { hasText: 'Boston Red Sox' })
       .filter({ hasText: 'Atlanta Braves' })
       .first()
