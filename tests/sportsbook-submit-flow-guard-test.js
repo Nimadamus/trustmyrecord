@@ -7,6 +7,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'sportsbook', 'index.html'), 'utf8');
 const reliability = fs.readFileSync(path.join(root, 'static', 'js', 'sportsbook-production-fix-persist-reliability.js'), 'utf8');
+const pendingHtml = fs.readFileSync(path.join(root, 'my-pending-picks', 'index.html'), 'utf8');
 
 assert(reliability.includes('SPORTSBOOK_RELIABILITY_OWNERSHIP'), 'sportsbook reliability script must remain the submit-flow owner');
 assert(reliability.includes('submit payload construction'), 'ownership comment must keep submit payload construction in the protected file');
@@ -19,6 +20,36 @@ assert(
 assert(
   /function selectOption\(optionId\)[\s\S]*state\.selectedOption = option;[\s\S]*pickDetailsEl\.classList\.add\('has-selection'\);[\s\S]*window\.TMR\._ttPopulateSlip\([\s\S]*gameId: option\.game_id \|\| game\.id \|\| null,[\s\S]*showSelectionFeedback\(option, active\);[\s\S]*function updatePickSummary\(\)/.test(reliability),
   'odds button selection must set selectedOption, expose the slip, populate the visible ticket, and show feedback'
+);
+
+assert(
+  /function setCardFilter\(cardId, filter\)[\s\S]*card\.dataset\.marketFilter = filter;[\s\S]*card\.dataset\.scope = filter === 'first-5' \? 'f5' : 'full';/.test(reliability),
+  'F5 board filters must switch the market card into f5 scope so first-five groups remain visible'
+);
+
+assert(
+  /const activeCardScope = activeCardFilter === 'first-5' \? 'f5' : 'full';[\s\S]*data-scope="' \+ activeCardScope \+ '" data-market-filter="' \+ activeCardFilter/.test(reliability),
+  'initial board render must align card scope with the active F5 market filter'
+);
+
+assert(
+  /case 'f5_totals':[\s\S]*betType = \/under\/i\.test\(label\) \? 'f5under' : 'f5over';[\s\S]*case 'f5_spreads':[\s\S]*betType = 'f5spread';[\s\S]*case 'f5_h2h':[\s\S]*betType = 'f5ml';/.test(reliability),
+  'F5 selected options must preserve F5 ML, run line, and total bet types in the ticket bridge'
+);
+
+assert(
+  /case 'f5ml':[\s\S]*marketType = 'f5_h2h';[\s\S]*selectionLabel = teamRaw \+ ' F5 ML';[\s\S]*break;/.test(reliability),
+  'legacy F5 moneyline clicks must submit as f5_h2h with an F5-visible label'
+);
+
+assert(
+  /if \(market === 'f5_h2h'\) \{[\s\S]*selection\.replace\([\s\S]*\+ ' F5 ML';[\s\S]*if \(market === 'h2h'/.test(html),
+  'saved F5 moneyline picks must display F5 in the pick title before generic h2h formatting'
+);
+
+assert(
+  /if \(market === 'f5_h2h'\) return[\s\S]*\+ ' F5 ML';/.test(pendingHtml),
+  'pending-picks page must display saved F5 moneylines as F5 ML, not generic moneylines'
 );
 
 assert(
