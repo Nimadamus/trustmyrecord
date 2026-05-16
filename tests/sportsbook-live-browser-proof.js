@@ -52,10 +52,15 @@ async function main() {
     ));
     if (!card) throw new Error('No live F5 card found');
     card.classList.add('open');
+    card.classList.add('secondary-open');
     card.scrollIntoView({ block: 'center', inline: 'nearest' });
   });
   await page.waitForTimeout(300);
-  await page.locator('#gamesListContainer .tmr-market-card.open[data-market-filter="first-5"] .tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])').first().click({ force: true });
+  await page.evaluate(() => {
+    const button = document.querySelector('#gamesListContainer .tmr-market-card.open.secondary-open[data-market-filter="first-5"] .tmr-group[data-category="first-5"] .tmr-option-btn:not([disabled])');
+    if (!button) throw new Error('No visible F5 option found');
+    button.click();
+  });
   await page.locator('.tmr-slip-panel:visible, #pickDetails:visible, aside:has-text("Pick Slip"):visible').first().waitFor({ state: 'visible', timeout: 15000 });
   await page.waitForFunction(() => {
     const board = document.querySelector('#gamesListContainer') || document.querySelector('main article');
