@@ -136,6 +136,10 @@ Do not copy another brand directly.
 - Full team names must remain readable on desktop sportsbook boards.
 - Empty placeholder columns are not allowed in sportsbook market tables.
 - Live visual verification of the public sportsbook page is required before marking sportsbook rendering work complete.
+- The Team Totals table is permanently locked to a two-column Over/Under layout; the old empty `Board` column/header must never return.
+- The Team Totals layout marker `sportsbook-game-card--two-market-cols` must stay present so regression tests can verify the board shape.
+- The Red Sox/Braves regression fixture must resolve Boston Red Sox Team Total to 3.5, not 4.5, and must fail if an alternate team total becomes the default row.
+- Future sportsbook odds, table, or display changes must preserve the Team Totals guards before they can be marked complete.
 
 ### Profile Pages
 
