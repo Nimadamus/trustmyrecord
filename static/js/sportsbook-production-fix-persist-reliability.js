@@ -1981,6 +1981,9 @@
         const card = document.getElementById(cardId);
         if (!card) return;
         card.dataset.marketFilter = filter;
+
+        card.dataset.scope = filter === 'first-5' ? 'f5' : 'full';
+
         card.classList.add('secondary-open');
         card.querySelectorAll('.tmr-family-tab, .tmr-filter-pill').forEach(function(button) {
             button.classList.toggle('active', button.dataset.filter === filter);
@@ -2013,6 +2016,9 @@
 
         const fallbackFilter = fallback.getAttribute('data-category') || activeFilter;
         card.dataset.marketFilter = fallbackFilter;
+
+        card.dataset.scope = fallbackFilter === 'first-5' ? 'f5' : 'full';
+
         card.querySelectorAll('.tmr-card-filter-tab').forEach(function(button) {
             button.classList.toggle('active', button.dataset.filter === fallbackFilter);
         });
@@ -2329,7 +2335,8 @@
                 return '';
             }
 
-            return '<div class="tmr-market-card' + (index === 0 ? ' open' : '') + '" id="' + cardId + '" data-scope="full" data-market-filter="' + activeCardFilter + '" style="--tmr-accent:' + escapeHtml(accent.primary) + ';--tmr-accent-soft:' + escapeHtml(accent.secondary) + ';">' +
+            const activeCardScope = activeCardFilter === 'first-5' ? 'f5' : 'full';
+            return '<div class="tmr-market-card' + (index === 0 ? ' open' : '') + '" id="' + cardId + '" data-scope="' + activeCardScope + '" data-market-filter="' + activeCardFilter + '" style="--tmr-accent:' + escapeHtml(accent.primary) + ';--tmr-accent-soft:' + escapeHtml(accent.secondary) + ';">' +
                 '<div class="tmr-market-head" onclick="window.tmrToggleCard(\'' + cardId + '\')">' +
                 '<div>' +
                 '<div class="tmr-market-topline"><span class="tmr-market-league">Game ' + boardNumber + ' • ' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span><span class="tmr-market-status">' + escapeHtml(formatStartsIn(game.commence_time)) + '</span></div>' +
