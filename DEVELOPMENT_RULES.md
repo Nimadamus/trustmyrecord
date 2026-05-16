@@ -81,7 +81,7 @@ Before marking any sportsbook, logo, profile, or shared-rendering task complete,
 - Fake profiles or fake data are not reintroduced.
 - Box score and stake-mode logic are not overwritten.
 - Any visual reference from old commits is manually re-applied as a small forward patch, not restored wholesale.
-- Live or local visual proof is captured for visual tasks when possible.
+- Live visual proof from the public page is captured for sportsbook rendering tasks before completion is claimed.
 - Relevant sportsbook regression tests or guards are run when touched behavior can affect sportsbook flow.
 
 ## Pending Picks Display Rules
