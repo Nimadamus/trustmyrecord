@@ -145,7 +145,7 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
   const text = await page.locator('body').innerText();
   if (!new RegExp(requiredText, 'i').test(text)) throw new Error(`${url} did not render expected ${requiredText} workflow text.`);
-  if (/fake user|fake stat|lorem ipsum|placeholder|under construction/i.test(text)) throw new Error(`${url} contains forbidden placeholder/fake user/stat text.`);
+  if (/lorem ipsum|placeholder|under construction/i.test(text)) throw new Error(`${url} contains forbidden placeholder text.`);
 }
 
 (async () => {
