@@ -1,0 +1,96 @@
+name: F5 Label Live Proof
+
+on:
+  workflow_dispatch:
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: |
+          mkdir -p artifacts
+          xvfb-run --auto-servernum node <<'NODE'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+
+          (async () => {
+            const browser = await chromium.launch({ headless: false, args: ['--window-size=1440,1200', '--no-sandbox'] });
+            const page = await browser.newPage({ viewport: { width: 1360, height: 1040 } });
+            const liveUrl = 'https://trustmyrecord.com/sportsbook/?f5_label_live_proof=' + Date.now();
+
+            const scriptResponse = await page.goto('https://trustmyrecord.com/static/js/sportsbook-production-fix-persist-reliability.js?proof=' + Date.now(), { waitUntil: 'domcontentloaded' });
+            const scriptText = await scriptResponse.text();
+            if (!scriptText.includes('f5TotalSide')) throw new Error('Live script does not contain F5 totals label fix');
+
+            await page.goto(liveUrl, { waitUntil: 'domcontentloaded' });
+            await page.waitForFunction(() => typeof window.__tmrSelectSportBoard === 'function' && typeof window.tmrSetBoardFilter === 'function', null, { timeout: 30000 });
+            await page.evaluate(async () => { await window.__tmrSelectSportBoard('MLB'); });
+            await page.locator('#gamesListContainer .tmr-market-card').first().waitFor({ state: 'visible', timeout: 30000 });
+            await page.waitForFunction(() => {
+              const tab = document.querySelector('.tmr-board-filter-tab[data-filter="first-5"]:not([disabled])');
+              return !!tab;
+            }, null, { timeout: 30000 });
+            await page.evaluate(() => { window.tmrSetBoardFilter('first-5'); });
+            await page.waitForFunction(() => {
+              const buttons = Array.from(document.querySelectorAll('#gamesListContainer .tmr-group[data-category="first-5"] .tmr-option-btn'));
+              return buttons.some((button) => /\bF5\s+Over\b/i.test(button.innerText || ''))
+                && buttons.some((button) => /\bF5\s+Under\b/i.test(button.innerText || ''));
+            }, null, { timeout: 30000 });
+
+            const proof = await page.evaluate(() => {
+              const cards = Array.from(document.querySelectorAll('#gamesListContainer .tmr-market-card'));
+              const targetCard = cards.find((card) => {
+                const text = card.innerText || '';
+                return /\bF5\s+Over\b/i.test(text) && /\bF5\s+Under\b/i.test(text);
+              });
+              if (!targetCard) throw new Error('No live F5 totals card found');
+              targetCard.classList.add('open', 'secondary-open');
+              targetCard.dataset.marketFilter = 'first-5';
+              targetCard.dataset.scope = 'f5';
+
+              const totalButtons = Array.from(targetCard.querySelectorAll('.tmr-group[data-category="first-5"] .tmr-option-btn')).filter((button) => /\bF5\s+(Over|Under)\b/i.test(button.innerText || ''));
+              totalButtons.forEach((button) => {
+                button.style.outline = '3px solid #22c55e';
+                button.style.boxShadow = '0 0 0 5px rgba(34,197,94,.24)';
+              });
+              targetCard.scrollIntoView({ block: 'center', inline: 'nearest' });
+
+              const totals = totalButtons.map((button) => ({
+                tag: (button.querySelector('.tmr-option-tag') && button.querySelector('.tmr-option-tag').textContent || '').trim(),
+                line: (button.querySelector('.tmr-option-line') && button.querySelector('.tmr-option-line').textContent || '').trim(),
+                market: (button.querySelector('.tmr-option-market') && button.querySelector('.tmr-option-market').textContent || '').trim(),
+                odds: (button.querySelector('.tmr-option-odds') && button.querySelector('.tmr-option-odds').textContent || '').trim(),
+                text: (button.innerText || '').trim()
+              }));
+              const badTags = totals.filter((item) => !/^(Over|Under)$/.test(item.tag));
+              if (badTags.length) throw new Error('F5 totals still have bad tags: ' + JSON.stringify(badTags));
+              return {
+                live_url: location.href,
+                title: document.title,
+                f5_total_buttons: totals
+              };
+            });
+
+            await page.waitForTimeout(500);
+            await page.screenshot({ path: 'artifacts/f5-total-label-live-proof.png', fullPage: false });
+            fs.writeFileSync('artifacts/f5-total-label-live-proof.json', JSON.stringify(proof, null, 2));
+            await browser.close();
+          })().catch((error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: f5-total-label-live-proof
+          path: |
+            artifacts/f5-total-label-live-proof.png
+            artifacts/f5-total-label-live-proof.json
