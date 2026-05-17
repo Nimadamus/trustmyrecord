@@ -50,11 +50,23 @@ jobs:
                 const text = clean(el.innerText || el.textContent);
                 return { i, text, className: String(el.className || '') };
               });
-              const corrected = rows.filter(row => /\b(Over|Under)\s+\d+(\.\d+)?\b/.test(row.text) || /\b(Over|Under)\b.*\+\d+(\.\d+)?/.test(row.text));
-              const broken = rows.filter(row => /^\+\d+(\.\d+)?\s+[-+]\d+/.test(row.text) || row.text === '+3.5' || row.text === '+4.5' || row.text === '+5.5');
-              const target = Array.from(document.querySelectorAll('.sb-odds, .tmr-option-btn, button')).find(el => {
+              const buttons = Array.from(document.querySelectorAll('.tmr-group[data-category="first-5"] .tmr-option-btn, .sb-odds'));
+              const f5Totals = buttons.map((el, i) => {
+                const tag = clean((el.querySelector('.tmr-option-tag') || el.querySelector('.sb-odds-line') || {}).textContent);
+                const line = clean((el.querySelector('.tmr-option-line') || {}).textContent);
+                const market = clean((el.querySelector('.tmr-option-market') || {}).textContent);
                 const text = clean(el.innerText || el.textContent);
-                return /\bOver\s+\d+(\.\d+)?\b/.test(text) || /\bUnder\s+\d+(\.\d+)?\b/.test(text) || /\bOver\b.*\+\d+(\.\d+)?/.test(text);
+                return { i, tag, line, market, text };
+              }).filter(row => {
+                return /\b(Over|Under)\b/i.test(row.market || row.text) && /\b(\+)?\d+(\.\d+)?\b/.test(row.line || row.market || row.text);
+              });
+              const corrected = f5Totals.filter(row => /^(Over|Under)$/i.test(row.tag) || /^(Over|Under)\s+\d+(\.\d+)?$/i.test(row.tag));
+              const broken = f5Totals.filter(row => /^\+\d+(\.\d+)?$/i.test(row.tag));
+              const group = document.querySelector('.tmr-group[data-category="first-5"]');
+              if (group) group.setAttribute('data-f5-proof-group', 'true');
+              const target = buttons.find(el => {
+                const text = clean(el.innerText || el.textContent);
+                return /\bOver\b/i.test(text) && /\b\+?\d+(\.\d+)?\b/.test(text);
               });
               if (target) {
                 target.scrollIntoView({ block: 'center', inline: 'center' });
@@ -73,12 +85,16 @@ jobs:
             fs.writeFileSync('artifacts/live-f5-totals-label-proof.json', JSON.stringify(proof, null, 2));
             await wait(1000);
             await page.screenshot({ path: 'artifacts/live-f5-totals-label-proof.png', fullPage: true });
+            const groupLocator = page.locator('[data-f5-proof-group="true"]').first();
+            if (await groupLocator.count()) {
+              await groupLocator.screenshot({ path: 'artifacts/live-f5-totals-label-proof-group.png' });
+            }
             await browser.close();
-            if (!proof.corrected.some(row => /\bOver\b/i.test(row.text)) || !proof.corrected.some(row => /\bUnder\b/i.test(row.text))) {
+            if (!proof.corrected.some(row => /\bOver\b/i.test(row.tag || row.text)) || !proof.corrected.some(row => /\bUnder\b/i.test(row.tag || row.text))) {
               throw new Error('Did not find both corrected Over and Under F5 totals labels on the live page.');
             }
-            if (proof.broken.some(row => /^\+\d+(\.\d+)?\b/.test(row.text))) {
-              throw new Error('Found a totals-looking button starting with a raw + line.');
+            if (proof.broken.length) {
+              throw new Error('Found an F5 totals button whose side tag is a raw + line.');
             }
           })().catch(error => {
             console.error(error);
@@ -93,4 +109,5 @@ jobs:
           name: f5-totals-live-label-proof
           path: |
             artifacts/live-f5-totals-label-proof.png
+            artifacts/live-f5-totals-label-proof-group.png
             artifacts/live-f5-totals-label-proof.json
