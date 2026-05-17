@@ -40,3 +40,39 @@ Required canonical examples:
 - `First 5 Innings Total`, `First Five Totals`, `First 5 Total`, and `First Five Total` aggregate as `f5_totals`
 
 This normalization must happen before records, pick counts, W-L-P, units, ROI, and win percentage are computed. Do not solve duplicate market rows by only renaming labels in the UI.
+
+## Public Ranking Eligibility
+
+Public rank metadata must use the same eligibility rule on profile pages, main leaderboards, and market leaderboards.
+
+Required public ranking conditions:
+
+- at least 20 graded picks
+- positive net units
+- active, public, non-test account
+- no pending picks counted toward rank, records, ROI, win percentage, or units
+
+If a user has 20 or more graded picks but non-positive net units, profile rank fields must stay unranked and `ranking_status` must read `Not ranked yet`. Do not decorate negative, break-even, inactive, private, or test accounts with `Ranked #...` metadata.
+
+## Public Page Empty States
+
+Launch-facing pages must not ship rough placeholder copy such as `No tracked picks yet` in visible page markup or runtime fallback strings. Empty states may explain that verified records or locked picks are loading or pending, but they must preserve the premium public-record tone and must not imply the platform has no real activity when live data is available.
+
+## Launch-Readiness Regression Standard
+
+Sportsbook work is not complete until the current version is verified end to end on the live public site, not only by localhost, source review, build output, deployment status, or HTTP-only checks.
+
+Required live checks:
+
+- log in with a controlled test account and open `https://trustmyrecord.com/sportsbook/`
+- confirm live sportsbook lines load for supported sports and that full-game lines, first-five lines, team totals, spreads/run lines/puck lines, moneylines, and totals are clearly labeled
+- confirm team names are readable and no empty decorative columns such as `board` appear without purpose
+- click representative lines and confirm exactly one correct ticket opens in the expected ticket area
+- submit controlled test picks only from safe test accounts, then refresh and confirm pending picks remain visible to that user
+- confirm pending picks are private and are not exposed on public profile, leaderboard, feed, or discovery surfaces before grading
+- grade controlled outcomes for win, loss, push, full-game, first-five, and team-total cases, then rebuild/verify stats from the canonical pick ledger
+- confirm records, units, ROI, win percentage, advanced stats, public profiles, and public leaderboard/discovery behavior match the graded ledger
+- preserve existing graded history order and never delete, duplicate, reorder, or mutate old graded picks as part of a sportsbook fix
+- capture browser screenshot proof with the live public URL visible in the browser address bar before marking the work complete
+
+The broad site regression suite must not fail solely on a fixed mobile sportsbook screenshot height when the dedicated sportsbook live workflow has passed. The sportsbook board is dynamic by schedule and odds availability, so mobile layout readiness is proved by the sportsbook live workflow plus functional mobile accessibility checks.
