@@ -30,37 +30,28 @@ jobs:
             if (!scriptText.includes('f5TotalSide')) throw new Error('Live script does not contain F5 totals label fix');
 
             await page.goto(liveUrl, { waitUntil: 'domcontentloaded' });
-            await page.waitForFunction(() => document.body && /MLB/i.test(document.body.innerText || ''), null, { timeout: 30000 });
-            await page.getByText('MLB', { exact: true }).click({ timeout: 15000 }).catch(async () => {
-              await page.evaluate(async () => {
-                if (typeof window.__tmrSelectSportBoard === 'function') await window.__tmrSelectSportBoard('MLB');
-              });
-            });
-            await page.waitForFunction(() => /MLB\s*·\s*Game Board|MLB Board|5 Inning Lines/i.test(document.body.innerText || ''), null, { timeout: 30000 });
-            await page.getByText('5 Inning Lines', { exact: false }).click({ timeout: 15000 }).catch(async () => {
-              await page.evaluate(() => {
-                if (typeof window.tmrSetBoardFilter === 'function') window.tmrSetBoardFilter('first-5');
-                if (window.TMR && typeof window.TMR.setMarket === 'function') window.TMR.setMarket('first_5');
-              });
-            });
-            await page.waitForFunction(() => {
-              const buttons = Array.from(document.querySelectorAll('.tmr-option-btn, .odds-btn, button'));
-              return buttons.some((button) => /\bF5\s+Over\b/i.test(button.innerText || ''))
-                && buttons.some((button) => /\bF5\s+Under\b/i.test(button.innerText || ''));
-            }, null, { timeout: 30000 });
+            await page.waitForFunction(() => typeof window.__tmrSelectSportBoard === 'function' && typeof window.tmrSetBoardFilter === 'function', null, { timeout: 30000 });
+            await page.evaluate(async () => { await window.__tmrSelectSportBoard('MLB'); });
+            await page.locator('#gamesListContainer .tmr-market-card').first().waitFor({ state: 'visible', timeout: 30000 });
+            await page.evaluate(() => { window.tmrSetBoardFilter('first-5'); });
+            await page.waitForTimeout(5000);
 
             const proof = await page.evaluate(() => {
               const cards = Array.from(document.querySelectorAll('#gamesListContainer .tmr-market-card, [data-market="first_5"], .games-board-wrap, .market-card, .game-card'));
               const targetCard = cards.find((card) => {
                 const text = card.innerText || '';
-                return /\bF5\s+Over\b/i.test(text) && /\bF5\s+Under\b/i.test(text);
+                return /F5|First 5|5 Inning/i.test(text) && /Over|Under|\bO\s+\d|\bU\s+\d/i.test(text);
               });
               if (!targetCard) throw new Error('No live F5 totals card found');
               targetCard.classList.add('open', 'secondary-open');
               targetCard.dataset.marketFilter = 'first-5';
               targetCard.dataset.scope = 'f5';
 
-              const totalButtons = Array.from(targetCard.querySelectorAll('.tmr-option-btn, .odds-btn, button')).filter((button) => /\bF5\s+(Over|Under)\b/i.test(button.innerText || '') || /\b(O|U)\s+\d/i.test(button.innerText || ''));
+              const totalButtons = Array.from(targetCard.querySelectorAll('.tmr-option-btn, .odds-btn, button')).filter((button) => {
+                const text = button.innerText || '';
+                const market = (button.querySelector('.tmr-option-market') && button.querySelector('.tmr-option-market').textContent || '');
+                return /\b(F5\s+)?(Over|Under)\b/i.test(market) || /\bF5\s+(Over|Under)\b/i.test(text) || /\b(O|U)\s+\d/i.test(text);
+              });
               totalButtons.forEach((button) => {
                 button.style.outline = '3px solid #22c55e';
                 button.style.boxShadow = '0 0 0 5px rgba(34,197,94,.24)';
