@@ -78,6 +78,11 @@ assert(
 );
 
 assert(
+  /option\.market_type === 'team_totals' \|\| option\.market_type === 'f5_team_totals'/.test(reliability),
+  'submit flow must canonicalize both full-game and F5 team-total selections before posting'
+);
+
+assert(
   /window\.dispatchEvent\(new CustomEvent\('tmr:pickLocked'[\s\S]*await fetchCurrentUserPicks\(\);[\s\S]*syncRecordWidgets\(state\.currentUserPicks\);[\s\S]*showPickSlipSuccess\('Pick Locked In'/.test(reliability),
   'successful submit must notify pending widgets, refresh picks, and show confirmation'
 );
