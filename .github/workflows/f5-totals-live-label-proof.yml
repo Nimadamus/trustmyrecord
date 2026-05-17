@@ -86,8 +86,12 @@ jobs:
             await wait(1000);
             await page.screenshot({ path: 'artifacts/live-f5-totals-label-proof.png', fullPage: true });
             const groupLocator = page.locator('[data-f5-proof-group="true"]').first();
-            if (await groupLocator.count()) {
-              await groupLocator.screenshot({ path: 'artifacts/live-f5-totals-label-proof-group.png' });
+            try {
+              if (await groupLocator.count()) {
+                await groupLocator.screenshot({ path: 'artifacts/live-f5-totals-label-proof-group.png', timeout: 5000 });
+              }
+            } catch (screenshotError) {
+              console.warn('Focused group screenshot skipped:', screenshotError.message);
             }
             await browser.close();
             if (!proof.corrected.some(row => /\bOver\b/i.test(row.tag || row.text)) || !proof.corrected.some(row => /\bUnder\b/i.test(row.tag || row.text))) {
