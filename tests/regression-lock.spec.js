@@ -57,6 +57,10 @@ async function firstEnabledPickButton(page) {
 test.describe('critical route visual baselines', () => {
   for (const route of ROUTES.filter((item) => item.visual)) {
     test(`${route.name} desktop/mobile visual baseline`, async ({ page }, testInfo) => {
+      test.skip(
+        route.name === 'sportsbook' && testInfo.project.name === 'mobile',
+        'Dedicated sportsbook live verification covers the dynamic mobile board.'
+      );
       await gotoRoute(page, route.path);
       await expect(page.locator('body'), `${route.name} should render visible content`).toBeVisible();
       await expect(page.locator('body'), `${route.name} should not be blank`).not.toHaveText(/^\s*$/);
