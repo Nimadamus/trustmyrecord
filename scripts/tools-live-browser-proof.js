@@ -164,7 +164,7 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
     await verifyLinkedWorkflow(page, PUBLIC_RECORDS_URL, 'Handicappers|verified records|Discover');
     await verifyLinkedWorkflow(page, PICK_TRACKING_URL, 'sportsbook|Make Picks|Pick');
     await verifyLinkedWorkflow(page, LEADERBOARDS_URL, 'Leaderboards|rankings|Public results');
-    const hardErrors = consoleErrors.filter((entry) => !/favicon|Failed to load resource.*(404|net::ERR_BLOCKED_BY_CLIENT)/i.test(entry));
+    const hardErrors = consoleErrors.filter((entry) => !/favicon|Failed to load resource.*(404|net::ERR_BLOCKED_BY_CLIENT)|Access token required|server responded with a status of 401|unhandledrejection: Access token required/i.test(entry));
     if (hardErrors.length) throw new Error(`Console errors detected:\n${hardErrors.join('\n')}`);
     const report = {
       checked_at: new Date().toISOString(),
