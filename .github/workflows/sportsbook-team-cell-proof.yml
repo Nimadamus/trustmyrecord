@@ -1,0 +1,115 @@
+name: Sportsbook Team Cell Proof
+
+on:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Playwright
+        run: |
+          npm install --no-audit --no-fund @playwright/test
+          npx playwright install --with-deps chromium
+      - name: Verify live sportsbook team cells
+        run: |
+          node <<'NODE'
+          const fs = require('fs');
+          const { chromium } = require('@playwright/test');
+
+          const url = 'https://trustmyrecord.com/sportsbook/?teamcellproof=' + Date.now();
+          const marker = "teamCell && teamCell.querySelector('.team-logo, .tmr-team-logo-badge')";
+          const outDir = 'artifacts/team-cell-proof';
+          fs.mkdirSync(outDir, { recursive: true });
+
+          function clean(text) {
+            return String(text || '').replace(/\s+/g, ' ').trim();
+          }
+
+          (async () => {
+            const browser = await chromium.launch();
+            const page = await browser.newPage({ viewport: { width: 1440, height: 1100 }, deviceScaleFactor: 1 });
+
+            let patched = false;
+            for (let attempt = 0; attempt < 24; attempt += 1) {
+              await page.goto(url + '&attempt=' + attempt, { waitUntil: 'domcontentloaded', timeout: 60000 });
+              const html = await page.content();
+              if (html.includes(marker)) {
+                patched = true;
+                break;
+              }
+              await page.waitForTimeout(30000);
+            }
+            if (!patched) throw new Error('Live sportsbook page did not serve patched team-cell HTML marker.');
+
+            await page.evaluate(() => {
+              try { if (typeof window.selectSportAndShowGames === 'function') window.selectSportAndShowGames('MLB'); } catch (_) {}
+              try { if (window.TMR && typeof window.TMR.setMarket === 'function') window.TMR.setMarket('first_5'); } catch (_) {}
+              try { if (typeof window.tmrSetBoardFilter === 'function') window.tmrSetBoardFilter('first-5'); } catch (_) {}
+              Array.from(document.querySelectorAll('button,[role="tab"],.sportsbook-period-tab,.market-subtab')).forEach((el) => {
+                const text = (el.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+                if (text === '1st 5' || text === 'first 5' || text === '5 innings') el.click();
+              });
+            });
+
+            await page.waitForTimeout(5000);
+            await page.waitForSelector('.team-market-row .team-cell', { timeout: 60000 });
+
+            const proof = await page.evaluate(() => {
+              const clean = (text) => String(text || '').replace(/\s+/g, ' ').trim();
+              const cells = Array.from(document.querySelectorAll('.team-market-row .team-cell')).slice(0, 4).map((cell) => {
+                const nameEl = cell.querySelector('.team-meta-stack > b, b');
+                const style = nameEl ? getComputedStyle(nameEl) : null;
+                return {
+                  text: clean(cell.innerText || cell.textContent),
+                  name: clean(nameEl && nameEl.textContent),
+                  logoCount: cell.querySelectorAll('.team-logo, .tmr-team-logo-badge').length,
+                  badgeCount: cell.querySelectorAll('.team-side-badge').length,
+                  stackLogoCount: cell.querySelectorAll('.team-meta-stack .team-logo, .team-meta-stack .tmr-team-logo-badge').length,
+                  textOverflow: style && style.textOverflow,
+                  whiteSpace: style && style.whiteSpace,
+                  overflow: style && style.overflow
+                };
+              });
+              const headers = Array.from(document.querySelectorAll('.market-header-row .market-header-cell')).map((el) => clean(el.textContent));
+              const firstCard = document.querySelector('.sportsbook-game-card--shared-market');
+              return {
+                url: location.href,
+                title: document.title,
+                cells,
+                headers,
+                firstCardText: clean(firstCard && firstCard.innerText).slice(0, 1200),
+                slipContainers: document.querySelectorAll('#pickDetails,.sportsbook-ticket-preview,.pick-slip-card').length
+              };
+            });
+
+            fs.writeFileSync(`${outDir}/live-team-cell-proof.json`, JSON.stringify(proof, null, 2));
+            await page.screenshot({ path: `${outDir}/live-team-cell-proof-full.png`, fullPage: true });
+            const card = page.locator('.sportsbook-game-card--shared-market').first();
+            await card.screenshot({ path: `${outDir}/live-team-cell-proof-card.png` });
+
+            if (proof.cells.length < 2) throw new Error('No team-market-row team cells found on live page.');
+            proof.cells.slice(0, 2).forEach((cell, index) => {
+              if (cell.logoCount !== 1) throw new Error(`Cell ${index} logoCount=${cell.logoCount}, expected 1`);
+              if (cell.badgeCount !== 1) throw new Error(`Cell ${index} badgeCount=${cell.badgeCount}, expected 1`);
+              if (cell.stackLogoCount !== 0) throw new Error(`Cell ${index} has logo inside name stack`);
+              if (!cell.name || cell.name.length < 8 || cell.name.includes('...')) throw new Error(`Cell ${index} full team name not visible: ${cell.name}`);
+            });
+            if (!proof.headers.join(' ').toLowerCase().includes('spread')) throw new Error('Spread column header missing');
+            if (!proof.headers.join(' ').toLowerCase().includes('moneyline')) throw new Error('Moneyline column header missing');
+            if (!proof.headers.join(' ').toLowerCase().includes('total')) throw new Error('Total column header missing');
+
+            await browser.close();
+          })().catch(async (error) => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+      - uses: actions/upload-artifact@v4
+        with:
+          name: team-cell-proof
+          path: artifacts/team-cell-proof/
