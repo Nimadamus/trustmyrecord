@@ -2038,10 +2038,11 @@
         const detailClass = option.source === 'manual' ? 'tmr-option-detail manual' : 'tmr-option-detail';
         const optionTag = getOptionTag(option, game);
         const optionLine = getOptionLineText(option);
+        const optionMarketLabel = getOptionMarketLabel(option);
         return '<button class="tmr-option-btn" id="' + optionDomId + '" data-option-id="' + escapeHtml(optionKey) + '" onclick="window.tmrSelectOption(this.dataset.optionId)">' +
             '<div class="tmr-option-main">' +
             '<div class="tmr-option-topline"><span class="tmr-option-tag">' + escapeHtml(optionTag) + '</span>' + (optionLine ? '<span class="tmr-option-line">' + escapeHtml(optionLine) + '</span>' : '') + '</div>' +
-            '<div class="tmr-option-market">' + escapeHtml(option.selection_label) + '</div>' +
+            '<div class="tmr-option-market">' + escapeHtml(optionMarketLabel) + '</div>' +
             '<div class="' + detailClass + '">' + escapeHtml(detailLabel) + '</div>' +
             '</div>' +
             '<div class="tmr-option-odds-wrap"><span class="tmr-option-odds-label">American</span><div class="tmr-option-odds">' + escapeHtml(option.odds_display || 'Manual') + '</div></div>' +
@@ -2484,12 +2485,21 @@
         if (!option) return '';
         if (option.line_display != null && String(option.line_display).trim()) {
             const line = String(option.line_display).trim();
+            if (option.market_type === 'f5_totals') return line.replace(/^\+/, '');
             if (/^[+-]/.test(line)) return line;
             return /^\d/.test(line) ? 'O/U ' + line : line;
         }
         const selectionLabel = String(option.selection_label || '');
         const match = selectionLabel.match(/([+-]\d+(\.\d+)?|\d+(\.\d+)?)$/);
-        return match ? match[1] : '';
+        return match ? (option.market_type === 'f5_totals' ? match[1].replace(/^\+/, '') : match[1]) : '';
+    }
+
+    function getOptionMarketLabel(option) {
+        const label = String(option && option.selection_label || '');
+        if (option && option.market_type === 'f5_totals') {
+            return label.replace(/\s+\+(\d+(\.\d+)?)\s*$/, ' $1');
+        }
+        return label;
     }
 
     function getSportAccent(sportKey) {
