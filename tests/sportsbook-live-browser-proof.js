@@ -39,14 +39,14 @@ async function main() {
     args: ['--window-size=1440,1200', '--no-sandbox'],
   });
   const page = await browser.newPage({ viewport: { width: 1360, height: 1040 } });
-  const unique = 'codex_f5_live_' + Date.now();
+  const unique = 'tmrverify_f5_live_' + Date.now();
   const signupResponse = await page.request.post('https://trustmyrecord-api.onrender.com/api/auth/signup', {
     headers: { 'Accept': 'application/json' },
     data: {
       username: unique,
-      email: unique + '@example.com',
+      email: unique + '@test.com',
       password: 'CodexF5LiveProof!2026',
-      displayName: 'Codex F5 Live Proof'
+      displayName: 'test_internal_f5_live_proof'
     }
   });
   const signupData = await signupResponse.json();
@@ -57,8 +57,8 @@ async function main() {
   const proofUser = {
     id: rawUser.id,
     username: rawUser.username || unique,
-    email: rawUser.email || unique + '@example.com',
-    displayName: rawUser.displayName || rawUser.display_name || 'Codex F5 Live Proof',
+    email: rawUser.email || unique + '@test.com',
+    displayName: rawUser.displayName || rawUser.display_name || 'test_internal_f5_live_proof',
     verified: rawUser.emailVerified || rawUser.email_verified || true,
     backendUser: true
   };
