@@ -88,9 +88,14 @@ jobs:
             });
 
             fs.writeFileSync(`${outDir}/live-team-cell-proof.json`, JSON.stringify(proof, null, 2));
+            console.log(JSON.stringify(proof, null, 2));
             await page.screenshot({ path: `${outDir}/live-team-cell-proof-full.png`, fullPage: true });
             const card = page.locator('.sportsbook-game-card--shared-market').first();
-            await card.screenshot({ path: `${outDir}/live-team-cell-proof-card.png` });
+            if (await card.count()) {
+              await card.screenshot({ path: `${outDir}/live-team-cell-proof-card.png` });
+            } else {
+              await page.locator('.team-market-row').first().screenshot({ path: `${outDir}/live-team-cell-proof-card.png` });
+            }
 
             if (proof.cells.length < 2) throw new Error('No team-market-row team cells found on live page.');
             proof.cells.slice(0, 2).forEach((cell, index) => {
@@ -110,6 +115,7 @@ jobs:
           });
           NODE
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: team-cell-proof
           path: artifacts/team-cell-proof/
