@@ -22,7 +22,7 @@ jobs:
           const { chromium } = require('@playwright/test');
 
           const url = 'https://trustmyrecord.com/sportsbook/?teamcellproof=' + Date.now();
-          const marker = "teamCell && teamCell.querySelector('.team-logo, .tmr-team-logo-badge')";
+          const marker = '20260517teamrowgrid';
           const outDir = 'artifacts/team-cell-proof';
           fs.mkdirSync(outDir, { recursive: true });
 
@@ -57,32 +57,37 @@ jobs:
             });
 
             await page.waitForTimeout(5000);
-            await page.waitForSelector('.team-market-row .team-cell', { timeout: 60000 });
+            await page.waitForSelector('#gamesListContainer .tmr-market-card .tmr-team-row', { timeout: 60000 });
 
             const proof = await page.evaluate(() => {
               const clean = (text) => String(text || '').replace(/\s+/g, ' ').trim();
-              const cells = Array.from(document.querySelectorAll('.team-market-row .team-cell')).slice(0, 4).map((cell) => {
-                const nameEl = cell.querySelector('.team-meta-stack > b, b');
+              const card = document.querySelector('#gamesListContainer .tmr-market-card');
+              const cells = Array.from(document.querySelectorAll('#gamesListContainer .tmr-market-card .tmr-team-row')).slice(0, 4).map((cell) => {
+                const nameEl = cell.querySelector('.tmr-team-name');
                 const style = nameEl ? getComputedStyle(nameEl) : null;
+                const rowStyle = getComputedStyle(cell);
+                const box = cell.getBoundingClientRect();
                 return {
                   text: clean(cell.innerText || cell.textContent),
                   name: clean(nameEl && nameEl.textContent),
                   logoCount: cell.querySelectorAll('.team-logo, .tmr-team-logo-badge').length,
-                  badgeCount: cell.querySelectorAll('.team-side-badge').length,
-                  stackLogoCount: cell.querySelectorAll('.team-meta-stack .team-logo, .team-meta-stack .tmr-team-logo-badge').length,
+                  badgeCount: cell.querySelectorAll('.tmr-team-side').length,
+                  nameLogoCount: cell.querySelectorAll('.tmr-team-name .team-logo, .tmr-team-name .tmr-team-logo-badge').length,
                   textOverflow: style && style.textOverflow,
                   whiteSpace: style && style.whiteSpace,
-                  overflow: style && style.overflow
+                  overflow: style && style.overflow,
+                  rowDisplay: rowStyle.display,
+                  rowGrid: rowStyle.gridTemplateColumns,
+                  width: Math.round(box.width)
                 };
               });
-              const headers = Array.from(document.querySelectorAll('.market-header-row .market-header-cell')).map((el) => clean(el.textContent));
-              const firstCard = document.querySelector('.sportsbook-game-card--shared-market');
+              const cardBox = card ? card.getBoundingClientRect() : null;
               return {
                 url: location.href,
                 title: document.title,
                 cells,
-                headers,
-                firstCardText: clean(firstCard && firstCard.innerText).slice(0, 1200),
+                cardWidth: cardBox ? Math.round(cardBox.width) : 0,
+                firstCardText: clean(card && card.innerText).slice(0, 1200),
                 slipContainers: document.querySelectorAll('#pickDetails,.sportsbook-ticket-preview,.pick-slip-card').length
               };
             });
@@ -90,23 +95,21 @@ jobs:
             fs.writeFileSync(`${outDir}/live-team-cell-proof.json`, JSON.stringify(proof, null, 2));
             console.log(JSON.stringify(proof, null, 2));
             await page.screenshot({ path: `${outDir}/live-team-cell-proof-full.png`, fullPage: true });
-            const card = page.locator('.sportsbook-game-card--shared-market').first();
-            if (await card.count()) {
-              await card.screenshot({ path: `${outDir}/live-team-cell-proof-card.png` });
-            } else {
-              await page.locator('.team-market-row').first().screenshot({ path: `${outDir}/live-team-cell-proof-card.png` });
-            }
+            await page.locator('#gamesListContainer .tmr-market-card').first().screenshot({ path: `${outDir}/live-team-cell-proof-card.png` });
 
-            if (proof.cells.length < 2) throw new Error('No team-market-row team cells found on live page.');
+            if (proof.cells.length < 2) throw new Error('No tmr-market-card team rows found on live page.');
             proof.cells.slice(0, 2).forEach((cell, index) => {
               if (cell.logoCount !== 1) throw new Error(`Cell ${index} logoCount=${cell.logoCount}, expected 1`);
               if (cell.badgeCount !== 1) throw new Error(`Cell ${index} badgeCount=${cell.badgeCount}, expected 1`);
-              if (cell.stackLogoCount !== 0) throw new Error(`Cell ${index} has logo inside name stack`);
+              if (cell.nameLogoCount !== 0) throw new Error(`Cell ${index} has logo inside team name`);
               if (!cell.name || cell.name.length < 8 || cell.name.includes('...')) throw new Error(`Cell ${index} full team name not visible: ${cell.name}`);
+              if (cell.rowDisplay !== 'grid') throw new Error(`Cell ${index} row display=${cell.rowDisplay}, expected grid`);
             });
-            if (!proof.headers.join(' ').toLowerCase().includes('spread')) throw new Error('Spread column header missing');
-            if (!proof.headers.join(' ').toLowerCase().includes('moneyline')) throw new Error('Moneyline column header missing');
-            if (!proof.headers.join(' ').toLowerCase().includes('total')) throw new Error('Total column header missing');
+            if (proof.cardWidth < 360) throw new Error(`Card width=${proof.cardWidth}, expected at least 360`);
+            const cardText = proof.firstCardText.toLowerCase();
+            if (!cardText.includes('away') || !cardText.includes('home')) throw new Error('Home/away badges missing from card text');
+            if (!cardText.includes('first 5')) throw new Error('First 5 market text missing');
+            if (!cardText.includes('spread') || !cardText.includes('moneyline') || !cardText.includes('total')) throw new Error('F5 spread/moneyline/total text missing');
 
             await browser.close();
           })().catch(async (error) => {
