@@ -20948,6 +20948,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!teamName) return;
             var parent = nameEl.parentElement;
             if (nameEl.closest && nameEl.closest('.tmr-team-row')) return;
+            var teamCell = nameEl.closest ? nameEl.closest('.team-cell,.team-info') : null;
+            if (teamCell && teamCell.querySelector('.team-logo, .tmr-team-logo-badge')) return;
             if (!parent || parent.querySelector(':scope > .team-logo, :scope > .tmr-team-logo-badge')) return;
             nameEl.insertAdjacentHTML('beforebegin', logoMarkup(teamName));
         }
@@ -29689,6 +29691,22 @@ document.addEventListener('DOMContentLoaded', function() {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-market-row .team-cell {
+        overflow: visible !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-market-row .team-meta-stack {
+        flex: 1 1 auto !important;
+        min-width: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-market-row .team-meta-stack > b {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        max-width: none !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-cell {
