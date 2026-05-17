@@ -106,6 +106,7 @@ async function verifyHubAndRoutes(page) {
   }
   const body = await page.locator('body').innerText();
   if (/coming soon|lorem ipsum|placeholder|under construction/i.test(body)) throw new Error('Tools Hub contains placeholder copy.');
+  await page.screenshot({ path: path.join(OUT_DIR, 'tools-hub-live-page-proof.png'), fullPage: false });
   return captureRoot('tools-hub-live-browser-addressbar-proof.png');
 }
 
@@ -175,7 +176,13 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
       public_records_url: PUBLIC_RECORDS_URL,
       pick_tracking_url: PICK_TRACKING_URL,
       leaderboards_url: LEADERBOARDS_URL,
-      screenshots: { hub, trendspotter, mlbSimulator, modelBuilder },
+      screenshots: {
+        hub,
+        hubPage: path.join(OUT_DIR, 'tools-hub-live-page-proof.png'),
+        trendspotter,
+        mlbSimulator,
+        modelBuilder,
+      },
     };
     fs.writeFileSync(path.join(OUT_DIR, 'tools-live-browser-proof.json'), JSON.stringify(report, null, 2));
     console.log(JSON.stringify(report, null, 2));
