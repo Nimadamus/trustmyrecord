@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="robots" content="noindex,nofollow">
-    <link rel="canonical" href="https://trustmyrecord.com/model-builder/index.html">
+    <meta name="robots" content="index,follow,max-image-preview:large">
+    <link rel="canonical" href="https://trustmyrecord.com/model-builder/">
     <title>Model Builder | TrustMyRecord</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -378,36 +378,26 @@
     <script src="/static/js/backend-api.js"></script>
 </head>
 <body>
-    <main id="authCheck" class="auth-check">Checking access...</main>
-    <main id="loginRequired" class="auth-check" hidden>
-        <section class="login-card">
-            <p class="panel-label">Private Model Builder Phase 1</p>
-            <h1>Login required</h1>
-            <p class="notice">Model Builder is private to your account.</p>
-            <a href="/login/?next=/model-builder/">Log in</a>
-        </section>
-    </main>
-
-    <main id="modelBuilderShell" class="model-builder-page" hidden>
+    <main id="modelBuilderShell" class="model-builder-page">
         <section class="model-builder-top">
-            <p class="kicker">Private Tools</p>
+            <p class="kicker">Research Tools</p>
             <h1>Model Builder</h1>
-            <p class="subtitle">Build a private sports model configuration with clear inputs, weights, factors, and output rules. This workspace saves setup details only; results and public claims come later after real grading exists.</p>
+            <p class="subtitle">Build and compare sports betting model assumptions with clear inputs, weights, factors, and output rules. This workspace saves setup details only; results and public claims require real graded data.</p>
         </section>
 
         <section class="empty-shell" aria-label="Model Builder empty state">
             <div class="empty-shell-inner">
                 <div class="empty-icon" aria-hidden="true">MB</div>
-                <p class="empty-title">Guided private model setup</p>
+                <p class="empty-title">Guided model setup</p>
                 <p class="empty-copy">Define what a model should look at, how much each factor should matter, and what kind of output it may produce once real data is connected.</p>
             </div>
         </section>
 
-        <section class="builder-grid" aria-label="Private Model Builder workspace">
+        <section class="builder-grid" aria-label="Model Builder workspace">
             <form id="modelBuilderForm" class="builder-panel">
-                <p class="panel-label">Private Model Definition</p>
+                <p class="panel-label">Model Definition</p>
                 <h2 id="formTitle">New model</h2>
-                <p>Use the guided fields below. Saved models are private configuration objects only.</p>
+                <p>Logged-out drafts are saved in this browser. Logged-in drafts can sync to your private account API when available.</p>
                 <div class="form-grid">
                     <div class="step-card">
                         <h3>1. Basics</h3>
@@ -511,7 +501,7 @@
 
                     <div class="data-warning">Real data is not connected inside this builder page yet. Saved models are configurations only. If scoring is added later, it must show the exact real inputs used and label unavailable data as unavailable.</div>
                     <div class="button-row">
-                        <button class="primary" type="submit" id="saveModelBtn">Save private model</button>
+                        <button class="primary" type="submit" id="saveModelBtn">Save model draft</button>
                         <button type="button" id="resetModelBtn">New draft</button>
                     </div>
                     <p id="modelBuilderMessage" class="notice" aria-live="polite"></p>
@@ -519,7 +509,7 @@
             </form>
 
             <section class="builder-panel">
-                <p class="panel-label">Your Private Models</p>
+                <p class="panel-label">Saved Models</p>
                 <h2>Saved definitions</h2>
                 <p>No public pages or shared rankings are created from this workspace.</p>
                 <div id="modelBuilderList" class="model-list"></div>
@@ -531,6 +521,13 @@
                 <h2>What this model will do</h2>
                 <p>This preview explains the saved configuration. It is not a result, score, or public claim.</p>
                 <div id="modelSummary" class="summary-box"></div>
+            </section>
+
+            <section class="builder-panel full">
+                <p class="panel-label">Compare</p>
+                <h2>Assumption comparison</h2>
+                <p>Select saved drafts to compare factor weights, market scope, and unit rules side by side.</p>
+                <div id="modelCompare" class="summary-box" aria-live="polite"></div>
             </section>
         </section>
     </main>
