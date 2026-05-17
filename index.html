@@ -2090,7 +2090,7 @@ button{font:inherit;cursor:pointer}
             </div>
             <div id="tmrHeroPicksList" class="tmr-pick-empty">
               <span>▣</span>
-              <strong>No tracked picks yet</strong>
+              <strong>Loading verified picks</strong>
               <p>Recent locked picks will appear here once users lock picks before game start.</p>
             </div>
             <footer>▣ All picks are locked before game start</footer>
@@ -4428,7 +4428,7 @@ button{font:inherit;cursor:pointer}
 
     function signed(value, suffix) {
         const parsed = Number(value);
-        if (!Number.isFinite(parsed)) return 'No tracked picks yet';
+        if (!Number.isFinite(parsed)) return 'Verified record pending';
         return (parsed > 0 ? '+' : '') + parsed.toFixed(2).replace(/\.00$/, '') + (suffix || '');
     }
 
@@ -4464,7 +4464,7 @@ button{font:inherit;cursor:pointer}
         const totalUsersEl = document.getElementById('tmrHeroTotalUsers');
         const totalPicksEl = document.getElementById('tmrHeroTotalPicks');
         if (totalUsersEl) totalUsersEl.textContent = String(cleanUsers.length || 4);
-        if (totalPicksEl) totalPicksEl.textContent = totalPicks ? String(totalPicks) : 'No tracked picks yet';
+        if (totalPicksEl) totalPicksEl.textContent = totalPicks ? String(totalPicks) : 'Verified record pending';
 
         if (lead) {
             const username = String(lead.username);
@@ -4484,10 +4484,10 @@ button{font:inherit;cursor:pointer}
             const unitsEl = document.getElementById('tmrHeroUnits');
             const picksEl = document.getElementById('tmrHeroPicks');
             const recordEl = document.getElementById('tmrHeroRecord');
-            if (roiEl) roiEl.textContent = total ? signed(lead.roi, '%') : 'No tracked picks yet';
-            if (unitsEl) unitsEl.textContent = total ? signed(lead.net_units || lead.netUnits, 'u') : 'No tracked picks yet';
-            if (picksEl) picksEl.textContent = total ? String(total) : 'No tracked picks yet';
-            if (recordEl) recordEl.textContent = total ? 'Public record' : 'No tracked picks yet';
+            if (roiEl) roiEl.textContent = total ? signed(lead.roi, '%') : 'Verified record pending';
+            if (unitsEl) unitsEl.textContent = total ? signed(lead.net_units || lead.netUnits, 'u') : 'Verified record pending';
+            if (picksEl) picksEl.textContent = total ? String(total) : 'Verified record pending';
+            if (recordEl) recordEl.textContent = total ? 'Public record' : 'Verified record pending';
         }
 
         const body = document.getElementById('tmrHeroLeaderboardBody');
@@ -4508,9 +4508,9 @@ button{font:inherit;cursor:pointer}
                 + '<td>' + (index + 1) + '</td>'
                 + '<td><a class="tmr-real-user" href="/profile/?user=' + encodeURIComponent(username) + '">'
                 + avatarHtml
-                + '<span>' + escapeHtml(displayName) + '<small>@' + escapeHtml(username) + ' · ' + (total ? total + ' picks' : 'No tracked picks yet') + '</small></span></a></td>'
-                + '<td>' + escapeHtml(total ? signed(user.roi, '%') : 'No tracked picks yet') + '</td>'
-                + '<td>' + escapeHtml(total ? signed(user.net_units || user.netUnits, 'u') : 'No tracked picks yet') + '</td>'
+                + '<span>' + escapeHtml(displayName) + '<small>@' + escapeHtml(username) + ' · ' + (total ? total + ' picks' : 'Verified record pending') + '</small></span></a></td>'
+                + '<td>' + escapeHtml(total ? signed(user.roi, '%') : 'Verified record pending') + '</td>'
+                + '<td>' + escapeHtml(total ? signed(user.net_units || user.netUnits, 'u') : 'Verified record pending') + '</td>'
                 + '</tr>';
         }).join('');
     }
@@ -4539,7 +4539,7 @@ button{font:inherit;cursor:pointer}
             .slice(0, 5);
         if (!cleanPicks.length) {
             list.className = 'tmr-pick-empty';
-            list.innerHTML = '<span>▣</span><strong>No tracked picks yet</strong><p>Recent locked picks will appear here once users lock picks before game start.</p>';
+            list.innerHTML = '<span>▣</span><strong>Loading verified picks</strong><p>Recent locked picks will appear here once users lock picks before game start.</p>';
             return;
         }
         list.className = '';
