@@ -17,7 +17,7 @@ Required selection labels:
 - F5 run line: `<Team> F5 <signed line>`
 - F5 total: `F5 Over <total>` or `F5 Under <total>`
 
-F5 totals board labels must render the side label from the F5 total side, never from the numeric line. The visible button tag for `f5_totals` must be `Over` or `Under`; the total number stays in the line display and odds stay unchanged.
+F5 totals board labels must render the side label from the F5 total side, never from the numeric line. The visible button tag for `f5_totals` must be `Over` or `Under`; the total number stays in the line display without a leading plus sign and odds stay unchanged.
 
 The sportsbook board, ticket preview, submitted payload, pending pick display, profile/history display, and grading/admin display must all preserve the F5 designation. A submitted F5 pick must keep the `f5_*` `market_type` through the API payload and database record so grading uses first-five-inning scoring rather than full-game scoring.
 
