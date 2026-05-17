@@ -25,8 +25,6 @@ Board rendering rule: when a card or board filter selects the First 5 category (
 
 Sportsbook matchup team rows must render exactly one team logo, one home/away badge, and one full team name. Logo restore helpers must not inject a second logo into `.tmr-team-row`, and desktop sportsbook cards must not ellipsize the team name.
 
-The verified F5 sportsbook board layout is locked by `tests/sportsbook-f5-board-layout-lock-test.js`. Do not change F5 totals labels, `.tmr-team-row`, `.tmr-team-name`, market-card header stacking, or market-card option-grid layout without updating that test after live public verification and explicit approval. This guard exists to prevent reverting to duplicate logos, wrapped/truncated team names, overlapping price grids, or `+3.5` total side labels.
-
 Any future F5 sportsbook change must verify the complete workflow:
 
 - ticket population clearly displays F5/First 5
