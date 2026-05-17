@@ -11718,6 +11718,10 @@ window.toggleSportFamily = function (family) {
             : (isOver ? 'Over' : (isUnder ? 'Under' : String(item.selection || label).replace(/\s+[+-]?\d+(\.\d+)?$/,'').trim()));
         var line = item.line == null ? '' : item.line;
         var lineText = item.selection_label || item.line_display || (line === '' ? (betType.indexOf('ml') !== -1 ? 'ML' : '—') : ((isOver ? 'O ' : isUnder ? 'U ' : '') + window.TMR.formatLine(line, { signed: String(marketType).indexOf('spread') !== -1 })));
+        if (String(marketType).toLowerCase() === 'f5_totals' && (isOver || isUnder)) {
+            var f5TotalLineText = line === '' ? String(item.line_display || '').replace(/^\+/, '') : window.TMR.formatLine(Math.abs(Number(line)));
+            lineText = (isOver ? 'Over' : 'Under') + (f5TotalLineText ? ' ' + f5TotalLineText : '');
+        }
         var onclick = "window.selectGameBet && window.selectGameBet(" + (gameIndex | 0) + ",'" + _ttEsc(betType) + "','" + _ttEsc(selection) + "','" + _ttEsc(line) + "','" + _ttEsc(item.odds) + "','" + _ttEsc(game.away_team || '') + "','" + _ttEsc(game.home_team || '') + "')";
         return '<button type="button" class="sb-odds" onclick="' + onclick + '"><span class="sb-odds-line">' + _ttHtmlEsc(lineText) + '</span><span class="sb-odds-price">' + _ttHtmlEsc(_ttFmtOdds(item.odds)) + '</span></button>';
     }
@@ -11733,6 +11737,10 @@ window.toggleSportFamily = function (family) {
         var isMl = String(marketType).indexOf('h2h') !== -1 || betType.indexOf('ml') !== -1;
         var line = item.line == null ? '' : item.line;
         var lineText = isMl ? 'ML' : (item.line_display || (line === '' ? (fallbackLine || '—') : ((isOver ? 'O ' : isUnder ? 'U ' : '') + window.TMR.formatLine(line, { signed: isSpread }))));
+        if (String(marketType).toLowerCase() === 'f5_totals' && (isOver || isUnder)) {
+            var f5TotalLineText = line === '' ? String(item.line_display || '').replace(/^\+/, '') : window.TMR.formatLine(Math.abs(Number(line)));
+            lineText = (isOver ? 'Over' : 'Under') + (f5TotalLineText ? ' ' + f5TotalLineText : '');
+        }
         return oddsButton(lineText, _ttFmtOdds(item.odds), {
             gameIndex: gameIndex,
             betType: betType,
