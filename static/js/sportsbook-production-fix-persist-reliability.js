@@ -1336,10 +1336,10 @@
             '.tmr-market-league{font-size:11px;font-weight:900;letter-spacing:0.16em;text-transform:uppercase;color:var(--tmr-accent-soft);}',
             '.tmr-market-status{padding:7px 11px;border-radius:999px;background:color-mix(in srgb, var(--tmr-accent) 18%, rgba(255,255,255,0.02));border:1px solid color-mix(in srgb, var(--tmr-accent) 40%, rgba(255,255,255,0.08));font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#f8fafc;}',
             '.tmr-market-matchup{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;padding:0;border-radius:18px;}',
-            '.tmr-team-row{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:10px;color:#f8fafc;}',
+            '.tmr-team-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;color:#f8fafc;}',
             '.tmr-team-side{display:inline-flex;align-items:center;justify-content:center;min-width:54px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#aeb8c6;}',
-            '.tmr-team-abbr{width:30px;height:30px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.08);font-size:11px;font-weight:900;letter-spacing:0.08em;color:#dbe7ef;flex-shrink:0;}',
-            '.tmr-team-name{font-size:clamp(18px,2vw,22px);font-weight:800;letter-spacing:0;line-height:1.05;white-space:normal;overflow:visible;text-overflow:clip;min-width:0;}',
+            '.tmr-team-row>.team-logo{flex:0 0 30px;}',
+            '.tmr-team-name{flex:1 1 150px;font-size:clamp(18px,2vw,22px);font-weight:800;letter-spacing:0;line-height:1.05;white-space:normal;overflow:visible;text-overflow:clip;min-width:0;}',
             '.tmr-matchup-divider{display:flex;align-items:center;gap:10px;padding-left:66px;color:#6f7a89;font-size:10px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;}',
             '.tmr-matchup-divider::before,.tmr-matchup-divider::after{content:"";height:1px;flex:1;background:rgba(255,255,255,0.08);}',
             '.tmr-market-meta{display:flex;gap:8px;flex-wrap:wrap;color:#aab4c3;font-size:11px;margin-top:16px;}',
@@ -2342,9 +2342,9 @@
                 '<div>' +
                 '<div class="tmr-market-topline"><span class="tmr-market-league">Game ' + boardNumber + ' • ' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span><span class="tmr-market-status">' + escapeHtml(formatStartsIn(game.commence_time)) + '</span></div>' +
                 '<div class="tmr-market-matchup">' +
-                '<div class="tmr-team-row"><span class="tmr-team-abbr">' + renderTeamLogo(game.away_team, game.sport_key, game.away_logo || game.awayLogo || '', game.away_abbr || game.awayAbbr || '') + '</span><span class="tmr-team-side">Away</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
+                '<div class="tmr-team-row">' + renderTeamLogo(game.away_team, game.sport_key, game.away_logo || game.awayLogo || '', game.away_abbr || game.awayAbbr || '') + '<span class="tmr-team-side">Away</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
                 '<div class="tmr-matchup-divider">@</div>' +
-                '<div class="tmr-team-row"><span class="tmr-team-abbr">' + renderTeamLogo(game.home_team, game.sport_key, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '') + '</span><span class="tmr-team-side">Home</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
+                '<div class="tmr-team-row">' + renderTeamLogo(game.home_team, game.sport_key, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '') + '<span class="tmr-team-side">Home</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
                 '</div>' +
                 '<div class="tmr-market-meta">' +
                 '<span class="tmr-market-chip accent">' + escapeHtml(new Date(game.commence_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span>' +
