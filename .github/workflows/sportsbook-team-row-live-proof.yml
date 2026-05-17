@@ -77,6 +77,10 @@ jobs:
 
             fs.writeFileSync('artifacts/live-team-row-proof.json', JSON.stringify(proof, null, 2));
             await page.screenshot({ path: 'artifacts/live-team-row-proof.png', fullPage: true });
+            const cardLocator = page.locator('.tmr-market-card[data-market-filter="first-5"]').first();
+            if (await cardLocator.count()) {
+              await cardLocator.screenshot({ path: 'artifacts/live-team-row-card-proof.png', timeout: 5000 }).catch(() => {});
+            }
             await browser.close();
 
             if (proof.rows.length < 2) throw new Error('Could not find two sportsbook team rows.');
@@ -101,4 +105,5 @@ jobs:
           name: sportsbook-team-row-live-proof
           path: |
             artifacts/live-team-row-proof.png
+            artifacts/live-team-row-card-proof.png
             artifacts/live-team-row-proof.json
