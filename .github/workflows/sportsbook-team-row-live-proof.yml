@@ -70,8 +70,8 @@ jobs:
                 first5Buttons,
                 hasF5Spread: first5Buttons.some(text => /[+-]0\.5|Run Line|Spread/i.test(text)),
                 hasF5Moneyline: first5Buttons.some(text => /F5 ML|Moneyline|American/i.test(text) && !/Over|Under/i.test(text)),
-                hasF5Total: first5Buttons.some(text => /\bOver\b|\bUnder\b/i.test(text)),
-                f5TotalsNoPlus: /Over\s*3\.5|Under\s*3\.5|Over\s*4\.5|Under\s*4\.5|Over\s*5\.5|Under\s*5\.5/i.test(body)
+                hasF5Total: first5Buttons.some(text => /(Over|Under)\+?\d+(\.\d+)?(Over|Under)\s+\d+(\.\d+)?/i.test(text)),
+                f5TotalsNoPlus: first5Buttons.some(text => /(Over|Under)\d+(\.\d+)?(Over|Under)\s+\d+(\.\d+)?/i.test(text)) && !first5Buttons.some(text => /(Over|Under)\+\d+(\.\d+)?/i.test(text))
               };
             });
 
