@@ -1,0 +1,85 @@
+name: F5 Totals No Plus Live Proof
+
+on:
+  workflow_dispatch:
+
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - name: Capture live F5 totals without plus sign
+        run: |
+          mkdir -p artifacts
+          cat > artifacts/f5-no-plus-proof.js <<'NODE'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+
+          const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+          (async () => {
+            const browser = await chromium.launch({ headless: true });
+            const page = await browser.newPage({ viewport: { width: 1440, height: 1100 }, deviceScaleFactor: 1 });
+            await page.goto('https://trustmyrecord.com/sportsbook/?f5noplus=' + Date.now(), { waitUntil: 'domcontentloaded', timeout: 60000 });
+            await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
+            await wait(3000);
+            await page.evaluate(() => {
+              if (window.selectSportAndShowGames) window.selectSportAndShowGames('MLB');
+            }).catch(() => {});
+            await wait(5000);
+            await page.evaluate(() => {
+              if (window.TMR && window.TMR.setMarket) window.TMR.setMarket('first_5');
+              if (window.tmrSetBoardFilter) window.tmrSetBoardFilter('first-5');
+            }).catch(() => {});
+            await page.getByText(/5 Inning|First 5|1ST 5/i).first().click({ timeout: 4000 }).catch(() => {});
+            await wait(8000);
+
+            const proof = await page.evaluate(() => {
+              const clean = text => String(text || '').replace(/\s+/g, ' ').trim();
+              const rows = Array.from(document.querySelectorAll('.tmr-group[data-category="first-5"] .tmr-option-btn')).map((el, i) => {
+                const tag = clean((el.querySelector('.tmr-option-tag') || {}).textContent);
+                const line = clean((el.querySelector('.tmr-option-line') || {}).textContent);
+                const market = clean((el.querySelector('.tmr-option-market') || {}).textContent);
+                const odds = clean((el.querySelector('.tmr-option-odds') || {}).textContent);
+                return { i, tag, line, market, odds, text: clean(el.innerText || el.textContent) };
+              }).filter(row => /^(Over|Under)$/i.test(row.tag) && /\b(Over|Under)\b/i.test(row.market));
+              const broken = rows.filter(row => /^\+/.test(row.line) || /\s\+\d+(\.\d+)?\b/.test(row.market));
+              const corrected = rows.filter(row => /^(Over|Under)$/i.test(row.tag) && /^\d+(\.\d+)?$/.test(row.line) && /\b(Over|Under)\s+\d+(\.\d+)?\b/.test(row.market));
+              const target = document.querySelector('.tmr-group[data-category="first-5"] .tmr-option-btn');
+              if (target) {
+                target.scrollIntoView({ block: 'center', inline: 'center' });
+                target.style.outline = '4px solid #22c55e';
+                target.style.outlineOffset = '3px';
+              }
+              return { url: location.href, corrected: corrected.slice(0, 20), broken: broken.slice(0, 20), targetText: target ? clean(target.innerText || target.textContent) : '' };
+            });
+
+            fs.writeFileSync('artifacts/live-f5-totals-no-plus-proof.json', JSON.stringify(proof, null, 2));
+            await page.screenshot({ path: 'artifacts/live-f5-totals-no-plus-proof.png', fullPage: true });
+            await browser.close();
+
+            if (!proof.corrected.some(row => row.tag === 'Over') || !proof.corrected.some(row => row.tag === 'Under')) {
+              throw new Error('Did not find corrected Over and Under F5 total rows without plus signs.');
+            }
+            if (proof.broken.length) {
+              throw new Error('Found F5 total display still using a leading plus sign.');
+            }
+          })().catch(error => {
+            console.error(error);
+            process.exit(1);
+          });
+          NODE
+          node artifacts/f5-no-plus-proof.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: f5-totals-no-plus-live-proof
+          path: |
+            artifacts/live-f5-totals-no-plus-proof.png
+            artifacts/live-f5-totals-no-plus-proof.json
