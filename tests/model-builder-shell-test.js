@@ -20,17 +20,17 @@ const visibleHtml = html.replace(/<script[\s\S]*?<\/script>/gi, '').replace(/Tru
 const robotsMeta = html.match(/<meta\b[^>]*\bname=["']robots["'][^>]*>/i);
 
 assert(robotsMeta, 'shell has robots meta tag');
-assert(/content=["'][^"']*\bnoindex\b[^"']*\bnofollow\b[^"']*["']/i.test(robotsMeta[0]), 'shell is noindex/nofollow');
-assert(/Checking access/.test(html), 'shell starts behind access check');
-assert(/Login required/.test(html), 'shell has login-required state');
-assert(/Private Model Builder Phase 1/.test(html), 'shell clearly labels private phase');
+assert(/content=["'][^"']*\bindex\b[^"']*\bfollow\b[^"']*["']/i.test(robotsMeta[0]), 'shell is index/follow for public Tools Hub access');
+assert(!/Checking access/.test(html), 'shell does not start behind access check');
+assert(!/Login required/.test(html), 'shell does not block logged-out users');
 assert(/\/static\/js\/backend-api\.js/.test(html), 'shell loads API client for private endpoints');
 assert(/\/static\/js\/model-builder-shell\.js/.test(html), 'shell loads page-specific client script');
 assert(!/model-builder/i.test(sitewide), 'sitewide public navigation does not expose Model Builder');
-assert(/Guided private model setup/.test(html), 'shell presents a guided setup flow');
+assert(/Guided model setup/.test(html), 'shell presents a guided setup flow');
 assert(/Real data is not connected/.test(html), 'shell labels unavailable data clearly');
-assert(/results and public claims come later after real grading exists/.test(html), 'shell rejects premature claims');
+assert(/results and public claims require real graded data/.test(html), 'shell rejects premature claims');
 assert(/id="modelBuilderDetail"/.test(html), 'shell has a model detail panel');
+assert(/id="modelCompare"/.test(html), 'shell has a model comparison panel');
 
 [
   'Model Tracker',
@@ -96,6 +96,7 @@ function makeContext(storageValues = {}) {
     'factorControls',
     'modelSummary',
     'modelBuilderDetail',
+    'modelCompare',
     'resetModelBtn',
   ].forEach((id) => { elements[id] = makeElement(id); });
 
@@ -172,6 +173,9 @@ function makeContext(storageValues = {}) {
     window: {
       api,
       localStorage: {
+        setItem(key, value) {
+          storageValues[key] = value;
+        },
         getItem(key) {
           return Object.prototype.hasOwnProperty.call(storageValues, key) ? storageValues[key] : null;
         },
@@ -207,16 +211,24 @@ async function main() {
   const loggedOut = makeContext();
   vm.runInNewContext(shellScript, loggedOut.context);
   await tick();
-  assert.strictEqual(loggedOut.elements.loginRequired.hidden, false, 'logged-out state shows login required');
-  assert.strictEqual(loggedOut.elements.modelBuilderShell.hidden, true, 'logged-out state hides shell');
+  assert.strictEqual(loggedOut.elements.modelBuilderShell.hidden, false, 'logged-out state shows shell');
   assert.strictEqual(loggedOut.calls.length, 0, 'logged-out state makes no model data calls');
+  assert(/Local browser draft mode/.test(loggedOut.elements.modelBuilderMessage.textContent), 'logged-out state labels local draft mode');
+
+  loggedOut.elements.modelName.value = 'Local audit model';
+  loggedOut.elements.modelDescription.value = 'Local config';
+  loggedOut.elements.modelSport.value = 'baseball_mlb';
+  loggedOut.elements.modelStatus.value = 'draft';
+  loggedOut.elements.modelMarket.value = 'totals';
+  loggedOut.elements.modelSide.value = 'under';
+  await loggedOut.context.window.TMRModelBuilderShell.saveModel({ preventDefault() {} });
+  assert(/Local audit model/.test(loggedOut.elements.modelBuilderList.innerHTML), 'logged-out save renders local draft');
 
   const loggedIn = makeContext({
     trustmyrecord_session: JSON.stringify({ user: { username: 'private_user' } }),
   });
   vm.runInNewContext(shellScript, loggedIn.context);
   await tick();
-  assert.strictEqual(loggedIn.elements.loginRequired.hidden, true, 'logged-in state hides login required');
   assert.strictEqual(loggedIn.elements.modelBuilderShell.hidden, false, 'logged-in state shows shell');
   assert(loggedIn.calls.some((call) => call.method === 'listModelDefinitions'), 'logged-in state loads private models');
   assert(/Private MLB definition/.test(loggedIn.elements.modelBuilderList.innerHTML), 'logged-in state renders owner model');
