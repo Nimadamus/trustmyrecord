@@ -114,8 +114,8 @@ jobs:
             if (proof.cardWidth < 360) throw new Error(`Card width=${proof.cardWidth}, expected at least 360`);
             const cardText = proof.firstCardText.toLowerCase();
             if (!cardText.includes('away') || !cardText.includes('home')) throw new Error('Home/away badges missing from card text');
-            if (!cardText.includes('first 5')) throw new Error('First 5 market text missing');
-            if (!cardText.includes('spread') || !cardText.includes('moneyline') || !cardText.includes('total')) throw new Error('F5 spread/moneyline/total text missing');
+            if (!cardText.includes('first 5') && !cardText.includes('1st 5')) throw new Error('First 5 market text missing');
+            if (!cardText.includes('run line') || !cardText.includes('moneyline') || !cardText.includes('total')) throw new Error('F5 run line/moneyline/total text missing');
 
             await browser.close();
           })().catch(async (error) => {
