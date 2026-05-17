@@ -14,6 +14,11 @@ const PICK_TRACKING_URL = process.env.TMR_PICK_TRACKING_URL || 'https://trustmyr
 const LEADERBOARDS_URL = process.env.TMR_LEADERBOARDS_URL || 'https://trustmyrecord.com/leaderboards/';
 const OUT_DIR = path.join(process.cwd(), 'artifacts');
 
+function cacheBust(url) {
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}proof=${Date.now()}`;
+}
+
 async function captureRoot(name) {
   const out = path.join(OUT_DIR, name);
   execFileSync('bash', ['-lc', `import -window root "${out.replace(/\\/g, '/')}"`], { stdio: 'inherit' });
@@ -85,7 +90,7 @@ async function verifyMlbSimulator(page) {
 }
 
 async function verifyHubAndRoutes(page) {
-  await page.goto(HUB_URL, { waitUntil: 'domcontentloaded' });
+  await page.goto(cacheBust(HUB_URL), { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
   const expected = [
     '/mlb-simulator/',
@@ -105,8 +110,17 @@ async function verifyHubAndRoutes(page) {
 }
 
 async function verifyModelBuilder(page) {
-  await page.goto(MODEL_URL, { waitUntil: 'domcontentloaded' });
+  await page.goto(cacheBust(MODEL_URL), { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
+  await page.waitForFunction(() => {
+    const shell = document.querySelector('#modelBuilderShell');
+    const input = document.querySelector('#modelName');
+    const text = document.body ? document.body.innerText : '';
+    return shell && input && !shell.hidden && input.offsetParent !== null &&
+      text.includes('Save model draft') &&
+      text.includes('Assumption comparison') &&
+      !text.includes('Login required');
+  }, null, { timeout: 30000 });
   await page.fill('#modelName', `MLB totals audit ${Date.now()}`);
   await page.selectOption('#modelSport', 'baseball_mlb');
   await page.selectOption('#modelMarket', 'totals');
