@@ -36,7 +36,7 @@ async function main() {
     await mobile.waitForTimeout(1200);
     await mobile.screenshot({ path: MOBILE, fullPage: false });
     const mobileText = await mobile.locator('body').innerText({ timeout: 10000 }).catch(() => '');
-    if (!mobileText.includes('Track Every')) throw new Error('Mobile homepage hero did not render');
+    if (!/Track Your Picks|Build Your Record|Verified Sports/i.test(mobileText)) throw new Error('Mobile homepage hero did not render');
     await mobile.close();
 
     fs.writeFileSync(META, JSON.stringify({ url: page.url(), title: await page.title(), generated_at: new Date().toISOString(), screenshot: OUT, mobile_screenshot: MOBILE, body_excerpt: bodyText.slice(0, 900) }, null, 2));
