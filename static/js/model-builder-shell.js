@@ -11,6 +11,8 @@
         models: [],
         editingId: null,
         selectedId: null,
+        compareIds: [],
+        storageMode: 'local',
         loading: false
     };
 
@@ -29,6 +31,25 @@
         } catch (error) {
             return null;
         }
+    }
+
+    function writeStorage(key, value) {
+        try {
+            if (window.localStorage) window.localStorage.setItem(key, value);
+        } catch (error) {}
+    }
+
+    function localModels() {
+        try {
+            var parsed = JSON.parse(readStorage('tmr_model_builder_drafts') || '[]');
+            return Array.isArray(parsed) ? parsed.map(stripForbidden) : [];
+        } catch (error) {
+            return [];
+        }
+    }
+
+    function saveLocalModels(models) {
+        writeStorage('tmr_model_builder_drafts', JSON.stringify((models || []).map(stripForbidden)));
     }
 
     function hasPrivateSession() {
@@ -199,6 +220,32 @@
         ].join('');
     }
 
+    function renderCompare() {
+        var host = document.getElementById('modelCompare');
+        if (!host) return;
+        var selected = state.models.filter(function (model) {
+            return state.compareIds.indexOf(String(model.id)) !== -1;
+        });
+        if (!selected.length) {
+            host.innerHTML = '<div><strong>No models selected</strong><span>Use the compare checkboxes on saved drafts to review assumptions side by side.</span></div>';
+            return;
+        }
+        host.innerHTML = selected.map(function (model) {
+            var criteria = stripForbidden(model.criteria_json || {});
+            var bankroll = stripForbidden(model.bankroll_json || {});
+            var factors = Array.isArray(criteria.factors) ? criteria.factors : [];
+            var totalWeight = factors.reduce(function (sum, factor) { return sum + Number(factor.weight || 0); }, 0);
+            return [
+                '<div>',
+                '<strong>' + escapeHtml(model.name) + '</strong>',
+                '<span>' + escapeHtml(formatSport(model.sport_key)) + ' · ' + escapeHtml(formatMarket(criteria.market_type)) + ' · ' + escapeHtml(criteria.side_preference || 'any') + '</span>',
+                '<span>Weights: ' + escapeHtml(factors.map(function (factor) { return factor.label + ' ' + factor.weight; }).join(', ') || 'none') + ' (' + escapeHtml(totalWeight) + ' total)</span>',
+                '<span>Units: ' + escapeHtml((bankroll.unit_mode || 'flat') + ', default ' + (bankroll.default_units == null ? 1 : bankroll.default_units) + ', max ' + (bankroll.max_units == null ? 1 : bankroll.max_units)) + '</span>',
+                '</div>'
+            ].join('');
+        }).join('');
+    }
+
     function renderDetail(model) {
         var panel = document.getElementById('modelBuilderDetail');
         if (!panel) return;
@@ -235,7 +282,8 @@
             return;
         }
         if (!state.models.length) {
-            list.innerHTML = '<div class="model-card"><h3>No private models yet</h3><p class="model-meta">Use the guided steps to save a private configuration draft.</p></div>';
+            list.innerHTML = '<div class="model-card"><h3>No saved models yet</h3><p class="model-meta">Use the guided steps to save a configuration draft.</p></div>';
+            renderCompare();
             return;
         }
         list.innerHTML = state.models.map(function (model) {
@@ -243,10 +291,12 @@
             var archived = model.status === 'archived';
             var criteria = stripForbidden(model.criteria_json || {});
             var factors = Array.isArray(criteria.factors) ? criteria.factors : [];
+            var checked = state.compareIds.indexOf(String(model.id)) !== -1 ? ' checked' : '';
             return [
                 '<article class="model-card" data-model-id="' + id + '">',
+                '<label class="model-meta" style="display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:0"><input type="checkbox" data-action="compare" data-id="' + id + '"' + checked + '> Compare this draft</label>',
                 '<h3>' + escapeHtml(model.name) + '</h3>',
-                '<div class="model-meta">' + escapeHtml(formatSport(model.sport_key)) + ' · ' + escapeHtml(model.status || 'draft') + ' · private configuration</div>',
+                '<div class="model-meta">' + escapeHtml(formatSport(model.sport_key)) + ' · ' + escapeHtml(model.status || 'draft') + ' · configuration draft</div>',
                 model.description ? '<p class="model-meta">' + escapeHtml(model.description) + '</p>' : '',
                 '<div class="model-breakdown">',
                 '<span>Market: ' + escapeHtml(formatMarket(criteria.market_type)) + '</span>',
@@ -263,6 +313,7 @@
                 '</article>'
             ].join('');
         }).join('');
+        renderCompare();
     }
 
     function resetForm() {
@@ -281,13 +332,17 @@
     }
 
     async function viewModel(id) {
-        if (!apiReady()) return setMessage('Private Model Builder API is not available yet.', 'error');
         try {
-            var data = await window.api.getModelDefinition(id);
-            var model = stripForbidden(data && data.model ? data.model : state.models.find(function (entry) { return String(entry.id) === String(id); }));
+            var model;
+            if (useApiStorage()) {
+                var data = await window.api.getModelDefinition(id);
+                model = stripForbidden(data && data.model ? data.model : state.models.find(function (entry) { return String(entry.id) === String(id); }));
+            } else {
+                model = state.models.find(function (entry) { return String(entry.id) === String(id); });
+            }
             state.selectedId = model && model.id;
             renderDetail(model);
-            setMessage('Viewing private model definition.', 'ok');
+            setMessage('Viewing model definition.', 'ok');
         } catch (error) {
             setMessage(error && error.message ? error.message : 'Unable to view private model.', 'error');
         }
@@ -300,7 +355,7 @@
         var bankroll = stripForbidden(model.bankroll_json || {});
         state.editingId = model.id;
         var title = document.getElementById('formTitle');
-        if (title) title.textContent = 'Edit private model';
+        if (title) title.textContent = 'Edit model';
         setValue('modelName', model.name || '');
         setValue('modelDescription', model.description || '');
         setValue('modelSport', model.sport_key || criteria.sport_key || 'baseball_mlb');
@@ -329,13 +384,19 @@
         return window.api && typeof window.api.listModelDefinitions === 'function';
     }
 
+    function useApiStorage() {
+        return hasPrivateSession() && apiReady();
+    }
+
     async function loadModels() {
-        if (!apiReady()) {
-            setMessage('Private Model Builder API is not available yet.', 'error');
-            state.models = [];
+        if (!useApiStorage()) {
+            state.storageMode = 'local';
+            state.models = localModels();
+            setMessage('Local browser draft mode. Log in to sync private model definitions.', 'ok');
             renderList();
             return;
         }
+        state.storageMode = 'api';
         state.loading = true;
         renderList();
         try {
@@ -359,10 +420,21 @@
 
     async function saveModel(event) {
         event.preventDefault();
-        if (!apiReady()) return setMessage('Private Model Builder API is not available yet.', 'error');
         try {
             var payload = modelPayloadFromForm();
-            if (state.editingId) {
+            if (!useApiStorage()) {
+                var models = localModels();
+                if (state.editingId) {
+                    models = models.map(function (model) {
+                        return String(model.id) === String(state.editingId) ? Object.assign({}, model, payload, { id: model.id, updated_at: new Date().toISOString() }) : model;
+                    });
+                    setMessage('Local model draft updated.', 'ok');
+                } else {
+                    models.unshift(Object.assign({}, payload, { id: 'local-' + Date.now(), created_at: new Date().toISOString() }));
+                    setMessage('Local model draft saved.', 'ok');
+                }
+                saveLocalModels(models);
+            } else if (state.editingId) {
                 await window.api.updateModelDefinition(state.editingId, payload);
                 setMessage('Private model updated.', 'ok');
             } else {
@@ -377,9 +449,14 @@
     }
 
     async function archiveModel(id) {
-        if (!apiReady()) return setMessage('Private Model Builder API is not available yet.', 'error');
         try {
-            await window.api.archiveModelDefinition(id);
+            if (!useApiStorage()) {
+                saveLocalModels(localModels().map(function (model) {
+                    return String(model.id) === String(id) ? Object.assign({}, model, { status: 'archived' }) : model;
+                }));
+            } else {
+                await window.api.archiveModelDefinition(id);
+            }
             setMessage('Private model archived.', 'ok');
             await loadModels();
         } catch (error) {
@@ -388,9 +465,14 @@
     }
 
     async function restoreModel(id) {
-        if (!apiReady()) return setMessage('Private Model Builder API is not available yet.', 'error');
         try {
-            await window.api.restoreModelDefinition(id);
+            if (!useApiStorage()) {
+                saveLocalModels(localModels().map(function (model) {
+                    return String(model.id) === String(id) ? Object.assign({}, model, { status: 'draft' }) : model;
+                }));
+            } else {
+                await window.api.restoreModelDefinition(id);
+            }
             setMessage('Private model restored.', 'ok');
             await loadModels();
         } catch (error) {
@@ -399,18 +481,21 @@
     }
 
     async function deleteModel(id) {
-        if (!apiReady()) return setMessage('Private Model Builder API is not available yet.', 'error');
-        if (typeof window.confirm === 'function' && !window.confirm('Delete this private model definition? This cannot be undone.')) {
+        if (typeof window.confirm === 'function' && !window.confirm('Delete this model definition? This cannot be undone.')) {
             return;
         }
         try {
-            await window.api.deleteModelDefinition(id);
+            if (!useApiStorage()) {
+                saveLocalModels(localModels().filter(function (model) { return String(model.id) !== String(id); }));
+            } else {
+                await window.api.deleteModelDefinition(id);
+            }
             if (String(state.editingId) === String(id)) resetForm();
             if (String(state.selectedId) === String(id)) {
                 state.selectedId = null;
                 renderDetail(null);
             }
-            setMessage('Private model deleted.', 'ok');
+            setMessage('Model deleted.', 'ok');
             await loadModels();
         } catch (error) {
             setMessage(error && error.message ? error.message : 'Unable to delete private model.', 'error');
@@ -425,15 +510,24 @@
         var list = document.getElementById('modelBuilderList');
         if (list) {
             list.addEventListener('click', function (event) {
-                var button = event.target.closest('button[data-action]');
-                if (!button) return;
-                var action = button.getAttribute('data-action');
-                var id = button.getAttribute('data-id');
+                var control = event.target.closest('[data-action]');
+                if (!control) return;
+                var action = control.getAttribute('data-action');
+                var id = control.getAttribute('data-id');
                 if (action === 'view') viewModel(id);
                 if (action === 'edit') editModel(id);
                 if (action === 'archive') archiveModel(id);
                 if (action === 'restore') restoreModel(id);
                 if (action === 'delete') deleteModel(id);
+                if (action === 'compare') {
+                    var decoded = decodeURIComponent(id);
+                    if (control.checked) {
+                        if (state.compareIds.indexOf(decoded) === -1) state.compareIds.push(decoded);
+                    } else {
+                        state.compareIds = state.compareIds.filter(function (entry) { return entry !== decoded; });
+                    }
+                    renderCompare();
+                }
             });
         }
         [
@@ -447,11 +541,7 @@
     }
 
     function renderPrivateShell() {
-        var authCheck = document.getElementById('authCheck');
-        var loginRequired = document.getElementById('loginRequired');
         var shell = document.getElementById('modelBuilderShell');
-        if (authCheck) authCheck.hidden = true;
-        if (loginRequired) loginRequired.hidden = true;
         if (shell) shell.hidden = false;
         renderFactorControls();
         wireEvents();
@@ -460,20 +550,7 @@
         loadModels();
     }
 
-    function showLoginRequired() {
-        var authCheck = document.getElementById('authCheck');
-        var loginRequired = document.getElementById('loginRequired');
-        var shell = document.getElementById('modelBuilderShell');
-        if (authCheck) authCheck.hidden = true;
-        if (shell) shell.hidden = true;
-        if (loginRequired) loginRequired.hidden = false;
-    }
-
     function init() {
-        if (!hasPrivateSession()) {
-            showLoginRequired();
-            return;
-        }
         renderPrivateShell();
     }
 
