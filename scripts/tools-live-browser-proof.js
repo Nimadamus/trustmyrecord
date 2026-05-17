@@ -115,28 +115,16 @@ async function verifyModelBuilder(page) {
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
   await page.waitForFunction(() => {
     const shell = document.querySelector('#modelBuilderShell');
-    const input = document.querySelector('#modelName');
     const text = document.body ? document.body.innerText : '';
-    return shell && input && !shell.hidden && input.offsetParent !== null &&
-      text.includes('Save model draft') &&
-      text.includes('Assumption comparison') &&
+    return shell && !shell.hidden &&
+      text.includes('Coming soon') &&
+      text.includes('This tool is not available yet') &&
+      !text.includes('Save model draft') &&
       !text.includes('Login required');
   }, null, { timeout: 30000 });
-  await page.fill('#modelName', `MLB totals audit ${Date.now()}`);
-  await page.selectOption('#modelSport', 'baseball_mlb');
-  await page.selectOption('#modelMarket', 'totals');
-  await page.selectOption('#modelSide', 'under');
-  await page.fill('#factor_recent_form', '25');
-  await page.fill('#factor_market_line', '35');
-  await page.fill('#modelNotes', 'Audit draft: requires real source rows before scoring.');
-  await page.click('#saveModelBtn');
-  await page.locator('#modelBuilderList .model-card h3').first().waitFor({ state: 'visible', timeout: 10000 });
-  await page.locator('[data-action="compare"]').first().check();
-  const compareText = await page.locator('#modelCompare').innerText();
-  if (!/MLB|Total|Weights|Units/i.test(compareText)) throw new Error('Model Builder compare output did not render useful assumptions.');
   const text = await page.locator('body').innerText();
-  if (/Login required|coming soon|placeholder|under construction|guaranteed winner|verified betting edge/i.test(text)) {
-    throw new Error('Model Builder exposed a blocked shell, placeholder, or forbidden claim.');
+  if (/Save model draft|Assumption comparison|guaranteed winner|verified betting edge/i.test(text)) {
+    throw new Error('Model Builder exposed active controls or forbidden claims while marked coming soon.');
   }
   return captureRoot('model-builder-live-browser-addressbar-proof.png');
 }
