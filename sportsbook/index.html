@@ -20947,6 +20947,7 @@ document.addEventListener('DOMContentLoaded', function() {
             var teamName = (nameEl.textContent || '').replace(/\s+/g, ' ').trim();
             if (!teamName) return;
             var parent = nameEl.parentElement;
+            if (nameEl.closest && nameEl.closest('.tmr-team-row')) return;
             if (!parent || parent.querySelector(':scope > .team-logo, :scope > .tmr-team-logo-badge')) return;
             nameEl.insertAdjacentHTML('beforebegin', logoMarkup(teamName));
         }
@@ -30009,6 +30010,27 @@ document.addEventListener('DOMContentLoaded', function() {
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-logo + .team-name,
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-logo + b {
         flex: 0 1 auto !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-market-matchup .tmr-team-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-width: 0 !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-market-matchup .tmr-team-abbr,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-market-matchup .tmr-team-side,
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-market-matchup .tmr-team-name {
+        flex: 0 0 auto !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .tmr-market-matchup .tmr-team-name {
+        white-space: normal !important;
+        overflow: visible !important;
+        text-overflow: clip !important;
+        max-width: none !important;
+        letter-spacing: 0 !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-cell {
