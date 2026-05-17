@@ -2460,6 +2460,16 @@
     }
 
     function getOptionTag(option, game) {
+        if (option && option.market_type === 'f5_totals') {
+            const f5TotalSide = String([
+                option.selection,
+                option.selection_label,
+                option.bet_side,
+                option.side
+            ].join(' ')).toLowerCase();
+            if (f5TotalSide.indexOf('under') !== -1) return 'Under';
+            if (f5TotalSide.indexOf('over') !== -1) return 'Over';
+        }
         const selection = String(option && option.selection || '').toLowerCase();
         const away = String(game && game.away_team || '').toLowerCase();
         const home = String(game && game.home_team || '').toLowerCase();
