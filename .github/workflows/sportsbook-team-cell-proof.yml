@@ -22,7 +22,7 @@ jobs:
           const { chromium } = require('@playwright/test');
 
           const url = 'https://trustmyrecord.com/sportsbook/?teamcellproof=' + Date.now();
-          const marker = '20260517teamrowgrid';
+          const marker = '20260517teamrowneat';
           const outDir = 'artifacts/team-cell-proof';
           fs.mkdirSync(outDir, { recursive: true });
 
@@ -109,6 +109,7 @@ jobs:
               if (cell.nameLogoCount !== 0) throw new Error(`Cell ${index} has logo inside team name`);
               if (!cell.name || cell.name.length < 8 || cell.name.includes('...')) throw new Error(`Cell ${index} full team name not visible: ${cell.name}`);
               if (cell.rowDisplay !== 'grid') throw new Error(`Cell ${index} row display=${cell.rowDisplay}, expected grid`);
+              if (cell.whiteSpace !== 'nowrap') throw new Error(`Cell ${index} whiteSpace=${cell.whiteSpace}, expected nowrap`);
             });
             if (proof.cardWidth < 360) throw new Error(`Card width=${proof.cardWidth}, expected at least 360`);
             const cardText = proof.firstCardText.toLowerCase();
