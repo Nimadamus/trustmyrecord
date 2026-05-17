@@ -3061,7 +3061,7 @@
             return;
         }
 
-        if (option.market_type === 'team_totals') {
+        if (option.market_type === 'team_totals' || option.market_type === 'f5_team_totals') {
             if (!/\b(over|under)\b/i.test(submittedSelection) || lineValue == null) {
                 showSubmitTrace('Submit stopped: incomplete team total payload.');
                 showPickSlipError('This team total is missing its side or line. Reselect the market and try again.');
@@ -3179,7 +3179,7 @@
     }
 
     function buildSubmittedSelection(option, lineValue) {
-        if (!option || option.market_type !== 'team_totals') {
+        if (!option || (option.market_type !== 'team_totals' && option.market_type !== 'f5_team_totals')) {
             return option && option.selection ? option.selection : '';
         }
 
@@ -3196,7 +3196,7 @@
     }
 
     function getTeamTotalSubmitMeta(option) {
-        if (!option || option.market_type !== 'team_totals') return {};
+        if (!option || (option.market_type !== 'team_totals' && option.market_type !== 'f5_team_totals')) return {};
         const visible = String(option.selection_label || option.selection || '').trim();
         const parsed = visible.match(/^(.+?)\s+(Over|Under)\b/i);
         const team = parsed ? parsed[1].trim() : String(option.selection || '').replace(/\s+\b(over|under)\b.*$/i, '').trim();
