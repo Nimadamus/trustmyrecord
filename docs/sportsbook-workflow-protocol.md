@@ -23,6 +23,8 @@ The sportsbook board, ticket preview, submitted payload, pending pick display, p
 
 Board rendering rule: when a card or board filter selects the First 5 category (`first-5`), the market card scope must switch to `data-scope="f5"` and the active filter must remain `data-market-filter="first-5"`. This keeps F5 groups visible after selection and prevents the board from falling back to an empty full-game scope.
 
+Sportsbook matchup team rows must render exactly one team logo, one home/away badge, and one full team name. Logo restore helpers must not inject a second logo into `.tmr-team-row`, and desktop sportsbook cards must not ellipsize the team name.
+
 Any future F5 sportsbook change must verify the complete workflow:
 
 - ticket population clearly displays F5/First 5
