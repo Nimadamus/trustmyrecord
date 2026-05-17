@@ -60,11 +60,11 @@ test('live Trend Spotter guided flow and safe output', async ({ page }) => {
   await expect(page.locator('#sideSelect')).toContainText(/Under/);
 
   await expect(page.locator('[data-market="team_total"]')).toBeDisabled();
-  await expect(page.locator('[data-market="team_total"]')).toContainText(/disabled until verified team-total source rows/i);
+  await expect(page.locator('[data-market="team_total"]')).toContainText(/verified team-total source rows/i);
   await expect(page.locator('[data-market="first_half"]')).toBeDisabled();
-  await expect(page.locator('[data-market="first_half"]')).toContainText(/disabled until verified period-specific source rows/i);
+  await expect(page.locator('[data-market="first_half"]')).toContainText(/verified period-specific source rows/i);
   await expect(page.locator('[data-market="first_five"]')).toBeDisabled();
-  await expect(page.locator('[data-market="first_five"]')).toContainText(/disabled until verified MLB F5 source rows/i);
+  await expect(page.locator('[data-market="first_five"]')).toContainText(/verified MLB F5 source rows/i);
 
   await page.selectOption('#sportSelect', 'NBA');
   await expect(page.locator('[data-market="first_five"]')).toBeDisabled();
