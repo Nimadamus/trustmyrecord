@@ -29,6 +29,7 @@ Any future F5 sportsbook change must verify the complete workflow:
 - post-refresh pending/history visibility still shows the pick
 - display labels keep F5 visible for ML, totals, and run line
 - grader/admin handling separates `f5_h2h`, `f5_spreads`, and `f5_totals` from full-game `h2h`, `spreads`, and `totals`
+- F5 team totals, when offered, must follow the same persisted selection contract as full-game team totals: `<Team> Over <line>` or `<Team> Under <line>`, with `market_type='f5_team_totals'`, exact line/odds snapshots, and owner-only pending visibility
 
 ## Market Label Normalization Before Stats
 
