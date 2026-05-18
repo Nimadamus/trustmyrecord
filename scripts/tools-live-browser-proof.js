@@ -14,11 +14,6 @@ const PICK_TRACKING_URL = process.env.TMR_PICK_TRACKING_URL || 'https://trustmyr
 const LEADERBOARDS_URL = process.env.TMR_LEADERBOARDS_URL || 'https://trustmyrecord.com/leaderboards/';
 const OUT_DIR = path.join(process.cwd(), 'artifacts');
 
-function cacheBust(url) {
-  const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}proof=${Date.now()}`;
-}
-
 async function captureRoot(name) {
   const out = path.join(OUT_DIR, name);
   execFileSync('bash', ['-lc', `import -window root "${out.replace(/\\/g, '/')}"`], { stdio: 'inherit' });
@@ -67,6 +62,13 @@ async function verifyTrendspotter(page) {
   await page.click('#generateTrend');
   await page.locator('#resultsList').waitFor({ state: 'visible', timeout: 15000 });
   const text = await page.locator('body').innerText();
+  const summary = await page.locator('#selectionSummary').innerText();
+  if (!/Search: Full game over \/ under/i.test(summary)) {
+    throw new Error('Trendspotter Current Query did not reflect the selected trend search.');
+  }
+  if (/Verified trend data source not connected yet|source not connected yet/i.test(text)) {
+    throw new Error('Trendspotter showed raw backend placeholder copy.');
+  }
   if (/fake ROI|fake win rate|fake records|fake predictions|verified betting edge/i.test(text)) {
     throw new Error('Trendspotter showed a forbidden verified/fake claim.');
   }
@@ -90,7 +92,7 @@ async function verifyMlbSimulator(page) {
 }
 
 async function verifyHubAndRoutes(page) {
-  await page.goto(cacheBust(HUB_URL), { waitUntil: 'domcontentloaded' });
+  await page.goto(HUB_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
   const expected = [
     '/mlb-simulator/',
@@ -106,25 +108,27 @@ async function verifyHubAndRoutes(page) {
   }
   const body = await page.locator('body').innerText();
   if (/coming soon|lorem ipsum|placeholder|under construction/i.test(body)) throw new Error('Tools Hub contains placeholder copy.');
-  await page.screenshot({ path: path.join(OUT_DIR, 'tools-hub-live-page-proof.png'), fullPage: false });
   return captureRoot('tools-hub-live-browser-addressbar-proof.png');
 }
 
 async function verifyModelBuilder(page) {
-  await page.goto(cacheBust(MODEL_URL), { waitUntil: 'domcontentloaded' });
+  await page.goto(MODEL_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
-  await page.waitForFunction(() => {
-    const shell = document.querySelector('#modelBuilderShell');
-    const text = document.body ? document.body.innerText : '';
-    return shell && !shell.hidden &&
-      text.includes('Coming soon') &&
-      text.includes('This tool is not available yet') &&
-      !text.includes('Save model draft') &&
-      !text.includes('Login required');
-  }, null, { timeout: 30000 });
+  await page.fill('#modelName', `MLB totals audit ${Date.now()}`);
+  await page.selectOption('#modelSport', 'baseball_mlb');
+  await page.selectOption('#modelMarket', 'totals');
+  await page.selectOption('#modelSide', 'under');
+  await page.fill('#factor_recent_form', '25');
+  await page.fill('#factor_market_line', '35');
+  await page.fill('#modelNotes', 'Audit draft: requires real source rows before scoring.');
+  await page.click('#saveModelBtn');
+  await page.locator('#modelBuilderList .model-card h3').first().waitFor({ state: 'visible', timeout: 10000 });
+  await page.locator('[data-action="compare"]').first().check();
+  const compareText = await page.locator('#modelCompare').innerText();
+  if (!/MLB|Total|Weights|Units/i.test(compareText)) throw new Error('Model Builder compare output did not render useful assumptions.');
   const text = await page.locator('body').innerText();
-  if (/Save model draft|Assumption comparison|guaranteed winner|verified betting edge/i.test(text)) {
-    throw new Error('Model Builder exposed active controls or forbidden claims while marked coming soon.');
+  if (/Login required|coming soon|placeholder|under construction|guaranteed winner|verified betting edge/i.test(text)) {
+    throw new Error('Model Builder exposed a blocked shell, placeholder, or forbidden claim.');
   }
   return captureRoot('model-builder-live-browser-addressbar-proof.png');
 }
@@ -134,6 +138,7 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
   const text = await page.locator('body').innerText();
   if (!new RegExp(requiredText, 'i').test(text)) throw new Error(`${url} did not render expected ${requiredText} workflow text.`);
+  if (/fake user|fake stats|lorem ipsum|placeholder|under construction/i.test(text)) throw new Error(`${url} contains forbidden placeholder/fake text.`);
 }
 
 (async () => {
@@ -153,7 +158,7 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
     await verifyLinkedWorkflow(page, PUBLIC_RECORDS_URL, 'Handicappers|verified records|Discover');
     await verifyLinkedWorkflow(page, PICK_TRACKING_URL, 'sportsbook|Make Picks|Pick');
     await verifyLinkedWorkflow(page, LEADERBOARDS_URL, 'Leaderboards|rankings|Public results');
-    const hardErrors = consoleErrors.filter((entry) => !/favicon|Failed to load resource.*(404|net::ERR_BLOCKED_BY_CLIENT)|Access token required|server responded with a status of 401|unhandledrejection: Access token required/i.test(entry));
+    const hardErrors = consoleErrors.filter((entry) => !/favicon|Failed to load resource.*(404|net::ERR_BLOCKED_BY_CLIENT)/i.test(entry));
     if (hardErrors.length) throw new Error(`Console errors detected:\n${hardErrors.join('\n')}`);
     const report = {
       checked_at: new Date().toISOString(),
@@ -164,13 +169,7 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
       public_records_url: PUBLIC_RECORDS_URL,
       pick_tracking_url: PICK_TRACKING_URL,
       leaderboards_url: LEADERBOARDS_URL,
-      screenshots: {
-        hub,
-        hubPage: path.join(OUT_DIR, 'tools-hub-live-page-proof.png'),
-        trendspotter,
-        mlbSimulator,
-        modelBuilder,
-      },
+      screenshots: { hub, trendspotter, mlbSimulator, modelBuilder },
     };
     fs.writeFileSync(path.join(OUT_DIR, 'tools-live-browser-proof.json'), JSON.stringify(report, null, 2));
     console.log(JSON.stringify(report, null, 2));

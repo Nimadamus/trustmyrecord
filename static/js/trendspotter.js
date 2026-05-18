@@ -25,7 +25,8 @@
     first_five: "First five innings"
   };
   var SAFE_MESSAGES = {
-    sourceMissing: "Verified trend data source not connected yet.",
+    sourceMissing: "Verified trend data is unavailable for this selection.",
+    selectToLoad: "Select a sport and matchup to load verified trend data.",
     noData: "No verified trend available for these inputs.",
     unavailable: "Trend calculation unavailable until dataset is connected.",
     noStrong: "No strong trend found for the selected variables.",
@@ -417,7 +418,7 @@
     if (!matchups.length) {
       els.matchup.innerHTML = "<option value=\"\">No matchup data available</option>";
       els.matchup.disabled = true;
-      els.matchupDataSource.textContent = SAFE_MESSAGES.sourceMissing;
+      els.matchupDataSource.textContent = "No verified matchup data is available for this sport right now.";
       return;
     }
     if (!matchups.some(function (matchup) { return matchup.key === state.matchupKey; })) state.matchupKey = "";
@@ -537,7 +538,7 @@
       state.sport || "Sport not selected",
       matchup ? matchup.matchup : "Matchup not selected",
       market ? market.label : "Trend type not selected",
-      trendKind ? "Search: " + trendKind.label : "Trend search not selected",
+      trendKind ? "Search: " + trendKind.label : "Choose trend search",
       state.side ? "Side: " + state.side : "Side not selected",
       state.team ? "Team: " + state.team : "",
       state.threshold !== "" ? "Line: " + state.threshold : "",
@@ -564,7 +565,7 @@
       ? "Loading verified trend data..."
       : data.status
         ? "Trend source status: " + data.status + ". Classification: " + classification.label + ". " + classification.detail
-        : SAFE_MESSAGES.sourceMissing;
+        : SAFE_MESSAGES.selectToLoad;
     if (state.generated) renderResults();
   }
 
@@ -623,7 +624,7 @@
       });
       cache[sport].matchup_source = cache[sport].live_matchups.length
         ? "Live schedule matchups loaded. Verified trend results still require matching Trend Spotter data."
-        : SAFE_MESSAGES.sourceMissing;
+        : "No schedule matchups are available for this sport right now.";
     } catch (error) {
       cache[sport].live_matchups = [];
       cache[sport].matchup_source = "Error state: schedule matchups could not be loaded.";

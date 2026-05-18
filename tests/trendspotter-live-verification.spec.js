@@ -37,6 +37,7 @@ test('live Trend Spotter guided flow and safe output', async ({ page }) => {
   await expect(page.locator('body')).toContainText('Trend Spotter');
   await expect(page.locator('body')).toContainText('Select Matchup');
   await expect(page.locator('body')).toContainText('Select Trend Type');
+  await expect(page.locator('body')).not.toContainText(/Verified trend data source not connected yet|source not connected yet/i);
 
   await page.selectOption('#sportSelect', 'MLB');
   await selectFirstLiveMatchup(page);
@@ -58,6 +59,8 @@ test('live Trend Spotter guided flow and safe output', async ({ page }) => {
   await expect(page.locator('#teamField')).toBeHidden();
   await expect(page.locator('#sideSelect')).toContainText(/Over/);
   await expect(page.locator('#sideSelect')).toContainText(/Under/);
+  await page.selectOption('#trendKindSelect', 'full_game_over_under');
+  await expect(page.locator('#selectionSummary')).toContainText(/Search: Full game over \/ under/i);
 
   await expect(page.locator('[data-market="team_total"]')).toBeDisabled();
   await expect(page.locator('[data-market="team_total"]')).toContainText(/verified team-total source rows/i);

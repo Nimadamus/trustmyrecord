@@ -11,9 +11,10 @@ const html = rawHtml
 const js = fs.readFileSync(path.join(root, 'static', 'js', 'trendspotter.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'static', 'css', 'trendspotter.css'), 'utf8');
 
-assert(/\/static\/css\/trendspotter\.css\?v=20260512-(cleanup|readiness1)/.test(rawHtml), 'Trend Spotter page uses the current stylesheet cache key');
-assert(/\/static\/js\/trendspotter\.js\?v=20260512-(cleanup|readiness1)/.test(rawHtml), 'Trend Spotter page uses the current script cache key');
+assert(/\/static\/css\/trendspotter\.css\?v=20260518-generate1/.test(rawHtml), 'Trend Spotter page uses the current stylesheet cache key');
+assert(/\/static\/js\/trendspotter\.js\?v=20260518-generate1/.test(rawHtml), 'Trend Spotter page uses the current script cache key');
 assert(!/20260512labels1/.test(rawHtml + js + css), 'stale Trend Spotter deployment labels are removed');
+assert(!/Verified trend data source not connected yet/i.test(rawHtml + js + css), 'raw backend placeholder text must not ship in Trend Spotter UI');
 
 function today() {
   const now = new Date();
@@ -351,7 +352,8 @@ function chooseTrendKind(doc, value) {
   change(noDataDoc, '#sideSelect', 'over');
   change(noDataDoc, '#thresholdInput', '8.5');
   noDataDoc.querySelector('#generateTrend').click();
-  assert.match(noDataDoc.querySelector('[data-state="safe-no-data"]').textContent, /No verified trend available|No strong trend found|Verified trend data source not connected/, 'safe no-data state should render');
+  assert.match(noDataDoc.querySelector('[data-state="safe-no-data"]').textContent, /No verified trend available|No strong trend found|Verified trend data is unavailable/, 'safe no-data state should render');
+  assert.doesNotMatch(noDataDoc.body.textContent, /Verified trend data source not connected yet/, 'safe no-data state must not expose raw placeholder copy');
   assert.match(noDataDoc.querySelector('[data-state="safe-no-data"]').textContent, /Source classification:\s*(Partial|Blocked|Source-backed)/, 'safe state should expose source classification');
   assert(noDataDoc.querySelector('[data-state="safe-no-data"]').getAttribute('data-source-label'), 'safe state should carry a source label attribute');
 

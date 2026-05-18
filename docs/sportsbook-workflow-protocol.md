@@ -25,6 +25,8 @@ Board rendering rule: when a card or board filter selects the First 5 category (
 
 Sportsbook matchup team rows must render exactly one team logo, one home/away badge, and one full team name. Logo restore helpers must not inject a second logo into `.tmr-team-row`, and desktop sportsbook cards must not ellipsize the team name.
 
+The verified F5 sportsbook board layout is locked by `tests/sportsbook-f5-board-layout-lock-test.js`. Do not change F5 totals labels, `.tmr-team-row`, `.tmr-team-name`, market-card header stacking, or market-card option-grid layout without updating that test after live public verification and explicit approval. This guard exists to prevent reverting to duplicate logos, wrapped/truncated team names, overlapping price grids, or `+3.5` total side labels.
+
 Any future F5 sportsbook change must verify the complete workflow:
 
 - ticket population clearly displays F5/First 5
@@ -93,5 +95,6 @@ No TrustMyRecord tool may launch as a shell, orphan page, or placeholder route. 
 - desktop and mobile browser checks show no layout breakage, overlap, or hidden primary controls
 - the page contains no placeholder copy, fake records, fake stats, stale data claims, or unsupported betting-performance claims
 - any data-backed output is verified against the live API/source, and unavailable data is labeled unavailable instead of invented
+- Trend Spotter's Generate Trend panel must never ship a fake-working state: the trend-search dropdown must populate from the selected market, Current Query must reflect the selected trend search, Generate must be disabled until required variables are present, and unavailable backend/source states must use polished intentional copy rather than raw placeholder text such as `source not connected yet`
 - public-record, leaderboard, profile, sportsbook, pick-tracking, grading, forum, and auth routes are not regressed
 - final acceptance requires live public browser verification with screenshot proof of the public URL visible, not only localhost, build success, deployment status, or HTTP-only checks
