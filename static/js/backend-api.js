@@ -146,7 +146,7 @@ class TrustMyRecordAPI {
         } catch (error) {}
     }
 
-    clearTokens() {
+    clearAuthTokensOnly() {
         this.token = null;
         this.refreshToken = null;
         this._cachedUser = null;
@@ -159,6 +159,10 @@ class TrustMyRecordAPI {
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('tmr_refresh_token');
+    }
+
+    clearTokens() {
+        this.clearAuthTokensOnly();
         this.clearFrontendSession();
     }
 
@@ -278,7 +282,7 @@ class TrustMyRecordAPI {
                 const refreshAttempted = !!(requestContext && requestContext.refreshAttempted);
                 const noWayToRecover = !this.refreshToken;
                 if (triedAuthedRequest && (refreshAttempted || noWayToRecover)) {
-                    this.clearTokens();
+                    this.clearAuthTokensOnly();
                 }
             }
             const error = new Error(message || `HTTP ${response.status}`);
@@ -310,7 +314,7 @@ class TrustMyRecordAPI {
                 return true;
             }
             if (response.status === 401 || response.status === 403) {
-                this.clearTokens();
+                this.clearAuthTokensOnly();
             }
         } catch (error) {
             console.error('Token refresh failed:', error);
