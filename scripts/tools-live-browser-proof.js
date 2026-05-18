@@ -78,14 +78,34 @@ async function verifyTrendspotter(page) {
 async function verifyMlbSimulator(page) {
   await page.goto(SIM_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
-  await selectByText(page, '#awayTeamSelect', 'Texas Rangers');
-  await selectByText(page, '#homeTeamSelect', 'New York Yankees');
+  await selectByText(page, '#awayTeamSelect', 'Chicago White Sox');
+  await selectByText(page, '#homeTeamSelect', 'Colorado Rockies');
+  const pitcherState = await page.evaluate(() => {
+    function state(selector) {
+      const select = document.querySelector(selector);
+      return {
+        disabled: Boolean(select?.disabled),
+        selected: select?.selectedOptions?.[0]?.textContent?.trim() || '',
+        optionCount: Array.from(select?.options || []).filter((option) => option.value).length,
+        unavailable: /Starting pitcher list unavailable/i.test(select?.textContent || ''),
+      };
+    }
+    return { away: state('#awayPitcherSelect'), home: state('#homePitcherSelect') };
+  });
+  if (pitcherState.away.disabled || pitcherState.away.optionCount < 1 || pitcherState.away.unavailable) {
+    throw new Error(`Away pitcher dropdown is not populated: ${JSON.stringify(pitcherState.away)}`);
+  }
+  if (pitcherState.home.disabled || pitcherState.home.optionCount < 1 || pitcherState.home.unavailable) {
+    throw new Error(`Home pitcher dropdown is not populated: ${JSON.stringify(pitcherState.home)}`);
+  }
   await page.selectOption('#simulationCountSelect', '10');
   await page.click('#runSimulationButton');
   await page.waitForFunction(() => document.querySelector('#projectionShell')?.getAttribute('data-projection-state') === 'projected', null, { timeout: 30000 });
 
   const text = await page.locator('body').innerText();
   if (!/Simulation-based estimate|simulation output/i.test(text)) throw new Error('MLB Simulator output was not labeled as simulation based.');
+  if (!/Chicago White Sox|Colorado Rockies/i.test(text)) throw new Error('MLB Simulator proof matchup did not render selected teams.');
+  if (!/Starting Pitchers/i.test(text)) throw new Error('MLB Simulator output did not render selected starting pitchers.');
   if (/verified betting edge|official pick|guaranteed result|guaranteed winner/i.test(text)) throw new Error('MLB Simulator showed a forbidden verified/fake claim.');
   if (/First Five output|F5 lean|Team Total lean|props/i.test(text)) throw new Error('MLB Simulator exposed unsupported output.');
   return captureRoot('mlb-simulator-live-browser-addressbar-proof.png');
