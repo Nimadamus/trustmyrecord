@@ -151,6 +151,17 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
   });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
   try {
+    if (process.env.TMR_ONLY_TRENDSPOTTER === '1') {
+      const trendspotter = await verifyTrendspotter(page);
+      const report = {
+        checked_at: new Date().toISOString(),
+        trendspotter_url: TREND_URL,
+        screenshots: { trendspotter },
+      };
+      fs.writeFileSync(path.join(OUT_DIR, 'trendspotter-live-browser-proof.json'), JSON.stringify(report, null, 2));
+      console.log(JSON.stringify(report, null, 2));
+      return;
+    }
     const hub = await verifyHubAndRoutes(page);
     const trendspotter = await verifyTrendspotter(page);
     const mlbSimulator = await verifyMlbSimulator(page);
