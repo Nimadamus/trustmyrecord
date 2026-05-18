@@ -11,9 +11,8 @@
     <meta property="og:title" content="User Profile | TrustMyRecord">
     <meta property="og:description" content="Check out my verified handicapping record and stats.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260514mobile1">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260506navcommunity1">
 <script defer src="/static/js/tmr-sitewide.js?v=20260506navcommunity1"></script>
-<script src="/static/js/streaks.js?v=20260506streak1"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -393,7 +392,7 @@
             box-shadow: 0 20px 46px rgba(4, 10, 18, 0.24);
         }
 
-        .picks-table { width: 100%; min-width: 0; table-layout: fixed; border-collapse: collapse; font-size: 0.78rem; }
+        .picks-table { width: 100%; min-width: 1500px; border-collapse: collapse; font-size: 0.78rem; }
 
         .picks-table thead {
             background: #09111c;
@@ -422,24 +421,11 @@
         .picks-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.018); }
         .picks-table tbody tr:hover { background: rgba(59, 130, 246, 0.08); }
 
+        .picks-table td.col-game,
         .picks-table td.col-pick {
+            min-width: 190px;
             white-space: normal;
-            overflow-wrap: anywhere;
-            word-break: normal;
         }
-
-        .picks-table th:nth-child(1),
-        .picks-table td:nth-child(1) { width: 14%; }
-        .picks-table th:nth-child(2),
-        .picks-table td:nth-child(2) { width: 9%; }
-        .picks-table th:nth-child(3),
-        .picks-table td:nth-child(3) { width: 38%; }
-        .picks-table th:nth-child(4),
-        .picks-table td:nth-child(4) { width: 9%; }
-        .picks-table th:nth-child(5),
-        .picks-table td:nth-child(5) { width: 10%; }
-        .picks-table th:nth-child(6),
-        .picks-table td:nth-child(6) { width: 20%; }
 
         .ledger-pick-title {
             font-weight: 700;
@@ -492,15 +478,9 @@
             letter-spacing: 0.08em;
         }
         .result-badge.won { background: var(--accent-green-bg); color: var(--accent-green); }
-        .result-badge.result-win { color: #86efac; }
-        .result-badge.result-loss { color: #f05252; }
-        .result-badge.result-push,
-        .result-badge.result-pending { color: var(--accent-gray); }
         .result-badge.lost { background: var(--accent-red-bg); color: var(--accent-red); }
-        .result-badge.push,
-        .result-badge.void,
-        .result-badge.cancelled,
-        .result-badge.pending { background: var(--accent-gray-bg); color: var(--accent-gray); }
+        .result-badge.push { background: var(--accent-gray-bg); color: var(--accent-gray); }
+        .result-badge.pending { background: var(--accent-blue-bg); color: var(--accent-blue); }
 
         .profit-cell.positive { color: var(--accent-green); font-weight: 600; }
         .profit-cell.negative { color: var(--accent-red); font-weight: 600; }
@@ -1131,8 +1111,8 @@
     body.tmr-social-profile .pick-result.loss,
     body.tmr-social-profile .result-loss,
     body.tmr-social-profile .pill.loss{
-      background:rgba(255,51,51,.16) !important;color:#ff3333 !important;
-      border:1px solid rgba(255,51,51,.36) !important;border-radius:6px !important;
+      background:rgba(239,68,68,.16) !important;color:#f87171 !important;
+      border:1px solid rgba(239,68,68,.3) !important;border-radius:6px !important;
     }
     body.tmr-social-profile .pick-result.pending,
     body.tmr-social-profile .result-pending,
@@ -1624,12 +1604,7 @@
                 <strong>Edit Profile</strong>
                 <label class="profile-avatar-uploader__btn" for="profileAvatarFile"><i class="fas fa-camera"></i> Change avatar</label>
                 <input id="profileAvatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
-                <span class="profile-avatar-uploader__hint" id="profileAvatarHint" aria-live="polite"></span>
-                <label class="profile-pending-share-toggle" for="profilePendingShareToggle">
-                    <input id="profilePendingShareToggle" type="checkbox">
-                    <span>Allow pending pick sharing</span>
-                </label>
-                <span class="profile-pending-share-status" id="profilePendingShareStatus" aria-live="polite"></span>
+                <span class="profile-avatar-uploader__hint" id="profileAvatarHint">PNG / JPG / WebP, &le; 5 MB. Resized to 256&times;256.</span>
             </div>
         </div>
     </section>
@@ -1724,13 +1699,6 @@
         .profile-avatar-uploader__btn{cursor:pointer;padding:8px 14px;border-radius:8px;background:rgba(0,255,255,0.10);border:1px solid rgba(0,255,255,0.32);color:#00ffff;font:700 12px/1 'Inter',sans-serif;letter-spacing:.04em;text-transform:uppercase;}
         .profile-avatar-uploader__btn:hover{background:rgba(0,255,255,0.18);}
         .profile-avatar-uploader__hint{color:#64748b;font-size:11.5px;}
-        .profile-pending-share-toggle{display:inline-flex;align-items:center;gap:8px;margin-left:auto;padding:8px 12px;border-radius:8px;border:1px solid rgba(148,163,184,0.18);background:rgba(2,6,23,0.34);color:#e2e8f0;font:800 12px/1.2 'Inter',sans-serif;letter-spacing:.02em;cursor:pointer;}
-        .profile-pending-share-toggle input{width:16px;height:16px;accent-color:#2dd4bf;cursor:pointer;}
-        .profile-pending-share-status{min-width:86px;color:#64748b;font-size:11.5px;font-weight:700;}
-        @media(max-width:720px){
-            .profile-pending-share-toggle{width:100%;margin-left:0;justify-content:flex-start;}
-            .profile-pending-share-status{width:100%;}
-        }
 
         .profile-advanced-strip-section{padding:18px 0 0;background:transparent;}
         .profile-advanced-strip-section .container{width:min(100% - 44px,1260px);max-width:1260px;margin:0 auto;padding:0;}
@@ -1802,47 +1770,8 @@
             var msgEl       = document.getElementById('profileSetupMsg');
             var fileInput   = document.getElementById('profileAvatarFile');
             var avatarHint  = document.getElementById('profileAvatarHint');
-            var pendingToggle = document.getElementById('profilePendingShareToggle');
-            var pendingStatus = document.getElementById('profilePendingShareStatus');
 
             if (uploaderEl) uploaderEl.hidden = false;
-
-            function setPendingShareStatus(text, kind) {
-                if (!pendingStatus) return;
-                pendingStatus.textContent = text || '';
-                pendingStatus.style.color = kind === 'error' ? '#ffd0d6' : kind === 'success' ? '#bef0ce' : '#94a3b8';
-            }
-
-            if (pendingToggle) {
-                pendingToggle.checked = !!p.public_pending_picks_enabled;
-                setPendingShareStatus(pendingToggle.checked ? 'Sharing on' : 'Private');
-                pendingToggle.addEventListener('change', async function() {
-                    var nextEnabled = !!pendingToggle.checked;
-                    pendingToggle.disabled = true;
-                    setPendingShareStatus('Saving...');
-                    try {
-                        if (!window.api || typeof window.api.updateProfile !== 'function') {
-                            throw new Error('Profile save service unavailable.');
-                        }
-                        var result = await window.api.updateProfile({ public_pending_picks_enabled: nextEnabled });
-                        var nextUser = result && result.user ? result.user : {};
-                        window.profileData.public_pending_picks_enabled = !!nextUser.public_pending_picks_enabled;
-                        profileData.public_pending_picks_enabled = window.profileData.public_pending_picks_enabled;
-                        if (window.currentUser) window.currentUser.public_pending_picks_enabled = window.profileData.public_pending_picks_enabled;
-                        pendingToggle.checked = window.profileData.public_pending_picks_enabled;
-                        setPendingShareStatus(pendingToggle.checked ? 'Sharing on' : 'Private', 'success');
-                        if (typeof showToast === 'function') {
-                            showToast(pendingToggle.checked ? 'Pending pick sharing enabled.' : 'Pending pick sharing disabled.', 'success');
-                        }
-                    } catch (err) {
-                        pendingToggle.checked = !nextEnabled;
-                        setPendingShareStatus(err && err.message ? err.message : 'Save failed.', 'error');
-                        if (typeof showToast === 'function') showToast('Could not update pending pick sharing.', 'error');
-                    } finally {
-                        pendingToggle.disabled = false;
-                    }
-                });
-            }
 
             // Make the avatar in the profile header clickable so the file
             // picker is one tap away — owners no longer need to scroll to the
@@ -2088,9 +2017,9 @@
                         </div>
                         <div class="tmrx-filter-bar">
                           <label><span>Sport</span><select data-tmrx-filter="sport"><option value="">All</option><option value="baseball_mlb">MLB</option><option value="basketball_nba">NBA</option><option value="icehockey_nhl">NHL</option><option value="americanfootball_nfl">NFL</option></select></label>
-                          <label><span>Market</span><select data-tmrx-filter="market"><option value="">All</option><option value="h2h">Moneyline</option><option value="spreads">Spread</option><option value="totals">Total</option><option value="team_totals">Team Total</option><option value="f5_h2h,f5_spreads,f5_totals,f5_team_totals">First Five</option></select></label>
+                          <label><span>Market</span><select data-tmrx-filter="market"><option value="">All</option><option value="h2h">Moneyline</option><option value="spreads">Spread</option><option value="totals">Total</option><option value="team_totals">Team Total</option><option value="f5_h2h,f5_spreads,f5_totals">First Five</option></select></label>
                           <label><span>Result</span><select data-tmrx-filter="result"><option value="">All</option><option value="won">Won</option><option value="lost">Lost</option><option value="push">Push</option><option value="pending">Pending</option></select></label>
-                          <label><span>Odds</span><select data-tmrx-filter="odds"><option value="">All</option><option value="favorite">Favorite (-101 or lower)</option><option value="underdog">Dog (+100 or higher)</option><option value="even_money">Even Money (-100)</option></select></label>
+                          <label><span>Odds</span><select data-tmrx-filter="odds"><option value="">All</option><option value="heavy_favorite">Heavy Fav (-200+)</option><option value="favorite">Favorite (-110 to -200)</option><option value="underdog">Dog (+100 to +200)</option><option value="big_underdog">Longshot (+201+)</option></select></label>
                           <label><span>Unit Size</span><select data-tmrx-filter="unit_size"><option value="">All</option><option value="0.5_to_1u">0.5u-1u</option><option value="1.5_to_2u">1.5u-2u</option><option value="2.5_to_3u">2.5u-3u</option><option value="3u_plus">3u+</option></select></label>
                           <label><span>Period</span><select data-tmrx-filter="period"><option value="">All Time</option><option value="7">Last 7d</option><option value="30">Last 30d</option><option value="90">Last 90d</option><option value="365">Last 365d</option></select></label>
                           <label><span>Side</span><select data-tmrx-filter="side"><option value="">All</option><option value="favorite">Favorite</option><option value="underdog">Underdog</option></select></label>
@@ -2221,7 +2150,7 @@
                       </div>
 
                       <div class="tmrx-section">
-                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Streaks &amp; Rolling Form</div><div class="tmrx-section-sub">Last 25 / 50 / 100 graded picks. Pushes reset streaks.</div></div></div>
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Streaks &amp; Rolling Form</div><div class="tmrx-section-sub">Last 25 / 50 / 100 graded picks. Pushes don't break a streak.</div></div></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableFormTop">
                             <thead><tr><th>Window</th><th class="num">Picks</th><th class="num">W-L</th><th class="num">Win %</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
@@ -2245,7 +2174,7 @@
                             <tbody>
                               <tr data-tmrx-adv-top="effective_units"><td class="name">eU (Effective Units)</td><td class="num zero">&mdash;</td><td>(net_units / avg_units_risked) &times; 3 &mdash; strips max-bet juicing.</td></tr>
                               <tr data-tmrx-adv-top="effective_win_rate"><td class="name">eWP (Effective Win %)</td><td class="num zero">&mdash;</td><td>Win-rate equivalent if every pick had been -110.</td></tr>
-                              <tr data-tmrx-adv-top="z_score"><td class="name">Z-Score</td><td class="num zero">&mdash;</td><td>Skill-vs-luck signal. Hidden until 5+ decisions.</td></tr>
+                              <tr data-tmrx-adv-top="z_score"><td class="name">Odds-Adjusted Z-Score</td><td class="num zero">&mdash;</td><td>Actual wins vs summed break-even wins from each pick's odds. Pushes excluded. Hidden until 5+ decisions.</td></tr>
                               <tr data-tmrx-adv-top="avg_odds"><td class="name">AOP (Avg Odds per Pick)</td><td class="num zero">&mdash;</td><td>Average implied probability converted back to American.</td></tr>
                               <tr data-tmrx-adv-top="avg_units"><td class="name">AUR (Avg Units Risked)</td><td class="num zero">&mdash;</td><td>Mean stake across settled picks.</td></tr>
                               <tr data-tmrx-adv-top="avg_daily_picks"><td class="name">Picks Per Day</td><td class="num zero">&mdash;</td><td>Graded public picks / active pick dates.</td></tr>
@@ -2272,10 +2201,10 @@
                           <table class="tmrx-table" id="tmrxTablePicks">
                             <thead><tr>
                               <th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Market</th>
-                              <th class="num">Odds</th><th class="num">Risked</th><th class="num">To Win</th>
+                              <th class="num">Line</th><th class="num">Odds</th><th class="num">Units</th>
                               <th>Result</th><th class="num">Net</th>
                             </tr></thead>
-                            <tbody><tr class="empty"><td colspan="9">Loading pick history&hellip;</td></tr></tbody>
+                            <tbody><tr class="empty"><td colspan="10">Loading pick history&hellip;</td></tr></tbody>
                           </table>
                         </div>
                       </div>
@@ -2358,7 +2287,7 @@
                             </div>
                             <div class="capper-history-scroll">
                                 <table class="capper-history-table">
-                                    <thead><tr><th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Odds</th><th>Risked</th><th>To Win</th><th>Result</th><th>Profit/Loss</th></tr></thead>
+                                    <thead><tr><th>Date</th><th>Sport</th><th>Game</th><th>Pick</th><th>Line</th><th>Odds</th><th>Units</th><th>Result</th><th>Profit/Loss</th></tr></thead>
                                     <tbody id="capHistoryBody"><tr><td colspan="9">Loading picks...</td></tr></tbody>
                                 </table>
                             </div>
@@ -2463,7 +2392,7 @@
                         <option value="spreads,spread">Spread</option>
                         <option value="totals,total">Totals</option>
                         <option value="team_totals">Team Totals</option>
-                        <option value="f5_h2h,f5_spreads,f5_totals,f5_team_totals">First 5 Innings</option>
+                        <option value="f5_h2h,f5_spreads,f5_totals">First 5</option>
                         <option value="first_half_h2h,first_half_spreads,first_half_totals">First Half</option>
                         <option value="second_half_h2h,second_half_spreads,second_half_totals">Second Half</option>
                         <option value="period_1_h2h,period_1_spreads,period_1_totals">1st Period</option>
@@ -2478,9 +2407,10 @@
                     </select>
                     <select id="filterOdds" onchange="applyFilters()" class="filter-control">
                         <option value="">All Odds</option>
-                        <option value="fav">Favorite (-101 or lower)</option>
-                        <option value="dog">Dog (+100 or higher)</option>
-                        <option value="even">Even Money (-100)</option>
+                        <option value="heavy-fav">Heavy Fav (-200+)</option>
+                        <option value="fav">Favorite (-110 to -200)</option>
+                        <option value="dog">Dog (+100 to +200)</option>
+                        <option value="longshot">Longshot (+201+)</option>
                     </select>
                     <select id="filterUnits" onchange="applyFilters()" class="filter-control">
                         <option value="">All Unit Sizes</option>
@@ -2552,12 +2482,20 @@
                 <table class="picks-table">
                     <thead>
                         <tr>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="date" onclick="setTableSort('date')">Date / Time</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="date" onclick="setTableSort('date')">Date</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="sport" onclick="setTableSort('sport')">Sport</button></th>
+                            <th>Game</th>
                             <th>Pick</th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="odds" onclick="setTableSort('odds')">Line</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="market" onclick="setTableSort('market')">Market</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="line" onclick="setTableSort('line')">Line</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="odds" onclick="setTableSort('odds')">Odds</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Units</button></th>
                             <th><button type="button" class="ledger-sort-button" data-sort-key="result" onclick="setTableSort('result')">Result</button></th>
-                            <th><button type="button" class="ledger-sort-button" data-sort-key="units" onclick="setTableSort('units')">Result Units</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="net_units" onclick="setTableSort('net_units')">Net Units</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="closing_line" onclick="setTableSort('closing_line')">Closing Line</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="clv" onclick="setTableSort('clv')">CLV</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="book" onclick="setTableSort('book')">Book</button></th>
+                            <th><button type="button" class="ledger-sort-button" data-sort-key="status" onclick="setTableSort('status')">Status</button></th>
                         </tr>
                     </thead>
                     <tbody id="picksTableBody"></tbody>
@@ -2986,7 +2924,7 @@
                       </div>
 
                       <div class="tmrx-section">
-                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Streaks &amp; Rolling Form</div><div class="tmrx-section-sub">Last 25 / 50 / 100 graded picks. Pushes reset streaks.</div></div></div>
+                        <div class="tmrx-section-head"><div><div class="tmrx-section-title">Streaks &amp; Rolling Form</div><div class="tmrx-section-sub">Last 25 / 50 / 100 graded picks. Pushes don't break a streak.</div></div></div>
                         <div class="tmrx-table-shell">
                           <table class="tmrx-table" id="tmrxTableForm">
                             <thead><tr><th>Window</th><th class="num">Picks</th><th class="num">W-L</th><th class="num">Win %</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>
@@ -3010,7 +2948,7 @@
                             <tbody>
                               <tr data-tmrx-adv="effective_units"><td class="name">eU (Effective Units)</td><td class="num zero">&mdash;</td><td>(net_units / avg_units_risked) &times; 3 &mdash; strips max-bet juicing.</td></tr>
                               <tr data-tmrx-adv="effective_win_rate"><td class="name">eWP (Effective Win %)</td><td class="num zero">&mdash;</td><td>Win-rate equivalent if every pick had been -110.</td></tr>
-                              <tr data-tmrx-adv="z_score"><td class="name">Z-Score</td><td class="num zero">&mdash;</td><td>Standardized skill-vs-luck signal at avg-implied-prob baseline. Hidden until 5+ decisions.</td></tr>
+                              <tr data-tmrx-adv="z_score"><td class="name">Odds-Adjusted Z-Score</td><td class="num zero">&mdash;</td><td>Standardized skill-vs-luck signal using each pick's break-even odds. Pushes excluded. Hidden until 5+ decisions.</td></tr>
                               <tr data-tmrx-adv="avg_odds"><td class="name">AOP (Avg Odds per Pick)</td><td class="num zero">&mdash;</td><td>Average implied probability converted back to American.</td></tr>
                               <tr data-tmrx-adv="avg_units"><td class="name">AUR (Avg Units Risked)</td><td class="num zero">&mdash;</td><td>Mean stake across settled picks.</td></tr>
                               <tr data-tmrx-adv="avg_daily_picks"><td class="name">Picks Per Day</td><td class="num zero">&mdash;</td><td>Graded public picks / active pick dates.</td></tr>
@@ -3071,7 +3009,7 @@
                             <div class="tmr-cap-card__metrics" style="margin-top:8px;">
                                 <div class="tmr-cap-metric" title="Effective Units (eU): net units normalized to a 3u-per-pick standard. (U / AUR) × 3. Stops max-bet juicing of unit profit."><span class="tmr-cap-metric__label">eU (Effective units)</span><span class="tmr-cap-metric__value is-placeholder" id="advEffectiveUnits">—</span><span class="tmr-cap-metric__sub">Profit normalized to 3u/pick</span></div>
                                 <div class="tmr-cap-metric" title="Effective Win % (eWP): the win rate equivalent if every pick had been at -110 juice. Better than raw WP because it accounts for the prices you actually took."><span class="tmr-cap-metric__label">eWP (Effective win %)</span><span class="tmr-cap-metric__value is-placeholder" id="advEffectiveWP">—</span><span class="tmr-cap-metric__sub">Win % equivalent at -110</span></div>
-                                <div class="tmr-cap-metric" title="Z-Score: standardized skill-vs-luck signal. Z = (W − n·p) / √(n·p·(1−p)) where p is the breakeven hit rate at your average odds (AOP). Higher absolute Z = more likely skill than variance."><span class="tmr-cap-metric__label">Z-Score</span><span class="tmr-cap-metric__value is-placeholder" id="advZScore">—</span><span class="tmr-cap-metric__sub">Skill-vs-luck signal</span></div>
+                                <div class="tmr-cap-metric" title="Odds-Adjusted Z-Score: Z = (actual wins - sum(p_i)) / sqrt(sum(p_i * (1 - p_i))). Each p_i is the pick's American-odds break-even probability; pushes and pending picks are excluded."><span class="tmr-cap-metric__label">Odds-Adjusted Z</span><span class="tmr-cap-metric__value is-placeholder" id="advZScore">—</span><span class="tmr-cap-metric__sub">Odds-weighted skill signal</span></div>
                                 <div class="tmr-cap-metric" title="Average Odds per Pick (AOP). Computed as the average implied probability across picks, then converted back to American — never an arithmetic mean of moneylines."><span class="tmr-cap-metric__label">AOP (Avg odds)</span><span class="tmr-cap-metric__value is-placeholder" id="advAop">—</span><span class="tmr-cap-metric__sub">Avg price per pick</span></div>
                                 <div class="tmr-cap-metric" title="Average Units Risked per Pick (AUR). Mean stake across all settled picks."><span class="tmr-cap-metric__label">AUR (Avg risk)</span><span class="tmr-cap-metric__value is-placeholder" id="advAur">—</span><span class="tmr-cap-metric__sub">Avg stake per pick</span></div>
                                 <div class="tmr-cap-metric" title="Picks Per Day: graded public picks divided by active pick dates. Zero-pick dates do not count."><span class="tmr-cap-metric__label">Picks Per Day</span><span class="tmr-cap-metric__value is-placeholder" id="advAdp">—</span><span class="tmr-cap-metric__sub">Active pick dates only</span></div>
@@ -3188,7 +3126,7 @@
                             .pm-table tbody tr:last-child td { border-bottom: 0; }
                             .pm-table .pm-row__name { color: #f4f7fb; font-weight: 700; letter-spacing: .02em; }
                             .pm-table .pm-pos { color: #4ade80; font-weight: 700; }
-                            .pm-table .pm-neg { color: #ff3333; font-weight: 700; }
+                            .pm-table .pm-neg { color: #f87171; font-weight: 700; }
                             .pm-table .pm-table__empty td { padding: 22px 18px; color: #64748b; text-align: center; font-style: italic; }
 
                             /* ===== PickMonitor-style filterable picks table (Picks tab) ===== */
@@ -3248,7 +3186,7 @@
                                 font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
                             }
                             .pm-summary-value.pm-pos { color: #4ade80; }
-                            .pm-summary-value.pm-neg { color: #ff3333; }
+                            .pm-summary-value.pm-neg { color: #f87171; }
 
                             .pm-picks-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid rgba(255,255,255,0.06); }
                             .pm-picks-table {
@@ -3272,7 +3210,7 @@
                             .pm-picks-table .pm-cell-date { color: #94a3b8; }
                             .pm-picks-table .pm-cell-pick { color: #f4f7fb; font-weight: 700; max-width: 240px; overflow: hidden; text-overflow: ellipsis; }
                             .pm-picks-table .pm-pos { color: #4ade80; font-weight: 700; }
-                            .pm-picks-table .pm-neg { color: #ff3333; font-weight: 700; }
+                            .pm-picks-table .pm-neg { color: #f87171; font-weight: 700; }
                             .pm-picks-table .pm-pending { color: #fbbf24; }
                             .pm-result {
                                 display: inline-block;
@@ -3280,7 +3218,7 @@
                                 font: 800 10px/1 'Inter', sans-serif; letter-spacing: .08em; text-transform: uppercase;
                             }
                             .pm-result--won     { background: rgba(74,222,128,0.16);  color: #4ade80; border: 1px solid rgba(74,222,128,0.36); }
-                            .pm-result--lost    { background: rgba(255,51,51,0.16); color: #ff3333; border: 1px solid rgba(255,51,51,0.40); }
+                            .pm-result--lost    { background: rgba(248,113,113,0.16); color: #f87171; border: 1px solid rgba(248,113,113,0.36); }
                             .pm-result--push    { background: rgba(148,163,184,0.16); color: #cbd5e1; border: 1px solid rgba(148,163,184,0.32); }
                             .pm-result--pending { background: rgba(251,191,36,0.14);  color: #fbbf24; border: 1px solid rgba(251,191,36,0.36); }
                             .pm-picks-empty td { padding: 28px 16px; color: #64748b; text-align: center; font-style: italic; }
@@ -3364,7 +3302,7 @@
                                 <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Favorite</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Underdog</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
                             </div>
                             <div class="tmr-cap-card" data-split="by_odds_bucket">
-                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">$</div><div class="tmr-cap-card__name"><strong>By odds range</strong><span>Favorite / dog / even money</span></div></div>
+                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">$</div><div class="tmr-cap-card__name"><strong>By odds range</strong><span>Heavy fav / fav / dog / longshot</span></div></div>
                                 <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
                             </div>
                             <div class="tmr-cap-card" data-split="by_unit_size">
@@ -3840,7 +3778,7 @@
             letter-spacing: -0.02em;
         }
         .profile-rail-value.is-positive { color: #4ade80; }
-        .profile-rail-value.is-negative { color: #ff3333; }
+        .profile-rail-value.is-negative { color: #f87171; }
         .profile-rail-value.is-neutral { color: #f8fafc; }
 
         .capper-monitor {
@@ -3956,7 +3894,7 @@
             text-overflow: ellipsis;
         }
         .capper-pos { color: #4ade80 !important; }
-        .capper-neg { color: #ff3333 !important; }
+        .capper-neg { color: #f87171 !important; }
         .capper-neutral { color: #f8fafc !important; }
         /* Secondary KPI strip — 6 more stats LTR (Apr 30 2026 r3) */
         .capper-second-row {
@@ -4069,7 +4007,7 @@
             text-transform: uppercase;
         }
         .capper-result.won { background: rgba(74, 222, 128, 0.12); color: #4ade80; }
-        .capper-result.lost { background: rgba(255, 51, 51, 0.12); color: #ff3333; }
+        .capper-result.lost { background: rgba(248, 113, 113, 0.12); color: #f87171; }
         .capper-result.push { background: rgba(148, 163, 184, 0.12); color: #cbd5e1; }
         .capper-result.pending { background: rgba(103, 232, 249, 0.1); color: #67e8f9; }
 
@@ -4722,7 +4660,7 @@
             --tmr-neon-cyan: #00ffff;
             --tmr-neon-purple: #c084fc;
             --tmr-neon-green: #39ff14;
-            --tmr-neon-red: #ff3333;
+            --tmr-neon-red: #ff3860;
             --tmr-neon-gold: #ffd700;
             --tmr-card-bg: rgba(15, 22, 38, 0.85);
             --tmr-card-bg-strong: rgba(20, 27, 44, 0.96);
@@ -5029,10 +4967,10 @@
         }
         body.profile-page .result-badge.lost,
         body.profile-page.tmr-site-shell .result-badge.lost {
-            background: rgba(255, 51, 51, 0.12) !important;
+            background: rgba(255, 56, 96, 0.12) !important;
             color: var(--tmr-neon-red) !important;
-            border: 1px solid rgba(255, 51, 51, 0.4) !important;
-            box-shadow: 0 0 12px rgba(255, 51, 51, 0.18);
+            border: 1px solid rgba(255, 56, 96, 0.4) !important;
+            box-shadow: 0 0 12px rgba(255, 56, 96, 0.18);
         }
         body.profile-page .result-badge.push,
         body.profile-page.tmr-site-shell .result-badge.push {
@@ -5123,9 +5061,9 @@
     </script>
     <script src="/static/js/config.js?v=20260330"></script>
     <script src="/static/js/analytics.js?v=20260405"></script>
-    <script src="/static/js/backend-api.js?v=20260518sessionfix2"></script>
+    <script src="/static/js/backend-api.js?v=20260505profilefast1"></script>
     <script src="/static/js/nav-badges.js"></script>
-    <script src="/static/js/auth-persistent.js?v=20260518sessionfix2"></script>
+    <script src="/static/js/auth-persistent.js?v=20260424a"></script>
     <script src="/static/js/auto-grader-fixed.js?v=20260405b"></script>
     <script>
     // ============================================================
@@ -5150,8 +5088,8 @@
         { key: 'moneyline', label: 'Moneyline', types: ['h2h', 'moneyline'] },
         { key: 'spreads', label: 'Spread', types: ['spreads', 'spread'] },
         { key: 'totals', label: 'Totals', types: ['totals', 'total'] },
-        { key: 'team_totals', label: 'Team Totals', types: ['team_totals', 'team_total'] },
-        { key: 'first5', label: 'First 5 Innings', types: ['f5_h2h', 'f5_spreads', 'f5_totals', 'f5_team_totals'] },
+        { key: 'team_totals', label: 'Team Totals', types: ['team_totals'] },
+        { key: 'first5', label: 'First 5', types: ['f5_h2h', 'f5_spreads', 'f5_totals'] },
         { key: 'first_half', label: 'First Half', types: ['first_half_h2h', 'first_half_spreads', 'first_half_totals'] },
         { key: 'second_half', label: 'Second Half', types: ['second_half_h2h', 'second_half_spreads', 'second_half_totals'] },
         { key: 'period_1', label: '1st Period', types: ['period_1_h2h', 'period_1_spreads', 'period_1_totals'] },
@@ -5187,97 +5125,15 @@
     };
     const initialSportFilter = normalizeProfileSportParam(urlParams.get('sport') || urlParams.get('league') || '');
 
-    function setMetaTag(selector, attrName, attrValue, content) {
-        if (!content) return;
-        var tag = document.head.querySelector(selector);
-        if (!tag) {
-            tag = document.createElement('meta');
-            tag.setAttribute(attrName, attrValue);
-            document.head.appendChild(tag);
-        }
-        tag.setAttribute('content', content);
-    }
-
-    function setCanonicalHref(href) {
-        if (!href) return;
-        var canonical = document.head.querySelector('link[rel="canonical"]');
-        if (!canonical) {
-            canonical = document.createElement('link');
-            canonical.setAttribute('rel', 'canonical');
-            document.head.appendChild(canonical);
-        }
-        canonical.setAttribute('href', href);
-    }
-
-    function formatProfileRecordForMeta(profile) {
-        var wins = Number(profile && profile.wins);
-        var losses = Number(profile && profile.losses);
-        var pushes = Number(profile && profile.pushes);
-        if (!Number.isFinite(wins)) wins = 0;
-        if (!Number.isFinite(losses)) losses = 0;
-        if (!Number.isFinite(pushes)) pushes = 0;
-        var decisions = wins + losses;
-        var winRate = decisions > 0 ? Math.round((wins / decisions) * 1000) / 10 : null;
-        var record = wins + '-' + losses + '-' + pushes;
-        return winRate == null ? record : record + ' (' + winRate + '%)';
-    }
-
-    function updateProfileSeoMeta(profile) {
-        if (!profile || !profile.username) return;
-        var username = String(profile.username || '').trim();
-        var displayName = String(profile.display_name || username).trim();
-        var sports = Array.isArray(profile.favorite_sports) ? profile.favorite_sports.filter(Boolean) : [];
-        var sportText = sports.length ? sports.slice(0, 2).join('/') + ' ' : '';
-        var recordText = formatProfileRecordForMeta(profile);
-        var units = Number(profile.net_units);
-        var unitsText = Number.isFinite(units) ? ', ' + (units >= 0 ? '+' : '') + (Math.round(units * 100) / 100) + ' units' : '';
-        var title = displayName + ' (@' + username + ') Verified Pick Record | TrustMyRecord';
-        var description = displayName + ' has a verified ' + sportText + 'handicapping record of ' + recordText + unitsText + ' on TrustMyRecord.';
-        var profileUrl = 'https://trustmyrecord.com/profile/?user=' + encodeURIComponent(username);
-
-        document.title = title;
-        setCanonicalHref(profileUrl);
-        setMetaTag('meta[name="description"]', 'name', 'description', description);
-        setMetaTag('meta[property="og:url"]', 'property', 'og:url', profileUrl);
-        setMetaTag('meta[property="og:title"]', 'property', 'og:title', title);
-        setMetaTag('meta[property="og:description"]', 'property', 'og:description', description);
-        setMetaTag('meta[name="twitter:title"]', 'name', 'twitter:title', title);
-        setMetaTag('meta[name="twitter:description"]', 'name', 'twitter:description', description);
-    }
-
     // ======================== UNIFIED STATS ========================
     function getMarketTypeGroup(marketType) {
-        const canonical = canonicalMarketType(marketType);
-        return MARKET_TYPE_GROUPS.find(group => group.types.includes(canonical)) || null;
-    }
-
-    function canonicalMarketType(value) {
-        const key = String(value || '').trim().toLowerCase()
-            .replace(/&/g, ' and ')
-            .replace(/[^a-z0-9]+/g, '_')
-            .replace(/^_+|_+$/g, '');
-        if (!key) return '';
-        const compact = key.replace(/_/g, '');
-        const hasF5 = /(^|_)f5(_|$)/.test(key)
-            || /(^|_)first_?5(_|$)/.test(key)
-            || /(^|_)first_five(_|$)/.test(key)
-            || compact.indexOf('first5') !== -1
-            || compact.indexOf('firstfive') !== -1;
-        if (hasF5 && key.indexOf('team') !== -1 && key.indexOf('total') !== -1) return 'f5_team_totals';
-        if (hasF5 && key.indexOf('total') !== -1) return 'f5_totals';
-        if (key === 'team_total' || key === 'team_totals' || (key.indexOf('team') !== -1 && key.indexOf('total') !== -1)) return 'team_totals';
-        if (key === 'moneyline' || key === 'ml') return 'h2h';
-        if (key === 'spread') return 'spreads';
-        if (key === 'total') return 'totals';
-        if (key === 'f5_moneyline' || key === 'f5_ml' || key === 'first_five_moneyline' || key === 'first_5_moneyline') return 'f5_h2h';
-        if (key === 'f5_spread' || key === 'first_five_spread' || key === 'first_5_spread') return 'f5_spreads';
-        return key;
+        return MARKET_TYPE_GROUPS.find(group => group.types.includes(marketType)) || null;
     }
 
     function buildMarketTypeBreakdown(picks) {
         const graded = (picks || []).filter(p => p.status === 'won' || p.status === 'lost' || p.status === 'push' || p.status === 'pushed');
         return MARKET_TYPE_GROUPS.map(group => {
-            const groupPicks = graded.filter(p => group.types.includes(canonicalMarketType(p.market_type)));
+            const groupPicks = graded.filter(p => group.types.includes(p.market_type));
             const wins = groupPicks.filter(p => p.status === 'won').length;
             const losses = groupPicks.filter(p => p.status === 'lost').length;
             const pushes = groupPicks.filter(p => p.status === 'push' || p.status === 'pushed').length;
@@ -5331,25 +5187,40 @@
             if (pick.result_units != null && !isNaN(pick.result_units)) {
                 netUnits += parseFloat(pick.result_units);
             } else {
-                netUnits += pickPL(pick);
+                const units = pick.units || 1;
+                const odds = pick.odds_snapshot || pick.odds || -110;
+                if (pick.status === 'won') netUnits += odds < 0 ? units : (units * odds / 100);
+                else if (pick.status === 'lost') netUnits += odds < 0 ? -(units * Math.abs(odds) / 100) : -units;
             }
         });
 
         // ROI
         let totalRisked = 0;
         graded.forEach(pick => {
-            totalRisked += getPickRiskUnits(pick) || 0;
+            const units = pick.units || 1;
+            const odds = pick.odds_snapshot || pick.odds || -110;
+            totalRisked += odds < 0 ? (units * Math.abs(odds) / 100) : units;
         });
         const roi = totalRisked > 0 ? (netUnits / totalRisked) * 100 : 0;
 
-        // Streaks are calculated from chronological graded picks only.
-        // Pushes are graded but break/reset streaks; pending and void/canceled picks do not affect streaks.
-        const streakStats = window.TMR && typeof window.TMR.calculateStreaks === 'function'
-            ? window.TMR.calculateStreaks(graded)
-            : { currentStreak: 0, longestWinStreak: 0, longestLossStreak: 0 };
-        const currentStreak = streakStats.currentStreak;
-        const bestStreak = streakStats.longestWinStreak;
-        const worstStreak = streakStats.longestLossStreak;
+        // Streaks
+        const sorted = [...graded].sort((a, b) =>
+            new Date(a.locked_at || a.created_at || 0) - new Date(b.locked_at || b.created_at || 0));
+        let bestStreak = 0, worstStreak = 0, tempWin = 0, tempLoss = 0;
+        sorted.forEach(pick => {
+            if (pick.status === 'won') { tempWin++; tempLoss = 0; if (tempWin > bestStreak) bestStreak = tempWin; }
+            else if (pick.status === 'lost') { tempLoss++; tempWin = 0; if (tempLoss > worstStreak) worstStreak = tempLoss; }
+            else { tempWin = 0; tempLoss = 0; }
+        });
+        const reversed = [...sorted].reverse();
+        let cStreak = 0, cType = '';
+        for (const pick of reversed) {
+            if (pick.status === 'push' || pick.status === 'pushed') continue;
+            if (!cType) { cType = pick.status; cStreak = 1; }
+            else if (pick.status === cType) { cStreak++; }
+            else break;
+        }
+        const currentStreak = cType === 'won' ? cStreak : cType === 'lost' ? -cStreak : 0;
 
         // Averages
         const oddsArr = picks.filter(p => p.odds_snapshot != null).map(p => Number(p.odds_snapshot));
@@ -5391,53 +5262,10 @@
         return Number.isFinite(value) && value > 0 ? value : 1;
     }
 
-    function normalizeStakeModeValue(value) {
-        const mode = String(value || '').trim().toLowerCase();
-        if (mode === 'to_win' || mode === 'towin') return 'to_win';
-        if (mode === 'risk') return 'risk';
-        return '';
-    }
-
-    function calculateStakeValuesForPick(mode, amount, odds) {
-        const units = Number(amount);
-        const price = Number(odds);
-        if (!Number.isFinite(units) || units <= 0 || !Number.isFinite(price) || Math.abs(price) < 100) {
-            return { riskUnits: null, toWinUnits: null };
-        }
-        if (mode === 'to_win') {
-            return {
-                riskUnits: price < 0 ? units * Math.abs(price) / 100 : units * 100 / price,
-                toWinUnits: units
-            };
-        }
-        return {
-            riskUnits: units,
-            toWinUnits: price < 0 ? units * 100 / Math.abs(price) : units * price / 100
-        };
-    }
-
-    function getPickStakeInfo(pick) {
-        const risk = Number(pick && pick.risk_units);
-        const toWinRaw = pick && (pick.to_win_units != null ? pick.to_win_units : pick.win_units);
-        const toWin = Number(toWinRaw);
-        const mode = normalizeStakeModeValue(pick && (pick.stake_mode || pick.units_mode));
-        if (Number.isFinite(risk) && risk > 0 && Number.isFinite(toWin) && toWin > 0) {
-            return { mode: mode || 'stored', riskUnits: risk, toWinUnits: toWin };
-        }
-        if (!mode) return { mode: 'legacy_unknown', riskUnits: null, toWinUnits: null };
-        const values = calculateStakeValuesForPick(mode, pick && pick.units, getPickOdds(pick));
-        values.mode = mode;
-        return values;
-    }
-
     function getPickRiskUnits(pick) {
-        const stake = getPickStakeInfo(pick);
-        return Number.isFinite(stake.riskUnits) ? stake.riskUnits : null;
-    }
-
-    function getPickToWinUnits(pick) {
-        const stake = getPickStakeInfo(pick);
-        return Number.isFinite(stake.toWinUnits) ? stake.toWinUnits : null;
+        const units = getPickUnits(pick);
+        const odds = getPickOdds(pick);
+        return odds < 0 ? units * Math.abs(odds) / 100 : units;
     }
 
     function computeCoreLedgerStatsFromPicks(picks) {
@@ -5457,7 +5285,7 @@
         const netUnits = graded.reduce(function(total, pick) { return total + pickPL(pick); }, 0);
         const riskedUnits = graded.reduce(function(total, pick) { return total + getPickRiskUnits(pick); }, 0);
         const avgUnits = graded.length
-            ? graded.reduce(function(total, pick) { return total + (getPickRiskUnits(pick) || 0); }, 0) / graded.length
+            ? graded.reduce(function(total, pick) { return total + getPickUnits(pick); }, 0) / graded.length
             : 0;
         const validProbabilities = graded
             .map(function(pick) { return oddsToProbability(getPickOdds(pick)); })
@@ -5466,18 +5294,42 @@
             ? probabilityToAmerican(validProbabilities.reduce(function(total, value) { return total + value; }, 0) / validProbabilities.length)
             : null;
         const effectiveUnits = graded.reduce(function(total, pick) {
-            const units = getPickRiskUnits(pick);
+            const units = getPickUnits(pick);
             if (!units) return total;
             return total + (pickPL(pick) / units) * 3;
         }, 0);
 
         const chronological = graded.slice().sort(function(a, b) {
-            return new Date(a.graded_at || a.settled_at || a.event_completed_at || a.completed_at || a.locked_at || a.created_at || 0) -
-                new Date(b.graded_at || b.settled_at || b.event_completed_at || b.completed_at || b.locked_at || b.created_at || 0);
+            return new Date(a.locked_at || a.created_at || a.graded_at || 0) - new Date(b.locked_at || b.created_at || b.graded_at || 0);
         });
-        const streakStats = window.TMR && typeof window.TMR.calculateStreaks === 'function'
-            ? window.TMR.calculateStreaks(graded)
-            : { currentStreak: 0, longestWinStreak: 0, longestLossStreak: 0 };
+        let bestStreak = 0;
+        let currentWinRun = 0;
+        chronological.forEach(function(pick) {
+            const status = normalizeStatus(pick.status);
+            if (status === 'won') {
+                currentWinRun += 1;
+                bestStreak = Math.max(bestStreak, currentWinRun);
+            } else if (status === 'lost') {
+                currentWinRun = 0;
+            }
+        });
+
+        let streakType = '';
+        let streakCount = 0;
+        chronological.slice().reverse().some(function(pick) {
+            const status = normalizeStatus(pick.status);
+            if (status === 'push') return false;
+            if (!streakType) {
+                streakType = status;
+                streakCount = 1;
+                return false;
+            }
+            if (status === streakType) {
+                streakCount += 1;
+                return false;
+            }
+            return true;
+        });
 
         const lastGraded = chronological.length
             ? chronological[chronological.length - 1].graded_at || chronological[chronological.length - 1].locked_at || chronological[chronological.length - 1].created_at
@@ -5498,9 +5350,8 @@
             avgOdds,
             avgUnits,
             effectiveUnits,
-            currentStreak: streakStats.currentStreak,
-            bestStreak: streakStats.longestWinStreak,
-            worstStreak: streakStats.longestLossStreak,
+            currentStreak: streakType === 'won' ? streakCount : streakType === 'lost' ? -streakCount : 0,
+            bestStreak,
             lastGraded
         };
     }
@@ -5531,10 +5382,6 @@
         profileData.win_rate = stats.decisions ? stats.winRate : null;
         profileData.net_units = stats.netUnits;
         profileData.roi = stats.graded ? stats.roi : null;
-        profileData.current_streak = stats.currentStreak;
-        profileData.best_streak = stats.bestStreak;
-        profileData.worst_streak = stats.worstStreak || 0;
-        updateProfileSeoMeta(profileData);
         return stats;
     }
 
@@ -5607,9 +5454,9 @@
     // ======================== PROFIT/LOSS FOR A SINGLE PICK ========================
     function pickPL(pick) {
         if (pick.result_units != null && !isNaN(pick.result_units)) return parseFloat(pick.result_units);
-        const status = normalizeStatus(pick && pick.status);
-        if (status === 'won') return getPickToWinUnits(pick) || 0;
-        if (status === 'lost') return -(getPickRiskUnits(pick) || 0);
+        const u = pick.units || 1, o = pick.odds_snapshot || pick.odds || -110;
+        if (pick.status === 'won') return o < 0 ? u : (u * o / 100);
+        if (pick.status === 'lost') return o < 0 ? -(u * Math.abs(o) / 100) : -u;
         return 0;
     }
 
@@ -5639,20 +5486,13 @@
         return s;
     }
 
-    function formatPickLineValue(pick) {
-        const value = pick && pick.line_snapshot;
-        if (value == null || value === '' || isNaN(Number(value))) return '--';
-        const selection = String(pick && pick.selection || '').toLowerCase();
-        const market = String(pick && pick.market_type || '').toLowerCase();
-        const isTotal = market.indexOf('total') !== -1 || /(over|under)/.test(selection);
-        const isMoneyline = market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h') || /(moneyline|ml)/.test(selection);
-        if (isMoneyline) return '--';
-        return isTotal ? formatTotalLineValue(value) : formatLineValue(value);
-    }
-
     function formatPickDisplayValue(pick) {
+        if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
+            const formatted = window.TMR.formatPickDisplay(pick);
+            if (formatted && !/^(over|under)$/i.test(String(formatted).trim())) return formatted;
+        }
         const selection = String(pick && pick.selection || 'Pick').trim();
-        const line = formatPickLineValue(pick);
+        const line = formatLineValue(pick && pick.line_snapshot);
         const market = String(pick && pick.market_type || '').toLowerCase();
         const home = String(pick && pick.home_team || '').trim();
         const away = String(pick && pick.away_team || '').trim();
@@ -5663,53 +5503,21 @@
         const isSpread = market === 'spreads' || market.indexOf('spread') !== -1;
         const sport = String(pick && pick.sport_key || '').toLowerCase();
         const spreadLabel = sport.indexOf('icehockey') !== -1 ? 'Puck Line' : sport.indexOf('baseball') !== -1 ? 'Run Line' : 'Spread';
-        if (market === 'team_totals' && /\b(over|under)\b/i.test(selection)) {
-            const totalLine = formatTotalLineValue(pick && pick.line_snapshot);
-            const team = String(pick && (pick.team || pick.selected_team || pick.participant || pick.team_name) || '').trim();
-            const base = /\bteam\s+total\b/i.test(selection)
-                ? selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '').trim()
-                : selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '').trim().replace(/\b(over|under)\b/i, 'Team Total $1');
-            const withTeam = team && !base.toLowerCase().includes(team.toLowerCase()) ? team + ' ' + base : base;
-            return normalizeProfilePickDescription(totalLine !== '--' && withTeam.indexOf(totalLine) === -1 ? withTeam + ' ' + totalLine : withTeam, pick);
-        }
-        if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
-            const formatted = window.TMR.formatPickDisplay(pick);
-            if (formatted && !/^(over|under)$/i.test(String(formatted).trim())) {
-                return normalizeProfilePickDescription(String(formatted).replace(/\bTeam Total (Over|Under)\s+\+/gi, 'Team Total $1 '), pick);
-            }
-        }
         if (isTotal && selectionOnlySide) {
             const totalLine = formatTotalLineValue(pick && pick.line_snapshot);
             const base = matchup ? matchup + ' ' + selection : (market === 'team_totals' ? 'Team Total ' + selection : 'Total ' + selection);
-            return normalizeProfilePickDescription(totalLine !== '--' ? base + ' ' + totalLine : base, pick);
+            return totalLine !== '--' ? base + ' ' + totalLine : base;
         }
         if (isMoneyline && selection && !/\b(moneyline|ml)\b/i.test(selection)) {
-            return normalizeProfilePickDescription(selection + ' Moneyline', pick);
+            return selection + ' Moneyline';
         }
         if (isSpread && selection && !/\b(spread|run line|puck line)\b/i.test(selection)) {
-            return normalizeProfilePickDescription(selection + ' ' + spreadLabel + (line !== '--' && selection.indexOf(line) === -1 ? ' ' + line : ''), pick);
+            return selection + ' ' + spreadLabel + (line !== '--' && selection.indexOf(line) === -1 ? ' ' + line : '');
         }
         if (line !== '--' && !/\b(over|under|ml)\b/i.test(selection) && selection.indexOf(line) === -1) {
-            return normalizeProfilePickDescription(selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + line, pick);
+            return selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '') + ' ' + line;
         }
-        return normalizeProfilePickDescription(selection || 'Pick', pick);
-    }
-
-    function normalizeProfilePickDescription(description, pick) {
-        const market = String(pick && pick.market_type || '').toLowerCase();
-        let text = String(description || 'Pick').replace(/\s+/g, ' ').trim();
-        if (market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h')) {
-            text = text.replace(/\s+ML$/i, ' Moneyline');
-            if (!/\bmoneyline\b/i.test(text)) text += ' Moneyline';
-        }
-        if (market === 'team_totals' || market === 'team_total') {
-            text = text.replace(/\b(Team\s+Total\s+)?(Over|Under)\s+\+(\d+(?:\.\d+)?)\b/i, function(_, prefix, side, number) {
-                return (prefix || '') + side + ' ' + number;
-            });
-        } else if (market.indexOf('total') !== -1) {
-            text = text.replace(/\s+@\s+/g, ' / ');
-        }
-        return text;
+        return selection || 'Pick';
     }
 
     function formatUnitsValue(value) {
@@ -5721,13 +5529,6 @@
         if (value == null || isNaN(Number(value))) return '--';
         const num = Number(value);
         return (num >= 0 ? '+' : '') + num.toFixed(2) + 'u';
-    }
-
-    function formatStakeBreakdown(pick) {
-        const stake = getPickStakeInfo(pick);
-        const riskText = Number.isFinite(stake.riskUnits) ? formatUnitsValue(stake.riskUnits) : 'Needs review';
-        const winText = Number.isFinite(stake.toWinUnits) ? formatUnitsValue(stake.toWinUnits) : 'Needs review';
-        return '<div class="ledger-subline">Risk ' + riskText + ' / To win ' + winText + '</div>';
     }
 
     function normalizeStatus(status) {
@@ -5965,30 +5766,6 @@
         return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
     }
 
-    function isProfileTimeoutError(error) {
-        return !!(error && (error.code === 'TMR_TIMEOUT' || /timed out/i.test(error.message || '')));
-    }
-
-    function keepProfileHeaderPending(message) {
-        const el = document.getElementById('profileHeader');
-        if (!el) return;
-        const status = el.querySelector('.profile-bio-empty');
-        if (status) status.textContent = message || 'Profile is still loading verified data...';
-    }
-
-    async function fetchProfileDirect(profileLookup) {
-        const username = normalizeProfileLookup(profileLookup || requestedProfileLookup || profileUsername || '');
-        if (!username) throw new Error('Profile username is missing.');
-        const response = await withTimeout(fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(username), {
-            headers: { 'Accept': 'application/json' }
-        }), 15000, 'Direct profile request');
-        const data = await response.json().catch(function() { return null; });
-        if (!response.ok || !data || !(data.user || data.username)) {
-            throw new Error((data && (data.message || data.error)) || 'Profile not found');
-        }
-        return data;
-    }
-
     function setProfileHeaderFallback(message) {
         const el = document.getElementById('profileHeader');
         if (!el) return;
@@ -6042,120 +5819,13 @@
         return candidates;
     }
 
-    const PROFILE_CACHE_TTL_MS = 2 * 60 * 1000;
-    let profileBackgroundLoadsStarted = false;
-
-    function profileCacheKey(value) {
-        const key = profileLookupKey(normalizeProfileLookup(value || ''));
-        return key ? 'tmr_profile_cache_' + key : '';
-    }
-
-    function readCachedProfile(value) {
-        const key = profileCacheKey(value);
-        if (!key) return null;
-        try {
-            const cached = JSON.parse(sessionStorage.getItem(key) || 'null');
-            if (!cached || !cached.user || !cached.cached_at) return null;
-            if (Date.now() - Number(cached.cached_at) > PROFILE_CACHE_TTL_MS) {
-                sessionStorage.removeItem(key);
-                return null;
-            }
-            return cached.user;
-        } catch (_) {
-            return null;
-        }
-    }
-
-    function writeCachedProfile(user) {
-        if (!user) return;
-        const username = normalizeProfileLookup(user.username || user.handle || user.display_name || user.displayName || profileUsername || requestedProfileLookup);
-        const key = profileCacheKey(username);
-        if (!key) return;
-        try {
-            sessionStorage.setItem(key, JSON.stringify({ cached_at: Date.now(), user: user }));
-        } catch (_) {}
-    }
-
-    function profileAvatarUrlFrom(user) {
-        if (!user) return '';
-        return user.avatar_url || user.avatarUrl || user.avatar || user.profile_image_url || user.profileImageUrl || '';
-    }
-
-    function renderProfileIdentityShell() {
-        const el = document.getElementById('profileHeader');
-        if (!el || el.dataset.profileShellRendered === '1') return;
-        const name = normalizeProfileLookup(requestedProfileLookup || profileUsername || 'Profile');
-        const letter = (name || '?').charAt(0).toUpperCase();
-        el.dataset.profileShellRendered = '1';
-        el.innerHTML = '<div class="profile-info profile-info-loading">' +
-            '<div class="profile-identity-row">' +
-            '<div class="profile-avatar">' + escTxt(letter) + '</div>' +
-            '<div class="profile-identity-copy">' +
-            '<div class="profile-eyebrow">Trust My Record profile</div>' +
-            '<div class="profile-name">' + escTxt(name) + '</div>' +
-            '<div class="profile-handle">@' + escTxt(name) + '</div>' +
-            '<div class="profile-bio profile-bio-empty">Loading verified profile...</div>' +
-            '</div>' +
-            '</div>' +
-            '</div>';
-    }
-
-    function applyLoadedProfile(data) {
-        profileData = data && data.user ? data.user : data;
-        if (!profileData) {
-            throw new Error('User not found.');
-        }
-        profileData.avatar_url = profileAvatarUrlFrom(profileData) || null;
-        profileData.avatarUrl = profileData.avatar_url;
-        profileData.avatar = profileData.avatar_url;
-        profileUsername = normalizeProfileLookup(profileData.username || profileUsername || requestedProfileLookup);
-        const headerEl = document.getElementById('profileHeader');
-        if (headerEl) headerEl.dataset.profileShellRendered = '';
-        window.profileData = profileData;
-        profileUserId = profileData.id;
-        updateProfileSeoMeta(profileData);
-
-        if (currentUser && !isOwnProfile) {
-            isFollowingProfile = !!profileData.is_following;
-        }
-
-        renderProfileHeader(profileData);
-    }
-
-    function deferProfileWork(fn, delay) {
-        const run = function() { setTimeout(fn, delay || 0); };
-        if (window.requestAnimationFrame) {
-            window.requestAnimationFrame(run);
-        } else {
-            run();
-        }
-    }
-
-    function startProfileBackgroundLoads() {
-        if (profileBackgroundLoadsStarted || !profileData) return;
-        profileBackgroundLoadsStarted = true;
-        deferProfileWork(function() {
-            loadProfileSecondaryData();
-        }, 0);
-        deferProfileWork(function() {
-            loadAllPicks().catch(function(error) {
-                console.warn('[Profile] Verified pick history unavailable:', error);
-                renderProfileStatsLoadError('Verified pick stats could not be loaded from the public ledger, so record metrics are hidden instead of showing zeroes.');
-            });
-        }, 25);
-        deferProfileWork(function() {
-            loadAdvancedMetrics(profileData.username || profileUsername || '');
-        }, 75);
-    }
-
     async function fetchProfileWithFallbacks() {
         let lastError = null;
         const candidates = profileLookupCandidates();
         for (const candidate of candidates) {
             try {
-                const data = await withTimeout(api.getUserProfile(candidate), 12000, 'Profile request');
+                const data = await withTimeout(api.getUserProfile(candidate), 9000, 'Profile request');
                 profileUsername = normalizeProfileLookup((data && data.user && data.user.username) || (data && data.username) || candidate);
-                writeCachedProfile((data && data.user) || data);
                 return data;
             } catch (error) {
                 lastError = error;
@@ -6163,14 +5833,13 @@
             }
             try {
                 if (typeof api.searchUsers === 'function') {
-                    const searchData = await withTimeout(api.searchUsers(candidate, { limit: 8 }), 12000, 'Profile search request');
+                    const searchData = await withTimeout(api.searchUsers(candidate, { limit: 8 }), 9000, 'Profile search request');
                     const users = (searchData && searchData.users) || [];
                     const match = users.find(function(user) {
                         return profileLookupMatchesUser(candidate, user);
                     });
                     if (match) {
                         profileUsername = normalizeProfileLookup(match.username || candidate);
-                        writeCachedProfile(match);
                         return { user: match };
                     }
                 }
@@ -6185,6 +5854,7 @@
         }
         throw lastError || new Error('Profile not found');
     }
+
     function setAdvancedMetricsEmpty(message) {
         const statusEl = document.getElementById('profileAdvancedMetricsStatus');
         if (statusEl) statusEl.textContent = message || 'No verified metrics yet';
@@ -6231,20 +5901,6 @@
         };
     }
 
-    function readRememberedSessionUser() {
-        const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
-        for (const key of keys) {
-            try {
-                const raw = localStorage.getItem(key);
-                if (!raw) continue;
-                const parsed = JSON.parse(raw);
-                const user = parsed && (parsed.user || parsed);
-                if (user && (user.username || user.email)) return user;
-            } catch (_) {}
-        }
-        return null;
-    }
-
     // ======================== INIT ========================
     async function init() {
         try {
@@ -6256,15 +5912,6 @@
             if (typeof auth !== 'undefined' && auth.isLoggedIn()) {
                 currentUser = auth.getCurrentUser();
                 window.currentUser = currentUser;
-            }
-            if (!currentUser) {
-                currentUser = readRememberedSessionUser();
-                if (currentUser) {
-                    window.currentUser = currentUser;
-                    if (typeof auth !== 'undefined' && !auth.currentUser) {
-                        auth.currentUser = currentUser;
-                    }
-                }
             }
 
             if (!profileUsername && currentUser) profileUsername = currentUser.username;
@@ -6283,62 +5930,44 @@
 
     // ======================== LOAD PROFILE ========================
     async function loadProfile() {
-        let renderedCachedProfile = false;
         try {
             if (!api || typeof api.getUserProfile !== 'function') {
                 throw new Error('Profile service is unavailable.');
             }
 
-            renderProfileIdentityShell();
+            const data = await fetchProfileWithFallbacks();
+            profileData = data.user || data;
+            if (!profileData) {
+                throw new Error('User not found.');
+            }
+            // Expose globally so inline onclick handlers (affiliation CTA, etc)
+            // can read the username for per-user localStorage keys.
+            window.profileData = profileData;
+            profileUserId = profileData.id;
 
-            const cachedProfile = readCachedProfile(profileUsername || requestedProfileLookup);
-            if (cachedProfile) {
-                applyLoadedProfile({ user: cachedProfile });
-                renderedCachedProfile = true;
+            if (currentUser && !isOwnProfile) {
+                isFollowingProfile = !!profileData.is_following;
             }
 
-            const data = await fetchProfileWithFallbacks();
-            applyLoadedProfile(data);
-            startProfileBackgroundLoads();
+            renderProfileHeader(profileData);
+            loadProfileSecondaryData();
+            loadAllPicks().catch(function(error) {
+                console.warn('[Profile] Verified pick history unavailable:', error);
+                renderProfileStatsLoadError('Verified pick stats could not be loaded from the public ledger, so record metrics are hidden instead of showing zeroes.');
+            });
+            loadAdvancedMetrics(profileData.username || profileUsername || '');
             analyticsTrackPickHistoryView({
                 view_type: isOwnProfile ? 'own' : 'public',
                 username: profileData.username || profileUsername || '',
                 display_name: profileData.display_name || profileData.username || ''
             });
         } catch (error) {
-            if (renderedCachedProfile && profileData) {
-                console.warn('[Profile] Fresh profile refresh failed; keeping cached profile:', error);
-                startProfileBackgroundLoads();
-                return;
-            }
-            if (isProfileTimeoutError(error)) {
-                console.warn('[Profile] Profile lookup timed out; keeping identity shell visible:', error);
-                keepProfileHeaderPending('Profile is still loading verified data...');
-                setTimeout(function() {
-                    fetchProfileWithFallbacks().then(function(data) {
-                        applyLoadedProfile(data);
-                        startProfileBackgroundLoads();
-                    }).catch(function(retryError) {
-                        console.warn('[Profile] Deferred profile retry failed:', retryError);
-                        keepProfileHeaderPending('Verified profile data is taking longer than expected.');
-                    });
-                }, 1500);
-                return;
-            }
-            try {
-                const directData = await fetchProfileDirect(requestedProfileLookup || profileUsername);
-                console.warn('[Profile] API wrapper lookup failed; direct public profile fetch recovered:', error);
-                applyLoadedProfile(directData);
-                startProfileBackgroundLoads();
-                return;
-            } catch (directError) {
-                console.warn('[Profile] Direct public profile recovery failed:', directError);
-            }
             console.error('[Profile] Profile load failed:', error);
             document.querySelectorAll('.summary-bar, .picks-section, .analytics-section').forEach(el => el.style.display = 'none');
             setProfileHeaderFallback('We could not find a profile for "' + (requestedProfileLookup || profileUsername || 'this user') + '".');
         }
     }
+
     async function loadProfileSecondaryData() {
         if (!profileData || !profileUsername) return;
         const renderUpdatedHeader = function() {
@@ -6499,10 +6128,7 @@
         }
         // Drawdown card cells.
         const dd = data.drawdown || {};
-        if (dd.max_drawdown != null) {
-            const v = Number(dd.max_drawdown);
-            set('advMaxDrawdown', (v > 0 ? '-' + v.toFixed(2) : v.toFixed(2)) + 'u', { signed: v || -1 });
-        }
+        if (dd.max_drawdown != null) set('advMaxDrawdown', Number(dd.max_drawdown).toFixed(2) + 'u', { signed: -1 });
         if (dd.peak_units   != null) set('advPeakUnits',   Number(dd.peak_units).toFixed(2) + 'u',   { signed: 1 });
 
         // ===== Rolling form (last 25 / 50 / 100) =====
@@ -6641,7 +6267,7 @@
         setCard(
             'profileAdvZScore',
             s.z_score != null ? fmtSigned(s.z_score, '', 2) : null,
-            s.z_score != null ? 'Skill-vs-luck signal' : 'Requires larger graded sample',
+            s.z_score != null ? 'Odds-adjusted skill-vs-luck signal' : 'Requires larger graded sample',
             s.z_score != null ? Number(s.z_score) : null
         );
         setCard(
@@ -6867,20 +6493,20 @@
         const TMRX_LABELS = {
             // sports
             baseball_mlb: 'MLB', basketball_nba: 'NBA', icehockey_nhl: 'NHL',
-            americanfootball_nfl: 'NFL', americanfootball_ncaaf: 'College Football',
-            basketball_ncaab: 'College Basketball', soccer_epl: 'EPL', mma_mixed_martial_arts: 'MMA',
+            americanfootball_nfl: 'NFL', americanfootball_ncaaf: 'NCAAF',
+            basketball_ncaab: 'NCAAB', soccer_epl: 'EPL', mma_mixed_martial_arts: 'MMA',
             // markets
             h2h: 'Moneyline', spreads: 'Spreads', totals: 'Totals',
             team_totals: 'Team Totals',
-            f5_h2h: 'First 5 Innings Moneyline', f5_spreads: 'First 5 Innings Run Line', f5_totals: 'First 5 Innings Total', f5_team_totals: 'First 5 Innings Team Total',
+            f5_h2h: 'F5 ML', f5_spreads: 'F5 Spread', f5_totals: 'F5 Total',
             first_half_h2h: '1H ML', first_half_spreads: '1H Spread', first_half_totals: '1H Total',
             second_half_h2h: '2H ML', second_half_spreads: '2H Spread', second_half_totals: '2H Total',
             period_1_h2h: 'P1 ML', period_1_spreads: 'P1 Spread', period_1_totals: 'P1 Total',
             alt_spreads: 'Alt Spread', alt_totals: 'Alt Total',
             // odds buckets
-            favorite: 'Favorite (-101 or lower)',
-            underdog: 'Dog (+100 or higher)',
-            even_money: 'Even Money (-100)',
+            heavy_favorite: 'Heavy Fav (-200+)', favorite: 'Favorite (-110 to -200)',
+            underdog: 'Dog (+100 to +200)',
+            big_underdog: 'Longshot (+201+)',
             // unit buckets
             '0.5_to_1u': '0.5u – 1u', '1.5_to_2u': '1.5u – 2u',
             '2.5_to_3u': '2.5u – 3u', '3u_plus': '3u +',
@@ -6902,10 +6528,10 @@
             const known = {
                 baseball_mlb: ['Baseball', 'MLB'],
                 basketball_nba: ['Basketball', 'NBA'],
-                basketball_ncaab: ['Basketball', 'College Basketball'],
+                basketball_ncaab: ['Basketball', 'NCAAB'],
                 icehockey_nhl: ['Hockey', 'NHL'],
                 americanfootball_nfl: ['Football', 'NFL'],
-                americanfootball_ncaaf: ['Football', 'College Football'],
+                americanfootball_ncaaf: ['Football', 'NCAAF'],
                 soccer_epl: ['Soccer', 'EPL'],
                 mma_mixed_martial_arts: ['MMA', 'MMA']
             };
@@ -7049,7 +6675,7 @@
         }
         if (dd.max_drawdown != null) {
             const v = Number(dd.max_drawdown);
-            setAdv('max_drawdown', (v > 0 ? '-' + v.toFixed(2) : v.toFixed(2)) + 'u', v || -1);
+            setAdv('max_drawdown', '-' + v.toFixed(2) + 'u', -1);
         }
         if (dd.peak_units != null) {
             const v = Number(dd.peak_units);
@@ -7081,7 +6707,7 @@
                 const sx = i => padX + (i / xRng) * (W - padX * 2);
                 const sy = y => H - padY - ((y - yMin) / yRng) * (H - padY * 2);
                 const last = ys[ys.length - 1];
-                const stroke = last >= 0 ? '#22D3EE' : '#ff3333';
+                const stroke = last >= 0 ? '#22D3EE' : '#fca5a5';
                 const fillTop = last >= 0 ? 'rgba(34,211,238,0.40)' : 'rgba(252,165,165,0.30)';
                 const d = eq.map((p, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(Number(p.units) || 0).toFixed(2)).join(' ');
                 const zeroY = sy(0).toFixed(2);
@@ -7090,8 +6716,8 @@
                 const guideY2 = (H - padY).toFixed(2);
                 const svgMarkup =
                     '<defs><linearGradient id="tmrxEqGrad" x1="0" y1="0" x2="0" y2="1">' +
-                    '<stop offset="0" stop-color="' + (last >= 0 ? '#22D3EE' : '#ff3333') + '" stop-opacity=".40"/>' +
-                    '<stop offset="1" stop-color="' + (last >= 0 ? '#22D3EE' : '#ff3333') + '" stop-opacity="0"/>' +
+                    '<stop offset="0" stop-color="' + (last >= 0 ? '#22D3EE' : '#fca5a5') + '" stop-opacity=".40"/>' +
+                    '<stop offset="1" stop-color="' + (last >= 0 ? '#22D3EE' : '#fca5a5') + '" stop-opacity="0"/>' +
                     '</linearGradient></defs>' +
                     '<line x1="0" y1="' + guideY1 + '" x2="' + W + '" y2="' + guideY1 + '" stroke="#1F3350" stroke-dasharray="4 4"/>' +
                     '<line x1="0" y1="' + zeroY + '" x2="' + W + '" y2="' + zeroY + '" stroke="rgba(148,163,184,0.32)" stroke-dasharray="3 4"/>' +
@@ -7114,7 +6740,7 @@
         }
         if (dd.max_drawdown != null) {
             const v = Number(dd.max_drawdown);
-            setDd('tmrxDdMax', (v > 0 ? '-' + v.toFixed(2) : v.toFixed(2)) + 'u', v || -1);
+            setDd('tmrxDdMax', '-' + v.toFixed(2) + 'u', -1);
         }
         if (st.worst != null) {
             const v = Math.abs(Number(st.worst));
@@ -7257,7 +6883,7 @@
             return (x > 0 ? '+' : '') + Math.round(x);
         };
         const sportLabel = (k) => {
-            const m = { baseball_mlb:'MLB', basketball_nba:'NBA', icehockey_nhl:'NHL', americanfootball_nfl:'NFL', americanfootball_ncaaf:'College Football', basketball_ncaab:'College Basketball' };
+            const m = { baseball_mlb:'MLB', basketball_nba:'NBA', icehockey_nhl:'NHL', americanfootball_nfl:'NFL', americanfootball_ncaaf:'NCAAF', basketball_ncaab:'NCAAB' };
             return m[String(k||'').toLowerCase()] || (k || '—').toUpperCase();
         };
         const marketLabel = (k) => {
@@ -7266,29 +6892,28 @@
         const resultTag = (status) => {
             const s = String(status || 'pending').toLowerCase();
             const cls = s === 'won' ? 'pos' : s === 'lost' ? 'neg' : 'zero';
-            const resultCls = s === 'won' ? 'result-win' : s === 'lost' ? 'result-loss' : s === 'push' || s === 'pushed' ? 'result-push' : 'result-pending';
-            return '<span class="' + cls + ' ' + resultCls + '" style="font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:11px;">' + s + '</span>';
+            return '<span class="' + cls + '" style="font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:11px;">' + s + '</span>';
         };
         tbody.innerHTML = picks.map(p => {
             if (p.redacted) {
                 return '<tr><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td></tr>';
             }
             const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : '—';
+            const line = p.line_snapshot != null ? Number(p.line_snapshot).toFixed(1) : '—';
+            const units = p.units != null ? Number(p.units).toFixed(1) + 'u' : '—';
             const result = String(p.status || 'pending').toLowerCase();
             const net = p.result_units != null ? Number(p.result_units) : null;
             const netCls = net == null ? 'zero' : (net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero');
             const netTxt = net == null ? '—' : (net > 0 ? '+' : '') + net.toFixed(2) + 'u';
-            const risk = getPickRiskUnits(p);
-            const toWin = getPickToWinUnits(p);
             return '<tr>' +
                 '<td>' + fmtDate(p.created_at || p.locked_at) + '</td>' +
                 '<td>' + sportLabel(p.sport_key) + '</td>' +
                 '<td>' + game + '</td>' +
                 '<td class="name">' + capEsc(formatPickDisplayValue(p)) + '</td>' +
                 '<td>' + marketLabel(p.market_type) + '</td>' +
+                '<td class="num">' + line + '</td>' +
                 '<td class="num">' + fmtAmericanOdds(p.odds_snapshot) + '</td>' +
-                '<td class="num">' + (Number.isFinite(risk) ? risk.toFixed(2) + 'u' : 'Needs review') + '</td>' +
-                '<td class="num">' + (Number.isFinite(toWin) ? toWin.toFixed(2) + 'u' : 'Needs review') + '</td>' +
+                '<td class="num">' + units + '</td>' +
                 '<td>' + resultTag(p.status) + '</td>' +
                 '<td class="num ' + netCls + '">' + netTxt + '</td>' +
             '</tr>';
@@ -7347,7 +6972,7 @@
         const k = String(bucketKey);
         if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
         if (splitKey === 'by_market')       return marketTypeLabel(k);
-        if (splitKey === 'by_odds_bucket')  return ({favorite:'Favorite (-101 or lower)',underdog:'Dog (+100 or higher)',even_money:'Even Money (-100)'})[k] || k;
+        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
         if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
         if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
@@ -7359,7 +6984,7 @@
         const k = String(bucketKey);
         if (splitKey === 'by_sport')        return k.toUpperCase().replace(/_/g, ' ');
         if (splitKey === 'by_market')       return marketTypeLabel(k);
-        if (splitKey === 'by_odds_bucket')  return ({favorite:'Favorite (-101 or lower)',underdog:'Dog (+100 or higher)',even_money:'Even Money (-100)'})[k] || k;
+        if (splitKey === 'by_odds_bucket')  return ({heavy_favorite:'Heavy Fav (-200+)',favorite:'Favorite (-110 to -200)',underdog:'Dog (+100 to +200)',big_underdog:'Big Dog (+200+)'})[k] || k;
         if (splitKey === 'by_fav_dog')      return ({favorite:'Favorite',underdog:'Underdog'})[k] || k;
         if (splitKey === 'by_unit_size')    return ({'0.5_to_1u':'0.5–1u','1.5_to_2u':'1.5–2u','2.5_to_3u':'2.5–3u','3u_plus':'3u+'})[k] || k;
         if (splitKey === 'by_day_of_week')  return ({sun:'Sunday',mon:'Monday',tue:'Tuesday',wed:'Wednesday',thu:'Thursday',fri:'Friday',sat:'Saturday'})[k] || k;
@@ -7419,8 +7044,8 @@
         const sy = y => h - padY - ((y - yMin) / yRng) * (h - padY * 2);
         const d  = equityCurve.map((p, i) => (i ? 'L' : 'M') + sx(i).toFixed(2) + ' ' + sy(Number(p.units) || 0).toFixed(2)).join(' ');
         const last = ys[ys.length - 1];
-        const stroke = last >= 0 ? '#4ade80' : '#ff3333';
-        const fillStop = last >= 0 ? 'rgba(74,222,128,0.18)' : 'rgba(255,51,51,0.18)';
+        const stroke = last >= 0 ? '#4ade80' : '#f87171';
+        const fillStop = last >= 0 ? 'rgba(74,222,128,0.18)' : 'rgba(248,113,113,0.18)';
         const zeroY = sy(0);
         const fill = d + ' L' + sx(xRng).toFixed(2) + ' ' + zeroY.toFixed(2) + ' L' + sx(0).toFixed(2) + ' ' + zeroY.toFixed(2) + ' Z';
         el.style.padding = '0';
@@ -7463,8 +7088,8 @@
         el.style.color = 'inherit'; el.style.font = 'inherit';
         el.style.letterSpacing = '0'; el.style.textTransform = 'none';
         el.innerHTML = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" style="width:100%;height:100%;display:block;">'
-            + '<path d="' + fill + '" fill="rgba(255,51,51,0.18)" stroke="none"/>'
-            + '<path d="' + d + '" fill="none" stroke="#ff3333" stroke-width="2"/>'
+            + '<path d="' + fill + '" fill="rgba(248,113,113,0.18)" stroke="none"/>'
+            + '<path d="' + d + '" fill="none" stroke="#f87171" stroke-width="2"/>'
             + '<text x="' + (w - padX) + '" y="' + (padY - 4) + '" text-anchor="end" font-size="10" fill="#94a3b8">'
             + 'Max DD ' + maxDd.toFixed(2) + 'u</text>'
             + '</svg>';
@@ -7487,7 +7112,7 @@
             const x = padX + i * barW;
             const bh = (Math.abs(v) / maxAbs) * (h / 2 - padY);
             const y  = v >= 0 ? zeroY - bh : zeroY;
-            const c  = v > 0 ? '#4ade80' : v < 0 ? '#ff3333' : 'rgba(255,255,255,0.3)';
+            const c  = v > 0 ? '#4ade80' : v < 0 ? '#f87171' : 'rgba(255,255,255,0.3)';
             return '<rect x="' + (x + 1).toFixed(1) + '" y="' + y.toFixed(1) + '" width="' + Math.max(1, barW - 2).toFixed(1) + '" height="' + Math.max(1, bh).toFixed(1) + '" fill="' + c + '"/>';
         }).join('');
         const wins = deltas.filter(v => v > 0).length;
@@ -7512,7 +7137,7 @@
         const rows = data.map(b => {
             const roi   = Number(b.roi) || 0;
             const pct   = Math.min(100, (Math.abs(roi) / maxAbs) * 100);
-            const color = roi >= 0 ? '#4ade80' : '#ff3333';
+            const color = roi >= 0 ? '#4ade80' : '#f87171';
             const label = formatBucketLabel(splitKey, b.key);
             const meta  = (Number(b.wins) || 0) + '-' + (Number(b.losses) || 0) + (b.pushes ? '-' + b.pushes : '');
             return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">'
@@ -7715,7 +7340,7 @@
 
     function pmSportLabel(s) {
         if (!s) return '—';
-        const map = { 'baseball_mlb':'MLB', 'basketball_nba':'NBA', 'basketball_ncaab':'College Basketball', 'icehockey_nhl':'NHL', 'americanfootball_nfl':'NFL', 'americanfootball_ncaaf':'College Football' };
+        const map = { 'baseball_mlb':'MLB', 'basketball_nba':'NBA', 'basketball_ncaab':'NCAAB', 'icehockey_nhl':'NHL', 'americanfootball_nfl':'NFL', 'americanfootball_ncaaf':'NCAAF' };
         if (map[s]) return map[s];
         return String(s).toUpperCase().replace(/_/g, ' ');
     }
@@ -7725,9 +7350,10 @@
     function pmOddsBucket(odds) {
         const o = Number(odds);
         if (!Number.isFinite(o)) return null;
-        if (o <= -101) return 'favorite';
-        if (o >= 100) return 'underdog';
-        return 'even_money';
+        if (o < -200) return 'heavy_favorite';
+        if (o < 0) return 'favorite';
+        if (o <= 200) return 'underdog';
+        return 'big_underdog';
     }
     function pmResultClass(p) {
         const r = String(p.result || p.status || '').toLowerCase();
@@ -7780,7 +7406,7 @@
     }
 
     function normalizeCapMarket(market) {
-        const m = canonicalMarketType(market);
+        const m = String(market || '').toLowerCase();
         if (['h2h','moneyline'].includes(m)) return 'moneyline';
         if (m.includes('spread')) return 'spread';
         if (m === 'team_totals' || m === 'team_total') return 'team_total';
@@ -7788,20 +7414,6 @@
         if (m.includes('f5') || m.includes('first_five')) return 'first_five';
         if (m.includes('prop')) return 'props';
         return m || 'other';
-    }
-
-    function marketSlug(value) {
-        return String(value || '')
-            .trim()
-            .toLowerCase()
-            .replace(/&/g, 'and')
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-+|-+$/g, '');
-    }
-
-    function buildProfileMarketUrl(marketType) {
-        const user = (profileData && profileData.username) || profileUsername || urlParams.get('user') || '';
-        return '/profile-market.html?user=' + encodeURIComponent(user) + '&market=' + encodeURIComponent(marketSlug(marketType));
     }
 
     function capMarketLabel(key) {
@@ -7815,8 +7427,7 @@
     function isCapGraded(p) { return ['won','lost','push'].includes(capStatus(p)); }
     function capDateMs(p) { return new Date((p && (p.locked_at || p.created_at || p.graded_at)) || 0).getTime(); }
     function capOdds(p) { return Number(p && (p.odds_snapshot != null ? p.odds_snapshot : p.odds)); }
-    function capUnits(p) { const n = getPickRiskUnits(p); return Number.isFinite(n) ? n : 0; }
-    function capToWinUnits(p) { const n = getPickToWinUnits(p); return Number.isFinite(n) ? n : 0; }
+    function capUnits(p) { const n = Number(p && p.units); return Number.isFinite(n) ? n : 0; }
     function capPL(p) { const n = Number(p && p.result_units); return Number.isFinite(n) ? n : 0; }
 
     function getCapperFilteredPicks() {
@@ -7894,10 +7505,14 @@
         return american > 0 ? '+' + american : String(american);
     }
     function computeBestStreak(rows) {
-        const streaks = window.TMR && typeof window.TMR.calculateStreaks === 'function'
-            ? window.TMR.calculateStreaks(rows || [])
-            : { longestWinStreak: 0 };
-        return streaks.longestWinStreak;
+        const chrono = (rows || []).slice().sort((a, b) => capDateMs(a) - capDateMs(b));
+        let cur = 0, best = 0;
+        for (const p of chrono) {
+            const s = capStatus(p);
+            if (s === 'won') { cur++; if (cur > best) best = cur; }
+            else if (s === 'lost') { cur = 0; }
+        }
+        return best;
     }
 
     function renderCapperMonitor() {
@@ -7941,13 +7556,18 @@
         if (second) {
             const decided = stats.wins + stats.losses;
             const avgUnitsVal = stats.picks ? (rows.reduce((s, p) => s + capUnits(p), 0) / stats.picks) : 0;
-            const streakStats = window.TMR && typeof window.TMR.calculateStreaks === 'function'
-                ? window.TMR.calculateStreaks(rows || [])
-                : { currentStreak: 0, longestWinStreak: 0 };
-            const bestStreak = streakStats.longestWinStreak;
-            const currentStreak = window.TMR && typeof window.TMR.formatStreak === 'function'
-                ? window.TMR.formatStreak(streakStats.currentStreak)
-                : '0';
+            const bestStreak = computeBestStreak(rows);
+            const currentStreak = (function () {
+                const chrono = rows.slice().sort((a, b) => capDateMs(b) - capDateMs(a));
+                let n = 0, last = '';
+                for (const p of chrono) {
+                    const s = capStatus(p);
+                    if (s !== 'won' && s !== 'lost') continue;
+                    if (!last) last = s;
+                    if (s === last) n++; else break;
+                }
+                return last === 'won' ? n + 'W' : last === 'lost' ? n + 'L' : '0';
+            })();
             const sCards = [
                 ['Avg Odds',       formatAvgOddsForOverview(rows),       'capper-neutral', '\u{1F3AF}'],
                 ['Avg Units',      stats.picks ? avgUnitsVal.toFixed(2) + 'u' : 'N/A', 'capper-neutral', '\u{1F4D0}'],
@@ -7993,12 +7613,20 @@
             ['NHL', p => pmSportLabel(p.sport_key) === 'NHL'],
             ['NCAAB', p => pmSportLabel(p.sport_key) === 'NCAAB']
         ]);
-        renderCapBreakdown('capTableMarket', rows, buildCapMarketBuckets(rows));
+        renderCapBreakdown('capTableMarket', rows, [
+            ['Team Totals', p => normalizeCapMarket(p.market_type) === 'team_total'],
+            ['Totals', p => normalizeCapMarket(p.market_type) === 'total'],
+            ['Moneyline', p => normalizeCapMarket(p.market_type) === 'moneyline'],
+            ['Spread', p => normalizeCapMarket(p.market_type) === 'spread'],
+            ['First Five', p => normalizeCapMarket(p.market_type) === 'first_five'],
+            ['Props', p => normalizeCapMarket(p.market_type) === 'props']
+        ]);
         renderCapBreakdown('capTableUnits', rows, [1,2,3,4,5].map(n => [n + 'u Picks', p => Math.round(capUnits(p)) === n]));
         renderCapBreakdown('capTableOdds', rows, [
-            ['Favorite (-101 or lower)', p => capOdds(p) <= -101],
-            ['Dog (+100 or higher)', p => capOdds(p) >= 100],
-            ['Even Money (-100)', p => capOdds(p) === -100]
+            ['Heavy Favorite', p => capOdds(p) < -200],
+            ['Favorite (-110 to -200)', p => capOdds(p) >= -200 && capOdds(p) < 0],
+            ['Dog (+100 to +200)', p => capOdds(p) >= 100 && capOdds(p) <= 200],
+            ['Big Underdog', p => capOdds(p) > 200]
         ]);
         renderCapBreakdown('capTableFavDog', rows, [
             ['Favorites', p => capOdds(p) < 0],
@@ -8016,30 +7644,16 @@
             el.innerHTML = '<div class="capper-empty">No graded picks yet.</div>';
             return;
         }
-        const body = buckets.map(([label, pred, href]) => {
+        const body = buckets.map(([label, pred]) => {
             const s = calcCapStats(rows.filter(p => pred(p)));
             const sportKeys = { MLB: 'baseball_mlb', NFL: 'americanfootball_nfl', NBA: 'basketball_nba', NHL: 'icehockey_nhl', NCAAB: 'basketball_ncaab', NCAAF: 'americanfootball_ncaaf' };
             const sportKey = id === 'capTableSport' ? sportKeys[label] : '';
             const categoryLabel = sportKey
                 ? '<a class="profile-sport-filter-link" href="' + escapeHtml(buildProfileSportFilterUrl(sportKey)) + '" onclick="return setProfileSportFilter(\'' + escapeHtml(sportKey) + '\', { updateUrl: true, scroll: true, clearOtherFilters: true });" title="View only ' + escapeHtml(label) + ' picks">' + escapeHtml(label) + '</a>'
-                : (href ? '<a class="profile-sport-filter-link" href="' + escapeHtml(href) + '" title="View ' + escapeHtml(label) + ' market breakdown">' + escapeHtml(label) + '<span class="profile-sport-view-indicator">View Breakdown</span></a>' : escapeHtml(label));
-            return '<tr' + (href ? ' class="profile-market-breakdown-row" data-href="' + escapeHtml(href) + '" onclick="if(!event.target.closest(\'a\')) window.location.href=this.dataset.href"' : '') + '><td>' + categoryLabel + '</td><td>' + s.picks + '</td><td>' + s.record + '</td><td class="' + (s.picks ? capValueClass(s.winRate - 50) : 'capper-neutral') + '">' + s.winRate.toFixed(1) + '%</td><td class="' + capValueClass(s.units) + '">' + capUnitsText(s.units) + '</td><td class="' + capValueClass(s.roi) + '">' + s.roi.toFixed(1) + '%</td></tr>';
+                : escapeHtml(label);
+            return '<tr><td>' + categoryLabel + '</td><td>' + s.picks + '</td><td>' + s.record + '</td><td class="' + (s.picks ? capValueClass(s.winRate - 50) : 'capper-neutral') + '">' + s.winRate.toFixed(1) + '%</td><td class="' + capValueClass(s.units) + '">' + capUnitsText(s.units) + '</td><td class="' + capValueClass(s.roi) + '">' + s.roi.toFixed(1) + '%</td></tr>';
         }).join('');
         el.innerHTML = '<table class="capper-table"><thead><tr><th>Category</th><th>Picks</th><th>Record</th><th>Win Rate</th><th>Units</th><th>ROI</th></tr></thead><tbody>' + body + '</tbody></table>';
-    }
-
-    function buildCapMarketBuckets(rows) {
-        const markets = Array.from(new Set((rows || [])
-            .filter(isCapGraded)
-            .map(p => canonicalMarketType(p.market_type))
-            .filter(Boolean)));
-        return markets
-            .map(marketType => [
-                marketTypeLabel(marketType),
-                p => canonicalMarketType(p.market_type) === marketType,
-                buildProfileMarketUrl(marketType)
-            ])
-            .sort((a, b) => a[0].localeCompare(b[0]));
     }
 
     function renderPendingSummary(rows) {
@@ -8077,15 +7691,16 @@
             const status = capStatus(p);
             const pl = isCapGraded(p) ? capPL(p) : 0;
             const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : (p.game || p.game_name || '—');
+            const line = p.line_snapshot != null ? p.line_snapshot : (p.line != null ? p.line : '—');
             const odds = capOdds(p);
             return '<tr>'
                 + '<td>' + (p.locked_at ? new Date(p.locked_at).toLocaleDateString() : '—') + '</td>'
                 + '<td>' + pmSportLabel(p.sport_key) + '</td>'
                 + '<td>' + capEsc(String(game)) + '</td>'
                 + '<td>' + capEsc(formatPickDisplayValue(p)) + '</td>'
+                + '<td>' + line + '</td>'
                 + '<td>' + (Number.isFinite(odds) ? (odds > 0 ? '+' : '') + odds : '—') + '</td>'
                 + '<td>' + capUnits(p).toFixed(2) + 'u</td>'
-                + '<td>' + capToWinUnits(p).toFixed(2) + 'u</td>'
                 + '<td><span class="capper-result ' + status + '">' + (status === 'won' ? 'Win' : status === 'lost' ? 'Loss' : status === 'push' ? 'Push' : 'Pending') + '</span></td>'
                 + '<td class="' + capValueClass(pl) + '">' + (isCapGraded(p) ? capUnitsText(pl) : '—') + '</td>'
                 + '</tr>';
@@ -8126,6 +7741,7 @@
 
         // Summary bar recomputes for the filtered subset.
         let wins = 0, losses = 0, pushes = 0, risked = 0, net = 0, probSum = 0, probCount = 0;
+        let zSample = 0, zActualWins = 0, zExpectedWins = 0, zVariance = 0;
         const impliedProb = (o) => {
             const x = Number(o);
             if (!Number.isFinite(x) || x === 0) return null;
@@ -8140,22 +7756,24 @@
             if (r === 'won') wins++;
             else if (r === 'lost') losses++;
             else if (r === 'push') pushes++;
-            const u = getPickRiskUnits(p) || 0;
-            const ru = pickPL(p);
+            const u = Number(p.units) || 0;
+            const ru = Number(p.result_units);
             risked += u;
-            net += ru;
+            if (Number.isFinite(ru)) net += ru;
             const ip = impliedProb(p.odds_snapshot);
             if (ip != null) { probSum += ip; probCount++; }
+            if ((r === 'won' || r === 'lost') && ip != null && ip > 0 && ip < 1) {
+                zSample++;
+                zActualWins += r === 'won' ? 1 : 0;
+                zExpectedWins += ip;
+                zVariance += ip * (1 - ip);
+            }
         });
         const decisions = wins + losses;
         const roiFrac = risked > 0 ? net / risked : 0;
         const ewp = decisions > 0 ? (110/210) * (1 + roiFrac) : null;
         const avgProb = probCount > 0 ? probSum / probCount : null;
-        let z = null;
-        if (decisions >= 5 && avgProb != null) {
-            const v = decisions * avgProb * (1 - avgProb);
-            if (v > 0) z = (wins - decisions * avgProb) / Math.sqrt(v);
-        }
+        const z = zSample >= 5 && zVariance > 0 ? (zActualWins - zExpectedWins) / Math.sqrt(zVariance) : null;
         const setSum = (id, val, signed) => {
             const el = document.getElementById(id);
             if (!el) return;
@@ -8177,26 +7795,20 @@
             return;
         }
         const fmtOdds = (o) => Number.isFinite(Number(o)) ? ((Number(o) > 0 ? '+' : '') + Number(o)) : '—';
-        const fmtLine = (p) => {
-            if (window.TMR && typeof window.TMR.formatPickLine === 'function') return window.TMR.formatPickLine(p);
-            const l = p && p.line_snapshot;
+        const fmtLine = (l) => {
             if (l == null || l === '') return '—';
             const n = Number(l);
             if (!Number.isFinite(n)) return String(l);
             let s = String(n);
             if (s.indexOf('.') !== -1) s = s.replace(/0+$/, '').replace(/\.$/, '');
-            const market = String(p && p.market_type || '').toLowerCase();
-            const selection = String(p && p.selection || '').toLowerCase();
-            if (market === 'h2h' || market === 'moneyline' || market.endsWith('_h2h') || /\b(moneyline|ml)\b/.test(selection)) return '-';
-            if (market.indexOf('total') !== -1 || /\b(over|under)\b/.test(selection)) return s.replace(/^-/, '');
-            if (market.indexOf('spread') !== -1 || market.indexOf('run_line') !== -1 || market.indexOf('puck_line') !== -1) return n > 0 ? '+' + s : s;
-            return s;
+            return n > 0 ? '+' + s : s;
         };
         const fmtUnits = (u) => Number.isFinite(Number(u)) ? Number(u).toFixed(2) + 'u' : '—';
         const fmtPL = (p) => {
             const r = pmResultClass(p);
+            const ru = Number(p.result_units);
             if (r === 'pending') return '<span class="pm-pending">—</span>';
-            const ru = pickPL(p);
+            if (!Number.isFinite(ru)) return '<span class="pm-pending">—</span>';
             const cls = ru > 0 ? 'pm-pos' : ru < 0 ? 'pm-neg' : '';
             return '<span class="' + cls + '">' + (ru >= 0 ? '+' : '') + ru.toFixed(2) + 'u</span>';
         };
@@ -8214,9 +7826,9 @@
                 + '<td>' + escHtml(pmSportLabel(p.sport_key)) + '</td>'
                 + '<td>' + escHtml(pmMarketLabel(p.market_type)) + '</td>'
                 + '<td class="pm-cell-pick">' + escHtml(formatPickDisplayValue(p)) + '</td>'
-                + '<td class="num">' + escHtml(fmtLine(p)) + '</td>'
+                + '<td class="num">' + escHtml(fmtLine(p.line_snapshot)) + '</td>'
                 + '<td class="num">' + escHtml(fmtOdds(p.odds_snapshot)) + '</td>'
-                + '<td class="num">Risked: ' + escHtml(fmtUnits(getPickRiskUnits(p))) + '<br>To Win: ' + escHtml(fmtUnits(getPickToWinUnits(p))) + '</td>'
+                + '<td class="num">' + escHtml(fmtUnits(p.units)) + '</td>'
                 + '<td>' + resultBadge + '</td>'
                 + '<td class="num">' + fmtPL(p) + '</td>'
                 + '</tr>';
@@ -8252,7 +7864,6 @@
             ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
             : 'N/A';
         const name = p.display_name || p.username;
-        const avatarUrl = profileAvatarUrlFrom(p);
         const letter = (p.username || '?').charAt(0).toUpperCase();
         const rankText = p.ranking_status || (currentLeaderboardRank != null ? 'Ranked #' + currentLeaderboardRank : 'Unranked');
         const ledgerStats = getProfileLedgerStats();
@@ -8349,16 +7960,11 @@
                 '<button class="btn btn-secondary" onclick="location.href=\'messages/?to=' + encodeURIComponent(p.username) + '\'">Message</button>' +
                 '<button class="btn btn-secondary" onclick="location.href=\'arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button>';
         }
-        // Public profile actions are safe to broadcast. Pending picks remain
-        // owner-only controls and must not be exposed on public profile views.
-        let shareActions =
-            '<button type="button" class="btn btn-secondary" onclick="openShareModal()" title="Share this profile" data-tmr-share-btn><i class="fas fa-share-alt" style="margin-right:6px;"></i>Share Profile</button>' +
-            '<button type="button" class="btn btn-secondary" onclick="showEmbedModal(\'stats\')" title="Embed public profile stats" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed Stats</button>';
-        if (isOwnProfile) {
-            shareActions +=
-                '<button type="button" class="btn btn-secondary" onclick="copyPendingPicksLink()" title="Share pending picks"><i class="fas fa-link" style="margin-right:6px;"></i>Share Pending Picks</button>' +
-                '<button type="button" class="btn btn-secondary" onclick="showEmbedModal(\'pending\')" title="Embed pending picks"><i class="fas fa-code" style="margin-right:6px;"></i>Embed Pending Picks</button>';
-        }
+        // Share + Embed always render, even for logged-out viewers, so any
+        // visitor can broadcast or embed a public profile.
+        const shareActions =
+            '<button class="btn btn-secondary" onclick="openShareModal()" title="Share this profile" data-tmr-share-btn><i class="fas fa-share-alt" style="margin-right:6px;"></i>Share</button>' +
+            '<button class="btn btn-secondary" onclick="showEmbedModal()" title="Embed this profile on your site" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed</button>';
         const actions = '<div class="profile-actions">' + primaryActions + shareActions + '</div>';
 
         // Headline (Twitter-style 140-char tagline). Always rendered; empty
@@ -8373,7 +7979,7 @@
 
         el.innerHTML = '<div class="profile-info">' +
             '<div class="profile-identity-row">' +
-            '<div class="profile-avatar">' + (avatarUrl ? '<img src="' + escTxt(avatarUrl) + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + escTxt(name) + ' avatar" loading="eager" decoding="async">' : letter) + '</div>' +
+            '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + name + '">' : letter) + '</div>' +
             '<div class="profile-identity-copy">' +
             '<div class="profile-eyebrow">Trust My Record profile</div>' +
             '<div class="profile-name">' + name + '</div>' +
@@ -8680,20 +8286,44 @@
         const sport = fmtSport(p.sport_key);
         const sc = sport.toLowerCase().replace(/\s/g, '');
         const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
+        const line = formatLineValue(p.line_snapshot);
         const sel = formatPickDisplayValue(p);
+        const matchup = (p.away_team && p.home_team) ? p.away_team + ' @ ' + p.home_team : (p.event_name || '--');
+        const units = formatUnitsValue(p.units);
         const status = normalizeStatus(p.status);
-        const pl = status === 'pending' ? null : pickPL(p);
-        const plClass = pl == null ? 'zero' : pl > 0 ? 'positive' : pl < 0 ? 'negative' : 'zero';
-        const plText = pl == null ? '--' : formatSignedUnits(pl);
+        const market = marketTypeLabel(p.market_type);
+        const closingLine = getClosingLineValue(p);
+        const clvValue = calculatePickClv(p);
+        const book = deriveBookName(p);
+
+        let pl = '', plc = 'zero';
+        if (status === 'won' || status === 'lost') {
+            const v = pickPL(p);
+            pl = formatSignedUnits(v);
+            plc = v > 0 ? 'positive' : v < 0 ? 'negative' : 'zero';
+        } else if (status === 'push') { pl = '+0.00u'; }
+        else { pl = '--'; }
+
+        const r = rtMap.get(p.id || (p.game_id + '|' + p.selection));
+        const rd = r != null ? formatSignedUnits(r) : '--';
+        const clvClass = clvValue > 0 ? 'positive' : clvValue < 0 ? 'negative' : 'zero';
 
         const rowClass = 'row-' + status;
         return '<tr class="' + rowClass + '">' +
-            '<td data-label="Date / Time"><div>' + dateStr + '</div><div class="ledger-muted">' + timeStr + '</div></td>' +
+            '<td data-label="Date"><div>' + dateStr + '</div><div class="ledger-muted">' + timeStr + '</div></td>' +
             '<td data-label="Sport"><span class="pick-sport ' + sc + '">' + sport + '</span></td>' +
-            '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div></td>' +
-            '<td data-label="Line">' + odds + '</td>' +
-            '<td data-label="Result"><span class="result-badge ' + status + ' ' + (status === 'won' ? 'result-win' : status === 'lost' ? 'result-loss' : status === 'push' ? 'result-push' : 'result-pending') + '">' + status.toUpperCase() + '</span></td>' +
-            '<td data-label="Result Units"><div class="profit-cell ' + plClass + '">' + plText + '</div>' + formatStakeBreakdown(p) + '</td>' +
+            '<td data-label="Game" class="col-game"><div class="ledger-pick-title">' + matchup + '</div><div class="ledger-game-meta">' + (p.event_name || 'Tracked pick') + '</div></td>' +
+            '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div><div class="ledger-pick-meta">' + (p.notes || '') + '</div></td>' +
+            '<td data-label="Market"><span class="ledger-type">' + market + '</span></td>' +
+            '<td data-label="Line">' + line + '</td>' +
+            '<td data-label="Odds">' + odds + '</td>' +
+            '<td data-label="Units">' + units + '</td>' +
+            '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
+            '<td data-label="Net Units" class="profit-cell ' + plc + '">' + pl + '<div class="ledger-subline">' + rd + '</div></td>' +
+            '<td data-label="Closing Line" class="ledger-closing">' + formatLineValue(closingLine) + '</td>' +
+            '<td data-label="CLV" class="profit-cell ' + clvClass + '">' + formatClvValue(clvValue) + '</td>' +
+            '<td data-label="Book">' + book + '</td>' +
+            '<td data-label="Status"><span class="ledger-status">' + (status === 'pending' ? 'Open' : 'Final') + '</span></td>' +
             '</tr>';
     }
 
@@ -8865,7 +8495,7 @@
             rows.push(
                 ['Effective Units', (adv.eU >= 0 ? '+' : '') + adv.eU.toFixed(2), 'Normalized to 3u sizing'],
                 ['Effective Win %', adv.eWP.toFixed(1) + '%', 'Equivalent win rate at -110'],
-                ['Z-Score', adv.zScore.toFixed(2), 'Signal strength versus implied probability'],
+                ['Odds-Adjusted Z-Score', adv.zScore == null ? 'N/A' : adv.zScore.toFixed(2), 'Signal strength versus break-even odds'],
                 ['Confidence', adv.confidence.toFixed(1) + '%', 'Confidence in edge estimate'],
                 ['Projected ROI', (adv.pROI >= 0 ? '+' : '') + adv.pROI.toFixed(1) + '%', 'Confidence-weighted projection'],
                 ['Profit Factor', adv.profitFactor, 'Gross won units divided by gross lost units'],
@@ -9033,9 +8663,10 @@
             return s === 'won' || s === 'lost';
         });
         const ranges = [
-            { label: 'Favorite (-101 or lower)', test: o => o <= -101 },
-            { label: 'Dog (+100 or higher)', test: o => o >= 100 },
-            { label: 'Even Money (-100)', test: o => o === -100 }
+            { label: 'Heavy Fav (-200+)', test: o => o <= -200 },
+            { label: 'Favorite (-110 to -200)', test: o => o <= -110 && o >= -200 },
+            { label: 'Dog (+100 to +200)', test: o => o >= 100 && o <= 200 },
+            { label: 'Longshot (+201+)', test: o => o >= 201 }
         ];
         const rows = [];
         for (const range of ranges) {
@@ -9166,20 +8797,27 @@
         const oddsArr = wl.map(p => p.odds_snapshot || p.odds || -110);
         const aop = oddsArr.length > 0 ? Math.round(oddsArr.reduce((a, b) => a + b, 0) / oddsArr.length) : -110;
 
-        // Z-Score: measures statistical significance
-        // z = (p_hat - 0.5) / sqrt(0.5 * 0.5 / n) for simple binomial
-        // Better: use implied probability weighted
-        const impliedProbs = wl.map(p => {
-            const o = p.odds_snapshot || p.odds || -110;
-            return o < 0 ? Math.abs(o) / (Math.abs(o) + 100) : 100 / (o + 100);
-        });
-        const avgImplied = impliedProbs.reduce((a, b) => a + b, 0) / impliedProbs.length;
-        const zScore = n >= 10 ? (winRate - avgImplied) / Math.sqrt(avgImplied * (1 - avgImplied) / n) : 0;
+        // Odds-adjusted Z-score: expected wins and variance are summed per pick.
+        const zParts = wl.reduce((acc, p) => {
+            const o = Number(p.odds_snapshot || p.odds || -110);
+            if (!Number.isFinite(o) || o === 0) return acc;
+            const prob = o < 0 ? Math.abs(o) / (Math.abs(o) + 100) : 100 / (o + 100);
+            if (prob <= 0 || prob >= 1) return acc;
+            acc.sample += 1;
+            acc.actual += String(p.status || p.result || '').toLowerCase() === 'won' ? 1 : 0;
+            acc.expected += prob;
+            acc.variance += prob * (1 - prob);
+            return acc;
+        }, { sample: 0, actual: 0, expected: 0, variance: 0 });
+        const zScore = zParts.sample >= 5 && zParts.variance > 0
+            ? (zParts.actual - zParts.expected) / Math.sqrt(zParts.variance)
+            : null;
+        const zScoreForConfidence = zScore == null ? 0 : zScore;
 
         // Confidence metric (PickMonitor-style)
         // confidence = prob(z) * r^2 * min(500, n) / 500
-        const probZ = 1 - 0.5 * Math.exp(-0.717 * zScore - 0.416 * zScore * zScore); // approx CDF
-        const rSquared = n > 1 ? 1 - (1 / (1 + (zScore * zScore / n))) : 0;
+        const probZ = 1 - 0.5 * Math.exp(-0.717 * zScoreForConfidence - 0.416 * zScoreForConfidence * zScoreForConfidence); // approx CDF
+        const rSquared = n > 1 ? 1 - (1 / (1 + (zScoreForConfidence * zScoreForConfidence / n))) : 0;
         const confidence = Math.max(0, Math.min(100, probZ * rSquared * Math.min(500, n) / 500 * 100));
 
         // Projected ROI (always less than actual ROI, weighted by confidence)
@@ -9306,7 +8944,7 @@
             cc('Eff. Win% (eWP)', adv.eWP.toFixed(1) + '%', 'Win% equiv at -110', adv.eWP > 52 ? 'cc-positive' : adv.eWP < 48 ? 'cc-negative' : '') +
             cc('Avg Odds (AOP)', (adv.aop > 0 ? '+' : '') + adv.aop, 'Per pick average', 'cc-blue') +
             cc('Avg Risked (AUR)', adv.aur.toFixed(2) + 'u', 'Per pick average', '') +
-            cc('Z-Score', adv.zScore.toFixed(2), adv.zScore > 2 ? 'Strong skill signal' : adv.zScore > 1 ? 'Possible skill' : 'Inconclusive', zCls) +
+            cc('Odds-Adjusted Z', adv.zScore == null ? 'N/A' : adv.zScore.toFixed(2), adv.zScore > 2 ? 'Strong skill signal' : adv.zScore > 1 ? 'Possible skill' : 'Inconclusive', zCls) +
             cc('Confidence', adv.confidence.toFixed(1) + '%', 'Skill probability', confCls) +
             cc('Projected ROI', fmtPct(adv.pROI), 'Forward-looking estimate', adv.pROI > 0 ? 'cc-positive' : 'cc-negative') +
             cc('Sharpe Ratio', adv.sharpe.toFixed(3), adv.sharpe > 0.5 ? 'Strong' : adv.sharpe > 0.2 ? 'Moderate' : 'Weak', adv.sharpe > 0.3 ? 'cc-positive' : '') +
@@ -9467,9 +9105,10 @@
 
     function getAdvancedStatsFilters() {
         const oddsMap = {
+            'heavy-fav': 'heavy_favorite',
             'fav': 'favorite',
             'dog': 'underdog',
-            'even': 'even_money'
+            'longshot': 'big_underdog'
         };
         return {
             sport: document.getElementById('filterSport').value || '',
@@ -9490,7 +9129,7 @@
     }
 
     function marketTypeLabel(value) {
-        const key = canonicalMarketType(value);
+        const key = String(value || '').toLowerCase();
         return {
             h2h: 'Moneyline',
             moneyline: 'Moneyline',
@@ -9504,10 +9143,9 @@
             second_half: 'Second Half',
             period_1: '1st Period',
             alt_lines: 'Alt Lines',
-            f5_h2h: 'First 5 Innings Moneyline',
-            f5_spreads: 'First 5 Innings Run Line',
-            f5_totals: 'First 5 Innings Total',
-            f5_team_totals: 'First 5 Innings Team Total',
+            f5_h2h: 'First 5 ML',
+            f5_spreads: 'First 5 Spread',
+            f5_totals: 'First 5 Totals',
             first_half_h2h: 'First Half ML',
             first_half_spreads: 'First Half Spread',
             first_half_totals: 'First Half Totals',
@@ -9524,9 +9162,10 @@
 
     function oddsBucketLabel(value) {
         return {
-            favorite: 'Favorite (-101 or lower)',
-            underdog: 'Dog (+100 or higher)',
-            even_money: 'Even Money (-100)'
+            heavy_favorite: 'Heavy Fav (-200+)',
+            favorite: 'Favorite (-110 to -200)',
+            underdog: 'Dog (+100 to +200)',
+            big_underdog: 'Longshot (+201+)'
         }[value] || value || 'Odds Range';
     }
 
@@ -9536,7 +9175,7 @@
             'spreads,spread': 'Spreads',
             'totals,total': 'Totals',
             'team_totals': 'Team Totals',
-            'f5_h2h,f5_spreads,f5_totals,f5_team_totals': 'First 5 Innings',
+            'f5_h2h,f5_spreads,f5_totals': 'First 5',
             'first_half_h2h,first_half_spreads,first_half_totals': 'First Half',
             'second_half_h2h,second_half_spreads,second_half_totals': 'Second Half',
             'period_1_h2h,period_1_spreads,period_1_totals': '1st Period',
@@ -9684,11 +9323,11 @@
         }
         if (odds) {
             filtered = filtered.filter(p => {
-                const o = Number(p.odds_snapshot != null ? p.odds_snapshot : (p.odds != null ? p.odds : -110));
-                if (!Number.isFinite(o)) return false;
-                if (odds === 'fav') return o <= -101;
-                if (odds === 'dog') return o >= 100;
-                if (odds === 'even') return o === -100;
+                const o = p.odds_snapshot || p.odds || -110;
+                if (odds === 'heavy-fav') return o <= -200;
+                if (odds === 'fav') return o < 0 && o >= -200;
+                if (odds === 'dog') return o >= 100 && o <= 200;
+                if (odds === 'longshot') return o >= 201;
                 return true;
             });
         }
@@ -9793,7 +9432,7 @@
             }
             if (result) parts.push(result.charAt(0).toUpperCase() + result.slice(1));
             if (odds) {
-                const oddsLabels = { 'fav': 'Favorites', 'dog': 'Dogs', 'even': 'Even Money' };
+                const oddsLabels = { 'heavy-fav': 'Heavy Favorites', 'fav': 'Favorites', 'dog': 'Dogs', 'longshot': 'Longshots' };
                 parts.push(oddsLabels[odds] || odds);
             }
             if (units) {
@@ -9953,7 +9592,7 @@
             const t = Number(i.total_picks) || (w + l + p);
             const wr = (w + l) > 0 ? ((w / (w + l)) * 100).toFixed(1) : '0.0';
             const units = Number(i.net_units) || 0;
-            return bRowExtended(marketTypeLabel(i.market_type), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units, buildProfileMarketUrl(i.market_type));
+            return bRowExtended(marketTypeLabel(i.market_type), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units);
         }).join('');
     }
 
@@ -10267,182 +9906,6 @@
         return 'https://trustmyrecord.com/profile/?user=' + encodeURIComponent(user) + '&' + params.toString();
     }
 
-    function tmrHtmlEscape(value) {
-        return String(value == null ? '' : value)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
-    function getProfileShareUser() {
-        return profileUsername || (profileData && profileData.username) || '';
-    }
-
-    function tmrFirstField(sources, keys) {
-        for (let i = 0; i < sources.length; i++) {
-            const source = sources[i];
-            if (!source || typeof source !== 'object') continue;
-            for (let j = 0; j < keys.length; j++) {
-                const key = keys[j];
-                if (Object.prototype.hasOwnProperty.call(source, key) && source[key] != null && source[key] !== '') {
-                    return source[key];
-                }
-            }
-        }
-        return null;
-    }
-
-    function tmrBooleanFieldEnabled(sources, keys) {
-        const value = tmrFirstField(sources, keys);
-        if (value === true || value === 1) return true;
-        if (typeof value === 'string') {
-            return ['1', 'true', 'yes', 'on', 'enabled', 'public'].includes(value.trim().toLowerCase());
-        }
-        return false;
-    }
-
-    function buildPendingPicksShareUrl() {
-        const user = getProfileShareUser();
-        const configured = tmrFirstField([profileData, currentUser], [
-            'pending_picks_share_url',
-            'pending_share_url',
-            'public_pending_url',
-            'pending_picks_public_url',
-            'pending_picks_url'
-        ]);
-        if (configured) return String(configured);
-        return 'https://trustmyrecord.com/profile/?user=' + encodeURIComponent(user) + '&tab=picks&result=pending';
-    }
-
-    function buildPendingPicksEmbedUrl(size) {
-        const user = getProfileShareUser();
-        const configured = tmrFirstField([profileData, currentUser], [
-            'pending_picks_embed_url',
-            'pending_embed_url',
-            'public_pending_embed_url'
-        ]);
-        if (configured) return String(configured);
-        return 'https://trustmyrecord.com/embed/?u=' + encodeURIComponent(user) + '&type=pending&size=' + encodeURIComponent(size || 'md') + '&theme=dark';
-    }
-
-    function getPendingPicksAccess(kind) {
-        if (!isOwnProfile) {
-            return {
-                enabled: false,
-                pendingCount: 0,
-                message: 'Pending picks are private for public profile views.'
-            };
-        }
-        const sources = [profileData];
-        if (isOwnProfile && currentUser) sources.push(currentUser);
-        const shareEnabled = tmrBooleanFieldEnabled(sources, [
-            'public_pending_picks_enabled',
-            'pending_picks_sharing_enabled',
-            'pending_pick_sharing_enabled',
-            'pending_sharing_enabled',
-            'share_pending_picks',
-            'allow_pending_pick_sharing',
-            'allow_pending_sharing',
-            'pending_picks_public',
-            'pending_public',
-            'public_pending_picks',
-            'expose_pending_picks'
-        ]);
-        const embedEnabled = tmrBooleanFieldEnabled(sources, [
-            'public_pending_picks_enabled',
-            'pending_picks_embedding_enabled',
-            'pending_pick_embedding_enabled',
-            'pending_embedding_enabled',
-            'embed_pending_picks',
-            'allow_pending_pick_embedding',
-            'allow_pending_embedding',
-            'pending_picks_embeddable',
-            'pending_embed_public'
-        ]);
-        const enabled = kind === 'embed' ? (embedEnabled || tmrBooleanFieldEnabled(sources, ['pending_picks_public_embed'])) : shareEnabled;
-        const pendingCount = Number((profileData && (profileData.pending_picks || profileData.pending || profileData.pending_count)) || 0);
-        return {
-            enabled: !!enabled,
-            pendingCount,
-            message: kind === 'embed'
-                ? 'Pending pick embedding is disabled or private for this profile.'
-                : 'Pending pick sharing is disabled or private for this profile.'
-        };
-    }
-
-    async function copyTextToClipboard(text, successMessage, analyticsTarget) {
-        if (!text) throw new Error('Nothing to copy yet.');
-        try {
-            if (navigator.clipboard && window.isSecureContext) {
-                await navigator.clipboard.writeText(text);
-            } else {
-                const ta = document.createElement('textarea');
-                ta.value = text;
-                ta.setAttribute('readonly', '');
-                ta.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;';
-                document.body.appendChild(ta);
-                ta.focus();
-                ta.select();
-                const ok = document.execCommand('copy');
-                ta.remove();
-                if (!ok) throw new Error('Clipboard copy failed.');
-            }
-            if (analyticsTarget) {
-                analyticsTrack('profile_share_copy_clicked', {
-                    username: getProfileShareUser(),
-                    copy_target: analyticsTarget
-                });
-            }
-            showToast(successMessage || 'Copied!', 'success');
-        } catch (error) {
-            console.error('[Profile] Clipboard action failed:', error);
-            showToast('Could not copy automatically. Open the modal and copy the text manually.', 'error');
-            throw error;
-        }
-    }
-
-    function showProfileActionMessage(title, message) {
-        const existing = document.getElementById('profileActionMessageModal');
-        if (existing) existing.remove();
-        const modal = document.createElement('div');
-        modal.id = 'profileActionMessageModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(7,12,20,0.78);z-index:10000;display:flex;align-items:center;justify-content:center;padding:22px;backdrop-filter:blur(10px);';
-        modal.innerHTML = '<div style="background:#0b1422;border:1px solid rgba(148,163,184,0.22);border-radius:18px;padding:24px;max-width:440px;width:min(100%,440px);box-shadow:0 24px 70px rgba(0,0,0,0.55);color:#eef4fb;">'
-            + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">'
-            + '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">' + tmrHtmlEscape(title) + '</h2>'
-            + '<button type="button" aria-label="Close" onclick="document.getElementById(\'profileActionMessageModal\').remove()" style="background:transparent;border:0;color:#97a8bc;font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1;">&times;</button>'
-            + '</div>'
-            + '<p style="color:#cfdbe8;font-size:.9rem;line-height:1.5;margin:0 0 18px 0;">' + tmrHtmlEscape(message) + '</p>'
-            + '<div style="display:flex;justify-content:flex-end;"><button type="button" class="btn btn-primary" onclick="document.getElementById(\'profileActionMessageModal\').remove()">OK</button></div>'
-            + '</div>';
-        document.body.appendChild(modal);
-        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
-    }
-
-    async function copyPendingPicksLink() {
-        try {
-            const user = getProfileShareUser();
-            if (!user) {
-                showToast('Profile not loaded yet', 'error');
-                return;
-            }
-            const access = getPendingPicksAccess('share');
-            if (!access.enabled) {
-                showProfileActionMessage('Pending picks are private', access.message);
-                showToast(access.message, 'info');
-                return;
-            }
-            await copyTextToClipboard(buildPendingPicksShareUrl(), 'Pending picks link copied!', 'pending_picks_link');
-        } catch (error) {
-            console.error('[Profile] Pending picks share failed:', error);
-            showToast((error && error.message) || 'Could not share pending picks.', 'error');
-        }
-    }
-
-    window.copyPendingPicksLink = copyPendingPicksLink;
-
     function buildShareText() {
         // Pull live ribbon text -- never fabricate. If a value is still
         // a placeholder (mdash) we just omit it from the share text.
@@ -10508,8 +9971,8 @@
             + '</div>'
             + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:6px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Profile link</div>'
             + '<div style="display:flex;gap:8px;align-items:stretch;">'
-            +   '<input id="shareCopyInput" readonly value="' + tmrHtmlEscape(copyUrl) + '" style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.78rem;outline:none;">'
-            +   '<button class="btn btn-primary" onclick="copyTextValue(\'shareCopyInput\', \'Profile link copied!\')" style="padding:10px 16px;font-size:.82rem;white-space:nowrap;"><i class="fas fa-link" style="margin-right:6px;"></i>Copy</button>'
+            +   '<input id="shareCopyInput" readonly value="' + copyUrl.replace(/"/g,'&quot;') + '" style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.78rem;outline:none;">'
+            +   '<button class="btn btn-primary" onclick="(function(){var el=document.getElementById(\'shareCopyInput\');el.select();document.execCommand(\'copy\');window.tmrTrackShare && window.tmrTrackShare(\'copy_link\');showToast(\'Profile link copied!\',\'success\');})()" style="padding:10px 16px;font-size:.82rem;white-space:nowrap;"><i class="fas fa-link" style="margin-right:6px;"></i>Copy</button>'
             + '</div>'
             + '</div>';
 
@@ -10572,43 +10035,13 @@
         ].join('\n');
     }
 
-    function tmrBuildPendingEmbedCode(user, size) {
-        const dim = TMR_EMBED_SIZES[size] || TMR_EMBED_SIZES.md;
-        const url = buildPendingPicksEmbedUrl(size);
-        return '<!-- TrustMyRecord pending picks widget -->\n'
-            + '<iframe\n'
-            + '  src="' + url + '"\n'
-            + '  title="TrustMyRecord pending picks for ' + user + '"\n'
-            + '  width="' + dim.w + '"\n'
-            + '  height="' + Math.max(dim.h, 260) + '"\n'
-            + '  frameborder="0"\n'
-            + '  loading="lazy"\n'
-            + '  referrerpolicy="strict-origin-when-cross-origin"\n'
-            + '  style="border:1px solid #1f2a3c;border-radius:14px;background:transparent;max-width:100%;"\n'
-            + '  scrolling="no">\n'
-            + '</iframe>';
-    }
-
-    function showEmbedModal(kind) {
+    function showEmbedModal() {
         const existing = document.getElementById('embedModal');
         if (existing) existing.remove();
 
         const user = profileUsername || (profileData && profileData.username) || '';
         if (!user) { showToast('Profile not loaded yet', 'error'); return; }
-        const embedKind = kind === 'pending' ? 'pending' : 'stats';
-        if (embedKind === 'pending') {
-            const access = getPendingPicksAccess('embed');
-            if (!access.enabled) {
-                showProfileActionMessage('Pending pick embedding is private', access.message);
-                showToast(access.message, 'info');
-                return;
-            }
-        }
         const profileShareUrl = (typeof buildShareUrl === 'function') ? buildShareUrl('trustmyrecord') : 'https://trustmyrecord.com/profile/?user=' + encodeURIComponent(user);
-        const modalTitle = embedKind === 'pending' ? 'Embed pending picks' : 'Embed verified profile';
-        const modalIntro = embedKind === 'pending'
-            ? 'Drop a live pending-picks view for <strong style="color:#2dd4bf;">@' + tmrHtmlEscape(user) + '</strong> on any website. Pick a size, copy the snippet.'
-            : 'Drop a live auto-updating <strong style="color:#2dd4bf;">@' + tmrHtmlEscape(user) + '</strong> badge on any website. Pick a size, copy the snippet.';
 
         const modal = document.createElement('div');
         modal.id = 'embedModal';
@@ -10624,10 +10057,10 @@
 
         modal.innerHTML = '<div style="background:#0b1422;border:1px solid rgba(148,163,184,0.22);border-radius:18px;padding:24px;max-width:720px;width:min(100%,720px);max-height:90vh;overflow-y:auto;box-shadow:0 24px 70px rgba(0,0,0,0.55);color:#eef4fb;">'
             + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">'
-            +   '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">' + modalTitle + '</h2>'
+            +   '<h2 style="font-size:1.15rem;font-weight:800;margin:0;">Embed verified profile</h2>'
             +   '<button type="button" aria-label="Close" onclick="document.getElementById(\'embedModal\').remove()" style="background:transparent;border:0;color:#97a8bc;font-size:1.4rem;cursor:pointer;padding:4px 8px;line-height:1;">&times;</button>'
             + '</div>'
-            + '<p style="color:#97a8bc;font-size:.86rem;margin:0 0 16px 0;">' + modalIntro + '</p>'
+            + '<p style="color:#97a8bc;font-size:.86rem;margin:0 0 16px 0;">Drop a live auto-updating <strong style="color:#2dd4bf;">@' + user + '</strong> badge on any website. Pick a size, copy the snippet.</p>'
 
             // Size selector
             + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Size</div>'
@@ -10657,7 +10090,7 @@
             // Profile link with UTM
             + '<div style="font-size:.74rem;color:#7b8aa1;margin-bottom:8px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;">Public profile link</div>'
             + '<div style="display:flex;gap:8px;align-items:stretch;margin-bottom:14px;">'
-            +   '<input id="profileShareLinkArea" readonly value="' + tmrHtmlEscape(embedKind === 'pending' ? buildPendingPicksShareUrl() : profileShareUrl) + '" style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;outline:none;">'
+            +   '<input id="profileShareLinkArea" readonly value="' + profileShareUrl.replace(/"/g,'&quot;') + '" style="flex:1;padding:10px 12px;border-radius:10px;border:1px solid rgba(148,163,184,0.22);background:#070d18;color:#2dd4bf;font-family:ui-monospace,Menlo,monospace;font-size:.76rem;outline:none;">'
             +   '<button class="btn btn-secondary" onclick="copyTextValue(\'profileShareLinkArea\', \'Profile link copied!\')" style="padding:10px 14px;font-size:.82rem;white-space:nowrap;"><i class="fas fa-link" style="margin-right:6px;"></i>Copy</button>'
             + '</div>'
 
@@ -10675,16 +10108,16 @@
         const refresh = () => {
             const dim = TMR_EMBED_SIZES[currentSize];
             // Snippets
-            document.getElementById('embedCodeArea').value = embedKind === 'pending' ? tmrBuildPendingEmbedCode(user, currentSize) : tmrBuildEmbedCode(user, currentSize);
+            document.getElementById('embedCodeArea').value = tmrBuildEmbedCode(user, currentSize);
             document.getElementById('scriptEmbedCodeArea').value = tmrBuildScriptCode(user);
             // Live preview iframe (rebuild so size attrs apply cleanly)
             const slot = document.getElementById('tmrEmbedPreviewSlot');
             slot.innerHTML = '';
             const ifr = document.createElement('iframe');
-            ifr.src = embedKind === 'pending' ? buildPendingPicksEmbedUrl(currentSize) : tmrEmbedIframeUrl(user, currentSize);
-            ifr.title = embedKind === 'pending' ? 'TrustMyRecord pending picks preview for ' + user : 'TrustMyRecord profile preview for ' + user;
+            ifr.src = tmrEmbedIframeUrl(user, currentSize);
+            ifr.title = 'TrustMyRecord profile preview for ' + user;
             ifr.width = String(dim.w);
-            ifr.height = String(embedKind === 'pending' ? Math.max(dim.h, 260) : dim.h);
+            ifr.height = String(dim.h);
             ifr.setAttribute('frameborder', '0');
             ifr.loading = 'lazy';
             ifr.referrerPolicy = 'strict-origin-when-cross-origin';
@@ -10710,29 +10143,21 @@
 
         analyticsTrack('profile_embed_modal_opened', {
             username: user,
-            kind: embedKind,
             profile_url: profileShareUrl
         });
     }
-    window.showEmbedModal = showEmbedModal;
 
-    async function copyTextValue(elementId, successMessage) {
+    function copyTextValue(elementId, successMessage) {
         const ta = document.getElementById(elementId);
-        if (!ta) {
-            showToast('Nothing to copy yet.', 'error');
-            return;
-        }
-        try {
-            await copyTextToClipboard(ta.value, successMessage || 'Copied!', elementId);
-            analyticsTrack('profile_embed_copy_clicked', {
-                username: profileUsername || '',
-                copy_target: elementId
-            });
-        } catch (error) {
-            console.error('[Profile] Copy field failed:', error);
-        }
+        if (!ta) return;
+        ta.select();
+        document.execCommand('copy');
+        analyticsTrack('profile_embed_copy_clicked', {
+            username: profileUsername || '',
+            copy_target: elementId
+        });
+        showToast(successMessage || 'Copied!', 'success');
     }
-    window.copyTextValue = copyTextValue;
 
     function profileEditString(value) {
         return String(value == null ? '' : value).trim();
@@ -10768,6 +10193,7 @@
             '<div style="flex:1;">' +
             '<input type="file" id="eAvatarFile" accept="image/png,image/jpeg,image/webp" style="display:none;">' +
             '<button type="button" id="eAvatarBtn" class="btn btn-secondary" style="padding:9px 16px;font-size:.82rem;margin-bottom:7px;border-radius:999px;background:#f8fafc;color:#162231;border:1px solid #d8dde6;">Upload Image</button>' +
+            '<div style="color:#637389;font-size:.78rem;">JPG, PNG, or WebP. Max 5MB.</div>' +
             '</div></div>' +
             '<label style="' + ls + '">Display Name</label><input id="eDN" value="' + (profileData.display_name || profileData.username || '') + '" style="' + is + '">' +
             '<label style="' + ls + '">Headline (one line, 140 chars)</label><input id="eHeadline" maxlength="140" placeholder="One-line public profile headline" value="' + ((profileData.headline || '').replace(/"/g,'&quot;')) + '" style="' + is + '">' +
@@ -11049,15 +10475,7 @@
       .tmrx-table tbody tr:hover td { background: rgba(34,211,238,.04); }
       .tmrx-table .name { font-weight: 800; color: #f1f5fb; }
       .tmrx-table .pos { color: #86efac; }
-      .tmrx-table .neg { color: #ff3333; }
-      body.profile-page.tmr-social-profile #tmrxTablePicks .result-win,
-      body.profile-page.tmr-social-profile .picks-table .result-win { color: #86efac !important; }
-      body.profile-page.tmr-social-profile #tmrxTablePicks .result-loss,
-      body.profile-page.tmr-social-profile .picks-table .result-loss { color: #f05252 !important; }
-      body.profile-page.tmr-social-profile #tmrxTablePicks .result-push,
-      body.profile-page.tmr-social-profile #tmrxTablePicks .result-pending,
-      body.profile-page.tmr-social-profile .picks-table .result-push,
-      body.profile-page.tmr-social-profile .picks-table .result-pending { color: #94a3b8 !important; }
+      .tmrx-table .neg { color: #fca5a5; }
       .tmrx-table .zero { color: #94a3b8; }
       .tmrx-table .empty td { padding: 22px 16px; text-align: center; color: #64748b; font-style: italic; }
 
@@ -11174,8 +10592,7 @@
         min-width: 1120px !important;
       }
       body.profile-page.tmr-social-profile .picks-table {
-        min-width: 0 !important;
-        table-layout: fixed !important;
+        min-width: 1500px !important;
       }
       .tmrx-ribbon {
         grid-template-columns: repeat(5, minmax(180px, 1fr)) !important;
@@ -11468,9 +10885,7 @@
         padding: 13px 16px !important;
       }
       body.profile-page.tmr-social-profile tr[data-tmrx-adv-top="clv"],
-      body.profile-page.tmr-social-profile tr[data-tmrx-adv="clv"],
-      body.profile-page.tmr-social-profile tr[data-tmrx-adv-top="z_score"],
-      body.profile-page.tmr-social-profile tr[data-tmrx-adv="z_score"] {
+      body.profile-page.tmr-social-profile tr[data-tmrx-adv="clv"] {
         display: none !important;
       }
       body.profile-page.tmr-social-profile .tmrx-unavail-note {
@@ -11872,7 +11287,7 @@
         border-left-color: #4ade80 !important;
       }
       body.profile-page.tmr-social-profile .picks-table tbody tr.row-lost td:first-child {
-        border-left-color: #ef4444 !important;
+        border-left-color: #fb7185 !important;
       }
       body.profile-page.tmr-social-profile .picks-table tbody tr.row-push td:first-child {
         border-left-color: #fbbf24 !important;
@@ -12142,7 +11557,7 @@
       }
       body.profile-page.tmr-social-profile .profile-rail-value.is-negative,
       body.profile-page.tmr-social-profile .profile-advanced-metric__value.is-neg {
-        color: #ef4444 !important;
+        color: #fb7185 !important;
       }
       body.profile-page.tmr-social-profile .profile-advanced-strip-section {
         padding-top: 22px !important;
@@ -12468,10 +11883,11 @@
         body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(3)::before { content: "Game"; }
         body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(4)::before { content: "Pick"; }
         body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(5)::before { content: "Market"; }
-        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(6)::before { content: "Odds"; }
-        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(7)::before { content: "Units"; }
-        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(8)::before { content: "Result"; }
-        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(9)::before { content: "Profit/Loss"; }
+        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(6)::before { content: "Line"; }
+        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(7)::before { content: "Odds"; }
+        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(8)::before { content: "Units"; }
+        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(9)::before { content: "Result"; }
+        body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(10)::before { content: "Profit/Loss"; }
         body.profile-page.tmr-social-profile #tmrxTablePicks td.name {
           text-align: right !important;
         }
@@ -12519,20 +11935,6 @@
   body.profile-page .profile-advanced-metric__value.is-neg {
     color: #ff3333 !important;
   }
-  body.profile-page .result-badge.lost,
-  body.profile-page .capper-result.lost,
-  body.profile-page .pm-result--lost,
-  body.profile-page .pick-result.loss,
-  body.profile-page .result-loss,
-  body.profile-page .pill.loss {
-    color: #ff3333 !important;
-    background: rgba(255, 51, 51, 0.14) !important;
-    border-color: rgba(255, 51, 51, 0.42) !important;
-  }
-  body.profile-page .picks-table tbody tr.row-lost td:first-child,
-  body.profile-page.tmr-social-profile .picks-table tbody tr.row-lost td:first-child {
-    border-left-color: #ff3333 !important;
-  }
   body.profile-page .breakdown-row.is-clickable {
     cursor: pointer;
     text-decoration: none;
@@ -12541,13 +11943,9 @@
     transition: background .16s ease, border-color .16s ease, transform .16s ease;
   }
   body.profile-page .breakdown-row.is-clickable:hover,
-  body.profile-page .profile-market-breakdown-row:hover td,
   body.profile-page .tmrx-table tbody tr:hover td {
     background: rgba(34, 211, 238, .07) !important;
     border-color: rgba(34, 211, 238, .28);
-  }
-  body.profile-page .profile-market-breakdown-row {
-    cursor: pointer;
   }
   body.profile-page .breakdown-row-indicator,
   body.profile-page .profile-sport-view-indicator {
@@ -12576,131 +11974,6 @@
   body.profile-page .breakdown-winrate,
   body.profile-page .profile-rail-value {
     white-space: nowrap;
-  }
-
-  /* May 6 2026: desktop ledger readability pass. Keep the sportsbook-dark
-     frame, but give the record and metrics tables enough width and row air. */
-  @media (min-width: 1101px) {
-    body.profile-page.tmr-social-profile .profile-header-section .container,
-    body.profile-page.tmr-social-profile .profile-tabs-section .container,
-    body.profile-page.tmr-social-profile .profile-advanced-strip-section .container,
-    body.profile-page.tmr-social-profile .profile-body-grid,
-    body.profile-page .container {
-      max-width: 1440px !important;
-    }
-
-    body.profile-page.tmr-social-profile .profile-body-grid {
-      width: min(100% - 48px, 1440px) !important;
-      grid-template-columns: minmax(0, 1fr) 280px !important;
-      gap: 22px !important;
-    }
-
-    body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="record"].profile-flow-record .picks-section .container {
-      max-width: none !important;
-      padding-left: 0 !important;
-      padding-right: 0 !important;
-    }
-  }
-
-  body.profile-page.tmr-social-profile .picks-table-wrapper,
-  body.profile-page.tmr-social-profile .tmrx-table-shell {
-    overflow-x: auto !important;
-    scrollbar-color: rgba(148, 163, 184, .42) rgba(7, 17, 31, .95) !important;
-  }
-
-  body.profile-page.tmr-social-profile #picksTableWrapper {
-    overflow-x: hidden !important;
-  }
-
-  body.profile-page.tmr-social-profile .picks-table {
-    width: 100% !important;
-    min-width: 0 !important;
-    table-layout: fixed !important;
-    font-size: 15px !important;
-  }
-
-  body.profile-page.tmr-social-profile .picks-table thead th {
-    padding: 16px 18px !important;
-    font-size: 12px !important;
-    letter-spacing: .1em !important;
-  }
-
-  body.profile-page.tmr-social-profile .picks-table tbody td {
-    padding: 17px 14px !important;
-    font-size: 15px !important;
-    line-height: 1.45 !important;
-    vertical-align: middle !important;
-  }
-
-  body.profile-page.tmr-social-profile .picks-table td.col-pick {
-    white-space: normal !important;
-    overflow-wrap: anywhere !important;
-  }
-
-  body.profile-page.tmr-social-profile .picks-table th:nth-child(1),
-  body.profile-page.tmr-social-profile .picks-table td:nth-child(1) { width: 14% !important; }
-  body.profile-page.tmr-social-profile .picks-table th:nth-child(2),
-  body.profile-page.tmr-social-profile .picks-table td:nth-child(2) { width: 9% !important; }
-  body.profile-page.tmr-social-profile .picks-table th:nth-child(3),
-  body.profile-page.tmr-social-profile .picks-table td:nth-child(3) { width: 38% !important; }
-  body.profile-page.tmr-social-profile .picks-table th:nth-child(4),
-  body.profile-page.tmr-social-profile .picks-table td:nth-child(4) { width: 9% !important; }
-  body.profile-page.tmr-social-profile .picks-table th:nth-child(5),
-  body.profile-page.tmr-social-profile .picks-table td:nth-child(5) { width: 10% !important; }
-  body.profile-page.tmr-social-profile .picks-table th:nth-child(6),
-  body.profile-page.tmr-social-profile .picks-table td:nth-child(6) { width: 20% !important; }
-
-  body.profile-page.tmr-social-profile .picks-table .result-badge.pending,
-  body.profile-page.tmr-social-profile .picks-table .result-badge.push,
-  body.profile-page.tmr-social-profile .picks-table .result-badge.void,
-  body.profile-page.tmr-social-profile .picks-table .result-badge.cancelled {
-    background: var(--accent-gray-bg) !important;
-    color: var(--accent-gray) !important;
-  }
-
-  body.profile-page.tmr-social-profile .ledger-pick-title {
-    font-size: 15.5px !important;
-    line-height: 1.35 !important;
-  }
-
-  body.profile-page.tmr-social-profile .ledger-pick-meta,
-  body.profile-page.tmr-social-profile .ledger-game-meta,
-  body.profile-page.tmr-social-profile .ledger-muted,
-  body.profile-page.tmr-social-profile .ledger-subline,
-  body.profile-page.tmr-social-profile .ledger-status,
-  body.profile-page.tmr-social-profile .ledger-type {
-    font-size: 12.5px !important;
-    line-height: 1.35 !important;
-  }
-
-  body.profile-page.tmr-social-profile .stats-summary-table,
-  body.profile-page.tmr-social-profile .tmrx-table {
-    font-size: 15px !important;
-  }
-
-  body.profile-page.tmr-social-profile .stats-summary-table th,
-  body.profile-page.tmr-social-profile .stats-summary-table td,
-  body.profile-page.tmr-social-profile .tmrx-table th,
-  body.profile-page.tmr-social-profile .tmrx-table td {
-    padding: 16px 18px !important;
-    line-height: 1.42 !important;
-  }
-
-  @media (max-width: 720px) {
-    body.profile-page.tmr-social-profile .picks-table {
-      min-width: 0 !important;
-      font-size: 13.5px !important;
-    }
-
-    body.profile-page.tmr-social-profile .picks-table thead th,
-    body.profile-page.tmr-social-profile .picks-table tbody td {
-      padding: 14px 13px !important;
-    }
-
-    body.profile-page.tmr-social-profile .stats-summary-table,
-    body.profile-page.tmr-social-profile .tmrx-table {
-      min-width: 760px !important;
-    }
   }
 </style>
 </body>
