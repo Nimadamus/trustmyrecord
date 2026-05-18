@@ -19,6 +19,7 @@ jobs:
           node-version: '20'
       - run: npm ci
       - run: npx playwright install chromium
+      - run: sudo apt-get update && sudo apt-get install -y imagemagick
       - run: xvfb-run --auto-servernum node scripts/forum-live-browser-proof.js
       - uses: actions/upload-artifact@v4
         if: always()
