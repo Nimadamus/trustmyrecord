@@ -4408,14 +4408,7 @@ button{font:inherit;cursor:pointer}
 (function () {
     const apiBase = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
     const fallbackAvatar = 'static/media/TMR-avatar-256.jpg';
-    const realHomepageUsers = new Set([
-        'betlegend',
-        'flintlocktropicks',
-        'mikeybalhansports',
-        'mike'
-    ]);
-
-    function escapeHtml(value) {
+function escapeHtml(value) {
         return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
             return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
         });
@@ -4453,7 +4446,6 @@ button{font:inherit;cursor:pointer}
     function renderUsers(users) {
         const cleanUsers = users
             .filter(function (user) { return user && user.username; })
-            .filter(function (user) { return realHomepageUsers.has(String(user.username).toLowerCase()); })
             .slice(0, 4);
 
         const lead = cleanUsers[0];
@@ -4535,7 +4527,6 @@ button{font:inherit;cursor:pointer}
         if (!list) return;
         const cleanPicks = picks
             .filter(function (pick) { return pick && pick.username && pick.status; })
-            .filter(function (pick) { return realHomepageUsers.has(String(pick.username).toLowerCase()); })
             .slice(0, 5);
         if (!cleanPicks.length) {
             list.className = 'tmr-pick-empty';
