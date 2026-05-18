@@ -619,6 +619,19 @@
             if (bCurated) return 1;
             return 0;
         });
+        if (!rosterRows.length && !options.length && curatedPitchers.length) {
+            return curatedPitchers.map(function (row) {
+                return {
+                    id: pitcherId(side, team.id + '-' + row[0]),
+                    name: row[1],
+                    quality: row[2],
+                    era: row[3],
+                    source: 'Current simulator starter profile',
+                    verified: false,
+                    note: 'Baseline current-team starter profile; active roster feed unavailable'
+                };
+            });
+        }
         if (!rosterRows.length && !options.length) return [];
         rosterRows.slice(0, liveStarter && liveStarter.name ? 4 : 5).forEach(function (player) {
             var row = curatedMatch(player.name);
