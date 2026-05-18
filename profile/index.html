@@ -6231,6 +6231,20 @@
         };
     }
 
+    function readRememberedSessionUser() {
+        const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
+        for (const key of keys) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (!raw) continue;
+                const parsed = JSON.parse(raw);
+                const user = parsed && (parsed.user || parsed);
+                if (user && (user.username || user.email)) return user;
+            } catch (_) {}
+        }
+        return null;
+    }
+
     // ======================== INIT ========================
     async function init() {
         try {
@@ -6242,6 +6256,15 @@
             if (typeof auth !== 'undefined' && auth.isLoggedIn()) {
                 currentUser = auth.getCurrentUser();
                 window.currentUser = currentUser;
+            }
+            if (!currentUser) {
+                currentUser = readRememberedSessionUser();
+                if (currentUser) {
+                    window.currentUser = currentUser;
+                    if (typeof auth !== 'undefined' && !auth.currentUser) {
+                        auth.currentUser = currentUser;
+                    }
+                }
             }
 
             if (!profileUsername && currentUser) profileUsername = currentUser.username;
