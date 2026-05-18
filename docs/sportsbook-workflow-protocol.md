@@ -62,6 +62,21 @@ Required public ranking conditions:
 
 If a user has 20 or more graded picks but non-positive net units, profile rank fields must stay unranked and `ranking_status` must read `Not ranked yet`. Do not decorate negative, break-even, inactive, private, or test accounts with `Ranked #...` metadata.
 
+## Profile Analytics / PickMonitor Parity
+
+Public profile analytics must preserve the PickMonitor-style advanced stat catalog unless a metric is explicitly documented as unavailable from the current ledger. The canonical backend source is `services/profileAnalytics.js`; the public profile renderer is `profile/index.html`.
+
+The primary Z-score is odds-adjusted. It must use graded win/loss picks only, exclude pending picks and pushes, convert each pick's American odds to break-even probability, then calculate:
+
+- `expectedWins = sum(p_i)`
+- `actualWins = sum(win_i)`
+- `variance = sum(p_i * (1 - p_i))`
+- `zScore = (actualWins - expectedWins) / sqrt(variance)`
+
+If variance is zero or fewer than five graded non-push picks have usable odds, the profile must display `N/A`/blank instead of a fake number. Do not replace this with a flat 50% or average-odds baseline unless it is added as a separate clearly labeled secondary metric.
+
+Profile redesigns must not hide or remove Z-score, effective units, effective win percentage, average odds, average risk, streaks, rolling form, sport splits, market splits, odds bucket splits, unit bucket splits, day-of-week splits, equity curve, or drawdown without updating the backend unit tests and the PickMonitor parity report. CLV-related metrics remain unavailable until the ledger includes closing odds/line data.
+
 ## Public Page Empty States
 
 Launch-facing pages must not ship rough placeholder copy such as `No tracked picks yet` in visible page markup or runtime fallback strings. Empty states may explain that verified records or locked picks are loading or pending, but they must preserve the premium public-record tone and must not imply the platform has no real activity when live data is available.
