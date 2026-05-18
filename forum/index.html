@@ -105,11 +105,18 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 .btn-outline{background:#f1f1f1}
 .fjump{background:#f5f5f5;border:1px solid var(--line);border-top:0;padding:7px 8px;margin:-12px 0 10px 0;color:#444;font-size:12px}
 .fjump select,.modal-body select{border:1px solid #aaa;background:#fff;color:#222;padding:5px;font:12px Arial,Helvetica,sans-serif}
-.fthread-post{display:grid;grid-template-columns:170px 1fr;background:#fff;border:1px solid var(--line);margin:0 0 10px 0}
+.fthread-post{display:grid;grid-template-columns:190px 1fr;background:#fff;border:1px solid var(--line);margin:0 0 10px 0}
 .fthread-author{background:#eef1f5;border-right:1px solid var(--line);padding:10px;color:#555;font-size:12px}
-.fthread-author b{display:block;color:#222;margin-bottom:4px}
+.fthread-avatar{width:64px;height:64px;border:1px solid #777;background:#dfe5ec;color:#222;display:grid;place-items:center;font:bold 24px Arial,Helvetica,sans-serif;margin-bottom:7px;overflow:hidden}
+.fthread-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.fthread-author b{display:block;color:#222;margin-bottom:3px}
+.fthread-role{color:#444;font-size:11px;margin-bottom:7px}
+.fthread-author-row{font-size:11px;line-height:1.35;margin-top:3px}
+.fthread-badge{display:inline-block;margin-top:7px;padding:2px 5px;border:1px solid #9aa7b8;background:#fff;color:#333;font:bold 10px Arial,Helvetica,sans-serif}
 .fthread-body{padding:10px 12px;color:#222;font-size:13px;line-height:1.5}
-.fthread-body .meta{border-bottom:1px solid var(--line-soft);color:#666;font-size:11px;padding-bottom:6px;margin-bottom:8px}
+.fthread-body .meta{border-bottom:1px solid var(--line-soft);color:#666;font-size:11px;padding-bottom:6px;margin-bottom:8px;display:flex;justify-content:space-between;gap:10px}
+.fthread-post-title{font:bold 14px Arial,Helvetica,sans-serif;color:#111;margin-bottom:7px}
+.fthread-post-num{white-space:nowrap;color:#444;font-weight:bold}
 .freply{background:#fff;border:1px solid var(--line);padding:10px;margin-top:10px}
 .freply h3{font:bold 13px Arial,Helvetica,sans-serif;margin:0 0 8px;color:#222}
 .freply textarea,.modal-body input[type="text"],.modal-body textarea{width:100%;border:1px solid #aaa;background:#fff;color:#222;padding:7px;font:12px Arial,Helvetica,sans-serif}
@@ -1579,27 +1586,157 @@ function renderThreads() {
     updateForumJump();
 }
 
+function numericValue(value) {
+    var n = parseInt(value, 10);
+    return Number.isFinite(n) ? n : null;
+}
+
+function firstFavoriteTeam(source) {
+    var teams = source && (source.favorite_teams || source.favoriteTeams);
+    if (Array.isArray(teams) && teams.length) {
+        var first = teams[0];
+        if (first && typeof first === 'object') return first.team || first.name || first.label || 'Not set';
+        return first || 'Not set';
+    }
+    return source && (source.favorite_team || source.favoriteTeam) || 'Not set';
+}
+
+function userIsVerified(source) {
+    var status = String(source && (source.verification_status || source.verified_record_status || source.role || '') || '').toLowerCase();
+    return !!(source && (source.is_verified || source.verified || status === 'verified' || status === 'trusted' || status === 'premium'));
+}
+
+function starterPostFromThread(thread) {
+    if (!thread || !String(thread.content || '').trim()) return null;
+    return {
+        id: 'thread-' + thread.id + '-starter',
+        thread_id: thread.id,
+        user_id: thread.user_id,
+        username: thread.username,
+        display_name: thread.display_name || thread.username,
+        avatar_url: thread.avatar_url,
+        user_joined: thread.user_joined,
+        created_at: thread.created_at,
+        updated_at: thread.updated_at,
+        content: thread.content,
+        title: thread.title,
+        is_thread_starter: true,
+        user_post_count: numericValue(thread.user_post_count),
+        user_thread_count: numericValue(thread.user_thread_count),
+        favorite_teams: thread.favorite_teams,
+        favorite_team: thread.favorite_team,
+        verification_status: thread.verification_status,
+        user: {
+            username: thread.username,
+            display_name: thread.display_name || thread.username,
+            avatar_url: thread.avatar_url,
+            created_at: thread.user_joined,
+            favorite_teams: thread.favorite_teams,
+            favorite_team: thread.favorite_team,
+            verification_status: thread.verification_status
+        }
+    };
+}
+
+function normalizedThreadPosts(thread, posts) {
+    var normalized = [];
+    var starter = starterPostFromThread(thread);
+    if (starter) normalized.push(starter);
+    (posts || []).slice().sort(function(a, b) {
+        return new Date(a.created_at || a.createdAt || 0) - new Date(b.created_at || b.createdAt || 0);
+    }).forEach(function(post) {
+        if (!post || !String(post.content || post.body || '').trim()) return;
+        normalized.push(post);
+    });
+    return normalized;
+}
+
+function authorSource(post) {
+    var user = post.user || {};
+    var username = user.username || user.display_name || post.username || post.display_name || 'user';
+    var cached = forumAuthorCache[String(username).toLowerCase()] || {};
+    return Object.assign({}, post, user, cached, { username: username });
+}
+
+function formatCount(value, fallback) {
+    var n = numericValue(value);
+    return n == null ? (fallback == null ? 'Not available' : fallback) : String(n);
+}
+
+function renderAuthorPanel(post) {
+    var author = authorSource(post);
+    var who = author.display_name || author.username || 'user';
+    var avatar = author.avatar_url || author.avatar || '';
+    var initials = String(who || '?').slice(0, 1).toUpperCase();
+    var role = author.user_title || author.title || author.headline || (userIsVerified(author) ? 'Verified Handicapper' : 'Member');
+    var joined = author.user_joined || author.created_at || author.joined_at;
+    var threadCount = author.user_thread_count;
+    var postCount = author.user_post_count;
+    if (post.is_thread_starter) {
+        threadCount = numericValue(threadCount);
+        if (threadCount == null) threadCount = 1;
+        postCount = numericValue(postCount);
+        if (postCount == null) postCount = threadCount;
+    }
+    return '<div class="fthread-author">'
+        + '<div class="fthread-avatar">' + (avatar ? '<img src="' + escHtml(avatar) + '" alt="' + escHtml(who) + ' avatar">' : escHtml(initials)) + '</div>'
+        + '<b>' + escHtml(who) + '</b>'
+        + '<div class="fthread-role">' + escHtml(role) + '</div>'
+        + '<div class="fthread-author-row">Joined: ' + escHtml(joined ? formatJoinedDate(joined) : 'Not available') + '</div>'
+        + '<div class="fthread-author-row">Posts: ' + escHtml(formatCount(postCount)) + '</div>'
+        + '<div class="fthread-author-row">Threads: ' + escHtml(formatCount(threadCount)) + '</div>'
+        + '<div class="fthread-author-row">Favorite Team: ' + escHtml(firstFavoriteTeam(author)) + '</div>'
+        + (userIsVerified(author) ? '<span class="fthread-badge">Verified record</span>' : '')
+        + '</div>';
+}
+
 function renderThread() {
     var c = document.getElementById('postsContainer');
     if (!c) return;
-    if (!cachedPosts.length && cachedThread) {
+    var posts = normalizedThreadPosts(cachedThread, cachedPosts);
+    if (!posts.length && cachedThread) {
         c.innerHTML = '<div class="fempty">Thread has no posts.</div>';
         return;
     }
-    c.innerHTML = cachedPosts.map(function(p) {
-        var who = (p.user && (p.user.username || p.user.display_name)) || p.username || 'user';
-        var avatar = (p.user && (p.user.avatar_url || p.user.avatar)) || '';
+    c.innerHTML = posts.map(function(p, idx) {
+        var postTitle = p.is_thread_starter ? (p.title || (cachedThread && cachedThread.title) || 'Thread') : (p.title || 'Reply');
+        var postNo = idx + 1;
         return '<div class="fthread-post">'
-            + '<div class="fthread-author">'
-            +   '<b>' + escHtml(who) + '</b>'
-            +   (avatar ? '<img src="' + escHtml(avatar) + '" alt="" style="width:60px;height:60px;border:1px solid #777;margin-top:4px;">' : '')
-            +   '<div style="color:#555;font-size:10.5px;margin-top:4px;">Joined ' + (p.user && p.user.created_at ? formatJoinedDate(p.user.created_at) : '—') + '</div>'
-            + '</div>'
+            + renderAuthorPanel(p)
             + '<div class="fthread-body">'
-            +   '<div class="meta">' + (p.created_at ? formatForumDate(p.created_at) : '—') + (p.id ? ' &middot; <a href="#post-' + p.id + '" id="post-' + p.id + '">Permalink</a>' : '') + '</div>'
+            +   '<div class="meta"><span>' + (p.created_at ? formatForumDate(p.created_at) : '—') + (p.id ? ' &middot; <a href="#post-' + escHtml(p.id) + '" id="post-' + escHtml(p.id) + '">Permalink</a>' : '') + '</span><span class="fthread-post-num">#' + postNo + '</span></div>'
+            +   '<div class="fthread-post-title">' + escHtml(postTitle) + '</div>'
             +   escHtml(p.content || p.body || '').replace(/\n/g, '<br>')
             + '</div></div>';
     }).join('');
+}
+
+async function enrichForumAuthors(thread, posts) {
+    var names = [];
+    if (thread && thread.username) names.push(thread.username);
+    (posts || []).forEach(function(post) {
+        var name = (post.user && (post.user.username || post.user.display_name)) || post.username || post.display_name;
+        if (name) names.push(name);
+    });
+    names = Array.from(new Set(names.map(function(name) { return String(name || '').trim(); }).filter(Boolean)));
+    await Promise.all(names.map(async function(username) {
+        var key = username.toLowerCase();
+        if (forumAuthorCache[key]) return;
+        var profile = {};
+        var threadCount = null;
+        try {
+            var userData = await api.request('/users/' + encodeURIComponent(username));
+            profile = userData.user || userData || {};
+        } catch (e) {}
+        try {
+            var threadData = await api.request('/forum/users/' + encodeURIComponent(username) + '/threads?limit=100');
+            if (Array.isArray(threadData.threads)) threadCount = threadData.threads.length;
+        } catch (e) {}
+        forumAuthorCache[key] = Object.assign({}, profile, {
+            user_thread_count: numericValue(profile.user_thread_count) != null ? profile.user_thread_count : threadCount,
+            user_post_count: numericValue(profile.user_post_count)
+        });
+    }));
 }
 var categories = [];
 var fallbackCategories = [
@@ -1679,6 +1816,7 @@ var currentCategoryName = null;
 var currentCategoryId = null;
 var currentThreadId = null;
 var currentThreadTitle = null;
+var forumAuthorCache = {};
 var searchDebounceTimer = null;
 
 function escHtml(value) {
@@ -1978,6 +2116,7 @@ async function loadThread(threadId) {
             currentCategoryName = cachedThread.category_name || cachedThread.category_slug;
             currentCategoryId = cachedThread.category_id;
         }
+        await enrichForumAuthors(cachedThread, cachedPosts);
         renderThread();
         renderReplyArea();
         // Update header label
