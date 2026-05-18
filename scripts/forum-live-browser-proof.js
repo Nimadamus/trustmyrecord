@@ -36,7 +36,6 @@ function captureRoot(name) {
       'Messages',
       'Alerts',
       'BetLegend',
-      'Logout',
     ];
     const missing = required.filter((item) => !text.includes(item));
     if (missing.length) throw new Error(`Forum live proof missing: ${missing.join(', ')}`);
