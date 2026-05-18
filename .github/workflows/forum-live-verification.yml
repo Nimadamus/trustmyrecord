@@ -1,0 +1,27 @@
+name: Forum Live Verification
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'forum/index.html'
+      - 'scripts/forum-live-browser-proof.js'
+      - '.github/workflows/forum-live-verification.yml'
+
+jobs:
+  forum-live-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npx playwright install chromium
+      - run: xvfb-run --auto-servernum node scripts/forum-live-browser-proof.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: forum-live-proof
+          path: artifacts/forum-live-proof/
