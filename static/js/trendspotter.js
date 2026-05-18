@@ -561,12 +561,16 @@
     els.validation.textContent = errors.length ? validationMessage(errors[0]) : "Ready to generate. Output will stay empty unless verified data supports the selected query.";
     var data = cache[state.sport] || {};
     var classification = sourceClassification(data);
-    els.dataStatus.textContent = state.loading
-      ? "Loading verified trend data..."
-      : data.status
-        ? "Trend source status: " + data.status + ". Classification: " + classification.label + ". " + classification.detail
-        : SAFE_MESSAGES.selectToLoad;
+    els.dataStatus.textContent = trendSourceStatusText(data, classification);
     if (state.generated) renderResults();
+  }
+
+  function trendSourceStatusText(data, classification) {
+    if (state.loading) return "Loading verified trend data...";
+    if (data.status) return "Trend source status: " + data.status + ". Classification: " + classification.label + ". " + classification.detail;
+    if (state.sport && state.matchupKey) return "Live matchup loaded. Verified trend output requires matching source rows for this query.";
+    if (state.sport) return "Choose a matchup to check verified trend availability.";
+    return SAFE_MESSAGES.selectToLoad;
   }
 
   function validationMessage(error) {
