@@ -485,7 +485,8 @@ async function flushAsync() {
   assert.strictEqual(simulator.liveInputs.length, 11, 'baseline live input architecture starts with eleven source slots');
   simulator.localTeams.current.forEach((team) => {
     const pitchers = simulator.pitcherOptionsFor(team, 'away', null);
-    assert.strictEqual(pitchers.length, 0, team.name + ' does not expose current pitcher names until a verified roster loads');
+    assert.strictEqual(pitchers.length, 5, team.name + ' exposes current starter profiles when the active roster feed is unavailable');
+    assert(pitchers.every((pitcher) => /^[A-Z][A-Za-z'. -]+$/.test(pitcher.name)), team.name + ' current starter profiles use actual names');
   });
   simulator.localTeams.historical.forEach((team) => {
     const pitchers = simulator.pitcherOptionsFor(team, 'away', null);
@@ -493,8 +494,8 @@ async function flushAsync() {
     assert(pitchers.every((pitcher) => /^[A-Z][A-Za-z'. -]+$/.test(pitcher.name)), team.name + ' historical starter options are actual names');
     assert(!/baseline ace|baseline starter|depth starter|era-average starter|staff game|Ace profile|Above average starter|League average starter|Back end starter|Bullpen game/.test(pitchers.map((pitcher) => pitcher.name).join('|')), team.name + ' has no fallback starter labels');
   });
-  assert(!/Zac Gallen|Chris Sale/.test(elements.awayPitcherSelect.innerHTML + elements.homePitcherSelect.innerHTML), 'current dropdowns do not show static current names before verified rosters load');
-  assert(/No pitcher selected/.test(elements.homePitcherMeta.textContent), 'current starter area does not invent a pitcher when roster fetch is unavailable');
+  assert(/Zac Gallen|Chris Sale/.test(elements.awayPitcherSelect.innerHTML + elements.homePitcherSelect.innerHTML), 'current dropdowns show baseline starter profiles before verified rosters load');
+  assert(/Starter list is for simulation selection/.test(elements.homePitcherMeta.textContent), 'current starter area labels baseline starter profiles as simulation selections');
   assert(!/Ace profile|Above average starter|League average starter|Back end starter|Bullpen game/.test(elements.awayPitcherSelect.innerHTML + elements.homePitcherSelect.innerHTML), 'current mode does not render generic starter profiles');
   assert(!/Team rotation option/.test(elements.awayPitcherSelect.innerHTML + elements.homePitcherSelect.innerHTML), 'current selector does not use vague team-rotation wording');
   assert(!/Rating|Starter list selection|Historical simulator input/.test(elements.awayPitcherSelect.innerHTML + elements.homePitcherSelect.innerHTML), 'dropdown avoids extra rating/source clutter');
@@ -579,9 +580,9 @@ async function flushAsync() {
   elements.mixedModeButton.listeners.click();
   assert.strictEqual(elements.awayPoolSelect.value, 'current', 'mixed mode keeps Team A current');
   assert.strictEqual(elements.homePoolSelect.value, 'historical', 'mixed mode sets Team B historical');
-  assert(!/Zac Gallen/.test(elements.awayPitcherSelect.innerHTML), 'mixed mode current pitcher options wait for verified roster');
+  assert(/Zac Gallen/.test(elements.awayPitcherSelect.innerHTML), 'mixed mode current pitcher options fall back to baseline starter profiles');
   assert(/Red Ruffing/.test(elements.homePitcherSelect.innerHTML), 'mixed mode historical pitcher options render');
-  assert(!/Zac Gallen/.test(elements.awayPitcherSelect.innerHTML), 'mixed Team A dropdown waits for verified current roster options');
+  assert(/Zac Gallen/.test(elements.awayPitcherSelect.innerHTML), 'mixed Team A dropdown shows current starter profiles when roster feed is unavailable');
   assert.strictEqual((elements.homePitcherSelect.innerHTML.match(/<option value=/g) || []).length, 5, 'mixed Team B dropdown shows five pitcher options');
   await simulator.runSimulation();
   assert.strictEqual(elements.projectionShell.getAttribute('data-projection-state'), 'projected', 'mixed matchup can run simulation');
