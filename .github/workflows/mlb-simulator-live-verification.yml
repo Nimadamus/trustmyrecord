@@ -1,0 +1,38 @@
+name: MLB Simulator Live Verification
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'mlb-simulator/**'
+      - 'static/js/mlb-simulator.js'
+      - 'tests/mlb-simulator-page-test.js'
+      - 'tests/mlb-simulator-live-verification.spec.js'
+      - 'scripts/tools-live-browser-proof.js'
+      - 'docs/sportsbook-workflow-protocol.md'
+      - '.github/workflows/mlb-simulator-live-verification.yml'
+
+jobs:
+  verify-mlb-simulator-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: sudo apt-get update && sudo apt-get install -y imagemagick
+      - run: node tests/mlb-simulator-page-test.js
+      - run: xvfb-run --auto-servernum node scripts/tools-live-browser-proof.js
+        env:
+          TMR_ONLY_MLB_SIMULATOR: '1'
+          TMR_MLB_SIMULATOR_URL: https://trustmyrecord.com/mlb-simulator/
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mlb-simulator-live-verification
+          path: |
+            artifacts/mlb-simulator-live-browser-addressbar-proof.png
+            artifacts/mlb-simulator-live-browser-proof.json
