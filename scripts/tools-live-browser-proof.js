@@ -182,6 +182,17 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
       console.log(JSON.stringify(report, null, 2));
       return;
     }
+    if (process.env.TMR_ONLY_MLB_SIMULATOR === '1') {
+      const mlbSimulator = await verifyMlbSimulator(page);
+      const report = {
+        checked_at: new Date().toISOString(),
+        mlb_simulator_url: SIM_URL,
+        screenshots: { mlbSimulator },
+      };
+      fs.writeFileSync(path.join(OUT_DIR, 'mlb-simulator-live-browser-proof.json'), JSON.stringify(report, null, 2));
+      console.log(JSON.stringify(report, null, 2));
+      return;
+    }
     const hub = await verifyHubAndRoutes(page);
     const trendspotter = await verifyTrendspotter(page);
     const mlbSimulator = await verifyMlbSimulator(page);
