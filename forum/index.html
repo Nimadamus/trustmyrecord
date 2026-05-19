@@ -117,6 +117,21 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 .fthread-body .meta{border-bottom:1px solid var(--line-soft);color:#666;font-size:11px;padding-bottom:6px;margin-bottom:8px;display:flex;justify-content:space-between;gap:10px}
 .fthread-post-title{font:bold 14px Arial,Helvetica,sans-serif;color:#111;margin-bottom:7px}
 .fthread-post-num{white-space:nowrap;color:#444;font-weight:bold}
+.fpost-actions{margin-top:10px;padding-top:7px;border-top:1px solid var(--line-soft);display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+.fpost-actions .fpost-btn{border:1px solid var(--button-border);background:var(--button);color:#1a1f2a;padding:4px 10px;font:bold 11px Arial,Helvetica,sans-serif;cursor:pointer;text-decoration:none;border-radius:2px}
+.fpost-actions .fpost-btn:hover{background:#d8dee7;color:#0f1419;text-decoration:none}
+.fpost-actions .fpost-btn.is-edit{background:#fff2bb;border-color:#c7a24d;color:#5d4700}
+.fpost-actions .fpost-btn.is-edit:hover{background:#ffe790;color:#3d2f00}
+.fpost-edit-box{margin-top:8px;border:1px solid var(--line);background:#fbfbfb;padding:8px}
+.fpost-edit-box textarea{width:100%;border:1px solid #aaa;background:#fff;color:#222;padding:7px;font:12px Arial,Helvetica,sans-serif;min-height:120px;box-sizing:border-box}
+.fpost-edit-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:6px}
+body.tmr-forum-live-redesign .fpost-actions{border-top-color:rgba(255,255,255,.08)}
+body.tmr-forum-live-redesign .fpost-actions .fpost-btn{background:#0e1a2c !important;border-color:rgba(255,255,255,.16) !important;color:#dbeafe !important}
+body.tmr-forum-live-redesign .fpost-actions .fpost-btn:hover{background:#16243d !important;color:#fff !important}
+body.tmr-forum-live-redesign .fpost-actions .fpost-btn.is-edit{background:#3a2a08 !important;border-color:#c7a24d !important;color:#ffe5a3 !important}
+body.tmr-forum-live-redesign .fpost-actions .fpost-btn.is-edit:hover{background:#523c0f !important;color:#fff7d6 !important}
+body.tmr-forum-live-redesign .fpost-edit-box{background:#0e1a2c !important;border-color:rgba(255,255,255,.12) !important}
+body.tmr-forum-live-redesign .fpost-edit-box textarea{background:#0a1422 !important;border-color:rgba(255,255,255,.18) !important;color:#e8eef7 !important}
 .freply{background:#fff;border:1px solid var(--line);padding:10px;margin-top:10px}
 .freply h3{font:bold 13px Arial,Helvetica,sans-serif;margin:0 0 8px;color:#222}
 .freply textarea,.modal-body input[type="text"],.modal-body textarea{width:100%;border:1px solid #aaa;background:#fff;color:#222;padding:7px;font:12px Arial,Helvetica,sans-serif}
@@ -1266,6 +1281,29 @@ body.tmr-forum-live-redesign .tmr-spinner {
     flex-wrap:wrap !important;
   }
 }
+/* Forum thread breadcrumb readability fix (May 19 2026) */
+body.classic-forum.tmr-forum-live-redesign .fcrumb,
+body.tmr-forum-live-redesign .fcrumb {
+  color:#e8eef7 !important;
+  font:700 13px Arial,Helvetica,sans-serif !important;
+  padding:9px 14px !important;
+}
+body.classic-forum.tmr-forum-live-redesign .fcrumb a,
+body.tmr-forum-live-redesign .fcrumb a {
+  color:#7fd9ff !important;
+  font-weight:700 !important;
+  text-decoration:underline !important;
+}
+body.classic-forum.tmr-forum-live-redesign .fcrumb a:hover,
+body.tmr-forum-live-redesign .fcrumb a:hover {
+  color:#b4ecff !important;
+}
+body.classic-forum.tmr-forum-live-redesign .fcrumb .sep,
+body.tmr-forum-live-redesign .fcrumb .sep {
+  color:#cfd9e8 !important;
+  font-weight:700 !important;
+  padding:0 7px !important;
+}
 </style>
 </head>
 <body class="classic-forum tmr-forum-live-redesign">
@@ -1685,7 +1723,6 @@ function renderAuthorPanel(post) {
         + '<div class="fthread-author-row">Joined: ' + escHtml(joined ? formatJoinedDate(joined) : 'Not available') + '</div>'
         + '<div class="fthread-author-row">Posts: ' + escHtml(formatCount(postCount)) + '</div>'
         + '<div class="fthread-author-row">Threads: ' + escHtml(formatCount(threadCount)) + '</div>'
-        + '<div class="fthread-author-row">Favorite Team: ' + escHtml(firstFavoriteTeam(author)) + '</div>'
         + (userIsVerified(author) ? '<span class="fthread-badge">Verified record</span>' : '')
         + '</div>';
 }
@@ -1698,17 +1735,120 @@ function renderThread() {
         c.innerHTML = '<div class="fempty">Thread has no posts.</div>';
         return;
     }
+    var sessionUser = (typeof getForumSessionUser === 'function') ? getForumSessionUser() : null;
+    var myUsername = sessionUser && sessionUser.username ? String(sessionUser.username).toLowerCase() : '';
+    var myUserId = sessionUser && (sessionUser.id != null) ? String(sessionUser.id) : '';
+    var canModerate = !!(sessionUser && (sessionUser.is_admin || sessionUser.is_moderator || sessionUser.role === 'admin' || sessionUser.role === 'moderator'));
+    var isLoggedIn = !!sessionUser;
+    window.__forumCachedPostsById = {};
     c.innerHTML = posts.map(function(p, idx) {
         var postTitle = p.is_thread_starter ? (p.title || (cachedThread && cachedThread.title) || 'Thread') : (p.title || 'Reply');
         var postNo = idx + 1;
-        return '<div class="fthread-post">'
+        var postId = (p.id != null) ? String(p.id) : '';
+        if (postId) window.__forumCachedPostsById[postId] = p;
+        var postAuthorName = String((p.user && (p.user.username || p.user.display_name)) || p.username || p.display_name || '').toLowerCase();
+        var postAuthorId = (p.user_id != null) ? String(p.user_id) : ((p.user && p.user.id != null) ? String(p.user.id) : '');
+        var isOwner = !!myUsername && (postAuthorName === myUsername || (!!myUserId && !!postAuthorId && myUserId === postAuthorId));
+        var canEdit = isOwner || canModerate;
+        var actions = '<div class="fpost-actions">'
+            + (canEdit && postId ? '<button type="button" class="fpost-btn is-edit" onclick="forumEditPost(\'' + escHtml(postId) + '\')">Edit</button>' : '')
+            + (isLoggedIn && postId ? '<button type="button" class="fpost-btn" onclick="forumQuotePost(\'' + escHtml(postId) + '\')">Quote</button>' : '')
+            + '<button type="button" class="fpost-btn" onclick="forumFocusReply()">Reply</button>'
+            + '</div>';
+        var editedFlag = p.is_edited ? ' &middot; <span style="color:#888;">edited</span>' : '';
+        return '<div class="fthread-post" data-post-id="' + escHtml(postId) + '">'
             + renderAuthorPanel(p)
             + '<div class="fthread-body">'
-            +   '<div class="meta"><span>' + (p.created_at ? formatForumDate(p.created_at) : '—') + (p.id ? ' &middot; <a href="#post-' + escHtml(p.id) + '" id="post-' + escHtml(p.id) + '">Permalink</a>' : '') + '</span><span class="fthread-post-num">#' + postNo + '</span></div>'
+            +   '<div class="meta"><span>' + (p.created_at ? formatForumDate(p.created_at) : '—') + (p.id ? ' &middot; <a href="#post-' + escHtml(p.id) + '" id="post-' + escHtml(p.id) + '">Permalink</a>' : '') + editedFlag + '</span><span class="fthread-post-num">#' + postNo + '</span></div>'
             +   '<div class="fthread-post-title">' + escHtml(postTitle) + '</div>'
-            +   escHtml(p.content || p.body || '').replace(/\n/g, '<br>')
+            +   '<div class="fpost-content" id="postContent-' + escHtml(postId) + '">' + escHtml(p.content || p.body || '').replace(/\n/g, '<br>') + '</div>'
+            +   actions
             + '</div></div>';
     }).join('');
+}
+
+function forumFocusReply() {
+    var ta = document.getElementById('replyText');
+    if (!ta) {
+        var area = document.getElementById('replyArea');
+        if (area) area.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
+    ta.focus();
+    ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function forumQuotePost(postId) {
+    var p = window.__forumCachedPostsById && window.__forumCachedPostsById[postId];
+    if (!p) return;
+    if (typeof isUserLoggedIn === 'function' && !isUserLoggedIn()) { window.location.href = '/login/'; return; }
+    var ta = document.getElementById('replyText');
+    if (!ta) return;
+    var author = (p.user && (p.user.username || p.user.display_name)) || p.username || p.display_name || 'user';
+    var body = String(p.content || p.body || '').trim();
+    var quoted = body.split('\n').map(function(line) { return '> ' + line; }).join('\n');
+    var prefix = ta.value && ta.value.trim().length ? ta.value.replace(/\s+$/, '') + '\n\n' : '';
+    ta.value = prefix + '[quote=' + author + ']\n' + quoted + '\n[/quote]\n\n';
+    ta.focus();
+    ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch(e) {}
+}
+
+function forumEditPost(postId) {
+    var p = window.__forumCachedPostsById && window.__forumCachedPostsById[postId];
+    if (!p) return;
+    if (typeof isUserLoggedIn === 'function' && !isUserLoggedIn()) { window.location.href = '/login/'; return; }
+    var bodyEl = document.querySelector('.fthread-post[data-post-id="' + postId + '"] .fthread-body');
+    if (!bodyEl) return;
+    if (bodyEl.querySelector('.fpost-edit-box')) return;
+    var actions = bodyEl.querySelector('.fpost-actions');
+    if (actions) actions.style.display = 'none';
+    var contentEl = document.getElementById('postContent-' + postId);
+    if (contentEl) contentEl.style.display = 'none';
+    var box = document.createElement('div');
+    box.className = 'fpost-edit-box';
+    var raw = String(p.content || p.body || '');
+    box.innerHTML = '<textarea class="fpost-edit-text"></textarea>'
+        + '<div class="fpost-edit-actions">'
+        +   '<button type="button" class="fbtn" data-cancel="1">Cancel</button>'
+        +   '<button type="button" class="fbtn is-primary" data-save="1">Save</button>'
+        + '</div>';
+    bodyEl.appendChild(box);
+    box.querySelector('.fpost-edit-text').value = raw;
+    box.querySelector('[data-cancel]').onclick = function() {
+        box.remove();
+        if (contentEl) contentEl.style.display = '';
+        if (actions) actions.style.display = '';
+    };
+    box.querySelector('[data-save]').onclick = async function() {
+        var newText = box.querySelector('.fpost-edit-text').value.trim();
+        if (newText.length < 1) { alert('Post cannot be empty.'); return; }
+        var saveBtn = this;
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving...';
+        try {
+            var resp = await api.request('/forum/posts/' + encodeURIComponent(postId), {
+                method: 'PUT',
+                body: { content: newText }
+            });
+            var updated = (resp && resp.post) ? resp.post : null;
+            if (updated && Array.isArray(cachedPosts)) {
+                for (var i = 0; i < cachedPosts.length; i++) {
+                    if (String(cachedPosts[i].id) === String(postId)) {
+                        cachedPosts[i] = Object.assign({}, cachedPosts[i], updated);
+                        break;
+                    }
+                }
+            }
+            renderThread();
+        } catch (err) {
+            console.error('Edit post error:', err);
+            alert((err && err.message) || 'Failed to save edit.');
+            saveBtn.disabled = false; saveBtn.textContent = 'Save';
+        }
+    };
+    var ta = box.querySelector('.fpost-edit-text');
+    ta.focus();
+    try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch(e) {}
 }
 
 async function enrichForumAuthors(thread, posts) {
