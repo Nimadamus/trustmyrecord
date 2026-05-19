@@ -336,6 +336,7 @@
     <script>
         (function () {
             const MONEY_RE = /\b(cash|money|wager|wagering|bet against|stake|staking|entry fee|paid entry|prize pool|jackpot|payout|rake|token|tokens|redeem|redeemable|withdraw|winner takes|dollar|usd|\$)\b/i;
+            const SAFE_NEGATIVE_MONEY_RE = /\bno\s+(?:cash(?:\s+prize)?|paid\s+entry|entry\s+fee|token(?:\s+staking)?|tokens?|staking|wager(?:ing)?|stake|prize\s+pool|rake|payouts?|redeemable\s+tokens?|cashable\s+tokens?)\b/gi;
             const DISCLAIMER = "Bragging Rights Only. No cash prize. No paid entry.";
             const state = { challenges: [], currentUser: null, detail: null };
 
@@ -437,7 +438,7 @@
             }
 
             function validateNoMoney(values) {
-                return values.every((value) => !MONEY_RE.test(String(value || "")));
+                return values.every((value) => !MONEY_RE.test(String(value || "").replace(SAFE_NEGATIVE_MONEY_RE, "")));
             }
 
             async function handleCreate(event) {
