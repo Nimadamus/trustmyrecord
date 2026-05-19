@@ -272,6 +272,8 @@
 
         const start = currentPageStart();
         document.querySelectorAll('#hmRows .hm-member-row').forEach((row, index) => {
+            const rowKey = String(start + index) + '|' + String(row.getAttribute('data-username') || '');
+            if (row.dataset.hmRowPolished === rowKey) return;
             const cells = Array.from(row.children);
             if (!cells.length) return;
             const user = row.querySelector('.hm-user');
@@ -301,6 +303,7 @@
                 sports.textContent = '--';
             }
             [rank, user, record, win, units, roi, picks, active, sports].filter(Boolean).forEach(cell => row.appendChild(cell));
+            row.dataset.hmRowPolished = rowKey;
         });
     }
 
