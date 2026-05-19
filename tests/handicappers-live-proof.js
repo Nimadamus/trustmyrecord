@@ -6,6 +6,7 @@ const path = require('path');
 const https = require('https');
 
 const LIVE_URL = process.env.TMR_HANDICAPPERS_URL || 'https://trustmyrecord.com/handicappers/';
+const BROWSER_URL = LIVE_URL.includes('#') ? LIVE_URL : LIVE_URL + '#member-rankings';
 const OUT_DIR = path.join(process.cwd(), 'artifacts');
 const DESKTOP_OUT = path.join(OUT_DIR, 'handicappers-live-browser-addressbar-proof.png');
 const MOBILE_OUT = path.join(OUT_DIR, 'handicappers-live-mobile-proof.png');
@@ -95,7 +96,7 @@ function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
   const report = {
     checked_at: new Date().toISOString(),
-    url: LIVE_URL,
+    url: LIVE_URL,`n    browser_url: BROWSER_URL,
     http_status: fetched.status,
     last_modified: fetched.headers['last-modified'] || '',
     headers,
