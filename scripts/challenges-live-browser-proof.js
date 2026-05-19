@@ -107,13 +107,28 @@ async function launchProofWindow() {
     if (text.includes('Continue to Arena') || text.includes('Redirecting to Arena')) {
       throw new Error('Challenges page still shows old Arena redirect content.');
     }
+    await page.click('[data-view]');
+    await page.waitForSelector('#detail-modal.open', { timeout: 15000 });
+    const modalText = await page.locator('#detail-modal').innerText();
+    const modalRequired = [
+      'Test Bragging Rights Challenge',
+      'tmrtestcreator',
+      'tmrtestacceptor',
+      'General',
+      'Bragging Rights Only',
+      'Participants',
+      '2 / 2',
+      'Bragging Rights Only. No cash prize. No paid entry.',
+    ];
+    const missingModal = modalRequired.filter((item) => !modalText.includes(item));
+    if (missingModal.length) throw new Error(`Challenges detail modal missing: ${missingModal.join(', ')}`);
     validatedUrl = page.url();
 
     await browser.close();
 
     const { child: proofProcess, windowId } = await launchProofWindow();
     const typedUrl = PROOF_URL.replace(/'/g, `'\\''`);
-    execFileSync('bash', ['-lc', `printf '%s' '${typedUrl}' | xclip -selection clipboard && xdotool windowactivate --sync "${windowId}" mousemove 520 17 click 1 key ctrl+a key ctrl+v`], { stdio: 'inherit' });
+    execFileSync('bash', ['-lc', `printf '%s' '${typedUrl}' | xclip -selection clipboard && xdotool windowactivate --sync "${windowId}" key --clearmodifiers alt+d key ctrl+a key ctrl+v`], { stdio: 'inherit' });
     await wait(800);
     const addressbar = captureWindow(windowId, 'challenges-live-addressbar-proof.png');
     proofProcess.kill('SIGTERM');
