@@ -20,7 +20,7 @@ jobs:
       - run: npm install
       - run: npx playwright install --with-deps chromium
       - run: sudo apt-get update && sudo apt-get install -y imagemagick
-      - run: xvfb-run --auto-servernum node tests/handicappers-live-proof.js
+      - run: xvfb-run --auto-servernum --server-args="-screen 0 1440x1800x24" node tests/handicappers-live-proof.js
         env:
           TMR_HANDICAPPERS_URL: https://trustmyrecord.com/handicappers/?proof=${{ github.sha }}
       - uses: actions/upload-artifact@v4
