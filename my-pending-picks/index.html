@@ -252,7 +252,7 @@
         }
     </style>
 </head>
-<body class="tmr-site-shell" data-tmr-route="my-pending-picks">
+<body class="tmr-site-shell" data-tmr-route="my-pending-picks" data-tmr-build="v4-debug"><div id="tmr-build-marker" style="position:fixed;bottom:6px;right:8px;font-size:11px;color:#6ee7d8;background:rgba(0,0,0,.55);padding:3px 7px;border-radius:4px;font-family:monospace;z-index:99999;">BUILD v4-debug | open DevTools console for [TMR-DBG] logs</div>
     <main class="pending-page">
         <header class="pending-head">
             <div>
@@ -484,29 +484,42 @@
         function statusText(pick) {
             return 'Pending';
         }
-        function fmtSubmittedAt(pick) {
-            // Time Submitted (ET): submission instant only. NEVER read
-            // commence_time / game_time / event_time / game_date. Walk the
-            // named submission timestamp fields in priority order; skip any
-            // value that is missing or parses to a future instant (submission
-            // cannot logically be in the future). If no candidate is a real
-            // past timestamp, return 'Unknown' instead of fabricating a time.
-            if (!pick) return 'Unknown';
+        function submittedDebug(pick) {
+            // Returns { display, fieldUsed, raws } so the row renderer can
+            // show a temporary inline debug subline. Walks submission-only
+            // fields; commence_time is INSPECTED FOR LOGGING ONLY, never used.
+            var raws = {
+                locked_at: pick && pick.locked_at != null ? pick.locked_at : null,
+                created_at: pick && pick.created_at != null ? pick.created_at : null,
+                submitted_at: pick && pick.submitted_at != null ? pick.submitted_at : null,
+                pick_created_at: pick && pick.pick_created_at != null ? pick.pick_created_at : null,
+                timestamp: pick && pick.timestamp != null ? pick.timestamp : null,
+                commence_time: pick && pick.commence_time != null ? pick.commence_time : null
+            };
+            if (!pick) return { display: 'Unknown', fieldUsed: null, raws: raws };
             var nowMs = Date.now();
-            var candidates = [
-                pick.locked_at,
-                pick.created_at,
-                pick.submitted_at,
-                pick.pick_created_at,
-                pick.timestamp
-            ];
-            for (var i = 0; i < candidates.length; i++) {
-                var v = candidates[i];
+            var order = ['locked_at','created_at','submitted_at','pick_created_at','timestamp'];
+            for (var i = 0; i < order.length; i++) {
+                var v = raws[order[i]];
                 if (!v) continue;
                 var t = new Date(v).getTime();
-                if (isFinite(t) && t > 0 && t <= nowMs) return fmtDate(v);
+                if (isFinite(t) && t > 0 && t <= nowMs) {
+                    return { display: fmtDate(v), fieldUsed: order[i], raws: raws };
+                }
             }
-            return 'Unknown';
+            return { display: 'Unknown', fieldUsed: null, raws: raws };
+        }
+        function fmtSubmittedAt(pick) { return submittedDebug(pick).display; }
+        function submittedDebugInline(pick) {
+            var d = submittedDebug(pick);
+            var r = d.raws;
+            return 'sel=' + (d.fieldUsed || 'NONE')
+                + ' | locked_at=' + (r.locked_at || 'null')
+                + ' | created_at=' + (r.created_at || 'null')
+                + ' | submitted_at=' + (r.submitted_at || 'null')
+                + ' | pick_created_at=' + (r.pick_created_at || 'null')
+                + ' | timestamp=' + (r.timestamp || 'null')
+                + ' | commence_time=' + (r.commence_time || 'null');
         }
         function rowHtml(pick) {
             var pickLabel = pickText(pick);
@@ -519,7 +532,7 @@
                 + '<td>' + esc(fmtOdds(pick.odds_snapshot)) + '</td>'
                 + '<td>' + esc(fmtUnits(stake.risk)) + '</td>'
                 + '<td>' + esc(fmtUnits(stake.toWin)) + '</td>'
-                + '<td>' + fmtSubmittedAt(pick) + '</td>'
+                + '<td>' + esc(fmtSubmittedAt(pick)) + '<span class="pick-sub" style="font-size:9px;color:#f4c95d;word-break:break-all;">DBG ' + esc(submittedDebugInline(pick)) + '</span></td>'
                 + '<td><span class="status-pill">' + esc(statusText(pick)) + '</span></td>'
                 + '</tr>';
         }
@@ -536,7 +549,7 @@
                 + cardRow('Odds', esc(fmtOdds(pick.odds_snapshot)))
                 + cardRow('Risk', esc(fmtUnits(stake.risk)))
                 + cardRow('To Win', esc(fmtUnits(stake.toWin)))
-                + cardRow('Time Submitted', fmtSubmittedAt(pick))
+                + cardRow('Time Submitted', esc(fmtSubmittedAt(pick)) + '<div style="font-size:9px;color:#f4c95d;word-break:break-all;margin-top:4px;">DBG ' + esc(submittedDebugInline(pick)) + '</div>')
                 + cardRow('Status', '<span class="status-pill">' + esc(statusText(pick)) + '</span>')
                 + '</article>';
         }
@@ -544,6 +557,11 @@
             var pending = (Array.isArray(picks) ? picks : []).filter(function (pick) {
                 return pick && String(pick.status || 'pending').toLowerCase() === 'pending';
             });
+            // [DEBUG-TIMESTAMP-AUDIT] Dump every pending pick's raw timestamps + selected field to console.
+            try {
+                console.warn('[TMR-DBG] BUILD-MARKER=v4-debug | pending-count=' + pending.length + ' | now=' + new Date().toISOString());
+                pending.forEach(function (p) { console.warn('[TMR-DBG] pick id=' + p.id + ' ' + submittedDebugInline(p)); });
+            } catch (_) {}
             var totalUnits = pending.reduce(function (sum, pick) { return sum + Number(pick.units || 0); }, 0);
             var earliest = pending.map(function (pick) { return pick.commence_time; }).filter(Boolean).sort()[0] || null;
 
