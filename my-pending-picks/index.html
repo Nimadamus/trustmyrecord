@@ -485,18 +485,28 @@
             return 'Pending';
         }
         function fmtSubmittedAt(pick) {
-            // 'Time Submitted' must never display a future instant. If locked_at
-            // is in the future (data corruption upstream), try created_at; if
-            // that's also in the future, surface the gap with an em-dash so the
-            // viewer can see the data is bad rather than a misleading time.
+            // Time Submitted (ET): submission instant only. NEVER read
+            // commence_time / game_time / event_time / game_date. Walk the
+            // named submission timestamp fields in priority order; skip any
+            // value that is missing or parses to a future instant (submission
+            // cannot logically be in the future). If no candidate is a real
+            // past timestamp, return 'Unknown' instead of fabricating a time.
+            if (!pick) return 'Unknown';
             var nowMs = Date.now();
-            var cands = [pick && pick.locked_at, pick && pick.created_at];
-            for (var i = 0; i < cands.length; i++) {
-                if (!cands[i]) continue;
-                var t = new Date(cands[i]).getTime();
-                if (isFinite(t) && t <= nowMs) return fmtDate(cands[i]);
+            var candidates = [
+                pick.locked_at,
+                pick.created_at,
+                pick.submitted_at,
+                pick.pick_created_at,
+                pick.timestamp
+            ];
+            for (var i = 0; i < candidates.length; i++) {
+                var v = candidates[i];
+                if (!v) continue;
+                var t = new Date(v).getTime();
+                if (isFinite(t) && t > 0 && t <= nowMs) return fmtDate(v);
             }
-            return '—';
+            return 'Unknown';
         }
         function rowHtml(pick) {
             var pickLabel = pickText(pick);
