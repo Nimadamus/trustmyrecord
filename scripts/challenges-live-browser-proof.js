@@ -15,25 +15,71 @@ function captureRoot(name) {
   return out;
 }
 
+function captureWindow(windowId, name) {
+  const out = path.join(OUT_DIR, name);
+  execFileSync('bash', ['-lc', `import -window "${windowId}" "${out.replace(/\\/g, '/')}"`], { stdio: 'inherit' });
+  return out;
+}
+
+function bashOutput(command) {
+  return execFileSync('bash', ['-lc', command], { encoding: 'utf8' }).trim();
+}
+
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function findProofBrowser() {
+function proofBrowserCandidates() {
   const chromeCandidates = [
     '/usr/bin/google-chrome',
     '/usr/bin/google-chrome-stable',
     '/usr/bin/chromium',
     '/usr/bin/chromium-browser',
+    chromium.executablePath(),
+  ].filter((candidate) => fs.existsSync(candidate));
+  return [
+    ...chromeCandidates.map((candidate) => ({ type: 'chrome', path: candidate })),
+    { type: 'firefox', path: firefox.executablePath() },
   ];
-  const chromePath = chromeCandidates.find((candidate) => fs.existsSync(candidate));
-  if (chromePath) return { type: 'chrome', path: chromePath };
-  return { type: 'firefox', path: firefox.executablePath() };
+}
+
+function browserArgs(candidate, userDataDir) {
+  if (candidate.type === 'chrome') {
+    return [
+      '--no-sandbox',
+      '--no-first-run',
+      '--disable-default-apps',
+      '--disable-dev-shm-usage',
+      '--window-size=1440,1100',
+      `--user-data-dir=${userDataDir}`,
+      LIVE_URL,
+    ];
+  }
+  return [
+    '--width', '1440',
+    '--height', '1100',
+    '--profile', userDataDir,
+    '--new-window',
+    LIVE_URL,
+  ];
+}
+
+async function launchProofWindow() {
+  for (const candidate of proofBrowserCandidates()) {
+    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), `tmr-challenges-${candidate.type}-`));
+    const child = spawn(candidate.path, browserArgs(candidate, userDataDir), { stdio: 'ignore' });
+    await wait(7000);
+    const windowId = bashOutput('xdotool search --onlyvisible --name "Open Challenges\\|TrustMyRecord\\|Chrome\\|Firefox\\|Nightly" 2>/dev/null | tail -n 1 || true');
+    if (windowId) {
+      return { child, windowId };
+    }
+    child.kill('SIGTERM');
+  }
+  throw new Error('Could not find a visible browser window for address-bar proof.');
 }
 
 (async () => {
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const proofBrowser = findProofBrowser();
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1320, height: 940 } });
   let validatedUrl = LIVE_URL;
@@ -57,30 +103,10 @@ function findProofBrowser() {
 
     await browser.close();
 
-    const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tmr-challenges-chrome-'));
-    const proofArgs = proofBrowser.type === 'chrome'
-      ? [
-          '--no-sandbox',
-          '--no-first-run',
-          '--disable-default-apps',
-          '--disable-dev-shm-usage',
-          '--window-size=1440,1100',
-          `--user-data-dir=${userDataDir}`,
-          LIVE_URL,
-        ]
-      : [
-          '--width', '1440',
-          '--height', '1100',
-          '--profile', userDataDir,
-          '--new-window',
-          LIVE_URL,
-        ];
-    const proofProcess = spawn(proofBrowser.path, proofArgs, { stdio: 'ignore' });
-
-    await wait(7000);
-    execFileSync('bash', ['-lc', 'xdotool key ctrl+l || true'], { stdio: 'inherit' });
+    const { child: proofProcess, windowId } = await launchProofWindow();
+    execFileSync('bash', ['-lc', `xdotool windowactivate --sync "${windowId}" key ctrl+l`], { stdio: 'inherit' });
     await wait(800);
-    const addressbar = captureRoot('challenges-live-addressbar-proof.png');
+    const addressbar = captureWindow(windowId, 'challenges-live-addressbar-proof.png');
     proofProcess.kill('SIGTERM');
     const report = {
       checked_at: new Date().toISOString(),
