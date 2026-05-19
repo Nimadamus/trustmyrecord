@@ -484,6 +484,20 @@
         function statusText(pick) {
             return 'Pending';
         }
+        function fmtSubmittedAt(pick) {
+            // 'Time Submitted' must never display a future instant. If locked_at
+            // is in the future (data corruption upstream), try created_at; if
+            // that's also in the future, surface the gap with an em-dash so the
+            // viewer can see the data is bad rather than a misleading time.
+            var nowMs = Date.now();
+            var cands = [pick && pick.locked_at, pick && pick.created_at];
+            for (var i = 0; i < cands.length; i++) {
+                if (!cands[i]) continue;
+                var t = new Date(cands[i]).getTime();
+                if (isFinite(t) && t <= nowMs) return fmtDate(cands[i]);
+            }
+            return '—';
+        }
         function rowHtml(pick) {
             var pickLabel = pickText(pick);
             var stake = stakeAmounts(pick);
@@ -495,7 +509,7 @@
                 + '<td>' + esc(fmtOdds(pick.odds_snapshot)) + '</td>'
                 + '<td>' + esc(fmtUnits(stake.risk)) + '</td>'
                 + '<td>' + esc(fmtUnits(stake.toWin)) + '</td>'
-                + '<td>' + esc(fmtDate(pick.locked_at || pick.created_at)) + '</td>'
+                + '<td>' + fmtSubmittedAt(pick) + '</td>'
                 + '<td><span class="status-pill">' + esc(statusText(pick)) + '</span></td>'
                 + '</tr>';
         }
@@ -512,7 +526,7 @@
                 + cardRow('Odds', esc(fmtOdds(pick.odds_snapshot)))
                 + cardRow('Risk', esc(fmtUnits(stake.risk)))
                 + cardRow('To Win', esc(fmtUnits(stake.toWin)))
-                + cardRow('Time Submitted', esc(fmtDate(pick.locked_at || pick.created_at)))
+                + cardRow('Time Submitted', fmtSubmittedAt(pick))
                 + cardRow('Status', '<span class="status-pill">' + esc(statusText(pick)) + '</span>')
                 + '</article>';
         }
