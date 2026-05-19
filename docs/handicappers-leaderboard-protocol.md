@@ -32,10 +32,9 @@ The page must also show current production members underneath the official quali
 
 Future leaderboard polish must never remove, hide, replace, or block the full real handicapper/member list. Official leaderboard qualification thresholds may lock promoted leaderboard badges, but all real members should remain visible in the general handicapper/member rankings list unless filtered by the user.
 
-Required ranking columns:
+Required public ranking columns:
 
-- Rank
-- Handicapper
+- User
 - Record
 - Win %
 - Net Units
@@ -43,6 +42,10 @@ Required ranking columns:
 - Verified Picks
 - Last Active
 - Sports
+
+The left side of each row must be one compact User block: small avatar, full display name, muted handle, and any optional rank badge inside that same cell. Do not reintroduce separate Rank and Handicapper columns on the far left. Avatars must stay compact, roughly 36px to 44px, rows must remain professional and compact, and names should only truncate when the viewport is genuinely too narrow.
+
+Every row must use that member's own avatar/profile image when available. Use the neutral TrustMyRecord fallback only for that specific user when they do not have an avatar; never let a stale/global avatar value repeat across unrelated members.
 
 Use `--` when a field is unavailable. Do not invent users, sports, records, stats, or activity.
 
@@ -54,12 +57,4 @@ No placeholder members or fake stats are allowed on the live leaderboard.
 
 ## Wiring
 
-`/handicappers/index.html` must load the page-scoped polish script directly. The cache-buster query string should be bumped any time `static/js/handicappers-leaderboard-polish.js` changes, so the CDN serves the updated payload:
-
-```html
-<script defer src="/static/js/handicappers-leaderboard-polish.js?v=YYYYMMDDx"></script>
-```
-
-Do not move the polish back into `static/js/nav-badges.js` or any sitewide bundle: it is page-scoped on purpose.
-
-The static script tag in `handicappers/index.html` must carry `data-hm-leaderboard-polish="1"`. `static/js/nav-badges.js` still ships a defensive IIFE that injects the polish script if no element with that marker exists. Without the marker, the IIFE adds a duplicate `<script>` with its own pinned cache-buster (`?v=20260519`), which causes the CDN to serve a stale build of the polish JS in parallel to the new one. Always keep the marker on the static tag whenever the cache-buster is bumped.
+Any page-scoped leaderboard polish must preserve the public member list and the compact User-column layout above. If a separate polish script is enabled again, it must be page-scoped, cache-busted, and marked so sitewide bundles do not inject duplicate or stale copies. During emergency restore work, disabling a broken polish script is acceptable when the inline page renderer already preserves the full real list.
