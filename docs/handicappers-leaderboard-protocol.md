@@ -30,6 +30,8 @@ Never let the literal strings `Not enough graded picks yet`, `No positive units 
 
 The page must also show current production members underneath the official qualification cards. These rankings can include members who do not yet qualify for official promoted badges, but they must use real available data only.
 
+Future leaderboard polish must never remove, hide, replace, or block the full real handicapper/member list. Official leaderboard qualification thresholds may lock promoted leaderboard badges, but all real members should remain visible in the general handicapper/member rankings list unless filtered by the user.
+
 Required ranking columns:
 
 - Rank
