@@ -110,7 +110,8 @@ async function launchProofWindow() {
     await browser.close();
 
     const { child: proofProcess, windowId } = await launchProofWindow();
-    execFileSync('bash', ['-lc', `xdotool windowactivate --sync "${windowId}" key ctrl+l`], { stdio: 'inherit' });
+    const typedUrl = LIVE_URL.replace(/["\\$`]/g, '\\$&');
+    execFileSync('bash', ['-lc', `xdotool windowactivate --sync "${windowId}" key ctrl+l type --clearmodifiers --delay 1 "${typedUrl}"`], { stdio: 'inherit' });
     await wait(800);
     const addressbar = captureWindow(windowId, 'challenges-live-addressbar-proof.png');
     proofProcess.kill('SIGTERM');
