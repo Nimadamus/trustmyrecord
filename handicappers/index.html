@@ -744,12 +744,12 @@
         </div>
 
         <div class="hm-trust-notes">
-            <span class="hm-trust-note">Only public members with real locked-pick activity are shown.</span>
+            <span class="hm-trust-note">All public real members are shown; promoted leaderboard badges require qualification.</span>
             <span class="hm-trust-note">Stats are based on graded picks only. Pending picks are not included until graded.</span>
         </div>
 
         <div class="hm-leaderboard-controls" aria-label="Leaderboard pagination controls">
-            <span class="hm-page-summary" id="hmPageSummary">Showing 0-0 of 0 qualified members</span>
+            <span class="hm-page-summary" id="hmPageSummary">Showing 0-0 of 0 members</span>
             <div class="hm-page-actions">
                 <select class="hm-page-size" id="hmPageSize" aria-label="Leaderboard page size">
                     <option value="25">Top 25</option>
@@ -1592,7 +1592,7 @@
         function updatePaginationControls(total, pageSize, pageCount, pageMembers) {
             const start = total ? ((currentPage - 1) * pageSize) + 1 : 0;
             const end = total ? start + pageMembers.length - 1 : 0;
-            els.pageSummary.textContent = 'Showing ' + start + '-' + end + ' of ' + total + ' qualified members';
+            els.pageSummary.textContent = 'Showing ' + start + '-' + end + ' of ' + total + ' members';
             els.pageIndicator.textContent = 'Page ' + currentPage + ' of ' + pageCount;
             els.prevPage.disabled = currentPage <= 1;
             els.nextPage.disabled = currentPage >= pageCount;
@@ -1614,7 +1614,7 @@
             updatePaginationControls(visibleMembers.length, isAll ? Math.max(visibleMembers.length, 1) : pageSize, pageCount, pageMembers);
 
             if (!visibleMembers.length) {
-                els.rows.innerHTML = '<div class="hm-empty"><strong>Founding records are being built now.</strong>Early members will appear here once they have locked pick activity. Search by username to find a specific production member.</div>';
+                els.rows.innerHTML = '<div class="hm-empty"><strong>No members match the current filters.</strong>Clear search or sport filters to return to the full public member list.</div>';
                 return;
             }
 
@@ -1691,7 +1691,7 @@
                     const stats = await hydrateStats(user);
                     return normalizeMember(user, stats);
                 });
-                members = members.filter(member => member.username && isProductionDirectoryUser(member) && Number(member.stats?.totalPicks || 0) > 0);
+                members = members.filter(member => member.username && isProductionDirectoryUser(member));
                 renderSummary();
                 fillSports();
                 applyFilters();
