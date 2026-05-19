@@ -14,6 +14,7 @@
     const communityRoutes = [
         ["/feed/", "Feed"],
         ["/arena/", "Arena"],
+        ["/challenges/", "Challenges"],
         ["/forum/", "Forums"],
         ["/polls/", "Polls"],
         ["/trivia/", "Trivia"]
@@ -23,15 +24,15 @@
 
     // Pages that should highlight Arena in the top nav even though they
     // have their own URL.
-    const ARENA_GROUP = new Set(["arena.html", "challenges.html"]);
-    const COMMUNITY_GROUP = new Set(["feed.html", "arena.html", "forum.html", "polls.html", "trivia.html", "hangout.html"]);
+    const ARENA_GROUP = new Set(["arena.html"]);
+    const COMMUNITY_GROUP = new Set(["feed.html", "arena.html", "challenges.html", "forum.html", "polls.html", "trivia.html", "hangout.html"]);
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
         "leaderboards.html": ["Leaderboards", "Handicapping records, trivia points, polls, online challenges, and handicapper challenges &mdash; every leaderboard in one hub."],
         "handicappers.html": ["Find Handicappers", "Search members, compare verified records, follow cappers, and open public profiles."],
         "arena.html": ["Arena", "Challenge rivals in sports picks, MLB The Show, Madden, NBA 2K, EA FC, and NHL."],
-        "challenges.html": ["Arena", "Public competition, head-to-head challenges, and rivalry loops."],
+        "challenges.html": ["Challenges", "Public competition, head-to-head challenges, and rivalry loops."],
         "feed.html": ["Feed", "Locked picks, hot takes, polls, trivia, and challenges from people with a record."],
         "hangout.html": ["Hangout", "Off-topic chatter and life conversations &mdash; not sports polls."],
         "polls.html": ["Polls", "Sports polls, prediction polls, debates, and community calls."],
