@@ -381,13 +381,13 @@
         }
 
         .hm-table {
-            min-width: 1340px;
+            min-width: 1120px;
         }
 
         .hm-row {
             display: grid;
-            grid-template-columns: minmax(420px, 1.7fr) minmax(142px, 0.6fr) minmax(116px, 0.5fr) minmax(116px, 0.5fr) minmax(116px, 0.5fr) minmax(96px, 0.42fr) minmax(112px, 0.48fr) minmax(118px, 0.5fr);
-            column-gap: 32px;
+            grid-template-columns: minmax(320px, 1.5fr) minmax(124px, 0.6fr) minmax(112px, 0.54fr) minmax(112px, 0.54fr) minmax(112px, 0.54fr) minmax(88px, 0.42fr) minmax(104px, 0.5fr) minmax(108px, 0.5fr);
+            column-gap: 24px;
             row-gap: 12px;
             align-items: center;
             padding: 20px 24px;
@@ -443,7 +443,6 @@
             align-items: center;
             gap: 16px;
             min-width: 0;
-            overflow: hidden;
         }
 
         .hm-avatar {
@@ -476,7 +475,6 @@
             display: grid;
             gap: 5px;
             min-width: 0;
-            overflow: hidden;
         }
 
         .hm-profile-name {
@@ -495,8 +493,6 @@
         }
 
         .hm-name strong {
-            display: block;
-            max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -507,8 +503,6 @@
         }
 
         .hm-name span {
-            display: block;
-            max-width: 100%;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
@@ -686,59 +680,6 @@
             }
 
         }
-    
-        /* Emergency lock: handicappers header and row cells share this exact 9-column map. */
-        .hm-row.hm-head,
-        .hm-row.hm-member-row {
-            grid-template-columns: minmax(58px, 0.32fr) minmax(250px, 1.55fr) minmax(92px, 0.55fr) minmax(86px, 0.5fr) minmax(102px, 0.56fr) minmax(86px, 0.5fr) minmax(112px, 0.58fr) minmax(142px, 0.74fr) minmax(110px, 0.56fr) !important;
-            column-gap: 14px !important;
-            align-items: center;
-        }
-        .hm-head > div { text-align: center; }
-        .hm-head > div:nth-child(2) { text-align: left; }
-        .hm-rank { font-weight: 900; color: #f7c85f; text-align: center; }
-        .hm-row.hm-member-row > .hm-stat { text-align: center; min-width: 0 !important; }
-        .hm-row.hm-member-row > .hm-user { min-width: 0; }
-        .hm-avatar { width: 40px !important; height: 40px !important; min-width: 40px !important; max-width: 40px !important; }
-        .hm-profile-name strong { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; }
-        @media (max-width: 760px) {
-            .hm-row.hm-member-row { grid-template-columns: 1fr !important; }
-            .hm-row.hm-member-row > .hm-stat { text-align: left; }
-            .hm-row.hm-member-row > .hm-stat::before { content: attr(data-label); display: block; margin-bottom: 3px; color: rgba(148, 163, 184, 0.78); font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
-        }
-        /* Locked restore: use real table semantics so headers and body cells cannot shift apart. */
-        .hm-table { width: 100% !important; min-width: 1180px !important; border-collapse: collapse !important; table-layout: fixed !important; }
-        .hm-table col.hm-col-rank { width: 72px; }
-        .hm-table col.hm-col-user { width: 280px; }
-        .hm-table col.hm-col-record { width: 110px; }
-        .hm-table col.hm-col-win { width: 96px; }
-        .hm-table col.hm-col-units { width: 112px; }
-        .hm-table col.hm-col-roi { width: 96px; }
-        .hm-table col.hm-col-picks { width: 124px; }
-        .hm-table col.hm-col-active { width: 156px; }
-        .hm-table col.hm-col-sports { width: 128px; }
-        .hm-table .hm-row { display: table-row !important; padding: 0 !important; border-bottom: 0 !important; }
-        .hm-table th, .hm-table td { padding: 13px 12px !important; border-bottom: 1px solid rgba(148, 163, 184, 0.12); vertical-align: middle; text-align: center; }
-        .hm-table th:nth-child(2), .hm-table td:nth-child(2) { text-align: left; }
-        .hm-table th { color: #7f8da3; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.08em; text-transform: uppercase; background: rgba(4, 9, 18, 0.72); }
-        .hm-table .hm-member-row { min-height: 0 !important; background: rgba(10, 18, 32, 0.78); }
-        .hm-table .hm-member-row:hover { background: rgba(17, 30, 50, 0.96); }
-        .hm-table .hm-cell, .hm-table .hm-stat { min-width: 0 !important; white-space: nowrap; }
-        .hm-table .hm-user-cell { white-space: normal; }
-        .hm-table .hm-user { gap: 10px; overflow: visible; }
-        .hm-table .hm-avatar-link { width: 40px !important; height: 40px !important; }
-        .hm-table .hm-avatar { width: 40px !important; height: 40px !important; min-width: 40px !important; max-width: 40px !important; }
-        .hm-table .hm-name strong { white-space: normal !important; overflow: visible !important; text-overflow: clip !important; font-size: 0.98rem; }
-        .hm-table .hm-name span { font-size: 0.78rem; }
-        @media (max-width: 760px) {
-            .hm-table { min-width: 0 !important; display: block; }
-            .hm-table colgroup, .hm-table thead { display: none; }
-            .hm-table tbody, .hm-table tr, .hm-table td { display: block; width: 100%; }
-            .hm-table tr.hm-member-row { border-radius: 12px; overflow: hidden; margin-bottom: 12px; }
-            .hm-table td { text-align: left !important; border-bottom: 0; padding: 8px 18px !important; }
-            .hm-table td::before { content: attr(data-label); display: block; margin-bottom: 3px; color: rgba(148, 163, 184, 0.78); font-size: 0.68rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.08em; }
-            .hm-table td.hm-user-cell::before { content: none; }
-        }
     </style>
 </head>
 <body>
@@ -750,9 +691,9 @@
                 <p>Discover members with real locked-pick activity, compare verified records, follow cappers, and open public pick histories.</p>
             </div>
             <div class="hm-counts" aria-label="Directory summary">
-                <div class="hm-count"><strong id="hmTotalMembers">12</strong><span>Total Members</span><small>Public members only</small></div>
-                <div class="hm-count"><strong id="hmActiveMembers">12</strong><span>Active Pick Makers</span><small>Members with real picks</small></div>
-                <div class="hm-count"><strong id="hmTotalPicks">194</strong><span>Total Verified Picks</span><small>Graded picks only</small></div>
+                <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Total Members</span><small>Public members only</small></div>
+                <div class="hm-count"><strong id="hmActiveMembers">0</strong><span>Active Pick Makers</span><small>Members with real picks</small></div>
+                <div class="hm-count"><strong id="hmTotalPicks">0</strong><span>Total Verified Picks</span><small>Graded picks only</small></div>
                 <div class="hm-count"><strong id="hmBestWinRate" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Best Win Percentage</span><small id="hmBestWinRateUser">Not enough graded picks yet</small></div>
                 <div class="hm-count"><strong id="hmTopUnits" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Units Leader</span><small id="hmTopUnitsUser">No positive units leader yet</small></div>
                 <div class="hm-count"><strong id="hmRecentActivity" class="is-muted" title="Not enough graded picks yet">--</strong><span>Most Recent Pick Activity</span><small id="hmRecentActivityUser">No pick activity yet</small></div>
@@ -765,7 +706,7 @@
                     <h2>Leaderboard</h2>
                     <p>Leaders require at least 20 graded picks, recent graded activity, and positive net units. Thin samples stay out of promoted rankings.</p>
                 </div>
-                <span class="hm-production-note">Showing <strong id="hmVisibleMembers">12</strong> filtered members</span>
+                <span class="hm-production-note">Showing <strong id="hmVisibleMembers">0</strong> filtered members</span>
             </div>
             <div class="hm-featured" id="hmFeaturedLeaders">
                 <div class="hm-leader-card hm-leader-card--empty"><b>Loading</b><strong>--</strong><span>Waiting for qualified member data</span></div>
@@ -803,12 +744,12 @@
         </div>
 
         <div class="hm-trust-notes">
-            <span class="hm-trust-note">Only public members with real pick activity are shown in this list.</span>
+            <span class="hm-trust-note">Only public members with real locked-pick activity are shown.</span>
             <span class="hm-trust-note">Stats are based on graded picks only. Pending picks are not included until graded.</span>
         </div>
 
         <div class="hm-leaderboard-controls" aria-label="Leaderboard pagination controls">
-            <span class="hm-page-summary" id="hmPageSummary">Showing 1-12 of 12 pick-active members</span>
+            <span class="hm-page-summary" id="hmPageSummary">Showing 0-0 of 0 qualified members</span>
             <div class="hm-page-actions">
                 <select class="hm-page-size" id="hmPageSize" aria-label="Leaderboard page size">
                     <option value="25">Top 25</option>
@@ -822,41 +763,26 @@
             </div>
         </div>
 
-                <section id="member-rankings" class="hm-table-wrap" aria-live="polite">
-            <table class="hm-table">
-                <colgroup>
-                    <col class="hm-col-rank">
-                    <col class="hm-col-user">
-                    <col class="hm-col-record">
-                    <col class="hm-col-win">
-                    <col class="hm-col-units">
-                    <col class="hm-col-roi">
-                    <col class="hm-col-picks">
-                    <col class="hm-col-active">
-                    <col class="hm-col-sports">
-                </colgroup>
-                <thead>
-                    <tr class="hm-row hm-head" role="row">
-                        <th scope="col">Rank</th>
-                        <th scope="col">Handicapper</th>
-                        <th scope="col">Record</th>
-                        <th scope="col">Win %</th>
-                        <th scope="col">Net Units</th>
-                        <th scope="col">ROI</th>
-                        <th scope="col">Verified Picks</th>
-                        <th scope="col">Last Active</th>
-                        <th scope="col">Sports</th>
-                    </tr>
-                </thead>
-                <tbody id="hmRows">
-                    <tr class="hm-row hm-member-row">
-                        <td class="hm-cell is-muted" colspan="9">Loading members...</td>
-                    </tr>
-                </tbody>
-            </table>
+        <section class="hm-table-wrap" aria-live="polite">
+            <div class="hm-table">
+                <div class="hm-row hm-head" role="row">
+                    <div>Username</div>
+                    <div>Record</div>
+                    <div>Units</div>
+                    <div>ROI</div>
+                    <div>Win %</div>
+                    <div>Picks</div>
+                    <div>Streak</div>
+                    <div>Active</div>
+                </div>
+                <div id="hmRows">
+                    <div class="hm-empty"><strong>Loading handicappers</strong>Pulling public profiles and performance stats.</div>
+                </div>
+            </div>
         </section>
     </main>
 
+    <script data-hm-leaderboard-polish="1"></script>
     <script src="/static/js/config.js"></script>
     <script src="/static/js/backend-api.js"></script>
     <script src="/static/js/stats-engine.js"></script>
@@ -988,7 +914,6 @@
                 /^ttdiag\d*[_-]?\d+$/,
                 /^usrtest\d+$/,
                 /^tmr(?:pick|profile)[_-]?\d+$/,
-                /^tmrtest/i,
                 /^claudetest\d+$/,
                 /^codexqa\d+$/,
                 /(?:^|[_-])(qa|generated|fake|junk|internal)(?:[_-]|\d|$)/,
@@ -1668,7 +1593,7 @@
         function updatePaginationControls(total, pageSize, pageCount, pageMembers) {
             const start = total ? ((currentPage - 1) * pageSize) + 1 : 0;
             const end = total ? start + pageMembers.length - 1 : 0;
-            els.pageSummary.textContent = 'Showing ' + start + '-' + end + ' of ' + total + ' pick-active members';
+            els.pageSummary.textContent = 'Showing ' + start + '-' + end + ' of ' + total + ' qualified members';
             els.pageIndicator.textContent = 'Page ' + currentPage + ' of ' + pageCount;
             els.prevPage.disabled = currentPage <= 1;
             els.nextPage.disabled = currentPage >= pageCount;
@@ -1684,41 +1609,37 @@
             const isAll = pageSize === Infinity;
             const pageCount = isAll ? 1 : Math.max(1, Math.ceil(visibleMembers.length / pageSize));
             currentPage = Math.min(Math.max(currentPage, 1), pageCount);
-            const pageStart = isAll ? 0 : (currentPage - 1) * pageSize;
             const pageMembers = isAll
                 ? visibleMembers
-                : visibleMembers.slice(pageStart, currentPage * pageSize);
+                : visibleMembers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
             updatePaginationControls(visibleMembers.length, isAll ? Math.max(visibleMembers.length, 1) : pageSize, pageCount, pageMembers);
 
             if (!visibleMembers.length) {
-                els.rows.innerHTML = '<div class="hm-empty"><strong>No pick-active members match the current filters.</strong>Clear search or sport filters to return to the full public pick-active list.</div>';
+                els.rows.innerHTML = '<div class="hm-empty"><strong>Founding records are being built now.</strong>Early members will appear here once they have locked pick activity. Search by username to find a specific production member.</div>';
                 return;
             }
 
-            els.rows.innerHTML = pageMembers.map((member, pageIndex) => {
+            els.rows.innerHTML = pageMembers.map(member => {
                 const stats = member.stats || defaultStats();
                 const hasPicks = Number(stats.totalPicks || 0) > 0;
                 const hasGraded = gradedCount(member) > 0;
-                const rank = pageStart + pageIndex + 1;
                 const profileHref = '/profile/?user=' + encodeURIComponent(member.username);
                 const profileLabel = 'View ' + member.username + ' profile';
-                const sports = Array.isArray(stats.sports) && stats.sports.length ? stats.sports.join(', ') : '--';
-                return '<tr class="hm-row hm-member-row" data-username="' + escapeHtml(member.username) + '" data-profile-href="' + profileHref + '" role="link" tabindex="0" aria-label="' + escapeHtml(profileLabel) + '">' +
-                    '<td class="hm-cell hm-stat hm-rank" data-label="Rank">#' + rank + '</td>' +
-                    '<td class="hm-cell hm-user-cell" data-label="Handicapper"><div class="hm-user">' +
+                return '<div class="hm-row hm-member-row" data-username="' + escapeHtml(member.username) + '" data-profile-href="' + profileHref + '" role="link" tabindex="0" aria-label="' + escapeHtml(profileLabel) + '">' +
+                    '<div class="hm-user">' +
                         '<a class="hm-avatar-link" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '">' +
                             '<img class="hm-avatar" src="' + escapeHtml(member.avatar) + '" alt="' + escapeHtml(member.displayName) + ' avatar">' +
                         '</a>' +
                         '<div class="hm-name"><a class="hm-profile-name" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '"><strong data-tmr-username="' + escapeHtml(member.username) + '">' + escapeHtml(member.displayName) + '</strong></a><span>@' + escapeHtml(member.username) + '</span></div>' +
-                    '</div></td>' +
-                    '<td class="hm-cell hm-stat" data-label="Record">' + escapeHtml(formatRecord(stats)) + '</td>' +
-                    '<td class="hm-cell hm-stat ' + (hasGraded ? statClass(stats.winRate == null ? null : Number(stats.winRate) - 50) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="Win %">' + escapeHtml(formatPercent(stats.winRate, hasGraded)) + '</td>' +
-                    '<td class="hm-cell hm-stat ' + statClass(stats.units) + '" data-label="Net Units">' + escapeHtml(formatUnits(stats.units, hasPicks)) + '</td>' +
-                    '<td class="hm-cell hm-stat ' + (hasGraded ? statClass(stats.roi) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="ROI">' + escapeHtml(formatPercent(stats.roi, hasGraded)) + '</td>' +
-                    '<td class="hm-cell hm-stat" data-label="Verified Picks">' + Number(stats.totalPicks || 0) + '</td>' +
-                    '<td class="hm-cell hm-stat is-muted" data-label="Last Active">' + escapeHtml(formatLastActive(member.lastActive)) + '</td>' +
-                    '<td class="hm-cell hm-stat is-muted" data-label="Sports">' + escapeHtml(sports) + '</td>' +
-                '</tr>';
+                    '</div>' +
+                    '<div class="hm-stat" data-label="Record">' + escapeHtml(formatRecord(stats)) + '</div>' +
+                    '<div class="hm-stat ' + statClass(stats.units) + '" data-label="Units">' + escapeHtml(formatUnits(stats.units, hasPicks)) + '</div>' +
+                    '<div class="hm-stat ' + (hasGraded ? statClass(stats.roi) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="ROI">' + escapeHtml(formatPercent(stats.roi, hasGraded)) + '</div>' +
+                    '<div class="hm-stat ' + (hasGraded ? statClass(stats.winRate == null ? null : Number(stats.winRate) - 50) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="Win %">' + escapeHtml(formatPercent(stats.winRate, hasGraded)) + '</div>' +
+                    '<div class="hm-stat" data-label="Total picks">' + Number(stats.totalPicks || 0) + '</div>' +
+                    '<div class="hm-stat ' + statClass(stats.currentStreak) + '" data-label="Current streak">' + escapeHtml(formatStreak(stats.currentStreak)) + '</div>' +
+                    '<div class="hm-stat is-muted" data-label="Last active">' + escapeHtml(formatLastActive(member.lastActive)) + '</div>' +
+                '</div>';
             }).join('');
 
             if (window.TMR && typeof window.TMR.attachUserBadges === 'function') {
@@ -1818,8 +1739,5 @@
         init();
     })();
     </script>
-    <!-- handicappers locked mapping publish 1779215245 -->
-    <!-- handicappers polish disabled during list restore -->
 </body>
 </html>
-
