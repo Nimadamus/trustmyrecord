@@ -8305,7 +8305,8 @@
         else { pl = '--'; }
 
         const r = rtMap.get(p.id || (p.game_id + '|' + p.selection));
-        const rd = r != null ? formatSignedUnits(r) : '--';
+        const rd = status === 'pending' ? '' : (r != null ? formatSignedUnits(r) : '--');
+        const netUnitsSubline = status === 'pending' ? '' : '<div class="ledger-subline">' + rd + '</div>';
         const clvClass = clvValue > 0 ? 'positive' : clvValue < 0 ? 'negative' : 'zero';
 
         const rowClass = 'row-' + status;
@@ -8319,7 +8320,7 @@
             '<td data-label="Odds">' + odds + '</td>' +
             '<td data-label="Units">' + units + '</td>' +
             '<td data-label="Result"><span class="result-badge ' + status + '">' + status.toUpperCase() + '</span></td>' +
-            '<td data-label="Net Units" class="profit-cell ' + plc + '">' + pl + '<div class="ledger-subline">' + rd + '</div></td>' +
+            '<td data-label="Net Units" class="profit-cell ' + plc + '">' + pl + netUnitsSubline + '</td>' +
             '<td data-label="Closing Line" class="ledger-closing">' + formatLineValue(closingLine) + '</td>' +
             '<td data-label="CLV" class="profit-cell ' + clvClass + '">' + formatClvValue(clvValue) + '</td>' +
             '<td data-label="Book">' + book + '</td>' +

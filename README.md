@@ -101,6 +101,10 @@ trustmyrecord/
 
 Production data lives in the backend. The frontend may use browser storage for session persistence, UI preferences, cached state, or graceful fallbacks, but the canonical records, pick grading, profile stats, forum posts, polls, trivia scores, and challenge data are API-backed.
 
+## Profile Record Table Protocol
+
+Pending picks must not show net units. In the profile record table, any row with `status` or `result` equal to `PENDING` displays only `--` in the Net Units cell, with no calculated, projected, stale, cumulative, closing-line, or secondary unit subline. Net units render only after a final graded result such as `WON`, `LOST`, `PUSH`, `VOID`, or `CANCELED`.
+
 ---
 
 ## Core Pages
