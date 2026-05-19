@@ -59,3 +59,5 @@ No placeholder members or fake stats are allowed on the live leaderboard.
 ```
 
 Do not move the polish back into `static/js/nav-badges.js` or any sitewide bundle: it is page-scoped on purpose.
+
+The static script tag in `handicappers/index.html` must carry `data-hm-leaderboard-polish="1"`. `static/js/nav-badges.js` still ships a defensive IIFE that injects the polish script if no element with that marker exists. Without the marker, the IIFE adds a duplicate `<script>` with its own pinned cache-buster (`?v=20260519`), which causes the CDN to serve a stale build of the polish JS in parallel to the new one. Always keep the marker on the static tag whenever the cache-buster is bumped.
