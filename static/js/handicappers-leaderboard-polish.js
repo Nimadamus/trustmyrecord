@@ -66,6 +66,144 @@
         return match ? Number(match[1]) || 1 : 1;
     }
 
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function listFromPayload(payload) {
+        if (Array.isArray(payload)) return payload;
+        if (Array.isArray(payload && payload.users)) return payload.users;
+        if (Array.isArray(payload && payload.leaderboard)) return payload.leaderboard;
+        if (Array.isArray(payload && payload.data)) return payload.data;
+        return [];
+    }
+
+    function isRealDirectoryUser(user) {
+        const username = String(user && user.username || '').trim().toLowerCase();
+        if (!username) return false;
+        return !/(?:^|[_-])(pendingqa|generated|demo|seed|bot|qa|test|fake|junk|internal)(?:[_-]|\d|$)/.test(username)
+            && !/^tmrtest/i.test(username);
+    }
+
+    function num(value) {
+        const parsed = Number(value);
+        return Number.isFinite(parsed) ? parsed : 0;
+    }
+
+    function userStat(user, keys, fallback) {
+        const stats = user && (user.stats || user.summary || user.metrics) || {};
+        for (const key of keys) {
+            if (user && user[key] != null) return user[key];
+            if (stats && stats[key] != null) return stats[key];
+        }
+        return fallback;
+    }
+
+    function mergedMembers(users, leaders) {
+        const byName = new Map();
+        users.concat(leaders).forEach(user => {
+            if (!isRealDirectoryUser(user)) return;
+            const username = String(user.username || '').trim();
+            const key = username.toLowerCase();
+            const existing = byName.get(key) || {};
+            byName.set(key, Object.assign({}, existing, user, {
+                username,
+                display_name: user.display_name || user.displayName || existing.display_name || existing.displayName || username,
+                avatar_url: user.avatar_url || user.avatarUrl || existing.avatar_url || existing.avatarUrl || ''
+            }));
+        });
+        return Array.from(byName.values());
+    }
+
+    function formatUnits(value, hasPicks) {
+        const units = num(value);
+        if (!hasPicks && units === 0) return '0.00';
+        return (units > 0 ? '+' : '') + units.toFixed(2);
+    }
+
+    function formatPercent(value, hasGraded) {
+        if (!hasGraded || value == null || value === '') return 'N/A';
+        return num(value).toFixed(1) + '%';
+    }
+
+    function formatLastActive(user) {
+        const raw = user.last_active_at || user.lastActiveAt || user.updated_at || user.updatedAt || user.created_at || user.createdAt;
+        const time = raw ? new Date(raw).getTime() : 0;
+        if (!time || !Number.isFinite(time)) return 'No recent activity';
+        const days = Math.floor((Date.now() - time) / 86400000);
+        if (days <= 0) return 'Today';
+        if (days === 1) return '1d ago';
+        return days + 'd ago';
+    }
+
+    function renderEmergencyRows(members) {
+        const rows = document.getElementById('hmRows');
+        if (!rows || !members.length) return;
+        members.sort((a, b) => num(userStat(b, ['net_units', 'netUnits', 'units'], 0)) - num(userStat(a, ['net_units', 'netUnits', 'units'], 0)));
+        rows.innerHTML = members.map(member => {
+            const username = String(member.username || '').trim();
+            const display = String(member.display_name || member.displayName || username);
+            const wins = num(userStat(member, ['wins'], 0));
+            const losses = num(userStat(member, ['losses'], 0));
+            const pushes = num(userStat(member, ['pushes'], 0));
+            const totalPicks = num(userStat(member, ['total_picks', 'totalPicks'], wins + losses + pushes));
+            const hasGraded = wins + losses + pushes > 0;
+            const units = num(userStat(member, ['net_units', 'netUnits', 'units'], 0));
+            const avatar = member.avatar_url || member.avatarUrl || '/static/media/TMR-avatar-256.jpg';
+            const profileHref = '/profile/?user=' + encodeURIComponent(username);
+            const record = wins + '-' + losses + (pushes ? '-' + pushes : '');
+            return '<div class="hm-row hm-member-row" data-username="' + escapeHtml(username) + '" data-profile-href="' + profileHref + '" role="link" tabindex="0">' +
+                '<div class="hm-user"><a class="hm-avatar-link" href="' + profileHref + '"><img class="hm-avatar" src="' + escapeHtml(avatar) + '" alt="' + escapeHtml(display) + ' avatar"></a>' +
+                '<div class="hm-name"><a class="hm-profile-name" href="' + profileHref + '"><strong data-tmr-username="' + escapeHtml(username) + '">' + escapeHtml(display) + '</strong></a><span>@' + escapeHtml(username) + '</span></div></div>' +
+                '<div class="hm-stat" data-label="Record">' + record + '</div>' +
+                '<div class="hm-stat ' + (units > 0 ? 'is-positive' : units < 0 ? 'is-negative' : 'is-muted') + '" data-label="Units">' + formatUnits(units, totalPicks > 0) + '</div>' +
+                '<div class="hm-stat ' + (hasGraded ? '' : 'is-neutral') + '" data-label="ROI">' + formatPercent(userStat(member, ['roi'], null), hasGraded) + '</div>' +
+                '<div class="hm-stat ' + (hasGraded ? '' : 'is-neutral') + '" data-label="Win %">' + formatPercent(userStat(member, ['win_rate', 'winRate'], null), hasGraded) + '</div>' +
+                '<div class="hm-stat" data-label="Total picks">' + totalPicks + '</div>' +
+                '<div class="hm-stat is-muted" data-label="Current streak">--</div>' +
+                '<div class="hm-stat is-muted" data-label="Last active">' + escapeHtml(formatLastActive(member)) + '</div>' +
+            '</div>';
+        }).join('');
+        const total = String(members.length);
+        const totalEl = document.getElementById('hmTotalMembers');
+        const visibleEl = document.getElementById('hmVisibleMembers');
+        const statusEl = document.getElementById('hmStatus');
+        const summaryEl = document.getElementById('hmPageSummary');
+        const activeEl = document.getElementById('hmActiveMembers');
+        const picksEl = document.getElementById('hmTotalPicks');
+        if (totalEl) totalEl.textContent = total;
+        if (visibleEl) visibleEl.textContent = total;
+        if (activeEl) activeEl.textContent = String(members.filter(member => num(userStat(member, ['total_picks', 'totalPicks'], 0)) > 0).length);
+        if (picksEl) picksEl.textContent = String(members.reduce((sum, member) => sum + num(userStat(member, ['total_picks', 'totalPicks'], 0)), 0));
+        if (statusEl) statusEl.textContent = 'Showing all ' + total + ' members.';
+        if (summaryEl) summaryEl.textContent = 'Showing 1-' + total + ' of ' + total + ' members';
+    }
+
+    async function restoreMemberListIfEmpty() {
+        const rows = document.querySelectorAll('#hmRows .hm-member-row').length;
+        const status = document.getElementById('hmStatus');
+        const looksEmpty = rows === 0 || /0\s+of\s+0|0\s+filtered|Loading/i.test(String(status && status.textContent || ''));
+        if (!looksEmpty || window.__hmEmergencyRestoreStarted) return;
+        window.__hmEmergencyRestoreStarted = true;
+        try {
+            const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            const responses = await Promise.all([
+                fetch(base + '/users?limit=250&offset=0').then(response => response.ok ? response.json() : []),
+                fetch(base + '/users/leaderboard?sortBy=net_units&limit=250').then(response => response.ok ? response.json() : [])
+            ]);
+            renderEmergencyRows(mergedMembers(listFromPayload(responses[0]), listFromPayload(responses[1])));
+            polish();
+        } catch (error) {
+            window.__hmEmergencyRestoreStarted = false;
+            console.warn('[Handicappers] Emergency member restore failed:', error);
+        }
+    }
+
     function ensureCurrentRankingsHeader() {
         if (document.querySelector('.hm-current-rankings')) return;
         const controls = document.querySelector('.hm-controls');
@@ -87,7 +225,7 @@
             if (copy) copy.textContent = OFFICIAL_COPY;
         }
         document.querySelectorAll('.hm-trust-note').forEach((note, index) => {
-            if (index === 0) note.textContent = OFFICIAL_COPY;
+            if (index === 0) note.textContent = 'All public real members are shown; promoted leaderboard badges require qualification.';
             if (index === 1) note.textContent = 'Current rankings use graded picks only for record, win percentage, net units, ROI, and verified pick counts. Pending picks stay out until graded.';
         });
         const pageSummary = document.getElementById('hmPageSummary');
@@ -209,6 +347,9 @@
 
     function initPolish() {
         polish();
+        setTimeout(restoreMemberListIfEmpty, 900);
+        setTimeout(restoreMemberListIfEmpty, 2600);
+        setTimeout(restoreMemberListIfEmpty, 5200);
         const rows = document.getElementById('hmRows');
         const featured = document.getElementById('hmFeaturedLeaders');
         const counts = document.querySelector('.hm-counts');
