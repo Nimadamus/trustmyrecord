@@ -24,12 +24,25 @@ function fetchLive() {
 }
 
 function extractHeaders(html) {
+  const tableHead = html.match(/<tr class="hm-row hm-head" role="row">([\s\S]*?)<\/tr>/);
+  if (tableHead) {
+    return Array.from(tableHead[1].matchAll(/<th scope="col">([\s\S]*?)<\/th>/g)).map((m) => m[1].trim());
+  }
   const match = html.match(/<div class="hm-row hm-head" role="row">([\s\S]*?)<\/div>\s*<div id="hmRows">/);
   if (!match) return [];
   return Array.from(match[1].matchAll(/<div>(.*?)<\/div>/g)).map((m) => m[1].trim());
 }
 
 function firstRowLabels(html) {
+  const renderer = html.slice(html.indexOf("return '<tr class=\"hm-row hm-member-row\""));
+  if (renderer) {
+    const labels = [];
+    for (const match of renderer.matchAll(/data-label="([^"]+)"/g)) {
+      labels.push(match[1]);
+      if (labels.length >= EXPECTED_HEADERS.length) break;
+    }
+    if (labels.length) return labels;
+  }
   const start = html.indexOf('<div class="hm-row hm-member-row"');
   if (start === -1) return [];
   const next = html.indexOf('<div class="hm-row hm-member-row"', start + 1);
@@ -98,4 +111,5 @@ function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
   console.error(error);
   process.exit(1);
 });
+
 
