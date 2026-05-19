@@ -60,6 +60,10 @@ function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
   const args = [
     '--no-sandbox',
     '--disable-gpu',
+    '--no-first-run',
+    '--no-default-browser-check',
+    '--disable-sync',
+    '--disable-features=SignInProfileCreation,ChromeWhatsNewUI,SigninInterception,AccountConsistency',
     '--ignore-certificate-errors',
     '--window-size=1440,1100',
     `--user-data-dir=${profile}`,
