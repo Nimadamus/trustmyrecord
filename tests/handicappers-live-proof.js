@@ -96,7 +96,8 @@ function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
   const report = {
     checked_at: new Date().toISOString(),
-    url: LIVE_URL,`n    browser_url: BROWSER_URL,
+    url: LIVE_URL,
+    browser_url: BROWSER_URL,
     http_status: fetched.status,
     last_modified: fetched.headers['last-modified'] || '',
     headers,
