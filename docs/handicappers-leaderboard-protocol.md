@@ -60,3 +60,6 @@ No placeholder members or fake stats are allowed on the live leaderboard.
 ## Wiring
 
 Any page-scoped leaderboard polish must preserve the public member list and the compact User-column layout above. If a separate polish script is enabled again, it must be page-scoped, cache-busted, and marked so sitewide bundles do not inject duplicate or stale copies. During emergency restore work, disabling a broken polish script is acceptable when the inline page renderer already preserves the full real list.
+## Leaderboard Body Mapping Lock
+
+Future work on the TrustMyRecord handicappers page must not alter the leaderboard/table body, column mapping, or row data rendering unless explicitly requested. Top/header/filter changes must not affect the leaderboard below it. The public member list must keep a stable user column plus correctly mapped record, win percentage, units/ROI, pick count, activity, sports or other visible stat labels; avatars and usernames must be rendered from each row user, never from the logged-in user or a shared stale fallback.
