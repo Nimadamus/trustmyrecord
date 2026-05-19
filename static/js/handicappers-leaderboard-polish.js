@@ -110,7 +110,7 @@
             const small = box.querySelector('small');
             const value = (strong.textContent || '').trim();
             const valueIsEmptyPhrase = COUNT_LOCKED_PHRASES.indexOf(value) !== -1;
-            const isLocked = !value || value === '--' || valueIsEmptyPhrase || strong.classList.contains('is-muted');
+            const isLocked = !value || value === '--' || valueIsEmptyPhrase;
             if (!isLocked) {
                 if (box.getAttribute('data-hm-locked') === '1') box.removeAttribute('data-hm-locked');
                 return;
