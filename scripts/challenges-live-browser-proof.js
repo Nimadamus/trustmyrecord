@@ -7,6 +7,7 @@ const path = require('path');
 const os = require('os');
 
 const LIVE_URL = process.env.TMR_CHALLENGES_URL || 'https://trustmyrecord.com/challenges/';
+const PROOF_URL = LIVE_URL.includes('#') ? LIVE_URL : `${LIVE_URL}#open-challenges`;
 const OUT_DIR = path.join(process.cwd(), 'artifacts', 'challenges-live-proof');
 
 function captureRoot(name) {
@@ -52,7 +53,7 @@ function browserArgs(candidate, userDataDir) {
       '--disable-dev-shm-usage',
       '--window-size=1440,1100',
       `--user-data-dir=${userDataDir}`,
-      LIVE_URL,
+      PROOF_URL,
     ];
   }
   return [
@@ -60,7 +61,7 @@ function browserArgs(candidate, userDataDir) {
     '--height', '1100',
     '--profile', userDataDir,
     '--new-window',
-    LIVE_URL,
+    PROOF_URL,
   ];
 }
 
@@ -97,6 +98,7 @@ async function launchProofWindow() {
     const required = [
       'Open Challenges',
       'Create Open Challenge',
+      'Test Bragging Rights Challenge',
       'Bragging Rights Only. No cash prize. No paid entry.',
       'Money challenges and token contests are not active yet.',
     ];
@@ -110,7 +112,7 @@ async function launchProofWindow() {
     await browser.close();
 
     const { child: proofProcess, windowId } = await launchProofWindow();
-    const typedUrl = LIVE_URL.replace(/'/g, `'\\''`);
+    const typedUrl = PROOF_URL.replace(/'/g, `'\\''`);
     execFileSync('bash', ['-lc', `printf '%s' '${typedUrl}' | xclip -selection clipboard && xdotool windowactivate --sync "${windowId}" mousemove 520 17 click 1 key ctrl+a key ctrl+v`], { stdio: 'inherit' });
     await wait(800);
     const addressbar = captureWindow(windowId, 'challenges-live-addressbar-proof.png');
