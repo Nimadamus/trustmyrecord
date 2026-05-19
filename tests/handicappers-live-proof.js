@@ -55,10 +55,11 @@ function captureRoot(out) {
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const browser = await chromium.launch({
     headless: false,
-    args: ['--window-size=1440,1100', '--no-sandbox'],
+    args: ['--window-size=1440,1100', '--no-sandbox', '--ignore-certificate-errors'],
   });
 
-  const page = await browser.newPage({ viewport: { width: 1320, height: 940 } });
+  const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1320, height: 940 } });
+  const page = await context.newPage();
   try {
     await waitForPage(page);
     await page.locator('.hm-leaderboard-controls').scrollIntoViewIfNeeded();
