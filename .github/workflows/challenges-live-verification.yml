@@ -1,0 +1,30 @@
+name: Challenges Live Verification
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'challenges/index.html'
+      - 'scripts/challenges-live-browser-proof.js'
+      - '.github/workflows/challenges-live-verification.yml'
+
+jobs:
+  challenges-live-proof:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci
+      - run: npx playwright install chromium
+      - run: sudo apt-get update && sudo apt-get install -y imagemagick
+      - run: xvfb-run --auto-servernum node scripts/challenges-live-browser-proof.js
+        env:
+          TMR_CHALLENGES_URL: https://trustmyrecord.com/challenges/?verify=open-challenges-20260519-final
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: challenges-live-proof
+          path: artifacts/challenges-live-proof/
