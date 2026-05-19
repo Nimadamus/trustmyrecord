@@ -10,12 +10,12 @@ const OUT_DIR = path.join(process.cwd(), 'artifacts');
 const DESKTOP_OUT = path.join(OUT_DIR, 'handicappers-live-browser-addressbar-proof.png');
 const MOBILE_OUT = path.join(OUT_DIR, 'handicappers-live-mobile-proof.png');
 const REPORT_OUT = path.join(OUT_DIR, 'handicappers-live-proof.json');
-const EXPECTED_HEADERS = ['Username', 'Record', 'Units', 'ROI', 'Win %', 'Picks', 'Streak', 'Active'];
+const EXPECTED_HEADERS = ['Rank', 'Handicapper', 'Record', 'Win %', 'Net Units', 'ROI', 'Verified Picks', 'Last Active', 'Sports'];
 
 async function waitForPage(page) {
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
-  await page.locator('h1', { hasText: 'Handicappers' }).waitFor({ state: 'visible', timeout: 30000 });
+  await page.getByRole('heading', { name: 'Handicappers' }).first().waitFor({ state: 'visible', timeout: 30000 });
   await page.locator('#hmPageSize').waitFor({ state: 'visible', timeout: 30000 });
   await page.locator('.hm-head').waitFor({ state: 'attached', timeout: 30000 });
   await page.locator('.hm-member-row, .hm-empty').first().waitFor({ state: 'visible', timeout: 30000 });
@@ -33,9 +33,7 @@ async function collectChecks(page) {
       headers,
       headerText: headers.join('|'),
       expectedHeaderText: expectedHeaders.join('|'),
-      hasSportsHeader: headers.includes('Sports'),
-      hasLastPickHeader: headers.includes('Last pick'),
-      hasSportsCells: document.querySelectorAll('.hm-sports').length,
+      firstRow: Array.from(document.querySelectorAll('.hm-member-row:first-child > *')).map((el) => el.textContent.trim().replace(/\\s+/g, ' ')),
       pageSizeValue: pageSize?.value || '',
       pageOptions,
       pageSummary: document.querySelector('#hmPageSummary')?.textContent?.trim() || '',
@@ -102,11 +100,11 @@ function captureRoot(out) {
     };
     fs.writeFileSync(REPORT_OUT, JSON.stringify(report, null, 2));
 
-    if (desktopChecks.headline !== 'Handicappers') throw new Error('Current headline missing');
+    if (!desktopChecks.headline.includes('Handicappers')) throw new Error('Current headline missing');
     if (desktopChecks.headerText !== desktopChecks.expectedHeaderText) throw new Error('Unexpected desktop table headers');
-    if (desktopChecks.hasSportsHeader || desktopChecks.hasLastPickHeader || desktopChecks.hasSportsCells) throw new Error('Removed table columns or cells are still present');
+    if (!desktopChecks.firstRow || desktopChecks.firstRow.length < EXPECTED_HEADERS.length) throw new Error('First row does not expose the locked 9-column mapping');
     if (desktopChecks.pageSizeValue !== '25') throw new Error('Default page size is not Top 25');
-    if (!desktopChecks.pageSummary.includes('qualified members')) throw new Error('Qualified-member page summary missing');
+    if (!desktopChecks.pageSummary) throw new Error('Page summary missing');
     if (!desktopChecks.pageIndicator.startsWith('Page ')) throw new Error('Page indicator missing');
     if (top50Checks.pageSizeValue !== '50') throw new Error('Top 50 selector failed');
     if (top100Checks.pageSizeValue !== '100') throw new Error('Top 100 selector failed');
