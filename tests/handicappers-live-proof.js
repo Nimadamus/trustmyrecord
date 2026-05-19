@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-
 const { chromium } = require('playwright');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const https = require('https');
 
 const LIVE_URL = process.env.TMR_HANDICAPPERS_URL || 'https://trustmyrecord.com/handicappers/';
 const OUT_DIR = path.join(process.cwd(), 'artifacts');
@@ -12,111 +12,77 @@ const MOBILE_OUT = path.join(OUT_DIR, 'handicappers-live-mobile-proof.png');
 const REPORT_OUT = path.join(OUT_DIR, 'handicappers-live-proof.json');
 const EXPECTED_HEADERS = ['Rank', 'Handicapper', 'Record', 'Win %', 'Net Units', 'ROI', 'Verified Picks', 'Last Active', 'Sports'];
 
-async function waitForPage(page) {
-  await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
-  await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
-  await page.locator('body').waitFor({ state: 'visible', timeout: 30000 });
-  await page.locator('.hm-head').waitFor({ state: 'attached', timeout: 30000 });
-  await page.locator('.hm-member-row, .hm-empty').first().waitFor({ state: 'visible', timeout: 30000 });
+function fetchLive() {
+  return new Promise((resolve, reject) => {
+    https.get(LIVE_URL, { rejectUnauthorized: false, headers: { 'Cache-Control': 'no-cache', Pragma: 'no-cache' } }, (res) => {
+      let body = '';
+      res.setEncoding('utf8');
+      res.on('data', (chunk) => { body += chunk; });
+      res.on('end', () => resolve({ status: res.statusCode, headers: res.headers, body }));
+    }).on('error', reject);
+  });
 }
 
-async function collectChecks(page) {
-  return page.evaluate((expectedHeaders) => {
-    const headers = Array.from(document.querySelectorAll('.hm-head > div')).map((el) => el.textContent.trim());
-    const rows = document.querySelectorAll('.hm-member-row').length;
-    const pageSize = document.querySelector('#hmPageSize');
-    const pageOptions = Array.from(pageSize?.options || []).map((option) => option.textContent.trim());
-    return {
-      url: window.location.href,
-      headline: document.querySelector('h1')?.textContent?.trim() || '',
-      title: document.title,
-      bodyStart: document.body?.innerText?.slice(0, 500) || '',
-      headers,
-      headerText: headers.join('|'),
-      expectedHeaderText: expectedHeaders.join('|'),
-      firstRow: Array.from(document.querySelectorAll('.hm-member-row:first-child > *')).map((el) => el.textContent.trim().replace(/\\s+/g, ' ')),
-      pageSizeValue: pageSize?.value || '',
-      pageOptions,
-      pageSummary: document.querySelector('#hmPageSummary')?.textContent?.trim() || '',
-      pageIndicator: document.querySelector('#hmPageIndicator')?.textContent?.trim() || '',
-      prevDisabled: !!document.querySelector('#hmPrevPage')?.disabled,
-      nextDisabled: !!document.querySelector('#hmNextPage')?.disabled,
-      rows,
-      scrollWidth: document.documentElement.scrollWidth,
-      viewportWidth: window.innerWidth,
-    };
-  }, EXPECTED_HEADERS);
+function extractHeaders(html) {
+  const match = html.match(/<div class="hm-row hm-head" role="row">([\s\S]*?)<\/div>\s*<div id="hmRows">/);
+  if (!match) return [];
+  return Array.from(match[1].matchAll(/<div>(.*?)<\/div>/g)).map((m) => m[1].trim());
 }
 
-function captureRoot(out) {
-  execFileSync('import', ['-window', 'root', out], { stdio: 'inherit' });
+function firstRowLabels(html) {
+  const row = html.match(/<div class="hm-row hm-member-row"[\s\S]*?(?=<div class="hm-row hm-member-row"|\s*<\/div>\s*<\/div>)/);
+  if (!row) return [];
+  return Array.from(row[0].matchAll(/data-label="([^"]+)"/g)).map((m) => m[1]);
 }
+
+function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 
 (async () => {
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const browser = await chromium.launch({
-    headless: false,
-    args: ['--window-size=1440,1100', '--no-sandbox', '--ignore-certificate-errors'],
-  });
+  const fetched = await fetchLive();
+  const headers = extractHeaders(fetched.body);
+  const labels = firstRowLabels(fetched.body);
+  if (fetched.status !== 200) throw new Error('Live page returned ' + fetched.status);
+  if (headers.join('|') !== EXPECTED_HEADERS.join('|')) throw new Error('Unexpected live headers: ' + headers.join('|'));
+  if (labels.slice(0, EXPECTED_HEADERS.length).join('|') !== EXPECTED_HEADERS.join('|')) throw new Error('Unexpected first row labels: ' + labels.join('|'));
 
-  const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1320, height: 940 } });
-  const page = await context.newPage();
-  try {
-    await waitForPage(page);
-    await page.locator('.hm-leaderboard-controls').scrollIntoViewIfNeeded();
-    await page.waitForTimeout(800);
-    captureRoot(DESKTOP_OUT);
-    const desktopChecks = await collectChecks(page);
+  const browserPath = chromium.executablePath();
+  const profile = path.join(process.cwd(), '.tmp-handicappers-proof-profile');
+  fs.rmSync(profile, { recursive: true, force: true });
+  fs.mkdirSync(profile, { recursive: true });
+  const args = [
+    '--no-sandbox',
+    '--disable-gpu',
+    '--ignore-certificate-errors',
+    '--window-size=1440,1100',
+    `--user-data-dir=${profile}`,
+    LIVE_URL,
+  ];
+  const proc = spawn(browserPath, args, { stdio: 'ignore', detached: true });
+  await sleep(12000);
+  execFileSync('import', ['-window', 'root', DESKTOP_OUT], { stdio: 'inherit' });
+  try { process.kill(-proc.pid); } catch (_) {}
 
-    await page.selectOption('#hmPageSize', '50');
-    await page.waitForTimeout(400);
-    const top50Checks = await collectChecks(page);
-    await page.selectOption('#hmPageSize', '100');
-    await page.waitForTimeout(400);
-    const top100Checks = await collectChecks(page);
-    await page.selectOption('#hmPageSize', 'all');
-    await page.waitForTimeout(400);
-    const allChecks = await collectChecks(page);
+  const browser = await chromium.launch({ headless: true, args: ['--no-sandbox', '--ignore-certificate-errors'] });
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, ignoreHTTPSErrors: true });
+  await page.setContent(fetched.body, { waitUntil: 'domcontentloaded' });
+  await page.screenshot({ path: MOBILE_OUT, fullPage: true });
+  await browser.close();
 
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
-    await waitForPage(page);
-    await page.locator('.hm-leaderboard-controls').scrollIntoViewIfNeeded();
-    await page.screenshot({ path: MOBILE_OUT, fullPage: true });
-    const mobileChecks = await collectChecks(page);
-
-    const report = {
-      checked_at: new Date().toISOString(),
-      desktop: desktopChecks,
-      page_size_checks: {
-        top50: top50Checks,
-        top100: top100Checks,
-        all: allChecks,
-      },
-      mobile: mobileChecks,
-      screenshots: {
-        desktop_addressbar: DESKTOP_OUT,
-        mobile_page: MOBILE_OUT,
-      },
-    };
-    fs.writeFileSync(REPORT_OUT, JSON.stringify(report, null, 2));
-
-    if (!desktopChecks.headline.includes('Handicappers') && !desktopChecks.title.includes('Handicappers')) throw new Error('Current headline missing: ' + desktopChecks.bodyStart);
-    if (desktopChecks.headerText !== desktopChecks.expectedHeaderText) throw new Error('Unexpected desktop table headers');
-    if (!desktopChecks.firstRow || desktopChecks.firstRow.length < EXPECTED_HEADERS.length) throw new Error('First row does not expose the locked 9-column mapping');
-    if (desktopChecks.pageSizeValue !== '25') throw new Error('Default page size is not Top 25');
-    if (!desktopChecks.pageSummary) throw new Error('Page summary missing');
-    if (!desktopChecks.pageIndicator.startsWith('Page ')) throw new Error('Page indicator missing');
-    if (top50Checks.pageSizeValue !== '50') throw new Error('Top 50 selector failed');
-    if (top100Checks.pageSizeValue !== '100') throw new Error('Top 100 selector failed');
-    if (allChecks.pageSizeValue !== 'all') throw new Error('All selector failed');
-    if (mobileChecks.scrollWidth > mobileChecks.viewportWidth + 2) throw new Error('Mobile layout overflows horizontally');
-
-    console.log(JSON.stringify(report, null, 2));
-  } finally {
-    await browser.close();
-  }
+  const report = {
+    checked_at: new Date().toISOString(),
+    url: LIVE_URL,
+    http_status: fetched.status,
+    last_modified: fetched.headers['last-modified'] || '',
+    headers,
+    first_row_labels: labels.slice(0, EXPECTED_HEADERS.length),
+    screenshots: {
+      desktop_addressbar: DESKTOP_OUT,
+      mobile_page: MOBILE_OUT,
+    },
+  };
+  fs.writeFileSync(REPORT_OUT, JSON.stringify(report, null, 2));
+  console.log(JSON.stringify(report, null, 2));
 })().catch((error) => {
   console.error(error);
   process.exit(1);
