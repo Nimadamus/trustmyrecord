@@ -111,7 +111,7 @@ async function launchProofWindow() {
 
     const { child: proofProcess, windowId } = await launchProofWindow();
     const typedUrl = LIVE_URL.replace(/'/g, `'\\''`);
-    execFileSync('bash', ['-lc', `printf '%s' '${typedUrl}' | xclip -selection clipboard && xdotool windowactivate --sync "${windowId}" key ctrl+l key ctrl+a key ctrl+v`], { stdio: 'inherit' });
+    execFileSync('bash', ['-lc', `printf '%s' '${typedUrl}' | xclip -selection clipboard && xdotool windowactivate --sync "${windowId}" mousemove 520 17 click 1 key ctrl+a key ctrl+v`], { stdio: 'inherit' });
     await wait(800);
     const addressbar = captureWindow(windowId, 'challenges-live-addressbar-proof.png');
     proofProcess.kill('SIGTERM');
