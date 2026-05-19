@@ -32,18 +32,20 @@ The page must also show current production members underneath the official quali
 
 Future leaderboard polish must never remove, hide, replace, or block the full real handicapper/member list. Official leaderboard qualification thresholds may lock promoted leaderboard badges, but all real members should remain visible in the general handicapper/member rankings list unless filtered by the user.
 
-Required public ranking columns:
+Required visible ranking columns/stat labels:
 
-- User
+- Rank
+- Handicapper
 - Record
 - Win %
-- Net Units
 - ROI
-- Verified Picks
-- Last Active
-- Sports
+- Total Picks
+- Net Units
+- Recent Activity, when useful
 
-The left side of each row must be one compact User block: small avatar, full display name, muted handle, and any optional rank badge inside that same cell. Do not reintroduce separate Rank and Handicapper columns on the far left. Avatars must stay compact, roughly 36px to 44px, rows must remain professional and compact, and names should only truncate when the viewport is genuinely too narrow.
+The handicappers page must always keep visible stat category labels. Future visual improvements must not remove column headers, stat labels, the full real list data, avatars, usernames, profile links, search/filter/sort behavior, or leaderboard functionality.
+
+The Handicapper column must show one compact user block: small avatar, full display name, and muted handle. Avatars must stay compact, roughly 36px to 44px, and each row must show one user only once. The Rank column may be a compact numeric label; do not let rank or avatars dominate the row.
 
 Every row must use that member's own avatar/profile image when available. Use the neutral TrustMyRecord fallback only for that specific user when they do not have an avatar; never let a stale/global avatar value repeat across unrelated members.
 
