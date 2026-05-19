@@ -5486,6 +5486,15 @@
         return s;
     }
 
+    function formatPickLineValue(pick) {
+        if (window.TMR && typeof window.TMR.formatPickLine === 'function') {
+            return window.TMR.formatPickLine(pick);
+        }
+        const market = String(pick && pick.market_type || '').toLowerCase();
+        const isTotal = market === 'totals' || market === 'total' || market === 'team_totals' || market === 'team_total' || market.endsWith('_totals');
+        return isTotal ? formatTotalLineValue(pick && pick.line_snapshot) : formatLineValue(pick && pick.line_snapshot);
+    }
+
     function formatPickDisplayValue(pick) {
         if (window.TMR && typeof window.TMR.formatPickDisplay === 'function') {
             const formatted = window.TMR.formatPickDisplay(pick);
@@ -8286,7 +8295,7 @@
         const sport = fmtSport(p.sport_key);
         const sc = sport.toLowerCase().replace(/\s/g, '');
         const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
-        const line = formatLineValue(p.line_snapshot);
+        const line = formatPickLineValue(p);
         const sel = formatPickDisplayValue(p);
         const matchup = (p.away_team && p.home_team) ? p.away_team + ' @ ' + p.home_team : (p.event_name || '--');
         const units = formatUnitsValue(p.units);
