@@ -489,13 +489,19 @@
                     const updated = state.challenges.find((item) => String(item.id) === String(id));
                     if (updated) openDetail(updated);
                 } catch (error) {
-                    alert(error.message || "Could not accept challenge.");
+                    openMessageModal("Could not accept challenge", error.message || "Could not accept challenge.");
                 }
             }
 
             function openLoginPrompt() {
                 $("detail-title").textContent = "Log in required";
                 $("detail-body").innerHTML = '<p class="muted">Log in with a verified TrustMyRecord account to accept open challenges.</p><div class="actions"><a class="btn primary" href="/login/"><i class="fa-solid fa-right-to-bracket"></i> Log In</a><a class="btn" href="/signup/"><i class="fa-solid fa-user-plus"></i> Sign Up</a></div>';
+                $("detail-modal").classList.add("open");
+            }
+
+            function openMessageModal(title, message) {
+                $("detail-title").textContent = title;
+                $("detail-body").innerHTML = '<p class="muted">' + escapeHTML(message || "Try again in a moment.") + '</p><div class="notice">' + DISCLAIMER + '</div>';
                 $("detail-modal").classList.add("open");
             }
 
