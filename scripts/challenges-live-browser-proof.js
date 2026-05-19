@@ -69,7 +69,13 @@ async function launchProofWindow() {
     const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), `tmr-challenges-${candidate.type}-`));
     const child = spawn(candidate.path, browserArgs(candidate, userDataDir), { stdio: 'ignore' });
     await wait(7000);
-    const windowId = bashOutput('xdotool search --onlyvisible --name "Open Challenges\\|TrustMyRecord\\|Chrome\\|Firefox\\|Nightly" 2>/dev/null | tail -n 1 || true');
+    const windowId = bashOutput(`(
+      xdotool search --onlyvisible --name "Open Challenges" 2>/dev/null ||
+      xdotool search --onlyvisible --name "TrustMyRecord" 2>/dev/null ||
+      xdotool search --onlyvisible --class "google-chrome" 2>/dev/null ||
+      xdotool search --onlyvisible --class "chromium" 2>/dev/null ||
+      xdotool search --onlyvisible --class "firefox" 2>/dev/null
+    ) | tail -n 1 || true`);
     if (windowId) {
       return { child, windowId };
     }
