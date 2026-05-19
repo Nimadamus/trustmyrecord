@@ -19,7 +19,7 @@ jobs:
           node-version: '20'
       - run: npm ci
       - run: npx playwright install --with-deps chromium firefox
-      - run: sudo apt-get update && sudo apt-get install -y imagemagick fluxbox xdotool
+      - run: sudo apt-get update && sudo apt-get install -y imagemagick fluxbox xdotool xclip
       - run: xvfb-run --auto-servernum bash -lc "fluxbox >/tmp/fluxbox.log 2>&1 & sleep 2; node scripts/challenges-live-browser-proof.js"
         env:
           TMR_CHALLENGES_URL: https://trustmyrecord.com/challenges/?verify=open-challenges-20260519-final
