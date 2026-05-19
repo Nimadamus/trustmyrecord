@@ -6882,8 +6882,8 @@
             try {
                 const d = new Date(iso);
                 if (isNaN(d.getTime())) return '—';
-                return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) +
-                    ' · ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();
+                return d.toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' }) +
+                    ' · ' + d.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase() + ' ET';
             } catch (_) { return '—'; }
         };
         const fmtAmericanOdds = (o) => {
@@ -7703,7 +7703,7 @@
             const line = p.line_snapshot != null ? p.line_snapshot : (p.line != null ? p.line : '—');
             const odds = capOdds(p);
             return '<tr>'
-                + '<td>' + (p.locked_at ? new Date(p.locked_at).toLocaleDateString() : '—') + '</td>'
+                + '<td>' + (p.locked_at ? new Date(p.locked_at).toLocaleDateString('en-US', { timeZone: 'America/New_York' }) : '—') + '</td>'
                 + '<td>' + pmSportLabel(p.sport_key) + '</td>'
                 + '<td>' + capEsc(String(game)) + '</td>'
                 + '<td>' + capEsc(formatPickDisplayValue(p)) + '</td>'
@@ -7825,7 +7825,7 @@
         const fmtDate = (ts) => {
             const d = new Date(ts);
             if (isNaN(d.getTime())) return '—';
-            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit' });
+            return d.toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', year: '2-digit' });
         };
         tbody.innerHTML = rows.map(p => {
             const r = pmResultClass(p);
@@ -8290,8 +8290,15 @@
     function pickRow(p, rtMap) {
         const date = p.locked_at || p.created_at || '';
         const _pd = date ? new Date(date) : null;
-        const dateStr = _pd ? ((_pd.getMonth()+1) + '/' + _pd.getDate() + '/' + String(_pd.getFullYear()).slice(-2)) : '--';
-        const timeStr = _pd ? _pd.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+        const _pdET = _pd ? (function() {
+            try {
+                var parts = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: 'numeric', day: 'numeric', year: '2-digit' }).formatToParts(_pd);
+                var get = function(t) { var f = parts.find(function(x) { return x.type === t; }); return f ? f.value : ''; };
+                return { m: get('month'), d: get('day'), y: get('year') };
+            } catch (_) { return null; }
+        })() : null;
+        const dateStr = _pdET ? (_pdET.m + '/' + _pdET.d + '/' + _pdET.y) : (_pd ? ((_pd.getMonth()+1) + '/' + _pd.getDate() + '/' + String(_pd.getFullYear()).slice(-2)) : '--');
+        const timeStr = _pd ? _pd.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' }) + ' ET' : '';
         const sport = fmtSport(p.sport_key);
         const sc = sport.toLowerCase().replace(/\s/g, '');
         const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
@@ -9866,7 +9873,7 @@
 
         chrono.forEach(p => {
             const date = p.locked_at || p.created_at || '';
-            const d = date ? new Date(date).toLocaleDateString('en-US') : '';
+            const d = date ? new Date(date).toLocaleDateString('en-US', { timeZone: 'America/New_York' }) : '';
             const sport = fmtSport(p.sport_key);
             const matchup = (p.away_team || '') + ' @ ' + (p.home_team || '');
             const pick = p.selection || '';

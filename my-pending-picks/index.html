@@ -302,14 +302,14 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>Date of Game</th>
+                                <th>Date of Game (ET)</th>
                                 <th>League</th>
                                 <th>Pick</th>
                                 <th>Line</th>
                                 <th>Odds</th>
                                 <th>Risk</th>
                                 <th>To Win</th>
-                                <th>Time Submitted</th>
+                                <th>Time Submitted (ET)</th>
                                 <th>Status</th>
                             </tr>
                         </thead>
@@ -357,17 +357,25 @@
                 default: return sportLabel(value);
             }
         }
+        var TMR_TZ = 'America/New_York';
+        function withTz(opts) {
+            var out = {};
+            for (var k in opts) { if (Object.prototype.hasOwnProperty.call(opts, k)) out[k] = opts[k]; }
+            out.timeZone = TMR_TZ;
+            return out;
+        }
         function fmtDate(value, opts) {
             if (!value) return 'TBD';
             var d = new Date(value);
             if (isNaN(d.getTime())) return 'TBD';
-            return d.toLocaleString('en-US', opts || { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+            var base = opts || { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' };
+            return d.toLocaleString('en-US', withTz(base)) + ' ET';
         }
         function fmtShortDate(value) {
             if (!value) return 'None';
             var d = new Date(value);
             if (isNaN(d.getTime())) return 'None';
-            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            return d.toLocaleDateString('en-US', withTz({ month: 'short', day: 'numeric' }));
         }
         function fmtOdds(value) {
             var n = Number(value);
