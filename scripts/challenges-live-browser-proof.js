@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { chromium } = require('playwright');
+const { chromium, firefox } = require('playwright');
 const { execFileSync, spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -21,7 +21,7 @@ function wait(ms) {
 
 (async () => {
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const executablePath = chromium.executablePath();
+  const proofBrowserPath = firefox.executablePath();
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1320, height: 940 } });
   let validatedUrl = LIVE_URL;
@@ -46,19 +46,17 @@ function wait(ms) {
     await browser.close();
 
     const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tmr-challenges-chrome-'));
-    const chrome = spawn(executablePath, [
-      '--no-sandbox',
-      '--no-first-run',
-      '--disable-default-apps',
-      '--disable-dev-shm-usage',
-      '--window-size=1440,1100',
-      `--user-data-dir=${userDataDir}`,
+    const proofBrowser = spawn(proofBrowserPath, [
+      '--width', '1440',
+      '--height', '1100',
+      '--profile', userDataDir,
+      '--new-window',
       LIVE_URL,
     ], { stdio: 'ignore' });
 
     await wait(7000);
     const addressbar = captureRoot('challenges-live-addressbar-proof.png');
-    chrome.kill('SIGTERM');
+    proofBrowser.kill('SIGTERM');
     const report = {
       checked_at: new Date().toISOString(),
       url: validatedUrl,
