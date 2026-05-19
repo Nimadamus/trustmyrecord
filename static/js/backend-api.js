@@ -212,12 +212,17 @@ class TrustMyRecordAPI {
 
                 let response = await fetch(url, config);
 
-                // Handle token expiration
+                // Handle token expiration. Only mark refreshAttempted=true when
+                // the refresh endpoint gave a definitive answer (success or an
+                // explicit 401/403 invalidating the refresh token). A network
+                // error / cold-start 5xx on /auth/refresh must NOT wipe the
+                // session - the refresh token is probably still valid; the
+                // backend is just temporarily unreachable.
                 if (response.status === 401 && this.refreshToken) {
-                    requestContext.refreshAttempted = true;
-                    const refreshed = await this.refreshAccessToken(baseUrl);
-                    if (refreshed) {
+                    const refreshOutcome = await this.refreshAccessToken(baseUrl);
+                    if (refreshOutcome === 'success') {
                         requestContext.sentAuth = true;
+                        requestContext.refreshAttempted = true;
                         response = await fetch(url, {
                             ...config,
                             headers: {
@@ -225,7 +230,10 @@ class TrustMyRecordAPI {
                                 Authorization: `Bearer ${this.token}`
                             }
                         });
+                    } else if (refreshOutcome === 'invalid') {
+                        requestContext.refreshAttempted = true;
                     }
+                    // 'network' -> leave refreshAttempted=false; next call retries.
                 }
 
                 const data = await this.handleResponse(response, requestContext);
@@ -293,13 +301,16 @@ class TrustMyRecordAPI {
     }
 
     async refreshAccessToken(baseUrlOverride) {
-        if (!this.refreshToken) return false;
+        if (!this.refreshToken) return 'invalid';
         try {
             const refreshBaseUrl = baseUrlOverride || this.baseUrl;
             const response = await fetch(`${refreshBaseUrl}/auth/refresh`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ refreshToken: this.refreshToken })
+                body: JSON.stringify({ refreshToken: this.refreshToken }),
+                // 20s timeout covers Render free-tier cold starts without
+                // leaving the page hanging forever on a dead backend.
+                signal: AbortSignal.timeout(20000)
             });
 
             if (response.ok) {
@@ -307,18 +318,21 @@ class TrustMyRecordAPI {
                 this.baseUrl = refreshBaseUrl;
                 this.backendAvailable = true;
                 this.saveTokens(data.accessToken || data.access_token, data.refreshToken || data.refresh_token || this.refreshToken);
-                return true;
+                return 'success';
             }
             if (response.status === 401 || response.status === 403) {
+                // Refresh token genuinely rejected -> log out.
                 this.clearTokens();
+                return 'invalid';
             }
+            // 5xx / 429 / 502 / cold-start: transient backend problem. Keep
+            // tokens so the next request retries instead of forcing re-login.
+            console.warn(`[TMR API] /auth/refresh returned ${response.status} (transient, keeping session)`);
+            return 'network';
         } catch (error) {
-            console.error('Token refresh failed:', error);
-            // Network failures should not erase a remembered login. Keep the
-            // refresh token and let the next API call retry.
-            return false;
+            console.warn('[TMR API] Token refresh network error (keeping session):', error?.message || error);
+            return 'network';
         }
-        return false;
     }
 
     // ==================== AUTH ROUTES ====================
