@@ -7,6 +7,21 @@
 
     const OFFICIAL_COPY = 'Official leaderboard spots unlock once members reach 20 graded picks, recent graded activity, and positive net units.';
     const LOCKED_COPY = 'Requires 20 graded picks, recent graded activity, and positive net units.';
+    const COUNT_LOCKED_PHRASES = [
+        'Not enough graded picks yet',
+        'No positive units leader yet',
+        'No pick activity yet'
+    ];
+    const COUNT_DEFAULT_LABELS = {
+        hmBestWinRate: 'Best Win Percentage',
+        hmTopUnits: 'Units Leader',
+        hmRecentActivity: 'Most Recent Pick Activity'
+    };
+    const COUNT_LOCKED_HINT = {
+        hmBestWinRate: 'Top win % unlocks at 20 graded picks',
+        hmTopUnits: 'Units leader unlocks at 20 graded picks',
+        hmRecentActivity: 'Awaiting recent graded activity'
+    };
 
     function injectPolishCSS() {
         if (document.getElementById('hmLeaderboardPolishStyles')) return;
@@ -30,6 +45,10 @@
             .hm-rank-cell{color:#f6d35f;font-weight:950;text-align:center;letter-spacing:.02em;}
             .hm-stat[data-label="Verified Picks"]{color:#eaf2ff;}
             .hm-stat[data-label="Sports"]{overflow:hidden;text-overflow:ellipsis;}
+            .hm-count[data-hm-locked="1"]{position:relative;}
+            .hm-count[data-hm-locked="1"] strong{display:inline-flex;align-items:center;gap:8px;font-size:1.05rem;line-height:1.15;color:#f6d35f;letter-spacing:.02em;}
+            .hm-count[data-hm-locked="1"] strong:before{content:"LOCKED";padding:3px 7px;border:1px solid rgba(212,167,44,.38);border-radius:999px;color:#f5d66b;background:rgba(212,167,44,.10);font-size:.6rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;}
+            .hm-count[data-hm-locked="1"] small{color:#9aa6bc;}
             @media (max-width:720px){.hm-table{min-width:0;}.hm-row{grid-template-columns:1fr!important;}.hm-rank-cell{text-align:left;}.hm-rank-cell:before{content:attr(data-label);display:block;margin-bottom:5px;color:#7f8da3;font-size:.66rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;}}
         `;
         document.head.appendChild(style);
@@ -79,6 +98,29 @@
             if (option) option.textContent = 'Verified picks';
         }
         ensureCurrentRankingsHeader();
+    }
+
+    function polishCountBoxes() {
+        Object.keys(COUNT_DEFAULT_LABELS).forEach(id => {
+            const strong = document.getElementById(id);
+            if (!strong) return;
+            const box = strong.closest('.hm-count');
+            if (!box) return;
+            const labelSpan = box.querySelector('span');
+            const small = box.querySelector('small');
+            const value = (strong.textContent || '').trim();
+            const valueIsEmptyPhrase = COUNT_LOCKED_PHRASES.indexOf(value) !== -1;
+            const isLocked = !value || value === '--' || valueIsEmptyPhrase || strong.classList.contains('is-muted');
+            if (!isLocked) {
+                if (box.getAttribute('data-hm-locked') === '1') box.removeAttribute('data-hm-locked');
+                return;
+            }
+            box.setAttribute('data-hm-locked', '1');
+            if (valueIsEmptyPhrase) strong.textContent = 'Locked';
+            else if (!value || value === '--') strong.textContent = 'Locked';
+            if (labelSpan) labelSpan.textContent = COUNT_DEFAULT_LABELS[id];
+            if (small) small.textContent = COUNT_LOCKED_HINT[id];
+        });
     }
 
     function polishLeaderCards() {
@@ -160,6 +202,7 @@
     function polish() {
         injectPolishCSS();
         polishCopy();
+        polishCountBoxes();
         polishLeaderCards();
         polishTable();
     }
@@ -168,9 +211,11 @@
         polish();
         const rows = document.getElementById('hmRows');
         const featured = document.getElementById('hmFeaturedLeaders');
+        const counts = document.querySelector('.hm-counts');
         const observer = new MutationObserver(() => polish());
         if (rows) observer.observe(rows, { childList: true, subtree: true });
         if (featured) observer.observe(featured, { childList: true, subtree: true });
+        if (counts) observer.observe(counts, { childList: true, subtree: true, characterData: true });
         document.addEventListener('change', event => {
             if (event.target && (event.target.id === 'hmSort' || event.target.id === 'hmPageSize' || event.target.id === 'hmSport')) {
                 setTimeout(polish, 0);
