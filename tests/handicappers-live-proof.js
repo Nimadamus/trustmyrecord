@@ -30,9 +30,16 @@ function extractHeaders(html) {
 }
 
 function firstRowLabels(html) {
-  const row = html.match(/<div class="hm-row hm-member-row"[\s\S]*?(?=<div class="hm-row hm-member-row"|\s*<\/div>\s*<\/div>)/);
-  if (!row) return [];
-  return Array.from(row[0].matchAll(/data-label="([^"]+)"/g)).map((m) => m[1]);
+  const start = html.indexOf('<div class="hm-row hm-member-row"');
+  if (start === -1) return [];
+  const next = html.indexOf('<div class="hm-row hm-member-row"', start + 1);
+  const row = html.slice(start, next === -1 ? undefined : next);
+  const labels = [];
+  for (const match of row.matchAll(/data-label="([^"]+)"/g)) {
+    labels.push(match[1]);
+    if (labels.length >= EXPECTED_HEADERS.length) break;
+  }
+  return labels;
 }
 
 function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
@@ -87,3 +94,4 @@ function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
   console.error(error);
   process.exit(1);
 });
+
