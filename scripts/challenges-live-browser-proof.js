@@ -22,6 +22,7 @@ function captureRoot(name) {
     await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
     await page.waitForFunction(() => document.body.innerText.includes('Open Challenges'), null, { timeout: 45000 });
+    await page.bringToFront();
 
     const text = await page.locator('body').innerText();
     const required = [
@@ -36,6 +37,7 @@ function captureRoot(name) {
       throw new Error('Challenges page still shows old Arena redirect content.');
     }
 
+    await page.waitForTimeout(1200);
     const addressbar = captureRoot('challenges-live-addressbar-proof.png');
     const report = {
       checked_at: new Date().toISOString(),
