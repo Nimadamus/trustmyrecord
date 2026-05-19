@@ -19,9 +19,21 @@ function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function findProofBrowser() {
+  const chromeCandidates = [
+    '/usr/bin/google-chrome',
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/chromium',
+    '/usr/bin/chromium-browser',
+  ];
+  const chromePath = chromeCandidates.find((candidate) => fs.existsSync(candidate));
+  if (chromePath) return { type: 'chrome', path: chromePath };
+  return { type: 'firefox', path: firefox.executablePath() };
+}
+
 (async () => {
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const proofBrowserPath = firefox.executablePath();
+  const proofBrowser = findProofBrowser();
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1320, height: 940 } });
   let validatedUrl = LIVE_URL;
@@ -46,17 +58,30 @@ function wait(ms) {
     await browser.close();
 
     const userDataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tmr-challenges-chrome-'));
-    const proofBrowser = spawn(proofBrowserPath, [
-      '--width', '1440',
-      '--height', '1100',
-      '--profile', userDataDir,
-      '--new-window',
-      LIVE_URL,
-    ], { stdio: 'ignore' });
+    const proofArgs = proofBrowser.type === 'chrome'
+      ? [
+          '--no-sandbox',
+          '--no-first-run',
+          '--disable-default-apps',
+          '--disable-dev-shm-usage',
+          '--window-size=1440,1100',
+          `--user-data-dir=${userDataDir}`,
+          LIVE_URL,
+        ]
+      : [
+          '--width', '1440',
+          '--height', '1100',
+          '--profile', userDataDir,
+          '--new-window',
+          LIVE_URL,
+        ];
+    const proofProcess = spawn(proofBrowser.path, proofArgs, { stdio: 'ignore' });
 
     await wait(7000);
+    execFileSync('bash', ['-lc', 'xdotool key ctrl+l || true'], { stdio: 'inherit' });
+    await wait(800);
     const addressbar = captureRoot('challenges-live-addressbar-proof.png');
-    proofBrowser.kill('SIGTERM');
+    proofProcess.kill('SIGTERM');
     const report = {
       checked_at: new Date().toISOString(),
       url: validatedUrl,
