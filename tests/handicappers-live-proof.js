@@ -10,26 +10,43 @@ const OUT_DIR = path.join(process.cwd(), 'artifacts');
 const DESKTOP_OUT = path.join(OUT_DIR, 'handicappers-live-browser-addressbar-proof.png');
 const MOBILE_OUT = path.join(OUT_DIR, 'handicappers-live-mobile-proof.png');
 const REPORT_OUT = path.join(OUT_DIR, 'handicappers-live-proof.json');
+const EXPECTED_HEADERS = ['Username', 'Record', 'Units', 'ROI', 'Win %', 'Picks', 'Streak', 'Active'];
 
 async function waitForPage(page) {
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
-  await page.locator('text=Find Verified Sports Handicappers').waitFor({ state: 'visible', timeout: 30000 });
-  await page.locator('text=Why Use TrustMyRecord?').waitFor({ state: 'visible', timeout: 30000 });
+  await page.locator('h1', { hasText: 'Handicappers' }).waitFor({ state: 'visible', timeout: 30000 });
+  await page.locator('#hmPageSize').waitFor({ state: 'visible', timeout: 30000 });
+  await page.locator('.hm-head').waitFor({ state: 'visible', timeout: 30000 });
+  await page.locator('.hm-member-row, .hm-empty').first().waitFor({ state: 'visible', timeout: 30000 });
 }
 
 async function collectChecks(page) {
-  return page.evaluate(() => ({
-    url: window.location.href,
-    headline: document.querySelector('h1')?.textContent?.trim() || '',
-    hasCtas: Array.from(document.querySelectorAll('.hm-hero-actions a')).map((a) => a.textContent.trim()),
-    hasWhySection: !!Array.from(document.querySelectorAll('h2')).find((h) => h.textContent.includes('Why Use TrustMyRecord')),
-    hasLeaderboardCopy: document.body.textContent.includes('Leaderboard highlights are based only on graded, locked-pick activity.'),
-    hasFilterCopy: document.body.textContent.includes('Search by username, filter by sport, or sort by the metrics that matter most to you.'),
-    rows: document.querySelectorAll('.hm-member-row:not(.hm-skeleton)').length,
-    scrollWidth: document.documentElement.scrollWidth,
-    viewportWidth: window.innerWidth,
-  }));
+  return page.evaluate((expectedHeaders) => {
+    const headers = Array.from(document.querySelectorAll('.hm-head > div')).map((el) => el.textContent.trim());
+    const rows = document.querySelectorAll('.hm-member-row').length;
+    const pageSize = document.querySelector('#hmPageSize');
+    const pageOptions = Array.from(pageSize?.options || []).map((option) => option.textContent.trim());
+    return {
+      url: window.location.href,
+      headline: document.querySelector('h1')?.textContent?.trim() || '',
+      headers,
+      headerText: headers.join('|'),
+      expectedHeaderText: expectedHeaders.join('|'),
+      hasSportsHeader: headers.includes('Sports'),
+      hasLastPickHeader: headers.includes('Last pick'),
+      hasSportsCells: document.querySelectorAll('.hm-sports').length,
+      pageSizeValue: pageSize?.value || '',
+      pageOptions,
+      pageSummary: document.querySelector('#hmPageSummary')?.textContent?.trim() || '',
+      pageIndicator: document.querySelector('#hmPageIndicator')?.textContent?.trim() || '',
+      prevDisabled: !!document.querySelector('#hmPrevPage')?.disabled,
+      nextDisabled: !!document.querySelector('#hmNextPage')?.disabled,
+      rows,
+      scrollWidth: document.documentElement.scrollWidth,
+      viewportWidth: window.innerWidth,
+    };
+  }, EXPECTED_HEADERS);
 }
 
 function captureRoot(out) {
@@ -46,22 +63,37 @@ function captureRoot(out) {
   const page = await browser.newPage({ viewport: { width: 1320, height: 940 } });
   try {
     await waitForPage(page);
+    await page.locator('.hm-leaderboard-controls').scrollIntoViewIfNeeded();
     await page.waitForTimeout(800);
     captureRoot(DESKTOP_OUT);
     const desktopChecks = await collectChecks(page);
-    await page.locator('text=Browse Verified Records').click();
-    await page.waitForTimeout(800);
+
+    await page.selectOption('#hmPageSize', '50');
+    await page.waitForTimeout(400);
+    const top50Checks = await collectChecks(page);
+    await page.selectOption('#hmPageSize', '100');
+    await page.waitForTimeout(400);
+    const top100Checks = await collectChecks(page);
+    await page.selectOption('#hmPageSize', 'all');
+    await page.waitForTimeout(400);
+    const allChecks = await collectChecks(page);
 
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
-    await page.locator('text=Find Verified Sports Handicappers').waitFor({ state: 'visible', timeout: 30000 });
+    await waitForPage(page);
+    await page.locator('.hm-leaderboard-controls').scrollIntoViewIfNeeded();
     await page.screenshot({ path: MOBILE_OUT, fullPage: true });
     const mobileChecks = await collectChecks(page);
 
     const report = {
       checked_at: new Date().toISOString(),
       desktop: desktopChecks,
+      page_size_checks: {
+        top50: top50Checks,
+        top100: top100Checks,
+        all: allChecks,
+      },
       mobile: mobileChecks,
       screenshots: {
         desktop_addressbar: DESKTOP_OUT,
@@ -70,9 +102,15 @@ function captureRoot(out) {
     };
     fs.writeFileSync(REPORT_OUT, JSON.stringify(report, null, 2));
 
-    if (desktopChecks.headline !== 'Find Verified Sports Handicappers') throw new Error('Updated headline missing');
-    if (!desktopChecks.hasWhySection) throw new Error('Why Use TrustMyRecord section missing');
-    if (desktopChecks.hasCtas.length < 2) throw new Error('Hero CTAs missing');
+    if (desktopChecks.headline !== 'Handicappers') throw new Error('Current headline missing');
+    if (desktopChecks.headerText !== desktopChecks.expectedHeaderText) throw new Error('Unexpected desktop table headers');
+    if (desktopChecks.hasSportsHeader || desktopChecks.hasLastPickHeader || desktopChecks.hasSportsCells) throw new Error('Removed table columns or cells are still present');
+    if (desktopChecks.pageSizeValue !== '25') throw new Error('Default page size is not Top 25');
+    if (!desktopChecks.pageSummary.includes('qualified members')) throw new Error('Qualified-member page summary missing');
+    if (!desktopChecks.pageIndicator.startsWith('Page ')) throw new Error('Page indicator missing');
+    if (top50Checks.pageSizeValue !== '50') throw new Error('Top 50 selector failed');
+    if (top100Checks.pageSizeValue !== '100') throw new Error('Top 100 selector failed');
+    if (allChecks.pageSizeValue !== 'all') throw new Error('All selector failed');
     if (mobileChecks.scrollWidth > mobileChecks.viewportWidth + 2) throw new Error('Mobile layout overflows horizontally');
 
     console.log(JSON.stringify(report, null, 2));
