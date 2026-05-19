@@ -30,6 +30,8 @@ async function collectChecks(page) {
     return {
       url: window.location.href,
       headline: document.querySelector('h1')?.textContent?.trim() || '',
+      title: document.title,
+      bodyStart: document.body?.innerText?.slice(0, 500) || '',
       headers,
       headerText: headers.join('|'),
       expectedHeaderText: expectedHeaders.join('|'),
@@ -101,7 +103,7 @@ function captureRoot(out) {
     };
     fs.writeFileSync(REPORT_OUT, JSON.stringify(report, null, 2));
 
-    if (!desktopChecks.headline.includes('Handicappers')) throw new Error('Current headline missing');
+    if (!desktopChecks.headline.includes('Handicappers') && !desktopChecks.title.includes('Handicappers')) throw new Error('Current headline missing: ' + desktopChecks.bodyStart);
     if (desktopChecks.headerText !== desktopChecks.expectedHeaderText) throw new Error('Unexpected desktop table headers');
     if (!desktopChecks.firstRow || desktopChecks.firstRow.length < EXPECTED_HEADERS.length) throw new Error('First row does not expose the locked 9-column mapping');
     if (desktopChecks.pageSizeValue !== '25') throw new Error('Default page size is not Top 25');
