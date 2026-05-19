@@ -36,7 +36,6 @@ function captureRoot(name) {
       throw new Error('Challenges page still shows old Arena redirect content.');
     }
 
-    await page.screenshot({ path: path.join(OUT_DIR, 'challenges-live-page.png'), fullPage: false });
     const addressbar = captureRoot('challenges-live-addressbar-proof.png');
     const report = {
       checked_at: new Date().toISOString(),
