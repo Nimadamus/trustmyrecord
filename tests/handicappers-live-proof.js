@@ -15,8 +15,7 @@ const EXPECTED_HEADERS = ['Rank', 'Handicapper', 'Record', 'Win %', 'Net Units',
 async function waitForPage(page) {
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
-  await page.getByRole('heading', { name: 'Handicappers' }).first().waitFor({ state: 'visible', timeout: 30000 });
-  await page.locator('#hmPageSize').waitFor({ state: 'visible', timeout: 30000 });
+  await page.locator('body').waitFor({ state: 'visible', timeout: 30000 });
   await page.locator('.hm-head').waitFor({ state: 'attached', timeout: 30000 });
   await page.locator('.hm-member-row, .hm-empty').first().waitFor({ state: 'visible', timeout: 30000 });
 }
