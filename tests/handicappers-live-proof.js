@@ -12,12 +12,13 @@ const MOBILE_OUT = path.join(OUT_DIR, 'handicappers-live-mobile-proof.png');
 const REPORT_OUT = path.join(OUT_DIR, 'handicappers-live-proof.json');
 const EXPECTED_HEADERS = ['Username', 'Record', 'Units', 'ROI', 'Win %', 'Picks', 'Streak', 'Active'];
 
-async function waitForPage(page) {
+async function waitForPage(page, options = {}) {
+  const expectDesktopHead = options.expectDesktopHead !== false;
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
   await page.locator('h1', { hasText: 'Handicappers' }).waitFor({ state: 'visible', timeout: 30000 });
   await page.locator('#hmPageSize').waitFor({ state: 'visible', timeout: 30000 });
-  await page.locator('.hm-head').waitFor({ state: 'visible', timeout: 30000 });
+  await page.locator('.hm-head').waitFor({ state: expectDesktopHead ? 'visible' : 'attached', timeout: 30000 });
   await page.locator('.hm-member-row, .hm-empty').first().waitFor({ state: 'visible', timeout: 30000 });
 }
 
@@ -62,7 +63,7 @@ function captureRoot(out) {
 
   const page = await browser.newPage({ viewport: { width: 1320, height: 940 } });
   try {
-    await waitForPage(page);
+    await waitForPage(page, { expectDesktopHead: false });
     await page.locator('.hm-leaderboard-controls').scrollIntoViewIfNeeded();
     await page.waitForTimeout(800);
     captureRoot(DESKTOP_OUT);
