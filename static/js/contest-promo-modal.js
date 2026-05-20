@@ -40,7 +40,7 @@
         if (document.querySelector('link[data-contest-promo-modal]')) return;
         var link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = '/static/css/contest-promo-modal.css?v=20260520a';
+        link.href = '/static/css/contest-promo-modal.css?v=20260520b';
         link.setAttribute('data-contest-promo-modal', '1');
         document.head.appendChild(link);
     }
@@ -59,7 +59,7 @@
             '<button type="button" class="tmr-contest-modal__close" aria-label="Close contest promo">&times;</button>',
             '<div class="tmr-contest-modal__body">',
             '  <div>',
-            '    <span class="tmr-contest-modal__brand"><span class="dot"></span> JUSTBET</span>',
+            '    <span class="tmr-contest-modal__brand" aria-label="JustBet"><img src="/static/media/justbet-logo.png?v=20260520a" alt="JustBet" width="260" height="26"></span>',
             '    <span class="tmr-contest-modal__status"><span class="pulse"></span> Coming This Week</span>',
             '  </div>',
             '  <h2 id="tmr-contest-promo-title">$2,500 JustBet MLB Handicapping Contest</h2>',
