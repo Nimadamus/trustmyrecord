@@ -411,8 +411,11 @@
     <script>
     (function () {
         const CONTEST_ID = 'justbet-mlb';
-        const API_BASE = (window.TMR_API_BASE || window.API_BASE_URL || '').replace(/\/$/, '');
-        const API = (path) => `${API_BASE}/api/contests/${CONTEST_ID}${path}`;
+        const API_BASE = ((typeof CONFIG !== 'undefined' && CONFIG && CONFIG.api && CONFIG.api.baseUrl)
+            || window.TMR_API_BASE
+            || window.API_BASE_URL
+            || 'https://trustmyrecord-api.onrender.com/api').replace(/\/$/, '');
+        const API = (path) => `${API_BASE}/contests/${CONTEST_ID}${path}`;
 
         const $ = (sel) => document.querySelector(sel);
         const fmtOdds = (n) => {
