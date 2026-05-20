@@ -58,6 +58,27 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = CONFIG;
 }
 
+// Auth links must remain native, reliable navigation even if later header scripts fail.
+(function () {
+    if (typeof document === 'undefined' || typeof window === 'undefined') return;
+    if (window.__tmrAuthClickFallbackInstalled) return;
+    window.__tmrAuthClickFallbackInstalled = true;
+    document.addEventListener('click', function (event) {
+        var target = event.target;
+        var link = target && target.closest && target.closest('a.auth-link, a[data-tmr-auth-route], a[href="/login/"], a[href="/register/"], a[href="login/"], a[href="register/"]');
+        if (!link) return;
+        var href = String(link.getAttribute('href') || '');
+        var route = String(link.getAttribute('data-tmr-auth-route') || '');
+        var destination = '';
+        if (route === 'signup' || /(^|\/)register\/?$/i.test(href)) destination = '/register/';
+        else if (route === 'login' || /(^|\/)login\/?$/i.test(href)) destination = '/login/';
+        if (!destination) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        window.location.assign(destination);
+    }, true);
+})();
+
 // JustBet MLB Contest sitewide promo modal loader (idempotent, defers itself).
 (function () {
     if (typeof document === 'undefined') return;
