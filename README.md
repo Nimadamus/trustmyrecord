@@ -105,6 +105,10 @@ Production data lives in the backend. The frontend may use browser storage for s
 
 Pending picks must not show net units. In the profile record table, any row with `status` or `result` equal to `PENDING` displays only `--` in the Net Units cell, with no calculated, projected, stale, cumulative, closing-line, or secondary unit subline. Net units render only after a final graded result such as `WON`, `LOST`, `PUSH`, `VOID`, or `CANCELED`.
 
+## Trend Spotter Protocol
+
+Trend Spotter must only display verified output when source-backed rows match the selected matchup, market, side, period, location, range, and minimum sample filters. If no rows match, the public result state must explain the failed filter, keep unsupported claims blocked, and show fallback suggestions such as full game, lower minimum sample, team trend, or all locations. It must not invent records, win rates, betting edges, picks, or source-backed claims. Diagnostics may only appear in admin/development mode and must include matched row count, source table/file/API, applied filters, failed filter reason, and source timestamp. Before closing Trend Spotter work, verify the behavior on the live public URL with browser proof.
+
 ---
 
 ## Core Pages
