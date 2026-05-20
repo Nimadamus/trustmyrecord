@@ -7,6 +7,7 @@
 
     const REFRESH_INTERVAL = 60000; // 60 seconds
     let badgeInterval = null;
+    let navObserver = null;
 
     function injectBadgeCSS() {
         if (document.getElementById('nav-badge-styles')) return;
@@ -138,6 +139,7 @@
         const link = document.createElement('a');
         link.href = '/messages/';
         link.setAttribute('role', 'menuitem');
+        link.setAttribute('data-tmr-mailbox-link', '1');
         link.textContent = 'Messages';
         communityPanel.appendChild(link);
     }
@@ -145,18 +147,20 @@
     function ensureMailboxAction() {
         if (!isLoggedIn()) return;
         const actions = document.querySelector('.tmr-global-nav__actions');
-        if (!actions || actions.querySelector('[data-tmr-mailbox-link]')) return;
+        if (!actions) return;
 
-        const link = document.createElement('a');
-        link.className = 'tmr-global-nav__button tmr-mailbox-link';
-        link.href = '/messages/?inbox=1';
-        link.setAttribute('data-tmr-mailbox-link', '1');
-        link.setAttribute('aria-label', 'Mailbox');
-        link.textContent = 'Mailbox';
-
-        const logout = actions.querySelector('[data-tmr-logout]');
-        if (logout) actions.insertBefore(link, logout);
-        else actions.appendChild(link);
+        let link = actions.querySelector('[data-tmr-mailbox-link]');
+        if (!link) {
+            link = document.createElement('a');
+            link.className = 'tmr-global-nav__button tmr-mailbox-link';
+            link.setAttribute('data-tmr-mailbox-link', '1');
+            link.setAttribute('aria-label', 'Messages');
+            const logout = actions.querySelector('[data-tmr-logout]');
+            if (logout) actions.insertBefore(link, logout);
+            else actions.appendChild(link);
+        }
+        link.href = '/messages/';
+        link.textContent = link.querySelector('.nav-badge') ? 'Messages' : 'Messages';
     }
 
     function getViewedProfileUsername() {
@@ -272,12 +276,22 @@
         ensureProfileMessageLink();
     }
 
+    function watchNavForLateRender() {
+        if (navObserver || !document.body) return;
+        navObserver = new MutationObserver(() => {
+            refreshMessagingEntryPoints();
+        });
+        navObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
     function init() {
         injectBadgeCSS();
         refreshMessagingEntryPoints();
+        watchNavForLateRender();
 
         setTimeout(refreshMessagingEntryPoints, 500);
         setTimeout(refreshMessagingEntryPoints, 1500);
+        setTimeout(refreshMessagingEntryPoints, 3000);
 
         if (!isLoggedIn()) return;
 

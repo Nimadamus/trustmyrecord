@@ -5,6 +5,7 @@ TrustMyRecord private messaging is an authenticated user-to-user feature tied to
 ## Frontend Standard
 
 - The canonical inbox route is `/messages/`.
+- Logged-in users must always have a visible Messages/Inbox entry point from the site navigation. The navigation entry must route to `/messages/` and may show the unread badge when `/messages/unread-count` is available.
 - Profile-based message access must link to `/messages/?to=<username>` for the viewed user.
 - Profile message actions must use absolute message routes. Do not use relative `messages/?to=<username>` from `/profile/`.
 - The profile `user` query parameter is reserved only for profile lookup. Messaging links must never generate `/profile/?user=messages&to=<username>` or otherwise replace the viewed profile username.
@@ -15,7 +16,7 @@ TrustMyRecord private messaging is an authenticated user-to-user feature tied to
 
 ## Required User Flows
 
-- A logged-in user can open the inbox at `/messages/`.
+- A logged-in user can open the inbox at `/messages/` from the site navigation.
 - A logged-in user can start a new conversation by username.
 - A logged-in user can send a message to another active user.
 - A logged-in user can read messages from conversations where they are a participant.
