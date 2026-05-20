@@ -146,21 +146,20 @@
 
     function ensureMailboxAction() {
         if (!isLoggedIn()) return;
-        const actions = document.querySelector('.tmr-global-nav__actions');
-        if (!actions) return;
+        const links = document.querySelector('.tmr-global-nav__links');
+        if (!links) return;
 
-        let link = actions.querySelector('[data-tmr-mailbox-link]');
+        let link = links.querySelector('[data-tmr-primary-mailbox-link]') || links.querySelector('a[href="/messages/"]');
         if (!link) {
             link = document.createElement('a');
-            link.className = 'tmr-global-nav__button tmr-mailbox-link';
+            link.className = 'tmr-mailbox-link';
+            link.setAttribute('data-tmr-primary-mailbox-link', '1');
             link.setAttribute('data-tmr-mailbox-link', '1');
-            link.setAttribute('aria-label', 'Messages');
-            const logout = actions.querySelector('[data-tmr-logout]');
-            if (logout) actions.insertBefore(link, logout);
-            else actions.appendChild(link);
+            links.appendChild(link);
         }
         link.href = '/messages/';
-        link.textContent = link.querySelector('.nav-badge') ? 'Messages' : 'Messages';
+        link.setAttribute('aria-label', 'Messages');
+        link.textContent = 'Messages';
     }
 
     function getViewedProfileUsername() {
