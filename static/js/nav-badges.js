@@ -33,6 +33,13 @@
                 box-shadow: 0 0 6px rgba(255, 68, 68, 0.5);
                 animation: badge-pop 0.3s ease;
             }
+            .tmr-profile-message-link {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                min-height: 42px;
+            }
             @keyframes badge-pop {
                 0% { transform: scale(0); }
                 70% { transform: scale(1.2); }
@@ -58,6 +65,33 @@
             }
         } catch(e) {}
         return false;
+    }
+
+    function getSessionUser() {
+        try {
+            if (window.auth && typeof window.auth.getCurrentUser === 'function') {
+                const user = window.auth.getCurrentUser();
+                if (user && (user.username || user.id || user.email)) return user;
+            }
+        } catch(e) {}
+        try {
+            if (window.api && window.api._cachedUser) return window.api._cachedUser;
+        } catch(e) {}
+        try {
+            const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
+            for (const key of keys) {
+                const raw = localStorage.getItem(key);
+                if (!raw) continue;
+                const parsed = JSON.parse(raw);
+                const user = parsed && (parsed.user || parsed);
+                if (user && (user.username || user.id || user.email)) return user;
+            }
+        } catch(e) {}
+        return null;
+    }
+
+    function normalizeUsername(value) {
+        return String(value || '').trim().replace(/^@+/, '').toLowerCase();
     }
 
     function findMessagesLinks() {
@@ -91,6 +125,54 @@
                 badge.style.display = 'none';
             }
         }
+    }
+
+    function ensureInboxNavigation() {
+        const communityPanel = document.querySelector('.tmr-community-menu__panel');
+        if (!communityPanel || communityPanel.querySelector('a[href="/messages/"]')) return;
+        const link = document.createElement('a');
+        link.href = '/messages/';
+        link.setAttribute('role', 'menuitem');
+        link.textContent = 'Messages';
+        communityPanel.appendChild(link);
+    }
+
+    function getViewedProfileUsername() {
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const fromQuery = params.get('user') || params.get('username') || params.get('u');
+            if (fromQuery) return fromQuery;
+        } catch(e) {}
+        try {
+            const profile = window.profileData || window.currentProfile || window.viewedProfile;
+            if (profile) return profile.username || profile.handle || profile.slug;
+        } catch(e) {}
+        const usernameNode = document.querySelector('[data-profile-username], [data-tmr-profile-username], .profile-username, #profileUsername');
+        if (usernameNode) {
+            return usernameNode.getAttribute('data-profile-username') || usernameNode.getAttribute('data-tmr-profile-username') || usernameNode.textContent;
+        }
+        return '';
+    }
+
+    function ensureProfileMessageLink() {
+        if (!/^\/profile\/?$/i.test(window.location.pathname)) return;
+        if (!isLoggedIn()) return;
+        const targetUsername = normalizeUsername(getViewedProfileUsername());
+        if (!targetUsername) return;
+
+        const sessionUser = getSessionUser();
+        const currentUsername = normalizeUsername(sessionUser && (sessionUser.username || sessionUser.handle));
+        if (currentUsername && currentUsername === targetUsername) return;
+
+        const actions = document.querySelector('.profile-actions') || document.querySelector('[data-profile-actions]');
+        if (!actions || actions.querySelector('[data-tmr-profile-message]')) return;
+
+        const link = document.createElement('a');
+        link.className = 'btn btn-secondary tmr-profile-message-link';
+        link.setAttribute('data-tmr-profile-message', '1');
+        link.href = '/messages/?to=' + encodeURIComponent(targetUsername);
+        link.textContent = 'Message';
+        actions.appendChild(link);
     }
 
     async function fetchUnreadCounts() {
@@ -129,6 +211,13 @@
 
     function init() {
         injectBadgeCSS();
+        ensureInboxNavigation();
+        ensureProfileMessageLink();
+
+        setTimeout(() => {
+            ensureInboxNavigation();
+            ensureProfileMessageLink();
+        }, 1000);
 
         if (!isLoggedIn()) return;
 
