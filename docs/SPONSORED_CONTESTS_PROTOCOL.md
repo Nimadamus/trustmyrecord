@@ -133,3 +133,38 @@ curl -s https://trustmyrecord.com/contests/justbet-mlb/ | grep -c "Two Steps to 
 curl -s https://trustmyrecord.com/static/media/justbet-logo.png -o /dev/null -w "%{http_code}"  # expect 200
 curl -s https://trustmyrecord.com/static/js/config.js | grep -c "contest-promo-modal"   # expect >=1
 ```
+
+## Sponsor bonus callout standard
+
+Sponsors will hand over signup-bonus terms after they approve a contest. Add
+them as a dedicated section on the contest landing page, NOT inline with the
+rules or prize structure. The callout exists to convert clicks into qualified
+signups via the affiliate link without changing the contest mechanics.
+
+Required pattern:
+
+* Section sits between the "Two Steps to Enter" funnel and the "Prize
+  Structure" section.
+* Kicker / heading clearly labels it as the sponsor's signup bonus (e.g.
+  "JustBet Signup Bonus", "Welcome Bonus Available").
+* Lead sentence uses "may also receive" / "welcome bonus available"
+  phrasing. **Never guarantee the bonus to every entrant.** Eligibility,
+  rollover, deposit minimums, and redemption terms are set by the sponsor.
+* Bullets / cards list the literal terms the sponsor handed over -- nothing
+  invented, nothing reworded into stronger promises.
+* Section ends with the affiliate-tracking CTA button. The raw affiliate
+  URL stays inside `href=` only, never as visible text.
+* Disclaimer line: "Bonus terms are set by <sponsor>. Eligibility and
+  rollover requirements are determined at signup."
+
+Forbidden in the bonus section:
+
+* Guaranteed amounts ("you WILL receive ...").
+* Made-up bonuses, tier ladders, or rebates not in the sponsor's hand-over.
+* Payout mechanics for the contest prize pool (separate concern, internal
+  process, never on the public page).
+* Any modification to canonical tags, schema metadata, or the existing
+  rules / prize / FAQ sections.
+
+Updating sponsor bonus terms when the sponsor changes them: edit the
+bullet copy in place; do not rebuild the page or move other sections.
