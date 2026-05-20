@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-bullpen-rates-pitch-cap-hr9-20260520f';
+    var UI_BUILD = 'mlb-simulator-handedness-splits-injuries-20260520g';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -398,18 +398,29 @@
             source: 'MLB schedule team record'
         };
     }
-    function teamLiveOpsFactor(team) {
+    function teamLiveOpsFactor(team, opposingHand) {
         if (!team || team.era !== 'current') return null;
         var roster = state.liveContext.teamRosters && state.liveContext.teamRosters[team.abbreviation];
         if (!roster || !Array.isArray(roster.players)) return null;
         var topHitters = roster.players.slice(0, 9).filter(function (p) { return p && p.mlbId; });
         if (topHitters.length < 6) return null;
-        var stats = topHitters.map(function (p) { return cachedPlayerStat(p.mlbId, 'hitting'); }).filter(function (s) { return s && Number(s.ops) > 0 && Number(s.plateAppearances) >= 30; });
+        var splitCount = 0;
+        var stats = topHitters.map(function (p) {
+            var split = opposingHand ? cachedPlayerSplitVs(p.mlbId, 'hitting', opposingHand) : null;
+            if (split && Number(split.ops) > 0 && Number(split.plateAppearances) >= 25) {
+                splitCount += 1;
+                return split;
+            }
+            var season = cachedPlayerStat(p.mlbId, 'hitting');
+            return season && Number(season.ops) > 0 && Number(season.plateAppearances) >= 30 ? season : null;
+        }).filter(Boolean);
         if (stats.length < 6) return null;
         var meanOps = stats.reduce(function (sum, s) { return sum + Number(s.ops); }, 0) / stats.length;
         return {
             meanOps: meanOps,
             sampleSize: stats.length,
+            splitCount: splitCount,
+            vsHand: opposingHand || null,
             factor: clamp(1 + (meanOps - 0.720) * 0.55, 0.85, 1.15)
         };
     }
@@ -439,6 +450,100 @@
     function cachedPlayerStat(playerId, group) {
         var key = playerId + ':' + group;
         return state.liveContext.playerStats && state.liveContext.playerStats[key] || null;
+    }
+    function playerProfileUrl(playerId) {
+        return 'https://statsapi.mlb.com/api/v1/people/' + encodeURIComponent(playerId) + '?_=' + encodeURIComponent(UI_BUILD);
+    }
+    function fetchPlayerProfile(playerId) {
+        if (!playerId) return Promise.resolve(null);
+        state.liveContext.playerProfiles = state.liveContext.playerProfiles || {};
+        if (Object.prototype.hasOwnProperty.call(state.liveContext.playerProfiles, playerId)) {
+            return Promise.resolve(state.liveContext.playerProfiles[playerId]);
+        }
+        return fetchJson(playerProfileUrl(playerId), { cache: 'default' }).then(function (data) {
+            var p = data && data.people && data.people[0] || null;
+            state.liveContext.playerProfiles[playerId] = p;
+            return p;
+        }).catch(function () {
+            state.liveContext.playerProfiles[playerId] = null;
+            return null;
+        });
+    }
+    function cachedPlayerProfile(playerId) {
+        return state.liveContext.playerProfiles && state.liveContext.playerProfiles[playerId] || null;
+    }
+    function pitchHandOf(playerId) {
+        var p = cachedPlayerProfile(playerId);
+        return p && p.pitchHand && p.pitchHand.code || null;
+    }
+    function batSideOf(playerId) {
+        var p = cachedPlayerProfile(playerId);
+        return p && p.batSide && p.batSide.code || null;
+    }
+    function playerSplitsUrl(playerId, group) {
+        return 'https://statsapi.mlb.com/api/v1/people/' + encodeURIComponent(playerId) +
+            '/stats?stats=statSplits&group=' + encodeURIComponent(group) +
+            '&sitCodes=vl,vr&season=' + encodeURIComponent(seasonYear()) +
+            '&_=' + encodeURIComponent(UI_BUILD);
+    }
+    function fetchPlayerSplits(playerId, group) {
+        if (!playerId) return Promise.resolve(null);
+        state.liveContext.playerSplits = state.liveContext.playerSplits || {};
+        var key = playerId + ':' + group;
+        if (Object.prototype.hasOwnProperty.call(state.liveContext.playerSplits, key)) {
+            return Promise.resolve(state.liveContext.playerSplits[key]);
+        }
+        return fetchJson(playerSplitsUrl(playerId, group), { cache: 'default' }).then(function (data) {
+            var splits = data && data.stats && data.stats[0] && Array.isArray(data.stats[0].splits) ? data.stats[0].splits : [];
+            var byCode = {};
+            splits.forEach(function (s) {
+                var code = s && s.split && s.split.code;
+                if (code) byCode[code] = s.stat || null;
+            });
+            state.liveContext.playerSplits[key] = byCode;
+            return byCode;
+        }).catch(function () {
+            state.liveContext.playerSplits[key] = null;
+            return null;
+        });
+    }
+    function cachedPlayerSplitVs(playerId, group, vsHand) {
+        var key = playerId + ':' + group;
+        var byCode = state.liveContext.playerSplits && state.liveContext.playerSplits[key] || null;
+        if (!byCode) return null;
+        if (vsHand === 'L') return byCode.vl || null;
+        if (vsHand === 'R') return byCode.vr || null;
+        return null;
+    }
+    function injuredRosterUrl(team) {
+        var teamId = team && MLB_TEAM_IDS[team.abbreviation];
+        return teamId ? 'https://statsapi.mlb.com/api/v1/teams/' + teamId + '/roster?rosterType=fullRoster&_=' + encodeURIComponent(UI_BUILD) : '';
+    }
+    function fetchInjuredRoster(team) {
+        if (!team || team.era !== 'current') return Promise.resolve(null);
+        state.liveContext.teamInjured = state.liveContext.teamInjured || {};
+        if (Object.prototype.hasOwnProperty.call(state.liveContext.teamInjured, team.abbreviation)) {
+            return Promise.resolve(state.liveContext.teamInjured[team.abbreviation]);
+        }
+        var url = injuredRosterUrl(team);
+        if (!url) return Promise.resolve(null);
+        return fetchJson(url, { cache: 'default' }).then(function (data) {
+            var list = (Array.isArray(data && data.roster) ? data.roster : []).filter(function (p) {
+                var desc = p && p.status && p.status.description || '';
+                return /^Injured\b/i.test(desc);
+            }).map(function (p) {
+                return {
+                    name: p.person && p.person.fullName || '',
+                    position: p.position && (p.position.abbreviation || p.position.name) || '',
+                    status: p.status && p.status.description || ''
+                };
+            });
+            state.liveContext.teamInjured[team.abbreviation] = list;
+            return list;
+        }).catch(function () {
+            state.liveContext.teamInjured[team.abbreviation] = null;
+            return null;
+        });
     }
     function pitcherQualityFromEra(era) {
         var n = Number(era);
@@ -660,10 +765,14 @@
         if (!roster) return;
         if (roster.todayProbableStarter && roster.todayProbableStarter.id) {
             fetchPlayerSeasonStats(roster.todayProbableStarter.id, 'pitching');
+            fetchPlayerProfile(roster.todayProbableStarter.id);
         }
         var players = Array.isArray(roster.players) ? roster.players : [];
         players.slice(0, 9).forEach(function (p) {
-            if (p && p.mlbId) fetchPlayerSeasonStats(p.mlbId, 'hitting');
+            if (p && p.mlbId) {
+                fetchPlayerSeasonStats(p.mlbId, 'hitting');
+                fetchPlayerSplits(p.mlbId, 'hitting');
+            }
         });
         var pitchers = players.filter(function (p) {
             return p && p.mlbId && /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(p.position || ''));
@@ -745,6 +854,7 @@
             }
             state.liveContext.teamRosters[team.abbreviation] = roster;
             prefetchPlayerStatsForRoster(roster);
+            fetchInjuredRoster(team);
             return roster;
         }).catch(function () {
             state.liveContext.teamRosters[team.abbreviation] = null;
@@ -1116,27 +1226,48 @@
             return player.name + (pos ? ' (' + pos + ')' : '');
         }).slice(0, 9);
     }
-    function rosterBatterSlotStats(roster) {
+    function rosterBatterSlotStats(roster, opposingHand) {
         var players = Array.isArray(roster && roster.players) ? roster.players : [];
         var pitchers = /^(P|SP|RP|CP|Relief|Pitcher)$/i;
         return players.filter(function (player) { return !pitchers.test(String(player.position || '')); }).slice(0, 9).map(function (player) {
-            var stat = player && player.mlbId ? cachedPlayerStat(player.mlbId, 'hitting') : null;
-            var pa = stat ? Number(stat.plateAppearances) : 0;
-            var hasReal = stat && Number.isFinite(Number(stat.ops)) && pa >= 30;
+            var seasonStat = player && player.mlbId ? cachedPlayerStat(player.mlbId, 'hitting') : null;
+            var splitStat = player && player.mlbId && opposingHand ? cachedPlayerSplitVs(player.mlbId, 'hitting', opposingHand) : null;
+            var splitPa = splitStat ? Number(splitStat.plateAppearances) : 0;
+            var splitOk = splitStat && Number.isFinite(Number(splitStat.ops)) && splitPa >= 25;
+            var seasonPa = seasonStat ? Number(seasonStat.plateAppearances) : 0;
+            var seasonOk = seasonStat && Number.isFinite(Number(seasonStat.ops)) && seasonPa >= 30;
+            var stat;
+            var source;
+            if (splitOk) {
+                stat = splitStat;
+                source = 'split';
+            } else if (seasonOk) {
+                stat = seasonStat;
+                source = 'season';
+            } else {
+                stat = null;
+                source = null;
+            }
+            var hasReal = !!stat;
+            var hrCount = seasonStat ? Number(seasonStat.homeRuns || 0) : 0;
+            var hrRateSeason = seasonOk && Number(seasonStat.atBats) > 0 ? hrCount / Number(seasonStat.atBats) : null;
             return {
                 name: player.name,
                 position: playerPositionLabel(player),
                 mlbId: player.mlbId || null,
+                batSide: player && player.mlbId ? batSideOf(player.mlbId) : null,
                 ops: hasReal ? Number(stat.ops) : null,
                 avg: hasReal ? Number(stat.avg) : null,
                 slg: hasReal ? Number(stat.slg) : null,
-                hr: hasReal ? Number(stat.homeRuns || 0) : 0,
+                hr: hrCount,
                 ab: hasReal ? Number(stat.atBats || 0) : 0,
-                pa: hasReal ? pa : 0,
-                hrRate: hasReal && Number(stat.atBats) > 0 ? Number(stat.homeRuns || 0) / Number(stat.atBats) : null,
-                kRate: hasReal && pa > 0 ? Number(stat.strikeOuts || 0) / pa : null,
-                bbRate: hasReal && pa > 0 ? Number(stat.baseOnBalls || 0) / pa : null,
-                real: hasReal
+                pa: hasReal ? Number(stat.plateAppearances || 0) : 0,
+                hrRate: hrRateSeason,
+                kRate: hasReal && Number(stat.plateAppearances) > 0 ? Number(stat.strikeOuts || 0) / Number(stat.plateAppearances) : null,
+                bbRate: hasReal && Number(stat.plateAppearances) > 0 ? Number(stat.baseOnBalls || 0) / Number(stat.plateAppearances) : null,
+                real: hasReal,
+                statSource: source,
+                vsHand: opposingHand || null
             };
         });
     }
@@ -1182,9 +1313,9 @@
         if (team && team.era === 'historical') return historicalRosterForTeam(team);
         return null;
     }
-    function modeledBatterLines(team, line, random, roster) {
+    function modeledBatterLines(team, line, random, roster, opposingHand) {
         var rosterNames = rosterNamesForBatters(roster);
-        var slotStats = rosterBatterSlotStats(roster);
+        var slotStats = rosterBatterSlotStats(roster, opposingHand);
         var slotPosBase = [1.12, 1.02, 1.2, 1.15, 1.04, 0.98, 0.9, 0.86, 0.72];
         var runPosBase = [1.2, 1.1, 1.18, 1.05, 0.92, 0.9, 0.78, 0.78, 0.58];
         var kPosBase = [0.75, 0.9, 0.85, 0.95, 1.05, 1.1, 1.18, 1.2, 1.12];
@@ -1245,7 +1376,7 @@
                 rbi: rbi[index],
                 bb: walks[index],
                 so: strikeouts[index],
-                statSource: statRow && statRow.real ? ('Real ' + seasonYear() + ' season OPS ' + statRow.ops.toFixed(3) + ' / AVG ' + statRow.avg.toFixed(3) + (statRow.hrRate != null ? ' / HR ' + statRow.hr : '')) : null
+                statSource: statRow && statRow.real ? ((statRow.statSource === 'split' && statRow.vsHand ? ('Real ' + seasonYear() + ' vs ' + statRow.vsHand + 'HP OPS ' + statRow.ops.toFixed(3) + ' / AVG ' + statRow.avg.toFixed(3)) : ('Real ' + seasonYear() + ' season OPS ' + statRow.ops.toFixed(3) + ' / AVG ' + statRow.avg.toFixed(3))) + (statRow.hrRate != null ? ' / HR ' + statRow.hr : '')) : null
             };
         }).filter(function (row) { return row.name; });
     }
@@ -1373,12 +1504,12 @@
         var homeRoster = rosterForTeam(home, rosterContext && rosterContext.home);
         return {
             away: {
-                batters: modeledBatterLines(away, awayLine, random, awayRoster),
+                batters: modeledBatterLines(away, awayLine, random, awayRoster, homePitcher && homePitcher.mlbId ? pitchHandOf(homePitcher.mlbId) : null),
                 pitchers: modeledPitcherLines(away, homeLine, awayPitcher, random, awayRoster),
                 rosterSource: awayRoster && awayRoster.players && awayRoster.players.length ? (awayRoster.source || 'Projected lineup from verified active roster names') : 'Lineup unavailable. Verified roster data could not be loaded.'
             },
             home: {
-                batters: modeledBatterLines(home, homeLine, random, homeRoster),
+                batters: modeledBatterLines(home, homeLine, random, homeRoster, awayPitcher && awayPitcher.mlbId ? pitchHandOf(awayPitcher.mlbId) : null),
                 pitchers: modeledPitcherLines(home, awayLine, homePitcher, random, homeRoster),
                 rosterSource: homeRoster && homeRoster.players && homeRoster.players.length ? (homeRoster.source || 'Projected lineup from verified active roster names') : 'Lineup unavailable. Verified roster data could not be loaded.'
             }
@@ -1919,15 +2050,19 @@
         var awayRuns = expectedRunsFor(away, home, 0.38);
         var homeRuns = expectedRunsFor(home, away, 0.12);
         var liveFactors = [];
-        var awayOps = teamLiveOpsFactor(away);
-        var homeOps = teamLiveOpsFactor(home);
+        var awayPitcherPre = selectedPitcher('away', away, context);
+        var homePitcherPre = selectedPitcher('home', home, context);
+        var homePitcherHand = homePitcherPre && homePitcherPre.mlbId ? pitchHandOf(homePitcherPre.mlbId) : null;
+        var awayPitcherHand = awayPitcherPre && awayPitcherPre.mlbId ? pitchHandOf(awayPitcherPre.mlbId) : null;
+        var awayOps = teamLiveOpsFactor(away, homePitcherHand);
+        var homeOps = teamLiveOpsFactor(home, awayPitcherHand);
         if (awayOps) {
             awayRuns = clamp(awayRuns * awayOps.factor, 1.7, 9.4);
-            liveFactors.push('Live offense from real ' + seasonYear() + ' hitter OPS: ' + away.abbreviation + ' top-9 mean OPS ' + awayOps.meanOps.toFixed(3) + ' (n=' + awayOps.sampleSize + ') applies a ' + Math.round((awayOps.factor - 1) * 100) + '% run-environment factor.');
+            liveFactors.push('Live offense from real ' + seasonYear() + ' hitter OPS' + (awayOps.vsHand && awayOps.splitCount ? (' vs ' + awayOps.vsHand + 'HP (' + awayOps.splitCount + ' of ' + awayOps.sampleSize + ' slots using split)') : '') + ': ' + away.abbreviation + ' top-9 mean OPS ' + awayOps.meanOps.toFixed(3) + ' applies a ' + Math.round((awayOps.factor - 1) * 100) + '% run-environment factor.');
         }
         if (homeOps) {
             homeRuns = clamp(homeRuns * homeOps.factor, 1.7, 9.4);
-            liveFactors.push('Live offense from real ' + seasonYear() + ' hitter OPS: ' + home.abbreviation + ' top-9 mean OPS ' + homeOps.meanOps.toFixed(3) + ' (n=' + homeOps.sampleSize + ') applies a ' + Math.round((homeOps.factor - 1) * 100) + '% run-environment factor.');
+            liveFactors.push('Live offense from real ' + seasonYear() + ' hitter OPS' + (homeOps.vsHand && homeOps.splitCount ? (' vs ' + homeOps.vsHand + 'HP (' + homeOps.splitCount + ' of ' + homeOps.sampleSize + ' slots using split)') : '') + ': ' + home.abbreviation + ' top-9 mean OPS ' + homeOps.meanOps.toFixed(3) + ' applies a ' + Math.round((homeOps.factor - 1) * 100) + '% run-environment factor.');
         }
         var awayBullpen = teamLiveBullpenFactor(away);
         var homeBullpen = teamLiveBullpenFactor(home);
@@ -1946,8 +2081,8 @@
             homeRuns = clamp(homeRuns - awayBullpen.adjustment, 1.7, 9.4);
             liveFactors.push('Live bullpen from real ' + seasonYear() + ' reliever stats: ' + away.abbreviation + ' mean reliever ERA ' + awayBullpen.meanEra.toFixed(2) + bullpenRateNote('away', awayBullpen) + ' (n=' + awayBullpen.sampleSize + ') adjusts opponent runs by ' + (awayBullpen.adjustment > 0 ? '-' : '+') + Math.abs(awayBullpen.adjustment).toFixed(2) + '.');
         }
-        var awayPitcher = selectedPitcher('away', away, context);
-        var homePitcher = selectedPitcher('home', home, context);
+        var awayPitcher = awayPitcherPre;
+        var homePitcher = homePitcherPre;
         awayRuns = clamp(awayRuns + selectedPitcherRunAdjustment(homePitcher), 1.9, 9.4);
         homeRuns = clamp(homeRuns + selectedPitcherRunAdjustment(awayPitcher), 1.9, 9.4);
         awayRuns = clamp(awayRuns + starterEraAdjustment(homePitcher), 1.8, 9.2);
@@ -1963,7 +2098,9 @@
         awayStrength += selectedPitcherStrengthAdjustment(awayPitcher);
         homeStrength += selectedPitcherStrengthAdjustment(homePitcher);
         if (awayPitcher && homePitcher) {
-            liveFactors.push('Starting Pitchers: ' + away.name + ': ' + awayPitcher.name + ' (' + awayPitcher.source + ', ' + (awayPitcher.verified ? 'verified probable' : 'modeled input') + '); ' + home.name + ': ' + homePitcher.name + ' (' + homePitcher.source + ', ' + (homePitcher.verified ? 'verified probable' : 'modeled input') + ').');
+            var awayHandLabel = awayPitcherHand ? ' (' + awayPitcherHand + 'HP)' : '';
+            var homeHandLabel = homePitcherHand ? ' (' + homePitcherHand + 'HP)' : '';
+            liveFactors.push('Starting Pitchers: ' + away.name + ': ' + awayPitcher.name + awayHandLabel + ' (' + awayPitcher.source + ', ' + (awayPitcher.verified ? 'verified probable' : 'modeled input') + '); ' + home.name + ': ' + homePitcher.name + homeHandLabel + ' (' + homePitcher.source + ', ' + (homePitcher.verified ? 'verified probable' : 'modeled input') + ').');
         }
         if (awayPitcher && homePitcher && Math.abs(awayPitcher.quality - homePitcher.quality) >= 7) {
             liveFactors.push('Starting pitching matchup: ' + (awayPitcher.quality > homePitcher.quality ? awayPitcher.name : homePitcher.name) + ' grades higher in this simulator profile and moves the run projection.');
@@ -2017,6 +2154,22 @@
             if (homeInjuries) homeStrength -= injuryStrengthPenalty(homeInjuries);
             if (awayInjuries || homeInjuries) {
                 liveFactors.push('ESPN injury report: ' + away.abbreviation + ' ' + (awayInjuries ? awayInjuries.summary : 'none listed') + '; ' + home.abbreviation + ' ' + (homeInjuries ? homeInjuries.summary : 'none listed') + '.');
+            }
+        }
+        if (away && away.era === 'current' && home && home.era === 'current' && state.liveContext.teamInjured) {
+            var awayInj = state.liveContext.teamInjured[away.abbreviation];
+            var homeInj = state.liveContext.teamInjured[home.abbreviation];
+            function injSummary(list) {
+                if (!Array.isArray(list) || !list.length) return null;
+                var short = list.filter(function (p) { return /\b(7|10|15)-Day\b/i.test(p.status); });
+                var bucket = short.length ? short : list;
+                var top = bucket.slice(0, 3).map(function (p) { return p.name + ' (' + p.position + ', ' + p.status + ')'; });
+                return bucket.length + ' listed: ' + top.join('; ') + (bucket.length > 3 ? '; ...' : '');
+            }
+            var awayInjLine = injSummary(awayInj);
+            var homeInjLine = injSummary(homeInj);
+            if (awayInjLine || homeInjLine) {
+                liveFactors.push('MLB injury list: ' + away.abbreviation + ' ' + (awayInjLine || 'none current') + '; ' + home.abbreviation + ' ' + (homeInjLine || 'none current') + '.');
             }
         }
         if (context && context.extraContext && context.extraContext.rosters && context.extraContext.rosters.away && context.extraContext.rosters.home) {
