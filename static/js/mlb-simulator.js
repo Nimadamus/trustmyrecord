@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-real-weather-ops-20260520b';
+    var UI_BUILD = 'mlb-simulator-real-batter-bullpen-20260520c';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -650,8 +650,38 @@
         });
         var pitchers = players.filter(function (p) {
             return p && p.mlbId && /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(p.position || ''));
-        }).slice(0, 6);
+        }).slice(0, 14);
         pitchers.forEach(function (p) { fetchPlayerSeasonStats(p.mlbId, 'pitching'); });
+    }
+    function teamLiveBullpenFactor(team) {
+        if (!team || team.era !== 'current') return null;
+        var roster = state.liveContext.teamRosters && state.liveContext.teamRosters[team.abbreviation];
+        if (!roster || !Array.isArray(roster.players)) return null;
+        var pitchers = roster.players.filter(function (p) {
+            return p && p.mlbId && /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(p.position || ''));
+        });
+        var relievers = pitchers.map(function (p) {
+            var s = cachedPlayerStat(p.mlbId, 'pitching');
+            if (!s) return null;
+            var gs = Number(s.gamesStarted || 0);
+            var g = Number(s.gamesPlayed || 0);
+            var era = Number(s.era);
+            if (!Number.isFinite(era) || era <= 0 || era >= 30) return null;
+            var ip = Number(String(s.inningsPitched || '0').replace('.', '.'));
+            if (!Number.isFinite(ip) || ip < 5) return null;
+            if (gs >= 4 || (g && gs / g >= 0.5)) return null;
+            return { name: p.name, era: era, ip: ip };
+        }).filter(Boolean);
+        if (relievers.length < 4) return null;
+        var weightedTotal = relievers.reduce(function (sum, r) { return sum + r.era * r.ip; }, 0);
+        var ipTotal = relievers.reduce(function (sum, r) { return sum + r.ip; }, 0);
+        if (ipTotal <= 0) return null;
+        var meanEra = weightedTotal / ipTotal;
+        return {
+            meanEra: meanEra,
+            sampleSize: relievers.length,
+            adjustment: clamp((4.10 - meanEra) * 0.12, -0.35, 0.35)
+        };
     }
     function fetchTeamRoster(team) {
         if (!team || team.era !== 'current') return Promise.resolve(null);
@@ -1043,6 +1073,30 @@
             return player.name + (pos ? ' (' + pos + ')' : '');
         }).slice(0, 9);
     }
+    function rosterBatterSlotStats(roster) {
+        var players = Array.isArray(roster && roster.players) ? roster.players : [];
+        var pitchers = /^(P|SP|RP|CP|Relief|Pitcher)$/i;
+        return players.filter(function (player) { return !pitchers.test(String(player.position || '')); }).slice(0, 9).map(function (player) {
+            var stat = player && player.mlbId ? cachedPlayerStat(player.mlbId, 'hitting') : null;
+            var pa = stat ? Number(stat.plateAppearances) : 0;
+            var hasReal = stat && Number.isFinite(Number(stat.ops)) && pa >= 30;
+            return {
+                name: player.name,
+                position: playerPositionLabel(player),
+                mlbId: player.mlbId || null,
+                ops: hasReal ? Number(stat.ops) : null,
+                avg: hasReal ? Number(stat.avg) : null,
+                slg: hasReal ? Number(stat.slg) : null,
+                hr: hasReal ? Number(stat.homeRuns || 0) : 0,
+                ab: hasReal ? Number(stat.atBats || 0) : 0,
+                pa: hasReal ? pa : 0,
+                hrRate: hasReal && Number(stat.atBats) > 0 ? Number(stat.homeRuns || 0) / Number(stat.atBats) : null,
+                kRate: hasReal && pa > 0 ? Number(stat.strikeOuts || 0) / pa : null,
+                bbRate: hasReal && pa > 0 ? Number(stat.baseOnBalls || 0) / pa : null,
+                real: hasReal
+            };
+        });
+    }
     function rosterNamesForPitchers(roster, starter) {
         var players = Array.isArray(roster && roster.players) ? roster.players : [];
         var names = [];
@@ -1086,28 +1140,48 @@
         return null;
     }
     function modeledBatterLines(team, line, random, roster) {
-        var slots = ['CF', 'SS', 'RF', '1B', '3B', 'LF', 'DH', '2B', 'C'];
         var rosterNames = rosterNamesForBatters(roster);
-        var hitWeights = [1.12, 1.02, 1.2, 1.15, 1.04, 0.98, 0.9, 0.86, 0.72];
-        var runWeights = [1.2, 1.1, 1.18, 1.05, 0.92, 0.9, 0.78, 0.78, 0.58];
+        var slotStats = rosterBatterSlotStats(roster);
+        var slotPosBase = [1.12, 1.02, 1.2, 1.15, 1.04, 0.98, 0.9, 0.86, 0.72];
+        var runPosBase = [1.2, 1.1, 1.18, 1.05, 0.92, 0.9, 0.78, 0.78, 0.58];
+        var kPosBase = [0.75, 0.9, 0.85, 0.95, 1.05, 1.1, 1.18, 1.2, 1.12];
+        function opsFactor(stat) {
+            if (!stat || !stat.real) return 1;
+            return clamp(stat.ops / 0.720, 0.7, 1.45);
+        }
+        function kFactor(stat) {
+            if (!stat || !stat.real || stat.kRate == null) return 1;
+            return clamp(stat.kRate / 0.225, 0.55, 1.55);
+        }
+        function bbFactor(stat) {
+            if (!stat || !stat.real || stat.bbRate == null) return 1;
+            return clamp(stat.bbRate / 0.085, 0.55, 1.55);
+        }
+        var hitWeights = slotPosBase.map(function (base, i) { return base * opsFactor(slotStats[i]); });
+        var runWeights = runPosBase.map(function (base, i) { return base * opsFactor(slotStats[i]); });
+        var bbWeights = runPosBase.map(function (base, i) { return base * bbFactor(slotStats[i]); });
+        var kWeights = kPosBase.map(function (base, i) { return base * kFactor(slotStats[i]); });
         var hits = weightedAllocate(line.hits, hitWeights, random, [5, 5, 5, 5, 4, 4, 4, 4, 4]);
         var runs = weightedAllocate(line.runs, runWeights, random, [4, 4, 4, 3, 3, 3, 3, 3, 3]);
         var rbiTotal = Math.max(0, line.runs - (random() < 0.35 ? 1 : 0));
         var rbi = weightedAllocate(rbiTotal, hitWeights.map(function (weight, index) { return weight + hits[index] * 0.45; }), random, [5, 5, 6, 6, 5, 5, 4, 4, 3]);
-        var walks = weightedAllocate(clamp(Math.round(2 + random() * 4 + (team.offense - 100) * 0.04), 1, 8), runWeights, random, [3, 3, 3, 3, 3, 3, 2, 2, 2]);
-        var strikeouts = weightedAllocate(clamp(Math.round(6 + random() * 5 - (team.offense - 100) * 0.03), 3, 14), [0.75, 0.9, 0.85, 0.95, 1.05, 1.1, 1.18, 1.2, 1.12], random, [3, 3, 3, 4, 4, 4, 4, 4, 4]);
-        return slots.map(function (slot, index) {
-            var ab = clamp(3 + Math.floor(random() * 2) + (index < 5 && random() < 0.45 ? 1 : 0), 2, 6);
+        var walks = weightedAllocate(clamp(Math.round(2 + random() * 4 + (team.offense - 100) * 0.04), 1, 8), bbWeights, random, [3, 3, 3, 3, 3, 3, 2, 2, 2]);
+        var strikeouts = weightedAllocate(clamp(Math.round(6 + random() * 5 - (team.offense - 100) * 0.03), 3, 14), kWeights, random, [3, 3, 3, 4, 4, 4, 4, 4, 4]);
+        return slotPosBase.map(function (_, index) {
+            var statRow = slotStats[index];
+            var topOfOrderBonus = index < 5 && random() < 0.45 ? 1 : 0;
+            var ab = clamp(3 + Math.floor(random() * 2) + topOfOrderBonus, 2, 6);
             if (ab < hits[index]) ab = hits[index];
             if (strikeouts[index] > ab - hits[index]) strikeouts[index] = Math.max(0, ab - hits[index]);
             return {
-                name: rosterNames[index] || '',
+                name: (statRow && statRow.name && (statRow.position ? statRow.name + ' (' + statRow.position + ')' : statRow.name)) || rosterNames[index] || '',
                 ab: ab,
                 r: runs[index],
                 h: hits[index],
                 rbi: rbi[index],
                 bb: walks[index],
-                so: strikeouts[index]
+                so: strikeouts[index],
+                statSource: statRow && statRow.real ? ('Real ' + seasonYear() + ' season OPS ' + statRow.ops.toFixed(3) + ' / AVG ' + statRow.avg.toFixed(3)) : null
             };
         }).filter(function (row) { return row.name; });
     }
@@ -1724,6 +1798,16 @@
             homeRuns = clamp(homeRuns * homeOps.factor, 1.7, 9.4);
             liveFactors.push('Live offense from real ' + seasonYear() + ' hitter OPS: ' + home.abbreviation + ' top-9 mean OPS ' + homeOps.meanOps.toFixed(3) + ' (n=' + homeOps.sampleSize + ') applies a ' + Math.round((homeOps.factor - 1) * 100) + '% run-environment factor.');
         }
+        var awayBullpen = teamLiveBullpenFactor(away);
+        var homeBullpen = teamLiveBullpenFactor(home);
+        if (homeBullpen) {
+            awayRuns = clamp(awayRuns - homeBullpen.adjustment, 1.7, 9.4);
+            liveFactors.push('Live bullpen from real ' + seasonYear() + ' reliever ERA: ' + home.abbreviation + ' mean reliever ERA ' + homeBullpen.meanEra.toFixed(2) + ' (n=' + homeBullpen.sampleSize + ') adjusts opponent runs by ' + (homeBullpen.adjustment > 0 ? '-' : '+') + Math.abs(homeBullpen.adjustment).toFixed(2) + '.');
+        }
+        if (awayBullpen) {
+            homeRuns = clamp(homeRuns - awayBullpen.adjustment, 1.7, 9.4);
+            liveFactors.push('Live bullpen from real ' + seasonYear() + ' reliever ERA: ' + away.abbreviation + ' mean reliever ERA ' + awayBullpen.meanEra.toFixed(2) + ' (n=' + awayBullpen.sampleSize + ') adjusts opponent runs by ' + (awayBullpen.adjustment > 0 ? '-' : '+') + Math.abs(awayBullpen.adjustment).toFixed(2) + '.');
+        }
         var awayPitcher = selectedPitcher('away', away, context);
         var homePitcher = selectedPitcher('home', home, context);
         awayRuns = clamp(awayRuns + selectedPitcherRunAdjustment(homePitcher), 1.9, 9.4);
@@ -2074,7 +2158,11 @@
     }
     function batterTableRows(rows) {
         return rows.map(function (row) {
-            return '<tr><th scope="row">' + escapeHtml(row.name) + '</th><td>' + row.ab + '</td><td>' + row.r + '</td><td>' + row.h + '</td><td>' + row.rbi + '</td><td>' + row.bb + '</td><td>' + row.so + '</td></tr>';
+            var nameCell = escapeHtml(row.name);
+            if (row.statSource) {
+                nameCell = '<span title="' + escapeAttr(row.statSource) + '">' + nameCell + '</span><br><small class="player-stat-source">' + escapeHtml(row.statSource) + '</small>';
+            }
+            return '<tr><th scope="row">' + nameCell + '</th><td>' + row.ab + '</td><td>' + row.r + '</td><td>' + row.h + '</td><td>' + row.rbi + '</td><td>' + row.bb + '</td><td>' + row.so + '</td></tr>';
         }).join('');
     }
     function pitcherTableRows(rows) {
