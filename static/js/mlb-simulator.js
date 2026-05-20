@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-real-pitcher-records-20260520d';
+    var UI_BUILD = 'mlb-simulator-real-batter-hr-20260520e';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1184,21 +1184,42 @@
         var rbi = weightedAllocate(rbiTotal, hitWeights.map(function (weight, index) { return weight + hits[index] * 0.45; }), random, [5, 5, 6, 6, 5, 5, 4, 4, 3]);
         var walks = weightedAllocate(clamp(Math.round(2 + random() * 4 + (team.offense - 100) * 0.04), 1, 8), bbWeights, random, [3, 3, 3, 3, 3, 3, 2, 2, 2]);
         var strikeouts = weightedAllocate(clamp(Math.round(6 + random() * 5 - (team.offense - 100) * 0.03), 3, 14), kWeights, random, [3, 3, 3, 4, 4, 4, 4, 4, 4]);
+        var hrTotal = 0;
+        var hrWeights = slotStats.map(function (stat, i) {
+            var base = i >= 2 && i <= 5 ? 1.1 : 0.85;
+            if (stat && stat.real && stat.hrRate != null) return base * clamp(stat.hrRate / 0.035, 0.2, 3.5);
+            return base;
+        });
+        var hrRateSum = 0;
+        var realHrSlots = 0;
+        slotStats.forEach(function (s) {
+            if (s && s.real && s.hrRate != null) {
+                hrRateSum += s.hrRate;
+                realHrSlots += 1;
+            }
+        });
+        var meanHrRate = realHrSlots >= 5 ? hrRateSum / realHrSlots : 0.030;
+        var teamAbEstimate = 32 + Math.floor(random() * 4);
+        hrTotal = clamp(Math.round(meanHrRate * teamAbEstimate + (random() - 0.5) * 0.8), 0, 5);
+        if (line.runs >= 7 && hrTotal < 2) hrTotal = 2;
+        var hrPerSlot = weightedAllocate(hrTotal, hrWeights, random, [3, 3, 3, 3, 3, 2, 2, 2, 1]);
         return slotPosBase.map(function (_, index) {
             var statRow = slotStats[index];
             var topOfOrderBonus = index < 5 && random() < 0.45 ? 1 : 0;
             var ab = clamp(3 + Math.floor(random() * 2) + topOfOrderBonus, 2, 6);
             if (ab < hits[index]) ab = hits[index];
             if (strikeouts[index] > ab - hits[index]) strikeouts[index] = Math.max(0, ab - hits[index]);
+            var hr = Math.min(hrPerSlot[index] || 0, hits[index]);
             return {
                 name: (statRow && statRow.name && (statRow.position ? statRow.name + ' (' + statRow.position + ')' : statRow.name)) || rosterNames[index] || '',
                 ab: ab,
                 r: runs[index],
                 h: hits[index],
+                hr: hr,
                 rbi: rbi[index],
                 bb: walks[index],
                 so: strikeouts[index],
-                statSource: statRow && statRow.real ? ('Real ' + seasonYear() + ' season OPS ' + statRow.ops.toFixed(3) + ' / AVG ' + statRow.avg.toFixed(3)) : null
+                statSource: statRow && statRow.real ? ('Real ' + seasonYear() + ' season OPS ' + statRow.ops.toFixed(3) + ' / AVG ' + statRow.avg.toFixed(3) + (statRow.hrRate != null ? ' / HR ' + statRow.hr : '')) : null
             };
         }).filter(function (row) { return row.name; });
     }
@@ -2224,7 +2245,7 @@
             if (row.statSource) {
                 nameCell = '<span title="' + escapeAttr(row.statSource) + '">' + nameCell + '</span><br><small class="player-stat-source">' + escapeHtml(row.statSource) + '</small>';
             }
-            return '<tr><th scope="row">' + nameCell + '</th><td>' + row.ab + '</td><td>' + row.r + '</td><td>' + row.h + '</td><td>' + row.rbi + '</td><td>' + row.bb + '</td><td>' + row.so + '</td></tr>';
+            return '<tr><th scope="row">' + nameCell + '</th><td>' + row.ab + '</td><td>' + row.r + '</td><td>' + row.h + '</td><td>' + (row.hr || 0) + '</td><td>' + row.rbi + '</td><td>' + row.bb + '</td><td>' + row.so + '</td></tr>';
         }).join('');
     }
     function pitcherTableRows(rows) {
@@ -2289,7 +2310,7 @@
             return '<section class="player-team-box"><h4>' + escapeHtml(team.name) + ' Box Score Lines</h4><p class="player-source-note">Roster source: ' + escapeHtml(source) + '.</p><div class="sim-empty">Lineup unavailable. Verified roster data could not be loaded.</div></section>';
         }
         return '<section class="player-team-box"><h4>' + escapeHtml(team.name) + ' Box Score Lines</h4><p class="player-source-note">Roster source: ' + escapeHtml(source) + '.</p>' +
-            '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>SO</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div>' +
+            '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>HR</th><th>RBI</th><th>BB</th><th>SO</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div>' +
             '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>HR</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers) + '</tbody></table></div></section>';
     }
     function renderPlayerBoxScore(result) {
@@ -2338,9 +2359,9 @@
                 [result.home.name, box.players.home]
             ].forEach(function (group) {
                 lines.push(group[0] + ' batters - ' + (group[1].rosterSource || 'Roster temporarily unavailable'));
-                lines.push('Batter, AB, R, H, RBI, BB, SO');
+                lines.push('Batter, AB, R, H, HR, RBI, BB, SO');
                 group[1].batters.forEach(function (row) {
-                    lines.push([row.name, row.ab, row.r, row.h, row.rbi, row.bb, row.so].join(', '));
+                    lines.push([row.name, row.ab, row.r, row.h, row.hr || 0, row.rbi, row.bb, row.so].join(', '));
                 });
                 lines.push(group[0] + ' pitchers');
                 lines.push('Pitcher, IP, H, R, ER, BB, SO, HR');
