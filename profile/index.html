@@ -1952,6 +1952,7 @@
                 <button type="button" class="profile-tab" data-tab="posts" role="tab">Posts</button>
                 <button type="button" class="profile-tab" data-tab="challenges" role="tab">Challenges</button>
                 <button type="button" class="profile-tab" data-tab="charts" role="tab">Charts</button>
+                <button type="button" class="profile-tab" data-tab="inbox" id="profileInboxTab" role="tab" hidden>Inbox <span id="profileInboxBadge" class="profile-tab-badge" hidden>0</span></button>
             </div>
         </div>
     </section>
@@ -2331,6 +2332,25 @@
                             <span id="pmSumClv">N/A</span>
                         </div>
                         <table id="pmPicksTable"><tbody></tbody></table>
+                    </div>
+                </div>
+
+                <!-- TAB: INBOX (own profile only) -->
+                <div class="profile-tab-panel" data-panel="inbox">
+                    <div class="profile-feed-card">
+                        <div class="profile-feed-head" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+                            <div>
+                                <div class="section-title">Inbox</div>
+                                <div class="section-subtitle">Direct messages with other members. Click a thread to open it.</div>
+                            </div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <a href="/messages/" class="btn btn-primary" style="padding:8px 14px;border-radius:9px;text-decoration:none;background:linear-gradient(135deg,#7dd3fc,#2dd4bf);color:#03110d;font-weight:800;font-size:.82rem;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-inbox"></i> Open Full Inbox</a>
+                                <a href="/messages/" class="btn" style="padding:8px 14px;border-radius:9px;text-decoration:none;background:rgba(255,255,255,.06);border:1px solid rgba(148,163,184,.18);color:#dbe7f5;font-weight:700;font-size:.82rem;display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-pen-to-square"></i> New Message</a>
+                            </div>
+                        </div>
+                        <div id="profileInboxList" style="margin-top:14px;display:flex;flex-direction:column;gap:8px;">
+                            <div id="profileInboxLoading" style="padding:18px;color:#9fb0c4;font-size:.88rem;">Loading messages...</div>
+                        </div>
                     </div>
                 </div>
 
@@ -4051,6 +4071,9 @@
             white-space: nowrap;
         }
         .profile-tab:hover { color: var(--tmr-text); background: var(--tmr-card-hover); }
+        .profile-tab[hidden] { display: none !important; }
+        .profile-tab-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 6px; margin-left: 6px; border-radius: 999px; background: #2dd4bf; color: #03110d; font-size: 0.7rem; font-weight: 800; line-height: 1; }
+        .profile-tab-badge[hidden] { display: none !important; }
         .profile-tab.active {
             background: var(--tmr-blue);
             color: #FFFFFF;
@@ -8126,6 +8149,98 @@
                 if (target) target.click();
             }
         };
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', onReady);
+        } else {
+            onReady();
+        }
+    })();
+
+    (function initProfileInbox() {
+        function fmtTime(ts) {
+            if (!ts) return '';
+            const d = new Date(ts);
+            const diff = (Date.now() - d.getTime()) / 1000;
+            if (diff < 60) return 'just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+            if (diff < 604800) return Math.floor(diff / 86400) + 'd';
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+        function escapeHtml(t) {
+            if (t == null) return '';
+            const d = document.createElement('div');
+            d.textContent = String(t);
+            return d.innerHTML;
+        }
+        async function loadInbox() {
+            const list = document.getElementById('profileInboxList');
+            const loading = document.getElementById('profileInboxLoading');
+            if (!list) return;
+            try {
+                if (!window.api || typeof window.api.getConversations !== 'function') throw new Error('api unavailable');
+                const data = await window.api.getConversations();
+                const convos = data.conversations || data.threads || [];
+                let unread = 0;
+                if (!convos.length) {
+                    list.innerHTML = '<div style="padding:24px;text-align:center;color:#9fb0c4;border:1px dashed rgba(148,163,184,.18);border-radius:12px;">' +
+                        '<i class="fas fa-envelope-open" style="display:block;font-size:1.6rem;color:#7dd3fc;margin-bottom:8px;"></i>' +
+                        '<p style="margin:0 0 8px 0;color:#dbe7f5;font-weight:700;">No conversations yet.</p>' +
+                        '<p style="margin:0;font-size:.86rem;">Start a thread from any profile or open the full inbox to compose a new message.</p>' +
+                        '</div>';
+                    return;
+                }
+                list.innerHTML = convos.slice(0, 12).map(c => {
+                    const other = c.other_username || c.username || 'User';
+                    const display = c.other_display_name || c.display_name || other;
+                    const preview = c.last_message || c.preview || c.last_content || '(no preview)';
+                    const unreadFlag = Number(c.unread_count || c.unread || 0) > 0;
+                    if (unreadFlag) unread += Number(c.unread_count || c.unread || 1);
+                    const initial = (display[0] || '?').toUpperCase();
+                    return '<a href="/messages/?to=' + encodeURIComponent(other) + '" style="display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;background:' + (unreadFlag ? 'rgba(45,212,191,.10)' : 'rgba(255,255,255,.03)') + ';border:1px solid ' + (unreadFlag ? 'rgba(45,212,191,.28)' : 'rgba(148,163,184,.14)') + ';text-decoration:none;color:inherit;">' +
+                        '<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#38bdf8,#c084fc);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;flex-shrink:0;">' + escapeHtml(initial) + '</div>' +
+                        '<div style="flex:1;min-width:0;">' +
+                            '<div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;color:#f1f6fb;">' + escapeHtml(display) + '</span>' + (unreadFlag ? '<span style="background:#2dd4bf;color:#03110d;font-size:.66rem;padding:2px 6px;border-radius:999px;font-weight:800;">NEW</span>' : '') + '</div>' +
+                            '<div style="color:#9fb0c4;font-size:.84rem;line-height:1.35;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(preview) + '</div>' +
+                        '</div>' +
+                        '<div style="color:#7c8a9f;font-size:.74rem;flex-shrink:0;">' + escapeHtml(fmtTime(c.last_message_at || c.updated_at || c.created_at)) + '</div>' +
+                    '</a>';
+                }).join('');
+                const badge = document.getElementById('profileInboxBadge');
+                if (badge) {
+                    if (unread > 0) {
+                        badge.textContent = unread > 99 ? '99+' : String(unread);
+                        badge.hidden = false;
+                    } else {
+                        badge.hidden = true;
+                    }
+                }
+            } catch (e) {
+                list.innerHTML = '<div style="padding:18px;color:#ff8aa3;font-size:.88rem;border:1px solid rgba(255,7,58,.25);border-radius:11px;background:rgba(255,7,58,.06);">Inbox is temporarily unavailable. Try the <a href="/messages/" style="color:#7dd3fc;text-decoration:underline;">full messages page</a>.</div>';
+            }
+        }
+
+        function onReady() {
+            const tab = document.getElementById('profileInboxTab');
+            if (!tab) return;
+            const showInbox = () => {
+                try {
+                    const own = (window.profileData && window.currentUser && window.profileData.username && window.currentUser.username && window.profileData.username.toLowerCase() === window.currentUser.username.toLowerCase());
+                    if (own || document.body.classList.contains('tmrx-is-own-profile')) {
+                        tab.hidden = false;
+                        loadInbox();
+                        return true;
+                    }
+                } catch (_) {}
+                return false;
+            };
+            if (!showInbox()) {
+                const obs = new MutationObserver(() => { if (showInbox()) obs.disconnect(); });
+                obs.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+                setTimeout(() => obs.disconnect(), 15000);
+            }
+            tab.addEventListener('click', loadInbox);
+        }
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', onReady);
         } else {

@@ -307,6 +307,7 @@ async function initAuth() {
 }
 
 function normalizePublicPick(item) {
+    const activityCount = Number(item.activity_count || item.pick_count || 0);
     return {
         item_id: item.item_id || item.id || item.pick_id,
         item_type: 'pick',
@@ -322,7 +323,16 @@ function normalizePublicPick(item) {
         comments_count: item.comments_count,
         liked_by_user: item.liked_by_user,
         graded_at: item.graded_at || item.grade_verified_at,
-        created_at: item.graded_at || item.grade_verified_at || item.created_at || item.locked_at
+        created_at: item.graded_at || item.grade_verified_at || item.created_at || item.locked_at,
+        pick_count: activityCount || undefined,
+        wins: item.record_wins != null ? item.record_wins : item.wins,
+        losses: item.record_losses != null ? item.record_losses : item.losses,
+        pushes: item.record_pushes != null ? item.record_pushes : item.pushes,
+        net_units: item.net_units != null ? item.net_units : item.user_net_units,
+        win_rate: item.win_rate,
+        wins_count: item.wins_count,
+        losses_count: item.losses_count,
+        pushes_count: item.pushes_count
     };
 }
 
@@ -372,17 +382,18 @@ function aggregateFeedItems(items) {
         const bucket = pickActivityBucket(item);
         const key = username + '|' + bucket + '|' + day;
         const existing = pickGroups.get(key);
+        const itemCount = Number(item.pick_count || item.activity_count || 1) || 1;
         if (!existing) {
             pickGroups.set(key, {
                 ...item,
                 item_id: 'pick_group_' + feedId(key),
                 pick_id: 'pick_group_' + feedId(key),
-                pick_count: 1,
+                pick_count: itemCount,
                 status: bucket === 'locked' ? 'pending' : 'graded'
             });
             return;
         }
-        existing.pick_count += 1;
+        existing.pick_count += itemCount;
         const existingTime = new Date(existing.graded_at || existing.created_at || 0).getTime();
         const itemTime = new Date(item.graded_at || item.created_at || 0).getTime();
         if (itemTime > existingTime) {
@@ -403,7 +414,14 @@ async function loadFeed() {
             const filterParam = currentFilter === 'hot-takes' ? 'posts' : currentFilter;
             const data = await api.request('/feed?limit=' + FEED_LIMIT + '&offset=' + feedOffset + '&filter=' + encodeURIComponent(filterParam));
             items = (data.feed || []).filter(isRealPublicFeedUser).map(item => {
-                if (item.item_type === 'pick' || item.post_type === 'pick' || item.post_type === 'pick_share') return normalizePublicPick(item);
+                if (
+                    item.item_type === 'pick' ||
+                    item.item_type === 'pick_activity' ||
+                    item.post_type === 'pick' ||
+                    item.post_type === 'pick_share' ||
+                    item.post_type === 'graded_pick_summary' ||
+                    item.post_type === 'locked_pick_summary'
+                ) return normalizePublicPick(item);
                 return item;
             });
 
