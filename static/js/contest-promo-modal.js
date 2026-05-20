@@ -118,7 +118,9 @@
         }
         document.addEventListener('keydown', onKey);
 
-        parts.backdrop.addEventListener('click', function () { close(parts); document.removeEventListener('keydown', onKey); });
+        // Intentionally do NOT close on backdrop click. Some pages auto-dispatch
+        // clicks shortly after page-ready and we don't want to dismiss the modal
+        // accidentally. Close via the X button, 'Maybe later', or Escape key only.
         parts.modal.querySelector('.tmr-contest-modal__close').addEventListener('click', function () { close(parts); document.removeEventListener('keydown', onKey); });
         parts.modal.querySelector('[data-contest-promo-skip]').addEventListener('click', function () { close(parts); document.removeEventListener('keydown', onKey); });
         parts.modal.querySelector('[data-contest-promo-cta]').addEventListener('click', function () {
