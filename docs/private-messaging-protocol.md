@@ -7,6 +7,7 @@ TrustMyRecord private messaging is an authenticated user-to-user feature tied to
 - The canonical inbox route is `/messages/`.
 - Logged-in users must always have a directly visible Messages/Inbox entry point from the site navigation. The navigation entry must route to `/messages/`, must not be hidden behind profile lookup state, and may show the unread badge when `/messages/unread-count` is available.
 - When a shared header or global navigation component is available, the Messages/Inbox entry must be owned by that component or inserted into the component's primary visible links in a way the header cleanup logic preserves. Do not rely on fragile post-render injection into areas that the header later removes.
+- Messaging/nav work must never break homepage, header, Login, Join Free, logout, or auth route controls. After any nav change, verify the live homepage Login control still opens `/login/` or the current login flow before considering the change complete.
 - Profile-based message access must link to `/messages/?to=<username>` for the viewed user.
 - Profile message actions must use absolute message routes. Do not use relative `messages/?to=<username>` from `/profile/`.
 - The profile `user` query parameter is reserved only for profile lookup. Messaging links must never generate `/profile/?user=messages&to=<username>` or otherwise replace the viewed profile username.
