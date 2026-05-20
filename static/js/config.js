@@ -63,15 +63,36 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof document === 'undefined' || typeof window === 'undefined') return;
     if (window.__tmrAuthClickFallbackInstalled) return;
     window.__tmrAuthClickFallbackInstalled = true;
-    document.addEventListener('click', function (event) {
+
+    var authSelector = 'a.auth-link, a[data-tmr-auth-route], a[href="/login/"], a[href="/register/"], a[href="login/"], a[href="register/"]';
+
+    function findAuthLink(event) {
         var target = event.target;
-        var link = target && target.closest && target.closest('a.auth-link, a[data-tmr-auth-route], a[href="/login/"], a[href="/register/"], a[href="login/"], a[href="register/"]');
-        if (!link) return;
+        var link = target && target.closest && target.closest(authSelector);
+        if (link) return link;
+        if (typeof document.elementsFromPoint !== 'function') return null;
+        var stack = document.elementsFromPoint(event.clientX, event.clientY) || [];
+        for (var i = 0; i < stack.length; i += 1) {
+            var element = stack[i];
+            if (element && element.closest) {
+                link = element.closest(authSelector);
+                if (link) return link;
+            }
+        }
+        return null;
+    }
+
+    function destinationFor(link) {
+        if (!link) return '';
         var href = String(link.getAttribute('href') || '');
         var route = String(link.getAttribute('data-tmr-auth-route') || '');
-        var destination = '';
-        if (route === 'signup' || /(^|\/)register\/?$/i.test(href)) destination = '/register/';
-        else if (route === 'login' || /(^|\/)login\/?$/i.test(href)) destination = '/login/';
+        if (route === 'signup' || /(^|\/)register\/?$/i.test(href)) return '/register/';
+        if (route === 'login' || /(^|\/)login\/?$/i.test(href)) return '/login/';
+        return '';
+    }
+
+    document.addEventListener('click', function (event) {
+        var destination = destinationFor(findAuthLink(event));
         if (!destination) return;
         event.preventDefault();
         event.stopImmediatePropagation();
