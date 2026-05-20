@@ -33,7 +33,8 @@
                 box-shadow: 0 0 6px rgba(255, 68, 68, 0.5);
                 animation: badge-pop 0.3s ease;
             }
-            .tmr-profile-message-link {
+            .tmr-profile-message-link,
+            .tmr-mailbox-link {
                 display: inline-flex;
                 align-items: center;
                 justify-content: center;
@@ -96,7 +97,7 @@
 
     function findMessagesLinks() {
         // Find all links pointing to the canonical messages route
-        return document.querySelectorAll('a[href="messages/"], a[href="/messages/"], a[href="messages.html"], a[href="/messages.html"]');
+        return document.querySelectorAll('a[href="messages/"], a[href="/messages/"], a[href="messages.html"], a[href="/messages.html"], [data-tmr-mailbox-link]');
     }
 
     function findNotificationElements() {
@@ -137,6 +138,23 @@
         communityPanel.appendChild(link);
     }
 
+    function ensureMailboxAction() {
+        if (!isLoggedIn()) return;
+        const actions = document.querySelector('.tmr-global-nav__actions');
+        if (!actions || actions.querySelector('[data-tmr-mailbox-link]')) return;
+
+        const link = document.createElement('a');
+        link.className = 'tmr-global-nav__button tmr-mailbox-link';
+        link.href = '/messages/?inbox=1';
+        link.setAttribute('data-tmr-mailbox-link', '1');
+        link.setAttribute('aria-label', 'Mailbox');
+        link.textContent = 'Mailbox';
+
+        const logout = actions.querySelector('[data-tmr-logout]');
+        if (logout) actions.insertBefore(link, logout);
+        else actions.appendChild(link);
+    }
+
     function getViewedProfileUsername() {
         try {
             const params = new URLSearchParams(window.location.search);
@@ -171,7 +189,7 @@
         link.className = 'btn btn-secondary tmr-profile-message-link';
         link.setAttribute('data-tmr-profile-message', '1');
         link.href = '/messages/?to=' + encodeURIComponent(targetUsername);
-        link.textContent = 'Message';
+        link.textContent = 'Send Message';
         actions.appendChild(link);
     }
 
@@ -184,7 +202,7 @@
             const msgResult = await window.api.request('/messages/unread-count').catch(() => null);
             const msgCount = (msgResult && typeof msgResult.count === 'number') ? msgResult.count : 0;
 
-            // Update all Messages links
+            // Update all Messages/Mailbox links
             const msgLinks = findMessagesLinks();
             msgLinks.forEach(link => setBadge(link, msgCount));
 
@@ -209,15 +227,18 @@
         }
     }
 
+    function refreshMessagingEntryPoints() {
+        ensureInboxNavigation();
+        ensureMailboxAction();
+        ensureProfileMessageLink();
+    }
+
     function init() {
         injectBadgeCSS();
-        ensureInboxNavigation();
-        ensureProfileMessageLink();
+        refreshMessagingEntryPoints();
 
-        setTimeout(() => {
-            ensureInboxNavigation();
-            ensureProfileMessageLink();
-        }, 1000);
+        setTimeout(refreshMessagingEntryPoints, 500);
+        setTimeout(refreshMessagingEntryPoints, 1500);
 
         if (!isLoggedIn()) return;
 
@@ -226,7 +247,10 @@
 
         // Refresh every 60 seconds
         if (badgeInterval) clearInterval(badgeInterval);
-        badgeInterval = setInterval(fetchUnreadCounts, REFRESH_INTERVAL);
+        badgeInterval = setInterval(() => {
+            refreshMessagingEntryPoints();
+            fetchUnreadCounts();
+        }, REFRESH_INTERVAL);
     }
 
     // Run on DOMContentLoaded
@@ -235,6 +259,8 @@
     } else {
         init();
     }
+    window.addEventListener('tmr-auth-changed', () => setTimeout(init, 50));
+    window.addEventListener('storage', () => setTimeout(init, 50));
 })();
 
 (function() {
