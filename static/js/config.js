@@ -100,13 +100,9 @@ if (typeof module !== 'undefined' && module.exports) {
     }, true);
 })();
 
-// JustBet MLB Contest sitewide promo modal loader (idempotent, defers itself).
-(function () {
-    if (typeof document === 'undefined') return;
-    if (document.querySelector('script[data-contest-promo-modal]')) return;
-    var s = document.createElement('script');
-    s.src = '/static/js/contest-promo-modal.js?v=20260520b';
-    s.defer = true;
-    s.setAttribute('data-contest-promo-modal', '1');
-    (document.head || document.documentElement).appendChild(s);
-})();
+// JustBet MLB Contest sitewide promo modal loader (DISABLED).
+// The modal's full-screen backdrop intercepts homepage Log in / Sign up clicks
+// and the elementsFromPoint workaround still leaves the page visually blocked.
+// Disabling the sitewide auto-open until the modal can re-launch without
+// covering the auth controls. The contest landing page itself is untouched.
+// Re-enable by restoring the document.createElement('script') loader.
