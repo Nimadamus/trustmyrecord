@@ -1534,7 +1534,7 @@
             const unitsLeader = qualifiedUnitsLeader(qualified);
             const roiLeader = qualifiedRoiLeader(qualified);
             const winRateLeader = qualifiedWinRateLeader(qualified);
-            const mostVerified = bestBy(qualified, member => gradedCount(member) > 0, compareBy(gradedCount, member => Number(member.stats.units || 0)));
+            const mostVerified = bestBy(members, member => gradedCount(member) > 0, compareBy(gradedCount, member => Number(member.stats.units || 0)));
             const newestActive = bestBy(qualified, member => getActivityTime(member) > 0, getActivityTime);
             const minLabel = 'Minimum ' + MIN_TOP_PERFORMER_GRADED_PICKS + ' graded picks, recent activity, and positive net units required.';
 
@@ -1542,7 +1542,7 @@
                 renderLeaderCard('Units Leader', unitsLeader, member => formatUnits(member.stats.units, true), member => member.stats.units, 'No positive units leader yet', minLabel),
                 renderLeaderCard('Best ROI', roiLeader, member => formatPercent(member.stats.roi, true), member => member.stats.roi, 'No positive ROI leader yet', minLabel),
                 renderLeaderCard('Best Win Percentage', winRateLeader, member => formatPercent(member.stats.winRate, true), member => member.stats.winRate == null ? null : Number(member.stats.winRate) - 50, 'Not enough graded picks yet', minLabel),
-                renderLeaderCard('Most Verified Picks', mostVerified, member => gradedCount(member) + ' graded picks', () => null, 'Not enough graded picks yet', minLabel),
+                renderLeaderCard('Most Verified Picks', mostVerified, member => gradedCount(member) + ' graded picks', () => null, 'No graded picks yet', 'Highest verified pick count across all members.'),
                 renderLeaderCard('Newest Active Capper', newestActive, member => formatLastActive(member.stats.lastActivity || member.lastActive), () => null, 'No qualifying activity yet', minLabel)
             ].join('');
         }
