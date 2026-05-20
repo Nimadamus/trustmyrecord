@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-todays-lineup-real-stats-20260520';
+    var UI_BUILD = 'mlb-simulator-real-weather-ops-20260520b';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -295,7 +295,7 @@
     function seasonYear() { return String(new Date().getUTCFullYear()); }
     function todaysScheduleUrl() {
         return 'https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=' + encodeURIComponent(todayIsoLocal()) +
-            '&hydrate=' + encodeURIComponent('probablePitcher,lineups,team') + '&_=' + encodeURIComponent(UI_BUILD);
+            '&hydrate=' + encodeURIComponent('probablePitcher,lineups,team,weather,venue') + '&_=' + encodeURIComponent(UI_BUILD);
     }
     function fetchTodaysSchedule() {
         if (state.liveContext.todaySchedule && state.liveContext.todaySchedule.uiBuild === UI_BUILD) return Promise.resolve(state.liveContext.todaySchedule);
@@ -354,6 +354,47 @@
         var pp = found.game.teams && found.game.teams[found.side] && found.game.teams[found.side].probablePitcher;
         if (!pp || !pp.id) return null;
         return { id: pp.id, name: pp.fullName || ((pp.firstName || '') + ' ' + (pp.lastName || '')).trim(), side: found.side };
+    }
+    function todaysWeatherForTeam(games, team) {
+        var found = todaysGameForTeam(games, team);
+        if (!found) return null;
+        var w = found.game.weather;
+        if (!w || (!w.temp && !w.condition && !w.wind)) return null;
+        var temp = Number(String(w.temp || '').replace(/[^\d.\-]/g, ''));
+        var gust = null;
+        var windStr = String(w.wind || '');
+        var gustMatch = windStr.match(/(\d+)\s*mph/i);
+        if (gustMatch) gust = Number(gustMatch[1]);
+        return {
+            temperature: Number.isFinite(temp) ? temp : null,
+            display: w.condition || '',
+            wind: w.wind || '',
+            gust: Number.isFinite(gust) ? gust : null,
+            precipitation: /rain|shower|storm/i.test(String(w.condition || '')) ? 1 : 0,
+            source: 'MLB schedule weather'
+        };
+    }
+    function todaysVenueForTeam(games, team) {
+        var found = todaysGameForTeam(games, team);
+        if (!found) return null;
+        var v = found.game.venue;
+        if (!v || !v.name) return null;
+        return { id: v.id || null, name: v.name, source: 'MLB schedule venue' };
+    }
+    function teamLiveOpsFactor(team) {
+        if (!team || team.era !== 'current') return null;
+        var roster = state.liveContext.teamRosters && state.liveContext.teamRosters[team.abbreviation];
+        if (!roster || !Array.isArray(roster.players)) return null;
+        var topHitters = roster.players.slice(0, 9).filter(function (p) { return p && p.mlbId; });
+        if (topHitters.length < 6) return null;
+        var stats = topHitters.map(function (p) { return cachedPlayerStat(p.mlbId, 'hitting'); }).filter(function (s) { return s && Number(s.ops) > 0 && Number(s.plateAppearances) >= 30; });
+        if (stats.length < 6) return null;
+        var meanOps = stats.reduce(function (sum, s) { return sum + Number(s.ops); }, 0) / stats.length;
+        return {
+            meanOps: meanOps,
+            sampleSize: stats.length,
+            factor: clamp(1 + (meanOps - 0.720) * 0.55, 0.85, 1.15)
+        };
     }
     function playerStatsUrl(playerId, group) {
         return 'https://statsapi.mlb.com/api/v1/people/' + encodeURIComponent(playerId) +
@@ -603,9 +644,14 @@
         if (roster.todayProbableStarter && roster.todayProbableStarter.id) {
             fetchPlayerSeasonStats(roster.todayProbableStarter.id, 'pitching');
         }
-        (Array.isArray(roster.players) ? roster.players : []).slice(0, 9).forEach(function (p) {
+        var players = Array.isArray(roster.players) ? roster.players : [];
+        players.slice(0, 9).forEach(function (p) {
             if (p && p.mlbId) fetchPlayerSeasonStats(p.mlbId, 'hitting');
         });
+        var pitchers = players.filter(function (p) {
+            return p && p.mlbId && /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(p.position || ''));
+        }).slice(0, 6);
+        pitchers.forEach(function (p) { fetchPlayerSeasonStats(p.mlbId, 'pitching'); });
     }
     function fetchTeamRoster(team) {
         if (!team || team.era !== 'current') return Promise.resolve(null);
@@ -780,15 +826,20 @@
         var limit = options.length >= 2 ? 3 : (options.length === 1 ? 4 : 5);
         rosterRows.slice(0, limit).forEach(function (player) {
             var row = curatedMatch(player.name);
+            var stat = player.mlbId ? cachedPlayerStat(player.mlbId, 'pitching') : null;
+            var realEra = stat ? Number(stat.era) : null;
+            var hasReal = Number.isFinite(realEra);
             addOption({
                 id: pitcherId(side, team.id + '-' + slugify(player.name)),
                 name: player.name,
-                quality: row ? row[2] : 100,
-                era: row ? row[3] : null,
-                source: verifiedRoster.source,
+                quality: hasReal ? pitcherQualityFromEra(realEra) : (row ? row[2] : 100),
+                era: hasReal ? realEra : (row ? row[3] : null),
+                source: hasReal ? (verifiedRoster.source + ' plus real ' + seasonYear() + ' season pitching stats') : verifiedRoster.source,
                 verified: true,
                 mlbId: player.mlbId || null,
-                note: 'Verified on the selected team active roster'
+                note: hasReal
+                    ? ('Real ' + seasonYear() + ' season ERA ' + realEra.toFixed(2) + ', WHIP ' + (stat.whip || 'N/A') + ', ' + (stat.wins || 0) + '-' + (stat.losses || 0))
+                    : 'Verified on the selected team active roster'
             });
         });
         return options;
@@ -1663,6 +1714,16 @@
         var awayRuns = expectedRunsFor(away, home, 0.38);
         var homeRuns = expectedRunsFor(home, away, 0.12);
         var liveFactors = [];
+        var awayOps = teamLiveOpsFactor(away);
+        var homeOps = teamLiveOpsFactor(home);
+        if (awayOps) {
+            awayRuns = clamp(awayRuns * awayOps.factor, 1.7, 9.4);
+            liveFactors.push('Live offense from real ' + seasonYear() + ' hitter OPS: ' + away.abbreviation + ' top-9 mean OPS ' + awayOps.meanOps.toFixed(3) + ' (n=' + awayOps.sampleSize + ') applies a ' + Math.round((awayOps.factor - 1) * 100) + '% run-environment factor.');
+        }
+        if (homeOps) {
+            homeRuns = clamp(homeRuns * homeOps.factor, 1.7, 9.4);
+            liveFactors.push('Live offense from real ' + seasonYear() + ' hitter OPS: ' + home.abbreviation + ' top-9 mean OPS ' + homeOps.meanOps.toFixed(3) + ' (n=' + homeOps.sampleSize + ') applies a ' + Math.round((homeOps.factor - 1) * 100) + '% run-environment factor.');
+        }
         var awayPitcher = selectedPitcher('away', away, context);
         var homePitcher = selectedPitcher('home', home, context);
         awayRuns = clamp(awayRuns + selectedPitcherRunAdjustment(homePitcher), 1.9, 9.4);
@@ -1700,6 +1761,19 @@
                 awayRuns = clamp(awayRuns + weatherAdjustment, 1.8, 9.2);
                 homeRuns = clamp(homeRuns + weatherAdjustment, 1.8, 9.2);
                 liveFactors.push('Weather context from ESPN: ' + [weather.temperature != null ? weather.temperature + 'F' : '', weather.display || '', Number.isFinite(weather.gust) ? 'gust ' + weather.gust + ' mph' : ''].filter(Boolean).join(' / ') + '.');
+            }
+        }
+        if (away && away.era === 'current' && home && home.era === 'current' && state.liveContext.todaySchedule && Array.isArray(state.liveContext.todaySchedule.games) && (!context || !context.espnGame || !context.espnGame.weather)) {
+            var mlbWeather = todaysWeatherForTeam(state.liveContext.todaySchedule.games, home);
+            if (mlbWeather) {
+                var mlbAdj = weatherRunAdjustment(mlbWeather);
+                awayRuns = clamp(awayRuns + mlbAdj, 1.8, 9.2);
+                homeRuns = clamp(homeRuns + mlbAdj, 1.8, 9.2);
+                liveFactors.push('Weather from MLB schedule: ' + [mlbWeather.temperature != null ? mlbWeather.temperature + 'F' : '', mlbWeather.display, mlbWeather.wind ? 'wind ' + mlbWeather.wind : ''].filter(Boolean).join(' / ') + '.');
+            }
+            var mlbVenue = todaysVenueForTeam(state.liveContext.todaySchedule.games, home);
+            if (mlbVenue && (!context || !context.espnGame || !context.espnGame.venue)) {
+                liveFactors.push('Ballpark from MLB schedule: ' + mlbVenue.name + '.');
             }
         }
         if (context && context.extraContext && context.extraContext.injuries) {
