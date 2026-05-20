@@ -311,6 +311,10 @@
                             <input id="cf-selection" name="selection" type="text" placeholder="e.g. Yankees, Over 8.5, Yankees Team Total Over 4.5" required>
                         </div>
                         <div class="field">
+                            <label for="cf-line">Line (required for spreads / totals / team totals)</label>
+                            <input id="cf-line" name="line" type="number" step="0.5" placeholder="e.g. 8.5 or -1.5 (leave blank for moneylines)">
+                        </div>
+                        <div class="field">
                             <label for="cf-odds">Odds (American)</label>
                             <input id="cf-odds" name="odds" type="number" placeholder="e.g. -135 or +120" required>
                         </div>
@@ -389,11 +393,12 @@
                             <th>P</th>
                             <th>Win %</th>
                             <th>Net Units</th>
+                            <th>Z</th>
                             <th>Last Pick</th>
                         </tr>
                     </thead>
                     <tbody id="lb-tbody">
-                        <tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading contest leaderboard…</div></td></tr>
+                        <tr><td colspan="10"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading contest leaderboard…</div></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -523,20 +528,23 @@
                 renderLeaderboard(entries);
             } catch {
                 $('#stat-entrants').textContent = '0';
-                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-trophy"></i>No entrants yet. The leaderboard opens when the contest launches.</div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><i class="fa-solid fa-trophy"></i>No entrants yet. The leaderboard opens when the contest launches.</div></td></tr>`;
             }
         }
 
         function renderLeaderboard(entries) {
             const tbody = $('#lb-tbody');
             if (!entries || entries.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-trophy"></i>No entrants yet. Be the first.</div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><i class="fa-solid fa-trophy"></i>No entrants yet. Be the first.</div></td></tr>`;
                 return;
             }
             tbody.innerHTML = entries.map((e, i) => {
                 const rank = e.rank || (i + 1);
                 const rankCls = rank === 1 ? 'r1' : rank === 2 ? 'r2' : rank === 3 ? 'r3' : '';
                 const winPct = (e.win_pct !== undefined && e.win_pct !== null) ? `${(Number(e.win_pct) * 100).toFixed(1)}%` : '—';
+                const zVal = (e.z_score !== undefined && e.z_score !== null && Number.isFinite(Number(e.z_score)))
+                    ? Number(e.z_score).toFixed(2)
+                    : '—';
                 return `
                     <tr>
                         <td><span class="lb-rank ${rankCls}">${rank}</span></td>
@@ -547,6 +555,7 @@
                         <td>${e.pushes ?? 0}</td>
                         <td>${winPct}</td>
                         <td class="${unitsClass(e.units_net)}">${fmtUnits(e.units_net)}</td>
+                        <td>${zVal}</td>
                         <td>${fmtTime(e.last_pick_at)}</td>
                     </tr>
                 `;
@@ -621,11 +630,13 @@
             const msg = $('#submit-msg');
             msg.textContent = '';
             const fd = new FormData(evt.target);
+            const lineVal = (fd.get('line') || '').toString().trim();
             const payload = {
                 contest_id: CONTEST_ID,
                 game_id: fd.get('game_id'),
                 market_type: fd.get('market_type'),
                 selection: (fd.get('selection') || '').toString().trim(),
+                line: lineVal === '' ? null : Number(lineVal),
                 odds: Number(fd.get('odds')),
                 units: Number(fd.get('units')),
                 stake_mode: fd.get('stake_mode') || 'risk',
