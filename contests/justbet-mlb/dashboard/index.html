@@ -332,6 +332,7 @@
 
                     <div class="submit-actions">
                         <button type="submit" class="cta-primary"><i class="fa-solid fa-vault"></i> Submit Sealed Contest Pick</button>
+                        <span id="picks-used-indicator" style="display:none; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:rgba(15,23,42,0.5); color:var(--text); font-size:0.85rem; font-weight:800; letter-spacing:0.02em;" data-picks-used-indicator><i class="fa-solid fa-vault" style="margin-right:6px;color:#ffd770;"></i><span id="picks-used-text">0 / 50 picks used</span></span>
                         <span id="submit-msg" style="color:var(--muted);font-size:0.9rem;"></span>
                     </div>
                 </form>
@@ -572,6 +573,33 @@
             return !!(window.TMR_AUTH && window.TMR_AUTH.user) || !!localStorage.getItem('tmr_auth_token');
         }
 
+        async function loadMyStatus() {
+            const indicator = $('#picks-used-indicator');
+            const text = $('#picks-used-text');
+            if (!isSignedIn()) { indicator.style.display = 'none'; return; }
+            try {
+                const token = localStorage.getItem('tmr_auth_token');
+                const res = await fetch(API('/my-status'), {
+                    credentials: 'include',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                });
+                if (!res.ok) { indicator.style.display = 'none'; return; }
+                const d = await res.json();
+                text.textContent = `${d.picks_used} / ${d.picks_max} picks used`;
+                indicator.style.display = 'inline-flex';
+                // When the cap is reached, disable submit and warn.
+                const submitBtn = $('#contest-pick-form button[type="submit"]');
+                if (submitBtn) {
+                    if (d.picks_used >= d.picks_max) {
+                        submitBtn.disabled = true;
+                        const msg = $('#submit-msg');
+                        msg.style.color = '#ffe4a3';
+                        msg.textContent = 'Contest pick limit reached (50 / 50). No further submissions.';
+                    }
+                }
+            } catch { indicator.style.display = 'none'; }
+        }
+
         function refreshAuthGate() {
             const preGate = $('#pre-launch-gate');
             const authGate = $('#auth-gate');
@@ -629,6 +657,7 @@
                 evt.target.reset();
                 loadPicks();
                 loadLeaderboard();
+                loadMyStatus();
             } catch (err) {
                 msg.style.color = '#f87171';
                 msg.textContent = `Submit failed: ${err.message}`;
@@ -640,11 +669,12 @@
             loadPicks();
             loadLeaderboard();
             loadGames();
-            $('#refresh-status').addEventListener('click', () => { loadStatus(); loadPicks(); loadLeaderboard(); });
+            loadMyStatus();
+            $('#refresh-status').addEventListener('click', () => { loadStatus(); loadPicks(); loadLeaderboard(); loadMyStatus(); });
             $('#refresh-picks').addEventListener('click', loadPicks);
             $('#refresh-lb').addEventListener('click', loadLeaderboard);
             $('#contest-pick-form').addEventListener('submit', submitPick);
-            window.addEventListener('storage', refreshAuthGate);
+            window.addEventListener('storage', () => { refreshAuthGate(); loadMyStatus(); });
         });
     })();
     </script>
