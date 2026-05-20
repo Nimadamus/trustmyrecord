@@ -57,3 +57,14 @@ const CONFIG = {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = CONFIG;
 }
+
+// JustBet MLB Contest sitewide promo modal loader (idempotent, defers itself).
+(function () {
+    if (typeof document === 'undefined') return;
+    if (document.querySelector('script[data-contest-promo-modal]')) return;
+    var s = document.createElement('script');
+    s.src = '/static/js/contest-promo-modal.js?v=20260520a';
+    s.defer = true;
+    s.setAttribute('data-contest-promo-modal', '1');
+    (document.head || document.documentElement).appendChild(s);
+})();
