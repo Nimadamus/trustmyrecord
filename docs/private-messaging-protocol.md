@@ -6,6 +6,8 @@ TrustMyRecord private messaging is an authenticated user-to-user feature tied to
 
 - The canonical inbox route is `/messages/`.
 - Profile-based message access must link to `/messages/?to=<username>` for the viewed user.
+- Profile message actions must use absolute message routes. Do not use relative `messages/?to=<username>` from `/profile/`.
+- The profile `user` query parameter is reserved only for profile lookup. Messaging links must never generate `/profile/?user=messages&to=<username>` or otherwise replace the viewed profile username.
 - The messages page opens an existing thread when one exists and otherwise opens a new empty thread addressed to that user.
 - The frontend may keep localStorage fallback data for legacy/offline display only. The production source of truth is always the TrustMyRecord API.
 - Do not add public feed, profile, forum, or leaderboard surfaces that expose private message content.
