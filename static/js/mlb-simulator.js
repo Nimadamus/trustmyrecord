@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-real-batter-bullpen-20260520c';
+    var UI_BUILD = 'mlb-simulator-real-pitcher-records-20260520d';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -380,6 +380,23 @@
         var v = found.game.venue;
         if (!v || !v.name) return null;
         return { id: v.id || null, name: v.name, source: 'MLB schedule venue' };
+    }
+    function todaysRecordForTeam(games, team) {
+        var found = todaysGameForTeam(games, team);
+        if (!found) return null;
+        var side = found.side;
+        var rec = found.game.teams && found.game.teams[side] && found.game.teams[side].leagueRecord;
+        if (!rec || !Number.isFinite(Number(rec.wins))) return null;
+        var wins = Number(rec.wins || 0);
+        var losses = Number(rec.losses || 0);
+        var total = wins + losses;
+        return {
+            wins: wins,
+            losses: losses,
+            pct: total ? wins / total : 0,
+            summary: wins + '-' + losses,
+            source: 'MLB schedule team record'
+        };
     }
     function teamLiveOpsFactor(team) {
         if (!team || team.era !== 'current') return null;
@@ -1196,10 +1213,28 @@
         var starterQuality = Number(starter && starter.quality);
         if (!Number.isFinite(starterQuality)) starterQuality = 100;
         var starterEra = Number(starter && starter.era);
+        var starterStat = starter && starter.mlbId ? cachedPlayerStat(starter.mlbId, 'pitching') : null;
+        var starterIpAvg = null, starterK9 = null, starterBB9 = null;
+        if (starterStat) {
+            var statIp = Number(String(starterStat.inningsPitched || '0'));
+            var statGs = Number(starterStat.gamesStarted || 0);
+            if (statIp > 0 && statGs > 0) starterIpAvg = statIp / statGs;
+            if (statIp > 0) {
+                starterK9 = Number(starterStat.strikeOuts || 0) / statIp * 9;
+                starterBB9 = Number(starterStat.baseOnBalls || 0) / statIp * 9;
+            }
+        }
         var qualityOuts = clamp(Math.round((starterQuality - 100) * 0.08), -3, 3);
         var eraOuts = Number.isFinite(starterEra) ? clamp(Math.round((4.2 - starterEra) * 0.9), -2, 2) : 0;
         var bullpenTrust = clamp(Math.round((team.bullpen - 100) * 0.04), -2, 2);
-        var starterOuts = clamp(17 - Math.floor(expectedDamage * 0.65) + Math.floor(random() * 4) + qualityOuts + eraOuts - Math.max(0, bullpenTrust), 9, 22);
+        var starterOuts;
+        if (Number.isFinite(starterIpAvg)) {
+            var realExpected = clamp(Math.round(starterIpAvg * 3), 9, 22);
+            var damagePenalty = Math.floor(expectedDamage * 0.45);
+            starterOuts = clamp(realExpected - damagePenalty + Math.floor(random() * 3) - 1, 9, 23);
+        } else {
+            starterOuts = clamp(17 - Math.floor(expectedDamage * 0.65) + Math.floor(random() * 4) + qualityOuts + eraOuts - Math.max(0, bullpenTrust), 9, 22);
+        }
         if (opponentLine.runs >= 7 || opponentLine.hits >= 13) starterOuts = clamp(starterOuts - 2 - Math.max(0, bullpenTrust), 8, 18);
         if (starterQuality >= 112 && opponentLine.runs <= 3 && opponentLine.hits <= 8) starterOuts = clamp(starterOuts + 2, 15, 23);
         if (starterQuality <= 92 || (Number.isFinite(starterEra) && starterEra >= 4.9)) starterOuts = clamp(starterOuts - 1, 8, 19);
@@ -1217,8 +1252,23 @@
             return clamp(cap, 1, max);
         });
         var hits = weightedAllocate(opponentLine.hits, outWeights.map(function (weight, index) { return weight * (index === 0 ? starterRunRisk : reliefRunRisk) + runs[index] * 1.1; }), random, hitCaps);
-        var walks = weightedAllocate(clamp(Math.round(2 + random() * 3 + (100 - team.bullpen) * 0.015), 1, 8), outWeights.map(function (weight, index) { return weight * (index === 0 ? starterRunRisk : reliefRunRisk); }), random, outs.map(function (out) { return clamp(Math.ceil(out / 4) + 1, 1, 4); }));
-        var strikeouts = weightedAllocate(clamp(Math.round(7 + random() * 5 + (starterQuality - 100) * 0.05 + (team.bullpen - 100) * 0.018), 3, 16), outWeights.map(function (weight, index) { return weight * (index === 0 ? clamp(1 + (starterQuality - 100) * 0.01, 0.75, 1.35) : clamp(1 + (team.bullpen - 100) * 0.008, 0.8, 1.25)); }), random, outs.map(function (out) { return Math.max(1, out); }));
+        var teamWalkTotal;
+        var teamKTotal;
+        if (Number.isFinite(starterBB9) && Number.isFinite(starterK9)) {
+            var starterExpectedBB = (starterBB9 / 9) * starterOuts;
+            var reliefBB = clamp((100 - team.bullpen) * 0.015 + random() * 2, 0.4, 4);
+            teamWalkTotal = clamp(Math.round(starterExpectedBB + reliefBB + (random() - 0.5)), 1, 9);
+            var starterExpectedK = (starterK9 / 9) * starterOuts;
+            var reliefK = clamp(2 + (team.bullpen - 100) * 0.02 + random() * 2.5, 1, 6);
+            teamKTotal = clamp(Math.round(starterExpectedK + reliefK + (random() - 0.5) * 1.5), 3, 18);
+        } else {
+            teamWalkTotal = clamp(Math.round(2 + random() * 3 + (100 - team.bullpen) * 0.015), 1, 8);
+            teamKTotal = clamp(Math.round(7 + random() * 5 + (starterQuality - 100) * 0.05 + (team.bullpen - 100) * 0.018), 3, 16);
+        }
+        var walks = weightedAllocate(teamWalkTotal, outWeights.map(function (weight, index) { return weight * (index === 0 ? starterRunRisk : reliefRunRisk); }), random, outs.map(function (out) { return clamp(Math.ceil(out / 4) + 1, 1, 4); }));
+        var starterKWeight = Number.isFinite(starterK9) ? clamp(starterK9 / 8.5, 0.55, 1.6) : clamp(1 + (starterQuality - 100) * 0.01, 0.75, 1.35);
+        var reliefKWeight = clamp(1 + (team.bullpen - 100) * 0.008, 0.8, 1.25);
+        var strikeouts = weightedAllocate(teamKTotal, outWeights.map(function (weight, index) { return weight * (index === 0 ? starterKWeight : reliefKWeight); }), random, outs.map(function (out) { return Math.max(1, out); }));
         var homers = weightedAllocate(clamp(Math.round(opponentLine.runs * 0.22 + random()), 0, 4), runs.map(function (run) { return run + 0.35; }), random, runs.map(function (run) { return Math.min(3, run); }));
         var rosterNames = rosterNamesForPitchers(roster, starter);
         var names = [rosterNames[0] || (starter && starter.name) || '', rosterNames[1] || '', rosterNames[2] || ''];
@@ -1847,17 +1897,29 @@
                 liveFactors.push('Weather context from ESPN: ' + [weather.temperature != null ? weather.temperature + 'F' : '', weather.display || '', Number.isFinite(weather.gust) ? 'gust ' + weather.gust + ' mph' : ''].filter(Boolean).join(' / ') + '.');
             }
         }
-        if (away && away.era === 'current' && home && home.era === 'current' && state.liveContext.todaySchedule && Array.isArray(state.liveContext.todaySchedule.games) && (!context || !context.espnGame || !context.espnGame.weather)) {
-            var mlbWeather = todaysWeatherForTeam(state.liveContext.todaySchedule.games, home);
-            if (mlbWeather) {
-                var mlbAdj = weatherRunAdjustment(mlbWeather);
-                awayRuns = clamp(awayRuns + mlbAdj, 1.8, 9.2);
-                homeRuns = clamp(homeRuns + mlbAdj, 1.8, 9.2);
-                liveFactors.push('Weather from MLB schedule: ' + [mlbWeather.temperature != null ? mlbWeather.temperature + 'F' : '', mlbWeather.display, mlbWeather.wind ? 'wind ' + mlbWeather.wind : ''].filter(Boolean).join(' / ') + '.');
+        if (away && away.era === 'current' && home && home.era === 'current' && state.liveContext.todaySchedule && Array.isArray(state.liveContext.todaySchedule.games)) {
+            var mlbGames = state.liveContext.todaySchedule.games;
+            if (!context || !context.espnGame || !context.espnGame.weather) {
+                var mlbWeather = todaysWeatherForTeam(mlbGames, home);
+                if (mlbWeather) {
+                    var mlbAdj = weatherRunAdjustment(mlbWeather);
+                    awayRuns = clamp(awayRuns + mlbAdj, 1.8, 9.2);
+                    homeRuns = clamp(homeRuns + mlbAdj, 1.8, 9.2);
+                    liveFactors.push('Weather from MLB schedule: ' + [mlbWeather.temperature != null ? mlbWeather.temperature + 'F' : '', mlbWeather.display, mlbWeather.wind ? 'wind ' + mlbWeather.wind : ''].filter(Boolean).join(' / ') + '.');
+                }
             }
-            var mlbVenue = todaysVenueForTeam(state.liveContext.todaySchedule.games, home);
-            if (mlbVenue && (!context || !context.espnGame || !context.espnGame.venue)) {
-                liveFactors.push('Ballpark from MLB schedule: ' + mlbVenue.name + '.');
+            if (!context || !context.espnGame || !context.espnGame.venue) {
+                var mlbVenue = todaysVenueForTeam(mlbGames, home);
+                if (mlbVenue) liveFactors.push('Ballpark from MLB schedule: ' + mlbVenue.name + '.');
+            }
+            if (!context || !context.espnGame || !context.espnGame.awayRecord || !context.espnGame.homeRecord) {
+                var awayRec = todaysRecordForTeam(mlbGames, away);
+                var homeRec = todaysRecordForTeam(mlbGames, home);
+                if (awayRec) awayStrength += recordStrengthAdjustment(awayRec);
+                if (homeRec) homeStrength += recordStrengthAdjustment(homeRec);
+                if (awayRec && homeRec) {
+                    liveFactors.push('Team records from MLB schedule: ' + away.abbreviation + ' ' + awayRec.summary + ' (' + (awayRec.pct * 100).toFixed(1) + '%), ' + home.abbreviation + ' ' + homeRec.summary + ' (' + (homeRec.pct * 100).toFixed(1) + '%).');
+                }
             }
         }
         if (context && context.extraContext && context.extraContext.injuries) {
