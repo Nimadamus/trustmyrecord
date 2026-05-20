@@ -91,12 +91,6 @@ POST /api/contests/:contestId/picks          → authed + email-verified + signu
 
 See `trustmyrecord-backend/routes/contests.js`.
 
-## Known regression — do NOT load `static/js/auth.js` on new contest pages
-
-`static/js/auth.js` contains legacy methods `updateUIForLoggedInUser()` and `updateUIForLoggedOutUser()` that find `document.querySelector('nav')` on the page and overwrite its `innerHTML` with old-architecture markup using `onclick="showSection(...)"` handlers. Because `tmr-sitewide.js` prepends the modern `<nav class="tmr-global-nav">` at the top of `<body>`, that nav becomes the first match and gets clobbered. The result on any page that loads both scripts: the top nav renders as unstyled raw text ("The Record My Record The Arena Data Core Blog Forums Make Your Picks App Live Odds Leaderboards Login Sign Up").
-
-**Rule for sponsored contest pages:** include `tmr-sitewide.js`, `config.js`, and `backend-api.js` only. Do NOT add `auth.js`. The sitewide nav already supplies Log In / Join Free buttons via `buildLoggedOutActions()` routing to `/login/` and `/register/`. The dashboard's auth check uses the `localStorage` token directly and does not need `auth.js`.
-
 ## Acceptance checklist (every new sponsored contest)
 
 - [ ] Two pages live: `/contests/<id>/` (landing) and `/contests/<id>/dashboard/` (live experience).

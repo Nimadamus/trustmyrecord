@@ -57,17 +57,3 @@ const CONFIG = {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = CONFIG;
 }
-
-// Auth-click fallback removed. The contest-promo modal that this workaround
-// was added for is no longer auto-loaded sitewide, so there is no overlay to
-// punch through. Letting the visible auth anchors do their native browser
-// navigation is more reliable than calling preventDefault + location.assign
-// from a capture-phase handler -- some browser environments (extensions,
-// blockers, embedded contexts) honor real anchor clicks but reject scripted
-// navigation from a capture-phase preventDefault chain. Mark the install
-// flag so any later script that checks it stays quiet.
-if (typeof window !== 'undefined') { window.__tmrAuthClickFallbackInstalled = true; }
-
-// JustBet MLB Contest sitewide promo modal loader (DISABLED).
-// Backdrop covered homepage auth controls. Re-enable only when the modal
-// can launch without covering the visible header. Landing page untouched.

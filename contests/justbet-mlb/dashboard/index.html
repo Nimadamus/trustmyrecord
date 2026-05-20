@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260502navspread1">
     <script defer src="/static/js/tmr-sitewide.js?v=20260501navspacing"></script>
     <script defer src="/static/js/config.js"></script>
+    <script defer src="/static/js/auth.js"></script>
     <script defer src="/static/js/backend-api.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -63,14 +64,16 @@
         }
         .dash-head .brand { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
         .justbet-mark {
-            display: inline-flex; align-items: center;
-            height: 28px;
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 12px;
+            background: linear-gradient(180deg, #1a1408, #0d0904);
+            border: 1px solid rgba(255, 184, 0, 0.45);
+            border-radius: 8px;
+            color: var(--justbet);
+            font-family: "Barlow", sans-serif;
+            font-weight: 900; letter-spacing: 0.04em; font-size: 1rem; text-transform: uppercase;
         }
-        .justbet-mark img {
-            height: 100%;
-            width: auto;
-            display: block;
-        }
+        .justbet-mark .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--justbet); box-shadow: 0 0 10px var(--justbet); }
         .isolation-pill {
             display: inline-flex; align-items: center; gap: 8px;
             padding: 6px 12px; border-radius: 999px;
@@ -234,7 +237,7 @@
         <!-- ========================= HEAD STRIP ========================= -->
         <section class="dash-head">
             <div class="brand">
-                <span class="justbet-mark" aria-label="JustBet"><img src="/static/media/justbet-logo.png?v=20260520a" alt="JustBet" width="280" height="28"></span>
+                <span class="justbet-mark"><span class="dot"></span> JUSTBET</span>
                 <div>
                     <h1>JustBet MLB Contest Dashboard</h1>
                     <div style="margin-top: 4px;">
@@ -332,7 +335,6 @@
 
                     <div class="submit-actions">
                         <button type="submit" class="cta-primary"><i class="fa-solid fa-vault"></i> Submit Sealed Contest Pick</button>
-                        <span id="picks-used-indicator" style="display:none; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:rgba(15,23,42,0.5); color:var(--text); font-size:0.85rem; font-weight:800; letter-spacing:0.02em;" data-picks-used-indicator><i class="fa-solid fa-vault" style="margin-right:6px;color:#ffd770;"></i><span id="picks-used-text">0 / 50 picks used</span></span>
                         <span id="submit-msg" style="color:var(--muted);font-size:0.9rem;"></span>
                     </div>
                 </form>
@@ -409,11 +411,8 @@
     <script>
     (function () {
         const CONTEST_ID = 'justbet-mlb';
-        const API_BASE = ((typeof CONFIG !== 'undefined' && CONFIG && CONFIG.api && CONFIG.api.baseUrl)
-            || window.TMR_API_BASE
-            || window.API_BASE_URL
-            || 'https://trustmyrecord-api.onrender.com/api').replace(/\/$/, '');
-        const API = (path) => `${API_BASE}/contests/${CONTEST_ID}${path}`;
+        const API_BASE = (window.TMR_API_BASE || window.API_BASE_URL || '').replace(/\/$/, '');
+        const API = (path) => `${API_BASE}/api/contests/${CONTEST_ID}${path}`;
 
         const $ = (sel) => document.querySelector(sel);
         const fmtOdds = (n) => {
@@ -573,33 +572,6 @@
             return !!(window.TMR_AUTH && window.TMR_AUTH.user) || !!localStorage.getItem('tmr_auth_token');
         }
 
-        async function loadMyStatus() {
-            const indicator = $('#picks-used-indicator');
-            const text = $('#picks-used-text');
-            if (!isSignedIn()) { indicator.style.display = 'none'; return; }
-            try {
-                const token = localStorage.getItem('tmr_auth_token');
-                const res = await fetch(API('/my-status'), {
-                    credentials: 'include',
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-                });
-                if (!res.ok) { indicator.style.display = 'none'; return; }
-                const d = await res.json();
-                text.textContent = `${d.picks_used} / ${d.picks_max} picks used`;
-                indicator.style.display = 'inline-flex';
-                // When the cap is reached, disable submit and warn.
-                const submitBtn = $('#contest-pick-form button[type="submit"]');
-                if (submitBtn) {
-                    if (d.picks_used >= d.picks_max) {
-                        submitBtn.disabled = true;
-                        const msg = $('#submit-msg');
-                        msg.style.color = '#ffe4a3';
-                        msg.textContent = 'Contest pick limit reached (50 / 50). No further submissions.';
-                    }
-                }
-            } catch { indicator.style.display = 'none'; }
-        }
-
         function refreshAuthGate() {
             const preGate = $('#pre-launch-gate');
             const authGate = $('#auth-gate');
@@ -657,7 +629,6 @@
                 evt.target.reset();
                 loadPicks();
                 loadLeaderboard();
-                loadMyStatus();
             } catch (err) {
                 msg.style.color = '#f87171';
                 msg.textContent = `Submit failed: ${err.message}`;
@@ -669,12 +640,11 @@
             loadPicks();
             loadLeaderboard();
             loadGames();
-            loadMyStatus();
-            $('#refresh-status').addEventListener('click', () => { loadStatus(); loadPicks(); loadLeaderboard(); loadMyStatus(); });
+            $('#refresh-status').addEventListener('click', () => { loadStatus(); loadPicks(); loadLeaderboard(); });
             $('#refresh-picks').addEventListener('click', loadPicks);
             $('#refresh-lb').addEventListener('click', loadLeaderboard);
             $('#contest-pick-form').addEventListener('submit', submitPick);
-            window.addEventListener('storage', () => { refreshAuthGate(); loadMyStatus(); });
+            window.addEventListener('storage', refreshAuthGate);
         });
     })();
     </script>

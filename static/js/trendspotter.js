@@ -384,167 +384,6 @@
       .sort(function (a, b) { return (Number(b.sample) || 0) - (Number(a.sample) || 0); })[0] || null;
   }
 
-  function analyzeFilterFailure() {
-    var matchup = selectedMatchup();
-    var market = selectedMarket();
-    var trendKind = selectedTrendKind();
-    var rows = trendsForSport(state.sport);
-    var diagnostics = {
-      source: cache[state.sport] && (cache[state.sport].source || cache[state.sport].artifact || cache[state.sport].source_table || "Trend Spotter verified endpoint"),
-      timestamp: cache[state.sport] && (cache[state.sport].updated_at || cache[state.sport].generated_at || cache[state.sport].artifact_generated_at || cache[state.sport].timestamp || ""),
-      filters: querySummary(),
-      counts: {
-        verifiedRows: rows.length,
-        matchupRows: 0,
-        marketRows: 0,
-        trendSearchRows: 0,
-        sideRows: 0,
-        locationRows: 0,
-        periodRows: 0,
-        sampleRows: 0
-      },
-      failedFilter: "",
-      message: "",
-      suggestions: []
-    };
-    if (!rows.length) {
-      diagnostics.failedFilter = "source";
-      diagnostics.message = "No verified trend rows are currently available for " + (state.sport || "this sport") + ".";
-      diagnostics.suggestions = [
-        { label: "Try Full Game instead of First Half", action: "period_full_game" },
-        { label: "Lower minimum sample to 5", action: "sample_5" },
-        { label: "Try team trend instead of side trend", action: "trend_team_win" },
-        { label: "Try all locations instead of location split", action: "location_all" }
-      ];
-      return diagnostics;
-    }
-    if (!matchup || !market || !trendKind) {
-      diagnostics.failedFilter = "required inputs";
-      diagnostics.message = "Trend Spotter needs a matchup, market, side, and trend search before it can check verified rows.";
-      diagnostics.suggestions = [{ label: "Review required filters", action: "focus_filters" }];
-      return diagnostics;
-    }
-    var home = normalize(matchup.home_abbr);
-    var away = normalize(matchup.away_abbr);
-    var matchupRows = rows.filter(function (trend) {
-      var team = normalize(trend.team_abbr);
-      return normalize(trend.matchup) === normalize(matchup.matchup) && [home, away].includes(team);
-    });
-    diagnostics.counts.matchupRows = matchupRows.length;
-    if (!matchupRows.length) {
-      diagnostics.failedFilter = "matchup";
-      diagnostics.message = "No verified trend found because the selected live matchup does not have matching verified Trend Spotter rows.";
-      diagnostics.suggestions = [
-        { label: "Try another matchup with verified rows", action: "focus_matchup" },
-        { label: "Try team trend instead of side trend", action: "trend_team_win" }
-      ];
-      return diagnostics;
-    }
-    var marketRows = matchupRows.filter(function (trend) { return marketMatches(trend, market); });
-    diagnostics.counts.marketRows = marketRows.length;
-    if (!marketRows.length) {
-      diagnostics.failedFilter = "market";
-      diagnostics.message = "No verified trend found because the " + market.label + " filter has no matching verified rows for this matchup.";
-      diagnostics.suggestions = [
-        { label: "Try Moneyline", action: "market_moneyline" },
-        { label: "Try Full Game instead of First Half", action: "period_full_game" }
-      ];
-      return diagnostics;
-    }
-    var trendRows = marketRows.filter(function (trend) {
-      if (!trendKind.tokens || !trendKind.tokens.length) return true;
-      var body = normalize([trend.kind, trend.trend_type, trend.subset, trend.label, trend.claim, trend.bet_type, trend.market].join(" "));
-      return trendKind.tokens.some(function (token) { return body.indexOf(normalize(token)) !== -1; });
-    });
-    diagnostics.counts.trendSearchRows = trendRows.length;
-    if (!trendRows.length) {
-      diagnostics.failedFilter = "trend search";
-      diagnostics.message = "No verified trend found because the selected " + trendKind.label + " search has no matching source rows.";
-      diagnostics.suggestions = [
-        { label: "Try team trend instead of side trend", action: "trend_team_win" },
-        { label: "Try Home / road split", action: "trend_home_road" }
-      ];
-      return diagnostics;
-    }
-    var sideRows = trendRows.filter(function (trend) {
-      var team = normalize(trend.team_abbr);
-      if (state.team && normalize(state.team) !== team) return false;
-      if (state.side && ["home", "away"].includes(state.side)) {
-        if (state.side === "home" && team !== home) return false;
-        if (state.side === "away" && team !== away) return false;
-      }
-      if (state.side && ["over", "under"].includes(state.side)) {
-        var body = normalize([trend.claim, trend.side, trend.subset].join(" "));
-        if (body.indexOf(normalize(state.side)) === -1) return false;
-      }
-      return true;
-    });
-    diagnostics.counts.sideRows = sideRows.length;
-    if (!sideRows.length) {
-      diagnostics.failedFilter = "side";
-      diagnostics.message = "No verified trend found because the selected side does not match any verified source rows.";
-      diagnostics.suggestions = [
-        { label: "Try the other side", action: "toggle_side" },
-        { label: "Try team trend instead of side trend", action: "trend_team_win" }
-      ];
-      return diagnostics;
-    }
-    var locationRows = sideRows.filter(function (trend) {
-      var team = normalize(trend.team_abbr);
-      if (state.location === "home" && team !== home) return false;
-      if (state.location === "away" && team !== away) return false;
-      return true;
-    });
-    diagnostics.counts.locationRows = locationRows.length;
-    if (!locationRows.length) {
-      diagnostics.failedFilter = "location";
-      diagnostics.message = "No verified trend found because the " + state.location + " location filter removed every verified row.";
-      diagnostics.suggestions = [
-        { label: "Try all locations instead of location split", action: "location_all" },
-        { label: "Try the other side", action: "toggle_side" }
-      ];
-      return diagnostics;
-    }
-    var periodRows = locationRows.filter(function () {
-      if (market.id === "first_half" && state.period !== "first_half") return false;
-      if (market.id === "first_five" && state.period !== "first_five") return false;
-      return state.range === "source_window";
-    });
-    diagnostics.counts.periodRows = periodRows.length;
-    if (!periodRows.length || state.period !== "full_game") {
-      diagnostics.failedFilter = "period";
-      diagnostics.message = "No verified trend found because the " + (PERIODS[state.period] || state.period) + " period filter did not produce verified rows for this query.";
-      diagnostics.suggestions = [
-        { label: "Try Full Game instead of First Half", action: "period_full_game" },
-        { label: "Try team trend instead of side trend", action: "trend_team_win" }
-      ];
-      return diagnostics;
-    }
-    var minSample = Number(state.minSample || 0);
-    var sampleRows = periodRows.filter(function (trend) { return Number(trend.sample || 0) >= minSample; });
-    diagnostics.counts.sampleRows = sampleRows.length;
-    if (!sampleRows.length) {
-      var bestSample = periodRows.reduce(function (max, trend) { return Math.max(max, Number(trend.sample || 0)); }, 0);
-      diagnostics.failedFilter = "minimum sample";
-      diagnostics.message = "No verified trend found because the selected filters produced fewer than " + minSample + " verified samples" + (bestSample ? " (best available sample: " + bestSample + ")." : ".");
-      diagnostics.suggestions = [
-        { label: "Lower minimum sample to 5", action: "sample_5" },
-        { label: "Try all locations instead of location split", action: "location_all" },
-        { label: "Try Full Game instead of First Half", action: "period_full_game" }
-      ];
-      return diagnostics;
-    }
-    diagnostics.failedFilter = "unsupported combination";
-    diagnostics.message = "No verified trend found because the selected filters did not map to a supported verified output.";
-    diagnostics.suggestions = [
-      { label: "Try Full Game instead of First Half", action: "period_full_game" },
-      { label: "Lower minimum sample to 5", action: "sample_5" },
-      { label: "Try team trend instead of side trend", action: "trend_team_win" },
-      { label: "Try all locations instead of location split", action: "location_all" }
-    ];
-    return diagnostics;
-  }
-
   function renderMarketOptions() {
     els.marketOptions.innerHTML = MARKETS.map(function (market) {
       var reason = marketDisabledReason(market);
@@ -816,100 +655,30 @@
     var trend = bestResult();
     if (!trend) {
       els.resultCount.textContent = "No verified trend";
-      var failure = analyzeFilterFailure();
-      els.resultsList.innerHTML = safeStateHtml(failure.message || SAFE_MESSAGES.noData, querySummary(), classification, failure);
+      var hasData = trendsForSport(state.sport).length > 0;
+      els.resultsList.innerHTML = safeStateHtml(hasData ? SAFE_MESSAGES.noStrong : SAFE_MESSAGES.noData, querySummary(), classification);
       return;
     }
     if ((Number(trend.sample) || 0) < Number(state.minSample || 0)) {
       els.resultCount.textContent = "Small sample";
-      var sampleFailure = analyzeFilterFailure();
-      els.resultsList.innerHTML = safeStateHtml(sampleFailure.message || SAFE_MESSAGES.smallSample, querySummary(), SOURCE_LABELS.partial, sampleFailure);
+      els.resultsList.innerHTML = safeStateHtml(SAFE_MESSAGES.smallSample, querySummary(), SOURCE_LABELS.partial);
       return;
     }
     els.resultCount.textContent = "Verified sample: " + Number(trend.sample || 0);
     els.resultsList.innerHTML = trendResultHtml(trend);
   }
 
-  function safeStateHtml(message, summary, classification, diagnostics) {
+  function safeStateHtml(message, summary, classification) {
     var label = typeof classification === "string" ? { label: classification, key: normalize(classification).toLowerCase() } : (classification || SOURCE_LABELS.blocked);
-    var failure = diagnostics || {};
     return [
       "<article class=\"ts-no-results\" data-state=\"safe-no-data\" data-source-label=\"" + escapeHtml(label.key || "blocked") + "\">",
       "  <span class=\"ts-source-label\">" + escapeHtml(label.label || SOURCE_LABELS.blocked.label) + "</span>",
       "  <strong>" + escapeHtml(message) + "</strong>",
-      failure.failedFilter ? "  <span>Failed filter: " + escapeHtml(failure.failedFilter) + "</span>" : "",
       "  <span>Query: " + escapeHtml(summary) + "</span>",
       "  <span>Source classification: " + escapeHtml(label.label || SOURCE_LABELS.blocked.label) + "</span>",
       "  <span>Trend Spotter will not invent unsupported results or performance-style claims when verified source data is unavailable.</span>",
-      suggestionHtml(failure.suggestions),
-      diagnosticsHtml(failure),
       "</article>"
     ].join("");
-  }
-
-  function suggestionHtml(suggestions) {
-    var items = Array.isArray(suggestions) ? suggestions : [];
-    if (!items.length) {
-      items = [
-        { label: "Try Full Game instead of First Half", action: "period_full_game" },
-        { label: "Lower minimum sample to 5", action: "sample_5" },
-        { label: "Try team trend instead of side trend", action: "trend_team_win" },
-        { label: "Try all locations instead of location split", action: "location_all" }
-      ];
-    }
-    return [
-      "<div class=\"ts-fallback-actions\" aria-label=\"Fallback suggestions\">",
-      "  <strong>Try next</strong>",
-      "  <div>",
-      items.map(function (item) {
-        return "<button class=\"ts-link-button\" type=\"button\" data-suggestion=\"" + escapeHtml(item.action) + "\">" + escapeHtml(item.label) + "</button>";
-      }).join(""),
-      "  </div>",
-      "</div>"
-    ].join("");
-  }
-
-  function diagnosticsEnabled() {
-    var params = new URLSearchParams(window.location.search || "");
-    return params.get("debug") === "trendspotter" || params.get("admin") === "1" || window.localStorage.getItem("tmrTrendspotterDebug") === "1";
-  }
-
-  function diagnosticsHtml(diagnostics) {
-    if (!diagnosticsEnabled() || !diagnostics || !diagnostics.counts) return "";
-    return [
-      "<details class=\"ts-diagnostics\">",
-      "  <summary>Diagnostics</summary>",
-      "  <dl class=\"ts-result-meta\">",
-      supportedValue("Matched rows count", diagnostics.counts.sampleRows || diagnostics.counts.periodRows || diagnostics.counts.locationRows || diagnostics.counts.sideRows || diagnostics.counts.trendSearchRows || diagnostics.counts.marketRows || diagnostics.counts.matchupRows || 0),
-      supportedValue("Verified rows loaded", diagnostics.counts.verifiedRows),
-      supportedValue("Source table/file/API", diagnostics.source || "Trend Spotter verified endpoint"),
-      supportedValue("Filters applied", diagnostics.filters),
-      supportedValue("Failed filter reason", diagnostics.failedFilter || "No matching verified output"),
-      supportedValue("Source timestamp", diagnostics.timestamp || "Unavailable"),
-      "  </dl>",
-      "</details>"
-    ].join("");
-  }
-
-  function applySuggestion(action) {
-    if (action === "period_full_game") state.period = "full_game";
-    if (action === "sample_5") state.minSample = 5;
-    if (action === "location_all") state.location = "all";
-    if (action === "market_moneyline") {
-      state.market = "moneyline";
-      state.trendKind = "";
-      state.threshold = "";
-    }
-    if (action === "trend_team_win") state.trendKind = "team_win";
-    if (action === "trend_home_road") state.trendKind = "home_road";
-    if (action === "toggle_side") state.side = state.side === "home" ? "away" : state.side === "away" ? "home" : state.side;
-    if (action === "focus_sport") els.sport.focus();
-    if (action === "focus_matchup") els.matchup.focus();
-    if (action === "focus_filters") els.trendKind.focus();
-    els.sample.value = state.minSample;
-    els.location.value = state.location;
-    updateUi();
-    renderResults();
   }
 
   function resultCounts(rows) {
@@ -1048,11 +817,6 @@
       el.addEventListener("input", onInput);
     });
     els.generate.addEventListener("click", renderResults);
-    els.resultsList.addEventListener("click", function (event) {
-      var button = event.target.closest("[data-suggestion]");
-      if (!button) return;
-      applySuggestion(button.getAttribute("data-suggestion"));
-    });
   }
 
   function onInput(event) {
