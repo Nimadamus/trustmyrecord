@@ -106,3 +106,30 @@ See `trustmyrecord-backend/routes/contests.js`.
 - [ ] No first-person identifiers in copy.
 - [ ] Sponsor disclosure footnote present on both pages.
 - [ ] Live verification: landing returns 200, dashboard returns 200, picks endpoint returns valid JSON, sealed/revealed states render with a manual time check.
+
+## Rollback-survival rule for sponsored contest assets
+
+Any sitewide rollback to a tree state must preserve the sponsored-contest
+asset set. The following files are critical and must survive any emergency
+rollback even when the trigger was unrelated (e.g. homepage click breakage):
+
+* `static/media/justbet-logo.png` (or the current sponsor's logo asset)
+* `static/js/contest-promo-modal.js`
+* `static/css/contest-promo-modal.css`
+* The `// JustBet MLB Contest sitewide promo modal loader` block at the end
+  of `static/js/config.js`
+* The "Two Steps to Enter" section in `contests/<contest-id>/index.html`
+* The picks-used pill markup + `loadMyStatus()` wiring in
+  `contests/<contest-id>/dashboard/index.html`
+
+If a rollback strictly requires removing one of these (e.g. the modal
+is the actual click-interception culprit), document the cause in the
+rollback commit message and immediately ticket the restore so the
+contest funnel doesn't regress silently.
+
+Sanity check after any rollback:
+```
+curl -s https://trustmyrecord.com/contests/justbet-mlb/ | grep -c "Two Steps to Enter"   # expect 1
+curl -s https://trustmyrecord.com/static/media/justbet-logo.png -o /dev/null -w "%{http_code}"  # expect 200
+curl -s https://trustmyrecord.com/static/js/config.js | grep -c "contest-promo-modal"   # expect >=1
+```
