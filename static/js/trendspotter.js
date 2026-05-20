@@ -411,8 +411,10 @@
       diagnostics.failedFilter = "source";
       diagnostics.message = "No verified trend rows are currently available for " + (state.sport || "this sport") + ".";
       diagnostics.suggestions = [
-        { label: "Try another sport", action: "focus_sport" },
-        { label: "Check a matchup that appears in verified artifacts", action: "focus_matchup" }
+        { label: "Try Full Game instead of First Half", action: "period_full_game" },
+        { label: "Lower minimum sample to 5", action: "sample_5" },
+        { label: "Try team trend instead of side trend", action: "trend_team_win" },
+        { label: "Try all locations instead of location split", action: "location_all" }
       ];
       return diagnostics;
     }
