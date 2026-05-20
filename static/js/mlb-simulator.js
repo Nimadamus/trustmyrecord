@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-real-batter-hr-20260520e';
+    var UI_BUILD = 'mlb-simulator-bullpen-rates-pitch-cap-hr9-20260520f';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -687,15 +687,41 @@
             var ip = Number(String(s.inningsPitched || '0').replace('.', '.'));
             if (!Number.isFinite(ip) || ip < 5) return null;
             if (gs >= 4 || (g && gs / g >= 0.5)) return null;
-            return { name: p.name, era: era, ip: ip };
+            var so = Number(s.strikeOuts || 0);
+            var bb = Number(s.baseOnBalls || 0);
+            var hr = Number(s.homeRuns || 0);
+            return {
+                name: p.name,
+                era: era,
+                ip: ip,
+                k9: ip > 0 ? (so / ip) * 9 : null,
+                bb9: ip > 0 ? (bb / ip) * 9 : null,
+                hr9: ip > 0 ? (hr / ip) * 9 : null
+            };
         }).filter(Boolean);
         if (relievers.length < 4) return null;
-        var weightedTotal = relievers.reduce(function (sum, r) { return sum + r.era * r.ip; }, 0);
         var ipTotal = relievers.reduce(function (sum, r) { return sum + r.ip; }, 0);
         if (ipTotal <= 0) return null;
-        var meanEra = weightedTotal / ipTotal;
+        function ipWeightedMean(field) {
+            var sum = 0;
+            var weight = 0;
+            relievers.forEach(function (r) {
+                if (Number.isFinite(r[field])) {
+                    sum += r[field] * r.ip;
+                    weight += r.ip;
+                }
+            });
+            return weight > 0 ? sum / weight : null;
+        }
+        var meanEra = ipWeightedMean('era');
+        var meanK9 = ipWeightedMean('k9');
+        var meanBb9 = ipWeightedMean('bb9');
+        var meanHr9 = ipWeightedMean('hr9');
         return {
             meanEra: meanEra,
+            meanK9: meanK9,
+            meanBb9: meanBb9,
+            meanHr9: meanHr9,
             sampleSize: relievers.length,
             adjustment: clamp((4.10 - meanEra) * 0.12, -0.35, 0.35)
         };
@@ -1235,7 +1261,7 @@
         if (!Number.isFinite(starterQuality)) starterQuality = 100;
         var starterEra = Number(starter && starter.era);
         var starterStat = starter && starter.mlbId ? cachedPlayerStat(starter.mlbId, 'pitching') : null;
-        var starterIpAvg = null, starterK9 = null, starterBB9 = null;
+        var starterIpAvg = null, starterK9 = null, starterBB9 = null, starterHr9 = null;
         if (starterStat) {
             var statIp = Number(String(starterStat.inningsPitched || '0'));
             var statGs = Number(starterStat.gamesStarted || 0);
@@ -1243,6 +1269,7 @@
             if (statIp > 0) {
                 starterK9 = Number(starterStat.strikeOuts || 0) / statIp * 9;
                 starterBB9 = Number(starterStat.baseOnBalls || 0) / statIp * 9;
+                starterHr9 = Number(starterStat.homeRuns || 0) / statIp * 9;
             }
         }
         var qualityOuts = clamp(Math.round((starterQuality - 100) * 0.08), -3, 3);
@@ -1259,6 +1286,18 @@
         if (opponentLine.runs >= 7 || opponentLine.hits >= 13) starterOuts = clamp(starterOuts - 2 - Math.max(0, bullpenTrust), 8, 18);
         if (starterQuality >= 112 && opponentLine.runs <= 3 && opponentLine.hits <= 8) starterOuts = clamp(starterOuts + 2, 15, 23);
         if (starterQuality <= 92 || (Number.isFinite(starterEra) && starterEra >= 4.9)) starterOuts = clamp(starterOuts - 1, 8, 19);
+        if (Number.isFinite(starterK9) && Number.isFinite(starterBB9)) {
+            var pullPitches = 95 + Math.floor(random() * 18);
+            var pitchesPerPa = clamp(3.80 + (starterK9 - 8.5) * 0.05 + (starterBB9 - 3.0) * 0.07, 3.45, 4.45);
+            var batterReachRate = 0.305 + clamp((starterBB9 - 3.0) * 0.010, -0.04, 0.05);
+            var paForStarter = starterOuts / (1 - batterReachRate);
+            var pitchEstimate = paForStarter * pitchesPerPa;
+            if (pitchEstimate > pullPitches) {
+                var cappedPa = pullPitches / pitchesPerPa;
+                var cappedOuts = Math.floor(cappedPa * (1 - batterReachRate));
+                starterOuts = clamp(Math.min(starterOuts, cappedOuts), 9, 22);
+            }
+        }
         var reliefOuts = 27 - starterOuts;
         var secondRelief = reliefOuts >= 9 ? clamp(3 + Math.floor(random() * 3), 3, reliefOuts - 3) : Math.floor(reliefOuts / 2);
         var outs = [starterOuts, secondRelief, reliefOuts - secondRelief];
@@ -1273,14 +1312,23 @@
             return clamp(cap, 1, max);
         });
         var hits = weightedAllocate(opponentLine.hits, outWeights.map(function (weight, index) { return weight * (index === 0 ? starterRunRisk : reliefRunRisk) + runs[index] * 1.1; }), random, hitCaps);
+        var bullpenLive = teamLiveBullpenFactor(team);
+        var bullpenK9 = bullpenLive && Number.isFinite(bullpenLive.meanK9) ? bullpenLive.meanK9 : null;
+        var bullpenBb9 = bullpenLive && Number.isFinite(bullpenLive.meanBb9) ? bullpenLive.meanBb9 : null;
+        var bullpenHr9 = bullpenLive && Number.isFinite(bullpenLive.meanHr9) ? bullpenLive.meanHr9 : null;
         var teamWalkTotal;
         var teamKTotal;
+        var reliefOutsTotal = outs[1] + outs[2];
         if (Number.isFinite(starterBB9) && Number.isFinite(starterK9)) {
             var starterExpectedBB = (starterBB9 / 9) * starterOuts;
-            var reliefBB = clamp((100 - team.bullpen) * 0.015 + random() * 2, 0.4, 4);
+            var reliefBB = Number.isFinite(bullpenBb9)
+                ? (bullpenBb9 / 9) * reliefOutsTotal
+                : clamp((100 - team.bullpen) * 0.015 + random() * 2, 0.4, 4);
             teamWalkTotal = clamp(Math.round(starterExpectedBB + reliefBB + (random() - 0.5)), 1, 9);
             var starterExpectedK = (starterK9 / 9) * starterOuts;
-            var reliefK = clamp(2 + (team.bullpen - 100) * 0.02 + random() * 2.5, 1, 6);
+            var reliefK = Number.isFinite(bullpenK9)
+                ? (bullpenK9 / 9) * reliefOutsTotal
+                : clamp(2 + (team.bullpen - 100) * 0.02 + random() * 2.5, 1, 6);
             teamKTotal = clamp(Math.round(starterExpectedK + reliefK + (random() - 0.5) * 1.5), 3, 18);
         } else {
             teamWalkTotal = clamp(Math.round(2 + random() * 3 + (100 - team.bullpen) * 0.015), 1, 8);
@@ -1288,9 +1336,21 @@
         }
         var walks = weightedAllocate(teamWalkTotal, outWeights.map(function (weight, index) { return weight * (index === 0 ? starterRunRisk : reliefRunRisk); }), random, outs.map(function (out) { return clamp(Math.ceil(out / 4) + 1, 1, 4); }));
         var starterKWeight = Number.isFinite(starterK9) ? clamp(starterK9 / 8.5, 0.55, 1.6) : clamp(1 + (starterQuality - 100) * 0.01, 0.75, 1.35);
-        var reliefKWeight = clamp(1 + (team.bullpen - 100) * 0.008, 0.8, 1.25);
+        var reliefKWeight = Number.isFinite(bullpenK9) ? clamp(bullpenK9 / 8.5, 0.6, 1.6) : clamp(1 + (team.bullpen - 100) * 0.008, 0.8, 1.25);
         var strikeouts = weightedAllocate(teamKTotal, outWeights.map(function (weight, index) { return weight * (index === 0 ? starterKWeight : reliefKWeight); }), random, outs.map(function (out) { return Math.max(1, out); }));
-        var homers = weightedAllocate(clamp(Math.round(opponentLine.runs * 0.22 + random()), 0, 4), runs.map(function (run) { return run + 0.35; }), random, runs.map(function (run) { return Math.min(3, run); }));
+        var starterHrExpected = Number.isFinite(starterHr9) ? (starterHr9 / 9) * starterOuts : null;
+        var reliefHrExpected = Number.isFinite(bullpenHr9) ? (bullpenHr9 / 9) * reliefOutsTotal : null;
+        var hrTeamTotal;
+        if (Number.isFinite(starterHrExpected) && Number.isFinite(reliefHrExpected)) {
+            hrTeamTotal = clamp(Math.round(starterHrExpected + reliefHrExpected + (random() - 0.5) * 0.8), 0, 5);
+        } else {
+            hrTeamTotal = clamp(Math.round(opponentLine.runs * 0.22 + random()), 0, 4);
+        }
+        var starterHrShare = Number.isFinite(starterHrExpected) ? starterHrExpected : runs[0] + 0.35;
+        var setupHrShare = Number.isFinite(bullpenHr9) ? (bullpenHr9 / 9) * outs[1] : runs[1] + 0.35;
+        var closerHrShare = Number.isFinite(bullpenHr9) ? (bullpenHr9 / 9) * outs[2] : runs[2] + 0.35;
+        var hrWeights = [Math.max(0.05, starterHrShare), Math.max(0.05, setupHrShare), Math.max(0.05, closerHrShare)];
+        var homers = weightedAllocate(hrTeamTotal, hrWeights, random, runs.map(function (run) { return Math.min(3, run + 1); }));
         var rosterNames = rosterNamesForPitchers(roster, starter);
         var names = [rosterNames[0] || (starter && starter.name) || '', rosterNames[1] || '', rosterNames[2] || ''];
         var rows = names.map(function (name, index) {
@@ -1871,13 +1931,20 @@
         }
         var awayBullpen = teamLiveBullpenFactor(away);
         var homeBullpen = teamLiveBullpenFactor(home);
+        function bullpenRateNote(label, factor) {
+            var parts = [];
+            if (Number.isFinite(factor.meanK9)) parts.push('K/9 ' + factor.meanK9.toFixed(2));
+            if (Number.isFinite(factor.meanBb9)) parts.push('BB/9 ' + factor.meanBb9.toFixed(2));
+            if (Number.isFinite(factor.meanHr9)) parts.push('HR/9 ' + factor.meanHr9.toFixed(2));
+            return parts.length ? ' (' + parts.join(', ') + ')' : '';
+        }
         if (homeBullpen) {
             awayRuns = clamp(awayRuns - homeBullpen.adjustment, 1.7, 9.4);
-            liveFactors.push('Live bullpen from real ' + seasonYear() + ' reliever ERA: ' + home.abbreviation + ' mean reliever ERA ' + homeBullpen.meanEra.toFixed(2) + ' (n=' + homeBullpen.sampleSize + ') adjusts opponent runs by ' + (homeBullpen.adjustment > 0 ? '-' : '+') + Math.abs(homeBullpen.adjustment).toFixed(2) + '.');
+            liveFactors.push('Live bullpen from real ' + seasonYear() + ' reliever stats: ' + home.abbreviation + ' mean reliever ERA ' + homeBullpen.meanEra.toFixed(2) + bullpenRateNote('home', homeBullpen) + ' (n=' + homeBullpen.sampleSize + ') adjusts opponent runs by ' + (homeBullpen.adjustment > 0 ? '-' : '+') + Math.abs(homeBullpen.adjustment).toFixed(2) + '.');
         }
         if (awayBullpen) {
             homeRuns = clamp(homeRuns - awayBullpen.adjustment, 1.7, 9.4);
-            liveFactors.push('Live bullpen from real ' + seasonYear() + ' reliever ERA: ' + away.abbreviation + ' mean reliever ERA ' + awayBullpen.meanEra.toFixed(2) + ' (n=' + awayBullpen.sampleSize + ') adjusts opponent runs by ' + (awayBullpen.adjustment > 0 ? '-' : '+') + Math.abs(awayBullpen.adjustment).toFixed(2) + '.');
+            liveFactors.push('Live bullpen from real ' + seasonYear() + ' reliever stats: ' + away.abbreviation + ' mean reliever ERA ' + awayBullpen.meanEra.toFixed(2) + bullpenRateNote('away', awayBullpen) + ' (n=' + awayBullpen.sampleSize + ') adjusts opponent runs by ' + (awayBullpen.adjustment > 0 ? '-' : '+') + Math.abs(awayBullpen.adjustment).toFixed(2) + '.');
         }
         var awayPitcher = selectedPitcher('away', away, context);
         var homePitcher = selectedPitcher('home', home, context);
