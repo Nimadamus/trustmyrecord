@@ -3,7 +3,7 @@
     'use strict';
 
     var CONTEST_LANDING_PATH = '/contests/justbet-mlb/';
-    var STORAGE_KEY = 'tmr_contest_promo_justbet_mlb_v1';
+    var STORAGE_KEY = 'tmr_contest_promo_justbet_mlb_v2';
     var SUPPRESS_HOURS = 24;
     var DELAY_MS = 1200;
 
@@ -40,7 +40,7 @@
         if (document.querySelector('link[data-contest-promo-modal]')) return;
         var link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = '/static/css/contest-promo-modal.css?v=20260520b';
+        link.href = '/static/css/contest-promo-modal.css?v=20260520c';
         link.setAttribute('data-contest-promo-modal', '1');
         document.head.appendChild(link);
     }
