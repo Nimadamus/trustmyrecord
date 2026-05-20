@@ -14,16 +14,8 @@
             if (p.indexOf('/contests/justbet-mlb') === 0) return true;
             // Don't show in iframes (e.g., embedded widgets).
             if (window.top !== window.self) return true;
-            // Honor previous dismissal within the suppression window.
-            var raw = window.localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                var ts = parseInt(raw, 10);
-                if (!isNaN(ts)) {
-                    var ageMs = Date.now() - ts;
-                    if (ageMs < SUPPRESS_HOURS * 60 * 60 * 1000) return true;
-                }
-            }
-            // Per-session suppression so a single visit doesn't bounce the modal.
+            // Per-session suppression only: dismissing closes for the current
+            // page load. The next full page navigation will show it again.
             if (window.sessionStorage.getItem(STORAGE_KEY + '_session') === '1') return true;
         } catch (err) { /* storage unavailable, fall through and show once */ }
         return false;
@@ -31,7 +23,7 @@
 
     function rememberDismiss() {
         try {
-            window.localStorage.setItem(STORAGE_KEY, String(Date.now()));
+            // Session-only dismissal so the modal re-appears on next visit.
             window.sessionStorage.setItem(STORAGE_KEY + '_session', '1');
         } catch (err) { /* ignore */ }
     }
