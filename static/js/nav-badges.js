@@ -8,6 +8,24 @@
     const REFRESH_INTERVAL = 60000; // 60 seconds
     let badgeInterval = null;
 
+    function installAuthClickFallback() {
+        if (window.__tmrAuthClickFallbackInstalled) return;
+        window.__tmrAuthClickFallbackInstalled = true;
+        document.addEventListener('click', (event) => {
+            const link = event.target && event.target.closest && event.target.closest('a.auth-link, a[data-tmr-auth-route], a[href="/login/"], a[href="/register/"], a[href="login/"], a[href="register/"]');
+            if (!link) return;
+            const href = String(link.getAttribute('href') || '');
+            const route = String(link.getAttribute('data-tmr-auth-route') || '');
+            let target = '';
+            if (route === 'signup' || /(^|\/)register\/?$/i.test(href)) target = '/register/';
+            else if (route === 'login' || /(^|\/)login\/?$/i.test(href)) target = '/login/';
+            if (!target) return;
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            window.location.assign(target);
+        }, true);
+    }
+
     function injectBadgeCSS() {
         if (document.getElementById('nav-badge-styles')) return;
         const style = document.createElement('style');
@@ -246,6 +264,7 @@
     }
 
     function init() {
+        installAuthClickFallback();
         injectBadgeCSS();
         refreshMessagingEntryPoints();
         setTimeout(refreshMessagingEntryPoints, 500);
