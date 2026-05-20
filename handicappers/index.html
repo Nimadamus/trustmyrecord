@@ -58,85 +58,164 @@
         }
 
         .hm-hero {
+            position: relative;
             display: grid;
-            grid-template-columns: minmax(0, 0.9fr) minmax(420px, 1.1fr);
-            gap: 22px;
-            align-items: stretch;
-            padding: 30px 0 18px;
-            border-bottom: 1px solid var(--line);
+            grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+            gap: 36px;
+            align-items: center;
+            padding: 44px 32px 40px;
+            margin-bottom: 28px;
+            border: 1px solid rgba(45, 212, 191, 0.18);
+            border-radius: 22px;
+            background:
+                radial-gradient(680px 320px at 8% 18%, rgba(45, 212, 191, 0.16), transparent 60%),
+                radial-gradient(620px 320px at 100% 100%, rgba(212, 167, 44, 0.14), transparent 62%),
+                linear-gradient(155deg, rgba(15, 26, 44, 0.96) 0%, rgba(8, 15, 27, 0.96) 100%);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+            overflow: hidden;
         }
 
+        .hm-hero::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0;
+            width: 4px; height: 100%;
+            background: linear-gradient(180deg, var(--teal), var(--gold));
+        }
+
+        .hm-hero-text { min-width: 0; }
+
         .hm-kicker {
-            margin: 0 0 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 0 0 14px;
+            padding: 5px 12px;
+            border: 1px solid rgba(45, 212, 191, 0.32);
+            border-radius: 999px;
+            background: rgba(45, 212, 191, 0.08);
             color: var(--teal);
-            font-size: 0.76rem;
+            font-size: 0.7rem;
             font-weight: 900;
-            letter-spacing: 0.14em;
+            letter-spacing: 0.18em;
             text-transform: uppercase;
+        }
+
+        .hm-kicker::before {
+            content: "";
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--teal);
+            box-shadow: 0 0 8px var(--teal);
         }
 
         .hm-hero h1 {
             margin: 0;
             font-family: "Barlow", "Inter", sans-serif;
-            font-size: clamp(2.25rem, 5vw, 4.7rem);
-            line-height: 0.96;
-            letter-spacing: 0;
+            font-size: clamp(2.4rem, 5.2vw, 4.8rem);
+            line-height: 0.94;
+            letter-spacing: -0.01em;
             font-weight: 900;
+            background: linear-gradient(135deg, #ffffff 0%, #cce9ff 55%, #9ffcf0 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .hm-hero p {
-            max-width: 850px;
-            margin: 12px 0 0;
-            color: #b8c5d7;
-            font-size: 1rem;
+            max-width: 560px;
+            margin: 16px 0 0;
+            color: #c4d1e2;
+            font-size: 1.02rem;
             line-height: 1.65;
         }
 
         .hm-counts {
             display: grid;
-            grid-template-columns: repeat(3, minmax(132px, 1fr));
-            gap: 10px;
+            grid-template-columns: 1fr;
+            grid-template-areas:
+                "primary"
+                "secondary";
+            gap: 12px;
             align-self: stretch;
         }
 
         .hm-count {
-            border: 1px solid var(--line);
-            border-radius: 12px;
-            padding: 14px 15px;
+            position: relative;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 14px;
+            padding: 18px 20px;
             background:
-                radial-gradient(circle at top right, rgba(45, 212, 191, 0.08), transparent 48%),
-                rgba(15, 26, 44, 0.76);
-            min-height: 86px;
+                linear-gradient(160deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.0)),
+                rgba(7, 13, 24, 0.72);
             display: flex;
             flex-direction: column;
             justify-content: center;
+            min-height: 0;
+        }
+
+        .hm-count--primary {
+            grid-area: primary;
+            padding: 22px 24px;
+            border: 1px solid rgba(45, 212, 191, 0.35);
+            background:
+                radial-gradient(360px 200px at 0% 0%, rgba(45, 212, 191, 0.22), transparent 65%),
+                linear-gradient(140deg, rgba(45, 212, 191, 0.10), rgba(15, 26, 44, 0.95));
+            box-shadow: 0 20px 40px rgba(45, 212, 191, 0.10);
+        }
+
+        .hm-count--secondary {
+            grid-area: secondary;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 0;
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .hm-count--secondary .hm-count {
+            min-height: 84px;
         }
 
         .hm-count strong {
             display: block;
             color: var(--text);
-            font-size: 1.45rem;
+            font-family: "Barlow", "Inter", sans-serif;
+            font-size: 1.6rem;
             font-weight: 900;
             line-height: 1;
+            letter-spacing: -0.01em;
+        }
+
+        .hm-count--primary strong {
+            font-size: clamp(2.4rem, 4vw, 3.2rem);
+            background: linear-gradient(135deg, #9ffcf0 0%, #ffffff 50%, #d4a72c 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .hm-count span {
             display: block;
-            margin-top: 7px;
+            margin-top: 10px;
             color: var(--muted);
-            font-size: 0.68rem;
+            font-size: 0.66rem;
             font-weight: 900;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
         }
 
+        .hm-count--primary span { color: #b6f0e6; }
+
         .hm-count small {
             display: block;
-            margin-top: 6px;
+            margin-top: 8px;
             color: #7f8da3;
-            font-size: 0.74rem;
-            font-weight: 800;
-            line-height: 1.25;
+            font-size: 0.78rem;
+            font-weight: 700;
+            line-height: 1.3;
         }
 
         .hm-section-head {
@@ -165,47 +244,89 @@
         .hm-featured {
             display: grid;
             grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 12px;
+            margin-bottom: 18px;
         }
 
         .hm-leader-card {
-            min-height: 116px;
-            padding: 14px;
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            border-radius: 13px;
+            position: relative;
+            min-height: 134px;
+            padding: 16px 16px 16px 18px;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 14px;
             background:
-                linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012)),
-                rgba(9, 17, 31, 0.88);
+                linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.0)),
+                rgba(9, 17, 31, 0.92);
+            overflow: hidden;
+            transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
         }
+
+        .hm-leader-card::before {
+            content: "";
+            position: absolute;
+            top: 14px; bottom: 14px; left: 0;
+            width: 3px;
+            border-radius: 0 3px 3px 0;
+            background: var(--leader-accent, var(--teal));
+            opacity: 0.85;
+        }
+
+        .hm-leader-card::after {
+            content: "";
+            position: absolute;
+            top: -40px; right: -40px;
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            background: var(--leader-accent, var(--teal));
+            opacity: 0.06;
+            pointer-events: none;
+        }
+
+        .hm-leader-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--leader-accent, var(--teal));
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.32);
+        }
+
+        .hm-leader-card:nth-child(1) { --leader-accent: #d4a72c; }
+        .hm-leader-card:nth-child(2) { --leader-accent: #2dd4bf; }
+        .hm-leader-card:nth-child(3) { --leader-accent: #60a5fa; }
+        .hm-leader-card:nth-child(4) { --leader-accent: #a78bfa; }
+        .hm-leader-card:nth-child(5) { --leader-accent: #f472b6; }
 
         .hm-leader-card b {
             display: block;
-            color: #7f8da3;
-            font-size: 0.66rem;
+            color: var(--leader-accent, #7f8da3);
+            font-size: 0.65rem;
             font-weight: 900;
-            letter-spacing: 0.11em;
+            letter-spacing: 0.14em;
             text-transform: uppercase;
         }
 
         .hm-leader-card strong {
             display: block;
-            margin-top: 12px;
+            margin-top: 14px;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             color: #f6fbff;
-            font-size: 1rem;
+            font-family: "Barlow", "Inter", sans-serif;
+            font-size: 1.15rem;
             font-weight: 900;
+            line-height: 1.15;
         }
 
         .hm-leader-card span {
             display: block;
-            margin-top: 5px;
+            margin-top: 6px;
             color: var(--muted);
-            font-size: 0.82rem;
+            font-size: 0.84rem;
             font-weight: 800;
+            line-height: 1.35;
         }
+
+        .hm-leader-card span.is-positive { color: #8ef3b2; }
+        .hm-leader-card span.is-negative { color: #ff7d7d; }
 
         .hm-leader-card--empty {
             grid-column: 1 / -1;
@@ -213,6 +334,9 @@
             border-style: dashed;
             background: rgba(8, 15, 27, 0.72);
         }
+
+        .hm-leader-card--empty::before,
+        .hm-leader-card--empty::after { display: none; }
 
         .hm-stat.is-neutral,
         .hm-count strong.is-muted {
@@ -567,6 +691,8 @@
             .hm-hero {
                 grid-template-columns: 1fr;
                 align-items: start;
+                padding: 32px 22px 28px;
+                gap: 26px;
             }
 
             .hm-counts {
@@ -577,6 +703,8 @@
             .hm-featured {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
+
+            .hm-leader-card { min-height: 124px; }
 
             .hm-controls {
                 grid-template-columns: 1fr 1fr;
@@ -604,6 +732,8 @@
             .hm-featured {
                 grid-template-columns: 1fr;
             }
+
+            .hm-count--secondary { grid-template-columns: 1fr 1fr; }
 
             .hm-hero h1 {
                 font-size: clamp(2rem, 13vw, 3.2rem);
@@ -685,18 +815,27 @@
 <body>
     <main class="hm-page">
         <section class="hm-hero">
-            <div>
+            <div class="hm-hero-text">
                 <p class="hm-kicker">Member Discovery</p>
                 <h1>Handicappers</h1>
                 <p>Discover members with real locked-pick activity, compare verified records, follow cappers, and open public pick histories.</p>
             </div>
             <div class="hm-counts" aria-label="Directory summary">
-                <div class="hm-count"><strong id="hmTotalMembers">0</strong><span>Total Members</span><small>Public members only</small></div>
-                <div class="hm-count"><strong id="hmActiveMembers">0</strong><span>Active Pick Makers</span><small>Members with real picks</small></div>
-                <div class="hm-count"><strong id="hmTotalPicks">0</strong><span>Total Verified Picks</span><small>Graded picks only</small></div>
-                <div class="hm-count"><strong id="hmBestWinRate" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Best Win Percentage</span><small id="hmBestWinRateUser">Not enough graded picks yet</small></div>
-                <div class="hm-count"><strong id="hmTopUnits" class="is-muted" title="Minimum 20 graded picks required">--</strong><span>Units Leader</span><small id="hmTopUnitsUser">No positive units leader yet</small></div>
-                <div class="hm-count"><strong id="hmRecentActivity" class="is-muted" title="Not enough graded picks yet">--</strong><span>Most Recent Pick Activity</span><small id="hmRecentActivityUser">No pick activity yet</small></div>
+                <div class="hm-count hm-count--primary">
+                    <strong id="hmTotalPicks">0</strong>
+                    <span>Total Verified Picks</span>
+                    <small>Graded picks across the directory</small>
+                </div>
+                <div class="hm-count--secondary">
+                    <div class="hm-count">
+                        <strong id="hmTotalMembers">0</strong>
+                        <span>Total Members</span>
+                    </div>
+                    <div class="hm-count">
+                        <strong id="hmActiveMembers">0</strong>
+                        <span>Active Pick Makers</span>
+                    </div>
+                </div>
             </div>
         </section>
 
