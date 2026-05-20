@@ -58,51 +58,16 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = CONFIG;
 }
 
-// Auth links must remain native, reliable navigation even if later header scripts fail.
-(function () {
-    if (typeof document === 'undefined' || typeof window === 'undefined') return;
-    if (window.__tmrAuthClickFallbackInstalled) return;
-    window.__tmrAuthClickFallbackInstalled = true;
-
-    var authSelector = 'a.auth-link, a[data-tmr-auth-route], a[href="/login/"], a[href="/register/"], a[href="login/"], a[href="register/"]';
-
-    function findAuthLink(event) {
-        var target = event.target;
-        var link = target && target.closest && target.closest(authSelector);
-        if (link) return link;
-        if (typeof document.elementsFromPoint !== 'function') return null;
-        var stack = document.elementsFromPoint(event.clientX, event.clientY) || [];
-        for (var i = 0; i < stack.length; i += 1) {
-            var element = stack[i];
-            if (element && element.closest) {
-                link = element.closest(authSelector);
-                if (link) return link;
-            }
-        }
-        return null;
-    }
-
-    function destinationFor(link) {
-        if (!link) return '';
-        var href = String(link.getAttribute('href') || '');
-        var route = String(link.getAttribute('data-tmr-auth-route') || '');
-        if (route === 'signup' || /(^|\/)register\/?$/i.test(href)) return '/register/';
-        if (route === 'login' || /(^|\/)login\/?$/i.test(href)) return '/login/';
-        return '';
-    }
-
-    document.addEventListener('click', function (event) {
-        var destination = destinationFor(findAuthLink(event));
-        if (!destination) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        window.location.assign(destination);
-    }, true);
-})();
+// Auth-click fallback removed. The contest-promo modal that this workaround
+// was added for is no longer auto-loaded sitewide, so there is no overlay to
+// punch through. Letting the visible auth anchors do their native browser
+// navigation is more reliable than calling preventDefault + location.assign
+// from a capture-phase handler -- some browser environments (extensions,
+// blockers, embedded contexts) honor real anchor clicks but reject scripted
+// navigation from a capture-phase preventDefault chain. Mark the install
+// flag so any later script that checks it stays quiet.
+if (typeof window !== 'undefined') { window.__tmrAuthClickFallbackInstalled = true; }
 
 // JustBet MLB Contest sitewide promo modal loader (DISABLED).
-// The modal's full-screen backdrop intercepts homepage Log in / Sign up clicks
-// and the elementsFromPoint workaround still leaves the page visually blocked.
-// Disabling the sitewide auto-open until the modal can re-launch without
-// covering the auth controls. The contest landing page itself is untouched.
-// Re-enable by restoring the document.createElement('script') loader.
+// Backdrop covered homepage auth controls. Re-enable only when the modal
+// can launch without covering the visible header. Landing page untouched.
