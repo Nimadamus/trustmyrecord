@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JustBet MLB Contest Dashboard | TrustMyRecord</title>
+    <meta name="description" content="JustBet MLB Handicapping Contest dashboard. Submit sealed contest picks, view the public picks grid, and track the live contest leaderboard. Separate from regular TrustMyRecord records.">
+    <link rel="canonical" href="https://trustmyrecord.com/contests/justbet-mlb/dashboard/">
+    <meta name="robots" content="index,follow">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260502navspread1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260501navspacing"></script>
+    <script defer src="/static/js/config.js"></script>
+    <script defer src="/static/js/auth.js"></script>
+    <script defer src="/static/js/backend-api.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --bg: #07111d;
+            --panel: rgba(10, 19, 33, 0.96);
+            --panel-2: rgba(16, 29, 49, 0.82);
+            --line: rgba(148, 163, 184, 0.16);
+            --line-strong: rgba(45, 212, 191, 0.32);
+            --text: #eef4fb;
+            --muted: #9fb0c3;
+            --faint: #6f8093;
+            --cyan: #2dd4bf;
+            --blue: #38bdf8;
+            --gold: #d4a72c;
+            --gold-bright: #f0c449;
+            --green: #22c55e;
+            --red: #ef4444;
+            --justbet: #ffb800;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; color: var(--text);
+            font-family: "Inter", system-ui, sans-serif;
+            background:
+                radial-gradient(circle at 8% 0%, rgba(255, 184, 0, 0.08), transparent 28%),
+                linear-gradient(180deg, #07111d 0%, #0a1421 58%, #08101c 100%);
+        }
+        a { color: inherit; text-decoration: none; }
+        .page { width: min(1240px, calc(100% - 32px)); margin: 0 auto; padding: 22px 0 64px; }
+        .panel {
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(18, 31, 52, 0.96), rgba(8, 15, 27, 0.97));
+            box-shadow: 0 22px 58px rgba(0, 0, 0, 0.28);
+            border-radius: 18px;
+        }
+        h1, h2, h3 { margin: 0; font-family: "Barlow", "Inter", sans-serif; }
+        h1 { font-size: clamp(1.8rem, 3.6vw, 2.6rem); font-weight: 900; }
+
+        /* ======== HEADER STRIP ======== */
+        .dash-head {
+            margin-top: 18px; padding: 22px 26px;
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+            border: 1px solid rgba(255, 184, 0, 0.28);
+            background: linear-gradient(180deg, rgba(18, 14, 4, 0.96), rgba(10, 20, 33, 0.97));
+            border-radius: 18px;
+        }
+        .dash-head .brand { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .justbet-mark {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 12px;
+            background: linear-gradient(180deg, #1a1408, #0d0904);
+            border: 1px solid rgba(255, 184, 0, 0.45);
+            border-radius: 8px;
+            color: var(--justbet);
+            font-family: "Barlow", sans-serif;
+            font-weight: 900; letter-spacing: 0.04em; font-size: 1rem; text-transform: uppercase;
+        }
+        .justbet-mark .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--justbet); box-shadow: 0 0 10px var(--justbet); }
+        .isolation-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 12px; border-radius: 999px;
+            background: rgba(45, 212, 191, 0.12);
+            color: #b4f1e7;
+            font-size: 0.72rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase;
+            border: 1px solid rgba(45, 212, 191, 0.3);
+        }
+        .cta-primary {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 11px 18px; border-radius: 10px;
+            background: linear-gradient(180deg, var(--gold-bright) 0%, var(--gold) 100%);
+            color: #1a1206;
+            font-weight: 900; font-size: 0.9rem; letter-spacing: 0.04em; text-transform: uppercase;
+            border: 1px solid #b4881d;
+            box-shadow: 0 12px 28px rgba(212, 167, 44, 0.32);
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .cta-ghost {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 9px 14px; border-radius: 8px;
+            background: rgba(15, 23, 42, 0.74);
+            color: var(--text);
+            border: 1px solid var(--line);
+            font-weight: 700; cursor: pointer; font-size: 0.85rem;
+        }
+        .cta-ghost:hover { border-color: var(--line-strong); }
+
+        /* ======== SECTIONS ======== */
+        .section { margin-top: 22px; padding: 26px 28px; }
+        .section h2 { margin-bottom: 14px; font-size: 1.4rem; font-weight: 900; }
+        .section .lead { color: var(--muted); margin: 0 0 18px; line-height: 1.5; }
+
+        /* ======== STAT STRIP ======== */
+        .stat-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 12px;
+            margin-top: 18px;
+        }
+        .stat {
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: var(--panel-2);
+        }
+        .stat .k { font-size: 0.7rem; color: var(--faint); letter-spacing: 0.14em; text-transform: uppercase; font-weight: 800; }
+        .stat .v { margin-top: 6px; font-family: "Barlow", sans-serif; font-weight: 900; font-size: 1.4rem; color: #fff; }
+
+        /* ======== SUBMIT FORM ======== */
+        .submit-card { padding: 24px; border-radius: 14px; border: 1px dashed rgba(45, 212, 191, 0.32); background: rgba(8, 22, 28, 0.55); }
+        .ctx-tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 12px; border-radius: 999px;
+            background: rgba(45, 212, 191, 0.12); color: #b4f1e7;
+            font-size: 0.72rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase;
+            border: 1px solid rgba(45, 212, 191, 0.3);
+        }
+        .submit-grid { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; margin-top: 14px; }
+        .submit-grid .field { display: flex; flex-direction: column; gap: 6px; }
+        .submit-grid label { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+        .submit-grid select, .submit-grid input {
+            background: rgba(8, 15, 27, 0.85); color: var(--text);
+            border: 1px solid var(--line); border-radius: 10px;
+            padding: 11px 12px; font-size: 0.95rem;
+        }
+        .submit-row-checkbox { margin-top: 12px; display: flex; align-items: flex-start; gap: 10px; font-size: 0.9rem; color: #d9e3f0; }
+        .submit-actions { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        @media (max-width: 720px) { .submit-grid { grid-template-columns: 1fr; } .dash-head { flex-direction: column; align-items: flex-start; } }
+
+        .auth-required-msg {
+            margin-top: 12px; padding: 14px 16px; border-radius: 10px;
+            border: 1px solid rgba(56, 189, 248, 0.32);
+            background: rgba(8, 23, 40, 0.85);
+            color: #c8e7ff; font-size: 0.92rem;
+        }
+        .pre-launch-msg {
+            margin-top: 12px; padding: 14px 16px; border-radius: 10px;
+            border: 1px solid rgba(255, 184, 0, 0.32);
+            background: rgba(28, 22, 8, 0.7);
+            color: #ffe4a3; font-size: 0.92rem;
+        }
+
+        /* ======== TABLES ======== */
+        .table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); }
+        table.contest-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+        table.contest-table thead { background: linear-gradient(180deg, rgba(45, 212, 191, 0.08), transparent); }
+        table.contest-table th {
+            text-align: left; padding: 12px 14px;
+            font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--muted); font-weight: 800;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+        }
+        table.contest-table td {
+            padding: 14px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+            color: #e6edf6;
+            white-space: nowrap;
+        }
+        table.contest-table tr:last-child td { border-bottom: 0; }
+
+        .pick-sealed {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 4px 10px; border-radius: 999px;
+            background: rgba(148, 163, 184, 0.10);
+            border: 1px solid rgba(148, 163, 184, 0.32);
+            color: #c5cfdb;
+            font-size: 0.82rem; font-weight: 700;
+        }
+        .pick-sealed i { color: #ffd770; }
+        .pick-revealed { color: #fff; font-weight: 700; }
+
+        .status-pill { padding: 3px 10px; border-radius: 999px; font-size: 0.72rem; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; }
+        .status-sealed { background: rgba(148, 163, 184, 0.12); color: #c5cfdb; border: 1px solid rgba(148, 163, 184, 0.32); }
+        .status-revealed { background: rgba(56, 189, 248, 0.14); color: #c8e7ff; border: 1px solid rgba(56, 189, 248, 0.36); }
+        .status-won { background: rgba(34, 197, 94, 0.16); color: #b6f5cd; border: 1px solid rgba(34, 197, 94, 0.42); }
+        .status-lost { background: rgba(239, 68, 68, 0.16); color: #fbbdbd; border: 1px solid rgba(239, 68, 68, 0.42); }
+        .status-push { background: rgba(212, 167, 44, 0.14); color: #ffe4a3; border: 1px solid rgba(212, 167, 44, 0.36); }
+
+        .units-pos { color: #34d399; font-weight: 800; }
+        .units-neg { color: #f87171; font-weight: 800; }
+        .units-zero { color: var(--muted); font-weight: 800; }
+
+        .empty-state {
+            padding: 36px 22px; text-align: center; color: var(--muted); font-size: 0.95rem;
+            border-radius: 12px; border: 1px dashed var(--line); background: rgba(15, 23, 42, 0.4);
+        }
+        .empty-state i { font-size: 1.5rem; color: var(--faint); margin-bottom: 10px; display: block; }
+
+        .lb-rank {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 8px;
+            font-family: "Barlow", sans-serif; font-weight: 900;
+            background: rgba(148, 163, 184, 0.10);
+            color: #fff;
+        }
+        .lb-rank.r1 { background: linear-gradient(180deg, var(--gold-bright), var(--gold)); color: #1a1206; }
+        .lb-rank.r2 { background: linear-gradient(180deg, #e2e8f0, #94a3b8); color: #0f172a; }
+        .lb-rank.r3 { background: linear-gradient(180deg, #c4844c, #8a5a30); color: #fff; }
+
+        .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+        .section-head h2 { margin-bottom: 0; }
+        .refresh-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 12px; border-radius: 8px;
+            border: 1px solid var(--line); background: rgba(15, 23, 42, 0.74);
+            color: var(--muted); cursor: pointer; font-size: 0.82rem;
+        }
+        .refresh-btn:hover { color: var(--text); border-color: var(--line-strong); }
+
+        .footnote { margin-top: 22px; color: var(--faint); font-size: 0.78rem; line-height: 1.55; max-width: 75ch; }
+    </style>
+</head>
+<body>
+    <div id="tmr-nav-placeholder"></div>
+
+    <main class="page">
+
+        <!-- ========================= HEAD STRIP ========================= -->
+        <section class="dash-head">
+            <div class="brand">
+                <span class="justbet-mark"><span class="dot"></span> JUSTBET</span>
+                <div>
+                    <h1>JustBet MLB Contest Dashboard</h1>
+                    <div style="margin-top: 4px;">
+                        <span class="isolation-pill"><i class="fa-solid fa-shield-halved"></i> Isolated from regular TMR records</span>
+                    </div>
+                </div>
+            </div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <a class="cta-ghost" href="/contests/justbet-mlb/"><i class="fa-solid fa-circle-info"></i> Contest Info & Rules</a>
+                <a class="cta-primary"
+                   href="https://record.revshare.ag/_RFP1Ust_FFzUOsjNOfgKeWNd7ZgqdRLk/1/"
+                   target="_blank"
+                   rel="sponsored noopener"
+                   data-affiliate-link="justbet-mlb-dashboard-head">
+                    <i class="fa-solid fa-up-right-from-square"></i> JustBet Signup
+                </a>
+            </div>
+        </section>
+
+        <!-- ========================= STAT STRIP ========================= -->
+        <section class="section panel" id="contest-status">
+            <div class="section-head">
+                <h2>Contest Status</h2>
+                <button class="refresh-btn" id="refresh-status"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+            </div>
+            <div class="stat-strip">
+                <div class="stat"><div class="k">Prize Pool</div><div class="v">$2,500</div></div>
+                <div class="stat"><div class="k">Picks Per Entrant</div><div class="v">50</div></div>
+                <div class="stat"><div class="k">Entrants</div><div class="v" id="stat-entrants">—</div></div>
+                <div class="stat"><div class="k">Picks Submitted</div><div class="v" id="stat-picks">—</div></div>
+                <div class="stat"><div class="k">Reveal</div><div class="v">First Pitch</div></div>
+            </div>
+        </section>
+
+        <!-- ========================= SUBMIT PICK ========================= -->
+        <section class="section panel" id="submit">
+            <h2>Submit a Contest Pick</h2>
+            <p class="lead">Picks here are stored under <code>contest_id = justbet-mlb</code> and do <strong>not</strong> count toward your regular TrustMyRecord public record.</p>
+
+            <div class="submit-card">
+                <span class="ctx-tag"><i class="fa-solid fa-vault"></i> Contest Picks Only · Sealed Until First Pitch</span>
+
+                <div id="pre-launch-gate" class="pre-launch-msg" hidden>
+                    <i class="fa-solid fa-hourglass-start"></i> Pick submission opens when the contest launches. Open your JustBet account through the official contest signup link now so you're ready.
+                </div>
+
+                <div id="auth-gate" class="auth-required-msg" hidden>
+                    <i class="fa-solid fa-lock"></i> Sign in to your TrustMyRecord account to submit contest picks. <a href="/signin/" style="color:var(--cyan);font-weight:800;">Sign in</a> or <a href="/register/" style="color:var(--cyan);font-weight:800;">Register</a>.
+                </div>
+
+                <form id="contest-pick-form">
+                    <div class="submit-grid">
+                        <div class="field">
+                            <label for="cf-game">Game</label>
+                            <select id="cf-game" name="game_id" required>
+                                <option value="">Select a game…</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="cf-market">Market</label>
+                            <select id="cf-market" name="market_type" required>
+                                <option value="h2h">Moneyline</option>
+                                <option value="spreads">Run Line</option>
+                                <option value="totals">Total (Over/Under)</option>
+                                <option value="f5_h2h">First-Five Moneyline</option>
+                                <option value="f5_totals">First-Five Total</option>
+                                <option value="team_totals">Team Total</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="cf-selection">Selection</label>
+                            <input id="cf-selection" name="selection" type="text" placeholder="e.g. Yankees, Over 8.5, Yankees Team Total Over 4.5" required>
+                        </div>
+                        <div class="field">
+                            <label for="cf-odds">Odds (American)</label>
+                            <input id="cf-odds" name="odds" type="number" placeholder="e.g. -135 or +120" required>
+                        </div>
+                        <div class="field">
+                            <label for="cf-units">Units (0.5 – 5)</label>
+                            <input id="cf-units" name="units" type="number" step="0.5" min="0.5" max="5" value="1" required>
+                        </div>
+                        <div class="field">
+                            <label for="cf-stake">Stake Mode</label>
+                            <select id="cf-stake" name="stake_mode">
+                                <option value="risk">Risk</option>
+                                <option value="to_win">To Win</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label class="submit-row-checkbox">
+                        <input id="cf-attest" name="attest_justbet_signup" type="checkbox" required>
+                        <span>I confirm I have created a JustBet account through the official contest signup link on the contest page. I understand this is required to qualify and may be verified.</span>
+                    </label>
+
+                    <div class="submit-actions">
+                        <button type="submit" class="cta-primary"><i class="fa-solid fa-vault"></i> Submit Sealed Contest Pick</button>
+                        <span id="submit-msg" style="color:var(--muted);font-size:0.9rem;"></span>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- ========================= PUBLIC PICKS GRID ========================= -->
+        <section class="section panel" id="public-picks">
+            <div class="section-head">
+                <h2>Public Picks Grid</h2>
+                <button class="refresh-btn" id="refresh-picks"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+            </div>
+            <p class="lead">Every contestant's pick lives here. Each entry is <code>🔒 Sealed</code> publicly until that game's first pitch, then automatically reveals — proving no edits, no front-running.</p>
+            <div class="table-wrap">
+                <table class="contest-table" aria-label="Public contest picks">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Game</th>
+                            <th>Market</th>
+                            <th>Pick</th>
+                            <th>Odds</th>
+                            <th>Units</th>
+                            <th>Status</th>
+                            <th>Result</th>
+                            <th>Net Units</th>
+                        </tr>
+                    </thead>
+                    <tbody id="picks-tbody">
+                        <tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading contest picks…</div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========================= LEADERBOARD ========================= -->
+        <section class="section panel" id="leaderboard">
+            <div class="section-head">
+                <h2>Contest Leaderboard</h2>
+                <button class="refresh-btn" id="refresh-lb"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+            </div>
+            <p class="lead">Standings are calculated from contest picks only — fully isolated from regular TrustMyRecord profile stats and the standard sportsbook leaderboard.</p>
+            <div class="table-wrap">
+                <table class="contest-table" aria-label="Contest leaderboard">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>User</th>
+                            <th>Picks Used</th>
+                            <th>W</th>
+                            <th>L</th>
+                            <th>P</th>
+                            <th>Win %</th>
+                            <th>Net Units</th>
+                            <th>Last Pick</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lb-tbody">
+                        <tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading contest leaderboard…</div></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <p class="footnote">
+            JustBet is the title sponsor of this contest. Contest picks on this dashboard are stored under
+            <code>contest_id=justbet-mlb</code> and are fully isolated from regular TrustMyRecord public records, profile
+            stats, grading history, and the standard sportsbook leaderboard. 21+ where applicable. Please play responsibly.
+        </p>
+    </main>
+
+    <div id="tmr-footer-placeholder"></div>
+
+    <script>
+    (function () {
+        const CONTEST_ID = 'justbet-mlb';
+        const API_BASE = (window.TMR_API_BASE || window.API_BASE_URL || '').replace(/\/$/, '');
+        const API = (path) => `${API_BASE}/api/contests/${CONTEST_ID}${path}`;
+
+        const $ = (sel) => document.querySelector(sel);
+        const fmtOdds = (n) => {
+            if (n === null || n === undefined || n === '') return '—';
+            const v = Number(n);
+            if (!Number.isFinite(v)) return String(n);
+            return v > 0 ? `+${v}` : `${v}`;
+        };
+        const fmtUnits = (n) => {
+            if (n === null || n === undefined || n === '') return '—';
+            const v = Number(n);
+            if (!Number.isFinite(v)) return String(n);
+            return v.toFixed(2);
+        };
+        const unitsClass = (n) => {
+            const v = Number(n);
+            if (!Number.isFinite(v) || v === 0) return 'units-zero';
+            return v > 0 ? 'units-pos' : 'units-neg';
+        };
+        const fmtTime = (iso) => {
+            if (!iso) return '—';
+            try {
+                const d = new Date(iso);
+                return d.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+            } catch { return iso; }
+        };
+        function escapeHtml(s) {
+            return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+        function escapeAttr(s) { return escapeHtml(s).replace(/"/g, '&quot;'); }
+
+        let contestLaunched = false;
+
+        async function loadStatus() {
+            try {
+                const res = await fetch(API(''), { credentials: 'include' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const c = await res.json();
+                contestLaunched = !!c.is_active;
+            } catch { contestLaunched = false; }
+            refreshAuthGate();
+        }
+
+        async function loadPicks() {
+            const tbody = $('#picks-tbody');
+            tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading contest picks…</div></td></tr>`;
+            try {
+                const res = await fetch(API('/picks'), { credentials: 'include' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const picks = Array.isArray(data) ? data : (data.picks || []);
+                $('#stat-picks').textContent = picks.length;
+                renderPicks(picks);
+            } catch {
+                $('#stat-picks').textContent = '0';
+                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-vault"></i>No contest picks yet. The dashboard goes live when the contest opens.</div></td></tr>`;
+            }
+        }
+
+        function renderPicks(picks) {
+            const tbody = $('#picks-tbody');
+            if (!picks || picks.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-vault"></i>No contest picks submitted yet. Be the first to enter.</div></td></tr>`;
+                return;
+            }
+            tbody.innerHTML = picks.map(p => {
+                const sealed = !!p.sealed;
+                const result = (p.result || 'pending').toLowerCase();
+                const statusPill = sealed
+                    ? `<span class="status-pill status-sealed"><i class="fa-solid fa-lock"></i> Sealed</span>`
+                    : result === 'won' ? `<span class="status-pill status-won">Won</span>`
+                    : result === 'lost' ? `<span class="status-pill status-lost">Lost</span>`
+                    : result === 'push' ? `<span class="status-pill status-push">Push</span>`
+                    : `<span class="status-pill status-revealed">Revealed</span>`;
+                const pickCell = sealed
+                    ? `<span class="pick-sealed"><i class="fa-solid fa-lock"></i> Sealed until first pitch</span>`
+                    : `<span class="pick-revealed">${escapeHtml(p.selection || '—')}</span>`;
+                const oddsCell = sealed ? '🔒' : fmtOdds(p.odds);
+                const unitsCell = sealed ? '🔒' : fmtUnits(p.units);
+                const marketCell = sealed ? '🔒' : escapeHtml(p.market || p.market_type || '—');
+                const netUnits = (p.result && p.result !== 'pending') ? fmtUnits(p.units_net) : '—';
+                const netClass = (p.result && p.result !== 'pending') ? unitsClass(p.units_net) : 'units-zero';
+                return `
+                    <tr>
+                        <td><strong>${escapeHtml(p.username || '—')}</strong></td>
+                        <td>${escapeHtml(p.game || '—')}</td>
+                        <td>${marketCell}</td>
+                        <td>${pickCell}</td>
+                        <td>${oddsCell}</td>
+                        <td>${unitsCell}</td>
+                        <td>${statusPill}</td>
+                        <td>${escapeHtml((p.result || 'pending').toString())}</td>
+                        <td class="${netClass}">${netUnits}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function loadLeaderboard() {
+            const tbody = $('#lb-tbody');
+            tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading contest leaderboard…</div></td></tr>`;
+            try {
+                const res = await fetch(API('/leaderboard'), { credentials: 'include' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const entries = Array.isArray(data) ? data : (data.entries || []);
+                $('#stat-entrants').textContent = entries.length;
+                renderLeaderboard(entries);
+            } catch {
+                $('#stat-entrants').textContent = '0';
+                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-trophy"></i>No entrants yet. The leaderboard opens when the contest launches.</div></td></tr>`;
+            }
+        }
+
+        function renderLeaderboard(entries) {
+            const tbody = $('#lb-tbody');
+            if (!entries || entries.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-trophy"></i>No entrants yet. Be the first.</div></td></tr>`;
+                return;
+            }
+            tbody.innerHTML = entries.map((e, i) => {
+                const rank = e.rank || (i + 1);
+                const rankCls = rank === 1 ? 'r1' : rank === 2 ? 'r2' : rank === 3 ? 'r3' : '';
+                const winPct = (e.win_pct !== undefined && e.win_pct !== null) ? `${(Number(e.win_pct) * 100).toFixed(1)}%` : '—';
+                return `
+                    <tr>
+                        <td><span class="lb-rank ${rankCls}">${rank}</span></td>
+                        <td><strong>${escapeHtml(e.username || '—')}</strong></td>
+                        <td>${e.picks_used ?? 0} / ${e.picks_max ?? 50}</td>
+                        <td>${e.wins ?? 0}</td>
+                        <td>${e.losses ?? 0}</td>
+                        <td>${e.pushes ?? 0}</td>
+                        <td>${winPct}</td>
+                        <td class="${unitsClass(e.units_net)}">${fmtUnits(e.units_net)}</td>
+                        <td>${fmtTime(e.last_pick_at)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function loadGames() {
+            const sel = $('#cf-game');
+            try {
+                const res = await fetch(API('/games'), { credentials: 'include' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const games = Array.isArray(data) ? data : (data.games || []);
+                if (!games.length) return;
+                sel.innerHTML = '<option value="">Select a game…</option>' + games.map(g => {
+                    const t = g.commence_time ? ` · ${fmtTime(g.commence_time)} ET` : '';
+                    return `<option value="${escapeAttr(g.id)}">${escapeHtml(g.away_team || g.away)} @ ${escapeHtml(g.home_team || g.home)}${t}</option>`;
+                }).join('');
+            } catch { /* leave default option */ }
+        }
+
+        function isSignedIn() {
+            return !!(window.TMR_AUTH && window.TMR_AUTH.user) || !!localStorage.getItem('tmr_auth_token');
+        }
+
+        function refreshAuthGate() {
+            const preGate = $('#pre-launch-gate');
+            const authGate = $('#auth-gate');
+            const form = $('#contest-pick-form');
+            const fields = form.querySelectorAll('input, select, button');
+            if (!contestLaunched) {
+                preGate.hidden = false;
+                authGate.hidden = true;
+                fields.forEach(el => el.disabled = true);
+                return;
+            }
+            preGate.hidden = true;
+            if (!isSignedIn()) {
+                authGate.hidden = false;
+                fields.forEach(el => el.disabled = true);
+            } else {
+                authGate.hidden = true;
+                fields.forEach(el => el.disabled = false);
+            }
+        }
+
+        async function submitPick(evt) {
+            evt.preventDefault();
+            const msg = $('#submit-msg');
+            msg.textContent = '';
+            const fd = new FormData(evt.target);
+            const payload = {
+                contest_id: CONTEST_ID,
+                game_id: fd.get('game_id'),
+                market_type: fd.get('market_type'),
+                selection: (fd.get('selection') || '').toString().trim(),
+                odds: Number(fd.get('odds')),
+                units: Number(fd.get('units')),
+                stake_mode: fd.get('stake_mode') || 'risk',
+                attest_justbet_signup: !!fd.get('attest_justbet_signup'),
+            };
+            if (!payload.attest_justbet_signup) { msg.textContent = 'You must confirm the JustBet signup attestation.'; return; }
+            try {
+                const token = localStorage.getItem('tmr_auth_token');
+                const res = await fetch(API('/picks'), {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+                    },
+                    body: JSON.stringify(payload),
+                });
+                if (!res.ok) {
+                    const j = await res.json().catch(() => ({}));
+                    throw new Error(j.error || `HTTP ${res.status}`);
+                }
+                msg.style.color = '#34d399';
+                msg.textContent = 'Sealed contest pick submitted. Reveals at first pitch.';
+                evt.target.reset();
+                loadPicks();
+                loadLeaderboard();
+            } catch (err) {
+                msg.style.color = '#f87171';
+                msg.textContent = `Submit failed: ${err.message}`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStatus();
+            loadPicks();
+            loadLeaderboard();
+            loadGames();
+            $('#refresh-status').addEventListener('click', () => { loadStatus(); loadPicks(); loadLeaderboard(); });
+            $('#refresh-picks').addEventListener('click', loadPicks);
+            $('#refresh-lb').addEventListener('click', loadLeaderboard);
+            $('#contest-pick-form').addEventListener('submit', submitPick);
+            window.addEventListener('storage', refreshAuthGate);
+        });
+    })();
+    </script>
+</body>
+</html>

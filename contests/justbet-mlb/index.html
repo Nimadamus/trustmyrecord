@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JustBet MLB Handicapping Contest | $2,500 Prize Pool | TrustMyRecord</title>
+    <meta name="description" content="Compete for $2,500 in the JustBet MLB Handicapping Contest. 50 MLB picks per entrant, sealed until first pitch, ranked by net units. Open your JustBet account through the official contest link to qualify.">
+    <link rel="canonical" href="https://trustmyrecord.com/contests/justbet-mlb/">
+    <meta property="og:title" content="JustBet MLB Handicapping Contest — $2,500 Prize Pool">
+    <meta property="og:description" content="50 picks. Sealed until first pitch. Top 3 win cash. Free to enter.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trustmyrecord.com/contests/justbet-mlb/">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260502navspread1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260501navspacing"></script>
+    <script defer src="/static/js/config.js"></script>
+    <script defer src="/static/js/auth.js"></script>
+    <script defer src="/static/js/backend-api.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --bg: #07111d;
+            --panel: rgba(10, 19, 33, 0.96);
+            --panel-2: rgba(16, 29, 49, 0.82);
+            --line: rgba(148, 163, 184, 0.16);
+            --line-strong: rgba(45, 212, 191, 0.32);
+            --text: #eef4fb;
+            --muted: #9fb0c3;
+            --faint: #6f8093;
+            --cyan: #2dd4bf;
+            --blue: #38bdf8;
+            --gold: #d4a72c;
+            --gold-bright: #f0c449;
+            --green: #22c55e;
+            --red: #ef4444;
+            --justbet: #ffb800;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            color: var(--text);
+            font-family: "Inter", system-ui, sans-serif;
+            background:
+                radial-gradient(circle at 8% 0%, rgba(255, 184, 0, 0.10), transparent 28%),
+                radial-gradient(circle at 92% 7%, rgba(212, 167, 44, 0.10), transparent 27%),
+                linear-gradient(180deg, #07111d 0%, #0a1421 58%, #08101c 100%);
+        }
+        a { color: inherit; text-decoration: none; }
+        button, input, select, textarea { font: inherit; }
+        .page { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 22px 0 64px; }
+        .panel {
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(18, 31, 52, 0.96), rgba(8, 15, 27, 0.97));
+            box-shadow: 0 22px 58px rgba(0, 0, 0, 0.28);
+            border-radius: 18px;
+        }
+
+        /* ======== HERO ======== */
+        .hero {
+            position: relative;
+            overflow: hidden;
+            padding: 38px 36px;
+            margin-top: 18px;
+            border: 1px solid rgba(255, 184, 0, 0.28);
+            background:
+                radial-gradient(circle at 90% 0%, rgba(255, 184, 0, 0.16), transparent 45%),
+                radial-gradient(circle at 0% 100%, rgba(45, 212, 191, 0.10), transparent 50%),
+                linear-gradient(180deg, rgba(18, 14, 4, 0.96), rgba(10, 20, 33, 0.97));
+        }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.85fr);
+            gap: 28px;
+            align-items: center;
+        }
+        .sponsor-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .sponsor-row .by { font-size: 0.75rem; color: var(--faint); letter-spacing: 0.18em; text-transform: uppercase; }
+        .justbet-mark {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 14px;
+            background: linear-gradient(180deg, #1a1408, #0d0904);
+            border: 1px solid rgba(255, 184, 0, 0.45);
+            border-radius: 8px;
+            color: var(--justbet);
+            font-family: "Barlow", sans-serif;
+            font-weight: 900;
+            letter-spacing: 0.04em;
+            font-size: 1.15rem;
+            text-transform: uppercase;
+        }
+        .justbet-mark .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--justbet); box-shadow: 0 0 12px var(--justbet); }
+        .kicker {
+            display: inline-flex; align-items: center; gap: 8px;
+            border-radius: 999px; font-size: 0.7rem; font-weight: 900;
+            letter-spacing: 0.14em; text-transform: uppercase;
+            padding: 7px 12px; border: 1px solid var(--line-strong);
+            background: rgba(45, 212, 191, 0.10); color: #d8fffb;
+        }
+        .status-tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            border-radius: 999px; padding: 7px 14px;
+            border: 1px solid rgba(34, 197, 94, 0.45);
+            background: rgba(34, 197, 94, 0.10);
+            color: #b6f5cd;
+            font-size: 0.72rem; font-weight: 900;
+            letter-spacing: 0.16em; text-transform: uppercase;
+        }
+        .status-tag .pulse {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #34d399;
+            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.6);
+            animation: pulse 2s ease-out infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.55); }
+            70% { box-shadow: 0 0 0 12px rgba(52, 211, 153, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+        }
+        h1, h2, h3 { margin: 0; font-family: "Barlow", "Inter", sans-serif; }
+        h1 {
+            margin-top: 14px;
+            font-size: clamp(2.4rem, 5.2vw, 4rem);
+            line-height: 1.0;
+            font-weight: 900;
+            letter-spacing: -0.01em;
+            background: linear-gradient(180deg, #fff5d8 0%, #ffd770 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .hero-sub {
+            margin-top: 14px;
+            color: #d2dceb;
+            font-size: 1.05rem;
+            line-height: 1.55;
+            max-width: 56ch;
+        }
+        .hero-meta {
+            display: flex; flex-wrap: wrap; gap: 18px; margin-top: 22px;
+            font-size: 0.85rem; color: var(--muted);
+        }
+        .hero-meta b { color: #fff; font-weight: 800; }
+        .hero-cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+
+        .prize-card {
+            border: 1px solid rgba(255, 184, 0, 0.42);
+            border-radius: 16px;
+            padding: 22px;
+            background:
+                radial-gradient(circle at 0% 0%, rgba(255, 184, 0, 0.16), transparent 55%),
+                linear-gradient(180deg, rgba(28, 22, 8, 0.96), rgba(14, 11, 5, 0.97));
+            text-align: center;
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42), inset 0 0 0 1px rgba(255, 184, 0, 0.08);
+        }
+        .prize-card .label { font-size: 0.72rem; color: #c9b27a; letter-spacing: 0.16em; text-transform: uppercase; font-weight: 800; }
+        .prize-card .amount {
+            margin: 8px 0 4px;
+            font-family: "Barlow", sans-serif;
+            font-size: clamp(2.6rem, 5vw, 3.6rem);
+            font-weight: 900;
+            color: #fff;
+            text-shadow: 0 0 24px rgba(255, 184, 0, 0.4);
+        }
+        .prize-card .amount .currency { color: var(--gold-bright); margin-right: 6px; }
+        .prize-card .sub { font-size: 0.9rem; color: #e7d6a8; }
+        .prize-card .breakdown { margin-top: 14px; display: flex; gap: 8px; justify-content: center; font-size: 0.78rem; color: #c9b27a; }
+        .prize-card .breakdown span { padding: 4px 8px; border: 1px solid rgba(255, 184, 0, 0.25); border-radius: 6px; }
+
+        /* ======== SHARED CTA ======== */
+        .cta-primary {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 15px 26px;
+            border-radius: 12px;
+            background: linear-gradient(180deg, var(--gold-bright) 0%, var(--gold) 100%);
+            color: #1a1206;
+            font-weight: 900;
+            font-size: 1rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            border: 1px solid #b4881d;
+            box-shadow: 0 12px 28px rgba(212, 167, 44, 0.32);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .cta-primary:hover { transform: translateY(-1px); box-shadow: 0 16px 34px rgba(212, 167, 44, 0.42); }
+        .cta-ghost {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 13px 20px; border-radius: 10px;
+            background: rgba(15, 23, 42, 0.74);
+            color: var(--text);
+            border: 1px solid var(--line);
+            font-weight: 800;
+            cursor: pointer;
+            letter-spacing: 0.02em;
+            font-size: 0.92rem;
+        }
+        .cta-ghost:hover { border-color: var(--line-strong); }
+        .cta-disabled {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 13px 20px; border-radius: 10px;
+            background: rgba(15, 23, 42, 0.40);
+            color: var(--muted);
+            border: 1px dashed var(--line);
+            font-weight: 800;
+            letter-spacing: 0.02em;
+            font-size: 0.92rem;
+            cursor: not-allowed;
+        }
+
+        /* ======== SIGNUP BANNER ======== */
+        .signup-banner {
+            margin-top: 22px;
+            padding: 26px 28px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 22px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 184, 0, 0.45);
+            background:
+                radial-gradient(circle at 0% 0%, rgba(255, 184, 0, 0.16), transparent 55%),
+                linear-gradient(180deg, rgba(28, 22, 8, 0.96), rgba(14, 11, 5, 0.97));
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42), inset 0 0 0 1px rgba(255, 184, 0, 0.12);
+        }
+        .req-tag {
+            display: inline-flex; align-items: center; gap: 8px;
+            border-radius: 999px; padding: 6px 12px;
+            border: 1px solid rgba(255, 184, 0, 0.55);
+            background: rgba(255, 184, 0, 0.12);
+            color: #ffe4a3;
+            font-size: 0.7rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase;
+        }
+        .signup-banner h2 {
+            margin-top: 10px;
+            font-size: clamp(1.4rem, 2.6vw, 2rem);
+            font-weight: 900;
+            color: #fff5d8;
+            line-height: 1.15;
+        }
+        .signup-banner p {
+            margin: 10px 0 0; color: #e7d6a8;
+            font-size: 0.98rem; line-height: 1.5; max-width: 62ch;
+        }
+        .promo-slot {
+            margin-top: 12px; font-size: 0.82rem; color: #c9b27a;
+            letter-spacing: 0.04em;
+        }
+        @media (max-width: 720px) {
+            .signup-banner, .hero-grid { grid-template-columns: 1fr; }
+            .cta-primary { width: 100%; justify-content: center; }
+        }
+
+        /* ======== SECTIONS ======== */
+        .section { margin-top: 22px; padding: 26px 28px; }
+        .section h2 { margin-bottom: 14px; font-size: 1.55rem; font-weight: 900; }
+        .section .lead { color: var(--muted); margin: 0 0 18px; line-height: 1.55; }
+
+        /* ======== PRIZE GRID ======== */
+        .prize-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .prize-tier {
+            padding: 22px 18px;
+            border-radius: 14px;
+            text-align: center;
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(20, 32, 52, 0.96), rgba(10, 18, 30, 0.97));
+            position: relative;
+            overflow: hidden;
+        }
+        .prize-tier.first { border-color: rgba(255, 184, 0, 0.5); background: linear-gradient(180deg, rgba(40, 30, 8, 0.96), rgba(20, 14, 4, 0.97)); }
+        .prize-tier.second { border-color: rgba(186, 198, 213, 0.42); }
+        .prize-tier.third { border-color: rgba(196, 132, 56, 0.42); }
+        .prize-tier .place { font-size: 0.74rem; letter-spacing: 0.18em; text-transform: uppercase; font-weight: 900; color: var(--muted); }
+        .prize-tier.first .place { color: #ffd770; }
+        .prize-tier.second .place { color: #d6e2ef; }
+        .prize-tier.third .place { color: #e5b07e; }
+        .prize-tier .amt {
+            margin-top: 10px;
+            font-family: "Barlow", sans-serif;
+            font-size: clamp(1.8rem, 3.4vw, 2.4rem);
+            font-weight: 900;
+            color: #fff;
+        }
+        .prize-tier .amt .currency { margin-right: 4px; }
+        .prize-tier.first .amt .currency { color: var(--gold-bright); }
+
+        /* ======== RULES + HOW-IT-WORKS ======== */
+        .rules-list { margin: 0; padding-left: 20px; }
+        .rules-list li { margin: 10px 0; color: #d9e3f0; line-height: 1.55; }
+        .rules-list strong { color: #fff; }
+        .rules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 12px;
+            margin: 0 0 18px;
+        }
+        .rule-stat {
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: var(--panel-2);
+        }
+        .rule-stat .k { font-size: 0.72rem; color: var(--faint); letter-spacing: 0.14em; text-transform: uppercase; font-weight: 800; }
+        .rule-stat .v { margin-top: 6px; font-family: "Barlow", sans-serif; font-weight: 900; font-size: 1.5rem; color: #fff; }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+        .step {
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: var(--panel-2);
+        }
+        .step .n {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: 8px;
+            font-family: "Barlow", sans-serif; font-weight: 900;
+            background: linear-gradient(180deg, var(--gold-bright), var(--gold));
+            color: #1a1206;
+        }
+        .step h3 { margin-top: 10px; font-size: 1.05rem; color: #fff; font-weight: 900; }
+        .step p { margin: 6px 0 0; color: var(--muted); font-size: 0.92rem; line-height: 1.5; }
+
+        /* ======== FAQ ======== */
+        .faq-item { padding: 14px 0; border-top: 1px solid var(--line); }
+        .faq-item:first-of-type { border-top: 0; }
+        .faq-item h3 { font-size: 1.05rem; color: #fff; margin-bottom: 6px; font-weight: 800; }
+        .faq-item p { margin: 0; color: var(--muted); line-height: 1.55; }
+
+        /* ======== FINAL CTA ======== */
+        .final-cta {
+            margin-top: 22px;
+            padding: 30px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 184, 0, 0.45);
+            background:
+                radial-gradient(circle at 100% 0%, rgba(255, 184, 0, 0.18), transparent 50%),
+                linear-gradient(180deg, rgba(28, 22, 8, 0.96), rgba(14, 11, 5, 0.97));
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+        }
+        .final-cta h2 {
+            font-size: clamp(1.6rem, 3vw, 2.2rem);
+            font-weight: 900;
+            color: #fff5d8;
+            margin-bottom: 10px;
+        }
+        .final-cta p { color: #e7d6a8; max-width: 60ch; margin: 0 auto 22px; font-size: 1rem; line-height: 1.55; }
+        .final-cta .row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+
+        .footnote { margin-top: 22px; color: var(--faint); font-size: 0.78rem; line-height: 1.55; max-width: 70ch; }
+    </style>
+</head>
+<body>
+    <div id="tmr-nav-placeholder"></div>
+
+    <main class="page">
+
+        <!-- ========================= HERO ========================= -->
+        <section class="hero panel">
+            <div class="hero-grid">
+                <div>
+                    <div class="sponsor-row">
+                        <span class="kicker"><i class="fa-solid fa-trophy"></i> Sponsored MLB Contest</span>
+                        <span class="by">Presented by</span>
+                        <span class="justbet-mark" aria-label="JustBet"><span class="dot"></span> JUSTBET</span>
+                    </div>
+                    <h1>JustBet MLB Handicapping Contest</h1>
+                    <p class="hero-sub">Compete for a $2,500 cash prize pool. 50 MLB picks per entrant, ranked by net units. Every pick is sealed publicly until first pitch — no front-running, no edits, full transparency.</p>
+
+                    <div style="margin-top: 18px;">
+                        <span class="status-tag"><span class="pulse"></span> Registration Opening Soon</span>
+                    </div>
+
+                    <div class="hero-meta">
+                        <span><b>Format:</b> 50 MLB picks per entrant</span>
+                        <span><b>Reveal:</b> Each pick unlocks at first pitch</span>
+                        <span><b>Prize Pool:</b> $2,500</span>
+                    </div>
+
+                    <div class="hero-cta-row">
+                        <a class="cta-primary"
+                           href="https://record.revshare.ag/_RFP1Ust_FFzUOsjNOfgKeWNd7ZgqdRLk/1/"
+                           target="_blank"
+                           rel="sponsored noopener"
+                           data-affiliate-link="justbet-mlb-contest-hero">
+                            <i class="fa-solid fa-up-right-from-square"></i> Create Your JustBet Account to Qualify
+                        </a>
+                        <a class="cta-ghost" href="#rules"><i class="fa-solid fa-list-check"></i> View Contest Rules</a>
+                        <span class="cta-disabled" aria-disabled="true"><i class="fa-solid fa-lock"></i> Contest Dashboard Coming Soon</span>
+                    </div>
+                </div>
+                <aside class="prize-card" aria-label="Prize pool summary">
+                    <div class="label">Total Prize Pool</div>
+                    <div class="amount"><span class="currency">$</span>2,500</div>
+                    <div class="sub">Top 3 finishers paid in cash</div>
+                    <div class="breakdown">
+                        <span>1st $1,500</span>
+                        <span>2nd $750</span>
+                        <span>3rd $250</span>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- ===================== SIGNUP BANNER ===================== -->
+        <section class="signup-banner" aria-label="Contest signup requirement">
+            <div>
+                <span class="req-tag"><i class="fa-solid fa-circle-exclamation"></i> Required to Enter</span>
+                <h2>Create Your JustBet Account To Qualify</h2>
+                <p><strong>To qualify for the contest, you must create your JustBet account through the official contest signup link on this page.</strong> Whether you arrived from Twitter, TrustMyRecord, or another source — your JustBet account must be opened by clicking the signup button on this page to count as a valid entry. Existing JustBet accounts not registered through this page do not qualify.</p>
+                <div class="promo-slot" data-promo-code-slot>
+                    <!-- PROMO_CODE_PLACEHOLDER: insert custom JustBet promo code here when assigned -->
+                </div>
+            </div>
+            <a class="cta-primary"
+               href="https://record.revshare.ag/_RFP1Ust_FFzUOsjNOfgKeWNd7ZgqdRLk/1/"
+               target="_blank"
+               rel="sponsored noopener"
+               data-affiliate-link="justbet-mlb-contest-banner">
+                <i class="fa-solid fa-up-right-from-square"></i> Create Your JustBet Account to Qualify
+            </a>
+        </section>
+
+        <!-- ===================== PRIZES ===================== -->
+        <section class="section panel" id="prizes">
+            <h2>Prize Structure</h2>
+            <p class="lead">Top three net-unit finishers at the end of the contest window split the $2,500 prize pool.</p>
+            <div class="prize-grid">
+                <div class="prize-tier first">
+                    <div class="place"><i class="fa-solid fa-crown"></i> 1st Place</div>
+                    <div class="amt"><span class="currency">$</span>1,500</div>
+                </div>
+                <div class="prize-tier second">
+                    <div class="place">2nd Place</div>
+                    <div class="amt"><span class="currency">$</span>750</div>
+                </div>
+                <div class="prize-tier third">
+                    <div class="place">3rd Place</div>
+                    <div class="amt"><span class="currency">$</span>250</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== HOW IT WORKS ===================== -->
+        <section class="section panel" id="how-it-works">
+            <h2>How It Works</h2>
+            <div class="steps">
+                <div class="step">
+                    <span class="n">1</span>
+                    <h3>Open Your JustBet Account</h3>
+                    <p>Click the JustBet signup button on this page to qualify. Existing accounts not registered through this link do not count.</p>
+                </div>
+                <div class="step">
+                    <span class="n">2</span>
+                    <h3>Submit Your 50 MLB Picks</h3>
+                    <p>When the dashboard launches, log 50 MLB picks across the contest window — moneylines, run lines, totals, first-five, team totals.</p>
+                </div>
+                <div class="step">
+                    <span class="n">3</span>
+                    <h3>Picks Stay Sealed Until First Pitch</h3>
+                    <p>Every pick is publicly hidden until that game's first pitch. No front-running, no edits, fully transparent.</p>
+                </div>
+                <div class="step">
+                    <span class="n">4</span>
+                    <h3>Top 3 Net-Unit Finishers Win</h3>
+                    <p>Ranked by net units across all 50 picks. 1st: $1,500 · 2nd: $750 · 3rd: $250.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== RULES ===================== -->
+        <section class="section panel" id="rules">
+            <h2>Contest Rules</h2>
+            <div class="rules-grid">
+                <div class="rule-stat"><div class="k">Picks Per Entrant</div><div class="v">50</div></div>
+                <div class="rule-stat"><div class="k">Sport</div><div class="v">MLB</div></div>
+                <div class="rule-stat"><div class="k">Ranking</div><div class="v">Net Units</div></div>
+                <div class="rule-stat"><div class="k">Reveal</div><div class="v">First Pitch</div></div>
+            </div>
+            <ol class="rules-list">
+                <li><strong>JustBet signup required.</strong> Open a new JustBet account through the official contest signup link on this page. Existing accounts not registered through this link do not qualify.</li>
+                <li><strong>50 MLB picks per entrant</strong> across the contest window. Each pick locks at submission and remains sealed publicly until that game's first pitch.</li>
+                <li><strong>Sealed-pick reveal.</strong> The public picks grid on the contest dashboard shows each pick as <code>🔒 Sealed</code> until first pitch, then automatically reveals the side/total, market, odds, and units.</li>
+                <li><strong>Units are graded</strong> through the standard TrustMyRecord unit P/L formula. Pushes count 0u.</li>
+                <li><strong>Ranking</strong> is by net units across all 50 contest picks. Ties broken by win percentage, then earliest submission.</li>
+                <li><strong>Contest picks are isolated</strong> from regular TrustMyRecord public records and personal profile stats. Submitting a contest pick does not affect your main TMR record.</li>
+                <li><strong>One entry per person.</strong> Duplicate accounts disqualified.</li>
+                <li><strong>Eligibility.</strong> Entrants must meet JustBet's age (21+ where applicable) and jurisdictional requirements.</li>
+                <li><strong>Prizes.</strong> 1st: $1,500 · 2nd: $750 · 3rd: $250.</li>
+            </ol>
+            <div style="margin-top:18px;display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:18px;border-radius:12px;border:1px solid rgba(255,184,0,0.32);background:rgba(28,22,8,0.55);">
+                <div style="flex:1;min-width:240px;color:#e7d6a8;font-size:0.95rem;">
+                    <strong style="color:#fff5d8;">Came from Twitter or TrustMyRecord?</strong> You still must click the JustBet signup button on this page to qualify.
+                </div>
+                <a class="cta-primary"
+                   href="https://record.revshare.ag/_RFP1Ust_FFzUOsjNOfgKeWNd7ZgqdRLk/1/"
+                   target="_blank"
+                   rel="sponsored noopener"
+                   data-affiliate-link="justbet-mlb-contest-rules-cta">
+                    <i class="fa-solid fa-up-right-from-square"></i> Sign Up Through JustBet to Enter
+                </a>
+            </div>
+        </section>
+
+        <!-- ===================== FAQ ===================== -->
+        <section class="section panel" id="faq">
+            <h2>FAQ</h2>
+            <div class="faq-item">
+                <h3>Do I have to deposit on JustBet to enter?</h3>
+                <p>No deposit is required to be tracked on the TrustMyRecord contest leaderboard. A qualifying JustBet account opened through the official contest signup link on this page is required.</p>
+            </div>
+            <div class="faq-item">
+                <h3>What if I already have a JustBet account?</h3>
+                <p>Existing accounts that were not registered through the official contest signup link on this page do not qualify. You'll need to register a new qualifying account through the link on this page.</p>
+            </div>
+            <div class="faq-item">
+                <h3>How are picks graded?</h3>
+                <p>Picks are graded automatically through the TrustMyRecord auto-grader using the standard unit P/L formula. Pushes count 0u.</p>
+            </div>
+            <div class="faq-item">
+                <h3>Will my contest picks affect my regular TrustMyRecord public record?</h3>
+                <p>No. Contest picks are stored separately and do not affect your regular public record, profile stats, grading history, or the standard sportsbook leaderboard.</p>
+            </div>
+            <div class="faq-item">
+                <h3>When does the contest start?</h3>
+                <p>Registration is opening soon. Once the contest dashboard launches, this page will link directly to it.</p>
+            </div>
+        </section>
+
+        <!-- ===================== FINAL CTA ===================== -->
+        <section class="final-cta">
+            <h2>Lock In Your Entry</h2>
+            <p>Open your JustBet account through the official contest signup link to qualify. Whether you arrived from Twitter, TrustMyRecord, or anywhere else — clicking the button below is the only way to count as a valid entry.</p>
+            <div class="row">
+                <a class="cta-primary"
+                   href="https://record.revshare.ag/_RFP1Ust_FFzUOsjNOfgKeWNd7ZgqdRLk/1/"
+                   target="_blank"
+                   rel="sponsored noopener"
+                   data-affiliate-link="justbet-mlb-contest-final">
+                    <i class="fa-solid fa-up-right-from-square"></i> Create Your JustBet Account to Qualify
+                </a>
+                <a class="cta-ghost" href="#rules"><i class="fa-solid fa-list-check"></i> Read Full Rules</a>
+            </div>
+        </section>
+
+        <p class="footnote">
+            JustBet is the title sponsor of this contest. The signup CTA on this page uses an affiliate tracking link.
+            Contest picks are stored separately from regular TrustMyRecord public records, profile stats, grading history, and the standard sportsbook leaderboard.
+            21+ where applicable. Please play responsibly.
+        </p>
+    </main>
+
+    <div id="tmr-footer-placeholder"></div>
+</body>
+</html>
