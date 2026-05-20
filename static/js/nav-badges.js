@@ -95,6 +95,10 @@
         return String(value || '').trim().replace(/^@+/, '').toLowerCase();
     }
 
+    function profileRouteUsername(value) {
+        return String(value || '').trim().replace(/^@+/, '').trim();
+    }
+
     function findMessagesLinks() {
         // Find all links pointing to the canonical messages route
         return document.querySelectorAll('a[href="messages/"], a[href="/messages/"], a[href="messages.html"], a[href="/messages.html"], [data-tmr-mailbox-link]');
@@ -172,6 +176,40 @@
         return '';
     }
 
+    function profileMessagesUrl(username) {
+        const clean = profileRouteUsername(username);
+        return clean ? '/messages/?to=' + encodeURIComponent(clean) : '/messages/';
+    }
+
+    function normalizeProfileMessageActions() {
+        if (!/^\/profile\/?$/i.test(window.location.pathname)) return;
+        const targetUsername = profileRouteUsername(getViewedProfileUsername());
+        if (!targetUsername) return;
+
+        const sessionUser = getSessionUser();
+        const currentUsername = normalizeUsername(sessionUser && (sessionUser.username || sessionUser.handle));
+        if (currentUsername && currentUsername === normalizeUsername(targetUsername)) return;
+
+        const targetUrl = profileMessagesUrl(targetUsername);
+        document.querySelectorAll('.profile-actions a, .profile-actions button, [data-profile-actions] a, [data-profile-actions] button').forEach((element) => {
+            const text = (element.textContent || '').replace(/\s+/g, ' ').trim().toLowerCase();
+            const inlineClick = String(element.getAttribute('onclick') || '');
+            const href = String(element.getAttribute('href') || '');
+            const isMessageAction =
+                element.matches('[data-tmr-profile-message]') ||
+                text === 'message' ||
+                text === 'send message' ||
+                /messages\/?\?to=/i.test(inlineClick) ||
+                /messages\/?\?to=/i.test(href);
+            if (!isMessageAction) return;
+
+            element.setAttribute('data-tmr-profile-message', '1');
+            element.setAttribute('data-tmr-message-url', targetUrl);
+            if (element.tagName === 'A') element.setAttribute('href', targetUrl);
+            if (element.tagName === 'BUTTON') element.removeAttribute('onclick');
+        });
+    }
+
     function ensureProfileMessageLink() {
         if (!/^\/profile\/?$/i.test(window.location.pathname)) return;
         if (!isLoggedIn()) return;
@@ -230,6 +268,7 @@
     function refreshMessagingEntryPoints() {
         ensureInboxNavigation();
         ensureMailboxAction();
+        normalizeProfileMessageActions();
         ensureProfileMessageLink();
     }
 
@@ -252,6 +291,16 @@
             fetchUnreadCounts();
         }, REFRESH_INTERVAL);
     }
+
+    document.addEventListener('click', (event) => {
+        const action = event.target && event.target.closest && event.target.closest('[data-tmr-profile-message]');
+        if (!action) return;
+        const url = action.getAttribute('data-tmr-message-url') || action.getAttribute('href');
+        if (!url || !/^\/messages\//.test(url)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        window.location.href = url;
+    }, true);
 
     // Run on DOMContentLoaded
     if (document.readyState === 'loading') {
