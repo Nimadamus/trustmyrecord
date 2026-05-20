@@ -7,7 +7,6 @@
 
     const REFRESH_INTERVAL = 60000; // 60 seconds
     let badgeInterval = null;
-    let navObserver = null;
 
     function injectBadgeCSS() {
         if (document.getElementById('nav-badge-styles')) return;
@@ -55,7 +54,6 @@
         if (window.api && typeof window.api.isLoggedIn === 'function') {
             return window.api.isLoggedIn();
         }
-        // Fallback: check localStorage
         try {
             const token = localStorage.getItem('trustmyrecord_token') || localStorage.getItem('token');
             if (token) return true;
@@ -101,39 +99,34 @@
     }
 
     function findMessagesLinks() {
-        // Find all links pointing to the canonical messages route
         return document.querySelectorAll('a[href="messages/"], a[href="/messages/"], a[href="messages.html"], a[href="/messages.html"], [data-tmr-mailbox-link]');
     }
 
     function findNotificationElements() {
-        // Find bell icons or notification links
         return document.querySelectorAll('.notification-bell, a[href="notifications/"], a[href="/notifications/"], a[href="notifications.html"], .fa-bell');
     }
 
     function setBadge(element, count) {
         if (!element) return;
-        // Find or create badge span
         let badge = element.querySelector('.nav-badge');
         if (count > 0) {
             if (!badge) {
                 badge = document.createElement('span');
                 badge.className = 'nav-badge';
                 element.appendChild(badge);
-                // Make sure parent has relative positioning for proper display
                 if (getComputedStyle(element).position === 'static') {
                     element.style.position = 'relative';
                 }
             }
             badge.textContent = count > 99 ? '99+' : count;
             badge.style.display = 'inline-flex';
-        } else {
-            if (badge) {
-                badge.style.display = 'none';
-            }
+        } else if (badge) {
+            badge.style.display = 'none';
         }
     }
 
     function ensureInboxNavigation() {
+        if (!isLoggedIn()) return;
         const communityPanel = document.querySelector('.tmr-community-menu__panel');
         if (!communityPanel || communityPanel.querySelector('a[href="/messages/"]')) return;
         const link = document.createElement('a');
@@ -146,20 +139,10 @@
 
     function ensureMailboxAction() {
         if (!isLoggedIn()) return;
-        const links = document.querySelector('.tmr-global-nav__links');
-        if (!links) return;
-
-        let link = links.querySelector('[data-tmr-primary-mailbox-link]') || links.querySelector('a[href="/messages/"]');
-        if (!link) {
-            link = document.createElement('a');
-            link.className = 'tmr-mailbox-link';
-            link.setAttribute('data-tmr-primary-mailbox-link', '1');
-            link.setAttribute('data-tmr-mailbox-link', '1');
-            links.appendChild(link);
-        }
-        link.href = '/messages/';
-        link.setAttribute('aria-label', 'Messages');
-        link.textContent = 'Messages';
+        document.querySelectorAll('[data-tmr-mailbox-link]').forEach((link) => {
+            if (link.tagName === 'A') link.href = '/messages/';
+            link.setAttribute('aria-label', 'Messages');
+        });
     }
 
     function getViewedProfileUsername() {
@@ -239,32 +222,19 @@
         if (!window.api) return;
 
         try {
-            // Fetch message unread count
             const msgResult = await window.api.request('/messages/unread-count').catch(() => null);
             const msgCount = (msgResult && typeof msgResult.count === 'number') ? msgResult.count : 0;
+            findMessagesLinks().forEach(link => setBadge(link, msgCount));
 
-            // Update all Messages/Mailbox links
-            const msgLinks = findMessagesLinks();
-            msgLinks.forEach(link => setBadge(link, msgCount));
-
-            // Fetch notification unread count (backend returns { unreadCount }; tolerate { count } too)
             const notifResult = await window.api.request('/notifications/unread-count').catch(() => null);
             let notifCount = 0;
             if (notifResult) {
                 if (typeof notifResult.unreadCount === 'number') notifCount = notifResult.unreadCount;
                 else if (typeof notifResult.count === 'number') notifCount = notifResult.count;
             }
-
-            // Update notification bell elements
-            const notifElements = findNotificationElements();
-            notifElements.forEach(el => {
-                // If it's an <i> icon inside a parent, badge the parent
-                const target = el.tagName === 'I' ? el.parentElement : el;
-                setBadge(target, notifCount);
-            });
-
+            findNotificationElements().forEach(el => setBadge(el.tagName === 'I' ? el.parentElement : el, notifCount));
         } catch(e) {
-            // Silently fail - badges are non-critical
+            // Badges are non-critical and must never block header/auth controls.
         }
     }
 
@@ -275,34 +245,16 @@
         ensureProfileMessageLink();
     }
 
-    function watchNavForLateRender() {
-        if (navObserver || !document.body) return;
-        navObserver = new MutationObserver(() => {
-            refreshMessagingEntryPoints();
-        });
-        navObserver.observe(document.body, { childList: true, subtree: true });
-    }
-
     function init() {
         injectBadgeCSS();
         refreshMessagingEntryPoints();
-        watchNavForLateRender();
-
         setTimeout(refreshMessagingEntryPoints, 500);
         setTimeout(refreshMessagingEntryPoints, 1500);
-        setTimeout(refreshMessagingEntryPoints, 3000);
 
         if (!isLoggedIn()) return;
-
-        // Initial fetch after a short delay to let page load
         setTimeout(fetchUnreadCounts, 500);
-
-        // Refresh every 60 seconds
         if (badgeInterval) clearInterval(badgeInterval);
-        badgeInterval = setInterval(() => {
-            refreshMessagingEntryPoints();
-            fetchUnreadCounts();
-        }, REFRESH_INTERVAL);
+        badgeInterval = setInterval(fetchUnreadCounts, REFRESH_INTERVAL);
     }
 
     document.addEventListener('click', (event) => {
@@ -315,7 +267,6 @@
         window.location.href = url;
     }, true);
 
-    // Run on DOMContentLoaded
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', init);
     } else {
