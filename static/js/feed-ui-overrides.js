@@ -469,6 +469,34 @@ async function loadFeed() {
                 } catch(e) {}
             }
 
+            // Authenticated viewers: merge real notifications as activity rows so
+            // graded picks, friend accepts, challenge wins, comments, replies, and
+            // trivia events surface in the feed when the backend emits them.
+            if (currentFilter === 'all' || currentFilter === 'following') {
+                try {
+                    const viewer = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+                    if (viewer) {
+                        const notif = await api.request('/notifications?limit=20');
+                        const allowed = new Set(['pick_graded','friend_accepted','achievement','challenge_joined','challenge_won','challenge_lost','trivia_created','trivia_answered','comment_created','reply_created','poll_voted','blog_published','recap_posted','follow','followed']);
+                        (notif.notifications || []).filter(n => allowed.has(String(n.type))).filter(isRealPublicFeedUser).forEach(n => items.push({
+                            item_type: 'activity',
+                            post_type: 'activity',
+                            item_id: 'notif_' + n.id,
+                            content: n.content || n.message || '',
+                            username: n.actor_username || n.username || viewer.username,
+                            display_name: n.actor_display_name || n.display_name || n.username || viewer.username,
+                            avatar_url: n.actor_avatar_url || n.avatar_url,
+                            sport: n.sport,
+                            created_at: n.created_at,
+                            notif_type: n.type,
+                            activity_type: n.type,
+                            likes_count: 0,
+                            comments_count: 0
+                        }));
+                    }
+                } catch(e) {}
+            }
+
             const userMap = await fetchPublicUsersByName(items.map(i => getUsername(i)));
             items = items.map(i => attachUserRecord(i, userMap[getUsername(i)]));
             items = aggregateFeedItems(items);
