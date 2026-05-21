@@ -373,3 +373,35 @@ These files are generated proof, API, or temporary working artifacts. They may b
 - `.tmp/sportsbook-ref.json`
 - `.tmp/sportsbook-test-payload.json`
 - `.tmp/sportsbook-tree.json`
+
+## SEO + Schema Standard for New Public Pages (May 21, 2026)
+
+Every NEW public-facing TrustMyRecord page (anything reachable without auth — hubs, contest pages, profile-style pages, marketing pages, content pages) MUST ship with the following in `<head>` from day one. No exceptions, no "we'll add SEO later" follow-up tickets.
+
+Required, in order, immediately after `<meta charset>` + `<meta viewport>`:
+
+1. `<title>` — page-specific, long-tail, ends with `| TrustMyRecord`. Keep < ~70 chars.
+2. `<meta name="description">` — 140-200 chars, describes THIS page, includes the platform value (verified picks / handicapping records / contests / leaderboards).
+3. `<link rel="canonical">` — only set if you are 100% sure of the canonical URL. **Never edit an existing canonical** without explicit approval; broken canonicals tank rankings.
+4. Open Graph block: `og:title`, `og:description`, `og:url`, `og:type` (usually `website`), `og:site_name="TrustMyRecord"`, `og:image` (use `/static/favicon.svg` if no branded image exists yet).
+5. Twitter Card block: `twitter:card` (`summary` for most pages, `summary_large_image` only when a real 1200x630 image exists), `twitter:title`, `twitter:description`, `twitter:image`.
+6. JSON-LD `<script type="application/ld+json">` — pick one schema type that matches the page (`CollectionPage`, `WebPage`, `ProfilePage`, `AboutPage`, `FAQPage`, etc.) + a `BreadcrumbList` block. Include `isPartOf` pointing at the site WebSite node. No fake ratings, no fake reviews, no fake counts.
+
+Forbidden in schema:
+- `aggregateRating`, `review`, `ratingValue` unless backed by real public data.
+- Fake follower/user counts in `interactionStatistic`.
+- Claims about "verified by Google" / "official partner of X" that aren't true.
+
+Hard guard rails:
+- Do NOT rewrite an existing page's canonical without an explicit approval line in the PR description.
+- Do NOT add SEO meta to authenticated-only surfaces (e.g. `/account/`, `/messages/`, `/notifications/`, admin tools). They should stay `noindex`.
+- Do NOT expose pending picks, autograder internals, admin endpoints, or user PII in any meta tag or JSON-LD.
+- Profile pages: schema describes the public profile surface generically — never bake a specific username into the static head; the dynamic page logic can update `og:title` / `og:url` per profile at runtime if needed.
+
+Reference implementations (May 21, 2026):
+- Homepage: `/index.html` — full WebSite + Organization + WebApplication graph.
+- Hub page: `/handicappers/index.html`, `/leaderboards/index.html`, `/challenges/index.html` — CollectionPage + BreadcrumbList.
+- Contest: `/contests/justbet-mlb/index.html` — WebPage + BreadcrumbList.
+- Profile: `/profile/index.html` — ProfilePage + BreadcrumbList.
+
+When in doubt: copy the head from the closest reference implementation above and edit only the page-specific strings.
