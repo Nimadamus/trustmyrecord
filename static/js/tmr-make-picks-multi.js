@@ -229,6 +229,81 @@
         window.selectGameBet.__tmrMultiPatched = true;
     }
 
+    // Click delegation. The wrap above only works when window.selectGameBet is
+    // the inline sportsbook/index.html implementation that writes to
+    // window.TMR.currentSelectedPick. The production reliability runtime
+    // (sportsbook-production-fix-persist-reliability.js) reassigns selectGameBet
+    // to its own implementation that routes through tmrSelectOption and does
+    // NOT populate currentSelectedPick — so the wrap reads `pick = null` and
+    // never queues. The delegation below reads the pick context straight from
+    // the odds button's inline onclick attribute (always present on every
+    // .odds-btn the sportsbook board emits), so the multi-slip queues
+    // regardless of which selectGameBet owner is active.
+    var ONCLICK_ARGS_RE = /selectGameBet\s*\(\s*(\d+)\s*,\s*['"]([^'"]*)['"]\s*,\s*['"]([^'"]*)['"]\s*,\s*['"]([^'"]*)['"]\s*,\s*['"]([^'"]*)['"]\s*,\s*['"]([^'"]*)['"]\s*,\s*['"]([^'"]*)['"]\s*\)/;
+    function parseOnclickPick(onclickStr) {
+        if (!onclickStr) return null;
+        var m = ONCLICK_ARGS_RE.exec(onclickStr);
+        if (!m) return null;
+        return {
+            gameIndex: parseInt(m[1], 10),
+            betType: m[2],
+            team: m[3],
+            line: m[4],
+            odds: m[5],
+            awayTeam: m[6],
+            homeTeam: m[7]
+        };
+    }
+    function installClickDelegation() {
+        if (window.__tmrMultiClickDelegationInstalled) return;
+        window.__tmrMultiClickDelegationInstalled = true;
+        document.addEventListener('click', function (ev) {
+            var t = ev.target;
+            if (!t || !t.closest) return;
+            // Ignore clicks inside our own slip UI (remove/units stepper)
+            if (t.closest('.tmr-multi-slip')) return;
+            var btn = t.closest('.odds-btn,.bet-pick-btn,.total-btn');
+            if (!btn) return;
+            // Don't queue the "More" market-navigator buttons.
+            if (btn.classList && btn.classList.contains('odds-more-btn')) return;
+            if (btn.getAttribute && btn.getAttribute('data-mkt') === 'more') return;
+            // Defer to after the inline onclick fires (it may populate
+            // TMR.currentSelectedPick / TMR.currentGames as side effects we
+            // want to read).
+            setTimeout(function () {
+                try {
+                    var args = parseOnclickPick(btn.getAttribute && btn.getAttribute('onclick'));
+                    var fallbackPick = window.TMR && window.TMR.currentSelectedPick;
+                    var ctx = null;
+                    if (args && args.odds && args.odds !== '--' && args.odds !== '' && args.odds !== 'Pick') {
+                        var games = (window.TMR && Array.isArray(window.TMR.currentGames)) ? window.TMR.currentGames : [];
+                        var game = (games[args.gameIndex] && games[args.gameIndex].home_team) ? games[args.gameIndex] : null;
+                        ctx = {
+                            gameIndex: args.gameIndex,
+                            betType: args.betType,
+                            team: args.team,
+                            line: args.line,
+                            odds: args.odds,
+                            awayTeam: args.awayTeam,
+                            homeTeam: args.homeTeam,
+                            sport: (window.TMR && window.TMR.selectedSport) || (fallbackPick && fallbackPick.sport) || '',
+                            gameTime: game ? game.commence_time : (fallbackPick && fallbackPick.gameTime) || null,
+                            gameId: game ? game.id : (fallbackPick && fallbackPick.gameId) || null,
+                            game: game
+                        };
+                    } else if (fallbackPick && fallbackPick.odds && fallbackPick.odds !== '--' && fallbackPick.odds !== '') {
+                        ctx = fallbackPick;
+                    }
+                    if (!ctx) return;
+                    var item = buildItemFromSelectGameBet(ctx);
+                    addOrToggleSelection(item);
+                } catch (e) {
+                    console.error('[TMR][multi] click delegation queue failed:', e);
+                }
+            }, 0);
+        }, false);
+    }
+
     // No-op the legacy scroll-to-slip behavior. Right-rail slip is sticky on
     // desktop and bottom-sticky on mobile (see CSS above) — no scroll needed.
     function suppressAutoScroll() {
@@ -493,6 +568,7 @@
         suppressAutoScroll();
         patchShowPickStep();
         patchSelectGameBet();
+        installClickDelegation();
         renderSlip();
         injectLeaderboardLink();
 
