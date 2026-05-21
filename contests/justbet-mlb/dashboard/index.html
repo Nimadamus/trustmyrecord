@@ -643,7 +643,19 @@
                         };
                     }
                 }
-                const games = gamesData.games || [];
+                const rawGames = gamesData.games || [];
+                // Dedupe matchup duplicates (e.g. `espn_*` + `an_*` for the same game).
+                // Prefer the variant that has live ESPN odds, otherwise keep the first.
+                const dedup = new Map();
+                for (const g of rawGames) {
+                    const key = `${g.away_team}@${g.home_team}@${g.commence_time}`;
+                    const espnId = String(g.id).replace(/^espn_/, '');
+                    const hasOdds = !!oddsById[espnId];
+                    const existing = dedup.get(key);
+                    if (!existing) { dedup.set(key, { g, hasOdds }); continue; }
+                    if (hasOdds && !existing.hasOdds) dedup.set(key, { g, hasOdds });
+                }
+                const games = Array.from(dedup.values()).map(v => v.g);
                 if (!games.length) {
                     root.innerHTML = `<div class="jb-board-empty"><i class="fa-solid fa-calendar-xmark"></i>No games on the slate.</div>`;
                     return;
