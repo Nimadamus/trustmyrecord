@@ -48,6 +48,33 @@ The Make Picks / sportsbook pick-entry flow follows these locked rules:
 
 Future agents must patch forward from `static/js/tmr-make-picks-multi.js`. Do not reintroduce one-pick-at-a-time-only flow, do not re-show the second review box, do not re-enable auto-scroll on pick selection.
 
+## Community Feed Posting Standard (May 21, 2026)
+
+Any change to `/feed/`, `static/js/social-home.js`, `static/js/feed-ui-overrides.js`, `static/js/feed-cleanup.js`, or `routes/feed.js` is not complete until a live posting test on `https://trustmyrecord.com/feed/` is performed AND evidence is captured in the same response. Required test matrix (logged-in user):
+
+1. Hot Take posts and appears in feed immediately.
+2. Status / text post posts and appears in feed immediately.
+3. Pick Recap posts as `pick_recap` (not silently downgraded to `text`).
+4. Poll posts via `POST /api/polls` with ≥2 options and renders in the Polls tab + For You tab.
+5. Sport dropdown value reaches the backend (visible on the rendered card).
+6. Post button only enables when content is non-empty; poll submit blocks if <2 options.
+7. New post optimistically clears composer; failure path keeps user input intact and shows inline (not `alert()`) error.
+8. Existing feed loads on a fresh page render; empty state appears when there are zero items.
+9. Authenticated avatar/username appears in composer; logged-out users see the login banner instead of a broken composer.
+10. No fake posts, fake users, or seeded test rows surface (filter `TMR_GENERATED_USER_RE` + `isProductionTestActivity`).
+11. Side surfaces (Make Picks, bet slip, pending picks, leaderboard, contest sportsbook, profiles, login/session, sealed-pick privacy) unaffected.
+
+Evidence the PR / response must include:
+- Commit hash of the change.
+- Live URL hit (`https://trustmyrecord.com/feed/` and the `POST /api/feed` / `POST /api/polls` payloads).
+- HTTP status (200/201) + the `feed_post` row returned, OR for browser-driven test: a screenshot or console-extracted `[data-type="feed_post"]` element with the just-posted content.
+- A statement that prior posts still render and no protected guard test regressed.
+
+Forbidden:
+- Marking feed work "done" because the file edit looks right or because `/api/feed` curl returned 200 in isolation. The end-to-end loop (compose → POST → loadFeed → DOM render) is the contract.
+- Adding new fake "preview" posts to make the empty state look populated.
+- Reverting the dual-script split (`social-home.js` + `feed-ui-overrides.js`) without keeping `submitPost` aware of all four UI post types: `status`, `hot-take`, `poll`, `pick-recap`.
+
 ## Current Baseline
 
 The protected baseline is the latest commit on `origin/main` at the start of each task, after inspecting the current remote head, local status, recent commits, and relevant diffs.

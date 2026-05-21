@@ -157,43 +157,101 @@ function rmPollOpt(btn) {
 }
 
 // ==================== SUBMIT POST ====================
+function showComposerStatus(kind, msg) {
+    let el = document.getElementById('composerStatus');
+    if (!el) {
+        const card = document.getElementById('composerCard');
+        if (!card) return;
+        el = document.createElement('div');
+        el.id = 'composerStatus';
+        el.style.cssText = 'margin-top:10px;padding:8px 12px;border-radius:8px;font-size:0.85rem;display:none;';
+        card.appendChild(el);
+    }
+    const palette = kind === 'error'
+        ? 'background:rgba(255,7,58,0.10);border:1px solid rgba(255,7,58,0.35);color:#ffb3c1;'
+        : 'background:rgba(57,255,20,0.08);border:1px solid rgba(57,255,20,0.35);color:#b8ffcc;';
+    el.style.cssText = 'margin-top:10px;padding:8px 12px;border-radius:8px;font-size:0.85rem;display:block;' + palette;
+    el.textContent = msg;
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.display = 'none'; }, 4500);
+}
+
+function resolveBackendPostType(uiType) {
+    if (uiType === 'hot-take') return 'hot_take';
+    if (uiType === 'pick-recap') return 'pick_recap';
+    if (uiType === 'status') return 'status';
+    return 'text';
+}
+
 async function submitPost() {
-    const content = document.getElementById('compInput').value.trim();
-    if (!content) return;
-    const sport = document.getElementById('sportPick').value || null;
+    const input = document.getElementById('compInput');
     const btn = document.getElementById('postBtn');
+    if (!input || !btn) return;
+    const content = input.value.trim();
+    if (!content) { showComposerStatus('error', 'Write something before posting.'); return; }
+
+    const viewer = (typeof auth !== 'undefined') ? auth.currentUser : null;
+    if (!viewer) { showComposerStatus('error', 'Sign in to post to the feed.'); return; }
+
+    if (!(api && typeof api.request === 'function')) {
+        showComposerStatus('error', 'Backend unavailable. Try again in a moment.');
+        return;
+    }
+
+    const sport = (document.getElementById('sportPick') || {}).value || null;
+    const isPoll = postType === 'poll';
+    let pollOpts = [];
+    if (isPoll) {
+        pollOpts = Array.from(document.querySelectorAll('#pollOpts .poll-input'))
+            .map(i => i.value.trim()).filter(Boolean);
+        if (pollOpts.length < 2) {
+            showComposerStatus('error', 'Polls need at least 2 options.');
+            return;
+        }
+    }
+
     btn.disabled = true;
     btn.textContent = 'Posting...';
 
     try {
-        if (postType === 'poll') {
-            const opts = Array.from(document.querySelectorAll('#pollOpts .poll-input')).map(i => i.value.trim()).filter(Boolean);
-            if (opts.length < 2) { alert('Need at least 2 options.'); btn.disabled = false; btn.textContent = 'Post'; return; }
-            if (api && typeof api.request === 'function') {
-                await api.request('/polls', {
-                    method: 'POST',
-                    body: { title: content, options: opts.map(t => ({ text: t })), sport: sport || undefined, scoring_type: 'binary', points_correct: 100 }
-                });
-            }
+        if (isPoll) {
+            await api.request('/polls', {
+                method: 'POST',
+                body: {
+                    title: content,
+                    options: pollOpts.map(t => ({ text: t })),
+                    sport: sport || undefined,
+                    scoring_type: 'binary',
+                    points_correct: 100
+                }
+            });
         } else {
-            if (api && typeof api.request === 'function') {
-                await api.request('/feed', {
-                    method: 'POST',
-                    body: { content, post_type: postType === 'hot-take' ? 'hot_take' : 'text', sport }
-                });
-            }
+            await api.request('/feed', {
+                method: 'POST',
+                body: { content, post_type: resolveBackendPostType(postType), sport }
+            });
         }
-    } catch(e) {
-        alert('Failed to post: ' + (e.message || 'Unknown error'));
+    } catch (e) {
+        btn.disabled = false;
+        btn.textContent = 'Post';
+        const msg = (e && e.message) ? String(e.message) : 'Failed to post. Please try again.';
+        showComposerStatus('error', msg);
+        return;
     }
 
-    // Reset
-    document.getElementById('compInput').value = '';
-    btn.disabled = true;
+    input.value = '';
     btn.textContent = 'Post';
-    document.getElementById('sportPick').value = '';
+    btn.disabled = true;
+    const sportSel = document.getElementById('sportPick');
+    if (sportSel) sportSel.value = '';
     if (postType !== 'post') toggleType(postType);
-    document.getElementById('pollOpts').innerHTML = '<div class="poll-row"><input class="poll-input" placeholder="Option 1" maxlength="60"><button class="poll-rm" onclick="rmPollOpt(this)"><i class="fas fa-times"></i></button></div><div class="poll-row"><input class="poll-input" placeholder="Option 2" maxlength="60"><button class="poll-rm" onclick="rmPollOpt(this)"><i class="fas fa-times"></i></button></div>';
+    const pollOptsEl = document.getElementById('pollOpts');
+    if (pollOptsEl) {
+        pollOptsEl.innerHTML =
+            '<div class="poll-row"><input class="poll-input" placeholder="Option 1" maxlength="60"><button class="poll-rm" onclick="rmPollOpt(this)"><i class="fas fa-times"></i></button></div>' +
+            '<div class="poll-row"><input class="poll-input" placeholder="Option 2" maxlength="60"><button class="poll-rm" onclick="rmPollOpt(this)"><i class="fas fa-times"></i></button></div>';
+    }
+    showComposerStatus('success', isPoll ? 'Poll posted.' : 'Posted to feed.');
     feedOffset = 0;
     await loadFeed();
 }
