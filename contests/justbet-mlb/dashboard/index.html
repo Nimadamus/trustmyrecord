@@ -234,8 +234,16 @@
         .jb-board-head span:not(:first-child) { text-align: center; }
         .jb-row { border-bottom: 1px solid rgba(148,163,184,0.08); }
         .jb-row:last-child { border-bottom: 0; }
-        .jb-matchup { font-weight: 800; color: #e6edf6; line-height: 1.4; }
-        .jb-matchup .jb-time { display: block; font-size: 0.72rem; color: var(--faint); font-weight: 700; margin-top: 2px; letter-spacing: 0.06em; }
+        .jb-matchup { font-weight: 800; color: #e6edf6; line-height: 1.35; display: flex; flex-direction: column; gap: 6px; }
+        .jb-matchup .jb-time { font-size: 0.72rem; color: var(--faint); font-weight: 700; letter-spacing: 0.06em; }
+        .jb-matchup-teams { display: flex; align-items: center; gap: 10px; }
+        .jb-team { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .jb-team-logo { width: 28px; height: 28px; object-fit: contain; border-radius: 6px; background: rgba(255,255,255,0.04); padding: 2px; flex-shrink: 0; }
+        .jb-team-logo--fallback { display: inline-flex; align-items: center; justify-content: center; font-family: "Barlow", sans-serif; font-weight: 900; font-size: 0.72rem; color: #c9b27a; border: 1px solid var(--line); padding: 0; }
+        .jb-team-text { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+        .jb-team-abbr { font-family: "Barlow", sans-serif; font-weight: 900; font-size: 0.95rem; color: #fff; letter-spacing: 0.04em; }
+        .jb-team-name { font-size: 0.7rem; color: var(--muted); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .jb-at { color: var(--faint); font-weight: 800; font-size: 0.78rem; letter-spacing: 0.18em; }
         .jb-chip-pair { display: flex; flex-direction: column; gap: 6px; }
         .jb-chip { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(15,23,42,0.65); color: var(--text); font-weight: 700; cursor: pointer; font-size: 0.86rem; transition: border-color .15s ease, color .15s ease, background .15s ease; }
         .jb-chip:hover:not(:disabled) { border-color: rgba(45,212,191,0.55); color: #b4f1e7; }
@@ -619,11 +627,21 @@
                 if (!gamesResp.ok) throw new Error(`games HTTP ${gamesResp.status}`);
                 const gamesData = await gamesResp.json();
                 let oddsById = {};
+                let metaById = {};
                 if (espnResp.ok) {
                     const espnData = await espnResp.json();
                     const leagues = ((espnData.sports || [])[0] || {}).leagues || [];
                     const events = (leagues[0] || {}).events || [];
-                    for (const e of events) oddsById[String(e.id)] = e.odds || null;
+                    for (const e of events) {
+                        oddsById[String(e.id)] = e.odds || null;
+                        const comps = e.competitors || [];
+                        const away = comps.find(c => c.homeAway === 'away') || comps[1] || {};
+                        const home = comps.find(c => c.homeAway === 'home') || comps[0] || {};
+                        metaById[String(e.id)] = {
+                            awayLogo: away.logo || null, awayAbbr: away.abbreviation || null, awayColor: away.color || null,
+                            homeLogo: home.logo || null, homeAbbr: home.abbreviation || null, homeColor: home.color || null,
+                        };
+                    }
                 }
                 const games = gamesData.games || [];
                 if (!games.length) {
@@ -633,11 +651,16 @@
                 root.innerHTML = games.map(g => {
                     const espnId = String(g.id).replace(/^espn_/, '');
                     const o = oddsById[espnId] || {};
+                    const m = metaById[espnId] || {};
                     const ml = o.moneyline || {};
                     const rl = o.pointSpread || {};
                     const tot = o.total || {};
                     const tdisp = g.commence_time ? `${fmtTime(g.commence_time)} ET` : '';
                     const matchup = `${g.away_team} @ ${g.home_team}`;
+                    const awayAbbr = m.awayAbbr || teamShort(g.away_team);
+                    const homeAbbr = m.homeAbbr || teamShort(g.home_team);
+                    const awayLogo = m.awayLogo || '';
+                    const homeLogo = m.homeLogo || '';
 
                     const pickOdds = (side, fallback) => (side?.current?.odds && side.current.odds !== 'OFF') ? side.current.odds : (side?.close?.odds || fallback || '');
                     const pickLine = (side, fallback) => (side?.current?.line && side.current.line !== 'OFF') ? side.current.line : (side?.close?.line || fallback || '');
@@ -662,16 +685,28 @@
                         </button>`;
                     };
 
+                    const teamCell = (logo, name, abbr) => `
+                        <div class="jb-team">
+                          ${logo ? `<img class="jb-team-logo" src="${escapeAttr(logo)}" alt="${escapeAttr(abbr)} logo" loading="lazy" onerror="this.style.visibility='hidden'">` : `<span class="jb-team-logo jb-team-logo--fallback">${escapeHtml(abbr)}</span>`}
+                          <div class="jb-team-text"><span class="jb-team-abbr">${escapeHtml(abbr)}</span><span class="jb-team-name">${escapeHtml(name)}</span></div>
+                        </div>`;
                     return `
                     <div class="jb-row" data-game-id="${escapeAttr(g.id)}">
-                      <div class="jb-matchup">${escapeHtml(matchup)}<span class="jb-time">${escapeHtml(tdisp)}</span></div>
-                      <div class="jb-chip-pair">
-                        ${chip('h2h', g.away_team, '', mlAway, escapeHtml(teamShort(g.away_team)))}
-                        ${chip('h2h', g.home_team, '', mlHome, escapeHtml(teamShort(g.home_team)))}
+                      <div class="jb-matchup">
+                        <div class="jb-matchup-teams">
+                          ${teamCell(awayLogo, g.away_team, awayAbbr)}
+                          <span class="jb-at">@</span>
+                          ${teamCell(homeLogo, g.home_team, homeAbbr)}
+                        </div>
+                        <span class="jb-time">${escapeHtml(tdisp)}</span>
                       </div>
                       <div class="jb-chip-pair">
-                        ${chip('spreads', g.away_team, rlAwayLine, rlAwayOdds, `${escapeHtml(teamShort(g.away_team))} <span class="jb-line">${escapeHtml(String(rlAwayLine || dash))}</span>`)}
-                        ${chip('spreads', g.home_team, rlHomeLine, rlHomeOdds, `${escapeHtml(teamShort(g.home_team))} <span class="jb-line">${escapeHtml(String(rlHomeLine || dash))}</span>`)}
+                        ${chip('h2h', g.away_team, '', mlAway, escapeHtml(awayAbbr))}
+                        ${chip('h2h', g.home_team, '', mlHome, escapeHtml(homeAbbr))}
+                      </div>
+                      <div class="jb-chip-pair">
+                        ${chip('spreads', g.away_team, rlAwayLine, rlAwayOdds, `${escapeHtml(awayAbbr)} <span class="jb-line">${escapeHtml(String(rlAwayLine || dash))}</span>`)}
+                        ${chip('spreads', g.home_team, rlHomeLine, rlHomeOdds, `${escapeHtml(homeAbbr)} <span class="jb-line">${escapeHtml(String(rlHomeLine || dash))}</span>`)}
                       </div>
                       <div class="jb-chip-pair">
                         ${chip('totals', `Over ${totLine}`, totLine, overOdds, `O <span class="jb-line">${escapeHtml(String(totLine || dash))}</span>`)}
@@ -727,7 +762,28 @@
         }
 
         function isSignedIn() {
-            return !!(window.TMR_AUTH && window.TMR_AUTH.user) || !!localStorage.getItem('tmr_auth_token');
+            try {
+                if (window.TMR_AUTH && window.TMR_AUTH.user) return true;
+                if (window.auth && window.auth.currentUser) return true;
+                const session = localStorage.getItem('trustmyrecord_session');
+                if (session) {
+                    const parsed = JSON.parse(session);
+                    const user = parsed && (parsed.user || parsed);
+                    if (user && (user.username || user.email)) return true;
+                }
+                if (localStorage.getItem('currentUser')) return true;
+                const tokenKeys = ['tmr_auth_token','trustmyrecord_token','accessToken','access_token','token','tmr_token'];
+                for (const k of tokenKeys) { if (localStorage.getItem(k)) return true; }
+            } catch (_) { /* fall through */ }
+            return false;
+        }
+
+        function getAuthToken() {
+            const tokenKeys = ['tmr_auth_token','trustmyrecord_token','accessToken','access_token','token','tmr_token'];
+            for (const k of tokenKeys) {
+                try { const v = localStorage.getItem(k); if (v) return v; } catch (_) {}
+            }
+            return null;
         }
 
         async function loadMyStatus() {
@@ -735,7 +791,7 @@
             const text = $('#picks-used-text');
             if (!isSignedIn()) { if (indicator) indicator.style.display = 'none'; return; }
             try {
-                const token = localStorage.getItem('tmr_auth_token');
+                const token = getAuthToken();
                 const res = await fetch(API('/my-status'), {
                     credentials: 'include',
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {},
@@ -793,7 +849,7 @@
             };
             if (!payload.attest_justbet_signup) { msg.textContent = 'You must confirm the JustBet signup attestation.'; return; }
             try {
-                const token = localStorage.getItem('tmr_auth_token');
+                const token = getAuthToken();
                 const res = await fetch(API('/picks'), {
                     method: 'POST',
                     credentials: 'include',
