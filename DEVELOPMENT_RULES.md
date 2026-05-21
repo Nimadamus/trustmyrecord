@@ -110,6 +110,19 @@ Before marking pending-picks display work complete, verify the following:
 - No task is complete until the live browser screenshot matches the intended display.
 
 
+## Contest Page Sponsor Bonus Standard
+
+Permanent rule for any TrustMyRecord contest signup page sponsored by a sportsbook or affiliate partner (`contests/<slug>/index.html`):
+
+- Every contest signup page must include a dedicated, sportsbook-styled bonus / incentive section for the sponsor's current new player offer.
+- The bonus section must live adjacent to the primary signup CTA / signup banner so it directly supports signup conversion. Do not bury it below FAQ or below the final CTA.
+- Required content fields when applicable: bonus percentage / type (e.g. "115% Free Play"), rollover requirement (e.g. "11x"), minimum qualifying deposit, maximum qualifying deposit, BetPoints / loyalty redemption value, and any VIP / support note.
+- Use the existing dark sportsbook styling (panel + gold accent border, Barlow stat cards, no spammy gradients or pop-ups).
+- Do not put the user's name in any bonus copy. Use neutral brand voice ("New Player Bonus Available", "Official Contest Link").
+- Include a footnote that bonus terms are set by the sponsor and eligibility / rollover / redemption rules are determined at signup.
+- When a new contest is created, the bonus section is part of the page baseline. A contest signup page that ships without the sponsor bonus section is incomplete.
+- When updating an existing contest page, never remove the bonus section unless the sponsor relationship has ended.
+
 ## Risky File Classification Inventory
 
 Production protected:
