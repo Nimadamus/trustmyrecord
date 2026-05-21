@@ -12,6 +12,29 @@ Rules for every future frontend deploy:
 - If a clean worktree is needed, create it from current `origin/main` and verify the guard before changing files.
 - The TrustMyRecord profile Line column must use `formatPickLineValue(pick)` in `profile/index.html`, and the shared formatter in `static/js/backend-api.js` must keep totals/team totals unsigned while spreads stay signed.
 
+## Contest Launch Checklist — Sportsbook Picks Section
+
+Status: PERMANENT. Required before any contest dashboard is announced as live.
+
+Every contest dashboard page (e.g. `/contests/<id>/dashboard/`) must be verified end-to-end before the contest is announced. Run all checks against the live URL on Cloudflare + Render and record evidence in this tracker.
+
+1. Live URL returns 200 and renders the dashboard HTML (`curl -sI <url>` + visible board/slip markup).
+2. Backend endpoints all return 200 against `https://trustmyrecord-api.onrender.com/api/contests/<id>`:
+   - `GET /api/contests/<id>` (status; `is_active`, `starts_at`, `ends_at`).
+   - `GET /api/contests/<id>/picks` (public picks, sealed-stripped before first pitch).
+   - `GET /api/contests/<id>/leaderboard`.
+   - `GET /api/contests/<id>/games` (today's slate).
+3. `POST /api/contests/<id>/picks` returns `401` without auth (token gate verified).
+4. Signed-in flow: a real test user can stage a chip → fill units → check attestation → submit → see `201` + sealed pick appears in `GET /picks` with username/game/sealed=true and no `selection`/`odds`/`units` leak.
+5. Submitted pick row stores: `username`, `game_label`, `game_commence_time`, `market_type`, `selection`, `odds_snapshot`, `units`, `stake_mode`, `submitted_at`. American odds `abs(odds) >= 100` enforced server-side.
+6. Sealed-pick reveal: after `game_commence_time` passes, the pick payload exposes `selection`/`odds`/`units` (server-side guard, never client-side).
+7. Sportsbook UI verified: `jb-board` + `jb-slip` (slate-style chips + pick slip), not legacy dropdowns. Matches `[[feedback_contest_dashboard_sportsbook_style]]`.
+8. No duplicate matchup rows on the slate when `/games` returns both `espn_*` and `an_*` for the same game (dedupe by `away@home@commence_time` preferring odds variant).
+9. Responsive: dashboard usable at 1280, 820, 480 px (jb-chip pair flips at <=820, submit grid stacks at <=720).
+10. Zero console errors on page load, chip click, and submit.
+11. Isolation confirmed: contest picks do not appear in `/api/users/:username/picks`, sportsbook leaderboard, or profile stats. Storage in `tmr_contest_picks` only.
+12. Files: `contests/<id>/dashboard/index.html` (frontend), `routes/contests.js` + `ensureContestsSchema()` (backend), `database/migration_contests.sql` (schema).
+
 ## 2026-05-06 - Profile Stats, Streak Accuracy, Drawdown Accuracy, Leaderboard Summary Accuracy
 
 Status: VERIFIED LIVE.
