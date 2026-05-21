@@ -226,6 +226,45 @@
         .refresh-btn:hover { color: var(--text); border-color: var(--line-strong); }
 
         .footnote { margin-top: 22px; color: var(--faint); font-size: 0.78rem; line-height: 1.55; max-width: 75ch; }
+
+        /* ======== SPORTSBOOK SLATE BOARD (contest pick entry) ======== */
+        .jb-board { margin-top: 14px; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; background: rgba(8, 15, 27, 0.7); }
+        .jb-board-head, .jb-row { display: grid; grid-template-columns: minmax(220px,1.6fr) 1fr 1fr 1fr; gap: 10px; padding: 12px 16px; align-items: center; }
+        .jb-board-head { background: linear-gradient(180deg, rgba(45,212,191,0.08), transparent); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 800; border-bottom: 1px solid var(--line); }
+        .jb-board-head span:not(:first-child) { text-align: center; }
+        .jb-row { border-bottom: 1px solid rgba(148,163,184,0.08); }
+        .jb-row:last-child { border-bottom: 0; }
+        .jb-matchup { font-weight: 800; color: #e6edf6; line-height: 1.4; }
+        .jb-matchup .jb-time { display: block; font-size: 0.72rem; color: var(--faint); font-weight: 700; margin-top: 2px; letter-spacing: 0.06em; }
+        .jb-chip-pair { display: flex; flex-direction: column; gap: 6px; }
+        .jb-chip { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: rgba(15,23,42,0.65); color: var(--text); font-weight: 700; cursor: pointer; font-size: 0.86rem; transition: border-color .15s ease, color .15s ease, background .15s ease; }
+        .jb-chip:hover:not(:disabled) { border-color: rgba(45,212,191,0.55); color: #b4f1e7; }
+        .jb-chip.is-staged { border-color: var(--gold-bright); color: #ffe4a3; background: rgba(40,30,8,0.55); }
+        .jb-chip:disabled { opacity: 0.4; cursor: not-allowed; }
+        .jb-chip .jb-line { color: var(--muted); font-weight: 700; font-size: 0.80rem; margin-left: 4px; }
+        .jb-chip .jb-odds { font-family: "Barlow", sans-serif; font-weight: 900; }
+        .jb-board-empty { padding: 36px 22px; text-align: center; color: var(--muted); font-size: 0.95rem; }
+        .jb-board-empty i { font-size: 1.4rem; color: var(--faint); display: block; margin-bottom: 8px; }
+
+        .jb-slip { margin-top: 18px; padding: 18px; border-radius: 14px; border: 1px solid rgba(255,184,0,0.32); background: linear-gradient(180deg, rgba(28,22,8,0.55), rgba(8,15,27,0.85)); }
+        .jb-slip-head { font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: #c9b27a; font-weight: 900; }
+        .jb-slip-stage { margin-top: 8px; padding: 14px; border-radius: 10px; border: 1px dashed var(--line); background: rgba(15,23,42,0.4); }
+        .jb-slip-stage.is-staged { border: 1px solid rgba(255,184,0,0.42); background: rgba(40,30,8,0.32); }
+        .jb-slip-stage .jb-stage-empty { color: var(--muted); font-size: 0.92rem; }
+        .jb-slip-stage .jb-stage-matchup { font-size: 0.74rem; color: var(--faint); letter-spacing: 0.10em; text-transform: uppercase; font-weight: 800; }
+        .jb-slip-stage .jb-stage-pick { margin-top: 6px; font-family: "Barlow", sans-serif; font-size: 1.25rem; font-weight: 900; color: #fff; }
+        .jb-slip-stage .jb-stage-odds { margin-top: 4px; color: #ffe4a3; font-weight: 800; }
+        .jb-slip-inputs { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .jb-slip-inputs label { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 800; display: block; margin-bottom: 4px; }
+        .jb-slip-inputs input, .jb-slip-inputs select { width: 100%; background: rgba(8,15,27,0.85); color: var(--text); border: 1px solid var(--line); border-radius: 10px; padding: 11px 12px; font-size: 0.95rem; }
+
+        @media (max-width: 820px) {
+            .jb-board-head, .jb-row { grid-template-columns: 1fr; gap: 6px; }
+            .jb-board-head span:not(:first-child) { display: none; }
+            .jb-chip-pair { flex-direction: row; }
+            .jb-chip { flex: 1; }
+            .jb-slip-inputs { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -288,46 +327,41 @@
                 </div>
 
                 <form id="contest-pick-form">
-                    <div class="submit-grid">
-                        <div class="field">
-                            <label for="cf-game">Game</label>
-                            <select id="cf-game" name="game_id" required>
-                                <option value="">Select a game…</option>
-                            </select>
+                    <input type="hidden" id="cf-game" name="game_id" required>
+                    <input type="hidden" id="cf-market" name="market_type" required>
+                    <input type="hidden" id="cf-selection" name="selection" required>
+                    <input type="hidden" id="cf-line" name="line">
+                    <input type="hidden" id="cf-odds" name="odds" required>
+
+                    <div class="jb-board" id="jb-board">
+                        <div class="jb-board-head">
+                            <span>Matchup</span>
+                            <span>Moneyline</span>
+                            <span>Run Line</span>
+                            <span>Total</span>
                         </div>
-                        <div class="field">
-                            <label for="cf-market">Market</label>
-                            <select id="cf-market" name="market_type" required>
-                                <option value="h2h">Moneyline</option>
-                                <option value="spreads">Run Line</option>
-                                <option value="totals">Total (Over/Under)</option>
-                                <option value="f5_h2h">First-Five Moneyline</option>
-                                <option value="f5_totals">First-Five Total</option>
-                                <option value="team_totals">Team Total</option>
-                            </select>
+                        <div id="jb-board-rows">
+                            <div class="jb-board-empty"><i class="fa-solid fa-hourglass-start"></i>Loading today's slate…</div>
                         </div>
-                        <div class="field">
-                            <label for="cf-selection">Selection</label>
-                            <input id="cf-selection" name="selection" type="text" placeholder="e.g. Yankees, Over 8.5, Yankees Team Total Over 4.5" required>
+                    </div>
+
+                    <div class="jb-slip">
+                        <div class="jb-slip-head"><i class="fa-solid fa-vault" style="color:#ffd770;"></i> Your Pick Slip</div>
+                        <div class="jb-slip-stage" id="jb-slip-stage">
+                            <div class="jb-stage-empty">Tap any odds chip above to stage a contest pick.</div>
                         </div>
-                        <div class="field">
-                            <label for="cf-line">Line (required for spreads / totals / team totals)</label>
-                            <input id="cf-line" name="line" type="number" step="0.5" placeholder="e.g. 8.5 or -1.5 (leave blank for moneylines)">
-                        </div>
-                        <div class="field">
-                            <label for="cf-odds">Odds (American)</label>
-                            <input id="cf-odds" name="odds" type="number" placeholder="e.g. -135 or +120" required>
-                        </div>
-                        <div class="field">
-                            <label for="cf-units">Units (0.5 – 5)</label>
-                            <input id="cf-units" name="units" type="number" step="0.5" min="0.5" max="5" value="1" required>
-                        </div>
-                        <div class="field">
-                            <label for="cf-stake">Stake Mode</label>
-                            <select id="cf-stake" name="stake_mode">
-                                <option value="risk">Risk</option>
-                                <option value="to_win">To Win</option>
-                            </select>
+                        <div class="jb-slip-inputs">
+                            <div>
+                                <label for="cf-units">Units (0.5 – 5)</label>
+                                <input id="cf-units" name="units" type="number" step="0.5" min="0.5" max="5" value="1" required>
+                            </div>
+                            <div>
+                                <label for="cf-stake">Stake Mode</label>
+                                <select id="cf-stake" name="stake_mode">
+                                    <option value="risk">Risk</option>
+                                    <option value="to_win">To Win</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -562,19 +596,134 @@
             }).join('');
         }
 
-        async function loadGames() {
-            const sel = $('#cf-game');
+        const MARKET_LABEL = { h2h: 'Moneyline', spreads: 'Run Line', totals: 'Total' };
+
+        function teamShort(name) {
+            const parts = String(name || '').split(' ').filter(Boolean);
+            return parts[parts.length - 1] || name || '';
+        }
+
+        function chipDataset(market, selection, line, odds) {
+            return `data-mkt="${escapeAttr(market)}" data-sel="${escapeAttr(selection)}" data-line="${escapeAttr(line ?? '')}" data-odds="${escapeAttr(odds ?? '')}"`;
+        }
+
+        async function loadOddsBoard() {
+            const root = document.getElementById('jb-board-rows');
+            if (!root) return;
+            root.innerHTML = `<div class="jb-board-empty"><i class="fa-solid fa-hourglass-start"></i>Loading today's slate…</div>`;
             try {
-                const res = await fetch(API('/games'), { credentials: 'include' });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                const games = Array.isArray(data) ? data : (data.games || []);
-                if (!games.length) return;
-                sel.innerHTML = '<option value="">Select a game…</option>' + games.map(g => {
-                    const t = g.commence_time ? ` · ${fmtTime(g.commence_time)} ET` : '';
-                    return `<option value="${escapeAttr(g.id)}">${escapeHtml(g.away_team || g.away)} @ ${escapeHtml(g.home_team || g.home)}${t}</option>`;
+                const [gamesResp, espnResp] = await Promise.all([
+                    fetch(API('/games'), { credentials: 'include' }),
+                    fetch('https://site.api.espn.com/apis/v2/scoreboard/header?sport=baseball&league=mlb'),
+                ]);
+                if (!gamesResp.ok) throw new Error(`games HTTP ${gamesResp.status}`);
+                const gamesData = await gamesResp.json();
+                let oddsById = {};
+                if (espnResp.ok) {
+                    const espnData = await espnResp.json();
+                    const leagues = ((espnData.sports || [])[0] || {}).leagues || [];
+                    const events = (leagues[0] || {}).events || [];
+                    for (const e of events) oddsById[String(e.id)] = e.odds || null;
+                }
+                const games = gamesData.games || [];
+                if (!games.length) {
+                    root.innerHTML = `<div class="jb-board-empty"><i class="fa-solid fa-calendar-xmark"></i>No games on the slate.</div>`;
+                    return;
+                }
+                root.innerHTML = games.map(g => {
+                    const espnId = String(g.id).replace(/^espn_/, '');
+                    const o = oddsById[espnId] || {};
+                    const ml = o.moneyline || {};
+                    const rl = o.pointSpread || {};
+                    const tot = o.total || {};
+                    const tdisp = g.commence_time ? `${fmtTime(g.commence_time)} ET` : '';
+                    const matchup = `${g.away_team} @ ${g.home_team}`;
+
+                    const pickOdds = (side, fallback) => (side?.current?.odds && side.current.odds !== 'OFF') ? side.current.odds : (side?.close?.odds || fallback || '');
+                    const pickLine = (side, fallback) => (side?.current?.line && side.current.line !== 'OFF') ? side.current.line : (side?.close?.line || fallback || '');
+
+                    const mlAway = pickOdds(ml.away);
+                    const mlHome = pickOdds(ml.home);
+                    const rlAwayOdds = pickOdds(rl.away);
+                    const rlAwayLine = pickLine(rl.away);
+                    const rlHomeOdds = pickOdds(rl.home);
+                    const rlHomeLine = pickLine(rl.home);
+                    const totLineRaw = pickLine(tot.over);
+                    const totLine = String(totLineRaw).replace(/^[ou]/i, '');
+                    const overOdds = pickOdds(tot.over);
+                    const underOdds = pickOdds(tot.under);
+
+                    const dash = '—';
+                    const chip = (mkt, sel, line, odds, leftLabel, rightLabel) => {
+                        const isOff = !odds || odds === 'OFF';
+                        const oddsTxt = isOff ? dash : odds;
+                        return `<button type="button" class="jb-chip" ${chipDataset(mkt, sel, line, isOff ? '' : odds)}${isOff ? ' disabled' : ''}>
+                          <span>${leftLabel}</span><span class="jb-odds">${escapeHtml(String(oddsTxt))}${rightLabel ? '' : ''}</span>
+                        </button>`;
+                    };
+
+                    return `
+                    <div class="jb-row" data-game-id="${escapeAttr(g.id)}">
+                      <div class="jb-matchup">${escapeHtml(matchup)}<span class="jb-time">${escapeHtml(tdisp)}</span></div>
+                      <div class="jb-chip-pair">
+                        ${chip('h2h', g.away_team, '', mlAway, escapeHtml(teamShort(g.away_team)))}
+                        ${chip('h2h', g.home_team, '', mlHome, escapeHtml(teamShort(g.home_team)))}
+                      </div>
+                      <div class="jb-chip-pair">
+                        ${chip('spreads', g.away_team, rlAwayLine, rlAwayOdds, `${escapeHtml(teamShort(g.away_team))} <span class="jb-line">${escapeHtml(String(rlAwayLine || dash))}</span>`)}
+                        ${chip('spreads', g.home_team, rlHomeLine, rlHomeOdds, `${escapeHtml(teamShort(g.home_team))} <span class="jb-line">${escapeHtml(String(rlHomeLine || dash))}</span>`)}
+                      </div>
+                      <div class="jb-chip-pair">
+                        ${chip('totals', `Over ${totLine}`, totLine, overOdds, `O <span class="jb-line">${escapeHtml(String(totLine || dash))}</span>`)}
+                        ${chip('totals', `Under ${totLine}`, totLine, underOdds, `U <span class="jb-line">${escapeHtml(String(totLine || dash))}</span>`)}
+                      </div>
+                    </div>`;
                 }).join('');
-            } catch { /* leave default option */ }
+
+                root.querySelectorAll('.jb-chip').forEach(btn => {
+                    btn.addEventListener('click', () => stageFromChip(btn));
+                });
+            } catch (err) {
+                root.innerHTML = `<div class="jb-board-empty"><i class="fa-solid fa-circle-exclamation"></i>Slate failed to load. <button type="button" class="refresh-btn" id="jb-retry" style="margin-top:10px;">Retry</button></div>`;
+                const r = document.getElementById('jb-retry');
+                if (r) r.addEventListener('click', loadOddsBoard);
+            }
+        }
+
+        function stageFromChip(btn) {
+            const row = btn.closest('.jb-row');
+            if (!row) return;
+            const gid = row.dataset.gameId;
+            const mkt = btn.dataset.mkt;
+            const sel = btn.dataset.sel;
+            const line = btn.dataset.line;
+            const odds = btn.dataset.odds;
+            const stage = document.getElementById('jb-slip-stage');
+            if (!odds) {
+                if (stage) {
+                    stage.classList.remove('is-staged');
+                    stage.innerHTML = `<div class="jb-stage-empty">No live odds for that selection. Pick another market.</div>`;
+                }
+                return;
+            }
+            const oddsNum = Number(String(odds).replace('+',''));
+            document.getElementById('cf-game').value = gid;
+            document.getElementById('cf-market').value = mkt;
+            document.getElementById('cf-selection').value = sel;
+            document.getElementById('cf-line').value = (line && mkt !== 'h2h') ? line : '';
+            document.getElementById('cf-odds').value = String(oddsNum);
+
+            document.querySelectorAll('.jb-chip.is-staged').forEach(c => c.classList.remove('is-staged'));
+            btn.classList.add('is-staged');
+
+            const matchupNode = row.querySelector('.jb-matchup');
+            const matchupText = (matchupNode && matchupNode.firstChild) ? matchupNode.firstChild.textContent.trim() : '';
+            stage.classList.add('is-staged');
+            stage.innerHTML = `
+                <div class="jb-stage-matchup">${escapeHtml(matchupText)} · ${escapeHtml(MARKET_LABEL[mkt] || mkt)}</div>
+                <div class="jb-stage-pick">${escapeHtml(sel)}${(line && mkt !== 'h2h') ? ` <span style="color:#c9b27a;">${escapeHtml(String(line))}</span>` : ''}</div>
+                <div class="jb-stage-odds">${escapeHtml(String(odds))}</div>
+            `;
         }
 
         function isSignedIn() {
@@ -674,7 +823,7 @@
             loadStatus();
             loadPicks();
             loadLeaderboard();
-            loadGames();
+            loadOddsBoard();
             loadMyStatus();
             $('#refresh-status').addEventListener('click', () => { loadStatus(); loadPicks(); loadLeaderboard(); loadMyStatus(); });
             $('#refresh-picks').addEventListener('click', loadPicks);
