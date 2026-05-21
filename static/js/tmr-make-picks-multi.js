@@ -327,6 +327,36 @@
         window.showPickStep.__tmrMultiPatched = true;
     }
 
+    // The reliability runtime emits a floating "Pick added — View Slip" cue
+    // (sportsbook-production-fix-persist-reliability.js:2729) whose click
+    // handler scrolls #pickDetails into view. We hide #pickDetails via CSS,
+    // so scrollIntoView on a display:none element is a no-op and the cue
+    // button looks dead. Capture-phase intercept: redirect those clicks to
+    // the real slip (.sportsbook-ticket-preview) instead.
+    function installSlipCueRedirect() {
+        if (window.__tmrSlipCueRedirectInstalled) return;
+        window.__tmrSlipCueRedirectInstalled = true;
+        document.addEventListener('click', function (ev) {
+            var t = ev.target;
+            if (!t || !t.closest) return;
+            var cueBtn = t.closest('.tmr-slip-cue-action, .tmr-slip-cue');
+            if (!cueBtn) return;
+            ev.preventDefault();
+            ev.stopPropagation();
+            var slip = document.querySelector('.sportsbook-ticket-preview');
+            if (!slip) return;
+            try {
+                slip.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (_) {
+                var r = slip.getBoundingClientRect();
+                window.scrollTo(0, Math.max(0, r.top + window.scrollY - 80));
+            }
+            // Dismiss the cue so it doesn't sit over the slip.
+            var cue = document.getElementById('tmrSlipCue');
+            if (cue) cue.classList.remove('show');
+        }, true);
+    }
+
     // ---------- slip render ----------
     function fmtOdds(o) {
         var n = Number(o);
@@ -569,6 +599,7 @@
         patchShowPickStep();
         patchSelectGameBet();
         installClickDelegation();
+        installSlipCueRedirect();
         renderSlip();
         injectLeaderboardLink();
 
