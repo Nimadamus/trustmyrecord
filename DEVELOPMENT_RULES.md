@@ -1,5 +1,18 @@
 # TrustMyRecord Development Rules
 
+## Make Picks UX Standard (May 21, 2026)
+
+The Make Picks / sportsbook pick-entry flow follows these locked rules:
+
+- Compact MLB/game-row layout. ~10 games visible on one screen on desktop/tablet (game-row margin 4px, team-row padding 4px 14px, odds-btn min-height 38px, odds-line font 14px). CSS overrides live in `static/js/tmr-make-picks-multi.js`. Never restore the older spread-out 58px button layout.
+- Multi-pick selection is the primary workflow. Each odds click queues into `window.TMR.multiSelections`; the right-rail `.sportsbook-ticket-preview-card` renders the full queue with per-row units stepper + remove button. Single-pick submit still works as a special case of N=1.
+- One review slip. `.sportsbook-ticket-preview` is the canonical review surface. The legacy `#pickDetails` step-form is hidden on the sportsbook route (CSS in `tmr-make-picks-multi.js`). Never re-enable the dual review boxes.
+- Batch submit. The "Submit Picks" button shows one `confirm()` dialog ("Submit all N picks?"), then loops `api.createPick(payload)` sequentially. No backend batch endpoint is needed; backend `POST /api/picks` stays single-pick. Autograder, validation, pending-pick rules, units conversion, and record math are unchanged.
+- No auto-scroll on selection. `window.TMR._ttScrollToPickSlip` is overridden to a no-op; `window.TMR._ttPopulateSlip` is overridden to render the multi-slip instead of a competing single-pick form. The slip is sticky on desktop (right rail) and bottom-sticky on mobile/tablet.
+- Visible leaderboard link. A "View Leaderboard" CTA injects at the top of `#picks` linking to `/leaderboards/`. Never remove this from the sportsbook page.
+
+Future agents must patch forward from `static/js/tmr-make-picks-multi.js`. Do not reintroduce one-pick-at-a-time-only flow, do not re-show the second review box, do not re-enable auto-scroll on pick selection.
+
 ## Current Baseline
 
 The protected baseline is the latest commit on `origin/main` at the start of each task, after inspecting the current remote head, local status, recent commits, and relevant diffs.
