@@ -200,6 +200,14 @@
       period_1_totals: '1st Period Totals', player_props: 'Player Props'
     };
     const UNIT_LABELS = { '0.5_to_1u': '0.5u - 1u', '1.5_to_2u': '1.5u - 2u', '2.5_to_3u': '2.5u - 3u', '3u_plus': '3u +' };
+    const UNIT_BUCKET_ORDER = { '3u_plus': 0, '2.5_to_3u': 1, '1.5_to_2u': 2, '0.5_to_1u': 3 };
+    function sortUnitBucketsDesc(arr, keyFn) {
+      return (arr || []).slice().sort((a, b) => {
+        const ai = UNIT_BUCKET_ORDER[keyFn(a)] != null ? UNIT_BUCKET_ORDER[keyFn(a)] : 99;
+        const bi = UNIT_BUCKET_ORDER[keyFn(b)] != null ? UNIT_BUCKET_ORDER[keyFn(b)] : 99;
+        return ai - bi;
+      });
+    }
     const FINAL = new Set(['won', 'lost', 'push', 'pushed', 'void', 'cancelled']);
     const qs = new URLSearchParams(location.search);
     const username = qs.get('user') || qs.get('username') || '';
@@ -515,7 +523,14 @@
           })),
           splitTableHtml('Home vs Away', groupByLabel(cardPicks, pickHomeAway)),
           splitTableHtml('Overs vs Unders', groupByLabel(cardPicks, pickSide)),
-          splitTableHtml('Unit Size Distribution', groupByLabel(cardPicks, p => UNIT_LABELS[unitBucketForPick(p)] || unitBucketForPick(p))),
+          splitTableHtml('Unit Size Distribution', sortUnitBucketsDesc(groupByLabel(cardPicks, p => UNIT_LABELS[unitBucketForPick(p)] || unitBucketForPick(p)), g => {
+            const lab = String(g.label || '');
+            if (lab.startsWith('3u')) return '3u_plus';
+            if (lab.startsWith('2.5')) return '2.5_to_3u';
+            if (lab.startsWith('1.5')) return '1.5_to_2u';
+            if (lab.startsWith('0.5')) return '0.5_to_1u';
+            return '';
+          })),
           splitTableHtml('Monthly Trend', groupByLabel(cardPicks, monthLabel)),
           splitTableHtml('Last 5 / Last 10', [recentSummary('5', cardPicks), recentSummary('10', cardPicks)].filter(g => g.picks.length > 0)),
           splitTableHtml('Best Team Results', groupByLabel(cardPicks, pickTeam).sort((a, b) => computeAdvancedPickMetrics(b.picks).net - computeAdvancedPickMetrics(a.picks).net).slice(0, 5)),
@@ -691,7 +706,7 @@
       const splits = metrics.splits || {};
       table('unitTable',
         [{label:'Unit Size'}, {label:'Picks', num:true}, {label:'W-L-P', num:true}, {label:'Win %', num:true}, {label:'Net Units', num:true}, {label:'ROI', num:true}],
-        breakdownRows(splits.by_unit_size || [], item => UNIT_LABELS[item.key] || String(item.key || '').replace(/_/g, ' '), false)
+        breakdownRows(sortUnitBucketsDesc(splits.by_unit_size, item => item.key), item => UNIT_LABELS[item.key] || String(item.key || '').replace(/_/g, ' '), false)
       );
       const now = Date.now();
       const periodRows = [

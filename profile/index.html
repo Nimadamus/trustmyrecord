@@ -3360,7 +3360,7 @@
                                 <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst bucket</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
                             </div>
                             <div class="tmr-cap-card" data-split="by_unit_size">
-                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">U</div><div class="tmr-cap-card__name"><strong>By unit size</strong><span>0.5–1u / 1.5–2u / 2.5–3u / 3u+</span></div></div>
+                                <div class="tmr-cap-card__head"><div class="tmr-cap-card__avatar">U</div><div class="tmr-cap-card__name"><strong>By unit size</strong><span>3u+ / 2.5–3u / 1.5–2u / 0.5–1u</span></div></div>
                                 <div class="tmr-cap-card__metrics" data-split-body><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Best</span><span class="tmr-cap-metric__value is-placeholder">—</span></div><div class="tmr-cap-metric"><span class="tmr-cap-metric__label">Worst</span><span class="tmr-cap-metric__value is-placeholder">—</span></div></div>
                             </div>
                             <div class="tmr-cap-card" data-split="by_day_of_week">
@@ -7266,7 +7266,16 @@
     function renderSplitBars(elementId, splitArr, splitKey) {
         const el = document.getElementById(elementId);
         if (!el || !Array.isArray(splitArr)) return;
-        const data = splitArr.filter(b => Number(b.total) >= 3).slice(0, 8);
+        let ordered = splitArr;
+        if (splitKey === 'by_unit_size') {
+            const unitOrder = { '3u_plus': 0, '2.5_to_3u': 1, '1.5_to_2u': 2, '0.5_to_1u': 3 };
+            ordered = splitArr.slice().sort((a, b) => {
+                const ai = unitOrder[String(a.key)] != null ? unitOrder[String(a.key)] : 99;
+                const bi = unitOrder[String(b.key)] != null ? unitOrder[String(b.key)] : 99;
+                return ai - bi;
+            });
+        }
+        const data = ordered.filter(b => Number(b.total) >= 3).slice(0, 8);
         if (!data.length) return;
         const maxAbs = Math.max(1, Math.max.apply(null, data.map(b => Math.abs(Number(b.roi) || 0))));
         const rows = data.map(b => {
@@ -7756,7 +7765,7 @@
             ['First Five', p => normalizeCapMarket(p.market_type) === 'first_five'],
             ['Props', p => normalizeCapMarket(p.market_type) === 'props']
         ]);
-        renderCapBreakdown('capTableUnits', rows, [1,2,3,4,5].map(n => [n + 'u Picks', p => Math.round(capUnits(p)) === n]));
+        renderCapBreakdown('capTableUnits', rows, [5,4,3,2,1].map(n => [n + 'u Picks', p => Math.round(capUnits(p)) === n]));
         renderCapBreakdown('capTableOdds', rows, [
             ['Heavy Favorite', p => capOdds(p) < -200],
             ['Favorite (-110 to -200)', p => capOdds(p) >= -200 && capOdds(p) < 0],
@@ -9039,11 +9048,11 @@
         // 1.00 string still lands in 1u). 5u+ is a soft cap so any data
         // drift past 5 still surfaces.
         const buckets = [
-            { label: '1u Picks', test: function (u) { return u <= 1; } },
-            { label: '2u Picks', test: function (u) { return u > 1 && u <= 2; } },
-            { label: '3u Picks', test: function (u) { return u > 2 && u <= 3; } },
+            { label: '5u Picks', test: function (u) { return u >= 5; } },
             { label: '4u Picks', test: function (u) { return u > 3 && u <= 4; } },
-            { label: '5u Picks', test: function (u) { return u >= 5; } }
+            { label: '3u Picks', test: function (u) { return u > 2 && u <= 3; } },
+            { label: '2u Picks', test: function (u) { return u > 1 && u <= 2; } },
+            { label: '1u Picks', test: function (u) { return u <= 1; } }
         ];
 
         const rows = [];
