@@ -5,18 +5,19 @@ on:
     branches:
       - main
   pull_request:
+  workflow_dispatch:
 
 jobs:
   line-formatting-guard:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Run line formatting guard
         run: node tests/line-formatting-regression-test.js
@@ -25,15 +26,176 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '24'
 
-      - name: Run sportsbook reliability guard
+      - name: Install jsdom for visual/snapshot guards
+        run: npm install --no-save jsdom@24.1.3
+
+      - name: Publish guard regression
+        run: node tests/publish-guard-regression-test.js
+
+      - name: Pending picks privacy guard
+        run: node tests/pending-picks-regression-test.js
+
+      - name: Local API no-seed guard
+        run: node tests/local-api-no-seed-regression-test.js
+
+      - name: Pick display format guard
+        run: node tests/pick-display-format.test.js
+
+      - name: Trendspotter source guard
+        run: node tests/trendspotter-source-regression-test.js
+
+      - name: Trendspotter accuracy guard
+        run: node tests/trendspotter-accuracy-test.js
+
+      - name: Sitewide design system guard
+        run: node tests/sitewide-design-system-regression-test.js
+
+      - name: Route shim regression
+        run: node tests/route-shim-regression-test.js
+
+      - name: Sitemap route regression
+        run: node tests/sitemap-route-regression-test.js
+
+      - name: Homepage canonical regression
+        run: node tests/homepage-canonical-regression-test.js
+
+      - name: Homepage visual regression
+        run: node tests/homepage-visual-regression-test.js
+
+      - name: Feed page regression
+        run: node tests/feed-page-regression-test.js
+
+      - name: Polls page visual regression
+        run: node tests/polls-page-visual-regression-test.js
+
+      - name: Polls create-flow regression
+        run: node tests/polls-create-flow-regression-test.js
+
+      - name: Trivia page regression
+        run: node tests/trivia-page-regression-test.js
+
+      - name: Arena page visual regression
+        run: node tests/arena-page-visual-regression-test.js
+
+      - name: Leaderboards page visual regression
+        run: node tests/leaderboards-page-visual-regression-test.js
+
+      - name: Forum page visual regression
+        run: node tests/forum-page-visual-regression-test.js
+
+      - name: Stats engine regression
+        run: node tests/stats-engine-regression-test.js
+
+      - name: Streaks unit test
+        run: node tests/streaks-test.js
+
+      - name: Streaks regression
+        run: node tests/streaks-regression-test.js
+
+      - name: Sportsbook no-game-drop guard
+        run: node tests/sportsbook-no-game-drop-regression-test.js
+
+      - name: Sportsbook reliability guard
         run: node tests/sportsbook-reliability-guard-test.js
 
-      - name: Run sportsbook stake-mode guard
+      - name: Sportsbook header guard
+        run: node tests/sportsbook-header-regression-test.js
+
+      - name: Sportsbook polish guard
+        run: node tests/sportsbook-polish-regression.test.js
+
+      - name: Sportsbook stake-mode guard
         run: node tests/sportsbook-stake-mode-ui-test.js
+
+      - name: Protected baseline regression
+        run: node tests/protected-baseline-regression-test.js
+
+      - name: Auto-grader regression
+        run: node tests/auto-grader-regression-test.js
+
+  profile-and-simulator-guards:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Profile lookup regression
+        run: node tests/profile-page-lookup-test.js
+
+      - name: Profile no-old-theme-flash regression
+        run: node tests/profile-no-old-theme-flash-test.js
+
+      - name: Profile source regression
+        run: node tests/profile-source-regression-test.js
+
+      - name: Profile market drilldown regression
+        run: node tests/profile-market-drilldown-page-test.js
+
+      - name: MLB simulator page regression
+        run: node tests/mlb-simulator-page-test.js
+
+      - name: MLB simulator box score regression
+        run: node tests/mlb-simulator-boxscore-test.js
+
+      - name: MLB simulator realism regression
+        run: node tests/mlb-simulator-realism-test.js
+
+      - name: MLB simulator live roster regression
+        run: node tests/mlb-simulator-live-roster-validation-test.js
+
+  predeploy-guard:
+    runs-on: windows-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Run predeploy guard
+        shell: pwsh
+        run: ./scripts/predeploy-guard.ps1 -SkipRemoteCheck
+
+  live-public-ranking-proof:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Run live public ranking proof
+        run: node tests/public-ranking-ui-live-test.js
+
+  live-protected-sources-proof:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Run live protected sources proof
+        run: node tests/live-protected-sources-test.js
