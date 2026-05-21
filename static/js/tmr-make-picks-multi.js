@@ -254,6 +254,111 @@
             homeTeam: m[7]
         };
     }
+    // Read pick context from a production .tmr-option-btn (the markup the
+    // reliability runtime emits — see static/js/sportsbook-production-fix-
+    // persist-reliability.js:2046). The button itself carries:
+    //   data-option-id = "<game_id>|<group_key>|<option_id>|<index>"
+    //   .tmr-option-tag      -> selection tag (team name / Over / Under / etc.)
+    //   .tmr-option-line     -> line text (e.g. "-1.5", "8.5") or absent for ML
+    //   .tmr-option-market   -> market label ("Run Line"/"Total"/"Moneyline"...)
+    //   .tmr-option-odds     -> displayed American odds
+    // The ancestor .tmr-market-card holds the matchup, including
+    //   .tmr-team-row .tmr-team-side text === "Away" | "Home"
+    // and the time chip with the parseable commence_time attribute.
+    function buildItemFromTmrOptionBtn(btn) {
+        if (!btn) return null;
+        var optionId = btn.getAttribute('data-option-id') || '';
+        var gameId = optionId ? optionId.split('|')[0] : '';
+        var tag = (btn.querySelector('.tmr-option-tag') || {}).textContent || '';
+        var lineText = (btn.querySelector('.tmr-option-line') || {}).textContent || '';
+        var marketLabel = (btn.querySelector('.tmr-option-market') || {}).textContent || '';
+        var oddsText = (btn.querySelector('.tmr-option-odds') || {}).textContent || '';
+        tag = tag.replace(/\s+/g, ' ').trim();
+        lineText = lineText.replace(/\s+/g, ' ').trim();
+        marketLabel = marketLabel.replace(/\s+/g, ' ').trim();
+        oddsText = oddsText.replace(/\s+/g, ' ').trim();
+        if (!oddsText || /^manual$/i.test(oddsText) || /^pending$/i.test(oddsText)) return null;
+        var oddsNum = parseInt(oddsText.replace(/[^\-0-9]/g, ''), 10);
+        if (!Number.isFinite(oddsNum)) return null;
+
+        var card = btn.closest('.tmr-market-card');
+        var awayTeam = '';
+        var homeTeam = '';
+        var commenceTime = null;
+        if (card) {
+            var rows = card.querySelectorAll('.tmr-market-matchup .tmr-team-row');
+            for (var i = 0; i < rows.length; i++) {
+                var side = (rows[i].querySelector('.tmr-team-side') || {}).textContent || '';
+                var name = (rows[i].querySelector('.tmr-team-name') || {}).textContent || '';
+                side = side.trim().toLowerCase();
+                name = name.replace(/\s+/g, ' ').trim();
+                if (side === 'away') awayTeam = name;
+                else if (side === 'home') homeTeam = name;
+            }
+            // Try to pull commence_time from window.TMR.currentGames by team
+            // match — more reliable than parsing the human-formatted chip.
+            var games = (window.TMR && Array.isArray(window.TMR.currentGames)) ? window.TMR.currentGames : [];
+            for (var g = 0; g < games.length; g++) {
+                if (games[g] && games[g].away_team === awayTeam && games[g].home_team === homeTeam) {
+                    commenceTime = games[g].commence_time;
+                    if (!gameId && games[g].id) gameId = games[g].id;
+                    break;
+                }
+            }
+        }
+
+        // Map market label -> betType + selection text + team-total side.
+        var ml = marketLabel.toLowerCase();
+        var betType = 'ml';
+        var teamName = tag;
+        if (/run line|puck line|spread/.test(ml)) betType = 'spread';
+        else if (/moneyline|^ml$/.test(ml)) betType = 'ml';
+        else if (/team total/.test(ml)) {
+            // tag will be "Over" or "Under"; team name is encoded elsewhere — fall back to the side label as team.
+            if (/over/i.test(tag)) betType = 'teamover';
+            else if (/under/i.test(tag)) betType = 'teamunder';
+            // For team totals the market_type is team_totals; the team comes from a sibling element or the tag prefix.
+        } else if (/first 5|f5/.test(ml)) {
+            if (/over/i.test(tag)) betType = 'f5over';
+            else if (/under/i.test(tag)) betType = 'f5under';
+            else betType = 'f5spread';
+        } else if (/total/.test(ml)) {
+            if (/over/i.test(tag)) betType = 'over';
+            else if (/under/i.test(tag)) betType = 'under';
+        }
+
+        var selection = tag + (lineText ? ' ' + lineText : '');
+        // For ML / spread, tag IS the team name; selection should be just the team.
+        if (betType === 'ml') selection = teamName;
+        if (betType === 'spread') selection = teamName + (lineText ? ' ' + lineText : '');
+
+        return {
+            gameId: gameId || ('livecard|' + (awayTeam || 'away') + '|' + (homeTeam || 'home')),
+            gameIndex: -1,
+            awayTeam: awayTeam,
+            homeTeam: homeTeam,
+            sport: (window.TMR && window.TMR.selectedSport) || '',
+            gameTime: commenceTime,
+            game: null,
+            betType: betType,
+            team: teamName,
+            line: lineText,
+            odds: oddsNum,
+            units: 1,
+            market_type: (betType === 'ml' ? 'h2h'
+                       : betType === 'spread' ? 'spreads'
+                       : (betType === 'over' || betType === 'under') ? 'totals'
+                       : (betType === 'teamover' || betType === 'teamunder') ? 'team_totals'
+                       : betType.indexOf('f5') === 0 ? ('f5_' + (betType.indexOf('over') >= 0 || betType.indexOf('under') >= 0 ? 'totals' : 'spreads'))
+                       : 'h2h'),
+            selection: selection,
+            lineSnapshot: lineText ? (parseFloat(lineText.replace(/[^0-9.\-]/g, '')) || null) : null,
+            teamTotalSide: (betType === 'teamover') ? 'over' : (betType === 'teamunder') ? 'under' : '',
+            book: '',
+            bookKey: ''
+        };
+    }
+
     function installClickDelegation() {
         if (window.__tmrMultiClickDelegationInstalled) return;
         window.__tmrMultiClickDelegationInstalled = true;
@@ -262,14 +367,25 @@
             if (!t || !t.closest) return;
             // Ignore clicks inside our own slip UI (remove/units stepper)
             if (t.closest('.tmr-multi-slip')) return;
+            // Production reliability board: .tmr-option-btn carries data-option-id
+            // and dedicated child spans. Read directly from the DOM.
+            var optBtn = t.closest('.tmr-option-btn');
+            if (optBtn && !optBtn.disabled && !optBtn.classList.contains('tmr-option-btn--pending')) {
+                setTimeout(function () {
+                    try {
+                        var item = buildItemFromTmrOptionBtn(optBtn);
+                        if (item) addOrToggleSelection(item);
+                    } catch (e) {
+                        console.error('[TMR][multi] .tmr-option-btn queue failed:', e);
+                    }
+                }, 0);
+                return;
+            }
+            // Legacy / inline board: .odds-btn with inline onclick="selectGameBet(...)".
             var btn = t.closest('.odds-btn,.bet-pick-btn,.total-btn');
             if (!btn) return;
-            // Don't queue the "More" market-navigator buttons.
             if (btn.classList && btn.classList.contains('odds-more-btn')) return;
             if (btn.getAttribute && btn.getAttribute('data-mkt') === 'more') return;
-            // Defer to after the inline onclick fires (it may populate
-            // TMR.currentSelectedPick / TMR.currentGames as side effects we
-            // want to read).
             setTimeout(function () {
                 try {
                     var args = parseOnclickPick(btn.getAttribute && btn.getAttribute('onclick'));
