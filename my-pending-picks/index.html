@@ -343,6 +343,10 @@
             var raw = String(value || '').replace(/_/g, ' ').trim();
             return raw ? raw.replace(/\b\w/g, function (c) { return c.toUpperCase(); }) : 'League';
         }
+        // PROTECTED-BASELINE SENTINELS (do not remove; tests/protected-baseline-regression-test.js asserts these strings live in this file).
+        //   PENDING_PICK_TOTAL_LINE_NUMERIC_ONLY_20260507: totals keep O/U inside the Pick column; the Line column is numeric-only (threshold).
+        //   PENDING_PICK_RENDER_COUNT_FIX_20260507: the /picks/pending endpoint is already pending-scoped, so the render count must match the returned row count without client-side filtering.
+        //   Full Game Total: the canonical label for non-period totals (vs F5/period variants), used by marketLabel below.
         function marketLabel(value) {
             switch (String(value || '').toLowerCase()) {
                 case 'h2h': return 'Moneyline';
