@@ -58,7 +58,25 @@
             // Leaderboard button
             '.tmr-mp-leaderboard-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: linear-gradient(90deg,#0b6e3a,#1aa05a); color: #fff; font-weight: 600; border-radius: 8px; text-decoration: none; font-size: 13px; border: 1px solid #1aa05a; }',
             '.tmr-mp-leaderboard-link:hover { filter: brightness(1.1); }',
-            '.tmr-mp-toolbar { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin: 8px 0 12px; padding: 0 14px; flex-wrap: wrap; }'
+            '.tmr-mp-toolbar { display: flex; gap: 10px; align-items: center; justify-content: flex-end; margin: 8px 0 12px; padding: 0 14px; flex-wrap: wrap; }',
+            // Floating multi-pick panel — visible regardless of which .pick-step is
+            // active. The original .sportsbook-ticket-preview aside is nested
+            // inside #sportSelection.pick-step, so it goes display:none when
+            // showPickStep("gamesListSection") fires. This panel is fixed to
+            // the viewport and bypasses the step machinery entirely.
+            '#tmrMultiPickPanel { position: fixed; right: 16px; top: 92px; width: 360px; max-width: calc(100vw - 32px); max-height: calc(100vh - 110px); background: #0b1118; border: 1px solid #243349; border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,0.45); z-index: 9998; display: flex; flex-direction: column; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }',
+            '#tmrMultiPickPanel.is-collapsed { width: auto; max-width: 220px; }',
+            '#tmrMultiPickPanel-head { padding: 10px 12px; background: linear-gradient(180deg, #131c27, #0b1118); border-bottom: 1px solid #243349; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }',
+            '#tmrMultiPickPanel-head h3 { margin: 0; color: #fff; font-size: 14px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }',
+            '#tmrMultiPickPanel-head .count-chip { background: #f2c94c; color: #111827; font-weight: 800; font-size: 11px; padding: 2px 8px; border-radius: 999px; }',
+            '#tmrMultiPickPanel-body { padding: 8px 10px; overflow-y: auto; flex: 1 1 auto; }',
+            '#tmrMultiPickPanel-foot { padding: 10px 12px; border-top: 1px solid #243349; background: #0b1118; }',
+            '#tmrMultiPickPanel-foot button.tmr-mp-submit { width: 100%; padding: 10px 12px; background: linear-gradient(90deg,#0b6e3a,#1aa05a); color: #fff; font-weight: 800; border: 1px solid #1aa05a; border-radius: 8px; cursor: pointer; font-size: 14px; letter-spacing: 0.03em; }',
+            '#tmrMultiPickPanel-foot button.tmr-mp-submit[disabled] { filter: grayscale(1) opacity(0.55); cursor: not-allowed; }',
+            '#tmrMultiPickPanel-foot button.tmr-mp-submit:hover:not([disabled]) { filter: brightness(1.08); }',
+            '@media (max-width: 900px) {',
+            '  #tmrMultiPickPanel { right: 0; left: 0; top: auto; bottom: 0; width: 100%; max-width: 100%; max-height: 60vh; border-radius: 12px 12px 0 0; }',
+            '}'
         ].join('\n');
         var s = document.createElement('style');
         s.id = STYLE_ID;
@@ -446,9 +464,10 @@
     // The reliability runtime emits a floating "Pick added — View Slip" cue
     // (sportsbook-production-fix-persist-reliability.js:2729) whose click
     // handler scrolls #pickDetails into view. We hide #pickDetails via CSS,
-    // so scrollIntoView on a display:none element is a no-op and the cue
-    // button looks dead. Capture-phase intercept: redirect those clicks to
-    // the real slip (.sportsbook-ticket-preview) instead.
+    // and the original .sportsbook-ticket-preview aside is nested inside
+    // #sportSelection.pick-step so it's display:none once the games board
+    // is showing. Capture-phase intercept: redirect clicks to the floating
+    // #tmrMultiPickPanel that is always visible.
     function installSlipCueRedirect() {
         if (window.__tmrSlipCueRedirectInstalled) return;
         window.__tmrSlipCueRedirectInstalled = true;
@@ -459,15 +478,16 @@
             if (!cueBtn) return;
             ev.preventDefault();
             ev.stopPropagation();
-            var slip = document.querySelector('.sportsbook-ticket-preview');
-            if (!slip) return;
+            var panel = ensureFloatingPanel();
             try {
-                slip.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } catch (_) {
-                var r = slip.getBoundingClientRect();
-                window.scrollTo(0, Math.max(0, r.top + window.scrollY - 80));
-            }
-            // Dismiss the cue so it doesn't sit over the slip.
+                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } catch (_) {}
+            // Flash the panel briefly so the user notices it.
+            panel.style.transition = 'box-shadow 0.35s ease';
+            var originalShadow = panel.style.boxShadow;
+            panel.style.boxShadow = '0 0 0 3px #f2c94c, 0 12px 32px rgba(0,0,0,0.45)';
+            setTimeout(function () { panel.style.boxShadow = originalShadow || ''; }, 700);
+            // Dismiss the reliability cue so it doesn't linger.
             var cue = document.getElementById('tmrSlipCue');
             if (cue) cue.classList.remove('show');
         }, true);
@@ -486,22 +506,46 @@
         });
     }
 
+    // Create (idempotently) a floating pick-slip panel that lives outside any
+    // .pick-step container, so it is visible regardless of which step is
+    // active. The original .sportsbook-ticket-preview aside is nested inside
+    // #sportSelection.pick-step and disappears as soon as the user selects a
+    // sport (showPickStep moves .active away and CSS hides the lobby). This
+    // floating panel solves that.
+    function ensureFloatingPanel() {
+        var panel = document.getElementById('tmrMultiPickPanel');
+        if (panel) return panel;
+        panel = document.createElement('aside');
+        panel.id = 'tmrMultiPickPanel';
+        panel.setAttribute('aria-label', 'Pick Slip');
+        panel.innerHTML =
+            '<div id="tmrMultiPickPanel-head">' +
+            '<h3>Pick Slip</h3>' +
+            '<span class="count-chip" id="tmrMultiPickPanel-count">0</span>' +
+            '</div>' +
+            '<div id="tmrMultiPickPanel-body"></div>' +
+            '<div id="tmrMultiPickPanel-foot">' +
+            '<button type="button" class="tmr-mp-submit" disabled>Submit Pick</button>' +
+            '</div>';
+        document.body.appendChild(panel);
+        // Wire the persistent submit button once (renderSlip just toggles
+        // disabled + label).
+        var submit = panel.querySelector('.tmr-mp-submit');
+        if (submit) submit.addEventListener('click', onSubmitAllClick);
+        return panel;
+    }
+
     function renderSlip() {
-        var card = document.querySelector('.sportsbook-ticket-preview-card');
-        if (!card) return;
-
-        // Remove any prior multi-slip container we injected
-        var existing = card.querySelector('.' + SLIP_CONTAINER_CLASS);
-        if (existing) existing.remove();
-
-        // Hide the empty-slip placeholder + note + single-pick submit button
-        // — we replace them with our multi-slip UI.
-        var empty = card.querySelector('.sportsbook-empty-slip');
-        if (empty) empty.style.display = 'none';
-        var note = card.querySelector('.sportsbook-ticket-preview-note');
-        if (note) note.style.display = 'none';
+        var panel = ensureFloatingPanel();
+        var body = panel.querySelector('#tmrMultiPickPanel-body');
+        var countChip = panel.querySelector('#tmrMultiPickPanel-count');
+        var submit = panel.querySelector('.tmr-mp-submit');
+        if (!body || !submit) return;
 
         var arr = window.TMR.multiSelections || [];
+
+        // Build the inner slip container.
+        body.innerHTML = '';
         var container = document.createElement('div');
         container.className = SLIP_CONTAINER_CLASS;
 
@@ -530,19 +574,29 @@
                 container.appendChild(row);
             });
         }
+        body.appendChild(container);
 
-        // Insert before the existing submit button so it sits between the
-        // empty-state area and the submit CTA.
-        var submitBtn = card.querySelector('.sportsbook-ticket-preview-submit');
-        if (submitBtn) {
-            card.insertBefore(container, submitBtn);
-            submitBtn.disabled = arr.length === 0;
-            submitBtn.textContent = arr.length > 1
-                ? 'Submit ' + arr.length + ' Picks'
-                : (arr.length === 1 ? 'Submit Pick' : 'Submit Pick');
-            submitBtn.onclick = onSubmitAllClick;
-        } else {
-            card.appendChild(container);
+        if (countChip) countChip.textContent = String(arr.length);
+        submit.disabled = arr.length === 0;
+        submit.textContent = arr.length > 1
+            ? 'Submit ' + arr.length + ' Picks'
+            : (arr.length === 1 ? 'Submit Pick' : 'Submit Pick');
+
+        panel.classList.toggle('is-collapsed', arr.length === 0);
+
+        // Mirror the count + submit label into the legacy .sportsbook-ticket-
+        // preview-card too so the original aside stays consistent if it
+        // becomes visible (e.g. user returns to the lobby step).
+        var legacyCard = document.querySelector('.sportsbook-ticket-preview-card');
+        if (legacyCard) {
+            var legacySubmit = legacyCard.querySelector('.sportsbook-ticket-preview-submit');
+            if (legacySubmit) {
+                legacySubmit.disabled = arr.length === 0;
+                legacySubmit.textContent = submit.textContent;
+                legacySubmit.onclick = onSubmitAllClick;
+            }
+            var legacyEmpty = legacyCard.querySelector('.sportsbook-empty-slip');
+            if (legacyEmpty) legacyEmpty.style.display = arr.length === 0 ? '' : 'none';
         }
 
         // Wire units stepper + remove buttons via delegation
@@ -628,7 +682,8 @@
         }
 
         window.__tmrLockInFlight = true;
-        var submitBtn = document.querySelector('.sportsbook-ticket-preview-submit');
+        var submitBtn = document.querySelector('#tmrMultiPickPanel .tmr-mp-submit')
+            || document.querySelector('.sportsbook-ticket-preview-submit');
         var origLabel = submitBtn ? submitBtn.textContent : '';
         if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Submitting...'; }
 
@@ -726,9 +781,9 @@
         try {
             var mo = new MutationObserver(function () {
                 patchSelectGameBet();
-                // If our slip container got blown away by another render, rebuild it.
-                var card = document.querySelector('.sportsbook-ticket-preview-card');
-                if (card && !card.querySelector('.' + SLIP_CONTAINER_CLASS)) renderSlip();
+                // Floating panel may be removed by a runtime that wipes body
+                // children; rebuild it if missing.
+                if (!document.getElementById('tmrMultiPickPanel')) renderSlip();
                 if (!document.querySelector('.tmr-mp-leaderboard-link')) injectLeaderboardLink();
             });
             mo.observe(document.body, { childList: true, subtree: true });
