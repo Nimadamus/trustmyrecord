@@ -648,7 +648,7 @@
     }
 
     const meta = routeMeta[currentFile];
-    if (meta && currentFile !== "index.html" && currentFile !== "sportsbook.html") {
+    if (meta && currentFile !== "index.html" && currentFile !== "sportsbook.html" && currentFile !== "profile.html") {
         const note = document.createElement("div");
         note.className = "tmr-route-note";
         note.innerHTML = `<strong>${meta[0]}:</strong> ${meta[1]}`;
