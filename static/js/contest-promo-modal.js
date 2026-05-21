@@ -7,11 +7,29 @@
     var SUPPRESS_HOURS = 24;
     var DELAY_MS = 1200;
 
+    var BLOCKED_PATHS = [
+        '/about/', '/about',
+        '/contact/', '/contact',
+        '/terms/', '/terms',
+        '/privacy/', '/privacy',
+        '/report-bug/', '/report-bug',
+        '/login/', '/login',
+        '/register/', '/register',
+        '/signup/', '/signup',
+        '/reset-password/', '/reset-password',
+        '/verify-email/', '/verify-email',
+        '/how-it-works/', '/how-it-works'
+    ];
+
     function shouldSuppress() {
         try {
             // Don't show on the contest pages themselves.
             var p = window.location.pathname.replace(/\/$/, '/');
             if (p.indexOf('/contests/justbet-mlb') === 0) return true;
+            // Don't show on informational / auth / legal pages.
+            for (var i = 0; i < BLOCKED_PATHS.length; i++) {
+                if (p === BLOCKED_PATHS[i] || p.indexOf(BLOCKED_PATHS[i] + '/') === 0) return true;
+            }
             // Don't show in iframes (e.g., embedded widgets).
             if (window.top !== window.self) return true;
             // Per-session suppression only: dismissing closes for the current
