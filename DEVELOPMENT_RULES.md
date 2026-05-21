@@ -110,6 +110,18 @@ Before marking pending-picks display work complete, verify the following:
 - No task is complete until the live browser screenshot matches the intended display.
 
 
+## Repo Hygiene Checklist
+
+Permanent rule for every agent/workstream touching this repo (or any other multi-agent BetLegend repo):
+
+- Each agent / workstream must work from its own clean branch or its own separate working copy. Do not pile concurrent work into one shared `main` worktree.
+- No agent may leave untracked files sitting in the shared main worktree. Untracked files in shared trees block every other agent's publish gate.
+- Before starting any task, run `git status` and confirm the tree is clean. If it is not clean, stop and report what is dirty before doing any new work.
+- Before pushing, commit only files directly related to the current task. Never use `git add -A` or `git add .` in a multi-agent worktree.
+- If unrelated dirty / untracked files exist when you go to push, stop and report them explicitly. Do not bundle them into your commit, do not silently stash them away, do not publish them as part of your task.
+- Push only the intended commit for the current task. Disclose, by path, any unrelated dirty files that were left behind for their proper workstreams.
+- When the predeploy / publish guard blocks because of unrelated dirty files, request explicit user permission to skip the gate rather than fixing it by committing other agents' work.
+
 ## Contest Page Sponsor Bonus Standard
 
 Permanent rule for any TrustMyRecord contest signup page sponsored by a sportsbook or affiliate partner (`contests/<slug>/index.html`):
