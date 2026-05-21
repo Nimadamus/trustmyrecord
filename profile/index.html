@@ -10616,7 +10616,9 @@
             '<label style="' + ls + '">Skill Level</label><select id="eGamerSkill" style="' + is + '"><option value="">Select...</option><option value="Beginner"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Beginner') ? ' selected' : '') + '>Beginner</option><option value="Intermediate"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Intermediate') ? ' selected' : '') + '>Intermediate</option><option value="Advanced"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Advanced') ? ' selected' : '') + '>Advanced</option><option value="Elite"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Elite') ? ' selected' : '') + '>Elite</option><option value="Pro"' + ((profileData._gamer && profileData._gamer.skill_tier === 'Pro') ? ' selected' : '') + '>Pro</option></select>' +
             '<div style="display:flex;gap:12px;justify-content:flex-end;margin-top:8px;"><button type="button" class="btn btn-secondary" onclick="document.getElementById(\'editModal\').remove()">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div></form></div>';
         document.body.appendChild(modal);
-        modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+        let _editModalCloseArm = false;
+        modal.addEventListener('mousedown', e => { _editModalCloseArm = (e.target === modal); });
+        modal.addEventListener('click', e => { if (e.target === modal && _editModalCloseArm) modal.remove(); _editModalCloseArm = false; });
 
         // Wire up file picker
         let pendingAvatarData = null;
