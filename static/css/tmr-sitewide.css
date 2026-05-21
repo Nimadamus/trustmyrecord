@@ -4332,3 +4332,65 @@ body.tmr-site-shell .tmr-global-nav__links a[href*="trendspotter"] {
         min-width: 0 !important;
     }
 }
+
+/* --- Unread messages mailbox indicator (sitewide profile chip) ---
+   Permanent UX standard (May 20, 2026): unread private messages must
+   surface a red, gently-pulsing envelope right next to the logged-in
+   user's profile chip and link to /messages/. Hidden when count is 0. */
+.tmr-user-chip-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+.tmr-mailbox-indicator {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255, 56, 56, 0.12);
+    border: 1px solid rgba(255, 56, 56, 0.55);
+    color: #ff4747;
+    text-decoration: none;
+    line-height: 1;
+    box-shadow: 0 0 0 0 rgba(255, 56, 56, 0.55);
+    animation: tmr-mailbox-pulse 1.6s ease-in-out infinite;
+    transition: transform 0.15s ease, background 0.15s ease;
+}
+.tmr-mailbox-indicator[hidden] { display: none !important; }
+.tmr-mailbox-indicator:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 56, 56, 0.22);
+    color: #ff6b6b;
+}
+.tmr-mailbox-indicator__icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+.tmr-mailbox-indicator__count {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: #ff2c2c;
+    color: #fff;
+    font: 700 10px/16px "Inter", "Exo 2", Arial, sans-serif;
+    text-align: center;
+    box-shadow: 0 0 4px rgba(255, 44, 44, 0.85);
+}
+.tmr-mailbox-indicator__count:empty { display: none; }
+@keyframes tmr-mailbox-pulse {
+    0%   { box-shadow: 0 0 0 0    rgba(255, 56, 56, 0.55); }
+    70%  { box-shadow: 0 0 0 10px rgba(255, 56, 56, 0); }
+    100% { box-shadow: 0 0 0 0    rgba(255, 56, 56, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .tmr-mailbox-indicator { animation: none; }
+}

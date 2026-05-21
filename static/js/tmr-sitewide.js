@@ -166,13 +166,19 @@
         const profileHref = "/profile/?user=" + encodeURIComponent(username);
 
         return `
-            <a class="tmr-global-nav__user" href="${profileHref}"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>
-                <img class="tmr-global-nav__user-avatar" src="${avatar}" alt="${escapeHtml(displayName)} avatar">
-                <span class="tmr-global-nav__user-copy">
-                    <strong>${escapeHtml(displayName)}</strong>
-                    <span>@${escapeHtml(username)}</span>
-                </span>
-            </a>
+            <span class="tmr-user-chip-wrap">
+                <a class="tmr-global-nav__user" href="${profileHref}"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>
+                    <img class="tmr-global-nav__user-avatar" src="${avatar}" alt="${escapeHtml(displayName)} avatar">
+                    <span class="tmr-global-nav__user-copy">
+                        <strong>${escapeHtml(displayName)}</strong>
+                        <span>@${escapeHtml(username)}</span>
+                    </span>
+                </a>
+                <a class="tmr-mailbox-indicator" href="/messages/" data-tmr-mailbox aria-label="Unread messages" title="You have unread messages" hidden>
+                    <svg class="tmr-mailbox-indicator__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-11Zm2.5-.5a.5.5 0 0 0-.5.5v.32l7 4.55 7-4.55V6.5a.5.5 0 0 0-.5-.5h-13Zm13.5 2.86-6.45 4.19a1 1 0 0 1-1.1 0L5 8.86V17.5a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5V8.86Z"/></svg>
+                    <span class="tmr-mailbox-indicator__count" data-tmr-mailbox-count></span>
+                </a>
+            </span>
             <button class="tmr-global-nav__button tmr-global-nav__logout" type="button" data-tmr-logout>Log Out</button>
         `;
     }
@@ -641,7 +647,7 @@
     // and messages icons get unread-count badges without each page importing it.
     if (!document.querySelector('script[data-tmr-nav-badges]')) {
         const navBadgesScript = document.createElement("script");
-        navBadgesScript.src = "/static/js/nav-badges.js?v=20260520rollback1";
+        navBadgesScript.src = "/static/js/nav-badges.js?v=20260520mailbox1";
         navBadgesScript.async = true;
         navBadgesScript.setAttribute("data-tmr-nav-badges", "1");
         document.head.appendChild(navBadgesScript);

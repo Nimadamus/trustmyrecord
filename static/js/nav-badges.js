@@ -106,6 +106,22 @@
             const msgLinks = findMessagesLinks();
             msgLinks.forEach(link => setBadge(link, msgCount));
 
+            // Update the profile-chip mailbox indicator (red flashing envelope).
+            // Hidden when unread = 0; visible + pulsing when unread > 0.
+            document.querySelectorAll('[data-tmr-mailbox]').forEach(el => {
+                if (msgCount > 0) {
+                    el.hidden = false;
+                    el.setAttribute('aria-label', msgCount + ' unread message' + (msgCount === 1 ? '' : 's'));
+                    el.setAttribute('title', msgCount + ' unread message' + (msgCount === 1 ? '' : 's'));
+                    const countEl = el.querySelector('[data-tmr-mailbox-count]');
+                    if (countEl) countEl.textContent = msgCount > 99 ? '99+' : String(msgCount);
+                } else {
+                    el.hidden = true;
+                    const countEl = el.querySelector('[data-tmr-mailbox-count]');
+                    if (countEl) countEl.textContent = '';
+                }
+            });
+
             // Fetch notification unread count (backend returns { unreadCount }; tolerate { count } too)
             const notifResult = await window.api.request('/notifications/unread-count').catch(() => null);
             let notifCount = 0;
