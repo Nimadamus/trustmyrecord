@@ -6683,7 +6683,16 @@
             const cols = opts.cols || 7;
             const rows = (Array.isArray(arr) ? arr : []).filter(b => Number(b.total || 0) >= minSample);
             if (!rows.length) return;
-            rows.sort((a, b) => Number(b.net || 0) - Number(a.net || 0));
+            if (splitKey === 'unit_size') {
+                const unitOrder = { '3u_plus': 0, '2.5_to_3u': 1, '1.5_to_2u': 2, '0.5_to_1u': 3 };
+                rows.sort((a, b) => {
+                    const ai = unitOrder[String(a.key)] != null ? unitOrder[String(a.key)] : 99;
+                    const bi = unitOrder[String(b.key)] != null ? unitOrder[String(b.key)] : 99;
+                    return ai - bi;
+                });
+            } else {
+                rows.sort((a, b) => Number(b.net || 0) - Number(a.net || 0));
+            }
             const cellFor = (b) => {
                 const w = Number(b.wins) || 0, l = Number(b.losses) || 0, p = Number(b.pushes) || 0;
                 const dec = w + l;
