@@ -542,6 +542,52 @@
             text-align: center;
         }
 
+        .hm-sort {
+            display: inline-flex;
+            align-items: center;
+            justify-content: inherit;
+            gap: 6px;
+            width: 100%;
+            background: transparent;
+            border: 0;
+            color: inherit;
+            font: inherit;
+            letter-spacing: inherit;
+            text-transform: inherit;
+            padding: 6px 4px;
+            cursor: pointer;
+            user-select: none;
+            border-radius: 6px;
+        }
+
+        .hm-head > div:nth-child(n+2) .hm-sort { justify-content: center; }
+        .hm-head > div:first-child .hm-sort { justify-content: flex-start; }
+
+        .hm-sort:hover,
+        .hm-sort:focus-visible {
+            color: #e8fffb;
+            background: rgba(45, 212, 191, 0.08);
+            outline: none;
+        }
+
+        .hm-sort[aria-sort="ascending"],
+        .hm-sort[aria-sort="descending"] {
+            color: #9ffcf0;
+        }
+
+        .hm-sort-arrow {
+            display: inline-block;
+            width: 10px;
+            font-size: 0.78rem;
+            line-height: 1;
+            opacity: 0.45;
+        }
+
+        .hm-sort[aria-sort="ascending"] .hm-sort-arrow,
+        .hm-sort[aria-sort="descending"] .hm-sort-arrow {
+            opacity: 1;
+        }
+
         .hm-member-row {
             min-height: 96px;
             background:
@@ -843,9 +889,9 @@
             <div class="hm-section-head">
                 <div>
                     <h2>Leaderboard</h2>
-                    <p>Leaders require at least 20 graded picks, recent graded activity, and positive net units. Thin samples stay out of promoted rankings.</p>
+                    <p>Featured leaders require at least 20 graded picks, recent graded activity, and positive net units. The leaderboard table below shows members with a minimum of <span id="hmMinPicksLabel">5</span> verified picks.</p>
                 </div>
-                <span class="hm-production-note">Showing <strong id="hmVisibleMembers">0</strong> filtered members</span>
+                <span class="hm-production-note"><strong id="hmVisibleMembers">0</strong> qualified members</span>
             </div>
             <div class="hm-featured" id="hmFeaturedLeaders">
                 <div class="hm-leader-card hm-leader-card--empty"><b>Loading</b><strong>--</strong><span>Waiting for qualified member data</span></div>
@@ -905,14 +951,14 @@
         <section class="hm-table-wrap" aria-live="polite">
             <div class="hm-table">
                 <div class="hm-row hm-head" role="row">
-                    <div>Username</div>
-                    <div>Record</div>
-                    <div>Units</div>
-                    <div>ROI</div>
-                    <div>Win %</div>
-                    <div>Picks</div>
-                    <div>Streak</div>
-                    <div>Active</div>
+                    <div><button type="button" class="hm-sort" data-sort="username" aria-sort="none"><span>Username</span><span class="hm-sort-arrow" aria-hidden="true"></span></button></div>
+                    <div><button type="button" class="hm-sort" data-sort="record" aria-sort="none"><span>Record</span><span class="hm-sort-arrow" aria-hidden="true"></span></button></div>
+                    <div><button type="button" class="hm-sort" data-sort="units" aria-sort="descending"><span>Units</span><span class="hm-sort-arrow" aria-hidden="true">↓</span></button></div>
+                    <div><button type="button" class="hm-sort" data-sort="roi" aria-sort="none"><span>ROI</span><span class="hm-sort-arrow" aria-hidden="true"></span></button></div>
+                    <div><button type="button" class="hm-sort" data-sort="winRate" aria-sort="none"><span>Win %</span><span class="hm-sort-arrow" aria-hidden="true"></span></button></div>
+                    <div><button type="button" class="hm-sort" data-sort="totalPicks" aria-sort="none"><span>Picks</span><span class="hm-sort-arrow" aria-hidden="true"></span></button></div>
+                    <div><button type="button" class="hm-sort" data-sort="streak" aria-sort="none"><span>Streak</span><span class="hm-sort-arrow" aria-hidden="true"></span></button></div>
+                    <div><button type="button" class="hm-sort" data-sort="active" aria-sort="none"><span>Active</span><span class="hm-sort-arrow" aria-hidden="true"></span></button></div>
                 </div>
                 <div id="hmRows">
                     <div class="hm-empty"><strong>Loading handicappers</strong>Pulling public profiles and performance stats.</div>
@@ -956,6 +1002,45 @@
         let visibleMembers = [];
         let currentPage = 1;
         const MIN_TOP_PERFORMER_GRADED_PICKS = 20;
+
+        // Leaderboard qualification: minimum verified (graded) picks to appear on the
+        // /handicappers/ table. Configurable so we can raise it as the site grows.
+        // Resolution order: ?minPicks=N URL param -> window.LEADERBOARD_MIN_PICKS
+        // -> localStorage('tmr_min_picks') -> default 5.
+        const LEADERBOARD_MIN_PICKS_DEFAULT = 5;
+        function resolveMinLeaderboardPicks() {
+            try {
+                const param = new URLSearchParams(window.location.search || '').get('minPicks');
+                if (param != null && param !== '' && Number.isFinite(Number(param))) {
+                    return Math.max(0, Math.floor(Number(param)));
+                }
+            } catch (error) {}
+            if (window.LEADERBOARD_MIN_PICKS != null && Number.isFinite(Number(window.LEADERBOARD_MIN_PICKS))) {
+                return Math.max(0, Math.floor(Number(window.LEADERBOARD_MIN_PICKS)));
+            }
+            try {
+                const stored = localStorage.getItem('tmr_min_picks');
+                if (stored != null && Number.isFinite(Number(stored))) {
+                    return Math.max(0, Math.floor(Number(stored)));
+                }
+            } catch (error) {}
+            return LEADERBOARD_MIN_PICKS_DEFAULT;
+        }
+        const LEADERBOARD_MIN_PICKS = resolveMinLeaderboardPicks();
+
+        // Sort state for the leaderboard table. Each field has a default direction
+        // that matches "highest first" semantics for the user-visible metric.
+        const SORT_DEFAULT_DIRS = {
+            username: 'asc',
+            record: 'desc',
+            units: 'desc',
+            roi: 'desc',
+            winRate: 'desc',
+            totalPicks: 'desc',
+            streak: 'desc',
+            active: 'desc'
+        };
+        let sortState = { field: 'units', dir: 'desc' };
         const social = window.socialSystem || (typeof SocialSystem !== 'undefined' ? new SocialSystem() : null);
         const DIRECTORY_API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
         const DIRECTORY_TIMEOUT_MS = 9000;
@@ -1693,11 +1778,47 @@
             if (sports.includes(selected)) els.sport.value = selected;
         }
 
+        function meetsLeaderboardMinimum(member) {
+            return gradedCount(member) >= LEADERBOARD_MIN_PICKS;
+        }
+
+        const SORT_KEYS = {
+            username: m => String(m.username || '').toLowerCase(),
+            record: m => Number(m.stats.wins || 0),
+            units: m => Number(m.stats.units || 0),
+            roi: m => m.stats.roi == null ? -Infinity : Number(m.stats.roi),
+            winRate: m => m.stats.winRate == null ? -Infinity : Number(m.stats.winRate),
+            totalPicks: m => Number(m.stats.totalPicks || 0),
+            streak: m => Number(m.stats.currentStreak || 0),
+            active: m => getActivityTime(m)
+        };
+
+        function buildComparator(field, dir) {
+            const getKey = SORT_KEYS[field] || SORT_KEYS.units;
+            const factor = dir === 'asc' ? 1 : -1;
+            return (a, b) => {
+                const ka = getKey(a);
+                const kb = getKey(b);
+                let primary;
+                if (typeof ka === 'string' || typeof kb === 'string') {
+                    primary = String(ka).localeCompare(String(kb)) * factor;
+                } else {
+                    primary = (Number(ka) - Number(kb)) * factor;
+                }
+                if (primary !== 0) return primary;
+                if (field === 'record') {
+                    const lossDiff = (Number(a.stats.losses || 0) - Number(b.stats.losses || 0));
+                    if (lossDiff !== 0) return lossDiff * factor;
+                }
+                return String(a.username || '').localeCompare(String(b.username || ''));
+            };
+        }
+
         function applyFilters() {
             const q = (els.search.value || '').trim().toLowerCase();
             const sport = els.sport.value || 'all';
-            const sort = els.sort.value || 'units';
-            visibleMembers = members.filter(member => {
+            const qualified = members.filter(meetsLeaderboardMinimum);
+            visibleMembers = qualified.filter(member => {
                 const matchesSearch = !q ||
                     member.username.toLowerCase().includes(q) ||
                     member.displayName.toLowerCase().includes(q);
@@ -1705,18 +1826,10 @@
                 return matchesSearch && matchesSport;
             });
 
-            const byNumber = getter => (a, b) => getter(b) - getter(a);
-            const sorters = {
-                units: byNumber(m => Number(m.stats.units || 0)),
-                roi: byNumber(m => m.stats.roi == null ? -Infinity : Number(m.stats.roi)),
-                winRate: byNumber(m => m.stats.winRate == null ? -Infinity : Number(m.stats.winRate)),
-                totalPicks: byNumber(m => Number(m.stats.totalPicks || 0)),
-                active: byNumber(getActivityTime),
-                username: (a, b) => a.username.localeCompare(b.username),
-                streak: byNumber(m => Math.abs(Number(m.stats.currentStreak || 0)))
-            };
-            visibleMembers.sort(sorters[sort] || sorters.units);
+            visibleMembers.sort(buildComparator(sortState.field, sortState.dir));
             renderRows();
+            updateSortIndicators();
+            syncSortDropdown();
         }
 
         function resetPaginationAndApplyFilters() {
@@ -1738,11 +1851,38 @@
             els.nextPage.disabled = currentPage >= pageCount;
         }
 
+        function updateSortIndicators() {
+            const buttons = document.querySelectorAll('.hm-sort');
+            buttons.forEach(btn => {
+                const field = btn.getAttribute('data-sort');
+                const arrow = btn.querySelector('.hm-sort-arrow');
+                if (field === sortState.field) {
+                    btn.setAttribute('aria-sort', sortState.dir === 'asc' ? 'ascending' : 'descending');
+                    if (arrow) arrow.textContent = sortState.dir === 'asc' ? '↑' : '↓';
+                } else {
+                    btn.setAttribute('aria-sort', 'none');
+                    if (arrow) arrow.textContent = '';
+                }
+            });
+        }
+
+        function syncSortDropdown() {
+            if (!els.sort) return;
+            const supported = Array.from(els.sort.options).map(opt => opt.value);
+            if (supported.includes(sortState.field) && els.sort.value !== sortState.field) {
+                els.sort.value = sortState.field;
+            }
+        }
+
         function renderRows() {
-            els.visible.textContent = String(visibleMembers.length);
-            els.status.textContent = visibleMembers.length === members.length
-                ? 'Showing all ' + members.length + ' members.'
-                : 'Showing ' + visibleMembers.length + ' of ' + members.length + ' members.';
+            const qualifiedCount = members.filter(meetsLeaderboardMinimum).length;
+            els.visible.textContent = String(qualifiedCount);
+            const minLabel = LEADERBOARD_MIN_PICKS > 0
+                ? ' (minimum ' + LEADERBOARD_MIN_PICKS + ' verified picks).'
+                : '.';
+            els.status.textContent = visibleMembers.length === qualifiedCount
+                ? 'Showing all ' + qualifiedCount + ' qualified members' + minLabel
+                : 'Showing ' + visibleMembers.length + ' of ' + qualifiedCount + ' qualified members' + minLabel;
 
             const pageSize = selectedPageSize();
             const isAll = pageSize === Infinity;
@@ -1823,6 +1963,8 @@
 
         async function init() {
             try {
+                const minLabel = document.getElementById('hmMinPicksLabel');
+                if (minLabel) minLabel.textContent = String(LEADERBOARD_MIN_PICKS);
                 const params = new URLSearchParams(window.location.search || '');
                 const initialQuery = (params.get('q') || params.get('search') || '').trim();
                 if (initialQuery) els.search.value = initialQuery;
@@ -1842,9 +1984,34 @@
             }
         }
 
+        function setSort(field) {
+            if (!SORT_KEYS[field]) return;
+            if (sortState.field === field) {
+                sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState.field = field;
+                sortState.dir = SORT_DEFAULT_DIRS[field] || 'desc';
+            }
+            resetPaginationAndApplyFilters();
+        }
+
+        document.querySelectorAll('.hm-sort').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const field = btn.getAttribute('data-sort');
+                if (field) setSort(field);
+            });
+        });
+
         els.search.addEventListener('input', resetPaginationAndApplyFilters);
         els.sport.addEventListener('change', resetPaginationAndApplyFilters);
-        els.sort.addEventListener('change', resetPaginationAndApplyFilters);
+        els.sort.addEventListener('change', () => {
+            const field = els.sort.value || 'units';
+            if (SORT_KEYS[field]) {
+                sortState.field = field;
+                sortState.dir = SORT_DEFAULT_DIRS[field] || 'desc';
+            }
+            resetPaginationAndApplyFilters();
+        });
         els.pageSize.addEventListener('change', resetPaginationAndApplyFilters);
         els.prevPage.addEventListener('click', () => {
             if (currentPage <= 1) return;
