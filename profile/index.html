@@ -1640,16 +1640,14 @@
                 </a>
             </aside>
 
-            <!-- Avatar uploader for own profile. Hidden until isOwnProfile resolves true. -->
-            <div id="profileAvatarUploader" class="profile-avatar-uploader" hidden>
-                <strong>Edit Profile</strong>
-                <label class="profile-avatar-uploader__btn" for="profileAvatarFile"><i class="fas fa-camera"></i> Change avatar</label>
+            <!-- Avatar uploader for own profile. Body-card UI removed May 22, 2026 — account controls live in the top-right user menu dropdown (tmr-sitewide.js). File input retained so the header avatar click + dropdown "Change Avatar" can trigger the picker. -->
+            <div id="profileAvatarUploader" class="profile-avatar-uploader" hidden style="display:none !important;">
                 <input id="profileAvatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
-                <span class="profile-avatar-uploader__hint" id="profileAvatarHint"></span>
+                <span class="profile-avatar-uploader__hint" id="profileAvatarHint" hidden></span>
             </div>
 
-            <!-- Change Password card. Hidden until isOwnProfile resolves true. -->
-            <div id="profileChangePassword" class="profile-change-password" hidden style="margin-top:16px;padding:16px 18px;border:1px solid rgba(148,163,184,0.18);border-radius:14px;background:rgba(8,15,27,0.6);max-width:420px;">
+            <!-- Change Password card. Body-card UI removed May 22, 2026 — password change now lives in the top-right user menu dropdown (tmr-sitewide.js). Hidden markup retained only so legacy direct-link callers do not 404. -->
+            <div id="profileChangePassword" class="profile-change-password" hidden style="display:none !important;">
                 <strong style="display:block;margin-bottom:10px;font-size:0.95rem;letter-spacing:0.02em;"><i class="fas fa-key" style="margin-right:6px;color:#2dd4bf;"></i> Change Password</strong>
                 <form id="changePasswordForm" autocomplete="off" style="display:flex;flex-direction:column;gap:10px;">
                     <input type="password" id="cpwCurrent" name="currentPassword" placeholder="Current password" autocomplete="current-password" required minlength="1" style="background:rgba(15,23,42,0.85);border:1px solid rgba(148,163,184,0.25);border-radius:8px;color:#eef4fb;padding:9px 12px;font-size:0.92rem;">
@@ -1879,9 +1877,10 @@
             var fileInput   = document.getElementById('profileAvatarFile');
             var avatarHint  = document.getElementById('profileAvatarHint');
 
-            if (uploaderEl) uploaderEl.hidden = false;
+            // May 22, 2026: account-edit body cards retired in favor of the top-right user menu dropdown
+            // (see static/js/tmr-sitewide.js). DO NOT unhide #profileAvatarUploader or
+            // #profileChangePassword on the profile body — they ship hidden + display:none.
             var changePwEl = document.getElementById('profileChangePassword');
-            if (changePwEl) changePwEl.hidden = false;
 
             // Make the avatar in the profile header clickable so the file
             // picker is one tap away — owners no longer need to scroll to the
@@ -10900,6 +10899,35 @@
         const btn = document.getElementById('loadMoreBtn');
         if (btn) btn.addEventListener('click', loadMorePicks);
     });
+
+    // ?action=edit / ?action=change-avatar deep links from the top-right user-menu dropdown
+    // (tmr-sitewide.js). Fires once profileData is loaded so openEditModal has its data.
+    (function wireProfileActionDeepLink() {
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            const action = (params.get('action') || '').toLowerCase();
+            if (!action) return;
+            let tries = 0;
+            const timer = setInterval(function() {
+                tries++;
+                if (tries > 60) { clearInterval(timer); return; }
+                if (action === 'edit') {
+                    if (window.profileData && typeof window.openEditModal === 'function') {
+                        clearInterval(timer);
+                        try { window.openEditModal(); } catch (e) {}
+                    }
+                } else if (action === 'change-avatar') {
+                    const picker = document.getElementById('profileAvatarFile');
+                    if (picker && typeof picker.click === 'function') {
+                        clearInterval(timer);
+                        try { picker.click(); } catch (e) {}
+                    }
+                } else {
+                    clearInterval(timer);
+                }
+            }, 250);
+        } catch (e) {}
+    })();
 
     init();
     </script>

@@ -165,22 +165,32 @@
         const displayName = String(user.displayName || user.display_name || user.name || user.username || user.handle || user.email || "User");
         const avatar = getUserAvatar(user);
         const profileHref = "/profile/?user=" + encodeURIComponent(username);
-
+        // Account-management controls live ONLY in this top-right dropdown
+        // (see profile/index.html — body cards retired May 22, 2026).
         return `
             <span class="tmr-user-chip-wrap">
-                <a class="tmr-global-nav__user" href="${profileHref}"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>
+                <button type="button" class="tmr-global-nav__user tmr-user-menu-trigger" data-tmr-user-menu aria-haspopup="true" aria-expanded="false"${currentFile === "profile.html" ? ' aria-current="page"' : ""}>
                     <img class="tmr-global-nav__user-avatar" src="${avatar}" alt="${escapeHtml(displayName)} avatar">
                     <span class="tmr-global-nav__user-copy">
                         <strong>${escapeHtml(displayName)}</strong>
                         <span>@${escapeHtml(username)}</span>
                     </span>
-                </a>
+                    <span class="tmr-user-menu-caret" aria-hidden="true">▾</span>
+                </button>
+                <div class="tmr-user-menu-panel" role="menu" aria-label="Account menu" hidden>
+                    <a class="tmr-user-menu-item" role="menuitem" href="${profileHref}"><i class="fas fa-user" aria-hidden="true"></i> View Profile</a>
+                    <button class="tmr-user-menu-item" role="menuitem" type="button" data-tmr-account-action="edit-profile" data-tmr-username="${escapeHtml(username)}"><i class="fas fa-pen" aria-hidden="true"></i> Edit Profile</button>
+                    <button class="tmr-user-menu-item" role="menuitem" type="button" data-tmr-account-action="change-avatar" data-tmr-username="${escapeHtml(username)}"><i class="fas fa-camera" aria-hidden="true"></i> Change Avatar</button>
+                    <button class="tmr-user-menu-item" role="menuitem" type="button" data-tmr-account-action="change-password"><i class="fas fa-key" aria-hidden="true"></i> Change Password</button>
+                    <a class="tmr-user-menu-item" role="menuitem" href="/messages/"><i class="fas fa-envelope" aria-hidden="true"></i> Messages</a>
+                    <div class="tmr-user-menu-divider" role="separator"></div>
+                    <button class="tmr-user-menu-item tmr-user-menu-item--logout" role="menuitem" type="button" data-tmr-logout><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Log Out</button>
+                </div>
                 <a class="tmr-mailbox-indicator" href="/messages/" data-tmr-mailbox aria-label="Unread messages" title="You have unread messages" hidden>
                     <svg class="tmr-mailbox-indicator__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-11Zm2.5-.5a.5.5 0 0 0-.5.5v.32l7 4.55 7-4.55V6.5a.5.5 0 0 0-.5-.5h-13Zm13.5 2.86-6.45 4.19a1 1 0 0 1-1.1 0L5 8.86V17.5a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5V8.86Z"/></svg>
                     <span class="tmr-mailbox-indicator__count" data-tmr-mailbox-count></span>
                 </a>
             </span>
-            <button class="tmr-global-nav__button tmr-global-nav__logout" type="button" data-tmr-logout>Log Out</button>
         `;
     }
 
@@ -428,6 +438,165 @@
         }
     }
 
+    function getUserMenuParts() {
+        if (!actions) return { trigger: null, panel: null };
+        return {
+            trigger: actions.querySelector("[data-tmr-user-menu]"),
+            panel: actions.querySelector(".tmr-user-menu-panel")
+        };
+    }
+
+    function toggleUserMenu(force) {
+        const { trigger, panel } = getUserMenuParts();
+        if (!trigger || !panel) return;
+        const shouldOpen = typeof force === "boolean" ? force : panel.hasAttribute("hidden");
+        if (shouldOpen) {
+            panel.removeAttribute("hidden");
+            panel.classList.add("is-open");
+            trigger.setAttribute("aria-expanded", "true");
+        } else {
+            panel.setAttribute("hidden", "");
+            panel.classList.remove("is-open");
+            trigger.setAttribute("aria-expanded", "false");
+        }
+    }
+
+    function closeUserMenu() {
+        toggleUserMenu(false);
+    }
+
+    function handleAccountAction(action, username) {
+        const userParam = username ? ("?user=" + encodeURIComponent(username)) : "";
+        const onProfile = currentFile === "profile.html" || currentFile === "index.html" && location.pathname.indexOf("/profile/") !== -1;
+        if (action === "edit-profile") {
+            if (typeof window.openEditModal === "function") {
+                try { window.openEditModal(); return; } catch (e) { /* fall through */ }
+            }
+            window.location.href = "/profile/" + userParam + (userParam ? "&" : "?") + "action=edit";
+            return;
+        }
+        if (action === "change-avatar") {
+            const picker = document.getElementById("profileAvatarFile");
+            if (picker && typeof picker.click === "function") {
+                try { picker.click(); return; } catch (e) { /* fall through */ }
+            }
+            window.location.href = "/profile/" + userParam + (userParam ? "&" : "?") + "action=change-avatar";
+            return;
+        }
+        if (action === "change-password") {
+            openChangePasswordModal();
+            return;
+        }
+    }
+
+    function openChangePasswordModal() {
+        // Self-contained modal — works on any TMR page (matches /api/auth/change-password).
+        const existing = document.getElementById("tmrChangePasswordModal");
+        if (existing) existing.remove();
+        const modal = document.createElement("div");
+        modal.id = "tmrChangePasswordModal";
+        modal.className = "tmr-account-modal";
+        modal.setAttribute("role", "dialog");
+        modal.setAttribute("aria-modal", "true");
+        modal.setAttribute("aria-label", "Change password");
+        modal.innerHTML = `
+            <div class="tmr-account-modal__panel">
+                <button type="button" class="tmr-account-modal__close" data-tmr-account-close aria-label="Close">&times;</button>
+                <h2 class="tmr-account-modal__title"><i class="fas fa-key" aria-hidden="true"></i> Change Password</h2>
+                <p class="tmr-account-modal__sub">Update your TrustMyRecord login password. You stay signed in on this device.</p>
+                <form id="tmrChangePasswordForm" class="tmr-account-modal__form" autocomplete="off">
+                    <label class="tmr-account-modal__label">Current password
+                        <input type="password" id="tmrCpwCurrent" name="currentPassword" autocomplete="current-password" required minlength="1">
+                    </label>
+                    <label class="tmr-account-modal__label">New password
+                        <input type="password" id="tmrCpwNew" name="newPassword" autocomplete="new-password" required minlength="8" placeholder="Min 8 characters">
+                    </label>
+                    <label class="tmr-account-modal__label">Confirm new password
+                        <input type="password" id="tmrCpwConfirm" name="confirmPassword" autocomplete="new-password" required minlength="8">
+                    </label>
+                    <div class="tmr-account-modal__msg" id="tmrCpwMsg" role="status" aria-live="polite"></div>
+                    <div class="tmr-account-modal__actions">
+                        <button type="button" class="tmr-account-modal__btn tmr-account-modal__btn--ghost" data-tmr-account-close>Cancel</button>
+                        <button type="submit" class="tmr-account-modal__btn tmr-account-modal__btn--primary" id="tmrCpwSubmit">Update Password</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        requestAnimationFrame(() => modal.classList.add("is-open"));
+
+        function getApiBase() {
+            try { if (window.api && window.api.baseUrl) return String(window.api.baseUrl).replace(/\/$/, ""); } catch (e) {}
+            return (window.TMR_API_BASE || window.API_BASE_URL || "https://trustmyrecord-api.onrender.com").replace(/\/$/, "");
+        }
+        function getToken() {
+            try { if (window.api && window.api.token) return window.api.token; } catch (e) {}
+            const keys = ["trustmyrecord_token", "tmr_auth_token", "accessToken", "access_token", "token", "tmr_token"];
+            for (let i = 0; i < keys.length; i++) {
+                try { const v = localStorage.getItem(keys[i]); if (v) return v; } catch (_) {}
+            }
+            return null;
+        }
+        function setMsg(text, ok) {
+            const m = modal.querySelector("#tmrCpwMsg");
+            if (!m) return;
+            m.textContent = text || "";
+            m.style.color = ok ? "#34d399" : "#f87171";
+        }
+        function closeModal() {
+            modal.classList.remove("is-open");
+            setTimeout(() => modal.remove(), 160);
+        }
+        modal.addEventListener("click", (ev) => {
+            if (ev.target === modal || ev.target.closest("[data-tmr-account-close]")) closeModal();
+        });
+        document.addEventListener("keydown", function escClose(ev) {
+            if (ev.key === "Escape") { closeModal(); document.removeEventListener("keydown", escClose); }
+        });
+
+        modal.querySelector("#tmrChangePasswordForm").addEventListener("submit", async function (ev) {
+            ev.preventDefault();
+            const cur = modal.querySelector("#tmrCpwCurrent").value;
+            const nw = modal.querySelector("#tmrCpwNew").value;
+            const cf = modal.querySelector("#tmrCpwConfirm").value;
+            if (nw !== cf) { setMsg("New password and confirmation do not match.", false); return; }
+            if (nw === cur) { setMsg("New password must differ from current password.", false); return; }
+            const btn = modal.querySelector("#tmrCpwSubmit");
+            btn.disabled = true; const orig = btn.textContent; btn.textContent = "Updating...";
+            setMsg("", true);
+            try {
+                const token = getToken();
+                if (!token) { setMsg("You must be logged in.", false); btn.disabled = false; btn.textContent = orig; return; }
+                const resp = await fetch(getApiBase() + "/api/auth/change-password", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+                    body: JSON.stringify({ currentPassword: cur, newPassword: nw })
+                });
+                let data = {};
+                try { data = await resp.json(); } catch (_) {}
+                if (!resp.ok) {
+                    const err = data.error || (data.errors && data.errors[0] && (data.errors[0].msg || data.errors[0].message)) || ("HTTP " + resp.status);
+                    setMsg(err, false);
+                } else {
+                    setMsg("Password updated. You can use the new password next time you log in.", true);
+                    ev.target.reset();
+                    setTimeout(closeModal, 1400);
+                }
+            } catch (e) {
+                setMsg("Network error: " + (e && e.message ? e.message : e), false);
+            } finally {
+                btn.disabled = false; btn.textContent = orig;
+            }
+        });
+
+        const firstInput = modal.querySelector("#tmrCpwCurrent");
+        if (firstInput) setTimeout(() => firstInput.focus(), 30);
+    }
+
+    document.addEventListener("keydown", (ev) => {
+        if (ev.key === "Escape") closeUserMenu();
+    });
+
     function routeToSportsbookAuth(section) {
         const target = section === "signup" ? "signup" : "login";
         try {
@@ -483,7 +652,24 @@
         const logoutButton = event.target.closest("[data-tmr-logout]");
         if (logoutButton) {
             event.preventDefault();
+            closeUserMenu();
             handleLogout();
+            return;
+        }
+        const userMenuTrigger = event.target.closest("[data-tmr-user-menu]");
+        if (userMenuTrigger) {
+            event.preventDefault();
+            event.stopPropagation();
+            toggleUserMenu();
+            return;
+        }
+        const accountAction = event.target.closest("[data-tmr-account-action]");
+        if (accountAction) {
+            event.preventDefault();
+            const action = accountAction.getAttribute("data-tmr-account-action");
+            const username = accountAction.getAttribute("data-tmr-username") || "";
+            closeUserMenu();
+            handleAccountAction(action, username);
             return;
         }
         const searchBtn = event.target.closest("[data-tmr-search]");
@@ -507,6 +693,8 @@
     });
 
     document.addEventListener("click", (event) => {
+        const userChip = event.target.closest(".tmr-user-chip-wrap");
+        if (!userChip) closeUserMenu();
         if (communityMenu && communityTrigger && !communityMenu.contains(event.target)) {
             communityMenu.classList.remove("is-open");
             communityTrigger.setAttribute("aria-expanded", "false");
