@@ -9547,6 +9547,13 @@
          POST /api/contests/<id>/picks. Without ?contest=... this script is a
          total no-op and the page behaves exactly like the regular sportsbook. -->
     <script defer src="/static/js/contest-mode.js?v=20260522contestmode1"></script>
+    <!-- In-slip contest toggle: when /sportsbook/ is loaded WITHOUT ?contest=...,
+         eligible signed-in registered contestants see a "Submit as JustBet MLB
+         Contest Pick" toggle inside the Pick Slip. When ON, that submission is
+         routed to /api/contests/justbet-mlb/picks (separate table; never touches
+         the user's public profile record). When OFF, normal pick flow runs
+         exactly as before. -->
+    <script defer src="/static/js/sportsbook-contest-toggle.js?v=20260522toggle1"></script>
 </head>
 <body data-tmr-test-route="sportsbook">
     <script>
