@@ -21,6 +21,24 @@
         '/how-it-works/', '/how-it-works'
     ];
 
+    // EAGER session claim: decide once at script execution whether THIS page
+    // load is the "first time this session" and immediately write the flag.
+    // Doing it here (instead of inside init) guarantees the flag is persisted
+    // even if the user navigates away before DOMContentLoaded fires or before
+    // the 1200ms open delay elapses. Subsequent page loads in the same tab
+    // see the flag and silently skip.
+    var IS_FIRST_THIS_SESSION = false;
+    try {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+            if (window.sessionStorage.getItem(STORAGE_KEY + '_session') !== '1') {
+                IS_FIRST_THIS_SESSION = true;
+                window.sessionStorage.setItem(STORAGE_KEY + '_session', '1');
+            }
+        }
+    } catch (err) { /* storage unavailable -- treat as first-and-only show */
+        IS_FIRST_THIS_SESSION = true;
+    }
+
     function shouldSuppress() {
         try {
             // Don't show on the contest pages themselves.
@@ -32,17 +50,13 @@
             }
             // Don't show in iframes (e.g., embedded widgets).
             if (window.top !== window.self) return true;
-            // Per-session suppression only: dismissing closes for the current
-            // page load. The next full page navigation will show it again.
-            if (window.sessionStorage.getItem(STORAGE_KEY + '_session') === '1') return true;
-        } catch (err) { /* storage unavailable, fall through and show once */ }
-        return false;
+        } catch (err) { /* fall through */ }
+        // Session-scoped: only the first load this session may show the modal.
+        return !IS_FIRST_THIS_SESSION;
     }
 
     function rememberDismiss() {
         try {
-            // Session-only suppression: once shown or dismissed, don't reappear
-            // on subsequent navigations in the same login session. Cleared on logout.
             window.sessionStorage.setItem(STORAGE_KEY + '_session', '1');
         } catch (err) { /* ignore */ }
     }
@@ -151,9 +165,7 @@
     function init() {
         if (shouldSuppress()) return;
         loadStylesheet();
-        // Mark as shown BEFORE the delayed open so navigating away mid-delay
-        // still suppresses the modal on the next page in this login session.
-        rememberDismiss();
+        // Flag was already written at IIFE-top (IS_FIRST_THIS_SESSION claim).
         setTimeout(open, DELAY_MS);
     }
 
