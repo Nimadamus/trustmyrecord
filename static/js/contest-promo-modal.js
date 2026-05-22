@@ -41,7 +41,8 @@
 
     function rememberDismiss() {
         try {
-            // Session-only dismissal so the modal re-appears on next visit.
+            // Session-only suppression: once shown or dismissed, don't reappear
+            // on subsequent navigations in the same login session. Cleared on logout.
             window.sessionStorage.setItem(STORAGE_KEY + '_session', '1');
         } catch (err) { /* ignore */ }
     }
@@ -150,6 +151,9 @@
     function init() {
         if (shouldSuppress()) return;
         loadStylesheet();
+        // Mark as shown BEFORE the delayed open so navigating away mid-delay
+        // still suppresses the modal on the next page in this login session.
+        rememberDismiss();
         setTimeout(open, DELAY_MS);
     }
 

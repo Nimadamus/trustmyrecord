@@ -416,6 +416,11 @@
             clearAuthStorage();
         }
 
+        try {
+            window.sessionStorage.removeItem("tmr_contest_promo_justbet_mlb_v2_session");
+        } catch (error) {
+            // ignore sessionStorage failures
+        }
         renderActions();
         window.dispatchEvent(new CustomEvent("tmr-auth-changed", { detail: { loggedIn: false } }));
         if (currentFile === "profile.html" || currentFile === "notifications.html" || currentFile === "messages.html" || currentFile === "friends.html") {
