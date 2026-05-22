@@ -474,12 +474,13 @@
                     </div>
                     <div class="tmr-form-row is-inline">
                         <div>
-                            <label for="pollCategory">Category (optional)</label>
-                            <select id="pollCategory"><option value="">General</option></select>
+                            <label for="pollCategory">Category <span style="color:var(--tmr-fb-red);">*</span></label>
+                            <select id="pollCategory" required><option value="">Select a category</option></select>
                         </div>
                         <div>
-                            <label for="pollExpires">Expires (optional)</label>
-                            <input id="pollExpires" type="datetime-local">
+                            <label for="pollExpires">Expiration Date <span style="color:var(--tmr-fb-red);">*</span></label>
+                            <input id="pollExpires" type="datetime-local" required onclick="try{this.showPicker&&this.showPicker()}catch(e){}" onfocus="try{this.showPicker&&this.showPicker()}catch(e){}">
+                            <div class="tmr-form-hint">Voting closes at this date/time. Required so votes can't be cast after the outcome.</div>
                         </div>
                     </div>
                     <div class="tmr-form-row is-inline">
@@ -709,7 +710,7 @@
             sel.onchange = function() { state.categoryFilter = this.value; loadPolls(); };
 
             var modalSel = document.getElementById('pollCategory');
-            modalSel.innerHTML = '<option value="">General</option>' + state.categories.map(function(c) {
+            modalSel.innerHTML = '<option value="">Select a category</option>' + state.categories.map(function(c) {
                 return '<option value="' + c.id + '">' + escHtml(c.name) + '</option>';
             }).join('');
 
@@ -953,6 +954,11 @@
             '<div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 1"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>' +
             '<div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 2"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>';
         populateLeagueSelect(document.getElementById('pollLeague'), '', false);
+        var exp = document.getElementById('pollExpires');
+        if (exp) {
+            var now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+            exp.min = now.toISOString().slice(0, 16);
+        }
         document.getElementById('createPollModal').classList.add('is-open');
     }
     function closeCreatePollModal() { document.getElementById('createPollModal').classList.remove('is-open'); }
@@ -1086,6 +1092,12 @@
         if (title.length < 5) { errorEl.textContent = 'Title must be at least 5 characters.'; errorEl.classList.add('is-shown'); return; }
         if (question.length < 5) { errorEl.textContent = 'Question must be at least 5 characters.'; errorEl.classList.add('is-shown'); return; }
         if (!sport) { errorEl.textContent = 'Choose a sport so this poll can be organized correctly.'; errorEl.classList.add('is-shown'); return; }
+        if (!categoryId) { errorEl.textContent = 'Category is required. Pick General, MLB, NFL, NBA, NHL, etc.'; errorEl.classList.add('is-shown'); document.getElementById('pollCategory').focus(); return; }
+        if (!expiresAt) { errorEl.textContent = 'Expiration date is required. Voting must close before the real outcome.'; errorEl.classList.add('is-shown'); document.getElementById('pollExpires').focus(); return; }
+        var expDate = new Date(expiresAt);
+        if (isNaN(expDate.getTime()) || expDate.getTime() <= Date.now()) {
+            errorEl.textContent = 'Expiration date must be in the future.'; errorEl.classList.add('is-shown'); document.getElementById('pollExpires').focus(); return;
+        }
         if (scoringMode !== 'closest' && options.length < 2) {
             errorEl.textContent = 'Provide at least 2 answer choices (or switch to Closest-numeric scoring).'; errorEl.classList.add('is-shown'); return;
         }

@@ -1,5 +1,15 @@
 # TrustMyRecord Development Rules
 
+## Poll Creation Standard (May 22, 2026)
+
+Locked rules for `/polls/` create-poll flow (`polls/index.html`):
+
+- **Category is required.** No "(optional)" label. Default `<option value="">` is `Select a category`; selection of a real backend category id is mandatory before submit. Client-side guard in `submitNewPoll` blocks with inline error if `categoryId` is empty.
+- **Expiration date is required.** No "(optional)" label. `<input id="pollExpires" type="datetime-local" required>` with `min` attribute set to "now" on modal open (`openCreatePollModal`). Submit blocks if empty or in the past. Voters cannot bet after the real outcome is known — this is the reason the field is required.
+- **Calendar picker UX.** `pollExpires` uses `showPicker()` on click/focus so the native browser date/time picker opens on tap, not a raw text-feel input.
+- **Validation order in `submitNewPoll`:** title → question → sport → category → expiration → expiration-in-future → options. Each fails with an inline `#createPollError` message and focuses the offending field. Submission never reaches `/api/polls` if any required field is missing.
+- **Do NOT regress** standard polls, multi-question/season-long polls, answer choices, multiple-choice setting, public results setting, anonymous voting, voting, results, leaderboard, login/session, sportsbook/contest/forum/picks/leaderboard/profile systems.
+
 ## Stale Test Quarantine (May 21, 2026)
 
 Commit `2ee02be9` (May 11) plus several legitimate later product commits (homepage rebuild `7c84eb3`, profile TMRX redesign, simulator parameter tuning, contest-flow route changes, sitemap evolution, pending-picks endpoint switch `d6930a64`) caused the local predeploy guard to fail on 19 tests whose assertions reference the prior product state. Those failures were already on `origin/main` before this commit, so they cannot have been triggered by any new work landing here.
