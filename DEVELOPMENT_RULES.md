@@ -2,12 +2,21 @@
 
 ## Poll Creation Standard (May 22, 2026)
 
-Locked rules for `/polls/` create-poll flow (`polls/index.html`):
+Locked rules for `/polls/` create-poll flow (`polls/index.html`) and backend `routes/polls.js`:
 
 - **Category is required.** No "(optional)" label. Default `<option value="">` is `Select a category`; selection of a real backend category id is mandatory before submit. Client-side guard in `submitNewPoll` blocks with inline error if `categoryId` is empty.
 - **Expiration date is required.** No "(optional)" label. `<input id="pollExpires" type="datetime-local" required>` with `min` attribute set to "now" on modal open (`openCreatePollModal`). Submit blocks if empty or in the past. Voters cannot bet after the real outcome is known — this is the reason the field is required.
-- **Calendar picker UX.** `pollExpires` uses `showPicker()` on click/focus so the native browser date/time picker opens on tap, not a raw text-feel input.
-- **Validation order in `submitNewPoll`:** title → question → sport → category → expiration → expiration-in-future → options. Each fails with an inline `#createPollError` message and focuses the offending field. Submission never reaches `/api/polls` if any required field is missing.
+- **Start / Publish date is OPTIONAL** (`<input id="pollPublishAt" type="datetime-local">`). Empty = publish immediately (default). Future = poll is scheduled.
+  - Validation: `publish_at` must be ISO8601 and **strictly before** `voting_deadline`. Enforced client-side in `submitNewPoll` AND server-side in `POST /api/polls` (400 with `path: 'publish_at'` if invalid).
+  - Server-side enforcement (backend `routes/polls.js`, schema `publish_at TIMESTAMP NULL` added by `ensurePollSchema`):
+    - `GET /api/polls` and `GET /api/polls/active`: rows with `publish_at > NOW()` hidden from public list.
+    - `GET /api/polls/:id`: returns 404 to non-creator when `publish_at > NOW()`. Creator still sees it.
+    - `POST /api/polls/:id/vote`: 400 `"Poll is scheduled and not yet open for voting"` when `publish_at > NOW()`.
+    - `GET /api/polls/users/:username/created`: NO `publish_at` filter — creator's "My Polls" tab keeps showing their scheduled polls.
+  - Frontend list badge: scheduled polls get a "Scheduled" status pill and "Opens …" line beside "Closes …".
+- **Calendar picker UX.** Both `pollExpires` and `pollPublishAt` use `showPicker()` on click/focus so the native browser date/time picker opens on tap.
+- **Validation order in `submitNewPoll`:** title → question → sport → category → expiration → expiration-in-future → publish-at-before-expiration → options. Each fails with an inline `#createPollError` message and focuses the offending field. Submission never reaches `/api/polls` if any required field is missing or invalid.
+- **Backward-safety:** `publish_at` column is `NULL`able with no backfill; every pre-existing poll has `NULL` and continues to publish immediately. Never add `NOT NULL`, default, or backfill on this column.
 - **Do NOT regress** standard polls, multi-question/season-long polls, answer choices, multiple-choice setting, public results setting, anonymous voting, voting, results, leaderboard, login/session, sportsbook/contest/forum/picks/leaderboard/profile systems.
 
 ## Stale Test Quarantine (May 21, 2026)

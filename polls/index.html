@@ -483,6 +483,11 @@
                             <div class="tmr-form-hint">Voting closes at this date/time. Required so votes can't be cast after the outcome.</div>
                         </div>
                     </div>
+                    <div class="tmr-form-row">
+                        <label for="pollPublishAt">Start Date / Publish Date <span style="color:var(--tmr-fb-muted);font-weight:600;">(optional)</span></label>
+                        <input id="pollPublishAt" type="datetime-local" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" onfocus="try{this.showPicker&&this.showPicker()}catch(e){}">
+                        <div class="tmr-form-hint">Leave empty to publish immediately. Set a future date/time to schedule. Voting is blocked until then. Must be before the expiration date.</div>
+                    </div>
                     <div class="tmr-form-row is-inline">
                         <label class="tmr-form-toggle"><input id="pollAllowMultiple" type="checkbox"><span>Allow multiple choice</span></label>
                         <label class="tmr-form-toggle"><input id="pollPublicResults" type="checkbox" checked><span>Public results before vote</span></label>
@@ -783,9 +788,12 @@
         listEl.innerHTML = polls.map(function(p) {
             var deadline = p.voting_deadline ? new Date(p.voting_deadline) : null;
             var isExpired = deadline && deadline < new Date();
-            var statusLabel = (p.status === 'resolved' ? 'Closed' : (isExpired ? 'Expired' : 'Active'));
-            var statusClass = (p.status === 'resolved' ? 'closed' : (isExpired ? 'expired' : 'active'));
+            var publish = p.publish_at ? new Date(p.publish_at) : null;
+            var isScheduled = publish && publish > new Date();
+            var statusLabel = (p.status === 'resolved' ? 'Closed' : (isScheduled ? 'Scheduled' : (isExpired ? 'Expired' : 'Active')));
+            var statusClass = (p.status === 'resolved' ? 'closed' : (isScheduled ? 'closed' : (isExpired ? 'expired' : 'active')));
             var deadlineHtml = deadline ? '<span class="sep">&middot;</span> Closes <strong>' + escHtml(fmtDate(deadline)) + '</strong>' : '';
+            if (isScheduled) deadlineHtml = '<span class="sep">&middot;</span> Opens <strong>' + escHtml(fmtDate(publish)) + '</strong>' + deadlineHtml;
             var totalVotes = parseInt(p.vote_count || 0);
             return '<div class="tmr-poll-card" onclick="openPoll(' + p.id + ')">' +
                 '<div class="tmr-poll-card-body">' +
@@ -954,11 +962,11 @@
             '<div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 1"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>' +
             '<div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 2"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>';
         populateLeagueSelect(document.getElementById('pollLeague'), '', false);
+        var nowLocal = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
         var exp = document.getElementById('pollExpires');
-        if (exp) {
-            var now = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
-            exp.min = now.toISOString().slice(0, 16);
-        }
+        if (exp) exp.min = nowLocal;
+        var pub = document.getElementById('pollPublishAt');
+        if (pub) { pub.min = nowLocal; pub.value = ''; }
         document.getElementById('createPollModal').classList.add('is-open');
     }
     function closeCreatePollModal() { document.getElementById('createPollModal').classList.remove('is-open'); }
@@ -1076,6 +1084,7 @@
         var teamPlayer = document.getElementById('pollTeamPlayer').value.trim();
         var categoryId = document.getElementById('pollCategory').value;
         var expiresAt = document.getElementById('pollExpires').value;
+        var publishAt = document.getElementById('pollPublishAt').value;
         var publicResults = document.getElementById('pollPublicResults').checked;
         var allowMultiple = document.getElementById('pollAllowMultiple').checked;
         var anonymous = document.getElementById('pollAnonymous').checked;
@@ -1097,6 +1106,15 @@
         var expDate = new Date(expiresAt);
         if (isNaN(expDate.getTime()) || expDate.getTime() <= Date.now()) {
             errorEl.textContent = 'Expiration date must be in the future.'; errorEl.classList.add('is-shown'); document.getElementById('pollExpires').focus(); return;
+        }
+        if (publishAt) {
+            var pubDate = new Date(publishAt);
+            if (isNaN(pubDate.getTime())) {
+                errorEl.textContent = 'Start date is invalid.'; errorEl.classList.add('is-shown'); document.getElementById('pollPublishAt').focus(); return;
+            }
+            if (pubDate.getTime() >= expDate.getTime()) {
+                errorEl.textContent = 'Start date must be before the expiration date.'; errorEl.classList.add('is-shown'); document.getElementById('pollPublishAt').focus(); return;
+            }
         }
         if (scoringMode !== 'closest' && options.length < 2) {
             errorEl.textContent = 'Provide at least 2 answer choices (or switch to Closest-numeric scoring).'; errorEl.classList.add('is-shown'); return;
@@ -1156,6 +1174,7 @@
         if (subQuestions.length) payload.sub_questions = subQuestions;
         if (categoryId) payload.category_id = parseInt(categoryId);
         if (expiresAt) payload.voting_deadline = new Date(expiresAt).toISOString();
+        if (publishAt) payload.publish_at = new Date(publishAt).toISOString();
 
         var btn = document.getElementById('createPollSubmit');
         btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Creating...';
