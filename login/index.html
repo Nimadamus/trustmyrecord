@@ -366,6 +366,10 @@
                 <button id="submitBtn" class="submit" type="submit">LOG IN</button>
             </form>
 
+            <a id="resetLinkBig" href="/reset-password/" style="display:block;text-align:center;margin-top:14px;padding:12px 16px;background:rgba(45,212,191,0.08);border:1px solid rgba(45,212,191,0.35);border-radius:10px;color:#2dd4bf;font-weight:700;text-decoration:none;letter-spacing:0.02em;">
+                <i class="fas fa-envelope" style="margin-right:6px;"></i> Can't log in? Email me a password reset link
+            </a>
+
             <div class="switch">Need an account? <a href="/register/">Create one here</a></div>
         </div>
     </div>
@@ -454,6 +458,8 @@
                 const submitBtn = document.getElementById('submitBtn');
 
                 resetLink.href = '/reset-password/?login=' + encodeURIComponent(login);
+                const resetLinkBig = document.getElementById('resetLinkBig');
+                if (resetLinkBig) resetLinkBig.href = '/reset-password/?login=' + encodeURIComponent(login);
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'LOGGING IN...';
                 setMessage('', '');
