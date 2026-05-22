@@ -40,6 +40,13 @@
             // sportsbook page — consolidates to a single review slip.
             'body[data-tmr-route="sportsbook"] #pickDetails.pick-step,',
             'body[data-tmr-route="sportsbook"] #pickDetails { display: none !important; }',
+            // Hide the legacy right-rail .sportsbook-ticket-preview-card on the
+            // sportsbook page. The floating #tmrMultiPickPanel is the canonical
+            // multi-pick slip; the legacy aside duplicated it on desktop (May 21
+            // emergency disable was triggered by exactly this). renderSlip still
+            // mirrors count/submit into the legacy card as a no-op safety net.
+            'body[data-tmr-route="sportsbook"] .sportsbook-ticket-preview-card,',
+            'body[data-tmr-route="sportsbook"] .sportsbook-ticket-preview { display: none !important; }',
             // Multi-pick slip styling
             '.' + SLIP_CONTAINER_CLASS + ' { display: flex; flex-direction: column; gap: 8px; margin: 8px 0 12px; max-height: 50vh; overflow-y: auto; }',
             '.' + SLIP_CONTAINER_CLASS + '-row { background: #101820; border: 1px solid #243349; border-radius: 8px; padding: 8px 10px; display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }',
