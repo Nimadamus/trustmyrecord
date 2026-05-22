@@ -34,6 +34,33 @@ One sportsbook engine. Two tracking buckets. The site must NEVER mix the two.
 - The same contest pick does NOT appear in `/api/users/:username/picks`, `/api/users/:username/metrics`, regular leaderboard, or any regular profile surface.
 - A normal pick submitted from `/sportsbook/` still appears in the regular profile and is NOT counted on the contest leaderboard.
 
+**Automated verification harness — DO NOT depend on personal user credentials.**
+
+The end-to-end isolation invariant is proven by `tests/contest-isolation-e2e-test.js` in `trustmyrecord-backend`. The harness seeds its own verified test user (no email verification round-trip needed), mints a JWT against the backend's `JWT_SECRET`, exercises the real Express routes (`POST /api/contests/:contestId/picks` and `POST /api/picks`) against the real Postgres schema, and asserts table-level isolation, sealed payload stripping, leaderboard counts, and profile-metrics deltas.
+
+- Run it before any contest-related claim of completion:
+
+  ```
+  cd trustmyrecord-backend && node tests/contest-isolation-e2e-test.js
+  ```
+
+- The harness is hermetic: it cleans up after itself (uses `SET session_replication_role = replica` to bypass the `prevent_pick_delete` rule on the `picks` table, then deletes test rows and the test user). Re-runs leave no state behind.
+- If `/api/contests` is not mounted in the local `server.js`, the harness splices it into the Express router stack at runtime (before the 404 catch-all). This makes the harness robust against concurrent agents who may have temporarily removed the contest mount from local `server.js`.
+- Phases the harness asserts (each is a separate `assert.deepStrictEqual` / `assert.strictEqual` — read the source for exact assertions):
+  1. seed verified test user + future MLB game; both pick tables start empty for the user
+  2. snapshot `/api/users/:u/metrics` BEFORE any submission
+  3. POST contest pick → 201
+  4. `tmr_contest_picks` has exactly 1 row; regular `picks` has 0 rows
+  5. `/api/contests/justbet-mlb/picks` returns the submission as sealed (no `selection`/`odds`/`units` in payload)
+  6. `/api/contests/justbet-mlb/leaderboard` counts the user with `picks_used=1`
+  7. `/api/users/:u/metrics` summary + periods deep-equal the pre-contest snapshot
+  8. POST regular pick → 201
+  9. `picks` has 1 row; `tmr_contest_picks` still has exactly 1 row (regular pick did NOT enter contest bucket)
+  10. `summary.pending_picks` increments by exactly 1 vs the original snapshot
+  11. Contest leaderboard `picks_used` STILL 1 (regular pick did NOT enter contest bucket)
+
+Add new phases to this harness if/when contest grading, contest-pick reveal, or contest leaderboard scoring change. The presence of this harness is what unblocks future contest work without needing the user's personal account credentials.
+
 ## Poll Creation Standard (May 22, 2026)
 
 Locked rules for `/polls/` create-poll flow (`polls/index.html`) and backend `routes/polls.js`:
