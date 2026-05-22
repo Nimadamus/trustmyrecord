@@ -2916,10 +2916,10 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-activity-row {
     display: grid;
-    grid-template-columns: 34px 1fr auto;
+    grid-template-columns: 34px 1fr;
     align-items: center;
     gap: 12px;
-    padding: 11px 12px;
+    padding: 10px 12px;
     border: 1px solid rgba(134, 162, 190, .14);
     border-radius: 8px;
     background: rgba(7, 18, 32, .58);
@@ -2946,12 +2946,11 @@ button{font:inherit;cursor:pointer}
   .tmr-activity-text b {
     display: block;
     min-width: 0;
-    overflow: hidden;
     color: #fff;
     font-size: 13px;
     font-weight: 900;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    white-space: normal;
+    word-break: break-word;
   }
   .tmr-activity-text small {
     display: block;
@@ -2960,6 +2959,8 @@ button{font:inherit;cursor:pointer}
     font-weight: 700;
     letter-spacing: .02em;
     text-transform: uppercase;
+    white-space: normal;
+    word-break: break-word;
   }
   .tmr-activity-badge {
     flex-shrink: 0;
@@ -4445,7 +4446,17 @@ function escapeHtml(value) {
     function renderUsers(users) {
         const cleanUsers = users
             .filter(function (user) { return user && user.username; })
-            .slice(0, 4);
+            .filter(function (user) { return number(user.total_picks || user.totalPicks, 0) > 0; })
+            .slice()
+            .sort(function (a, b) {
+                const ua = number(a.net_units || a.netUnits, -Infinity);
+                const ub = number(b.net_units || b.netUnits, -Infinity);
+                if (ub !== ua) return ub - ua;
+                const ra = number(a.roi, -Infinity);
+                const rb = number(b.roi, -Infinity);
+                return rb - ra;
+            })
+            .slice(0, 10);
 
         const lead = cleanUsers[0];
         const totalPicks = cleanUsers.reduce(function (sum, user) {
@@ -4537,14 +4548,13 @@ function escapeHtml(value) {
         list.className = 'tmr-activity-list';
         list.setAttribute('aria-busy', 'false');
         list.innerHTML = grouped.map(function (group) {
-            const badge = group.count + ' pick' + (group.count === 1 ? '' : 's');
+            const sub = group.count + ' pick' + (group.count === 1 ? '' : 's') + ' locked';
             return '<div class="tmr-activity-row">'
                 + '<span class="tmr-activity-icon" aria-hidden="true">▣</span>'
                 + '<div class="tmr-activity-text">'
                 + '<b>' + escapeHtml(group.username) + '</b>'
-                + '<small>Locked</small>'
+                + '<small>' + escapeHtml(sub) + '</small>'
                 + '</div>'
-                + '<span class="tmr-activity-badge">' + escapeHtml(badge) + '</span>'
                 + '</div>';
         }).join('');
     }
