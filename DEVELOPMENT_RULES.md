@@ -1,5 +1,39 @@
 # TrustMyRecord Development Rules
 
+## Contest Pick Tracking Standard (May 22, 2026) — HARD RULE
+
+One sportsbook engine. Two tracking buckets. The site must NEVER mix the two.
+
+**Bucket 1 — Regular Picks:**
+- Submitted from `/sportsbook/` (or any non-contest pick surface).
+- Stored in the regular `picks` table.
+- Count toward the user's public profile record, regular stats, regular leaderboard, ROI, units, and regular pick history.
+
+**Bucket 2 — Contest Picks:**
+- Submitted only from a Contest Mode surface (currently `/contests/<contestId>/dashboard/`).
+- Stored ONLY in `tmr_contest_picks` (with `contest_id`, `user_id`, `username`, `game_id`, `game_label`, `game_commence_time`, `market_type`, `selection`, `odds_snapshot`, `units`, `stake_mode`, `result`, `units_net`, `submitted_at`, `graded_at`, `deleted_at`).
+- Count ONLY toward the contest leaderboard (`/api/contests/:contestId/leaderboard`).
+- MUST NOT affect the user's public profile record, regular stats, regular leaderboard, ROI, units, or regular pick history.
+
+**Required guardrails (do not regress):**
+1. Contest picks are NEVER joined into regular pick / leaderboard / profile / stats / autograder / aggregator queries. Reference: `services/statsAggregator.js`, `services/autoGrader.js`, `routes/picks.js`, `routes/users.js`. Search every query for `tmr_contest_picks` — it must appear only in `routes/contests.js`.
+2. The Contest Mode pick form submits to `POST /api/contests/:contestId/picks` only. Never to `POST /api/picks` or any regular pick endpoint.
+3. The Contest Mode surface must display a prominent "Contest Mode Active" banner above the pick form. Submit button reads **"Submit Contest Pick"**, never just "Submit Pick".
+4. Picks before game commence_time are sealed: `selection`, `odds`, `units`, `market_type`, `stake_mode`, `units_net`, `graded_at` are stripped server-side by `routes/contests.js` until first pitch.
+5. The contest leaderboard reads ONLY from `tmr_contest_picks WHERE contest_id = $1 AND deleted_at IS NULL`.
+6. Per-user pick cap is 50 (`PICKS_MAX` in `routes/contests.js`); the dashboard shows "X / 50 picks used" via `GET /api/contests/:contestId/my-status`.
+7. Profile, public profile, public leaderboard, sportsbook stats endpoints must never reference `tmr_contest_picks`.
+
+**Entry points to Contest Mode (must remain present):**
+- `/profile/` — Enter Contest Picks CTA card.
+- `/contests/` — Active contests landing with CTA per contest.
+- `/sportsbook/` — Contest Mode banner above the sports nav, linking to the contest dashboard.
+
+**Verification before claiming Contest Mode work is complete:**
+- A contest pick submitted via dashboard appears in `/api/contests/:contestId/picks` AND on the contest leaderboard.
+- The same contest pick does NOT appear in `/api/users/:username/picks`, `/api/users/:username/metrics`, regular leaderboard, or any regular profile surface.
+- A normal pick submitted from `/sportsbook/` still appears in the regular profile and is NOT counted on the contest leaderboard.
+
 ## Poll Creation Standard (May 22, 2026)
 
 Locked rules for `/polls/` create-poll flow (`polls/index.html`) and backend `routes/polls.js`:

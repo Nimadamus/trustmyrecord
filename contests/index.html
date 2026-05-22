@@ -4,11 +4,168 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Contests | TrustMyRecord</title>
-    <link rel="canonical" href="https://trustmyrecord.com/contests/justbet-mlb/">
-    <meta name="robots" content="noindex, follow">
-    <meta http-equiv="refresh" content="0; url=/contests/justbet-mlb/">
-    <script>window.location.replace('/contests/justbet-mlb/' + window.location.search + window.location.hash);</script>
+    <meta name="description" content="Active TrustMyRecord handicapping contests. Submit contest picks in Contest Mode — fully separated from your public profile record.">
+    <link rel="canonical" href="https://trustmyrecord.com/contests/">
+    <meta name="robots" content="index,follow">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260520mailbox1"></script>
+    <script defer src="/static/js/config.js"></script>
+    <script defer src="/static/js/backend-api.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --bg: #07111d;
+            --panel: rgba(10,19,33,0.96);
+            --panel-2: rgba(16,29,49,0.82);
+            --line: rgba(148,163,184,0.16);
+            --line-strong: rgba(45,212,191,0.32);
+            --text: #eef4fb;
+            --muted: #9fb0c3;
+            --faint: #6f8093;
+            --cyan: #2dd4bf;
+            --gold: #d4a72c;
+            --gold-bright: #f0c449;
+            --justbet: #ffb800;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; color: var(--text);
+            font-family: "Inter", system-ui, sans-serif;
+            background:
+                radial-gradient(circle at 8% 0%, rgba(255,184,0,0.08), transparent 28%),
+                linear-gradient(180deg, #07111d 0%, #0a1421 58%, #08101c 100%);
+        }
+        a { color: inherit; text-decoration: none; }
+        .page { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 22px 0 64px; }
+        h1, h2, h3 { margin: 0; font-family: "Barlow", "Inter", sans-serif; }
+        h1 { font-size: clamp(1.9rem, 3.8vw, 2.6rem); font-weight: 900; }
+        h2 { font-size: 1.4rem; font-weight: 900; }
+
+        .hero {
+            margin-top: 18px; padding: 28px 30px;
+            border: 1px solid rgba(45,212,191,0.28);
+            background: linear-gradient(180deg, rgba(8,28,33,0.96), rgba(10,20,33,0.97));
+            border-radius: 18px;
+            box-shadow: 0 22px 58px rgba(0,0,0,0.28);
+        }
+        .hero .eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 12px; border-radius: 999px;
+            background: rgba(45,212,191,0.12); color: #b4f1e7;
+            font-size: 0.72rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase;
+            border: 1px solid rgba(45,212,191,0.3);
+        }
+        .hero p { color: var(--muted); margin: 10px 0 0; max-width: 70ch; line-height: 1.55; }
+
+        .contest-list { display: grid; gap: 18px; margin-top: 22px; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); }
+        .contest-card {
+            padding: 22px 24px;
+            border: 1px solid rgba(255,184,0,0.32);
+            background: linear-gradient(180deg, rgba(28,22,8,0.55), rgba(8,15,27,0.85));
+            border-radius: 16px;
+            display: flex; flex-direction: column; gap: 12px;
+            box-shadow: 0 18px 44px rgba(0,0,0,0.28);
+        }
+        .contest-card .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .contest-card .sponsor {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 4px 10px; background: #1a1408; border: 1px solid rgba(255,184,0,0.45);
+            color: var(--justbet); font-family: "Barlow", sans-serif; font-weight: 900;
+            font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase;
+            border-radius: 8px;
+        }
+        .contest-card .live {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 3px 8px; border-radius: 999px;
+            background: rgba(34,197,94,0.18); border: 1px solid rgba(34,197,94,0.45);
+            color: #b6f5cd; font-size: 0.7rem; font-weight: 900; letter-spacing: 0.14em;
+        }
+        .contest-card .live .dot { width: 6px; height: 6px; border-radius: 50%; background: #34d399; box-shadow: 0 0 8px #34d399; }
+        .contest-card .title { font-family: "Barlow", sans-serif; font-weight: 900; font-size: 1.45rem; color: #fff; }
+        .contest-card .meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+        .contest-card .meta .k { font-size: 0.66rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); font-weight: 800; }
+        .contest-card .meta .v { margin-top: 2px; font-family: "Barlow", sans-serif; font-weight: 900; font-size: 1.15rem; color: #ffe4a3; }
+        .contest-card .desc { color: #e2e8f0; font-size: 0.93rem; line-height: 1.55; }
+        .contest-card .desc strong { color: #fff; }
+        .contest-card .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+        .cta-primary {
+            display: inline-flex; align-items: center; gap: 10px;
+            padding: 12px 18px; border-radius: 10px;
+            background: linear-gradient(180deg, var(--gold-bright) 0%, var(--gold) 100%);
+            color: #1a1206; font-weight: 900; font-size: 0.9rem;
+            letter-spacing: 0.04em; text-transform: uppercase;
+            border: 1px solid #b4881d;
+            box-shadow: 0 12px 28px rgba(212,167,44,0.32);
+            cursor: pointer; white-space: nowrap;
+        }
+        .cta-ghost {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 11px 14px; border-radius: 8px;
+            background: rgba(15,23,42,0.74);
+            color: var(--text);
+            border: 1px solid var(--line);
+            font-weight: 700; font-size: 0.85rem;
+        }
+        .cta-ghost:hover { border-color: var(--line-strong); }
+
+        .iso-note {
+            margin-top: 26px; padding: 16px 18px;
+            border: 1px dashed rgba(45,212,191,0.32);
+            background: rgba(8,22,28,0.55);
+            border-radius: 12px;
+            color: var(--muted); font-size: 0.88rem; line-height: 1.55;
+        }
+        .iso-note strong { color: #b4f1e7; }
+        .iso-note code { background: rgba(15,23,42,0.6); padding: 1px 6px; border-radius: 4px; color: #c8e7ff; font-size: 0.85rem; }
+    </style>
 </head>
-<body><a href="/contests/justbet-mlb/">Continue to the JustBet MLB Handicapping Contest</a><script src="/static/js/analytics.js?v=20260504a"></script>
+<body>
+    <div id="tmr-nav-placeholder"></div>
+
+    <main class="page">
+        <section class="hero">
+            <span class="eyebrow"><i class="fa-solid fa-trophy"></i> TrustMyRecord Contests</span>
+            <h1 style="margin-top:10px;">Handicapping Contests</h1>
+            <p>Compete in active sponsored contests on TrustMyRecord. Picks submitted in Contest Mode are tracked under a separate contest leaderboard and <strong>do not affect your public profile record</strong>, units, ROI, or regular pick history.</p>
+        </section>
+
+        <section class="contest-list" aria-label="Active contests">
+
+            <!-- JustBet MLB -->
+            <article class="contest-card">
+                <div class="row">
+                    <span class="sponsor"><i class="fa-solid fa-circle" style="font-size:6px;"></i> JustBet</span>
+                    <span class="live"><span class="dot"></span> Active</span>
+                </div>
+                <div class="title">JustBet MLB Handicapping Contest</div>
+                <div class="meta">
+                    <div><div class="k">Prize Pool</div><div class="v">$2,500</div></div>
+                    <div><div class="k">Picks</div><div class="v">50 per entrant</div></div>
+                    <div><div class="k">Sport</div><div class="v">MLB</div></div>
+                    <div><div class="k">Reveal</div><div class="v">First Pitch</div></div>
+                </div>
+                <div class="desc">Submit up to 50 MLB picks. Each pick is sealed until first pitch. Ranked by net units. Top 3 win cash. Contest picks are <strong>fully isolated</strong> from your public TrustMyRecord profile record.</div>
+                <div class="actions">
+                    <a class="cta-primary" href="/contests/justbet-mlb/dashboard/">
+                        <i class="fa-solid fa-vault"></i> Enter Contest Picks
+                    </a>
+                    <a class="cta-ghost" href="/contests/justbet-mlb/">
+                        <i class="fa-solid fa-circle-info"></i> Rules &amp; Info
+                    </a>
+                </div>
+            </article>
+
+        </section>
+
+        <div class="iso-note">
+            <strong>Contest Mode isolation:</strong> All contest picks are stored under <code>contest_id</code> in a separate <code>tmr_contest_picks</code> table. They are NEVER joined into the regular picks, regular leaderboard, regular profile records, or sportsbook stats. Submitting in Contest Mode will not change your public ROI, units, win rate, or pick history.
+        </div>
+    </main>
+
+    <div id="tmr-footer-placeholder"></div>
 </body>
 </html>
