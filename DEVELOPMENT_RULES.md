@@ -1,5 +1,17 @@
 # TrustMyRecord Development Rules
 
+## Global Nav Make Picks / Sportsbook Standard (May 22, 2026) — HARD RULE
+
+The public top-of-page navigation on every TMR page MUST always preserve a visible, obvious entry point to the sportsbook / pick entry flow (label: "Make Picks" or "Sportsbook"). This link is a core product function — picks, contests, and locked records all depend on it.
+
+- Homepage: `index.html` `.tmr-premium-links` header — first link MUST be `<a href="/sportsbook/">Make Picks</a>`.
+- All other pages: `static/js/tmr-sitewide.js` `routes[]` MUST keep `[sportsbookPicksHref, "Make Picks"]` at the top.
+- Logged-out users follow the same link; downstream pages handle login/signup gating. Do not hide the sportsbook concept from anonymous visitors.
+- Never remove, rename, or replace this nav item under SEO/content/redesign rationale. Renames must keep the wording sportsbook-clear ("Make Picks", "Sportsbook", "Make Pick"). No "Bet", "Wager", or money language.
+- Removing or breaking this link is a P0 production incident.
+
+Incident reference: May 22, 2026 — homepage `.tmr-premium-links` shipped with no sportsbook entry point (`Features / Handicappers / Sell Your Picks / Contest / Feed / About`). Restored as `Make Picks` chip in commit `f0390f85`.
+
 ## Contest Pick Tracking Standard (May 22, 2026) — HARD RULE
 
 One sportsbook engine. Two tracking buckets. The site must NEVER mix the two.
