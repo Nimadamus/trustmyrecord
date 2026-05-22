@@ -54,6 +54,19 @@ Permanent rules for this quarantine:
 - The quarantine list cannot grow without explicit acknowledgement in the PR description.
 - The intent is to keep ALL real protected guards firing while not letting a single botched rewrite hold every future deploy hostage. If half the chain is quarantined, that is a triage backlog signal, not the new normal.
 
+## Sportsbook Contest-Launch Priority (May 22, 2026)
+
+**Multi-pick is PAUSED until JustBet contest launch is stable.** `/sportsbook/index.html` does NOT load `tmr-make-picks-multi.js` (commented placeholder remains at end-of-body so a future re-enable is one line). The Make Picks UX Standard below (compact rows, hidden legacy `#pickDetails`, no auto-scroll) is INACTIVE while the script is unloaded. The native single-pick reliability runtime owns the slip.
+
+Acceptance for the current stable state:
+1. MLB → click one odds → one pick in Pick Slip → Submit enables → `POST /api/picks` single-pick payload (no `contest_id`).
+2. JustBet contest picks come from `/contests/justbet-mlb/dashboard/` ONLY. That dashboard has its own form, its own `submitPick`, and its own `POST /api/picks` body with `contest_id: 'justbet-mlb'`. Public-record sportsbook and contest picks share the `/api/picks` endpoint but are isolated by `contest_id` (server stores it; grader/leaderboard filters by it).
+3. No duplicate Pick Slip.
+4. No unauthorized modal.
+5. No console / route disaster.
+
+Do NOT re-enable `tmr-make-picks-multi.js` until contest launch is stable AND multi-pick has been re-tested in isolation against the contest dashboard for cross-talk. If re-enabled, the legacy-aside-hide CSS rule added in commit `6bd75776` must stay (prevents the May 21 duplicate-slip regression).
+
 ## Make Picks UX Standard (May 21, 2026)
 
 The Make Picks / sportsbook pick-entry flow follows these locked rules:
