@@ -35,3 +35,17 @@ Avatar sourcing rules:
 - Markup hook: `<span class="fthread-row-avatar">`, sized ~28×28px on desktop and ~24×24px on mobile. Keep the row compact so the thread list does not grow oversized.
 
 Any future change to the thread list row layout (new badges, sport icons, last-post column tweaks, classic vs. modern skin) must preserve the creator avatar element. Do not remove the avatar to "simplify" the row.
+
+## Thread List Polish Standard
+
+The thread list row must also preserve these polish elements:
+
+- **Last Post column avatar.** Render a small (22px) avatar next to the Last Post title/meta when last-poster avatar data is available. Sourcing order: `thread.last_post_avatar_url` → `thread.last_avatar_url` → `thread.last_user_avatar` → starter avatar when `last_post_username === starter`. Otherwise render the initials placeholder using `<span class="fthread-row-avatar">`. Last-post avatar must not appear when there are no replies — keep the "No replies yet" placeholder unchanged.
+- **Row affordance.** Thread rows must have a hover/focus background change (`#e1ecf8`), a 120ms color transition, and a visible focus outline (`outline:2px solid #1f5f9f` on `:focus-visible`). Do not remove or weaken these states to "match" other tables.
+- **Keyboard + screen-reader access.** Each `<tr class="frow">` must have `role="link"`, `tabindex="0"`, `aria-label="Open thread: <title>"`, and a keyboard handler that opens the thread on Enter or Space (calls the same `showThreadDetail(id)` route as the click handler — never a different route).
+- **Breadcrumb.** Keep `.fcrumb` at `padding:9px 12px; line-height:1.5; .sep padding:0 8px` so the breadcrumb has comfortable vertical rhythm without feeling oversized. Do not collapse it back to 7px/6px spacing.
+- **Mobile.** The Last Post column is hidden under `@media (max-width:760px)`. Do not re-show it on mobile, and keep the thread starter avatar at 24px on mobile so the row stays compact.
+
+Future work (not yet implemented):
+
+- Profile hover popover (mini-card on hover over the starter avatar/username). Requires new logic and a profile-fetch endpoint; intentionally deferred.
