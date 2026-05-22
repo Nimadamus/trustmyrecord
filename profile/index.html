@@ -8203,8 +8203,12 @@
             '</div>';
 
         let primaryActions = '';
+        // May 22, 2026 (HARD RULE): account-management actions (Edit Profile / Change Avatar /
+        // Change Password) live ONLY in the authenticated top-right avatar/username dropdown
+        // (static/js/tmr-sitewide.js). Do not re-render the body "Edit Profile" button — it
+        // exposes private account controls inside the public profile card.
         if (isOwnProfile) {
-            primaryActions = '<button class="btn btn-secondary" onclick="openEditModal()">Edit Profile</button>';
+            primaryActions = '';
         } else if (currentUser) {
             const ft = isFollowingProfile ? 'Unfollow' : 'Follow';
             const fc = isFollowingProfile ? 'btn-secondary' : 'btn-primary';

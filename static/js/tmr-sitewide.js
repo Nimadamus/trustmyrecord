@@ -360,11 +360,36 @@
         toggleButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
     }
 
+    function wireUserMenuTrigger() {
+        if (!actions) return;
+        const trigger = actions.querySelector("[data-tmr-user-menu]");
+        if (!trigger || trigger.dataset.tmrWired === "1") return;
+        trigger.dataset.tmrWired = "1";
+        trigger.addEventListener("click", function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            toggleUserMenu();
+        });
+        actions.querySelectorAll("[data-tmr-account-action]").forEach((btn) => {
+            if (btn.dataset.tmrWired === "1") return;
+            btn.dataset.tmrWired = "1";
+            btn.addEventListener("click", function (ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                const action = btn.getAttribute("data-tmr-account-action");
+                const username = btn.getAttribute("data-tmr-username") || "";
+                closeUserMenu();
+                handleAccountAction(action, username);
+            });
+        });
+    }
+
     function renderActions() {
         if (!actions) return;
         const user = getSessionUser();
         actions.innerHTML = user ? buildLoggedInActions(user) : buildLoggedOutActions();
         cleanupNavActions();
+        wireUserMenuTrigger();
     }
 
     function cleanupNavActions() {
@@ -386,6 +411,9 @@
         ].join(",");
 
         actions.querySelectorAll(legacyActionSelector).forEach((element) => {
+            // May 22, 2026: protect the authenticated user-menu dropdown contents
+            // (Messages link, mailbox indicator) from the legacy nav-icon scrubber.
+            if (element.closest(".tmr-user-chip-wrap")) return;
             element.remove();
         });
 

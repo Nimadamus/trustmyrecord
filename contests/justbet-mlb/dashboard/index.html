@@ -501,11 +501,11 @@
                 tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-user-plus"></i>No registrations yet. Be the first to register.</div></td></tr>`;
                 return;
             }
+            // PUBLIC FACING STATUS POLICY (May 22 2026): everyone in the
+            // public registrations payload is shown as "Registered". Internal
+            // verification stages never surface on the public dashboard.
             tbody.innerHTML = entries.map(e => {
-                const status = String(e.status || 'pending_verification').toLowerCase();
-                const pill = status === 'verified_eligible'
-                    ? `<span class="status-pill status-won">Verified &amp; Eligible</span>`
-                    : `<span class="status-pill status-sealed"><i class="fa-solid fa-hourglass-half"></i> Pending Verification</span>`;
+                const pill = `<span class="status-pill status-won">Registered</span>`;
                 return `
                     <tr>
                         <td><strong>${escapeHtml(e.username || '—')}</strong></td>
