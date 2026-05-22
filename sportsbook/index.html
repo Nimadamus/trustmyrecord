@@ -1642,6 +1642,50 @@
             // Wide desktop on the board view: slip is already visible.
             pdEl.classList.add('active');
         }
+
+        // DUPLICATE_PICK_SLIP_FIX_20260522 (Nima): the lobby aside
+        // .sportsbook-ticket-preview is the single canonical pick slip
+        // (#pickDetails is hidden on desktop). _ttPopulateSlip used to fire
+        // only for team totals — extend it to ML / spread / total / runline /
+        // F5 / over / under so the aside actually shows the selected pick for
+        // every bet type, not just TT.
+        try {
+            if (typeof window.TMR._ttPopulateSlip === 'function') {
+                var sportSel = (window.TMR && window.TMR.selectedSport) || '';
+                var marketLabelMap = {
+                    ml: 'Moneyline', spread: (sportSel === 'NHL' ? 'Puck Line' : (sportSel === 'MLB' ? 'Run Line' : 'Spread')),
+                    over: 'Total', under: 'Total',
+                    teamover: 'Team Total', teamunder: 'Team Total',
+                    f5spread: 'F5 Run Line', f5ml: 'F5 Moneyline', f5over: 'F5 Total', f5under: 'F5 Total'
+                };
+                var marketTypeMap = {
+                    ml: 'moneyline', spread: 'spread', over: 'totals', under: 'totals',
+                    teamover: 'team_totals', teamunder: 'team_totals',
+                    f5spread: 'f5_spread', f5ml: 'f5_moneyline', f5over: 'f5_totals', f5under: 'f5_totals'
+                };
+                var rawTeamForSlip = String(team || '').replace(/\s+(Over|Under)\s*$/i, '').trim();
+                var teamForSlip = (betType === 'over' || betType === 'under' || betType === 'f5over' || betType === 'f5under')
+                    ? (awayTeam || homeTeam || '') : rawTeamForSlip;
+                window.TMR._ttPopulateSlip({
+                    gameIndex: gameIndex,
+                    betType: betType,
+                    team: teamForSlip,
+                    line: line,
+                    odds: odds,
+                    awayTeam: awayTeam,
+                    homeTeam: homeTeam,
+                    sport: sportSel,
+                    league: sportSel,
+                    market: marketLabelMap[betType] || (betType ? String(betType) : 'Pick'),
+                    marketType: marketTypeMap[betType] || 'other',
+                    gameTime: gameTime,
+                    gameId: gameId,
+                    game: fullGame
+                });
+            }
+        } catch (e) {
+            console.warn('[TMR] _ttPopulateSlip extension failed:', e);
+        }
     };
 
     function analyticsTrackSportsbook(eventName, params) {
@@ -10060,6 +10104,19 @@
                     margin: 0 0 14px;
                     opacity: 0.9;
                 }
+                #picks .picks-board-row { grid-template-columns: minmax(0, 1fr); }
+            }
+            /* DUPLICATE_PICK_SLIP_FIX_20260522 (Nima):
+               Hide the .picks-board-row #pickDetails panel on ALL viewports.
+               The lobby's .sportsbook-ticket-preview aside is the single
+               canonical visible pick slip (populated by _ttPopulateSlip for
+               every bet type via selectGameBet). Rendering #pickDetails
+               alongside it produced a duplicate "Pick Slip / Bet Ticket /
+               Review Before Submit" panel. #pickDetails form fields stay in
+               the DOM for selectGameBet state-mirroring and lockInPick
+               submission; only the visual panel is removed. */
+            #picks .picks-board-row > #pickDetails {
+                display: none !important;
             }
             /* Empty-state placeholder for the slip when no pick is selected. */
             #pickSlipEmpty {
