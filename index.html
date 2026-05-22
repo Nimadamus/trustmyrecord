@@ -2432,7 +2432,7 @@ button{font:inherit;cursor:pointer}
   .tmr-premium-dashboard {
     align-self: start;
     justify-self: stretch;
-    margin-top: 8px;
+    margin-top: -8px;
     min-width: 0;
     border: 1px solid rgba(91, 119, 147, .52);
     border-radius: 12px;
@@ -2735,7 +2735,7 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-board-card {
     min-width: 0;
-    padding: 18px;
+    padding: 14px 14px 12px;
     background: rgba(5, 14, 26, .38);
   }
   .tmr-board-card + .tmr-board-card { border-left: 1px solid rgba(134, 162, 190, .17); }
@@ -2743,7 +2743,7 @@ button{font:inherit;cursor:pointer}
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
   .tmr-board-card h3 {
     margin: 0;
@@ -2792,10 +2792,10 @@ button{font:inherit;cursor:pointer}
     color: var(--premium-muted);
     font-weight: 500;
     text-align: left;
-    padding: 8px 5px;
+    padding: 6px 5px;
   }
   .tmr-board-card td {
-    padding: 8px 5px;
+    padding: 5px 5px;
     border-top: 1px solid rgba(134, 162, 190, .10);
     color: #f4f8ff;
     overflow: hidden;
@@ -2877,7 +2877,7 @@ button{font:inherit;cursor:pointer}
   .tmr-see-more {
     display: block;
     text-align: center;
-    margin-top: 12px;
+    margin-top: 6px;
   }
   .tmr-mini-ticket {
     display: grid;
@@ -2916,24 +2916,45 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-activity-row {
     display: grid;
-    grid-template-columns: 34px 1fr;
+    grid-template-columns: 36px 1fr auto;
     align-items: center;
     gap: 12px;
-    padding: 10px 12px;
+    padding: 9px 12px;
     border: 1px solid rgba(134, 162, 190, .14);
     border-radius: 8px;
     background: rgba(7, 18, 32, .58);
   }
-  .tmr-activity-icon {
+  .tmr-activity-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(134, 162, 190, .22);
     display: grid;
     place-items: center;
-    width: 34px;
-    height: 34px;
-    border: 1px solid rgba(55, 214, 193, .28);
-    border-radius: 8px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: .02em;
+  }
+  .tmr-activity-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .tmr-activity-pill {
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(55, 214, 193, .38);
+    background: rgba(55, 214, 193, .12);
     color: var(--premium-teal);
-    background: rgba(55, 214, 193, .08);
-    font-size: 14px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
   .tmr-activity-text {
     min-width: 0;
@@ -4443,6 +4464,45 @@ function escapeHtml(value) {
         return response.json();
     }
 
+    const userAvatarByUsername = new Map();
+
+    function initials(name) {
+        const trimmed = String(name || '').trim();
+        if (!trimmed) return '?';
+        const parts = trimmed.split(/[\s_.-]+/).filter(Boolean);
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[1][0]).toUpperCase();
+        }
+        return trimmed.slice(0, 2).toUpperCase();
+    }
+
+    function avatarColor(username) {
+        const str = String(username || '');
+        let h = 0;
+        for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+        return 'hsl(' + (h % 360) + ', 62%, 48%)';
+    }
+
+    function attachAvatarFallbacks(root) {
+        if (!root) return;
+        root.querySelectorAll('img[data-avatar-initials]').forEach(function (img) {
+            img.addEventListener('error', function () {
+                const span = document.createElement('span');
+                const txt = img.getAttribute('data-avatar-initials') || '?';
+                const color = img.getAttribute('data-avatar-color') || '#3a4a60';
+                span.className = 'tmr-fallback-initials';
+                span.style.background = color;
+                span.style.color = '#fff';
+                span.style.width = '100%';
+                span.style.height = '100%';
+                span.style.display = 'grid';
+                span.style.placeItems = 'center';
+                span.textContent = txt;
+                img.replaceWith(span);
+            }, { once: true });
+        });
+    }
+
     function renderUsers(users) {
         const cleanUsers = users
             .filter(function (user) { return user && user.username; })
@@ -4503,9 +4563,12 @@ function escapeHtml(value) {
             const displayName = user.display_name || user.displayName || username;
             const total = number(user.total_picks || user.totalPicks, 0);
             const avatarUrl = user.avatar_url || user.avatarUrl || '';
+            userAvatarByUsername.set(username.toLowerCase(), avatarUrl);
+            const init = initials(displayName || username);
+            const color = avatarColor(username);
             const avatarHtml = avatarUrl
-                ? '<img src="' + escapeHtml(avatarUrl) + '" alt="TrustMyRecord user avatar">'
-                : '<span class="avatar-sm">' + escapeHtml(username.slice(0, 2).toUpperCase()) + '</span>';
+                ? '<img src="' + escapeHtml(avatarUrl) + '" alt="TrustMyRecord user avatar" data-avatar-initials="' + escapeHtml(init) + '" data-avatar-color="' + escapeHtml(color) + '">'
+                : '<span class="avatar-sm" style="background:' + escapeHtml(color) + ';color:#fff">' + escapeHtml(init) + '</span>';
             return '<tr class="tmr-real-user-row">'
                 + '<td>' + (index + 1) + '</td>'
                 + '<td><a class="tmr-real-user" href="/profile/?user=' + encodeURIComponent(username) + '">'
@@ -4515,6 +4578,7 @@ function escapeHtml(value) {
                 + '<td>' + escapeHtml(total ? signed(user.net_units || user.netUnits, 'u') : 'Verified record pending') + '</td>'
                 + '</tr>';
         }).join('');
+        attachAvatarFallbacks(body);
     }
 
     function renderPicks(picks) {
@@ -4526,12 +4590,16 @@ function escapeHtml(value) {
             .forEach(function (pick) {
                 const key = String(pick.username).toLowerCase();
                 const existing = groups.get(key);
+                const pickAvatar = pick.avatar_url || pick.avatarUrl || '';
                 if (existing) {
                     existing.count += 1;
+                    if (!existing.avatarUrl && pickAvatar) existing.avatarUrl = pickAvatar;
                 } else {
                     groups.set(key, {
+                        usernameRaw: pick.username,
                         username: pick.display_name || pick.username,
-                        count: 1
+                        count: 1,
+                        avatarUrl: pickAvatar || userAvatarByUsername.get(key) || ''
                     });
                 }
             });
@@ -4549,14 +4617,23 @@ function escapeHtml(value) {
         list.setAttribute('aria-busy', 'false');
         list.innerHTML = grouped.map(function (group) {
             const sub = group.count + ' pick' + (group.count === 1 ? '' : 's') + ' locked';
+            const lookupKey = String(group.usernameRaw || group.username).toLowerCase();
+            const avatarUrl = group.avatarUrl || userAvatarByUsername.get(lookupKey) || '';
+            const init = initials(group.username);
+            const color = avatarColor(group.usernameRaw || group.username);
+            const avatarHtml = avatarUrl
+                ? '<img src="' + escapeHtml(avatarUrl) + '" alt="" data-avatar-initials="' + escapeHtml(init) + '" data-avatar-color="' + escapeHtml(color) + '">'
+                : '<span class="tmr-fallback-initials" style="background:' + escapeHtml(color) + ';color:#fff;width:100%;height:100%;display:grid;place-items:center">' + escapeHtml(init) + '</span>';
             return '<div class="tmr-activity-row">'
-                + '<span class="tmr-activity-icon" aria-hidden="true">▣</span>'
+                + '<span class="tmr-activity-avatar" aria-hidden="true">' + avatarHtml + '</span>'
                 + '<div class="tmr-activity-text">'
                 + '<b>' + escapeHtml(group.username) + '</b>'
                 + '<small>' + escapeHtml(sub) + '</small>'
                 + '</div>'
+                + '<span class="tmr-activity-pill">LOCKED</span>'
                 + '</div>';
         }).join('');
+        attachAvatarFallbacks(list);
     }
 
     async function hydrateHomepagePreview() {
