@@ -378,6 +378,132 @@
         .final-cta .row { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
 
         .footnote { margin-top: 22px; color: var(--faint); font-size: 0.78rem; line-height: 1.55; max-width: 70ch; }
+
+        /* ======== REGISTRATION ======== */
+        .reg-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+            gap: 16px;
+        }
+        @media (max-width: 860px) { .reg-grid { grid-template-columns: 1fr; } }
+        .reg-card {
+            border: 1px solid var(--line);
+            background: var(--panel-2);
+            border-radius: 14px;
+            padding: 20px 22px;
+        }
+        .reg-card h3 { font-size: 1.15rem; color: #fff; margin-bottom: 10px; font-weight: 900; }
+        .reg-form label {
+            display: block;
+            margin-top: 12px;
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 700;
+        }
+        .reg-form input[type=text],
+        .reg-form input[type=email],
+        .reg-form select {
+            display: block;
+            width: 100%;
+            margin-top: 6px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: rgba(8, 14, 26, 0.85);
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+        .reg-form input:focus, .reg-form select:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 0 2px rgba(212, 167, 44, 0.18);
+        }
+        .reg-consent {
+            display: flex; gap: 10px; align-items: flex-start;
+            margin-top: 16px;
+            font-size: 0.88rem; color: #d9e3f0; line-height: 1.5;
+        }
+        .reg-consent input { margin-top: 4px; }
+        .reg-help { font-size: 0.78rem; color: var(--faint); margin-top: 6px; line-height: 1.45; }
+        .reg-error {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.45);
+            background: rgba(239, 68, 68, 0.10);
+            color: #fecaca;
+            font-size: 0.88rem;
+        }
+        .reg-success {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(34, 197, 94, 0.45);
+            background: rgba(34, 197, 94, 0.10);
+            color: #bbf7d0;
+            font-size: 0.88rem;
+        }
+        .reg-status-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 6px 12px; border-radius: 999px;
+            font-size: 0.78rem; font-weight: 800;
+            letter-spacing: 0.06em; text-transform: uppercase;
+        }
+        .reg-status-pill.pending {
+            background: rgba(212, 167, 44, 0.14);
+            border: 1px solid rgba(212, 167, 44, 0.4);
+            color: #ffe9a8;
+        }
+        .reg-status-pill.verified {
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.45);
+            color: #bbf7d0;
+        }
+        .reg-status-pill.needs_info {
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #bae6fd;
+        }
+        .reg-status-pill.rejected {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fecaca;
+        }
+        .reg-board {
+            margin-top: 16px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .reg-board table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+        .reg-board th, .reg-board td {
+            text-align: left;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--line);
+        }
+        .reg-board th {
+            background: rgba(15, 23, 42, 0.6);
+            font-size: 0.74rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 800;
+        }
+        .reg-board tbody tr:last-child td { border-bottom: 0; }
+        .reg-board .empty {
+            padding: 22px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+        .reg-counts {
+            display: flex; flex-wrap: wrap; gap: 14px;
+            font-size: 0.85rem; color: var(--muted);
+            margin-bottom: 10px;
+        }
+        .reg-counts b { color: #fff; font-weight: 800; }
     </style>
 </head>
 <body>
@@ -415,6 +541,7 @@
                            data-affiliate-link="justbet-mlb-contest-hero">
                             <i class="fa-solid fa-up-right-from-square"></i> Create Your JustBet Account to Qualify
                         </a>
+                        <a class="cta-ghost" href="#contest-registration"><i class="fa-solid fa-id-card"></i> Register for the Contest</a>
                         <a class="cta-ghost" href="#rules"><i class="fa-solid fa-list-check"></i> View Contest Rules</a>
                         <span class="cta-disabled" aria-disabled="true"><i class="fa-solid fa-lock"></i> Contest Dashboard Coming Soon</span>
                     </div>
@@ -450,6 +577,301 @@
                 <i class="fa-solid fa-up-right-from-square"></i> Create Your JustBet Account to Qualify
             </a>
         </section>
+
+        <!-- ===================== CONTEST REGISTRATION ===================== -->
+        <section class="section panel" id="contest-registration" aria-label="Contest registration">
+            <h2><i class="fa-solid fa-id-card"></i> Contest Registration</h2>
+            <p class="lead">After opening your JustBet account, register here to lock in your contest eligibility. Submit your sportsbook customer ID so we can verify your qualifying signup.</p>
+
+            <div class="reg-grid">
+                <div class="reg-card" id="reg-card-form">
+                    <h3>Register for the Contest</h3>
+                    <div id="reg-state-loading" style="color: var(--muted); font-size: 0.92rem;">Loading…</div>
+
+                    <div id="reg-state-anon" hidden>
+                        <p style="color:#d9e3f0; line-height:1.55;">You must be logged into your TrustMyRecord account to register.</p>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top: 10px;">
+                            <a class="cta-ghost" href="/login/"><i class="fa-solid fa-right-to-bracket"></i> Log In</a>
+                            <a class="cta-ghost" href="/register/"><i class="fa-solid fa-user-plus"></i> Create TMR Account</a>
+                        </div>
+                    </div>
+
+                    <form id="reg-state-form" class="reg-form" hidden novalidate>
+                        <label for="reg-sb-name">Sportsbook Name <span style="color:var(--red);">*</span></label>
+                        <select id="reg-sb-name" name="sportsbook_name" required>
+                            <option value="JustBet" selected>JustBet</option>
+                        </select>
+                        <div class="reg-help">JustBet is the contest sponsor. Selecting another sportsbook requires admin approval.</div>
+
+                        <label for="reg-sb-acct">Sportsbook Account / Customer ID <span style="color:var(--red);">*</span></label>
+                        <input type="text" id="reg-sb-acct" name="sportsbook_account_id" autocomplete="off" required maxlength="80" placeholder="Your JustBet customer ID">
+                        <div class="reg-help"><strong>Admin-only.</strong> Your account/customer ID is used to verify your qualifying signup. It is never shown publicly.</div>
+
+                        <label for="reg-sb-email">Sportsbook Email <span style="color:var(--muted); font-weight:600; text-transform:none; letter-spacing:0;">(optional)</span></label>
+                        <input type="email" id="reg-sb-email" name="sportsbook_email" autocomplete="off" maxlength="160" placeholder="Optional — speeds up verification">
+                        <div class="reg-help"><strong>Admin-only.</strong> Sportsbook email is private verification data and never displayed publicly.</div>
+
+                        <label class="reg-consent">
+                            <input type="checkbox" id="reg-consent" name="consent" required>
+                            <span>I confirm I own the sportsbook account listed above and authorize TrustMyRecord to verify it against the JustBet contest signup records.</span>
+                        </label>
+
+                        <div id="reg-error" class="reg-error" hidden></div>
+                        <div id="reg-success" class="reg-success" hidden></div>
+
+                        <div style="margin-top: 16px;">
+                            <button type="submit" id="reg-submit" class="cta-primary"><i class="fa-solid fa-circle-check"></i> Submit Registration</button>
+                        </div>
+                    </form>
+
+                    <div id="reg-state-existing" hidden>
+                        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                            <span id="reg-status-pill" class="reg-status-pill pending">Pending Verification</span>
+                            <span id="reg-username-label" style="color:#fff5d8; font-weight:800;"></span>
+                        </div>
+                        <p id="reg-status-msg" style="margin-top: 10px; color:#d9e3f0; line-height:1.55;"></p>
+                        <p id="reg-status-reason" style="margin-top: 6px; color:#fecaca; font-size:0.9rem;" hidden></p>
+                        <div style="margin-top: 12px; font-size:0.85rem; color: var(--muted);">
+                            Your sportsbook account/customer ID is stored privately and is visible only to TrustMyRecord admins for verification. It is <strong>never</strong> shown on the public contest board.
+                        </div>
+                        <div id="reg-resubmit-row" style="margin-top: 14px;" hidden>
+                            <button type="button" id="reg-resubmit" class="cta-ghost"><i class="fa-solid fa-rotate-right"></i> Re-submit Registration</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reg-card" id="reg-card-board">
+                    <h3>Public Signup Board</h3>
+                    <p style="color: var(--muted); font-size: 0.92rem; line-height: 1.5; margin: 0 0 12px;">
+                        Live list of TrustMyRecord users registered for the contest. Shows only TMR username and verification status. Sportsbook account numbers, emails, and other private details are <strong>never</strong> displayed here.
+                    </p>
+                    <div id="reg-board-counts" class="reg-counts">
+                        <span>Verified & Eligible: <b id="reg-count-verified">0</b></span>
+                        <span>Pending Verification: <b id="reg-count-pending">0</b></span>
+                    </div>
+                    <div id="reg-board-wrap" class="reg-board">
+                        <table aria-label="Public contest registrations">
+                            <thead>
+                                <tr>
+                                    <th>TMR Username</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reg-board-tbody">
+                                <tr><td colspan="2" class="empty">Loading registrations…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <script>
+        (function () {
+            var API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            var CONTEST_ID = 'justbet-mlb';
+
+            function tokenKeys() {
+                return ['trustmyrecord_token','accessToken','access_token','token','tmr_token'];
+            }
+            function getToken() {
+                try {
+                    for (var i = 0; i < tokenKeys().length; i++) {
+                        var v = localStorage.getItem(tokenKeys()[i]);
+                        if (v) return v;
+                    }
+                } catch (e) {}
+                return null;
+            }
+            function statusLabel(s) {
+                if (s === 'verified_eligible') return 'Verified & Eligible';
+                if (s === 'pending_verification') return 'Pending Verification';
+                if (s === 'needs_info') return 'Needs Info';
+                if (s === 'rejected') return 'Rejected';
+                return s || '—';
+            }
+            function statusPillClass(s) {
+                if (s === 'verified_eligible') return 'reg-status-pill verified';
+                if (s === 'pending_verification') return 'reg-status-pill pending';
+                if (s === 'needs_info') return 'reg-status-pill needs_info';
+                if (s === 'rejected') return 'reg-status-pill rejected';
+                return 'reg-status-pill pending';
+            }
+            function escapeHtml(s) {
+                return String(s == null ? '' : s)
+                    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+            }
+
+            function show(id) { var el = document.getElementById(id); if (el) el.hidden = false; }
+            function hide(id) { var el = document.getElementById(id); if (el) el.hidden = true; }
+
+            function showError(msg) {
+                var el = document.getElementById('reg-error');
+                if (!el) return;
+                el.textContent = msg;
+                el.hidden = false;
+                var ok = document.getElementById('reg-success');
+                if (ok) ok.hidden = true;
+            }
+            function showSuccess(msg) {
+                var el = document.getElementById('reg-success');
+                if (!el) return;
+                el.textContent = msg;
+                el.hidden = false;
+                var err = document.getElementById('reg-error');
+                if (err) err.hidden = true;
+            }
+            function clearMessages() {
+                ['reg-error','reg-success'].forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (el) { el.hidden = true; el.textContent = ''; }
+                });
+            }
+
+            function renderExisting(reg) {
+                hide('reg-state-loading'); hide('reg-state-anon'); hide('reg-state-form');
+                show('reg-state-existing');
+                var pill = document.getElementById('reg-status-pill');
+                pill.className = statusPillClass(reg.status);
+                pill.textContent = statusLabel(reg.status);
+                document.getElementById('reg-username-label').textContent = reg.username ? '@' + reg.username : '';
+                var msg = document.getElementById('reg-status-msg');
+                if (reg.status === 'verified_eligible') {
+                    msg.textContent = 'Your registration is verified. You are eligible to submit contest picks once the dashboard opens.';
+                } else if (reg.status === 'pending_verification') {
+                    msg.textContent = 'Your registration was received and is awaiting admin verification against the JustBet contest signup records.';
+                } else if (reg.status === 'needs_info') {
+                    msg.textContent = 'An admin needs additional info before verifying your registration. See the note below and re-submit if needed.';
+                } else if (reg.status === 'rejected') {
+                    msg.textContent = 'Your registration was rejected. You may re-submit with corrected details.';
+                } else {
+                    msg.textContent = '';
+                }
+                var reasonEl = document.getElementById('reg-status-reason');
+                if (reg.status_reason && (reg.status === 'needs_info' || reg.status === 'rejected')) {
+                    reasonEl.textContent = 'Admin note: ' + reg.status_reason;
+                    reasonEl.hidden = false;
+                } else {
+                    reasonEl.hidden = true;
+                }
+                var resubmit = document.getElementById('reg-resubmit-row');
+                if (reg.status === 'rejected' || reg.status === 'needs_info') {
+                    resubmit.hidden = false;
+                } else {
+                    resubmit.hidden = true;
+                }
+            }
+
+            function renderForm() {
+                hide('reg-state-loading'); hide('reg-state-anon'); hide('reg-state-existing');
+                show('reg-state-form');
+            }
+            function renderAnon() {
+                hide('reg-state-loading'); hide('reg-state-form'); hide('reg-state-existing');
+                show('reg-state-anon');
+            }
+
+            function loadMyRegistration() {
+                var token = getToken();
+                if (!token) { renderAnon(); return; }
+                fetch(API_BASE + '/contests/' + CONTEST_ID + '/my-registration', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                }).then(function (r) {
+                    if (r.status === 401 || r.status === 403) { renderAnon(); return null; }
+                    return r.json();
+                }).then(function (data) {
+                    if (!data) return;
+                    if (data.registration && data.registration.status && data.registration.status !== 'none') {
+                        renderExisting(data.registration);
+                    } else {
+                        renderForm();
+                    }
+                }).catch(function () {
+                    renderForm();
+                });
+            }
+
+            function submitRegistration(e) {
+                e.preventDefault();
+                clearMessages();
+                var token = getToken();
+                if (!token) { showError('You must be logged in to register.'); return; }
+                var sbName  = (document.getElementById('reg-sb-name').value || '').trim();
+                var sbAcct  = (document.getElementById('reg-sb-acct').value || '').trim();
+                var sbEmail = (document.getElementById('reg-sb-email').value || '').trim();
+                var consent = document.getElementById('reg-consent').checked;
+                if (!sbName) return showError('Please choose a sportsbook.');
+                if (!sbAcct) return showError('Sportsbook account/customer ID is required.');
+                if (!consent) return showError('You must check the consent box to register.');
+                var btn = document.getElementById('reg-submit');
+                btn.disabled = true; btn.style.opacity = 0.6;
+                fetch(API_BASE + '/contests/' + CONTEST_ID + '/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                    body: JSON.stringify({
+                        sportsbook_name: sbName,
+                        sportsbook_account_id: sbAcct,
+                        sportsbook_email: sbEmail || undefined,
+                        consent: true
+                    })
+                }).then(function (r) {
+                    return r.json().then(function (data) { return { status: r.status, data: data }; });
+                }).then(function (res) {
+                    btn.disabled = false; btn.style.opacity = 1;
+                    if (res.status >= 200 && res.status < 300) {
+                        showSuccess('Registration submitted. Status is now Pending Verification.');
+                        loadMyRegistration();
+                        loadPublicBoard();
+                    } else if (res.status === 409) {
+                        showSuccess('You are already registered. Loading your status…');
+                        loadMyRegistration();
+                    } else {
+                        var msg = (res.data && (res.data.error || (res.data.errors && res.data.errors[0] && (res.data.errors[0].msg || res.data.errors[0].message)))) || ('Registration failed (HTTP ' + res.status + ').');
+                        showError(msg);
+                    }
+                }).catch(function (err) {
+                    btn.disabled = false; btn.style.opacity = 1;
+                    showError('Network error: ' + (err && err.message ? err.message : 'unable to submit.'));
+                });
+            }
+
+            function loadPublicBoard() {
+                fetch(API_BASE + '/contests/' + CONTEST_ID + '/registrations').then(function (r) {
+                    return r.json();
+                }).then(function (data) {
+                    var tbody = document.getElementById('reg-board-tbody');
+                    if (!tbody) return;
+                    var entries = (data && Array.isArray(data.entries)) ? data.entries : [];
+                    var counts = (data && data.counts) || {};
+                    document.getElementById('reg-count-verified').textContent = counts.verified_eligible || 0;
+                    document.getElementById('reg-count-pending').textContent = counts.pending_verification || 0;
+                    if (!entries.length) {
+                        tbody.innerHTML = '<tr><td colspan="2" class="empty">No registrations yet. Be the first to sign up.</td></tr>';
+                        return;
+                    }
+                    tbody.innerHTML = entries.map(function (e) {
+                        return '<tr>' +
+                            '<td><a href="/profile/?username=' + encodeURIComponent(e.username) + '" style="color:#fff5d8; font-weight:700;">@' + escapeHtml(e.username) + '</a></td>' +
+                            '<td><span class="' + statusPillClass(e.status) + '">' + escapeHtml(statusLabel(e.status)) + '</span></td>' +
+                            '</tr>';
+                    }).join('');
+                }).catch(function () {
+                    var tbody = document.getElementById('reg-board-tbody');
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="2" class="empty">Failed to load registrations.</td></tr>';
+                });
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                var form = document.getElementById('reg-state-form');
+                if (form) form.addEventListener('submit', submitRegistration);
+                var resubmit = document.getElementById('reg-resubmit');
+                if (resubmit) resubmit.addEventListener('click', function () { renderForm(); });
+                loadMyRegistration();
+                loadPublicBoard();
+            });
+        })();
+        </script>
 
         <!-- ===================== JUSTBET SIGNUP BONUS ===================== -->
         <section class="section panel" id="justbet-bonus" aria-label="JustBet new player bonus">

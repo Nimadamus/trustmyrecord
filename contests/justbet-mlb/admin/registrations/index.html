@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Contest Registrations Admin | JustBet MLB | TrustMyRecord</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260520mailbox1"></script>
+    <script defer src="/static/js/config.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --bg: #07111d;
+            --panel: rgba(10, 19, 33, 0.96);
+            --panel-2: rgba(16, 29, 49, 0.82);
+            --line: rgba(148, 163, 184, 0.16);
+            --text: #eef4fb;
+            --muted: #9fb0c3;
+            --faint: #6f8093;
+            --cyan: #2dd4bf;
+            --gold: #d4a72c;
+            --gold-bright: #f0c449;
+            --green: #22c55e;
+            --red: #ef4444;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh; color: var(--text);
+            font-family: "Inter", system-ui, sans-serif;
+            background: linear-gradient(180deg, #07111d 0%, #0a1421 58%, #08101c 100%);
+        }
+        a { color: inherit; text-decoration: none; }
+        .page { width: min(1280px, calc(100% - 32px)); margin: 0 auto; padding: 22px 0 64px; }
+        .panel {
+            border: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(18, 31, 52, 0.96), rgba(8, 15, 27, 0.97));
+            border-radius: 18px;
+            padding: 24px 28px;
+        }
+        h1, h2 { font-family: "Barlow", "Inter", sans-serif; margin: 0; }
+        h1 { font-size: 1.8rem; font-weight: 900; }
+        h2 { font-size: 1.1rem; font-weight: 900; }
+        .crumbs { color: var(--muted); font-size: 0.85rem; margin-bottom: 14px; }
+        .crumbs a:hover { color: #fff; }
+        .privacy-banner {
+            margin-top: 16px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            border: 1px solid rgba(212, 167, 44, 0.4);
+            background: rgba(28, 22, 8, 0.55);
+            color: #ffe9a8;
+            font-size: 0.9rem;
+            line-height: 1.55;
+        }
+        .privacy-banner b { color: #fff5d8; }
+        .toolbar {
+            margin-top: 18px;
+            display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+        }
+        .toolbar input[type=text] {
+            flex: 1; min-width: 200px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: rgba(8, 14, 26, 0.85);
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+        .toolbar select {
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: rgba(8, 14, 26, 0.85);
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+        .toolbar button.refresh {
+            padding: 10px 16px; border-radius: 8px;
+            background: rgba(15, 23, 42, 0.74);
+            color: var(--text); border: 1px solid var(--line);
+            font-weight: 800; cursor: pointer;
+        }
+        .auth-card {
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: var(--panel-2);
+        }
+        .auth-card input {
+            width: 100%; max-width: 480px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--line);
+            background: rgba(8, 14, 26, 0.85);
+            color: var(--text);
+            font-family: "JetBrains Mono", monospace;
+        }
+        .reg-table-wrap {
+            margin-top: 18px;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+        table.regs { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        table.regs th, table.regs td {
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--line);
+            vertical-align: top;
+        }
+        table.regs th {
+            background: rgba(15, 23, 42, 0.6);
+            font-size: 0.74rem;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 800;
+            position: sticky;
+            top: 0;
+        }
+        table.regs tbody tr:hover { background: rgba(15, 23, 42, 0.5); }
+        table.regs tbody tr:last-child td { border-bottom: 0; }
+        .pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 10px; border-radius: 999px;
+            font-size: 0.72rem; font-weight: 800;
+            letter-spacing: 0.06em; text-transform: uppercase;
+        }
+        .pill.pending {
+            background: rgba(212, 167, 44, 0.14);
+            border: 1px solid rgba(212, 167, 44, 0.4);
+            color: #ffe9a8;
+        }
+        .pill.verified {
+            background: rgba(34, 197, 94, 0.12);
+            border: 1px solid rgba(34, 197, 94, 0.45);
+            color: #bbf7d0;
+        }
+        .pill.needs_info {
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #bae6fd;
+        }
+        .pill.rejected {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fecaca;
+        }
+        .private {
+            background: rgba(239, 68, 68, 0.06);
+            color: #fecaca;
+            font-family: "JetBrains Mono", "Courier New", monospace;
+            font-size: 0.85rem;
+        }
+        .actions {
+            display: flex; gap: 6px; flex-wrap: wrap; min-width: 280px;
+        }
+        .btn {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            font-weight: 800;
+            border: 1px solid var(--line);
+            background: rgba(15, 23, 42, 0.74);
+            color: var(--text);
+            cursor: pointer;
+            letter-spacing: 0.04em;
+        }
+        .btn:hover { border-color: rgba(45, 212, 191, 0.4); }
+        .btn.approve { border-color: rgba(34, 197, 94, 0.5); color: #bbf7d0; }
+        .btn.reject  { border-color: rgba(239, 68, 68, 0.5); color: #fecaca; }
+        .btn.needs   { border-color: rgba(56, 189, 248, 0.5); color: #bae6fd; }
+        .btn.save    { background: linear-gradient(180deg, var(--gold-bright), var(--gold)); color: #1a1206; border-color: #b4881d; }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        textarea.notes {
+            width: 100%; min-height: 60px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--line);
+            background: rgba(8, 14, 26, 0.85);
+            color: var(--text);
+            font-family: inherit; font-size: 0.85rem;
+            resize: vertical;
+        }
+        .row-msg {
+            font-size: 0.78rem;
+            margin-top: 6px;
+        }
+        .row-msg.ok { color: #bbf7d0; }
+        .row-msg.err { color: #fecaca; }
+        .empty {
+            padding: 22px;
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+        .meta { color: var(--faint); font-size: 0.76rem; }
+        .copy-btn {
+            margin-left: 6px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid var(--line);
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 0.72rem;
+        }
+        .copy-btn:hover { color: #fff; border-color: rgba(45, 212, 191, 0.4); }
+    </style>
+</head>
+<body>
+    <div id="tmr-nav-placeholder"></div>
+
+    <main class="page">
+        <div class="crumbs"><a href="/contests/">Contests</a> &rsaquo; <a href="/contests/justbet-mlb/">JustBet MLB</a> &rsaquo; Admin Registrations</div>
+
+        <section class="panel">
+            <h1>Contest Registrations <span style="color:var(--muted); font-size:1rem; font-weight:600;">/ JustBet MLB</span></h1>
+
+            <div class="privacy-banner">
+                <b>Privacy notice:</b> The sportsbook name, account/customer ID, and email shown on this page are <b>verification data</b>. They are visible only to admins on this private page and are <b>never</b> displayed on the public contest signup board.
+            </div>
+
+            <div class="auth-card" id="auth-card">
+                <h2 style="margin-bottom: 10px;">Admin Token</h2>
+                <p style="color: var(--muted); font-size: 0.88rem; margin: 0 0 8px;">Paste the TMR <code>ADMIN_TOKEN</code> (sent in the <code>x-admin-token</code> header on every request). Stored only in this browser tab.</p>
+                <input type="password" id="admin-token" placeholder="ADMIN_TOKEN" autocomplete="off">
+                <div style="margin-top: 10px; display:flex; gap:8px; flex-wrap:wrap;">
+                    <button class="btn save" id="auth-save">Save &amp; Load Registrations</button>
+                    <button class="btn" id="auth-clear">Clear Token</button>
+                </div>
+                <p id="auth-msg" class="row-msg" style="margin-top: 8px;"></p>
+            </div>
+
+            <div class="toolbar">
+                <input type="text" id="filter-text" placeholder="Filter by TMR username, sportsbook ID, or email…">
+                <select id="filter-status">
+                    <option value="">All statuses</option>
+                    <option value="pending_verification">Pending Verification</option>
+                    <option value="needs_info">Needs Info</option>
+                    <option value="verified_eligible">Verified &amp; Eligible</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+                <button class="refresh" id="refresh-btn"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+                <span id="count-label" style="color: var(--muted); font-size: 0.85rem;"></span>
+            </div>
+
+            <div class="reg-table-wrap">
+                <table class="regs" aria-label="All contest registrations">
+                    <thead>
+                        <tr>
+                            <th style="min-width:140px;">TMR Username</th>
+                            <th style="min-width:120px;">Sportsbook</th>
+                            <th style="min-width:160px;">Account / Customer ID</th>
+                            <th style="min-width:180px;">Sportsbook Email</th>
+                            <th style="min-width:160px;">Submitted</th>
+                            <th style="min-width:140px;">Status</th>
+                            <th style="min-width:280px;">Admin Notes</th>
+                            <th style="min-width:320px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="regs-tbody">
+                        <tr><td colspan="8" class="empty">Enter your admin token above to load registrations.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+
+    <div id="tmr-footer-placeholder"></div>
+
+    <script>
+    (function () {
+        var API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        var CONTEST_ID = 'justbet-mlb';
+        var TOKEN_KEY = 'tmr_contest_admin_token';
+        var allRows = [];
+
+        function getStoredToken() {
+            try { return sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; }
+        }
+        function setStoredToken(t) {
+            try {
+                if (t) sessionStorage.setItem(TOKEN_KEY, t);
+                else sessionStorage.removeItem(TOKEN_KEY);
+            } catch (e) {}
+        }
+        function escapeHtml(s) {
+            return String(s == null ? '' : s)
+                .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+                .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+        }
+        function statusLabel(s) {
+            if (s === 'verified_eligible') return 'Verified & Eligible';
+            if (s === 'pending_verification') return 'Pending Verification';
+            if (s === 'needs_info') return 'Needs Info';
+            if (s === 'rejected') return 'Rejected';
+            return s || '—';
+        }
+        function statusPillClass(s) {
+            if (s === 'verified_eligible') return 'pill verified';
+            if (s === 'pending_verification') return 'pill pending';
+            if (s === 'needs_info') return 'pill needs_info';
+            if (s === 'rejected') return 'pill rejected';
+            return 'pill';
+        }
+        function fmtDate(d) {
+            if (!d) return '—';
+            try {
+                var dt = new Date(d);
+                if (isNaN(dt)) return d;
+                return dt.toLocaleString();
+            } catch (e) { return d; }
+        }
+
+        function authMsg(text, ok) {
+            var el = document.getElementById('auth-msg');
+            el.textContent = text || '';
+            el.className = 'row-msg ' + (ok ? 'ok' : 'err');
+        }
+
+        function loadRegistrations() {
+            var token = (document.getElementById('admin-token').value || '').trim();
+            if (!token) {
+                authMsg('Enter admin token first.', false);
+                return;
+            }
+            authMsg('Loading…', true);
+            fetch(API_BASE + '/contests/' + CONTEST_ID + '/admin/registrations', {
+                headers: { 'x-admin-token': token }
+            }).then(function (r) {
+                return r.json().then(function (data) { return { status: r.status, data: data }; });
+            }).then(function (res) {
+                if (res.status === 403 || res.status === 401) {
+                    authMsg('Admin token rejected.', false);
+                    return;
+                }
+                if (res.status >= 400) {
+                    authMsg('Failed to load: ' + ((res.data && res.data.error) || ('HTTP ' + res.status)), false);
+                    return;
+                }
+                allRows = (res.data && Array.isArray(res.data.entries)) ? res.data.entries : [];
+                setStoredToken(token);
+                authMsg('Loaded ' + allRows.length + ' registrations.', true);
+                renderTable();
+            }).catch(function (err) {
+                authMsg('Network error: ' + (err && err.message ? err.message : 'failed.'), false);
+            });
+        }
+
+        function applyFilters(rows) {
+            var q = (document.getElementById('filter-text').value || '').trim().toLowerCase();
+            var s = (document.getElementById('filter-status').value || '').trim();
+            return rows.filter(function (r) {
+                if (s && r.status !== s) return false;
+                if (q) {
+                    var hay = [r.username, r.sportsbook_account_id, r.sportsbook_email, r.sportsbook_name]
+                        .map(function (v) { return (v || '').toString().toLowerCase(); }).join(' ');
+                    if (hay.indexOf(q) === -1) return false;
+                }
+                return true;
+            });
+        }
+
+        function renderTable() {
+            var rows = applyFilters(allRows);
+            var tbody = document.getElementById('regs-tbody');
+            document.getElementById('count-label').textContent = rows.length + ' / ' + allRows.length + ' shown';
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="empty">No registrations match the current filter.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = rows.map(function (r) {
+                var id = r.id;
+                var acct = r.sportsbook_account_id || '';
+                var email = r.sportsbook_email || '';
+                return '' +
+                    '<tr data-id="' + id + '">' +
+                        '<td><a href="/profile/?username=' + encodeURIComponent(r.username) + '" target="_blank" rel="noopener" style="color:#fff5d8; font-weight:700;">@' + escapeHtml(r.username) + '</a><div class="meta">id=' + id + '</div></td>' +
+                        '<td>' + escapeHtml(r.sportsbook_name || '—') + '</td>' +
+                        '<td class="private"><span data-copy="' + escapeHtml(acct) + '">' + escapeHtml(acct || '—') + '</span>' + (acct ? ' <button class="copy-btn" data-copy-text="' + escapeHtml(acct) + '">copy</button>' : '') + '</td>' +
+                        '<td class="private">' + escapeHtml(email || '—') + (email ? ' <button class="copy-btn" data-copy-text="' + escapeHtml(email) + '">copy</button>' : '') + '</td>' +
+                        '<td><div>' + escapeHtml(fmtDate(r.submitted_at || r.created_at)) + '</div>' + (r.status_updated_at ? '<div class="meta">updated ' + escapeHtml(fmtDate(r.status_updated_at)) + '</div>' : '') + '</td>' +
+                        '<td><span class="' + statusPillClass(r.status) + '">' + escapeHtml(statusLabel(r.status)) + '</span>' + (r.status_reason ? '<div class="meta" style="margin-top:4px;">reason: ' + escapeHtml(r.status_reason) + '</div>' : '') + '</td>' +
+                        '<td><textarea class="notes" data-field="admin_notes">' + escapeHtml(r.admin_notes || '') + '</textarea><div style="margin-top: 6px;"><input type="text" class="notes" placeholder="Status reason (visible to user on needs_info / rejected)" data-field="status_reason" value="' + escapeHtml(r.status_reason || '') + '" style="min-height:auto;"></div></td>' +
+                        '<td>' +
+                            '<div class="actions">' +
+                                '<button class="btn approve" data-action="approve">Approve</button>' +
+                                '<button class="btn needs"   data-action="needs">Needs Info</button>' +
+                                '<button class="btn reject"  data-action="reject">Reject</button>' +
+                                '<button class="btn save"    data-action="save">Save Notes</button>' +
+                            '</div>' +
+                            '<div class="row-msg" data-row-msg></div>' +
+                        '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        function patchRow(tr, body, msg) {
+            var id = tr.getAttribute('data-id');
+            var token = (document.getElementById('admin-token').value || '').trim();
+            if (!token) { authMsg('Admin token required.', false); return; }
+            var msgEl = tr.querySelector('[data-row-msg]');
+            var btns = tr.querySelectorAll('.btn');
+            btns.forEach(function (b) { b.disabled = true; });
+            if (msgEl) { msgEl.textContent = 'Saving…'; msgEl.className = 'row-msg'; }
+            fetch(API_BASE + '/contests/' + CONTEST_ID + '/admin/registrations/' + id, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', 'x-admin-token': token },
+                body: JSON.stringify(body)
+            }).then(function (r) {
+                return r.json().then(function (data) { return { status: r.status, data: data }; });
+            }).then(function (res) {
+                btns.forEach(function (b) { b.disabled = false; });
+                if (res.status >= 200 && res.status < 300) {
+                    if (msgEl) { msgEl.textContent = msg || 'Saved'; msgEl.className = 'row-msg ok'; }
+                    var idx = allRows.findIndex(function (r) { return String(r.id) === String(id); });
+                    if (idx >= 0 && res.data && res.data.entry) {
+                        Object.assign(allRows[idx], res.data.entry);
+                        renderTable();
+                    }
+                } else {
+                    var em = (res.data && res.data.error) || ('HTTP ' + res.status);
+                    if (msgEl) { msgEl.textContent = 'Failed: ' + em; msgEl.className = 'row-msg err'; }
+                }
+            }).catch(function (err) {
+                btns.forEach(function (b) { b.disabled = false; });
+                if (msgEl) { msgEl.textContent = 'Network error: ' + (err && err.message ? err.message : 'failed'); msgEl.className = 'row-msg err'; }
+            });
+        }
+
+        function readRowFields(tr) {
+            var notes = tr.querySelector('textarea[data-field="admin_notes"]');
+            var reason = tr.querySelector('input[data-field="status_reason"]');
+            return {
+                admin_notes: notes ? notes.value : null,
+                status_reason: reason ? reason.value : null,
+            };
+        }
+
+        document.addEventListener('click', function (ev) {
+            var copyBtn = ev.target.closest('.copy-btn');
+            if (copyBtn) {
+                var text = copyBtn.getAttribute('data-copy-text') || '';
+                if (text && navigator.clipboard) {
+                    navigator.clipboard.writeText(text).then(function () {
+                        var orig = copyBtn.textContent;
+                        copyBtn.textContent = 'copied';
+                        setTimeout(function () { copyBtn.textContent = orig; }, 1200);
+                    });
+                }
+                return;
+            }
+            var btn = ev.target.closest('.btn[data-action]');
+            if (!btn) return;
+            var tr = btn.closest('tr[data-id]');
+            if (!tr) return;
+            var action = btn.getAttribute('data-action');
+            var fields = readRowFields(tr);
+            if (action === 'approve') {
+                patchRow(tr, { status: 'verified_eligible', admin_notes: fields.admin_notes, status_reason: null }, 'Approved');
+            } else if (action === 'reject') {
+                patchRow(tr, { status: 'rejected', admin_notes: fields.admin_notes, status_reason: fields.status_reason || null }, 'Rejected');
+            } else if (action === 'needs') {
+                patchRow(tr, { status: 'needs_info', admin_notes: fields.admin_notes, status_reason: fields.status_reason || null }, 'Marked Needs Info');
+            } else if (action === 'save') {
+                patchRow(tr, { admin_notes: fields.admin_notes, status_reason: fields.status_reason || null }, 'Notes saved');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var tok = getStoredToken();
+            if (tok) document.getElementById('admin-token').value = tok;
+            document.getElementById('auth-save').addEventListener('click', loadRegistrations);
+            document.getElementById('auth-clear').addEventListener('click', function () {
+                document.getElementById('admin-token').value = '';
+                setStoredToken('');
+                authMsg('Token cleared.', true);
+            });
+            document.getElementById('refresh-btn').addEventListener('click', loadRegistrations);
+            document.getElementById('filter-text').addEventListener('input', renderTable);
+            document.getElementById('filter-status').addEventListener('change', renderTable);
+            if (tok) loadRegistrations();
+        });
+    })();
+    </script>
+</body>
+</html>
