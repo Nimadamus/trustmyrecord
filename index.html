@@ -4486,37 +4486,41 @@ function escapeHtml(value) {
         }).join('');
     }
 
-    function gameLabel(pick) {
-        return [pick.away_team, pick.home_team].filter(Boolean).join(' at ') || pick.game_id || 'Tracked game';
-    }
-
     function renderPicks(picks) {
         const list = document.getElementById('tmrHeroPicksList');
         if (!list) return;
-        const seen = new Set();
-        const cleanPicks = picks
-            .filter(function (pick) { return pick && pick.username; })
-            .filter(function (pick) {
-                const key = String(pick.username).toLowerCase() + '|' + gameLabel(pick).toLowerCase();
-                if (seen.has(key)) return false;
-                seen.add(key);
-                return true;
-            })
-            .slice(0, 5);
-        if (!cleanPicks.length) {
+
+        const groups = new Map();
+        picks.filter(function (pick) { return pick && pick.username; })
+            .forEach(function (pick) {
+                const key = String(pick.username).toLowerCase();
+                const existing = groups.get(key);
+                if (existing) {
+                    existing.count += 1;
+                } else {
+                    groups.set(key, {
+                        username: pick.display_name || pick.username,
+                        count: 1
+                    });
+                }
+            });
+
+        const grouped = Array.from(groups.values()).slice(0, 5);
+
+        if (!grouped.length) {
             list.className = 'tmr-activity-list tmr-activity-empty';
             list.setAttribute('aria-busy', 'true');
             list.innerHTML = '<div class="tmr-activity-loading"><span aria-hidden="true">▣</span><strong>Loading recent activity</strong><p>Users who lock picks before game start will show up here.</p></div>';
             return;
         }
+
         list.className = 'tmr-activity-list';
         list.setAttribute('aria-busy', 'false');
-        list.innerHTML = cleanPicks.map(function (pick) {
-            const username = pick.display_name || pick.username;
-            const game = gameLabel(pick);
+        list.innerHTML = grouped.map(function (group) {
+            const verb = group.count === 1 ? 'posted a verified pick' : 'locked in ' + group.count + ' picks';
             return '<div class="tmr-activity-row">'
                 + '<span class="tmr-activity-icon" aria-hidden="true">▣</span>'
-                + '<div class="tmr-activity-text"><b>' + escapeHtml(username) + '</b> locked a pick for <em>' + escapeHtml(game) + '</em></div>'
+                + '<div class="tmr-activity-text"><b>' + escapeHtml(group.username) + '</b> ' + verb + '</div>'
                 + '</div>';
         }).join('');
     }
