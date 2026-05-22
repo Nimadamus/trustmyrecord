@@ -2,6 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <link rel="canonical" href="https://trustmyrecord.com/">
 <script>
   (function () {
@@ -2876,8 +2879,6 @@ button{font:inherit;cursor:pointer}
     text-align: center;
     margin-top: 12px;
   }
-  .tmr-pick-table-head,
-  .tmr-pick-line,
   .tmr-mini-ticket {
     display: grid;
     grid-template-columns: minmax(134px, 1.1fr) minmax(126px, 1fr) 58px 66px 54px;
@@ -2886,82 +2887,7 @@ button{font:inherit;cursor:pointer}
     color: #edf5ff;
     font-size: 13px;
   }
-  .tmr-pick-table-head {
-    min-height: 32px;
-    padding: 0 8px;
-    color: var(--premium-muted);
-    border-top: 1px solid rgba(134, 162, 190, .10);
-    border-bottom: 1px solid rgba(134, 162, 190, .10);
-    background: rgba(255,255,255,.025);
-    font-size: 9px;
-    font-weight: 900;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-  }
-  .tmr-pick-line {
-    min-height: 72px;
-    padding: 11px 8px;
-    border-top: 1px solid rgba(134, 162, 190, .10);
-  }
-  .tmr-pick-game,
-  .tmr-pick-market {
-    min-width: 0;
-  }
-  .tmr-pick-game strong,
-  .tmr-pick-market strong {
-    display: block;
-    overflow: hidden;
-    color: #fff;
-    font-size: 12px;
-    line-height: 1.25;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .tmr-pick-game small,
-  .tmr-pick-market small {
-    display: block;
-    margin-top: 4px;
-    overflow: hidden;
-    color: var(--premium-muted);
-    font-size: 10px;
-    line-height: 1.25;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .tmr-pick-odds,
-  .tmr-pick-units {
-    color: #dfe8f4;
-    font-family: var(--mono, "JetBrains Mono", monospace);
-    font-size: 11px;
-    font-style: normal;
-    text-align: right;
-  }
-  .tmr-pick-units { color: var(--premium-green); font-weight: 900; }
-  .tmr-pick-units { padding-right: 2px; }
-  .tmr-pick-result {
-    justify-self: stretch;
-    min-width: 0;
-    padding: 7px 7px;
-    border-radius: 999px;
-    color: #042019;
-    background: var(--premium-green);
-    font-size: 10.5px;
-    font-weight: 950;
-    text-align: center;
-    text-transform: uppercase;
-  }
-  .tmr-pick-result.loss {
-    color: #fff;
-    background: rgba(255,95,109,.82);
-  }
-  .tmr-pick-result.push,
-  .tmr-pick-result.pending {
-    color: #f5f9ff;
-    background: rgba(134,162,190,.24);
-  }
-  .tmr-pick-line small,
   .tmr-mini-ticket small { color: var(--premium-muted); line-height: 1.25; }
-  .tmr-pick-line small b,
   .tmr-mini-ticket small b { color: #fff; }
   .tmr-mini-ticket strong { font-size: 13px; }
   .tmr-mini-ticket em {
@@ -2977,46 +2903,6 @@ button{font:inherit;cursor:pointer}
     font-size: 12px;
     font-weight: 900;
     text-align: right;
-  }
-  .tmr-pick-empty {
-    min-height: 296px;
-    display: grid;
-    place-items: center;
-    align-content: center;
-    gap: 10px;
-    padding: 30px;
-    border-top: 1px solid rgba(134, 162, 190, .10);
-    color: #d7e0ec;
-    text-align: center;
-    background:
-      radial-gradient(circle at 50% 28%, rgba(55,214,193,.13), transparent 8rem),
-      rgba(4, 12, 23, .22);
-  }
-  .tmr-pick-empty span {
-    display: grid;
-    place-items: center;
-    width: 42px;
-    height: 42px;
-    border: 1px solid rgba(55, 214, 193, .28);
-    border-radius: 9px;
-    color: var(--premium-teal);
-    background: rgba(55, 214, 193, .10);
-  }
-  .tmr-pick-empty strong { color: #fff; font-size: 16px; }
-  .tmr-pick-empty p {
-    max-width: 310px;
-    margin: 0;
-    color: var(--premium-muted);
-    font-size: 13px;
-    line-height: 1.45;
-  }
-  .tmr-picks-card .tmr-pick-line:first-of-type { border-top: 0; }
-  .tmr-picks-card footer {
-    padding-top: 11px;
-    border-top: 1px solid rgba(134, 162, 190, .10);
-    color: var(--premium-muted);
-    text-align: center;
-    font-size: 12px;
   }
 
   /* Recent Platform Activity card (activity only, no pick details) */
@@ -3389,14 +3275,6 @@ button{font:inherit;cursor:pointer}
       overflow-x: auto;
       scrollbar-width: none;
     }
-    .tmr-pick-table-head { display: none; }
-    .tmr-pick-line {
-      grid-template-columns: 1fr auto;
-      gap: 8px 14px;
-    }
-    .tmr-pick-game,
-    .tmr-pick-market { grid-column: 1 / -1; }
-    .tmr-pick-result { justify-self: end; }
     .tmr-premium-proof-cards,
     .tmr-platform-grid { grid-template-columns: 1fr; }
     .tmr-platform-section { padding: 52px 16px 62px; }
@@ -4535,15 +4413,6 @@ function escapeHtml(value) {
         return (parsed > 0 ? '+' : '') + parsed.toFixed(2).replace(/\.00$/, '') + (suffix || '');
     }
 
-    function statusLabel(status) {
-        const clean = String(status || '').toLowerCase();
-        if (clean === 'won' || clean === 'win') return 'Win';
-        if (clean === 'lost' || clean === 'loss') return 'Loss';
-        if (clean === 'push') return 'Push';
-        if (clean === 'pending') return 'Pending';
-        return clean ? clean.charAt(0).toUpperCase() + clean.slice(1) : 'Tracked';
-    }
-
     async function request(path) {
         if (window.api && typeof window.api.request === 'function') {
             return window.api.request(path);
@@ -4619,17 +4488,6 @@ function escapeHtml(value) {
 
     function gameLabel(pick) {
         return [pick.away_team, pick.home_team].filter(Boolean).join(' at ') || pick.game_id || 'Tracked game';
-    }
-
-    function marketLabel(pick) {
-        const market = String(pick.market_type || 'Pick').replace(/_/g, ' ');
-        return market.charAt(0).toUpperCase() + market.slice(1);
-    }
-
-    function pickLabel(pick) {
-        const selection = pick.selection || pick.pick || 'Locked pick';
-        const line = pick.line_snapshot != null ? ' ' + pick.line_snapshot : '';
-        return selection + line;
     }
 
     function renderPicks(picks) {
