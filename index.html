@@ -2074,27 +2074,27 @@ button{font:inherit;cursor:pointer}
       <div class="tmr-dashboard-shell">
         <div class="tmr-dashboard-grid">
           <section class="tmr-board-card">
-            <header><h3>Public Profiles</h3><a href="/handicappers/">View All</a></header>
+            <header><h3>Public Profiles</h3><a href="/leaderboards/">View Leaderboards</a></header>
             <table>
               <thead><tr><th>#</th><th>User</th><th>ROI</th><th>Units</th></tr></thead>
               <tbody id="tmrHeroLeaderboardBody">
                 <tr class="tmr-empty-table-row"><td colspan="4">Public profiles will populate after users submit locked picks.</td></tr>
               </tbody>
             </table>
-            <a class="tmr-see-more" href="/handicappers/">Browse public profiles →</a>
+            <a class="tmr-see-more" href="/leaderboards/">View Leaderboards →</a>
           </section>
 
-          <section class="tmr-board-card tmr-picks-card">
-            <header><h3>Recent Locked Picks</h3><a href="/sportsbook/">View All</a></header>
-            <div class="tmr-pick-table-head" aria-hidden="true">
-              <span>Game</span><span>Pick</span><span>Odds</span><span>Result</span><span>Units</span>
+          <section class="tmr-board-card tmr-activity-card">
+            <header><h3>Recent Platform Activity</h3><a href="/handicappers/">View Public Records</a></header>
+            <div id="tmrHeroPicksList" class="tmr-activity-list tmr-activity-empty" aria-live="polite" aria-busy="true">
+              <div class="tmr-activity-loading">
+                <span aria-hidden="true">▣</span>
+                <strong>Loading recent activity</strong>
+                <p>Users who lock picks before game start will show up here.</p>
+              </div>
             </div>
-            <div id="tmrHeroPicksList" class="tmr-pick-empty">
-              <span>▣</span>
-              <strong>Loading verified picks</strong>
-              <p>Recent locked picks will appear here once users lock picks before game start.</p>
-            </div>
-            <footer>▣ All picks are locked before game start</footer>
+            <p class="tmr-activity-trustnote">▣ Picks unlock after game start. Records update after grading.</p>
+            <a class="tmr-activity-cta" href="/handicappers/">View Public Records →</a>
           </section>
         </div>
 
@@ -2724,7 +2724,7 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-dashboard-grid {
     display: grid;
-    grid-template-columns: minmax(310px, .82fr) minmax(380px, 1.18fr);
+    grid-template-columns: minmax(330px, 1fr) minmax(330px, 1fr);
     border: 1px solid rgba(134, 162, 190, .17);
     border-radius: 8px;
     overflow: hidden;
@@ -3018,6 +3018,105 @@ button{font:inherit;cursor:pointer}
     text-align: center;
     font-size: 12px;
   }
+
+  /* Recent Platform Activity card (activity only, no pick details) */
+  .tmr-activity-card { display: flex; flex-direction: column; }
+  .tmr-activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid rgba(134, 162, 190, .10);
+    padding-top: 12px;
+  }
+  .tmr-activity-row {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    border: 1px solid rgba(134, 162, 190, .14);
+    border-radius: 8px;
+    background: rgba(7, 18, 32, .58);
+  }
+  .tmr-activity-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid rgba(55, 214, 193, .28);
+    border-radius: 8px;
+    color: var(--premium-teal);
+    background: rgba(55, 214, 193, .08);
+    font-size: 14px;
+  }
+  .tmr-activity-text {
+    min-width: 0;
+    color: #edf5ff;
+    font-size: 13px;
+    line-height: 1.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tmr-activity-text b {
+    color: #fff;
+    font-weight: 900;
+  }
+  .tmr-activity-text em {
+    color: var(--premium-muted);
+    font-style: normal;
+  }
+  .tmr-activity-empty {
+    min-height: 220px;
+    place-items: center;
+    align-content: center;
+    border: 1px dashed rgba(134, 162, 190, .18);
+    border-radius: 8px;
+    background:
+      radial-gradient(circle at 50% 28%, rgba(55,214,193,.10), transparent 8rem),
+      rgba(4, 12, 23, .22);
+  }
+  .tmr-activity-empty.tmr-activity-list { padding: 24px; }
+  .tmr-activity-loading {
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+    text-align: center;
+    color: var(--premium-muted);
+  }
+  .tmr-activity-loading span {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(55, 214, 193, .28);
+    border-radius: 9px;
+    color: var(--premium-teal);
+    background: rgba(55, 214, 193, .10);
+  }
+  .tmr-activity-loading strong { color: #fff; font-size: 15px; }
+  .tmr-activity-loading p { margin: 0; max-width: 280px; font-size: 12.5px; line-height: 1.45; }
+  .tmr-activity-trustnote {
+    margin: 12px 0 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(134, 162, 190, .10);
+    color: var(--premium-muted);
+    font-size: 12px;
+    text-align: center;
+  }
+  .tmr-activity-cta {
+    display: block;
+    padding: 10px 14px;
+    border: 1px solid rgba(55, 214, 193, .42);
+    border-radius: 7px;
+    color: var(--premium-teal);
+    background: rgba(55, 214, 193, .08);
+    font-size: 13px;
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: .01em;
+  }
+  .tmr-activity-cta:hover { background: rgba(55, 214, 193, .14); }
   .tmr-source-strip {
     display: flex;
     align-items: center;
@@ -4536,30 +4635,31 @@ function escapeHtml(value) {
     function renderPicks(picks) {
         const list = document.getElementById('tmrHeroPicksList');
         if (!list) return;
+        const seen = new Set();
         const cleanPicks = picks
-            .filter(function (pick) { return pick && pick.username && pick.status; })
+            .filter(function (pick) { return pick && pick.username; })
+            .filter(function (pick) {
+                const key = String(pick.username).toLowerCase() + '|' + gameLabel(pick).toLowerCase();
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            })
             .slice(0, 5);
         if (!cleanPicks.length) {
-            list.className = 'tmr-pick-empty';
-            list.innerHTML = '<span>▣</span><strong>Loading verified picks</strong><p>Recent locked picks will appear here once users lock picks before game start.</p>';
+            list.className = 'tmr-activity-list tmr-activity-empty';
+            list.setAttribute('aria-busy', 'true');
+            list.innerHTML = '<div class="tmr-activity-loading"><span aria-hidden="true">▣</span><strong>Loading recent activity</strong><p>Users who lock picks before game start will show up here.</p></div>';
             return;
         }
-        list.className = '';
+        list.className = 'tmr-activity-list';
+        list.setAttribute('aria-busy', 'false');
         list.innerHTML = cleanPicks.map(function (pick) {
-            const result = statusLabel(pick.status);
-            const isLoss = /^loss|lost$/i.test(result);
-            const isPush = /^push$/i.test(result);
-            const isPending = /^pending$/i.test(result);
-            const resultUnits = signed(pick.result_units, 'u');
-            const odds = pick.odds_snapshot != null ? String(pick.odds_snapshot) : '--';
             const username = pick.display_name || pick.username;
-            const resultClass = isLoss ? ' loss' : isPush ? ' push' : isPending ? ' pending' : '';
-            return '<div class="tmr-pick-line">'
-                + '<div class="tmr-pick-game"><strong>' + escapeHtml(gameLabel(pick)) + '</strong><small>' + escapeHtml(username) + '</small></div>'
-                + '<div class="tmr-pick-market"><strong>' + escapeHtml(pickLabel(pick)) + '</strong><small>' + escapeHtml(marketLabel(pick)) + '</small></div>'
-                + '<em class="tmr-pick-odds">' + escapeHtml(odds) + '</em>'
-                + '<mark class="tmr-pick-result' + resultClass + '">' + escapeHtml(result) + '</mark>'
-                + '<strong class="tmr-pick-units">' + escapeHtml(resultUnits) + '</strong></div>';
+            const game = gameLabel(pick);
+            return '<div class="tmr-activity-row">'
+                + '<span class="tmr-activity-icon" aria-hidden="true">▣</span>'
+                + '<div class="tmr-activity-text"><b>' + escapeHtml(username) + '</b> locked a pick for <em>' + escapeHtml(game) + '</em></div>'
+                + '</div>';
         }).join('');
     }
 
