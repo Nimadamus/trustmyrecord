@@ -87,10 +87,10 @@
                     <span class="status-pill" id="my-status-pill">Pending</span>
                     <span style="color:var(--muted);font-size:0.88rem;" id="my-registered-at"></span>
                 </div>
-                <p class="lead" id="my-status-note">Your registration is on file. You can submit contest picks now in Contest Mode.</p>
+                <p class="lead" id="my-status-note">Your registration is on file. Contest pick entry opens when the contest officially begins.</p>
                 <div class="actions">
-                    <a class="cta-primary" href="/sportsbook/?contest=justbet-mlb"><i class="fa-solid fa-trophy"></i> Enter Contest Picks</a>
-                    <a class="cta-ghost" href="/contests/justbet-mlb/dashboard/"><i class="fa-solid fa-chart-line"></i> Contest Dashboard</a>
+                    <!-- Enter Contest Picks CTA intentionally hidden until contest-pick entry flow is fully built, tested, and approved (May 22, 2026). Do NOT restore this link until then. -->
+                    <a class="cta-primary" href="/contests/justbet-mlb/dashboard/"><i class="fa-solid fa-chart-line"></i> Contest Dashboard</a>
                     <a class="cta-ghost" href="/contests/justbet-mlb/participants/"><i class="fa-solid fa-users"></i> Participants</a>
                 </div>
             </div>
@@ -171,17 +171,16 @@
             try { return new Date(iso).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); }
             catch (_) { return ''; }
         }
+        // PUBLIC FACING STATUS POLICY (May 22 2026): once a user has
+        // submitted their JustBet account number they are "Registered".
+        // Internal stages (pending/needs_info/verified) never surface; only
+        // 'rejected' shows a distinct pill so the user can re-submit.
         function statusPill(status) {
             var el = $('#my-status-pill');
             if (!el) return;
             var cls, label;
-            switch (status) {
-                case 'verified_eligible': cls = 'status-verified'; label = 'Verified'; break;
-                case 'pending_verification': cls = 'status-pending'; label = 'Pending'; break;
-                case 'needs_info': cls = 'status-needsinfo'; label = 'Needs Info'; break;
-                case 'rejected': cls = 'status-rejected'; label = 'Rejected'; break;
-                default: cls = 'status-pending'; label = status || 'Pending';
-            }
+            if (status === 'rejected') { cls = 'status-rejected'; label = 'Rejected'; }
+            else { cls = 'status-verified'; label = 'Registered'; }
             el.className = 'status-pill ' + cls;
             el.textContent = label;
         }
@@ -202,13 +201,7 @@
                 if (reg && reg.status && reg.status !== 'none' && reg.status !== 'rejected') {
                     statusPill(reg.status);
                     $('#my-registered-at').textContent = reg.submitted_at ? ('Registered ' + fmtDate(reg.submitted_at)) : '';
-                    if (reg.status === 'pending_verification') {
-                        $('#my-status-note').textContent = 'Your registration is pending JustBet verification. You can already submit contest picks while you wait.';
-                    } else if (reg.status === 'verified_eligible') {
-                        $('#my-status-note').textContent = 'Your JustBet eligibility is verified. Submit contest picks in Contest Mode.';
-                    } else if (reg.status === 'needs_info') {
-                        $('#my-status-note').textContent = 'The contest admin requested more info. You can still submit contest picks while you respond.';
-                    }
+                    $('#my-status-note').textContent = 'You are Registered for the contest. Your TMR username appears on the public Signup Board as Registered. You can submit contest picks in Contest Mode.';
                     $('#already-registered').hidden = false;
                     return;
                 }

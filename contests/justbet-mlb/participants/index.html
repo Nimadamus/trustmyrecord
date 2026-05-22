@@ -61,14 +61,12 @@
             <p class="lead">Public list of TrustMyRecord users who have registered for the JustBet MLB Handicapping Contest. <strong>TMR usernames only.</strong> No sportsbook account numbers, emails, or private user data are shown.</p>
 
             <div class="stat-row">
-                <div class="stat"><div class="k">Total Registered</div><div class="v" id="stat-total">—</div></div>
-                <div class="stat"><div class="k">Pending</div><div class="v" id="stat-pending">—</div></div>
-                <div class="stat"><div class="k">Verified</div><div class="v" id="stat-verified">—</div></div>
+                <div class="stat"><div class="k">Registered Entrants</div><div class="v" id="stat-total">—</div></div>
             </div>
 
             <div class="actions">
-                <a class="cta-primary" href="/sportsbook/?contest=justbet-mlb"><i class="fa-solid fa-trophy"></i> Enter Contest Picks</a>
-                <a class="cta-ghost" href="/contests/justbet-mlb/register/"><i class="fa-solid fa-user-plus"></i> Register</a>
+                <!-- Enter Contest Picks CTA intentionally hidden until contest-pick entry flow is fully built, tested, and approved (May 22, 2026). Do NOT restore this link until then. -->
+                <a class="cta-primary" href="/contests/justbet-mlb/register/"><i class="fa-solid fa-user-plus"></i> Register for Contest</a>
                 <a class="cta-ghost" href="/contests/justbet-mlb/dashboard/"><i class="fa-solid fa-chart-line"></i> Contest Dashboard</a>
             </div>
 
@@ -104,9 +102,11 @@
                 return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
             });
         }
-        function pillFor(status) {
-            if (status === 'verified_eligible') return '<span class="status-pill status-verified"><i class="fa-solid fa-circle-check"></i> Verified</span>';
-            return '<span class="status-pill status-pending"><i class="fa-solid fa-clock"></i> Pending</span>';
+        // PUBLIC FACING STATUS POLICY (May 22 2026): everyone on the public
+        // participants list is shown as "Registered". Internal verification
+        // stages (pending/verified/needs_info) are NEVER surfaced publicly.
+        function registeredPill() {
+            return '<span class="status-pill status-verified"><i class="fa-solid fa-circle-check"></i> Registered</span>';
         }
         async function load() {
             var tbody = $('#participants-tbody');
@@ -115,22 +115,17 @@
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 var data = await r.json();
                 var entries = Array.isArray(data.entries) ? data.entries : [];
-                var counts = data.counts || {};
                 $('#stat-total').textContent = entries.length;
-                $('#stat-pending').textContent = counts.pending_verification || 0;
-                $('#stat-verified').textContent = counts.verified_eligible || 0;
                 if (!entries.length) {
                     tbody.innerHTML = '<tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-user-plus"></i>No participants yet. <a href="/contests/justbet-mlb/register/" style="color:var(--gold-bright);font-weight:800;">Be the first to register.</a></div></td></tr>';
                     return;
                 }
                 tbody.innerHTML = entries.map(function (e) {
                     var u = e && e.username ? String(e.username) : '—';
-                    return '<tr><td><strong><a href="/profile/?user=' + encodeURIComponent(u) + '" style="color:#fff;">' + escapeHtml(u) + '</a></strong></td><td>' + pillFor(e && e.status) + '</td></tr>';
+                    return '<tr><td><strong><a href="/profile/?user=' + encodeURIComponent(u) + '" style="color:#fff;">' + escapeHtml(u) + '</a></strong></td><td>' + registeredPill() + '</td></tr>';
                 }).join('');
             } catch (err) {
                 $('#stat-total').textContent = '0';
-                $('#stat-pending').textContent = '0';
-                $('#stat-verified').textContent = '0';
                 tbody.innerHTML = '<tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-circle-exclamation"></i>Could not load participants. Try again in a moment.</div></td></tr>';
             }
         }

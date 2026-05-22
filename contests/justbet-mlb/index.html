@@ -542,7 +542,7 @@
                             <i class="fa-solid fa-up-right-from-square"></i> Create Your JustBet Account to Qualify
                         </a>
                         <a class="cta-ghost" href="/contests/justbet-mlb/register/"><i class="fa-solid fa-id-card"></i> Register for the Contest</a>
-                        <a class="cta-ghost" href="/sportsbook/?contest=justbet-mlb"><i class="fa-solid fa-trophy"></i> Enter Contest Picks</a>
+                        <!-- Enter Contest Picks CTA intentionally hidden until contest-pick entry flow is fully built, tested, and approved (May 22, 2026). Do NOT restore this link until then. -->
                         <a class="cta-ghost" href="/contests/justbet-mlb/dashboard/"><i class="fa-solid fa-gauge-high"></i> Contest Dashboard</a>
                         <a class="cta-ghost" href="#rules"><i class="fa-solid fa-list-check"></i> View Contest Rules</a>
                     </div>
@@ -627,7 +627,7 @@
 
                     <div id="reg-state-existing" hidden>
                         <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
-                            <span id="reg-status-pill" class="reg-status-pill pending">Pending Verification</span>
+                            <span id="reg-status-pill" class="reg-status-pill verified">Registered</span>
                             <span id="reg-username-label" style="color:#fff5d8; font-weight:800;"></span>
                         </div>
                         <p id="reg-status-msg" style="margin-top: 10px; color:#d9e3f0; line-height:1.55;"></p>
@@ -644,11 +644,10 @@
                 <div class="reg-card" id="reg-card-board">
                     <h3>Public Signup Board</h3>
                     <p style="color: var(--muted); font-size: 0.92rem; line-height: 1.5; margin: 0 0 12px;">
-                        Live list of TrustMyRecord users registered for the contest. Shows only TMR username and verification status. Sportsbook account numbers, emails, and other private details are <strong>never</strong> displayed here.
+                        Live list of TrustMyRecord users registered for the contest. Shows only TMR username and <strong>Registered</strong> status. Sportsbook account numbers, emails, internal verification stages, and other private details are <strong>never</strong> displayed here.
                     </p>
                     <div id="reg-board-counts" class="reg-counts">
-                        <span>Verified & Eligible: <b id="reg-count-verified">0</b></span>
-                        <span>Pending Verification: <b id="reg-count-pending">0</b></span>
+                        <span>Registered Entrants: <b id="reg-count-registered">0</b></span>
                     </div>
                     <div id="reg-board-wrap" class="reg-board">
                         <table aria-label="Public contest registrations">
@@ -684,19 +683,21 @@
                 } catch (e) {}
                 return null;
             }
+            // PUBLIC FACING STATUS POLICY (May 22 2026): once a user submits
+            // their sportsbook account/customer ID, their status is shown as
+            // "Registered" everywhere on the public surface and to the user
+            // themselves. Internal verification stages (pending/needs_info/
+            // verified) are NEVER surfaced publicly; only 'rejected' falls
+            // back to a quiet pill so the user can re-submit.
             function statusLabel(s) {
-                if (s === 'verified_eligible') return 'Verified & Eligible';
-                if (s === 'pending_verification') return 'Pending Verification';
-                if (s === 'needs_info') return 'Needs Info';
                 if (s === 'rejected') return 'Rejected';
-                return s || '—';
+                if (s === 'registered') return 'Registered';
+                if (s === 'verified_eligible' || s === 'pending_verification' || s === 'needs_info') return 'Registered';
+                return s ? 'Registered' : '—';
             }
             function statusPillClass(s) {
-                if (s === 'verified_eligible') return 'reg-status-pill verified';
-                if (s === 'pending_verification') return 'reg-status-pill pending';
-                if (s === 'needs_info') return 'reg-status-pill needs_info';
                 if (s === 'rejected') return 'reg-status-pill rejected';
-                return 'reg-status-pill pending';
+                return 'reg-status-pill verified';
             }
             function escapeHtml(s) {
                 return String(s == null ? '' : s)
@@ -738,26 +739,22 @@
                 pill.textContent = statusLabel(reg.status);
                 document.getElementById('reg-username-label').textContent = reg.username ? '@' + reg.username : '';
                 var msg = document.getElementById('reg-status-msg');
-                if (reg.status === 'verified_eligible') {
-                    msg.textContent = 'Your registration is verified. You are eligible to submit contest picks once the dashboard opens.';
-                } else if (reg.status === 'pending_verification') {
-                    msg.textContent = 'Your registration was received and is awaiting admin verification against the JustBet contest signup records.';
-                } else if (reg.status === 'needs_info') {
-                    msg.textContent = 'An admin needs additional info before verifying your registration. See the note below and re-submit if needed.';
-                } else if (reg.status === 'rejected') {
+                if (reg.status === 'rejected') {
                     msg.textContent = 'Your registration was rejected. You may re-submit with corrected details.';
+                } else if (reg.status && reg.status !== 'none') {
+                    msg.textContent = 'You are registered for the contest. Your TMR username will appear on the public Signup Board as Registered.';
                 } else {
                     msg.textContent = '';
                 }
                 var reasonEl = document.getElementById('reg-status-reason');
-                if (reg.status_reason && (reg.status === 'needs_info' || reg.status === 'rejected')) {
+                if (reg.status_reason && reg.status === 'rejected') {
                     reasonEl.textContent = 'Admin note: ' + reg.status_reason;
                     reasonEl.hidden = false;
                 } else {
                     reasonEl.hidden = true;
                 }
                 var resubmit = document.getElementById('reg-resubmit-row');
-                if (reg.status === 'rejected' || reg.status === 'needs_info') {
+                if (reg.status === 'rejected') {
                     resubmit.hidden = false;
                 } else {
                     resubmit.hidden = true;
@@ -821,11 +818,11 @@
                 }).then(function (res) {
                     btn.disabled = false; btn.style.opacity = 1;
                     if (res.status >= 200 && res.status < 300) {
-                        showSuccess('Registration submitted. Status is now Pending Verification.');
+                        showSuccess('Registration submitted. You are now Registered for the contest.');
                         loadMyRegistration();
                         loadPublicBoard();
                     } else if (res.status === 409) {
-                        showSuccess('You are already registered. Loading your status…');
+                        showSuccess('You are already Registered. Loading your status…');
                         loadMyRegistration();
                     } else {
                         var msg = (res.data && (res.data.error || (res.data.errors && res.data.errors[0] && (res.data.errors[0].msg || res.data.errors[0].message)))) || ('Registration failed (HTTP ' + res.status + ').');
@@ -844,9 +841,11 @@
                     var tbody = document.getElementById('reg-board-tbody');
                     if (!tbody) return;
                     var entries = (data && Array.isArray(data.entries)) ? data.entries : [];
-                    var counts = (data && data.counts) || {};
-                    document.getElementById('reg-count-verified').textContent = counts.verified_eligible || 0;
-                    document.getElementById('reg-count-pending').textContent = counts.pending_verification || 0;
+                    var total = (data && typeof data.count === 'number')
+                        ? data.count
+                        : entries.length;
+                    var regCountEl = document.getElementById('reg-count-registered');
+                    if (regCountEl) regCountEl.textContent = total;
                     if (!entries.length) {
                         tbody.innerHTML = '<tr><td colspan="2" class="empty">No registrations yet. Be the first to sign up.</td></tr>';
                         return;
@@ -854,7 +853,7 @@
                     tbody.innerHTML = entries.map(function (e) {
                         return '<tr>' +
                             '<td><a href="/profile/?username=' + encodeURIComponent(e.username) + '" style="color:#fff5d8; font-weight:700;">@' + escapeHtml(e.username) + '</a></td>' +
-                            '<td><span class="' + statusPillClass(e.status) + '">' + escapeHtml(statusLabel(e.status)) + '</span></td>' +
+                            '<td><span class="reg-status-pill verified">Registered</span></td>' +
                             '</tr>';
                     }).join('');
                 }).catch(function () {
@@ -950,7 +949,7 @@
                     <p>Register your JustBet account number once. Then submit your 50 sealed MLB picks through the normal Make Picks sportsbook page in <strong>Contest Mode</strong>. Picks reveal at first pitch and are tracked separately from your public TrustMyRecord profile record.</p>
                     <div style="margin-top: 14px; display:flex; gap:8px; flex-wrap:wrap;">
                         <a class="cta-ghost" href="/contests/justbet-mlb/register/"><i class="fa-solid fa-user-plus"></i> Register</a>
-                        <a class="cta-ghost" href="/sportsbook/?contest=justbet-mlb"><i class="fa-solid fa-trophy"></i> Enter Contest Picks</a>
+                        <!-- Enter Contest Picks CTA intentionally hidden until contest-pick entry flow is fully built, tested, and approved (May 22, 2026). Do NOT restore this link until then. -->
                         <a class="cta-ghost" href="/contests/justbet-mlb/participants/"><i class="fa-solid fa-users"></i> Participants</a>
                         <a class="cta-ghost" href="/contests/justbet-mlb/dashboard/"><i class="fa-solid fa-gauge-high"></i> Contest Dashboard</a>
                     </div>
