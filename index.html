@@ -2916,7 +2916,7 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-activity-row {
     display: grid;
-    grid-template-columns: 34px 1fr;
+    grid-template-columns: 34px 1fr auto;
     align-items: center;
     gap: 12px;
     padding: 11px 12px;
@@ -2937,20 +2937,40 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-activity-text {
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
     color: #edf5ff;
-    font-size: 13px;
-    line-height: 1.35;
+    line-height: 1.25;
+  }
+  .tmr-activity-text b {
+    display: block;
+    min-width: 0;
     overflow: hidden;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 900;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
-  .tmr-activity-text b {
-    color: #fff;
-    font-weight: 900;
-  }
-  .tmr-activity-text em {
+  .tmr-activity-text small {
+    display: block;
     color: var(--premium-muted);
-    font-style: normal;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+  }
+  .tmr-activity-badge {
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border: 1px solid rgba(55, 214, 193, .32);
+    border-radius: 999px;
+    color: var(--premium-teal);
+    background: rgba(55, 214, 193, .10);
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
   }
   .tmr-activity-empty {
     min-height: 220px;
@@ -4517,10 +4537,14 @@ function escapeHtml(value) {
         list.className = 'tmr-activity-list';
         list.setAttribute('aria-busy', 'false');
         list.innerHTML = grouped.map(function (group) {
-            const verb = group.count === 1 ? 'posted a verified pick' : 'locked in ' + group.count + ' picks';
+            const badge = group.count + ' pick' + (group.count === 1 ? '' : 's');
             return '<div class="tmr-activity-row">'
                 + '<span class="tmr-activity-icon" aria-hidden="true">▣</span>'
-                + '<div class="tmr-activity-text"><b>' + escapeHtml(group.username) + '</b> ' + verb + '</div>'
+                + '<div class="tmr-activity-text">'
+                + '<b>' + escapeHtml(group.username) + '</b>'
+                + '<small>Locked</small>'
+                + '</div>'
+                + '<span class="tmr-activity-badge">' + escapeHtml(badge) + '</span>'
                 + '</div>';
         }).join('');
     }
