@@ -109,6 +109,9 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 .fthread-author{background:#eef1f5;border-right:1px solid var(--line);padding:10px;color:#555;font-size:12px}
 .fthread-avatar{width:64px;height:64px;border:1px solid #777;background:#dfe5ec;color:#222;display:grid;place-items:center;font:bold 24px Arial,Helvetica,sans-serif;margin-bottom:7px;overflow:hidden}
 .fthread-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.fthread-row-avatar{flex:0 0 28px;width:28px;height:28px;border:1px solid #9da7b5;background:#e6ebf2;color:#222;display:inline-grid;place-items:center;font:bold 11px Arial,Helvetica,sans-serif;border-radius:50%;overflow:hidden;margin-top:1px}
+.fthread-row-avatar img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+@media (max-width:760px){.fthread-row-avatar{flex-basis:24px;width:24px;height:24px;font-size:10px}}
 .fthread-author b{display:block;color:#222;margin-bottom:3px}
 .fthread-role{color:#444;font-size:11px;margin-bottom:7px}
 .fthread-author-row{font-size:11px;line-height:1.35;margin-top:3px}
@@ -1602,6 +1605,11 @@ function renderThreads() {
         var folderClass = 'ffolder' + (t.is_pinned || t.sticky ? ' is-pinned' : '');
         var stickyTag = (t.is_pinned || t.sticky) ? '<span class="fsticky-tag">Sticky</span>' : '';
         var starter = t.username || (t.user && t.user.username) || 'user';
+        var starterAvatar = t.avatar_url || (t.user && (t.user.avatar_url || t.user.avatar)) || '';
+        var starterInitials = String(starter || '?').slice(0, 1).toUpperCase();
+        var avatarHtml = starterAvatar
+            ? '<span class="fthread-row-avatar" aria-hidden="true"><img src="' + escHtml(starterAvatar) + '" alt="' + escHtml(starter) + ' avatar" loading="lazy" onerror="this.parentNode.textContent=\'' + escHtml(starterInitials) + '\';"></span>'
+            : '<span class="fthread-row-avatar" aria-hidden="true">' + escHtml(starterInitials) + '</span>';
         var lastTitle = (t.last_post_title || t.title || '').toString();
         if (lastTitle.length > 36) lastTitle = lastTitle.substring(0, 36) + '...';
         var lastUser = t.last_post_username || t.last_username || starter;
@@ -1610,7 +1618,7 @@ function renderThreads() {
             ? '<div class="flpost-title">' + escHtml(lastTitle) + '</div><div class="flpost-meta">by <b>' + escHtml(lastUser) + '</b> ' + timeAgo(lastWhen) + '</div>'
             : '<span class="flpost-empty">No replies yet</span>';
         return '<tr class="' + rowClass + '" onclick="showThreadDetail(' + t.id + ')">'
-            + '<td class="fcell"><div class="frowinner"><span class="' + folderClass + '"></span><div>'
+            + '<td class="fcell"><div class="frowinner"><span class="' + folderClass + '"></span>' + avatarHtml + '<div>'
             +   stickyTag
             +   '<a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title || 'Thread') + '</a>'
             +   '<div class="fdesc">Started by <b>' + escHtml(starter) + '</b> ' + (t.created_at ? timeAgo(t.created_at) : '') + '</div>'

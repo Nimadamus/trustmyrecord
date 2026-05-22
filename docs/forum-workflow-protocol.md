@@ -22,3 +22,16 @@ Each rendered post should use real user/profile/forum data where available:
 - verified record or handicapper badge only when the user/profile data supports it
 
 Do not invent forum users, starter posts, replies, join dates, post totals, thread totals, badges, or favorite teams.
+
+## Thread List Rendering
+
+The forum thread list (rendered by `renderThreads()` in `forum/index.html`) must show a small circular avatar for the thread creator next to each thread row, in addition to the existing folder icon, thread title, and `Started by <user>` line.
+
+Avatar sourcing rules:
+
+- Use the real user avatar from the thread record when available (`thread.avatar_url`, falling back to `thread.user.avatar_url` / `thread.user.avatar`).
+- When no avatar URL is present, render a single-letter initials placeholder (uppercase first character of the starter username) inside the same circular slot.
+- If the avatar image fails to load (`onerror`), collapse to the initials placeholder.
+- Markup hook: `<span class="fthread-row-avatar">`, sized ~28×28px on desktop and ~24×24px on mobile. Keep the row compact so the thread list does not grow oversized.
+
+Any future change to the thread list row layout (new badges, sport icons, last-post column tweaks, classic vs. modern skin) must preserve the creator avatar element. Do not remove the avatar to "simplify" the row.
