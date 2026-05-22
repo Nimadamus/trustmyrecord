@@ -351,17 +351,31 @@
             </div>
         </section>
 
-        <!-- ========================= CONTEST MODE ACTIVE BANNER ========================= -->
+        <!-- ========================= ENTER PICKS CTA ROW =========================
+             This page is a STATUS dashboard. Pick entry happens on the normal
+             Make Picks sportsbook page in Contest Mode (/sportsbook/?contest=...).
+             Do not put a pick-entry form on this page. -->
         <div class="contest-mode-banner" role="status" aria-live="polite">
             <div class="cm-icon"><i class="fa-solid fa-trophy"></i></div>
             <div class="cm-text">
                 <div class="cm-title">
-                    Contest Mode Active
+                    Status Dashboard
                     <span class="cm-live"><span class="dot"></span> JustBet MLB</span>
                 </div>
                 <div class="cm-body">
-                    These picks count <strong>only for the JustBet MLB Handicapping Contest leaderboard</strong> and <strong>will not affect your public TrustMyRecord profile record, units, ROI, or regular pick history</strong>.
+                    This page shows contest <strong>status, participants, and the leaderboard</strong>. Submit contest picks on the normal <strong>Make Picks sportsbook page in Contest Mode</strong>. Contest picks are tracked separately and will not affect your public TrustMyRecord profile record.
                 </div>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <a class="cta-primary" href="/sportsbook/?contest=justbet-mlb" style="display:inline-flex;align-items:center;gap:10px;">
+                    <i class="fa-solid fa-trophy"></i> Enter Contest Picks
+                </a>
+                <a class="cta-ghost" href="/contests/justbet-mlb/register/" style="display:inline-flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-user-plus"></i> Register
+                </a>
+                <a class="cta-ghost" href="/contests/justbet-mlb/participants/" style="display:inline-flex;align-items:center;gap:8px;">
+                    <i class="fa-solid fa-users"></i> Participants
+                </a>
             </div>
         </div>
 
@@ -380,74 +394,9 @@
             </div>
         </section>
 
-        <!-- ========================= SUBMIT PICK ========================= -->
-        <section class="section panel" id="submit">
-            <h2>Submit a Contest Pick</h2>
-            <p class="lead">Picks here are stored under <code>contest_id = justbet-mlb</code> and do <strong>not</strong> count toward your regular TrustMyRecord public record.</p>
-
-            <div class="submit-card">
-                <span class="ctx-tag"><i class="fa-solid fa-vault"></i> Contest Picks Only · Sealed Until First Pitch</span>
-
-                <div id="pre-launch-gate" class="pre-launch-msg" hidden>
-                    <i class="fa-solid fa-hourglass-start"></i> Pick submission opens when the contest launches. Open your JustBet account through the official contest signup link now so you're ready.
-                </div>
-
-                <div id="auth-gate" class="auth-required-msg" hidden>
-                    <i class="fa-solid fa-lock"></i> Sign in to your TrustMyRecord account to submit contest picks. <a href="/signin/" style="color:var(--cyan);font-weight:800;">Sign in</a> or <a href="/register/" style="color:var(--cyan);font-weight:800;">Register</a>.
-                </div>
-
-                <form id="contest-pick-form">
-                    <input type="hidden" id="cf-game" name="game_id" required>
-                    <input type="hidden" id="cf-market" name="market_type" required>
-                    <input type="hidden" id="cf-selection" name="selection" required>
-                    <input type="hidden" id="cf-line" name="line">
-                    <input type="hidden" id="cf-odds" name="odds" required>
-
-                    <div class="jb-board" id="jb-board">
-                        <div class="jb-board-head">
-                            <span>Matchup</span>
-                            <span>Moneyline</span>
-                            <span>Run Line</span>
-                            <span>Total</span>
-                        </div>
-                        <div id="jb-board-rows">
-                            <div class="jb-board-empty"><i class="fa-solid fa-hourglass-start"></i>Loading today's slate…</div>
-                        </div>
-                    </div>
-
-                    <div class="jb-slip">
-                        <div class="jb-slip-head"><i class="fa-solid fa-vault" style="color:#ffd770;"></i> Your Pick Slip</div>
-                        <div class="jb-slip-stage" id="jb-slip-stage">
-                            <div class="jb-stage-empty">Tap any odds chip above to stage a contest pick.</div>
-                        </div>
-                        <div class="jb-slip-inputs">
-                            <div>
-                                <label for="cf-units">Units (0.5 – 5)</label>
-                                <input id="cf-units" name="units" type="number" step="0.5" min="0.5" max="5" value="1" required>
-                            </div>
-                            <div>
-                                <label for="cf-stake">Stake Mode</label>
-                                <select id="cf-stake" name="stake_mode">
-                                    <option value="risk">Risk</option>
-                                    <option value="to_win">To Win</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <label class="submit-row-checkbox">
-                        <input id="cf-attest" name="attest_justbet_signup" type="checkbox" required>
-                        <span>I confirm I have created a JustBet account through the official contest signup link on the contest page. I understand this is required to qualify and may be verified.</span>
-                    </label>
-
-                    <div class="submit-actions">
-                        <button type="submit" class="cta-primary"><i class="fa-solid fa-vault"></i> Submit Contest Pick</button>
-                        <span id="picks-used-indicator" style="display:none; padding:6px 12px; border-radius:999px; border:1px solid var(--line); background:rgba(15,23,42,0.5); color:var(--text); font-size:0.85rem; font-weight:800; letter-spacing:0.02em;" data-picks-used-indicator><i class="fa-solid fa-vault" style="margin-right:6px;color:#ffd770;"></i><span id="picks-used-text">0 / 50 picks used</span></span>
-                        <span id="submit-msg" style="color:var(--muted);font-size:0.9rem;"></span>
-                    </div>
-                </form>
-            </div>
-        </section>
+        <!-- Pick entry section removed. Contest picks are entered on the
+             normal /sportsbook/ page in Contest Mode (?contest=justbet-mlb).
+             This dashboard is status-only by design. -->
 
         <!-- ========================= PUBLIC PICKS GRID ========================= -->
         <section class="section panel" id="public-picks">
@@ -950,16 +899,20 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Pick entry was removed from this dashboard. Picks are entered on
+            // /sportsbook/?contest=justbet-mlb. We only initialize the status,
+            // public picks grid, and leaderboard surfaces here. Refresh buttons
+            // are wired defensively (some refresh controls may not exist if
+            // older markup is cached).
             loadStatus();
             loadPicks();
             loadLeaderboard();
-            loadOddsBoard();
-            loadMyStatus();
-            $('#refresh-status').addEventListener('click', () => { loadStatus(); loadPicks(); loadLeaderboard(); loadMyStatus(); });
-            $('#refresh-picks').addEventListener('click', loadPicks);
-            $('#refresh-lb').addEventListener('click', loadLeaderboard);
-            $('#contest-pick-form').addEventListener('submit', submitPick);
-            window.addEventListener('storage', () => { refreshAuthGate(); loadMyStatus(); });
+            const rs = $('#refresh-status');
+            if (rs) rs.addEventListener('click', () => { loadStatus(); loadPicks(); loadLeaderboard(); });
+            const rp = $('#refresh-picks');
+            if (rp) rp.addEventListener('click', loadPicks);
+            const rl = $('#refresh-lb');
+            if (rl) rl.addEventListener('click', loadLeaderboard);
         });
     })();
     </script>

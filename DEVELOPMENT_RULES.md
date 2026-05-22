@@ -12,6 +12,58 @@ The public top-of-page navigation on every TMR page MUST always preserve a visib
 
 Incident reference: May 22, 2026 — homepage `.tmr-premium-links` shipped with no sportsbook entry point (`Features / Handicappers / Sell Your Picks / Contest / Feed / About`). Restored as `Make Picks` chip in commit `f0390f85`.
 
+## Contest Mode Standard — ONE Sportsbook, Mode-Aware (May 22, 2026) — HARD RULE
+
+**There is exactly ONE Make Picks sportsbook page on TrustMyRecord: `/sportsbook/`.** Contest picks are entered through that same page in **Contest Mode**, activated by the URL query parameter `?contest=<contestId>`. There are NO duplicate sportsbook pages. There is no second pick-entry surface.
+
+**Activation:**
+- Contest Mode is on iff the URL has `?contest=<contestId>` and the contest id is in `SUPPORTED_CONTESTS` inside `/static/js/contest-mode.js` (currently `justbet-mlb`).
+- Mode is **stateless** — URL is the single source of truth. No `sessionStorage`, no `localStorage` persistence. Removing the query param exits Contest Mode immediately. The banner's Exit button does exactly that.
+
+**Adapter responsibilities (`/static/js/contest-mode.js`):**
+- Adds `body.tmr-contest-mode` and mounts a sticky top-of-page banner labeled `Contest Mode: <Contest Name>` with the message "picks submitted here count only for the contest leaderboard and will not affect your public profile record".
+- Pre-flights registration via `GET /api/contests/<id>/my-registration`. If status is `none` or `rejected`, soft-redirects to `/contests/<id>/register/?return=<original-url>`.
+- Pre-flights pick usage via `GET /api/contests/<id>/my-status` and shows `X / 50 contest picks used` in the banner.
+- Wraps `window.fetch` so any `POST /api/picks` while Contest Mode is active is re-targeted to `POST /api/contests/<id>/picks` with a translated payload (game_id, market_type, selection, odds, units, stake_mode, line if present). The regular sportsbook code remains unchanged.
+
+**Entry points (must remain present):**
+- `/profile/` — "Enter Contest Picks" CTA → `/sportsbook/?contest=justbet-mlb` (NEVER the old dashboard).
+- `/contests/` — landing card primary CTA → `/sportsbook/?contest=justbet-mlb`.
+- `/contests/<id>/` — landing primary CTA → `/sportsbook/?contest=<id>`.
+- `/sportsbook/` — visible "Enter Contest Mode" banner above the sports nav, hidden by inline script when `?contest=...` is already present.
+
+**Forbidden patterns (P0 incident if introduced):**
+- Any new pick-entry form on `/contests/<id>/dashboard/`, `/contests/<id>/`, or any contest-area page. The dashboard is **status-only** (stat strip, picks grid, leaderboard). Pick entry lives only on `/sportsbook/?contest=...`.
+- Routing a contest-pick CTA anywhere other than `/sportsbook/?contest=<id>` or `/contests/<id>/register/`.
+- Saving Contest Mode in browser storage. Mode must die at the end of the URL it lives in.
+
+## Contest Registration Standard (May 22, 2026) — HARD RULE
+
+Users register **once per contest** before submitting picks. Registration is a separate page (`/contests/<id>/register/`) and a separate API surface from picks.
+
+**Backend storage (`tmr_contest_entries`):**
+- Private columns: `sportsbook_name`, `sportsbook_account_id`, `sportsbook_email`, `consent_authorized_at`, `admin_notes`, `status_reason`, `status_updated_by`. Returned ONLY to (a) the owner via `GET /api/contests/<id>/my-registration`, and (b) the admin board `GET /api/contests/<id>/admin/registrations` (admin-token gated).
+- Public columns echoed by `GET /api/contests/<id>/registrations`: **`username`, `status` only.** Server-side allow-list — no sportsbook_* field can leak. Public statuses are limited to `pending_verification` and `verified_eligible`.
+- Status values: `none` (no row), `pending_verification` (default after register), `verified_eligible` (admin approved), `needs_info` (admin requested more info), `rejected` (admin rejected).
+
+**Registration flow:**
+1. User loads `/contests/<id>/register/`.
+2. Form collects only: `sportsbook_account_id` (required), `sportsbook_email` (optional), `consent` (required boolean). NO sportsbook password. NO sportsbook login credentials.
+3. `POST /api/contests/<id>/register` stores the row with status `pending_verification`.
+4. After success, the page redirects to `/sportsbook/?contest=<id>` so the user lands directly in Contest Mode.
+
+**Pick submission gate (`routes/contests.js` `POST /:contestId/picks`):**
+- Loads `status` from `tmr_contest_entries` for `(contest_id, user_id)`.
+- Block with `403 { error: "Contest registration required.", code: "REGISTRATION_REQUIRED", register_url: "/contests/<id>/register/" }` when status is `none` or `rejected`.
+- Allow when status is `pending_verification`, `verified_eligible`, or `needs_info`. **Auto-active on register** — registering unlocks pick entry immediately. Admin can still flip to `rejected` later to remove access.
+
+**Privacy guardrails (do not regress):**
+- Sportsbook account numbers MUST NOT appear in any public response, log line that exits the server, or HTML rendered by anonymous viewers. Account numbers are only echoed by `/my-registration` (owner-only) and `/admin/registrations` (admin-only).
+- Public participants board (`/contests/<id>/participants/`) renders only TMR username + status. No emails, no real names, no account ids.
+- Profile / public-profile pages MUST NOT join against the private columns of `tmr_contest_entries`.
+
+**Verification harness:** isolation invariant + registration gate covered by `trustmyrecord-backend/tests/contest-isolation-e2e-test.js`. Future changes to the contest registration or Contest Mode adapter must keep that harness green and add new phases for any new public surface.
+
 ## Contest Pick Tracking Standard (May 22, 2026) — HARD RULE
 
 One sportsbook engine. Two tracking buckets. The site must NEVER mix the two.

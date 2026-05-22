@@ -9498,6 +9498,11 @@
     <script defer src="/static/js/tmr-sitewide.js?v=20260520mailbox1"></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1">
+    <!-- Contest Mode adapter: when /sportsbook/?contest=<id> is loaded, shows a
+         sticky Contest Mode banner and reroutes POST /api/picks to
+         POST /api/contests/<id>/picks. Without ?contest=... this script is a
+         total no-op and the page behaves exactly like the regular sportsbook. -->
+    <script defer src="/static/js/contest-mode.js?v=20260522contestmode1"></script>
 </head>
 <body data-tmr-test-route="sportsbook">
     <script>
@@ -9530,19 +9535,38 @@
              through /login/ and /register/ via the global nav buttons. -->
         <div id="notificationsPanel" class="notifications-panel" hidden style="display:none !important"></div>
 
-        <!-- ======== CONTEST MODE ENTRY BANNER (links to isolated Contest Mode picks) ======== -->
-        <aside class="sportsbook-contest-cta" aria-label="Enter the JustBet MLB Contest" style="margin:14px 0 8px;padding:14px 18px;border:1px solid rgba(255,184,0,0.45);border-radius:14px;background:linear-gradient(90deg,rgba(60,42,8,0.92) 0%,rgba(28,22,8,0.88) 100%);box-shadow:0 12px 28px rgba(0,0,0,0.28);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <!-- ======== CONTEST MODE ENTRY BANNER ========
+             Only visible when /sportsbook/ is loaded WITHOUT ?contest=...
+             When Contest Mode is active, contest-mode.js mounts its own sticky
+             banner at the top of <body> and hides this one. -->
+        <aside class="sportsbook-contest-cta" id="tmr-sportsbook-contest-entry-banner" aria-label="Enter Contest Mode for the JustBet MLB Contest" style="margin:14px 0 8px;padding:14px 18px;border:1px solid rgba(255,184,0,0.45);border-radius:14px;background:linear-gradient(90deg,rgba(60,42,8,0.92) 0%,rgba(28,22,8,0.88) 100%);box-shadow:0 12px 28px rgba(0,0,0,0.28);display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
             <div style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:10px;background:linear-gradient(180deg,#f0c449,#d4a72c);color:#1a1206;font-size:1.25rem;flex-shrink:0;">
                 <i class="fas fa-trophy"></i>
             </div>
             <div style="flex:1;min-width:220px;line-height:1.45;color:#f5e8c9;">
                 <div style="font-family:Barlow,Inter,sans-serif;font-weight:900;font-size:0.98rem;letter-spacing:0.04em;text-transform:uppercase;color:#ffe4a3;">JustBet MLB Contest &mdash; $2,500 Prize Pool</div>
-                <div style="margin-top:3px;font-size:0.9rem;">Contest picks are tracked separately and <strong style="color:#fff;">will not affect your public profile record</strong>.</div>
+                <div style="margin-top:3px;font-size:0.9rem;">Switch to <strong style="color:#fff;">Contest Mode</strong> to submit picks for the JustBet MLB leaderboard. Contest picks are tracked separately and will not affect your public profile record.</div>
             </div>
-            <a href="/contests/justbet-mlb/dashboard/" style="display:inline-flex;align-items:center;gap:10px;padding:11px 16px;border-radius:10px;background:linear-gradient(180deg,#f0c449 0%,#d4a72c 100%);color:#1a1206;font-weight:900;font-size:0.88rem;letter-spacing:0.04em;text-transform:uppercase;border:1px solid #b4881d;box-shadow:0 12px 28px rgba(212,167,44,0.32);white-space:nowrap;">
-                <i class="fas fa-vault"></i> Enter Contest Picks
+            <a href="/sportsbook/?contest=justbet-mlb" style="display:inline-flex;align-items:center;gap:10px;padding:11px 16px;border-radius:10px;background:linear-gradient(180deg,#f0c449 0%,#d4a72c 100%);color:#1a1206;font-weight:900;font-size:0.88rem;letter-spacing:0.04em;text-transform:uppercase;border:1px solid #b4881d;box-shadow:0 12px 28px rgba(212,167,44,0.32);white-space:nowrap;" data-tmr-contest-mode-enter>
+                <i class="fas fa-trophy"></i> Enter Contest Mode
+            </a>
+            <a href="/contests/justbet-mlb/dashboard/" style="display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;background:rgba(15,23,42,0.55);color:#ffe4a3;border:1px solid rgba(255,184,0,0.32);font-weight:700;font-size:0.85rem;white-space:nowrap;">
+                <i class="fas fa-chart-line"></i> Contest Dashboard
             </a>
         </aside>
+        <script>
+        // Hide the entry banner when Contest Mode is already active (the
+        // contest-mode.js banner takes over at the top of the page).
+        (function () {
+            try {
+                var params = new URLSearchParams(window.location.search);
+                if (params.get('contest')) {
+                    var el = document.getElementById('tmr-sportsbook-contest-entry-banner');
+                    if (el) el.style.display = 'none';
+                }
+            } catch (e) {}
+        })();
+        </script>
 
         <div class="sportsbook-sports-nav" aria-label="Sportsbook navigation" hidden style="display:none !important">
             <button type="button" class="active" data-sportsbook-tab="sport" data-sport="NBA" onclick="window.TMR.setSport('NBA')">NBA</button>
