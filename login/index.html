@@ -370,6 +370,49 @@
                 <i class="fas fa-envelope" style="margin-right:6px;"></i> Can't log in? Email me a password reset link
             </a>
 
+            <button type="button" id="tempPwBtn" style="display:block;width:100%;margin-top:10px;padding:12px 16px;background:rgba(212,167,44,0.10);border:1px solid rgba(212,167,44,0.45);border-radius:10px;color:#f0c449;font-weight:700;letter-spacing:0.02em;cursor:pointer;font:inherit;">
+                <i class="fas fa-key" style="margin-right:6px;"></i> Email me a temporary password
+            </button>
+            <div id="tempPwMsg" role="status" aria-live="polite" style="margin-top:8px;text-align:center;font-size:0.85rem;min-height:1.1em;"></div>
+            <script>
+            (function(){
+                function getApiBase(){
+                    try { if (window.api && window.api.baseUrl) return String(window.api.baseUrl).replace(/\/$/,''); } catch(e){}
+                    return (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/,'');
+                }
+                var btn = document.getElementById('tempPwBtn');
+                var msg = document.getElementById('tempPwMsg');
+                if (!btn) return;
+                btn.addEventListener('click', async function(){
+                    var loginVal = (document.getElementById('loginValue').value || '').trim();
+                    if (!loginVal) { msg.style.color='#f87171'; msg.textContent='Type your email or username above first.'; return; }
+                    btn.disabled = true; var orig = btn.innerHTML; btn.innerHTML='<i class="fas fa-spinner fa-spin" style="margin-right:6px;"></i> Sending...';
+                    msg.textContent='';
+                    try {
+                        var resp = await fetch(getApiBase() + '/api/auth/email-temp-password', {
+                            method:'POST',
+                            headers:{'Content-Type':'application/json'},
+                            body: JSON.stringify({ login: loginVal })
+                        });
+                        var data = {};
+                        try { data = await resp.json(); } catch(_){}
+                        if (!resp.ok) {
+                            msg.style.color = '#f87171';
+                            msg.textContent = data.error || ('HTTP ' + resp.status);
+                        } else {
+                            msg.style.color = '#34d399';
+                            msg.textContent = data.message || 'If an account exists, a temporary password has been emailed.';
+                        }
+                    } catch (e) {
+                        msg.style.color = '#f87171';
+                        msg.textContent = 'Network error: ' + (e && e.message ? e.message : e);
+                    } finally {
+                        btn.disabled = false; btn.innerHTML = orig;
+                    }
+                });
+            })();
+            </script>
+
             <div class="switch">Need an account? <a href="/register/">Create one here</a></div>
         </div>
     </div>
