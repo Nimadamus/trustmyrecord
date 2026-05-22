@@ -388,8 +388,8 @@
             <div class="stat-strip">
                 <div class="stat"><div class="k">Prize Pool</div><div class="v">$2,500</div></div>
                 <div class="stat"><div class="k">Picks Per Entrant</div><div class="v">50</div></div>
-                <div class="stat"><div class="k">Entrants</div><div class="v" id="stat-entrants">—</div></div>
-                <div class="stat"><div class="k">Picks Submitted</div><div class="v" id="stat-picks">—</div></div>
+                <div class="stat"><div class="k">Registered</div><div class="v" id="stat-entrants">—</div></div>
+                <div class="stat"><div class="k">Picks Open</div><div class="v">Not Yet</div></div>
                 <div class="stat"><div class="k">Reveal</div><div class="v">First Pitch</div></div>
             </div>
         </section>
@@ -398,60 +398,26 @@
              normal /sportsbook/ page in Contest Mode (?contest=justbet-mlb).
              This dashboard is status-only by design. -->
 
-        <!-- ========================= PUBLIC PICKS GRID ========================= -->
-        <section class="section panel" id="public-picks">
+        <!-- ========================= CONTEST REGISTRATION BOARD =========================
+             Pre-contest phase: NO public picks grid, NO leaderboard. Picks UI returns
+             only after the contest officially opens. See feedback rule
+             feedback_no_picks_grid_before_contest_start.md. -->
+        <section class="section panel" id="registration-board">
             <div class="section-head">
-                <h2>Public Picks Grid</h2>
-                <button class="refresh-btn" id="refresh-picks"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+                <h2>Contest Registration Board</h2>
+                <button class="refresh-btn" id="refresh-reg"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
             </div>
-            <p class="lead">Every contestant's pick lives here. Each entry is <code>🔒 Sealed</code> publicly until that game's first pitch, then automatically reveals — proving no edits, no front-running.</p>
+            <p class="lead">Registration is open. Contest picks will appear only after the contest officially begins. Public board shows TMR usernames and verification status only.</p>
             <div class="table-wrap">
-                <table class="contest-table" aria-label="Public contest picks">
+                <table class="contest-table" aria-label="Registered contestants">
                     <thead>
                         <tr>
-                            <th>User</th>
-                            <th>Game</th>
-                            <th>Market</th>
-                            <th>Pick</th>
-                            <th>Odds</th>
-                            <th>Units</th>
+                            <th>TMR Username</th>
                             <th>Status</th>
-                            <th>Result</th>
-                            <th>Net Units</th>
                         </tr>
                     </thead>
-                    <tbody id="picks-tbody">
-                        <tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading contest picks…</div></td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- ========================= LEADERBOARD ========================= -->
-        <section class="section panel" id="leaderboard">
-            <div class="section-head">
-                <h2>Contest Leaderboard</h2>
-                <button class="refresh-btn" id="refresh-lb"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
-            </div>
-            <p class="lead">Standings are calculated from contest picks only — fully isolated from regular TrustMyRecord profile stats and the standard sportsbook leaderboard.</p>
-            <div class="table-wrap">
-                <table class="contest-table" aria-label="Contest leaderboard">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>User</th>
-                            <th>Picks Used</th>
-                            <th>W</th>
-                            <th>L</th>
-                            <th>P</th>
-                            <th>Win %</th>
-                            <th>Net Units</th>
-                            <th>Z</th>
-                            <th>Last Pick</th>
-                        </tr>
-                    </thead>
-                    <tbody id="lb-tbody">
-                        <tr><td colspan="10"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading contest leaderboard…</div></td></tr>
+                    <tbody id="reg-tbody">
+                        <tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading registration board…</div></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -511,105 +477,39 @@
                 const c = await res.json();
                 contestLaunched = !!c.is_active;
             } catch { contestLaunched = false; }
-            refreshAuthGate();
         }
 
-        async function loadPicks() {
-            const tbody = $('#picks-tbody');
-            tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading contest picks…</div></td></tr>`;
+        async function loadRegistrations() {
+            const tbody = $('#reg-tbody');
+            tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading registration board…</div></td></tr>`;
             try {
-                const res = await fetch(API('/picks'), { credentials: 'include' });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                const picks = Array.isArray(data) ? data : (data.picks || []);
-                $('#stat-picks').textContent = picks.length;
-                renderPicks(picks);
-            } catch {
-                $('#stat-picks').textContent = '0';
-                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-vault"></i>No contest picks yet. The dashboard goes live when the contest opens.</div></td></tr>`;
-            }
-        }
-
-        function renderPicks(picks) {
-            const tbody = $('#picks-tbody');
-            if (!picks || picks.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-vault"></i>No contest picks submitted yet. Be the first to enter.</div></td></tr>`;
-                return;
-            }
-            tbody.innerHTML = picks.map(p => {
-                const sealed = !!p.sealed;
-                const result = (p.result || 'pending').toLowerCase();
-                const statusPill = sealed
-                    ? `<span class="status-pill status-sealed"><i class="fa-solid fa-lock"></i> Sealed</span>`
-                    : result === 'won' ? `<span class="status-pill status-won">Won</span>`
-                    : result === 'lost' ? `<span class="status-pill status-lost">Lost</span>`
-                    : result === 'push' ? `<span class="status-pill status-push">Push</span>`
-                    : `<span class="status-pill status-revealed">Revealed</span>`;
-                const pickCell = sealed
-                    ? `<span class="pick-sealed"><i class="fa-solid fa-lock"></i> Sealed until first pitch</span>`
-                    : `<span class="pick-revealed">${escapeHtml(p.selection || '—')}</span>`;
-                const oddsCell = sealed ? '🔒' : fmtOdds(p.odds);
-                const unitsCell = sealed ? '🔒' : fmtUnits(p.units);
-                const marketCell = sealed ? '🔒' : escapeHtml(p.market || p.market_type || '—');
-                const netUnits = (p.result && p.result !== 'pending') ? fmtUnits(p.units_net) : '—';
-                const netClass = (p.result && p.result !== 'pending') ? unitsClass(p.units_net) : 'units-zero';
-                return `
-                    <tr>
-                        <td><strong>${escapeHtml(p.username || '—')}</strong></td>
-                        <td>${escapeHtml(p.game || '—')}</td>
-                        <td>${marketCell}</td>
-                        <td>${pickCell}</td>
-                        <td>${oddsCell}</td>
-                        <td>${unitsCell}</td>
-                        <td>${statusPill}</td>
-                        <td>${escapeHtml((p.result || 'pending').toString())}</td>
-                        <td class="${netClass}">${netUnits}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        async function loadLeaderboard() {
-            const tbody = $('#lb-tbody');
-            tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading contest leaderboard…</div></td></tr>`;
-            try {
-                const res = await fetch(API('/leaderboard'), { credentials: 'include' });
+                const res = await fetch(API('/registrations'), { credentials: 'include' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 const entries = Array.isArray(data) ? data : (data.entries || []);
                 $('#stat-entrants').textContent = entries.length;
-                renderLeaderboard(entries);
+                renderRegistrations(entries);
             } catch {
                 $('#stat-entrants').textContent = '0';
-                tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><i class="fa-solid fa-trophy"></i>No entrants yet. The leaderboard opens when the contest launches.</div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-user-plus"></i>No registrations yet. Be the first to register.</div></td></tr>`;
             }
         }
 
-        function renderLeaderboard(entries) {
-            const tbody = $('#lb-tbody');
+        function renderRegistrations(entries) {
+            const tbody = $('#reg-tbody');
             if (!entries || entries.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><i class="fa-solid fa-trophy"></i>No entrants yet. Be the first.</div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-user-plus"></i>No registrations yet. Be the first to register.</div></td></tr>`;
                 return;
             }
-            tbody.innerHTML = entries.map((e, i) => {
-                const rank = e.rank || (i + 1);
-                const rankCls = rank === 1 ? 'r1' : rank === 2 ? 'r2' : rank === 3 ? 'r3' : '';
-                const winPct = (e.win_pct !== undefined && e.win_pct !== null) ? `${(Number(e.win_pct) * 100).toFixed(1)}%` : '—';
-                const zVal = (e.z_score !== undefined && e.z_score !== null && Number.isFinite(Number(e.z_score)))
-                    ? Number(e.z_score).toFixed(2)
-                    : '—';
+            tbody.innerHTML = entries.map(e => {
+                const status = String(e.status || 'pending_verification').toLowerCase();
+                const pill = status === 'verified_eligible'
+                    ? `<span class="status-pill status-won">Verified &amp; Eligible</span>`
+                    : `<span class="status-pill status-sealed"><i class="fa-solid fa-hourglass-half"></i> Pending Verification</span>`;
                 return `
                     <tr>
-                        <td><span class="lb-rank ${rankCls}">${rank}</span></td>
                         <td><strong>${escapeHtml(e.username || '—')}</strong></td>
-                        <td>${e.picks_used ?? 0} / ${e.picks_max ?? 50}</td>
-                        <td>${e.wins ?? 0}</td>
-                        <td>${e.losses ?? 0}</td>
-                        <td>${e.pushes ?? 0}</td>
-                        <td>${winPct}</td>
-                        <td class="${unitsClass(e.units_net)}">${fmtUnits(e.units_net)}</td>
-                        <td>${zVal}</td>
-                        <td>${fmtTime(e.last_pick_at)}</td>
+                        <td>${pill}</td>
                     </tr>
                 `;
             }).join('');
@@ -905,14 +805,11 @@
             // are wired defensively (some refresh controls may not exist if
             // older markup is cached).
             loadStatus();
-            loadPicks();
-            loadLeaderboard();
+            loadRegistrations();
             const rs = $('#refresh-status');
-            if (rs) rs.addEventListener('click', () => { loadStatus(); loadPicks(); loadLeaderboard(); });
-            const rp = $('#refresh-picks');
-            if (rp) rp.addEventListener('click', loadPicks);
-            const rl = $('#refresh-lb');
-            if (rl) rl.addEventListener('click', loadLeaderboard);
+            if (rs) rs.addEventListener('click', () => { loadStatus(); loadRegistrations(); });
+            const rr = $('#refresh-reg');
+            if (rr) rr.addEventListener('click', loadRegistrations);
         });
     })();
     </script>
