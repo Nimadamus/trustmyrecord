@@ -2078,12 +2078,14 @@ button{font:inherit;cursor:pointer}
         <div class="tmr-dashboard-grid">
           <section class="tmr-board-card">
             <header><h3>Public Profiles</h3><a href="/leaderboards/">View Leaderboards</a></header>
+            <div class="tmr-board-scroll">
             <table>
               <thead><tr><th>#</th><th>User</th><th>ROI</th><th>Units</th></tr></thead>
               <tbody id="tmrHeroLeaderboardBody">
                 <tr class="tmr-empty-table-row"><td colspan="4">Public profiles will populate after users submit locked picks.</td></tr>
               </tbody>
             </table>
+            </div>
             <a class="tmr-see-more" href="/leaderboards/">View Leaderboards →</a>
           </section>
 
@@ -2772,6 +2774,11 @@ button{font:inherit;cursor:pointer}
   .tmr-board-tabs span:first-child {
     color: var(--premium-teal);
     background: rgba(55,214,193,.14);
+  }
+  .tmr-board-scroll {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
   .tmr-board-card table {
     width: 100%;
