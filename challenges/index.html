@@ -141,15 +141,30 @@
         .board-row span { display: block; margin-top: 3px; color: var(--muted); font-size: 0.82rem; line-height: 1.45; }
 
         /* ---- Sections ---- */
-        .section { margin-top: 40px; }
-        .section-head { display: flex; justify-content: space-between; gap: 18px; align-items: flex-start; margin-bottom: 24px; }
+        .section { margin-top: 44px; }
+        .section-head { display: flex; justify-content: space-between; gap: 18px; align-items: flex-end; margin-bottom: 22px; flex-wrap: wrap; }
         .section h2 { font-size: clamp(1.5rem, 2.2vw, 2rem); line-height: 1.05; font-weight: 900; }
         .section-head p { max-width: 64ch; margin: 9px 0 0; font-size: 0.96rem; }
+        .head-actions { display: flex; align-items: center; gap: 10px; }
 
-        /* The create form sits inside its own light card */
-        #challenge-form { border: 1px solid var(--line); border-radius: 18px; padding: 30px; background: var(--surface); }
-        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
-        .field { display: grid; gap: 9px; }
+        .btn.sm { min-height: 38px; padding: 0 14px; font-size: 0.86rem; }
+
+        /* ---- Create form (lives inside the create modal) ---- */
+        #challenge-form { border: 0; padding: 0; background: none; }
+        .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+        .group-head {
+            grid-column: 1 / -1;
+            margin: 14px 0 2px;
+            padding-bottom: 9px;
+            border-bottom: 1px solid var(--line);
+            color: var(--cyan);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.11em;
+            text-transform: uppercase;
+        }
+        .group-head:first-child { margin-top: 0; }
+        .field { display: grid; gap: 8px; }
         .field.full { grid-column: 1 / -1; }
         label { color: #c7d4e2; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
         input, textarea, select {
@@ -212,6 +227,7 @@
         .modal { position: fixed; inset: 0; z-index: 1000; display: none; align-items: center; justify-content: center; padding: 22px; background: rgba(3, 8, 16, 0.74); backdrop-filter: blur(4px); }
         .modal.open { display: flex; }
         .modal-card { width: min(720px, 100%); max-height: min(86vh, 820px); overflow: auto; border: 1px solid var(--line-2); border-radius: 18px; padding: 28px; background: #0d1626; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5); }
+        .modal-card.create-card { width: min(820px, 100%); }
         .modal-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 18px; }
         .icon-btn { width: 40px; height: 40px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface-2); color: var(--text); cursor: pointer; transition: border-color 0.16s ease, background 0.16s ease; }
         .icon-btn:hover { border-color: var(--line-strong); background: var(--surface-hover); }
@@ -232,106 +248,32 @@
 <body class="tmr-site-shell" data-tmr-route="challenges">
     <main class="page">
         <section class="hero" aria-labelledby="page-title">
-            <div>
+            <div class="hero-copy">
                 <span class="kicker"><i class="fa-solid fa-trophy"></i> Open Challenges</span>
-                <h1 id="page-title">Post a public challenge. Compete for reputation.</h1>
-                <p>TrustMyRecord Challenges are free, social competitions for status, trophies, badges, profile history, and leaderboard credit only. This first version has no paid entry, cash prize, stake, wager, rake, or redeemable token flow.</p>
+                <h1 id="page-title">Challenge Any Handicapper</h1>
+                <p>Call your shot, set the terms, and go head-to-head with any verified TrustMyRecord member. Free to enter, public verified records, pure bragging rights on the line. No cash, no paid entry, ever.</p>
                 <div class="actions">
-                    <a class="btn primary" href="#create-challenge"><i class="fa-solid fa-plus"></i> Create Challenge</a>
-                    <a class="btn" href="#open-challenges"><i class="fa-solid fa-list-check"></i> View Open Challenges</a>
+                    <button class="btn primary" type="button" data-open-create><i class="fa-solid fa-plus"></i> Create Challenge</button>
+                    <a class="btn" href="#open-challenges"><i class="fa-solid fa-list-check"></i> Browse Open Challenges</a>
                 </div>
             </div>
-            <aside class="hero-board" aria-label="Challenge rules">
-                <div class="board-row"><i class="fa-solid fa-shield-halved"></i><div><strong>Bragging rights only</strong><span>No cash prize. No paid entry.</span></div></div>
-                <div class="board-row"><i class="fa-solid fa-users"></i><div><strong>Real members only</strong><span>Challenges use real logged-in accounts and real database records.</span></div></div>
-                <div class="board-row"><i class="fa-solid fa-medal"></i><div><strong>Status rewards</strong><span>Profile trophies, badges, XP, and rankings can come later without money mechanics.</span></div></div>
+            <aside class="hero-board" aria-label="How open challenges work">
+                <div class="board-row"><i class="fa-solid fa-shield-halved"></i><div><strong>Bragging rights only</strong><span>No cash prize, no paid entry, no wagering.</span></div></div>
+                <div class="board-row"><i class="fa-solid fa-users"></i><div><strong>Real members only</strong><span>Every challenge runs on real accounts and verified records.</span></div></div>
+                <div class="board-row"><i class="fa-solid fa-medal"></i><div><strong>Win the matchup</strong><span>Most net units over the window takes the crown.</span></div></div>
             </aside>
-        </section>
-
-        <section class="section" id="create-challenge" aria-labelledby="create-title">
-            <div class="section-head">
-                <div>
-                    <h2 id="create-title">Create Open Challenge</h2>
-                    <p>Define a clean competition format and let verified community members accept it. Every challenge is locked to the non-cash disclaimer.</p>
-                </div>
-                <span class="pill"><i class="fa-solid fa-ban"></i> Non-cash</span>
-            </div>
-
-            <form id="challenge-form">
-                <div class="form-grid">
-                    <div class="field">
-                        <label for="challenge-title">Challenge title</label>
-                        <input id="challenge-title" maxlength="180" required placeholder="NBA Playoff pick battle">
-                    </div>
-                    <div class="field">
-                        <label for="challenge-sport">Sport or game</label>
-                        <input id="challenge-sport" maxlength="80" required placeholder="NBA, MLB, NFL, Madden, NBA 2K">
-                    </div>
-                    <div class="field">
-                        <label for="challenge-type">Challenge category/type</label>
-                        <select id="challenge-type" required>
-                            <option>Most net units over a date range</option>
-                            <option>Head-to-head pick battle (net units)</option>
-                            <option>Most net units over a set slate</option>
-                            <option>Specific sport contest (net units)</option>
-                            <option>Video game challenge</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label for="challenge-scoring">Scoring method</label>
-                        <select id="challenge-scoring" required>
-                            <option>Most net units won</option>
-                            <option>Head-to-head result (most net units)</option>
-                            <option>Manual non-monetary result review</option>
-                        </select>
-                        <span class="field-note">Winner is determined by total net units won over the challenge window, not win percentage or raw W-L record.</span>
-                    </div>
-                    <div class="field">
-                        <label for="challenge-start">Start date</label>
-                        <input id="challenge-start" type="date" required>
-                    </div>
-                    <div class="field">
-                        <label for="challenge-end">End date</label>
-                        <input id="challenge-end" type="date" required>
-                    </div>
-                    <div class="field">
-                        <label for="challenge-max">Max participants</label>
-                        <input id="challenge-max" type="number" min="2" max="250" value="2" required>
-                        <span class="field-note">Use 2 for head-to-head or more for a small group challenge.</span>
-                    </div>
-                    <div class="field">
-                        <label for="challenge-scope">Who can accept</label>
-                        <select id="challenge-scope" required>
-                            <option>Any verified TrustMyRecord member</option>
-                            <option>Members with public profiles</option>
-                            <option>Members with at least 10 graded picks</option>
-                            <option>Invite link / community callout</option>
-                        </select>
-                    </div>
-                    <div class="field full">
-                        <label for="challenge-terms">Terms/rules</label>
-                        <textarea id="challenge-terms" required maxlength="2000" placeholder="Example: NBA picks from May 20 through May 27. Minimum 5 graded picks. Pending picks do not count toward final scoring."></textarea>
-                    </div>
-                    <div class="field full">
-                        <label for="challenge-note">Optional note/message</label>
-                        <textarea id="challenge-note" maxlength="1000" placeholder="Optional community callout or rivalry note."></textarea>
-                    </div>
-                </div>
-                <div class="notice"><i class="fa-solid fa-circle-info"></i> Bragging Rights Only. No cash prize. No paid entry.</div>
-                <div class="actions">
-                    <button class="btn primary" type="submit"><i class="fa-solid fa-bolt"></i> Post Open Challenge</button>
-                    <span class="form-status" id="form-status" role="status"></span>
-                </div>
-            </form>
         </section>
 
         <section class="section" id="open-challenges" aria-labelledby="open-title">
             <div class="section-head">
                 <div>
                     <h2 id="open-title">Open Challenges</h2>
-                    <p>Browse active public challenges and accept one from another member. Cards only show real challenge records returned by the API.</p>
+                    <p>Live public challenges from the community. Accept one, or post your own and call your shot.</p>
                 </div>
-                <span class="pill" id="challenge-count">Loading</span>
+                <div class="head-actions">
+                    <span class="pill" id="challenge-count">Loading</span>
+                    <button class="btn primary sm" type="button" data-open-create><i class="fa-solid fa-plus"></i> Create Challenge</button>
+                </div>
             </div>
             <div class="toolbar">
                 <select id="status-filter" aria-label="Filter challenge status">
@@ -350,6 +292,90 @@
         </section>
 
     </main>
+
+    <div class="modal" id="create-modal" role="dialog" aria-modal="true" aria-labelledby="create-title">
+        <article class="modal-card create-card">
+            <div class="modal-head">
+                <div>
+                    <span class="kicker"><i class="fa-solid fa-plus"></i> New Challenge</span>
+                    <h2 id="create-title" style="margin-top:10px;">Create Open Challenge</h2>
+                </div>
+                <button class="icon-btn" id="close-create" type="button" aria-label="Close create form"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="challenge-form">
+                <div class="form-grid">
+                    <div class="group-head">The matchup</div>
+                    <div class="field full">
+                        <label for="challenge-title">Challenge title</label>
+                        <input id="challenge-title" maxlength="180" required placeholder="NBA Playoff pick battle">
+                    </div>
+                    <div class="field">
+                        <label for="challenge-sport">Sport or game</label>
+                        <input id="challenge-sport" maxlength="80" required placeholder="NBA, MLB, NFL, Madden, NBA 2K">
+                    </div>
+                    <div class="field">
+                        <label for="challenge-type">Category / type</label>
+                        <select id="challenge-type" required>
+                            <option>Most net units over a date range</option>
+                            <option>Head-to-head pick battle (net units)</option>
+                            <option>Most net units over a set slate</option>
+                            <option>Specific sport contest (net units)</option>
+                            <option>Video game challenge</option>
+                        </select>
+                    </div>
+
+                    <div class="group-head">Format &amp; scoring</div>
+                    <div class="field">
+                        <label for="challenge-scoring">Scoring method</label>
+                        <select id="challenge-scoring" required>
+                            <option>Most net units won</option>
+                            <option>Head-to-head result (most net units)</option>
+                            <option>Manual non-monetary result review</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label for="challenge-scope">Who can accept</label>
+                        <select id="challenge-scope" required>
+                            <option>Any verified TrustMyRecord member</option>
+                            <option>Members with public profiles</option>
+                            <option>Members with at least 10 graded picks</option>
+                            <option>Invite link / community callout</option>
+                        </select>
+                    </div>
+                    <div class="field full">
+                        <label for="challenge-max">Max participants</label>
+                        <input id="challenge-max" type="number" min="2" max="250" value="2" required>
+                        <span class="field-note">Winner is total net units over the window, not win percentage. Use 2 for head-to-head or more for a group.</span>
+                    </div>
+
+                    <div class="group-head">Schedule</div>
+                    <div class="field">
+                        <label for="challenge-start">Start date</label>
+                        <input id="challenge-start" type="date" required>
+                    </div>
+                    <div class="field">
+                        <label for="challenge-end">End date</label>
+                        <input id="challenge-end" type="date" required>
+                    </div>
+
+                    <div class="group-head">Rules</div>
+                    <div class="field full">
+                        <label for="challenge-terms">Terms / rules</label>
+                        <textarea id="challenge-terms" required maxlength="2000" placeholder="Example: NBA picks from May 20 through May 27. Minimum 5 graded picks. Pending picks do not count toward final scoring."></textarea>
+                    </div>
+                    <div class="field full">
+                        <label for="challenge-note">Note / message <span style="text-transform:none;letter-spacing:0;color:var(--faint);font-weight:600;">(optional)</span></label>
+                        <textarea id="challenge-note" maxlength="1000" placeholder="Optional community callout or rivalry note."></textarea>
+                    </div>
+                </div>
+                <div class="notice"><i class="fa-solid fa-circle-info"></i> Bragging Rights Only. No cash prize. No paid entry.</div>
+                <div class="actions">
+                    <button class="btn primary" type="submit"><i class="fa-solid fa-bolt"></i> Post Open Challenge</button>
+                    <span class="form-status" id="form-status" role="status"></span>
+                </div>
+            </form>
+        </article>
+    </div>
 
     <div class="modal" id="detail-modal" role="dialog" aria-modal="true" aria-labelledby="detail-title">
         <article class="modal-card">
@@ -439,7 +465,7 @@
                 const list = $("challenge-list");
                 if (!list) return;
                 if (!state.challenges.length) {
-                    list.innerHTML = '<div class="empty"><div><i class="fa-solid fa-flag-checkered"></i><h3>No open challenges yet.</h3><p>Create the first bragging-rights challenge and invite the community to compete.</p><div class="actions" style="justify-content:center;"><a class="btn primary" href="#create-challenge"><i class="fa-solid fa-plus"></i> Create Challenge</a></div></div></div>';
+                    list.innerHTML = '<div class="empty"><div><i class="fa-solid fa-flag-checkered"></i><h3>No public challenges are open right now.</h3><p>Start the first one and call your shot. Set the sport, the terms, and the window, then let the community accept.</p><div class="actions" style="justify-content:center;"><button class="btn primary" type="button" data-open-create><i class="fa-solid fa-plus"></i> Create Challenge</button></div></div></div>';
                     return;
                 }
                 list.innerHTML = state.challenges.map(cardHTML).join("");
@@ -501,6 +527,7 @@
                     $("challenge-max").value = 2;
                     setDefaultDates();
                     setStatus("Challenge posted.");
+                    closeCreateModal();
                     await loadChallenges();
                     location.hash = "open-challenges";
                 } catch (error) {
@@ -583,15 +610,30 @@
                 if ($("challenge-end") && !$("challenge-end").value) $("challenge-end").value = toDateInput(nextWeek);
             }
 
+            function openCreateModal() {
+                if (!state.currentUser) { openLoginPrompt(); return; }
+                setStatus("");
+                $("create-modal").classList.add("open");
+            }
+            function closeCreateModal() { $("create-modal").classList.remove("open"); }
+
             function bindEvents() {
                 $("challenge-form").addEventListener("submit", handleCreate);
                 $("refresh-button").addEventListener("click", loadChallenges);
                 $("status-filter").addEventListener("change", loadChallenges);
                 $("close-modal").addEventListener("click", () => $("detail-modal").classList.remove("open"));
+                $("close-create").addEventListener("click", closeCreateModal);
                 $("detail-modal").addEventListener("click", (event) => {
                     if (event.target === $("detail-modal")) $("detail-modal").classList.remove("open");
                 });
+                $("create-modal").addEventListener("click", (event) => {
+                    if (event.target === $("create-modal")) closeCreateModal();
+                });
+                document.addEventListener("keydown", (event) => {
+                    if (event.key === "Escape") { closeCreateModal(); $("detail-modal").classList.remove("open"); }
+                });
                 document.addEventListener("click", (event) => {
+                    if (event.target.closest("[data-open-create]")) { openCreateModal(); return; }
                     const view = event.target.closest("[data-view]");
                     if (view) {
                         openDetailById(view.getAttribute("data-view"));
