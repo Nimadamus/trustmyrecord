@@ -368,7 +368,7 @@
 
         .hm-controls {
             display: grid;
-            grid-template-columns: minmax(260px, 1.25fr) minmax(160px, 0.65fr) minmax(210px, 0.85fr);
+            grid-template-columns: minmax(220px, 1.1fr) minmax(150px, 0.65fr) minmax(150px, 0.65fr) minmax(190px, 0.8fr);
             gap: 12px;
             align-items: end;
             margin: 18px 0 14px;
@@ -941,6 +941,22 @@
                 </select>
             </div>
             <div class="hm-field">
+                <label for="hmWager">Filter by wager type</label>
+                <select class="hm-select" id="hmWager">
+                    <option value="all">All wager types</option>
+                    <option value="moneyline">Moneyline</option>
+                    <option value="spread">Spread</option>
+                    <option value="runline">Run Line</option>
+                    <option value="puckline">Puck Line</option>
+                    <option value="total">Total</option>
+                    <option value="teamtotal">Team Total</option>
+                    <option value="first5">First 5</option>
+                    <option value="playerprop">Player Prop</option>
+                    <option value="futures">Futures</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="hm-field">
                 <label for="hmSort">Sort by</label>
                 <select class="hm-select" id="hmSort">
                     <option value="units">Units won</option>
@@ -1009,6 +1025,7 @@
             rows: document.getElementById('hmRows'),
             search: document.getElementById('hmSearch'),
             sport: document.getElementById('hmSport'),
+            wager: document.getElementById('hmWager'),
             sort: document.getElementById('hmSort'),
             status: document.getElementById('hmStatus'),
             total: document.getElementById('hmTotalMembers'),
@@ -1031,6 +1048,8 @@
 
         let members = [];
         let visibleMembers = [];
+        let displayMembers = [];
+        let qualifiedPool = [];
         let currentPage = 1;
         const MIN_TOP_PERFORMER_GRADED_PICKS = 20;
 
@@ -1194,6 +1213,12 @@
                 soccer_epl: 'EPL'
             };
             if (map[lower]) return map[lower];
+            if (/^soccer/.test(lower)) return 'Soccer';
+            if (/^tennis/.test(lower)) return 'Tennis';
+            if (/^(mma|ufc|mixed_martial)/.test(lower) || lower.includes('martial_arts')) return 'UFC/MMA';
+            if (/^boxing/.test(lower)) return 'Boxing';
+            if (lower === 'basketball_wnba') return 'WNBA';
+            if (lower === 'baseball_ncaa' || lower === 'baseball_ncaab') return 'NCAA Baseball';
             return raw
                 .replace(/_/g, ' ')
                 .replace(/\b\w/g, ch => ch.toUpperCase())
@@ -1221,6 +1246,56 @@
                     .forEach(([sport]) => add(sport));
             }
             return sports.slice(0, 3);
+        }
+
+        // Canonical wager-type buckets used by the "Filter by wager type" control.
+        // Detection scans market/bet-type/period fields plus selection text so it
+        // works across sports. First 5 is treated as an orthogonal flag (an F5
+        // moneyline counts for both "First 5" and "Moneyline").
+        const WAGER_TYPES = ['moneyline', 'spread', 'runline', 'puckline', 'total', 'teamtotal', 'first5', 'playerprop', 'futures', 'other'];
+
+        function wagerBlob(pick) {
+            return [pick.bet_type, pick.market_type, pick.market, pick.wager_type, pick.bet_category, pick.period, pick.market_key]
+                .map(v => String(v == null ? '' : v).toLowerCase())
+                .join(' ');
+        }
+
+        function isFirstFivePick(pick) {
+            const blob = wagerBlob(pick);
+            return /first[_\s-]?5|1st[_\s-]?5|\bf5\b|first[_\s-]?five|first[_\s-]?(inning|half)/.test(blob);
+        }
+
+        // Single base category for a pick (excludes the First 5 flag).
+        function wagerCategory(pick) {
+            const blob = wagerBlob(pick);
+            const sport = normalizeSportName(pick.sport_display || pick.sport_key || pick.sport);
+            const selection = String(pick.selection || pick.pick || '').trim();
+            if (/player|pitcher_|batter_|strikeout|\bouts\b|points|rebound|assist|passing|rushing|receiving|goalscorer|anytime|\bhits\b|home_run|total_bases|prop/.test(blob)) return 'playerprop';
+            if (/futures|outright|to_win|to_lift|championship|series_price|win_division|win_conference|mvp|award/.test(blob)) return 'futures';
+            if (/team[_\s-]?total/.test(blob)) return 'teamtotal';
+            if (/run[_\s-]?line/.test(blob) || (sport === 'MLB' && /spread|handicap/.test(blob))) return 'runline';
+            if (/puck[_\s-]?line/.test(blob) || (sport === 'NHL' && /spread|handicap/.test(blob))) return 'puckline';
+            if (/spread|handicap|point[_\s-]?spread/.test(blob)) return 'spread';
+            if (/total|over[_\s-]?under|o\/u/.test(blob)) return 'total';
+            if (/moneyline|money[_\s-]?line|h2h|head[_\s-]?to[_\s-]?head|\bml\b/.test(blob)) return 'moneyline';
+            if (/^(over|under)$/i.test(selection)) return 'total';
+            return 'other';
+        }
+
+        function normalizePickMeta(pick) {
+            const status = String(pick.status || 'pending').toLowerCase() === 'pushed' ? 'push' : String(pick.status || 'pending').toLowerCase();
+            return Object.assign({}, pick, {
+                _status: status,
+                _sport: normalizeSportName(pick.sport_display || pick.sport_key || pick.sport),
+                _wager: wagerCategory(pick),
+                _first5: isFirstFivePick(pick)
+            });
+        }
+
+        function pickMatchesWager(pick, wager) {
+            if (!wager || wager === 'all') return true;
+            if (wager === 'first5') return !!pick._first5;
+            return pick._wager === wager;
         }
 
         function statsFromUser(user) {
@@ -1262,10 +1337,8 @@
             const rows = Array.isArray(picks) ? picks : [];
             if (!rows.length) return null;
 
-            const normalized = rows.map(pick => ({
-                ...pick,
-                _status: String(pick.status || 'pending').toLowerCase() === 'pushed' ? 'push' : String(pick.status || 'pending').toLowerCase()
-            }));
+            // Accept either raw or already-normalized picks.
+            const normalized = rows.map(pick => (pick && pick._status ? pick : normalizePickMeta(pick)));
             const graded = normalized.filter(pick => ['won', 'lost', 'push'].includes(pick._status));
             const decisions = graded.filter(pick => pick._status === 'won' || pick._status === 'lost');
             const wins = graded.filter(pick => pick._status === 'won').length;
@@ -1351,8 +1424,10 @@
                 sports: base.sports && base.sports.length ? base.sports : extractSports(user, {})
             };
 
-            const pickStats = statsFromPicks(user, await fetchUserPicks(user, username));
-            if (pickStats) base = pickStats;
+            const rawPicks = (await fetchUserPicks(user, username) || []).map(normalizePickMeta);
+            base._rawPicks = rawPicks;
+            const pickStats = statsFromPicks(user, rawPicks);
+            if (pickStats) base = Object.assign(pickStats, { _rawPicks: rawPicks });
 
             const needsMetrics =
                 username &&
@@ -1403,6 +1478,7 @@
                 }
             }
             if (!base.sports.length) base.sports = extractSports(user, base);
+            if (!base._rawPicks) base._rawPicks = rawPicks;
             return base;
         }
 
@@ -1432,6 +1508,8 @@
             );
             const currentUser = getCurrentUser();
             const localFollowing = currentUser && social ? social.isFollowing(String(currentUser.username || ''), username) : false;
+            const rawPicks = Array.isArray(stats._rawPicks) ? stats._rawPicks : [];
+            if (stats && stats._rawPicks) delete stats._rawPicks;
             return {
                 id: user.id || user.user_id || username,
                 username,
@@ -1440,6 +1518,8 @@
                 createdAt,
                 lastActive,
                 stats,
+                rawPicks,
+                _user: user,
                 isFollowing: !!(user.is_following || user.isFollowing || localFollowing),
                 isCurrentUser: currentUser && String(currentUser.username || '').toLowerCase() === username.toLowerCase()
             };
@@ -1768,10 +1848,11 @@
         }
 
         function renderSummary() {
-            const pickedMembers = members.filter(member => Number(member.stats.totalPicks || 0) > 0);
-            const gradedMembers = members.filter(member => gradedCount(member) > 0);
+            const pool = displayMembers.length || members.length ? (displayMembers.length ? displayMembers : members) : members;
+            const pickedMembers = pool.filter(member => Number(member.stats.totalPicks || 0) > 0);
+            const gradedMembers = pool.filter(member => gradedCount(member) > 0);
             const qualifiedMembers = gradedMembers.filter(isQualifiedTopPerformer);
-            const totalGradedPicks = members.reduce((sum, member) => sum + gradedCount(member), 0);
+            const totalGradedPicks = pool.reduce((sum, member) => sum + gradedCount(member), 0);
             const bestWinRate = qualifiedWinRateLeader(qualifiedMembers);
             const topUnits = qualifiedUnitsLeader(qualifiedMembers);
             const recent = bestBy(pickedMembers, () => true, getActivityTime);
@@ -1789,11 +1870,12 @@
         }
 
         function renderFeaturedLeaders() {
-            const qualified = members.filter(isQualifiedTopPerformer);
+            const pool = displayMembers.length ? displayMembers : members;
+            const qualified = pool.filter(isQualifiedTopPerformer);
             const unitsLeader = qualifiedUnitsLeader(qualified);
             const roiLeader = qualifiedRoiLeader(qualified);
             const winRateLeader = qualifiedWinRateLeader(qualified);
-            const mostVerified = bestBy(members, member => gradedCount(member) > 0, compareBy(gradedCount, member => Number(member.stats.units || 0)));
+            const mostVerified = bestBy(pool, member => gradedCount(member) > 0, compareBy(gradedCount, member => Number(member.stats.units || 0)));
             const newestActive = bestBy(qualified, member => getActivityTime(member) > 0, getActivityTime);
             const minLabel = 'Minimum ' + MIN_TOP_PERFORMER_GRADED_PICKS + ' graded picks, recent activity, and positive net units required.';
 
@@ -1808,9 +1890,26 @@
 
         function fillSports() {
             const selected = els.sport.value || 'all';
-            const sports = Array.from(new Set(members.flatMap(member => member.stats.sports || []))).sort();
+            const set = new Set();
+            members.forEach(member => {
+                (member.stats.sports || []).forEach(s => { if (s) set.add(s); });
+                (member.rawPicks || []).forEach(p => { if (p._sport) set.add(p._sport); });
+            });
+            const sports = Array.from(set).sort();
             els.sport.innerHTML = '<option value="all">All sports</option>' + sports.map(sport => '<option value="' + escapeHtml(sport) + '">' + escapeHtml(sport) + '</option>').join('');
             if (sports.includes(selected)) els.sport.value = selected;
+        }
+
+        // Recalculate a member's stats from only the picks that match the active
+        // Sport + Wager Type filters. Pending picks are excluded downstream by the
+        // same graded-only math used for the unfiltered board.
+        function memberStatsForFilters(member, sport, wager) {
+            if (sport === 'all' && wager === 'all') return member.stats;
+            const picks = (member.rawPicks || []).filter(p =>
+                (sport === 'all' || p._sport === sport) && pickMatchesWager(p, wager)
+            );
+            const stats = statsFromPicks(member._user || {}, picks);
+            return stats || Object.assign(defaultStats(), { sports: [] });
         }
 
         function meetsLeaderboardMinimum(member) {
@@ -1852,16 +1951,24 @@
         function applyFilters() {
             const q = (els.search.value || '').trim().toLowerCase();
             const sport = els.sport.value || 'all';
-            const qualified = members.filter(meetsLeaderboardMinimum);
-            visibleMembers = qualified.filter(member => {
-                const matchesSearch = !q ||
+            const wager = (els.wager && els.wager.value) || 'all';
+            const filtersActive = sport !== 'all' || wager !== 'all';
+
+            // displayMembers carries filter-aware stats so the table, summary, and
+            // featured cards all reflect the same Sport + Wager Type selection.
+            displayMembers = filtersActive
+                ? members.map(member => Object.assign({}, member, { stats: memberStatsForFilters(member, sport, wager) }))
+                : members;
+
+            qualifiedPool = displayMembers.filter(meetsLeaderboardMinimum);
+            visibleMembers = qualifiedPool.filter(member => {
+                return !q ||
                     member.username.toLowerCase().includes(q) ||
                     member.displayName.toLowerCase().includes(q);
-                const matchesSport = sport === 'all' || (member.stats.sports || []).includes(sport);
-                return matchesSearch && matchesSport;
             });
 
             visibleMembers.sort(buildComparator(sortState.field, sortState.dir));
+            renderSummary();
             renderRows();
             updateSortIndicators();
             syncSortDropdown();
@@ -1911,7 +2018,7 @@
         }
 
         function renderRows() {
-            const qualifiedCount = members.filter(meetsLeaderboardMinimum).length;
+            const qualifiedCount = qualifiedPool.length;
             els.visible.textContent = String(qualifiedCount);
             els.visible.classList.remove('hm-stat-loading');
             els.visible.removeAttribute('aria-busy');
@@ -2042,6 +2149,7 @@
 
         els.search.addEventListener('input', resetPaginationAndApplyFilters);
         els.sport.addEventListener('change', resetPaginationAndApplyFilters);
+        if (els.wager) els.wager.addEventListener('change', resetPaginationAndApplyFilters);
         els.sort.addEventListener('change', () => {
             const field = els.sort.value || 'units';
             if (SORT_KEYS[field]) {

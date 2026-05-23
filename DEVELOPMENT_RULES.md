@@ -1,5 +1,16 @@
 # TrustMyRecord Development Rules
 
+## Leaderboard Must Support Sport + Wager Type Filtering (May 23, 2026) — PROTOCOL
+
+`/handicappers/` (Find Handicappers / Leaderboard) MUST always offer filtering by **Sport** and **Wager Type**, with all stats recalculated from the filtered, graded-only pick subset.
+
+- Controls live in `handicappers/index.html` `.hm-controls`: Search, `#hmSport`, `#hmWager`, `#hmSort` (in that order). Keep the 4-column dark sportsbook grid; never drop the wager filter.
+- Sport options are data-driven from members' graded picks (`normalizeSportName` maps sport keys → MLB/NBA/NHL/NFL/NCAAF/NCAAB/Soccer/Tennis/UFC-MMA/etc).
+- Wager Type options are fixed: All / Moneyline / Spread / Run Line / Puck Line / Total / Team Total / First 5 / Player Prop / Futures / Other. Detection = `wagerCategory()` + `isFirstFivePick()` over market/bet-type/period fields. First 5 is an orthogonal flag.
+- When any filter is active, `memberStatsForFilters()` recomputes units/ROI/win%/record/streak/pick count from only the matching picks via `statsFromPicks()`. Units, leaders, summary and featured cards all use the same filter-aware `displayMembers` pool.
+- Pending picks are NEVER counted in graded stats and never exposed. Test/seed accounts stay filtered by `isProductionDirectoryUser`.
+- Combined Sport + Wager filtering, plus column sorting, must keep working together. Any future leaderboard work preserves this capability.
+
 ## Global Nav Make Picks / Sportsbook Standard (May 22, 2026) — HARD RULE
 
 The public top-of-page navigation on every TMR page MUST always preserve a visible, obvious entry point to the sportsbook / pick entry flow (label: "Make Picks" or "Sportsbook"). This link is a core product function — picks, contests, and locked records all depend on it.
