@@ -589,3 +589,15 @@ Reference implementations (May 21, 2026):
 - Profile: `/profile/index.html` — ProfilePage + BreadcrumbList.
 
 When in doubt: copy the head from the closest reference implementation above and edit only the page-specific strings.
+
+## New Feature Page Pattern (Online Gaming standard)
+
+When adding a new core vertical page (the Online Gaming page, `/online-gaming/`, is the reference), follow this checklist so it is not a one-off:
+
+1. **Reuse the backend, don't duplicate it.** Search `trustmyrecord-backend/routes/` and `server.js` before writing any API. Online Gaming reuses the existing `/api/gaming/*` routes and `database/gaming_schema.sql` (gaming_titles, gaming_challenges, gaming_match_results, gaming_mlb_box_scores, gaming_user_stats, gaming_h2h_records). No new tables were created.
+2. **Page shell:** `<body class="tmr-site-shell" data-tmr-route="<slug>"><main class="page">`. Nav + footer inject from `tmr-sitewide.js`. Load order in `<head>`: `tmr-sitewide.css`, then `tmr-sitewide.js`, `config.js`, `backend-api.js` (all `defer`). Use the site palette tokens (`--cyan #2dd4bf`, `--gold #d4a72c`, slate).
+3. **Nav registration is part of the task.** Add the route to `routes`/`communityRoutes` in `static/js/tmr-sitewide.js`, add a `routeMeta["<slug>.html"]` entry, and add the file key to `COMMUNITY_GROUP` if it belongs to the community cluster. A page with no nav entry is incomplete (CLAUDE.md rules 17/18).
+4. **SEO:** unique `<title>`, meta description, `<link rel=canonical>` (do NOT change canonicals elsewhere), OG/Twitter tags, JSON-LD (CollectionPage + BreadcrumbList; FAQPage when there is real Q&A). One H1, descriptive H2s, natural keywords.
+5. **API client usage:** call `api.request('/endpoint', { method, body })`; gate writes behind `await api.getCurrentUser()` and redirect guests to `/login/?next=...`. Render professional empty/loading states; never show fabricated users, records, or counts.
+6. **Profile integration** for any per-user data goes in its own `data-tab`/`data-panel` in `profile/index.html`, lazy-loaded on tab click, and must stay isolated from the betting/handicapping ledger.
+7. **Stakes/wager language:** online gaming challenges are bragging-rights / reputation only. No cash prize, paid entry, or wagering copy (matches the sitewide money-language rules).

@@ -14,6 +14,7 @@
     ];
     const communityRoutes = [
         ["/feed/", "Feed"],
+        ["/online-gaming/", "Online Gaming"],
         ["/arena/", "Arena"],
         ["/challenges/", "Challenges"],
         ["/forum/", "Forums"],
@@ -26,7 +27,7 @@
     // Pages that should highlight Arena in the top nav even though they
     // have their own URL.
     const ARENA_GROUP = new Set(["arena.html"]);
-    const COMMUNITY_GROUP = new Set(["feed.html", "arena.html", "challenges.html", "forum.html", "polls.html", "trivia.html", "hangout.html"]);
+    const COMMUNITY_GROUP = new Set(["feed.html", "online-gaming.html", "arena.html", "challenges.html", "forum.html", "polls.html", "trivia.html", "hangout.html"]);
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
@@ -35,6 +36,7 @@
         "arena.html": ["Arena", "Challenge rivals in sports picks, MLB The Show, Madden, NBA 2K, EA FC, and NHL."],
         "challenges.html": ["Challenges", "Public competition, head-to-head challenges, and rivalry loops."],
         "feed.html": ["Feed", "Locked picks, hot takes, polls, trivia, and challenges from people with a record."],
+        "online-gaming.html": ["Online Gaming", "Create and accept open sports video game challenges in MLB The Show, Madden, NBA 2K, NHL, and EA FC. Track wins, box scores, and lifetime stats."],
         "hangout.html": ["Hangout", "Off-topic chatter and life conversations &mdash; not sports polls."],
         "polls.html": ["Polls", "Sports polls, prediction polls, debates, and community calls."],
         "trivia.html": ["Trivia", "Sports trivia, custom questions, leaderboards, and reputation."],

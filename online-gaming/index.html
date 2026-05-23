@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Gaming Challenges | Play MLB The Show, Madden, NBA 2K &amp; More | TrustMyRecord</title>
+    <meta name="description" content="Create and accept open online sports video game challenges in MLB The Show, Madden, NBA 2K, NHL, and EA FC. Pick PlayStation or Xbox, track wins and losses, and preserve every MLB The Show box score for lifetime stats. Bragging rights only.">
+    <link rel="canonical" href="https://trustmyrecord.com/online-gaming/">
+    <meta property="og:title" content="Online Gaming Challenges | TrustMyRecord">
+    <meta property="og:description" content="Open sports video game challenges for MLB The Show, Madden, NBA 2K, NHL, and EA FC. Track verified records and lifetime MLB The Show stats.">
+    <meta property="og:url" content="https://trustmyrecord.com/online-gaming/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <meta property="og:image" content="https://trustmyrecord.com/static/favicon.svg">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Online Gaming Challenges | TrustMyRecord">
+    <meta name="twitter:description" content="Open sports video game challenges. Madden, MLB The Show, NBA 2K, NHL, EA FC. Verified records, lifetime stats.">
+    <meta name="twitter:image" content="https://trustmyrecord.com/static/favicon.svg">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Online Gaming Challenges",
+      "description": "Open online sports video game challenges on TrustMyRecord. Create and accept matchups in MLB The Show, Madden, NBA 2K, NHL, and EA FC, track verified records, and preserve MLB The Show box scores for lifetime stats.",
+      "url": "https://trustmyrecord.com/online-gaming/",
+      "isPartOf": { "@type": "WebSite", "name": "TrustMyRecord", "url": "https://trustmyrecord.com/" },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Online Gaming", "item": "https://trustmyrecord.com/online-gaming/" }
+        ]
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Can I play MLB The Show for money on TrustMyRecord?",
+          "acceptedAnswer": { "@type": "Answer", "text": "TrustMyRecord runs MLB The Show challenges for bragging rights and a permanent public record, not cash payouts. You create an open challenge, an opponent accepts, you play on PlayStation or Xbox, and the result is logged with a full box score that builds lifetime stats." }
+        },
+        {
+          "@type": "Question",
+          "name": "Which sports video games are supported?",
+          "acceptedAnswer": { "@type": "Answer", "text": "MLB The Show, Madden, NBA 2K, NHL, and EA FC (soccer). MLB The Show challenges also preserve a permanent box score for running stat tracking." }
+        },
+        {
+          "@type": "Question",
+          "name": "How are online gaming records kept separate from betting records?",
+          "acceptedAnswer": { "@type": "Answer", "text": "Gaming challenge results are stored in their own gaming stats tables and shown in a dedicated Online Gaming section on your profile. They never touch your handicapping or betting record." }
+        }
+      ]
+    }
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260520mailbox1"></script>
+    <script defer src="/static/js/config.js"></script>
+    <script defer src="/static/js/backend-api.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        /* Site palette (teal #2dd4bf / gold #d4a72c / slate). Premium gaming-arena treatment. */
+        :root {
+            --bg: #0b1220;
+            --surface: rgba(255, 255, 255, 0.022);
+            --surface-2: rgba(255, 255, 255, 0.045);
+            --surface-hover: rgba(255, 255, 255, 0.06);
+            --line: rgba(148, 163, 184, 0.12);
+            --line-2: rgba(148, 163, 184, 0.20);
+            --line-strong: rgba(45, 212, 191, 0.34);
+            --text: #f1f6fc;
+            --muted: #9fb0c3;
+            --faint: #76879b;
+            --cyan: #2dd4bf;
+            --blue: #38bdf8;
+            --gold: #d4a72c;
+            --green: #22c55e;
+            --red: #ef4444;
+            --purple: #a78bfa;
+            --shadow: 0 16px 46px rgba(2, 8, 18, 0.40);
+        }
+        * { box-sizing: border-box; }
+        a { color: inherit; text-decoration: none; }
+        button, input, textarea, select { font: inherit; }
+        body { margin: 0; min-height: 100vh; color: var(--text); font-family: "Inter", system-ui, sans-serif; }
+        .page { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 30px 0 90px; }
+        h1, h2, h3 { font-family: "Barlow", "Inter", sans-serif; letter-spacing: -0.01em; margin: 0; }
+
+        /* ---------- Hero ---------- */
+        .og-hero {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 22px;
+            padding: 52px 46px;
+            background:
+                radial-gradient(130% 130% at 0% 0%, rgba(45, 212, 191, 0.10), transparent 52%),
+                radial-gradient(130% 130% at 100% 0%, rgba(167, 139, 250, 0.10), transparent 52%),
+                linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.012));
+            box-shadow: var(--shadow);
+        }
+        .og-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            font-size: 12.5px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase;
+            color: var(--cyan); margin-bottom: 16px;
+            padding: 6px 12px; border: 1px solid var(--line-strong); border-radius: 999px;
+            background: rgba(45, 212, 191, 0.06);
+        }
+        .og-hero h1 { font-size: clamp(30px, 5vw, 52px); font-weight: 900; line-height: 1.04; }
+        .og-hero h1 .grad {
+            background: linear-gradient(100deg, var(--cyan), var(--blue) 60%, var(--purple));
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        .og-hero p.lede { color: var(--muted); font-size: 17px; line-height: 1.6; max-width: 720px; margin: 18px 0 0; }
+        .og-cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+        .btn {
+            display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
+            border-radius: 12px; padding: 13px 22px; font-weight: 800; font-size: 14.5px;
+            border: 1px solid transparent; transition: transform .12s ease, background .15s ease, border-color .15s ease;
+        }
+        .btn:active { transform: translateY(1px); }
+        .btn-primary { background: linear-gradient(100deg, var(--cyan), var(--blue)); color: #06121a; }
+        .btn-primary:hover { filter: brightness(1.06); }
+        .btn-ghost { background: var(--surface-2); color: var(--text); border-color: var(--line-2); }
+        .btn-ghost:hover { background: var(--surface-hover); border-color: var(--line-strong); }
+        .btn-sm { padding: 9px 15px; font-size: 13px; border-radius: 10px; }
+        .btn-block { width: 100%; justify-content: center; }
+        .btn-gold { background: linear-gradient(100deg, var(--gold), #e6c14f); color: #1a1305; }
+
+        .og-hero-stats { display: flex; flex-wrap: wrap; gap: 26px; margin-top: 34px; padding-top: 26px; border-top: 1px solid var(--line); }
+        .og-hero-stat .num { font-family: "Barlow", sans-serif; font-size: 30px; font-weight: 900; line-height: 1; }
+        .og-hero-stat .lbl { color: var(--faint); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 7px; }
+
+        /* ---------- Section frame ---------- */
+        .section { margin-top: 46px; }
+        .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+        .section-head h2 { font-size: clamp(21px, 3vw, 28px); font-weight: 800; }
+        .section-head .sub { color: var(--muted); font-size: 14.5px; margin-top: 6px; }
+
+        /* ---------- Game cards ---------- */
+        .game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
+        .game-card {
+            position: relative; overflow: hidden; border-radius: 18px; padding: 22px;
+            border: 1px solid var(--line-2); min-height: 158px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            transition: transform .14s ease, border-color .15s ease;
+        }
+        .game-card:hover { transform: translateY(-3px); border-color: var(--line-strong); }
+        .game-card .gc-icon { font-size: 30px; }
+        .game-card h3 { font-size: 18px; font-weight: 800; margin-top: 12px; }
+        .game-card .gc-meta { color: var(--muted); font-size: 12.5px; margin-top: 5px; }
+        .game-card .gc-flag { display: inline-block; margin-top: 12px; font-size: 11px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; }
+        .game-card.mlb  { background: linear-gradient(155deg, rgba(212,167,44,0.16), rgba(255,255,255,0.02)); }
+        .game-card.mlb .gc-icon, .game-card.mlb .gc-flag { color: var(--gold); }
+        .game-card.mlb .gc-flag { background: rgba(212,167,44,0.12); border: 1px solid rgba(212,167,44,0.3); }
+        .game-card.nba  { background: linear-gradient(155deg, rgba(56,189,248,0.15), rgba(255,255,255,0.02)); }
+        .game-card.nba .gc-icon { color: var(--blue); }
+        .game-card.nfl  { background: linear-gradient(155deg, rgba(34,197,94,0.14), rgba(255,255,255,0.02)); }
+        .game-card.nfl .gc-icon { color: var(--green); }
+        .game-card.nhl  { background: linear-gradient(155deg, rgba(167,139,250,0.15), rgba(255,255,255,0.02)); }
+        .game-card.nhl .gc-icon { color: var(--purple); }
+        .game-card.soccer { background: linear-gradient(155deg, rgba(45,212,191,0.15), rgba(255,255,255,0.02)); }
+        .game-card.soccer .gc-icon { color: var(--cyan); }
+        .game-card .gc-track { color: var(--faint); font-size: 11.5px; font-weight: 700; }
+
+        /* ---------- Filters ---------- */
+        .filter-bar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 20px; }
+        .tab-row { display: inline-flex; flex-wrap: wrap; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 6px; }
+        .tab-chip { padding: 8px 15px; border-radius: 9px; font-size: 13px; font-weight: 700; color: var(--muted); cursor: pointer; border: 1px solid transparent; }
+        .tab-chip:hover { color: var(--text); }
+        .tab-chip.active { background: var(--surface-2); color: var(--text); border-color: var(--line-strong); }
+        .sel { background: var(--surface); border: 1px solid var(--line-2); color: var(--text); border-radius: 10px; padding: 9px 13px; font-size: 13.5px; font-weight: 600; }
+
+        /* ---------- Challenge cards ---------- */
+        .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+        .cc {
+            border: 1px solid var(--line-2); border-radius: 16px; padding: 18px 18px 16px;
+            background: var(--surface); display: flex; flex-direction: column; gap: 12px;
+            transition: border-color .15s ease, transform .14s ease;
+        }
+        .cc:hover { border-color: var(--line-strong); transform: translateY(-2px); }
+        .cc-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .cc-game { display: inline-flex; align-items: center; gap: 8px; font-weight: 800; font-size: 13px; padding: 5px 10px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line-2); }
+        .cc-status { font-size: 10.5px; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; padding: 4px 9px; border-radius: 999px; }
+        .cc-status.open { color: var(--cyan); background: rgba(45,212,191,0.1); border: 1px solid var(--line-strong); }
+        .cc-status.accepted, .cc-status.in_progress { color: var(--gold); background: rgba(212,167,44,0.1); border: 1px solid rgba(212,167,44,0.3); }
+        .cc-status.completed { color: var(--green); background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); }
+        .cc-title { font-weight: 800; font-size: 15.5px; }
+        .cc-desc { color: var(--muted); font-size: 13px; line-height: 1.5; }
+        .cc-people { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
+        .cc-people b { color: var(--text); }
+        .cc-vs { color: var(--faint); font-weight: 800; font-size: 11px; }
+        .cc-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; color: var(--faint); font-size: 12px; border-top: 1px solid var(--line); padding-top: 11px; }
+        .cc-meta span i { color: var(--muted); margin-right: 5px; }
+        .cc-actions { display: flex; gap: 8px; }
+
+        /* ---------- Empty / loading states ---------- */
+        .empty { text-align: center; padding: 52px 24px; border: 1px dashed var(--line-2); border-radius: 16px; background: var(--surface); }
+        .empty .ic { font-size: 34px; color: var(--faint); margin-bottom: 14px; }
+        .empty h3 { font-size: 18px; font-weight: 800; }
+        .empty p { color: var(--muted); font-size: 14px; margin: 8px auto 0; max-width: 440px; line-height: 1.55; }
+        .loading { text-align: center; padding: 40px; color: var(--faint); font-size: 14px; }
+
+        /* ---------- MLB explainer ---------- */
+        .mlb-panel {
+            border: 1px solid rgba(212,167,44,0.28); border-radius: 20px; padding: 34px;
+            background: radial-gradient(120% 120% at 100% 0%, rgba(212,167,44,0.10), transparent 55%), var(--surface);
+        }
+        .mlb-panel .tag { color: var(--gold); font-weight: 800; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; }
+        .mlb-panel h2 { font-size: clamp(22px, 3vw, 30px); font-weight: 900; margin-top: 10px; }
+        .mlb-panel p { color: var(--muted); font-size: 15px; line-height: 1.65; margin-top: 14px; max-width: 760px; }
+        .mlb-feats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 24px; }
+        .mlb-feat { border: 1px solid var(--line-2); border-radius: 13px; padding: 16px; background: rgba(255,255,255,0.02); }
+        .mlb-feat i { color: var(--gold); font-size: 18px; }
+        .mlb-feat b { display: block; margin-top: 9px; font-size: 14.5px; }
+        .mlb-feat span { color: var(--faint); font-size: 12.5px; display: block; margin-top: 4px; line-height: 1.45; }
+
+        /* ---------- SEO content ---------- */
+        .seo-wrap { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 34px; }
+        .seo-wrap h2 { font-size: 22px; font-weight: 800; margin-top: 26px; }
+        .seo-wrap h2:first-child { margin-top: 0; }
+        .seo-wrap p { color: var(--muted); font-size: 14.5px; line-height: 1.7; margin-top: 12px; }
+        .seo-wrap a { color: var(--cyan); font-weight: 600; }
+        .seo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-top: 18px; }
+
+        /* ---------- Modal ---------- */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(3,8,16,0.74); backdrop-filter: blur(4px); display: none; align-items: flex-start; justify-content: center; padding: 60px 16px; z-index: 200; overflow-y: auto; }
+        .modal-overlay.open { display: flex; }
+        .modal { width: min(540px, 100%); background: #0e1626; border: 1px solid var(--line-2); border-radius: 18px; padding: 26px; position: relative; box-shadow: var(--shadow); }
+        .modal h2 { font-size: 20px; font-weight: 800; }
+        .modal .close-btn { position: absolute; top: 14px; right: 16px; background: none; border: none; color: var(--faint); font-size: 26px; cursor: pointer; line-height: 1; }
+        .modal .close-btn:hover { color: var(--text); }
+        .form-group { margin-top: 14px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-group label { display: block; font-size: 12.5px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+        .form-control { width: 100%; background: rgba(255,255,255,0.03); border: 1px solid var(--line-2); color: var(--text); border-radius: 10px; padding: 11px 12px; font-size: 14px; }
+        .form-control:focus { outline: none; border-color: var(--line-strong); }
+        .form-note { color: var(--faint); font-size: 11.5px; margin-top: 6px; line-height: 1.45; }
+        .stake-note { margin-top: 16px; padding: 11px 13px; border-radius: 10px; background: rgba(45,212,191,0.06); border: 1px solid var(--line-strong); color: var(--muted); font-size: 12px; line-height: 1.5; }
+
+        .auth-banner { display: none; margin-top: 16px; padding: 13px 16px; border-radius: 12px; background: rgba(212,167,44,0.08); border: 1px solid rgba(212,167,44,0.28); color: var(--text); font-size: 13.5px; }
+        .auth-banner.show { display: block; }
+        .auth-banner a { color: var(--gold); font-weight: 800; }
+
+        .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #0e1626; border: 1px solid var(--line-strong); color: var(--text); padding: 13px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; z-index: 300; box-shadow: var(--shadow); display: none; }
+        .toast.show { display: block; }
+
+        @media (max-width: 640px) {
+            .og-hero { padding: 36px 22px; }
+            .form-row { grid-template-columns: 1fr; }
+            .cc-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body class="tmr-site-shell" data-tmr-route="online-gaming">
+<main class="page">
+
+    <!-- ===================== HERO ===================== -->
+    <section class="og-hero">
+        <span class="og-eyebrow"><i class="fas fa-gamepad"></i> Online Gaming Arena</span>
+        <h1>Online Gaming <span class="grad">Challenges</span></h1>
+        <p class="lede">
+            Create an open challenge in <strong>MLB The Show</strong>, <strong>Madden</strong>, <strong>NBA 2K</strong>,
+            <strong>NHL</strong>, or <strong>EA FC</strong>, pick PlayStation or Xbox, and let any verified member accept.
+            Every result builds a public record, and every MLB The Show game preserves a full box score for lifetime stats.
+            Bragging rights and reputation, tracked for real.
+        </p>
+        <div class="og-cta-row">
+            <button class="btn btn-primary" onclick="openCreate()"><i class="fas fa-plus"></i> Create a Challenge</button>
+            <a class="btn btn-ghost" href="#open-challenges"><i class="fas fa-bolt"></i> Browse Open Challenges</a>
+        </div>
+        <div class="auth-banner" id="authBanner">
+            You are browsing as a guest. <a href="/login/">Log in</a> or <a href="/register/">create a free account</a> to post and accept challenges.
+        </div>
+        <div class="og-hero-stats">
+            <div class="og-hero-stat"><div class="num" id="statOpen">&mdash;</div><div class="lbl">Open Challenges</div></div>
+            <div class="og-hero-stat"><div class="num">5</div><div class="lbl">Supported Games</div></div>
+            <div class="og-hero-stat"><div class="num" id="statCompleted">&mdash;</div><div class="lbl">Completed Matches</div></div>
+            <div class="og-hero-stat"><div class="num">PS / Xbox</div><div class="lbl">Platforms</div></div>
+        </div>
+    </section>
+
+    <!-- ===================== GAME CARDS ===================== -->
+    <section class="section" id="games">
+        <div class="section-head">
+            <div>
+                <h2>Choose Your Game</h2>
+                <div class="sub">Five sports video game arenas. Challenge a rival head-to-head or post an open callout.</div>
+            </div>
+        </div>
+        <div class="game-grid">
+            <div class="game-card mlb" onclick="openCreate('mlb-the-show-26')">
+                <div class="gc-icon"><i class="fas fa-baseball"></i></div>
+                <div>
+                    <h3>MLB The Show 26</h3>
+                    <div class="gc-meta">PlayStation &amp; Xbox</div>
+                    <span class="gc-flag">Box scores + lifetime stats</span>
+                </div>
+            </div>
+            <div class="game-card nba" onclick="openCreate('nba-2k26')">
+                <div class="gc-icon"><i class="fas fa-basketball"></i></div>
+                <div>
+                    <h3>NBA 2K26</h3>
+                    <div class="gc-meta">PlayStation &amp; Xbox</div>
+                    <span class="gc-track">Win / loss record tracking</span>
+                </div>
+            </div>
+            <div class="game-card nfl" onclick="openCreate('madden-26')">
+                <div class="gc-icon"><i class="fas fa-football"></i></div>
+                <div>
+                    <h3>Madden NFL 26</h3>
+                    <div class="gc-meta">PlayStation &amp; Xbox</div>
+                    <span class="gc-track">Win / loss record tracking</span>
+                </div>
+            </div>
+            <div class="game-card nhl" onclick="openCreate('nhl-26')">
+                <div class="gc-icon"><i class="fas fa-hockey-puck"></i></div>
+                <div>
+                    <h3>NHL 26</h3>
+                    <div class="gc-meta">PlayStation &amp; Xbox</div>
+                    <span class="gc-track">Win / loss record tracking</span>
+                </div>
+            </div>
+            <div class="game-card soccer" onclick="openCreate('ea-fc-26')">
+                <div class="gc-icon"><i class="fas fa-futbol"></i></div>
+                <div>
+                    <h3>EA FC 26</h3>
+                    <div class="gc-meta">PlayStation &amp; Xbox</div>
+                    <span class="gc-track">Win / loss record tracking</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== OPEN CHALLENGES ===================== -->
+    <section class="section" id="open-challenges">
+        <div class="section-head">
+            <div>
+                <h2>Open Challenges</h2>
+                <div class="sub">Live callouts waiting for an opponent. Filter by game and platform, then accept.</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openCreate()"><i class="fas fa-plus"></i> Create</button>
+        </div>
+        <div class="filter-bar">
+            <div class="tab-row" id="gameTabs">
+                <div class="tab-chip active" data-game="all">All Games</div>
+                <div class="tab-chip" data-game="mlb-the-show-26">MLB The Show</div>
+                <div class="tab-chip" data-game="nba-2k26">NBA 2K</div>
+                <div class="tab-chip" data-game="madden-26">Madden</div>
+                <div class="tab-chip" data-game="nhl-26">NHL</div>
+                <div class="tab-chip" data-game="ea-fc-26">EA FC</div>
+            </div>
+            <select class="sel" id="platformFilter">
+                <option value="all">All platforms</option>
+                <option value="PlayStation">PlayStation</option>
+                <option value="Xbox">Xbox</option>
+                <option value="PC">PC</option>
+            </select>
+        </div>
+        <div id="openList"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading open challenges&hellip;</div></div>
+    </section>
+
+    <!-- ===================== MLB EXPLAINER ===================== -->
+    <section class="section">
+        <div class="mlb-panel">
+            <span class="tag"><i class="fas fa-baseball"></i> MLB The Show Stat Tracking</span>
+            <h2>Baseball is a numbers game, so we keep the numbers</h2>
+            <p>
+                Every completed MLB The Show challenge preserves its full box score permanently. Runs, hits, errors,
+                home runs, strikeouts, the teams each player used, and an inning-by-inning line are all stored and tied to
+                both players' profiles. Nothing is overwritten, so your MLB The Show history compounds into lifetime running
+                stats and head-to-head records. This is the foundation for future MLB The Show stat leaderboards.
+            </p>
+            <div class="mlb-feats">
+                <div class="mlb-feat"><i class="fas fa-floppy-disk"></i><b>Permanent box scores</b><span>Each game is saved forever, never overwritten.</span></div>
+                <div class="mlb-feat"><i class="fas fa-users"></i><b>Tied to both profiles</b><span>Results attach to challenger and opponent alike.</span></div>
+                <div class="mlb-feat"><i class="fas fa-chart-line"></i><b>Lifetime running stats</b><span>Wins, run differential, streaks, and rivalries.</span></div>
+                <div class="mlb-feat"><i class="fas fa-shield-halved"></i><b>Separate from betting</b><span>Gaming stats never touch your handicapping record.</span></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== RECENT COMPLETED ===================== -->
+    <section class="section" id="completed">
+        <div class="section-head">
+            <div>
+                <h2>Recent Completed Challenges</h2>
+                <div class="sub">Settled head-to-head results across every supported game.</div>
+            </div>
+        </div>
+        <div id="completedList"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading results&hellip;</div></div>
+    </section>
+
+    <!-- ===================== SEO CONTENT ===================== -->
+    <section class="seo-wrap">
+        <h2>The sports video game competition platform built on real records</h2>
+        <p>
+            TrustMyRecord is where competitive players come to settle it on the sticks. If you have ever wanted to
+            play MLB The Show for money, play Madden for money, or play NBA 2K for money against someone who will actually
+            show up and put their name on the line, this is the cleaner way to do it: open online sports gaming challenges
+            for bragging rights and reputation, with a permanent public record instead of an empty group chat. Post a
+            challenge, lock in PlayStation or Xbox, and let a verified member accept.
+        </p>
+        <div class="seo-grid">
+            <div>
+                <h2>MLB The Show challenges</h2>
+                <p>
+                    Create MLB The Show challenges, log the final box score, and watch your lifetime numbers grow. Because
+                    baseball is a stat sport, every MLB The Show result is preserved with full game detail so your record,
+                    run differential, and head-to-head rivalries are always there to back up the trash talk.
+                </p>
+            </div>
+            <div>
+                <h2>Madden online challenges</h2>
+                <p>
+                    Looking to play Madden for money or just to prove you run the league? Post Madden online challenges,
+                    accept open callouts, and build a clean win/loss record on PlayStation or Xbox that anyone can verify.
+                </p>
+            </div>
+            <div>
+                <h2>NBA 2K online challenges</h2>
+                <p>
+                    Run NBA 2K online challenges head-to-head, track every win and loss, and climb a record that is yours
+                    for good. No fake clout, just a verified gaming record on a real competition platform.
+                </p>
+            </div>
+            <div>
+                <h2>NHL and soccer video game challenges</h2>
+                <p>
+                    Play NHL online for money-style stakes the honest way, or run soccer video game challenges in EA FC.
+                    Both track full win/loss history by opponent, game, date, and platform on TrustMyRecord.
+                </p>
+            </div>
+        </div>
+        <h2>How online sports gaming challenges work</h2>
+        <p>
+            Create an open challenge for the game you want, choose your platform and your GamerTag or PSN ID, and add
+            optional details or trash talk. Another member accepts, you play, and the result is logged. Wins and losses
+            update your dedicated Online Gaming record on your <a href="/profile/">profile</a>, completely separate from
+            your sports betting and handicapping record. Want to challenge specific rivals on picks instead of games?
+            Visit <a href="/challenges/">Challenges</a> or the <a href="/arena/">Arena</a>. Ready to start? Browse the
+            <a href="#open-challenges">open challenges</a> above or post your own.
+        </p>
+        <p style="color:var(--faint);font-size:12.5px;margin-top:22px;">
+            Bragging rights and reputation only. TrustMyRecord does not process cash prizes, paid entry, or wagering for online gaming challenges.
+        </p>
+    </section>
+
+</main>
+
+<!-- ===================== CREATE MODAL ===================== -->
+<div class="modal-overlay" id="createModal">
+    <div class="modal">
+        <button class="close-btn" onclick="closeCreate()" aria-label="Close">&times;</button>
+        <h2><i class="fas fa-gamepad" style="color:var(--cyan);margin-right:8px;"></i>Create a Challenge</h2>
+        <form id="createForm" onsubmit="submitChallenge(event)">
+            <div class="form-group">
+                <label>Game</label>
+                <select class="form-control" id="fGame" required>
+                    <option value="">Select a game&hellip;</option>
+                    <option value="mlb-the-show-26">MLB The Show 26</option>
+                    <option value="nba-2k26">NBA 2K26</option>
+                    <option value="madden-26">Madden NFL 26</option>
+                    <option value="nhl-26">NHL 26</option>
+                    <option value="ea-fc-26">EA FC 26</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Platform</label>
+                    <select class="form-control" id="fPlatform" required>
+                        <option value="PlayStation">PlayStation</option>
+                        <option value="Xbox">Xbox</option>
+                        <option value="PC">PC</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Format</label>
+                    <select class="form-control" id="fBestOf">
+                        <option value="1">Single Game</option>
+                        <option value="3">Best of 3</option>
+                        <option value="5">Best of 5</option>
+                        <option value="7">Best of 7</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Your GamerTag / PSN ID / Xbox ID</label>
+                <input class="form-control" id="fGamerTag" placeholder="So opponents know who to add" maxlength="100" autocomplete="off">
+                <div class="form-note">Saved to your gamer profile so you only enter it once.</div>
+            </div>
+            <div class="form-group">
+                <label>Challenge a specific player (optional)</label>
+                <input class="form-control" id="fOpponent" placeholder="@username — leave blank for an open challenge" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label>Title (optional)</label>
+                <input class="form-control" id="fTitle" placeholder="Name your challenge" maxlength="120">
+            </div>
+            <div class="form-group">
+                <label>Stakes</label>
+                <select class="form-control" id="fStake">
+                    <option value="bragging_rights">Bragging Rights</option>
+                    <option value="points">Reputation Points</option>
+                </select>
+                <div class="form-note">Bragging rights and reputation only — no cash prizes or paid entry.</div>
+            </div>
+            <div class="form-group">
+                <label>Description / trash talk (optional)</label>
+                <textarea class="form-control" id="fDesc" rows="2" placeholder="Add rules, scheduling, or talk your talk"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" style="margin-top:18px;" id="submitBtn">
+                <i class="fas fa-paper-plane"></i> Post Challenge
+            </button>
+            <div class="stake-note">
+                Online gaming challenges on TrustMyRecord are for bragging rights and reputation. Results build your
+                Online Gaming record and are kept separate from your betting and handicapping record.
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+    const GAME_ICON = {
+        'mlb-the-show-26': 'fa-baseball',
+        'nba-2k26': 'fa-basketball',
+        'madden-26': 'fa-football',
+        'nhl-26': 'fa-hockey-puck',
+        'ea-fc-26': 'fa-futbol'
+    };
+    const GAME_LABEL = {
+        'mlb-the-show-26': 'MLB The Show',
+        'nba-2k26': 'NBA 2K',
+        'madden-26': 'Madden',
+        'nhl-26': 'NHL',
+        'ea-fc-26': 'EA FC'
+    };
+    let activeGame = 'all';
+    let activePlatform = 'all';
+    let openCache = [];
+
+    function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function fmtDate(ts) {
+        if (!ts) return '';
+        try { return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
+        catch (e) { return ''; }
+    }
+    function toast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3200);
+    }
+    function apiReady() { return typeof api !== 'undefined' && api && typeof api.request === 'function'; }
+
+    // ---------- Auth banner ----------
+    async function checkAuth() {
+        if (!apiReady()) return false;
+        try {
+            const u = await api.getCurrentUser();
+            if (!u) document.getElementById('authBanner').classList.add('show');
+            return !!u;
+        } catch (e) {
+            document.getElementById('authBanner').classList.add('show');
+            return false;
+        }
+    }
+
+    // ---------- Create modal ----------
+    window.openCreate = function (game) {
+        if (game) { const sel = document.getElementById('fGame'); if (sel) sel.value = game; }
+        document.getElementById('createModal').classList.add('open');
+    };
+    window.closeCreate = function () { document.getElementById('createModal').classList.remove('open'); };
+    document.getElementById('createModal').addEventListener('click', function (e) {
+        if (e.target === this) closeCreate();
+    });
+
+    window.submitChallenge = async function (e) {
+        e.preventDefault();
+        if (!apiReady()) { toast('Backend unavailable. Try again shortly.'); return; }
+        let me;
+        try { me = await api.getCurrentUser(); } catch (_) {}
+        if (!me) { window.location.href = '/login/?next=' + encodeURIComponent('/online-gaming/'); return; }
+
+        const game_slug = document.getElementById('fGame').value;
+        const platform = document.getElementById('fPlatform').value;
+        const best_of = parseInt(document.getElementById('fBestOf').value, 10) || 1;
+        const gamerTag = document.getElementById('fGamerTag').value.trim();
+        const opponent = document.getElementById('fOpponent').value.replace('@', '').trim();
+        const title = document.getElementById('fTitle').value.trim();
+        const stake_type = document.getElementById('fStake').value;
+        let description = document.getElementById('fDesc').value.trim();
+        if (gamerTag) description = (description ? description + '\n' : '') + 'GamerTag: ' + gamerTag;
+
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting&hellip;';
+        try {
+            // Persist GamerTag to gamer profile (best effort).
+            if (gamerTag) {
+                const profileBody = platform === 'Xbox'
+                    ? { xbox_gamertag: gamerTag, preferred_console: platform }
+                    : platform === 'PC'
+                        ? { steam_username: gamerTag, preferred_console: platform }
+                        : { psn_username: gamerTag, preferred_console: platform };
+                try { await api.request('/gaming/profile', { method: 'PUT', body: profileBody }); } catch (_) {}
+            }
+            await api.request('/gaming/challenges', {
+                method: 'POST',
+                body: {
+                    game_slug,
+                    challenged_username: opponent || null,
+                    platform,
+                    best_of,
+                    title: title || null,
+                    description: description || null,
+                    stake_type
+                }
+            });
+            closeCreate();
+            document.getElementById('createForm').reset();
+            toast('Challenge posted.');
+            loadOpen(); loadCompleted();
+        } catch (err) {
+            toast(err && (err.message || err.error) ? (err.message || err.error) : 'Failed to post challenge.');
+        } finally {
+            btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Challenge';
+        }
+    };
+
+    // ---------- Accept ----------
+    window.acceptChallenge = async function (id) {
+        if (!apiReady()) return;
+        let me;
+        try { me = await api.getCurrentUser(); } catch (_) {}
+        if (!me) { window.location.href = '/login/?next=' + encodeURIComponent('/online-gaming/'); return; }
+        try {
+            await api.request('/gaming/challenges/' + id + '/respond', { method: 'PUT', body: { action: 'accept' } });
+            toast('Challenge accepted. Good luck.');
+            loadOpen(); loadCompleted();
+        } catch (err) {
+            toast(err && (err.message || err.error) ? (err.message || err.error) : 'Could not accept challenge.');
+        }
+    };
+
+    // ---------- Render open ----------
+    function challengeCard(ch, opts) {
+        opts = opts || {};
+        const slug = ch.game_slug || '';
+        const icon = GAME_ICON[slug] || 'fa-gamepad';
+        const label = ch.game_title || GAME_LABEL[slug] || slug || 'Game';
+        const statusRaw = (ch.status || 'open');
+        const statusClass = statusRaw === 'pending' ? 'open' : statusRaw;
+        const statusText = statusRaw === 'pending' ? 'Open' : statusRaw.replace('_', ' ');
+        const challenger = ch.challenger_display || ch.challenger_username || 'Member';
+        const opponent = ch.challenged_display || ch.challenged_username;
+        const titleHtml = ch.title ? '<div class="cc-title">' + esc(ch.title) + '</div>' : '';
+        const descRaw = (ch.description || '').replace(/GamerTag:.*$/m, '').trim();
+        const descHtml = descRaw ? '<div class="cc-desc">' + esc(descRaw) + '</div>' : '';
+
+        let people;
+        if (opponent) {
+            people = '<div class="cc-people"><b>' + esc(challenger) + '</b> <span class="cc-vs">VS</span> <b>' + esc(opponent) + '</b></div>';
+        } else {
+            people = '<div class="cc-people">Posted by <b>' + esc(challenger) + '</b> <span class="cc-vs">&middot; open to all</span></div>';
+        }
+
+        let result = '';
+        if (statusRaw === 'completed') {
+            const score = (ch.challenger_wins != null && ch.challenged_wins != null)
+                ? (ch.challenger_wins + ' - ' + ch.challenged_wins) : '';
+            if (score) result = '<span><i class="fas fa-trophy"></i>' + esc(score) + '</span>';
+        }
+
+        let action = '';
+        if (opts.allowAccept && statusRaw === 'pending' && !ch.challenged_id) {
+            action = '<div class="cc-actions"><button class="btn btn-primary btn-sm" onclick="acceptChallenge(' + ch.id + ')"><i class="fas fa-check"></i> Accept Challenge</button></div>';
+        }
+
+        return '<div class="cc">' +
+            '<div class="cc-top"><span class="cc-game"><i class="fas ' + icon + '"></i>' + esc(label) + '</span>' +
+            '<span class="cc-status ' + statusClass + '">' + esc(statusText) + '</span></div>' +
+            titleHtml + descHtml + people +
+            '<div class="cc-meta">' +
+                (ch.platform ? '<span><i class="fas fa-tower-cell"></i>' + esc(ch.platform) + '</span>' : '') +
+                (ch.best_of && ch.best_of > 1 ? '<span><i class="fas fa-layer-group"></i>Best of ' + ch.best_of + '</span>' : '<span><i class="fas fa-flag-checkered"></i>Single game</span>') +
+                (ch.created_at ? '<span><i class="fas fa-calendar"></i>' + esc(fmtDate(ch.created_at)) + '</span>' : '') +
+                result +
+            '</div>' + action +
+        '</div>';
+    }
+
+    function applyFilters() {
+        let list = openCache.slice();
+        if (activeGame !== 'all') list = list.filter(c => c.game_slug === activeGame);
+        if (activePlatform !== 'all') list = list.filter(c => (c.platform || '').toLowerCase() === activePlatform.toLowerCase());
+        const wrap = document.getElementById('openList');
+        if (!list.length) {
+            wrap.innerHTML = '<div class="empty"><div class="ic"><i class="fas fa-bolt"></i></div>' +
+                '<h3>No open challenges yet</h3>' +
+                '<p>Be the first to post a callout. Pick a game and platform, set your GamerTag, and let a verified member accept.</p>' +
+                '<div style="margin-top:18px;"><button class="btn btn-primary btn-sm" onclick="openCreate()"><i class="fas fa-plus"></i> Create a Challenge</button></div></div>';
+            return;
+        }
+        wrap.innerHTML = '<div class="cc-grid">' + list.map(c => challengeCard(c, { allowAccept: true })).join('') + '</div>';
+    }
+
+    async function loadOpen() {
+        const wrap = document.getElementById('openList');
+        if (!apiReady()) { wrap.innerHTML = backendEmpty(); return; }
+        try {
+            const data = await api.request('/gaming/challenges?status=pending&limit=60');
+            openCache = (data && data.challenges ? data.challenges : []).filter(c => !c.challenged_id);
+            document.getElementById('statOpen').textContent = openCache.length;
+            applyFilters();
+        } catch (err) {
+            wrap.innerHTML = backendEmpty();
+        }
+    }
+
+    function backendEmpty() {
+        return '<div class="empty"><div class="ic"><i class="fas fa-bolt"></i></div>' +
+            '<h3>No open challenges yet</h3>' +
+            '<p>Open challenges will appear here as members post them. Create one to get the arena started.</p>' +
+            '<div style="margin-top:18px;"><button class="btn btn-primary btn-sm" onclick="openCreate()"><i class="fas fa-plus"></i> Create a Challenge</button></div></div>';
+    }
+
+    async function loadCompleted() {
+        const wrap = document.getElementById('completedList');
+        if (!apiReady()) { wrap.innerHTML = completedEmpty(); return; }
+        try {
+            const data = await api.request('/gaming/challenges?status=completed&limit=12');
+            const list = data && data.challenges ? data.challenges : [];
+            if (list.length) document.getElementById('statCompleted').textContent = (data.total != null ? data.total : list.length);
+            else {
+                // Fall back to logged matches for the completed count.
+                try {
+                    const m = await api.request('/gaming/matches?limit=1');
+                    if (m && Array.isArray(m.matches)) { /* count not exact, leave dash */ }
+                } catch (_) {}
+            }
+            if (!list.length) { wrap.innerHTML = completedEmpty(); return; }
+            wrap.innerHTML = '<div class="cc-grid">' + list.map(c => challengeCard(c, { allowAccept: false })).join('') + '</div>';
+        } catch (err) {
+            wrap.innerHTML = completedEmpty();
+        }
+    }
+
+    function completedEmpty() {
+        return '<div class="empty"><div class="ic"><i class="fas fa-trophy"></i></div>' +
+            '<h3>No completed challenges yet</h3>' +
+            '<p>Once challenges are accepted and played, settled results appear here with the winner and final score.</p></div>';
+    }
+
+    // ---------- Filter wiring ----------
+    document.getElementById('gameTabs').addEventListener('click', function (e) {
+        const chip = e.target.closest('.tab-chip');
+        if (!chip) return;
+        this.querySelectorAll('.tab-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        activeGame = chip.getAttribute('data-game');
+        applyFilters();
+    });
+    document.getElementById('platformFilter').addEventListener('change', function () {
+        activePlatform = this.value;
+        applyFilters();
+    });
+
+    // ---------- Init ----------
+    function start() {
+        checkAuth();
+        loadOpen();
+        loadCompleted();
+    }
+    if (typeof api !== 'undefined' && api && api.ready && typeof api.ready.then === 'function') {
+        api.ready.then(start).catch(start);
+    } else {
+        // backend-api.js is deferred; wait for load.
+        window.addEventListener('load', function () {
+            if (typeof api !== 'undefined') start();
+            else setTimeout(start, 600);
+        });
+    }
+})();
+</script>
+</body>
+</html>
