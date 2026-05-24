@@ -4828,7 +4828,7 @@ function escapeHtml(value) {
         if (dogs.length) {
             const rec = wlr(dogs);
             const dogNet = dogs.reduce(function (t, p) { return t + pickPL(p); }, 0);
-            if (rec.n >= 5 && (rec.r >= 0.5 || dogNet >= 1)) {
+            if (rec.n >= 5 && (rec.r >= 0.55 || dogNet >= 1)) {
                 if (dogNet >= 1) out.push({ score: 540 + dogNet, line: '💰 ' + signedUnits(dogNet) + ' on underdogs',
                     sub: wl(rec.w, rec.l) + ' on plus-money plays', tag: 'UNDERDOG', cls: 'is-underdog' });
                 else out.push({ score: 520 + rec.r * 100, line: '🧊 ' + wl(rec.w, rec.l) + ' on plus-money plays',
@@ -4870,9 +4870,11 @@ function escapeHtml(value) {
         if (w7.length >= 5) out.push({ score: 400 + w7.length, line: '🚀 ' + w7.length + ' verified picks this week',
             sub: 'High tracked volume this week', tag: 'VOLUME', cls: 'is-volume' });
 
-        // 13. Strong lifetime units (authoritative totals from /users) -> PROFIT
-        if (Number.isFinite(net) && net >= 3) out.push({ score: 300 + net, line: '💰 ' + signedUnits(net) + ' lifetime',
-            sub: (decided >= 5 && Number.isFinite(roi)) ? signedPct(roi) + ' ROI' : plPicks(total || decided), tag: 'PROFIT', cls: 'is-profit' });
+        // 13. Strong lifetime units (authoritative totals from /users) -> PROFIT.
+        // Requires a real settled sample so a single big pick never reads as a
+        // lifetime edge.
+        if (Number.isFinite(net) && net >= 3 && decided >= 5) out.push({ score: 300 + net, line: '💰 ' + signedUnits(net) + ' lifetime',
+            sub: Number.isFinite(roi) ? signedPct(roi) + ' ROI' : plPicks(total || decided), tag: 'PROFIT', cls: 'is-profit' });
 
         // 14. ROI over a meaningful sample (>= 20 settled, >= 5% ROI) -> PROFIT
         if (decided >= 20 && Number.isFinite(roi) && roi >= 5) out.push({ score: 460 + roi,
@@ -4883,9 +4885,11 @@ function escapeHtml(value) {
         if (vol >= 25) out.push({ score: 200 + Math.min(vol, 150), line: '🚀 ' + vol + ' verified picks tracked',
             sub: 'Long-term verified track record', tag: vol >= 100 ? 'VERIFIED' : 'VOLUME', cls: vol >= 100 ? 'is-verified' : 'is-volume' });
 
-        // 16. Positive fallback only (never a losing record)
+        // 16. Positive fallback only (never a losing record). Units/% claims
+        // require a real sample (>= 5 settled); thin-sample cappers get safe,
+        // non-exaggerated wording instead of a one-pick brag.
         if (!out.length) {
-            if (Number.isFinite(net) && net > 0) out.push({ score: 100 + net, line: '✅ ' + signedUnits(net) + ' overall',
+            if (decided >= 5 && Number.isFinite(net) && net > 0) out.push({ score: 100 + net, line: '✅ ' + signedUnits(net) + ' overall',
                 sub: plPicks(total || decided), tag: 'PROFIT', cls: 'is-profit' });
             else if (decided >= 5 && winRate >= 0.5) out.push({ score: 80 + winRate * 100, line: '✅ ' + wl(wins, losses) + ' verified record',
                 sub: pct(winRate) + '% win rate', tag: 'RECORD', cls: 'is-record' });
