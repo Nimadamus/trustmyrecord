@@ -1,11 +1,12 @@
 # TrustMyRecord Development Rules
 
-## Profile Header Long-Username Handling (May 23, 2026) — HARD RULE
-The public profile masthead (`profile/index.html`, `#profileHeader` grid: left `.profile-info` / right `.profile-rail` stat card) must never let a long display name or `@handle` overflow into the right stat card.
-- `.profile-name` and `.profile-handle` MUST carry `overflow-wrap:anywhere; word-break:break-word; max-width:100%` (name also `hyphens:auto`). Font sizing uses `clamp()` with a small floor (name floor 26px) so long single-word names shrink before they wrap.
-- `.profile-identity-copy` MUST be `min-width:0; max-width:100%; overflow:hidden`; `.profile-info` stays `min-width:0` (grid track is `minmax(0, …)`).
-- These properties are duplicated in BOTH the early `.profile-name` block and the LATEST governing masthead `<style>` block (the one with `grid-template-columns: minmax(0,1.05fr) minmax(430px,.95fr)`), because later blocks re-declare font-size. Any future masthead redesign must re-apply the wrapping props in the governing block.
-- Verify with a long name (e.g. `NobodyImportant74`) at desktop/tablet/mobile: no overlap with the stat card, no horizontal scroll, layout stacks cleanly ≤1180px.
+## Profile Header Long-Username Layout (May 23, 2026) — HARD RULE (PERMANENT)
+The public profile masthead (`profile/index.html`, `#profileHeader` grid: left `.profile-info` / right `.profile-rail` stat card) must keep long usernames on ONE line on desktop while the stats panel auto-yields space — never overlap, never an ugly mid-word two-line break on desktop.
+- **Smart grid, not hardcoded positioning.** Governing masthead `<style>` block uses `grid-template-columns: minmax(min-content, 1.05fr) minmax(300px, .95fr)`. The `min-content` left track grows to fit a one-line name, pushing the divider right; the stats panel shrinks to its 300px floor and stays contained. Do NOT revert the left track to `minmax(0, …)` or raise the right floor back to 430px — that re-creates the wrap.
+- **Desktop name = one line.** `.profile-name`/`.profile-handle` carry `white-space:nowrap; overflow-wrap:normal; word-break:keep-all` in the governing block. Font is `clamp(30px, 3.2vw, 54px)` — do not shrink the floor further to "solve" wrapping.
+- **Identity copy must NOT clip on desktop.** `.profile-identity-copy` is `min-width:auto; overflow:visible` in the governing block so its real one-line width feeds the grid's `min-content` track. Setting it to `min-width:0; overflow:hidden` on desktop defeats the auto-expand — only do that inside the ≤1180px media query.
+- **Wrapping is last resort, below the desktop threshold only.** The `@media (max-width:1180px)` block collapses the header to one column and re-enables `white-space:normal; overflow-wrap:anywhere; word-break:break-word` plus `.profile-identity-copy{min-width:0;overflow:hidden}`. ≤720px drops the name to 31px. Mobile/tablet may wrap or shrink cleanly; desktop may not.
+- Verify with `NobodyImportant74` (and a longer name) at desktop / tablet / mobile: one-line name on desktop, no overlap with the stat card, no horizontal scroll, clean stack ≤1180px.
 
 ## Leaderboard Must Support Sport + Wager Type Filtering (May 23, 2026) — PROTOCOL
 

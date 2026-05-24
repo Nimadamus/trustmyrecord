@@ -12067,7 +12067,11 @@
       }
       body.profile-page.tmr-social-profile .profile-header {
         display: grid !important;
-        grid-template-columns: minmax(0, 1.05fr) minmax(430px, .95fr) !important;
+        /* Left identity column sizes to its content (min-content) so a long
+           one-line username pushes the divider right; the stats panel yields
+           space down to a 300px floor and stays contained. No hardcoded
+           positioning — the grid rebalances automatically per name length. */
+        grid-template-columns: minmax(min-content, 1.05fr) minmax(300px, .95fr) !important;
         gap: 24px !important;
         padding: 30px !important;
         border: 1px solid rgba(115, 139, 174, .28) !important;
@@ -12112,28 +12116,33 @@
         letter-spacing: .14em !important;
         text-transform: uppercase !important;
       }
+      /* Desktop: identity copy must report its real (one-line name) width so
+         the grid's min-content left track expands. Do NOT clip/zero it here. */
       body.profile-page.tmr-social-profile .profile-identity-copy {
-        min-width: 0 !important;
+        min-width: auto !important;
         max-width: 100% !important;
-        overflow: hidden !important;
+        overflow: visible !important;
       }
       body.profile-page.tmr-social-profile .profile-name {
         margin-top: 6px !important;
         color: #f8fbff !important;
-        font-size: clamp(26px, 3.2vw, 54px) !important;
+        font-size: clamp(30px, 3.2vw, 54px) !important;
         font-weight: 950 !important;
         max-width: 100% !important;
-        overflow-wrap: anywhere !important;
-        word-break: break-word !important;
-        hyphens: auto !important;
+        /* Desktop priority: keep the username on a single line. */
+        white-space: nowrap !important;
+        overflow-wrap: normal !important;
+        word-break: keep-all !important;
+        hyphens: manual !important;
       }
       body.profile-page.tmr-social-profile .profile-handle {
         color: #9fb0c7 !important;
         font-size: 16px !important;
         font-weight: 750 !important;
         max-width: 100% !important;
-        overflow-wrap: anywhere !important;
-        word-break: break-word !important;
+        white-space: nowrap !important;
+        overflow-wrap: normal !important;
+        word-break: keep-all !important;
       }
       body.profile-page.tmr-social-profile .profile-trust-row {
         display: flex !important;
@@ -12409,6 +12418,18 @@
       @media (max-width: 1180px) {
         body.profile-page.tmr-social-profile .profile-header {
           grid-template-columns: 1fr !important;
+        }
+        /* Stacked layout below the desktop threshold: name gets the full row,
+           so allow wrapping again as the last resort for extreme names. */
+        body.profile-page.tmr-social-profile .profile-identity-copy {
+          min-width: 0 !important;
+          overflow: hidden !important;
+        }
+        body.profile-page.tmr-social-profile .profile-name,
+        body.profile-page.tmr-social-profile .profile-handle {
+          white-space: normal !important;
+          overflow-wrap: anywhere !important;
+          word-break: break-word !important;
         }
         body.profile-page.tmr-social-profile .profile-rail {
           grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
