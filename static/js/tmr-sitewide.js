@@ -1028,3 +1028,86 @@
     });
     if (document.body) observer.observe(document.body, { childList: true, subtree: true });
 })();
+
+// ============================================================
+// Shared Eastern-Time timestamp helpers â€” sitewide single source
+// ------------------------------------------------------------
+// One formatter so pick tables stop drifting between browser-local
+// time and ET. All API timestamps are UTC ISO (e.g. 2026-05-24T01:34:53.293Z);
+// these always render in America/New_York regardless of the viewer's
+// browser timezone, then suffix " ET".
+//   TMR.formatET(value, opts)      -> "May 24, 2026, 9:34 PM ET" | '' if unparseable
+//   TMR.formatDateET(value)        -> "May 24" (no time, no ET suffix; for short cells)
+//   TMR.formatGameTimeET(pick)     -> scheduled game start in ET (commence_time only)
+//   TMR.formatSubmittedET(pick)    -> actual submission instant in ET; never game/lock-as-game.
+// ============================================================
+(function() {
+    window.TMR = window.TMR || {};
+    if (window.TMR.formatET) return;
+
+    var ET_TZ = 'America/New_York';
+
+    function parse(value) {
+        if (value == null || value === '') return null;
+        var d = new Date(value);
+        return isNaN(d.getTime()) ? null : d;
+    }
+
+    // Always force the ET timezone so the viewer's browser tz can never
+    // corrupt the rendered value. Handles AM/PM + date rollover natively
+    // via Intl/toLocaleString. Returns '' (not a fabricated date) on bad input.
+    function formatET(value, opts) {
+        var d = parse(value);
+        if (!d) return '';
+        var base = opts || { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' };
+        var out = {};
+        for (var k in base) { if (Object.prototype.hasOwnProperty.call(base, k)) out[k] = base[k]; }
+        out.timeZone = ET_TZ;
+        var showTime = ('hour' in out) || ('minute' in out) || ('second' in out);
+        return d.toLocaleString('en-US', out) + (showTime ? ' ET' : '');
+    }
+
+    function formatDateET(value) {
+        var d = parse(value);
+        if (!d) return '';
+        return d.toLocaleDateString('en-US', { timeZone: ET_TZ, month: 'short', day: 'numeric' });
+    }
+
+    // Scheduled game start. Only ever reads commence/game-start fields â€”
+    // never created_at / locked_at (those are submission, not game time).
+    function formatGameTimeET(pick) {
+        if (!pick) return '';
+        var v = pick.commence_time || pick.game_time || pick.start_time
+            || (pick.game && (pick.game.commence_time || pick.game.start_time));
+        return formatET(v);
+    }
+
+    // Actual submission instant. Walks true submission fields first; locked_at
+    // is the last resort (it equals created_at at insert in this schema, but
+    // semantically it is the lock, not the user submit). Skips missing or
+    // future values; never falls back to game time.
+    function formatSubmittedET(pick) {
+        if (!pick) return '';
+        var nowMs = Date.now();
+        var candidates = [
+            pick.submitted_at,
+            pick.created_at,
+            pick.pick_created_at,
+            pick.locked_at,
+            pick.timestamp
+        ];
+        for (var i = 0; i < candidates.length; i++) {
+            var d = parse(candidates[i]);
+            if (d) {
+                var t = d.getTime();
+                if (t > 0 && t <= nowMs) return formatET(candidates[i]);
+            }
+        }
+        return '';
+    }
+
+    window.TMR.formatET = formatET;
+    window.TMR.formatDateET = formatDateET;
+    window.TMR.formatGameTimeET = formatGameTimeET;
+    window.TMR.formatSubmittedET = formatSubmittedET;
+})();

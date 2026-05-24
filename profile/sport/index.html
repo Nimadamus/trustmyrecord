@@ -7,7 +7,7 @@
   <meta name="description" content="Verified sport-specific profile breakdown on TrustMyRecord.">
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
   <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
-  <script defer src="/static/js/tmr-sitewide.js?v=20260520mailbox1"></script>
+  <script defer src="/static/js/tmr-sitewide.js?v=20260524etfmt1"></script>
   <script src="/static/js/streaks.js?v=20260506streak1"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -487,7 +487,7 @@
         const net = Number(p.result_units || 0);
         const status = String(p.status || '').toLowerCase();
         return '<div class="recent-pick"><strong>' + esc(formatPickDisplay(p)) + '</strong>' +
-          '<span>' + esc(new Date(p.locked_at || p.created_at || Date.now()).toLocaleDateString()) + ' - ' + fmtOdds(p.odds_snapshot) + ' - ' + Number(p.units || 0).toFixed(2) + 'u</span>' +
+          '<span>' + esc((window.TMR && window.TMR.formatDateET) ? (window.TMR.formatDateET(p.locked_at || p.created_at) || '—') : new Date(p.locked_at || p.created_at || Date.now()).toLocaleDateString('en-US', { timeZone: 'America/New_York' })) + ' - ' + fmtOdds(p.odds_snapshot) + ' - ' + Number(p.units || 0).toFixed(2) + 'u</span>' +
           '<span><span class="pill ' + esc(status) + '">' + esc(status) + '</span> <b class="' + signClass(net) + '">' + signed(net, 'u', 2) + '</b></span></div>';
       }).join('') + '</div></div>';
     }
@@ -664,7 +664,7 @@
         const net = Number(p.result_units || 0);
         return '<div class="ledger-row">' +
           '<div class="ledger-main"><strong>' + esc(formatPickDisplay(p)) + '</strong><span>' + esc(MARKET_LABELS[p.market_type] || p.market_type || 'Market') + ' - ' + esc(p.away_team || '') + (p.home_team ? ' at ' + esc(p.home_team) : '') + '</span></div>' +
-          '<div class="ledger-meta">' + esc(new Date(p.locked_at || p.created_at || Date.now()).toLocaleDateString()) + '</div>' +
+          '<div class="ledger-meta">' + esc((window.TMR && window.TMR.formatDateET) ? (window.TMR.formatDateET(p.locked_at || p.created_at) || '—') : new Date(p.locked_at || p.created_at || Date.now()).toLocaleDateString('en-US', { timeZone: 'America/New_York' })) + '</div>' +
           '<div class="ledger-meta">' + fmtOdds(p.odds_snapshot) + '</div>' +
           '<div class="ledger-meta">' + Number(p.units || 0).toFixed(2) + 'u</div>' +
           '<div><span class="pill ' + esc(status) + '">' + esc(status) + '</span></div>' +

@@ -9539,7 +9539,7 @@
          approved TrustMyRecord branding shell as the rest of the app instead of
          depending on sportsbook-specific chrome or late body includes. -->
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260520mailbox1"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=20260524etfmt1"></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1">
     <!-- Contest Mode adapter: when /sportsbook/?contest=<id> is loaded, shows a
@@ -10867,10 +10867,15 @@ window.toggleSportFamily = function (family) {
             return null;
         }
         function fmtSubmitted(ts) {
+            // Always Eastern Time via the sitewide helper so the viewer's
+            // browser timezone can never corrupt the displayed submit time.
+            if (window.TMR && typeof window.TMR.formatET === 'function') {
+                return window.TMR.formatET(ts, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+            }
             if (!ts) return '';
             var d = new Date(ts);
             if (isNaN(d.getTime())) return '';
-            return d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+            return d.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' ET';
         }
         function normalizePendingPick(p) {
             if (!p || String(p.status || 'pending').toLowerCase() !== 'pending') return null;

@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260520mailbox1"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=20260524etfmt1"></script>
     <style>
         :root {
             --page-bg: #060b12;
@@ -489,18 +489,20 @@
             return 'Pending';
         }
         function fmtSubmittedAt(pick) {
-            // Time Submitted (ET): submission instant only. NEVER reads
-            // commence_time / game_time / event_time / game_date. Walks
-            // named submission timestamp fields in priority order; skips
-            // any value missing or in the future. Returns literal 'Unknown'
-            // if no candidate is a real past instant -- never fabricates.
+            // Time Submitted (ET): submission instant only, via the sitewide
+            // helper so every pick table renders this the same way. NEVER reads
+            // commence_time / game_time. Returns literal 'Unknown' if no
+            // candidate is a real past instant -- never fabricates.
             if (!pick) return 'Unknown';
+            if (window.TMR && typeof window.TMR.formatSubmittedET === 'function') {
+                return window.TMR.formatSubmittedET(pick) || 'Unknown';
+            }
             var nowMs = Date.now();
             var candidates = [
-                pick.locked_at,
-                pick.created_at,
                 pick.submitted_at,
+                pick.created_at,
                 pick.pick_created_at,
+                pick.locked_at,
                 pick.timestamp
             ];
             for (var i = 0; i < candidates.length; i++) {
