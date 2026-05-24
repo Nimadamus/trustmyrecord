@@ -521,12 +521,12 @@
     if (market && market.sportOnly && state.sport !== market.sportOnly) errors.push("invalid combination");
     if (market && !marketIsDisabled(market) && !state.trendKind) errors.push("missing trend search");
     if (trendKind && trendKind.disabled) errors.push("invalid combination");
-    if (market && !marketIsDisabled(market) && !state.side) errors.push("missing required variables");
-    if (market && market.requiresTeam && !state.team) errors.push("missing required variables");
-    if (market && market.needsThreshold && state.threshold === "") errors.push("missing required variables");
-    if (market && market.needsThreshold && state.threshold !== "" && !Number.isFinite(Number(state.threshold))) errors.push("invalid combination");
+    if (market && !marketIsDisabled(market) && !state.side) errors.push("missing_side");
+    if (market && market.requiresTeam && !state.team) errors.push("missing_team");
+    if (market && market.needsThreshold && state.threshold === "") errors.push("missing_line");
+    if (market && market.needsThreshold && state.threshold !== "" && !Number.isFinite(Number(state.threshold))) errors.push("invalid_line");
     if (state.range !== "source_window") errors.push("invalid combination");
-    if (Number(state.minSample) < 1) errors.push("missing required variables");
+    if (Number(state.minSample) < 1) errors.push("missing_sample");
     return errors;
   }
 
@@ -557,7 +557,15 @@
     renderPeriods();
     var errors = validationErrors();
     els.summary.textContent = querySummary();
-    els.generate.disabled = Boolean(errors.length || state.loading);
+    var blocked = Boolean(errors.length);
+    // Hard-disable only while data is loading. When inputs are incomplete we
+    // keep the button clickable but visually mark it blocked so a click always
+    // surfaces the named missing field (never a silent dead button).
+    els.generate.disabled = Boolean(state.loading);
+    els.generate.classList.toggle("is-blocked", blocked && !state.loading);
+    els.generate.setAttribute("aria-disabled", blocked || state.loading ? "true" : "false");
+    if (errors.length) els.generate.title = validationMessage(errors[0]);
+    else els.generate.removeAttribute("title");
     els.validation.textContent = errors.length ? validationMessage(errors[0]) : "Ready to generate. Output will stay empty unless verified data supports the selected query.";
     var data = cache[state.sport] || {};
     var classification = sourceClassification(data);
@@ -574,10 +582,16 @@
   }
 
   function validationMessage(error) {
+    var market = selectedMarket();
+    var marketLabel = market ? market.label : "this market";
     if (error === "no matchup selected") return "Select a sport and matchup before generating.";
     if (error === "no trend type selected") return "Select a trend type before generating.";
     if (error === "missing trend search") return "Select the kind of trend you want to search for.";
-    if (error === "missing required variables") return "Missing required variables for this market.";
+    if (error === "missing_side") return "Missing field: choose a Side (which team/over-under) for the " + marketLabel + " trend.";
+    if (error === "missing_team") return "Missing field: choose a Team for the " + marketLabel + " trend.";
+    if (error === "missing_line") return "Missing field: enter the " + marketLabel + " line (a number, e.g. -1.5) before generating.";
+    if (error === "invalid_line") return "Invalid field: the " + marketLabel + " line must be a number (e.g. -1.5).";
+    if (error === "missing_sample") return "Missing field: set a minimum sample size of at least 1.";
     if (error === "invalid combination") return "Invalid combination for the selected sport or market.";
     return "Trend calculation unavailable until dataset is connected.";
   }
@@ -640,11 +654,14 @@
     els.resultsSection.classList.remove("is-hidden");
     els.resultsTitle.textContent = "Trend Result";
     var errors = validationErrors();
+    console.info("[Trendspotter] Generate clicked", { query: querySummary(), errors: errors.slice() });
     if (errors.length) {
+      console.warn("[Trendspotter] Blocked: " + errors[0] + " -> " + validationMessage(errors[0]));
       els.resultCount.textContent = SOURCE_LABELS.blocked.label;
       els.resultsList.innerHTML = safeStateHtml(validationMessage(errors[0]), querySummary(), SOURCE_LABELS.blocked);
       return;
     }
+    console.info("[Trendspotter] Validation passed -> evaluating verified source rows");
     var data = cache[state.sport] || {};
     var classification = sourceClassification(data);
     if (data.status === "error") {

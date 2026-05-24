@@ -178,7 +178,6 @@ Quarantined tests (run for observability, do NOT block the push):
 - tests/profile-page-lookup-test.js
 - tests/local-api-no-seed-regression-test.js
 - tests/pending-picks-regression-test.js
-- tests/trendspotter-source-regression-test.js
 - tests/sitewide-design-system-regression-test.js
 - tests/homepage-canonical-regression-test.js
 - tests/homepage-visual-regression-test.js
@@ -188,9 +187,7 @@ Quarantined tests (run for observability, do NOT block the push):
 - tests/profile-source-regression-test.js
 - tests/profile-market-drilldown-page-test.js
 - tests/mlb-simulator-page-test.js
-- tests/mlb-simulator-boxscore-test.js
-- tests/mlb-simulator-realism-test.js
-- tests/mlb-simulator-live-roster-validation-test.js
+- tests/mlb-simulator-live-roster-validation-test.js (network-dependent integration test; now passes against honest labels but kept soft-warn to avoid live-data flakiness)
 - tests/sportsbook-polish-regression.test.js
 
 Mechanism: `scripts/predeploy-guard.ps1` invokes each of the above via `Invoke-StaleQuarantineCommand`, which runs the test, records failures, and continues. The hard-guard tests (line formatting, workflow regression, protected baseline, publish guard, pick display format, sportsbook header / no-game-drop / reliability / stake-mode, trendspotter accuracy, feed page, polls / arena / forum / leaderboards / trivia visual guards, streaks unit, auto-grader regression) still hard-block on any new regression.
@@ -201,6 +198,18 @@ Permanent rules for this quarantine:
 - Adding a new test to the quarantine requires a one-line entry above and a `# stale-quarantine` reason in `predeploy-guard.ps1`.
 - The quarantine list cannot grow without explicit acknowledgement in the PR description.
 - The intent is to keep ALL real protected guards firing while not letting a single botched rewrite hold every future deploy hostage. If half the chain is quarantined, that is a triage backlog signal, not the new normal.
+
+## MLB Simulator Realism & Lineup-Honesty Protocol (May 23, 2026)
+
+The MLB Simulator (`/mlb-simulator/`, `static/js/mlb-simulator.js`) may produce SIMULATED stat lines, but its roster/lineup INPUTS must be real, current, and honestly labeled. Hard rules:
+
+- **Verified current rosters only.** Current-team rows come from the live MLB Stats API active-roster endpoint (`statsapi.mlb.com/api/v1/teams/:id/roster?rosterType=active`, CORS-open, `cache:no-store` + UI-build cache-buster). No hardcoded current-team roster/lineup fixtures. Historical teams use clearly labeled curated rosters.
+- **Batting order = the real lineup when available.** Use today's posted/confirmed lineup (schedule `lineups` hydrate) or the most recent game's boxscore batting order. The lineup feed is the source of truth for ORDER; active-roster data only enriches metadata. Never drop a real lineup hitter just because the active-roster name string differs (accents, Jr., etc.).
+- **No false "confirmed" claims.** `lineupStatus` is one of: `confirmed` (today's game is Live/Final with a posted lineup), `posted` (today, pregame, lineup posted but game not started), `recent` (projected from the most recent game), `roster` (active-roster fallback, NO set batting order). The "confirmed" label may ONLY appear for a live/final game. The status must reflect what was ACTUALLY applied — if a 9-deep ordered lineup could not be built, downgrade to `roster` fallback; never keep a lineup label while showing a position-sorted roster.
+- **Surface the status.** Every team's box-score batting section renders a `lineup-status-chip` with the honest badge so users can see Confirmed / Posted / Projected-from-last-game / Active-roster-fallback at a glance.
+- **Box score stays MLB-style:** full team names + abbreviations, line score (R/H/E by inning), batting table (AB/R/H/RBI/BB/SO/AVG/OPS) with Totals, batting/baserunning/fielding detail line, pitching table (IP/H/R/ER/BB/SO/HR/ERA with W/L/SV, no fake holds), game notes, FINAL matchup card. All clearly labeled simulated.
+
+Guards: `tests/mlb-simulator-roster-source-test.js` (deterministic, hard guard) proves names come from the MLB payload, confirmed maps to game state, and no stale fixtures. `tests/mlb-simulator-boxscore-test.js` + `tests/mlb-simulator-realism-test.js` are hard guards. `tests/mlb-simulator-live-roster-validation-test.js` is a network-dependent soft-warn integration check.
 
 ## Sportsbook Contest-Launch Priority (May 22, 2026)
 
@@ -624,6 +633,13 @@ When adding a new core vertical page (the Online Gaming page, `/online-gaming/`,
 5. **API client usage:** call `api.request('/endpoint', { method, body })`; gate writes behind `await api.getCurrentUser()` and redirect guests to `/login/?next=...`. Render professional empty/loading states; never show fabricated users, records, or counts.
 6. **Profile integration** for any per-user data goes in its own `data-tab`/`data-panel` in `profile/index.html`, lazy-loaded on tab click, and must stay isolated from the betting/handicapping ledger.
 7. **Stakes/wager language:** online gaming challenges are bragging-rights / reputation only. No cash prize, paid entry, or wagering copy (matches the sitewide money-language rules).
+
+## Trendspotter generator MUST name missing fields and never fail silently (May 23, 2026) — HARD RULE
+`/trendspotter/` (`static/js/trendspotter.js`) validation and Generate button must never show the generic "Missing required variables" or present a dead/clickable-but-silent button.
+- **Name the field.** `validationErrors()` returns field-specific keys (`missing_side`, `missing_team`, `missing_line`, `invalid_line`, `missing_sample`, …) and `validationMessage()` maps each to a human-readable, market-aware sentence (e.g. "Missing field: enter the Spread line (a number, e.g. -1.5) before generating."). Never collapse distinct missing inputs into one vague message.
+- **Visually indicate why, but stay clickable.** When inputs are incomplete the Generate button gets `.is-blocked` + `aria-disabled="true"` + a `title` reason (hard `disabled` only while data is loading). A click while blocked must render the specific named-field message in the results panel — never do nothing.
+- **No silent failure.** The click handler logs `[Trendspotter] Generate clicked {query, errors}` and either `Blocked: <key> -> <message>` or `Validation passed -> evaluating verified source rows`. When valid, the result is a verified trend OR an explicit "no verified trend / small sample" message with the sample size — never empty.
+- Future Trendspotter work must preserve explicit missing-field messages, the clickable-blocked button, and the console trace.
 
 ## Homepage right-rail activity module MUST show meaningful verified stats (May 23, 2026) — HARD RULE
 The homepage right-side activity module is the **Capper Trend Spotter** (`index.html`, `#tmrHeroPicksList`). It must surface a meaningful, **verified, positive** trend per capper — never dumb "N picks locked" counts and never a losing/negative trend.
