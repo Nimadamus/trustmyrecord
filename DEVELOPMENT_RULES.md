@@ -17,6 +17,10 @@ The public profile masthead (`profile/index.html`, `#profileHeader` grid: left `
 - Wager Type options are fixed: All / Moneyline / Spread / Run Line / Puck Line / Total / Team Total / First 5 / Player Prop / Futures / Other. Detection = `wagerCategory()` + `isFirstFivePick()` over market/bet-type/period fields. First 5 is an orthogonal flag.
 - When any filter is active, `memberStatsForFilters()` recomputes units/ROI/win%/record/streak/pick count from only the matching picks via `statsFromPicks()`. Units, leaders, summary and featured cards all use the same filter-aware `displayMembers` pool.
 - Pending picks are NEVER counted in graded stats and never exposed. Test/seed accounts stay filtered by `isProductionDirectoryUser`.
+- `void`/`cancelled`/`refunded`/`no_action` picks are no-action: excluded from graded, pending, AND total counts (`VOID_PICK_STATUSES`). They must NOT appear in record, units, ROI, win%, or pick count.
+- Member pick history MUST be fetched in FULL via pagination (`fetchPicksForParam` loops on `pagination.hasMore`). NEVER compute stats from a single `limit=100` window — heavy hitters have >100 picks and truncation silently corrupts every stat. (May 23, 2026 bug: BetLegend showed 100/164 picks.)
+- ROI uses backend `risk_units` per pick when present so it matches the profile/metrics exactly. `/api/picks?username=` returns profile picks only; contest picks live in a separate table and MUST stay out of this page.
+- **Verification is NOT "the dropdowns exist."** Any change to this page's filter/calc logic MUST be verified against REAL graded-pick data: pull a known heavy member (e.g. BetLegend) from the live API, recompute the combos below with the page's own functions, and confirm they equal the backend `/users/<u>/metrics` for All/All. Required test combos: All/All, All/Total, MLB/Team Total, MLB/Run Line, MLB/Moneyline. HTTP 200 + markup presence is insufficient.
 - Combined Sport + Wager filtering, plus column sorting, must keep working together. Any future leaderboard work preserves this capability.
 
 ## Global Nav Make Picks / Sportsbook Standard (May 22, 2026) — HARD RULE

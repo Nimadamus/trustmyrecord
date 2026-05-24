@@ -1254,6 +1254,9 @@
         // moneyline counts for both "First 5" and "Moneyline").
         const WAGER_TYPES = ['moneyline', 'spread', 'runline', 'puckline', 'total', 'teamtotal', 'first5', 'playerprop', 'futures', 'other'];
 
+        // No-action statuses: never counted as graded, pending, or total.
+        const VOID_PICK_STATUSES = new Set(['void', 'voided', 'cancelled', 'canceled', 'refunded', 'no_action', 'noaction', 'nulled', 'cancel']);
+
         function wagerBlob(pick) {
             return [pick.bet_type, pick.market_type, pick.market, pick.wager_type, pick.bet_category, pick.period, pick.market_key]
                 .map(v => String(v == null ? '' : v).toLowerCase())
@@ -1262,7 +1265,10 @@
 
         function isFirstFivePick(pick) {
             const blob = wagerBlob(pick);
-            return /first[_\s-]?5|1st[_\s-]?5|\bf5\b|first[_\s-]?five|first[_\s-]?(inning|half)/.test(blob);
+            // Note: "_" is a word char, so \bf5\b fails on "f5_totals" — match on
+            // explicit separators/start instead.
+            return /(?:^|[^a-z0-9])f5(?:[^a-z0-9]|$)/.test(blob) ||
+                /first[_\s-]?5|1st[_\s-]?5|first[_\s-]?five|first[_\s-]?(inning|half)/.test(blob);
         }
 
         // Single base category for a pick (excludes the First 5 flag).
@@ -1338,15 +1344,23 @@
             if (!rows.length) return null;
 
             // Accept either raw or already-normalized picks.
-            const normalized = rows.map(pick => (pick && pick._status ? pick : normalizePickMeta(pick)));
+            const all = rows.map(pick => (pick && pick._status ? pick : normalizePickMeta(pick)));
+            // Void/cancelled/refunded picks are no-action: excluded from graded,
+            // pending, and total counts entirely (matches backend metrics, which
+            // report total_picks as wins+losses+pushes only).
+            const normalized = all.filter(pick => !VOID_PICK_STATUSES.has(pick._status));
+            if (!normalized.length) return null;
             const graded = normalized.filter(pick => ['won', 'lost', 'push'].includes(pick._status));
             const decisions = graded.filter(pick => pick._status === 'won' || pick._status === 'lost');
             const wins = graded.filter(pick => pick._status === 'won').length;
             const losses = graded.filter(pick => pick._status === 'lost').length;
             const pushes = graded.filter(pick => pick._status === 'push').length;
-            const pending = normalized.filter(pick => pick._status === 'pending' || !['won', 'lost', 'push'].includes(pick._status)).length;
+            const pending = normalized.filter(pick => !['won', 'lost', 'push'].includes(pick._status)).length;
             const units = graded.reduce((total, pick) => total + pickPL(pick), 0);
             const risk = graded.reduce((total, pick) => {
+                // Prefer the backend-recorded risk so ROI matches the profile/metrics exactly.
+                const rk = Number(pick.risk_units);
+                if (Number.isFinite(rk) && rk > 0) return total + rk;
                 const stake = Number(pick.units || pick.stake || 1);
                 const odds = Number(pick.odds_snapshot || pick.odds || pick.price || -110);
                 return total + (odds < 0 ? stake * Math.abs(odds) / 100 : stake);
@@ -1400,17 +1414,36 @@
             };
         }
 
-        async function fetchUserPicks(user, username) {
-            const queries = [];
-            if (user.id || user.user_id) queries.push('/picks?limit=100&offset=0&userId=' + encodeURIComponent(user.id || user.user_id));
-            if (username) queries.push('/picks?limit=100&offset=0&username=' + encodeURIComponent(username));
-
-            for (const query of queries) {
+        // Fetch a member's FULL graded history by paginating until the API reports
+        // no more rows. The old single limit=100 call truncated heavy hitters
+        // (e.g. 100 of 145 picks), so every recalculated stat was wrong.
+        async function fetchPicksForParam(param) {
+            const PAGE = 100;
+            const MAX_PICKS = 2000; // hard safety ceiling
+            const all = [];
+            for (let offset = 0; offset < MAX_PICKS; offset += PAGE) {
+                let data;
                 try {
-                    const data = await directoryRequest(query);
-                    const picks = Array.isArray(data) ? data : Array.isArray(data?.picks) ? data.picks : [];
-                    if (picks.length) return picks;
-                } catch (error) {}
+                    data = await directoryRequest('/picks?limit=' + PAGE + '&offset=' + offset + '&' + param);
+                } catch (error) {
+                    break;
+                }
+                const picks = Array.isArray(data) ? data : Array.isArray(data?.picks) ? data.picks : [];
+                all.push(...picks);
+                const hasMore = !!(data && data.pagination && data.pagination.hasMore);
+                if (!hasMore || picks.length < PAGE) break;
+            }
+            return all;
+        }
+
+        async function fetchUserPicks(user, username) {
+            if (user.id || user.user_id) {
+                const byId = await fetchPicksForParam('userId=' + encodeURIComponent(user.id || user.user_id));
+                if (byId.length) return byId;
+            }
+            if (username) {
+                const byName = await fetchPicksForParam('username=' + encodeURIComponent(username));
+                if (byName.length) return byName;
             }
             return [];
         }
