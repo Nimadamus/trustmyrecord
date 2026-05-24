@@ -1018,9 +1018,11 @@
                 privatePendingResponse = await api.getPendingPicks({ limit: 100 });
             }
         } catch (error) {
-            if (error && (error.status === 401 || error.status === 403)) {
-                clearFrontendAuthState();
-            }
+            // Do NOT clear auth on a 401/403 here. The picks list is a best-effort
+            // read; backend-api.request() already owns the refresh-then-clear
+            // decision and deliberately KEEPS the session on transient / cold-start
+            // 401s. Wiping it here logged users out when they returned to a
+            // spun-down backend. (persistent-login fix)
             throw error;
         }
         const mergedById = new Map();
