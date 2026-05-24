@@ -2331,6 +2331,7 @@
                             <tbody><tr class="empty"><td colspan="10">Loading pick history&hellip;</td></tr></tbody>
                           </table>
                         </div>
+                        <div class="tmrx-pagination" id="tmrxPicksPagination" hidden></div>
                       </div>
 
                     </section>
@@ -7336,27 +7337,59 @@
     // /api/picks?username=... and renders into the wide history table.
     // Same endpoint the Records ledger already uses; no new backend calls.
     // ============================================================
+    const TMRX_PICKS_PER_PAGE = 15;
+    const SETTLED_RE = /^(won|lost|push|void|cancelled)$/i;
+    let tmrxLedgerPicks = [];   // full settled public history, newest first
+    let tmrxLedgerPage = 1;
+
     async function tmrxRenderPickHistory(username) {
         const tbody = document.querySelector('#tmrxTablePicks tbody');
         const meta = document.getElementById('tmrxPickMeta');
+        const pager = document.getElementById('tmrxPicksPagination');
         if (!tbody) return;
+        if (pager) { pager.hidden = true; pager.innerHTML = ''; }
         if (!username || !window.api || typeof window.api.request !== 'function') {
             tbody.innerHTML = '<tr class="empty"><td colspan="10">Pick history unavailable.</td></tr>';
             return;
         }
-        let resp;
+        // Pull the user's FULL settled public history by paging the API until
+        // exhausted (no new backend call; same /picks endpoint with offset).
+        const PAGE = 100;
+        let all = [];
         try {
-            resp = await window.api.request('/picks?username=' + encodeURIComponent(username) + '&limit=25');
+            for (let offset = 0, guard = 0; guard < 200; offset += PAGE, guard++) {
+                const resp = await window.api.request('/picks?username=' + encodeURIComponent(username) + '&limit=' + PAGE + '&offset=' + offset);
+                const batch = (resp && Array.isArray(resp.picks)) ? resp.picks : [];
+                all = all.concat(batch);
+                if (!resp || !resp.pagination || !resp.pagination.hasMore || batch.length < PAGE) break;
+            }
         } catch (err) {
             tbody.innerHTML = '<tr class="empty"><td colspan="10">Pick history unavailable.</td></tr>';
             return;
         }
-        const picks = (resp && Array.isArray(resp.picks)) ? resp.picks : [];
-        if (!picks.length) {
-            tbody.innerHTML = '<tr class="empty"><td colspan="10">No picks locked yet.</td></tr>';
-            if (meta) meta.textContent = '0 picks';
+        // Public Ledger = settled picks only; pending stays hidden until graded.
+        tmrxLedgerPicks = all
+            .filter(p => !p.redacted && SETTLED_RE.test(p.status))
+            .sort((a, b) => new Date(b.created_at || b.locked_at || 0) - new Date(a.created_at || a.locked_at || 0));
+        tmrxLedgerPage = 1;
+        if (meta) meta.textContent = tmrxLedgerPicks.length + ' settled public pick' + (tmrxLedgerPicks.length === 1 ? '' : 's');
+        if (!tmrxLedgerPicks.length) {
+            tbody.innerHTML = '<tr class="empty"><td colspan="10">No settled picks yet.</td></tr>';
             return;
         }
+        tmrxRenderLedgerPage();
+    }
+
+    function tmrxRenderLedgerPage() {
+        const tbody = document.querySelector('#tmrxTablePicks tbody');
+        const pager = document.getElementById('tmrxPicksPagination');
+        if (!tbody) return;
+        const total = tmrxLedgerPicks.length;
+        const totalPages = Math.max(1, Math.ceil(total / TMRX_PICKS_PER_PAGE));
+        if (tmrxLedgerPage > totalPages) tmrxLedgerPage = totalPages;
+        if (tmrxLedgerPage < 1) tmrxLedgerPage = 1;
+        const start = (tmrxLedgerPage - 1) * TMRX_PICKS_PER_PAGE;
+        const picks = tmrxLedgerPicks.slice(start, start + TMRX_PICKS_PER_PAGE);
         const fmtDate = (iso) => {
             if (!iso) return '—';
             try {
@@ -7407,10 +7440,49 @@
                 '<td class="num ' + netCls + '">' + netTxt + '</td>' +
             '</tr>';
         }).join('');
-        if (meta) {
-            const settled = picks.filter(p => /^(won|lost|push|void|cancelled)$/i.test(p.status)).length;
-            meta.textContent = settled + ' settled public picks';
+
+        // Pagination controls
+        if (pager) {
+            if (totalPages <= 1) {
+                pager.hidden = true;
+                pager.innerHTML = '';
+                return;
+            }
+            pager.hidden = false;
+            const cur = tmrxLedgerPage;
+            const showFrom = start + 1;
+            const showTo = Math.min(start + picks.length, total);
+            let html = '<div class="tmrx-page-info">Showing ' + showFrom + '&ndash;' + showTo + ' of ' + total + ' &middot; Page ' + cur + ' of ' + totalPages + '</div>';
+            html += '<button type="button" data-tmrx-page="' + (cur - 1) + '"' + (cur === 1 ? ' disabled' : '') + '>Previous</button>';
+            // Page numbers: first, last, and a window around current.
+            const nums = [];
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= cur - 1 && i <= cur + 1)) nums.push(i);
+            }
+            let prev = 0;
+            nums.forEach(i => {
+                if (i - prev > 1) html += '<span class="tmrx-page-gap">&hellip;</span>';
+                html += '<button type="button" class="' + (i === cur ? 'is-active' : '') + '" data-tmrx-page="' + i + '"' + (i === cur ? ' disabled' : '') + '>' + i + '</button>';
+                prev = i;
+            });
+            html += '<button type="button" data-tmrx-page="' + (cur + 1) + '"' + (cur === totalPages ? ' disabled' : '') + '>Next</button>';
+            pager.innerHTML = html;
         }
+    }
+
+    // Pagination clicks (delegated, bound once).
+    if (!window.__tmrxLedgerPagerBound) {
+        window.__tmrxLedgerPagerBound = true;
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest && e.target.closest('#tmrxPicksPagination button[data-tmrx-page]');
+            if (!btn || btn.disabled) return;
+            const p = parseInt(btn.getAttribute('data-tmrx-page'), 10);
+            if (!Number.isFinite(p)) return;
+            tmrxLedgerPage = p;
+            tmrxRenderLedgerPage();
+            const sec = document.getElementById('tmrxTablePicks');
+            if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        });
     }
 
     function renderPmTable(tableId, splitArr, splitKey) {
@@ -11361,6 +11433,15 @@
       .tmrx-table .zero { color: #94a3b8; }
       .tmrx-table .empty td { padding: 22px 16px; text-align: center; color: #64748b; font-style: italic; }
 
+      .tmrx-pagination { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+      .tmrx-pagination .tmrx-page-info { width: 100%; text-align: center; font-size: 11.5px; font-weight: 800; letter-spacing: .04em; color: #7a8499; margin-bottom: 4px; }
+      .tmrx-pagination button { min-width: 36px; padding: 7px 11px; border-radius: 9px; border: 1px solid rgba(31,51,80,.85); background: #0a1322; color: #cbd5e1; font-size: 12.5px; font-weight: 800; cursor: pointer; transition: background .12s, border-color .12s, color .12s; }
+      .tmrx-pagination button:hover:not(:disabled) { background: rgba(34,211,238,.08); border-color: #22d3ee; color: #f1f5fb; }
+      .tmrx-pagination button.is-active { background: #22d3ee; border-color: #22d3ee; color: #021018; }
+      .tmrx-pagination button:disabled { opacity: .4; cursor: default; }
+      .tmrx-pagination .tmrx-page-gap { color: #475569; padding: 0 2px; font-weight: 800; }
+      @media (max-width: 560px) { .tmrx-pagination button { min-width: 32px; padding: 6px 8px; font-size: 12px; } }
+
       .tmrx-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
 
       .tmrx-equity-wrap { padding: 6px 14px 14px; }
@@ -11567,11 +11648,24 @@
         text-transform: none !important;
         outline: none !important;
         min-width: 130px !important;
+        color-scheme: dark;
       }
       body.profile-page.tmr-social-profile .tmrx-filter-bar select:focus,
       body.profile-page.tmr-social-profile .tmrx-filter-bar input:focus {
         border-color: rgba(34,211,238,.35) !important;
         background: rgba(34,211,238,.05) !important;
+      }
+      /* Open dropdown popup: dark + readable (fixes white-on-white options) */
+      body.profile-page.tmr-social-profile .tmrx-filter-bar select option,
+      body.profile-page.tmr-social-profile .tmrx-filter-bar select optgroup {
+        background: #111a2e !important;
+        color: #dbe5f4 !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-filter-bar select option:checked,
+      body.profile-page.tmr-social-profile .tmrx-filter-bar select option:hover,
+      body.profile-page.tmr-social-profile .tmrx-filter-bar select option:focus {
+        background: #1b3a5c !important;
+        color: #ffffff !important;
       }
 
       /* Container width — match preview's clean 1320px feel. */
