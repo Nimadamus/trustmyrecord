@@ -558,9 +558,10 @@
             } catch (error) {}
         }
 
-        clearFrontendAuthState();
-        showSubmitTrace('Access blocked: login session expired before submit.');
-        redirectToLoginForPicks('Your login session expired. Please log in again before making picks.');
+        // Never auto-logout (May 24 2026 rule): do NOT clear auth or bounce to
+        // login here even if we could not mint a fresh token. The submit may
+        // fail server-side, but the user's session is preserved everywhere else.
+        showSubmitTrace('Could not refresh access token before submit; session preserved.');
         return false;
     }
 
