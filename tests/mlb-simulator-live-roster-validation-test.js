@@ -41,6 +41,14 @@ function assertRealPlayer(player, team) {
   assert(!/^\s*$/.test(player.position), team.name + ' player ' + player.name + ' has a non-empty position');
 }
 
+const HONEST_SOURCE_LABELS = [
+  "Today's confirmed MLB lineup (live/final game) plus verified MLB active roster endpoint",
+  "Today's posted MLB starting lineup (pregame, not yet final) plus verified MLB active roster endpoint",
+  'Projected from most recent game starting lineup plus verified MLB active roster endpoint',
+  'Active roster fallback (no set batting order) from verified MLB active roster endpoint',
+];
+const CONFIRMED_LABEL = HONEST_SOURCE_LABELS[0];
+
 function renderedNames(group) {
   return []
     .concat((group && group.batters) || [])
@@ -69,8 +77,8 @@ function renderedNames(group) {
     const roster = await simulator.fetchTeamRoster(team);
     assert(roster, team.name + ' loaded a verified current active roster');
     assert.strictEqual(String(roster.teamId), String(team.source.teamId), team.name + ' roster has the selected MLB team id');
-    assert.strictEqual(roster.source, 'Official MLB recent starting batting order from boxscore plus verified MLB active roster endpoint', team.name + ' labels the live lineup source');
-    assert.strictEqual(roster.lineupSource, 'Official MLB recent starting batting order from boxscore', team.name + ' loaded an official recent batting order');
+    assert(HONEST_SOURCE_LABELS.includes(roster.source), team.name + ' labels the live lineup source honestly: ' + roster.source);
+    assert.strictEqual(roster.lineupConfirmed, roster.source === CONFIRMED_LABEL, team.name + " only claims \"confirmed\" when the source is a confirmed live/final lineup");
 
     const pitchers = roster.players.filter((player) => /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')));
     const hitters = roster.players.filter((player) => !/^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(player.position || '')));
@@ -92,8 +100,14 @@ function renderedNames(group) {
     const lineup = roster.players
       .filter((player) => Number.isFinite(Number(player.battingOrder)))
       .slice(0, 9);
-    assert.strictEqual(lineup.length, 9, abbr + ' live roster includes nine official recent batting-order slots');
-    assert.deepStrictEqual(lineup.map((player) => Number(player.battingOrder)), [100, 200, 300, 400, 500, 600, 700, 800, 900], abbr + ' official recent batting order is sorted 1 through 9');
+    // A real batting order is present only when a confirmed/posted/recent lineup loaded.
+    // Active-roster fallback rosters legitimately have no batting-order slots.
+    if (roster.lineupSource) {
+      assert.strictEqual(lineup.length, 9, abbr + ' lineup-backed roster includes nine batting-order slots');
+      assert.deepStrictEqual(lineup.map((player) => Number(player.battingOrder)), [100, 200, 300, 400, 500, 600, 700, 800, 900], abbr + ' batting order is sorted 1 through 9');
+    } else {
+      assert.strictEqual(lineup.length, 0, abbr + ' active-roster fallback exposes no fake batting order');
+    }
   });
 
   teams.forEach((team, index) => {
@@ -103,8 +117,8 @@ function renderedNames(group) {
     simulator.state.awayPitcherId = '';
     simulator.state.homePitcherId = '';
     const result = simulator.simulate(team, opponent, null, 'full-roster-' + team.abbreviation, false);
-    assert(result.boxScore.players.away.rosterSource === 'Official MLB recent starting batting order from boxscore plus verified MLB active roster endpoint', team.name + ' rendered away player rows from the verified lineup source');
-    assert(result.boxScore.players.home.rosterSource === 'Official MLB recent starting batting order from boxscore plus verified MLB active roster endpoint', opponent.name + ' rendered home player rows from the verified lineup source');
+    assert(HONEST_SOURCE_LABELS.includes(result.boxScore.players.away.rosterSource), team.name + ' rendered away player rows from an honest verified lineup source: ' + result.boxScore.players.away.rosterSource);
+    assert(HONEST_SOURCE_LABELS.includes(result.boxScore.players.home.rosterSource), opponent.name + ' rendered home player rows from an honest verified lineup source: ' + result.boxScore.players.home.rosterSource);
 
     assert.strictEqual(result.boxScore.players.away.batters.length, 9, team.name + ' renders exactly nine verified batting-order rows');
     assert.strictEqual(result.boxScore.players.home.batters.length, 9, opponent.name + ' renders exactly nine verified batting-order rows');

@@ -243,7 +243,7 @@ function chooseTrendKind(doc, value) {
   chooseTrendKind(doc, 'team_win');
   change(doc, '#sideSelect', 'away');
   change(doc, '#sampleInput', '3');
-  assert.strictEqual(doc.querySelector('#generateTrend').disabled, false, 'moneyline should allow verified generation after team side and trend search');
+  assert.strictEqual(doc.querySelector('#generateTrend').getAttribute('aria-disabled'), 'false', 'moneyline should allow verified generation after team side and trend search');
   doc.querySelector('#generateTrend').click();
   assert.match(doc.querySelector('#resultsList').textContent, /Selected market\s*Moneyline/, 'moneyline result should reflect selected market');
   assert.match(doc.querySelector('#resultsList').textContent, /Sample size\s*3/, 'moneyline result should show sample size');
@@ -251,9 +251,9 @@ function chooseTrendKind(doc, value) {
   clickMarket(doc, 'spread');
   chooseTrendKind(doc, 'ats');
   change(doc, '#sideSelect', 'away');
-  assert.strictEqual(doc.querySelector('#generateTrend').disabled, true, 'spread should require a numeric threshold before generation');
+  assert.strictEqual(doc.querySelector('#generateTrend').getAttribute('aria-disabled'), 'true', 'spread should require a numeric threshold before generation');
   change(doc, '#thresholdInput', '1.5');
-  assert.strictEqual(doc.querySelector('#generateTrend').disabled, false, 'spread should allow generation when a matching source line exists');
+  assert.strictEqual(doc.querySelector('#generateTrend').getAttribute('aria-disabled'), 'false', 'spread should allow generation when a matching source line exists');
   doc.querySelector('#generateTrend').click();
   assert.match(doc.querySelector('#resultsList').textContent, /Selected market\s*Spread/, 'spread result should reflect selected market');
   assert.match(doc.querySelector('#resultsList').textContent, /line=1.5/, 'spread result should reflect selected source-matched threshold');
@@ -268,10 +268,10 @@ function chooseTrendKind(doc, value) {
   assert.strictEqual(doc.querySelector('#thresholdField').classList.contains('is-hidden'), false, 'total should show threshold');
   assert.strictEqual(doc.querySelector('#teamField').classList.contains('is-hidden'), true, 'game total should not require team selector');
   assert.match(doc.querySelector('#sideSelect').textContent, /Over/, 'total should show over/under side');
-  assert.strictEqual(doc.querySelector('#generateTrend').disabled, true, 'total should block generation until trend search is selected');
+  assert.strictEqual(doc.querySelector('#generateTrend').getAttribute('aria-disabled'), 'true', 'total should block generation until trend search is selected');
   chooseTrendKind(doc, 'full_game_over_under');
   change(doc, '#sideSelect', 'over');
-  assert.strictEqual(doc.querySelector('#generateTrend').disabled, true, 'threshold markets should block generation until a numeric line is supplied');
+  assert.strictEqual(doc.querySelector('#generateTrend').getAttribute('aria-disabled'), 'true', 'threshold markets should block generation until a numeric line is supplied');
   change(doc, '#thresholdInput', '8.5');
   doc.querySelector('#generateTrend').click();
   assert.strictEqual(doc.querySelectorAll('[data-result="verified-trend"]').length, 1, 'total query should generate matching verified result');
@@ -296,9 +296,9 @@ function chooseTrendKind(doc, value) {
   chooseTrendKind(doc, 'team_total_over_under');
   change(doc, '#sideSelect', 'over');
   change(doc, '#teamSelect', 'New York Mets');
-  assert.strictEqual(doc.querySelector('#generateTrend').disabled, true, 'team totals should require a numeric team-total line before generation');
+  assert.strictEqual(doc.querySelector('#generateTrend').getAttribute('aria-disabled'), 'true', 'team totals should require a numeric team-total line before generation');
   change(doc, '#thresholdInput', '4.5');
-  assert.strictEqual(doc.querySelector('#generateTrend').disabled, false, 'team totals should allow generation when verified source line data exists');
+  assert.strictEqual(doc.querySelector('#generateTrend').getAttribute('aria-disabled'), 'false', 'team totals should allow generation when verified source line data exists');
   doc.querySelector('#generateTrend').click();
   assert.match(doc.querySelector('#resultsList').textContent, /Selected market\s*Team Total/, 'team-total result should reflect selected market');
   assert.match(doc.querySelector('#resultsList').textContent, /Selected team\s*New York Mets/, 'team-total result should reflect selected team');
@@ -419,7 +419,7 @@ function chooseTrendKind(doc, value) {
 
   const blockedDom = await boot();
   blockedDom.window.document.querySelector('#generateTrend').click();
-  assert.strictEqual(blockedDom.window.document.querySelector('#generateTrend').disabled, true, 'generation should be blocked without required selections');
+  assert.strictEqual(blockedDom.window.document.querySelector('#generateTrend').getAttribute('aria-disabled'), 'true', 'generation should be blocked without required selections');
   assert.match(blockedDom.window.document.querySelector('#validationMessage').textContent, /Select a sport and matchup/, 'missing matchup validation should render');
 
   const visibleText = doc.body.textContent;

@@ -147,6 +147,7 @@ try {
         "tests/mlb-simulator-page-test.js",
         "tests/mlb-simulator-boxscore-test.js",
         "tests/mlb-simulator-realism-test.js",
+        "tests/mlb-simulator-roster-source-test.js",
         "tests/mlb-simulator-live-roster-validation-test.js",
         "tests/sportsbook-header-regression-test.js",
         "tests/sportsbook-no-game-drop-regression-test.js",
@@ -190,9 +191,10 @@ try {
     Invoke-StaleQuarantineCommand "profile source regression test" @("node", "tests/profile-source-regression-test.js") "profile markup rewritten with TMRX redesign; assertion strings out of sync"
     Invoke-StaleQuarantineCommand "profile market drilldown regression test" @("node", "tests/profile-market-drilldown-page-test.js") "drilldown markup superseded by current profile/market.html"
     Invoke-StaleQuarantineCommand "MLB simulator page regression test" @("node", "tests/mlb-simulator-page-test.js") "simulator page DOM evolved; test references prior structure"
-    Invoke-StaleQuarantineCommand "MLB simulator box score regression test" @("node", "tests/mlb-simulator-boxscore-test.js") "box score renderer evolved with simulator overhaul"
-    Invoke-StaleQuarantineCommand "MLB simulator realism regression test" @("node", "tests/mlb-simulator-realism-test.js") "realism thresholds reset after model parameter tuning"
-    Invoke-StaleQuarantineCommand "MLB simulator live roster regression test" @("node", "tests/mlb-simulator-live-roster-validation-test.js") "roster source-string copy changed after roster data refactor"
+    Invoke-GuardCommand "MLB simulator box score regression test" @("node", "tests/mlb-simulator-boxscore-test.js")
+    Invoke-GuardCommand "MLB simulator realism regression test" @("node", "tests/mlb-simulator-realism-test.js")
+    Invoke-GuardCommand "MLB simulator roster source (no stale fixtures) test" @("node", "tests/mlb-simulator-roster-source-test.js")
+    Invoke-StaleQuarantineCommand "MLB simulator live roster regression test" @("node", "tests/mlb-simulator-live-roster-validation-test.js") "network-dependent integration test; passes against current honest labels but kept soft-warn to avoid live-data flakiness"
     Invoke-GuardCommand "sportsbook header regression test" @("node", "tests/sportsbook-header-regression-test.js")
     Invoke-GuardCommand "sportsbook no-game-drop regression test" @("node", "tests/sportsbook-no-game-drop-regression-test.js")
     Invoke-StaleQuarantineCommand "sportsbook polish regression test" @("node", "tests/sportsbook-polish-regression.test.js") "data-col team-total markers not in current sportsbook/index.html on origin/main; pre-existing failure unrelated to Make Picks UX"

@@ -340,11 +340,14 @@
                 mlbId: p.id || null
             };
         });
+        var gameState = found.game.status && (found.game.status.abstractGameState || found.game.status.detailedState) || '';
+        var isLiveOrFinal = /live|final|in progress/i.test(gameState);
         return {
             teamId: String(expectedId || ''),
             players: players,
-            confirmed: true,
-            source: "Today's confirmed MLB lineup",
+            confirmed: isLiveOrFinal,
+            lineupStatus: isLiveOrFinal ? 'confirmed' : 'posted',
+            source: isLiveOrFinal ? "Today's confirmed MLB lineup" : "Today's posted MLB lineup (pregame)",
             gamePk: found.game.gamePk || null
         };
     }
@@ -637,43 +640,68 @@
         });
         var hitters = players.filter(function (player) { return !/Pitcher|P$|SP|RP|CP/i.test(player.position); }).sort(function (a, b) { return rosterSortValue(a) - rosterSortValue(b); });
         var pitchers = players.filter(function (player) { return /Pitcher|P$|SP|RP|CP/i.test(player.position); });
+        var orderedHitters = [];
         if (recentLineup && Array.isArray(recentLineup.players) && recentLineup.players.length >= 9) {
             var activeByName = {};
             players.forEach(function (player) { activeByName[normalizeName(player.name)] = player; });
-            var orderedHitters = recentLineup.players.slice(0, 9).map(function (player, index) {
+            // The lineup feed (today's posted/confirmed lineup, or the most recent game's
+            // batting order) is itself the source of truth for the order. Enrich each slot
+            // with active-roster metadata (mlbId/position) when names match, but do NOT drop
+            // a real lineup hitter just because the active-roster name string differs.
+            orderedHitters = recentLineup.players.slice(0, 9).map(function (player, index) {
                 var active = activeByName[normalizeName(player.name)];
-                return Object.assign({}, active || player, {
+                return Object.assign({}, active || {}, {
                     name: player.name,
-                    position: player.position || active && active.position || '',
+                    position: player.position || (active && active.position) || '',
                     teamId: String(expectedId || ''),
                     battingOrder: (index + 1) * 100,
                     mlbId: player.mlbId || (active && active.mlbId) || null
                 });
-            }).filter(function (player) { return playerBelongsToTeam(player, team); });
-            if (orderedHitters.length >= 9) {
-                var used = {};
-                orderedHitters.forEach(function (player) { used[normalizeName(player.name)] = true; });
-                hitters = orderedHitters.concat(hitters.filter(function (player) { return !used[normalizeName(player.name)]; }));
-            }
+            }).filter(function (player) { return player.name && !playerBlockedForTeam(team, player.name); });
         }
-        var lineupConfirmed = !!(recentLineup && recentLineup.confirmed);
-        var lineupLoaded = !!(recentLineup && Array.isArray(recentLineup.players) && recentLineup.players.length >= 9);
-        var sourceLabel = lineupConfirmed
-            ? "Today's confirmed MLB lineup plus verified MLB active roster endpoint"
-            : (lineupLoaded
-                ? 'Most recent game starting lineup (projected) plus verified MLB active roster endpoint'
-                : 'Projected lineup from verified MLB active roster endpoint');
-        var lineupSourceLabel = lineupConfirmed
-            ? "Today's confirmed MLB lineup"
-            : (lineupLoaded ? 'Most recent game starting lineup (projected)' : null);
+        // Only claim a lineup-backed order when we actually applied 9 ordered hitters.
+        // Otherwise fall back honestly to the active-roster (no set batting order).
+        var appliedLineup = orderedHitters.length >= 9;
+        if (appliedLineup) {
+            var used = {};
+            orderedHitters.forEach(function (player) { used[normalizeName(player.name)] = true; });
+            hitters = orderedHitters.concat(hitters.filter(function (player) { return !used[normalizeName(player.name)]; }));
+        }
+        var lineupStatus = appliedLineup ? (recentLineup.lineupStatus || (recentLineup.confirmed ? 'confirmed' : 'recent')) : 'roster';
+        var lineupConfirmed = lineupStatus === 'confirmed';
+        var LINEUP_LABELS = {
+            confirmed: {
+                source: "Today's confirmed MLB lineup (live/final game) plus verified MLB active roster endpoint",
+                lineupSource: "Today's confirmed MLB lineup",
+                badge: 'Confirmed lineup (MLB, today)'
+            },
+            posted: {
+                source: "Today's posted MLB starting lineup (pregame, not yet final) plus verified MLB active roster endpoint",
+                lineupSource: "Today's posted MLB starting lineup (pregame)",
+                badge: 'Posted lineup (today, pregame)'
+            },
+            recent: {
+                source: 'Projected from most recent game starting lineup plus verified MLB active roster endpoint',
+                lineupSource: 'Projected from most recent game starting lineup',
+                badge: 'Projected from last game'
+            },
+            roster: {
+                source: 'Active roster fallback (no set batting order) from verified MLB active roster endpoint',
+                lineupSource: null,
+                badge: 'Active roster fallback (not a set batting order)'
+            }
+        };
+        var labels = LINEUP_LABELS[lineupStatus] || LINEUP_LABELS.roster;
         return validatedRosterForTeam(team, {
             teamId: String(expectedId || ''),
             count: players.length,
             relievers: pitchers.length,
             players: hitters.concat(pitchers),
             summary: players.length + ' MLB active roster players',
-            source: sourceLabel,
-            lineupSource: lineupSourceLabel,
+            source: labels.source,
+            lineupSource: labels.lineupSource,
+            lineupStatus: lineupStatus,
+            lineupBadge: labels.badge,
             lineupConfirmed: lineupConfirmed
         });
     }
@@ -728,7 +756,7 @@
             player.mlbId = id || null;
             return player;
         }).filter(function (player) { return player.name && playerBelongsToTeam(player, team); });
-        return players.length >= 9 ? { players: players, source: 'Most recent game starting lineup (projected)', confirmed: false } : null;
+        return players.length >= 9 ? { players: players, source: 'Most recent game starting lineup (projected)', confirmed: false, lineupStatus: 'recent' } : null;
     }
     function fetchRecentStartingLineup(team) {
         return fetchTodaysSchedule().then(function (sched) {
@@ -1508,6 +1536,15 @@
         }).filter(function (row) { return row.name && row.outs > 0; });
         return rows;
     }
+    function lineupStatusFor(team, roster) {
+        if (!roster || !roster.players || !roster.players.length) return null;
+        if (team && team.era === 'historical') return { status: 'historical', badge: 'Curated historical lineup', confirmed: false };
+        return {
+            status: roster.lineupStatus || 'roster',
+            badge: roster.lineupBadge || 'Active roster fallback (not a set batting order)',
+            confirmed: !!roster.lineupConfirmed
+        };
+    }
     function modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random, rosterContext) {
         var awayRoster = rosterForTeam(away, rosterContext && rosterContext.away);
         var homeRoster = rosterForTeam(home, rosterContext && rosterContext.home);
@@ -1515,12 +1552,14 @@
             away: {
                 batters: modeledBatterLines(away, awayLine, random, awayRoster, homePitcher && homePitcher.mlbId ? pitchHandOf(homePitcher.mlbId) : null),
                 pitchers: modeledPitcherLines(away, homeLine, awayPitcher, random, awayRoster),
-                rosterSource: awayRoster && awayRoster.players && awayRoster.players.length ? (awayRoster.source || 'Projected lineup from verified active roster names') : 'Lineup unavailable. Verified roster data could not be loaded.'
+                rosterSource: awayRoster && awayRoster.players && awayRoster.players.length ? (awayRoster.source || 'Projected lineup from verified active roster names') : 'Lineup unavailable. Verified roster data could not be loaded.',
+                lineupStatus: lineupStatusFor(away, awayRoster)
             },
             home: {
                 batters: modeledBatterLines(home, homeLine, random, homeRoster, awayPitcher && awayPitcher.mlbId ? pitchHandOf(awayPitcher.mlbId) : null),
                 pitchers: modeledPitcherLines(home, awayLine, homePitcher, random, homeRoster),
-                rosterSource: homeRoster && homeRoster.players && homeRoster.players.length ? (homeRoster.source || 'Projected lineup from verified active roster names') : 'Lineup unavailable. Verified roster data could not be loaded.'
+                rosterSource: homeRoster && homeRoster.players && homeRoster.players.length ? (homeRoster.source || 'Projected lineup from verified active roster names') : 'Lineup unavailable. Verified roster data could not be loaded.',
+                lineupStatus: lineupStatusFor(home, homeRoster)
             }
         };
     }
@@ -2641,13 +2680,20 @@
             return '<p><strong>' + escapeHtml(row[0]) + ':</strong> ' + escapeHtml(row[1]) + '</p>';
         }).join('') + '</section>';
     }
+    function lineupStatusChip(players) {
+        var info = players && players.lineupStatus;
+        if (!info || !info.badge) return '';
+        var tone = info.status === 'confirmed' ? 'confirmed' : (info.status === 'posted' ? 'posted' : (info.status === 'historical' ? 'historical' : 'fallback'));
+        return '<span class="lineup-status-chip" data-lineup-status="' + escapeAttr(tone) + '">' + escapeHtml(info.badge) + '</span>';
+    }
     function battingTableSection(team, players) {
         var source = players && players.rosterSource ? players.rosterSource : 'Roster temporarily unavailable';
         var hasBatters = players && players.batters && players.batters.length;
+        var headerLabel = '<div class="team-box-header"><p class="team-box-label">' + escapeHtml(team.name) + ' (' + escapeHtml(team.abbreviation) + ') Batting</p>' + lineupStatusChip(players) + '</div>';
         if (!hasBatters) {
-            return '<section class="player-team-box"><p class="team-box-label">' + escapeHtml(team.name) + ' Batting</p><p class="player-source-note">Roster source: ' + escapeHtml(source) + '.</p><div class="sim-empty">Lineup unavailable. Verified roster data could not be loaded.</div></section>';
+            return '<section class="player-team-box">' + headerLabel + '<p class="player-source-note">Roster source: ' + escapeHtml(source) + '.</p><div class="sim-empty">Lineup unavailable. Verified roster data could not be loaded.</div></section>';
         }
-        return '<section class="player-team-box"><p class="team-box-label">' + escapeHtml(team.name) + ' Batting</p><p class="player-source-note">Roster source: ' + escapeHtml(source) + '.</p>' +
+        return '<section class="player-team-box">' + headerLabel + '<p class="player-source-note">Lineup source: ' + escapeHtml(source) + '.</p>' +
             '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>SO</th><th>AVG</th><th>OPS</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div></section>';
     }
     function pitchingTableSection(team, players, isWinner) {
@@ -3205,7 +3251,10 @@
         viewBoxScore: viewBoxScore,
         rosterSourceForTeam: rosterSourceForTeam,
         fetchTeamRoster: fetchTeamRoster,
-        validatedRosterForTeam: validatedRosterForTeam
+        validatedRosterForTeam: validatedRosterForTeam,
+        collectMlbTeamRoster: collectMlbTeamRoster,
+        todaysLineupForTeam: todaysLineupForTeam,
+        teamRosterUrl: teamRosterUrl
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
