@@ -90,7 +90,7 @@
         a { color: inherit; text-decoration: none; }
         button, input, textarea, select { font: inherit; }
         body { margin: 0; min-height: 100vh; color: var(--text); font-family: "Inter", system-ui, sans-serif; }
-        .page { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 18px 0 70px; }
+        .page { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 30px 0 90px; }
         h1, h2, h3 { font-family: "Barlow", "Inter", sans-serif; letter-spacing: -0.01em; margin: 0; }
 
         /* ---------- Hero ---------- */
@@ -99,7 +99,7 @@
             overflow: hidden;
             border: 1px solid var(--line);
             border-radius: 22px;
-            padding: 22px 30px;
+            padding: 52px 46px;
             background:
                 radial-gradient(130% 130% at 0% 0%, rgba(45, 212, 191, 0.10), transparent 52%),
                 radial-gradient(130% 130% at 100% 0%, rgba(167, 139, 250, 0.10), transparent 52%),
@@ -109,17 +109,17 @@
         .og-eyebrow {
             display: inline-flex; align-items: center; gap: 8px;
             font-size: 12.5px; font-weight: 800; letter-spacing: 0.10em; text-transform: uppercase;
-            color: var(--cyan); margin-bottom: 10px;
+            color: var(--cyan); margin-bottom: 16px;
             padding: 6px 12px; border: 1px solid var(--line-strong); border-radius: 999px;
             background: rgba(45, 212, 191, 0.06);
         }
-        .og-hero h1 { font-size: clamp(24px, 3.4vw, 33px); font-weight: 900; line-height: 1.04; }
+        .og-hero h1 { font-size: clamp(30px, 5vw, 52px); font-weight: 900; line-height: 1.04; }
         .og-hero h1 .grad {
             background: linear-gradient(100deg, var(--cyan), var(--blue) 60%, var(--purple));
             -webkit-background-clip: text; background-clip: text; color: transparent;
         }
-        .og-hero p.lede { color: var(--muted); font-size: 15px; line-height: 1.5; max-width: 680px; margin: 10px 0 0; }
-        .og-cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 16px; }
+        .og-hero p.lede { color: var(--muted); font-size: 17px; line-height: 1.6; max-width: 720px; margin: 18px 0 0; }
+        .og-cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
         .btn {
             display: inline-flex; align-items: center; gap: 9px; cursor: pointer;
             border-radius: 12px; padding: 13px 22px; font-weight: 800; font-size: 14.5px;
@@ -134,21 +134,21 @@
         .btn-block { width: 100%; justify-content: center; }
         .btn-gold { background: linear-gradient(100deg, var(--gold), #e6c14f); color: #1a1305; }
 
-        .og-hero-stats { display: flex; flex-wrap: wrap; gap: 22px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
-        .og-hero-stat .num { font-family: "Barlow", sans-serif; font-size: 21px; font-weight: 900; line-height: 1; }
+        .og-hero-stats { display: flex; flex-wrap: wrap; gap: 26px; margin-top: 34px; padding-top: 26px; border-top: 1px solid var(--line); }
+        .og-hero-stat .num { font-family: "Barlow", sans-serif; font-size: 30px; font-weight: 900; line-height: 1; }
         .og-hero-stat .lbl { color: var(--faint); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 7px; }
 
         /* ---------- Section frame ---------- */
-        .section { margin-top: 28px; }
-        .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+        .section { margin-top: 46px; }
+        .section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
         .section-head h2 { font-size: clamp(21px, 3vw, 28px); font-weight: 800; }
         .section-head .sub { color: var(--muted); font-size: 14.5px; margin-top: 6px; }
 
         /* ---------- Game cards ---------- */
         .game-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 16px; }
         .game-card {
-            position: relative; overflow: hidden; border-radius: 18px; padding: 16px 18px;
-            border: 1px solid var(--line-2); min-height: 124px;
+            position: relative; overflow: hidden; border-radius: 18px; padding: 22px;
+            border: 1px solid var(--line-2); min-height: 158px;
             display: flex; flex-direction: column; justify-content: space-between;
             transition: transform .14s ease, border-color .15s ease;
         }
@@ -170,20 +170,6 @@
         .game-card.soccer .gc-icon { color: var(--cyan); }
         .game-card .gc-track { color: var(--faint); font-size: 11.5px; font-weight: 700; }
 
-        /* ---------- Dashboard (games + open challenges side by side) ---------- */
-        .og-dash { display: grid; grid-template-columns: 290px 1fr; gap: 22px; align-items: start; margin-top: 24px; }
-        .dash-col-title { font-family: "Barlow", sans-serif; font-size: 16px; font-weight: 800; }
-        .dash-col-title .sub { display: block; color: var(--faint); font-size: 12px; font-weight: 600; margin-top: 3px; }
-        .game-list { display: grid; gap: 8px; margin-top: 12px; }
-        .game-row { display: flex; align-items: center; gap: 11px; padding: 10px 13px; border: 1px solid var(--line-2); border-radius: 12px; cursor: pointer; background: var(--surface); transition: border-color .14s ease, transform .12s ease; }
-        .game-row:hover { border-color: var(--line-strong); transform: translateY(-1px); }
-        .game-row > i { font-size: 17px; width: 22px; text-align: center; }
-        .game-row .gr-name { font-weight: 800; font-size: 14px; }
-        .game-row .gr-sub { color: var(--faint); font-size: 11.5px; margin-top: 1px; }
-        .game-row.mlb > i { color: var(--gold); } .game-row.nba > i { color: var(--blue); }
-        .game-row.nfl > i { color: var(--green); } .game-row.nhl > i { color: var(--purple); } .game-row.soccer > i { color: var(--cyan); }
-        @media (max-width: 880px) { .og-dash { grid-template-columns: 1fr; } }
-
         /* ---------- Filters ---------- */
         .filter-bar { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 20px; }
         .tab-row { display: inline-flex; flex-wrap: wrap; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 6px; }
@@ -193,7 +179,7 @@
         .sel { background: var(--surface); border: 1px solid var(--line-2); color: var(--text); border-radius: 10px; padding: 9px 13px; font-size: 13.5px; font-weight: 600; }
 
         /* ---------- Challenge cards ---------- */
-        .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
+        .cc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
         .cc {
             border: 1px solid var(--line-2); border-radius: 16px; padding: 18px 18px 16px;
             background: var(--surface); display: flex; flex-direction: column; gap: 12px;
@@ -216,31 +202,31 @@
         .cc-actions { display: flex; gap: 8px; }
 
         /* ---------- Empty / loading states ---------- */
-        .empty { text-align: center; padding: 30px 24px; border: 1px dashed var(--line-2); border-radius: 16px; background: var(--surface); }
-        .empty .ic { font-size: 30px; color: var(--faint); margin-bottom: 10px; }
+        .empty { text-align: center; padding: 52px 24px; border: 1px dashed var(--line-2); border-radius: 16px; background: var(--surface); }
+        .empty .ic { font-size: 34px; color: var(--faint); margin-bottom: 14px; }
         .empty h3 { font-size: 18px; font-weight: 800; }
         .empty p { color: var(--muted); font-size: 14px; margin: 8px auto 0; max-width: 440px; line-height: 1.55; }
         .loading { text-align: center; padding: 40px; color: var(--faint); font-size: 14px; }
 
         /* ---------- MLB explainer ---------- */
         .mlb-panel {
-            border: 1px solid rgba(212,167,44,0.28); border-radius: 20px; padding: 22px 24px;
+            border: 1px solid rgba(212,167,44,0.28); border-radius: 20px; padding: 34px;
             background: radial-gradient(120% 120% at 100% 0%, rgba(212,167,44,0.10), transparent 55%), var(--surface);
         }
         .mlb-panel .tag { color: var(--gold); font-weight: 800; font-size: 12.5px; letter-spacing: .08em; text-transform: uppercase; }
         .mlb-panel h2 { font-size: clamp(22px, 3vw, 30px); font-weight: 900; margin-top: 10px; }
-        .mlb-panel p { color: var(--muted); font-size: 14px; line-height: 1.55; margin-top: 10px; max-width: 760px; }
-        .mlb-feats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 16px; }
+        .mlb-panel p { color: var(--muted); font-size: 15px; line-height: 1.65; margin-top: 14px; max-width: 760px; }
+        .mlb-feats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 24px; }
         .mlb-feat { border: 1px solid var(--line-2); border-radius: 13px; padding: 16px; background: rgba(255,255,255,0.02); }
         .mlb-feat i { color: var(--gold); font-size: 18px; }
         .mlb-feat b { display: block; margin-top: 9px; font-size: 14.5px; }
         .mlb-feat span { color: var(--faint); font-size: 12.5px; display: block; margin-top: 4px; line-height: 1.45; }
 
         /* ---------- SEO content ---------- */
-        .seo-wrap { border-top: 1px solid var(--line); margin-top: 30px; padding-top: 24px; }
-        .seo-wrap h2 { font-size: 19px; font-weight: 800; margin-top: 20px; }
+        .seo-wrap { border-top: 1px solid var(--line); margin-top: 56px; padding-top: 34px; }
+        .seo-wrap h2 { font-size: 22px; font-weight: 800; margin-top: 26px; }
         .seo-wrap h2:first-child { margin-top: 0; }
-        .seo-wrap p { color: var(--muted); font-size: 13.5px; line-height: 1.6; margin-top: 10px; }
+        .seo-wrap p { color: var(--muted); font-size: 14.5px; line-height: 1.7; margin-top: 12px; }
         .seo-wrap a { color: var(--cyan); font-weight: 600; }
         .seo-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; margin-top: 18px; }
 
@@ -259,7 +245,7 @@
         .form-note { color: var(--faint); font-size: 11.5px; margin-top: 6px; line-height: 1.45; }
         .stake-note { margin-top: 16px; padding: 11px 13px; border-radius: 10px; background: rgba(45,212,191,0.06); border: 1px solid var(--line-strong); color: var(--muted); font-size: 12px; line-height: 1.5; }
 
-        .auth-banner { display: none; margin-top: 12px; padding: 9px 14px; border-radius: 10px; background: rgba(212,167,44,0.08); border: 1px solid rgba(212,167,44,0.28); color: var(--text); font-size: 12.5px; }
+        .auth-banner { display: none; margin-top: 16px; padding: 13px 16px; border-radius: 12px; background: rgba(212,167,44,0.08); border: 1px solid rgba(212,167,44,0.28); color: var(--text); font-size: 13.5px; }
         .auth-banner.show { display: block; }
         .auth-banner a { color: var(--gold); font-weight: 800; }
 
@@ -281,9 +267,10 @@
         <span class="og-eyebrow"><i class="fas fa-gamepad"></i> Online Gaming Arena</span>
         <h1>Online Gaming <span class="grad">Challenges</span></h1>
         <p class="lede">
-            Post a challenge. Accept a matchup. Prove it on the leaderboard.
-            <strong>MLB The Show</strong>, <strong>Madden</strong>, <strong>NBA 2K</strong>, <strong>NHL</strong>, and <strong>EA FC</strong>
-            on PlayStation or Xbox. Every result builds a verified public record. Bragging rights only.
+            Create an open challenge in <strong>MLB The Show</strong>, <strong>Madden</strong>, <strong>NBA 2K</strong>,
+            <strong>NHL</strong>, or <strong>EA FC</strong>, pick PlayStation or Xbox, and let any verified member accept.
+            Every result builds a public record, and every MLB The Show game preserves a full box score for lifetime stats.
+            Bragging rights and reputation, tracked for real.
         </p>
         <div class="og-cta-row">
             <button class="btn btn-primary" onclick="openCreate()"><i class="fas fa-plus"></i> Create a Challenge</button>
@@ -300,46 +287,103 @@
         </div>
     </section>
 
-    <!-- ===================== DASHBOARD: games + open challenges ===================== -->
-    <section class="og-dash" id="games">
-        <!-- Left: pick a game / post -->
-        <div id="open-challenges-pick">
-            <div class="dash-col-title">Choose Your Game<span class="sub">Pick one to post a challenge</span></div>
-            <div class="game-list">
-                <div class="game-row mlb" onclick="openCreate('mlb-the-show-26')"><i class="fas fa-baseball"></i><div><div class="gr-name">MLB The Show 26</div><div class="gr-sub">Box scores + lifetime stats</div></div></div>
-                <div class="game-row nba" onclick="openCreate('nba-2k26')"><i class="fas fa-basketball"></i><div><div class="gr-name">NBA 2K26</div><div class="gr-sub">Win / loss record</div></div></div>
-                <div class="game-row nfl" onclick="openCreate('madden-26')"><i class="fas fa-football"></i><div><div class="gr-name">Madden NFL 26</div><div class="gr-sub">Win / loss record</div></div></div>
-                <div class="game-row nhl" onclick="openCreate('nhl-26')"><i class="fas fa-hockey-puck"></i><div><div class="gr-name">NHL 26</div><div class="gr-sub">Win / loss record</div></div></div>
-                <div class="game-row soccer" onclick="openCreate('ea-fc-26')"><i class="fas fa-futbol"></i><div><div class="gr-name">EA FC 26</div><div class="gr-sub">Win / loss record</div></div></div>
+    <!-- ===================== GAME CARDS ===================== -->
+    <section class="section" id="games">
+        <div class="section-head">
+            <div>
+                <h2>Choose Your Game</h2>
+                <div class="sub">Five sports video game arenas. Challenge a rival head-to-head or post an open callout.</div>
             </div>
-            <button class="btn btn-primary btn-block" style="margin-top:12px;" onclick="openCreate()"><i class="fas fa-plus"></i> Post a Challenge</button>
         </div>
-
-        <!-- Right: open challenges board -->
-        <div id="open-challenges">
-            <div class="section-head">
+        <div class="game-grid">
+            <div class="game-card mlb" onclick="openCreate('mlb-the-show-26')">
+                <div class="gc-icon"><i class="fas fa-baseball"></i></div>
                 <div>
-                    <h2>Open Challenges</h2>
-                    <div class="sub">Live callouts waiting for an opponent. Filter, then accept.</div>
+                    <h3>MLB The Show 26</h3>
+                    <div class="gc-meta">PlayStation &amp; Xbox</div>
+                    <span class="gc-flag">Box scores + lifetime stats</span>
                 </div>
             </div>
-            <div class="filter-bar">
-                <div class="tab-row" id="gameTabs">
-                    <div class="tab-chip active" data-game="all">All</div>
-                    <div class="tab-chip" data-game="mlb-the-show-26">MLB The Show</div>
-                    <div class="tab-chip" data-game="nba-2k26">NBA 2K</div>
-                    <div class="tab-chip" data-game="madden-26">Madden</div>
-                    <div class="tab-chip" data-game="nhl-26">NHL</div>
-                    <div class="tab-chip" data-game="ea-fc-26">EA FC</div>
+            <div class="game-card nba" onclick="openCreate('nba-2k26')">
+                <div class="gc-icon"><i class="fas fa-basketball"></i></div>
+                <div>
+                    <h3>NBA 2K26</h3>
+                    <div class="gc-meta">PlayStation &amp; Xbox</div>
+                    <span class="gc-track">Win / loss record tracking</span>
                 </div>
-                <select class="sel" id="platformFilter">
-                    <option value="all">All platforms</option>
-                    <option value="PlayStation">PlayStation</option>
-                    <option value="Xbox">Xbox</option>
-                    <option value="PC">PC</option>
-                </select>
             </div>
-            <div id="openList"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading open challenges&hellip;</div></div>
+            <div class="game-card nfl" onclick="openCreate('madden-26')">
+                <div class="gc-icon"><i class="fas fa-football"></i></div>
+                <div>
+                    <h3>Madden NFL 26</h3>
+                    <div class="gc-meta">PlayStation &amp; Xbox</div>
+                    <span class="gc-track">Win / loss record tracking</span>
+                </div>
+            </div>
+            <div class="game-card nhl" onclick="openCreate('nhl-26')">
+                <div class="gc-icon"><i class="fas fa-hockey-puck"></i></div>
+                <div>
+                    <h3>NHL 26</h3>
+                    <div class="gc-meta">PlayStation &amp; Xbox</div>
+                    <span class="gc-track">Win / loss record tracking</span>
+                </div>
+            </div>
+            <div class="game-card soccer" onclick="openCreate('ea-fc-26')">
+                <div class="gc-icon"><i class="fas fa-futbol"></i></div>
+                <div>
+                    <h3>EA FC 26</h3>
+                    <div class="gc-meta">PlayStation &amp; Xbox</div>
+                    <span class="gc-track">Win / loss record tracking</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===================== OPEN CHALLENGES ===================== -->
+    <section class="section" id="open-challenges">
+        <div class="section-head">
+            <div>
+                <h2>Open Challenges</h2>
+                <div class="sub">Live callouts waiting for an opponent. Filter by game and platform, then accept.</div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openCreate()"><i class="fas fa-plus"></i> Create</button>
+        </div>
+        <div class="filter-bar">
+            <div class="tab-row" id="gameTabs">
+                <div class="tab-chip active" data-game="all">All Games</div>
+                <div class="tab-chip" data-game="mlb-the-show-26">MLB The Show</div>
+                <div class="tab-chip" data-game="nba-2k26">NBA 2K</div>
+                <div class="tab-chip" data-game="madden-26">Madden</div>
+                <div class="tab-chip" data-game="nhl-26">NHL</div>
+                <div class="tab-chip" data-game="ea-fc-26">EA FC</div>
+            </div>
+            <select class="sel" id="platformFilter">
+                <option value="all">All platforms</option>
+                <option value="PlayStation">PlayStation</option>
+                <option value="Xbox">Xbox</option>
+                <option value="PC">PC</option>
+            </select>
+        </div>
+        <div id="openList"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading open challenges&hellip;</div></div>
+    </section>
+
+    <!-- ===================== MLB EXPLAINER ===================== -->
+    <section class="section">
+        <div class="mlb-panel">
+            <span class="tag"><i class="fas fa-baseball"></i> MLB The Show Stat Tracking</span>
+            <h2>Baseball is a numbers game, so we keep the numbers</h2>
+            <p>
+                Every completed MLB The Show challenge preserves its full box score permanently. Runs, hits, errors,
+                home runs, strikeouts, the teams each player used, and an inning-by-inning line are all stored and tied to
+                both players' profiles. Nothing is overwritten, so your MLB The Show history compounds into lifetime running
+                stats and head-to-head records. This is the foundation for future MLB The Show stat leaderboards.
+            </p>
+            <div class="mlb-feats">
+                <div class="mlb-feat"><i class="fas fa-floppy-disk"></i><b>Permanent box scores</b><span>Each game is saved forever, never overwritten.</span></div>
+                <div class="mlb-feat"><i class="fas fa-users"></i><b>Tied to both profiles</b><span>Results attach to challenger and opponent alike.</span></div>
+                <div class="mlb-feat"><i class="fas fa-chart-line"></i><b>Lifetime running stats</b><span>Wins, run differential, streaks, and rivalries.</span></div>
+                <div class="mlb-feat"><i class="fas fa-shield-halved"></i><b>Separate from betting</b><span>Gaming stats never touch your handicapping record.</span></div>
+            </div>
         </div>
     </section>
 
@@ -354,15 +398,58 @@
         <div id="completedList"><div class="loading"><i class="fas fa-spinner fa-spin"></i> Loading results&hellip;</div></div>
     </section>
 
-    <!-- ===================== SEO CONTENT (compact) ===================== -->
+    <!-- ===================== SEO CONTENT ===================== -->
     <section class="seo-wrap">
-        <h2>Online sports video game challenges, with a verified record</h2>
+        <h2>The sports video game competition platform built on real records</h2>
         <p>
-            Post open <strong>MLB The Show</strong>, <strong>Madden</strong>, <strong>NBA 2K</strong>, <strong>NHL</strong>, and
-            <strong>EA FC</strong> challenges, pick PlayStation or Xbox, and let a verified member accept. Every result builds a
-            permanent win/loss record by opponent, game, date, and platform, and MLB The Show games keep a full box score for lifetime stats.
-            Wins and losses update your dedicated Online Gaming record on your <a href="/profile/">profile</a>, completely separate from
-            your sports betting and handicapping record. Bragging rights and reputation only, no cash prizes or paid entry.
+            TrustMyRecord is where competitive players come to settle it on the sticks. If you have ever wanted to
+            play MLB The Show for money, play Madden for money, or play NBA 2K for money against someone who will actually
+            show up and put their name on the line, this is the cleaner way to do it: open online sports gaming challenges
+            for bragging rights and reputation, with a permanent public record instead of an empty group chat. Post a
+            challenge, lock in PlayStation or Xbox, and let a verified member accept.
+        </p>
+        <div class="seo-grid">
+            <div>
+                <h2>MLB The Show challenges</h2>
+                <p>
+                    Create MLB The Show challenges, log the final box score, and watch your lifetime numbers grow. Because
+                    baseball is a stat sport, every MLB The Show result is preserved with full game detail so your record,
+                    run differential, and head-to-head rivalries are always there to back up the trash talk.
+                </p>
+            </div>
+            <div>
+                <h2>Madden online challenges</h2>
+                <p>
+                    Looking to play Madden for money or just to prove you run the league? Post Madden online challenges,
+                    accept open callouts, and build a clean win/loss record on PlayStation or Xbox that anyone can verify.
+                </p>
+            </div>
+            <div>
+                <h2>NBA 2K online challenges</h2>
+                <p>
+                    Run NBA 2K online challenges head-to-head, track every win and loss, and climb a record that is yours
+                    for good. No fake clout, just a verified gaming record on a real competition platform.
+                </p>
+            </div>
+            <div>
+                <h2>NHL and soccer video game challenges</h2>
+                <p>
+                    Play NHL online for money-style stakes the honest way, or run soccer video game challenges in EA FC.
+                    Both track full win/loss history by opponent, game, date, and platform on TrustMyRecord.
+                </p>
+            </div>
+        </div>
+        <h2>How online sports gaming challenges work</h2>
+        <p>
+            Create an open challenge for the game you want, choose your platform and your GamerTag or PSN ID, and add
+            optional details or trash talk. Another member accepts, you play, and the result is logged. Wins and losses
+            update your dedicated Online Gaming record on your <a href="/profile/">profile</a>, completely separate from
+            your sports betting and handicapping record. Want to challenge specific rivals on picks instead of games?
+            Visit <a href="/challenges/">Challenges</a> or the <a href="/arena/">Arena</a>. Ready to start? Browse the
+            <a href="#open-challenges">open challenges</a> above or post your own.
+        </p>
+        <p style="color:var(--faint);font-size:12.5px;margin-top:22px;">
+            Bragging rights and reputation only. TrustMyRecord does not process cash prizes, paid entry, or wagering for online gaming challenges.
         </p>
     </section>
 
