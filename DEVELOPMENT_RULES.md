@@ -624,3 +624,11 @@ When adding a new core vertical page (the Online Gaming page, `/online-gaming/`,
 5. **API client usage:** call `api.request('/endpoint', { method, body })`; gate writes behind `await api.getCurrentUser()` and redirect guests to `/login/?next=...`. Render professional empty/loading states; never show fabricated users, records, or counts.
 6. **Profile integration** for any per-user data goes in its own `data-tab`/`data-panel` in `profile/index.html`, lazy-loaded on tab click, and must stay isolated from the betting/handicapping ledger.
 7. **Stakes/wager language:** online gaming challenges are bragging-rights / reputation only. No cash prize, paid entry, or wagering copy (matches the sitewide money-language rules).
+
+## Homepage "Public Profiles" / "Recent Platform Activity" module — refresh contract
+The right-side dashboard on `index.html` is **live client-fetched on every page load** (no build-time/static data):
+- `hydrateHomepagePreview()` in the inline `<script>` calls `GET /api/users?limit=100` (leaderboard/Public Profiles) and `GET /api/picks?limit=20` (Recent Platform Activity), each with a `_=<timestamp>` cache-buster so a stale browser/CDN copy is never reused.
+- Backend source of truth: `routes/users.js` `GET /` reads `user_stats` (updated by the grader/statsAggregator) and only returns users with a public settled pick; it sends `Cache-Control: public, max-age=60, stale-while-revalidate=120`. `routes/picks.js` `GET /` returns only FINAL (graded) statuses for anonymous viewers (pending hidden until owner-authed) and sends `Cache-Control: no-store`.
+- Daily/continuous refresh is guaranteed by: grader cron (`grade-picks.yml`, */30) updating stats → 60s API cache ceiling → per-load cache-busted fetch. No manual rebuild needed.
+- Personal-record picks only (`picks` table); contest entries live in `contest_picks` and are never mixed in here.
+- If this module looks stale again: confirm the live API is fresh first (`curl /api/users` & `/api/picks`), then check the cache-buster + Cache-Control headers above before touching render logic.

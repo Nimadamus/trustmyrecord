@@ -4644,8 +4644,12 @@ function escapeHtml(value) {
     }
 
     async function hydrateHomepagePreview() {
+        // Cache-bust so the leaderboard/activity module always reflects the
+        // current graded/locked source of truth and never serves a stale
+        // (yesterday's) copy from browser/CDN HTTP cache.
+        const bust = '_=' + Date.now();
         try {
-            const usersData = await request('/users?limit=100');
+            const usersData = await request('/users?limit=100&' + bust);
             renderUsers(Array.isArray(usersData && usersData.users) ? usersData.users : []);
         } catch (error) {
             console.warn('[TMR] Homepage real users preview unavailable:', error);
@@ -4653,7 +4657,7 @@ function escapeHtml(value) {
         }
 
         try {
-            const picksData = await request('/picks?limit=20');
+            const picksData = await request('/picks?limit=20&' + bust);
             renderPicks(Array.isArray(picksData && picksData.picks) ? picksData.picks : []);
         } catch (error) {
             console.warn('[TMR] Homepage real picks preview unavailable:', error);
