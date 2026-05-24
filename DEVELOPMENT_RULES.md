@@ -1,5 +1,11 @@
 # TrustMyRecord Development Rules
 
+## Homepage Has ONE Header, ONE Hero, ONE Footer — no stacked legacy homepage (May 24, 2026) — HARD RULE (PERMANENT)
+`index.html` must render exactly ONE of each: one site header, one above-the-fold hero/top section, one footer. The current homepage top is `<main class="tmr-premium-home">` (hero + live leaderboard + Capper Trend Spotter), followed by the marketing sections (How It Works `.tmr-loop`, `.trust-standards`, `.tmr-integrity`, `.tmr-sport-analytics`, Features `.tmr-features`, Final CTA `.tmr-final`), and nothing else structural.
+- The site header is the global nav (`.tmr-global-nav`) and the site footer is `.tmr-global-footer`, BOTH injected by `static/js/tmr-sitewide.js`. Do NOT add a per-page `<header class="header">` or `<footer class="footer">` to `index.html`.
+- Do NOT reintroduce the legacy steph-curry hero (`.tmr-social-hero.combined-hero.hero-v2`). It was a second stacked hero and was removed May 24, 2026 (markers `DUPLICATE_LEGACY_*_REMOVED_20260524` in index.html). The `static/media/steph-curry-hero.gif` asset is still used as the CSS background of the kept `.tmr-premium-hero` — that reference stays.
+- Quick guard before publishing homepage edits: `grep -cE '^<header class="header">' index.html` and `^<footer class="footer">` and `^<section class="tmr-social-hero` must each be `0`; `<main class="tmr-premium-home"` and `id="tmrHeroPicksList"` must each be `1`.
+
 ## Homepage Capper Trend Spotter Highlight Standard (May 24, 2026) — HARD RULE (PERMANENT)
 The homepage Trend Spotter (`index.html` → `computeHighlight`) surfaces ONE positive, verified, scouting-report-style highlight per capper. Permanent rules for any future change to this module or any other auto-generated capper highlight:
 - **Verified settled picks only.** Count `won`/`lost`/`push`. Pending/void/cancelled picks are NEVER counted. Never fabricate streaks, users, ROI, records, or units.
