@@ -296,19 +296,11 @@ class TrustMyRecordAPI {
                 const first = data.errors[0];
                 message = first.msg || first.message || 'Request validation failed';
             }
-            // Only nuke the session on 401/403 when we actually sent a token
-            // AND the refresh attempt has already been tried (or refreshToken is
-            // gone). A bare 401 from an anonymous call must NOT log a user out.
-            // (Bug fix Apr 30 2026: stray 401s were clearing sessions on every
-            // page switch.)
-            if (response.status === 401 || response.status === 403) {
-                const triedAuthedRequest = !!(requestContext && requestContext.sentAuth);
-                const refreshAttempted = !!(requestContext && requestContext.refreshAttempted);
-                const noWayToRecover = !this.refreshToken;
-                if (triedAuthedRequest && (refreshAttempted || noWayToRecover)) {
-                    this.clearTokens();
-                }
-            }
+            // RULE (May 24 2026): NEVER log a user out automatically. A 401/403
+            // here must NOT clear the session or tokens. Only an explicit
+            // Log Out (logout()) may clear auth. The error still propagates so
+            // callers can react/retry, but the user's session is preserved.
+            // (Supersedes the Apr 30 conditional clear.)
             const error = new Error(message || `HTTP ${response.status}`);
             error.status = response.status;
             error.code = data.code;
@@ -341,8 +333,8 @@ class TrustMyRecordAPI {
                 return 'success';
             }
             if (response.status === 401 || response.status === 403) {
-                // Refresh token genuinely rejected -> log out.
-                this.clearTokens();
+                // Refresh token rejected. Per the never-auto-logout rule we do
+                // NOT clear tokens here; return 'invalid' only to stop retrying.
                 return 'invalid';
             }
             // 5xx / 429 / 502 / cold-start: transient backend problem. Keep
