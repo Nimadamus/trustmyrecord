@@ -6853,7 +6853,9 @@
                             '<td class="league">' + linkedLeague + '</td>'
                         ];
                     })()
-                    : ['<td class="name">' + labelOf('by_' + splitKey, b.key) + '</td>'];
+                    : opts.drill
+                        ? ['<td class="name"><span class="tmrx-drill-caret" aria-hidden="true">▸</span>' + labelOf('by_' + splitKey, b.key) + '<span class="breakdown-row-indicator">View Breakdown</span></td>']
+                        : ['<td class="name">' + labelOf('by_' + splitKey, b.key) + '</td>'];
                 const cells = labelCells.concat([
                     '<td class="num">' + b.total + '</td>',
                     '<td class="num">' + w + '-' + l + (p ? '-' + p : '') + '</td>',
@@ -6864,13 +6866,15 @@
                 cells.push('<td class="num ' + roiCls + '">' + fmtSigned(roi, '%', 2) + '</td>');
                 const rowAttrs = opts.sportLeague
                     ? ' class="profile-sport-breakdown-row" role="link" tabindex="0" data-href="' + escapeHtml(buildProfileSportBreakdownUrl(b.key)) + '" onclick="if(!event.target.closest(\'a\')) window.location.href=this.dataset.href" onkeydown="if((event.key===\'Enter\'||event.key===\' \')&&!event.target.closest(\'a\')){event.preventDefault();window.location.href=this.dataset.href;}"'
-                    : '';
+                    : opts.drill
+                        ? ' class="tmrx-market-drill-row" role="button" tabindex="0" aria-expanded="false" data-market-key="' + escapeHtml(String(b.key || '')) + '" data-market-label="' + escapeHtml(labelOf('by_' + splitKey, b.key)) + '"'
+                        : '';
                 return '<tr' + rowAttrs + '>' + cells.join('') + '</tr>';
             };
             tbody.innerHTML = rows.map(cellFor).join('');
         };
         renderSplitTable('tmrxTableSport',      'sport',       splits.by_sport,       { cols: 7, sportLeague: true });
-        renderSplitTable('tmrxTableMarket',     'market',      splits.by_market,      { cols: 7 });
+        renderSplitTable('tmrxTableMarket',     'market',      splits.by_market,      { cols: 7, drill: true });
         renderSplitTable('tmrxTableUnitSize',   'unit_size',   splits.by_unit_size,   { cols: 6 });
         renderSplitTable('tmrxTableOddsBucket', 'odds_bucket', splits.by_odds_bucket, { cols: 6 });
         renderSplitTable('tmrxTableFavDog',     'fav_dog',     splits.by_fav_dog,     { cols: 6, minSample: 1 });
@@ -7112,6 +7116,212 @@
             eqShellDst.classList.toggle('tmrx-equity-shell--empty',
                 eqShellSrc.classList.contains('tmrx-equity-shell--empty'));
         }
+    }
+
+    // ============================================================
+    // MARKET-TYPE DRILLDOWN — expands a clickable "Performance by
+    // Market Type" row into a sport + side (Over/Under or Fav/Dog)
+    // breakdown computed entirely from the already-loaded graded
+    // picks (allLoadedPicks). No new backend call, no fabricated
+    // rows — empty subsections render "No qualifying picks yet."
+    // Works on every profile (data is per-user allLoadedPicks).
+    // ============================================================
+    function tmrxMarketKeyMatches(pick, key) {
+        const mk = String(pick && pick.market_type || '').toLowerCase().trim();
+        const k = String(key || '').toLowerCase().trim();
+        if (!mk || !k) return false;
+        if (mk === k) return true;
+        const aliases = {
+            h2h: ['h2h', 'moneyline', 'ml'],
+            spreads: ['spreads', 'spread', 'run_line', 'runline', 'puck_line', 'puckline'],
+            totals: ['totals', 'total'],
+            team_totals: ['team_totals', 'team_total']
+        };
+        const set = aliases[k];
+        return Array.isArray(set) ? set.indexOf(mk) !== -1 : false;
+    }
+
+    function tmrxIsTotalMarket(key) {
+        const k = String(key || '').toLowerCase();
+        return k.indexOf('total') !== -1;
+    }
+
+    function tmrxPickSide(pick, marketKey) {
+        // Returns { label, order } for the directional sub-split, or null
+        // when the market has no natural Over/Under or Fav/Dog axis.
+        if (tmrxIsTotalMarket(marketKey)) {
+            const sel = String(pick && pick.selection || '').toLowerCase();
+            if (/\bunder\b|^u\b|^u /.test(sel) || sel === 'u') return { label: 'Under', order: 1 };
+            if (/\bover\b|^o\b|^o /.test(sel) || sel === 'o') return { label: 'Over', order: 0 };
+            return { label: 'Other', order: 2 };
+        }
+        // ML / spread / run line / puck line → favorite vs underdog by price.
+        const o = Number(pick && (pick.odds_snapshot != null ? pick.odds_snapshot : pick.odds));
+        if (!Number.isFinite(o) || o === 0) return { label: 'Unknown', order: 2 };
+        return o < 0 ? { label: 'Favorite', order: 0 } : { label: 'Underdog', order: 1 };
+    }
+
+    function tmrxSubtypeLabel(marketKey) {
+        const k = String(marketKey || '').toLowerCase();
+        if (k.indexOf('f5_') === 0) return 'First Five';
+        if (k.indexOf('first_half_') === 0) return 'First Half';
+        if (k.indexOf('second_half_') === 0) return 'Second Half';
+        if (k.indexOf('period_1_') === 0) return '1st Period';
+        if (k.indexOf('period_') === 0) return 'Period';
+        if (k.indexOf('alt_') === 0) return 'Alternate Line';
+        return 'Full Game';
+    }
+
+    function tmrxAggregatePicks(picks) {
+        let w = 0, l = 0, p = 0, net = 0, risked = 0, oddsSum = 0, oddsN = 0;
+        picks.forEach(function(pk) {
+            const st = normalizeStatus(pk.status);
+            if (st === 'won') w++;
+            else if (st === 'lost') l++;
+            else if (st === 'push') p++;
+            net += pickPL(pk);
+            const u = Number(pk.units) || 1;
+            const o = Number(pk.odds_snapshot != null ? pk.odds_snapshot : (pk.odds != null ? pk.odds : -110));
+            if (st === 'won' || st === 'lost') {
+                risked += o < 0 ? (u * Math.abs(o) / 100) : u;
+            }
+            if (Number.isFinite(o) && o !== 0) { oddsSum += o; oddsN++; }
+        });
+        const dec = w + l;
+        return {
+            total: picks.length,
+            wins: w, losses: l, pushes: p, dec: dec,
+            winPct: dec > 0 ? (w / dec) * 100 : 0,
+            net: net,
+            roi: risked > 0 ? (net / risked) * 100 : 0,
+            avgOdds: oddsN > 0 ? Math.round(oddsSum / oddsN) : null
+        };
+    }
+
+    function tmrxBuildMarketDrilldownHtml(marketKey, marketLabel) {
+        const fmtSigned = function(n, suffix, dec) {
+            const x = Number(n) || 0;
+            return (x >= 0 ? '+' : '') + x.toFixed(dec != null ? dec : 2) + (suffix || '');
+        };
+        const fmtOdds = function(o) {
+            return (o == null || !Number.isFinite(Number(o)) || Number(o) === 0) ? '—' : (Number(o) > 0 ? '+' : '') + Math.round(Number(o));
+        };
+        const sportName = function(k) {
+            const known = {
+                baseball_mlb: 'MLB', basketball_nba: 'NBA', icehockey_nhl: 'NHL',
+                americanfootball_nfl: 'NFL', americanfootball_ncaaf: 'NCAAF',
+                basketball_ncaab: 'NCAAB', basketball_wnba: 'WNBA',
+                soccer_epl: 'EPL', soccer_usa_mls: 'MLS', mma_mixed_martial_arts: 'MMA'
+            };
+            const key = String(k || '').toLowerCase();
+            if (known[key]) return known[key];
+            return key ? key.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); }) : 'Other';
+        };
+
+        const graded = (Array.isArray(allLoadedPicks) ? allLoadedPicks : []).filter(function(p) {
+            const st = normalizeStatus(p && p.status);
+            return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, marketKey);
+        });
+
+        if (!graded.length) {
+            return '<div class="tmrx-drill-empty">No qualifying picks yet for ' + escapeHtml(marketLabel || 'this market') + '.</div>';
+        }
+
+        const isTotal = tmrxIsTotalMarket(marketKey);
+        const sideHeader = isTotal ? 'Over / Under' : 'Favorite / Underdog';
+
+        // Group by sport, then by directional side within each sport.
+        const sportMap = {};
+        graded.forEach(function(pk) {
+            const sk = String(pk.sport_key || 'other').toLowerCase();
+            if (!sportMap[sk]) sportMap[sk] = [];
+            sportMap[sk].push(pk);
+        });
+
+        const statCells = function(agg) {
+            const winCls = agg.dec > 0 ? (agg.winPct >= 50 ? 'pos' : 'neg') : 'zero';
+            const netCls = agg.net > 0 ? 'pos' : agg.net < 0 ? 'neg' : 'zero';
+            const roiCls = agg.roi > 0 ? 'pos' : agg.roi < 0 ? 'neg' : 'zero';
+            return '<td class="num">' + agg.total + '</td>' +
+                '<td class="num">' + agg.wins + '-' + agg.losses + (agg.pushes ? '-' + agg.pushes : '') + '</td>' +
+                '<td class="num ' + winCls + '">' + (agg.dec > 0 ? agg.winPct.toFixed(1) + '%' : '—') + '</td>' +
+                '<td class="num">' + fmtOdds(agg.avgOdds) + '</td>' +
+                '<td class="num ' + netCls + '">' + fmtSigned(agg.net, 'u', 2) + '</td>' +
+                '<td class="num ' + roiCls + '">' + fmtSigned(agg.roi, '%', 2) + '</td>';
+        };
+
+        const sportKeys = Object.keys(sportMap).sort(function(a, b) {
+            return tmrxAggregatePicks(sportMap[b]).net - tmrxAggregatePicks(sportMap[a]).net;
+        });
+
+        let bodyRows = '';
+        sportKeys.forEach(function(sk) {
+            const sportPicks = sportMap[sk];
+            const sportAgg = tmrxAggregatePicks(sportPicks);
+            const subtype = tmrxSubtypeLabel(marketKey);
+            const sportTitle = sportName(sk) + (subtype && subtype !== 'Full Game' ? ' · ' + subtype : '');
+            bodyRows += '<tr class="tmrx-drill-sport"><td class="name">' + escapeHtml(sportTitle) + '</td>' + statCells(sportAgg) + '</tr>';
+
+            // Directional sub-rows within the sport.
+            const sideMap = {};
+            sportPicks.forEach(function(pk) {
+                const side = tmrxPickSide(pk, marketKey);
+                if (!side) return;
+                if (!sideMap[side.label]) sideMap[side.label] = { order: side.order, picks: [] };
+                sideMap[side.label].picks.push(pk);
+            });
+            Object.keys(sideMap).sort(function(a, b) {
+                return sideMap[a].order - sideMap[b].order;
+            }).forEach(function(lbl) {
+                const agg = tmrxAggregatePicks(sideMap[lbl].picks);
+                bodyRows += '<tr class="tmrx-drill-side"><td class="name">↳ ' + escapeHtml(lbl) + '</td>' + statCells(agg) + '</tr>';
+            });
+        });
+
+        return '<div class="tmrx-drill-panel">' +
+            '<div class="tmrx-drill-head">' + escapeHtml(marketLabel || 'Market') + ' — breakdown by sport &amp; ' + escapeHtml(sideHeader) +
+            ' <span class="tmrx-drill-count">' + graded.length + ' graded pick' + (graded.length === 1 ? '' : 's') + '</span></div>' +
+            '<div class="tmrx-table-shell"><table class="tmrx-table tmrx-drill-table">' +
+            '<thead><tr><th>Breakdown</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>' +
+            '<tbody>' + bodyRows + '</tbody></table></div></div>';
+    }
+
+    function tmrxToggleMarketDrilldown(row) {
+        if (!row) return;
+        const tbody = row.parentNode;
+        if (!tbody) return;
+        const open = row.classList.contains('tmrx-drill-open');
+        // Close any open drilldown in this table (one at a time).
+        tbody.querySelectorAll('tr.tmrx-drill-open').forEach(function(r) {
+            r.classList.remove('tmrx-drill-open');
+            r.setAttribute('aria-expanded', 'false');
+        });
+        tbody.querySelectorAll('tr.tmrx-drill-expansion').forEach(function(r) { r.remove(); });
+        if (open) return; // was open → now collapsed
+        row.classList.add('tmrx-drill-open');
+        row.setAttribute('aria-expanded', 'true');
+        const colCount = row.children.length;
+        const exp = document.createElement('tr');
+        exp.className = 'tmrx-drill-expansion';
+        const td = document.createElement('td');
+        td.colSpan = colCount;
+        td.innerHTML = tmrxBuildMarketDrilldownHtml(row.getAttribute('data-market-key'), row.getAttribute('data-market-label'));
+        exp.appendChild(td);
+        if (row.nextSibling) tbody.insertBefore(exp, row.nextSibling);
+        else tbody.appendChild(exp);
+    }
+
+    if (!window.__tmrxMarketDrillBound) {
+        window.__tmrxMarketDrillBound = true;
+        document.addEventListener('click', function(e) {
+            const row = e.target.closest && e.target.closest('tr.tmrx-market-drill-row');
+            if (row) tmrxToggleMarketDrilldown(row);
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const row = e.target.closest && e.target.closest('tr.tmrx-market-drill-row');
+            if (row) { e.preventDefault(); tmrxToggleMarketDrilldown(row); }
+        });
     }
 
     // ============================================================
@@ -12673,6 +12883,60 @@
   body.profile-page .profile-rail-value {
     white-space: nowrap;
   }
+
+  /* ---- Market-type drilldown (clickable Performance by Market Type rows) ---- */
+  body.profile-page .tmrx-market-drill-row { cursor: pointer; }
+  body.profile-page .tmrx-market-drill-row .tmrx-drill-caret {
+    display: inline-block;
+    margin-right: 8px;
+    color: #22d3ee;
+    font-size: 11px;
+    transition: transform .18s ease;
+    transform: translateY(-1px);
+  }
+  body.profile-page .tmrx-market-drill-row.tmrx-drill-open .tmrx-drill-caret { transform: rotate(90deg); }
+  body.profile-page .tmrx-market-drill-row .breakdown-row-indicator {
+    display: block;
+    margin-top: 4px;
+    color: #8fb3d9;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  body.profile-page .tmrx-market-drill-row:hover td,
+  body.profile-page .tmrx-market-drill-row.tmrx-drill-open td {
+    background: rgba(34, 211, 238, .07) !important;
+  }
+  body.profile-page tr.tmrx-drill-expansion td {
+    padding: 0 !important;
+    background: #06101d !important;
+    border-bottom: 1px solid rgba(31,51,80,.55);
+  }
+  body.profile-page .tmrx-drill-panel { padding: 14px 16px 16px; }
+  body.profile-page .tmrx-drill-head {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .03em;
+    color: #b8c6dc;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  body.profile-page .tmrx-drill-count {
+    margin-left: 8px;
+    color: #22d3ee;
+    font-weight: 900;
+  }
+  body.profile-page .tmrx-drill-empty {
+    padding: 18px 16px;
+    color: #64748b;
+    font-style: italic;
+    font-size: 13px;
+  }
+  body.profile-page .tmrx-drill-table tbody tr.tmrx-drill-sport td.name { font-weight: 900; color: #f1f5fb; }
+  body.profile-page .tmrx-drill-table tbody tr.tmrx-drill-side td { color: #aebbcf; }
+  body.profile-page .tmrx-drill-table tbody tr.tmrx-drill-side td.name { padding-left: 26px; font-weight: 600; }
 </style>
 </body>
 </html>
