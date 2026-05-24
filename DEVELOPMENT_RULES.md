@@ -1,5 +1,8 @@
 # TrustMyRecord Development Rules
 
+## Distinct CTA Destinations — marketplace & onboarding (May 24, 2026) — HARD RULE (PERMANENT)
+Marketplace and onboarding pages must NOT show multiple CTA buttons that lead to the same destination. Every CTA in the same section must have a distinct purpose AND a distinct destination. (May 24, 2026: the `/marketplace/` hero shipped both "Start Building Your Record" and "Make Your First Pick" pointing to `/sportsbook/` — redundant. Removed "Make Your First Pick"; hero now = "Start Building Your Record" → `/sportsbook/` + "View Leaderboards" → `/handicappers/`.)
+
 ## SEO Indexing Readiness — every NEW public page (May 23, 2026) — HARD RULE (PERMANENT)
 No new public-facing page (`*/index.html` or top-level `*.html` meant for visitors) is complete until it is indexing-ready. Before marking done, confirm ALL of:
 1. Returns **200** on the live URL (verify after deploy, not just locally).
