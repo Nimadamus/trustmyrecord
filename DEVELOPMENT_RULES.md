@@ -1,5 +1,9 @@
 # TrustMyRecord Development Rules
 
+## Forum Empty-State Posting CTA + Backend-Driven Sidebar (May 24, 2026) — HARD RULE (PERMANENT)
+Every empty forum/category view MUST show a clear posting/login CTA — never just "no threads" text. Logged-out users see a login-focused CTA ("Log in to Start the First Thread"); logged-in users see a direct "Start the First Thread" CTA. Both route through the existing `openNewThread()` flow (logged-out → `/login/` with redirect saved; logged-in → New Thread modal). Do not duplicate the action-row "+ New Thread" button messily — the empty-state CTA is the in-table prompt only, shown ONLY when the category has zero threads.
+The forum left sidebar MUST be auto-built from the live `/forum/categories` response (`renderForumSidebar()`), never hardcoded slugs. Hardcoded slugs (`general-betting`, `college-football`, `fantasy`, `golf`, `pick-sellers`, `challenges`, `general-discussion`, `support`, `site-feedback`) silently dead-ended because they didn't match backend slugs (`general`, `nfl`, `nba`, `mlb`, `nhl`, `college`, `sportsbooks`, `strategy`, `beats-brags`, `off-topic`). Sidebar forum links can never dead-end on a slug the backend lacks.
+
 ## Distinct CTA Destinations — marketplace & onboarding (May 24, 2026) — HARD RULE (PERMANENT)
 Marketplace and onboarding pages must NOT show multiple CTA buttons that lead to the same destination. Every CTA in the same section must have a distinct purpose AND a distinct destination. (May 24, 2026: the `/marketplace/` hero shipped both "Start Building Your Record" and "Make Your First Pick" pointing to `/sportsbook/` — redundant. Removed "Make Your First Pick"; hero now = "Start Building Your Record" → `/sportsbook/` + "View Leaderboards" → `/handicappers/`.)
 
