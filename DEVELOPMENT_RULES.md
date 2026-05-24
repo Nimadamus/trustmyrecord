@@ -1,5 +1,12 @@
 # TrustMyRecord Development Rules
 
+## Profile Header Long-Username Handling (May 23, 2026) — HARD RULE
+The public profile masthead (`profile/index.html`, `#profileHeader` grid: left `.profile-info` / right `.profile-rail` stat card) must never let a long display name or `@handle` overflow into the right stat card.
+- `.profile-name` and `.profile-handle` MUST carry `overflow-wrap:anywhere; word-break:break-word; max-width:100%` (name also `hyphens:auto`). Font sizing uses `clamp()` with a small floor (name floor 26px) so long single-word names shrink before they wrap.
+- `.profile-identity-copy` MUST be `min-width:0; max-width:100%; overflow:hidden`; `.profile-info` stays `min-width:0` (grid track is `minmax(0, …)`).
+- These properties are duplicated in BOTH the early `.profile-name` block and the LATEST governing masthead `<style>` block (the one with `grid-template-columns: minmax(0,1.05fr) minmax(430px,.95fr)`), because later blocks re-declare font-size. Any future masthead redesign must re-apply the wrapping props in the governing block.
+- Verify with a long name (e.g. `NobodyImportant74`) at desktop/tablet/mobile: no overlap with the stat card, no horizontal scroll, layout stacks cleanly ≤1180px.
+
 ## Leaderboard Must Support Sport + Wager Type Filtering (May 23, 2026) — PROTOCOL
 
 `/handicappers/` (Find Handicappers / Leaderboard) MUST always offer filtering by **Sport** and **Wager Type**, with all stats recalculated from the filtered, graded-only pick subset.
