@@ -1254,6 +1254,49 @@
         // moneyline counts for both "First 5" and "Moneyline").
         const WAGER_TYPES = ['moneyline', 'spread', 'runline', 'puckline', 'total', 'teamtotal', 'first5', 'playerprop', 'futures', 'other'];
 
+        // Sport-aware "Filter by wager type" options. The dropdown must never show
+        // an impossible bet type for the selected sport (e.g. Puck Line for MLB,
+        // Run Line / First 5 for NHL/NBA/NFL). Labels keyed by canonical value.
+        const WAGER_LABELS = {
+            all: 'All wager types',
+            moneyline: 'Moneyline',
+            spread: 'Spread',
+            runline: 'Run Line',
+            puckline: 'Puck Line',
+            total: 'Total',
+            teamtotal: 'Team Total',
+            first5: 'First 5',
+            playerprop: 'Player Prop',
+            futures: 'Futures',
+            other: 'Other'
+        };
+        const WAGER_ALL = ['all', 'moneyline', 'spread', 'runline', 'puckline', 'total', 'teamtotal', 'first5', 'playerprop', 'futures', 'other'];
+        const WAGER_BY_SPORT = {
+            MLB: ['all', 'moneyline', 'runline', 'total', 'teamtotal', 'first5', 'playerprop', 'futures', 'other'],
+            NHL: ['all', 'moneyline', 'puckline', 'total', 'teamtotal', 'playerprop', 'futures', 'other'],
+            NBA: ['all', 'moneyline', 'spread', 'total', 'teamtotal', 'playerprop', 'futures', 'other'],
+            NFL: ['all', 'moneyline', 'spread', 'total', 'teamtotal', 'playerprop', 'futures', 'other'],
+            NCAAF: ['all', 'moneyline', 'spread', 'total', 'teamtotal', 'playerprop', 'futures', 'other'],
+            NCAAB: ['all', 'moneyline', 'spread', 'total', 'teamtotal', 'playerprop', 'futures', 'other']
+        };
+
+        function wagerOptionsForSport(sport) {
+            return WAGER_BY_SPORT[sport] || WAGER_ALL;
+        }
+
+        // Rebuild the wager dropdown for the active sport. If the current selection
+        // is no longer valid, reset to "all". Returns true if the selection changed.
+        function rebuildWagerOptions() {
+            if (!els.wager) return false;
+            const sport = (els.sport && els.sport.value) || 'all';
+            const opts = wagerOptionsForSport(sport);
+            const prev = els.wager.value || 'all';
+            const next = opts.includes(prev) ? prev : 'all';
+            els.wager.innerHTML = opts.map(v => '<option value="' + v + '">' + escapeHtml(WAGER_LABELS[v] || v) + '</option>').join('');
+            els.wager.value = next;
+            return next !== prev;
+        }
+
         // No-action statuses: never counted as graded, pending, or total.
         const VOID_PICK_STATUSES = new Set(['void', 'voided', 'cancelled', 'canceled', 'refunded', 'no_action', 'noaction', 'nulled', 'cancel']);
 
@@ -1931,6 +1974,7 @@
             const sports = Array.from(set).sort();
             els.sport.innerHTML = '<option value="all">All sports</option>' + sports.map(sport => '<option value="' + escapeHtml(sport) + '">' + escapeHtml(sport) + '</option>').join('');
             if (sports.includes(selected)) els.sport.value = selected;
+            rebuildWagerOptions();
         }
 
         // Recalculate a member's stats from only the picks that match the active
@@ -2181,7 +2225,7 @@
         });
 
         els.search.addEventListener('input', resetPaginationAndApplyFilters);
-        els.sport.addEventListener('change', resetPaginationAndApplyFilters);
+        els.sport.addEventListener('change', () => { rebuildWagerOptions(); resetPaginationAndApplyFilters(); });
         if (els.wager) els.wager.addEventListener('change', resetPaginationAndApplyFilters);
         els.sort.addEventListener('change', () => {
             const field = els.sort.value || 'units';
