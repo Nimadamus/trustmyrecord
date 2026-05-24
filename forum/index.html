@@ -158,6 +158,11 @@ body.tmr-forum-live-redesign .fpost-edit-box textarea{background:#0a1422 !import
 .modal-body{padding:12px}
 .modal-body label{display:block;margin:8px 0 4px;color:#333;font:bold 12px Arial,Helvetica,sans-serif}
 .fempty{padding:24px 12px;text-align:center;color:#666;font-style:italic;background:#fff;border:1px solid var(--line)}
+.fempty-cta{display:flex;flex-direction:column;align-items:center;gap:12px;font-style:normal}
+.fempty-cta-msg{color:#555;font-size:13px}
+.fempty-cta-btn{font-size:13px;padding:9px 18px}
+body.tmr-forum-live-redesign .fempty-cta-msg{color:#aeb9c7}
+.fside-loading{color:#888;font-style:italic;cursor:default}
 .tmr-loading-state{padding:50px 15px;text-align:center;color:#666}
 .tmr-spinner{display:inline-block;width:28px;height:28px;border:3px solid #d0d0d0;border-top-color:#777;border-radius:50%;animation:spin .8s linear infinite;margin-bottom:10px}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -1369,32 +1374,19 @@ body.tmr-forum-live-redesign .fcrumb .sep {
 
     <aside class="fside" aria-label="Forum categories">
         <section class="fside-box">
-            <div class="fside-head">Sports &amp; Games</div>
-            <div class="fside-list">
-                <a data-cat-slug="general-betting" onclick="onSidebarPick(this,'general-betting','Sports Betting')">Sports Betting</a>
-                <a data-cat-slug="mlb" onclick="onSidebarPick(this,'mlb','MLB')">MLB</a>
-                <a data-cat-slug="nfl" onclick="onSidebarPick(this,'nfl','NFL')">NFL</a>
-                <a data-cat-slug="nba" onclick="onSidebarPick(this,'nba','NBA')">NBA</a>
-                <a data-cat-slug="nhl" onclick="onSidebarPick(this,'nhl','NHL')">NHL</a>
-                <a data-cat-slug="college-football" onclick="onSidebarPick(this,'college-football','College Football')">College Football</a>
-                <a data-cat-slug="college-basketball" onclick="onSidebarPick(this,'college-basketball','College Basketball')">College Basketball</a>
-                <a data-cat-slug="fantasy" onclick="onSidebarPick(this,'fantasy','Fantasy Sports')">Fantasy Sports</a>
-                <a data-cat-slug="golf" onclick="onSidebarPick(this,'golf','Golf')">Golf</a>
+            <div class="fside-head">Forums</div>
+            <!-- Auto-built from live backend categories so every link opens a real, postable forum. -->
+            <div class="fside-list" id="forumSidebarList">
+                <a class="fside-loading">Loading forums...</a>
             </div>
         </section>
         <section class="fside-box">
             <div class="fside-head">TrustMyRecord</div>
             <div class="fside-list">
-                <a data-cat-slug="general-betting" onclick="onSidebarPick(this,'general-betting','Verified Records')">Verified Records</a>
                 <a href="/handicappers/">Handicappers</a>
-                <a data-cat-slug="pick-sellers" onclick="onSidebarPick(this,'pick-sellers','Marketplace')">Marketplace</a>
-                <a data-cat-slug="challenges" onclick="onSidebarPick(this,'challenges','Challenges')">Challenges</a>
-            </div>
-            <div class="fside-subhead">Community</div>
-            <div class="fside-list">
-                <a data-cat-slug="general-discussion" onclick="onSidebarPick(this,'general-discussion','General Community')">General Community</a>
-                <a data-cat-slug="support" onclick="onSidebarPick(this,'support','Support')">Support</a>
-                <a data-cat-slug="site-feedback" onclick="onSidebarPick(this,'site-feedback','Announcements')">Announcements</a>
+                <a href="/leaderboard/">Leaderboard</a>
+                <a href="/sportsbook/">Sportsbook</a>
+                <a href="/challenges/">Challenges</a>
             </div>
         </section>
     </aside>
@@ -1555,6 +1547,24 @@ function forumSportBadge(slug, name) {
     return { code: 'TMR', cls: 'gen' };
 }
 
+// Build the left sidebar forum list straight from the live categories so a
+// sidebar link can never dead-end on a slug the backend doesn't have.
+function renderForumSidebar() {
+    var list = document.getElementById('forumSidebarList');
+    if (!list) return;
+    var cats = categories || [];
+    if (!cats.length) {
+        list.innerHTML = '<a class="fside-loading">No forums yet</a>';
+        return;
+    }
+    list.innerHTML = cats.map(function(c) {
+        var slug = String(c.slug || '');
+        var name = c.name || slug || 'Forum';
+        return '<a data-cat-slug="' + escHtml(slug) + '" onclick="onSidebarPick(this,\'' + escHtml(slug) + '\',\'' + escHtml(name) + '\')">' + escHtml(name) + '</a>';
+    }).join('');
+    if (currentCategorySlug) setActiveSidebar(currentCategorySlug);
+}
+
 function renderCategories() {
     var container = document.getElementById('categoriesContainer');
     if (!container) return;
@@ -1617,7 +1627,16 @@ function renderThreads() {
     var body = document.getElementById('threadsBody');
     if (!body) return;
     if (!cachedThreads.length) {
-        body.innerHTML = '<tr><td class="fcell" colspan="5"><div class="fempty">No threads in this forum yet. Be the first to post.</div></td></tr>';
+        var loggedIn = (typeof isUserLoggedIn === 'function') && isUserLoggedIn();
+        var ctaMsg = loggedIn
+            ? 'No threads here yet. Be the first to start the discussion.'
+            : 'No threads here yet. Be the first to start this discussion. Log in to post.';
+        var ctaLabel = loggedIn ? '+ Start the First Thread' : 'Log in to Start the First Thread';
+        body.innerHTML = '<tr><td class="fcell" colspan="5">'
+            + '<div class="fempty fempty-cta">'
+            +   '<div class="fempty-cta-msg">' + ctaMsg + '</div>'
+            +   '<button type="button" class="fbtn is-primary fempty-cta-btn" onclick="openNewThread()">' + ctaLabel + '</button>'
+            + '</div></td></tr>';
         updateForumJump();
         return;
     }
@@ -2207,6 +2226,7 @@ async function loadCategories() {
             usingFallbackCategories = false;
         }
         renderCategories();
+        renderForumSidebar();
         updateStats();
         updateForumJump();
     } catch (err) {
@@ -2214,6 +2234,7 @@ async function loadCategories() {
         usingFallbackCategories = true;
         categories = fallbackCategories.slice();
         renderCategories();
+        renderForumSidebar();
         updateStats();
         updateForumJump();
         container.insertAdjacentHTML('afterbegin', '<div class="forum-trust-note" style="margin-bottom:10px;">Live forum data is temporarily unavailable. Showing empty forum categories without fake threads or seeded users.</div>');
