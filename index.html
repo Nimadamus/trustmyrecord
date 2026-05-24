@@ -4526,6 +4526,18 @@ function escapeHtml(value) {
         return response.json();
     }
 
+    // A transient cold-start (Render free-dyno spin-up) can fail the very first
+    // request. Retry a couple of times so the homepage modules hydrate with
+    // real cards instead of falling back to the empty state for normal visitors.
+    async function requestRetry(path, tries) {
+        let last;
+        for (let i = 0; i < (tries || 3); i++) {
+            try { return await request(path); }
+            catch (e) { last = e; await new Promise(function (r) { setTimeout(r, 600 * (i + 1)); }); }
+        }
+        throw last;
+    }
+
     const userAvatarByUsername = new Map();
 
     function initials(name) {
@@ -4910,7 +4922,7 @@ function escapeHtml(value) {
         if (!entries.length) {
             list.className = 'tmr-activity-list tmr-activity-empty';
             list.setAttribute('aria-busy', 'true');
-            list.innerHTML = '<div class="tmr-activity-loading"><span aria-hidden="true">📈</span><strong>Scanning verified records</strong><p>The hottest verified streak for each capper shows up here.</p></div>';
+            list.innerHTML = '<div class="tmr-activity-loading"><span aria-hidden="true">📈</span><strong>Scanning verified records</strong><p>Hot streaks, sharp angles, and profit windows for each capper show up here.</p></div>';
             return;
         }
         list.className = 'tmr-activity-list';
@@ -4974,7 +4986,7 @@ function escapeHtml(value) {
         const bust = '_=' + Date.now();
         let users = [];
         try {
-            const usersData = await request('/users?limit=100&' + bust);
+            const usersData = await requestRetry('/users?limit=100&' + bust);
             users = Array.isArray(usersData && usersData.users) ? usersData.users : [];
             renderUsers(users);
         } catch (error) {
