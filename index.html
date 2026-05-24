@@ -2090,15 +2090,15 @@ button{font:inherit;cursor:pointer}
           </section>
 
           <section class="tmr-board-card tmr-activity-card">
-            <header><h3>Recent Platform Activity</h3><a href="/handicappers/">View Public Records</a></header>
+            <header><h3>Capper Trend Spotter</h3><a href="/handicappers/">View Public Records</a></header>
             <div id="tmrHeroPicksList" class="tmr-activity-list tmr-activity-empty" aria-live="polite" aria-busy="true">
               <div class="tmr-activity-loading">
-                <span aria-hidden="true">▣</span>
-                <strong>Loading recent activity</strong>
-                <p>Users who lock picks before game start will show up here.</p>
+                <span aria-hidden="true">📈</span>
+                <strong>Scanning verified records</strong>
+                <p>The hottest verified streak for each capper shows up here.</p>
               </div>
             </div>
-            <p class="tmr-activity-trustnote">▣ Picks unlock after game start. Records update after grading.</p>
+            <p class="tmr-activity-trustnote">📊 Highlights are computed from graded, verified picks only.</p>
             <a class="tmr-activity-cta" href="/handicappers/">View Public Records →</a>
           </section>
         </div>
@@ -2990,6 +2990,32 @@ button{font:inherit;cursor:pointer}
     white-space: normal;
     word-break: break-word;
   }
+  /* Capper Trend Spotter highlight lines */
+  .tmr-trend-line {
+    display: block;
+    color: var(--premium-green);
+    font-size: 12.5px;
+    font-weight: 900;
+    letter-spacing: .01em;
+    line-height: 1.3;
+    white-space: normal;
+    word-break: break-word;
+  }
+  .tmr-trend-sub {
+    display: block;
+    color: var(--premium-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .01em;
+    margin-top: 1px;
+    white-space: normal;
+    word-break: break-word;
+  }
+  .tmr-trend-pill.is-streak { border-color: rgba(255, 145, 79, .42); background: rgba(255, 145, 79, .12); color: #ff914f; }
+  .tmr-trend-pill.is-hot { border-color: rgba(105, 238, 143, .42); background: rgba(105, 238, 143, .12); color: var(--premium-green); }
+  .tmr-trend-pill.is-edge { border-color: rgba(55, 214, 193, .42); background: rgba(55, 214, 193, .12); color: var(--premium-teal); }
+  .tmr-trend-pill.is-profit { border-color: rgba(255, 209, 102, .45); background: rgba(255, 209, 102, .12); color: #ffd166; }
+  .tmr-trend-pill.is-record { border-color: rgba(134, 162, 190, .4); background: rgba(134, 162, 190, .12); color: #b9cbe0; }
   .tmr-activity-badge {
     flex-shrink: 0;
     padding: 6px 10px;
@@ -4588,80 +4614,257 @@ function escapeHtml(value) {
         attachAvatarFallbacks(body);
     }
 
-    function renderPicks(picks) {
-        const list = document.getElementById('tmrHeroPicksList');
-        if (!list) return;
+    // ===== Capper Trend Spotter =====================================
+    // Finds the single strongest POSITIVE verified trend for each active
+    // capper from their graded pick history. Never surfaces a losing trend.
+    const GRADED = { won: 1, lost: 1, push: 1 };
 
-        const groups = new Map();
-        picks.filter(function (pick) { return pick && pick.username; })
-            .forEach(function (pick) {
-                const key = String(pick.username).toLowerCase();
-                const existing = groups.get(key);
-                const pickAvatar = pick.avatar_url || pick.avatarUrl || '';
-                if (existing) {
-                    existing.count += 1;
-                    if (!existing.avatarUrl && pickAvatar) existing.avatarUrl = pickAvatar;
-                } else {
-                    groups.set(key, {
-                        usernameRaw: pick.username,
-                        username: pick.display_name || pick.username,
-                        count: 1,
-                        avatarUrl: pickAvatar || userAvatarByUsername.get(key) || ''
-                    });
-                }
-            });
+    function pickDate(p) {
+        return new Date(p.commence_time || p.graded_at || p.created_at || 0).getTime();
+    }
 
-        const grouped = Array.from(groups.values()).slice(0, 5);
+    function sportLabel(key) {
+        const k = String(key || '').toLowerCase();
+        if (/mlb|baseball/.test(k)) return 'MLB';
+        if (/nhl|hockey/.test(k)) return 'NHL';
+        if (/nba|basketball/.test(k)) return 'NBA';
+        if (/nfl|football/.test(k)) return 'NFL';
+        return null;
+    }
 
-        if (!grouped.length) {
-            list.className = 'tmr-activity-list tmr-activity-empty';
-            list.setAttribute('aria-busy', 'true');
-            list.innerHTML = '<div class="tmr-activity-loading"><span aria-hidden="true">▣</span><strong>Loading recent activity</strong><p>Users who lock picks before game start will show up here.</p></div>';
-            return;
+    function marketCatKey(market) {
+        const m = String(market || '').toLowerCase();
+        if (/team_total/.test(m)) return 'team_totals';
+        if (/total/.test(m)) return 'totals';
+        if (/spread|runline|run_line|puck/.test(m)) return 'spreads';
+        if (/h2h|moneyline|(^|_)ml($|_)/.test(m)) return 'moneylines';
+        return null;
+    }
+
+    function dominantSport(picks) {
+        const c = {};
+        picks.forEach(function (p) { const s = sportLabel(p.sport_key); if (s) c[s] = (c[s] || 0) + 1; });
+        return Object.keys(c).sort(function (a, b) { return c[b] - c[a]; })[0] || null;
+    }
+
+    function catLabel(key, picks) {
+        if (key === 'spreads') {
+            const s = dominantSport(picks);
+            if (s === 'MLB') return 'run lines';
+            if (s === 'NHL') return 'puck lines';
+            return 'spreads';
+        }
+        return { totals: 'totals', team_totals: 'team totals', moneylines: 'moneylines' }[key] || key;
+    }
+
+    // Consecutive wins counting back from the most recent pick (chronological
+    // subset). Pushes are skipped (neutral); a loss ends the streak.
+    function endStreak(chronoSubset) {
+        let s = 0;
+        for (let i = chronoSubset.length - 1; i >= 0; i--) {
+            const st = String(chronoSubset[i].status || '').toLowerCase();
+            if (st === 'push') continue;
+            if (st === 'won') s++; else break;
+        }
+        return s;
+    }
+
+    function pct(x) { return Math.round(x * 100); }
+    function signedUnits(n) { return (n > 0 ? '+' : '') + Number(n).toFixed(2).replace(/\.00$/, '') + 'u'; }
+    function signedPct(n) { return (n > 0 ? '+' : '') + Number(n).toFixed(2).replace(/\.00$/, '') + '%'; }
+    function plPicks(n) { return n + ' verified pick' + (n === 1 ? '' : 's'); }
+
+    // A complementary POSITIVE supporting stat. Only surfaces a percentage when
+    // it is genuinely strong on a meaningful sample; otherwise shows positive
+    // units or honest volume. Never shows a weak/sub-coinflip number.
+    function recordSub(meta, decided, winRate, total) {
+        const net = Number(meta && meta.net_units);
+        if (decided >= 10 && winRate >= 0.55) return pct(winRate) + '% career win rate';
+        if (Number.isFinite(net) && net > 0) return signedUnits(net) + ' lifetime';
+        return plPicks(total || decided);
+    }
+
+    function computeHighlight(picks, meta) {
+        const graded = (picks || [])
+            .filter(function (p) { return GRADED[String(p.status || '').toLowerCase()]; })
+            .sort(function (a, b) { return pickDate(a) - pickDate(b); });
+        if (!graded.length) return null;
+
+        const wins = graded.filter(function (p) { return p.status === 'won'; }).length;
+        const losses = graded.filter(function (p) { return p.status === 'lost'; }).length;
+        const decided = wins + losses;
+        const winRate = decided ? wins / decided : 0;
+        const net = Number(meta && meta.net_units);
+        const roi = Number(meta && meta.roi);
+        const total = Number(meta && meta.total_picks);
+        const out = [];
+
+        // 1. Overall active winning streak (>= 3)
+        const ovr = endStreak(graded);
+        if (ovr >= 3) out.push({ score: 1000 + ovr * 10, line: '🔥 Won ' + ovr + ' straight',
+            sub: recordSub(meta, decided, winRate, total), tag: 'STREAK', cls: 'is-streak' });
+
+        // group helpers
+        const byCat = {}, bySport = {};
+        graded.forEach(function (p) {
+            const c = marketCatKey(p.market_type); if (c) (byCat[c] = byCat[c] || []).push(p);
+            const s = sportLabel(p.sport_key); if (s) (bySport[s] = bySport[s] || []).push(p);
+        });
+
+        // 2. Bet-type streak (>= 3)
+        Object.keys(byCat).forEach(function (c) {
+            const sub = byCat[c]; const st = endStreak(sub);
+            if (st >= 3) {
+                const label = catLabel(c, sub);
+                const dec = sub.filter(function (p) { return p.status !== 'push'; });
+                const w = dec.filter(function (p) { return p.status === 'won'; }).length;
+                const catRate = dec.length ? w / dec.length : 0;
+                // Only brag the category % when it is strong on a real sample;
+                // otherwise show a different positive stat (never a weak number).
+                const catSub = (dec.length >= 5 && catRate >= 0.55) ? pct(catRate) + '% lifetime on ' + label : recordSub(meta, decided, winRate, total);
+                out.push({ score: 850 + st * 10, line: '🔥 Hit last ' + st + ' ' + label, sub: catSub, tag: 'STREAK', cls: 'is-streak' });
+            }
+        });
+
+        // 3. Sport-specific streak (>= 3)
+        Object.keys(bySport).forEach(function (s) {
+            const sub = bySport[s]; const st = endStreak(sub);
+            if (st >= 3) out.push({ score: 750 + st * 10, line: '🔥 ' + st + ' straight ' + s + ' winners',
+                sub: sub.length + ' tracked ' + s + ' picks', tag: 'STREAK', cls: 'is-streak' });
+        });
+
+        // 4. Recent hot form over last 10 / 8 / 5 (>= 60%, >= 4 wins)
+        [10, 8, 5].forEach(function (n) {
+            const last = graded.slice(-n).filter(function (p) { return p.status !== 'push'; });
+            if (last.length >= Math.min(5, n)) {
+                const w = last.filter(function (p) { return p.status === 'won'; }).length;
+                const r = w / last.length;
+                if (r >= 0.6 && w >= 4) out.push({ score: 600 + r * 100 + last.length, line: '📈 ' + w + ' of last ' + last.length + ' won',
+                    sub: pct(r) + '% recent form', tag: 'HOT', cls: 'is-hot' });
+            }
+        });
+
+        // 6. Category win rate (>= 5 graded, >= 60%)
+        Object.keys(byCat).forEach(function (c) {
+            const dec = byCat[c].filter(function (p) { return p.status !== 'push'; });
+            if (dec.length >= 5) {
+                const w = dec.filter(function (p) { return p.status === 'won'; }).length;
+                const r = w / dec.length;
+                if (r >= 0.6) { const label = catLabel(c, byCat[c]);
+                    out.push({ score: 500 + r * 100, line: '🎯 ' + pct(r) + '% on ' + label, sub: dec.length + ' graded ' + label, tag: 'EDGE', cls: 'is-edge' }); }
+            }
+        });
+        // sport win rate (>= 5 graded, >= 60%)
+        Object.keys(bySport).forEach(function (s) {
+            const dec = bySport[s].filter(function (p) { return p.status !== 'push'; });
+            if (dec.length >= 5) {
+                const w = dec.filter(function (p) { return p.status === 'won'; }).length;
+                const r = w / dec.length;
+                if (r >= 0.6) out.push({ score: 480 + r * 100, line: '🎯 ' + pct(r) + '% on ' + s, sub: dec.length + ' graded ' + s + ' picks', tag: 'EDGE', cls: 'is-edge' });
+            }
+        });
+
+        // 5. Strong lifetime units / ROI (authoritative totals from /users).
+        // ROI % only shown on a meaningful sample so 1-pick brags never appear.
+        if (Number.isFinite(net) && net >= 3) out.push({ score: 300 + net, line: '💰 ' + signedUnits(net) + ' lifetime',
+            sub: (decided >= 5 && Number.isFinite(roi)) ? signedPct(roi) + ' ROI' : plPicks(total || decided), tag: 'PROFIT', cls: 'is-profit' });
+
+        // 7. Positive fallback only (never a losing record)
+        if (!out.length) {
+            if (Number.isFinite(net) && net > 0) out.push({ score: 100 + net, line: '✅ ' + signedUnits(net) + ' overall',
+                sub: plPicks(total || decided), tag: 'PROFIT', cls: 'is-profit' });
+            else if (decided >= 5 && winRate >= 0.5) out.push({ score: 50 + winRate * 100, line: '✅ ' + pct(winRate) + '% win rate',
+                sub: wins + '-' + losses + ' verified record', tag: 'RECORD', cls: 'is-record' });
         }
 
+        if (!out.length) return null; // no positive trend -> skip this capper
+        out.sort(function (a, b) { return b.score - a.score; });
+        return out[0];
+    }
+
+    function renderTrendSpotter(entries) {
+        const list = document.getElementById('tmrHeroPicksList');
+        if (!list) return;
+        if (!entries.length) {
+            list.className = 'tmr-activity-list tmr-activity-empty';
+            list.setAttribute('aria-busy', 'true');
+            list.innerHTML = '<div class="tmr-activity-loading"><span aria-hidden="true">📈</span><strong>Scanning verified records</strong><p>The hottest verified streak for each capper shows up here.</p></div>';
+            return;
+        }
         list.className = 'tmr-activity-list';
         list.setAttribute('aria-busy', 'false');
-        list.innerHTML = grouped.map(function (group) {
-            const sub = group.count + ' pick' + (group.count === 1 ? '' : 's') + ' locked';
-            const lookupKey = String(group.usernameRaw || group.username).toLowerCase();
-            const avatarUrl = group.avatarUrl || userAvatarByUsername.get(lookupKey) || '';
-            const init = initials(group.username);
-            const color = avatarColor(group.usernameRaw || group.username);
+        list.innerHTML = entries.map(function (e) {
+            const avatarUrl = e.avatarUrl || userAvatarByUsername.get(String(e.usernameRaw).toLowerCase()) || '';
+            const init = initials(e.displayName || e.usernameRaw);
+            const color = avatarColor(e.usernameRaw);
             const avatarHtml = avatarUrl
                 ? '<img src="' + escapeHtml(avatarUrl) + '" alt="" data-avatar-initials="' + escapeHtml(init) + '" data-avatar-color="' + escapeHtml(color) + '">'
                 : '<span class="tmr-fallback-initials" style="background:' + escapeHtml(color) + ';color:#fff;width:100%;height:100%;display:grid;place-items:center">' + escapeHtml(init) + '</span>';
-            return '<div class="tmr-activity-row">'
+            return '<a class="tmr-activity-row tmr-trend-row" href="/profile/?user=' + encodeURIComponent(e.usernameRaw) + '">'
                 + '<span class="tmr-activity-avatar" aria-hidden="true">' + avatarHtml + '</span>'
                 + '<div class="tmr-activity-text">'
-                + '<b>' + escapeHtml(group.username) + '</b>'
-                + '<small>' + escapeHtml(sub) + '</small>'
+                + '<b>' + escapeHtml(e.displayName || e.usernameRaw) + '</b>'
+                + '<span class="tmr-trend-line">' + escapeHtml(e.highlight.line) + '</span>'
+                + '<span class="tmr-trend-sub">' + escapeHtml(e.highlight.sub) + '</span>'
                 + '</div>'
-                + '<span class="tmr-activity-pill">LOCKED</span>'
-                + '</div>';
+                + '<span class="tmr-activity-pill tmr-trend-pill ' + e.highlight.cls + '">' + escapeHtml(e.highlight.tag) + '</span>'
+                + '</a>';
         }).join('');
         attachAvatarFallbacks(list);
     }
 
+    async function buildTrendSpotter(users, bust) {
+        // Candidate cappers: real users with at least one graded pick, richest
+        // records first. Cap fan-out at 12 lookups, display up to 10 winners.
+        const candidates = (users || [])
+            .filter(function (u) { return u && u.username && number(u.total_picks || u.totalPicks, 0) > 0; })
+            .sort(function (a, b) { return number(b.net_units || b.netUnits, -Infinity) - number(a.net_units || a.netUnits, -Infinity); })
+            .slice(0, 12);
+
+        const results = await Promise.all(candidates.map(async function (u) {
+            try {
+                const data = await request('/picks?username=' + encodeURIComponent(u.username) + '&limit=100&' + bust);
+                const picks = Array.isArray(data && data.picks) ? data.picks : [];
+                const highlight = computeHighlight(picks, {
+                    net_units: u.net_units != null ? u.net_units : u.netUnits,
+                    roi: u.roi,
+                    total_picks: u.total_picks != null ? u.total_picks : u.totalPicks
+                });
+                if (!highlight) return null;
+                return {
+                    usernameRaw: u.username,
+                    displayName: u.display_name || u.displayName || u.username,
+                    avatarUrl: u.avatar_url || u.avatarUrl || '',
+                    highlight: highlight
+                };
+            } catch (err) { return null; }
+        }));
+
+        const entries = results.filter(Boolean)
+            .sort(function (a, b) { return b.highlight.score - a.highlight.score; })
+            .slice(0, 10);
+        renderTrendSpotter(entries);
+    }
+
     async function hydrateHomepagePreview() {
-        // Cache-bust so the leaderboard/activity module always reflects the
-        // current graded/locked source of truth and never serves a stale
-        // (yesterday's) copy from browser/CDN HTTP cache.
+        // Cache-bust so the module always reflects the current graded/verified
+        // source of truth and never serves a stale browser/CDN copy.
         const bust = '_=' + Date.now();
+        let users = [];
         try {
             const usersData = await request('/users?limit=100&' + bust);
-            renderUsers(Array.isArray(usersData && usersData.users) ? usersData.users : []);
+            users = Array.isArray(usersData && usersData.users) ? usersData.users : [];
+            renderUsers(users);
         } catch (error) {
             console.warn('[TMR] Homepage real users preview unavailable:', error);
             renderUsers([]);
         }
 
         try {
-            const picksData = await request('/picks?limit=20&' + bust);
-            renderPicks(Array.isArray(picksData && picksData.picks) ? picksData.picks : []);
+            await buildTrendSpotter(users, bust);
         } catch (error) {
-            console.warn('[TMR] Homepage real picks preview unavailable:', error);
-            renderPicks([]);
+            console.warn('[TMR] Capper Trend Spotter unavailable:', error);
+            renderTrendSpotter([]);
         }
     }
 

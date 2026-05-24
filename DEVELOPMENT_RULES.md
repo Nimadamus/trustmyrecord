@@ -625,7 +625,15 @@ When adding a new core vertical page (the Online Gaming page, `/online-gaming/`,
 6. **Profile integration** for any per-user data goes in its own `data-tab`/`data-panel` in `profile/index.html`, lazy-loaded on tab click, and must stay isolated from the betting/handicapping ledger.
 7. **Stakes/wager language:** online gaming challenges are bragging-rights / reputation only. No cash prize, paid entry, or wagering copy (matches the sitewide money-language rules).
 
-## Homepage "Public Profiles" / "Recent Platform Activity" module — refresh contract
+## Homepage right-rail activity module MUST show meaningful verified stats (May 23, 2026) — HARD RULE
+The homepage right-side activity module is the **Capper Trend Spotter** (`index.html`, `#tmrHeroPicksList`). It must surface a meaningful, **verified, positive** trend per capper — never dumb "N picks locked" counts and never a losing/negative trend.
+- **Engine:** `computeHighlight(picks, meta)` + `buildTrendSpotter()` in the homepage inline `<script>`. For each active capper it fetches `GET /api/picks?username=<u>&limit=100` (graded/verified picks only for anon — pending is hidden server-side) and picks the single strongest positive highlight by priority: (1) overall active win streak → (2) bet-type streak → (3) sport streak → (4) recent hot form (last 10/8/5) → (5) strong lifetime units/ROI → (6) category/sport win rate → (7) positive overall fallback.
+- **Minimum samples (no small-sample nonsense):** streak ≥3 straight wins; win-rate highlights ≥5 graded AND ≥60%; a supporting % only prints when ≥5 sample and ≥55% (else show positive units or honest `N verified picks`); ROI % only at ≥5 decided; lifetime fallback ≥1 graded.
+- **Positivity rule:** never render a losing streak, sub-coinflip rate, or negative units. If a capper has no positive trend, they are **skipped** (not shown with a bad stat).
+- **No fake/mock/hardcoded:** all highlight text is generated from real `/api/users` + `/api/picks` data. Completed games are never labeled "locked" (the old LOCKED pill is gone). Display up to 10 cappers, richest records first.
+- **Refresh:** same cache-bust (`_=<ts>`) per load as the leaderboard; never a stale/static label. Going forward, any homepage activity module must follow this verified-stat contract, not stale locked-count copy.
+
+## Homepage "Public Profiles" / "Capper Trend Spotter" module — refresh contract
 The right-side dashboard on `index.html` is **live client-fetched on every page load** (no build-time/static data):
 - `hydrateHomepagePreview()` in the inline `<script>` calls `GET /api/users?limit=100` (leaderboard/Public Profiles) and `GET /api/picks?limit=20` (Recent Platform Activity), each with a `_=<timestamp>` cache-buster so a stale browser/CDN copy is never reused.
 - Backend source of truth: `routes/users.js` `GET /` reads `user_stats` (updated by the grader/statsAggregator) and only returns users with a public settled pick; it sends `Cache-Control: public, max-age=60, stale-while-revalidate=120`. `routes/picks.js` `GET /` returns only FINAL (graded) statuses for anonymous viewers (pending hidden until owner-authed) and sends `Cache-Control: no-store`.
