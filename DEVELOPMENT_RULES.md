@@ -1,5 +1,19 @@
 # TrustMyRecord Development Rules
 
+## Homepage Capper Trend Spotter Highlight Standard (May 24, 2026) — HARD RULE (PERMANENT)
+The homepage Trend Spotter (`index.html` → `computeHighlight`) surfaces ONE positive, verified, scouting-report-style highlight per capper. Permanent rules for any future change to this module or any other auto-generated capper highlight:
+- **Verified settled picks only.** Count `won`/`lost`/`push`. Pending/void/cancelled picks are NEVER counted. Never fabricate streaks, users, ROI, records, or units.
+- **Positive only.** Never surface a losing streak, sub-.500 record, or any shaming stat. If a capper has no positive trend, skip them.
+- **Minimum sample guards (mandatory):**
+  - Percentage/record highlights: ≥ 5 settled picks (recent-form windows), ≥ 6 for per-sport, ≥ 5 for bet-type/category, ≥ 10 for favorites.
+  - Lifetime/overall units and ROI claims: ≥ 5 settled (units), ≥ 20 settled (ROI %).
+  - Underdog/plus-money: ≥ 5 settled and either ≥ 55% win rate OR net ≥ +1u.
+  - 2u+ high-confidence: ≥ 3 settled, ≥ 60%.
+  - One-pick / thin-sample cappers get SAFE wording only ("First verified win logged", "New verified capper") — never a units or % brag.
+- **Categories (each maps to a badge):** active streak (STREAK), recent W–L form windows / per-sport recent record (HOT/SURGING), bet-type & sport win rate (EDGE), totals/team-totals (TOTALS), underdog/plus-money (UNDERDOG), 2u+ & favorites (SHARP), last 7/30-day units & weekly volume (SURGING/VOLUME), lifetime units & ROI (PROFIT), long-term volume milestone ≥25 (VOLUME/VERIFIED), positive fallback (RECORD/VERIFIED).
+- **Card shape:** avatar/initials + username + one strong main line + one smaller context line + one badge. Records render as `W–L` (en-dash). Display ≈ 6–8 cappers (currently capped at 8 from a 16-candidate fan-out, ranked by highlight score).
+- **No em dashes (—)** in copy; en-dash in scores is allowed. Module must stay clean on desktop and mobile and must never break nav/login/signup/leaderboard/profiles/contest/pick-submission/autograder.
+
 ## Forum Empty-State Posting CTA + Backend-Driven Sidebar (May 24, 2026) — HARD RULE (PERMANENT)
 Every empty forum/category view MUST show a clear posting/login CTA — never just "no threads" text. Logged-out users see a login-focused CTA ("Log in to Start the First Thread"); logged-in users see a direct "Start the First Thread" CTA. Both route through the existing `openNewThread()` flow (logged-out → `/login/` with redirect saved; logged-in → New Thread modal). Do not duplicate the action-row "+ New Thread" button messily — the empty-state CTA is the in-table prompt only, shown ONLY when the category has zero threads.
 The forum left sidebar MUST be auto-built from the live `/forum/categories` response (`renderForumSidebar()`), never hardcoded slugs. Hardcoded slugs (`general-betting`, `college-football`, `fantasy`, `golf`, `pick-sellers`, `challenges`, `general-discussion`, `support`, `site-feedback`) silently dead-ended because they didn't match backend slugs (`general`, `nfl`, `nba`, `mlb`, `nhl`, `college`, `sportsbooks`, `strategy`, `beats-brags`, `off-topic`). Sidebar forum links can never dead-end on a slug the backend lacks.
