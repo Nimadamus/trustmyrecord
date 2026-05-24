@@ -890,6 +890,8 @@
                             <div class="field">
                                 <label for="sampleFilter">Minimum picks</label>
                                 <select id="sampleFilter">
+                                    <option value="5">5 picks</option>
+                                    <option value="10">10 picks</option>
                                     <option value="20">20 picks</option>
                                     <option value="25">25 picks</option>
                                     <option value="50">50 picks</option>
@@ -1297,7 +1299,7 @@
                 setStateAsEmpty(state, emptyStateHtml({
                     icon: '★',
                     title: 'No ranked handicappers yet',
-                    body: 'Lock graded picks to build a public record. Ranked handicappers require 20 graded picks, recent graded activity, and positive net units.',
+                    body: 'Lock graded picks to build a public record. Ranked handicappers require 5 graded picks, recent graded activity, and positive net units.',
                     ctas: [
                         { label: 'Lock Your First Pick', href: '/sportsbook/', primary: true },
                         { label: 'Invite A Rival', href: '/arena/' }
@@ -1505,7 +1507,7 @@
             document.getElementById('capperSearch').value = '';
             document.getElementById('sportFilter').value = 'all';
             document.getElementById('sortFilter').value = 'units';
-            document.getElementById('sampleFilter').value = '20';
+            document.getElementById('sampleFilter').value = '5';
             applyHandicapperFilters();
         }
 
@@ -1519,7 +1521,7 @@
                     : [];
 
                 fullLeaderboard = rawEntries.map(normalizeEntry).filter(function(entry) {
-                    return entry.username && entry.totalPicks >= 20 && entry.units > 0;
+                    return entry.username && entry.totalPicks >= 5 && entry.units > 0;
                 });
 
                 setQuickStats(fullLeaderboard);
