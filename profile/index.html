@@ -7131,11 +7131,18 @@
         const k = String(key || '').toLowerCase().trim();
         if (!mk || !k) return false;
         if (mk === k) return true;
+        // Mirror the backend's by_market normalization so each drilldown row
+        // sums the exact same picks as its summary row. The backend folds
+        // alternate spellings (e.g. first_five_totals -> f5_totals) into one
+        // key; the drilldown must too or the expanded totals won't match.
         const aliases = {
             h2h: ['h2h', 'moneyline', 'ml'],
             spreads: ['spreads', 'spread', 'run_line', 'runline', 'puck_line', 'puckline'],
             totals: ['totals', 'total'],
-            team_totals: ['team_totals', 'team_total']
+            team_totals: ['team_totals', 'team_total'],
+            f5_h2h: ['f5_h2h', 'first_five_h2h', 'first_five_ml', 'f5_ml'],
+            f5_totals: ['f5_totals', 'f5_total', 'first_five_totals', 'first_five_total'],
+            f5_spreads: ['f5_spreads', 'f5_spread', 'first_five_spreads', 'first_five_spread', 'f5_run_line']
         };
         const set = aliases[k];
         return Array.isArray(set) ? set.indexOf(mk) !== -1 : false;
