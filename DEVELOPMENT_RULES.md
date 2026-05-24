@@ -1,5 +1,17 @@
 # TrustMyRecord Development Rules
 
+## SEO Indexing Readiness — every NEW public page (May 23, 2026) — HARD RULE (PERMANENT)
+No new public-facing page (`*/index.html` or top-level `*.html` meant for visitors) is complete until it is indexing-ready. Before marking done, confirm ALL of:
+1. Returns **200** on the live URL (verify after deploy, not just locally).
+2. Not blocked by `robots.txt` (`robots.txt` stays `Allow: /` + `Sitemap:` line; never disallow a content page).
+3. **No `noindex`** robots meta on a real content page. Only utility pages (reset-password, verify-email, report-bug, pure redirect stubs) may carry `noindex,follow`.
+4. **Self-referencing canonical** with the clean trailing-slash URL (e.g. `https://trustmyrecord.com/foo/`), NOT `/foo/index.html`.
+5. Listed in `sitemap.xml`. **Sitemap rule: include only canonical indexable pages.** Never list redirect stubs (`<meta http-equiv="refresh">`), `noindex` pages, or login-gated/user-dynamic shells (profile, my-record, my-pending-picks). Bump `<lastmod>`.
+6. **At least one crawlable inbound internal link** from homepage nav/footer, the `/tools/` hub, or another indexable page. Repoint dead `#` footer links to real pages instead of adding orphans.
+7. Real `<title>` + `<meta name="description">` (no empty/placeholder).
+8. Page is useful to Google without login (server/static content, not login-only).
+Redirect stubs (`/leaderboard/`, `/signup/`, `/make-picks/`, `/directory/`, `/community/`, `/forums/`, `/how-it-works/`) must keep `noindex,follow` + canonical to their target and stay OUT of the sitemap.
+
 ## Profile Header Long-Username Layout (May 23, 2026) — HARD RULE (PERMANENT)
 The public profile masthead (`profile/index.html`, `#profileHeader` grid: left `.profile-info` / right `.profile-rail` stat card) must keep long usernames on ONE line on desktop while the stats panel auto-yields space — never overlap, never an ugly mid-word two-line break on desktop.
 - **Smart grid, not hardcoded positioning.** Governing masthead `<style>` block uses `grid-template-columns: minmax(min-content, 1.05fr) minmax(300px, .95fr)`. The `min-content` left track grows to fit a one-line name, pushing the divider right; the stats panel shrinks to its 300px floor and stays contained. Do NOT revert the left track to `minmax(0, …)` or raise the right floor back to 430px — that re-creates the wrap.
