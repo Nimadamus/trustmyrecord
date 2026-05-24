@@ -14,7 +14,7 @@ for (const required of [
   'tmr-sitewide.js?v=',
   'sortBy=net_units',
   'positive net units',
-  '20 graded picks',
+  '5 graded picks',
   'data-tab="handicappers"',
   'data-tab="trivia"',
   'data-tab="polls"',
