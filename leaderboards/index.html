@@ -1316,7 +1316,7 @@
                 const statClass = function(value) { return value > 0 ? 'pos' : value < 0 ? 'neg' : 'neutral'; };
                 const streakLabel = entry.streak > 0 ? 'W' + entry.streak : entry.streak < 0 ? 'L' + Math.abs(entry.streak) : '0';
                 return '<tr>'
-                    + '<td><span class="rank ' + rankClass + '">#' + (entry.raw.rank || index + 1) + '</span></td>'
+                    + '<td><span class="rank ' + rankClass + '">#' + (index + 1) + '</span></td>'
                     + '<td><div class="person">' + avatarHtml(entry.displayName, entry.avatarUrl)
                     +     '<div class="person-meta">'
                     +       '<a class="person-name" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">' + escapeHtml(entry.displayName) + '</a>'
