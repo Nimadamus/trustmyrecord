@@ -48,7 +48,7 @@ class PersistentAuthSystem {
             if (api.ready) {
                 try { await api.ready; } catch (error) {}
             }
-            if (!api.token && api.refreshToken && typeof api.refreshAccessToken === 'function') {
+            if (this.shouldProactivelyRefresh() && typeof api.refreshAccessToken === 'function') {
                 await api.refreshAccessToken();
             }
             if (typeof api.getCurrentUser !== 'function') return;
@@ -67,13 +67,22 @@ class PersistentAuthSystem {
         }
     }
 
+    // Refresh on load when there IS a refresh token and the access token is
+    // either missing or expired. Falls back to the old "missing token" check
+    // if the API can't self-report expiry.
+    shouldProactivelyRefresh() {
+        if (typeof api === 'undefined' || !api.refreshToken) return false;
+        if (typeof api.isAccessTokenExpired === 'function') return api.isAccessTokenExpired();
+        return !api.token;
+    }
+
     async refreshBackendAccessInBackground() {
         if (typeof api === 'undefined') return;
         try {
             if (api.ready) {
                 try { await api.ready; } catch (error) {}
             }
-            if (!api.token && api.refreshToken && typeof api.refreshAccessToken === 'function') {
+            if (this.shouldProactivelyRefresh() && typeof api.refreshAccessToken === 'function') {
                 await api.refreshAccessToken();
             }
         } catch (error) {

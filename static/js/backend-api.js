@@ -85,6 +85,26 @@ class TrustMyRecordAPI {
             null;
     }
 
+    // True when the access token is missing, malformed, or past (near) its
+    // exp claim. Used to PROACTIVELY refresh on page load instead of waiting
+    // for a 401 - closes the window where a stale 15-min token rides along on
+    // a bootstrap call and an auth gate briefly sees the user as logged out.
+    // A missing token with a live refresh token also counts as "expired" so
+    // the caller refreshes. 30s skew avoids edge races near expiry.
+    isAccessTokenExpired() {
+        const token = this.token;
+        if (!token) return true;
+        try {
+            const part = token.split('.')[1];
+            if (!part) return true;
+            const json = JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/')));
+            if (!json || typeof json.exp !== 'number') return false; // no exp -> treat as non-expiring
+            return (json.exp * 1000) <= (Date.now() + 30000);
+        } catch (error) {
+            return false; // unparseable -> let the 401 path decide, don't force logout
+        }
+    }
+
     saveTokens(token, refreshToken) {
         this.token = token;
         this.refreshToken = refreshToken || null;
