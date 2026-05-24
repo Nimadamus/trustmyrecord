@@ -2091,11 +2091,12 @@ button{font:inherit;cursor:pointer}
 
           <section class="tmr-board-card tmr-activity-card">
             <header><h3>Capper Trend Spotter</h3><a href="/handicappers/">View Public Records</a></header>
+            <p class="tmr-activity-tagline">Not just wins and losses. We detect who is hot, where they are strong, and why their record matters.</p>
             <div id="tmrHeroPicksList" class="tmr-activity-list tmr-activity-empty" aria-live="polite" aria-busy="true">
               <div class="tmr-activity-loading">
                 <span aria-hidden="true">📈</span>
                 <strong>Scanning verified records</strong>
-                <p>The hottest verified streak for each capper shows up here.</p>
+                <p>Hot streaks, sharp angles, and profit windows for each capper show up here.</p>
               </div>
             </div>
             <p class="tmr-activity-trustnote">📊 Highlights are computed from graded, verified picks only.</p>
@@ -2991,6 +2992,13 @@ button{font:inherit;cursor:pointer}
     word-break: break-word;
   }
   /* Capper Trend Spotter highlight lines */
+  .tmr-activity-tagline {
+    margin: 2px 0 10px;
+    color: var(--premium-muted);
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.4;
+  }
   .tmr-trend-line {
     display: block;
     color: var(--premium-green);
@@ -3016,6 +3024,12 @@ button{font:inherit;cursor:pointer}
   .tmr-trend-pill.is-edge { border-color: rgba(55, 214, 193, .42); background: rgba(55, 214, 193, .12); color: var(--premium-teal); }
   .tmr-trend-pill.is-profit { border-color: rgba(255, 209, 102, .45); background: rgba(255, 209, 102, .12); color: #ffd166; }
   .tmr-trend-pill.is-record { border-color: rgba(134, 162, 190, .4); background: rgba(134, 162, 190, .12); color: #b9cbe0; }
+  .tmr-trend-pill.is-surging { border-color: rgba(105, 238, 143, .42); background: rgba(105, 238, 143, .12); color: var(--premium-green); }
+  .tmr-trend-pill.is-totals { border-color: rgba(123, 196, 255, .42); background: rgba(123, 196, 255, .12); color: #7bc4ff; }
+  .tmr-trend-pill.is-underdog { border-color: rgba(190, 150, 255, .42); background: rgba(190, 150, 255, .12); color: #be96ff; }
+  .tmr-trend-pill.is-sharp { border-color: rgba(255, 99, 132, .42); background: rgba(255, 99, 132, .12); color: #ff8fa3; }
+  .tmr-trend-pill.is-volume { border-color: rgba(55, 214, 193, .42); background: rgba(55, 214, 193, .12); color: var(--premium-teal); }
+  .tmr-trend-pill.is-verified { border-color: rgba(134, 162, 190, .4); background: rgba(134, 162, 190, .12); color: #b9cbe0; }
   .tmr-activity-badge {
     flex-shrink: 0;
     padding: 6px 10px;
@@ -4699,6 +4713,33 @@ function escapeHtml(value) {
         return plPicks(total || decided);
     }
 
+    // Realized profit/loss for one settled pick. Mirrors the handicappers page
+    // (prefers backend result_units; falls back to odds + stake). Pending picks
+    // never reach here -> they always score 0 and are excluded upstream.
+    const DAY_MS = 86400000;
+    function pickPL(p) {
+        if (p.result_units != null && p.result_units !== '' && !isNaN(Number(p.result_units))) return Number(p.result_units);
+        const units = Number(p.units || p.stake || 1);
+        const odds = Number(p.odds_snapshot || p.odds || p.price || -110);
+        const st = String(p.status || '').toLowerCase();
+        if (st === 'won') return odds > 0 ? units * odds / 100 : units;
+        if (st === 'lost') return odds < 0 ? -(units * Math.abs(odds) / 100) : -units;
+        return 0;
+    }
+    function oddsOf(p) { return Number(p.odds_snapshot || p.odds || p.price); }
+    function unitsOf(p) { return Number(p.units || p.stake || 1); }
+    function sportEmoji(s) { return { MLB: '⚾', NHL: '🏒', NBA: '🏀', NFL: '🏈' }[s] || '🎯'; }
+    function wl(w, l) { return w + '–' + l; } // en-dash record, e.g. 9–2
+    function wlr(rows) {
+        const dec = rows.filter(function (p) { return p.status !== 'push'; });
+        const w = dec.filter(function (p) { return p.status === 'won'; }).length;
+        return { w: w, l: dec.length - w, n: dec.length, r: dec.length ? w / dec.length : 0 };
+    }
+
+    // Builds EVERY eligible positive, sample-guarded highlight for a capper and
+    // returns the single most interesting one. Each highlight reads like a mini
+    // scouting report: a strong main line + a supporting context line + a badge.
+    // Pending picks are never counted; minimum sample rules block misleading %.
     function computeHighlight(picks, meta) {
         const graded = (picks || [])
             .filter(function (p) { return GRADED[String(p.status || '').toLowerCase()]; })
@@ -4713,11 +4754,7 @@ function escapeHtml(value) {
         const roi = Number(meta && meta.roi);
         const total = Number(meta && meta.total_picks);
         const out = [];
-
-        // 1. Overall active winning streak (>= 3)
-        const ovr = endStreak(graded);
-        if (ovr >= 3) out.push({ score: 1000 + ovr * 10, line: '🔥 Won ' + ovr + ' straight',
-            sub: recordSub(meta, decided, winRate, total), tag: 'STREAK', cls: 'is-streak' });
+        const now = Date.now();
 
         // group helpers
         const byCat = {}, bySport = {};
@@ -4726,70 +4763,136 @@ function escapeHtml(value) {
             const s = sportLabel(p.sport_key); if (s) (bySport[s] = bySport[s] || []).push(p);
         });
 
-        // 2. Bet-type streak (>= 3)
+        // 1. Overall active winning streak (>= 3) -> STREAK
+        const ovr = endStreak(graded);
+        if (ovr >= 3) out.push({ score: 1000 + ovr * 10, line: '🔥 Won ' + ovr + ' straight',
+            sub: recordSub(meta, decided, winRate, total), tag: 'STREAK', cls: 'is-streak' });
+
+        // 2. Sport-specific active streak (>= 3) -> STREAK
+        Object.keys(bySport).forEach(function (s) {
+            const sub = bySport[s]; const st = endStreak(sub);
+            if (st >= 3) out.push({ score: 760 + st * 10, line: sportEmoji(s) + ' ' + st + ' straight ' + s + ' wins',
+                sub: wlr(sub).w + ' wins across ' + sub.length + ' ' + s + ' picks', tag: 'STREAK', cls: 'is-streak' });
+        });
+
+        // 3. Bet-type active streak (>= 3) -> STREAK
         Object.keys(byCat).forEach(function (c) {
             const sub = byCat[c]; const st = endStreak(sub);
             if (st >= 3) {
-                const label = catLabel(c, sub);
-                const dec = sub.filter(function (p) { return p.status !== 'push'; });
-                const w = dec.filter(function (p) { return p.status === 'won'; }).length;
-                const catRate = dec.length ? w / dec.length : 0;
-                // Only brag the category % when it is strong on a real sample;
-                // otherwise show a different positive stat (never a weak number).
-                const catSub = (dec.length >= 5 && catRate >= 0.55) ? pct(catRate) + '% lifetime on ' + label : recordSub(meta, decided, winRate, total);
-                out.push({ score: 850 + st * 10, line: '🔥 Hit last ' + st + ' ' + label, sub: catSub, tag: 'STREAK', cls: 'is-streak' });
+                const label = catLabel(c, sub); const rec = wlr(sub);
+                const catSub = (rec.n >= 5 && rec.r >= 0.55) ? pct(rec.r) + '% lifetime on ' + label : recordSub(meta, decided, winRate, total);
+                out.push({ score: 840 + st * 10, line: '🔥 Hit last ' + st + ' ' + label, sub: catSub, tag: 'STREAK', cls: 'is-streak' });
             }
         });
 
-        // 3. Sport-specific streak (>= 3)
+        // 4. Recent hot form: best W–L window over last 20 / 12 / 10 / 8 / 5
+        // (>= 5 settled, >= 4 wins, >= 60%). Reads "📈 9–2 over last 11 picks".
+        [20, 12, 10, 8, 5].forEach(function (n) {
+            const rec = wlr(graded.slice(-n));
+            if (rec.n >= 5 && rec.w >= 4 && rec.r >= 0.6) {
+                const hot = rec.r >= 0.75;
+                out.push({ score: 600 + rec.r * 120 + rec.n, line: '📈 ' + wl(rec.w, rec.l) + ' over last ' + rec.n + ' picks',
+                    sub: pct(rec.r) + '% recent form across verified plays', tag: hot ? 'HOT' : 'SURGING', cls: hot ? 'is-hot' : 'is-surging' });
+            }
+        });
+
+        // 5. Per-sport recent record (last 15, >= 6 settled, >= 60%) -> HOT
         Object.keys(bySport).forEach(function (s) {
-            const sub = bySport[s]; const st = endStreak(sub);
-            if (st >= 3) out.push({ score: 750 + st * 10, line: '🔥 ' + st + ' straight ' + s + ' winners',
-                sub: sub.length + ' tracked ' + s + ' picks', tag: 'STREAK', cls: 'is-streak' });
+            const rec = wlr(bySport[s].slice(-15));
+            if (rec.n >= 6 && rec.r >= 0.6) out.push({ score: 700 + rec.r * 100 + rec.n,
+                line: sportEmoji(s) + ' ' + wl(rec.w, rec.l) + ' last ' + rec.n + ' ' + s + ' picks',
+                sub: pct(rec.r) + '% in ' + s, tag: 'HOT', cls: 'is-hot' });
         });
 
-        // 4. Recent hot form over last 10 / 8 / 5 (>= 60%, >= 4 wins)
-        [10, 8, 5].forEach(function (n) {
-            const last = graded.slice(-n).filter(function (p) { return p.status !== 'push'; });
-            if (last.length >= Math.min(5, n)) {
-                const w = last.filter(function (p) { return p.status === 'won'; }).length;
-                const r = w / last.length;
-                if (r >= 0.6 && w >= 4) out.push({ score: 600 + r * 100 + last.length, line: '📈 ' + w + ' of last ' + last.length + ' won',
-                    sub: pct(r) + '% recent form', tag: 'HOT', cls: 'is-hot' });
-            }
-        });
-
-        // 6. Category win rate (>= 5 graded, >= 60%)
+        // 6. Category record (>= 5 settled, >= 60%) -> TOTALS / EDGE
         Object.keys(byCat).forEach(function (c) {
-            const dec = byCat[c].filter(function (p) { return p.status !== 'push'; });
-            if (dec.length >= 5) {
-                const w = dec.filter(function (p) { return p.status === 'won'; }).length;
-                const r = w / dec.length;
-                if (r >= 0.6) { const label = catLabel(c, byCat[c]);
-                    out.push({ score: 500 + r * 100, line: '🎯 ' + pct(r) + '% on ' + label, sub: dec.length + ' graded ' + label, tag: 'EDGE', cls: 'is-edge' }); }
-            }
-        });
-        // sport win rate (>= 5 graded, >= 60%)
-        Object.keys(bySport).forEach(function (s) {
-            const dec = bySport[s].filter(function (p) { return p.status !== 'push'; });
-            if (dec.length >= 5) {
-                const w = dec.filter(function (p) { return p.status === 'won'; }).length;
-                const r = w / dec.length;
-                if (r >= 0.6) out.push({ score: 480 + r * 100, line: '🎯 ' + pct(r) + '% on ' + s, sub: dec.length + ' graded ' + s + ' picks', tag: 'EDGE', cls: 'is-edge' });
+            const rec = wlr(byCat[c]);
+            if (rec.n >= 5 && rec.r >= 0.6) {
+                const cs = dominantSport(byCat[c]); const label = catLabel(c, byCat[c]);
+                const isTot = c === 'totals' || c === 'team_totals';
+                out.push({ score: 500 + rec.r * 100 + rec.n,
+                    line: (cs ? sportEmoji(cs) : '🎯') + ' ' + wl(rec.w, rec.l) + ' on ' + (cs ? cs + ' ' : '') + label,
+                    sub: pct(rec.r) + '% on ' + label, tag: isTot ? 'TOTALS' : 'EDGE', cls: isTot ? 'is-totals' : 'is-edge' });
             }
         });
 
-        // 5. Strong lifetime units / ROI (authoritative totals from /users).
-        // ROI % only shown on a meaningful sample so 1-pick brags never appear.
+        // 7. Per-sport win rate (>= 6 settled, >= 60%) -> EDGE
+        Object.keys(bySport).forEach(function (s) {
+            const rec = wlr(bySport[s]);
+            if (rec.n >= 6 && rec.r >= 0.6) out.push({ score: 480 + rec.r * 100,
+                line: '🎯 ' + pct(rec.r) + '% on ' + s, sub: wl(rec.w, rec.l) + ' across ' + rec.n + ' ' + s + ' picks', tag: 'EDGE', cls: 'is-edge' });
+        });
+
+        // 8. Underdog / plus-money performance (odds > 0, >= 5 settled) -> UNDERDOG
+        const dogs = graded.filter(function (p) { return oddsOf(p) > 0; });
+        if (dogs.length) {
+            const rec = wlr(dogs);
+            const dogNet = dogs.reduce(function (t, p) { return t + pickPL(p); }, 0);
+            if (rec.n >= 5 && (rec.r >= 0.5 || dogNet >= 1)) {
+                if (dogNet >= 1) out.push({ score: 540 + dogNet, line: '💰 ' + signedUnits(dogNet) + ' on underdogs',
+                    sub: wl(rec.w, rec.l) + ' on plus-money plays', tag: 'UNDERDOG', cls: 'is-underdog' });
+                else out.push({ score: 520 + rec.r * 100, line: '🧊 ' + wl(rec.w, rec.l) + ' on plus-money plays',
+                    sub: pct(rec.r) + '% on underdogs', tag: 'UNDERDOG', cls: 'is-underdog' });
+            }
+        }
+
+        // 9. High-confidence 2u+ plays (>= 3 settled, >= 60%) -> SHARP
+        const big = graded.filter(function (p) { return unitsOf(p) >= 2; });
+        if (big.length) {
+            const rec = wlr(big);
+            if (rec.n >= 3 && rec.r >= 0.6) out.push({ score: 560 + rec.r * 80 + rec.n,
+                line: '🔒 ' + wl(rec.w, rec.l) + ' on 2u+ plays', sub: 'High-confidence verified plays', tag: 'SHARP', cls: 'is-sharp' });
+        }
+
+        // 10. Favorites win rate (odds < 0, >= 10 settled, >= 62%) -> SHARP
+        const favs = graded.filter(function (p) { return oddsOf(p) < 0; });
+        if (favs.length) {
+            const rec = wlr(favs);
+            if (rec.n >= 10 && rec.r >= 0.62) out.push({ score: 470 + rec.r * 100,
+                line: '🔒 ' + pct(rec.r) + '% on favorites', sub: wl(rec.w, rec.l) + ' on ' + rec.n + ' favorites', tag: 'SHARP', cls: 'is-sharp' });
+        }
+
+        // 11. Last 30-day units (>= 3 settled, positive) -> SURGING
+        const w30 = graded.filter(function (p) { return now - pickDate(p) <= 30 * DAY_MS; });
+        if (w30.length >= 3) {
+            const u30 = w30.reduce(function (t, p) { return t + pickPL(p); }, 0);
+            if (u30 >= 1) out.push({ score: 580 + u30, line: '📈 ' + signedUnits(u30) + ' over last 30 days',
+                sub: w30.length + ' verified picks tracked', tag: 'SURGING', cls: 'is-surging' });
+        }
+
+        // 12. Last 7-day units / volume -> SURGING / VOLUME
+        const w7 = graded.filter(function (p) { return now - pickDate(p) <= 7 * DAY_MS; });
+        if (w7.length >= 2) {
+            const u7 = w7.reduce(function (t, p) { return t + pickPL(p); }, 0);
+            if (u7 >= 1) out.push({ score: 540 + u7, line: '📈 ' + signedUnits(u7) + ' this week',
+                sub: w7.length + ' verified picks this week', tag: 'SURGING', cls: 'is-surging' });
+        }
+        if (w7.length >= 5) out.push({ score: 400 + w7.length, line: '🚀 ' + w7.length + ' verified picks this week',
+            sub: 'High tracked volume this week', tag: 'VOLUME', cls: 'is-volume' });
+
+        // 13. Strong lifetime units (authoritative totals from /users) -> PROFIT
         if (Number.isFinite(net) && net >= 3) out.push({ score: 300 + net, line: '💰 ' + signedUnits(net) + ' lifetime',
             sub: (decided >= 5 && Number.isFinite(roi)) ? signedPct(roi) + ' ROI' : plPicks(total || decided), tag: 'PROFIT', cls: 'is-profit' });
 
-        // 7. Positive fallback only (never a losing record)
+        // 14. ROI over a meaningful sample (>= 20 settled, >= 5% ROI) -> PROFIT
+        if (decided >= 20 && Number.isFinite(roi) && roi >= 5) out.push({ score: 460 + roi,
+            line: '📊 ' + signedPct(roi) + ' ROI across ' + (total || decided) + ' picks', sub: 'Sustained edge on a real sample', tag: 'PROFIT', cls: 'is-profit' });
+
+        // 15. Long-term verified volume milestone (>= 25 settled) -> VERIFIED / VOLUME
+        const vol = total || decided;
+        if (vol >= 25) out.push({ score: 200 + Math.min(vol, 150), line: '🚀 ' + vol + ' verified picks tracked',
+            sub: 'Long-term verified track record', tag: vol >= 100 ? 'VERIFIED' : 'VOLUME', cls: vol >= 100 ? 'is-verified' : 'is-volume' });
+
+        // 16. Positive fallback only (never a losing record)
         if (!out.length) {
             if (Number.isFinite(net) && net > 0) out.push({ score: 100 + net, line: '✅ ' + signedUnits(net) + ' overall',
                 sub: plPicks(total || decided), tag: 'PROFIT', cls: 'is-profit' });
-            else if (decided >= 5 && winRate >= 0.5) out.push({ score: 50 + winRate * 100, line: '✅ ' + pct(winRate) + '% win rate',
-                sub: wins + '-' + losses + ' verified record', tag: 'RECORD', cls: 'is-record' });
+            else if (decided >= 5 && winRate >= 0.5) out.push({ score: 80 + winRate * 100, line: '✅ ' + wl(wins, losses) + ' verified record',
+                sub: pct(winRate) + '% win rate', tag: 'RECORD', cls: 'is-record' });
+            else if (wins >= 1) out.push({ score: 40, line: '✅ First verified ' + (wins === 1 ? 'win' : 'wins') + ' logged',
+                sub: plPicks(total || decided), tag: 'VERIFIED', cls: 'is-verified' });
+            else if (decided >= 1 || total >= 1) out.push({ score: 20, line: '✨ New verified capper',
+                sub: plPicks(total || decided) + ' tracked', tag: 'VERIFIED', cls: 'is-verified' });
         }
 
         if (!out.length) return null; // no positive trend -> skip this capper
@@ -4830,11 +4933,11 @@ function escapeHtml(value) {
 
     async function buildTrendSpotter(users, bust) {
         // Candidate cappers: real users with at least one graded pick, richest
-        // records first. Cap fan-out at 12 lookups, display up to 10 winners.
+        // records first. Cap fan-out at 16 lookups, display up to 8 winners.
         const candidates = (users || [])
             .filter(function (u) { return u && u.username && number(u.total_picks || u.totalPicks, 0) > 0; })
             .sort(function (a, b) { return number(b.net_units || b.netUnits, -Infinity) - number(a.net_units || a.netUnits, -Infinity); })
-            .slice(0, 12);
+            .slice(0, 16);
 
         const results = await Promise.all(candidates.map(async function (u) {
             try {
@@ -4857,7 +4960,7 @@ function escapeHtml(value) {
 
         const entries = results.filter(Boolean)
             .sort(function (a, b) { return b.highlight.score - a.highlight.score; })
-            .slice(0, 10);
+            .slice(0, 8);
         renderTrendSpotter(entries);
     }
 
