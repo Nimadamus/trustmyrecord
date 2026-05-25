@@ -15,6 +15,7 @@
     const communityRoutes = [
         ["/feed/", "Feed"],
         ["/online-gaming/", "Online Gaming"],
+        ["/mlb-the-show-stat-league/", "Stat League"],
         ["/arena/", "Arena"],
         ["/challenges/", "Challenges"],
         ["/forum/", "Forums"],
@@ -27,7 +28,7 @@
     // Pages that should highlight Arena in the top nav even though they
     // have their own URL.
     const ARENA_GROUP = new Set(["arena.html"]);
-    const COMMUNITY_GROUP = new Set(["feed.html", "online-gaming.html", "arena.html", "challenges.html", "forum.html", "polls.html", "trivia.html", "hangout.html"]);
+    const COMMUNITY_GROUP = new Set(["feed.html", "online-gaming.html", "mlb-the-show-stat-league.html", "arena.html", "challenges.html", "forum.html", "polls.html", "trivia.html", "hangout.html"]);
 
     const routeMeta = {
         "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
