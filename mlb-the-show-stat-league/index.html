@@ -116,14 +116,47 @@
         .sl-cta p { margin: 16px auto 28px; max-width: 620px; color: var(--text-dim); font-size: 1.08rem; line-height: 1.65; }
         .sl-beta-note { margin-top: 22px; font-size: 0.88rem; color: var(--text-muted); }
 
+        /* SIGNUP FORM */
+        .sl-form-wrap { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: 22px; align-items: start; }
+        .sl-form-card, .sl-list-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 28px; }
+        .sl-form-card h3, .sl-list-card h3 { font-family: var(--font-display); font-weight: 800; font-size: 1.2rem; margin-bottom: 6px; }
+        .sl-form-card .hint, .sl-list-card .hint { color: var(--text-dim); font-size: 0.9rem; margin-bottom: 20px; line-height: 1.5; }
+        .sl-field { margin-bottom: 16px; }
+        .sl-field label { display: block; font-size: 0.82rem; font-weight: 700; color: var(--text); margin-bottom: 7px; letter-spacing: 0.02em; }
+        .sl-field label .opt { color: var(--text-muted); font-weight: 500; text-transform: none; }
+        .sl-field input, .sl-field select, .sl-field textarea { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+            color: var(--text); font-family: var(--font-body); font-size: 0.95rem; transition: border-color .15s; }
+        .sl-field input:focus, .sl-field select:focus, .sl-field textarea:focus { outline: none; border-color: var(--primary); }
+        .sl-field textarea { resize: vertical; min-height: 64px; }
+        .sl-form-card .btn { width: 100%; justify-content: center; margin-top: 6px; }
+        .sl-form-msg { margin-top: 14px; font-size: 0.9rem; font-weight: 600; min-height: 1.2em; }
+        .sl-form-msg.ok { color: var(--accent-green); }
+        .sl-form-msg.err { color: var(--accent-red); }
+        .sl-priv { margin-top: 14px; font-size: 0.78rem; color: var(--text-muted); display: flex; gap: 7px; align-items: flex-start; }
+        .sl-priv i { color: var(--accent-green); margin-top: 2px; }
+
+        /* SIGNUP LIST */
+        .sl-list-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 18px; }
+        .sl-list-head .count { font-family: var(--font-display); font-weight: 800; color: var(--accent-gold); font-size: 0.95rem; }
+        .sl-signups { list-style: none; display: grid; gap: 10px; max-height: 460px; overflow-y: auto; }
+        .sl-signup { display: grid; grid-template-columns: 40px 1fr auto; gap: 12px; align-items: center; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+        .sl-signup .av { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-display); font-weight: 800; color: #06121a; background: linear-gradient(135deg, #00aeff, #a855f7); font-size: 1rem; }
+        .sl-signup .who { min-width: 0; }
+        .sl-signup .name { font-weight: 800; color: var(--text); font-size: 0.98rem; }
+        .sl-signup .meta { color: var(--text-dim); font-size: 0.8rem; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .sl-signup .tag { padding: 4px 10px; border-radius: 999px; background: var(--primary-dim); border: 1px solid rgba(0,174,255,0.3); color: #bfe9ff; font-size: 0.74rem; font-weight: 700; white-space: nowrap; }
+        .sl-empty { text-align: center; color: var(--text-dim); padding: 40px 16px; border: 1px dashed var(--border); border-radius: 12px; }
+        .sl-empty i { font-size: 1.6rem; color: var(--text-muted); display: block; margin-bottom: 10px; }
+
         @media (max-width: 900px) {
             .sl-steps { grid-template-columns: repeat(2, 1fr); }
             .sl-cards { grid-template-columns: repeat(2, 1fr); }
+            .sl-form-wrap { grid-template-columns: 1fr; }
         }
         @media (max-width: 560px) {
             .sl-hero { padding: 40px 22px; }
             .sl-steps, .sl-cards { grid-template-columns: 1fr; }
-            .sl-intro, .sl-sickos, .sl-cta { padding: 28px 22px; }
+            .sl-intro, .sl-sickos, .sl-cta, .sl-form-card, .sl-list-card { padding: 24px 20px; }
         }
     </style>
 </head>
@@ -139,7 +172,7 @@
         <h1>Join the <span class="gold">MLB The Show</span> <span class="blue">Stat League</span></h1>
         <p class="sub">Play real online games. Upload your box scores. Build a permanent public record.</p>
         <div class="sl-hero-actions">
-            <a class="btn btn-gold" href="/register/"><i class="fas fa-user-plus"></i> Join the Stat League</a>
+            <a class="btn btn-gold" href="#join-form"><i class="fas fa-user-plus"></i> Join the Stat League</a>
             <a class="btn btn-outline" href="#how-it-works"><i class="fas fa-list-ol"></i> See How It Works</a>
         </div>
     </section>
@@ -228,6 +261,60 @@
         </div>
     </section>
 
+    <!-- SIGNUP FORM + PUBLIC LIST -->
+    <section class="sl-section" id="join-form">
+        <div class="sl-section-head">
+            <h2>Join the <span class="gold">MLB The Show Stat League</span></h2>
+            <p>Add your name to the first version of the league. Submitted players appear in the public list, your record gets built from there.</p>
+        </div>
+        <div class="sl-form-wrap">
+            <div class="sl-form-card">
+                <h3>Sign Up</h3>
+                <p class="hint">Drop your details and you are on the board. We will reach out with matchups as the first season fills up.</p>
+                <form id="slSignupForm" autocomplete="off" novalidate>
+                    <div class="sl-field">
+                        <label for="slName">Display Name / Account Name</label>
+                        <input type="text" id="slName" name="display_name" maxlength="60" placeholder="e.g. StatLordMike" required>
+                    </div>
+                    <div class="sl-field">
+                        <label for="slPlatform">Platform / Console</label>
+                        <select id="slPlatform" name="platform">
+                            <option value="">Select platform</option>
+                            <option value="PlayStation 5">PlayStation 5</option>
+                            <option value="PlayStation 4">PlayStation 4</option>
+                            <option value="Xbox Series X|S">Xbox Series X|S</option>
+                            <option value="Xbox One">Xbox One</option>
+                            <option value="PC">PC</option>
+                            <option value="Nintendo Switch">Nintendo Switch</option>
+                            <option value="Cross-Platform">Cross-Platform</option>
+                        </select>
+                    </div>
+                    <div class="sl-field">
+                        <label for="slTag">Gamer Tag / PSN / Xbox Name</label>
+                        <input type="text" id="slTag" name="gamer_tag" maxlength="60" placeholder="e.g. PSN_StatLord" required>
+                    </div>
+                    <div class="sl-field">
+                        <label for="slNote">Note <span class="opt">(optional)</span></label>
+                        <textarea id="slNote" name="note" maxlength="280" placeholder="Favorite team, rivalry callouts, availability..."></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-gold" id="slSubmit"><i class="fas fa-baseball-bat-ball"></i> Join the Stat League</button>
+                    <div class="sl-form-msg" id="slMsg" role="status" aria-live="polite"></div>
+                    <div class="sl-priv"><i class="fas fa-lock"></i> <span>No email collected here, no sensitive data shown publicly. Only your display name, platform, gamer tag, and optional note appear on the list.</span></div>
+                </form>
+            </div>
+            <div class="sl-list-card">
+                <div class="sl-list-head">
+                    <h3>Signed-Up Players</h3>
+                    <span class="count" id="slCount"></span>
+                </div>
+                <p class="hint">Live roster of everyone who has joined the first version of the league.</p>
+                <ul class="sl-signups" id="slList" aria-live="polite">
+                    <li class="sl-empty" id="slLoading"><i class="fas fa-spinner fa-spin"></i> Loading players...</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA -->
     <section class="sl-cta" id="join">
         <h2>Want <span class="gold">In?</span></h2>
@@ -237,6 +324,100 @@
     </section>
 
 </main>
+
+<script>
+(function () {
+    var API = 'https://trustmyrecord-api.onrender.com';
+    var listEl = document.getElementById('slList');
+    var countEl = document.getElementById('slCount');
+    var form = document.getElementById('slSignupForm');
+    var msg = document.getElementById('slMsg');
+    var submitBtn = document.getElementById('slSubmit');
+
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    function initials(name) {
+        var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return '?';
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    function emptyState() {
+        return '<li class="sl-empty"><i class="fas fa-baseball-bat-ball"></i>No players signed up yet. Be the first to join.</li>';
+    }
+    function rowHtml(s) {
+        var meta = [];
+        if (s.platform) meta.push(esc(s.platform));
+        if (s.note) meta.push(esc(s.note));
+        return '<li class="sl-signup">' +
+            '<span class="av">' + esc(initials(s.display_name)) + '</span>' +
+            '<span class="who"><span class="name">' + esc(s.display_name) + '</span>' +
+            (meta.length ? '<span class="meta">' + meta.join(' &middot; ') + '</span>' : '') + '</span>' +
+            (s.gamer_tag ? '<span class="tag">' + esc(s.gamer_tag) + '</span>' : '') +
+            '</li>';
+    }
+    function render(signups) {
+        if (!signups || !signups.length) {
+            listEl.innerHTML = emptyState();
+            countEl.textContent = '';
+            return;
+        }
+        countEl.textContent = signups.length + (signups.length === 1 ? ' player' : ' players');
+        listEl.innerHTML = signups.map(rowHtml).join('');
+    }
+    function loadSignups() {
+        return fetch(API + '/api/gaming/stat-league/signups?_=' + Date.now())
+            .then(function (r) { return r.ok ? r.json() : { signups: [] }; })
+            .then(function (d) { render(d.signups || []); })
+            .catch(function () { listEl.innerHTML = emptyState(); countEl.textContent = ''; });
+    }
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        msg.className = 'sl-form-msg';
+        msg.textContent = '';
+        var body = {
+            display_name: document.getElementById('slName').value.trim(),
+            platform: document.getElementById('slPlatform').value,
+            gamer_tag: document.getElementById('slTag').value.trim(),
+            note: document.getElementById('slNote').value.trim()
+        };
+        if (!body.display_name) { msg.className = 'sl-form-msg err'; msg.textContent = 'Display name is required.'; return; }
+        if (!body.gamer_tag) { msg.className = 'sl-form-msg err'; msg.textContent = 'Gamer tag is required.'; return; }
+        submitBtn.disabled = true;
+        var original = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Joining...';
+        fetch(API + '/api/gaming/stat-league/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        }).then(function (r) {
+            return r.json().then(function (d) { return { ok: r.ok, status: r.status, d: d }; });
+        }).then(function (res) {
+            if (res.ok) {
+                msg.className = 'sl-form-msg ok';
+                msg.textContent = 'You are on the board. Welcome to the league!';
+                form.reset();
+                loadSignups();
+            } else {
+                msg.className = 'sl-form-msg err';
+                msg.textContent = (res.d && res.d.error) ? res.d.error : 'Could not submit. Please try again.';
+            }
+        }).catch(function () {
+            msg.className = 'sl-form-msg err';
+            msg.textContent = 'Network error. Please try again.';
+        }).then(function () {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = original;
+        });
+    });
+
+    loadSignups();
+})();
+</script>
 
 </body>
 </html>
