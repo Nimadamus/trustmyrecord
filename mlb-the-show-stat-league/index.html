@@ -148,6 +148,16 @@
         .sl-empty { text-align: center; color: var(--text-dim); padding: 40px 16px; border: 1px dashed var(--border); border-radius: 12px; }
         .sl-empty i { font-size: 1.6rem; color: var(--text-muted); display: block; margin-bottom: 10px; }
 
+        /* LEADERBOARD PREVIEW */
+        .sl-lb-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 28px; position: relative; }
+        .sl-lb-badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 999px; background: rgba(255,215,0,0.1); border: 1px solid rgba(255,215,0,0.3); color: var(--accent-gold); font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 16px; }
+        .sl-lb-scroll { overflow-x: auto; }
+        .sl-lb-table { width: 100%; border-collapse: collapse; min-width: 560px; }
+        .sl-lb-table th { text-align: left; font-family: var(--font-display); font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-dim); padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        .sl-lb-table th:first-child { color: var(--text); }
+        .sl-lb-soon td { padding: 34px 14px; text-align: center; color: var(--text-muted); font-size: 0.92rem; }
+        .sl-lb-soon i { color: var(--text-dim); margin-right: 7px; }
+
         @media (max-width: 900px) {
             .sl-steps { grid-template-columns: repeat(2, 1fr); }
             .sl-cards { grid-template-columns: repeat(2, 1fr); }
@@ -271,6 +281,7 @@
             <div class="sl-form-card">
                 <h3>Sign Up</h3>
                 <p class="hint">Drop your details and you are on the board. We will reach out with matchups as the first season fills up.</p>
+                <p class="hint" style="margin-bottom:20px;">Once enough players join, we'll post matchup rules, box score upload instructions, standings, and season format.</p>
                 <form id="slSignupForm" autocomplete="off" novalidate>
                     <div class="sl-field">
                         <label for="slName">Display Name / Account Name</label>
@@ -299,7 +310,7 @@
                     </div>
                     <button type="submit" class="btn btn-gold" id="slSubmit"><i class="fas fa-baseball-bat-ball"></i> Join the Stat League</button>
                     <div class="sl-form-msg" id="slMsg" role="status" aria-live="polite"></div>
-                    <div class="sl-priv"><i class="fas fa-lock"></i> <span>No email collected here, no sensitive data shown publicly. Only your display name, platform, gamer tag, and optional note appear on the list.</span></div>
+                    <div class="sl-priv"><i class="fas fa-lock"></i> <span>No money, no deposit, no spam. This is free to join. We don't collect an email here, and only your display name, platform, gamer tag, and optional note are ever shown publicly.</span></div>
                 </form>
             </div>
             <div class="sl-list-card">
@@ -315,11 +326,40 @@
         </div>
     </section>
 
+    <!-- LEADERBOARD PREVIEW (headers only, no data yet) -->
+    <section class="sl-section" id="leaderboard-preview">
+        <div class="sl-section-head">
+            <h2>League <span class="gold">Leaderboard</span></h2>
+            <p>A preview of the standings table. It fills in with real, verified numbers once box scores start coming in.</p>
+        </div>
+        <div class="sl-lb-card">
+            <span class="sl-lb-badge"><i class="fas fa-clock"></i> Coming Soon</span>
+            <div class="sl-lb-scroll">
+                <table class="sl-lb-table">
+                    <thead>
+                        <tr>
+                            <th>Player</th>
+                            <th>Record</th>
+                            <th>Runs For</th>
+                            <th>Runs Against</th>
+                            <th>HR</th>
+                            <th>ERA</th>
+                            <th>OPS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="sl-lb-soon"><td colspan="7"><i class="fas fa-baseball-bat-ball"></i> Standings populate from verified box scores once the first matchups are played.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
     <!-- CTA -->
     <section class="sl-cta" id="join">
         <h2>Want <span class="gold">In?</span></h2>
         <p>We are looking for MLB The Show players who want to join the first version of the league. If you want your games tracked, your stats posted, and your record publicly verified, join now.</p>
-        <a class="btn btn-gold" href="/register/"><i class="fas fa-user-plus"></i> Join the MLB The Show Stat League</a>
+        <a class="btn btn-gold" href="#join-form"><i class="fas fa-user-plus"></i> Join the MLB The Show Stat League</a>
         <div class="sl-beta-note">This is an upcoming community league. Join the first version and help shape it. No fake stats, no fake records, just verified results.</div>
     </section>
 
@@ -346,7 +386,7 @@
         return (parts[0][0] + parts[1][0]).toUpperCase();
     }
     function emptyState() {
-        return '<li class="sl-empty"><i class="fas fa-baseball-bat-ball"></i>No players signed up yet. Be the first to join.</li>';
+        return '<li class="sl-empty"><i class="fas fa-baseball-bat-ball"></i>No players are on the board yet. First wave signups get priority when matchups open.</li>';
     }
     function rowHtml(s) {
         var meta = [];
