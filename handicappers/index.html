@@ -1193,7 +1193,11 @@
                 /(?:^|[_-])(qa|generated|fake|junk|internal)(?:[_-]|\d|$)/,
                 /^(?:errtest|multitest|loginprobe|uilogin|domlogin)[_-]?\d+$/,
                 /^remember(?:poll|flow)?(?:[_-]?\d+)+$/,
-                /^(?:diag|pickdiag|inspectopt|d404)\d*/
+                /^(?:diag|pickdiag|inspectopt|d404)\d*/,
+                // tmr* / e2e internal + QA automation accounts
+                /^tmr(?:test|qa|e2e|verify|check|flow|proof|hard|probe|tokens|live|fast|nhl|tennis|hangout|login)/,
+                /(?:^|[_-])e2e(?:[_-]|\d|$)/,
+                /^qa[_-]/
             ];
 
             return !testPatterns.some(pattern => pattern.test(username) || pattern.test(display));
