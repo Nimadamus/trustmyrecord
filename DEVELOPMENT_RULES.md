@@ -1,5 +1,14 @@
 # TrustMyRecord Development Rules
 
+## Homepage Removal Verification Workflow — verify the LIVE PUBLIC URL, not the origin (May 25, 2026) — HARD RULE (PERMANENT)
+trustmyrecord.com is served by GitHub Pages **behind Cloudflare**. A removal is NOT done when the repo/origin is clean — it is done only when the live public URL no longer serves the strings. Mandatory steps for any homepage section removal:
+1. Edit `index.html`, deploy (Contents API), wait for `gh api repos/Nimadamus/trustmyrecord/pages/builds/latest` → `status:"built"`.
+2. Verify the LIVE PUBLIC URL (through Cloudflare), e.g.: `curl -s https://trustmyrecord.com/ | grep -c "<exact removed string>"` must be `0` for EVERY removed string. Repeat for all of them, not just one.
+3. Cross-check from an independent network: `curl -s "https://r.jina.ai/https://trustmyrecord.com/" | grep -ci "<string>"` (WebFetch is 403-blocked by Cloudflare). Optionally bypass Cloudflare to the origin with `curl --resolve trustmyrecord.com:443:185.199.108.153 ...`.
+4. If origin is clean but the live URL still serves the old strings, **Cloudflare is caching** → purge it. There is no Cloudflare API token in the repo/CLAUDE.md; either (a) obtain a `CLOUDFLARE_API_TOKEN` + zone id and run `POST https://api.cloudflare.com/client/v4/zones/<zone>/purge_cache -d '{"purge_everything":true}'`, or (b) purge from the Cloudflare dashboard (Caching → Purge Everything). `cf-cache-status: DYNAMIC` means Cloudflare is NOT caching that response (passthrough); a `HIT` means it is.
+5. Browser cache is the LAST explanation, never the first — only after the curl-through-Cloudflare check returns 0 may a remaining user sighting be attributed to their browser (hard refresh / incognito).
+Reference: [[reference_tmr_homepage_structure_and_deploy]].
+
 ## Homepage Has ONE Header, ONE Hero, ONE Footer — no stacked legacy homepage (May 24, 2026) — HARD RULE (PERMANENT)
 `index.html` must render exactly ONE of each: one site header, one above-the-fold hero/top section, one footer. The current homepage top is `<main class="tmr-premium-home">` (hero + live leaderboard + Capper Trend Spotter), followed by a SHORT set of focused sections only: beta-strip community links (`.tmr-home-beta-strip`), How It Works (`.tmr-loop`), the short trust line (`.tmr-integrity`), Features/community (`.tmr-features`), Final CTA (`.tmr-final`), Latest Updates, and the footer. Nothing else structural.
 - The site header is the global nav (`.tmr-global-nav`) and the site footer is `.tmr-global-footer`, BOTH injected by `static/js/tmr-sitewide.js`. Do NOT add a per-page `<header class="header">` or `<footer class="footer">` to `index.html`.
