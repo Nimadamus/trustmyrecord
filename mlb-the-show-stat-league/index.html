@@ -338,7 +338,7 @@
     <section class="sl-section" id="leaderboard-preview">
         <div class="sl-section-head">
             <h2>League <span class="gold">Leaderboard</span></h2>
-            <p>Live standings for MLB The Show. Records and runs come straight from confirmed match results, home runs, ERA, and OPS fill in as box scores are logged.</p>
+            <p>Live standings for MLB The Show. Records, runs, and home runs come straight from confirmed match results and box scores.</p>
         </div>
         <div class="sl-lb-card">
             <span class="sl-lb-badge" id="slLbBadge"><i class="fas fa-circle-notch fa-spin"></i> Loading Standings</span>
@@ -351,12 +351,10 @@
                             <th>Runs For</th>
                             <th>Runs Against</th>
                             <th>HR</th>
-                            <th>ERA</th>
-                            <th>OPS</th>
                         </tr>
                     </thead>
                     <tbody id="slLbBody">
-                        <tr class="sl-lb-soon"><td colspan="7"><i class="fas fa-circle-notch fa-spin"></i> Loading standings...</td></tr>
+                        <tr class="sl-lb-soon"><td colspan="5"><i class="fas fa-circle-notch fa-spin"></i> Loading standings...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -483,21 +481,17 @@
         var record = wins + '-' + losses + (draws ? '-' + draws : '');
         var agg = r.aggregate_stats || {};
         var hr = statVal(agg, ['home_runs', 'hr']);
-        var era = statVal(agg, ['era', 'ERA']);
-        var ops = statVal(agg, ['ops', 'OPS']);
-        function cell(v) { return v === null ? '<span class="sl-lb-dim">--</span>' : esc(v); }
+        function cell(v) { return (v === null || v === undefined) ? '<span class="sl-lb-dim">--</span>' : esc(v); }
         return '<tr>' +
             '<td class="sl-lb-player"><span class="sl-lb-rank">' + (i + 1) + '</span>' + nameCell + '</td>' +
             '<td>' + esc(record) + '</td>' +
             '<td>' + esc(r.total_points_for || 0) + '</td>' +
             '<td>' + esc(r.total_points_against || 0) + '</td>' +
             '<td>' + cell(hr) + '</td>' +
-            '<td>' + cell(era) + '</td>' +
-            '<td>' + cell(ops) + '</td>' +
             '</tr>';
     }
     function lbEmpty() {
-        return '<tr class="sl-lb-soon"><td colspan="7"><i class="fas fa-baseball-bat-ball"></i> No standings yet. First wave signups get priority when matchups open, play a confirmed game to land on the board.</td></tr>';
+        return '<tr class="sl-lb-soon"><td colspan="5"><i class="fas fa-baseball-bat-ball"></i> No standings yet. First wave signups get priority when matchups open, play a confirmed game to land on the board.</td></tr>';
     }
     function loadLeaderboard() {
         return fetch(API + '/api/gaming/leaderboard?game=mlb-the-show-26&sort=wins&limit=25&_=' + Date.now())
