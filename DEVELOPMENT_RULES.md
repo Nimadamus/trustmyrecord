@@ -1,5 +1,13 @@
 # TrustMyRecord Development Rules
 
+## Gaming Acquisition Page Standard (May 25, 2026) — STANDARD
+New gaming-vertical landing/recruit pages (Arena, Online Gaming, MLB The Show Stat League, future game leagues) follow this template. Reference impl: `/mlb-the-show-stat-league/` (commit `99b8cebb`).
+- Dir-style URL `/<keyword-slug>/index.html`; canonical, SEO `<title>` + meta description, OG tags, GA snippet, favicon.
+- Load `tmr-sitewide.css` + `tmr-sitewide.js` and use `<body class="tmr-site-shell">`; the global nav + footer inject automatically — do NOT hardcode a per-page header/footer.
+- Self-contained `<style>` using the dark sportsbook tokens (`--bg-dark` `#0a0a0f`, `--primary` `#00aeff`, `--accent-gold` `#ffd700`, Barlow display / Inter body). Mobile: stacked single-column under 560px, grids collapse 4→2→1.
+- No fake users/stats/records. Frame any unlaunched league as "upcoming/community — join the first version". CTA → `/register/` (or the real signup/join route if one exists).
+- NOT AN ORPHAN: every gaming page needs (a) a `communityRoutes` nav entry + `COMMUNITY_GROUP` highlight in `tmr-sitewide.js`, (b) at least one hardcoded inbound link from a live sibling page (e.g. Online Gaming hero), and (c) a `sitemap.xml` entry. The nav route alone is insufficient because other pages serve a cache-busted `?v=` copy of the JS and won't show the new link until their `?v=` bumps — the hardcoded inbound link + sitemap guarantee discoverability immediately.
+
 ## Homepage Removal Verification Workflow — verify the LIVE PUBLIC URL, not the origin (May 25, 2026) — HARD RULE (PERMANENT)
 trustmyrecord.com is served by GitHub Pages **behind Cloudflare**. A removal is NOT done when the repo/origin is clean — it is done only when the live public URL no longer serves the strings. Mandatory steps for any homepage section removal:
 1. Edit `index.html`, deploy (Contents API), wait for `gh api repos/Nimadamus/trustmyrecord/pages/builds/latest` → `status:"built"`.
