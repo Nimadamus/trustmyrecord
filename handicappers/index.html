@@ -920,7 +920,7 @@
             <div class="hm-section-head">
                 <div>
                     <h2>Leaderboard</h2>
-                    <p>Featured leaders require at least 20 graded picks, recent graded activity, and positive net units. The leaderboard table below shows members with a minimum of <span id="hmMinPicksLabel">5</span> verified picks.</p>
+                    <p>Featured leaders require at least 20 graded picks, recent graded activity, and positive net units. The leaderboard table below shows every member with at least <span id="hmMinPicksLabel">1</span> locked pick.</p>
                 </div>
                 <span class="hm-production-note"><strong id="hmVisibleMembers" class="hm-stat-loading" aria-busy="true">--</strong> qualified members</span>
             </div>
@@ -1057,7 +1057,7 @@
         // /handicappers/ table. Configurable so we can raise it as the site grows.
         // Resolution order: ?minPicks=N URL param -> window.LEADERBOARD_MIN_PICKS
         // -> localStorage('tmr_min_picks') -> default 5.
-        const LEADERBOARD_MIN_PICKS_DEFAULT = 5;
+        const LEADERBOARD_MIN_PICKS_DEFAULT = 1;
         function resolveMinLeaderboardPicks() {
             try {
                 const param = new URLSearchParams(window.location.search || '').get('minPicks');
@@ -1660,10 +1660,38 @@
             throw lastError || new Error('Directory request failed');
         }
 
+        function extractUserArray(data) {
+            if (Array.isArray(data)) return data;
+            if (Array.isArray(data?.users)) return data.users;
+            if (Array.isArray(data?.members)) return data.members;
+            if (Array.isArray(data?.leaderboard)) return data.leaderboard;
+            if (Array.isArray(data?.data)) return data.data;
+            return [];
+        }
+
+        // The /users endpoint caps each response at 50 rows, so walk offsets
+        // until a short page is returned. Without this, members beyond the first
+        // page were silently dropped from the directory.
+        async function fetchAllUsers() {
+            const PAGE = 50;
+            const all = [];
+            for (let offset = 0; offset < 5000; offset += PAGE) {
+                let batch;
+                try {
+                    batch = extractUserArray(await directoryRequest('/users?limit=' + PAGE + '&offset=' + offset));
+                } catch (error) {
+                    if (offset === 0) throw error;
+                    break;
+                }
+                all.push(...batch);
+                if (batch.length < PAGE) break;
+            }
+            return all;
+        }
+
         async function fetchBackendUsers() {
             const requests = [
-                directoryRequest('/users?limit=250&offset=0'),
-                directoryRequest('/users?query=&limit=250&offset=0'),
+                fetchAllUsers(),
                 directoryRequest('/users/leaderboard?sortBy=net_units&limit=250')
             ];
             const settled = await Promise.allSettled(requests);
@@ -1990,7 +2018,10 @@
         }
 
         function meetsLeaderboardMinimum(member) {
-            return gradedCount(member) >= LEADERBOARD_MIN_PICKS;
+            // Count any locked pick (graded or still pending) so members with
+            // verified activity but few/no graded results still appear.
+            const total = Number(member?.stats?.totalPicks || 0);
+            return Math.max(total, gradedCount(member)) >= LEADERBOARD_MIN_PICKS;
         }
 
         const SORT_KEYS = {
@@ -2100,7 +2131,7 @@
             els.visible.classList.remove('hm-stat-loading');
             els.visible.removeAttribute('aria-busy');
             const minLabel = LEADERBOARD_MIN_PICKS > 0
-                ? ' (minimum ' + LEADERBOARD_MIN_PICKS + ' verified picks).'
+                ? ' (at least ' + LEADERBOARD_MIN_PICKS + ' locked pick' + (LEADERBOARD_MIN_PICKS === 1 ? '' : 's') + ').'
                 : '.';
             els.status.textContent = visibleMembers.length === qualifiedCount
                 ? 'Showing all ' + qualifiedCount + ' qualified members' + minLabel
@@ -2265,7 +2296,31 @@
             window.location.href = row.getAttribute('data-profile-href');
         });
 
+        // Silent background refresh so new members and updated records appear
+        // without a manual reload. Preserves the visitor's search, sort, and page.
+        let refreshing = false;
+        async function refreshMembers() {
+            if (refreshing || document.hidden) return;
+            refreshing = true;
+            try {
+                const sourceUsers = await fetchBackendUsers();
+                const next = await mapWithConcurrency(sourceUsers, 6, async user => {
+                    const stats = await hydrateStats(user);
+                    return normalizeMember(user, stats);
+                });
+                members = next.filter(member => member.username && isProductionDirectoryUser(member) && Number(member.stats?.totalPicks || 0) > 0);
+                fillSports();
+                applyFilters();
+            } catch (error) {
+                console.warn('[Handicappers] Auto-refresh failed:', error);
+            } finally {
+                refreshing = false;
+            }
+        }
+
         init();
+        setInterval(refreshMembers, 90000);
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshMembers(); });
     })();
     </script>
 </body>
