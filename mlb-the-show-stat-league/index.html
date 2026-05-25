@@ -157,6 +157,14 @@
         .sl-lb-table th:first-child { color: var(--text); }
         .sl-lb-soon td { padding: 34px 14px; text-align: center; color: var(--text-muted); font-size: 0.92rem; }
         .sl-lb-soon i { color: var(--text-dim); margin-right: 7px; }
+        .sl-lb-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.92rem; color: var(--text); white-space: nowrap; }
+        .sl-lb-table tbody tr:last-child td { border-bottom: none; }
+        .sl-lb-rank { color: var(--text-muted); font-weight: 700; margin-right: 8px; }
+        .sl-lb-player { font-weight: 800; }
+        .sl-lb-player a { color: var(--text); }
+        .sl-lb-player a:hover { color: var(--accent-gold); }
+        .sl-lb-dim { color: var(--text-muted); }
+        .sl-lb-foot { margin-top: 16px; font-size: 0.82rem; color: var(--text-dim); line-height: 1.5; }
 
         @media (max-width: 900px) {
             .sl-steps { grid-template-columns: repeat(2, 1fr); }
@@ -326,14 +334,14 @@
         </div>
     </section>
 
-    <!-- LEADERBOARD PREVIEW (headers only, no data yet) -->
+    <!-- LIVE LEAGUE LEADERBOARD (real data from /api/gaming/leaderboard) -->
     <section class="sl-section" id="leaderboard-preview">
         <div class="sl-section-head">
             <h2>League <span class="gold">Leaderboard</span></h2>
-            <p>A preview of the standings table. It fills in with real, verified numbers once box scores start coming in.</p>
+            <p>Live standings for MLB The Show. Records and runs come straight from confirmed match results, home runs, ERA, and OPS fill in as box scores are logged.</p>
         </div>
         <div class="sl-lb-card">
-            <span class="sl-lb-badge"><i class="fas fa-clock"></i> Coming Soon</span>
+            <span class="sl-lb-badge" id="slLbBadge"><i class="fas fa-circle-notch fa-spin"></i> Loading Standings</span>
             <div class="sl-lb-scroll">
                 <table class="sl-lb-table">
                     <thead>
@@ -347,11 +355,12 @@
                             <th>OPS</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr class="sl-lb-soon"><td colspan="7"><i class="fas fa-baseball-bat-ball"></i> Standings populate from verified box scores once the first matchups are played.</td></tr>
+                    <tbody id="slLbBody">
+                        <tr class="sl-lb-soon"><td colspan="7"><i class="fas fa-circle-notch fa-spin"></i> Loading standings...</td></tr>
                     </tbody>
                 </table>
             </div>
+            <p class="sl-lb-foot">Results are logged through head-to-head match reporting in <a href="/online-gaming/">Online Gaming</a>. Confirmed MLB The Show box scores update these standings automatically.</p>
         </div>
     </section>
 
@@ -455,7 +464,62 @@
         });
     });
 
+    // ----- Live league leaderboard (MLB The Show) -----
+    var lbBody = document.getElementById('slLbBody');
+    var lbBadge = document.getElementById('slLbBadge');
+    function statVal(agg, keys) {
+        if (!agg || typeof agg !== 'object') return null;
+        for (var i = 0; i < keys.length; i++) {
+            if (agg[keys[i]] !== undefined && agg[keys[i]] !== null && agg[keys[i]] !== '') return agg[keys[i]];
+        }
+        return null;
+    }
+    function lbRowHtml(r, i) {
+        var name = r.display_name || r.username || 'Player';
+        var nameCell = r.username
+            ? '<a href="/profile/?user=' + encodeURIComponent(r.username) + '">' + esc(name) + '</a>'
+            : esc(name);
+        var wins = r.wins || 0, losses = r.losses || 0, draws = r.draws || 0;
+        var record = wins + '-' + losses + (draws ? '-' + draws : '');
+        var agg = r.aggregate_stats || {};
+        var hr = statVal(agg, ['home_runs', 'hr']);
+        var era = statVal(agg, ['era', 'ERA']);
+        var ops = statVal(agg, ['ops', 'OPS']);
+        function cell(v) { return v === null ? '<span class="sl-lb-dim">--</span>' : esc(v); }
+        return '<tr>' +
+            '<td class="sl-lb-player"><span class="sl-lb-rank">' + (i + 1) + '</span>' + nameCell + '</td>' +
+            '<td>' + esc(record) + '</td>' +
+            '<td>' + esc(r.total_points_for || 0) + '</td>' +
+            '<td>' + esc(r.total_points_against || 0) + '</td>' +
+            '<td>' + cell(hr) + '</td>' +
+            '<td>' + cell(era) + '</td>' +
+            '<td>' + cell(ops) + '</td>' +
+            '</tr>';
+    }
+    function lbEmpty() {
+        return '<tr class="sl-lb-soon"><td colspan="7"><i class="fas fa-baseball-bat-ball"></i> No standings yet. First wave signups get priority when matchups open, play a confirmed game to land on the board.</td></tr>';
+    }
+    function loadLeaderboard() {
+        return fetch(API + '/api/gaming/leaderboard?game=mlb-the-show-26&sort=wins&limit=25&_=' + Date.now())
+            .then(function (r) { return r.ok ? r.json() : { leaderboard: [] }; })
+            .then(function (d) {
+                var rows = (d && d.leaderboard) ? d.leaderboard : [];
+                if (!rows.length) {
+                    lbBody.innerHTML = lbEmpty();
+                    if (lbBadge) lbBadge.innerHTML = '<i class="fas fa-bolt"></i> Live Standings';
+                    return;
+                }
+                lbBody.innerHTML = rows.map(lbRowHtml).join('');
+                if (lbBadge) lbBadge.innerHTML = '<i class="fas fa-bolt"></i> Live Standings';
+            })
+            .catch(function () {
+                lbBody.innerHTML = lbEmpty();
+                if (lbBadge) lbBadge.innerHTML = '<i class="fas fa-bolt"></i> Live Standings';
+            });
+    }
+
     loadSignups();
+    loadLeaderboard();
 })();
 </script>
 
