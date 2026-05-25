@@ -1,5 +1,18 @@
 # TrustMyRecord Development Rules
 
+## Auth / Session Persistence — verified-working contract (May 25, 2026) — HARD RULE (PERMANENT)
+Login persists until the user explicitly clicks **Log Out**. Verified live on 2026-05-25 with `_auth_persist_test.cjs` (Playwright, real account, full 8-step acceptance: login → refresh → protected page → close/reopen new context → access-token-expiry+reload → logout → reload-stays-out — all pass).
+
+Architecture (do not regress):
+- Auth is **pure localStorage**, no cookies. Keys: `trustmyrecord_session`, `trustmyrecord_token` (15-min access JWT), `trustmyrecord_refresh_token` (365-day refresh), `trustmyrecord_remember`. localStorage survives tab close, browser restart, and "return later" by design — never move the session to `sessionStorage`.
+- **NEVER auto-clear auth.** No `clearTokens()` / `clearSession()` / `clearFrontendAuthState()` on a 401/403, rejected refresh, cold-start 5xx, failed bootstrap fetch, hydration, or route change. Clearing is allowed ONLY from explicit `logout()` paths (`backend-api.logout`, `auth-persistent.logout`, `tmr-sitewide.handleLogout`).
+- On load, `auth-persistent.js` restores the UI from the localStorage session immediately (`isSessionValid` always returns true) and proactively refreshes the access token in the background when expired (`shouldProactivelyRefresh` + `isAccessTokenExpired`, 30s skew). A transient/cold-start refresh failure returns `'network'` and keeps the session.
+- `backend-api.refreshAccessToken` returns `'success' | 'invalid' | 'network'`; only `'success'` mints new tokens, and NONE of them clear tokens. `handleResponse` rethrows 401/403 without clearing.
+- Nav display: `tmr-sitewide.js getSessionUser()` reads `window.auth` → caches → localStorage `trustmyrecord_session`; logged-in chip vs Log In/Join buttons is purely a function of that.
+- The live `/sportsbook/` loads only `sportsbook-production-fix-persist-reliability.js`, whose pre-submit guard no longer clears auth (defines `clearFrontendAuthState` but never calls it). The older `sportsbook-production-fix.js` / `sportsbook-production-fix-persist.js` still contain the auth-wiping pre-submit guard but are referenced ONLY by quarantine/`sportsbook-test` pages — never wire them into a live page.
+
+If a user still reports "logged out on return" after this contract holds, the cause is **stale browser/Cloudflare cache** (old pre-fix JS/HTML), not the code: hard-refresh / incognito, confirm the live `?v=` JS serves the never-auto-logout marker (`curl -s ".../static/js/backend-api.js?v=<token>" | grep -c "NEVER log a user out automatically"` = 1), and only then attribute to browser cache. Re-run `_auth_persist_test.cjs` (set `TMR_USER`/`TMR_PASS`) before claiming any auth change is safe.
+
 ## Gaming Acquisition Page Standard (May 25, 2026) — STANDARD
 New gaming-vertical landing/recruit pages (Arena, Online Gaming, MLB The Show Stat League, future game leagues) follow this template. Reference impl: `/mlb-the-show-stat-league/` (commit `99b8cebb`).
 - Dir-style URL `/<keyword-slug>/index.html`; canonical, SEO `<title>` + meta description, OG tags, GA snippet, favicon.
