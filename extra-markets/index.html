@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Extra Markets — Alt Lines & Props | TrustMyRecord</title>
+<meta name="robots" content="noindex">
+<style>
+  :root{ --bg:#0a0a0f; --panel:#13131c; --panel2:#1b1b27; --border:#262636; --text:#e8e8f0; --muted:#9aa; --cyan:#00aeff; --gold:#ffd700; --green:#1ed760; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Arial,sans-serif;}
+  header{padding:18px 20px;border-bottom:1px solid var(--border);}
+  header h1{margin:0;font-size:18px;letter-spacing:.5px}
+  header p{margin:4px 0 0;color:var(--muted);font-size:13px}
+  .wrap{max-width:1000px;margin:0 auto;padding:16px 20px 60px}
+  .sporttabs{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+  .sporttabs button{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:999px;cursor:pointer;font-size:13px}
+  .sporttabs button.active{background:var(--cyan);color:#001018;border-color:var(--cyan);font-weight:700}
+  .status{color:var(--muted);font-size:13px;margin:8px 0 16px}
+  .game{background:var(--panel);border:1px solid var(--border);border-radius:12px;margin:0 0 16px;overflow:hidden}
+  .game-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+  .game-head b{font-size:15px}
+  .game-head small{color:var(--muted)}
+  .grp{padding:10px 16px 14px}
+  .grp h3{margin:6px 0 10px;font-size:13px;color:var(--gold);text-transform:uppercase;letter-spacing:.6px}
+  .lines{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .line{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:center;font-size:13px}
+  .line .sel{color:var(--text)}
+  .line .odds{color:var(--green);font-weight:700}
+  .empty{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:28px;text-align:center;color:var(--muted)}
+  footer{color:var(--muted);font-size:12px;text-align:center;padding:20px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Extra Markets — Alternate Lines &amp; Props</h1>
+  <p>Standalone preview. Sourced separately from Bovada's public feed. Does not affect the main sportsbook game-line boards.</p>
+</header>
+<div class="wrap">
+  <div class="sporttabs" id="sporttabs"></div>
+  <div class="status" id="status">Loading…</div>
+  <div id="board"></div>
+</div>
+<footer>TrustMyRecord · Extra Markets preview · alt lines refresh ~90s</footer>
+
+<script>
+(function(){
+  var API = 'https://trustmyrecord-api.onrender.com/api/games/altlines/';
+  var SPORTS = [
+    { key:'baseball_mlb', label:'MLB' },
+    { key:'basketball_nba', label:'NBA' },
+    { key:'icehockey_nhl', label:'NHL' },
+    { key:'americanfootball_nfl', label:'NFL' },
+    { key:'basketball_ncaab', label:'NCAAB' },
+    { key:'americanfootball_ncaaf', label:'NCAAF' }
+  ];
+  var current = SPORTS[0].key;
+  var tabsEl = document.getElementById('sporttabs');
+  var statusEl = document.getElementById('status');
+  var boardEl = document.getElementById('board');
+
+  function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmtOdds(o){ var n=Number(o); if(!isFinite(n)) return '—'; return n>0?'+'+n:String(n); }
+  function fmtWhen(iso){ if(!iso) return ''; try{ var d=new Date(iso); return d.toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }catch(e){ return ''; } }
+
+  function renderTabs(){
+    tabsEl.innerHTML = SPORTS.map(function(s){
+      return '<button data-key="'+s.key+'" class="'+(s.key===current?'active':'')+'">'+s.label+'</button>';
+    }).join('');
+    Array.prototype.forEach.call(tabsEl.querySelectorAll('button'), function(b){
+      b.addEventListener('click', function(){ current=b.getAttribute('data-key'); renderTabs(); load(); });
+    });
+  }
+
+  function lineLabel(item){
+    var line = item.line;
+    var lineStr = (line>0?'+':'') + line;
+    return esc(item.selection) + ' ' + lineStr;
+  }
+
+  function load(){
+    statusEl.textContent = 'Loading ' + current + ' alternate lines…';
+    boardEl.innerHTML = '';
+    fetch(API + encodeURIComponent(current) + '?cb=' + Date.now())
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var games = (data && data.games) || [];
+        if(!data || !data.supported){ statusEl.textContent = 'Alternate lines not offered for this sport yet.'; boardEl.innerHTML = '<div class="empty">No alternate-line market for '+esc(current)+'.</div>'; return; }
+        if(!games.length){ statusEl.textContent=''; boardEl.innerHTML = '<div class="empty">No alternate lines available right now'+(data.reason?(' ('+esc(data.reason)+')'):'')+'. Check back when games are posted.</div>'; return; }
+        statusEl.textContent = games.length + ' game' + (games.length!==1?'s':'') + ' with alternate lines (Bovada).';
+        boardEl.innerHTML = games.map(function(g){
+          var groups = (g.alt_groups||[]).map(function(grp){
+            var lines = (grp.items||[]).map(function(it){
+              return '<div class="line"><span class="sel">'+lineLabel(it)+'</span><span class="odds">'+fmtOdds(it.odds)+'</span></div>';
+            }).join('');
+            return '<div class="grp"><h3>'+esc(grp.label||grp.key)+'</h3><div class="lines">'+lines+'</div></div>';
+          }).join('');
+          return '<div class="game"><div class="game-head"><b>'+esc(g.away_team)+' @ '+esc(g.home_team)+'</b><small>'+esc(fmtWhen(g.commence_time))+'</small></div>'+groups+'</div>';
+        }).join('');
+      })
+      .catch(function(){ statusEl.textContent=''; boardEl.innerHTML = '<div class="empty">Alternate-lines feed temporarily unavailable. Try again shortly.</div>'; });
+  }
+
+  renderTabs();
+  load();
+})();
+</script>
+</body>
+</html>
