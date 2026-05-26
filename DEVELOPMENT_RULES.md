@@ -1,5 +1,20 @@
 # TrustMyRecord Development Rules
 
+## Odds provider fallback chain (soccer/tennis) — ARCHITECTURE (May 26, 2026)
+Soccer/tennis boards must NOT break when one odds provider key dies. Resolution order in `trustmyrecord-backend/routes/games.js` `/board/:sportKey`:
+1. **Action Network (free, no key)** — `actionNetworkService.supports()` covers MLB/NBA/WNBA/NHL/NFL/NCAAB/NCAAF + **tennis**. NOT soccer.
+2. **Primary odds provider** — The Odds API / OddsPapi via `ODDS_API_KEY` (soccer + tennis). Currently a DEAD 401 key.
+3. **Fallback chain** — `services/oddsProviderChain.js` → `services/apiSportsOddsProvider.js` (API-Sports/API-Football, **soccer only**, env `APISPORTS_API_KEY`, inert without key).
+4. **Clean empty state** — if all providers unavailable: `severity:"warning"`, message **"Odds temporarily unavailable. Check back shortly."**, with `provider_chain_attempts` diagnostics. Never a raw error, never a hang.
+
+Key facts:
+- **Tennis is FIXED and FREE (no key needed).** The UI requests `tennis_atp`/`tennis_wta`; the route aliases both to `tennis` (`TENNIS_KEY_ALIASES`), which hits Action Network's free tennis feed (54 live games verified 2026-05-26). The frontend grouped board dedupes by game id since ATP+WTA share one feed.
+- **Soccer still needs a key.** No free source covers soccer. To light it up: renew `ODDS_API_KEY` (The Odds API), OR set `APISPORTS_API_KEY` (API-Football fallback). Architecture is in place and proven to degrade gracefully meanwhile.
+- **Provider health:** `GET /api/games/providers/health` reports which providers are configured (no network calls).
+- **Scope guard:** the fallback chain runs ONLY for soccer/tennis keys (`isSoccerOrTennisKey`). MLB/NBA/NFL/NHL/NCAA keep their existing Action Network → DB-snapshot path untouched.
+- **Adding a fallback provider:** add a module exposing `isConfigured()`/`supportsSport()`/`fetchBoard()` returning The-Odds-API-shaped events, register it in `oddsProviderChain.fallbackProviders()`. Document its env var in `.env.example`.
+- **MANDATORY regression test on any odds-feed/provider/loader change:** live-check `/api/games/board/{baseball_mlb,tennis_atp,tennis_wta,soccer_epl}` AND the `/sportsbook/` UI for MLB populated, tennis populated, soccer clean empty-state — never a hang.
+
 ## Soccer/Tennis depend on the OddsPapi provider key — HARD RULE (May 26, 2026)
 **Soccer (EPL/MLS/UCL/La Liga/Serie A/Bundesliga/Ligue 1) and Tennis (ATP/WTA) games come ONLY from the OddsPapi odds provider** in `trustmyrecord-backend/services/sportsDataService.js` (`ODDS_API_KEY`, base `https://api.oddspapi.io/v4`, fallbacks `v5.oddspapi.io` + `api.the-odds-api.com`). **MLB is independent** — it is fed by Action Network (`actionNetworkService.js`) → DraftKings, so MLB keeps working even when OddsPapi is down.
 
