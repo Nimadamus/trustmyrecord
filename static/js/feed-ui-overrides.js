@@ -50,6 +50,31 @@ function getRecordText(item) {
     return 'public record pending';
 }
 
+// Builds a privacy-safe aggregate breakdown of a graded-pick batch.
+// Distinguishes picks PROCESSED from picks that COUNT toward the win/loss record
+// (pushes, voids, and cancellations are processed but record-neutral). Never
+// exposes individual pick details. Returns '' when batch outcome data is absent
+// or incoherent (e.g. cumulative vs. batch scope mismatch).
+function getGradedBreakdownText(item) {
+    const processed = Number(item.pick_count || item.count || 0);
+    const wins = Number(item.wins_count || 0);
+    const losses = Number(item.losses_count || 0);
+    const pushes = Number(item.pushes_count || 0);
+    const voids = Number(item.voids_count || 0);
+    const counted = wins + losses + pushes + voids;
+    // Only render when batch counts are present and consistent with the processed total.
+    if (counted === 0 || counted > processed) return '';
+    const parts = [];
+    if (wins > 0) parts.push(wins + (wins === 1 ? ' win' : ' wins'));
+    if (losses > 0) parts.push(losses + (losses === 1 ? ' loss' : ' losses'));
+    const neutral = pushes + voids;
+    if (neutral > 0) parts.push(neutral + ' push/void/ineligible');
+    const unresolved = processed - counted;
+    if (unresolved > 0) parts.push(unresolved + ' pending');
+    if (!parts.length) return '';
+    return processed + ' pick' + (processed === 1 ? '' : 's') + ' processed: ' + parts.join(', ');
+}
+
 function getSportOrTeam(item) {
     const sport = formatSport(item.sport || item.sport_key || item.league || item.primary_sport);
     return esc(sport || 'Verified record');
@@ -110,14 +135,17 @@ function renderPickCard(item) {
             '<div class="pe-team">Pick details hidden until eligible for public record.</div>' +
         '</div>';
     } else {
+        const breakdown = getGradedBreakdownText(item);
         body = '<div class="pick-embed">' +
             '<div class="pe-row">' +
                 '<span class="pe-chip is-sport">Verified record update</span>' +
-                '<span class="pe-chip is-won">' + count + ' pick' + (count === 1 ? '' : 's') + ' graded</span>' +
+                '<span class="pe-chip is-won">' + count + ' pick' + (count === 1 ? '' : 's') + ' processed</span>' +
             '</div>' +
-            '<div class="pe-team">Verified record updated.</div>' +
-            '<div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;">Current record: ' + esc(getRecordText(item)) + '</div>' +
-            '<div style="margin-top:8px;color:var(--text-secondary);font-size:0.82rem;">Pick details hidden until eligible for public record.</div>' +
+            (breakdown
+                ? '<div class="pe-team">' + esc(breakdown) + '</div>'
+                : '<div class="pe-team">Verified record updated.</div>') +
+            '<div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;">Current overall record: ' + esc(getRecordText(item)) + '</div>' +
+            '<div style="margin-top:8px;color:var(--text-secondary);font-size:0.82rem;">Pushes, voids, and ineligible picks are processed but do not change the win/loss record. Pick details stay hidden until eligible for public record.</div>' +
         '</div>';
     }
 
@@ -332,7 +360,8 @@ function normalizePublicPick(item) {
         win_rate: item.win_rate,
         wins_count: item.wins_count,
         losses_count: item.losses_count,
-        pushes_count: item.pushes_count
+        pushes_count: item.pushes_count,
+        voids_count: item.voids_count
     };
 }
 
@@ -389,11 +418,19 @@ function aggregateFeedItems(items) {
                 item_id: 'pick_group_' + feedId(key),
                 pick_id: 'pick_group_' + feedId(key),
                 pick_count: itemCount,
+                wins_count: Number(item.wins_count || 0),
+                losses_count: Number(item.losses_count || 0),
+                pushes_count: Number(item.pushes_count || 0),
+                voids_count: Number(item.voids_count || 0),
                 status: bucket === 'locked' ? 'pending' : 'graded'
             });
             return;
         }
         existing.pick_count += itemCount;
+        existing.wins_count = Number(existing.wins_count || 0) + Number(item.wins_count || 0);
+        existing.losses_count = Number(existing.losses_count || 0) + Number(item.losses_count || 0);
+        existing.pushes_count = Number(existing.pushes_count || 0) + Number(item.pushes_count || 0);
+        existing.voids_count = Number(existing.voids_count || 0) + Number(item.voids_count || 0);
         const existingTime = new Date(existing.graded_at || existing.created_at || 0).getTime();
         const itemTime = new Date(item.graded_at || item.created_at || 0).getTime();
         if (itemTime > existingTime) {
