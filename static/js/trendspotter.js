@@ -758,6 +758,7 @@
       supportedValue("Time range", state.range),
       supportedValue("Selected filters", "location=" + state.location + " | min_sample=" + state.minSample + (state.threshold !== "" ? " | line=" + state.threshold : "")),
       supportedValue("Result", rows.length ? counts.text : "Verified source rows available"),
+      supportedValue("Record basis", recordBasis(market)),
       supportedValue("Sample size", sample),
       supportedValue("Usefulness", usefulnessLabel(sample)),
       sample < Number(state.minSample || 0) ? supportedValue("Warning", SAFE_MESSAGES.smallSample) : "",
@@ -769,6 +770,18 @@
       rows.length ? sourceRowsHtml(rows.slice(0, 8)) : "<p class=\"ts-muted-line\">Verified source rows are not available for display.</p>",
       "</article>"
     ].join("");
+  }
+
+  function recordBasis(market) {
+    // Be explicit about how the win/loss record was computed so the entered
+    // line is never mistaken for a per-line filter. The record is recent-form
+    // across the verified sample, scored at each game's own posted line.
+    if (!market) return "";
+    if (market.id === "total") return "Over/under outcomes scored at each game's posted total within the verified sample (not only the entered line).";
+    if (market.id === "team_total") return "Team over/under outcomes scored at each game's posted team total within the verified sample (not only the entered line).";
+    if (market.id === "spread") return "Cover/no-cover outcomes scored at each game's posted spread within the verified sample.";
+    if (market.id === "moneyline") return "Straight win/loss outcomes across the verified sample.";
+    return "Outcomes scored from the verified source rows in the sample.";
   }
 
   function supportedValue(label, value) {
