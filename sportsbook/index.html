@@ -22546,28 +22546,34 @@ document.addEventListener('DOMContentLoaded', function() {
         // "Loading..." forever. Resolve each league directly here so every row
         // ends on a real count or a clean empty state ("—").
         try {
-            var groups = (typeof GROUP_SPORTS !== 'undefined') ? GROUP_SPORTS : null;
-            if (groups) {
-                var leagueRows = [];
-                Object.keys(groups).forEach(function(g) {
-                    (groups[g] || []).forEach(function(l) { leagueRows.push(l); });
+            // Self-contained list (GROUP_SPORTS lives in a different script scope and
+            // is not reliably visible here). railId = rail span id prefix.
+            var leagueRows = [
+                { railId: 'soccer',     key: 'soccer_epl' },
+                { railId: 'mls',        key: 'soccer_usa_mls' },
+                { railId: 'ucl',        key: 'soccer_uefa_champs_league' },
+                { railId: 'laliga',     key: 'soccer_spain_la_liga' },
+                { railId: 'seriea',     key: 'soccer_italy_serie_a' },
+                { railId: 'bundesliga', key: 'soccer_germany_bundesliga' },
+                { railId: 'ligue1',     key: 'soccer_france_ligue_one' },
+                { railId: 'atp',        key: 'tennis_atp' },
+                { railId: 'wta',        key: 'tennis_wta' }
+            ];
+            var apiBase3 = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+            leagueRows.forEach(function(l) {
+                var railCell = document.getElementById(l.railId + '-game-count');
+                if (!railCell) return;
+                railCell.textContent = '…';
+                fetch(String(apiBase3).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(l.key)).then(function(r) {
+                    if (!r.ok) throw new Error('HTTP ' + r.status);
+                    return r.json();
+                }).then(function(data) {
+                    var games = (data && data.games) || [];
+                    railCell.textContent = games.length > 0 ? String(games.length) : '—';
+                }).catch(function() {
+                    railCell.textContent = '—';
                 });
-                var apiBase3 = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
-                leagueRows.forEach(function(l) {
-                    var railCell = document.getElementById(l.sport.toLowerCase() + '-game-count');
-                    if (!railCell) return;
-                    railCell.textContent = '…';
-                    fetch(String(apiBase3).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(l.key)).then(function(r) {
-                        if (!r.ok) throw new Error('HTTP ' + r.status);
-                        return r.json();
-                    }).then(function(data) {
-                        var games = (data && data.games) || [];
-                        railCell.textContent = games.length > 0 ? String(games.length) : '—';
-                    }).catch(function() {
-                        railCell.textContent = '—';
-                    });
-                });
-            }
+            });
         } catch (e) { /* never leave league rows stuck on Loading... */ }
     }
 
