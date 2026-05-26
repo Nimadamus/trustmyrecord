@@ -12158,7 +12158,15 @@ window.toggleSportFamily = function (family) {
     // matchup row.
     window.TMR.setSport = function (sport) {
         if (!sport) return;
+        var changed = window.TMR.selectedSport !== sport;
         window.TMR.selectedSport = sport;
+        // Reset to game lines when the sport changes, and never carry an
+        // alts/props selection across sports — otherwise a stale 'props'/'alts'
+        // (now a valid tab on every sport) makes the new sport render the
+        // "not available" empty state instead of its real game board.
+        if (changed || window.TMR.selectedPeriod === 'alts' || window.TMR.selectedPeriod === 'props') {
+            window.TMR.selectedPeriod = 'full';
+        }
         try { renderBoard(sport); } catch (e) { console.warn('[TMR] setSport render error', e); }
     };
 
