@@ -11927,16 +11927,31 @@ window.toggleSportFamily = function (family) {
     // is down we show a calm "being refreshed" message instead of implying the
     // slate is genuinely empty. See DEVELOPMENT_RULES.md (odds-provider rule).
     function _groupProviderUnavailable(payload) {
-        if (!payload) return true; // null payload = non-OK HTTP from backend
-        var sev = payload.summary && payload.summary.severity;
-        if (sev === 'warning' || sev === 'error') return true;
-        var attempts = (payload.diagnostics && payload.diagnostics.source_attempts) || [];
-        for (var i = 0; i < attempts.length; i++) {
-            var a = attempts[i] || {};
-            if (a.circuit_open) return true;
-            if (typeof a.source === 'string' && /error|circuit/i.test(a.source)) return true;
+        var down = false;
+        if (!payload) {
+            down = true; // null payload = non-OK HTTP from backend
+        } else {
+            var sev = payload.summary && payload.summary.severity;
+            if (sev === 'warning' || sev === 'error') down = true;
+            var attempts = (payload.diagnostics && payload.diagnostics.source_attempts) || [];
+            for (var i = 0; i < attempts.length && !down; i++) {
+                var a = attempts[i] || {};
+                if (a.circuit_open) down = true;
+                else if (typeof a.source === 'string' && /error|circuit/i.test(a.source)) down = true;
+            }
         }
-        return false;
+        // Remember a confirmed provider-down across the session. The odds provider
+        // (OddsPapi) feeds ALL soccer + tennis leagues, so when one league reports
+        // the circuit is open the rest are down too even if their own payload only
+        // says "no games" (the live fetch was skipped). This lets every grouped
+        // board show the same calm "being refreshed" message instead of implying
+        // an empty slate. Window is short so a genuinely-empty future slate recovers.
+        if (down) { window.TMR = window.TMR || {}; window.TMR._oddsProviderDownAt = Date.now(); }
+        return down;
+    }
+    function _oddsProviderRecentlyDown() {
+        var t = window.TMR && window.TMR._oddsProviderDownAt;
+        return !!t && (Date.now() - t) < 15 * 60 * 1000;
     }
     function renderGroupedBoard(sport, rowsEl, period) {
         var group = GROUP_SPORTS[sport] || [];
@@ -11952,7 +11967,7 @@ window.toggleSportFamily = function (family) {
             if (rowsEl.getAttribute('data-sport') !== sport) return;
             var games = [].concat.apply([], results.map(function (r) { return r.games; })).filter(function (g) { return !_ttGameStarted(g); });
             if (!games.length) {
-                var providerDown = results.some(function (r) { return r.providerDown; });
+                var providerDown = results.some(function (r) { return r.providerDown; }) || _oddsProviderRecentlyDown();
                 var msg = providerDown
                     ? sport + ' odds are temporarily unavailable while the data provider connection is being refreshed.'
                     : 'No ' + sport.toLowerCase() + ' odds available right now.';
@@ -22597,6 +22612,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }).then(function(data) {
                     var games = (data && data.games) || [];
                     railCell.textContent = games.length > 0 ? String(games.length) : '—';
+                    // Record provider-down on load (inline; this loop runs in a
+                    // different scope than renderGroupedBoard) so soccer + tennis
+                    // show the same calm "being refreshed" message regardless of
+                    // which group the user opens first. Window short by design.
+                    try {
+                        var sev = data && data.summary && data.summary.severity;
+                        var atts = (data && data.diagnostics && data.diagnostics.source_attempts) || [];
+                        var down = (sev === 'warning' || sev === 'error') || atts.some(function(a){ return a && (a.circuit_open || (typeof a.source === 'string' && /error|circuit/i.test(a.source))); });
+                        if (down) { window.TMR = window.TMR || {}; window.TMR._oddsProviderDownAt = Date.now(); }
+                    } catch (e) {}
                 }).catch(function() {
                     railCell.textContent = '—';
                 });
