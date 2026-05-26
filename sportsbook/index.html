@@ -11921,22 +11921,49 @@ window.toggleSportFamily = function (family) {
         rowsEl.innerHTML = html || emptyState(sport, 'No ' + label + ' ' + sport + ' odds available right now.', 'closed');
         if (html) console.log('[TMR][period] ' + sport + ' ' + label + ' rendered from ' + sourceLabel + '.');
     }
+    // Detect that the upstream odds provider is unavailable (e.g. auth 401 /
+    // tripped circuit breaker) WITHOUT surfacing any internal error text to
+    // normal users. Soccer/Tennis depend entirely on that provider, so when it
+    // is down we show a calm "being refreshed" message instead of implying the
+    // slate is genuinely empty. See DEVELOPMENT_RULES.md (odds-provider rule).
+    function _groupProviderUnavailable(payload) {
+        if (!payload) return true; // null payload = non-OK HTTP from backend
+        var sev = payload.summary && payload.summary.severity;
+        if (sev === 'warning' || sev === 'error') return true;
+        var attempts = (payload.diagnostics && payload.diagnostics.source_attempts) || [];
+        for (var i = 0; i < attempts.length; i++) {
+            var a = attempts[i] || {};
+            if (a.circuit_open) return true;
+            if (typeof a.source === 'string' && /error|circuit/i.test(a.source)) return true;
+        }
+        return false;
+    }
     function renderGroupedBoard(sport, rowsEl, period) {
         var group = GROUP_SPORTS[sport] || [];
         rowsEl.innerHTML = '<div class="sportsbook-board-empty"><div class="sportsbook-board-empty-icon" aria-hidden="true">●</div><strong>Loading ' + sport + ' odds…</strong><span>Checking available ' + sport.toLowerCase() + ' leagues and tournaments.</span></div>';
         Promise.all(group.map(function (league) {
             return fetchBackendBoard(league.key, 30).then(function (payload) {
-                return ((payload && payload.games) || []).map(function (game) { game.sport_title = league.label; return game; });
-            }).catch(function () { return []; });
-        })).then(function (groups) {
+                return {
+                    games: ((payload && payload.games) || []).map(function (game) { game.sport_title = league.label; return game; }),
+                    providerDown: _groupProviderUnavailable(payload)
+                };
+            }).catch(function () { return { games: [], providerDown: true }; });
+        })).then(function (results) {
             if (rowsEl.getAttribute('data-sport') !== sport) return;
-            var games = [].concat.apply([], groups).filter(function (g) { return !_ttGameStarted(g); });
-            if (!games.length) { rowsEl.innerHTML = emptyState(sport, 'No ' + sport.toLowerCase() + ' odds available right now.', 'closed'); return; }
+            var games = [].concat.apply([], results.map(function (r) { return r.games; })).filter(function (g) { return !_ttGameStarted(g); });
+            if (!games.length) {
+                var providerDown = results.some(function (r) { return r.providerDown; });
+                var msg = providerDown
+                    ? sport + ' odds are temporarily unavailable while the data provider connection is being refreshed.'
+                    : 'No ' + sport.toLowerCase() + ' odds available right now.';
+                rowsEl.innerHTML = emptyState(sport, msg, 'closed');
+                return;
+            }
             if (period && period !== 'full') { renderPeriodRows(sport, rowsEl, games, period, 'backend grouped board'); return; }
             window.TMR.currentGames = games;
             rowsEl.innerHTML = games.map(function (game, index) { return renderRow(game, index); }).join('');
         }).catch(function () {
-            if (rowsEl.getAttribute('data-sport') === sport) rowsEl.innerHTML = emptyState(sport, sport + ' odds feed temporarily unavailable. Try again in a moment.', 'closed');
+            if (rowsEl.getAttribute('data-sport') === sport) rowsEl.innerHTML = emptyState(sport, sport + ' odds are temporarily unavailable while the data provider connection is being refreshed.', 'closed');
         });
     }
 
