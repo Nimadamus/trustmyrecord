@@ -370,6 +370,27 @@ Forbidden:
 - Adding new fake "preview" posts to make the empty state look populated.
 - Reverting the dual-script split (`social-home.js` + `feed-ui-overrides.js`) without keeping `submitPost` aware of all four UI post types: `status`, `hot-take`, `poll`, `pick-recap`.
 
+## Graded-Pick Feed Card — Processed vs. Record-Counting Picks (May 26, 2026) — HARD RULE
+
+A graded-pick summary card on `/feed/` mixes two different scopes and MUST keep them visually distinct so the card never looks self-contradictory:
+
+1. **Picks PROCESSED (this batch/day).** The `activity_count` from `routes/feed.js` `graded_pick_summary` (`COUNT(*)` of that day's picks in `FINAL_PICK_STATUS`). Rendered as the chip `N picks processed` in `renderPickCard` (`feed-ui-overrides.js`).
+2. **Record-COUNTING picks (cumulative).** `record_wins/record_losses/record_pushes` + `net_units` + `win_rate` from the user record. Rendered on the **`Current overall record:`** line via `getRecordText`.
+
+These differ because **pushes, voids, and cancelled picks are processed but record-neutral** — they never move the win/loss record. So "4 picks processed" next to a "1-1" record is CORRECT, not a bug; the card must explain it.
+
+Required behavior:
+- The card shows `N picks processed` (never the bare "N picks graded" next to a smaller record with no explanation).
+- When per-batch outcome counts are present and coherent, render the aggregate breakdown via `getGradedBreakdownText` using `wins_count` / `losses_count` / `pushes_count` / `voids_count` (backend `COUNT(*) FILTER` columns), e.g. `4 picks processed: 1 win, 1 loss, 2 push/void/ineligible`.
+- The cumulative line is labeled `Current overall record:` so it is never read as this batch's result.
+- An explicit note states pushes/voids/ineligible are processed but do not change the win/loss record.
+- `getGradedBreakdownText` returns `''` (falling back to the neutral "Verified record updated." message) when batch counts are absent or **incoherent** (`counted === 0` or `counted > processed`) — never invent or display contradictory math.
+- `aggregateFeedItems` MUST sum `wins_count`/`losses_count`/`pushes_count`/`voids_count` across grouped rows, not just `pick_count`. Dropping them is what produced the original `scpridematt` contradiction (pick_count summed to 4 while the breakdown counts were lost and only the cumulative 1-1 record showed).
+
+Privacy: only safe aggregate status counts may be shown. NEVER expose locked/pending individual pick details (team, line, units) on a feed card. Pending batches keep the `Pick details hidden until eligible for public record.` body.
+
+Live verification (mandatory, same response): hit `https://trustmyrecord.com/feed/`, confirm the served `feed-ui-overrides.js?v=...` contains `getGradedBreakdownText` and the `N picks processed` + `Current overall record:` rendering, and bump the `?v=` cache-bust on `feed/index.html` (GitHub Pages serves `?v=` URLs stale otherwise).
+
 ## Current Baseline
 
 The protected baseline is the latest commit on `origin/main` at the start of each task, after inspecting the current remote head, local status, recent commits, and relevant diffs.
@@ -768,20 +789,11 @@ Build pillar pages one at a time; never spin up a cluster of thin pages at once.
 - **Pillar (live):** `/mlb-season-simulator/` targets "MLB season simulator." Honest framing only: it is a season-prediction experience in development, NOT a fully automated simulation engine or live competition. Never claim functionality that does not exist.
 - **Planned cluster (documented, DO NOT build until each can be done right with real content/functionality):** MLB Prediction League, MLB Playoff Predictor, MLB Standings Predictor, plus the already-live MLB The Show Stat League.
 - **Before adding any cluster page:** it must have unique, substantial content (no thin/duplicate), a verified-record angle, working CTA, and at least one valid inbound link from live structure (tools hub / nav / related page) + sitemap entry. If it would be thin, do not publish it.
+
+## Above-the-fold compactness — Arena/community hub heroes (May 26, 2026) — HARD RULE
+Arena and community/hub pages must NOT ship with an oversized hero that pushes the main cards/options far below the fold. On desktop the headline, action buttons, and at least the top row of cards must be visible without a long scroll.
+- Keep hero vertical padding tight (Arena `.arena-clean-hero` uses `padding: clamp(28px, 4vw, 48px) 24px 26px` — never a `clamp(...,92px)`-class top pad or a `min-height: ~820px` full-viewport hero).
+- Headline stays moderate (`.arena-clean-hero h1` = `clamp(2.2rem, 5vw, 4rem)`, not `5.6rem`+).
+- Tighten subtitle/buttons/proof-pill/card spacing (subtitle `margin-top:10px`, actions `16px`, proof `14px`, `.arena-clean-main` `padding-top:18px`, cards `min-height:210px`).
+- Keep the premium dark sportsbook style; never remove Arena functionality. Note: this page carries several stacked legacy redesign `<style>` blocks — only the LAST-defined `.arena-clean-*` ruleset is live; edit those, not the earlier overridden ones.
 - **CTA honesty:** waitlist/predictions CTAs link only to existing functionality (e.g. `/register/`, `/predictions/`). No forms posting to non-existent endpoints.
-
-
-## Profile/action-button routes must be ABSOLUTE — never relative (May 26, 2026) — HARD RULE
-Action buttons rendered on `/profile/` (Message, Challenge, and any future action) navigate to other sections of the app. They MUST use root-absolute paths, e.g. `location.href='/messages/?to=' + username` and `location.href='/arena/?challenge=' + username`.
-- **Why:** A relative href like `'messages/?to=scpridematt'` resolves against the current document `/profile/` and produces a broken route. In production this surfaced as `/profile/?user=messages&to=scpridematt`, which made the profile loader treat `messages` as the username and render `Profile not found. We could not find a profile for "messages".`
-- **Rule:** Never let a profile action button feed a section name into the profile `?user=` query param. The only thing that belongs in `?user=` is a real username on `/profile/`. Section navigation = absolute path + its own query param (`/messages/?to=`, `/arena/?challenge=`).
-- **Canonical messaging route:** `/messages/?to=<username>`. The messages page reads `?to=` and opens the thread via `startConversationWithUser()`.
-- **Check before shipping any new profile action button:** the href starts with `/`, points at the section's own route, and does not collide with `?user=`.
-
-
-## PERMANENT RULE: internal app-route buttons/links use root-absolute paths, never parent-page-relative (May 26, 2026)
-Any button or link that navigates between sections of the app MUST use a root-absolute path beginning with `/` (or a full canonical URL). NEVER use a parent-page-relative path.
-- **Failure mode:** a relative `location.href='messages/?to=<user>'` rendered on `/profile/?user=<x>` resolves against `/profile/` and produced `/profile/?user=messages&to=<user>`, so the profile loader read `messages` as the username -> `Profile not found for "messages"`. The same defect existed on the Challenge button (`arena/?challenge=`) and on `/profile-test/`.
-- **Canonical routes:** messaging = `/messages/?to=<username>` (the messages page reads `?to=` and opens the thread via `startConversationWithUser()`); challenge = `/arena/?challenge=<username>`.
-- **Hard rule:** a section name (`messages`, `arena`, etc.) must NEVER land in another page's query param such as `?user=`. The only valid value of `/profile/?user=` is a real username. Section navigation = absolute section path + that section's own query param.
-- **Before shipping any new action button (profile, arena, cappers, feed, anywhere):** confirm the href starts with `/`, points at the section's own route, preserves the target username, and cannot be misread as a `?user=`/section-relative route. Grep check: `location\.href=\?'(messages|arena|profile|...)/`  must return zero relative (no leading slash) hits.
