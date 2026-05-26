@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/mlb-season-simulator/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MLB Season Simulator | Predict the Season and Track Your Record</title>
+    <meta name="description" content="Use the TrustMyRecord MLB Season Simulator page to think through division races, playoff teams, win totals, and submit your season predictions for a future verified leaderboard.">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+    <meta property="og:title" content="MLB Season Simulator | TrustMyRecord">
+    <meta property="og:description" content="Simulate the season. Submit your predictions. Prove who called baseball best.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trustmyrecord.com/mlb-season-simulator/">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260526seasonsim1"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-surface: #12121a;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #222240;
+            --border: #2a2a4a;
+            --primary: #00aeff;
+            --primary-dim: rgba(0, 174, 255, 0.15);
+            --accent-gold: #ffd700;
+            --accent-green: #00ff88;
+            --accent-red: #ff4444;
+            --accent-purple: #a855f7;
+            --text: #e8e8f0;
+            --text-dim: #8888aa;
+            --text-muted: #555577;
+            --font-display: 'Barlow', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body.tmr-site-shell { background: var(--bg-dark); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+        .ss-wrap a { color: var(--primary); text-decoration: none; }
+        .ss-wrap a:hover { color: var(--accent-gold); }
+        .ss-wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px 80px; }
+
+        /* HERO */
+        .ss-hero { position: relative; overflow: hidden; border-radius: 24px; margin-top: 28px; padding: 56px 36px;
+            background: radial-gradient(1200px 400px at 15% -10%, rgba(0,174,255,0.18), transparent 60%),
+                        radial-gradient(1000px 360px at 95% 0%, rgba(168,85,247,0.16), transparent 55%),
+                        linear-gradient(180deg, rgba(26,26,46,0.95), rgba(10,10,15,0.95));
+            border: 1px solid var(--border); }
+        .ss-kicker { display: inline-flex; align-items: center; gap: 8px; padding: 7px 14px; border-radius: 999px;
+            background: rgba(0,255,136,0.1); border: 1px solid rgba(0,255,136,0.3); color: var(--accent-green);
+            font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 18px; }
+        .ss-hero h1 { font-family: var(--font-display); font-weight: 900; font-size: clamp(2rem, 5vw, 3.3rem); line-height: 1.04; letter-spacing: -0.02em; }
+        .ss-hero h1 .gold { color: var(--accent-gold); }
+        .ss-hero h1 .blue { color: var(--primary); }
+        .ss-hero .sub { margin-top: 16px; color: var(--text-dim); font-size: clamp(1rem, 2vw, 1.25rem); font-weight: 600; max-width: 660px; }
+        .ss-tagline { margin-top: 14px; font-family: var(--font-display); font-weight: 800; color: var(--text); font-size: clamp(1.05rem, 2.2vw, 1.35rem); }
+        .ss-tagline .blue { color: var(--primary); }
+        .ss-tagline .gold { color: var(--accent-gold); }
+        .ss-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+
+        .btn { display: inline-flex; align-items: center; gap: 9px; padding: 14px 26px; border-radius: 12px; font-family: var(--font-display);
+            font-weight: 800; font-size: 1rem; cursor: pointer; border: 1px solid transparent; transition: transform .15s, box-shadow .15s; }
+        .btn-gold { background: linear-gradient(135deg, #ffd700, #ffb300); color: #1a1200; box-shadow: 0 10px 28px rgba(255,215,0,0.22); }
+        .btn-gold:hover { transform: translateY(-2px); color: #1a1200; }
+        .btn-outline { background: transparent; border-color: var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--primary); color: var(--text); }
+
+        /* SECTION */
+        .ss-section { margin-top: 56px; }
+        .ss-section-head { text-align: center; max-width: 740px; margin: 0 auto 30px; }
+        .ss-section-head h2 { font-family: var(--font-display); font-weight: 800; font-size: clamp(1.5rem, 3.4vw, 2.1rem); letter-spacing: -0.01em; }
+        .ss-section-head h2 .gold { color: var(--accent-gold); }
+        .ss-section-head p { margin-top: 12px; color: var(--text-dim); font-size: 1.02rem; line-height: 1.6; }
+
+        /* INTRO CARD */
+        .ss-intro { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 30px 32px; line-height: 1.7; color: var(--text-dim); font-size: 1.04rem; }
+        .ss-intro strong { color: var(--text); }
+        .ss-intro p + p { margin-top: 16px; }
+
+        /* PREDICTION CARDS */
+        .ss-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .ss-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 26px 22px; transition: border-color .2s, transform .2s; }
+        .ss-card:hover { border-color: var(--primary); transform: translateY(-3px); }
+        .ss-card i { font-size: 1.4rem; color: var(--primary); margin-bottom: 12px; }
+        .ss-card h3 { font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; margin-bottom: 8px; }
+        .ss-card p { color: var(--text-dim); font-size: 0.92rem; line-height: 1.55; }
+
+        /* ANGLE */
+        .ss-angle { background: linear-gradient(135deg, rgba(168,85,247,0.1), rgba(0,174,255,0.06)); border: 1px solid var(--border); border-radius: 20px; padding: 40px 36px; }
+        .ss-angle h2 { font-family: var(--font-display); font-weight: 900; font-size: clamp(1.6rem, 3.6vw, 2.3rem); text-align: center; }
+        .ss-angle h2 .purple { color: var(--accent-purple); }
+        .ss-angle .lead { margin: 18px auto 24px; max-width: 780px; text-align: center; color: var(--text-dim); font-size: 1.08rem; line-height: 1.7; }
+        .ss-angle .lead strong { color: var(--text); }
+        .ss-pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 8px; }
+        .ss-pillar { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 14px; padding: 22px 18px; text-align: center; }
+        .ss-pillar i { font-size: 1.4rem; color: var(--accent-green); margin-bottom: 10px; }
+        .ss-pillar h3 { font-family: var(--font-display); font-weight: 800; font-size: 1rem; }
+        .ss-pillar p { margin-top: 6px; color: var(--text-dim); font-size: 0.85rem; line-height: 1.5; }
+
+        /* CLUSTER / ROADMAP */
+        .ss-roadmap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 30px 32px; }
+        .ss-roadmap > p { color: var(--text-dim); line-height: 1.7; font-size: 1.02rem; }
+        .ss-roadmap > p strong { color: var(--text); }
+        .ss-roadmap-list { list-style: none; display: grid; gap: 10px; margin-top: 20px; }
+        .ss-roadmap-list li { display: flex; align-items: center; gap: 12px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+        .ss-roadmap-list i { color: var(--accent-gold); font-size: 1rem; }
+        .ss-roadmap-list .name { font-family: var(--font-display); font-weight: 800; color: var(--text); }
+        .ss-roadmap-list .tag { margin-left: auto; padding: 4px 11px; border-radius: 999px; background: var(--primary-dim); border: 1px solid rgba(0,174,255,0.3); color: #bfe9ff; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+        .ss-roadmap-list .tag.live { background: rgba(0,255,136,0.1); border-color: rgba(0,255,136,0.3); color: var(--accent-green); }
+
+        /* FAQ */
+        .ss-faq { display: grid; gap: 14px; }
+        .ss-faq details { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 4px 6px; }
+        .ss-faq summary { cursor: pointer; list-style: none; padding: 18px 20px; font-family: var(--font-display); font-weight: 800; font-size: 1.05rem; color: var(--text); }
+        .ss-faq summary::-webkit-details-marker { display: none; }
+        .ss-faq summary::after { content: '\002B'; float: right; color: var(--accent-gold); font-weight: 800; }
+        .ss-faq details[open] summary::after { content: '\2212'; }
+        .ss-faq p { padding: 0 20px 18px; color: var(--text-dim); line-height: 1.65; }
+
+        /* CTA */
+        .ss-cta { margin-top: 64px; text-align: center; border-radius: 24px; padding: 56px 36px;
+            background: radial-gradient(800px 300px at 50% 0%, rgba(255,215,0,0.14), transparent 60%), linear-gradient(180deg, rgba(26,26,46,0.95), rgba(10,10,15,0.95));
+            border: 1px solid rgba(255,215,0,0.25); }
+        .ss-cta h2 { font-family: var(--font-display); font-weight: 900; font-size: clamp(1.8rem, 4vw, 2.6rem); }
+        .ss-cta h2 .gold { color: var(--accent-gold); }
+        .ss-cta p { margin: 16px auto 28px; max-width: 640px; color: var(--text-dim); font-size: 1.08rem; line-height: 1.65; }
+        .ss-cta-actions { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+        .ss-note { margin-top: 22px; font-size: 0.88rem; color: var(--text-muted); }
+
+        @media (max-width: 900px) {
+            .ss-cards, .ss-pillars { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 560px) {
+            .ss-hero { padding: 40px 22px; }
+            .ss-cards, .ss-pillars { grid-template-columns: 1fr; }
+            .ss-intro, .ss-angle, .ss-roadmap, .ss-cta { padding: 24px 20px; }
+        }
+    </style>
+</head>
+<body class="tmr-site-shell">
+
+<!-- Sitewide global nav + footer are injected by tmr-sitewide.js -->
+
+<main class="ss-wrap">
+
+    <!-- HERO -->
+    <section class="ss-hero">
+        <span class="ss-kicker"><i class="fas fa-baseball-bat-ball"></i> In Development</span>
+        <h1>MLB Season <span class="gold">Simulator</span></h1>
+        <p class="sub">Think through the entire MLB season, division races, playoff fields, and World Series outcomes, then put your name on the predictions that matter.</p>
+        <p class="ss-tagline"><span class="blue">Simulate the season.</span> Submit your predictions. <span class="gold">Prove who called baseball best.</span></p>
+        <div class="ss-hero-actions">
+            <a class="btn btn-gold" href="#waitlist"><i class="fas fa-user-plus"></i> Join the MLB Season Prediction Waitlist</a>
+            <a class="btn btn-outline" href="#how"><i class="fas fa-circle-info"></i> What Is a Season Simulator?</a>
+        </div>
+    </section>
+
+    <!-- WHAT IS IT -->
+    <section class="ss-section" id="how">
+        <div class="ss-intro">
+            <p>An <strong>MLB season simulator</strong> is a way to play out a full baseball season before, or while, it happens. Instead of guessing one game at a time, you work through the whole picture: which teams win each division, which clubs grab the Wild Card spots, who represents each league in the World Series, and how many games the contenders win across a 162-game grind.</p>
+            <p>Some simulators run thousands of computer simulations to produce probabilities. The version we are building at TrustMyRecord puts <strong>you</strong> in that seat. You think through the matchups, the rosters, the schedule, and the storylines, then lock in your own season outlook, the same way a sharp analyst would map out the year in spring training.</p>
+            <p>This page is an early look at that experience. We are being upfront: there is <strong>no fully automated advanced simulation engine or live prediction competition on this page yet</strong>. What we are building is a place where your season predictions get recorded honestly and graded against real results, so the people who actually called it right can prove it.</p>
+        </div>
+    </section>
+
+    <!-- WHAT YOU CAN PREDICT -->
+    <section class="ss-section">
+        <div class="ss-section-head">
+            <h2>What You Will Be Able to <span class="gold">Predict</span></h2>
+            <p>The MLB Season Simulator is built around the predictions that decide every baseball season, from the division grind in April to the final out in October.</p>
+        </div>
+        <div class="ss-cards">
+            <div class="ss-card">
+                <i class="fas fa-trophy"></i>
+                <h3>Division Winners</h3>
+                <p>Call the champion of all six divisions: AL East, AL Central, AL West, NL East, NL Central, and NL West.</p>
+            </div>
+            <div class="ss-card">
+                <i class="fas fa-ticket"></i>
+                <h3>Wild Card Teams</h3>
+                <p>Pick the Wild Card clubs that sneak into October and decide which contenders make the expanded playoff field.</p>
+            </div>
+            <div class="ss-card">
+                <i class="fas fa-flag-usa"></i>
+                <h3>AL Champion</h3>
+                <p>Predict which American League team survives the bracket and earns the pennant.</p>
+            </div>
+            <div class="ss-card">
+                <i class="fas fa-flag-checkered"></i>
+                <h3>NL Champion</h3>
+                <p>Predict the National League pennant winner that punches its World Series ticket.</p>
+            </div>
+            <div class="ss-card">
+                <i class="fas fa-crown"></i>
+                <h3>World Series Champion</h3>
+                <p>The big one. Name the team you believe lifts the trophy when the season ends.</p>
+            </div>
+            <div class="ss-card">
+                <i class="fas fa-chart-simple"></i>
+                <h3>Win Totals</h3>
+                <p>Project regular-season win totals for the contenders and test your read on who is overrated and who is for real.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- TRUSTMYRECORD ANGLE -->
+    <section class="ss-section">
+        <div class="ss-angle">
+            <h2>The TrustMyRecord <span class="purple">Angle</span></h2>
+            <p class="lead">Anybody can claim they called the season after it happens. The whole point of TrustMyRecord is that you <strong>cannot</strong> do that here. Predictions get logged before the results are known and stay public, win or lose.</p>
+            <div class="ss-pillars">
+                <div class="ss-pillar">
+                    <i class="fas fa-shield-halved"></i>
+                    <h3>Verified Public Records</h3>
+                    <p>Season predictions are tied to a public profile and graded against what actually happens on the field.</p>
+                </div>
+                <div class="ss-pillar">
+                    <i class="fas fa-ban"></i>
+                    <h3>No Deleted Losers</h3>
+                    <p>Bad calls do not disappear. Your record shows the misses alongside the hits, like an honest track record should.</p>
+                </div>
+                <div class="ss-pillar">
+                    <i class="fas fa-user-secret"></i>
+                    <h3>No Mystery Handicappers</h3>
+                    <p>No fake records and no anonymous experts hiding their results. The leaderboard rewards the people who were actually right.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FUTURE CLUSTER (documented, not built) -->
+    <section class="ss-section">
+        <div class="ss-section-head">
+            <h2>The First Step in a Bigger <span class="gold">MLB Prediction Hub</span></h2>
+            <p>This page is the starting point. Over time we plan to grow it into a connected set of MLB prediction experiences. These are on the roadmap, not live yet, and we will only build each one when it can be done right.</p>
+        </div>
+        <div class="ss-roadmap">
+            <p>The MLB Season Simulator is the <strong>pillar page</strong> for a planned content cluster. We are intentionally launching one solid page first instead of a pile of thin ones. Planned additions:</p>
+            <ul class="ss-roadmap-list">
+                <li><i class="fas fa-star"></i> <span class="name">MLB Season Simulator</span> <span class="tag live">This Page</span></li>
+                <li><i class="fas fa-people-group"></i> <span class="name">MLB Prediction League</span> <span class="tag">Planned</span></li>
+                <li><i class="fas fa-sitemap"></i> <span class="name">MLB Playoff Predictor</span> <span class="tag">Planned</span></li>
+                <li><i class="fas fa-table-list"></i> <span class="name">MLB Standings Predictor</span> <span class="tag">Planned</span></li>
+                <li><i class="fas fa-gamepad"></i> <span class="name">MLB The Show Stat League</span> <span class="tag live">Live</span></li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="ss-section">
+        <div class="ss-section-head">
+            <h2>MLB Season Simulator <span class="gold">FAQ</span></h2>
+        </div>
+        <div class="ss-faq">
+            <details>
+                <summary>Is this a fully automated simulation engine?</summary>
+                <p>Not yet, and we will not pretend otherwise. Today this is a prediction experience in development. You think through the season and submit your outlook. We are building toward richer simulation tools, but only features that actually exist will be presented as live.</p>
+            </details>
+            <details>
+                <summary>How are my season predictions verified?</summary>
+                <p>The TrustMyRecord model is built on timestamped, public records. Once season prediction submission is live, your division winners, playoff teams, champions, and win totals are recorded before results are known and graded against real outcomes, so your accuracy is provable.</p>
+            </details>
+            <details>
+                <summary>Will there be a leaderboard?</summary>
+                <p>That is the goal. A verified season-prediction leaderboard is planned so the people who called baseball best rise to the top. It is not live on this page yet.</p>
+            </details>
+            <details>
+                <summary>How do I get involved now?</summary>
+                <p>Join the waitlist below by creating a free TrustMyRecord account. You will be first in line when MLB season prediction submission opens, and you can start building a verified public record on the rest of the platform today.</p>
+            </details>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="ss-cta" id="waitlist">
+        <h2>Join the MLB Season Prediction <span class="gold">Waitlist</span></h2>
+        <p>Simulate the season, submit your predictions, and prove who called baseball best. Create a free TrustMyRecord account to claim your spot when season predictions open, and start tracking a verified public record today.</p>
+        <div class="ss-cta-actions">
+            <a class="btn btn-gold" href="/register/"><i class="fas fa-user-plus"></i> Join the MLB Season Prediction Waitlist</a>
+            <a class="btn btn-outline" href="/predictions/"><i class="fas fa-list-check"></i> See Current Predictions</a>
+        </div>
+        <div class="ss-note">No fake records, no deleted losers, no mystery handicappers. Just verified MLB predictions. Want to run a single matchup instead? Try the <a href="/mlb-simulator/">MLB Simulator</a>.</div>
+    </section>
+
+</main>
+
+</body>
+</html>
