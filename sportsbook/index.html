@@ -10640,15 +10640,22 @@ window.toggleSportFamily = function (family) {
 
     // Per-sport period catalog driving the lobby preview's top tab strip.
     // Sportsbook-style labels: MLB never shows quarter / half NBA tabs.
+    // 'alts' (alternate lines) and 'props' (player props) tabs are shown on every
+    // sport but the current free Action Network feed only carries mainline markets
+    // and game segments, so selecting them renders an honest "not available from
+    // the current odds feed" empty state (handled in renderBoard) — never fake
+    // odds or a broken section. They light up automatically if a future provider
+    // supplies that data. See DEVELOPMENT_RULES "Sportsbook odds data source".
+    var ALT_PROP_TABS = [{k:'alts',label:'Alt Lines'},{k:'props',label:'Player Props'}];
     var PERIOD_CATALOGS = {
-        'NBA':   [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}],
-        'NCAAB': [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'tt',label:'Team Totals'}],
-        'NFL':   [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}],
-        'NCAAF': [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}],
-        'NHL':   [{k:'full',label:'Game Lines'},{k:'p1',label:'1st Period'},{k:'p2',label:'2nd Period'},{k:'p3',label:'3rd Period'},{k:'tt',label:'Team Totals'}],
-        'MLB':   [{k:'full',label:'Game Lines'},{k:'f5',label:'5 Inning Lines'},{k:'tt',label:'Team Totals'}],
-        'Soccer':[{k:'full',label:'Match'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'}],
-        'Tennis':[{k:'full',label:'Match'}]
+        'NBA':   [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
+        'NCAAB': [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
+        'NFL':   [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
+        'NCAAF': [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
+        'NHL':   [{k:'full',label:'Game Lines'},{k:'p1',label:'1st Period'},{k:'p2',label:'2nd Period'},{k:'p3',label:'3rd Period'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
+        'MLB':   [{k:'full',label:'Game Lines'},{k:'f5',label:'5 Inning Lines'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
+        'Soccer':[{k:'full',label:'Match'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'}].concat(ALT_PROP_TABS),
+        'Tennis':[{k:'full',label:'Match'}].concat(ALT_PROP_TABS)
     };
 
     // Rebuild the lobby period tab strip for a given sport. Keeps the active
@@ -12010,6 +12017,15 @@ window.toggleSportFamily = function (family) {
         // DraftKings preferred). Halves and quarters stay placeholder until
         // those feeds are wired so we don't fabricate odds.
         var period = (window.TMR && window.TMR.selectedPeriod) || 'full';
+        // Alternate lines / player props: the current free Action Network feed
+        // does not expose these. Render an honest, non-breaking empty state for
+        // every sport instead of fake odds, a blank section, or an endless
+        // spinner. Lights up automatically when a future provider supplies them.
+        if (period === 'alts' || period === 'props') {
+            var unavailableKind = period === 'alts' ? 'Alternate lines' : 'Player props';
+            rows.innerHTML = emptyState(sport, unavailableKind + ' are not available from the current odds feed.', 'closed');
+            return;
+        }
         if (period === 'tt') {
             return renderTeamTotalsBoard(sport, rows);
         }
