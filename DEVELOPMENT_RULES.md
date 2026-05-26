@@ -738,3 +738,10 @@ The right-side dashboard on `index.html` is **live client-fetched on every page 
 - Daily/continuous refresh is guaranteed by: grader cron (`grade-picks.yml`, */30) updating stats → 60s API cache ceiling → per-load cache-busted fetch. No manual rebuild needed.
 - Personal-record picks only (`picks` table); contest entries live in `contest_picks` and are never mixed in here.
 - If this module looks stale again: confirm the live API is fresh first (`curl /api/users` & `/api/picks`), then check the cache-buster + Cache-Control headers above before touching render logic.
+
+## Cautious SEO cluster strategy — MLB prediction/simulator pages (May 26, 2026) — HARD RULE
+Build pillar pages one at a time; never spin up a cluster of thin pages at once.
+- **Pillar (live):** `/mlb-season-simulator/` targets "MLB season simulator." Honest framing only: it is a season-prediction experience in development, NOT a fully automated simulation engine or live competition. Never claim functionality that does not exist.
+- **Planned cluster (documented, DO NOT build until each can be done right with real content/functionality):** MLB Prediction League, MLB Playoff Predictor, MLB Standings Predictor, plus the already-live MLB The Show Stat League.
+- **Before adding any cluster page:** it must have unique, substantial content (no thin/duplicate), a verified-record angle, working CTA, and at least one valid inbound link from live structure (tools hub / nav / related page) + sitemap entry. If it would be thin, do not publish it.
+- **CTA honesty:** waitlist/predictions CTAs link only to existing functionality (e.g. `/register/`, `/predictions/`). No forms posting to non-existent endpoints.
