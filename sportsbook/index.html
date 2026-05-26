@@ -12023,6 +12023,41 @@ window.toggleSportFamily = function (family) {
         if (!move() && document.addEventListener) document.addEventListener('DOMContentLoaded', move);
     })();
 
+    // Alternate lines (alt spreads / alt totals) for the Alt Lines tab ONLY.
+    // Sourced from the separate /games/altlines endpoint (Bovada). This is
+    // display-only and fully isolated: it never runs for game-lines periods
+    // (full/tt/segments/grouped), never mutates window.TMR.currentGames, and
+    // any failure degrades to a clean empty state — so the live game-line
+    // boards are untouched and cannot be affected by this path.
+    function renderAltLinesBoard(sport, rowsEl) {
+        var key = (window.TMR && window.TMR.sportKeyMap && window.TMR.sportKeyMap[sport]) || '';
+        rowsEl.innerHTML = '<div class="sportsbook-board-empty"><div class="sportsbook-board-empty-icon" aria-hidden="true">●</div><strong>Loading ' + sport + ' alternate lines…</strong><span>Pulling alternate spreads &amp; totals.</span></div>';
+        if (!key) { rowsEl.innerHTML = emptyState(sport, 'Alternate lines are not available for ' + sport + ' yet.', 'closed'); return; }
+        var base = (typeof _ttApiBase === 'function') ? _ttApiBase() : ((window.api && window.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api');
+        var esc = function (s) { return ('' + (s == null ? '' : s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
+        var fmtOdds = function (o) { var n = Number(o); if (!isFinite(n)) return '—'; return n > 0 ? '+' + n : String(n); };
+        var fmtWhen = function (iso) { if (!iso) return ''; try { var d = new Date(iso); return d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
+        fetch(String(base).replace(/\/$/, '') + '/games/altlines/' + encodeURIComponent(key) + '?cb=' + Date.now(), { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+                if (rowsEl.getAttribute('data-sport') !== sport || window.TMR.selectedPeriod !== 'alts') return;
+                if (!data || !data.supported) { rowsEl.innerHTML = emptyState(sport, 'Alternate lines are not offered for ' + sport + ' yet.', 'closed'); return; }
+                var games = data.games || [];
+                if (!games.length) { rowsEl.innerHTML = emptyState(sport, 'No alternate lines posted right now. Check back when lines are up.', 'closed'); return; }
+                rowsEl.innerHTML = games.map(function (g) {
+                    var groups = (g.alt_groups || []).map(function (grp) {
+                        var lines = (grp.items || []).map(function (it) {
+                            var lineStr = (Number(it.line) > 0 ? '+' : '') + it.line;
+                            return '<div style="background:rgba(255,255,255,.04);border:1px solid var(--glass-border,#262636);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;gap:8px;font-size:13px"><span>' + esc(it.selection) + ' ' + esc(lineStr) + '</span><b style="color:#1ed760">' + fmtOdds(it.odds) + '</b></div>';
+                        }).join('');
+                        return '<div style="padding:6px 0"><h4 style="margin:6px 0;color:var(--accent-gold,#ffd700);font-size:12px;text-transform:uppercase;letter-spacing:.5px">' + esc(grp.label || grp.key) + '</h4><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">' + lines + '</div></div>';
+                    }).join('');
+                    return '<article class="sportsbook-game-card"><div class="game-meta-row"><b>' + esc(g.away_team) + ' @ ' + esc(g.home_team) + '</b> <small style="color:var(--text-muted,#9aa);margin-left:8px">' + esc(fmtWhen(g.commence_time)) + '</small></div>' + groups + '</article>';
+                }).join('');
+            })
+            .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'alts') rowsEl.innerHTML = emptyState(sport, 'Alternate-lines feed temporarily unavailable. Try again shortly.', 'closed'); });
+    }
+
     function renderBoard(sport) {
         var rows = document.getElementById('lobbyBoardRows');
         if (!rows) return;
@@ -12054,8 +12089,8 @@ window.toggleSportFamily = function (family) {
             var subT = document.getElementById('tennisSubleagues');
             if (subS) subS.classList.remove('show');
             if (subT) subT.classList.remove('show');
-            var unavailableKind = period === 'alts' ? 'Alternate lines' : 'Player props';
-            rows.innerHTML = emptyState(sport, unavailableKind + ' are not available from the current odds feed.', 'closed');
+            if (period === 'alts') { return renderAltLinesBoard(sport, rows); }
+            rows.innerHTML = emptyState(sport, 'Player props are not available from the current odds feed.', 'closed');
             return;
         }
         if (period === 'tt') {
