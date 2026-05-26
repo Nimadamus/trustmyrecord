@@ -1,8 +1,21 @@
 # TrustMyRecord Development Rules
 
-## Sportsbook league rail empty-state — HARD RULE (May 26, 2026)
-Grouped league rail rows (Soccer: EPL/MLS/UCL/La Liga/Serie A/Bundesliga/Ligue 1; Tennis: ATP/WTA) initialize to `Loading...` in static HTML. They are NOT covered by the `[data-sport-count]` lobby loop, so they must be resolved explicitly inside `updateGameCounts()` (sportsbook `index.html`), which fetches `/games/board/<leagueKey>` per league from `GROUP_SPORTS` and sets each `#<sport.toLowerCase()>-game-count` to a real count or a clean `—`. A `try/catch` guarantees no row is ever left stuck on `Loading...`.
-**Regression test requirement:** Any change to the odds feed, `/games/board/`, `GROUP_SPORTS`, `sportKeyMap`, or league loading MUST include opening the Soccer (and Tennis) group on live `/sportsbook/` and confirming every league row ends on a count or `—`, never permanent `Loading...`. The board empty state ("No soccer odds available right now") is separate and must also render cleanly when no odds exist.
+## Soccer/Tennis depend on the OddsPapi provider key — HARD RULE (May 26, 2026)
+**Soccer (EPL/MLS/UCL/La Liga/Serie A/Bundesliga/Ligue 1) and Tennis (ATP/WTA) games come ONLY from the OddsPapi odds provider** in `trustmyrecord-backend/services/sportsDataService.js` (`ODDS_API_KEY`, base `https://api.oddspapi.io/v4`, fallbacks `v5.oddspapi.io` + `api.the-odds-api.com`). **MLB is independent** — it is fed by Action Network (`actionNetworkService.js`) → DraftKings, so MLB keeps working even when OddsPapi is down.
+
+When `ODDS_API_KEY` is invalid/expired, every provider request returns **401**, the backend trips a circuit breaker (`ODDS_PROVIDER_AUTH_COOLDOWN_MS`), and `/games/board/<soccer|tennis key>` returns `games:[]` with `summary.severity:"warning"` / `diagnostics.source_attempts[].circuit_open:true`. **There is NO games-from-frontend workaround. Do NOT fake soccer/tennis games or wire a hack.** The only real fix is restoring a valid provider key on the `trustmyrecord-api` Render service.
+
+- **Missing/needed env var:** `ODDS_API_KEY` (an OddsPapi key) on `trustmyrecord-api`. If the key is actually a The-Odds-API key, also set `ODDS_API_COMPATIBILITY_BASE_URLS=https://api.the-odds-api.com/v4` (already a default fallback). No other env var is required for soccer/tennis.
+- **FanDuel public feed?** The board service does NOT use FanDuel's public API (`sbapi.il.sportsbook.fanduel.com`); `fanduel` only appears as a bookmaker *slug requested through OddsPapi* (`ODDS_API_BOOKMAKERS=draftkings,pinnacle,fanduel`). The FanDuel public API is used elsewhere only for the MLBProps article model, never wired into `/games/board/`. **Wiring FanDuel public odds into the board for soccer/tennis is NOT low-risk** (new fetch path + new normalization + untested market mapping) and must NOT be done as part of an empty-state fix. Leave it documented, not implemented.
+
+### Frontend empty-state contract (sportsbook `index.html`)
+1. **Rail counts:** Grouped league rail rows initialize to `Loading...` in static HTML and are NOT covered by the `[data-sport-count]` lobby loop. They are resolved explicitly inside `updateGameCounts()` (self-contained `leagueRows` list, independent of `GROUP_SPORTS` scope), which fetches `/games/board/<leagueKey>` and sets each `#<railId>-game-count` to a real count or a clean `—`. A `try/catch` guarantees no row is left stuck on `Loading...`.
+2. **Board empty state:** `renderGroupedBoard()` uses `_groupProviderUnavailable(payload)` (severity warning/error, `circuit_open`, error source, or null payload) to show the consumer-safe message **"<Sport> odds are temporarily unavailable while the data provider connection is being refreshed."** when the provider is down, vs. **"No <sport> odds available right now."** when the slate is genuinely empty. **Never surface raw provider/diagnostics error text to users.**
+
+**Regression test requirement (MANDATORY):** Any change to the odds feed, `/games/board/`, `sportsDataService`, `GROUP_SPORTS`, `sportKeyMap`, or sportsbook group loading MUST be live-verified on `/sportsbook/`:
+- MLB board populates with real games (proves Action Network path untouched).
+- Soccer group: every league row ends on a count or `—` (never permanent `Loading...`), and the board shows the calm "temporarily unavailable…refreshed" message (not a hang, not raw errors) while the provider key is down.
+- Tennis group: same — clean empty/unavailable state, never stuck on `Loading...`.
 
 ## Auth / Session Persistence — verified-working contract (May 25, 2026) — HARD RULE (PERMANENT)
 Login persists until the user explicitly clicks **Log Out**. Verified live on 2026-05-25 with `_auth_persist_test.cjs` (Playwright, real account, full 8-step acceptance: login → refresh → protected page → close/reopen new context → access-token-expiry+reload → logout → reload-stays-out — all pass).
