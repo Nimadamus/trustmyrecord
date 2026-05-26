@@ -1,5 +1,16 @@
 # TrustMyRecord Development Rules
 
+## Sportsbook odds data source — what the free feed does and does NOT carry (May 26, 2026)
+**The live sportsbook runs on the free Action Network public feed** (`api.actionnetwork.com/web/v1/scoreboard/<slug>`) for MLB, NBA, NFL, NHL, NCAAB/F, **tennis** (alias `tennis_atp`/`tennis_wta` → `tennis`), and **soccer** (all leagues via the `soccer` slug, labeled per game), plus the `ODDS_API_KEY`/`APISPORTS_API_KEY` fallback chain for soccer/tennis when AN is empty.
+
+**Provides:** mainline markets only — moneyline (h2h), spread/run line/puck line/Asian, total, team totals — plus available **game segments** (1H/2H, quarters, periods, MLB First 5, first inning).
+
+**Does NOT provide:** **alternate lines** and **player props**. Verified 2026-05-26: AN odds rows have no alt-line arrays or prop fields, and AN event/props/markets endpoints (`/web/v2/markets/event/<id>`, `/web/v1/games/<id>/props`, etc.) all 404.
+
+**Graceful handling (HARD RULE — do not regress):** the period bar shows `Alt Lines` and `Player Props` tabs on every sport; selecting them renders an honest empty state — "Alternate lines are not available from the current odds feed." / "Player props are not available from the current odds feed." (in `renderBoard`, `sportsbook/index.html`, keyed on `period === 'alts' | 'props'`). **Never** show fake/simulated odds, placeholder prices, a blank section, or an endless spinner for these.
+
+**Future integration note:** real alt lines / player props require a separate verified provider — FanDuel public API (already used for MLBProps), DraftKings, The Odds API (paid), or SportsDataIO. Do NOT wire one without explicit approval; route it through the same normalized board shape and keep the graceful empty state for uncovered sports/games. Do NOT revert to a stale/broken odds path or assume AN carries alt/props.
+
 ## Odds provider fallback chain (soccer/tennis) — ARCHITECTURE (May 26, 2026)
 Soccer/tennis boards must NOT break when one odds provider key dies. Resolution order in `trustmyrecord-backend/routes/games.js` `/board/:sportKey`:
 1. **Action Network (free, no key)** — `actionNetworkService.supports()` covers MLB/NBA/WNBA/NHL/NFL/NCAAB/NCAAF + **tennis**. NOT soccer.
