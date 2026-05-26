@@ -9863,14 +9863,15 @@
                             <strong>Soccer Leagues</strong>
                             <button type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('close')">Close</button>
                         </div>
-                        <div class="sportsbook-subleague-grid">
-                            <button type="button" onclick="window.selectSportAndShowGames('Soccer')">EPL <span id="soccer-game-count">Loading...</span></button>
-                            <button type="button" onclick="window.selectSportAndShowGames('MLS')">MLS <span id="mls-game-count">Loading...</span></button>
-                            <button type="button" onclick="window.selectSportAndShowGames('UCL')">Champions League <span id="ucl-game-count">Loading...</span></button>
-                            <button type="button" onclick="window.selectSportAndShowGames('LaLiga')">La Liga <span id="laliga-game-count">Loading...</span></button>
-                            <button type="button" onclick="window.selectSportAndShowGames('SerieA')">Serie A <span id="seriea-game-count">Loading...</span></button>
-                            <button type="button" onclick="window.selectSportAndShowGames('Bundesliga')">Bundesliga <span id="bundesliga-game-count">Loading...</span></button>
-                            <button type="button" onclick="window.selectSportAndShowGames('Ligue1')">Ligue 1 <span id="ligue1-game-count">Loading...</span></button>
+                        <div class="sportsbook-subleague-grid" id="soccerLeagueFilters">
+                            <button type="button" class="is-active" data-league="all" onclick="window.TMR.setSoccerFilter('all')">All Soccer</button>
+                            <button type="button" data-league="EPL" onclick="window.TMR.setSoccerFilter('EPL')">EPL</button>
+                            <button type="button" data-league="MLS" onclick="window.TMR.setSoccerFilter('MLS')">MLS</button>
+                            <button type="button" data-league="Champions League" onclick="window.TMR.setSoccerFilter('Champions League')">Champions League</button>
+                            <button type="button" data-league="La Liga" onclick="window.TMR.setSoccerFilter('La Liga')">La Liga</button>
+                            <button type="button" data-league="Serie A" onclick="window.TMR.setSoccerFilter('Serie A')">Serie A</button>
+                            <button type="button" data-league="Bundesliga" onclick="window.TMR.setSoccerFilter('Bundesliga')">Bundesliga</button>
+                            <button type="button" data-league="Ligue 1" onclick="window.TMR.setSoccerFilter('Ligue 1')">Ligue 1</button>
                         </div>
                     </div>
 
@@ -9879,11 +9880,17 @@
                             <strong>Tennis Tours</strong>
                             <button type="button" onclick="window.toggleSportFamily && window.toggleSportFamily('close')">Close</button>
                         </div>
-                        <div class="sportsbook-subleague-grid">
-                            <button type="button" onclick="window.selectSportAndShowGames('ATP')">ATP <span id="atp-game-count">Loading...</span></button>
-                            <button type="button" onclick="window.selectSportAndShowGames('WTA')">WTA <span id="wta-game-count">Loading...</span></button>
+                        <div class="sportsbook-subleague-grid" id="tennisTourFilters">
+                            <button type="button" class="is-active" data-tour="all" onclick="window.TMR.setTourFilter('all')">All Tennis</button>
+                            <button type="button" data-tour="atp" onclick="window.TMR.setTourFilter('atp')">ATP</button>
+                            <button type="button" data-tour="wta" onclick="window.TMR.setTourFilter('wta')">WTA</button>
                         </div>
                     </div>
+                    <style>
+                      #soccerLeagueFilters button.is-active, #tennisTourFilters button.is-active {
+                        background: var(--neon-cyan, #00aeff); color: #001018; border-color: var(--neon-cyan, #00aeff); font-weight: 700;
+                      }
+                    </style>
                 </section>
 
                 <aside class="sportsbook-ticket-preview">
@@ -11990,22 +11997,66 @@ window.toggleSportFamily = function (family) {
                 rowsEl.innerHTML = emptyState(sport, msg, 'closed');
                 return;
             }
-            if (period && period !== 'full') { renderPeriodRows(sport, rowsEl, games, period, 'backend grouped board'); return; }
-            // Soonest-first, and cap the visible slate so big tennis/soccer days
-            // don't render an endless scroll — match the feel of the other sports.
+            // Soonest-first; stash the full deduped slate so the league/tour
+            // filter buttons can narrow it client-side without a refetch.
             games.sort(function (a, b) { return new Date(a.commence_time || a.start_time || 0) - new Date(b.commence_time || b.start_time || 0); });
-            var GROUP_CAP = 20;
-            var shown = games.slice(0, GROUP_CAP);
-            window.TMR.currentGames = shown;
-            var html = shown.map(function (game, index) { return renderRow(game, index); }).join('');
-            if (games.length > GROUP_CAP) {
-                html += '<div class="sportsbook-group-more-note" style="padding:14px 16px;text-align:center;color:var(--text-muted,#9aab9f);font-size:13px;">Showing the next ' + GROUP_CAP + ' of ' + games.length + ' ' + sport.toLowerCase() + ' matches, soonest first. Use the league/tour buttons above to narrow the board.</div>';
-            }
-            rowsEl.innerHTML = html;
+            window.TMR._groupedGames = games;
+            window.TMR._groupedSport = sport;
+            window.TMR._groupedPeriod = period;
+            window.TMR._renderGroupedFiltered();
         }).catch(function () {
             if (rowsEl.getAttribute('data-sport') === sport) rowsEl.innerHTML = emptyState(sport, sport + ' odds are temporarily unavailable while the data provider connection is being refreshed.', 'closed');
         });
     }
+
+    // Render the grouped (soccer/tennis) board applying the active tour/league
+    // filter. Tennis filters by tour via the game id (an_atp_… / an_wta_…);
+    // soccer filters by the per-game league label (sport_title). Display-only,
+    // capped, and never touches game-line sports.
+    window.TMR._renderGroupedFiltered = function () {
+        var rowsEl = document.getElementById('lobbyBoardRows');
+        var sport = window.TMR._groupedSport;
+        if (!rowsEl || !sport || rowsEl.getAttribute('data-sport') !== sport) return;
+        var period = window.TMR._groupedPeriod || 'full';
+        var all = window.TMR._groupedGames || [];
+        var f = window.TMR._groupFilter || 'all';
+        var filtered = (f === 'all') ? all : all.filter(function (g) {
+            if (sport === 'Tennis') return ('' + (g.id || '')).toLowerCase().indexOf('_' + f + '_') !== -1;
+            return (g.sport_title || '') === f; // soccer league label
+        });
+        if (!filtered.length) {
+            window.TMR.currentGames = [];
+            rowsEl.innerHTML = emptyState(sport, 'No matches for this selection right now.', 'closed');
+            return;
+        }
+        if (period && period !== 'full') { renderPeriodRows(sport, rowsEl, filtered, period, 'grouped filtered'); return; }
+        var CAP = 20;
+        var shown = filtered.slice(0, CAP);
+        window.TMR.currentGames = shown;
+        var html = shown.map(function (game, index) { return renderRow(game, index); }).join('');
+        if (filtered.length > CAP) {
+            html += '<div class="sportsbook-group-more-note" style="padding:14px 16px;text-align:center;color:var(--text-muted,#9aab9f);font-size:13px;">Showing the next ' + CAP + ' of ' + filtered.length + ' ' + (f === 'all' ? sport.toLowerCase() : f) + ' matches, soonest first.</div>';
+        }
+        rowsEl.innerHTML = html;
+    };
+
+    function _setGroupFilterActive(panelId, attr, value) {
+        var panel = document.getElementById(panelId);
+        if (!panel) return;
+        Array.prototype.forEach.call(panel.querySelectorAll('button'), function (b) {
+            b.classList.toggle('is-active', b.getAttribute(attr) === value);
+        });
+    }
+    window.TMR.setTourFilter = function (tour) {
+        window.TMR._groupFilter = tour || 'all';
+        _setGroupFilterActive('tennisTourFilters', 'data-tour', window.TMR._groupFilter);
+        window.TMR._renderGroupedFiltered();
+    };
+    window.TMR.setSoccerFilter = function (league) {
+        window.TMR._groupFilter = league || 'all';
+        _setGroupFilterActive('soccerLeagueFilters', 'data-league', window.TMR._groupFilter);
+        window.TMR._renderGroupedFiltered();
+    };
 
     // Move the soccer/tennis league pickers ABOVE the games grid (they ship in
     // the HTML after the board). One-time relocation so the ATP/WTA / league
@@ -12102,6 +12153,16 @@ window.toggleSportFamily = function (family) {
         setActiveTabs(sport);
         renderPeriodBar(sport);
 
+        // The soccer/tennis league sub-panels belong only to their own sport.
+        // Hide them whenever the active sport isn't that family so they never
+        // linger inside another sport's board (e.g. Soccer Leagues under NBA).
+        (function () {
+            var subS = document.getElementById('soccerSubleagues');
+            var subT = document.getElementById('tennisSubleagues');
+            if (subS && sport !== 'Soccer') subS.classList.remove('show');
+            if (subT && sport !== 'Tennis') subT.classList.remove('show');
+        })();
+
         if (sport === 'Consensus') {
             rows.innerHTML = emptyState('Consensus', 'Consensus Coming Soon.', 'closed');
             return;
@@ -12125,7 +12186,8 @@ window.toggleSportFamily = function (family) {
             if (subS) subS.classList.remove('show');
             if (subT) subT.classList.remove('show');
             if (period === 'alts') { return renderAltLinesBoard(sport, rows); }
-            return renderPlayerPropsBoard(sport, rows);
+            rows.innerHTML = emptyState(sport, 'Player props are not available from the current odds feed.', 'closed');
+            return;
         }
         if (period === 'tt') {
             return renderTeamTotalsBoard(sport, rows);
@@ -12260,6 +12322,13 @@ window.toggleSportFamily = function (family) {
         // "not available" empty state instead of its real game board.
         if (changed || window.TMR.selectedPeriod === 'alts' || window.TMR.selectedPeriod === 'props') {
             window.TMR.selectedPeriod = 'full';
+        }
+        // Changing sport resets the tour/league filter to "All" so a stale
+        // ATP/EPL selection doesn't carry over and blank the next grouped board.
+        if (changed) {
+            window.TMR._groupFilter = 'all';
+            _setGroupFilterActive('tennisTourFilters', 'data-tour', 'all');
+            _setGroupFilterActive('soccerLeagueFilters', 'data-league', 'all');
         }
         try { renderBoard(sport); } catch (e) { console.warn('[TMR] setSport render error', e); }
     };
