@@ -1,5 +1,8 @@
 # TrustMyRecord Development Rules
 
+## Sportsbook page — no stray section labels from other pages (May 26, 2026)
+**HARD RULE:** The `/sportsbook/` page must not render leftover section labels/list items from other pages (leaderboards, profile, etc.). On May 26 an orphaned `<li>Public leaderboards</li></ul>` sat just after the `</style>` of the picks-page style block (between the `#picks` section close and `<div id="arena">`), with no matching `<ul>` — it rendered as a stray bullet "Public leaderboards" above the footer. Removed the orphan `<li>`+`</ul>`; kept the section-closing `</div>`s and footer intact. When editing `sportsbook/index.html`, never leave orphaned list items / headings from copied markup; every visible text node above the footer must belong to a sportsbook component.
+
 ## Sportsbook odds data source — what the free feed does and does NOT carry (May 26, 2026)
 **The live sportsbook runs on the free Action Network public feed** (`api.actionnetwork.com/web/v1/scoreboard/<slug>`) for MLB, NBA, NFL, NHL, NCAAB/F, **tennis** (alias `tennis_atp`/`tennis_wta` → `tennis`), and **soccer** (all leagues via the `soccer` slug, labeled per game), plus the `ODDS_API_KEY`/`APISPORTS_API_KEY` fallback chain for soccer/tennis when AN is empty.
 
@@ -808,11 +811,3 @@ Arena and community/hub pages must NOT ship with an oversized hero that pushes t
 - Tighten subtitle/buttons/proof-pill/card spacing (subtitle `margin-top:10px`, actions `16px`, proof `14px`, `.arena-clean-main` `padding-top:18px`, cards `min-height:210px`).
 - Keep the premium dark sportsbook style; never remove Arena functionality. Note: this page carries several stacked legacy redesign `<style>` blocks — only the LAST-defined `.arena-clean-*` ruleset is live; edit those, not the earlier overridden ones.
 - **CTA honesty:** waitlist/predictions CTAs link only to existing functionality (e.g. `/register/`, `/predictions/`). No forms posting to non-existent endpoints.
-
-
-## PERMANENT RULE: profile action buttons must route to a WORKING canonical destination, not just a harmless URL (May 26, 2026)
-Fixing a misrouting bug by pointing a button at a syntactically valid URL is NOT done until that destination actually performs the action.
-- A profile/action button must (a) use a root-absolute path (see prior rule) AND (b) land on a page that consumes the passed param and starts/prefills the intended flow.
-- **Messaging:** `/messages/?to=<username>` -> messages page reads `?to=` and opens the thread via `startConversationWithUser()`.
-- **Challenge:** `/arena/?challenge=<username>` -> arena `DOMContentLoaded` reads `?challenge=`, calls `openCreateChallenge()`, and prefills `#ccOpponent` with the username. If you change the arena entry point, update this deep-link handler too.
-- **Verification bar:** a route fix is only complete when a live load of `<route>?<param>=<username>` visibly starts the flow for that username, not merely when the URL stops being wrong. "Harmless but inert" is still broken.
