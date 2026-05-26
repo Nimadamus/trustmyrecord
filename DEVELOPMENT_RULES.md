@@ -808,3 +808,11 @@ Arena and community/hub pages must NOT ship with an oversized hero that pushes t
 - Tighten subtitle/buttons/proof-pill/card spacing (subtitle `margin-top:10px`, actions `16px`, proof `14px`, `.arena-clean-main` `padding-top:18px`, cards `min-height:210px`).
 - Keep the premium dark sportsbook style; never remove Arena functionality. Note: this page carries several stacked legacy redesign `<style>` blocks — only the LAST-defined `.arena-clean-*` ruleset is live; edit those, not the earlier overridden ones.
 - **CTA honesty:** waitlist/predictions CTAs link only to existing functionality (e.g. `/register/`, `/predictions/`). No forms posting to non-existent endpoints.
+
+
+## PERMANENT RULE: profile action buttons must route to a WORKING canonical destination, not just a harmless URL (May 26, 2026)
+Fixing a misrouting bug by pointing a button at a syntactically valid URL is NOT done until that destination actually performs the action.
+- A profile/action button must (a) use a root-absolute path (see prior rule) AND (b) land on a page that consumes the passed param and starts/prefills the intended flow.
+- **Messaging:** `/messages/?to=<username>` -> messages page reads `?to=` and opens the thread via `startConversationWithUser()`.
+- **Challenge:** `/arena/?challenge=<username>` -> arena `DOMContentLoaded` reads `?challenge=`, calls `openCreateChallenge()`, and prefills `#ccOpponent` with the username. If you change the arena entry point, update this deep-link handler too.
+- **Verification bar:** a route fix is only complete when a live load of `<route>?<param>=<username>` visibly starts the flow for that username, not merely when the URL stops being wrong. "Harmless but inert" is still broken.
