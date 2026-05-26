@@ -11960,17 +11960,26 @@ window.toggleSportFamily = function (family) {
             return fetchBackendBoard(league.key, 30).then(function (payload) {
                 return {
                     games: ((payload && payload.games) || []).map(function (game) { game.sport_title = league.label; return game; }),
-                    providerDown: _groupProviderUnavailable(payload)
+                    providerDown: _groupProviderUnavailable(payload),
+                    backendMsg: (payload && payload.summary && payload.summary.message) || ''
                 };
-            }).catch(function () { return { games: [], providerDown: true }; });
+            }).catch(function () { return { games: [], providerDown: true, backendMsg: '' }; });
         })).then(function (results) {
             if (rowsEl.getAttribute('data-sport') !== sport) return;
-            var games = [].concat.apply([], results.map(function (r) { return r.games; })).filter(function (g) { return !_ttGameStarted(g); });
+            // Dedupe by game id: some groups (e.g. tennis ATP+WTA) resolve to the
+            // same combined backend feed, which would otherwise double every row.
+            var seen = {};
+            var games = [].concat.apply([], results.map(function (r) { return r.games; }))
+                .filter(function (g) { return !_ttGameStarted(g); })
+                .filter(function (g) { var id = g && g.id; if (!id) return true; if (seen[id]) return false; seen[id] = 1; return true; });
             if (!games.length) {
                 var providerDown = results.some(function (r) { return r.providerDown; }) || _oddsProviderRecentlyDown();
-                var msg = providerDown
-                    ? sport + ' odds are temporarily unavailable while the data provider connection is being refreshed.'
-                    : 'No ' + sport.toLowerCase() + ' odds available right now.';
+                // Prefer the backend's canonical consumer-safe reason when present.
+                var backendMsg = (results.find(function (r) { return r.backendMsg; }) || {}).backendMsg;
+                var msg = backendMsg
+                    || (providerDown
+                        ? sport + ' odds are temporarily unavailable while the data provider connection is being refreshed.'
+                        : 'No ' + sport.toLowerCase() + ' odds available right now.');
                 rowsEl.innerHTML = emptyState(sport, msg, 'closed');
                 return;
             }
