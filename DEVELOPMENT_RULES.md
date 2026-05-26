@@ -769,3 +769,11 @@ Build pillar pages one at a time; never spin up a cluster of thin pages at once.
 - **Planned cluster (documented, DO NOT build until each can be done right with real content/functionality):** MLB Prediction League, MLB Playoff Predictor, MLB Standings Predictor, plus the already-live MLB The Show Stat League.
 - **Before adding any cluster page:** it must have unique, substantial content (no thin/duplicate), a verified-record angle, working CTA, and at least one valid inbound link from live structure (tools hub / nav / related page) + sitemap entry. If it would be thin, do not publish it.
 - **CTA honesty:** waitlist/predictions CTAs link only to existing functionality (e.g. `/register/`, `/predictions/`). No forms posting to non-existent endpoints.
+
+
+## Profile/action-button routes must be ABSOLUTE — never relative (May 26, 2026) — HARD RULE
+Action buttons rendered on `/profile/` (Message, Challenge, and any future action) navigate to other sections of the app. They MUST use root-absolute paths, e.g. `location.href='/messages/?to=' + username` and `location.href='/arena/?challenge=' + username`.
+- **Why:** A relative href like `'messages/?to=scpridematt'` resolves against the current document `/profile/` and produces a broken route. In production this surfaced as `/profile/?user=messages&to=scpridematt`, which made the profile loader treat `messages` as the username and render `Profile not found. We could not find a profile for "messages".`
+- **Rule:** Never let a profile action button feed a section name into the profile `?user=` query param. The only thing that belongs in `?user=` is a real username on `/profile/`. Section navigation = absolute path + its own query param (`/messages/?to=`, `/arena/?challenge=`).
+- **Canonical messaging route:** `/messages/?to=<username>`. The messages page reads `?to=` and opens the thread via `startConversationWithUser()`.
+- **Check before shipping any new profile action button:** the href starts with `/`, points at the section's own route, and does not collide with `?user=`.
