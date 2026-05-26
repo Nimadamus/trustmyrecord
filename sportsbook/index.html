@@ -12022,6 +12022,13 @@ window.toggleSportFamily = function (family) {
         // every sport instead of fake odds, a blank section, or an endless
         // spinner. Lights up automatically when a future provider supplies them.
         if (period === 'alts' || period === 'props') {
+            // The soccer/tennis league sub-panel is a league picker for game lines;
+            // it's irrelevant on the alt/props unavailable view and would otherwise
+            // linger below the message — hide it so nothing dangles under "not available".
+            var subS = document.getElementById('soccerSubleagues');
+            var subT = document.getElementById('tennisSubleagues');
+            if (subS) subS.classList.remove('show');
+            if (subT) subT.classList.remove('show');
             var unavailableKind = period === 'alts' ? 'Alternate lines' : 'Player props';
             rows.innerHTML = emptyState(sport, unavailableKind + ' are not available from the current odds feed.', 'closed');
             return;
