@@ -315,7 +315,15 @@
     if (selected === null) return false;
     var values = lineValuesForTrend(trend, market);
     if (!values.length) return false;
-    return values.some(function (value) { return Math.abs(value - selected) <= 0.001; });
+    // Spread/run-line lines are stored as magnitude (e.g. 1.5), but users
+    // commonly enter favorite notation (-1.5). Match on absolute value for
+    // spread so the sign convention never hides a verified trend. Totals and
+    // team totals are unsigned, so they keep exact matching.
+    var matchSelected = market.id === "spread" ? Math.abs(selected) : selected;
+    return values.some(function (value) {
+      var compare = market.id === "spread" ? Math.abs(value) : value;
+      return Math.abs(compare - matchSelected) <= 0.001;
+    });
   }
 
   function marketMatches(trend, market) {
