@@ -1704,6 +1704,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadLeaderboard();
     loadMLBHub();
     updateArenaSummaryStats();
+
+    // Deep-link: /arena/?challenge=<username> opens the Create Challenge modal
+    // prefilled with that opponent (canonical entry from a profile Challenge button).
+    try {
+        const challengeTarget = new URLSearchParams(location.search).get('challenge');
+        if (challengeTarget) {
+            openCreateChallenge();
+            const ccOpp = document.getElementById('ccOpponent');
+            if (ccOpp) ccOpp.value = challengeTarget.replace(/^@/, '');
+        }
+    } catch (e) { /* ignore deep-link parse errors */ }
 });
 
 function updateNavUser() {
