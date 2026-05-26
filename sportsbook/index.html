@@ -11991,12 +11991,37 @@ window.toggleSportFamily = function (family) {
                 return;
             }
             if (period && period !== 'full') { renderPeriodRows(sport, rowsEl, games, period, 'backend grouped board'); return; }
-            window.TMR.currentGames = games;
-            rowsEl.innerHTML = games.map(function (game, index) { return renderRow(game, index); }).join('');
+            // Soonest-first, and cap the visible slate so big tennis/soccer days
+            // don't render an endless scroll — match the feel of the other sports.
+            games.sort(function (a, b) { return new Date(a.commence_time || a.start_time || 0) - new Date(b.commence_time || b.start_time || 0); });
+            var GROUP_CAP = 20;
+            var shown = games.slice(0, GROUP_CAP);
+            window.TMR.currentGames = shown;
+            var html = shown.map(function (game, index) { return renderRow(game, index); }).join('');
+            if (games.length > GROUP_CAP) {
+                html += '<div class="sportsbook-group-more-note" style="padding:14px 16px;text-align:center;color:var(--text-muted,#9aab9f);font-size:13px;">Showing the next ' + GROUP_CAP + ' of ' + games.length + ' ' + sport.toLowerCase() + ' matches, soonest first. Use the league/tour buttons above to narrow the board.</div>';
+            }
+            rowsEl.innerHTML = html;
         }).catch(function () {
             if (rowsEl.getAttribute('data-sport') === sport) rowsEl.innerHTML = emptyState(sport, sport + ' odds are temporarily unavailable while the data provider connection is being refreshed.', 'closed');
         });
     }
+
+    // Move the soccer/tennis league pickers ABOVE the games grid (they ship in
+    // the HTML after the board). One-time relocation so the ATP/WTA / league
+    // buttons sit near the top instead of being stranded under a long slate.
+    (function _relocateGroupPickersOnce() {
+        function move() {
+            var grid = document.querySelector('.sportsbook-board-shell .sportsbook-board-grid');
+            if (!grid || !grid.parentNode) return false;
+            ['soccerSubleagues', 'tennisSubleagues'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el && el.parentNode === grid.parentNode) grid.parentNode.insertBefore(el, grid);
+            });
+            return true;
+        }
+        if (!move() && document.addEventListener) document.addEventListener('DOMContentLoaded', move);
+    })();
 
     function renderBoard(sport) {
         var rows = document.getElementById('lobbyBoardRows');
@@ -13380,8 +13405,6 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
 }
 </style>
 
-                            <li>Public leaderboards</li>
-                        </ul>
                     </div>
                 </div>
             </div>
