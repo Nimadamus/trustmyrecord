@@ -12,7 +12,7 @@ const js = fs.readFileSync(path.join(root, 'static', 'js', 'trendspotter.js'), '
 const css = fs.readFileSync(path.join(root, 'static', 'css', 'trendspotter.css'), 'utf8');
 
 assert(/\/static\/css\/trendspotter\.css\?v=20260518-generate2/.test(rawHtml), 'Trend Spotter page uses the current stylesheet cache key');
-assert(/\/static\/js\/trendspotter\.js\?v=20260518-generate2/.test(rawHtml), 'Trend Spotter page uses the current script cache key');
+assert(/\/static\/js\/trendspotter\.js\?v=20260526-spreadabs/.test(rawHtml), 'Trend Spotter page uses the current script cache key');
 assert(!/20260512labels1/.test(rawHtml + js + css), 'stale Trend Spotter deployment labels are removed');
 assert(!/Verified trend data source not connected yet/i.test(rawHtml + js + css), 'raw backend placeholder text must not ship in Trend Spotter UI');
 
@@ -260,6 +260,9 @@ function chooseTrendKind(doc, value) {
   change(doc, '#thresholdInput', '2.5');
   doc.querySelector('#generateTrend').click();
   assert.strictEqual(doc.querySelectorAll('[data-result="verified-trend"]').length, 0, 'spread should not render when selected line does not match source line data');
+  change(doc, '#thresholdInput', '-1.5');
+  doc.querySelector('#generateTrend').click();
+  assert.strictEqual(doc.querySelectorAll('[data-result="verified-trend"]').length, 1, 'spread should match favorite notation (-1.5) against magnitude source line (1.5)');
   change(doc, '#thresholdInput', '1.5');
 
   clickMarket(doc, 'total');
