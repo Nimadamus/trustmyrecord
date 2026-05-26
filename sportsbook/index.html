@@ -22539,6 +22539,36 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         });
+
+        // Soccer/Tennis league rail rows initialize to "Loading..." but are NOT
+        // covered by the [data-sport-count] lobby loop above (no such elements
+        // exist for the grouped league rail), so they used to stay stuck on
+        // "Loading..." forever. Resolve each league directly here so every row
+        // ends on a real count or a clean empty state ("—").
+        try {
+            var groups = (typeof GROUP_SPORTS !== 'undefined') ? GROUP_SPORTS : null;
+            if (groups) {
+                var leagueRows = [];
+                Object.keys(groups).forEach(function(g) {
+                    (groups[g] || []).forEach(function(l) { leagueRows.push(l); });
+                });
+                var apiBase3 = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+                leagueRows.forEach(function(l) {
+                    var railCell = document.getElementById(l.sport.toLowerCase() + '-game-count');
+                    if (!railCell) return;
+                    railCell.textContent = '…';
+                    fetch(String(apiBase3).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(l.key)).then(function(r) {
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        return r.json();
+                    }).then(function(data) {
+                        var games = (data && data.games) || [];
+                        railCell.textContent = games.length > 0 ? String(games.length) : '—';
+                    }).catch(function() {
+                        railCell.textContent = '—';
+                    });
+                });
+            }
+        } catch (e) { /* never leave league rows stuck on Loading... */ }
     }
 
     // Export functions - only export the <head> inline system functions
