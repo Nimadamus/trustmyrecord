@@ -39,7 +39,7 @@ for (const id of [
   assert(html.includes(`id="${id}"`), `Trendspotter page must keep #${id}`);
 }
 
-assert(html.includes('/static/js/trendspotter.js?v=20260526-spreadabs'), 'Trendspotter page must load the current cache-busted script');
+assert(html.includes('/static/js/trendspotter.js?v=20260526-recordbasis'), 'Trendspotter page must load the current cache-busted script');
 assert(html.includes('/static/css/trendspotter.css?v=20260518-generate2'), 'Trendspotter page must load the current cache-busted stylesheet');
 
 // --- Multi-sport, board-key driven sourcing (current product, not MLB-only) ---
