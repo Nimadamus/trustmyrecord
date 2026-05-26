@@ -777,3 +777,11 @@ Action buttons rendered on `/profile/` (Message, Challenge, and any future actio
 - **Rule:** Never let a profile action button feed a section name into the profile `?user=` query param. The only thing that belongs in `?user=` is a real username on `/profile/`. Section navigation = absolute path + its own query param (`/messages/?to=`, `/arena/?challenge=`).
 - **Canonical messaging route:** `/messages/?to=<username>`. The messages page reads `?to=` and opens the thread via `startConversationWithUser()`.
 - **Check before shipping any new profile action button:** the href starts with `/`, points at the section's own route, and does not collide with `?user=`.
+
+
+## PERMANENT RULE: internal app-route buttons/links use root-absolute paths, never parent-page-relative (May 26, 2026)
+Any button or link that navigates between sections of the app MUST use a root-absolute path beginning with `/` (or a full canonical URL). NEVER use a parent-page-relative path.
+- **Failure mode:** a relative `location.href='messages/?to=<user>'` rendered on `/profile/?user=<x>` resolves against `/profile/` and produced `/profile/?user=messages&to=<user>`, so the profile loader read `messages` as the username -> `Profile not found for "messages"`. The same defect existed on the Challenge button (`arena/?challenge=`) and on `/profile-test/`.
+- **Canonical routes:** messaging = `/messages/?to=<username>` (the messages page reads `?to=` and opens the thread via `startConversationWithUser()`); challenge = `/arena/?challenge=<username>`.
+- **Hard rule:** a section name (`messages`, `arena`, etc.) must NEVER land in another page's query param such as `?user=`. The only valid value of `/profile/?user=` is a real username. Section navigation = absolute section path + that section's own query param.
+- **Before shipping any new action button (profile, arena, cappers, feed, anywhere):** confirm the href starts with `/`, points at the section's own route, preserves the target username, and cannot be misread as a `?user=`/section-relative route. Grep check: `location\.href=\?'(messages|arena|profile|...)/`  must return zero relative (no leading slash) hits.
