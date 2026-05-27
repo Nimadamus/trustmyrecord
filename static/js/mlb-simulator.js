@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-handedness-splits-injuries-20260520g';
+    var UI_BUILD = 'mlb-simulator-realism-homefield-winprob-20260527a';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2180,8 +2180,11 @@
         return clamp((report.ilCount * 0.32) + (report.dayToDay * 0.12) + (report.relieverCount * 0.12), 0, 2.8);
     }
     function simulate(away, home, context, seedSalt, allowUpset) {
-        var awayRuns = expectedRunsFor(away, home, 0.38);
-        var homeRuns = expectedRunsFor(home, away, 0.12);
+        // Home-field run environment: home clubs historically score slightly MORE
+        // (last at-bat, familiarity, platoon), not less. Give home the larger
+        // run bonus (~+0.16 net over road) instead of the prior inverted values.
+        var awayRuns = expectedRunsFor(away, home, 0.08);
+        var homeRuns = expectedRunsFor(home, away, 0.24);
         var liveFactors = [];
         var awayPitcherPre = selectedPitcher('away', away, context);
         var homePitcherPre = selectedPitcher('home', home, context);
@@ -2324,7 +2327,16 @@
                 liveFactors.push('Recent scoring form from ESPN finals: ' + away.abbreviation + ' ' + context.recentForm.away.summary + '; ' + home.abbreviation + ' ' + context.recentForm.home.summary + '.');
             }
         }
-        var homeWin = clamp(1 / (1 + Math.exp(-(((homeRuns - awayRuns) * 0.55) + ((homeStrength - awayStrength) * 0.027)))), 0.17, 0.83);
+        // Real MLB single-game win probability almost never leaves ~[0.30, 0.70];
+        // even the best vs worst club tops out near 68%. Blend a gentle logistic
+        // (team-strength driven) with a Pythagorean expectation from the projected
+        // run environment so the displayed win % tracks the simulated box scores
+        // instead of drifting away from them, then clamp to a realistic band.
+        var homeLogistic = 1 / (1 + Math.exp(-(((homeRuns - awayRuns) * 0.42) + ((homeStrength - awayStrength) * 0.020))));
+        var homePythagExp = Math.pow(homeRuns, 1.83);
+        var awayPythagExp = Math.pow(awayRuns, 1.83);
+        var homePythag = (homePythagExp + awayPythagExp) > 0 ? homePythagExp / (homePythagExp + awayPythagExp) : 0.5;
+        var homeWin = clamp((homeLogistic * 0.5) + (homePythag * 0.5), 0.28, 0.72);
         if (context && context.odds) {
             var awayImp = impliedFromAmerican(context.odds.awayPrice);
             var homeImp = impliedFromAmerican(context.odds.homePrice);
