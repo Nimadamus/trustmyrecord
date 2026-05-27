@@ -9,6 +9,12 @@ Public pages must render their shell (header/nav/hero/static content) immediatel
 - No duplicate/runaway requests; dedup list+leaderboard so the richer row wins.
 - Reference fix: `/handicappers/` two-phase render — `hydrateStats()` is now synchronous (aggregate only), `enrichMembersWithPicks()` pulls picks in the background. Before: directory waited on N×(pick pages + metrics) before any render. After: shell + board paint on the first 1–2 calls.
 
+### API list/leaderboard endpoints must NOT return inline base64 blobs (May 27, 2026)
+- List/leaderboard/search endpoints must stay lightweight. NEVER serialize inline base64 avatar (or any base64 media) data URIs into a list payload — `/users` and `/users/leaderboard` were ~368KB each, ~98% base64 avatars, which dominated first-visit time.
+- Return a lightweight, cacheable URL instead. Pattern: backend `routes/users.js` `lightenAvatarRows()` rewrites any `data:` avatar to `GET /api/users/:id/avatar`, which decodes the stored base64 and serves a real image with `Cache-Control: public, max-age=86400` (hosted `http(s)` avatars pass through; missing/broken → 404 → frontend initials fallback).
+- Result: `/users` 368KB→~6KB, `/users/leaderboard` 367KB→~5.5KB; verified stats/records/rankings unchanged. Backend commit `3bd1ca3` on `master`.
+- Backend deploy note: the backend default branch is **master** and the local Windows clone is a divergent lineage with dual backslash-path corruption — commit single files to `master` via the GitHub Git Data API (blob→tree with `base_tree`→commit→update ref), never `git push` the local tree.
+
 ## Sportsbook page — no stray section labels from other pages (May 26, 2026)
 **HARD RULE:** The `/sportsbook/` page must not render leftover section labels/list items from other pages (leaderboards, profile, etc.). On May 26 an orphaned `<li>Public leaderboards</li></ul>` sat just after the `</style>` of the picks-page style block (between the `#picks` section close and `<div id="arena">`), with no matching `<ul>` — it rendered as a stray bullet "Public leaderboards" above the footer. Removed the orphan `<li>`+`</ul>`; kept the section-closing `</div>`s and footer intact. When editing `sportsbook/index.html`, never leave orphaned list items / headings from copied markup; every visible text node above the footer must belong to a sportsbook component.
 
