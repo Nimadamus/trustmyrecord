@@ -576,7 +576,8 @@
         // on every row — no need for separate ML/RL/Total filter tabs on MLB.
         'MLB':    [ {key:'game', label:'Game Lines', hint:'Run Line · Total · ML'},
                     {key:'first_5', label:'5 Inning Lines', hint:'First 5 innings'},
-                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'} ],
+                    {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'},
+                    {key:'player_props', label:'Player Props', hint:'View only'} ],
         'Soccer': [ {key:'game', label:'90-Min', hint:'1X2 / Spread / Total'},
                     {key:'moneyline', label:'1X2', hint:'Win / Draw'},
                     {key:'spread', label:'Asian', hint:'Asian handicap'},
@@ -679,6 +680,16 @@
             if (window.TMR._fullGameFilterMarkets.indexOf(key) !== -1) return true;
             // Live stays available so the user sees the "coming soon" message.
             if (key === 'live') return true;
+            // Player Props is DISPLAY-ONLY: show only when the board API actually
+            // returned a player_props group with items (backend PROPS_DISPLAY_ENABLED
+            // flag off => no group => tab hidden automatically).
+            if (key === 'player_props') {
+                return (games || []).some(function(g) {
+                    return Array.isArray(g.market_groups) && g.market_groups.some(function(grp) {
+                        return grp && grp.key === 'player_props' && Array.isArray(grp.items) && grp.items.length;
+                    });
+                });
+            }
             // Group-backed markets only appear when the underlying market_groups data exists.
             if (window.TMR._groupBackedMarkets.indexOf(key) !== -1) {
                 var alias = key === 'alts' ? ['alt_spreads', 'alt_totals'] : [key];
@@ -805,6 +816,76 @@
     //   - first_5     → full DK 5-col board: Matchup | F5 RL | F5 Total | F5 ML | More
     //   - alts/other  → falls through to legacy pill-grid renderer
     // selectGameBet onclick contract preserved: same arg shape, same bet-type strings.
+    // DISPLAY-ONLY Player Props board. Renders ONLY the player_props groups that
+    // the board API already returned. Markup is intentionally inert: no buttons,
+    // no onclick, no selectGameBet, no data-bet hooks, nothing the pick slip or
+    // submit flow can latch onto. Props are view-only until explicitly upgraded.
+    window.TMR._renderPlayerPropsBoard = function(container, games, sport) {
+        var escHtml = function(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+        var fmtOdds = function(o) { var n = Number(o); if (!Number.isFinite(n)) return ''; return n > 0 ? '+' + n : '' + n; };
+        var propItems = function(game) {
+            if (!Array.isArray(game.market_groups)) return [];
+            var out = [];
+            game.market_groups.forEach(function(g) {
+                if (!g || g.key !== 'player_props' || !Array.isArray(g.items)) return;
+                g.items.forEach(function(it) { if (it && it.display_only) out.push(it); });
+            });
+            return out;
+        };
+
+        var banner = '<div class="tmr-pp-banner" role="note">'
+            + '<span class="tmr-pp-pill">View Only</span>'
+            + '<span class="tmr-pp-banner-text">Player props are shown for reference only. They are not bettable here yet — you cannot add them to a pick slip or submit them.</span>'
+            + '</div>';
+
+        var anyContent = games.some(function(g) { return propItems(g).length; });
+        if (!anyContent) {
+            container.innerHTML = banner
+                + '<div class="market-empty tmr-pp-empty" style="padding:28px 20px;text-align:center;color:#94a3b8;">'
+                + '<div style="font-size:30px;margin-bottom:8px;">&#128100;</div>'
+                + '<div style="color:#f4f7fb;font-weight:800;letter-spacing:.03em;margin-bottom:6px;">No player props available right now</div>'
+                + 'Props post closer to game time. Switch back to '
+                + '<button type="button" onclick="window.TMR.setMarket(\'game\')" style="background:none;border:0;color:#00ffff;padding:0;cursor:pointer;font-weight:700;">Game Lines</button>.'
+                + '</div>';
+            return;
+        }
+
+        var html = banner + '<div class="tmr-pp-board">';
+        games.forEach(function(game) {
+            var items = propItems(game);
+            if (!items.length) return;
+            var gameTime = '';
+            try { gameTime = new Date(game.commence_time).toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'}); } catch (_) {}
+            // Group by prop_label, preserving first-seen order.
+            var order = [], byLabel = {};
+            items.forEach(function(it) {
+                var label = it.prop_label || it.prop_type || 'Prop';
+                if (!byLabel[label]) { byLabel[label] = []; order.push(label); }
+                byLabel[label].push(it);
+            });
+            html += '<div class="tmr-pp-game">'
+                + '<div class="tmr-pp-game-head">' + escHtml(game.away_team) + ' @ ' + escHtml(game.home_team)
+                + (gameTime ? ' <span class="tmr-pp-time">' + escHtml(gameTime) + '</span>' : '') + '</div>';
+            order.forEach(function(label) {
+                html += '<div class="tmr-pp-group"><div class="tmr-pp-group-label">' + escHtml(label) + '</div><div class="tmr-pp-rows">';
+                byLabel[label].forEach(function(it) {
+                    var player = escHtml(it.player_name || it.selection || '');
+                    var team = it.player_team ? '<span class="tmr-pp-team">' + escHtml(it.player_team) + '</span>' : '';
+                    var lineTxt = escHtml(((it.side || '') + ' ' + (it.line != null ? it.line : '')).trim());
+                    html += '<div class="tmr-pp-row">'
+                        + '<span class="tmr-pp-player">' + player + team + '</span>'
+                        + '<span class="tmr-pp-pickline">' + lineTxt + '</span>'
+                        + '<span class="tmr-pp-odds">' + escHtml(it.odds_display || fmtOdds(it.odds)) + '</span>'
+                        + '</div>';
+                });
+                html += '</div></div>';
+            });
+            html += '</div>';
+        });
+        html += '</div>';
+        container.innerHTML = html;
+    };
+
     window.TMR._renderMarketBoard = function(container, games, sport, marketKey) {
         var aliases = marketKey === 'alts' ? ['alt_spreads', 'alt_totals'] : [marketKey];
         var labelByMarket = {
@@ -1145,6 +1226,11 @@
                 + '<button type="button" onclick="window.TMR.setMarket(\'game\')" style="background:none;border:0;color:#00ffff;padding:0;cursor:pointer;font-weight:700;">All Markets</button> to lock pre-game picks.'
                 + '</div>';
             return;
+        }
+
+        // ===== Player Props (DISPLAY-ONLY, read-only, never pickable) =====
+        if (market === 'player_props') {
+            return window.TMR._renderPlayerPropsBoard(container, games, sport);
         }
 
         // ===== Group-backed markets (Team Totals / F5 / Halves / Alts) =====
@@ -10047,6 +10133,23 @@
             .market-subtab .market-subtab__hint{display:block;font-size:9.5px;color:rgba(0,0,0,0.55);margin-top:3px;font-weight:600;letter-spacing:.05em;}
             .market-subtab:not(.is-active) .market-subtab__hint{color:#64748b;}
             .market-empty{padding:16px 18px;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:10px;color:#94a3b8;font-size:13.5px;text-align:center;margin:8px 0 0;}
+
+            /* DISPLAY-ONLY Player Props (read-only; visually distinct from pickable cards) */
+            .tmr-pp-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:6px 0 14px;padding:11px 15px;background:rgba(148,163,184,0.08);border:1px dashed rgba(148,163,184,0.4);border-radius:10px;color:#cbd5e1;font-size:12.5px;}
+            .tmr-pp-pill{flex:0 0 auto;padding:4px 10px;border-radius:999px;background:#334155;color:#e2e8f0;font:800 10px/1 'Inter',sans-serif;letter-spacing:.12em;text-transform:uppercase;}
+            .tmr-pp-banner-text{flex:1 1 240px;}
+            .tmr-pp-board{display:flex;flex-direction:column;gap:14px;}
+            .tmr-pp-game{background:rgba(11,17,24,0.55);border:1px solid rgba(255,255,255,0.06);border-radius:11px;padding:12px 14px;}
+            .tmr-pp-game-head{color:#f4f7fb;font-weight:800;font-size:13px;letter-spacing:.03em;margin-bottom:8px;}
+            .tmr-pp-time{color:#8ea0bc;font-weight:600;font-size:11px;margin-left:8px;}
+            .tmr-pp-group{margin-top:8px;}
+            .tmr-pp-group-label{color:#94a3b8;font:800 10.5px/1 'Inter',sans-serif;letter-spacing:.1em;text-transform:uppercase;margin:6px 0 5px;}
+            .tmr-pp-rows{display:flex;flex-direction:column;gap:4px;}
+            .tmr-pp-row{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:7px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);cursor:default;}
+            .tmr-pp-player{flex:1 1 auto;color:#e2e8f0;font-size:13px;font-weight:600;}
+            .tmr-pp-team{color:#7c8aa0;font-size:10.5px;font-weight:600;margin-left:8px;text-transform:uppercase;letter-spacing:.04em;}
+            .tmr-pp-pickline{flex:0 0 auto;color:#aeb8c6;font-size:12px;font-weight:700;min-width:78px;text-align:right;}
+            .tmr-pp-odds{flex:0 0 auto;color:#f4f7fb;font-size:13px;font-weight:800;min-width:56px;text-align:right;}
 
             /* Column filter: when a single-market sub-tab is active, hide the other
                two columns of the standard board. data-mkt="matchup" always stays. */
