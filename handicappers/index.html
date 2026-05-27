@@ -1054,6 +1054,10 @@
         };
 
         let members = [];
+        // Total registered/public users (production directory), INCLUDING members
+        // with zero picks. Distinct from `members`, which is filtered to users with
+        // at least one pick. Used for the "Total Members" summary card.
+        let totalRegistered = 0;
         let visibleMembers = [];
         let displayMembers = [];
         let qualifiedPool = [];
@@ -1948,11 +1952,6 @@
         function renderSummary() {
             const pool = displayMembers.length || members.length ? (displayMembers.length ? displayMembers : members) : members;
             const pickedMembers = pool.filter(member => Number(member.stats.totalPicks || 0) > 0);
-            // Active Pick Makers = members who have locked/graded picks AND recent activity
-            // (same 30-day window used by the leaderboard's isQualifiedTopPerformer).
-            // This is a DISTINCT metric from Total Members and must never reuse members.length.
-            const recentCutoff = Date.now() - (30 * 24 * 60 * 60 * 1000);
-            const activeMembers = pickedMembers.filter(member => getActivityTime(member) > recentCutoff);
             const gradedMembers = pool.filter(member => gradedCount(member) > 0);
             const qualifiedMembers = gradedMembers.filter(isQualifiedTopPerformer);
             const totalGradedPicks = pool.reduce((sum, member) => sum + gradedCount(member), 0);
@@ -1960,8 +1959,12 @@
             const topUnits = qualifiedUnitsLeader(qualifiedMembers);
             const recent = bestBy(pickedMembers, () => true, getActivityTime);
 
-            setText(els.total, String(members.length));
-            setText(els.active, String(activeMembers.length));
+            // Total Members = ALL registered/public users (incl. zero-pick signups).
+            // Active Pick Makers = users with at least one locked/graded pick.
+            // These are SEPARATE metrics and must never collapse into one count.
+            const activeCount = members.filter(member => Number(member.stats.totalPicks || 0) > 0).length;
+            setText(els.total, String(Math.max(totalRegistered, members.length, activeCount)));
+            setText(els.active, String(activeCount));
             setText(els.totalPicks, String(totalGradedPicks));
             setMetricText(els.bestWinRate, bestWinRate ? formatPercent(bestWinRate.stats.winRate, true) : 'Not enough graded picks yet', bestWinRate ? Number(bestWinRate.stats.winRate) - 50 : null);
             setText(els.bestWinRateUser, bestWinRate ? '@' + bestWinRate.username + ' · ' + gradedCount(bestWinRate) + ' graded picks' : 'Not enough graded picks yet');
@@ -2231,7 +2234,8 @@
         function writeDirectoryCache(list) {
             try {
                 localStorage.setItem(DIRECTORY_CACHE_KEY, JSON.stringify({
-                    ts: Date.now(), members: (list || []).map(serializeMemberForCache)
+                    ts: Date.now(), totalRegistered: totalRegistered,
+                    members: (list || []).map(serializeMemberForCache)
                 }));
             } catch (error) { /* quota/unavailable: caching is best-effort */ }
         }
@@ -2240,6 +2244,7 @@
                 const raw = localStorage.getItem(DIRECTORY_CACHE_KEY);
                 const data = raw ? JSON.parse(raw) : null;
                 if (!data || !Array.isArray(data.members)) return [];
+                if (Number(data.totalRegistered) > 0) totalRegistered = Number(data.totalRegistered);
                 return data.members.map(m => Object.assign({}, m, {
                     stats: Object.assign(defaultStats(), m.stats || {}),
                     rawPicks: [],
@@ -2264,6 +2269,10 @@
                     applyFilters();
                 }
                 const sourceUsers = await fetchBackendUsers();
+                // Total registered/public members = every production user with a
+                // username, regardless of pick count (sourceUsers is already
+                // test-account-filtered by fetchBackendUsers).
+                totalRegistered = sourceUsers.filter(user => normalizeUsername(user)).length;
                 // Phase 1: render fresh aggregate stats (no per-user fetches).
                 members = sourceUsers
                     .map(user => normalizeMember(user, hydrateStats(user)))
@@ -2348,6 +2357,7 @@
             refreshing = true;
             try {
                 const sourceUsers = await fetchBackendUsers();
+                totalRegistered = sourceUsers.filter(user => normalizeUsername(user)).length;
                 // Preserve already-enriched picks so the Sport/Wager filters don't
                 // flicker back to aggregate-only between background refreshes.
                 const priorPicks = new Map();
