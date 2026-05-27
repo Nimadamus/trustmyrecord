@@ -2090,16 +2090,14 @@ button{font:inherit;cursor:pointer}
           </section>
 
           <section class="tmr-board-card tmr-activity-card">
-            <header><h3>Capper Trend Spotter</h3><a href="/handicappers/">View Public Records</a></header>
-            <p class="tmr-activity-tagline">Not just wins and losses. We detect who is hot, where they are strong, and why their record matters.</p>
+            <header><h3>Live Highlights</h3><a href="/handicappers/">View Public Records</a></header>
             <div id="tmrHeroPicksList" class="tmr-activity-list tmr-activity-empty" aria-live="polite" aria-busy="true">
               <div class="tmr-activity-loading">
                 <span aria-hidden="true">📈</span>
                 <strong>Scanning verified records</strong>
-                <p>Hot streaks, sharp angles, and profit windows for each capper show up here.</p>
+                <p>Hot streaks, sharp angles, and profit windows show up here.</p>
               </div>
             </div>
-            <p class="tmr-activity-trustnote">📊 Highlights are computed from graded, verified picks only.</p>
             <a class="tmr-activity-cta" href="/handicappers/">View Public Records →</a>
           </section>
         </div>
@@ -2696,18 +2694,18 @@ button{font:inherit;cursor:pointer}
   }
   .tmr-dashboard-grid {
     display: grid;
-    grid-template-columns: minmax(330px, 1fr) minmax(330px, 1fr);
-    border: 1px solid rgba(134, 162, 190, .17);
+    grid-template-columns: 1fr;
+    border: 0;
     border-radius: 8px;
     overflow: hidden;
-    background: rgba(3, 10, 19, .36);
+    background: transparent;
   }
   .tmr-board-card {
     min-width: 0;
-    padding: 14px 14px 12px;
+    padding: 16px 16px 14px;
     background: rgba(5, 14, 26, .38);
   }
-  .tmr-board-card + .tmr-board-card { border-left: 1px solid rgba(134, 162, 190, .17); }
+  .tmr-board-card + .tmr-board-card { border-top: 1px solid rgba(134, 162, 190, .14); }
   .tmr-board-card header {
     display: flex;
     justify-content: space-between;
@@ -2884,16 +2882,16 @@ button{font:inherit;cursor:pointer}
   .tmr-activity-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     border-top: 1px solid rgba(134, 162, 190, .10);
-    padding-top: 12px;
+    padding-top: 14px;
   }
   .tmr-activity-row {
     display: grid;
     grid-template-columns: 36px 1fr auto;
     align-items: center;
     gap: 12px;
-    padding: 9px 12px;
+    padding: 12px 14px;
     border: 1px solid rgba(134, 162, 190, .14);
     border-radius: 8px;
     background: rgba(7, 18, 32, .58);
@@ -4622,7 +4620,6 @@ function escapeHtml(value) {
                 + '<div class="tmr-activity-text">'
                 + '<b>' + escapeHtml(e.displayName || e.usernameRaw) + '</b>'
                 + '<span class="tmr-trend-line">' + escapeHtml(e.highlight.line) + '</span>'
-                + '<span class="tmr-trend-sub">' + escapeHtml(e.highlight.sub) + '</span>'
                 + '</div>'
                 + '<span class="tmr-activity-pill tmr-trend-pill ' + e.highlight.cls + '">' + escapeHtml(e.highlight.tag) + '</span>'
                 + '</a>';
@@ -4659,7 +4656,7 @@ function escapeHtml(value) {
 
         const entries = results.filter(Boolean)
             .sort(function (a, b) { return b.highlight.score - a.highlight.score; })
-            .slice(0, 8);
+            .slice(0, 4);
         renderTrendSpotter(entries);
     }
 
