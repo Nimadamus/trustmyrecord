@@ -2168,6 +2168,41 @@
             renderRows();
         }
 
+        // Stale-while-revalidate cache. The /users + /users/leaderboard payloads
+        // are ~360KB each (≈98% inline base64 avatars), and a cold Render free
+        // instance can take many seconds for the first response. Persisting the
+        // last directory snapshot lets repeat/cold loads paint the full board
+        // instantly while fresh data revalidates in the background.
+        const DIRECTORY_CACHE_KEY = 'tmr_handicappers_directory_v1';
+        function serializeMemberForCache(m) {
+            const stats = Object.assign({}, m.stats);
+            delete stats._rawPicks;
+            return {
+                id: m.id, username: m.username, displayName: m.displayName,
+                avatar: m.avatar, createdAt: m.createdAt, lastActive: m.lastActive,
+                stats: stats, isFollowing: m.isFollowing
+            };
+        }
+        function writeDirectoryCache(list) {
+            try {
+                localStorage.setItem(DIRECTORY_CACHE_KEY, JSON.stringify({
+                    ts: Date.now(), members: (list || []).map(serializeMemberForCache)
+                }));
+            } catch (error) { /* quota/unavailable: caching is best-effort */ }
+        }
+        function readDirectoryCache() {
+            try {
+                const raw = localStorage.getItem(DIRECTORY_CACHE_KEY);
+                const data = raw ? JSON.parse(raw) : null;
+                if (!data || !Array.isArray(data.members)) return [];
+                return data.members.map(m => Object.assign({}, m, {
+                    stats: Object.assign(defaultStats(), m.stats || {}),
+                    rawPicks: [],
+                    _user: { username: m.username, id: m.id }
+                }));
+            } catch (error) { return []; }
+        }
+
         async function init() {
             try {
                 const minLabel = document.getElementById('hmMinPicksLabel');
@@ -2175,11 +2210,20 @@
                 const params = new URLSearchParams(window.location.search || '');
                 const initialQuery = (params.get('q') || params.get('search') || '').trim();
                 if (initialQuery) els.search.value = initialQuery;
+                // Phase 0: instant paint from last cached snapshot (if any).
+                const cached = readDirectoryCache();
+                if (cached.length) {
+                    members = cached;
+                    renderSummary();
+                    fillSports();
+                    applyFilters();
+                }
                 const sourceUsers = await fetchBackendUsers();
-                // Phase 1: instant paint from aggregate stats (no per-user fetches).
+                // Phase 1: render fresh aggregate stats (no per-user fetches).
                 members = sourceUsers
                     .map(user => normalizeMember(user, hydrateStats(user)))
                     .filter(member => member.username && isProductionDirectoryUser(member) && Number(member.stats?.totalPicks || 0) > 0);
+                writeDirectoryCache(members);
                 renderSummary();
                 fillSports();
                 applyFilters();
@@ -2280,6 +2324,7 @@
                     })
                     .filter(member => member.username && isProductionDirectoryUser(member) && Number(member.stats?.totalPicks || 0) > 0);
                 members = next;
+                writeDirectoryCache(members);
                 fillSports();
                 applyFilters();
                 enrichMembersWithPicks();
