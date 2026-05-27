@@ -2076,7 +2076,8 @@ button{font:inherit;cursor:pointer}
     <aside class="tmr-premium-dashboard" aria-label="TrustMyRecord product dashboard preview">
       <div class="tmr-dashboard-shell">
         <div class="tmr-dashboard-grid">
-          <section class="tmr-board-card">
+          <!-- Public Profiles card hidden from hero rail (reversible: remove tmr-hero-card-hidden class / its CSS rule to restore). Markup + #tmrHeroLeaderboardBody hydration intact; leaderboard access remains in nav + /leaderboards/. -->
+          <section class="tmr-board-card tmr-hero-card-hidden">
             <header><h3>Public Profiles</h3><a href="/leaderboards/">View Leaderboards</a></header>
             <div class="tmr-board-scroll">
             <table>
@@ -2706,6 +2707,8 @@ button{font:inherit;cursor:pointer}
     background: rgba(5, 14, 26, .38);
   }
   .tmr-board-card + .tmr-board-card { border-top: 1px solid rgba(134, 162, 190, .14); }
+  /* Hero rail = one clean Live Highlights module; Public Profiles card hidden (reversible). */
+  .tmr-hero-card-hidden { display: none; }
   .tmr-board-card header {
     display: flex;
     justify-content: space-between;
