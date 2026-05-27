@@ -143,14 +143,15 @@ The public profile masthead (`profile/index.html`, `#profileHeader` grid: left `
 - **Wrapping is last resort, below the desktop threshold only.** The `@media (max-width:1180px)` block collapses the header to one column and re-enables `white-space:normal; overflow-wrap:anywhere; word-break:break-word` plus `.profile-identity-copy{min-width:0;overflow:hidden}`. ≤720px drops the name to 31px. Mobile/tablet may wrap or shrink cleanly; desktop may not.
 - Verify with `NobodyImportant74` (and a longer name) at desktop / tablet / mobile: one-line name on desktop, no overlap with the stat card, no horizontal scroll, clean stack ≤1180px.
 
-## Handicappers Summary Cards: Total Members ≠ Active Pick Makers (May 27, 2026) — PROTOCOL
+## Handicappers Summary Cards: three distinct metrics (May 27, 2026) — PROTOCOL
 
-On `/handicappers/`, the top summary cards **Total Members** and **Active Pick Makers** are SEPARATE metrics and must NEVER share the same count (no `members.length` reused for both, no mock/fallback shared value).
+On the Handicappers page, Total Members means all registered/public users, Active Pick Makers means users with locked-pick activity, and Qualified Members means users eligible for the directory/leaderboard filters. These three metrics must not be collapsed into one count.
 
-- **Total Members** = total qualifying/public members in the directory (`members.length`).
-- **Active Pick Makers** = members with locked/graded picks AND recent activity, using the existing 30-day window: `pickedMembers.filter(m => getActivityTime(m) > Date.now() - 30d)`. This matches the leaderboard's `isQualifiedTopPerformer` recency window and the member-table activity logic. Do NOT count everyone in the directory as active.
-- Wired in `renderSummary()` (`handicappers/index.html`): `setText(els.total, members.length)` and `setText(els.active, activeMembers.length)` from two distinct computations.
-- Incident: May 27, 2026 — both cards showed `19` because Active reused `pickedMembers.length` (everyone with ≥1 pick) instead of the recent-activity subset. Fixed in commit `ed8b913`.
+- **Total Members** = ALL registered/public production users, INCLUDING signups with zero picks. Wired to module var `totalRegistered = sourceUsers.filter(normalizeUsername).length` (sourceUsers is already test-account-filtered by `fetchBackendUsers`). NOT `members.length`, which is the picks-only subset.
+- **Active Pick Makers** = users with at least one locked/graded pick: `members.filter(m => Number(m.stats.totalPicks) > 0).length`. Do NOT gate this on a today/recent timestamp — the directory shows all users with locked-pick activity.
+- **Qualified Members** = users eligible for the directory/leaderboard filters (the picks-only `members` array filtered by `isProductionDirectoryUser` + `totalPicks > 0`; leaders further gated by `isQualifiedTopPerformer`).
+- Wired in `renderSummary()` (`handicappers/index.html`): `setText(els.total, max(totalRegistered, members.length, activeCount))` and `setText(els.active, activeCount)`.
+- Incident: May 27, 2026 — first wrong fix gated Active on a 30-day recency window → Active showed `0`. Corrected: Active = all picks-makers (19), Total = full registered count (≥ 19).
 
 ## Leaderboard Must Support Sport + Wager Type Filtering (May 23, 2026) — PROTOCOL
 
