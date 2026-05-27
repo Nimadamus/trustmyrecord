@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-pa-engine-ttop-park-steals-20260527c';
+    var UI_BUILD = 'mlb-simulator-target-aware-anchor-20260527d';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1791,8 +1791,19 @@
         if (!m) return v;
         return evNormalize({ bb: v.bb, so: v.so * m.so, hr: v.hr * m.hr, b3: v.b3 * m.hit, b2: v.b2 * m.hit, b1: v.b1 * m.hit, out: Math.max(0.02, v.out) });
     }
+    // Target-aware correction between the linear-weights anchor target and the
+    // realized simulated mean. The engine tracks low/medium targets near unity but
+    // compounds above ~4.4 R/G (high-OBP lineups rally more than linear weights
+    // predict), so the correction shrinks as the target rises. Quadratic fit (~exact
+    // across T=3.0-6.5) to the realized-vs-target curve measured by
+    // scripts/validate-mlb-simulator.cjs; replaces the old fixed 0.985 that was
+    // tuned only at ~4.4 and let lopsided matchups overshoot.
+    function evAnchorTargetCorrection(t) {
+        return clamp(0.985 + 0.02752 * t - 0.006719 * t * t, 0.80, 1.0);
+    }
     function evAnchorFactor(combinedVectors, targetRuns) {
-        var target = clamp(targetRuns, 1.4, 11) * 0.985;
+        var t = clamp(targetRuns, 1.4, 11);
+        var target = t * evAnchorTargetCorrection(t);
         function runsAt(f) {
             var avg = { bb: 0, so: 0, hr: 0, b3: 0, b2: 0, b1: 0, out: 0 };
             combinedVectors.forEach(function (v) { var sv = evScale(v, f); for (var k in avg) avg[k] += sv[k] / combinedVectors.length; });
