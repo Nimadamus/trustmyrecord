@@ -1948,6 +1948,11 @@
         function renderSummary() {
             const pool = displayMembers.length || members.length ? (displayMembers.length ? displayMembers : members) : members;
             const pickedMembers = pool.filter(member => Number(member.stats.totalPicks || 0) > 0);
+            // Active Pick Makers = members who have locked/graded picks AND recent activity
+            // (same 30-day window used by the leaderboard's isQualifiedTopPerformer).
+            // This is a DISTINCT metric from Total Members and must never reuse members.length.
+            const recentCutoff = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            const activeMembers = pickedMembers.filter(member => getActivityTime(member) > recentCutoff);
             const gradedMembers = pool.filter(member => gradedCount(member) > 0);
             const qualifiedMembers = gradedMembers.filter(isQualifiedTopPerformer);
             const totalGradedPicks = pool.reduce((sum, member) => sum + gradedCount(member), 0);
@@ -1956,7 +1961,7 @@
             const recent = bestBy(pickedMembers, () => true, getActivityTime);
 
             setText(els.total, String(members.length));
-            setText(els.active, String(pickedMembers.length));
+            setText(els.active, String(activeMembers.length));
             setText(els.totalPicks, String(totalGradedPicks));
             setMetricText(els.bestWinRate, bestWinRate ? formatPercent(bestWinRate.stats.winRate, true) : 'Not enough graded picks yet', bestWinRate ? Number(bestWinRate.stats.winRate) - 50 : null);
             setText(els.bestWinRateUser, bestWinRate ? '@' + bestWinRate.username + ' · ' + gradedCount(bestWinRate) + ' graded picks' : 'Not enough graded picks yet');
