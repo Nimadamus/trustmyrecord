@@ -320,10 +320,22 @@
     // spread so the sign convention never hides a verified trend. Totals and
     // team totals are unsigned, so they keep exact matching.
     var matchSelected = market.id === "spread" ? Math.abs(selected) : selected;
-    return values.some(function (value) {
-      var compare = market.id === "spread" ? Math.abs(value) : value;
-      return Math.abs(compare - matchSelected) <= 0.001;
+    var compares = values.map(function (value) {
+      return market.id === "spread" ? Math.abs(value) : value;
     });
+    // Exact match always counts.
+    if (compares.some(function (value) { return Math.abs(value - matchSelected) <= 0.001; })) return true;
+    // The displayed record is scored at each game's own posted line within the
+    // verified sample (see recordBasis), not only the entered line. Posted lines
+    // vary game to game and are stored only on source rows, so requiring an exact
+    // match silently hid real, verified spread/total/team-total trends. Accept any
+    // entered line inside the posted-line range of the verified sample (small
+    // tolerance) so a sensible line surfaces the same verified trend instead of
+    // returning "No verified trend"; an absurd, out-of-range line still does not.
+    var min = Math.min.apply(null, compares);
+    var max = Math.max.apply(null, compares);
+    var tolerance = market.id === "spread" ? 0.5 : 1;
+    return matchSelected >= (min - tolerance) && matchSelected <= (max + tolerance);
   }
 
   function marketMatches(trend, market) {
