@@ -1371,7 +1371,15 @@
                 roi: totalPicks > 0 ? numberFrom(user.roi, stats.roi) : null,
                 winRate: decisions > 0 ? numberFrom(user.win_rate, user.winRate, stats.win_rate, stats.winRate, (wins / decisions) * 100) : null,
                 currentStreak: numberFrom(user.current_streak, user.currentStreak, stats.current_streak, stats.currentStreak, stats.streaks?.current) || 0,
-                sports: extractSports(user, stats)
+                sports: extractSports(user, stats),
+                // If the backend ever returns an aggregate last-pick timestamp, use
+                // it for the Active column on first paint; otherwise enrichment fills
+                // lastActivity from the member's actual picks. Never login/created.
+                lastActivity: firstValidDate(
+                    user.last_pick_at, user.lastPickAt,
+                    stats.last_pick_at, stats.lastPickAt,
+                    user.last_activity_at, user.lastActivityAt
+                )
             };
         }
 
@@ -1419,6 +1427,11 @@
             const latestPick = graded.slice().sort((a, b) =>
                 new Date(b.locked_at || b.created_at || 0).getTime() - new Date(a.locked_at || a.created_at || 0).getTime()
             )[0] || null;
+            // Activity = most recent pick of ANY kind (graded OR submitted/pending),
+            // so "Active today" reflects a pick submitted today, not just graded ones.
+            const latestActivity = normalized.slice().sort((a, b) =>
+                new Date(b.locked_at || b.created_at || 0).getTime() - new Date(a.locked_at || a.created_at || 0).getTime()
+            )[0] || null;
             let currentStreak = 0;
             let streakType = '';
             for (let i = sorted.length - 1; i >= 0; i--) {
@@ -1457,7 +1470,7 @@
                 currentStreak,
                 sports: sports.length ? sports : extractSports(user, {}),
                 lastPick: latestPick,
-                lastActivity: latestPick ? (latestPick.locked_at || latestPick.created_at || '') : ''
+                lastActivity: latestActivity ? (latestActivity.locked_at || latestActivity.created_at || '') : ''
             };
         }
 
@@ -1712,6 +1725,20 @@
             return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined });
         }
 
+        // Active column: defined as recent PICK activity, never login/created date.
+        // value = latest pick timestamp (graded or submitted); hasPicks = member has picks.
+        function formatPickActivity(value, hasPicks) {
+            if (!value) return hasPicks ? 'Inactive' : 'No picks yet';
+            const date = new Date(value);
+            if (!Number.isFinite(date.getTime())) return hasPicks ? 'Inactive' : 'No picks yet';
+            const day = 24 * 60 * 60 * 1000;
+            const days = Math.floor((Date.now() - date.getTime()) / day);
+            if (days <= 0) return 'Active today';
+            if (days === 1) return 'Last pick: 1 day ago';
+            if (days <= 7) return 'Last pick: ' + days + ' days ago';
+            return 'Inactive';
+        }
+
         function firstValidDate(...values) {
             for (const value of values) {
                 if (!value) continue;
@@ -1793,7 +1820,7 @@
         }
 
         function getActivityTime(member) {
-            return Math.max(getTime(member.lastActive), pickTimestamp(member.stats?.lastPick));
+            return Math.max(getTime(member.lastActive), getTime(member.stats?.lastActivity), pickTimestamp(member.stats?.lastPick));
         }
 
         function setText(el, value) {
@@ -2124,7 +2151,7 @@
                     '<div class="hm-stat ' + (hasGraded ? statClass(stats.winRate == null ? null : Number(stats.winRate) - 50) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="Win %">' + escapeHtml(formatPercent(stats.winRate, hasGraded)) + '</div>' +
                     '<div class="hm-stat" data-label="Total picks">' + Number(stats.totalPicks || 0) + '</div>' +
                     '<div class="hm-stat ' + statClass(stats.currentStreak) + '" data-label="Current streak">' + escapeHtml(formatStreak(stats.currentStreak)) + '</div>' +
-                    '<div class="hm-stat is-muted" data-label="Last active">' + escapeHtml(formatLastActive(member.lastActive)) + '</div>' +
+                    '<div class="hm-stat is-muted" data-label="Last active">' + escapeHtml(formatPickActivity((stats && stats.lastActivity) || '', Number(stats.totalPicks || 0) > 0)) + '</div>' +
                 '</div>';
             }).join('');
 
