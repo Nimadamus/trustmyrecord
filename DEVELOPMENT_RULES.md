@@ -1,5 +1,14 @@
 # TrustMyRecord Development Rules
 
+## Public pages must not block first paint on heavy API queries (May 27, 2026) — HARD RULE (PERMANENT)
+Public pages must render their shell (header/nav/hero/static content) immediately and must NOT block initial render on heavy or fan-out API work. Expensive stats must be cached, paginated, deferred, or server-optimized before deployment.
+- NO client-side N+1: never loop a per-member/per-row fetch (e.g. `/picks?userId=...` or `/users/:id/metrics` for every directory member) on the critical render path.
+- Render usable content from the aggregate list/leaderboard payload first; the `/users/leaderboard` endpoint already returns `wins/losses/pushes/net_units/roi/win_rate/total_picks` per member — use those for the initial board.
+- Defer non-critical enrichment (per-member picks for Sport/Wager filters, sport tags, streaks) to a background pass AFTER first paint, then re-render.
+- Loading skeletons only where data is genuinely pending — never a page-wide blocking spinner.
+- No duplicate/runaway requests; dedup list+leaderboard so the richer row wins.
+- Reference fix: `/handicappers/` two-phase render — `hydrateStats()` is now synchronous (aggregate only), `enrichMembersWithPicks()` pulls picks in the background. Before: directory waited on N×(pick pages + metrics) before any render. After: shell + board paint on the first 1–2 calls.
+
 ## Sportsbook page — no stray section labels from other pages (May 26, 2026)
 **HARD RULE:** The `/sportsbook/` page must not render leftover section labels/list items from other pages (leaderboards, profile, etc.). On May 26 an orphaned `<li>Public leaderboards</li></ul>` sat just after the `</style>` of the picks-page style block (between the `#picks` section close and `<div id="arena">`), with no matching `<ul>` — it rendered as a stray bullet "Public leaderboards" above the footer. Removed the orphan `<li>`+`</ul>`; kept the section-closing `</div>`s and footer intact. When editing `sportsbook/index.html`, never leave orphaned list items / headings from copied markup; every visible text node above the footer must belong to a sportsbook component.
 
