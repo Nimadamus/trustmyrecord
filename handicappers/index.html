@@ -1495,71 +1495,19 @@
             return [];
         }
 
-        async function hydrateStats(user) {
-            const username = normalizeUsername(user);
-            let base = statsFromUser(user);
-            base = {
+        // Fast, synchronous stats built only from the aggregate fields already
+        // present on the /users + /users/leaderboard payloads (wins, losses,
+        // net_units, roi, win_rate, total_picks). No per-user pick fetch, so the
+        // directory paints immediately on first load. Per-member picks are pulled
+        // afterward in the background by enrichMembersWithPicks() to power the
+        // Sport/Wager filters, sport tags, and streaks.
+        function hydrateStats(user) {
+            const base = statsFromUser(user);
+            return {
                 ...defaultStats(),
                 ...base,
                 sports: base.sports && base.sports.length ? base.sports : extractSports(user, {})
             };
-
-            const rawPicks = (await fetchUserPicks(user, username) || []).map(normalizePickMeta);
-            base._rawPicks = rawPicks;
-            const pickStats = statsFromPicks(user, rawPicks);
-            if (pickStats) base = Object.assign(pickStats, { _rawPicks: rawPicks });
-
-            const needsMetrics =
-                username &&
-                base.totalPicks > 0 &&
-                (base.roi == null || base.winRate == null || !base.sports.length || (!user.stats && !user.summary && !user.metrics));
-
-            if (needsMetrics) {
-                try {
-                    const metrics = await directoryRequest('/users/' + encodeURIComponent(username) + '/metrics');
-                    const summary = metrics && metrics.summary ? metrics.summary : null;
-                    if (summary) {
-                        const wins = numberFrom(summary.wins) || 0;
-                        const losses = numberFrom(summary.losses) || 0;
-                        const pushes = numberFrom(summary.pushes) || 0;
-                        const pending = numberFrom(summary.pending_picks, summary.pending) || 0;
-                        const totalPicks = numberFrom(summary.total_picks, wins + losses + pushes + pending) || 0;
-                        const decisions = wins + losses;
-                        base = {
-                            wins,
-                            losses,
-                            pushes,
-                            gradedPicks: wins + losses + pushes,
-                            pending,
-                            totalPicks,
-                            units: numberFrom(summary.net_units) || 0,
-                            roi: totalPicks > 0 && decisions > 0 ? numberFrom(summary.roi) : null,
-                            winRate: decisions > 0 ? numberFrom(summary.win_rate, (wins / decisions) * 100) : null,
-                            currentStreak: numberFrom(summary.current_streak, summary.streak) || base.currentStreak || 0,
-                            sports: extractSports(user, metrics),
-                            lastPick: base.lastPick,
-                            lastActivity: firstValidDate(
-                                summary.last_activity_at,
-                                summary.lastActivityAt,
-                                summary.last_active_at,
-                                summary.lastActiveAt,
-                                summary.last_pick_at,
-                                summary.lastPickAt,
-                                metrics.last_activity_at,
-                                metrics.lastActivityAt,
-                                metrics.last_active_at,
-                                metrics.lastActiveAt,
-                                base.lastActivity
-                            )
-                        };
-                    }
-                } catch (error) {
-                    // Directory remains usable with real pick stats or backend aggregate fields.
-                }
-            }
-            if (!base.sports.length) base.sports = extractSports(user, base);
-            if (!base._rawPicks) base._rawPicks = rawPicks;
-            return base;
         }
 
         function normalizeMember(user, stats) {
@@ -1694,9 +1642,11 @@
         }
 
         async function fetchBackendUsers() {
+            // Leaderboard first so its richer rows (wins/losses/win_rate) win the
+            // uniqUsers dedup over the leaner /users rows for the same member.
             const requests = [
-                fetchAllUsers(),
-                directoryRequest('/users/leaderboard?sortBy=net_units&limit=250')
+                directoryRequest('/users/leaderboard?sortBy=net_units&limit=250'),
+                fetchAllUsers()
             ];
             const settled = await Promise.allSettled(requests);
             const responses = settled
@@ -2226,14 +2176,15 @@
                 const initialQuery = (params.get('q') || params.get('search') || '').trim();
                 if (initialQuery) els.search.value = initialQuery;
                 const sourceUsers = await fetchBackendUsers();
-                members = await mapWithConcurrency(sourceUsers, 6, async user => {
-                    const stats = await hydrateStats(user);
-                    return normalizeMember(user, stats);
-                });
-                members = members.filter(member => member.username && isProductionDirectoryUser(member) && Number(member.stats?.totalPicks || 0) > 0);
+                // Phase 1: instant paint from aggregate stats (no per-user fetches).
+                members = sourceUsers
+                    .map(user => normalizeMember(user, hydrateStats(user)))
+                    .filter(member => member.username && isProductionDirectoryUser(member) && Number(member.stats?.totalPicks || 0) > 0);
                 renderSummary();
                 fillSports();
                 applyFilters();
+                // Phase 2: enrich with per-member picks in the background.
+                enrichMembersWithPicks();
             } catch (error) {
                 console.error('[Handicappers] Load failed:', error);
                 els.status.textContent = 'Unable to load members.';
@@ -2308,18 +2259,57 @@
             refreshing = true;
             try {
                 const sourceUsers = await fetchBackendUsers();
-                const next = await mapWithConcurrency(sourceUsers, 6, async user => {
-                    const stats = await hydrateStats(user);
-                    return normalizeMember(user, stats);
+                // Preserve already-enriched picks so the Sport/Wager filters don't
+                // flicker back to aggregate-only between background refreshes.
+                const priorPicks = new Map();
+                members.forEach(member => {
+                    if (Array.isArray(member.rawPicks) && member.rawPicks.length) {
+                        priorPicks.set(String(member.username).toLowerCase(), member.rawPicks);
+                    }
                 });
-                members = next.filter(member => member.username && isProductionDirectoryUser(member) && Number(member.stats?.totalPicks || 0) > 0);
+                const next = sourceUsers
+                    .map(user => {
+                        const member = normalizeMember(user, hydrateStats(user));
+                        const cached = priorPicks.get(String(member.username).toLowerCase());
+                        if (cached) {
+                            member.rawPicks = cached;
+                            const pickStats = statsFromPicks(member._user || {}, cached);
+                            if (pickStats) member.stats = Object.assign({}, member.stats, pickStats);
+                        }
+                        return member;
+                    })
+                    .filter(member => member.username && isProductionDirectoryUser(member) && Number(member.stats?.totalPicks || 0) > 0);
+                members = next;
                 fillSports();
                 applyFilters();
+                enrichMembersWithPicks();
             } catch (error) {
                 console.warn('[Handicappers] Auto-refresh failed:', error);
             } finally {
                 refreshing = false;
             }
+        }
+
+        // Background enrichment: pull each member's locked picks AFTER first paint
+        // so Sport + Wager Type filters, sport tags, and streaks work — without
+        // blocking the initial render. Re-renders the board when done.
+        async function enrichMembersWithPicks(targetMembers) {
+            const list = targetMembers || members;
+            if (!Array.isArray(list) || !list.length) return;
+            await mapWithConcurrency(list, 5, async member => {
+                if (Array.isArray(member.rawPicks) && member.rawPicks.length) return;
+                try {
+                    const rawPicks = (await fetchUserPicks(member._user || {}, member.username) || []).map(normalizePickMeta);
+                    if (!rawPicks.length) return;
+                    member.rawPicks = rawPicks;
+                    const pickStats = statsFromPicks(member._user || {}, rawPicks);
+                    if (pickStats) member.stats = Object.assign({}, member.stats, pickStats);
+                } catch (error) {
+                    // Keep aggregate stats if a member's picks fail to load.
+                }
+            });
+            fillSports();
+            applyFilters();
         }
 
         init();
