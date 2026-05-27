@@ -3720,7 +3720,17 @@
         validatedRosterForTeam: validatedRosterForTeam,
         collectMlbTeamRoster: collectMlbTeamRoster,
         todaysLineupForTeam: todaysLineupForTeam,
-        teamRosterUrl: teamRosterUrl
+        teamRosterUrl: teamRosterUrl,
+        // Test-only hook (additive, no runtime effect): lets the offline validation
+        // harness drive the plate-appearance engine with controlled inputs and read
+        // raw per-game accumulators for integrity + distribution calibration.
+        _engine: {
+            buildEventInputs: buildEventInputs,
+            evSimGame: evSimGame,
+            eventWinProbability: eventWinProbability,
+            parkHrFactor: parkHrFactor,
+            league: EV_LEAGUE
+        }
     };
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
