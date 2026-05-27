@@ -4638,6 +4638,19 @@ function escapeHtml(value) {
         attachAvatarFallbacks(list);
     }
 
+    // Real-data fallback highlight built ONLY from authoritative /users totals
+    // (no per-pick fetch, no fabricated stats). Used to top the module up to a
+    // full row count when the per-pick trend pass yields fewer winners.
+    function fallbackHighlightFromUser(u) {
+        const total = number(u.total_picks != null ? u.total_picks : u.totalPicks, 0);
+        if (total < 1) return null;
+        const net = number(u.net_units != null ? u.net_units : u.netUnits, NaN);
+        const roi = number(u.roi, NaN);
+        if (Number.isFinite(net) && net >= 1) return { line: '💰 ' + signedUnits(net) + ' lifetime', tag: 'PROFIT', cls: 'is-profit' };
+        if (Number.isFinite(roi) && roi >= 1) return { line: '📊 ' + signedPct(roi) + ' ROI on record', tag: 'PROFIT', cls: 'is-profit' };
+        return { line: '✅ ' + plPicks(total) + ' on record', tag: 'VERIFIED', cls: 'is-verified' };
+    }
+
     async function buildTrendSpotter(users, bust) {
         // Candidate cappers: real users with at least one graded pick, richest
         // records first. Cap fan-out at 16 lookups, display up to 8 winners.
@@ -4665,9 +4678,31 @@ function escapeHtml(value) {
             } catch (err) { return null; }
         }));
 
+        const TARGET_ROWS = 5;
         const entries = results.filter(Boolean)
             .sort(function (a, b) { return b.highlight.score - a.highlight.score; })
-            .slice(0, 5);
+            .slice(0, TARGET_ROWS);
+
+        // Top up to exactly TARGET_ROWS using real users not already shown,
+        // richest verified records first. Real authoritative stats only.
+        if (entries.length < TARGET_ROWS) {
+            const shown = {};
+            entries.forEach(function (e) { shown[String(e.usernameRaw).toLowerCase()] = true; });
+            const extra = (users || [])
+                .filter(function (u) { return u && u.username && !shown[String(u.username).toLowerCase()] && number(u.total_picks || u.totalPicks, 0) > 0; })
+                .sort(function (a, b) { return number(b.net_units || b.netUnits, -Infinity) - number(a.net_units || a.netUnits, -Infinity); });
+            for (let i = 0; i < extra.length && entries.length < TARGET_ROWS; i++) {
+                const u = extra[i];
+                const hl = fallbackHighlightFromUser(u);
+                if (!hl) continue;
+                entries.push({
+                    usernameRaw: u.username,
+                    displayName: u.display_name || u.displayName || u.username,
+                    avatarUrl: u.avatar_url || u.avatarUrl || '',
+                    highlight: hl
+                });
+            }
+        }
         renderTrendSpotter(entries);
     }
 
