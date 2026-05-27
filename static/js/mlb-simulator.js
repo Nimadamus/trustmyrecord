@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-pa-monte-carlo-engine-20260527b';
+    var UI_BUILD = 'mlb-simulator-pa-engine-ttop-park-steals-20260527c';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -175,6 +175,18 @@
         MIL: 0.99, NYM: 0.99, STL: 0.99, WSH: 0.99, CWS: 0.98, DET: 0.98, MIA: 0.98, SD: 0.98,
         SEA: 0.97, SF: 0.97, TB: 0.97, ATH: 0.96, CLE: 0.96, PIT: 0.96
     };
+    // Home-run-specific park factors (separate from overall run factor): some parks
+    // (Coors, GABP, Yankee Stadium short porch) inflate HR while suppressing nothing,
+    // others (Oracle, T-Mobile, Comerica) turn would-be homers into outs/doubles.
+    var PARK_HR_FACTORS = {
+        CIN: 1.18, COL: 1.16, NYY: 1.13, BAL: 1.10, CWS: 1.08, PHI: 1.07, MIL: 1.06, LAD: 1.05,
+        TEX: 1.05, HOU: 1.04, TOR: 1.04, LAA: 1.04, ARI: 1.03, ATL: 1.02, CHC: 1.01, MIN: 1.00,
+        WSH: 1.00, NYM: 0.98, STL: 0.96, TB: 0.96, CLE: 0.96, BOS: 0.94, DET: 0.93, SD: 0.93,
+        MIA: 0.92, ATH: 0.92, KC: 0.92, SEA: 0.91, PIT: 0.91, SF: 0.86
+    };
+    function parkHrFactor(homeTeam) {
+        return PARK_HR_FACTORS[homeTeam && homeTeam.abbreviation] || 1;
+    }
 
     var LIVE_INPUT_SOURCES = [
         ['scheduleFinals', 'MLB schedule/finals', 'Unavailable', 'No verified current schedule or final score match is connected.'],
@@ -1753,6 +1765,32 @@
         nv.out = Math.max(0.02, v.out + (posOld - posNew));
         return evNormalize(nv);
     }
+    function evApplyParkHr(v, hrFactor) {
+        if (!hrFactor || hrFactor === 1) return v;
+        return evNormalize({ bb: v.bb, so: v.so, hr: v.hr * hrFactor, b3: v.b3, b2: v.b2, b1: v.b1, out: v.out });
+    }
+    function evBlend(v1, v2, w) {
+        var k = ['bb', 'so', 'hr', 'b3', 'b2', 'b1', 'out'], o = {};
+        k.forEach(function (key) { o[key] = v1[key] * w + v2[key] * (1 - w); });
+        return evNormalize(o);
+    }
+    // Roughly league-average opposing pitcher (used to represent relief innings in
+    // the run anchor, since combining a batter against a league pitcher returns the
+    // batter's own rate).
+    var EV_LEAGUE_PITCHER = { bb: EV_LEAGUE.bb, so: EV_LEAGUE.so, hr: EV_LEAGUE.hr, hitFactor: 1 };
+    // Times-through-the-order multipliers, centered near the 2nd pass so the full
+    // game stays mean-calibrated: a fresh pitcher misses more bats and yields fewer
+    // homers; the 3rd time through the lineup he fades (the well-documented TTOP).
+    function evTtoMultipliers(timesThrough) {
+        if (timesThrough <= 1) return { so: 1.06, hr: 0.92, hit: 0.96 };
+        if (timesThrough === 2) return { so: 1.0, hr: 1.0, hit: 1.0 };
+        if (timesThrough === 3) return { so: 0.93, hr: 1.10, hit: 1.05 };
+        return { so: 0.88, hr: 1.18, hit: 1.09 };
+    }
+    function evApplyTto(v, m) {
+        if (!m) return v;
+        return evNormalize({ bb: v.bb, so: v.so * m.so, hr: v.hr * m.hr, b3: v.b3 * m.hit, b2: v.b2 * m.hit, b1: v.b1 * m.hit, out: Math.max(0.02, v.out) });
+    }
     function evAnchorFactor(combinedVectors, targetRuns) {
         var target = clamp(targetRuns, 1.4, 11) * 0.985;
         function runsAt(f) {
@@ -1774,10 +1812,10 @@
         if ((r -= v.b1) < 0) return 'b1';
         return 'out';
     }
-    function evNewBat() { return { pa: 0, ab: 0, h: 0, b2: 0, b3: 0, hr: 0, bb: 0, so: 0, r: 0, rbi: 0 }; }
-    function evNewPit() { return { outs: 0, h: 0, bb: 0, so: 0, hr: 0, r: 0, er: 0 }; }
+    function evNewBat() { return { pa: 0, ab: 0, h: 0, b2: 0, b3: 0, hr: 0, bb: 0, so: 0, r: 0, rbi: 0, sb: 0, cs: 0 }; }
+    function evNewPit() { return { outs: 0, h: 0, bb: 0, so: 0, hr: 0, r: 0, er: 0, bf: 0 }; }
     // Build per-team lineup (anchored batter vectors + display rows) and staff.
-    function evBuildSide(team, oppPitcher, ownStarter, targetRuns, rosterContext) {
+    function evBuildSide(team, oppPitcher, ownStarter, targetRuns, rosterContext, parkHr) {
         var roster = rosterForTeam(team, rosterContext);
         var oppHand = oppPitcher && oppPitcher.mlbId ? pitchHandOf(oppPitcher.mlbId) : null;
         var slotStats = roster ? rosterBatterSlotStats(roster, oppHand) : [];
@@ -1800,7 +1838,15 @@
                 acc: evNewBat()
             });
         }
-        var combinedForAnchor = lineup.map(function (b) { return evCombine(b.baseVec, oppVec); });
+        // Anchor against a starter/bullpen blend (~72% of PAs face the opposing
+        // starter, ~28% the bullpen, approximated as a league-average arm) with the
+        // park HR effect baked in, so the calibrated mean reflects the real game mix
+        // instead of assuming the starter pitches all nine innings.
+        var combinedForAnchor = lineup.map(function (b) {
+            var vsStarter = evApplyParkHr(evCombine(b.baseVec, oppVec), parkHr);
+            var vsLeague = evApplyParkHr(evCombine(b.baseVec, EV_LEAGUE_PITCHER), parkHr);
+            return evBlend(vsStarter, vsLeague, 0.72);
+        });
         var anchorFactor = evAnchorFactor(combinedForAnchor, targetRuns);
         // pitching staff: own starter (faces opponent) -> set up -> closer
         var staffNames = roster ? rosterNamesForPitchers(roster, ownStarter) : (ownStarter && ownStarter.name ? [ownStarter.name] : []);
@@ -1815,7 +1861,8 @@
         return {
             team: team, lineup: lineup, anchorFactor: anchorFactor, pitchers: pitchers,
             starterOuts: starterOuts, roster: roster, hasNamedLineup: !!(roster && roster.players && roster.players.length),
-            errRate: clamp(0.017 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.008, 0.032)
+            errRate: clamp(0.017 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.008, 0.032),
+            parkHr: parkHr || 1, stealRate: 0.10, stealSuccess: 0.78, sb: 0, cs: 0
         };
     }
     function evStarterOuts(starter, team) {
@@ -1835,9 +1882,15 @@
         var lineup = side.lineup, outs = 0, bases = [null, null, null], runs = 0, errors = 0;
         function score(slot, earned) { lineup[slot].acc.r++; runs++; pitcher.acc.r++; if (earned) pitcher.acc.er++; }
         while (outs < 3) {
+            // Steal attempt with a runner on 1B and 2B open (live event, not post-hoc).
+            if (bases[0] !== null && bases[1] === null && random() < side.stealRate) {
+                if (random() < side.stealSuccess) { lineup[bases[0]].acc.sb++; side.sb++; bases[1] = bases[0]; bases[0] = null; }
+                else { lineup[bases[0]].acc.cs++; side.cs++; bases[0] = null; pitcher.acc.outs++; outs++; if (outs >= 3) break; }
+            }
             var bi = side.idx % 9, b = lineup[bi];
-            var v = evScale(evCombine(b.baseVec, pitcher.vec), side.anchorFactor);
-            var ev = evSample(v, random), acc = b.acc; acc.pa++;
+            var timesThrough = Math.floor(pitcher.acc.bf / 9) + 1;
+            var v = evScale(evApplyTto(evApplyParkHr(evCombine(b.baseVec, pitcher.vec), side.parkHr), evTtoMultipliers(timesThrough)), side.anchorFactor);
+            var ev = evSample(v, random), acc = b.acc; acc.pa++; pitcher.acc.bf++;
             var rbi = 0;
             if (ev === 'bb') {
                 acc.bb++; pitcher.acc.bb++;
@@ -1891,7 +1944,8 @@
         return side.pitchers[2];
     }
     function evSimGame(awaySide, homeSide, random) {
-        awaySide.idx = 0; awaySide.lob = 0; homeSide.idx = 0; homeSide.lob = 0;
+        awaySide.idx = 0; awaySide.lob = 0; awaySide.sb = 0; awaySide.cs = 0;
+        homeSide.idx = 0; homeSide.lob = 0; homeSide.sb = 0; homeSide.cs = 0;
         awaySide.lineup.forEach(function (b) { b.acc = evNewBat(); });
         homeSide.lineup.forEach(function (b) { b.acc = evNewBat(); });
         awaySide.pitchers.forEach(function (p) { p.acc = evNewPit(); });
@@ -1922,8 +1976,9 @@
         return assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random);
     }
     function buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext) {
-        var awaySide = evBuildSide(away, homePitcher, awayPitcher, awayRuns, rosterContext && rosterContext.away);
-        var homeSide = evBuildSide(home, awayPitcher, homePitcher, homeRuns, rosterContext && rosterContext.home);
+        var parkHr = parkHrFactor(home); // both clubs hit in the home park
+        var awaySide = evBuildSide(away, homePitcher, awayPitcher, awayRuns, rosterContext && rosterContext.away, parkHr);
+        var homeSide = evBuildSide(home, awayPitcher, homePitcher, homeRuns, rosterContext && rosterContext.home, parkHr);
         return { awaySide: awaySide, homeSide: homeSide };
     }
     function eventWinProbability(inputs, samples) {
@@ -1968,8 +2023,8 @@
         var leftOnBase = side.lob || 0;
         var rispChances = clamp(Math.round(hits * 0.5) + 2, 1, 16);
         var rispHits = clamp(Math.round(runs * 0.45), 0, rispChances);
-        var stolenBases = clamp(Math.round((hits + walks) * 0.06), 0, 4);
-        var caughtStealing = stolenBases > 1 && random() < 0.5 ? 1 : 0;
+        var stolenBases = side.sb || 0;
+        var caughtStealing = side.cs || 0;
         var totalPitches = 0, totalStrikes = 0;
         side.pitchers.forEach(function (p) {
             if (p.acc.outs <= 0 && p.acc.h <= 0 && p.acc.bb <= 0) return;
