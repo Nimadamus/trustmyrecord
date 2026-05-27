@@ -820,3 +820,9 @@ Arena and community/hub pages must NOT ship with an oversized hero that pushes t
 - Tighten subtitle/buttons/proof-pill/card spacing (subtitle `margin-top:10px`, actions `16px`, proof `14px`, `.arena-clean-main` `padding-top:18px`, cards `min-height:210px`).
 - Keep the premium dark sportsbook style; never remove Arena functionality. Note: this page carries several stacked legacy redesign `<style>` blocks — only the LAST-defined `.arena-clean-*` ruleset is live; edit those, not the earlier overridden ones.
 - **CTA honesty:** waitlist/predictions CTAs link only to existing functionality (e.g. `/register/`, `/predictions/`). No forms posting to non-existent endpoints.
+
+## "Active" / activity columns mean recent PICK activity, never login (May 27, 2026) — HARD RULE
+On any leaderboard / handicappers / capper directory, an "Active" / "Last active" / activity column means the member's most recent PICK timestamp (graded OR submitted), never login/created/updated date.
+- `/api/users` and `/api/users/leaderboard` do NOT return any timestamp field, so falling back to login/created data makes every populated member read "No recent activity". Derive activity from the member's real picks (already fetched client-side by `enrichMembersWithPicks`), using the latest `locked_at || created_at` across non-void picks.
+- Display contract (handicappers/index.html `formatPickActivity`): pick today → `Active today`; 1 day → `Last pick: 1 day ago`; 2-7 days → `Last pick: N days ago`; >7 days → `Inactive`; member has no picks → `No picks yet`.
+- Never fake activity, never fall back to login/profile-updated dates, never expose pending pick details (a timestamp string only). Keep activity-based sorting (`getActivityTime`) consistent with the displayed value.
