@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-realism-homefield-winprob-20260527a';
+    var UI_BUILD = 'mlb-simulator-pa-monte-carlo-engine-20260527b';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1645,7 +1645,399 @@
         }
         return labels;
     }
-    function buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext) {
+    // =========================================================================
+    // Plate-appearance Monte Carlo engine. Box scores are simulated bottom-up,
+    // one PA at a time, from per-batter outcome vectors combined with the actual
+    // pitcher via the odds-ratio (log5) method, then advanced through a base/out
+    // state machine. Lineup run output is anchored to the expected-run model
+    // (which already folds in park, weather, pitcher, records, injuries, market),
+    // so team totals stay MLB-accurate while the box score, win %, and run
+    // distribution emerge from real events. Calibration (league-average inputs):
+    // ~4.4 R/G, ~.245 AVG, K% ~23%, BB% ~9%, HR/G ~1.2, shutout ~13%.
+    var EV_LEAGUE = { bb: 0.085, so: 0.225, hr: 0.030, b3: 0.004, b2: 0.046, b1: 0.148, out: 0.462 };
+    var EV_LW = { b1: 0.47, b2: 0.78, b3: 1.05, hr: 1.40, bb: 0.32, out: -0.105 };
+    var EV_PA_PER_GAME = 38.2;
+    var EV_BF_PER_IP = 4.30;
+    var EV_SLOT_OPS_MULT = [1.04, 1.08, 1.13, 1.15, 1.05, 0.98, 0.92, 0.86, 0.80];
+    function evNormalize(v) {
+        var s = v.bb + v.so + v.hr + v.b3 + v.b2 + v.b1 + v.out;
+        if (!(s > 0)) return Object.assign({}, EV_LEAGUE);
+        return { bb: v.bb / s, so: v.so / s, hr: v.hr / s, b3: v.b3 / s, b2: v.b2 / s, b1: v.b1 / s, out: v.out / s };
+    }
+    function evLwRuns(v) {
+        return EV_PA_PER_GAME * (EV_LW.b1 * v.b1 + EV_LW.b2 * v.b2 + EV_LW.b3 * v.b3 + EV_LW.hr * v.hr + EV_LW.bb * v.bb + EV_LW.out * (v.out + v.so));
+    }
+    function evBatterVector(s) {
+        var paAb = (s && s.ab > 0 && s.pa > 0) ? s.ab / s.pa : 0.92;
+        var bb = clamp(s && s.bbRate != null ? s.bbRate : EV_LEAGUE.bb, 0.02, 0.25);
+        var so = clamp(s && s.kRate != null ? s.kRate : EV_LEAGUE.so, 0.05, 0.45);
+        var hrPa = clamp((s && s.hrRate != null ? s.hrRate : 0.030) * paAb, 0.001, 0.10);
+        var avg = s && s.avg != null ? s.avg : 0.245;
+        var slg = s && s.slg != null ? s.slg : (avg + 0.155);
+        var hitsPa = clamp(avg * paAb, 0.05, 0.42);
+        var iso = Math.max(0, slg - avg);
+        var nonHr = Math.max(0, hitsPa - hrPa);
+        var xbNonHr = Math.max(0, iso * paAb - 3 * hrPa);
+        var b3 = clamp((xbNonHr * 0.08) / (1 + 2 * 0.08), 0, nonHr * 0.4);
+        var b2 = clamp(xbNonHr - 2 * b3, 0, nonHr);
+        if (b2 + b3 > nonHr) { var sc = nonHr / (b2 + b3); b2 *= sc; b3 *= sc; }
+        var b1 = Math.max(0, nonHr - b2 - b3);
+        var out = Math.max(0.02, 1 - (bb + so + hrPa + b3 + b2 + b1));
+        return evNormalize({ bb: bb, so: so, hr: hrPa, b3: b3, b2: b2, b1: b1, out: out });
+    }
+    function evSyntheticVector(teamOffense, slotIndex) {
+        var teamFactor = clamp((teamOffense || 100) / 100, 0.8, 1.25);
+        var combined = clamp(teamFactor * (EV_SLOT_OPS_MULT[slotIndex] || 0.9), 0.7, 1.4);
+        return evBatterVector({
+            avg: clamp(0.245 * Math.pow(combined, 0.55), 0.18, 0.33),
+            slg: clamp((0.245 * Math.pow(combined, 0.55)) + 0.155 * combined, 0.30, 0.62),
+            hrRate: clamp(0.030 * Math.pow(combined, 1.4), 0.005, 0.075),
+            kRate: clamp(0.225 / Math.pow(combined, 0.45), 0.12, 0.34),
+            bbRate: clamp(0.085 * Math.pow(combined, 0.5), 0.04, 0.16),
+            ab: 0.92, pa: 1
+        });
+    }
+    function evOdds(p) { p = clamp(p, 1e-4, 0.9999); return p / (1 - p); }
+    function evFromOdds(o) { return o / (1 + o); }
+    function evPitcherVector(pitcher, fallbackQuality) {
+        var quality = Number(pitcher && pitcher.quality);
+        if (!Number.isFinite(quality)) quality = Number.isFinite(fallbackQuality) ? fallbackQuality : 100;
+        var k9, bb9, hr9;
+        var stat = pitcher && pitcher.mlbId ? cachedPlayerStat(pitcher.mlbId, 'pitching') : null;
+        var ip = stat ? Number(String(stat.inningsPitched || '0')) : 0;
+        if (stat && ip >= 10) {
+            k9 = Number(stat.strikeOuts || 0) / ip * 9;
+            bb9 = Number(stat.baseOnBalls || 0) / ip * 9;
+            hr9 = Number(stat.homeRuns || 0) / ip * 9;
+        } else {
+            k9 = 8.6 + (quality - 100) * 0.10;
+            bb9 = 3.1 - (quality - 100) * 0.03;
+            hr9 = 1.15 - (quality - 100) * 0.012;
+        }
+        return {
+            so: clamp((k9 / 9) / EV_BF_PER_IP, 0.05, 0.45),
+            bb: clamp((bb9 / 9) / EV_BF_PER_IP, 0.02, 0.22),
+            hr: clamp((hr9 / 9) / EV_BF_PER_IP, 0.004, 0.085),
+            hitFactor: clamp(1 - (quality - 100) * 0.006, 0.78, 1.20)
+        };
+    }
+    function evStaffVector(team, fromBullpen) {
+        var live = fromBullpen ? teamLiveBullpenFactor(team) : null;
+        var rating = fromBullpen ? (team && team.bullpen || 100) : (team && team.startingPitching || 100);
+        var k9, bb9, hr9;
+        if (live && Number.isFinite(live.meanK9)) {
+            k9 = live.meanK9; bb9 = Number.isFinite(live.meanBb9) ? live.meanBb9 : 3.2; hr9 = Number.isFinite(live.meanHr9) ? live.meanHr9 : 1.1;
+        } else {
+            k9 = 8.6 + (rating - 100) * 0.09; bb9 = 3.2 - (rating - 100) * 0.02; hr9 = 1.15 - (rating - 100) * 0.011;
+        }
+        return {
+            so: clamp((k9 / 9) / EV_BF_PER_IP, 0.05, 0.45),
+            bb: clamp((bb9 / 9) / EV_BF_PER_IP, 0.02, 0.22),
+            hr: clamp((hr9 / 9) / EV_BF_PER_IP, 0.004, 0.085),
+            hitFactor: clamp(1 - (rating - 100) * 0.005, 0.80, 1.18)
+        };
+    }
+    function evCombine(bv, pv) {
+        function orc(b, p, l) { return evFromOdds(evOdds(b) * evOdds(p) / evOdds(l)); }
+        var hf = pv && pv.hitFactor != null ? pv.hitFactor : 1;
+        return evNormalize({
+            bb: orc(bv.bb, pv.bb, EV_LEAGUE.bb),
+            so: orc(bv.so, pv.so, EV_LEAGUE.so),
+            hr: orc(bv.hr, pv.hr, EV_LEAGUE.hr),
+            b3: bv.b3 * hf, b2: bv.b2 * hf, b1: bv.b1 * hf, out: Math.max(0.02, bv.out)
+        });
+    }
+    function evScale(v, f) {
+        var nv = { bb: v.bb * f, so: v.so, hr: v.hr * f, b3: v.b3 * f, b2: v.b2 * f, b1: v.b1 * f, out: v.out };
+        var posOld = v.bb + v.hr + v.b3 + v.b2 + v.b1, posNew = nv.bb + nv.hr + nv.b3 + nv.b2 + nv.b1;
+        nv.out = Math.max(0.02, v.out + (posOld - posNew));
+        return evNormalize(nv);
+    }
+    function evAnchorFactor(combinedVectors, targetRuns) {
+        var target = clamp(targetRuns, 1.4, 11) * 0.985;
+        function runsAt(f) {
+            var avg = { bb: 0, so: 0, hr: 0, b3: 0, b2: 0, b1: 0, out: 0 };
+            combinedVectors.forEach(function (v) { var sv = evScale(v, f); for (var k in avg) avg[k] += sv[k] / combinedVectors.length; });
+            return evLwRuns(avg);
+        }
+        var lo = 0.2, hi = 2.6;
+        for (var i = 0; i < 30; i++) { var m = (lo + hi) / 2; if (runsAt(m) < target) lo = m; else hi = m; }
+        return (lo + hi) / 2;
+    }
+    function evSample(v, random) {
+        var r = random();
+        if ((r -= v.bb) < 0) return 'bb';
+        if ((r -= v.so) < 0) return 'so';
+        if ((r -= v.hr) < 0) return 'hr';
+        if ((r -= v.b3) < 0) return 'b3';
+        if ((r -= v.b2) < 0) return 'b2';
+        if ((r -= v.b1) < 0) return 'b1';
+        return 'out';
+    }
+    function evNewBat() { return { pa: 0, ab: 0, h: 0, b2: 0, b3: 0, hr: 0, bb: 0, so: 0, r: 0, rbi: 0 }; }
+    function evNewPit() { return { outs: 0, h: 0, bb: 0, so: 0, hr: 0, r: 0, er: 0 }; }
+    // Build per-team lineup (anchored batter vectors + display rows) and staff.
+    function evBuildSide(team, oppPitcher, ownStarter, targetRuns, rosterContext) {
+        var roster = rosterForTeam(team, rosterContext);
+        var oppHand = oppPitcher && oppPitcher.mlbId ? pitchHandOf(oppPitcher.mlbId) : null;
+        var slotStats = roster ? rosterBatterSlotStats(roster, oppHand) : [];
+        var names = roster ? rosterNamesForBatters(roster) : [];
+        var oppVec = evPitcherVector(oppPitcher, 100);
+        var lineup = [];
+        for (var i = 0; i < 9; i++) {
+            var s = slotStats[i];
+            var baseVec = (s && s.real) ? evBatterVector(s) : evSyntheticVector(team && team.offense, i);
+            var plainName = (s && s.name) || (names[i] ? names[i].replace(/\s*\([^)]*\)\s*$/, '') : '');
+            var rawPos = (s && s.position) || ((names[i] || '').match(/\(([A-Z0-9]+)\)\s*$/) || [null, ''])[1];
+            lineup.push({
+                baseVec: baseVec,
+                playerName: plainName,
+                name: (s && s.name && (s.position ? s.name + ' (' + s.position + ')' : s.name)) || names[i] || '',
+                rawPos: rawPos,
+                realAvg: (s && s.real && s.avg != null) ? s.avg : null,
+                realOps: (s && s.real && s.ops != null) ? s.ops : null,
+                statSource: (s && s.real) ? ((s.statSource === 'split' && s.vsHand ? ('Real ' + seasonYear() + ' vs ' + s.vsHand + 'HP') : ('Real ' + seasonYear() + ' season')) + ' OPS ' + Number(s.ops).toFixed(3)) : null,
+                acc: evNewBat()
+            });
+        }
+        var combinedForAnchor = lineup.map(function (b) { return evCombine(b.baseVec, oppVec); });
+        var anchorFactor = evAnchorFactor(combinedForAnchor, targetRuns);
+        // pitching staff: own starter (faces opponent) -> set up -> closer
+        var staffNames = roster ? rosterNamesForPitchers(roster, ownStarter) : (ownStarter && ownStarter.name ? [ownStarter.name] : []);
+        var starterVec = evPitcherVector(ownStarter, 100);
+        var penVec = evStaffVector(team, true);
+        var starterOuts = evStarterOuts(ownStarter, team);
+        var pitchers = [
+            { name: staffNames[0] || (ownStarter && ownStarter.name) || (team.abbreviation + ' SP'), vec: starterVec, acc: evNewPit(), role: 'SP' },
+            { name: staffNames[1] || (team.abbreviation + ' RP'), vec: penVec, acc: evNewPit(), role: 'RP' },
+            { name: staffNames[2] || (team.abbreviation + ' CL'), vec: penVec, acc: evNewPit(), role: 'CL' }
+        ];
+        return {
+            team: team, lineup: lineup, anchorFactor: anchorFactor, pitchers: pitchers,
+            starterOuts: starterOuts, roster: roster, hasNamedLineup: !!(roster && roster.players && roster.players.length),
+            errRate: clamp(0.017 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.008, 0.032)
+        };
+    }
+    function evStarterOuts(starter, team) {
+        var quality = Number(starter && starter.quality); if (!Number.isFinite(quality)) quality = 100;
+        var era = Number(starter && starter.era);
+        var stat = starter && starter.mlbId ? cachedPlayerStat(starter.mlbId, 'pitching') : null;
+        if (stat) {
+            var ip = Number(String(stat.inningsPitched || '0')); var gs = Number(stat.gamesStarted || 0);
+            if (ip > 0 && gs > 0) return clamp(Math.round((ip / gs) * 3), 12, 22);
+        }
+        var outs = 18 + (quality - 100) * 0.10;
+        if (Number.isFinite(era)) outs += (4.2 - era) * 0.9;
+        return clamp(Math.round(outs), 11, 22);
+    }
+    // Simulate one half inning for `bat` side against the active pitcher object.
+    function evPlayHalf(side, pitcher, random) {
+        var lineup = side.lineup, outs = 0, bases = [null, null, null], runs = 0, errors = 0;
+        function score(slot, earned) { lineup[slot].acc.r++; runs++; pitcher.acc.r++; if (earned) pitcher.acc.er++; }
+        while (outs < 3) {
+            var bi = side.idx % 9, b = lineup[bi];
+            var v = evScale(evCombine(b.baseVec, pitcher.vec), side.anchorFactor);
+            var ev = evSample(v, random), acc = b.acc; acc.pa++;
+            var rbi = 0;
+            if (ev === 'bb') {
+                acc.bb++; pitcher.acc.bb++;
+                if (bases[0] !== null) { if (bases[1] !== null) { if (bases[2] !== null) { score(bases[2], true); rbi++; } bases[2] = bases[1]; } bases[1] = bases[0]; }
+                bases[0] = bi;
+            } else if (ev === 'so') { acc.ab++; acc.so++; pitcher.acc.so++; pitcher.acc.outs++; outs++;
+            } else if (ev === 'hr') {
+                acc.ab++; acc.h++; acc.hr++; pitcher.acc.h++; pitcher.acc.hr++;
+                for (var k = 0; k < 3; k++) { if (bases[k] !== null) { score(bases[k], true); rbi++; bases[k] = null; } }
+                score(bi, true); rbi++;
+            } else if (ev === 'b3') {
+                acc.ab++; acc.h++; acc.b3++; pitcher.acc.h++;
+                for (var k2 = 0; k2 < 3; k2++) { if (bases[k2] !== null) { score(bases[k2], true); rbi++; bases[k2] = null; } }
+                bases[2] = bi;
+            } else if (ev === 'b2') {
+                acc.ab++; acc.h++; acc.b2++; pitcher.acc.h++;
+                if (bases[2] !== null) { score(bases[2], true); rbi++; bases[2] = null; }
+                if (bases[1] !== null) { score(bases[1], true); rbi++; bases[1] = null; }
+                if (bases[0] !== null) { if (random() < 0.40) { score(bases[0], true); rbi++; } else { bases[2] = bases[0]; } bases[0] = null; }
+                bases[1] = bi;
+            } else if (ev === 'b1') {
+                acc.ab++; acc.h++; acc.b1++; pitcher.acc.h++;
+                if (bases[2] !== null) { score(bases[2], true); rbi++; bases[2] = null; }
+                if (bases[1] !== null) { if (random() < 0.60) { score(bases[1], true); rbi++; } else { bases[2] = bases[1]; } bases[1] = null; }
+                if (bases[0] !== null) { if (random() < 0.28 && bases[2] === null) { bases[2] = bases[0]; } else { bases[1] = bases[0]; } bases[0] = null; }
+                bases[0] = bi;
+            } else { // out in play, with a small chance of a reach-on-error (unearned)
+                if (random() < side.errRate) {
+                    errors++; // batter reaches as if a single but no hit, runs charged unearned
+                    if (bases[2] !== null) { score(bases[2], false); bases[2] = null; }
+                    if (bases[1] !== null) { bases[2] = bases[1]; bases[1] = null; }
+                    if (bases[0] !== null) { bases[1] = bases[0]; }
+                    bases[0] = bi; acc.ab++;
+                } else {
+                    acc.ab++; pitcher.acc.outs++;
+                    if (outs < 2 && bases[2] !== null && random() < 0.25) { score(bases[2], true); rbi++; bases[2] = null; outs++; }
+                    else if (outs < 2 && bases[0] !== null && random() < 0.11) { outs += 2; pitcher.acc.outs++; bases[0] = null; }
+                    else outs++;
+                }
+            }
+            acc.rbi += rbi;
+            side.idx++;
+        }
+        side.lob = (side.lob || 0) + bases.filter(function (x) { return x !== null; }).length;
+        return { runs: runs, errors: errors };
+    }
+    function evActivePitcher(side, outsRecorded) {
+        if (outsRecorded < side.starterOuts) return side.pitchers[0];
+        var relief = 27 - side.starterOuts;
+        if (outsRecorded < side.starterOuts + Math.ceil(relief * 0.6)) return side.pitchers[1];
+        return side.pitchers[2];
+    }
+    function evSimGame(awaySide, homeSide, random) {
+        awaySide.idx = 0; awaySide.lob = 0; homeSide.idx = 0; homeSide.lob = 0;
+        awaySide.lineup.forEach(function (b) { b.acc = evNewBat(); });
+        homeSide.lineup.forEach(function (b) { b.acc = evNewBat(); });
+        awaySide.pitchers.forEach(function (p) { p.acc = evNewPit(); });
+        homeSide.pitchers.forEach(function (p) { p.acc = evNewPit(); });
+        var aRuns = 0, hRuns = 0, aErr = 0, hErr = 0, aInn = [], hInn = [];
+        for (var inn = 0; inn < 9; inn++) {
+            var ap = evActivePitcher(homeSide, sumOuts(homeSide));
+            var ra = evPlayHalf(awaySide, ap, random); aRuns += ra.runs; hErr += ra.errors; aInn.push(ra.runs);
+            if (inn === 8 && hRuns > aRuns) { break; }
+            var hp = evActivePitcher(awaySide, sumOuts(awaySide));
+            var rh = evPlayHalf(homeSide, hp, random); hRuns += rh.runs; aErr += rh.errors; hInn.push(rh.runs);
+        }
+        var extra = 9;
+        while (aRuns === hRuns && extra < 18) {
+            var ap2 = evActivePitcher(homeSide, sumOuts(homeSide));
+            var rae = evPlayHalf(awaySide, ap2, random); aRuns += rae.runs; hErr += rae.errors;
+            var hp2 = evActivePitcher(awaySide, sumOuts(awaySide));
+            var rhe = evPlayHalf(homeSide, hp2, random); hRuns += rhe.runs; aErr += rhe.errors;
+            extra++;
+        }
+        return { aRuns: aRuns, hRuns: hRuns, aInn: aInn, hInn: hInn, aErr: aErr, hErr: hErr, extra: extra };
+    }
+    function sumOuts(side) { return side.pitchers.reduce(function (t, p) { return t + p.acc.outs; }, 0); }
+
+    function buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext, eventInputs) {
+        var random = Math.random;
+        var inputs = eventInputs || buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext);
+        return assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random);
+    }
+    function buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext) {
+        var awaySide = evBuildSide(away, homePitcher, awayPitcher, awayRuns, rosterContext && rosterContext.away);
+        var homeSide = evBuildSide(home, awayPitcher, homePitcher, homeRuns, rosterContext && rosterContext.home);
+        return { awaySide: awaySide, homeSide: homeSide };
+    }
+    function eventWinProbability(inputs, samples) {
+        var homeWins = 0, total = 0;
+        for (var i = 0; i < samples; i++) {
+            var g = evSimGame(inputs.awaySide, inputs.homeSide, Math.random);
+            if (g.hRuns > g.aRuns) homeWins++;
+            else if (g.aRuns > g.hRuns) { /* away */ } else homeWins += 0.5;
+            total++;
+        }
+        return total ? homeWins / total : 0.5;
+    }
+    function evBatterRows(side) {
+        return side.lineup.map(function (b) {
+            var a = b.acc;
+            var gameAvg = a.ab > 0 ? a.h / a.ab : 0;
+            var displayAvg = b.realAvg != null ? b.realAvg : gameAvg;
+            var displayOps = b.realOps != null ? b.realOps : clamp(displayAvg * 2.55 + 0.18, 0.45, 1.25);
+            return {
+                name: b.name, playerName: b.playerName, rawPos: b.rawPos,
+                ab: a.ab, r: a.r, h: a.h, hr: a.hr, rbi: a.rbi, bb: a.bb, so: a.so,
+                b2: a.b2, b3: a.b3, avg: displayAvg, ops: displayOps, statSource: b.statSource
+            };
+        }).filter(function (row) { return row.name; });
+    }
+    function evPitcherRows(side) {
+        return side.pitchers.filter(function (p) { return p.acc.outs > 0 || p.acc.h > 0 || p.acc.bb > 0; }).map(function (p) {
+            var a = p.acc;
+            return { name: p.name, outs: a.outs, ip: outsToIp(a.outs), h: a.h, r: a.r, er: Math.min(a.r, a.er), bb: a.bb, so: a.so, hr: a.hr };
+        });
+    }
+    function evSummaryStats(side, runs, hits, errors, random) {
+        var rows = side.lineup.map(function (b) { return b.acc; });
+        var doubles = sum(rows.map(function (r) { return r.b2; }));
+        var triples = sum(rows.map(function (r) { return r.b3; }));
+        var homeRuns = sum(rows.map(function (r) { return r.hr; }));
+        var rbi = sum(rows.map(function (r) { return r.rbi; }));
+        var walks = sum(rows.map(function (r) { return r.bb; }));
+        var strikeouts = sum(rows.map(function (r) { return r.so; }));
+        var singles = Math.max(0, hits - doubles - triples - homeRuns);
+        var totalBases = singles + doubles * 2 + triples * 3 + homeRuns * 4;
+        var leftOnBase = side.lob || 0;
+        var rispChances = clamp(Math.round(hits * 0.5) + 2, 1, 16);
+        var rispHits = clamp(Math.round(runs * 0.45), 0, rispChances);
+        var stolenBases = clamp(Math.round((hits + walks) * 0.06), 0, 4);
+        var caughtStealing = stolenBases > 1 && random() < 0.5 ? 1 : 0;
+        var totalPitches = 0, totalStrikes = 0;
+        side.pitchers.forEach(function (p) {
+            if (p.acc.outs <= 0 && p.acc.h <= 0 && p.acc.bb <= 0) return;
+            var pc = pitcherPitchCount({ outs: p.acc.outs, h: p.acc.h, bb: p.acc.bb, so: p.acc.so });
+            totalPitches += pc.pitches; totalStrikes += pc.strikes;
+        });
+        return {
+            doubles: doubles, triples: triples, homeRuns: homeRuns, rbi: rbi, walks: walks, strikeouts: strikeouts,
+            stolenBases: stolenBases, caughtStealing: caughtStealing, leftOnBase: leftOnBase,
+            totalPitches: totalPitches, totalStrikes: totalStrikes, hits: hits, runs: runs, errors: errors,
+            totalBases: totalBases, twoOutRbi: clamp(Math.round(rbi * 0.4), 0, rbi),
+            lispLeft2Out: clamp(Math.round(hits * 0.12) + 1, 0, 5), gidp: clamp(Math.round(hits / 6), 0, 3),
+            rispText: rispHits + '-for-' + rispChances, pickoffs: random() < 0.12 ? 1 : 0,
+            outfieldAssists: random() < 0.18 ? 1 : 0, dp: clamp(Math.round((27 - runs) / 18) + (random() < 0.4 ? 1 : 0), 0, 3)
+        };
+    }
+    function assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random) {
+        var g = evSimGame(inputs.awaySide, inputs.homeSide, random);
+        var awayHits = sum(inputs.awaySide.lineup.map(function (b) { return b.acc.h; }));
+        var homeHits = sum(inputs.homeSide.lineup.map(function (b) { return b.acc.h; }));
+        var awayInnings = evPadInnings(g.aInn, g.aRuns);
+        var homeInnings = evPadInnings(g.hInn, g.hRuns);
+        var winner = g.hRuns > g.aRuns ? home : away;
+        var loser = g.hRuns > g.aRuns ? away : home;
+        var awayBatters = evBatterRows(inputs.awaySide);
+        var homeBatters = evBatterRows(inputs.homeSide);
+        var awayPitchers = evPitcherRows(inputs.awaySide);
+        var homePitchers = evPitcherRows(inputs.homeSide);
+        var awayLine = { team: away, innings: awayInnings, runs: g.aRuns, hits: awayHits, errors: g.aErr, starter: awayPitcher };
+        var homeLine = { team: home, innings: homeInnings, runs: g.hRuns, hits: homeHits, errors: g.hErr, starter: homePitcher };
+        awayLine.summaryStats = evSummaryStats(inputs.awaySide, g.aRuns, awayHits, g.aErr, random);
+        homeLine.summaryStats = evSummaryStats(inputs.homeSide, g.hRuns, homeHits, g.hErr, random);
+        var lineupStatusAway = lineupStatusFor(away, inputs.awaySide.roster);
+        var lineupStatusHome = lineupStatusFor(home, inputs.homeSide.roster);
+        var winnerPitcher = winner === home ? homePitcher : awayPitcher;
+        var extraNote = g.extra > 9 ? ' (' + g.extra + ' innings)' : '';
+        return {
+            runId: String(Date.now()) + '-' + Math.floor(random() * 1000000),
+            away: awayLine, home: homeLine, winner: winner, loser: loser,
+            players: {
+                away: { batters: awayBatters, pitchers: awayPitchers, rosterSource: evRosterSource(inputs.awaySide), lineupStatus: lineupStatusAway },
+                home: { batters: homeBatters, pitchers: homePitchers, rosterSource: evRosterSource(inputs.homeSide), lineupStatus: lineupStatusHome }
+            },
+            summary: winner.name + ' defeats ' + loser.name + ', ' + Math.max(g.aRuns, g.hRuns) + '-' + Math.min(g.aRuns, g.hRuns) + extraNote + '. ' + (winnerPitcher ? winnerPitcher.name + ' starts for the winning side. ' : '') + 'Box score simulated plate-appearance by plate-appearance.',
+            pitcherLines: [
+                away.name + ': ' + (awayPitchers[0] ? awayPitchers[0].name + ' ' + awayPitchers[0].ip + ' IP, ' + awayPitchers[0].h + ' H, ' + awayPitchers[0].r + ' R, ' + awayPitchers[0].so + ' K' : 'Starter unavailable'),
+                home.name + ': ' + (homePitchers[0] ? homePitchers[0].name + ' ' + homePitchers[0].ip + ' IP, ' + homePitchers[0].h + ' H, ' + homePitchers[0].r + ' R, ' + homePitchers[0].so + ' K' : 'Starter unavailable')
+            ],
+            keyPerformers: [evTopHitter(awayBatters, away), evTopHitter(homeBatters, home)]
+        };
+    }
+    function evPadInnings(innArr, totalRuns) {
+        var innings = innArr.slice(0, 9);
+        while (innings.length < 9) innings.push(0);
+        var shown = innings.reduce(function (t, x) { return t + x; }, 0);
+        if (shown < totalRuns) innings[8] += (totalRuns - shown); // fold extra-inning runs into the 9th column for the fixed 9-column line
+        return innings;
+    }
+    function evRosterSource(side) {
+        if (side.hasNamedLineup) return side.roster.source || 'Projected lineup from verified active roster names';
+        return 'Synthetic league-average lineup (verified roster unavailable; names not shown)';
+    }
+    function evTopHitter(batters, team) {
+        var best = batters.slice().sort(function (a, b) { return (b.h * 2 + b.hr * 3 + b.rbi) - (a.h * 2 + a.hr * 3 + a.rbi); })[0];
+        if (!best || !best.playerName) return team.abbreviation + ' lineup contributed across the order';
+        return team.abbreviation + ': ' + best.playerName + ' ' + best.h + '-for-' + best.ab + (best.hr ? ', ' + best.hr + ' HR' : '') + (best.rbi ? ', ' + best.rbi + ' RBI' : '');
+    }
+    function buildBoxScoreLegacy(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext) {
         var random = Math.random;
         var awayScore = controlledFinalScore(awayRuns, homeRuns, awayWin, random);
         var homeScore = controlledFinalScore(homeRuns, awayRuns, homeWin, random);
@@ -2353,14 +2745,21 @@
                 if (calibrated.applied) liveFactors.push('Run environment calibration: sportsbook total is used only to anchor the scoring environment, not to create a betting edge.');
             }
         }
-        var awayWin = 1 - homeWin;
-        var winner = homeWin >= awayWin ? home : away;
-        var winnerPct = Math.max(homeWin, awayWin);
         var volatility = clamp((away.volatility + home.volatility) / 2, 0.92, 1.16);
         var spread = round1(1.1 * volatility);
         var totalRuns = awayRuns + homeRuns;
         var rosterContext = rostersForTeams(away, home, context);
-        var boxScore = buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext);
+        var eventInputs = buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext);
+        // Win probability is the simulated frequency from the same plate-appearance
+        // engine that produces the box score, so the displayed win % and the box
+        // scores are one consistent model. The run-based blend above is the fallback.
+        var wpSamples = state.simulationCount > 1 ? 90 : 300;
+        var simHomeWin = eventWinProbability(eventInputs, wpSamples);
+        homeWin = clamp(Number.isFinite(simHomeWin) ? simHomeWin : homeWin, 0.05, 0.95);
+        var awayWin = 1 - homeWin;
+        var winner = homeWin >= awayWin ? home : away;
+        var winnerPct = Math.max(homeWin, awayWin);
+        var boxScore = buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext, eventInputs);
         var projectedAwayScore = boxScore.away.runs;
         var projectedHomeScore = boxScore.home.runs;
         var finalWinner = boxScore.winner;
