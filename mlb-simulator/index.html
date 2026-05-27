@@ -348,8 +348,8 @@
             <div class="explainer-layout">
                 <article>
                     <h3>What the simulator is built to do</h3>
-                    <p>The MLB Simulator models baseball matchups using structured team baselines, starting pitcher selection, era context, and available verified live inputs when they can be matched. It is designed to produce a directional projection: expected runs, score range, win probability, matchup notes, and the factors driving the result.</p>
-                    <p>It is not a random number generator, and it is not a guarantee. The output is a model-based estimate that should be read as scenario guidance, not certainty.</p>
+                    <p>The MLB Simulator plays each game out one plate appearance at a time. Every batter faces the selected pitcher with outcome probabilities (walk, strikeout, single, double, triple, home run, out) built from real rate stats and combined through the odds-ratio method, then runners advance through a base-and-out state machine. The box score, win probability, run distribution, strikeouts, walks, and home runs all emerge from those simulated events rather than being assigned after the fact.</p>
+                    <p>Team run output is anchored to a structured expected-run model that already accounts for park, starter and bullpen quality, era context, and verified live inputs when available, so totals stay realistic while each simulated game varies the way real baseball does. It is not a guarantee; the output is a model-based estimate that should be read as scenario guidance, not certainty.</p>
                 </article>
                 <article>
                     <h3>Current, classic, and mixed era modes</h3>
@@ -370,6 +370,6 @@
         </section>
     </main>
 
-    <script src="/static/js/mlb-simulator.js?v=20260527a-realism-homefield-winprob"></script>
+    <script src="/static/js/mlb-simulator.js?v=20260527b-pa-monte-carlo-engine"></script>
 </body>
 </html>
