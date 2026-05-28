@@ -7440,13 +7440,18 @@
             return marketTypeLabel(k);
         };
         const resultTag = (status) => {
-            const s = String(status || 'pending').toLowerCase();
-            const cls = s === 'won' ? 'pos' : s === 'lost' ? 'neg' : 'zero';
-            return '<span class="' + cls + '" style="font-weight:800;text-transform:uppercase;letter-spacing:.04em;font-size:11px;">' + s + '</span>';
+            const raw = String(status || 'pending').toLowerCase();
+            const s = raw === 'pushed' ? 'push' : raw === 'cancelled' ? 'canceled' : raw === 'voided' ? 'void' : raw;
+            return '<span class="tmrx-result-badge tmrx-result-' + s + '">' + s + '</span>';
+        };
+        const rowStatusClass = (status) => {
+            const raw = String(status || 'pending').toLowerCase();
+            const s = raw === 'pushed' ? 'push' : raw === 'cancelled' ? 'canceled' : raw === 'voided' ? 'void' : raw;
+            return 'tmrx-row-' + s;
         };
         tbody.innerHTML = picks.map(p => {
             if (p.redacted) {
-                return '<tr><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td></tr>';
+                return '<tr class="' + rowStatusClass(p.status) + '"><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td></tr>';
             }
             const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : '—';
             const line = p.line_snapshot != null ? Number(p.line_snapshot).toFixed(1) : '—';
@@ -7455,7 +7460,7 @@
             const net = p.result_units != null ? Number(p.result_units) : null;
             const netCls = net == null ? 'zero' : (net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero');
             const netTxt = net == null ? '—' : (net > 0 ? '+' : '') + net.toFixed(2) + 'u';
-            return '<tr>' +
+            return '<tr class="' + rowStatusClass(p.status) + '">' +
                 '<td>' + fmtDate(p.created_at || p.locked_at) + '</td>' +
                 '<td>' + sportLabel(p.sport_key) + '</td>' +
                 '<td>' + game + '</td>' +
@@ -11461,6 +11466,68 @@
       .tmrx-table .pos { color: #86efac; }
       .tmrx-table .neg { color: #fca5a5; }
       .tmrx-table .zero { color: #94a3b8; }
+
+      /* TMRX_LEDGER_RESULT_COLOR_20260527: Public Ledger must read win=green, loss=red,
+         everything else=neutral at a glance, regardless of horizontal scroll position. */
+      .tmrx-result-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-family: 'Barlow','Inter',sans-serif;
+        font-weight: 800;
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        min-width: 60px;
+        text-align: center;
+        line-height: 1.2;
+      }
+      .tmrx-result-badge.tmrx-result-won {
+        background: rgba(57,255,20,0.16);
+        color: #5ee68a;
+        border: 1px solid rgba(57,255,20,0.45);
+        box-shadow: 0 0 10px rgba(57,255,20,0.18);
+      }
+      .tmrx-result-badge.tmrx-result-lost {
+        background: rgba(255,56,96,0.16);
+        color: #ff8a8a;
+        border: 1px solid rgba(255,56,96,0.45);
+        box-shadow: 0 0 10px rgba(255,56,96,0.18);
+      }
+      .tmrx-result-badge.tmrx-result-push,
+      .tmrx-result-badge.tmrx-result-void,
+      .tmrx-result-badge.tmrx-result-canceled,
+      .tmrx-result-badge.tmrx-result-pending,
+      .tmrx-result-badge.tmrx-result-unknown {
+        background: rgba(148,163,184,0.14);
+        color: #cbd5e1;
+        border: 1px solid rgba(148,163,184,0.34);
+      }
+      .tmrx-table tbody tr.tmrx-row-won td {
+        background: linear-gradient(180deg, rgba(57,255,20,0.07), rgba(57,255,20,0.028)) !important;
+      }
+      .tmrx-table tbody tr.tmrx-row-lost td {
+        background: linear-gradient(180deg, rgba(255,56,96,0.075), rgba(255,56,96,0.03)) !important;
+      }
+      .tmrx-table tbody tr.tmrx-row-won:hover td {
+        background: linear-gradient(180deg, rgba(57,255,20,0.12), rgba(57,255,20,0.05)) !important;
+      }
+      .tmrx-table tbody tr.tmrx-row-lost:hover td {
+        background: linear-gradient(180deg, rgba(255,56,96,0.13), rgba(255,56,96,0.055)) !important;
+      }
+      .tmrx-table tbody tr.tmrx-row-won td:first-child {
+        box-shadow: inset 3px 0 0 0 #5ee68a;
+      }
+      .tmrx-table tbody tr.tmrx-row-lost td:first-child {
+        box-shadow: inset 3px 0 0 0 #ff8a8a;
+      }
+      .tmrx-table tbody tr.tmrx-row-push td:first-child,
+      .tmrx-table tbody tr.tmrx-row-void td:first-child,
+      .tmrx-table tbody tr.tmrx-row-canceled td:first-child,
+      .tmrx-table tbody tr.tmrx-row-pending td:first-child,
+      .tmrx-table tbody tr.tmrx-row-unknown td:first-child {
+        box-shadow: inset 3px 0 0 0 rgba(148,163,184,0.55);
+      }
       .tmrx-table .empty td { padding: 22px 16px; text-align: center; color: #64748b; font-style: italic; }
 
       .tmrx-pagination { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
