@@ -965,16 +965,28 @@
     var stat = historyRowsForTeam(sport, team) || [];
     var art = artifactRowsForTeam(sport, team) || [];
     if (!art.length) return stat;
-    var seen = new Set();
-    var merged = [];
+    var byKey = new Map();
+    // Artifact rows seed the set (cover the freshest games).
     art.forEach(function (r) {
       var k = (r.d || "") + "|" + normalize(r.opp || "");
-      if (!seen.has(k)) { seen.add(k); merged.push(r); }
+      byKey.set(k, Object.assign({}, r));
     });
+    // For overlap, enrich the artifact row with static-only fields (ml, ats, sp/tl
+    // where missing). For static-only games (older than the artifact window),
+    // insert the static row as-is.
     stat.forEach(function (r) {
       var k = (r.d || "") + "|" + normalize(r.opp || "");
-      if (!seen.has(k)) { seen.add(k); merged.push(r); }
+      var existing = byKey.get(k);
+      if (existing) {
+        if (existing.ml == null && r.ml != null) existing.ml = r.ml;
+        if (existing.sp == null && r.sp != null) existing.sp = r.sp;
+        if (existing.tl == null && r.tl != null) existing.tl = r.tl;
+        if (existing.ats == null && r.ats != null) existing.ats = r.ats;
+        return;
+      }
+      byKey.set(k, r);
     });
+    var merged = Array.from(byKey.values());
     merged.sort(function (a, b) { return String(b.d || "").localeCompare(String(a.d || "")); });
     return merged;
   }
@@ -1030,20 +1042,6 @@
         }
         return true;
       });
-    try {
-      window._tsDebug = {
-        team: team,
-        sortedAllCount: sortedAll.length,
-        sortedAllFirst5: sortedAll.slice(0,5).map(function(r){return {d:r.d,opp:r.opp,h:r.h,ml:r.ml,sp:r.sp,_from:r._from||"static"};}),
-        afterFilterCount: rows.length,
-        afterFilterDates: rows.map(function(r){return r.d+"|"+r.opp+"|ml="+r.ml+"|sp="+r.sp+"|"+(r._from||"static");}),
-        kindId: kindId,
-        market: market.id,
-        side: state.side,
-        location: state.location,
-        range: state.range
-      };
-    } catch (e) {}
     if (kindId === "after_win" || kindId === "after_loss") {
       var needPrev = kindId === "after_win" ? 1 : 0;
       rows = rows.filter(function (r) {
