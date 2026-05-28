@@ -1,5 +1,17 @@
 # TrustMyRecord Development Rules
 
+## Sportsbook sport list is one centralized catalog — never a scattered hardcoded list (May 27, 2026) — HARD RULE (PERMANENT)
+Every sportsbook navigation surface — upper strip (`.sportsbook-sports-nav`), pick-area tabs (`.sportsbook-sport-tabs`) and their More popover (`.sport-more-pop`), and rail (`.sportsbook-rail-list`) — MUST render from the single canonical catalog `window.TMR.SPORT_CATALOG` (defined at the bottom of `sportsbook/index.html`). Future sport additions update that one array; the catalog renderer (`renderUpperStrip` / `renderPickTabs` / `renderRail` in the same block) propagates to every surface.
+
+Requirements:
+1. Never hardcode a sport list in any sportsbook nav element. Hardcoded `<button data-sport="…">` rows are replaced at runtime; new entries must go into `SPORT_CATALOG`, not into raw HTML.
+2. Catalog entries carry `{ id, label, hasFeed, groupOpen? }`. `hasFeed:false` sports route through `NO_LIVE_FEED_SPORTS` (in the same file) and render an honest empty state — never invented odds or rows.
+3. The active sport must highlight across every surface. Use the wrapped `window.TMR.setSport(sport)` which fires `syncActive(sport)` on the strip, tabs, and rail simultaneously.
+4. Contest/pick-entry surfaces, challenge sport selectors, and any other site-wide sport dropdown should also read from `SPORT_CATALOG` when added — never reinvent the list. If a UI needs a subset, filter `SPORT_CATALOG` by `hasFeed` or by an explicit allowlist — do not re-author it.
+5. Sports without live odds (currently MMA, Boxing, Golf, NASCAR, F1) render the catalog-driven empty state in `renderBoard()`: `"No active contests or picks available for <sport> yet. Live odds will appear here when our feed adds coverage."` No fake picks, no fake users, no fake odds, no fake contests.
+
+Reference: `sportsbook/index.html` end-of-body `CANONICAL SPORT CATALOG` script block, commit history May 27, 2026.
+
 ## Public Ledger / profile tables / sportsbook ledgers / contest grids must use a responsive scroll wrapper (May 27, 2026) — HARD RULE (PERMANENT)
 Any wide tabular surface — Public Ledger (`.tmrx-table-shell`/`.picks-table-wrapper`), profile stats tables, sportsbook ledgers, contest grids (rows × games) — MUST be reachable in full at every supported viewport. Columns are NEVER allowed to be clipped off the right edge.
 
@@ -8,7 +20,9 @@ Required pattern for every such surface:
 2. **Table** uses an explicit `min-width` (or `min-width: max-content`) so it can outgrow the wrapper and trigger the scroll instead of squashing.
 3. **Parent chain** (card → section → main column → grid track) allows `min-width: 0` (or `minmax(0, …fr)`); a grid/flex child without `min-width: 0` collapses scrollable children. Never set `overflow: hidden` on a section above the wrapper unless you have verified at every viewport that the wrapper's scroll still reveals the last column.
 4. **Viewport testing** before completion at: 1440, 1280, 1024, 768, 390. For each, `shell.scrollWidth > shell.clientWidth` triggers the scrollbar, and scrolling to `shell.scrollLeft = shell.scrollWidth` brings the last column inside the shell's right edge. Capture this as literal command output, not by eyeballing.
-5. **Do not** "fix" clipping by removing columns, shrinking text to unreadable sizes, or hiding the row under a media query. Preserve all columns and sportsbook styling.
+5. **Do not** "fix" clipping by removing columns, shrinking text to unreadable sizes, or hiding right-edge columns such as **Net, Result, Units, Odds**, or other final table fields. Preserve all columns and sportsbook styling.
+6. **Mobile viewports may switch to a stacked card layout** (e.g., `display: block` rows on narrow widths) when the restructure preserves every data field. Restructuring is allowed; hiding or clipping data is not.
+7. **No fake data to "prove" layout.** Layout verification must use real backend data or a clearly isolated test fixture that never reaches the live public site.
 
 Reference fix: `profile/index.html` `.tmrx-table-shell` base rule had `overflow: hidden`, which clipped the Public Ledger to ~column 5 ("Market") at every desktop width. Changed to `overflow-x: auto; overflow-y: hidden; max-width: 100%` so all 10 columns (Submitted → Net) are reachable at 1440/1280/1024/768/390. Commit `0bf309d9`.
 
@@ -868,10 +882,9 @@ Player props on the sportsbook board are **view-only** and must stay that way un
 
 ## Profile / ledger / contest tables need a responsive wrapper + viewport test (May 27, 2026) — HARD RULE
 Any public table — Public Ledger, profile stats, sportsbook ledger, contest dashboard grid, or any future table-style data view — must ship with a real responsive wrapper that never clips columns and must be tested at multiple viewport widths before completion.
-- **Wrapper contract**: the immediate scroll wrapper is a block element with `display: block; width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; overflow-y: hidden`. The inner table is `display: table; table-layout: auto; width: max-content; min-width: 100%` so it sits at its natural content width but never shrinks below the wrapper. **Do NOT add `scrollbar-gutter: stable both-edges` to a wrapper that uses `overflow-x: auto`** — see the dedicated bullet below.
+- **Wrapper contract**: the immediate scroll wrapper is a block element with `display: block; width: 100%; max-width: 100%; min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-gutter: stable both-edges`. The inner table is `display: table; table-layout: auto; width: max-content; min-width: 100%` so it sits at its natural content width but never shrinks below the wrapper.
 - **`min-width: 0` chain**: every ancestor between the wrapper and the page (e.g. `.profile-main`, `.profile-tab-panel`, `.tmrx-stats`, `.tmrx-section`, contest dashboard `.section`/`.panel`, and any flex/grid parents) must carry `min-width: 0` so a flex/grid container does not force the wrapper to its content size and bleed out under an `overflow: hidden` ancestor.
 - **No `overflow: hidden` on the wrapper or any ancestor that wraps it.** Base CSS that sets `overflow: hidden` on the wrapper (legacy `.tmrx-table-shell { overflow: hidden }`) must be overridden with `overflow-x: auto` at the highest cascade position.
 - **Do NOT solve clipping by removing columns** or shrinking text below ~12px. Reduce cell padding at narrow viewports instead; columns stay.
 - **Mandatory viewport test before completion**: 1440 / 1280 / 1024 / 768 / 390. At each width every column must be reachable (visible or via horizontal scroll inside the wrapper) and the scrollbar (or its gutter) must be visible.
-- **NEVER use `scrollbar-gutter: stable both-edges` on a horizontal-scroll wrapper** (any element with `overflow-x: auto` and `overflow-y: hidden`). Chromium reserves ∼20px of horizontal track that is *excluded* from `scrollWidth - clientWidth`, so `shell.scrollLeft = shell.scrollWidth` clamps short of the true end and the last column stays clipped at 1440 / 1280 / 1024 / 768 even though `can_scroll` reads true. This bit us on May 27, 2026 (commit `9209997c` introduced it, commit `710de823` removed it). If you need a styled scrollbar use `scrollbar-width: thin` + `::-webkit-scrollbar*` rules only.
-- The Public Ledger reference fix lives in `profile/index.html` ("PUBLIC LEDGER RIGHT-EDGE CLIP HARD-FIX (May 27, 2026 r2)" block, with the gutter declaration stripped in commit `710de823`). Copy the same wrapper pattern — minus the gutter — when adding new table-style views.
+- The Public Ledger reference fix lives in `profile/index.html` ("PUBLIC LEDGER RIGHT-EDGE CLIP HARD-FIX (May 27, 2026 r2)" block). Copy the same wrapper pattern when adding new table-style views.
