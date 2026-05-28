@@ -1002,23 +1002,25 @@
         if (market.id === "team_total") return false;
         if (kindId === "favorite" || kindId === "favorite_ats") {
           // Prefer real moneyline; fall back to spread sign for artifact rows.
-          var ml = Number(r.ml);
-          var sp = Number(r.sp);
-          if (Number.isFinite(ml)) {
-            if (ml >= 0) return false;
-          } else if (Number.isFinite(sp)) {
-            if (sp >= 0) return false;
+          // Use explicit null/undefined check because Number(null) === 0,
+          // which would otherwise mis-classify null-moneyline rows as ml=0.
+          var mlV = (r.ml === null || r.ml === undefined) ? NaN : Number(r.ml);
+          var spV = (r.sp === null || r.sp === undefined) ? NaN : Number(r.sp);
+          if (Number.isFinite(mlV)) {
+            if (mlV >= 0) return false;
+          } else if (Number.isFinite(spV)) {
+            if (spV >= 0) return false;
           } else {
             return false;
           }
         }
         if (kindId === "underdog" || kindId === "underdog_ats") {
-          var ml2 = Number(r.ml);
-          var sp2 = Number(r.sp);
-          if (Number.isFinite(ml2)) {
-            if (ml2 <= 0) return false;
-          } else if (Number.isFinite(sp2)) {
-            if (sp2 <= 0) return false;
+          var mlV2 = (r.ml === null || r.ml === undefined) ? NaN : Number(r.ml);
+          var spV2 = (r.sp === null || r.sp === undefined) ? NaN : Number(r.sp);
+          if (Number.isFinite(mlV2)) {
+            if (mlV2 <= 0) return false;
+          } else if (Number.isFinite(spV2)) {
+            if (spV2 <= 0) return false;
           } else {
             return false;
           }
