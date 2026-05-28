@@ -896,7 +896,7 @@
 
   function gameLogRowHtml(row, market, displayLine) {
     var rawLog = row.raw_game_log || "";
-    var scoreMatch = rawLog.match(/(\d+)-(\d+)/);
+    var scoreMatch = rawLog.match(/(\d+)-(\d+)\s+(WIN|LOSS|PUSH)\b/i);
     var gameDesc = "";
     var finalScore = "";
     if (rawLog) {
