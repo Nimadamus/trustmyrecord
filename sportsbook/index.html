@@ -12350,8 +12350,11 @@ window.toggleSportFamily = function (family) {
             if (subS) subS.classList.remove('show');
             if (subT) subT.classList.remove('show');
             if (period === 'alts') { return renderAltLinesBoard(sport, rows); }
-            rows.innerHTML = emptyState(sport, 'Player props are not available from the current odds feed.', 'closed');
-            return;
+            // Player Props route through the live /games/props/<sportKey> backend
+            // (display-only, no clickable bet buttons — see DEVELOPMENT_RULES.md
+            // "Player props are view-only"). Renders real props where the feed
+            // has them, honest empty/no-feed copy otherwise.
+            return renderPlayerPropsBoard(sport, rows);
         }
         if (period === 'tt') {
             return renderTeamTotalsBoard(sport, rows);
