@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-lineup-fallback-refresh-20260527e';
+    var UI_BUILD = 'mlb-simulator-homefield-calibration-20260527f';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1687,6 +1687,11 @@
     var EV_PA_PER_GAME = 38.2;
     var EV_BF_PER_IP = 4.30;
     var EV_SLOT_OPS_MULT = [1.04, 1.08, 1.13, 1.15, 1.05, 0.98, 0.92, 0.86, 0.80];
+    // Home-field run-environment split (Layer 3). Sum is fixed at 0.32 (unchanged
+    // total run environment); the split is tuned so simulated home win % tracks the
+    // real 2025 baseline without inflating the home/away run gap beyond reality.
+    var HOME_FIELD_AWAY_BONUS = -0.02;
+    var HOME_FIELD_HOME_BONUS = 0.34;
     function evNormalize(v) {
         var s = v.bb + v.so + v.hr + v.b3 + v.b2 + v.b1 + v.out;
         if (!(s > 0)) return Object.assign({}, EV_LEAGUE);
@@ -2654,11 +2659,16 @@
         return clamp((report.ilCount * 0.32) + (report.dayToDay * 0.12) + (report.relieverCount * 0.12), 0, 2.8);
     }
     function simulate(away, home, context, seedSalt, allowUpset) {
-        // Home-field run environment: home clubs historically score slightly MORE
-        // (last at-bat, familiarity, platoon), not less. Give home the larger
-        // run bonus (~+0.16 net over road) instead of the prior inverted values.
-        var awayRuns = expectedRunsFor(away, home, 0.08);
-        var homeRuns = expectedRunsFor(home, away, 0.24);
+        // Home-field run environment (Layer 3 calibration). HOME_FIELD_HOME_BONUS +
+        // HOME_FIELD_AWAY_BONUS is held CONSTANT (= 0.32) so total runs/game and
+        // league runs/team are unchanged; only the home/away split shifts. Shifting
+        // toward home raises the simulated home win % toward the real 2025 baseline
+        // (54.3%) while keeping the realized home/away run gap near reality (real
+        // 2025: home 4.489 vs away 4.404). Reaching the full 54.3% via runs alone
+        // would over-inflate the split, so this targets the realistic split; the
+        // residual home edge is a last-at-bat/leverage effect (future layer).
+        var awayRuns = expectedRunsFor(away, home, HOME_FIELD_AWAY_BONUS);
+        var homeRuns = expectedRunsFor(home, away, HOME_FIELD_HOME_BONUS);
         var liveFactors = [];
         var awayPitcherPre = selectedPitcher('away', away, context);
         var homePitcherPre = selectedPitcher('home', home, context);
