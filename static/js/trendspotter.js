@@ -527,11 +527,15 @@
         "<option value=\"total\"" + (state.side === "total" ? " selected" : "") + ">Total</option>"
       ].join("");
     }
-    // Show team picker when the market requires it, OR when the user picked an
-    // extended range (last_20/last_50/season). Extended history is anchored on a
-    // single team, so the user should choose which team's last-N to analyze
-    // rather than defaulting silently.
-    var teamPickerNeeded = market.requiresTeam || (rangeIsExtended() && EXTENDED_SPORTS.includes(state.sport));
+    // Show team picker when the market requires it, when range is extended, or
+    // when the market doesn't already encode a team in its side (total). For
+    // moneyline/spread, side=home/away already selects the team. For total, the
+    // side is over/under, so we must show the team picker so the user explicitly
+    // chooses which team's games to analyze.
+    var teamPickerNeeded =
+      market.requiresTeam ||
+      market.id === "total" ||
+      (rangeIsExtended() && EXTENDED_SPORTS.includes(state.sport));
     if (teamPickerNeeded) {
       els.teamField.classList.remove("is-hidden");
       els.team.disabled = false;
