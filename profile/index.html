@@ -13038,6 +13038,56 @@
   body.profile-page .tmrx-drill-table tbody tr.tmrx-drill-sport td.name { font-weight: 900; color: #f1f5fb; }
   body.profile-page .tmrx-drill-table tbody tr.tmrx-drill-side td { color: #aebbcf; }
   body.profile-page .tmrx-drill-table tbody tr.tmrx-drill-side td.name { padding-left: 26px; font-weight: 600; }
+
+  /* ===== PUBLIC LEDGER + STAT TABLES: responsive horizontal scroll (May 27, 2026)
+     Earlier cascade left .tmrx-table at min-width:1040px while .tmrx-table-shell
+     inherited overflow:hidden from base CSS, so the right columns (Line/Odds/
+     Units/Result/Net) were clipped on desktop+laptop where the main column is
+     ~904px wide. This block restores a clean shell-scoped horizontal scroll and
+     a min-width: 0 chain so the table fits inside the profile content area. */
+  body.profile-page.tmr-social-profile .profile-main,
+  body.profile-page.tmr-social-profile .profile-tab-panel,
+  body.profile-page.tmr-social-profile .tmrx-stats,
+  body.profile-page.tmr-social-profile .tmrx-section {
+    min-width: 0 !important;
+  }
+  body.profile-page.tmr-social-profile .tmrx-table-shell {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-x: contain !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(148,163,184,.55) rgba(15,23,42,.4) !important;
+  }
+  body.profile-page.tmr-social-profile .tmrx-table-shell::-webkit-scrollbar {
+    height: 10px !important;
+  }
+  body.profile-page.tmr-social-profile .tmrx-table-shell::-webkit-scrollbar-track {
+    background: rgba(15,23,42,.4) !important;
+    border-radius: 0 0 12px 12px !important;
+  }
+  body.profile-page.tmr-social-profile .tmrx-table-shell::-webkit-scrollbar-thumb {
+    background: rgba(148,163,184,.55) !important;
+    border-radius: 8px !important;
+  }
+  body.profile-page.tmr-social-profile .tmrx-table-shell::-webkit-scrollbar-thumb:hover {
+    background: rgba(34,211,238,.6) !important;
+  }
+  body.profile-page.tmr-social-profile #tmrxTablePicks {
+    min-width: max-content !important;
+    width: 100% !important;
+  }
+  body.profile-page.tmr-social-profile #tmrxTablePicks th,
+  body.profile-page.tmr-social-profile #tmrxTablePicks td {
+    white-space: nowrap !important;
+  }
+  @media (max-width: 720px) {
+    body.profile-page.tmr-social-profile #tmrxTablePicks {
+      min-width: 0 !important;
+    }
+  }
 </style>
 </body>
 </html>
