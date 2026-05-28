@@ -840,6 +840,12 @@
     var sorted = rows.slice().sort(function (a, b) {
       return String(b.date || "").localeCompare(String(a.date || ""));
     });
+    var kind = state.trendKind;
+    var isH2H = kind === "head_to_head" || kind === "head_to_head_ats" || kind === "head_to_head_over_under";
+    // Head-to-head meetings are naturally rare; the user already filtered by
+    // opponent. Treat source_window / season as "all available H2H meetings"
+    // and only apply explicit last_N slices.
+    if (isH2H && (state.range === "source_window" || state.range === "season")) return sorted;
     if (state.range === "last_5") return sorted.slice(0, Math.min(5, sorted.length));
     if (state.range === "last_10") return sorted.slice(0, Math.min(10, sorted.length));
     if (state.range === "last_20") return sorted.slice(0, Math.min(20, sorted.length));
