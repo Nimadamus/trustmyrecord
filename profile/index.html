@@ -11419,7 +11419,9 @@
       .tmrx-period-cell .v.is-neg { color: #ef4444; }
       .tmrx-period-cell .s { margin-top: 2px; font-size: 11px; color: #7f8ca3; font-weight: 700; }
 
-      .tmrx-table-shell { border: 1px solid rgba(31,51,80,.55); border-radius: 12px; overflow: hidden; background: #0a1322; }
+      /* Public Ledger / tmrx tables can exceed the card width (min-width up to 1040px).
+         Use horizontal scroll instead of clipping so no column is hidden at any viewport. */
+      .tmrx-table-shell { border: 1px solid rgba(31,51,80,.55); border-radius: 12px; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; background: #0a1322; max-width: 100%; }
       .tmrx-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
       .tmrx-table thead th { font-size: 11px; font-weight: 900; text-transform: uppercase; letter-spacing: .10em; color: #7a8499; background: #08111f; text-align: left; padding: 10px 14px; border-bottom: 1px solid #1F3350; }
       .tmrx-table thead th.num { text-align: right; }
