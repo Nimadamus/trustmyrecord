@@ -13090,6 +13090,74 @@
       min-width: 0 !important;
     }
   }
+
+  /* ===== PUBLIC LEDGER RIGHT-EDGE CLIP HARD-FIX (May 27, 2026 r2)
+     Despite the earlier May 27 block, on the live page the Public Ledger
+     still clipped at the "Market" column because an earlier override set
+     #tmrxTablePicks { width: 100% !important } at lower specificity but
+     before resolution, combined with another rule that hid the shell's
+     scrollbar. This block is positioned LAST (highest source-order weight)
+     and:
+       1. Forces the shell to be a block-formatting context that scrolls
+          horizontally with a visible, always-on thin scrollbar.
+       2. Sets the Public Ledger table to its NATURAL content width
+          (width: max-content) with a 100% floor so the table never shrinks
+          below the shell when fewer columns fit.
+       3. Walks the min-width: 0 chain up through every ancestor between
+          the shell and the page, so no flex/grid container squeezes the
+          shell and clips it.
+       4. At narrow viewports, reduces padding so more columns fit before
+          scrolling kicks in.
+     Result: every ledger column is reachable on all viewports without
+     removing columns or shrinking text below legibility. */
+  body.profile-page.tmr-social-profile main,
+  body.profile-page.tmr-social-profile .profile-layout,
+  body.profile-page.tmr-social-profile .profile-content,
+  body.profile-page.tmr-social-profile .profile-main,
+  body.profile-page.tmr-social-profile .profile-tab-panel,
+  body.profile-page.tmr-social-profile .profile-tab-panel[data-panel="picks"],
+  body.profile-page.tmr-social-profile .tmrx-stats,
+  body.profile-page.tmr-social-profile .tmrx-section,
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) {
+    min-width: 0 !important;
+  }
+  body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTablePicks) > .tmrx-table-shell,
+  body.profile-page.tmr-social-profile .tmrx-section > .tmrx-table-shell:has(#tmrxTablePicks) {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior-x: contain !important;
+    scrollbar-gutter: stable both-edges !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(148, 163, 184, .55) rgba(15, 23, 42, .4) !important;
+  }
+  body.profile-page.tmr-social-profile #tmrxTablePicks {
+    display: table !important;
+    table-layout: auto !important;
+    width: max-content !important;
+    min-width: 100% !important;
+    max-width: none !important;
+  }
+  @media (max-width: 1280px) {
+    body.profile-page.tmr-social-profile #tmrxTablePicks th,
+    body.profile-page.tmr-social-profile #tmrxTablePicks td {
+      padding-left: 10px !important;
+      padding-right: 10px !important;
+      font-size: 13px !important;
+    }
+  }
+  @media (max-width: 720px) {
+    body.profile-page.tmr-social-profile #tmrxTablePicks th,
+    body.profile-page.tmr-social-profile #tmrxTablePicks td {
+      padding-left: 8px !important;
+      padding-right: 8px !important;
+      font-size: 12px !important;
+    }
+  }
 </style>
 </body>
 </html>
