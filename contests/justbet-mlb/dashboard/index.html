@@ -495,13 +495,29 @@
     (function () {
         const CONTEST_ID = 'justbet-mlb';
         // PRE-LAUNCH GATE (authoritative, set by Nima — do NOT derive from the
-        // API's starts_at, which currently holds stale QA placeholder dates).
-        // While true, the contest is NOT live: the board and leaderboard render
-        // clean empty/coming-soon states and never display picks, records,
-        // standings, units, or win %. Flip to false ONLY when launch is approved.
+        // API's starts_at, which holds stale QA placeholder dates).
+        // While true the contest is NOT live: the LEADERBOARD never shows records
+        // (W-L-P / units / win% / picks-used). The CONTEST GRID still renders its
+        // real launch-ready structure (registered contestants x the day's games);
+        // cells show dash / Sealed / revealed strictly from real contest picks.
+        // Flip to false ONLY when launch + graded results are approved.
         const PRELAUNCH = true;
         const API_BASE = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
         const API = (path) => `${API_BASE}/api/contests/${CONTEST_ID}${path}`;
+
+        // Real-contestant filter: keep registered entrants out of the public grid
+        // when they are known seed/test/demo accounts. Display-layer only — no
+        // registration rows or user accounts are deleted. Extend KNOWN_FAKES as
+        // needed; the prefix patterns catch automated QA/seed/test/demo accounts.
+        const KNOWN_FAKES = new Set(['NobodyImportant74', 'patrick9']);
+        const FAKE_PREFIX = /^(qa[_-]|test[_-]?|seed[_-]?|demo[_-]?|tmrtest)/i;
+        const isRealContestant = (u) => {
+            const name = String(u || '').trim();
+            if (!name) return false;
+            if (KNOWN_FAKES.has(name)) return false;
+            if (FAKE_PREFIX.test(name)) return false;
+            return true;
+        };
 
         const $ = (sel) => document.querySelector(sel);
         const fmtOdds = (n) => {
@@ -551,7 +567,8 @@
                 const res = await fetch(API('/registrations'), { credentials: 'include' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
-                const entries = Array.isArray(data) ? data : (data.entries || []);
+                const raw = Array.isArray(data) ? data : (data.entries || []);
+                const entries = raw.filter(e => isRealContestant(e && e.username));
                 $('#stat-entrants').textContent = entries.length;
                 renderRegistrations(entries);
             } catch {
@@ -865,28 +882,32 @@
 
         const gameLabel = (g) => `${g.away_team} @ ${g.home_team}`;
 
-        // Build the contestants x games grid. Columns = today's slate (/games)
-        // unioned with any game already referenced by a pick (so started-game
-        // picks always have a column to reveal in). Reveal/seal is driven by
-        // each pick row's server-computed `sealed` flag.
+        // Build the launch-ready contestants x games grid.
+        //   Rows    = real registered entrants (from /registrations, fake-filtered).
+        //   Columns = the day's contest board (from /games), plus any game already
+        //             referenced by a real pick so revealed picks always have a column.
+        //   Cells   = real contest picks only (from /picks): dash (no pick),
+        //             Sealed (pick + game not started), or revealed pick (game started).
+        // Renders the real structure even pre-launch; never invents picks or records.
         async function loadGrid() {
             const empty = $('#cgrid-empty');
             const table = $('#cgrid-table');
-            if (PRELAUNCH) {
-                table.hidden = true;
-                empty.hidden = false;
-                empty.innerHTML = `<i class="fa-solid fa-hourglass-half"></i>Contest dashboard coming soon. Once the contest begins, sealed picks will appear here after each game starts.`;
-                return;
-            }
             try {
-                const [gamesResp, picksResp] = await Promise.all([
+                const [regResp, gamesResp, picksResp] = await Promise.all([
+                    fetch(API('/registrations'), { credentials: 'include' }),
                     fetch(API('/games'), { credentials: 'include' }),
                     fetch(API('/picks'), { credentials: 'include' }),
                 ]);
                 if (!picksResp.ok) throw new Error(`picks HTTP ${picksResp.status}`);
                 const gamesData = gamesResp.ok ? await gamesResp.json() : { games: [] };
                 const picksData = await picksResp.json();
-                const picks = picksData.picks || [];
+                const picks = (picksData.picks || []).filter(p => isRealContestant(p.username));
+
+                let regRows = [];
+                if (regResp.ok) {
+                    const rd = await regResp.json();
+                    regRows = Array.isArray(rd) ? rd : (rd.entries || []);
+                }
 
                 // Column map keyed by game label -> { label, start }.
                 const colMap = new Map();
@@ -894,17 +915,26 @@
                 picks.forEach(p => { if (!colMap.has(p.game)) colMap.set(p.game, { label: p.game, start: p.game_start_at }); });
                 const cols = [...colMap.values()].sort((a, b) => new Date(a.start || 0) - new Date(b.start || 0));
 
-                // Rows = distinct real contestants (test rows already purged).
-                const users = [...new Set(picks.map(p => p.username))].sort((a, b) => a.localeCompare(b));
+                // Rows = real registered contestants (union any real pick author, defensively).
+                const users = [...new Set([
+                    ...regRows.map(r => r && r.username).filter(isRealContestant),
+                    ...picks.map(p => p.username),
+                ])].sort((a, b) => a.localeCompare(b));
 
                 // Lookup: username||label -> pick.
                 const byCell = new Map();
                 picks.forEach(p => byCell.set(`${p.username}||${p.game}`, p));
 
-                if (!cols.length || !users.length) {
+                if (!users.length) {
                     table.hidden = true;
                     empty.hidden = false;
-                    empty.innerHTML = `<i class="fa-solid fa-inbox"></i>No contest picks yet. Picks appear here once contestants submit.`;
+                    empty.innerHTML = `<i class="fa-solid fa-user-plus"></i>Registered contestants will appear here. Be the first to register.`;
+                    return;
+                }
+                if (!cols.length) {
+                    table.hidden = true;
+                    empty.hidden = false;
+                    empty.innerHTML = `<i class="fa-solid fa-baseball"></i>Today's MLB matchups will appear across the top once the daily board is posted.`;
                     return;
                 }
 
