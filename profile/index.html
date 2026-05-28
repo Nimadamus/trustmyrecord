@@ -5182,12 +5182,31 @@
             border-left: 3px solid var(--tmr-neon-red) !important;
         }
         body.profile-page .picks-table tbody tr.row-push,
-        body.profile-page.tmr-site-shell .picks-table tbody tr.row-push {
-            border-left: 3px solid var(--tmr-neon-gold) !important;
-        }
+        body.profile-page.tmr-site-shell .picks-table tbody tr.row-push,
+        body.profile-page .picks-table tbody tr.row-void,
+        body.profile-page.tmr-site-shell .picks-table tbody tr.row-void,
+        body.profile-page .picks-table tbody tr.row-canceled,
+        body.profile-page.tmr-site-shell .picks-table tbody tr.row-canceled,
         body.profile-page .picks-table tbody tr.row-pending,
         body.profile-page.tmr-site-shell .picks-table tbody tr.row-pending {
-            border-left: 3px solid var(--tmr-neon-cyan) !important;
+            border-left: 3px solid rgba(148,163,184,0.55) !important;
+        }
+        /* LEDGER_WIN_LOSS_TINT_20260527: subtle row-wide tint so wins/losses are obvious at a glance even when the Result column is scrolled out of view. */
+        body.profile-page .picks-table tbody tr.row-won td,
+        body.profile-page.tmr-site-shell .picks-table tbody tr.row-won td {
+            background: linear-gradient(180deg, rgba(57,255,20,0.055), rgba(57,255,20,0.025)) !important;
+        }
+        body.profile-page .picks-table tbody tr.row-lost td,
+        body.profile-page.tmr-site-shell .picks-table tbody tr.row-lost td {
+            background: linear-gradient(180deg, rgba(255,56,96,0.06), rgba(255,56,96,0.028)) !important;
+        }
+        body.profile-page .picks-table tbody tr.row-won:hover td,
+        body.profile-page.tmr-site-shell .picks-table tbody tr.row-won:hover td {
+            background: linear-gradient(180deg, rgba(57,255,20,0.10), rgba(57,255,20,0.045)) !important;
+        }
+        body.profile-page .picks-table tbody tr.row-lost:hover td,
+        body.profile-page.tmr-site-shell .picks-table tbody tr.row-lost:hover td {
+            background: linear-gradient(180deg, rgba(255,56,96,0.105), rgba(255,56,96,0.05)) !important;
         }
 
         /* Pick column = the headline. Make it pop. */
@@ -5227,17 +5246,23 @@
             border: 1px solid rgba(255, 56, 96, 0.4) !important;
             box-shadow: 0 0 12px rgba(255, 56, 96, 0.18);
         }
+        /* LEDGER_NEUTRAL_NON_DECISION_20260527: push / void / canceled / pending / unknown must NOT read as a win or a loss. Hold them on a neutral slate. */
         body.profile-page .result-badge.push,
-        body.profile-page.tmr-site-shell .result-badge.push {
-            background: rgba(255, 215, 0, 0.10) !important;
-            color: var(--tmr-neon-gold) !important;
-            border: 1px solid rgba(255, 215, 0, 0.36) !important;
-        }
+        body.profile-page.tmr-site-shell .result-badge.push,
+        body.profile-page .result-badge.void,
+        body.profile-page.tmr-site-shell .result-badge.void,
+        body.profile-page .result-badge.canceled,
+        body.profile-page.tmr-site-shell .result-badge.canceled,
+        body.profile-page .result-badge.cancelled,
+        body.profile-page.tmr-site-shell .result-badge.cancelled,
         body.profile-page .result-badge.pending,
-        body.profile-page.tmr-site-shell .result-badge.pending {
-            background: rgba(0, 255, 255, 0.08) !important;
-            color: var(--tmr-neon-cyan) !important;
-            border: 1px solid rgba(0, 255, 255, 0.36) !important;
+        body.profile-page.tmr-site-shell .result-badge.pending,
+        body.profile-page .result-badge.unknown,
+        body.profile-page.tmr-site-shell .result-badge.unknown {
+            background: rgba(148, 163, 184, 0.12) !important;
+            color: #cbd5e1 !important;
+            border: 1px solid rgba(148, 163, 184, 0.32) !important;
+            box-shadow: none !important;
         }
         body.profile-page .profit-cell.positive,
         body.profile-page.tmr-site-shell .profit-cell.positive {
@@ -5797,7 +5822,10 @@
 
     function normalizeStatus(status) {
         const raw = String(status || 'pending').toLowerCase();
-        return raw === 'pushed' ? 'push' : raw;
+        if (raw === 'pushed') return 'push';
+        if (raw === 'cancelled') return 'canceled';
+        if (raw === 'voided') return 'void';
+        return raw;
     }
 
     function getProfileIdentityCandidates() {
