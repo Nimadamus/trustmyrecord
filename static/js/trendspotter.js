@@ -37,8 +37,14 @@
     last_5: "Last 5 games",
     last_10: "Last 10 games",
     last_20: "Last 20 games",
+    last_50: "Last 50 games",
     season: "Season long"
   };
+  var EXTENDED_RANGES = ["last_20", "last_50", "season"];
+  var TEAM_ALIASES_MLB = {
+    "Athletics": "Oakland Athletics"
+  };
+  var historyCache = { mlb: null, loading: null };
   var FORBIDDEN_OUTPUT = [
     /\bfake\b/i,
     /\broi\b/i,
@@ -399,13 +405,16 @@
     }
     if (state.location === "home" && team !== home) return false;
     if (state.location === "away" && team !== away) return false;
-    if (!["source_window", "last_5", "last_10", "last_20"].includes(state.range)) return false;
+    if (!["source_window", "last_5", "last_10", "last_20", "last_50", "season"].includes(state.range)) return false;
     if (market.id === "first_half" && state.period !== "first_half") return false;
     if (market.id === "first_five" && state.period !== "first_five") return false;
     return true;
   }
 
   function bestResult() {
+    if (EXTENDED_RANGES.includes(state.range)) {
+      return extendedTrendForQuery();
+    }
     return trendsForSport(state.sport)
       .filter(trendMatchesQuery)
       .sort(function (a, b) { return (Number(b.sample) || 0) - (Number(a.sample) || 0); })[0] || null;
@@ -552,7 +561,7 @@
     if (market && market.requiresTeam && !state.team) errors.push("missing_team");
     if (market && market.needsThreshold && state.threshold === "") errors.push("missing_line");
     if (market && market.needsThreshold && state.threshold !== "" && !Number.isFinite(Number(state.threshold))) errors.push("invalid_line");
-    if (!["source_window", "last_5", "last_10", "last_20"].includes(state.range)) errors.push("invalid combination");
+    if (!["source_window", "last_5", "last_10", "last_20", "last_50", "season"].includes(state.range)) errors.push("invalid combination");
     if (Number(state.minSample) < 1) errors.push("missing_sample");
     return errors;
   }
@@ -657,6 +666,7 @@
     if (!matchupsForSport(sport).length) {
       await loadBoardMatchups(sport);
     }
+    if (sport === "MLB") loadMlbHistory();
     state.loading = false;
     updateUi();
   }
@@ -803,7 +813,87 @@
     if (state.range === "last_5") return sorted.slice(0, Math.min(5, sorted.length));
     if (state.range === "last_10") return sorted.slice(0, Math.min(10, sorted.length));
     if (state.range === "last_20") return sorted.slice(0, Math.min(20, sorted.length));
+    if (state.range === "last_50") return sorted.slice(0, Math.min(50, sorted.length));
+    if (state.range === "season") {
+      var yr = String(new Date().getFullYear());
+      return sorted.filter(function (r) { return String(r.date || "").startsWith(yr); });
+    }
     return sorted;
+  }
+
+  function loadMlbHistory() {
+    if (historyCache.mlb) return Promise.resolve(historyCache.mlb);
+    if (historyCache.loading) return historyCache.loading;
+    historyCache.loading = fetch("/static/data/mlb/team-history.json?v=20260528a", { cache: "force-cache" })
+      .then(function (resp) { return resp.json(); })
+      .then(function (data) { historyCache.mlb = data; historyCache.loading = null; return data; })
+      .catch(function () { historyCache.loading = null; return null; });
+    return historyCache.loading;
+  }
+
+  function historyRowsForTeam(team) {
+    if (!historyCache.mlb || !historyCache.mlb.teams) return [];
+    var key = TEAM_ALIASES_MLB[team] || team;
+    return historyCache.mlb.teams[key] || historyCache.mlb.teams[team] || [];
+  }
+
+  function extendedTrendForQuery() {
+    if (state.sport !== "MLB") return null;
+    var matchup = selectedMatchup();
+    var market = selectedMarket();
+    var trendKind = selectedTrendKind();
+    if (!matchup || !market || !trendKind || marketIsDisabled(market) || trendKind.disabled) return null;
+    var team = state.team || (state.side === "away" ? matchup.away_abbr : matchup.home_abbr);
+    var raw = historyRowsForTeam(team);
+    if (!raw.length) return null;
+    var rows = raw
+      .filter(function (r) {
+        if (state.location === "home" && !r.h) return false;
+        if (state.location === "away" && r.h) return false;
+        if (market.id === "total" && r.te) return false;
+        if (market.id === "spread" && r.se) return false;
+        if (market.id === "team_total") return false;
+        return true;
+      })
+      .map(function (r) {
+        var mlResult = r.w ? "WIN" : "LOSS";
+        var atsResult = r.ats === "W" ? "WIN" : r.ats === "L" ? "LOSS" : "PUSH";
+        return {
+          date: r.d,
+          opponent: r.opp,
+          location: r.h ? "home" : "away",
+          total_line: r.tl,
+          spread_line: r.sp,
+          game_total: (Number(r.s) || 0) + (Number(r.os) || 0),
+          team_runs: r.s,
+          opponent_runs: r.os,
+          market_result: market.id === "moneyline" ? mlResult : market.id === "spread" ? atsResult : mlResult,
+          result: market.id === "moneyline" ? mlResult : market.id === "spread" ? atsResult : mlResult,
+          raw_game_log: r.d + " " + (r.h ? "vs " : "@ ") + (r.opp || "") + " " + r.s + "-" + r.os + " " + mlResult,
+          why_counted: "Extended verified historical game pulled from local game-log archive."
+        };
+      });
+    if (!rows.length) return null;
+    return {
+      sport: "MLB",
+      matchup: matchup.matchup,
+      team_abbr: team,
+      opponent_abbr: matchup.home_abbr === team ? matchup.away_abbr : matchup.home_abbr,
+      home_abbr: matchup.home_abbr,
+      away_abbr: matchup.away_abbr,
+      bet_type: market.id.toUpperCase(),
+      market: market.id.toUpperCase(),
+      kind: "EXTENDED_HISTORY",
+      side: state.side,
+      claim: "Extended history trend",
+      sample: rows.length,
+      record: "",
+      source_classification: "source_backed",
+      source_classification_detail: "Extended verified historical games (season>=2025)",
+      source_url: "Local game-log archive (handicapping_tool/trends.db)",
+      source_rows: rows,
+      _extended: true
+    };
   }
 
   function usefulnessLabel(sample) {
