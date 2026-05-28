@@ -833,6 +833,17 @@ When adding a new core vertical page (the Online Gaming page, `/online-gaming/`,
 - **No silent failure.** The click handler logs `[Trendspotter] Generate clicked {query, errors}` and either `Blocked: <key> -> <message>` or `Validation passed -> evaluating verified source rows`. When valid, the result is a verified trend OR an explicit "no verified trend / small sample" message with the sample size — never empty.
 - Future Trendspotter work must preserve explicit missing-field messages, the clickable-blocked button, and the console trace.
 
+## Trend Spotter user-facing UX standard (May 27, 2026) — HARD RULE (PERMANENT)
+`/trendspotter/` is a user-query-driven research tool. Output must read like a human trend answer, not a backend matcher. Any future change must preserve all of these:
+- **Query-driven inputs only.** Sport, Matchup, Market, Trend search, Side, Team (when required), Line/threshold, Period, Time range, Minimum sample, Location. No selection = no result.
+- **Plain-English Trend Answer** as the lead result. Examples: "Los Angeles Angels games have gone UNDER 9 runs in 6 of their last 10 completed games."; "Team is 7-3 against the spread (line +1.5) at home in their last 10 completed games." Never use backend phrases like "source rows matched", "source_window", "verified Trend Spotter artifact" as the headline answer.
+- **Result card fields (required):** Trend Answer, Record (with matching/non-matching breakdown), Sample size, Line/threshold used, Market, Side, Team / matchup, Period, Location filter, Usefulness, Source / data status, Why this matched, "This is a trend, not a betting recommendation." note.
+- **Verified game log table (required columns):** Date | Game | Line | Final score | Result vs line (Hit/Miss/Push, color-coded) | Why included. Render from `source_rows`/`included_games` with per-game `total_line`/`spread_line`/`team_total_line` and parsed final score from `raw_game_log`.
+- **Human labels everywhere.** "source_window" never appears in the user-facing UI — display it as "Recent verified completed games". Side labels are Over/Under/Home/Away, not raw enum values. Location labels are "Any location"/"Home only"/"Away only". Hide "Team: Not required" rather than printing the placeholder.
+- **Guardrails:** unsupported/disabled markets stay disabled with a reason; missing sample size → block; exact unsupported query → "No verified trend available for this exact query."; sub-min sample → "Sample too small …"; never invent picks, edges, ROI, or recommendations.
+- **Market-aware:** Total uses game total vs total line; Team Total uses team runs vs team-total line; Spread uses cover/no-cover vs posted spread; Moneyline uses straight win/loss. Inputs change per market so impossible combinations are blocked before generation.
+- **Asset cache-bust per change.** Bump `/static/js/trendspotter.js?v=` AND `/static/css/trendspotter.css?v=` in `trendspotter/index.html` on every UX change so GitHub Pages CDN serves the new build.
+
 ## Homepage right-rail activity module MUST show meaningful verified stats (May 23, 2026) — HARD RULE
 The homepage right-side activity module is the **Capper Trend Spotter** (`index.html`, `#tmrHeroPicksList`). It must surface a meaningful, **verified, positive** trend per capper — never dumb "N picks locked" counts and never a losing/negative trend.
 - **Engine:** `computeHighlight(picks, meta)` + `buildTrendSpotter()` in the homepage inline `<script>`. For each active capper it fetches `GET /api/picks?username=<u>&limit=100` (graded/verified picks only for anon — pending is hidden server-side) and picks the single strongest positive highlight by priority: (1) overall active win streak → (2) bet-type streak → (3) sport streak → (4) recent hot form (last 10/8/5) → (5) strong lifetime units/ROI → (6) category/sport win rate → (7) positive overall fallback.
@@ -868,6 +879,13 @@ On any leaderboard / handicappers / capper directory, an "Active" / "Last active
 - `/api/users` and `/api/users/leaderboard` do NOT return any timestamp field, so falling back to login/created data makes every populated member read "No recent activity". Derive activity from the member's real picks (already fetched client-side by `enrichMembersWithPicks`), using the latest `locked_at || created_at` across non-void picks.
 - Display contract (handicappers/index.html `formatPickActivity`): pick today → `Active today`; 1 day → `Last pick: 1 day ago`; 2-7 days → `Last pick: N days ago`; >7 days → `Inactive`; member has no picks → `No picks yet`.
 - Never fake activity, never fall back to login/profile-updated dates, never expose pending pick details (a timestamp string only). Keep activity-based sorting (`getActivityTime`) consistent with the displayed value.
+
+## Responsive-table layout: stacked-mobile, named right-edge columns, no-fake-data (May 27, 2026) — PROTOCOL ADDENDUM
+For every wide tabular surface on the site (ledger tables, profile tables, sportsbook ledgers, contest grids):
+
+1. **Never hide right-edge columns** such as **Net, Result, Units, Odds**, or other final table fields. If the table can outgrow its card width, the wrapper must scroll horizontally so the last column is reachable; columns must not be removed to "fix" overflow.
+2. **Mobile viewports may switch to a stacked card layout** (e.g., `display: block` rows on narrow widths) when the restructure preserves every data field. Restructuring is allowed; hiding or clipping data is not.
+3. **No fake data to "prove" layout.** Layout verification must use real backend data or a clearly isolated test fixture that never reaches the live public site.
 
 ## Sportsbook player props are DISPLAY-ONLY (May 27, 2026) — HARD RULE
 Player props on the sportsbook board are **view-only** and must stay that way unless an explicit future upgrade is approved (the rollout plan's later sub-steps: schema migration → pickable → grading).
