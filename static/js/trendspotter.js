@@ -27,10 +27,17 @@
   var SAFE_MESSAGES = {
     sourceMissing: "Verified trend data is unavailable for this selection.",
     selectToLoad: "Select a sport and matchup to load verified trend data.",
-    noData: "No verified trend available for these inputs.",
+    noData: "No verified trend available for this exact query.",
     unavailable: "Trend calculation unavailable until dataset is connected.",
-    noStrong: "No strong trend found for the selected variables.",
-    smallSample: "Small sample warning: this query does not meet the requested minimum sample."
+    noStrong: "No verified trend available for this exact query.",
+    smallSample: "Sample too small: this query does not meet the requested minimum sample."
+  };
+  var RANGE_LABELS = {
+    source_window: "Recent verified completed games",
+    last_5: "Last 5 games",
+    last_10: "Last 10 games",
+    last_20: "Last 20 games",
+    season: "Season long"
   };
   var FORBIDDEN_OUTPUT = [
     /\bfake\b/i,
@@ -559,14 +566,32 @@
       matchup ? matchup.matchup : "Matchup not selected",
       market ? market.label : "Trend type not selected",
       trendKind ? "Search: " + trendKind.label : "Choose trend search",
-      state.side ? "Side: " + state.side : "Side not selected",
+      state.side ? "Side: " + sideLabel(state.side) : "Side not selected",
       state.team ? "Team: " + state.team : "",
       state.threshold !== "" ? "Line: " + state.threshold : "",
       state.period ? PERIODS[state.period] : "",
-      "Range: " + state.range,
+      "Range: " + (RANGE_LABELS[state.range] || state.range),
       "Min sample: " + state.minSample,
-      "Location: " + state.location
+      "Location: " + locationLabel(state.location)
     ].filter(Boolean).join(" / ");
+  }
+
+  function sideLabel(side) {
+    if (!side) return "";
+    if (side === "over") return "Over";
+    if (side === "under") return "Under";
+    if (side === "home") return "Home";
+    if (side === "away") return "Away";
+    if (side === "moneyline") return "Moneyline";
+    if (side === "spread") return "Spread";
+    if (side === "total") return "Total";
+    return side;
+  }
+
+  function locationLabel(loc) {
+    if (loc === "home") return "Home only";
+    if (loc === "away") return "Away only";
+    return "Any location";
   }
 
   function updateUi() {
@@ -595,8 +620,8 @@
 
   function trendSourceStatusText(data, classification) {
     if (state.loading) return "Loading verified trend data...";
-    if (data.status) return "Trend source status: " + data.status + ". Classification: " + classification.label + ". " + classification.detail;
-    if (state.sport && state.matchupKey) return "Live matchup loaded. Verified trend output requires matching source rows for this query.";
+    if (data.status) return classification.label + " - " + classification.detail;
+    if (state.sport && state.matchupKey) return "Matchup loaded. A result will appear if verified completed-game data supports your query.";
     if (state.sport) return "Choose a matchup to check verified trend availability.";
     return SAFE_MESSAGES.selectToLoad;
   }
@@ -711,9 +736,8 @@
       "<article class=\"ts-no-results\" data-state=\"safe-no-data\" data-source-label=\"" + escapeHtml(label.key || "blocked") + "\">",
       "  <span class=\"ts-source-label\">" + escapeHtml(label.label || SOURCE_LABELS.blocked.label) + "</span>",
       "  <strong>" + escapeHtml(message) + "</strong>",
-      "  <span>Query: " + escapeHtml(summary) + "</span>",
-      "  <span>Source classification: " + escapeHtml(label.label || SOURCE_LABELS.blocked.label) + "</span>",
-      "  <span>Trend Spotter will not invent unsupported results or performance-style claims when verified source data is unavailable.</span>",
+      "  <span>Your query: " + escapeHtml(summary) + "</span>",
+      "  <span>Data status: " + escapeHtml(label.label || SOURCE_LABELS.blocked.label) + ". Trend Spotter only returns results when verified completed-game data supports the exact query.</span>",
       "</article>"
     ].join("");
   }
@@ -751,37 +775,87 @@
     var market = selectedMarket();
     var trendKind = selectedTrendKind();
     var sample = Number(trend.sample || rows.length || 0);
-    var plainSummary = "Verified " + market.label + " source rows matched " + (trend.team_abbr || state.team || state.side || "the selected side") + " for " + (matchup && matchup.matchup) + " using " + (trendKind ? trendKind.label : "the selected trend search") + ".";
-    var note = sample ? plainSummary : safeText(trend.safe_summary || trend.summary || trend.claim) || "Verified trend data matched the selected inputs. Detailed performance claims are hidden until the dataset contract explicitly supports them.";
+    var displayLine = pickDisplayLine(trend, market, rows);
+    var record = trend.record || (counts.wins + "-" + counts.losses + (counts.pushes ? "-" + counts.pushes : ""));
+    var trendAnswer = buildTrendAnswer(trend, matchup, market, counts, sample, displayLine, record);
     return [
       "<article class=\"ts-result-item\" data-result=\"verified-trend\" data-source-label=\"" + escapeHtml(SOURCE_LABELS.source_backed.key) + "\">",
       "  <div class=\"ts-result-label-row\">",
       "    <span class=\"ts-type-label\">" + escapeHtml(market.label) + "</span>",
       "    <span class=\"ts-status-label is-current\">" + escapeHtml(SOURCE_LABELS.source_backed.label) + "</span>",
       "  </div>",
-      "  <p class=\"ts-claim\"><strong>Trend Found:</strong> " + escapeHtml(note) + "</p>",
+      "  <p class=\"ts-claim\"><strong>Trend Answer:</strong> " + escapeHtml(trendAnswer) + "</p>",
       "  <dl class=\"ts-result-meta\">",
-      supportedValue("Selected matchup", matchup && matchup.matchup),
-      supportedValue("Selected market", market.label),
-      supportedValue("Trend search", trendKind && trendKind.label),
-      supportedValue("Selected side", state.side),
-      supportedValue("Selected team", state.team || "Not required"),
-      supportedValue("Selected period", PERIODS[state.period]),
-      supportedValue("Time range", state.range),
-      supportedValue("Selected filters", "location=" + state.location + " | min_sample=" + state.minSample + (state.threshold !== "" ? " | line=" + state.threshold : "")),
-      supportedValue("Result", rows.length ? counts.text : "Verified source rows available"),
-      supportedValue("Record basis", recordBasis(market)),
-      supportedValue("Sample size", sample),
+      supportedValue("Record", record + " (" + counts.wins + " matching, " + counts.losses + " non-matching" + (counts.pushes ? ", " + counts.pushes + " pushes" : "") + ")"),
+      supportedValue("Sample size", sample + " verified completed games"),
+      market.needsThreshold ? supportedValue("Line / threshold used", displayLine !== null ? formatLine(displayLine, market) : "Posted line per game") : "",
+      supportedValue("Market", market.label),
+      supportedValue("Side", sideLabel(state.side)),
+      supportedValue("Team / matchup", (state.team || trend.team_abbr || "") + " in " + (matchup && matchup.matchup)),
+      supportedValue("Period", PERIODS[state.period]),
+      supportedValue("Location filter", locationLabel(state.location)),
       supportedValue("Usefulness", usefulnessLabel(sample)),
       sample < Number(state.minSample || 0) ? supportedValue("Warning", SAFE_MESSAGES.smallSample) : "",
-      supportedValue("Data state", "Verified source rows available"),
-      supportedValue("Source classification", trendSourceClassification(trend)),
-      supportedValue("Source", trend.source_url || "Verified Trend Spotter artifact"),
+      supportedValue("Source / data status", SOURCE_LABELS.source_backed.label + " (completed games with final scores)"),
+      supportedValue("Why this matched", whyMatched(trend, matchup, market, trendKind, sample)),
       supportedValue("Note", "This is a trend, not a betting recommendation."),
       "  </dl>",
-      rows.length ? sourceRowsHtml(rows.slice(0, 8)) : "<p class=\"ts-muted-line\">Verified source rows are not available for display.</p>",
+      rows.length ? sourceRowsHtml(rows, market, displayLine) : "<p class=\"ts-muted-line\">Verified source rows are not available for display.</p>",
       "</article>"
     ].join("");
+  }
+
+  function pickDisplayLine(trend, market, rows) {
+    var entered = numericLine(state.threshold);
+    if (entered !== null && market && market.needsThreshold) return entered;
+    var values = lineValuesForTrend(trend, market);
+    if (values.length) return values[0];
+    return null;
+  }
+
+  function formatLine(line, market) {
+    if (line === null || line === undefined || line === "") return "";
+    if (market && market.id === "spread") {
+      var n = Number(line);
+      if (n > 0) return "+" + n;
+      return String(n);
+    }
+    return String(line);
+  }
+
+  function buildTrendAnswer(trend, matchup, market, counts, sample, displayLine, record) {
+    var team = state.team || trend.team_abbr || "";
+    var side = state.side;
+    var hits = counts.wins;
+    var total = sample;
+    var lineStr = displayLine !== null && displayLine !== undefined ? formatLine(displayLine, market) : "";
+    if (market.id === "total") {
+      var ouWord = side === "over" ? "OVER" : side === "under" ? "UNDER" : "OVER/UNDER";
+      var teamPhrase = team ? team + " games" : (matchup && matchup.matchup ? matchup.matchup + " games" : "Games");
+      return teamPhrase + " have gone " + ouWord + (lineStr ? " " + lineStr + " runs" : "") + " in " + hits + " of their last " + total + " completed games.";
+    }
+    if (market.id === "team_total") {
+      var ttWord = side === "over" ? "OVER" : side === "under" ? "UNDER" : "OVER/UNDER";
+      return (team || "Team") + " team total has gone " + ttWord + (lineStr ? " " + lineStr : "") + " in " + hits + " of their last " + total + " completed games.";
+    }
+    if (market.id === "spread") {
+      var locPhrase = state.location === "home" ? " at home" : state.location === "away" ? " on the road" : "";
+      return (team || "Team") + " is " + record + " against the spread" + (lineStr ? " (line " + lineStr + ")" : "") + locPhrase + " in their last " + total + " completed games.";
+    }
+    if (market.id === "moneyline") {
+      var locPhrase2 = state.location === "home" ? " at home" : state.location === "away" ? " on the road" : "";
+      return (team || "Team") + " is " + record + " straight up" + locPhrase2 + " in their last " + total + " completed games.";
+    }
+    return (team || "Team") + " is " + record + " on the " + market.label + " in their last " + total + " completed games.";
+  }
+
+  function whyMatched(trend, matchup, market, trendKind, sample) {
+    var parts = [];
+    parts.push("Pulled from " + sample + " completed " + (state.sport || "") + " games with final scores");
+    if (state.location !== "all") parts.push("filtered to " + (state.location === "home" ? "home" : "away") + " games only");
+    if (market && market.needsThreshold && state.threshold !== "") parts.push("matched against entered line " + state.threshold);
+    if (trendKind && trendKind.label) parts.push("for trend search: " + trendKind.label);
+    return parts.join("; ") + ".";
   }
 
   function recordBasis(market) {
@@ -801,21 +875,56 @@
     return "<div><dt>" + escapeHtml(label) + "</dt><dd>" + escapeHtml(value) + "</dd></div>";
   }
 
-  function sourceRowsHtml(rows) {
+  function sourceRowsHtml(rows, market, displayLine) {
     return [
+      "<h3 class=\"ts-table-title\">Verified game log</h3>",
       "<div class=\"ts-table-wrap\"><table class=\"ts-games-table\">",
-      "<thead><tr><th>Date</th><th>Source row</th><th>Why counted</th></tr></thead>",
+      "<thead><tr><th>Date</th><th>Game</th><th>" + escapeHtml(lineColHeader(market)) + "</th><th>Final score</th><th>Result vs line</th><th>Why included</th></tr></thead>",
       "<tbody>",
-      rows.map(function (row) {
-        return [
-          "<tr>",
-          "<td>" + escapeHtml(row.date || "Unavailable") + "</td>",
-          "<td>" + escapeHtml(row.detail || row.raw_game_log || row.opponent || "Verified row") + "</td>",
-          "<td>" + escapeHtml(row.why_counted || "Included by the verified Trend Spotter artifact.") + "</td>",
-          "</tr>"
-        ].join("");
-      }).join(""),
+      rows.map(function (row) { return gameLogRowHtml(row, market, displayLine); }).join(""),
       "</tbody></table></div>"
+    ].join("");
+  }
+
+  function lineColHeader(market) {
+    if (!market) return "Line";
+    if (market.id === "total") return "Total line";
+    if (market.id === "team_total") return "Team total line";
+    if (market.id === "spread") return "Spread";
+    return "Line";
+  }
+
+  function gameLogRowHtml(row, market, displayLine) {
+    var rawLog = row.raw_game_log || "";
+    var scoreMatch = rawLog.match(/(\d+)-(\d+)/);
+    var gameDesc = "";
+    var finalScore = "";
+    if (rawLog) {
+      var loc = row.location === "home" ? "vs " : row.location === "away" ? "@ " : "";
+      gameDesc = (loc + (row.opponent || "")).trim() || rawLog;
+      if (scoreMatch) finalScore = scoreMatch[1] + "-" + scoreMatch[2];
+    } else {
+      gameDesc = row.opponent || row.detail || "Verified row";
+    }
+    var lineCell = "";
+    if (market) {
+      if (market.id === "total") lineCell = row.total_line != null ? String(row.total_line) : "";
+      else if (market.id === "team_total") lineCell = row.team_total_line != null ? String(row.team_total_line) : "";
+      else if (market.id === "spread") lineCell = row.spread_line != null ? formatLine(row.spread_line, market) : "";
+    }
+    if (!lineCell) lineCell = "-";
+    var result = normalize(row.market_result || row.result || "");
+    var resultLabel = result === "WIN" ? "Hit" : result === "LOSS" ? "Miss" : result === "PUSH" ? "Push" : (result || "-");
+    var resultClass = result === "WIN" ? "ts-rv-hit" : result === "LOSS" ? "ts-rv-miss" : "ts-rv-push";
+    return [
+      "<tr>",
+      "<td>" + escapeHtml(row.date || "-") + "</td>",
+      "<td>" + escapeHtml(gameDesc) + "</td>",
+      "<td>" + escapeHtml(lineCell) + "</td>",
+      "<td>" + escapeHtml(finalScore || "-") + "</td>",
+      "<td class=\"" + resultClass + "\">" + escapeHtml(resultLabel) + "</td>",
+      "<td>" + escapeHtml(row.why_counted || "Completed game with verified final score and line.") + "</td>",
+      "</tr>"
     ].join("");
   }
 
