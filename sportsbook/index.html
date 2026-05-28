@@ -32735,6 +32735,159 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- tmr-make-picks-multi.js intentionally not loaded: contest launch priority is
          clean one-pick flow + JustBet contest dashboard isolation. Re-enable only
          after contest launch is stable. See DEVELOPMENT_RULES.md > Make Picks. -->
+
+    <!-- ====================================================================
+         CANONICAL SPORT CATALOG (May 27, 2026)
+         Single source of truth for every sportsbook navigation surface:
+         upper strip (.sportsbook-sports-nav), pick-area tabs (.sportsbook-sport-tabs),
+         More dropdown (.sport-more-pop), and rail (.sportsbook-rail-list).
+         Add a sport here, it propagates everywhere automatically.
+         New rule: never hardcode a sport list in any sportsbook nav element —
+         render from window.TMR.SPORT_CATALOG. See DEVELOPMENT_RULES.md.
+    ==================================================================== -->
+    <script>
+    (function () {
+        window.TMR = window.TMR || {};
+        if (window.TMR.__sportCatalogInit) return;
+        window.TMR.__sportCatalogInit = true;
+
+        // hasFeed=true → live odds via backend/ESPN; false → empty state only.
+        // groupOpen=true → also fires window.toggleSportFamily for league pickers.
+        window.TMR.SPORT_CATALOG = [
+            { id: 'NBA',    label: 'NBA',         hasFeed: true },
+            { id: 'NHL',    label: 'NHL',         hasFeed: true },
+            { id: 'NFL',    label: 'NFL',         hasFeed: true },
+            { id: 'MLB',    label: 'MLB',         hasFeed: true },
+            { id: 'NCAAB',  label: 'NCAAB',       hasFeed: true },
+            { id: 'NCAAF',  label: 'NCAAF',       hasFeed: true },
+            { id: 'WNBA',   label: 'WNBA',        hasFeed: true },
+            { id: 'Soccer', label: 'Soccer',      hasFeed: true,  groupOpen: 'soccer' },
+            { id: 'Tennis', label: 'Tennis',      hasFeed: true,  groupOpen: 'tennis' },
+            { id: 'MMA',    label: 'UFC / MMA',   hasFeed: false },
+            { id: 'Boxing', label: 'Boxing',      hasFeed: false },
+            { id: 'Golf',   label: 'Golf',        hasFeed: false },
+            { id: 'NASCAR', label: 'NASCAR',     hasFeed: false },
+            { id: 'F1',     label: 'Formula 1',   hasFeed: false }
+        ];
+
+        function _esc(s) { return ('' + (s == null ? '' : s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+
+        function _setSportOnclick(sport) {
+            var g = sport.groupOpen ? "; window.toggleSportFamily && window.toggleSportFamily('" + sport.groupOpen + "')" : '';
+            return "window.TMR && window.TMR.setSport && window.TMR.setSport('" + sport.id + "')" + g;
+        }
+
+        // Rebuild upper strip (.sportsbook-sports-nav). Same handler semantics as
+        // the original hardcoded buttons. Consensus stays as the final muted tab.
+        function renderUpperStrip() {
+            document.querySelectorAll('.sportsbook-sports-nav').forEach(function (el) {
+                el.setAttribute('data-sport-catalog', 'v1');
+                var html = window.TMR.SPORT_CATALOG.map(function (s) {
+                    return '<button type="button" data-sportsbook-tab="sport" data-sport="' + _esc(s.id) + '"'
+                        + ' onclick="' + _setSportOnclick(s) + '">' + _esc(s.label) + '</button>';
+                }).join('');
+                html += '<button type="button" data-sportsbook-tab="consensus" class="sportsbook-sports-nav--muted" title="Consensus board (coming soon)">Consensus</button>';
+                el.innerHTML = html;
+            });
+        }
+
+        // Rebuild pick-area tab strip (.sportsbook-sport-tabs). Keeps the same
+        // visual pattern: primary sports inline, secondary sports under a More
+        // popover. Source-of-truth-driven so it can never drift from the rail.
+        function renderPickTabs() {
+            document.querySelectorAll('.sportsbook-sport-tabs').forEach(function (el) {
+                el.setAttribute('data-sport-catalog', 'v1');
+                var primary = window.TMR.SPORT_CATALOG.slice(0, 7);
+                var more    = window.TMR.SPORT_CATALOG.slice(7);
+                var inline = primary.map(function (s) {
+                    return '<button type="button" class="sportsbook-sport-tab" data-sport="' + _esc(s.id) + '"'
+                        + ' onclick="' + _setSportOnclick(s) + '">' + _esc(s.label) + '</button>';
+                }).join('');
+                var moreItems = more.map(function (s) {
+                    return '<button type="button" role="menuitem" data-sport="' + _esc(s.id) + '"'
+                        + ' onclick="event.stopPropagation();' + _setSportOnclick(s) + '">' + _esc(s.label) + '</button>';
+                }).join('');
+                var moreHtml = ''
+                    + '<div class="sportsbook-sport-tab sportsbook-sport-tab--more" id="sportTabMore"'
+                    + ' tabindex="0" role="button" aria-haspopup="true" aria-expanded="false"'
+                    + ' onclick="(function(el){var p=el.querySelector(\'.sport-more-pop\');if(p){var open=p.style.display===\'block\';p.style.display=open?\'none\':\'block\';el.setAttribute(\'aria-expanded\',open?\'false\':\'true\');}})(this)">More'
+                    + ' <i class="fas fa-caret-down" style="margin-left:6px;font-size:.7em;opacity:.7;"></i>'
+                    + '<div class="sport-more-pop" role="menu">' + moreItems + '</div></div>';
+                var consensus = '<button type="button" class="sportsbook-sport-tab sportsbook-sport-tab--muted" title="Consensus board (coming soon)">Consensus</button>';
+                el.innerHTML = inline + moreHtml + consensus;
+            });
+        }
+
+        // Rebuild the rail board list (.sportsbook-rail-list) from the catalog.
+        // Source-of-truth-driven — every catalog sport gets a rail card.
+        function renderRail() {
+            var rail = document.querySelector('.sportsbook-rail-list');
+            if (!rail) return;
+            rail.setAttribute('data-sport-catalog', 'v1');
+            var subBySport = {
+                NBA: 'Pro Basketball', NHL: 'Hockey', NFL: 'Pro Football', MLB: 'Baseball',
+                NCAAB: 'College Basketball', NCAAF: 'College Football', WNBA: 'Pro Basketball',
+                Soccer: 'Leagues', Tennis: 'ATP · WTA', MMA: 'UFC · Bellator · PFL',
+                Boxing: 'Pro Boxing', Golf: 'PGA · LIV · Majors', NASCAR: 'Cup Series', F1: 'Formula 1'
+            };
+            rail.innerHTML = window.TMR.SPORT_CATALOG.map(function (s, idx) {
+                var sub = subBySport[s.id] || '';
+                var badge = s.hasFeed ? (s.groupOpen ? 'Group' : 'Board') : 'Soon';
+                var active = idx === 0 ? ' is-active' : '';
+                return '<button class="sportsbook-rail-board' + active + '" data-sport="' + _esc(s.id) + '" type="button"'
+                    + ' onclick="' + _setSportOnclick(s) + '">'
+                    + '<span class="sportsbook-rail-board-main"><b>' + _esc(s.label) + '</b><small><i></i> ' + _esc(sub) + '</small></span>'
+                    + '<span class="sportsbook-rail-board-count">' + _esc(badge) + '</span>'
+                    + '</button>';
+            }).join('');
+        }
+
+        // Mirror setSport active-state across every sport-nav surface so the
+        // user's selection highlights consistently in strip, tabs, and rail.
+        function syncActive(sport) {
+            if (!sport) return;
+            ['.sportsbook-sports-nav button[data-sport]',
+             '.sportsbook-sport-tab[data-sport]',
+             '.sportsbook-rail-board[data-sport]'].forEach(function (sel) {
+                document.querySelectorAll(sel).forEach(function (b) {
+                    var on = b.getAttribute('data-sport') === sport;
+                    b.classList.toggle('active', on);
+                    b.classList.toggle('is-active', on);
+                });
+            });
+        }
+
+        // Wrap existing TMR.setSport (already defined earlier) to fire syncActive
+        // after each selection. Guard against multiple wraps via __catalogWrapped.
+        function wrapSetSport() {
+            if (!window.TMR.setSport || window.TMR.setSport.__catalogWrapped) return;
+            var orig = window.TMR.setSport;
+            var wrapped = function (sport) {
+                var rv = orig.apply(this, arguments);
+                try { syncActive(sport); } catch (_) {}
+                return rv;
+            };
+            wrapped.__catalogWrapped = true;
+            window.TMR.setSport = wrapped;
+        }
+
+        function renderAll() {
+            try { renderUpperStrip(); } catch (e) { console.warn('[TMR][catalog] upper strip:', e); }
+            try { renderPickTabs(); }   catch (e) { console.warn('[TMR][catalog] pick tabs:', e); }
+            try { renderRail(); }       catch (e) { console.warn('[TMR][catalog] rail:', e); }
+            try { wrapSetSport(); }     catch (e) { console.warn('[TMR][catalog] wrap setSport:', e); }
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', renderAll);
+        } else {
+            renderAll();
+        }
+        // Re-run once more after the rest of the page settles so any late
+        // injection from tmr-redesign-loader can't strand a stale strip.
+        setTimeout(renderAll, 600);
+    })();
+    </script>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->
