@@ -41,10 +41,28 @@
     season: "Season long"
   };
   var EXTENDED_RANGES = ["last_20", "last_50", "season"];
-  var TEAM_ALIASES_MLB = {
-    "Athletics": "Oakland Athletics"
+  var TEAM_ALIASES = {
+    MLB: { "Athletics": "Oakland Athletics" },
+    NBA: {},
+    NFL: {},
+    NHL: { "Utah Mammoth": "Utah Hockey Club" }
   };
-  var historyCache = { mlb: null, loading: null };
+  var EXTENDED_SPORTS = ["MLB", "NBA", "NFL", "NHL"];
+  var KINDS_AVAILABLE_IN_EXTENDED = [
+    "favorite", "underdog", "favorite_ats", "underdog_ats",
+    "after_win", "after_loss",
+    "head_to_head", "head_to_head_ats", "head_to_head_over_under"
+  ];
+
+  function kindAvailableInExtended(kind) {
+    return Boolean(kind && KINDS_AVAILABLE_IN_EXTENDED.includes(kind.id));
+  }
+
+  function rangeIsExtended() {
+    return EXTENDED_RANGES.includes(state.range);
+  }
+  var historyCache = {};
+  var historyLoading = {};
   var FORBIDDEN_OUTPUT = [
     /\bfake\b/i,
     /\broi\b/i,
@@ -517,6 +535,12 @@
     }
   }
 
+  function effectiveKindDisabled(kind) {
+    if (!kind || !kind.disabled) return false;
+    if (rangeIsExtended() && EXTENDED_SPORTS.includes(state.sport) && KINDS_AVAILABLE_IN_EXTENDED.includes(kind.id)) return false;
+    return true;
+  }
+
   function renderTrendKinds() {
     var market = selectedMarket();
     var kinds = market && !marketIsDisabled(market) ? trendKindsForMarket(market.id) : [];
@@ -526,12 +550,13 @@
       state.trendKind = "";
       return;
     }
-    if (!kinds.some(function (kind) { return kind.id === state.trendKind && !kind.disabled; })) {
+    if (!kinds.some(function (kind) { return kind.id === state.trendKind && !effectiveKindDisabled(kind); })) {
       state.trendKind = "";
     }
     els.trendKind.innerHTML = "<option value=\"\">Choose trend search</option>" + kinds.map(function (kind) {
-      var label = kind.label + (kind.disabled && kind.reason ? " - " + kind.reason : "");
-      return "<option value=\"" + escapeHtml(kind.id) + "\"" + (state.trendKind === kind.id ? " selected" : "") + (kind.disabled ? " disabled" : "") + ">" + escapeHtml(label) + "</option>";
+      var disabled = effectiveKindDisabled(kind);
+      var label = kind.label + (disabled && kind.reason ? " - " + kind.reason : (kind.disabled && !disabled ? " (extended history)" : ""));
+      return "<option value=\"" + escapeHtml(kind.id) + "\"" + (state.trendKind === kind.id ? " selected" : "") + (disabled ? " disabled" : "") + ">" + escapeHtml(label) + "</option>";
     }).join("");
   }
 
@@ -556,7 +581,7 @@
     if (market && marketIsDisabled(market)) errors.push("invalid combination");
     if (market && market.sportOnly && state.sport !== market.sportOnly) errors.push("invalid combination");
     if (market && !marketIsDisabled(market) && !state.trendKind) errors.push("missing trend search");
-    if (trendKind && trendKind.disabled) errors.push("invalid combination");
+    if (trendKind && effectiveKindDisabled(trendKind)) errors.push("invalid combination");
     if (market && !marketIsDisabled(market) && !state.side) errors.push("missing_side");
     if (market && market.requiresTeam && !state.team) errors.push("missing_team");
     if (market && market.needsThreshold && state.threshold === "") errors.push("missing_line");
@@ -666,7 +691,7 @@
     if (!matchupsForSport(sport).length) {
       await loadBoardMatchups(sport);
     }
-    if (sport === "MLB") loadMlbHistory();
+    if (EXTENDED_SPORTS.includes(sport)) loadSportHistory(sport);
     state.loading = false;
     updateUi();
   }
@@ -821,40 +846,67 @@
     return sorted;
   }
 
-  function loadMlbHistory() {
-    if (historyCache.mlb) return Promise.resolve(historyCache.mlb);
-    if (historyCache.loading) return historyCache.loading;
-    historyCache.loading = fetch("/static/data/mlb/team-history.json?v=20260528a", { cache: "force-cache" })
+  function loadSportHistory(sport) {
+    if (!EXTENDED_SPORTS.includes(sport)) return Promise.resolve(null);
+    if (historyCache[sport]) return Promise.resolve(historyCache[sport]);
+    if (historyLoading[sport]) return historyLoading[sport];
+    var path = "/static/data/" + sport.toLowerCase() + "/team-history.json?v=20260528a";
+    historyLoading[sport] = fetch(path, { cache: "force-cache" })
       .then(function (resp) { return resp.json(); })
-      .then(function (data) { historyCache.mlb = data; historyCache.loading = null; return data; })
-      .catch(function () { historyCache.loading = null; return null; });
-    return historyCache.loading;
+      .then(function (data) { historyCache[sport] = data; historyLoading[sport] = null; return data; })
+      .catch(function () { historyLoading[sport] = null; return null; });
+    return historyLoading[sport];
   }
 
-  function historyRowsForTeam(team) {
-    if (!historyCache.mlb || !historyCache.mlb.teams) return [];
-    var key = TEAM_ALIASES_MLB[team] || team;
-    return historyCache.mlb.teams[key] || historyCache.mlb.teams[team] || [];
+  function historyRowsForTeam(sport, team) {
+    var data = historyCache[sport];
+    if (!data || !data.teams) return [];
+    var aliases = TEAM_ALIASES[sport] || {};
+    var key = aliases[team] || team;
+    return data.teams[key] || data.teams[team] || [];
   }
 
   function extendedTrendForQuery() {
-    if (state.sport !== "MLB") return null;
+    if (!EXTENDED_SPORTS.includes(state.sport)) return null;
     var matchup = selectedMatchup();
     var market = selectedMarket();
     var trendKind = selectedTrendKind();
-    if (!matchup || !market || !trendKind || marketIsDisabled(market) || trendKind.disabled) return null;
+    if (!matchup || !market || !trendKind) return null;
+    if (marketIsDisabled(market)) return null;
+    if (trendKind.disabled && !kindAvailableInExtended(trendKind)) return null;
     var team = state.team || (state.side === "away" ? matchup.away_abbr : matchup.home_abbr);
-    var raw = historyRowsForTeam(team);
+    var raw = historyRowsForTeam(state.sport, team);
     if (!raw.length) return null;
-    var rows = raw
+    var sortedAll = raw.slice().sort(function (a, b) { return String(b.d || "").localeCompare(String(a.d || "")); });
+    var opponentInMatchup = (matchup.home_abbr === team) ? matchup.away_abbr : matchup.home_abbr;
+    var kindId = trendKind.id;
+    var rows = sortedAll
       .filter(function (r) {
         if (state.location === "home" && !r.h) return false;
         if (state.location === "away" && r.h) return false;
         if (market.id === "total" && r.te) return false;
         if (market.id === "spread" && r.se) return false;
         if (market.id === "team_total") return false;
+        if (kindId === "favorite" || kindId === "favorite_ats") {
+          if (!Number.isFinite(Number(r.ml)) || Number(r.ml) >= 0) return false;
+        }
+        if (kindId === "underdog" || kindId === "underdog_ats") {
+          if (!Number.isFinite(Number(r.ml)) || Number(r.ml) <= 0) return false;
+        }
+        if (kindId === "head_to_head" || kindId === "head_to_head_ats" || kindId === "head_to_head_over_under") {
+          if (normalize(r.opp) !== normalize(opponentInMatchup)) return false;
+        }
         return true;
-      })
+      });
+    if (kindId === "after_win" || kindId === "after_loss") {
+      var needPrev = kindId === "after_win" ? 1 : 0;
+      rows = rows.filter(function (r) {
+        var idx = sortedAll.indexOf(r);
+        var prev = sortedAll[idx + 1];
+        return prev && Number(prev.w) === needPrev;
+      });
+    }
+    rows = rows
       .map(function (r) {
         var mlResult = r.w ? "WIN" : "LOSS";
         var atsResult = r.ats === "W" ? "WIN" : r.ats === "L" ? "LOSS" : "PUSH";
