@@ -997,11 +997,10 @@
         .hm-leader-card b { font-size: 0.7rem !important; letter-spacing: 0.18em !important; }
         .hm-leader-card strong { font-size: 1.3rem !important; margin-top: 14px !important; }
 
-        /* STICKY TOOLBAR (search/sport/wager/sort) */
+        /* TOOLBAR (search/sport/wager/sort) - non-sticky so it cannot cover the first row */
         .hm-controls {
-            position: sticky;
-            top: 38px;
-            z-index: 30;
+            position: static;
+            margin-bottom: 18px !important;
             border-radius: 16px !important;
             padding: 14px !important;
             background:
@@ -1092,9 +1091,9 @@
                 minmax(80px, 0.36fr)
                 minmax(94px, 0.46fr)
                 minmax(168px, 0.82fr)
-                minmax(204px, 1fr) !important;
+                minmax(132px, 0.58fr) !important;
             column-gap: 14px !important;
-            padding: 16px 22px !important;
+            padding: 12px 20px !important;
         }
 
         /* RANK CHIP */
@@ -1125,7 +1124,7 @@
 
         /* ROW BG + HOVER */
         .hm-member-row {
-            min-height: 92px !important;
+            min-height: 78px !important;
             background:
                 linear-gradient(180deg, rgba(255,255,255,0.025), rgba(255,255,255,0.0)),
                 rgba(10,18,32,0.84) !important;
@@ -1204,53 +1203,66 @@
             font-size: 0.92rem;
         }
 
-        /* ACTION BUTTONS (vertical stack on desktop) */
+        /* ACTION AREA: one compact primary button + small ghost text link */
         .hm-actions {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            align-items: stretch;
+            gap: 4px;
+            align-items: center;
             justify-content: center;
             min-width: 0;
+            max-width: 132px;
+            margin: 0 auto;
         }
-        .hm-action-btn {
+        .hm-action-btn--primary {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            padding: 9px 12px;
-            min-height: 34px;
-            border-radius: 9px;
-            font-size: 0.76rem;
+            padding: 8px 14px;
+            min-height: 32px;
+            min-width: 116px;
+            border-radius: 8px;
+            font-size: 0.74rem;
             font-weight: 900;
             letter-spacing: 0.08em;
             text-transform: uppercase;
             white-space: nowrap;
             cursor: pointer;
-            transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
-            text-decoration: none;
-        }
-        .hm-action-btn--primary {
             color: #06140f;
             background: linear-gradient(135deg, #5eead4 0%, #14b8a6 100%);
             border: 1px solid #2dd4bf;
-            box-shadow: 0 8px 18px rgba(45,212,191,0.22);
+            box-shadow: 0 6px 14px rgba(45,212,191,0.22);
+            text-decoration: none;
+            transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
         }
         .hm-action-btn--primary:hover {
             transform: translateY(-1px);
             background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
-            box-shadow: 0 12px 24px rgba(45,212,191,0.32);
+            box-shadow: 0 10px 20px rgba(45,212,191,0.32);
         }
         .hm-action-btn--ghost {
-            color: #cde8ff;
-            background: linear-gradient(180deg, rgba(96,165,250,0.1), rgba(96,165,250,0.04));
-            border: 1px solid rgba(96,165,250,0.4);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3px 6px;
+            background: transparent;
+            border: 0;
+            color: #9ec6f5;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: none;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            text-decoration-color: rgba(158,198,245,0.5);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color 0.12s ease, text-decoration-color 0.12s ease;
         }
         .hm-action-btn--ghost:hover {
-            transform: translateY(-1px);
             color: #ffffff;
-            background: linear-gradient(180deg, rgba(96,165,250,0.22), rgba(96,165,250,0.08));
-            border-color: #60a5fa;
+            text-decoration-color: #ffffff;
         }
 
         /* TRUST NOTES */
@@ -1295,7 +1307,7 @@
             .hm-member-row > .hm-stat[data-label="Total picks"] { grid-area: s5; }
             .hm-member-row > .hm-stat[data-label="Current streak"] { grid-area: s6; }
             .hm-member-row > .hm-stat[data-label="Last active"] { grid-area: s7; }
-            .hm-member-row > .hm-actions { grid-area: act; width: 100%; flex-direction: row; }
+            .hm-member-row > .hm-actions { grid-area: act; width: 100%; max-width: none; flex-direction: row; gap: 10px; align-items: center; }
             .hm-member-row .hm-stat {
                 width: 100%;
                 display: flex !important;
@@ -1322,7 +1334,8 @@
             .hm-member-row .hm-stat.is-muted,
             .hm-member-row .hm-stat.is-neutral { color: #a8bccf !important; }
             .hm-member-row .hm-stat[data-label="Last active"] { color: #c8e9e1 !important; font-size: 0.95rem; }
-            .hm-action-btn { flex: 1; min-height: 42px; font-size: 0.78rem; }
+            .hm-action-btn--primary { flex: 1; min-height: 42px; font-size: 0.78rem; min-width: 0; }
+            .hm-action-btn--ghost { flex: 0 0 auto; font-size: 0.82rem; padding: 6px 8px; }
         }
     </style>
 </head>
