@@ -399,7 +399,7 @@
     }
     if (state.location === "home" && team !== home) return false;
     if (state.location === "away" && team !== away) return false;
-    if (state.range !== "source_window") return false;
+    if (!["source_window", "last_5", "last_10", "last_20"].includes(state.range)) return false;
     if (market.id === "first_half" && state.period !== "first_half") return false;
     if (market.id === "first_five" && state.period !== "first_five") return false;
     return true;
@@ -552,7 +552,7 @@
     if (market && market.requiresTeam && !state.team) errors.push("missing_team");
     if (market && market.needsThreshold && state.threshold === "") errors.push("missing_line");
     if (market && market.needsThreshold && state.threshold !== "" && !Number.isFinite(Number(state.threshold))) errors.push("invalid_line");
-    if (state.range !== "source_window") errors.push("invalid combination");
+    if (!["source_window", "last_5", "last_10", "last_20"].includes(state.range)) errors.push("invalid combination");
     if (Number(state.minSample) < 1) errors.push("missing_sample");
     return errors;
   }
@@ -742,15 +742,15 @@
     ].join("");
   }
 
-  function resultCounts(rows) {
+  function resultCounts(rows, market, displayLine) {
     var wins = 0;
     var losses = 0;
     var pushes = 0;
     rows.forEach(function (row) {
-      var result = normalize(row.market_result || row.result);
-      if (result === "WIN") wins += 1;
-      else if (result === "LOSS") losses += 1;
-      else if (result === "PUSH") pushes += 1;
+      var outcome = perRowOutcome(row, market, displayLine);
+      if (outcome === "HIT") wins += 1;
+      else if (outcome === "MISS") losses += 1;
+      else if (outcome === "PUSH") pushes += 1;
     });
     return {
       wins: wins,
@@ -758,6 +758,51 @@
       pushes: pushes,
       text: wins + " matching, " + losses + " non-matching" + (pushes ? ", " + pushes + " pushes" : "")
     };
+  }
+
+  // Compute Hit/Miss/Push independently from the verified per-row data instead
+  // of trusting the artifact's pre-computed market_result. For totals and team
+  // totals we score against the user's selected line (so the displayed record
+  // truly answers "how often did this go OVER/UNDER the entered line").
+  function perRowOutcome(row, market, displayLine) {
+    if (market) {
+      if (market.id === "total") {
+        var gt = Number(row.game_total);
+        var line = displayLine !== null && displayLine !== undefined ? Number(displayLine) : Number(row.total_line);
+        if (Number.isFinite(gt) && Number.isFinite(line)) {
+          if (gt === line) return "PUSH";
+          var goesOver = gt > line;
+          if (state.side === "over") return goesOver ? "HIT" : "MISS";
+          if (state.side === "under") return goesOver ? "MISS" : "HIT";
+        }
+      }
+      if (market.id === "team_total") {
+        var tt = Number(row.team_total != null ? row.team_total : row.team_runs);
+        var ttLine = displayLine !== null && displayLine !== undefined ? Number(displayLine) : Number(row.team_total_line);
+        if (Number.isFinite(tt) && Number.isFinite(ttLine)) {
+          if (tt === ttLine) return "PUSH";
+          var ttOver = tt > ttLine;
+          if (state.side === "over") return ttOver ? "HIT" : "MISS";
+          if (state.side === "under") return ttOver ? "MISS" : "HIT";
+        }
+      }
+    }
+    var fallback = normalize(row.market_result || row.result);
+    if (fallback === "WIN") return "HIT";
+    if (fallback === "LOSS") return "MISS";
+    if (fallback === "PUSH") return "PUSH";
+    return "";
+  }
+
+  function effectiveRows(rows) {
+    if (!Array.isArray(rows) || !rows.length) return [];
+    var sorted = rows.slice().sort(function (a, b) {
+      return String(b.date || "").localeCompare(String(a.date || ""));
+    });
+    if (state.range === "last_5") return sorted.slice(0, Math.min(5, sorted.length));
+    if (state.range === "last_10") return sorted.slice(0, Math.min(10, sorted.length));
+    if (state.range === "last_20") return sorted.slice(0, Math.min(20, sorted.length));
+    return sorted;
   }
 
   function usefulnessLabel(sample) {
@@ -770,13 +815,16 @@
 
   function trendResultHtml(trend) {
     var matchup = selectedMatchup();
-    var rows = sourceRows(trend);
-    var counts = resultCounts(rows);
+    var allRows = sourceRows(trend);
     var market = selectedMarket();
     var trendKind = selectedTrendKind();
-    var sample = Number(trend.sample || rows.length || 0);
-    var displayLine = pickDisplayLine(trend, market, rows);
-    var record = trend.record || (counts.wins + "-" + counts.losses + (counts.pushes ? "-" + counts.pushes : ""));
+    var displayLine = pickDisplayLine(trend, market, allRows);
+    var rows = effectiveRows(allRows);
+    var counts = resultCounts(rows, market, displayLine);
+    var sample = rows.length;
+    var record = (market && (market.id === "total" || market.id === "team_total"))
+      ? counts.wins + "-" + counts.losses + (counts.pushes ? "-" + counts.pushes : "")
+      : (state.range === "source_window" && trend.record ? trend.record : counts.wins + "-" + counts.losses + (counts.pushes ? "-" + counts.pushes : ""));
     var trendAnswer = buildTrendAnswer(trend, matchup, market, counts, sample, displayLine, record);
     return [
       "<article class=\"ts-result-item\" data-result=\"verified-trend\" data-source-label=\"" + escapeHtml(SOURCE_LABELS.source_backed.key) + "\">",
@@ -913,9 +961,10 @@
       else if (market.id === "spread") lineCell = row.spread_line != null ? formatLine(row.spread_line, market) : "";
     }
     if (!lineCell) lineCell = "-";
-    var result = normalize(row.market_result || row.result || "");
-    var resultLabel = result === "WIN" ? "Hit" : result === "LOSS" ? "Miss" : result === "PUSH" ? "Push" : (result || "-");
-    var resultClass = result === "WIN" ? "ts-rv-hit" : result === "LOSS" ? "ts-rv-miss" : "ts-rv-push";
+    var outcome = perRowOutcome(row, market, displayLine);
+    var resultLabel = outcome === "HIT" ? "Hit" : outcome === "MISS" ? "Miss" : outcome === "PUSH" ? "Push" : "-";
+    var resultClass = outcome === "HIT" ? "ts-rv-hit" : outcome === "MISS" ? "ts-rv-miss" : "ts-rv-push";
+    var why = humanWhyCounted(row, market, finalScore, lineCell);
     return [
       "<tr>",
       "<td>" + escapeHtml(row.date || "-") + "</td>",
@@ -923,9 +972,31 @@
       "<td>" + escapeHtml(lineCell) + "</td>",
       "<td>" + escapeHtml(finalScore || "-") + "</td>",
       "<td class=\"" + resultClass + "\">" + escapeHtml(resultLabel) + "</td>",
-      "<td>" + escapeHtml(row.why_counted || "Completed game with verified final score and line.") + "</td>",
+      "<td>" + escapeHtml(why) + "</td>",
       "</tr>"
     ].join("");
+  }
+
+  function humanWhyCounted(row, market, finalScore, lineCell) {
+    var dateStr = row.date || "completed game";
+    if (!market) return "Completed game with verified final score.";
+    if (market.id === "total") {
+      var gt = Number(row.game_total);
+      if (Number.isFinite(gt) && lineCell && lineCell !== "-") {
+        return "Game on " + dateStr + " finished " + (finalScore || "") + " for a total of " + gt + " runs vs the " + lineCell + " line.";
+      }
+      return "Completed game on " + dateStr + " with a verified posted total line.";
+    }
+    if (market.id === "team_total") {
+      return "Completed game on " + dateStr + " with a verified team-total line.";
+    }
+    if (market.id === "spread") {
+      return "Completed game on " + dateStr + " with a verified posted spread of " + lineCell + ".";
+    }
+    if (market.id === "moneyline") {
+      return "Completed game on " + dateStr + " with a verified final score" + (finalScore ? " (" + finalScore + ")" : "") + ".";
+    }
+    return "Completed game on " + dateStr + " with verified final-score data.";
   }
 
   function resetForSport() {
