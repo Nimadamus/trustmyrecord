@@ -528,12 +528,12 @@
         }
 
         .hm-table {
-            min-width: 1080px;
+            min-width: 1110px;
         }
 
         .hm-row {
             display: grid;
-            grid-template-columns: minmax(230px, 1.5fr) minmax(108px, 0.58fr) minmax(98px, 0.5fr) minmax(98px, 0.5fr) minmax(98px, 0.5fr) minmax(82px, 0.4fr) minmax(94px, 0.46fr) minmax(150px, 0.74fr);
+            grid-template-columns: minmax(230px, 1.5fr) minmax(108px, 0.58fr) minmax(98px, 0.5fr) minmax(98px, 0.5fr) minmax(98px, 0.5fr) minmax(82px, 0.4fr) minmax(94px, 0.46fr) minmax(180px, 0.88fr);
             column-gap: 18px;
             row-gap: 12px;
             align-items: center;
@@ -724,11 +724,17 @@
             min-width: 108px;
         }
 
-        /* Active column: allow longer activity text to wrap instead of being clipped */
+        /* Active column: keep "Last pick: N days ago" on one line on desktop */
         .hm-row > .hm-stat:last-child {
-            white-space: normal;
+            white-space: nowrap;
             line-height: 1.25;
             min-width: 0;
+        }
+
+        @media (max-width: 720px) {
+            .hm-row > .hm-stat:last-child {
+                white-space: normal;
+            }
         }
 
         .hm-stat.is-positive { color: #8ef3b2; }
