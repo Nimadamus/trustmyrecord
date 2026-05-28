@@ -1,5 +1,17 @@
 # TrustMyRecord Development Rules
 
+## Public Ledger / profile tables / sportsbook ledgers / contest grids must use a responsive scroll wrapper (May 27, 2026) — HARD RULE (PERMANENT)
+Any wide tabular surface — Public Ledger (`.tmrx-table-shell`/`.picks-table-wrapper`), profile stats tables, sportsbook ledgers, contest grids (rows × games) — MUST be reachable in full at every supported viewport. Columns are NEVER allowed to be clipped off the right edge.
+
+Required pattern for every such surface:
+1. **Wrapper** uses `width: 100%; max-width: 100%; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch;` — NEVER `overflow: hidden` on the wrapper when its child table can exceed the card width.
+2. **Table** uses an explicit `min-width` (or `min-width: max-content`) so it can outgrow the wrapper and trigger the scroll instead of squashing.
+3. **Parent chain** (card → section → main column → grid track) allows `min-width: 0` (or `minmax(0, …fr)`); a grid/flex child without `min-width: 0` collapses scrollable children. Never set `overflow: hidden` on a section above the wrapper unless you have verified at every viewport that the wrapper's scroll still reveals the last column.
+4. **Viewport testing** before completion at: 1440, 1280, 1024, 768, 390. For each, `shell.scrollWidth > shell.clientWidth` triggers the scrollbar, and scrolling to `shell.scrollLeft = shell.scrollWidth` brings the last column inside the shell's right edge. Capture this as literal command output, not by eyeballing.
+5. **Do not** "fix" clipping by removing columns, shrinking text to unreadable sizes, or hiding the row under a media query. Preserve all columns and sportsbook styling.
+
+Reference fix: `profile/index.html` `.tmrx-table-shell` base rule had `overflow: hidden`, which clipped the Public Ledger to ~column 5 ("Market") at every desktop width. Changed to `overflow-x: auto; overflow-y: hidden; max-width: 100%` so all 10 columns (Submitted → Net) are reachable at 1440/1280/1024/768/390. Commit `0bf309d9`.
+
 ## Public pages must not block first paint on heavy API queries (May 27, 2026) — HARD RULE (PERMANENT)
 Public pages must render their shell (header/nav/hero/static content) immediately and must NOT block initial render on heavy or fan-out API work. Expensive stats must be cached, paginated, deferred, or server-optimized before deployment.
 - NO client-side N+1: never loop a per-member/per-row fetch (e.g. `/picks?userId=...` or `/users/:id/metrics` for every directory member) on the critical render path.
