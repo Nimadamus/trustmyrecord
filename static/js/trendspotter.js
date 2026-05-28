@@ -801,10 +801,20 @@
     };
   }
 
+  function rowFinalScores(row) {
+    var team = Number(row.team_runs != null ? row.team_runs : (row.s != null ? row.s : NaN));
+    var opp = Number(row.opponent_runs != null ? row.opponent_runs : (row.os != null ? row.os : NaN));
+    if (!Number.isFinite(team) || !Number.isFinite(opp)) {
+      var m = String(row.raw_game_log || "").match(/(\d+)-(\d+)\s+(?:WIN|LOSS|PUSH)/i);
+      if (m) { team = parseInt(m[1], 10); opp = parseInt(m[2], 10); }
+    }
+    return { team: team, opp: opp };
+  }
+
   // Compute Hit/Miss/Push independently from the verified per-row data instead
-  // of trusting the artifact's pre-computed market_result. For totals and team
-  // totals we score against the user's selected line (so the displayed record
-  // truly answers "how often did this go OVER/UNDER the entered line").
+  // of trusting the artifact's pre-computed market_result. For totals, team
+  // totals, and spreads we score against the user's selected line (so the
+  // record truly answers "would the entered line have hit?").
   function perRowOutcome(row, market, displayLine) {
     if (market) {
       if (market.id === "total") {
@@ -825,6 +835,24 @@
           var ttOver = tt > ttLine;
           if (state.side === "over") return ttOver ? "HIT" : "MISS";
           if (state.side === "under") return ttOver ? "MISS" : "HIT";
+        }
+      }
+      if (market.id === "spread") {
+        var sline = displayLine !== null && displayLine !== undefined ? Number(displayLine) : Number(row.spread_line);
+        var scores = rowFinalScores(row);
+        if (Number.isFinite(scores.team) && Number.isFinite(scores.opp) && Number.isFinite(sline)) {
+          var margin = (scores.team - scores.opp) + sline;
+          if (margin > 0) return "HIT";
+          if (margin < 0) return "MISS";
+          return "PUSH";
+        }
+      }
+      if (market.id === "moneyline") {
+        var mScores = rowFinalScores(row);
+        if (Number.isFinite(mScores.team) && Number.isFinite(mScores.opp)) {
+          if (mScores.team > mScores.opp) return "HIT";
+          if (mScores.team < mScores.opp) return "MISS";
+          return "PUSH";
         }
       }
     }
@@ -877,6 +905,68 @@
     return data.teams[key] || data.teams[team] || [];
   }
 
+  // Pull the team's recent games out of the artifact's source_rows (which is
+  // refreshed daily and lives ahead of the static history file). De-dupe by
+  // date+opponent and convert to the same shape as the static history rows so
+  // extendedTrendForQuery can merge both into one fresh, deep dataset.
+  function artifactRowsForTeam(sport, team) {
+    var data = cache[sport];
+    if (!data || !Array.isArray(data.trends)) return [];
+    var teamN = normalize(team);
+    var aliases = TEAM_ALIASES[sport] || {};
+    var teamAliased = normalize(aliases[team] || team);
+    var byKey = new Map();
+    data.trends.forEach(function (t) {
+      if (!t) return;
+      var tN = normalize(t.team_abbr);
+      if (tN !== teamN && tN !== teamAliased) return;
+      var rows = sourceRows(t);
+      rows.forEach(function (r) {
+        var log = String(r.raw_game_log || "");
+        var m = log.match(/(\d+)-(\d+)\s+(?:WIN|LOSS|PUSH)/i);
+        if (!m) return;
+        var ts = parseInt(m[1], 10);
+        var oss = parseInt(m[2], 10);
+        var key = (r.date || "") + "|" + normalize(r.opponent || "");
+        if (byKey.has(key)) return;
+        byKey.set(key, {
+          d: r.date || "",
+          opp: r.opponent || "",
+          h: r.location === "home" ? 1 : 0,
+          s: ts,
+          os: oss,
+          tl: (r.total_line != null) ? Number(r.total_line) : null,
+          sp: (r.spread_line != null) ? Number(r.spread_line) : null,
+          ats: null,
+          w: ts > oss ? 1 : (ts < oss ? 0 : null),
+          ml: null,
+          te: 0,
+          se: 0,
+          _from: "artifact"
+        });
+      });
+    });
+    return Array.from(byKey.values());
+  }
+
+  function mergedHistoryRowsForTeam(sport, team) {
+    var stat = historyRowsForTeam(sport, team) || [];
+    var art = artifactRowsForTeam(sport, team) || [];
+    if (!art.length) return stat;
+    var seen = new Set();
+    var merged = [];
+    art.forEach(function (r) {
+      var k = (r.d || "") + "|" + normalize(r.opp || "");
+      if (!seen.has(k)) { seen.add(k); merged.push(r); }
+    });
+    stat.forEach(function (r) {
+      var k = (r.d || "") + "|" + normalize(r.opp || "");
+      if (!seen.has(k)) { seen.add(k); merged.push(r); }
+    });
+    merged.sort(function (a, b) { return String(b.d || "").localeCompare(String(a.d || "")); });
+    return merged;
+  }
+
   function extendedTrendForQuery() {
     if (!EXTENDED_SPORTS.includes(state.sport)) return null;
     var matchup = selectedMatchup();
@@ -886,7 +976,7 @@
     if (marketIsDisabled(market)) return null;
     if (trendKind.disabled && !kindAvailableInExtended(trendKind)) return null;
     var team = state.team || (state.side === "away" ? matchup.away_abbr : matchup.home_abbr);
-    var raw = historyRowsForTeam(state.sport, team);
+    var raw = mergedHistoryRowsForTeam(state.sport, team);
     if (!raw.length) return null;
     var sortedAll = raw.slice().sort(function (a, b) { return String(b.d || "").localeCompare(String(a.d || "")); });
     var opponentInMatchup = (matchup.home_abbr === team) ? matchup.away_abbr : matchup.home_abbr;
@@ -989,6 +1079,7 @@
       "  <p class=\"ts-claim\"><strong>Trend Answer:</strong> " + escapeHtml(trendAnswer) + "</p>",
       "  <dl class=\"ts-result-meta\">",
       supportedValue("Record", record + " (" + counts.wins + " matching, " + counts.losses + " non-matching" + (counts.pushes ? ", " + counts.pushes + " pushes" : "") + ")"),
+      supportedValue("Scoring basis", recordBasis(market)),
       supportedValue("Sample size", sample + " verified completed games"),
       market.needsThreshold ? supportedValue("Line / threshold used", displayLine !== null ? formatLine(displayLine, market) : "Posted line per game") : "",
       supportedValue("Market", market.label),
@@ -1099,13 +1190,10 @@
   }
 
   function recordBasis(market) {
-    // Be explicit about how the win/loss record was computed so the entered
-    // line is never mistaken for a per-line filter. The record is recent-form
-    // across the verified sample, scored at each game's own posted line.
     if (!market) return "";
-    if (market.id === "total") return "Over/under outcomes scored at each game's posted total within the verified sample (not only the entered line).";
-    if (market.id === "team_total") return "Team over/under outcomes scored at each game's posted team total within the verified sample (not only the entered line).";
-    if (market.id === "spread") return "Cover/no-cover outcomes scored at each game's posted spread within the verified sample.";
+    if (market.id === "total") return "Each game scored against your entered total line, independent of the line that was actually posted at game time.";
+    if (market.id === "team_total") return "Each game scored against your entered team-total line, independent of the line that was actually posted at game time.";
+    if (market.id === "spread") return "Each game scored against your entered spread, independent of the line that was actually posted at game time.";
     if (market.id === "moneyline") return "Straight win/loss outcomes across the verified sample.";
     return "Outcomes scored from the verified source rows in the sample.";
   }
