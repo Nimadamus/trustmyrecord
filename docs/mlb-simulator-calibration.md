@@ -15,22 +15,34 @@ node scripts/validate-mlb-simulator.cjs [engineGames=40000] [endToEndPairs=60]
 - Track 1b end-to-end via `simulate()` over a **deterministic** mirror-pair matchup
   set with replication (repeatable home-field % and drift).
 
-## Validated targets (MLB ~2024 approximations; replace with authoritative pull)
-| Metric | Target | Engine (current) | Status |
+## Authoritative baselines — MLB 2025 full regular season (Phase 0)
+Source: MLB Stats API (statsapi.mlb.com), pulled 2026-05-27. Rates aggregated over all
+30 teams' season hitting/fielding stats; distributions computed from all 2,434 final
+regular-season games (4,860 team-games) via the season schedule with line scores.
+- Rates: `/api/v1/teams/stats?season=2025&group=hitting&stats=season&sportIds=1` (+ `group=fielding`)
+- Games/dist: `/api/v1/schedule?sportId=1&season=2025&gameType=R&hydrate=linescore`
+
+| Metric | 2025 baseline | Engine (current) | Status |
 |---|---|---|---|
-| Runs / team / game | 4.40 | 4.40 | ok |
-| Game total (mean) | 8.80 | 8.80 | ok |
-| HR / team | 1.12 | 1.12 | ok |
-| K / team | 8.60 | ~8.95 | slightly hot (within tol) |
-| BB / team | 3.10 | ~3.35 | slightly hot (within tol) |
-| SB / team | 0.70 | ~0.76 | ok |
-| Shutout % (team=0) | 7.5% | ~6.3% | ok |
-| Blowout % (≥5) | 26% | ~26% | ok |
-| Extra-inning % | 8.5% | ~10% | ok |
-| Team-games scoring 7+ | 18% (see note) | ~22% | OPEN — see #2 |
-| Home win % (mirror) | 53.5% | ~51.6% | ok (within tol) |
-| End-to-end target drift | 0% | ~+2–4% | ok after #1 |
+| Runs / team / game | 4.447 | 4.45 | ok |
+| Game total (mean) | 8.893 | 8.90 | ok |
+| HR / team | 1.163 | 1.13 | ok |
+| K / team | 8.363 | 8.94 | hot +0.58 (within tol; future target) |
+| BB / team | 3.164 | 3.36 | hot +0.20 (within tol) |
+| SB / team | 0.708 | 0.76 | ok |
+| CS / team | 0.203 | 0.21 | ok |
+| Errors / team | 0.504 | 0.30 | low -0.20 (engine ROE rate light; future target) |
+| Shutout % (team=0) | 6.8% | 6.3% | ok |
+| Blowout % (≥5) | 28.7% | 26.6% | ok (-2.1) |
+| Extra-inning % | 8.6% | 10% | ok (+1.4) |
+| Team-games scoring 7+ | 22.7% | 22.7% | exact match (old 18% estimate was phantom) |
+| Home win % (mirror) | 54.3% | 51.4% | -2.9 (within tol; Layer 3 target) |
+| End-to-end target drift | 0% | ~+1–3% | ok after #1 |
 | Engine integrity violations | 0 | 0 | CLEAN |
+
+Reference-only 2025 baselines (not gated): SB success 77.7%, league BABIP .291,
+league AVG .245, real single-team max 24 runs. Harness reports `RESULT: PASS`
+(0 calibration misses) against these authoritative targets.
 
 ## Calibration corrections
 ### #1 — Target-aware anchor (DONE, deployed; build `target-aware-anchor-20260527d`)
