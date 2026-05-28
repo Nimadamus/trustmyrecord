@@ -11528,6 +11528,21 @@
       .tmrx-table tbody tr.tmrx-row-unknown td:first-child {
         box-shadow: inset 3px 0 0 0 rgba(148,163,184,0.55);
       }
+      /* Override the even-row neutral stripe so tint reads as a clean win/loss band on every row. */
+      body.profile-page.tmr-social-profile .tmrx-table tbody tr.tmrx-row-won td,
+      body.profile-page.tmr-social-profile .tmrx-table tbody tr.tmrx-row-won:nth-child(even) td {
+        background: linear-gradient(180deg, rgba(57,255,20,0.085), rgba(57,255,20,0.04)) !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table tbody tr.tmrx-row-lost td,
+      body.profile-page.tmr-social-profile .tmrx-table tbody tr.tmrx-row-lost:nth-child(even) td {
+        background: linear-gradient(180deg, rgba(255,56,96,0.095), rgba(255,56,96,0.045)) !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table tbody tr.tmrx-row-won:hover td {
+        background: linear-gradient(180deg, rgba(57,255,20,0.15), rgba(57,255,20,0.07)) !important;
+      }
+      body.profile-page.tmr-social-profile .tmrx-table tbody tr.tmrx-row-lost:hover td {
+        background: linear-gradient(180deg, rgba(255,56,96,0.16), rgba(255,56,96,0.075)) !important;
+      }
       .tmrx-table .empty td { padding: 22px 16px; text-align: center; color: #64748b; font-style: italic; }
 
       .tmrx-pagination { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
