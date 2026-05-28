@@ -494,6 +494,12 @@
     <script>
     (function () {
         const CONTEST_ID = 'justbet-mlb';
+        // PRE-LAUNCH GATE (authoritative, set by Nima — do NOT derive from the
+        // API's starts_at, which currently holds stale QA placeholder dates).
+        // While true, the contest is NOT live: the board and leaderboard render
+        // clean empty/coming-soon states and never display picks, records,
+        // standings, units, or win %. Flip to false ONLY when launch is approved.
+        const PRELAUNCH = true;
         const API_BASE = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
         const API = (path) => `${API_BASE}/api/contests/${CONTEST_ID}${path}`;
 
@@ -866,6 +872,12 @@
         async function loadGrid() {
             const empty = $('#cgrid-empty');
             const table = $('#cgrid-table');
+            if (PRELAUNCH) {
+                table.hidden = true;
+                empty.hidden = false;
+                empty.innerHTML = `<i class="fa-solid fa-hourglass-half"></i>Contest dashboard coming soon. Once the contest begins, sealed picks will appear here after each game starts.`;
+                return;
+            }
             try {
                 const [gamesResp, picksResp] = await Promise.all([
                     fetch(API('/games'), { credentials: 'include' }),
@@ -924,6 +936,10 @@
 
         async function loadLeaderboard() {
             const body = $('#lb-body');
+            if (PRELAUNCH) {
+                body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-trophy"></i>Standings appear only after the contest officially begins.</div></td></tr>`;
+                return;
+            }
             try {
                 const res = await fetch(API('/leaderboard'), { credentials: 'include' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
