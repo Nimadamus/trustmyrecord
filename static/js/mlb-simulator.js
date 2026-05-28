@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-target-aware-anchor-20260527d';
+    var UI_BUILD = 'mlb-simulator-lineup-fallback-refresh-20260527e';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -309,16 +309,23 @@
         return 'https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=' + encodeURIComponent(todayIsoLocal()) +
             '&hydrate=' + encodeURIComponent('probablePitcher,lineups,team,weather,venue') + '&_=' + encodeURIComponent(UI_BUILD);
     }
+    var TODAY_SCHEDULE_TTL_MS = 120000;
     function fetchTodaysSchedule() {
-        if (state.liveContext.todaySchedule && state.liveContext.todaySchedule.uiBuild === UI_BUILD) return Promise.resolve(state.liveContext.todaySchedule);
+        var cached = state.liveContext.todaySchedule;
+        // Short TTL, not a permanent session cache: MLB posts today's lineups during
+        // the day, so the schedule must be re-pulled periodically so a pre-game
+        // fallback can upgrade to today's confirmed/posted lineup once it appears.
+        if (cached && cached.uiBuild === UI_BUILD && (Date.now() - (cached.fetchedAt || 0)) < TODAY_SCHEDULE_TTL_MS) return Promise.resolve(cached);
         return fetchJson(todaysScheduleUrl(), { cache: 'no-store' }).then(function (data) {
             var games = (Array.isArray(data && data.dates) ? data.dates : []).reduce(function (all, day) {
                 return all.concat(Array.isArray(day && day.games) ? day.games : []);
             }, []);
-            state.liveContext.todaySchedule = { uiBuild: UI_BUILD, games: games };
+            state.liveContext.todaySchedule = { uiBuild: UI_BUILD, fetchedAt: Date.now(), games: games };
             return state.liveContext.todaySchedule;
         }).catch(function () {
-            state.liveContext.todaySchedule = { uiBuild: UI_BUILD, games: [] };
+            // Keep any previously fetched games on a transient failure; just stamp the
+            // time so the next call retries after the TTL instead of wiping to empty.
+            state.liveContext.todaySchedule = { uiBuild: UI_BUILD, fetchedAt: Date.now(), games: (cached && cached.games) || [] };
             return state.liveContext.todaySchedule;
         });
     }
@@ -878,7 +885,15 @@
     function fetchTeamRoster(team) {
         if (!team || team.era !== 'current') return Promise.resolve(null);
         state.liveContext.teamRosters = state.liveContext.teamRosters || {};
-        if (state.liveContext.teamRosters[team.abbreviation] && state.liveContext.teamRosters[team.abbreviation].uiBuild === UI_BUILD) return Promise.resolve(state.liveContext.teamRosters[team.abbreviation]);
+        var cachedRoster = state.liveContext.teamRosters[team.abbreviation];
+        // A today posted/confirmed lineup is final for the session (the verified-good
+        // path — keep caching it unchanged). A pre-game FALLBACK ("recent" last-game
+        // order or active-roster) is only cached briefly, so once MLB posts today's
+        // lineup a later Run picks it up instead of showing the old lineup forever.
+        if (cachedRoster && cachedRoster.uiBuild === UI_BUILD) {
+            var isTodayLineup = cachedRoster.lineupStatus === 'confirmed' || cachedRoster.lineupStatus === 'posted';
+            if (isTodayLineup || (Date.now() - (cachedRoster.fetchedAt || 0)) < TODAY_SCHEDULE_TTL_MS) return Promise.resolve(cachedRoster);
+        }
         var url = teamRosterUrl(team);
         if (!url) return Promise.resolve(null);
         return Promise.all([
@@ -890,6 +905,7 @@
             var probable = results[2] ? todaysProbableStarterForTeam(results[2].games, team) : null;
             if (roster) {
                 roster.uiBuild = UI_BUILD;
+                roster.fetchedAt = Date.now();
                 roster.todayProbableStarter = probable || null;
             }
             state.liveContext.teamRosters[team.abbreviation] = roster;
