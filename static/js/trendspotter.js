@@ -928,7 +928,12 @@
         var ts = parseInt(m[1], 10);
         var oss = parseInt(m[2], 10);
         var key = (r.date || "") + "|" + normalize(r.opponent || "");
-        if (byKey.has(key)) return;
+        var existing = byKey.get(key);
+        if (existing) {
+          if (existing.tl == null && r.total_line != null) existing.tl = Number(r.total_line);
+          if (existing.sp == null && r.spread_line != null) existing.sp = Number(r.spread_line);
+          return;
+        }
         byKey.set(key, {
           d: r.date || "",
           opp: r.opponent || "",
@@ -1259,19 +1264,25 @@
 
   function humanWhyCounted(row, market, finalScore, lineCell) {
     var dateStr = row.date || "completed game";
+    var hasLine = lineCell && lineCell !== "-";
+    var unit = unitWordForSport() || "points";
     if (!market) return "Completed game with verified final score.";
     if (market.id === "total") {
-      var gt = Number(row.game_total);
-      if (Number.isFinite(gt) && lineCell && lineCell !== "-") {
-        return "Game on " + dateStr + " finished " + (finalScore || "") + " for a total of " + gt + " runs vs the " + lineCell + " line.";
+      var gt = Number(row.game_total != null ? row.game_total : (Number(row.s) + Number(row.os)));
+      if (Number.isFinite(gt) && hasLine) {
+        return "Game on " + dateStr + " finished " + (finalScore || "") + " for a total of " + gt + " " + unit + " vs the " + lineCell + " line.";
       }
-      return "Completed game on " + dateStr + " with a verified posted total line.";
+      if (Number.isFinite(gt)) {
+        return "Game on " + dateStr + " finished " + (finalScore || "") + " for a total of " + gt + " " + unit + "; scored against your entered line.";
+      }
+      return "Completed game on " + dateStr + " with verified final score.";
     }
     if (market.id === "team_total") {
       return "Completed game on " + dateStr + " with a verified team-total line.";
     }
     if (market.id === "spread") {
-      return "Completed game on " + dateStr + " with a verified posted spread of " + lineCell + ".";
+      if (hasLine) return "Completed game on " + dateStr + " finished " + (finalScore || "") + ", posted spread " + lineCell + "; scored against your entered line.";
+      return "Completed game on " + dateStr + " finished " + (finalScore || "") + "; scored against your entered line (no posted spread available).";
     }
     if (market.id === "moneyline") {
       return "Completed game on " + dateStr + " with a verified final score" + (finalScore ? " (" + finalScore + ")" : "") + ".";
