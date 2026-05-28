@@ -928,10 +928,16 @@
         var ts = parseInt(m[1], 10);
         var oss = parseInt(m[2], 10);
         var key = (r.date || "") + "|" + normalize(r.opponent || "");
+        // Per-trend field names vary: spread trends use `line`, total trends
+        // use `total_line`, team-total trends use `team_total_line`.
+        var spreadRaw = (r.spread_line != null) ? r.spread_line : (t.bet_type === "SPREAD" ? r.line : null);
+        var totalRaw = (r.total_line != null) ? r.total_line : null;
+        var ttRaw = (r.team_total_line != null) ? r.team_total_line : null;
         var existing = byKey.get(key);
         if (existing) {
-          if (existing.tl == null && r.total_line != null) existing.tl = Number(r.total_line);
-          if (existing.sp == null && r.spread_line != null) existing.sp = Number(r.spread_line);
+          if (existing.tl == null && totalRaw != null) existing.tl = Number(totalRaw);
+          if (existing.sp == null && spreadRaw != null) existing.sp = Number(spreadRaw);
+          if (existing.ttl == null && ttRaw != null) existing.ttl = Number(ttRaw);
           return;
         }
         byKey.set(key, {
@@ -940,8 +946,9 @@
           h: r.location === "home" ? 1 : 0,
           s: ts,
           os: oss,
-          tl: (r.total_line != null) ? Number(r.total_line) : null,
-          sp: (r.spread_line != null) ? Number(r.spread_line) : null,
+          tl: (totalRaw != null) ? Number(totalRaw) : null,
+          sp: (spreadRaw != null) ? Number(spreadRaw) : null,
+          ttl: (ttRaw != null) ? Number(ttRaw) : null,
           ats: null,
           w: ts > oss ? 1 : (ts < oss ? 0 : null),
           ml: null,
@@ -1022,8 +1029,10 @@
           location: r.h ? "home" : "away",
           total_line: r.tl,
           spread_line: r.sp,
+          team_total_line: r.ttl != null ? r.ttl : null,
           game_total: (Number(r.s) || 0) + (Number(r.os) || 0),
           team_runs: r.s,
+          team_total: r.s,
           opponent_runs: r.os,
           market_result: market.id === "moneyline" ? mlResult : market.id === "spread" ? atsResult : mlResult,
           result: market.id === "moneyline" ? mlResult : market.id === "spread" ? atsResult : mlResult,
