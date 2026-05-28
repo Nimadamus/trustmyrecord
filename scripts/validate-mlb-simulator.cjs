@@ -31,26 +31,37 @@ const fs = require('fs');
 const path = require('path');
 
 // ---- documented MLB baseline targets (approx 2024 league averages) -----------
+// AUTHORITATIVE BASELINES — MLB 2025 full regular season (2,434 final games, 4,860
+// team-games). Source: MLB Stats API (statsapi.mlb.com), pulled 2026-05-27:
+//   Rates    -> /api/v1/teams/stats?season=2025&group=hitting&stats=season&sportIds=1
+//               (+ group=fielding for errors), aggregated over all 30 teams.
+//   Game/dist-> /api/v1/schedule?sportId=1&season=2025&gameType=R&hydrate=linescore
+//               (home win, shutout, blowout, extra-inning, run buckets, max team).
+// These replaced the prior hand-estimated ~2024 targets. Notably the real 7+ rate is
+// 22.7% (the old 18.0 estimate was Poisson-low and produced a phantom MISS).
 const MLB = {
-  runsPerTeam: 4.40,
-  hrPerTeam: 1.12,
-  kPerTeam: 8.60,
-  bbPerTeam: 3.10,
-  sbPerTeam: 0.70,
-  shutoutTeamPct: 7.5,          // % of team-games scoring exactly 0
-  gameTotalMean: 8.80,
-  blowoutPct: 26.0,             // % of games decided by >= 5 runs (MLB ~1-in-4)
-  extraInningPct: 8.5,          // % of games tied after 9
-  homeWinPct: 53.5,             // home-field edge (mirror-pair isolation)
-  // % of team-games scoring exactly k runs (7+ grouped). NOTE: 18.0 for 7+ is the
-  // residual of the 0-6 estimates and sits near a pure-Poisson(4.4) value (~15.6%);
-  // real MLB team runs are over-dispersed (variance/mean ~1.2), so the true 7+ rate
-  // is likely ~19-21%. A faithful plate-appearance Markov engine naturally lands in
-  // that range. Replace these with an authoritative season pull before treating the
-  // 7+ row as a hard gate. (See calibration #2 notes in the dev notes.)
-  runDist: { 0: 7.4, 1: 11.4, 2: 14.2, 3: 15.0, 4: 13.8, 5: 11.4, 6: 8.8, '7+': 18.0 },
+  season: '2025',
+  runsPerTeam: 4.447,
+  hrPerTeam: 1.163,
+  kPerTeam: 8.363,
+  bbPerTeam: 3.164,
+  sbPerTeam: 0.708,
+  shutoutTeamPct: 6.8,          // % of team-games scoring exactly 0
+  gameTotalMean: 8.893,
+  blowoutPct: 28.7,             // % of games decided by >= 5 runs
+  extraInningPct: 8.6,          // % of games going past 9 innings
+  homeWinPct: 54.3,             // home-field edge (mirror-pair isolation)
+  // % of team-games scoring exactly k runs (7+ grouped); sums to 100.
+  runDist: { 0: 6.8, 1: 11.5, 2: 12.7, 3: 13.8, 4: 13.4, 5: 10.6, 6: 8.5, '7+': 22.7 },
+  // Additional documented 2025 baselines (errors + CS are gated; BABIP and SB-success
+  // are documented references the harness does not yet measure directly):
+  errorsPerTeam: 0.504,
+  csPerTeam: 0.203,
+  sbSuccessPct: 77.7,           // reference only (not gated)
+  babip: 0.291,                 // reference only (engine BABIP not directly measured)
+  maxTeamRunsObserved: 24,      // reference only (real 2025 single-team max)
 };
-const TOL = { runs: 0.30, hr: 0.20, k: 1.0, bb: 0.70, sb: 0.25, pct: 3.0, dist: 3.0, total: 0.6, homeWin: 3.0 };
+const TOL = { runs: 0.30, hr: 0.20, k: 1.0, bb: 0.70, sb: 0.25, cs: 0.15, err: 0.20, pct: 3.0, dist: 3.0, total: 0.6, homeWin: 3.0 };
 
 // ---- load the production engine with browser globals stubbed ------------------
 function fakeEl() {
@@ -125,17 +136,18 @@ function runEngineSample(n) {
   const inputs = ENG.buildEventInputs(away, home, neutralStarter(), neutralStarter(), MLB.runsPerTeam, MLB.runsPerTeam, null);
   const A = inputs.awaySide, H = inputs.homeSide;
   const viol = {};
-  const teamRuns = [], totals = [], hr = [], k = [], bb = [], sb = [], hits = [];
+  const teamRuns = [], totals = [], hr = [], k = [], bb = [], sb = [], cs = [], err = [], hits = [];
   let shutoutTeam = 0, teamGames = 0, blowout = 0, extra = 0, maxTeam = 0, homeRunsSum = 0, awayRunsSum = 0;
   const runBuckets = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, '7+': 0 };
   for (let i = 0; i < n; i++) {
     const g = ENG.evSimGame(A, H, Math.random);
     checkIntegrity(A, H, g, viol);
     awayRunsSum += g.aRuns; homeRunsSum += g.hRuns;
-    [[A, g.aRuns], [H, g.hRuns]].forEach(([s, runs]) => {
+    [[A, g.aRuns, g.aErr], [H, g.hRuns, g.hErr]].forEach(([s, runs, errs]) => {
       teamGames++; teamRuns.push(runs);
       hr.push(sum(s.lineup, b => b.acc.hr)); k.push(sum(s.lineup, b => b.acc.so));
-      bb.push(sum(s.lineup, b => b.acc.bb)); sb.push(s.sb || 0); hits.push(sum(s.lineup, b => b.acc.h));
+      bb.push(sum(s.lineup, b => b.acc.bb)); sb.push(s.sb || 0); cs.push(s.cs || 0); err.push(errs || 0);
+      hits.push(sum(s.lineup, b => b.acc.h));
       if (runs === 0) shutoutTeam++;
       runBuckets[runs >= 7 ? '7+' : runs]++;
       if (runs > maxTeam) maxTeam = runs;
@@ -149,7 +161,8 @@ function runEngineSample(n) {
     runsPerTeam: (awayRunsSum + homeRunsSum) / teamGames,
     awayPerGame: awayRunsSum / n, homePerGame: homeRunsSum / n,
     hrPerTeam: sum(hr) / teamGames, kPerTeam: sum(k) / teamGames, bbPerTeam: sum(bb) / teamGames,
-    sbPerTeam: sum(sb) / teamGames, hitsPerTeam: sum(hits) / teamGames,
+    sbPerTeam: sum(sb) / teamGames, csPerTeam: sum(cs) / teamGames, errorsPerTeam: sum(err) / teamGames,
+    hitsPerTeam: sum(hits) / teamGames,
     shutoutTeamPct: 100 * shutoutTeam / teamGames,
     gameTotalMean: sum(totals) / n, blowoutPct: 100 * blowout / n, extraInningPct: 100 * extra / n,
     maxTeam,
@@ -204,6 +217,7 @@ function main() {
   const engineGames = Number(process.argv[2] || 40000);
   const pairs = Number(process.argv[3] || 60);
   console.log('MLB SIMULATOR VALIDATION  (engine build: ' + SIM.uiBuild + ')');
+  console.log('Baselines: MLB ' + MLB.season + ' full regular season (statsapi.mlb.com)');
   console.log('Engine sample: ' + engineGames + ' games | End-to-end: ' + (pairs * 2) + ' mirror games\n');
 
   const R = runEngineSample(engineGames);
@@ -222,6 +236,8 @@ function main() {
     row('K / team', R.kPerTeam, MLB.kPerTeam, TOL.k),
     row('BB / team', R.bbPerTeam, MLB.bbPerTeam, TOL.bb),
     row('SB / team', R.sbPerTeam, MLB.sbPerTeam, TOL.sb),
+    row('CS / team', R.csPerTeam, MLB.csPerTeam, TOL.cs),
+    row('Errors / team', R.errorsPerTeam, MLB.errorsPerTeam, TOL.err),
     row('Shutout % (team=0)', R.shutoutTeamPct, MLB.shutoutTeamPct, TOL.pct, '%'),
     row('Blowout % (>=5)', R.blowoutPct, MLB.blowoutPct, TOL.pct, '%'),
     row('Extra-inning %', R.extraInningPct, MLB.extraInningPct, TOL.pct, '%'),
