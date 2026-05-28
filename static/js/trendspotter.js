@@ -721,12 +721,13 @@
       els.resultsList.innerHTML = safeStateHtml(hasData ? SAFE_MESSAGES.noStrong : SAFE_MESSAGES.noData, querySummary(), classification);
       return;
     }
-    if ((Number(trend.sample) || 0) < Number(state.minSample || 0)) {
-      els.resultCount.textContent = "Small sample";
+    var effSample = effectiveRows(sourceRows(trend)).length;
+    if (effSample < Number(state.minSample || 0)) {
+      els.resultCount.textContent = "Sample too small";
       els.resultsList.innerHTML = safeStateHtml(SAFE_MESSAGES.smallSample, querySummary(), SOURCE_LABELS.partial);
       return;
     }
-    els.resultCount.textContent = "Verified sample: " + Number(trend.sample || 0);
+    els.resultCount.textContent = "Verified sample: " + effSample;
     els.resultsList.innerHTML = trendResultHtml(trend);
   }
 
