@@ -521,7 +521,12 @@
         "<option value=\"total\"" + (state.side === "total" ? " selected" : "") + ">Total</option>"
       ].join("");
     }
-    if (market.requiresTeam) {
+    // Show team picker when the market requires it, OR when the user picked an
+    // extended range (last_20/last_50/season). Extended history is anchored on a
+    // single team, so the user should choose which team's last-N to analyze
+    // rather than defaulting silently.
+    var teamPickerNeeded = market.requiresTeam || (rangeIsExtended() && EXTENDED_SPORTS.includes(state.sport));
+    if (teamPickerNeeded) {
       els.teamField.classList.remove("is-hidden");
       els.team.disabled = false;
       els.team.innerHTML = [
@@ -850,7 +855,7 @@
     if (!EXTENDED_SPORTS.includes(sport)) return Promise.resolve(null);
     if (historyCache[sport]) return Promise.resolve(historyCache[sport]);
     if (historyLoading[sport]) return historyLoading[sport];
-    var path = "/static/data/" + sport.toLowerCase() + "/team-history.json?v=20260528a";
+    var path = "/static/data/" + sport.toLowerCase() + "/team-history.json?v=20260528b";
     historyLoading[sport] = fetch(path, { cache: "force-cache" })
       .then(function (resp) { return resp.json(); })
       .then(function (data) { historyCache[sport] = data; historyLoading[sport] = null; return data; })
@@ -1020,24 +1025,62 @@
     var hits = counts.wins;
     var total = sample;
     var lineStr = displayLine !== null && displayLine !== undefined ? formatLine(displayLine, market) : "";
+    var trendKind = selectedTrendKind();
+    var kindPhrase = kindContextPhrase(trendKind, matchup, team);
+    var samplePhrase = "their last " + total + " completed games" + (kindPhrase.qualifier ? " " + kindPhrase.qualifier : "");
+    var unitWord = unitWordForSport();
     if (market.id === "total") {
       var ouWord = side === "over" ? "OVER" : side === "under" ? "UNDER" : "OVER/UNDER";
       var teamPhrase = team ? team + " games" : (matchup && matchup.matchup ? matchup.matchup + " games" : "Games");
-      return teamPhrase + " have gone " + ouWord + (lineStr ? " " + lineStr + " runs" : "") + " in " + hits + " of their last " + total + " completed games.";
+      return teamPhrase + " have gone " + ouWord + (lineStr ? " " + lineStr + " " + unitWord : "") + " in " + hits + " of " + samplePhrase + ".";
     }
     if (market.id === "team_total") {
       var ttWord = side === "over" ? "OVER" : side === "under" ? "UNDER" : "OVER/UNDER";
-      return (team || "Team") + " team total has gone " + ttWord + (lineStr ? " " + lineStr : "") + " in " + hits + " of their last " + total + " completed games.";
+      return (team || "Team") + " team total has gone " + ttWord + (lineStr ? " " + lineStr : "") + " in " + hits + " of " + samplePhrase + ".";
     }
     if (market.id === "spread") {
       var locPhrase = state.location === "home" ? " at home" : state.location === "away" ? " on the road" : "";
-      return (team || "Team") + " is " + record + " against the spread" + (lineStr ? " (line " + lineStr + ")" : "") + locPhrase + " in their last " + total + " completed games.";
+      return (team || "Team") + " is " + record + " against the spread" + (lineStr ? " (line " + lineStr + ")" : "") + locPhrase + (kindPhrase.adjective ? " " + kindPhrase.adjective : "") + " in " + samplePhrase + ".";
     }
     if (market.id === "moneyline") {
       var locPhrase2 = state.location === "home" ? " at home" : state.location === "away" ? " on the road" : "";
-      return (team || "Team") + " is " + record + " straight up" + locPhrase2 + " in their last " + total + " completed games.";
+      return (team || "Team") + " is " + record + " straight up" + locPhrase2 + (kindPhrase.adjective ? " " + kindPhrase.adjective : "") + " in " + samplePhrase + ".";
     }
-    return (team || "Team") + " is " + record + " on the " + market.label + " in their last " + total + " completed games.";
+    return (team || "Team") + " is " + record + " on the " + market.label + " in " + samplePhrase + ".";
+  }
+
+  function unitWordForSport() {
+    if (state.sport === "MLB") return "runs";
+    if (state.sport === "NFL" || state.sport === "NCAAF") return "points";
+    if (state.sport === "NHL") return "goals";
+    if (state.sport === "NBA" || state.sport === "NCAAB") return "points";
+    return "";
+  }
+
+  function kindContextPhrase(trendKind, matchup, team) {
+    var out = { adjective: "", qualifier: "" };
+    if (!trendKind) return out;
+    var oppName = "";
+    if (matchup && team) oppName = (matchup.home_abbr === team) ? matchup.away_abbr : matchup.home_abbr;
+    switch (trendKind.id) {
+      case "favorite": case "favorite_ats":
+        out.adjective = "as a favorite";
+        break;
+      case "underdog": case "underdog_ats":
+        out.adjective = "as an underdog";
+        break;
+      case "after_win":
+        out.qualifier = "following a win";
+        break;
+      case "after_loss":
+        out.qualifier = "following a loss";
+        break;
+      case "head_to_head": case "head_to_head_ats": case "head_to_head_over_under":
+        if (oppName) out.qualifier = "head-to-head vs " + oppName;
+        else out.qualifier = "in head-to-head matchups";
+        break;
+    }
+    return out;
   }
 
   function whyMatched(trend, matchup, market, trendKind, sample) {
