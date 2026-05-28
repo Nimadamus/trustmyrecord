@@ -895,7 +895,9 @@
             try {
                 const [regResp, gamesResp, picksResp] = await Promise.all([
                     fetch(API('/registrations'), { credentials: 'include' }),
-                    fetch(API('/games'), { credentials: 'include' }),
+                    // Full contest-date slate (started + in-progress + completed) so every
+                    // game gets a column; sealed/revealed/result still come from real picks.
+                    fetch(API('/games?scope=full'), { credentials: 'include' }),
                     fetch(API('/picks'), { credentials: 'include' }),
                 ]);
                 if (!picksResp.ok) throw new Error(`picks HTTP ${picksResp.status}`);
