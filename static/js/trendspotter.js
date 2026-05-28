@@ -1001,10 +1001,27 @@
         if (market.id === "spread" && r.se) return false;
         if (market.id === "team_total") return false;
         if (kindId === "favorite" || kindId === "favorite_ats") {
-          if (!Number.isFinite(Number(r.ml)) || Number(r.ml) >= 0) return false;
+          // Prefer real moneyline; fall back to spread sign for artifact rows.
+          var ml = Number(r.ml);
+          var sp = Number(r.sp);
+          if (Number.isFinite(ml)) {
+            if (ml >= 0) return false;
+          } else if (Number.isFinite(sp)) {
+            if (sp >= 0) return false;
+          } else {
+            return false;
+          }
         }
         if (kindId === "underdog" || kindId === "underdog_ats") {
-          if (!Number.isFinite(Number(r.ml)) || Number(r.ml) <= 0) return false;
+          var ml2 = Number(r.ml);
+          var sp2 = Number(r.sp);
+          if (Number.isFinite(ml2)) {
+            if (ml2 <= 0) return false;
+          } else if (Number.isFinite(sp2)) {
+            if (sp2 <= 0) return false;
+          } else {
+            return false;
+          }
         }
         if (kindId === "head_to_head" || kindId === "head_to_head_ats" || kindId === "head_to_head_over_under") {
           if (normalize(r.opp) !== normalize(opponentInMatchup)) return false;
