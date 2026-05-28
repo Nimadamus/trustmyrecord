@@ -421,6 +421,67 @@
             </div>
         </section>
 
+        <!-- ========================= CONTEST GRID =========================
+             Rows = contestants, Columns = today's games + any game already
+             referenced by a contest pick. Each cell: dash (no pick),
+             "Sealed" (pick exists, game not started — server withholds the
+             selection), or the revealed pick (game started). Reveal state is
+             100% driven by the API's per-row `sealed` flag, which the backend
+             computes from game_commence_time. No pregame selection can leak. -->
+        <style>
+            #contest-grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid rgba(148,163,184,0.16); border-radius: 12px; }
+            table.cgrid { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.86rem; }
+            table.cgrid th, table.cgrid td { padding: 10px 12px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.10); border-right: 1px solid rgba(148,163,184,0.07); white-space: nowrap; }
+            table.cgrid thead th { position: sticky; top: 0; background: #0f1722; color: #c8e7ff; font-weight: 800; font-size: 0.74rem; letter-spacing: 0.04em; text-transform: uppercase; z-index: 2; }
+            table.cgrid th.cgrid-game small { display:block; color:#7e8aa0; font-weight:600; font-size:0.68rem; letter-spacing:0; text-transform:none; margin-top:3px; }
+            table.cgrid th.cgrid-user, table.cgrid td.cgrid-user { position: sticky; left: 0; background: #131c28; text-align: left; font-weight: 800; color: #e6edf6; z-index: 1; }
+            table.cgrid thead th.cgrid-user { z-index: 3; }
+            .cgrid-dash { color: #4a5568; }
+            .cgrid-sealed { display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:999px; background:rgba(148,163,184,0.12); color:#c5cfdb; border:1px solid rgba(148,163,184,0.30); font-weight:700; font-size:0.78rem; }
+            .cgrid-pick { display:flex; flex-direction:column; gap:2px; line-height:1.2; }
+            .cgrid-pick .sel { font-weight:800; color:#fff; }
+            .cgrid-pick .meta { font-size:0.72rem; color:#9fb0c4; }
+            .cgrid-pick.res-won .sel { color:#34d399; }
+            .cgrid-pick.res-lost .sel { color:#f87171; }
+            .cgrid-pick.res-push .sel, .cgrid-pick.res-void .sel { color:#fbbf24; }
+            .cgrid-disclosure { font-size:0.86rem; color:#cbd5e1; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.24); border-radius:10px; padding:10px 14px; margin:0 0 14px; }
+            .cgrid-disclosure i { color:#38bdf8; margin-right:7px; }
+            .lb-table { border-collapse: collapse; width: 100%; }
+            .lb-table th, .lb-table td { padding: 10px 12px; text-align: right; border-bottom: 1px solid rgba(148,163,184,0.10); white-space: nowrap; }
+            .lb-table th:first-child, .lb-table td:first-child, .lb-table th:nth-child(2), .lb-table td:nth-child(2) { text-align: left; }
+            .lb-table thead th { color:#c8e7ff; font-size:0.72rem; letter-spacing:0.04em; text-transform:uppercase; font-weight:800; }
+            .lb-pos { color:#34d399; font-weight:800; } .lb-neg { color:#f87171; font-weight:800; } .lb-zero { color:#9fb0c4; font-weight:700; }
+        </style>
+        <section class="section panel" id="contest-grid-section">
+            <div class="section-head">
+                <h2>Contest Board</h2>
+                <button class="refresh-btn" id="refresh-grid"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+            </div>
+            <p class="cgrid-disclosure"><i class="fa-solid fa-lock"></i>Contest picks are sealed until the selected game starts. Once the game begins, your pick will appear publicly on the contest board.</p>
+            <div id="contest-grid-wrap">
+                <div class="empty-state" id="cgrid-empty"><i class="fa-solid fa-hourglass-start"></i>Loading contest board…</div>
+                <table class="cgrid" id="cgrid-table" hidden>
+                    <thead><tr id="cgrid-head"></tr></thead>
+                    <tbody id="cgrid-body"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ========================= LEADERBOARD ========================= -->
+        <section class="section panel" id="contest-leaderboard-section">
+            <div class="section-head">
+                <h2>Leaderboard</h2>
+                <button class="refresh-btn" id="refresh-lb"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+            </div>
+            <p class="lead">Standings update as contest picks are graded. Contest record is fully separate from public TrustMyRecord profiles.</p>
+            <div class="table-wrap">
+                <table class="lb-table" aria-label="Contest leaderboard">
+                    <thead><tr><th>#</th><th>Contestant</th><th>Picks</th><th>W-L-P</th><th>Win %</th><th>Units</th></tr></thead>
+                    <tbody id="lb-body"><tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading leaderboard…</div></td></tr></tbody>
+                </table>
+            </div>
+        </section>
+
         <p class="footnote">
             JustBet is the title sponsor of this contest. Contest picks on this dashboard are stored under
             <code>contest_id=justbet-mlb</code> and are fully isolated from regular TrustMyRecord public records, profile
@@ -796,18 +857,120 @@
             }
         }
 
+        const gameLabel = (g) => `${g.away_team} @ ${g.home_team}`;
+
+        // Build the contestants x games grid. Columns = today's slate (/games)
+        // unioned with any game already referenced by a pick (so started-game
+        // picks always have a column to reveal in). Reveal/seal is driven by
+        // each pick row's server-computed `sealed` flag.
+        async function loadGrid() {
+            const empty = $('#cgrid-empty');
+            const table = $('#cgrid-table');
+            try {
+                const [gamesResp, picksResp] = await Promise.all([
+                    fetch(API('/games'), { credentials: 'include' }),
+                    fetch(API('/picks'), { credentials: 'include' }),
+                ]);
+                if (!picksResp.ok) throw new Error(`picks HTTP ${picksResp.status}`);
+                const gamesData = gamesResp.ok ? await gamesResp.json() : { games: [] };
+                const picksData = await picksResp.json();
+                const picks = picksData.picks || [];
+
+                // Column map keyed by game label -> { label, start }.
+                const colMap = new Map();
+                (gamesData.games || []).forEach(g => colMap.set(gameLabel(g), { label: gameLabel(g), start: g.commence_time }));
+                picks.forEach(p => { if (!colMap.has(p.game)) colMap.set(p.game, { label: p.game, start: p.game_start_at }); });
+                const cols = [...colMap.values()].sort((a, b) => new Date(a.start || 0) - new Date(b.start || 0));
+
+                // Rows = distinct real contestants (test rows already purged).
+                const users = [...new Set(picks.map(p => p.username))].sort((a, b) => a.localeCompare(b));
+
+                // Lookup: username||label -> pick.
+                const byCell = new Map();
+                picks.forEach(p => byCell.set(`${p.username}||${p.game}`, p));
+
+                if (!cols.length || !users.length) {
+                    table.hidden = true;
+                    empty.hidden = false;
+                    empty.innerHTML = `<i class="fa-solid fa-inbox"></i>No contest picks yet. Picks appear here once contestants submit.`;
+                    return;
+                }
+
+                $('#cgrid-head').innerHTML = `<th class="cgrid-user">Contestant</th>` + cols.map(c =>
+                    `<th class="cgrid-game">${escapeHtml(c.label)}<small>${fmtTime(c.start)}</small></th>`
+                ).join('');
+
+                $('#cgrid-body').innerHTML = users.map(u => {
+                    const cells = cols.map(c => {
+                        const p = byCell.get(`${u}||${c.label}`);
+                        if (!p) return `<td><span class="cgrid-dash">—</span></td>`;
+                        if (p.sealed) return `<td><span class="cgrid-sealed"><i class="fa-solid fa-lock"></i> Sealed</span></td>`;
+                        const res = (p.result && p.result !== 'pending') ? p.result : '';
+                        const cls = res === 'won' ? 'res-won' : res === 'lost' ? 'res-lost' : res === 'push' ? 'res-push' : res === 'void' ? 'res-void' : '';
+                        const lbl = MARKET_LABEL[p.market_type] || p.market_type || '';
+                        return `<td><div class="cgrid-pick ${cls}"><span class="sel">${escapeHtml(p.selection)}</span><span class="meta">${escapeHtml(lbl)} · ${fmtOdds(p.odds)}</span></div></td>`;
+                    }).join('');
+                    return `<tr><td class="cgrid-user">${escapeHtml(u)}</td>${cells}</tr>`;
+                }).join('');
+
+                empty.hidden = true;
+                table.hidden = false;
+            } catch (err) {
+                table.hidden = true;
+                empty.hidden = false;
+                empty.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>Contest board temporarily unavailable. Refreshing shortly.`;
+            }
+        }
+
+        async function loadLeaderboard() {
+            const body = $('#lb-body');
+            try {
+                const res = await fetch(API('/leaderboard'), { credentials: 'include' });
+                if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                const data = await res.json();
+                const entries = data.entries || [];
+                if (!entries.length) {
+                    body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-trophy"></i>No graded contest picks yet. Standings appear once picks grade.</div></td></tr>`;
+                    return;
+                }
+                body.innerHTML = entries.map(e => {
+                    const net = Number(e.units_net);
+                    const netCls = !Number.isFinite(net) || net === 0 ? 'lb-zero' : net > 0 ? 'lb-pos' : 'lb-neg';
+                    const pct = Number.isFinite(Number(e.win_pct)) ? `${(Number(e.win_pct) * 100).toFixed(1)}%` : '—';
+                    return `<tr>
+                        <td>${e.rank ?? '—'}</td>
+                        <td><strong>${escapeHtml(e.username || '—')}</strong></td>
+                        <td>${e.picks_used ?? 0}/${e.picks_max ?? 50}</td>
+                        <td>${e.wins ?? 0}-${e.losses ?? 0}-${e.pushes ?? 0}</td>
+                        <td>${pct}</td>
+                        <td class="${netCls}">${net > 0 ? '+' : ''}${fmtUnits(e.units_net)}</td>
+                    </tr>`;
+                }).join('');
+            } catch {
+                body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Leaderboard temporarily unavailable.</div></td></tr>`;
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             // Pick entry was removed from this dashboard. Picks are entered on
-            // /sportsbook/?contest=justbet-mlb. We only initialize the status,
-            // public picks grid, and leaderboard surfaces here. Refresh buttons
-            // are wired defensively (some refresh controls may not exist if
+            // /sportsbook/?contest=justbet-mlb. We initialize the status,
+            // registration board, contest grid, and leaderboard here. Refresh
+            // buttons are wired defensively (some controls may not exist if
             // older markup is cached).
             loadStatus();
             loadRegistrations();
+            loadGrid();
+            loadLeaderboard();
             const rs = $('#refresh-status');
             if (rs) rs.addEventListener('click', () => { loadStatus(); loadRegistrations(); });
             const rr = $('#refresh-reg');
             if (rr) rr.addEventListener('click', loadRegistrations);
+            const rg = $('#refresh-grid');
+            if (rg) rg.addEventListener('click', loadGrid);
+            const rl = $('#refresh-lb');
+            if (rl) rl.addEventListener('click', loadLeaderboard);
+            // Auto-refresh so sealed picks reveal at first pitch without a manual reload.
+            setInterval(() => { loadGrid(); loadLeaderboard(); }, 60000);
         });
     })();
     </script>
