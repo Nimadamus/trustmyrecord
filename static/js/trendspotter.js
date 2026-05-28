@@ -430,9 +430,15 @@
   }
 
   function bestResult() {
-    if (EXTENDED_RANGES.includes(state.range)) {
-      return extendedTrendForQuery();
-    }
+    // Always go through the merged-dataset path so per-row scoring against the
+    // user's entered line+side is used for every range. The artifact's
+    // pre-computed UNDER/OVER trend text would otherwise hide a query for the
+    // opposite side even when the underlying game data supports it.
+    var ext = extendedTrendForQuery();
+    if (ext) return ext;
+    // Fallback for sports where extendedTrendForQuery yields nothing (no
+    // artifact rows for this team, no static history): use the legacy
+    // artifact-trend matcher so source_window queries still work.
     return trendsForSport(state.sport)
       .filter(trendMatchesQuery)
       .sort(function (a, b) { return (Number(b.sample) || 0) - (Number(a.sample) || 0); })[0] || null;
@@ -992,7 +998,6 @@
   }
 
   function extendedTrendForQuery() {
-    if (!EXTENDED_SPORTS.includes(state.sport)) return null;
     var matchup = selectedMatchup();
     var market = selectedMarket();
     var trendKind = selectedTrendKind();
