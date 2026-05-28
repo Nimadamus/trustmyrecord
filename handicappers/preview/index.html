@@ -353,8 +353,9 @@
         .hm-leader-card span.is-negative { color: #ff7d7d; }
 
         .hm-leader-card--empty {
-            grid-column: 1 / -1;
-            min-height: 104px;
+            grid-column: auto;
+            max-width: 280px;
+            min-height: 100px;
             border-style: dashed;
             background: rgba(8, 15, 27, 0.72);
         }
@@ -933,13 +934,12 @@
             margin-bottom: 22px !important;
             gap: 30px !important;
             border-radius: 22px !important;
-            background:
-                radial-gradient(900px 380px at 0% 0%, rgba(45,212,191,0.22), transparent 60%),
-                radial-gradient(720px 360px at 100% 100%, rgba(212,167,44,0.16), transparent 65%),
-                linear-gradient(165deg, #0e1c32 0%, #050b16 100%) !important;
-            border: 1px solid rgba(45,212,191,0.32) !important;
+            background: linear-gradient(165deg, #0d1a2c 0%, #060d18 100%) !important;
+            border: 1px solid rgba(148,163,184,0.18) !important;
             box-shadow: 0 30px 70px rgba(0,0,0,0.42) !important;
         }
+        /* Kill the original teal/gold left-edge accent stripe so nothing sits behind the title. */
+        .hm-hero::before { display: none !important; }
         .hm-hero h1 {
             font-size: clamp(2.3rem, 4.6vw, 4rem) !important;
             background: none !important;
