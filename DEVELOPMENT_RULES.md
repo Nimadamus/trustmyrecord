@@ -1,5 +1,15 @@
 # TrustMyRecord Development Rules
 
+## Public Ledger settled-result coloring (May 28, 2026) — HARD RULE (PERMANENT)
+Any public-facing ledger / pick-history / record table on TrustMyRecord MUST color settled results so a visitor can tell wins from losses at a glance, regardless of horizontal scroll position. Required pattern:
+- **Settled win** → green (text + pill badge + subtle row tint + left-rail accent).
+- **Settled loss** → red (text + pill badge + subtle row tint + left-rail accent).
+- **Push / void / canceled / pending / unknown** → neutral gray/white. NEVER colored as a win or a loss, NEVER gold/cyan/amber pseudo-status colors.
+- The `Result` (or equivalent) column MUST be visible in the rendered table — if the column would scroll off, add row-level tint (background or left-rail) so status is still readable on the leftmost columns.
+- Pending picks STAY hidden from the public ledger (server-side filter via `SETTLED_RE` in `tmrxRenderPickHistory`).
+
+Reference implementation: `profile/index.html` `tmrxRenderLedgerPage()` (`rowStatusClass` + `resultTag` → `.tmrx-result-badge` / `.tmrx-row-*` classes) and the `TMRX_LEDGER_RESULT_COLOR_20260527` / `LEDGER_NEUTRAL_NON_DECISION_20260527` / `LEDGER_WIN_LOSS_TINT_20260527` CSS markers. Status string normalization: `pushed`→`push`, `cancelled`→`canceled`, `voided`→`void` (apply same mapping anywhere a row class is built from raw status).
+
 ## Sportsbook sport list is one centralized catalog — never a scattered hardcoded list (May 27, 2026) — HARD RULE (PERMANENT)
 Every sportsbook navigation surface — upper strip (`.sportsbook-sports-nav`), pick-area tabs (`.sportsbook-sport-tabs`) and their More popover (`.sport-more-pop`), and rail (`.sportsbook-rail-list`) — MUST render from the single canonical catalog `window.TMR.SPORT_CATALOG` (defined at the bottom of `sportsbook/index.html`). Future sport additions update that one array; the catalog renderer (`renderUpperStrip` / `renderPickTabs` / `renderRail` in the same block) propagates to every surface.
 
