@@ -9846,10 +9846,12 @@
                 <div class="sportsbook-sport-tab sportsbook-sport-tab--more" id="sportTabMore" tabindex="0" role="button" aria-haspopup="true" aria-expanded="false" onclick="(function(el){var p=el.querySelector('.sport-more-pop');if(p){var open=p.style.display==='block';p.style.display=open?'none':'block';el.setAttribute('aria-expanded',open?'false':'true');}})(this)">More <i class="fas fa-caret-down" style="margin-left:6px;font-size:.7em;opacity:.7;"></i>
                     <div class="sport-more-pop" role="menu">
                         <button type="button" role="menuitem" onclick="event.stopPropagation();window.toggleSportFamily && window.toggleSportFamily('tennis');">Tennis</button>
-                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.selectSportAndShowGames('UFC');">UFC / MMA</button>
-                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.selectSportAndShowGames('Golf');">Golf</button>
-                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.selectSportAndShowGames('Boxing');">Boxing</button>
-                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.selectSportAndShowGames('NASCAR');">NASCAR / F1</button>
+                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.TMR && window.TMR.setSport && window.TMR.setSport('WNBA');">WNBA</button>
+                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.TMR && window.TMR.setSport && window.TMR.setSport('MMA');">MMA</button>
+                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.TMR && window.TMR.setSport && window.TMR.setSport('Boxing');">Boxing</button>
+                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.TMR && window.TMR.setSport && window.TMR.setSport('Golf');">Golf</button>
+                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.TMR && window.TMR.setSport && window.TMR.setSport('NASCAR');">NASCAR</button>
+                        <button type="button" role="menuitem" onclick="event.stopPropagation();window.TMR && window.TMR.setSport && window.TMR.setSport('F1');">Formula 1</button>
                     </div>
                 </div>
                 <button type="button" class="sportsbook-sport-tab sportsbook-sport-tab--muted" title="Consensus board (coming soon)">Consensus</button>
@@ -9907,6 +9909,30 @@
                         <button class="sportsbook-rail-board" data-sport="Tennis" type="button" onclick="window.TMR.setSport('Tennis'); window.toggleSportFamily && window.toggleSportFamily('tennis');">
                             <span class="sportsbook-rail-board-main"><b>Tennis</b><small><i></i> ATP · WTA</small></span>
                             <span class="sportsbook-rail-board-count">Group</span>
+                        </button>
+                        <button class="sportsbook-rail-board" data-sport="WNBA" type="button" onclick="window.TMR.setSport('WNBA')">
+                            <span class="sportsbook-rail-board-main"><b>WNBA</b><small><i></i> Pro Basketball</small></span>
+                            <span class="sportsbook-rail-board-count" id="wnba-game-count">Board</span>
+                        </button>
+                        <button class="sportsbook-rail-board" data-sport="MMA" type="button" onclick="window.TMR.setSport('MMA')">
+                            <span class="sportsbook-rail-board-main"><b>MMA</b><small><i></i> UFC · Bellator · PFL</small></span>
+                            <span class="sportsbook-rail-board-count">Soon</span>
+                        </button>
+                        <button class="sportsbook-rail-board" data-sport="Boxing" type="button" onclick="window.TMR.setSport('Boxing')">
+                            <span class="sportsbook-rail-board-main"><b>Boxing</b><small><i></i> Pro Boxing</small></span>
+                            <span class="sportsbook-rail-board-count">Soon</span>
+                        </button>
+                        <button class="sportsbook-rail-board" data-sport="Golf" type="button" onclick="window.TMR.setSport('Golf')">
+                            <span class="sportsbook-rail-board-main"><b>Golf</b><small><i></i> PGA · LIV · Majors</small></span>
+                            <span class="sportsbook-rail-board-count">Soon</span>
+                        </button>
+                        <button class="sportsbook-rail-board" data-sport="NASCAR" type="button" onclick="window.TMR.setSport('NASCAR')">
+                            <span class="sportsbook-rail-board-main"><b>NASCAR</b><small><i></i> Cup Series</small></span>
+                            <span class="sportsbook-rail-board-count">Soon</span>
+                        </button>
+                        <button class="sportsbook-rail-board" data-sport="F1" type="button" onclick="window.TMR.setSport('F1')">
+                            <span class="sportsbook-rail-board-main"><b>F1</b><small><i></i> Formula 1</small></span>
+                            <span class="sportsbook-rail-board-count">Soon</span>
                         </button>
                     </div>
                 </aside>
@@ -10428,7 +10454,15 @@ window.toggleSportFamily = function (family) {
         Soccer: { kicker: 'Soccer Board', title: 'Soccer · League Boards',   tagline: 'Pick a league from the rail to load matchups.',                 cols: ['3-Way', 'Moneyline', 'Goal Total'] },
         Tennis: { kicker: 'Tennis Board', title: 'Tennis · Tour Boards',     tagline: 'Pick a tour from the rail to load matchups.',                   cols: ['Set Spread', 'Match Winner', 'Game Total'] },
         WNBA:   { kicker: 'WNBA Board',   title: 'WNBA · Game Board',        tagline: 'Pro basketball matchups. Tap any line to add it to your slip.', cols: ['Spread', 'Moneyline', 'Total'] },
-        Consensus: { kicker: 'Consensus', title: 'Consensus Picks',           tagline: 'Aggregated picks from loaded user records.',                    cols: ['Spread', 'Moneyline', 'Total'] }
+        Consensus: { kicker: 'Consensus', title: 'Consensus Picks',           tagline: 'Aggregated picks from loaded user records.',                    cols: ['Spread', 'Moneyline', 'Total'] },
+        // Sports without a live odds feed yet. Headers render cleanly; the
+        // board short-circuits to a professional "no data yet" empty state
+        // (see NO_LIVE_FEED_SPORTS / renderBoard). No fake odds, no fake rows.
+        MMA:    { kicker: 'MMA Board',    title: 'MMA · Fight Board',         tagline: 'UFC, Bellator, PFL and combat. Live lines coming soon.',         cols: ['Method', 'Moneyline', 'Total Rounds'] },
+        Boxing: { kicker: 'Boxing Board', title: 'Boxing · Fight Board',      tagline: 'Pro boxing matchups. Live lines coming soon.',                   cols: ['Method', 'Moneyline', 'Total Rounds'] },
+        Golf:   { kicker: 'Golf Board',   title: 'Golf · Tournament Board',   tagline: 'PGA, LIV and majors. Tournament lines coming soon.',             cols: ['Outright', 'Matchups', 'H2H'] },
+        NASCAR: { kicker: 'NASCAR Board', title: 'NASCAR · Race Board',       tagline: 'Cup Series matchups. Live lines coming soon.',                   cols: ['Outright', 'Matchups', 'H2H'] },
+        F1:     { kicker: 'F1 Board',     title: 'Formula 1 · Race Board',    tagline: 'F1 grand prix matchups. Live lines coming soon.',                cols: ['Outright', 'Matchups', 'H2H'] }
     };
 
     function fmtPrice(p) {
@@ -10765,8 +10799,26 @@ window.toggleSportFamily = function (family) {
         'NHL':   [{k:'full',label:'Game Lines'},{k:'p1',label:'1st Period'},{k:'p2',label:'2nd Period'},{k:'p3',label:'3rd Period'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
         'MLB':   [{k:'full',label:'Game Lines'},{k:'f5',label:'5 Inning Lines'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
         'Soccer':[{k:'full',label:'Match'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'}].concat(ALT_PROP_TABS),
-        'Tennis':[{k:'full',label:'Match'}].concat(ALT_PROP_TABS)
+        'Tennis':[{k:'full',label:'Match'}].concat(ALT_PROP_TABS),
+        // No-feed sports get a single inert Game Lines tab. The board short-circuits
+        // to the empty state below; alt/props tabs are intentionally omitted so
+        // users don't see dead extra tabs.
+        'WNBA':  [{k:'full',label:'Game Lines'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
+        'MMA':   [{k:'full',label:'Fights'}],
+        'Boxing':[{k:'full',label:'Fights'}],
+        'Golf':  [{k:'full',label:'Tournament'}],
+        'NASCAR':[{k:'full',label:'Race'}],
+        'F1':    [{k:'full',label:'Race'}]
     };
+
+    // Sports the sportsbook recognizes but for which the current odds feed
+    // does NOT yet supply game lines. The board renders an honest empty
+    // state for these instead of attempting a useless backend/ESPN fetch
+    // that would either fall through to a broken "Unknown sport" branch
+    // or hammer the API for nothing. Centralized source-of-truth so every
+    // future contest/pick-entry surface can ask: is this sport feed-backed?
+    var NO_LIVE_FEED_SPORTS = { MMA: 1, Boxing: 1, Golf: 1, NASCAR: 1, F1: 1 };
+    window.TMR.NO_LIVE_FEED_SPORTS = NO_LIVE_FEED_SPORTS;
 
     // Rebuild the lobby period tab strip for a given sport. Keeps the active
     // selection if it's still valid for the new sport, else falls back to 'full'.
@@ -12268,6 +12320,15 @@ window.toggleSportFamily = function (family) {
 
         if (sport === 'Consensus') {
             rows.innerHTML = emptyState('Consensus', 'Consensus Coming Soon.', 'closed');
+            return;
+        }
+
+        // Sports without a live odds feed (MMA, Boxing, Golf, NASCAR, F1).
+        // Render a professional empty state — never invent rows, never call
+        // the backend/ESPN feeds for keys they don't support. Lights up
+        // automatically once a future provider supplies them.
+        if (NO_LIVE_FEED_SPORTS[sport]) {
+            rows.innerHTML = emptyState(sport, 'No active contests or picks available for ' + sport + ' yet. Live odds will appear here when our feed adds coverage.', 'closed');
             return;
         }
 
