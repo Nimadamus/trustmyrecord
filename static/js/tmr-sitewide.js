@@ -451,6 +451,13 @@
     }
 
     function renderActions() {
+        // May 29, 2026 — keep the page-baked static auth header (homepage
+        // `.tmr-premium-actions` "Log in / Sign up") in sync too. It lives
+        // inside <main>, so the legacy-nav kill-switch never hid it, and no
+        // other script updated it — so a logged-in user still saw "Log in /
+        // Sign up" in the homepage header even though the injected global nav
+        // showed their account. That was the real persistent-login symptom.
+        syncStaticAuthHeader();
         if (!actions) return;
         const user = getSessionUser();
         if (user) {
@@ -464,6 +471,45 @@
         }
         cleanupNavActions();
         wireUserMenuTrigger();
+    }
+
+    // Sync any static, page-baked auth header (currently the homepage premium
+    // header) with the real session. Logged in -> swap "Log in / Sign up" for a
+    // profile link; tokens present but user not yet resolved -> hide the
+    // login/signup so it never flashes logged-out; logged out -> restore the
+    // original markup.
+    function syncStaticAuthHeader() {
+        const boxes = document.querySelectorAll(".tmr-premium-actions");
+        if (!boxes.length) return;
+        const user = getSessionUser();
+        const pending = !user && hasAuthTokens();
+        boxes.forEach((box) => {
+            if (typeof box._tmrOriginalActions !== "string") {
+                box._tmrOriginalActions = box.innerHTML;
+            }
+            if (user) {
+                const username = String(user.username || user.handle || user.slug || user.displayName || user.display_name || user.email || "account");
+                const display = String(user.displayName || user.display_name || user.name || user.username || user.handle || "My Account");
+                const href = "/profile/?user=" + encodeURIComponent(username);
+                const next = '<a class="tmr-premium-login auth-link" href="' + href + '">' + escapeHtml(display) + '</a>'
+                           + '<a class="tmr-premium-signup auth-link" href="' + href + '">My Record</a>';
+                if (box.getAttribute("data-tmr-auth-state") !== "in:" + username) {
+                    box.innerHTML = next;
+                    box.setAttribute("data-tmr-auth-state", "in:" + username);
+                    box.style.visibility = "";
+                }
+            } else if (pending) {
+                // Don't show login/signup while a known session is resolving.
+                box.style.visibility = "hidden";
+                box.setAttribute("data-tmr-auth-state", "pending");
+            } else {
+                if (box.getAttribute("data-tmr-auth-state") && box.getAttribute("data-tmr-auth-state") !== "out") {
+                    box.innerHTML = box._tmrOriginalActions;
+                }
+                box.style.visibility = "";
+                box.setAttribute("data-tmr-auth-state", "out");
+            }
+        });
     }
 
     function cleanupNavActions() {
@@ -938,6 +984,46 @@
     document.addEventListener("visibilitychange", () => {
         if (!document.hidden) renderActions();
     });
+
+    // Temporary, OFF by default: append ?authdebug=1 to any URL to show a live
+    // auth diagnostic panel (loaded JS version, token present, /auth/me result,
+    // nav render state, URL, timestamp). Disabled unless explicitly requested,
+    // so it never appears for normal users / final deployment.
+    try {
+        if (/[?&]authdebug=1\b/.test(location.search)) {
+            const JS_VERSION = "20260529authhydrate3";
+            const panel = document.createElement("div");
+            panel.id = "tmr-auth-debug";
+            panel.style.cssText = "position:fixed;z-index:2147483647;left:8px;bottom:8px;max-width:92vw;background:#0b1220;color:#cde;font:12px/1.5 monospace;padding:10px 12px;border:1px solid #00aeff;border-radius:8px;white-space:pre-wrap;box-shadow:0 4px 18px rgba(0,0,0,.5)";
+            document.body.appendChild(panel);
+            const tokenKeys = ["trustmyrecord_token","accessToken","token","tmr_token","trustmyrecord_refresh_token","refreshToken","refresh_token"];
+            const draw = (authMe) => {
+                const u = getSessionUser();
+                const gnav = document.querySelector(".tmr-global-nav__actions");
+                const prem = document.querySelector(".tmr-premium-actions");
+                const present = tokenKeys.filter((k) => { try { return !!localStorage.getItem(k); } catch (e) { return false; } });
+                panel.textContent =
+                    "TMR AUTH DEBUG\n" +
+                    "jsVersion: " + JS_VERSION + "\n" +
+                    "url: " + location.href + "\n" +
+                    "time: " + new Date().toISOString() + "\n" +
+                    "tokenPresent: " + (present.length > 0) + " [" + present.join(",") + "]\n" +
+                    "sessionUser: " + (u ? (u.username || u.email) : "null") + "\n" +
+                    "globalNav: " + (gnav ? gnav.textContent.replace(/\s+/g, " ").trim().slice(0, 50) : "(none)") + "\n" +
+                    "premiumHeader: " + (prem ? prem.textContent.replace(/\s+/g, " ").trim() : "(none)") + "\n" +
+                    "authMe: " + authMe;
+            };
+            draw("(fetching...)");
+            if (window.api && typeof window.api.getCurrentUser === "function") {
+                Promise.resolve(window.api.getCurrentUser())
+                    .then((d) => { const uu = d && (d.user || d); draw(uu && (uu.username || uu.email) ? ("OK user=" + (uu.username || uu.email)) : "no-user"); })
+                    .catch((e) => draw("ERROR " + (e && e.message ? e.message : e)));
+            } else {
+                draw("window.api unavailable");
+            }
+            window.addEventListener("tmr-auth-changed", () => draw("(auth-changed)"));
+        }
+    } catch (e) {}
 
     // Load nav-badges.js on every page once the global nav exists, so the bell
     // and messages icons get unread-count badges without each page importing it.
