@@ -43,6 +43,9 @@
         'soccer_italy_serie_a': 'soccer/ita.1',
         'soccer_germany_bundesliga': 'soccer/ger.1',
         'soccer_france_ligue_one': 'soccer/fra.1',
+        'soccer_brazil_serie_a': 'soccer/bra.1',
+        'soccer_nwsl': 'soccer/usa.nwsl',
+        'soccer_intl_friendly': 'soccer/fifa.friendly',
         'americanfootball_ncaaf': 'football/college-football',
         'basketball_ncaab': 'basketball/mens-college-basketball',
         'tennis': 'tennis',
@@ -322,6 +325,74 @@
     // hide next-day matches like the Champions League final. This alias keeps a
     // live reference so renderGroupedBoard can still pull per-league ESPN games.
     window.TMR.fetchEspnLeagueGames = window.TMR.fetchGamesFromESPN;
+
+    // Date-RANGE ESPN league fetcher for the grouped soccer board. The single
+    // -day walker (fetchGamesFromESPN) returns only the soonest non-empty day,
+    // so it can never show a full upcoming slate. This pulls today..+N days in
+    // ONE request and returns every UPCOMING match (with odds where ESPN posts
+    // them), tagged for the grouped board. Source-driven, no day-by-day cap.
+    window.TMR.fetchEspnLeagueRange = function (sportKey, callback, daysAhead) {
+        var espnPath = window.TMR.espnPaths[sportKey];
+        if (!espnPath) { callback([]); return; }
+        var pad = function (d) { return d.toISOString().split('T')[0].replace(/-/g, ''); };
+        var start = new Date();
+        var end = new Date(); end.setDate(end.getDate() + (daysAhead || 14));
+        var url = 'https://site.api.espn.com/apis/site/v2/sports/' + espnPath +
+                  '/scoreboard?dates=' + pad(start) + '-' + pad(end) + '&limit=300';
+        fetch(url)
+            .then(function (r) { if (!r.ok) throw new Error('ESPN ' + r.status); return r.json(); })
+            .then(function (data) {
+                var events = data.events || [];
+                var now = Date.now();
+                var games = [];
+                var pickLogo = function (t) {
+                    if (!t) return '';
+                    if (t.logo) return t.logo;
+                    if (Array.isArray(t.logos) && t.logos[0] && t.logos[0].href) return t.logos[0].href;
+                    return '';
+                };
+                for (var i = 0; i < events.length; i++) {
+                    var evt = events[i];
+                    var comp = evt.competitions && evt.competitions[0];
+                    if (!comp) continue;
+                    var competitors = comp.competitors || [];
+                    var homeComp = null, awayComp = null;
+                    for (var j = 0; j < competitors.length; j++) {
+                        if (competitors[j].homeAway === 'home') homeComp = competitors[j];
+                        if (competitors[j].homeAway === 'away') awayComp = competitors[j];
+                    }
+                    if (!homeComp || !awayComp) continue;
+                    var homeTeam = homeComp.team && homeComp.team.displayName;
+                    var awayTeam = awayComp.team && awayComp.team.displayName;
+                    if (!homeTeam || !awayTeam) continue;
+                    var status = (comp.status && comp.status.type) || (evt.status && evt.status.type) || {};
+                    if (status.completed === true) continue;
+                    var stateStr = (status.state || '').toLowerCase();
+                    if (stateStr === 'in' || status.id === '2') continue;            // live
+                    if (status.id === '3' || status.id === '6' || stateStr === 'post' || stateStr === 'cancel') continue;
+                    var gameStart = new Date(evt.date || comp.date);
+                    if (isNaN(gameStart.getTime()) || gameStart.getTime() <= now) continue; // upcoming only
+                    var bookmakers = window.TMR.parseEspnOdds(comp.odds || [], homeTeam, awayTeam);
+                    var ho = homeComp.team || {}, ao = awayComp.team || {};
+                    games.push({
+                        id: 'espn_' + evt.id,
+                        espn_event_id: evt.id,
+                        sport_key: sportKey,
+                        sport_title: evt.shortName || sportKey,
+                        home_team: homeTeam,
+                        away_team: awayTeam,
+                        home_logo: pickLogo(ho),
+                        away_logo: pickLogo(ao),
+                        home_abbr: ho.abbreviation || ho.shortDisplayName || '',
+                        away_abbr: ao.abbreviation || ao.shortDisplayName || '',
+                        commence_time: evt.date || comp.date,
+                        bookmakers: bookmakers
+                    });
+                }
+                callback(games);
+            })
+            .catch(function () { callback([]); });
+    };
 
     // Fetch odds from ESPN summary endpoint for individual games
     window.TMR.fetchOddsFromSummary = function(games, espnPath, callback) {
@@ -9634,7 +9705,7 @@
          approved TrustMyRecord branding shell as the rest of the app instead of
          depending on sportsbook-specific chrome or late body includes. -->
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate1"></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1">
     <!-- Contest Mode adapter: when /sportsbook/?contest=<id> is loaded, shows a
@@ -9993,6 +10064,9 @@
                             <button type="button" data-league="Serie A" onclick="window.TMR.setSoccerFilter('Serie A')">Serie A</button>
                             <button type="button" data-league="Bundesliga" onclick="window.TMR.setSoccerFilter('Bundesliga')">Bundesliga</button>
                             <button type="button" data-league="Ligue 1" onclick="window.TMR.setSoccerFilter('Ligue 1')">Ligue 1</button>
+                            <button type="button" data-league="Brazil Serie A" onclick="window.TMR.setSoccerFilter('Brazil Serie A')">Brazil Serie A</button>
+                            <button type="button" data-league="NWSL" onclick="window.TMR.setSoccerFilter('NWSL')">NWSL</button>
+                            <button type="button" data-league="International" onclick="window.TMR.setSoccerFilter('International')">International</button>
                         </div>
                     </div>
 
@@ -12016,7 +12090,13 @@ window.toggleSportFamily = function (family) {
             { sport: 'LaLiga', key: 'soccer_spain_la_liga', label: 'La Liga' },
             { sport: 'SerieA', key: 'soccer_italy_serie_a', label: 'Serie A' },
             { sport: 'Bundesliga', key: 'soccer_germany_bundesliga', label: 'Bundesliga' },
-            { sport: 'Ligue1', key: 'soccer_france_ligue_one', label: 'Ligue 1' }
+            { sport: 'Ligue1', key: 'soccer_france_ligue_one', label: 'Ligue 1' },
+            // In-season competitions (ESPN-only; Action Network's free soccer
+            // slug doesn't carry them). espnOnly skips the backend fetch so the
+            // sparse AN board is never passed through and mislabeled under them.
+            { sport: 'BrazilSerieA', key: 'soccer_brazil_serie_a', label: 'Brazil Serie A', espnOnly: true },
+            { sport: 'NWSL', key: 'soccer_nwsl', label: 'NWSL', espnOnly: true },
+            { sport: 'Intl', key: 'soccer_intl_friendly', label: 'International', espnOnly: true }
         ],
         Tennis: [
             { sport: 'ATP', key: 'tennis_atp', label: 'ATP' },
@@ -12202,6 +12282,10 @@ window.toggleSportFamily = function (family) {
         var group = GROUP_SPORTS[sport] || [];
         rowsEl.innerHTML = '<div class="sportsbook-board-empty"><div class="sportsbook-board-empty-icon" aria-hidden="true">●</div><strong>Loading ' + sport + ' odds…</strong><span>Checking available ' + sport.toLowerCase() + ' leagues and tournaments.</span></div>';
         var backendP = Promise.all(group.map(function (league) {
+            // espnOnly leagues aren't in Action Network's soccer slug; calling the
+            // backend would pass its sparse generic board through and mislabel it
+            // under this league. Skip the backend for them — ESPN supplies them.
+            if (league.espnOnly) return Promise.resolve({ games: [], providerDown: false, backendMsg: '' });
             return fetchBackendBoard(league.key, 30).then(function (payload) {
                 return {
                     games: ((payload && payload.games) || []).map(function (game) { game.sport_title = league.label; return game; }),
@@ -12210,16 +12294,15 @@ window.toggleSportFamily = function (family) {
                 };
             }).catch(function () { return { games: [], providerDown: true, backendMsg: '' }; });
         }));
-        // SOCCER ESPN PER-LEAGUE FALLBACK (frontend-only, additive).
-        // The backend maps every soccer_* league key to one generic "soccer"
-        // Action Network query, which currently surfaces a single game and
-        // mislabels its league — so "All Soccer" collapsed to one match. ESPN's
-        // free per-league scoreboards (already mapped in espnPaths: eng.1/usa.1/
-        // esp.1/ita.1/ger.1/fra.1/uefa.champions) return real, league-tagged
-        // games WITH odds. We fetch them in parallel and merge below, preferring
-        // backend rows (richer DraftKings markets) on matchup collisions. Tennis
-        // is untouched (backend-only) since ESPN tennis odds are unreliable.
-        var espnLeagueFetch = window.TMR.fetchEspnLeagueGames || window.TMR.fetchGamesFromESPN;
+        // SOCCER ESPN PER-LEAGUE COVERAGE (frontend, additive).
+        // Action Network's free soccer slug is sparse and league-blind. ESPN's
+        // free per-league scoreboards are league-aware and carry real odds, so
+        // we pull EVERY whitelisted league over a 14-day forward window (range
+        // fetch, not a single soonest-day) and merge below, preferring backend
+        // rows (richer DraftKings markets) on matchup collisions. This is what
+        // makes "All Soccer" show the full upcoming slate across competitions.
+        // Tennis stays backend-only (ESPN tennis odds are unreliable).
+        var espnLeagueFetch = window.TMR.fetchEspnLeagueRange || window.TMR.fetchEspnLeagueGames || window.TMR.fetchGamesFromESPN;
         var espnP = (sport === 'Soccer' && espnLeagueFetch)
             ? Promise.all(group.map(function (league) {
                 return new Promise(function (resolve) {
@@ -12297,7 +12380,7 @@ window.toggleSportFamily = function (family) {
             return;
         }
         if (period && period !== 'full') { renderPeriodRows(sport, rowsEl, filtered, period, 'grouped filtered'); return; }
-        var CAP = 20;
+        var CAP = 40;
         var shown = filtered.slice(0, CAP);
         window.TMR.currentGames = shown;
         var html = shown.map(function (game, index) { return renderRow(game, index); }).join('');
