@@ -1038,17 +1038,26 @@
                         + '</div></div>';
                     return;
                 }
-                // Group items by team. Accept selection_team / team / fallback to selection.
+                // Group by team, then by line, collecting EVERY threshold the feed
+                // returns (standard + alternate team totals). Feed shape:
+                // selection = "<Team> Over" / "<Team> Under", numeric `line`, american `odds`.
+                // Prior logic kept only the last O/U per team, hiding all alternates.
                 var byTeam = {};
                 items.forEach(function(it) {
-                    var team = it.selection_team || it.team || it.selection || '';
+                    var rawSel = String(it.selection_label || it.selection || '');
+                    var side = (it.bet_side === 'over' || it.bet_side === 'under')
+                        ? it.bet_side
+                        : (/\bunder\b/i.test(rawSel) ? 'under' : (/\bover\b/i.test(rawSel) ? 'over' : ''));
+                    if (!side) return;
+                    var team = it.selection_team || it.team || rawSel.replace(/\s*(over|under)\s*$/i, '').trim();
                     if (!team) return;
-                    byTeam[team] = byTeam[team] || { over: null, under: null };
-                    var sel = String(it.selection_label || it.selection || '').toLowerCase();
-                    if (sel.indexOf('over') !== -1 || it.bet_side === 'over') byTeam[team].over = it;
-                    else if (sel.indexOf('under') !== -1 || it.bet_side === 'under') byTeam[team].under = it;
-                    else if (!byTeam[team].over) byTeam[team].over = it;
-                    else byTeam[team].under = it;
+                    var ln = Number(it.line);
+                    if (it.line == null || !Number.isFinite(ln)) return;
+                    var lineKey = '' + ln;
+                    byTeam[team] = byTeam[team] || {};
+                    byTeam[team][lineKey] = byTeam[team][lineKey] || { line: ln, over: null, under: null };
+                    if (side === 'over') byTeam[team][lineKey].over = it;
+                    else byTeam[team][lineKey].under = it;
                 });
                 var teamOrder = [game.away_team, game.home_team].filter(function(t) { return byTeam[t]; });
                 if (!teamOrder.length) teamOrder = Object.keys(byTeam);
@@ -1058,35 +1067,40 @@
                     + '<div class="game-time-header"><span class="game-time">' + gameTime + '</span>'
                     + '<span style="margin-left:10px;color:#8ea0bc;font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;">' + escHtml(game.away_team) + ' @ ' + escHtml(game.home_team) + ' · Team Totals</span>'
                     + '</div>';
-                teamOrder.forEach(function(teamName, ti) {
-                    var pair = byTeam[teamName];
-                    var over = pair.over, under = pair.under;
-                    var oLine = over && over.line != null ? 'O ' + over.line : 'Over';
-                    var uLine = under && under.line != null ? 'U ' + under.line : 'Under';
-                    var oOdds = over ? fmtOdds(over.odds) : '';
-                    var uOdds = under ? fmtOdds(under.odds) : '';
-                    var moreCell = (ti === 0)
-                        ? '<button class="odds-btn odds-more-btn" data-mkt="more"'
-                          + ' onclick="window.TMR.setMarket(\'game\'); var st=document.getElementById(\'marketSubtabs\'); if(st){window.scrollTo({top: st.offsetTop - 80, behavior: \'smooth\'});}"'
-                          + ' title="Back to Game Lines for this matchup">'
-                          + '<span class="odds-line">Game Lines</span><span class="odds-value">More &rsaquo;</span>'
-                          + '</button>'
-                        : '<div class="odds-more-spacer" data-mkt="more" aria-hidden="true"></div>';
-
+                var firstMoreUsed = false;
+                teamOrder.forEach(function(teamName) {
+                    var lineMap = byTeam[teamName];
+                    var lineKeys = Object.keys(lineMap).sort(function(a, b) { return lineMap[a].line - lineMap[b].line; });
+                    if (!lineKeys.length) return;
                     var ttLogo = teamName === game.home_team
                         ? window.TMR._teamLogo(game.home_logo, game.home_abbr, teamName)
                         : window.TMR._teamLogo(game.away_logo, game.away_abbr, teamName);
-                    html += '<div class="team-row">'
-                        + '<div class="team-info" data-mkt="matchup">' + ttLogo + '<div class="team-details"><div class="team-name">' + escHtml(teamName) + '</div></div></div>'
-                        + (over
-                            ? '<button class="odds-btn" data-mkt="spread" onclick="window.selectGameBet(' + index + ',\'teamover\',\'' + esc(teamName) + ' Over\',\'' + esc(pv(over.line)) + '\',\'' + esc(pv(over.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + oLine + '</span><span class="odds-value' + (Number(over.odds) > 0 ? ' positive' : '') + '">' + oOdds + '</span></button>'
-                            : '<div class="odds-btn no-odds-btn" data-mkt="spread"><span class="odds-line">Over</span><span class="odds-value">—</span></div>')
-                        + (under
-                            ? '<button class="odds-btn" data-mkt="total" onclick="window.selectGameBet(' + index + ',\'teamunder\',\'' + esc(teamName) + ' Under\',\'' + esc(pv(under.line)) + '\',\'' + esc(pv(under.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + uLine + '</span><span class="odds-value' + (Number(under.odds) > 0 ? ' positive' : '') + '">' + uOdds + '</span></button>'
-                            : '<div class="odds-btn no-odds-btn" data-mkt="total"><span class="odds-line">Under</span><span class="odds-value">—</span></div>')
-                        + '<div class="odds-btn no-odds-btn" data-mkt="ml" style="background:transparent;border:0;cursor:default;"><span class="odds-line" style="opacity:0.5;">—</span></div>'
-                        + moreCell
-                        + '</div>';
+                    lineKeys.forEach(function(lk, li) {
+                        var pair = lineMap[lk];
+                        var over = pair.over, under = pair.under;
+                        var oLine = 'O ' + pair.line;
+                        var uLine = 'U ' + pair.line;
+                        var oOdds = over ? fmtOdds(over.odds) : '';
+                        var uOdds = under ? fmtOdds(under.odds) : '';
+                        var matchupCell = (li === 0)
+                            ? '<div class="team-info" data-mkt="matchup">' + ttLogo + '<div class="team-details"><div class="team-name">' + escHtml(teamName) + '</div></div></div>'
+                            : '<div class="team-info" data-mkt="matchup" style="opacity:.72;">' + ttLogo + '<div class="team-details"><div class="team-name">' + escHtml(teamName) + '</div><div style="font-size:10px;color:#8ea0bc;letter-spacing:.5px;text-transform:uppercase;font-weight:700;">Alt</div></div></div>';
+                        var moreCell = !firstMoreUsed
+                            ? '<button class="odds-btn odds-more-btn" data-mkt="more" onclick="window.TMR.setMarket(\'game\'); var st=document.getElementById(\'marketSubtabs\'); if(st){window.scrollTo({top: st.offsetTop - 80, behavior: \'smooth\'});}" title="Back to Game Lines for this matchup"><span class="odds-line">Game Lines</span><span class="odds-value">More &rsaquo;</span></button>'
+                            : '<div class="odds-more-spacer" data-mkt="more" aria-hidden="true"></div>';
+                        firstMoreUsed = true;
+                        html += '<div class="team-row' + (li === 0 ? ' team-row--tt-main' : ' team-row--tt-alt') + '">'
+                            + matchupCell
+                            + (over
+                                ? '<button class="odds-btn" data-mkt="spread" onclick="window.selectGameBet(' + index + ',\'teamover\',\'' + esc(teamName) + ' Over\',\'' + esc(pv(pair.line)) + '\',\'' + esc(pv(over.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + oLine + '</span><span class="odds-value' + (Number(over.odds) > 0 ? ' positive' : '') + '">' + oOdds + '</span></button>'
+                                : '<div class="odds-btn no-odds-btn" data-mkt="spread"><span class="odds-line">' + oLine + '</span><span class="odds-value">—</span></div>')
+                            + (under
+                                ? '<button class="odds-btn" data-mkt="total" onclick="window.selectGameBet(' + index + ',\'teamunder\',\'' + esc(teamName) + ' Under\',\'' + esc(pv(pair.line)) + '\',\'' + esc(pv(under.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + uLine + '</span><span class="odds-value' + (Number(under.odds) > 0 ? ' positive' : '') + '">' + uOdds + '</span></button>'
+                                : '<div class="odds-btn no-odds-btn" data-mkt="total"><span class="odds-line">' + uLine + '</span><span class="odds-value">—</span></div>')
+                            + '<div class="odds-btn no-odds-btn" data-mkt="ml" style="background:transparent;border:0;cursor:default;"><span class="odds-line" style="opacity:0.5;">—</span></div>'
+                            + moreCell
+                            + '</div>';
+                    });
                 });
                 html += '</div>';
             });
