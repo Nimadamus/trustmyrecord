@@ -9625,7 +9625,7 @@
          approved TrustMyRecord branding shell as the rest of the app instead of
          depending on sportsbook-specific chrome or late body includes. -->
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260524etfmt1"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate1"></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1">
     <!-- Contest Mode adapter: when /sportsbook/?contest=<id> is loaded, shows a
@@ -12192,7 +12192,7 @@ window.toggleSportFamily = function (family) {
     function renderGroupedBoard(sport, rowsEl, period) {
         var group = GROUP_SPORTS[sport] || [];
         rowsEl.innerHTML = '<div class="sportsbook-board-empty"><div class="sportsbook-board-empty-icon" aria-hidden="true">●</div><strong>Loading ' + sport + ' odds…</strong><span>Checking available ' + sport.toLowerCase() + ' leagues and tournaments.</span></div>';
-        Promise.all(group.map(function (league) {
+        var backendP = Promise.all(group.map(function (league) {
             return fetchBackendBoard(league.key, 30).then(function (payload) {
                 return {
                     games: ((payload && payload.games) || []).map(function (game) { game.sport_title = league.label; return game; }),
@@ -12200,14 +12200,49 @@ window.toggleSportFamily = function (family) {
                     backendMsg: (payload && payload.summary && payload.summary.message) || ''
                 };
             }).catch(function () { return { games: [], providerDown: true, backendMsg: '' }; });
-        })).then(function (results) {
+        }));
+        // SOCCER ESPN PER-LEAGUE FALLBACK (frontend-only, additive).
+        // The backend maps every soccer_* league key to one generic "soccer"
+        // Action Network query, which currently surfaces a single game and
+        // mislabels its league — so "All Soccer" collapsed to one match. ESPN's
+        // free per-league scoreboards (already mapped in espnPaths: eng.1/usa.1/
+        // esp.1/ita.1/ger.1/fra.1/uefa.champions) return real, league-tagged
+        // games WITH odds. We fetch them in parallel and merge below, preferring
+        // backend rows (richer DraftKings markets) on matchup collisions. Tennis
+        // is untouched (backend-only) since ESPN tennis odds are unreliable.
+        var espnP = (sport === 'Soccer' && window.TMR.fetchGamesFromESPN)
+            ? Promise.all(group.map(function (league) {
+                return new Promise(function (resolve) {
+                    try {
+                        window.TMR.fetchGamesFromESPN(league.key, function (games) {
+                            resolve((games || []).map(function (g) { g.sport_title = league.label; return g; }));
+                        });
+                    } catch (e) { resolve([]); }
+                });
+            })).then(function (arrs) { return [].concat.apply([], arrs); }).catch(function () { return []; })
+            : Promise.resolve([]);
+        Promise.all([backendP, espnP]).then(function (both) {
+            var results = both[0];
+            var espnGames = both[1] || [];
             if (rowsEl.getAttribute('data-sport') !== sport) return;
-            // Dedupe by game id: some groups (e.g. tennis ATP+WTA) resolve to the
-            // same combined backend feed, which would otherwise double every row.
-            var seen = {};
+            // Dedupe by game id AND by normalized matchup (home|away|date) so the
+            // same fixture from two sources (backend vs ESPN) shows once. Backend
+            // rows come first, so they win collisions and keep their richer
+            // markets; ESPN games only fill matchups the backend didn't return.
+            var seen = {}, matchSeen = {};
+            var norm = function (s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); };
+            var matchKey = function (g) {
+                var d = String(g.commence_time || g.start_time || '').slice(0, 10);
+                return norm(g.home_team) + '|' + norm(g.away_team) + '|' + d;
+            };
             var games = [].concat.apply([], results.map(function (r) { return r.games; }))
+                .concat(espnGames)
                 .filter(function (g) { return !_ttGameStarted(g); })
-                .filter(function (g) { var id = g && g.id; if (!id) return true; if (seen[id]) return false; seen[id] = 1; return true; });
+                .filter(function (g) {
+                    var id = g && g.id; if (id) { if (seen[id]) return false; seen[id] = 1; }
+                    var mk = matchKey(g); if (matchSeen[mk]) return false; matchSeen[mk] = 1;
+                    return true;
+                });
             if (!games.length) {
                 var providerDown = results.some(function (r) { return r.providerDown; }) || _oddsProviderRecentlyDown();
                 // Prefer the backend's canonical consumer-safe reason when present.
