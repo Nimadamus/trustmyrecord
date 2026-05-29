@@ -3917,6 +3917,63 @@
         // stale no-op path. Lock the bridge after installing it so every
         // dynamically rendered team-total button reaches the same slip flow.
         lockFunction(window, 'selectGameBet', window.selectGameBet);
+        // ALT_LINE_SUBMIT_FIX_20260529 (Nima): alternate spreads/totals come
+        // from a separate feed and were never registered in state.currentOptions,
+        // so selectAltBet only populated the visible slip + window.TMR
+        // .currentSelectedPick. The production lockInPick reads
+        // state.selectedOption, which stayed null/stale for alt picks — so
+        // "Lock Pick" did nothing (or submitted the prior standard pick).
+        // This bridge registers an externally-built alt option (real game_id
+        // preserved for grading) and selects it, so the canonical submit path
+        // runs unchanged. Works for MLB + NHL alt totals/spreads/team totals.
+        window.tmrRegisterExternalOption = function(info) {
+            try {
+                if (!info || !info.game_id) {
+                    console.warn('[TMR][ALT] tmrRegisterExternalOption missing game_id', info);
+                    return false;
+                }
+                var sportKeyMap = (window.TMR && window.TMR.sportKeyMap) || {};
+                var sportDisplay = info.sport || (window.TMR && window.TMR.selectedSport) || state.selectedSport || '';
+                var game = {
+                    id: info.game_id,
+                    sport_key: info.sport_key || sportKeyMap[sportDisplay] || sportDisplay || '',
+                    home_team: info.home_team || '',
+                    away_team: info.away_team || '',
+                    commence_time: info.commence_time || new Date().toISOString(),
+                    _bookTitle: info.book_title || 'Sportsbook feed',
+                    _bookKey: info.book_key || ''
+                };
+                if (hasGameStarted(game)) {
+                    showSubmitTrace('Alt selection blocked: game already started (' + game.id + ').');
+                    showPickSlipError('This game has already started, so picks are locked.');
+                    return false;
+                }
+                var lineNum = (info.line == null || info.line === '') ? null : parseFloat(info.line);
+                if (lineNum != null && isNaN(lineNum)) lineNum = null;
+                var oddsNum = (info.odds == null || info.odds === '') ? null : parseInt(info.odds, 10);
+                if (oddsNum != null && isNaN(oddsNum)) oddsNum = null;
+                var option = createFallbackOption(
+                    game,
+                    'alt',
+                    info.group_label || 'Alternate Lines',
+                    info.market_type || 'totals',
+                    info.selection || '',
+                    info.selection_label || info.selection || '',
+                    oddsNum,
+                    lineNum,
+                    game._bookTitle,
+                    'sportsbook'
+                );
+                var key = 'alt-' + (info.market_type || 'totals') + '-' + String(info.selection || '').toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-' + (lineNum == null ? 'x' : lineNum);
+                var registered = Object.assign({ game: game, _domId: key, _optionKey: key }, option);
+                state.currentOptions.set(key, registered);
+                selectOption(key);
+                return true;
+            } catch (err) {
+                console.error('[TMR][ALT] tmrRegisterExternalOption failed:', err);
+                return false;
+            }
+        };
         window.updatePickSummary = updatePickSummary;
         lockFunction(window, 'loadGamesWithAllBets', loadGamesWithAllBetsOverride);
         lockFunction(window, 'loadMyPicks', loadMyPicks);
