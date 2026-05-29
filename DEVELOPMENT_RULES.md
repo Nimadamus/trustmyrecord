@@ -935,3 +935,15 @@ Any public table — Public Ledger, profile stats, sportsbook ledger, contest da
 - **Do NOT solve clipping by removing columns** or shrinking text below ~12px. Reduce cell padding at narrow viewports instead; columns stay.
 - **Mandatory viewport test before completion**: 1440 / 1280 / 1024 / 768 / 390. At each width every column must be reachable (visible or via horizontal scroll inside the wrapper) and the scrollbar (or its gutter) must be visible.
 - The Public Ledger reference fix lives in `profile/index.html` ("PUBLIC LEDGER RIGHT-EDGE CLIP HARD-FIX (May 27, 2026 r2)" block). Copy the same wrapper pattern when adding new table-style views.
+
+
+## PERMANENT RULE: Nav must never render logged-out state while a session is still resolving (May 29, 2026)
+
+The global nav (`static/js/tmr-sitewide.js` `renderActions()`) decides login state from `getSessionUser()`. That can transiently return `null` on a cold load while the async `/auth/me` restore is still in flight, even though valid tokens exist in localStorage. Rendering "Log In / Join Free" in that window was the root cause of the long-running "site keeps asking me to log in" regression.
+
+Hard rules:
+- `renderActions()` MUST branch three ways: resolved user -> logged-in nav; **tokens present but user not yet resolved -> neutral PENDING chip (`buildPendingActions`, `data-tmr-auth-pending`), never login buttons**; no tokens -> logged-out nav. Token presence is checked by `hasAuthTokens()` (all token keys + `window.api.isLoggedIn()`).
+- Hydration (`hydrateAuthThenRerender` -> `window.api.getCurrentUser()`) must persist the user to `tmr_current_user` so subsequent loads resolve synchronously with zero flash.
+- Never "fix" this by only patching button text. The session must drive the nav.
+- This composes with the never-auto-logout rule: only explicit Log Out clears auth; a slow/failed `/auth/me` keeps the user logged in.
+- Deploy note: bumping `tmr-sitewide.js?v=` is mandatory for the fix to reach users (GitHub Pages edge-caches each `?v=` URL for max-age=14400). `sportsbook/index.html` is >1MB so the Contents API returns empty content — edit it via the Git Blobs + Git Data API, not Contents API. Never curl a new `?v=` URL until the JS blob is confirmed at origin, or you cache it stale.
