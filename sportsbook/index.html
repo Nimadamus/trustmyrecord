@@ -12038,6 +12038,41 @@ window.toggleSportFamily = function (family) {
             console.warn('[TMR][ALT] _ttPopulateSlip missing');
             return;
         }
+        // Build the selection label the user sees / the backend stores.
+        var _fmtAlt = (window.TMR && typeof window.TMR.formatLine === 'function') ? window.TMR.formatLine : function (v) { var n = parseFloat(v); return Number.isFinite(n) ? String(n) : ''; };
+        var lineDisp = (info.line == null || info.line === '') ? '' : _fmtAlt(info.line);
+        var lineSigned = (info.line == null || info.line === '') ? '' : _fmtAlt(info.line, { signed: true });
+        var altSelection, altSelectionLabel, altMarketType;
+        if (isTotal) {
+            altMarketType = 'totals';
+            altSelection = (betType === 'under') ? 'Under' : 'Over';
+            altSelectionLabel = altSelection + (lineDisp ? ' ' + lineDisp : '');
+        } else {
+            altMarketType = 'spreads';
+            altSelection = String(info.selection || '').trim();
+            altSelectionLabel = altSelection + (lineSigned ? ' ' + lineSigned : '');
+        }
+        // CRITICAL: register the alt option in the production submit state so
+        // lockInPick (which reads state.selectedOption) submits THIS pick.
+        // Without this the slip shows but Lock Pick is a no-op. Preserve the
+        // real gameId so grading can match the event.
+        if (typeof window.tmrRegisterExternalOption === 'function') {
+            var ok = window.tmrRegisterExternalOption({
+                game_id: info.gameId || null,
+                sport: sport,
+                home_team: info.homeTeam,
+                away_team: info.awayTeam,
+                commence_time: info.gameTime || null,
+                market_type: altMarketType,
+                selection: altSelection,
+                selection_label: altSelectionLabel,
+                line: info.line,
+                odds: info.odds,
+                group_label: info.market || (isTotal ? 'Alternate Totals' : 'Alternate Spreads'),
+                book_title: info.book || ''
+            });
+            if (ok === false) return;
+        }
         window.TMR._ttPopulateSlip({
             gameIndex: null,
             betType: betType,
@@ -21776,7 +21811,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260524auth401nowipe&cb=20260524auth401nowipe"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260529altlinesubmit&cb=20260529altlinesubmit"></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
