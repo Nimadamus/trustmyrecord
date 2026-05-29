@@ -9625,7 +9625,7 @@
          approved TrustMyRecord branding shell as the rest of the app instead of
          depending on sportsbook-specific chrome or late body includes. -->
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate2"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate1"></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1">
     <!-- Contest Mode adapter: when /sportsbook/?contest=<id> is loaded, shows a
@@ -12442,7 +12442,7 @@ window.toggleSportFamily = function (family) {
         // the backend/ESPN feeds for keys they don't support. Lights up
         // automatically once a future provider supplies them.
         if (NO_LIVE_FEED_SPORTS[sport]) {
-            rows.innerHTML = emptyState(sport, 'No active contests or picks available for ' + sport + ' yet. Live odds will appear here when our feed adds coverage.', 'closed');
+            rows.innerHTML = emptyState(sport, sport + ' — coming soon. No live odds source is connected yet for this sport. It will turn on automatically the moment a verified feed is available.', 'closed');
             return;
         }
 
