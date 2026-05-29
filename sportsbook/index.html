@@ -11455,6 +11455,102 @@ window.toggleSportFamily = function (family) {
         return _ttApplyMainLineSanity(game, bucket);
     }
 
+    // ALT_TEAM_TOTALS_20260529 (Nima). Accepts main AND alternate team-total
+    // items so the expandable ladder can surface every threshold the feed
+    // provides. Matches team_totals, alt_team_totals, alternate-team-total, etc.
+    function _ttIsAnyTeamTotalItem(it) {
+        if (!it) return false;
+        var parts = [it.market_type, it.market_key, it.group_key].map(function (v) {
+            return String(v || '').toLowerCase();
+        });
+        return parts.some(function (v) { return /team[_ -]?total/.test(v); });
+    }
+
+    // Collect EVERY distinct team-total line per team (main + alternates),
+    // sorted ascending. Used only for the Alt Team Totals panel — the main
+    // board card still renders via _ttSplitItems (unchanged).
+    function _ttCollectLines(game, items) {
+        var away = String(game.away_team || '').toLowerCase();
+        var home = String(game.home_team || '').toLowerCase();
+        var bucket = {
+            away: { team: game.away_team, lines: [] },
+            home: { team: game.home_team, lines: [] }
+        };
+        (items || []).forEach(function (it) {
+            if (!it || !_ttIsAnyTeamTotalItem(it)) return;
+            var sel = String(it.selection || it.selection_label || '').toLowerCase();
+            var isOver = sel.indexOf('over') !== -1;
+            var isUnder = sel.indexOf('under') !== -1;
+            var teamSlot = null;
+            if (sel.indexOf(away) === 0 || sel.indexOf(away) > -1 && sel.indexOf(home) === -1) teamSlot = 'away';
+            else if (sel.indexOf(home) === 0 || sel.indexOf(home) > -1 && sel.indexOf(away) === -1) teamSlot = 'home';
+            if (!teamSlot) return;
+            var entry = {
+                line: (it.line != null ? Number(it.line) : null),
+                odds: (it.odds != null ? Number(it.odds) : null),
+                book: it.book_title || it.book_key || '',
+                source: it.source || ''
+            };
+            var hasReal = (entry.source !== 'manual') && entry.line != null && entry.odds != null;
+            if (!hasReal) return;
+            var slot = bucket[teamSlot];
+            var row = slot.lines.find(function (r) { return r.line === entry.line; });
+            if (!row) { row = { line: entry.line, over: null, under: null }; slot.lines.push(row); }
+            if (isOver && !row.over) row.over = entry;
+            else if (isUnder && !row.under) row.under = entry;
+        });
+        ['away', 'home'].forEach(function (slotKey) {
+            bucket[slotKey].lines.sort(function (a, b) { return a.line - b.line; });
+        });
+        return bucket;
+    }
+
+    // One threshold row inside the alt ladder: "Team Total X" + Over/Under
+    // buttons. Reuses _ttButton so clicks flow through the identical
+    // _ttDirectClick -> selectGameBet -> _ttPopulateSlip path as the main card.
+    function _ttAltLineRow(idx, teamName, awayTeam, homeTeam, row, isMain) {
+        var over = row.over || {};
+        var under = row.under || {};
+        return '<div class="sb-alt-tt-line" style="display:flex;align-items:center;gap:10px;padding:5px 0;">' +
+            '<span class="sb-alt-tt-thresh" style="min-width:104px;font-size:12px;font-weight:700;color:#cbd5e1;">Team Total ' +
+                _ttHtmlEsc(window.TMR.formatLine(row.line)) +
+                (isMain ? ' <em style="font-style:normal;font-size:10px;color:#34d399;font-weight:800;">MAIN</em>' : '') +
+            '</span>' +
+            '<div class="sb-alt-tt-btns" style="display:flex;gap:8px;flex:1;">' +
+                _ttButton(idx, 'over', teamName, (over.line != null ? over.line : null), (over.odds != null ? over.odds : null), awayTeam, homeTeam) +
+                _ttButton(idx, 'under', teamName, (under.line != null ? under.line : null), (under.odds != null ? under.odds : null), awayTeam, homeTeam) +
+            '</div></div>';
+    }
+
+    // Build the collapsible Alt Team Totals panel for one game. Returns '' when
+    // there are no alternate lines beyond the main number for either team, so
+    // games with only a single posted line keep their current clean card.
+    function _ttAltPanel(idx, game, ladder, mainAwayLine, mainHomeLine) {
+        function teamBlock(slotKey, teamName, mainLine) {
+            var lines = (ladder[slotKey] && ladder[slotKey].lines) || [];
+            if (!lines.length) return '';
+            var rows = lines.map(function (row) {
+                return _ttAltLineRow(idx, teamName, game.away_team, game.home_team, row, row.line === mainLine);
+            }).join('');
+            return '<div class="sb-alt-tt-team" style="padding:8px 0;border-top:1px solid rgba(255,255,255,0.06);">' +
+                '<div class="sb-alt-tt-team-name" style="font-size:12px;font-weight:800;color:#f8fafc;margin-bottom:2px;">' +
+                    _ttHtmlEsc(teamName) + ' Team Total</div>' + rows + '</div>';
+        }
+        var awayCount = (ladder.away && ladder.away.lines.length) || 0;
+        var homeCount = (ladder.home && ladder.home.lines.length) || 0;
+        var mainCount = (mainAwayLine != null ? 1 : 0) + (mainHomeLine != null ? 1 : 0);
+        var hasAlt = (awayCount + homeCount) > mainCount;
+        if (!hasAlt) return '';
+        var body = teamBlock('away', game.away_team, mainAwayLine) + teamBlock('home', game.home_team, mainHomeLine);
+        if (!body) body = '<div class="sb-alt-tt-empty" style="font-size:12px;color:#94a3b8;padding:8px 0;">No alternate team totals available for this game.</div>';
+        return '<div class="sb-alt-tt" data-game-index="' + idx + '" style="margin:-6px 0 14px;padding:0 14px 6px;">' +
+            '<button type="button" class="sb-alt-tt-toggle" aria-expanded="false" onclick="window.TMR._ttToggleAlt(this)" ' +
+                'style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.16);border-radius:8px;color:#cbd5e1;font-weight:700;font-size:12px;padding:7px 12px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;">' +
+                'Alternate Team Totals <span class="sb-alt-tt-caret" aria-hidden="true">&#9662;</span></button>' +
+            '<div class="sb-alt-tt-body" hidden style="margin-top:8px;background:rgba(0,0,0,0.18);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:4px 12px;">' +
+                body + '</div></div>';
+    }
+
     function _ttButton(gameIndex, side, team, line, odds, awayTeam, homeTeam) {
         var hasReal = (line != null && odds != null);
         var lineTxt = hasReal
@@ -11568,6 +11664,30 @@ window.toggleSportFamily = function (family) {
             return;
         }
         try { if (window.TMR && typeof window.TMR._ttScrollToPickSlip === 'function') window.TMR._ttScrollToPickSlip(); } catch (_) {}
+    };
+
+    // Toggle the Alt Team Totals ladder open/closed (ALT_TEAM_TOTALS_20260529).
+    window.TMR._ttToggleAlt = function (btn) {
+        try {
+            var wrap = btn.closest('.sb-alt-tt');
+            if (!wrap) return;
+            var body = wrap.querySelector('.sb-alt-tt-body');
+            if (!body) return;
+            var opening = body.hasAttribute('hidden');
+            if (opening) {
+                body.removeAttribute('hidden');
+                btn.setAttribute('aria-expanded', 'true');
+                wrap.classList.add('is-open');
+                var caret = btn.querySelector('.sb-alt-tt-caret');
+                if (caret) caret.innerHTML = '&#9652;';
+            } else {
+                body.setAttribute('hidden', '');
+                btn.setAttribute('aria-expanded', 'false');
+                wrap.classList.remove('is-open');
+                var caret2 = btn.querySelector('.sb-alt-tt-caret');
+                if (caret2) caret2.innerHTML = '&#9662;';
+            }
+        } catch (_) {}
     };
 
     // After selectGameBet runs, jump the activated #pickDetails into view.
@@ -11966,6 +12086,15 @@ window.toggleSportFamily = function (family) {
             var ttGroup = groups.find(function (g) { return g && g.key === 'team_totals'; });
             var items = (ttGroup && Array.isArray(ttGroup.items)) ? ttGroup.items : [];
             var split = _ttSplitItems(game, items);
+            // Gather every team-total-pattern group (team_totals + any
+            // alt_team_totals variant) for the alternate-lines ladder.
+            var allTtItems = [];
+            groups.forEach(function (g) {
+                if (g && /team[_ -]?total/.test(String(g.key || '').toLowerCase())) {
+                    (Array.isArray(g.items) ? g.items : []).forEach(function (it) { allTtItems.push(it); });
+                }
+            });
+            var ttLadder = _ttCollectLines(game, allTtItems);
             var awayHasReal = split.away.over || split.away.under;
             var homeHasReal = split.home.over || split.home.under;
             var hasAny = awayHasReal || homeHasReal;
@@ -12017,6 +12146,13 @@ window.toggleSportFamily = function (family) {
                         _ttButton(idx, 'under', game.home_team, homeUnder.line, homeUnder.odds, game.away_team, game.home_team)
                     ]
                 });
+                // Append the expandable Alt Team Totals ladder (real feed lines
+                // only). Returns '' when no alternates beyond the main number.
+                var mainAwayLine = (split.away.over && split.away.over.line != null) ? Number(split.away.over.line)
+                    : (split.away.under && split.away.under.line != null ? Number(split.away.under.line) : null);
+                var mainHomeLine = (split.home.over && split.home.over.line != null) ? Number(split.home.over.line)
+                    : (split.home.under && split.home.under.line != null ? Number(split.home.under.line) : null);
+                html += _ttAltPanel(idx, game, ttLadder, mainAwayLine, mainHomeLine);
             }
         });
 
