@@ -163,6 +163,69 @@
         `;
     }
 
+    // May 29, 2026 — auth-hydration flash fix.
+    // Returns true when auth credentials exist in storage. If so, the user IS
+    // logged in; the user object is just still resolving (async /auth/me, which
+    // can be slow on a cold backend). We must NOT show "Log In / Join Free" in
+    // that window — that is the persistent-login regression users reported.
+    function hasAuthTokens() {
+        const keys = [
+            "trustmyrecord_token", "accessToken", "access_token", "token", "tmr_token",
+            "trustmyrecord_refresh_token", "refreshToken", "refresh_token", "tmr_refresh_token"
+        ];
+        try {
+            for (const key of keys) {
+                if (localStorage.getItem(key)) return true;
+            }
+        } catch (error) {}
+        try {
+            if (window.api && typeof window.api.isLoggedIn === "function" && window.api.isLoggedIn()) {
+                return true;
+            }
+        } catch (error) {}
+        return false;
+    }
+
+    // Neutral placeholder shown while a known session hydrates. Carries the
+    // tmr-global-nav__user class so cleanupNavActions does not scrub it, and
+    // never renders login buttons.
+    function buildPendingActions() {
+        return `
+            <span class="tmr-user-chip-wrap">
+                <span class="tmr-global-nav__user tmr-user-menu-trigger" data-tmr-auth-pending aria-busy="true" aria-label="Loading account" style="opacity:.55;pointer-events:none;">
+                    <span class="tmr-global-nav__user-avatar" style="width:32px;height:32px;border-radius:50%;background:rgba(148,163,184,.35);display:inline-block;"></span>
+                </span>
+            </span>
+        `;
+    }
+
+    let authHydrationStarted = false;
+    function hydrateAuthThenRerender() {
+        if (authHydrationStarted) return;
+        authHydrationStarted = true;
+        // auth-persistent.js normally restores the backend session and fires
+        // tmr-auth-changed. This is a self-contained safety net for pages where
+        // that path is slow or absent: pull the user, persist it, re-render.
+        try {
+            if (window.api && typeof window.api.getCurrentUser === "function") {
+                Promise.resolve(window.api.getCurrentUser())
+                    .then((data) => {
+                        const user = data && (data.user || data);
+                        if (user && (user.username || user.email)) {
+                            try { localStorage.setItem("tmr_current_user", JSON.stringify(user)); } catch (error) {}
+                        }
+                    })
+                    .catch(() => {})
+                    .finally(() => {
+                        authHydrationStarted = false;
+                        renderActions();
+                    });
+                return;
+            }
+        } catch (error) {}
+        authHydrationStarted = false;
+    }
+
     function buildLoggedInActions(user) {
         const username = String(user.username || user.handle || user.slug || user.displayName || user.display_name || user.email || "user");
         const displayName = String(user.displayName || user.display_name || user.name || user.username || user.handle || user.email || "User");
@@ -390,7 +453,15 @@
     function renderActions() {
         if (!actions) return;
         const user = getSessionUser();
-        actions.innerHTML = user ? buildLoggedInActions(user) : buildLoggedOutActions();
+        if (user) {
+            actions.innerHTML = buildLoggedInActions(user);
+        } else if (hasAuthTokens()) {
+            // Logged in, user object still resolving — never flash logged-out.
+            actions.innerHTML = buildPendingActions();
+            hydrateAuthThenRerender();
+        } else {
+            actions.innerHTML = buildLoggedOutActions();
+        }
         cleanupNavActions();
         wireUserMenuTrigger();
     }
