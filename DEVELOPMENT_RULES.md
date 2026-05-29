@@ -1,5 +1,44 @@
 # TrustMyRecord Development Rules
 
+## Public leaderboard style (May 28, 2026) - HARD RULE (PERMANENT)
+Any public-facing ranking / leaderboard table on TrustMyRecord (handicappers directory,
+contest leaderboards, future props/futures boards, gaming standings) MUST follow the same
+minimal premium pattern that `/handicappers/` now ships. The reference implementation is
+`handicappers/index.html` under the marker comment `HANDICAPPERS LEADERBOARD STYLE`
+(promoted from `/handicappers/preview/` v7b on 2026-05-28, commit `e206345e`).
+
+Required pattern:
+1. **Hero title is plain text only.** Solid near-white (`#f6fbff`) H1, no `background-clip:
+   text` gradient mask, no radial-gradient glow behind the title, no left-edge accent stripe.
+2. **Row chrome is minimal.** Rows separate via a single 1px `rgba(148,163,184,0.07)` bottom
+   border. No per-row background gradient, no zebra striping, no individual row card boxes.
+3. **Stat cells are plain text by default.** Record, Total picks, Win %, and Last active
+   are unstyled text-color values. NEVER box them in pills or bordered chips.
+4. **Color is the only signal for win/loss-direction stats.** Units, ROI, and Current streak
+   use `is-positive` -> `#6de78f` text and `is-negative` -> `#ff8084` text. Background must
+   stay transparent and border must stay 0 (no green/red pill chips).
+5. **Activity column is one line.** Use `white-space: nowrap` on `[data-label="Last active"]`
+   and keep the action column wide enough that "Last pick: NN days ago" never wraps.
+6. **Right-side action area is two tiny text links.** Primary "Profile" + tiny chevron, plus
+   a smaller "Picks" ghost link. NEVER repeat a bright teal pill button down every row -
+   that turns the leaderboard into a control panel.
+7. **Rank chips stay subtle.** 28x28 px pill, neutral gray for rows 4+, gold/silver/bronze
+   gradients reserved for ranks 1/2/3.
+8. **Filter toolbar is non-sticky.** A sticky toolbar covers the first row on scroll; keep
+   `.hm-controls { position: static; margin-bottom: 18px }` so the first row is reachable.
+9. **Data layer is untouchable.** Promotion changed only CSS overrides + JS-injected action
+   links + rank pseudo-element. `static/js/backend-api.js`, `stats-engine.js`,
+   `social-system.js`, the renderer, and autograder behavior MUST stay unchanged.
+10. **Real data only.** No invented users, records, streaks, or activity. Empty-state
+    leader card stays compact (`max-width: 280px`, `grid-column: auto`), never a full-width
+    block.
+
+Reference markers in the file: `HANDICAPPERS LEADERBOARD STYLE`, `STAT CELLS - minimal:
+plain text by default`, `ACTION AREA - minimal text links, no pill`. When porting this
+pattern to a new leaderboard surface, copy the override block verbatim and remap the data
+attributes to match the new row schema (`[data-label="..."]`).
+
+
 ## Public Ledger settled-result coloring (May 28, 2026) — HARD RULE (PERMANENT)
 Any public-facing ledger / pick-history / record table on TrustMyRecord MUST color settled results so a visitor can tell wins from losses at a glance, regardless of horizontal scroll position. Required pattern:
 - **Settled win** → green (text + pill badge + subtle row tint + left-rail accent).
