@@ -1175,6 +1175,45 @@
             font-size: 0.86rem !important;
         }
 
+        /* ACTION AREA v8 - single subtle chevron, no repeated text labels */
+        .hm-action-btn--chevron {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 999px;
+            color: #6f8aa8;
+            font-size: 1rem;
+            font-weight: 900;
+            line-height: 1;
+            text-decoration: none;
+            background: transparent;
+            border: 1px solid rgba(148,163,184,0.16);
+            transition: color 0.12s ease, border-color 0.12s ease, background 0.12s ease;
+        }
+        .hm-action-btn--chevron:hover {
+            color: #ffffff;
+            border-color: rgba(45,212,191,0.5);
+            background: rgba(45,212,191,0.08);
+        }
+        /* Shrink the action column footprint now that only one chevron lives in it */
+        .hm-row {
+            grid-template-columns:
+                48px
+                minmax(220px, 1.6fr)
+                minmax(86px, 0.5fr)
+                minmax(84px, 0.46fr)
+                minmax(84px, 0.46fr)
+                minmax(84px, 0.46fr)
+                minmax(74px, 0.34fr)
+                minmax(80px, 0.4fr)
+                minmax(180px, 0.94fr)
+                52px !important;
+        }
+        .hm-actions { max-width: 44px !important; }
+        .hm-head .hm-head-actions { border: 0 !important; padding: 0 !important; }
+
         /* ACTION AREA - minimal text links, no pill, no glow */
         .hm-actions {
             display: flex;
@@ -1349,7 +1388,7 @@
             <div class="hm-section-head">
                 <div>
                     <h2>Leaderboard</h2>
-                    <p>Featured leaders require at least 20 graded picks, recent graded activity, and positive net units. The leaderboard table below shows every member with at least <span id="hmMinPicksLabel">1</span> locked pick.</p>
+                    <p>Featured leaders require at least 20 graded picks, recent graded activity, and positive net units. Rankings favor verified volume, profitability, ROI, and recent activity - small samples (under 20 graded picks) are weighted down so a single-pick spike will not dominate. The leaderboard table below shows every member with at least <span id="hmMinPicksLabel">1</span> locked pick.</p>
                 </div>
                 <span class="hm-production-note"><strong id="hmVisibleMembers" class="hm-stat-loading" aria-busy="true">--</strong> qualified members</span>
             </div>
@@ -2448,12 +2487,22 @@
             return Math.max(total, gradedCount(member)) >= LEADERBOARD_MIN_PICKS;
         }
 
+        // Volume-shrunk sort scoring (v8): low-graded-volume members are pulled
+        // toward the neutral baseline so a 1-0 spike does not dominate the table.
+        // Ramp = min(1, gradedCount / 20). units/roi shrink toward 0; winRate
+        // shrinks toward the 50% prior. Raw data, record math, and autograder
+        // outputs are unchanged - this only affects the default sort order.
+        const RANK_SHRINK_THRESHOLD = 20;
+        function rankShrinkRamp(member) {
+            const g = gradedCount(member);
+            return Math.min(1, g / RANK_SHRINK_THRESHOLD);
+        }
         const SORT_KEYS = {
             username: m => String(m.username || '').toLowerCase(),
             record: m => Number(m.stats.wins || 0),
-            units: m => Number(m.stats.units || 0),
-            roi: m => m.stats.roi == null ? -Infinity : Number(m.stats.roi),
-            winRate: m => m.stats.winRate == null ? -Infinity : Number(m.stats.winRate),
+            units: m => Number(m.stats.units || 0) * rankShrinkRamp(m),
+            roi: m => m.stats.roi == null ? -Infinity : Number(m.stats.roi) * rankShrinkRamp(m),
+            winRate: m => m.stats.winRate == null ? -Infinity : 50 + (Number(m.stats.winRate) - 50) * rankShrinkRamp(m),
             totalPicks: m => Number(m.stats.totalPicks || 0),
             streak: m => Number(m.stats.currentStreak || 0),
             active: m => getActivityTime(m)
@@ -2852,7 +2901,7 @@
             head.insertBefore(rank, head.firstChild);
             var act = document.createElement("div");
             act.className = "hm-head-actions";
-            act.textContent = "Actions";
+            act.textContent = "";
             head.appendChild(act);
             head.dataset.previewEnhanced = "1";
         }
@@ -2864,8 +2913,7 @@
             var actions = document.createElement("div");
             actions.className = "hm-actions";
             actions.innerHTML =
-                "<a class=\"hm-action-btn hm-action-btn--primary\" href=\"/profile/?user=" + safe + "\" aria-label=\"View " + user + " profile\">Profile</a>" +
-                "<a class=\"hm-action-btn hm-action-btn--ghost\" href=\"/profile/?user=" + safe + "#picks\" aria-label=\"View " + user + " picks\">Picks</a>";
+                "<a class=\"hm-action-btn hm-action-btn--chevron\" href=\"/profile/?user=" + safe + "\" aria-label=\"View " + user + " profile\" title=\"View profile\">›</a>";
             actions.addEventListener("click", function(e){ e.stopPropagation(); });
             row.appendChild(actions);
         }
