@@ -59,6 +59,7 @@
         var results = [];
         for (var i = 0; i < oddsArray.length; i++) {
             var o = oddsArray[i];
+            if (!o) continue; // some ESPN feeds (Brazil, friendlies) include null odds entries
             var provName = (o.provider && o.provider.name) || 'ESPN';
             var provKey = provName.toLowerCase().replace(/\s+/g, '');
             var markets = [];
@@ -372,7 +373,9 @@
                     if (status.id === '3' || status.id === '6' || stateStr === 'post' || stateStr === 'cancel') continue;
                     var gameStart = new Date(evt.date || comp.date);
                     if (isNaN(gameStart.getTime()) || gameStart.getTime() <= now) continue; // upcoming only
-                    var bookmakers = window.TMR.parseEspnOdds(comp.odds || [], homeTeam, awayTeam);
+                    var bookmakers = [];
+                    try { bookmakers = window.TMR.parseEspnOdds(comp.odds || [], homeTeam, awayTeam); }
+                    catch (oddsErr) { bookmakers = []; } // never let one bad game's odds drop the whole league
                     var ho = homeComp.team || {}, ao = awayComp.team || {};
                     games.push({
                         id: 'espn_' + evt.id,
