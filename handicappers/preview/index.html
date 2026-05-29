@@ -1094,7 +1094,7 @@
                 minmax(74px, 0.34fr)
                 minmax(80px, 0.4fr)
                 minmax(168px, 0.84fr)
-                minmax(124px, 0.54fr) !important;
+                minmax(96px, 0.42fr) !important;
             column-gap: 16px !important;
             padding: 10px 20px !important;
         }
@@ -1150,18 +1150,17 @@
         .hm-name strong { font-size: 0.98rem !important; color: #f6fbff !important; }
         .hm-name span { font-size: 0.78rem !important; color: #88a0bf !important; font-weight: 700 !important; }
 
-        /* STAT PILLS - smaller, lighter borders, restrained color */
+        /* STAT CELLS - minimal: plain text by default; only Units/ROI/Streak get color */
         .hm-member-row .hm-stat {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 4px 9px;
-            border-radius: 7px;
-            background: transparent;
-            border: 1px solid rgba(148,163,184,0.14);
-            color: #dfeaf8;
-            font-size: 0.92rem;
-            font-weight: 800;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            color: #dde8f6 !important;
+            font-size: 0.93rem;
+            font-weight: 700;
             letter-spacing: 0;
             white-space: nowrap !important;
             justify-self: center;
@@ -1169,88 +1168,93 @@
             max-width: 100%;
             box-shadow: none !important;
         }
+        /* Color-only signal for positive / negative stats (text only, no chrome) */
         .hm-member-row .hm-stat.is-positive {
-            color: #7ee49a !important;
-            background: rgba(34,197,94,0.08) !important;
-            border-color: rgba(34,197,94,0.3) !important;
+            color: #6de78f !important;
+            background: transparent !important;
+            border: 0 !important;
         }
         .hm-member-row .hm-stat.is-negative {
-            color: #ff8b8b !important;
-            background: rgba(239,68,68,0.07) !important;
-            border-color: rgba(239,68,68,0.28) !important;
+            color: #ff8084 !important;
+            background: transparent !important;
+            border: 0 !important;
         }
         .hm-member-row .hm-stat.is-muted,
         .hm-member-row .hm-stat.is-neutral {
             color: #93a8c0 !important;
             background: transparent !important;
-            border-color: rgba(148,163,184,0.16) !important;
+            border: 0 !important;
         }
-        /* Record + Picks: no boxed background, just text */
+        /* Record + Picks + Win% + Activity stay neutral plain text */
         .hm-member-row .hm-stat[data-label="Record"],
-        .hm-member-row .hm-stat[data-label="Total picks"] {
-            color: #eaf2fc;
-            background: transparent;
-            border-color: rgba(148,163,184,0.14);
+        .hm-member-row .hm-stat[data-label="Total picks"],
+        .hm-member-row .hm-stat[data-label="Win %"] {
+            color: #e7eef9 !important;
+            font-weight: 700 !important;
         }
-        /* Activity: subtle text, no pill background */
         .hm-member-row .hm-stat[data-label="Last active"] {
             white-space: nowrap !important;
-            background: transparent;
-            border: 0;
-            color: #93b8d2;
-            font-weight: 700;
-            font-size: 0.88rem;
-            padding: 0;
+            color: #8aa3bf !important;
+            font-weight: 600 !important;
+            font-size: 0.86rem !important;
         }
 
-        /* ACTION AREA - one slim teal pill + tiny ghost link, sized to never dominate the row */
+        /* ACTION AREA - minimal text links, no pill, no glow */
         .hm-actions {
             display: flex;
-            flex-direction: column;
-            gap: 3px;
+            flex-direction: row;
+            gap: 10px;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-end;
             min-width: 0;
-            max-width: 116px;
-            margin: 0 auto;
+            max-width: 96px;
+            margin-left: auto;
+            padding-right: 4px;
         }
         .hm-action-btn--primary {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            padding: 6px 14px;
-            min-height: 28px;
-            min-width: 104px;
-            border-radius: 999px;
-            font-size: 0.7rem;
-            font-weight: 900;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
+            justify-content: flex-end;
+            padding: 4px 0;
+            min-height: 0;
+            min-width: 0;
+            border-radius: 0;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0;
+            text-transform: none;
             white-space: nowrap;
             cursor: pointer;
-            color: #062018;
-            background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 100%);
-            border: 0;
-            box-shadow: 0 4px 10px rgba(45,212,191,0.18);
+            color: #d6e7fb;
+            background: transparent !important;
+            border: 0 !important;
+            box-shadow: none !important;
             text-decoration: none;
-            transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease;
+            transition: color 0.12s ease;
+        }
+        .hm-action-btn--primary::after {
+            content: " ›";
+            margin-left: 4px;
+            color: #5eead4;
+            font-weight: 900;
         }
         .hm-action-btn--primary:hover {
-            transform: translateY(-1px);
-            background: linear-gradient(135deg, #99f6e4 0%, #2dd4bf 100%);
-            box-shadow: 0 8px 16px rgba(45,212,191,0.28);
+            color: #ffffff !important;
+            background: transparent !important;
+            transform: none !important;
+            box-shadow: none !important;
         }
         .hm-action-btn--ghost {
             display: inline-flex;
             align-items: center;
-            justify-content: center;
-            padding: 2px 4px;
+            justify-content: flex-end;
+            padding: 4px 0;
             background: transparent;
             border: 0;
-            color: #8aabd2;
-            font-size: 0.68rem;
+            color: #7a93b5;
+            font-size: 0.74rem;
             font-weight: 700;
-            letter-spacing: 0.04em;
+            letter-spacing: 0;
             text-transform: none;
             text-decoration: none;
             cursor: pointer;
@@ -1332,8 +1336,9 @@
             .hm-member-row .hm-stat.is-muted,
             .hm-member-row .hm-stat.is-neutral { color: #a8bccf !important; }
             .hm-member-row .hm-stat[data-label="Last active"] { color: #c8e9e1 !important; font-size: 0.95rem; }
-            .hm-action-btn--primary { flex: 1; min-height: 42px; font-size: 0.78rem; min-width: 0; }
-            .hm-action-btn--ghost { flex: 0 0 auto; font-size: 0.82rem; padding: 6px 8px; }
+            .hm-member-row > .hm-actions { justify-content: flex-end !important; padding-top: 4px; }
+            .hm-action-btn--primary { font-size: 0.86rem; padding: 6px 0; color: #ffffff; }
+            .hm-action-btn--ghost { font-size: 0.78rem; padding: 6px 0; }
         }
     </style>
 </head>
@@ -2889,8 +2894,8 @@
             var actions = document.createElement("div");
             actions.className = "hm-actions";
             actions.innerHTML =
-                "<a class=\"hm-action-btn hm-action-btn--primary\" href=\"/profile/?user=" + safe + "\" aria-label=\"View " + user + " profile\">View Profile</a>" +
-                "<a class=\"hm-action-btn hm-action-btn--ghost\" href=\"/profile/?user=" + safe + "#picks\" aria-label=\"View " + user + " picks\">View Picks</a>";
+                "<a class=\"hm-action-btn hm-action-btn--primary\" href=\"/profile/?user=" + safe + "\" aria-label=\"View " + user + " profile\">Profile</a>" +
+                "<a class=\"hm-action-btn hm-action-btn--ghost\" href=\"/profile/?user=" + safe + "#picks\" aria-label=\"View " + user + " picks\">Picks</a>";
             actions.addEventListener("click", function(e){ e.stopPropagation(); });
             row.appendChild(actions);
         }
