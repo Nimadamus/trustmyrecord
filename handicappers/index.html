@@ -7,7 +7,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Handicappers | TrustMyRecord</title>
+    <title>Find Verified Handicappers | TrustMyRecord</title>
     <meta name="description" content="Discover TrustMyRecord handicappers, compare verified records, filter by sport, follow members, and open public profiles.">
     <meta property="og:title" content="Handicappers | TrustMyRecord">
     <meta property="og:description" content="Search members, compare records, units, ROI, win rate, streaks, primary sports, and recent activity.">
@@ -352,8 +352,9 @@
         .hm-leader-card span.is-negative { color: #ff7d7d; }
 
         .hm-leader-card--empty {
-            grid-column: 1 / -1;
-            min-height: 104px;
+            grid-column: auto;
+            max-width: 280px;
+            min-height: 100px;
             border-style: dashed;
             background: rgba(8, 15, 27, 0.72);
         }
@@ -528,12 +529,12 @@
         }
 
         .hm-table {
-            min-width: 1110px;
+            min-width: 1080px;
         }
 
         .hm-row {
             display: grid;
-            grid-template-columns: minmax(230px, 1.5fr) minmax(108px, 0.58fr) minmax(98px, 0.5fr) minmax(98px, 0.5fr) minmax(98px, 0.5fr) minmax(82px, 0.4fr) minmax(94px, 0.46fr) minmax(180px, 0.88fr);
+            grid-template-columns: minmax(230px, 1.5fr) minmax(108px, 0.58fr) minmax(98px, 0.5fr) minmax(98px, 0.5fr) minmax(98px, 0.5fr) minmax(82px, 0.4fr) minmax(94px, 0.46fr) minmax(150px, 0.74fr);
             column-gap: 18px;
             row-gap: 12px;
             align-items: center;
@@ -724,17 +725,11 @@
             min-width: 108px;
         }
 
-        /* Active column: keep "Last pick: N days ago" on one line on desktop */
+        /* Active column: allow longer activity text to wrap instead of being clipped */
         .hm-row > .hm-stat:last-child {
-            white-space: nowrap;
+            white-space: normal;
             line-height: 1.25;
             min-width: 0;
-        }
-
-        @media (max-width: 720px) {
-            .hm-row > .hm-stat:last-child {
-                white-space: normal;
-            }
         }
 
         .hm-stat.is-positive { color: #8ef3b2; }
@@ -900,6 +895,427 @@
             }
 
         }
+
+        /* ============================================================
+           HANDICAPPERS LEADERBOARD STYLE (premium minimal, v7b promoted from preview).
+           Approved 2026-05-28. Data layer (backend-api, stats-engine, autograder) unchanged.
+        ============================================================ */
+
+        /* PAGE: tighter top, less stretched */
+        .hm-page { padding: 22px 0 56px !important; }
+
+        /* HERO */
+        .hm-hero {
+            padding: 36px 36px 32px !important;
+            margin-bottom: 22px !important;
+            gap: 30px !important;
+            border-radius: 22px !important;
+            background: linear-gradient(165deg, #0d1a2c 0%, #060d18 100%) !important;
+            border: 1px solid rgba(148,163,184,0.18) !important;
+            box-shadow: 0 30px 70px rgba(0,0,0,0.42) !important;
+        }
+        /* Kill the original teal/gold left-edge accent stripe so nothing sits behind the title. */
+        .hm-hero::before { display: none !important; }
+        .hm-hero h1 {
+            font-size: clamp(2.3rem, 4.6vw, 4rem) !important;
+            background: none !important;
+            background-image: none !important;
+            -webkit-background-clip: border-box !important;
+            background-clip: border-box !important;
+            -webkit-text-fill-color: #f6fbff !important;
+            color: #f6fbff !important;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.35) !important;
+        }
+        .hm-hero p { color: #c4d6ea !important; font-size: 1rem !important; }
+        .hm-kicker {
+            background: rgba(212,167,44,0.12) !important;
+            border-color: rgba(212,167,44,0.4) !important;
+            color: #f3c869 !important;
+            font-size: 0.7rem !important;
+        }
+        .hm-kicker::before { background: #f3c869 !important; box-shadow: 0 0 8px #f3c869 !important; }
+
+        /* HERO COUNTS */
+        .hm-counts { gap: 14px !important; }
+        .hm-count {
+            border: 1px solid rgba(148,163,184,0.22) !important;
+            background:
+                linear-gradient(160deg, rgba(45,212,191,0.07), rgba(255,255,255,0.0)),
+                rgba(11,21,38,0.84) !important;
+            border-radius: 18px !important;
+        }
+        .hm-count--primary {
+            border: 1px solid rgba(45,212,191,0.5) !important;
+            background:
+                radial-gradient(380px 220px at 0% 0%, rgba(45,212,191,0.28), transparent 65%),
+                linear-gradient(140deg, rgba(45,212,191,0.14), rgba(11,21,38,0.96)) !important;
+            box-shadow: 0 28px 50px rgba(45,212,191,0.18) !important;
+        }
+        .hm-count strong { font-size: 1.85rem !important; }
+        .hm-count span { letter-spacing: 0.13em !important; color: #9fb0c6 !important; }
+
+        /* SECTION HEAD */
+        .hm-section-head { margin: 24px 0 14px !important; }
+        .hm-section-head h2 {
+            font-size: clamp(1.55rem, 2.4vw, 2.1rem) !important;
+            background: linear-gradient(135deg, #ffffff 0%, #9ffcf0 100%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* FEATURED LEADER CARDS */
+        .hm-leader-card {
+            min-height: 148px !important;
+            padding: 18px 18px 18px 22px !important;
+            border-radius: 18px !important;
+            border: 1px solid rgba(148,163,184,0.22) !important;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.0)),
+                rgba(11,20,36,0.92) !important;
+        }
+        .hm-leader-card::before { width: 4px !important; opacity: 1 !important; }
+        .hm-leader-card b { font-size: 0.7rem !important; letter-spacing: 0.18em !important; }
+        .hm-leader-card strong { font-size: 1.3rem !important; margin-top: 14px !important; }
+
+        /* TOOLBAR (search/sport/wager/sort) - non-sticky so it cannot cover the first row */
+        .hm-controls {
+            position: static;
+            margin-bottom: 18px !important;
+            border-radius: 16px !important;
+            padding: 14px !important;
+            background:
+                linear-gradient(135deg, rgba(45,212,191,0.07), rgba(96,165,250,0.05)),
+                rgba(7,13,24,0.96) !important;
+            border: 1px solid rgba(45,212,191,0.28) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 18px 36px rgba(0,0,0,0.36) !important;
+        }
+        .hm-field label {
+            color: #9ffcf0 !important;
+            font-size: 0.66rem !important;
+            letter-spacing: 0.14em !important;
+            font-weight: 900 !important;
+        }
+        .hm-input, .hm-select {
+            min-height: 46px !important;
+            border-radius: 12px !important;
+            background: linear-gradient(180deg, #0a1525, #07101d) !important;
+            border-color: rgba(148,163,184,0.28) !important;
+            font-weight: 700 !important;
+            color: #eef6ff !important;
+        }
+        .hm-input:focus, .hm-select:focus {
+            border-color: #5eead4 !important;
+            box-shadow: 0 0 0 3px rgba(45,212,191,0.18) !important;
+        }
+        .hm-input::placeholder { color: #6a7d96 !important; }
+        /* Search-icon prefix */
+        .hm-controls .hm-field:first-child { position: relative; }
+        .hm-controls .hm-field:first-child .hm-input { padding-left: 38px !important; }
+        .hm-controls .hm-field:first-child::after {
+            content: "";
+            position: absolute;
+            left: 12px;
+            bottom: 14px;
+            width: 14px; height: 14px;
+            border: 2px solid #5eead4;
+            border-radius: 50%;
+            box-shadow: 10px 10px 0 -7px #5eead4;
+            transform: rotate(45deg);
+            pointer-events: none;
+            opacity: 0.9;
+        }
+
+        /* TABLE WRAP - airy, no heavy outer frame */
+        .hm-table-wrap {
+            border-radius: 14px !important;
+            border: 1px solid rgba(148,163,184,0.12) !important;
+            background: rgba(7,13,24,0.55) !important;
+            box-shadow: none !important;
+        }
+        .hm-table { min-width: 1240px !important; }
+
+        /* COLUMN HEADER - subtle, smaller, just a label row */
+        .hm-head {
+            min-height: 42px !important;
+            background: transparent !important;
+            color: #8a9fbb !important;
+            font-size: 0.64rem !important;
+            letter-spacing: 0.16em !important;
+            border-bottom: 1px solid rgba(148,163,184,0.12) !important;
+        }
+        .hm-head .hm-sort { color: #8a9fbb !important; font-weight: 800 !important; padding: 4px 4px !important; }
+        .hm-head .hm-sort:hover { background: transparent !important; color: #e8f7ff !important; }
+        .hm-head .hm-sort[aria-sort="ascending"], .hm-head .hm-sort[aria-sort="descending"] { color: #9ffcf0 !important; }
+        .hm-head .hm-head-rank, .hm-head .hm-head-actions {
+            text-align: center;
+            padding: 0 4px;
+            color: #8a9fbb;
+            font-weight: 800;
+            font-size: 0.64rem;
+            letter-spacing: 0.16em;
+        }
+        .hm-head .hm-head-rank { grid-column: 1; }
+
+        /* ROW GRID - airy, tighter, balanced */
+        .hm-row {
+            grid-template-columns:
+                48px
+                minmax(220px, 1.6fr)
+                minmax(86px, 0.5fr)
+                minmax(84px, 0.46fr)
+                minmax(84px, 0.46fr)
+                minmax(84px, 0.46fr)
+                minmax(74px, 0.34fr)
+                minmax(80px, 0.4fr)
+                minmax(168px, 0.84fr)
+                minmax(96px, 0.42fr) !important;
+            column-gap: 16px !important;
+            padding: 10px 20px !important;
+        }
+
+        /* RANK CHIP - smaller, more refined */
+        #hmRows { counter-reset: hm-rank; }
+        .hm-member-row { counter-increment: hm-rank; position: relative; }
+        .hm-member-row::before {
+            content: counter(hm-rank);
+            grid-column: 1;
+            align-self: center;
+            justify-self: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            height: 28px;
+            padding: 0 8px;
+            font-family: "Barlow","Inter",sans-serif;
+            font-size: 0.82rem;
+            font-weight: 900;
+            color: #9fb0c6;
+            background: rgba(148,163,184,0.07);
+            border: 1px solid rgba(148,163,184,0.18);
+            border-radius: 999px;
+            letter-spacing: 0.02em;
+            box-shadow: none;
+        }
+        .hm-member-row:nth-of-type(1)::before { color: #0b1424; background: linear-gradient(135deg, #fde68a, #d4a72c); border-color: #d4a72c; }
+        .hm-member-row:nth-of-type(2)::before { color: #0b1424; background: linear-gradient(135deg, #e2e8f0, #94a3b8); border-color: #94a3b8; }
+        .hm-member-row:nth-of-type(3)::before { color: #0b1424; background: linear-gradient(135deg, #fdba74, #b45309); border-color: #b45309; }
+
+        /* ROW BG + HOVER - airy, thin separator, no zebra, no per-row box */
+        .hm-member-row {
+            min-height: 66px !important;
+            background: transparent !important;
+            border-bottom: 1px solid rgba(148,163,184,0.07) !important;
+            transition: background 0.14s ease !important;
+        }
+        .hm-member-row:hover {
+            background: linear-gradient(180deg, rgba(45,212,191,0.05), rgba(45,212,191,0.01)) !important;
+        }
+        .hm-member-row:last-of-type { border-bottom: 0 !important; }
+
+        /* USER CELL - smaller avatar, restrained typography */
+        .hm-user { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .hm-avatar {
+            width: 44px !important; height: 44px !important;
+            border: 1px solid rgba(45,212,191,0.3) !important;
+            box-shadow: 0 0 0 2px rgba(45,212,191,0.06) !important;
+        }
+        .hm-avatar-link { width: 44px !important; height: 44px !important; }
+        .hm-name strong { font-size: 0.98rem !important; color: #f6fbff !important; }
+        .hm-name span { font-size: 0.78rem !important; color: #88a0bf !important; font-weight: 700 !important; }
+
+        /* STAT CELLS - minimal: plain text by default; only Units/ROI/Streak get color */
+        .hm-member-row .hm-stat {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            color: #dde8f6 !important;
+            font-size: 0.93rem;
+            font-weight: 700;
+            letter-spacing: 0;
+            white-space: nowrap !important;
+            justify-self: center;
+            min-width: 0 !important;
+            max-width: 100%;
+            box-shadow: none !important;
+        }
+        /* Color-only signal for positive / negative stats (text only, no chrome) */
+        .hm-member-row .hm-stat.is-positive {
+            color: #6de78f !important;
+            background: transparent !important;
+            border: 0 !important;
+        }
+        .hm-member-row .hm-stat.is-negative {
+            color: #ff8084 !important;
+            background: transparent !important;
+            border: 0 !important;
+        }
+        .hm-member-row .hm-stat.is-muted,
+        .hm-member-row .hm-stat.is-neutral {
+            color: #93a8c0 !important;
+            background: transparent !important;
+            border: 0 !important;
+        }
+        /* Record + Picks + Win% + Activity stay neutral plain text */
+        .hm-member-row .hm-stat[data-label="Record"],
+        .hm-member-row .hm-stat[data-label="Total picks"],
+        .hm-member-row .hm-stat[data-label="Win %"] {
+            color: #e7eef9 !important;
+            font-weight: 700 !important;
+        }
+        .hm-member-row .hm-stat[data-label="Last active"] {
+            white-space: nowrap !important;
+            color: #8aa3bf !important;
+            font-weight: 600 !important;
+            font-size: 0.86rem !important;
+        }
+
+        /* ACTION AREA - minimal text links, no pill, no glow */
+        .hm-actions {
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            align-items: center;
+            justify-content: flex-end;
+            min-width: 0;
+            max-width: 96px;
+            margin-left: auto;
+            padding-right: 4px;
+        }
+        .hm-action-btn--primary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 4px 0;
+            min-height: 0;
+            min-width: 0;
+            border-radius: 0;
+            font-size: 0.78rem;
+            font-weight: 800;
+            letter-spacing: 0;
+            text-transform: none;
+            white-space: nowrap;
+            cursor: pointer;
+            color: #d6e7fb;
+            background: transparent !important;
+            border: 0 !important;
+            box-shadow: none !important;
+            text-decoration: none;
+            transition: color 0.12s ease;
+        }
+        .hm-action-btn--primary::after {
+            content: " ›";
+            margin-left: 4px;
+            color: #5eead4;
+            font-weight: 900;
+        }
+        .hm-action-btn--primary:hover {
+            color: #ffffff !important;
+            background: transparent !important;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .hm-action-btn--ghost {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 4px 0;
+            background: transparent;
+            border: 0;
+            color: #7a93b5;
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 0;
+            text-transform: none;
+            text-decoration: none;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: color 0.12s ease;
+        }
+        .hm-action-btn--ghost:hover {
+            color: #ffffff;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        /* TRUST NOTES */
+        .hm-trust-notes { border-color: rgba(45,212,191,0.32) !important; border-radius: 14px !important; }
+        .hm-trust-note { background: rgba(7,13,24,0.84) !important; border-color: rgba(148,163,184,0.25) !important; }
+
+        /* PAGINATION CONTROLS */
+        .hm-leaderboard-controls {
+            border-radius: 14px !important;
+            border-color: rgba(45,212,191,0.22) !important;
+            background: rgba(7,13,24,0.84) !important;
+        }
+
+        /* MOBILE: premium card layout, strong label/value contrast */
+        @media (max-width: 720px) {
+            .hm-controls { position: static !important; }
+            .hm-row {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                grid-template-areas:
+                    "rank user"
+                    "s1 s2"
+                    "s3 s4"
+                    "s5 s6"
+                    "s7 s7"
+                    "act act" !important;
+                padding: 16px !important;
+                row-gap: 10px !important;
+                column-gap: 10px !important;
+                border-radius: 16px !important;
+                background:
+                    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.0)),
+                    rgba(11,20,36,0.9) !important;
+                border: 1px solid rgba(45,212,191,0.2) !important;
+            }
+            .hm-member-row::before { grid-area: rank; justify-self: start; align-self: center; }
+            .hm-member-row > .hm-user { grid-area: user; justify-self: end; align-items: center; }
+            .hm-member-row > .hm-stat[data-label="Record"] { grid-area: s1; }
+            .hm-member-row > .hm-stat[data-label="Units"] { grid-area: s2; }
+            .hm-member-row > .hm-stat[data-label="ROI"] { grid-area: s3; }
+            .hm-member-row > .hm-stat[data-label="Win %"] { grid-area: s4; }
+            .hm-member-row > .hm-stat[data-label="Total picks"] { grid-area: s5; }
+            .hm-member-row > .hm-stat[data-label="Current streak"] { grid-area: s6; }
+            .hm-member-row > .hm-stat[data-label="Last active"] { grid-area: s7; }
+            .hm-member-row > .hm-actions { grid-area: act; width: 100%; max-width: none; flex-direction: row; gap: 10px; align-items: center; }
+            .hm-member-row .hm-stat {
+                width: 100%;
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                justify-content: center !important;
+                gap: 4px;
+                padding: 11px 12px;
+                font-size: 1rem;
+                color: #ffffff !important;
+            }
+            /* Mobile: label ABOVE value via ::before injected by original mobile CSS */
+            .hm-member-row .hm-stat::before {
+                color: #f3c869 !important;
+                font-size: 0.6rem !important;
+                font-weight: 900 !important;
+                letter-spacing: 0.14em !important;
+                margin-bottom: 2px !important;
+                text-transform: uppercase !important;
+                display: block !important;
+            }
+            .hm-member-row .hm-stat.is-positive { color: #b9f3cc !important; }
+            .hm-member-row .hm-stat.is-negative { color: #ffc4c4 !important; }
+            .hm-member-row .hm-stat.is-muted,
+            .hm-member-row .hm-stat.is-neutral { color: #a8bccf !important; }
+            .hm-member-row .hm-stat[data-label="Last active"] { color: #c8e9e1 !important; font-size: 0.95rem; }
+            .hm-member-row > .hm-actions { justify-content: flex-end !important; padding-top: 4px; }
+            .hm-action-btn--primary { font-size: 0.86rem; padding: 6px 0; color: #ffffff; }
+            .hm-action-btn--ghost { font-size: 0.78rem; padding: 6px 0; }
+        }
     </style>
 </head>
 <body>
@@ -907,7 +1323,7 @@
         <section class="hm-hero">
             <div class="hm-hero-text">
                 <p class="hm-kicker">Member Discovery</p>
-                <h1>Handicappers</h1>
+                <h1>Find Verified Handicappers</h1>
                 <p>Discover members with real locked-pick activity, compare verified records, follow cappers, and open public pick histories.</p>
             </div>
             <div class="hm-counts" aria-label="Directory summary">
@@ -2421,6 +2837,50 @@
         init();
         setInterval(refreshMembers, 90000);
         document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshMembers(); });
+    })();
+    </script>
+
+    <script data-handi-preview-enhance="1">
+    (function(){
+        // Add Rank + Actions header cells once, after the existing 8 sort headers.
+        function ensureHeader(){
+            var head = document.querySelector(".hm-table .hm-head");
+            if (!head || head.dataset.previewEnhanced === "1") return;
+            var rank = document.createElement("div");
+            rank.className = "hm-head-rank";
+            rank.textContent = "#";
+            head.insertBefore(rank, head.firstChild);
+            var act = document.createElement("div");
+            act.className = "hm-head-actions";
+            act.textContent = "Actions";
+            head.appendChild(act);
+            head.dataset.previewEnhanced = "1";
+        }
+        function enhanceRow(row){
+            if (!row.classList.contains("hm-member-row")) return;
+            if (row.querySelector(".hm-actions")) return;
+            var user = row.getAttribute("data-username") || "";
+            var safe = encodeURIComponent(user);
+            var actions = document.createElement("div");
+            actions.className = "hm-actions";
+            actions.innerHTML =
+                "<a class=\"hm-action-btn hm-action-btn--primary\" href=\"/profile/?user=" + safe + "\" aria-label=\"View " + user + " profile\">Profile</a>" +
+                "<a class=\"hm-action-btn hm-action-btn--ghost\" href=\"/profile/?user=" + safe + "#picks\" aria-label=\"View " + user + " picks\">Picks</a>";
+            actions.addEventListener("click", function(e){ e.stopPropagation(); });
+            row.appendChild(actions);
+        }
+        function enhanceAll(){
+            ensureHeader();
+            document.querySelectorAll(".hm-member-row").forEach(enhanceRow);
+        }
+        // Initial pass + re-run whenever the row container changes.
+        document.addEventListener("DOMContentLoaded", function(){
+            enhanceAll();
+            var target = document.getElementById("hmRows");
+            if (target) {
+                new MutationObserver(enhanceAll).observe(target, { childList: true, subtree: false });
+            }
+        });
     })();
     </script>
 </body>
