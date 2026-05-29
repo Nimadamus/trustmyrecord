@@ -491,7 +491,10 @@
                 const username = String(user.username || user.handle || user.slug || user.displayName || user.display_name || user.email || "account");
                 const display = String(user.displayName || user.display_name || user.name || user.username || user.handle || "My Account");
                 const href = "/profile/?user=" + encodeURIComponent(username);
-                const next = '<a class="tmr-premium-login auth-link" href="' + href + '">' + escapeHtml(display) + '</a>'
+                const avatar = getUserAvatar(user);
+                const next = '<a class="tmr-premium-login auth-link" href="' + href + '" style="display:inline-flex;align-items:center;gap:8px;">'
+                           + '<img class="tmr-premium-avatar" src="' + avatar + '" alt="' + escapeHtml(display) + ' avatar" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex:0 0 auto;border:1px solid rgba(148,163,184,.45);">'
+                           + '<span>' + escapeHtml(display) + '</span></a>'
                            + '<a class="tmr-premium-signup auth-link" href="' + href + '">My Record</a>';
                 if (box.getAttribute("data-tmr-auth-state") !== "in:" + username) {
                     box.innerHTML = next;
