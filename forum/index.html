@@ -1520,6 +1520,7 @@ body.tmr-forum-live-redesign .fcrumb .sep {
 <script src="/static/js/backend-api.js?v=20260423a"></script>
 <script src="/static/js/auth-persistent.js?v=20260424a"></script>
 <script src="/static/js/notifications.js?v=20260423a"></script>
+<script src="/static/js/forum-notification-bell.js?v=20260530bell1"></script>
 <script>
 // =====================================================================
 // 2+2-style render overrides (Apr 30 2026)
@@ -1753,7 +1754,7 @@ function authorSource(post) {
 
 function formatCount(value, fallback) {
     var n = numericValue(value);
-    return n == null ? (fallback == null ? 'Not available' : fallback) : String(n);
+    return n == null ? (fallback == null ? '0' : fallback) : String(n);
 }
 
 function renderAuthorPanel(post) {
@@ -1930,10 +1931,15 @@ async function enrichForumAuthors(thread, posts) {
             var threadData = await api.request('/forum/users/' + encodeURIComponent(username) + '/threads?limit=100');
             if (Array.isArray(threadData.threads)) threadCount = threadData.threads.length;
         } catch (e) {}
-        forumAuthorCache[key] = Object.assign({}, profile, {
-            user_thread_count: numericValue(profile.user_thread_count) != null ? profile.user_thread_count : threadCount,
-            user_post_count: numericValue(profile.user_post_count)
-        });
+        var cacheEntry = Object.assign({}, profile);
+        // Only set count fields when we have a real number, so we never clobber
+        // the accurate per-post counts the forum API already attaches to each row.
+        var resolvedThreadCount = numericValue(profile.user_thread_count) != null ? numericValue(profile.user_thread_count) : threadCount;
+        if (numericValue(resolvedThreadCount) != null) cacheEntry.user_thread_count = numericValue(resolvedThreadCount);
+        else delete cacheEntry.user_thread_count;
+        if (numericValue(profile.user_post_count) != null) cacheEntry.user_post_count = numericValue(profile.user_post_count);
+        else delete cacheEntry.user_post_count;
+        forumAuthorCache[key] = cacheEntry;
     }));
 }
 var categories = [];
