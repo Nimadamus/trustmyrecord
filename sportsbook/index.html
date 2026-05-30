@@ -12681,37 +12681,77 @@ window.toggleSportFamily = function (family) {
         var esc = function (s) { return ('' + (s == null ? '' : s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
         var fmtOdds = function (o) { var n = Number(o); if (!isFinite(n)) return '—'; return n > 0 ? '+' + n : String(n); };
         var fmtWhen = function (iso) { if (!iso) return ''; try { var d = new Date(iso); return d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
+        // Sport-aware spread market wording for the slip/grading.
+        var spreadMkt = (sport === 'NHL') ? 'Alt Puck Line' : (sport === 'MLB' ? 'Alt Run Line' : 'Alt Spread');
+
+        // Shared card renderer — used for both the Bovada feed and the board
+        // fallback. Expects games shaped { away_team, home_team, commence_time,
+        // id, alt_groups:[{ key, label, items:[{ selection, line, odds }] }] }.
+        function renderAltGames(games) {
+            rowsEl.innerHTML = games.map(function (g) {
+                var gAttrs = ' data-alt-away="' + esc(g.away_team) + '" data-alt-home="' + esc(g.home_team) + '"'
+                    + ' data-alt-time="' + esc(g.commence_time || '') + '" data-alt-gid="' + esc(g.id || '') + '"';
+                var groups = (g.alt_groups || []).map(function (grp) {
+                    var isTotal = grp.key === 'alt_totals';
+                    var lines = (grp.items || []).map(function (it) {
+                        var lineStr = (Number(it.line) > 0 ? '+' : '') + it.line;
+                        // alt_totals → over/under by selection; alt_spreads → spread on the named team.
+                        var betType = isTotal ? (String(it.selection).toLowerCase() === 'under' ? 'under' : 'over') : 'spread';
+                        var mkt = isTotal ? 'Alt Total' : spreadMkt;
+                        return '<button type="button" class="odds-btn" data-alt-pick="1"'
+                            + ' data-bet-type="' + esc(betType) + '" data-market="' + esc(mkt) + '"'
+                            + ' data-selection="' + esc(it.selection) + '" data-line="' + esc(it.line) + '" data-odds="' + esc(it.odds) + '"'
+                            + ' style="background:rgba(255,255,255,.04);border:1px solid var(--glass-border,#262636);border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;cursor:pointer;color:inherit;text-align:left;width:100%">'
+                            + '<span>' + esc(it.selection) + ' ' + esc(lineStr) + '</span><b style="color:#1ed760">' + fmtOdds(it.odds) + '</b></button>';
+                    }).join('');
+                    return '<div style="padding:6px 0"><h4 style="margin:6px 0;color:var(--accent-gold,#ffd700);font-size:12px;text-transform:uppercase;letter-spacing:.5px">' + esc(grp.label || grp.key) + '</h4><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">' + lines + '</div></div>';
+                }).join('');
+                return '<article class="sportsbook-game-card"' + gAttrs + '><div class="game-meta-row"><b>' + esc(g.away_team) + ' @ ' + esc(g.home_team) + '</b> <small style="color:var(--text-muted,#9aa);margin-left:8px">' + esc(fmtWhen(g.commence_time)) + '</small></div>' + groups + '</article>';
+            }).join('');
+        }
+
+        // ALT_LINES_BOARD_FALLBACK_20260530 (Nima): the dedicated Bovada altlines
+        // feed is blocked from the Render host (coupon_error:ECONNABORTED), so the
+        // Alt Lines tab was empty even though the board's FanDuel feed already
+        // carries alt_spreads/alt_totals per game. When Bovada yields nothing,
+        // map those board groups into the same alt_groups shape and render them.
+        function altGamesFromBoard(bgames) {
+            return (bgames || []).map(function (g) {
+                var ag = (g.market_groups || []).filter(function (grp) {
+                    return grp && (grp.key === 'alt_spreads' || grp.key === 'alt_totals') && (grp.items || []).length;
+                }).map(function (grp) {
+                    return {
+                        key: grp.key,
+                        label: grp.label || (grp.key === 'alt_totals' ? 'Alternative Totals' : 'Alternative Lines'),
+                        items: (grp.items || []).map(function (it) { return { selection: (it.selection != null ? it.selection : it.selection_label), line: it.line, odds: it.odds }; })
+                    };
+                });
+                if (!ag.length) return null;
+                return { id: g.id, away_team: g.away_team, home_team: g.home_team, commence_time: g.commence_time, alt_groups: ag };
+            }).filter(Boolean);
+        }
+        function fallbackToBoard() {
+            fetch(String(base).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(key) + '?limit=80', { cache: 'no-store' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (bd) {
+                    if (rowsEl.getAttribute('data-sport') !== sport || window.TMR.selectedPeriod !== 'alts') return;
+                    var mapped = altGamesFromBoard(bd && bd.games);
+                    if (!mapped.length) { rowsEl.innerHTML = emptyState(sport, 'No alternate lines posted right now. Check back when lines are up.', 'closed'); return; }
+                    renderAltGames(mapped);
+                })
+                .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'alts') rowsEl.innerHTML = emptyState(sport, 'Alternate-lines feed temporarily unavailable. Try again shortly.', 'closed'); });
+        }
+
         fetch(String(base).replace(/\/$/, '') + '/games/altlines/' + encodeURIComponent(key) + '?cb=' + Date.now(), { cache: 'no-store' })
             .then(function (r) { return r.ok ? r.json() : null; })
             .then(function (data) {
                 if (rowsEl.getAttribute('data-sport') !== sport || window.TMR.selectedPeriod !== 'alts') return;
-                if (!data || !data.supported) { rowsEl.innerHTML = emptyState(sport, 'Alternate lines are not offered for ' + sport + ' yet.', 'closed'); return; }
-                var games = data.games || [];
-                if (!games.length) { rowsEl.innerHTML = emptyState(sport, 'No alternate lines posted right now. Check back when lines are up.', 'closed'); return; }
-                // Sport-aware spread market wording for the slip/grading.
-                var spreadMkt = (sport === 'NHL') ? 'Alt Puck Line' : (sport === 'MLB' ? 'Alt Run Line' : 'Alt Spread');
-                rowsEl.innerHTML = games.map(function (g) {
-                    var gAttrs = ' data-alt-away="' + esc(g.away_team) + '" data-alt-home="' + esc(g.home_team) + '"'
-                        + ' data-alt-time="' + esc(g.commence_time || '') + '" data-alt-gid="' + esc(g.id || '') + '"';
-                    var groups = (g.alt_groups || []).map(function (grp) {
-                        var isTotal = grp.key === 'alt_totals';
-                        var lines = (grp.items || []).map(function (it) {
-                            var lineStr = (Number(it.line) > 0 ? '+' : '') + it.line;
-                            // alt_totals → over/under by selection; alt_spreads → spread on the named team.
-                            var betType = isTotal ? (String(it.selection).toLowerCase() === 'under' ? 'under' : 'over') : 'spread';
-                            var mkt = isTotal ? 'Alt Total' : spreadMkt;
-                            return '<button type="button" class="odds-btn" data-alt-pick="1"'
-                                + ' data-bet-type="' + esc(betType) + '" data-market="' + esc(mkt) + '"'
-                                + ' data-selection="' + esc(it.selection) + '" data-line="' + esc(it.line) + '" data-odds="' + esc(it.odds) + '"'
-                                + ' style="background:rgba(255,255,255,.04);border:1px solid var(--glass-border,#262636);border-radius:8px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;cursor:pointer;color:inherit;text-align:left;width:100%">'
-                                + '<span>' + esc(it.selection) + ' ' + esc(lineStr) + '</span><b style="color:#1ed760">' + fmtOdds(it.odds) + '</b></button>';
-                        }).join('');
-                        return '<div style="padding:6px 0"><h4 style="margin:6px 0;color:var(--accent-gold,#ffd700);font-size:12px;text-transform:uppercase;letter-spacing:.5px">' + esc(grp.label || grp.key) + '</h4><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px">' + lines + '</div></div>';
-                    }).join('');
-                    return '<article class="sportsbook-game-card"' + gAttrs + '><div class="game-meta-row"><b>' + esc(g.away_team) + ' @ ' + esc(g.home_team) + '</b> <small style="color:var(--text-muted,#9aa);margin-left:8px">' + esc(fmtWhen(g.commence_time)) + '</small></div>' + groups + '</article>';
-                }).join('');
+                if (data && data.supported === false) { rowsEl.innerHTML = emptyState(sport, 'Alternate lines are not offered for ' + sport + ' yet.', 'closed'); return; }
+                var games = (data && data.games) || [];
+                if (!games.length) { fallbackToBoard(); return; }
+                renderAltGames(games);
             })
-            .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'alts') rowsEl.innerHTML = emptyState(sport, 'Alternate-lines feed temporarily unavailable. Try again shortly.', 'closed'); });
+            .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'alts') fallbackToBoard(); });
     }
 
     // Player/pitcher/game props for the Player Props tab ONLY. Same isolation
