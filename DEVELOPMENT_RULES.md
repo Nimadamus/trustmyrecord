@@ -1,5 +1,12 @@
 # TrustMyRecord Development Rules
 
+## Alt Lines tab source + fail-open fallback (May 30, 2026) — HARD RULE (PERMANENT)
+`ALT_LINES_BOARD_FALLBACK_20260530`. The sportsbook **Alt Lines** tab (alt run/puck lines + alt game totals — NOT the Alternate Team Totals under Team Totals) has TWO independent data sources:
+- **Primary:** the dedicated backend route `/api/games/altlines/:sportKey`, sourced from **Bovada** (`bovadaOddsProvider`). Bovada is frequently **unreachable from the Render host** (`reason: "coupon_error:ECONNABORTED"`, `games: []`) — treat it as unreliable.
+- **Fallback (frontend, `renderAltLinesBoard`):** when Bovada returns 0 games / errors, fetch `/api/games/board/:sportKey` and render its `alt_spreads` / `alt_totals` groups (the board's **FanDuel** feed already carries them per game — e.g. MLB: 12 alt_spreads + 18 alt_totals per game). Map to the same `alt_groups` shape and reuse the identical `data-alt-pick` card markup so selection/click/grading are unchanged.
+- Rule: the Alt Lines tab must **never** dead-end to "No alternate lines posted" while the board feed has alts. Always fall back to the board before showing the empty state. The fallback is additive and scoped to `renderAltLinesBoard` only — it does not touch Game Lines, Team Totals, Pick Slip, or backend.
+- Honest-source note: if BOTH Bovada and the board genuinely have no alts for a sport, the empty state is correct — but prove it with the board API output, don't assume.
+
 ## Sportsbook CSS scoping + post-change tab sweep (May 30, 2026) — HARD RULE (PERMANENT)
 A sub-feature's CSS must never reach into the shared sportsbook layout. Concretely:
 - **Alt-market (and any sub-panel) CSS must be scoped to its own container class only** — e.g. `.sb-alt-tt`, `.sb-alt-team`, `.sb-alt-grid*`, `.sb-alt-cell`. NEVER add or restyle a bare global selector (`.team-row`, `.game-row`, `.picks-board-row`, `.odds-btn`, `.sb-odds`, `.market-headers`, `.sb-board-row`) for a sub-feature. If you must touch a shared class, compound-scope it under the sub-container (`.sb-alt-cell.sb-odds {…}`), never `.sb-odds {…}` alone.
