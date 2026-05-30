@@ -267,6 +267,16 @@
                         };
                         var homeTeamObj = homeComp.team || {};
                         var awayTeamObj = awayComp.team || {};
+                        // MLB probable starters live in competitor.probables[].athlete.
+                        // Harmless for other sports (no probables key) — never invented.
+                        var pickProbable = function(c) {
+                            var pr = c && c.probables;
+                            if (Array.isArray(pr) && pr[0] && pr[0].athlete) {
+                                var a = pr[0].athlete;
+                                return a.displayName || a.fullName || a.shortName || '';
+                            }
+                            return '';
+                        };
                         games.push({
                             id: 'espn_' + evt.id,
                             espn_event_id: evt.id,
@@ -281,7 +291,9 @@
                             commence_time: evt.date || comp.date,
                             bookmakers: bookmakers,
                             home_record: homeRecord || '',
-                            away_record: awayRecord || ''
+                            away_record: awayRecord || '',
+                            away_pitcher: pickProbable(awayComp),
+                            home_pitcher: pickProbable(homeComp)
                         });
                     }
                     console.log('[TMR] PARSED GAMES: ' + games.length);
@@ -1145,8 +1157,16 @@
                 });
                 var awayPitcher = game.away_pitcher || game.away_starter || (game.starters && game.starters.away) || '';
                 var homePitcher = game.home_pitcher || game.home_starter || (game.starters && game.starters.home) || '';
-                var awayPitcherHtml = awayPitcher ? '<div class="team-pitcher">' + escHtml(awayPitcher) + '</div>' : '';
-                var homePitcherHtml = homePitcher ? '<div class="team-pitcher">' + escHtml(homePitcher) + '</div>' : '';
+                // MLB-only "Probable Pitcher:" line. TBD when the feed lacks a name;
+                // never rendered for non-MLB sports.
+                var _mlbStarter = String(sport || '').toUpperCase() === 'MLB';
+                var pitcherLineHtml = function(nm) {
+                    if (!_mlbStarter) return '';
+                    var v = (nm && String(nm).trim()) ? escHtml(nm) : 'TBD';
+                    return '<div class="team-pitcher"><span class="team-pitcher-label">Probable Pitcher:</span> ' + v + '</div>';
+                };
+                var awayPitcherHtml = pitcherLineHtml(awayPitcher);
+                var homePitcherHtml = pitcherLineHtml(homePitcher);
 
                 var cell = function(it, mkt, type, sideLabel, lineFmt) {
                     if (!it) return '<div class="odds-btn no-odds-btn" data-mkt="' + mkt + '"><span class="odds-line">' + sideLabel + '</span><span class="odds-value">—</span></div>';
@@ -1420,8 +1440,16 @@
             var awayPitcher = game.away_pitcher || game.away_starter || (game.starters && game.starters.away) || '';
             var homePitcher = game.home_pitcher || game.home_starter || (game.starters && game.starters.home) || '';
             var escHtml = function(s) { return ('' + (s || '')).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
-            var awayPitcherHtml = awayPitcher ? '<div class="team-pitcher">' + escHtml(awayPitcher) + '</div>' : '';
-            var homePitcherHtml = homePitcher ? '<div class="team-pitcher">' + escHtml(homePitcher) + '</div>' : '';
+            // MLB-only "Probable Pitcher:" line. TBD when the feed lacks a name;
+            // never rendered for non-MLB sports so other tabs stay uncluttered.
+            var _mlbStarter = String(sport || '').toUpperCase() === 'MLB';
+            var pitcherLineHtml = function(nm) {
+                if (!_mlbStarter) return '';
+                var v = (nm && String(nm).trim()) ? escHtml(nm) : 'TBD';
+                return '<div class="team-pitcher"><span class="team-pitcher-label">Probable Pitcher:</span> ' + v + '</div>';
+            };
+            var awayPitcherHtml = pitcherLineHtml(awayPitcher);
+            var homePitcherHtml = pitcherLineHtml(homePitcher);
             // More Bets cell — appears once per game, spans both team rows via CSS.
             // For MLB it jumps to 5 Inning Lines; for NHL to Team Totals. Honest action:
             // surfaces additional markets we already publish — no stub overlay.
@@ -29399,6 +29427,11 @@ document.addEventListener('DOMContentLoaded', function() {
             margin-top: 2px !important;
             letter-spacing: 0.01em;
         }
+        #picks .game-row .team-pitcher .team-pitcher-label {
+            color: #6f7f99 !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.02em;
+        }
         /* Subtle "at" connector between away and home (kept hidden — vertical
            stack already implies the matchup; reserved for future enable). */
         #picks .game-row .team-conjunction { display: none; }
@@ -29650,6 +29683,11 @@ document.addEventListener('DOMContentLoaded', function() {
             white-space: nowrap !important;
             overflow: hidden !important;
             text-overflow: ellipsis !important;
+        }
+        #picks .game-row .team-pitcher .team-pitcher-label {
+            color: #6f7f99 !important;
+            font-weight: 700 !important;
+            letter-spacing: 0.02em !important;
         }
 
         /* Odds tiles — large rectangular buttons, line on top + odds below.
