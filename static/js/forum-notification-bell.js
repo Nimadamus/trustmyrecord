@@ -18,16 +18,11 @@
   function bell() { return document.getElementById('notificationsBtn'); }
 
   function ensureBound() {
-    var el = bell();
-    if (!el || el.getAttribute('data-tmr-bell-bound')) return;
-    el.setAttribute('data-tmr-bell-bound', '1');
-    el.addEventListener('click', function (e) {
-      if (typeof window.toggleNotifications === 'function') {
-        e.preventDefault();
-        window.toggleNotifications(e);
-      }
-      // else: fall through to the <a href="/notifications/"> page.
-    });
+    // notifications.js (loaded before this file) already binds a click handler
+    // to #notificationsBtn that toggles the dropdown. We MUST NOT add a second
+    // click handler here — two handlers toggle the dropdown twice per click and
+    // it never opens. The <a href="/notifications/"> remains the no-JS fallback.
+    // This enhancer only keeps the unread count fresh (see refresh()).
   }
 
   function refresh() {
