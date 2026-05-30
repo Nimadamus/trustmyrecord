@@ -1346,6 +1346,9 @@
             '.tmr-team-side{display:inline-flex;align-items:center;justify-content:center;min-width:54px;padding:5px 9px;border-radius:999px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);font-size:10px;font-weight:900;letter-spacing:0.12em;text-transform:uppercase;color:#aeb8c6;}',
             '.tmr-team-row>.team-logo{grid-column:1;flex:0 0 30px;}',
             '.tmr-team-name{grid-column:3;min-width:0;font-size:14px;font-weight:800;letter-spacing:0;line-height:1.1;white-space:nowrap;overflow:visible;text-overflow:clip;max-width:none;}',
+            '.tmr-team-pitcher{grid-column:3;min-width:0;margin-top:3px;font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;font-size:11.5px;font-weight:600;line-height:1.25;letter-spacing:0.01em;color:#8ea0bc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}',
+            '.tmr-team-pitcher .tmr-team-pitcher-label{color:#6f7f99;font-weight:700;letter-spacing:0.02em;}',
+            '@media (max-width:640px){.tmr-team-pitcher{font-size:11px;}}',
             '.tmr-matchup-divider{display:flex;align-items:center;gap:10px;padding-left:66px;color:#6f7a89;font-size:10px;font-weight:900;letter-spacing:0.18em;text-transform:uppercase;}',
             '.tmr-matchup-divider::before,.tmr-matchup-divider::after{content:"";height:1px;flex:1;background:rgba(255,255,255,0.08);}',
             '.tmr-market-meta{display:flex;gap:8px;flex-wrap:wrap;color:#aab4c3;font-size:11px;margin-top:16px;}',
@@ -2242,9 +2245,97 @@
         renderBoard(state.currentBoardSummary || null, state.currentBoard || []);
     }
 
+    // ---- MLB probable pitcher support -------------------------------------
+    // Display-only. Renders "Probable Pitcher: <name|TBD>" under each MLB team
+    // name. MLB only -- never injected into NBA/NHL/soccer/WNBA/tennis/etc.
+    // Data is taken from whatever the board feed already carries; when absent it
+    // is enriched from ESPN's public MLB scoreboard (probable starters) matched
+    // by team name. Fail-open: any error just leaves the line as TBD.
+    function isMlbBoardSport(game) {
+        const s = String((game && game.sport_key) || state.selectedSport || '').toUpperCase();
+        return s === 'MLB';
+    }
+    function pickGamePitcher(game, side) {
+        if (!game) return '';
+        const direct = side === 'home'
+            ? (game.home_pitcher || game.home_probable_pitcher || game.home_starter || (game.starters && game.starters.home))
+            : (game.away_pitcher || game.away_probable_pitcher || game.away_starter || (game.starters && game.starters.away));
+        return direct ? String(direct).trim() : '';
+    }
+    function probablePitcherHtml(game, side) {
+        if (!isMlbBoardSport(game)) return '';
+        const name = pickGamePitcher(game, side);
+        const value = name ? escapeHtml(name) : 'TBD';
+        return '<div class="tmr-team-pitcher"><span class="tmr-team-pitcher-label">Probable Pitcher:</span> ' + value + '</div>';
+    }
+
+    const _mlbProbableState = { map: null, fetchedAt: 0, inflight: false };
+    function _normTeamKey(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+    function enrichMlbProbables(games) {
+        // Only when MLB is the active board and at least one game lacks a pitcher.
+        if (String(state.selectedSport || '').toUpperCase() !== 'MLB') return;
+        if (!Array.isArray(games) || !games.length) return;
+        const needs = games.some(function(g) { return !pickGamePitcher(g, 'away') || !pickGamePitcher(g, 'home'); });
+        if (!needs) return;
+
+        const applyMap = function(map) {
+            if (!map) return false;
+            let changed = false;
+            games.forEach(function(g) {
+                ['away', 'home'].forEach(function(side) {
+                    if (pickGamePitcher(g, side)) return;
+                    const team = side === 'home' ? g.home_team : g.away_team;
+                    const abbr = side === 'home' ? (g.home_abbr || g.homeAbbr) : (g.away_abbr || g.awayAbbr);
+                    const nick = String(team || '').trim().split(/\s+/).pop();
+                    const hit = map[_normTeamKey(team)] || map[_normTeamKey(abbr)] || map[_normTeamKey(nick)];
+                    if (hit) { g[side + '_pitcher'] = hit; changed = true; }
+                });
+            });
+            return changed;
+        };
+
+        // Re-use a recent map (10 min) before hitting the network again.
+        const fresh = _mlbProbableState.map && (Date.now() - _mlbProbableState.fetchedAt < 600000);
+        if (fresh) { applyMap(_mlbProbableState.map); return; }
+        if (_mlbProbableState.inflight) return;
+        _mlbProbableState.inflight = true;
+        fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard', { cache: 'no-store' })
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+                _mlbProbableState.inflight = false;
+                if (!data || !Array.isArray(data.events)) return;
+                const map = {};
+                data.events.forEach(function(evt) {
+                    const comp = evt.competitions && evt.competitions[0];
+                    if (!comp || !Array.isArray(comp.competitors)) return;
+                    comp.competitors.forEach(function(c) {
+                        const pr = c.probables;
+                        let nm = '';
+                        if (Array.isArray(pr) && pr[0] && pr[0].athlete) {
+                            nm = pr[0].athlete.displayName || pr[0].athlete.fullName || pr[0].athlete.shortName || '';
+                        }
+                        if (!nm) return;
+                        const t = c.team || {};
+                        [t.displayName, t.shortDisplayName, t.name, t.nickname, t.location, t.abbreviation].forEach(function(k) {
+                            if (k) map[_normTeamKey(k)] = nm;
+                        });
+                    });
+                });
+                _mlbProbableState.map = map;
+                _mlbProbableState.fetchedAt = Date.now();
+                // Re-render only if this enrichment actually filled something in.
+                if (applyMap(map) && String(state.selectedSport || '').toUpperCase() === 'MLB') {
+                    renderBoard(state.currentBoardSummary || null, state.currentBoard || []);
+                }
+            })
+            .catch(function() { _mlbProbableState.inflight = false; });
+    }
+
     function renderBoard(summary, games) {
         const container = document.getElementById('gamesListContainer');
         if (!container) return;
+
+        try { enrichMlbProbables(games); } catch (e) {}
 
         state.currentOptions.clear();
         state.currentBoardSummary = summary || null;
@@ -2349,9 +2440,9 @@
                 '<div>' +
                 '<div class="tmr-market-topline"><span class="tmr-market-league">Game ' + boardNumber + ' • ' + escapeHtml(state.selectedSport || game.sport_title || 'Board') + '</span><span class="tmr-market-status">' + escapeHtml(formatStartsIn(game.commence_time)) + '</span></div>' +
                 '<div class="tmr-market-matchup">' +
-                '<div class="tmr-team-row">' + renderTeamLogo(game.away_team, game.sport_key, game.away_logo || game.awayLogo || '', game.away_abbr || game.awayAbbr || '') + '<span class="tmr-team-side">Away</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span></div>' +
+                '<div class="tmr-team-row">' + renderTeamLogo(game.away_team, game.sport_key, game.away_logo || game.awayLogo || '', game.away_abbr || game.awayAbbr || '') + '<span class="tmr-team-side">Away</span><span class="tmr-team-name">' + escapeHtml(game.away_team) + '</span>' + probablePitcherHtml(game, 'away') + '</div>' +
                 '<div class="tmr-matchup-divider">@</div>' +
-                '<div class="tmr-team-row">' + renderTeamLogo(game.home_team, game.sport_key, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '') + '<span class="tmr-team-side">Home</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span></div>' +
+                '<div class="tmr-team-row">' + renderTeamLogo(game.home_team, game.sport_key, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '') + '<span class="tmr-team-side">Home</span><span class="tmr-team-name">' + escapeHtml(game.home_team) + '</span>' + probablePitcherHtml(game, 'home') + '</div>' +
                 '</div>' +
                 '<div class="tmr-market-meta">' +
                 '<span class="tmr-market-chip accent">' + escapeHtml(new Date(game.commence_time).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })) + '</span>' +
