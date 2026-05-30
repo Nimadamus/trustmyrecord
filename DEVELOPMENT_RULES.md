@@ -957,3 +957,18 @@ Any public table — Public Ledger, profile stats, sportsbook ledger, contest da
 - **Do NOT solve clipping by removing columns** or shrinking text below ~12px. Reduce cell padding at narrow viewports instead; columns stay.
 - **Mandatory viewport test before completion**: 1440 / 1280 / 1024 / 768 / 390. At each width every column must be reachable (visible or via horizontal scroll inside the wrapper) and the scrollbar (or its gutter) must be visible.
 - The Public Ledger reference fix lives in `profile/index.html` ("PUBLIC LEDGER RIGHT-EDGE CLIP HARD-FIX (May 27, 2026 r2)" block). Copy the same wrapper pattern when adding new table-style views.
+
+## Forum profile-card counts standard (May 30, 2026) — HARD RULE
+Every forum author card (thread starter + each post) must show **Joined**, **Posts**, and **Threads** with real values, never `Posts: Not available` and never a hardcoded number.
+- **Definitions**: `Threads` = `COUNT(forum_threads WHERE user_id)` (topics the user started). `Posts` = `COUNT(forum_posts WHERE user_id) + COUNT(forum_threads WHERE user_id)` (all contributions including replies AND thread openers). `Posts >= Threads` always.
+- **Source of truth is the API**: `routes/forum.js` returns `user_thread_count` and `user_post_count` on the thread object (`GET /forum/threads/:id`) and on every row of both posts queries. Do not recompute counts from page-local arrays.
+- **Frontend never prints a "not available" fallback for counts**: `forum/index.html` `formatCount()` returns `'0'` for null, and the author-cache enrich must not clobber real per-post counts with null (`delete` the key instead of assigning null).
+- Verify after any forum change: `GET /api/forum/threads/<id>` returns numeric `user_thread_count`/`user_post_count`, and no card renders `Not available`.
+
+## Forum notification standard (May 30, 2026) — HARD RULE
+Forum/social engagement MUST notify the recipient. Never remove or bypass this when touching forum code.
+- **Events (all live, wired in `routes/forum.js` via `services/notifications.js`)**: reply to a user's thread → `forum_thread_reply`; direct reply to a user's post (`parent_post_id`) → `forum_post_reply`; like a user's post → `forum_post_like`; `@mention` → `forum_mention`. Add similar events for any new engagement surface.
+- **Never notify a user about their own action** (actor `!== ` recipient). Dedup with a `dedupeKey`. A direct-reply notification is suppressed when the parent-post author is also the thread author (they already got `forum_thread_reply`).
+- **Model**: `notifications` table, auto-migrated by `ensureNotificationSchema()`; each row carries `type`, `related_user_id` (actor), `related_thread_id`, `related_post_id`, `content`, `is_read`, `read_at`, `created_at`. Never expose pending picks or private data in a notification.
+- **UI**: a notification bell in the logged-in nav with a visible unread count, a dropdown/`/notifications/` page, mark-read, and click-through to `/forum/?thread=<id>#post-<id>`. The dropdown lives in `static/js/notifications.js`; the unread badge poller in `nav-badges.js`. As of the forum-first rollout the bell is injected by the **forum-scoped** `static/js/forum-notification-bell.js` (loaded only by `forum/index.html`); when sitewide rollout is approved, move the bell markup into `buildLoggedInActions()` in `tmr-sitewide.js` and delete the injector.
+- Writes are best-effort (`notifySafe`) and must never block forum posting/replies/likes.
