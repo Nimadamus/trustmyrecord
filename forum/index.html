@@ -48,6 +48,9 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 .fhead-search button:hover{background:#d4dbe5}
 .fhead-links{display:flex;gap:10px;align-items:center;white-space:nowrap}
 .fhead-links a,.fhead-links button{border:0;background:transparent;color:var(--link);font:12px Arial,Helvetica,sans-serif;padding:0;cursor:pointer}
+.fhead-bell{position:relative;display:inline-flex;align-items:center;gap:4px}
+.fhead-bell-icon{width:13px;height:13px;flex:0 0 13px}
+.fhead-bell-badge{background:#ff4444;color:#fff;font:700 10px Arial,Helvetica,sans-serif;min-width:15px;height:15px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;padding:0 4px;line-height:1;box-shadow:0 0 5px rgba(255,68,68,.5)}
 .ftabs{background:#d7dde6;border-top:1px solid #fff;border-bottom:1px solid #aeb8c6}
 .ftabs-in{max-width:1180px;margin:0 auto;padding:0 12px;display:flex;flex-wrap:wrap;gap:0}
 .ftabs a,.ftabs button{display:block;padding:8px 11px;border:0;border-right:1px solid #b7c0cb;background:transparent;color:#1d3552;font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;cursor:pointer}
@@ -1347,7 +1350,7 @@ body.tmr-forum-live-redesign .fcrumb .sep {
         </div>
         <div class="fhead-links" id="forumTopNav">
             <a href="/messages/">Messages</a>
-            <a href="/notifications/">Alerts</a>
+            <a href="/notifications/" id="notificationsBtn" class="fhead-bell" aria-label="Notifications" title="Notifications"><svg class="fhead-bell-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v3.6L4.3 15a1 1 0 0 0 .9 1.4h13.6a1 1 0 0 0 .9-1.4L18 11.6V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.83-2H9.17A3 3 0 0 0 12 22Z"/></svg>Alerts<span id="notifBadge" class="fhead-bell-badge" style="display:none;"></span></a>
             <a href="/profile/" id="forumTopProfileLink" style="display:none;">Profile</a>
             <a href="/login/" id="forumTopLoginLink">Log In</a>
             <a href="/register/" id="forumTopRegisterLink">Register</a>
@@ -1520,7 +1523,7 @@ body.tmr-forum-live-redesign .fcrumb .sep {
 <script src="/static/js/backend-api.js?v=20260423a"></script>
 <script src="/static/js/auth-persistent.js?v=20260424a"></script>
 <script src="/static/js/notifications.js?v=20260423a"></script>
-<script src="/static/js/forum-notification-bell.js?v=20260530bell1"></script>
+<script src="/static/js/forum-notification-bell.js?v=20260530bell2"></script>
 <script>
 // =====================================================================
 // 2+2-style render overrides (Apr 30 2026)
