@@ -10741,7 +10741,89 @@ window.toggleSportFamily = function (family) {
         return '<span class="sb-team-tag">' + _sbEsc(abbr || String(teamName || '?').slice(0, 2).toUpperCase()) + '</span>';
     }
 
-    function renderRow(game, gameIndex) {
+    // ---- MLB probable pitcher (lobby board) -------------------------------
+    // Display-only line under each MLB team name: "Probable Pitcher: <name|TBD>".
+    // MLB only. Backend (Action Network) games carry no pitcher, so the names
+    // are enriched from ESPN's public MLB scoreboard, matched by team name.
+    // Fail-open: any miss simply shows TBD; never blocks odds rendering.
+    function lobbyIsMlb(game, sport) {
+        var s = String(sport || (game && (game.sport_key || game.sport_title)) || '').toUpperCase();
+        return s === 'MLB' || s.indexOf('BASEBALL_MLB') >= 0 || (s.indexOf('MLB') >= 0 && s.indexOf('NBA') < 0);
+    }
+    function lobbyPitcherName(game, side) {
+        if (!game) return '';
+        var v = side === 'home'
+            ? (game.home_pitcher || game.home_probable_pitcher || game.home_starter || (game.starters && game.starters.home))
+            : (game.away_pitcher || game.away_probable_pitcher || game.away_starter || (game.starters && game.starters.away));
+        return v ? String(v).trim() : '';
+    }
+    function lobbyPitcherHtml(game, side, sport) {
+        if (!lobbyIsMlb(game, sport)) return '';
+        var nm = lobbyPitcherName(game, side);
+        var val = nm ? _sbEsc(nm) : 'TBD';
+        return '<div class="sb-team-pitcher"><span class="sb-team-pitcher-label">Probable Pitcher:</span> ' + val + '</div>';
+    }
+    var _lobbyMlbProbable = { map: null, fetchedAt: 0, inflight: false };
+    function _lobbyTeamKey(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+    function lobbyApplyProbableMap(games, map) {
+        if (!map || !Array.isArray(games)) return false;
+        var changed = false;
+        games.forEach(function (g) {
+            ['away', 'home'].forEach(function (side) {
+                if (lobbyPitcherName(g, side)) return;
+                var team = side === 'home' ? g.home_team : g.away_team;
+                var abbr = side === 'home' ? (g.home_abbr || g.homeAbbr) : (g.away_abbr || g.awayAbbr);
+                var nick = String(team || '').trim().split(/\s+/).pop();
+                var hit = map[_lobbyTeamKey(team)] || map[_lobbyTeamKey(abbr)] || map[_lobbyTeamKey(nick)];
+                if (hit) { g[side + '_pitcher'] = hit; changed = true; }
+            });
+        });
+        return changed;
+    }
+    // Ensures MLB games carry probable pitchers, then calls done(). Always calls
+    // done() (even on failure) so the board paints regardless.
+    function lobbyEnsureMlbPitchers(games, done) {
+        try {
+            if (!Array.isArray(games) || !games.length) { done(); return; }
+            var fresh = _lobbyMlbProbable.map && (Date.now() - _lobbyMlbProbable.fetchedAt < 600000);
+            if (fresh) { lobbyApplyProbableMap(games, _lobbyMlbProbable.map); done(); return; }
+            if (_lobbyMlbProbable.inflight) { done(); return; }
+            _lobbyMlbProbable.inflight = true;
+            var finished = false;
+            var finish = function () { if (finished) return; finished = true; done(); };
+            var guard = setTimeout(finish, 4500);
+            fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard', { cache: 'no-store' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (data) {
+                    _lobbyMlbProbable.inflight = false;
+                    if (data && Array.isArray(data.events)) {
+                        var map = {};
+                        data.events.forEach(function (evt) {
+                            var comp = evt.competitions && evt.competitions[0];
+                            if (!comp || !Array.isArray(comp.competitors)) return;
+                            comp.competitors.forEach(function (c) {
+                                var pr = c.probables, nm = '';
+                                if (Array.isArray(pr) && pr[0] && pr[0].athlete) {
+                                    nm = pr[0].athlete.displayName || pr[0].athlete.fullName || pr[0].athlete.shortName || '';
+                                }
+                                if (!nm) return;
+                                var t = c.team || {};
+                                [t.displayName, t.shortDisplayName, t.name, t.nickname, t.location, t.abbreviation].forEach(function (k) {
+                                    if (k) map[_lobbyTeamKey(k)] = nm;
+                                });
+                            });
+                        });
+                        _lobbyMlbProbable.map = map;
+                        _lobbyMlbProbable.fetchedAt = Date.now();
+                        lobbyApplyProbableMap(games, map);
+                    }
+                    clearTimeout(guard); finish();
+                })
+                .catch(function () { _lobbyMlbProbable.inflight = false; clearTimeout(guard); finish(); });
+        } catch (e) { done(); }
+    }
+
+    function renderRow(game, gameIndex, sport) {
         var book = pickFirstBookmaker(game);
         var home = game.home_team || game.homeTeam || (game.teams && game.teams.home) || '';
         var away = game.away_team || game.awayTeam || (game.teams && game.teams.away) || '';
@@ -10805,8 +10887,14 @@ window.toggleSportFamily = function (family) {
         var whenText = [dateStr, timeStr].filter(Boolean).join(' • ');
         var awayLogo = sportsbookTeamLogoMarkup(away, game.away_logo || game.awayLogo || '', game.away_abbr || game.awayAbbr || '');
         var homeLogo = sportsbookTeamLogoMarkup(home, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '');
-        var awayTeamCell = '<div class="team-cell">' + awayLogo + '<b>' + (away || 'Away') + '</b></div>';
-        var homeTeamCell = '<div class="team-cell">' + homeLogo + '<b>' + (home || 'Home') + '</b></div>';
+        var awayPitcherHtml = lobbyPitcherHtml(game, 'away', sport);
+        var homePitcherHtml = lobbyPitcherHtml(game, 'home', sport);
+        var awayTeamCell = awayPitcherHtml
+            ? '<div class="team-cell">' + awayLogo + '<span class="sb-team-stack"><b>' + (away || 'Away') + '</b>' + awayPitcherHtml + '</span></div>'
+            : '<div class="team-cell">' + awayLogo + '<b>' + (away || 'Away') + '</b></div>';
+        var homeTeamCell = homePitcherHtml
+            ? '<div class="team-cell">' + homeLogo + '<span class="sb-team-stack"><b>' + (home || 'Home') + '</b>' + homePitcherHtml + '</span></div>'
+            : '<div class="team-cell">' + homeLogo + '<b>' + (home || 'Home') + '</b></div>';
 
         return '<article class="sportsbook-game-card">' +
             '<div class="game-meta-row">' + (whenText || '&nbsp;') + '</div>' +
@@ -12903,7 +12991,7 @@ window.toggleSportFamily = function (family) {
         // the first call succeeded). Cache key bumped to v2 (Apr 30 2026) to
         // invalidate dead-button HTML from before the click-wiring fix.
         window.TMR._fullBoardCache = window.TMR._fullBoardCache || {};
-        var cacheKey = sport + ':v3';
+        var cacheKey = sport + ':v4mlbpitcher';
         var cached = window.TMR._fullBoardCache[cacheKey];
         if (cached) {
             rows.innerHTML = cached;
@@ -12940,15 +13028,24 @@ window.toggleSportFamily = function (family) {
             }
             // Surface to selectGameBet (it indexes via window.TMR.currentGames).
             window.TMR.currentGames = games;
-            var html = '';
-            for (var i = 0; i < games.length; i++) {
-                html += renderRow(games[i], i);
+            var doPaint = function () {
+                if (rows.getAttribute('data-sport') !== sport) return;
+                var html = '';
+                for (var i = 0; i < games.length; i++) {
+                    html += renderRow(games[i], i, sport);
+                }
+                rows.innerHTML = html;
+                if (window.TMR && window.TMR._fullBoardCache) {
+                    window.TMR._fullBoardCache[cacheKey] = html;
+                }
+                console.log('[TMR][lobby] ' + sport + ' rendered ' + games.length + ' games. Source: ' + sourceLabel);
+            };
+            // MLB: enrich with probable pitchers (ESPN) before paint; always paints.
+            if (lobbyIsMlb(null, sport)) {
+                lobbyEnsureMlbPitchers(games, doPaint);
+            } else {
+                doPaint();
             }
-            rows.innerHTML = html;
-            if (window.TMR && window.TMR._fullBoardCache) {
-                window.TMR._fullBoardCache[cacheKey] = html;
-            }
-            console.log('[TMR][lobby] ' + sport + ' rendered ' + games.length + ' games. Source: ' + sourceLabel);
         };
 
         var espnFallback = function () {
@@ -30888,6 +30985,40 @@ document.addEventListener('DOMContentLoaded', function() {
         white-space: nowrap !important;
         overflow: hidden !important;
         text-overflow: ellipsis !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-cell .sb-team-stack {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        align-items: flex-start !important;
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+        gap: 2px !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-cell .sb-team-stack > b {
+        display: block !important;
+        max-width: 100% !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-team-pitcher {
+        font: 600 11.5px/1.2 "Inter", system-ui, -apple-system, sans-serif !important;
+        color: #8ea0bc !important;
+        letter-spacing: 0.01em !important;
+        max-width: 100% !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-team-pitcher .sb-team-pitcher-label {
+        color: #6f7f99 !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.02em !important;
+    }
+    @media (max-width: 640px) {
+        body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-team-pitcher { font-size: 11px !important; }
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .team-market-row .team-cell {
