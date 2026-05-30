@@ -8,6 +8,14 @@
 - **Alternate markets render per event** and must be tied to the correct team/player/game. Never key an alt feed to the first event only; match per-game by canonical matchup (see `fanduelAltLinesService.enrichBoard` which matches by `matchupKey(away,home)` per game). NOTE: FanDuel's public API only publishes alternate TEAM totals for the spotlight (first) event of a slate — alt run-lines and alt game-totals come back for every game, but alt team totals are featured-game-only upstream. Render alt team totals for whatever games actually carry them; never fabricate odds to fill the others (no-fake-numbers rule).
 - **Compact alt rows.** The expanded alternate ladder must read like a professional sportsbook list, not stacked oversized cards. Keep the dark sportsbook theme; scope any sizing CSS to the alt panel only (`.sb-alt-tt`) so the main board is untouched.
 
+**Final visual standard (`ALT_TT_GRID_20260530`):** the Alternate Team Totals panel must be sportsbook-grade and grouped per game/team:
+- One collapsible panel per game (`Alternate Team Totals` toggle). Inside, one block per team.
+- Each team block has a single header: small team logo + team name ONCE (never a logo on every line — that clutters).
+- Below the header, a compact column-aligned grid with headers `Total | Over | Under` (CSS grid `60px 1fr 1fr`). One row per threshold; the posted line carries a small green `MAIN` tag.
+- Cells show the price only (the column header carries Over/Under). Unavailable outcomes render a muted `–` cell (`.sb-alt-cell.is-empty`), never ugly `Under—` text.
+- Spacing/alignment consistent with the main board; cells `30px` tall, scoped under `.sb-alt-tt`/`.sb-alt-team`/`.sb-alt-grid*`/`.sb-alt-cell`. Implemented in `_ttAltPanel`/`_ttAltLineRow`/`_ttAltCell` in `sportsbook/index.html`.
+- Click contract unchanged: alt cells keep the same `data-*` + `_ttDirectClick` path as the main team-total buttons.
+
 Reference implementation:
 - Frontend filter helper `window.TMR._altTtAllowed(sport,line,odds)` in `sportsbook/index.html`, applied in `_ttCollectLines` (alt ladder), the `team_totals` branch of `_renderMarketBoard`, and the `lockInPick` submit guard. Compact CSS marker `ALT_LINE_INTEGRITY_20260530` scoped to `.sb-alt-tt`.
 - Backend source strip in `services/fanduelAltLinesService.js` (`altTeamTotalAllowed` in `buildTeamTotalItems`).
