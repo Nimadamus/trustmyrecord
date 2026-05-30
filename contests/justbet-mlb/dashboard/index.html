@@ -396,29 +396,19 @@
              normal /sportsbook/ page in Contest Mode (?contest=justbet-mlb).
              This dashboard is status-only by design. -->
 
-        <!-- ========================= CONTEST REGISTRATION BOARD =========================
-             Pre-contest phase: NO public picks grid, NO leaderboard. Picks UI returns
-             only after the contest officially opens. See feedback rule
-             feedback_no_picks_grid_before_contest_start.md. -->
-        <section class="section panel" id="registration-board">
+        <!-- ========================= REGISTERED PARTICIPANTS (single authoritative list) =========================
+             The full registered-participant list lives ONLY on /contests/justbet-mlb/participants/.
+             Do NOT add a second registration table/board on this dashboard — one authoritative
+             list avoids inconsistent counts/confusion. See DEVELOPMENT_RULES
+             "Single authoritative contest participants list". -->
+        <section class="section panel" id="participants-cta">
             <div class="section-head">
-                <h2>Contest Registration Board</h2>
-                <button class="refresh-btn" id="refresh-reg"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+                <h2>Registered Participants</h2>
             </div>
-            <p class="lead">Registration is open. Contest picks will appear only after the contest officially begins. Public board shows TMR usernames and verification status only.</p>
-            <div class="table-wrap">
-                <table class="contest-table" aria-label="Registered contestants">
-                    <thead>
-                        <tr>
-                            <th>TMR Username</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reg-tbody">
-                        <tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading registration board…</div></td></tr>
-                    </tbody>
-                </table>
-            </div>
+            <p class="lead">See the full, official list of players registered for the JustBet MLB contest on the participants page.</p>
+            <a class="cta-primary" href="/contests/justbet-mlb/participants/" style="display:inline-flex;align-items:center;gap:10px;">
+                <i class="fa-solid fa-users"></i> View Registered Participants
+            </a>
         </section>
 
         <!-- ========================= CONTEST GRID =========================
@@ -560,41 +550,23 @@
             } catch { contestLaunched = false; }
         }
 
+        // Registration TABLE removed from the dashboard (it duplicated the
+        // authoritative /participants/ page). We still pull the count here to
+        // keep the "Registered" stat in sync with the participants page, which
+        // counts every entry with a username (no display-only fake filter).
         async function loadRegistrations() {
-            const tbody = $('#reg-tbody');
-            tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading registration board…</div></td></tr>`;
             try {
                 const res = await fetch(API('/registrations'), { credentials: 'include' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 const raw = Array.isArray(data) ? data : (data.entries || []);
-                const entries = raw.filter(e => isRealContestant(e && e.username));
-                $('#stat-entrants').textContent = entries.length;
-                renderRegistrations(entries);
+                const entries = raw.filter(e => e && (e.username || e.name));
+                const el = $('#stat-entrants');
+                if (el) el.textContent = entries.length;
             } catch {
-                $('#stat-entrants').textContent = '0';
-                tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-user-plus"></i>No registrations yet. Be the first to register.</div></td></tr>`;
+                const el = $('#stat-entrants');
+                if (el) el.textContent = '0';
             }
-        }
-
-        function renderRegistrations(entries) {
-            const tbody = $('#reg-tbody');
-            if (!entries || entries.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-user-plus"></i>No registrations yet. Be the first to register.</div></td></tr>`;
-                return;
-            }
-            // PUBLIC FACING STATUS POLICY (May 22 2026): everyone in the
-            // public registrations payload is shown as "Registered". Internal
-            // verification stages never surface on the public dashboard.
-            tbody.innerHTML = entries.map(e => {
-                const pill = `<span class="status-pill status-won">Registered</span>`;
-                return `
-                    <tr>
-                        <td><strong>${escapeHtml(e.username || '—')}</strong></td>
-                        <td>${pill}</td>
-                    </tr>
-                `;
-            }).join('');
         }
 
         const MARKET_LABEL = { h2h: 'Moneyline', spreads: 'Run Line', totals: 'Total' };
