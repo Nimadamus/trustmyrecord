@@ -1053,6 +1053,8 @@
                     if (!team) return;
                     var ln = Number(it.line);
                     if (it.line == null || !Number.isFinite(ln)) return;
+                    // Integrity filter: drop joke lines (sub-2.5 MLB, extreme juice).
+                    if (window.TMR._altTtAllowed && !window.TMR._altTtAllowed(sport, ln, it.odds)) return;
                     var lineKey = '' + ln;
                     byTeam[team] = byTeam[team] || {};
                     byTeam[team][lineKey] = byTeam[team][lineKey] || { line: ln, over: null, under: null };
@@ -1993,6 +1995,16 @@
         if (needsLine.indexOf(betType) !== -1 && !finalLine && finalLine !== '0') {
             alert('Please enter the line/total from your sportsbook.');
             if (lineInput) lineInput.focus();
+            return;
+        }
+
+        // ALT_LINE_INTEGRITY_20260530 (Nima): block absurd unit-farming team
+        // totals at submit (sub-2.5 MLB lines, juice worse than -500). The
+        // backend re-validates, this just gives a clean message client-side.
+        if (['teamover', 'teamunder', 'f5teamover', 'f5teamunder'].indexOf(betType) !== -1
+            && window.TMR && typeof window.TMR._altTtAllowed === 'function'
+            && !window.TMR._altTtAllowed(thePick.sport, parseFloat(finalLine), oddsNum)) {
+            alert('This team total is blocked for record integrity. MLB team totals must be 2.5 or higher and odds cannot be worse than -500.');
             return;
         }
 
@@ -11469,6 +11481,21 @@ window.toggleSportFamily = function (family) {
         return _ttApplyMainLineSanity(game, bucket);
     }
 
+    // ALT_LINE_INTEGRITY_20260530 (Nima): never display or allow selection of
+    // absurd unit-farming team totals. MLB lines below 2.5 (0.5/1.5) and any
+    // side juiced worse than -500 (-2500, -7000, ...) are filtered out. Mirrors
+    // the backend guard in fanduelAltLinesService + routes/picks.js.
+    window.TMR = window.TMR || {};
+    window.TMR.MLB_MIN_TEAM_TOTAL = 2.5;
+    window.TMR.MAX_TEAM_TOTAL_JUICE = -500;
+    window.TMR._altTtAllowed = function (sport, line, odds) {
+        var ln = Number(line);
+        if (String(sport || '').toUpperCase() === 'MLB' && Number.isFinite(ln) && ln < window.TMR.MLB_MIN_TEAM_TOTAL) return false;
+        var od = Number(odds);
+        if (Number.isFinite(od) && od < window.TMR.MAX_TEAM_TOTAL_JUICE) return false;
+        return true;
+    };
+
     // ALT_TEAM_TOTALS_20260529 (Nima). Accepts main AND alternate team-total
     // items so the expandable ladder can surface every threshold the feed
     // provides. Matches team_totals, alt_team_totals, alternate-team-total, etc.
@@ -11507,6 +11534,8 @@ window.toggleSportFamily = function (family) {
             };
             var hasReal = (entry.source !== 'manual') && entry.line != null && entry.odds != null;
             if (!hasReal) return;
+            // Integrity filter: drop joke alt lines (sub-2.5 MLB, extreme juice).
+            if (!window.TMR._altTtAllowed((window.TMR && window.TMR.selectedSport) || 'MLB', entry.line, entry.odds)) return;
             var slot = bucket[teamSlot];
             var row = slot.lines.find(function (r) { return r.line === entry.line; });
             if (!row) { row = { line: entry.line, over: null, under: null }; slot.lines.push(row); }
@@ -29977,6 +30006,37 @@ document.addEventListener('DOMContentLoaded', function() {
         height: 46px !important;
         min-height: 46px !important;
         max-height: 46px !important;
+    }
+
+    /* ALT_LINE_INTEGRITY_20260530 (Nima): compact, professional alternate
+       team-total rows. Tighter than the main board tiles so the expanded
+       ladder reads like a sportsbook list, not stacked oversized cards.
+       Scoped to .sb-alt-tt only — main Team Totals card is untouched. */
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-alt-tt-body {
+        padding: 4px 10px 6px !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-alt-tt-team {
+        padding: 6px 0 !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-alt-tt-line {
+        padding: 3px 0 !important;
+        gap: 8px !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-alt-tt-thresh {
+        min-width: 92px !important;
+        font-size: 11.5px !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-alt-tt .sb-odds {
+        height: 32px !important;
+        min-height: 32px !important;
+        max-height: 32px !important;
+        border-radius: 5px !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-alt-tt .sb-odds-line {
+        font-size: 11px !important;
+    }
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sb-alt-tt .sb-odds-price {
+        font-size: 12px !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-empty-slip {
