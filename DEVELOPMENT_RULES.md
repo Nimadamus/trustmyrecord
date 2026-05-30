@@ -1,5 +1,19 @@
 # TrustMyRecord Development Rules
 
+## Alternate-line integrity — no absurd unit-farming lines (May 30, 2026) — HARD RULE (PERMANENT)
+`ALT_LINE_INTEGRITY_20260530`. Alternate markets exist to give real bettable options, NOT to let users farm fake easy units off joke lines. Every alternate-line market MUST be filtered both visually AND at submission/validation, by the same thresholds on both ends:
+- **MLB team totals below 2.5 are removed** (hide `Team Total 0.5`, `1.5`). `2.5` and up are allowed. The MAIN posted line is always kept even if it is `3.5`, `4.5`, etc.
+- **Extreme juice is removed**: any side with odds worse than `-500` (i.e. `< -500`, e.g. `-2500`, `-3500`, `-7000`, `-20000`) is dropped.
+- **Filter at the source, the display, AND the API.** Visual hiding alone is never enough — the backend pick-create route MUST reject these markets so a client that bypasses the UI cannot record them.
+- **Alternate markets render per event** and must be tied to the correct team/player/game. Never key an alt feed to the first event only; match per-game by canonical matchup (see `fanduelAltLinesService.enrichBoard` which matches by `matchupKey(away,home)` per game). NOTE: FanDuel's public API only publishes alternate TEAM totals for the spotlight (first) event of a slate — alt run-lines and alt game-totals come back for every game, but alt team totals are featured-game-only upstream. Render alt team totals for whatever games actually carry them; never fabricate odds to fill the others (no-fake-numbers rule).
+- **Compact alt rows.** The expanded alternate ladder must read like a professional sportsbook list, not stacked oversized cards. Keep the dark sportsbook theme; scope any sizing CSS to the alt panel only (`.sb-alt-tt`) so the main board is untouched.
+
+Reference implementation:
+- Frontend filter helper `window.TMR._altTtAllowed(sport,line,odds)` in `sportsbook/index.html`, applied in `_ttCollectLines` (alt ladder), the `team_totals` branch of `_renderMarketBoard`, and the `lockInPick` submit guard. Compact CSS marker `ALT_LINE_INTEGRITY_20260530` scoped to `.sb-alt-tt`.
+- Backend source strip in `services/fanduelAltLinesService.js` (`altTeamTotalAllowed` in `buildTeamTotalItems`).
+- Backend authoritative rejection in `routes/picks.js` create route (`ALT_LINE_INTEGRITY_20260530` block: 400 on sub-2.5 MLB team totals or odds `< -500`).
+Thresholds live in ONE place per layer — change them in lockstep across all four sites if ever tuned.
+
 ## Every visible sportsbook market button MUST be click-tested before deploy (May 28, 2026) — HARD RULE (PERMANENT)
 Any market a user can SEE as a tappable price on `/sportsbook/` MUST drive the canonical pick slip + lock path — a button that highlights but populates nothing is a production bug (alt spreads/totals shipped dead this way, fixed in `ALT_LINES_CLICK_FIX_20260528`).
 
@@ -935,21 +949,3 @@ Any public table — Public Ledger, profile stats, sportsbook ledger, contest da
 - **Do NOT solve clipping by removing columns** or shrinking text below ~12px. Reduce cell padding at narrow viewports instead; columns stay.
 - **Mandatory viewport test before completion**: 1440 / 1280 / 1024 / 768 / 390. At each width every column must be reachable (visible or via horizontal scroll inside the wrapper) and the scrollbar (or its gutter) must be visible.
 - The Public Ledger reference fix lives in `profile/index.html` ("PUBLIC LEDGER RIGHT-EDGE CLIP HARD-FIX (May 27, 2026 r2)" block). Copy the same wrapper pattern when adding new table-style views.
-
-
-## PERMANENT RULE: Nav must never render logged-out state while a session is still resolving (May 29, 2026)
-
-The global nav (`static/js/tmr-sitewide.js` `renderActions()`) decides login state from `getSessionUser()`. That can transiently return `null` on a cold load while the async `/auth/me` restore is still in flight, even though valid tokens exist in localStorage. Rendering "Log In / Join Free" in that window was the root cause of the long-running "site keeps asking me to log in" regression.
-
-Hard rules:
-- `renderActions()` MUST branch three ways: resolved user -> logged-in nav; **tokens present but user not yet resolved -> neutral PENDING chip (`buildPendingActions`, `data-tmr-auth-pending`), never login buttons**; no tokens -> logged-out nav. Token presence is checked by `hasAuthTokens()` (all token keys + `window.api.isLoggedIn()`).
-- Hydration (`hydrateAuthThenRerender` -> `window.api.getCurrentUser()`) must persist the user to `tmr_current_user` so subsequent loads resolve synchronously with zero flash.
-- Never "fix" this by only patching button text. The session must drive the nav.
-- This composes with the never-auto-logout rule: only explicit Log Out clears auth; a slow/failed `/auth/me` keeps the user logged in.
-- Deploy note: bumping `tmr-sitewide.js?v=` is mandatory for the fix to reach users (GitHub Pages edge-caches each `?v=` URL for max-age=14400). `sportsbook/index.html` is >1MB so the Contents API returns empty content — edit it via the Git Blobs + Git Data API, not Contents API. Never curl a new `?v=` URL until the JS blob is confirmed at origin, or you cache it stale.
-
-
-## Sportsbook alternate-line submission (ALT_LINE_SUBMIT_FIX_20260529)
-Alternate spreads/totals (and alt team totals) come from a SEPARATE feed and are NOT in window.TMR.currentGames. The production submit path (lockInPick in sportsbook-production-fix-persist-reliability.js) reads state.selectedOption, which is ONLY set by selectOption() via state.currentOptions. Standard markets route through window.selectGameBet -> createFallbackOption -> selectOption. Alt lines route through window.selectAltBet, which previously only painted the slip + window.TMR.currentSelectedPick and never registered an option -> Lock Pick was a silent no-op (or submitted the prior standard pick).
-
-RULE: any selection path that bypasses selectGameBet (alt lines, props if ever made pickable, externally-sourced markets) MUST register its option in the production submit state before Lock Pick. Use window.tmrRegisterExternalOption({game_id, sport, home_team, away_team, commence_time, market_type, selection, selection_label, line, odds, group_label, book_title}). It preserves the REAL game_id (needed for grading), maps alt totals -> market_type 'totals' and alt spreads -> 'spreads', and calls selectOption so lockInPick submits the alt pick unchanged. selectAltBet now calls it. Do not regress this; verify alt MLB + NHL totals/spreads build a correct POST /api/picks payload (market_type, line_snapshot, odds_snapshot, selection_label) before shipping any sportsbook submit change.
