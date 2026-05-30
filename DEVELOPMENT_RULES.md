@@ -1,5 +1,12 @@
 # TrustMyRecord Development Rules
 
+## Sportsbook CSS scoping + post-change tab sweep (May 30, 2026) — HARD RULE (PERMANENT)
+A sub-feature's CSS must never reach into the shared sportsbook layout. Concretely:
+- **Alt-market (and any sub-panel) CSS must be scoped to its own container class only** — e.g. `.sb-alt-tt`, `.sb-alt-team`, `.sb-alt-grid*`, `.sb-alt-cell`. NEVER add or restyle a bare global selector (`.team-row`, `.game-row`, `.picks-board-row`, `.odds-btn`, `.sb-odds`, `.market-headers`, `.sb-board-row`) for a sub-feature. If you must touch a shared class, compound-scope it under the sub-container (`.sb-alt-cell.sb-odds {…}`), never `.sb-odds {…}` alone.
+- **Never leave an unbalanced brace in any inline `<style>` block.** One missing `}` swallows every rule after it and destroys the whole board. After editing CSS, verify total `{` == `}` across all style blocks (this file's regression check: `style blocks balanced, open==close`).
+- **After ANY sportsbook UI change, sweep all tabs before calling complete:** Game Lines (horizontal MATCHUP/SPREAD/MONEYLINE/TOTAL must stay aligned), Team Totals, 1st 5 / periods, Alt Lines, Player Props, and the Pick Slip / Submit flow. A change is not done until each renders cleanly and Submit still works.
+- **Cache note:** GitHub Pages CDN + browser can serve a stale/mid-deploy `index.html` for a few minutes after a Contents API commit. "Page looks broken right after deploy" is usually cache — hard-refresh (Ctrl+Shift+R) and re-check the fresh deployed file before assuming a code regression.
+
 ## Alternate-line integrity — no absurd unit-farming lines (May 30, 2026) — HARD RULE (PERMANENT)
 `ALT_LINE_INTEGRITY_20260530`. Alternate markets exist to give real bettable options, NOT to let users farm fake easy units off joke lines. Every alternate-line market MUST be filtered both visually AND at submission/validation, by the same thresholds on both ends:
 - **MLB team totals below 2.5 are removed** (hide `Team Total 0.5`, `1.5`). `2.5` and up are allowed. The MAIN posted line is always kept even if it is `3.5`, `4.5`, etc.
