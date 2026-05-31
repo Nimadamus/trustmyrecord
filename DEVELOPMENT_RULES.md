@@ -1009,3 +1009,23 @@ from forum_threads.content (id = "thread-<n>-starter"), NOT a forum_posts row.
   is_edited && edited_at are truthy. Never render it on untouched posts.
 - Future forum edit work must preserve this split (starter -> threads endpoint,
   replies -> posts endpoint) and the edited-timestamp gating.
+
+
+## FORUM POST CARD STANDARD - FORUM_POST_CARD_20260531
+Every forum post card (starter + replies) MUST keep, under the classic light skin:
+- READABLE author panel: tmr-redesign-overrides.css forces a dark navy
+  .fthread-author panel; classic-forum must restore the light panel
+  (bg #eef1f5, dark text) so username/role/joined/posts/threads/active/
+  badges (e.g. "Verified record") stay readable. Never leave it dark-on-dark.
+- Visible user/post/thread stats (Posts, Threads, Joined) in the author panel.
+- Action buttons where permitted, styled as compact classic .fpost-btn:
+  * Like  -> POST /forum/posts/:id/like  (replies) or /forum/threads/:id/like
+            (starter); returns {liked, like_count}; server enforces 1-per-user
+            (UNIQUE / existing-row check). Show + live-update the count.
+  * Quote -> populates quick reply with [quote=author]...[/quote].
+  * Reply -> focuses the quick reply box.
+  * Edit  -> owner/mod only; starter via PUT /forum/threads/:id, replies via
+            PUT /forum/posts/:id (see FORUM_EDIT_STARTER_20260531).
+- Edited posts show "Last edited <ET timestamp>" under the body, ONLY when
+  is_edited && edited_at are truthy.
+Future forum card changes must preserve all of the above.
