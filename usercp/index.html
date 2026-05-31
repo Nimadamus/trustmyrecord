@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,follow">
+<link rel="canonical" href="https://trustmyrecord.com/usercp/">
+<title>User CP - TrustMyRecord Forums</title>
+<meta name="description" content="Your private TrustMyRecord forum control panel. Manage your profile, avatar, account and notification settings, messages, threads and posts.">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+<style>
+/* TrustMyRecord User CP - light classic forum skin (matches /forum/) */
+:root{
+  --page:#e9e9e9;--paper:#ffffff;--panel:#f7f7f7;--bar:#d9e0ea;--bar-dark:#c8d2df;
+  --line:#b7c0cb;--line-soft:#d7dce2;--text:#202428;--muted:#5f6873;
+  --link:#1f5f9f;--link-hover:#0f3f72;--button:#e6eaf0;--button-border:#9faabb;
+  --notice:#fff8d7;--danger:#a32727;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--page);color:var(--text);font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.35}
+a{color:var(--link);text-decoration:none}
+a:hover{color:var(--link-hover);text-decoration:underline}
+.fhead{background:#f6f6f6;border-bottom:1px solid var(--line)}
+.fhead-in{max-width:1180px;margin:0 auto;padding:10px 12px;display:flex;align-items:center;gap:16px}
+.fhead-logo{font-size:20px;font-weight:700;color:#1d1d1d;text-decoration:none;white-space:nowrap}
+.fhead-logo b{color:#b87500}
+.fhead-logo span{display:block;font:normal 11px Arial,Helvetica,sans-serif;color:#777}
+.fhead-links{display:flex;gap:10px;align-items:center;white-space:nowrap;margin-left:auto}
+.fhead-links a,.fhead-links button{border:0;background:transparent;color:var(--link);font:12px Arial,Helvetica,sans-serif;padding:0;cursor:pointer}
+.ftabs{background:#d7dde6;border-top:1px solid #fff;border-bottom:1px solid #aeb8c6}
+.ftabs-in{max-width:1180px;margin:0 auto;padding:0 12px;display:flex;flex-wrap:wrap;gap:0}
+.ftabs a,.ftabs button{display:block;padding:8px 11px;border:0;border-right:1px solid #b7c0cb;background:transparent;color:#1d3552;font:bold 12px Arial,Helvetica,sans-serif;text-decoration:none;cursor:pointer}
+.ftabs a:hover,.ftabs button:hover{background:#c7d1de;color:#10253c;text-decoration:none}
+.ftabs a.is-active{background:#fff;color:#000}
+.fshell{max-width:1180px;margin:12px auto 40px;padding:0 12px}
+.fcrumb{background:#f5f5f5;border:1px solid var(--line);padding:9px 12px;color:var(--muted);font-size:12px}
+.fcrumb a{font-weight:bold;color:var(--link)}
+.ftitle{background:#fff;border:1px solid var(--line);border-top:0;padding:11px 12px}
+.ftitle h1{margin:0;color:#111;font:bold 20px Arial,Helvetica,sans-serif}
+.ftitle p{margin:4px 0 0 0;color:#555;font-size:12px}
+
+.ucp-grid{display:grid;grid-template-columns:300px 1fr;gap:12px;margin-top:12px}
+@media(max-width:820px){.ucp-grid{grid-template-columns:1fr}}
+.ucp-box{background:#fff;border:1px solid var(--line)}
+.ucp-box-head{background:var(--bar);border-bottom:1px solid var(--line);padding:6px 10px;font:bold 12px Arial,Helvetica,sans-serif;color:#222}
+.ucp-box-body{padding:12px}
+
+.ucp-id{display:flex;align-items:center;gap:12px}
+.ucp-avatar{width:64px;height:64px;border:1px solid #777;background:#dfe5ec;color:#222;display:grid;place-items:center;font:bold 26px Arial,Helvetica,sans-serif;overflow:hidden;flex:0 0 64px}
+.ucp-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.ucp-id-name{font:bold 15px Arial,Helvetica,sans-serif;color:#111}
+.ucp-id-sub{color:#555;font-size:12px;margin-top:2px}
+.ucp-id-sub a{font-weight:bold}
+
+.ucp-stats{list-style:none;margin:10px 0 0;padding:0;border-top:1px solid var(--line-soft)}
+.ucp-stats li{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line-soft);font-size:12px}
+.ucp-stats li span:first-child{color:#555}
+.ucp-stats li b{color:#111}
+
+.ucp-tools{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(max-width:520px){.ucp-tools{grid-template-columns:1fr}}
+.ucp-tool{display:block;border:1px solid var(--line);background:#f7f9fc;padding:10px 12px;color:#1d3552}
+.ucp-tool:hover{background:#e7eef8;text-decoration:none;border-color:#8ea9c3}
+.ucp-tool b{display:block;font:bold 13px Arial,Helvetica,sans-serif;color:#1d3552;margin-bottom:2px}
+.ucp-tool span{display:block;color:#5f6873;font-size:11px;line-height:1.3}
+
+.ucp-list{margin:0;padding:0;list-style:none}
+.ucp-list li{padding:8px 4px;border-bottom:1px solid var(--line-soft);font-size:12px}
+.ucp-list li:last-child{border-bottom:0}
+.ucp-list a{font-weight:bold}
+.ucp-list .ucp-meta{color:#777;font-size:11px;margin-top:2px}
+.ucp-empty{color:#777;font-size:12px;padding:8px 4px}
+.ucp-section{margin-top:12px}
+.ucp-note{background:var(--notice);border:1px solid #e3d27a;padding:8px 10px;color:#5d4d10;font-size:12px;margin-top:12px}
+</style>
+</head>
+<body class="classic-forum">
+
+<div class="fhead">
+    <div class="fhead-in">
+        <a href="/" class="fhead-logo">Trust<b>My</b>Record Forums<span>Sports betting discussion boards</span></a>
+        <div class="fhead-links" id="forumTopNav">
+            <a href="/messages/">Messages</a>
+            <a href="/notifications/">Alerts</a>
+            <a href="/profile/" id="ucpTopProfileLink">Profile</a>
+            <button type="button" onclick="ucpLogout()">Log Out</button>
+        </div>
+    </div>
+</div>
+
+<div class="ftabs">
+    <div class="ftabs-in">
+        <a href="/forum/">Forums</a>
+        <a href="/leaderboard/">Leaderboard</a>
+        <a href="/handicappers/">Handicappers</a>
+        <a href="/sportsbook/">Sportsbook</a>
+        <a href="/usercp/" class="is-active">User CP</a>
+    </div>
+</div>
+
+<div class="fshell">
+    <div class="fcrumb"><a href="/forum/">Forums</a> &rsaquo; User CP</div>
+    <div class="ftitle">
+        <h1>User CP</h1>
+        <p>Your private control panel. Manage your account, profile, and forum activity. Your public profile stays separate and is reached from the Profile link.</p>
+    </div>
+
+    <div class="ucp-grid">
+        <!-- Left: account identity + stats -->
+        <div>
+            <div class="ucp-box">
+                <div class="ucp-box-head">Your Account</div>
+                <div class="ucp-box-body">
+                    <div class="ucp-id">
+                        <div class="ucp-avatar" id="ucpAvatar"><span id="ucpAvatarInitial">&middot;</span></div>
+                        <div>
+                            <div class="ucp-id-name" id="ucpDisplayName">Loading...</div>
+                            <div class="ucp-id-sub">@<span id="ucpUsername">...</span></div>
+                            <div class="ucp-id-sub"><a href="/profile/" id="ucpViewProfile">View public profile &raquo;</a></div>
+                        </div>
+                    </div>
+                    <ul class="ucp-stats" id="ucpStats">
+                        <li><span>Member since</span><b id="ucpJoined">&ndash;</b></li>
+                        <li><span>Threads started</span><b id="ucpThreadCount">&ndash;</b></li>
+                        <li><span>Forum posts</span><b id="ucpPostCount">&ndash;</b></li>
+                        <li><span>Verified picks</span><b id="ucpPicks">&ndash;</b></li>
+                        <li><span>Record</span><b id="ucpRecord">&ndash;</b></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: tools + activity -->
+        <div>
+            <div class="ucp-box">
+                <div class="ucp-box-head">Account Tools</div>
+                <div class="ucp-box-body">
+                    <div class="ucp-tools">
+                        <a class="ucp-tool" href="/profile/?action=edit"><b>Edit Profile</b><span>Display name, headline, bio, location, favorite teams</span></a>
+                        <a class="ucp-tool" href="/profile/?action=change-avatar"><b>Change Avatar</b><span>Upload or replace your profile image</span></a>
+                        <a class="ucp-tool" href="/profile/?action=edit"><b>Account Settings</b><span>Manage your public identity and account details</span></a>
+                        <a class="ucp-tool" href="/notifications/"><b>Notification Settings</b><span>Review alerts, replies, likes and mentions</span></a>
+                        <a class="ucp-tool" href="/messages/"><b>Messages / Inbox</b><span>Open your private message inbox</span></a>
+                        <a class="ucp-tool" href="/notifications/"><b>Alerts</b><span>See your latest forum notifications</span></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ucp-box ucp-section">
+                <div class="ucp-box-head">My Threads</div>
+                <div class="ucp-box-body">
+                    <ul class="ucp-list" id="ucpMyThreads"><li class="ucp-empty">Loading your threads...</li></ul>
+                </div>
+            </div>
+
+            <div class="ucp-box ucp-section">
+                <div class="ucp-box-head">My Posts</div>
+                <div class="ucp-box-body">
+                    <ul class="ucp-list" id="ucpMyPosts"><li class="ucp-empty">Loading your posts...</li></ul>
+                </div>
+            </div>
+
+            <div class="ucp-box ucp-section">
+                <div class="ucp-box-head">Subscribed Threads</div>
+                <div class="ucp-box-body">
+                    <ul class="ucp-list" id="ucpSubscribed"><li class="ucp-empty">Loading...</li></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/static/js/config.js?v=20260421a"></script>
+<script src="/static/js/backend-api.js?v=20260423a"></script>
+<script src="/static/js/auth-persistent.js?v=20260424a"></script>
+<script>
+(function(){
+  'use strict';
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function timeAgo(ts){
+    if(!ts) return '';
+    var t=new Date(ts).getTime(); if(isNaN(t)) return '';
+    var s=Math.floor((Date.now()-t)/1000);
+    if(s<60) return 'just now';
+    var m=Math.floor(s/60); if(m<60) return m+'m ago';
+    var h=Math.floor(m/60); if(h<24) return h+'h ago';
+    var d=Math.floor(h/24); if(d<30) return d+'d ago';
+    return new Date(t).toLocaleDateString();
+  }
+  function getStoredUser(){
+    var keys=['tmr_current_user','currentUser'];
+    for(var i=0;i<keys.length;i++){
+      try{var raw=localStorage.getItem(keys[i]); if(raw){var u=JSON.parse(raw); if(u&&(u.username||u.user)) return u.user||u;}}catch(e){}
+    }
+    try{var s=localStorage.getItem('trustmyrecord_session'); if(s){var p=JSON.parse(s); return p.user||p;}}catch(e){}
+    return null;
+  }
+  function loggedIn(){
+    try{ if(window.api && window.api.isLoggedIn && window.api.isLoggedIn()) return true; }catch(e){}
+    return !!getStoredUser() || !!localStorage.getItem('tmr_access_token') || !!localStorage.getItem('accessToken');
+  }
+
+  if(!loggedIn()){
+    window.location.replace('/login/?next=' + encodeURIComponent('/usercp/'));
+    return;
+  }
+
+  window.ucpLogout = function(){
+    try{ if(window.api && window.api.logout) { window.api.logout(); } }catch(e){}
+    try{ ['tmr_current_user','currentUser','trustmyrecord_session','tmr_access_token','tmr_refresh_token','accessToken','refreshToken'].forEach(function(k){localStorage.removeItem(k);}); }catch(e){}
+    window.location.href = '/';
+  };
+
+  var currentUsername = null;
+
+  function paintAccount(u){
+    if(!u) return;
+    currentUsername = u.username || u.user_name || null;
+    var dn = u.display_name || u.displayName || u.username || 'Member';
+    document.getElementById('ucpDisplayName').textContent = dn;
+    document.getElementById('ucpUsername').textContent = u.username || '';
+    var avatar = u.avatar_url || u.avatar || '';
+    var av = document.getElementById('ucpAvatar');
+    if(avatar){ av.innerHTML = '<img src="'+esc(avatar)+'" alt="">'; }
+    else { document.getElementById('ucpAvatarInitial').textContent = (dn||'?').charAt(0).toUpperCase(); }
+    var prof = currentUsername ? '/profile/?user='+encodeURIComponent(currentUsername) : '/profile/';
+    document.getElementById('ucpViewProfile').href = prof;
+    document.getElementById('ucpTopProfileLink').href = prof;
+    if(u.created_at||u.joined_at||u.createdAt){
+      var d=new Date(u.created_at||u.joined_at||u.createdAt);
+      if(!isNaN(d.getTime())) document.getElementById('ucpJoined').textContent = d.toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric'});
+    }
+    var st = u.stats || u;
+    var picks = st.total_picks!=null?st.total_picks:(st.picks!=null?st.picks:null);
+    if(picks!=null) document.getElementById('ucpPicks').textContent = picks;
+    var w = st.wins, l = st.losses;
+    if(w!=null && l!=null) document.getElementById('ucpRecord').textContent = w+'-'+l+(st.pushes?('-'+st.pushes):'');
+    if(u.user_thread_count!=null) document.getElementById('ucpThreadCount').textContent = u.user_thread_count;
+    if(u.user_post_count!=null) document.getElementById('ucpPostCount').textContent = u.user_post_count;
+  }
+
+  function renderThreads(el, threads){
+    if(!threads || !threads.length){ el.innerHTML = '<li class="ucp-empty">You have not started any threads yet. <a href="/forum/">Start one &raquo;</a></li>'; return; }
+    el.innerHTML = threads.map(function(t){
+      var id = t.id || t.thread_id;
+      var title = t.title || 'Thread';
+      var href = '/forum/?thread=' + encodeURIComponent(id);
+      var meta = (t.reply_count!=null?(t.reply_count+' replies'):'') + (t.created_at?(' · '+timeAgo(t.created_at)):'');
+      return '<li><a href="'+esc(href)+'">'+esc(title)+'</a><div class="ucp-meta">'+esc(meta)+'</div></li>';
+    }).join('');
+  }
+
+  // Pull recent forum threads (a few pages), keep ones authored by the current user.
+  async function loadMyThreads(){
+    var el = document.getElementById('ucpMyThreads');
+    if(!window.api || !window.api.getForumThreads){ el.innerHTML='<li class="ucp-empty">Forum activity unavailable right now.</li>'; return; }
+    try{
+      var mine=[], page=1, maxPages=6;
+      while(page<=maxPages && mine.length<25){
+        var res = await window.api.getForumThreads({page:page, limit:50});
+        var list = (res && (res.threads||res.data||res.items)) || [];
+        if(!list.length) break;
+        list.forEach(function(t){
+          var au = t.username || (t.user && t.user.username) || t.author_username;
+          if(currentUsername && au && au.toLowerCase()===currentUsername.toLowerCase()) mine.push(t);
+        });
+        if(list.length<50) break;
+        page++;
+      }
+      mine.sort(function(a,b){return new Date(b.created_at||0)-new Date(a.created_at||0);});
+      document.getElementById('ucpThreadCount').textContent = mine.length + (mine.length>=25?'+':'');
+      renderThreads(el, mine.slice(0,15));
+    }catch(e){ el.innerHTML='<li class="ucp-empty">Could not load your threads right now.</li>'; }
+  }
+
+  function loadMyPosts(){
+    var el = document.getElementById('ucpMyPosts');
+    // No per-user posts endpoint yet; point users to their public activity feed.
+    var prof = currentUsername ? '/profile/?user='+encodeURIComponent(currentUsername) : '/profile/';
+    el.innerHTML = '<li class="ucp-empty">Your full reply history lives on your <a href="'+esc(prof)+'">public profile</a>. Per-post listing here is coming as the forum API expands.</li>';
+  }
+
+  function loadSubscribed(){
+    var el = document.getElementById('ucpSubscribed');
+    el.innerHTML = '<li class="ucp-empty">Thread subscriptions are not enabled yet. Threads you start or reply to appear under My Threads above.</li>';
+  }
+
+  async function init(){
+    var stored = getStoredUser();
+    if(stored) paintAccount(stored);
+    try{
+      if(window.api){
+        if(window.api.ready) { try{ await window.api.ready; }catch(e){} }
+        if(window.api.getCurrentUser){
+          var data = await window.api.getCurrentUser();
+          paintAccount((data && (data.user||data)) || stored);
+        }
+      }
+    }catch(e){}
+    if(!currentUsername){ var s=getStoredUser(); if(s) currentUsername=s.username; }
+    loadMyThreads();
+    loadMyPosts();
+    loadSubscribed();
+  }
+  init();
+})();
+</script>
+<script src="/static/js/analytics.js?v=20260504a"></script>
+</body>
+</html>
