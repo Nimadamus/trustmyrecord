@@ -140,6 +140,8 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 .fpost-actions .fpost-btn:hover{background:#d8dee7;color:#0f1419;text-decoration:none}
 .fpost-actions .fpost-btn.is-edit{background:#fff2bb;border-color:#c7a24d;color:#5d4700}
 .fpost-actions .fpost-btn.is-edit:hover{background:#ffe790;color:#3d2f00}
+.fpost-actions .fpost-btn.is-like.is-liked{background:#dff0e0;border-color:#5a9e63;color:#1f5a2a}
+.fpost-actions .fpost-btn .fpost-like-count{font-weight:normal;opacity:.85}
 .fpost-edit-box{margin-top:8px;border:1px solid var(--line);background:#fbfbfb;padding:8px}
 .fpost-edit-box textarea{width:100%;border:1px solid #aaa;background:#fff;color:#222;padding:7px;font:12px Arial,Helvetica,sans-serif;min-height:120px;box-sizing:border-box}
 .fpost-edit-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:6px}
@@ -432,6 +434,18 @@ body.classic-forum .fthread-body span,
 body.classic-forum .fthread-post-title,
 body.classic-forum .fthread-author,
 body.classic-forum .fthread-author b{color:#1f2937 !important}
+/* Author info panel: tmr-redesign-overrides.css forces a dark navy panel
+   (#1a2236) under .fthread-author, leaving the classic dark text unreadable.
+   Restore the classic light author panel so username/role/joined/posts/threads/
+   badges stay readable. NEVER leave the author panel dark under the classic skin. */
+body.classic-forum .fthread-author{background:#eef1f5 !important;border-right:1px solid #c9c9c9 !important;color:#333 !important}
+body.classic-forum .fthread-author b{color:#1f2937 !important}
+body.classic-forum .fthread-role{color:#444 !important}
+body.classic-forum .fthread-author-row{color:#333 !important}
+body.classic-forum .fthread-author-row a{color:#0033cc !important}
+body.classic-forum .fthread-avatar{background:#dfe5ec !important;border:1px solid #9aa7b8 !important;color:#222 !important}
+body.classic-forum .fthread-fandom{background:#e8f0ff !important;border:1px solid #b8ccf0 !important;color:#1d3a6b !important}
+body.classic-forum .fthread-badge{background:#fff !important;border:1px solid #9aa7b8 !important;color:#1f2937 !important}
 body.classic-forum .fthread-body blockquote,
 body.classic-forum .fpost-quote,
 body.classic-forum .fquote{color:#1f2937 !important;background:#f1f3f7 !important;border-left:3px solid #b8c2d4 !important;padding:6px 10px !important;margin:6px 0 !important}
@@ -1854,6 +1868,7 @@ function starterPostFromThread(thread) {
         is_thread_starter: true,
         is_edited: !!thread.is_edited,
         edited_at: thread.edited_at,
+        like_count: numericValue(thread.like_count) || 0,
         user_post_count: numericValue(thread.user_post_count),
         user_thread_count: numericValue(thread.user_thread_count),
         favorite_teams: thread.favorite_teams,
@@ -1948,10 +1963,13 @@ function renderThread() {
         var postAuthorId = (p.user_id != null) ? String(p.user_id) : ((p.user && p.user.id != null) ? String(p.user.id) : '');
         var isOwner = !!myUsername && (postAuthorName === myUsername || (!!myUserId && !!postAuthorId && myUserId === postAuthorId));
         var canEdit = isOwner || canModerate;
+        var likeCount = numericValue(p.like_count); if (likeCount == null) likeCount = 0;
+        var likeTarget = p.is_thread_starter ? (p.thread_id || (cachedThread && cachedThread.id)) : postId;
         var actions = '<div class="fpost-actions">'
-            + (canEdit && postId ? '<button type="button" class="fpost-btn is-edit" onclick="forumEditPost(\'' + escHtml(postId) + '\')">Edit</button>' : '')
+            + (likeTarget ? '<button type="button" class="fpost-btn is-like" onclick="forumLikePost(\'' + escHtml(String(likeTarget)) + '\',' + (p.is_thread_starter ? 'true' : 'false') + ',this)">Like <span class="fpost-like-count">(' + likeCount + ')</span></button>' : '')
             + (isLoggedIn && postId ? '<button type="button" class="fpost-btn" onclick="forumQuotePost(\'' + escHtml(postId) + '\')">Quote</button>' : '')
             + '<button type="button" class="fpost-btn" onclick="forumFocusReply()">Reply</button>'
+            + (canEdit && postId ? '<button type="button" class="fpost-btn is-edit" onclick="forumEditPost(\'' + escHtml(postId) + '\')">Edit</button>' : '')
             + '</div>';
         var editedLine = (p.is_edited && p.edited_at) ? '<div class="fpost-edited" id="postEdited-' + escHtml(postId) + '">Last edited ' + escHtml(formatEditedDate(p.edited_at)) + '</div>' : '';
         return '<div class="fthread-post" data-post-id="' + escHtml(postId) + '">'
@@ -1991,6 +2009,36 @@ function forumQuotePost(postId) {
     ta.focus();
     ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
     try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch(e) {}
+}
+
+async function forumLikePost(targetId, isStarter, btn) {
+    if (typeof isUserLoggedIn === 'function' && !isUserLoggedIn()) { window.location.href = '/login/'; return; }
+    if (!btn || btn.disabled) return;
+    btn.disabled = true;
+    var countEl = btn.querySelector('.fpost-like-count');
+    try {
+        var path = isStarter
+            ? '/forum/threads/' + encodeURIComponent(targetId) + '/like'
+            : '/forum/posts/' + encodeURIComponent(targetId) + '/like';
+        var resp = await api.request(path, { method: 'POST' });
+        var n = (resp && typeof resp.like_count === 'number') ? resp.like_count : null;
+        if (countEl && n != null) countEl.textContent = '(' + n + ')';
+        if (resp && resp.liked) { btn.classList.add('is-liked'); } else { btn.classList.remove('is-liked'); }
+        // Keep cache in sync so a later re-render preserves the new count.
+        if (n != null) {
+            if (isStarter && cachedThread) cachedThread.like_count = n;
+            else if (Array.isArray(cachedPosts)) {
+                for (var i = 0; i < cachedPosts.length; i++) {
+                    if (String(cachedPosts[i].id) === String(targetId)) { cachedPosts[i].like_count = n; break; }
+                }
+            }
+        }
+    } catch (err) {
+        console.error('Like error:', err, err && err.detail);
+        alert((err && (err.message || err.detail)) || 'Failed to like post.');
+    } finally {
+        btn.disabled = false;
+    }
 }
 
 function forumEditPost(postId) {
