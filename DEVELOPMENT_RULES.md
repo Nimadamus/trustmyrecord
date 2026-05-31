@@ -995,37 +995,35 @@ Forum/social engagement MUST notify the recipient. Never remove or bypass this w
 - **UI**: a notification bell in the logged-in nav with a visible unread count, a dropdown/`/notifications/` page, mark-read, and click-through to `/forum/?thread=<id>#post-<id>`. The dropdown lives in `static/js/notifications.js`; the unread badge poller in `nav-badges.js`. As of the forum-first rollout the bell is injected by the **forum-scoped** `static/js/forum-notification-bell.js` (loaded only by `forum/index.html`); when sitewide rollout is approved, move the bell markup into `buildLoggedInActions()` in `tmr-sitewide.js` and delete the injector.
 - Writes are best-effort (`notifySafe`) and must never block forum posting/replies/likes.
 
+## RULE: TMR forum visual target = light "Two Plus Two" classic skin (TWO_PLUS_TWO_FORUM_STYLE_TARGET_20260531)
 
-## FORUM EDIT BEHAVIOR (STARTER POST) - FORUM_EDIT_STARTER_20260531
-The first post in every forum thread is a SYNTHETIC starter post built client-side
-from forum_threads.content (id = "thread-<n>-starter"), NOT a forum_posts row.
-- Editing the starter MUST call PUT /api/forum/threads/:id (owner-only), never
-  PUT /api/forum/posts/:id. Sending the synthetic id to /posts/:id casts a
-  non-numeric value to the integer posts.id column and 500s ("Failed to edit post").
-- Regular replies (real forum_posts rows) continue to use PUT /api/forum/posts/:id.
-- Both routes set is_edited=true + edited_at=NOW(); forum_threads also has these
-  columns (added via ADD COLUMN IF NOT EXISTS guard in the route).
-- The UI shows "Last edited <ET timestamp>" under a post body ONLY when
-  is_edited && edited_at are truthy. Never render it on untouched posts.
-- Future forum edit work must preserve this split (starter -> threads endpoint,
-  replies -> posts endpoint) and the edited-timestamp gating.
+The TrustMyRecord forum (`/forum/index.html`) must visually follow the Two Plus Two
+forum reference unless Nima explicitly changes direction:
+- Light gray/off-white page background (NOT the dark sportsbook background).
+- Dark charcoal top nav bar + tab bar.
+- Clean white/light-gray forum rows, dark-charcoal section header bars.
+- Light-gray left sidebar with simple dark text links (no dark cards/glow).
+- Simple folder-style sport icons (no glowing badge tiles).
+- Layout: forum name/description left, last post middle, threads/posts right.
+- Compact classic typography; no oversized modern styling or heavy rounded dark panels.
 
+Implementation: body uses ONLY `class="classic-forum"`. The dark
+`tmr-forum-live-redesign` / `FORUM_PREMIUM_SOCIAL_UI` CSS layers stay in the file
+(dormant, not applied) — do NOT re-add that class to <body>. Light styling for the
+sidebar box/list and sport icons lives in `<style id="tmr-forum-2p2-classic-final-20260531">`.
+Visual only: never touch forum routes, auth, messages, alerts, notification bell,
+thread/post counts, or thread/reply logic when restyling.
 
-## FORUM POST CARD STANDARD - FORUM_POST_CARD_20260531
-Every forum post card (starter + replies) MUST keep, under the classic light skin:
-- READABLE author panel: tmr-redesign-overrides.css forces a dark navy
-  .fthread-author panel; classic-forum must restore the light panel
-  (bg #eef1f5, dark text) so username/role/joined/posts/threads/active/
-  badges (e.g. "Verified record") stay readable. Never leave it dark-on-dark.
-- Visible user/post/thread stats (Posts, Threads, Joined) in the author panel.
-- Action buttons where permitted, styled as compact classic .fpost-btn:
-  * Like  -> POST /forum/posts/:id/like  (replies) or /forum/threads/:id/like
-            (starter); returns {liked, like_count}; server enforces 1-per-user
-            (UNIQUE / existing-row check). Show + live-update the count.
-  * Quote -> populates quick reply with [quote=author]...[/quote].
-  * Reply -> focuses the quick reply box.
-  * Edit  -> owner/mod only; starter via PUT /forum/threads/:id, replies via
-            PUT /forum/posts/:id (see FORUM_EDIT_STARTER_20260531).
-- Edited posts show "Last edited <ET timestamp>" under the body, ONLY when
-  is_edited && edited_at are truthy.
-Future forum card changes must preserve all of the above.
+## RULE: Forum "User CP" = private control panel, NOT a public profile shortcut (FORUM_USERCP_CONTROL_PANEL_20260531)
+
+The forum nav "User CP" tab must route to the dedicated private control panel
+`/usercp/` (`usercp/index.html`), never to `/profile/`.
+- `/usercp/` is private (login-gated; `noindex`) and uses the light `classic-forum` skin.
+- It holds account tools only: Edit Profile (`/profile/?action=edit`), Change Avatar
+  (`/profile/?action=change-avatar`), Account Settings, Notification Settings,
+  Messages/Inbox (`/messages/`), Alerts (`/notifications/`), My Threads (live, filtered
+  by current username), My Posts, Subscribed Threads, and basic account/forum stats.
+- The PUBLIC profile stays separate and is reached ONLY via the username / Profile link
+  (`/profile/?user=<username>`). Never collapse User CP into the public profile again.
+- Future forum nav work must keep this separation: "User CP" = private dashboard,
+  "Profile" = public page.
