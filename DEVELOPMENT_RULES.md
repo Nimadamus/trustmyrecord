@@ -958,6 +958,11 @@ Player props on the sportsbook board are **view-only** and must stay that way un
 - Frontend (`sportsbook/index.html`): the "Player Props" MLB subtab renders via `_renderPlayerPropsBoard`, which is intentionally inert — no buttons, no `onclick`, no `selectGameBet`, no pick-slip/bet-slip/manual-entry hooks. It must never be added to `_groupBackedMarkets` (that path is pickable). The tab only appears when the API returns a non-empty `player_props` group; otherwise show the clean empty state.
 - Do NOT wire props to the pick slip, submit flow, grading, or any DB write without an explicit upgrade decision. Props are reference data until then.
 
+### Stats depth — Player Props + Alternate Lines sections (May 31, 2026, PROP_STATS_20260531)
+Props and alt lines are tracked as **dedicated stat sections** with depth, not lumped into generic spread/total groups:
+- **Backend `services/statsAggregator.js`** (deployed master `6e5f1d27`): `marketGroup()` now returns `player_props` for the 4 prop markets and `alternate_lines` for `alt_spreads`/`alt_totals` (split out of `spread`/`total`). Two new breakdown categories persist in `user_stat_breakdowns`: `prop_type` (strikeouts/hits/total_bases/rbi) and `alt_line_type` (alt_spread/alt_total). `addBucket` skips null buckets, so non-prop/non-alt picks are unaffected. Exposed live via `GET /api/users/:u/stats/breakdowns?category=market_group|prop_type|alt_line_type` (table-driven; populates after the next stats rebuild once such graded picks exist). Note: the repo stores this file LF; the GitHub compare shows whole-file because the stored blob endings differ — content is live+only the added lines (verified by LF-vs-LF diff). `profileAnalytics.js`/`routes/users.js` intentionally NOT changed (breakdowns endpoint is table-driven; their splits were unused).
+- **Frontend `profile/index.html`** (deployed `e608a4e`): two new panels — **Player Props** (rows by stat type) + **Alternate Lines** (alt spread vs alt total) — rendered client-side from the user's own graded picks via `renderDepthBreakdown()` (same `pickPL`/`bRowExtended` as every other panel). `MARKET_TYPE_GROUPS` gained a `player_props` group; `PROP_TYPE_GROUPS`/`ALT_LINE_GROUPS` drive the depth panels. Modules self-hide when the user has no such picks (verified live: hidden for BetLegend, 0 page errors). No fabricated data.
+
 ### Rollout status
 - **Sub-step 1 (display-only) — DONE.** Backend `services/fanduelPropsService.js` + frontend `_renderPlayerPropsBoard` tab live.
 - **Sub-step 2 (schema support) — DONE (May 27, 2026).** `database/migration_player_props.sql` applied to live DB (backend commit `67c5da4`): added nullable `picks.player_name` / `player_team` / `player_id`, and widened `picks_market_type_check` (kept `NOT VALID`, matching the existing live constraint so legacy rows like `first_five_totals`/`team_total` don't break) to allow `pitcher_strikeouts`/`batter_total_bases`/`batter_hits`/`batter_rbi`. Wired into `init-db.js` for fresh DBs (note: prod init-db is guarded off by `RUN_PRODUCTION_DB_INIT`, so prod migrations are applied directly to the DB). Backend validation (`routes/picks.js`) accepts prop market types ONLY when env `PROPS_PICKABLE_ENABLED` is truthy — **default OFF**, so prop submissions still return HTTP 400 and nothing can be written. **Do NOT set `PROPS_PICKABLE_ENABLED=true` until sub-step 4 (grading + handler support) is done** — turning it on early would allow ungraded prop picks. Known follow-up for the pickable sub-step: the unique index `picks_user_game_market_active_uniq(user_id, game_id, market_type)` must include `player_id`/selection before multiple props of the same type per game can be submitted.
@@ -1031,28 +1036,3 @@ The forum nav "User CP" tab must route to the dedicated private control panel
   (`/profile/?user=<username>`). Never collapse User CP into the public profile again.
 - Future forum nav work must keep this separation: "User CP" = private dashboard,
   "Profile" = public page.
-
-## FORUM INTERACTION STATE HYDRATION - FORUM_LIKE_STATE_HYDRATION_20260531
-Forum interaction state must hydrate on page load, not only after a click.
-- GET /api/forum/threads/:id (optionalAuth) returns `liked_by_me` on the thread
-  and on each post for the authenticated user (additive; absent/false for guests;
-  a missing forum_thread_likes table is treated as not-liked, never a 500).
-- The Like button renders with `.is-liked` when `liked_by_me` is true, so a post
-  the user already liked shows liked immediately after refresh.
-- Clicking still toggles via POST .../like and updates the count from the
-  returned `like_count`. Going forward, any new forum interaction (like, bookmark,
-  subscribe, vote) must ship its on-load hydration flag in the same GET, and the
-  card render must reflect it. Verify after each forum change: like -> refresh ->
-  still shows liked without re-clicking.
-
-## CI Guard Consistency — Quarantine Must Be Mirrored in the Workflow (2026-05-31)
-
-scripts/predeploy-guard.ps1 soft-ignores known-stale tests via Invoke-StaleQuarantineCommand,
-but the .github/workflows/sportsbook-regression.yml jobs (sportsbook-guards,
-profile-and-simulator-guards) re-ran the SAME tests as hard steps. A quarantined test
-failing did not break predeploy but DID break the workflow, leaving it red for 80+ runs.
-Rule: any test quarantined in predeploy-guard.ps1 must carry continue-on-error: true on
-its matching workflow step (comment: stale-quarantine: see DEVELOPMENT_RULES.md), and the
-two lists must stay in sync. Also: every job that runs a jsdom-dependent test (e.g.
-trendspotter-accuracy) must include the npm install --no-save jsdom@24.1.3 step.
-Marker: CI_GUARD_QUARANTINE_SYNC_20260531.
