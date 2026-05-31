@@ -994,3 +994,18 @@ Forum/social engagement MUST notify the recipient. Never remove or bypass this w
 - **Model**: `notifications` table, auto-migrated by `ensureNotificationSchema()`; each row carries `type`, `related_user_id` (actor), `related_thread_id`, `related_post_id`, `content`, `is_read`, `read_at`, `created_at`. Never expose pending picks or private data in a notification.
 - **UI**: a notification bell in the logged-in nav with a visible unread count, a dropdown/`/notifications/` page, mark-read, and click-through to `/forum/?thread=<id>#post-<id>`. The dropdown lives in `static/js/notifications.js`; the unread badge poller in `nav-badges.js`. As of the forum-first rollout the bell is injected by the **forum-scoped** `static/js/forum-notification-bell.js` (loaded only by `forum/index.html`); when sitewide rollout is approved, move the bell markup into `buildLoggedInActions()` in `tmr-sitewide.js` and delete the injector.
 - Writes are best-effort (`notifySafe`) and must never block forum posting/replies/likes.
+
+
+## FORUM EDIT BEHAVIOR (STARTER POST) - FORUM_EDIT_STARTER_20260531
+The first post in every forum thread is a SYNTHETIC starter post built client-side
+from forum_threads.content (id = "thread-<n>-starter"), NOT a forum_posts row.
+- Editing the starter MUST call PUT /api/forum/threads/:id (owner-only), never
+  PUT /api/forum/posts/:id. Sending the synthetic id to /posts/:id casts a
+  non-numeric value to the integer posts.id column and 500s ("Failed to edit post").
+- Regular replies (real forum_posts rows) continue to use PUT /api/forum/posts/:id.
+- Both routes set is_edited=true + edited_at=NOW(); forum_threads also has these
+  columns (added via ADD COLUMN IF NOT EXISTS guard in the route).
+- The UI shows "Last edited <ET timestamp>" under a post body ONLY when
+  is_edited && edited_at are truthy. Never render it on untouched posts.
+- Future forum edit work must preserve this split (starter -> threads endpoint,
+  replies -> posts endpoint) and the edited-timestamp gating.
