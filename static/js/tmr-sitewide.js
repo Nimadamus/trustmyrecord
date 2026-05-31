@@ -1068,6 +1068,14 @@
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
+                    <h3 class="tmr-global-footer__heading">Records &amp; Rankings</h3>
+                    <div class="tmr-global-footer__links">
+                        <a href="/sports-picks-leaderboard/">Sports Picks Leaderboard</a>
+                        <a href="/verified-handicapper-records/">Verified Handicapper Records</a>
+                        <a href="/sports-betting-record-tracker/">Sports Betting Record Tracker</a>
+                    </div>
+                </div>
+                <div class="tmr-global-footer__section">
                     <h3 class="tmr-global-footer__heading">Community</h3>
                     <div class="tmr-global-footer__links">
                         <a href="/feed/">Feed</a>
