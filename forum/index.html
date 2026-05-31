@@ -415,6 +415,48 @@ body.classic-forum .freply textarea{
 }
 body.classic-forum .modal-overlay{background:rgba(0,0,0,.25) !important;backdrop-filter:none !important}
 body.classic-forum .modal-head{background:#d7dce5 !important;color:#222 !important}
+/* PERMANENT TEXT-CONTRAST GUARD (FORUM_TEXT_CONTRAST_GUARD_20260531).
+   The classic light skin forces white/light backgrounds on post + reply panels,
+   but tmr-redesign-overrides.css applies dark-theme light text (#e6ecf5/#7a8499)
+   to the same .fthread-body/.meta/.freply elements via !important and loads after
+   this block. Result was near-invisible light text on white. These higher-specificity
+   classic-forum rules force dark readable copy. NEVER let forum body/quote/signature/
+   timestamp/permalink/quick-reply/form text go light on a light panel again. */
+body.classic-forum .fthread-post,
+body.classic-forum .fthread-body,
+body.classic-forum .fpost-content,
+body.classic-forum .fthread-body p,
+body.classic-forum .fthread-body li,
+body.classic-forum .fthread-body span,
+body.classic-forum .fthread-post-title,
+body.classic-forum .fthread-author,
+body.classic-forum .fthread-author b{color:#1f2937 !important}
+body.classic-forum .fthread-body blockquote,
+body.classic-forum .fpost-quote,
+body.classic-forum .fquote{color:#1f2937 !important;background:#f1f3f7 !important;border-left:3px solid #b8c2d4 !important;padding:6px 10px !important;margin:6px 0 !important}
+body.classic-forum .fthread-body .meta,
+body.classic-forum .fthread-post-num,
+body.classic-forum .fpost-meta,
+body.classic-forum .fpost-signature,
+body.classic-forum .fthread-signature{color:#4b5563 !important}
+body.classic-forum .fthread-body .meta a,
+body.classic-forum .fthread-body a,
+body.classic-forum .fpost-content a{color:#0033cc !important}
+body.classic-forum .freply,
+body.classic-forum .freply h3,
+body.classic-forum .freply label,
+body.classic-forum .freply textarea,
+body.classic-forum .fpost-edit-box,
+body.classic-forum .fpost-edit-box textarea,
+body.classic-forum .modal-body,
+body.classic-forum .modal-body label,
+body.classic-forum .modal-body input[type="text"],
+body.classic-forum .modal-body textarea,
+body.classic-forum .modal-body select{color:#1f2937 !important;background:#fff !important}
+body.classic-forum .freply textarea::placeholder,
+body.classic-forum .fpost-edit-box textarea::placeholder,
+body.classic-forum .modal-body textarea::placeholder,
+body.classic-forum .modal-body input[type="text"]::placeholder{color:#6b7280 !important;opacity:1 !important}
 @media (max-width:760px){
   body.classic-forum .fhead-in{padding:8px !important}
   body.classic-forum .fhead-search{width:100% !important;max-width:none !important;margin:7px 0 !important}
