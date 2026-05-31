@@ -89,7 +89,7 @@ async function main() {
     const ledgerPicks = [];
   let ledgerOffset = 0;
   while (true) {
-    const pageResponse = await fetch(`https://trustmyrecord-api.onrender.com/api/picks?username=BetLegend&limit=200&offset=${ledgerOffset}`);
+    const pageResponse = await fetch(`https://trustmyrecord-api.onrender.com/api/picks?username=BetLegend&limit=100&offset=${ledgerOffset}`);
     assert.strictEqual(pageResponse.status, 200, 'BetLegend pick ledger should load');
     const pageData = await pageResponse.json();
     const batch = pageData.picks || [];
