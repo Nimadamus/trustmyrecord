@@ -86,10 +86,19 @@ async function main() {
     assert.strictEqual(user.id, canonicalId, `${label} should resolve the same profile`);
   }
 
-  const picksResponse = await fetch('https://trustmyrecord-api.onrender.com/api/picks?username=BetLegend&limit=100&offset=0');
-  assert.strictEqual(picksResponse.status, 200, 'BetLegend pick ledger should load');
-  const picksData = await picksResponse.json();
-  const stats = calculateLedgerStats(picksData.picks || []);
+    const ledgerPicks = [];
+  let ledgerOffset = 0;
+  while (true) {
+    const pageResponse = await fetch(`https://trustmyrecord-api.onrender.com/api/picks?username=BetLegend&limit=200&offset=${ledgerOffset}`);
+    assert.strictEqual(pageResponse.status, 200, 'BetLegend pick ledger should load');
+    const pageData = await pageResponse.json();
+    const batch = pageData.picks || [];
+    if (batch.length === 0) break;
+    ledgerPicks.push(...batch);
+    ledgerOffset += batch.length;
+    if (ledgerOffset > 10000) break;
+  }
+  const stats = calculateLedgerStats(ledgerPicks);
   assert(stats.graded > 0, 'BetLegend graded pick count should come from the ledger');
   assert.notStrictEqual(stats.record, '0-0-0', 'BetLegend record must not be zero when graded picks exist');
   assert(stats.winRate != null, 'BetLegend win rate must be calculable when wins/losses exist');
