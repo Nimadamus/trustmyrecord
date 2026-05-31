@@ -1031,3 +1031,17 @@ The forum nav "User CP" tab must route to the dedicated private control panel
   (`/profile/?user=<username>`). Never collapse User CP into the public profile again.
 - Future forum nav work must keep this separation: "User CP" = private dashboard,
   "Profile" = public page.
+
+
+## FORUM INTERACTION STATE HYDRATION - FORUM_LIKE_STATE_HYDRATION_20260531
+Forum interaction state must hydrate on page load, not only after a click.
+- GET /api/forum/threads/:id (optionalAuth) returns  on the thread
+  and on each post for the authenticated user (additive; absent/false for guests;
+  a missing forum_thread_likes table is treated as not-liked, never a 500).
+- The Like button renders with  when  is true, so a post
+  the user already liked shows liked immediately after refresh.
+- Clicking still toggles via POST .../like and updates the count from the
+  returned . Going forward, any new forum interaction (like, bookmark,
+  subscribe, vote) must ship its on-load hydration flag in the same GET, and the
+  card render must reflect it. Verify after each forum change: like -> refresh ->
+  still shows liked without re-clicking.
