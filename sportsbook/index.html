@@ -12289,6 +12289,72 @@ window.toggleSportFamily = function (family) {
         }, false);
     }
 
+    // PROP_PICK_20260531: player-prop pick selection. Player props come from a
+    // separate feed (/games/props) and are NOT in window.TMR.currentGames, so —
+    // exactly like alt lines — they cannot route through selectGameBet. This
+    // builds the selection + game context and drives the canonical pick slip via
+    // tmrRegisterExternalOption (which sets state.selectedOption so Lock Pick
+    // submits THIS prop). Additive: never touches currentGames or live boards.
+    window.selectPropBet = function (info) {
+        if (typeof window.tmrRegisterExternalOption !== 'function') {
+            console.warn('[TMR][PROP] tmrRegisterExternalOption missing');
+            return;
+        }
+        var sport = (window.TMR && window.TMR.selectedSport) || '';
+        var sportKey = (window.TMR && window.TMR.sportKeyMap && window.TMR.sportKeyMap[sport]) || '';
+        var lineNum = (info.line == null || info.line === '') ? null : parseFloat(info.line);
+        var sideTxt = String(info.side || '').trim(); // "Over" / "Under"
+        var lineTxt = (lineNum == null) ? '' : (function (n) { var s = String(n); return s; })(lineNum);
+        // Grader contract: "<Player> Over|Under <line> <Stat>" (player & side are
+        // what the box-score grader parses; line comes from line_snapshot).
+        var selection = (info.player + ' ' + sideTxt + (lineTxt ? ' ' + lineTxt : '') + ' ' + (info.stat || '')).replace(/\s+/g, ' ').trim();
+        var ok = window.tmrRegisterExternalOption({
+            game_id: info.gameId || null,
+            sport: sport,
+            sport_key: sportKey,
+            home_team: info.homeTeam,
+            away_team: info.awayTeam,
+            commence_time: info.gameTime || null,
+            market_type: info.marketType || 'pitcher_strikeouts',
+            selection: selection,
+            selection_label: info.player + ' ' + sideTxt + (lineTxt ? ' ' + lineTxt : '') + ' ' + (info.stat || ''),
+            line: lineNum,
+            odds: info.odds,
+            group_label: info.group || 'Player Props',
+            book_title: 'Sportsbook feed'
+        });
+        if (ok === false) return;
+        try { if (window.TMR && typeof window.TMR._ttScrollToPickSlip === 'function') window.TMR._ttScrollToPickSlip(); } catch (_) {}
+    };
+
+    if (!window.TMR._propClickBound) {
+        window.TMR._propClickBound = true;
+        document.addEventListener('click', function (ev) {
+            var btn = ev.target && ev.target.closest && ev.target.closest('[data-prop-pick="1"]');
+            if (!btn) return;
+            ev.preventDefault();
+            var card = btn.closest('article.sportsbook-game-card');
+            try {
+                document.querySelectorAll('[data-prop-pick="1"].selected').forEach(function (b) { b.classList.remove('selected'); b.style.outline = ''; });
+                btn.classList.add('selected');
+                btn.style.outline = '2px solid #1ed760';
+            } catch (e) { /* cosmetic */ }
+            window.selectPropBet({
+                marketType: btn.getAttribute('data-market-type'),
+                player: btn.getAttribute('data-player'),
+                side: btn.getAttribute('data-side'),
+                line: btn.getAttribute('data-line'),
+                odds: btn.getAttribute('data-odds'),
+                stat: btn.getAttribute('data-stat'),
+                group: btn.getAttribute('data-group'),
+                awayTeam: card ? card.getAttribute('data-prop-away') : '',
+                homeTeam: card ? card.getAttribute('data-prop-home') : '',
+                gameTime: card ? card.getAttribute('data-prop-time') : '',
+                gameId: card ? card.getAttribute('data-prop-gid') : ''
+            });
+        }, false);
+    }
+
     function _ttRenderRows(sport, rowsEl, games, sourceLabel) {
         // Surface the games to selectGameBet (it indexes via window.TMR.currentGames).
         window.TMR = window.TMR || {};
@@ -12888,18 +12954,50 @@ window.toggleSportFamily = function (family) {
                 if (!data || !data.supported) { rowsEl.innerHTML = emptyState(sport, 'Player props are not offered for ' + sport + ' yet.', 'closed'); return; }
                 var games = data.games || [];
                 if (!games.length) { rowsEl.innerHTML = emptyState(sport, 'No player props posted right now. Check back when lines are up.', 'closed'); return; }
+                // PROP_PICK_20260531: A market is PICKABLE only when it's a clean
+                // Over/Under-with-line player prop the grader can settle from the
+                // box score. Today that's MLB pitcher "Total Strikeouts" only —
+                // the only feed market that ships as true O/U with a numeric line
+                // AND maps to a gradable backend market (pitcher_strikeouts).
+                // Everything else stays display-only (honest, never fabricated).
+                var propPickInfo = function (grp, m) {
+                    if (sport !== 'MLB') return null;
+                    if (!grp || grp.key !== 'pitcher_props') return null;
+                    if (!/^Total Strikeouts\b/i.test(String(m.label || ''))) return null;
+                    var player = (String(m.label).split(' - ')[1] || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+                    if (!player) return null;
+                    return { market_type: 'pitcher_strikeouts', player: player, stat_label: 'Strikeouts', group_label: 'Pitcher Strikeouts' };
+                };
+                var outcomePickable = function (info, o) {
+                    return info && (o.selection === 'Over' || o.selection === 'Under') &&
+                        o.line != null && isFinite(Number(o.line));
+                };
                 rowsEl.innerHTML = games.map(function (g) {
                     var groups = (g.prop_groups || []).map(function (grp) {
                         var markets = (grp.markets || []).map(function (m) {
+                            var info = propPickInfo(grp, m);
                             var outs = (m.outcomes || []).map(function (o) {
                                 var lineStr = (o.line != null ? ' ' + ((Number(o.line) > 0 ? '+' : '') + o.line) : '');
+                                if (outcomePickable(info, o)) {
+                                    // Pickable: a real button that drives the canonical pick slip.
+                                    return '<button type="button" data-prop-pick="1"' +
+                                        ' data-market-type="' + esc(info.market_type) + '"' +
+                                        ' data-player="' + esc(info.player) + '"' +
+                                        ' data-side="' + esc(o.selection) + '"' +
+                                        ' data-line="' + esc(o.line) + '"' +
+                                        ' data-odds="' + esc(o.odds) + '"' +
+                                        ' data-stat="' + esc(info.stat_label) + '"' +
+                                        ' data-group="' + esc(info.group_label) + '"' +
+                                        ' style="background:rgba(30,215,96,.06);border:1px solid rgba(30,215,96,.35);border-radius:8px;padding:7px 10px;display:flex;justify-content:space-between;gap:8px;font-size:12.5px;cursor:pointer;color:#f4f7fb;width:100%;text-align:left">' +
+                                        '<span>' + esc(o.selection) + esc(lineStr) + '</span><b style="color:#1ed760">' + fmtOdds(o.odds) + '</b></button>';
+                                }
                                 return '<div style="background:rgba(255,255,255,.04);border:1px solid var(--glass-border,#262636);border-radius:8px;padding:7px 10px;display:flex;justify-content:space-between;gap:8px;font-size:12.5px"><span>' + esc(o.selection) + esc(lineStr) + '</span><b style="color:#1ed760">' + fmtOdds(o.odds) + '</b></div>';
                             }).join('');
-                            return '<div style="margin:8px 0"><div style="font-size:12px;color:var(--text-secondary,#bcc);margin:4px 0">' + esc(m.label) + '</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px">' + outs + '</div></div>';
+                            return '<div style="margin:8px 0"><div style="font-size:12px;color:var(--text-secondary,#bcc);margin:4px 0">' + esc(m.label) + (info ? ' <span style="color:#1ed760;font-weight:700">• Pickable</span>' : '') + '</div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:6px">' + outs + '</div></div>';
                         }).join('');
                         return '<div style="padding:6px 0"><h4 style="margin:8px 0;color:var(--accent-gold,#ffd700);font-size:12px;text-transform:uppercase;letter-spacing:.5px">' + esc(grp.label || grp.key) + '</h4>' + markets + '</div>';
                     }).join('');
-                    return '<article class="sportsbook-game-card"><div class="game-meta-row"><b>' + esc(g.away_team) + ' @ ' + esc(g.home_team) + '</b> <small style="color:var(--text-muted,#9aa);margin-left:8px">' + esc(fmtWhen(g.commence_time)) + '</small></div>' + groups + '</article>';
+                    return '<article class="sportsbook-game-card" data-prop-away="' + esc(g.away_team) + '" data-prop-home="' + esc(g.home_team) + '" data-prop-time="' + esc(g.commence_time || '') + '" data-prop-gid="' + esc(g.id || '') + '"><div class="game-meta-row"><b>' + esc(g.away_team) + ' @ ' + esc(g.home_team) + '</b> <small style="color:var(--text-muted,#9aa);margin-left:8px">' + esc(fmtWhen(g.commence_time)) + '</small></div>' + groups + '</article>';
                 }).join('');
             })
             .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'props') rowsEl.innerHTML = emptyState(sport, 'Player-props feed temporarily unavailable. Try again shortly.', 'closed'); });
