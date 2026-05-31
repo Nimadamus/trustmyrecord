@@ -1869,6 +1869,7 @@ function starterPostFromThread(thread) {
         is_edited: !!thread.is_edited,
         edited_at: thread.edited_at,
         like_count: numericValue(thread.like_count) || 0,
+        liked_by_me: !!thread.liked_by_me,
         user_post_count: numericValue(thread.user_post_count),
         user_thread_count: numericValue(thread.user_thread_count),
         favorite_teams: thread.favorite_teams,
@@ -1966,7 +1967,7 @@ function renderThread() {
         var likeCount = numericValue(p.like_count); if (likeCount == null) likeCount = 0;
         var likeTarget = p.is_thread_starter ? (p.thread_id || (cachedThread && cachedThread.id)) : postId;
         var actions = '<div class="fpost-actions">'
-            + (likeTarget ? '<button type="button" class="fpost-btn is-like" onclick="forumLikePost(\'' + escHtml(String(likeTarget)) + '\',' + (p.is_thread_starter ? 'true' : 'false') + ',this)">Like <span class="fpost-like-count">(' + likeCount + ')</span></button>' : '')
+            + (likeTarget ? '<button type="button" class="fpost-btn is-like' + (p.liked_by_me ? ' is-liked' : '') + '" onclick="forumLikePost(\'' + escHtml(String(likeTarget)) + '\',' + (p.is_thread_starter ? 'true' : 'false') + ',this)">Like <span class="fpost-like-count">(' + likeCount + ')</span></button>' : '')
             + (isLoggedIn && postId ? '<button type="button" class="fpost-btn" onclick="forumQuotePost(\'' + escHtml(postId) + '\')">Quote</button>' : '')
             + '<button type="button" class="fpost-btn" onclick="forumFocusReply()">Reply</button>'
             + (canEdit && postId ? '<button type="button" class="fpost-btn is-edit" onclick="forumEditPost(\'' + escHtml(postId) + '\')">Edit</button>' : '')
