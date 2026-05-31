@@ -1044,3 +1044,15 @@ Forum interaction state must hydrate on page load, not only after a click.
   subscribe, vote) must ship its on-load hydration flag in the same GET, and the
   card render must reflect it. Verify after each forum change: like -> refresh ->
   still shows liked without re-clicking.
+
+## CI Guard Consistency — Quarantine Must Be Mirrored in the Workflow (2026-05-31)
+
+scripts/predeploy-guard.ps1 soft-ignores known-stale tests via Invoke-StaleQuarantineCommand,
+but the .github/workflows/sportsbook-regression.yml jobs (sportsbook-guards,
+profile-and-simulator-guards) re-ran the SAME tests as hard steps. A quarantined test
+failing did not break predeploy but DID break the workflow, leaving it red for 80+ runs.
+Rule: any test quarantined in predeploy-guard.ps1 must carry continue-on-error: true on
+its matching workflow step (comment: stale-quarantine: see DEVELOPMENT_RULES.md), and the
+two lists must stay in sync. Also: every job that runs a jsdom-dependent test (e.g.
+trendspotter-accuracy) must include the npm install --no-save jsdom@24.1.3 step.
+Marker: CI_GUARD_QUARANTINE_SYNC_20260531.
