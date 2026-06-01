@@ -1484,7 +1484,7 @@
 
     <script data-hm-leaderboard-polish="1"></script>
     <script src="/static/js/config.js"></script>
-    <script src="/static/js/backend-api.js"></script>
+    <script src="/static/js/backend-api.js?v=20260601nostorestats1"></script>
     <script src="/static/js/stats-engine.js"></script>
     <script src="/static/js/social-system.js"></script>
     <script>
@@ -2057,6 +2057,7 @@
         async function directApiRequest(endpoint) {
             if (typeof fetch !== 'function') throw new Error('Fetch unavailable');
             const options = {
+                cache: 'no-store',
                 headers: { 'Content-Type': 'application/json' }
             };
             if (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
