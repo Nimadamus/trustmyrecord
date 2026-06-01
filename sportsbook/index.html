@@ -12954,86 +12954,42 @@ window.toggleSportFamily = function (family) {
                 if (!data || !data.supported) { rowsEl.innerHTML = emptyState(sport, 'Player props are not offered for ' + sport + ' yet.', 'closed'); return; }
                 var games = data.games || [];
                 if (!games.length) { rowsEl.innerHTML = emptyState(sport, 'No player props posted right now. Check back when lines are up.', 'closed'); return; }
-                // PROP_EXPAND_20260601: a market is PICKABLE when every outcome maps
-                // to a clean (player, side, numeric line, market_type) the box-score
-                // grader can settle. Covered (MLB): pitcher Total/Alternate Strikeouts,
-                // Hits Allowed, Walks, Outs, Earned Runs (O/U); and batter milestone
-                // markets (to record a Hit/2+ Hits/Run/2+ Runs/RBI/Home Run/2+ HR),
-                // where each player outcome becomes an Over-the-threshold pick.
-                // Non-gradable markets (correct score, first HR, game props) stay
-                // display-only — never fabricated.
-                var classifyMarket = function (grp, m) {
-                    if (sport !== 'MLB' || !grp) return null;
-                    var label = String(m.label || '');
-                    if (grp.key === 'pitcher_props') {
-                        var player = (label.split(' - ')[1] || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
-                        if (!player) return null;
-                        if (/^Total Strikeouts\b/i.test(label)) return { kind: 'pou', market_type: 'pitcher_strikeouts', player: player, stat_label: 'Strikeouts', group_label: 'Pitcher Strikeouts' };
-                        if (/^Alternate Strikeouts\b/i.test(label)) return { kind: 'palt', market_type: 'pitcher_strikeouts', player: player, stat_label: 'Strikeouts', group_label: 'Pitcher Strikeouts' };
-                        if (/Hits Allowed\b/i.test(label)) return { kind: 'pou', market_type: 'pitcher_hits_allowed', player: player, stat_label: 'Hits Allowed', group_label: 'Pitcher Hits Allowed' };
-                        if (/Walks\b/i.test(label)) return { kind: 'pou', market_type: 'pitcher_walks', player: player, stat_label: 'Walks', group_label: 'Pitcher Walks' };
-                        if (/Earned Runs\b/i.test(label)) return { kind: 'pou', market_type: 'pitcher_earned_runs', player: player, stat_label: 'Earned Runs', group_label: 'Pitcher Earned Runs' };
-                        if (/\bOuts\b/i.test(label)) return { kind: 'pou', market_type: 'pitcher_outs', player: player, stat_label: 'Outs', group_label: 'Pitcher Outs' };
-                        return null;
-                    }
-                    if (grp.key === 'player_props') {
-                        var BYN = [
-                            [/record 2\+ Hits\b/i, 'batter_hits', 1.5, 'Hits'],
-                            [/record a Hit\b/i, 'batter_hits', 0.5, 'Hits'],
-                            [/record 2\+ Runs\b/i, 'batter_runs', 1.5, 'Runs'],
-                            [/record a Run\b/i, 'batter_runs', 0.5, 'Runs'],
-                            [/record an? RBI\b/i, 'batter_rbi', 0.5, 'RBI'],
-                            [/hit 2\+ Home Runs\b/i, 'batter_home_runs', 1.5, 'Home Runs'],
-                            [/hit a Home Run\b/i, 'batter_home_runs', 0.5, 'Home Runs']
-                        ];
-                        for (var i = 0; i < BYN.length; i++) {
-                            if (BYN[i][0].test(label)) return { kind: 'byn', market_type: BYN[i][1], line: BYN[i][2], stat_label: BYN[i][3], group_label: 'Batter ' + BYN[i][3] };
-                        }
-                        return null;
-                    }
-                    return null;
+                // PROP_PICK_20260531: A market is PICKABLE only when it's a clean
+                // Over/Under-with-line player prop the grader can settle from the
+                // box score. Today that's MLB pitcher "Total Strikeouts" only —
+                // the only feed market that ships as true O/U with a numeric line
+                // AND maps to a gradable backend market (pitcher_strikeouts).
+                // Everything else stays display-only (honest, never fabricated).
+                var propPickInfo = function (grp, m) {
+                    if (sport !== 'MLB') return null;
+                    if (!grp || grp.key !== 'pitcher_props') return null;
+                    if (!/^Total Strikeouts\b/i.test(String(m.label || ''))) return null;
+                    var player = (String(m.label).split(' - ')[1] || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+                    if (!player) return null;
+                    return { market_type: 'pitcher_strikeouts', player: player, stat_label: 'Strikeouts', group_label: 'Pitcher Strikeouts' };
                 };
-                // Per-outcome pick params (or null = display-only outcome).
-                var outcomePick = function (info, o) {
-                    if (!info || o == null || o.odds == null) return null;
-                    if (info.kind === 'pou') {
-                        if ((o.selection === 'Over' || o.selection === 'Under') && o.line != null && isFinite(Number(o.line))) {
-                            return { market_type: info.market_type, player: info.player, side: o.selection, line: o.line, odds: o.odds, stat_label: info.stat_label, group_label: info.group_label, label: o.selection + ' ' + ((Number(o.line) > 0 ? '+' : '') + o.line) };
-                        }
-                        return null;
-                    }
-                    if (info.kind === 'palt') {
-                        var mm = String(o.selection || '').match(/(\d+)\s*\+/);
-                        if (!mm) return null;
-                        var line = Number(mm[1]) - 0.5;
-                        return { market_type: info.market_type, player: info.player, side: 'Over', line: line, odds: o.odds, stat_label: info.stat_label, group_label: info.group_label, label: o.selection };
-                    }
-                    if (info.kind === 'byn') {
-                        var who = String(o.selection || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
-                        if (!who || /^no\b/i.test(who)) return null;
-                        return { market_type: info.market_type, player: who, side: 'Over', line: info.line, odds: o.odds, stat_label: info.stat_label, group_label: info.group_label, label: who };
-                    }
-                    return null;
+                var outcomePickable = function (info, o) {
+                    return info && (o.selection === 'Over' || o.selection === 'Under') &&
+                        o.line != null && isFinite(Number(o.line));
                 };
                 rowsEl.innerHTML = games.map(function (g) {
                     var groups = (g.prop_groups || []).map(function (grp) {
                         var markets = (grp.markets || []).map(function (m) {
-                            var info = classifyMarket(grp, m);
+                            var info = propPickInfo(grp, m);
                             var outs = (m.outcomes || []).map(function (o) {
                                 var lineStr = (o.line != null ? ' ' + ((Number(o.line) > 0 ? '+' : '') + o.line) : '');
-                                var pk = outcomePick(info, o);
-                                if (pk) {
+                                if (outcomePickable(info, o)) {
                                     // Pickable: a real button that drives the canonical pick slip.
                                     return '<button type="button" data-prop-pick="1"' +
-                                        ' data-market-type="' + esc(pk.market_type) + '"' +
-                                        ' data-player="' + esc(pk.player) + '"' +
-                                        ' data-side="' + esc(pk.side) + '"' +
-                                        ' data-line="' + esc(pk.line) + '"' +
-                                        ' data-odds="' + esc(pk.odds) + '"' +
-                                        ' data-stat="' + esc(pk.stat_label) + '"' +
-                                        ' data-group="' + esc(pk.group_label) + '"' +
+                                        ' data-market-type="' + esc(info.market_type) + '"' +
+                                        ' data-player="' + esc(info.player) + '"' +
+                                        ' data-side="' + esc(o.selection) + '"' +
+                                        ' data-line="' + esc(o.line) + '"' +
+                                        ' data-odds="' + esc(o.odds) + '"' +
+                                        ' data-stat="' + esc(info.stat_label) + '"' +
+                                        ' data-group="' + esc(info.group_label) + '"' +
                                         ' style="background:rgba(30,215,96,.06);border:1px solid rgba(30,215,96,.35);border-radius:8px;padding:7px 10px;display:flex;justify-content:space-between;gap:8px;font-size:12.5px;cursor:pointer;color:#f4f7fb;width:100%;text-align:left">' +
-                                        '<span>' + esc(pk.label) + '</span><b style="color:#1ed760">' + fmtOdds(pk.odds) + '</b></button>';
+                                        '<span>' + esc(o.selection) + esc(lineStr) + '</span><b style="color:#1ed760">' + fmtOdds(o.odds) + '</b></button>';
                                 }
                                 return '<div style="background:rgba(255,255,255,.04);border:1px solid var(--glass-border,#262636);border-radius:8px;padding:7px 10px;display:flex;justify-content:space-between;gap:8px;font-size:12.5px"><span>' + esc(o.selection) + esc(lineStr) + '</span><b style="color:#1ed760">' + fmtOdds(o.odds) + '</b></div>';
                             }).join('');
@@ -21960,7 +21916,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- External Scripts -->
     <script src="/static/js/config.js?v=20260317"></script>
     <script src="/static/js/analytics.js?v=20260405"></script>
-    <script src="/static/js/backend-api.js?v=20260525noautologout"></script>
+    <script src="/static/js/backend-api.js?v=20260601nostorestats1"></script>
     <script src="/static/js/auth-persistent.js?v=20260525noautologout"></script>
     <script src="/static/js/nhl-markets.js?v=20260430a"></script>
     <script>
