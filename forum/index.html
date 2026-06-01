@@ -1473,16 +1473,50 @@ body.classic-forum .sport-icon.nhl{background:#e0f0f6 !important;border-color:#9
 body.classic-forum .sport-icon.cfb{background:#f4e6bd !important;border-color:#c5aa62 !important;color:#6f5215 !important}
 body.classic-forum .sport-icon.cbb{background:#ece3ff !important;border-color:#b8a2d7 !important;color:#4f3477 !important}
 @media (max-width:900px){
-  body.classic-forum .fside-list{display:flex !important;flex-wrap:nowrap !important;overflow-x:auto !important;gap:8px !important;padding:4px 8px !important}
-  body.classic-forum .fside-box{border-bottom:0 !important}
-  body.classic-forum .fside-head{display:none !important}
+  /* FORUM_MOBILE_TABSTRIP_20260531: labeled, readable, scroll-affordant tab-strip.
+     Mobile-only + classic-only; desktop sidebar layout is untouched. */
+  body.classic-forum .fside{margin:0 0 10px !important;background:#f4f5f7 !important;border:1px solid #c5ccd0 !important;border-radius:0 !important}
+  body.classic-forum .fside-box{border-bottom:1px solid #d6dcdf !important;padding:2px 0 5px !important}
+  body.classic-forum .fside-box:last-child{border-bottom:0 !important}
+  /* Slim section label so forum categories are distinguishable from site links. */
+  body.classic-forum .fside-head{
+    display:block !important;
+    background:transparent !important;
+    color:#566069 !important;
+    padding:7px 10px 2px !important;
+    font:700 10px Arial,Helvetica,sans-serif !important;
+    text-transform:uppercase !important;
+    letter-spacing:.05em !important;
+    border:0 !important;
+  }
+  body.classic-forum .fside-list{
+    display:flex !important;
+    flex-wrap:nowrap !important;
+    overflow-x:auto !important;
+    gap:7px !important;
+    padding:4px 10px 9px !important;
+    -webkit-overflow-scrolling:touch !important;
+    scroll-snap-type:x proximity !important;
+  }
+  body.classic-forum .fside-list::-webkit-scrollbar{height:4px}
+  body.classic-forum .fside-list::-webkit-scrollbar-thumb{background:#b9c1c6;border-radius:4px}
   body.classic-forum .fside-list a{
     flex:0 0 auto !important;
     white-space:nowrap !important;
+    scroll-snap-align:start !important;
     border:1px solid #c2c8cb !important;
-    background:#eef0f1 !important;
     border-left:1px solid #c2c8cb !important;
-    padding:7px 9px !important;
+    background:#fff !important;
+    color:#0033cc !important;
+    border-radius:4px !important;
+    padding:8px 12px !important;
+    font:600 13px Arial,Helvetica,sans-serif !important;
+  }
+  body.classic-forum .fside-list a:hover,
+  body.classic-forum .fside-list a.is-active{
+    background:#dfe6ef !important;
+    color:#001f85 !important;
+    border-color:#9bb0cf !important;
   }
 }
 </style>
