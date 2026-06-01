@@ -4184,7 +4184,7 @@ button{font:inherit;cursor:pointer}
 <!-- DUPLICATE_LEGACY_FOOTER_REMOVED_20260524: a second static <footer class="footer"> was stacked above the injected global footer. Removed. The site uses ONE footer: .tmr-global-footer injected by static/js/tmr-sitewide.js (see its buildGlobalFooter ~line 888). Do not reintroduce a per-page homepage <footer class="footer">. -->
 
 <script src="static/js/config.js?v=20260520rollback1"></script>
-<script src="static/js/backend-api.js?v=20260524noautologout"></script>
+<script src="static/js/backend-api.js?v=20260601nostorestats1"></script>
 <script src="static/js/auth-persistent.js?v=20260524noautologout"></script>
 <script defer src="static/js/tmr-sitewide.js?v=20260529navavatar1"></script>
 <script src="static/js/analytics.js?v=20260520rollback1"></script>
@@ -4213,7 +4213,7 @@ function escapeHtml(value) {
         if (window.api && typeof window.api.request === 'function') {
             return window.api.request(path);
         }
-        const response = await fetch(apiBase + path, { headers: { 'Accept': 'application/json' } });
+        const response = await fetch(apiBase + path, { cache: 'no-store', headers: { 'Accept': 'application/json' } });
         if (!response.ok) throw new Error('Request failed: ' + path);
         return response.json();
     }
