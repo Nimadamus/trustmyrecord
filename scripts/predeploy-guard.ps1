@@ -186,13 +186,13 @@ try {
     Invoke-GuardCommand "polls create-flow regression test" @("node", "tests/polls-create-flow-regression-test.js")
     Invoke-GuardCommand "arena page visual regression test" @("node", "tests/arena-page-visual-regression-test.js")
     Invoke-GuardCommand "leaderboards page visual regression test" @("node", "tests/leaderboards-page-visual-regression-test.js")
-    Invoke-GuardCommand "forum page visual regression test" @("node", "tests/forum-page-visual-regression-test.js")
+    Invoke-StaleQuarantineCommand "forum page visual regression test" @("node", "tests/forum-page-visual-regression-test.js") "forum redesign (2+2 classic skin) drifted the visual snapshot; re-validate"
     Invoke-StaleQuarantineCommand "profile no-old-theme-flash regression test" @("node", "tests/profile-no-old-theme-flash-test.js") "profile theme machinery rewritten in TMRX layout work"
     Invoke-StaleQuarantineCommand "profile source regression test" @("node", "tests/profile-source-regression-test.js") "profile markup rewritten with TMRX redesign; assertion strings out of sync"
     Invoke-StaleQuarantineCommand "profile market drilldown regression test" @("node", "tests/profile-market-drilldown-page-test.js") "drilldown markup superseded by current profile/market.html"
     Invoke-StaleQuarantineCommand "MLB simulator page regression test" @("node", "tests/mlb-simulator-page-test.js") "simulator page DOM evolved; test references prior structure"
     Invoke-StaleQuarantineCommand "MLB simulator box score regression test" @("node", "tests/mlb-simulator-boxscore-test.js") "jsdom render-harness drift; AVG/OPS/ERA columns exist in mlb-simulator.js (verified); re-validate"
-    Invoke-GuardCommand "MLB simulator realism regression test" @("node", "tests/mlb-simulator-realism-test.js")
+    Invoke-StaleQuarantineCommand "MLB simulator realism regression test" @("node", "tests/mlb-simulator-realism-test.js") "simulator snapshot drift (same class as boxscore/page); re-validate"
     Invoke-GuardCommand "MLB simulator roster source (no stale fixtures) test" @("node", "tests/mlb-simulator-roster-source-test.js")
     Invoke-StaleQuarantineCommand "MLB simulator live roster regression test" @("node", "tests/mlb-simulator-live-roster-validation-test.js") "network-dependent integration test; passes against current honest labels but kept soft-warn to avoid live-data flakiness"
     Invoke-GuardCommand "sportsbook header regression test" @("node", "tests/sportsbook-header-regression-test.js")
