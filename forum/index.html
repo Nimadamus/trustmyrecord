@@ -458,6 +458,12 @@ body.classic-forum .fthread-signature{color:#4b5563 !important}
 body.classic-forum .fthread-body .meta a,
 body.classic-forum .fthread-body a,
 body.classic-forum .fpost-content a{color:#0033cc !important}
+.fpost-content a{word-break:break-word}
+.fpost-embed{display:block;margin:10px 0;max-width:640px}
+.fpost-embed iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:6px;background:#000}
+.fpost-embed video{width:100%;max-height:480px;border-radius:6px;background:#000}
+.fpost-btn.is-delete{color:#b91c1c}
+.fpost-btn.is-delete:hover{background:#fee2e2;border-color:#fca5a5}
 body.classic-forum .freply,
 body.classic-forum .freply h3,
 body.classic-forum .freply label,
@@ -2006,6 +2012,7 @@ function renderThread() {
             + (isLoggedIn && postId ? '<button type="button" class="fpost-btn" onclick="forumQuotePost(\'' + escHtml(postId) + '\')">Quote</button>' : '')
             + '<button type="button" class="fpost-btn" onclick="forumFocusReply()">Reply</button>'
             + (canEdit && postId ? '<button type="button" class="fpost-btn is-edit" onclick="forumEditPost(\'' + escHtml(postId) + '\')">Edit</button>' : '')
+            + (canEdit && postId ? '<button type="button" class="fpost-btn is-delete" onclick="forumDeletePost(\'' + escHtml(postId) + '\')">Delete</button>' : '')
             + '</div>';
         var editedLine = (p.is_edited && p.edited_at) ? '<div class="fpost-edited" id="postEdited-' + escHtml(postId) + '">Last edited ' + escHtml(formatEditedDate(p.edited_at)) + '</div>' : '';
         return '<div class="fthread-post" data-post-id="' + escHtml(postId) + '">'
@@ -2013,11 +2020,65 @@ function renderThread() {
             + '<div class="fthread-body">'
             +   '<div class="meta"><span>' + (p.created_at ? formatForumDate(p.created_at) : '—') + (p.id ? ' &middot; <a href="#post-' + escHtml(p.id) + '" id="post-' + escHtml(p.id) + '">Permalink</a>' : '') + '</span><span class="fthread-post-num">#' + postNo + '</span></div>'
             +   '<div class="fthread-post-title">' + escHtml(postTitle) + '</div>'
-            +   '<div class="fpost-content" id="postContent-' + escHtml(postId) + '">' + escHtml(p.content || p.body || '').replace(/\n/g, '<br>') + '</div>'
+            +   '<div class="fpost-content" id="postContent-' + escHtml(postId) + '">' + forumRenderContent(p.content || p.body || '') + '</div>'
             +   editedLine
             +   actions
             + '</div></div>';
     }).join('');
+}
+
+// Render post body: HTML-escape first (XSS-safe), then turn URLs into clickable
+// links and embed videos (YouTube + direct mp4/webm/ogg) so members can post
+// links and video. Newlines -> <br>. Embeds are built only from matched, safe
+// URL patterns operating on already-escaped text.
+function forumRenderContent(raw) {
+    var esc = escHtml(String(raw == null ? '' : raw));
+    esc = esc.replace(/(https?:\/\/[^\s<]+)/g, function (m) {
+        var url = m.replace(/&amp;/g, '&');
+        var yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        if (yt) {
+            return '<span class="fpost-embed"><iframe src="https://www.youtube.com/embed/' + yt[1] + '" title="Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></span>';
+        }
+        if (/\.(mp4|webm|ogg)(\?|#|$)/i.test(url)) {
+            var vsrc = url.replace(/"/g, '%22');
+            return '<span class="fpost-embed"><video controls preload="metadata"><source src="' + vsrc + '"></video></span>';
+        }
+        var href = url.replace(/"/g, '%22');
+        return '<a href="' + href + '" target="_blank" rel="nofollow noopener noreferrer">' + m + '</a>';
+    });
+    return esc.replace(/\n/g, '<br>');
+}
+
+// Delete own post (reply) or own thread (when the post is the thread starter).
+// Owner-only is also enforced server-side. FK cascade removes likes/subs/notifs.
+async function forumDeletePost(postId) {
+    if (typeof isUserLoggedIn === 'function' && !isUserLoggedIn()) { window.location.href = '/login/'; return; }
+    var p = window.__forumCachedPostsById && window.__forumCachedPostsById[postId];
+    var isStarter = !!(p && p.is_thread_starter);
+    var msg = isStarter
+        ? 'Delete this entire thread and all of its replies? This cannot be undone.'
+        : 'Delete this post? This cannot be undone.';
+    if (!window.confirm(msg)) return;
+    try {
+        if (isStarter) {
+            var threadId = (p && p.thread_id) || (cachedThread && cachedThread.id) || currentThreadId;
+            await api.request('/forum/threads/' + encodeURIComponent(threadId), { method: 'DELETE' });
+            if (currentCategorySlug && typeof showThreadsList === 'function') {
+                showThreadsList(currentCategorySlug, (typeof currentCategoryName !== 'undefined' ? currentCategoryName : currentCategorySlug), (typeof currentCategoryId !== 'undefined' ? currentCategoryId : null));
+            } else if (typeof showCategories === 'function') {
+                showCategories();
+            }
+        } else {
+            await api.request('/forum/posts/' + encodeURIComponent(postId), { method: 'DELETE' });
+            if (Array.isArray(cachedPosts)) {
+                cachedPosts = cachedPosts.filter(function (x) { return String(x.id) !== String(postId); });
+            }
+            renderThread();
+        }
+    } catch (err) {
+        console.error('Delete error:', err, err && err.detail);
+        alert((err && (err.message || err.detail)) || 'Failed to delete. Please try again.');
+    }
 }
 
 function forumFocusReply() {
