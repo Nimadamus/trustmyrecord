@@ -11,8 +11,8 @@ const html = rawHtml
 const js = fs.readFileSync(path.join(root, 'static', 'js', 'trendspotter.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'static', 'css', 'trendspotter.css'), 'utf8');
 
-assert(/\/static\/css\/trendspotter\.css\?v=20260518-generate2/.test(rawHtml), 'Trend Spotter page uses the current stylesheet cache key');
-assert(/\/static\/js\/trendspotter\.js\?v=20260526-recordbasis/.test(rawHtml), 'Trend Spotter page uses the current script cache key');
+assert(/\/static\/css\/trendspotter\.css\?v=20260527b-plain-english/.test(rawHtml), 'Trend Spotter page uses the current stylesheet cache key');
+assert(/\/static\/js\/trendspotter\.js\?v=20260528o-team-picker-for-totals/.test(rawHtml), 'Trend Spotter page uses the current script cache key');
 assert(!/20260512labels1/.test(rawHtml + js + css), 'stale Trend Spotter deployment labels are removed');
 assert(!/Verified trend data source not connected yet/i.test(rawHtml + js + css), 'raw backend placeholder text must not ship in Trend Spotter UI');
 
