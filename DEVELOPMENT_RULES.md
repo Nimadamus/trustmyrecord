@@ -1042,3 +1042,25 @@ The forum nav "User CP" tab must route to the dedicated private control panel
   (`/profile/?user=<username>`). Never collapse User CP into the public profile again.
 - Future forum nav work must keep this separation: "User CP" = private dashboard,
   "Profile" = public page.
+
+
+## FORUM MOBILE SIDEBAR TAB-STRIP - FORUM_MOBILE_TABSTRIP_20260531
+On <=900px the classic-skin forum sidebar (`.fside` > `.fside-box` > `.fside-head`
++ `.fside-list a`) collapses into horizontal scroll tab-strips. Requirements:
+- Each strip MUST keep its section label (`.fside-head`, e.g. "Forums" vs
+  "TrustMyRecord") so forum categories are distinguishable from site links.
+  A legacy mobile rule `body.classic-forum .fside .fside-head{display:none}`
+  exists; any rule that re-shows the label must match its specificity
+  (`body.classic-forum .fside .fside-head`, 0-3-1) and sit LATER in the
+  stylesheet, or it silently loses.
+- Chips: readable contrast (white bg, #0033cc text), rounded, >=8px vertical
+  padding for tap targets, clear hover/`.is-active` state, horizontal scroll
+  with a visible thin scrollbar affordance.
+- Mobile-only (`@media (max-width:900px)`) and `body.classic-forum`-scoped:
+  never alter the desktop sidebar/board layout.
+LESSON: TMR forum CSS has overlapping legacy + current blocks; before adding a
+mobile forum rule, grep for an existing higher-specificity / display:none rule
+on the same selector and beat it on specificity + source order. Verify the
+COMPUTED style with a headless render at 390px (GitHub Pages CDN can serve a
+stale node briefly; re-render until the marker is present), and re-check desktop
+at 1280px for no regression.
