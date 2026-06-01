@@ -2207,7 +2207,7 @@
                 // The leaderboard/users payload now ships last_pick_at, so value is
                 // normally present on first paint. If a row arrives without it (cold
                 // cache, edge case), show a polished non-loading fallback instead of
-                // a row-by-row "Checking activity…" spinner state.
+                // a row-by-row loading/spinner placeholder.
                 if (!loaded && hasPicks) return 'Recently active';
                 return hasPicks ? 'No recent activity' : 'No picks yet';
             }
