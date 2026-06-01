@@ -2313,26 +2313,6 @@
                         </div>
                       </div>
 
-                      <div class="tmrx-section" id="tmrxOpenSection" hidden>
-                        <div class="tmrx-section-head">
-                          <div>
-                            <div class="tmrx-section-title">Open Picks</div>
-                            <div class="tmrx-section-sub">Your live pending picks, locked and waiting to grade. Only you can see these until they settle.</div>
-                          </div>
-                          <div class="tmrx-meta" id="tmrxOpenMeta"></div>
-                        </div>
-                        <div class="tmrx-table-shell">
-                          <table class="tmrx-table" id="tmrxTableOpen">
-                            <thead><tr>
-                              <th>Submitted</th><th>Sport</th><th>Game</th><th>Pick</th><th>Market</th>
-                              <th class="num">Line</th><th class="num">Odds</th><th class="num">Units</th>
-                              <th>Status</th>
-                            </tr></thead>
-                            <tbody></tbody>
-                          </table>
-                        </div>
-                      </div>
-
                       <div class="tmrx-section">
                         <div class="tmrx-section-head">
                           <div>
@@ -7473,9 +7453,6 @@
             tbody.innerHTML = '<tr class="empty"><td colspan="10">Pick history unavailable.</td></tr>';
             return;
         }
-        // Open Picks = the viewer's own live pending picks (backend only returns
-        // un-redacted pending rows to the owner), shown above the settled ledger.
-        try { tmrxRenderOpenPicks(all); } catch (_) {}
         // Public Ledger = settled picks only; pending stays hidden until graded.
         tmrxLedgerPicks = all
             .filter(p => !p.redacted && SETTLED_RE.test(p.status))
@@ -7582,54 +7559,6 @@
             html += '<button type="button" data-tmrx-page="' + (cur + 1) + '"' + (cur === totalPages ? ' disabled' : '') + '>Next</button>';
             pager.innerHTML = html;
         }
-    }
-
-    // Render the owner's live pending picks into the Open Picks section.
-    function tmrxRenderOpenPicks(all) {
-        const section = document.getElementById('tmrxOpenSection');
-        const tbody = document.querySelector('#tmrxTableOpen tbody');
-        const meta = document.getElementById('tmrxOpenMeta');
-        if (!section || !tbody) return;
-        const pending = (Array.isArray(all) ? all : [])
-            .filter(p => p && !p.redacted && String(p.status || '').toLowerCase() === 'pending')
-            .sort((a, b) => new Date(b.created_at || b.locked_at || 0) - new Date(a.created_at || a.locked_at || 0));
-        if (!pending.length) { section.hidden = true; tbody.innerHTML = ''; return; }
-        const fmtDate = (iso) => {
-            if (!iso) return '—';
-            try {
-                const d = new Date(iso);
-                if (isNaN(d.getTime())) return '—';
-                return d.toLocaleDateString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' }) +
-                    ' · ' + d.toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase() + ' ET';
-            } catch (_) { return '—'; }
-        };
-        const fmtAmericanOdds = (o) => {
-            const x = Number(o);
-            if (!Number.isFinite(x) || x === 0) return '—';
-            return (x > 0 ? '+' : '') + Math.round(x);
-        };
-        const sportLabel = (k) => {
-            const m = { baseball_mlb:'MLB', basketball_nba:'NBA', icehockey_nhl:'NHL', americanfootball_nfl:'NFL', americanfootball_ncaaf:'NCAAF', basketball_ncaab:'NCAAB' };
-            return m[String(k||'').toLowerCase()] || (k || '—').toUpperCase();
-        };
-        tbody.innerHTML = pending.map(p => {
-            const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : '—';
-            const line = p.line_snapshot != null ? Number(p.line_snapshot).toFixed(1) : '—';
-            const units = p.units != null ? Number(p.units).toFixed(1) + 'u' : '—';
-            return '<tr class="tmrx-row-pending">' +
-                '<td>' + fmtDate(p.created_at || p.locked_at) + '</td>' +
-                '<td>' + sportLabel(p.sport_key) + '</td>' +
-                '<td>' + game + '</td>' +
-                '<td class="name">' + capEsc(formatPickDisplayValue(p)) + '</td>' +
-                '<td>' + marketTypeLabel(p.market_type) + '</td>' +
-                '<td class="num">' + line + '</td>' +
-                '<td class="num">' + fmtAmericanOdds(p.odds_snapshot) + '</td>' +
-                '<td class="num">' + units + '</td>' +
-                '<td><span class="tmrx-result-badge tmrx-result-pending">pending</span></td>' +
-            '</tr>';
-        }).join('');
-        if (meta) meta.textContent = pending.length + ' open pick' + (pending.length === 1 ? '' : 's');
-        section.hidden = false;
     }
 
     // Pagination clicks (delegated, bound once).
