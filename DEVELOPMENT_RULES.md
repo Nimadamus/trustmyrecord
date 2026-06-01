@@ -975,7 +975,8 @@ Props and alt lines are tracked as **dedicated stat sections** with depth, not l
 - **Sub-steps 3 (pickable) + 4 (grading) — BUILT for MLB pitcher strikeouts (May 31, 2026, PROP_PICK_20260531).** Nima approved "make props fully bettable." Scope was deliberately narrowed to the only feed market that ships as a clean Over/Under-with-line AND is reliably gradable: **MLB `pitcher_strikeouts`** ("Total Strikeouts - <Pitcher>"). The Bovada batter markets ("Player to record a Hit/RBI") are player-as-outcome yes/no with `line:null`, so they are NOT clean O/U and stay display-only (no fabricated lines).
   - **Grading (sub-step 4):** new `backend services/playerPropGrading.js` settles props from the official MLB Stats API box score (`statsapi.mlb.com`, free, no key): resolves the game by date+teams, reads `pitching.strikeOuts` for the parsed player, compares to `line_snapshot`. Never fabricates — throws (pick stays `pending`, retries) when the game isn't final or the player/stat can't be read. Wired into `services/gradingEngine.js` as an **isolated async loop** that runs after the proven score-based loop and can never break it; prop markets are excluded from the score-based query. Deployed to backend master `8e5c0d74` (via Git Data API, rebased on live master — no regression to the per-sport final-game buffers / refactored graders). Unit-verified on real finals (Framber Valdez K=4: Over 3.5 → won, Under 4.5 → won; Anthony Kay K=3: Over 5.5 → lost; unit math correct).
   - **Pickable (sub-step 3):** frontend `sportsbook/index.html` `renderPlayerPropsBoard` renders "Total Strikeouts" outcomes as real buttons (`data-prop-pick="1"`); `window.selectPropBet` + a delegated click handler register the selection through `window.tmrRegisterExternalOption` (same canonical submit path as alt lines) with `market_type:'pitcher_strikeouts'` and selection `"<Pitcher> Over|Under <line> Strikeouts"`. **NOT yet deployed** (held until the flag is on — see below).
-  - **TO GO LIVE (Nima):** set env **`PROPS_PICKABLE_ENABLED=true`** on the `trustmyrecord-api` Render service and confirm the backend redeploys. Submission stays HTTP 400 until then. Once confirmed, the frontend `index.html` ships via Contents API and a real strikeout prop is submitted + graded end-to-end as the live verification.
+  - **LIVE (June 1, 2026, PROP_DEFAULT_ON_20260601).** Frontend `sportsbook/index.html` deployed (`46ef8b9`). Backend grader + stats deployed. The env-flag dependency was REMOVED: `routes/picks.js` `propsPickableEnabled()` now defaults to **TRUE** (commit `4101a206`) because grading is live — so props are pickable without any Render dashboard action. `PROPS_PICKABLE_ENABLED` is now a **kill switch only**: set it to `false`/`0`/`off`/`no` to disable. Verified live: authed `POST /api/picks` with `market_type:pitcher_strikeouts` no longer returns the "must be one of" 400 (passes validation; returns `Game not found` only for a junk id). Render DOES deploy these commits — it just takes ~3 min to build+restart (the earlier "flag off" was the pre-deploy process still serving). Grader re-verified on a real final (Kyle Bradish K=4: Over 2.5 → won, Over 5.5 → lost).
+  - **PENDING (external timing only):** a single literal submit→record→grade chain on one live pick waits on (a) Bovada posting today's "Total Strikeouts" props (the feed is empty early-morning ET; posts midday/afternoon) and (b) that game finaling (hours later). Nothing in code blocks it.
   - **KNOWN LIMITATION:** the unique index `picks_user_game_market_active_uniq(user_id, game_id, market_type)` means a user can lock only ONE `pitcher_strikeouts` pick per game — locking both starters collides (2nd returns as duplicate). Removing this needs the index to include selection/player; tracked as the next follow-up before multi-pitcher props per game.
 
 ## Sportsbook MLB probable pitcher under team name (May 30, 2026) — HARD RULE (PRESERVE)
@@ -1042,25 +1043,3 @@ The forum nav "User CP" tab must route to the dedicated private control panel
   (`/profile/?user=<username>`). Never collapse User CP into the public profile again.
 - Future forum nav work must keep this separation: "User CP" = private dashboard,
   "Profile" = public page.
-
-
-## FORUM MOBILE SIDEBAR TAB-STRIP - FORUM_MOBILE_TABSTRIP_20260531
-On <=900px the classic-skin forum sidebar (`.fside` > `.fside-box` > `.fside-head`
-+ `.fside-list a`) collapses into horizontal scroll tab-strips. Requirements:
-- Each strip MUST keep its section label (`.fside-head`, e.g. "Forums" vs
-  "TrustMyRecord") so forum categories are distinguishable from site links.
-  A legacy mobile rule `body.classic-forum .fside .fside-head{display:none}`
-  exists; any rule that re-shows the label must match its specificity
-  (`body.classic-forum .fside .fside-head`, 0-3-1) and sit LATER in the
-  stylesheet, or it silently loses.
-- Chips: readable contrast (white bg, #0033cc text), rounded, >=8px vertical
-  padding for tap targets, clear hover/`.is-active` state, horizontal scroll
-  with a visible thin scrollbar affordance.
-- Mobile-only (`@media (max-width:900px)`) and `body.classic-forum`-scoped:
-  never alter the desktop sidebar/board layout.
-LESSON: TMR forum CSS has overlapping legacy + current blocks; before adding a
-mobile forum rule, grep for an existing higher-specificity / display:none rule
-on the same selector and beat it on specificity + source order. Verify the
-COMPUTED style with a headless render at 390px (GitHub Pages CDN can serve a
-stale node briefly; re-render until the marker is present), and re-check desktop
-at 1280px for no regression.
