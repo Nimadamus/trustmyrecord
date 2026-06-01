@@ -1043,3 +1043,28 @@ The forum nav "User CP" tab must route to the dedicated private control panel
   (`/profile/?user=<username>`). Never collapse User CP into the public profile again.
 - Future forum nav work must keep this separation: "User CP" = private dashboard,
   "Profile" = public page.
+
+---
+
+## STAT/RECORD FETCHES: request-side `no-store` is the PERMANENT STANDARD (June 1, 2026)
+
+Render's Cloudflare edge in front of `*.onrender.com` STRIPS response cache headers
+(`Cache-Control`/`Pragma`/`Expires`) before they reach the browser (it keeps `etag`).
+Proven June 1, 2026: the API sets `Cache-Control: no-store` (read back via
+`GET /api/_nostore_probe` body `cacheControlHeaderSet`) but the client never receives it.
+
+Therefore backend response headers are NOT a reliable anti-stale mechanism. Required standard:
+
+- All fetches that load user stats, records, picks, metrics, pending/graded counts, ROI,
+  units, win rate, or leaderboard data MUST be request-side `cache: 'no-store'`.
+- The shared `static/js/backend-api.js` `request()` already forces `cache:'no-store'` on
+  every GET. Any page-local/fallback `fetch()` for stat data must also pass
+  `{ cache: 'no-store' }`.
+- When updating `backend-api.js`, bump the `?v=` cache-bust on EVERY page that loads it for
+  stats (GitHub Pages CDN caches per `?v=` URL). Pages currently on the no-store client:
+  `/`, `/handicappers/`, `/leaderboards/`, `/profile/`, `/profile/sport/`, `/sportsbook/`
+  (`backend-api.js?v=20260601nostorestats1`).
+- Keep the backend no-store middleware + `GET /api/_nostore_probe` (build-liveness check).
+  Do not rely on the backend header through the edge; do not remove it either.
+- Render deploy liveness: verify via the probe (404 = stale build) + `/api/health` uptime
+  reset, NOT the dashboard "live" label (it lied June 1, 2026 while uptime climbed).
