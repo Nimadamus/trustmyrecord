@@ -12947,32 +12947,30 @@ window.toggleSportFamily = function (family) {
         var esc = function (s) { return ('' + (s == null ? '' : s)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); };
         var fmtOdds = function (o) { var n = Number(o); if (!isFinite(n)) return '—'; return n > 0 ? '+' + n : String(n); };
         var fmtWhen = function (iso) { if (!iso) return ''; try { var d = new Date(iso); return d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); } catch (e) { return ''; } };
-        fetch(String(base).replace(/\/$/, '') + '/games/props/' + encodeURIComponent(key) + '?cb=' + Date.now(), { cache: 'no-store' })
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (data) {
-                if (rowsEl.getAttribute('data-sport') !== sport || window.TMR.selectedPeriod !== 'props') return;
-                if (!data || !data.supported) { rowsEl.innerHTML = emptyState(sport, 'Player props are not offered for ' + sport + ' yet.', 'closed'); return; }
-                var games = data.games || [];
-                if (!games.length) { rowsEl.innerHTML = emptyState(sport, 'No player props posted right now. Check back when lines are up.', 'closed'); return; }
-                // PROP_PICK_20260531: A market is PICKABLE only when it's a clean
-                // Over/Under-with-line player prop the grader can settle from the
-                // box score. Today that's MLB pitcher "Total Strikeouts" only —
-                // the only feed market that ships as true O/U with a numeric line
-                // AND maps to a gradable backend market (pitcher_strikeouts).
-                // Everything else stays display-only (honest, never fabricated).
-                var propPickInfo = function (grp, m) {
-                    if (sport !== 'MLB') return null;
-                    if (!grp || grp.key !== 'pitcher_props') return null;
-                    if (!/^Total Strikeouts\b/i.test(String(m.label || ''))) return null;
-                    var player = (String(m.label).split(' - ')[1] || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
-                    if (!player) return null;
-                    return { market_type: 'pitcher_strikeouts', player: player, stat_label: 'Strikeouts', group_label: 'Pitcher Strikeouts' };
-                };
-                var outcomePickable = function (info, o) {
-                    return info && (o.selection === 'Over' || o.selection === 'Under') &&
-                        o.line != null && isFinite(Number(o.line));
-                };
-                rowsEl.innerHTML = games.map(function (g) {
+        // PROP_PICK_20260531: A market is PICKABLE only when it's a clean
+        // Over/Under-with-line player prop the grader can settle from the
+        // box score. Today that's MLB pitcher "Total Strikeouts" only —
+        // the only feed market that ships as true O/U with a numeric line
+        // AND maps to a gradable backend market (pitcher_strikeouts).
+        // Everything else stays display-only (honest, never fabricated).
+        var propPickInfo = function (grp, m) {
+            if (sport !== 'MLB') return null;
+            if (!grp || grp.key !== 'pitcher_props') return null;
+            if (!/^Total Strikeouts\b/i.test(String(m.label || ''))) return null;
+            var player = (String(m.label).split(' - ')[1] || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+            if (!player) return null;
+            return { market_type: 'pitcher_strikeouts', player: player, stat_label: 'Strikeouts', group_label: 'Pitcher Strikeouts' };
+        };
+        var outcomePickable = function (info, o) {
+            return info && (o.selection === 'Over' || o.selection === 'Under') &&
+                o.line != null && isFinite(Number(o.line));
+        };
+        // Shared card renderer — used for both the Bovada props feed and the
+        // board fallback. Expects games shaped { away_team, home_team,
+        // commence_time, id, prop_groups:[{ key, label, markets:[{ label,
+        // outcomes:[{ selection, line, odds }] }] }] }.
+        function renderPropGames(games) {
+            rowsEl.innerHTML = games.map(function (g) {
                     var groups = (g.prop_groups || []).map(function (grp) {
                         var markets = (grp.markets || []).map(function (m) {
                             var info = propPickInfo(grp, m);
@@ -12999,8 +12997,70 @@ window.toggleSportFamily = function (family) {
                     }).join('');
                     return '<article class="sportsbook-game-card" data-prop-away="' + esc(g.away_team) + '" data-prop-home="' + esc(g.home_team) + '" data-prop-time="' + esc(g.commence_time || '') + '" data-prop-gid="' + esc(g.id || '') + '"><div class="game-meta-row"><b>' + esc(g.away_team) + ' @ ' + esc(g.home_team) + '</b> <small style="color:var(--text-muted,#9aa);margin-left:8px">' + esc(fmtWhen(g.commence_time)) + '</small></div>' + groups + '</article>';
                 }).join('');
+        }
+
+        // PROPS_BOARD_FALLBACK_20260601 (Nima): the dedicated props feed
+        // (/games/props) is sourced from Bovada, which is blocked from the Render
+        // host (ECONNABORTED) and returns games:[] even when props exist. The
+        // board's FanDuel feed already carries the player_props group per game, so
+        // when the Bovada props feed is empty, map those board props into the same
+        // prop_groups shape and render them (display-only, never fabricated).
+        // Pitcher Strikeouts stay PICKABLE via the existing propPickInfo path.
+        function propGamesFromBoard(bgames) {
+            return (bgames || []).map(function (g) {
+                var pp = (g.market_groups || []).filter(function (grp) {
+                    return grp && grp.key === 'player_props' && (grp.items || []).length;
+                })[0];
+                if (!pp) return null;
+                // Bucket flat items by market_type, then by player.
+                var byMarket = {};
+                (pp.items || []).forEach(function (it) {
+                    var mt = it.market_type || it.market_key || 'prop';
+                    var bucket = byMarket[mt] || (byMarket[mt] = { label: it.prop_label || mt, players: {}, order: [] });
+                    var player = it.player_name || '';
+                    if (!bucket.players[player]) { bucket.players[player] = []; bucket.order.push(player); }
+                    bucket.players[player].push({ selection: it.side || it.selection, line: it.line, odds: it.odds });
+                });
+                var groups = Object.keys(byMarket).map(function (mt) {
+                    var b = byMarket[mt];
+                    var isPitcherK = (mt === 'pitcher_strikeouts');
+                    return {
+                        key: isPitcherK ? 'pitcher_props' : (mt + '_props'),
+                        label: isPitcherK ? 'Pitcher Props' : b.label,
+                        markets: b.order.map(function (player) {
+                            // pitcher_strikeouts label must match propPickInfo's
+                            // "Total Strikeouts - <player>" pattern to stay pickable.
+                            var lbl = isPitcherK ? ('Total Strikeouts - ' + player) : (b.label + ' - ' + player);
+                            return { label: lbl, outcomes: b.players[player] };
+                        })
+                    };
+                });
+                if (!groups.length) return null;
+                return { id: g.id, away_team: g.away_team, home_team: g.home_team, commence_time: g.commence_time, prop_groups: groups };
+            }).filter(Boolean);
+        }
+        function fallbackToBoard() {
+            fetch(String(base).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(key) + '?limit=80', { cache: 'no-store' })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (bd) {
+                    if (rowsEl.getAttribute('data-sport') !== sport || window.TMR.selectedPeriod !== 'props') return;
+                    var mapped = propGamesFromBoard(bd && bd.games);
+                    if (!mapped.length) { rowsEl.innerHTML = emptyState(sport, 'No player props posted right now. Check back when lines are up.', 'closed'); return; }
+                    renderPropGames(mapped);
+                })
+                .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'props') rowsEl.innerHTML = emptyState(sport, 'Player-props feed temporarily unavailable. Try again shortly.', 'closed'); });
+        }
+
+        fetch(String(base).replace(/\/$/, '') + '/games/props/' + encodeURIComponent(key) + '?cb=' + Date.now(), { cache: 'no-store' })
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (data) {
+                if (rowsEl.getAttribute('data-sport') !== sport || window.TMR.selectedPeriod !== 'props') return;
+                if (data && data.supported === false) { rowsEl.innerHTML = emptyState(sport, 'Player props are not offered for ' + sport + ' yet.', 'closed'); return; }
+                var games = (data && data.games) || [];
+                if (!games.length) { fallbackToBoard(); return; }
+                renderPropGames(games);
             })
-            .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'props') rowsEl.innerHTML = emptyState(sport, 'Player-props feed temporarily unavailable. Try again shortly.', 'closed'); });
+            .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'props') fallbackToBoard(); });
     }
 
     function renderBoard(sport) {
