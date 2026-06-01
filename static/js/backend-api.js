@@ -212,6 +212,17 @@ class TrustMyRecordAPI {
                 }
             };
 
+            // NEVER serve stale stats. All GET reads bypass the HTTP cache so
+            // records/units/ROI/pick-history always reflect the live ledger.
+            // (Stale CDN/browser caching of API GETs was the cause of a stale
+            // profile record showing 91-93-4 while the DB held 92-93-3.)
+            const _method = (config.method || 'GET').toUpperCase();
+            if (_method === 'GET' && config.cache === undefined) {
+                config.cache = 'no-store';
+                config.headers['Cache-Control'] = 'no-cache';
+                config.headers['Pragma'] = 'no-cache';
+            }
+
             if (config.body && typeof config.body === 'object') {
                 config.body = JSON.stringify(config.body);
             }
