@@ -114,3 +114,32 @@ No TrustMyRecord tool may launch as a shell, orphan page, or placeholder route. 
 - MLB Simulator deployments must be live-verified after every simulator data or UI change: current-team selectors, away and home starting-pitcher dropdowns, simulation run, Projection Review output, and Box Score output must all work on `https://trustmyrecord.com/mlb-simulator/`. Current teams must expose starter dropdown options from verified roster data when available and from the checked-in current starter profile dataset when live roster data is unavailable.
 - public-record, leaderboard, profile, sportsbook, pick-tracking, grading, forum, and auth routes are not regressed
 - final acceptance requires live public browser verification with screenshot proof of the public URL visible, not only localhost, build success, deployment status, or HTTP-only checks
+
+## New Sport / League Onboarding (added June 3, 2026)
+
+A league must never be made pickable on the sportsbook board before its full
+settlement path exists. Root cause reference: `soccer_intl_friendly` (Intl
+Friendly) was pickable and submitted picks, but the backend score cron had no
+ESPN ingestion entry for it, so soccer picks (e.g. Italy ML, June 3, 2026)
+stayed pending forever.
+
+Adding a league to the sportsbook frontend (ESPN league map / league tabs)
+REQUIRES, in the same change set:
+
+1. Backend `services/gameIngestionService.js`: `SPORT_CONFIG` entry (ESPN
+   scoreboard path) + `ACTIVE_SPORTS` membership, so finals ingest and the
+   pending-pick backfill reaches the league.
+2. Backend grading support for every pickable market of that sport, including
+   the per-sport settle delay window.
+3. Records surfaces: sport label/bucket mapping on handicappers, leaderboards
+   dropdown `<option>`, profile record grids, and my-pending-picks labels.
+4. Stats aggregation verified (`user_sport_stats` row appears after first
+   graded pick; stats-consistency drift 0).
+5. Backend regression coverage: add the league key to
+   `tests/soccer-grading-coverage-test.js` (or sport equivalent) in
+   trustmyrecord-backend so CI blocks removal of ingestion coverage.
+6. Live verification: submit a controlled pick, confirm the auto-grader
+   settles it without manual help, and confirm it appears in records pages.
+
+See trustmyrecord-backend `GRADING_BACKFILL_PROTOCOL.md` → "New sport / league
+onboarding checklist" for the canonical backend-side runbook.
