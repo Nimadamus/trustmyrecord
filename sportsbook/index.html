@@ -1163,7 +1163,7 @@
                 var pitcherLineHtml = function(nm) {
                     if (!_mlbStarter) return '';
                     var v = (nm && String(nm).trim()) ? escHtml(nm) : 'TBD';
-                    return '<div class="team-pitcher"><span class="team-pitcher-label">Probable Pitcher:</span> ' + v + '</div>';
+                    return '<div class="team-pitcher">' + v + '</div>';
                 };
                 var awayPitcherHtml = pitcherLineHtml(awayPitcher);
                 var homePitcherHtml = pitcherLineHtml(homePitcher);
@@ -1446,7 +1446,7 @@
             var pitcherLineHtml = function(nm) {
                 if (!_mlbStarter) return '';
                 var v = (nm && String(nm).trim()) ? escHtml(nm) : 'TBD';
-                return '<div class="team-pitcher"><span class="team-pitcher-label">Probable Pitcher:</span> ' + v + '</div>';
+                return '<div class="team-pitcher">' + v + '</div>';
             };
             var awayPitcherHtml = pitcherLineHtml(awayPitcher);
             var homePitcherHtml = pitcherLineHtml(homePitcher);
@@ -10758,7 +10758,7 @@ window.toggleSportFamily = function (family) {
         if (!lobbyIsMlb(game, sport)) return '';
         var nm = lobbyPitcherName(game, side);
         var val = nm ? _sbEsc(nm) : 'TBD';
-        return '<div class="sb-team-pitcher"><span class="sb-team-pitcher-label">Probable Pitcher:</span> ' + val + '</div>';
+        return '<div class="sb-team-pitcher">' + val + '</div>';
     }
     var _lobbyMlbProbable = { map: null, fetchedAt: 0, inflight: false };
     function _lobbyTeamKey(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
