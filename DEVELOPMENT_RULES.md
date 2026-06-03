@@ -958,10 +958,26 @@ Player props on the sportsbook board are **view-only** and must stay that way un
 - Frontend (`sportsbook/index.html`): the "Player Props" MLB subtab renders via `_renderPlayerPropsBoard`, which is intentionally inert — no buttons, no `onclick`, no `selectGameBet`, no pick-slip/bet-slip/manual-entry hooks. It must never be added to `_groupBackedMarkets` (that path is pickable). The tab only appears when the API returns a non-empty `player_props` group; otherwise show the clean empty state.
 - Do NOT wire props to the pick slip, submit flow, grading, or any DB write without an explicit upgrade decision. Props are reference data until then.
 
+### HARD RULE — feature flags must be verified against the LIVE RUNNING Render process, not code presence (May 31, 2026, FLAG_VERIFY_LIVE_20260531)
+A feature gated by an env flag (e.g. `PROPS_PICKABLE_ENABLED`) is NOT live just because (a) the code that reads it is on master, or (b) someone set the var in the Render dashboard. The **running process** must have been restarted/redeployed AFTER the var was set, and Render deploys silently fail on `pipeline_minutes_exhausted` (build_failed in ~1s → the OLD process keeps serving without the var). **Always prove flag state against the live API**, never infer it:
+- For `PROPS_PICKABLE_ENABLED`: `POST /api/picks` an authed prop and check the response. `200/duplicate` = flag live; a `400 "market_type must be one of: …"` whose list LACKS `pitcher_strikeouts` = flag NOT active on the running process (regardless of dashboard/code state).
+- Claude (CLI) CANNOT set Render env vars or restart the service — there is no Render API key / deploy hook / service id in the repo or `CLAUDE.md` (`.env` holds only `JWT_SECRET`). Setting the var + restarting is a human/dashboard action. After the human does it, re-run the live probe before claiming the feature works.
+- If the probe still shows the old list after a dashboard change, suspect a failed/queued Render deploy (minutes exhausted) — fix in dashboard ("Clear build cache & deploy" / reset minutes), then re-probe.
+
+### Stats depth — Player Props + Alternate Lines sections (May 31, 2026, PROP_STATS_20260531)
+Props and alt lines are tracked as **dedicated stat sections** with depth, not lumped into generic spread/total groups:
+- **Backend `services/statsAggregator.js`** (deployed master `6e5f1d27`): `marketGroup()` now returns `player_props` for the 4 prop markets and `alternate_lines` for `alt_spreads`/`alt_totals` (split out of `spread`/`total`). Two new breakdown categories persist in `user_stat_breakdowns`: `prop_type` (strikeouts/hits/total_bases/rbi) and `alt_line_type` (alt_spread/alt_total). `addBucket` skips null buckets, so non-prop/non-alt picks are unaffected. Exposed live via `GET /api/users/:u/stats/breakdowns?category=market_group|prop_type|alt_line_type` (table-driven; populates after the next stats rebuild once such graded picks exist). Note: the repo stores this file LF; the GitHub compare shows whole-file because the stored blob endings differ — content is live+only the added lines (verified by LF-vs-LF diff). `profileAnalytics.js`/`routes/users.js` intentionally NOT changed (breakdowns endpoint is table-driven; their splits were unused).
+- **Frontend `profile/index.html`** (deployed `e608a4e`): two new panels — **Player Props** (rows by stat type) + **Alternate Lines** (alt spread vs alt total) — rendered client-side from the user's own graded picks via `renderDepthBreakdown()` (same `pickPL`/`bRowExtended` as every other panel). `MARKET_TYPE_GROUPS` gained a `player_props` group; `PROP_TYPE_GROUPS`/`ALT_LINE_GROUPS` drive the depth panels. Modules self-hide when the user has no such picks (verified live: hidden for BetLegend, 0 page errors). No fabricated data.
+
 ### Rollout status
 - **Sub-step 1 (display-only) — DONE.** Backend `services/fanduelPropsService.js` + frontend `_renderPlayerPropsBoard` tab live.
 - **Sub-step 2 (schema support) — DONE (May 27, 2026).** `database/migration_player_props.sql` applied to live DB (backend commit `67c5da4`): added nullable `picks.player_name` / `player_team` / `player_id`, and widened `picks_market_type_check` (kept `NOT VALID`, matching the existing live constraint so legacy rows like `first_five_totals`/`team_total` don't break) to allow `pitcher_strikeouts`/`batter_total_bases`/`batter_hits`/`batter_rbi`. Wired into `init-db.js` for fresh DBs (note: prod init-db is guarded off by `RUN_PRODUCTION_DB_INIT`, so prod migrations are applied directly to the DB). Backend validation (`routes/picks.js`) accepts prop market types ONLY when env `PROPS_PICKABLE_ENABLED` is truthy — **default OFF**, so prop submissions still return HTTP 400 and nothing can be written. **Do NOT set `PROPS_PICKABLE_ENABLED=true` until sub-step 4 (grading + handler support) is done** — turning it on early would allow ungraded prop picks. Known follow-up for the pickable sub-step: the unique index `picks_user_game_market_active_uniq(user_id, game_id, market_type)` must include `player_id`/selection before multiple props of the same type per game can be submitted.
-- **Sub-steps 3 (pickable) + 4 (grading) — NOT started.** Need explicit approval.
+- **Sub-steps 3 (pickable) + 4 (grading) — BUILT for MLB pitcher strikeouts (May 31, 2026, PROP_PICK_20260531).** Nima approved "make props fully bettable." Scope was deliberately narrowed to the only feed market that ships as a clean Over/Under-with-line AND is reliably gradable: **MLB `pitcher_strikeouts`** ("Total Strikeouts - <Pitcher>"). The Bovada batter markets ("Player to record a Hit/RBI") are player-as-outcome yes/no with `line:null`, so they are NOT clean O/U and stay display-only (no fabricated lines).
+  - **Grading (sub-step 4):** new `backend services/playerPropGrading.js` settles props from the official MLB Stats API box score (`statsapi.mlb.com`, free, no key): resolves the game by date+teams, reads `pitching.strikeOuts` for the parsed player, compares to `line_snapshot`. Never fabricates — throws (pick stays `pending`, retries) when the game isn't final or the player/stat can't be read. Wired into `services/gradingEngine.js` as an **isolated async loop** that runs after the proven score-based loop and can never break it; prop markets are excluded from the score-based query. Deployed to backend master `8e5c0d74` (via Git Data API, rebased on live master — no regression to the per-sport final-game buffers / refactored graders). Unit-verified on real finals (Framber Valdez K=4: Over 3.5 → won, Under 4.5 → won; Anthony Kay K=3: Over 5.5 → lost; unit math correct).
+  - **Pickable (sub-step 3):** frontend `sportsbook/index.html` `renderPlayerPropsBoard` renders "Total Strikeouts" outcomes as real buttons (`data-prop-pick="1"`); `window.selectPropBet` + a delegated click handler register the selection through `window.tmrRegisterExternalOption` (same canonical submit path as alt lines) with `market_type:'pitcher_strikeouts'` and selection `"<Pitcher> Over|Under <line> Strikeouts"`. **NOT yet deployed** (held until the flag is on — see below).
+  - **LIVE (June 1, 2026, PROP_DEFAULT_ON_20260601).** Frontend `sportsbook/index.html` deployed (`46ef8b9`). Backend grader + stats deployed. The env-flag dependency was REMOVED: `routes/picks.js` `propsPickableEnabled()` now defaults to **TRUE** (commit `4101a206`) because grading is live — so props are pickable without any Render dashboard action. `PROPS_PICKABLE_ENABLED` is now a **kill switch only**: set it to `false`/`0`/`off`/`no` to disable. Verified live: authed `POST /api/picks` with `market_type:pitcher_strikeouts` no longer returns the "must be one of" 400 (passes validation; returns `Game not found` only for a junk id). Render DOES deploy these commits — it just takes ~3 min to build+restart (the earlier "flag off" was the pre-deploy process still serving). Grader re-verified on a real final (Kyle Bradish K=4: Over 2.5 → won, Over 5.5 → lost).
+  - **PENDING (external timing only):** a single literal submit→record→grade chain on one live pick waits on (a) Bovada posting today's "Total Strikeouts" props (the feed is empty early-morning ET; posts midday/afternoon) and (b) that game finaling (hours later). Nothing in code blocks it.
+  - **KNOWN LIMITATION:** the unique index `picks_user_game_market_active_uniq(user_id, game_id, market_type)` means a user can lock only ONE `pitcher_strikeouts` pick per game — locking both starters collides (2nd returns as duplicate). Removing this needs the index to include selection/player; tracked as the next follow-up before multi-pitcher props per game.
 
 ## Sportsbook MLB probable pitcher under team name (May 30, 2026) — HARD RULE (PRESERVE)
 The MLB sportsbook board shows a probable-starter line **directly under each team name**: `Probable Pitcher: <name|TBD>`. This is display-only and MLB-only — it must NEVER be injected into NBA/NHL/Soccer/WNBA/Tennis/NCAA or any non-MLB board.
@@ -995,18 +1011,68 @@ Forum/social engagement MUST notify the recipient. Never remove or bypass this w
 - **UI**: a notification bell in the logged-in nav with a visible unread count, a dropdown/`/notifications/` page, mark-read, and click-through to `/forum/?thread=<id>#post-<id>`. The dropdown lives in `static/js/notifications.js`; the unread badge poller in `nav-badges.js`. As of the forum-first rollout the bell is injected by the **forum-scoped** `static/js/forum-notification-bell.js` (loaded only by `forum/index.html`); when sitewide rollout is approved, move the bell markup into `buildLoggedInActions()` in `tmr-sitewide.js` and delete the injector.
 - Writes are best-effort (`notifySafe`) and must never block forum posting/replies/likes.
 
-### CORRECTION (2026-06-02): test the board with the REAL sport key, and MLB alt team totals are a provider gap
-- **Sport-key gotcha:** the sportsbook UI labels are NOT the board API keys. The frontend `sportKeyMap` sends `baseball_mlb` (also `basketball_nba`, `icehockey_nhl`, etc.). Hitting `/api/games/board/MLB` resolves to a key Action Network does not support, skips the live primary source, falls through to the empty `games` DB table, and returns `total_games:0` with `source:database ok:false` — which FALSELY looks like an ingestion outage. ALWAYS test `/api/games/board/baseball_mlb`. A 0 on the label key is a test error, not an outage.
-- **MLB alternate team totals = provider-inventory gap (verified 2026-06-02):** with 15 live MLB games on `/board/baseball_mlb`, every game carries exactly ONE main team-total line per team (from Action Network) and NO alternate ladder. The FanDuel alt enricher (`services/fanduelAltLinesService.js`) is running (it adds `alt_spreads`/`alt_totals`) and its team-total wiring is correct, but the FanDuel IL feed (`sbapi.il.sportsbook.fanduel.com`) exposes `ALTERNATE_RUN_LINES` + `ALTERNATE_TOTAL_RUNS` and ZERO team-total markets for MLB (default tab = 97 markets, none containing `TEAM`). So `altTeamTotals` is always empty — there is nothing to render. This is honest no-inventory, not a bug.
-- **Live render proof required and obtained:** Playwright drove the live Team Totals tab (MLB): 15 cards, 60 standard team-total buttons rendering correctly (e.g. Tigers O3.5 -125 / Rays O4.5 +105), 0 alt toggles (correct — no inventory), 0 overflow elements desktop, no mobile horizontal overflow, no board console errors (only benign unauthenticated 401s).
-- **To actually ADD alt team totals** a NEW source carrying MLB alt team totals must be wired (e.g. a FanDuel jurisdiction/tab that lists team totals, DraftKings, or The Odds API `alternate_team_totals` once `ODDS_API_KEY` is restored). Do NOT synthesize lines to fill the gap.
+## RULE: TMR forum visual target = light "Two Plus Two" classic skin (TWO_PLUS_TWO_FORUM_STYLE_TARGET_20260531)
 
-### RULE (2026-06-02): a "restore"/"recover emptied file" commit MUST be a forward merge, never a stale-snapshot revert
-- **What broke:** commit `93fe4a2b` emptied `sportsbook/index.html` (0 bytes). The follow-up "fix: restore … (prev commit emptied it)" `9f0bbde6` restored the file from a snapshot that PREDATED three live feature commits — `46ef8b99` (PROP_PICK: pitcher Total Strikeouts pickable), `9734f74a` (PROP_EXPAND: full pitcher + batter milestone pickable set), `28b55f9c` (PROPS_BOARD_FALLBACK). Result: live `/sportsbook/` Player Props rendered every market as a display-only `<div>` — ZERO pickable buttons. Users reported "can't create any player props / can't choose anything when I cursor over a field." This was a silent REGRESSION, not a backend/data outage (the Bovada props feed + board fallback both had data).
-- **Root cause class:** restoring a large single-file page from an old working copy / old commit instead of from the current `origin/main` HEAD. Any feature added between the snapshot and HEAD is silently clobbered. The push gate / validators do not catch lost JS behavior.
-- **Mandatory protocol when recovering an emptied or corrupted page file:**
-  1. Recover from `git show origin/main:<path>` (or the latest non-empty commit of THAT file), never from a local stale copy or an arbitrary older commit.
-  2. Run `git log --oneline -15 -- <path>` and confirm EVERY feature commit since the last-known-good is still represented (grep its marker token, e.g. `PROP_EXPAND_20260601`, `PROPS_BOARD_FALLBACK_20260601`, `ALT_TT_ANYGROUP_20260602`).
-  3. If the empty/restore straddled feature commits, reconstruct by taking the most COMPLETE feature version as the base and porting any newer isolated changes on top — do not pick one side and drop the other.
-- **Player-props pickability guard (regression canary):** after ANY `sportsbook/index.html` deploy, load live `/sportsbook/` → MLB → Player Props and assert `document.querySelectorAll('[data-prop-pick="1"]').length > 0` whenever the props/board feed returns games. Markers that MUST coexist in the file: `classifyMarket` + `outcomePick` (pickability), `PROPS_BOARD_FALLBACK_20260601` (Bovada-down fallback), `ALT_TT_ANYGROUP_20260602` (team totals). Pickable MLB markets: pitcher_strikeouts (Total + Alternate), pitcher_hits_allowed, pitcher_walks, pitcher_outs, pitcher_earned_runs, batter_hits, batter_runs, batter_rbi, batter_home_runs. Non-gradable markets (correct score, first HR, game props) stay display-only — never fabricate.
-- **When a NEW prop type is added:** add its branch to `classifyMarket` (and a backend grader market_type), confirm the live canary still shows pickable buttons, and update this list. Display-only is the safe default for any market the box-score grader can't settle.
+The TrustMyRecord forum (`/forum/index.html`) must visually follow the Two Plus Two
+forum reference unless Nima explicitly changes direction:
+- Light gray/off-white page background (NOT the dark sportsbook background).
+- Dark charcoal top nav bar + tab bar.
+- Clean white/light-gray forum rows, dark-charcoal section header bars.
+- Light-gray left sidebar with simple dark text links (no dark cards/glow).
+- Simple folder-style sport icons (no glowing badge tiles).
+- Layout: forum name/description left, last post middle, threads/posts right.
+- Compact classic typography; no oversized modern styling or heavy rounded dark panels.
+
+Implementation: body uses ONLY `class="classic-forum"`. The dark
+`tmr-forum-live-redesign` / `FORUM_PREMIUM_SOCIAL_UI` CSS layers stay in the file
+(dormant, not applied) — do NOT re-add that class to <body>. Light styling for the
+sidebar box/list and sport icons lives in `<style id="tmr-forum-2p2-classic-final-20260531">`.
+Visual only: never touch forum routes, auth, messages, alerts, notification bell,
+thread/post counts, or thread/reply logic when restyling.
+
+## RULE: Forum "User CP" = private control panel, NOT a public profile shortcut (FORUM_USERCP_CONTROL_PANEL_20260531)
+
+The forum nav "User CP" tab must route to the dedicated private control panel
+`/usercp/` (`usercp/index.html`), never to `/profile/`.
+- `/usercp/` is private (login-gated; `noindex`) and uses the light `classic-forum` skin.
+- It holds account tools only: Edit Profile (`/profile/?action=edit`), Change Avatar
+  (`/profile/?action=change-avatar`), Account Settings, Notification Settings,
+  Messages/Inbox (`/messages/`), Alerts (`/notifications/`), My Threads (live, filtered
+  by current username), My Posts, Subscribed Threads, and basic account/forum stats.
+- The PUBLIC profile stays separate and is reached ONLY via the username / Profile link
+  (`/profile/?user=<username>`). Never collapse User CP into the public profile again.
+- Future forum nav work must keep this separation: "User CP" = private dashboard,
+  "Profile" = public page.
+
+---
+
+## STAT/RECORD FETCHES: request-side `no-store` is the PERMANENT STANDARD (June 1, 2026)
+
+Render's Cloudflare edge in front of `*.onrender.com` STRIPS response cache headers
+(`Cache-Control`/`Pragma`/`Expires`) before they reach the browser (it keeps `etag`).
+Proven June 1, 2026: the API sets `Cache-Control: no-store` (read back via
+`GET /api/_nostore_probe` body `cacheControlHeaderSet`) but the client never receives it.
+
+Therefore backend response headers are NOT a reliable anti-stale mechanism. Required standard:
+
+- All fetches that load user stats, records, picks, metrics, pending/graded counts, ROI,
+  units, win rate, or leaderboard data MUST be request-side `cache: 'no-store'`.
+- The shared `static/js/backend-api.js` `request()` already forces `cache:'no-store'` on
+  every GET. Any page-local/fallback `fetch()` for stat data must also pass
+  `{ cache: 'no-store' }`.
+- When updating `backend-api.js`, bump the `?v=` cache-bust on EVERY page that loads it for
+  stats (GitHub Pages CDN caches per `?v=` URL). Pages currently on the no-store client:
+  `/`, `/handicappers/`, `/leaderboards/`, `/profile/`, `/profile/sport/`, `/sportsbook/`
+  (`backend-api.js?v=20260601nostorestats1`).
+- Keep the backend no-store middleware + `GET /api/_nostore_probe` (build-liveness check).
+  Do not rely on the backend header through the edge; do not remove it either.
+- Render deploy liveness: verify via the probe (404 = stale build) + `/api/health` uptime
+  reset, NOT the dashboard "live" label (it lied June 1, 2026 while uptime climbed).
+
+## SPORTSBOOK_PITCHER_NO_LABEL_20260603
+- MLB board rows show ONLY the probable pitcher name under each team name. Do NOT
+  reintroduce the "Probable Pitcher:" prefix label.
+- Renderers in `sportsbook/index.html` (all three MLB starter paths + lobby
+  `lobbyPitcherHtml`) must emit `<div class="team-pitcher">NAME</div>` /
+  `<div class="sb-team-pitcher">NAME</div>` with no `*-label` span. TBD fallback when
+  the feed lacks a name. Label was removed June 3, 2026 (it truncated names).
