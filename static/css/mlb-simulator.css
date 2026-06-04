@@ -2873,3 +2873,222 @@ select.pitcher-select option {
         text-align: left;
     }
 }
+
+/* ============================================================
+   TOP_SCOREBOARD_20260603: baseball line-score scoreboard at the
+   top of the result card. Premium dark sportsbook styling.
+   ============================================================ */
+.top-scoreboard-wrap {
+    display: grid;
+    gap: 0;
+    margin: 0 16px 16px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(10, 15, 23, 0.97), rgba(3, 7, 14, 0.99));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 14px 34px rgba(0, 0, 0, 0.32);
+}
+
+.top-scoreboard-wrap[data-state="empty"],
+.result-card[data-result-state="loading"] .top-scoreboard-wrap,
+.result-card[data-result-state="empty"] .top-scoreboard-wrap {
+    display: none;
+}
+
+.sb-topline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    background: rgba(15, 23, 42, 0.55);
+}
+
+.sb-final-tag {
+    padding: 3px 10px;
+    border: 1px solid rgba(244, 201, 93, 0.45);
+    border-radius: 999px;
+    color: var(--sim-gold);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.sb-final-score {
+    color: var(--sim-text);
+    font-family: Barlow, Inter, sans-serif;
+    font-size: clamp(18px, 2.2vw, 24px);
+    font-weight: 800;
+    letter-spacing: 0.01em;
+}
+
+.sb-sim-tag {
+    margin-left: auto;
+    color: var(--sim-muted);
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.sb-scroll {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.sb-table {
+    width: 100%;
+    min-width: 640px;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+}
+
+.sb-table th,
+.sb-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+    text-align: center;
+}
+
+.sb-table thead th {
+    padding: 8px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.28);
+    background: rgba(15, 23, 42, 0.5);
+    color: var(--sim-muted);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.sb-table tbody tr:last-child th,
+.sb-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.sb-table .sb-team-head,
+.sb-table .sb-team {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 168px;
+    background: linear-gradient(180deg, rgba(10, 15, 23, 0.99), rgba(3, 7, 14, 0.99));
+    text-align: left;
+}
+
+.sb-table thead .sb-team-head {
+    background: rgba(13, 20, 31, 0.99);
+}
+
+.sb-table .sb-team {
+    padding-left: 14px;
+}
+
+.sb-team strong {
+    display: block;
+    color: var(--sim-text);
+    font-family: Barlow, Inter, sans-serif;
+    font-size: 19px;
+    font-weight: 800;
+    line-height: 1.05;
+}
+
+.sb-team span {
+    display: block;
+    overflow: hidden;
+    max-width: 180px;
+    color: var(--sim-muted);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.sb-inning {
+    min-width: 34px;
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.sb-table thead .sb-inning {
+    color: var(--sim-muted);
+}
+
+.sb-total {
+    min-width: 40px;
+    color: var(--sim-text);
+    font-size: 15px;
+    font-weight: 900;
+}
+
+.sb-table .sb-runs,
+.sb-table .sb-runs-head {
+    border-left: 2px solid rgba(244, 201, 93, 0.4);
+    background: rgba(244, 201, 93, 0.07);
+    color: var(--sim-gold);
+    font-size: 17px;
+}
+
+.sb-table thead .sb-runs-head {
+    color: var(--sim-gold);
+}
+
+.sb-row.sb-winner td.sb-inning,
+.sb-row.sb-winner td.sb-total {
+    background: rgba(45, 212, 191, 0.06);
+}
+
+.sb-row.sb-winner .sb-team strong {
+    color: var(--sim-cyan);
+}
+
+.sb-row.sb-winner td.sb-runs {
+    background: rgba(244, 201, 93, 0.12);
+}
+
+@media (max-width: 920px) {
+    .top-scoreboard-wrap {
+        margin: 0 12px 14px;
+    }
+
+    .sb-topline {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 9px 12px;
+    }
+
+    .sb-final-score {
+        font-size: 17px;
+    }
+
+    .sb-table {
+        min-width: 600px;
+    }
+
+    .sb-table .sb-team-head,
+    .sb-table .sb-team {
+        min-width: 132px;
+    }
+
+    .sb-team span {
+        max-width: 120px;
+    }
+
+    .sb-inning {
+        min-width: 32px;
+        font-size: 13px;
+    }
+
+    .sb-total {
+        min-width: 36px;
+    }
+}
+
