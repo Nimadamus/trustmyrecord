@@ -108,3 +108,39 @@ calibration misses 0, R/team 4.43 (real 4.45), errors 0.50, K 8.23, 7+ bucket
 Open after this pass: BB/team +0.10 hot (within tol), blowout% 26.0 vs 28.7
 (within tol), extra-inning% 10.1 vs 8.6 (within tol). Next roadmap layer:
 per-reliever bullpen (Layer 1) — NOT built yet.
+
+## Accuracy + event-sourced outputs pass (June 4, 2026 — build mlb-simulator-accuracy-outputs-20260604b)
+Driven by Nima directive: rosters/batting orders 100% accurate, outputs fixed, more realism.
+
+**Roster/lineup accuracy (30/30 verified):**
+- FIXED teamSideInGame shape bug: it read schedule shape (teams.home.team.id) but
+  collectRecentStartingLineup passes live-feed gameData (teams.home.id) — the
+  recent-game batting order NEVER matched a side, so every team without a posted
+  lineup silently fell to the unordered active-roster fallback. Now handles both.
+- FIXED stale manual blocklist { ARI: nolanarenado }: statsapi lists Arenado on
+  ARI active roster (3B, status A); the entry dropped a real lineup hitter and
+  broke ARI to the roster fallback. Blocklist now empty with a hard re-verify rule.
+- FIXED loadLiveContext wiping playerStats/playerProfiles/playerSplits/todaySchedule/
+  teamInjured when replacing state.liveContext (threw in in-flight fetch callbacks and
+  silently degraded lineup slots from real stats to synthetic vectors).
+- Audit (_roster_audit.cjs, engine vs raw statsapi ground truth): 30/30 batting
+  orders MATCH, 0 roster membership issues.
+
+**Event-sourced outputs (no estimates / random garnish left):**
+- RISP X-for-Y, 2-out RBI, LISP-2out, GIDP (per batter + team), SF (AB-excluded,
+  official scoring), pickoffs (live event ~0.05/team), outfield assists (runner
+  thrown out at home on a single, ~0.13/team), DP turned (defense mirror of GIDP),
+  per-PA pitch counts (staff ~146/game) — all tracked from simulated events.
+- W/L/SV: starter needs 5+ IP for the W; SV only in close games (margin <= 3) or
+  3+ inning finishes. Verified 600 games: 600 Ws, 0 blowout saves.
+- GIDP rate calibrated 0.11 -> 0.21 per opportunity => 0.70/team (real 0.72).
+
+**Layer 1 — per-reliever bullpen (SHIPPED, fail-open):** when verified reliever
+season stats are cached, setup man = best remaining ERA and closer = saves leader
+pitch with their OWN real K/BB/HR rates and real names; otherwise team bullpen
+profile (evRelieverArms).
+
+**Anchor re-measured twice:** x1.003 (after pickoff/assist outs ran cold) then
+x1.024 (after GIDP rate removed ~2.7% of runs). Final harness: R/team 4.45 (+0.00),
+integrity 0 violations, 0 calibration misses, end-to-end drift +1.0%, home win 53.6%.
+Rule unchanged: ANY layer adding/removing baserunners or outs must re-measure.
