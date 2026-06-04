@@ -144,3 +144,21 @@ profile (evRelieverArms).
 x1.024 (after GIDP rate removed ~2.7% of runs). Final harness: R/team 4.45 (+0.00),
 integrity 0 violations, 0 calibration misses, end-to-end drift +1.0%, home win 53.6%.
 Rule unchanged: ANY layer adding/removing baserunners or outs must re-measure.
+
+## Roster/pitcher polish pass (June 4, 2026 — build mlb-simulator-roster-pitcher-polish-20260604c)
+- Standardized lineup labels: CONFIRMED LINEUP (only live/final source) / PROJECTED
+  LINEUP (posted/recent/roster/historical, with detail) / LINEUP UNAVAILABLE chip.
+- normalizeName now accent-folds (NFD) — accented active-roster vs plain lineup-feed
+  names ("Teoscar Hernandez") previously failed dedupe.
+- Final cross-list dedupe in collectMlbTeamRoster — two-way player (Ohtani, TWP
+  matches the pitcher regex via /P$/) appeared in BOTH lineup and pitcher lists.
+- Per-game starter outing variance: starterOutsGame = mean +/- 8 outs (clamped
+  8-25), inning-quantized at pitching changes => 8 distinct outing lengths (4-9 IP),
+  mean 6.30 IP; mean-preserving so the bullpen anchor share is unchanged.
+- Extended _roster_audit.cjs: lineup structure rules (9 unique, no pitcher in the
+  order unless the feed says so, no roster duplicates), label-honesty checks
+  (confirmed/posted only when today's feed has it), probable-starter cross-check
+  vs schedule hydrate=probablePitcher. Result: 30/30 orders MATCH, 0 membership,
+  0 rule fails, 0 label overclaims, 18/18 probables MATCH (12 teams idle today).
+- Harness after pass: R/team 4.53 (+0.08, in tol), integrity 0, misses 0, drift
+  +1.3%, home win 53.6%. No anchor retune needed (within tolerance).
