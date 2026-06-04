@@ -116,9 +116,10 @@ function checkIntegrity(A, H, g, viol) {
   const outsH = pStat(H, 'outs'), outsA = pStat(A, 'outs');
   if (outsH % 3 !== 0 || outsH < 27) fail('homePitcherOutsInvalid');
   if (outsH - outsA < 0 || outsH - outsA > 3) fail('outsSplitInvalid');
-  // runs cannot exceed runners who reached (hits + walks + reach-on-error)
-  if (g.aRuns > accStat(A, 'h') + accStat(A, 'bb') + g.hErr) fail('awayRuns>reachers');
-  if (g.hRuns > accStat(H, 'h') + accStat(H, 'bb') + g.aErr) fail('homeRuns>reachers');
+  // runs cannot exceed runners who reached (hits + walks + reach-on-error +
+  // extra-innings placed runners, who reach base without a H/BB/E — 2020+ rule)
+  if (g.aRuns > accStat(A, 'h') + accStat(A, 'bb') + g.hErr + (g.aPlaced || 0)) fail('awayRuns>reachers');
+  if (g.hRuns > accStat(H, 'h') + accStat(H, 'bb') + g.aErr + (g.hPlaced || 0)) fail('homeRuns>reachers');
   // per-batter sanity
   [A, H].forEach((s, si) => s.lineup.forEach(b => {
     const a = b.acc;
