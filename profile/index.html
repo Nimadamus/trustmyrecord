@@ -13363,6 +13363,23 @@
     white-space: normal !important;
     overflow-wrap: anywhere !important;
   }
+  /* PROFILE_METRIC_FIT_20260604: headroom for 4-digit records (e.g. 1000-1050-30).
+     Trim side padding for extra width and start long-format cards (Record,
+     Units, Max Drawdown) at a tighter clamp so they fit without the JS
+     fitter dropping them to tiny sizes. */
+  body.profile-page.tmr-social-profile .profile-advanced-metric {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  body.profile-page.tmr-social-profile [data-advanced-metric-card="record"] .profile-advanced-metric__value {
+    font-size: clamp(15px, 1.45vw, 21px) !important;
+    letter-spacing: -0.02em !important;
+  }
+  body.profile-page.tmr-social-profile [data-advanced-metric-card="units"] .profile-advanced-metric__value,
+  body.profile-page.tmr-social-profile [data-advanced-metric-card="max_drawdown"] .profile-advanced-metric__value {
+    font-size: clamp(16px, 1.55vw, 25px) !important;
+    letter-spacing: -0.02em !important;
+  }
 </style>
 <script>
 (function () {
@@ -13375,6 +13392,15 @@
     if (!el || el.classList.contains('is-empty')) return;
     el.style.removeProperty('font-size');
     var size = parseFloat(window.getComputedStyle(el).fontSize) || 22;
+    /* PROFILE_METRIC_FIT_20260604: for very long values (4-digit records),
+       jump straight to an estimated fitting size instead of 1px steps. */
+    if (el.scrollWidth > el.clientWidth + 0.5 && el.scrollWidth > 0) {
+      var est = Math.floor(size * (el.clientWidth / el.scrollWidth));
+      if (est < size && est >= MIN_PX) {
+        size = est;
+        el.style.setProperty('font-size', size + 'px', 'important');
+      }
+    }
     var guard = 0;
     while (el.scrollWidth > el.clientWidth + 0.5 && size > MIN_PX && guard++ < 40) {
       size -= 1;
