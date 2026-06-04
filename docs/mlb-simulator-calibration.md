@@ -78,3 +78,33 @@ warranted; do NOT force 7+ down with structural changes that would reduce realis
 Betting-market outputs (ML / run-line / total / team-total / F5) — gated until the
 distribution calibration is locked. No player props until box-score integrity is
 proven over a real-roster sample.
+
+## Game-rules realism pass (June 4, 2026 — build mlb-simulator-game-rules-realism-20260604a)
+Real MLB game-ending rules + two known calibration misses fixed in one harness-gated pass:
+
+1. **Walk-off truncation.** The home half of the 9th (and every extra inning) now
+   ends the moment the lead is taken, checked at the end of each PA so a walk-off
+   HR counts every run. Measured home-win margins in bottom-9/extras-decided games:
+   1 run 78%, 2 runs 16%, 3 runs 6%, 4 runs <1% (grand-slam cap).
+2. **True extra innings.** Extra-inning runs are tracked per inning (real 10/11/...
+   columns, no more folding into the 9th) and extras use the 2020+ placed-runner
+   rule (previous batter starts on 2B; scores as an unearned run). The harness
+   reachers check now allows placed runners (engine returns aPlaced/hPlaced).
+3. **Skipped bottom 9.** When the home team leads after 8.5, its line score has 8
+   entries and the box/scoreboard renders X (baseball convention), never a fake 0.
+   boxScore gains additive fields: totalInnings, homeSkippedFinal.
+4. **Error-rate calibration.** ROE base 0.017 -> 0.027 (clamp 0.012-0.05):
+   errors/team 0.31 -> 0.50 vs real 0.504.
+5. **K trim.** EV_K_TRIM = 0.93 inside evCombine (mass moved to in-play outs):
+   K/team 8.96 -> 8.23 vs real 8.36.
+6. **Anchor rescale x0.969.** Items 2/4/5 added unanchored baserunners (+3.2%
+   realized runs, end-to-end drift +3.5%); evAnchorTargetCorrection rescaled by
+   the measured overshoot.
+
+Harness after the pass (40000 games / 120 mirror): integrity 0 violations,
+calibration misses 0, R/team 4.43 (real 4.45), errors 0.50, K 8.23, 7+ bucket
+22.2% (real 22.7%), end-to-end drift +0.5%, home win 53.3% (real 54.3%).
+
+Open after this pass: BB/team +0.10 hot (within tol), blowout% 26.0 vs 28.7
+(within tol), extra-inning% 10.1 vs 8.6 (within tol). Next roadmap layer:
+per-reliever bullpen (Layer 1) — NOT built yet.
