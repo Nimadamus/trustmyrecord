@@ -1769,11 +1769,12 @@ function renderCategories() {
     var html = '';
     groups.forEach(function(group) {
         html += '<table class="fgroup-table" cellpadding="2" cellspacing="1">';
-        html += '<tr class="fgroup-band"><td colspan="4">' + escHtml(group.name) + '</td><td class="fgroup-meta">Forum index</td></tr>';
-        html += '<tr class="fcol-head"><td>Forum</td><td class="col-last">Last Post</td><td class="col-num">Threads</td><td class="col-num">Posts</td></tr>';
+        /* FORUM_INDEX_NO_POSTS_COLUMN_20260603: main forum index shows Forum / Last Post / Threads only.
+           Do NOT re-add a Posts column here; post counts stay available inside sections/threads. */
+        html += '<tr class="fgroup-band"><td colspan="3">' + escHtml(group.name) + '</td><td class="fgroup-meta">Forum index</td></tr>';
+        html += '<tr class="fcol-head"><td>Forum</td><td class="col-last">Last Post</td><td class="col-num">Threads</td></tr>';
         group.categories.forEach(function(cat, i) {
             var threadCount = formatForumCountValue(cat.thread_count);
-            var postCount = formatForumCountValue(cat.post_count);
             var lastHtml = '<span class="flpost-empty">No live threads yet</span>';
             if (cat.latest_thread) {
                 var lt = cat.latest_thread;
@@ -1787,7 +1788,6 @@ function renderCategories() {
                 + '<td class="fcell"><div class="frowinner"><span class="sport-icon ' + badge.cls + '">' + escHtml(badge.code) + '</span><div><div class="fname">' + escHtml(cat.name) + '</div><div class="fdesc">' + escHtml(cat.description || '') + '</div></div></div></td>'
                 + '<td class="fcell col-last">' + lastHtml + '</td>'
                 + '<td class="fcell col-num">' + threadCount + '</td>'
-                + '<td class="fcell col-num">' + postCount + '</td>'
                 + '</tr>';
         });
         html += '</table>';
