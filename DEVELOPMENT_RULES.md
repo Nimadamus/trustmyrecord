@@ -1112,3 +1112,33 @@ ALL current and future contest participant/entrant pages MUST follow it:
    right-aligned numeric columns, 24px avatar (initial-letter fallback), row
    hover tint, mobile breakpoint at 640px with tighter padding + horizontal
    scroll via `.table-wrap`.
+
+
+## PROFILE_METRIC_FIT_20260603 - Permanent profile metrics display standard
+
+Profile stat values (Advanced Capper Metrics grid + header rail cards: Record,
+Units, ROI, Win Rate, Avg Odds, Max Drawdown, etc.) must ALWAYS fit inside
+their own cell. Long values like `100-105-3` or `-357.27u` must never overflow
+into neighboring boxes at any viewport width.
+
+Implementation (profile/index.html, marker `PROFILE_METRIC_FIT_20260603`,
+style id `tmrProfileMetricFit20260603` near `</body>`):
+- Cells (`.profile-advanced-metric`, `.profile-rail-card`): `min-width: 0` + `overflow: hidden`.
+- Values (`.profile-advanced-metric__value`, `.profile-rail-value`):
+  `font-size: clamp(18px, 1.7vw, 28px)` (rail: `clamp(20px, 2.1vw, 32px)`),
+  `line-height: 1.05`, `letter-spacing: -0.01em`, `font-variant-numeric: tabular-nums`,
+  `max-width: 100%`, `white-space: nowrap`, `overflow: hidden`.
+  `.is-empty` placeholder text is exempt and wraps normally.
+- JS auto-fitter (same marker): after data loads, on resize, and on grid
+  mutations, any value with `scrollWidth > clientWidth` shrinks 1px at a time
+  (floor 12px) until it fits. This guarantees future long records/units/ROI/
+  drawdown values can never break layout.
+
+Rules:
+- Never remove this block; it must stay LAST in source order so its
+  `!important` declarations win over the `tmr-social-profile` redesign overrides.
+- Never add `scrollbar-gutter: stable` or fixed pixel font sizes to these values.
+- Any new profile metric card must use these classes (or replicate the
+  min-width:0 / overflow guard / auto-fit pattern).
+- Verify with a live overflow scan (scrollWidth vs clientWidth on every
+  metric cell) at 1440 / 1280 / 1024 / 768 / 390 widths before calling done.
