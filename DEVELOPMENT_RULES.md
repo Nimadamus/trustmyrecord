@@ -1085,3 +1085,30 @@ Therefore backend response headers are NOT a reliable anti-stale mechanism. Requ
   `colspan="3"` + the `fgroup-meta` cell.
 - Post counts remain available inside sections: thread lists (Replies/Views) and thread
   author panels are unchanged. This rule applies ONLY to the forum index table.
+
+## CONTEST PARTICIPANT PAGE STANDARD (June 3, 2026) — COMPACT_PARTICIPANT_TABLE_20260603
+
+Reference implementation: `contests/justbet-mlb/participants/index.html` (commit 44e307ce).
+ALL current and future contest participant/entrant pages MUST follow it:
+
+1. **Count integrity.** The headline "Registered Entrants" number MUST be
+   `entries.length` of the SAME array that renders the rows — never a separate
+   server `count` field, never a hardcoded number. The footer line states
+   "Showing all N of N registered participants" so count vs list mismatches are
+   impossible. If the list is ever paginated, the footer must show
+   "Showing X–Y of N" with working controls.
+2. **Compact rows.** td padding 7-8px vertical, font-size ~0.88rem, line-height 1.3.
+   Never ship 14px+ td padding two-column tables with floating status pills.
+3. **Real public stats only.** Enrich rows from the public
+   `/api/users/leaderboard` payload (graded picks only): Record W-L-P, Picks,
+   Net Units, ROI. Members with no graded picks show "No graded picks yet" / 0 / — / —.
+   NEVER invent stats, NEVER fetch or display pending/unsettled picks, NEVER
+   expose sportsbook fields. Label stats as "overall verified TMR record, not
+   contest standings"; keep alphabetical order so no contest ranking is implied.
+4. **Status column.** Compact plain green check + "Registered" text
+   (`.status-ok`), no boxed pill. Internal verification stages are never
+   surfaced publicly (May 22 2026 policy unchanged).
+5. **Premium dark styling.** Color only on Units/ROI (green/red), tabular-nums
+   right-aligned numeric columns, 24px avatar (initial-letter fallback), row
+   hover tint, mobile breakpoint at 640px with tighter padding + horizontal
+   scroll via `.table-wrap`.
