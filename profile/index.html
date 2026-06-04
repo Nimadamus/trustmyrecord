@@ -13332,6 +13332,76 @@
     }
   }
 </style>
+
+<!-- PROFILE_METRIC_FIT_20260603 : permanent profile metrics display standard.
+     Stat values (Record, Units, ROI, drawdown, rail cards) must always fit
+     inside their own cell and never overflow into neighboring boxes. -->
+<style id="tmrProfileMetricFit20260603">
+  body.profile-page .profile-advanced-metric,
+  body.profile-page .profile-rail-card {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+  body.profile-page .profile-advanced-metric__value,
+  body.profile-page .profile-rail-value {
+    display: block !important;
+    max-width: 100% !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.01em !important;
+    font-variant-numeric: tabular-nums !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+  }
+  body.profile-page.tmr-social-profile .profile-advanced-metric__value {
+    font-size: clamp(18px, 1.7vw, 28px) !important;
+  }
+  body.profile-page.tmr-social-profile .profile-rail-value {
+    font-size: clamp(20px, 2.1vw, 32px) !important;
+  }
+  body.profile-page .profile-advanced-metric__value.is-empty,
+  body.profile-page.tmr-social-profile .profile-advanced-metric__value.is-empty {
+    white-space: normal !important;
+    overflow-wrap: anywhere !important;
+  }
+</style>
+<script>
+(function () {
+  /* PROFILE_METRIC_FIT_20260603: shrink any stat value that is still wider
+     than its cell (e.g. 100-105-3, -357.27u) until it fits. Runs after data
+     loads and on resize, so future long values can never overlap columns. */
+  var SEL = '.profile-advanced-metric__value, .profile-rail-value';
+  var MIN_PX = 12;
+  function fitOne(el) {
+    if (!el || el.classList.contains('is-empty')) return;
+    el.style.removeProperty('font-size');
+    var size = parseFloat(window.getComputedStyle(el).fontSize) || 22;
+    var guard = 0;
+    while (el.scrollWidth > el.clientWidth + 0.5 && size > MIN_PX && guard++ < 40) {
+      size -= 1;
+      el.style.setProperty('font-size', size + 'px', 'important');
+    }
+  }
+  function fitAll() {
+    document.querySelectorAll(SEL).forEach(fitOne);
+  }
+  var timer = null;
+  function queueFit() { clearTimeout(timer); timer = setTimeout(fitAll, 120); }
+  window.addEventListener('resize', queueFit);
+  var mo = new MutationObserver(queueFit);
+  function arm() {
+    document.querySelectorAll('.profile-advanced-metric-grid, .profile-rail').forEach(function (n) {
+      mo.observe(n, { subtree: true, childList: true, characterData: true });
+    });
+    fitAll();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', arm);
+  } else { arm(); }
+  setTimeout(fitAll, 1500);
+  setTimeout(fitAll, 4000);
+})();
+</script>
+
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
