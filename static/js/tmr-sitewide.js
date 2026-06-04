@@ -1088,6 +1088,7 @@
                     <h3 class="tmr-global-footer__heading">Info</h3>
                     <div class="tmr-global-footer__links">
                         <a href="/about/">About</a>
+                        <a href="/how-it-works/">How It Works</a>
                         <a href="/terms/">Terms</a>
                         <a href="/privacy/">Privacy</a>
                         <a href="/contact/">Contact Us</a>
