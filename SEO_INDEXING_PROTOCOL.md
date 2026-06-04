@@ -82,3 +82,13 @@ GitHub Pages from `main`. `git push` is blocked by the local publish guard, so d
 changed files via the GitHub Contents API (`gh api --method PUT repos/Nimadamus/trustmyrecord/contents/<path>`).
 After deploy, re-verify live with `curl -I` (expect 200), run `python scripts/seo_audit.py`,
 and confirm sitemap no longer lists removed URLs, then request indexing in GSC.
+
+## 10. Deploy staging dir + push-gate exemption (June 3, 2026)
+Deploy sources for Contents-API uploads are staged in `C:\Users\Nima\tmr_seo_staging\`
+(NEVER as scratch `.html` inside the trustmyrecord working tree). The local push gate
+(`~/.claude/hooks/verify_pushed.py`) exempts that directory, because trustmyrecord has no
+publish.py site key and the gate could otherwise never be satisfied (caused an end-of-turn
+false-positive loop during the June 3 SEO repair). Verification for anything staged there is
+NOT the publish log — it is: (1) the Contents API PUT returns a commit sha, (2) the live URL
+returns 200 and matches the staged file (hash compare), (3) `python scripts/seo_audit.py`
+exits 0. Do not remove the exemption; do not stage TMR deploy files anywhere else.
