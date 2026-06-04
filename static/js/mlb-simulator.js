@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-accuracy-outputs-20260604b';
+    var UI_BUILD = 'mlb-simulator-roster-pitcher-polish-20260604c';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -244,7 +244,10 @@
     }
     function escapeAttr(value) { return escapeHtml(value); }
     function setText(id, value) { var el = byId(id); if (el) el.textContent = value; }
-    function normalizeName(value) { return String(value || '').toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]/g, ''); }
+    // Accent-folding (June 4, 2026): names arrive both accented (active roster:
+    // "Teoscar Hernández") and plain (lineup feeds) — without NFD folding the same
+    // player failed to dedupe and appeared twice on the roster.
+    function normalizeName(value) { return String(value || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/^the\s+/, '').replace(/[^a-z0-9]/g, ''); }
     function seededHash(value) {
         var str = String(value || '');
         var h = 2166136261;
@@ -720,11 +723,21 @@
             }
         };
         var labels = LINEUP_LABELS[lineupStatus] || LINEUP_LABELS.roster;
+        // Final cross-list dedupe (June 4, 2026): a two-way player (e.g. Ohtani,
+        // position TWP, which the pitcher regex matches via /P$/) can land in BOTH
+        // the ordered lineup and the pitcher list — keep the first (lineup) entry.
+        var mergedSeen = {};
+        var mergedPlayers = hitters.concat(pitchers).filter(function (player) {
+            var key = normalizeName(player.name);
+            if (mergedSeen[key]) return false;
+            mergedSeen[key] = true;
+            return true;
+        });
         return validatedRosterForTeam(team, {
             teamId: String(expectedId || ''),
-            count: players.length,
+            count: mergedPlayers.length,
             relievers: pitchers.length,
-            players: hitters.concat(pitchers),
+            players: mergedPlayers,
             summary: players.length + ' MLB active roster players',
             source: labels.source,
             lineupSource: labels.lineupSource,
@@ -2091,9 +2104,12 @@
         return { runs: runs, errors: errors, gidp: gidp, ofAssists: ofAssists };
     }
     function evActivePitcher(side, outsRecorded) {
-        if (outsRecorded < side.starterOuts) return side.pitchers[0];
-        var relief = 27 - side.starterOuts;
-        if (outsRecorded < side.starterOuts + Math.ceil(relief * 0.6)) return side.pitchers[1];
+        // starterOutsGame: per-game sampled hook point (real starters do not throw
+        // an identical inning count every outing); falls back to the season mean.
+        var starterOuts = side.starterOutsGame || side.starterOuts;
+        if (outsRecorded < starterOuts) return side.pitchers[0];
+        var relief = Math.max(3, 27 - starterOuts);
+        if (outsRecorded < starterOuts + Math.ceil(relief * 0.6)) return side.pitchers[1];
         return side.pitchers[2];
     }
     function evSimGame(awaySide, homeSide, random) {
@@ -2102,6 +2118,11 @@
             // Event-sourced situational trackers (reset per game).
             s.gidp = 0; s.sf = 0; s.rispAb = 0; s.rispHits = 0; s.twoOutRbi = 0;
             s.lisp2out = 0; s.pickoffs = 0; s.ofAssists = 0; s.dpTurned = 0;
+            // Per-game starter length: symmetric +/-8 out sample around the starter's
+            // real per-start mean (mean-preserving). Pitching changes happen at inning
+            // boundaries, so realized outings quantize to whole innings (4-8 IP range,
+            // like real starters); bullpen share stays anchored on average.
+            s.starterOutsGame = clamp(s.starterOuts + Math.round((random() * 2 - 1) * 8), 8, 25);
             s.lineup.forEach(function (b) { b.acc = evNewBat(); });
             s.pitchers.forEach(function (p) { p.acc = evNewPit(); });
         });
@@ -3334,9 +3355,15 @@
     }
     function lineupStatusChip(players) {
         var info = players && players.lineupStatus;
-        if (!info || !info.badge) return '';
+        // Standardized top-level labels (June 4, 2026): CONFIRMED only when the
+        // source actually confirms (today's game live/final); everything else is
+        // PROJECTED with its detail; missing data is LINEUP UNAVAILABLE, never faked.
+        if (!info || !info.badge) {
+            return '<span class="lineup-status-chip" data-lineup-status="fallback">LINEUP UNAVAILABLE</span>';
+        }
         var tone = info.status === 'confirmed' ? 'confirmed' : (info.status === 'posted' ? 'posted' : (info.status === 'historical' ? 'historical' : 'fallback'));
-        return '<span class="lineup-status-chip" data-lineup-status="' + escapeAttr(tone) + '">' + escapeHtml(info.badge) + '</span>';
+        var prefix = info.status === 'confirmed' ? 'CONFIRMED LINEUP' : 'PROJECTED LINEUP';
+        return '<span class="lineup-status-chip" data-lineup-status="' + escapeAttr(tone) + '">' + prefix + ' - ' + escapeHtml(info.badge) + '</span>';
     }
     function battingTableSection(team, players) {
         var source = players && players.rosterSource ? players.rosterSource : 'Roster temporarily unavailable';
