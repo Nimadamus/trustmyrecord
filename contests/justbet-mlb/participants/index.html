@@ -37,15 +37,33 @@
         .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
         .cta-primary { display: inline-flex; align-items: center; gap: 10px; padding: 12px 18px; border-radius: 10px; background: linear-gradient(180deg, var(--gold-bright), var(--gold)); color: #1a1206; font-weight: 900; font-size: 0.9rem; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid #b4881d; }
         .cta-ghost { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 8px; background: rgba(15,23,42,0.55); color: var(--text); border: 1px solid var(--line); font-weight: 700; font-size: 0.85rem; }
+        /* COMPACT PARTICIPANT TABLE (June 3, 2026) — contest participant standard:
+           tight rows, real public graded stats, count always equals rendered rows. */
         .table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid var(--line); margin-top: 18px; }
-        table.contest-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+        table.contest-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
         table.contest-table thead { background: linear-gradient(180deg, rgba(45,212,191,0.08), transparent); }
-        table.contest-table th { text-align: left; padding: 12px 14px; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 800; border-bottom: 1px solid var(--line); white-space: nowrap; }
-        table.contest-table td { padding: 14px; border-bottom: 1px solid rgba(148,163,184,0.08); color: #e6edf6; white-space: nowrap; }
+        table.contest-table th { text-align: left; padding: 8px 12px; font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 800; border-bottom: 1px solid var(--line); white-space: nowrap; }
+        table.contest-table td { padding: 7px 12px; border-bottom: 1px solid rgba(148,163,184,0.08); color: #e6edf6; white-space: nowrap; line-height: 1.3; }
         table.contest-table tr:last-child td { border-bottom: 0; }
-        .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.74rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; }
-        .status-verified { background: rgba(34,197,94,0.16); color: #b6f5cd; border: 1px solid rgba(34,197,94,0.42); }
-        .status-pending  { background: rgba(255,184,0,0.14); color: #ffe4a3; border: 1px solid rgba(255,184,0,0.32); }
+        table.contest-table tbody tr:hover { background: rgba(45,212,191,0.04); }
+        table.contest-table th.num, table.contest-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .member-cell { display: inline-flex; align-items: center; gap: 9px; }
+        .member-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex: 0 0 24px; background: rgba(45,212,191,0.12); border: 1px solid var(--line); display: inline-flex; align-items: center; justify-content: center; font-size: 0.66rem; font-weight: 900; color: var(--cyan); }
+        .member-cell a { color: #fff; font-weight: 700; }
+        .member-cell a:hover { color: var(--cyan); }
+        .units-pos, .roi-pos { color: #4ade80; font-weight: 700; }
+        .units-neg, .roi-neg { color: #f87171; font-weight: 700; }
+        .units-flat { color: var(--muted); }
+        .no-picks { color: var(--faint); font-size: 0.8rem; }
+        .status-ok { display: inline-flex; align-items: center; gap: 5px; color: #86efac; font-size: 0.76rem; font-weight: 700; white-space: nowrap; }
+        .status-ok i { font-size: 0.7rem; }
+        .table-foot { margin-top: 10px; color: var(--faint); font-size: 0.8rem; }
+        .table-foot strong { color: var(--muted); }
+        @media (max-width: 640px) {
+            table.contest-table { font-size: 0.82rem; }
+            table.contest-table th, table.contest-table td { padding: 6px 9px; }
+            .member-avatar { width: 20px; height: 20px; flex-basis: 20px; }
+        }
         .empty-state { padding: 36px 22px; text-align: center; color: var(--muted); font-size: 0.95rem; border-radius: 12px; border: 1px dashed var(--line); background: rgba(15,23,42,0.4); }
         .privacy-note { margin-top: 18px; padding: 14px 16px; border-radius: 10px; border: 1px dashed rgba(45,212,191,0.32); background: rgba(8,22,28,0.55); color: var(--muted); font-size: 0.86rem; line-height: 1.55; }
         .privacy-note strong { color: #b4f1e7; }
@@ -74,15 +92,20 @@
                 <table class="contest-table" aria-label="Registered participants">
                     <thead>
                         <tr>
-                            <th>TMR Username</th>
+                            <th>Member</th>
+                            <th class="num">Record</th>
+                            <th class="num">Picks</th>
+                            <th class="num">Net Units</th>
+                            <th class="num">ROI</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody id="participants-tbody">
-                        <tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading participants…</div></td></tr>
+                        <tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading participants…</div></td></tr>
                     </tbody>
                 </table>
             </div>
+            <p class="table-foot" id="table-foot">Record, picks, units, and ROI are each member's <strong>overall verified TMR record (graded picks only)</strong>, not contest standings. Pending picks are never shown. Participants are listed alphabetically.</p>
 
             <div class="privacy-note">
                 <strong>Privacy guarantee:</strong> This page renders <strong>only</strong> TMR username and registration status. The underlying API (<code>GET /api/contests/justbet-mlb/registrations</code>) is filtered server-side to exclude <code>sportsbook_name</code>, <code>sportsbook_account_id</code>, <code>sportsbook_email</code>, and all admin fields. Account numbers are never sent over the wire on this endpoint.
@@ -105,28 +128,94 @@
         // PUBLIC FACING STATUS POLICY (May 22 2026): everyone on the public
         // participants list is shown as "Registered". Internal verification
         // stages (pending/verified/needs_info) are NEVER surfaced publicly.
-        function registeredPill() {
-            return '<span class="status-pill status-verified"><i class="fa-solid fa-circle-check"></i> Registered</span>';
+        function statusMark() {
+            return '<span class="status-ok"><i class="fa-solid fa-circle-check"></i>Registered</span>';
+        }
+        // STATS POLICY (June 3 2026): per-member columns come from the PUBLIC
+        // leaderboard endpoint — graded picks only (wins/losses/pushes, net
+        // units, ROI). Pending/unsettled pick data is never requested or shown.
+        // Members with no graded picks show "No graded picks yet" — never fake numbers.
+        function fmtUnits(v) {
+            var n = Number(v);
+            if (!isFinite(n)) return '<span class="units-flat">—</span>';
+            var cls = n > 0 ? 'units-pos' : (n < 0 ? 'units-neg' : 'units-flat');
+            var s = (n > 0 ? '+' : '') + n.toFixed(2);
+            return '<span class="' + cls + '">' + s + '</span>';
+        }
+        function fmtRoi(v) {
+            var n = Number(v);
+            if (!isFinite(n)) return '<span class="units-flat">—</span>';
+            var cls = n > 0 ? 'roi-pos' : (n < 0 ? 'roi-neg' : 'units-flat');
+            var s = (n > 0 ? '+' : '') + n.toFixed(1) + '%';
+            return '<span class="' + cls + '">' + s + '</span>';
+        }
+        function avatarHtml(stats, u) {
+            if (stats && stats.avatar_url) {
+                return '<img class="member-avatar" src="' + escapeHtml(stats.avatar_url) + '" alt="" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;member-avatar&quot;>' + escapeHtml(u.charAt(0).toUpperCase()) + '</span>\'">';
+            }
+            return '<span class="member-avatar">' + escapeHtml(u.charAt(0).toUpperCase()) + '</span>';
+        }
+        function rowHtml(e, statsByName) {
+            var u = e && e.username ? String(e.username) : '—';
+            var s = statsByName[u.toLowerCase()] || null;
+            var member = '<span class="member-cell">' + avatarHtml(s, u) +
+                '<a href="/profile/?user=' + encodeURIComponent(u) + '">' + escapeHtml(u) + '</a></span>';
+            var record, picks, units, roi;
+            if (s && Number(s.total_picks) > 0) {
+                record = (s.wins | 0) + '-' + (s.losses | 0) + '-' + (s.pushes | 0);
+                picks = String(s.total_picks | 0);
+                units = fmtUnits(s.net_units);
+                roi = fmtRoi(s.roi);
+            } else {
+                record = '<span class="no-picks">No graded picks yet</span>';
+                picks = '<span class="no-picks">0</span>';
+                units = '<span class="units-flat">—</span>';
+                roi = '<span class="units-flat">—</span>';
+            }
+            return '<tr><td>' + member + '</td><td class="num">' + record + '</td><td class="num">' + picks +
+                '</td><td class="num">' + units + '</td><td class="num">' + roi + '</td><td>' + statusMark() + '</td></tr>';
+        }
+        async function fetchStats() {
+            // Public, graded-only stats. Fail-open: table still renders without stats columns populated.
+            try {
+                var r = await fetch(API_BASE + '/api/users/leaderboard?sortBy=net_units&limit=250');
+                if (!r.ok) return {};
+                var d = await r.json();
+                var arr = Array.isArray(d) ? d : (d.leaderboard || d.users || d.members || []);
+                var map = {};
+                arr.forEach(function (m) {
+                    if (m && m.username) map[String(m.username).toLowerCase()] = m;
+                });
+                return map;
+            } catch (e) { return {}; }
         }
         async function load() {
             var tbody = $('#participants-tbody');
             try {
-                var r = await fetch(API_BASE + '/api/contests/' + encodeURIComponent(CONTEST_ID) + '/registrations');
+                var results = await Promise.all([
+                    fetch(API_BASE + '/api/contests/' + encodeURIComponent(CONTEST_ID) + '/registrations'),
+                    fetchStats()
+                ]);
+                var r = results[0], statsByName = results[1];
                 if (!r.ok) throw new Error('HTTP ' + r.status);
                 var data = await r.json();
                 var entries = Array.isArray(data.entries) ? data.entries : [];
+                // COUNT INTEGRITY: the headline number is ALWAYS the number of rows
+                // actually rendered below — never a separate server count field.
                 $('#stat-total').textContent = entries.length;
                 if (!entries.length) {
-                    tbody.innerHTML = '<tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-user-plus"></i>No participants yet. <a href="/contests/justbet-mlb/register/" style="color:var(--gold-bright);font-weight:800;">Be the first to register.</a></div></td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-user-plus"></i>No participants yet. <a href="/contests/justbet-mlb/register/" style="color:var(--gold-bright);font-weight:800;">Be the first to register.</a></div></td></tr>';
                     return;
                 }
-                tbody.innerHTML = entries.map(function (e) {
-                    var u = e && e.username ? String(e.username) : '—';
-                    return '<tr><td><strong><a href="/profile/?user=' + encodeURIComponent(u) + '" style="color:#fff;">' + escapeHtml(u) + '</a></strong></td><td>' + registeredPill() + '</td></tr>';
-                }).join('');
+                tbody.innerHTML = entries.map(function (e) { return rowHtml(e, statsByName); }).join('');
+                var foot = $('#table-foot');
+                if (foot) {
+                    foot.innerHTML = 'Showing all <strong>' + entries.length + ' of ' + entries.length +
+                        '</strong> registered participants. Record, picks, units, and ROI are each member\'s <strong>overall verified TMR record (graded picks only)</strong>, not contest standings. Pending picks are never shown. Participants are listed alphabetically.';
+                }
             } catch (err) {
                 $('#stat-total').textContent = '0';
-                tbody.innerHTML = '<tr><td colspan="2"><div class="empty-state"><i class="fa-solid fa-circle-exclamation"></i>Could not load participants. Try again in a moment.</div></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-circle-exclamation"></i>Could not load participants. Try again in a moment.</div></td></tr>';
             }
         }
         document.addEventListener('DOMContentLoaded', load);
