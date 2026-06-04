@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-homefield-calibration-20260527f';
+    var UI_BUILD = 'mlb-simulator-game-rules-realism-20260604a';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1770,14 +1770,22 @@
             hitFactor: clamp(1 - (rating - 100) * 0.005, 0.80, 1.18)
         };
     }
+    // K-rate trim (June 4, 2026 calibration vs real MLB 2025): the engine ran
+    // K/team +0.6 hot (8.96 vs 8.36). Trim strikeouts and move the removed mass
+    // to in-play outs so on-base/run rates stay anchored. Applied inside
+    // evCombine so the anchor and live play see the same distribution.
+    var EV_K_TRIM = 0.93;
     function evCombine(bv, pv) {
         function orc(b, p, l) { return evFromOdds(evOdds(b) * evOdds(p) / evOdds(l)); }
         var hf = pv && pv.hitFactor != null ? pv.hitFactor : 1;
+        var soRaw = orc(bv.so, pv.so, EV_LEAGUE.so);
+        var soTrimmed = soRaw * EV_K_TRIM;
         return evNormalize({
             bb: orc(bv.bb, pv.bb, EV_LEAGUE.bb),
-            so: orc(bv.so, pv.so, EV_LEAGUE.so),
+            so: soTrimmed,
             hr: orc(bv.hr, pv.hr, EV_LEAGUE.hr),
-            b3: bv.b3 * hf, b2: bv.b2 * hf, b1: bv.b1 * hf, out: Math.max(0.02, bv.out)
+            b3: bv.b3 * hf, b2: bv.b2 * hf, b1: bv.b1 * hf,
+            out: Math.max(0.02, bv.out) + (soRaw - soTrimmed)
         });
     }
     function evScale(v, f) {
@@ -1820,7 +1828,12 @@
     // scripts/validate-mlb-simulator.cjs; replaces the old fixed 0.985 that was
     // tuned only at ~4.4 and let lopsided matchups overshoot.
     function evAnchorTargetCorrection(t) {
-        return clamp(0.985 + 0.02752 * t - 0.006719 * t * t, 0.80, 1.0);
+        // June 4, 2026 rescale (x0.969): the game-rules realism pass (true error
+        // rate, K->in-play-out trim, extra-innings placed runners) added unanchored
+        // baserunners and pushed realized runs +3.2% over target (harness: 4.59 vs
+        // 4.45 R/team, end-to-end drift +3.5%). Uniform rescale measured from that
+        // run; see scripts/validate-mlb-simulator.cjs and docs/mlb-simulator-calibration.md.
+        return clamp((0.985 + 0.02752 * t - 0.006719 * t * t) * 0.969, 0.80, 1.0);
     }
     function evAnchorFactor(combinedVectors, targetRuns) {
         var t = clamp(targetRuns, 1.4, 11);
@@ -1893,7 +1906,9 @@
         return {
             team: team, lineup: lineup, anchorFactor: anchorFactor, pitchers: pitchers,
             starterOuts: starterOuts, roster: roster, hasNamedLineup: !!(roster && roster.players && roster.players.length),
-            errRate: clamp(0.017 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.008, 0.032),
+            // Error-rate calibration (June 4, 2026 vs real MLB 2025): engine ran
+            // 0.31 errors/team vs real 0.504 — reach-on-error base raised to match.
+            errRate: clamp(0.027 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.012, 0.05),
             parkHr: parkHr || 1, stealRate: 0.10, stealSuccess: 0.78, sb: 0, cs: 0
         };
     }
@@ -1910,9 +1925,19 @@
         return clamp(Math.round(outs), 11, 22);
     }
     // Simulate one half inning for `bat` side against the active pitcher object.
-    function evPlayHalf(side, pitcher, random) {
+    // endLead (optional): walk-off rule — the half ends as soon as runs exceed this
+    // deficit (checked at the end of each PA, so a walk-off HR counts every run).
+    // ghostSlot (optional): extra-innings placed runner (2020+ rule) — that lineup
+    // slot starts the inning on 2B and scores as an UNEARNED run for the pitcher.
+    function evPlayHalf(side, pitcher, random, endLead, ghostSlot) {
         var lineup = side.lineup, outs = 0, bases = [null, null, null], runs = 0, errors = 0;
-        function score(slot, earned) { lineup[slot].acc.r++; runs++; pitcher.acc.r++; if (earned) pitcher.acc.er++; }
+        var hasGhost = ghostSlot !== undefined && ghostSlot !== null;
+        var ghostScored = false;
+        if (hasGhost) bases[1] = ghostSlot;
+        function score(slot, earned) {
+            if (hasGhost && !ghostScored && slot === ghostSlot) { ghostScored = true; earned = false; }
+            lineup[slot].acc.r++; runs++; pitcher.acc.r++; if (earned) pitcher.acc.er++;
+        }
         while (outs < 3) {
             // Steal attempt with a runner on 1B and 2B open (live event, not post-hoc).
             if (bases[0] !== null && bases[1] === null && random() < side.stealRate) {
@@ -1965,6 +1990,8 @@
             }
             acc.rbi += rbi;
             side.idx++;
+            // Walk-off: the game ends the moment the batting side takes the lead.
+            if (endLead !== undefined && endLead !== null && runs > endLead) break;
         }
         side.lob = (side.lob || 0) + bases.filter(function (x) { return x !== null; }).length;
         return { runs: runs, errors: errors };
@@ -1982,23 +2009,29 @@
         homeSide.lineup.forEach(function (b) { b.acc = evNewBat(); });
         awaySide.pitchers.forEach(function (p) { p.acc = evNewPit(); });
         homeSide.pitchers.forEach(function (p) { p.acc = evNewPit(); });
-        var aRuns = 0, hRuns = 0, aErr = 0, hErr = 0, aInn = [], hInn = [];
+        var aRuns = 0, hRuns = 0, aErr = 0, hErr = 0, aInn = [], hInn = [], aPlaced = 0, hPlaced = 0;
         for (var inn = 0; inn < 9; inn++) {
             var ap = evActivePitcher(homeSide, sumOuts(homeSide));
             var ra = evPlayHalf(awaySide, ap, random); aRuns += ra.runs; hErr += ra.errors; aInn.push(ra.runs);
-            if (inn === 8 && hRuns > aRuns) { break; }
+            if (inn === 8 && hRuns > aRuns) { break; } // home leads, bottom 9 not played
             var hp = evActivePitcher(awaySide, sumOuts(awaySide));
-            var rh = evPlayHalf(homeSide, hp, random); hRuns += rh.runs; aErr += rh.errors; hInn.push(rh.runs);
+            // Bottom 9: walk-off rule applies (half ends when home takes the lead).
+            var rh = evPlayHalf(homeSide, hp, random, inn === 8 ? (aRuns - hRuns) : null);
+            hRuns += rh.runs; aErr += rh.errors; hInn.push(rh.runs);
         }
+        // Extra innings: real per-inning tracking, placed runner on 2B (2020+ rule),
+        // walk-off termination for the home half.
         var extra = 9;
         while (aRuns === hRuns && extra < 18) {
             var ap2 = evActivePitcher(homeSide, sumOuts(homeSide));
-            var rae = evPlayHalf(awaySide, ap2, random); aRuns += rae.runs; hErr += rae.errors;
+            var rae = evPlayHalf(awaySide, ap2, random, null, (awaySide.idx + 8) % 9);
+            aRuns += rae.runs; hErr += rae.errors; aInn.push(rae.runs); aPlaced++;
             var hp2 = evActivePitcher(awaySide, sumOuts(awaySide));
-            var rhe = evPlayHalf(homeSide, hp2, random); hRuns += rhe.runs; aErr += rhe.errors;
+            var rhe = evPlayHalf(homeSide, hp2, random, aRuns - hRuns, (homeSide.idx + 8) % 9);
+            hRuns += rhe.runs; aErr += rhe.errors; hInn.push(rhe.runs); hPlaced++;
             extra++;
         }
-        return { aRuns: aRuns, hRuns: hRuns, aInn: aInn, hInn: hInn, aErr: aErr, hErr: hErr, extra: extra };
+        return { aRuns: aRuns, hRuns: hRuns, aInn: aInn, hInn: hInn, aErr: aErr, hErr: hErr, extra: extra, aPlaced: aPlaced, hPlaced: hPlaced };
     }
     function sumOuts(side) { return side.pitchers.reduce(function (t, p) { return t + p.acc.outs; }, 0); }
 
@@ -2077,8 +2110,12 @@
         var g = evSimGame(inputs.awaySide, inputs.homeSide, random);
         var awayHits = sum(inputs.awaySide.lineup.map(function (b) { return b.acc.h; }));
         var homeHits = sum(inputs.homeSide.lineup.map(function (b) { return b.acc.h; }));
-        var awayInnings = evPadInnings(g.aInn, g.aRuns);
-        var homeInnings = evPadInnings(g.hInn, g.hRuns);
+        // Innings arrays are now complete per-inning (extras included). Home may be
+        // one inning short when the bottom 9th was skipped — shown as X, never 0.
+        var totalInnings = Math.max(9, g.aInn.length);
+        var homeSkippedFinal = g.hInn.length < g.aInn.length;
+        var awayInnings = evPadInnings(g.aInn, totalInnings);
+        var homeInnings = evPadInnings(g.hInn, homeSkippedFinal ? totalInnings - 1 : totalInnings);
         var winner = g.hRuns > g.aRuns ? home : away;
         var loser = g.hRuns > g.aRuns ? away : home;
         var awayBatters = evBatterRows(inputs.awaySide);
@@ -2095,6 +2132,7 @@
         var extraNote = g.extra > 9 ? ' (' + g.extra + ' innings)' : '';
         return {
             runId: String(Date.now()) + '-' + Math.floor(random() * 1000000),
+            totalInnings: totalInnings, homeSkippedFinal: homeSkippedFinal,
             away: awayLine, home: homeLine, winner: winner, loser: loser,
             players: {
                 away: { batters: awayBatters, pitchers: awayPitchers, rosterSource: evRosterSource(inputs.awaySide), lineupStatus: lineupStatusAway },
@@ -2108,11 +2146,9 @@
             keyPerformers: [evTopHitter(awayBatters, away), evTopHitter(homeBatters, home)]
         };
     }
-    function evPadInnings(innArr, totalRuns) {
-        var innings = innArr.slice(0, 9);
-        while (innings.length < 9) innings.push(0);
-        var shown = innings.reduce(function (t, x) { return t + x; }, 0);
-        if (shown < totalRuns) innings[8] += (totalRuns - shown); // fold extra-inning runs into the 9th column for the fixed 9-column line
+    function evPadInnings(innArr, count) {
+        var innings = innArr.slice(0, count);
+        while (innings.length < count) innings.push(0);
         return innings;
     }
     function evRosterSource(side) {
@@ -3089,10 +3125,22 @@
     function sum(values) {
         return values.reduce(function (total, value) { return total + Number(value || 0); }, 0);
     }
-    function boxRow(line, winnerId) {
+    // Per-inning display cells: real extra-inning columns; a skipped home 9th
+    // shows "X" (baseball convention), never a fake 0.
+    function inningCells(line, totalInnings) {
+        var cells = [];
+        for (var i = 0; i < totalInnings; i++) {
+            cells.push(i < line.innings.length ? String(line.innings[i]) : 'X');
+        }
+        return cells;
+    }
+    function boxColumnCount(box) {
+        return Math.max(9, (box && box.totalInnings) || (box && box.away && box.away.innings.length) || 9);
+    }
+    function boxRow(line, winnerId, totalInnings) {
         var isWinner = line.team.id === winnerId;
         return '<tr class="' + (isWinner ? 'winner-row' : '') + '"><th scope="row">' + escapeHtml(line.team.abbreviation) + '</th>' +
-            line.innings.map(function (runs) { return '<td>' + runs + '</td>'; }).join('') +
+            inningCells(line, totalInnings).map(function (runs) { return '<td>' + runs + '</td>'; }).join('') +
             '<td class="total-runs">' + line.runs + '</td><td>' + line.hits + '</td><td>' + line.errors + '</td></tr>';
     }
     function fmt3(value) { return Number(value || 0).toFixed(3); }
@@ -3240,24 +3288,26 @@
         }
         var box = result.boxScore;
         var awayWon = box.away.runs > box.home.runs;
+        var totalInnings = boxColumnCount(box);
         function sbRow(line, won) {
             return '<tr class="sb-row' + (won ? ' sb-winner' : '') + '">' +
                 '<th scope="row" class="sb-team"><strong>' + escapeHtml(line.team.abbreviation) + '</strong><span>' + escapeHtml(line.team.name) + '</span></th>' +
-                line.innings.map(function (runs) { return '<td class="sb-inning">' + runs + '</td>'; }).join('') +
+                inningCells(line, totalInnings).map(function (runs) { return '<td class="sb-inning">' + runs + '</td>'; }).join('') +
                 '<td class="sb-total sb-runs">' + line.runs + '</td>' +
                 '<td class="sb-total">' + line.hits + '</td>' +
                 '<td class="sb-total">' + line.errors + '</td></tr>';
         }
         var winnerLine = awayWon ? box.away : box.home;
         var loserLine = awayWon ? box.home : box.away;
+        var headerCols = [];
+        for (var n = 1; n <= totalInnings; n++) headerCols.push('<th class="sb-inning">' + n + '</th>');
         wrap.setAttribute('data-state', 'final');
         wrap.innerHTML = '<div class="sb-topline">' +
-            '<span class="sb-final-tag">Final</span>' +
+            '<span class="sb-final-tag">Final' + (totalInnings > 9 ? '/' + totalInnings : '') + '</span>' +
             '<span class="sb-final-score">' + escapeHtml(winnerLine.team.abbreviation) + ' ' + winnerLine.runs + ', ' + escapeHtml(loserLine.team.abbreviation) + ' ' + loserLine.runs + '</span>' +
             '<span class="sb-sim-tag">Simulated</span></div>' +
             '<div class="sb-scroll"><table class="sb-table" aria-label="Simulated line score by inning">' +
-            '<thead><tr><th class="sb-team-head">Team</th>' +
-            [1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (n) { return '<th class="sb-inning">' + n + '</th>'; }).join('') +
+            '<thead><tr><th class="sb-team-head">Team</th>' + headerCols.join('') +
             '<th class="sb-total sb-runs-head">R</th><th class="sb-total">H</th><th class="sb-total">E</th></tr></thead>' +
             '<tbody>' + sbRow(box.away, awayWon) + sbRow(box.home, !awayWon) + '</tbody></table></div>';
     }
@@ -3299,9 +3349,12 @@
         lines.push('Expected runs: ' + result.away.name + ' ' + result.awayRuns + ' / ' + result.home.name + ' ' + result.homeRuns);
         lines.push('Starting Pitchers: ' + result.away.name + ': ' + (result.awayPitcher ? result.awayPitcher.name : 'Roster temporarily unavailable') + ' | ' + result.home.name + ': ' + (result.homePitcher ? result.homePitcher.name : 'Roster temporarily unavailable'));
         lines.push('');
-        lines.push('Team        1 2 3 4 5 6 7 8 9 | R H E');
+        var txtInnings = boxColumnCount(box);
+        var txtHeader = [];
+        for (var ti = 1; ti <= txtInnings; ti++) txtHeader.push(String(ti));
+        lines.push('Team        ' + txtHeader.join(' ') + ' | R H E');
         [box.away, box.home].forEach(function (line) {
-            lines.push((line.team.abbreviation + '          ').slice(0, 10) + line.innings.join(' ') + ' | ' + line.runs + ' ' + line.hits + ' ' + line.errors);
+            lines.push((line.team.abbreviation + '          ').slice(0, 10) + inningCells(line, txtInnings).join(' ') + ' | ' + line.runs + ' ' + line.hits + ' ' + line.errors);
         });
         lines.push('');
         lines.push('Final: ' + box.winner.name + ' ' + Math.max(box.away.runs, box.home.runs) + ', ' + box.loser.name + ' ' + Math.min(box.away.runs, box.home.runs));
@@ -3420,6 +3473,8 @@
         if (!result || !result.boxScore) {
             panel.setAttribute('data-box-score-state', 'empty');
             title.textContent = 'Run a simulation to generate a box score.';
+            var emptyHeadRow = byId('boxScoreHeadRow');
+            if (emptyHeadRow) emptyHeadRow.innerHTML = '<th>Team</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>R</th><th>H</th><th>E</th>';
             body.innerHTML = '<tr><td colspan="13">Run a simulation to generate a box score.</td></tr>';
             if (summary) summary.textContent = 'Run a simulation to generate a box score.';
             setExportButtons(false);
@@ -3432,8 +3487,16 @@
         panel.setAttribute('data-box-score-state', 'projected');
         renderTopScoreboard(result);
         renderBoxScoreMatchupCard(result);
-        title.textContent = result.away.name + ' at ' + result.home.name + ' / Final ' + result.away.abbreviation + ' ' + box.away.runs + ', ' + result.home.abbreviation + ' ' + box.home.runs;
-        body.innerHTML = boxRow(box.away, box.winner.id) + boxRow(box.home, box.winner.id);
+        var totalInnings = boxColumnCount(box);
+        var headRow = byId('boxScoreHeadRow');
+        if (headRow) {
+            var headCols = ['<th>Team</th>'];
+            for (var n = 1; n <= totalInnings; n++) headCols.push('<th>' + n + '</th>');
+            headCols.push('<th>R</th><th>H</th><th>E</th>');
+            headRow.innerHTML = headCols.join('');
+        }
+        title.textContent = result.away.name + ' at ' + result.home.name + ' / Final' + (totalInnings > 9 ? '/' + totalInnings : '') + ' ' + result.away.abbreviation + ' ' + box.away.runs + ', ' + result.home.abbreviation + ' ' + box.home.runs;
+        body.innerHTML = boxRow(box.away, box.winner.id, totalInnings) + boxRow(box.home, box.winner.id, totalInnings);
         if (summary) summary.innerHTML = '<strong>' + escapeHtml(box.summary) + '</strong><span>' + escapeHtml(box.pitcherLines.join(' / ')) + '</span><span>' + escapeHtml(box.keyPerformers.join(' / ')) + '</span>';
         renderPlayerBoxScore(result);
         setExportButtons(true);
