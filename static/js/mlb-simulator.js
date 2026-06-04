@@ -3229,6 +3229,38 @@
             pitchingTableSection(result.home, box.players.home, !awayWon) +
             pitchingGameNotes(result);
     }
+    // TOP_SCOREBOARD_20260603: baseball line-score scoreboard rendered at the top of the result card.
+    function renderTopScoreboard(result) {
+        var wrap = byId('topScoreboard');
+        if (!wrap) return;
+        if (!result || !result.boxScore) {
+            wrap.setAttribute('data-state', 'empty');
+            wrap.innerHTML = '';
+            return;
+        }
+        var box = result.boxScore;
+        var awayWon = box.away.runs > box.home.runs;
+        function sbRow(line, won) {
+            return '<tr class="sb-row' + (won ? ' sb-winner' : '') + '">' +
+                '<th scope="row" class="sb-team"><strong>' + escapeHtml(line.team.abbreviation) + '</strong><span>' + escapeHtml(line.team.name) + '</span></th>' +
+                line.innings.map(function (runs) { return '<td class="sb-inning">' + runs + '</td>'; }).join('') +
+                '<td class="sb-total sb-runs">' + line.runs + '</td>' +
+                '<td class="sb-total">' + line.hits + '</td>' +
+                '<td class="sb-total">' + line.errors + '</td></tr>';
+        }
+        var winnerLine = awayWon ? box.away : box.home;
+        var loserLine = awayWon ? box.home : box.away;
+        wrap.setAttribute('data-state', 'final');
+        wrap.innerHTML = '<div class="sb-topline">' +
+            '<span class="sb-final-tag">Final</span>' +
+            '<span class="sb-final-score">' + escapeHtml(winnerLine.team.abbreviation) + ' ' + winnerLine.runs + ', ' + escapeHtml(loserLine.team.abbreviation) + ' ' + loserLine.runs + '</span>' +
+            '<span class="sb-sim-tag">Simulated</span></div>' +
+            '<div class="sb-scroll"><table class="sb-table" aria-label="Simulated line score by inning">' +
+            '<thead><tr><th class="sb-team-head">Team</th>' +
+            [1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (n) { return '<th class="sb-inning">' + n + '</th>'; }).join('') +
+            '<th class="sb-total sb-runs-head">R</th><th class="sb-total">H</th><th class="sb-total">E</th></tr></thead>' +
+            '<tbody>' + sbRow(box.away, awayWon) + sbRow(box.home, !awayWon) + '</tbody></table></div>';
+    }
     function renderBoxScoreMatchupCard(result) {
         var card = byId('boxScoreMatchupCard');
         if (!card) return;
@@ -3391,12 +3423,14 @@
             body.innerHTML = '<tr><td colspan="13">Run a simulation to generate a box score.</td></tr>';
             if (summary) summary.textContent = 'Run a simulation to generate a box score.';
             setExportButtons(false);
+            renderTopScoreboard(null);
             renderBoxScoreMatchupCard(null);
             renderPlayerBoxScore(null);
             return;
         }
         var box = result.boxScore;
         panel.setAttribute('data-box-score-state', 'projected');
+        renderTopScoreboard(result);
         renderBoxScoreMatchupCard(result);
         title.textContent = result.away.name + ' at ' + result.home.name + ' / Final ' + result.away.abbreviation + ' ' + box.away.runs + ', ' + result.home.abbreviation + ' ' + box.home.runs;
         body.innerHTML = boxRow(box.away, box.winner.id) + boxRow(box.home, box.winner.id);
