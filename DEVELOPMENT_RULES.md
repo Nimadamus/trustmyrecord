@@ -1076,3 +1076,12 @@ Therefore backend response headers are NOT a reliable anti-stale mechanism. Requ
   `lobbyPitcherHtml`) must emit `<div class="team-pitcher">NAME</div>` /
   `<div class="sb-team-pitcher">NAME</div>` with no `*-label` span. TBD fallback when
   the feed lacks a name. Label was removed June 3, 2026 (it truncated names).
+
+## FORUM_INDEX_NO_POSTS_COLUMN_20260603
+- The main forum index (`/forum/` landing table, `renderForumCategories()` in
+  `forum/index.html`) shows exactly three columns: Forum, Last Post, Threads.
+- The Posts column was intentionally removed June 3, 2026 (looked empty/cluttered with
+  0-counts on the public landing page). Do NOT re-add it. Group band row uses
+  `colspan="3"` + the `fgroup-meta` cell.
+- Post counts remain available inside sections: thread lists (Replies/Views) and thread
+  author panels are unchanged. This rule applies ONLY to the forum index table.
