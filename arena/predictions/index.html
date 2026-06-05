@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://trustmyrecord.com/arena/predictions/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Arena Picks & Arena Points | TrustMyRecord Arena</title>
+    <meta name="description" content="Your free predictions, Arena Points balance, and prediction record on TrustMyRecord Arena.">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/arena-suite.css?v=20260605arena1">
+</head>
+<body class="arena-page">
+
+    <div class="as-hero">
+        <div class="as-hero-inner">
+            <div class="as-breadcrumb"><a href="/arena/">Arena</a> / My Arena Picks</div>
+            <span class="as-kicker">Free Predictions</span>
+            <h1>My <span class="gold">Arena Picks</span></h1>
+            <p class="lede">Your free predictions on Arena matches. Every new account starts with 1,000 free Arena Points. Call winners correctly to earn more. Points are for fun and leaderboard bragging only: they have no cash value, cannot be purchased, and cannot be withdrawn.</p>
+            <div class="as-actions">
+                <span class="as-points-chip" id="pointsChip" style="display:none"></span>
+                <a class="as-btn as-btn-gold" href="/arena/challenges/"><i class="fas fa-bullseye"></i> Find a Match to Predict</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="as-main">
+        <div id="loginGate" class="as-empty" style="display:none">You need to <a href="/?login=1">log in</a> to see your Arena Picks.</div>
+
+        <div id="content" style="display:none">
+            <div class="as-stat-row" id="recordRow"></div>
+
+            <div class="as-section">
+                <div class="as-section-head"><h2><i class="fas fa-bullseye"></i> My Predictions</h2></div>
+                <div id="predList"></div>
+            </div>
+
+            <div class="as-section">
+                <div class="as-section-head"><h2><i class="fas fa-coins"></i> Arena Points Activity</h2></div>
+                <div id="ledger" class="as-ledger"></div>
+            </div>
+        </div>
+
+        <div class="as-disclaimer" id="arenaDisclaimer"></div>
+    </div>
+
+    <script src="/static/js/config.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/arena-suite.js?v=20260605arena1"></script>
+    <script>
+    (function () {
+        const A = window.TMRArena;
+        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
+        A.ready(async function (api) {
+            if (!api) return;
+            const me = await A.currentUser(api);
+            if (!me) { document.getElementById('loginGate').style.display = 'block'; return; }
+            document.getElementById('content').style.display = 'block';
+            A.loadPointsChip(api, document.getElementById('pointsChip'));
+
+            try {
+                const rec = await api.request('/arena/predictions/record/' + encodeURIComponent(me.username));
+                const r = rec.record || {};
+                document.getElementById('recordRow').innerHTML = `
+                    <div class="as-stat"><div class="num">${r.wins || 0}-${r.losses || 0}</div><div class="label">Prediction Record</div></div>
+                    <div class="as-stat"><div class="num">${r.pending || 0}</div><div class="label">Pending</div></div>
+                    <div class="as-stat"><div class="num">${(r.net_points || 0) > 0 ? '+' : ''}${r.net_points || 0}</div><div class="label">Net Points</div></div>`;
+            } catch (_) {}
+
+            try {
+                const data = await api.request('/arena/predictions/mine');
+                const list = data.predictions || [];
+                document.getElementById('predList').innerHTML = list.length
+                    ? '<table class="as-table"><thead><tr><th>Match</th><th>My Pick</th><th>Points</th><th>Status</th><th>Result</th></tr></thead><tbody>' +
+                      list.map(p => {
+                          const statusKey = p.status === 'graded' ? (p.result === 'won' ? 'open' : 'disputed') : p.status === 'void' ? 'voided' : p.status === 'locked' ? 'live' : 'scheduled';
+                          const resultTxt = p.status === 'graded' ? (p.result === 'won' ? '+' + (p.points_payout - p.points_staked) : '-' + p.points_staked)
+                              : p.status === 'void' ? 'refunded' : '-';
+                          return '<tr><td><a href="/arena/challenges/view/?id=' + p.challenge_id + '">' +
+                              A.esc(p.challenger_username) + ' vs ' + A.esc(p.challenged_username || 'Open') + '</a><br><span style="color:var(--as-muted);font-size:12px">' + A.esc(p.game_title) + '</span></td>' +
+                              '<td>' + A.esc(p.predicted_winner_username) + '</td>' +
+                              '<td>' + p.points_staked + '</td>' +
+                              '<td><span class="as-pill ' + statusKey + '">' + A.esc(p.status) + '</span></td>' +
+                              '<td>' + resultTxt + '</td></tr>';
+                      }).join('') + '</tbody></table>'
+                    : '<div class="as-empty">No Arena Picks yet. <a href="/arena/challenges/">Find an upcoming match</a> and call the winner.</div>';
+            } catch (_) {
+                document.getElementById('predList').innerHTML = '<div class="as-empty">Predictions are temporarily unavailable.</div>';
+            }
+
+            try {
+                const data = await api.request('/arena/points/me');
+                const rows = data.ledger || [];
+                document.getElementById('ledger').innerHTML = rows.length
+                    ? '<table class="as-table"><thead><tr><th>When</th><th>Change</th><th>Balance</th><th>Reason</th></tr></thead><tbody>' +
+                      rows.map(l => '<tr><td>' + A.fmtDate(l.created_at) + '</td>' +
+                          '<td class="' + (l.delta >= 0 ? 'pos' : 'neg') + '">' + (l.delta >= 0 ? '+' : '') + l.delta + '</td>' +
+                          '<td>' + l.balance_after + '</td>' +
+                          '<td>' + A.esc(l.note || l.reason) + '</td></tr>').join('') + '</tbody></table>'
+                    : '<div class="as-empty">No activity yet.</div>';
+            } catch (_) {
+                document.getElementById('ledger').innerHTML = '<div class="as-empty">Unavailable.</div>';
+            }
+        });
+    })();
+    </script>
+</body>
+</html>
