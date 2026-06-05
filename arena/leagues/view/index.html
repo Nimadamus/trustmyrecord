@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>League Details | TrustMyRecord Arena</title>
+    <meta name="description" content="Gaming league standings, members and verified match results on TrustMyRecord Arena.">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/arena-suite.css?v=20260605arena1">
+</head>
+<body class="arena-page">
+
+    <div class="as-hero">
+        <div class="as-hero-inner">
+            <div class="as-breadcrumb"><a href="/arena/">Arena</a> / <a href="/arena/leagues/">Leagues</a> / <span id="bcName">League</span></div>
+            <span class="as-kicker">TrustMyRecord Arena</span>
+            <h1 id="pageTitle">League</h1>
+            <div id="statusLine" style="margin-top:6px"></div>
+            <div class="as-actions" id="joinWrap" style="display:none">
+                <button class="as-btn as-btn-gold" id="joinBtn"><i class="fas fa-user-plus"></i> Join This League</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="as-main">
+        <div class="as-msg" id="topMsg"></div>
+        <div id="notFound" class="as-empty" style="display:none">League not found.</div>
+
+        <div id="content" style="display:none">
+            <div class="as-two-col">
+                <div>
+                    <div class="as-section" style="margin-top:0">
+                        <div class="as-section-head"><h2><i class="fas fa-ranking-star"></i> Standings</h2></div>
+                        <div id="standings"></div>
+                        <div class="hint" style="color:var(--as-muted);font-size:12px;margin-top:8px">Standings count confirmed results only (opponent confirmed or admin verified).</div>
+                    </div>
+                    <div class="as-section">
+                        <div class="as-section-head"><h2><i class="fas fa-clock-rotate-left"></i> Match Results</h2></div>
+                        <div id="matches"></div>
+                    </div>
+                    <div class="as-card" id="reportCard" style="margin-top:18px; display:none">
+                        <h3><i class="fas fa-flag-checkered" style="color:var(--as-gold)"></i> Report a Match Result</h3>
+                        <div class="meta">
+                            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; align-items:center">
+                                <select id="oppSel" style="background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px"></select>
+                                <input type="number" min="0" id="myScore" placeholder="Your score" style="width:110px;background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px">
+                                <span>-</span>
+                                <input type="number" min="0" id="oppScore" placeholder="Their score" style="width:110px;background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px">
+                            </div>
+                            <input type="url" id="proofInput" placeholder="Proof screenshot URL (optional)" style="margin-top:8px;width:100%;box-sizing:border-box;background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px">
+                            <button class="as-btn as-btn-gold" id="reportBtn" style="margin-top:10px">Submit Result</button>
+                            <div class="hint" style="color:var(--as-muted);font-size:12px;margin-top:6px">Your opponent must confirm before it counts in the standings.</div>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="as-card">
+                        <h3><i class="fas fa-circle-info" style="color:var(--as-gold)"></i> League Info</h3>
+                        <div class="meta" id="infoBody"></div>
+                    </div>
+                    <div class="as-card" style="margin-top:14px">
+                        <h3><i class="fas fa-users" style="color:var(--as-gold)"></i> Members</h3>
+                        <div class="meta" id="membersBody"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="as-disclaimer" id="arenaDisclaimer"></div>
+    </div>
+
+    <script src="/static/js/config.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/arena-suite.js?v=20260605arena1"></script>
+    <script>
+    (function () {
+        const A = window.TMRArena;
+        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
+        const id = parseInt(A.qs('id'), 10);
+        let apiRef = null, me = null, league = null, members = [];
+
+        function topMsg(kind, text) { A.msg(document.getElementById('topMsg'), kind, text); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+        async function load() {
+            const data = await apiRef.request('/arena/leagues/' + id);
+            league = data.league;
+            members = data.members || [];
+            document.getElementById('bcName').textContent = league.name;
+            document.getElementById('pageTitle').innerHTML = A.esc(league.name) +
+                ' <span style="font-size:16px; color:var(--as-dim)">&middot; ' + A.esc(league.game_title) + '</span>';
+            document.getElementById('statusLine').innerHTML =
+                '<span class="as-pill ' + (league.status === 'open' ? 'open' : league.status === 'active' ? 'live' : 'completed') + '">' + A.esc(league.status) + '</span>';
+            document.getElementById('content').style.display = 'block';
+
+            const info = [];
+            if (league.console) info.push('<strong>Console:</strong> ' + A.esc(league.console));
+            info.push('<strong>Players:</strong> ' + members.length + '/' + league.max_players);
+            if (league.season_start) info.push('<strong>Season starts:</strong> ' + A.esc(String(league.season_start).slice(0, 10)));
+            info.push('<strong>Format:</strong> ' + A.esc(String(league.schedule_format || '').replace(/_/g, ' ')));
+            info.push('<strong>Visibility:</strong> ' + (league.is_public ? 'Public' : 'Private'));
+            info.push('<strong>Commissioner:</strong> <a href="/profile/?user=' + encodeURIComponent(league.creator_username) + '">' + A.esc(league.creator_username) + '</a>');
+            if (league.rules) info.push('<strong>Rules:</strong><br>' + A.esc(league.rules).replace(/\n/g, '<br>'));
+            document.getElementById('infoBody').innerHTML = info.join('<br>');
+
+            document.getElementById('membersBody').innerHTML = members.length
+                ? members.map(m => '<div style="margin-bottom:6px"><a href="/profile/?user=' + encodeURIComponent(m.username) + '">' + A.esc(m.display_name || m.username) + '</a>' + (m.role === 'commissioner' ? ' <span class="as-pill verified">commissioner</span>' : '') + '</div>').join('')
+                : 'No members yet.';
+
+            const st = data.standings || [];
+            document.getElementById('standings').innerHTML = st.length
+                ? '<table class="as-table"><thead><tr><th>#</th><th>Player</th><th>W</th><th>L</th><th>D</th><th>PF</th><th>PA</th></tr></thead><tbody>' +
+                  st.map((s, i) => '<tr><td>' + (i + 1) + '</td><td><a href="/profile/?user=' + encodeURIComponent(s.username) + '">' + A.esc(s.display_name || s.username) + '</a></td><td>' + s.wins + '</td><td>' + s.losses + '</td><td>' + s.draws + '</td><td>' + s.points_for + '</td><td>' + s.points_against + '</td></tr>').join('') +
+                  '</tbody></table>'
+                : '<div class="as-empty">No confirmed results yet.</div>';
+
+            const ms = data.matches || [];
+            document.getElementById('matches').innerHTML = ms.length
+                ? '<table class="as-table"><thead><tr><th>Match</th><th>Score</th><th>Status</th><th></th></tr></thead><tbody>' +
+                  ms.map(m => {
+                      let actions = '';
+                      if (me && m.status === 'scheduled' && m.reported_by !== me.id && (m.home_user_id === me.id || m.away_user_id === me.id)) {
+                          actions = '<button class="as-btn as-btn-green" data-mid="' + m.id + '" data-act="confirm" style="padding:4px 10px;font-size:12px">Confirm</button> ' +
+                                    '<button class="as-btn as-btn-danger" data-mid="' + m.id + '" data-act="dispute" style="padding:4px 10px;font-size:12px">Dispute</button>';
+                      }
+                      const statusKey = m.status === 'completed' ? 'completed' : m.status === 'disputed' ? 'disputed' : m.status === 'void' ? 'voided' : 'scheduled';
+                      const statusLabel = m.status === 'scheduled' ? 'Awaiting Confirm' : m.status;
+                      return '<tr><td>' + A.esc(m.home_username) + ' vs ' + A.esc(m.away_username) + '</td>' +
+                             '<td>' + (m.home_score != null ? m.home_score + '-' + m.away_score : '-') +
+                             (m.proof_url ? ' <a href="' + A.esc(m.proof_url) + '" target="_blank" rel="noopener nofollow"><i class="fas fa-image"></i></a>' : '') + '</td>' +
+                             '<td><span class="as-pill ' + statusKey + '">' + A.esc(statusLabel) + '</span></td>' +
+                             '<td>' + actions + '</td></tr>';
+                  }).join('') + '</tbody></table>'
+                : '<div class="as-empty">No matches reported yet.</div>';
+
+            document.querySelectorAll('#matches [data-act]').forEach(btn => {
+                btn.addEventListener('click', async function () {
+                    try {
+                        await apiRef.request('/arena/league-matches/' + btn.getAttribute('data-mid') + '/' + btn.getAttribute('data-act'), { method: 'PUT', body: {} });
+                        topMsg('ok', btn.getAttribute('data-act') === 'confirm' ? 'Result confirmed.' : 'Result disputed - an admin will review.');
+                        await load();
+                    } catch (e) {
+                        topMsg('err', (e && e.message) || 'Action failed');
+                    }
+                });
+            });
+
+            // Join + report visibility
+            const isMember = me && members.some(m => m.user_id === me.id);
+            document.getElementById('joinWrap').style.display =
+                (me && !isMember && league.status === 'open' && members.length < league.max_players) ? 'flex' : 'none';
+            const reportCard = document.getElementById('reportCard');
+            if (isMember && members.length > 1) {
+                reportCard.style.display = 'block';
+                const sel = document.getElementById('oppSel');
+                sel.innerHTML = members.filter(m => m.user_id !== me.id)
+                    .map(m => '<option value="' + A.esc(m.username) + '">' + A.esc(m.username) + '</option>').join('');
+            } else {
+                reportCard.style.display = 'none';
+            }
+        }
+
+        A.ready(async function (api) {
+            if (!api || !Number.isInteger(id)) { document.getElementById('notFound').style.display = 'block'; return; }
+            apiRef = api;
+            me = await A.currentUser(api);
+
+            document.getElementById('joinBtn').addEventListener('click', async function () {
+                try {
+                    await apiRef.request('/arena/leagues/' + id + '/join', { method: 'POST', body: {} });
+                    topMsg('ok', 'Welcome to the league!');
+                    await load();
+                } catch (e) {
+                    topMsg('err', (e && e.message) || 'Failed to join');
+                }
+            });
+
+            document.getElementById('reportBtn').addEventListener('click', async function () {
+                const myScore = parseInt(document.getElementById('myScore').value, 10);
+                const oppScore = parseInt(document.getElementById('oppScore').value, 10);
+                if (isNaN(myScore) || isNaN(oppScore)) return topMsg('err', 'Enter both scores');
+                try {
+                    await apiRef.request('/arena/leagues/' + id + '/matches', {
+                        method: 'POST',
+                        body: {
+                            opponent_username: document.getElementById('oppSel').value,
+                            my_score: myScore,
+                            opponent_score: oppScore,
+                            proof_url: document.getElementById('proofInput').value.trim() || undefined
+                        }
+                    });
+                    topMsg('ok', 'Result reported. It counts once your opponent confirms.');
+                    await load();
+                } catch (e) {
+                    topMsg('err', (e && e.message) || 'Failed to report result');
+                }
+            });
+
+            try {
+                await load();
+            } catch (e) {
+                document.getElementById('notFound').style.display = 'block';
+            }
+        });
+    })();
+    </script>
+</body>
+</html>
