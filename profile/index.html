@@ -1784,7 +1784,20 @@
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvMaxDrawdown">Not enough data yet</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvMaxDrawdownSub">Peak-to-trough units</span>
                     </article>
+                    <!-- PICK_DIVERSITY_20260604: additive analytics layer. Computed client-side
+                         from the same graded public ledger as the table below (regular picks only;
+                         contest picks live in a separate table and never reach this feed). -->
+                    <article class="profile-advanced-metric" data-advanced-metric-card="pick_diversity">
+                        <span class="profile-advanced-metric__label">Pick Diversity <span class="profile-diversity-info" id="profileDiversityInfo" role="button" tabindex="0" aria-label="What is Pick Diversity?" title="Measures how much of this record comes from unique handicapping opinions versus repeated exposure on the same game, market, or alternate line.">?</span></span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvPickDiversity">Not enough data yet</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvPickDiversitySub">Unique opinions vs repeated exposure</span>
+                    </article>
                 </div>
+                <details class="profile-diversity-detail" id="profileDiversityDetail" hidden>
+                    <summary>Pick Diversity breakdown</summary>
+                    <p>Alternate lines and repeated same-game positions are grouped so users can see whether a record is built from independent picks or repeated exposure to the same handicap.</p>
+                    <ul id="profileDiversityDetailList"></ul>
+                </details>
                 <div class="profile-advanced-support-grid" aria-label="Advanced supporting sections">
                     <div>Performance by Sport<span>Shown in Overview from verified ledger rows.</span></div>
                     <div>Performance by League<span>Shown with sport breakdowns when league data exists.</span></div>
@@ -1853,6 +1866,17 @@
         @media(max-width:420px){
             .profile-advanced-metric-grid,.profile-advanced-support-grid{grid-template-columns:1fr;}
         }
+
+        /* PICK_DIVERSITY_20260604 */
+        .profile-diversity-info{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;margin-left:4px;border-radius:50%;border:1px solid rgba(148,163,184,.45);color:#aebbd0;font-size:9px;font-weight:900;cursor:pointer;vertical-align:1px;}
+        .profile-diversity-info:hover{color:#67e8f9;border-color:#67e8f9;}
+        .profile-diversity-detail{margin-top:10px;padding:10px 12px;border:1px solid rgba(148,163,184,.16);border-radius:10px;background:rgba(2,6,23,.32);}
+        .profile-diversity-detail summary{cursor:pointer;color:#aebbd0;font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;}
+        .profile-diversity-detail summary:hover{color:#67e8f9;}
+        .profile-diversity-detail p{margin:8px 0 6px;color:#8491a6;font-size:11.5px;line-height:1.45;}
+        .profile-diversity-detail ul{margin:0;padding-left:18px;color:#e7eef8;font-size:12px;line-height:1.7;}
+        .profile-diversity-detail li strong{font-variant-numeric:tabular-nums;}
+        .profile-diversity-detail li.is-conflict{color:#fbbf24;}
 
         /* Sticky team badge -- shown next to a username everywhere (forum, polls, trivia, feed). */
         .tmr-team-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;margin-left:6px;border-radius:5px;background:rgba(0,255,255,0.08);border:1px solid rgba(0,255,255,0.22);color:#67e8f9;font:700 10px/1.4 'Inter',sans-serif;letter-spacing:.04em;text-transform:uppercase;vertical-align:1px;white-space:nowrap;}
@@ -7821,6 +7845,165 @@
     }
 
     // ======================== LOAD ALL PICKS ========================
+    // ============================================================
+    // PICK_DIVERSITY_20260604 — Pick Diversity Score (additive analytics).
+    // Groups graded picks into unique handicapping opinions:
+    //   sport | game | period scope | market family | participant | direction.
+    // Alt lines fold into their base market, so Over 6.5 / 7.5 / 8.5 on the
+    // same game = one opinion with correlated (alt-line) extras. Yankees ML +
+    // Yankees -1.5 = related exposure (half penalty). Over + Under the same
+    // total = a conflict flag, never a duplicate. Unparseable legacy picks
+    // count as their own opinion (safe fallback — never penalized). Mirrors
+    // services/pickDiversity.js on the backend (/users/:username/metrics).
+    // Contest picks live in tmr_contest_picks and never reach this feed.
+    // ============================================================
+    function tmrComputePickDiversity(picks) {
+        var KNOWN_BASES = { h2h: 1, spreads: 1, totals: 1, team_totals: 1 };
+        function dvNorm(v) { return String(v == null ? '' : v).toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
+        function dvDirection(sel) {
+            var s = ' ' + dvNorm(sel) + ' ';
+            if (/\sover\s/.test(s) || /\so\d/.test(s)) return 'over';
+            if (/\sunder\s/.test(s) || /\su\d/.test(s)) return 'under';
+            return null;
+        }
+        function dvBefore(sel) { var m = String(sel || '').match(/^(.*?)\b(over|under)\b/i); return m ? dvNorm(m[1]) : ''; }
+        function dvTeam(sel, home, away) {
+            var s = dvNorm(sel), h = dvNorm(home), a = dvNorm(away);
+            if (!s) return null;
+            if (h && (s === h || h.indexOf(s) !== -1 || s.indexOf(h) !== -1)) return 'home:' + h;
+            if (a && (s === a || a.indexOf(s) !== -1 || s.indexOf(a) !== -1)) return 'away:' + a;
+            return 'team:' + s;
+        }
+        function dvMarket(mt) {
+            var m = dvNorm(mt).replace(/ /g, '_');
+            if (!m) return null;
+            if (m === 'alt_totals') m = 'totals';
+            if (m === 'alt_spreads') m = 'spreads';
+            var period = 'full';
+            var prefixes = [['f5_', 'f5'], ['first_half_', 'h1'], ['second_half_', 'h2'], ['period_1_', 'p1']];
+            for (var i = 0; i < prefixes.length; i++) {
+                if (m.indexOf(prefixes[i][0]) === 0) { period = prefixes[i][1]; m = m.slice(prefixes[i][0].length); break; }
+            }
+            return { period: period, family: KNOWN_BASES[m] ? m : 'prop_' + m };
+        }
+        function dvGameKey(p) {
+            if (p.game_id != null && String(p.game_id).trim() !== '') return 'g:' + String(p.game_id).trim();
+            var h = dvNorm(p.home_team), a = dvNorm(p.away_team);
+            var day = String(p.commence_time || p.locked_at || p.created_at || '').slice(0, 10);
+            return (h && a && day) ? ('m:' + a + '@' + h + ':' + day) : null;
+        }
+        function classify(p, i) {
+            var sport = dvNorm(p.sport_key) || 'unknown';
+            var market = dvMarket(p.market_type);
+            var gameKey = dvGameKey(p);
+            if (!market || !gameKey) return null;
+            var participant = '', direction = null, family = market.family;
+            if (family === 'totals') {
+                direction = dvDirection(p.selection);
+            } else if (family === 'team_totals' || family.indexOf('prop_') === 0) {
+                direction = dvDirection(p.selection);
+                participant = dvBefore(p.selection);
+                if (!participant) return null;
+            } else {
+                direction = dvTeam(p.selection, p.home_team, p.away_team);
+            }
+            if (!direction) return null;
+            var base = sport + '|' + gameKey + '|' + market.period + '|' + family + '|' + participant;
+            var relatedKey;
+            if (family === 'h2h' || family === 'spreads') relatedKey = sport + '|' + gameKey + '|teamside|' + direction.replace(/^(home|away|team):/, '');
+            else if (family === 'totals') relatedKey = sport + '|' + gameKey + '|total|' + direction;
+            else if (family === 'team_totals') relatedKey = sport + '|' + gameKey + '|tt|' + participant + '|' + direction;
+            else relatedKey = sport + '|' + gameKey + '|' + family + '|' + participant + '|' + direction;
+            var lineRaw = p.line_snapshot != null ? Number(p.line_snapshot) : (p.line != null ? Number(p.line) : null);
+            return { exactKey: base + '|' + direction, conflictKey: base, relatedKey: relatedKey, line: Number.isFinite(lineRaw) ? lineRaw : null };
+        }
+        var rows = (Array.isArray(picks) ? picks : []).filter(Boolean);
+        var total = rows.length;
+        var exact = new Map(), conflict = new Map(), related = new Map();
+        rows.forEach(function (p, i) {
+            var c = classify(p, i);
+            if (!c) {
+                var k = 'pick:' + (p && p.id != null ? p.id : 'i' + i);
+                exact.set(k, (exact.get(k) || []).concat([{ line: null }]));
+                return;
+            }
+            exact.set(c.exactKey, (exact.get(c.exactKey) || []).concat([{ line: c.line }]));
+            if (!conflict.has(c.conflictKey)) conflict.set(c.conflictKey, new Set());
+            conflict.get(c.conflictKey).add(c.exactKey);
+            if (!related.has(c.relatedKey)) related.set(c.relatedKey, new Set());
+            related.get(c.relatedKey).add(c.exactKey);
+        });
+        var correlated = 0, altExtras = 0;
+        exact.forEach(function (members) {
+            if (members.length <= 1) return;
+            correlated += members.length - 1;
+            var lines = new Set(members.map(function (m) { return m.line == null ? 'x' : String(m.line); }));
+            if (lines.size > 1) altExtras += members.length - 1;
+        });
+        var relatedExtras = 0;
+        related.forEach(function (set) { if (set.size > 1) relatedExtras += set.size - 1; });
+        var conflicts = 0;
+        conflict.forEach(function (set) { if (set.size > 1) conflicts += 1; });
+        function rate(n) { return total > 0 ? Number(((n / total) * 100).toFixed(2)) : 0; }
+        var score = null;
+        if (total > 0) score = Math.max(0, Math.min(100, Math.round(100 - ((correlated + 0.5 * relatedExtras) / total) * 100)));
+        return {
+            total_graded_picks: total,
+            unique_opinion_count: exact.size,
+            correlated_pick_count: correlated,
+            correlated_pick_rate: rate(correlated),
+            alt_line_exposure_count: altExtras,
+            alt_line_exposure_rate: rate(altExtras),
+            related_exposure_count: relatedExtras,
+            conflict_count: conflicts,
+            has_conflicts: conflicts > 0,
+            pick_diversity_score: score
+        };
+    }
+
+    function renderPickDiversity(picks) {
+        var valueEl = document.getElementById('profileAdvPickDiversity');
+        var subEl = document.getElementById('profileAdvPickDiversitySub');
+        var detailEl = document.getElementById('profileDiversityDetail');
+        var listEl = document.getElementById('profileDiversityDetailList');
+        if (!valueEl || !subEl) return;
+        var graded = (Array.isArray(picks) ? picks : []).filter(function (p) {
+            var st = normalizeStatus(p && p.status);
+            return st === 'won' || st === 'lost' || st === 'push';
+        });
+        var d = tmrComputePickDiversity(graded);
+        if (!d.total_graded_picks || d.pick_diversity_score == null) {
+            valueEl.textContent = 'Not enough data yet';
+            valueEl.classList.add('is-empty');
+            if (detailEl) detailEl.hidden = true;
+            return;
+        }
+        valueEl.textContent = d.pick_diversity_score + '/100';
+        valueEl.classList.remove('is-empty', 'is-pos', 'is-neg');
+        if (d.pick_diversity_score >= 85) valueEl.classList.add('is-pos');
+        else if (d.pick_diversity_score <= 50) valueEl.classList.add('is-neg');
+        subEl.textContent = d.unique_opinion_count + ' unique opinions of ' + d.total_graded_picks + ' graded picks';
+        if (detailEl && listEl) {
+            var items = [
+                '<li>Pick Diversity Score: <strong>' + d.pick_diversity_score + '/100</strong></li>',
+                '<li>Unique Opinions: <strong>' + d.unique_opinion_count + ' of ' + d.total_graded_picks + '</strong> graded picks</li>',
+                '<li>Correlated Picks: <strong>' + d.correlated_pick_count + '</strong> (' + d.correlated_pick_rate.toFixed(1) + '% of record)</li>',
+                '<li>Alt-Line Exposure: <strong>' + d.alt_line_exposure_rate.toFixed(1) + '%</strong> (' + d.alt_line_exposure_count + ' stacked alt-line picks)</li>'
+            ];
+            if (d.related_exposure_count > 0) items.push('<li>Related Same-Game Exposure: <strong>' + d.related_exposure_count + '</strong> overlapping positions (e.g. ML + run line on the same team)</li>');
+            if (d.has_conflicts) items.push('<li class="is-conflict">Opposite-Side Conflicts: <strong>' + d.conflict_count + '</strong> (both sides of the same market in one game)</li>');
+            listEl.innerHTML = items.join('');
+            detailEl.hidden = false;
+        }
+        var info = document.getElementById('profileDiversityInfo');
+        if (info && detailEl && !info.__tmrBound) {
+            info.__tmrBound = true;
+            var openDetail = function () { detailEl.hidden = false; detailEl.open = true; detailEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
+            info.addEventListener('click', openDetail);
+            info.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDetail(); } });
+        }
+    }
+
     async function loadAllPicks() {
         let picks = [];
         let pickRequestSucceeded = false;
@@ -7912,6 +8095,7 @@
         renderPicksTable(picks);
         renderAnalytics(stats);
         renderCapperMetrics(picks);
+        try { renderPickDiversity(picks); } catch (e) { console.warn('[Profile] Pick diversity render failed:', e); }
         if (initialSportFilter) {
             ensureSportFilterOption(initialSportFilter);
             const sportSelect = document.getElementById('filterSport');
