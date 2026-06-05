@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://trustmyrecord.com/arena/leagues/create/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start a Gaming League | TrustMyRecord Arena</title>
+    <meta name="description" content="Commission an online console gaming league on TrustMyRecord Arena.">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/arena-suite.css?v=20260605arena1">
+</head>
+<body class="arena-page">
+
+    <div class="as-hero">
+        <div class="as-hero-inner">
+            <div class="as-breadcrumb"><a href="/arena/">Arena</a> / <a href="/arena/leagues/">Leagues</a> / Create</div>
+            <span class="as-kicker">TrustMyRecord Arena</span>
+            <h1>Start a <span class="gold">League</span></h1>
+            <p class="lede">You are the commissioner: set the game, console, player cap, season start, and house rules. You are automatically the first member.</p>
+        </div>
+    </div>
+
+    <div class="as-main">
+        <div id="loginGate" class="as-empty" style="display:none">You need to <a href="/?login=1">log in</a> to start a league.</div>
+        <form class="as-form" id="createForm" style="display:none">
+            <div>
+                <label for="fName">League Name</label>
+                <input id="fName" type="text" maxlength="120" required placeholder="e.g. Friday Night Show League">
+            </div>
+            <div>
+                <label for="fGame">Game</label>
+                <select id="fGame" required></select>
+            </div>
+            <div>
+                <label for="fConsole">Console</label>
+                <select id="fConsole">
+                    <option value="">Any</option>
+                    <option>PS5</option>
+                    <option>Xbox</option>
+                    <option>PC</option>
+                    <option>Switch</option>
+                </select>
+            </div>
+            <div>
+                <label for="fMax">Max Players</label>
+                <input id="fMax" type="number" min="2" max="64" value="8">
+            </div>
+            <div>
+                <label for="fStart">Season Start Date</label>
+                <input id="fStart" type="date">
+            </div>
+            <div>
+                <label for="fFormat">Schedule Format</label>
+                <select id="fFormat">
+                    <option value="round_robin">Round robin (everyone plays everyone)</option>
+                    <option value="double_round_robin">Double round robin</option>
+                    <option value="season_playoffs">Season + playoffs</option>
+                </select>
+            </div>
+            <div>
+                <label for="fPublic">Visibility</label>
+                <select id="fPublic">
+                    <option value="true">Public (listed in the league directory)</option>
+                    <option value="false">Private (joinable by direct link only)</option>
+                </select>
+            </div>
+            <div>
+                <label for="fRules">League Rules</label>
+                <textarea id="fRules" rows="5" maxlength="4000" placeholder="Difficulty, rosters, scheduling expectations, forfeit policy..."></textarea>
+            </div>
+            <div class="as-msg" id="formMsg"></div>
+            <div>
+                <button type="submit" class="as-btn as-btn-gold"><i class="fas fa-plus"></i> Create League</button>
+                <a class="as-btn as-btn-outline" href="/arena/leagues/">Cancel</a>
+            </div>
+        </form>
+        <div class="as-disclaimer" id="arenaDisclaimer"></div>
+    </div>
+
+    <script src="/static/js/config.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/arena-suite.js?v=20260605arena1"></script>
+    <script>
+    (function () {
+        const A = window.TMRArena;
+        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
+        A.ready(async function (api) {
+            if (!api) return;
+            const me = await A.currentUser(api);
+            if (!me) { document.getElementById('loginGate').style.display = 'block'; return; }
+            document.getElementById('createForm').style.display = 'grid';
+
+            try {
+                const titles = await api.request('/gaming/titles');
+                const sel = document.getElementById('fGame');
+                (titles.games || []).forEach(g => {
+                    const o = document.createElement('option');
+                    o.value = g.slug; o.textContent = g.title;
+                    sel.appendChild(o);
+                });
+                const pre = A.qs('game');
+                if (pre) sel.value = pre;
+            } catch (_) {}
+
+            document.getElementById('createForm').addEventListener('submit', async function (ev) {
+                ev.preventDefault();
+                const m = document.getElementById('formMsg');
+                const body = {
+                    name: document.getElementById('fName').value.trim(),
+                    game_slug: document.getElementById('fGame').value,
+                    console: document.getElementById('fConsole').value || undefined,
+                    max_players: parseInt(document.getElementById('fMax').value, 10) || 8,
+                    season_start: document.getElementById('fStart').value || undefined,
+                    schedule_format: document.getElementById('fFormat').value,
+                    is_public: document.getElementById('fPublic').value === 'true',
+                    rules: document.getElementById('fRules').value.trim() || undefined
+                };
+                try {
+                    const res = await api.request('/arena/leagues', { method: 'POST', body });
+                    A.msg(m, 'ok', 'League created. Redirecting...');
+                    location.href = '/arena/leagues/view/?id=' + res.league.id;
+                } catch (e) {
+                    A.msg(m, 'err', (e && e.message) || 'Failed to create league');
+                }
+            });
+        });
+    })();
+    </script>
+</body>
+</html>
