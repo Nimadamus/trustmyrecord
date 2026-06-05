@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena Admin | TrustMyRecord</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/arena-suite.css?v=20260605arena1">
+    <style>
+        body { margin: 0; }
+        .admin-bar { background: var(--as-surface); border-bottom: 1px solid var(--as-border); padding: 14px 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .admin-bar h1 { font-family: var(--as-display); font-size: 18px; margin: 0; color: var(--as-gold); }
+        .admin-bar input { background: var(--as-bg); color: var(--as-text); border: 1px solid var(--as-border); border-radius: 8px; padding: 8px 10px; min-width: 260px; }
+        .tabbar { display: flex; gap: 6px; padding: 12px 20px; background: var(--as-surface); border-bottom: 1px solid var(--as-border); flex-wrap: wrap; }
+        .tabbar button { background: transparent; border: 1px solid transparent; color: var(--as-dim); padding: 8px 14px; border-radius: 8px; font-weight: 700; cursor: pointer; font-family: var(--as-body); }
+        .tabbar button.active { color: var(--as-gold); background: rgba(255,215,0,0.1); border-color: rgba(255,215,0,0.3); }
+        .panel { display: none; } .panel.active { display: block; }
+        pre.json { background: var(--as-surface); border: 1px solid var(--as-border); border-radius: 8px; padding: 10px; font-size: 11px; overflow-x: auto; color: var(--as-dim); max-height: 200px; }
+        .as-table td { vertical-align: top; }
+    </style>
+</head>
+<body class="arena-page">
+
+    <div class="admin-bar">
+        <h1><i class="fas fa-shield-halved"></i> Arena Admin</h1>
+        <input type="password" id="adminToken" placeholder="ADMIN_TOKEN (or rely on BetLegend login)">
+        <button class="as-btn as-btn-outline" id="saveToken">Save Token</button>
+        <button class="as-btn as-btn-primary" id="refreshBtn"><i class="fas fa-rotate"></i> Refresh</button>
+        <a class="as-btn as-btn-outline" href="/admin/">Autograder Admin</a>
+    </div>
+
+    <div class="tabbar">
+        <button data-tab="streamers" class="active">Streamers</button>
+        <button data-tab="disputes">Disputes</button>
+        <button data-tab="challenges">Verify / Void</button>
+        <button data-tab="predictions">Predictions</button>
+        <button data-tab="audit">Audit Trail</button>
+    </div>
+
+    <div class="as-main">
+        <div class="as-msg" id="topMsg"></div>
+
+        <div class="panel active" id="panel-streamers">
+            <div class="as-section-head"><h2><i class="fas fa-user-check"></i> Streamer Applications</h2></div>
+            <div id="streamersBody"></div>
+        </div>
+
+        <div class="panel" id="panel-disputes">
+            <div class="as-section-head"><h2><i class="fas fa-gavel"></i> Disputed Results</h2></div>
+            <div id="disputesBody"></div>
+        </div>
+
+        <div class="panel" id="panel-challenges">
+            <div class="as-section-head"><h2><i class="fas fa-flag-checkered"></i> Verify or Void a Challenge</h2></div>
+            <div class="as-card" style="max-width:560px">
+                <div class="meta">
+                    <label style="font-size:12px;color:var(--as-dim)">Challenge ID</label><br>
+                    <input type="number" id="chId" style="background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px;width:140px">
+                    <div style="margin-top:10px">
+                        <label style="font-size:12px;color:var(--as-dim)">Winner</label><br>
+                        <select id="chWinner" style="background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px">
+                            <option value="challenger">Challenger</option>
+                            <option value="challenged">Challenged</option>
+                        </select>
+                        <input type="number" id="chScoreC" placeholder="Challenger score" style="width:140px;background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px">
+                        <input type="number" id="chScoreD" placeholder="Challenged score" style="width:140px;background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px">
+                    </div>
+                    <input type="text" id="chReason" placeholder="Reason (logged to audit trail)" style="margin-top:10px;width:100%;box-sizing:border-box;background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px">
+                    <div style="margin-top:10px">
+                        <button class="as-btn as-btn-green" id="verifyBtn">Verify Result (grades predictions)</button>
+                        <button class="as-btn as-btn-danger" id="voidBtn">Void Match (refunds predictions)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel" id="panel-predictions">
+            <div class="as-section-head"><h2><i class="fas fa-bullseye"></i> Prediction Activity</h2></div>
+            <div id="predictionsBody"></div>
+        </div>
+
+        <div class="panel" id="panel-audit">
+            <div class="as-section-head"><h2><i class="fas fa-scroll"></i> Arena Audit Trail</h2></div>
+            <div id="auditBody"></div>
+        </div>
+    </div>
+
+    <script src="/static/js/config.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/arena-suite.js?v=20260605arena1"></script>
+    <script>
+    (function () {
+        const A = window.TMRArena;
+        const tokenInput = document.getElementById('adminToken');
+        tokenInput.value = localStorage.getItem('tmr_admin_token') || '';
+        document.getElementById('saveToken').addEventListener('click', () => {
+            localStorage.setItem('tmr_admin_token', tokenInput.value.trim());
+            topMsg('ok', 'Token saved locally.');
+        });
+        function topMsg(kind, text) { A.msg(document.getElementById('topMsg'), kind, text); }
+        function headers() {
+            const t = (tokenInput.value || '').trim();
+            return t ? { 'x-admin-token': t } : {};
+        }
+        let apiRef = null;
+
+        async function adminReq(path, method, body) {
+            return apiRef.request(path, { method: method || 'GET', body: body, headers: headers() });
+        }
+
+        document.querySelectorAll('.tabbar button').forEach(b => {
+            b.addEventListener('click', () => {
+                document.querySelectorAll('.tabbar button').forEach(x => x.classList.remove('active'));
+                document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+                b.classList.add('active');
+                document.getElementById('panel-' + b.getAttribute('data-tab')).classList.add('active');
+            });
+        });
+
+        async function loadStreamers() {
+            const el = document.getElementById('streamersBody');
+            try {
+                const data = await adminReq('/arena/admin/streamers');
+                const rows = data.streamers || [];
+                el.innerHTML = rows.length
+                    ? '<table class="as-table"><thead><tr><th>User</th><th>Status</th><th>Note</th><th>Actions</th></tr></thead><tbody>' +
+                      rows.map(s => `
+                        <tr>
+                            <td><strong>${A.esc(s.username)}</strong><br><span style="color:var(--as-muted);font-size:11px">${A.esc(s.email || '')}</span></td>
+                            <td><span class="as-pill ${s.streamer_status === 'approved' ? 'open' : s.streamer_status === 'pending' ? 'scheduled' : 'disputed'}">${A.esc(s.streamer_status)}</span>
+                                ${s.status_reason ? '<br><span style="font-size:11px;color:var(--as-muted)">' + A.esc(s.status_reason) + '</span>' : ''}</td>
+                            <td style="max-width:260px">${A.esc(s.application_note || '')}</td>
+                            <td>
+                                <button class="as-btn as-btn-green" data-uid="${s.user_id}" data-act="approve" style="padding:4px 10px;font-size:12px">Approve</button>
+                                <button class="as-btn as-btn-danger" data-uid="${s.user_id}" data-act="suspend" style="padding:4px 10px;font-size:12px">Suspend</button>
+                                <button class="as-btn as-btn-outline" data-uid="${s.user_id}" data-act="reject" style="padding:4px 10px;font-size:12px">Reject</button>
+                            </td>
+                        </tr>`).join('') + '</tbody></table>'
+                    : '<div class="as-empty">No streamer applications.</div>';
+                el.querySelectorAll('[data-act]').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const reason = prompt('Reason (logged to audit trail):') || '';
+                        try {
+                            await adminReq('/arena/admin/streamers/' + btn.getAttribute('data-uid') + '/' + btn.getAttribute('data-act'), 'POST', { reason });
+                            topMsg('ok', 'Streamer updated.');
+                            loadStreamers();
+                        } catch (e) { topMsg('err', (e && e.message) || 'Failed'); }
+                    });
+                });
+            } catch (e) {
+                el.innerHTML = '<div class="as-empty">' + A.esc((e && e.message) || 'Failed to load (check admin token)') + '</div>';
+            }
+        }
+
+        async function loadDisputes() {
+            const el = document.getElementById('disputesBody');
+            try {
+                const data = await adminReq('/arena/admin/disputes');
+                const ch = data.disputed_challenges || [];
+                const lm = data.disputed_league_matches || [];
+                let html = '<h3 style="font-family:var(--as-display)">Challenges</h3>';
+                html += ch.length
+                    ? '<table class="as-table"><thead><tr><th>ID</th><th>Match</th><th>Reported Score</th><th>Reason</th><th>Proof</th></tr></thead><tbody>' +
+                      ch.map(c => '<tr><td>' + c.id + '</td><td>' + A.esc(c.challenger_username) + ' vs ' + A.esc(c.challenged_username || '?') + '<br><span style="font-size:11px;color:var(--as-muted)">' + A.esc(c.game_title) + '</span></td><td>' + (c.challenger_score != null ? c.challenger_score + '-' + c.challenged_score : '-') + '</td><td style="max-width:240px">' + A.esc(c.dispute_reason || '') + '</td><td>' + (c.proof_url ? '<a href="' + A.esc(c.proof_url) + '" target="_blank" rel="noopener">view</a>' : '-') + '</td></tr>').join('') + '</tbody></table>'
+                    : '<div class="as-empty">No disputed challenges.</div>';
+                html += '<h3 style="font-family:var(--as-display); margin-top:18px">League Matches</h3>';
+                html += lm.length
+                    ? '<table class="as-table"><thead><tr><th>ID</th><th>League</th><th>Match</th><th>Score</th><th>Actions</th></tr></thead><tbody>' +
+                      lm.map(m => '<tr><td>' + m.id + '</td><td>' + A.esc(m.league_name) + '</td><td>' + A.esc(m.home_username) + ' vs ' + A.esc(m.away_username) + '</td><td>' + m.home_score + '-' + m.away_score + (m.proof_url ? ' <a href="' + A.esc(m.proof_url) + '" target="_blank" rel="noopener">proof</a>' : '') + '</td>' +
+                      '<td><button class="as-btn as-btn-green" data-lmid="' + m.id + '" data-act="verify" style="padding:4px 10px;font-size:12px">Verify</button> <button class="as-btn as-btn-danger" data-lmid="' + m.id + '" data-act="void" style="padding:4px 10px;font-size:12px">Void</button></td></tr>').join('') + '</tbody></table>'
+                    : '<div class="as-empty">No disputed league matches.</div>';
+                el.innerHTML = html;
+                el.querySelectorAll('[data-lmid]').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        const reason = prompt('Reason (logged):') || '';
+                        try {
+                            await adminReq('/arena/admin/league-matches/' + btn.getAttribute('data-lmid') + '/' + btn.getAttribute('data-act'), 'POST', { reason });
+                            topMsg('ok', 'League match updated.');
+                            loadDisputes();
+                        } catch (e) { topMsg('err', (e && e.message) || 'Failed'); }
+                    });
+                });
+            } catch (e) {
+                el.innerHTML = '<div class="as-empty">' + A.esc((e && e.message) || 'Failed to load') + '</div>';
+            }
+        }
+
+        async function loadPredictions() {
+            const el = document.getElementById('predictionsBody');
+            try {
+                const data = await adminReq('/arena/admin/predictions');
+                const s = data.summary || {};
+                let html = '<div class="as-stat-row">' +
+                    '<div class="as-stat"><div class="num">' + (s.total || 0) + '</div><div class="label">Total</div></div>' +
+                    '<div class="as-stat"><div class="num">' + (s.open || 0) + '</div><div class="label">Open</div></div>' +
+                    '<div class="as-stat"><div class="num">' + (s.locked || 0) + '</div><div class="label">Locked</div></div>' +
+                    '<div class="as-stat"><div class="num">' + (s.graded || 0) + '</div><div class="label">Graded</div></div>' +
+                    '<div class="as-stat"><div class="num">' + (s.void || 0) + '</div><div class="label">Void</div></div>' +
+                    '<div class="as-stat"><div class="num">' + (s.total_points_entered || 0).toLocaleString() + '</div><div class="label">Points Entered</div></div></div>';
+                const rows = data.predictions || [];
+                html += rows.length
+                    ? '<table class="as-table"><thead><tr><th>ID</th><th>User</th><th>Challenge</th><th>Pick</th><th>Points</th><th>Status</th></tr></thead><tbody>' +
+                      rows.slice(0, 100).map(p => '<tr><td>' + p.id + '</td><td>' + A.esc(p.username) + '</td><td>#' + p.challenge_id + ' (' + A.esc(p.challenge_status) + ')</td><td>' + A.esc(p.predicted_winner_username) + '</td><td>' + p.points_staked + '</td><td>' + A.esc(p.status) + (p.result ? '/' + p.result : '') + '</td></tr>').join('') + '</tbody></table>'
+                    : '<div class="as-empty">No predictions yet.</div>';
+                el.innerHTML = html;
+            } catch (e) {
+                el.innerHTML = '<div class="as-empty">' + A.esc((e && e.message) || 'Failed to load') + '</div>';
+            }
+        }
+
+        async function loadAudit() {
+            const el = document.getElementById('auditBody');
+            try {
+                const data = await adminReq('/arena/admin/audit');
+                const rows = data.audit || [];
+                el.innerHTML = rows.length
+                    ? '<table class="as-table"><thead><tr><th>When</th><th>Table</th><th>Action</th><th>Row</th><th>Meta</th></tr></thead><tbody>' +
+                      rows.map(a => '<tr><td>' + A.fmtDate(a.created_at) + '</td><td>' + A.esc(a.table_name) + '</td><td>' + A.esc(a.action) + '</td><td>' + (a.row_id || '') + '</td><td><pre class="json">' + A.esc(JSON.stringify(a.meta || {}, null, 1)) + '</pre></td></tr>').join('') + '</tbody></table>'
+                    : '<div class="as-empty">No arena audit entries yet.</div>';
+            } catch (e) {
+                el.innerHTML = '<div class="as-empty">' + A.esc((e && e.message) || 'Failed to load') + '</div>';
+            }
+        }
+
+        function loadAll() { loadStreamers(); loadDisputes(); loadPredictions(); loadAudit(); }
+
+        A.ready(function (api) {
+            if (!api) return;
+            apiRef = api;
+            document.getElementById('refreshBtn').addEventListener('click', loadAll);
+            document.getElementById('verifyBtn').addEventListener('click', async () => {
+                const id = parseInt(document.getElementById('chId').value, 10);
+                if (!id) return topMsg('err', 'Enter a challenge ID');
+                const body = { winner: document.getElementById('chWinner').value, reason: document.getElementById('chReason').value.trim() || undefined };
+                const cs = parseInt(document.getElementById('chScoreC').value, 10);
+                const ds = parseInt(document.getElementById('chScoreD').value, 10);
+                if (!isNaN(cs)) body.challenger_score = cs;
+                if (!isNaN(ds)) body.challenged_score = ds;
+                try {
+                    const r = await adminReq('/arena/admin/challenges/' + id + '/verify', 'POST', body);
+                    topMsg('ok', 'Verified. Predictions graded: ' + r.predictions_graded);
+                    loadAll();
+                } catch (e) { topMsg('err', (e && e.message) || 'Failed'); }
+            });
+            document.getElementById('voidBtn').addEventListener('click', async () => {
+                const id = parseInt(document.getElementById('chId').value, 10);
+                if (!id) return topMsg('err', 'Enter a challenge ID');
+                try {
+                    const r = await adminReq('/arena/admin/challenges/' + id + '/void', 'POST', { reason: document.getElementById('chReason').value.trim() || undefined });
+                    topMsg('ok', 'Voided. Predictions refunded: ' + r.predictions_voided);
+                    loadAll();
+                } catch (e) { topMsg('err', (e && e.message) || 'Failed'); }
+            });
+            loadAll();
+        });
+    })();
+    </script>
+</body>
+</html>
