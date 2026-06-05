@@ -352,8 +352,14 @@
                     <input id="favTeamsValue" type="text" maxlength="500" placeholder="e.g. Pittsburgh Steelers, Pittsburgh Penguins, Pirates">
                 </div>
 
+                <div class="field" style="margin-bottom:18px;padding:13px 15px;border-radius:14px;border:1px solid rgba(255,143,143,0.35);background:rgba(255,107,107,0.08);">
+                    <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#ffd5d5;margin-bottom:5px;">Account Integrity Rule</div>
+                    <div style="font-size:13px;line-height:1.55;color:var(--muted);">TrustMyRecord allows only <strong style="color:var(--text);">one account per person and one account per household</strong>. No exceptions. Duplicate or related household accounts may be suspended, removed from contests, or permanently banned, and contest entries, records, rankings, and prizes may be voided. <a href="/rules/" style="color:var(--cyan);font-weight:700;" target="_blank" rel="noopener">Read the Platform Rules</a>.</div>
+                </div>
+
                 <div id="message" class="message"></div>
                 <button id="submitBtn" class="submit" type="submit">CREATE ACCOUNT</button>
+                <p style="margin:12px 0 0;text-align:center;color:var(--muted);font-size:12.5px;line-height:1.5;">By creating an account you agree to the <a href="/rules/" style="color:var(--text);font-weight:700;" target="_blank" rel="noopener">Platform Rules</a> and <a href="/terms/" style="color:var(--text);font-weight:700;" target="_blank" rel="noopener">Terms of Service</a>, including one account per person and one account per household.</p>
             </form>
             <script>
                 // Build favorite-sport chips
@@ -463,7 +469,7 @@
                     }
 
                     if (data && data.email) {
-                        setMessage(data.message || ('Account created. Verify ' + data.email + ' to continue.'), 'success');
+                        setMessage((data.message || ('Account created. Verify ' + data.email + ' to continue.')) + ' Reminder: only one account per person and one account per household is allowed on TrustMyRecord.', 'success');
                         return;
                     }
 
