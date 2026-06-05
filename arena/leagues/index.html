@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/arena/leagues/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Gaming Leagues with Verified Standings | TrustMyRecord Arena</title>
+    <meta name="description" content="Join online console gaming leagues for MLB The Show, NBA 2K, Madden, EA FC and NHL. Real standings from verified results: wins, losses, run differential. Start your own league free.">
+    <meta property="og:title" content="Online Gaming Leagues | TrustMyRecord Arena">
+    <meta property="og:description" content="Console gaming leagues with verified standings. Join one or start your own.">
+    <meta property="og:url" content="https://trustmyrecord.com/arena/leagues/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <meta name="twitter:card" content="summary_large_image">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/arena-suite.css?v=20260605arena1">
+</head>
+<body class="arena-page">
+
+    <div class="as-hero">
+        <div class="as-hero-inner">
+            <div class="as-breadcrumb"><a href="/arena/">Arena</a> / Leagues</div>
+            <span class="as-kicker">TrustMyRecord Arena</span>
+            <h1>Gaming <span class="gold">Leagues</span></h1>
+            <p class="lede">Season-long console competition with standings you can trust. Every league result must be confirmed by both players or verified by an admin before it counts, so the table reflects what actually happened on the sticks. Join an open league below or start your own and set the rules.</p>
+            <div class="as-actions">
+                <a class="as-btn as-btn-gold" href="/arena/leagues/create/"><i class="fas fa-plus"></i> Start a League</a>
+                <a class="as-btn as-btn-outline" href="/arena/mlb-the-show/"><i class="fas fa-baseball-ball"></i> MLB The Show Hub</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="as-main">
+        <div class="as-section">
+            <div class="as-section-head">
+                <h2><i class="fas fa-trophy"></i> Open &amp; Active Leagues</h2>
+                <select id="gameFilter" style="background:var(--as-surface); color:var(--as-text); border:1px solid var(--as-border); border-radius:8px; padding:8px 10px;">
+                    <option value="">All Games</option>
+                </select>
+            </div>
+            <div id="leaguesGrid" class="as-grid"><div class="as-empty">Loading leagues...</div></div>
+        </div>
+
+        <div class="as-section as-copy">
+            <h2>How Arena leagues work</h2>
+            <p>Anyone with a TrustMyRecord account can commission a league: pick the game, console, player cap, season start date, and schedule format, then write the house rules. Members report match results as they play; the opponent confirms each score, and disputed results go to admin review. Standings are computed only from confirmed results, ranked by wins and point differential. Your league record also feeds your public gaming profile, alongside your head-to-head challenge history.</p>
+        </div>
+
+        <div class="as-disclaimer" id="arenaDisclaimer"></div>
+    </div>
+
+    <script src="/static/js/config.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/arena-suite.js?v=20260605arena1"></script>
+    <script>
+    (function () {
+        const A = window.TMRArena;
+        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
+        let apiRef = null;
+
+        async function loadLeagues() {
+            const game = document.getElementById('gameFilter').value;
+            const grid = document.getElementById('leaguesGrid');
+            grid.innerHTML = '<div class="as-empty">Loading leagues...</div>';
+            try {
+                const data = await apiRef.request('/arena/leagues' + (game ? '?game=' + encodeURIComponent(game) : ''));
+                if (!data.leagues || !data.leagues.length) {
+                    grid.innerHTML = '<div class="as-empty">No leagues yet. <a href="/arena/leagues/create/">Start the first one</a>.</div>';
+                    return;
+                }
+                grid.innerHTML = data.leagues.map(l => `
+                    <a class="as-card" href="/arena/leagues/view/?id=${l.id}">
+                        <h3>${A.esc(l.name)}</h3>
+                        <div class="meta">
+                            <span class="as-pill ${l.status === 'open' ? 'open' : l.status === 'active' ? 'live' : 'completed'}">${A.esc(l.status)}</span>
+                            &nbsp; <strong>${A.esc(l.game_title)}</strong>
+                            <br>${l.member_count}/${l.max_players} players
+                            ${l.console ? ' &middot; ' + A.esc(l.console) : ''}
+                            ${l.season_start ? '<br>Season starts ' + A.esc(String(l.season_start).slice(0, 10)) : ''}
+                            <br>Commissioner: ${A.esc(l.creator_username)}
+                        </div>
+                    </a>`).join('');
+            } catch (e) {
+                grid.innerHTML = '<div class="as-empty">Leagues are temporarily unavailable.</div>';
+            }
+        }
+
+        A.ready(async function (api) {
+            if (!api) return;
+            apiRef = api;
+            try {
+                const titles = await api.request('/gaming/titles');
+                const sel = document.getElementById('gameFilter');
+                (titles.games || []).forEach(g => {
+                    const o = document.createElement('option');
+                    o.value = g.slug; o.textContent = g.title;
+                    sel.appendChild(o);
+                });
+            } catch (_) {}
+            document.getElementById('gameFilter').addEventListener('change', loadLeagues);
+            loadLeagues();
+        });
+    })();
+    </script>
+</body>
+</html>
