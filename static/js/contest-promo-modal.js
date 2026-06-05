@@ -18,7 +18,12 @@
         '/signup/', '/signup',
         '/reset-password/', '/reset-password',
         '/verify-email/', '/verify-email',
-        '/how-it-works/', '/how-it-works'
+        '/how-it-works/', '/how-it-works',
+        // SPORTSBOOK_PROMO_SUPPRESS_20260604: never cover the pick-submission
+        // board. A full-viewport backdrop (z-index 9998, pointer-events:auto)
+        // intercepts every odds button, which reads to users as "I can't click
+        // or select anything on the pick screen."
+        '/sportsbook/', '/sportsbook'
     ];
 
     // EAGER session claim: decide once at script execution whether THIS page
@@ -151,9 +156,17 @@
         }
         document.addEventListener('keydown', onKey);
 
-        // Intentionally do NOT close on backdrop click. Some pages auto-dispatch
-        // clicks shortly after page-ready and we don't want to dismiss the modal
-        // accidentally. Close via the X button, 'Maybe later', or Escape key only.
+        // Close on backdrop click as a safety net so the page can never become
+        // permanently click-trapped behind the modal (SPORTSBOOK_PROMO_SUPPRESS_20260604).
+        // A short arming delay avoids dismissing on any auto-dispatched click that
+        // fires immediately after page-ready.
+        var backdropArmed = false;
+        setTimeout(function () { backdropArmed = true; }, 400);
+        parts.backdrop.addEventListener('click', function () {
+            if (!backdropArmed) return;
+            close(parts);
+            document.removeEventListener('keydown', onKey);
+        });
         parts.modal.querySelector('.tmr-contest-modal__close').addEventListener('click', function () { close(parts); document.removeEventListener('keydown', onKey); });
         parts.modal.querySelector('[data-contest-promo-skip]').addEventListener('click', function () { close(parts); document.removeEventListener('keydown', onKey); });
         parts.modal.querySelector('[data-contest-promo-cta]').addEventListener('click', function () {
