@@ -363,7 +363,7 @@
                     <span class="cm-live"><span class="dot"></span> JustBet MLB</span>
                 </div>
                 <div class="cm-body">
-                    This page shows contest <strong>status, participants, and the leaderboard</strong>. Submit contest picks on the normal <strong>Make Picks sportsbook page in Contest Mode</strong>. Contest picks are tracked separately and will not affect your public TrustMyRecord profile record.
+                    This page shows contest <strong>status and registered members</strong>. The official contest board appears here when the contest begins. Contest picks are tracked separately and will not affect your public TrustMyRecord profile record.
                 </div>
             </div>
             <div style="display:flex; gap:10px; flex-wrap:wrap;">
@@ -396,79 +396,49 @@
              normal /sportsbook/ page in Contest Mode (?contest=justbet-mlb).
              This dashboard is status-only by design. -->
 
-        <!-- ========================= REGISTERED PARTICIPANTS (single authoritative list) =========================
-             The full registered-participant list lives ONLY on /contests/justbet-mlb/participants/.
-             Do NOT add a second registration table/board on this dashboard — one authoritative
-             list avoids inconsistent counts/confusion. See DEVELOPMENT_RULES
-             "Single authoritative contest participants list". -->
-        <section class="section panel" id="participants-cta">
-            <div class="section-head">
-                <h2>Registered Participants</h2>
-            </div>
-            <p class="lead">See the full, official list of players registered for the JustBet MLB contest on the participants page.</p>
-            <a class="cta-primary" href="/contests/justbet-mlb/participants/" style="display:inline-flex;align-items:center;gap:10px;">
-                <i class="fa-solid fa-users"></i> View Registered Participants
-            </a>
-        </section>
-
-        <!-- ========================= CONTEST GRID =========================
-             Rows = contestants, Columns = today's games + any game already
-             referenced by a contest pick. Each cell: dash (no pick),
-             "Sealed" (pick exists, game not started — server withholds the
-             selection), or the revealed pick (game started). Reveal state is
-             100% driven by the API's per-row `sealed` flag, which the backend
-             computes from game_commence_time. No pregame selection can leak. -->
+        <!-- ========================= REGISTERED MEMBERS (REG_MEMBERS_FULL_20260605) =========================
+             COUNT INTEGRITY: the "Registered" stat above and this list render the SAME
+             /registrations entries array — every registered entry shows, NO display-layer
+             fake-filtering. The count can never disagree with the rendered rows.
+             Detailed graded-stats view stays on /contests/justbet-mlb/participants/. -->
         <style>
-            #contest-grid-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid rgba(148,163,184,0.16); border-radius: 12px; }
-            table.cgrid { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 0.86rem; }
-            table.cgrid th, table.cgrid td { padding: 10px 12px; text-align: center; border-bottom: 1px solid rgba(148,163,184,0.10); border-right: 1px solid rgba(148,163,184,0.07); white-space: nowrap; }
-            table.cgrid thead th { position: sticky; top: 0; background: #0f1722; color: #c8e7ff; font-weight: 800; font-size: 0.74rem; letter-spacing: 0.04em; text-transform: uppercase; z-index: 2; }
-            table.cgrid th.cgrid-game small { display:block; color:#7e8aa0; font-weight:600; font-size:0.68rem; letter-spacing:0; text-transform:none; margin-top:3px; }
-            table.cgrid th.cgrid-user, table.cgrid td.cgrid-user { position: sticky; left: 0; background: #131c28; text-align: left; font-weight: 800; color: #e6edf6; z-index: 1; }
-            table.cgrid thead th.cgrid-user { z-index: 3; }
-            .cgrid-dash { color: #4a5568; }
-            .cgrid-sealed { display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:999px; background:rgba(148,163,184,0.12); color:#c5cfdb; border:1px solid rgba(148,163,184,0.30); font-weight:700; font-size:0.78rem; }
-            .cgrid-pick { display:flex; flex-direction:column; gap:2px; line-height:1.2; }
-            .cgrid-pick .sel { font-weight:800; color:#fff; }
-            .cgrid-pick .meta { font-size:0.72rem; color:#9fb0c4; }
-            .cgrid-pick.res-won .sel { color:#34d399; }
-            .cgrid-pick.res-lost .sel { color:#f87171; }
-            .cgrid-pick.res-push .sel, .cgrid-pick.res-void .sel { color:#fbbf24; }
-            .cgrid-disclosure { font-size:0.86rem; color:#cbd5e1; background:rgba(56,189,248,0.08); border:1px solid rgba(56,189,248,0.24); border-radius:10px; padding:10px 14px; margin:0 0 14px; }
-            .cgrid-disclosure i { color:#38bdf8; margin-right:7px; }
-            .lb-table { border-collapse: collapse; width: 100%; }
-            .lb-table th, .lb-table td { padding: 10px 12px; text-align: right; border-bottom: 1px solid rgba(148,163,184,0.10); white-space: nowrap; }
-            .lb-table th:first-child, .lb-table td:first-child, .lb-table th:nth-child(2), .lb-table td:nth-child(2) { text-align: left; }
-            .lb-table thead th { color:#c8e7ff; font-size:0.72rem; letter-spacing:0.04em; text-transform:uppercase; font-weight:800; }
-            .lb-pos { color:#34d399; font-weight:800; } .lb-neg { color:#f87171; font-weight:800; } .lb-zero { color:#9fb0c4; font-weight:700; }
+            .members-table { border-collapse: collapse; width: 100%; }
+            .members-table th, .members-table td { padding: 9px 14px; text-align: left; border-bottom: 1px solid rgba(148,163,184,0.10); white-space: nowrap; }
+            .members-table th:last-child, .members-table td:last-child { text-align: right; }
+            .members-table thead th { color: #c8e7ff; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 800; }
+            .members-table td.m-name { font-weight: 800; color: #e6edf6; }
+            .members-table .m-num { color: var(--faint); font-weight: 700; width: 42px; }
+            .members-status { color: #34d399; font-weight: 800; font-size: 0.82rem; }
+            .members-foot { margin-top: 12px; color: var(--muted); font-size: 0.85rem; }
+            .members-foot a { color: #5eead4; font-weight: 700; }
         </style>
-        <section class="section panel" id="contest-grid-section">
+        <section class="section panel" id="registered-members">
             <div class="section-head">
-                <h2>Contest Board</h2>
-                <button class="refresh-btn" id="refresh-grid"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+                <h2>Registered Members</h2>
+                <button class="refresh-btn" id="refresh-members"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
             </div>
-            <p class="cgrid-disclosure"><i class="fa-solid fa-lock"></i>Contest picks are sealed until the selected game starts. Once the game begins, your pick will appear publicly on the contest board.</p>
-            <div id="contest-grid-wrap">
-                <div class="empty-state" id="cgrid-empty"><i class="fa-solid fa-hourglass-start"></i>Loading contest board…</div>
-                <table class="cgrid" id="cgrid-table" hidden>
-                    <thead><tr id="cgrid-head"></tr></thead>
-                    <tbody id="cgrid-body"></tbody>
+            <p class="lead">Every TrustMyRecord member officially registered for the JustBet MLB contest. TMR usernames only — no sportsbook account details are ever shown.</p>
+            <div class="table-wrap">
+                <table class="members-table" aria-label="Registered contest members">
+                    <thead><tr><th class="m-num">#</th><th>Member</th><th>Status</th></tr></thead>
+                    <tbody id="members-body"><tr><td colspan="3"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading registered members…</div></td></tr></tbody>
                 </table>
             </div>
+            <p class="members-foot" id="members-foot"></p>
         </section>
 
-        <!-- ========================= LEADERBOARD ========================= -->
-        <section class="section panel" id="contest-leaderboard-section">
+        <!-- ========================= CONTEST BOARD PLACEHOLDER =========================
+             The full contestants-x-games pick grid was intentionally REMOVED pre-launch
+             (June 5, 2026). Do NOT render a grid, leaderboard, or any pick/standings data
+             before the contest officially begins. This placeholder is the only allowed
+             pre-launch board state. -->
+        <section class="section panel" id="contest-board-placeholder">
             <div class="section-head">
-                <h2>Leaderboard</h2>
-                <button class="refresh-btn" id="refresh-lb"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+                <h2>Official Contest Board</h2>
             </div>
-            <p class="lead">Standings update as contest picks are graded. Contest record is fully separate from public TrustMyRecord profiles.</p>
-            <div class="table-wrap">
-                <table class="lb-table" aria-label="Contest leaderboard">
-                    <thead><tr><th>#</th><th>Contestant</th><th>Picks</th><th>W-L-P</th><th>Win %</th><th>Units</th></tr></thead>
-                    <tbody id="lb-body"><tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading leaderboard…</div></td></tr></tbody>
-                </table>
+            <div class="empty-state" style="padding: 42px 22px;">
+                <i class="fa-solid fa-hourglass-start"></i>
+                The contest has not started yet. The official contest board — every contestant's sealed picks, results, and live standings — will appear here the moment the contest begins.
             </div>
         </section>
 
@@ -486,28 +456,14 @@
         const CONTEST_ID = 'justbet-mlb';
         // PRE-LAUNCH GATE (authoritative, set by Nima — do NOT derive from the
         // API's starts_at, which holds stale QA placeholder dates).
-        // While true the contest is NOT live: the LEADERBOARD never shows records
-        // (W-L-P / units / win% / picks-used). The CONTEST GRID still renders its
-        // real launch-ready structure (registered contestants x the day's games);
-        // cells show dash / Sealed / revealed strictly from real contest picks.
+        // While true the contest is NOT live: the page shows ONLY contest status,
+        // the full Registered Members list, and the contest-board placeholder.
+        // The pick grid + leaderboard were removed pre-launch (June 5, 2026) and
+        // must only be rebuilt from real contest picks AFTER the contest begins.
         // Flip to false ONLY when launch + graded results are approved.
         const PRELAUNCH = true;
         const API_BASE = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
         const API = (path) => `${API_BASE}/api/contests/${CONTEST_ID}${path}`;
-
-        // Real-contestant filter: keep registered entrants out of the public grid
-        // when they are known seed/test/demo accounts. Display-layer only — no
-        // registration rows or user accounts are deleted. Extend KNOWN_FAKES as
-        // needed; the prefix patterns catch automated QA/seed/test/demo accounts.
-        const KNOWN_FAKES = new Set(['NobodyImportant74', 'patrick9']);
-        const FAKE_PREFIX = /^(qa[_-]|test[_-]?|seed[_-]?|demo[_-]?|tmrtest)/i;
-        const isRealContestant = (u) => {
-            const name = String(u || '').trim();
-            if (!name) return false;
-            if (KNOWN_FAKES.has(name)) return false;
-            if (FAKE_PREFIX.test(name)) return false;
-            return true;
-        };
 
         const $ = (sel) => document.querySelector(sel);
         const fmtOdds = (n) => {
@@ -550,447 +506,50 @@
             } catch { contestLaunched = false; }
         }
 
-        // Registration TABLE removed from the dashboard (it duplicated the
-        // authoritative /participants/ page). We still pull the count here to
-        // keep the "Registered" stat in sync with the participants page, which
-        // counts every entry with a username (no display-only fake filter).
-        async function loadRegistrations() {
+        // REGISTERED MEMBERS (REG_MEMBERS_FULL_20260605)
+        // COUNT INTEGRITY: the "Registered" stat AND the rendered member rows both
+        // come from this single `entries` array. Every registration with a username
+        // renders — no display-layer fake-filtering, so count always equals rows.
+        async function loadMembers() {
+            const body = $('#members-body');
+            const foot = $('#members-foot');
+            const stat = $('#stat-entrants');
             try {
                 const res = await fetch(API('/registrations'), { credentials: 'include' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
                 const data = await res.json();
                 const raw = Array.isArray(data) ? data : (data.entries || []);
-                const entries = raw.filter(e => e && (e.username || e.name));
-                const el = $('#stat-entrants');
-                if (el) el.textContent = entries.length;
-            } catch {
-                const el = $('#stat-entrants');
-                if (el) el.textContent = '0';
-            }
-        }
-
-        const MARKET_LABEL = { h2h: 'Moneyline', spreads: 'Run Line', totals: 'Total' };
-
-        function teamShort(name) {
-            const parts = String(name || '').split(' ').filter(Boolean);
-            return parts[parts.length - 1] || name || '';
-        }
-
-        function chipDataset(market, selection, line, odds) {
-            return `data-mkt="${escapeAttr(market)}" data-sel="${escapeAttr(selection)}" data-line="${escapeAttr(line ?? '')}" data-odds="${escapeAttr(odds ?? '')}"`;
-        }
-
-        async function loadOddsBoard() {
-            const root = document.getElementById('jb-board-rows');
-            if (!root) return;
-            root.innerHTML = `<div class="jb-board-empty"><i class="fa-solid fa-hourglass-start"></i>Loading today's slate…</div>`;
-            try {
-                const [gamesResp, espnResp] = await Promise.all([
-                    fetch(API('/games'), { credentials: 'include' }),
-                    fetch('https://site.api.espn.com/apis/v2/scoreboard/header?sport=baseball&league=mlb'),
-                ]);
-                if (!gamesResp.ok) throw new Error(`games HTTP ${gamesResp.status}`);
-                const gamesData = await gamesResp.json();
-                let oddsById = {};
-                let metaById = {};
-                if (espnResp.ok) {
-                    const espnData = await espnResp.json();
-                    const leagues = ((espnData.sports || [])[0] || {}).leagues || [];
-                    const events = (leagues[0] || {}).events || [];
-                    for (const e of events) {
-                        oddsById[String(e.id)] = e.odds || null;
-                        const comps = e.competitors || [];
-                        const away = comps.find(c => c.homeAway === 'away') || comps[1] || {};
-                        const home = comps.find(c => c.homeAway === 'home') || comps[0] || {};
-                        metaById[String(e.id)] = {
-                            awayLogo: away.logo || null, awayAbbr: away.abbreviation || null, awayColor: away.color || null,
-                            homeLogo: home.logo || null, homeAbbr: home.abbreviation || null, homeColor: home.color || null,
-                        };
-                    }
-                }
-                const rawGames = gamesData.games || [];
-                // Dedupe matchup duplicates (e.g. `espn_*` + `an_*` for the same game).
-                // Prefer the variant that has live ESPN odds, otherwise keep the first.
-                const dedup = new Map();
-                for (const g of rawGames) {
-                    const key = `${g.away_team}@${g.home_team}@${g.commence_time}`;
-                    const espnId = String(g.id).replace(/^espn_/, '');
-                    const hasOdds = !!oddsById[espnId];
-                    const existing = dedup.get(key);
-                    if (!existing) { dedup.set(key, { g, hasOdds }); continue; }
-                    if (hasOdds && !existing.hasOdds) dedup.set(key, { g, hasOdds });
-                }
-                const games = Array.from(dedup.values()).map(v => v.g);
-                if (!games.length) {
-                    root.innerHTML = `<div class="jb-board-empty"><i class="fa-solid fa-calendar-xmark"></i>No games on the slate.</div>`;
-                    return;
-                }
-                root.innerHTML = games.map(g => {
-                    const espnId = String(g.id).replace(/^espn_/, '');
-                    const o = oddsById[espnId] || {};
-                    const m = metaById[espnId] || {};
-                    const ml = o.moneyline || {};
-                    const rl = o.pointSpread || {};
-                    const tot = o.total || {};
-                    const tdisp = g.commence_time ? `${fmtTime(g.commence_time)} ET` : '';
-                    const matchup = `${g.away_team} @ ${g.home_team}`;
-                    const awayAbbr = m.awayAbbr || teamShort(g.away_team);
-                    const homeAbbr = m.homeAbbr || teamShort(g.home_team);
-                    const awayLogo = m.awayLogo || '';
-                    const homeLogo = m.homeLogo || '';
-
-                    const pickOdds = (side, fallback) => (side?.current?.odds && side.current.odds !== 'OFF') ? side.current.odds : (side?.close?.odds || fallback || '');
-                    const pickLine = (side, fallback) => (side?.current?.line && side.current.line !== 'OFF') ? side.current.line : (side?.close?.line || fallback || '');
-
-                    const mlAway = pickOdds(ml.away);
-                    const mlHome = pickOdds(ml.home);
-                    const rlAwayOdds = pickOdds(rl.away);
-                    const rlAwayLine = pickLine(rl.away);
-                    const rlHomeOdds = pickOdds(rl.home);
-                    const rlHomeLine = pickLine(rl.home);
-                    const totLineRaw = pickLine(tot.over);
-                    const totLine = String(totLineRaw).replace(/^[ou]/i, '');
-                    const overOdds = pickOdds(tot.over);
-                    const underOdds = pickOdds(tot.under);
-
-                    const dash = '—';
-                    const chip = (mkt, sel, line, odds, leftLabel, rightLabel) => {
-                        const isOff = !odds || odds === 'OFF';
-                        const oddsTxt = isOff ? dash : odds;
-                        return `<button type="button" class="jb-chip" ${chipDataset(mkt, sel, line, isOff ? '' : odds)}${isOff ? ' disabled' : ''}>
-                          <span>${leftLabel}</span><span class="jb-odds">${escapeHtml(String(oddsTxt))}${rightLabel ? '' : ''}</span>
-                        </button>`;
-                    };
-
-                    const teamCell = (logo, name, abbr) => `
-                        <div class="jb-team">
-                          ${logo ? `<img class="jb-team-logo" src="${escapeAttr(logo)}" alt="${escapeAttr(abbr)} logo" loading="lazy" onerror="this.style.visibility='hidden'">` : `<span class="jb-team-logo jb-team-logo--fallback">${escapeHtml(abbr)}</span>`}
-                          <div class="jb-team-text"><span class="jb-team-abbr">${escapeHtml(abbr)}</span><span class="jb-team-name">${escapeHtml(name)}</span></div>
-                        </div>`;
-                    return `
-                    <div class="jb-row" data-game-id="${escapeAttr(g.id)}">
-                      <div class="jb-matchup">
-                        <div class="jb-matchup-teams">
-                          ${teamCell(awayLogo, g.away_team, awayAbbr)}
-                          <span class="jb-at">@</span>
-                          ${teamCell(homeLogo, g.home_team, homeAbbr)}
-                        </div>
-                        <span class="jb-time">${escapeHtml(tdisp)}</span>
-                      </div>
-                      <div class="jb-chip-pair">
-                        ${chip('h2h', g.away_team, '', mlAway, escapeHtml(awayAbbr))}
-                        ${chip('h2h', g.home_team, '', mlHome, escapeHtml(homeAbbr))}
-                      </div>
-                      <div class="jb-chip-pair">
-                        ${chip('spreads', g.away_team, rlAwayLine, rlAwayOdds, `${escapeHtml(awayAbbr)} <span class="jb-line">${escapeHtml(String(rlAwayLine || dash))}</span>`)}
-                        ${chip('spreads', g.home_team, rlHomeLine, rlHomeOdds, `${escapeHtml(homeAbbr)} <span class="jb-line">${escapeHtml(String(rlHomeLine || dash))}</span>`)}
-                      </div>
-                      <div class="jb-chip-pair">
-                        ${chip('totals', `Over ${totLine}`, totLine, overOdds, `O <span class="jb-line">${escapeHtml(String(totLine || dash))}</span>`)}
-                        ${chip('totals', `Under ${totLine}`, totLine, underOdds, `U <span class="jb-line">${escapeHtml(String(totLine || dash))}</span>`)}
-                      </div>
-                    </div>`;
-                }).join('');
-
-                root.querySelectorAll('.jb-chip').forEach(btn => {
-                    btn.addEventListener('click', () => stageFromChip(btn));
-                });
-            } catch (err) {
-                root.innerHTML = `<div class="jb-board-empty"><i class="fa-solid fa-circle-exclamation"></i>Slate failed to load. <button type="button" class="refresh-btn" id="jb-retry" style="margin-top:10px;">Retry</button></div>`;
-                const r = document.getElementById('jb-retry');
-                if (r) r.addEventListener('click', loadOddsBoard);
-            }
-        }
-
-        function stageFromChip(btn) {
-            const row = btn.closest('.jb-row');
-            if (!row) return;
-            const gid = row.dataset.gameId;
-            const mkt = btn.dataset.mkt;
-            const sel = btn.dataset.sel;
-            const line = btn.dataset.line;
-            const odds = btn.dataset.odds;
-            const stage = document.getElementById('jb-slip-stage');
-            if (!odds) {
-                if (stage) {
-                    stage.classList.remove('is-staged');
-                    stage.innerHTML = `<div class="jb-stage-empty">No live odds for that selection. Pick another market.</div>`;
-                }
-                return;
-            }
-            const oddsNum = Number(String(odds).replace('+',''));
-            document.getElementById('cf-game').value = gid;
-            document.getElementById('cf-market').value = mkt;
-            document.getElementById('cf-selection').value = sel;
-            document.getElementById('cf-line').value = (line && mkt !== 'h2h') ? line : '';
-            document.getElementById('cf-odds').value = String(oddsNum);
-
-            document.querySelectorAll('.jb-chip.is-staged').forEach(c => c.classList.remove('is-staged'));
-            btn.classList.add('is-staged');
-
-            const matchupNode = row.querySelector('.jb-matchup');
-            const matchupText = (matchupNode && matchupNode.firstChild) ? matchupNode.firstChild.textContent.trim() : '';
-            stage.classList.add('is-staged');
-            stage.innerHTML = `
-                <div class="jb-stage-matchup">${escapeHtml(matchupText)} · ${escapeHtml(MARKET_LABEL[mkt] || mkt)}</div>
-                <div class="jb-stage-pick">${escapeHtml(sel)}${(line && mkt !== 'h2h') ? ` <span style="color:#c9b27a;">${escapeHtml(String(line))}</span>` : ''}</div>
-                <div class="jb-stage-odds">${escapeHtml(String(odds))}</div>
-            `;
-        }
-
-        function isSignedIn() {
-            try {
-                if (window.TMR_AUTH && window.TMR_AUTH.user) return true;
-                if (window.auth && window.auth.currentUser) return true;
-                const session = localStorage.getItem('trustmyrecord_session');
-                if (session) {
-                    const parsed = JSON.parse(session);
-                    const user = parsed && (parsed.user || parsed);
-                    if (user && (user.username || user.email)) return true;
-                }
-                if (localStorage.getItem('currentUser')) return true;
-                const tokenKeys = ['tmr_auth_token','trustmyrecord_token','accessToken','access_token','token','tmr_token'];
-                for (const k of tokenKeys) { if (localStorage.getItem(k)) return true; }
-            } catch (_) { /* fall through */ }
-            return false;
-        }
-
-        function getAuthToken() {
-            const tokenKeys = ['tmr_auth_token','trustmyrecord_token','accessToken','access_token','token','tmr_token'];
-            for (const k of tokenKeys) {
-                try { const v = localStorage.getItem(k); if (v) return v; } catch (_) {}
-            }
-            return null;
-        }
-
-        async function loadMyStatus() {
-            const indicator = $('#picks-used-indicator');
-            const text = $('#picks-used-text');
-            if (!isSignedIn()) { if (indicator) indicator.style.display = 'none'; return; }
-            try {
-                const token = getAuthToken();
-                const res = await fetch(API('/my-status'), {
-                    credentials: 'include',
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-                });
-                if (!res.ok) { if (indicator) indicator.style.display = 'none'; return; }
-                const d = await res.json();
-                if (text) text.textContent = `${d.picks_used} / ${d.picks_max} picks used`;
-                if (indicator) indicator.style.display = 'inline-flex';
-                const submitBtn = $('#contest-pick-form button[type="submit"]');
-                if (submitBtn && d.picks_used >= d.picks_max) {
-                    submitBtn.disabled = true;
-                    const msg = $('#submit-msg');
-                    if (msg) { msg.style.color = '#ffe4a3'; msg.textContent = 'Contest pick limit reached (50 / 50). No further submissions.'; }
-                }
-            } catch { if (indicator) indicator.style.display = 'none'; }
-        }
-
-        function refreshAuthGate() {
-            const preGate = $('#pre-launch-gate');
-            const authGate = $('#auth-gate');
-            const form = $('#contest-pick-form');
-            const fields = form.querySelectorAll('input, select, button');
-            if (!contestLaunched) {
-                preGate.hidden = false;
-                authGate.hidden = true;
-                fields.forEach(el => el.disabled = true);
-                return;
-            }
-            preGate.hidden = true;
-            if (!isSignedIn()) {
-                authGate.hidden = false;
-                fields.forEach(el => el.disabled = true);
-            } else {
-                authGate.hidden = true;
-                fields.forEach(el => el.disabled = false);
-            }
-        }
-
-        async function submitPick(evt) {
-            evt.preventDefault();
-            const msg = $('#submit-msg');
-            msg.textContent = '';
-            const fd = new FormData(evt.target);
-            const lineVal = (fd.get('line') || '').toString().trim();
-            const payload = {
-                contest_id: CONTEST_ID,
-                game_id: fd.get('game_id'),
-                market_type: fd.get('market_type'),
-                selection: (fd.get('selection') || '').toString().trim(),
-                line: lineVal === '' ? null : Number(lineVal),
-                odds: Number(fd.get('odds')),
-                units: Number(fd.get('units')),
-                stake_mode: fd.get('stake_mode') || 'risk',
-                attest_justbet_signup: !!fd.get('attest_justbet_signup'),
-            };
-            if (!payload.attest_justbet_signup) { msg.textContent = 'You must confirm the JustBet signup attestation.'; return; }
-            try {
-                const token = getAuthToken();
-                const res = await fetch(API('/picks'), {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-                    },
-                    body: JSON.stringify(payload),
-                });
-                if (!res.ok) {
-                    const j = await res.json().catch(() => ({}));
-                    throw new Error(j.error || `HTTP ${res.status}`);
-                }
-                msg.style.color = '#34d399';
-                msg.textContent = 'Sealed contest pick submitted. Reveals at first pitch.';
-                evt.target.reset();
-                loadPicks();
-                loadLeaderboard();
-                loadMyStatus();
-            } catch (err) {
-                msg.style.color = '#f87171';
-                msg.textContent = `Submit failed: ${err.message}`;
-            }
-        }
-
-        const gameLabel = (g) => `${g.away_team} @ ${g.home_team}`;
-
-        // Build the launch-ready contestants x games grid.
-        //   Rows    = real registered entrants (from /registrations, fake-filtered).
-        //   Columns = the day's contest board (from /games), plus any game already
-        //             referenced by a real pick so revealed picks always have a column.
-        //   Cells   = real contest picks only (from /picks): dash (no pick),
-        //             Sealed (pick + game not started), or revealed pick (game started).
-        // Renders the real structure even pre-launch; never invents picks or records.
-        async function loadGrid() {
-            const empty = $('#cgrid-empty');
-            const table = $('#cgrid-table');
-            try {
-                const [regResp, gamesResp, picksResp] = await Promise.all([
-                    fetch(API('/registrations'), { credentials: 'include' }),
-                    // Full contest-date slate (started + in-progress + completed) so every
-                    // game gets a column; sealed/revealed/result still come from real picks.
-                    fetch(API('/games?scope=full'), { credentials: 'include' }),
-                    fetch(API('/picks'), { credentials: 'include' }),
-                ]);
-                if (!picksResp.ok) throw new Error(`picks HTTP ${picksResp.status}`);
-                const gamesData = gamesResp.ok ? await gamesResp.json() : { games: [] };
-                const picksData = await picksResp.json();
-                const picks = (picksData.picks || []).filter(p => isRealContestant(p.username));
-
-                let regRows = [];
-                if (regResp.ok) {
-                    const rd = await regResp.json();
-                    regRows = Array.isArray(rd) ? rd : (rd.entries || []);
-                }
-
-                // Column map keyed by game label -> { label, start }.
-                const colMap = new Map();
-                (gamesData.games || []).forEach(g => colMap.set(gameLabel(g), { label: gameLabel(g), start: g.commence_time }));
-                picks.forEach(p => { if (!colMap.has(p.game)) colMap.set(p.game, { label: p.game, start: p.game_start_at }); });
-                const cols = [...colMap.values()].sort((a, b) => new Date(a.start || 0) - new Date(b.start || 0));
-
-                // Rows = real registered contestants (union any real pick author, defensively).
-                const users = [...new Set([
-                    ...regRows.map(r => r && r.username).filter(isRealContestant),
-                    ...picks.map(p => p.username),
-                ])].sort((a, b) => a.localeCompare(b));
-
-                // Lookup: username||label -> pick.
-                const byCell = new Map();
-                picks.forEach(p => byCell.set(`${p.username}||${p.game}`, p));
-
-                if (!users.length) {
-                    table.hidden = true;
-                    empty.hidden = false;
-                    empty.innerHTML = `<i class="fa-solid fa-user-plus"></i>Registered contestants will appear here. Be the first to register.`;
-                    return;
-                }
-                if (!cols.length) {
-                    table.hidden = true;
-                    empty.hidden = false;
-                    empty.innerHTML = `<i class="fa-solid fa-baseball"></i>Today's MLB matchups will appear across the top once the daily board is posted.`;
-                    return;
-                }
-
-                $('#cgrid-head').innerHTML = `<th class="cgrid-user">Contestant</th>` + cols.map(c =>
-                    `<th class="cgrid-game">${escapeHtml(c.label)}<small>${fmtTime(c.start)}</small></th>`
-                ).join('');
-
-                $('#cgrid-body').innerHTML = users.map(u => {
-                    const cells = cols.map(c => {
-                        const p = byCell.get(`${u}||${c.label}`);
-                        if (!p) return `<td><span class="cgrid-dash">—</span></td>`;
-                        if (p.sealed) return `<td><span class="cgrid-sealed"><i class="fa-solid fa-lock"></i> Sealed</span></td>`;
-                        const res = (p.result && p.result !== 'pending') ? p.result : '';
-                        const cls = res === 'won' ? 'res-won' : res === 'lost' ? 'res-lost' : res === 'push' ? 'res-push' : res === 'void' ? 'res-void' : '';
-                        const lbl = MARKET_LABEL[p.market_type] || p.market_type || '';
-                        return `<td><div class="cgrid-pick ${cls}"><span class="sel">${escapeHtml(p.selection)}</span><span class="meta">${escapeHtml(lbl)} · ${fmtOdds(p.odds)}</span></div></td>`;
-                    }).join('');
-                    return `<tr><td class="cgrid-user">${escapeHtml(u)}</td>${cells}</tr>`;
-                }).join('');
-
-                empty.hidden = true;
-                table.hidden = false;
-            } catch (err) {
-                table.hidden = true;
-                empty.hidden = false;
-                empty.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i>Contest board temporarily unavailable. Refreshing shortly.`;
-            }
-        }
-
-        async function loadLeaderboard() {
-            const body = $('#lb-body');
-            if (PRELAUNCH) {
-                body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-trophy"></i>Standings appear only after the contest officially begins.</div></td></tr>`;
-                return;
-            }
-            try {
-                const res = await fetch(API('/leaderboard'), { credentials: 'include' });
-                if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                const data = await res.json();
-                const entries = data.entries || [];
+                const entries = raw
+                    .filter(e => e && (e.username || e.name))
+                    .sort((a, b) => String(a.username || a.name).localeCompare(String(b.username || b.name), undefined, { sensitivity: 'base' }));
+                if (stat) stat.textContent = entries.length;
                 if (!entries.length) {
-                    body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-trophy"></i>No graded contest picks yet. Standings appear once picks grade.</div></td></tr>`;
+                    body.innerHTML = `<tr><td colspan="3"><div class="empty-state"><i class="fa-solid fa-user-plus"></i>No registered members yet. Be the first to register.</div></td></tr>`;
+                    if (foot) foot.textContent = '';
                     return;
                 }
-                body.innerHTML = entries.map(e => {
-                    const net = Number(e.units_net);
-                    const netCls = !Number.isFinite(net) || net === 0 ? 'lb-zero' : net > 0 ? 'lb-pos' : 'lb-neg';
-                    const pct = Number.isFinite(Number(e.win_pct)) ? `${(Number(e.win_pct) * 100).toFixed(1)}%` : '—';
-                    return `<tr>
-                        <td>${e.rank ?? '—'}</td>
-                        <td><strong>${escapeHtml(e.username || '—')}</strong></td>
-                        <td>${e.picks_used ?? 0}/${e.picks_max ?? 50}</td>
-                        <td>${e.wins ?? 0}-${e.losses ?? 0}-${e.pushes ?? 0}</td>
-                        <td>${pct}</td>
-                        <td class="${netCls}">${net > 0 ? '+' : ''}${fmtUnits(e.units_net)}</td>
-                    </tr>`;
-                }).join('');
+                body.innerHTML = entries.map((e, i) =>
+                    `<tr><td class="m-num">${i + 1}</td><td class="m-name">${escapeHtml(e.username || e.name)}</td><td><span class="members-status"><i class="fa-solid fa-check"></i> Registered</span></td></tr>`
+                ).join('');
+                if (foot) foot.innerHTML = `Showing all <strong>${entries.length} of ${entries.length}</strong> registered members. Detailed public stats: <a href="/contests/justbet-mlb/participants/">participants page</a>.`;
             } catch {
-                body.innerHTML = `<tr><td colspan="6"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Leaderboard temporarily unavailable.</div></td></tr>`;
+                if (stat) stat.textContent = '—';
+                body.innerHTML = `<tr><td colspan="3"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Member list temporarily unavailable. Try refresh.</div></td></tr>`;
+                if (foot) foot.textContent = '';
             }
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            // Pick entry was removed from this dashboard. Picks are entered on
-            // /sportsbook/?contest=justbet-mlb. We initialize the status,
-            // registration board, contest grid, and leaderboard here. Refresh
-            // buttons are wired defensively (some controls may not exist if
-            // older markup is cached).
+            // Pre-launch dashboard: status + full Registered Members list only.
+            // Pick grid/leaderboard return after launch, built from real picks.
             loadStatus();
-            loadRegistrations();
-            loadGrid();
-            loadLeaderboard();
+            loadMembers();
             const rs = $('#refresh-status');
-            if (rs) rs.addEventListener('click', () => { loadStatus(); loadRegistrations(); });
-            const rr = $('#refresh-reg');
-            if (rr) rr.addEventListener('click', loadRegistrations);
-            const rg = $('#refresh-grid');
-            if (rg) rg.addEventListener('click', loadGrid);
-            const rl = $('#refresh-lb');
-            if (rl) rl.addEventListener('click', loadLeaderboard);
-            // Auto-refresh so sealed picks reveal at first pitch without a manual reload.
-            setInterval(() => { loadGrid(); loadLeaderboard(); }, 60000);
+            if (rs) rs.addEventListener('click', () => { loadStatus(); loadMembers(); });
+            const rm = $('#refresh-members');
+            if (rm) rm.addEventListener('click', loadMembers);
+            // Keep the member list fresh without a manual reload.
+            setInterval(loadMembers, 120000);
         });
     })();
     </script>
