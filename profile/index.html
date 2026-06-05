@@ -8995,6 +8995,36 @@
                 '<p class="profile-empty-title">No online gaming record yet</p>' +
                 '<p class="profile-empty-body">Game challenges this member completes will show up here, separate from their picks.</p></div>';
         }
+        // ARENA_PHASE1_20260605: public Arena extras - free prediction record,
+        // Arena Points balance, streamer approval status. Appended under the
+        // gaming record; never mixed into the sports pick record above.
+        async function loadArenaExtras(uname, body) {
+            try {
+                const parts = [];
+                try {
+                    const rec = await api.request('/arena/predictions/record/' + encodeURIComponent(uname));
+                    const r = (rec && rec.record) || {};
+                    if (((r.wins || 0) + (r.losses || 0) + (r.pending || 0)) > 0 || rec.balance != null) {
+                        parts.push('<span><b style="color:var(--text,#f1f6fc);">' + (r.wins || 0) + '-' + (r.losses || 0) + '</b> Arena Pick record</span>');
+                        if (r.pending) parts.push('<span><b style="color:var(--text,#f1f6fc);">' + r.pending + '</b> pending</span>');
+                        if (rec.balance != null) parts.push('<span><b style="color:var(--text,#f1f6fc);">' + Number(rec.balance).toLocaleString() + '</b> Arena Points</span>');
+                    }
+                } catch (e) {}
+                try {
+                    const st = await api.request('/arena/streamer/status/' + encodeURIComponent(uname));
+                    if (st && st.streamer_status && st.streamer_status !== 'none') {
+                        parts.push('<span>Streamer status: <b style="color:var(--text,#f1f6fc);">' + esc(st.streamer_status) + '</b></span>');
+                    }
+                } catch (e) {}
+                if (!parts.length) return;
+                const wrap = document.createElement('div');
+                wrap.style.cssText = 'margin-top:14px;padding:12px 14px;border:1px solid rgba(148,163,184,0.18);border-radius:12px;background:rgba(255,255,255,0.02);';
+                wrap.innerHTML = '<div style="font-weight:800;margin-bottom:8px;color:var(--text,#f1f6fc);"><i class="fas fa-bullseye" style="color:var(--cyan,#2dd4bf);margin-right:6px;"></i>Arena</div>' +
+                    '<div style="display:flex;gap:18px;flex-wrap:wrap;color:var(--muted,#9fb0c3);font-size:13px;">' + parts.join('') + '</div>' +
+                    '<div style="margin-top:8px;color:var(--muted,#9fb0c3);font-size:11.5px;">Free predictions are for entertainment only. Arena Points have no cash value and cannot be purchased or withdrawn.</div>';
+                body.appendChild(wrap);
+            } catch (e) {}
+        }
         async function load() {
             if (loaded) return; loaded = true;
             const body = document.getElementById('profileGamingBody');
@@ -9007,7 +9037,7 @@
                 const games = (data && data.stats_by_game) ? data.stats_by_game : [];
                 const t = (data && data.totals) ? data.totals : {};
                 const tw = parseInt(t.total_wins) || 0, tl = parseInt(t.total_losses) || 0, td = parseInt(t.total_draws) || 0;
-                if (!games.length && !(tw + tl + td)) { body.innerHTML = emptyState(); return; }
+                if (!games.length && !(tw + tl + td)) { body.innerHTML = emptyState(); loadArenaExtras(uname, body); return; }
                 let html = '<div class="tmrx-ribbon" style="margin-bottom:14px;">' +
                     '<div class="tmrx-cell"><div class="tmrx-label">Gaming Record</div><div class="tmrx-value">' + tw + '-' + tl + (td ? '-' + td : '') + '</div><div class="tmrx-sub">W-L' + (td ? '-D' : '') + '</div></div>' +
                     '<div class="tmrx-cell"><div class="tmrx-label">Games Played</div><div class="tmrx-value">' + games.length + '</div><div class="tmrx-sub">titles with results</div></div>' +
@@ -9026,8 +9056,10 @@
                 });
                 html += '</div>';
                 body.innerHTML = html;
+                loadArenaExtras(uname, body);
             } catch (err) {
                 body.innerHTML = emptyState();
+                loadArenaExtras(uname, body);
             }
         }
         function onReady() {
