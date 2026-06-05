@@ -17,6 +17,7 @@
         ["/online-gaming/", "Online Gaming"],
         ["/mlb-the-show-stat-league/", "Stat League"],
         ["/arena/", "Arena"],
+        ["/arena/mlb-the-show/", "MLB The Show"],
         ["/challenges/", "Challenges"],
         ["/forum/", "Forums"],
         ["/polls/", "Polls"],
@@ -1082,6 +1083,8 @@
                     <div class="tmr-global-footer__links">
                         <a href="/feed/">Feed</a>
                         <a href="/forum/">Forum</a>
+                        <a href="/arena/leagues/">Arena Leagues</a>
+                        <a href="/arena/streaming/">Arena Streaming</a>
                         <a href="/hangout/">Hangout</a>
                         <a href="/trivia/">Trivia</a>
                     </div>
