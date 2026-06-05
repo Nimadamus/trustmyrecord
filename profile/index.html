@@ -208,6 +208,20 @@
             font-size: 0.94rem;
             margin-bottom: 12px;
         }
+        /* Role badge under the username: red ADMIN chip, role-based from the API. */
+        .profile-admin-badge {
+            display: inline-block;
+            margin: -6px 0 12px;
+            padding: 2px 9px;
+            border-radius: 3px;
+            background: #c0392b;
+            border: 1px solid #962d22;
+            color: #fff;
+            font-weight: 800;
+            font-size: 0.66rem;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+        }
         .profile-trust-row {
             display: flex;
             gap: 8px;
@@ -8834,6 +8848,7 @@
             '<div class="profile-eyebrow">Trust My Record profile</div>' +
             '<div class="profile-name">' + name + '</div>' +
             '<div class="profile-handle">@' + p.username + '</div>' +
+            (p.is_admin ? '<div><span class="profile-admin-badge">ADMIN</span></div>' : (p.is_moderator ? '<div><span class="profile-admin-badge">MOD</span></div>' : '')) +
             headlineHtml +
             '</div>' +
             '</div>' +
