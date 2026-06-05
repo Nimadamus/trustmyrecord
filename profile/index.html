@@ -7990,7 +7990,7 @@
                 '<li>Correlated Picks: <strong>' + d.correlated_pick_count + '</strong> (' + d.correlated_pick_rate.toFixed(1) + '% of record)</li>',
                 '<li>Alt-Line Exposure: <strong>' + d.alt_line_exposure_rate.toFixed(1) + '%</strong> (' + d.alt_line_exposure_count + ' stacked alt-line picks)</li>'
             ];
-            if (d.related_exposure_count > 0) items.push('<li>Related Same-Game Exposure: <strong>' + d.related_exposure_count + '</strong> overlapping positions (e.g. ML + run line on the same team)</li>');
+            if (d.related_exposure_count > 0) items.push('<li>Related Same-Game Exposure: <strong>' + d.related_exposure_count + '</strong> overlapping position' + (d.related_exposure_count === 1 ? '' : 's') + ' (e.g. ML + run line on the same team)</li>');
             if (d.has_conflicts) items.push('<li class="is-conflict">Opposite-Side Conflicts: <strong>' + d.conflict_count + '</strong> (both sides of the same market in one game)</li>');
             listEl.innerHTML = items.join('');
             detailEl.hidden = false;
