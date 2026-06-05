@@ -1074,6 +1074,7 @@
                         <a href="/sports-picks-leaderboard/">Sports Picks Leaderboard</a>
                         <a href="/verified-handicapper-records/">Verified Handicapper Records</a>
                         <a href="/sports-betting-record-tracker/">Sports Betting Record Tracker</a>
+                        <a href="/stats/">Stats Explained</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
