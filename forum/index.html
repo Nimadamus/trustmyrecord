@@ -126,6 +126,9 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 @media (max-width:760px){.fthread-row-avatar{flex-basis:24px;width:24px;height:24px;font-size:10px}}
 .fthread-author b{display:block;color:#222;margin-bottom:3px}
 .fthread-role{color:#444;font-size:11px;margin-bottom:7px}
+/* Role badge under the username: red ADMIN (or MOD) chip, role-based from the API. */
+.fadmin-badge{display:inline-block;margin:0 0 5px;padding:1px 7px;border-radius:3px;background:#c0392b;border:1px solid #962d22;color:#fff;font:bold 9px/1.6 Arial,Helvetica,sans-serif;letter-spacing:1.2px;text-transform:uppercase;vertical-align:middle}
+body.classic-forum .fadmin-badge{background:#c0392b !important;color:#fff !important;border:1px solid #962d22 !important}
 .fthread-fandom{display:inline-flex;align-items:center;gap:5px;margin:0 0 7px;padding:2px 8px;border-radius:999px;background:#e8f0ff;border:1px solid #b8ccf0;color:#1d3a6b;font:bold 10px Arial,Helvetica,sans-serif;letter-spacing:.2px}
 .fthread-fandom-dot{width:6px;height:6px;border-radius:50%;background:#2f6bd8;flex:none}
 .fthread-author-row{font-size:11px;line-height:1.35;margin-top:3px}
@@ -464,6 +467,8 @@ body.classic-forum .fpost-content a{color:#0033cc !important}
 .fpost-embed video{width:100%;max-height:480px;border-radius:6px;background:#000}
 .fpost-btn.is-delete{color:#b91c1c}
 .fpost-btn.is-delete:hover{background:#fee2e2;border-color:#fca5a5}
+.fpost-btn.is-mod{color:#7c2d12;border-color:#d8a48f;background:#fdf1ec}
+.fpost-btn.is-mod:hover{background:#f9ddd2;border-color:#c0392b;color:#5a1f0c}
 body.classic-forum .freply,
 body.classic-forum .freply h3,
 body.classic-forum .freply label,
@@ -1909,6 +1914,9 @@ function starterPostFromThread(thread) {
         is_thread_starter: true,
         is_edited: !!thread.is_edited,
         edited_at: thread.edited_at,
+        moderator_edited: !!thread.moderator_edited,
+        author_is_admin: !!thread.author_is_admin,
+        author_is_moderator: !!thread.author_is_moderator,
         like_count: numericValue(thread.like_count) || 0,
         liked_by_me: !!thread.liked_by_me,
         user_post_count: numericValue(thread.user_post_count),
@@ -1953,6 +1961,22 @@ function formatCount(value, fallback) {
     return n == null ? (fallback == null ? '0' : fallback) : String(n);
 }
 
+// Role-based badge under the username. Reads the role flags the API attaches
+// to every post/thread row (author_is_admin / author_is_moderator from
+// users.account_type) plus the /users/:username profile cache (is_admin).
+// Never shows for normal users.
+function authorIsAdmin(author) {
+    return !!(author && (author.author_is_admin || author.is_admin || String(author.account_type || '').toLowerCase() === 'admin'));
+}
+function authorIsModerator(author) {
+    return !!(author && (author.author_is_moderator || author.is_moderator || String(author.account_type || '').toLowerCase() === 'moderator'));
+}
+function authorRoleBadge(author) {
+    if (authorIsAdmin(author)) return '<div><span class="fadmin-badge">ADMIN</span></div>';
+    if (authorIsModerator(author)) return '<div><span class="fadmin-badge">MOD</span></div>';
+    return '';
+}
+
 function renderAuthorPanel(post) {
     var author = authorSource(post);
     var who = author.display_name || author.username || 'user';
@@ -1973,6 +1997,7 @@ function renderAuthorPanel(post) {
     return '<div class="fthread-author">'
         + '<div class="fthread-avatar">' + (avatar ? '<img src="' + escHtml(avatar) + '" alt="' + escHtml(who) + ' avatar">' : escHtml(initials)) + '</div>'
         + '<b>' + escHtml(who) + '</b>'
+        + authorRoleBadge(author)
         + '<div class="fthread-role">' + escHtml(role) + '</div>'
         + (hasFavTeam ? '<div class="fthread-fandom"><span class="fthread-fandom-dot"></span>' + escHtml(favTeam) + '</div>' : '')
         + '<div class="fthread-author-row">Joined: ' + escHtml(joined ? formatJoinedDate(joined) : 'Not available') + '</div>'
@@ -1993,7 +2018,11 @@ function renderThread() {
     var sessionUser = (typeof getForumSessionUser === 'function') ? getForumSessionUser() : null;
     var myUsername = sessionUser && sessionUser.username ? String(sessionUser.username).toLowerCase() : '';
     var myUserId = sessionUser && (sessionUser.id != null) ? String(sessionUser.id) : '';
-    var canModerate = !!(sessionUser && (sessionUser.is_admin || sessionUser.is_moderator || sessionUser.role === 'admin' || sessionUser.role === 'moderator'));
+    // Server-confirmed flag (set from GET /forum/threads/:id viewer payload)
+    // is the primary source; localStorage role flags are a fallback for fresh
+    // logins. The backend re-checks the role on every moderator endpoint.
+    var canModerate = window.__forumViewerIsModerator === true
+        || !!(sessionUser && (sessionUser.is_admin || sessionUser.is_moderator || sessionUser.role === 'admin' || sessionUser.role === 'moderator'));
     var isLoggedIn = !!sessionUser;
     window.__forumCachedPostsById = {};
     c.innerHTML = posts.map(function(p, idx) {
@@ -2013,8 +2042,10 @@ function renderThread() {
             + '<button type="button" class="fpost-btn" onclick="forumFocusReply()">Reply</button>'
             + (canEdit && postId ? '<button type="button" class="fpost-btn is-edit" onclick="forumEditPost(\'' + escHtml(postId) + '\')">Edit</button>' : '')
             + (canEdit && postId ? '<button type="button" class="fpost-btn is-delete" onclick="forumDeletePost(\'' + escHtml(postId) + '\')">Delete</button>' : '')
+            + (canModerate && p.is_thread_starter ? '<button type="button" class="fpost-btn is-mod" onclick="forumLockThread(this)">' + ((cachedThread && cachedThread.is_locked) ? 'Unlock Thread' : 'Lock Thread') + '</button>' : '')
+            + (canModerate && p.is_thread_starter ? '<button type="button" class="fpost-btn is-mod" onclick="forumPinThread(this)">' + ((cachedThread && cachedThread.is_pinned) ? 'Unpin Thread' : 'Pin Thread') + '</button>' : '')
             + '</div>';
-        var editedLine = (p.is_edited && p.edited_at) ? '<div class="fpost-edited" id="postEdited-' + escHtml(postId) + '">Last edited ' + escHtml(formatEditedDate(p.edited_at)) + '</div>' : '';
+        var editedLine = (p.is_edited && p.edited_at) ? '<div class="fpost-edited" id="postEdited-' + escHtml(postId) + '">Last edited ' + escHtml(formatEditedDate(p.edited_at)) + (p.moderator_edited ? ' by moderator' : '') + '</div>' : '';
         return '<div class="fthread-post" data-post-id="' + escHtml(postId) + '">'
             + renderAuthorPanel(p)
             + '<div class="fthread-body">'
@@ -2078,6 +2109,45 @@ async function forumDeletePost(postId) {
     } catch (err) {
         console.error('Delete error:', err, err && err.detail);
         alert((err && (err.message || err.detail)) || 'Failed to delete. Please try again.');
+    }
+}
+
+// Moderator: lock/unlock the current thread. Mod-only server-side.
+async function forumLockThread(btn) {
+    if (!cachedThread || !cachedThread.id) return;
+    var locking = !cachedThread.is_locked;
+    if (!window.confirm(locking ? 'Lock this thread? Members will no longer be able to reply.' : 'Unlock this thread and allow replies again?')) return;
+    if (btn) btn.disabled = true;
+    try {
+        var resp = await api.request('/forum/threads/' + encodeURIComponent(cachedThread.id) + '/lock', {
+            method: 'POST',
+            body: { locked: locking }
+        });
+        cachedThread.is_locked = !!(resp && resp.is_locked);
+        renderThread();
+    } catch (err) {
+        console.error('Lock thread error:', err, err && err.detail);
+        alert((err && (err.message || err.detail)) || 'Failed to lock/unlock thread.');
+        if (btn) btn.disabled = false;
+    }
+}
+
+// Moderator: pin/unpin the current thread. Mod-only server-side.
+async function forumPinThread(btn) {
+    if (!cachedThread || !cachedThread.id) return;
+    var pinning = !cachedThread.is_pinned;
+    if (btn) btn.disabled = true;
+    try {
+        var resp = await api.request('/forum/threads/' + encodeURIComponent(cachedThread.id) + '/pin', {
+            method: 'POST',
+            body: { pinned: pinning }
+        });
+        cachedThread.is_pinned = !!(resp && resp.is_pinned);
+        renderThread();
+    } catch (err) {
+        console.error('Pin thread error:', err, err && err.detail);
+        alert((err && (err.message || err.detail)) || 'Failed to pin/unpin thread.');
+        if (btn) btn.disabled = false;
     }
 }
 
@@ -2629,6 +2699,9 @@ async function loadThread(threadId) {
         var data = await api.request('/forum/threads/' + threadId);
         cachedThread = data.thread;
         cachedPosts = data.posts || [];
+        // Server-confirmed moderator flag for the current viewer (display only;
+        // the backend re-checks the role on every moderator endpoint).
+        window.__forumViewerIsModerator = !!(data.viewer && data.viewer.is_moderator);
         currentThreadTitle = cachedThread.title;
         // Set category info from thread if not already set
         if (cachedThread.category_slug) {
