@@ -24,6 +24,17 @@
         .support-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 14px 16px; }
         .support-item strong { display: block; color: var(--tmrp-text-primary); margin-bottom: 4px; }
         .support-item span { color: var(--tmrp-text-secondary); font-size: 14px; line-height: 1.5; }
+        /* CONTACT_FORM_20260605 */
+        .form-row { display: grid; grid-template-columns: 1fr; gap: 14px; margin-top: 14px; }
+        @media (min-width: 720px) { .form-row.cols-2 { grid-template-columns: 1fr 1fr; } }
+        .form-label { display: block; font-size: 13px; color: var(--tmrp-text-secondary); margin-bottom: 6px; font-weight: 600; letter-spacing: 0.02em; }
+        .form-required { color: var(--tmrp-neon-cyan); }
+        textarea.tmr-textarea { min-height: 160px; resize: vertical; }
+        .honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; opacity: 0; }
+        .alert { border-radius: 12px; padding: 14px 16px; margin-top: 16px; font-size: 14px; line-height: 1.5; display: none; }
+        .alert.is-shown { display: block; }
+        .alert-success { background: rgba(0, 255, 136, 0.08); border: 1px solid rgba(0, 255, 136, 0.32); color: #b6ffd9; }
+        .alert-error   { background: rgba(255, 80, 100, 0.10); border: 1px solid rgba(255, 80, 100, 0.36); color: #ffd0d6; }
     </style>
 </head>
 <body class="tmr-polished-page">
@@ -44,6 +55,61 @@
     </section>
 
     <section class="tmr-glass">
+        <h2 class="tmr-h2">Send Us a Message</h2>
+        <p>Fill out the form below and it goes straight to the TrustMyRecord team.</p>
+
+        <form id="contactForm" novalidate>
+            <input type="text" class="honeypot" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+            <div class="form-row cols-2">
+                <div>
+                    <label class="form-label" for="contactName">Your Name <span class="form-required">*</span></label>
+                    <input id="contactName" name="name" type="text" class="tmr-input" maxlength="64" required>
+                </div>
+                <div>
+                    <label class="form-label" for="contactEmail">Your Email <span class="form-required">*</span></label>
+                    <input id="contactEmail" name="email" type="email" class="tmr-input" maxlength="320" required>
+                </div>
+            </div>
+
+            <div class="form-row cols-2">
+                <div>
+                    <label class="form-label" for="contactTopic">Topic</label>
+                    <select id="contactTopic" name="topic" class="tmr-select">
+                        <option value="general">General question</option>
+                        <option value="account">Account or profile help</option>
+                        <option value="picks">Picks or grading</option>
+                        <option value="marketplace">Marketplace or seller question</option>
+                        <option value="billing">Billing</option>
+                        <option value="partnership">Partnership</option>
+                        <option value="security">Security or privacy</option>
+                        <option value="feedback">Feedback</option>
+                        <option value="other">Something else</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label" for="contactSubject">Subject</label>
+                    <input id="contactSubject" name="subject" type="text" class="tmr-input" maxlength="140" placeholder="Short summary">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div>
+                    <label class="form-label" for="contactMessage">Message <span class="form-required">*</span></label>
+                    <textarea id="contactMessage" name="message" class="tmr-textarea tmr-input" maxlength="5000" required placeholder="How can we help?"></textarea>
+                </div>
+            </div>
+
+            <div class="contact-actions">
+                <button type="submit" id="contactSubmitBtn" class="tmr-cta-primary"><i class="fas fa-paper-plane"></i> Send Message</button>
+            </div>
+
+            <div id="contactAlertSuccess" class="alert alert-success" role="status">Message sent. The TrustMyRecord team has received it and will get back to you at the email you provided.</div>
+            <div id="contactAlertError" class="alert alert-error" role="alert"><strong>Couldn't send your message.</strong> <span id="contactAlertErrorMsg">Please try again in a moment.</span> You can also email <a href="mailto:support@trustmyrecord.com">support@trustmyrecord.com</a> directly.</div>
+        </form>
+    </section>
+
+    <section class="tmr-glass">
         <h2 class="tmr-h2">What to include</h2>
         <div class="support-list">
             <div class="support-item">
@@ -61,6 +127,111 @@
         </div>
     </section>
 </main>
+
+<script>
+/* CONTACT_FORM_20260605 */
+(function() {
+    var form = document.getElementById('contactForm');
+    if (!form) return;
+
+    var nameInput    = document.getElementById('contactName');
+    var emailInput   = document.getElementById('contactEmail');
+    var subjectInput = document.getElementById('contactSubject');
+    var msgInput     = document.getElementById('contactMessage');
+    var submitBtn    = document.getElementById('contactSubmitBtn');
+    var alertSuccess = document.getElementById('contactAlertSuccess');
+    var alertError   = document.getElementById('contactAlertError');
+    var alertErrorMsg = document.getElementById('contactAlertErrorMsg');
+
+    try {
+        var cached = null;
+        if (window.api && window.api._cachedUser) cached = window.api._cachedUser;
+        if (!cached) {
+            var raw = localStorage.getItem('tmr_user') || localStorage.getItem('user');
+            if (raw) cached = JSON.parse(raw);
+        }
+        if (cached) {
+            if (cached.username && !nameInput.value) nameInput.value = cached.username;
+            if (cached.email && !emailInput.value) emailInput.value = cached.email;
+        }
+    } catch (e) {}
+
+    function showError(msg) {
+        alertSuccess.classList.remove('is-shown');
+        alertErrorMsg.textContent = msg || 'Please try again in a moment.';
+        alertError.classList.add('is-shown');
+    }
+    function showSuccess() {
+        alertError.classList.remove('is-shown');
+        alertSuccess.classList.add('is-shown');
+    }
+
+    form.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        alertSuccess.classList.remove('is-shown');
+        alertError.classList.remove('is-shown');
+
+        var name = (nameInput.value || '').trim();
+        var email = (emailInput.value || '').trim();
+        var message = (msgInput.value || '').trim();
+
+        if (!name) { showError('Please enter your name.'); nameInput.focus(); return; }
+        if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('Please enter a valid email address so we can reply.'); emailInput.focus(); return; }
+        if (message.length < 10) { showError('Please write at least a sentence (10+ characters).'); msgInput.focus(); return; }
+
+        var payload = {
+            name: name,
+            email: email,
+            topic: document.getElementById('contactTopic').value || 'general',
+            subject: (subjectInput.value || '').trim(),
+            message: message,
+            pageUrl: location.href,
+            honeypot: form.elements['company'] ? form.elements['company'].value : ''
+        };
+
+        submitBtn.disabled = true;
+        var originalLabel = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+
+        try {
+            var bases = [];
+            if (window.api && window.api.baseUrl) bases.push(window.api.baseUrl);
+            bases.push('https://trustmyrecord-api.onrender.com/api');
+
+            var lastErrText = 'Unknown error';
+            var ok = false;
+            for (var i = 0; i < bases.length && !ok; i++) {
+                try {
+                    var res = await fetch(bases[i] + '/support/contact', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (res.ok) { ok = true; break; }
+                    var data = null;
+                    try { data = await res.json(); } catch (e2) {}
+                    lastErrText = (data && data.error) || ('Server returned ' + res.status);
+                } catch (err) {
+                    lastErrText = err && err.message ? err.message : 'Network error';
+                }
+            }
+
+            if (ok) {
+                showSuccess();
+                msgInput.value = '';
+                subjectInput.value = '';
+            } else {
+                showError(lastErrText);
+            }
+        } catch (err) {
+            showError(err && err.message ? err.message : 'Network error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalLabel;
+        }
+    });
+})();
+</script>
 
 <script src="/static/js/analytics.js?v=20260504a"></script>
 </body>
