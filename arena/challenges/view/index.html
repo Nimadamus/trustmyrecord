@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Challenge Details | TrustMyRecord Arena</title>
+    <meta name="description" content="Head-to-head gaming challenge details, verified results, and free predictions on TrustMyRecord Arena.">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/arena-suite.css?v=20260605arena1">
+</head>
+<body class="arena-page">
+
+    <div class="as-hero">
+        <div class="as-hero-inner">
+            <div class="as-breadcrumb"><a href="/arena/">Arena</a> / <a href="/arena/challenges/">Challenges</a> / <span id="bcId">Challenge</span></div>
+            <span class="as-kicker">TrustMyRecord Arena</span>
+            <h1 id="pageTitle">Challenge</h1>
+            <div id="statusLine" style="margin-top:6px"></div>
+        </div>
+    </div>
+
+    <div class="as-main">
+        <div class="as-msg" id="topMsg"></div>
+        <div id="notFound" class="as-empty" style="display:none">Challenge not found.</div>
+
+        <div class="as-two-col" id="content" style="display:none">
+            <div>
+                <div class="as-vs" id="vsBox"></div>
+                <div class="as-card" id="detailsCard">
+                    <h3><i class="fas fa-circle-info" style="color:var(--as-gold)"></i> Match Details</h3>
+                    <div class="meta" id="detailsBody"></div>
+                </div>
+                <div class="as-card" id="actionsCard" style="margin-top:14px; display:none">
+                    <h3><i class="fas fa-gamepad" style="color:var(--as-gold)"></i> Participant Actions</h3>
+                    <div class="meta" id="actionsBody"></div>
+                </div>
+            </div>
+            <div>
+                <div class="as-card" id="predictCard">
+                    <h3><i class="fas fa-bullseye" style="color:var(--as-gold)"></i> Free Predictions (Arena Picks)</h3>
+                    <div class="meta" id="predictBody">Loading...</div>
+                    <div class="as-predict-disclaimer" id="predictDisclaimer"></div>
+                </div>
+                <div class="as-card" style="margin-top:14px">
+                    <h3><i class="fas fa-users" style="color:var(--as-gold)"></i> Community Arena Picks</h3>
+                    <div class="meta" id="communityPicks">Loading...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="as-disclaimer" id="arenaDisclaimer"></div>
+    </div>
+
+    <script src="/static/js/config.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/arena-suite.js?v=20260605arena1"></script>
+    <script>
+    (function () {
+        const A = window.TMRArena;
+        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
+        document.getElementById('predictDisclaimer').textContent = A.PREDICT_DISCLAIMER;
+        const id = parseInt(A.qs('id'), 10);
+        let apiRef = null, me = null, ch = null;
+
+        function topMsg(kind, text) { A.msg(document.getElementById('topMsg'), kind, text); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+        async function act(path, method, body, okText) {
+            try {
+                await apiRef.request(path, { method: method, body: body });
+                topMsg('ok', okText);
+                await load();
+            } catch (e) {
+                topMsg('err', (e && e.message) || 'Action failed');
+            }
+        }
+
+        function renderVs() {
+            const started = ['in_progress', 'completed', 'disputed', 'voided'].includes(ch.status);
+            const cWin = ch.status === 'completed' && ch.winner_id === ch.challenger_id;
+            const dWin = ch.status === 'completed' && ch.winner_id === ch.challenged_id;
+            document.getElementById('vsBox').innerHTML = `
+                <div class="side ${cWin ? 'winner' : ''}">
+                    <div class="uname"><a href="/profile/?user=${encodeURIComponent(ch.challenger_username)}">${A.esc(ch.challenger_username)}</a></div>
+                    <div class="score">${started && ch.challenger_score != null ? ch.challenger_score : '-'}</div>
+                    ${cWin ? '<span class="as-pill open">Winner</span>' : ''}
+                </div>
+                <div class="mid">VS</div>
+                <div class="side ${dWin ? 'winner' : ''}">
+                    <div class="uname">${ch.challenged_username ? '<a href="/profile/?user=' + encodeURIComponent(ch.challenged_username) + '">' + A.esc(ch.challenged_username) + '</a>' : '<span style="color:var(--as-green)">Open Spot</span>'}</div>
+                    <div class="score">${started && ch.challenged_score != null ? ch.challenged_score : '-'}</div>
+                    ${dWin ? '<span class="as-pill open">Winner</span>' : ''}
+                </div>`;
+        }
+
+        function renderDetails() {
+            const rows = [];
+            rows.push('<strong>Game:</strong> ' + A.esc(ch.game_title || ''));
+            if (ch.game_version) rows.push('<strong>Version:</strong> ' + A.esc(ch.game_version));
+            if (ch.platform) rows.push('<strong>Console:</strong> ' + A.esc(ch.platform));
+            rows.push('<strong>Series:</strong> Best of ' + (ch.best_of || 1));
+            rows.push('<strong>Scheduled:</strong> ' + A.fmtDate(ch.scheduled_at));
+            if (ch.rules) rows.push('<strong>Rules:</strong><br>' + A.esc(ch.rules).replace(/\n/g, '<br>'));
+            if (ch.proof_url) rows.push('<strong>Proof:</strong> <a href="' + A.esc(ch.proof_url) + '" target="_blank" rel="noopener nofollow">screenshot</a>');
+            if (ch.status === 'disputed' && ch.dispute_reason) rows.push('<strong>Dispute reason:</strong> ' + A.esc(ch.dispute_reason));
+            if (ch.admin_verified) rows.push('<span class="as-pill verified">Result verified by admin</span>');
+            else if (ch.status === 'completed') rows.push('<span class="as-pill completed">Result confirmed by both players</span>');
+            if (ch.status === 'voided' && ch.void_reason) rows.push('<strong>Voided:</strong> ' + A.esc(ch.void_reason));
+            document.getElementById('detailsBody').innerHTML = rows.join('<br>');
+        }
+
+        function renderActions() {
+            const card = document.getElementById('actionsCard');
+            const body = document.getElementById('actionsBody');
+            if (!me) { card.style.display = 'none'; return; }
+            const isChallenger = me.id === ch.challenger_id;
+            const isChallenged = ch.challenged_id && me.id === ch.challenged_id;
+            const isParticipant = isChallenger || isChallenged;
+            const parts = [];
+
+            if (ch.status === 'pending' && !isChallenger && (!ch.challenged_id || isChallenged)) {
+                parts.push('<button class="as-btn as-btn-green" data-act="accept">Accept Challenge</button> <button class="as-btn as-btn-danger" data-act="decline">Decline</button>');
+            }
+            if (isChallenger && ch.status === 'pending') {
+                parts.push('<button class="as-btn as-btn-danger" data-act="cancel">Cancel Challenge</button>');
+            }
+            if (isParticipant && ['pending', 'accepted'].includes(ch.status)) {
+                parts.push('<div style="margin-top:10px"><label style="font-size:12px;color:var(--as-dim)">Set scheduled time</label><br><input type="datetime-local" id="schedInput" style="background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px"> <button class="as-btn as-btn-outline" data-act="schedule">Save</button></div>');
+            }
+            if (isParticipant && ch.status === 'accepted') {
+                parts.push('<button class="as-btn as-btn-primary" data-act="start" style="margin-top:10px"><i class="fas fa-play"></i> Start Match (locks predictions)</button>');
+            }
+            if (isParticipant && ['accepted', 'in_progress'].includes(ch.status)) {
+                parts.push(`
+                    <div style="margin-top:14px; border-top:1px solid var(--as-border); padding-top:12px">
+                        <strong style="color:var(--as-text)">Report final score</strong><br>
+                        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; align-items:center">
+                            <input type="number" min="0" id="scoreC" placeholder="${A.esc(ch.challenger_username)}" style="width:130px;background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px">
+                            <span>-</span>
+                            <input type="number" min="0" id="scoreD" placeholder="${A.esc(ch.challenged_username || 'opponent')}" style="width:130px;background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px">
+                        </div>
+                        <input type="url" id="proofInput" placeholder="Proof screenshot URL (optional)" style="margin-top:8px;width:100%;box-sizing:border-box;background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px">
+                        <button class="as-btn as-btn-gold" data-act="report" style="margin-top:8px">Submit Result</button>
+                    </div>`);
+            }
+            if (isParticipant && ch.result_reported_at && ch.status === 'in_progress' && ch.result_reported_by !== me.id) {
+                parts.push(`
+                    <div style="margin-top:14px; border-top:1px solid var(--as-border); padding-top:12px">
+                        <strong style="color:var(--as-gold)">Your opponent reported ${ch.challenger_score}-${ch.challenged_score}.</strong><br>
+                        <button class="as-btn as-btn-green" data-act="confirm" style="margin-top:8px">Confirm Result</button>
+                        <button class="as-btn as-btn-danger" data-act="dispute" style="margin-top:8px">Dispute</button>
+                    </div>`);
+            }
+            if (isParticipant && ['in_progress', 'completed'].includes(ch.status) && !ch.admin_verified && ch.status !== 'disputed' && ch.result_reported_by === me.id) {
+                parts.push('<div class="hint" style="margin-top:10px;color:var(--as-muted);font-size:12px">Waiting on your opponent to confirm. The winner is official only after confirmation or admin verification.</div>');
+            }
+            if (isParticipant && ch.status === 'completed' && !ch.admin_verified) {
+                parts.push('<button class="as-btn as-btn-danger" data-act="dispute" style="margin-top:8px">Dispute This Result</button>');
+            }
+
+            if (!parts.length) { card.style.display = 'none'; return; }
+            card.style.display = 'block';
+            body.innerHTML = parts.join('');
+
+            body.querySelectorAll('[data-act]').forEach(btn => {
+                btn.addEventListener('click', async function (ev) {
+                    ev.preventDefault();
+                    const a = btn.getAttribute('data-act');
+                    if (a === 'accept') return act('/gaming/challenges/' + id + '/respond', 'PUT', { action: 'accept' }, 'Challenge accepted.');
+                    if (a === 'decline') return act('/gaming/challenges/' + id + '/respond', 'PUT', { action: 'decline' }, 'Challenge declined.');
+                    if (a === 'cancel') return act('/gaming/challenges/' + id, 'DELETE', undefined, 'Challenge canceled.');
+                    if (a === 'start') return act('/arena/challenges/' + id + '/start', 'PUT', {}, 'Match is live. Predictions are locked.');
+                    if (a === 'schedule') {
+                        const v = document.getElementById('schedInput').value;
+                        if (!v) return topMsg('err', 'Pick a date and time first');
+                        return act('/arena/challenges/' + id + '/schedule', 'PUT', { scheduled_at: new Date(v).toISOString() }, 'Schedule saved.');
+                    }
+                    if (a === 'report') {
+                        const c = parseInt(document.getElementById('scoreC').value, 10);
+                        const d = parseInt(document.getElementById('scoreD').value, 10);
+                        if (isNaN(c) || isNaN(d)) return topMsg('err', 'Enter both scores');
+                        const proof = document.getElementById('proofInput').value.trim();
+                        return act('/arena/challenges/' + id + '/report-result', 'PUT',
+                            { challenger_score: c, challenged_score: d, proof_url: proof || undefined },
+                            'Result reported. It becomes official when your opponent confirms.');
+                    }
+                    if (a === 'confirm') return act('/arena/challenges/' + id + '/confirm-result', 'PUT', {}, 'Result confirmed - winner is official.');
+                    if (a === 'dispute') {
+                        const reason = prompt('Why are you disputing this result?') || '';
+                        return act('/arena/challenges/' + id + '/dispute', 'PUT', { reason: reason }, 'Result disputed. An admin will review it.');
+                    }
+                });
+            });
+        }
+
+        async function renderPredict() {
+            const body = document.getElementById('predictBody');
+            const isParticipant = me && (me.id === ch.challenger_id || me.id === ch.challenged_id);
+            const open = ['pending', 'accepted'].includes(ch.status) && ch.challenged_id &&
+                         !(ch.scheduled_at && new Date(ch.scheduled_at) <= new Date());
+
+            if (!me) {
+                body.innerHTML = 'Log in to make a free Arena Pick on this match.';
+                return;
+            }
+            if (isParticipant) {
+                body.innerHTML = 'You are playing in this match, so you cannot make a prediction on it.';
+                return;
+            }
+            if (!ch.challenged_id) {
+                body.innerHTML = 'Predictions open once this challenge has an opponent.';
+                return;
+            }
+
+            let mine = null;
+            try {
+                const data = await apiRef.request('/arena/predictions/mine');
+                mine = (data.predictions || []).find(p => p.challenge_id === ch.id) || null;
+            } catch (_) {}
+
+            if (mine) {
+                const label = mine.status === 'graded' ? (mine.result === 'won' ? 'WON +' + (mine.points_payout - mine.points_staked) : 'LOST') :
+                              mine.status === 'void' ? 'VOIDED (refunded)' : mine.status.toUpperCase();
+                body.innerHTML = 'Your Arena Pick: <strong>' + A.esc(mine.predicted_winner_username) + '</strong> for ' +
+                    mine.points_staked + ' Arena Points &middot; <span class="as-pill ' + (mine.result === 'won' ? 'open' : mine.status === 'graded' ? 'disputed' : 'scheduled') + '">' + label + '</span>';
+                return;
+            }
+            if (!open) {
+                body.innerHTML = 'Predictions are locked - this match has started or finished.';
+                return;
+            }
+
+            let balance = 0;
+            try { balance = (await apiRef.request('/arena/points/me')).balance; } catch (_) {}
+            body.innerHTML = `
+                <div>Who wins? <span style="float:right" class="as-points-chip" style="font-size:11px"><i class="fas fa-coins"></i> ${Number(balance).toLocaleString()}</span></div>
+                <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap">
+                    <button class="as-btn as-btn-outline" id="pickC">${A.esc(ch.challenger_username)}</button>
+                    <button class="as-btn as-btn-outline" id="pickD">${A.esc(ch.challenged_username)}</button>
+                </div>
+                <div style="margin-top:10px">
+                    <label style="font-size:12px;color:var(--as-dim)">Arena Points (25-500)</label><br>
+                    <input type="number" id="ptsInput" min="25" max="500" step="25" value="50" style="width:120px;background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:8px">
+                    <button class="as-btn as-btn-gold" id="submitPick" disabled>Lock In Arena Pick</button>
+                </div>
+                <div class="hint" style="color:var(--as-muted);font-size:12px;margin-top:6px">Correct call doubles your entry. Predictions lock at match start.</div>`;
+            let chosen = null;
+            const pickC = document.getElementById('pickC'), pickD = document.getElementById('pickD'), submit = document.getElementById('submitPick');
+            function choose(btn, otherBtn, userId) {
+                chosen = userId;
+                btn.classList.add('as-btn-primary'); btn.classList.remove('as-btn-outline');
+                otherBtn.classList.add('as-btn-outline'); otherBtn.classList.remove('as-btn-primary');
+                submit.disabled = false;
+            }
+            pickC.addEventListener('click', () => choose(pickC, pickD, ch.challenger_id));
+            pickD.addEventListener('click', () => choose(pickD, pickC, ch.challenged_id));
+            submit.addEventListener('click', async () => {
+                const pts = parseInt(document.getElementById('ptsInput').value, 10);
+                try {
+                    await apiRef.request('/arena/predictions', { method: 'POST', body: { challenge_id: ch.id, predicted_winner_id: chosen, points: pts } });
+                    topMsg('ok', 'Arena Pick locked in. Good luck!');
+                    await load();
+                } catch (e) {
+                    topMsg('err', (e && e.message) || 'Failed to submit Arena Pick');
+                }
+            });
+        }
+
+        async function renderCommunity() {
+            try {
+                const data = await apiRef.request('/arena/predictions/challenge/' + id);
+                const el = document.getElementById('communityPicks');
+                const totals = data.totals || {};
+                const keys = Object.keys(totals);
+                if (!keys.length) { el.innerHTML = 'No Arena Picks on this match yet.'; return; }
+                el.innerHTML = keys.map(k =>
+                    '<div style="margin-bottom:6px"><strong>' + A.esc(k) + '</strong>: ' + totals[k].count +
+                    ' pick' + (totals[k].count === 1 ? '' : 's') + ' (' + totals[k].points.toLocaleString() + ' points)</div>').join('') +
+                    '<div style="margin-top:8px; font-size:12px; color:var(--as-muted)">' + (data.predictions || []).slice(0, 10).map(p =>
+                        A.esc(p.username) + ' &rarr; ' + A.esc(p.predicted_winner_username) + ' (' + p.points_staked + ')').join('<br>') + '</div>';
+            } catch (_) {
+                document.getElementById('communityPicks').innerHTML = 'Unavailable.';
+            }
+        }
+
+        async function load() {
+            const data = await apiRef.request('/gaming/challenges/' + id);
+            ch = data.challenge;
+            document.getElementById('bcId').textContent = 'Challenge #' + ch.id;
+            document.getElementById('pageTitle').innerHTML =
+                (ch.title ? A.esc(ch.title) : A.esc(ch.challenger_username) + ' vs ' + (ch.challenged_username ? A.esc(ch.challenged_username) : 'Open')) +
+                ' <span style="font-size:16px; color:var(--as-dim)">&middot; ' + A.esc(ch.game_title || '') + '</span>';
+            document.getElementById('statusLine').innerHTML = A.pill(ch);
+            document.getElementById('content').style.display = 'grid';
+            renderVs();
+            renderDetails();
+            renderActions();
+            await renderPredict();
+            await renderCommunity();
+        }
+
+        A.ready(async function (api) {
+            if (!api || !Number.isInteger(id)) { document.getElementById('notFound').style.display = 'block'; return; }
+            apiRef = api;
+            me = await A.currentUser(api);
+            try {
+                await load();
+            } catch (e) {
+                document.getElementById('notFound').style.display = 'block';
+            }
+        });
+    })();
+    </script>
+</body>
+</html>
