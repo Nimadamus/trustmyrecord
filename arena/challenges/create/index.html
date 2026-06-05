@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://trustmyrecord.com/arena/challenges/create/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create a Gaming Challenge | TrustMyRecord Arena</title>
+    <meta name="description" content="Create a head-to-head console gaming challenge on TrustMyRecord Arena.">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/arena-suite.css?v=20260605arena1">
+</head>
+<body class="arena-page">
+
+    <div class="as-hero">
+        <div class="as-hero-inner">
+            <div class="as-breadcrumb"><a href="/arena/">Arena</a> / <a href="/arena/challenges/">Challenges</a> / Create</div>
+            <span class="as-kicker">TrustMyRecord Arena</span>
+            <h1>Create a <span class="gold">Challenge</span></h1>
+            <p class="lede">Challenge a specific player by username, or post an open challenge anyone can accept. Results become official when both players confirm or an admin verifies.</p>
+        </div>
+    </div>
+
+    <div class="as-main">
+        <div id="loginGate" class="as-empty" style="display:none">You need to <a href="/?login=1">log in</a> to create a challenge.</div>
+        <form class="as-form" id="createForm" style="display:none">
+            <div>
+                <label for="fGame">Game Title</label>
+                <select id="fGame" required></select>
+            </div>
+            <div>
+                <label for="fVersion">Game Version</label>
+                <input id="fVersion" type="text" maxlength="50" placeholder="e.g. MLB The Show 26">
+                <div class="hint">Optional. Which edition/year you are playing.</div>
+            </div>
+            <div>
+                <label for="fConsole">Console</label>
+                <select id="fConsole">
+                    <option value="">Any</option>
+                    <option>PS5</option>
+                    <option>Xbox</option>
+                    <option>PC</option>
+                    <option>Switch</option>
+                </select>
+            </div>
+            <div>
+                <label for="fOpponent">Opponent Username</label>
+                <input id="fOpponent" type="text" maxlength="50" placeholder="Leave blank for an open challenge">
+                <div class="hint">Blank = open challenge anyone can accept.</div>
+            </div>
+            <div>
+                <label for="fScheduled">Scheduled Time</label>
+                <input id="fScheduled" type="datetime-local">
+                <div class="hint">Optional. Free predictions on your match lock at this time.</div>
+            </div>
+            <div>
+                <label for="fBestOf">Series Length</label>
+                <select id="fBestOf">
+                    <option value="1">Single game</option>
+                    <option value="3">Best of 3</option>
+                    <option value="5">Best of 5</option>
+                    <option value="7">Best of 7</option>
+                </select>
+            </div>
+            <div>
+                <label for="fTitle">Challenge Title</label>
+                <input id="fTitle" type="text" maxlength="200" placeholder="e.g. Friday night grudge match">
+            </div>
+            <div>
+                <label for="fRules">Rules</label>
+                <textarea id="fRules" rows="4" maxlength="4000" placeholder="House rules: difficulty, roster, pause limits, DC policy..."></textarea>
+            </div>
+            <div class="as-msg" id="formMsg"></div>
+            <div>
+                <button type="submit" class="as-btn as-btn-gold"><i class="fas fa-plus"></i> Create Challenge</button>
+                <a class="as-btn as-btn-outline" href="/arena/challenges/">Cancel</a>
+            </div>
+        </form>
+        <div class="as-disclaimer" id="arenaDisclaimer"></div>
+    </div>
+
+    <script src="/static/js/config.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/arena-suite.js?v=20260605arena1"></script>
+    <script>
+    (function () {
+        const A = window.TMRArena;
+        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
+        A.ready(async function (api) {
+            if (!api) return;
+            const me = await A.currentUser(api);
+            if (!me) { document.getElementById('loginGate').style.display = 'block'; return; }
+            document.getElementById('createForm').style.display = 'grid';
+
+            try {
+                const titles = await api.request('/gaming/titles');
+                const sel = document.getElementById('fGame');
+                (titles.games || []).forEach(g => {
+                    const o = document.createElement('option');
+                    o.value = g.slug; o.textContent = g.title;
+                    sel.appendChild(o);
+                });
+                const pre = A.qs('game');
+                if (pre) sel.value = pre;
+            } catch (_) {}
+
+            document.getElementById('createForm').addEventListener('submit', async function (ev) {
+                ev.preventDefault();
+                const m = document.getElementById('formMsg');
+                const sched = document.getElementById('fScheduled').value;
+                const body = {
+                    game_slug: document.getElementById('fGame').value,
+                    game_version: document.getElementById('fVersion').value.trim() || undefined,
+                    platform: document.getElementById('fConsole').value || undefined,
+                    challenged_username: document.getElementById('fOpponent').value.trim() || undefined,
+                    scheduled_at: sched ? new Date(sched).toISOString() : undefined,
+                    best_of: parseInt(document.getElementById('fBestOf').value, 10),
+                    title: document.getElementById('fTitle').value.trim() || undefined,
+                    rules: document.getElementById('fRules').value.trim() || undefined
+                };
+                try {
+                    const res = await api.request('/gaming/challenges', { method: 'POST', body });
+                    A.msg(m, 'ok', 'Challenge created. Redirecting...');
+                    location.href = '/arena/challenges/view/?id=' + res.challenge.id;
+                } catch (e) {
+                    A.msg(m, 'err', (e && e.message) || 'Failed to create challenge');
+                }
+            });
+        });
+    })();
+    </script>
+</body>
+</html>
