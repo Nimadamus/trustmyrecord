@@ -10,7 +10,8 @@
         ["/contests/justbet-mlb/", "Contest"],
         ["/tools/", "Tools"],
         ["/handicappers/", "Find Handicappers"],
-        ["/marketplace/", "Sell Your Picks"]
+        ["/marketplace/", "Sell Your Picks"],
+        ["/rules/", "Rules"]
     ];
     const communityRoutes = [
         ["/feed/", "Feed"],
