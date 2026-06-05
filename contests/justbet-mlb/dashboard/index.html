@@ -406,6 +406,40 @@
             }
             .prelaunch-bar i { color: var(--justbet); font-size: 1.05rem; flex-shrink: 0; }
             .prelaunch-bar strong { color: #fff; }
+
+            /* ======== CONTEST BOARD (game-centric, BOARD_GAMECARDS_20260605) ========
+               Inverted layout: one compact card PER GAME (not contestants x games),
+               picks live inside their game card under ML / RL / Total cells.
+               No horizontal scrolling at any viewport by design. */
+            .board-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; }
+            .game-card { border: 1px solid var(--line); background: var(--panel-2); border-radius: 12px; padding: 10px 12px; min-width: 0; }
+            .game-card.is-live { border-color: rgba(34, 197, 94, 0.40); }
+            .g-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+            .g-teams { font-family: "Barlow", sans-serif; font-weight: 900; font-size: 0.98rem; color: #fff; letter-spacing: 0.02em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .g-teams .at { color: var(--faint); font-size: 0.78rem; margin: 0 4px; }
+            .g-time { color: var(--faint); font-size: 0.72rem; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+            .g-markets { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; margin-top: 8px; }
+            .g-mkt { border: 1px solid rgba(148,163,184,0.10); border-radius: 8px; padding: 5px 7px; min-width: 0; background: rgba(8,15,27,0.45); }
+            .g-mkt .mk { font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-weight: 800; margin-bottom: 4px; }
+            .g-mkt .none { color: #3d4a5c; font-weight: 700; font-size: 0.8rem; }
+            .pchip { display: flex; align-items: center; gap: 5px; min-width: 0; font-size: 0.76rem; line-height: 1.25; padding: 2px 0; }
+            .pchip + .pchip { border-top: 1px dotted rgba(148,163,184,0.12); }
+            .pchip .pu { color: #9fb0c4; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+            .pchip .ps { font-weight: 800; color: #fff; white-space: nowrap; flex-shrink: 0; margin-left: auto; }
+            .pchip .po { color: #7e8aa0; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+            .pchip.res-won .ps { color: #34d399; }
+            .pchip.res-lost .ps { color: #f87171; }
+            .pchip.res-push .ps, .pchip.res-void .ps { color: #fbbf24; }
+            .pchip.sealed .ps { color: #c5cfdb; font-weight: 700; }
+            .pchip.sealed .ps i { font-size: 0.66rem; margin-right: 3px; color: #8aa0b8; }
+            .board-foot { margin-top: 10px; color: var(--muted); font-size: 0.82rem; }
+            .preview-banner {
+                display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+                padding: 9px 14px; border-radius: 10px;
+                border: 1px solid rgba(239, 68, 68, 0.45); background: rgba(60, 14, 14, 0.45);
+                color: #fecaca; font-weight: 800; font-size: 0.82rem; letter-spacing: 0.06em; text-transform: uppercase;
+            }
+            @media (max-width: 480px) { .g-markets { grid-template-columns: 1fr; } }
         </style>
         <section class="panel dash-main">
             <div class="block" id="contest-status">
@@ -438,6 +472,19 @@
                     <i class="fa-solid fa-hourglass-start"></i>
                     <span><strong>The contest has not started yet.</strong> The official contest board — every contestant's sealed picks, results, and live standings — will appear here the moment the contest begins.</span>
                 </div>
+            </div>
+
+            <!-- CONTEST BOARD (hidden pre-launch; renders ONLY when PRELAUNCH=false,
+                 or in local-only dev preview). One compact card per game; each
+                 contestant pick renders inside its game's ML / RL / Total cell. -->
+            <div class="block" id="contest-board" hidden>
+                <div class="block-head">
+                    <h2>Contest Board</h2>
+                    <button class="refresh-btn" id="refresh-board"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+                </div>
+                <div id="board-preview-banner" class="preview-banner" hidden><i class="fa-solid fa-flask"></i> Dev Preview — sample data, not real picks. Local only.</div>
+                <div class="board-grid" id="board-grid"></div>
+                <p class="board-foot" id="board-foot"></p>
             </div>
         </section>
 
@@ -543,9 +590,145 @@
             }
         }
 
+        // ==================== CONTEST BOARD (BOARD_GAMECARDS_20260605) ====================
+        // Game-centric board: one compact card per game, contestant picks render inside
+        // their game's ML / RL / Total cell. No contestants-x-games matrix, so the layout
+        // can never need horizontal scrolling regardless of entrant count.
+        // ACTIVATION: renders ONLY when PRELAUNCH=false (real /games + /picks data), or
+        // in DEV PREVIEW (localhost + ?preview=board) with clearly-labeled sample data.
+        // The preview can NEVER activate on the live domain — hostname-gated.
+        const IS_LOCAL = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+        const PREVIEW_BOARD = IS_LOCAL && new URLSearchParams(window.location.search).get('preview') === 'board';
+        const BOARD_ACTIVE = !PRELAUNCH || PREVIEW_BOARD;
+
+        const MARKET_CELLS = [
+            { key: 'h2h', label: 'Moneyline' },
+            { key: 'spreads', label: 'Run Line' },
+            { key: 'totals', label: 'Total' },
+        ];
+
+        // "New York Yankees" -> "Yankees"; keeps two-word nicknames (Red Sox, White Sox, Blue Jays).
+        function teamNick(name) {
+            const parts = String(name || '').trim().split(/\s+/);
+            if (parts.length >= 2 && ['Red', 'White', 'Blue'].includes(parts[parts.length - 2])) {
+                return parts.slice(-2).join(' ');
+            }
+            return parts[parts.length - 1] || String(name || '');
+        }
+        const gameLabel = (g) => `${g.away_team} @ ${g.home_team}`;
+
+        function pickChip(p) {
+            if (p.sealed) {
+                return `<div class="pchip sealed"><span class="pu">${escapeHtml(p.username)}</span><span class="ps"><i class="fa-solid fa-lock"></i>Sealed</span></div>`;
+            }
+            const res = (p.result && p.result !== 'pending') ? p.result : '';
+            const cls = res === 'won' ? 'res-won' : res === 'lost' ? 'res-lost' : res === 'push' ? 'res-push' : res === 'void' ? 'res-void' : '';
+            const line = (p.line !== null && p.line !== undefined && p.line !== '') ? ` ${p.line}` : '';
+            return `<div class="pchip ${cls}"><span class="pu">${escapeHtml(p.username)}</span><span class="ps">${escapeHtml(teamNick(p.selection) || p.selection)}${escapeHtml(line)}</span><span class="po">${fmtOdds(p.odds)}</span></div>`;
+        }
+
+        function renderBoard(games, picks) {
+            const grid = $('#board-grid');
+            const foot = $('#board-foot');
+
+            // Cards keyed by game label; defensively add a card for any pick whose
+            // game is missing from the board so no real pick is ever dropped.
+            const cardMap = new Map();
+            (games || []).forEach(g => cardMap.set(gameLabel(g), { label: gameLabel(g), away: g.away_team, home: g.home_team, start: g.commence_time, picks: [] }));
+            (picks || []).forEach(p => {
+                if (!cardMap.has(p.game)) {
+                    const [away, home] = String(p.game).split(' @ ');
+                    cardMap.set(p.game, { label: p.game, away: away || p.game, home: home || '', start: p.game_start_at, picks: [] });
+                }
+                cardMap.get(p.game).picks.push(p);
+            });
+            const cards = [...cardMap.values()].sort((a, b) => new Date(a.start || 0) - new Date(b.start || 0));
+
+            if (!cards.length) {
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-baseball"></i>The contest slate will appear here once the daily board is posted.</div>`;
+                if (foot) foot.textContent = '';
+                return;
+            }
+
+            grid.innerHTML = cards.map(c => {
+                const started = c.start && new Date(c.start) <= new Date();
+                const cells = MARKET_CELLS.map(m => {
+                    const mPicks = c.picks.filter(p => (p.market_type || '') === m.key);
+                    const inner = mPicks.length ? mPicks.map(pickChip).join('') : `<div class="none">—</div>`;
+                    return `<div class="g-mkt"><div class="mk">${m.label}</div>${inner}</div>`;
+                }).join('');
+                // Picks with unknown market types still render (defensive, never dropped).
+                const other = c.picks.filter(p => !MARKET_CELLS.some(m => m.key === (p.market_type || '')));
+                const otherCell = other.length ? `<div class="g-mkt" style="grid-column: 1 / -1;"><div class="mk">Other</div>${other.map(pickChip).join('')}</div>` : '';
+                return `<div class="game-card${started ? ' is-live' : ''}">
+                    <div class="g-head"><span class="g-teams">${escapeHtml(teamNick(c.away))}<span class="at">@</span>${escapeHtml(teamNick(c.home))}</span><span class="g-time">${fmtTime(c.start)}</span></div>
+                    <div class="g-markets">${cells}${otherCell}</div>
+                </div>`;
+            }).join('');
+
+            const totalPicks = cards.reduce((n, c) => n + c.picks.length, 0);
+            if (foot) foot.innerHTML = `Showing <strong>${cards.length}</strong> games · <strong>${totalPicks}</strong> contest picks. Picks are sealed until first pitch.`;
+        }
+
+        async function loadBoard() {
+            if (!BOARD_ACTIVE) return;
+            const grid = $('#board-grid');
+            if (PREVIEW_BOARD && PRELAUNCH) {
+                // LOCAL-ONLY sample data, clearly labeled. Never reachable on the live
+                // domain (IS_LOCAL gate) and never mixed with real API data.
+                $('#board-preview-banner').hidden = false;
+                renderBoard(SAMPLE_GAMES, SAMPLE_PICKS);
+                return;
+            }
+            try {
+                const [gamesResp, picksResp] = await Promise.all([
+                    fetch(API('/games?scope=full'), { credentials: 'include' }),
+                    fetch(API('/picks'), { credentials: 'include' }),
+                ]);
+                if (!picksResp.ok) throw new Error(`picks HTTP ${picksResp.status}`);
+                const gamesData = gamesResp.ok ? await gamesResp.json() : { games: [] };
+                const picksData = await picksResp.json();
+                renderBoard(gamesData.games || [], picksData.picks || []);
+            } catch {
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-triangle-exclamation"></i>Contest board temporarily unavailable. Try refresh.</div>`;
+            }
+        }
+
+        // Sample fixtures for the local dev preview ONLY (?preview=board on localhost).
+        // Generic demo usernames — never real members, never shown on the live site.
+        const SAMPLE_GAMES = [
+            { away_team: 'New York Yankees', home_team: 'Boston Red Sox', commence_time: '2026-06-05T23:10:00Z' },
+            { away_team: 'Los Angeles Dodgers', home_team: 'San Francisco Giants', commence_time: '2026-06-06T02:15:00Z' },
+            { away_team: 'Chicago Cubs', home_team: 'St. Louis Cardinals', commence_time: '2026-06-05T23:45:00Z' },
+            { away_team: 'Houston Astros', home_team: 'Texas Rangers', commence_time: '2026-06-06T00:05:00Z' },
+            { away_team: 'Atlanta Braves', home_team: 'Philadelphia Phillies', commence_time: '2026-06-05T22:35:00Z' },
+            { away_team: 'San Diego Padres', home_team: 'Arizona Diamondbacks', commence_time: '2026-06-06T01:40:00Z' },
+            { away_team: 'Toronto Blue Jays', home_team: 'Baltimore Orioles', commence_time: '2026-06-05T23:05:00Z' },
+            { away_team: 'Seattle Mariners', home_team: 'Oakland Athletics', commence_time: '2026-06-06T02:40:00Z' },
+            { away_team: 'Cleveland Guardians', home_team: 'Detroit Tigers', commence_time: '2026-06-05T22:40:00Z' },
+            { away_team: 'Milwaukee Brewers', home_team: 'Cincinnati Reds', commence_time: '2026-06-05T22:40:00Z' },
+            { away_team: 'Minnesota Twins', home_team: 'Kansas City Royals', commence_time: '2026-06-06T00:10:00Z' },
+            { away_team: 'New York Mets', home_team: 'Washington Nationals', commence_time: '2026-06-05T22:45:00Z' },
+            { away_team: 'Tampa Bay Rays', home_team: 'Miami Marlins', commence_time: '2026-06-05T22:40:00Z' },
+            { away_team: 'Colorado Rockies', home_team: 'Los Angeles Angels', commence_time: '2026-06-06T01:38:00Z' },
+            { away_team: 'Pittsburgh Pirates', home_team: 'Chicago White Sox', commence_time: '2026-06-06T00:10:00Z' },
+        ];
+        const SAMPLE_PICKS = [
+            { username: 'DemoCapper1', game: 'New York Yankees @ Boston Red Sox', market_type: 'h2h', selection: 'New York Yankees', odds: -135, sealed: false, result: 'won' },
+            { username: 'DemoCapper2', game: 'New York Yankees @ Boston Red Sox', market_type: 'totals', selection: 'Over', line: 8.5, odds: -110, sealed: false, result: 'lost' },
+            { username: 'DemoCapper3', game: 'New York Yankees @ Boston Red Sox', market_type: 'spreads', selection: 'Boston Red Sox', line: '+1.5', odds: -150, sealed: false, result: 'pending' },
+            { username: 'DemoCapper4', game: 'Los Angeles Dodgers @ San Francisco Giants', market_type: 'h2h', selection: 'Los Angeles Dodgers', odds: -160, sealed: true },
+            { username: 'DemoCapper5', game: 'Chicago Cubs @ St. Louis Cardinals', market_type: 'totals', selection: 'Under', line: 9, odds: -105, sealed: true },
+            { username: 'DemoCapper1', game: 'Atlanta Braves @ Philadelphia Phillies', market_type: 'spreads', selection: 'Atlanta Braves', line: '-1.5', odds: +140, sealed: false, result: 'push' },
+            { username: 'DemoCapper6', game: 'Toronto Blue Jays @ Baltimore Orioles', market_type: 'h2h', selection: 'Baltimore Orioles', odds: -120, sealed: true },
+            { username: 'DemoCapper2', game: 'Seattle Mariners @ Oakland Athletics', market_type: 'h2h', selection: 'Seattle Mariners', odds: -170, sealed: false, result: 'pending' },
+            { username: 'DemoCapper7', game: 'Minnesota Twins @ Kansas City Royals', market_type: 'totals', selection: 'Over', line: 8, odds: -115, sealed: true },
+        ];
+
         document.addEventListener('DOMContentLoaded', () => {
             // Pre-launch dashboard: status + full Registered Members list only.
-            // Pick grid/leaderboard return after launch, built from real picks.
+            // The game-centric contest board renders only when PRELAUNCH=false
+            // (or in the localhost-only dev preview).
             loadStatus();
             loadMembers();
             const rs = $('#refresh-status');
@@ -554,6 +737,16 @@
             if (rm) rm.addEventListener('click', loadMembers);
             // Keep the member list fresh without a manual reload.
             setInterval(loadMembers, 120000);
+
+            if (BOARD_ACTIVE) {
+                $('#contest-board').hidden = false;
+                $('#contest-board-placeholder').hidden = true;
+                loadBoard();
+                const rb = $('#refresh-board');
+                if (rb) rb.addEventListener('click', loadBoard);
+                // Sealed picks reveal at first pitch without a manual reload.
+                setInterval(loadBoard, 60000);
+            }
         });
     })();
     </script>
