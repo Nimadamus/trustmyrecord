@@ -76,6 +76,30 @@
             </div>
         </div>
 
+        <!-- ARENA_STREAM_KEY_PANEL_20260605: only rendered for approved streamers,
+             and only when the flag-gated backend endpoints are live (probe via
+             GET /arena/streams/live). Flag off = clean "not enabled yet" state. -->
+        <div class="as-section" id="streamKeySection" style="display:none">
+            <div class="as-section-head"><h2><i class="fas fa-key"></i> Your Stream Key</h2></div>
+            <div class="as-card">
+                <p class="meta" id="skStateMsg"></p>
+                <div id="skPanel" style="display:none">
+                    <div class="meta" style="margin:8px 0 4px;font-weight:600">Server (RTMPS URL)</div>
+                    <input id="skServer" readonly style="width:100%;box-sizing:border-box;background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:10px;font-family:monospace">
+                    <div class="meta" style="margin:10px 0 4px;font-weight:600">Stream Key (keep this private)</div>
+                    <input id="skKey" readonly type="password" style="width:100%;box-sizing:border-box;background:var(--as-surface);color:var(--as-text);border:1px solid var(--as-border);border-radius:8px;padding:10px;font-family:monospace">
+                    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+                        <button class="as-btn" id="skRevealBtn"><i class="fas fa-eye"></i> Reveal</button>
+                        <button class="as-btn" id="skCopyBtn"><i class="fas fa-copy"></i> Copy Key</button>
+                        <button class="as-btn" id="skRotateBtn"><i class="fas fa-rotate"></i> Rotate Key</button>
+                    </div>
+                    <p class="meta" style="margin-top:10px">In OBS: Settings &gt; Stream &gt; Service: Custom, then paste the Server and Stream Key above. Never show this key on camera or screen share. If it leaks, rotate it immediately; the old key dies the moment you rotate.</p>
+                </div>
+                <button class="as-btn as-btn-gold" id="skGetBtn" style="display:none"><i class="fas fa-key"></i> Get My Stream Key</button>
+                <div class="as-msg" id="skMsg"></div>
+            </div>
+        </div>
+
         <div class="as-section as-copy">
             <h2>Streaming &amp; Content Policy (Preliminary)</h2>
             <p>The full streaming policy will be published before launch. The ground rules already set:</p>
@@ -106,7 +130,7 @@
             try {
                 const data = await api.request('/arena/streamer/me');
                 const s = (data.streamer && data.streamer.streamer_status) || 'none';
-                if (s === 'approved') statusEl.innerHTML = '<span class="as-pill open">Approved</span> You are on the early-access streamer list. We will notify you at launch.';
+                if (s === 'approved') { statusEl.innerHTML = '<span class="as-pill open">Approved</span> You are on the early-access streamer list.'; initStreamKey(api); }
                 else if (s === 'pending') statusEl.innerHTML = '<span class="as-pill scheduled">Pending Review</span> Your application is in the queue.';
                 else if (s === 'suspended') statusEl.innerHTML = '<span class="as-pill disputed">Suspended</span> Contact support for details.';
                 else if (s === 'rejected') { statusEl.innerHTML = '<span class="as-pill voided">Not Approved</span> You can re-apply below.'; applyWrap.style.display = 'block'; }
@@ -114,6 +138,58 @@
             } catch (_) {
                 statusEl.textContent = 'Status unavailable right now.';
             }
+            // ARENA_STREAM_KEY_PANEL_20260605 - approved streamers only.
+            // Probes the flag-gated public endpoint first; 404 means streaming
+            // is not enabled yet, so no key UI is shown at all.
+            async function initStreamKey(api) {
+                const section = document.getElementById('streamKeySection');
+                const stateMsg = document.getElementById('skStateMsg');
+                const panel = document.getElementById('skPanel');
+                const getBtn = document.getElementById('skGetBtn');
+                const msg = document.getElementById('skMsg');
+                section.style.display = 'block';
+                try {
+                    await api.request('/arena/streams/live');
+                } catch (e) {
+                    if (e && e.status === 404) {
+                        stateMsg.textContent = 'Streaming is not enabled yet. Your access is approved; this panel will activate the moment streaming launches.';
+                    } else {
+                        stateMsg.textContent = 'Streaming status unavailable right now. Check back soon.';
+                    }
+                    return;
+                }
+                stateMsg.textContent = 'Streaming is enabled for your account.';
+                getBtn.style.display = 'inline-flex';
+                function showKey(d) {
+                    document.getElementById('skServer').value = d.rtmps_url || '';
+                    document.getElementById('skKey').value = d.stream_key || '';
+                    panel.style.display = 'block';
+                    getBtn.style.display = 'none';
+                }
+                getBtn.addEventListener('click', async function () {
+                    getBtn.disabled = true;
+                    try { showKey(await api.request('/arena/streamer/key', { method: 'POST' })); }
+                    catch (e) { A.msg(msg, 'err', (e && e.message) || 'Failed to get stream key'); getBtn.disabled = false; }
+                });
+                document.getElementById('skRevealBtn').addEventListener('click', function () {
+                    const k = document.getElementById('skKey');
+                    const hidden = k.type === 'password';
+                    k.type = hidden ? 'text' : 'password';
+                    this.innerHTML = hidden ? '<i class="fas fa-eye-slash"></i> Hide' : '<i class="fas fa-eye"></i> Reveal';
+                });
+                document.getElementById('skCopyBtn').addEventListener('click', async function () {
+                    try { await navigator.clipboard.writeText(document.getElementById('skKey').value); A.msg(msg, 'ok', 'Stream key copied.'); }
+                    catch (_) { A.msg(msg, 'err', 'Copy failed - reveal and copy manually.'); }
+                });
+                document.getElementById('skRotateBtn').addEventListener('click', async function () {
+                    if (!confirm('Rotate your stream key? Your current key stops working immediately.')) return;
+                    this.disabled = true;
+                    try { showKey(await api.request('/arena/streamer/key/rotate', { method: 'POST' })); A.msg(msg, 'ok', 'Key rotated. Update OBS with the new key.'); }
+                    catch (e) { A.msg(msg, 'err', (e && e.message) || 'Failed to rotate key'); }
+                    this.disabled = false;
+                });
+            }
+
             document.getElementById('applyBtn').addEventListener('click', async function () {
                 const m = document.getElementById('applyMsg');
                 try {
