@@ -92,6 +92,33 @@
       <h2 style="margin-top:0;font-size:16px">Run Output</h2>
       <pre id="output">-</pre>
     </section>
+
+    <!-- DUPLICATE_ACCOUNT_RISK_PANEL_20260604 -->
+    <section class="panel" style="margin-top:12px">
+      <div class="top" style="margin-bottom:10px">
+        <div>
+          <h2 style="margin:0;font-size:16px">Duplicate-Account Risk (Account Integrity Rule)</h2>
+          <div class="muted">Read-only scan. Flags shared IP, shared IP + browser, email patterns, similar usernames, identical pick behavior, and synced session timing. Flags are review signals only, never automatic bans: shared WiFi, VPNs, and mobile networks cause IP false positives.</div>
+        </div>
+        <div class="actions">
+          <button class="primary" id="dupScanBtn">Run Duplicate Scan</button>
+        </div>
+      </div>
+      <div class="grid" style="margin:10px 0">
+        <div class="panel stat"><div class="label">Flag Clusters</div><div class="value" id="dupClusters">-</div></div>
+        <div class="panel stat"><div class="label">Flagged Accounts</div><div class="value" id="dupAccounts">-</div></div>
+        <div class="panel stat"><div class="label">High Risk (score &ge; 80)</div><div class="value" id="dupHigh">-</div></div>
+        <div class="panel stat"><div class="label">Signals Unavailable</div><div class="value" id="dupUnavail">-</div></div>
+      </div>
+      <div style="overflow:auto">
+        <table>
+          <thead><tr><th>Risk</th><th>Account</th><th>Email</th><th>Signals</th></tr></thead>
+          <tbody id="dupRows"><tr><td colspan="4" class="muted">Run the scan to load duplicate-account warnings.</td></tr></tbody>
+        </table>
+      </div>
+      <h3 style="font-size:14px;margin:14px 0 6px">Cluster Evidence</h3>
+      <pre id="dupEvidence">-</pre>
+    </section>
   </main>
 
   <script src="/static/js/config.js"></script>
@@ -185,6 +212,44 @@
       }
     });
     loadStatus().catch((error) => { document.getElementById('output').textContent = error.message; });
+
+    // ---- Duplicate-account risk scan (read-only flags, no bans) ----
+    document.getElementById('dupScanBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('dupScanBtn');
+      btn.disabled = true;
+      document.getElementById('dupEvidence').textContent = 'Scanning...';
+      try {
+        const data = await request('/admin/duplicate-account-scan');
+        document.getElementById('dupClusters').textContent = data.cluster_count ?? 0;
+        document.getElementById('dupAccounts').textContent = data.flagged_account_count ?? 0;
+        const high = (data.flagged_accounts || []).filter((a) => Number(a.max_score) >= 80).length;
+        const highEl = document.getElementById('dupHigh');
+        highEl.textContent = high;
+        highEl.className = 'value ' + (high > 0 ? 'bad' : 'ok');
+        document.getElementById('dupUnavail').textContent = (data.signals_unavailable || []).length ? data.signals_unavailable.join(', ') : 'None';
+        const rows = document.getElementById('dupRows');
+        const flagged = data.flagged_accounts || [];
+        rows.innerHTML = flagged.length ? flagged.map((a) => {
+          const cls = Number(a.max_score) >= 80 ? 'bad' : Number(a.max_score) >= 50 ? 'warn' : 'ok';
+          return `<tr>
+            <td><span class="${cls}" style="font-weight:750">${a.max_score}</span></td>
+            <td>#${a.id} ${a.username || ''}</td>
+            <td>${a.email || ''}</td>
+            <td>${(a.signals || []).join(', ')}</td>
+          </tr>`;
+        }).join('') : '<tr><td colspan="4" class="muted">No duplicate-account flags. Clean.</td></tr>';
+        document.getElementById('dupEvidence').textContent = pretty({
+          generated_at: data.generated_at,
+          read_only: data.read_only,
+          action: data.action,
+          clusters: (data.clusters || []).slice(0, 25),
+        });
+      } catch (error) {
+        document.getElementById('dupEvidence').textContent = error.message;
+      } finally {
+        btn.disabled = false;
+      }
+    });
   </script>
 </body>
 </html>
