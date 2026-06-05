@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/arena/challenges/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gaming Challenges - Verified Head-to-Head Matches | TrustMyRecord Arena</title>
+    <meta name="description" content="Browse open and upcoming video game challenges in MLB The Show, NBA 2K, Madden, EA FC and NHL. Accept a head-to-head match, track verified results, and make free predictions with Arena Points.">
+    <meta property="og:title" content="Gaming Challenges | TrustMyRecord Arena">
+    <meta property="og:description" content="Open and upcoming head-to-head gaming challenges with verified results and free predictions.">
+    <meta property="og:url" content="https://trustmyrecord.com/arena/challenges/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <meta name="twitter:card" content="summary_large_image">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/arena-suite.css?v=20260605arena1">
+</head>
+<body class="arena-page">
+
+    <div class="as-hero">
+        <div class="as-hero-inner">
+            <div class="as-breadcrumb"><a href="/arena/">Arena</a> / Challenges</div>
+            <span class="as-kicker">TrustMyRecord Arena</span>
+            <h1>Gaming <span class="gold">Challenges</span></h1>
+            <p class="lede">Head-to-head console matches with verified results. Accept an open challenge or create your own in MLB The Show, NBA 2K, Madden, EA FC, or NHL. Final scores become official only when both players confirm or an admin verifies, and confirmed results build your public gaming record. Not playing? Make a free Arena Pick on who wins.</p>
+            <div class="as-actions">
+                <a class="as-btn as-btn-gold" href="/arena/challenges/create/"><i class="fas fa-plus"></i> Create a Challenge</a>
+                <a class="as-btn as-btn-outline" href="/arena/predictions/"><i class="fas fa-bullseye"></i> My Arena Picks</a>
+                <span class="as-points-chip" id="pointsChip" style="display:none"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="as-main">
+        <div class="as-section">
+            <div class="as-section-head">
+                <h2><i class="fas fa-list"></i> Challenge Board</h2>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <select id="gameFilter" style="background:var(--as-surface); color:var(--as-text); border:1px solid var(--as-border); border-radius:8px; padding:8px 10px;">
+                        <option value="">All Games</option>
+                    </select>
+                    <select id="statusFilter" style="background:var(--as-surface); color:var(--as-text); border:1px solid var(--as-border); border-radius:8px; padding:8px 10px;">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Open</option>
+                        <option value="accepted">Accepted / Scheduled</option>
+                        <option value="in_progress">Live</option>
+                        <option value="completed">Completed</option>
+                        <option value="disputed">Disputed</option>
+                    </select>
+                </div>
+            </div>
+            <div id="challengesGrid" class="as-grid"><div class="as-empty">Loading challenges...</div></div>
+        </div>
+
+        <div class="as-disclaimer" id="arenaDisclaimer"></div>
+    </div>
+
+    <script src="/static/js/config.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/arena-suite.js?v=20260605arena1"></script>
+    <script>
+    (function () {
+        const A = window.TMRArena;
+        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
+        let apiRef = null;
+
+        async function loadChallenges() {
+            const game = document.getElementById('gameFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            const grid = document.getElementById('challengesGrid');
+            grid.innerHTML = '<div class="as-empty">Loading challenges...</div>';
+            try {
+                let url = '/gaming/challenges?limit=50';
+                if (game) url += '&game=' + encodeURIComponent(game);
+                if (status) url += '&status=' + encodeURIComponent(status);
+                const data = await apiRef.request(url);
+                let rows = data.challenges || [];
+                if (!status) rows = rows.filter(c => !['declined', 'cancelled', 'expired'].includes(c.status));
+                if (!rows.length) {
+                    grid.innerHTML = '<div class="as-empty">No challenges match. <a href="/arena/challenges/create/">Create one</a>.</div>';
+                    return;
+                }
+                grid.innerHTML = rows.map(c => `
+                    <a class="as-card" href="/arena/challenges/view/?id=${c.id}">
+                        <h3>${A.esc(c.challenger_username)} vs ${c.challenged_username ? A.esc(c.challenged_username) : '<span style="color:var(--as-green)">Open Challenge</span>'}</h3>
+                        <div class="meta">
+                            ${A.pill(c)} &nbsp; <strong>${A.esc(c.game_title || '')}</strong>
+                            ${c.platform ? ' &middot; ' + A.esc(c.platform) : ''}
+                            <br>${c.scheduled_at ? 'Scheduled: ' + A.fmtDate(c.scheduled_at) : 'Best of ' + (c.best_of || 1)}
+                            ${c.status === 'completed' && c.challenger_score != null ? '<br>Final: ' + c.challenger_score + '-' + c.challenged_score : ''}
+                        </div>
+                    </a>`).join('');
+            } catch (e) {
+                grid.innerHTML = '<div class="as-empty">Challenges are temporarily unavailable.</div>';
+            }
+        }
+
+        A.ready(async function (api) {
+            if (!api) return;
+            apiRef = api;
+            A.loadPointsChip(api, document.getElementById('pointsChip'));
+            try {
+                const titles = await api.request('/gaming/titles');
+                const sel = document.getElementById('gameFilter');
+                (titles.games || []).forEach(g => {
+                    const o = document.createElement('option');
+                    o.value = g.slug; o.textContent = g.title;
+                    sel.appendChild(o);
+                });
+            } catch (_) {}
+            document.getElementById('gameFilter').addEventListener('change', loadChallenges);
+            document.getElementById('statusFilter').addEventListener('change', loadChallenges);
+            loadChallenges();
+        });
+    })();
+    </script>
+</body>
+</html>
