@@ -340,7 +340,12 @@
                 </div>
             </div>
             <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                <a class="cta-ghost" href="/contests/justbet-mlb/"><i class="fa-solid fa-circle-info"></i> Contest Info & Rules</a>
+                <a class="cta-ghost" href="/contests/justbet-mlb/"><i class="fa-solid fa-circle-info"></i> Info & Rules</a>
+                <a class="cta-ghost" href="/contests/justbet-mlb/participants/"><i class="fa-solid fa-users"></i> Participants</a>
+                <!-- Enter Contest Picks CTA intentionally hidden until contest-pick entry flow is fully built, tested, and approved (May 22, 2026). Do NOT restore this link until then. -->
+                <a class="cta-primary" href="/contests/justbet-mlb/register/">
+                    <i class="fa-solid fa-user-plus"></i> Register
+                </a>
                 <a class="cta-primary"
                    href="https://record.revshare.ag/_RFP1Ust_FFzUOsjNOfgKeWNd7ZgqdRLk/1/"
                    target="_blank"
@@ -351,94 +356,88 @@
             </div>
         </section>
 
-        <!-- ========================= ENTER PICKS CTA ROW =========================
+        <!-- ========================= MAIN PANEL (compact, single-card layout) =========================
              This page is a STATUS dashboard. Pick entry happens on the normal
              Make Picks sportsbook page in Contest Mode (/sportsbook/?contest=...).
-             Do not put a pick-entry form on this page. -->
-        <div class="contest-mode-banner" role="status" aria-live="polite">
-            <div class="cm-icon"><i class="fa-solid fa-trophy"></i></div>
-            <div class="cm-text">
-                <div class="cm-title">
-                    Status Dashboard
-                    <span class="cm-live"><span class="dot"></span> JustBet MLB</span>
-                </div>
-                <div class="cm-body">
-                    This page shows contest <strong>status and registered members</strong>. The official contest board appears here when the contest begins. Contest picks are tracked separately and will not affect your public TrustMyRecord profile record.
-                </div>
-            </div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <!-- Enter Contest Picks CTA intentionally hidden until contest-pick entry flow is fully built, tested, and approved (May 22, 2026). Do NOT restore this link until then. -->
-                <a class="cta-primary" href="/contests/justbet-mlb/register/" style="display:inline-flex;align-items:center;gap:10px;">
-                    <i class="fa-solid fa-user-plus"></i> Register for Contest
-                </a>
-                <a class="cta-ghost" href="/contests/justbet-mlb/participants/" style="display:inline-flex;align-items:center;gap:8px;">
-                    <i class="fa-solid fa-users"></i> Participants
-                </a>
-            </div>
-        </div>
+             Do not put a pick-entry form on this page.
 
-        <!-- ========================= STAT STRIP ========================= -->
-        <section class="section panel" id="contest-status">
-            <div class="section-head">
-                <h2>Contest Status</h2>
-                <button class="refresh-btn" id="refresh-status"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
-            </div>
-            <div class="stat-strip">
-                <div class="stat"><div class="k">Prize Pool</div><div class="v">$2,500</div></div>
-                <div class="stat"><div class="k">Picks Per Entrant</div><div class="v">50</div></div>
-                <div class="stat"><div class="k">Registered</div><div class="v" id="stat-entrants">—</div></div>
-                <div class="stat"><div class="k">Picks Open</div><div class="v">Not Yet</div></div>
-                <div class="stat"><div class="k">Reveal</div><div class="v">First Pitch</div></div>
-            </div>
-        </section>
-
-        <!-- Pick entry section removed. Contest picks are entered on the
-             normal /sportsbook/ page in Contest Mode (?contest=justbet-mlb).
-             This dashboard is status-only by design. -->
-
-        <!-- ========================= REGISTERED MEMBERS (REG_MEMBERS_FULL_20260605) =========================
-             COUNT INTEGRITY: the "Registered" stat above and this list render the SAME
+             REGISTERED MEMBERS (REG_MEMBERS_FULL_20260605)
+             COUNT INTEGRITY: the "Registered" stat and the member chips render the SAME
              /registrations entries array — every registered entry shows, NO display-layer
-             fake-filtering. The count can never disagree with the rendered rows.
-             Detailed graded-stats view stays on /contests/justbet-mlb/participants/. -->
-        <style>
-            .members-table { border-collapse: collapse; width: 100%; }
-            .members-table th, .members-table td { padding: 9px 14px; text-align: left; border-bottom: 1px solid rgba(148,163,184,0.10); white-space: nowrap; }
-            .members-table th:last-child, .members-table td:last-child { text-align: right; }
-            .members-table thead th { color: #c8e7ff; font-size: 0.72rem; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 800; }
-            .members-table td.m-name { font-weight: 800; color: #e6edf6; }
-            .members-table .m-num { color: var(--faint); font-weight: 700; width: 42px; }
-            .members-status { color: #34d399; font-weight: 800; font-size: 0.82rem; }
-            .members-foot { margin-top: 12px; color: var(--muted); font-size: 0.85rem; }
-            .members-foot a { color: #5eead4; font-weight: 700; }
-        </style>
-        <section class="section panel" id="registered-members">
-            <div class="section-head">
-                <h2>Registered Members</h2>
-                <button class="refresh-btn" id="refresh-members"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
-            </div>
-            <p class="lead">Every TrustMyRecord member officially registered for the JustBet MLB contest. TMR usernames only — no sportsbook account details are ever shown.</p>
-            <div class="table-wrap">
-                <table class="members-table" aria-label="Registered contest members">
-                    <thead><tr><th class="m-num">#</th><th>Member</th><th>Status</th></tr></thead>
-                    <tbody id="members-body"><tr><td colspan="3"><div class="empty-state"><i class="fa-solid fa-hourglass-start"></i>Loading registered members…</div></td></tr></tbody>
-                </table>
-            </div>
-            <p class="members-foot" id="members-foot"></p>
-        </section>
+             fake-filtering. The count can never disagree with the rendered chips.
+             Detailed graded-stats view stays on /contests/justbet-mlb/participants/.
 
-        <!-- ========================= CONTEST BOARD PLACEHOLDER =========================
-             The full contestants-x-games pick grid was intentionally REMOVED pre-launch
-             (June 5, 2026). Do NOT render a grid, leaderboard, or any pick/standings data
-             before the contest officially begins. This placeholder is the only allowed
-             pre-launch board state. -->
-        <section class="section panel" id="contest-board-placeholder">
-            <div class="section-head">
-                <h2>Official Contest Board</h2>
+             CONTEST BOARD: the contestants-x-games pick grid was intentionally REMOVED
+             pre-launch (June 5, 2026). Do NOT render a grid, leaderboard, or any
+             pick/standings data before the contest officially begins. The slim
+             prelaunch bar below is the only allowed pre-launch board state. -->
+        <style>
+            .dash-main { margin-top: 14px; padding: 20px 22px; }
+            .dash-main .block + .block { margin-top: 18px; padding-top: 18px; border-top: 1px solid rgba(148,163,184,0.12); }
+            .block-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+            .block-head h2 { font-size: 1.1rem; font-weight: 900; letter-spacing: 0.01em; }
+            .block-head .sub { color: var(--muted); font-size: 0.82rem; font-weight: 600; }
+            .stat-strip { margin-top: 0; gap: 10px; }
+            .stat { padding: 10px 14px; }
+            .stat .v { font-size: 1.2rem; margin-top: 4px; }
+            .members-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
+            .member-chip {
+                display: flex; align-items: center; gap: 10px; min-width: 0;
+                padding: 8px 12px; border-radius: 10px;
+                border: 1px solid var(--line); background: var(--panel-2);
+            }
+            .member-chip .avatar {
+                width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+                display: inline-flex; align-items: center; justify-content: center;
+                font-family: "Barlow", sans-serif; font-weight: 900; font-size: 0.82rem;
+                background: rgba(45, 212, 191, 0.14); color: #7dead9;
+                border: 1px solid rgba(45, 212, 191, 0.30);
+            }
+            .member-chip .name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800; color: #e6edf6; font-size: 0.88rem; }
+            .member-chip .ok { margin-left: auto; color: #34d399; font-size: 0.78rem; flex-shrink: 0; }
+            .members-foot { margin-top: 10px; color: var(--muted); font-size: 0.82rem; }
+            .members-foot a { color: #5eead4; font-weight: 700; }
+            .prelaunch-bar {
+                display: flex; align-items: center; gap: 12px;
+                padding: 13px 16px; border-radius: 12px;
+                border: 1px dashed rgba(255, 184, 0, 0.35);
+                background: rgba(28, 22, 8, 0.35);
+                color: #e8dcb8; font-size: 0.92rem; line-height: 1.45;
+            }
+            .prelaunch-bar i { color: var(--justbet); font-size: 1.05rem; flex-shrink: 0; }
+            .prelaunch-bar strong { color: #fff; }
+        </style>
+        <section class="panel dash-main">
+            <div class="block" id="contest-status">
+                <div class="block-head">
+                    <h2>Contest Status</h2>
+                    <button class="refresh-btn" id="refresh-status"><i class="fa-solid fa-arrows-rotate"></i> Refresh</button>
+                </div>
+                <div class="stat-strip">
+                    <div class="stat"><div class="k">Prize Pool</div><div class="v">$2,500</div></div>
+                    <div class="stat"><div class="k">Picks Per Entrant</div><div class="v">50</div></div>
+                    <div class="stat"><div class="k">Registered</div><div class="v" id="stat-entrants">—</div></div>
+                    <div class="stat"><div class="k">Picks Open</div><div class="v">Not Yet</div></div>
+                    <div class="stat"><div class="k">Reveal</div><div class="v">First Pitch</div></div>
+                </div>
             </div>
-            <div class="empty-state" style="padding: 42px 22px;">
-                <i class="fa-solid fa-hourglass-start"></i>
-                The contest has not started yet. The official contest board — every contestant's sealed picks, results, and live standings — will appear here the moment the contest begins.
+
+            <div class="block" id="registered-members">
+                <div class="block-head">
+                    <h2 id="members-heading">Registered Members</h2>
+                    <span class="sub">TMR usernames only — no sportsbook account details are ever shown.</span>
+                </div>
+                <div class="members-grid" id="members-grid">
+                    <div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-hourglass-start"></i>Loading registered members…</div>
+                </div>
+                <p class="members-foot" id="members-foot"></p>
+            </div>
+
+            <div class="block" id="contest-board-placeholder">
+                <div class="prelaunch-bar">
+                    <i class="fa-solid fa-hourglass-start"></i>
+                    <span><strong>The contest has not started yet.</strong> The official contest board — every contestant's sealed picks, results, and live standings — will appear here the moment the contest begins.</span>
+                </div>
             </div>
         </section>
 
@@ -511,9 +510,10 @@
         // come from this single `entries` array. Every registration with a username
         // renders — no display-layer fake-filtering, so count always equals rows.
         async function loadMembers() {
-            const body = $('#members-body');
+            const grid = $('#members-grid');
             const foot = $('#members-foot');
             const stat = $('#stat-entrants');
+            const heading = $('#members-heading');
             try {
                 const res = await fetch(API('/registrations'), { credentials: 'include' });
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -523,18 +523,22 @@
                     .filter(e => e && (e.username || e.name))
                     .sort((a, b) => String(a.username || a.name).localeCompare(String(b.username || b.name), undefined, { sensitivity: 'base' }));
                 if (stat) stat.textContent = entries.length;
+                if (heading) heading.textContent = `Registered Members (${entries.length})`;
                 if (!entries.length) {
-                    body.innerHTML = `<tr><td colspan="3"><div class="empty-state"><i class="fa-solid fa-user-plus"></i>No registered members yet. Be the first to register.</div></td></tr>`;
+                    grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-user-plus"></i>No registered members yet. Be the first to register.</div>`;
                     if (foot) foot.textContent = '';
                     return;
                 }
-                body.innerHTML = entries.map((e, i) =>
-                    `<tr><td class="m-num">${i + 1}</td><td class="m-name">${escapeHtml(e.username || e.name)}</td><td><span class="members-status"><i class="fa-solid fa-check"></i> Registered</span></td></tr>`
-                ).join('');
+                grid.innerHTML = entries.map(e => {
+                    const name = String(e.username || e.name);
+                    const initial = name.charAt(0).toUpperCase();
+                    return `<div class="member-chip" title="${escapeAttr(name)} — Registered"><span class="avatar">${escapeHtml(initial)}</span><span class="name">${escapeHtml(name)}</span><span class="ok" aria-label="Registered"><i class="fa-solid fa-circle-check"></i></span></div>`;
+                }).join('');
                 if (foot) foot.innerHTML = `Showing all <strong>${entries.length} of ${entries.length}</strong> registered members. Detailed public stats: <a href="/contests/justbet-mlb/participants/">participants page</a>.`;
             } catch {
                 if (stat) stat.textContent = '—';
-                body.innerHTML = `<tr><td colspan="3"><div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i>Member list temporarily unavailable. Try refresh.</div></td></tr>`;
+                if (heading) heading.textContent = 'Registered Members';
+                grid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;"><i class="fa-solid fa-triangle-exclamation"></i>Member list temporarily unavailable. Try refresh.</div>`;
                 if (foot) foot.textContent = '';
             }
         }
