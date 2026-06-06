@@ -900,7 +900,7 @@
     if (!EXTENDED_SPORTS.includes(sport)) return Promise.resolve(null);
     if (historyCache[sport]) return Promise.resolve(historyCache[sport]);
     if (historyLoading[sport]) return historyLoading[sport];
-    var path = "/static/data/" + sport.toLowerCase() + "/team-history.json?v=20260528b";
+    var path = "/static/data/" + sport.toLowerCase() + "/team-history.json?v=20260606a";
     historyLoading[sport] = fetch(path, { cache: "force-cache" })
       .then(function (resp) { return resp.json(); })
       .then(function (data) { historyCache[sport] = data; historyLoading[sport] = null; return data; })
@@ -976,9 +976,30 @@
     var stat = historyRowsForTeam(sport, team) || [];
     var art = artifactRowsForTeam(sport, team) || [];
     if (!art.length) return stat;
+    // STATIC_ROWS_WIN_20260606: the static history file carries verified
+    // ET-dated finals from the MLB Stats API backfill; artifact rows can be
+    // UTC-date-shifted (+1 for late games). Only let artifact rows in when
+    // they are newer than the static window, and drop any artifact row that
+    // duplicates a static game (same opponent + same scores within 1 day) so
+    // a shifted date can never hide or overwrite a real verified game.
+    var statMax = "";
+    stat.forEach(function (r) { if (String(r.d || "") > statMax) statMax = String(r.d || ""); });
+    var statGameSig = new Map();
+    stat.forEach(function (r) {
+      statGameSig.set(normalize(r.opp || "") + "|" + r.s + "|" + r.os, String(r.d || ""));
+    });
+    function isDupOfStatic(r) {
+      var sig = normalize(r.opp || "") + "|" + r.s + "|" + r.os;
+      var d0 = statGameSig.get(sig);
+      if (!d0 || !r.d) return false;
+      var diff = Math.abs(Date.parse(String(r.d) + "T00:00:00Z") - Date.parse(d0 + "T00:00:00Z"));
+      return diff <= 86400000;
+    }
     var byKey = new Map();
-    // Artifact rows seed the set (cover the freshest games).
+    // Artifact rows seed the set ONLY for games beyond the static window.
     art.forEach(function (r) {
+      if (statMax && String(r.d || "") <= statMax) return;
+      if (isDupOfStatic(r)) return;
       var k = (r.d || "") + "|" + normalize(r.opp || "");
       byKey.set(k, Object.assign({}, r));
     });
