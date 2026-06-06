@@ -10306,11 +10306,14 @@
                          (width/padding/flex) so chips stay small and inline. */
                       .sb-team-tt { display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 5px; margin-top: 3px; min-width: 0; flex-wrap: wrap; }
                       .sb-team-tt-label { font-size: 9.5px; font-weight: 800; letter-spacing: .6px; color: var(--text-muted, #9aab9f); }
-                      .sb-tt-mini, .odds-btn.sb-tt-mini { display: inline-flex !important; flex-direction: row !important; align-items: center !important; width: auto !important; min-width: 0 !important; min-height: 0 !important; height: auto !important; font-size: 10.5px !important; line-height: 1.1 !important; padding: 3px 7px !important; margin: 0 !important; border: 1px solid var(--glass-border, #262636) !important; border-radius: 6px !important; background: rgba(255,255,255,.05) !important; color: inherit !important; cursor: pointer; white-space: nowrap !important; gap: 3px; }
-                      .sb-tt-mini b { color: #1ed760; margin-left: 3px; font-weight: 700; font-size: 10.5px; }
-                      .sb-tt-mini:hover { border-color: var(--neon-cyan, #00aeff) !important; }
-                      .odds-btn.sb-tt-mini.selected { background: var(--gradient-gold, #ffd700) !important; color: #001018 !important; }
-                      .odds-btn.sb-tt-mini.selected b { color: #001018; }
+                      .sb-tt-mini, .odds-btn.sb-tt-mini,
+                      #picks .odds-btn.sb-tt-mini,
+                      body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-btn.sb-tt-mini,
+                      body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .game-row .odds-btn.sb-tt-mini { display: inline-flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; width: auto !important; min-width: 0 !important; min-height: 0 !important; height: auto !important; font-size: 10.5px !important; line-height: 1.1 !important; padding: 3px 7px !important; margin: 0 !important; border: 1px solid rgba(148, 163, 184, 0.25) !important; border-radius: 6px !important; background: rgba(255,255,255,.05) !important; color: #c7d3e4 !important; box-shadow: none !important; cursor: pointer; white-space: nowrap !important; gap: 3px; transform: none !important; }
+                      .sb-tt-mini b, #picks .sb-tt-mini b { color: #1ed760 !important; margin-left: 3px; font-weight: 700 !important; font-size: 10.5px !important; }
+                      #picks .odds-btn.sb-tt-mini:hover { border-color: var(--neon-cyan, #00aeff) !important; background: rgba(0,174,255,.10) !important; transform: none !important; }
+                      #picks .odds-btn.sb-tt-mini.selected,
+                      body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-btn.sb-tt-mini.selected { background: linear-gradient(180deg, #24422a 0%, #1b3220 100%) !important; border-color: rgba(74, 222, 128, 0.88) !important; color: #eafff0 !important; }
                     </style>
                 </section>
 
