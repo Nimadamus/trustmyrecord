@@ -13549,6 +13549,82 @@
       font-size: 12px !important;
     }
   }
+
+  /* ===== PUBLIC_LEDGER_FIT_20260606: ledger fits inside its card on
+     desktop/tablet. Previously every th/td was nowrap, so long Game/Pick
+     strings pushed the table to ~1680px inside a ~1256px shell; the table
+     spilled right and the Market column / card right border looked cut off.
+     Fix: fixed table layout at 100% width with explicit column widths, and
+     let text columns wrap. Numeric columns stay on one line. The shell keeps
+     overflow-x:auto as a safety net but no longer needs to scroll. The
+     <=720px mobile card layout (thead hidden, stacked td rows) is untouched. */
+  @media (min-width: 721px) {
+    body.profile-page.tmr-social-profile #tmrxTablePicks {
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+      table-layout: fixed !important;
+    }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th,
+    body.profile-page.tmr-social-profile #tmrxTablePicks td {
+      white-space: normal !important;
+      overflow-wrap: break-word !important;
+      vertical-align: top;
+    }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(1)  { width: 11%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(2)  { width: 9%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(3)  { width: 20%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(4)  { width: 17%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(5)  { width: 10%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(6)  { width: 6.5%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(7)  { width: 6.5%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(8)  { width: 6%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(9)  { width: 7%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(10) { width: 7%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(n+6),
+    body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(n+6) {
+      white-space: nowrap !important;
+    }
+  }
+  /* Narrow-tablet band (721-900px): same fit, tighter type + rebalanced
+     columns so the nowrap numeric/result columns get enough room. */
+  @media (min-width: 721px) and (max-width: 900px) {
+    body.profile-page.tmr-social-profile #tmrxTablePicks th,
+    body.profile-page.tmr-social-profile #tmrxTablePicks td {
+      padding-left: 6px !important;
+      padding-right: 6px !important;
+      font-size: 12px !important;
+    }
+    body.profile-page.tmr-social-profile #tmrxTablePicks thead th {
+      font-size: 9.5px !important;
+      letter-spacing: .05em !important;
+    }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(1)  { width: 10.5%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(2)  { width: 8%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(3)  { width: 17%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(4)  { width: 16%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(5)  { width: 9.5%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(6)  { width: 6%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(7)  { width: 7%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(8)  { width: 6.5%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(9)  { width: 9.5%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(10) { width: 10%; }
+  }
+  /* Mobile (<=720px): re-assert the stacked card layout. The May 27 r2
+     hard-fix above (display:table / width:max-content / nowrap, declared
+     without a media query) was overriding it and caused a pre-existing
+     ~28px right-edge clip on phones. */
+  @media (max-width: 720px) {
+    body.profile-page.tmr-social-profile #tmrxTablePicks {
+      display: block !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+    body.profile-page.tmr-social-profile #tmrxTablePicks td {
+      white-space: normal !important;
+    }
+  }
 </style>
 
 <!-- PROFILE_METRIC_FIT_20260603 : permanent profile metrics display standard.
