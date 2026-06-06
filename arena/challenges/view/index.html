@@ -38,6 +38,13 @@
 
         <div class="as-two-col" id="content" style="display:none">
             <div>
+                <!-- ARENA_MATCH_LIVE_EMBED_20260606: participant's live stream, only
+                     when the flag-gated /arena/streams/live endpoint returns a match.
+                     Flag off (404) / nobody live = card never renders. -->
+                <div class="as-card" id="liveStreamCard" style="display:none;margin-bottom:14px">
+                    <h3><i class="fas fa-circle" style="color:#e53e3e"></i> <span id="liveStreamTitle">Live Stream</span></h3>
+                    <div id="liveStreamPlayers"></div>
+                </div>
                 <div class="as-vs" id="vsBox"></div>
                 <div class="as-card" id="detailsCard">
                     <h3><i class="fas fa-circle-info" style="color:var(--as-gold)"></i> Match Details</h3>
@@ -295,6 +302,32 @@
             }
         }
 
+        // ARENA_MATCH_LIVE_EMBED_20260606 - embed a participant's stream when live.
+        // 404 (flag off), errors, or no participant streaming all leave the card
+        // hidden. Re-checks every 60s so the player appears/disappears with the stream.
+        let liveEmbedTimer = null;
+        async function renderLiveEmbed() {
+            const card = document.getElementById('liveStreamCard');
+            const wrap = document.getElementById('liveStreamPlayers');
+            let data;
+            try { data = await apiRef.request('/arena/streams/live'); }
+            catch (_) { return; } // flag off or backend hiccup - stay hidden
+            const names = [ch.challenger_username, ch.challenged_username].filter(Boolean).map(n => String(n).toLowerCase());
+            const live = (data && data.streams || []).filter(function (s) {
+                return s.username && names.includes(String(s.username).toLowerCase()) &&
+                    s.stream_playback_url && /^https:\/\/[a-z0-9-]+\.cloudflarestream\.com\//i.test(s.stream_playback_url);
+            });
+            if (!live.length) { card.style.display = 'none'; wrap.innerHTML = ''; return; }
+            document.getElementById('liveStreamTitle').textContent =
+                live.length > 1 ? 'Both Players Are Live' : A.esc(live[0].display_name || live[0].username) + ' Is Live';
+            wrap.innerHTML = live.map(function (s) {
+                return '<div style="position:relative;padding-top:56.25%;margin-top:10px;border-radius:8px;overflow:hidden;background:#000">' +
+                    '<iframe src="' + A.esc(s.stream_playback_url) + '" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;" allowfullscreen></iframe>' +
+                    '</div>';
+            }).join('');
+            card.style.display = 'block';
+        }
+
         async function load() {
             const data = await apiRef.request('/gaming/challenges/' + id);
             ch = data.challenge;
@@ -307,6 +340,8 @@
             renderVs();
             renderDetails();
             renderActions();
+            renderLiveEmbed();
+            if (!liveEmbedTimer) liveEmbedTimer = setInterval(renderLiveEmbed, 60000);
             await renderPredict();
             await renderCommunity();
         }
