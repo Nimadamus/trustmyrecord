@@ -1056,7 +1056,7 @@
                 confirmed: true,
                 mlbId: todayProbable.id || null,
                 note: pitchStat
-                    ? ('Real ' + seasonYear() + ' season ERA ' + (Number.isFinite(realEra) ? realEra.toFixed(2) : 'N/A') + ', WHIP ' + (pitchStat.whip || 'N/A') + ', ' + (pitchStat.wins || 0) + '-' + (pitchStat.losses || 0))
+                    ? ('Real ' + seasonYear() + ' season' + (Number.isFinite(realEra) ? ' ERA ' + realEra.toFixed(2) : '') + (pitchStat.whip ? ', WHIP ' + pitchStat.whip : '') + ', ' + (pitchStat.wins || 0) + '-' + (pitchStat.losses || 0))
                     : "Today's confirmed MLB probable starter from the official schedule"
             });
         }
@@ -1110,7 +1110,7 @@
                 verified: true,
                 mlbId: player.mlbId || null,
                 note: hasReal
-                    ? ('Real ' + seasonYear() + ' season ERA ' + realEra.toFixed(2) + ', WHIP ' + (stat.whip || 'N/A') + ', ' + (stat.wins || 0) + '-' + (stat.losses || 0))
+                    ? ('Real ' + seasonYear() + ' season ERA ' + realEra.toFixed(2) + (stat.whip ? ', WHIP ' + stat.whip : '') + ', ' + (stat.wins || 0) + '-' + (stat.losses || 0))
                     : 'Verified on the selected team active roster'
             });
         });
@@ -1148,10 +1148,15 @@
     }
     function pitcherRecord(pitcher) {
         var match = String(pitcher && pitcher.note ? pitcher.note : '').match(/(\d+\s*-\s*\d+)/);
-        return match ? match[1].replace(/\s+/g, '') : 'N/A';
+        return match ? match[1].replace(/\s+/g, '') : null;
     }
     function pitcherOptionLabel(pitcher) {
-        return pitcher.name + ', ERA ' + (pitcher.era != null ? pitcher.era : 'N/A') + ', W-L ' + pitcherRecord(pitcher);
+        // Only show stats we actually have; never render placeholder values.
+        var parts = [pitcher.name];
+        if (pitcher.era != null) parts.push('ERA ' + pitcher.era);
+        var record = pitcherRecord(pitcher);
+        if (record) parts.push('W-L ' + record);
+        return parts.join(', ');
     }
     function pitcherOptionTag(pitcher, selected) {
         return '<option value="' + escapeHtml(pitcher.id) + '"' + (selected ? ' selected' : '') + '>' + escapeHtml(pitcherOptionLabel(pitcher)) + '</option>';
