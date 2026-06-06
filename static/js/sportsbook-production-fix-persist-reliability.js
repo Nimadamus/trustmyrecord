@@ -115,7 +115,21 @@
         player_threes: 'Player Threes',
         player_hits: 'Player Hits',
         player_home_runs: 'Player Home Runs',
-        player_shots_on_goal: 'Shots On Goal'
+        player_shots_on_goal: 'Shots On Goal',
+        // NBA_NHL_PROPS_20260606 + MLB prop labels for pending/graded displays
+        pitcher_strikeouts: 'Pitcher Strikeouts',
+        pitcher_outs: 'Pitcher Outs',
+        batter_hits: 'Batter Hits',
+        batter_total_bases: 'Batter Total Bases',
+        batter_rbi: 'Batter RBI',
+        nba_points: 'Player Points',
+        nba_rebounds: 'Player Rebounds',
+        nba_assists: 'Player Assists',
+        nba_threes: 'Player Threes',
+        nhl_shots_on_goal: 'Shots On Goal',
+        nhl_points: 'Player Points',
+        nhl_assists: 'Player Assists',
+        nhl_saves: 'Goalie Saves'
     };
 
     const ESPN_LOGO_BASE = 'https://a.espncdn.com/i/teamlogos/';
