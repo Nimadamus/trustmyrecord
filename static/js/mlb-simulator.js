@@ -842,22 +842,35 @@
         };
     }
     function prefetchPlayerStatsForRoster(roster) {
-        if (!roster) return;
+        // Returns a promise that settles when every stat fetch lands, so
+        // callers can re-render with REAL season numbers instead of leaving
+        // baseline profile values on screen (REAL_ERA_LABELS_20260606).
+        if (!roster) return Promise.resolve(null);
+        var jobs = [];
         if (roster.todayProbableStarter && roster.todayProbableStarter.id) {
-            fetchPlayerSeasonStats(roster.todayProbableStarter.id, 'pitching');
-            fetchPlayerProfile(roster.todayProbableStarter.id);
+            jobs.push(fetchPlayerSeasonStats(roster.todayProbableStarter.id, 'pitching'));
+            jobs.push(fetchPlayerProfile(roster.todayProbableStarter.id));
         }
         var players = Array.isArray(roster.players) ? roster.players : [];
         players.slice(0, 9).forEach(function (p) {
             if (p && p.mlbId) {
-                fetchPlayerSeasonStats(p.mlbId, 'hitting');
-                fetchPlayerSplits(p.mlbId, 'hitting');
+                jobs.push(fetchPlayerSeasonStats(p.mlbId, 'hitting'));
+                jobs.push(fetchPlayerSplits(p.mlbId, 'hitting'));
             }
         });
         var pitchers = players.filter(function (p) {
             return p && p.mlbId && /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(p.position || ''));
         }).slice(0, 14);
-        pitchers.forEach(function (p) { fetchPlayerSeasonStats(p.mlbId, 'pitching'); });
+        pitchers.forEach(function (p) { jobs.push(fetchPlayerSeasonStats(p.mlbId, 'pitching')); });
+        return Promise.all(jobs);
+    }
+    function refreshPitcherSelectsFromState() {
+        try {
+            var awayTeam = findTeamInPool(state.awayTeamId, state.awayPool);
+            var homeTeam = findTeamInPool(state.homeTeamId, state.homePool);
+            if (awayTeam) renderPitcherOptions('away', awayTeam, state.activeLiveContext);
+            if (homeTeam) renderPitcherOptions('home', homeTeam, state.activeLiveContext);
+        } catch (e) { /* render best-effort; stale labels are non-fatal */ }
     }
     function teamLiveBullpenFactor(team) {
         if (!team || team.era !== 'current') return null;
@@ -942,9 +955,14 @@
                 roster.todayProbableStarter = probable || null;
             }
             state.liveContext.teamRosters[team.abbreviation] = roster;
-            prefetchPlayerStatsForRoster(roster);
             fetchInjuredRoster(team);
-            return roster;
+            // Wait for the real season stats so the simulation and the pitcher
+            // dropdowns use verified numbers, then upgrade any labels already
+            // rendered with baseline profiles (REAL_ERA_LABELS_20260606).
+            return prefetchPlayerStatsForRoster(roster).catch(function () { return null; }).then(function () {
+                refreshPitcherSelectsFromState();
+                return roster;
+            });
         }).catch(function () {
             state.liveContext.teamRosters[team.abbreviation] = null;
             return null;
@@ -1088,6 +1106,7 @@
                     name: row[1],
                     quality: row[2],
                     era: row[3],
+                    eraVerified: false,
                     source: 'Current simulator starter profile',
                     verified: false,
                     note: 'Baseline current-team starter profile; active roster feed unavailable'
@@ -1106,6 +1125,7 @@
                 name: player.name,
                 quality: hasReal ? pitcherQualityFromEra(realEra) : (row ? row[2] : 100),
                 era: hasReal ? realEra : (row ? row[3] : null),
+                eraVerified: hasReal,
                 source: hasReal ? (verifiedRoster.source + ' plus real ' + seasonYear() + ' season pitching stats') : verifiedRoster.source,
                 verified: true,
                 mlbId: player.mlbId || null,
@@ -1152,8 +1172,12 @@
     }
     function pitcherOptionLabel(pitcher) {
         // Only show stats we actually have; never render placeholder values.
+        // Baseline profile ERAs (eraVerified === false on current teams) are
+        // model inputs, not real season stats -- never display them as "ERA"
+        // (REAL_ERA_LABELS_20260606). Historical/classic curated ERAs keep
+        // displaying (real recorded history).
         var parts = [pitcher.name];
-        if (pitcher.era != null) parts.push('ERA ' + pitcher.era);
+        if (pitcher.era != null && pitcher.eraVerified !== false) parts.push('ERA ' + pitcher.era);
         var record = pitcherRecord(pitcher);
         if (record) parts.push('W-L ' + record);
         return parts.join(', ');
