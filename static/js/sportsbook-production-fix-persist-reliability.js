@@ -2269,37 +2269,77 @@
         return '<div class="tmr-team-pitcher"><span class="tmr-team-pitcher-label">Probable Pitcher:</span> ' + value + '</div>';
     }
 
-    const _mlbProbableState = { map: null, fetchedAt: 0, inflight: false };
+    // PITCHER_DATE_GUARD_20260606: names are only trusted from SCHEDULED
+    // (pre-game) ESPN events whose US/Eastern date matches the board game's
+    // date. Map keyed date|team, completed/live events excluded, doubleheader
+    // ambiguity drops to TBD, cache dies at ET date rollover, and the verified
+    // map authoritatively overwrites whatever the feed carried (no confirmed
+    // starter for that team+date = cleared = renders TBD). A starter who threw
+    // yesterday can never be shown today unless ESPN lists him as today's
+    // scheduled probable.
+    const _mlbProbableState = { map: null, fetchedAt: 0, inflight: false, dateKey: '' };
     function _normTeamKey(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+    function _etDateKey(d) {
+        try {
+            const dt = (d === undefined || d === null) ? new Date() : new Date(d);
+            if (isNaN(dt.getTime())) return '';
+            return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(dt).replace(/-/g, '');
+        } catch (e) { return ''; }
+    }
     function enrichMlbProbables(games) {
-        // Only when MLB is the active board and at least one game lacks a pitcher.
+        // Only when MLB is the active board.
         if (String(state.selectedSport || '').toUpperCase() !== 'MLB') return;
         if (!Array.isArray(games) || !games.length) return;
-        const needs = games.some(function(g) { return !pickGamePitcher(g, 'away') || !pickGamePitcher(g, 'home'); });
-        if (!needs) return;
 
         const applyMap = function(map) {
             if (!map) return false;
             let changed = false;
             games.forEach(function(g) {
+                const gDate = _etDateKey(g.commence_time || g.commenceTime || g.start_time || g.date);
                 ['away', 'home'].forEach(function(side) {
-                    if (pickGamePitcher(g, side)) return;
                     const team = side === 'home' ? g.home_team : g.away_team;
                     const abbr = side === 'home' ? (g.home_abbr || g.homeAbbr) : (g.away_abbr || g.awayAbbr);
                     const nick = String(team || '').trim().split(/\s+/).pop();
-                    const hit = map[_normTeamKey(team)] || map[_normTeamKey(abbr)] || map[_normTeamKey(nick)];
-                    if (hit) { g[side + '_pitcher'] = hit; changed = true; }
+                    let hit = '';
+                    if (gDate) {
+                        const keys = [_normTeamKey(team), _normTeamKey(abbr), _normTeamKey(nick)];
+                        for (let ki = 0; ki < keys.length && !hit; ki++) {
+                            if (!keys[ki]) continue;
+                            const v = map[gDate + '|' + keys[ki]];
+                            if (v && v !== '__AMBIG__') hit = v;
+                        }
+                    }
+                    const cur = pickGamePitcher(g, side);
+                    const next = hit || '';
+                    if (cur !== next) {
+                        g[side + '_pitcher'] = next;
+                        if (!next) {
+                            // Clear every alias pickGamePitcher reads so an
+                            // unverified (possibly yesterday's) name can't survive.
+                            delete g[side + '_probable_pitcher'];
+                            delete g[side + '_starter'];
+                            if (g.starters) delete g.starters[side];
+                        }
+                        changed = true;
+                    }
                 });
             });
             return changed;
         };
 
-        // Re-use a recent map (10 min) before hitting the network again.
-        const fresh = _mlbProbableState.map && (Date.now() - _mlbProbableState.fetchedAt < 600000);
+        // Re-use a recent map (10 min, same ET date) before hitting the network again.
+        const todayKey = _etDateKey();
+        const fresh = _mlbProbableState.map
+            && _mlbProbableState.dateKey === todayKey
+            && (Date.now() - _mlbProbableState.fetchedAt < 600000);
         if (fresh) { applyMap(_mlbProbableState.map); return; }
         if (_mlbProbableState.inflight) return;
         _mlbProbableState.inflight = true;
-        fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard', { cache: 'no-store' })
+        // Explicit today+tomorrow (ET) window so ESPN can never hand back a
+        // stale "current" scoreboard still parked on yesterday's slate.
+        const tmrwKey = _etDateKey(Date.now() + 86400000);
+        const datesQ = todayKey ? ('?dates=' + todayKey + (tmrwKey ? '-' + tmrwKey : '')) : '';
+        fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard' + datesQ, { cache: 'no-store' })
             .then(function(r) { return r.ok ? r.json() : null; })
             .then(function(data) {
                 _mlbProbableState.inflight = false;
@@ -2308,6 +2348,13 @@
                 data.events.forEach(function(evt) {
                     const comp = evt.competitions && evt.competitions[0];
                     if (!comp || !Array.isArray(comp.competitors)) return;
+                    // Only scheduled (pre-game) events contribute names. A
+                    // completed/live event's "probable" is who already threw.
+                    const st = (comp.status && comp.status.type) || (evt.status && evt.status.type) || {};
+                    if (st.completed === true) return;
+                    if (String(st.state || '').toLowerCase() !== 'pre') return;
+                    const evDate = _etDateKey(evt.date || comp.date);
+                    if (!evDate) return;
                     comp.competitors.forEach(function(c) {
                         const pr = c.probables;
                         let nm = '';
@@ -2317,13 +2364,19 @@
                         if (!nm) return;
                         const t = c.team || {};
                         [t.displayName, t.shortDisplayName, t.name, t.nickname, t.location, t.abbreviation].forEach(function(k) {
-                            if (k) map[_normTeamKey(k)] = nm;
+                            if (!k) return;
+                            const mk = evDate + '|' + _normTeamKey(k);
+                            // Same team twice on one date (doubleheader) with
+                            // different starters = ambiguous -> drop to TBD.
+                            if (map[mk] && map[mk] !== nm) { map[mk] = '__AMBIG__'; return; }
+                            map[mk] = nm;
                         });
                     });
                 });
                 _mlbProbableState.map = map;
                 _mlbProbableState.fetchedAt = Date.now();
-                // Re-render only if this enrichment actually filled something in.
+                _mlbProbableState.dateKey = todayKey;
+                // Re-render only if this enrichment actually changed something.
                 if (applyMap(map) && String(state.selectedSport || '').toUpperCase() === 'MLB') {
                     renderBoard(state.currentBoardSummary || null, state.currentBoard || []);
                 }
