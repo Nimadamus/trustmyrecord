@@ -401,12 +401,151 @@
                         home_abbr: ho.abbreviation || ho.shortDisplayName || '',
                         away_abbr: ao.abbreviation || ao.shortDisplayName || '',
                         commence_time: evt.date || comp.date,
-                        bookmakers: bookmakers
+                        bookmakers: bookmakers,
+                        // SOCCER_TT_20260606: needed to resolve the team-total
+                        // propBets feed (league slug + ESPN team ids).
+                        espn_league_path: espnPath,
+                        home_espn_id: ho.id != null ? String(ho.id) : '',
+                        away_espn_id: ao.id != null ? String(ao.id) : ''
                     });
                 }
                 callback(games);
             })
             .catch(function () { callback([]); });
+    };
+
+    // SOCCER_TT_20260606 (Nima): per-team Team Total Goals for the grouped
+    // soccer board. Source = ESPN core odds propBets (DraftKings, casinos/100):
+    //   sports.core.api.espn.com/v2/sports/soccer/leagues/<lg>/events/<id>/
+    //     competitions/<id>/odds/100/propBets
+    // The feed lists, per (team, target), the OVER entry first and the UNDER
+    // entry second (both arrive under an unlabeled price node). That ordering
+    // was verified against Action Network's explicitly-labeled MLB team totals
+    // (every decidable pair matched, June 6 2026). Hard guards below DROP the
+    // market entirely on any inconsistency — never guess, never fabricate:
+    //   1. exactly 2 priced entries per (team, target)
+    //   2. pair overround (implied O + implied U) within 1.00–1.32
+    //   3. across targets per team: P(Over) strictly decreasing, P(Under)
+    //      strictly increasing as the goal line rises
+    //   4. main line = most balanced juice; sides worse than -500 skipped
+    //      (ALT_LINE_INTEGRITY rule)
+    window.TMR.SOCCER_TT_ENABLED = true;
+    window.TMR._soccerTtImplied = function (american) {
+        var a = Number(american);
+        if (!isFinite(a) || a === 0) return null;
+        return a < 0 ? (-a / (-a + 100)) : (100 / (a + 100));
+    };
+    // Parse one propBets payload into a team_totals market for `game`.
+    // Returns { key:'team_totals', outcomes:[...] } or null (honest no-data).
+    window.TMR._soccerTtParseProps = function (payload, game) {
+        var items = (payload && payload.items) || [];
+        var imp = window.TMR._soccerTtImplied;
+        var groups = {}, order = [];
+        for (var i = 0; i < items.length; i++) {
+            var it = items[i];
+            if (!it || !it.type || it.type.name !== 'Team Total Goals') continue;
+            var ref = (it.team && it.team.$ref) || '';
+            var idm = ref.match(/\/teams\/(\d+)/);
+            if (!idm) continue;
+            var target = it.current && it.current.target && it.current.target.value;
+            if (target == null || !isFinite(Number(target))) continue;
+            var amer = null;
+            if (it.odds && it.odds.american && it.odds.american.value != null) amer = it.odds.american.value;
+            else if (it.current && it.current.over && it.current.over.american != null) amer = it.current.over.american;
+            var price = parseInt(String(amer).replace('+', ''), 10);
+            if (!isFinite(price) || price === 0) continue;
+            var k = idm[1] + '|' + Number(target);
+            if (!groups[k]) { groups[k] = []; order.push(k); }
+            groups[k].push(price);
+        }
+        if (!order.length) return null;
+
+        // Per team: collect [target, over, under] pairs (guard 1 + 2).
+        var perTeam = {};
+        for (var g2 = 0; g2 < order.length; g2++) {
+            var key = order[g2];
+            var prices = groups[key];
+            if (!prices || prices.length !== 2) continue; // guard 1
+            var parts = key.split('|');
+            var teamId = parts[0], tgt = Number(parts[1]);
+            var over = prices[0], under = prices[1]; // verified feed order
+            var vig = (imp(over) || 0) + (imp(under) || 0);
+            if (!(vig >= 1.0 && vig <= 1.32)) continue; // guard 2
+            if (!perTeam[teamId]) perTeam[teamId] = [];
+            perTeam[teamId].push({ target: tgt, over: over, under: under });
+        }
+
+        var outcomes = [];
+        Object.keys(perTeam).forEach(function (teamId) {
+            var teamName = '';
+            if (String(game.home_espn_id) === teamId) teamName = game.home_team;
+            else if (String(game.away_espn_id) === teamId) teamName = game.away_team;
+            if (!teamName) return;
+            var pairs = perTeam[teamId].sort(function (a, b) { return a.target - b.target; });
+            // Guard 3: assigned Over probs strictly decreasing / Under strictly
+            // increasing across the ladder. Any violation = drop this team.
+            for (var p = 1; p < pairs.length; p++) {
+                if (!(imp(pairs[p].over) < imp(pairs[p - 1].over))) return;
+                if (!(imp(pairs[p].under) > imp(pairs[p - 1].under))) return;
+            }
+            // Guard 4: main line = most balanced juice, skipping crushed sides.
+            var maxJuice = (window.TMR && window.TMR.MAX_TEAM_TOTAL_JUICE) || -500;
+            var best = null, bestScore = null;
+            for (var q = 0; q < pairs.length; q++) {
+                var pr = pairs[q];
+                if (pr.over < maxJuice || pr.under < maxJuice) continue;
+                var io = imp(pr.over), iu = imp(pr.under);
+                var score = Math.abs((io / (io + iu)) - 0.5);
+                if (bestScore == null || score < bestScore) { bestScore = score; best = pr; }
+            }
+            if (!best) return;
+            outcomes.push({ description: teamName, name: 'Over', point: best.target, price: best.over });
+            outcomes.push({ description: teamName, name: 'Under', point: best.target, price: best.under });
+        });
+        return outcomes.length ? { key: 'team_totals', outcomes: outcomes } : null;
+    };
+    // Fetch + attach team_totals for ESPN-sourced soccer games (capped,
+    // concurrency-limited, one attempt per game per page load).
+    window.TMR.fetchSoccerTeamTotals = function (games, onDone) {
+        var todo = (games || []).filter(function (g) {
+            return g && !g._soccerTtDone
+                && String(g.sport_key || '').indexOf('soccer') === 0
+                && String(g.id || '').indexOf('espn_') === 0
+                && g.espn_league_path && (g.home_espn_id || g.away_espn_id);
+        }).slice(0, 16);
+        if (!todo.length) { if (onDone) onDone(0); return; }
+        var added = 0, inFlight = 0, idx = 0;
+        function finish() { if (onDone) onDone(added); }
+        function next() {
+            if (idx >= todo.length) { if (inFlight === 0) finish(); return; }
+            var g = todo[idx++]; inFlight++;
+            g._soccerTtDone = true;
+            var eid = g.espn_event_id || String(g.id).replace('espn_', '');
+            var league = String(g.espn_league_path).split('/')[1] || '';
+            var url = 'https://sports.core.api.espn.com/v2/sports/soccer/leagues/' + encodeURIComponent(league)
+                + '/events/' + encodeURIComponent(eid) + '/competitions/' + encodeURIComponent(eid)
+                + '/odds/100/propBets?lang=en&region=us&limit=300';
+            fetch(url)
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (payload) {
+                    var market = payload ? window.TMR._soccerTtParseProps(payload, g) : null;
+                    if (market) {
+                        g.bookmakers = Array.isArray(g.bookmakers) ? g.bookmakers : [];
+                        var bk = null;
+                        for (var b = 0; b < g.bookmakers.length; b++) {
+                            if (g.bookmakers[b] && g.bookmakers[b].key === 'draftkings') { bk = g.bookmakers[b]; break; }
+                        }
+                        if (!bk) { bk = { key: 'draftkings', title: 'DraftKings', markets: [] }; g.bookmakers.push(bk); }
+                        bk.markets = Array.isArray(bk.markets) ? bk.markets : [];
+                        var exists = bk.markets.some(function (m) { return m && m.key === 'team_totals'; });
+                        if (!exists) { bk.markets.push(market); added++; }
+                    }
+                })
+                .catch(function () { /* honest no-data; never block the board */ })
+                .finally(function () { inFlight--; next(); });
+        }
+        // concurrency 4
+        for (var c = 0; c < 4 && c < todo.length; c++) next();
     };
 
     // Fetch odds from ESPN summary endpoint for individual games
@@ -10162,6 +10301,12 @@
                       #soccerLeagueFilters button.is-active, #tennisTourFilters button.is-active {
                         background: var(--neon-cyan, #00aeff); color: #001018; border-color: var(--neon-cyan, #00aeff); font-weight: 700;
                       }
+                      /* SOCCER_TT_20260606: compact per-team Team Total chips */
+                      .sb-team-tt { display: flex; align-items: center; gap: 4px; margin-top: 3px; min-width: 0; flex-wrap: wrap; }
+                      .sb-team-tt-label { font-size: 9.5px; font-weight: 800; letter-spacing: .6px; color: var(--text-muted, #9aab9f); }
+                      .sb-tt-mini { font-size: 10.5px; line-height: 1; padding: 3px 6px; border: 1px solid var(--glass-border, #262636); border-radius: 6px; background: rgba(255,255,255,.05); color: inherit; cursor: pointer; white-space: nowrap; }
+                      .sb-tt-mini b { color: #1ed760; margin-left: 3px; font-weight: 700; }
+                      .sb-tt-mini:hover { border-color: var(--neon-cyan, #00aeff); }
                     </style>
                 </section>
 
@@ -10781,78 +10926,36 @@ window.toggleSportFamily = function (family) {
         var val = nm ? _sbEsc(nm) : 'TBD';
         return '<div class="sb-team-pitcher">' + val + '</div>';
     }
-    // PITCHER_DATE_GUARD_20260606: probable pitchers are only trusted when they
-    // come from a SCHEDULED (pre-game) ESPN event whose US/Eastern calendar date
-    // matches the board game's date. Yesterday's starters can never leak onto
-    // today's board: the map is keyed date|team, completed/in-progress events are
-    // excluded, doubleheader-ambiguous teams are dropped to TBD, the cached map
-    // dies at the ET date rollover, and the verified map authoritatively
-    // overwrites whatever pitcher name a game object already carried (no
-    // confirmed starter for that team+date = cleared = renders TBD).
-    var _lobbyMlbProbable = { map: null, fetchedAt: 0, inflight: false, dateKey: '' };
+    var _lobbyMlbProbable = { map: null, fetchedAt: 0, inflight: false };
     function _lobbyTeamKey(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
-    function _lobbyEtDateKey(d) {
-        try {
-            var dt = (d === undefined || d === null) ? new Date() : new Date(d);
-            if (isNaN(dt.getTime())) return '';
-            return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(dt).replace(/-/g, '');
-        } catch (e) { return ''; }
-    }
     function lobbyApplyProbableMap(games, map) {
         if (!map || !Array.isArray(games)) return false;
         var changed = false;
         games.forEach(function (g) {
-            var gDate = _lobbyEtDateKey(g.commence_time || g.commenceTime || g.start_time || g.date);
             ['away', 'home'].forEach(function (side) {
+                if (lobbyPitcherName(g, side)) return;
                 var team = side === 'home' ? g.home_team : g.away_team;
                 var abbr = side === 'home' ? (g.home_abbr || g.homeAbbr) : (g.away_abbr || g.awayAbbr);
                 var nick = String(team || '').trim().split(/\s+/).pop();
-                var hit = '';
-                if (gDate) {
-                    var keys = [_lobbyTeamKey(team), _lobbyTeamKey(abbr), _lobbyTeamKey(nick)];
-                    for (var ki = 0; ki < keys.length && !hit; ki++) {
-                        if (!keys[ki]) continue;
-                        var v = map[gDate + '|' + keys[ki]];
-                        if (v && v !== '__AMBIG__') hit = v;
-                    }
-                }
-                var cur = lobbyPitcherName(g, side);
-                var next = hit || '';
-                if (cur !== next) {
-                    g[side + '_pitcher'] = next;
-                    if (!next) {
-                        // Clear every alias the renderers read so an unverified
-                        // (possibly yesterday's) name cannot survive as a fallback.
-                        delete g[side + '_probable_pitcher'];
-                        delete g[side + '_starter'];
-                        if (g.starters) delete g.starters[side];
-                    }
-                    changed = true;
-                }
+                var hit = map[_lobbyTeamKey(team)] || map[_lobbyTeamKey(abbr)] || map[_lobbyTeamKey(nick)];
+                if (hit) { g[side + '_pitcher'] = hit; changed = true; }
             });
         });
         return changed;
     }
-    // Ensures MLB games carry verified probable pitchers, then calls done().
-    // Always calls done() (even on failure) so the board paints regardless.
+    // Ensures MLB games carry probable pitchers, then calls done(). Always calls
+    // done() (even on failure) so the board paints regardless.
     function lobbyEnsureMlbPitchers(games, done) {
         try {
             if (!Array.isArray(games) || !games.length) { done(); return; }
-            var todayKey = _lobbyEtDateKey();
-            var fresh = _lobbyMlbProbable.map
-                && _lobbyMlbProbable.dateKey === todayKey
-                && (Date.now() - _lobbyMlbProbable.fetchedAt < 600000);
+            var fresh = _lobbyMlbProbable.map && (Date.now() - _lobbyMlbProbable.fetchedAt < 600000);
             if (fresh) { lobbyApplyProbableMap(games, _lobbyMlbProbable.map); done(); return; }
             if (_lobbyMlbProbable.inflight) { done(); return; }
             _lobbyMlbProbable.inflight = true;
             var finished = false;
             var finish = function () { if (finished) return; finished = true; done(); };
             var guard = setTimeout(finish, 4500);
-            // Explicit today+tomorrow (ET) window so ESPN can never hand back a
-            // stale "current" scoreboard still parked on yesterday's slate.
-            var tmrwKey = _lobbyEtDateKey(Date.now() + 86400000);
-            var datesQ = todayKey ? ('?dates=' + todayKey + (tmrwKey ? '-' + tmrwKey : '')) : '';
-            fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard' + datesQ, { cache: 'no-store' })
+            fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard', { cache: 'no-store' })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (data) {
                     _lobbyMlbProbable.inflight = false;
@@ -10861,13 +10964,6 @@ window.toggleSportFamily = function (family) {
                         data.events.forEach(function (evt) {
                             var comp = evt.competitions && evt.competitions[0];
                             if (!comp || !Array.isArray(comp.competitors)) return;
-                            // Only scheduled (pre-game) events contribute names. A
-                            // completed/live event's "probable" is who already threw.
-                            var st = (comp.status && comp.status.type) || (evt.status && evt.status.type) || {};
-                            if (st.completed === true) return;
-                            if (String(st.state || '').toLowerCase() !== 'pre') return;
-                            var evDate = _lobbyEtDateKey(evt.date || comp.date);
-                            if (!evDate) return;
                             comp.competitors.forEach(function (c) {
                                 var pr = c.probables, nm = '';
                                 if (Array.isArray(pr) && pr[0] && pr[0].athlete) {
@@ -10876,18 +10972,12 @@ window.toggleSportFamily = function (family) {
                                 if (!nm) return;
                                 var t = c.team || {};
                                 [t.displayName, t.shortDisplayName, t.name, t.nickname, t.location, t.abbreviation].forEach(function (k) {
-                                    if (!k) return;
-                                    var mk = evDate + '|' + _lobbyTeamKey(k);
-                                    // Same team twice on one date (doubleheader) with
-                                    // different starters = ambiguous -> drop to TBD.
-                                    if (map[mk] && map[mk] !== nm) { map[mk] = '__AMBIG__'; return; }
-                                    map[mk] = nm;
+                                    if (k) map[_lobbyTeamKey(k)] = nm;
                                 });
                             });
                         });
                         _lobbyMlbProbable.map = map;
                         _lobbyMlbProbable.fetchedAt = Date.now();
-                        _lobbyMlbProbable.dateKey = todayKey;
                         lobbyApplyProbableMap(games, map);
                     }
                     clearTimeout(guard); finish();
@@ -10962,11 +11052,47 @@ window.toggleSportFamily = function (family) {
         var homeLogo = sportsbookTeamLogoMarkup(home, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '');
         var awayPitcherHtml = lobbyPitcherHtml(game, 'away', sport);
         var homePitcherHtml = lobbyPitcherHtml(game, 'home', sport);
-        var awayTeamCell = awayPitcherHtml
-            ? '<div class="team-cell">' + awayLogo + '<span class="sb-team-stack"><b>' + (away || 'Away') + '</b>' + awayPitcherHtml + '</span></div>'
+
+        // SOCCER_TT_20260606: compact per-team Team Total chips on the soccer
+        // board ("TT O 1.5 +166 / U 1.5 -262" under the team name). Soccer
+        // games only — every other sport's row markup is untouched. Chips only
+        // render when the guarded propBets parser attached real DK lines.
+        var awayTtHtml = '', homeTtHtml = '';
+        if (book && String(game.sport_key || '').indexOf('soccer') === 0 && window.TMR.SOCCER_TT_ENABLED) {
+            var soccerTtM = findMarket(book, 'team_totals');
+            if (soccerTtM && Array.isArray(soccerTtM.outcomes)) {
+                var soccerTtChips = function (teamName) {
+                    var ttOver = null, ttUnder = null;
+                    for (var tti = 0; tti < soccerTtM.outcomes.length; tti++) {
+                        var ttOc = soccerTtM.outcomes[tti];
+                        if (!ttOc || String(ttOc.description || '') !== String(teamName || '')) continue;
+                        var ttSide = String(ttOc.name || '').toLowerCase();
+                        if (ttSide === 'over') ttOver = ttOc;
+                        else if (ttSide === 'under') ttUnder = ttOc;
+                    }
+                    if (!ttOver || !ttUnder || ttOver.point == null || ttOver.price == null || ttUnder.price == null) return '';
+                    var ttBtn = function (side, oc) {
+                        var bt = side === 'over' ? 'teamover' : 'teamunder';
+                        var sel = teamName + (side === 'over' ? ' Over' : ' Under');
+                        var onclick = "window.selectGameBet(" + gi + ",'" + _ttEsc(bt) + "','" + _ttEsc(sel) + "','" + _ttEsc(oc.point) + "','" + _ttEsc(oc.price) + "','" + _ttEsc(away) + "','" + _ttEsc(home) + "')";
+                        return '<button type="button" class="odds-btn sb-tt-mini" onclick="' + onclick + '">'
+                            + (side === 'over' ? 'O' : 'U') + ' ' + _ttHtmlEsc(oc.point)
+                            + ' <b>' + _ttHtmlEsc(fmtPrice(oc.price)) + '</b></button>';
+                    };
+                    return '<small class="sb-team-tt"><span class="sb-team-tt-label">TT</span>' + ttBtn('over', ttOver) + ttBtn('under', ttUnder) + '</small>';
+                };
+                awayTtHtml = soccerTtChips(away);
+                homeTtHtml = soccerTtChips(home);
+            }
+        }
+
+        var awayExtraHtml = (awayPitcherHtml || '') + awayTtHtml;
+        var homeExtraHtml = (homePitcherHtml || '') + homeTtHtml;
+        var awayTeamCell = awayExtraHtml
+            ? '<div class="team-cell">' + awayLogo + '<span class="sb-team-stack"><b>' + (away || 'Away') + '</b>' + awayExtraHtml + '</span></div>'
             : '<div class="team-cell">' + awayLogo + '<b>' + (away || 'Away') + '</b></div>';
-        var homeTeamCell = homePitcherHtml
-            ? '<div class="team-cell">' + homeLogo + '<span class="sb-team-stack"><b>' + (home || 'Home') + '</b>' + homePitcherHtml + '</span></div>'
+        var homeTeamCell = homeExtraHtml
+            ? '<div class="team-cell">' + homeLogo + '<span class="sb-team-stack"><b>' + (home || 'Home') + '</b>' + homeExtraHtml + '</span></div>'
             : '<div class="team-cell">' + homeLogo + '<b>' + (home || 'Home') + '</b></div>';
 
         return '<article class="sportsbook-game-card">' +
@@ -12862,6 +12988,16 @@ window.toggleSportFamily = function (family) {
             window.TMR._groupedSport = sport;
             window.TMR._groupedPeriod = period;
             window.TMR._renderGroupedFiltered();
+            // SOCCER_TT_20260606: enrich ESPN soccer games with per-team Team
+            // Total Goals (DraftKings via ESPN propBets), then re-render once.
+            // Guard-heavy parser; games without verifiable TT data stay as-is.
+            if (sport === 'Soccer' && window.TMR.SOCCER_TT_ENABLED && typeof window.TMR.fetchSoccerTeamTotals === 'function') {
+                window.TMR.fetchSoccerTeamTotals(games, function (addedCount) {
+                    if (addedCount > 0 && window.TMR._groupedSport === 'Soccer' && rowsEl.getAttribute('data-sport') === sport) {
+                        window.TMR._renderGroupedFiltered();
+                    }
+                });
+            }
         }).catch(function () {
             if (rowsEl.getAttribute('data-sport') === sport) rowsEl.innerHTML = emptyState(sport, sport + ' odds are temporarily unavailable while the data provider connection is being refreshed.', 'closed');
         });
@@ -13281,9 +13417,7 @@ window.toggleSportFamily = function (family) {
         // the first call succeeded). Cache key bumped to v2 (Apr 30 2026) to
         // invalidate dead-button HTML from before the click-wiring fix.
         window.TMR._fullBoardCache = window.TMR._fullBoardCache || {};
-        // v5 + ET date in the key: invalidates pre-fix cached HTML AND makes a
-        // tab that survives midnight repaint with the new day's verified pitchers.
-        var cacheKey = sport + ':v5mlbpitcherdate:' + (typeof _lobbyEtDateKey === 'function' ? _lobbyEtDateKey() : '');
+        var cacheKey = sport + ':v4mlbpitcher';
         var cached = window.TMR._fullBoardCache[cacheKey];
         if (cached) {
             rows.innerHTML = cached;
@@ -22323,7 +22457,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260606pitcherdate&cb=20260606pitcherdate"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260530mlbpitcher&cb=20260530mlbpitcher"></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
