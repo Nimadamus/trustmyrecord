@@ -131,4 +131,13 @@ assert(pending.includes('Full Game Total'), 'pending full-game total label must 
 assert(pending.includes('Team Total'), 'pending team total label must remain');
 assert(!/side\s*\?\s*side\s*\+\s*['"]\s['"]\s*\+\s*line/.test(pending), 'pending Line column must not prefix totals with U/O');
 
+// PICK_LINE_SINGLE_SOURCE_20260605: pick text and the LINE column must both
+// derive from line_snapshot - a wager can never display two different lines
+// (the "Over 217.5 214.5" bug). See tests/pick-line-single-source-test.js
+// for the behavioral proof on the real formatters.
+const backendApi = fs.readFileSync(path.join(root, 'static', 'js', 'backend-api.js'), 'utf8');
+assert(backendApi.includes('PICK_LINE_SINGLE_SOURCE_20260605'), 'backend-api.js single-source line guard must remain');
+assert(pending.includes('PICK_LINE_SINGLE_SOURCE_20260605'), 'pending picks single-source line guard must remain');
+assert(reliability.includes('PICK_LINE_SINGLE_SOURCE_20260605'), 'sportsbook reliability line fallback guard must remain');
+
 console.log('protected baseline regression test passed');
