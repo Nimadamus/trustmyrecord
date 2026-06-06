@@ -12530,7 +12530,15 @@ window.toggleSportFamily = function (family) {
             line: lineNum,
             odds: info.odds,
             group_label: info.group || 'Player Props',
-            book_title: 'Sportsbook feed'
+            book_title: 'Sportsbook feed',
+            // NBA_NHL_PROPS_20260606: carry the visible prop odds in the
+            // submitted game snapshot so the backend can verify the selection
+            // even when the schedule-ingested game row has no stored odds.
+            bookmakers: [{
+                key: 'submitted_board',
+                title: 'Sportsbook feed',
+                markets: [{ key: info.marketType || 'pitcher_strikeouts', outcomes: [{ name: selection, point: lineNum, price: parseInt(info.odds, 10) }] }]
+            }]
         });
         if (ok === false) return;
         try { if (window.TMR && typeof window.TMR._ttScrollToPickSlip === 'function') window.TMR._ttScrollToPickSlip(); } catch (_) {}
