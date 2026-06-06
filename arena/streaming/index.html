@@ -39,6 +39,14 @@
     </div>
 
     <div class="as-main">
+        <!-- ARENA_LIVE_NOW_20260605: public live-stream players. Hidden unless
+             the flag-gated backend returns live streams; flag off (404) or an
+             empty list = section never renders, page reads as roadmap only. -->
+        <div class="as-section" id="liveNowSection" style="display:none;margin-top:0">
+            <div class="as-section-head"><h2><i class="fas fa-circle" style="color:#e53e3e"></i> Live Now</h2></div>
+            <div class="as-grid" id="liveNowGrid"></div>
+        </div>
+
         <div class="as-section" style="margin-top:0">
             <div class="as-section-head"><h2><i class="fas fa-video"></i> What is coming</h2></div>
             <div class="as-grid">
@@ -105,7 +113,7 @@
             <p>The full streaming policy will be published before launch. The ground rules already set:</p>
             <p><strong>Allowed:</strong> your own live gameplay of Arena-supported titles, match commentary, and community discussion around your verified record and challenges.</p>
             <p><strong>Not allowed:</strong> rebroadcasting copyrighted content (TV broadcasts, other people's streams, pay-per-view events), music you do not have rights to (we recommend disabling in-game licensed soundtrack audio), harassment, and any content unrelated to sports gaming. Violations end in suspension of streaming access, which is a privilege, not a right.</p>
-            <p><strong>Copyright complaints:</strong> TrustMyRecord responds to valid takedown notices. A dedicated DMCA policy page and designated agent contact will be published with the streaming launch. Until then, copyright concerns can be reported through the <a href="/support/">support page</a>.</p>
+            <p><strong>Copyright complaints:</strong> TrustMyRecord responds to valid takedown notices under our <a href="/dmca/">DMCA policy</a>. Copyright concerns can also be reported through the <a href="/contact/">contact page</a>.</p>
         </div>
 
         <div class="as-disclaimer" id="arenaDisclaimer"></div>
@@ -120,6 +128,7 @@
         document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
         A.ready(async function (api) {
             if (!api) return;
+            loadLiveNow(api); // ARENA_LIVE_NOW_20260605 - public, independent of login
             const me = await A.currentUser(api);
             const statusEl = document.getElementById('streamerStatus');
             const applyWrap = document.getElementById('applyWrap');
@@ -138,6 +147,35 @@
             } catch (_) {
                 statusEl.textContent = 'Status unavailable right now.';
             }
+            // ARENA_LIVE_NOW_20260605 - render embedded Cloudflare Stream players
+            // for everyone when streams are live. 404 (flag off) / error / empty
+            // list all leave the section hidden. Refreshes every 60s.
+            async function loadLiveNow(api) {
+                const section = document.getElementById('liveNowSection');
+                const grid = document.getElementById('liveNowGrid');
+                async function render() {
+                    let data;
+                    try { data = await api.request('/arena/streams/live'); }
+                    catch (_) { return; } // flag off or backend hiccup - stay hidden
+                    const streams = (data && data.streams || []).filter(function (s) {
+                        return s.stream_playback_url && /^https:\/\/[a-z0-9-]+\.cloudflarestream\.com\//i.test(s.stream_playback_url);
+                    });
+                    if (!streams.length) { section.style.display = 'none'; return; }
+                    grid.innerHTML = streams.map(function (s) {
+                        const name = A.esc(s.display_name || s.username);
+                        return '<div class="as-card" style="grid-column:1/-1">' +
+                            '<h3><span class="as-pill live" style="background:#e53e3e;color:#fff">LIVE</span> ' + name +
+                            ' <a href="/profile/?user=' + encodeURIComponent(s.username) + '" style="font-size:.85em;font-weight:500">@' + A.esc(s.username) + '</a></h3>' +
+                            '<div style="position:relative;padding-top:56.25%;margin-top:10px;border-radius:8px;overflow:hidden;background:#000">' +
+                            '<iframe src="' + A.esc(s.stream_playback_url) + '" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;" allowfullscreen></iframe>' +
+                            '</div></div>';
+                    }).join('');
+                    section.style.display = 'block';
+                }
+                await render();
+                setInterval(render, 60000);
+            }
+
             // ARENA_STREAM_KEY_PANEL_20260605 - approved streamers only.
             // Probes the flag-gated public endpoint first; 404 means streaming
             // is not enabled yet, so no key UI is shown at all.
