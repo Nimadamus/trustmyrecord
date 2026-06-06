@@ -1944,6 +1944,15 @@
         }
     }
 
+    // TICKET_ID_20260605 (Nima): every wager gets a sportsbook-style ticket
+    // number derived from its immutable backend pick id (e.g. TMR-0001144).
+    // No schema change — covers every past and future pick automatically.
+    window.TMR = window.TMR || {};
+    window.TMR.ticketId = function (id) {
+        var n = Number(id);
+        return Number.isFinite(n) && n > 0 ? 'TMR-' + String(Math.floor(n)).padStart(7, '0') : '';
+    };
+
     window.lockInPick = function() {
         if (window.__tmrProductionLockInPick && window.__tmrProductionLockInPick !== window.lockInPick) {
             return window.__tmrProductionLockInPick();
@@ -2123,6 +2132,18 @@
             var displayMeta = thePick.awayTeam + ' @ ' + thePick.homeTeam + '  |  ' + units + 'u  |  ' + (thePick.sport || '') + '  |  ' + lockMsg;
             if (el1) el1.textContent = displayPick;
             if (el2) el2.textContent = displayMeta;
+
+            // TICKET_ID_20260605: surface the ticket number on the
+            // confirmation screen once the backend has issued the pick id.
+            var ticket = (newPick._backendSynced && window.TMR && typeof window.TMR.ticketId === 'function') ? window.TMR.ticketId(newPick.id) : '';
+            var tEl = document.getElementById('confirmTicketId');
+            if (!tEl && el1 && el1.parentNode) {
+                tEl = document.createElement('div');
+                tEl.id = 'confirmTicketId';
+                tEl.style.cssText = 'color:#ffd700;font-size:15px;font-weight:bold;letter-spacing:1px;margin:6px 0;';
+                el1.parentNode.insertBefore(tEl, el1.nextSibling);
+            }
+            if (tEl) tEl.textContent = ticket ? 'Ticket #' + ticket : '';
 
             analyticsTrackSportsbook('sportsbook_pick_created', {
                 sport: thePick.sport || '',
@@ -11297,7 +11318,9 @@ window.toggleSportFamily = function (family) {
                 unitsText: unitsText,
                 game: game,
                 submitted: fmtSubmitted(p.locked_at || p.created_at),
-                lockedAt: p.locked_at || p.created_at || ''
+                lockedAt: p.locked_at || p.created_at || '',
+                // TICKET_ID_20260605: derived ticket number for display
+                ticket: (window.TMR && typeof window.TMR.ticketId === 'function') ? window.TMR.ticketId(p.id) : ''
             };
         }
 
@@ -11330,6 +11353,7 @@ window.toggleSportFamily = function (family) {
                 return '<div class="tmr-pending-pick">'
                     + '<span class="tmr-pending-pick-sport">' + escapeHtml(p.sport) + '</span>'
                     + '<strong>' + escapeHtml(p.selection) + '</strong>'
+                    + (p.ticket ? '<span class="tmr-pending-pick-ticket" style="display:block;color:#ffd700;font-size:11px;font-weight:700;letter-spacing:0.5px;">Ticket #' + escapeHtml(p.ticket) + '</span>' : '')
                     + '<span class="tmr-pending-pick-odds">' + escapeHtml(fmtOdds(p.odds)) + ' · ' + escapeHtml(p.unitsText) + '</span>'
                     + '<span class="tmr-pending-pick-meta">' + escapeHtml(p.market) + (p.game ? ' · ' + escapeHtml(p.game) : '') + (p.submitted ? ' · Submitted: ' + escapeHtml(p.submitted) : '') + '</span>'
                     + '<span class="tmr-pending-status">Awaiting Grade</span>'
