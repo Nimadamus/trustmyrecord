@@ -683,8 +683,9 @@
     if (error === "missing trend search") return "Select the kind of trend you want to search for.";
     if (error === "missing_side") return "Missing field: choose a Side (which team/over-under) for the " + marketLabel + " trend.";
     if (error === "missing_team") return "Missing field: choose a Team for the " + marketLabel + " trend.";
-    if (error === "missing_line") return "Missing field: enter the " + marketLabel + " line (a number, e.g. -1.5) before generating.";
-    if (error === "invalid_line") return "Invalid field: the " + marketLabel + " line must be a number (e.g. -1.5).";
+    var lineExample = market && /total/i.test(market.id || "") ? "8.5" : "-1.5";
+    if (error === "missing_line") return "Missing field: enter the " + marketLabel + " line (a number, e.g. " + lineExample + ") before generating.";
+    if (error === "invalid_line") return "Invalid field: the " + marketLabel + " line must be a number (e.g. " + lineExample + ").";
     if (error === "missing_sample") return "Missing field: set a minimum sample size of at least 1.";
     if (error === "invalid combination") return "Invalid combination for the selected sport or market.";
     return "Trend calculation unavailable until dataset is connected.";
