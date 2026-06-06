@@ -1128,9 +1128,17 @@ if (typeof window !== 'undefined') {
         if (!selection) return 'Pick';
         if (isMoneyline) return /\b(ml|moneyline)\b/i.test(selection) ? selection : selection + ' ML';
 
+        // PICK_LINE_SINGLE_SOURCE_20260605: when a stored line exists, strip
+        // ANY trailing numeric token from the selection text - not just one
+        // matching the stored line - so a stale embedded line can never
+        // surface next to the real line_snapshot.
         let cleaned = selection;
-        if (signedLine) cleaned = cleaned.replace(new RegExp('\\s+' + signedLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), '').trim();
-        if (escapedPlainLine) cleaned = cleaned.replace(new RegExp('\\s+[+-]?' + escapedPlainLine + '$'), '').trim();
+        if (hasLine) {
+            cleaned = cleaned.replace(/\s+[+-]?\d+(\.\d+)?$/, '').trim();
+        } else {
+            if (signedLine) cleaned = cleaned.replace(new RegExp('\\s+' + signedLine.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$'), '').trim();
+            if (escapedPlainLine) cleaned = cleaned.replace(new RegExp('\\s+[+-]?' + escapedPlainLine + '$'), '').trim();
+        }
 
         if (isTeamTotal && hasTotalSide && !/\bteam\s+total\b/i.test(cleaned)) {
             return cleaned.replace(/\b(over|under)\b/i, 'Team Total $1');
@@ -1183,7 +1191,13 @@ if (typeof window !== 'undefined') {
         if (market === 'totals' || market === 'total' || market.endsWith('_totals')) {
             if (!plainLine) return matchup && hasTotalSide && !hasMatchup ? matchup + ' ' + selection : selection;
             if (hasTotalSide) {
-                const selectionWithLine = selection.match(new RegExp('\\b' + plainLine.replace('.', '\\.') + '\\b')) ? selection : selection + ' ' + plainLine;
+                // PICK_LINE_SINGLE_SOURCE_20260605: the rendered line ALWAYS
+                // comes from the stored line_snapshot. Strip any line embedded
+                // in the selection text first, then append the canonical line,
+                // so a total can never display two different numbers
+                // (the "Over 217.5 214.5" bug).
+                const strippedSelection = selection.replace(/\s+[+-]?\d+(\.\d+)?$/, '').trim();
+                const selectionWithLine = strippedSelection + ' ' + plainLine;
                 return matchup && !hasMatchup ? matchup + ' ' + selectionWithLine : selectionWithLine;
             }
             if (lowerSelection === 'over' || lowerSelection === 'under') return selection + ' ' + plainLine;
