@@ -10301,12 +10301,16 @@
                       #soccerLeagueFilters button.is-active, #tennisTourFilters button.is-active {
                         background: var(--neon-cyan, #00aeff); color: #001018; border-color: var(--neon-cyan, #00aeff); font-weight: 700;
                       }
-                      /* SOCCER_TT_20260606: compact per-team Team Total chips */
-                      .sb-team-tt { display: flex; align-items: center; gap: 4px; margin-top: 3px; min-width: 0; flex-wrap: wrap; }
+                      /* SOCCER_TT_20260606: compact per-team Team Total chips.
+                         !important overrides the global .odds-btn block sizing
+                         (width/padding/flex) so chips stay small and inline. */
+                      .sb-team-tt { display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 5px; margin-top: 3px; min-width: 0; flex-wrap: wrap; }
                       .sb-team-tt-label { font-size: 9.5px; font-weight: 800; letter-spacing: .6px; color: var(--text-muted, #9aab9f); }
-                      .sb-tt-mini { font-size: 10.5px; line-height: 1; padding: 3px 6px; border: 1px solid var(--glass-border, #262636); border-radius: 6px; background: rgba(255,255,255,.05); color: inherit; cursor: pointer; white-space: nowrap; }
-                      .sb-tt-mini b { color: #1ed760; margin-left: 3px; font-weight: 700; }
-                      .sb-tt-mini:hover { border-color: var(--neon-cyan, #00aeff); }
+                      .sb-tt-mini, .odds-btn.sb-tt-mini { display: inline-flex !important; flex-direction: row !important; align-items: center !important; width: auto !important; min-width: 0 !important; min-height: 0 !important; height: auto !important; font-size: 10.5px !important; line-height: 1.1 !important; padding: 3px 7px !important; margin: 0 !important; border: 1px solid var(--glass-border, #262636) !important; border-radius: 6px !important; background: rgba(255,255,255,.05) !important; color: inherit !important; cursor: pointer; white-space: nowrap !important; gap: 3px; }
+                      .sb-tt-mini b { color: #1ed760; margin-left: 3px; font-weight: 700; font-size: 10.5px; }
+                      .sb-tt-mini:hover { border-color: var(--neon-cyan, #00aeff) !important; }
+                      .odds-btn.sb-tt-mini.selected { background: var(--gradient-gold, #ffd700) !important; color: #001018 !important; }
+                      .odds-btn.sb-tt-mini.selected b { color: #001018; }
                     </style>
                 </section>
 
