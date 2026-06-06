@@ -9515,6 +9515,10 @@
     }
 
     function pickRow(p, rtMap) {
+        // TICKET_ID_20260605 (Nima): sportsbook-style ticket number derived
+        // from the immutable backend pick id — shown on every wager row.
+        const _ticketNum = Number(p.id);
+        const ticket = (Number.isFinite(_ticketNum) && _ticketNum > 0) ? 'TMR-' + String(Math.floor(_ticketNum)).padStart(7, '0') : '';
         const date = p.locked_at || p.created_at || '';
         const _pd = date ? new Date(date) : null;
         const _pdET = _pd ? (function() {
@@ -9557,7 +9561,7 @@
             '<td data-label="Submitted"><div>' + dateStr + '</div><div class="ledger-muted">' + timeStr + '</div></td>' +
             '<td data-label="Sport"><span class="pick-sport ' + sc + '">' + sport + '</span></td>' +
             '<td data-label="Game" class="col-game"><div class="ledger-pick-title">' + matchup + '</div><div class="ledger-game-meta">' + (p.event_name || 'Tracked pick') + '</div></td>' +
-            '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div><div class="ledger-pick-meta">' + (p.notes || '') + '</div></td>' +
+            '<td data-label="Pick" class="col-pick"><div class="ledger-pick-title">' + sel + '</div><div class="ledger-pick-meta">' + (ticket ? '<span style="color:#ffd700;font-weight:700;">Ticket #' + ticket + '</span>' + (p.notes ? ' · ' : '') : '') + (p.notes || '') + '</div></td>' +
             '<td data-label="Market"><span class="ledger-type">' + market + '</span></td>' +
             '<td data-label="Line">' + line + '</td>' +
             '<td data-label="Odds">' + odds + '</td>' +
