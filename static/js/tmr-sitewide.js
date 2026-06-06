@@ -1098,6 +1098,7 @@
                         <a href="/rules/">Rules</a>
                         <a href="/terms/">Terms</a>
                         <a href="/privacy/">Privacy</a>
+                        <a href="/dmca/">DMCA</a>
                         <a href="/contact/">Contact Us</a>
                         <a href="/report-bug/">Report a Bug</a>
                     </div>
