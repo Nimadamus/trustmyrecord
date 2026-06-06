@@ -4675,10 +4675,13 @@ function escapeHtml(value) {
     }
 
     async function buildTrendSpotter(users, bust) {
+        // TREND_EXCLUDE_OWNER_20260605: keep the site owner's account out of the
+        // homepage Trend Spotter module; someone else fills the slot.
+        const TREND_EXCLUDE = { 'moneymakers': true };
         // Candidate cappers: real users with at least one graded pick, richest
         // records first. Cap fan-out at 16 lookups, display up to 8 winners.
         const candidates = (users || [])
-            .filter(function (u) { return u && u.username && number(u.total_picks || u.totalPicks, 0) > 0; })
+            .filter(function (u) { return u && u.username && !TREND_EXCLUDE[String(u.username).toLowerCase()] && number(u.total_picks || u.totalPicks, 0) > 0; })
             .sort(function (a, b) { return number(b.net_units || b.netUnits, -Infinity) - number(a.net_units || a.netUnits, -Infinity); })
             .slice(0, 16);
 
@@ -4712,7 +4715,7 @@ function escapeHtml(value) {
             const shown = {};
             entries.forEach(function (e) { shown[String(e.usernameRaw).toLowerCase()] = true; });
             const extra = (users || [])
-                .filter(function (u) { return u && u.username && !shown[String(u.username).toLowerCase()] && number(u.total_picks || u.totalPicks, 0) > 0; })
+                .filter(function (u) { return u && u.username && !TREND_EXCLUDE[String(u.username).toLowerCase()] && !shown[String(u.username).toLowerCase()] && number(u.total_picks || u.totalPicks, 0) > 0; })
                 .sort(function (a, b) { return number(b.net_units || b.netUnits, -Infinity) - number(a.net_units || a.netUnits, -Infinity); });
             for (let i = 0; i < extra.length && entries.length < TARGET_ROWS; i++) {
                 const u = extra[i];
