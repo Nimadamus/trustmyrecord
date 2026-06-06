@@ -302,6 +302,7 @@
                     <table>
                         <thead>
                             <tr>
+                                <th>Ticket #</th>
                                 <th>Date of Game (ET)</th>
                                 <th>League</th>
                                 <th>Pick</th>
@@ -514,10 +515,17 @@
             }
             return 'Unknown';
         }
+        // TICKET_ID_20260605 (Nima): sportsbook-style ticket number derived
+        // from the immutable backend pick id — shown on every pending wager.
+        function ticketId(pick) {
+            var n = Number(pick && pick.id);
+            return (isFinite(n) && n > 0) ? 'TMR-' + ('0000000' + String(Math.floor(n))).slice(-7) : '-';
+        }
         function rowHtml(pick) {
             var pickLabel = pickText(pick);
             var stake = stakeAmounts(pick);
             return '<tr>'
+                + '<td><span style="color:#ffd700;font-weight:700;letter-spacing:0.5px;">' + esc(ticketId(pick)) + '</span></td>'
                 + '<td>' + esc(fmtDate(pick.commence_time)) + '<span class="pick-sub">' + esc(matchup(pick)) + '</span></td>'
                 + '<td><span class="league-chip">' + esc(sportLabel(pick.sport_key)) + '</span></td>'
                 + '<td><span class="pick-main">' + esc(pickLabel) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span></td>'
@@ -535,6 +543,7 @@
         function cardHtml(pick) {
             var stake = stakeAmounts(pick);
             return '<article class="pending-card">'
+                + cardRow('Ticket #', '<span style="color:#ffd700;font-weight:700;letter-spacing:0.5px;">' + esc(ticketId(pick)) + '</span>')
                 + cardRow('Date of Game', esc(fmtDate(pick.commence_time)) + '<span class="pick-sub">' + esc(matchup(pick)) + '</span>')
                 + cardRow('League', '<span class="league-chip">' + esc(sportLabel(pick.sport_key)) + '</span>')
                 + cardRow('Pick', '<span class="pick-main">' + esc(pickText(pick)) + '</span><span class="pick-sub">' + esc(marketLabel(pick.market_type)) + '</span>')
