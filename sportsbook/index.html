@@ -10781,36 +10781,78 @@ window.toggleSportFamily = function (family) {
         var val = nm ? _sbEsc(nm) : 'TBD';
         return '<div class="sb-team-pitcher">' + val + '</div>';
     }
-    var _lobbyMlbProbable = { map: null, fetchedAt: 0, inflight: false };
+    // PITCHER_DATE_GUARD_20260606: probable pitchers are only trusted when they
+    // come from a SCHEDULED (pre-game) ESPN event whose US/Eastern calendar date
+    // matches the board game's date. Yesterday's starters can never leak onto
+    // today's board: the map is keyed date|team, completed/in-progress events are
+    // excluded, doubleheader-ambiguous teams are dropped to TBD, the cached map
+    // dies at the ET date rollover, and the verified map authoritatively
+    // overwrites whatever pitcher name a game object already carried (no
+    // confirmed starter for that team+date = cleared = renders TBD).
+    var _lobbyMlbProbable = { map: null, fetchedAt: 0, inflight: false, dateKey: '' };
     function _lobbyTeamKey(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+    function _lobbyEtDateKey(d) {
+        try {
+            var dt = (d === undefined || d === null) ? new Date() : new Date(d);
+            if (isNaN(dt.getTime())) return '';
+            return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(dt).replace(/-/g, '');
+        } catch (e) { return ''; }
+    }
     function lobbyApplyProbableMap(games, map) {
         if (!map || !Array.isArray(games)) return false;
         var changed = false;
         games.forEach(function (g) {
+            var gDate = _lobbyEtDateKey(g.commence_time || g.commenceTime || g.start_time || g.date);
             ['away', 'home'].forEach(function (side) {
-                if (lobbyPitcherName(g, side)) return;
                 var team = side === 'home' ? g.home_team : g.away_team;
                 var abbr = side === 'home' ? (g.home_abbr || g.homeAbbr) : (g.away_abbr || g.awayAbbr);
                 var nick = String(team || '').trim().split(/\s+/).pop();
-                var hit = map[_lobbyTeamKey(team)] || map[_lobbyTeamKey(abbr)] || map[_lobbyTeamKey(nick)];
-                if (hit) { g[side + '_pitcher'] = hit; changed = true; }
+                var hit = '';
+                if (gDate) {
+                    var keys = [_lobbyTeamKey(team), _lobbyTeamKey(abbr), _lobbyTeamKey(nick)];
+                    for (var ki = 0; ki < keys.length && !hit; ki++) {
+                        if (!keys[ki]) continue;
+                        var v = map[gDate + '|' + keys[ki]];
+                        if (v && v !== '__AMBIG__') hit = v;
+                    }
+                }
+                var cur = lobbyPitcherName(g, side);
+                var next = hit || '';
+                if (cur !== next) {
+                    g[side + '_pitcher'] = next;
+                    if (!next) {
+                        // Clear every alias the renderers read so an unverified
+                        // (possibly yesterday's) name cannot survive as a fallback.
+                        delete g[side + '_probable_pitcher'];
+                        delete g[side + '_starter'];
+                        if (g.starters) delete g.starters[side];
+                    }
+                    changed = true;
+                }
             });
         });
         return changed;
     }
-    // Ensures MLB games carry probable pitchers, then calls done(). Always calls
-    // done() (even on failure) so the board paints regardless.
+    // Ensures MLB games carry verified probable pitchers, then calls done().
+    // Always calls done() (even on failure) so the board paints regardless.
     function lobbyEnsureMlbPitchers(games, done) {
         try {
             if (!Array.isArray(games) || !games.length) { done(); return; }
-            var fresh = _lobbyMlbProbable.map && (Date.now() - _lobbyMlbProbable.fetchedAt < 600000);
+            var todayKey = _lobbyEtDateKey();
+            var fresh = _lobbyMlbProbable.map
+                && _lobbyMlbProbable.dateKey === todayKey
+                && (Date.now() - _lobbyMlbProbable.fetchedAt < 600000);
             if (fresh) { lobbyApplyProbableMap(games, _lobbyMlbProbable.map); done(); return; }
             if (_lobbyMlbProbable.inflight) { done(); return; }
             _lobbyMlbProbable.inflight = true;
             var finished = false;
             var finish = function () { if (finished) return; finished = true; done(); };
             var guard = setTimeout(finish, 4500);
-            fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard', { cache: 'no-store' })
+            // Explicit today+tomorrow (ET) window so ESPN can never hand back a
+            // stale "current" scoreboard still parked on yesterday's slate.
+            var tmrwKey = _lobbyEtDateKey(Date.now() + 86400000);
+            var datesQ = todayKey ? ('?dates=' + todayKey + (tmrwKey ? '-' + tmrwKey : '')) : '';
+            fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard' + datesQ, { cache: 'no-store' })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (data) {
                     _lobbyMlbProbable.inflight = false;
@@ -10819,6 +10861,13 @@ window.toggleSportFamily = function (family) {
                         data.events.forEach(function (evt) {
                             var comp = evt.competitions && evt.competitions[0];
                             if (!comp || !Array.isArray(comp.competitors)) return;
+                            // Only scheduled (pre-game) events contribute names. A
+                            // completed/live event's "probable" is who already threw.
+                            var st = (comp.status && comp.status.type) || (evt.status && evt.status.type) || {};
+                            if (st.completed === true) return;
+                            if (String(st.state || '').toLowerCase() !== 'pre') return;
+                            var evDate = _lobbyEtDateKey(evt.date || comp.date);
+                            if (!evDate) return;
                             comp.competitors.forEach(function (c) {
                                 var pr = c.probables, nm = '';
                                 if (Array.isArray(pr) && pr[0] && pr[0].athlete) {
@@ -10827,12 +10876,18 @@ window.toggleSportFamily = function (family) {
                                 if (!nm) return;
                                 var t = c.team || {};
                                 [t.displayName, t.shortDisplayName, t.name, t.nickname, t.location, t.abbreviation].forEach(function (k) {
-                                    if (k) map[_lobbyTeamKey(k)] = nm;
+                                    if (!k) return;
+                                    var mk = evDate + '|' + _lobbyTeamKey(k);
+                                    // Same team twice on one date (doubleheader) with
+                                    // different starters = ambiguous -> drop to TBD.
+                                    if (map[mk] && map[mk] !== nm) { map[mk] = '__AMBIG__'; return; }
+                                    map[mk] = nm;
                                 });
                             });
                         });
                         _lobbyMlbProbable.map = map;
                         _lobbyMlbProbable.fetchedAt = Date.now();
+                        _lobbyMlbProbable.dateKey = todayKey;
                         lobbyApplyProbableMap(games, map);
                     }
                     clearTimeout(guard); finish();
@@ -13226,7 +13281,9 @@ window.toggleSportFamily = function (family) {
         // the first call succeeded). Cache key bumped to v2 (Apr 30 2026) to
         // invalidate dead-button HTML from before the click-wiring fix.
         window.TMR._fullBoardCache = window.TMR._fullBoardCache || {};
-        var cacheKey = sport + ':v4mlbpitcher';
+        // v5 + ET date in the key: invalidates pre-fix cached HTML AND makes a
+        // tab that survives midnight repaint with the new day's verified pitchers.
+        var cacheKey = sport + ':v5mlbpitcherdate:' + (typeof _lobbyEtDateKey === 'function' ? _lobbyEtDateKey() : '');
         var cached = window.TMR._fullBoardCache[cacheKey];
         if (cached) {
             rows.innerHTML = cached;
@@ -22266,7 +22323,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260530mlbpitcher&cb=20260530mlbpitcher"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260606pitcherdate&cb=20260606pitcherdate"></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
