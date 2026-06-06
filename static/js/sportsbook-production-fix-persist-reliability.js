@@ -3163,7 +3163,15 @@
         ensureStakeModeControls(unitsInput);
 
         const oddsValue = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
-        const lineValue = lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null;
+        // PICK_LINE_SINGLE_SOURCE_20260605: if the visible line input is empty
+        // (hidden form, multi-slip page, partial render), fall back to the
+        // selected option's OWN line - never submit a line-market pick without
+        // its line, because the backend would otherwise have to fill it from a
+        // potentially stale cached board (the Over 217.5 / 214.5 corruption).
+        let lineValue = lineInput && lineInput.value !== '' ? parseFloat(lineInput.value) : null;
+        if (lineValue == null && option.line != null && option.line !== '' && Number.isFinite(Number(option.line))) {
+            lineValue = Number(option.line);
+        }
         // Frontend hard-cap: stake amount must be in [0.5, 5], rounded to
         // half units. Read from the visible ticket input when present, then
         // mirror to #unitsInput so preview text and submit payload cannot
