@@ -4093,7 +4093,12 @@
                     away_team: info.away_team || '',
                     commence_time: info.commence_time || new Date().toISOString(),
                     _bookTitle: info.book_title || 'Sportsbook feed',
-                    _bookKey: info.book_key || ''
+                    _bookKey: info.book_key || '',
+                    // NBA_NHL_PROPS_20260606: callers (player props / alt lines)
+                    // may attach the visible odds so the submitted game snapshot
+                    // carries them — the backend adopts these only when the
+                    // stored game row has no odds at all.
+                    bookmakers: Array.isArray(info.bookmakers) ? info.bookmakers : []
                 };
                 if (hasGameStarted(game)) {
                     showSubmitTrace('Alt selection blocked: game already started (' + game.id + ').');
