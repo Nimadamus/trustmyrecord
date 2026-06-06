@@ -10933,78 +10933,36 @@ window.toggleSportFamily = function (family) {
         var val = nm ? _sbEsc(nm) : 'TBD';
         return '<div class="sb-team-pitcher">' + val + '</div>';
     }
-    // PITCHER_DATE_GUARD_20260606: probable pitchers are only trusted when they
-    // come from a SCHEDULED (pre-game) ESPN event whose US/Eastern calendar date
-    // matches the board game's date. Yesterday's starters can never leak onto
-    // today's board: the map is keyed date|team, completed/in-progress events are
-    // excluded, doubleheader-ambiguous teams are dropped to TBD, the cached map
-    // dies at the ET date rollover, and the verified map authoritatively
-    // overwrites whatever pitcher name a game object already carried (no
-    // confirmed starter for that team+date = cleared = renders TBD).
-    var _lobbyMlbProbable = { map: null, fetchedAt: 0, inflight: false, dateKey: '' };
+    var _lobbyMlbProbable = { map: null, fetchedAt: 0, inflight: false };
     function _lobbyTeamKey(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
-    function _lobbyEtDateKey(d) {
-        try {
-            var dt = (d === undefined || d === null) ? new Date() : new Date(d);
-            if (isNaN(dt.getTime())) return '';
-            return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(dt).replace(/-/g, '');
-        } catch (e) { return ''; }
-    }
     function lobbyApplyProbableMap(games, map) {
         if (!map || !Array.isArray(games)) return false;
         var changed = false;
         games.forEach(function (g) {
-            var gDate = _lobbyEtDateKey(g.commence_time || g.commenceTime || g.start_time || g.date);
             ['away', 'home'].forEach(function (side) {
+                if (lobbyPitcherName(g, side)) return;
                 var team = side === 'home' ? g.home_team : g.away_team;
                 var abbr = side === 'home' ? (g.home_abbr || g.homeAbbr) : (g.away_abbr || g.awayAbbr);
                 var nick = String(team || '').trim().split(/\s+/).pop();
-                var hit = '';
-                if (gDate) {
-                    var keys = [_lobbyTeamKey(team), _lobbyTeamKey(abbr), _lobbyTeamKey(nick)];
-                    for (var ki = 0; ki < keys.length && !hit; ki++) {
-                        if (!keys[ki]) continue;
-                        var v = map[gDate + '|' + keys[ki]];
-                        if (v && v !== '__AMBIG__') hit = v;
-                    }
-                }
-                var cur = lobbyPitcherName(g, side);
-                var next = hit || '';
-                if (cur !== next) {
-                    g[side + '_pitcher'] = next;
-                    if (!next) {
-                        // Clear every alias the renderers read so an unverified
-                        // (possibly yesterday's) name cannot survive as a fallback.
-                        delete g[side + '_probable_pitcher'];
-                        delete g[side + '_starter'];
-                        if (g.starters) delete g.starters[side];
-                    }
-                    changed = true;
-                }
+                var hit = map[_lobbyTeamKey(team)] || map[_lobbyTeamKey(abbr)] || map[_lobbyTeamKey(nick)];
+                if (hit) { g[side + '_pitcher'] = hit; changed = true; }
             });
         });
         return changed;
     }
-    // Ensures MLB games carry verified probable pitchers, then calls done().
-    // Always calls done() (even on failure) so the board paints regardless.
+    // Ensures MLB games carry probable pitchers, then calls done(). Always calls
+    // done() (even on failure) so the board paints regardless.
     function lobbyEnsureMlbPitchers(games, done) {
         try {
             if (!Array.isArray(games) || !games.length) { done(); return; }
-            var todayKey = _lobbyEtDateKey();
-            var fresh = _lobbyMlbProbable.map
-                && _lobbyMlbProbable.dateKey === todayKey
-                && (Date.now() - _lobbyMlbProbable.fetchedAt < 600000);
+            var fresh = _lobbyMlbProbable.map && (Date.now() - _lobbyMlbProbable.fetchedAt < 600000);
             if (fresh) { lobbyApplyProbableMap(games, _lobbyMlbProbable.map); done(); return; }
             if (_lobbyMlbProbable.inflight) { done(); return; }
             _lobbyMlbProbable.inflight = true;
             var finished = false;
             var finish = function () { if (finished) return; finished = true; done(); };
             var guard = setTimeout(finish, 4500);
-            // Explicit today+tomorrow (ET) window so ESPN can never hand back a
-            // stale "current" scoreboard still parked on yesterday's slate.
-            var tmrwKey = _lobbyEtDateKey(Date.now() + 86400000);
-            var datesQ = todayKey ? ('?dates=' + todayKey + (tmrwKey ? '-' + tmrwKey : '')) : '';
-            fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard' + datesQ, { cache: 'no-store' })
+            fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard', { cache: 'no-store' })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (data) {
                     _lobbyMlbProbable.inflight = false;
@@ -11013,13 +10971,6 @@ window.toggleSportFamily = function (family) {
                         data.events.forEach(function (evt) {
                             var comp = evt.competitions && evt.competitions[0];
                             if (!comp || !Array.isArray(comp.competitors)) return;
-                            // Only scheduled (pre-game) events contribute names. A
-                            // completed/live event's "probable" is who already threw.
-                            var st = (comp.status && comp.status.type) || (evt.status && evt.status.type) || {};
-                            if (st.completed === true) return;
-                            if (String(st.state || '').toLowerCase() !== 'pre') return;
-                            var evDate = _lobbyEtDateKey(evt.date || comp.date);
-                            if (!evDate) return;
                             comp.competitors.forEach(function (c) {
                                 var pr = c.probables, nm = '';
                                 if (Array.isArray(pr) && pr[0] && pr[0].athlete) {
@@ -11028,18 +10979,12 @@ window.toggleSportFamily = function (family) {
                                 if (!nm) return;
                                 var t = c.team || {};
                                 [t.displayName, t.shortDisplayName, t.name, t.nickname, t.location, t.abbreviation].forEach(function (k) {
-                                    if (!k) return;
-                                    var mk = evDate + '|' + _lobbyTeamKey(k);
-                                    // Same team twice on one date (doubleheader) with
-                                    // different starters = ambiguous -> drop to TBD.
-                                    if (map[mk] && map[mk] !== nm) { map[mk] = '__AMBIG__'; return; }
-                                    map[mk] = nm;
+                                    if (k) map[_lobbyTeamKey(k)] = nm;
                                 });
                             });
                         });
                         _lobbyMlbProbable.map = map;
                         _lobbyMlbProbable.fetchedAt = Date.now();
-                        _lobbyMlbProbable.dateKey = todayKey;
                         lobbyApplyProbableMap(games, map);
                     }
                     clearTimeout(guard); finish();
@@ -13217,6 +13162,155 @@ window.toggleSportFamily = function (family) {
             .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'alts') fallbackToBoard(); });
     }
 
+    // NBA_NHL_PROPS_20260606: ESPN core propBets enrichment for the Player
+    // Props tab (DraftKings data). Adds clean per-player O/U markets the
+    // Bovada feed doesn't carry (NBA points/rebounds/assists/threes, NHL
+    // SOG/points/assists/saves). Same unlabeled-sides feed as soccer team
+    // totals: per (player, line) the OVER entry is listed first, UNDER second
+    // — cross-book verified vs Bovada's labeled NHL Total Saves (prices
+    // matched exactly) and vs Action Network's labeled MLB team totals.
+    // Guards: exactly 2 priced entries per (player, line) and pair overround
+    // within 1.00–1.32, else that market is dropped (honest no-data).
+    var ESPN_PLAYER_PROPS_SPORT = {
+        NBA: { path: 'basketball/nba', markets: {
+            'Total Points':   { market: 'nba_points',   stat: 'Points' },
+            'Total Rebounds': { market: 'nba_rebounds', stat: 'Rebounds' },
+            'Total Assists':  { market: 'nba_assists',  stat: 'Assists' },
+            'Total 3-Point Field Goals': { market: 'nba_threes', stat: 'Threes' }
+        } },
+        NHL: { path: 'hockey/nhl', markets: {
+            'Total Shots on Goal': { market: 'nhl_shots_on_goal', stat: 'Shots on Goal' },
+            'Total Points':  { market: 'nhl_points',  stat: 'Points' },
+            'Total Assists': { market: 'nhl_assists', stat: 'Assists' },
+            'Total Saves':   { market: 'nhl_saves',   stat: 'Saves' }
+        } }
+    };
+    window.TMR._espnAthleteNameCache = window.TMR._espnAthleteNameCache || {};
+    window.TMR.fetchEspnPlayerProps = function (sport, games, onDone) {
+        var cfg = ESPN_PLAYER_PROPS_SPORT[sport];
+        if (!cfg) { onDone(games, 0); return; }
+        var imp = function (a) { a = Number(a); if (!isFinite(a) || a === 0) return null; return a < 0 ? (-a / (-a + 100)) : (100 / (a + 100)); };
+        var norm = function (s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); };
+        var pad = function (d) { return d.toISOString().split('T')[0].replace(/-/g, ''); };
+        var start = new Date(); var end = new Date(); end.setDate(end.getDate() + 4);
+        var sbUrl = 'https://site.api.espn.com/apis/site/v2/sports/' + cfg.path + '/scoreboard?dates=' + pad(start) + '-' + pad(end) + '&limit=100';
+        fetch(sbUrl)
+            .then(function (r) { return r.ok ? r.json() : null; })
+            .then(function (sb) {
+                var events = (sb && sb.events) || [];
+                // upcoming events only — props are for games you can still pick
+                events = events.filter(function (e) {
+                    var st = (e.status && e.status.type) || {};
+                    return !st.completed && String(st.state || '') !== 'in' && new Date(e.date).getTime() > Date.now();
+                }).slice(0, 4);
+                if (!events.length) { onDone(games, 0); return; }
+                var added = 0;
+                var pendingEvents = events.length;
+                events.forEach(function (evt) {
+                    var comp = evt.competitions && evt.competitions[0];
+                    var competitors = (comp && comp.competitors) || [];
+                    var homeC = competitors.find(function (c) { return c.homeAway === 'home'; });
+                    var awayC = competitors.find(function (c) { return c.homeAway === 'away'; });
+                    var homeName = homeC && homeC.team && homeC.team.displayName;
+                    var awayName = awayC && awayC.team && awayC.team.displayName;
+                    var lg = cfg.path.split('/')[1];
+                    var pbUrl = 'https://sports.core.api.espn.com/v2/sports/' + cfg.path.split('/')[0] + '/leagues/' + lg + '/events/' + evt.id + '/competitions/' + evt.id + '/odds/100/propBets?lang=en&region=us&limit=400';
+                    fetch(pbUrl)
+                        .then(function (r) { return r.ok ? r.json() : null; })
+                        .then(function (pb) {
+                            var items = (pb && pb.items) || [];
+                            // group (marketName|athleteId|target) -> ordered prices
+                            var groups = {}, order = [];
+                            items.forEach(function (it) {
+                                var typeName = it.type && it.type.name;
+                                if (!cfg.markets[typeName]) return;
+                                var am = ((it.athlete || {}).$ref || '').match(/\/athletes\/(\d+)/);
+                                if (!am) return;
+                                var target = it.current && it.current.target && it.current.target.value;
+                                var amer = (it.odds && it.odds.american && it.odds.american.value != null)
+                                    ? it.odds.american.value
+                                    : (it.current && it.current.over && it.current.over.american);
+                                var price = parseInt(String(amer).replace('+', ''), 10);
+                                if (target == null || !isFinite(price) || price === 0) return;
+                                var k = typeName + '|' + am[1] + '|' + Number(target);
+                                if (!groups[k]) { groups[k] = []; order.push(k); }
+                                groups[k].push(price);
+                            });
+                            // validate pairs + collect athlete ids
+                            var pairs = [];
+                            var athleteIds = {};
+                            order.forEach(function (k) {
+                                var prices = groups[k];
+                                if (!prices || prices.length !== 2) return;       // guard 1
+                                var vig = (imp(prices[0]) || 0) + (imp(prices[1]) || 0);
+                                if (!(vig >= 1.0 && vig <= 1.32)) return;          // guard 2
+                                var parts = k.split('|');
+                                pairs.push({ market: parts[0], athleteId: parts[1], line: Number(parts[2]), over: prices[0], under: prices[1] });
+                                athleteIds[parts[1]] = 1;
+                            });
+                            if (!pairs.length) { if (--pendingEvents === 0) onDone(games, added); return; }
+                            // resolve athlete names (cached across calls)
+                            var idList = Object.keys(athleteIds).filter(function (id) { return !window.TMR._espnAthleteNameCache[cfg.path + id]; });
+                            var lgSport = cfg.path.split('/')[0];
+                            Promise.all(idList.map(function (id) {
+                                var aUrl = 'https://sports.core.api.espn.com/v2/sports/' + lgSport + '/leagues/' + lg + '/athletes/' + id + '?lang=en&region=us';
+                                return fetch(aUrl).then(function (r) { return r.ok ? r.json() : null; })
+                                    .then(function (a) { if (a && a.displayName) window.TMR._espnAthleteNameCache[cfg.path + id] = a.displayName; })
+                                    .catch(function () {});
+                            })).then(function () {
+                                // multiple lines per player possible — keep the most balanced
+                                var best = {};
+                                pairs.forEach(function (p) {
+                                    var name = window.TMR._espnAthleteNameCache[cfg.path + p.athleteId];
+                                    if (!name) return; // unresolved athlete = skip, never guess
+                                    var bk = p.market + '|' + name;
+                                    var io = imp(p.over), iu = imp(p.under);
+                                    var score = Math.abs((io / (io + iu)) - 0.5);
+                                    if (!best[bk] || score < best[bk].score) best[bk] = { p: p, name: name, score: score };
+                                });
+                                var marketsOut = [];
+                                Object.keys(best).forEach(function (bk) {
+                                    var b = best[bk];
+                                    var mcfg = cfg.markets[b.p.market];
+                                    marketsOut.push({
+                                        label: b.p.market + ' - ' + b.name,
+                                        _pick_market: mcfg.market,
+                                        _player: b.name,
+                                        _stat: mcfg.stat,
+                                        _group: sport + ' Player Props',
+                                        outcomes: [
+                                            { selection: 'Over', line: b.p.line, odds: b.p.over },
+                                            { selection: 'Under', line: b.p.line, odds: b.p.under }
+                                        ]
+                                    });
+                                });
+                                if (marketsOut.length) {
+                                    marketsOut.sort(function (a, b) { return a.label < b.label ? -1 : a.label > b.label ? 1 : 0; });
+                                    var group = { key: 'espn_dk_props', label: 'Player Props (DraftKings)', markets: marketsOut };
+                                    // merge into an existing game card (team-name match) or add one
+                                    var target = (games || []).find(function (g) {
+                                        return norm(g.home_team) === norm(homeName) && norm(g.away_team) === norm(awayName);
+                                    });
+                                    if (target) {
+                                        target.prop_groups = target.prop_groups || [];
+                                        if (!target.prop_groups.some(function (gr) { return gr && gr.key === 'espn_dk_props'; })) {
+                                            target.prop_groups.unshift(group);
+                                            added += marketsOut.length;
+                                        }
+                                    } else {
+                                        games.push({ id: 'espn_' + evt.id, away_team: awayName, home_team: homeName, commence_time: evt.date, prop_groups: [group] });
+                                        added += marketsOut.length;
+                                    }
+                                }
+                                if (--pendingEvents === 0) onDone(games, added);
+                            });
+                        })
+                        .catch(function () { if (--pendingEvents === 0) onDone(games, added); });
+                });
+            })
+            .catch(function () { onDone(games, 0); });
+    };
+
     // Player/pitcher/game props for the Player Props tab ONLY. Same isolation
     // contract as renderAltLinesBoard: never runs for game-lines periods, never
     // mutates currentGames, degrades to a clean empty state — live boards safe.
@@ -13242,7 +13336,25 @@ window.toggleSportFamily = function (family) {
         // where each player outcome becomes an Over-the-threshold pick. Non-gradable
         // markets (correct score, first HR, game props) stay display-only.
         var classifyMarket = function (grp, m) {
-            if (sport !== 'MLB' || !grp) return null;
+            // NBA_NHL_PROPS_20260606: ESPN-synthesized prop markets carry
+            // explicit pick metadata — no label parsing needed. Gradable via
+            // backend playerPropGrading (ESPN box scores).
+            if (m && m._pick_market && m._player) {
+                return { kind: 'pou', market_type: m._pick_market, player: m._player, stat_label: m._stat || '', group_label: m._group || 'Player Props' };
+            }
+            if (!grp) return null;
+            // NBA_NHL_PROPS_20260606: NHL goalie saves from the Bovada feed
+            // (labeled O/U + alternate ladder). Full-game markets only — the
+            // 1st-period variants have no grader and stay display-only.
+            if (sport === 'NHL' && grp.key === 'goalie_props') {
+                var gLabel = String(m.label || '');
+                var gPlayer = (gLabel.split(' - ')[1] || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+                if (!gPlayer) return null;
+                if (/^Total Saves\b/i.test(gLabel)) return { kind: 'pou', market_type: 'nhl_saves', player: gPlayer, stat_label: 'Saves', group_label: 'Goalie Saves' };
+                if (/^Alternate Total Saves\b/i.test(gLabel)) return { kind: 'palt', market_type: 'nhl_saves', player: gPlayer, stat_label: 'Saves', group_label: 'Goalie Saves' };
+                return null;
+            }
+            if (sport !== 'MLB') return null;
             var label = String(m.label || '');
             if (grp.key === 'pitcher_props') {
                 var player = (label.split(' - ')[1] || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
@@ -13369,16 +13481,30 @@ window.toggleSportFamily = function (family) {
                 return { id: g.id, away_team: g.away_team, home_team: g.home_team, commence_time: g.commence_time, prop_groups: groups };
             }).filter(Boolean);
         }
+        // NBA_NHL_PROPS_20260606: after the primary render, enrich NBA/NHL with
+        // ESPN DraftKings per-player O/U markets and re-render once. With zero
+        // primary games the enrichment alone can populate the tab; if it also
+        // finds nothing, the honest empty state stays.
+        function renderWithEspnEnrichment(games, emptyMsg) {
+            var stillHere = function () { return rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'props'; };
+            if (games.length) renderPropGames(games);
+            else rowsEl.innerHTML = emptyState(sport, emptyMsg || 'No player props posted right now. Check back when lines are up.', 'closed');
+            if ((sport === 'NBA' || sport === 'NHL') && typeof window.TMR.fetchEspnPlayerProps === 'function') {
+                window.TMR.fetchEspnPlayerProps(sport, games.slice(), function (merged, addedCount) {
+                    if (addedCount > 0 && stillHere()) renderPropGames(merged);
+                });
+            }
+        }
+
         function fallbackToBoard() {
             fetch(String(base).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(key) + '?limit=80', { cache: 'no-store' })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (bd) {
                     if (rowsEl.getAttribute('data-sport') !== sport || window.TMR.selectedPeriod !== 'props') return;
                     var mapped = propGamesFromBoard(bd && bd.games);
-                    if (!mapped.length) { rowsEl.innerHTML = emptyState(sport, 'No player props posted right now. Check back when lines are up.', 'closed'); return; }
-                    renderPropGames(mapped);
+                    renderWithEspnEnrichment(mapped);
                 })
-                .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'props') rowsEl.innerHTML = emptyState(sport, 'Player-props feed temporarily unavailable. Try again shortly.', 'closed'); });
+                .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'props') renderWithEspnEnrichment([], 'Player-props feed temporarily unavailable. Try again shortly.'); });
         }
 
         fetch(String(base).replace(/\/$/, '') + '/games/props/' + encodeURIComponent(key) + '?cb=' + Date.now(), { cache: 'no-store' })
@@ -13388,7 +13514,7 @@ window.toggleSportFamily = function (family) {
                 if (data && data.supported === false) { rowsEl.innerHTML = emptyState(sport, 'Player props are not offered for ' + sport + ' yet.', 'closed'); return; }
                 var games = (data && data.games) || [];
                 if (!games.length) { fallbackToBoard(); return; }
-                renderPropGames(games);
+                renderWithEspnEnrichment(games);
             })
             .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'props') fallbackToBoard(); });
     }
@@ -13479,9 +13605,7 @@ window.toggleSportFamily = function (family) {
         // the first call succeeded). Cache key bumped to v2 (Apr 30 2026) to
         // invalidate dead-button HTML from before the click-wiring fix.
         window.TMR._fullBoardCache = window.TMR._fullBoardCache || {};
-        // v5 + ET date in the key: invalidates pre-fix cached HTML AND makes a
-        // tab that survives midnight repaint with the new day's verified pitchers.
-        var cacheKey = sport + ':v5mlbpitcherdate:' + (typeof _lobbyEtDateKey === 'function' ? _lobbyEtDateKey() : '');
+        var cacheKey = sport + ':v4mlbpitcher';
         var cached = window.TMR._fullBoardCache[cacheKey];
         if (cached) {
             rows.innerHTML = cached;
@@ -22521,7 +22645,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260606pitcherdate&cb=20260606pitcherdate"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260530mlbpitcher&cb=20260530mlbpitcher"></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
