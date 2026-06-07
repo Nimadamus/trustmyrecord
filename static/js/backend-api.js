@@ -228,7 +228,10 @@ class TrustMyRecordAPI {
             }
 
             try {
-                if (!this.token && this.refreshToken) {
+                // Proactively refresh when the access token is missing OR
+                // expired/near-expiry, so a stale 15-min token never rides along
+                // on a user-scoped call (e.g. /picks/pending) and silently 401s.
+                if (this.refreshToken && this.isAccessTokenExpired()) {
                     await this.refreshAccessToken(baseUrl);
                     config.headers = {
                         ...this.getAuthHeaders(),
