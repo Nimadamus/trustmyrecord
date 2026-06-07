@@ -10301,19 +10301,9 @@
                       #soccerLeagueFilters button.is-active, #tennisTourFilters button.is-active {
                         background: var(--neon-cyan, #00aeff); color: #001018; border-color: var(--neon-cyan, #00aeff); font-weight: 700;
                       }
-                      /* SOCCER_TT_20260606: compact per-team Team Total chips.
-                         !important overrides the global .odds-btn block sizing
-                         (width/padding/flex) so chips stay small and inline. */
-                      .sb-team-tt { display: inline-flex !important; flex-direction: row !important; align-items: center; gap: 5px; margin-top: 3px; min-width: 0; flex-wrap: wrap; }
-                      .sb-team-tt-label { font-size: 9.5px; font-weight: 800; letter-spacing: .6px; color: var(--text-muted, #9aab9f); }
-                      .sb-tt-mini, .odds-btn.sb-tt-mini,
-                      #picks .odds-btn.sb-tt-mini,
-                      body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-btn.sb-tt-mini,
-                      body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .game-row .odds-btn.sb-tt-mini { display: inline-flex !important; flex-direction: row !important; align-items: center !important; justify-content: flex-start !important; width: auto !important; min-width: 0 !important; min-height: 0 !important; height: auto !important; font-size: 10.5px !important; line-height: 1.1 !important; padding: 3px 7px !important; margin: 0 !important; border: 1px solid rgba(148, 163, 184, 0.25) !important; border-radius: 6px !important; background: rgba(255,255,255,.05) !important; color: #c7d3e4 !important; box-shadow: none !important; cursor: pointer; white-space: nowrap !important; gap: 3px; transform: none !important; }
-                      .sb-tt-mini b, #picks .sb-tt-mini b { color: #1ed760 !important; margin-left: 3px; font-weight: 700 !important; font-size: 10.5px !important; }
-                      #picks .odds-btn.sb-tt-mini:hover { border-color: var(--neon-cyan, #00aeff) !important; background: rgba(0,174,255,.10) !important; transform: none !important; }
-                      #picks .odds-btn.sb-tt-mini.selected,
-                      body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .odds-btn.sb-tt-mini.selected { background: linear-gradient(180deg, #24422a 0%, #1b3220 100%) !important; border-color: rgba(74, 222, 128, 0.88) !important; color: #eafff0 !important; }
+                      /* TT_TAB_20260607 (Nima): SOCCER_TT_20260606 mini chip CSS
+                         removed — team totals moved off the main board into the
+                         dedicated "Team Totals" market tab (PERIOD_CATALOGS). */
                     </style>
                 </section>
 
@@ -11060,41 +11050,13 @@ window.toggleSportFamily = function (family) {
         var awayPitcherHtml = lobbyPitcherHtml(game, 'away', sport);
         var homePitcherHtml = lobbyPitcherHtml(game, 'home', sport);
 
-        // SOCCER_TT_20260606: compact per-team Team Total chips on the soccer
-        // board ("TT O 1.5 +166 / U 1.5 -262" under the team name). Soccer
-        // games only — every other sport's row markup is untouched. Chips only
-        // render when the guarded propBets parser attached real DK lines.
-        var awayTtHtml = '', homeTtHtml = '';
-        if (book && String(game.sport_key || '').indexOf('soccer') === 0 && window.TMR.SOCCER_TT_ENABLED) {
-            var soccerTtM = findMarket(book, 'team_totals');
-            if (soccerTtM && Array.isArray(soccerTtM.outcomes)) {
-                var soccerTtChips = function (teamName) {
-                    var ttOver = null, ttUnder = null;
-                    for (var tti = 0; tti < soccerTtM.outcomes.length; tti++) {
-                        var ttOc = soccerTtM.outcomes[tti];
-                        if (!ttOc || String(ttOc.description || '') !== String(teamName || '')) continue;
-                        var ttSide = String(ttOc.name || '').toLowerCase();
-                        if (ttSide === 'over') ttOver = ttOc;
-                        else if (ttSide === 'under') ttUnder = ttOc;
-                    }
-                    if (!ttOver || !ttUnder || ttOver.point == null || ttOver.price == null || ttUnder.price == null) return '';
-                    var ttBtn = function (side, oc) {
-                        var bt = side === 'over' ? 'teamover' : 'teamunder';
-                        var sel = teamName + (side === 'over' ? ' Over' : ' Under');
-                        var onclick = "window.selectGameBet(" + gi + ",'" + _ttEsc(bt) + "','" + _ttEsc(sel) + "','" + _ttEsc(oc.point) + "','" + _ttEsc(oc.price) + "','" + _ttEsc(away) + "','" + _ttEsc(home) + "')";
-                        return '<button type="button" class="odds-btn sb-tt-mini" onclick="' + onclick + '">'
-                            + (side === 'over' ? 'O' : 'U') + ' ' + _ttHtmlEsc(oc.point)
-                            + ' <b>' + _ttHtmlEsc(fmtPrice(oc.price)) + '</b></button>';
-                    };
-                    return '<small class="sb-team-tt"><span class="sb-team-tt-label">TT</span>' + ttBtn('over', ttOver) + ttBtn('under', ttUnder) + '</small>';
-                };
-                awayTtHtml = soccerTtChips(away);
-                homeTtHtml = soccerTtChips(home);
-            }
-        }
-
-        var awayExtraHtml = (awayPitcherHtml || '') + awayTtHtml;
-        var homeExtraHtml = (homePitcherHtml || '') + homeTtHtml;
+        // TT_TAB_20260607 (Nima): the SOCCER_TT_20260606 mini TT chips that
+        // were crammed under the team names are GONE. Main Lines stays clean
+        // (Matchup | Spread | Moneyline | Total); per-team Team Totals now
+        // live behind the dedicated "Team Totals" market tab above the games
+        // (see renderGroupedTtRows + the Soccer entry in PERIOD_CATALOGS).
+        var awayExtraHtml = (awayPitcherHtml || '');
+        var homeExtraHtml = (homePitcherHtml || '');
         var awayTeamCell = awayExtraHtml
             ? '<div class="team-cell">' + awayLogo + '<span class="sb-team-stack"><b>' + (away || 'Away') + '</b>' + awayExtraHtml + '</span></div>'
             : '<div class="team-cell">' + awayLogo + '<b>' + (away || 'Away') + '</b></div>';
@@ -11232,7 +11194,10 @@ window.toggleSportFamily = function (family) {
         'NCAAF': [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
         'NHL':   [{k:'full',label:'Game Lines'},{k:'p1',label:'1st Period'},{k:'p2',label:'2nd Period'},{k:'p3',label:'3rd Period'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
         'MLB':   [{k:'full',label:'Game Lines'},{k:'f5',label:'5 Inning Lines'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
-        'Soccer':[{k:'full',label:'Match'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'}].concat(ALT_PROP_TABS),
+        // TT_TAB_20260607: soccer Team Totals live behind their own tab (per-team
+        // goal O/U from the guarded fetchSoccerTeamTotals enricher) — never as
+        // chips/columns on the Main Lines board.
+        'Soccer':[{k:'full',label:'Main Lines'},{k:'tt',label:'Team Totals'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'}].concat(ALT_PROP_TABS),
         'Tennis':[{k:'full',label:'Match'}].concat(ALT_PROP_TABS),
         // No-feed sports get a single inert Game Lines tab. The board short-circuits
         // to the empty state below; alt/props tabs are intentionally omitted so
@@ -12895,6 +12860,66 @@ window.toggleSportFamily = function (family) {
         rowsEl.innerHTML = html || emptyState(sport, 'No ' + label + ' ' + sport + ' odds available right now.', 'closed');
         if (html) console.log('[TMR][period] ' + sport + ' ' + label + ' rendered from ' + sourceLabel + '.');
     }
+
+    // TT_TAB_20260607 (Nima): Team Totals tab for grouped (Soccer) boards.
+    // Main Lines stays clean — per-team totals render here ONLY, in the same
+    // sportsbook-grade two-market card every other TT board uses:
+    // Matchup | Team Total Over | Team Total Under. Lines come from the
+    // per-game team_totals market the guarded fetchSoccerTeamTotals enricher
+    // attaches (ESPN propBets, DraftKings) or any backend book row that
+    // carries one. Buttons reuse _ttButton -> selectGameBet
+    // (teamover/teamunder -> market_type team_totals), so slip payloads are
+    // identical to the MLB/NBA/NHL TT boards.
+    function renderGroupedTtRows(sport, rowsEl, games) {
+        var playable = (games || []).filter(function (g) { return !_ttGameStarted(g); });
+        window.TMR.currentGames = playable;
+        var html = '';
+        var rendered = 0, pending = 0;
+        playable.forEach(function (game, idx) {
+            var away = game.away_team || '';
+            var home = game.home_team || '';
+            var m = _ttFindRawMarket(game, 'team_totals');
+            var ocs = (m && Array.isArray(m.outcomes)) ? m.outcomes : [];
+            var pairFor = function (teamName) {
+                var over = null, under = null;
+                for (var i = 0; i < ocs.length; i++) {
+                    var oc = ocs[i];
+                    if (!oc || String(oc.description || '') !== String(teamName || '')) continue;
+                    var side = String(oc.name || '').toLowerCase();
+                    if (side === 'over') over = oc;
+                    else if (side === 'under') under = oc;
+                }
+                if (!over || !under || over.point == null || over.price == null || under.point == null || under.price == null) return null;
+                return { over: over, under: under };
+            };
+            var awayPair = pairFor(away);
+            var homePair = pairFor(home);
+            if (!awayPair && !homePair) {
+                pending++;
+                return; // no fabricated rows — only games with real TT lines render
+            }
+            rendered++;
+            html += renderMarketBoardCard(game, idx, {
+                marketLabel: 'Team Totals',
+                headers: ['Team Total Over', 'Team Total Under'],
+                awayButtons: [
+                    _ttButton(idx, 'over', away, awayPair ? awayPair.over.point : null, awayPair ? awayPair.over.price : null, away, home),
+                    _ttButton(idx, 'under', away, awayPair ? awayPair.under.point : null, awayPair ? awayPair.under.price : null, away, home)
+                ],
+                homeButtons: [
+                    _ttButton(idx, 'over', home, homePair ? homePair.over.point : null, homePair ? homePair.over.price : null, away, home),
+                    _ttButton(idx, 'under', home, homePair ? homePair.under.point : null, homePair ? homePair.under.price : null, away, home)
+                ]
+            });
+        });
+        if (!html) {
+            rowsEl.innerHTML = emptyState(sport, 'Team totals not posted yet for today’s ' + sport.toLowerCase() + ' slate. Lines load shortly after books post them — check Main Lines meanwhile.', 'closed');
+            console.log('[TMR][TT] ' + sport + ' grouped TT: 0 of ' + playable.length + ' games have lines yet.');
+            return;
+        }
+        rowsEl.innerHTML = html;
+        console.log('[TMR][TT] ' + sport + ' grouped TT rendered: ' + rendered + ' game(s) with lines, ' + pending + ' without.');
+    }
     // Detect that the upstream odds provider is unavailable (e.g. auth 401 /
     // tripped circuit breaker) WITHOUT surfacing any internal error text to
     // normal users. Soccer/Tennis depend entirely on that provider, so when it
@@ -13038,6 +13063,9 @@ window.toggleSportFamily = function (family) {
             rowsEl.innerHTML = emptyState(sport, 'No matches for this selection right now.', 'closed');
             return;
         }
+        // TT_TAB_20260607: Team Totals tab for grouped boards renders its own
+        // clean two-market layout (Matchup | TT Over | TT Under).
+        if (period === 'tt') { renderGroupedTtRows(sport, rowsEl, filtered); return; }
         if (period && period !== 'full') { renderPeriodRows(sport, rowsEl, filtered, period, 'grouped filtered'); return; }
         var CAP = 40;
         var shown = filtered.slice(0, CAP);
@@ -13585,6 +13613,11 @@ window.toggleSportFamily = function (family) {
             return renderPlayerPropsBoard(sport, rows);
         }
         if (period === 'tt') {
+            // TT_TAB_20260607: grouped sports (Soccer) source team totals from
+            // their own per-league boards + the ESPN propBets enricher, not the
+            // single-key backend TT board. renderGroupedBoard fetches the slate
+            // and _renderGroupedFiltered routes period 'tt' to renderGroupedTtRows.
+            if (GROUP_SPORTS[sport]) return renderGroupedBoard(sport, rows, period);
             return renderTeamTotalsBoard(sport, rows);
         }
         if (GROUP_SPORTS[sport]) {
