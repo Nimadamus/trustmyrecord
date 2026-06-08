@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Fan Pages | Claim Your Team on TrustMyRecord</title>
+    <meta name="description" content="Pick your favorite team, build a verified sports record, and be one of the first fans to claim your team on TrustMyRecord. Create your sports fan profile free.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://trustmyrecord.com/teams/">
+    <meta property="og:title" content="Claim Your Team on TrustMyRecord">
+    <meta property="og:description" content="Be one of the first fans to claim your team. Create your verified sports profile, pick your team, and start building your record.">
+    <meta property="og:url" content="https://trustmyrecord.com/teams/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <link rel="stylesheet" href="/static/css/tmr-page-polish.css?v=20260429a">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+      .tm-hero{text-align:center}
+      .tm-eyebrow{display:inline-block;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#00aeff;margin-bottom:8px}
+      .tm-cta{display:inline-flex;align-items:center;gap:8px;background:#00aeff;color:#04121f;border:0;border-radius:10px;padding:13px 24px;font-weight:800;font-size:15px;text-decoration:none;cursor:pointer}
+      .tm-cta.secondary{background:transparent;color:#cfe9ff;border:1px solid #2c3346}
+      .tm-cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+      .tm-claim{margin:22px 0;padding:18px;border:1px dashed #2c4a63;border-radius:14px;background:rgba(0,174,255,.06);text-align:center}
+      .tm-claim p{margin:6px 0;color:#b9c0d4}
+      .tm-fans{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+      .tm-fan{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:#0f1320;border:1px solid #232a3b;color:#e6e9f2;text-decoration:none;font-size:13px;font-weight:600}
+      .tm-fan img{width:24px;height:24px;border-radius:50%;object-fit:cover}
+      .tm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px}
+      .tm-soon{padding:16px;border:1px solid #232a3b;border-radius:12px;background:#0f1320;opacity:.85}
+      .tm-soon h3{margin:0 0 6px;font-size:14px;color:#fff}.tm-soon p{margin:0;font-size:13px;color:#8b93a7}
+      .tm-pick{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;margin-top:14px}
+      .tm-pick select{background:#0f1320;color:#e6e9f2;border:1px solid #2c3346;border-radius:8px;padding:10px}
+      .tm-leagues{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}
+      .tm-league{padding:6px 13px;border-radius:999px;background:#0f1320;border:1px solid #232a3b;color:#cfe9ff;font-size:12px;font-weight:700}
+      @media(max-width:720px){.tm-grid,.tm-pick{grid-template-columns:1fr}}
+    </style>
+</head>
+<body class="tmr-polished-page">
+<main class="tmr-shell">
+    <header class="tmr-page-header tm-hero">
+        <span class="tm-eyebrow" id="tmEyebrow">Sports Fan Profiles</span>
+        <h1 class="tmr-h1" id="tmTitle">Claim Your Team</h1>
+        <p class="tmr-page-sub" id="tmSub">Create your verified sports fan profile, pick your team, and start building a record opinions can't fake.</p>
+        <div class="tm-cta-row">
+            <a class="tm-cta" href="/register/"><i class="fas fa-user-plus"></i> Create your sports profile</a>
+            <a class="tm-cta secondary" href="/how-it-works/">How it works</a>
+        </div>
+    </header>
+
+    <section class="tmr-glass" id="tmTeamSection" hidden>
+        <h2 class="tmr-h2" id="tmTeamName">Team</h2>
+        <div class="tm-claim" id="tmClaim">
+            <p><strong id="tmClaimLead">Be one of the first fans to claim this team on TrustMyRecord.</strong></p>
+            <p>Create your profile, pick this team, and start building your verified record.</p>
+            <div class="tm-cta-row"><a class="tm-cta" href="/register/"><i class="fas fa-user-plus"></i> Create your sports profile</a></div>
+        </div>
+        <div id="tmFansWrap" hidden>
+            <h3 class="tmr-h2" style="font-size:16px">Fans on this team (<span id="tmFanCount">0</span>)</h3>
+            <div class="tm-fans" id="tmFans"></div>
+        </div>
+        <div class="tm-grid">
+            <div class="tm-soon"><h3>Team Posts</h3><p>Fan posts about this team are coming soon. Claim the team early to be first.</p></div>
+            <div class="tm-soon"><h3>Predictions</h3><p>Verified predictions for this team will appear here as fans lock picks.</p></div>
+            <div class="tm-soon"><h3>Top Fans</h3><p>The fans with the strongest verified records on this team will rank here.</p></div>
+            <div class="tm-soon"><h3>Rivalry Challenges</h3><p>Head-to-head rivalry challenges between fan bases are coming soon.</p></div>
+        </div>
+    </section>
+
+    <section class="tmr-glass" id="tmPickerSection" hidden>
+        <h2 class="tmr-h2">Find your team</h2>
+        <p class="tmr-page-sub" style="margin:0">Pick a league and team to see its early-access fan page.</p>
+        <div class="tm-pick">
+            <select id="tmSportSel"></select>
+            <select id="tmTeamSel"></select>
+            <a class="tm-cta" id="tmGoBtn">View team</a>
+        </div>
+        <div class="tm-leagues" id="tmLeagues"></div>
+    </section>
+</main>
+
+<script>
+(function () {
+  var API = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+  function qs(k) { return new URLSearchParams(location.search).get(k); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  var sport = (qs('sport') || '').toLowerCase();
+  var team = (qs('team') || '').toLowerCase();
+
+  if (sport && team) loadTeam(sport, team);
+  else loadPicker();
+
+  function loadTeam(sport, team) {
+    fetch(API + '/api/teams/' + encodeURIComponent(sport) + '/' + encodeURIComponent(team))
+      .then(function (r) { if (!r.ok) throw new Error('not found'); return r.json(); })
+      .then(function (d) {
+        var t = d.team;
+        document.title = t.name + ' Fans | TrustMyRecord';
+        document.getElementById('tmEyebrow').textContent = t.sport_label + ' Fan Page';
+        document.getElementById('tmTitle').textContent = t.name;
+        document.getElementById('tmSub').textContent = 'Claim ' + t.name + ' on TrustMyRecord. Build a verified record as a ' + t.name + ' fan.';
+        document.getElementById('tmTeamName').textContent = t.name + ' Fans';
+        document.getElementById('tmTeamSection').hidden = false;
+
+        var fans = d.fans || [];
+        if (fans.length) {
+          document.getElementById('tmClaimLead').textContent = 'Join ' + fans.length + ' fan' + (fans.length === 1 ? '' : 's') + ' already claiming ' + t.name + '.';
+          document.getElementById('tmFanCount').textContent = d.fan_count || fans.length;
+          document.getElementById('tmFans').innerHTML = fans.map(function (f) {
+            var av = f.avatar_url ? '<img src="' + esc(f.avatar_url) + '" alt="">' : '<i class="fas fa-user-circle"></i>';
+            return '<a class="tm-fan" href="' + esc(f.profile_url) + '">' + av + esc(f.display_name || f.username) + '</a>';
+          }).join('');
+          document.getElementById('tmFansWrap').hidden = false;
+        }
+      })
+      .catch(function () {
+        document.getElementById('tmTitle').textContent = 'Team not found';
+        document.getElementById('tmSub').textContent = 'We could not find that team. Browse all teams below.';
+        loadPicker();
+      });
+  }
+
+  function loadPicker() {
+    document.getElementById('tmPickerSection').hidden = false;
+    fetch(API + '/api/teams/catalog').then(function (r) { return r.json(); }).then(function (c) {
+      var sports = c.sports || [];
+      var sportSel = document.getElementById('tmSportSel'), teamSel = document.getElementById('tmTeamSel');
+      sportSel.innerHTML = sports.map(function (s) { return '<option value="' + s.sportSlug + '">' + esc(s.label) + '</option>'; }).join('');
+      document.getElementById('tmLeagues').innerHTML = sports.map(function (s) { return '<span class="tm-league">' + esc(s.label) + ' &middot; ' + s.teams.length + '</span>'; }).join('');
+      function fillTeams() {
+        var s = sports.filter(function (x) { return x.sportSlug === sportSel.value; })[0];
+        teamSel.innerHTML = (s ? s.teams : []).map(function (t) { return '<option value="' + t.slug + '">' + esc(t.name) + '</option>'; }).join('');
+      }
+      fillTeams();
+      sportSel.addEventListener('change', fillTeams);
+      document.getElementById('tmGoBtn').addEventListener('click', function () {
+        location.href = '/teams/?sport=' + sportSel.value + '&team=' + teamSel.value;
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>
