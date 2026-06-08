@@ -1789,6 +1789,13 @@
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvPickDiversity">Not enough data yet</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvPickDiversitySub">Unique opinions vs repeated exposure</span>
                     </article>
+                    <!-- PICK_CORRELATION_20260607: additive risk-clustering stat from the
+                         same graded public ledger (regular picks only; contest picks excluded). -->
+                    <article class="profile-advanced-metric" data-advanced-metric-card="correlation_risk">
+                        <span class="profile-advanced-metric__label">Correlation Risk <span class="profile-diversity-info" id="profileCorrelationInfo" role="button" tabindex="0" aria-label="What is Correlation Risk?" title="This bettor frequently posts picks that depend on the same game, team, player, or outcome. High correlation can make records look stronger or weaker than truly independent picks.">?</span></span>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvCorrelation">Not enough data yet</strong>
+                        <span class="profile-advanced-metric__sub" id="profileAdvCorrelationSub">Pick correlation index</span>
+                    </article>
                 </div>
                 <details class="profile-diversity-detail" id="profileDiversityDetail" hidden>
                     <summary>Pick Diversity breakdown</summary>
@@ -1844,6 +1851,10 @@
         .profile-advanced-metric__value.is-empty{color:#a6b2c4;font-size:13px;font-weight:850;line-height:1.18;}
         .profile-advanced-metric__value.is-pos{color:#22c55e;}
         .profile-advanced-metric__value.is-neg{color:#ef4444;}
+        .profile-advanced-metric__value.corr-low{color:#22c55e;}
+        .profile-advanced-metric__value.corr-moderate{color:#eab308;}
+        .profile-advanced-metric__value.corr-high{color:#f97316;}
+        .profile-advanced-metric__value.corr-extreme{color:#ef4444;}
         .profile-advanced-metric__sub{margin-top:auto;color:#7f8ca3;font-size:11px;font-weight:700;line-height:1.25;}
         .profile-advanced-support-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:12px;}
         .profile-advanced-support-grid div{min-height:70px;padding:11px;border:1px solid rgba(148,163,184,.13);border-radius:10px;background:rgba(2,6,23,.32);color:#e7eef8;font-size:12px;font-weight:850;line-height:1.2;}
@@ -6701,6 +6712,28 @@
             maxDd != null && Number.isFinite(maxDd) ? 'Peak-to-trough units' : 'Requires enough graded picks',
             maxDd != null && Number.isFinite(maxDd) && maxDd > 0 ? -1 : null
         );
+
+        // PICK_CORRELATION_20260607: risk-clustering stat (Low/Moderate/High/Extreme).
+        const corr = (data && data.correlation) || null;
+        const corrEl = document.getElementById('profileAdvCorrelation');
+        const corrSub = document.getElementById('profileAdvCorrelationSub');
+        if (corrEl) {
+            corrEl.classList.remove('corr-low', 'corr-moderate', 'corr-high', 'corr-extreme');
+            if (corr && corr.display && corr.level) {
+                corrEl.textContent = corr.level;
+                corrEl.className = 'profile-advanced-metric__value corr-' + String(corr.level).toLowerCase();
+                if (corrSub) {
+                    const bits = [];
+                    if (corr.pct_correlated != null) bits.push(Number(corr.pct_correlated).toFixed(0) + '% correlated');
+                    if (corr.clusters) bits.push(corr.clusters + (corr.clusters === 1 ? ' cluster' : ' clusters'));
+                    corrSub.textContent = bits.length ? bits.join(' · ') : 'Pick correlation index';
+                }
+            } else {
+                corrEl.textContent = 'Not enough data yet';
+                corrEl.className = 'profile-advanced-metric__value is-empty';
+                if (corrSub) corrSub.textContent = 'Pick correlation index';
+            }
+        }
     }
 
     async function bootstrapProfileAdvancedMetricsStrip() {
