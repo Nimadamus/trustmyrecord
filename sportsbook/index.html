@@ -2092,6 +2092,44 @@
         return Number.isFinite(n) && n > 0 ? 'TMR-' + String(Math.floor(n)).padStart(7, '0') : '';
     };
 
+    // PICK_CORRELATION_WARNING_20260607: warning-only correlation detector.
+    // Returns a short reason string when the new pick is highly correlated with
+    // an existing PENDING pick (same game/different market, or same team across
+    // different games), else null. Never throws and never blocks — callers only
+    // use it to show a non-blocking heads-up; the pick is always submittable.
+    window.TMR = window.TMR || {};
+    window.TMR._correlationWarning = function(newPick) {
+        try {
+            var pending = (window.TMR && window.TMR.lastPendingPicks) || [];
+            if (!Array.isArray(pending) || !pending.length || !newPick) return null;
+            var TEAM_SIDED = { h2h:1, spreads:1, alt_spreads:1, team_totals:1, f5_h2h:1, f5_spreads:1, f5_team_totals:1, first_half_h2h:1, first_half_spreads:1, second_half_h2h:1, second_half_spreads:1, period_1_h2h:1, period_1_spreads:1 };
+            function teamToken(p) {
+                if (!TEAM_SIDED[p.market_type]) return null;
+                var sel = String(p.selection || '').toLowerCase();
+                var home = String(p.home_team || '').toLowerCase();
+                var away = String(p.away_team || '').toLowerCase();
+                if (home && sel.indexOf(home) !== -1) return p.sport_key + '|' + home;
+                if (away && sel.indexOf(away) !== -1) return p.sport_key + '|' + away;
+                var stripped = sel.replace(/\s+(over|under)\b.*$/, '').trim();
+                return stripped ? (p.sport_key + '|' + stripped) : null;
+            }
+            var newGame = String(newPick.game_id || '');
+            var newTeam = teamToken(newPick);
+            for (var i = 0; i < pending.length; i++) {
+                var p = pending[i];
+                // Same game, different market = correlated (ML+spread, TT+total, F5+full, etc.)
+                if (newGame && String(p.game_id || '') === newGame && p.market_type !== newPick.market_type) {
+                    return 'another pending pick on this same game';
+                }
+                // Same team, different game = shared-team exposure.
+                if (newTeam && String(p.game_id || '') !== newGame && teamToken(p) === newTeam) {
+                    return 'another pending pick on the same team';
+                }
+            }
+            return null;
+        } catch (e) { return null; }
+    };
+
     window.lockInPick = function() {
         if (window.__tmrProductionLockInPick && window.__tmrProductionLockInPick !== window.lockInPick) {
             return window.__tmrProductionLockInPick();
@@ -2310,6 +2348,24 @@
             alert('Lock failed: pick service unavailable. Please refresh and try again.');
             return;
         }
+
+        // PICK_CORRELATION_WARNING_20260607: non-blocking correlation warning.
+        // Shown ONLY when this pick is highly correlated with an existing
+        // pending pick. The user can always proceed — the pick is NEVER blocked
+        // and no submission rule changes. Straight/unrelated picks see nothing.
+        try {
+            var corrReason = (window.TMR && typeof window.TMR._correlationWarning === 'function')
+                ? window.TMR._correlationWarning(newPick) : null;
+            if (corrReason) {
+                if (typeof analyticsTrackSportsbook === 'function') {
+                    analyticsTrackSportsbook('sportsbook_correlated_pick_warned', {
+                        sport: thePick.sport || '', market_type: marketType, reason: corrReason
+                    });
+                }
+                var proceed = window.confirm('Heads up: this pick appears correlated with ' + corrReason + '. Correlated plays make your record and risk depend on the same game or team, which can distort your true results. Lock it anyway?');
+                if (!proceed) return; // user chose to reconsider; nothing is blocked
+            }
+        } catch (e) {}
 
         window.__tmrLockInFlight = true;
         _tmrSetLockBtnsState('pending');
@@ -11533,6 +11589,10 @@ window.toggleSportFamily = function (family) {
                 // Defense-in-depth filter — if backend ever returns non-pending rows
                 // in the same payload, keep only the pending ones here.
                 picks = picks.filter(function (p) { return !p.status || String(p.status).toLowerCase() === 'pending'; });
+                // PICK_CORRELATION_WARNING_20260607: cache pending picks so the
+                // pick-slip correlation warning can compare a new pick against them.
+                window.TMR = window.TMR || {};
+                window.TMR.lastPendingPicks = picks;
                 render(picks, {});
                 lastFetched = Date.now();
             } catch (e) {
