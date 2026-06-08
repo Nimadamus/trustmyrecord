@@ -1792,9 +1792,9 @@
                     <!-- PICK_CORRELATION_20260607: additive risk-clustering stat from the
                          same graded public ledger (regular picks only; contest picks excluded). -->
                     <article class="profile-advanced-metric" data-advanced-metric-card="correlation_risk">
-                        <span class="profile-advanced-metric__label">Correlation Risk <span class="profile-diversity-info" id="profileCorrelationInfo" role="button" tabindex="0" aria-label="What is Correlation Risk?" title="This bettor frequently posts picks that depend on the same game, team, player, or outcome. High correlation can make records look stronger or weaker than truly independent picks.">?</span></span>
+                        <span class="profile-advanced-metric__label">Correlated Plays <span class="profile-diversity-info" id="profileCorrelationInfo" role="button" tabindex="0" aria-label="What are Correlated Plays?" title="Correlated plays are multiple picks that ride the same game, team, player, or outcome, e.g. side + team total, full-game total + team total, spread + moneyline, or player props tied to the same result. Stacking correlated plays can inflate confidence and distort record quality versus truly independent picks. This is an accountability stat, not a penalty.">?</span></span>
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvCorrelation">Not enough data yet</strong>
-                        <span class="profile-advanced-metric__sub" id="profileAdvCorrelationSub">Pick correlation index</span>
+                        <span class="profile-advanced-metric__sub" id="profileAdvCorrelationSub">Same-game / same-outcome exposure</span>
                     </article>
                 </div>
                 <details class="profile-diversity-detail" id="profileDiversityDetail" hidden>
@@ -1855,6 +1855,7 @@
         .profile-advanced-metric__value.corr-moderate{color:#eab308;}
         .profile-advanced-metric__value.corr-high{color:#f97316;}
         .profile-advanced-metric__value.corr-extreme{color:#ef4444;}
+        .profile-advanced-metric__value .corr-warn-badge{display:inline-block;margin-left:7px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:900;letter-spacing:.04em;vertical-align:middle;line-height:1.4;background:rgba(239,68,68,.16);color:#fca5a5;border:1px solid rgba(239,68,68,.5);white-space:nowrap;}
         .profile-advanced-metric__sub{margin-top:auto;color:#7f8ca3;font-size:11px;font-weight:700;line-height:1.25;}
         .profile-advanced-support-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:12px;}
         .profile-advanced-support-grid div{min-height:70px;padding:11px;border:1px solid rgba(148,163,184,.13);border-radius:10px;background:rgba(2,6,23,.32);color:#e7eef8;font-size:12px;font-weight:850;line-height:1.2;}
@@ -6719,19 +6720,30 @@
         const corrSub = document.getElementById('profileAdvCorrelationSub');
         if (corrEl) {
             corrEl.classList.remove('corr-low', 'corr-moderate', 'corr-high', 'corr-extreme');
-            if (corr && corr.display && corr.level) {
-                corrEl.textContent = corr.level;
-                corrEl.className = 'profile-advanced-metric__value corr-' + String(corr.level).toLowerCase();
+            if (corr && corr.display) {
+                const level = corr.level || null;
+                const isHigh = level === 'High' || level === 'Extreme';
+                // Correlated Plays = exact count of picks inside a correlated cluster.
+                // Fall back to rate x sample only if the backend count is unavailable.
+                let count = (corr.correlated_picks != null) ? Number(corr.correlated_picks) : null;
+                if (count == null && corr.pct_correlated != null && corr.total_picks) {
+                    count = Math.round(Number(corr.pct_correlated) / 100 * Number(corr.total_picks));
+                }
+                const countTxt = (count != null) ? String(count) : (level || '—');
+                const warn = isHigh ? ' <span class="corr-warn-badge">⚠ ' + level + '</span>' : '';
+                corrEl.innerHTML = countTxt + warn;
+                corrEl.className = 'profile-advanced-metric__value corr-' + String(level || '').toLowerCase();
                 if (corrSub) {
                     const bits = [];
-                    if (corr.pct_correlated != null) bits.push(Number(corr.pct_correlated).toFixed(0) + '% correlated');
+                    if (corr.pct_correlated != null) bits.push(Number(corr.pct_correlated).toFixed(0) + '% correlation rate');
                     if (corr.clusters) bits.push(corr.clusters + (corr.clusters === 1 ? ' cluster' : ' clusters'));
-                    corrSub.textContent = bits.length ? bits.join(' · ') : 'Pick correlation index';
+                    if (isHigh) bits.push('high correlation — records may look stronger/weaker than independent picks');
+                    corrSub.textContent = bits.length ? bits.join(' · ') : 'Same-game / same-outcome exposure';
                 }
             } else {
                 corrEl.textContent = 'Not enough data yet';
                 corrEl.className = 'profile-advanced-metric__value is-empty';
-                if (corrSub) corrSub.textContent = 'Pick correlation index';
+                if (corrSub) corrSub.textContent = 'Same-game / same-outcome exposure';
             }
         }
     }
