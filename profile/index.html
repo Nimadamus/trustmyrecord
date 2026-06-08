@@ -8765,6 +8765,16 @@
         const canShowFinancialStats = !!ledgerStats || profileHasRecordFields || gradedProfilePicks === 0;
         const signedClass = (value) => value > 0 ? ' is-positive' : value < 0 ? ' is-negative' : ' is-neutral';
         const fmtSigned = (value, suffix, decimals) => (value > 0 ? '+' : '') + value.toFixed(decimals == null ? 1 : decimals) + (suffix || '');
+        // Avg Odds: same backend ledger-driven value used by Advanced Capper Metrics
+        // (p.avg_odds). Falls back to the unified ledger calc when the backend field
+        // is absent. Never hardcoded. Formatted as clean American odds (-124 / +105).
+        const avgOddsValue = (p && p.avg_odds != null && p.avg_odds !== '')
+            ? Number(p.avg_odds)
+            : (ledgerStats && ledgerStats.avgOdds != null ? Number(ledgerStats.avgOdds) : null);
+        const fmtAmericanOddsRail = (o) => (o == null || isNaN(o)) ? null : ((o > 0 ? '+' : '') + Math.round(o));
+        const avgOddsText = avgOddsValue != null
+            ? fmtAmericanOddsRail(avgOddsValue)
+            : (statsLoadError ? 'Unavailable' : (gradedProfilePicks > 0 ? 'N/A' : 'Loading...'));
         const showEmptyLedgerNote = isOwnProfile && totalPicks === 0 && !p.__recoveredFromLocal;
         const trustPills = '<div class="profile-trust-row">' +
             '<span class="profile-trust-pill"><i class="fas fa-check-circle"></i> Status <strong>' + verifiedText + '</strong></span>' +
@@ -8817,6 +8827,7 @@
             '<div class="profile-rail-card"><span class="profile-rail-label">Units</span><span class="profile-rail-value' + (canShowFinancialStats ? signedClass(netUnitsValue) : ' is-neutral') + '">' + (canShowFinancialStats ? fmtSigned(netUnitsValue, 'u', 2) : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">ROI</span><span class="profile-rail-value' + (canShowFinancialStats && gradedProfilePicks > 0 ? signedClass(roiValue) : ' is-neutral') + '">' + (canShowFinancialStats ? (gradedProfilePicks > 0 ? fmtSigned(roiValue, '%') : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
+            '<div class="profile-rail-card profile-rail-card--avg-odds"><span class="profile-rail-label">Avg Odds</span><span class="profile-rail-value">' + avgOddsText + '</span></div>' +
             '</div>';
         const overview = '<div class="profile-overview-grid">' +
             '<div class="profile-overview-card"><span class="profile-overview-label">Followers</span><span class="profile-overview-value">' + (Number(p.follower_count) || 0) + '</span></div>' +
@@ -12956,6 +12967,14 @@
       }
       body.profile-page.tmr-social-profile .profile-rail-card:nth-last-child(-n+2) {
         border-bottom: 0 !important;
+      }
+      /* Avg Odds is the 7th stat: with the 2-/3-col verified-record grid an odd
+         count leaves a gap, so span it full-width as a clean closing row. */
+      body.profile-page.tmr-social-profile .profile-rail-card--avg-odds {
+        grid-column: 1 / -1 !important;
+        border-right: 0 !important;
+        border-bottom: 0 !important;
+        border-top: 1px solid rgba(117, 140, 173, .18) !important;
       }
       body.profile-page.tmr-social-profile .profile-rail-label,
       body.profile-page.tmr-social-profile .profile-advanced-metric__label {
