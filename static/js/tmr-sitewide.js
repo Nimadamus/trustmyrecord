@@ -1101,6 +1101,7 @@
                         <a href="/dmca/">DMCA</a>
                         <a href="/contact/">Contact Us</a>
                         <a href="/report-bug/">Report a Bug</a>
+                        <a href="/lease/">Lease / Acquire</a>
                     </div>
                 </div>
             </div>
