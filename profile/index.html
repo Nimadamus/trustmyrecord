@@ -1789,13 +1789,10 @@
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvPickDiversity">Not enough data yet</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvPickDiversitySub">Unique opinions vs repeated exposure</span>
                     </article>
-                    <!-- PICK_CORRELATION_20260607: additive risk-clustering stat from the
-                         same graded public ledger (regular picks only; contest picks excluded). -->
-                    <article class="profile-advanced-metric" data-advanced-metric-card="correlation_risk">
-                        <span class="profile-advanced-metric__label">Correlated Plays <span class="profile-diversity-info" id="profileCorrelationInfo" role="button" tabindex="0" aria-label="What are Correlated Plays?" title="Correlated plays are multiple picks that ride the same game, team, player, or outcome, e.g. side + team total, full-game total + team total, spread + moneyline, or player props tied to the same result. Stacking correlated plays can inflate confidence and distort record quality versus truly independent picks. This is an accountability stat, not a penalty.">?</span></span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvCorrelation">Not enough data yet</strong>
-                        <span class="profile-advanced-metric__sub" id="profileAdvCorrelationSub">Same-game / same-outcome exposure</span>
-                    </article>
+                    <!-- PICK_CORRELATION_20260607: Correlated Picks moved to the TOP profile
+                         rail (next to Avg Odds). Card intentionally removed from this grid to
+                         avoid duplication; populated by applyRailCorrelation(). -->
+
                 </div>
                 <details class="profile-diversity-detail" id="profileDiversityDetail" hidden>
                     <summary>Pick Diversity breakdown</summary>
@@ -6714,38 +6711,11 @@
             maxDd != null && Number.isFinite(maxDd) && maxDd > 0 ? -1 : null
         );
 
-        // PICK_CORRELATION_20260607: risk-clustering stat (Low/Moderate/High/Extreme).
-        const corr = (data && data.correlation) || null;
-        const corrEl = document.getElementById('profileAdvCorrelation');
-        const corrSub = document.getElementById('profileAdvCorrelationSub');
-        if (corrEl) {
-            corrEl.classList.remove('corr-low', 'corr-moderate', 'corr-high', 'corr-extreme');
-            if (corr && corr.display) {
-                const level = corr.level || null;
-                const isHigh = level === 'High' || level === 'Extreme';
-                // Correlated Plays = exact count of picks inside a correlated cluster.
-                // Fall back to rate x sample only if the backend count is unavailable.
-                let count = (corr.correlated_picks != null) ? Number(corr.correlated_picks) : null;
-                if (count == null && corr.pct_correlated != null && corr.total_picks) {
-                    count = Math.round(Number(corr.pct_correlated) / 100 * Number(corr.total_picks));
-                }
-                const countTxt = (count != null) ? String(count) : (level || '—');
-                const warn = isHigh ? ' <span class="corr-warn-badge">⚠ ' + level + '</span>' : '';
-                corrEl.innerHTML = countTxt + warn;
-                corrEl.className = 'profile-advanced-metric__value corr-' + String(level || '').toLowerCase();
-                if (corrSub) {
-                    const bits = [];
-                    if (corr.pct_correlated != null) bits.push(Number(corr.pct_correlated).toFixed(0) + '% correlation rate');
-                    if (corr.clusters) bits.push(corr.clusters + (corr.clusters === 1 ? ' cluster' : ' clusters'));
-                    if (isHigh) bits.push('high correlation — records may look stronger/weaker than independent picks');
-                    corrSub.textContent = bits.length ? bits.join(' · ') : 'Same-game / same-outcome exposure';
-                }
-            } else {
-                corrEl.textContent = 'Not enough data yet';
-                corrEl.className = 'profile-advanced-metric__value is-empty';
-                if (corrSub) corrSub.textContent = 'Same-game / same-outcome exposure';
-            }
-        }
+        // PICK_CORRELATION_20260607: correlated-picks accountability stat now lives in the
+        // TOP profile rail (next to Avg Odds), not buried in the advanced grid. Cache the
+        // payload and render the rail card. (The old advanced-grid card was removed.)
+        window.__tmrCorrelation = (data && data.correlation) || null;
+        try { applyRailCorrelation(); } catch (_) {}
     }
 
     async function bootstrapProfileAdvancedMetricsStrip() {
@@ -8840,6 +8810,7 @@
             '<div class="profile-rail-card"><span class="profile-rail-label">ROI</span><span class="profile-rail-value' + (canShowFinancialStats && gradedProfilePicks > 0 ? signedClass(roiValue) : ' is-neutral') + '">' + (canShowFinancialStats ? (gradedProfilePicks > 0 ? fmtSigned(roiValue, '%') : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
             '<div class="profile-rail-card profile-rail-card--avg-odds"><span class="profile-rail-label">Avg Odds</span><span class="profile-rail-value">' + avgOddsText + '</span></div>' +
+            '<div class="profile-rail-card profile-rail-card--corr"><span class="profile-rail-label">Correlated Picks <span class="profile-corr-info" id="railCorrInfo" role="button" tabindex="0" aria-label="What are correlated picks?" title="Correlated picks are multiple picks tied to the same game, team, player, or outcome. A high rate can make a record look stronger or weaker than a set of independent picks.">?</span></span><span class="profile-rail-value rail-corr-value" id="railCorrValue">&mdash;</span><span class="profile-rail-corr-sub" id="railCorrSub"></span></div>' +
             '</div>';
         const overview = '<div class="profile-overview-grid">' +
             '<div class="profile-overview-card"><span class="profile-overview-label">Followers</span><span class="profile-overview-value">' + (Number(p.follower_count) || 0) + '</span></div>' +
@@ -8905,6 +8876,43 @@
 
         updateWorkspaceLinks(p.username);
         updateProfileSidebar(p);
+        // Fill the top-rail Correlated Picks card if correlation data already
+        // arrived (metrics fetch and profile render race; whichever lands last wins).
+        try { applyRailCorrelation(); } catch (_) {}
+    }
+
+    // Populates the top-rail "Correlated Picks" stat (next to Avg Odds) from the
+    // /metrics correlation payload. Idempotent; safe to call before or after the
+    // data loads. Source: services/pickCorrelation.js (regular ledger picks only).
+    function applyRailCorrelation() {
+        const corr = window.__tmrCorrelation || null;
+        const v = document.getElementById('railCorrValue');
+        const s = document.getElementById('railCorrSub');
+        if (!v) return; // rail not rendered yet
+        if (corr && corr.display) {
+            const level = corr.level || null;
+            const cnt = (corr.correlated_picks != null) ? Number(corr.correlated_picks) : null;
+            const tot = (corr.total_picks != null) ? Number(corr.total_picks) : null;
+            const primary = (cnt != null && tot != null) ? (cnt + ' / ' + tot)
+                          : (cnt != null ? String(cnt) : (level || '—'));
+            const badge = level
+                ? ' <span class="rail-corr-badge corr-' + String(level).toLowerCase() + '">' + level + '</span>'
+                : '';
+            v.innerHTML = primary + badge;
+            v.className = 'profile-rail-value rail-corr-value';
+            if (s) {
+                if (corr.pct_correlated != null && corr.clusters != null) {
+                    const pct = (Math.round(Number(corr.pct_correlated) * 10) / 10);
+                    s.textContent = pct + '% of graded picks are part of ' + corr.clusters + ' correlated ' + (corr.clusters === 1 ? 'cluster' : 'clusters');
+                } else {
+                    s.textContent = '';
+                }
+            }
+        } else {
+            v.textContent = corr ? 'Not enough data' : '—';
+            v.className = 'profile-rail-value rail-corr-value' + (corr ? ' is-neutral' : '');
+            if (s) s.textContent = '';
+        }
     }
 
     function updateProfileSidebar(p) {
@@ -12980,13 +12988,52 @@
       body.profile-page.tmr-social-profile .profile-rail-card:nth-last-child(-n+2) {
         border-bottom: 0 !important;
       }
-      /* Avg Odds is the 7th stat: with the 2-/3-col verified-record grid an odd
-         count leaves a gap, so span it full-width as a clean closing row. */
+      /* Avg Odds + Correlated Picks form the closing 2-card row (8 cards total =
+         4 even rows in the 2-col grid), so Avg Odds is no longer full-width. */
       body.profile-page.tmr-social-profile .profile-rail-card--avg-odds {
-        grid-column: 1 / -1 !important;
+        border-bottom: 0 !important;
+      }
+      /* Correlated Picks rail card: count "150 / 229" + severity badge + subtext. */
+      body.profile-page.tmr-social-profile .profile-rail-card--corr {
         border-right: 0 !important;
         border-bottom: 0 !important;
-        border-top: 1px solid rgba(117, 140, 173, .18) !important;
+      }
+      body.profile-page.tmr-social-profile .profile-rail-value.rail-corr-value {
+        font-size: clamp(19px, 1.55vw, 26px) !important;
+        display: flex !important;
+        align-items: center !important;
+        flex-wrap: wrap !important;
+        gap: 6px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-rail-corr-sub {
+        display: block !important;
+        margin-top: 7px !important;
+        color: #93a7c0 !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        line-height: 1.32 !important;
+        letter-spacing: 0 !important;
+        text-transform: none !important;
+      }
+      body.profile-page.tmr-social-profile .rail-corr-badge {
+        display: inline-block;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-size: 11px !important;
+        font-weight: 900 !important;
+        letter-spacing: .04em;
+        line-height: 1.5;
+        vertical-align: middle;
+      }
+      body.profile-page.tmr-social-profile .rail-corr-badge.corr-low { background: rgba(34,197,94,.16); color: #86efac !important; border: 1px solid rgba(34,197,94,.5); }
+      body.profile-page.tmr-social-profile .rail-corr-badge.corr-moderate { background: rgba(234,179,8,.16); color: #fde68a !important; border: 1px solid rgba(234,179,8,.5); }
+      body.profile-page.tmr-social-profile .rail-corr-badge.corr-high { background: rgba(249,115,22,.16); color: #fdba74 !important; border: 1px solid rgba(249,115,22,.55); }
+      body.profile-page.tmr-social-profile .rail-corr-badge.corr-extreme { background: rgba(239,68,68,.18); color: #fca5a5 !important; border: 1px solid rgba(239,68,68,.6); }
+      body.profile-page.tmr-social-profile .profile-corr-info {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 14px; height: 14px; margin-left: 4px; border-radius: 50%;
+        background: rgba(148,163,184,.22); color: #cbd5e1; font-size: 9px; font-weight: 900;
+        cursor: help; vertical-align: middle;
       }
       body.profile-page.tmr-social-profile .profile-rail-label,
       body.profile-page.tmr-social-profile .profile-advanced-metric__label {
