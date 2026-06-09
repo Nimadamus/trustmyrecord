@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/arena/rankings/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Gaming Rankings & Records - MLB The Show Leaderboard | TrustMyRecord Arena</title>
+    <meta name="description" content="See who is leading TrustMyRecord Arena sports-gaming: MLB The Show, NBA 2K, Madden and EA FC player rankings by wins, win percentage, and streak. Verified records from confirmed head-to-head matches. Free Arena, no cash wagering.">
+    <meta property="og:title" content="Sports Gaming Rankings & Records | TrustMyRecord Arena">
+    <meta property="og:description" content="Player rankings and verified records for MLB The Show and sports-gaming challenges.">
+    <meta property="og:url" content="https://trustmyrecord.com/arena/rankings/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <meta name="twitter:card" content="summary_large_image">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260605dmca1"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/arena-suite.css?v=20260605arena1">
+    <!-- ARENA_RANKINGS_NO_CONTEST_MODAL_20260609: keep the JustBet promo modal from covering the rankings table. -->
+    <script data-contest-promo-modal="1">/* contest promo modal intentionally suppressed on /arena/rankings/ */</script>
+    <style>
+        .contest-promo-modal-backdrop,.tmr-contest-modal-backdrop,[data-contest-promo-modal-backdrop],[data-contest-promo-modal-backdrop="1"],#contestPromoModal{display:none!important;visibility:hidden!important;pointer-events:none!important;opacity:0!important}
+        .rk-table{width:100%;border-collapse:collapse}
+        .rk-table th,.rk-table td{padding:10px 8px;border-bottom:1px solid var(--as-border);text-align:left;font-size:.95em}
+        .rk-table th{color:#9aa4b2;font-weight:600;font-size:.82em;text-transform:uppercase;letter-spacing:.03em}
+        .rk-rank{font-weight:800;color:var(--as-gold);width:42px}
+        .rk-num{text-align:center}
+        .rk-player{display:flex;align-items:center;gap:8px}
+        .rk-av{width:30px;height:30px;border-radius:50%;object-fit:cover;background:#1b2330}
+        .rk-live{background:#e53e3e;color:#fff;border-radius:4px;padding:1px 6px;font-size:.72em;font-weight:700;margin-left:6px}
+        @media(max-width:640px){.rk-hide-sm{display:none}}
+    </style>
+</head>
+<body class="arena-page">
+
+    <div class="as-hero">
+        <div class="as-hero-inner">
+            <div class="as-breadcrumb"><a href="/arena/">Arena</a> / Rankings</div>
+            <span class="as-kicker">Verified Records</span>
+            <h1>Sports Gaming <span class="gold">Rankings</span></h1>
+            <p class="lede">Who is actually winning. Player rankings and verified records built only from confirmed head-to-head matches in MLB The Show and other sports-gaming titles. No cash, no wagering, just real records and bragging rights.</p>
+            <div class="as-actions">
+                <a class="as-btn as-btn-outline" href="/arena/live/"><i class="fas fa-circle" style="color:#e53e3e"></i> Watch Live</a>
+                <a class="as-btn as-btn-outline" href="/arena/challenges/"><i class="fas fa-khanda"></i> Open Challenges</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="as-main">
+        <div class="as-section">
+            <div class="as-section-head">
+                <h2><i class="fas fa-ranking-star"></i> Leaderboard</h2>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    <select id="gameFilter" style="background:var(--as-surface); color:var(--as-text); border:1px solid var(--as-border); border-radius:8px; padding:8px 10px;">
+                        <option value="">All Games</option>
+                    </select>
+                    <select id="sortFilter" style="background:var(--as-surface); color:var(--as-text); border:1px solid var(--as-border); border-radius:8px; padding:8px 10px;">
+                        <option value="wins">Most Wins</option>
+                        <option value="win_pct">Win %</option>
+                        <option value="streak">Hot Streak</option>
+                    </select>
+                </div>
+            </div>
+            <!-- ARENA_RANKINGS_20260609 -->
+            <div id="rankingsWrap"><div class="as-empty">Loading rankings...</div></div>
+        </div>
+
+        <div class="as-disclaimer" id="arenaDisclaimer"></div>
+    </div>
+
+    <script src="/static/js/config.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/arena-suite.js?v=20260605arena1"></script>
+    <script>
+    (function () {
+        const A = window.TMRArena;
+        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
+        let apiRef = null, liveSet = {};
+
+        function row(r, i) {
+            const name = A.esc(r.display_name || r.username);
+            const av = r.avatar_url
+                ? '<img class="rk-av" src="' + A.esc(r.avatar_url) + '" alt="">'
+                : '<span class="rk-av" style="display:inline-flex;align-items:center;justify-content:center"><i class="fas fa-user" style="color:#9aa4b2"></i></span>';
+            const isLive = liveSet[(r.username || '').toLowerCase()];
+            const liveBadge = isLive ? '<span class="rk-live">LIVE</span>' : '';
+            const wins = r.wins || 0, losses = r.losses || 0, draws = r.draws || 0;
+            const played = wins + losses + draws;
+            const winPct = (r.win_pct != null ? r.win_pct : 0);
+            const streak = r.current_streak || 0;
+            const streakTxt = streak > 0 ? ('W' + streak) : (streak < 0 ? ('L' + Math.abs(streak)) : '-');
+            return '<tr>' +
+                '<td class="rk-rank">' + (i + 1) + '</td>' +
+                '<td><span class="rk-player">' + av +
+                    '<a href="/profile/?user=' + encodeURIComponent(r.username) + '" style="font-weight:600">' + name + '</a>' + liveBadge +
+                '</span></td>' +
+                '<td class="rk-hide-sm">' + A.esc(r.game_title || '') + '</td>' +
+                '<td class="rk-num"><strong>' + wins + '</strong>-' + losses + (draws ? '-' + draws : '') + '</td>' +
+                '<td class="rk-num">' + winPct + '%</td>' +
+                '<td class="rk-num">' + streakTxt + '</td>' +
+                '<td class="rk-num rk-hide-sm">' + played + '</td>' +
+            '</tr>';
+        }
+
+        async function loadRankings() {
+            const game = document.getElementById('gameFilter').value;
+            const sort = document.getElementById('sortFilter').value;
+            const wrap = document.getElementById('rankingsWrap');
+            wrap.innerHTML = '<div class="as-empty">Loading rankings...</div>';
+            try {
+                let url = '/gaming/leaderboard?limit=50&sort=' + encodeURIComponent(sort);
+                if (game) url += '&game=' + encodeURIComponent(game);
+                const data = await apiRef.request(url);
+                const rows = data.leaderboard || [];
+                if (!rows.length) {
+                    wrap.innerHTML = '<div class="as-empty" style="text-align:center;padding:30px 16px">' +
+                        '<h3 style="margin:0 0 8px"><i class="fas fa-ranking-star" style="color:#9aa4b2"></i> No ranked players yet</h3>' +
+                        '<p style="margin:0 0 12px;color:#9aa4b2">Rankings appear here once head-to-head matches are confirmed. Be the first on the board.</p>' +
+                        '<a class="as-btn as-btn-gold" href="/arena/challenges/create/"><i class="fas fa-plus"></i> Create a Challenge</a>' +
+                        '</div>';
+                    return;
+                }
+                wrap.innerHTML = '<div style="overflow-x:auto"><table class="rk-table">' +
+                    '<thead><tr><th class="rk-rank">#</th><th>Player</th><th class="rk-hide-sm">Game</th>' +
+                    '<th class="rk-num">W-L</th><th class="rk-num">Win %</th><th class="rk-num">Streak</th>' +
+                    '<th class="rk-num rk-hide-sm">Played</th></tr></thead>' +
+                    '<tbody>' + rows.map(row).join('') + '</tbody></table></div>';
+            } catch (e) {
+                wrap.innerHTML = '<div class="as-empty">Rankings are temporarily unavailable.</div>';
+            }
+        }
+
+        A.ready(async function (api) {
+            if (!api) return;
+            apiRef = api;
+            try {
+                const live = await api.request('/arena/streams/live');
+                (live && live.streams || []).forEach(function (s) { if (s.username) liveSet[s.username.toLowerCase()] = true; });
+            } catch (_) {}
+            try {
+                const titles = await api.request('/gaming/titles');
+                const sel = document.getElementById('gameFilter');
+                (titles.games || []).forEach(function (g) {
+                    const o = document.createElement('option');
+                    o.value = g.slug; o.textContent = g.title;
+                    sel.appendChild(o);
+                });
+            } catch (_) {}
+            document.getElementById('gameFilter').addEventListener('change', loadRankings);
+            document.getElementById('sortFilter').addEventListener('change', loadRankings);
+            loadRankings();
+        });
+    })();
+    </script>
+</body>
+</html>
