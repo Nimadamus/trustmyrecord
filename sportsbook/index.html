@@ -1050,26 +1050,30 @@
     //   - first_5     → full DK 5-col board: Matchup | F5 RL | F5 Total | F5 ML | More
     //   - alts/other  → falls through to legacy pill-grid renderer
     // selectGameBet onclick contract preserved: same arg shape, same bet-type strings.
-    // DISPLAY-ONLY Player Props board. Renders ONLY the player_props groups that
-    // the board API already returned. Markup is intentionally inert: no buttons,
-    // no onclick, no selectGameBet, no data-bet hooks, nothing the pick slip or
-    // submit flow can latch onto. Props are view-only until explicitly upgraded.
+    // PROPS_PICKABLE_20260608: Player Props board is now PICKABLE. Each row is a
+    // button that calls window.selectPropBet -> the same pick slip / submit flow
+    // as game lines. Backend accepts these market_types (pitcher_strikeouts,
+    // batter_hits, batter_total_bases, batter_rbi, ...) and grades them from box
+    // scores (services/playerPropGrading.js). The board API stamps the items
+    // display_only:false / pickable:true.
     window.TMR._renderPlayerPropsBoard = function(container, games, sport) {
         var escHtml = function(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+        var esc = function(s) { return ('' + (s != null ? s : '')).replace(/\\/g,'\\\\').replace(/'/g, "\\'"); };
+        var pv = function(v) { return v != null ? '' + v : ''; };
         var fmtOdds = function(o) { var n = Number(o); if (!Number.isFinite(n)) return ''; return n > 0 ? '+' + n : '' + n; };
         var propItems = function(game) {
             if (!Array.isArray(game.market_groups)) return [];
             var out = [];
             game.market_groups.forEach(function(g) {
                 if (!g || g.key !== 'player_props' || !Array.isArray(g.items)) return;
-                g.items.forEach(function(it) { if (it && it.display_only) out.push(it); });
+                g.items.forEach(function(it) { if (it) out.push(it); });
             });
             return out;
         };
 
         var banner = '<div class="tmr-pp-banner" role="note">'
-            + '<span class="tmr-pp-pill">View Only</span>'
-            + '<span class="tmr-pp-banner-text">Player props are shown for reference only. They are not bettable here yet — you cannot add them to a pick slip or submit them.</span>'
+            + '<span class="tmr-pp-pill" style="background:rgba(0,200,83,0.18);color:#00e676;">Pickable</span>'
+            + '<span class="tmr-pp-banner-text">Tap any player prop to add it to your pick slip. Strikeouts, hits, total bases, RBI and more are graded automatically from the box score.</span>'
             + '</div>';
 
         var anyContent = games.some(function(g) { return propItems(g).length; });
@@ -1085,7 +1089,7 @@
         }
 
         var html = banner + '<div class="tmr-pp-board">';
-        games.forEach(function(game) {
+        games.forEach(function(game, index) {
             var items = propItems(game);
             if (!items.length) return;
             var gameTime = '';
@@ -1106,11 +1110,27 @@
                     var player = escHtml(it.player_name || it.selection || '');
                     var team = it.player_team ? '<span class="tmr-pp-team">' + escHtml(it.player_team) + '</span>' : '';
                     var lineTxt = escHtml(((it.side || '') + ' ' + (it.line != null ? it.line : '')).trim());
-                    html += '<div class="tmr-pp-row">'
+                    // Canonical pickable-prop path: selectPropBet(info) ->
+                    // tmrRegisterExternalOption -> production Lock Pick (the same
+                    // pipeline NBA/NHL props use). info.player + side + line_snapshot
+                    // are what the box-score grader parses.
+                    var info = "{marketType:'" + esc(it.market_type || it.prop_type)
+                        + "',player:'" + esc(it.player_name || '')
+                        + "',side:'" + esc(it.side || '')
+                        + "',line:'" + esc(pv(it.line))
+                        + "',odds:'" + esc(pv(it.odds))
+                        + "',stat:'" + esc(label)
+                        + "',group:'Player Props'"
+                        + ",awayTeam:'" + esc(game.away_team)
+                        + "',homeTeam:'" + esc(game.home_team)
+                        + "',gameTime:'" + esc(pv(game.commence_time))
+                        + "',gameId:'" + esc(pv(game.id)) + "'}";
+                    html += '<button type="button" class="tmr-pp-row tmr-pp-row--pick" data-prop-row="1"'
+                        + ' onclick="window.selectPropBet(' + info + ')">'
                         + '<span class="tmr-pp-player">' + player + team + '</span>'
                         + '<span class="tmr-pp-pickline">' + lineTxt + '</span>'
-                        + '<span class="tmr-pp-odds">' + escHtml(it.odds_display || fmtOdds(it.odds)) + '</span>'
-                        + '</div>';
+                        + '<span class="tmr-pp-odds' + (Number(it.odds) > 0 ? ' positive' : '') + '">' + escHtml(it.odds_display || fmtOdds(it.odds)) + '</span>'
+                        + '</button>';
                 });
                 html += '</div></div>';
             });
@@ -1119,6 +1139,9 @@
         html += '</div>';
         container.innerHTML = html;
     };
+    // Note: window.selectPropBet(info) is defined later (the canonical pickable-
+    // prop path via tmrRegisterExternalOption + production Lock Pick) and is what
+    // the rows above call.
 
     window.TMR._renderMarketBoard = function(container, games, sport, marketKey) {
         var aliases = marketKey === 'alts' ? ['alt_spreads', 'alt_totals'] : [marketKey];
