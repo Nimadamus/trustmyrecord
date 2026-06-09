@@ -77,10 +77,10 @@
     <script>
     (function () {
         const A = window.TMRArena;
-        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
+        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER + ' No money is wagered.'; /* ARENA_MATCH_WATCH_ENRICH_20260609 */
         document.getElementById('predictDisclaimer').textContent = A.PREDICT_DISCLAIMER;
         const id = parseInt(A.qs('id'), 10);
-        let apiRef = null, me = null, ch = null;
+        let apiRef = null, me = null, ch = null, recMap = {};
 
         function topMsg(kind, text) { A.msg(document.getElementById('topMsg'), kind, text); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
@@ -94,22 +94,33 @@
             }
         }
 
+        async function loadRecords() {
+            recMap = {};
+            if (!ch.game_slug) return;
+            try {
+                const data = await apiRef.request('/gaming/leaderboard?game=' + encodeURIComponent(ch.game_slug) + '&limit=200');
+                (data.leaderboard || []).forEach(function (r, i) {
+                    if (r.username) recMap[String(r.username).toLowerCase()] = { wins: r.wins || 0, losses: r.losses || 0, win_pct: (r.win_pct != null ? r.win_pct : 0), rank: i + 1, avatar: r.avatar_url || null };
+                });
+            } catch (_) {}
+        }
+        function sideHtml(username, score, isWin, isOpen) {
+            if (isOpen) return '<div class="uname"><span style="color:var(--as-green)">Open Spot</span></div><div class="score">-</div>';
+            var rec = recMap[String(username).toLowerCase()];
+            var av = (rec && rec.avatar) ? '<img src="' + A.esc(rec.avatar) + '" alt="" style="width:44px;height:44px;border-radius:50%;object-fit:cover;display:block;margin:0 auto 6px">' : '<div style="width:44px;height:44px;border-radius:50%;background:#1b2330;display:flex;align-items:center;justify-content:center;margin:0 auto 6px"><i class="fas fa-user" style="color:#9aa4b2"></i></div>';
+            var recLine = rec ? '<div class="meta" style="font-size:12px;margin-top:4px;color:#9aa4b2">' + rec.wins + '-' + rec.losses + ' &middot; ' + rec.win_pct + '% &middot; #' + rec.rank + '</div>' : '';
+            return av + '<div class="uname"><a href="/profile/?user=' + encodeURIComponent(username) + '">' + A.esc(username) + '</a></div><div class="score">' + score + '</div>' + (isWin ? '<span class="as-pill open">Winner</span>' : '') + recLine;
+        }
         function renderVs() {
-            const started = ['in_progress', 'completed', 'disputed', 'voided'].includes(ch.status);
-            const cWin = ch.status === 'completed' && ch.winner_id === ch.challenger_id;
-            const dWin = ch.status === 'completed' && ch.winner_id === ch.challenged_id;
-            document.getElementById('vsBox').innerHTML = `
-                <div class="side ${cWin ? 'winner' : ''}">
-                    <div class="uname"><a href="/profile/?user=${encodeURIComponent(ch.challenger_username)}">${A.esc(ch.challenger_username)}</a></div>
-                    <div class="score">${started && ch.challenger_score != null ? ch.challenger_score : '-'}</div>
-                    ${cWin ? '<span class="as-pill open">Winner</span>' : ''}
-                </div>
-                <div class="mid">VS</div>
-                <div class="side ${dWin ? 'winner' : ''}">
-                    <div class="uname">${ch.challenged_username ? '<a href="/profile/?user=' + encodeURIComponent(ch.challenged_username) + '">' + A.esc(ch.challenged_username) + '</a>' : '<span style="color:var(--as-green)">Open Spot</span>'}</div>
-                    <div class="score">${started && ch.challenged_score != null ? ch.challenged_score : '-'}</div>
-                    ${dWin ? '<span class="as-pill open">Winner</span>' : ''}
-                </div>`;
+            var started = ['in_progress', 'completed', 'disputed', 'voided'].indexOf(ch.status) !== -1;
+            var cWin = ch.status === 'completed' && ch.winner_id === ch.challenger_id;
+            var dWin = ch.status === 'completed' && ch.winner_id === ch.challenged_id;
+            var cScore = started && ch.challenger_score != null ? ch.challenger_score : '-';
+            var dScore = started && ch.challenged_score != null ? ch.challenged_score : '-';
+            document.getElementById('vsBox').innerHTML =
+                '<div class="side ' + (cWin ? 'winner' : '') + '">' + sideHtml(ch.challenger_username, cScore, cWin, false) + '</div>' +
+                '<div class="mid">VS</div>' +
+                '<div class="side ' + (dWin ? 'winner' : '') + '">' + sideHtml(ch.challenged_username, dScore, dWin, !ch.challenged_username) + '</div>';
         }
 
         function renderDetails() {
@@ -118,7 +129,7 @@
             if (ch.game_version) rows.push('<strong>Version:</strong> ' + A.esc(ch.game_version));
             if (ch.platform) rows.push('<strong>Console:</strong> ' + A.esc(ch.platform));
             rows.push('<strong>Series:</strong> Best of ' + (ch.best_of || 1));
-            rows.push('<strong>Scheduled:</strong> ' + A.fmtDate(ch.scheduled_at));
+            rows.push('<strong>Scheduled:</strong> ' + (ch.scheduled_at ? A.fmtDate(ch.scheduled_at) : 'Anytime'));
             if (ch.rules) rows.push('<strong>Rules:</strong><br>' + A.esc(ch.rules).replace(/\n/g, '<br>'));
             if (ch.proof_url) rows.push('<strong>Proof:</strong> <a href="' + A.esc(ch.proof_url) + '" target="_blank" rel="noopener nofollow">screenshot</a>');
             if (ch.status === 'disputed' && ch.dispute_reason) rows.push('<strong>Dispute reason:</strong> ' + A.esc(ch.dispute_reason));
@@ -317,7 +328,14 @@
                 return s.username && names.includes(String(s.username).toLowerCase()) &&
                     s.stream_playback_url && /^https:\/\/[a-z0-9-]+\.cloudflarestream\.com\//i.test(s.stream_playback_url);
             });
-            if (!live.length) { card.style.display = 'none'; wrap.innerHTML = ''; return; }
+            if (!live.length) {
+                if (['accepted', 'in_progress'].indexOf(ch.status) !== -1) {
+                    document.getElementById('liveStreamTitle').textContent = 'Live Stream';
+                    wrap.innerHTML = '<div class="meta" style="margin-top:8px;color:#9aa4b2"><i class="far fa-circle"></i> No live stream yet for this match. If a player goes live, the stream appears here automatically.</div>';
+                    card.style.display = 'block';
+                } else { card.style.display = 'none'; wrap.innerHTML = ''; }
+                return;
+            }
             document.getElementById('liveStreamTitle').textContent =
                 live.length > 1 ? 'Both Players Are Live' : A.esc(live[0].display_name || live[0].username) + ' Is Live';
             wrap.innerHTML = live.map(function (s) {
@@ -337,6 +355,7 @@
                 ' <span style="font-size:16px; color:var(--as-dim)">&middot; ' + A.esc(ch.game_title || '') + '</span>';
             document.getElementById('statusLine').innerHTML = A.pill(ch);
             document.getElementById('content').style.display = 'grid';
+            await loadRecords();
             renderVs();
             renderDetails();
             renderActions();
