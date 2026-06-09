@@ -306,7 +306,7 @@
                 <a href="/">TRUST<span>MY</span>RECORD</a>
             </div>
             <h2>Welcome to TrustMyRecord.</h2>
-            <p>Build your verified sports record by posting your first pick.</p>
+            <p>Create your sports fan profile. Claim your favorite teams, build a permanent verified record, and own your sports identity.</p>
             <div class="trust-list">
                 <div class="trust-item"><strong>Make your first pick</strong><span>Start simple with a side, total, or moneyline.</span></div>
                 <div class="trust-item"><strong>Locked receipts</strong><span>Picks are made before results and stay attached to your history.</span></div>
@@ -314,8 +314,12 @@
             </div>
         </aside>
         <div class="content">
-            <h1>Create <span class="accent">Account</span></h1>
-            <p class="sub">Create your account, then post your first pick to start building a verified record.</p>
+            <div style="margin:0 0 18px;padding:13px 16px;border-radius:14px;border:1px solid rgba(212,167,44,0.45);background:linear-gradient(135deg,rgba(58,46,7,0.55),rgba(92,71,8,0.45));">
+                <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#ffd966;margin-bottom:4px;">&#9733; Founding Member</div>
+                <div style="font-size:13.5px;line-height:1.55;color:#f3e7c0;">Be one of the first fans on TrustMyRecord. Claim your username, pick your teams, and lock a permanent profile and Founding Member badge before launch.</div>
+            </div>
+            <h1>Create Your <span class="accent">Sports Profile</span></h1>
+            <p class="sub">Create your sports fan profile. Claim your teams, lock a permanent verified record, and grab your Founding Member badge.</p>
 
             <form id="direct-register-form">
                 <div class="field">
@@ -348,8 +352,14 @@
                 </div>
 
                 <div class="field">
-                    <label for="favTeamsValue">Favorite Teams <span style="color:var(--muted);font-weight:500;">(comma-separated)</span></label>
-                    <input id="favTeamsValue" type="text" maxlength="500" placeholder="e.g. Pittsburgh Steelers, Pittsburgh Penguins, Pirates">
+                    <label>Favorite Teams <span style="color:var(--muted);font-weight:500;">(claim your teams by league)</span></label>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <select id="favTeamSport" style="flex:1;min-width:120px;border-radius:14px;background:#e7eef9;color:#101625;padding:13px 14px;font-size:0.98rem;font-weight:600;border:1px solid rgba(255,255,255,0.1);"></select>
+                        <select id="favTeamPick" style="flex:1.6;min-width:150px;border-radius:14px;background:#e7eef9;color:#101625;padding:13px 14px;font-size:0.98rem;font-weight:600;border:1px solid rgba(255,255,255,0.1);"></select>
+                        <button type="button" id="favTeamAdd" style="border:0;border-radius:14px;padding:0 20px;font-weight:800;color:#062023;background:var(--cyan);cursor:pointer;">Add</button>
+                    </div>
+                    <div id="favTeamChips" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;"></div>
+                    <input id="favTeamsValue" type="hidden" value="">
                 </div>
 
                 <div class="field" style="margin-bottom:18px;padding:13px 15px;border-radius:14px;border:1px solid rgba(255,143,143,0.35);background:rgba(255,107,107,0.08);">
@@ -386,8 +396,52 @@
                 window.collectFavSports = function(){
                     return Array.from(document.querySelectorAll('#favSportsGrid button[data-on="1"]')).map(function(b){ return b.dataset.sport; });
                 };
+                // Structured by-sport favorite-team picker (Phase 1.5).
+                (function buildTeamPicker(){
+                    var apiBase = 'https://trustmyrecord-api.onrender.com';
+                    try { if (window.api && window.api.baseUrl) apiBase = String(window.api.baseUrl).replace(/\/$/,''); } catch(e){}
+                    var sportSel = document.getElementById('favTeamSport');
+                    var teamSel = document.getElementById('favTeamPick');
+                    var chipsEl = document.getElementById('favTeamChips');
+                    var addBtn = document.getElementById('favTeamAdd');
+                    if (!sportSel || !teamSel || !addBtn) return;
+                    var selected = [];
+                    var sports = [];
+                    function esc(x){ return String(x==null?'':x).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+                    function renderChips(){
+                        chipsEl.innerHTML = selected.map(function(n,i){
+                            return '<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;background:rgba(51,230,223,0.14);border:1px solid rgba(51,230,223,0.4);color:#d7ffff;font-size:0.85rem;font-weight:600;">'+esc(n)+' <b data-i="'+i+'" style="cursor:pointer;color:#ff8f8f;">&times;</b></span>';
+                        }).join('');
+                        Array.prototype.forEach.call(chipsEl.querySelectorAll('b[data-i]'), function(b){
+                            b.addEventListener('click', function(){ selected.splice(parseInt(b.getAttribute('data-i'),10),1); renderChips(); });
+                        });
+                    }
+                    function fillTeams(){
+                        var sp = sports.filter(function(x){return x.sportSlug===sportSel.value;})[0];
+                        teamSel.innerHTML = (sp?sp.teams:[]).map(function(t){return '<option value="'+esc(t.name)+'">'+esc(t.name)+'</option>';}).join('');
+                    }
+                    fetch(apiBase+'/api/teams/catalog').then(function(r){return r.json();}).then(function(c){
+                        sports = c.sports||[];
+                        sportSel.innerHTML = sports.map(function(s){return '<option value="'+s.sportSlug+'">'+esc(s.label)+'</option>';}).join('');
+                        fillTeams();
+                    }).catch(function(){
+                        // graceful fallback: let users type if catalog is unreachable
+                        sportSel.parentNode.innerHTML = '<input id="favTeamsValue" type="text" maxlength="500" placeholder="e.g. Pittsburgh Steelers, Pittsburgh Penguins" style="width:100%;">';
+                    });
+                    sportSel.addEventListener('change', fillTeams);
+                    addBtn.addEventListener('click', function(){
+                        var v = teamSel.value;
+                        if (v && selected.indexOf(v)===-1 && selected.length<30){ selected.push(v); renderChips(); }
+                    });
+                    window.__tmrSelectedTeams = function(){ return selected.slice(); };
+                })();
                 window.collectFavTeams = function(){
-                    var raw = (document.getElementById('favTeamsValue').value || '').trim();
+                    if (typeof window.__tmrSelectedTeams === 'function'){
+                        var arr = window.__tmrSelectedTeams();
+                        if (arr && arr.length) return arr.slice(0,30);
+                    }
+                    var el = document.getElementById('favTeamsValue');
+                    var raw = (el && el.value || '').trim();
                     if (!raw) return [];
                     return raw.split(',').map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 30);
                 };
