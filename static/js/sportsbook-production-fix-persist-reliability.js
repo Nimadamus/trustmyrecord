@@ -554,29 +554,26 @@
             return false;
         }
 
+        // SILENT_SUBMIT_FIX_20260609 (Nima: "sportsbook won't accept my pick").
+        // A logged-in user must ALWAYS be allowed to attempt a submit. The old
+        // code returned false here whenever the 15-minute access token had
+        // expired and a fresh one could not be minted in this pre-check, and
+        // lockInPick then returned with NO network call and NO visible error —
+        // a pure silent failure (reproduced: token expires after browsing a
+        // while, user tries a late soccer pick, button just resets). Token
+        // freshness is already handled robustly inside api.request() (proactive
+        // refresh on expiry + 401-retry with the refresh token), and any true
+        // failure now surfaces a visible error from lockInPick's catch block.
+        // So we WARM the token best-effort but NEVER block a real user.
         const apiClient = await waitForApi();
-        const token = getStoredAuthToken();
-        const refreshToken = getStoredRefreshToken() || (apiClient && apiClient.refreshToken);
-
-        if (token) {
-            return true;
+        if (!getStoredAuthToken()) {
+            const refreshToken = getStoredRefreshToken() || (apiClient && apiClient.refreshToken);
+            if (refreshToken && apiClient && typeof apiClient.refreshAccessToken === 'function') {
+                apiClient.refreshToken = refreshToken;
+                try { await apiClient.refreshAccessToken(); } catch (error) {}
+            }
         }
-
-        if (refreshToken && apiClient && typeof apiClient.refreshAccessToken === 'function') {
-            apiClient.refreshToken = refreshToken;
-            try {
-                const refreshed = await apiClient.refreshAccessToken();
-                if (refreshed && getStoredAuthToken()) {
-                    return true;
-                }
-            } catch (error) {}
-        }
-
-        // Never auto-logout (May 24 2026 rule): do NOT clear auth or bounce to
-        // login here even if we could not mint a fresh token. The submit may
-        // fail server-side, but the user's session is preserved everywhere else.
-        showSubmitTrace('Could not refresh access token before submit; session preserved.');
-        return false;
+        return true;
     }
 
     function showSubmitTrace(message) {
@@ -3376,7 +3373,24 @@
             ].join(' | ');
             try { console.error('[TMR][lockInPick] failure', { error, option, data }); } catch (e) {}
             showSubmitTrace('Submit failed: ' + dumped);
-            showPickSlipError('Pick Not Submitted. Something went wrong. Please try again.');
+            // VISIBLE error always (req: no silent failures). Surface the real
+            // backend reason so the user knows exactly why a pick was rejected
+            // (started game, lines pending, integrity rule, etc.) instead of a
+            // useless generic string. Auth/session errors get a clear re-login
+            // prompt rather than "something went wrong".
+            const backendMsg = (data && (data.error || data.message)) || '';
+            const isAuth = status === 401 || status === 403 || /access token|unauthor|session|log ?in|verify your email/i.test(backendMsg + ' ' + raw);
+            let userMsg;
+            if (isAuth) {
+                userMsg = 'Your session expired before this pick could be locked. Please log in again, then re-submit your pick.';
+            } else if (backendMsg) {
+                userMsg = 'Pick Not Submitted: ' + backendMsg;
+            } else if (status) {
+                userMsg = 'Pick Not Submitted (error ' + status + '). Please refresh the board and try again.';
+            } else {
+                userMsg = 'Pick Not Submitted. The pick service could not be reached. Check your connection and try again.';
+            }
+            showPickSlipError(userMsg);
         } finally {
             resetLockButtons();
             window.__tmrLockInFlight = false;
