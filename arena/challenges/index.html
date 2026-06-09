@@ -38,6 +38,7 @@
             <div class="as-actions">
                 <a class="as-btn as-btn-gold" href="/arena/challenges/create/"><i class="fas fa-plus"></i> Create a Challenge</a>
                 <a class="as-btn as-btn-outline" href="/arena/predictions/"><i class="fas fa-bullseye"></i> My Arena Picks</a>
+                <a class="as-btn as-btn-outline" href="/arena/live/"><i class="fas fa-circle" style="color:#e53e3e"></i> Watch Live</a>
                 <span class="as-points-chip" id="pointsChip" style="display:none"></span>
             </div>
         </div>
@@ -92,16 +93,20 @@
                     grid.innerHTML = '<div class="as-empty">No challenges match. <a href="/arena/challenges/create/">Create one</a>.</div>';
                     return;
                 }
-                grid.innerHTML = rows.map(c => `
-                    <a class="as-card" href="/arena/challenges/view/?id=${c.id}">
-                        <h3>${A.esc(c.challenger_username)} vs ${c.challenged_username ? A.esc(c.challenged_username) : '<span style="color:var(--as-green)">Open Challenge</span>'}</h3>
-                        <div class="meta">
-                            ${A.pill(c)} &nbsp; <strong>${A.esc(c.game_title || '')}</strong>
-                            ${c.platform ? ' &middot; ' + A.esc(c.platform) : ''}
-                            <br>${c.scheduled_at ? 'Scheduled: ' + A.fmtDate(c.scheduled_at) : 'Best of ' + (c.best_of || 1)}
-                            ${c.status === 'completed' && c.challenger_score != null ? '<br>Final: ' + c.challenger_score + '-' + c.challenged_score : ''}
-                        </div>
-                    </a>`).join('');
+                grid.innerHTML = rows.map(function(c){
+                    /* ARENA_OPEN_CHALLENGES_ENRICH_20260609 */
+                    var av = c.challenger_avatar ? '<img src="' + A.esc(c.challenger_avatar) + '" alt="" style="width:26px;height:26px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:6px">' : '<i class="fas fa-user-circle" style="margin-right:6px;color:#9aa4b2"></i>';
+                    var opp = c.challenged_username ? A.esc(c.challenged_username) : '<span style="color:var(--as-green)">Open Challenge</span>';
+                    var when = c.scheduled_at ? 'Scheduled: ' + A.fmtDate(c.scheduled_at) : 'Anytime';
+                    var fmt = 'Best of ' + (c.best_of || 1);
+                    var rules = c.rules ? '<br><span style="color:#9aa4b2">Rules: ' + A.esc(String(c.rules).slice(0,120)) + '</span>' : '';
+                    var live = (c.status === 'in_progress' || c.status === 'accepted') ? '<br><span style="color:#e53e3e"><i class="fas fa-circle"></i> Watch on the match page</span>' : '';
+                    var fin = (c.status === 'completed' && c.challenger_score != null) ? '<br>Final: ' + c.challenger_score + '-' + c.challenged_score : '';
+                    return '<a class="as-card" href="/arena/challenges/view/?id=' + c.id + '">' +
+                        '<h3>' + av + A.esc(c.challenger_display || c.challenger_username) + ' vs ' + opp + '</h3>' +
+                        '<div class="meta">' + A.pill(c) + ' &nbsp; <strong>' + A.esc(c.game_title || '') + '</strong>' + (c.platform ? ' &middot; ' + A.esc(c.platform) : '') +
+                        '<br>' + when + ' &middot; ' + fmt + rules + live + fin + '</div></a>';
+                }).join('');
             } catch (e) {
                 grid.innerHTML = '<div class="as-empty">Challenges are temporarily unavailable.</div>';
             }
