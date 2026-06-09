@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/arena/live/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Matches - Watch Sports Gaming Live | TrustMyRecord Arena</title>
+    <meta name="description" content="Watch live MLB The Show and sports-gaming matches on TrustMyRecord Arena. See who is streaming right now, follow verified head-to-head matches, and make free Arena Picks on the result. No cash wagering.">
+    <meta property="og:title" content="Live Matches | TrustMyRecord Arena">
+    <meta property="og:description" content="Watch live sports-gaming matches with verified records and free Arena Picks.">
+    <meta property="og:url" content="https://trustmyrecord.com/arena/live/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <meta name="twitter:card" content="summary_large_image">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260605dmca1"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/arena-suite.css?v=20260605arena1">
+    <!-- ARENA_LIVE_MATCHES_NO_CONTEST_MODAL_20260609: page-scoped suppression of the JustBet
+         contest promo modal so it can never cover or intercept the live players. config.js only
+         loads the modal when no script[data-contest-promo-modal] exists yet; this pre-empts it. -->
+    <script data-contest-promo-modal="1">/* contest promo modal intentionally suppressed on /arena/live/ */</script>
+    <style>.contest-promo-modal-backdrop,.tmr-contest-modal-backdrop,[data-contest-promo-modal-backdrop],[data-contest-promo-modal-backdrop="1"],#contestPromoModal{display:none!important;visibility:hidden!important;pointer-events:none!important;opacity:0!important}</style>
+</head>
+<body class="arena-page">
+
+    <div class="as-hero">
+        <div class="as-hero-inner">
+            <div class="as-breadcrumb"><a href="/arena/">Arena</a> / Live Matches</div>
+            <span class="as-kicker">Live Now</span>
+            <h1>Sports Gaming <span class="gold">Live Matches</span></h1>
+            <p class="lede">Watch verified MLB The Show and sports-gaming matches as they happen. Streams are tied to real records and challenges, so what you see is what counts. Make free Arena Picks on the result, no cash value, pure bragging rights.</p>
+        </div>
+    </div>
+
+    <div class="as-main">
+        <!-- ARENA_LIVE_MATCHES_20260609: public live players + live matches. -->
+        <div class="as-section" id="liveSection" style="margin-top:0">
+            <div class="as-section-head"><h2><i class="fas fa-circle" style="color:#e53e3e"></i> Live Right Now</h2></div>
+            <div class="as-grid" id="liveGrid">
+                <div class="as-card" style="grid-column:1/-1;text-align:center;padding:34px 18px">
+                    <div class="spinner" style="margin:0 auto"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="as-section">
+            <div class="as-section-head"><h2><i class="fas fa-gamepad"></i> Get in the Arena</h2></div>
+            <div class="as-grid">
+                <a class="as-card" href="/arena/streaming/" style="text-decoration:none;color:inherit">
+                    <h3><i class="fas fa-video" style="color:var(--as-gold)"></i> Stream your matches</h3>
+                    <div class="meta">Approved streamers go live straight to TrustMyRecord with OBS or a capture card. Apply for streamer access and get your private stream key.</div>
+                </a>
+                <a class="as-card" href="/arena/challenges/" style="text-decoration:none;color:inherit">
+                    <h3><i class="fas fa-khanda" style="color:var(--as-gold)"></i> Open Challenges</h3>
+                    <div class="meta">Browse open head-to-head challenges available now, or post your own. Confirmed results build your verified record.</div>
+                </a>
+                <a class="as-card" href="/arena/mlb-the-show/" style="text-decoration:none;color:inherit">
+                    <h3><i class="fas fa-baseball-ball" style="color:var(--as-gold)"></i> MLB The Show Arena</h3>
+                    <div class="meta">Leagues, challenges, top players, and verified records for MLB The Show 26.</div>
+                </a>
+                <a class="as-card" href="/arena/predictions/" style="text-decoration:none;color:inherit">
+                    <h3><i class="fas fa-bullseye" style="color:var(--as-gold)"></i> Free Predictions</h3>
+                    <div class="meta">Make free Arena Picks on other players' matches with Arena Points. No cash value, pure bragging rights.</div>
+                </a>
+            </div>
+        </div>
+
+        <div class="as-disclaimer" id="arenaDisclaimer"></div>
+    </div>
+
+    <script src="/static/js/config.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/arena-suite.js?v=20260605arena1"></script>
+    <script>
+    (function () {
+        const A = window.TMRArena;
+        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
+        A.ready(async function (api) {
+            if (!api) return;
+            const section = document.getElementById('liveSection');
+            const grid = document.getElementById('liveGrid');
+
+            function streamCard(s) {
+                const name = A.esc(s.display_name || s.username);
+                return '<div class="as-card" style="grid-column:1/-1">' +
+                    '<h3><span class="as-pill live" style="background:#e53e3e;color:#fff">LIVE</span> ' + name +
+                    ' <a href="/profile/?user=' + encodeURIComponent(s.username) + '" style="font-size:.85em;font-weight:500">@' + A.esc(s.username) + '</a></h3>' +
+                    '<div style="position:relative;padding-top:56.25%;margin-top:10px;border-radius:8px;overflow:hidden;background:#000">' +
+                    '<iframe src="' + A.esc(s.stream_playback_url) + '" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;border:0" allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;" allowfullscreen></iframe>' +
+                    '</div></div>';
+            }
+
+            function matchCard(m) {
+                const a = A.esc(m.challenger_username || m.player_a_username || m.player_a || 'Player A');
+                const b = A.esc(m.challenged_username || m.player_b_username || m.player_b || 'Player B');
+                const game = A.esc(m.game_title || m.game || 'Sports Gaming');
+                const id = m.id != null ? encodeURIComponent(m.id) : '';
+                const href = id ? '/arena/challenges/view/?id=' + id : '/arena/challenges/';
+                return '<a class="as-card" href="' + href + '" style="grid-column:1/-1;text-decoration:none;color:inherit">' +
+                    '<h3><span class="as-pill live" style="background:#e53e3e;color:#fff">LIVE MATCH</span> ' + a + ' vs ' + b + '</h3>' +
+                    '<div class="meta">' + game + ' - tap to watch and make a free Arena Pick.</div>' +
+                    '</a>';
+            }
+
+            function emptyState() {
+                return '<div class="as-card" style="grid-column:1/-1;text-align:center;padding:34px 18px">' +
+                    '<h3 style="margin:0 0 8px"><i class="far fa-circle" style="color:#9aa4b2"></i> No live matches right now</h3>' +
+                    '<p style="margin:0 0 12px;color:#9aa4b2">Nobody is live at the moment. Approved streamers go live straight from their dashboard.</p>' +
+                    '<a class="as-btn as-btn-gold" href="/arena/streaming/"><i class="fas fa-video"></i> Stream your match</a>' +
+                    '</div>';
+            }
+
+            async function render() {
+                let streams = [], matches = [];
+                try {
+                    const d = await api.request('/arena/streams/live');
+                    streams = (d && d.streams || []).filter(function (s) {
+                        return s.stream_playback_url && /^https:\/\/[a-z0-9-]+\.cloudflarestream\.com\//i.test(s.stream_playback_url);
+                    });
+                } catch (_) { /* flag off / hiccup */ }
+                try {
+                    const d = await api.request('/gaming/matches?status=live');
+                    matches = (d && d.matches) || [];
+                } catch (_) { /* no matches endpoint / hiccup */ }
+                const html = streams.map(streamCard).join('') + matches.map(matchCard).join('');
+                grid.innerHTML = html || emptyState();
+            }
+            await render();
+            setInterval(render, 60000);
+        });
+    })();
+    </script>
+</body>
+</html>
