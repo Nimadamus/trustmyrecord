@@ -1077,6 +1077,9 @@
                         <a href="/verified-handicapper-records/">Verified Handicapper Records</a>
                         <a href="/sports-betting-record-tracker/">Sports Betting Record Tracker</a>
                         <a href="/stats/">Stats Explained</a>
+                        <a href="/teams/">Team Fan Pages</a>
+                        <a href="/trustmyrecord-tools/">TrustMyRecord Tools</a>
+                        <a href="/contests/justbet-mlb/">JustBet MLB Contest</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
@@ -1086,6 +1089,9 @@
                         <a href="/forum/">Forum</a>
                         <a href="/arena/leagues/">Arena Leagues</a>
                         <a href="/arena/streaming/">Arena Streaming</a>
+                        <a href="/arena/sports-gaming/">Sports Gaming Arena</a>
+                        <a href="/arena/rankings/">Arena Rankings</a>
+                        <a href="/arena/free-predictions/">Free Predictions</a>
                         <a href="/hangout/">Hangout</a>
                         <a href="/trivia/">Trivia</a>
                     </div>
