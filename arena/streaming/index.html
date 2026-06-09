@@ -26,6 +26,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="/static/css/arena-suite.css?v=20260605arena1">
+    <!-- ARENA_STREAMING_NO_CONTEST_MODAL_20260609: page-scoped suppression of the JustBet
+         contest promo modal so it can never cover or intercept the live player or the
+         "Get Stream Key" button. config.js only loads the modal when no
+         script[data-contest-promo-modal] exists yet; this placeholder pre-empts that loader.
+         The CSS is belt-and-suspenders in case the modal is ever injected another way. -->
+    <script data-contest-promo-modal="1">/* contest promo modal intentionally suppressed on /arena/streaming/ */</script>
+    <style>.contest-promo-modal-backdrop,.tmr-contest-modal-backdrop,[data-contest-promo-modal-backdrop],[data-contest-promo-modal-backdrop="1"],#contestPromoModal{display:none!important;visibility:hidden!important;pointer-events:none!important;opacity:0!important}</style>
 </head>
 <body class="arena-page">
 
@@ -160,7 +167,16 @@
                     const streams = (data && data.streams || []).filter(function (s) {
                         return s.stream_playback_url && /^https:\/\/[a-z0-9-]+\.cloudflarestream\.com\//i.test(s.stream_playback_url);
                     });
-                    if (!streams.length) { section.style.display = 'none'; return; }
+                    if (!streams.length) {
+                        // ARENA_LIVE_EMPTY_STATE_20260609: request succeeded (streaming enabled)
+                        // but nobody is live -> show a clear empty state instead of hiding.
+                        grid.innerHTML = '<div class="as-card" style="grid-column:1/-1;text-align:center;padding:34px 18px">' +
+                            '<h3 style="margin:0 0 8px"><i class="far fa-circle" style="color:#9aa4b2"></i> No one is live right now</h3>' +
+                            '<p style="margin:0;color:#9aa4b2">There are no live streams at the moment. Check back soon, approved streamers go live straight from their dashboard.</p>' +
+                            '</div>';
+                        section.style.display = 'block';
+                        return;
+                    }
                     grid.innerHTML = streams.map(function (s) {
                         const name = A.esc(s.display_name || s.username);
                         return '<div class="as-card" style="grid-column:1/-1">' +
