@@ -3038,16 +3038,28 @@
                         sideLabel = 'ML';
                         break;
                     default:
-                        betType = 'ml';
-                        displayTeam = option.selection || '';
-                        sideLabel = '';
+                        // PROPS_PICKABLE_20260608: player props (pitcher_*/batter_*/
+                        // nba_*/nhl_*) are NOT moneyline. Show the full player+side+line
+                        // selection in the slip headline, not "<Player> ML".
+                        if (/^(pitcher_|batter_|nba_|nhl_)/.test(market)) {
+                            betType = 'prop';
+                            displayTeam = option.selection_label || option.selection || label;
+                            sideLabel = '';
+                        } else {
+                            betType = 'ml';
+                            displayTeam = option.selection || '';
+                            sideLabel = '';
+                        }
                 }
+                var __isPropSlip = (betType === 'prop');
 
                 window.TMR._ttPopulateSlip({
                     gameIndex: null,
                     betType: betType,
                     team: displayTeam,
-                    line: option.line != null ? option.line : (parseFloat(option.line_display) || null),
+                    // Prop selection_label already carries the line; passing line again
+                    // would double it ("Over 6.5 6.5"), so suppress it for props.
+                    line: __isPropSlip ? null : (option.line != null ? option.line : (parseFloat(option.line_display) || null)),
                     odds: option.odds,
                     awayTeam: awayTeam,
                     homeTeam: homeTeam,
