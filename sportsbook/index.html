@@ -13592,7 +13592,20 @@ window.toggleSportFamily = function (family) {
                             // pitcher_strikeouts label must match classifyMarket's
                             // "Total Strikeouts - <player>" pattern to stay pickable.
                             var lbl = isPitcherK ? ('Total Strikeouts - ' + player) : (b.label + ' - ' + player);
-                            return { label: lbl, outcomes: b.players[player] };
+                            var mk = { label: lbl, outcomes: b.players[player] };
+                            // PROPS_PICKABLE_ALL_20260609 (Nima: "only pitcher props are
+                            // clickable"). The backend player_props group ONLY ever ships
+                            // markets that are both pickable AND box-score gradable
+                            // (pitcher strikeouts/outs/hits/walks/ER + batter
+                            // hits/total bases/RBI/runs/HR). Carry the explicit
+                            // market_type + player so classifyMarket marks EVERY one
+                            // pickable via its _pick_market path instead of only matching
+                            // the pitcher-strikeouts label regex. Batter props were
+                            // rendering display-only purely because their group key was
+                            // unrecognized — the data, submit, and grader all support them.
+                            var PICK_STAT = { pitcher_strikeouts: 'Strikeouts', pitcher_outs: 'Outs', pitcher_hits_allowed: 'Hits Allowed', pitcher_walks: 'Walks', pitcher_earned_runs: 'Earned Runs', batter_hits: 'Hits', batter_total_bases: 'Total Bases', batter_rbi: 'RBI', batter_runs: 'Runs', batter_home_runs: 'Home Runs' };
+                            if (PICK_STAT[mt]) { mk._pick_market = mt; mk._player = player; mk._stat = PICK_STAT[mt]; mk._group = b.label || PICK_STAT[mt]; }
+                            return mk;
                         })
                     };
                 });
