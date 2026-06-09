@@ -1,6 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- tmr-build-autoreload 20260609: GitHub Pages serves this HTML with
+         Cache-Control: max-age=600, so a user can sit on a stale cached copy of
+         the sportsbook (old submit/props code) for up to 10 minutes and think a
+         fix never shipped. This early check fetches the current build marker
+         (no-store, cache-busted) and, if the loaded build is older, forces ONE
+         reload to pull fresh HTML+JS. A per-build sessionStorage guard makes a
+         reload loop impossible, and every failure path is a silent no-op. -->
+    <script>
+    (function(){
+      var BUILD='20260609-2205';
+      try{
+        fetch('/version.json?cb=' + (new Date().getTime()), { cache: 'no-store' })
+          .then(function(r){ return r.ok ? r.json() : null; })
+          .then(function(v){
+            if (!v || !v.build || v.build === BUILD) return;
+            var k = 'tmr_build_reload_' + v.build;
+            if (sessionStorage.getItem(k)) return;      // already reloaded for this build
+            sessionStorage.setItem(k, '1');
+            location.reload();                          // one-time refresh onto the new build
+          })
+          .catch(function(){});
+      }catch(e){}
+    })();
+    </script>
     <!-- CRITICAL: Early script to define core functions BEFORE anything else loads -->
     <script>
     // This runs FIRST, before any other scripts
