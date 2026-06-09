@@ -26,6 +26,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <link rel="stylesheet" href="/static/css/arena-suite.css?v=20260605arena1">
+    <!-- ARENA_MLB_SHOW_SEO_20260609 -->
+    <script data-contest-promo-modal="1">/* contest promo modal suppressed on /arena/mlb-the-show/ */</script>
+    <style>.contest-promo-modal-backdrop,.tmr-contest-modal-backdrop,[data-contest-promo-modal-backdrop],[data-contest-promo-modal-backdrop="1"],#contestPromoModal{display:none!important;visibility:hidden!important;pointer-events:none!important;opacity:0!important}</style>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -99,7 +102,20 @@
             <p>Everyone gets 1,000 free Arena Points to start. Use them to make free predictions, we call them Arena Picks, on other players' matches before they start. Call the winner correctly and earn more points; miss and you lose what you entered. Predictions lock at match start, you can never predict your own match, and prediction records are tracked separately from sports pick records. Arena Points are purely for fun: they have no cash value, cannot be purchased, and cannot be withdrawn.</p>
         </div>
 
-        <div class="as-disclaimer" id="arenaDisclaimer"></div>
+        <div class="as-section">
+            <div class="as-section-head"><h2><i class="fas fa-compass"></i> Explore the Arena</h2></div>
+            <div class="as-grid">
+                <a class="as-card" href="/arena/live/" style="text-decoration:none;color:inherit"><h3><i class="fas fa-circle" style="color:#e53e3e"></i> Live Matches</h3><div class="meta">Watch MLB The Show matches streaming now.</div></a>
+                <a class="as-card" href="/arena/streaming/" style="text-decoration:none;color:inherit"><h3><i class="fas fa-video" style="color:var(--as-gold)"></i> Stream Your Matches</h3><div class="meta">Go live with OBS or a capture card.</div></a>
+                <a class="as-card" href="/arena/challenges/" style="text-decoration:none;color:inherit"><h3><i class="fas fa-khanda" style="color:var(--as-gold)"></i> Open Challenges</h3><div class="meta">Post or accept a head-to-head match.</div></a>
+                <a class="as-card" href="/arena/rankings/" style="text-decoration:none;color:inherit"><h3><i class="fas fa-ranking-star" style="color:var(--as-gold)"></i> Rankings &amp; Records</h3><div class="meta">Verified wins, win %, and streak.</div></a>
+                <a class="as-card" href="/arena/free-predictions/" style="text-decoration:none;color:inherit"><h3><i class="fas fa-bullseye" style="color:var(--as-gold)"></i> Free Predictions</h3><div class="meta">Call the winner with free Arena Points.</div></a>
+                <a class="as-card" href="/arena/sports-gaming/" style="text-decoration:none;color:inherit"><h3><i class="fas fa-gamepad" style="color:var(--as-gold)"></i> Sports Gaming Arena</h3><div class="meta">What the Arena is and how it works.</div></a>
+            </div>
+            <p class="meta" style="margin-top:10px">See a match in action: <a href="/arena/challenges/view/?id=7">view a sample match page</a>.</p>
+        </div>
+        <div class="as-section as-copy"><h2>Free to play, no wagering</h2><p>The MLB The Show Arena is free to play. No real-money wagering, no deposits, no payouts, and no betting odds. Predictions use free Arena Points with no cash value that cannot be purchased or withdrawn. <strong>No money is wagered.</strong></p></div>
+                <div class="as-disclaimer" id="arenaDisclaimer"></div>
     </div>
 
     <script src="/static/js/config.js?v=20260405"></script>
@@ -108,7 +124,7 @@
     <script>
     (function () {
         const A = window.TMRArena;
-        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER;
+        document.getElementById('arenaDisclaimer').textContent = A.ARENA_DISCLAIMER + ' No money is wagered.';
         A.ready(async function (api) {
             if (!api) return;
             A.loadPointsChip(api, document.getElementById('pointsChip'));
