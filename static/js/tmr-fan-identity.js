@@ -9,8 +9,12 @@
   window.__tmrFanIdentity = true;
 
   function apiBase() {
-    try { if (window.api && window.api.baseUrl) return String(window.api.baseUrl).replace(/\/$/, ''); } catch (e) {}
-    return (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+    // Return host root WITHOUT a trailing /api segment; callers add '/api/...' paths.
+    // window.api.baseUrl already ends in '/api', so strip it to avoid '/api/api/...'.
+    var base;
+    try { base = (window.api && window.api.baseUrl) ? String(window.api.baseUrl) : null; } catch (e) { base = null; }
+    if (!base) base = window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com';
+    return String(base).replace(/\/+$/, '').replace(/\/api$/, '');
   }
 
   var catalogPromise = null;
@@ -238,11 +242,11 @@
       '.tmr-fi-editor{margin-top:18px;padding-top:16px;border-top:1px solid #262c3d;display:grid;gap:14px}' +
       '.tmr-fi-row label{display:block;font-size:12px;font-weight:700;color:#b9c0d4;margin-bottom:6px}' +
       '.tmr-fi-picker{display:flex;gap:8px;flex-wrap:wrap}' +
-      '.tmr-fi-picker select{background:#0f1320;color:#e6e9f2;border:1px solid #2c3346;border-radius:8px;padding:8px;flex:1;min-width:120px}' +
+      '.tmr-fi-picker select{background:#0f1320;color:#e6e9f2;border:1px solid #2c3346;border-radius:8px;padding:8px;flex:1;min-width:120px;color-scheme:dark;appearance:none;-webkit-appearance:none}' +
       '.tmr-fi-picker button,.tmr-fi-actions button{background:#00aeff;color:#04121f;border:0;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer}' +
       '.tmr-fi-selected{margin-top:8px}' +
       '.tmr-fi-actions{display:flex;align-items:center;gap:12px}' +
-      '#tmrFiPersonality{background:#0f1320;color:#e6e9f2;border:1px solid #2c3346;border-radius:8px;padding:8px;min-width:160px}' +
+      '#tmrFiPersonality{background:#0f1320;color:#e6e9f2;border:1px solid #2c3346;border-radius:8px;padding:8px;min-width:160px;color-scheme:dark;appearance:none;-webkit-appearance:none}' +
       '.tmr-fi-msg{font-size:12px}.tmr-fi-msg.is-ok{color:#46d39a}.tmr-fi-msg.is-err{color:#ff8e97}' +
       '@media(max-width:720px){.tmr-fi-teams{grid-template-columns:1fr}.tmr-fi-stats{grid-template-columns:repeat(2,1fr)}}';
     document.head.appendChild(css);
