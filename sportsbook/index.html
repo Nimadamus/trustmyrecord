@@ -10,7 +10,7 @@
          reload loop impossible, and every failure path is a silent no-op. -->
     <script>
     (function(){
-      var BUILD='20260609-2205';
+      var BUILD='20260609-2330';
       try{
         fetch('/version.json?cb=' + (new Date().getTime()), { cache: 'no-store' })
           .then(function(r){ return r.ok ? r.json() : null; })
@@ -13266,6 +13266,13 @@ window.toggleSportFamily = function (family) {
         // Alt Lines tab was empty even though the board's FanDuel feed already
         // carries alt_spreads/alt_totals per game. When Bovada yields nothing,
         // map those board groups into the same alt_groups shape and render them.
+        // ALT_LINES_NULL_PLACEHOLDER_GUARD_20260609 (Nima): some sports (NFL,
+        // NCAAF) ship alt_spreads/alt_totals as empty manual-entry placeholders
+        // (line:null, odds:null, source:"manual"). Those rendered as clickable
+        // buttons that could not submit ("Enter valid American odds"). Only keep
+        // items that carry a real numeric line AND numeric odds; drop a group if
+        // it has none, and the game if no real alt groups remain.
+        var _altReal = function (it) { return it && isFinite(Number(it.line)) && it.line !== null && it.line !== '' && isFinite(Number(it.odds)) && it.odds !== null && it.odds !== ''; };
         function altGamesFromBoard(bgames) {
             return (bgames || []).map(function (g) {
                 var ag = (g.market_groups || []).filter(function (grp) {
@@ -13274,9 +13281,9 @@ window.toggleSportFamily = function (family) {
                     return {
                         key: grp.key,
                         label: grp.label || (grp.key === 'alt_totals' ? 'Alternative Totals' : 'Alternative Lines'),
-                        items: (grp.items || []).map(function (it) { return { selection: (it.selection != null ? it.selection : it.selection_label), line: it.line, odds: it.odds }; })
+                        items: (grp.items || []).map(function (it) { return { selection: (it.selection != null ? it.selection : it.selection_label), line: it.line, odds: it.odds }; }).filter(_altReal)
                     };
-                });
+                }).filter(function (grp) { return grp.items.length; });
                 if (!ag.length) return null;
                 return { id: g.id, away_team: g.away_team, home_team: g.home_team, commence_time: g.commence_time, alt_groups: ag };
             }).filter(Boolean);
