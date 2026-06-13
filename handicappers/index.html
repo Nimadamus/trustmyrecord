@@ -413,6 +413,50 @@
             box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.10);
         }
 
+        .hm-view-toggle {
+            display: inline-flex;
+            gap: 4px;
+            margin: 18px 0 0;
+            padding: 5px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: rgba(8, 15, 27, 0.78);
+        }
+
+        .hm-view-btn {
+            -webkit-appearance: none;
+            appearance: none;
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            font-size: 0.86rem;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            padding: 9px 18px;
+            border-radius: 999px;
+            cursor: pointer;
+        }
+
+        .hm-view-btn:hover { color: #e8fffb; }
+
+        .hm-view-btn.is-active {
+            background: rgba(45, 212, 191, 0.16);
+            border: 1px solid rgba(45, 212, 191, 0.45);
+            color: #e8fffb;
+        }
+
+        .hm-view-hint {
+            margin: 8px 0 0;
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 700;
+        }
+
+        @media (max-width: 560px) {
+            .hm-view-toggle { display: flex; width: 100%; }
+            .hm-view-btn { flex: 1; padding: 10px 8px; }
+        }
+
         .hm-toolbar {
             display: flex;
             justify-content: space-between;
@@ -1397,6 +1441,12 @@
             </div>
         </section>
 
+        <div class="hm-view-toggle" role="group" aria-label="Member view">
+            <button type="button" class="hm-view-btn is-active" data-view="active" aria-pressed="true">Active Pick Makers</button>
+            <button type="button" class="hm-view-btn" data-view="all" aria-pressed="false">All Members</button>
+        </div>
+        <p class="hm-view-hint" id="hmViewHint">Showing members who locked a pick in the last 24 hours.</p>
+
         <section class="hm-controls" aria-label="Search and filters">
             <div class="hm-field">
                 <label for="hmSearch">Search by username</label>
@@ -1511,8 +1561,21 @@
             pageSize: document.getElementById('hmPageSize'),
             prevPage: document.getElementById('hmPrevPage'),
             nextPage: document.getElementById('hmNextPage'),
-            pageIndicator: document.getElementById('hmPageIndicator')
+            pageIndicator: document.getElementById('hmPageIndicator'),
+            viewButtons: Array.from(document.querySelectorAll('.hm-view-btn')),
+            viewHint: document.getElementById('hmViewHint')
         };
+
+        // Member view: 'active' = recent pick makers only (DEFAULT, so the page
+        // feels alive). 'all' = full directory incl. stale members, each labeled
+        // with "Last pick: X days ago". Never default to 'all'.
+        let activityView = 'active';
+        // Active window: prefer the last 24h; expand to 48h only when 24h yields
+        // too few members to fill the board. Stale members (4d/20d/28d) never
+        // appear in the active view.
+        const ACTIVE_PRIMARY_WINDOW_MS = 24 * 60 * 60 * 1000;
+        const ACTIVE_FALLBACK_WINDOW_MS = 48 * 60 * 60 * 1000;
+        const ACTIVE_MIN_VOLUME = 8;
 
         let members = [];
         // Total registered/public users (production directory), INCLUDING members
@@ -2306,6 +2369,31 @@
             return Math.max(getTime(member.lastActive), getTime(member.stats?.lastActivity), pickTimestamp(member.stats?.lastPick));
         }
 
+        // Pick-only recency (never login/created), used by the Active Pick Makers
+        // view so "active" honestly means "recently posted a pick".
+        function lastPickTime(member) {
+            return Math.max(getTime(member.stats?.lastActivity), pickTimestamp(member.stats?.lastPick));
+        }
+
+        function activeWithin(pool, windowMs) {
+            const cutoff = Date.now() - windowMs;
+            return pool.filter(member => lastPickTime(member) >= cutoff);
+        }
+
+        // 24h first; only widen to 48h if 24h is too thin to fill the board.
+        function activePickMakers(pool) {
+            let list = activeWithin(pool, ACTIVE_PRIMARY_WINDOW_MS);
+            let windowMs = ACTIVE_PRIMARY_WINDOW_MS;
+            if (list.length < ACTIVE_MIN_VOLUME) {
+                const widened = activeWithin(pool, ACTIVE_FALLBACK_WINDOW_MS);
+                if (widened.length > list.length) {
+                    list = widened;
+                    windowMs = ACTIVE_FALLBACK_WINDOW_MS;
+                }
+            }
+            return { list, windowMs };
+        }
+
         function setText(el, value) {
             if (!el) return;
             el.textContent = value;
@@ -2546,7 +2634,15 @@
                 ? members.map(member => Object.assign({}, member, { stats: memberStatsForFilters(member, sport, wager) }))
                 : members;
 
-            qualifiedPool = displayMembers.filter(meetsLeaderboardMinimum);
+            const basePool = displayMembers.filter(meetsLeaderboardMinimum);
+            if (activityView === 'active') {
+                const active = activePickMakers(basePool);
+                qualifiedPool = active.list;
+                updateViewHint(active.windowMs, active.list.length);
+            } else {
+                qualifiedPool = basePool;
+                updateViewHint(null, basePool.length);
+            }
             visibleMembers = qualifiedPool.filter(member => {
                 return !q ||
                     member.username.toLowerCase().includes(q) ||
@@ -2558,6 +2654,30 @@
             renderRows();
             updateSortIndicators();
             syncSortDropdown();
+        }
+
+        function updateViewHint(windowMs, count) {
+            if (!els.viewHint) return;
+            if (activityView === 'active') {
+                const hours = windowMs === ACTIVE_FALLBACK_WINDOW_MS ? 48 : 24;
+                els.viewHint.textContent = 'Showing ' + count + ' member' + (count === 1 ? '' : 's') +
+                    ' who locked a pick in the last ' + hours + ' hours.';
+            } else {
+                els.viewHint.textContent = 'Showing all ' + count + ' member' + (count === 1 ? '' : 's') +
+                    ' with locked picks, including inactive accounts (last pick shown per row).';
+            }
+        }
+
+        function setActivityView(view) {
+            const next = view === 'all' ? 'all' : 'active';
+            if (next === activityView) return;
+            activityView = next;
+            els.viewButtons.forEach(btn => {
+                const isActive = btn.getAttribute('data-view') === activityView;
+                btn.classList.toggle('is-active', isActive);
+                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+            });
+            resetPaginationAndApplyFilters();
         }
 
         function resetPaginationAndApplyFilters() {
@@ -2625,7 +2745,9 @@
             updatePaginationControls(visibleMembers.length, isAll ? Math.max(visibleMembers.length, 1) : pageSize, pageCount, pageMembers);
 
             if (!visibleMembers.length) {
-                els.rows.innerHTML = '<div class="hm-empty"><strong>Founding records are being built now.</strong>Early members will appear here once they have locked pick activity. Search by username to find a specific production member.</div>';
+                els.rows.innerHTML = activityView === 'active'
+                    ? '<div class="hm-empty"><strong>No active pick makers right now.</strong>No members have locked a pick in the last 48 hours. Switch to All Members to see the full directory.</div>'
+                    : '<div class="hm-empty"><strong>Founding records are being built now.</strong>Early members will appear here once they have locked pick activity. Search by username to find a specific production member.</div>';
                 return;
             }
 
@@ -2784,6 +2906,9 @@
             });
         });
 
+        els.viewButtons.forEach(btn => {
+            btn.addEventListener('click', () => setActivityView(btn.getAttribute('data-view')));
+        });
         els.search.addEventListener('input', resetPaginationAndApplyFilters);
         els.sport.addEventListener('change', () => { rebuildWagerOptions(); resetPaginationAndApplyFilters(); });
         if (els.wager) els.wager.addEventListener('change', resetPaginationAndApplyFilters);
