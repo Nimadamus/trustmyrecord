@@ -4216,3 +4216,233 @@
 
     document.addEventListener('DOMContentLoaded', boot);
 })();
+
+
+/* =====================================================================
+   QUICK_BET_BAR_20260613 (Nima: "don't make me scroll back up to submit").
+   Self-contained, additive. A floating bottom action bar that mirrors the
+   current pick-slip selection so a user can set units + lock the pick from
+   anywhere on the board without scrolling up to the slip.
+
+   Design contract (do not break):
+   - Zero coupling to the renderer's private closure. It only reads stable
+     public DOM: #pickDetails.has-selection, #summaryPick, #summaryOdds,
+     #summaryGame, #unitsInput, and submits via window.lockInPick() so EVERY
+     existing validation / in-flight / Discord-confirm safeguard still runs.
+   - Shows only when a selection exists AND the real Lock button is not
+     already comfortably in the viewport (so desktop's sticky right-rail is
+     untouched; mobile / scrolled-away always gets the bar).
+   - Units field is two-way synced with #unitsInput (same 0.5-5 / step 0.5
+     constraints) and dispatches the input event so the stake preview updates.
+   ===================================================================== */
+(function () {
+    if (typeof document === 'undefined') return;
+    if (window.__tmrQuickBetInit) return;
+    window.__tmrQuickBetInit = true;
+
+    var BAR_ID = 'tmrQuickBet';
+
+    function injectStyles() {
+        if (document.getElementById('tmrQuickBetStyles')) return;
+        var css = ''
+            + '#tmrQuickBet{position:fixed;left:0;right:0;bottom:0;z-index:9998;'
+            + 'transform:translateY(120%);transition:transform .25s ease;'
+            + 'background:linear-gradient(180deg,rgba(20,24,31,0.98),rgba(13,16,21,0.99));'
+            + 'border-top:1px solid rgba(112,221,255,0.22);box-shadow:0 -10px 30px rgba(0,0,0,0.45);'
+            + 'padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));'
+            + 'display:flex;align-items:center;gap:10px;font-family:Inter,system-ui,sans-serif;}'
+            + '#tmrQuickBet.show{transform:translateY(0);}'
+            + '#tmrQuickBet .qb-info{flex:1 1 auto;min-width:0;}'
+            + '#tmrQuickBet .qb-pick{color:#f4f7fb;font-weight:800;font-size:14px;line-height:1.2;'
+            + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+            + '#tmrQuickBet .qb-meta{color:#9fb0c3;font-size:11px;margin-top:2px;'
+            + 'white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}'
+            + '#tmrQuickBet .qb-units{display:flex;align-items:center;gap:0;flex:0 0 auto;'
+            + 'border:1px solid rgba(255,255,255,0.14);border-radius:10px;overflow:hidden;}'
+            + '#tmrQuickBet .qb-step{width:34px;height:42px;border:none;background:rgba(255,255,255,0.06);'
+            + 'color:#f4f7fb;font-size:20px;font-weight:800;cursor:pointer;line-height:1;}'
+            + '#tmrQuickBet .qb-step:active{background:rgba(255,255,255,0.14);}'
+            + '#tmrQuickBet .qb-uinput{width:48px;height:42px;border:none;background:transparent;'
+            + 'color:#fff;text-align:center;font-size:16px;font-weight:800;font-family:Barlow,Inter,sans-serif;'
+            + '-moz-appearance:textfield;}'
+            + '#tmrQuickBet .qb-uinput::-webkit-outer-spin-button,#tmrQuickBet .qb-uinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}'
+            + '#tmrQuickBet .qb-ulabel{color:#7f8ea0;font-size:9px;font-weight:800;letter-spacing:.08em;'
+            + 'text-transform:uppercase;text-align:center;margin-top:3px;}'
+            + '#tmrQuickBet .qb-submit{flex:0 0 auto;border:none;cursor:pointer;border-radius:10px;'
+            + 'padding:0 18px;height:46px;font-size:14px;font-weight:900;letter-spacing:.03em;'
+            + 'color:#0b0f14;background:linear-gradient(135deg,#f2c94c,#f0b429);'
+            + 'box-shadow:0 6px 16px rgba(240,180,41,0.3);white-space:nowrap;}'
+            + '#tmrQuickBet .qb-submit:disabled{opacity:.55;cursor:default;box-shadow:none;}'
+            + '#tmrQuickBet .qb-edit{flex:0 0 auto;background:none;border:none;color:#70ddff;'
+            + 'font-size:11px;font-weight:700;cursor:pointer;text-decoration:underline;padding:4px;}'
+            + '@media (min-width:1100px){#tmrQuickBet{left:auto;right:24px;bottom:24px;max-width:520px;'
+            + 'border-radius:16px;border:1px solid rgba(112,221,255,0.22);}}'
+            + '@media (max-width:380px){#tmrQuickBet .qb-edit{display:none;}#tmrQuickBet{gap:7px;}}';
+        var st = document.createElement('style');
+        st.id = 'tmrQuickBetStyles';
+        st.textContent = css;
+        (document.head || document.documentElement).appendChild(st);
+    }
+
+    // The VISIBLE ticket stake field is #ttSlipUnits (new renderer); #unitsInput
+    // is the legacy/hidden mirror. getCurrentStakeAmount() reads ttSlipUnits first
+    // and mirrors the clamped value back to BOTH, so we must drive the same field
+    // the page treats as source-of-truth or our write gets reverted on the next
+    // updateStakeModePreview(). Match that precedence exactly.
+    function realUnitsInput() {
+        return document.getElementById('ttSlipUnits') || document.getElementById('unitsInput');
+    }
+
+    function clampUnits(v) {
+        var n = parseFloat(v);
+        if (!isFinite(n)) n = 1;
+        if (n < 0.5) n = 0.5;
+        if (n > 5) n = 5;
+        // snap to 0.5 step
+        n = Math.round(n * 2) / 2;
+        return n;
+    }
+
+    function buildBar() {
+        var bar = document.getElementById(BAR_ID);
+        if (bar) return bar;
+        injectStyles();
+        bar = document.createElement('div');
+        bar.id = BAR_ID;
+        bar.setAttribute('role', 'region');
+        bar.setAttribute('aria-label', 'Quick bet slip');
+        bar.innerHTML =
+              '<div class="qb-info">'
+            +   '<div class="qb-pick" id="qbPick">Your pick</div>'
+            +   '<div class="qb-meta" id="qbMeta"></div>'
+            + '</div>'
+            + '<button type="button" class="qb-edit" id="qbEdit" aria-label="Edit full slip">Details</button>'
+            + '<div>'
+            +   '<div class="qb-units">'
+            +     '<button type="button" class="qb-step" id="qbMinus" aria-label="Decrease units">&minus;</button>'
+            +     '<input class="qb-uinput" id="qbUnits" type="number" inputmode="decimal" min="0.5" max="5" step="0.5" value="1" aria-label="Units" />'
+            +     '<button type="button" class="qb-step" id="qbPlus" aria-label="Increase units">+</button>'
+            +   '</div>'
+            +   '<div class="qb-ulabel" id="qbUnitsLabel">Units</div>'
+            + '</div>'
+            + '<button type="button" class="qb-submit" id="qbSubmit">Lock In</button>';
+        document.body.appendChild(bar);
+
+        var qbUnits = bar.querySelector('#qbUnits');
+        // two-way sync with the real units input
+        function pushToReal() {
+            var ri = realUnitsInput();
+            var n = clampUnits(qbUnits.value);
+            qbUnits.value = n;
+            if (ri) {
+                ri.value = n;
+                ri.dispatchEvent(new Event('input', { bubbles: true }));
+                ri.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        }
+        qbUnits.addEventListener('input', function () {
+            var ri = realUnitsInput();
+            if (ri) { ri.value = qbUnits.value; ri.dispatchEvent(new Event('input', { bubbles: true })); }
+        });
+        qbUnits.addEventListener('blur', pushToReal);
+        bar.querySelector('#qbMinus').addEventListener('click', function () {
+            qbUnits.value = clampUnits(parseFloat(qbUnits.value || '1') - 0.5); pushToReal();
+        });
+        bar.querySelector('#qbPlus').addEventListener('click', function () {
+            qbUnits.value = clampUnits(parseFloat(qbUnits.value || '1') + 0.5); pushToReal();
+        });
+        bar.querySelector('#qbEdit').addEventListener('click', function () {
+            var slip = document.getElementById('pickDetails');
+            if (slip && slip.scrollIntoView) slip.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        bar.querySelector('#qbSubmit').addEventListener('click', function () {
+            pushToReal();
+            // Submit through the EXISTING production path so every validation,
+            // in-flight guard, and Discord-confirm safeguard still runs. Prefer
+            // clicking the real Lock button (keeps its own busy/disabled state),
+            // fall back to window.lockInPick().
+            var realBtn = document.querySelector('.submit-pick-btn, #ttSlipSubmit, [data-tmr-lock-btn]');
+            if (realBtn && typeof realBtn.click === 'function') {
+                realBtn.click();
+            } else if (typeof window.lockInPick === 'function') {
+                try { window.lockInPick(); } catch (e) { console.error('[TMR][QuickBet] lockInPick error', e); }
+            }
+        });
+        return bar;
+    }
+
+    function selectionActive() {
+        var pd = document.getElementById('pickDetails');
+        var conf = document.getElementById('pickConfirmation');
+        var confActive = conf && (conf.classList.contains('active') || (window.getComputedStyle(conf).display !== 'none' && conf.offsetParent !== null));
+        return !!(pd && pd.classList.contains('has-selection')) && !confActive;
+    }
+
+    function realSubmitInViewport() {
+        var btns = document.querySelectorAll('.submit-pick-btn, .sportsbook-ticket-preview-submit, #ttSlipSubmit, [data-tmr-lock-btn]');
+        var vh = window.innerHeight || document.documentElement.clientHeight;
+        for (var i = 0; i < btns.length; i++) {
+            var el = btns[i];
+            var cs = window.getComputedStyle(el);
+            if (cs.display === 'none' || cs.visibility === 'hidden') continue;
+            var r = el.getBoundingClientRect();
+            if (r.width <= 0 || r.height <= 0) continue;
+            // "comfortably" visible: fully within the viewport
+            if (r.top >= 0 && r.bottom <= vh) return true;
+        }
+        return false;
+    }
+
+    function refresh() {
+        var bar = document.getElementById(BAR_ID) || buildBar();
+        if (!selectionActive()) { bar.classList.remove('show'); return; }
+        // mirror selection text
+        var pickTxt = (document.getElementById('summaryPick') || {}).textContent || '';
+        var oddsTxt = (document.getElementById('summaryOdds') || {}).textContent || '';
+        var gameTxt = (document.getElementById('summaryGame') || {}).textContent || '';
+        pickTxt = pickTxt.trim(); oddsTxt = oddsTxt.trim(); gameTxt = gameTxt.trim();
+        if (!pickTxt || pickTxt === '-') { bar.classList.remove('show'); return; }
+        bar.querySelector('#qbPick').textContent = pickTxt;
+        var meta = [];
+        if (oddsTxt && oddsTxt !== '-') meta.push(oddsTxt);
+        if (gameTxt && gameTxt !== '-') meta.push(gameTxt);
+        bar.querySelector('#qbMeta').textContent = meta.join('  •  ');
+        // mirror current units value + mode label
+        var ri = realUnitsInput();
+        if (ri && ri.value) bar.querySelector('#qbUnits').value = clampUnits(ri.value);
+        var modeToWin = document.getElementById('modeToWin');
+        var toWinActive = modeToWin && modeToWin.classList.contains('active');
+        bar.querySelector('#qbUnitsLabel').textContent = toWinActive ? 'To Win' : 'Units';
+        // only surface when the real submit isn't already on screen
+        if (realSubmitInViewport()) { bar.classList.remove('show'); }
+        else { bar.classList.add('show'); }
+    }
+
+    var rafPending = false;
+    function scheduleRefresh() {
+        if (rafPending) return;
+        rafPending = true;
+        window.requestAnimationFrame(function () { rafPending = false; refresh(); });
+    }
+
+    function start() {
+        buildBar();
+        var pd = document.getElementById('pickDetails');
+        if (pd && window.MutationObserver) {
+            new MutationObserver(scheduleRefresh).observe(pd, {
+                attributes: true, attributeFilter: ['class'], childList: true, subtree: true, characterData: true
+            });
+        }
+        window.addEventListener('scroll', scheduleRefresh, { passive: true });
+        window.addEventListener('resize', scheduleRefresh, { passive: true });
+        // catch step transitions / confirmation that don't touch #pickDetails
+        document.addEventListener('click', function () { window.setTimeout(scheduleRefresh, 60); }, true);
+        scheduleRefresh();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start);
+    } else {
+        start();
+    }
+})();
