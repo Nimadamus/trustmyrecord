@@ -1,13 +1,14 @@
 /* ============================================================================
    JustBet SportsCapper Bonus Bonanza Weekend — INVITE PROMO (TrustMyRecord.com)
    ----------------------------------------------------------------------------
-   This is a JustBet invitation / VIP-rep promo funnel. It is NOT a public
-   instant-signup form and NOT a TrustMyRecord contest. TrustMyRecord only hosts
-   and promotes this third-party JustBet partner offer.
+   This is a JustBet invitation / VIP-rep promo funnel. It is a third-party
+   JustBet partner offer that TrustMyRecord only hosts and promotes. It is not a
+   TrustMyRecord contest and does not require a TrustMyRecord account.
 
    Correct framing: visit the JustBet promo page, click "Join Promo" or contact
-   a JustBet VIP rep, and provide invite code SB09G. Do not imply instant signup,
-   a TMR account requirement, a TMR contest, or any guaranteed bonus/withdrawal.
+   a JustBet VIP rep, and provide invite code SB09G. Keep copy to the approved
+   wording below; do not promise certain bonuses, certain withdrawals, immediate
+   account creation, or any TMR-contest association.
 
    >>> WEEKEND TEMPORARY PROMO <<<
    To take it down after the weekend: set ENABLED:false (boxes vanish sitewide),
