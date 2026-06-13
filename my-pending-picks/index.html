@@ -267,9 +267,10 @@
         </header>
 
         <section id="authState" class="auth-state" hidden>
-            <h2>Log in to view pending picks</h2>
-            <p>This page is private to your account and only loads picks tied to your authenticated session.</p>
-            <a class="btn btn-primary" href="/login/?next=/my-pending-picks/">Log In</a>
+            <h2 id="authHeading">Log in to view pending picks</h2>
+            <p id="authMessage">This page is private to your account and only loads picks tied to your authenticated session.</p>
+            <a id="authLoginBtn" class="btn btn-primary" href="/login/?next=/my-pending-picks/">Log In</a>
+            <button id="authRetryBtn" type="button" class="btn btn-primary" hidden>Retry</button>
         </section>
 
         <section id="pendingContent" hidden>
@@ -572,25 +573,89 @@
             rows.innerHTML = pending.map(rowHtml).join('');
             cards.innerHTML = pending.map(cardHtml).join('');
         }
+        // PENDING_PICK_AUTH_VS_TRANSIENT_SPLIT_20260613: three distinct end states.
+        //   (1) Not authenticated / token truly invalid (no session, or 401/403)
+        //       -> show login prompt + Log In button, then redirect to /login/.
+        //   (2) Authenticated but the request failed transiently (Render cold-start
+        //       5xx, network blip, generic backend error) -> the user is NOT logged
+        //       out; show an accurate "couldn't load, retry" state WITHOUT a Log In
+        //       button and offer a Retry. One automatic retry covers cold starts.
+        //   (3) Success -> render() (which itself shows the empty state for 0 picks).
+        // The old code conflated (2) with a logged-out state: it surfaced a stray
+        // "Log In" button and inaccurate "public record privacy filters" copy to a
+        // user who was actually logged in.
+        var authHeading = document.getElementById('authHeading');
+        var authMessage = document.getElementById('authMessage');
+        var authLoginBtn = document.getElementById('authLoginBtn');
+        var authRetryBtn = document.getElementById('authRetryBtn');
+        var autoRetried = false;
+
+        function isLoggedIn() {
+            return !!(window.api && window.api.isLoggedIn());
+        }
+
+        function showLoginRequired() {
+            content.hidden = true;
+            authState.hidden = false;
+            authHeading.textContent = 'Log in to view pending picks';
+            authMessage.textContent = 'This page is private to your account and only loads picks tied to your authenticated session.';
+            authLoginBtn.hidden = false;
+            authRetryBtn.hidden = true;
+            setTimeout(function () {
+                window.location.href = '/login/?next=/my-pending-picks/';
+            }, 900);
+        }
+
+        function showLoadError() {
+            // Authenticated user, transient backend failure. Do NOT show a Log In
+            // button (they are logged in) and do NOT mention privacy filters.
+            content.hidden = true;
+            authState.hidden = false;
+            authHeading.textContent = 'Could not load pending picks';
+            authMessage.textContent = 'The server did not respond just now. Your account and pending picks are safe. Try again in a moment.';
+            authLoginBtn.hidden = true;
+            authRetryBtn.hidden = false;
+        }
+
+        async function loadPending() {
+            authState.hidden = true;
+            authLoginBtn.hidden = true;
+            authRetryBtn.hidden = true;
+            await window.api.getCurrentUser();
+            var data = await window.api.getPendingPicks({ limit: 100 });
+            render(data && data.picks);
+        }
+
         async function boot() {
+            if (!isLoggedIn()) {
+                showLoginRequired();
+                return;
+            }
             try {
-                if (!window.api || !window.api.isLoggedIn()) throw new Error('not authenticated');
-                await window.api.getCurrentUser();
-                var data = await window.api.getPendingPicks({ limit: 100 });
-                render(data && data.picks);
+                await loadPending();
             } catch (error) {
-                authState.hidden = false;
-                content.hidden = true;
-                if (!window.api || !window.api.isLoggedIn() || error.status === 401 || error.status === 403) {
-                    setTimeout(function () {
-                        window.location.href = '/login/?next=/my-pending-picks/';
-                    }, 900);
-                } else {
-                    authState.querySelector('h2').textContent = 'Could not load pending picks';
-                    authState.querySelector('p').textContent = 'Refresh in a moment. Your public record privacy filters were not changed.';
+                // Token genuinely rejected (refresh already attempted in api.request)
+                // -> real auth failure -> route to login.
+                if (error && (error.status === 401 || error.status === 403)) {
+                    showLoginRequired();
+                    return;
                 }
+                // Transient (cold-start 5xx / network). Retry once automatically,
+                // then surface a retryable error if it still fails.
+                if (!autoRetried) {
+                    autoRetried = true;
+                    setTimeout(function () { boot(); }, 1500);
+                    return;
+                }
+                showLoadError();
             }
         }
+
+        authRetryBtn.addEventListener('click', function () {
+            autoRetried = false;
+            boot();
+        });
+
         boot();
     })();
     </script>
