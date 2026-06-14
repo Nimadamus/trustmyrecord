@@ -67,11 +67,36 @@
         'soccer_italy_serie_a': 'soccer/ita.1',
         'soccer_germany_bundesliga': 'soccer/ger.1',
         'soccer_france_ligue_one': 'soccer/fra.1',
+        'soccer_uefa_europa_league': 'soccer/uefa.europa',
+        'soccer_uefa_conference_league': 'soccer/uefa.europa.conf',
+        'soccer_mexico_ligamx': 'soccer/mex.1',
+        'soccer_england_championship': 'soccer/eng.2',
+        'soccer_netherlands_eredivisie': 'soccer/ned.1',
+        'soccer_portugal_primeira_liga': 'soccer/por.1',
+        'soccer_scotland_premiership': 'soccer/sco.1',
         'soccer_brazil_serie_a': 'soccer/bra.1',
+        'soccer_argentina_liga_profesional': 'soccer/arg.1',
         'soccer_nwsl': 'soccer/usa.nwsl',
-        'soccer_intl_friendly': 'soccer/fifa.friendly',
+        'soccer_concacaf_champions': 'soccer/concacaf.champions',
+        'soccer_conmebol_libertadores': 'soccer/conmebol.libertadores',
+        'soccer_conmebol_sudamericana': 'soccer/conmebol.sudamericana',
         'soccer_fifa_world_cup': 'soccer/fifa.world',
         'soccer_fifa_club_world_cup': 'soccer/fifa.cwc',
+        'soccer_fifa_womens_world_cup': 'soccer/fifa.wwc',
+        'soccer_uefa_euro': 'soccer/uefa.euro',
+        'soccer_uefa_nations': 'soccer/uefa.nations',
+        'soccer_conmebol_america': 'soccer/conmebol.america',
+        'soccer_concacaf_gold': 'soccer/concacaf.gold',
+        'soccer_concacaf_nations': 'soccer/concacaf.nations.league',
+        'soccer_caf_nations': 'soccer/caf.nations',
+        'soccer_wcq_uefa': 'soccer/fifa.worldq.uefa',
+        'soccer_wcq_conmebol': 'soccer/fifa.worldq.conmebol',
+        'soccer_wcq_concacaf': 'soccer/fifa.worldq.concacaf',
+        'soccer_wcq_afc': 'soccer/fifa.worldq.afc',
+        'soccer_wcq_caf': 'soccer/fifa.worldq.caf',
+        'soccer_wcq_ofc': 'soccer/fifa.worldq.ofc',
+        'soccer_fifa_olympics': 'soccer/fifa.olympics',
+        'soccer_intl_friendly': 'soccer/fifa.friendly',
         'americanfootball_ncaaf': 'football/college-football',
         'basketball_ncaab': 'basketball/mens-college-basketball',
         'tennis': 'tennis',
@@ -12809,21 +12834,49 @@ window.toggleSportFamily = function (family) {
 
     var GROUP_SPORTS = {
         Soccer: [
-            { sport: 'Soccer', key: 'soccer_epl', label: 'EPL' },
-            { sport: 'MLS', key: 'soccer_usa_mls', label: 'MLS' },
-            { sport: 'UCL', key: 'soccer_uefa_champs_league', label: 'Champions League' },
-            { sport: 'LaLiga', key: 'soccer_spain_la_liga', label: 'La Liga' },
-            { sport: 'SerieA', key: 'soccer_italy_serie_a', label: 'Serie A' },
-            { sport: 'Bundesliga', key: 'soccer_germany_bundesliga', label: 'Bundesliga' },
-            { sport: 'Ligue1', key: 'soccer_france_ligue_one', label: 'Ligue 1' },
-            // In-season competitions (ESPN-only; Action Network's free soccer
-            // slug doesn't carry them). espnOnly skips the backend fetch so the
-            // sparse AN board is never passed through and mislabeled under them.
+            // PERMANENT COVERAGE: full soccer competition universe. Top leagues
+            // use the backend (richer DK markets); everything else is espnOnly
+            // (league-aware ESPN scoreboards). League filter buttons are built
+            // DYNAMICALLY from whatever competitions actually have games today
+            // (window.TMR.rebuildSoccerFilters), so new tournaments (World Cup,
+            // Euros, Copa America, etc.) appear automatically with no code edits.
+            { sport: 'Epl', key: 'soccer_epl', label: 'EPL' },
+            { sport: 'UsaMls', key: 'soccer_usa_mls', label: 'MLS' },
+            { sport: 'UefaChampsLeague', key: 'soccer_uefa_champs_league', label: 'Champions League' },
+            { sport: 'SpainLaLiga', key: 'soccer_spain_la_liga', label: 'La Liga' },
+            { sport: 'ItalySerieA', key: 'soccer_italy_serie_a', label: 'Serie A' },
+            { sport: 'GermanyBundesliga', key: 'soccer_germany_bundesliga', label: 'Bundesliga' },
+            { sport: 'FranceLigueOne', key: 'soccer_france_ligue_one', label: 'Ligue 1' },
+            { sport: 'UefaEuropaLeague', key: 'soccer_uefa_europa_league', label: 'Europa League', espnOnly: true },
+            { sport: 'UefaConferenceLeague', key: 'soccer_uefa_conference_league', label: 'Conference League', espnOnly: true },
+            { sport: 'MexicoLigamx', key: 'soccer_mexico_ligamx', label: 'Liga MX', espnOnly: true },
+            { sport: 'EnglandChampionship', key: 'soccer_england_championship', label: 'Championship', espnOnly: true },
+            { sport: 'NetherlandsEredivisie', key: 'soccer_netherlands_eredivisie', label: 'Eredivisie', espnOnly: true },
+            { sport: 'PortugalPrimeiraLiga', key: 'soccer_portugal_primeira_liga', label: 'Primeira Liga', espnOnly: true },
+            { sport: 'ScotlandPremiership', key: 'soccer_scotland_premiership', label: 'Scottish Premiership', espnOnly: true },
             { sport: 'BrazilSerieA', key: 'soccer_brazil_serie_a', label: 'Brazil Serie A', espnOnly: true },
-            { sport: 'NWSL', key: 'soccer_nwsl', label: 'NWSL', espnOnly: true },
-            { sport: 'WorldCup', key: 'soccer_fifa_world_cup', label: 'World Cup', espnOnly: true },
-            { sport: 'ClubWorldCup', key: 'soccer_fifa_club_world_cup', label: 'Club World Cup', espnOnly: true },
-            { sport: 'Intl', key: 'soccer_intl_friendly', label: 'International', espnOnly: true }
+            { sport: 'ArgentinaLigaProfesional', key: 'soccer_argentina_liga_profesional', label: 'Argentina Liga Profesional', espnOnly: true },
+            { sport: 'Nwsl', key: 'soccer_nwsl', label: 'NWSL', espnOnly: true },
+            { sport: 'ConcacafChampions', key: 'soccer_concacaf_champions', label: 'CONCACAF Champions Cup', espnOnly: true },
+            { sport: 'ConmebolLibertadores', key: 'soccer_conmebol_libertadores', label: 'Copa Libertadores', espnOnly: true },
+            { sport: 'ConmebolSudamericana', key: 'soccer_conmebol_sudamericana', label: 'Copa Sudamericana', espnOnly: true },
+            { sport: 'FifaWorldCup', key: 'soccer_fifa_world_cup', label: 'World Cup', espnOnly: true },
+            { sport: 'FifaClubWorldCup', key: 'soccer_fifa_club_world_cup', label: 'Club World Cup', espnOnly: true },
+            { sport: 'FifaWomensWorldCup', key: 'soccer_fifa_womens_world_cup', label: 'Women\'s World Cup', espnOnly: true },
+            { sport: 'UefaEuro', key: 'soccer_uefa_euro', label: 'Euro', espnOnly: true },
+            { sport: 'UefaNations', key: 'soccer_uefa_nations', label: 'UEFA Nations League', espnOnly: true },
+            { sport: 'ConmebolAmerica', key: 'soccer_conmebol_america', label: 'Copa America', espnOnly: true },
+            { sport: 'ConcacafGold', key: 'soccer_concacaf_gold', label: 'Gold Cup', espnOnly: true },
+            { sport: 'ConcacafNations', key: 'soccer_concacaf_nations', label: 'CONCACAF Nations League', espnOnly: true },
+            { sport: 'CafNations', key: 'soccer_caf_nations', label: 'AFCON', espnOnly: true },
+            { sport: 'WcqUefa', key: 'soccer_wcq_uefa', label: 'World Cup Qualifying - UEFA', espnOnly: true },
+            { sport: 'WcqConmebol', key: 'soccer_wcq_conmebol', label: 'World Cup Qualifying - CONMEBOL', espnOnly: true },
+            { sport: 'WcqConcacaf', key: 'soccer_wcq_concacaf', label: 'World Cup Qualifying - CONCACAF', espnOnly: true },
+            { sport: 'WcqAfc', key: 'soccer_wcq_afc', label: 'World Cup Qualifying - AFC', espnOnly: true },
+            { sport: 'WcqCaf', key: 'soccer_wcq_caf', label: 'World Cup Qualifying - CAF', espnOnly: true },
+            { sport: 'WcqOfc', key: 'soccer_wcq_ofc', label: 'World Cup Qualifying - OFC', espnOnly: true },
+            { sport: 'FifaOlympics', key: 'soccer_fifa_olympics', label: 'Olympics', espnOnly: true },
+            { sport: 'IntlFriendly', key: 'soccer_intl_friendly', label: 'International', espnOnly: true }
         ],
         Tennis: [
             { sport: 'ATP', key: 'tennis_atp', label: 'ATP' },
@@ -13138,6 +13191,7 @@ window.toggleSportFamily = function (family) {
             // filter buttons can narrow it client-side without a refetch.
             games.sort(function (a, b) { return new Date(a.commence_time || a.start_time || 0) - new Date(b.commence_time || b.start_time || 0); });
             window.TMR._groupedGames = games;
+            if (sport === 'Soccer') { try { window.TMR.rebuildSoccerFilters(); } catch (e) {} }
             window.TMR._groupedSport = sport;
             window.TMR._groupedPeriod = period;
             window.TMR._renderGroupedFiltered();
@@ -13206,6 +13260,38 @@ window.toggleSportFamily = function (family) {
         window.TMR._groupFilter = league || 'all';
         _setGroupFilterActive('soccerLeagueFilters', 'data-league', window.TMR._groupFilter);
         window.TMR._renderGroupedFiltered();
+    };
+
+    // PERMANENT: rebuild the soccer league filter buttons from the competitions
+    // actually present in the loaded slate. Any competition with upcoming games
+    // gets a button automatically; empty competitions are hidden. This is what
+    // makes new tournaments appear consistently without hand-editing the buttons.
+    window.TMR.rebuildSoccerFilters = function () {
+        var panel = document.getElementById('soccerLeagueFilters');
+        if (!panel) return;
+        var games = window.TMR._groupedGames || [];
+        var seen = {}, labels = [];
+        games.forEach(function (g) {
+            var t = (g && g.sport_title) || '';
+            if (t && !seen[t]) { seen[t] = 1; labels.push(t); }
+        });
+        if (!labels.length) return; // nothing loaded yet -> keep existing buttons
+        var ORDER = ['EPL','La Liga','Serie A','Bundesliga','Ligue 1','Champions League','Europa League','Conference League','MLS','Liga MX','Championship','Eredivisie','Primeira Liga','Scottish Premiership','Brazil Serie A','Argentina Liga Profesional','Copa Libertadores','Copa Sudamericana','CONCACAF Champions Cup','World Cup','Club World Cup',"Women's World Cup",'Euro','Copa America','Gold Cup','UEFA Nations League','CONCACAF Nations League','AFCON','World Cup Qualifying - UEFA','World Cup Qualifying - CONMEBOL','World Cup Qualifying - CONCACAF','World Cup Qualifying - AFC','World Cup Qualifying - CAF','World Cup Qualifying - OFC','Olympics','NWSL','International'];
+        labels.sort(function (a, b) {
+            var ia = ORDER.indexOf(a), ib = ORDER.indexOf(b);
+            if (ia === -1) ia = 999; if (ib === -1) ib = 999;
+            if (ia !== ib) return ia - ib;
+            return a < b ? -1 : a > b ? 1 : 0;
+        });
+        var cur = window.TMR._groupFilter || 'all';
+        var esc = (typeof escapeHtml === 'function') ? escapeHtml : function (x) { return String(x); };
+        var html = '<button type="button" data-league="all" onclick="window.TMR.setSoccerFilter(\'all\')">All Soccer</button>';
+        labels.forEach(function (l) {
+            var arg = String(l).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            html += '<button type="button" data-league="' + esc(l) + '" onclick="window.TMR.setSoccerFilter(\'' + arg + '\')">' + esc(l) + '</button>';
+        });
+        panel.innerHTML = html;
+        _setGroupFilterActive('soccerLeagueFilters', 'data-league', cur);
     };
 
     // Move the soccer/tennis league pickers ABOVE the games grid (they ship in
