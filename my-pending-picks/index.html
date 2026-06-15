@@ -588,7 +588,6 @@
         var authMessage = document.getElementById('authMessage');
         var authLoginBtn = document.getElementById('authLoginBtn');
         var authRetryBtn = document.getElementById('authRetryBtn');
-        var autoRetried = false;
 
         function isLoggedIn() {
             return !!(window.api && window.api.isLoggedIn());
@@ -606,13 +605,28 @@
             }, 900);
         }
 
-        function showLoadError() {
-            // Authenticated user, transient backend failure. Do NOT show a Log In
-            // button (they are logged in) and do NOT mention privacy filters.
+        // COLD_START_NEVER_ERROR_20260614: a logged-in user must NEVER see
+        // "Could not load pending picks". The Render web service is on the free
+        // plan and cold-starts can take 30-60s, during which the first request
+        // 5xxs. Instead of giving up after one retry, we retry persistently
+        // through the entire cold-start window with backoff, showing an honest
+        // "waking the server" loading state (NOT an error, NO Log In button).
+        function showWaking() {
             content.hidden = true;
             authState.hidden = false;
-            authHeading.textContent = 'Could not load pending picks';
-            authMessage.textContent = 'The server did not respond just now. Your account and pending picks are safe. Try again in a moment.';
+            authHeading.textContent = 'Loading your pending picks…';
+            authMessage.textContent = 'Waking the server. First load after idle can take up to a minute, hang tight.';
+            authLoginBtn.hidden = true;
+            authRetryBtn.hidden = true;
+        }
+
+        function showLoadError() {
+            // Reached only after the full cold-start window is exhausted (server
+            // genuinely down). Logged-in user: no Log In button, offer Retry.
+            content.hidden = true;
+            authState.hidden = false;
+            authHeading.textContent = 'Still loading…';
+            authMessage.textContent = 'The server is taking longer than usual to wake. Your account and pending picks are safe. Keep this open or tap Retry.';
             authLoginBtn.hidden = true;
             authRetryBtn.hidden = false;
         }
@@ -626,13 +640,22 @@
             render(data && data.picks);
         }
 
+        // Backoff schedule covering ~5 min of cold-start/transient outage before
+        // we ever surface a retryable state. In practice a cold start recovers
+        // well inside this window, so the error copy is effectively unreachable.
+        var RETRY_DELAYS_MS = [1500, 2000, 3000, 4000, 5000, 6000, 8000, 10000, 12000, 15000, 15000, 20000, 20000, 30000, 30000, 30000, 45000, 45000];
+        var attempt = 0;
+        var retryTimer = null;
+
         async function boot() {
+            if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
             if (!isLoggedIn()) {
                 showLoginRequired();
                 return;
             }
             try {
                 await loadPending();
+                attempt = 0;
             } catch (error) {
                 // Token genuinely rejected (refresh already attempted in api.request)
                 // -> real auth failure -> route to login.
@@ -640,11 +663,13 @@
                     showLoginRequired();
                     return;
                 }
-                // Transient (cold-start 5xx / network). Retry once automatically,
-                // then surface a retryable error if it still fails.
-                if (!autoRetried) {
-                    autoRetried = true;
-                    setTimeout(function () { boot(); }, 1500);
+                // Transient (cold-start 5xx / network). Keep retrying through the
+                // whole backoff window with an honest loading state, never an error.
+                if (attempt < RETRY_DELAYS_MS.length) {
+                    showWaking();
+                    var delay = RETRY_DELAYS_MS[attempt];
+                    attempt += 1;
+                    retryTimer = setTimeout(function () { boot(); }, delay);
                     return;
                 }
                 showLoadError();
@@ -652,7 +677,7 @@
         }
 
         authRetryBtn.addEventListener('click', function () {
-            autoRetried = false;
+            attempt = 0;
             boot();
         });
 
