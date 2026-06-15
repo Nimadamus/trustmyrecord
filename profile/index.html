@@ -8819,8 +8819,22 @@
             '<div class="profile-rail-card"><span class="profile-rail-label">ROI</span><span class="profile-rail-value' + (canShowFinancialStats && gradedProfilePicks > 0 ? signedClass(roiValue) : ' is-neutral') + '">' + (canShowFinancialStats ? (gradedProfilePicks > 0 ? fmtSigned(roiValue, '%') : 'N/A') : (statsLoadError ? 'Unavailable' : 'Loading...')) + '</span></div>' +
             '<div class="profile-rail-card"><span class="profile-rail-label">Rank</span><span class="profile-rail-value">' + rankText + '</span></div>' +
             '<div class="profile-rail-card profile-rail-card--avg-odds"><span class="profile-rail-label">Avg Odds</span><span class="profile-rail-value">' + avgOddsText + '</span></div>' +
-            '<div class="profile-rail-card profile-rail-card--corr"><span class="profile-rail-label">Correlated Picks <span class="profile-corr-info" id="railCorrInfo" role="button" tabindex="0" aria-label="What are correlated picks?" title="Correlated picks are multiple picks tied to the same game, team, player, or outcome. A high rate can make a record look stronger or weaker than a set of independent picks.">?</span></span><span class="profile-rail-value rail-corr-value" id="railCorrValue">&mdash;</span><span class="profile-rail-corr-sub" id="railCorrSub"></span></div>' +
-            '</div>';
+            '<div class="profile-rail-card profile-rail-card--corr"><span class="profile-rail-label">Correlated Picks <span class="profile-corr-info" id="railCorrInfo" role="button" tabindex="0" aria-label="What are correlated picks?" title="Correlated picks are multiple picks that depend on the SAME game outcome in the same direction (for example a team moneyline plus that team’s spread, or a game total over plus a team total over). It is NOT just any two picks on the same game. A high share means the record has less independent sample than the raw pick count suggests. Click to see details.">?</span></span><span class="profile-rail-value rail-corr-value" id="railCorrValue">&mdash;</span><span class="profile-rail-corr-sub" id="railCorrSub"></span></div>' +
+            '</div>' +
+            '<details class="profile-corr-panel" id="railCorrPanel" hidden>' +
+              '<summary>Correlated Picks &mdash; what this means &amp; how it was counted</summary>' +
+              '<div class="profile-corr-panel__body">' +
+                '<ul class="profile-corr-stats">' +
+                  '<li id="railCorrStatPicks"></li>' +
+                  '<li id="railCorrStatClusters"></li>' +
+                  '<li id="railCorrStatAvg"></li>' +
+                '</ul>' +
+                '<h4 class="profile-corr-h4">Correlated clusters</h4>' +
+                '<div id="railCorrList" class="profile-corr-list"></div>' +
+                '<h4 class="profile-corr-h4">What this stat means</h4>' +
+                '<p id="railCorrExplain" class="profile-corr-explain"></p>' +
+              '</div>' +
+            '</details>';
         const overview = '<div class="profile-overview-grid">' +
             '<div class="profile-overview-card"><span class="profile-overview-label">Followers</span><span class="profile-overview-value">' + (Number(p.follower_count) || 0) + '</span></div>' +
             '<div class="profile-overview-card"><span class="profile-overview-label">Following</span><span class="profile-overview-value">' + (Number(p.following_count) || 0) + '</span></div>' +
@@ -8917,10 +8931,61 @@
                     s.textContent = '';
                 }
             }
+            applyCorrPanel(corr, cnt, tot);
         } else {
             v.textContent = corr ? 'Not enough data' : '—';
             v.className = 'profile-rail-value rail-corr-value' + (corr ? ' is-neutral' : '');
             if (s) s.textContent = '';
+            const panel = document.getElementById('railCorrPanel');
+            if (panel) panel.hidden = true;
+        }
+    }
+
+    // Fills the expandable Correlated Picks detail panel (counts, average cluster
+    // size, the actual clusters, and the full explanation) so the number is fully
+    // auditable. Insert-only; safe no-op if the panel isn't in the DOM.
+    function applyCorrPanel(corr, cnt, tot) {
+        const panel = document.getElementById('railCorrPanel');
+        if (!panel) return;
+        const esc = (x) => String(x == null ? '' : x).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+        const setText = (id, t) => { const el = document.getElementById(id); if (el) el.textContent = t; };
+        const clusters = Number(corr.clusters || 0);
+        const correlated = (cnt != null ? cnt : Number(corr.correlated_picks || 0));
+        const total = (tot != null ? tot : Number(corr.total_picks || 0));
+        const avg = (corr.avg_cluster_size != null) ? Number(corr.avg_cluster_size)
+                  : (clusters ? Math.round((correlated / clusters) * 10) / 10 : null);
+        setText('railCorrStatPicks', correlated + ' correlated picks out of ' + total + ' graded picks');
+        setText('railCorrStatClusters', clusters + ' correlated ' + (clusters === 1 ? 'cluster' : 'clusters') + ' found');
+        setText('railCorrStatAvg', 'Average cluster size: ' + (avg != null ? avg : '—') + ' picks');
+        setText('railCorrExplain', corr.explanation || corr.tooltip || '');
+        const list = document.getElementById('railCorrList');
+        if (list) {
+            const details = Array.isArray(corr.cluster_details) ? corr.cluster_details : [];
+            if (!details.length) {
+                list.innerHTML = '<p class="profile-corr-empty">No correlated clusters in this record.</p>';
+            } else {
+                list.innerHTML = details.map((c) => {
+                    const legs = (c.picks || []).map((pk) =>
+                        '<li><span class="profile-corr-ticket">' + esc(pk.ticket || '') + '</span> ' +
+                        esc(pk.market_type || '') + ' &mdash; <strong>' + esc(pk.selection || '') + '</strong>' +
+                        (pk.line ? ' (' + esc(pk.line) + ')' : '') +
+                        ' <span class="profile-corr-status profile-corr-status--' + esc((pk.status || '').toLowerCase()) + '">' + esc(pk.status || '') + '</span></li>'
+                    ).join('');
+                    return '<div class="profile-corr-cluster">' +
+                        '<div class="profile-corr-cluster__head"><strong>' + esc(c.game || 'Game') + '</strong>' +
+                        ' <span class="profile-corr-cluster__meta">' + esc(c.size) + ' legs &middot; ' + esc(c.reason || '') + '</span></div>' +
+                        '<ul class="profile-corr-cluster__legs">' + legs + '</ul>' +
+                    '</div>';
+                }).join('');
+            }
+        }
+        panel.hidden = false;
+        const info = document.getElementById('railCorrInfo');
+        if (info && !info.__tmrBound) {
+            info.__tmrBound = true;
+            const open = function () { panel.hidden = false; panel.open = true; panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
+            info.addEventListener('click', open);
+            info.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
         }
     }
 
@@ -13007,6 +13072,29 @@
         border-right: 0 !important;
         border-bottom: 0 !important;
       }
+      /* Expandable Correlated Picks detail panel (PICK_CORRELATION_20260614). */
+      .profile-corr-panel{margin:10px 0 0;border:1px solid rgba(117,140,173,.22);border-radius:12px;background:rgba(8,17,31,.55);color:#cbd5e1;font-size:13px;overflow:hidden;}
+      .profile-corr-panel>summary{cursor:pointer;list-style:none;padding:11px 14px;font:700 12.5px/1.3 'Inter',sans-serif;letter-spacing:.02em;color:#9fd0ff;background:rgba(0,255,255,.05);}
+      .profile-corr-panel>summary::-webkit-details-marker{display:none;}
+      .profile-corr-panel>summary::before{content:'\25B8';margin-right:8px;color:#5fb0e6;}
+      .profile-corr-panel[open]>summary::before{content:'\25BE';}
+      .profile-corr-panel__body{padding:6px 16px 16px;}
+      .profile-corr-stats{margin:8px 0 4px;padding-left:18px;}
+      .profile-corr-stats li{margin:3px 0;color:#e2eaf4;}
+      .profile-corr-h4{margin:14px 0 6px;font:800 11.5px/1 'Barlow','Inter',sans-serif;letter-spacing:.08em;text-transform:uppercase;color:#7f9bbd;}
+      .profile-corr-cluster{margin:0 0 10px;padding:10px 12px;border:1px solid rgba(117,140,173,.16);border-radius:9px;background:rgba(15,21,32,.5);}
+      .profile-corr-cluster__head{font-size:13px;color:#f4f7fb;}
+      .profile-corr-cluster__meta{color:#8aa0bd;font-size:12px;font-weight:600;}
+      .profile-corr-cluster__legs{margin:7px 0 0;padding-left:16px;}
+      .profile-corr-cluster__legs li{margin:3px 0;font-size:12.5px;color:#cbd5e1;}
+      .profile-corr-ticket{color:#67e8f9;font-weight:700;font-family:'Inter',monospace;}
+      .profile-corr-status{margin-left:6px;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;opacity:.85;}
+      .profile-corr-status--won{color:#4ade80;}
+      .profile-corr-status--lost{color:#f87171;}
+      .profile-corr-status--pending{color:#fbbf24;}
+      .profile-corr-status--push,.profile-corr-status--pushed{color:#94a3b8;}
+      .profile-corr-explain{margin:6px 0 0;line-height:1.6;color:#aebdd2;font-size:12.5px;}
+      .profile-corr-empty{color:#8aa0bd;font-style:italic;}
       body.profile-page.tmr-social-profile .profile-rail-value.rail-corr-value {
         font-size: clamp(19px, 1.55vw, 26px) !important;
         display: flex !important;
