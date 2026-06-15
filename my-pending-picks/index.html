@@ -663,16 +663,16 @@
                     showLoginRequired();
                     return;
                 }
-                // Transient (cold-start 5xx / network). Keep retrying through the
-                // whole backoff window with an honest loading state, never an error.
-                if (attempt < RETRY_DELAYS_MS.length) {
-                    showWaking();
-                    var delay = RETRY_DELAYS_MS[attempt];
-                    attempt += 1;
-                    retryTimer = setTimeout(function () { boot(); }, delay);
-                    return;
-                }
-                showLoadError();
+                // Transient (cold-start 5xx / network). Retry FOREVER with an
+                // honest loading state. We never surface an error-looking screen
+                // for a logged-in user: backoff ramps up then holds at the max
+                // interval indefinitely until the server wakes and succeeds.
+                showWaking();
+                var idx = attempt < RETRY_DELAYS_MS.length ? attempt : RETRY_DELAYS_MS.length - 1;
+                var delay = RETRY_DELAYS_MS[idx];
+                attempt += 1;
+                retryTimer = setTimeout(function () { boot(); }, delay);
+                return;
             }
         }
 
