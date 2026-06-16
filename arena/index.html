@@ -886,31 +886,16 @@
         }
 
         /* CLEAN ARENA HUB */
+        /* ===== ARENA REDESIGN — calm / premium (ARENA_REDESIGN_20260615) ===== */
         .arena-clean-hero {
-            padding: clamp(28px, 4vw, 48px) 24px 26px;
-            border-bottom: 1px solid rgba(45, 212, 191, 0.18);
-            background:
-                radial-gradient(circle at 82% 10%, rgba(34, 211, 238, 0.16), transparent 28rem),
-                linear-gradient(135deg, rgba(45, 212, 191, 0.14), rgba(14, 165, 233, 0.09) 42%, rgba(2, 6, 23, 0)),
-                linear-gradient(180deg, #020611 0%, #06101d 100%);
+            padding: clamp(34px, 4vw, 58px) 24px clamp(28px, 3vw, 40px);
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, #0c0c17 0%, var(--bg-dark) 100%);
             position: relative;
-            overflow: hidden;
-        }
-
-        .arena-clean-hero::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            background:
-                linear-gradient(rgba(148, 163, 184, 0.035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(148, 163, 184, 0.025) 1px, transparent 1px);
-            background-size: 44px 44px;
-            mask-image: linear-gradient(180deg, rgba(0,0,0,0.72), transparent 78%);
         }
 
         .arena-clean-inner {
-            width: min(1180px, 100%);
+            width: min(1120px, 100%);
             margin: 0 auto;
             position: relative;
             z-index: 1;
@@ -919,65 +904,43 @@
         .arena-clean-kicker {
             display: inline-flex;
             align-items: center;
-            padding: 8px 12px;
-            border: 1px solid rgba(45, 212, 191, 0.28);
+            gap: 7px;
+            padding: 5px 12px;
+            border: 1px solid var(--border-glow);
             border-radius: 999px;
-            background: rgba(45, 212, 191, 0.1);
-            color: #a7fff4;
-            font-size: 0.74rem;
-            font-weight: 900;
-            letter-spacing: 0.14em;
+            background: rgba(255,255,255,0.03);
+            color: var(--text-dim);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
         }
 
+        .arena-clean-kicker i { color: var(--primary); font-size: 0.7rem; }
+
         .arena-clean-hero h1 {
-            max-width: 760px;
-            margin: 12px 0 0;
+            max-width: 720px;
+            margin: 16px 0 0;
             font-family: var(--font-display);
-            font-size: clamp(2.2rem, 5vw, 4rem);
-            line-height: 0.95;
+            font-size: clamp(1.7rem, 3.4vw, 2.6rem);
+            line-height: 1.05;
             letter-spacing: 0;
-            color: #f4fbff;
+            color: var(--text);
         }
 
         .arena-clean-hero p {
-            max-width: 760px;
-            margin: 10px 0 0;
-            color: #b8c8d9;
-            font-size: clamp(0.95rem, 1.4vw, 1.08rem);
-            line-height: 1.55;
+            max-width: 640px;
+            margin: 12px 0 0;
+            color: var(--text-dim);
+            font-size: clamp(0.92rem, 1.2vw, 1rem);
+            line-height: 1.6;
         }
 
         .arena-clean-actions {
             display: flex;
             flex-wrap: wrap;
-            gap: 12px;
-            margin-top: 16px;
-        }
-
-        .arena-clean-proof {
-            display: flex;
-            flex-wrap: wrap;
             gap: 10px;
-            margin-top: 14px;
-        }
-
-        .arena-clean-proof span {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            min-height: 36px;
-            padding: 8px 12px;
-            border-radius: 999px;
-            border: 1px solid rgba(148, 163, 184, 0.16);
-            background: rgba(2, 8, 18, 0.46);
-            color: #b8c8d9;
-            font-size: 0.8rem;
-            font-weight: 800;
-        }
-
-        .arena-clean-proof i {
-            color: #67e8f9;
+            margin-top: 22px;
         }
 
         .arena-clean-actions .btn,
@@ -986,152 +949,149 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            min-height: 46px;
-            padding: 12px 18px;
+            min-height: 42px;
+            padding: 11px 18px;
         }
+
+        .arena-clean-proof {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .arena-clean-proof span {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .arena-clean-proof i { color: var(--primary); opacity: 0.85; }
 
         .arena-clean-main {
-            max-width: 1180px;
-            padding-top: 18px;
+            max-width: 1120px;
+            padding-top: 6px;
         }
 
-        .arena-clean-cards {
+        /* Primary actions — three compact cards */
+        .arena-actions-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 14px;
-            margin-bottom: 24px;
+            margin: 26px 0 6px;
         }
 
-        .arena-hub-card {
-            min-height: 210px;
-            padding: 20px;
-            border: 1px solid rgba(45, 212, 191, 0.16);
-            border-radius: 18px;
-            background:
-                radial-gradient(circle at 20% 0%, rgba(45, 212, 191, 0.10), transparent 16rem),
-                linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.018)),
-                rgba(6, 16, 31, 0.96);
-            color: #eef7ff;
+        .arena-action-card {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--bg-card);
+            color: var(--text);
             cursor: pointer;
             text-align: left;
             font-family: var(--font-body);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            box-shadow: 0 20px 56px rgba(0,0,0,0.28);
-            transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease;
+            transition: border-color .2s ease, background .2s ease;
         }
 
-        .arena-hub-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(45, 212, 191, 0.38);
-            color: #fff;
-            box-shadow: 0 26px 70px rgba(0,0,0,0.34), 0 0 28px rgba(45, 212, 191, 0.1);
-        }
+        .arena-action-card:hover { border-color: var(--border-glow); background: var(--bg-card-hover); }
 
-        .arena-hub-icon {
-            width: 46px;
-            height: 46px;
+        .arena-action-icon {
+            flex: none;
+            width: 38px;
+            height: 38px;
             display: grid;
             place-items: center;
-            border-radius: 14px;
-            background: linear-gradient(135deg, #2dd4bf, #67e8f9);
-            color: #03111a;
-            font-size: 1.16rem;
-            box-shadow: 0 14px 34px rgba(45, 212, 191, 0.16);
+            border-radius: 10px;
+            background: var(--primary-dim);
+            color: var(--primary);
+            font-size: 1rem;
         }
 
-        .arena-hub-card h2 {
-            margin: 4px 0 0;
-            font-family: var(--font-display);
-            font-size: 1.32rem;
-            line-height: 1.05;
-        }
+        .arena-action-card h2 { margin: 0; font-family: var(--font-display); font-size: 1.02rem; font-weight: 700; }
+        .arena-action-card p { margin: 5px 0 0; color: var(--text-dim); font-size: 0.84rem; line-height: 1.45; }
 
-        .arena-hub-card p {
-            margin: 0;
-            color: #aabacc;
-            font-size: 0.93rem;
-            line-height: 1.5;
-        }
-
-        .arena-hub-cta {
-            margin-top: auto;
-            color: #67e8f9;
-            font-size: 0.85rem;
-            font-weight: 900;
-        }
-
+        /* Sections */
         .arena-clean-section {
-            margin-top: 24px;
-            padding: 22px;
-            border: 1px solid rgba(45, 212, 191, 0.14);
-            border-radius: 20px;
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.012)),
-                rgba(6, 16, 31, 0.9);
-            box-shadow: 0 20px 56px rgba(0,0,0,0.22);
+            margin-top: 22px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--bg-surface);
         }
 
-        .arena-clean-section .section-header {
-            margin-bottom: 16px;
-        }
-
-        .arena-clean-section .section-header h2 {
-            font-size: 1.28rem;
-        }
-
+        .arena-clean-section .section-header { margin-bottom: 16px; }
+        .arena-clean-section .section-header h2 { font-size: 1.05rem; }
         .arena-clean-section .section-header h3 {
-            margin-top: 5px;
-            font-size: 0.82rem;
+            margin-top: 3px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-muted);
             text-transform: none;
             letter-spacing: 0;
         }
 
-        .arena-list-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .arena-list-grid .challenge-card {
-            min-height: 0;
-        }
+        .arena-list-grid { grid-template-columns: 1fr; }
+        .arena-list-grid .challenge-card { min-height: 0; }
 
         .arena-list-grid .challenge-card,
         #myChallengesList .challenge-card {
-            border-radius: 18px;
-            border-color: rgba(45, 212, 191, 0.14);
-            background:
-                linear-gradient(180deg, rgba(45, 212, 191, 0.055), rgba(255,255,255,0.016)),
-                rgba(5, 13, 26, 0.96);
+            border-radius: 12px;
+            border-color: var(--border);
+            background: var(--bg-card);
         }
 
         .arena-list-grid .challenge-card.pending,
-        #myChallengesList .challenge-card.pending {
-            border-left: 4px solid #67e8f9;
-        }
+        #myChallengesList .challenge-card.pending { border-left: 3px solid var(--primary); }
 
         .arena-list-grid .challenge-card.accepted,
         .arena-list-grid .challenge-card.in_progress,
         #myChallengesList .challenge-card.accepted,
-        #myChallengesList .challenge-card.in_progress {
-            border-left: 4px solid #2dd4bf;
-        }
+        #myChallengesList .challenge-card.in_progress { border-left: 3px solid var(--accent-green); }
 
-        .cc-status {
-            border-radius: 999px;
-            letter-spacing: 0.08em;
-        }
-
-        .cc-actions .btn {
-            display: inline-flex;
+        /* Rankings banner */
+        .arena-rankings-banner {
+            display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 6px;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .arena-rankings-banner .arb-text h2 { font-family: var(--font-display); font-size: 1.05rem; margin: 0; }
+        .arena-rankings-banner .arb-text p { margin: 4px 0 0; color: var(--text-dim); font-size: 0.85rem; }
+
+        /* Secondary features — compact links */
+        .arena-more-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 10px;
         }
 
-        .panel {
-            margin-top: 24px;
+        .arena-more-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 11px;
+            background: var(--bg-card);
+            color: var(--text);
+            transition: border-color .2s ease, background .2s ease;
         }
+        .arena-more-link:hover { border-color: var(--border-glow); background: var(--bg-card-hover); color: var(--text); }
+        .arena-more-link > i { width: 18px; text-align: center; color: var(--text-dim); font-size: 0.95rem; }
+        .arena-more-link .aml-title { font-size: 0.9rem; font-weight: 600; }
+        .arena-more-link .aml-sub { display: block; font-size: 0.74rem; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
+
+        .cc-status { border-radius: 999px; letter-spacing: 0.06em; }
+        .cc-actions .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+
+        .panel { margin-top: 22px; }
 
         #panel-gaming-room,
         #panel-my-challenges,
@@ -1139,91 +1099,53 @@
         #panel-mlb-the-show,
         #panel-my-stats {
             padding: 20px;
-            border: 1px solid rgba(45, 212, 191, 0.14);
-            border-radius: 20px;
-            background: rgba(6, 16, 31, 0.9);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--bg-surface);
         }
 
         .empty-state {
-            padding: 42px 22px;
-            border: 1px solid rgba(45, 212, 191, 0.16);
-            border-radius: 18px;
-            background:
-                radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.10), transparent 17rem),
-                linear-gradient(180deg, rgba(13, 27, 45, 0.72), rgba(5, 12, 24, 0.82));
+            padding: 40px 22px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--bg-card);
         }
 
         .empty-state i {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 54px;
-            height: 54px;
-            border-radius: 18px;
-            font-size: 1.35rem;
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            font-size: 1.2rem;
             margin-bottom: 12px;
-            color: #67e8f9;
-            background: rgba(34, 211, 238, 0.10);
-            border: 1px solid rgba(34, 211, 238, 0.22);
+            color: var(--text-dim);
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
         }
 
-        .empty-state h3 {
-            color: #dbeafe;
-            font-size: 1rem;
-        }
-
-        .empty-state p {
-            color: #9fb0c5;
-            margin: 6px 0 0;
-        }
-
-        .empty-state .arena-empty-action {
-            margin-top: 16px;
-        }
+        .empty-state h3 { color: var(--text); font-size: 0.98rem; }
+        .empty-state p { color: var(--text-dim); margin: 6px 0 0; }
+        .empty-state .arena-empty-action { margin-top: 16px; }
 
         .loading {
-            min-height: 180px;
-            border: 1px solid rgba(45, 212, 191, 0.12);
-            border-radius: 18px;
-            background: rgba(5, 12, 24, 0.62);
+            min-height: 160px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: var(--bg-card);
         }
 
-        @media (max-width: 980px) {
-            .arena-clean-cards {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-            }
+        @media (max-width: 860px) {
+            .arena-actions-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 640px) {
-            .arena-clean-hero {
-                padding: 38px 16px 30px;
-            }
-
-            .arena-clean-cards {
-                grid-template-columns: 1fr;
-            }
-
-            .arena-hub-card {
-                min-height: 210px;
-            }
-
-            .arena-clean-actions .btn,
-            .arena-clean-section .section-header .btn {
-                width: 100%;
-            }
-
-            .arena-clean-proof span {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .arena-clean-section .section-header {
-                display: block;
-            }
-
-            .arena-clean-section .section-header .btn {
-                margin-top: 14px;
-            }
+            .arena-clean-hero { padding: 32px 16px 26px; }
+            .arena-clean-actions .btn { width: 100%; }
+            .arena-clean-section .section-header { display: block; }
+            .arena-clean-section .section-header .btn { margin-top: 12px; }
+            .arena-rankings-banner .btn { width: 100%; }
         }
     </style>
 </head>
@@ -1234,88 +1156,46 @@
 <!-- HERO -->
 <section class="arena-clean-hero">
     <div class="arena-clean-inner">
-        <span class="arena-clean-kicker">Competitive beta</span>
-        <h1>TrustMyRecord Arena</h1>
-        <p>Challenge other cappers, compete in prediction battles, and prove yourself beyond the standard leaderboard.</p>
+        <span class="arena-clean-kicker"><i class="fas fa-shield-halved"></i> Competitive Beta</span>
+        <h1>The Arena</h1>
+        <p>Challenge other members head to head, log the result, and build a record both sides confirm. Same verification standard as the rest of TrustMyRecord, applied to direct matchups.</p>
         <div class="arena-clean-actions">
             <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Create Challenge</button>
-            <button class="btn btn-outline" onclick="scrollToChallenges(event)"><i class="fas fa-list"></i> View Open Challenges</button>
+            <button class="btn btn-outline" onclick="scrollToChallenges(event)"><i class="fas fa-list"></i> Browse Open Challenges</button>
         </div>
         <div class="arena-clean-proof" aria-label="Arena standards">
-            <span><i class="fas fa-shield-halved"></i> Verified outcomes only</span>
-            <span><i class="fas fa-user-group"></i> Rivalry-ready matchups</span>
-            <span><i class="fas fa-chart-line"></i> Records tied to activity</span>
+            <span><i class="fas fa-circle-check"></i> Verified outcomes only</span>
+            <span><i class="fas fa-user-group"></i> Both players confirm results</span>
+            <span><i class="fas fa-chart-line"></i> Records tied to real activity</span>
         </div>
     </div>
 </section>
 
 <!-- MAIN CONTENT -->
 <main class="main arena-clean-main">
-    <section class="arena-clean-cards" aria-label="Arena competition types">
-        <button class="arena-hub-card" onclick="openCreateChallenge()">
-            <span class="arena-hub-icon"><i class="fas fa-user-shield"></i></span>
-            <h2>Capper Challenges</h2>
-            <p>Go head to head against another handicapper using locked picks and verified results.</p>
-            <span class="arena-hub-cta">Start a Challenge</span>
+    <!-- PRIMARY ACTIONS -->
+    <section class="arena-actions-grid" aria-label="Arena primary actions">
+        <button class="arena-action-card" onclick="openCreateChallenge()">
+            <span class="arena-action-icon"><i class="fas fa-plus"></i></span>
+            <span>
+                <h2>Create a Challenge</h2>
+                <p>Pick the game, format, and stakes, then send it to a member or post it open.</p>
+            </span>
         </button>
-        <a class="arena-hub-card" href="/polls/">
-            <span class="arena-hub-icon"><i class="fas fa-square-poll-vertical"></i></span>
-            <h2>Poll Battles</h2>
-            <p>Let the community vote on matchups, hot takes, and betting debates.</p>
-            <span class="arena-hub-cta">View Poll Battles</span>
-        </a>
-        <a class="arena-hub-card" href="/trivia/">
-            <span class="arena-hub-icon"><i class="fas fa-brain"></i></span>
-            <h2>Trivia Battles</h2>
-            <p>Compete on sports knowledge, betting history, and strategy questions.</p>
-            <span class="arena-hub-cta">Play Trivia</span>
-        </a>
-        <button class="arena-hub-card" onclick="switchTab('gaming-room')">
-            <span class="arena-hub-icon"><i class="fas fa-gamepad"></i></span>
-            <h2>Gaming Room</h2>
-            <p>Track competitive gaming matchups like MLB The Show and other sports games.</p>
-            <span class="arena-hub-cta">Enter Gaming Room</span>
+        <button class="arena-action-card" onclick="scrollToChallenges(event)">
+            <span class="arena-action-icon"><i class="fas fa-handshake"></i></span>
+            <span>
+                <h2>Join a Challenge</h2>
+                <p>Accept an open matchup from the board and start a head to head record.</p>
+            </span>
         </button>
-    </section>
-
-    <!-- ARENA_PHASE1_HUB_LINKS_20260605 + ARENA_LIVE_MATCHES_HUB_CARD_20260609 -->
-    <section class="arena-clean-cards" aria-label="Arena: live matches, leagues, predictions, streaming" style="margin-top:4px;">
-        <a class="arena-hub-card" href="/arena/live/">
-            <span class="arena-hub-icon"><i class="fas fa-circle" style="color:#e53e3e"></i></span>
-            <h2>Live Matches</h2>
-            <p>Watch sports-gaming matches live right now, with verified records and free Arena Picks on the result.</p>
-            <span class="arena-hub-cta">Watch Live</span>
-        </a>
-        <a class="arena-hub-card" href="/arena/rankings/"><!-- ARENA_RANKINGS_HUB_CARD_20260609 -->
-            <span class="arena-hub-icon"><i class="fas fa-ranking-star"></i></span>
-            <h2>Rankings &amp; Records</h2>
-            <p>See who is leading MLB The Show and sports-gaming by verified wins, win percentage, and streak.</p>
-            <span class="arena-hub-cta">View Rankings</span>
-        </a>
-        <a class="arena-hub-card" href="/arena/mlb-the-show/">
-            <span class="arena-hub-icon"><i class="fas fa-baseball-ball"></i></span>
-            <h2>MLB The Show Hub</h2>
-            <p>Leagues, challenges, top players, and verified records for MLB The Show.</p>
-            <span class="arena-hub-cta">Enter the Hub</span>
-        </a>
-        <a class="arena-hub-card" href="/arena/leagues/">
-            <span class="arena-hub-icon"><i class="fas fa-trophy"></i></span>
-            <h2>Arena Leagues</h2>
-            <p>Season-long console leagues with standings built from confirmed results only.</p>
-            <span class="arena-hub-cta">Browse Leagues</span>
-        </a>
-        <a class="arena-hub-card" href="/arena/predictions/">
-            <span class="arena-hub-icon"><i class="fas fa-bullseye"></i></span>
-            <h2>Free Predictions</h2>
-            <p>Make free Arena Picks on other players' matches with Arena Points. No cash value, pure bragging rights.</p>
-            <span class="arena-hub-cta">My Arena Picks</span>
-        </a>
-        <a class="arena-hub-card" href="/arena/streaming/">
-            <span class="arena-hub-icon"><i class="fas fa-video"></i></span>
-            <h2>Live Streaming</h2>
-            <p>Stream your matches directly to TrustMyRecord with OBS or a capture card. Approved streamers get a private stream key.</p>
-            <span class="arena-hub-cta">Start Streaming</span>
-        </a>
+        <button class="arena-action-card" onclick="switchTab('gaming-room')">
+            <span class="arena-action-icon"><i class="fas fa-gamepad"></i></span>
+            <span>
+                <h2>Gaming Room</h2>
+                <p>Log MLB The Show, 2K, Madden and more, then track results and standings.</p>
+            </span>
+        </button>
     </section>
 
     <section class="arena-clean-section open-challenges-market" id="openChallengesSection">
@@ -1340,6 +1220,36 @@
         </div>
         <div id="matchesFeed" class="match-feed">
             <div class="loading"><div class="spinner"></div></div>
+        </div>
+    </section>
+
+    <!-- RANKINGS -->
+    <section class="arena-clean-section">
+        <div class="section-header arena-rankings-banner">
+            <div class="arb-text">
+                <h2>Rankings &amp; Records</h2>
+                <p>See who leads by verified wins, win percentage, and current streak.</p>
+            </div>
+            <a class="btn btn-outline" href="/arena/rankings/"><i class="fas fa-ranking-star"></i> View Rankings</a>
+        </div>
+    </section>
+
+    <!-- MORE / SECONDARY FEATURES -->
+    <section class="arena-clean-section">
+        <div class="section-header">
+            <div>
+                <h2>More in the Arena</h2>
+                <h3>Secondary features and community games</h3>
+            </div>
+        </div>
+        <div class="arena-more-grid">
+            <a class="arena-more-link" href="/arena/live/"><i class="fas fa-tower-broadcast"></i><span><span class="aml-title">Live Matches</span><span class="aml-sub">Watch matches in progress</span></span></a>
+            <a class="arena-more-link" href="/arena/mlb-the-show/"><i class="fas fa-baseball-ball"></i><span><span class="aml-title">MLB The Show Hub</span><span class="aml-sub">Leagues, records, top players</span></span></a>
+            <a class="arena-more-link" href="/arena/leagues/"><i class="fas fa-trophy"></i><span><span class="aml-title">Arena Leagues</span><span class="aml-sub">Season-long standings</span></span></a>
+            <a class="arena-more-link" href="/arena/predictions/"><i class="fas fa-bullseye"></i><span><span class="aml-title">Free Predictions</span><span class="aml-sub">Arena Picks, no cash value</span></span></a>
+            <a class="arena-more-link" href="/polls/"><i class="fas fa-square-poll-vertical"></i><span><span class="aml-title">Poll Battles</span><span class="aml-sub">Community votes on matchups</span></span></a>
+            <a class="arena-more-link" href="/trivia/"><i class="fas fa-brain"></i><span><span class="aml-title">Trivia Battles</span><span class="aml-sub">Sports knowledge contests</span></span></a>
+            <a class="arena-more-link" href="/arena/streaming/"><i class="fas fa-video"></i><span><span class="aml-title">Live Streaming</span><span class="aml-sub">Stream your matches</span></span></a>
         </div>
     </section>
 
@@ -1868,6 +1778,21 @@ function renderOpenChallengesErrorState() {
     container.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><h3>Open challenges could not be loaded.</h3><p>The Arena feed may be warming up. Try again in a moment.</p><button class="btn btn-outline arena-empty-action" onclick="loadChallenges()"><i class="fas fa-rotate-right"></i> Retry</button></div>';
 }
 
+// ARENA_REDESIGN_20260615: hide synthetic test/QA accounts (e.g. streamtest_1781028310)
+const ARENA_TEST_USER_RE = /^[a-z]*test_\d{6,}$/i;
+function arenaIsTestName(n){ return !!n && ARENA_TEST_USER_RE.test(String(n).trim()); }
+function arenaFilterTestChallenges(list){
+    return (list||[]).filter(c => !arenaIsTestName(c.challenger_username) && !arenaIsTestName(c.challenged_username)
+        && !arenaIsTestName(c.challenger_display) && !arenaIsTestName(c.challenged_display));
+}
+function arenaFilterTestMatches(list){
+    return (list||[]).filter(m => !arenaIsTestName(m.player1_username) && !arenaIsTestName(m.player2_username)
+        && !arenaIsTestName(m.player1_display) && !arenaIsTestName(m.player2_display));
+}
+function arenaFilterTestLeaderboard(list){
+    return (list||[]).filter(e => !arenaIsTestName(e.username) && !arenaIsTestName(e.display_name));
+}
+
 async function loadChallenges() {
     const container = document.getElementById('challengesList');
     if (container) {
@@ -1877,7 +1802,7 @@ async function loadChallenges() {
     try {
         const data = await requestOpenChallenges();
         if (!data || !data.challenges) data = { challenges: [] };
-        allChallenges = data.challenges;
+        allChallenges = arenaFilterTestChallenges(data.challenges);
         renderChallenges(allChallenges);
         const openCount = allChallenges.filter(c => c.status === 'pending' && !c.challenged_id).length;
         const activeCount = allChallenges.filter(c => ['pending','accepted','in_progress'].includes(c.status)).length;
@@ -2066,6 +1991,7 @@ async function loadRecentMatches(game) {
             data = await api.request(url);
         }
         if (!data || !data.matches) data = { matches: [] };
+        data.matches = arenaFilterTestMatches(data.matches);
         renderMatchFeed(container, data.matches);
         const gamingRoomContainer = document.getElementById('gamingRoomMatches');
         if (gamingRoomContainer && currentTab === 'gaming-room') renderMatchFeed(gamingRoomContainer, data.matches);
@@ -2165,6 +2091,7 @@ async function loadLeaderboard(game) {
             data = await api.request(url);
         }
         if (!data || !data.leaderboard) data = { leaderboard: [] };
+        data.leaderboard = arenaFilterTestLeaderboard(data.leaderboard);
         renderLeaderboard(container, data.leaderboard);
         const activeGamers = document.getElementById('statActiveGamers');
         if (activeGamers) activeGamers.textContent = data.leaderboard.length;
@@ -2230,7 +2157,7 @@ async function loadMLBHub() {
         }
         if (!data || !data.leaderboard) data = { leaderboard: [] };
 
-        const lb = data.leaderboard;
+        const lb = arenaFilterTestLeaderboard(data.leaderboard);
         renderLeaderboard(document.getElementById('mlbLeaderboard'), lb);
 
         // Stats
@@ -2253,6 +2180,7 @@ async function loadMLBHub() {
             matchData = await api.request('/gaming/matches?game=mlb-the-show-26&limit=15');
         }
         if (!matchData || !matchData.matches) matchData = { matches: [] };
+        matchData.matches = arenaFilterTestMatches(matchData.matches);
         renderMatchFeed(document.getElementById('mlbRecentMatches'), matchData.matches);
 
     } catch (e) {
@@ -2758,7 +2686,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
                             <a href="/about/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">About</a>
                             <a href="/terms/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Terms of Service</a>
                             <a href="/privacy/" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Privacy Policy</a>
-                            <a href="mailto:support@trustmyrecord.com" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
+                            <a href="/cdn-cgi/l/email-protection#e2919792928d9096a296909791968f9b9087818d9086cc818d8f" style="color: #b0b0c0; text-decoration: none; font-size: 0.9rem; transition: color 0.3s;">Contact</a>
                         </div>
                     </div>
                 </div>
@@ -2782,7 +2710,7 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 
 
 
-        <script src="/static/js/analytics.js?v=20260417"></script>
+        <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="/static/js/analytics.js?v=20260417"></script>
 </body>
 </html>
 
