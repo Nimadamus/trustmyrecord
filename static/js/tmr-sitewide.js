@@ -15,10 +15,8 @@
     ];
     const communityRoutes = [
         ["/feed/", "Feed"],
-        ["/online-gaming/", "Online Gaming"],
-        ["/mlb-the-show-stat-league/", "Stat League"],
         ["/arena/", "Arena"],
-        ["/arena/mlb-the-show/", "MLB The Show"],
+        ["/online-gaming/", "MLB The Show"],
         ["/challenges/", "Challenges"],
         ["/forum/", "Forums"],
         ["/polls/", "Polls"],
