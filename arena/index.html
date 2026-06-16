@@ -1778,7 +1778,7 @@ function renderOpenChallengesErrorState() {
     container.innerHTML = '<div class="empty-state"><i class="fas fa-triangle-exclamation"></i><h3>Open challenges could not be loaded.</h3><p>The Arena feed may be warming up. Try again in a moment.</p><button class="btn btn-outline arena-empty-action" onclick="loadChallenges()"><i class="fas fa-rotate-right"></i> Retry</button></div>';
 }
 
-// ARENA_REDESIGN_20260615: hide synthetic test/QA accounts (e.g. streamtest_1781028310)
+// ARENA_REDESIGN_20260615: hide synthetic test/QA accounts (pattern word+test_digits)
 const ARENA_TEST_USER_RE = /^[a-z]*test_\d{6,}$/i;
 function arenaIsTestName(n){ return !!n && ARENA_TEST_USER_RE.test(String(n).trim()); }
 function arenaFilterTestChallenges(list){
