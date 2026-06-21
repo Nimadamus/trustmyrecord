@@ -1114,6 +1114,16 @@
                 <a href="/contact/">Contact Us</a>
                 <a href="/report-bug/">Report a Bug</a>
             </div>
+            <nav class="tmr-global-footer__corenav" aria-label="Core site links" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px 22px;padding:18px 16px 4px;margin-top:10px;border-top:1px solid rgba(255,255,255,0.08);">
+                <a href="/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Home</a>
+                <a href="/sportsbook/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Sportsbook</a>
+                <a href="/leaderboards/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Leaderboard</a>
+                <a href="/contests/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Contest</a>
+                <a href="/public-picks/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Public Picks</a>
+                <a href="/forum/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Forum</a>
+                <a href="/rules/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Rules</a>
+                <a href="/contact/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Contact</a>
+            </nav>
             <div class="tmr-global-footer__bottom">
                 <p>&copy; 2026 TrustMyRecord.com. Transparent sports records, community competition, and locked receipts.</p>
                 <p>TrustMyRecord is not a gambling platform. No real money is wagered on this site.</p>
