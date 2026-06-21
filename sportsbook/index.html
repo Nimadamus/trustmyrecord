@@ -11371,7 +11371,7 @@ window.toggleSportFamily = function (family) {
         'NFL':   [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
         'NCAAF': [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
         'NHL':   [{k:'full',label:'Game Lines'},{k:'p1',label:'1st Period'},{k:'p2',label:'2nd Period'},{k:'p3',label:'3rd Period'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
-        'MLB':   [{k:'full',label:'Game Lines'},{k:'f5',label:'5 Inning Lines'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
+        'MLB':   [{k:'full',label:'Game Lines'},{k:'f5',label:'5 Inning Lines'},{k:'fi',label:'NRFI / YRFI'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
         // TT_TAB_20260607: soccer Team Totals live behind their own tab (per-team
         // goal O/U from the guarded fetchSoccerTeamTotals enricher) — never as
         // chips/columns on the Main Lines board.
@@ -11762,6 +11762,7 @@ window.toggleSportFamily = function (family) {
         q4: '4th Quarter',
         tt: 'Team Totals',
         f5: '5 Inning Lines',
+        fi: '1st Inning',
         p1: '1st Period',
         p2: '2nd Period',
         p3: '3rd Period'
@@ -12932,7 +12933,7 @@ window.toggleSportFamily = function (family) {
     var PERIOD_GROUP_KEYS = {
         '1h': ['first_half'], '2h': ['second_half'], 'p1': ['period_1'],
         'q1': ['period_1'], 'q2': ['period_2'], 'q3': ['period_3'], 'q4': ['period_4'],
-        'f5': ['first_5']
+        'f5': ['first_5'], 'fi': ['first_inning']
     };
     function fetchBackendBoard(sportKey, limit, timeoutMs) {
         var controller = typeof AbortController === 'function' ? new AbortController() : null;
@@ -12955,6 +12956,7 @@ window.toggleSportFamily = function (family) {
         var isOver = /\bover\b/i.test(label);
         var isUnder = /\bunder\b/i.test(label);
         if (marketType === 'f5_team_totals') return isUnder ? 'f5teamunder' : 'f5teamover';
+        if (marketType.indexOf('first_inning') === 0) return isUnder ? 'firstinningunder' : 'firstinningover';
         if (marketType.indexOf('first_half') === 0) return isOver ? 'firsthalfover' : (isUnder ? 'firsthalfunder' : (marketType.indexOf('spread') !== -1 ? 'firsthalfspread' : 'firsthalfml'));
         if (marketType.indexOf('second_half') === 0) return isOver ? 'secondhalfover' : (isUnder ? 'secondhalfunder' : (marketType.indexOf('spread') !== -1 ? 'secondhalfspread' : 'secondhalfml'));
         if (marketType.indexOf('period_1') === 0) return isOver ? 'period1over' : (isUnder ? 'period1under' : (marketType.indexOf('spread') !== -1 ? 'period1spread' : 'period1ml'));
