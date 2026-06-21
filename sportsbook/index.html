@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<<<<<<< Updated upstream
     <!-- tmr-build-autoreload 20260609: GitHub Pages serves this HTML with
          Cache-Control: max-age=600, so a user can sit on a stale cached copy of
          the sportsbook (old submit/props code) for up to 10 minutes and think a
@@ -26,8 +25,6 @@
       }catch(e){}
     })();
     </script>
-=======
->>>>>>> Stashed changes
     <!-- CRITICAL: Early script to define core functions BEFORE anything else loads -->
     <script>
     // This runs FIRST, before any other scripts
@@ -70,7 +67,6 @@
         'soccer_italy_serie_a': 'soccer/ita.1',
         'soccer_germany_bundesliga': 'soccer/ger.1',
         'soccer_france_ligue_one': 'soccer/fra.1',
-<<<<<<< Updated upstream
         'soccer_uefa_europa_league': 'soccer/uefa.europa',
         'soccer_uefa_conference_league': 'soccer/uefa.europa.conf',
         'soccer_mexico_ligamx': 'soccer/mex.1',
@@ -100,10 +96,6 @@
         'soccer_wcq_caf': 'soccer/fifa.worldq.caf',
         'soccer_wcq_ofc': 'soccer/fifa.worldq.ofc',
         'soccer_fifa_olympics': 'soccer/fifa.olympics',
-=======
-        'soccer_brazil_serie_a': 'soccer/bra.1',
-        'soccer_nwsl': 'soccer/usa.nwsl',
->>>>>>> Stashed changes
         'soccer_intl_friendly': 'soccer/fifa.friendly',
         'americanfootball_ncaaf': 'football/college-football',
         'basketball_ncaab': 'basketball/mens-college-basketball',
@@ -460,16 +452,12 @@
                         home_abbr: ho.abbreviation || ho.shortDisplayName || '',
                         away_abbr: ao.abbreviation || ao.shortDisplayName || '',
                         commence_time: evt.date || comp.date,
-<<<<<<< Updated upstream
                         bookmakers: bookmakers,
                         // SOCCER_TT_20260606: needed to resolve the team-total
                         // propBets feed (league slug + ESPN team ids).
                         espn_league_path: espnPath,
                         home_espn_id: ho.id != null ? String(ho.id) : '',
                         away_espn_id: ao.id != null ? String(ao.id) : ''
-=======
-                        bookmakers: bookmakers
->>>>>>> Stashed changes
                     });
                 }
                 callback(games);
@@ -477,7 +465,6 @@
             .catch(function () { callback([]); });
     };
 
-<<<<<<< Updated upstream
     // SOCCER_TT_20260606 (Nima): per-team Team Total Goals for the grouped
     // soccer board. Source = ESPN core odds propBets (DraftKings, casinos/100):
     //   sports.core.api.espn.com/v2/sports/soccer/leagues/<lg>/events/<id>/
@@ -612,8 +599,6 @@
         for (var c = 0; c < 4 && c < todo.length; c++) next();
     };
 
-=======
->>>>>>> Stashed changes
     // Fetch odds from ESPN summary endpoint for individual games
     window.TMR.fetchOddsFromSummary = function(games, espnPath, callback) {
         var completed = 0;
@@ -876,10 +861,7 @@
         // on every row — no need for separate ML/RL/Total filter tabs on MLB.
         'MLB':    [ {key:'game', label:'Game Lines', hint:'Run Line · Total · ML'},
                     {key:'first_5', label:'5 Inning Lines', hint:'First 5 innings'},
-<<<<<<< Updated upstream
                     {key:'first_inning', label:'NRFI / YRFI', hint:'1st inning run'},
-=======
->>>>>>> Stashed changes
                     {key:'team_totals', label:'Team Totals', hint:'Per-team O/U'},
                     {key:'player_props', label:'Player Props', hint:'View only'} ],
         'Soccer': [ {key:'game', label:'90-Min', hint:'1X2 / Spread / Total'},
@@ -898,11 +880,7 @@
     // Markets that filter the standard 3-col board instead of pulling from market_groups.
     window.TMR._fullGameFilterMarkets = ['game', 'moneyline', 'spread', 'total'];
     // Markets that pull items from game.market_groups via _renderMarketBoard.
-<<<<<<< Updated upstream
     window.TMR._groupBackedMarkets = ['team_totals', 'first_5', 'first_inning', 'alts', 'first_half', 'second_half'];
-=======
-    window.TMR._groupBackedMarkets = ['team_totals', 'first_5', 'alts', 'first_half', 'second_half'];
->>>>>>> Stashed changes
     window.TMR.selectedMarket = 'game';
     window.TMR._cachedGames = [];
     window.TMR._cachedSport = null;
@@ -1124,7 +1102,6 @@
     //   - first_5     → full DK 5-col board: Matchup | F5 RL | F5 Total | F5 ML | More
     //   - alts/other  → falls through to legacy pill-grid renderer
     // selectGameBet onclick contract preserved: same arg shape, same bet-type strings.
-<<<<<<< Updated upstream
     // PROPS_PICKABLE_20260608: Player Props board is now PICKABLE. Each row is a
     // button that calls window.selectPropBet -> the same pick slip / submit flow
     // as game lines. Backend accepts these market_types (pitcher_strikeouts,
@@ -1135,37 +1112,20 @@
         var escHtml = function(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
         var esc = function(s) { return ('' + (s != null ? s : '')).replace(/\\/g,'\\\\').replace(/'/g, "\\'"); };
         var pv = function(v) { return v != null ? '' + v : ''; };
-=======
-    // DISPLAY-ONLY Player Props board. Renders ONLY the player_props groups that
-    // the board API already returned. Markup is intentionally inert: no buttons,
-    // no onclick, no selectGameBet, no data-bet hooks, nothing the pick slip or
-    // submit flow can latch onto. Props are view-only until explicitly upgraded.
-    window.TMR._renderPlayerPropsBoard = function(container, games, sport) {
-        var escHtml = function(s) { return ('' + (s == null ? '' : s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
->>>>>>> Stashed changes
         var fmtOdds = function(o) { var n = Number(o); if (!Number.isFinite(n)) return ''; return n > 0 ? '+' + n : '' + n; };
         var propItems = function(game) {
             if (!Array.isArray(game.market_groups)) return [];
             var out = [];
             game.market_groups.forEach(function(g) {
                 if (!g || g.key !== 'player_props' || !Array.isArray(g.items)) return;
-<<<<<<< Updated upstream
                 g.items.forEach(function(it) { if (it) out.push(it); });
-=======
-                g.items.forEach(function(it) { if (it && it.display_only) out.push(it); });
->>>>>>> Stashed changes
             });
             return out;
         };
 
         var banner = '<div class="tmr-pp-banner" role="note">'
-<<<<<<< Updated upstream
             + '<span class="tmr-pp-pill" style="background:rgba(0,200,83,0.18);color:#00e676;">Pickable</span>'
             + '<span class="tmr-pp-banner-text">Tap any player prop to add it to your pick slip. Strikeouts, hits, total bases, RBI and more are graded automatically from the box score.</span>'
-=======
-            + '<span class="tmr-pp-pill">View Only</span>'
-            + '<span class="tmr-pp-banner-text">Player props are shown for reference only. They are not bettable here yet — you cannot add them to a pick slip or submit them.</span>'
->>>>>>> Stashed changes
             + '</div>';
 
         var anyContent = games.some(function(g) { return propItems(g).length; });
@@ -1181,11 +1141,7 @@
         }
 
         var html = banner + '<div class="tmr-pp-board">';
-<<<<<<< Updated upstream
         games.forEach(function(game, index) {
-=======
-        games.forEach(function(game) {
->>>>>>> Stashed changes
             var items = propItems(game);
             if (!items.length) return;
             var gameTime = '';
@@ -1206,7 +1162,6 @@
                     var player = escHtml(it.player_name || it.selection || '');
                     var team = it.player_team ? '<span class="tmr-pp-team">' + escHtml(it.player_team) + '</span>' : '';
                     var lineTxt = escHtml(((it.side || '') + ' ' + (it.line != null ? it.line : '')).trim());
-<<<<<<< Updated upstream
                     // Canonical pickable-prop path: selectPropBet(info) ->
                     // tmrRegisterExternalOption -> production Lock Pick (the same
                     // pipeline NBA/NHL props use). info.player + side + line_snapshot
@@ -1228,13 +1183,6 @@
                         + '<span class="tmr-pp-pickline">' + lineTxt + '</span>'
                         + '<span class="tmr-pp-odds' + (Number(it.odds) > 0 ? ' positive' : '') + '">' + escHtml(it.odds_display || fmtOdds(it.odds)) + '</span>'
                         + '</button>';
-=======
-                    html += '<div class="tmr-pp-row">'
-                        + '<span class="tmr-pp-player">' + player + team + '</span>'
-                        + '<span class="tmr-pp-pickline">' + lineTxt + '</span>'
-                        + '<span class="tmr-pp-odds">' + escHtml(it.odds_display || fmtOdds(it.odds)) + '</span>'
-                        + '</div>';
->>>>>>> Stashed changes
                 });
                 html += '</div></div>';
             });
@@ -1243,21 +1191,15 @@
         html += '</div>';
         container.innerHTML = html;
     };
-<<<<<<< Updated upstream
     // Note: window.selectPropBet(info) is defined later (the canonical pickable-
     // prop path via tmrRegisterExternalOption + production Lock Pick) and is what
     // the rows above call.
-=======
->>>>>>> Stashed changes
 
     window.TMR._renderMarketBoard = function(container, games, sport, marketKey) {
         var aliases = marketKey === 'alts' ? ['alt_spreads', 'alt_totals'] : [marketKey];
         var labelByMarket = {
             first_5: '5 Inning Lines',
-<<<<<<< Updated upstream
             first_inning: '1st Inning &middot; NRFI / YRFI',
-=======
->>>>>>> Stashed changes
             team_totals: 'Team Totals',
             alts: 'Alt Spreads &amp; Totals'
         };
@@ -1489,7 +1431,6 @@
             return;
         }
 
-<<<<<<< Updated upstream
         // ---- 1st Inning NRFI / YRFI (MLB first_inning_totals) -----------
         // YRFI = Over 0.5 (a run scores in the 1st), NRFI = Under 0.5 (no run).
         // Pickable: submits market_type first_inning_totals, selection Over/Under,
@@ -1534,8 +1475,6 @@
             return;
         }
 
-=======
->>>>>>> Stashed changes
         // ---- Fallback: legacy pill-grid renderer for alts / unknown markets.
         games.forEach(function(game, index) {
             var items = collectItems(game);
@@ -2264,7 +2203,6 @@
         }
     }
 
-<<<<<<< Updated upstream
     // TICKET_ID_20260605 (Nima): every wager gets a sportsbook-style ticket
     // number derived from its immutable backend pick id (e.g. TMR-0001144).
     // No schema change — covers every past and future pick automatically.
@@ -2279,12 +2217,6 @@
     // an existing PENDING pick (same game/different market, or same team across
     // different games), else null. Never throws and never blocks — callers only
     // use it to show a non-blocking heads-up; the pick is always submittable.
-=======
-    // PICK_CORRELATION_20260607: client mirror of the backend correlation
-    // tiers — same game, or same team across different games. Returns a short
-    // reason string when the new pick is correlated with a pending pick, else
-    // null. Never throws; on any error it returns null so locking is unaffected.
->>>>>>> Stashed changes
     window.TMR = window.TMR || {};
     window.TMR._correlationWarning = function(newPick) {
         try {
@@ -2410,20 +2342,12 @@
             return;
         }
 
-<<<<<<< Updated upstream
         var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals', f5teamover: 'f5_team_totals', f5teamunder: 'f5_team_totals', firstinningover: 'first_inning_totals', firstinningunder: 'first_inning_totals', firsthalfml: 'first_half_h2h', firsthalfspread: 'first_half_spreads', firsthalfover: 'first_half_totals', firsthalfunder: 'first_half_totals', secondhalfml: 'second_half_h2h', secondhalfspread: 'second_half_spreads', secondhalfover: 'second_half_totals', secondhalfunder: 'second_half_totals', period1ml: 'period_1_h2h', period1spread: 'period_1_spreads', period1over: 'period_1_totals', period1under: 'period_1_totals', period2ml: 'period_2_h2h', period2spread: 'period_2_spreads', period2over: 'period_2_totals', period2under: 'period_2_totals', period3ml: 'period_3_h2h', period3spread: 'period_3_spreads', period3over: 'period_3_totals', period3under: 'period_3_totals', period4ml: 'period_4_h2h', period4spread: 'period_4_spreads', period4over: 'period_4_totals', period4under: 'period_4_totals' };
-=======
-        var marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals', f5teamover: 'f5_team_totals', f5teamunder: 'f5_team_totals', firsthalfml: 'first_half_h2h', firsthalfspread: 'first_half_spreads', firsthalfover: 'first_half_totals', firsthalfunder: 'first_half_totals', secondhalfml: 'second_half_h2h', secondhalfspread: 'second_half_spreads', secondhalfover: 'second_half_totals', secondhalfunder: 'second_half_totals', period1ml: 'period_1_h2h', period1spread: 'period_1_spreads', period1over: 'period_1_totals', period1under: 'period_1_totals', period2ml: 'period_2_h2h', period2spread: 'period_2_spreads', period2over: 'period_2_totals', period2under: 'period_2_totals', period3ml: 'period_3_h2h', period3spread: 'period_3_spreads', period3over: 'period_3_totals', period3under: 'period_3_totals', period4ml: 'period_4_h2h', period4spread: 'period_4_spreads', period4over: 'period_4_totals', period4under: 'period_4_totals' };
->>>>>>> Stashed changes
         var marketType = marketTypeMap[betType] || 'h2h';
 
         // Determine line snapshot (spread number or total number, null for ML/F5ML)
         var lineSnapshot = null;
-<<<<<<< Updated upstream
         if (betType === 'spread' || betType === 'over' || betType === 'under' || betType === 'teamover' || betType === 'teamunder' || betType === 'f5spread' || betType === 'f5over' || betType === 'f5under' || betType === 'f5teamover' || betType === 'f5teamunder' || betType === 'firstinningover' || betType === 'firstinningunder') {
-=======
-        if (betType === 'spread' || betType === 'over' || betType === 'under' || betType === 'teamover' || betType === 'teamunder' || betType === 'f5spread' || betType === 'f5over' || betType === 'f5under' || betType === 'f5teamover' || betType === 'f5teamunder') {
->>>>>>> Stashed changes
             lineSnapshot = parseFloat(finalLine) || null;
         }
 
@@ -2435,15 +2359,9 @@
         var selection;
         var rawTeam = String(thePick.team || thePick.pick || '').replace(/\s+(over|under)\s*$/i, '').trim();
         var teamTotalSide = '';
-<<<<<<< Updated upstream
         if (betType === 'over' || betType === 'f5over' || betType === 'firstinningover') {
             selection = _line ? ('Over ' + _line) : 'Over';
         } else if (betType === 'under' || betType === 'f5under' || betType === 'firstinningunder') {
-=======
-        if (betType === 'over' || betType === 'f5over') {
-            selection = _line ? ('Over ' + _line) : 'Over';
-        } else if (betType === 'under' || betType === 'f5under') {
->>>>>>> Stashed changes
             selection = _line ? ('Under ' + _line) : 'Under';
         } else if (betType === 'teamover' || betType === 'f5teamover') {
             teamTotalSide = 'over';
@@ -2512,7 +2430,6 @@
             if (el1) el1.textContent = displayPick;
             if (el2) el2.textContent = displayMeta;
 
-<<<<<<< Updated upstream
             // TICKET_ID_20260605: surface the ticket number on the
             // confirmation screen once the backend has issued the pick id.
             var ticket = (newPick._backendSynced && window.TMR && typeof window.TMR.ticketId === 'function') ? window.TMR.ticketId(newPick.id) : '';
@@ -2525,8 +2442,6 @@
             }
             if (tEl) tEl.textContent = ticket ? 'Ticket #' + ticket : '';
 
-=======
->>>>>>> Stashed changes
             analyticsTrackSportsbook('sportsbook_pick_created', {
                 sport: thePick.sport || '',
                 bet_type: betType,
@@ -2554,20 +2469,12 @@
             return;
         }
 
-<<<<<<< Updated upstream
         // PICK_CORRELATION_WARNING_20260607: non-blocking correlation warning.
         // Shown ONLY when this pick is highly correlated with an existing
         // pending pick. The user can always proceed — the pick is NEVER blocked
         // and no submission rule changes. Straight/unrelated picks see nothing.
         try {
             var corrReason = (window.TMR && typeof window.TMR._correlationWarning === 'function')
-=======
-        // PICK_CORRELATION_20260607: non-blocking correlation warning. Warns
-        // when this pick correlates with an existing pending pick, lets the
-        // user proceed (the pick is NEVER blocked), and tracks the event.
-        try {
-            var corrReason = window.TMR && typeof window.TMR._correlationWarning === 'function'
->>>>>>> Stashed changes
                 ? window.TMR._correlationWarning(newPick) : null;
             if (corrReason) {
                 if (typeof analyticsTrackSportsbook === 'function') {
@@ -2575,13 +2482,8 @@
                         sport: thePick.sport || '', market_type: marketType, reason: corrReason
                     });
                 }
-<<<<<<< Updated upstream
                 var proceed = window.confirm('Heads up: this pick appears correlated with ' + corrReason + '. Correlated plays make your record and risk depend on the same game or team, which can distort your true results. Lock it anyway?');
                 if (!proceed) return; // user chose to reconsider; nothing is blocked
-=======
-                var proceed = window.confirm('Warning: this pick appears correlated with ' + corrReason + '. Correlated picks make your record depend on the same game or team. Lock it anyway?');
-                if (!proceed) return;
->>>>>>> Stashed changes
             }
         } catch (e) {}
 
@@ -4572,11 +4474,7 @@
             border-radius: 50%;
         }
 
-<<<<<<< Updated upstream
         .profile-identity h1, .profile-identity h2 {
-=======
-        .profile-identity h1 {
->>>>>>> Stashed changes
             font-size: 2rem;
             color: var(--neon-gold);
             margin: 0 0 5px 0;
@@ -5861,11 +5759,7 @@
             padding-top: 20px;
         }
 
-<<<<<<< Updated upstream
         .profile-identity h1, .profile-identity h2 {
-=======
-        .profile-identity h1 {
->>>>>>> Stashed changes
             font-size: 32px;
             color: var(--text-primary);
             margin-bottom: 5px;
@@ -10564,11 +10458,8 @@
                             <button type="button" data-league="Ligue 1" onclick="window.TMR.setSoccerFilter('Ligue 1')">Ligue 1</button>
                             <button type="button" data-league="Brazil Serie A" onclick="window.TMR.setSoccerFilter('Brazil Serie A')">Brazil Serie A</button>
                             <button type="button" data-league="NWSL" onclick="window.TMR.setSoccerFilter('NWSL')">NWSL</button>
-<<<<<<< Updated upstream
                             <button type="button" data-league="World Cup" onclick="window.TMR.setSoccerFilter('World Cup')">World Cup</button>
                             <button type="button" data-league="Club World Cup" onclick="window.TMR.setSoccerFilter('Club World Cup')">Club World Cup</button>
-=======
->>>>>>> Stashed changes
                             <button type="button" data-league="International" onclick="window.TMR.setSoccerFilter('International')">International</button>
                         </div>
                     </div>
@@ -10588,12 +10479,9 @@
                       #soccerLeagueFilters button.is-active, #tennisTourFilters button.is-active {
                         background: var(--neon-cyan, #00aeff); color: #001018; border-color: var(--neon-cyan, #00aeff); font-weight: 700;
                       }
-<<<<<<< Updated upstream
                       /* TT_TAB_20260607 (Nima): SOCCER_TT_20260606 mini chip CSS
                          removed — team totals moved off the main board into the
                          dedicated "Team Totals" market tab (PERIOD_CATALOGS). */
-=======
->>>>>>> Stashed changes
                     </style>
                 </section>
 
@@ -11339,7 +11227,6 @@ window.toggleSportFamily = function (family) {
         var homeLogo = sportsbookTeamLogoMarkup(home, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '');
         var awayPitcherHtml = lobbyPitcherHtml(game, 'away', sport);
         var homePitcherHtml = lobbyPitcherHtml(game, 'home', sport);
-<<<<<<< Updated upstream
 
         // TT_TAB_20260607 (Nima): the SOCCER_TT_20260606 mini TT chips that
         // were crammed under the team names are GONE. Main Lines stays clean
@@ -11353,13 +11240,6 @@ window.toggleSportFamily = function (family) {
             : '<div class="team-cell">' + awayLogo + '<b>' + (away || 'Away') + '</b></div>';
         var homeTeamCell = homeExtraHtml
             ? '<div class="team-cell">' + homeLogo + '<span class="sb-team-stack"><b>' + (home || 'Home') + '</b>' + homeExtraHtml + '</span></div>'
-=======
-        var awayTeamCell = awayPitcherHtml
-            ? '<div class="team-cell">' + awayLogo + '<span class="sb-team-stack"><b>' + (away || 'Away') + '</b>' + awayPitcherHtml + '</span></div>'
-            : '<div class="team-cell">' + awayLogo + '<b>' + (away || 'Away') + '</b></div>';
-        var homeTeamCell = homePitcherHtml
-            ? '<div class="team-cell">' + homeLogo + '<span class="sb-team-stack"><b>' + (home || 'Home') + '</b>' + homePitcherHtml + '</span></div>'
->>>>>>> Stashed changes
             : '<div class="team-cell">' + homeLogo + '<b>' + (home || 'Home') + '</b></div>';
 
         return '<article class="sportsbook-game-card">' +
@@ -11492,14 +11372,10 @@ window.toggleSportFamily = function (family) {
         'NCAAF': [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
         'NHL':   [{k:'full',label:'Game Lines'},{k:'p1',label:'1st Period'},{k:'p2',label:'2nd Period'},{k:'p3',label:'3rd Period'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
         'MLB':   [{k:'full',label:'Game Lines'},{k:'f5',label:'5 Inning Lines'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
-<<<<<<< Updated upstream
         // TT_TAB_20260607: soccer Team Totals live behind their own tab (per-team
         // goal O/U from the guarded fetchSoccerTeamTotals enricher) — never as
         // chips/columns on the Main Lines board.
         'Soccer':[{k:'full',label:'Main Lines'},{k:'tt',label:'Team Totals'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'}].concat(ALT_PROP_TABS),
-=======
-        'Soccer':[{k:'full',label:'Match'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'}].concat(ALT_PROP_TABS),
->>>>>>> Stashed changes
         'Tennis':[{k:'full',label:'Match'}].concat(ALT_PROP_TABS),
         // No-feed sports get a single inert Game Lines tab. The board short-circuits
         // to the empty state below; alt/props tabs are intentionally omitted so
@@ -11773,13 +11649,9 @@ window.toggleSportFamily = function (family) {
                 unitsText: unitsText,
                 game: game,
                 submitted: fmtSubmitted(p.locked_at || p.created_at),
-<<<<<<< Updated upstream
                 lockedAt: p.locked_at || p.created_at || '',
                 // TICKET_ID_20260605: derived ticket number for display
                 ticket: (window.TMR && typeof window.TMR.ticketId === 'function') ? window.TMR.ticketId(p.id) : ''
-=======
-                lockedAt: p.locked_at || p.created_at || ''
->>>>>>> Stashed changes
             };
         }
 
@@ -11812,10 +11684,7 @@ window.toggleSportFamily = function (family) {
                 return '<div class="tmr-pending-pick">'
                     + '<span class="tmr-pending-pick-sport">' + escapeHtml(p.sport) + '</span>'
                     + '<strong>' + escapeHtml(p.selection) + '</strong>'
-<<<<<<< Updated upstream
                     + (p.ticket ? '<span class="tmr-pending-pick-ticket" style="display:block;color:#ffd700;font-size:11px;font-weight:700;letter-spacing:0.5px;">Ticket #' + escapeHtml(p.ticket) + '</span>' : '')
-=======
->>>>>>> Stashed changes
                     + '<span class="tmr-pending-pick-odds">' + escapeHtml(fmtOdds(p.odds)) + ' · ' + escapeHtml(p.unitsText) + '</span>'
                     + '<span class="tmr-pending-pick-meta">' + escapeHtml(p.market) + (p.game ? ' · ' + escapeHtml(p.game) : '') + (p.submitted ? ' · Submitted: ' + escapeHtml(p.submitted) : '') + '</span>'
                     + '<span class="tmr-pending-status">Awaiting Grade</span>'
@@ -11842,13 +11711,8 @@ window.toggleSportFamily = function (family) {
                 // Defense-in-depth filter — if backend ever returns non-pending rows
                 // in the same payload, keep only the pending ones here.
                 picks = picks.filter(function (p) { return !p.status || String(p.status).toLowerCase() === 'pending'; });
-<<<<<<< Updated upstream
                 // PICK_CORRELATION_WARNING_20260607: cache pending picks so the
                 // pick-slip correlation warning can compare a new pick against them.
-=======
-                // PICK_CORRELATION_20260607: cache pending picks so the pick-slip
-                // correlation warning can compare a new pick against them.
->>>>>>> Stashed changes
                 window.TMR = window.TMR || {};
                 window.TMR.lastPendingPicks = picks;
                 render(picks, {});
@@ -12813,7 +12677,6 @@ window.toggleSportFamily = function (family) {
             line: lineNum,
             odds: info.odds,
             group_label: info.group || 'Player Props',
-<<<<<<< Updated upstream
             book_title: 'Sportsbook feed',
             // NBA_NHL_PROPS_20260606: carry the visible prop odds in the
             // submitted game snapshot so the backend can verify the selection
@@ -12823,9 +12686,6 @@ window.toggleSportFamily = function (family) {
                 title: 'Sportsbook feed',
                 markets: [{ key: info.marketType || 'pitcher_strikeouts', outcomes: [{ name: selection, point: lineNum, price: parseInt(info.odds, 10) }] }]
             }]
-=======
-            book_title: 'Sportsbook feed'
->>>>>>> Stashed changes
         });
         if (ok === false) return;
         try { if (window.TMR && typeof window.TMR._ttScrollToPickSlip === 'function') window.TMR._ttScrollToPickSlip(); } catch (_) {}
@@ -13020,7 +12880,6 @@ window.toggleSportFamily = function (family) {
 
     var GROUP_SPORTS = {
         Soccer: [
-<<<<<<< Updated upstream
             // PERMANENT COVERAGE: full soccer competition universe. Top leagues
             // use the backend (richer DK markets); everything else is espnOnly
             // (league-aware ESPN scoreboards). League filter buttons are built
@@ -13064,21 +12923,6 @@ window.toggleSportFamily = function (family) {
             { sport: 'WcqOfc', key: 'soccer_wcq_ofc', label: 'World Cup Qualifying - OFC', espnOnly: true },
             { sport: 'FifaOlympics', key: 'soccer_fifa_olympics', label: 'Olympics', espnOnly: true },
             { sport: 'IntlFriendly', key: 'soccer_intl_friendly', label: 'International', espnOnly: true }
-=======
-            { sport: 'Soccer', key: 'soccer_epl', label: 'EPL' },
-            { sport: 'MLS', key: 'soccer_usa_mls', label: 'MLS' },
-            { sport: 'UCL', key: 'soccer_uefa_champs_league', label: 'Champions League' },
-            { sport: 'LaLiga', key: 'soccer_spain_la_liga', label: 'La Liga' },
-            { sport: 'SerieA', key: 'soccer_italy_serie_a', label: 'Serie A' },
-            { sport: 'Bundesliga', key: 'soccer_germany_bundesliga', label: 'Bundesliga' },
-            { sport: 'Ligue1', key: 'soccer_france_ligue_one', label: 'Ligue 1' },
-            // In-season competitions (ESPN-only; Action Network's free soccer
-            // slug doesn't carry them). espnOnly skips the backend fetch so the
-            // sparse AN board is never passed through and mislabeled under them.
-            { sport: 'BrazilSerieA', key: 'soccer_brazil_serie_a', label: 'Brazil Serie A', espnOnly: true },
-            { sport: 'NWSL', key: 'soccer_nwsl', label: 'NWSL', espnOnly: true },
-            { sport: 'Intl', key: 'soccer_intl_friendly', label: 'International', espnOnly: true }
->>>>>>> Stashed changes
         ],
         Tennis: [
             { sport: 'ATP', key: 'tennis_atp', label: 'ATP' },
@@ -13228,7 +13072,6 @@ window.toggleSportFamily = function (family) {
         rowsEl.innerHTML = html || emptyState(sport, 'No ' + label + ' ' + sport + ' odds available right now.', 'closed');
         if (html) console.log('[TMR][period] ' + sport + ' ' + label + ' rendered from ' + sourceLabel + '.');
     }
-<<<<<<< Updated upstream
 
     // TT_TAB_20260607 (Nima): Team Totals tab for grouped (Soccer) boards.
     // Main Lines stays clean — per-team totals render here ONLY, in the same
@@ -13289,8 +13132,6 @@ window.toggleSportFamily = function (family) {
         rowsEl.innerHTML = html;
         console.log('[TMR][TT] ' + sport + ' grouped TT rendered: ' + rendered + ' game(s) with lines, ' + pending + ' without.');
     }
-=======
->>>>>>> Stashed changes
     // Detect that the upstream odds provider is unavailable (e.g. auth 401 /
     // tripped circuit breaker) WITHOUT surfacing any internal error text to
     // normal users. Soccer/Tennis depend entirely on that provider, so when it
@@ -13396,7 +13237,6 @@ window.toggleSportFamily = function (family) {
             // filter buttons can narrow it client-side without a refetch.
             games.sort(function (a, b) { return new Date(a.commence_time || a.start_time || 0) - new Date(b.commence_time || b.start_time || 0); });
             window.TMR._groupedGames = games;
-<<<<<<< Updated upstream
             if (sport === 'Soccer') { try { window.TMR.rebuildSoccerFilters(); } catch (e) {} }
             window.TMR._groupedSport = sport;
             window.TMR._groupedPeriod = period;
@@ -13411,11 +13251,6 @@ window.toggleSportFamily = function (family) {
                     }
                 });
             }
-=======
-            window.TMR._groupedSport = sport;
-            window.TMR._groupedPeriod = period;
-            window.TMR._renderGroupedFiltered();
->>>>>>> Stashed changes
         }).catch(function () {
             if (rowsEl.getAttribute('data-sport') === sport) rowsEl.innerHTML = emptyState(sport, sport + ' odds are temporarily unavailable while the data provider connection is being refreshed.', 'closed');
         });
@@ -13441,12 +13276,9 @@ window.toggleSportFamily = function (family) {
             rowsEl.innerHTML = emptyState(sport, 'No matches for this selection right now.', 'closed');
             return;
         }
-<<<<<<< Updated upstream
         // TT_TAB_20260607: Team Totals tab for grouped boards renders its own
         // clean two-market layout (Matchup | TT Over | TT Under).
         if (period === 'tt') { renderGroupedTtRows(sport, rowsEl, filtered); return; }
-=======
->>>>>>> Stashed changes
         if (period && period !== 'full') { renderPeriodRows(sport, rowsEl, filtered, period, 'grouped filtered'); return; }
         var CAP = 40;
         var shown = filtered.slice(0, CAP);
@@ -13476,7 +13308,6 @@ window.toggleSportFamily = function (family) {
         window.TMR._renderGroupedFiltered();
     };
 
-<<<<<<< Updated upstream
     // PERMANENT: rebuild the soccer league filter buttons from the competitions
     // actually present in the loaded slate. Any competition with upcoming games
     // gets a button automatically; empty competitions are hidden. This is what
@@ -13509,8 +13340,6 @@ window.toggleSportFamily = function (family) {
         _setGroupFilterActive('soccerLeagueFilters', 'data-league', cur);
     };
 
-=======
->>>>>>> Stashed changes
     // Move the soccer/tennis league pickers ABOVE the games grid (they ship in
     // the HTML after the board). One-time relocation so the ATP/WTA / league
     // buttons sit near the top instead of being stranded under a long slate.
@@ -13580,12 +13409,7 @@ window.toggleSportFamily = function (family) {
         // (line:null, odds:null, source:"manual"). Those rendered as clickable
         // buttons that could not submit ("Enter valid American odds"). Only keep
         // items that carry a real numeric line AND numeric odds; drop a group if
-<<<<<<< Updated upstream
         // it has none, and the game if no real alt groups remain.
-=======
-        // it has none, and the game if no real alt groups remain → clean empty
-        // state instead of dead buttons.
->>>>>>> Stashed changes
         var _altReal = function (it) { return it && isFinite(Number(it.line)) && it.line !== null && it.line !== '' && isFinite(Number(it.odds)) && it.odds !== null && it.odds !== ''; };
         function altGamesFromBoard(bgames) {
             return (bgames || []).map(function (g) {
@@ -13626,7 +13450,6 @@ window.toggleSportFamily = function (family) {
             .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'alts') fallbackToBoard(); });
     }
 
-<<<<<<< Updated upstream
     // NBA_NHL_PROPS_20260606: ESPN core propBets enrichment for the Player
     // Props tab (DraftKings data). Adds clean per-player O/U markets the
     // Bovada feed doesn't carry (NBA points/rebounds/assists/threes, NHL
@@ -13776,8 +13599,6 @@ window.toggleSportFamily = function (family) {
             .catch(function () { onDone(games, 0); });
     };
 
-=======
->>>>>>> Stashed changes
     // Player/pitcher/game props for the Player Props tab ONLY. Same isolation
     // contract as renderAltLinesBoard: never runs for game-lines periods, never
     // mutates currentGames, degrades to a clean empty state — live boards safe.
@@ -13803,7 +13624,6 @@ window.toggleSportFamily = function (family) {
         // where each player outcome becomes an Over-the-threshold pick. Non-gradable
         // markets (correct score, first HR, game props) stay display-only.
         var classifyMarket = function (grp, m) {
-<<<<<<< Updated upstream
             // NBA_NHL_PROPS_20260606: ESPN-synthesized prop markets carry
             // explicit pick metadata — no label parsing needed. Gradable via
             // backend playerPropGrading (ESPN box scores).
@@ -13823,9 +13643,6 @@ window.toggleSportFamily = function (family) {
                 return null;
             }
             if (sport !== 'MLB') return null;
-=======
-            if (sport !== 'MLB' || !grp) return null;
->>>>>>> Stashed changes
             var label = String(m.label || '');
             if (grp.key === 'pitcher_props') {
                 var player = (label.split(' - ')[1] || '').replace(/\s*\([^)]*\)\s*$/, '').trim();
@@ -13944,7 +13761,6 @@ window.toggleSportFamily = function (family) {
                             // pitcher_strikeouts label must match classifyMarket's
                             // "Total Strikeouts - <player>" pattern to stay pickable.
                             var lbl = isPitcherK ? ('Total Strikeouts - ' + player) : (b.label + ' - ' + player);
-<<<<<<< Updated upstream
                             var mk = { label: lbl, outcomes: b.players[player] };
                             // PROPS_PICKABLE_ALL_20260609 (Nima: "only pitcher props are
                             // clickable"). The backend player_props group ONLY ever ships
@@ -13959,9 +13775,6 @@ window.toggleSportFamily = function (family) {
                             var PICK_STAT = { pitcher_strikeouts: 'Strikeouts', pitcher_outs: 'Outs', pitcher_hits_allowed: 'Hits Allowed', pitcher_walks: 'Walks', pitcher_earned_runs: 'Earned Runs', batter_hits: 'Hits', batter_total_bases: 'Total Bases', batter_rbi: 'RBI', batter_runs: 'Runs', batter_home_runs: 'Home Runs' };
                             if (PICK_STAT[mt]) { mk._pick_market = mt; mk._player = player; mk._stat = PICK_STAT[mt]; mk._group = b.label || PICK_STAT[mt]; }
                             return mk;
-=======
-                            return { label: lbl, outcomes: b.players[player] };
->>>>>>> Stashed changes
                         })
                     };
                 });
@@ -13969,7 +13782,6 @@ window.toggleSportFamily = function (family) {
                 return { id: g.id, away_team: g.away_team, home_team: g.home_team, commence_time: g.commence_time, prop_groups: groups };
             }).filter(Boolean);
         }
-<<<<<<< Updated upstream
         // NBA_NHL_PROPS_20260606: after the primary render, enrich NBA/NHL with
         // ESPN DraftKings per-player O/U markets and re-render once. With zero
         // primary games the enrichment alone can populate the tab; if it also
@@ -13985,24 +13797,15 @@ window.toggleSportFamily = function (family) {
             }
         }
 
-=======
->>>>>>> Stashed changes
         function fallbackToBoard() {
             fetch(String(base).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(key) + '?limit=80', { cache: 'no-store' })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (bd) {
                     if (rowsEl.getAttribute('data-sport') !== sport || window.TMR.selectedPeriod !== 'props') return;
                     var mapped = propGamesFromBoard(bd && bd.games);
-<<<<<<< Updated upstream
                     renderWithEspnEnrichment(mapped);
                 })
                 .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'props') renderWithEspnEnrichment([], 'Player-props feed temporarily unavailable. Try again shortly.'); });
-=======
-                    if (!mapped.length) { rowsEl.innerHTML = emptyState(sport, 'No player props posted right now. Check back when lines are up.', 'closed'); return; }
-                    renderPropGames(mapped);
-                })
-                .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'props') rowsEl.innerHTML = emptyState(sport, 'Player-props feed temporarily unavailable. Try again shortly.', 'closed'); });
->>>>>>> Stashed changes
         }
 
         fetch(String(base).replace(/\/$/, '') + '/games/props/' + encodeURIComponent(key) + '?cb=' + Date.now(), { cache: 'no-store' })
@@ -14012,11 +13815,7 @@ window.toggleSportFamily = function (family) {
                 if (data && data.supported === false) { rowsEl.innerHTML = emptyState(sport, 'Player props are not offered for ' + sport + ' yet.', 'closed'); return; }
                 var games = (data && data.games) || [];
                 if (!games.length) { fallbackToBoard(); return; }
-<<<<<<< Updated upstream
                 renderWithEspnEnrichment(games);
-=======
-                renderPropGames(games);
->>>>>>> Stashed changes
             })
             .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'props') fallbackToBoard(); });
     }
@@ -14079,14 +13878,11 @@ window.toggleSportFamily = function (family) {
             return renderPlayerPropsBoard(sport, rows);
         }
         if (period === 'tt') {
-<<<<<<< Updated upstream
             // TT_TAB_20260607: grouped sports (Soccer) source team totals from
             // their own per-league boards + the ESPN propBets enricher, not the
             // single-key backend TT board. renderGroupedBoard fetches the slate
             // and _renderGroupedFiltered routes period 'tt' to renderGroupedTtRows.
             if (GROUP_SPORTS[sport]) return renderGroupedBoard(sport, rows, period);
-=======
->>>>>>> Stashed changes
             return renderTeamTotalsBoard(sport, rows);
         }
         if (GROUP_SPORTS[sport]) {
@@ -15456,11 +15252,7 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
             <div id="arena" class="page-section">
                 <div style="max-width: 1000px; margin: 0 auto; padding: 20px;">
                     <div style="text-align: center; margin-bottom: 30px;">
-<<<<<<< Updated upstream
 <h2 style="font-family: Barlow, sans-serif; font-size: 2.5rem; background: linear-gradient(45deg, #ff6b35, #ff073a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;">THE ARENA</h2>
-=======
-<h1 style="font-family: Barlow, sans-serif; font-size: 2.5rem; background: linear-gradient(45deg, #ff6b35, #ff073a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;">THE ARENA</h1>
->>>>>>> Stashed changes
                         <p style="color: var(--text-secondary); font-size: 1.1rem;">Challenge other handicappers to head-to-head pick battles</p>
                     </div>
 
@@ -15625,15 +15417,9 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
             <div id="mypicks" class="page-section">
                 <div class="mypicks-container" style="max-width: 1000px; margin: 0 auto; padding: 20px;">
                     <div class="mypicks-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-<<<<<<< Updated upstream
 <h2 style="font-family: 'Barlow', sans-serif; color: #fff; margin: 0; font-size: 2rem;">
                             <span style="color: #00ffff;">My</span> Picks
                         </h2>
-=======
-<h1 style="font-family: 'Barlow', sans-serif; color: #fff; margin: 0;">
-                            <span style="color: #00ffff;">My</span> Picks
-                        </h1>
->>>>>>> Stashed changes
                         <button onclick="showSection('picks')" style="background: linear-gradient(135deg, #00c853, #00a648); border: none; padding: 12px 24px; border-radius: 8px; color: #000; font-weight: 700; cursor: pointer; font-size: 14px;">
                             + Make New Pick
                         </button>
@@ -15810,11 +15596,7 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
             <div id="trivia" class="page-section">
                 <div class="container" style="max-width: 900px; margin: 0 auto; padding: 20px;">
                     <div style="text-align: center; margin-bottom: 40px;">
-<<<<<<< Updated upstream
 <h2 style="font-family: Barlow, sans-serif; font-size: 2.5rem; background: linear-gradient(45deg, var(--neon-cyan), var(--neon-gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px;">Sports Trivia</h2>
-=======
-<h1 style="font-family: Barlow, sans-serif; font-size: 2.5rem; background: linear-gradient(45deg, var(--neon-cyan), var(--neon-gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px;">Sports Trivia</h1>
->>>>>>> Stashed changes
                         <p style="color: var(--text-secondary); font-size: 1.1rem;">Test your sports knowledge and climb the leaderboard</p>
                     </div>
 
@@ -15893,11 +15675,7 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
             <!-- PREDICTION POLLS SECTION - redirects to polls-trivia -->
             <div id="predictions" class="page-section">
                 <div class="container" style="text-align: center; padding: 60px 20px;">
-<<<<<<< Updated upstream
 <h2 style="font-family: Barlow, sans-serif; font-size: 2.5rem; background: linear-gradient(45deg, var(--neon-purple), var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px;">Prediction Polls</h2>
-=======
-<h1 style="font-family: Barlow, sans-serif; font-size: 2.5rem; background: linear-gradient(45deg, var(--neon-purple), var(--neon-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 15px;">Prediction Polls</h1>
->>>>>>> Stashed changes
                     <p style="color: var(--text-secondary); margin-bottom: 20px;">Vote on upcoming matchups and see what the community thinks!</p>
                     <button onclick="showSection('polls-trivia')" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 14px 32px; border-radius: 30px; font-weight: 700; cursor: pointer; font-size: 16px;">Go to Polls &amp; Trivia</button>
                 </div>
@@ -15907,11 +15685,7 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
             <div id="contests" class="page-section">
                 <div class="container" style="max-width: 900px; margin: 0 auto; padding: 20px;">
                     <div style="text-align: center; margin-bottom: 30px;">
-<<<<<<< Updated upstream
 <h2 style="font-family: Barlow, sans-serif; font-size: 2.5rem; background: linear-gradient(45deg, var(--neon-gold), #ff6b35); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;">Handicapping Contests</h2>
-=======
-<h1 style="font-family: Barlow, sans-serif; font-size: 2.5rem; background: linear-gradient(45deg, var(--neon-gold), #ff6b35); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px;">Handicapping Contests</h1>
->>>>>>> Stashed changes
                         <p style="color: var(--text-secondary); font-size: 1.1rem;">Compete against other handicappers in weekly pick challenges</p>
                     </div>
 
@@ -15969,11 +15743,7 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
                                 </div>
                             </div>
                             <div class="profile-identity">
-<<<<<<< Updated upstream
                                 <h2 id="profileDisplayName">Your Name</h2>
-=======
-                                <h1 id="profileDisplayName">Your Name</h1>
->>>>>>> Stashed changes
                                 <p class="profile-username">@<span id="profileUsername">username</span></p>
                                 <button class="edit-profile-btn" onclick="openProfileEditor()">Edit Profile</button>
                             </div>
@@ -23181,11 +22951,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<<<<<<< Updated upstream
 <script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260613quickbetbar&cb=20260613quickbetbar"></script>
-=======
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260609silentsubmitfix&cb=20260609silentsubmitfix"></script>
->>>>>>> Stashed changes
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
@@ -24361,11 +24127,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Save to localStorage
         if (window.auth && window.auth.isLoggedIn()) {
-<<<<<<< Updated upstream
             const marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', total: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals', f5teamover: 'f5_team_totals', f5teamunder: 'f5_team_totals', firstinningover: 'first_inning_totals', firstinningunder: 'first_inning_totals', firsthalfml: 'first_half_h2h', firsthalfspread: 'first_half_spreads', firsthalfover: 'first_half_totals', firsthalfunder: 'first_half_totals', secondhalfml: 'second_half_h2h', secondhalfspread: 'second_half_spreads', secondhalfover: 'second_half_totals', secondhalfunder: 'second_half_totals', period1ml: 'period_1_h2h', period1spread: 'period_1_spreads', period1over: 'period_1_totals', period1under: 'period_1_totals', period2ml: 'period_2_h2h', period2spread: 'period_2_spreads', period2over: 'period_2_totals', period2under: 'period_2_totals', period3ml: 'period_3_h2h', period3spread: 'period_3_spreads', period3over: 'period_3_totals', period3under: 'period_3_totals', period4ml: 'period_4_h2h', period4spread: 'period_4_spreads', period4over: 'period_4_totals', period4under: 'period_4_totals' };
-=======
-            const marketTypeMap = { ml: 'h2h', spread: 'spreads', over: 'totals', under: 'totals', total: 'totals', teamover: 'team_totals', teamunder: 'team_totals', f5spread: 'f5_spreads', f5ml: 'f5_h2h', f5over: 'f5_totals', f5under: 'f5_totals', f5teamover: 'f5_team_totals', f5teamunder: 'f5_team_totals', firsthalfml: 'first_half_h2h', firsthalfspread: 'first_half_spreads', firsthalfover: 'first_half_totals', firsthalfunder: 'first_half_totals', secondhalfml: 'second_half_h2h', secondhalfspread: 'second_half_spreads', secondhalfover: 'second_half_totals', secondhalfunder: 'second_half_totals', period1ml: 'period_1_h2h', period1spread: 'period_1_spreads', period1over: 'period_1_totals', period1under: 'period_1_totals', period2ml: 'period_2_h2h', period2spread: 'period_2_spreads', period2over: 'period_2_totals', period2under: 'period_2_totals', period3ml: 'period_3_h2h', period3spread: 'period_3_spreads', period3over: 'period_3_totals', period3under: 'period_3_totals', period4ml: 'period_4_h2h', period4spread: 'period_4_spreads', period4over: 'period_4_totals', period4under: 'period_4_totals' };
->>>>>>> Stashed changes
             const marketType = marketTypeMap[pick.betType] || 'h2h';
             const selection = extractSelection(pick.pick, pick.betType, pick.game);
             const units = Math.max(0.5, Math.min(10, parseFloat(pick.units) || 1));
