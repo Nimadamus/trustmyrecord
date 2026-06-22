@@ -4085,11 +4085,12 @@ body.tmr-site-shell .friends-top-strip {
    width from the nav row on normal desktop/laptop viewports. */
 @media (min-width: 641px) {
     body.tmr-site-shell .tmr-global-nav__inner {
-        width: min(1480px, calc(100% - 32px)) !important;
+        width: min(1560px, calc(100% - 40px)) !important;
         grid-template-columns: minmax(205px, max-content) minmax(0, 1fr) max-content max-content max-content !important;
         grid-template-areas: "brand links community support actions" !important;
         align-items: center !important;
-        column-gap: clamp(10px, 1vw, 18px) !important;
+        min-height: 84px !important;
+        column-gap: clamp(22px, 2.4vw, 44px) !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__brand {
@@ -4106,7 +4107,7 @@ body.tmr-site-shell .friends-top-strip {
         grid-area: links !important;
         min-width: 0 !important;
         justify-content: center !important;
-        gap: clamp(10px, 1vw, 20px) !important;
+        gap: clamp(6px, 0.9vw, 16px) !important;
         flex-wrap: nowrap !important;
         row-gap: 0 !important;
         padding: 0 !important;
@@ -4122,9 +4123,9 @@ body.tmr-site-shell .friends-top-strip {
         overflow: visible !important;
         text-overflow: clip !important;
         white-space: nowrap !important;
-        min-height: 34px !important;
-        padding: 7px clamp(7px, 0.52vw, 10px) !important;
-        letter-spacing: 0.045em !important;
+        min-height: 40px !important;
+        padding: 9px clamp(14px, 1.1vw, 20px) !important;
+        letter-spacing: 0.05em !important;
     }
 
     body.tmr-site-shell .tmr-support-menu {
@@ -4146,15 +4147,22 @@ body.tmr-site-shell .friends-top-strip {
         max-width: max-content !important;
         justify-content: flex-end !important;
         justify-self: end !important;
-        gap: 10px !important;
+        gap: 12px !important;
+        padding-left: clamp(8px, 1vw, 18px) !important;
         overflow: visible !important;
         flex-wrap: nowrap !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__button {
-        min-height: 34px !important;
-        padding-left: 11px !important;
-        padding-right: 11px !important;
+        min-height: 40px !important;
+        padding-left: 16px !important;
+        padding-right: 16px !important;
+    }
+
+    body.tmr-site-shell .tmr-community-menu__trigger,
+    body.tmr-site-shell .tmr-support-menu__trigger {
+        min-height: 40px !important;
+        padding: 9px 16px !important;
     }
 }
 
@@ -4214,7 +4222,7 @@ body.tmr-site-shell .tmr-global-nav__links a[href*="trendspotter"] {
         min-width: 0 !important;
         flex-wrap: wrap !important;
         row-gap: 6px !important;
-        column-gap: 8px !important;
+        column-gap: clamp(6px, 0.9vw, 16px) !important;
         overflow: visible !important;
         white-space: normal !important;
     }
@@ -4222,10 +4230,58 @@ body.tmr-site-shell .tmr-global-nav__links a[href*="trendspotter"] {
     body.tmr-site-shell .tmr-global-nav__links a,
     body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__links a {
         min-width: 0 !important;
-        padding-left: 8px !important;
-        padding-right: 8px !important;
+        padding-left: clamp(14px, 1.1vw, 20px) !important;
+        padding-right: clamp(14px, 1.1vw, 20px) !important;
         white-space: nowrap !important;
     }
+}
+
+/* Premium nav polish - 2026-06-22
+   Desktop (>=1025px) hierarchy + breathing room. Tab hover/active refinements,
+   consistent 40px control heights, and clearer separation between the primary
+   tabs and the right-side Community/Support/profile cluster. Additive only;
+   does not touch nav links, dropdown wiring, or auth/profile behavior. */
+@media (min-width: 1025px) {
+    body.tmr-site-shell .tmr-global-nav__inner {
+        column-gap: clamp(26px, 2.6vw, 48px) !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__links {
+        gap: clamp(8px, 1vw, 18px) !important;
+    }
+
+    /* Vertical hairline separating the primary tabs from secondary actions. */
+    body.tmr-site-shell .tmr-community-menu {
+        padding-left: clamp(10px, 1.2vw, 22px) !important;
+        margin-left: clamp(4px, 0.6vw, 10px) !important;
+        border-left: 1px solid rgba(156, 173, 199, 0.16) !important;
+    }
+}
+
+/* Tab styling: calmer resting state, confident hover, strong current-page tab. */
+body.tmr-site-shell .tmr-global-nav__links a {
+    font-weight: 700 !important;
+    transition: color 0.16s ease, background 0.16s ease, border-color 0.16s ease, transform 0.16s ease !important;
+}
+
+body.tmr-site-shell .tmr-global-nav__links a:hover {
+    color: #eaf6ff !important;
+    border-color: rgba(0, 217, 255, 0.22) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
+    transform: translateY(-1px) !important;
+}
+
+body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"] {
+    color: #041017 !important;
+    font-weight: 800 !important;
+    border-color: transparent !important;
+    background: linear-gradient(135deg, var(--tmr-teal), #6ff0d4 58%, #d7ff59) !important;
+    box-shadow: 0 10px 26px rgba(0, 217, 255, 0.22) !important;
+    transform: none !important;
+}
+
+body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
+    transform: translateY(-1px) !important;
 }
 /* Sitewide mobile hardening pass - 2026-05-14
    Additive responsive guardrails only: no data, auth, grading, or pick logic changes. */

@@ -6,7 +6,7 @@
     // pointless redirect hop on every click.
     const sportsbookPicksHref = "/sportsbook/";
     const routes = [
-        [sportsbookPicksHref, "Make Picks"],
+        [sportsbookPicksHref, "Sportsbook"],
         ["/contests/justbet-mlb/", "Contest"],
         ["/tools/", "Tools"],
         ["/handicappers/", "Find Handicappers"],
@@ -31,7 +31,7 @@
     const COMMUNITY_GROUP = new Set(["feed.html", "online-gaming.html", "mlb-the-show-stat-league.html", "arena.html", "challenges.html", "forum.html", "polls.html", "trivia.html", "hangout.html"]);
 
     const routeMeta = {
-        "sportsbook.html": ["Make Picks", "Lock picks before games start. Build a public, permanent record."],
+        "sportsbook.html": ["Sportsbook", "Lock picks before games start. Build a public, permanent record."],
         "leaderboards.html": ["Leaderboards", "Handicapping records, trivia points, polls, online challenges, and handicapper challenges &mdash; every leaderboard in one hub."],
         "handicappers.html": ["Find Handicappers", "Search members, compare verified records, follow cappers, and open public profiles."],
         "arena.html": ["Arena", "Challenge rivals in sports picks, MLB The Show, Madden, NBA 2K, EA FC, and NHL."],
@@ -874,7 +874,7 @@
                         <div class="tmr-search-section">
                             <div class="tmr-search-label">Quick jumps</div>
                             <div class="tmr-search-grid">
-                                <a href="/sportsbook/"><strong>Make Picks</strong><span>Lock picks before games start</span></a>
+                                <a href="/sportsbook/"><strong>Sportsbook</strong><span>Lock picks before games start</span></a>
                                 <a href="/feed/"><strong>Feed</strong><span>Posts, takes, locked picks</span></a>
                                 <a href="/handicappers/"><strong>Handicappers</strong><span>Find members and compare records</span></a>
                                 <a href="/arena/"><strong>Arena</strong><span>Head-to-head challenges</span></a>
@@ -1062,7 +1062,7 @@
                 <div class="tmr-global-footer__section">
                     <h3 class="tmr-global-footer__heading">Platform</h3>
                     <div class="tmr-global-footer__links">
-                        <a href="/sportsbook/">Make Picks</a>
+                        <a href="/sportsbook/">Sportsbook</a>
                         <a href="/arena/">Arena</a>
                         <a href="/premium/">Premium</a>
                         <a href="/profile/">Records</a>
