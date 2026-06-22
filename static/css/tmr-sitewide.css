@@ -4686,27 +4686,53 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
    panel to a clean single column and clear the inherited grid-area names so
    the sections stack vertically: tabs -> Community -> Support -> auth/profile. */
 @media (max-width: 768px) {
-    body.tmr-site-shell .tmr-global-nav__inner {
+    /* Force a uniform 2-column hamburger grid on every route. The doubled
+       .tmr-site-shell + [data-tmr-route] lifts specificity to (0,4,2) so it
+       beats sportsbook-pro.css, which loads later and forces the inner to
+       display:flex (0,3,1) on the /sportsbook/ route. All three children are
+       placed by explicit grid lines (not named areas) so leaked grid-area
+       names from other breakpoints cannot misplace them: brand + hamburger on
+       row 1, the panel spanning row 2. */
+    html body.tmr-site-shell.tmr-site-shell[data-tmr-route] .tmr-global-nav__inner {
+        display: grid !important;
         grid-template-columns: minmax(0, 1fr) 44px !important;
+        grid-template-rows: auto auto !important;
         grid-template-areas:
             "brand toggle"
             "panel panel" !important;
+        align-items: start !important;
+        flex-wrap: nowrap !important;
     }
 
-    /* Keep the hamburger pinned top-right next to the brand, even when the
-       panel below it is tall and open (inner uses align-items:center). */
-    body.tmr-site-shell .tmr-global-nav__toggle {
+    html body.tmr-site-shell.tmr-site-shell[data-tmr-route] .tmr-global-nav__brand {
+        grid-column: 1 !important;
+        grid-row: 1 !important;
+    }
+
+    /* Hamburger pinned top-right next to the brand, even when the open panel
+       below is tall. */
+    html body.tmr-site-shell.tmr-site-shell[data-tmr-route] .tmr-global-nav__toggle {
+        grid-column: 2 !important;
+        grid-row: 1 !important;
         align-self: start !important;
+        margin-top: 0 !important;
     }
 
-    /* Flex column instead of grid: grid-area names leaked onto the children
-       are ignored in a flex container, so they can no longer collapse into a
-       single grid cell. Guarantees a clean full-width vertical stack. */
-    body.tmr-site-shell .tmr-global-nav.is-open .tmr-global-nav__panel {
-        grid-area: panel !important;
+    html body.tmr-site-shell.tmr-site-shell[data-tmr-route] .tmr-global-nav__panel {
+        grid-column: 1 / -1 !important;
+        grid-row: 2 !important;
+    }
+
+    /* Flex column instead of grid for the panel itself: grid-area names leaked
+       onto the children are ignored in a flex container, so they can no longer
+       collapse into a single cell. Guarantees a clean full-width vertical
+       stack: tabs -> Community -> Support -> auth/profile. */
+    html body.tmr-site-shell.tmr-site-shell .tmr-global-nav.is-open .tmr-global-nav__panel {
         display: flex !important;
         flex-direction: column !important;
         align-items: stretch !important;
+        flex-basis: 100% !important;
+        width: 100% !important;
         gap: 10px !important;
     }
 
