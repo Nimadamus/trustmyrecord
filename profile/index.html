@@ -2,8 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="robots" content="noindex, follow">
+    <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://trustmyrecord.com/profile/">
+    <script>
+    /* Self-canonicalize public profile pages to their ?user= URL so each verified
+       record is indexed on its own (was collapsing all profiles to /profile/). */
+    (function(){
+      try{
+        var u=(new URLSearchParams(location.search).get('user')||new URLSearchParams(location.search).get('username')||'').trim();
+        if(!u) return;
+        var url='https://trustmyrecord.com/profile/?user='+encodeURIComponent(u);
+        var c=document.querySelector('link[rel="canonical"]'); if(c) c.href=url;
+        var og=document.querySelector('meta[property="og:url"]'); if(og) og.setAttribute('content',url);
+      }catch(e){}
+    })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile | TrustMyRecord</title>
     <meta name="description" content="View user profile, verified pick record, and performance stats on TrustMyRecord.">
