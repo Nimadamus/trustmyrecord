@@ -5,13 +5,14 @@
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://trustmyrecord.com/profile/">
     <script>
-    /* Self-canonicalize public profile pages to their ?user= URL so each verified
-       record is indexed on its own (was collapsing all profiles to /profile/). */
+    /* This ?user= shell is for in-app navigation only. The canonical public,
+       crawler-visible record lives at the static /u/<username>/ page, so point
+       the canonical there (durable, not JS-SEO-dependent). */
     (function(){
       try{
         var u=(new URLSearchParams(location.search).get('user')||new URLSearchParams(location.search).get('username')||'').trim();
         if(!u) return;
-        var url='https://trustmyrecord.com/profile/?user='+encodeURIComponent(u);
+        var url='https://trustmyrecord.com/u/'+encodeURIComponent(u)+'/';
         var c=document.querySelector('link[rel="canonical"]'); if(c) c.href=url;
         var og=document.querySelector('meta[property="og:url"]'); if(og) og.setAttribute('content',url);
       }catch(e){}
