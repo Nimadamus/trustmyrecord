@@ -176,7 +176,11 @@ def page_html(d, recent, avg_amer, sport_rows):
     desc  = (f"View {disp}'s verified TrustMyRecord betting record, including graded picks, "
              f"units, ROI, win percentage, streaks, and public performance history.")
     desc  = e(desc)
-    og_img = f'\n<meta property="og:image" content="{e(avatar)}">' if avatar else ""
+    og_img = ('\n<meta property="og:image" content="https://trustmyrecord.com/static/og/og-profile.png">'
+              '\n<meta property="og:image:width" content="1200">'
+              '\n<meta property="og:image:height" content="630">'
+              '\n<meta name="twitter:card" content="summary_large_image">'
+              '\n<meta name="twitter:image" content="https://trustmyrecord.com/static/og/og-profile.png">')
     avatar_html = (f'<img class="u-avatar" src="{e(avatar)}" alt="{e(disp)} avatar" '
                    f'width="84" height="84">') if avatar else ""
     bio_html = f'<p class="u-bio">{e(bio)}</p>' if bio else ""

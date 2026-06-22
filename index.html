@@ -20,17 +20,21 @@
   }());
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TrustMyRecord | Verified Sports Pick Records, Stats & Competition</title>
-<meta name="description" content="TrustMyRecord gives sports bettors free verified record tracking, public profiles, advanced stats, pick selling tools, transparent buyer discovery, challenges, contests, polls, trivia, and community games.">
+<title>TrustMyRecord | Free Verified Sports Betting Records & Pick Tracking</title>
+<meta name="description" content="Build a free verified sports betting record on TrustMyRecord. Lock picks before game time, auto-grade results, track units, ROI, win percentage, streaks, and compete on public leaderboards.">
 <meta name="keywords" content="sports pick tracking, verified sports picks, sports betting social network, public pick record, handicapper leaderboard, ROI tracker, units tracker, buy sports picks, sell sports picks, sports challenges, sports contests, sports polls, sports trivia, MLB picks, NBA picks, NFL picks, NHL picks">
-<meta property="og:title" content="TrustMyRecord | Verified Sports Pick Records, Stats & Competition">
-<meta property="og:description" content="Free verified pick tracking, public profiles, advanced stats, transparent handicappers, pick selling, challenges, contests, polls, trivia, and community sports games.">
+<meta property="og:title" content="TrustMyRecord | Free Verified Sports Betting Records & Pick Tracking">
+<meta property="og:description" content="Build a free verified sports betting record. Lock picks before game time, auto-grade results, track units, ROI, win percentage, streaks, and compete on public leaderboards.">
 <meta property="og:url" content="https://trustmyrecord.com/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="TrustMyRecord">
+<meta property="og:image" content="https://trustmyrecord.com/static/og/og-home.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="TrustMyRecord | Verified Sports Pick Records">
-<meta name="twitter:description" content="Free verified records, advanced stats, public profiles, pick selling, transparent buying, challenges, contests, polls, trivia, and sports games.">
+<meta name="twitter:title" content="TrustMyRecord | Free Verified Sports Betting Records & Pick Tracking">
+<meta name="twitter:description" content="Build a free verified sports betting record. Lock picks before game time, auto-grade results, track units, ROI, win rate, and streaks on public leaderboards.">
+<meta name="twitter:image" content="https://trustmyrecord.com/static/og/og-home.png">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -2084,7 +2088,7 @@ button{font:inherit;cursor:pointer}
             <table>
               <thead><tr><th>#</th><th>User</th><th>ROI</th><th>Units</th></tr></thead>
               <tbody id="tmrHeroLeaderboardBody">
-                <tr class="tmr-empty-table-row"><td colspan="4">Public profiles will populate after users submit locked picks.</td></tr>
+                <tr class="tmr-seed-table-row"><td colspan="4">Verified public records ranked by net units and ROI. <a href="/leaderboards/">View the full leaderboard</a>.</td></tr>
               </tbody>
             </table>
             </div>
@@ -2096,8 +2100,8 @@ button{font:inherit;cursor:pointer}
             <div id="tmrHeroPicksList" class="tmr-activity-list tmr-activity-empty" aria-live="polite" aria-busy="true">
               <div class="tmr-activity-loading">
                 <span aria-hidden="true">📈</span>
-                <strong>Scanning verified records</strong>
-                <p>Hot streaks, sharp angles, and profit windows show up here.</p>
+                <strong>Verified streaks and recent winners</strong>
+                <p>Hot streaks, sharp angles, and active pick makers from public records. <a href="/handicappers/">Browse verified records</a>.</p>
               </div>
             </div>
             <a class="tmr-activity-cta" href="/handicappers/">View Public Records →</a>
@@ -4444,7 +4448,7 @@ function escapeHtml(value) {
         const body = document.getElementById('tmrHeroLeaderboardBody');
         if (!body) return;
         if (!cleanUsers.length) {
-            body.innerHTML = '<tr class="tmr-empty-table-row"><td colspan="4">Public profiles will populate after users submit locked picks.</td></tr>';
+            body.innerHTML = '<tr class="tmr-seed-table-row"><td colspan="4">Verified public records ranked by net units and ROI. <a href="/leaderboards/">View the full leaderboard</a>.</td></tr>';
             return;
         }
         body.innerHTML = cleanUsers.map(function (user, index) {
@@ -4737,7 +4741,7 @@ function escapeHtml(value) {
         if (!entries.length) {
             list.className = 'tmr-activity-list tmr-activity-empty';
             list.setAttribute('aria-busy', 'true');
-            list.innerHTML = '<div class="tmr-activity-loading"><span aria-hidden="true">📈</span><strong>Scanning verified records</strong><p>Hot streaks, sharp angles, and profit windows for each capper show up here.</p></div>';
+            list.innerHTML = '<div class="tmr-activity-loading"><span aria-hidden="true">📈</span><strong>Verified streaks and recent winners</strong><p>Hot streaks, sharp angles, and active pick makers from public records.</p></div>';
             return;
         }
         list.className = 'tmr-activity-list';
