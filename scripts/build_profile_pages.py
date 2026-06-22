@@ -25,7 +25,7 @@ ROOT  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # repo root
 UDIR  = os.path.join(ROOT, "u")
 SITEMAP = os.path.join(ROOT, "sitemap.xml")
 
-GRADED_MIN = 5   # minimum settled (won/lost/push) picks to index a profile
+GRADED_MIN = 25   # minimum settled (won/lost/push) picks to index a profile (trust-first)
 
 # Internal/system/test accounts to exclude even if they otherwise look eligible.
 INTERNAL_DENYLIST = {"admin", "test", "tmr", "system", "support", "demo"}
