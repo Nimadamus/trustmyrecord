@@ -23,6 +23,7 @@ SITE = "https://trustmyrecord.com"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HANDI = os.path.join(ROOT, "handicappers", "index.html")
 LEAD  = os.path.join(ROOT, "leaderboards", "index.html")
+HOME  = os.path.join(ROOT, "index.html")
 
 INTERNAL_DENYLIST = {"admin", "test", "tmr", "system", "support", "demo"}
 ADMIN_ALLOWLIST   = {"BetLegend"}
@@ -256,6 +257,58 @@ def bake_leaderboards(rows):
         f.write(t)
     return len(rows)
 
+def home_preview_rows(rows, k=5):
+    out = []
+    for i, r in enumerate(rows[:k]):
+        href = f"/u/{e(r['username'])}/"
+        out.append(
+            f'<tr><td class="rk">#{i+1}</td>'
+            f'<td><a href="{href}">{e(r["display_name"])}</a></td>'
+            f'<td>{e(rec(r))}</td>'
+            f'<td class="{lclass(r["net_units"])}">{e(units_u(r["net_units"]))}</td>'
+            f'<td class="{lclass(r["roi"])}">{e(pct(r["roi"]))}</td></tr>'
+        )
+    return "".join(out)
+
+def home_highlights(rows):
+    """Real, derived highlights from the live record set (no fabricated data)."""
+    items = []
+    streakers = sorted([r for r in rows if r["current_streak"] > 0],
+                       key=lambda r: r["current_streak"], reverse=True)
+    if streakers:
+        s = streakers[0]
+        items.append(f'🔥 <b>{e(s["display_name"])}</b> is on a {e(streak(s["current_streak"]))} '
+                     f'win streak with a {e(rec(s))} verified record.')
+    roi_lead = sorted([r for r in rows if r["total_picks"] >= 10],
+                      key=lambda r: r["roi"], reverse=True)
+    if roi_lead:
+        rl = roi_lead[0]
+        items.append(f'📈 <b>{e(rl["display_name"])}</b> leads ROI at {e(pct(rl["roi"]))} '
+                     f'across {rl["total_picks"]} graded picks.')
+    units_lead = max(rows, key=lambda r: r["net_units"])
+    items.append(f'🏆 <b>{e(units_lead["display_name"])}</b> tops the board at '
+                 f'{e(units_u(units_lead["net_units"]))} net units.')
+    volume = max(rows, key=lambda r: r["total_picks"])
+    items.append(f'📊 <b>{e(volume["display_name"])}</b> has the deepest public record with '
+                 f'{volume["total_picks"]} graded picks.')
+    # de-dup while preserving order, cap at 4
+    seen, uniq = set(), []
+    for it in items:
+        if it not in seen:
+            seen.add(it); uniq.append(it)
+    return "".join(f"<li>{x}</li>" for x in uniq[:4])
+
+def bake_homepage(rows):
+    with open(HOME, encoding="utf-8") as f:
+        t = f.read()
+    t = set_marker(t, "homeLbPreview", home_preview_rows(rows),
+                   r'(<tbody>)(<tr><td colspan="5")', r'\g<1>@@BLOCK@@')  # unused fallback
+    t = set_marker(t, "homeHighlights", home_highlights(rows),
+                   r'(<ul class="tmrhx-hl">)(<li>)', r'\g<1>@@BLOCK@@')   # unused fallback
+    with open(HOME, "w", encoding="utf-8", newline="\n") as f:
+        f.write(t)
+    return len(rows[:5])
+
 def main():
     now = datetime.datetime.now(datetime.timezone.utc)
     rows = collect()
@@ -271,8 +324,10 @@ def main():
         return
     n1, tp, act = bake_handicappers(rows, now)
     n2 = bake_leaderboards(rows)
+    n3 = bake_homepage(rows)
     print(f"handicappers: baked {n1} rows, {tp} total picks, {act} active")
     print(f"leaderboards: baked {n2} rows")
+    print(f"homepage: baked {n3} preview rows + highlights")
 
 if __name__ == "__main__":
     main()
