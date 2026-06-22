@@ -34,18 +34,24 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Run prerender (bakes /handicappers/ + /leaderboards/)
+      - name: Bake directory + homepage (/handicappers/, /leaderboards/, /)
         run: python scripts/prerender_directory.py
+
+      - name: Regenerate eligible /u/ profile pages + sitemap
+        run: python scripts/build_profile_pages.py
 
       - name: Commit only if generated output changed
         run: |
-          if git diff --quiet -- handicappers/index.html leaderboards/index.html index.html; then
-            echo "No data change in generated files — skipping commit."
+          # Stage every crawlable SEO surface, incl. NEW profile dirs for users
+          # that just crossed the graded-pick threshold (untracked files need
+          # `git add` before a --cached diff can see them).
+          git add -A handicappers/index.html leaderboards/index.html index.html u sitemap.xml
+          if git diff --cached --quiet; then
+            echo "No data change in generated output — skipping commit."
           else
             git config user.name "tmr-prerender-bot"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add handicappers/index.html leaderboards/index.html index.html
-            git commit -m "chore(prerender): refresh crawlable handicappers + leaderboards + homepage rows [skip ci]"
+            git commit -m "chore(prerender): refresh crawlable directory + homepage + profile pages + sitemap [skip ci]"
             git push origin HEAD:main
             echo "Pushed refreshed prerender output."
           fi
