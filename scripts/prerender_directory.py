@@ -129,6 +129,11 @@ def collect():
             d = u
         if not eligible(d):
             continue
+        # The per-user detail endpoint omits last_pick_at; the /users LIST row
+        # carries the real timestamp. Prefer detail, fall back to the list row so
+        # "Active This Week" is correct and matches the live JS (which reads the
+        # same list field), instead of baking a stale 0.
+        last_pick_at = d.get("last_pick_at") or u.get("last_pick_at") or ""
         rows.append({
             "username": un,
             "display_name": d.get("display_name") or un,
@@ -141,7 +146,7 @@ def collect():
             "roi": num(d.get("roi")),
             "win_rate": num(d.get("win_rate")),
             "current_streak": int(num(d.get("current_streak"))),
-            "last_pick_at": d.get("last_pick_at") or "",
+            "last_pick_at": last_pick_at,
         })
     rows.sort(key=lambda r: r["net_units"], reverse=True)
     return rows
