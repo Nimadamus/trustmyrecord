@@ -1,0 +1,278 @@
+#!/usr/bin/env python3
+"""
+prerender_directory.py - bake real, crawler-visible rows into the static
+/handicappers/ and /leaderboards/ pages for TrustMyRecord (GitHub Pages, no SSR).
+
+Why: both pages ship JS shells ("Loading members...", empty <tbody>) so Googlebot
+sees zero usernames/records/units/ROI. This pulls the live Render API and writes
+the actual ranked rows + hero counts into the initial HTML source. The existing
+client JS still runs and overwrites these nodes for human visitors (progressive
+enhancement) - the baked rows are the durable, crawler-visible source of truth.
+
+Build only. Does NOT commit or deploy. Run from the repo root:
+    python scripts/prerender_directory.py
+Add --dry-run to print the eligible set + sample row without writing files.
+
+Idempotent: re-running replaces content between <!--MK:key--> markers, so a
+30-min cron/GitHub Action can call it repeatedly without drift.
+"""
+import json, os, sys, re, html, datetime, urllib.request
+
+API  = "https://trustmyrecord-api.onrender.com/api"
+SITE = "https://trustmyrecord.com"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+HANDI = os.path.join(ROOT, "handicappers", "index.html")
+LEAD  = os.path.join(ROOT, "leaderboards", "index.html")
+
+INTERNAL_DENYLIST = {"admin", "test", "tmr", "system", "support", "demo"}
+ADMIN_ALLOWLIST   = {"BetLegend"}
+DEFAULT_AVATAR    = "https://trustmyrecord.com/static/media/TMR-avatar-256.jpg"
+
+def clean_avatar(url):
+    """Never bake giant inline data: URIs into the static HTML (one user's
+    avatar is 160KB+). Fall back to the shared default static avatar."""
+    url = (url or "").strip()
+    if not url or url.startswith("data:") or len(url) > 300:
+        return DEFAULT_AVATAR
+    return url
+
+def get(url):
+    req = urllib.request.Request(url, headers={"Accept": "application/json"})
+    with urllib.request.urlopen(req, timeout=45) as r:
+        return json.load(r)
+
+def num(v, d=0.0):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return d
+
+def list_users():
+    out, off = [], 0
+    while True:
+        d = get(f"{API}/users?limit=200&offset={off}")
+        u = d.get("users", [])
+        out += u
+        if len(u) < 200:
+            break
+        off += 200
+    return out
+
+def eligible(d):
+    un = d.get("username", "")
+    if d.get("verification_status") != "verified":
+        return False
+    if (d.get("total_picks") or 0) <= 0:
+        return False
+    if un.lower() in INTERNAL_DENYLIST:
+        return False
+    if d.get("is_admin") and un not in ADMIN_ALLOWLIST:
+        return False
+    return True
+
+def is_active(last_pick_at, now):
+    if not last_pick_at:
+        return False
+    try:
+        t = datetime.datetime.fromisoformat(str(last_pick_at).replace("Z", "+00:00"))
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=datetime.timezone.utc)
+        return (now - t).total_seconds() < 86400
+    except Exception:
+        return False
+
+def collect():
+    """Return ranked list of member dicts with full record stats."""
+    base = list_users()
+    rows = []
+    for u in base:
+        un = u["username"]
+        try:
+            d = get(f"{API}/users/{un}")
+            d = d.get("user", d)
+        except Exception:
+            d = u
+        if not eligible(d):
+            continue
+        rows.append({
+            "username": un,
+            "display_name": d.get("display_name") or un,
+            "avatar_url": clean_avatar(d.get("avatar_url")),
+            "wins": int(num(d.get("wins"))),
+            "losses": int(num(d.get("losses"))),
+            "pushes": int(num(d.get("pushes"))),
+            "total_picks": int(num(d.get("total_picks"))),
+            "net_units": num(d.get("net_units")),
+            "roi": num(d.get("roi")),
+            "win_rate": num(d.get("win_rate")),
+            "current_streak": int(num(d.get("current_streak"))),
+            "last_pick_at": d.get("last_pick_at") or "",
+        })
+    rows.sort(key=lambda r: r["net_units"], reverse=True)
+    return rows
+
+# ---------- formatters (mirror the page JS exactly) ----------
+def e(s):
+    return html.escape(str(s), quote=True)
+
+def rec(r):
+    s = f"{r['wins']}-{r['losses']}"
+    return s + (f"-{r['pushes']}" if r["pushes"] else "")
+
+def units_plain(v):   # handicappers cell: "+20.66" / "-19.48"
+    return ("+" if v > 0 else "") + f"{v:.2f}"
+
+def units_u(v):       # leaderboards cell: "+20.66u"
+    return ("+" if v > 0 else "") + f"{v:.2f}u"
+
+def pct(v):
+    return f"{v:.1f}%"
+
+def roi_pct(v):       # leaderboards signed %
+    return ("+" if v > 0 else "") + f"{v:.2f}%"
+
+def streak(v):
+    if not v:
+        return "0"
+    return ("W" + str(v)) if v > 0 else ("L" + str(abs(v)))
+
+def sclass(v):
+    if v > 0: return "is-positive"
+    if v < 0: return "is-negative"
+    return "is-muted"
+
+def lclass(v):        # leaderboards: pos/neg/neutral
+    return "pos" if v > 0 else "neg" if v < 0 else "neutral"
+
+# ---------- row builders (match each page's JS markup) ----------
+def handi_row(r):
+    href = f"/u/{e(r['username'])}/"
+    label = f"View {r['username']} profile"
+    has_graded = r["total_picks"] > 0
+    roi_cls = sclass(r["roi"]) if has_graded else "is-neutral"
+    wr_cls = sclass(r["win_rate"] - 50) if has_graded else "is-neutral"
+    return (
+        f'<div class="hm-row hm-member-row" data-username="{e(r["username"])}" data-profile-href="{href}" role="link" tabindex="0" aria-label="{e(label)}">'
+        f'<div class="hm-user">'
+        f'<a class="hm-avatar-link" href="{href}" aria-label="{e(label)}" title="{e(label)}">'
+        f'<img class="hm-avatar" src="{e(r["avatar_url"])}" alt="{e(r["display_name"])} avatar"></a>'
+        f'<div class="hm-name"><a class="hm-profile-name" href="{href}" aria-label="{e(label)}" title="{e(label)}">'
+        f'<strong data-tmr-username="{e(r["username"])}">{e(r["display_name"])}</strong></a><span>@{e(r["username"])}</span></div>'
+        f'</div>'
+        f'<div class="hm-stat" data-label="Record">{e(rec(r))}</div>'
+        f'<div class="hm-stat {sclass(r["net_units"])}" data-label="Units">{e(units_plain(r["net_units"]))}</div>'
+        f'<div class="hm-stat {roi_cls}" data-label="ROI">{e(pct(r["roi"]))}</div>'
+        f'<div class="hm-stat {wr_cls}" data-label="Win %">{e(pct(r["win_rate"]))}</div>'
+        f'<div class="hm-stat" data-label="Total picks">{r["total_picks"]}</div>'
+        f'<div class="hm-stat {sclass(r["current_streak"])}" data-label="Current streak">{e(streak(r["current_streak"]))}</div>'
+        f'<div class="hm-stat is-muted" data-label="Last active">{"Recent" if r["last_pick_at"] else "No recent activity"}</div>'
+        f'</div>'
+    )
+
+def lead_row(r, idx):
+    href = f"/profile/?user={e(r['username'])}"
+    rank_cls = "gold" if idx == 0 else "silver" if idx == 1 else "bronze" if idx == 2 else ""
+    initial = e((r["display_name"] or "?")[:1].upper())
+    if r["avatar_url"]:
+        avatar = f'<img class="avatar" src="{e(r["avatar_url"])}" alt="{e(r["display_name"])} avatar">'
+    else:
+        avatar = f'<span class="avatar avatar-initial">{initial}</span>'
+    return (
+        f'<tr>'
+        f'<td><span class="rank {rank_cls}">#{idx + 1}</span></td>'
+        f'<td><div class="person">{avatar}<div class="person-meta">'
+        f'<a class="person-name" href="{href}" data-action="open-profile" data-username="{e(r["username"])}" data-source="board">{e(r["display_name"])}</a>'
+        f'<span class="person-sub">@{e(r["username"])} &bull; All sports &bull; streak {e(streak(r["current_streak"]))}</span>'
+        f'</div></div></td>'
+        f'<td class="{lclass(r["win_rate"] - 50)}">{e(rec(r))}</td>'
+        f'<td class="{lclass(r["roi"])}">{e(roi_pct(r["roi"]))}</td>'
+        f'<td class="{lclass(r["net_units"])}">{e(units_u(r["net_units"]))}</td>'
+        f'<td class="{lclass(r["win_rate"] - 50)}">{e(pct(r["win_rate"]))}</td>'
+        f'<td>{r["total_picks"]}</td>'
+        f'<td><div class="link-actions">'
+        f'<a class="mini-link" href="{href}" data-action="open-profile" data-username="{e(r["username"])}" data-source="board">Profile</a>'
+        f'<a class="mini-link" href="/arena/?challenge={e(r["username"])}" data-action="challenge-capper" data-username="{e(r["username"])}" data-source="board">Challenge</a>'
+        f'</div></td>'
+        f'</tr>'
+    )
+
+# ---------- idempotent injection helpers ----------
+def set_marker(text, key, inner, anchor_pat, anchor_repl_template):
+    """Replace between <!--MK:key-->...<!--/MK:key-->; first run uses anchor_pat."""
+    block = f"<!--MK:{key}-->{inner}<!--/MK:{key}-->"
+    mk = re.compile(rf"<!--MK:{re.escape(key)}-->.*?<!--/MK:{re.escape(key)}-->", re.S)
+    if mk.search(text):
+        return mk.sub(lambda m: block, text, count=1)
+    new, n = re.subn(anchor_pat, anchor_repl_template.replace("@@BLOCK@@", block), text, count=1, flags=re.S)
+    if n == 0:
+        raise RuntimeError(f"anchor not found for key={key}")
+    return new
+
+def set_text(text, pat, value):
+    new, n = re.subn(pat, lambda m: m.group(1) + value + m.group(2), text, count=1, flags=re.S)
+    if n == 0:
+        raise RuntimeError(f"text anchor not found: {pat}")
+    return new
+
+def bake_handicappers(rows, now):
+    with open(HANDI, encoding="utf-8") as f:
+        t = f.read()
+    body = "".join(handi_row(r) for r in rows)
+    t = set_marker(
+        t, "hmRows", body,
+        r'<div class="hm-empty"><strong>Loading handicappers</strong>Pulling public profiles and performance stats\.</div>',
+        "@@BLOCK@@",
+    )
+    total_picks = sum(r["total_picks"] for r in rows)
+    active = sum(1 for r in rows if is_active(r["last_pick_at"], now))
+    # drop loading styling now that real numbers are baked in
+    for hid in ("hmTotalPicks", "hmTotalMembers", "hmActiveMembers", "hmVisibleMembers"):
+        t = re.sub(rf'(<strong id="{hid}")[^>]*(>)', r'\1\2', t, count=1)
+    t = set_text(t, r'(<strong id="hmTotalPicks"[^>]*>).*?(</strong>)', f"{total_picks:,}")
+    t = set_text(t, r'(<strong id="hmTotalMembers"[^>]*>).*?(</strong>)', f"{len(rows):,}")
+    t = set_text(t, r'(<strong id="hmActiveMembers"[^>]*>).*?(</strong>)', f"{active:,}")
+    t = set_text(t, r'(<strong id="hmVisibleMembers"[^>]*>).*?(</strong>)', f"{len(rows):,}")
+    with open(HANDI, "w", encoding="utf-8", newline="\n") as f:
+        f.write(t)
+    return len(rows), total_picks, active
+
+def bake_leaderboards(rows):
+    with open(LEAD, encoding="utf-8") as f:
+        t = f.read()
+    body = "".join(lead_row(r, i) for i, r in enumerate(rows))
+    t = set_marker(
+        t, "lbBody", body,
+        r'(<tbody id="leaderboardBody">)(</tbody>)',
+        r'\g<1>@@BLOCK@@\g<2>',
+    )
+    # make the static table visible without JS; hide the JS loading state
+    t = t.replace('<div id="leaderboardWrap" class="table-wrap" style="display:none;">',
+                  '<div id="leaderboardWrap" class="table-wrap" data-prerendered="1">')
+    t = t.replace('<div id="leaderboardState" class="loading">Loading verified handicapper data...</div>',
+                  '<div id="leaderboardState" class="loading" style="display:none;">Loading verified handicapper data...</div>')
+    t = set_text(t, r'(<div class="count-chip" id="resultCount">).*?(</div>)', f"{len(rows)} cappers")
+    t = set_text(t, r'(<b id="qsHandicappers">).*?(</b>)', str(len(rows)))
+    with open(LEAD, "w", encoding="utf-8", newline="\n") as f:
+        f.write(t)
+    return len(rows)
+
+def main():
+    now = datetime.datetime.now(datetime.timezone.utc)
+    rows = collect()
+    if not rows:
+        print("no eligible members - aborting (will not blank pages)")
+        sys.exit(1)
+    if "--dry-run" in sys.argv:
+        print(f"eligible members: {len(rows)}")
+        for r in rows[:8]:
+            print(f"  {r['username']:>20}  {rec(r):>9}  {units_u(r['net_units']):>9}  ROI {r['roi']:.2f}%  {r['total_picks']} picks  streak {streak(r['current_streak'])}")
+        print("\nSAMPLE handicappers row:\n", handi_row(rows[0])[:400])
+        print("\nSAMPLE leaderboard row:\n", lead_row(rows[0], 0)[:400])
+        return
+    n1, tp, act = bake_handicappers(rows, now)
+    n2 = bake_leaderboards(rows)
+    print(f"handicappers: baked {n1} rows, {tp} total picks, {act} active")
+    print(f"leaderboards: baked {n2} rows")
+
+if __name__ == "__main__":
+    main()
