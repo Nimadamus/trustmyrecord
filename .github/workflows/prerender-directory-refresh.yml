@@ -1,0 +1,51 @@
+name: Prerender Directory Refresh
+
+# Keeps the crawler-visible rows on /handicappers/ and /leaderboards/ fresh.
+# scripts/prerender_directory.py pulls the live Render API and bakes real member
+# rows + hero counts into the static HTML (GitHub Pages = legacy, source main/,
+# so a push to main republishes automatically). Commits made by GITHUB_TOKEN do
+# not trigger `on: push` workflows, so this cannot loop; we also only commit when
+# the generated output actually changed and tag the message [skip ci].
+
+on:
+  schedule:
+    # Every 30 minutes. Script is stdlib-only and hits a free-tier Render API;
+    # if rate/limits ever bite, change to '0 * * * *' (hourly).
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: prerender-directory-refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Run prerender (bakes /handicappers/ + /leaderboards/)
+        run: python scripts/prerender_directory.py
+
+      - name: Commit only if generated output changed
+        run: |
+          if git diff --quiet -- handicappers/index.html leaderboards/index.html; then
+            echo "No data change in generated files — skipping commit."
+          else
+            git config user.name "tmr-prerender-bot"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add handicappers/index.html leaderboards/index.html
+            git commit -m "chore(prerender): refresh crawlable handicappers + leaderboards rows [skip ci]"
+            git push origin HEAD:main
+            echo "Pushed refreshed prerender output."
+          fi
