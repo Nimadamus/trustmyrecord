@@ -1023,6 +1023,74 @@
         .hm-leader-card b { font-size: 0.7rem !important; letter-spacing: 0.18em !important; }
         .hm-leader-card strong { font-size: 1.3rem !important; margin-top: 14px !important; }
 
+        /* ===== Tiered ranking redesign ===== */
+        .hm-counts--quad {
+            grid-template-columns: 1fr 1fr;
+            grid-template-areas: none;
+        }
+        .hm-counts--quad .hm-count--primary { grid-area: auto; padding: 18px 20px; }
+        .hm-counts--quad .hm-count--primary strong { font-size: clamp(1.9rem, 3vw, 2.4rem); }
+        @media (max-width: 560px) { .hm-counts--quad { grid-template-columns: 1fr 1fr; } }
+
+        /* Tier section dividers inside the leaderboard table */
+        .hm-tier-header {
+            grid-column: 1 / -1;
+            padding: 18px 22px 10px;
+            border-top: 1px solid rgba(45, 212, 191, 0.18);
+        }
+        #hmRows > .hm-tier-header:first-child { border-top: 0; }
+        .hm-tier-header h3 {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: "Barlow", "Inter", sans-serif;
+            font-size: 1.04rem;
+            font-weight: 900;
+            letter-spacing: 0.01em;
+            color: #eaf6ff;
+        }
+        .hm-tier-header--verified h3 { color: #9ffcf0; }
+        .hm-tier-header--rising h3 { color: #ffd98a; }
+        .hm-tier-header--new h3 { color: #b8c6db; }
+        .hm-tier-count {
+            font-size: 0.72rem;
+            font-weight: 900;
+            color: #0b1424;
+            background: rgba(159, 252, 240, 0.85);
+            border-radius: 999px;
+            padding: 2px 9px;
+        }
+        .hm-tier-header--rising .hm-tier-count { background: rgba(255, 217, 138, 0.9); }
+        .hm-tier-header--new .hm-tier-count { background: rgba(184, 198, 219, 0.85); }
+        .hm-tier-header p {
+            margin: 5px 0 0;
+            color: var(--muted);
+            font-size: 0.82rem;
+            font-weight: 700;
+            max-width: 760px;
+        }
+        /* Hide global medal/rank chips when the board is grouped into tiers */
+        #hmRows.hm-grouped .hm-member-row::before { display: none !important; }
+
+        /* Small-sample / building-record badges */
+        .hm-badge {
+            justify-self: start;
+            display: inline-block;
+            font-size: 0.64rem;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            padding: 2px 8px;
+            border-radius: 999px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            color: #9fb0c6;
+            background: rgba(148, 163, 184, 0.1);
+        }
+        .hm-badge--building { color: #ffd98a; border-color: rgba(255, 217, 138, 0.4); background: rgba(255, 217, 138, 0.1); }
+        .hm-badge--sample { color: #9fc6ff; border-color: rgba(96, 165, 250, 0.4); background: rgba(96, 165, 250, 0.1); }
+        .hm-badge--joined { color: #b8c6db; }
+
         /* TOOLBAR (search/sport/wager/sort) - non-sticky so it cannot cover the first row */
         .hm-controls {
             position: static;
@@ -1420,43 +1488,44 @@
                 <h1>Find Verified Handicappers</h1>
                 <p>Discover members with real locked-pick activity, compare verified records, follow cappers, and open public pick histories.</p>
             </div>
-            <div class="hm-counts" aria-label="Directory summary">
+            <div class="hm-counts hm-counts--quad" aria-label="Platform activity">
                 <div class="hm-count hm-count--primary">
-                    <strong id="hmTotalPicks">1,159</strong>
-                    <span>Total Verified Picks</span>
-                    <small>Graded picks across the directory</small>
+                    <strong id="hmVerifiedCount">9</strong>
+                    <span>Verified Handicappers</span>
+                    <small>25+ graded picks, public record</small>
                 </div>
-                <div class="hm-count--secondary">
-                    <div class="hm-count">
-                        <strong id="hmTotalMembers">27</strong>
-                        <span>Total Members</span>
-                    </div>
-                    <div class="hm-count">
-                        <strong id="hmActiveMembers">0</strong>
-                        <span>Active Pick Makers</span>
-                    </div>
+                <div class="hm-count">
+                    <strong id="hmPickMakers">27</strong>
+                    <span>Pick Makers</span>
+                    <small>Members building a record</small>
+                </div>
+                <div class="hm-count">
+                    <strong id="hmTotalPicks">1,160</strong>
+                    <span>Total Graded Picks</span>
+                    <small>Across the directory</small>
+                </div>
+                <div class="hm-count">
+                    <strong id="hmActiveWeek">0</strong>
+                    <span>Active This Week</span>
+                    <small>Locked a pick in 7 days</small>
                 </div>
             </div>
         </section>
 
-        <section aria-label="Featured leaders">
+        <section aria-label="Featured verified handicappers">
             <div class="hm-section-head">
                 <div>
-                    <h2>Leaderboard</h2>
-                    <p>Featured leaders require at least 20 graded picks, recent graded activity, and positive net units. Rankings favor verified volume, profitability, ROI, and recent activity - small samples (under 20 graded picks) are weighted down so a single-pick spike will not dominate. The leaderboard table below shows every member with at least <span id="hmMinPicksLabel">1</span> locked pick.</p>
+                    <h2>Featured Verified Handicappers</h2>
+                    <p>The serious leaderboard. Featured leaders have at least 25 graded picks, recent activity, and positive net units. Small samples are weighted down so a single-pick spike never dominates. Rising and new pick makers are listed in the full directory below.</p>
                 </div>
-                <span class="hm-production-note"><strong id="hmVisibleMembers">27</strong> qualified members</span>
+                <span class="hm-production-note"><strong id="hmVisibleMembers">9</strong> verified · <strong id="hmBuildingCount">18</strong> building records</span>
             </div>
             <div class="hm-featured" id="hmFeaturedLeaders">
-                <div class="hm-leader-card hm-leader-card--empty"><b>Loading</b><strong>--</strong><span>Waiting for qualified member data</span></div>
+                <div class="hm-leader-card hm-leader-card--empty"><b>Loading</b><strong>--</strong><span>Waiting for verified member data</span></div>
             </div>
         </section>
 
-        <div class="hm-view-toggle" role="group" aria-label="Member view">
-            <button type="button" class="hm-view-btn is-active" data-view="active" aria-pressed="true">Active Pick Makers</button>
-            <button type="button" class="hm-view-btn" data-view="all" aria-pressed="false">All Members</button>
-        </div>
-        <p class="hm-view-hint" id="hmViewHint">Showing members who locked a pick in the last 24 hours.</p>
+        <p class="hm-view-hint" id="hmViewHint">Showing verified leaders first. Rising and new pick makers are listed below as they build a record.</p>
 
         <section class="hm-controls" aria-label="Search and filters">
             <div class="hm-field">
@@ -1511,13 +1580,17 @@
         </div>
 
         <div class="hm-leaderboard-controls" aria-label="Leaderboard pagination controls">
-            <span class="hm-page-summary" id="hmPageSummary" aria-busy="true">Loading qualified members...</span>
+            <span class="hm-page-summary" id="hmPageSummary" aria-busy="true">Loading members...</span>
             <div class="hm-page-actions">
-                <select class="hm-page-size" id="hmPageSize" aria-label="Leaderboard page size">
-                    <option value="25">Top 25</option>
-                    <option value="50">Top 50</option>
-                    <option value="100">Top 100</option>
-                    <option value="all">All</option>
+                <select class="hm-page-size" id="hmTier" aria-label="Show handicapper tier">
+                    <option value="all">All Pick Makers</option>
+                    <option value="verified">Verified Leaders</option>
+                    <option value="rising">Rising Pick Makers</option>
+                    <option value="new">New Pick Makers</option>
+                    <option value="active">Recently Active</option>
+                    <option value="picks">Most Picks</option>
+                    <option value="roi">Best ROI</option>
+                    <option value="winrate">Best Win Rate</option>
                 </select>
                 <button class="hm-page-button" type="button" id="hmPrevPage">Previous</button>
                 <span class="hm-page-indicator" id="hmPageIndicator">Page 1 of 1</span>
@@ -1537,8 +1610,8 @@
                     <div><button type="button" class="hm-sort" data-sort="streak" aria-sort="none"><span>Streak</span><span class="hm-sort-arrow" aria-hidden="true"></span></button></div>
                     <div><button type="button" class="hm-sort" data-sort="active" aria-sort="none"><span>Active</span><span class="hm-sort-arrow" aria-hidden="true"></span></button></div>
                 </div>
-                <div id="hmRows">
-                    <!--MK:hmRows--><div class="hm-row hm-member-row" data-username="makaveli66" data-profile-href="/u/makaveli66/" role="link" tabindex="0" aria-label="View makaveli66 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/makaveli66/" aria-label="View makaveli66 profile" title="View makaveli66 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="makaveli66 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/makaveli66/" aria-label="View makaveli66 profile" title="View makaveli66 profile"><strong data-tmr-username="makaveli66">makaveli66</strong></a><span>@makaveli66</span></div></div><div class="hm-stat" data-label="Record">79-55</div><div class="hm-stat is-positive" data-label="Units">+20.66</div><div class="hm-stat is-positive" data-label="ROI">1.1%</div><div class="hm-stat is-positive" data-label="Win %">59.0%</div><div class="hm-stat" data-label="Total picks">134</div><div class="hm-stat is-positive" data-label="Current streak">W6</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Bullshark" data-profile-href="/u/Bullshark/" role="link" tabindex="0" aria-label="View Bullshark profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Bullshark/" aria-label="View Bullshark profile" title="View Bullshark profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Bullshark avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Bullshark/" aria-label="View Bullshark profile" title="View Bullshark profile"><strong data-tmr-username="Bullshark">Bullshark</strong></a><span>@Bullshark</span></div></div><div class="hm-stat" data-label="Record">1-0</div><div class="hm-stat is-positive" data-label="Units">+5.00</div><div class="hm-stat is-positive" data-label="ROI">90.9%</div><div class="hm-stat is-positive" data-label="Win %">100.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Mike" data-profile-href="/u/Mike/" role="link" tabindex="0" aria-label="View Mike profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Mike/" aria-label="View Mike profile" title="View Mike profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Mike avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Mike/" aria-label="View Mike profile" title="View Mike profile"><strong data-tmr-username="Mike">Mike</strong></a><span>@Mike</span></div></div><div class="hm-stat" data-label="Record">2-1</div><div class="hm-stat is-positive" data-label="Units">+4.41</div><div class="hm-stat is-positive" data-label="ROI">56.2%</div><div class="hm-stat is-positive" data-label="Win %">66.7%</div><div class="hm-stat" data-label="Total picks">3</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="regi" data-profile-href="/u/regi/" role="link" tabindex="0" aria-label="View regi profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/regi/" aria-label="View regi profile" title="View regi profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="regi avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/regi/" aria-label="View regi profile" title="View regi profile"><strong data-tmr-username="regi">regi</strong></a><span>@regi</span></div></div><div class="hm-stat" data-label="Record">29-24</div><div class="hm-stat is-positive" data-label="Units">+4.30</div><div class="hm-stat is-positive" data-label="ROI">8.1%</div><div class="hm-stat is-positive" data-label="Win %">54.7%</div><div class="hm-stat" data-label="Total picks">53</div><div class="hm-stat is-negative" data-label="Current streak">L4</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="patrick9" data-profile-href="/u/patrick9/" role="link" tabindex="0" aria-label="View patrick9 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/patrick9/" aria-label="View patrick9 profile" title="View patrick9 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="patrick9 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/patrick9/" aria-label="View patrick9 profile" title="View patrick9 profile"><strong data-tmr-username="patrick9">patrick9</strong></a><span>@patrick9</span></div></div><div class="hm-stat" data-label="Record">10-8-1</div><div class="hm-stat is-positive" data-label="Units">+3.34</div><div class="hm-stat is-positive" data-label="ROI">12.2%</div><div class="hm-stat is-positive" data-label="Win %">55.6%</div><div class="hm-stat" data-label="Total picks">19</div><div class="hm-stat is-negative" data-label="Current streak">L4</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="cfunesti" data-profile-href="/u/cfunesti/" role="link" tabindex="0" aria-label="View cfunesti profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/cfunesti/" aria-label="View cfunesti profile" title="View cfunesti profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="c$ avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/cfunesti/" aria-label="View cfunesti profile" title="View cfunesti profile"><strong data-tmr-username="cfunesti">c$</strong></a><span>@cfunesti</span></div></div><div class="hm-stat" data-label="Record">1-0</div><div class="hm-stat is-positive" data-label="Units">+2.20</div><div class="hm-stat is-positive" data-label="ROI">110.0%</div><div class="hm-stat is-positive" data-label="Win %">100.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="fade_my_picks" data-profile-href="/u/fade_my_picks/" role="link" tabindex="0" aria-label="View fade_my_picks profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/fade_my_picks/" aria-label="View fade_my_picks profile" title="View fade_my_picks profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="fade_my_picks avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/fade_my_picks/" aria-label="View fade_my_picks profile" title="View fade_my_picks profile"><strong data-tmr-username="fade_my_picks">fade_my_picks</strong></a><span>@fade_my_picks</span></div></div><div class="hm-stat" data-label="Record">52-44-7</div><div class="hm-stat is-positive" data-label="Units">+1.47</div><div class="hm-stat is-positive" data-label="ROI">1.5%</div><div class="hm-stat is-positive" data-label="Win %">54.2%</div><div class="hm-stat" data-label="Total picks">103</div><div class="hm-stat is-positive" data-label="Current streak">W2</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Edwin" data-profile-href="/u/Edwin/" role="link" tabindex="0" aria-label="View Edwin profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Edwin/" aria-label="View Edwin profile" title="View Edwin profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Edwin avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Edwin/" aria-label="View Edwin profile" title="View Edwin profile"><strong data-tmr-username="Edwin">Edwin</strong></a><span>@Edwin</span></div></div><div class="hm-stat" data-label="Record">1-1</div><div class="hm-stat is-positive" data-label="Units">+1.45</div><div class="hm-stat is-positive" data-label="ROI">29.9%</div><div class="hm-stat is-muted" data-label="Win %">50.0%</div><div class="hm-stat" data-label="Total picks">2</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Igilli" data-profile-href="/u/Igilli/" role="link" tabindex="0" aria-label="View Igilli profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Igilli/" aria-label="View Igilli profile" title="View Igilli profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Igilli avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Igilli/" aria-label="View Igilli profile" title="View Igilli profile"><strong data-tmr-username="Igilli">Igilli</strong></a><span>@Igilli</span></div></div><div class="hm-stat" data-label="Record">1-0</div><div class="hm-stat is-positive" data-label="Units">+1.20</div><div class="hm-stat is-positive" data-label="ROI">120.0%</div><div class="hm-stat is-positive" data-label="Win %">100.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="KasperNV" data-profile-href="/u/KasperNV/" role="link" tabindex="0" aria-label="View KasperNV profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/KasperNV/" aria-label="View KasperNV profile" title="View KasperNV profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="KasperNV avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/KasperNV/" aria-label="View KasperNV profile" title="View KasperNV profile"><strong data-tmr-username="KasperNV">KasperNV</strong></a><span>@KasperNV</span></div></div><div class="hm-stat" data-label="Record">1-0</div><div class="hm-stat is-positive" data-label="Units">+1.20</div><div class="hm-stat is-positive" data-label="ROI">120.0%</div><div class="hm-stat is-positive" data-label="Win %">100.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Livan" data-profile-href="/u/Livan/" role="link" tabindex="0" aria-label="View Livan profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Livan/" aria-label="View Livan profile" title="View Livan profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Livan avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Livan/" aria-label="View Livan profile" title="View Livan profile"><strong data-tmr-username="Livan">Livan</strong></a><span>@Livan</span></div></div><div class="hm-stat" data-label="Record">2-1</div><div class="hm-stat is-positive" data-label="Units">+1.15</div><div class="hm-stat is-positive" data-label="ROI">38.3%</div><div class="hm-stat is-positive" data-label="Win %">66.7%</div><div class="hm-stat" data-label="Total picks">3</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Firelink" data-profile-href="/u/Firelink/" role="link" tabindex="0" aria-label="View Firelink profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Firelink/" aria-label="View Firelink profile" title="View Firelink profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Firelink avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Firelink/" aria-label="View Firelink profile" title="View Firelink profile"><strong data-tmr-username="Firelink">Firelink</strong></a><span>@Firelink</span></div></div><div class="hm-stat" data-label="Record">1-0</div><div class="hm-stat is-positive" data-label="Units">+0.95</div><div class="hm-stat is-positive" data-label="ROI">95.0%</div><div class="hm-stat is-positive" data-label="Win %">100.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="albert20" data-profile-href="/u/albert20/" role="link" tabindex="0" aria-label="View albert20 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/albert20/" aria-label="View albert20 profile" title="View albert20 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="albert20 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/albert20/" aria-label="View albert20 profile" title="View albert20 profile"><strong data-tmr-username="albert20">albert20</strong></a><span>@albert20</span></div></div><div class="hm-stat" data-label="Record">1-0</div><div class="hm-stat is-positive" data-label="Units">+0.94</div><div class="hm-stat is-positive" data-label="ROI">94.0%</div><div class="hm-stat is-positive" data-label="Win %">100.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Fademe70" data-profile-href="/u/Fademe70/" role="link" tabindex="0" aria-label="View Fademe70 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Fademe70/" aria-label="View Fademe70 profile" title="View Fademe70 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Fademe70 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Fademe70/" aria-label="View Fademe70 profile" title="View Fademe70 profile"><strong data-tmr-username="Fademe70">Fademe70</strong></a><span>@Fademe70</span></div></div><div class="hm-stat" data-label="Record">18-11</div><div class="hm-stat is-positive" data-label="Units">+0.24</div><div class="hm-stat is-positive" data-label="ROI">0.6%</div><div class="hm-stat is-positive" data-label="Win %">62.1%</div><div class="hm-stat" data-label="Total picks">29</div><div class="hm-stat is-positive" data-label="Current streak">W6</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="scpridematt" data-profile-href="/u/scpridematt/" role="link" tabindex="0" aria-label="View scpridematt profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/scpridematt/" aria-label="View scpridematt profile" title="View scpridematt profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="scpridematt avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/scpridematt/" aria-label="View scpridematt profile" title="View scpridematt profile"><strong data-tmr-username="scpridematt">scpridematt</strong></a><span>@scpridematt</span></div></div><div class="hm-stat" data-label="Record">1-1</div><div class="hm-stat is-positive" data-label="Units">+0.01</div><div class="hm-stat is-positive" data-label="ROI">0.4%</div><div class="hm-stat is-muted" data-label="Win %">50.0%</div><div class="hm-stat" data-label="Total picks">2</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Nyce509" data-profile-href="/u/Nyce509/" role="link" tabindex="0" aria-label="View Nyce509 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Nyce509/" aria-label="View Nyce509 profile" title="View Nyce509 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Nyce509 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Nyce509/" aria-label="View Nyce509 profile" title="View Nyce509 profile"><strong data-tmr-username="Nyce509">Nyce509</strong></a><span>@Nyce509</span></div></div><div class="hm-stat" data-label="Record">1-1</div><div class="hm-stat is-negative" data-label="Units">-0.20</div><div class="hm-stat is-negative" data-label="ROI">-10.0%</div><div class="hm-stat is-muted" data-label="Win %">50.0%</div><div class="hm-stat" data-label="Total picks">2</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="ebonyprince" data-profile-href="/u/ebonyprince/" role="link" tabindex="0" aria-label="View ebonyprince profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/ebonyprince/" aria-label="View ebonyprince profile" title="View ebonyprince profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="ebonyprince avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/ebonyprince/" aria-label="View ebonyprince profile" title="View ebonyprince profile"><strong data-tmr-username="ebonyprince">ebonyprince</strong></a><span>@ebonyprince</span></div></div><div class="hm-stat" data-label="Record">0-1</div><div class="hm-stat is-negative" data-label="Units">-1.00</div><div class="hm-stat is-negative" data-label="ROI">-100.0%</div><div class="hm-stat is-negative" data-label="Win %">0.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-negative" data-label="Current streak">L1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="peacecrypt" data-profile-href="/u/peacecrypt/" role="link" tabindex="0" aria-label="View peacecrypt profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/peacecrypt/" aria-label="View peacecrypt profile" title="View peacecrypt profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="peacecrypt avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/peacecrypt/" aria-label="View peacecrypt profile" title="View peacecrypt profile"><strong data-tmr-username="peacecrypt">peacecrypt</strong></a><span>@peacecrypt</span></div></div><div class="hm-stat" data-label="Record">0-1</div><div class="hm-stat is-negative" data-label="Units">-1.00</div><div class="hm-stat is-negative" data-label="ROI">-100.0%</div><div class="hm-stat is-negative" data-label="Win %">0.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-negative" data-label="Current streak">L1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="84Donkey" data-profile-href="/u/84Donkey/" role="link" tabindex="0" aria-label="View 84Donkey profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/84Donkey/" aria-label="View 84Donkey profile" title="View 84Donkey profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="84Donkey avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/84Donkey/" aria-label="View 84Donkey profile" title="View 84Donkey profile"><strong data-tmr-username="84Donkey">84Donkey</strong></a><span>@84Donkey</span></div></div><div class="hm-stat" data-label="Record">0-1</div><div class="hm-stat is-negative" data-label="Units">-1.00</div><div class="hm-stat is-negative" data-label="ROI">-100.0%</div><div class="hm-stat is-negative" data-label="Win %">0.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-negative" data-label="Current streak">L1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="NobodyImportant74" data-profile-href="/u/NobodyImportant74/" role="link" tabindex="0" aria-label="View NobodyImportant74 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/NobodyImportant74/" aria-label="View NobodyImportant74 profile" title="View NobodyImportant74 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="NobodyImportant74 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/NobodyImportant74/" aria-label="View NobodyImportant74 profile" title="View NobodyImportant74 profile"><strong data-tmr-username="NobodyImportant74">NobodyImportant74</strong></a><span>@NobodyImportant74</span></div></div><div class="hm-stat" data-label="Record">38-40</div><div class="hm-stat is-negative" data-label="Units">-1.52</div><div class="hm-stat is-negative" data-label="ROI">-1.9%</div><div class="hm-stat is-negative" data-label="Win %">48.7%</div><div class="hm-stat" data-label="Total picks">78</div><div class="hm-stat is-negative" data-label="Current streak">L1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Flintlocktropicks" data-profile-href="/u/Flintlocktropicks/" role="link" tabindex="0" aria-label="View Flintlocktropicks profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Flintlocktropicks/" aria-label="View Flintlocktropicks profile" title="View Flintlocktropicks profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Flintlocktropicks avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Flintlocktropicks/" aria-label="View Flintlocktropicks profile" title="View Flintlocktropicks profile"><strong data-tmr-username="Flintlocktropicks">Flintlocktropicks</strong></a><span>@Flintlocktropicks</span></div></div><div class="hm-stat" data-label="Record">2-2</div><div class="hm-stat is-negative" data-label="Units">-1.53</div><div class="hm-stat is-negative" data-label="ROI">-26.0%</div><div class="hm-stat is-muted" data-label="Win %">50.0%</div><div class="hm-stat" data-label="Total picks">4</div><div class="hm-stat is-positive" data-label="Current streak">W2</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="The_Land17" data-profile-href="/u/The_Land17/" role="link" tabindex="0" aria-label="View The_Land17 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/The_Land17/" aria-label="View The_Land17 profile" title="View The_Land17 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="The_Land17 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/The_Land17/" aria-label="View The_Land17 profile" title="View The_Land17 profile"><strong data-tmr-username="The_Land17">The_Land17</strong></a><span>@The_Land17</span></div></div><div class="hm-stat" data-label="Record">78-70-1</div><div class="hm-stat is-negative" data-label="Units">-1.57</div><div class="hm-stat is-negative" data-label="ROI">-0.5%</div><div class="hm-stat is-positive" data-label="Win %">52.7%</div><div class="hm-stat" data-label="Total picks">149</div><div class="hm-stat is-negative" data-label="Current streak">L2</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="MoneyMakers" data-profile-href="/u/MoneyMakers/" role="link" tabindex="0" aria-label="View MoneyMakers profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/MoneyMakers/" aria-label="View MoneyMakers profile" title="View MoneyMakers profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="MoneyMakers avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/MoneyMakers/" aria-label="View MoneyMakers profile" title="View MoneyMakers profile"><strong data-tmr-username="MoneyMakers">MoneyMakers</strong></a><span>@MoneyMakers</span></div></div><div class="hm-stat" data-label="Record">93-39</div><div class="hm-stat is-negative" data-label="Units">-1.64</div><div class="hm-stat is-negative" data-label="ROI">-0.8%</div><div class="hm-stat is-positive" data-label="Win %">70.5%</div><div class="hm-stat" data-label="Total picks">132</div><div class="hm-stat is-positive" data-label="Current streak">W2</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="betonsportspicks" data-profile-href="/u/betonsportspicks/" role="link" tabindex="0" aria-label="View betonsportspicks profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/betonsportspicks/" aria-label="View betonsportspicks profile" title="View betonsportspicks profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="betonsportspicks avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/betonsportspicks/" aria-label="View betonsportspicks profile" title="View betonsportspicks profile"><strong data-tmr-username="betonsportspicks">betonsportspicks</strong></a><span>@betonsportspicks</span></div></div><div class="hm-stat" data-label="Record">5-7</div><div class="hm-stat is-negative" data-label="Units">-1.89</div><div class="hm-stat is-negative" data-label="ROI">-14.5%</div><div class="hm-stat is-negative" data-label="Win %">41.7%</div><div class="hm-stat" data-label="Total picks">12</div><div class="hm-stat is-negative" data-label="Current streak">L1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="mikeybalhansports" data-profile-href="/u/mikeybalhansports/" role="link" tabindex="0" aria-label="View mikeybalhansports profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/mikeybalhansports/" aria-label="View mikeybalhansports profile" title="View mikeybalhansports profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="mikeybalhansports avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/mikeybalhansports/" aria-label="View mikeybalhansports profile" title="View mikeybalhansports profile"><strong data-tmr-username="mikeybalhansports">mikeybalhansports</strong></a><span>@mikeybalhansports</span></div></div><div class="hm-stat" data-label="Record">0-2</div><div class="hm-stat is-negative" data-label="Units">-9.05</div><div class="hm-stat is-negative" data-label="ROI">-100.0%</div><div class="hm-stat is-negative" data-label="Win %">0.0%</div><div class="hm-stat" data-label="Total picks">2</div><div class="hm-stat is-negative" data-label="Current streak">L2</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="WilliamWarmbach" data-profile-href="/u/WilliamWarmbach/" role="link" tabindex="0" aria-label="View WilliamWarmbach profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/WilliamWarmbach/" aria-label="View WilliamWarmbach profile" title="View WilliamWarmbach profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="WilliamWarmbach avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/WilliamWarmbach/" aria-label="View WilliamWarmbach profile" title="View WilliamWarmbach profile"><strong data-tmr-username="WilliamWarmbach">WilliamWarmbach</strong></a><span>@WilliamWarmbach</span></div></div><div class="hm-stat" data-label="Record">51-63</div><div class="hm-stat is-negative" data-label="Units">-18.82</div><div class="hm-stat is-negative" data-label="ROI">-16.5%</div><div class="hm-stat is-negative" data-label="Win %">44.7%</div><div class="hm-stat" data-label="Total picks">114</div><div class="hm-stat is-negative" data-label="Current streak">L3</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="BetLegend" data-profile-href="/u/BetLegend/" role="link" tabindex="0" aria-label="View BetLegend profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/BetLegend/" aria-label="View BetLegend profile" title="View BetLegend profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="BetLegend avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/BetLegend/" aria-label="View BetLegend profile" title="View BetLegend profile"><strong data-tmr-username="BetLegend">BetLegend</strong></a><span>@BetLegend</span></div></div><div class="hm-stat" data-label="Record">159-147-3</div><div class="hm-stat is-negative" data-label="Units">-19.48</div><div class="hm-stat is-negative" data-label="ROI">-1.9%</div><div class="hm-stat is-positive" data-label="Win %">52.0%</div><div class="hm-stat" data-label="Total picks">309</div><div class="hm-stat is-negative" data-label="Current streak">L1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><!--/MK:hmRows-->
+                <div id="hmRows" class="hm-grouped">
+                    <!--MK:hmRows--><div class="hm-tier-header hm-tier-header--verified" role="presentation"><h3>Featured Verified Handicappers <span class="hm-tier-count">9</span></h3><p>Members with 25+ graded picks and a real, public ROI/units record.</p></div><div class="hm-row hm-member-row" data-username="makaveli66" data-profile-href="/u/makaveli66/" role="link" tabindex="0" aria-label="View makaveli66 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/makaveli66/" aria-label="View makaveli66 profile" title="View makaveli66 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="makaveli66 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/makaveli66/" aria-label="View makaveli66 profile" title="View makaveli66 profile"><strong data-tmr-username="makaveli66">makaveli66</strong></a><span>@makaveli66</span></div></div><div class="hm-stat" data-label="Record">79-55</div><div class="hm-stat is-positive" data-label="Units">+20.66</div><div class="hm-stat is-positive" data-label="ROI">1.1%</div><div class="hm-stat is-positive" data-label="Win %">59.0%</div><div class="hm-stat" data-label="Total picks">134</div><div class="hm-stat is-positive" data-label="Current streak">W6</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="regi" data-profile-href="/u/regi/" role="link" tabindex="0" aria-label="View regi profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/regi/" aria-label="View regi profile" title="View regi profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="regi avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/regi/" aria-label="View regi profile" title="View regi profile"><strong data-tmr-username="regi">regi</strong></a><span>@regi</span></div></div><div class="hm-stat" data-label="Record">29-24</div><div class="hm-stat is-positive" data-label="Units">+4.30</div><div class="hm-stat is-positive" data-label="ROI">8.1%</div><div class="hm-stat is-positive" data-label="Win %">54.7%</div><div class="hm-stat" data-label="Total picks">53</div><div class="hm-stat is-negative" data-label="Current streak">L4</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="fade_my_picks" data-profile-href="/u/fade_my_picks/" role="link" tabindex="0" aria-label="View fade_my_picks profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/fade_my_picks/" aria-label="View fade_my_picks profile" title="View fade_my_picks profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="fade_my_picks avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/fade_my_picks/" aria-label="View fade_my_picks profile" title="View fade_my_picks profile"><strong data-tmr-username="fade_my_picks">fade_my_picks</strong></a><span>@fade_my_picks</span></div></div><div class="hm-stat" data-label="Record">52-44-7</div><div class="hm-stat is-positive" data-label="Units">+1.47</div><div class="hm-stat is-positive" data-label="ROI">1.5%</div><div class="hm-stat is-positive" data-label="Win %">54.2%</div><div class="hm-stat" data-label="Total picks">103</div><div class="hm-stat is-positive" data-label="Current streak">W2</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Fademe70" data-profile-href="/u/Fademe70/" role="link" tabindex="0" aria-label="View Fademe70 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Fademe70/" aria-label="View Fademe70 profile" title="View Fademe70 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Fademe70 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Fademe70/" aria-label="View Fademe70 profile" title="View Fademe70 profile"><strong data-tmr-username="Fademe70">Fademe70</strong></a><span>@Fademe70</span></div></div><div class="hm-stat" data-label="Record">18-11</div><div class="hm-stat is-positive" data-label="Units">+0.24</div><div class="hm-stat is-positive" data-label="ROI">0.6%</div><div class="hm-stat is-positive" data-label="Win %">62.1%</div><div class="hm-stat" data-label="Total picks">29</div><div class="hm-stat is-positive" data-label="Current streak">W6</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="MoneyMakers" data-profile-href="/u/MoneyMakers/" role="link" tabindex="0" aria-label="View MoneyMakers profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/MoneyMakers/" aria-label="View MoneyMakers profile" title="View MoneyMakers profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="MoneyMakers avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/MoneyMakers/" aria-label="View MoneyMakers profile" title="View MoneyMakers profile"><strong data-tmr-username="MoneyMakers">MoneyMakers</strong></a><span>@MoneyMakers</span></div></div><div class="hm-stat" data-label="Record">94-39</div><div class="hm-stat is-negative" data-label="Units">-1.14</div><div class="hm-stat is-negative" data-label="ROI">-0.6%</div><div class="hm-stat is-positive" data-label="Win %">70.7%</div><div class="hm-stat" data-label="Total picks">133</div><div class="hm-stat is-positive" data-label="Current streak">W3</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="NobodyImportant74" data-profile-href="/u/NobodyImportant74/" role="link" tabindex="0" aria-label="View NobodyImportant74 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/NobodyImportant74/" aria-label="View NobodyImportant74 profile" title="View NobodyImportant74 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="NobodyImportant74 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/NobodyImportant74/" aria-label="View NobodyImportant74 profile" title="View NobodyImportant74 profile"><strong data-tmr-username="NobodyImportant74">NobodyImportant74</strong></a><span>@NobodyImportant74</span></div></div><div class="hm-stat" data-label="Record">38-40</div><div class="hm-stat is-negative" data-label="Units">-1.52</div><div class="hm-stat is-negative" data-label="ROI">-1.9%</div><div class="hm-stat is-negative" data-label="Win %">48.7%</div><div class="hm-stat" data-label="Total picks">78</div><div class="hm-stat is-negative" data-label="Current streak">L1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="The_Land17" data-profile-href="/u/The_Land17/" role="link" tabindex="0" aria-label="View The_Land17 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/The_Land17/" aria-label="View The_Land17 profile" title="View The_Land17 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="The_Land17 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/The_Land17/" aria-label="View The_Land17 profile" title="View The_Land17 profile"><strong data-tmr-username="The_Land17">The_Land17</strong></a><span>@The_Land17</span></div></div><div class="hm-stat" data-label="Record">78-70-1</div><div class="hm-stat is-negative" data-label="Units">-1.57</div><div class="hm-stat is-negative" data-label="ROI">-0.5%</div><div class="hm-stat is-positive" data-label="Win %">52.7%</div><div class="hm-stat" data-label="Total picks">149</div><div class="hm-stat is-negative" data-label="Current streak">L2</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="WilliamWarmbach" data-profile-href="/u/WilliamWarmbach/" role="link" tabindex="0" aria-label="View WilliamWarmbach profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/WilliamWarmbach/" aria-label="View WilliamWarmbach profile" title="View WilliamWarmbach profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="WilliamWarmbach avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/WilliamWarmbach/" aria-label="View WilliamWarmbach profile" title="View WilliamWarmbach profile"><strong data-tmr-username="WilliamWarmbach">WilliamWarmbach</strong></a><span>@WilliamWarmbach</span></div></div><div class="hm-stat" data-label="Record">51-63</div><div class="hm-stat is-negative" data-label="Units">-18.82</div><div class="hm-stat is-negative" data-label="ROI">-16.5%</div><div class="hm-stat is-negative" data-label="Win %">44.7%</div><div class="hm-stat" data-label="Total picks">114</div><div class="hm-stat is-negative" data-label="Current streak">L3</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="BetLegend" data-profile-href="/u/BetLegend/" role="link" tabindex="0" aria-label="View BetLegend profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/BetLegend/" aria-label="View BetLegend profile" title="View BetLegend profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="BetLegend avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/BetLegend/" aria-label="View BetLegend profile" title="View BetLegend profile"><strong data-tmr-username="BetLegend">BetLegend</strong></a><span>@BetLegend</span></div></div><div class="hm-stat" data-label="Record">159-147-3</div><div class="hm-stat is-negative" data-label="Units">-19.48</div><div class="hm-stat is-negative" data-label="ROI">-1.9%</div><div class="hm-stat is-positive" data-label="Win %">52.0%</div><div class="hm-stat" data-label="Total picks">309</div><div class="hm-stat is-negative" data-label="Current streak">L1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-tier-header hm-tier-header--rising" role="presentation"><h3>Rising Pick Makers <span class="hm-tier-count">2</span></h3><p>Members building their public record (5 to 24 graded picks). Not yet fully qualified for the main leaderboard.</p></div><div class="hm-row hm-member-row" data-username="patrick9" data-profile-href="/u/patrick9/" role="link" tabindex="0" aria-label="View patrick9 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/patrick9/" aria-label="View patrick9 profile" title="View patrick9 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="patrick9 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/patrick9/" aria-label="View patrick9 profile" title="View patrick9 profile"><strong data-tmr-username="patrick9">patrick9</strong></a><span>@patrick9</span><span class="hm-badge hm-badge--building" title="Needs 25 graded picks to be verified">Building Record</span></div></div><div class="hm-stat" data-label="Record">10-8-1</div><div class="hm-stat is-positive" data-label="Units">+3.34</div><div class="hm-stat is-positive" data-label="ROI">12.2%</div><div class="hm-stat is-positive" data-label="Win %">55.6%</div><div class="hm-stat" data-label="Total picks">19</div><div class="hm-stat is-negative" data-label="Current streak">L4</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="betonsportspicks" data-profile-href="/u/betonsportspicks/" role="link" tabindex="0" aria-label="View betonsportspicks profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/betonsportspicks/" aria-label="View betonsportspicks profile" title="View betonsportspicks profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="betonsportspicks avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/betonsportspicks/" aria-label="View betonsportspicks profile" title="View betonsportspicks profile"><strong data-tmr-username="betonsportspicks">betonsportspicks</strong></a><span>@betonsportspicks</span><span class="hm-badge hm-badge--building" title="Needs 25 graded picks to be verified">Building Record</span></div></div><div class="hm-stat" data-label="Record">5-7</div><div class="hm-stat is-negative" data-label="Units">-1.89</div><div class="hm-stat is-negative" data-label="ROI">-14.5%</div><div class="hm-stat is-negative" data-label="Win %">41.7%</div><div class="hm-stat" data-label="Total picks">12</div><div class="hm-stat is-negative" data-label="Current streak">L1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-tier-header hm-tier-header--new" role="presentation"><h3>New / Building Records <span class="hm-tier-count">16</span></h3><p>New members who have started building a public record (1 to 4 graded picks). Shown as community activity, not ranked aggressively by ROI.</p></div><div class="hm-row hm-member-row" data-username="Bullshark" data-profile-href="/u/Bullshark/" role="link" tabindex="0" aria-label="View Bullshark profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Bullshark/" aria-label="View Bullshark profile" title="View Bullshark profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Bullshark avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Bullshark/" aria-label="View Bullshark profile" title="View Bullshark profile"><strong data-tmr-username="Bullshark">Bullshark</strong></a><span>@Bullshark</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">1-0</div><div class="hm-stat is-positive" data-label="Units">+5.00</div><div class="hm-stat is-positive" data-label="ROI">90.9%</div><div class="hm-stat is-positive" data-label="Win %">100.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Mike" data-profile-href="/u/Mike/" role="link" tabindex="0" aria-label="View Mike profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Mike/" aria-label="View Mike profile" title="View Mike profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Mike avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Mike/" aria-label="View Mike profile" title="View Mike profile"><strong data-tmr-username="Mike">Mike</strong></a><span>@Mike</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">2-1</div><div class="hm-stat is-positive" data-label="Units">+4.41</div><div class="hm-stat is-positive" data-label="ROI">56.2%</div><div class="hm-stat is-positive" data-label="Win %">66.7%</div><div class="hm-stat" data-label="Total picks">3</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="cfunesti" data-profile-href="/u/cfunesti/" role="link" tabindex="0" aria-label="View cfunesti profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/cfunesti/" aria-label="View cfunesti profile" title="View cfunesti profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="c$ avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/cfunesti/" aria-label="View cfunesti profile" title="View cfunesti profile"><strong data-tmr-username="cfunesti">c$</strong></a><span>@cfunesti</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">1-0</div><div class="hm-stat is-positive" data-label="Units">+2.20</div><div class="hm-stat is-positive" data-label="ROI">110.0%</div><div class="hm-stat is-positive" data-label="Win %">100.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Edwin" data-profile-href="/u/Edwin/" role="link" tabindex="0" aria-label="View Edwin profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Edwin/" aria-label="View Edwin profile" title="View Edwin profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Edwin avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Edwin/" aria-label="View Edwin profile" title="View Edwin profile"><strong data-tmr-username="Edwin">Edwin</strong></a><span>@Edwin</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">1-1</div><div class="hm-stat is-positive" data-label="Units">+1.45</div><div class="hm-stat is-positive" data-label="ROI">29.9%</div><div class="hm-stat is-muted" data-label="Win %">50.0%</div><div class="hm-stat" data-label="Total picks">2</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Igilli" data-profile-href="/u/Igilli/" role="link" tabindex="0" aria-label="View Igilli profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Igilli/" aria-label="View Igilli profile" title="View Igilli profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Igilli avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Igilli/" aria-label="View Igilli profile" title="View Igilli profile"><strong data-tmr-username="Igilli">Igilli</strong></a><span>@Igilli</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">1-0</div><div class="hm-stat is-positive" data-label="Units">+1.20</div><div class="hm-stat is-positive" data-label="ROI">120.0%</div><div class="hm-stat is-positive" data-label="Win %">100.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="KasperNV" data-profile-href="/u/KasperNV/" role="link" tabindex="0" aria-label="View KasperNV profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/KasperNV/" aria-label="View KasperNV profile" title="View KasperNV profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="KasperNV avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/KasperNV/" aria-label="View KasperNV profile" title="View KasperNV profile"><strong data-tmr-username="KasperNV">KasperNV</strong></a><span>@KasperNV</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">1-0</div><div class="hm-stat is-positive" data-label="Units">+1.20</div><div class="hm-stat is-positive" data-label="ROI">120.0%</div><div class="hm-stat is-positive" data-label="Win %">100.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Livan" data-profile-href="/u/Livan/" role="link" tabindex="0" aria-label="View Livan profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Livan/" aria-label="View Livan profile" title="View Livan profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Livan avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Livan/" aria-label="View Livan profile" title="View Livan profile"><strong data-tmr-username="Livan">Livan</strong></a><span>@Livan</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">2-1</div><div class="hm-stat is-positive" data-label="Units">+1.15</div><div class="hm-stat is-positive" data-label="ROI">38.3%</div><div class="hm-stat is-positive" data-label="Win %">66.7%</div><div class="hm-stat" data-label="Total picks">3</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Firelink" data-profile-href="/u/Firelink/" role="link" tabindex="0" aria-label="View Firelink profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Firelink/" aria-label="View Firelink profile" title="View Firelink profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Firelink avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Firelink/" aria-label="View Firelink profile" title="View Firelink profile"><strong data-tmr-username="Firelink">Firelink</strong></a><span>@Firelink</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">1-0</div><div class="hm-stat is-positive" data-label="Units">+0.95</div><div class="hm-stat is-positive" data-label="ROI">95.0%</div><div class="hm-stat is-positive" data-label="Win %">100.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="albert20" data-profile-href="/u/albert20/" role="link" tabindex="0" aria-label="View albert20 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/albert20/" aria-label="View albert20 profile" title="View albert20 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="albert20 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/albert20/" aria-label="View albert20 profile" title="View albert20 profile"><strong data-tmr-username="albert20">albert20</strong></a><span>@albert20</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">1-0</div><div class="hm-stat is-positive" data-label="Units">+0.94</div><div class="hm-stat is-positive" data-label="ROI">94.0%</div><div class="hm-stat is-positive" data-label="Win %">100.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="scpridematt" data-profile-href="/u/scpridematt/" role="link" tabindex="0" aria-label="View scpridematt profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/scpridematt/" aria-label="View scpridematt profile" title="View scpridematt profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="scpridematt avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/scpridematt/" aria-label="View scpridematt profile" title="View scpridematt profile"><strong data-tmr-username="scpridematt">scpridematt</strong></a><span>@scpridematt</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">1-1</div><div class="hm-stat is-positive" data-label="Units">+0.01</div><div class="hm-stat is-positive" data-label="ROI">0.4%</div><div class="hm-stat is-muted" data-label="Win %">50.0%</div><div class="hm-stat" data-label="Total picks">2</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Nyce509" data-profile-href="/u/Nyce509/" role="link" tabindex="0" aria-label="View Nyce509 profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Nyce509/" aria-label="View Nyce509 profile" title="View Nyce509 profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Nyce509 avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Nyce509/" aria-label="View Nyce509 profile" title="View Nyce509 profile"><strong data-tmr-username="Nyce509">Nyce509</strong></a><span>@Nyce509</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">1-1</div><div class="hm-stat is-negative" data-label="Units">-0.20</div><div class="hm-stat is-negative" data-label="ROI">-10.0%</div><div class="hm-stat is-muted" data-label="Win %">50.0%</div><div class="hm-stat" data-label="Total picks">2</div><div class="hm-stat is-positive" data-label="Current streak">W1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="ebonyprince" data-profile-href="/u/ebonyprince/" role="link" tabindex="0" aria-label="View ebonyprince profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/ebonyprince/" aria-label="View ebonyprince profile" title="View ebonyprince profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="ebonyprince avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/ebonyprince/" aria-label="View ebonyprince profile" title="View ebonyprince profile"><strong data-tmr-username="ebonyprince">ebonyprince</strong></a><span>@ebonyprince</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">0-1</div><div class="hm-stat is-negative" data-label="Units">-1.00</div><div class="hm-stat is-negative" data-label="ROI">-100.0%</div><div class="hm-stat is-negative" data-label="Win %">0.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-negative" data-label="Current streak">L1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="peacecrypt" data-profile-href="/u/peacecrypt/" role="link" tabindex="0" aria-label="View peacecrypt profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/peacecrypt/" aria-label="View peacecrypt profile" title="View peacecrypt profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="peacecrypt avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/peacecrypt/" aria-label="View peacecrypt profile" title="View peacecrypt profile"><strong data-tmr-username="peacecrypt">peacecrypt</strong></a><span>@peacecrypt</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">0-1</div><div class="hm-stat is-negative" data-label="Units">-1.00</div><div class="hm-stat is-negative" data-label="ROI">-100.0%</div><div class="hm-stat is-negative" data-label="Win %">0.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-negative" data-label="Current streak">L1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="84Donkey" data-profile-href="/u/84Donkey/" role="link" tabindex="0" aria-label="View 84Donkey profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/84Donkey/" aria-label="View 84Donkey profile" title="View 84Donkey profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="84Donkey avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/84Donkey/" aria-label="View 84Donkey profile" title="View 84Donkey profile"><strong data-tmr-username="84Donkey">84Donkey</strong></a><span>@84Donkey</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">0-1</div><div class="hm-stat is-negative" data-label="Units">-1.00</div><div class="hm-stat is-negative" data-label="ROI">-100.0%</div><div class="hm-stat is-negative" data-label="Win %">0.0%</div><div class="hm-stat" data-label="Total picks">1</div><div class="hm-stat is-negative" data-label="Current streak">L1</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="Flintlocktropicks" data-profile-href="/u/Flintlocktropicks/" role="link" tabindex="0" aria-label="View Flintlocktropicks profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/Flintlocktropicks/" aria-label="View Flintlocktropicks profile" title="View Flintlocktropicks profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="Flintlocktropicks avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/Flintlocktropicks/" aria-label="View Flintlocktropicks profile" title="View Flintlocktropicks profile"><strong data-tmr-username="Flintlocktropicks">Flintlocktropicks</strong></a><span>@Flintlocktropicks</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">2-2</div><div class="hm-stat is-negative" data-label="Units">-1.53</div><div class="hm-stat is-negative" data-label="ROI">-26.0%</div><div class="hm-stat is-muted" data-label="Win %">50.0%</div><div class="hm-stat" data-label="Total picks">4</div><div class="hm-stat is-positive" data-label="Current streak">W2</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><div class="hm-row hm-member-row" data-username="mikeybalhansports" data-profile-href="/u/mikeybalhansports/" role="link" tabindex="0" aria-label="View mikeybalhansports profile"><div class="hm-user"><a class="hm-avatar-link" href="/u/mikeybalhansports/" aria-label="View mikeybalhansports profile" title="View mikeybalhansports profile"><img class="hm-avatar" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt="mikeybalhansports avatar"></a><div class="hm-name"><a class="hm-profile-name" href="/u/mikeybalhansports/" aria-label="View mikeybalhansports profile" title="View mikeybalhansports profile"><strong data-tmr-username="mikeybalhansports">mikeybalhansports</strong></a><span>@mikeybalhansports</span><span class="hm-badge hm-badge--sample" title="Small sample - record still forming">Small Sample</span></div></div><div class="hm-stat" data-label="Record">0-2</div><div class="hm-stat is-negative" data-label="Units">-9.05</div><div class="hm-stat is-negative" data-label="ROI">-100.0%</div><div class="hm-stat is-negative" data-label="Win %">0.0%</div><div class="hm-stat" data-label="Total picks">2</div><div class="hm-stat is-negative" data-label="Current streak">L2</div><div class="hm-stat is-muted" data-label="Last active">No recent activity</div></div><!--/MK:hmRows-->
                 </div>
             </div>
         </section>
@@ -1558,8 +1631,10 @@
             wager: document.getElementById('hmWager'),
             sort: document.getElementById('hmSort'),
             status: document.getElementById('hmStatus'),
-            total: document.getElementById('hmTotalMembers'),
-            active: document.getElementById('hmActiveMembers'),
+            verifiedCount: document.getElementById('hmVerifiedCount'),
+            pickMakers: document.getElementById('hmPickMakers'),
+            activeWeek: document.getElementById('hmActiveWeek'),
+            buildingCount: document.getElementById('hmBuildingCount'),
             visible: document.getElementById('hmVisibleMembers'),
             totalPicks: document.getElementById('hmTotalPicks'),
             bestWinRate: document.getElementById('hmBestWinRate'),
@@ -1570,24 +1645,50 @@
             recentActivityUser: document.getElementById('hmRecentActivityUser'),
             featured: document.getElementById('hmFeaturedLeaders'),
             pageSummary: document.getElementById('hmPageSummary'),
-            pageSize: document.getElementById('hmPageSize'),
+            tier: document.getElementById('hmTier'),
             prevPage: document.getElementById('hmPrevPage'),
             nextPage: document.getElementById('hmNextPage'),
             pageIndicator: document.getElementById('hmPageIndicator'),
-            viewButtons: Array.from(document.querySelectorAll('.hm-view-btn')),
             viewHint: document.getElementById('hmViewHint')
         };
 
-        // Member view: 'active' = recent pick makers only (DEFAULT, so the page
-        // feels alive). 'all' = full directory incl. stale members, each labeled
-        // with "Last pick: X days ago". Never default to 'all'.
-        let activityView = 'active';
-        // Active window: prefer the last 24h; expand to 48h only when 24h yields
-        // too few members to fill the board. Stale members (4d/20d/28d) never
-        // appear in the active view.
-        const ACTIVE_PRIMARY_WINDOW_MS = 24 * 60 * 60 * 1000;
-        const ACTIVE_FALLBACK_WINDOW_MS = 48 * 60 * 60 * 1000;
-        const ACTIVE_MIN_VOLUME = 8;
+        // ===== Tiered ranking model =====
+        // Tiers are defined purely by verified (graded) pick volume so they are
+        // predictable and never inflate tiny samples into "elite" status.
+        //   verified: 25+ graded picks   (the serious leaderboard)
+        //   rising:   5-24 graded picks  (real but partial record)
+        //   new:      1-4 graded picks   (community activity, not ROI-ranked)
+        const TIER_VERIFIED_MIN = 25;
+        const TIER_RISING_MIN = 5;
+        const TIER_ORDER = ['verified', 'rising', 'new'];
+        const TIER_META = {
+            verified: {
+                title: 'Featured Verified Handicappers',
+                copy: 'Members with 25+ graded picks and a real, public ROI/units record.'
+            },
+            rising: {
+                title: 'Rising Pick Makers',
+                copy: 'Members building their public record (5 to 24 graded picks). Not yet fully qualified for the main leaderboard.'
+            },
+            new: {
+                title: 'New / Building Records',
+                copy: 'New members who have started building a public record (1 to 4 graded picks). Shown as community activity, not ranked aggressively by ROI.'
+            }
+        };
+        // Tier dropdown views: each maps to a set of tiers + a sensible default sort.
+        // 'all' is grouped into the three stacked sections; the rest are flat lists.
+        const RECENT_ACTIVE_DAYS = 30;
+        const TIER_VIEWS = {
+            all:      { tiers: ['verified', 'rising', 'new'], grouped: true,  sort: 'units' },
+            verified: { tiers: ['verified'],                  grouped: false, sort: 'units' },
+            rising:   { tiers: ['rising'],                    grouped: false, sort: 'units' },
+            new:      { tiers: ['new'],                       grouped: false, sort: 'active' },
+            active:   { tiers: ['verified', 'rising', 'new'], grouped: false, sort: 'active', activeDays: RECENT_ACTIVE_DAYS },
+            picks:    { tiers: ['verified', 'rising', 'new'], grouped: false, sort: 'totalPicks' },
+            roi:      { tiers: ['verified', 'rising', 'new'], grouped: false, sort: 'roi' },
+            winrate:  { tiers: ['verified', 'rising', 'new'], grouped: false, sort: 'winRate' }
+        };
+        let tierView = 'all';
 
         let members = [];
         // Total registered/public users (production directory), INCLUDING members
@@ -1598,7 +1699,7 @@
         let displayMembers = [];
         let qualifiedPool = [];
         let currentPage = 1;
-        const MIN_TOP_PERFORMER_GRADED_PICKS = 20;
+        const MIN_TOP_PERFORMER_GRADED_PICKS = 25;
 
         // Leaderboard qualification: minimum verified (graded) picks to appear on the
         // /handicappers/ table. Configurable so we can raise it as the site grows.
@@ -2387,25 +2488,6 @@
             return Math.max(getTime(member.stats?.lastActivity), pickTimestamp(member.stats?.lastPick));
         }
 
-        function activeWithin(pool, windowMs) {
-            const cutoff = Date.now() - windowMs;
-            return pool.filter(member => lastPickTime(member) >= cutoff);
-        }
-
-        // 24h first; only widen to 48h if 24h is too thin to fill the board.
-        function activePickMakers(pool) {
-            let list = activeWithin(pool, ACTIVE_PRIMARY_WINDOW_MS);
-            let windowMs = ACTIVE_PRIMARY_WINDOW_MS;
-            if (list.length < ACTIVE_MIN_VOLUME) {
-                const widened = activeWithin(pool, ACTIVE_FALLBACK_WINDOW_MS);
-                if (widened.length > list.length) {
-                    list = widened;
-                    windowMs = ACTIVE_FALLBACK_WINDOW_MS;
-                }
-            }
-            return { list, windowMs };
-        }
-
         function setText(el, value) {
             if (!el) return;
             el.textContent = value;
@@ -2434,6 +2516,24 @@
             return gradedCount(member) >= MIN_TOP_PERFORMER_GRADED_PICKS
                 && Number(member?.stats?.units || 0) > 0
                 && getActivityTime(member) > Date.now() - (30 * 24 * 60 * 60 * 1000);
+        }
+
+        // Tier of a member, by verified (graded) pick volume only.
+        function tierOf(member) {
+            const g = gradedCount(member);
+            if (g >= TIER_VERIFIED_MIN) return 'verified';
+            if (g >= TIER_RISING_MIN) return 'rising';
+            return 'new';
+        }
+
+        // Small-sample badge shown next to sub-verified members so they are never
+        // confused with fully verified handicappers. Verified tier gets no badge.
+        function tierBadge(member) {
+            const g = gradedCount(member);
+            if (g >= TIER_VERIFIED_MIN) return null;
+            if (g >= TIER_RISING_MIN) return { label: 'Building Record', cls: 'building', title: 'Needs ' + TIER_VERIFIED_MIN + ' graded picks to be verified' };
+            if (g >= 1) return { label: 'Small Sample', cls: 'sample', title: 'Small sample - record still forming' };
+            return { label: 'Recently Joined', cls: 'joined', title: 'No graded picks yet' };
         }
 
         function compareBy(...getters) {
@@ -2516,28 +2616,21 @@
         }
 
         function renderSummary() {
-            const pool = displayMembers.length || members.length ? (displayMembers.length ? displayMembers : members) : members;
-            const pickedMembers = pool.filter(member => Number(member.stats.totalPicks || 0) > 0);
-            const gradedMembers = pool.filter(member => gradedCount(member) > 0);
-            const qualifiedMembers = gradedMembers.filter(isQualifiedTopPerformer);
-            const totalGradedPicks = pool.reduce((sum, member) => sum + gradedCount(member), 0);
-            const bestWinRate = qualifiedWinRateLeader(qualifiedMembers);
-            const topUnits = qualifiedUnitsLeader(qualifiedMembers);
-            const recent = bestBy(pickedMembers, () => true, getActivityTime);
+            // Stat cards always describe the full directory (members), not the
+            // currently-filtered table, so platform activity reads honestly.
+            const pickMakers = members.filter(member => Number(member.stats.totalPicks || 0) > 0);
+            const verifiedTier = pickMakers.filter(member => tierOf(member) === 'verified');
+            const buildingTier = pickMakers.filter(member => tierOf(member) !== 'verified');
+            const totalGradedPicks = members.reduce((sum, member) => sum + gradedCount(member), 0);
+            const weekCutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);
+            const activeWeek = pickMakers.filter(member => lastPickTime(member) >= weekCutoff).length;
 
-            // Total Members = ALL registered/public users (incl. zero-pick signups).
-            // Active Pick Makers = users with at least one locked/graded pick.
-            // These are SEPARATE metrics and must never collapse into one count.
-            const activeCount = members.filter(member => Number(member.stats.totalPicks || 0) > 0).length;
-            setText(els.total, String(Math.max(totalRegistered, members.length, activeCount)));
-            setText(els.active, String(activeCount));
-            setText(els.totalPicks, String(totalGradedPicks));
-            setMetricText(els.bestWinRate, bestWinRate ? formatPercent(bestWinRate.stats.winRate, true) : 'Not enough graded picks yet', bestWinRate ? Number(bestWinRate.stats.winRate) - 50 : null);
-            setText(els.bestWinRateUser, bestWinRate ? '@' + bestWinRate.username + ' · ' + gradedCount(bestWinRate) + ' graded picks' : 'Not enough graded picks yet');
-            setMetricText(els.topUnits, topUnits ? formatUnits(topUnits.stats.units, true) : 'No positive units leader yet', topUnits ? topUnits.stats.units : null);
-            setText(els.topUnitsUser, topUnits ? '@' + topUnits.username + ' · ' + gradedCount(topUnits) + ' graded picks' : 'No positive units leader yet');
-            setText(els.recentActivity, leaderValue(recent, member => formatLastActive(member.stats.lastActivity || member.lastActive)));
-            setText(els.recentActivityUser, recent ? '@' + recent.username : 'No pick activity yet');
+            setText(els.verifiedCount, String(verifiedTier.length));
+            setText(els.pickMakers, String(Math.max(pickMakers.length, totalRegistered ? pickMakers.length : 0)));
+            setText(els.totalPicks, totalGradedPicks.toLocaleString());
+            setText(els.activeWeek, String(activeWeek));
+            setText(els.visible, String(verifiedTier.length));
+            setText(els.buildingCount, String(buildingTier.length));
             renderFeaturedLeaders();
         }
 
@@ -2646,15 +2739,15 @@
                 ? members.map(member => Object.assign({}, member, { stats: memberStatsForFilters(member, sport, wager) }))
                 : members;
 
-            const basePool = displayMembers.filter(meetsLeaderboardMinimum);
-            if (activityView === 'active') {
-                const active = activePickMakers(basePool);
-                qualifiedPool = active.list;
-                updateViewHint(active.windowMs, active.list.length);
-            } else {
-                qualifiedPool = basePool;
-                updateViewHint(null, basePool.length);
+            const view = TIER_VIEWS[tierView] || TIER_VIEWS.all;
+            let basePool = displayMembers.filter(meetsLeaderboardMinimum);
+            basePool = basePool.filter(member => view.tiers.includes(tierOf(member)));
+            if (view.activeDays) {
+                const cutoff = Date.now() - (view.activeDays * 24 * 60 * 60 * 1000);
+                basePool = basePool.filter(member => lastPickTime(member) >= cutoff);
             }
+            qualifiedPool = basePool;
+            updateViewHint(view);
             visibleMembers = qualifiedPool.filter(member => {
                 return !q ||
                     member.username.toLowerCase().includes(q) ||
@@ -2668,28 +2761,19 @@
             syncSortDropdown();
         }
 
-        function updateViewHint(windowMs, count) {
+        const VIEW_HINTS = {
+            all: 'Showing verified leaders first, then rising and new pick makers building a record.',
+            verified: 'Verified leaders: 25 or more graded picks, a real public record, and ROI/units data.',
+            rising: 'Rising pick makers are building their public record (5 to 24 graded picks). Not yet fully qualified for the main leaderboard.',
+            new: 'New members who have started building a public record (1 to 4 graded picks).',
+            active: 'Members who locked a pick in the last ' + RECENT_ACTIVE_DAYS + ' days.',
+            picks: 'All pick makers, ordered by total tracked picks.',
+            roi: 'All pick makers, ordered by ROI (small samples are weighted down).',
+            winrate: 'All pick makers, ordered by win percentage (small samples are weighted down).'
+        };
+        function updateViewHint() {
             if (!els.viewHint) return;
-            if (activityView === 'active') {
-                const hours = windowMs === ACTIVE_FALLBACK_WINDOW_MS ? 48 : 24;
-                els.viewHint.textContent = 'Showing ' + count + ' member' + (count === 1 ? '' : 's') +
-                    ' who locked a pick in the last ' + hours + ' hours.';
-            } else {
-                els.viewHint.textContent = 'Showing all ' + count + ' member' + (count === 1 ? '' : 's') +
-                    ' with locked picks, including inactive accounts (last pick shown per row).';
-            }
-        }
-
-        function setActivityView(view) {
-            const next = view === 'all' ? 'all' : 'active';
-            if (next === activityView) return;
-            activityView = next;
-            els.viewButtons.forEach(btn => {
-                const isActive = btn.getAttribute('data-view') === activityView;
-                btn.classList.toggle('is-active', isActive);
-                btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-            });
-            resetPaginationAndApplyFilters();
+            els.viewHint.textContent = VIEW_HINTS[tierView] || VIEW_HINTS.all;
         }
 
         function resetPaginationAndApplyFilters() {
@@ -2698,18 +2782,24 @@
         }
 
         function selectedPageSize() {
-            const value = els.pageSize.value || '25';
-            return value === 'all' ? Infinity : Math.max(1, Number(value) || 25);
+            const view = TIER_VIEWS[tierView] || TIER_VIEWS.all;
+            return view.grouped ? Infinity : 25;
         }
 
         function updatePaginationControls(total, pageSize, pageCount, pageMembers) {
-            const start = total ? ((currentPage - 1) * pageSize) + 1 : 0;
-            const end = total ? start + pageMembers.length - 1 : 0;
-            els.pageSummary.textContent = 'Showing ' + start + '-' + end + ' of ' + total + ' qualified members';
+            const grouped = (TIER_VIEWS[tierView] || TIER_VIEWS.all).grouped;
+            const noun = total === 1 ? 'pick maker' : 'pick makers';
+            if (grouped) {
+                els.pageSummary.textContent = total + ' ' + noun + ' across all tiers';
+            } else {
+                const start = total ? ((currentPage - 1) * pageSize) + 1 : 0;
+                const end = total ? start + pageMembers.length - 1 : 0;
+                els.pageSummary.textContent = 'Showing ' + start + '-' + end + ' of ' + total + ' ' + noun;
+            }
             els.pageSummary.removeAttribute('aria-busy');
-            els.pageIndicator.textContent = 'Page ' + currentPage + ' of ' + pageCount;
-            els.prevPage.disabled = currentPage <= 1;
-            els.nextPage.disabled = currentPage >= pageCount;
+            els.pageIndicator.textContent = grouped ? 'Grouped by tier' : ('Page ' + currentPage + ' of ' + pageCount);
+            els.prevPage.disabled = grouped || currentPage <= 1;
+            els.nextPage.disabled = grouped || currentPage >= pageCount;
         }
 
         function updateSortIndicators() {
@@ -2735,56 +2825,71 @@
             }
         }
 
-        function renderRows() {
-            const qualifiedCount = qualifiedPool.length;
-            els.visible.textContent = String(qualifiedCount);
-            els.visible.classList.remove('hm-stat-loading');
-            els.visible.removeAttribute('aria-busy');
-            const minLabel = LEADERBOARD_MIN_PICKS > 0
-                ? ' (at least ' + LEADERBOARD_MIN_PICKS + ' locked pick' + (LEADERBOARD_MIN_PICKS === 1 ? '' : 's') + ').'
-                : '.';
-            els.status.textContent = visibleMembers.length === qualifiedCount
-                ? 'Showing all ' + qualifiedCount + ' qualified members' + minLabel
-                : 'Showing ' + visibleMembers.length + ' of ' + qualifiedCount + ' qualified members' + minLabel;
+        function memberRowHtml(member) {
+            const stats = member.stats || defaultStats();
+            const hasPicks = Number(stats.totalPicks || 0) > 0;
+            const hasGraded = gradedCount(member) > 0;
+            const profileHref = '/u/' + encodeURIComponent(member.username) + '/';
+            const profileLabel = 'View ' + member.username + ' profile';
+            const badge = tierBadge(member);
+            const badgeHtml = badge
+                ? '<span class="hm-badge hm-badge--' + badge.cls + '" title="' + escapeHtml(badge.title) + '">' + escapeHtml(badge.label) + '</span>'
+                : '';
+            return '<div class="hm-row hm-member-row" data-username="' + escapeHtml(member.username) + '" data-profile-href="' + profileHref + '" role="link" tabindex="0" aria-label="' + escapeHtml(profileLabel) + '">' +
+                '<div class="hm-user">' +
+                    '<a class="hm-avatar-link" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '">' +
+                        '<img class="hm-avatar" src="' + escapeHtml(member.avatar) + '" alt="' + escapeHtml(member.displayName) + ' avatar">' +
+                    '</a>' +
+                    '<div class="hm-name"><a class="hm-profile-name" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '"><strong data-tmr-username="' + escapeHtml(member.username) + '">' + escapeHtml(member.displayName) + '</strong></a><span>@' + escapeHtml(member.username) + '</span>' + badgeHtml + '</div>' +
+                '</div>' +
+                '<div class="hm-stat" data-label="Record">' + escapeHtml(formatRecord(stats)) + '</div>' +
+                '<div class="hm-stat ' + statClass(stats.units) + '" data-label="Units">' + escapeHtml(formatUnits(stats.units, hasPicks)) + '</div>' +
+                '<div class="hm-stat ' + (hasGraded ? statClass(stats.roi) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="ROI">' + escapeHtml(formatPercent(stats.roi, hasGraded)) + '</div>' +
+                '<div class="hm-stat ' + (hasGraded ? statClass(stats.winRate == null ? null : Number(stats.winRate) - 50) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="Win %">' + escapeHtml(formatPercent(stats.winRate, hasGraded)) + '</div>' +
+                '<div class="hm-stat" data-label="Total picks">' + Number(stats.totalPicks || 0) + '</div>' +
+                '<div class="hm-stat ' + statClass(stats.currentStreak) + '" data-label="Current streak">' + escapeHtml(formatStreak(stats.currentStreak)) + '</div>' +
+                '<div class="hm-stat is-muted" data-label="Last active">' + escapeHtml(formatPickActivity((stats && stats.lastActivity) || '', Number(stats.totalPicks || 0) > 0, !!(member.rawPicks && member.rawPicks.length))) + '</div>' +
+            '</div>';
+        }
 
-            const pageSize = selectedPageSize();
-            const isAll = pageSize === Infinity;
-            const pageCount = isAll ? 1 : Math.max(1, Math.ceil(visibleMembers.length / pageSize));
-            currentPage = Math.min(Math.max(currentPage, 1), pageCount);
-            const pageMembers = isAll
-                ? visibleMembers
-                : visibleMembers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-            updatePaginationControls(visibleMembers.length, isAll ? Math.max(visibleMembers.length, 1) : pageSize, pageCount, pageMembers);
+        function tierSectionHtml(tier, group) {
+            const meta = TIER_META[tier];
+            return '<div class="hm-tier-header hm-tier-header--' + tier + '" role="presentation">' +
+                '<h3>' + escapeHtml(meta.title) + ' <span class="hm-tier-count">' + group.length + '</span></h3>' +
+                '<p>' + escapeHtml(meta.copy) + '</p>' +
+            '</div>' + group.map(memberRowHtml).join('');
+        }
+
+        function renderRows() {
+            const grouped = (TIER_VIEWS[tierView] || TIER_VIEWS.all).grouped;
+            els.rows.classList.toggle('hm-grouped', grouped);
+
+            els.status.textContent = qualifiedPool.length === visibleMembers.length
+                ? visibleMembers.length + ' pick maker' + (visibleMembers.length === 1 ? '' : 's') + ' shown'
+                : 'Showing ' + visibleMembers.length + ' of ' + qualifiedPool.length + ' pick makers';
 
             if (!visibleMembers.length) {
-                els.rows.innerHTML = activityView === 'active'
-                    ? '<div class="hm-empty"><strong>No active pick makers right now.</strong>No members have locked a pick in the last 48 hours. Switch to All Members to see the full directory.</div>'
-                    : '<div class="hm-empty"><strong>Founding records are being built now.</strong>Early members will appear here once they have locked pick activity. Search by username to find a specific production member.</div>';
+                updatePaginationControls(0, 1, 1, []);
+                els.rows.innerHTML = '<div class="hm-empty"><strong>No pick makers match this view.</strong>Try the All Pick Makers tier or clear your search to see the full directory.</div>';
                 return;
             }
 
-            els.rows.innerHTML = pageMembers.map(member => {
-                const stats = member.stats || defaultStats();
-                const hasPicks = Number(stats.totalPicks || 0) > 0;
-                const hasGraded = gradedCount(member) > 0;
-                const profileHref = '/u/' + encodeURIComponent(member.username) + '/';
-                const profileLabel = 'View ' + member.username + ' profile';
-                return '<div class="hm-row hm-member-row" data-username="' + escapeHtml(member.username) + '" data-profile-href="' + profileHref + '" role="link" tabindex="0" aria-label="' + escapeHtml(profileLabel) + '">' +
-                    '<div class="hm-user">' +
-                        '<a class="hm-avatar-link" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '">' +
-                            '<img class="hm-avatar" src="' + escapeHtml(member.avatar) + '" alt="' + escapeHtml(member.displayName) + ' avatar">' +
-                        '</a>' +
-                        '<div class="hm-name"><a class="hm-profile-name" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '"><strong data-tmr-username="' + escapeHtml(member.username) + '">' + escapeHtml(member.displayName) + '</strong></a><span>@' + escapeHtml(member.username) + '</span></div>' +
-                    '</div>' +
-                    '<div class="hm-stat" data-label="Record">' + escapeHtml(formatRecord(stats)) + '</div>' +
-                    '<div class="hm-stat ' + statClass(stats.units) + '" data-label="Units">' + escapeHtml(formatUnits(stats.units, hasPicks)) + '</div>' +
-                    '<div class="hm-stat ' + (hasGraded ? statClass(stats.roi) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="ROI">' + escapeHtml(formatPercent(stats.roi, hasGraded)) + '</div>' +
-                    '<div class="hm-stat ' + (hasGraded ? statClass(stats.winRate == null ? null : Number(stats.winRate) - 50) : 'is-neutral') + '" title="' + (hasGraded ? '' : 'Not enough graded picks yet') + '" data-label="Win %">' + escapeHtml(formatPercent(stats.winRate, hasGraded)) + '</div>' +
-                    '<div class="hm-stat" data-label="Total picks">' + Number(stats.totalPicks || 0) + '</div>' +
-                    '<div class="hm-stat ' + statClass(stats.currentStreak) + '" data-label="Current streak">' + escapeHtml(formatStreak(stats.currentStreak)) + '</div>' +
-                    '<div class="hm-stat is-muted" data-label="Last active">' + escapeHtml(formatPickActivity((stats && stats.lastActivity) || '', Number(stats.totalPicks || 0) > 0, !!(member.rawPicks && member.rawPicks.length))) + '</div>' +
-                '</div>';
-            }).join('');
+            if (grouped) {
+                updatePaginationControls(visibleMembers.length, Math.max(visibleMembers.length, 1), 1, visibleMembers);
+                els.rows.innerHTML = TIER_ORDER
+                    .map(tier => {
+                        const group = visibleMembers.filter(member => tierOf(member) === tier);
+                        return group.length ? tierSectionHtml(tier, group) : '';
+                    })
+                    .join('');
+            } else {
+                const pageSize = selectedPageSize();
+                const pageCount = Math.max(1, Math.ceil(visibleMembers.length / pageSize));
+                currentPage = Math.min(Math.max(currentPage, 1), pageCount);
+                const pageMembers = visibleMembers.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+                updatePaginationControls(visibleMembers.length, pageSize, pageCount, pageMembers);
+                els.rows.innerHTML = pageMembers.map(memberRowHtml).join('');
+            }
 
             if (window.TMR && typeof window.TMR.attachUserBadges === 'function') {
                 try {
@@ -2918,8 +3023,15 @@
             });
         });
 
-        els.viewButtons.forEach(btn => {
-            btn.addEventListener('click', () => setActivityView(btn.getAttribute('data-view')));
+        if (els.tier) els.tier.addEventListener('change', () => {
+            const next = TIER_VIEWS[els.tier.value] ? els.tier.value : 'all';
+            tierView = next;
+            const defaultSort = TIER_VIEWS[next].sort;
+            if (SORT_KEYS[defaultSort]) {
+                sortState.field = defaultSort;
+                sortState.dir = SORT_DEFAULT_DIRS[defaultSort] || 'desc';
+            }
+            resetPaginationAndApplyFilters();
         });
         els.search.addEventListener('input', resetPaginationAndApplyFilters);
         els.sport.addEventListener('change', () => { rebuildWagerOptions(); resetPaginationAndApplyFilters(); });
@@ -2932,7 +3044,6 @@
             }
             resetPaginationAndApplyFilters();
         });
-        els.pageSize.addEventListener('change', resetPaginationAndApplyFilters);
         els.prevPage.addEventListener('click', () => {
             if (currentPage <= 1) return;
             currentPage -= 1;

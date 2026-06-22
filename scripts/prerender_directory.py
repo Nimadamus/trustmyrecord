@@ -71,16 +71,50 @@ def eligible(d):
         return False
     return True
 
-def is_active(last_pick_at, now):
+def active_within(last_pick_at, now, days):
     if not last_pick_at:
         return False
     try:
         t = datetime.datetime.fromisoformat(str(last_pick_at).replace("Z", "+00:00"))
         if t.tzinfo is None:
             t = t.replace(tzinfo=datetime.timezone.utc)
-        return (now - t).total_seconds() < 86400
+        return (now - t).total_seconds() < days * 86400
     except Exception:
         return False
+
+# Tier thresholds mirror the page JS exactly (handicappers/index.html).
+TIER_VERIFIED_MIN = 25
+TIER_RISING_MIN = 5
+TIER_ORDER = ["verified", "rising", "new"]
+TIER_META = {
+    "verified": ("Featured Verified Handicappers",
+                 "Members with 25+ graded picks and a real, public ROI/units record."),
+    "rising": ("Rising Pick Makers",
+               "Members building their public record (5 to 24 graded picks). Not yet fully qualified for the main leaderboard."),
+    "new": ("New / Building Records",
+            "New members who have started building a public record (1 to 4 graded picks). Shown as community activity, not ranked aggressively by ROI."),
+}
+
+def graded(r):
+    return r["wins"] + r["losses"] + r["pushes"]
+
+def tier_of(r):
+    g = graded(r)
+    if g >= TIER_VERIFIED_MIN:
+        return "verified"
+    if g >= TIER_RISING_MIN:
+        return "rising"
+    return "new"
+
+def tier_badge(r):
+    g = graded(r)
+    if g >= TIER_VERIFIED_MIN:
+        return None
+    if g >= TIER_RISING_MIN:
+        return ("building", "Building Record", f"Needs {TIER_VERIFIED_MIN} graded picks to be verified")
+    if g >= 1:
+        return ("sample", "Small Sample", "Small sample - record still forming")
+    return ("joined", "Recently Joined", "No graded picks yet")
 
 def collect():
     """Return ranked list of member dicts with full record stats."""
@@ -149,16 +183,21 @@ def lclass(v):        # leaderboards: pos/neg/neutral
 def handi_row(r):
     href = f"/u/{e(r['username'])}/"
     label = f"View {r['username']} profile"
-    has_graded = r["total_picks"] > 0
+    has_graded = graded(r) > 0
     roi_cls = sclass(r["roi"]) if has_graded else "is-neutral"
     wr_cls = sclass(r["win_rate"] - 50) if has_graded else "is-neutral"
+    badge = tier_badge(r)
+    badge_html = (
+        f'<span class="hm-badge hm-badge--{badge[0]}" title="{e(badge[2])}">{e(badge[1])}</span>'
+        if badge else ""
+    )
     return (
         f'<div class="hm-row hm-member-row" data-username="{e(r["username"])}" data-profile-href="{href}" role="link" tabindex="0" aria-label="{e(label)}">'
         f'<div class="hm-user">'
         f'<a class="hm-avatar-link" href="{href}" aria-label="{e(label)}" title="{e(label)}">'
         f'<img class="hm-avatar" src="{e(r["avatar_url"])}" alt="{e(r["display_name"])} avatar"></a>'
         f'<div class="hm-name"><a class="hm-profile-name" href="{href}" aria-label="{e(label)}" title="{e(label)}">'
-        f'<strong data-tmr-username="{e(r["username"])}">{e(r["display_name"])}</strong></a><span>@{e(r["username"])}</span></div>'
+        f'<strong data-tmr-username="{e(r["username"])}">{e(r["display_name"])}</strong></a><span>@{e(r["username"])}</span>{badge_html}</div>'
         f'</div>'
         f'<div class="hm-stat" data-label="Record">{e(rec(r))}</div>'
         f'<div class="hm-stat {sclass(r["net_units"])}" data-label="Units">{e(units_plain(r["net_units"]))}</div>'
@@ -215,27 +254,51 @@ def set_text(text, pat, value):
         raise RuntimeError(f"text anchor not found: {pat}")
     return new
 
+def handi_tier_header(tier, count):
+    title, copy = TIER_META[tier]
+    return (
+        f'<div class="hm-tier-header hm-tier-header--{tier}" role="presentation">'
+        f'<h3>{e(title)} <span class="hm-tier-count">{count}</span></h3>'
+        f'<p>{e(copy)}</p></div>'
+    )
+
 def bake_handicappers(rows, now):
     with open(HANDI, encoding="utf-8") as f:
         t = f.read()
-    body = "".join(handi_row(r) for r in rows)
+    # Default static view = grouped "All Pick Makers": tier header + its rows.
+    body_parts = []
+    for tier in TIER_ORDER:
+        group = [r for r in rows if tier_of(r) == tier]
+        if not group:
+            continue
+        body_parts.append(handi_tier_header(tier, len(group)))
+        body_parts.extend(handi_row(r) for r in group)
+    body = "".join(body_parts)
+    # Static default view is grouped, so mark #hmRows to suppress global rank/medal
+    # chips (the client JS toggles this class too). Idempotent.
+    t = re.sub(r'<div id="hmRows"(?:\s+class="[^"]*")?>', '<div id="hmRows" class="hm-grouped">', t, count=1)
     t = set_marker(
         t, "hmRows", body,
         r'<div class="hm-empty"><strong>Loading handicappers</strong>Pulling public profiles and performance stats\.</div>',
         "@@BLOCK@@",
     )
-    total_picks = sum(r["total_picks"] for r in rows)
-    active = sum(1 for r in rows if is_active(r["last_pick_at"], now))
+    total_graded = sum(graded(r) for r in rows)
+    verified_count = sum(1 for r in rows if tier_of(r) == "verified")
+    building_count = len(rows) - verified_count
+    active_week = sum(1 for r in rows if active_within(r["last_pick_at"], now, 7))
     # drop loading styling now that real numbers are baked in
-    for hid in ("hmTotalPicks", "hmTotalMembers", "hmActiveMembers", "hmVisibleMembers"):
+    for hid in ("hmVerifiedCount", "hmPickMakers", "hmTotalPicks", "hmActiveWeek",
+                "hmVisibleMembers", "hmBuildingCount"):
         t = re.sub(rf'(<strong id="{hid}")[^>]*(>)', r'\1\2', t, count=1)
-    t = set_text(t, r'(<strong id="hmTotalPicks"[^>]*>).*?(</strong>)', f"{total_picks:,}")
-    t = set_text(t, r'(<strong id="hmTotalMembers"[^>]*>).*?(</strong>)', f"{len(rows):,}")
-    t = set_text(t, r'(<strong id="hmActiveMembers"[^>]*>).*?(</strong>)', f"{active:,}")
-    t = set_text(t, r'(<strong id="hmVisibleMembers"[^>]*>).*?(</strong>)', f"{len(rows):,}")
+    t = set_text(t, r'(<strong id="hmVerifiedCount"[^>]*>).*?(</strong>)', f"{verified_count:,}")
+    t = set_text(t, r'(<strong id="hmPickMakers"[^>]*>).*?(</strong>)', f"{len(rows):,}")
+    t = set_text(t, r'(<strong id="hmTotalPicks"[^>]*>).*?(</strong>)', f"{total_graded:,}")
+    t = set_text(t, r'(<strong id="hmActiveWeek"[^>]*>).*?(</strong>)', f"{active_week:,}")
+    t = set_text(t, r'(<strong id="hmVisibleMembers"[^>]*>).*?(</strong>)', f"{verified_count:,}")
+    t = set_text(t, r'(<strong id="hmBuildingCount"[^>]*>).*?(</strong>)', f"{building_count:,}")
     with open(HANDI, "w", encoding="utf-8", newline="\n") as f:
         f.write(t)
-    return len(rows), total_picks, active
+    return len(rows), total_graded, active_week
 
 def bake_leaderboards(rows):
     with open(LEAD, encoding="utf-8") as f:
