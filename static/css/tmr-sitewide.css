@@ -4677,3 +4677,40 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
 @media (prefers-reduced-motion: reduce) {
     .tmr-mailbox-indicator { animation: none; }
 }
+
+/* Mobile open-menu grid fix - 2026-06-22 (final, EOF authoritative)
+   Pre-existing bug: the max-width:1320px block assigns grid-area names
+   (links/community/support/actions) to the panel children. At <=768px the
+   panel becomes display:grid, so those leaked names collapse all four
+   children into a single cell, jumbling the open hamburger menu. Reset the
+   panel to a clean single column and clear the inherited grid-area names so
+   the sections stack vertically: tabs -> Community -> Support -> auth/profile. */
+@media (max-width: 768px) {
+    body.tmr-site-shell .tmr-global-nav__inner {
+        grid-template-columns: minmax(0, 1fr) 44px !important;
+        grid-template-areas:
+            "brand toggle"
+            "panel panel" !important;
+    }
+
+    /* Flex column instead of grid: grid-area names leaked onto the children
+       are ignored in a flex container, so they can no longer collapse into a
+       single grid cell. Guarantees a clean full-width vertical stack. */
+    body.tmr-site-shell .tmr-global-nav.is-open .tmr-global-nav__panel {
+        grid-area: panel !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__panel > .tmr-global-nav__links,
+    body.tmr-site-shell .tmr-global-nav__panel > .tmr-community-menu,
+    body.tmr-site-shell .tmr-global-nav__panel > .tmr-support-menu,
+    body.tmr-site-shell .tmr-global-nav__panel > .tmr-global-nav__actions {
+        grid-area: auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        flex: 0 0 auto !important;
+    }
+}
