@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-platoon-reliever-20260623';
+    var UI_BUILD = 'mlb-simulator-expected-runs-20260623';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2283,14 +2283,19 @@
         var homeSide = evBuildSide(home, awayPitcher, homePitcher, homeRuns, rosterContext && rosterContext.home, parkHr);
         return { awaySide: awaySide, homeSide: homeSide };
     }
-    function eventWinProbability(inputs, samples) {
-        var homeWins = 0, total = 0;
+    function eventWinProbability(inputs, samples, statsOut) {
+        // EXPECTED_RUNS_CONSISTENCY_20260623: optionally accumulate the mean simulated
+        // runs per side over the SAME sample of games used for win probability, so the
+        // caller can display expected runs that match the box scores exactly (one model).
+        var homeWins = 0, total = 0, aSum = 0, hSum = 0;
         for (var i = 0; i < samples; i++) {
             var g = evSimGame(inputs.awaySide, inputs.homeSide, Math.random);
             if (g.hRuns > g.aRuns) homeWins++;
             else if (g.aRuns > g.hRuns) { /* away */ } else homeWins += 0.5;
+            aSum += g.aRuns; hSum += g.hRuns;
             total++;
         }
+        if (statsOut && total) { statsOut.awayMean = aSum / total; statsOut.homeMean = hSum / total; }
         return total ? homeWins / total : 0.5;
     }
     function evBatterRows(side) {
@@ -3154,8 +3159,21 @@
         // sharpens the win-probability estimate; it does not change the box score or
         // run model, so calibration is unaffected.
         var wpSamples = state.simulationCount > 1 ? 200 : 2000;
-        var simHomeWin = eventWinProbability(eventInputs, wpSamples);
+        var simStats = {};
+        var simHomeWin = eventWinProbability(eventInputs, wpSamples, simStats);
         homeWin = clamp(Number.isFinite(simHomeWin) ? simHomeWin : homeWin, 0.05, 0.95);
+        // EXPECTED_RUNS_CONSISTENCY_20260623: align the DISPLAYED expected runs (and the
+        // score range, total, and run environment that derive from them) with the actual
+        // mean of the simulated box scores from the same plate-appearance engine. The
+        // separate run-projection model that seeds the anchor runs ~0.3/team above the
+        // realized sim mean on real rosters, so the headline number used to disagree with
+        // the box score below it. The box score itself is unchanged (it is anchored to
+        // eventInputs); only the reported summary is reconciled to what was simulated.
+        if (Number.isFinite(simStats.awayMean) && Number.isFinite(simStats.homeMean)) {
+            awayRuns = clamp(simStats.awayMean, 1.6, 9.4);
+            homeRuns = clamp(simStats.homeMean, 1.6, 9.4);
+            totalRuns = awayRuns + homeRuns;
+        }
         var awayWin = 1 - homeWin;
         var winner = homeWin >= awayWin ? home : away;
         var winnerPct = Math.max(homeWin, awayWin);
