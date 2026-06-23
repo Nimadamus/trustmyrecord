@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-multiarm-pen-20260622';
+    var UI_BUILD = 'mlb-simulator-reliever-hand-20260623';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -861,7 +861,13 @@
         var pitchers = players.filter(function (p) {
             return p && p.mlbId && /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(p.position || ''));
         }).slice(0, 14);
-        pitchers.forEach(function (p) { jobs.push(fetchPlayerSeasonStats(p.mlbId, 'pitching')); });
+        pitchers.forEach(function (p) {
+            jobs.push(fetchPlayerSeasonStats(p.mlbId, 'pitching'));
+            // RELIEVER_HAND_20260623: load each bullpen arm's profile so pitchHandOf()
+            // returns a real throw hand (previously only the probable starter's profile
+            // was fetched, leaving reliever handedness null/undisplayed).
+            jobs.push(fetchPlayerProfile(p.mlbId));
+        });
         return Promise.all(jobs);
     }
     function refreshPitcherSelectsFromState() {
@@ -2275,7 +2281,10 @@
     function evPitcherRows(side) {
         return side.pitchers.filter(function (p) { return p.acc.outs > 0 || p.acc.h > 0 || p.acc.bb > 0; }).map(function (p) {
             var a = p.acc;
-            return { name: p.name, outs: a.outs, ip: outsToIp(a.outs), h: a.h, r: a.r, er: Math.min(a.r, a.er), bb: a.bb, so: a.so, hr: a.hr, pitches: a.pitches || 0, strikes: a.strikes || 0 };
+            // RELIEVER_HAND_20260623: show the real throw hand on bullpen arms (LHP/RHP)
+            // when the profile is available; cosmetic only (does not affect the sim math).
+            var handTag = p.hand === 'L' ? ' (LHP)' : p.hand === 'R' ? ' (RHP)' : '';
+            return { name: p.name + handTag, outs: a.outs, ip: outsToIp(a.outs), h: a.h, r: a.r, er: Math.min(a.r, a.er), bb: a.bb, so: a.so, hr: a.hr, pitches: a.pitches || 0, strikes: a.strikes || 0 };
         });
     }
     // Every situational stat here is EVENT-SOURCED from the simulated plate
