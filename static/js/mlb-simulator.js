@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-data-mode-chip-20260622';
+    var UI_BUILD = 'mlb-simulator-pitcher-rates-20260622';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1064,11 +1064,14 @@
         if (todayProbable && todayProbable.name) {
             var pitchStat = cachedPlayerStat(todayProbable.id, 'pitching');
             var realEra = pitchStat ? Number(pitchStat.era) : null;
+            var todayRates = pitcherRealRates(Number.isFinite(realEra) ? pitchStat : null);
             addOption({
                 id: pitcherId(side, 'today-' + slugify(todayProbable.name)),
                 name: todayProbable.name,
                 quality: pitcherQualityFromEra(realEra),
                 era: Number.isFinite(realEra) ? realEra : null,
+                whip: todayRates.whip,
+                kbbPct: todayRates.kbbPct,
                 source: "Today's confirmed MLB probable starter",
                 verified: true,
                 confirmed: true,
@@ -1120,11 +1123,14 @@
             var stat = player.mlbId ? cachedPlayerStat(player.mlbId, 'pitching') : null;
             var realEra = stat ? Number(stat.era) : null;
             var hasReal = Number.isFinite(realEra);
+            var rosterRates = pitcherRealRates(hasReal ? stat : null);
             addOption({
                 id: pitcherId(side, team.id + '-' + slugify(player.name)),
                 name: player.name,
                 quality: hasReal ? pitcherQualityFromEra(realEra) : (row ? row[2] : 100),
                 era: hasReal ? realEra : (row ? row[3] : null),
+                whip: rosterRates.whip,
+                kbbPct: rosterRates.kbbPct,
                 eraVerified: hasReal,
                 source: hasReal ? (verifiedRoster.source + ' plus real ' + seasonYear() + ' season pitching stats') : verifiedRoster.source,
                 verified: true,
@@ -1170,6 +1176,20 @@
         var match = String(pitcher && pitcher.note ? pitcher.note : '').match(/(\d+\s*-\s*\d+)/);
         return match ? match[1].replace(/\s+/g, '') : null;
     }
+    // PITCHER_RATES_20260622: derive real WHIP + K-BB% from cached statsapi
+    // season pitching splits. Returns nulls when stats are absent so labels
+    // never render baseline/placeholder rates as if they were real.
+    function pitcherRealRates(stat) {
+        if (!stat) return { whip: null, kbbPct: null };
+        var whip = Number(stat.whip);
+        var bf = Number(stat.battersFaced || 0);
+        var so = Number(stat.strikeOuts || 0);
+        var bb = Number(stat.baseOnBalls || 0);
+        return {
+            whip: Number.isFinite(whip) && whip > 0 ? whip : null,
+            kbbPct: bf > 0 ? (so - bb) / bf : null
+        };
+    }
     function pitcherOptionLabel(pitcher) {
         // Only show stats we actually have; never render placeholder values.
         // Baseline profile ERAs (eraVerified === false on current teams) are
@@ -1178,6 +1198,8 @@
         // displaying (real recorded history).
         var parts = [pitcher.name];
         if (pitcher.era != null && pitcher.eraVerified !== false) parts.push('ERA ' + pitcher.era);
+        if (pitcher.whip != null) parts.push('WHIP ' + pitcher.whip.toFixed(2));
+        if (pitcher.kbbPct != null) parts.push('K-BB% ' + (pitcher.kbbPct * 100).toFixed(1) + '%');
         var record = pitcherRecord(pitcher);
         if (record) parts.push('W-L ' + record);
         return parts.join(', ');
