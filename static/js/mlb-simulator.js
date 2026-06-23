@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-reliever-hand-20260623';
+    var UI_BUILD = 'mlb-simulator-platoon-reliever-20260623';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1961,16 +1961,29 @@
         var roster = rosterForTeam(team, rosterContext);
         var oppHand = oppPitcher && oppPitcher.mlbId ? pitchHandOf(oppPitcher.mlbId) : null;
         var slotStats = roster ? rosterBatterSlotStats(roster, oppHand) : [];
+        // PLATOON_VS_RELIEVER_20260623: also resolve each batter's vs-LHP and vs-RHP
+        // split vectors. baseVec stays built vs the opposing STARTER's hand (so the
+        // ~72% starter share is byte-identical to before), but evPlayHalf swaps to the
+        // correct platoon split when a reliever of a different hand enters. Both fall
+        // back to baseVec when a batter has no usable split, so synthetic/no-split
+        // teams and the offline harness are completely unchanged.
+        var slotStatsL = roster ? rosterBatterSlotStats(roster, 'L') : [];
+        var slotStatsR = roster ? rosterBatterSlotStats(roster, 'R') : [];
         var names = roster ? rosterNamesForBatters(roster) : [];
         var oppVec = evPitcherVector(oppPitcher, 100);
         var lineup = [];
         for (var i = 0; i < 9; i++) {
             var s = slotStats[i];
             var baseVec = (s && s.real) ? evBatterVector(s) : evSyntheticVector(team && team.offense, i);
+            var sL = slotStatsL[i], sR = slotStatsR[i];
+            var baseVecVsL = (sL && sL.real) ? evBatterVector(sL) : baseVec;
+            var baseVecVsR = (sR && sR.real) ? evBatterVector(sR) : baseVec;
             var plainName = (s && s.name) || (names[i] ? names[i].replace(/\s*\([^)]*\)\s*$/, '') : '');
             var rawPos = (s && s.position) || ((names[i] || '').match(/\(([A-Z0-9]+)\)\s*$/) || [null, ''])[1];
             lineup.push({
                 baseVec: baseVec,
+                baseVecVsL: baseVecVsL,
+                baseVecVsR: baseVecVsR,
                 playerName: plainName,
                 name: (s && s.name && (s.position ? s.name + ' (' + s.position + ')' : s.name)) || names[i] || '',
                 rawPos: rawPos,
@@ -1984,9 +1997,17 @@
         // starter, ~28% the bullpen, approximated as a league-average arm) with the
         // park HR effect baked in, so the calibrated mean reflects the real game mix
         // instead of assuming the starter pitches all nine innings.
+        // PLATOON_VS_RELIEVER_20260623: the starter share uses the vs-starter-hand
+        // split (baseVec), but the bullpen share faces a HAND MIX (league-typical
+        // ~70% RHP / 30% LHP). Lineups are platoon-stacked vs the starter, so anchoring
+        // the relief share on baseVec (the platoon-advantaged split) overstated offense
+        // and left realized runs ~0.3-0.5 below target once opposite-hand relievers
+        // entered at PA time. Anchoring the relief term on the batter's hand-blended
+        // split makes the calibrated target match what evPlayHalf actually simulates.
         var combinedForAnchor = lineup.map(function (b) {
             var vsStarter = evApplyParkHr(evCombine(b.baseVec, oppVec), parkHr);
-            var vsLeague = evApplyParkHr(evCombine(b.baseVec, EV_LEAGUE_PITCHER), parkHr);
+            var reliefBat = evBlend(b.baseVecVsR, b.baseVecVsL, 0.70);
+            var vsLeague = evApplyParkHr(evCombine(reliefBat, EV_LEAGUE_PITCHER), parkHr);
             return evBlend(vsStarter, vsLeague, 0.72);
         });
         var anchorFactor = evAnchorFactor(combinedForAnchor, targetRuns);
@@ -2005,7 +2026,7 @@
         // the prior 3-slot team-profile pen (RP + CL) when real arms are unavailable.
         var arms = evRelieverArms(roster, ownStarter);
         var pitchers = [
-            { name: staffNames[0] || (ownStarter && ownStarter.name) || (team.abbreviation + ' SP'), vec: starterVec, acc: evNewPit(), role: 'SP' }
+            { name: staffNames[0] || (ownStarter && ownStarter.name) || (team.abbreviation + ' SP'), vec: starterVec, acc: evNewPit(), role: 'SP', hand: ownStarter && ownStarter.mlbId ? pitchHandOf(ownStarter.mlbId) : null }
         ];
         if (arms) {
             arms.ordered.forEach(function (a) {
@@ -2096,7 +2117,14 @@
             }
             var bi = side.idx % 9, b = lineup[bi];
             var timesThrough = Math.floor(pitcher.acc.bf / 9) + 1;
-            var v = evScale(evApplyTto(evApplyParkHr(evCombine(b.baseVec, pitcher.vec), side.parkHr), evTtoMultipliers(timesThrough)), side.anchorFactor);
+            // PLATOON_VS_RELIEVER_20260623: face the batter with the split that matches
+            // the ACTIVE pitcher's hand (starter or reliever). baseVecVsL/R default to
+            // baseVec when no real split exists, and pitcher.hand is null for synthetic
+            // teams, so this is a no-op everywhere except real rosters with split data.
+            var batVec = pitcher.hand === 'L' ? (b.baseVecVsL || b.baseVec)
+                       : pitcher.hand === 'R' ? (b.baseVecVsR || b.baseVec)
+                       : b.baseVec;
+            var v = evScale(evApplyTto(evApplyParkHr(evCombine(batVec, pitcher.vec), side.parkHr), evTtoMultipliers(timesThrough)), side.anchorFactor);
             var ev = evSample(v, random), acc = b.acc; acc.pa++; pitcher.acc.bf++;
             // Event-sourced situational accounting (no post-hoc estimates):
             var preOuts = outs;
