@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-pitcher-rates-20260622';
+    var UI_BUILD = 'mlb-simulator-wp-precision-20260622';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3082,7 +3082,13 @@
         // Win probability is the simulated frequency from the same plate-appearance
         // engine that produces the box score, so the displayed win % and the box
         // scores are one consistent model. The run-based blend above is the fallback.
-        var wpSamples = state.simulationCount > 1 ? 90 : 300;
+        // WP_PRECISION_20260622: a single 90/300-game sample carries ~3-5% Bernoulli
+        // sampling error, so the displayed win % visibly wobbled between identical
+        // runs. The PA engine is cheap, so sample far more games (single run 2000,
+        // batched aggregate runs 200) to cut that standard error to ~1%. This only
+        // sharpens the win-probability estimate; it does not change the box score or
+        // run model, so calibration is unaffected.
+        var wpSamples = state.simulationCount > 1 ? 200 : 2000;
         var simHomeWin = eventWinProbability(eventInputs, wpSamples);
         homeWin = clamp(Number.isFinite(simHomeWin) ? simHomeWin : homeWin, 0.05, 0.95);
         var awayWin = 1 - homeWin;
