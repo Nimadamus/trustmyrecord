@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-roster-pitcher-polish-20260604c';
+    var UI_BUILD = 'mlb-simulator-data-mode-chip-20260622';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2435,6 +2435,36 @@
         return 'Verified live inputs are unavailable, so this matchup will use internal baseline ratings.';
     }
 
+    // DATA_MODE_CHIP_20260622: prominent per-run "Live-informed vs Baseline only" chip.
+    function renderDataModeChip(result) {
+        var el = byId('dataModeChip');
+        if (!el) return;
+        var base = 'display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:10px 0 2px;padding:8px 12px;border-radius:9px;font-size:0.8rem;line-height:1.4;color:#e7ecf3;';
+        if (!result) {
+            el.setAttribute('data-mode', 'idle');
+            el.style.cssText = base + 'border:1px solid rgba(255,255,255,0.14);background:rgba(255,255,255,0.04);';
+            el.innerHTML = '<span style="width:9px;height:9px;border-radius:50%;background:#8b95a7;flex:none;"></span>'
+                + '<strong>Data mode</strong>'
+                + '<span style="opacity:0.8;">Run a simulation to see which inputs were live vs baseline.</span>';
+            return;
+        }
+        var used = (result.dataSourcesUsed || []);
+        var live = used.length > 0;
+        var color = live ? '#22c55e' : '#f5b301';
+        el.setAttribute('data-mode', live ? 'live' : 'baseline');
+        el.style.cssText = base + 'border:1px solid ' + (live ? 'rgba(34,197,94,0.4)' : 'rgba(245,179,1,0.4)')
+            + ';background:' + (live ? 'rgba(34,197,94,0.10)' : 'rgba(245,179,1,0.10)') + ';';
+        var head = live
+            ? 'Live-informed (' + used.length + ' ' + (used.length === 1 ? 'feed' : 'feeds') + ')'
+            : 'Baseline only';
+        var detail = live
+            ? 'Live: ' + used.join(', ')
+            : 'No live feeds matched this matchup; internal baseline ratings used.';
+        el.innerHTML = '<span style="width:9px;height:9px;border-radius:50%;background:' + color + ';flex:none;"></span>'
+            + '<strong style="color:' + color + ';">' + head + '</strong>'
+            + '<span style="opacity:0.85;">' + detail + '</span>';
+    }
+
     function parseRecord(summary) {
         var match = String(summary || '').match(/(\d+)\s*-\s*(\d+)/);
         if (!match) return null;
@@ -3676,6 +3706,7 @@
             setText('eraAdjustmentValue', 'Run to calculate');
             setText('simulationModeValue', 'Ready to run');
             setText('dataModeValue', dataModeLabel());
+            renderDataModeChip(null);
             setText('awayProbabilityLabel', 'Team A');
             setText('homeProbabilityLabel', 'Team B');
             setText('awayProbabilityValue', '--');
@@ -3723,6 +3754,7 @@
         setText('eraAdjustmentValue', result.eraAdjustment);
         setText('simulationModeValue', result.simulationMode);
         setText('dataModeValue', result.dataMode);
+        renderDataModeChip(result);
         setText('awayProbabilityLabel', result.away.name);
         setText('homeProbabilityLabel', result.home.name);
         setText('awayProbabilityValue', roundPct(result.awayWin));
