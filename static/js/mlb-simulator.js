@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-wp-precision-20260622';
+    var UI_BUILD = 'mlb-simulator-multiarm-pen-20260622';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1989,18 +1989,27 @@
         var starterVec = evPitcherVector(ownStarter, 100);
         var penVec = evStaffVector(team, true);
         var starterOuts = evStarterOuts(ownStarter, team);
-        // Per-reliever bullpen (Layer 1, June 4 2026): when verified reliever season
-        // stats are cached for this roster, the setup man and closer pitch with their
-        // OWN real K/BB/HR rates and real names (closer = saves leader, setup = best
-        // remaining ERA). Fail-open to the team bullpen profile otherwise.
+        // Multi-arm bullpen (Layer 2, June 22 2026): when verified reliever season
+        // stats exist, sequence the real bridge -> setup -> closer, each with their
+        // OWN K/BB/HR vector, real name, and handedness (when the profile is cached),
+        // instead of one flat bucket. evActivePitcher reserves the closer for the 9th+
+        // pocket and splits the bridge innings across the middle arms. Multi-inning
+        // fatigue needs no separate term: the existing times-through-order penalty
+        // already degrades any reliever left in to face the lineup again. Fail-open to
+        // the prior 3-slot team-profile pen (RP + CL) when real arms are unavailable.
         var arms = evRelieverArms(roster, ownStarter);
         var pitchers = [
-            { name: staffNames[0] || (ownStarter && ownStarter.name) || (team.abbreviation + ' SP'), vec: starterVec, acc: evNewPit(), role: 'SP' },
-            arms ? { name: arms.setup.name, vec: evPitcherVector({ mlbId: arms.setup.mlbId }, 100), acc: evNewPit(), role: 'RP' }
-                 : { name: staffNames[1] || (team.abbreviation + ' RP'), vec: penVec, acc: evNewPit(), role: 'RP' },
-            arms ? { name: arms.closer.name, vec: evPitcherVector({ mlbId: arms.closer.mlbId }, 100), acc: evNewPit(), role: 'CL' }
-                 : { name: staffNames[2] || (team.abbreviation + ' CL'), vec: penVec, acc: evNewPit(), role: 'CL' }
+            { name: staffNames[0] || (ownStarter && ownStarter.name) || (team.abbreviation + ' SP'), vec: starterVec, acc: evNewPit(), role: 'SP' }
         ];
+        if (arms) {
+            arms.ordered.forEach(function (a) {
+                var role = a === arms.closer ? 'CL' : (a === arms.setup ? 'SU' : 'RP');
+                pitchers.push({ name: a.name, vec: evPitcherVector({ mlbId: a.mlbId }, 100), acc: evNewPit(), role: role, hand: a.hand || null });
+            });
+        } else {
+            pitchers.push({ name: staffNames[1] || (team.abbreviation + ' RP'), vec: penVec, acc: evNewPit(), role: 'RP' });
+            pitchers.push({ name: staffNames[2] || (team.abbreviation + ' CL'), vec: penVec, acc: evNewPit(), role: 'CL' });
+        }
         return {
             team: team, lineup: lineup, anchorFactor: anchorFactor, pitchers: pitchers,
             starterOuts: starterOuts, roster: roster, hasNamedLineup: !!(roster && roster.players && roster.players.length),
@@ -2026,12 +2035,20 @@
             if (!Number.isFinite(ip) || ip < 10) return null;
             if (gs >= 4 || (g > 0 && gs / g >= 0.5)) return null; // exclude starters
             if (!Number.isFinite(era) || era <= 0 || era >= 30) return null;
-            return { name: p.name, mlbId: p.mlbId, era: era, saves: Number(s.saves || 0), ip: ip };
+            return { name: p.name, mlbId: p.mlbId, era: era, saves: Number(s.saves || 0), ip: ip, hand: pitchHandOf(p.mlbId) };
         }).filter(Boolean);
         if (arms.length < 2) return null;
+        // Closer = saves leader (ERA tiebreak); setup + bridge = best ERAs remaining.
         var closer = arms.slice().sort(function (a, b) { return (b.saves - a.saves) || (a.era - b.era); })[0];
-        var setup = arms.filter(function (a) { return a !== closer; }).sort(function (a, b) { return a.era - b.era; })[0];
-        return { setup: setup, closer: closer };
+        var rest = arms.filter(function (a) { return a !== closer; }).sort(function (a, b) { return a.era - b.era; });
+        var setup = rest[0];
+        var bridge = rest[1] || null; // third real arm (best ERA after setup); null if only 2 qualify
+        // Ordered low -> high leverage so evActivePitcher walks bridge -> setup -> closer.
+        var ordered = [];
+        if (bridge) ordered.push(bridge);
+        ordered.push(setup);
+        ordered.push(closer);
+        return { setup: setup, closer: closer, bridge: bridge, ordered: ordered };
     }
     function evStarterOuts(starter, team) {
         var quality = Number(starter && starter.quality); if (!Number.isFinite(quality)) quality = 100;
@@ -2158,10 +2175,21 @@
         // starterOutsGame: per-game sampled hook point (real starters do not throw
         // an identical inning count every outing); falls back to the season mean.
         var starterOuts = side.starterOutsGame || side.starterOuts;
-        if (outsRecorded < starterOuts) return side.pitchers[0];
-        var relief = Math.max(3, 27 - starterOuts);
-        if (outsRecorded < starterOuts + Math.ceil(relief * 0.6)) return side.pitchers[1];
-        return side.pitchers[2];
+        var arms = side.pitchers;
+        if (outsRecorded < starterOuts || arms.length <= 1) return arms[0];
+        // Multi-arm sequencing: the LAST arm is the closer, reserved for the 9th-
+        // inning pocket (defensive out 24+) and any later relief. The middle arms
+        // (bridge, setup) split the outs between the starter's exit and the 9th, in
+        // order, so the highest-leverage arm (setup) covers the latest pocket.
+        var closerIdx = arms.length - 1;
+        var CLOSER_FLOOR = 24; // 9th inning begins at the 24th defensive out
+        if (outsRecorded >= Math.max(starterOuts, CLOSER_FLOOR)) return arms[closerIdx];
+        var midCount = closerIdx - 1; // arms between the starter and the closer
+        if (midCount <= 0) return arms[closerIdx];
+        var span = CLOSER_FLOOR - starterOuts;
+        if (span <= 0) return arms[closerIdx];
+        var k = clamp(Math.floor(((outsRecorded - starterOuts) / span) * midCount), 0, midCount - 1);
+        return arms[1 + k];
     }
     function evSimGame(awaySide, homeSide, random) {
         [awaySide, homeSide].forEach(function (s) {
@@ -4089,6 +4117,8 @@
             buildEventInputs: buildEventInputs,
             evSimGame: evSimGame,
             eventWinProbability: eventWinProbability,
+            evActivePitcher: evActivePitcher,
+            evRelieverArms: evRelieverArms,
             parkHrFactor: parkHrFactor,
             league: EV_LEAGUE
         }
