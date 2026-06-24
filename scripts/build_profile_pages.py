@@ -91,7 +91,7 @@ def eligible(detail):
 def fetch_picks(un):
     """All public picks for a user (paginate; API caps limit at 100)."""
     out, off = [], 0
-    while off < 400:
+    while off < 900:
         try:
             d = get(f"{API}/picks?username={un}&limit=100&offset={off}")
         except Exception:
@@ -102,6 +102,15 @@ def fetch_picks(un):
             break
         off += 100
     return out
+
+def fetch_metrics(un):
+    """Live aggregator — the SAME source the /profile/ dashboard and the
+    /handicappers/ leaderboard (pick-log recompute) use, so the baked public
+    numbers match them instead of the lagging materialized /api/users columns."""
+    try:
+        return get(f"{API}/users/{un}/metrics")
+    except Exception:
+        return None
 
 def amer_to_dec(o):
     o = num(o)
@@ -155,7 +164,7 @@ def derive(picks):
     graded_sorted = sorted(graded, key=lambda p: p.get("graded_at") or "", reverse=True)
     return graded_sorted[:5], avg_amer, sport_rows, len(graded)
 
-def page_html(d, recent, avg_amer, sport_rows):
+def page_html(d, recent, avg_amer, sport_rows, m=None):
     e = html.escape
     un    = d["username"]
     disp  = d.get("display_name") or un
@@ -163,13 +172,30 @@ def page_html(d, recent, avg_amer, sport_rows):
     avatar= d.get("avatar_url") or ""
     if avatar.startswith("data:") or len(avatar) > 300:
         avatar = ""
-    w, l, p = int(num(d.get("wins"))), int(num(d.get("losses"))), int(num(d.get("pushes")))
-    tp    = graded_count(d)
-    wr    = num(d.get("win_rate"))
-    roi   = num(d.get("roi"))
-    units = num(d.get("net_units"))
-    cur   = int(num(d.get("current_streak")))
-    best  = int(num(d.get("best_streak")))
+    # Prefer the live aggregator (metrics) so the baked numbers match the
+    # leaderboard + own dashboard; fall back to the /api/users detail columns.
+    summ = (m or {}).get("summary") or {}
+    strk = (m or {}).get("streaks") or {}
+    if summ:
+        w = int(num(summ.get("wins")))
+        l = int(num(summ.get("losses")))
+        p = int(num(summ.get("pushes")))
+        tp = int(num(summ.get("total_picks"))) or (w + l + p)
+        wr = num(summ.get("win_rate"))
+        roi = num(summ.get("roi"))
+        units = num(summ.get("net_units"))
+        cur = int(num(strk.get("current", d.get("current_streak"))))
+        best = int(num(strk.get("best", d.get("best_streak"))))
+        if summ.get("avg_odds") is not None:
+            avg_amer = int(num(summ.get("avg_odds")))
+    else:
+        w, l, p = int(num(d.get("wins"))), int(num(d.get("losses"))), int(num(d.get("pushes")))
+        tp    = graded_count(d)
+        wr    = num(d.get("win_rate"))
+        roi   = num(d.get("roi"))
+        units = num(d.get("net_units"))
+        cur   = int(num(d.get("current_streak")))
+        best  = int(num(d.get("best_streak")))
     rec   = f"{w}-{l}" + (f"-{p}" if p else "")
     url   = f"{SITE}/u/{un}/"
     title = f"{disp} - Verified Sports Betting Record, ROI & Public Picks | TrustMyRecord"
@@ -201,8 +227,50 @@ def page_html(d, recent, avg_amer, sport_rows):
         stats.append(stat(fmt_amer(avg_amer), "Avg Odds"))
     stats_html = "".join(stats)
 
+    # Sport breakdown: rich (units/ROI/win%) when metrics is available, else
+    # the record-only fallback from the pick log.
     sport_html = ""
-    if sport_rows:
+    by_sport = (m or {}).get("splits", {}).get("by_sport") if m else None
+    if by_sport:
+        def sgn_u(v):
+            v = num(v); return ("+" if v > 0 else "") + f"{v:.2f}u"
+        def sgn_p(v):
+            v = num(v); return ("+" if v > 0 else "") + f"{v:.2f}%"
+        def clz(v):
+            v = num(v); return "u-win" if v > 0 else "u-loss" if v < 0 else "u-push"
+        # Merge competitions that share a display label (e.g. all soccer_* -> Soccer).
+        merged = {}
+        order = []
+        for s in by_sport:
+            lab = sport_label(s.get("key"))
+            if lab not in merged:
+                merged[lab] = {"w": 0, "l": 0, "p": 0, "t": 0, "net": 0.0, "risked": 0.0}
+                order.append(lab)
+            g = merged[lab]
+            g["w"] += int(num(s.get("wins"))); g["l"] += int(num(s.get("losses")))
+            g["p"] += int(num(s.get("pushes"))); g["t"] += int(num(s.get("total")))
+            g["net"] += num(s.get("net")); g["risked"] += num(s.get("risked"))
+        srows = []
+        for lab in order:
+            g = merged[lab]
+            roi = (g["net"] / g["risked"] * 100) if g["risked"] else 0.0
+            wr = (g["w"] / (g["w"] + g["l"]) * 100) if (g["w"] + g["l"]) else 0.0
+            srows.append((lab, g, roi, wr))
+        srows.sort(key=lambda x: -x[1]["t"])
+        rows = "".join(
+            f'<tr><td>{e(lab)}</td>'
+            f'<td>{g["w"]}-{g["l"]}' + (f'-{g["p"]}' if g["p"] else '') + '</td>'
+            f'<td>{g["t"]}</td>'
+            f'<td class="{clz(g["net"])}">{e(sgn_u(g["net"]))}</td>'
+            f'<td class="{clz(roi)}">{e(sgn_p(roi))}</td>'
+            f'<td>{wr:.1f}%</td></tr>'
+            for lab, g, roi, wr in srows)
+        sport_html = (
+            '<section class="u-block"><h2>Sport-by-sport breakdown</h2>'
+            '<div class="u-scroll"><table class="u-table"><thead><tr><th>Sport</th><th>Record</th>'
+            '<th>Picks</th><th>Units</th><th>ROI</th><th>Win %</th></tr></thead>'
+            f'<tbody>{rows}</tbody></table></div></section>')
+    elif sport_rows:
         rows = "".join(
             f'<tr><td>{e(lab)}</td><td>{c[0]}-{c[1]}' + (f'-{c[2]}' if c[2] else '') + f'</td><td>{c[0]+c[1]+c[2]}</td></tr>'
             for lab, c in sport_rows)
@@ -278,6 +346,7 @@ def page_html(d, recent, avg_amer, sport_rows):
 .u-table th{{color:#8890ad;font-size:11px;text-transform:uppercase;letter-spacing:.4px;}}
 .u-win{{color:#00ff88;font-weight:700;}}.u-loss{{color:#ff5566;font-weight:700;}}.u-push{{color:#9aa;font-weight:700;}}
 .u-note{{color:#8890ad;font-size:12px;margin:8px 0 0;}}
+.u-scroll{{overflow-x:auto;}}
 .u-how{{background:#13131c;border:1px solid #262636;border-radius:12px;padding:16px 18px;color:#a9b0c8;line-height:1.6;font-size:14px;margin-top:26px;}}
 .u-cta{{display:inline-block;margin-top:14px;background:#ffd700;color:#1a1200;font-family:'Barlow',sans-serif;
   font-weight:800;padding:12px 22px;border-radius:11px;}}
@@ -295,11 +364,13 @@ def page_html(d, recent, avg_amer, sport_rows):
       {bio_html}
     </div>
   </div>
-  <section class="u-stats">
+  <section class="u-stats" id="uStats">
     {stats_html}
   </section>
+  <div id="uDeep">
   {sport_html}
   {recent_html}
+  </div>
   <div class="u-how">
     <strong>How this record is verified:</strong> every pick {e(disp)} makes is timestamped and
     locked before the game starts, then graded automatically when the result settles. Wins and
@@ -321,7 +392,12 @@ def page_html(d, recent, avg_amer, sport_rows):
 """
 
 def noindex_html(un):
-    """Slim noindex stub for an existing /u page that no longer qualifies."""
+    """Noindex (low-data) profile for an existing /u page that doesn't yet meet
+    the SEO indexing threshold. Still a REAL profile for visitors: the same
+    headline/#uStats + #uDeep mounts that tmr-profile-hydrate.js fills live from
+    the metrics aggregator, so clicking "View" from the leaderboard for a rising
+    or new member shows their real (if smaller) stats, not a dead-end stub. It's
+    noindex only — SEO is gated on graded volume, the live experience is not."""
     e = html.escape
     url = f"{SITE}/u/{un}/"
     return f"""<!DOCTYPE html>
@@ -332,17 +408,48 @@ def noindex_html(un):
 <meta name="robots" content="noindex, follow">
 <link rel="canonical" href="{url}">
 <title>{e(un)} | TrustMyRecord</title>
-<meta name="description" content="This TrustMyRecord profile does not yet have enough graded pick history to be featured.">
+<meta name="description" content="Public TrustMyRecord profile for {e(un)} - verified locked-pick record, units, ROI, and history. Building toward the featured leaderboard.">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css">
+<style>
+.u-wrap{{max-width:820px;margin:0 auto;padding:24px 18px 70px;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;}}
+.u-wrap a{{color:#00aeff;text-decoration:none;}}
+.u-head{{display:flex;gap:16px;align-items:center;margin:8px 0 6px;}}
+.u-name{{font-size:26px;margin:0;font-family:'Barlow',sans-serif;}}
+.u-tag{{color:#8890ad;font-size:13px;margin:2px 0 0;}}
+.u-stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0;}}
+.u-stat{{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px;}}
+.u-stat b{{display:block;font-size:20px;}}
+.u-stat span{{color:#9aa;font-size:11px;text-transform:uppercase;letter-spacing:.5px;}}
+.u-block{{margin-top:26px;}}
+.u-block h2{{font-family:'Barlow',sans-serif;font-size:18px;margin:0 0 10px;}}
+.u-table{{width:100%;border-collapse:collapse;font-size:14px;background:#13131c;border:1px solid #262636;border-radius:12px;overflow:hidden;}}
+.u-table th,.u-table td{{text-align:left;padding:9px 11px;border-bottom:1px solid #20202e;}}
+.u-table th{{color:#8890ad;font-size:11px;text-transform:uppercase;letter-spacing:.4px;}}
+.u-win{{color:#00ff88;font-weight:700;}}.u-loss{{color:#ff5566;font-weight:700;}}.u-push{{color:#9aa;font-weight:700;}}
+.u-note{{color:#8890ad;font-size:12px;margin:8px 0 0;}}
+.u-scroll{{overflow-x:auto;}}
+.u-building{{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px 16px;color:#a9b0c8;line-height:1.55;font-size:13.5px;margin-top:18px;}}
+@media(max-width:640px){{.u-stats{{grid-template-columns:repeat(2,1fr);}}.u-table{{font-size:12.5px;}}}}
+</style>
 </head>
 <body>
-<main style="max-width:640px;margin:0 auto;padding:48px 20px;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;">
-  <h1 style="font-family:'Barlow',sans-serif;">@{e(un)}</h1>
-  <p style="color:#9aa;line-height:1.6;">This public profile does not yet have enough graded pick history to be
-  featured. Records are published once a member has at least {GRADED_MIN} graded picks.</p>
-  <p><a href="/profile/?user={e(un)}" style="color:#00aeff;">View the live interactive profile</a> ·
-     <a href="/leaderboards/" style="color:#00aeff;">Verified Leaderboards</a></p>
+<main class="u-wrap">
+  <div class="u-head">
+    <div>
+      <h1 class="u-name">{e(un)}</h1>
+      <p class="u-tag">@{e(un)} · Public pick record</p>
+    </div>
+  </div>
+  <section class="u-stats" id="uStats">
+    <div class="u-stat"><b>&mdash;</b><span>Loading record</span></div>
+  </section>
+  <div id="uDeep"></div>
+  <p class="u-building">Building a public record. Full SEO feature listing unlocks at {GRADED_MIN} graded picks;
+  the live stats above update automatically as picks settle.</p>
+  <div class="u-note"><a href="/leaderboards/">Verified Leaderboards</a> ·
+     <a href="/handicappers/">Handicappers</a> ·
+     <a href="/profile/?user={e(un)}">Full interactive profile</a></div>
 </main>
 <script>window.__TMR_PROFILE_USERNAME={json.dumps(un)};</script>
 <script src="/static/js/tmr-profile-hydrate.js" defer></script>
@@ -387,10 +494,11 @@ def main():
     for d in eligible_pages:
         un = d["username"]
         recent, avg_amer, sport_rows, _ = derive(fetch_picks(un))
+        m = fetch_metrics(un)
         ddir = os.path.join(UDIR, un)
         os.makedirs(ddir, exist_ok=True)
         with open(os.path.join(ddir, "index.html"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(page_html(d, recent, avg_amer, sport_rows))
+            f.write(page_html(d, recent, avg_amer, sport_rows, m))
     for un in to_noindex:
         with open(os.path.join(UDIR, un, "index.html"), "w", encoding="utf-8", newline="\n") as f:
             f.write(noindex_html(un))
