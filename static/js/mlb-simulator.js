@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-lob-20260623';
+    var UI_BUILD = 'mlb-simulator-statcast-20260623';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -202,7 +202,8 @@
         ['injuryReport', 'Injury report', 'Unavailable', 'No verified injury report feed is connected.'],
         ['rosterContext', 'Roster context', 'Unavailable', 'No verified player roster feed is connected.'],
         ['recentForm', 'Recent scoring form', 'Unavailable', 'No verified recent final-score feed is connected.'],
-        ['bullpenContext', 'Bullpen context', 'Unavailable', 'No verified bullpen availability feed is connected.']
+        ['bullpenContext', 'Bullpen context', 'Unavailable', 'No verified bullpen availability feed is connected.'],
+        ['statcast', 'Statcast expected stats', 'Unavailable', 'No Baseball Savant expected-stats feed is connected.']
     ].map(function (row) { return { key: row[0], label: row[1], status: row[2], detail: row[3], verified: false }; });
 
     var state = {
@@ -311,6 +312,53 @@
         return y + '-' + m + '-' + day;
     }
     function seasonYear() { return String(new Date().getUTCFullYear()); }
+    // STATCAST_20260623: Baseball Savant expected-stats leaderboards (xwOBA, xERA).
+    // Public CSV with access-control-allow-origin:* so the client can fetch directly.
+    // Fetched once per session (whole-league leaderboard, not per-player), fail-open.
+    function statcastUrl(type) {
+        return 'https://baseballsavant.mlb.com/leaderboard/expected_statistics?type=' + type + '&year=' + seasonYear() + '&position=&team=&filterType=bip&min=q&csv=true';
+    }
+    function parseCsvRow(line) {
+        var out = [], cur = '', q = false;
+        for (var i = 0; i < line.length; i++) {
+            var c = line[i];
+            if (q) { if (c === '"') { if (line[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += c; }
+            else { if (c === '"') q = true; else if (c === ',') { out.push(cur); cur = ''; } else cur += c; }
+        }
+        out.push(cur);
+        return out;
+    }
+    function parseStatcastCsv(text) {
+        var lines = String(text || '').split(/\r?\n/).filter(function (l) { return l.trim(); });
+        if (lines.length < 2) return {};
+        var head = parseCsvRow(lines[0]).map(function (h) { return h.replace(/^﻿/, '').trim(); });
+        var idx = {}; head.forEach(function (h, i) { idx[h] = i; });
+        if (idx.player_id == null || idx.est_woba == null) return {};
+        var map = {};
+        for (var r = 1; r < lines.length; r++) {
+            var f = parseCsvRow(lines[r]); var id = f[idx.player_id]; if (!id) continue;
+            map[String(id)] = {
+                woba: Number(f[idx.woba]), xwoba: Number(f[idx.est_woba]),
+                era: idx.era != null ? Number(f[idx.era]) : null, xera: idx.xera != null ? Number(f[idx.xera]) : null
+            };
+        }
+        return map;
+    }
+    function fetchStatcastExpected() {
+        if (state.liveContext.statcast) return Promise.resolve(state.liveContext.statcast);
+        function getText(url) { return fetch(url, { cache: 'default' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); }); }
+        return Promise.allSettled([getText(statcastUrl('batter')), getText(statcastUrl('pitcher'))]).then(function (res) {
+            var batter = res[0].status === 'fulfilled' ? parseStatcastCsv(res[0].value) : {};
+            var pitcher = res[1].status === 'fulfilled' ? parseStatcastCsv(res[1].value) : {};
+            var sc = (Object.keys(batter).length || Object.keys(pitcher).length) ? { batter: batter, pitcher: pitcher, fetchedAt: Date.now() } : null;
+            state.liveContext.statcast = sc;
+            return sc;
+        }).catch(function () { state.liveContext.statcast = null; return null; });
+    }
+    function cachedStatcast(id, type) {
+        var sc = state.liveContext.statcast;
+        return sc && sc[type] && sc[type][String(id)] || null;
+    }
     function todaysScheduleUrl() {
         return 'https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=' + encodeURIComponent(todayIsoLocal()) +
             '&hydrate=' + encodeURIComponent('probablePitcher,lineups,team,weather,venue') + '&_=' + encodeURIComponent(UI_BUILD);
@@ -2881,7 +2929,12 @@
             },
             { key: 'rosterContext', label: 'Roster context', status: rosterAvailable ? 'Available from active roster payload' : 'Unavailable', detail: rosterAvailable ? espnGame.awayTeam + ': ' + extra.rosters.away.summary + ' / ' + espnGame.homeTeam + ': ' + extra.rosters.home.summary : 'No verified player roster list is connected for this matchup.', verified: rosterAvailable },
             backendProjectionInputStatus(),
-            { key: 'bullpenContext', label: 'Bullpen context', status: bullpenAvailable ? 'Bullpen injury/depth context available' : 'Unavailable', detail: bullpenAvailable ? 'Derived from ESPN roster/injury context only; workload and availability are not connected.' : 'No verified bullpen depth, workload, or availability feed is connected.', verified: bullpenAvailable }
+            { key: 'bullpenContext', label: 'Bullpen context', status: bullpenAvailable ? 'Bullpen injury/depth context available' : 'Unavailable', detail: bullpenAvailable ? 'Derived from ESPN roster/injury context only; workload and availability are not connected.' : 'No verified bullpen depth, workload, or availability feed is connected.', verified: bullpenAvailable },
+            (function () {
+                var sc = state.liveContext && state.liveContext.statcast;
+                var n = sc ? (Object.keys(sc.batter || {}).length + Object.keys(sc.pitcher || {}).length) : 0;
+                return { key: 'statcast', label: 'Statcast expected stats', status: n ? 'Available from Baseball Savant' : 'Unavailable', detail: n ? ('Real ' + seasonYear() + ' Statcast expected stats (xwOBA / xERA) loaded for ' + n + ' qualified players.') : 'No Baseball Savant expected-stats feed is connected.', verified: !!n };
+            })()
         ];
     }
     function backendProjectionInputStatus() {
@@ -3541,6 +3594,18 @@
         var awayInherited = inheritedRunnersLine(awayPlayers);
         var homeInherited = inheritedRunnersLine(homePlayers);
         if (awayInherited || homeInherited) rows.push(['Inherited runners-scored', result.away.abbreviation + ' ' + (awayInherited || '0-0') + '; ' + result.home.abbreviation + ' ' + (homeInherited || '0-0')]);
+        // STATCAST_20260623: real Baseball Savant expected stats for the starters
+        // (season, not game). Shown as context; not yet fed into the projection model.
+        function scStarter(p) {
+            var sc = p && p.mlbId ? cachedStatcast(p.mlbId, 'pitcher') : null;
+            if (!sc) return null;
+            var parts = [];
+            if (Number.isFinite(sc.xera)) parts.push('xERA ' + sc.xera.toFixed(2));
+            if (Number.isFinite(sc.xwoba)) parts.push('xwOBA-against ' + sc.xwoba.toFixed(3));
+            return parts.length ? (p.name + ' ' + parts.join(', ')) : null;
+        }
+        var scLines = [scStarter(result.awayPitcher), scStarter(result.homePitcher)].filter(Boolean);
+        if (scLines.length) rows.push(['Statcast starters (' + seasonYear() + ' season)', scLines.join('; ')]);
         return '<section class="pitching-game-notes"><h4>Pitching &amp; Game Notes</h4>' + rows.map(function (row) {
             return '<p><strong>' + escapeHtml(row[0]) + ':</strong> ' + escapeHtml(row[1]) + '</p>';
         }).join('') + '</section>';
@@ -4062,6 +4127,7 @@
         var espnUrls = recentEspnDates().map(function (date) {
             return 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' + date;
         });
+        fetchStatcastExpected();
         return Promise.allSettled([
             fetchJson(base + '/games?sport=baseball_mlb'),
             fetchJson(base + '/games/board/baseball_mlb')
@@ -4101,6 +4167,7 @@
                     playerSplits: state.liveContext.playerSplits || {},
                     todaySchedule: state.liveContext.todaySchedule || null,
                     teamInjured: state.liveContext.teamInjured || {},
+                    statcast: state.liveContext.statcast || null,
                     recentEvents: recentEvents,
                     error: null
                 };
