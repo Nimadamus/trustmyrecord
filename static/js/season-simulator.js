@@ -132,7 +132,7 @@
         if (locked) return;
         state[s.getAttribute('data-field')] = s.value || null;
         syncDownstream();
-        renderBracket(); renderChampions();
+        renderBracket(); renderChampions(); updateProgress();
       });
     });
   }
@@ -176,9 +176,10 @@
         if (locked) return;
         var abbr = inp.getAttribute('data-abbr');
         var n = parseInt(inp.value, 10);
-        if (inp.value === '' || isNaN(n)) { delete state.team_win_totals[abbr]; return; }
+        if (inp.value === '' || isNaN(n)) { delete state.team_win_totals[abbr]; updateProgress(); return; }
         n = Math.max(0, Math.min(162, n));
         state.team_win_totals[abbr] = n;
+        updateProgress();
       });
     });
   }
