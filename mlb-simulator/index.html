@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="canonical" href="https://trustmyrecord.com/mlb-simulator/">
+    <title>MLB Simulator | Free Matchup &amp; Team Builder Simulator | TrustMyRecord</title>
+    <meta name="description" content="Free MLB simulator: pick two teams, choose starters, and run a projected matchup. Use it as an MLB predictions and team builder simulator, then lock your pick and track your record on TrustMyRecord.">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+    <meta property="og:title" content="MLB Simulator | Free Matchup &amp; Team Builder Simulator | TrustMyRecord">
+    <meta property="og:description" content="Pick two MLB teams, choose starters, and run a projected matchup. An MLB predictions and team builder simulator. Then lock your pick and track your record on TrustMyRecord.">
+    <meta property="og:url" content="https://trustmyrecord.com/mlb-simulator/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-page-polish.css">
+    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260623-model-vs-market">
+    <script src="/static/js/config.js"></script>
+    <script src="/static/js/backend-api.js"></script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "MLB Simulator", "applicationCategory": "SportsApplication", "operatingSystem": "Web", "url": "https://trustmyrecord.com/mlb-simulator/", "description": "Select current or classic MLB teams and run a clearly labeled TrustMyRecord simulator estimate.", "publisher": {"@type": "Organization", "name": "TrustMyRecord", "url": "https://trustmyrecord.com/"}}</script>
+</head>
+<body class="tmr-polished-page mlb-simulator-page" data-mlb-simulator-build="mlb-simulator-lob-20260623">
+    <header class="sim-topbar" aria-label="TrustMyRecord navigation">
+        <a class="sim-brand" href="/">TrustMyRecord</a>
+        <nav class="sim-nav" aria-label="Primary">
+            <a href="/sportsbook/">Sportsbook</a>
+            <a href="/handicappers/">Handicappers</a>
+            <a href="/leaderboard/">Leaderboard</a>
+            <a href="/mlb-simulator/" aria-current="page">MLB Simulator</a>
+        </nav>
+    </header>
+
+    <main class="sim-shell">
+        <section class="sim-hero">
+            <div>
+                <p class="sim-kicker">Data Lab</p>
+                <h1>MLB Simulator</h1>
+                <p class="sim-subtitle">A free MLB simulator and team builder: pick two teams, choose starters, and run a projected matchup. Use it to test MLB predictions before you bet.</p>
+                <p style="margin-top:10px;font-size:0.95rem;">After testing a matchup, <a href="/sportsbook/" style="color:#00aeff;font-weight:700;text-decoration:underline;">lock your pick</a> and <a href="/leaderboards/" style="color:#00aeff;font-weight:700;text-decoration:underline;">track your record on TrustMyRecord</a>.</p>
+                <p style="margin-top:8px;font-size:0.95rem;"><a href="/mlb-season-simulator/" style="color:#00aeff;font-weight:700;text-decoration:underline;">Read the MLB Season Simulator Guide &rarr;</a> <span style="opacity:0.7;">(predict division races, playoff teams, and the World Series)</span></p>
+            </div>
+            <div class="sim-status-card" aria-live="polite">
+                <span class="sim-status-dot" aria-hidden="true"></span>
+                <div>
+                    <strong id="simDataSourceTitle">Simulator dataset</strong>
+                    <span id="simDataSourceDetail">Preparing baseline team library...</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="sim-workflow" aria-label="Simulator workflow">
+            <div><span>Step 1</span><strong>Mode</strong><small>Choose format</small></div>
+            <div><span>Step 2</span><strong>Teams</strong><small>Away and home</small></div>
+            <div><span>Step 3</span><strong>Starters</strong><small>Pick pitchers</small></div>
+            <div><span>Step 4</span><strong>Run</strong><small>Simulate</small></div>
+            <div><span>Step 5</span><strong>Review</strong><small>Results</small></div>
+        </section>
+
+        <section class="sim-workspace" aria-label="MLB simulator controls">
+            <section class="sim-panel sim-control-panel">
+                <div class="sim-panel-heading">
+                    <p class="sim-label">Simulator</p>
+                    <h2>Team Selection</h2>
+                </div>
+
+                <div class="sim-toggle three-up" role="group" aria-label="Matchup presets">
+                    <button id="currentModeButton" type="button" class="active" data-mode="current">Current Teams</button>
+                    <button id="historicalModeButton" type="button" data-mode="historical">Classic Teams</button>
+                    <button id="mixedModeButton" type="button" data-mode="mixed">Mixed Era Matchup</button>
+                </div>
+                <p id="modeHelpText" class="sim-mode-help">Current Teams mode compares two modern MLB baseline profiles.</p>
+
+                <div class="team-picker-grid">
+                    <article class="team-picker-card">
+                        <span class="team-side">Away Team</span>
+                        <div id="awayPickerIdentity" class="team-picker-identity" aria-live="polite"></div>
+                        <label class="sim-field compact-field">
+                            <span>Team pool</span>
+                            <select id="awayPoolSelect" class="sim-select">
+                                <option value="current">Current MLB</option>
+                                <option value="historical">Classic Historical</option>
+                            </select>
+                        </label>
+                        <label class="sim-field">
+                            <span>Away team</span>
+                            <select id="awayTeamSelect" class="sim-select">
+                                <option value="">Preparing team list...</option>
+                            </select>
+                        </label>
+                        <div id="awayTeamMeta" class="team-meta">No team selected</div>
+                        <div class="sim-field pitcher-field">
+                            <span>Starting Pitcher</span>
+                            <select id="awayPitcherSelect" class="sim-select starter-select pitcher-select" data-pitcher-side="away" aria-label="Team A starting pitcher">
+                                <option value="">Preparing starter list...</option>
+                            </select>
+                        </div>
+                        <div id="awayPitcherMeta" class="pitcher-meta">Pitcher choice affects the projection.</div>
+                    </article>
+
+                    <article class="team-picker-card">
+                        <span class="team-side">Home Team</span>
+                        <div id="homePickerIdentity" class="team-picker-identity" aria-live="polite"></div>
+                        <label class="sim-field compact-field">
+                            <span>Team pool</span>
+                            <select id="homePoolSelect" class="sim-select">
+                                <option value="current">Current MLB</option>
+                                <option value="historical">Classic Historical</option>
+                            </select>
+                        </label>
+                        <label class="sim-field">
+                            <span>Home team</span>
+                            <select id="homeTeamSelect" class="sim-select">
+                                <option value="">Preparing team list...</option>
+                            </select>
+                        </label>
+                        <div id="homeTeamMeta" class="team-meta">No team selected</div>
+                        <div class="sim-field pitcher-field">
+                            <span>Starting Pitcher</span>
+                            <select id="homePitcherSelect" class="sim-select starter-select pitcher-select" data-pitcher-side="home" aria-label="Team B starting pitcher">
+                                <option value="">Preparing starter list...</option>
+                            </select>
+                        </div>
+                        <div id="homePitcherMeta" class="pitcher-meta">Pitcher choice affects the projection.</div>
+                    </article>
+                </div>
+
+                <div class="sim-actions sim-actions-expanded">
+                    <label class="sim-count-field" for="simulationCountSelect">
+                        <span>Number of simulations</span>
+                        <select id="simulationCountSelect" class="sim-select">
+                            <option value="1" selected>1</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </label>
+                    <button id="runSimulationButton" class="sim-button primary" type="button">Run Simulation</button>
+                    <a id="viewBoxScoreControl" class="sim-button secondary compact-action view-box-score-link" href="#boxScorePanel" aria-disabled="true">View Box Score</a>
+                    <button id="refreshTeamsButton" class="sim-button secondary" type="button">Reset</button>
+                </div>
+                <div id="simBoardMessage" class="sim-message" role="status">Local simulator baselines are ready even when provider data is unavailable.</div>
+            </section>
+
+            <section class="sim-panel sim-score-panel" aria-label="Simulation results">
+                <div class="sim-panel-heading compact">
+                    <p class="sim-label">Projection Review</p>
+                    <h2 id="selectedMatchupTitle">Matchup Review</h2>
+                </div>
+
+                <!-- SIM_HONESTY_BADGE_20260622 -->
+                <aside class="sim-honesty-badge" role="note" aria-label="Simulator disclosure" style="margin:0 0 16px;padding:14px 16px;border:1px solid rgba(255,255,255,0.14);border-left:4px solid #f5b301;border-radius:10px;background:rgba(245,179,1,0.08);color:#e7ecf3;font-size:0.86rem;line-height:1.5;">
+                    <strong style="display:block;margin-bottom:6px;color:#f5b301;font-size:0.78rem;letter-spacing:0.06em;text-transform:uppercase;">Read this first</strong>
+                    <p style="margin:0 0 8px;">Simulator results are estimates, not guaranteed picks. Rosters, probable pitchers, injuries, odds, and weather can change. Use the simulator as a research tool and track official picks through TrustMyRecord's locked, auto-graded record system.</p>
+                    <p style="margin:0;opacity:0.85;">Some ratings may use cached or estimated inputs when live data is unavailable.</p>
+                </aside>
+
+                <div class="matchup-header" aria-live="polite">
+                    <article>
+                        <div id="awayHeaderLogo" class="matchup-team-logo"></div>
+                        <span id="awayEraBadge">Team A</span>
+                        <strong id="awayHeaderName">Select Team A</strong>
+                        <small id="awayHeaderMeta">Current or classic</small>
+                    </article>
+                    <div class="matchup-vs">vs</div>
+                    <article class="home">
+                        <div id="homeHeaderLogo" class="matchup-team-logo"></div>
+                        <span id="homeEraBadge">Team B</span>
+                        <strong id="homeHeaderName">Select Team B</strong>
+                        <small id="homeHeaderMeta">Current or classic</small>
+                    </article>
+                </div>
+
+                <div id="resultCard" class="result-card" data-result-state="empty">
+                    <div class="winner-strip">
+                        <span>Projected Winner</span>
+                        <strong id="winnerBadge">Run a simulation</strong>
+                    </div>
+                    <!-- DATA_MODE_CHIP_20260622 -->
+                    <div id="dataModeChip" class="data-mode-chip" aria-live="polite"></div>
+                    <div class="scoreboard-readout">
+                        <article>
+                            <div id="awayScoreLogo" class="score-team-logo"></div>
+                            <span id="awayScoreLabel">Team A</span>
+                            <strong id="awayScoreBig">--</strong>
+                            <small id="awayExpectedTile">Choose team and starter</small>
+                        </article>
+                        <div class="score-divider">to</div>
+                        <article class="home">
+                            <div id="homeScoreLogo" class="score-team-logo"></div>
+                            <span id="homeScoreLabel">Team B</span>
+                            <strong id="homeScoreBig">--</strong>
+                            <small id="homeExpectedTile">Choose team and starter</small>
+                        </article>
+                    </div>
+                    <div id="topScoreboard" class="top-scoreboard-wrap" data-state="empty" aria-live="polite"></div>
+                    <p id="keyExplanationValue" class="key-explanation">Run the simulator to generate winner, score range, win probability, and notes.</p>
+                    <div class="result-jump-actions">
+                        <a id="viewBoxScoreLink" class="sim-button secondary compact-action view-box-score-link" href="#boxScorePanel" aria-disabled="true">View Box Score</a>
+                    </div>
+                </div>
+
+                <div id="projectionEmptyState" class="projection-empty-state" data-empty-state="ready">
+                    <span>Ready to simulate</span>
+                    <strong>Select two teams, choose starting pitchers, then run the simulator.</strong>
+                    <p>Results and box score appear here after simulation.</p>
+                </div>
+
+                <div id="projectionShell" class="projection-shell" data-projection-state="not-connected">
+                    <div>
+                        <span id="projectedScoreValue" class="projection-value muted">Run simulation</span>
+                        <small>Projected Score Range</small>
+                    </div>
+                    <div>
+                        <span id="winProbabilityValue" class="projection-value muted">Select teams</span>
+                        <small>Simulated Winner / Win %</small>
+                    </div>
+                    <div>
+                        <span id="expectedRunsValue" class="projection-value muted">Choose starters</span>
+                        <small>Expected Runs</small>
+                    </div>
+                    <div>
+                        <span id="totalRangeValue" class="projection-value muted">Run to calculate</span>
+                        <small>Total Runs Range</small>
+                    </div>
+                    <div>
+                        <span id="runEnvironmentValue" class="projection-value muted">Run to calculate</span>
+                        <small>Run Environment</small>
+                    </div>
+                    <div>
+                        <span id="simulationConfidenceValue" class="projection-value muted">Run to calculate</span>
+                        <small>Confidence Band</small>
+                    </div>
+                    <div>
+                        <span id="eraAdjustmentValue" class="projection-value muted">Run to calculate</span>
+                        <small>Era Adjustment</small>
+                    </div>
+                    <div>
+                        <span id="simulationModeValue" class="projection-value muted">Ready to run</span>
+                        <small>Simulation Mode Used</small>
+                    </div>
+                    <div>
+                        <span id="dataModeValue" class="projection-value muted">Baseline ratings</span>
+                        <small>Data Mode Used</small>
+                    </div>
+                </div>
+
+                <section id="aggregatePanel" class="sim-aggregate-panel" data-aggregate-state="empty" aria-live="polite">
+                    <div class="sim-panel-heading compact">
+                        <p class="sim-label">Simulation Batch</p>
+                        <h3>Aggregate Summary</h3>
+                    </div>
+                    <div id="aggregateSummaryGrid" class="aggregate-summary-grid">
+                        <div><strong>Runs</strong><span>Choose 10, 25, 50, or 100 simulations.</span></div>
+                    </div>
+                    <p id="aggregateSummaryText">Multiple-simulation output is simulation-based, not official prediction certainty.</p>
+                </section>
+
+                <div id="probabilityLab" class="probability-lab" data-probability-state="empty">
+                    <div class="probability-row">
+                        <span id="awayProbabilityLabel">Team A</span>
+                        <div class="probability-track"><span id="awayProbabilityBar" style="width: 50%"></span></div>
+                        <strong id="awayProbabilityValue">--</strong>
+                    </div>
+                    <div class="probability-row">
+                        <span id="homeProbabilityLabel">Team B</span>
+                        <div class="probability-track"><span id="homeProbabilityBar" style="width: 50%"></span></div>
+                        <strong id="homeProbabilityValue">--</strong>
+                    </div>
+                </div>
+
+                <!-- MODEL_VS_MARKET_20260623 -->
+                <div id="modelVsMarket" class="model-vs-market" data-mvm-state="empty"></div>
+
+                <p id="projectionNotice" class="sim-notice">Select two teams and run the simulator. Outputs here are never counted as official picks or user records.</p>
+            </section>
+
+            <section id="boxScorePanel" class="sim-panel box-score-panel" data-box-score-state="empty" aria-label="Simulated box score">
+                <div class="box-score-heading">
+                    <div>
+                        <p class="sim-label">Full Box Score</p>
+                        <h2>Box Score</h2>
+                        <strong id="boxScoreTitle">Run a simulation to generate a box score.</strong>
+                    </div>
+                    <div class="box-score-actions">
+                        <button id="copyBoxScoreButton" class="sim-button secondary compact-action" type="button" disabled>Copy Box Score</button>
+                        <button id="saveBoxScoreButton" class="sim-button secondary compact-action" type="button" disabled>Save Box Score</button>
+                    </div>
+                </div>
+                <div id="boxScoreMatchupCard" class="box-score-matchup-card" data-state="empty"></div>
+                <div class="box-score-scroll">
+                    <table class="box-score-table">
+                        <thead>
+                            <tr id="boxScoreHeadRow">
+                                <th>Team</th>
+                                <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th>
+                                <th>R</th><th>H</th><th>E</th>
+                            </tr>
+                        </thead>
+                        <tbody id="boxScoreBody">
+                            <tr><td colspan="13">Run a simulation to generate a box score.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="boxScoreSummary" class="box-score-summary">Run a simulation to generate a box score.</div>
+                <div id="playerBoxScorePanel" class="player-box-score-panel" data-player-box-state="empty">
+                    <div class="player-box-score-heading">
+                        <p class="sim-label">Player Box Score</p>
+                        <h3>Batter & Pitcher Lines</h3>
+                        <span>Current-team matchups load verified MLB active roster names before rendering. If a roster endpoint is unavailable, the panel labels that limitation instead of presenting slot rows as players. Stat lines are simulation output, not official MLB player stats.</span>
+                    </div>
+                    <div id="playerBoxScoreContent" class="player-box-score-content">
+                        <div class="sim-empty">Run a simulation to generate batter and pitcher simulation lines.</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="sim-panel sim-compare-panel" aria-label="Offensive and defensive comparison">
+                <div class="sim-panel-heading compact">
+                    <p class="sim-label">Comparison</p>
+                    <h2>Team Profile</h2>
+                </div>
+                <div id="comparisonGrid" class="comparison-grid">
+                    <div class="sim-empty">Run a simulation to compare offense, run prevention, starting pitching, and bullpen baselines.</div>
+                </div>
+            </section>
+
+            <section class="sim-panel sim-notes-panel" aria-label="Key matchup notes">
+                <div class="sim-panel-heading compact">
+                    <p class="sim-label">Readout</p>
+                    <h2>Inputs & Notes</h2>
+                </div>
+                <div id="inputSummary" class="input-summary">
+                    <div><strong>Baseline data</strong><span>Internal team ratings and historical context</span></div>
+                    <div><strong>Live inputs</strong><span>Shown only when matched to verified sources</span></div>
+                    <div><strong>Verified edges</strong><span>Not claimed by this simulator</span></div>
+                    <div><strong>Official records</strong><span>Excluded</span></div>
+                </div>
+                <ul id="matchupNotes" class="matchup-notes">
+                    <li>Select a mode and matchup to generate a baseline simulation. No sportsbook board is required.</li>
+                </ul>
+            </section>
+        </section>
+
+        <section class="data-notes-panel" aria-label="Data notes">
+            <div class="data-mode-topline">
+                <span>Data Notes</span>
+                <strong id="dataModeBadge">Baseline ratings</strong>
+            </div>
+            <p id="dataModeDetail">Verified live inputs appear when available. This simulator currently uses baseline team and starter profiles when verified live feeds are unavailable.</p>
+            <div id="liveInputGrid" class="live-input-grid">
+                <div class="data-note-line">Verified live inputs appear when available. Baseline simulator profiles remain available for every matchup.</div>
+            </div>
+        </section>
+
+        <section class="sim-explainer-section" aria-labelledby="mlbSimulatorExplainerTitle">
+            <div class="sim-panel-heading compact">
+                <p class="sim-label">How It Works</p>
+                <h2 id="mlbSimulatorExplainerTitle">Inside the TrustMyRecord MLB Simulator</h2>
+            </div>
+            <div class="explainer-layout">
+                <article>
+                    <h3>What the simulator is built to do</h3>
+                    <p>The MLB Simulator plays each game out one plate appearance at a time. Every batter faces the selected pitcher with outcome probabilities (walk, strikeout, single, double, triple, home run, out) built from real rate stats and combined through the odds-ratio method, then runners advance through a base-and-out state machine. The box score, win probability, run distribution, strikeouts, walks, and home runs all emerge from those simulated events rather than being assigned after the fact.</p>
+                    <p>Team run output is anchored to a structured expected-run model that already accounts for park, starter and bullpen quality, era context, and verified live inputs when available, so totals stay realistic while each simulated game varies the way real baseball does. It is not a guarantee; the output is a model-based estimate that should be read as scenario guidance, not certainty.</p>
+                </article>
+                <article>
+                    <h3>Current, classic, and mixed era modes</h3>
+                    <p>Current Teams mode compares modern MLB baseline profiles. Classic Teams mode uses curated historical team profiles and normalizes them into a shared simulator environment. Mixed Era Matchup lets a current club face a classic team, with era adjustment shown clearly in the projection.</p>
+                    <p>When verified live context is unavailable, the simulator stays usable with baseline ratings instead of inventing unavailable injuries, weather, confirmed starters, sportsbook odds, or betting edges.</p>
+                </article>
+                <article>
+                    <h3>Why starter selection matters</h3>
+                    <p>Starting pitching is one of the biggest drivers of a baseball game projection. The starter dropdown changes both run expectation and win probability, so users can compare how different rotation options affect the matchup.</p>
+                    <p>Current-team player names are loaded from the MLB Stats API active roster endpoint for the selected team, fetched with no-store behavior and a simulator build cache-buster. If that roster cannot be verified with enough hitters and pitchers for the selected team, the player box score says the roster is temporarily unavailable instead of filling rows with fallback names.</p>
+                </article>
+                <article>
+                    <h3>How to read the output</h3>
+                    <p>Use the projected score range, expected runs, win probability, and key explanation together. A higher win probability means the model sees a stronger matchup profile, not that the result is guaranteed.</p>
+                    <p>For fans, it is a way to explore matchups. For handicappers, it can be one decision-making input alongside market prices, lineup news, weather, injury reports, and personal judgment.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/js/mlb-simulator.js?v=20260623-lob"></script>
+</body>
+</html>
