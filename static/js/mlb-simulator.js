@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-expected-runs-20260623';
+    var UI_BUILD = 'mlb-simulator-boxscore-style-20260623';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3445,8 +3445,9 @@
         var totals = { ab: 0, r: 0, h: 0, rbi: 0, bb: 0, so: 0 };
         var body = lineup.map(function (row, index) {
             totals.ab += row.ab; totals.r += row.r; totals.h += row.h; totals.rbi += row.rbi; totals.bb += row.bb; totals.so += row.so;
-            var name = (row.playerName || String(row.name || '').replace(/\s*\([^)]*\)\s*$/, '')) + ' (' + positions[index] + ')';
-            return '<tr><th scope="row">' + escapeHtml(name) + '</th><td>' + row.ab + '</td><td>' + row.r + '</td><td>' + row.h + '</td><td>' + row.rbi + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + fmt3(row.avg) + '</td><td>' + fmt3(row.ops) + '</td></tr>';
+            var plain = (row.playerName || String(row.name || '').replace(/\s*\([^)]*\)\s*$/, ''));
+            var name = escapeHtml(plain) + ' <span class="bx-pos">' + escapeHtml(positions[index]) + '</span>';
+            return '<tr><th scope="row">' + name + '</th><td>' + row.ab + '</td><td>' + row.r + '</td><td>' + row.h + '</td><td>' + row.rbi + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + fmt3(row.avg) + '</td><td>' + fmt3(row.ops) + '</td></tr>';
         }).join('');
         var teamAvg = totals.ab > 0 ? totals.h / totals.ab : 0;
         body += '<tr class="totals-row"><th scope="row">Totals</th><td>' + totals.ab + '</td><td>' + totals.r + '</td><td>' + totals.h + '</td><td>' + totals.rbi + '</td><td>' + totals.bb + '</td><td>' + totals.so + '</td><td>' + fmt3(teamAvg) + '</td><td></td></tr>';
@@ -3457,8 +3458,8 @@
         var totals = { h: 0, r: 0, er: 0, bb: 0, so: 0, hr: 0, outs: 0 };
         var body = rows.map(function (row, index) {
             totals.h += row.h; totals.r += row.r; totals.er += row.er; totals.bb += row.bb; totals.so += row.so; totals.hr += row.hr; totals.outs += Number(row.outs || 0);
-            var name = row.name + (decisions[index] ? ' (' + decisions[index] + ')' : '');
-            return '<tr><th scope="row">' + escapeHtml(name) + '</th><td>' + escapeHtml(row.ip) + '</td><td>' + row.h + '</td><td>' + row.r + '</td><td>' + row.er + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + row.hr + '</td><td>' + gameEra(row) + '</td></tr>';
+            var name = escapeHtml(row.name) + (decisions[index] ? ' <span class="bx-dec">(' + escapeHtml(decisions[index]) + ')</span>' : '');
+            return '<tr><th scope="row">' + name + '</th><td>' + escapeHtml(row.ip) + '</td><td>' + row.h + '</td><td>' + row.r + '</td><td>' + row.er + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + row.hr + '</td><td>' + gameEra(row) + '</td></tr>';
         }).join('');
         body += '<tr class="totals-row"><th scope="row">Totals</th><td>' + outsToIp(totals.outs) + '</td><td>' + totals.h + '</td><td>' + totals.r + '</td><td>' + totals.er + '</td><td>' + totals.bb + '</td><td>' + totals.so + '</td><td>' + totals.hr + '</td><td></td></tr>';
         return body;
