@@ -56,7 +56,8 @@
     host.innerHTML = DIVISIONS.map(function (d) {
       var btns = d.teams.map(function (t) {
         var sel = state.division_winners[d.label] === t.abbr;
-        return '<button type="button" class="ss-team-btn' + (sel ? ' sel' : '') + '" data-div="' + esc(d.label) + '" data-abbr="' + esc(t.abbr) + '"' + (locked ? ' disabled' : '') + '>' +
+        var tip = t.ballpark ? (t.name + ' · ' + t.ballpark + ' (' + (t.city || '') + ') · Mgr: ' + (t.manager || '')) : t.name;
+        return '<button type="button" class="ss-team-btn' + (sel ? ' sel' : '') + '" title="' + esc(tip) + '" data-div="' + esc(d.label) + '" data-abbr="' + esc(t.abbr) + '"' + (locked ? ' disabled' : '') + '>' +
           '<span class="ab">' + esc(t.abbr) + '</span><span class="nm">' + esc(t.name) + '</span></button>';
       }).join('');
       return '<div class="ss-div-card"><div class="ss-div-head">' + esc(d.label) + '</div><div class="ss-team-grid">' + btns + '</div></div>';
@@ -160,7 +161,8 @@
     host.innerHTML = DIVISIONS.map(function (d) {
       var rows = d.teams.map(function (t) {
         var v = state.team_win_totals[t.abbr];
-        return '<div class="ss-wt-row"><span class="ss-wt-team"><b>' + esc(t.abbr) + '</b> ' + esc(t.name) + '</span>' +
+        var meta = t.ballpark ? '<span class="ss-wt-meta">' + esc(t.ballpark) + ' &middot; Mgr: ' + esc(t.manager || '') + '</span>' : '';
+        return '<div class="ss-wt-row"><span class="ss-wt-team"><b>' + esc(t.abbr) + '</b> ' + esc(t.name) + meta + '</span>' +
           '<input type="number" min="0" max="162" inputmode="numeric" data-abbr="' + esc(t.abbr) + '" value="' + (v != null ? v : '') + '" placeholder="--"' + (locked ? ' disabled' : '') + '></div>';
       }).join('');
       return '<div class="ss-wt-group"><div class="ss-wt-head">' + esc(d.label) + '</div>' + rows + '</div>';
