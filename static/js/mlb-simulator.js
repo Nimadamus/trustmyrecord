@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-statcast-20260623';
+    var UI_BUILD = 'mlb-simulator-statcast-proj-20260624';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3003,9 +3003,22 @@
             });
     }
 
+    // STATCAST_PROJECTION_20260624 (Phase 6b): regress a starter's results-based ERA
+    // toward his Statcast xERA, which strips luck/sequencing and is more predictive of
+    // future run prevention. Population-centered (xERA ~ ERA league-wide) so it shifts
+    // individual matchups toward true talent without moving league-average runs. Falls
+    // back to raw ERA when the pitcher has no qualified Statcast line.
+    function effectivePitcherEra(starter) {
+        var era = Number(starter && starter.era);
+        if (!Number.isFinite(era)) return null;
+        var sc = starter && starter.mlbId ? cachedStatcast(starter.mlbId, 'pitcher') : null;
+        if (sc && Number.isFinite(sc.xera) && sc.xera > 0) return era * 0.55 + sc.xera * 0.45;
+        return era;
+    }
     function starterEraAdjustment(starter) {
-        if (!starter || !Number.isFinite(starter.era)) return 0;
-        return clamp((starter.era - 4.2) * 0.16, -0.32, 0.48);
+        var era = effectivePitcherEra(starter);
+        if (!Number.isFinite(era)) return 0;
+        return clamp((era - 4.2) * 0.16, -0.32, 0.48);
     }
     function selectedPitcherRunAdjustment(pitcher) {
         if (!pitcher) return 0;
