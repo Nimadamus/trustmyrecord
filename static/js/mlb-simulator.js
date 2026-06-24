@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-boxscore-style-20260623';
+    var UI_BUILD = 'mlb-simulator-model-vs-market-20260623';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3128,11 +3128,15 @@
         var awayPythagExp = Math.pow(awayRuns, 1.83);
         var homePythag = (homePythagExp + awayPythagExp) > 0 ? homePythagExp / (homePythagExp + awayPythagExp) : 0.5;
         var homeWin = clamp((homeLogistic * 0.5) + (homePythag * 0.5), 0.28, 0.72);
+        // MODEL_VS_MARKET_20260623: capture the no-vig market-implied win % (research
+        // context only, never presented as a betting edge).
+        var marketWin = null;
         if (context && context.odds) {
             var awayImp = impliedFromAmerican(context.odds.awayPrice);
             var homeImp = impliedFromAmerican(context.odds.homePrice);
             if (awayImp != null && homeImp != null) {
                 var noVigHome = homeImp / (homeImp + awayImp);
+                marketWin = { awayPct: awayImp / (awayImp + homeImp), homePct: noVigHome, book: context.odds.book, awayPrice: context.odds.awayPrice, homePrice: context.odds.homePrice };
                 homeWin = clamp((homeWin * 0.85) + (noVigHome * 0.15), 0.17, 0.83);
                 liveFactors.push('Market context: ' + context.odds.book + ' moneyline snapshot is included, but no betting edge is claimed.');
             }
@@ -3195,6 +3199,7 @@
             winnerPct: winnerPct,
             awayWin: awayWin,
             homeWin: homeWin,
+            marketWin: marketWin,
             awayRuns: round1(awayRuns),
             homeRuns: round1(homeRuns),
             projectedAwayScore: projectedAwayScore,
@@ -3801,6 +3806,31 @@
         setExportButtons(true);
     }
 
+    // MODEL_VS_MARKET_20260623: read-only comparison of the simulator's win % to the
+    // no-vig market-implied win %. Research context only; explicitly NOT a betting edge.
+    function renderModelVsMarket(result) {
+        var el = byId('modelVsMarket');
+        if (!el) return;
+        if (!result || !result.marketWin) {
+            el.setAttribute('data-mvm-state', 'empty');
+            el.innerHTML = '';
+            return;
+        }
+        var m = result.marketWin;
+        function pct(x) { return Math.round(x * 100) + '%'; }
+        function diff(model, market) { var d = (model - market) * 100; return (d >= 0 ? '+' : '') + d.toFixed(1); }
+        function row(name, model, market) {
+            return '<tr><th scope="row">' + escapeHtml(name) + '</th><td>' + pct(model) + '</td><td>' + pct(market) + '</td><td>' + diff(model, market) + '</td></tr>';
+        }
+        el.setAttribute('data-mvm-state', 'shown');
+        el.innerHTML = '<div class="mvm-head">Model vs Market <span class="mvm-note">research context — not a betting edge</span></div>' +
+            '<table class="mvm-table"><thead><tr><th>Team</th><th>Model</th><th>Market</th><th>Diff (pts)</th></tr></thead><tbody>' +
+            row(result.away.abbreviation, result.awayWin, m.awayPct) +
+            row(result.home.abbreviation, result.homeWin, m.homePct) +
+            '</tbody></table>' +
+            '<div class="mvm-foot">' + escapeHtml(m.book) + ' no-vig moneyline snapshot. Simulation estimate only; no wager is implied or recommended.</div>';
+    }
+
     function renderResult(result) {
         if (!result) {
             var shell = byId('projectionShell');
@@ -3819,6 +3849,7 @@
             setText('simulationModeValue', 'Ready to run');
             setText('dataModeValue', dataModeLabel());
             renderDataModeChip(null);
+            renderModelVsMarket(null);
             setText('awayProbabilityLabel', 'Team A');
             setText('homeProbabilityLabel', 'Team B');
             setText('awayProbabilityValue', '--');
@@ -3867,6 +3898,7 @@
         setText('simulationModeValue', result.simulationMode);
         setText('dataModeValue', result.dataMode);
         renderDataModeChip(result);
+        renderModelVsMarket(result);
         setText('awayProbabilityLabel', result.away.name);
         setText('homeProbabilityLabel', result.home.name);
         setText('awayProbabilityValue', roundPct(result.awayWin));
