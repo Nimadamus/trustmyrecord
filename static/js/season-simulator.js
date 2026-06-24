@@ -373,19 +373,42 @@
       if (confirm('Lock your 2026 MLB season predictions? Once locked they are timestamped and cannot be changed.')) submit(true);
     });
     el('ss-draft-btn').addEventListener('click', function () { submit(false); });
+    var clr = el('ss-clear-btn');
+    if (clr) clr.addEventListener('click', function () {
+      if (locked) return;
+      if (!confirm('Clear every pick and start over? This only affects your unsaved builder, not a locked entry.')) return;
+      state.division_winners = {}; state.wild_card_teams = { AL: [], NL: [] };
+      state.al_champion = null; state.nl_champion = null; state.world_series_champion = null;
+      state.team_win_totals = {};
+      renderAll(); setStatus('<i class="fas fa-eraser"></i> Builder cleared. Make your picks, then save or lock.', 'ok');
+    });
     var rc = el('ss-roster-close'); if (rc) rc.addEventListener('click', closeRoster);
     var rm = el('ss-roster-modal');
     if (rm) rm.addEventListener('click', function (e) { if (e.target === rm) closeRoster(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeRoster(); });
 
+    loadTeams(0);
+  }
+
+  // Render placeholders so the page never looks blank while the API (which can
+  // cold-start on a free Render instance) is waking up. Retries transient fails.
+  function showBuilderLoading() {
+    var msg = '<div class="ss-loading"><i class="fas fa-spinner fa-spin"></i> Loading teams...</div>';
+    ['ss-build-divisions', 'ss-build-wildcards', 'ss-build-champions', 'ss-build-wintotals', 'ss-build-bracket'].forEach(function (id) {
+      var n = el(id); if (n) n.innerHTML = msg;
+    });
+  }
+  function loadTeams(attempt) {
+    showBuilderLoading();
+    if (attempt === 0) setStatus('<i class="fas fa-spinner fa-spin"></i> Warming up the simulator...', 'ok');
     fetch(API + '/api/season-simulator/teams')
-      .then(function (r) { return r.json(); })
+      .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
       .then(function (d) {
-        TEAMS = d.teams || [];
-        DIVISIONS = d.divisions || [];
-        TEAM_BY_ABBR = {};
-        TEAMS.forEach(function (t) { TEAM_BY_ABBR[t.abbr] = t; });
+        if (!d.teams || !d.teams.length) throw new Error('empty');
+        TEAMS = d.teams; DIVISIONS = d.divisions || [];
+        TEAM_BY_ABBR = {}; TEAMS.forEach(function (t) { TEAM_BY_ABBR[t.abbr] = t; });
         renderAll();
+        setStatus('', '');
         if (isLoggedIn()) {
           fetch(API + '/api/season-simulator/me?year=' + SEASON, { headers: authHeaders() })
             .then(function (r) { return r.ok ? r.json() : { prediction: null }; })
@@ -396,7 +419,11 @@
         loadPublic();
         loadLeaderboard();
       })
-      .catch(function () { setStatus('<i class="fas fa-circle-exclamation"></i> Could not load team data. Refresh to retry.', 'err'); });
+      .catch(function () {
+        if (attempt < 4) { setTimeout(function () { loadTeams(attempt + 1); }, 3000 + attempt * 2000); return; }
+        setStatus('<i class="fas fa-circle-exclamation"></i> Could not reach the simulator. <button type="button" id="ss-retry" class="ss-roster-link" style="font-size:0.95rem;">Retry</button>', 'err');
+        var rb = el('ss-retry'); if (rb) rb.addEventListener('click', function () { loadTeams(0); });
+      });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
