@@ -161,12 +161,16 @@
     host.innerHTML = DIVISIONS.map(function (d) {
       var rows = d.teams.map(function (t) {
         var v = state.team_win_totals[t.abbr];
-        var meta = t.ballpark ? '<span class="ss-wt-meta">' + esc(t.ballpark) + ' &middot; Mgr: ' + esc(t.manager || '') + '</span>' : '';
+        var rosterLink = t.mlbId ? ' <button type="button" class="ss-roster-link" data-mlbid="' + esc(t.mlbId) + '" data-abbr="' + esc(t.abbr) + '"><i class="fas fa-users"></i> roster</button>' : '';
+        var meta = t.ballpark ? '<span class="ss-wt-meta">' + esc(t.ballpark) + ' &middot; Mgr: ' + esc(t.manager || '') + rosterLink + '</span>' : '';
         return '<div class="ss-wt-row"><span class="ss-wt-team"><b>' + esc(t.abbr) + '</b> ' + esc(t.name) + meta + '</span>' +
           '<input type="number" min="0" max="162" inputmode="numeric" data-abbr="' + esc(t.abbr) + '" value="' + (v != null ? v : '') + '" placeholder="--"' + (locked ? ' disabled' : '') + '></div>';
       }).join('');
       return '<div class="ss-wt-group"><div class="ss-wt-head">' + esc(d.label) + '</div>' + rows + '</div>';
     }).join('');
+    host.querySelectorAll('.ss-roster-link').forEach(function (btn) {
+      btn.addEventListener('click', function (e) { e.preventDefault(); openRoster(btn.getAttribute('data-abbr'), btn.getAttribute('data-mlbid')); });
+    });
     host.querySelectorAll('input').forEach(function (inp) {
       inp.addEventListener('input', function () {
         if (locked) return;
@@ -280,6 +284,64 @@
       });
   }
 
+  // ---------- Live roster modal (StatsAPI, fetched fresh so never stale) ----------
+  var POS_ORDER = ['SP', 'P', 'C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'OF', 'DH', 'TWP'];
+  function openRoster(abbr, mlbId) {
+    var t = TEAM_BY_ABBR[abbr] || {};
+    var modal = el('ss-roster-modal');
+    el('ss-roster-title').textContent = (t.name || abbr) + ' Roster';
+    el('ss-roster-sub').innerHTML = esc((t.ballpark || '') + (t.city ? ' (' + t.city + ')' : '')) + ' &middot; Mgr: ' + esc(t.manager || '') + ' &middot; <span class="ss-muted">Live active roster, 2026</span>';
+    el('ss-roster-body').innerHTML = '<p class="ss-muted" style="padding:24px;text-align:center;"><i class="fas fa-spinner fa-spin"></i> Loading live roster...</p>';
+    modal.style.display = 'flex';
+    fetch('https://statsapi.mlb.com/api/v1/teams/' + encodeURIComponent(mlbId) + '/roster?rosterType=active&season=' + SEASON)
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var roster = (d && d.roster) || [];
+        if (!roster.length) { el('ss-roster-body').innerHTML = '<p class="ss-muted" style="padding:24px;text-align:center;">No active roster returned right now. Try again shortly.</p>'; return; }
+        roster.sort(function (a, b) {
+          var pa = POS_ORDER.indexOf(a.position.abbreviation); var pb = POS_ORDER.indexOf(b.position.abbreviation);
+          if (pa < 0) pa = 99; if (pb < 0) pb = 99;
+          if (pa !== pb) return pa - pb;
+          return a.person.fullName.localeCompare(b.person.fullName);
+        });
+        var pitchers = roster.filter(function (p) { return /P/.test(p.position.abbreviation) && p.position.abbreviation !== 'TWP'; });
+        var hitters = roster.filter(function (p) { return !/^P$|^SP$|^RP$/.test(p.position.abbreviation); });
+        function rowHtml(p) {
+          return '<div class="ss-roster-row"><span class="ss-jersey">' + esc(p.jerseyNumber || '--') + '</span>' +
+            '<span class="ss-pos">' + esc(p.position.abbreviation) + '</span>' +
+            '<span class="ss-pname">' + esc(p.person.fullName) + '</span></div>';
+        }
+        el('ss-roster-body').innerHTML =
+          '<div class="ss-roster-cols">' +
+          '<div><h4>Pitchers (' + pitchers.length + ')</h4>' + pitchers.map(rowHtml).join('') + '</div>' +
+          '<div><h4>Position Players (' + hitters.length + ')</h4>' + hitters.map(rowHtml).join('') + '</div></div>';
+      })
+      .catch(function () { el('ss-roster-body').innerHTML = '<p class="ss-muted" style="padding:24px;text-align:center;">Could not load roster (data source unreachable).</p>'; });
+  }
+  function closeRoster() { var m = el('ss-roster-modal'); if (m) m.style.display = 'none'; }
+
+  // ---------- Graded leaderboard ----------
+  function loadLeaderboard() {
+    var sec = el('ss-leaderboard-section'); var host = el('ss-leaderboard-list');
+    if (!sec) return;
+    fetch(API + '/api/season-simulator/leaderboard?year=' + SEASON + '&limit=50')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var rows = (d && d.leaderboard) || [];
+        if (!rows.length) { sec.style.display = 'none'; return; }
+        sec.style.display = 'block';
+        host.innerHTML = '<div class="ss-pub-head"><span>Rank</span><span>Member</span><span>Score</span><span>WS</span><span>Graded</span></div>' +
+          rows.map(function (p) {
+            return '<div class="ss-pub-row"><span class="ss-rank">#' + p.rank + '</span>' +
+              '<a href="/u/' + esc(p.username) + '/" class="ss-pub-user">@' + esc(p.username) + '</a>' +
+              '<span class="ss-pub-ws"><b>' + (p.score != null ? p.score : 0) + '</b></span>' +
+              '<span>' + esc(p.world_series_champion || '--') + '</span>' +
+              '<span class="ss-muted">' + (p.graded_at ? new Date(p.graded_at).toLocaleDateString() : '') + '</span></div>';
+          }).join('');
+      })
+      .catch(function () { sec.style.display = 'none'; });
+  }
+
   // ---------- Public feed ----------
   function loadPublic() {
     var host = el('ss-public-list');
@@ -310,6 +372,10 @@
       if (confirm('Lock your 2026 MLB season predictions? Once locked they are timestamped and cannot be changed.')) submit(true);
     });
     el('ss-draft-btn').addEventListener('click', function () { submit(false); });
+    var rc = el('ss-roster-close'); if (rc) rc.addEventListener('click', closeRoster);
+    var rm = el('ss-roster-modal');
+    if (rm) rm.addEventListener('click', function (e) { if (e.target === rm) closeRoster(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeRoster(); });
 
     fetch(API + '/api/season-simulator/teams')
       .then(function (r) { return r.json(); })
@@ -327,6 +393,7 @@
             }).catch(function () {});
         }
         loadPublic();
+        loadLeaderboard();
       })
       .catch(function () { setStatus('<i class="fas fa-circle-exclamation"></i> Could not load team data. Refresh to retry.', 'err'); });
   }
