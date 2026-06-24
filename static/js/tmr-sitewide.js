@@ -9,7 +9,11 @@
         [sportsbookPicksHref, "Sportsbook"],
         ["/contests/justbet-mlb/", "Contest"],
         ["/tools/", "Tools"],
-        ["/handicappers/", "Find Handicappers"],
+        ["/handicappers/", "Find Handicappers"]
+    ];
+    // Lower-priority links live in a compact "More" dropdown so the primary
+    // row never wraps on desktop.
+    const moreRoutes = [
         ["/marketplace/", "Sell Your Picks"],
         ["/rules/", "Rules"]
     ];
@@ -29,6 +33,7 @@
     // have their own URL.
     const ARENA_GROUP = new Set(["arena.html"]);
     const COMMUNITY_GROUP = new Set(["feed.html", "online-gaming.html", "mlb-the-show-stat-league.html", "arena.html", "challenges.html", "forum.html", "polls.html", "trivia.html", "hangout.html"]);
+    const MORE_GROUP = new Set(["marketplace.html", "rules.html"]);
 
     const routeMeta = {
         "sportsbook.html": ["Sportsbook", "Lock picks before games start. Build a public, permanent record."],
@@ -406,6 +411,24 @@
                     <div class="tmr-support-menu__panel" role="menu" aria-label="Support links">
                         <a href="/contact/" role="menuitem">Contact Us</a>
                         <a href="/report-bug/" role="menuitem">Report a Bug</a>
+                    </div>
+                </div>
+                <div class="tmr-support-menu tmr-more-menu${MORE_GROUP.has(currentFile) ? " is-current" : ""}">
+                    <button class="tmr-support-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
+                        More
+                    </button>
+                    <div class="tmr-support-menu__panel" role="menu" aria-label="More links">
+                        ${moreRoutes.map(([href, label]) => {
+                            const hrefPath = href.split("#")[0].toLowerCase();
+                            const segs = hrefPath.split("/").filter(Boolean);
+                            const hrefFile = segs.length
+                                ? (segs[segs.length - 1].endsWith(".html")
+                                    ? segs[segs.length - 1]
+                                    : segs[segs.length - 1] + ".html")
+                                : "index.html";
+                            const active = currentFile === hrefFile;
+                            return `<a href="${href}" role="menuitem"${active ? ' aria-current="page"' : ""}>${label}</a>`;
+                        }).join("")}
                     </div>
                 </div>
                 <div class="tmr-global-nav__actions"></div>
