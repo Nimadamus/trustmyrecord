@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-model-vs-market-20260623';
+    var UI_BUILD = 'mlb-simulator-pcst-20260623';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3458,15 +3458,26 @@
         body += '<tr class="totals-row"><th scope="row">Totals</th><td>' + totals.ab + '</td><td>' + totals.r + '</td><td>' + totals.h + '</td><td>' + totals.rbi + '</td><td>' + totals.bb + '</td><td>' + totals.so + '</td><td>' + fmt3(teamAvg) + '</td><td></td></tr>';
         return body;
     }
+    // MLB_BOXSCORE_PCST_20260623: MLB Gameday pitch count-strikes (PC-ST) per pitcher.
+    // Uses event-sourced pitches/strikes when available; otherwise the same estimate
+    // as the pitch-count note line. Returns {pc, st}.
+    function pitcherPcSt(row) {
+        if (Number(row.pitches || 0) > 0) return { pc: Number(row.pitches), st: Math.min(Number(row.strikes || 0), Number(row.pitches)) };
+        var outs = Number(row.outs || 0);
+        var pc = clamp(Math.round(outs * 4.1 + Number(row.h || 0) * 4.6 + Number(row.bb || 0) * 5.2 + Number(row.so || 0) * 1.8), 8, 130);
+        var st = clamp(Math.round(pc * clamp(0.61 + Number(row.so || 0) * 0.008 - Number(row.bb || 0) * 0.018, 0.52, 0.71)), 4, pc);
+        return { pc: pc, st: st };
+    }
     function pitcherTableRows(rows, isWinner, margin) {
         var decisions = pitcherDecisions(rows, isWinner, margin);
-        var totals = { h: 0, r: 0, er: 0, bb: 0, so: 0, hr: 0, outs: 0 };
+        var totals = { h: 0, r: 0, er: 0, bb: 0, so: 0, hr: 0, outs: 0, pc: 0, st: 0 };
         var body = rows.map(function (row, index) {
             totals.h += row.h; totals.r += row.r; totals.er += row.er; totals.bb += row.bb; totals.so += row.so; totals.hr += row.hr; totals.outs += Number(row.outs || 0);
+            var ps = pitcherPcSt(row); totals.pc += ps.pc; totals.st += ps.st;
             var name = escapeHtml(row.name) + (decisions[index] ? ' <span class="bx-dec">(' + escapeHtml(decisions[index]) + ')</span>' : '');
-            return '<tr><th scope="row">' + name + '</th><td>' + escapeHtml(row.ip) + '</td><td>' + row.h + '</td><td>' + row.r + '</td><td>' + row.er + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + row.hr + '</td><td>' + gameEra(row) + '</td></tr>';
+            return '<tr><th scope="row">' + name + '</th><td>' + escapeHtml(row.ip) + '</td><td>' + row.h + '</td><td>' + row.r + '</td><td>' + row.er + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + row.hr + '</td><td>' + gameEra(row) + '</td><td>' + ps.pc + '-' + ps.st + '</td></tr>';
         }).join('');
-        body += '<tr class="totals-row"><th scope="row">Totals</th><td>' + outsToIp(totals.outs) + '</td><td>' + totals.h + '</td><td>' + totals.r + '</td><td>' + totals.er + '</td><td>' + totals.bb + '</td><td>' + totals.so + '</td><td>' + totals.hr + '</td><td></td></tr>';
+        body += '<tr class="totals-row"><th scope="row">Totals</th><td>' + outsToIp(totals.outs) + '</td><td>' + totals.h + '</td><td>' + totals.r + '</td><td>' + totals.er + '</td><td>' + totals.bb + '</td><td>' + totals.so + '</td><td>' + totals.hr + '</td><td></td><td>' + totals.pc + '-' + totals.st + '</td></tr>';
         return body;
     }
     function battingFieldingDetails(result) {
@@ -3557,7 +3568,7 @@
             return '<section class="player-team-box"><p class="team-box-label">' + escapeHtml(team.name) + ' Pitching</p><div class="sim-empty">Pitching lines unavailable.</div></section>';
         }
         return '<section class="player-team-box"><p class="team-box-label">' + escapeHtml(team.name) + ' Pitching</p>' +
-            '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>HR</th><th>ERA</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers, isWinner, margin) + '</tbody></table></div></section>';
+            '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>HR</th><th>ERA</th><th>PC-ST</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers, isWinner, margin) + '</tbody></table></div></section>';
     }
     function renderPlayerBoxScore(result) {
         var panel = byId('playerBoxScorePanel');
