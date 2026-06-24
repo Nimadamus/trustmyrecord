@@ -4761,12 +4761,12 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
         display: flex !important;
         flex-wrap: nowrap !important;
         align-items: center !important;
-        gap: clamp(6px, 0.8vw, 16px) !important;
+        gap: clamp(5px, 0.6vw, 13px) !important;
         grid-template-columns: none !important;
         grid-template-areas: none !important;
         grid-template-rows: none !important;
         row-gap: 0 !important;
-        width: min(1680px, calc(100% - 40px)) !important;
+        width: min(1680px, calc(100% - 36px)) !important;
         min-height: 78px !important;
     }
 
@@ -4776,17 +4776,18 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
         margin-right: clamp(6px, 0.8vw, 18px) !important;
     }
 
-    /* Primary tabs: never wrap, tight but even spacing. */
+    /* Primary tabs: never wrap, never shrink (shrinking made the active pill
+       overflow its box and visually collide with the Community dropdown). */
     body.tmr-site-shell .tmr-global-nav__links {
         grid-area: auto !important;
-        flex: 0 1 auto !important;
+        flex: 0 0 auto !important;
         flex-wrap: nowrap !important;
         justify-content: flex-start !important;
         align-items: center !important;
         white-space: nowrap !important;
         overflow: visible !important;
-        gap: clamp(4px, 0.55vw, 12px) !important;
-        column-gap: clamp(4px, 0.55vw, 12px) !important;
+        gap: clamp(2px, 0.4vw, 10px) !important;
+        column-gap: clamp(2px, 0.4vw, 10px) !important;
         row-gap: 0 !important;
         min-width: 0 !important;
         padding: 0 !important;
@@ -4817,5 +4818,47 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
         justify-content: flex-end !important;
         flex-wrap: nowrap !important;
         align-self: center !important;
+    }
+}
+
+/* Narrower desktops/laptops (641-1339): tighten every control so the full
+   single row fits without overflow or overlap. Above 1340 the default
+   comfortable spacing applies. */
+@media (min-width: 641px) and (max-width: 1339px) {
+    body.tmr-site-shell .tmr-global-nav__inner {
+        gap: clamp(4px, 0.5vw, 10px) !important;
+        width: min(1680px, calc(100% - 24px)) !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__brand {
+        font-size: clamp(1.05rem, 1.15vw, 1.32rem) !important;
+        margin-right: clamp(4px, 0.6vw, 12px) !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__links a {
+        padding: 8px clamp(5px, 0.45vw, 10px) !important;
+        letter-spacing: 0.01em !important;
+        font-size: 0.91rem !important;
+    }
+
+    body.tmr-site-shell .tmr-community-menu__trigger,
+    body.tmr-site-shell .tmr-support-menu__trigger {
+        padding: 8px 9px !important;
+        font-size: 0.89rem !important;
+    }
+
+    body.tmr-site-shell .tmr-community-menu {
+        padding-left: clamp(3px, 0.5vw, 8px) !important;
+        margin-left: clamp(2px, 0.35vw, 5px) !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__button {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+        font-size: 0.89rem !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__actions {
+        gap: 6px !important;
     }
 }

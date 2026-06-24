@@ -211,6 +211,7 @@ def handi_row(r):
         f'<div class="hm-stat" data-label="Total picks">{r["total_picks"]}</div>'
         f'<div class="hm-stat {sclass(r["current_streak"])}" data-label="Current streak">{e(streak(r["current_streak"]))}</div>'
         f'<div class="hm-stat is-muted" data-label="Last active">{"Recent" if r["last_pick_at"] else "No recent activity"}</div>'
+        f'<div class="hm-actions"><a class="hm-action-btn hm-action-btn--view" href="{href}" aria-label="{e(label)}" title="{e(label)}">View</a></div>'
         f'</div>'
     )
 
