@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-statcast-offense-20260624';
+    var UI_BUILD = 'mlb-simulator-defense-oaa-20260624';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -358,6 +358,43 @@
     function cachedStatcast(id, type) {
         var sc = state.liveContext.statcast;
         return sc && sc[type] && sc[type][String(id)] || null;
+    }
+    // DEFENSE_OAA_20260624: Baseball Savant team Outs Above Average (fielding). CORS-open
+    // CSV; whole-league (30 rows) so fetched once/session. OAA is league-centered (sums
+    // to ~0) so feeding it as an opponent-run adjustment is calibration-neutral.
+    function teamOaaUrl() {
+        return 'https://baseballsavant.mlb.com/leaderboard/outs_above_average?type=Fielding_Team&startYear=' + seasonYear() + '&endYear=' + seasonYear() + '&split=no&team=&range=year&min=q&pos=&roles=&viz=hide&csv=true';
+    }
+    function parseTeamOaaCsv(text) {
+        var lines = String(text || '').split(/\r?\n/).filter(function (l) { return l.trim(); });
+        if (lines.length < 2) return {};
+        var head = parseCsvRow(lines[0]).map(function (h) { return h.replace(/^﻿/, '').trim(); });
+        var idx = {}; head.forEach(function (h, i) { idx[h] = i; });
+        if (idx.team_id == null || idx.outs_above_average == null) return {};
+        var map = {};
+        for (var r = 1; r < lines.length; r++) {
+            var f = parseCsvRow(lines[r]); var id = f[idx.team_id]; if (!id) continue;
+            map[String(id)] = Number(f[idx.outs_above_average]);
+        }
+        return map;
+    }
+    function fetchTeamOaa() {
+        if (state.liveContext.teamOaa) return Promise.resolve(state.liveContext.teamOaa);
+        return fetch(teamOaaUrl(), { cache: 'default' }).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.text(); })
+            .then(function (text) { var m = parseTeamOaaCsv(text); state.liveContext.teamOaa = Object.keys(m).length ? m : null; return state.liveContext.teamOaa; })
+            .catch(function () { state.liveContext.teamOaa = null; return null; });
+    }
+    function teamOaaFor(team) {
+        var m = state.liveContext.teamOaa;
+        var id = team && MLB_TEAM_IDS[team.abbreviation];
+        return m && id != null && Number.isFinite(m[String(id)]) ? m[String(id)] : null;
+    }
+    // A team's season OAA converted to a per-game opponent-run adjustment (good defense
+    // -> negative -> suppresses opponent runs). ~0.75 run/out over ~75 team-games to date.
+    function defenseRunAdjustment(fieldingTeam) {
+        var oaa = teamOaaFor(fieldingTeam);
+        if (!Number.isFinite(oaa)) return 0;
+        return clamp(-oaa * 0.012, -0.30, 0.30);
     }
     function todaysScheduleUrl() {
         return 'https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=' + encodeURIComponent(todayIsoLocal()) +
@@ -3104,6 +3141,15 @@
             homeRuns = clamp(homeRuns * parkFactor, 1.8, 9.2);
             liveFactors.push('Park factor: ' + home.name + ' home environment adjusts the run model by ' + Math.round((parkFactor - 1) * 100) + '%.');
         }
+        // DEFENSE_OAA_20260624: each club's fielding (Statcast team OAA) suppresses or
+        // inflates the opponent's expected runs. League-centered so it is calibration-
+        // neutral; only applies when the Savant OAA feed loaded for the team.
+        var awayDef = defenseRunAdjustment(home), homeDef = defenseRunAdjustment(away);
+        if (awayDef !== 0) awayRuns = clamp(awayRuns + awayDef, 1.7, 9.4);
+        if (homeDef !== 0) homeRuns = clamp(homeRuns + homeDef, 1.7, 9.4);
+        if (awayDef !== 0 || homeDef !== 0) {
+            liveFactors.push('Defense (Statcast team OAA ' + seasonYear() + '): ' + home.abbreviation + ' ' + (teamOaaFor(home) > 0 ? '+' : '') + teamOaaFor(home) + ' OAA, ' + away.abbreviation + ' ' + (teamOaaFor(away) > 0 ? '+' : '') + teamOaaFor(away) + ' OAA adjust opponent runs accordingly.');
+        }
         var awayStrength = strength(away);
         var homeStrength = strength(home) + 1.7;
         awayStrength += selectedPitcherStrengthAdjustment(awayPitcher);
@@ -4154,6 +4200,7 @@
             return 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' + date;
         });
         fetchStatcastExpected();
+        fetchTeamOaa();
         return Promise.allSettled([
             fetchJson(base + '/games?sport=baseball_mlb'),
             fetchJson(base + '/games/board/baseball_mlb')
@@ -4194,6 +4241,7 @@
                     todaySchedule: state.liveContext.todaySchedule || null,
                     teamInjured: state.liveContext.teamInjured || {},
                     statcast: state.liveContext.statcast || null,
+                    teamOaa: state.liveContext.teamOaa || null,
                     recentEvents: recentEvents,
                     error: null
                 };
