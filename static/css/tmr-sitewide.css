@@ -4090,7 +4090,7 @@ body.tmr-site-shell .friends-top-strip {
         grid-template-areas: "brand links community support actions" !important;
         align-items: center !important;
         min-height: 84px !important;
-        column-gap: clamp(22px, 2.4vw, 44px) !important;
+        column-gap: clamp(12px, 1.3vw, 22px) !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__brand {
@@ -4107,7 +4107,7 @@ body.tmr-site-shell .friends-top-strip {
         grid-area: links !important;
         min-width: 0 !important;
         justify-content: center !important;
-        gap: clamp(6px, 0.9vw, 16px) !important;
+        gap: clamp(3px, 0.5vw, 9px) !important;
         flex-wrap: nowrap !important;
         row-gap: 0 !important;
         padding: 0 !important;
@@ -4124,8 +4124,8 @@ body.tmr-site-shell .friends-top-strip {
         text-overflow: clip !important;
         white-space: nowrap !important;
         min-height: 40px !important;
-        padding: 9px clamp(14px, 1.1vw, 20px) !important;
-        letter-spacing: 0.05em !important;
+        padding: 8px clamp(9px, 0.7vw, 13px) !important;
+        letter-spacing: 0.04em !important;
     }
 
     body.tmr-site-shell .tmr-support-menu {
@@ -4147,26 +4147,26 @@ body.tmr-site-shell .friends-top-strip {
         max-width: max-content !important;
         justify-content: flex-end !important;
         justify-self: end !important;
-        gap: 12px !important;
-        padding-left: clamp(8px, 1vw, 18px) !important;
+        gap: 8px !important;
+        padding-left: clamp(6px, 0.7vw, 12px) !important;
         overflow: visible !important;
         flex-wrap: nowrap !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__button {
         min-height: 40px !important;
-        padding-left: 16px !important;
-        padding-right: 16px !important;
+        padding-left: 13px !important;
+        padding-right: 13px !important;
     }
 
     body.tmr-site-shell .tmr-community-menu__trigger,
     body.tmr-site-shell .tmr-support-menu__trigger {
         min-height: 40px !important;
-        padding: 9px 16px !important;
+        padding: 8px 12px !important;
     }
 }
 
-@media (min-width: 641px) and (max-width: 1180px) {
+@media (min-width: 641px) and (max-width: 1239px) {
     body.tmr-site-shell .tmr-global-nav__inner,
     body.tmr-site-shell[data-tmr-route="sportsbook"] .tmr-global-nav__inner {
         width: min(100%, calc(100% - 28px)) !important;
@@ -4241,19 +4241,19 @@ body.tmr-site-shell .tmr-global-nav__links a[href*="trendspotter"] {
    consistent 40px control heights, and clearer separation between the primary
    tabs and the right-side Community/Support/profile cluster. Additive only;
    does not touch nav links, dropdown wiring, or auth/profile behavior. */
-@media (min-width: 1025px) {
+@media (min-width: 1240px) {
     body.tmr-site-shell .tmr-global-nav__inner {
-        column-gap: clamp(26px, 2.6vw, 48px) !important;
+        column-gap: clamp(14px, 1.5vw, 30px) !important;
     }
 
     body.tmr-site-shell .tmr-global-nav__links {
-        gap: clamp(8px, 1vw, 18px) !important;
+        gap: clamp(4px, 0.6vw, 12px) !important;
     }
 
     /* Vertical hairline separating the primary tabs from secondary actions. */
     body.tmr-site-shell .tmr-community-menu {
-        padding-left: clamp(10px, 1.2vw, 22px) !important;
-        margin-left: clamp(4px, 0.6vw, 10px) !important;
+        padding-left: clamp(8px, 0.9vw, 16px) !important;
+        margin-left: clamp(3px, 0.5vw, 8px) !important;
         border-left: 1px solid rgba(156, 173, 199, 0.16) !important;
     }
 }
@@ -4744,5 +4744,78 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
         width: 100% !important;
         min-width: 0 !important;
         flex: 0 0 auto !important;
+    }
+}
+
+/* ============================================================================
+   Desktop/tablet nav single-row redesign - 2026-06-23
+   Replaces the accreted multi-column grid (which wrapped the primary links into
+   a stranded 2nd row at 1440-1920) with one clean flex row:
+   [Brand] [Sportsbook Contest Tools Find-Handicappers] [Community v][Support v][More v] .... [Account]
+   Appended at EOF so it supersedes every earlier nav grid/flex-wrap block.
+   Mobile (<=640px) is untouched and still collapses into the hamburger panel.
+============================================================================ */
+@media (min-width: 641px) {
+    body.tmr-site-shell .tmr-global-nav__inner,
+    body.tmr-site-shell[data-tmr-route] .tmr-global-nav__inner {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        align-items: center !important;
+        gap: clamp(6px, 0.8vw, 16px) !important;
+        grid-template-columns: none !important;
+        grid-template-areas: none !important;
+        grid-template-rows: none !important;
+        row-gap: 0 !important;
+        width: min(1680px, calc(100% - 40px)) !important;
+        min-height: 78px !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__brand {
+        grid-area: auto !important;
+        flex: 0 0 auto !important;
+        margin-right: clamp(6px, 0.8vw, 18px) !important;
+    }
+
+    /* Primary tabs: never wrap, tight but even spacing. */
+    body.tmr-site-shell .tmr-global-nav__links {
+        grid-area: auto !important;
+        flex: 0 1 auto !important;
+        flex-wrap: nowrap !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        white-space: nowrap !important;
+        overflow: visible !important;
+        gap: clamp(4px, 0.55vw, 12px) !important;
+        column-gap: clamp(4px, 0.55vw, 12px) !important;
+        row-gap: 0 !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__links a {
+        grid-area: auto !important;
+        flex: 0 0 auto !important;
+        white-space: nowrap !important;
+        min-width: max-content !important;
+    }
+
+    /* Community / Support / More dropdown triggers sit in one inline cluster. */
+    body.tmr-site-shell .tmr-community-menu,
+    body.tmr-site-shell .tmr-support-menu {
+        grid-area: auto !important;
+        flex: 0 0 auto !important;
+        align-self: center !important;
+    }
+
+    /* Account / auth cluster pinned cleanly to the far right of the same row. */
+    body.tmr-site-shell .tmr-global-nav__actions {
+        grid-area: auto !important;
+        flex: 0 0 auto !important;
+        margin-left: auto !important;
+        min-width: max-content !important;
+        max-width: none !important;
+        justify-content: flex-end !important;
+        flex-wrap: nowrap !important;
+        align-self: center !important;
     }
 }
