@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-statcast-proj-20260624';
+    var UI_BUILD = 'mlb-simulator-statcast-offense-20260624';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -483,19 +483,32 @@
         var splitCount = 0;
         var stats = topHitters.map(function (p) {
             var split = opposingHand ? cachedPlayerSplitVs(p.mlbId, 'hitting', opposingHand) : null;
-            if (split && Number(split.ops) > 0 && Number(split.plateAppearances) >= 25) {
-                splitCount += 1;
-                return split;
-            }
-            var season = cachedPlayerStat(p.mlbId, 'hitting');
-            return season && Number(season.ops) > 0 && Number(season.plateAppearances) >= 30 ? season : null;
+            var base = null;
+            if (split && Number(split.ops) > 0 && Number(split.plateAppearances) >= 25) { splitCount += 1; base = split; }
+            if (!base) { var season = cachedPlayerStat(p.mlbId, 'hitting'); if (season && Number(season.ops) > 0 && Number(season.plateAppearances) >= 30) base = season; }
+            return base ? { ops: Number(base.ops), mlbId: p.mlbId } : null;
         }).filter(Boolean);
         if (stats.length < 6) return null;
-        var meanOps = stats.reduce(function (sum, s) { return sum + Number(s.ops); }, 0) / stats.length;
+        // STATCAST_PROJECTION_20260624 (Phase 6c): regress each hitter's OPS toward his
+        // Statcast expected production via the xwOBA/wOBA luck ratio (0.55 results /
+        // 0.45 expected, mirroring the pitcher xERA blend). Population-centered so it
+        // shifts matchups toward true talent without moving league-average offense.
+        var statcastAdj = 0;
+        var adjOps = stats.map(function (s) {
+            var sc = cachedStatcast(s.mlbId, 'batter');
+            if (sc && Number.isFinite(sc.woba) && sc.woba > 0 && Number.isFinite(sc.xwoba)) {
+                statcastAdj += 1;
+                var luck = clamp(sc.xwoba / sc.woba, 0.90, 1.10);
+                return s.ops * (0.55 + 0.45 * luck);
+            }
+            return s.ops;
+        });
+        var meanOps = adjOps.reduce(function (sum, v) { return sum + v; }, 0) / adjOps.length;
         return {
             meanOps: meanOps,
             sampleSize: stats.length,
             splitCount: splitCount,
+            statcastAdj: statcastAdj,
             vsHand: opposingHand || null,
             factor: clamp(1 + (meanOps - 0.720) * 0.55, 0.85, 1.15)
         };
