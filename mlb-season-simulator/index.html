@@ -128,6 +128,23 @@
         .ss-wt-team { flex: 1; font-size: 0.88rem; color: var(--text-dim); }
         .ss-wt-team b { color: var(--text); }
         .ss-wt-meta { display: block; font-size: 0.74rem; color: var(--text-muted); margin-top: 2px; }
+        .ss-roster-link { background: none; border: none; color: var(--primary); cursor: pointer; font-size: 0.74rem; font-family: var(--font-body); padding: 0 0 0 6px; }
+        .ss-roster-link:hover { color: var(--accent-gold); text-decoration: underline; }
+        .ss-rank { font-family: var(--font-display); font-weight: 800; color: var(--accent-gold); }
+        /* MODAL */
+        .ss-modal { position: fixed; inset: 0; z-index: 9999; background: rgba(5,5,10,0.82); display: flex; align-items: center; justify-content: center; padding: 18px; }
+        .ss-modal-box { position: relative; width: 100%; max-width: 680px; max-height: 86vh; overflow-y: auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 26px 26px 30px; }
+        .ss-modal-box h3 { font-family: var(--font-display); font-weight: 900; font-size: 1.4rem; padding-right: 36px; }
+        .ss-modal-sub { color: var(--text-dim); font-size: 0.86rem; margin: 8px 0 16px; }
+        .ss-modal-close { position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; border-radius: 9px; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text); cursor: pointer; font-size: 1rem; }
+        .ss-modal-close:hover { border-color: var(--primary); color: var(--primary); }
+        .ss-roster-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+        .ss-roster-cols h4 { font-family: var(--font-display); font-weight: 800; font-size: 0.9rem; color: var(--primary); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+        .ss-roster-row { display: grid; grid-template-columns: 34px 38px 1fr; gap: 6px; align-items: center; padding: 4px 0; font-size: 0.86rem; }
+        .ss-jersey { color: var(--text-muted); text-align: right; font-variant-numeric: tabular-nums; }
+        .ss-pos { color: var(--primary); font-weight: 700; font-size: 0.78rem; }
+        .ss-pname { color: var(--text); }
+        @media (max-width: 560px) { .ss-roster-cols { grid-template-columns: 1fr; } }
         .ss-wt-row input { width: 74px; padding: 8px 10px; border-radius: 8px; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text); text-align: center; font-family: var(--font-display); font-weight: 700; }
         .ss-wt-cols { columns: 2; column-gap: 28px; }
 
@@ -241,12 +258,29 @@
         </div>
     </section>
 
+    <!-- GRADED LEADERBOARD (appears once predictions are graded) -->
+    <section class="ss-step" id="ss-leaderboard-section" style="margin-top:18px; display:none;">
+        <h2><i class="fas fa-ranking-star" style="color:var(--accent-gold);"></i> 2026 Season Leaderboard</h2>
+        <p class="hint">Ranked by accuracy once the season is graded against real results.</p>
+        <div id="ss-leaderboard-list"></div>
+    </section>
+
     <!-- PUBLIC PREDICTIONS -->
     <section class="ss-step" style="margin-top:18px;">
         <h2><i class="fas fa-list-check" style="color:var(--primary);"></i> Locked Predictions <span class="ss-muted" style="font-weight:600;">(<span id="ss-public-count">0</span>)</span></h2>
         <p class="hint">Public, timestamped entries from TrustMyRecord members for the 2026 season.</p>
         <div id="ss-public-list"></div>
     </section>
+
+    <!-- LIVE ROSTER MODAL -->
+    <div id="ss-roster-modal" class="ss-modal" style="display:none;">
+        <div class="ss-modal-box">
+            <button type="button" id="ss-roster-close" class="ss-modal-close" aria-label="Close"><i class="fas fa-xmark"></i></button>
+            <h3 id="ss-roster-title">Roster</h3>
+            <p id="ss-roster-sub" class="ss-modal-sub"></p>
+            <div id="ss-roster-body"></div>
+        </div>
+    </div>
 
     <!-- WHAT IS IT (SEO, secondary) -->
     <section class="ss-section" id="how">
@@ -309,6 +343,6 @@
 
 </main>
 
-<script defer src="/static/js/season-simulator.js?v=20260623c"></script>
+<script defer src="/static/js/season-simulator.js?v=20260624a"></script>
 </body>
 </html>
