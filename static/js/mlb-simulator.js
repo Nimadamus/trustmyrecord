@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-pcst-20260623';
+    var UI_BUILD = 'mlb-simulator-lob-20260623';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1954,7 +1954,7 @@
         if ((r -= v.b1) < 0) return 'b1';
         return 'out';
     }
-    function evNewBat() { return { pa: 0, ab: 0, h: 0, b2: 0, b3: 0, hr: 0, bb: 0, so: 0, r: 0, rbi: 0, sb: 0, cs: 0, sf: 0, gidp: 0 }; }
+    function evNewBat() { return { pa: 0, ab: 0, h: 0, b2: 0, b3: 0, hr: 0, bb: 0, so: 0, r: 0, rbi: 0, sb: 0, cs: 0, sf: 0, gidp: 0, lob: 0 }; }
     function evNewPit() { return { outs: 0, h: 0, bb: 0, so: 0, hr: 0, r: 0, er: 0, bf: 0, pitches: 0, strikes: 0 }; }
     // Build per-team lineup (anchored batter vectors + display rows) and staff.
     function evBuildSide(team, oppPitcher, ownStarter, targetRuns, rosterContext, parkHr) {
@@ -2201,7 +2201,12 @@
             if (endLead !== undefined && endLead !== null && runs > endLead) break;
         }
         // Runners stranded in scoring position when the 3rd out was recorded.
-        if (outs >= 3) side.lisp2out = (side.lisp2out || 0) + (bases[1] !== null ? 1 : 0) + (bases[2] !== null ? 1 : 0);
+        if (outs >= 3) {
+            side.lisp2out = (side.lisp2out || 0) + (bases[1] !== null ? 1 : 0) + (bases[2] !== null ? 1 : 0);
+            // MLB_BOXSCORE_LOB_20260623: charge the batter who made the inning-ending
+            // out with the runners stranded on base (per-batter LOB, as on mlb.com).
+            lineup[bi].acc.lob = (lineup[bi].acc.lob || 0) + bases.filter(function (x) { return x !== null; }).length;
+        }
         side.lob = (side.lob || 0) + bases.filter(function (x) { return x !== null; }).length;
         return { runs: runs, errors: errors, gidp: gidp, ofAssists: ofAssists };
     }
@@ -2306,7 +2311,7 @@
             var displayOps = b.realOps != null ? b.realOps : clamp(displayAvg * 2.55 + 0.18, 0.45, 1.25);
             return {
                 name: b.name, playerName: b.playerName, rawPos: b.rawPos,
-                ab: a.ab, r: a.r, h: a.h, hr: a.hr, rbi: a.rbi, bb: a.bb, so: a.so,
+                ab: a.ab, r: a.r, h: a.h, hr: a.hr, rbi: a.rbi, bb: a.bb, so: a.so, lob: a.lob,
                 b2: a.b2, b3: a.b3, avg: displayAvg, ops: displayOps, statSource: b.statSource
             };
         }).filter(function (row) { return row.name; });
@@ -3447,15 +3452,15 @@
     function batterTableRows(rows) {
         var positions = assignLineupPositions(rows);
         var lineup = rows.slice(0, 9);
-        var totals = { ab: 0, r: 0, h: 0, rbi: 0, bb: 0, so: 0 };
+        var totals = { ab: 0, r: 0, h: 0, rbi: 0, bb: 0, so: 0, lob: 0 };
         var body = lineup.map(function (row, index) {
-            totals.ab += row.ab; totals.r += row.r; totals.h += row.h; totals.rbi += row.rbi; totals.bb += row.bb; totals.so += row.so;
+            totals.ab += row.ab; totals.r += row.r; totals.h += row.h; totals.rbi += row.rbi; totals.bb += row.bb; totals.so += row.so; totals.lob += Number(row.lob || 0);
             var plain = (row.playerName || String(row.name || '').replace(/\s*\([^)]*\)\s*$/, ''));
             var name = escapeHtml(plain) + ' <span class="bx-pos">' + escapeHtml(positions[index]) + '</span>';
-            return '<tr><th scope="row">' + name + '</th><td>' + row.ab + '</td><td>' + row.r + '</td><td>' + row.h + '</td><td>' + row.rbi + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + fmt3(row.avg) + '</td><td>' + fmt3(row.ops) + '</td></tr>';
+            return '<tr><th scope="row">' + name + '</th><td>' + row.ab + '</td><td>' + row.r + '</td><td>' + row.h + '</td><td>' + row.rbi + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + Number(row.lob || 0) + '</td><td>' + fmt3(row.avg) + '</td><td>' + fmt3(row.ops) + '</td></tr>';
         }).join('');
         var teamAvg = totals.ab > 0 ? totals.h / totals.ab : 0;
-        body += '<tr class="totals-row"><th scope="row">Totals</th><td>' + totals.ab + '</td><td>' + totals.r + '</td><td>' + totals.h + '</td><td>' + totals.rbi + '</td><td>' + totals.bb + '</td><td>' + totals.so + '</td><td>' + fmt3(teamAvg) + '</td><td></td></tr>';
+        body += '<tr class="totals-row"><th scope="row">Totals</th><td>' + totals.ab + '</td><td>' + totals.r + '</td><td>' + totals.h + '</td><td>' + totals.rbi + '</td><td>' + totals.bb + '</td><td>' + totals.so + '</td><td>' + totals.lob + '</td><td>' + fmt3(teamAvg) + '</td><td></td></tr>';
         return body;
     }
     // MLB_BOXSCORE_PCST_20260623: MLB Gameday pitch count-strikes (PC-ST) per pitcher.
@@ -3560,7 +3565,7 @@
             return '<section class="player-team-box">' + headerLabel + '<p class="player-source-note">Roster source: ' + escapeHtml(source) + '.</p><div class="sim-empty">Lineup unavailable. Verified roster data could not be loaded.</div></section>';
         }
         return '<section class="player-team-box">' + headerLabel + '<p class="player-source-note">Lineup source: ' + escapeHtml(source) + '.</p>' +
-            '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>SO</th><th>AVG</th><th>OPS</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div></section>';
+            '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>SO</th><th>LOB</th><th>AVG</th><th>OPS</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div></section>';
     }
     function pitchingTableSection(team, players, isWinner, margin) {
         var hasPitchers = players && players.pitchers && players.pitchers.length;
