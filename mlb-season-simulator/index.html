@@ -150,6 +150,7 @@
 
         .ss-actions { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-top: 6px; }
         .ss-public-opt { display: inline-flex; align-items: center; gap: 8px; color: var(--text-dim); font-size: 0.9rem; margin-left: auto; }
+        .ss-loading { padding: 26px; text-align: center; color: var(--text-dim); font-weight: 600; }
 
         /* PUBLIC FEED */
         .ss-pub-head, .ss-pub-row { display: grid; grid-template-columns: 1.4fr 1fr 0.6fr 0.6fr 0.8fr; gap: 8px; padding: 11px 14px; align-items: center; }
@@ -197,6 +198,7 @@
             .ss-public-opt { margin-left: 0; }
         }
     </style>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"MLB Season Simulator","url":"https://trustmyrecord.com/mlb-season-simulator/","applicationCategory":"SportsApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Free MLB season simulator: pick division winners, wild cards, league champions, the World Series winner, and projected win totals, then lock your predictions and track your record on TrustMyRecord.","publisher":{"@type":"Organization","name":"TrustMyRecord","url":"https://trustmyrecord.com/"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I submit MLB season predictions on this page?","acceptedAnswer":{"@type":"Answer","text":"Yes. Log in to TrustMyRecord, pick all six division winners, the AL and NL wild cards, both pennant winners, the World Series champion, and projected win totals, then lock your entry. Your predictions are saved to your account and timestamped."}},{"@type":"Question","name":"How are my season predictions verified?","acceptedAnswer":{"@type":"Answer","text":"When you lock your entry the server records a timestamp and ties it to your public profile before results are known. At season's end your division winners, playoff teams, champions, and win totals can be graded against real outcomes, so your accuracy is provable."}},{"@type":"Question","name":"Can I change my predictions after I lock them?","acceptedAnswer":{"@type":"Answer","text":"No. You can save a draft and edit it freely, but once you lock your entry it is frozen and timestamped. No deleting losers, no quiet edits. That is the whole point of a verified record."}},{"@type":"Question","name":"Is this an automated simulation engine?","acceptedAnswer":{"@type":"Answer","text":"This page is a prediction builder where you make the calls, submit them, and lock them for grading. To run a single computer-simulated matchup with win probabilities, use the separate MLB Simulator tool."}}]}</script>
 </head>
 <body class="tmr-site-shell">
@@ -253,6 +255,7 @@
             <div class="ss-actions" id="ss-actions">
                 <button type="button" class="btn btn-gold" id="ss-lock-btn" disabled><i class="fas fa-lock"></i> Submit &amp; Lock Predictions</button>
                 <button type="button" class="btn btn-outline" id="ss-draft-btn"><i class="fas fa-floppy-disk"></i> Save Draft</button>
+                <button type="button" class="btn btn-outline" id="ss-clear-btn"><i class="fas fa-eraser"></i> Clear</button>
                 <label class="ss-public-opt"><input type="checkbox" id="ss-public-toggle" checked> Show my entry on the public board</label>
             </div>
         </div>
@@ -273,7 +276,7 @@
     </section>
 
     <!-- LIVE ROSTER MODAL -->
-    <div id="ss-roster-modal" class="ss-modal" style="display:none;">
+    <div id="ss-roster-modal" class="ss-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="ss-roster-title">
         <div class="ss-modal-box">
             <button type="button" id="ss-roster-close" class="ss-modal-close" aria-label="Close"><i class="fas fa-xmark"></i></button>
             <h3 id="ss-roster-title">Roster</h3>
@@ -343,6 +346,6 @@
 
 </main>
 
-<script defer src="/static/js/season-simulator.js?v=20260624b"></script>
+<script defer src="/static/js/season-simulator.js?v=20260624c"></script>
 </body>
 </html>
