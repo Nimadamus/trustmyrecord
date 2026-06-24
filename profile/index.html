@@ -858,7 +858,9 @@
             .picks-table-wrapper { overflow-x: auto; }
             .picks-table { min-width: 1280px; }
             .stats-summary-table { min-width: 720px; }
-            nav { display: none; }
+            /* Hide only legacy in-page navs on mobile; keep the sitewide global
+               nav (its own hamburger handles mobile). */
+            nav:not(.tmr-global-nav) { display: none; }
             .analytics-grid { grid-template-columns: repeat(2, 1fr); }
             .filter-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .site-footer-inner { grid-template-columns: 1fr; }
