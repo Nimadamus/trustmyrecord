@@ -178,6 +178,8 @@
         .ss-pillar i { font-size: 1.3rem; color: var(--accent-green); margin-bottom: 10px; }
         .ss-pillar h3 { font-family: var(--font-display); font-weight: 800; font-size: 0.98rem; }
         .ss-pillar p { margin-top: 6px; color: var(--text-dim); font-size: 0.84rem; line-height: 1.5; }
+        .ss-pillar .step-n { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 11px; background: var(--primary-dim); border: 1px solid rgba(0,174,255,0.35); color: var(--primary); font-family: var(--font-display); font-weight: 900; font-size: 1.2rem; margin-bottom: 12px; }
+        .ss-steps .ss-pillar { text-align: left; }
         .ss-faq { display: grid; gap: 12px; }
         .ss-faq details { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 4px 6px; }
         .ss-faq summary { cursor: pointer; list-style: none; padding: 16px 18px; font-family: var(--font-display); font-weight: 800; font-size: 1.02rem; color: var(--text); }
@@ -199,7 +201,7 @@
         }
     </style>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"MLB Season Simulator","url":"https://trustmyrecord.com/mlb-season-simulator/","applicationCategory":"SportsApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Free MLB season simulator: pick division winners, wild cards, league champions, the World Series winner, and projected win totals, then lock your predictions and track your record on TrustMyRecord.","publisher":{"@type":"Organization","name":"TrustMyRecord","url":"https://trustmyrecord.com/"}}</script>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I submit MLB season predictions on this page?","acceptedAnswer":{"@type":"Answer","text":"Yes. Log in to TrustMyRecord, pick all six division winners, the AL and NL wild cards, both pennant winners, the World Series champion, and projected win totals, then lock your entry. Your predictions are saved to your account and timestamped."}},{"@type":"Question","name":"How are my season predictions verified?","acceptedAnswer":{"@type":"Answer","text":"When you lock your entry the server records a timestamp and ties it to your public profile before results are known. At season's end your division winners, playoff teams, champions, and win totals can be graded against real outcomes, so your accuracy is provable."}},{"@type":"Question","name":"Can I change my predictions after I lock them?","acceptedAnswer":{"@type":"Answer","text":"No. You can save a draft and edit it freely, but once you lock your entry it is frozen and timestamped. No deleting losers, no quiet edits. That is the whole point of a verified record."}},{"@type":"Question","name":"Is this an automated simulation engine?","acceptedAnswer":{"@type":"Answer","text":"This page is a prediction builder where you make the calls, submit them, and lock them for grading. To run a single computer-simulated matchup with win probabilities, use the separate MLB Simulator tool."}}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Can I submit MLB season predictions on this page?","acceptedAnswer":{"@type":"Answer","text":"Yes. Log in to TrustMyRecord, pick all six division winners, the AL and NL wild cards, both pennant winners, the World Series champion, and projected win totals, then lock your entry. Your predictions are saved to your account and timestamped."}},{"@type":"Question","name":"How are my season predictions verified?","acceptedAnswer":{"@type":"Answer","text":"When you lock your entry the server records a timestamp and ties it to your public profile before results are known. At season's end your division winners, playoff teams, champions, and win totals can be graded against real outcomes, so your accuracy is provable."}},{"@type":"Question","name":"Can I change my predictions after I lock them?","acceptedAnswer":{"@type":"Answer","text":"No. You can save a draft and edit it freely, but once you lock your entry it is frozen and timestamped. No deleting losers, no quiet edits. That is the whole point of a verified record."}},{"@type":"Question","name":"Is this an automated simulation engine?","acceptedAnswer":{"@type":"Answer","text":"This page is a prediction builder where you make the calls, submit them, and lock them for grading. To run a single computer-simulated matchup with win probabilities, use the separate MLB Simulator tool."}},{"@type":"Question","name":"Can I simulate the MLB standings and playoff bracket?","acceptedAnswer":{"@type":"Answer","text":"Yes. Setting all six division winners builds your projected MLB standings, and choosing the Wild Cards, pennant winners, and World Series champion fills out a full playoff bracket. It works as both an MLB standings simulator and an MLB playoff simulator in one place."}},{"@type":"Question","name":"Can I predict each team's win total?","acceptedAnswer":{"@type":"Answer","text":"Yes. Step 4 lets you enter a regular-season win total from 0 to 162 for any team you want graded. That turns the tool into an MLB record predictor, with every win-total call checked against the real standings at the end of the year."}},{"@type":"Question","name":"Is the MLB season simulator free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Building, saving, and locking your season predictions is completely free. All you need is a free TrustMyRecord account to submit an entry and put it on your public record."}}]}</script>
 </head>
 <body class="tmr-site-shell">
 
@@ -287,10 +289,74 @@
 
     <!-- WHAT IS IT (SEO, secondary) -->
     <section class="ss-section" id="how">
+        <div class="ss-section-head">
+            <h2>What Is an <span class="gold">MLB Season Simulator</span>?</h2>
+        </div>
         <div class="ss-intro">
             <p>An <strong>MLB season simulator</strong> is a way to play out a full baseball season before, or while, it happens. Instead of guessing one game at a time, you work through the whole picture: which teams win each division, which clubs grab the Wild Card spots, who wins each pennant, who lifts the World Series trophy, and how many games the contenders win across a 162-game grind.</p>
+            <p>Think of it as a <strong>baseball season simulator</strong>, <strong>MLB standings simulator</strong>, and <strong>MLB playoff simulator</strong> rolled into one. You set the final standings, build the October bracket, and predict win totals, all on a single page. It doubles as an <strong>MLB record predictor</strong>: every win-total call you make is graded against the real 162-game results.</p>
             <p>This page puts <strong>you</strong> in the simulator's seat. You think through the matchups, the rosters, the schedule, and the storylines, then lock in your own season outlook. The builder above is live: pick your teams, submit while logged in, and your entry is saved to your account and timestamped so it counts.</p>
-            <p>Want a computer to crunch a single matchup with win probabilities instead? Use the separate <a href="/mlb-simulator/">MLB Simulator</a>, then come back here to lock your season-long calls.</p>
+            <p>Want a computer to crunch a single matchup with win probabilities instead? Use the separate <a href="/mlb-simulator/">MLB game simulator</a>, then come back here to lock your season-long calls.</p>
+        </div>
+    </section>
+
+    <!-- HOW IT WORKS -->
+    <section class="ss-section" id="how-it-works">
+        <div class="ss-section-head">
+            <h2>How the <span class="gold">MLB Season Simulator</span> Works</h2>
+            <p>Four steps from a blank slate to a locked, timestamped season prediction.</p>
+        </div>
+        <div class="ss-pillars ss-steps">
+            <div class="ss-pillar">
+                <span class="step-n">1</span>
+                <h3>Set the Division Winners</h3>
+                <p>Choose a champion for all six divisions. This is the backbone of your simulated standings and seeds the rest of the bracket.</p>
+            </div>
+            <div class="ss-pillar">
+                <span class="step-n">2</span>
+                <h3>Fill the Wild Card Race</h3>
+                <p>Add three Wild Cards per league. Division winners are removed automatically, so your playoff field always stays legal.</p>
+            </div>
+            <div class="ss-pillar">
+                <span class="step-n">3</span>
+                <h3>Build the Playoff Bracket</h3>
+                <p>Pick each pennant winner from its own playoff field, then crown a World Series champion. The bracket updates live as you choose.</p>
+            </div>
+            <div class="ss-pillar">
+                <span class="step-n">4</span>
+                <h3>Predict Win Totals &amp; Lock</h3>
+                <p>Optionally set a regular-season win total for any team, then submit and lock. Your entry is frozen, timestamped, and public.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- WHAT YOU CAN SIMULATE -->
+    <section class="ss-section" id="what-you-can-simulate">
+        <div class="ss-section-head">
+            <h2>What You Can <span class="gold">Simulate</span></h2>
+            <p>One tool covers the full shape of an MLB season, from April standings to the final out of the World Series.</p>
+        </div>
+        <div class="ss-pillars">
+            <div class="ss-pillar">
+                <i class="fas fa-table-list"></i>
+                <h3>Final Standings</h3>
+                <p>Lock in every division winner and project the order of the league. It is a working MLB standings simulator, not a static bracket.</p>
+            </div>
+            <div class="ss-pillar">
+                <i class="fas fa-sitemap"></i>
+                <h3>Playoff Bracket</h3>
+                <p>Run the Wild Card race, both League Championship Series, and the World Series as a live MLB playoff simulator that grades in October.</p>
+            </div>
+            <div class="ss-pillar">
+                <i class="fas fa-chart-line"></i>
+                <h3>Win Totals &amp; Records</h3>
+                <p>Call how many games each contender wins across 162. Your over/under instincts become a graded MLB record predictor.</p>
+            </div>
+            <div class="ss-pillar">
+                <i class="fas fa-trophy"></i>
+                <h3>The World Series Champion</h3>
+                <p>Name the team that lifts the trophy. Get it right before Opening Day and it lives on your public record all year.</p>
+            </div>
         </div>
     </section>
 
@@ -340,6 +406,18 @@
             <details>
                 <summary>Is this an automated simulation engine?</summary>
                 <p>This page is a prediction builder where you make the calls, submit them, and lock them for grading. To run a single computer-simulated matchup with win probabilities, use the separate <a href="/mlb-simulator/">MLB Simulator</a>.</p>
+            </details>
+            <details>
+                <summary>Can I simulate the MLB standings and playoff bracket?</summary>
+                <p>Yes. Setting all six division winners builds your projected MLB standings, and choosing the Wild Cards, pennant winners, and World Series champion fills out a full playoff bracket. It works as both an MLB standings simulator and an MLB playoff simulator in one place.</p>
+            </details>
+            <details>
+                <summary>Can I predict each team's win total?</summary>
+                <p>Yes. Step 4 lets you enter a regular-season win total from 0 to 162 for any team you want graded. That turns the tool into an MLB record predictor, with every win-total call checked against the real standings at the end of the year.</p>
+            </details>
+            <details>
+                <summary>Is the MLB season simulator free?</summary>
+                <p>Yes. Building, saving, and locking your season predictions is completely free. All you need is a free TrustMyRecord account to submit an entry and put it on your public record.</p>
             </details>
         </div>
     </section>
