@@ -1100,6 +1100,7 @@
                         <a href="/stats/">Stats Explained</a>
                         <a href="/teams/">Team Fan Pages</a>
                         <a href="/trustmyrecord-tools/">TrustMyRecord Tools</a>
+                        <a href="/mlb-season-simulator/">MLB Season Simulator</a>
                         <a href="/contests/justbet-mlb/">JustBet MLB Contest</a>
                     </div>
                 </div>
