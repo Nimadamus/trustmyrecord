@@ -1092,15 +1092,53 @@
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
-                    <h3 class="tmr-global-footer__heading">Records &amp; Rankings</h3>
+                    <h3 class="tmr-global-footer__heading">Verified Records &amp; Leaderboards</h3>
                     <div class="tmr-global-footer__links">
+                        <a href="/leaderboards/">Sports Betting Leaderboards</a>
                         <a href="/sports-picks-leaderboard/">Sports Picks Leaderboard</a>
+                        <a href="/best-verified-sports-bettors/">Best Verified Sports Bettors</a>
                         <a href="/verified-handicapper-records/">Verified Handicapper Records</a>
                         <a href="/sports-betting-record-tracker/">Sports Betting Record Tracker</a>
-                        <a href="/stats/">Stats Explained</a>
+                        <a href="/transparent-sports-betting-results/">Transparent Betting Results</a>
+                        <a href="/handicappers/">Browse Handicappers</a>
                         <a href="/teams/">Team Fan Pages</a>
-                        <a href="/trustmyrecord-tools/">TrustMyRecord Tools</a>
+                    </div>
+                </div>
+                <div class="tmr-global-footer__section">
+                    <h3 class="tmr-global-footer__heading">Pick Tracking</h3>
+                    <div class="tmr-global-footer__links">
+                        <a href="/free-pick-tracking/">Free Pick Tracking</a>
+                        <a href="/mlb-pick-tracker/">MLB Pick Tracker</a>
+                        <a href="/nba-pick-tracker/">NBA Pick Tracker</a>
+                        <a href="/nfl-pick-tracker/">NFL Pick Tracker</a>
+                        <a href="/nhl-pick-tracker/">NHL Pick Tracker</a>
+                        <a href="/soccer-pick-tracker/">Soccer Pick Tracker</a>
+                        <a href="/make-picks/">Make a Pick</a>
+                    </div>
+                </div>
+                <div class="tmr-global-footer__section">
+                    <h3 class="tmr-global-footer__heading">Stat Guides</h3>
+                    <div class="tmr-global-footer__links">
+                        <a href="/sports-betting-glossary/">Sports Betting Glossary</a>
+                        <a href="/sports-betting-roi-explained/">What Is Betting ROI</a>
+                        <a href="/stats/roi/">ROI Explained</a>
+                        <a href="/stats/clv/">Closing Line Value (CLV)</a>
+                        <a href="/stats/units/">Units Explained</a>
+                        <a href="/stats/average-odds/">Average Odds</a>
+                        <a href="/stats/win-percentage/">Win Percentage</a>
+                        <a href="/stats/streaks/">Streaks</a>
+                    </div>
+                </div>
+                <div class="tmr-global-footer__section">
+                    <h3 class="tmr-global-footer__heading">Tools &amp; Contests</h3>
+                    <div class="tmr-global-footer__links">
                         <a href="/mlb-season-simulator/">MLB Season Simulator</a>
+                        <a href="/mlb-simulator/">MLB Game Simulator</a>
+                        <a href="/trendspotter/">Trend Spotter</a>
+                        <a href="/model-builder/">Model Builder</a>
+                        <a href="/trustmyrecord-tools/">All TrustMyRecord Tools</a>
+                        <a href="/free-sports-betting-contest/">Free Sports Betting Contest</a>
+                        <a href="/mlb-betting-contest/">MLB Betting Contest</a>
                         <a href="/contests/justbet-mlb/">JustBet MLB Contest</a>
                     </div>
                 </div>
