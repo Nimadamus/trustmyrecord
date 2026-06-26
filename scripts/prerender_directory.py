@@ -16,7 +16,7 @@ Add --dry-run to print the eligible set + sample row without writing files.
 Idempotent: re-running replaces content between <!--MK:key--> markers, so a
 30-min cron/GitHub Action can call it repeatedly without drift.
 """
-import json, os, sys, re, html, datetime, urllib.request
+import json, os, sys, re, html, datetime, urllib.request, urllib.parse
 
 API  = "https://trustmyrecord-api.onrender.com/api"
 SITE = "https://trustmyrecord.com"
@@ -339,40 +339,231 @@ def home_preview_rows(rows, k=5):
         )
     return "".join(out)
 
-def home_highlights(rows):
-    """Real, derived highlights from the live record set (no fabricated data)."""
-    items = []
-    streakers = sorted([r for r in rows if r["current_streak"] > 0],
-                       key=lambda r: r["current_streak"], reverse=True)
-    if streakers:
-        s = streakers[0]
-        items.append(f'🔥 <b>{e(s["display_name"])}</b> is on a {e(streak(s["current_streak"]))} '
-                     f'win streak with a {e(rec(s))} verified record.')
-    roi_lead = sorted([r for r in rows if r["total_picks"] >= 10],
-                      key=lambda r: r["roi"], reverse=True)
-    if roi_lead:
-        rl = roi_lead[0]
-        items.append(f'📈 <b>{e(rl["display_name"])}</b> leads ROI at {e(pct(rl["roi"]))} '
-                     f'across {rl["total_picks"]} graded picks.')
-    units_lead = max(rows, key=lambda r: r["net_units"])
-    items.append(f'🏆 <b>{e(units_lead["display_name"])}</b> tops the board at '
-                 f'{e(units_u(units_lead["net_units"]))} net units.')
-    volume = max(rows, key=lambda r: r["total_picks"])
-    items.append(f'📊 <b>{e(volume["display_name"])}</b> has the deepest public record with '
-                 f'{volume["total_picks"]} graded picks.')
-    # de-dup while preserving order, cap at 4
-    seen, uniq = set(), []
-    for it in items:
-        if it not in seen:
-            seen.add(it); uniq.append(it)
-    return "".join(f"<li>{x}</li>" for x in uniq[:4])
+# ---------- per-pick highlight engine (mirrors the homepage hero JS exactly) ----------
+# The hero "Live Highlights" card (#tmrHeroPicksList) computes these client-side
+# from /api/picks. This bakes the SAME sample-guarded, category-aware highlights
+# into the crawler-visible SEO block so Googlebot sees real, current records and
+# thin-sample users (e.g. a 1-0 +5u account) can never dominate a claim.
+GRADED_ST = {"won", "lost", "push"}
+HOME_HL_CANDIDATES = 16   # richest records to inspect per refresh
+HOME_HL_ROWS = 4          # max highlight rows rendered
 
-def bake_homepage(rows):
+def _pick_dt(p):
+    for k in ("commence_time", "graded_at", "created_at"):
+        v = p.get(k)
+        if v:
+            try:
+                d = datetime.datetime.fromisoformat(str(v).replace("Z", "+00:00"))
+                return d.replace(tzinfo=datetime.timezone.utc) if d.tzinfo is None else d
+            except Exception:
+                pass
+    return None
+
+def _pick_pl(p):
+    ru = p.get("result_units")
+    try:
+        if ru is not None and str(ru) != "":
+            return float(ru)
+    except (TypeError, ValueError):
+        pass
+    units = num(p.get("units") or p.get("stake") or 1, 1.0)
+    odds = num(p.get("odds_snapshot") or p.get("odds") or -110, -110.0)
+    st = str(p.get("status") or "").lower()
+    if st == "won":
+        return units * odds / 100 if odds > 0 else units
+    if st == "lost":
+        return -(units * abs(odds) / 100) if odds < 0 else -units
+    return 0.0
+
+def _sport_label(key):
+    k = str(key or "").lower()
+    if "mlb" in k or "baseball" in k: return "MLB"
+    if "nhl" in k or "hockey" in k: return "NHL"
+    if "nba" in k or "basketball" in k: return "NBA"
+    if "nfl" in k or "football" in k: return "NFL"
+    return None
+
+def _cat_key(market):
+    m = str(market or "").lower()
+    if "team_total" in m: return "team_totals"
+    if "total" in m: return "totals"
+    if "spread" in m or "runline" in m or "run_line" in m or "puck" in m: return "spreads"
+    if "h2h" in m or "moneyline" in m or m == "ml" or m.startswith("ml_") or m.endswith("_ml"): return "moneylines"
+    if "batter_" in m or "pitcher_" in m or "player_" in m or "_prop" in m: return "props"
+    return None
+
+def _dominant_sport(picks):
+    c = {}
+    for p in picks:
+        s = _sport_label(p.get("sport_key"))
+        if s: c[s] = c.get(s, 0) + 1
+    return max(c, key=c.get) if c else None
+
+def _cat_label(key, picks):
+    if key == "spreads":
+        s = _dominant_sport(picks)
+        return "run lines" if s == "MLB" else "puck lines" if s == "NHL" else "spreads"
+    return {"totals": "totals", "team_totals": "team totals",
+            "moneylines": "moneylines", "props": "player props"}.get(key, key)
+
+def _end_streak(chrono):
+    s = 0
+    for p in reversed(chrono):
+        st = str(p.get("status") or "").lower()
+        if st == "push":
+            continue
+        if st == "won":
+            s += 1
+        else:
+            break
+    return s
+
+def _wlr(picks):
+    dec = [p for p in picks if str(p.get("status") or "").lower() != "push"]
+    w = sum(1 for p in dec if str(p.get("status") or "").lower() == "won")
+    n = len(dec)
+    return w, n - w, n, (w / n if n else 0.0)
+
+def _su(v):   # signed units, "+7.01u"
+    return ("+" if v > 0 else "") + f"{v:.2f}u"
+
+def _sroi(v): # signed pct, "+12.20%"
+    return ("+" if v > 0 else "") + f"{v:.2f}%"
+
+def compute_home_highlight(picks, meta, now):
+    """Single best sample-guarded highlight for one capper, or None.
+    Mirrors index.html computeHighlight(): pending picks never count, every
+    %/units claim is gated on a real settled sample so no 1-0 user can brag."""
+    graded = sorted([p for p in (picks or []) if str(p.get("status") or "").lower() in GRADED_ST],
+                    key=lambda p: (_pick_dt(p) or datetime.datetime.min.replace(tzinfo=datetime.timezone.utc)))
+    if not graded:
+        return None
+    wins = sum(1 for p in graded if str(p.get("status") or "").lower() == "won")
+    losses = sum(1 for p in graded if str(p.get("status") or "").lower() == "lost")
+    decided = wins + losses
+    win_rate = wins / decided if decided else 0.0
+    net = num(meta.get("net_units"), None) if meta.get("net_units") is not None else None
+    roi = num(meta.get("roi"), None) if meta.get("roi") is not None else None
+    total = int(num(meta.get("total_picks"), 0))
+    by_cat, by_sport = {}, {}
+    for p in graded:
+        c = _cat_key(p.get("market_type"))
+        if c: by_cat.setdefault(c, []).append(p)
+        s = _sport_label(p.get("sport_key"))
+        if s: by_sport.setdefault(s, []).append(p)
+    out = []  # (score, emoji, clause)
+
+    # 1. overall active winning streak (>= 3)
+    ovr = _end_streak(graded)
+    if ovr >= 3:
+        out.append((1000 + ovr * 10, "🔥", f"has won {ovr} straight"))
+    # 2. category-specific active streak (moneylines / totals / team totals / props / spreads)
+    for c, sub in by_cat.items():
+        st = _end_streak(sub)
+        if st >= 3:
+            out.append((840 + st * 10, "🔥", f"hit the last {st} {_cat_label(c, sub)}"))
+    # 3. per-sport active streak
+    for s, sub in by_sport.items():
+        st = _end_streak(sub)
+        if st >= 3:
+            out.append((760 + st * 10, "⚾🏒🏀🏈🎯"[0], f"has won {st} straight {s} picks"))
+    # 4. recent hot window (>=5 settled, >=4 wins, >=60%)
+    for n in (20, 12, 10, 8, 5):
+        w, l, nn, r = _wlr(graded[-n:])
+        if nn >= 5 and w >= 4 and r >= 0.6:
+            out.append((600 + r * 120 + nn, "📈", f"is {w}-{l} over the last {nn} picks"))
+            break
+    # 5. category record (>=5 settled, >=60%) e.g. "10-3 on MLB totals".
+    # When labeled with a sport, count ONLY that sport's picks so the record
+    # exactly matches the label (no all-sport count under an MLB header).
+    for c, sub in by_cat.items():
+        sp = _dominant_sport(sub)
+        scoped = [p for p in sub if _sport_label(p.get("sport_key")) == sp] if sp else sub
+        w, l, nn, r = _wlr(scoped)
+        if nn >= 5 and r >= 0.6:
+            label = _cat_label(c, scoped)
+            out.append((500 + r * 100 + nn, "🎯", f"is {w}-{l} on {(sp + ' ') if sp else ''}{label}"))
+    # 6. last 30-day units (>=3 settled in window, positive)
+    w30 = [p for p in graded if _pick_dt(p) and (now - _pick_dt(p)).total_seconds() <= 30 * 86400]
+    if len(w30) >= 3:
+        u30 = sum(_pick_pl(p) for p in w30)
+        if u30 >= 1:
+            out.append((580 + u30, "📈", f"is {_su(u30)} over the last 30 days"))
+    # 7. last 7-day units (>=2 settled, positive)
+    w7 = [p for p in graded if _pick_dt(p) and (now - _pick_dt(p)).total_seconds() <= 7 * 86400]
+    if len(w7) >= 2:
+        u7 = sum(_pick_pl(p) for p in w7)
+        if u7 >= 1:
+            out.append((540 + u7, "📈", f"is {_su(u7)} over the last 7 days"))
+    # 8. strong lifetime units (net >= 3 on a real settled sample)
+    if net is not None and net >= 3 and decided >= 5:
+        out.append((300 + net, "💰", f"is {_su(net)} lifetime across {total or decided} verified picks"))
+    # 9. ROI on a meaningful sample (>=20 settled, >=5%)
+    if decided >= 20 and roi is not None and roi >= 5:
+        out.append((460 + roi, "📊", f"holds a {_sroi(roi)} ROI across {total or decided} graded picks"))
+    # 10. long-term verified volume milestone (>=25 settled)
+    vol = total or decided
+    if vol >= 25:
+        out.append((200 + min(vol, 150), "🚀", f"has {vol} verified picks tracked"))
+    # 11. positive-only fallback (never a losing record; requires a real sample)
+    if not out:
+        if decided >= 5 and net is not None and net > 0:
+            out.append((100 + net, "✅", f"is {_su(net)} overall across {total or decided} verified picks"))
+        elif decided >= 5 and win_rate >= 0.5:
+            out.append((80 + win_rate * 100, "✅", f"holds a {wins}-{losses} verified record"))
+
+    if not out:
+        return None
+    out.sort(key=lambda x: x[0], reverse=True)
+    score, emoji, clause = out[0]
+    return {"score": score, "emoji": emoji, "clause": clause}
+
+# Fallback shown when not enough qualifying highlights exist. NEVER a fake user.
+HOME_HL_EMPTY = ('<li class="tmrhx-hl-empty">Public records update daily after '
+                 'results are graded.</li>')
+
+def home_highlights(rows, now):
+    """Real, per-pick-derived highlights (no fabricated data). Each row links to
+    the capper's public profile. Falls back to a neutral message - never to a
+    fake user or stat - when too few qualifying highlights exist."""
+    # Keep the site owner out of the highlights module (mirrors hero JS
+    # TREND_EXCLUDE_OWNER); someone else fills the slot.
+    HL_EXCLUDE = {"moneymakers"}
+    found = []  # (score, username, display, emoji, clause)
+    cands = [r for r in rows if r["username"].lower() not in HL_EXCLUDE][:HOME_HL_CANDIDATES]
+    for r in cands:
+        un = r["username"]
+        try:
+            d = get(f"{API}/picks?username={urllib.parse.quote(un)}&limit=100")
+            picks = d.get("picks", []) if isinstance(d, dict) else []
+        except Exception:
+            picks = []
+        hl = compute_home_highlight(picks, {
+            "net_units": r["net_units"], "roi": r["roi"], "total_picks": r["total_picks"],
+        }, now)
+        if hl:
+            found.append((hl["score"], un, r["display_name"], hl["emoji"], hl["clause"]))
+    # best highlights, one per distinct user
+    found.sort(key=lambda x: x[0], reverse=True)
+    items, seen = [], set()
+    for score, un, disp, emoji, clause in found:
+        if un.lower() in seen:
+            continue
+        seen.add(un.lower())
+        href = f"/u/{e(un)}/"
+        items.append(f'<li>{emoji} <a href="{href}"><b>{e(disp)}</b></a> {clause}.</li>')
+        if len(items) >= HOME_HL_ROWS:
+            break
+    if not items:
+        return HOME_HL_EMPTY
+    return "".join(items)
+
+def bake_homepage(rows, now):
     with open(HOME, encoding="utf-8") as f:
         t = f.read()
     t = set_marker(t, "homeLbPreview", home_preview_rows(rows),
                    r'(<tbody>)(<tr><td colspan="5")', r'\g<1>@@BLOCK@@')  # unused fallback
-    t = set_marker(t, "homeHighlights", home_highlights(rows),
+    t = set_marker(t, "homeHighlights", home_highlights(rows, now),
                    r'(<ul class="tmrhx-hl">)(<li>)', r'\g<1>@@BLOCK@@')   # unused fallback
     with open(HOME, "w", encoding="utf-8", newline="\n") as f:
         f.write(t)
@@ -393,7 +584,7 @@ def main():
         return
     n1, tp, act = bake_handicappers(rows, now)
     n2 = bake_leaderboards(rows)
-    n3 = bake_homepage(rows)
+    n3 = bake_homepage(rows, now)
     print(f"handicappers: baked {n1} rows, {tp} total picks, {act} active")
     print(f"leaderboards: baked {n2} rows")
     print(f"homepage: baked {n3} preview rows + highlights")

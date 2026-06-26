@@ -37,6 +37,12 @@ jobs:
       - name: Bake directory + homepage (/handicappers/, /leaderboards/, /)
         run: python scripts/prerender_directory.py
 
+      - name: Verify homepage highlights are reproducible from live graded picks
+        # Fail closed: if any baked "Live highlights" row cannot be re-derived from
+        # real graded picks (fake/stale/hand-injected), the job stops here and the
+        # commit step never runs - nothing fake can reach the live homepage.
+        run: python scripts/verify_home_highlights.py
+
       - name: Regenerate eligible /u/ profile pages + sitemap
         run: python scripts/build_profile_pages.py
 
