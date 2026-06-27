@@ -36,7 +36,11 @@ HREF_RE = re.compile(r'href="/u/([^/"]+)/"')
 
 
 def fetch(url):
-    req = urllib.request.Request(url, headers={"Accept": "text/html,application/json"})
+    # GitHub Pages / Cloudflare 403s the default urllib UA; send a real one.
+    req = urllib.request.Request(url, headers={
+        "Accept": "text/html,application/json",
+        "User-Agent": "Mozilla/5.0 (TMR-highlights-verifier)",
+    })
     with urllib.request.urlopen(req, timeout=45) as r:
         return r.read().decode("utf-8", "replace")
 
