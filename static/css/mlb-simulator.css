@@ -3113,3 +3113,86 @@ select.pitcher-select option {
 .model-vs-market .mvm-table thead th{font-size:0.66rem;text-transform:uppercase;letter-spacing:0.04em;color:#9aa6b6;font-weight:700;}
 .model-vs-market .mvm-table th:first-child{text-align:left;font-weight:700;}
 .model-vs-market .mvm-foot{margin-top:8px;font-size:0.66rem;color:#9aa6b6;line-height:1.4;}
+
+/* ============================================================
+   MODERN BOX SCORE 20260628 — ESPN/MLB-grade polish (append-only override)
+   ============================================================ */
+/* Crisp tabular number alignment across every box-score table */
+.box-score-table, .player-box-table, .sb-table { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+
+/* White card container pops cleanly on the dark page */
+.box-score-panel {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(2, 8, 23, 0.35);
+    overflow: hidden;
+}
+.box-score-panel .box-score-heading,
+.box-score-panel .box-score-heading h3,
+.box-score-panel .sim-label { color: #0f172a; }
+
+/* Matchup header: logos + winner emphasis (ESPN game header feel) */
+.box-score-team-card .scoreboard-logo { display: inline-grid; place-items: center; }
+.box-score-team-card.winner strong { color: #047857; }
+.bx-win-dot { color: #059669; font-size: 13px; }
+.box-score-final strong { color: #0f172a; }
+.box-score-matchup-card { border-bottom: 1px solid #e5e7eb; }
+
+/* Line-score team cell: logo + abbreviation */
+.line-score-team { display: inline-grid; grid-template-columns: 24px auto; align-items: center; gap: 8px; }
+.line-score-team .line-score-logo { width: 22px; height: 22px; border-radius: 4px; overflow: hidden; }
+.line-score-team .line-score-logo img { width: 100%; height: 100%; object-fit: contain; }
+.line-score-team .ls-abbr { font-weight: 900; color: #0f172a; letter-spacing: 0.02em; }
+
+/* Line score: highlight winner, separate + emphasize R | H | E */
+.box-score-table .winner-row td, .box-score-table .winner-row th { background: #ecfdf5; }
+.box-score-table .winner-row .ls-abbr { color: #047857; }
+.box-score-table tbody tr:hover td, .box-score-table tbody tr:hover th { background: #f1f5f9; }
+.box-score-table th:nth-last-child(3), .box-score-table td:nth-last-child(3) { border-left: 2px solid #cbd5e1; }
+.box-score-table .total-runs { color: #0f172a; font-size: 15px; font-weight: 900; }
+.box-score-table thead th { background: #f8fafc; color: #64748b; }
+
+/* Player tables: zebra, hover, sticky name column, bold totals */
+.player-table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid #e5e7eb; }
+.player-box-table { min-width: 600px; }
+.player-box-table thead th { background: #f8fafc; position: sticky; top: 0; z-index: 2; }
+.player-box-table tbody tr:nth-child(even):not(.totals-row) td,
+.player-box-table tbody tr:nth-child(even):not(.totals-row) th { background: #f8fafc; }
+.player-box-table tbody tr:hover:not(.totals-row) td,
+.player-box-table tbody tr:hover:not(.totals-row) th { background: #eef2ff; }
+.player-box-table th:first-child, .player-box-table td:first-child {
+    position: sticky; left: 0; z-index: 1; background: #ffffff;
+    box-shadow: 1px 0 0 #e5e7eb; min-width: 150px;
+}
+.player-box-table tbody tr:nth-child(even):not(.totals-row) th:first-child { background: #f8fafc; }
+.player-box-table tbody tr:hover:not(.totals-row) th:first-child { background: #eef2ff; }
+.player-box-table tbody tr.totals-row th, .player-box-table tbody tr.totals-row td {
+    border-top: 2px solid #cbd5e1; background: #f1f5f9; color: #0f172a; font-weight: 900;
+}
+.player-box-table tbody tr.totals-row th:first-child { background: #f1f5f9; }
+
+/* Batter position + pitcher decision pills */
+.bx-pos { color: #64748b; font-size: 9px; font-weight: 800; letter-spacing: 0.04em; margin-left: 5px; }
+.bx-dec { display: inline-block; font-size: 9px; font-weight: 900; letter-spacing: 0.03em;
+    padding: 1px 6px; border-radius: 999px; margin-left: 6px; vertical-align: middle;
+    background: #e2e8f0; color: #334155; }
+.bx-dec-W { background: #dcfce7; color: #15803d; }
+.bx-dec-L { background: #fee2e2; color: #b91c1c; }
+.bx-dec-SV, .bx-dec-S, .bx-dec-H, .bx-dec-HLD { background: #dbeafe; color: #1d4ed8; }
+
+/* Top scoreboard: logos + winner accent */
+.sb-table .sb-team { display: flex; align-items: center; gap: 8px; }
+.sb-logo { width: 20px; height: 20px; border-radius: 4px; overflow: hidden; flex: none; }
+.sb-logo img { width: 100%; height: 100%; object-fit: contain; }
+.sb-table .sb-row.sb-winner .sb-team strong { color: #047857; }
+.sb-table .sb-runs { font-weight: 900; }
+
+/* Team-box header chips read crisp on white */
+.team-box-header .team-box-label { color: #0f172a; font-weight: 900; }
+
+@media (max-width: 640px) {
+    .box-score-final strong { font-size: 30px; }
+    .player-box-table { min-width: 540px; }
+    .line-score-team .line-score-logo { width: 18px; height: 18px; }
+}
