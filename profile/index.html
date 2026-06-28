@@ -13806,6 +13806,27 @@
     }
   }
 
+  /* MARKET_TABLE_EDGE_20260627: tighten horizontal cell padding on the split +
+     drill tables so all 7 columns (through ROI) fit inside the card without the
+     right edge clipping. Extra right gutter keeps ROI off the border. */
+  body.profile-page.tmr-social-profile #tmrxTableMarket td,
+  body.profile-page.tmr-social-profile #tmrxTableMarket th,
+  body.profile-page.tmr-social-profile #tmrxTableMarketTop td,
+  body.profile-page.tmr-social-profile #tmrxTableMarketTop th,
+  body.profile-page.tmr-social-profile .tmrx-drill-table td,
+  body.profile-page.tmr-social-profile .tmrx-drill-table th {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  body.profile-page.tmr-social-profile #tmrxTableMarket td:last-child,
+  body.profile-page.tmr-social-profile #tmrxTableMarket th:last-child,
+  body.profile-page.tmr-social-profile #tmrxTableMarketTop td:last-child,
+  body.profile-page.tmr-social-profile #tmrxTableMarketTop th:last-child,
+  body.profile-page.tmr-social-profile .tmrx-drill-table td:last-child,
+  body.profile-page.tmr-social-profile .tmrx-drill-table th:last-child {
+    padding-right: 16px !important;
+  }
+
   /* ===== PUBLIC LEDGER + STAT TABLES: responsive horizontal scroll (May 27, 2026)
      Earlier cascade left .tmrx-table at min-width:1040px while .tmrx-table-shell
      inherited overflow:hidden from base CSS, so the right columns (Line/Odds/
