@@ -3196,3 +3196,23 @@ select.pitcher-select option {
     .player-box-table { min-width: 540px; }
     .line-score-team .line-score-logo { width: 18px; height: 18px; }
 }
+
+/* MODERN BOX SCORE — horizontal single-row final score (20260628b) */
+.box-score-final {
+    display: flex !important;
+    align-items: baseline;
+    justify-content: center;
+    gap: 8px;
+    min-width: 120px;
+    white-space: nowrap;
+}
+.box-score-final .bsf-score { display: inline-flex; align-items: baseline; gap: 6px; }
+.box-score-final .bsf-score strong { font: 900 34px/1 Inter, Arial, sans-serif; color: #0f172a; }
+.box-score-final .bsf-score em { font-style: normal; color: #94a3b8; font-weight: 700; font-size: 24px; }
+.box-score-final .bsf-final {
+    color: #64748b; font-size: 11px; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase;
+}
+@media (max-width: 640px) {
+    .box-score-final .bsf-score strong { font-size: 28px; }
+    .box-score-final { gap: 6px; }
+}
