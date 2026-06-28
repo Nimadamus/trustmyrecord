@@ -318,6 +318,34 @@
                 </div>
             </section>
 
+            <style>
+                #bullpenPanel{grid-column:1 / -1;}
+                #bullpenPanel .bullpen-team{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.10);border-radius:12px;padding:14px 16px;}
+                #bullpenPanel .bullpen-team h3{font-size:1.02rem;color:#e7ecf3;}
+                #bullpenPanel .bullpen-starter{margin:6px 0 10px;font-size:0.92rem;color:#e7ecf3;line-height:1.5;}
+                #bullpenPanel .bullpen-subhead{margin:12px 0 6px;font-size:0.74rem;letter-spacing:.04em;text-transform:uppercase;color:#9fb0c7;font-weight:700;}
+                #bullpenPanel .bullpen-note{text-transform:none;letter-spacing:0;font-weight:500;color:#8b95a7;font-size:0.72rem;}
+                #bullpenPanel .bullpen-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px;}
+                #bullpenPanel .bullpen-list li{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:0.88rem;color:#dbe3ee;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+                #bullpenPanel .bullpen-name{font-weight:600;color:#f1f5fa;}
+                #bullpenPanel .bullpen-hand{font-size:0.74rem;color:#7fd1c4;border:1px solid rgba(127,209,196,0.35);border-radius:5px;padding:1px 6px;}
+                #bullpenPanel .bullpen-meta{color:#9fb0c7;font-size:0.82rem;}
+                #bullpenPanel .bullpen-tag{font-size:0.72rem;border-radius:6px;padding:2px 8px;font-weight:700;}
+                #bullpenPanel .bullpen-tag-confirmed{background:rgba(34,197,94,0.14);color:#4ade80;border:1px solid rgba(34,197,94,0.4);}
+                #bullpenPanel .bullpen-tag-projected{background:rgba(245,179,1,0.14);color:#f5b301;border:1px solid rgba(245,179,1,0.4);}
+                #bullpenPanel .bullpen-foot{margin-top:10px;font-size:0.74rem;color:#8b95a7;}
+            </style>
+            <section id="bullpenPanel" class="sim-panel" data-bullpen-state="empty" aria-label="Active bullpen by team">
+                <div class="sim-panel-heading compact">
+                    <p class="sim-label">Pitching Staff</p>
+                    <h2>Probable Starter & Active Bullpen</h2>
+                    <span>Built from each team's live MLB active roster. The official roster feed does not publish bullpen roles (closer/setup/middle), so any starter-vs-bullpen split shown here is inferred from games started this season and labeled as such. Injured, optioned, and traded players are excluded by the active-roster feed.</span>
+                </div>
+                <div id="bullpenContent" class="bullpen-content">
+                    <div class="sim-empty">Run a simulation to load each team's active bullpen.</div>
+                </div>
+            </section>
+
             <section class="sim-panel sim-compare-panel" aria-label="Offensive and defensive comparison">
                 <div class="sim-panel-heading compact">
                     <p class="sim-label">Comparison</p>
@@ -450,7 +478,7 @@
         </section>
     </main>
 
-    <script src="/static/js/mlb-simulator.js?v=20260628-data-updated-stamp"></script>
+    <script src="/static/js/mlb-simulator.js?v=20260628-bullpen-panel"></script>
 
 <!-- tmr-internal-cluster : SEO internal linking (insert-only) -->
 <section class="tmr-internal-cluster" aria-label="Related pages on TrustMyRecord" style="max-width:1140px;margin:46px auto 0;padding:26px 22px;background:#12121a;border:1px solid #2a2a4a;border-radius:18px;font-family:'Inter',system-ui,sans-serif;">
