@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-modern-boxscore-20260628';
+    var UI_BUILD = 'mlb-simulator-modern-boxscore-20260628b';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3822,10 +3822,9 @@
                 '<span>' + escapeHtml(line.team.name) + '</span>' +
                 '<small>' + line.hits + ' H / ' + line.errors + ' E</small></div></div>';
         }
-        card.innerHTML = '<div class="box-score-status">FINAL</div>' +
-            '<div class="box-score-matchup-main">' +
+        card.innerHTML = '<div class="box-score-matchup-main">' +
             teamCard('away', box.away, box.away.runs > box.home.runs) +
-            '<div class="box-score-final"><strong>' + box.away.runs + '</strong><em>-</em><strong>' + box.home.runs + '</strong><span>FINAL</span></div>' +
+            '<div class="box-score-final"><span class="bsf-score"><strong>' + box.away.runs + '</strong><em>-</em><strong>' + box.home.runs + '</strong></span><span class="bsf-final">· FINAL</span></div>' +
             teamCard('home', box.home, box.home.runs > box.away.runs) +
             '</div>' +
             '<p class="box-score-honesty">Simulated final score, not official MLB stats.</p>';
