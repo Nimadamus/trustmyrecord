@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="canonical" href="https://trustmyrecord.com/mlb-playoff-simulator/">
+    <title>MLB Playoff Simulator | Build & Lock Your Postseason Bracket</title>
+    <meta name="description" content="Use the TrustMyRecord MLB playoff simulator to build the postseason bracket, advance teams through the Wild Card round, LCS, and World Series, then lock your picks and track your record.">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+    <meta property="og:title" content="MLB Playoff Simulator | Build & Lock Your Postseason Bracket">
+    <meta property="og:description" content="Use the TrustMyRecord MLB playoff simulator to build the postseason bracket, advance teams through the Wild Card round, LCS, and World Series, then lock your picks and track your record.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trustmyrecord.com/mlb-playoff-simulator/">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+      :root{--bg:#0a0a0f;--surface:#12121a;--card:#1a1a2e;--border:#2a2a4a;--primary:#00aeff;--gold:#ffd700;--green:#00ff88;--purple:#a855f7;--text:#e8e8f0;--dim:#8a93a8;--font-d:'Barlow',sans-serif;--font-b:'Inter',sans-serif;}
+      *{margin:0;padding:0;box-sizing:border-box;}
+      body.tmr-site-shell{background:var(--bg);color:var(--text);font-family:var(--font-b);min-height:100vh;line-height:1.7;}
+      .cl-wrap{max-width:1080px;margin:0 auto;padding:0 20px 80px;}
+      .cl-wrap a{color:var(--primary);text-decoration:none;}
+      .cl-wrap a:hover{color:var(--gold);}
+      .cl-hero{position:relative;overflow:hidden;border-radius:24px;margin-top:28px;padding:46px 38px;border:1px solid var(--border);
+        background:radial-gradient(1200px 400px at 15% -10%,rgba(0,174,255,0.18),transparent 60%),radial-gradient(1000px 360px at 95% 0%,rgba(168,85,247,0.16),transparent 55%),linear-gradient(180deg,rgba(26,26,46,0.95),rgba(10,10,15,0.95));}
+      .cl-kicker{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.3);color:var(--green);font-size:0.72rem;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;margin-bottom:16px;}
+      .cl-hero h1{font-family:var(--font-d);font-weight:800;font-size:clamp(2rem,5vw,3rem);line-height:1.05;letter-spacing:-0.02em;}
+      .cl-hero h1 .gold{color:var(--gold);}
+      .cl-hero .sub{margin-top:14px;color:var(--dim);font-size:clamp(1rem,2vw,1.16rem);font-weight:600;max-width:720px;}
+      .cl-cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:24px;}
+      .btn{display:inline-flex;align-items:center;gap:9px;padding:13px 22px;border-radius:12px;font-family:var(--font-d);font-weight:800;font-size:0.96rem;border:1px solid transparent;text-decoration:none;}
+      .btn-gold{background:linear-gradient(135deg,#ffd700,#ffb300);color:#1a1200;}
+      .btn-outline{background:transparent;border-color:var(--border);color:var(--text);}
+      .btn-outline:hover{border-color:var(--primary);color:var(--text);}
+      .cl-sec{margin-top:34px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:30px 32px;}
+      .cl-sec h2{font-family:var(--font-d);font-weight:800;font-size:clamp(1.35rem,3vw,1.7rem);margin:0 0 14px;color:#fff;}
+      .cl-sec h3{font-family:var(--font-d);font-weight:800;font-size:1.1rem;margin:18px 0 8px;color:var(--primary);}
+      .cl-sec p{color:#cfd6e4;margin:0 0 14px;}
+      .cl-sec p:last-child{margin-bottom:0;}
+      .cl-sec ul{color:#cfd6e4;margin:0 0 6px 20px;}
+      .cl-sec ul li{margin:6px 0;}
+      .cl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:18px;}
+      .cl-mini{background:var(--bg);border:1px solid var(--border);border-radius:14px;padding:20px;}
+      .cl-mini h3{margin-top:0;}
+      .cl-angle{margin-top:34px;border-radius:20px;padding:36px 32px;text-align:center;border:1px solid var(--border);background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(0,174,255,0.08));}
+      .cl-angle h2{font-family:var(--font-d);font-weight:900;font-size:clamp(1.5rem,3.4vw,2rem);color:#fff;}
+      .cl-angle p{max-width:780px;margin:14px auto 0;color:#cfd6e4;}
+      .cl-faq{margin-top:34px;display:grid;gap:12px;}
+      .cl-faq details{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px 8px;}
+      .cl-faq summary{cursor:pointer;list-style:none;padding:16px;font-family:var(--font-d);font-weight:800;font-size:1.02rem;color:#fff;}
+      .cl-faq summary::-webkit-details-marker{display:none;}
+      .cl-faq summary::after{content:'+';float:right;color:var(--gold);font-weight:800;}
+      .cl-faq details[open] summary::after{content:'\2212';}
+      .cl-faq p{padding:0 16px 16px;margin:0;color:#cfd6e4;}
+      .cl-cluster{margin-top:34px;background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:26px 28px;}
+      .cl-cluster h2{font-family:var(--font-d);font-weight:800;font-size:1.15rem;color:#fff;margin:0 0 14px;}
+      .cl-cluster .lk{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px 18px;}
+      .cl-cluster .lk a{font-weight:600;font-size:0.95rem;display:inline-flex;gap:8px;}
+      .cl-cluster .lk a span{color:var(--gold);}
+      @media(max-width:620px){.cl-hero{padding:32px 20px;}.cl-sec{padding:24px 20px;}}
+    </style>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "MLB Playoff Simulator", "url": "https://trustmyrecord.com/mlb-playoff-simulator/", "applicationCategory": "SportsApplication", "operatingSystem": "Web", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "description": "Use the TrustMyRecord MLB playoff simulator to build the postseason bracket, advance teams through the Wild Card round, LCS, and World Series, then lock your picks and track your record.", "publisher": {"@type": "Organization", "name": "TrustMyRecord", "url": "https://trustmyrecord.com/"}}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is an MLB playoff simulator?", "acceptedAnswer": {"@type": "Answer", "text": "An MLB playoff simulator is a tool for projecting the postseason: you set the Wild Card field, advance teams through the Division and League Championship Series, and crown a World Series champion. On TrustMyRecord you can lock that bracket so it is timestamped and graded against the real playoffs."}}, {"@type": "Question", "name": "How do I simulate the MLB playoff bracket?", "acceptedAnswer": {"@type": "Answer", "text": "Use the MLB Season Simulator to set your division winners and wild cards, which seeds a full October bracket, then choose each pennant winner and your World Series champion. To simulate a single postseason matchup with win probabilities, use the MLB Simulator game tool."}}, {"@type": "Question", "name": "Can a playoff simulator predict the World Series winner?", "acceptedAnswer": {"@type": "Answer", "text": "It can project one. A simulator estimates likely outcomes based on team strength, pitching, and matchups, but October baseball is volatile and upsets are common. Treat the projected champion as a strong opinion to test, not a guarantee."}}, {"@type": "Question", "name": "Is the MLB playoff simulator free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Building and locking your bracket is completely free with a TrustMyRecord account, and your locked postseason calls go on your public, graded record."}}]}</script>
+</head>
+<body class="tmr-site-shell">
+<!-- Sitewide global nav + footer are injected by tmr-sitewide.js -->
+<main class="cl-wrap">
+  <section class="cl-hero">
+    <span class="cl-kicker"><i class="fas fa-baseball-bat-ball"></i> Postseason · 2026</span>
+    <h1>MLB Playoff <span class="gold">Simulator</span></h1>
+    <p class="sub">Build the October bracket, advance teams through the Wild Card round, the LCS, and the World Series, then lock your postseason call on a timestamped public record.</p>
+    <div class="cl-cta-row"><a class="btn btn-gold" href="/mlb-simulator/"><i class="fas fa-play"></i> Open the MLB Simulator</a><a class="btn btn-outline" href="/mlb-season-simulator/"><i class="fas fa-calendar"></i> Season Simulator</a><a class="btn btn-outline" href="/leaderboard/"><i class="fas fa-ranking-star"></i> Leaderboard</a></div>
+  </section>
+  <section class="cl-sec">
+    <h2>Simulate the MLB Postseason, Then Lock It</h2>
+    <p>The <strong>MLB playoff simulator</strong> approach on TrustMyRecord turns October into a bracket you control. Instead of one game, you map the entire road to the World Series: who grabs the Wild Card spots, who survives the Division Series, who wins each pennant, and which team is standing at the end. Every choice updates a live bracket, and when you are done you can lock it so the call is timestamped before the playoffs even start.</p>
+    <p>That lock is the difference between a hot take and a record. Anyone can say they had the champion after the parade. Here your bracket is frozen and public, so when your sleeper actually wins it all, the receipt is right there.</p>
+    <h3>What you can build</h3>
+    <ul>
+      <li><strong>Wild Card field:</strong> set three wild cards per league on top of your division winners.</li>
+      <li><strong>Division &amp; League Championship Series:</strong> advance teams round by round through a legal bracket.</li>
+      <li><strong>Pennant winners:</strong> choose the AL and NL champions from their playoff fields.</li>
+      <li><strong>World Series champion:</strong> crown the team that lifts the trophy and put it on your record.</li>
+    </ul>
+  </section>
+  <section class="cl-sec">
+    <h2>How the Playoff Projection Works</h2>
+    <p>Seeding starts with the regular season. When you set division winners and wild cards in the <a href="/mlb-season-simulator/">MLB Season Simulator</a>, the bracket fills in automatically and stays legal as you advance teams. Want to stress-test a single postseason series first? Drop the two clubs into the <a href="/mlb-simulator/">MLB Simulator</a>, pick the probable starters, and run it 100 times to see how often each side advances. Use that read to inform the bracket you lock here.</p>
+    <div class="cl-grid">
+      <div class="cl-mini"><h3>Seed It</h3><p>Set division winners and wild cards to build the field.</p></div>
+      <div class="cl-mini"><h3>Advance It</h3><p>Move teams through each round to your two pennant winners.</p></div>
+      <div class="cl-mini"><h3>Lock It</h3><p>Crown a champion and freeze the bracket on your public record.</p></div>
+    </div>
+  </section>
+  <section class="cl-angle">
+    <h2>Simulations Are Useful. Verified Records Matter More.</h2>
+    <p>A simulator can tell you what might happen. It cannot tell you who has actually been right. That is what TrustMyRecord is built for. Every pick is locked before game time, auto-graded, and counted toward a public record with real picks, real records, ROI, units, CLV, and streaks. No deleted losers, no anonymous experts, no edited history. Use the simulator to do your homework, then prove your read where it counts.</p>
+    <div class="cl-cta-row" style="justify-content:center;margin-top:22px;">
+      <a class="btn btn-gold" href="/sportsbook/"><i class="fas fa-lock"></i> Lock a Verified Pick</a>
+      <a class="btn btn-outline" href="/leaderboard/"><i class="fas fa-ranking-star"></i> See the Leaderboard</a>
+      <a class="btn btn-outline" href="/handicappers/"><i class="fas fa-user-check"></i> Verified Handicappers</a>
+    </div>
+  </section>
+  <section class="cl-faq" aria-label="FAQ">
+    <details open><summary>What is an MLB playoff simulator?</summary><p>An MLB playoff simulator is a tool for projecting the postseason: you set the Wild Card field, advance teams through the Division and League Championship Series, and crown a World Series champion. On TrustMyRecord you can lock that bracket so it is timestamped and graded against the real playoffs.</p></details>
+    <details><summary>How do I simulate the MLB playoff bracket?</summary><p>Use the MLB Season Simulator to set your division winners and wild cards, which seeds a full October bracket, then choose each pennant winner and your World Series champion. To simulate a single postseason matchup with win probabilities, use the MLB Simulator game tool.</p></details>
+    <details><summary>Can a playoff simulator predict the World Series winner?</summary><p>It can project one. A simulator estimates likely outcomes based on team strength, pitching, and matchups, but October baseball is volatile and upsets are common. Treat the projected champion as a strong opinion to test, not a guarantee.</p></details>
+    <details><summary>Is the MLB playoff simulator free?</summary><p>Yes. Building and locking your bracket is completely free with a TrustMyRecord account, and your locked postseason calls go on your public, graded record.</p></details>
+  </section>
+  <section class="cl-cluster" aria-label="Related TrustMyRecord pages">
+    <h2>Explore the MLB Simulator Cluster</h2>
+    <div class="lk">
+      <a href="/mlb-simulator/"><span>&rsaquo;</span>MLB Simulator (run a single game)</a>
+      <a href="/mlb-season-simulator/"><span>&rsaquo;</span>MLB Season Simulator (lock the whole season)</a>
+      <a href="/mlb-playoff-simulator/"><span>&rsaquo;</span>MLB Playoff Simulator (build the bracket)</a>
+      <a href="/mlb-game-simulator/"><span>&rsaquo;</span>MLB Game Simulator (matchup tool)</a>
+      <a href="/mlb-simulation-predictions/"><span>&rsaquo;</span>MLB Simulation Predictions (how to read output)</a>
+      <a href="/mlb-predictions-simulator/"><span>&rsaquo;</span>MLB Predictions Simulator</a>
+      <a href="/leaderboard/"><span>&rsaquo;</span>Verified Leaderboard</a>
+      <a href="/handicappers/"><span>&rsaquo;</span>Verified Handicappers</a>
+      <a href="/stats/"><span>&rsaquo;</span>Stats Hub</a>
+      <a href="/tools/"><span>&rsaquo;</span>All TrustMyRecord Tools</a>
+      <a href="/contests/justbet-mlb/"><span>&rsaquo;</span>JustBet MLB Contest</a>
+    </div>
+  </section>
+</main>
+</body>
+</html>
