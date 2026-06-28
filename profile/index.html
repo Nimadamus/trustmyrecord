@@ -7452,7 +7452,7 @@
                 return sideMap[a].order - sideMap[b].order;
             }).forEach(function(lbl) {
                 const agg = tmrxAggregatePicks(sideMap[lbl].picks);
-                bodyRows += '<tr class="tmrx-drill-side"><td class="name">↳ ' + escapeHtml(lbl) + '</td>' + statCells(agg) + '</tr>';
+                bodyRows += '<tr class="tmrx-drill-side"><td class="name">' + escapeHtml(lbl) + '</td>' + statCells(agg) + '</tr>';
             });
         });
 
@@ -13676,7 +13676,64 @@
   }
   body.profile-page .tmrx-drill-table tbody tr.tmrx-drill-sport td.name { font-weight: 900; color: #f1f5fb; }
   body.profile-page .tmrx-drill-table tbody tr.tmrx-drill-side td { color: #aebbcf; }
-  body.profile-page .tmrx-drill-table tbody tr.tmrx-drill-side td.name { padding-left: 26px; font-weight: 600; }
+  /* DRILL_SIDE_HIERARCHY_20260627: indent the Favorite/Underdog/Over/Under
+     sub-rows with clean spacing + a subtle accent rule instead of a "↳" glyph. */
+  body.profile-page .tmrx-drill-table tbody tr.tmrx-drill-side td.name {
+    padding-left: 30px;
+    font-weight: 600;
+    position: relative;
+  }
+  body.profile-page .tmrx-drill-table tbody tr.tmrx-drill-side td.name::before {
+    content: "";
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    width: 8px;
+    height: 1px;
+    background: rgba(148, 163, 184, .5);
+    transform: translateY(-50%);
+  }
+
+  /* MARKET_TABLE_FIT_20260627: the 6-7 column split tables (market type, sport,
+     unit size, odds bucket, fav/dog, day-of-week) and the drill breakdown do NOT
+     need the wide Public-Ledger min-width:920px. That min-width forced horizontal
+     scroll inside the card, clipping the right edge and jamming the ROI column
+     against the scroll wall. Let these tables fit the card cleanly; the shell
+     still scrolls if a narrow viewport needs it (mobile preserved). */
+  body.profile-page.tmr-social-profile #tmrxTableMarket,
+  body.profile-page.tmr-social-profile #tmrxTableMarketTop,
+  body.profile-page.tmr-social-profile #tmrxTableSport,
+  body.profile-page.tmr-social-profile #tmrxTableSportTop,
+  body.profile-page.tmr-social-profile #tmrxTableUnitSize,
+  body.profile-page.tmr-social-profile #tmrxTableUnitSizeTop,
+  body.profile-page.tmr-social-profile #tmrxTableOddsBucket,
+  body.profile-page.tmr-social-profile #tmrxTableOddsBucketTop,
+  body.profile-page.tmr-social-profile #tmrxTableFavDog,
+  body.profile-page.tmr-social-profile #tmrxTableFavDogTop,
+  body.profile-page.tmr-social-profile #tmrxTableDow,
+  body.profile-page.tmr-social-profile #tmrxTableDowTop,
+  body.profile-page.tmr-social-profile .tmrx-drill-table {
+    min-width: 0 !important;
+    width: 100% !important;
+    table-layout: auto !important;
+  }
+  @media (max-width: 640px) {
+    body.profile-page.tmr-social-profile #tmrxTableMarket,
+    body.profile-page.tmr-social-profile #tmrxTableMarketTop,
+    body.profile-page.tmr-social-profile #tmrxTableSport,
+    body.profile-page.tmr-social-profile #tmrxTableSportTop,
+    body.profile-page.tmr-social-profile #tmrxTableUnitSize,
+    body.profile-page.tmr-social-profile #tmrxTableUnitSizeTop,
+    body.profile-page.tmr-social-profile #tmrxTableOddsBucket,
+    body.profile-page.tmr-social-profile #tmrxTableOddsBucketTop,
+    body.profile-page.tmr-social-profile #tmrxTableFavDog,
+    body.profile-page.tmr-social-profile #tmrxTableFavDogTop,
+    body.profile-page.tmr-social-profile #tmrxTableDow,
+    body.profile-page.tmr-social-profile #tmrxTableDowTop,
+    body.profile-page.tmr-social-profile .tmrx-drill-table {
+      min-width: 560px !important;
+    }
+  }
 
   /* ===== PUBLIC LEDGER + STAT TABLES: responsive horizontal scroll (May 27, 2026)
      Earlier cascade left .tmrx-table at min-width:1040px while .tmrx-table-shell
