@@ -7043,7 +7043,84 @@
             };
             tbody.innerHTML = rows.map(cellFor).join('');
         };
-        renderSplitTable('tmrxTableSport',      'sport',       splits.by_sport,       { cols: 7, sportLeague: true });
+        // SPORT_GROUPING_20260627: Group "Performance by Sport & League" by
+        // top-level sport first. Soccer (and any multi-league sport) collapses
+        // to ONE parent row whose totals equal the sum of its league children;
+        // clicking it expands an inline league/competition breakdown. No more
+        // split top-level rows like "Soccer / Intl Friendly" + "Soccer Fifa World".
+        const renderSportLeagueTable = (tableId, arr) => {
+            const table = document.getElementById(tableId);
+            if (!table) return;
+            const tbody = table.querySelector('tbody');
+            if (!tbody) return;
+            const buckets = (Array.isArray(arr) ? arr : []).filter(b => Number(b.total || 0) >= 1);
+            if (!buckets.length) return;
+            const groups = {};
+            const order = [];
+            buckets.forEach(b => {
+                const gk = String(b.key || '').toLowerCase().split('_')[0] || 'other';
+                const sl = sportLeagueOf(b.key);
+                if (!groups[gk]) { groups[gk] = { key: gk, sportLabel: sl[0], children: [] }; order.push(gk); }
+                groups[gk].children.push({
+                    key: String(b.key || ''),
+                    leagueLabel: sl[1] && sl[1] !== '—' ? sl[1] : sl[0],
+                    total: Number(b.total) || 0,
+                    wins: Number(b.wins) || 0,
+                    losses: Number(b.losses) || 0,
+                    pushes: Number(b.pushes) || 0,
+                    net: Number(b.net) || 0,
+                    roi: Number(b.roi) || 0,
+                    avgOdds: (b.avg_odds != null && Number.isFinite(Number(b.avg_odds)) && Number(b.avg_odds) !== 0) ? Number(b.avg_odds) : null
+                });
+            });
+            const aggOf = (children) => {
+                let t = 0, w = 0, l = 0, p = 0, net = 0, risked = 0, oddsSum = 0, oddsW = 0;
+                children.forEach(c => {
+                    t += c.total; w += c.wins; l += c.losses; p += c.pushes; net += c.net;
+                    if (c.roi) risked += Math.abs(c.net / (c.roi / 100));
+                    if (c.avgOdds != null) { oddsSum += c.avgOdds * c.total; oddsW += c.total; }
+                });
+                const dec = w + l;
+                return {
+                    total: t, wins: w, losses: l, pushes: p, dec: dec,
+                    winPct: dec > 0 ? (w / dec) * 100 : 0,
+                    net: net,
+                    roi: risked > 0 ? (net / risked) * 100 : 0,
+                    avgOdds: oddsW > 0 ? Math.round(oddsSum / oddsW) : null
+                };
+            };
+            const list = order.map(gk => Object.assign({}, groups[gk], { agg: aggOf(groups[gk].children) }));
+            list.sort((a, b) => b.agg.net - a.agg.net);
+            window.__tmrxSportGroups = {};
+            list.forEach(g => { window.__tmrxSportGroups[g.key] = { sportLabel: g.sportLabel, children: g.children.slice() }; });
+            const rowHtml = (g) => {
+                const a = g.agg;
+                const multi = g.children.length > 1;
+                const winCls = a.dec > 0 ? (a.winPct >= 50 ? 'pos' : 'neg') : 'zero';
+                const netCls = a.net > 0 ? 'pos' : a.net < 0 ? 'neg' : 'zero';
+                const roiCls = a.roi > 0 ? 'pos' : a.roi < 0 ? 'neg' : 'zero';
+                const sportCell = multi
+                    ? '<td class="name"><span class="tmrx-drill-caret" aria-hidden="true">&#9656;</span>' + escapeHtml(g.sportLabel) + '<span class="breakdown-row-indicator">View Breakdown</span></td>'
+                    : '<td class="name">' + escapeHtml(g.sportLabel) + '</td>';
+                const leagueText = multi
+                    ? (g.children.length + ' competitions')
+                    : escapeHtml(g.children[0].leagueLabel);
+                const cells = sportCell +
+                    '<td class="league">' + leagueText + '</td>' +
+                    '<td class="num">' + a.total + '</td>' +
+                    '<td class="num">' + a.wins + '-' + a.losses + (a.pushes ? '-' + a.pushes : '') + '</td>' +
+                    '<td class="num ' + winCls + '">' + (a.dec > 0 ? a.winPct.toFixed(1) + '%' : '&mdash;') + '</td>' +
+                    '<td class="num">' + (a.avgOdds != null ? fmtAmericanOdds(a.avgOdds) : '&mdash;') + '</td>' +
+                    '<td class="num ' + netCls + '">' + fmtSigned(a.net, 'u', 2) + '</td>' +
+                    '<td class="num ' + roiCls + '">' + fmtSigned(a.roi, '%', 2) + '</td>';
+                const attrs = multi
+                    ? ' class="tmrx-sport-drill-row" role="button" tabindex="0" aria-expanded="false" data-sport-group="' + escapeHtml(g.key) + '"'
+                    : ' class="tmrx-sport-row-static" data-sport-group="' + escapeHtml(g.key) + '"';
+                return '<tr' + attrs + '>' + cells + '</tr>';
+            };
+            tbody.innerHTML = list.map(rowHtml).join('');
+        };
+        renderSportLeagueTable('tmrxTableSport', splits.by_sport);
         renderSplitTable('tmrxTableMarket',     'market',      splits.by_market,      { cols: 7, drill: true });
         renderSplitTable('tmrxTableUnitSize',   'unit_size',   splits.by_unit_size,   { cols: 6 });
         renderSplitTable('tmrxTableOddsBucket', 'odds_bucket', splits.by_odds_bucket, { cols: 6 });
@@ -7559,16 +7636,18 @@
             });
         });
         // Performance by Sport — Avg Odds is children[5] (sport + league label cols).
+        // Parent rows are now grouped by top-level sport; match every pick whose
+        // sport_key shares the row's group prefix (e.g. all soccer_* under Soccer).
         ['tmrxTableSport', 'tmrxTableSportTop'].forEach(function(id) {
             const tb = document.querySelector('#' + id + ' tbody');
             if (!tb) return;
-            tb.querySelectorAll('tr.profile-sport-breakdown-row').forEach(function(row) {
+            tb.querySelectorAll('tr.tmrx-sport-drill-row, tr.tmrx-sport-row-static').forEach(function(row) {
                 const cell = row.children && row.children[5]; // sport, league, picks, w-l-p, win%, AVG ODDS, net, roi
-                const key = String(row.getAttribute('data-sport-key') || '').toLowerCase();
-                if (!cell || !key || !isEmpty(cell)) return;
+                const grp = String(row.getAttribute('data-sport-group') || '').toLowerCase();
+                if (!cell || !grp || !isEmpty(cell)) return;
                 fillCell(cell, allLoadedPicks.filter(function(p) {
                     const st = normalizeStatus(p && p.status);
-                    return (st === 'won' || st === 'lost' || st === 'push') && String(p && p.sport_key || '').toLowerCase() === key;
+                    return (st === 'won' || st === 'lost' || st === 'push') && String(p && p.sport_key || '').toLowerCase().split('_')[0] === grp;
                 }));
             });
         });
@@ -7585,6 +7664,92 @@
             if (e.key !== 'Enter' && e.key !== ' ') return;
             const row = e.target.closest && e.target.closest('tr.tmrx-market-drill-row');
             if (row) { e.preventDefault(); tmrxToggleMarketDrilldown(row); }
+        });
+    }
+
+    // ============================================================
+    // SPORT DRILLDOWN — expands a "Performance by Sport & League"
+    // parent (e.g. Soccer) into its league / competition children.
+    // Children data is stashed on window.__tmrxSportGroups at render
+    // time; parent totals already equal the sum of these children.
+    // ============================================================
+    function tmrxBuildSportDrilldownHtml(groupKey) {
+        const fmtSigned = function(n, suffix, dec) {
+            const x = Number(n) || 0;
+            return (x >= 0 ? '+' : '') + x.toFixed(dec != null ? dec : 2) + (suffix || '');
+        };
+        const fmtOdds = function(o) {
+            return (o == null || !Number.isFinite(Number(o)) || Number(o) === 0) ? '—' : (Number(o) > 0 ? '+' : '') + Math.round(Number(o));
+        };
+        const grp = (window.__tmrxSportGroups || {})[groupKey];
+        const children = grp && Array.isArray(grp.children) ? grp.children : [];
+        const sportLabel = (grp && grp.sportLabel) || 'Sport';
+        if (!children.length) {
+            return '<div class="tmrx-drill-panel"><div class="tmrx-drill-empty">No league breakdown available.</div></div>';
+        }
+        const rows = children.slice().sort(function(a, b) { return b.net - a.net; }).map(function(c) {
+            let avg = c.avgOdds;
+            if (avg == null && Array.isArray(allLoadedPicks) && allLoadedPicks.length && typeof tmrxAggregatePicks === 'function') {
+                const mp = allLoadedPicks.filter(function(p) {
+                    const st = normalizeStatus(p && p.status);
+                    return (st === 'won' || st === 'lost' || st === 'push') && String(p && p.sport_key || '').toLowerCase() === String(c.key).toLowerCase();
+                });
+                if (mp.length) { const a = tmrxAggregatePicks(mp); if (a.avgOdds != null) avg = a.avgOdds; }
+            }
+            const dec = c.wins + c.losses;
+            const winPct = dec > 0 ? (c.wins / dec) * 100 : 0;
+            const winCls = dec > 0 ? (winPct >= 50 ? 'pos' : 'neg') : 'zero';
+            const netCls = c.net > 0 ? 'pos' : c.net < 0 ? 'neg' : 'zero';
+            const roiCls = c.roi > 0 ? 'pos' : c.roi < 0 ? 'neg' : 'zero';
+            return '<tr class="tmrx-drill-sport"><td class="name">' + escapeHtml(c.leagueLabel) + '</td>' +
+                '<td class="num">' + c.total + '</td>' +
+                '<td class="num">' + c.wins + '-' + c.losses + (c.pushes ? '-' + c.pushes : '') + '</td>' +
+                '<td class="num ' + winCls + '">' + (dec > 0 ? winPct.toFixed(1) + '%' : '—') + '</td>' +
+                '<td class="num">' + fmtOdds(avg) + '</td>' +
+                '<td class="num ' + netCls + '">' + fmtSigned(c.net, 'u', 2) + '</td>' +
+                '<td class="num ' + roiCls + '">' + fmtSigned(c.roi, '%', 2) + '</td></tr>';
+        }).join('');
+        return '<div class="tmrx-drill-panel">' +
+            '<div class="tmrx-drill-head">' + escapeHtml(sportLabel) + ' — breakdown by league / competition' +
+            ' <span class="tmrx-drill-count">' + children.length + ' competition' + (children.length === 1 ? '' : 's') + '</span></div>' +
+            '<div class="tmrx-table-shell"><table class="tmrx-table tmrx-drill-table">' +
+            '<thead><tr><th>League / Competition</th><th class="num">Picks</th><th class="num">W-L-P</th><th class="num">Win %</th><th class="num">Avg Odds</th><th class="num">Net Units</th><th class="num">ROI</th></tr></thead>' +
+            '<tbody>' + rows + '</tbody></table></div></div>';
+    }
+
+    function tmrxToggleSportDrilldown(row) {
+        if (!row) return;
+        const tbody = row.parentNode;
+        if (!tbody) return;
+        const open = row.classList.contains('tmrx-drill-open');
+        tbody.querySelectorAll('tr.tmrx-drill-open').forEach(function(r) {
+            r.classList.remove('tmrx-drill-open');
+            r.setAttribute('aria-expanded', 'false');
+        });
+        tbody.querySelectorAll('tr.tmrx-drill-expansion').forEach(function(r) { r.remove(); });
+        if (open) return;
+        row.classList.add('tmrx-drill-open');
+        row.setAttribute('aria-expanded', 'true');
+        const exp = document.createElement('tr');
+        exp.className = 'tmrx-drill-expansion';
+        const td = document.createElement('td');
+        td.colSpan = row.children.length;
+        td.innerHTML = tmrxBuildSportDrilldownHtml(row.getAttribute('data-sport-group'));
+        exp.appendChild(td);
+        if (row.nextSibling) tbody.insertBefore(exp, row.nextSibling);
+        else tbody.appendChild(exp);
+    }
+
+    if (!window.__tmrxSportDrillBound) {
+        window.__tmrxSportDrillBound = true;
+        document.addEventListener('click', function(e) {
+            const row = e.target.closest && e.target.closest('tr.tmrx-sport-drill-row');
+            if (row) tmrxToggleSportDrilldown(row);
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key !== 'Enter' && e.key !== ' ') return;
+            const row = e.target.closest && e.target.closest('tr.tmrx-sport-drill-row');
+            if (row) { e.preventDefault(); tmrxToggleSportDrilldown(row); }
         });
     }
 
@@ -13715,8 +13880,10 @@
   }
 
   /* ---- Market-type drilldown (clickable Performance by Market Type rows) ---- */
-  body.profile-page .tmrx-market-drill-row { cursor: pointer; }
-  body.profile-page .tmrx-market-drill-row .tmrx-drill-caret {
+  body.profile-page .tmrx-market-drill-row,
+  body.profile-page .tmrx-sport-drill-row { cursor: pointer; }
+  body.profile-page .tmrx-market-drill-row .tmrx-drill-caret,
+  body.profile-page .tmrx-sport-drill-row .tmrx-drill-caret {
     display: inline-block;
     margin-right: 8px;
     color: #22d3ee;
@@ -13724,8 +13891,10 @@
     transition: transform .18s ease;
     transform: translateY(-1px);
   }
-  body.profile-page .tmrx-market-drill-row.tmrx-drill-open .tmrx-drill-caret { transform: rotate(90deg); }
-  body.profile-page .tmrx-market-drill-row .breakdown-row-indicator {
+  body.profile-page .tmrx-market-drill-row.tmrx-drill-open .tmrx-drill-caret,
+  body.profile-page .tmrx-sport-drill-row.tmrx-drill-open .tmrx-drill-caret { transform: rotate(90deg); }
+  body.profile-page .tmrx-market-drill-row .breakdown-row-indicator,
+  body.profile-page .tmrx-sport-drill-row .breakdown-row-indicator {
     display: block;
     margin-top: 4px;
     color: #8fb3d9;
@@ -13736,7 +13905,9 @@
     white-space: nowrap;
   }
   body.profile-page .tmrx-market-drill-row:hover td,
-  body.profile-page .tmrx-market-drill-row.tmrx-drill-open td {
+  body.profile-page .tmrx-market-drill-row.tmrx-drill-open td,
+  body.profile-page .tmrx-sport-drill-row:hover td,
+  body.profile-page .tmrx-sport-drill-row.tmrx-drill-open td {
     background: rgba(34, 211, 238, .07) !important;
   }
   body.profile-page tr.tmrx-drill-expansion td {
