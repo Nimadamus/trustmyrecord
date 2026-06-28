@@ -7035,7 +7035,7 @@
                 cells.push('<td class="num ' + netCls + '">' + fmtSigned(net, 'u', 2) + '</td>');
                 cells.push('<td class="num ' + roiCls + '">' + fmtSigned(roi, '%', 2) + '</td>');
                 const rowAttrs = opts.sportLeague
-                    ? ' class="profile-sport-breakdown-row" role="link" tabindex="0" data-href="' + escapeHtml(buildProfileSportBreakdownUrl(b.key)) + '" onclick="if(!event.target.closest(\'a\')) window.location.href=this.dataset.href" onkeydown="if((event.key===\'Enter\'||event.key===\' \')&&!event.target.closest(\'a\')){event.preventDefault();window.location.href=this.dataset.href;}"'
+                    ? ' class="profile-sport-breakdown-row" role="link" tabindex="0" data-sport-key="' + escapeHtml(String(b.key || '')) + '" data-href="' + escapeHtml(buildProfileSportBreakdownUrl(b.key)) + '" onclick="if(!event.target.closest(\'a\')) window.location.href=this.dataset.href" onkeydown="if((event.key===\'Enter\'||event.key===\' \')&&!event.target.closest(\'a\')){event.preventDefault();window.location.href=this.dataset.href;}"'
                     : opts.drill
                         ? ' class="tmrx-market-drill-row" role="button" tabindex="0" aria-expanded="false" data-market-key="' + escapeHtml(String(b.key || '')) + '" data-market-label="' + escapeHtml(labelOf('by_' + splitKey, b.key)) + '"'
                         : '';
@@ -7534,23 +7534,42 @@
         if (!Array.isArray(allLoadedPicks) || !allLoadedPicks.length) return;
         if (typeof tmrxMarketKeyMatches !== 'function' || typeof tmrxAggregatePicks !== 'function') return;
         const fmt = function(x) { return (x > 0 ? '+' : '') + Math.round(x); };
+        const isEmpty = function(cell) {
+            if (!cell) return false;
+            const cur = (cell.textContent || '').trim();
+            return cur === '' || cur === '—' || cur === '-';
+        };
+        const fillCell = function(cell, picks) {
+            if (!isEmpty(cell) || !picks.length) return;
+            const a = tmrxAggregatePicks(picks);
+            if (a.avgOdds != null && Number.isFinite(a.avgOdds) && a.avgOdds !== 0) cell.textContent = fmt(a.avgOdds);
+        };
+        // Performance by Market Type — Avg Odds is children[4] (single label col).
         ['tmrxTableMarket', 'tmrxTableMarketTop'].forEach(function(id) {
             const tb = document.querySelector('#' + id + ' tbody');
             if (!tb) return;
             tb.querySelectorAll('tr.tmrx-market-drill-row').forEach(function(row) {
                 const cell = row.children && row.children[4]; // name, picks, w-l-p, win%, AVG ODDS, net, roi
-                if (!cell) return;
-                const cur = (cell.textContent || '').trim();
-                if (cur && cur !== '—' && cur !== '-' && cur !== '—') return; // already has a value
                 const key = row.getAttribute('data-market-key');
-                if (!key) return;
-                const mp = allLoadedPicks.filter(function(p) {
+                if (!cell || !key || !isEmpty(cell)) return;
+                fillCell(cell, allLoadedPicks.filter(function(p) {
                     const st = normalizeStatus(p && p.status);
                     return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, key);
-                });
-                if (!mp.length) return;
-                const a = tmrxAggregatePicks(mp);
-                if (a.avgOdds != null && Number.isFinite(a.avgOdds) && a.avgOdds !== 0) cell.textContent = fmt(a.avgOdds);
+                }));
+            });
+        });
+        // Performance by Sport — Avg Odds is children[5] (sport + league label cols).
+        ['tmrxTableSport', 'tmrxTableSportTop'].forEach(function(id) {
+            const tb = document.querySelector('#' + id + ' tbody');
+            if (!tb) return;
+            tb.querySelectorAll('tr.profile-sport-breakdown-row').forEach(function(row) {
+                const cell = row.children && row.children[5]; // sport, league, picks, w-l-p, win%, AVG ODDS, net, roi
+                const key = String(row.getAttribute('data-sport-key') || '').toLowerCase();
+                if (!cell || !key || !isEmpty(cell)) return;
+                fillCell(cell, allLoadedPicks.filter(function(p) {
+                    const st = normalizeStatus(p && p.status);
+                    return (st === 'won' || st === 'lost' || st === 'push') && String(p && p.sport_key || '').toLowerCase() === key;
+                }));
             });
         });
     }
