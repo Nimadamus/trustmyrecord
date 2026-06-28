@@ -7431,16 +7431,19 @@
             return tmrxAggregatePicks(sportMap[b]).net - tmrxAggregatePicks(sportMap[a]).net;
         });
 
+        // DRILL_DEDUP_20260627: only render breakdown rows that add information.
+        // Split by sport only when >1 sport; split by side only when both sides
+        // exist. A single sport with a single side would just repeat the parent.
+        const multiSport = sportKeys.length > 1;
         let bodyRows = '';
+        let meaningfulRows = 0;
         sportKeys.forEach(function(sk) {
             const sportPicks = sportMap[sk];
             const sportAgg = tmrxAggregatePicks(sportPicks);
             const subtype = tmrxSubtypeLabel(marketKey);
             const sportContext = (subtype && subtype !== 'Full Game') ? subtype : (marketLabel || '');
             const sportTitle = sportName(sk) + (sportContext ? ' · ' + sportContext : '');
-            bodyRows += '<tr class="tmrx-drill-sport"><td class="name">' + escapeHtml(sportTitle) + '</td>' + statCells(sportAgg) + '</tr>';
 
-            // Directional sub-rows within the sport.
             const sideMap = {};
             sportPicks.forEach(function(pk) {
                 const side = tmrxPickSide(pk, marketKey);
@@ -7448,13 +7451,41 @@
                 if (!sideMap[side.label]) sideMap[side.label] = { order: side.order, picks: [] };
                 sideMap[side.label].picks.push(pk);
             });
-            Object.keys(sideMap).sort(function(a, b) {
+            const sideLabels = Object.keys(sideMap).sort(function(a, b) {
                 return sideMap[a].order - sideMap[b].order;
-            }).forEach(function(lbl) {
-                const agg = tmrxAggregatePicks(sideMap[lbl].picks);
-                bodyRows += '<tr class="tmrx-drill-side"><td class="name">' + escapeHtml(lbl) + '</td>' + statCells(agg) + '</tr>';
             });
+            const multiSide = sideLabels.length > 1;
+
+            if (multiSport) {
+                bodyRows += '<tr class="tmrx-drill-sport"><td class="name">' + escapeHtml(sportTitle) + '</td>' + statCells(sportAgg) + '</tr>';
+                meaningfulRows++;
+                if (multiSide) {
+                    sideLabels.forEach(function(lbl) {
+                        const agg = tmrxAggregatePicks(sideMap[lbl].picks);
+                        bodyRows += '<tr class="tmrx-drill-side"><td class="name">' + escapeHtml(lbl) + '</td>' + statCells(agg) + '</tr>';
+                    });
+                }
+            } else if (multiSide) {
+                // Single sport: skip the redundant sport header; the directional
+                // split becomes the primary rows.
+                sideLabels.forEach(function(lbl) {
+                    const agg = tmrxAggregatePicks(sideMap[lbl].picks);
+                    bodyRows += '<tr class="tmrx-drill-sport"><td class="name">' + escapeHtml(lbl) + '</td>' + statCells(agg) + '</tr>';
+                    meaningfulRows++;
+                });
+            }
         });
+
+        if (!meaningfulRows) {
+            // One sport, one side: every row would equal the parent. Explain
+            // instead of repeating identical numbers.
+            const oneSport = sportName(sportKeys[0]);
+            let oneSide = '';
+            graded.some(function(pk) { const s = tmrxPickSide(pk, marketKey); if (s) { oneSide = s.label; return true; } return false; });
+            return '<div class="tmrx-drill-panel"><div class="tmrx-drill-empty">All ' + graded.length +
+                ' graded pick' + (graded.length === 1 ? '' : 's') + ' are ' + escapeHtml(oneSport) +
+                (oneSide ? ' &middot; ' + escapeHtml(oneSide) : '') + ' &mdash; no further breakdown.</div></div>';
+        }
 
         return '<div class="tmrx-drill-panel">' +
             '<div class="tmrx-drill-head">' + escapeHtml(marketLabel || 'Market') + ' — breakdown by sport &amp; ' + escapeHtml(sideHeader) +
