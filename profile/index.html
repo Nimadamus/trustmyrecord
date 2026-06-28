@@ -7270,6 +7270,9 @@
                 if (sBody && dBody) dBody.innerHTML = sBody.innerHTML;
             }
         });
+        // Backfill parent-row Avg Odds now that both tables exist (no-op until
+        // the graded ledger is loaded; re-run from the ledger load callback).
+        try { if (typeof tmrxFillMarketAvgOddsFromPicks === 'function') tmrxFillMarketAvgOddsFromPicks(); } catch (_) {}
         // Period strip mirror
         document.querySelectorAll('#tmrxPeriodStripTop [data-tmrx-period]').forEach(dst => {
             const key = dst.getAttribute('data-tmrx-period');
@@ -7519,6 +7522,39 @@
         if (row.nextSibling) tbody.insertBefore(exp, row.nextSibling);
         else tbody.appendChild(exp);
     }
+
+    // AVG_ODDS_PARENT_BACKFILL_20260627: the Performance by Market Type parent
+    // rows render from the stats summary (which often omits avg_odds) BEFORE the
+    // graded-pick ledger finishes loading, so the render-time fallback can't see
+    // any picks and leaves "—". Once allLoadedPicks is populated, walk every
+    // market parent row in both the main and mirrored ("Top") tables and fill any
+    // "—" Avg Odds cell using the SAME pick math as the drilldown children. Safe
+    // to call repeatedly — it only fills cells that are still empty.
+    function tmrxFillMarketAvgOddsFromPicks() {
+        if (!Array.isArray(allLoadedPicks) || !allLoadedPicks.length) return;
+        if (typeof tmrxMarketKeyMatches !== 'function' || typeof tmrxAggregatePicks !== 'function') return;
+        const fmt = function(x) { return (x > 0 ? '+' : '') + Math.round(x); };
+        ['tmrxTableMarket', 'tmrxTableMarketTop'].forEach(function(id) {
+            const tb = document.querySelector('#' + id + ' tbody');
+            if (!tb) return;
+            tb.querySelectorAll('tr.tmrx-market-drill-row').forEach(function(row) {
+                const cell = row.children && row.children[4]; // name, picks, w-l-p, win%, AVG ODDS, net, roi
+                if (!cell) return;
+                const cur = (cell.textContent || '').trim();
+                if (cur && cur !== '—' && cur !== '-' && cur !== '—') return; // already has a value
+                const key = row.getAttribute('data-market-key');
+                if (!key) return;
+                const mp = allLoadedPicks.filter(function(p) {
+                    const st = normalizeStatus(p && p.status);
+                    return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, key);
+                });
+                if (!mp.length) return;
+                const a = tmrxAggregatePicks(mp);
+                if (a.avgOdds != null && Number.isFinite(a.avgOdds) && a.avgOdds !== 0) cell.textContent = fmt(a.avgOdds);
+            });
+        });
+    }
+    window.tmrxFillMarketAvgOddsFromPicks = tmrxFillMarketAvgOddsFromPicks;
 
     if (!window.__tmrxMarketDrillBound) {
         window.__tmrxMarketDrillBound = true;
@@ -8167,6 +8203,10 @@
 
         picks.sort((a, b) => new Date(b.locked_at || b.created_at || 0) - new Date(a.locked_at || a.created_at || 0));
         allLoadedPicks = picks;
+        // Fill any "—" Avg Odds on the Performance by Market Type parent rows
+        // now that the graded ledger is available (see AVG_ODDS_PARENT_BACKFILL).
+        try { if (typeof tmrxFillMarketAvgOddsFromPicks === 'function') tmrxFillMarketAvgOddsFromPicks(); } catch (_) {}
+        setTimeout(function () { try { tmrxFillMarketAvgOddsFromPicks(); } catch (_) {} }, 1200);
 
         const declaredGraded = getProfileDeclaredGradedCount(profileData);
         if (!pickRequestSucceeded && declaredGraded > 0) {
