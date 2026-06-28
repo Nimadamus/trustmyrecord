@@ -7010,7 +7010,28 @@
                     '<td class="num">' + w + '-' + l + (p ? '-' + p : '') + '</td>',
                     '<td class="num ' + winCls + '">' + (dec > 0 ? winPct.toFixed(1) + '%' : '—') + '</td>',
                 ]);
-                if (cols >= 7) cells.push('<td class="num">' + (b.avg_odds != null ? fmtAmericanOdds(b.avg_odds) : '—') + '</td>');
+                if (cols >= 7) {
+                    // AVG_ODDS_PARENT_FALLBACK_20260627: the backend's by_market
+                    // rows often omit avg_odds, leaving "—" on the parent while the
+                    // expanded breakdown shows a real number. When the field is
+                    // missing, recompute it from the already-loaded graded picks
+                    // using the SAME logic as the drilldown child rows so parent and
+                    // children agree.
+                    let avgOddsVal = (b.avg_odds != null && Number.isFinite(Number(b.avg_odds)) && Number(b.avg_odds) !== 0)
+                        ? Number(b.avg_odds) : null;
+                    if (avgOddsVal == null && opts.drill && Array.isArray(allLoadedPicks)
+                        && typeof tmrxMarketKeyMatches === 'function' && typeof tmrxAggregatePicks === 'function') {
+                        const mp = allLoadedPicks.filter(function(p) {
+                            const st = normalizeStatus(p && p.status);
+                            return (st === 'won' || st === 'lost' || st === 'push') && tmrxMarketKeyMatches(p, b.key);
+                        });
+                        if (mp.length) {
+                            const a = tmrxAggregatePicks(mp);
+                            if (a.avgOdds != null && Number.isFinite(a.avgOdds) && a.avgOdds !== 0) avgOddsVal = a.avgOdds;
+                        }
+                    }
+                    cells.push('<td class="num">' + (avgOddsVal != null ? fmtAmericanOdds(avgOddsVal) : '—') + '</td>');
+                }
                 cells.push('<td class="num ' + netCls + '">' + fmtSigned(net, 'u', 2) + '</td>');
                 cells.push('<td class="num ' + roiCls + '">' + fmtSigned(roi, '%', 2) + '</td>');
                 const rowAttrs = opts.sportLeague
@@ -7415,7 +7436,8 @@
             const sportPicks = sportMap[sk];
             const sportAgg = tmrxAggregatePicks(sportPicks);
             const subtype = tmrxSubtypeLabel(marketKey);
-            const sportTitle = sportName(sk) + (subtype && subtype !== 'Full Game' ? ' · ' + subtype : '');
+            const sportContext = (subtype && subtype !== 'Full Game') ? subtype : (marketLabel || '');
+            const sportTitle = sportName(sk) + (sportContext ? ' · ' + sportContext : '');
             bodyRows += '<tr class="tmrx-drill-sport"><td class="name">' + escapeHtml(sportTitle) + '</td>' + statCells(sportAgg) + '</tr>';
 
             // Directional sub-rows within the sport.
