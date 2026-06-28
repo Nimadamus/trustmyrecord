@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-modern-boxscore-20260628b';
+    var UI_BUILD = 'mlb-simulator-phase4-realism-20260628';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1976,16 +1976,31 @@
     // to in-play outs so on-base/run rates stay anchored. Applied inside
     // evCombine so the anchor and live play see the same distribution.
     var EV_K_TRIM = 0.93;
+    // Walk compression (June 28, 2026 realism pass): the odds-ratio combine is correct
+    // at league average, but for high-OBP real-stat matchups (e.g. LAD/NYY) it
+    // super-compounds — measured 6.3 BB/team/game vs real ~3.3. Pull the COMBINED walk
+    // rate partway back toward league for above-average matchups; league-average pairs
+    // are unchanged (bbRaw ~= league -> bbCal ~= league), so the offline calibration
+    // harness (synthetic average teams) stays byte-stable. Removed walk mass -> outs so
+    // PA accounting and run anchoring are preserved. Re-measure if EV_LEAGUE.bb changes.
+    var EV_BB_COMPRESS = 0.55;
     function evCombine(bv, pv) {
         function orc(b, p, l) { return evFromOdds(evOdds(b) * evOdds(p) / evOdds(l)); }
         var hf = pv && pv.hitFactor != null ? pv.hitFactor : 1;
         var soRaw = orc(bv.so, pv.so, EV_LEAGUE.so);
         var soTrimmed = soRaw * EV_K_TRIM;
+        var bbRaw = orc(bv.bb, pv.bb, EV_LEAGUE.bb);
+        var bbCal = clamp(EV_LEAGUE.bb + (bbRaw - EV_LEAGUE.bb) * EV_BB_COMPRESS, 0.02, 0.155);
+        // Route the removed walk mass to SINGLES, not outs: a compressed-walk patient
+        // lineup still reaches base at a similar clip (single ~= walk in run value), so
+        // run production and the calibrated anchor stay stable while the visible walk
+        // count drops to a realistic level and hit totals firm up.
+        var bbShift = Math.max(0, bbRaw - bbCal);
         return evNormalize({
-            bb: orc(bv.bb, pv.bb, EV_LEAGUE.bb),
+            bb: bbCal,
             so: soTrimmed,
             hr: orc(bv.hr, pv.hr, EV_LEAGUE.hr),
-            b3: bv.b3 * hf, b2: bv.b2 * hf, b1: bv.b1 * hf,
+            b3: bv.b3 * hf, b2: bv.b2 * hf, b1: bv.b1 * hf + bbShift,
             out: Math.max(0.02, bv.out) + (soRaw - soTrimmed)
         });
     }
@@ -2149,7 +2164,7 @@
             starterOuts: starterOuts, roster: roster, hasNamedLineup: !!(roster && roster.players && roster.players.length),
             // Error-rate calibration (June 4, 2026 vs real MLB 2025): engine ran
             // 0.31 errors/team vs real 0.504 — reach-on-error base raised to match.
-            errRate: clamp(0.027 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.012, 0.05),
+            errRate: clamp(0.034 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.016, 0.055),
             parkHr: parkHr || 1, stealRate: 0.10, stealSuccess: 0.78, sb: 0, cs: 0
         };
     }
@@ -2347,7 +2362,11 @@
             // real per-start mean (mean-preserving). Pitching changes happen at inning
             // boundaries, so realized outings quantize to whole innings (4-8 IP range,
             // like real starters); bullpen share stays anchored on average.
-            s.starterOutsGame = clamp(s.starterOuts + Math.round((random() * 2 - 1) * 8), 8, 25);
+            // STARTER_IP_VARIANCE_20260628: triangular (mean of two uniforms) so per-game
+            // length clusters near the starter's real average (real start IP SD ~1.5),
+            // instead of the old flat +/-8-out swing that produced too many 3-IP and
+            // 8-IP outings. Mean-preserving; floor lifted off 8 so quick hooks stay rare.
+            s.starterOutsGame = clamp(s.starterOuts + Math.round((random() + random() - 1) * 6), 9, 24);
             s.lineup.forEach(function (b) { b.acc = evNewBat(); });
             s.pitchers.forEach(function (p) { p.acc = evNewPit(); });
         });
