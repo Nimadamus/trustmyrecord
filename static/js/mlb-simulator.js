@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-bullpen-panel-20260628';
+    var UI_BUILD = 'mlb-simulator-modern-boxscore-20260628';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3598,7 +3598,9 @@
     }
     function boxRow(line, winnerId, totalInnings) {
         var isWinner = line.team.id === winnerId;
-        return '<tr class="' + (isWinner ? 'winner-row' : '') + '"><th scope="row">' + escapeHtml(line.team.abbreviation) + '</th>' +
+        var teamCell = '<span class="line-score-team">' + logoMarkup(line.team, 'line-score-logo') +
+            '<span class="ls-abbr">' + escapeHtml(line.team.abbreviation) + '</span></span>';
+        return '<tr class="' + (isWinner ? 'winner-row' : '') + '"><th scope="row">' + teamCell + '</th>' +
             inningCells(line, totalInnings).map(function (runs) { return '<td>' + runs + '</td>'; }).join('') +
             '<td class="total-runs">' + line.runs + '</td><td>' + line.hits + '</td><td>' + line.errors + '</td></tr>';
     }
@@ -3638,7 +3640,8 @@
         var body = rows.map(function (row, index) {
             totals.h += row.h; totals.r += row.r; totals.er += row.er; totals.bb += row.bb; totals.so += row.so; totals.hr += row.hr; totals.outs += Number(row.outs || 0);
             var ps = pitcherPcSt(row); totals.pc += ps.pc; totals.st += ps.st;
-            var name = escapeHtml(row.name) + (decisions[index] ? ' <span class="bx-dec">(' + escapeHtml(decisions[index]) + ')</span>' : '');
+            var decClass = decisions[index] ? ' bx-dec-' + String(decisions[index]).replace(/[^A-Za-z]/g, '').toUpperCase() : '';
+            var name = escapeHtml(row.name) + (decisions[index] ? ' <span class="bx-dec' + decClass + '">' + escapeHtml(decisions[index]) + '</span>' : '');
             return '<tr><th scope="row">' + name + '</th><td>' + escapeHtml(row.ip) + '</td><td>' + row.h + '</td><td>' + row.r + '</td><td>' + row.er + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + row.hr + '</td><td>' + gameEra(row) + '</td><td>' + ps.pc + '-' + ps.st + '</td></tr>';
         }).join('');
         body += '<tr class="totals-row"><th scope="row">Totals</th><td>' + outsToIp(totals.outs) + '</td><td>' + totals.h + '</td><td>' + totals.r + '</td><td>' + totals.er + '</td><td>' + totals.bb + '</td><td>' + totals.so + '</td><td>' + totals.hr + '</td><td></td><td>' + totals.pc + '-' + totals.st + '</td></tr>';
@@ -3782,7 +3785,7 @@
         var totalInnings = boxColumnCount(box);
         function sbRow(line, won) {
             return '<tr class="sb-row' + (won ? ' sb-winner' : '') + '">' +
-                '<th scope="row" class="sb-team"><strong>' + escapeHtml(line.team.abbreviation) + '</strong><span>' + escapeHtml(line.team.name) + '</span></th>' +
+                '<th scope="row" class="sb-team">' + logoMarkup(line.team, 'sb-logo') + '<span class="sb-team-text"><strong>' + escapeHtml(line.team.abbreviation) + '</strong><span>' + escapeHtml(line.team.name) + '</span></span></th>' +
                 inningCells(line, totalInnings).map(function (runs) { return '<td class="sb-inning">' + runs + '</td>'; }).join('') +
                 '<td class="sb-total sb-runs">' + line.runs + '</td>' +
                 '<td class="sb-total">' + line.hits + '</td>' +
@@ -3814,7 +3817,8 @@
         card.setAttribute('data-state', 'final');
         function teamCard(side, line, won) {
             return '<div class="box-score-team-card ' + side + (won ? ' winner' : '') + '">' +
-                '<div><strong>' + escapeHtml(line.team.abbreviation) + '</strong>' +
+                logoMarkup(line.team, 'scoreboard-logo') +
+                '<div><strong>' + escapeHtml(line.team.abbreviation) + (won ? ' <span class="bx-win-dot" title="Winner">▸</span>' : '') + '</strong>' +
                 '<span>' + escapeHtml(line.team.name) + '</span>' +
                 '<small>' + line.hits + ' H / ' + line.errors + ' E</small></div></div>';
         }
