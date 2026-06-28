@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-data-updated-stamp-20260628';
+    var UI_BUILD = 'mlb-simulator-bullpen-panel-20260628';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -60,37 +60,42 @@
         ['classic-2023-tex', '2023 Texas Rangers', 'TEX', 2023, 115, 101, 102, 99, 1.08]
     ];
 
+    // EMERGENCY FALLBACK ONLY. Regenerated from the live MLB Stats API active
+    // rosters + real 2026 season pitching stats on 2026-06-28. This is shown ONLY
+    // when a team's live active-roster feed fails to load; when used, the UI flags
+    // it as an emergency profile and the reason is logged (see currentPitchersForTeam).
+    // Never treated as authoritative current data: live roster always overrides.
     var CURRENT_PITCHERS = {
-        ARI: [['gallen', 'Zac Gallen', 112, 3.45], ['rodriguez', 'Eduardo Rodriguez', 102, 4.05], ['soroka', 'Michael Soroka', 100, 4.15], ['kelly', 'Merrill Kelly', 106, 3.75], ['nelson', 'Ryne Nelson', 100, 4.15]],
-        ATL: [['sale', 'Chris Sale', 116, 3.25], ['strider', 'Spencer Strider', 115, 3.30], ['elder', 'Bryce Elder', 101, 4.10], ['holmes', 'Grant Holmes', 98, 4.30], ['ritchie', 'JR Ritchie', 96, 4.45]],
-        BAL: [['rogers', 'Trevor Rogers', 102, 4.05], ['bradish', 'Kyle Bradish', 108, 3.70], ['baz', 'Shane Baz', 106, 3.80], ['bassitt', 'Chris Bassitt', 104, 3.95], ['kremer', 'Dean Kremer', 100, 4.20]],
-        BOS: [['crochet', 'Garrett Crochet', 114, 3.35], ['gray', 'Sonny Gray', 109, 3.60], ['suarez', 'Ranger Suarez', 108, 3.65], ['early', 'Connelly Early', 95, 4.50], ['bello', 'Brayan Bello', 102, 4.05]],
-        CHC: [['imanaga', 'Shota Imanaga', 110, 3.55], ['cabrera', 'Edward Cabrera', 102, 4.05], ['taillon', 'Jameson Taillon', 100, 4.20], ['rea', 'Colin Rea', 97, 4.35], ['wicks', 'Jordan Wicks', 96, 4.45]],
-        CWS: [['burke', 'Sean Burke', 96, 4.45], ['fedde', 'Erick Fedde', 101, 4.10], ['kay', 'Anthony Kay', 92, 4.75], ['martin', 'Davis Martin', 94, 4.60], ['schultz', 'Noah Schultz', 98, 4.30]],
-        CIN: [['lodolo', 'Nick Lodolo', 106, 3.80], ['abbott', 'Andrew Abbott', 103, 4.00], ['singer', 'Brady Singer', 100, 4.20], ['burns', 'Chase Burns', 101, 4.10], ['lowder', 'Rhett Lowder', 98, 4.30]],
-        CLE: [['bibee', 'Tanner Bibee', 108, 3.65], ['cantillo', 'Joey Cantillo', 96, 4.45], ['cecconi', 'Slade Cecconi', 95, 4.50], ['messick', 'Parker Messick', 97, 4.35], ['williams', 'Gavin Williams', 104, 3.95]],
-        COL: [['freeland', 'Kyle Freeland', 96, 4.45], ['lorenzen', 'Michael Lorenzen', 97, 4.35], ['quintana', 'Jose Quintana', 98, 4.30], ['sugano', 'Tomoyuki Sugano', 100, 4.20], ['feltner', 'Ryan Feltner', 96, 4.45]],
-        DET: [['skubal', 'Tarik Skubal', 118, 3.15], ['valdez', 'Framber Valdez', 112, 3.45], ['flaherty', 'Jack Flaherty', 108, 3.65], ['mize', 'Casey Mize', 101, 4.10], ['verlander', 'Justin Verlander', 104, 3.95]],
-        HOU: [['brown', 'Hunter Brown', 110, 3.55], ['imai', 'Tatsuya Imai', 104, 3.95], ['burrows', 'Mike Burrows', 94, 4.60], ['javier', 'Cristian Javier', 106, 3.80], ['mccullers', 'Lance McCullers Jr.', 102, 4.05]],
-        KC: [['bubic', 'Kris Bubic', 101, 4.10], ['cameron', 'Noah Cameron', 97, 4.35], ['lugo', 'Seth Lugo', 109, 3.60], ['ragans', 'Cole Ragans', 113, 3.40], ['wacha', 'Michael Wacha', 103, 4.00]],
-        LAA: [['soriano', 'Jose Soriano', 101, 4.10], ['detmers', 'Reid Detmers', 100, 4.20], ['grayson-rodriguez', 'Grayson Rodriguez', 106, 3.80], ['kochanowicz', 'Jack Kochanowicz', 96, 4.45], ['ryan-johnson', 'Ryan Johnson', 94, 4.60]],
-        LAD: [['yamamoto', 'Yoshinobu Yamamoto', 114, 3.35], ['ohtani', 'Shohei Ohtani', 116, 3.25], ['snell', 'Blake Snell', 112, 3.45], ['glasnow', 'Tyler Glasnow', 113, 3.40], ['sheehan', 'Emmet Sheehan', 101, 4.10]],
-        MIA: [['alcantara', 'Sandy Alcantara', 110, 3.55], ['perez', 'Eury Perez', 107, 3.70], ['meyer', 'Max Meyer', 101, 4.10], ['junk', 'Janson Junk', 94, 4.60], ['snelling', 'Robby Snelling', 98, 4.30]],
-        MIL: [['misiorowski', 'Jacob Misiorowski', 104, 3.95], ['woodruff', 'Brandon Woodruff', 108, 3.65], ['harrison', 'Kyle Harrison', 99, 4.25], ['priester', 'Quinn Priester', 98, 4.30], ['patrick', 'Chad Patrick', 96, 4.45]],
-        MIN: [['ryan', 'Joe Ryan', 108, 3.65], ['ober', 'Bailey Ober', 105, 3.90], ['bradley', 'Taj Bradley', 101, 4.10], ['woods-richardson', 'Simeon Woods Richardson', 99, 4.25], ['abel', 'Mick Abel', 97, 4.35]],
-        NYM: [['peralta', 'Freddy Peralta', 109, 3.60], ['mclean', 'Nolan McLean', 98, 4.30], ['holmes', 'Clay Holmes', 101, 4.10], ['peterson', 'David Peterson', 103, 4.00], ['senga', 'Kodai Senga', 108, 3.65]],
-        NYY: [['fried', 'Max Fried', 114, 3.35], ['cole', 'Gerrit Cole', 113, 3.40], ['rodon', 'Carlos Rodon', 107, 3.70], ['schlittler', 'Cam Schlittler', 96, 4.45], ['weathers', 'Ryan Weathers', 99, 4.25]],
-        ATH: [['civale', 'Aaron Civale', 100, 4.20], ['ginn', 'J.T. Ginn', 95, 4.50], ['lopez', 'Jacob Lopez', 97, 4.35], ['severino', 'Luis Severino', 103, 4.00], ['springs', 'Jeffrey Springs', 104, 3.95]],
-        PHI: [['luzardo', 'Jesus Luzardo', 107, 3.70], ['nola', 'Aaron Nola', 110, 3.55], ['painter', 'Andrew Painter', 103, 4.00], ['sanchez', 'Cristopher Sanchez', 109, 3.60], ['wheeler', 'Zack Wheeler', 116, 3.25]],
-        PIT: [['skenes', 'Paul Skenes', 118, 3.15], ['keller', 'Mitch Keller', 102, 4.05], ['jones', 'Jared Jones', 104, 3.95], ['ashcraft', 'Braxton Ashcraft', 96, 4.45], ['chandler', 'Bubba Chandler', 99, 4.25]],
-        SD: [['pivetta', 'Nick Pivetta', 104, 3.95], ['king', 'Michael King', 110, 3.55], ['musgrove', 'Joe Musgrove', 106, 3.80], ['vasquez', 'Randy Vasquez', 95, 4.50], ['giolito', 'Lucas Giolito', 100, 4.20]],
-        SF: [['webb', 'Logan Webb', 113, 3.40], ['ray', 'Robbie Ray', 104, 3.95], ['roupp', 'Landen Roupp', 96, 4.45], ['mahle', 'Tyler Mahle', 102, 4.05], ['houser', 'Adrian Houser', 98, 4.30]],
-        SEA: [['gilbert', 'Logan Gilbert', 111, 3.50], ['kirby', 'George Kirby', 112, 3.45], ['woo', 'Bryan Woo', 108, 3.65], ['castillo', 'Luis Castillo', 110, 3.55], ['miller', 'Bryce Miller', 106, 3.80]],
-        STL: [['leahy', 'Kyle Leahy', 94, 4.60], ['liberatore', 'Matthew Liberatore', 98, 4.30], ['may', 'Dustin May', 103, 4.00], ['mcgreevy', 'Michael McGreevy', 96, 4.45], ['pallante', 'Andre Pallante', 97, 4.35]],
-        TB: [['rasmussen', 'Drew Rasmussen', 108, 3.65], ['mcclanahan', 'Shane McClanahan', 114, 3.35], ['matz', 'Steven Matz', 98, 4.30], ['martinez', 'Nick Martinez', 101, 4.10], ['boyle', 'Joe Boyle', 96, 4.45]],
-        TEX: [['degrom', 'Jacob deGrom', 118, 3.15], ['eovaldi', 'Nathan Eovaldi', 106, 3.80], ['gore', 'MacKenzie Gore', 105, 3.90], ['leiter', 'Jack Leiter', 98, 4.30], ['rocker', 'Kumar Rocker', 99, 4.25]],
-        TOR: [['gausman', 'Kevin Gausman', 109, 3.60], ['cease', 'Dylan Cease', 110, 3.55], ['bieber', 'Shane Bieber', 108, 3.65], ['yesavage', 'Trey Yesavage', 98, 4.30], ['scherzer', 'Max Scherzer', 105, 3.90]],
-        WSH: [['cavalli', 'Cade Cavalli', 97, 4.35], ['griffin', 'Foster Griffin', 94, 4.60], ['irvin', 'Jake Irvin', 100, 4.20], ['littell', 'Zack Littell', 98, 4.30], ['mikolas', 'Miles Mikolas', 99, 4.25]]
+        ARI: [['gallen', "Zac Gallen", 78, 6.15], ['rodriguez', "Eduardo Rodriguez", 124, 2.27], ['kelly', "Merrill Kelly", 82, 5.84], ['cabrera', "Jose Cabrera", 108, 3.6], ['clarke', "Taylor Clarke", 127, 2.04]],
+        ATH: [['springs', "Jeffrey Springs", 85, 5.52], ['ginn', "J.T. Ginn", 114, 3.15], ['civale', "Aaron Civale", 91, 5.05], ['jump', "Gage Jump", 127, 2.04], ['perkins', "Jack Perkins", 80, 6]],
+        ATL: [['elder', "Bryce Elder", 103, 4.01], ['sale', "Chris Sale", 127, 2.05], ['holmes', "Grant Holmes", 104, 3.96], ['perez', "Martín Pérez", 116, 3], ['lopez', "Reynaldo López", 110, 3.47]],
+        BAL: [['bradish', "Kyle Bradish", 106, 3.77], ['baz', "Shane Baz", 100, 4.31], ['rogers', "Trevor Rogers", 92, 4.99], ['young', "Brandon Young", 114, 3.11], ['gibson', "Trey Gibson", 84, 5.64]],
+        BOS: [['early', "Connelly Early", 109, 3.59], ['suarez', "Ranger Suarez", 118, 2.83], ['gray', "Sonny Gray", 116, 2.95], ['tolle', "Payton Tolle", 118, 2.78], ['bennett', "Jake Bennett", 112, 3.27]],
+        CHC: [['imanaga', "Shota Imanaga", 99, 4.4], ['rea', "Colin Rea", 94, 4.8], ['peterson', "David Peterson", 81, 5.86], ['assad', "Javier Assad", 103, 4.04], ['boyd', "Matthew Boyd", 91, 5.02]],
+        CIN: [['abbott', "Andrew Abbott", 105, 3.9], ['burns', "Chase Burns", 123, 2.36], ['singer', "Brady Singer", 90, 5.12], ['lowder', "Rhett Lowder", 94, 4.81], ['lodolo', "Nick Lodolo", 85, 5.59]],
+        CLE: [['williams', "Gavin Williams", 106, 3.81], ['bibee', "Tanner Bibee", 106, 3.78], ['cecconi', "Slade Cecconi", 101, 4.18], ['cantillo', "Joey Cantillo", 105, 3.87], ['messick', "Parker Messick", 120, 2.67]],
+        COL: [['lorenzen', "Michael Lorenzen", 78, 6.83], ['sugano', "Tomoyuki Sugano", 94, 4.8], ['freeland', "Kyle Freeland", 78, 7.5], ['feltner', "Ryan Feltner", 99, 4.42], ['herget', "Jimmy Herget", 103, 4.05]],
+        CWS: [['martin', "Davis Martin", 116, 3], ['kay', "Anthony Kay", 98, 4.5], ['burke', "Sean Burke", 107, 3.71], ['fedde', "Erick Fedde", 100, 4.34], ['hudson', "Bryan Hudson", 126, 2.13]],
+        DET: [['valdez', "Framber Valdez", 103, 4.05], ['flaherty', "Jack Flaherty", 92, 4.97], ['montero', "Keider Montero", 111, 3.39], ['mize', "Casey Mize", 116, 2.95], ['skubal', "Tarik Skubal", 112, 3.32]],
+        HOU: [['burrows', "Mike Burrows", 86, 5.48], ['arrighetti', "Spencer Arrighetti", 104, 4], ['lambert', "Peter Lambert", 112, 3.28], ['imai', "Tatsuya Imai", 87, 5.36], ['brown', "Hunter Brown", 130, 1.78]],
+        KC: [['wacha', "Michael Wacha", 112, 3.31], ['lugo', "Seth Lugo", 101, 4.18], ['cameron', "Noah Cameron", 98, 4.5], ['avila', "Luinder Avila", 87, 5.4], ['cruz', "Steven Cruz", 83, 5.68]],
+        LAA: [['detmers', "Reid Detmers", 105, 3.88], ['soriano', "José Soriano", 112, 3.32], ['urena', "Walbert Ureña", 114, 3.14], ['aldegheri', "Sam Aldegheri", 93, 4.85], ['johnson', "Ryan Johnson", 78, 8.84]],
+        LAD: [['yamamoto', "Yoshinobu Yamamoto", 120, 2.67], ['sheehan', "Emmet Sheehan", 91, 5.09], ['sasaki', "Roki Sasaki", 93, 4.88], ['wrobleski', "Justin Wrobleski", 119, 2.71], ['lauer', "Eric Lauer", 93, 4.87]],
+        MIA: [['alcantara', "Sandy Alcantara", 103, 4.01], ['meyer', "Max Meyer", 120, 2.6], ['perez', "Eury Pérez", 99, 4.41], ['phillips', "Tyler Phillips", 115, 3.02], ['gusto', "Ryan Gusto", 91, 5.06]],
+        MIL: [['misiorowski', "Jacob Misiorowski", 130, 1.45], ['harrison', "Kyle Harrison", 121, 2.57], ['sproat', "Brandon Sproat", 86, 5.43], ['woodruff', "Brandon Woodruff", 121, 2.59], ['patrick', "Chad Patrick", 105, 3.9]],
+        MIN: [['ryan', "Joe Ryan", 113, 3.18], ['bradley', "Taj Bradley", 104, 3.98], ['prielipp', "Connor Prielipp", 92, 4.96], ['matthews', "Zebby Matthews", 97, 4.56], ['paredes', "Mike Paredes", 100, 4.26]],
+        NYM: [['peralta', "Freddy Peralta", 97, 4.53], ['mclean', "Nolan McLean", 103, 4.03], ['scott', "Christian Scott", 113, 3.2], ['senga', "Kodai Senga", 78, 9.09], ['brazoban', "Huascar Brazobán", 128, 1.94]],
+        NYY: [['schlittler', "Cam Schlittler", 130, 1.62], ['warren', "Will Warren", 107, 3.75], ['weathers', "Ryan Weathers", 104, 3.95], ['rodon', "Carlos Rodón", 107, 3.7], ['cole', "Gerrit Cole", 103, 4.06]],
+        PHI: [['sanchez', "Cristopher Sánchez", 126, 2.13], ['luzardo', "Jesús Luzardo", 105, 3.88], ['nola', "Aaron Nola", 85, 5.58], ['wheeler', "Zack Wheeler", 127, 2.03], ['mayza', "Tim Mayza", 116, 2.95]],
+        PIT: [['keller', "Mitch Keller", 93, 4.87], ['skenes', "Paul Skenes", 114, 3.1], ['ashcraft', "Braxton Ashcraft", 115, 3.07], ['chandler', "Bubba Chandler", 99, 4.42], ['mlodzinski', "Carmen Mlodzinski", 110, 3.47]],
+        SD: [['king', "Michael King", 112, 3.32], ['buehler', "Walker Buehler", 106, 3.81], ['vasquez', "Randy Vásquez", 97, 4.56], ['canning', "Griffin Canning", 78, 7.38], ['peralta', "Wandy Peralta", 130, 1.77]],
+        SEA: [['gilbert', "Logan Gilbert", 111, 3.42], ['kirby', "George Kirby", 104, 3.94], ['woo', "Bryan Woo", 100, 4.26], ['hancock', "Emerson Hancock", 110, 3.47], ['castillo', "Luis Castillo", 92, 4.93]],
+        SF: [['ray', "Robbie Ray", 110, 3.5], ['roupp', "Landen Roupp", 103, 4.07], ['webb', "Logan Webb", 115, 3.09], ['houser', "Adrian Houser", 85, 5.53], ['mahle', "Tyler Mahle", 86, 5.49]],
+        STL: [['pallante', "Andre Pallante", 106, 3.83], ['mcgreevy', "Michael McGreevy", 114, 3.12], ['leahy', "Kyle Leahy", 103, 4.09], ['liberatore', "Matthew Liberatore", 85, 5.56], ['may', "Dustin May", 100, 4.3]],
+        TB: [['martinez', "Nick Martinez", 120, 2.66], ['rasmussen', "Drew Rasmussen", 122, 2.45], ['mcclanahan', "Shane McClanahan", 112, 3.3], ['jax', "Griffin Jax", 112, 3.33], ['seymour', "Ian Seymour", 100, 4.32]],
+        TEX: [['gore', "MacKenzie Gore", 103, 4.05], ['eovaldi', "Nathan Eovaldi", 104, 3.95], ['degrom', "Jacob deGrom", 109, 3.55], ['rocker', "Kumar Rocker", 106, 3.83], ['quantrill', "Cal Quantrill", 112, 3.31]],
+        TOR: [['gausman', "Kevin Gausman", 99, 4.36], ['cease', "Dylan Cease", 115, 3.02], ['corbin', "Patrick Corbin", 91, 5.09], ['yesavage', "Trey Yesavage", 109, 3.56], ['fisher', "Braydon Fisher", 110, 3.48]],
+        WSH: [['griffin', "Foster Griffin", 116, 2.93], ['cavalli', "Cade Cavalli", 104, 4], ['littell', "Zack Littell", 88, 5.29], ['poulin', "PJ Poulin", 117, 2.88], ['mikolas', "Miles Mikolas", 89, 5.24]]
     };
 
     var HISTORICAL_PITCHERS = {
@@ -1207,6 +1212,9 @@
             return 0;
         });
         if (!rosterRows.length && !options.length && curatedPitchers.length) {
+            try { console.warn('[mlb-simulator] EMERGENCY FALLBACK: live active-roster feed unavailable for ' + (team && team.abbreviation) + '; showing static emergency pitcher profiles (regenerated 2026-06-28, may be outdated).'); } catch (e) {}
+            state.usedEmergencyPitcherFallback = state.usedEmergencyPitcherFallback || {};
+            if (team) state.usedEmergencyPitcherFallback[team.abbreviation] = true;
             return curatedPitchers.map(function (row) {
                 return {
                     id: pitcherId(side, team.id + '-' + row[0]),
@@ -1214,9 +1222,10 @@
                     quality: row[2],
                     era: row[3],
                     eraVerified: false,
-                    source: 'Current simulator starter profile',
+                    source: 'Emergency fallback profile (live roster unavailable)',
                     verified: false,
-                    note: 'Baseline current-team starter profile; active roster feed unavailable'
+                    emergencyFallback: true,
+                    note: 'EMERGENCY fallback: the live MLB active-roster feed did not load, so this is a static profile (regenerated 2026-06-28) and may be outdated. Not confirmed current.'
                 };
             });
         }
@@ -4009,6 +4018,105 @@
             '<div class="mvm-foot">' + escapeHtml(m.book) + ' no-vig moneyline snapshot. Simulation estimate only; no wager is implied or recommended.</div>';
     }
 
+    function isPitcherPosition(pos) {
+        return /^(P|SP|RP|CP)$|Relief|Pitcher/i.test(String(pos || ''));
+    }
+    function handLabel(mlbId) {
+        var h = pitchHandOf(mlbId);
+        return h === 'L' ? 'LHP' : h === 'R' ? 'RHP' : 'P';
+    }
+    function bullpenPitcherInfo(p, probableNorm) {
+        var stat = p.mlbId ? cachedPlayerStat(p.mlbId, 'pitching') : null;
+        var gs = stat ? Number(stat.gamesStarted || 0) : 0;
+        var g = stat ? Number(stat.gamesPitched || stat.gamesPlayed || 0) : 0;
+        var era = stat && stat.era != null && stat.era !== '-.--' ? Number(stat.era) : null;
+        var sv = stat ? Number(stat.saves || 0) : 0;
+        var rec = stat ? (Number(stat.wins || 0) + '-' + Number(stat.losses || 0)) : null;
+        var isProbable = probableNorm && normalizeName(p.name) === probableNorm;
+        // Role is INFERRED from games started (the active-roster feed has no role data).
+        var role = isProbable || (stat && gs >= 3 && (g === 0 || gs / g >= 0.5)) ? 'rotation' : 'bullpen';
+        return { name: p.name, hand: handLabel(p.mlbId), gs: gs, g: g, era: era, sv: sv, rec: rec, role: role, hasStat: !!stat, isProbable: isProbable };
+    }
+    function bullpenStatLine(i) {
+        var bits = [];
+        if (Number.isFinite(i.era)) bits.push('ERA ' + i.era.toFixed(2));
+        if (i.rec) bits.push(i.rec);
+        if (i.sv > 0) bits.push(i.sv + ' SV');
+        if (i.g > 0) bits.push(i.g + ' G' + (i.gs > 0 ? '/' + i.gs + ' GS' : ''));
+        return bits.length ? bits.join(' · ') : 'No 2026 stats loaded';
+    }
+    function renderBullpenForTeam(team) {
+        var head = '<div class="bullpen-team"><h3 style="margin:0 0 6px;">' + escapeHtml(team ? team.name : 'Team') + '</h3>';
+        if (!team || team.era !== 'current') {
+            return head + '<div class="sim-empty">Active bullpen is shown for current MLB teams only. Classic/historical teams use rating profiles, not live rosters.</div></div>';
+        }
+        var stored = state.liveContext.teamRosters && state.liveContext.teamRosters[team.abbreviation];
+        var roster = validatedRosterForTeam(team, stored);
+        if (!roster || !Array.isArray(roster.players)) {
+            return head + '<div class="sim-empty">Active bullpen unavailable: the live MLB active-roster feed did not load for ' + escapeHtml(team.abbreviation) + '. No names are shown rather than display stale data.</div></div>';
+        }
+        var seen = {}, pitchers = [];
+        roster.players.filter(function (p) { return isPitcherPosition(p.position); }).forEach(function (p) {
+            var k = normalizeName(p.name);
+            if (!k || seen[k]) return; // no duplicates
+            seen[k] = true; pitchers.push(p);
+        });
+        var probable = stored && stored.todayProbableStarter;
+        var probableNorm = probable && probable.name ? normalizeName(probable.name) : null;
+        var infos = pitchers.map(function (p) { return bullpenPitcherInfo(p, probableNorm); });
+        var rotation = infos.filter(function (i) { return i.role === 'rotation'; }).sort(function (a, b) {
+            if (a.isProbable !== b.isProbable) return a.isProbable ? -1 : 1;
+            return (b.gs || 0) - (a.gs || 0);
+        });
+        var pen = infos.filter(function (i) { return i.role === 'bullpen'; }).sort(function (a, b) {
+            var ae = Number.isFinite(a.era) ? a.era : 99, be = Number.isFinite(b.era) ? b.era : 99;
+            return ae - be;
+        });
+        var html = head;
+        // Probable / projected starter
+        if (probable && probable.name) {
+            var probInfo = infos.filter(function (i) { return i.isProbable; })[0];
+            html += '<div class="bullpen-starter"><span class="bullpen-tag bullpen-tag-confirmed">Today’s probable starter</span> <strong>' + escapeHtml(probable.name) + '</strong>'
+                + (probInfo ? ' <span class="bullpen-hand">' + escapeHtml(probInfo.hand) + '</span> <span class="bullpen-meta">' + escapeHtml(bullpenStatLine(probInfo)) + '</span>' : '') + '</div>';
+        } else {
+            html += '<div class="bullpen-starter"><span class="bullpen-tag bullpen-tag-projected">Probable starter not posted</span> <span class="bullpen-meta">Today’s starter is not yet listed on the MLB schedule.</span></div>';
+        }
+        // Other rotation arms (inferred)
+        var otherRotation = rotation.filter(function (i) { return !i.isProbable; });
+        if (otherRotation.length) {
+            html += '<div class="bullpen-subhead">Rotation (inferred from games started) <span class="bullpen-note">not official roles</span></div><ul class="bullpen-list">';
+            otherRotation.forEach(function (i) {
+                html += '<li><span class="bullpen-name">' + escapeHtml(i.name) + '</span> <span class="bullpen-hand">' + escapeHtml(i.hand) + '</span> <span class="bullpen-meta">' + escapeHtml(bullpenStatLine(i)) + '</span></li>';
+            });
+            html += '</ul>';
+        }
+        // Active bullpen
+        html += '<div class="bullpen-subhead">Active Bullpen – ' + pen.length + ' arm' + (pen.length === 1 ? '' : 's') + ' <span class="bullpen-note">roles inferred; feed has no closer/setup data</span></div>';
+        if (!pen.length) {
+            html += '<div class="sim-empty">No relief arms classified from the current roster + loaded stats.</div>';
+        } else {
+            html += '<ul class="bullpen-list">';
+            pen.forEach(function (i) {
+                html += '<li><span class="bullpen-name">' + escapeHtml(i.name) + '</span> <span class="bullpen-hand">' + escapeHtml(i.hand) + '</span> <span class="bullpen-meta">' + escapeHtml(bullpenStatLine(i)) + '</span></li>';
+            });
+            html += '</ul>';
+        }
+        html += '<div class="bullpen-foot">' + escapeHtml(roster.players.length + ' verified active roster players · ' + pitchers.length + ' pitchers') + (stored && stored.fetchedAt ? ' · updated ' + new Date(stored.fetchedAt).toLocaleTimeString() : '') + '</div>';
+        return html + '</div>';
+    }
+    function renderBullpenPanels(result) {
+        var panel = byId('bullpenPanel');
+        var content = byId('bullpenContent');
+        if (!panel || !content) return;
+        if (!result || !result.away || !result.home) {
+            panel.setAttribute('data-bullpen-state', 'empty');
+            content.innerHTML = '<div class="sim-empty">Run a simulation to load each team’s active bullpen.</div>';
+            return;
+        }
+        panel.setAttribute('data-bullpen-state', 'ready');
+        content.innerHTML = '<div class="bullpen-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">'
+            + renderBullpenForTeam(result.away) + renderBullpenForTeam(result.home) + '</div>';
+    }
     function renderResult(result) {
         if (!result) {
             var shell = byId('projectionShell');
@@ -4048,6 +4156,7 @@
             renderNotes(null);
             renderAggregate(null);
             renderBoxScore(null);
+            renderBullpenPanels(null);
             return;
         }
         var shellProjected = byId('projectionShell');
@@ -4091,6 +4200,7 @@
         renderNotes(result);
         renderAggregate(state.aggregate);
         renderBoxScore(result);
+        renderBullpenPanels(result);
     }
 
     function renderLoading(away, home) {
