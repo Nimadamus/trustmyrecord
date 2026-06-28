@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-defense-oaa-20260624';
+    var UI_BUILD = 'mlb-simulator-data-updated-stamp-20260628';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3450,10 +3450,35 @@
         if (mixed) mixed.classList.toggle('active', state.preset === 'mixed');
     }
 
+    function liveDataUpdatedAt() {
+        var newest = 0;
+        function consider(v) {
+            if (v === undefined || v === null) return;
+            var t = typeof v === 'number' ? v : new Date(v).getTime();
+            if (Number.isFinite(t) && t > newest) newest = t;
+        }
+        [state.liveContext, state.activeLiveContext].forEach(function (ctx) {
+            if (!ctx) return;
+            consider(ctx.loadedAt);
+            consider(ctx.todaySchedule && ctx.todaySchedule.fetchedAt);
+            var rosters = ctx.teamRosters;
+            if (rosters) Object.keys(rosters).forEach(function (k) {
+                consider(rosters[k] && rosters[k].fetchedAt);
+            });
+        });
+        return newest > 0 ? newest : null;
+    }
+    function liveDataUpdatedLabel() {
+        var ts = liveDataUpdatedAt();
+        if (!ts) return '';
+        try { return 'MLB roster/schedule data last updated ' + new Date(ts).toLocaleString() + '.'; }
+        catch (e) { return ''; }
+    }
     function renderDataModeStatus() {
         var verifiedCount = verifiedLiveInputs().length;
+        var updated = liveDataUpdatedLabel();
         setText('simDataSourceTitle', verifiedCount ? 'Verified input mode' : 'Baseline ratings mode');
-        setText('simDataSourceDetail', verifiedCount ? 'Using verified live inputs where available plus baseline ratings.' : 'Using internal baseline team ratings and historical context only.');
+        setText('simDataSourceDetail', (verifiedCount ? 'Using verified live inputs where available plus baseline ratings.' : 'Using internal baseline team ratings and historical context only.') + (updated ? ' ' + updated : ''));
         setText('dataModeBadge', dataModeLabel());
         setText('dataModeDetail', dataModeDetail());
         var grid = byId('liveInputGrid');
