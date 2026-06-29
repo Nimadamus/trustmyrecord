@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ultrareal6-steals-20260629';
+    var UI_BUILD = 'mlb-simulator-ultrareal7-rotation-20260629';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1230,8 +1230,16 @@
             });
         }
         if (!rosterRows.length && !options.length) return [];
-        var limit = options.length >= 2 ? 3 : (options.length === 1 ? 4 : 5);
-        rosterRows.slice(0, limit).forEach(function (player) {
+        // FULL_ROTATION_DROPDOWN_20260629: include every pitcher who has actually started
+        // a game this season (not a hard top-3/5 cap), so any real probable starter is
+        // selectable. Falls back to the top roster arms when season stats have not loaded.
+        var starterRows = rosterRows.filter(function (player) {
+            var st = player.mlbId ? cachedPlayerStat(player.mlbId, 'pitching') : null;
+            return st && Number(st.gamesStarted || 0) >= 1;
+        });
+        var minShow = options.length >= 2 ? 3 : (options.length === 1 ? 4 : 5);
+        var rowsToShow = (starterRows.length >= minShow ? starterRows : rosterRows).slice(0, 10);
+        rowsToShow.forEach(function (player) {
             var row = curatedMatch(player.name);
             var stat = player.mlbId ? cachedPlayerStat(player.mlbId, 'pitching') : null;
             var realEra = stat ? Number(stat.era) : null;
