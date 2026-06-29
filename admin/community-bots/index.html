@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Community Bots Admin | TrustMyRecord</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/config.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; background:#0b1117; color:#e8eef5; font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; }
+    .wrap { max-width:1180px; margin:0 auto; padding:28px 18px 64px; }
+    .top { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:18px; flex-wrap:wrap; }
+    h1 { margin:0; font-size:26px; }
+    h2 { font-size:18px; margin:0 0 4px; }
+    .muted { color:#9bacbd; font-size:13px; }
+    .panel { background:#121a23; border:1px solid #263546; border-radius:10px; padding:16px; margin-bottom:14px; }
+    .row { display:flex; flex-wrap:wrap; gap:14px; }
+    .botcard { flex:1 1 460px; }
+    label { display:block; font-size:12px; color:#9bacbd; text-transform:uppercase; margin:10px 0 4px; }
+    input[type=number] { width:90px; }
+    input, select { background:#0d141c; border:1px solid #304155; border-radius:7px; color:#e8eef5; padding:8px 10px; }
+    .switches { display:flex; flex-wrap:wrap; gap:16px; margin:8px 0; }
+    .sw { display:flex; align-items:center; gap:7px; font-size:14px; color:#e8eef5; }
+    .nums { display:flex; flex-wrap:wrap; gap:18px; align-items:flex-end; }
+    .num { display:flex; flex-direction:column; }
+    .cats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:6px; }
+    .cats fieldset { border:1px solid #243242; border-radius:8px; padding:8px; }
+    .cats legend { font-size:11px; color:#9bacbd; text-transform:uppercase; padding:0 4px; }
+    .chk { display:flex; align-items:center; gap:6px; font-size:13px; margin:3px 0; }
+    button { border:1px solid #3b5066; background:#1a2633; color:#f4f7fb; border-radius:7px; padding:9px 14px; font-weight:700; cursor:pointer; }
+    button.primary { background:#d9a441; border-color:#d9a441; color:#111827; }
+    button.gold { background:#1a2633; border-color:#d9a441; color:#e9c878; }
+    button:disabled { opacity:.5; cursor:not-allowed; }
+    .actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:14px; align-items:center; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th,td { text-align:left; border-bottom:1px solid #243242; padding:8px; vertical-align:top; }
+    th { color:#9bacbd; font-size:11px; text-transform:uppercase; }
+    .pill { padding:1px 8px; border-radius:999px; font-size:11px; font-weight:700; }
+    .pill.published { background:#16361f; color:#6ee79a; }
+    .pill.pending { background:#3a2f10; color:#f0c860; }
+    .pill.error { background:#3a1620; color:#fb7185; }
+    .pill.rejected,.pill.skipped_dup { background:#23303d; color:#9bacbd; }
+    .stat { display:inline-block; margin-right:14px; }
+    .stat b { font-size:20px; }
+    #msg { margin-left:8px; font-size:13px; }
+    .ok { color:#6ee79a; } .bad { color:#fb7185; }
+    @media (max-width:760px){ .cats{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top">
+      <div>
+        <h1>Community Bots</h1>
+        <div class="muted">Official TrustMyRecord accounts: TMR Polls &amp; TMR Trivia &amp; Challenges. They never make picks, enter contests, or affect records / rankings.</div>
+      </div>
+      <a href="/admin/" class="muted" style="text-decoration:none">&larr; Admin</a>
+    </div>
+
+    <section class="panel">
+      <div class="actions">
+        <input id="adminToken" type="password" autocomplete="off" placeholder="Founder login token used automatically. Paste a bearer token to override." style="flex:1 1 340px">
+        <button id="saveTokenBtn">Save Token</button>
+        <button id="reloadBtn" class="primary">Load / Refresh</button>
+        <span id="msg"></span>
+      </div>
+      <div class="muted" style="margin-top:8px">Requires an admin account (users.account_type = 'admin').</div>
+    </section>
+
+    <div id="bots" class="row"></div>
+
+    <section class="panel">
+      <h2>Pending Approval <span id="pendingCount" class="muted"></span></h2>
+      <div class="muted">Appears only when a bot has "Require approval" turned on.</div>
+      <table id="pendingTbl"><thead><tr><th>Bot</th><th>Type</th><th>Title / Preview</th><th>When</th><th></th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <section class="panel">
+      <h2>Recent Activity Log</h2>
+      <table id="logTbl"><thead><tr><th>Bot</th><th>Type</th><th>Source</th><th>Status</th><th>Title</th><th>Target</th><th>When</th></tr></thead><tbody></tbody></table>
+    </section>
+  </main>
+
+  <script>
+  (function(){
+    var API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    var tokenInput = document.getElementById('adminToken');
+    var msg = document.getElementById('msg');
+    tokenInput.value = localStorage.getItem('tmr_admin_token') || '';
+
+    function bearer(){
+      return (tokenInput.value && tokenInput.value.trim()) ||
+        localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken') ||
+        localStorage.getItem('access_token') || localStorage.getItem('token') || localStorage.getItem('tmr_token');
+    }
+    function headers(){ var h={'Content-Type':'application/json'}; var b=bearer(); if(b) h.Authorization='Bearer '+b; return h; }
+    function note(t,bad){ msg.textContent=t; msg.className=bad?'bad':'ok'; }
+    function api(path,opts){ return fetch(API_BASE+path,Object.assign({headers:headers()},opts||{})).then(function(r){ return r.json().then(function(j){ if(!r.ok) throw new Error(j.error||('HTTP '+r.status)); return j; }); }); }
+    function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+    function ago(t){ if(!t) return '-'; var d=(Date.now()-new Date(t).getTime())/1000; if(d<60) return Math.floor(d)+'s'; if(d<3600) return Math.floor(d/60)+'m'; if(d<86400) return Math.floor(d/3600)+'h'; return Math.floor(d/86400)+'d'; }
+
+    var CATS = {poll:[],trivia:[],forum:[]};
+
+    function botCard(b){
+      var ac = b.allowed_categories || {};
+      function catBox(kind){
+        var sel = ac[kind] || [];
+        var rows = CATS[kind].map(function(c){
+          var on = sel.length===0 || sel.indexOf(c.slug)!==-1;
+          return '<label class="chk"><input type="checkbox" data-cat="'+kind+'" value="'+esc(c.slug)+'" '+(on?'checked':'')+'> '+esc(c.name)+'</label>';
+        }).join('');
+        return '<fieldset><legend>'+kind+'</legend>'+rows+'<div class="muted" style="font-size:11px;margin-top:4px">all checked = no restriction</div></fieldset>';
+      }
+      var weekly = b.bot_key==='polls' ? '<label class="sw"><input type="checkbox" data-f="weekly_thread_enabled" '+(b.weekly_thread_enabled?'checked':'')+'> Weekly leaderboard thread</label>' : '';
+      return '<section class="panel botcard" data-bot="'+b.bot_key+'">'
+        + '<h2>'+esc(b.display_name)+' <span class="muted">@'+esc(b.username||b.bot_key)+'</span></h2>'
+        + '<div class="muted">'+esc(b.bio||'')+'</div>'
+        + '<div class="switches" style="margin-top:10px">'
+        + '<label class="sw"><input type="checkbox" data-f="enabled" '+(b.enabled?'checked':'')+'> Enabled</label>'
+        + '<label class="sw"><input type="checkbox" data-f="require_approval" '+(b.require_approval?'checked':'')+'> Require approval</label>'
+        + weekly + '</div>'
+        + '<div class="nums">'
+        + '<div class="num"><label>Min gap (hrs)</label><input type="number" min="0" max="168" data-f="min_gap_hours" value="'+(b.min_gap_hours)+'"></div>'
+        + '<div class="num"><label>Max / day</label><input type="number" min="0" max="24" data-f="max_per_day" value="'+(b.max_per_day)+'"></div>'
+        + '<div class="num"><label>Max / week</label><input type="number" min="0" max="50" data-f="max_per_week" value="'+(b.max_per_week)+'"></div>'
+        + '</div>'
+        + '<label>Allowed categories</label><div class="cats">'+catBox('poll')+catBox('trivia')+catBox('forum')+'</div>'
+        + '<div class="actions">'
+        + '<button class="primary" data-act="save">Save settings</button>'
+        + '<button class="gold" data-act="run">Run now</button>'
+        + '<span class="muted">Last post: '+ago(b.last_post_at)+' ago &middot; last run: '+ago(b.last_run_at)+' ago</span>'
+        + '</div></section>';
+    }
+
+    function collect(card){
+      var body={allowed_categories:{}};
+      card.querySelectorAll('[data-f]').forEach(function(el){
+        var f=el.getAttribute('data-f');
+        body[f] = el.type==='checkbox' ? el.checked : Number(el.value);
+      });
+      ['poll','trivia','forum'].forEach(function(kind){
+        var all=card.querySelectorAll('[data-cat="'+kind+'"]');
+        var checked=card.querySelectorAll('[data-cat="'+kind+'"]:checked');
+        // all checked => empty array (no restriction); otherwise list checked slugs
+        body.allowed_categories[kind] = (checked.length===all.length)?[]:Array.prototype.map.call(checked,function(c){return c.value;});
+      });
+      return body;
+    }
+
+    function wire(){
+      document.querySelectorAll('[data-bot]').forEach(function(card){
+        var key=card.getAttribute('data-bot');
+        card.querySelector('[data-act="save"]').onclick=function(){
+          note('Saving...');
+          api('/community-bots/'+key,{method:'PUT',body:JSON.stringify(collect(card))})
+            .then(function(){ note('Saved '+key+'.'); load(); }).catch(function(e){ note(e.message,true); });
+        };
+        card.querySelector('[data-act="run"]').onclick=function(){
+          note('Running '+key+'...');
+          api('/community-bots/'+key+'/run',{method:'POST',body:JSON.stringify({force:true})})
+            .then(function(r){ note(key+': '+(r.results||[]).map(function(x){return (x.type||'post')+'='+(x.status||'?');}).join(', ')||'no action'); load(); })
+            .catch(function(e){ note(e.message,true); });
+        };
+      });
+    }
+
+    function renderPending(rows){
+      document.getElementById('pendingCount').textContent = rows.length?('('+rows.length+')'):'';
+      var tb=document.querySelector('#pendingTbl tbody');
+      tb.innerHTML = rows.length?'':'<tr><td colspan="5" class="muted">Nothing pending.</td></tr>';
+      rows.forEach(function(p){
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td>'+esc(p.bot_key)+'</td><td>'+esc(p.post_type)+'</td>'
+          +'<td><b>'+esc(p.title)+'</b><div class="muted">'+esc(p.body_preview||'')+'</div></td>'
+          +'<td>'+ago(p.created_at)+'</td>'
+          +'<td><button class="primary" data-ap="'+p.id+'">Approve</button> <button data-rj="'+p.id+'">Reject</button></td>';
+        tb.appendChild(tr);
+      });
+      tb.querySelectorAll('[data-ap]').forEach(function(b){ b.onclick=function(){ api('/community-bots/pending/'+b.getAttribute('data-ap')+'/approve',{method:'POST',body:'{}'}).then(function(){note('Approved & published.');load();}).catch(function(e){note(e.message,true);}); }; });
+      tb.querySelectorAll('[data-rj]').forEach(function(b){ b.onclick=function(){ api('/community-bots/pending/'+b.getAttribute('data-rj')+'/reject',{method:'POST',body:'{}'}).then(function(){note('Rejected.');load();}).catch(function(e){note(e.message,true);}); }; });
+    }
+
+    function renderLog(rows){
+      var tb=document.querySelector('#logTbl tbody'); tb.innerHTML='';
+      if(!rows.length){ tb.innerHTML='<tr><td colspan="7" class="muted">No activity yet.</td></tr>'; return; }
+      rows.forEach(function(p){
+        var tgt = p.target_table?('<a href="'+linkFor(p)+'" target="_blank" style="color:#7cc0ff">#'+p.target_id+'</a>'):'-';
+        var tr=document.createElement('tr');
+        tr.innerHTML='<td>'+esc(p.bot_key)+'</td><td>'+esc(p.post_type)+'</td><td>'+esc(p.source)+'</td>'
+          +'<td><span class="pill '+esc(p.status)+'">'+esc(p.status)+'</span>'+(p.error_detail?'<div class="muted">'+esc(p.error_detail)+'</div>':'')+'</td>'
+          +'<td>'+esc(p.title)+'</td><td>'+tgt+'</td><td>'+ago(p.published_at||p.created_at)+'</td>';
+        tb.appendChild(tr);
+      });
+    }
+    function linkFor(p){
+      if(p.target_table==='prediction_polls') return '/polls/?id='+p.target_id;
+      if(p.target_table==='trivia_questions') return '/trivia/';
+      if(p.target_table==='forum_threads') return '/forum/?thread='+p.target_id;
+      return '#';
+    }
+
+    function load(){
+      note('Loading...');
+      api('/community-bots').then(function(d){
+        CATS = d.categories || CATS;
+        var countsByKey={}; (d.counts||[]).forEach(function(c){countsByKey[c.bot_key]=c;});
+        document.getElementById('bots').innerHTML = (d.bots||[]).map(botCard).join('');
+        wire();
+        note('Loaded.');
+      }).catch(function(e){ note(e.message,true); });
+      api('/community-bots/pending').then(function(d){ renderPending(d.pending||[]); }).catch(function(){});
+      api('/community-bots/posts?limit=60').then(function(d){ renderLog(d.posts||[]); }).catch(function(){});
+    }
+
+    document.getElementById('saveTokenBtn').onclick=function(){ localStorage.setItem('tmr_admin_token',tokenInput.value.trim()); note('Token saved.'); };
+    document.getElementById('reloadBtn').onclick=load;
+    load();
+  })();
+  </script>
+</body>
+</html>
