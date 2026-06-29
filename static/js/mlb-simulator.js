@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ultrareal5-posplayer-20260629';
+    var UI_BUILD = 'mlb-simulator-ultrareal6-steals-20260629';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1518,6 +1518,13 @@
             var hrRateObs = seasonOk && Number(seasonStat.atBats) > 0 ? hrCount / Number(seasonStat.atBats) : null;
             var kRateObs = hasReal && Number(stat.plateAppearances) > 0 ? Number(stat.strikeOuts || 0) / Number(stat.plateAppearances) : null;
             var bbRateObs = hasReal && Number(stat.plateAppearances) > 0 ? Number(stat.baseOnBalls || 0) / Number(stat.plateAppearances) : null;
+            // Per-player base-stealing from real SB/CS (so speedsters run and sluggers
+            // do not). Raw = attempts per time reaching 1B; normalized to the team rate
+            // later in evBuildSide so the league SB total stays calibrated.
+            var sSb = seasonStat ? Number(seasonStat.stolenBases || 0) : 0;
+            var sCs = seasonStat ? Number(seasonStat.caughtStealing || 0) : 0;
+            var sOn1b = seasonStat ? (Number(seasonStat.hits || 0) - Number(seasonStat.doubles || 0) - Number(seasonStat.triples || 0) - Number(seasonStat.homeRuns || 0) + Number(seasonStat.baseOnBalls || 0)) : 0;
+            var sAtt = sSb + sCs;
             return {
                 name: player.name,
                 position: playerPositionLabel(player),
@@ -1538,7 +1545,9 @@
                 bbRate: hasReal ? reg(bbRateObs, LG.bbRate) : null,
                 real: hasReal,
                 statSource: source,
-                vsHand: opposingHand || null
+                vsHand: opposingHand || null,
+                sbRawRate: sOn1b >= 25 ? clamp(sAtt / sOn1b, 0, 0.6) : null,
+                stealSucc: sAtt >= 6 ? clamp(sSb / sAtt, 0.5, 0.95) : null
             };
         });
     }
@@ -2154,9 +2163,23 @@
                 realAvg: (s && s.real && s.realAvgRaw != null) ? s.realAvgRaw : null,
                 realOps: (s && s.real && s.realOpsRaw != null) ? s.realOpsRaw : null,
                 statSource: (s && s.real) ? ((s.statSource === 'split' && s.vsHand ? ('Real ' + seasonYear() + ' vs ' + s.vsHand + 'HP') : ('Real ' + seasonYear() + ' season')) + ' OPS ' + Number(s.realOpsRaw != null ? s.realOpsRaw : s.ops).toFixed(3)) : null,
+                sbRawRate: (s && s.sbRawRate != null) ? s.sbRawRate : null,
+                stealSucc: (s && s.stealSucc != null) ? s.stealSucc : null,
                 acc: evNewBat()
             });
         }
+        // PER_PLAYER_STEALS_20260629: distribute the calibrated team steal rate by each
+        // runner's real attempt rate, so fast players run often and sluggers almost never,
+        // while the lineup mean stays at the team baseline (SB total unchanged). Players
+        // with no real SB sample fall back to the league raw rate.
+        var LG_SB_RAW = 0.075, TEAM_BASE_STEAL = 0.10;
+        var rawRates = lineup.map(function (b) { return b.sbRawRate != null ? b.sbRawRate : LG_SB_RAW; });
+        var rawMean = rawRates.reduce(function (a, c) { return a + c; }, 0) / (rawRates.length || 1);
+        var stealScale = rawMean > 0 ? TEAM_BASE_STEAL / rawMean : 1;
+        lineup.forEach(function (b, i) {
+            b.stealRate = clamp(rawRates[i] * stealScale, 0, 0.5);
+            b.stealSuccess = b.stealSucc != null ? b.stealSucc : 0.78;
+        });
         // Anchor against a starter/bullpen blend (~72% of PAs face the opposing
         // starter, ~28% the bullpen, approximated as a league-average arm) with the
         // park HR effect baked in, so the calibrated mean reflects the real game mix
@@ -2306,8 +2329,12 @@
                 if (outs >= 3) break;
             }
             // Steal attempt with a runner on 1B and 2B open (live event, not post-hoc).
-            if (bases[0] !== null && bases[1] === null && random() < side.stealRate) {
-                if (random() < side.stealSuccess) { lineup[bases[0]].acc.sb++; side.sb++; bases[1] = bases[0]; bp[1] = bp[0]; bases[0] = null; bp[0] = null; }
+            // Per-runner rate/success (real SB profile) when available, else team default.
+            var runner0 = lineup[bases[0]];
+            var rSteal = runner0 && runner0.stealRate != null ? runner0.stealRate : side.stealRate;
+            var rSucc = runner0 && runner0.stealSuccess != null ? runner0.stealSuccess : side.stealSuccess;
+            if (bases[0] !== null && bases[1] === null && random() < rSteal) {
+                if (random() < rSucc) { lineup[bases[0]].acc.sb++; side.sb++; bases[1] = bases[0]; bp[1] = bp[0]; bases[0] = null; bp[0] = null; }
                 else { lineup[bases[0]].acc.cs++; side.cs++; bases[0] = null; bp[0] = null; pitcher.acc.outs++; outs++; if (outs >= 3) break; }
             }
             var bi = side.idx % 9, b = lineup[bi];
@@ -2550,7 +2577,7 @@
             return {
                 name: b.name, playerName: b.playerName, rawPos: b.rawPos,
                 ab: a.ab, r: a.r, h: a.h, hr: a.hr, rbi: a.rbi, bb: a.bb, so: a.so, lob: a.lob,
-                b2: a.b2, b3: a.b3, avg: displayAvg, ops: displayOps, statSource: b.statSource
+                b2: a.b2, b3: a.b3, sb: a.sb || 0, cs: a.cs || 0, avg: displayAvg, ops: displayOps, statSource: b.statSource
             };
         }).filter(function (row) { return row.name; });
     }
