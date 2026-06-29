@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ultrareal3-hitters-20260628';
+    var UI_BUILD = 'mlb-simulator-ultrareal4-midinning-20260628';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2270,26 +2270,45 @@
     // deficit (checked at the end of each PA, so a walk-off HR counts every run).
     // ghostSlot (optional): extra-innings placed runner (2020+ rule) — that lineup
     // slot starts the inning on 2B and scores as an UNEARNED run for the pitcher.
-    function evPlayHalf(side, pitcher, random, endLead, ghostSlot) {
+    function evPlayHalf(side, pitcher, random, endLead, ghostSlot, defSide) {
         var lineup = side.lineup, outs = 0, bases = [null, null, null], runs = 0, errors = 0;
+        // bp[k] = the pitcher responsible for the runner on base k (the arm that put him
+        // there). Inherited runners that score charge THAT pitcher, not whoever is on the
+        // mound when they cross — the correct rule once mid-inning changes exist.
+        var bp = [null, null, null];
         var hasGhost = ghostSlot !== undefined && ghostSlot !== null;
         var ghostScored = false;
-        if (hasGhost) bases[1] = ghostSlot;
-        function score(slot, earned) {
+        if (hasGhost) { bases[1] = ghostSlot; bp[1] = pitcher; }
+        var apptRuns = 0; // runs scored during the current pitcher's appearance this inning
+        function score(slot, earned, resp) {
             if (hasGhost && !ghostScored && slot === ghostSlot) { ghostScored = true; earned = false; }
-            lineup[slot].acc.r++; runs++; pitcher.acc.r++; if (earned) pitcher.acc.er++;
+            lineup[slot].acc.r++; runs++; apptRuns++;
+            var rp = resp || pitcher; rp.acc.r++; if (earned) rp.acc.er++;
+        }
+        // MID_INNING_CHANGE_20260628: real managers pull a reliever (and a shelled
+        // starter) mid-inning when the crooked number grows. The engine otherwise only
+        // changes arms between innings, leaving relievers with no partial innings and too
+        // few pitchers used in rough games. Walk the same bridge->setup->closer sequence
+        // evActivePitcher uses; the next arm inherits the runners (charged to the arm that
+        // allowed them via bp). Fires only on real damage, so run totals stay calibrated.
+        function maybeChange() {
+            if (!defSide || !Array.isArray(defSide.pitchers)) return;
+            var arms = defSide.pitchers, idx = arms.indexOf(pitcher);
+            if (idx < 0 || idx >= arms.length - 1) return;
+            var threshold = idx === 0 ? 5 : 3; // shelled starter: 5 runs; reliever: 3
+            if (apptRuns >= threshold) { pitcher = arms[idx + 1]; apptRuns = 0; defSide.minArmIdx = Math.max(defSide.minArmIdx || 0, idx + 1); defSide.midChanges = (defSide.midChanges || 0) + 1; }
         }
         var gidp = 0, ofAssists = 0;
         while (outs < 3) {
             // Pickoff: rare live event with a runner on 1B (real MLB ~0.05/team-game).
             if (bases[0] !== null && random() < 0.0035) {
-                side.pickoffs = (side.pickoffs || 0) + 1; bases[0] = null; pitcher.acc.outs++; outs++;
+                side.pickoffs = (side.pickoffs || 0) + 1; bases[0] = null; bp[0] = null; pitcher.acc.outs++; outs++;
                 if (outs >= 3) break;
             }
             // Steal attempt with a runner on 1B and 2B open (live event, not post-hoc).
             if (bases[0] !== null && bases[1] === null && random() < side.stealRate) {
-                if (random() < side.stealSuccess) { lineup[bases[0]].acc.sb++; side.sb++; bases[1] = bases[0]; bases[0] = null; }
-                else { lineup[bases[0]].acc.cs++; side.cs++; bases[0] = null; pitcher.acc.outs++; outs++; if (outs >= 3) break; }
+                if (random() < side.stealSuccess) { lineup[bases[0]].acc.sb++; side.sb++; bases[1] = bases[0]; bp[1] = bp[0]; bases[0] = null; bp[0] = null; }
+                else { lineup[bases[0]].acc.cs++; side.cs++; bases[0] = null; bp[0] = null; pitcher.acc.outs++; outs++; if (outs >= 3) break; }
             }
             var bi = side.idx % 9, b = lineup[bi];
             var timesThrough = Math.floor(pitcher.acc.bf / 9) + 1;
@@ -2309,53 +2328,53 @@
             var rbi = 0;
             if (ev === 'bb') {
                 acc.bb++; pitcher.acc.bb++;
-                if (bases[0] !== null) { if (bases[1] !== null) { if (bases[2] !== null) { score(bases[2], true); rbi++; } bases[2] = bases[1]; } bases[1] = bases[0]; }
-                bases[0] = bi;
+                if (bases[0] !== null) { if (bases[1] !== null) { if (bases[2] !== null) { score(bases[2], true, bp[2]); rbi++; } bases[2] = bases[1]; bp[2] = bp[1]; } bases[1] = bases[0]; bp[1] = bp[0]; }
+                bases[0] = bi; bp[0] = pitcher;
             } else if (ev === 'so') { acc.ab++; acc.so++; pitcher.acc.so++; pitcher.acc.outs++; outs++;
             } else if (ev === 'hr') {
                 acc.ab++; acc.h++; acc.hr++; pitcher.acc.h++; pitcher.acc.hr++;
-                for (var k = 0; k < 3; k++) { if (bases[k] !== null) { score(bases[k], true); rbi++; bases[k] = null; } }
-                score(bi, true); rbi++;
+                for (var k = 0; k < 3; k++) { if (bases[k] !== null) { score(bases[k], true, bp[k]); rbi++; bases[k] = null; bp[k] = null; } }
+                score(bi, true, pitcher); rbi++;
             } else if (ev === 'b3') {
                 acc.ab++; acc.h++; acc.b3++; pitcher.acc.h++;
-                for (var k2 = 0; k2 < 3; k2++) { if (bases[k2] !== null) { score(bases[k2], true); rbi++; bases[k2] = null; } }
-                bases[2] = bi;
+                for (var k2 = 0; k2 < 3; k2++) { if (bases[k2] !== null) { score(bases[k2], true, bp[k2]); rbi++; bases[k2] = null; bp[k2] = null; } }
+                bases[2] = bi; bp[2] = pitcher;
             } else if (ev === 'b2') {
                 acc.ab++; acc.h++; acc.b2++; pitcher.acc.h++;
-                if (bases[2] !== null) { score(bases[2], true); rbi++; bases[2] = null; }
-                if (bases[1] !== null) { score(bases[1], true); rbi++; bases[1] = null; }
-                if (bases[0] !== null) { if (random() < 0.40) { score(bases[0], true); rbi++; } else { bases[2] = bases[0]; } bases[0] = null; }
-                bases[1] = bi;
+                if (bases[2] !== null) { score(bases[2], true, bp[2]); rbi++; bases[2] = null; bp[2] = null; }
+                if (bases[1] !== null) { score(bases[1], true, bp[1]); rbi++; bases[1] = null; bp[1] = null; }
+                if (bases[0] !== null) { if (random() < 0.40) { score(bases[0], true, bp[0]); rbi++; } else { bases[2] = bases[0]; bp[2] = bp[0]; } bases[0] = null; bp[0] = null; }
+                bases[1] = bi; bp[1] = pitcher;
             } else if (ev === 'b1') {
                 acc.ab++; acc.h++; acc.b1++; pitcher.acc.h++;
-                if (bases[2] !== null) { score(bases[2], true); rbi++; bases[2] = null; }
+                if (bases[2] !== null) { score(bases[2], true, bp[2]); rbi++; bases[2] = null; bp[2] = null; }
                 if (bases[1] !== null) {
                     var send = random();
-                    if (send < 0.60) { score(bases[1], true); rbi++; bases[1] = null; }
-                    else if (send < 0.70) { ofAssists++; pitcher.acc.outs++; outs++; bases[1] = null; } // thrown out at home (outfield assist)
-                    else { bases[2] = bases[1]; bases[1] = null; }
+                    if (send < 0.60) { score(bases[1], true, bp[1]); rbi++; bases[1] = null; bp[1] = null; }
+                    else if (send < 0.70) { ofAssists++; pitcher.acc.outs++; outs++; bases[1] = null; bp[1] = null; } // thrown out at home (outfield assist)
+                    else { bases[2] = bases[1]; bp[2] = bp[1]; bases[1] = null; bp[1] = null; }
                 }
-                if (bases[0] !== null) { if (random() < 0.28 && bases[2] === null) { bases[2] = bases[0]; } else { bases[1] = bases[0]; } bases[0] = null; }
-                bases[0] = bi;
+                if (bases[0] !== null) { if (random() < 0.28 && bases[2] === null) { bases[2] = bases[0]; bp[2] = bp[0]; } else { bases[1] = bases[0]; bp[1] = bp[0]; } bases[0] = null; bp[0] = null; }
+                bases[0] = bi; bp[0] = pitcher;
             } else { // out in play, with a small chance of a reach-on-error (unearned)
                 if (random() < side.errRate) {
                     errors++; // batter reaches as if a single but no hit, runs charged unearned
-                    if (bases[2] !== null) { score(bases[2], false); bases[2] = null; }
-                    if (bases[1] !== null) { bases[2] = bases[1]; bases[1] = null; }
-                    if (bases[0] !== null) { bases[1] = bases[0]; }
-                    bases[0] = bi; acc.ab++;
+                    if (bases[2] !== null) { score(bases[2], false, bp[2]); bases[2] = null; bp[2] = null; }
+                    if (bases[1] !== null) { bases[2] = bases[1]; bp[2] = bp[1]; bases[1] = null; bp[1] = null; }
+                    if (bases[0] !== null) { bases[1] = bases[0]; bp[1] = bp[0]; }
+                    bases[0] = bi; bp[0] = pitcher; acc.ab++;
                 } else {
                     acc.ab++; pitcher.acc.outs++;
                     if (outs < 2 && bases[2] !== null && random() < 0.25) {
                         // Sac fly: run scores, batter is NOT charged an at-bat (official scoring).
                         acc.ab--; acc.sf = (acc.sf || 0) + 1; side.sf = (side.sf || 0) + 1;
-                        score(bases[2], true); rbi++; bases[2] = null; outs++;
+                        score(bases[2], true, bp[2]); rbi++; bases[2] = null; bp[2] = null; outs++;
                     }
                     else if (outs < 2 && bases[0] !== null && random() < 0.21) {
                         // GIDP rate calibrated June 4 2026: 0.11 produced 0.38/team
                         // vs real 0.72; 0.21 lands on the real rate.
                         acc.gidp = (acc.gidp || 0) + 1; side.gidp = (side.gidp || 0) + 1; gidp++;
-                        outs += 2; pitcher.acc.outs++; bases[0] = null;
+                        outs += 2; pitcher.acc.outs++; bases[0] = null; bp[0] = null;
                     }
                     else outs++;
                 }
@@ -2375,6 +2394,7 @@
             side.idx++;
             // Walk-off: the game ends the moment the batting side takes the lead.
             if (endLead !== undefined && endLead !== null && runs > endLead) break;
+            if (outs < 3) maybeChange();
         }
         // Runners stranded in scoring position when the 3rd out was recorded.
         if (outs >= 3) {
@@ -2391,24 +2411,30 @@
         // an identical inning count every outing); falls back to the season mean.
         var starterOuts = side.starterOutsGame || side.starterOuts;
         var arms = side.pitchers;
-        if (outsRecorded < starterOuts || arms.length <= 1) return arms[0];
+        if (arms.length <= 1) return arms[0];
+        // minArmIdx floors the selection: once a mid-inning change has advanced to a later
+        // arm, the next inning never reverts to an earlier one (no using the closer in the
+        // 6th then the setup man in the 7th).
+        var floor = side.minArmIdx || 0;
+        function pick(i) { return arms[Math.max(i, floor)]; }
         // Multi-arm sequencing: the LAST arm is the closer, reserved for the 9th-
         // inning pocket (defensive out 24+) and any later relief. The middle arms
         // (bridge, setup) split the outs between the starter's exit and the 9th, in
         // order, so the highest-leverage arm (setup) covers the latest pocket.
         var closerIdx = arms.length - 1;
         var CLOSER_FLOOR = 24; // 9th inning begins at the 24th defensive out
-        if (outsRecorded >= Math.max(starterOuts, CLOSER_FLOOR)) return arms[closerIdx];
+        if (outsRecorded < starterOuts) return pick(0);
+        if (outsRecorded >= Math.max(starterOuts, CLOSER_FLOOR)) return pick(closerIdx);
         var midCount = closerIdx - 1; // arms between the starter and the closer
-        if (midCount <= 0) return arms[closerIdx];
+        if (midCount <= 0) return pick(closerIdx);
         var span = CLOSER_FLOOR - starterOuts;
-        if (span <= 0) return arms[closerIdx];
+        if (span <= 0) return pick(closerIdx);
         var k = clamp(Math.floor(((outsRecorded - starterOuts) / span) * midCount), 0, midCount - 1);
-        return arms[1 + k];
+        return pick(1 + k);
     }
     function evSimGame(awaySide, homeSide, random) {
         [awaySide, homeSide].forEach(function (s) {
-            s.idx = 0; s.lob = 0; s.sb = 0; s.cs = 0;
+            s.idx = 0; s.lob = 0; s.sb = 0; s.cs = 0; s.minArmIdx = 0; s.midChanges = 0;
             // Event-sourced situational trackers (reset per game).
             s.gidp = 0; s.sf = 0; s.rispAb = 0; s.rispHits = 0; s.twoOutRbi = 0;
             s.lisp2out = 0; s.pickoffs = 0; s.ofAssists = 0; s.dpTurned = 0;
@@ -2428,7 +2454,7 @@
         // Defensive stats (double plays turned, outfield assists) credit the side in
         // the field for that half.
         function half(batSide, defSide, pitcher, endLead, ghostSlot) {
-            var r = evPlayHalf(batSide, pitcher, random, endLead, ghostSlot);
+            var r = evPlayHalf(batSide, pitcher, random, endLead, ghostSlot, defSide);
             defSide.dpTurned += r.gidp; defSide.ofAssists += r.ofAssists;
             return r;
         }
