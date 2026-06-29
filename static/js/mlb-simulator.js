@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ultrareal2-decisions-20260628';
+    var UI_BUILD = 'mlb-simulator-ultrareal3-hitters-20260628';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1488,7 +1488,13 @@
             var splitPa = splitStat ? Number(splitStat.plateAppearances) : 0;
             var splitOk = splitStat && Number.isFinite(Number(splitStat.ops)) && splitPa >= 25;
             var seasonPa = seasonStat ? Number(seasonStat.plateAppearances) : 0;
-            var seasonOk = seasonStat && Number.isFinite(Number(seasonStat.ops)) && seasonPa >= 30;
+            // SMALL_SAMPLE_REGRESSION_20260628: lowered the hard cutoff (was 30 PA) so a
+            // bench bat with real numbers is no longer thrown out and rendered as a flat
+            // league-average .245 hitter (a .105 backup catcher used to "hit" .248). Below
+            // a full sample, each rate is regressed toward league by plate appearances, so
+            // limited/weak hitters trend toward their (noise-corrected) true talent rather
+            // than league average, and a hot small-sample line is not taken at face value.
+            var seasonOk = seasonStat && Number.isFinite(Number(seasonStat.ops)) && seasonPa >= 15;
             var stat;
             var source;
             if (splitOk) {
@@ -1502,22 +1508,34 @@
                 source = null;
             }
             var hasReal = !!stat;
+            var paUsed = hasReal ? Number(stat.plateAppearances || 0) : 0;
+            // Reliability weight: full trust by ~250 PA, floored so a real-but-tiny sample
+            // still nudges off league average toward the player's observed line.
+            var rw = clamp(paUsed / 250, 0.15, 1);
+            var LG = { avg: 0.245, slg: 0.400, ops: 0.715, kRate: 0.225, bbRate: 0.085, hrRate: 0.033 };
+            function reg(obs, lg) { return (obs == null || !Number.isFinite(obs)) ? lg : obs * rw + lg * (1 - rw); }
             var hrCount = seasonStat ? Number(seasonStat.homeRuns || 0) : 0;
-            var hrRateSeason = seasonOk && Number(seasonStat.atBats) > 0 ? hrCount / Number(seasonStat.atBats) : null;
+            var hrRateObs = seasonOk && Number(seasonStat.atBats) > 0 ? hrCount / Number(seasonStat.atBats) : null;
+            var kRateObs = hasReal && Number(stat.plateAppearances) > 0 ? Number(stat.strikeOuts || 0) / Number(stat.plateAppearances) : null;
+            var bbRateObs = hasReal && Number(stat.plateAppearances) > 0 ? Number(stat.baseOnBalls || 0) / Number(stat.plateAppearances) : null;
             return {
                 name: player.name,
                 position: playerPositionLabel(player),
                 mlbId: player.mlbId || null,
                 batSide: player && player.mlbId ? batSideOf(player.mlbId) : null,
-                ops: hasReal ? Number(stat.ops) : null,
-                avg: hasReal ? Number(stat.avg) : null,
-                slg: hasReal ? Number(stat.slg) : null,
+                ops: hasReal ? reg(Number(stat.ops), LG.ops) : null,
+                avg: hasReal ? reg(Number(stat.avg), LG.avg) : null,
+                slg: hasReal ? reg(Number(stat.slg), LG.slg) : null,
+                // Raw (un-regressed) real line for DISPLAY only; the regressed values above
+                // drive the simulation model.
+                realAvgRaw: hasReal ? Number(stat.avg) : null,
+                realOpsRaw: hasReal ? Number(stat.ops) : null,
                 hr: hrCount,
                 ab: hasReal ? Number(stat.atBats || 0) : 0,
-                pa: hasReal ? Number(stat.plateAppearances || 0) : 0,
-                hrRate: hrRateSeason,
-                kRate: hasReal && Number(stat.plateAppearances) > 0 ? Number(stat.strikeOuts || 0) / Number(stat.plateAppearances) : null,
-                bbRate: hasReal && Number(stat.plateAppearances) > 0 ? Number(stat.baseOnBalls || 0) / Number(stat.plateAppearances) : null,
+                pa: paUsed,
+                hrRate: hasReal ? reg(hrRateObs, LG.hrRate) : null,
+                kRate: hasReal ? reg(kRateObs, LG.kRate) : null,
+                bbRate: hasReal ? reg(bbRateObs, LG.bbRate) : null,
                 real: hasReal,
                 statSource: source,
                 vsHand: opposingHand || null
@@ -1623,8 +1641,8 @@
             var plainName = (statRow && statRow.name) || (rosterNames[index] ? rosterNames[index].replace(/\s*\([^)]*\)\s*$/, '') : '');
             var rawPos = (statRow && statRow.position) || ((rosterNames[index] || '').match(/\(([A-Z0-9]+)\)\s*$/) || [null, ''])[1];
             var gameAvg = ab > 0 ? hits[index] / ab : 0;
-            var displayAvg = statRow && statRow.real && statRow.avg != null ? statRow.avg : gameAvg;
-            var displayOps = statRow && statRow.real && statRow.ops != null ? statRow.ops : clamp(displayAvg * 2.55 + 0.18, 0.45, 1.25);
+            var displayAvg = statRow && statRow.real && statRow.realAvgRaw != null ? statRow.realAvgRaw : gameAvg;
+            var displayOps = statRow && statRow.real && statRow.realOpsRaw != null ? statRow.realOpsRaw : clamp(displayAvg * 2.55 + 0.18, 0.45, 1.25);
             return {
                 name: (statRow && statRow.name && (statRow.position ? statRow.name + ' (' + statRow.position + ')' : statRow.name)) || rosterNames[index] || '',
                 playerName: plainName,
@@ -1638,7 +1656,7 @@
                 rbi: rbi[index],
                 bb: walks[index],
                 so: strikeouts[index],
-                statSource: statRow && statRow.real ? ((statRow.statSource === 'split' && statRow.vsHand ? ('Real ' + seasonYear() + ' vs ' + statRow.vsHand + 'HP OPS ' + statRow.ops.toFixed(3) + ' / AVG ' + statRow.avg.toFixed(3)) : ('Real ' + seasonYear() + ' season OPS ' + statRow.ops.toFixed(3) + ' / AVG ' + statRow.avg.toFixed(3))) + (statRow.hrRate != null ? ' / HR ' + statRow.hr : '')) : null
+                statSource: statRow && statRow.real ? ((statRow.statSource === 'split' && statRow.vsHand ? ('Real ' + seasonYear() + ' vs ' + statRow.vsHand + 'HP OPS ' + (statRow.realOpsRaw != null ? statRow.realOpsRaw : statRow.ops).toFixed(3) + ' / AVG ' + (statRow.realAvgRaw != null ? statRow.realAvgRaw : statRow.avg).toFixed(3)) : ('Real ' + seasonYear() + ' season OPS ' + (statRow.realOpsRaw != null ? statRow.realOpsRaw : statRow.ops).toFixed(3) + ' / AVG ' + (statRow.realAvgRaw != null ? statRow.realAvgRaw : statRow.avg).toFixed(3))) + (statRow.hrRate != null ? ' / HR ' + statRow.hr : '')) : null
             };
         }).filter(function (row) { return row.name; });
     }
@@ -2024,8 +2042,13 @@
     // with no post-hoc compression hack. evAnchorFactor solves f over THIS function, so
     // the anchor automatically compensates through hits.
     function evScale(v, f) {
-        var nv = { bb: v.bb, so: v.so, hr: v.hr * f, b3: v.b3 * f, b2: v.b2 * f, b1: v.b1 * f, out: v.out };
-        var posOld = v.hr + v.b3 + v.b2 + v.b1, posNew = nv.hr + nv.b3 + nv.b2 + nv.b1;
+        // Walks track the run environment only PARTIALLY (~1/3 as much as hits): plate
+        // discipline is mostly matchup-driven, so high-scoring lineups get there mainly
+        // through hits/power. Scaling walks 0% (hits carry everything) inflated realized
+        // batting averages ~.017; this split keeps walks realistic AND AVG honest.
+        var bbF = 1 + (f - 1) * 0.35;
+        var nv = { bb: v.bb * bbF, so: v.so, hr: v.hr * f, b3: v.b3 * f, b2: v.b2 * f, b1: v.b1 * f, out: v.out };
+        var posOld = v.bb + v.hr + v.b3 + v.b2 + v.b1, posNew = nv.bb + nv.hr + nv.b3 + nv.b2 + nv.b1;
         nv.out = Math.max(0.02, v.out + (posOld - posNew));
         return evNormalize(nv);
     }
@@ -2128,9 +2151,9 @@
                 playerName: plainName,
                 name: (s && s.name && (s.position ? s.name + ' (' + s.position + ')' : s.name)) || names[i] || '',
                 rawPos: rawPos,
-                realAvg: (s && s.real && s.avg != null) ? s.avg : null,
-                realOps: (s && s.real && s.ops != null) ? s.ops : null,
-                statSource: (s && s.real) ? ((s.statSource === 'split' && s.vsHand ? ('Real ' + seasonYear() + ' vs ' + s.vsHand + 'HP') : ('Real ' + seasonYear() + ' season')) + ' OPS ' + Number(s.ops).toFixed(3)) : null,
+                realAvg: (s && s.real && s.realAvgRaw != null) ? s.realAvgRaw : null,
+                realOps: (s && s.real && s.realOpsRaw != null) ? s.realOpsRaw : null,
+                statSource: (s && s.real) ? ((s.statSource === 'split' && s.vsHand ? ('Real ' + seasonYear() + ' vs ' + s.vsHand + 'HP') : ('Real ' + seasonYear() + ' season')) + ' OPS ' + Number(s.realOpsRaw != null ? s.realOpsRaw : s.ops).toFixed(3)) : null,
                 acc: evNewBat()
             });
         }
