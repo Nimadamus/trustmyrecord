@@ -2720,6 +2720,12 @@
             ].join('');
         }
 
+        // Deep-link state: /handicappers/?sport=MLB pre-selects a sport. The sport
+        // options only exist after background enrichment, so we (re)apply the param
+        // each time fillSports runs, until the visitor changes the dropdown themselves.
+        let pendingSportFilter = '';
+        let userTouchedSport = false;
+
         function fillSports() {
             const selected = els.sport.value || 'all';
             const set = new Set();
@@ -2730,6 +2736,7 @@
             const sports = Array.from(set).sort();
             els.sport.innerHTML = '<option value="all">All sports</option>' + sports.map(sport => '<option value="' + escapeHtml(sport) + '">' + escapeHtml(sport) + '</option>').join('');
             if (sports.includes(selected)) els.sport.value = selected;
+            if (!userTouchedSport && pendingSportFilter && sports.includes(pendingSportFilter)) els.sport.value = pendingSportFilter;
             rebuildWagerOptions();
         }
 
@@ -3047,18 +3054,13 @@
                 // lets the sport-tracker pages open this board pre-filtered to one sport.
                 const SPORT_PARAM_MAP = { mlb:'MLB', nba:'NBA', nfl:'NFL', nhl:'NHL', soccer:'Soccer', baseball_mlb:'MLB', basketball_nba:'NBA', americanfootball_nfl:'NFL', icehockey_nhl:'NHL' };
                 const rawSportParam = (params.get('sport') || '').trim();
-                const pendingSportFilter = rawSportParam ? (SPORT_PARAM_MAP[rawSportParam.toLowerCase()] || rawSportParam) : '';
-                const applyInitialSport = () => {
-                    if (!pendingSportFilter || !els.sport) return;
-                    if (Array.from(els.sport.options).some(o => o.value === pendingSportFilter)) els.sport.value = pendingSportFilter;
-                };
+                pendingSportFilter = rawSportParam ? (SPORT_PARAM_MAP[rawSportParam.toLowerCase()] || rawSportParam) : '';
                 // Phase 0: instant paint from last cached snapshot (if any).
                 const cached = readDirectoryCache();
                 if (cached.length) {
                     members = cached;
                     renderSummary();
                     fillSports();
-                    applyInitialSport();
                     applyFilters();
                 }
                 const sourceUsers = await fetchBackendUsers();
@@ -3073,7 +3075,6 @@
                 writeDirectoryCache(members);
                 renderSummary();
                 fillSports();
-                applyInitialSport();
                 applyFilters();
                 // Phase 2: enrich with per-member picks in the background.
                 enrichMembersWithPicks();
@@ -3113,7 +3114,7 @@
             resetPaginationAndApplyFilters();
         });
         els.search.addEventListener('input', resetPaginationAndApplyFilters);
-        els.sport.addEventListener('change', () => { rebuildWagerOptions(); resetPaginationAndApplyFilters(); });
+        els.sport.addEventListener('change', () => { userTouchedSport = true; rebuildWagerOptions(); resetPaginationAndApplyFilters(); });
         if (els.wager) els.wager.addEventListener('change', resetPaginationAndApplyFilters);
         els.sort.addEventListener('change', () => {
             const field = els.sort.value || 'units';
