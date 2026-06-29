@@ -170,15 +170,50 @@
       var tb=document.querySelector('#pendingTbl tbody');
       tb.innerHTML = rows.length?'':'<tr><td colspan="5" class="muted">Nothing pending.</td></tr>';
       rows.forEach(function(p){
+        var pl=p.payload||{};
         var tr=document.createElement('tr');
         tr.innerHTML='<td>'+esc(p.bot_key)+'</td><td>'+esc(p.post_type)+'</td>'
           +'<td><b>'+esc(p.title)+'</b><div class="muted">'+esc(p.body_preview||'')+'</div></td>'
           +'<td>'+ago(p.created_at)+'</td>'
-          +'<td><button class="primary" data-ap="'+p.id+'">Approve</button> <button data-rj="'+p.id+'">Reject</button></td>';
+          +'<td><button class="primary" data-ap="'+p.id+'">Approve</button> <button data-ed="'+p.id+'">Edit</button> <button data-rj="'+p.id+'">Reject</button></td>';
         tb.appendChild(tr);
+        // hidden inline editor row
+        var er=document.createElement('tr'); er.style.display='none'; er.setAttribute('data-editrow',p.id);
+        var fields='';
+        if(p.post_type==='trivia'){
+          fields='<label>Question</label><input data-f="q" style="width:100%" value="'+esc(pl.q||p.title||'')+'">'
+            +'<label>Answers (one per line, mark correct with index below)</label><textarea data-f="answers" style="width:100%;height:90px">'+esc((pl.answers||[]).join('\n'))+'</textarea>'
+            +'<label>Correct answer index (0-based)</label><input type="number" data-f="correct" value="'+(pl.correct!=null?pl.correct:0)+'" style="width:90px">'
+            +'<label>Explanation</label><textarea data-f="explanation" style="width:100%;height:70px">'+esc(pl.explanation||'')+'</textarea>';
+        } else if(p.post_type==='poll'){
+          fields='<label>Title</label><input data-f="title" style="width:100%" value="'+esc(pl.title||p.title||'')+'">'
+            +'<label>Options (one per line)</label><textarea data-f="options" style="width:100%;height:90px">'+esc((pl.options||[]).join('\n'))+'</textarea>';
+        } else {
+          fields='<label>Title</label><input data-f="title" style="width:100%" value="'+esc(pl.title||p.title||'')+'">'
+            +'<label>Body</label><textarea data-f="body" style="width:100%;height:120px">'+esc(pl.body||'')+'</textarea>';
+        }
+        er.innerHTML='<td colspan="5"><div class="panel" style="margin:6px 0">'+fields
+          +'<div class="actions"><button class="primary" data-save="'+p.id+'" data-type="'+p.post_type+'">Save edits</button>'
+          +'<button data-cancel="'+p.id+'">Cancel</button></div></div></td>';
+        tb.appendChild(er);
       });
       tb.querySelectorAll('[data-ap]').forEach(function(b){ b.onclick=function(){ api('/community-bots/pending/'+b.getAttribute('data-ap')+'/approve',{method:'POST',body:'{}'}).then(function(){note('Approved & published.');load();}).catch(function(e){note(e.message,true);}); }; });
       tb.querySelectorAll('[data-rj]').forEach(function(b){ b.onclick=function(){ api('/community-bots/pending/'+b.getAttribute('data-rj')+'/reject',{method:'POST',body:'{}'}).then(function(){note('Rejected.');load();}).catch(function(e){note(e.message,true);}); }; });
+      tb.querySelectorAll('[data-ed]').forEach(function(b){ b.onclick=function(){ var r=tb.querySelector('[data-editrow="'+b.getAttribute('data-ed')+'"]'); if(r) r.style.display=r.style.display==='none'?'':'none'; }; });
+      tb.querySelectorAll('[data-cancel]').forEach(function(b){ b.onclick=function(){ var r=tb.querySelector('[data-editrow="'+b.getAttribute('data-cancel')+'"]'); if(r) r.style.display='none'; }; });
+      tb.querySelectorAll('[data-save]').forEach(function(b){ b.onclick=function(){
+        var id=b.getAttribute('data-save'), type=b.getAttribute('data-type');
+        var row=tb.querySelector('[data-editrow="'+id+'"]');
+        var body={};
+        row.querySelectorAll('[data-f]').forEach(function(el){
+          var f=el.getAttribute('data-f');
+          if(f==='answers'||f==='options') body[f]=el.value.split('\n').map(function(s){return s.trim();}).filter(Boolean);
+          else if(f==='correct') body[f]=Number(el.value);
+          else body[f]=el.value;
+        });
+        api('/community-bots/pending/'+id,{method:'PUT',body:JSON.stringify(body)})
+          .then(function(){note('Saved edits to #'+id+'.');load();}).catch(function(e){note(e.message,true);});
+      }; });
     }
 
     function renderLog(rows){
