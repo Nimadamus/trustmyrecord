@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ultrareal4-midinning-20260628';
+    var UI_BUILD = 'mlb-simulator-ultrareal5-posplayer-20260629';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2432,8 +2432,40 @@
         var k = clamp(Math.floor(((outsRecorded - starterOuts) / span) * midCount), 0, midCount - 1);
         return pick(1 + k);
     }
+    // A position player on the mound: real teams down big late send a hitter out to
+    // soak innings and save the bullpen. Lobs strikes -> almost no strikeouts, lots of
+    // contact, the occasional long ball. Built from one of the defending side's own
+    // hitters (a corner IF / DH, the usual volunteers).
+    var POSITION_PITCHER_VEC = { so: 0.045, bb: 0.075, hr: 0.050, hitFactor: 1.22 };
+    function evMakePositionPitcher(side) {
+        var lineup = side.lineup || [];
+        var cand = lineup.filter(function (b) { return /1B|3B|2B|DH|SS|C\b/i.test(String(b.rawPos || '')); });
+        var pick = cand.length ? cand[cand.length - 1] : lineup[lineup.length - 1];
+        if (!pick) return null;
+        var nm = (pick.playerName || pick.name || 'Position player').replace(/\s*\([^)]*\)\s*$/, '');
+        return { name: nm + ' (' + (pick.rawPos || 'IF') + ', position player)', vec: POSITION_PITCHER_VEC, acc: evNewPit(), role: 'POS', hand: null, isPositionPlayer: true };
+    }
+    // POSITION_PLAYER_PITCHING_20260629: pick the defending arm, but in a deep blowout
+    // (down 8+ in the 8th inning or later) send a position player instead of burning a
+    // real reliever. The pos pitcher is appended once and pinned via minArmIdx; the
+    // per-game reset truncates it so win-probability resampling never accumulates arms.
+    function evDefPitcher(side, outsRecorded, defRuns, oppRuns, inn) {
+        if (inn >= 7 && (oppRuns - defRuns) >= 8) {
+            if (!side.posPitcher) {
+                var pp = evMakePositionPitcher(side);
+                if (pp) { side.pitchers.push(pp); side.posPitcherIdx = side.pitchers.length - 1; side.posPitcher = pp; }
+            }
+            if (side.posPitcher) { side.minArmIdx = side.posPitcherIdx; return side.posPitcher; }
+        }
+        return evActivePitcher(side, outsRecorded);
+    }
     function evSimGame(awaySide, homeSide, random) {
         [awaySide, homeSide].forEach(function (s) {
+            // Restore the pitcher staff to its real arms (drop any blowout position
+            // player appended in a prior sampled game) so resampling never accumulates.
+            if (s._baseArms === undefined) s._baseArms = s.pitchers.length;
+            else if (s.pitchers.length > s._baseArms) s.pitchers.length = s._baseArms;
+            s.posPitcher = null; s.posPitcherIdx = -1;
             s.idx = 0; s.lob = 0; s.sb = 0; s.cs = 0; s.minArmIdx = 0; s.midChanges = 0;
             // Event-sourced situational trackers (reset per game).
             s.gidp = 0; s.sf = 0; s.rispAb = 0; s.rispHits = 0; s.twoOutRbi = 0;
@@ -2459,10 +2491,10 @@
             return r;
         }
         for (var inn = 0; inn < 9; inn++) {
-            var ap = evActivePitcher(homeSide, sumOuts(homeSide));
+            var ap = evDefPitcher(homeSide, sumOuts(homeSide), hRuns, aRuns, inn);
             var ra = half(awaySide, homeSide, ap); aRuns += ra.runs; hErr += ra.errors; aInn.push(ra.runs);
             if (inn === 8 && hRuns > aRuns) { break; } // home leads, bottom 9 not played
-            var hp = evActivePitcher(awaySide, sumOuts(awaySide));
+            var hp = evDefPitcher(awaySide, sumOuts(awaySide), aRuns, hRuns, inn);
             // Bottom 9: walk-off rule applies (half ends when home takes the lead).
             var rh = half(homeSide, awaySide, hp, inn === 8 ? (aRuns - hRuns) : null);
             hRuns += rh.runs; aErr += rh.errors; hInn.push(rh.runs);
