@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ultrareal8-baserun-ibb-wind-20260629';
+    var UI_BUILD = 'mlb-simulator-ultrareal9-truetalent-20260629';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -554,6 +554,34 @@
             vsHand: opposingHand || null,
             factor: clamp(1 + (meanOps - 0.720) * 0.55, 0.85, 1.15)
         };
+    }
+    // TEAM_TRUE_TALENT_20260629: real season run differential is the single best
+    // calibrated team-quality signal. Fetch the league standings once (RS/RA/GP for all
+    // 30), then blend each matchup's log5 Pythagorean expectation into the win % as a
+    // true-talent prior. One call, cached league-wide, so any matchup can read it.
+    function fetchLeagueSeasonStrength() {
+        if (state.liveContext.teamSeasonLoaded) return Promise.resolve(state.liveContext.teamSeason || null);
+        var url = 'https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=' + seasonYear() + '&standingsTypes=regularSeason&_=' + encodeURIComponent(UI_BUILD);
+        return fetchJson(url, { cache: 'default' }).then(function (data) {
+            var id2abbr = {}; Object.keys(MLB_TEAM_IDS).forEach(function (a) { id2abbr[MLB_TEAM_IDS[a]] = a; });
+            var map = {};
+            (data && data.records || []).forEach(function (rec) {
+                (rec.teamRecords || []).forEach(function (t) {
+                    var ab = id2abbr[t.team && t.team.id]; if (!ab) return;
+                    var rs = Number(t.runsScored), ra = Number(t.runsAllowed), gp = Number(t.gamesPlayed);
+                    if (rs > 0 && ra > 0 && gp >= 10) map[ab] = { rs: rs, ra: ra, gp: gp };
+                });
+            });
+            state.liveContext.teamSeason = map; state.liveContext.teamSeasonLoaded = true;
+            return map;
+        }).catch(function () { state.liveContext.teamSeasonLoaded = true; return null; });
+    }
+    function teamSeasonPythag(team) {
+        if (!team || team.era !== 'current') return null;
+        var s = state.liveContext.teamSeason && state.liveContext.teamSeason[team.abbreviation];
+        if (!s) return null;
+        var ex = 1.83, rs = Math.pow(s.rs, ex), ra = Math.pow(s.ra, ex);
+        return (rs + ra) > 0 ? rs / (rs + ra) : null;
     }
     function playerStatsUrl(playerId, group) {
         return 'https://statsapi.mlb.com/api/v1/people/' + encodeURIComponent(playerId) +
@@ -3500,6 +3528,19 @@
         var simStats = {};
         var simHomeWin = eventWinProbability(eventInputs, wpSamples, simStats);
         homeWin = clamp(Number.isFinite(simHomeWin) ? simHomeWin : homeWin, 0.05, 0.95);
+        // TEAM_TRUE_TALENT_20260629: regularize the simulated win % toward a real
+        // season run-differential prior (log5 of the two clubs' Pythagorean win
+        // expectations + home edge). The PA-engine frequency stays dominant (75/25); the
+        // prior pulls in true talent the single-game starter matchup can miss. Synthetic
+        // teams (offline gate) have no season data, so this is calibration-neutral.
+        var awaySeas = teamSeasonPythag(away), homeSeas = teamSeasonPythag(home);
+        if (awaySeas != null && homeSeas != null) {
+            var denomS = homeSeas + awaySeas - 2 * homeSeas * awaySeas;
+            var l5 = denomS > 0 ? (homeSeas - homeSeas * awaySeas) / denomS : 0.5;
+            l5 = clamp(l5 + 0.035, 0.20, 0.80);
+            homeWin = clamp(homeWin * 0.75 + l5 * 0.25, 0.05, 0.95);
+            liveFactors.push('Season run-differential prior: ' + home.abbreviation + ' Pyth ' + Math.round(homeSeas * 100) + '% vs ' + away.abbreviation + ' ' + Math.round(awaySeas * 100) + '% regularizes the win probability toward true talent.');
+        }
         // EXPECTED_RUNS_CONSISTENCY_20260623: align the DISPLAYED expected runs (and the
         // score range, total, and run environment that derive from them) with the actual
         // mean of the simulated box scores from the same plate-appearance engine. The
@@ -4463,7 +4504,8 @@
         setText('projectionNotice', 'Loading verified MLB active roster names before rendering the player box score.');
         return Promise.all([
             ensureRostersForTeams(away, home),
-            fetchBackendProjectionStatus(state.activeLiveContext)
+            fetchBackendProjectionStatus(state.activeLiveContext),
+            fetchLeagueSeasonStrength()
         ]).then(function () {
             setLiveInputsForMatchup(away, home);
             renderPitcherOptions('away', away, state.activeLiveContext);
