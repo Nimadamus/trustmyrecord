@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ultrareal7-rotation-20260629';
+    var UI_BUILD = 'mlb-simulator-ultrareal8-baserun-ibb-wind-20260629';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1347,9 +1347,16 @@
             else if (weather.temperature >= 78) adjustment += 0.06;
             else if (weather.temperature <= 48) adjustment -= 0.09;
         }
-        if (Number.isFinite(weather.gust) && weather.gust >= 18) adjustment += 0.04;
+        // WIND_DIRECTION_20260629: wind blowing OUT carries fly balls (more runs/HR), IN
+        // knocks them down. Parse the MLB schedule wind string ("12 mph, Out To CF").
+        if (typeof weather.wind === 'string') {
+            var wmph = (weather.wind.match(/(\d+)\s*mph/i) || [])[1];
+            wmph = wmph ? Number(wmph) : 0;
+            if (/\bout\b/i.test(weather.wind)) adjustment += clamp(wmph * 0.006, 0, 0.12);
+            else if (/\bin\b/i.test(weather.wind)) adjustment -= clamp(wmph * 0.005, 0, 0.10);
+        } else if (Number.isFinite(weather.gust) && weather.gust >= 18) adjustment += 0.04;
         if (Number.isFinite(weather.precipitation) && weather.precipitation > 0) adjustment -= 0.08;
-        return clamp(adjustment, -0.16, 0.18);
+        return clamp(adjustment, -0.22, 0.24);
     }
     function applyMarketTotalCalibration(awayRuns, homeRuns, total, strengthShare) {
         var marketTotal = Number(total);
@@ -2187,6 +2194,11 @@
         lineup.forEach(function (b, i) {
             b.stealRate = clamp(rawRates[i] * stealScale, 0, 0.5);
             b.stealSuccess = b.stealSucc != null ? b.stealSucc : 0.78;
+            // SPEED_BASERUNNING_20260629: extra-base advancement multiplier from real
+            // steal-attempt rate (a clean speed proxy), centered on the league runner
+            // (0.075 -> 1.0) so the league-MEAN advancement is unchanged (calibration-
+            // neutral) while burners take the extra base more and sluggers less.
+            b.speed = clamp(1.0 + ((b.sbRawRate != null ? b.sbRawRate : LG_SB_RAW) - LG_SB_RAW) * 2.4, 0.82, 1.30);
         });
         // Anchor against a starter/bullpen blend (~72% of PAs face the opposing
         // starter, ~28% the bullpen, approximated as a league-average arm) with the
@@ -2346,6 +2358,21 @@
                 else { lineup[bases[0]].acc.cs++; side.cs++; bases[0] = null; bp[0] = null; pitcher.acc.outs++; outs++; if (outs >= 3) break; }
             }
             var bi = side.idx % 9, b = lineup[bi];
+            // INTENTIONAL_WALK_20260629: first base open, a runner in scoring position,
+            // two outs, an elite bat up and a clearly weaker on-deck hitter -> the manager
+            // puts him on (real MLB ~0.2 IBB/team-game). Needs real OPS, so synthetic teams
+            // and the offline calibration harness never trigger it (calibration-neutral).
+            if (bases[0] === null && (bases[1] !== null || bases[2] !== null) && outs >= 1 && b.realOps != null && b.realOps >= 0.830) {
+                var onDeck = lineup[(side.idx + 1) % 9];
+                var ibbProb = outs === 2 ? 0.85 : 0.30;
+                if (onDeck && (onDeck.realOps == null || onDeck.realOps < b.realOps - 0.070) && random() < ibbProb) {
+                    b.acc.pa++; b.acc.bb++; pitcher.acc.bb++; pitcher.acc.bf++;
+                    pitcher.acc.pitches = (pitcher.acc.pitches || 0) + 4; pitcher.acc.strikes = (pitcher.acc.strikes || 0) + 1;
+                    bases[0] = bi; bp[0] = pitcher; side.ibb = (side.ibb || 0) + 1; side.idx++;
+                    if (outs < 3) maybeChange();
+                    continue;
+                }
+            }
             var timesThrough = Math.floor(pitcher.acc.bf / 9) + 1;
             // PLATOON_VS_RELIEVER_20260623: face the batter with the split that matches
             // the ACTIVE pitcher's hand (starter or reliever). baseVecVsL/R default to
@@ -2378,18 +2405,20 @@
                 acc.ab++; acc.h++; acc.b2++; pitcher.acc.h++;
                 if (bases[2] !== null) { score(bases[2], true, bp[2]); rbi++; bases[2] = null; bp[2] = null; }
                 if (bases[1] !== null) { score(bases[1], true, bp[1]); rbi++; bases[1] = null; bp[1] = null; }
-                if (bases[0] !== null) { if (random() < 0.40) { score(bases[0], true, bp[0]); rbi++; } else { bases[2] = bases[0]; bp[2] = bp[0]; } bases[0] = null; bp[0] = null; }
+                if (bases[0] !== null) { if (random() < clamp(0.40 * (lineup[bases[0]].speed || 1), 0.18, 0.72)) { score(bases[0], true, bp[0]); rbi++; } else { bases[2] = bases[0]; bp[2] = bp[0]; } bases[0] = null; bp[0] = null; }
                 bases[1] = bi; bp[1] = pitcher;
             } else if (ev === 'b1') {
                 acc.ab++; acc.h++; acc.b1++; pitcher.acc.h++;
                 if (bases[2] !== null) { score(bases[2], true, bp[2]); rbi++; bases[2] = null; bp[2] = null; }
                 if (bases[1] !== null) {
+                    var sp2 = lineup[bases[1]].speed || 1;
+                    var scoreT = clamp(0.60 * sp2, 0.42, 0.82), outT = scoreT + 0.10;
                     var send = random();
-                    if (send < 0.60) { score(bases[1], true, bp[1]); rbi++; bases[1] = null; bp[1] = null; }
-                    else if (send < 0.70) { ofAssists++; pitcher.acc.outs++; outs++; bases[1] = null; bp[1] = null; } // thrown out at home (outfield assist)
+                    if (send < scoreT) { score(bases[1], true, bp[1]); rbi++; bases[1] = null; bp[1] = null; }
+                    else if (send < outT) { ofAssists++; pitcher.acc.outs++; outs++; bases[1] = null; bp[1] = null; } // thrown out at home (outfield assist)
                     else { bases[2] = bases[1]; bp[2] = bp[1]; bases[1] = null; bp[1] = null; }
                 }
-                if (bases[0] !== null) { if (random() < 0.28 && bases[2] === null) { bases[2] = bases[0]; bp[2] = bp[0]; } else { bases[1] = bases[0]; bp[1] = bp[0]; } bases[0] = null; bp[0] = null; }
+                if (bases[0] !== null) { if (random() < clamp(0.28 * (lineup[bases[0]].speed || 1), 0.12, 0.5) && bases[2] === null) { bases[2] = bases[0]; bp[2] = bp[0]; } else { bases[1] = bases[0]; bp[1] = bp[0]; } bases[0] = null; bp[0] = null; }
                 bases[0] = bi; bp[0] = pitcher;
             } else { // out in play, with a small chance of a reach-on-error (unearned)
                 if (random() < side.errRate) {
@@ -2501,7 +2530,7 @@
             if (s._baseArms === undefined) s._baseArms = s.pitchers.length;
             else if (s.pitchers.length > s._baseArms) s.pitchers.length = s._baseArms;
             s.posPitcher = null; s.posPitcherIdx = -1;
-            s.idx = 0; s.lob = 0; s.sb = 0; s.cs = 0; s.minArmIdx = 0; s.midChanges = 0;
+            s.idx = 0; s.lob = 0; s.sb = 0; s.cs = 0; s.minArmIdx = 0; s.midChanges = 0; s.ibb = 0;
             // Event-sourced situational trackers (reset per game).
             s.gidp = 0; s.sf = 0; s.rispAb = 0; s.rispHits = 0; s.twoOutRbi = 0;
             s.lisp2out = 0; s.pickoffs = 0; s.ofAssists = 0; s.dpTurned = 0;
@@ -2622,7 +2651,7 @@
             lispLeft2Out: side.lisp2out || 0, gidp: side.gidp || 0,
             sacFlies: side.sf || 0,
             rispText: (side.rispHits || 0) + '-for-' + (side.rispAb || 0), pickoffs: side.pickoffs || 0,
-            outfieldAssists: side.ofAssists || 0, dp: side.dpTurned || 0
+            outfieldAssists: side.ofAssists || 0, dp: side.dpTurned || 0, ibb: side.ibb || 0
         };
     }
     function assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random) {
@@ -3816,7 +3845,7 @@
     function battingFieldingDetails(result) {
         function detail(label, line) {
             var s = line.summaryStats || {};
-            return '<p><strong>' + escapeHtml(label) + '</strong> 2B: ' + (s.doubles || 0) + '; 3B: ' + (s.triples || 0) + '; HR: ' + (s.homeRuns || 0) + '; TB: ' + (s.totalBases || 0) + '; RBI: ' + (s.rbi || 0) + '; 2-out RBI: ' + (s.twoOutRbi || 0) + '; Runners left in scoring position, 2 out: ' + (s.lispLeft2Out || 0) + '; GIDP: ' + (s.gidp || 0) + '; SF: ' + (s.sacFlies || 0) + '; Team RISP: ' + (s.rispText || '0-for-0') + '; Team LOB: ' + (s.leftOnBase || 0) + '; SB: ' + (s.stolenBases || 0) + '; CS: ' + (s.caughtStealing || 0) + '; Pickoffs: ' + (s.pickoffs || 0) + '; E: ' + (s.errors || 0) + '; Outfield assists: ' + (s.outfieldAssists || 0) + '; DP: ' + (s.dp || 0) + '</p>';
+            return '<p><strong>' + escapeHtml(label) + '</strong> 2B: ' + (s.doubles || 0) + '; 3B: ' + (s.triples || 0) + '; HR: ' + (s.homeRuns || 0) + '; TB: ' + (s.totalBases || 0) + '; RBI: ' + (s.rbi || 0) + '; 2-out RBI: ' + (s.twoOutRbi || 0) + '; Runners left in scoring position, 2 out: ' + (s.lispLeft2Out || 0) + '; GIDP: ' + (s.gidp || 0) + '; SF: ' + (s.sacFlies || 0) + '; IBB: ' + (s.ibb || 0) + '; Team RISP: ' + (s.rispText || '0-for-0') + '; Team LOB: ' + (s.leftOnBase || 0) + '; SB: ' + (s.stolenBases || 0) + '; CS: ' + (s.caughtStealing || 0) + '; Pickoffs: ' + (s.pickoffs || 0) + '; E: ' + (s.errors || 0) + '; Outfield assists: ' + (s.outfieldAssists || 0) + '; DP: ' + (s.dp || 0) + '</p>';
         }
         return '<section class="batting-fielding-details"><h5>Batting, Baserunning &amp; Fielding</h5>' +
             detail(result.away.abbreviation, result.boxScore.away) +
