@@ -32,7 +32,8 @@
         '<td class="' + cls + '">' + roi + '</td>' +
         '<td>' + num(u.win_rate) + '%</td></tr>';
     });
-    h += '</tbody></table></div><p style="margin-top:10px"><a href="/handicappers/">See the full verified handicapper leaderboard &rarr;</a></p>';
+    h += '</tbody></table></div><p style="margin-top:10px"><a href="/handicappers/?sport=' + encodeURIComponent(label) +
+      '">See the full verified ' + esc(label) + ' handicapper leaderboard &rarr;</a></p>';
     el.innerHTML = h;
   }
   function load(el) {
@@ -43,7 +44,7 @@
       .then(function (r) { return r.json(); })
       .then(function (d) { render(el, (d && d.leaderboard) || [], label); })
       .catch(function () {
-        el.innerHTML = '<div class="seo-card">Leaderboard temporarily unavailable. <a href="/handicappers/">View all verified handicappers.</a></div>';
+        el.innerHTML = '<div class="seo-card">Leaderboard temporarily unavailable. <a href="/handicappers/?sport=' + encodeURIComponent(label) + '">View verified ' + esc(label) + ' handicappers.</a></div>';
       });
   }
   function init() {
