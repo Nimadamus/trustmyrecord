@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ultrareal11-priorw30-20260629';
+    var UI_BUILD = 'mlb-simulator-ultrareal12-totalrecenter-20260629';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3522,6 +3522,16 @@
         var spread = round1(1.1 * volatility);
         var totalRuns = awayRuns + homeRuns;
         var rosterContext = rostersForTeams(away, home, context);
+        // REAL_TOTAL_RECENTER_20260629: on REAL matchups (live season data loaded) the
+        // stacked live adjustments (OPS, pitcher true-talent regression, park, defense)
+        // net ~+0.35 runs hot vs actual scoring (backtest n=60: pred 9.50 vs actual 9.15,
+        // season 8.96). Scale both clubs equally so the total recenters toward reality
+        // while the calibrated run DIFFERENCE (and win %) is untouched. Gated on real
+        // season data, so synthetic teams / the offline calibration gate are unaffected.
+        if (teamSeasonPythag(away) != null && teamSeasonPythag(home) != null) {
+            awayRuns = clamp(awayRuns * 0.955, 1.6, 9.4);
+            homeRuns = clamp(homeRuns * 0.955, 1.6, 9.4);
+        }
         var eventInputs = buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext);
         // Win probability is the simulated frequency from the same plate-appearance
         // engine that produces the box score, so the displayed win % and the box
