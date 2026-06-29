@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ultrareal10-pitchtt-20260629';
+    var UI_BUILD = 'mlb-simulator-ultrareal11-priorw30-20260629';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3546,7 +3546,7 @@
             var denomS = homeSeas + awaySeas - 2 * homeSeas * awaySeas;
             var l5 = denomS > 0 ? (homeSeas - homeSeas * awaySeas) / denomS : 0.5;
             l5 = clamp(l5 + 0.035, 0.20, 0.80);
-            homeWin = clamp(homeWin * 0.75 + l5 * 0.25, 0.05, 0.95);
+            homeWin = clamp(homeWin * 0.70 + l5 * 0.30, 0.05, 0.95);
             liveFactors.push('Season run-differential prior: ' + home.abbreviation + ' Pyth ' + Math.round(homeSeas * 100) + '% vs ' + away.abbreviation + ' ' + Math.round(awaySeas * 100) + '% regularizes the win probability toward true talent.');
         }
         // EXPECTED_RUNS_CONSISTENCY_20260623: align the DISPLAYED expected runs (and the
