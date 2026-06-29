@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ultrareal9-truetalent-20260629';
+    var UI_BUILD = 'mlb-simulator-ultrareal10-pitchtt-20260629';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2023,9 +2023,17 @@
         var stat = pitcher && pitcher.mlbId ? cachedPlayerStat(pitcher.mlbId, 'pitching') : null;
         var ip = stat ? Number(String(stat.inningsPitched || '0')) : 0;
         if (stat && ip >= 10) {
-            k9 = Number(stat.strikeOuts || 0) / ip * 9;
-            bb9 = Number(stat.baseOnBalls || 0) / ip * 9;
-            hr9 = Number(stat.homeRuns || 0) / ip * 9;
+            // PITCHER_TRUE_TALENT_20260629: regress each rate toward league by innings,
+            // since in-season pitcher rates are noisy at different speeds (K stabilizes
+            // fast, BB medium, HR slow). A starter with a few gopher-ball starts no longer
+            // reads as a true gopher-baller — the box-score sim (and thus the win %) uses
+            // true-talent rates. Synthetic teams (offline gate) have no stat -> unaffected.
+            var rawK9 = Number(stat.strikeOuts || 0) / ip * 9;
+            var rawBB9 = Number(stat.baseOnBalls || 0) / ip * 9;
+            var rawHR9 = Number(stat.homeRuns || 0) / ip * 9;
+            k9 = (ip * rawK9 + 25 * 8.6) / (ip + 25);
+            bb9 = (ip * rawBB9 + 45 * 3.1) / (ip + 45);
+            hr9 = (ip * rawHR9 + 90 * 1.16) / (ip + 90);
         } else {
             k9 = 8.6 + (quality - 100) * 0.10;
             bb9 = 3.1 - (quality - 100) * 0.03;
