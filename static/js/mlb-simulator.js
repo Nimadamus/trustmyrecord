@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ultrareal-20260628';
+    var UI_BUILD = 'mlb-simulator-ultrareal2-decisions-20260628';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -1854,23 +1854,36 @@
         });
         return assigned;
     }
-    function pitcherDecisions(rows, isWinner, margin) {
+    // Pitcher decisions (W/L/SV). ctx = { walkOff, extra, isHome }.
+    // PITCHER_DECISIONS_20260628: handle walk-offs and extra-inning games the way the
+    // official rules do, instead of always crediting the starter the win and the last
+    // arm a save. Walk-off: the WINNING team's last pitcher (in when his team won it)
+    // gets the W and NO save is awarded; the LOSING team's last pitcher (gave up the
+    // walk-off) takes the L. Any extra-inning game: the starter can never be the winner
+    // (the score was tied when he left), so the W goes to the reliever of record before
+    // the final lead and the finisher can earn the save. Regulation: starter wins with
+    // 5+ IP, else the bridge reliever; closer saves on a <=3-run lead or 3-inning finish.
+    function pitcherDecisions(rows, isWinner, margin, ctx) {
         var labels = (rows || []).map(function () { return ''; });
         if (!rows || !rows.length) return labels;
+        ctx = ctx || {};
+        var last = rows.length - 1;
+        var m = Number.isFinite(margin) ? margin : 1;
         if (isWinner) {
-            // W: starter only with 5+ IP (official rule), otherwise a reliever.
-            var wIdx = Number(rows[0].outs || 0) >= 15 ? 0 : (rows.length > 1 ? 1 : 0);
+            if (ctx.walkOff && ctx.isHome) { labels[last] = 'W'; return labels; }
+            var wIdx;
+            if (ctx.extra) {
+                wIdx = last >= 2 ? last - 1 : (rows.length > 1 ? 1 : 0);
+            } else {
+                wIdx = Number(rows[0].outs || 0) >= 15 ? 0 : (rows.length > 1 ? 1 : 0);
+            }
             labels[wIdx] = 'W';
-            // SV: real save rule approximation — last pitcher, not the winner, and
-            // either a close game (margin <= 3) or a 3+ inning finish.
-            if (rows.length > 1) {
-                var last = rows.length - 1;
-                var m = Number.isFinite(margin) ? margin : 1;
+            if (rows.length > 1 && last !== wIdx) {
                 var longFinish = Number(rows[last].outs || 0) >= 9;
-                if (last !== wIdx && (m <= 3 || longFinish)) labels[last] = 'SV';
+                if (m <= 3 || longFinish) labels[last] = 'SV';
             }
         } else {
-            labels[0] = 'L';
+            labels[ctx.walkOff && !ctx.isHome ? last : 0] = 'L';
         }
         return labels;
     }
@@ -3671,8 +3684,8 @@
         var st = clamp(Math.round(pc * clamp(0.61 + Number(row.so || 0) * 0.008 - Number(row.bb || 0) * 0.018, 0.52, 0.71)), 4, pc);
         return { pc: pc, st: st };
     }
-    function pitcherTableRows(rows, isWinner, margin) {
-        var decisions = pitcherDecisions(rows, isWinner, margin);
+    function pitcherTableRows(rows, isWinner, margin, ctx) {
+        var decisions = pitcherDecisions(rows, isWinner, margin, ctx);
         var totals = { h: 0, r: 0, er: 0, bb: 0, so: 0, hr: 0, outs: 0, pc: 0, st: 0 };
         var body = rows.map(function (row, index) {
             totals.h += row.h; totals.r += row.r; totals.er += row.er; totals.bb += row.bb; totals.so += row.so; totals.hr += row.hr; totals.outs += Number(row.outs || 0);
@@ -3778,13 +3791,13 @@
         return '<section class="player-team-box">' + headerLabel + '<p class="player-source-note">Lineup source: ' + escapeHtml(source) + '.</p>' +
             '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>SO</th><th>LOB</th><th>AVG</th><th>OPS</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div></section>';
     }
-    function pitchingTableSection(team, players, isWinner, margin) {
+    function pitchingTableSection(team, players, isWinner, margin, ctx) {
         var hasPitchers = players && players.pitchers && players.pitchers.length;
         if (!hasPitchers) {
             return '<section class="player-team-box"><p class="team-box-label">' + escapeHtml(team.name) + ' Pitching</p><div class="sim-empty">Pitching lines unavailable.</div></section>';
         }
         return '<section class="player-team-box"><p class="team-box-label">' + escapeHtml(team.name) + ' Pitching</p>' +
-            '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>HR</th><th>ERA</th><th>PC-ST</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers, isWinner, margin) + '</tbody></table></div></section>';
+            '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>SO</th><th>HR</th><th>ERA</th><th>PC-ST</th></tr></thead><tbody>' + pitcherTableRows(players.pitchers, isWinner, margin, ctx) + '</tbody></table></div></section>';
     }
     function renderPlayerBoxScore(result) {
         var panel = byId('playerBoxScorePanel');
@@ -3797,6 +3810,15 @@
         }
         var box = result.boxScore;
         var awayWon = box.winner && box.winner.id === result.away.id;
+        // Walk-off detection: home won, scored in the bottom of the final inning, and
+        // was tied or trailing before that frame (true walk-off, not just a final-inning
+        // insurance run). extra = the game ran past 9.
+        var homeInn = (box.home && box.home.innings) || [];
+        var extra = homeInn.length > 9 || ((box.away && box.away.innings || []).length > 9);
+        var homeLast = homeInn.length ? homeInn[homeInn.length - 1] : 0;
+        var homePre = (box.home ? box.home.runs : 0) - homeLast;
+        var walkOff = !awayWon && homeLast > 0 && homePre <= (box.away ? box.away.runs : 0);
+        var margin = Math.abs(box.away.runs - box.home.runs);
         panel.setAttribute('data-player-box-state', 'projected');
         content.innerHTML = '<p class="player-source-note box-score-disclaimer">Simulation output from TrustMyRecord. Player stat lines are modeled from the selected matchup and are not official MLB stats.</p>' +
             '<h4>Batting</h4>' +
@@ -3804,8 +3826,8 @@
             battingTableSection(result.home, box.players.home) +
             battingFieldingDetails(result) +
             '<h4>Pitching</h4>' +
-            pitchingTableSection(result.away, box.players.away, awayWon, Math.abs(box.away.runs - box.home.runs)) +
-            pitchingTableSection(result.home, box.players.home, !awayWon, Math.abs(box.away.runs - box.home.runs)) +
+            pitchingTableSection(result.away, box.players.away, awayWon, margin, { walkOff: walkOff, extra: extra, isHome: false }) +
+            pitchingTableSection(result.home, box.players.home, !awayWon, margin, { walkOff: walkOff, extra: extra, isHome: true }) +
             pitchingGameNotes(result);
     }
     // TOP_SCOREBOARD_20260603: baseball line-score scoreboard rendered at the top of the result card.
