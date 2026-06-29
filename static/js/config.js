@@ -68,3 +68,14 @@ if (typeof module !== 'undefined' && module.exports) {
     s.setAttribute('data-contest-promo-modal', '1');
     (document.head || document.documentElement).appendChild(s);
 })();
+
+// Official community-account badge loader (TMR Polls / TMR Trivia). Idempotent.
+(function () {
+    if (typeof document === 'undefined') return;
+    if (document.querySelector('script[data-official-badge]')) return;
+    var s = document.createElement('script');
+    s.src = '/static/js/official-badge.js?v=20260628';
+    s.defer = true;
+    s.setAttribute('data-official-badge', '1');
+    (document.head || document.documentElement).appendChild(s);
+})();
