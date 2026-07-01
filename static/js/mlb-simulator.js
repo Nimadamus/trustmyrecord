@@ -583,6 +583,24 @@
         var ex = 1.83, rs = Math.pow(s.rs, ex), ra = Math.pow(s.ra, ex);
         return (rs + ra) > 0 ? rs / (rs + ra) : null;
     }
+    // REAL_RSRA_BLEND_20260630 helpers.
+    // League average runs/team/game across whatever teams are loaded (>=10 teams needed).
+    function leagueRunBaseline() {
+        var ts = state.liveContext.teamSeason; if (!ts) return null;
+        var s = 0, c = 0;
+        Object.keys(ts).forEach(function (k) { var x = ts[k]; if (x && x.gp > 0) { s += x.rs / x.gp; c++; } });
+        return c >= 10 ? s / c : null;
+    }
+    // Matchup-runs (Bill James): offense team's real RS/g x defense team's real RA/g /
+    // league RS/g. Uses pre-game season-to-date RS/RA (current standings live; injected
+    // as-of-game-date in backtest) so there is no look-ahead in this term.
+    function teamRealRunExp(off, def) {
+        if (!off || off.era !== 'current' || !def || def.era !== 'current') return null;
+        var ts = state.liveContext.teamSeason; if (!ts) return null;
+        var o = ts[off.abbreviation], d = ts[def.abbreviation], lg = leagueRunBaseline();
+        if (!o || !d || !lg || o.gp < 10 || d.gp < 10) return null;
+        return clamp((o.rs / o.gp) * (d.ra / d.gp) / lg, 1.6, 9.4);
+    }
     function playerStatsUrl(playerId, group) {
         return 'https://statsapi.mlb.com/api/v1/people/' + encodeURIComponent(playerId) +
             '/stats?stats=season&group=' + encodeURIComponent(group) +
@@ -3531,6 +3549,20 @@
         if (teamSeasonPythag(away) != null && teamSeasonPythag(home) != null) {
             awayRuns = clamp(awayRuns * 0.955, 1.6, 9.4);
             homeRuns = clamp(homeRuns * 0.955, 1.6, 9.4);
+        }
+        // REAL_RSRA_BLEND_20260630: blend each club's expected runs toward the matchup-runs
+        // estimate from REAL pre-game season RS/RA (oRS/g * dRA/g / leagueRS/g). The
+        // OPS+ratings run model under/over-rated several teams' offense vs their actual
+        // scoring (team-reproduction audit: MIA -1.0 RS/g, PIT -1.2, LAD +0.8). This pulls
+        // team run output toward reality while the engine term keeps the selected-starter
+        // matchup. Data = state.liveContext.teamSeason (pre-game season-to-date: current
+        // standings live; injected as-of-game-date in backtest -> no look-ahead). Gated on
+        // real season data so the synthetic-team calibration gate is unaffected.
+        var rExpA = teamRealRunExp(away, home), rExpH = teamRealRunExp(home, away);
+        if (rExpA != null && rExpH != null) {
+            var RSRA_W = (typeof window !== 'undefined' && window.__RSRA_W != null) ? window.__RSRA_W : 0.40;
+            awayRuns = clamp(awayRuns * (1 - RSRA_W) + rExpA * RSRA_W, 1.6, 9.4);
+            homeRuns = clamp(homeRuns * (1 - RSRA_W) + rExpH * RSRA_W, 1.6, 9.4);
         }
         var eventInputs = buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext);
         // Win probability is the simulated frequency from the same plate-appearance
