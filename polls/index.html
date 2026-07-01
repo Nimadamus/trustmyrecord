@@ -181,6 +181,7 @@
         .tmr-poll-option input { accent-color: var(--tmr-fb-blue); }
         .tmr-poll-option:hover { border-color: var(--tmr-fb-blue); }
         .tmr-poll-option.is-disabled label { cursor: default; opacity: 0.85; }
+        .tmr-poll-option.is-checked { border-color: var(--tmr-fb-cyan); background: rgba(34,211,238,0.12); box-shadow: inset 3px 0 0 var(--tmr-fb-cyan); }
 
         .tmr-poll-result { padding: 12px 14px; }
         .tmr-poll-result-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; font-size: 0.9rem; }
@@ -847,11 +848,14 @@
         // Public-results gate: when public_results is false (stored in description metadata or future column),
         // hide results until the user has voted or the poll has closed.
         var isPublicResults = p.description == null || p.description.indexOf('[hide-results-until-vote]') === -1;
-        var showResults = userVote || isClosed || isPublicResults;
+        // A logged-in user who can still vote always gets the interactive ballot,
+        // even when results are public. Results render only when voting is not available.
+        var showVoteForm = canVote;
+        var showResults = !showVoteForm && (userVote || isClosed || isPublicResults);
 
         var winningVotes = options.reduce(function(m, o) { return Math.max(m, parseInt(o.vote_count || 0)); }, 0);
 
-        var optionsHtml;
+        var optionsHtml = '';
         if (showResults) {
             optionsHtml = '<div class="tmr-poll-options" role="group">' + options.map(function(o) {
                 var votes = parseInt(o.vote_count || 0);
@@ -871,11 +875,11 @@
                     '<div class="tmr-poll-bar"><div class="tmr-poll-bar-fill" style="width:' + Math.min(100, pct) + '%"></div></div>' +
                 '</div></li>';
             }).join('') + '</div>';
-        } else {
+        } else if (showVoteForm) {
             // Vote form
             optionsHtml = '<form id="voteForm" onsubmit="submitVote(event)"><div class="tmr-poll-options" role="radiogroup" aria-label="Poll options">' +
                 options.map(function(o) {
-                    return '<li class="tmr-poll-option"><label><input type="radio" name="pollOption" value="' + o.id + '" required> <span>' + escHtml(o.option_text) + '</span></label></li>';
+                    return '<li class="tmr-poll-option"><label><input type="radio" name="pollOption" value="' + o.id + '" onchange="markPollChoice(this)" required> <span>' + escHtml(o.option_text) + '</span></label></li>';
                 }).join('') +
                 '</div><div class="tmr-poll-detail-footer">' +
                     '<span>One vote per account &middot; ' + totalVotes + ' votes already</span>' +
@@ -894,9 +898,9 @@
         }
 
         var loginPrompt = '';
-        if (!showResults && !isLoggedIn()) {
-            loginPrompt = '<div class="tmr-empty-msg" style="padding:20px;border:1px dashed var(--tmr-fb-border-strong);border-radius:6px;margin-bottom:14px;"><a href="/login/">Log in</a> to vote on this poll. Results unlock for you after you cast a vote.</div>';
-            optionsHtml = '';
+        if (!isLoggedIn() && !isClosed && !userVote) {
+            loginPrompt = '<div class="tmr-empty-msg" style="padding:20px;border:1px dashed var(--tmr-fb-border-strong);border-radius:6px;margin-bottom:14px;"><a href="/login/">Log in</a> to vote on this poll.' + (isPublicResults ? '' : ' Results unlock for you after you cast a vote.') + '</div>';
+            if (!showResults) optionsHtml = '';
         }
 
         document.getElementById('pollDetail').innerHTML = '<div class="tmr-poll-detail" id="poll-' + p.id + '">' +
@@ -916,6 +920,12 @@
             optionsHtml +
             noVoteFooter +
         '</div>';
+    }
+
+    function markPollChoice(input) {
+        document.querySelectorAll('.tmr-poll-option').forEach(function(li) { li.classList.remove('is-checked'); });
+        var li = input.closest ? input.closest('.tmr-poll-option') : null;
+        if (li) li.classList.add('is-checked');
     }
 
     async function submitVote(e) {
