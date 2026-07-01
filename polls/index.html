@@ -202,6 +202,67 @@
         .tmr-poll-vote-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .tmr-poll-vote-btn:hover:not(:disabled) { background: #1E4FCD; }
 
+        /* ===== Multi-question Game ===== */
+        .tmr-game { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; margin-top: 16px; align-items: start; }
+        .tmr-game-main { min-width: 0; background: linear-gradient(180deg, rgba(12,22,37,0.96), rgba(8,15,26,0.96)); border: 1px solid var(--tmr-fb-border); border-radius: 18px; padding: 20px; box-shadow: var(--tmr-fb-shadow); }
+        .tmr-game-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; padding-bottom: 14px; border-bottom: 1px solid var(--tmr-fb-border); }
+        .tmr-game-title { font-size: 1.34rem; font-weight: 900; color: var(--tmr-fb-text); margin-bottom: 4px; }
+        .tmr-game-sub { color: var(--tmr-fb-muted); font-size: 0.84rem; }
+        .tmr-game-rules { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0 4px; }
+        .tmr-game-rule { padding: 6px 10px; border-radius: 999px; background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.20); color: #BAE6FD; font-size: 0.72rem; font-weight: 800; }
+        .tmr-q { border: 1px solid var(--tmr-fb-border-strong); border-radius: 14px; padding: 14px 16px; margin: 12px 0; background: rgba(15,23,42,0.5); }
+        .tmr-q-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        .tmr-q-title { font-weight: 800; color: var(--tmr-fb-text); font-size: 0.98rem; }
+        .tmr-q-num { color: #67E8F9; font-weight: 900; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; }
+        .tmr-q-worth { color: #FDE68A; font-weight: 800; font-size: 0.74rem; white-space: nowrap; }
+        .tmr-q-opts { display: flex; flex-direction: column; gap: 7px; }
+        .tmr-q-opt { border: 1px solid var(--tmr-fb-border-strong); border-radius: 10px; background: rgba(15,23,42,0.7); overflow: hidden; }
+        .tmr-q-opt label { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; font-weight: 600; }
+        .tmr-q-opt input { accent-color: var(--tmr-fb-blue); }
+        .tmr-q-opt:hover { border-color: var(--tmr-fb-blue); }
+        .tmr-q-opt.is-checked { border-color: var(--tmr-fb-cyan); background: rgba(34,211,238,0.12); box-shadow: inset 3px 0 0 var(--tmr-fb-cyan); }
+        .tmr-q-opt.is-correct { border-color: rgba(34,197,94,0.55); background: rgba(34,197,94,0.12); }
+        .tmr-q-opt.is-yourpick { box-shadow: inset 3px 0 0 var(--tmr-fb-blue); }
+        .tmr-q-res-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 9px 12px; }
+        .tmr-q-res-text { color: var(--tmr-fb-text); font-weight: 700; font-size: 0.9rem; }
+        .tmr-q-res-pct { color: var(--tmr-fb-muted); font-weight: 700; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+        .tmr-q-bar { height: 6px; background: rgba(148,163,184,0.16); border-radius: 999px; overflow: hidden; margin: 0 12px 8px; }
+        .tmr-q-bar-fill { height: 100%; background: linear-gradient(90deg, var(--tmr-fb-blue), var(--tmr-fb-cyan)); border-radius: 999px; }
+        .tmr-q-tag { display: inline-block; padding: 1px 7px; border-radius: 5px; font-size: 0.62rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; margin-left: 6px; }
+        .tmr-q-tag.correct { background: var(--tmr-fb-green); color: #06111F; }
+        .tmr-q-tag.you { background: var(--tmr-fb-blue); color: #fff; }
+        .tmr-q-tag.pts { background: rgba(251,191,36,0.18); color: #FDE68A; border: 1px solid rgba(251,191,36,0.3); }
+        .tmr-q-numinput { width: 100%; padding: 10px 12px; border: 1px solid var(--tmr-fb-border-strong); border-radius: 10px; background: rgba(15,23,42,0.76); color: var(--tmr-fb-text); font-family: inherit; font-size: 0.9rem; }
+        .tmr-q-conf { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+        .tmr-q-conf input[type=range] { flex: 1; accent-color: var(--tmr-fb-cyan); }
+        .tmr-q-conf-val { color: #67E8F9; font-weight: 900; min-width: 42px; text-align: right; }
+        .tmr-game-submit-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--tmr-fb-border); flex-wrap: wrap; }
+
+        /* Leaders panel */
+        .tmr-leaders { position: sticky; top: 18px; background: linear-gradient(180deg, rgba(8,17,30,0.98), rgba(4,9,17,0.98)); border: 1px solid rgba(34,211,238,0.16); border-radius: 18px; overflow: hidden; box-shadow: var(--tmr-fb-shadow); }
+        .tmr-leaders-head { padding: 14px 16px; background: linear-gradient(135deg, rgba(15,43,68,0.92), rgba(9,17,30,0.96)); border-bottom: 1px solid rgba(148,163,184,0.14); }
+        .tmr-leaders-head h3 { font-size: 0.92rem; font-weight: 900; color: #F1F5F9; display: flex; align-items: center; gap: 8px; }
+        .tmr-leaders-head span { color: var(--tmr-fb-muted); font-size: 0.72rem; font-weight: 700; }
+        .tmr-leaders-list { list-style: none; max-height: 560px; overflow-y: auto; }
+        .tmr-leader { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center; padding: 9px 14px; border-bottom: 1px solid rgba(148,163,184,0.10); }
+        .tmr-leader:nth-child(even) { background: rgba(14,25,42,0.5); }
+        .tmr-leader-rank { font-weight: 900; color: var(--tmr-fb-muted); font-size: 0.82rem; text-align: center; }
+        .tmr-leader:nth-child(1) .tmr-leader-rank { color: #FDE047; }
+        .tmr-leader:nth-child(2) .tmr-leader-rank { color: #E5E7EB; }
+        .tmr-leader:nth-child(3) .tmr-leader-rank { color: #FCA55D; }
+        .tmr-leader-name { color: var(--tmr-fb-text); font-weight: 750; font-size: 0.84rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tmr-leader-name a { color: var(--tmr-fb-text); }
+        .tmr-leader-sub { color: var(--tmr-fb-muted); font-size: 0.68rem; font-weight: 700; }
+        .tmr-leader-pts { color: #67E8F9; font-weight: 900; font-size: 0.9rem; text-align: right; font-variant-numeric: tabular-nums; }
+        .tmr-sharp-badge { display: inline-block; margin-left: 5px; padding: 0 5px; border-radius: 4px; background: rgba(168,85,247,0.18); color: #D8B4FE; border: 1px solid rgba(168,85,247,0.34); font-size: 0.6rem; font-weight: 900; letter-spacing: 0.04em; }
+        .tmr-leaders-empty { padding: 26px 16px; text-align: center; color: var(--tmr-fb-muted); font-size: 0.82rem; }
+        .tmr-resolve-box { margin-top: 14px; padding: 14px 16px; border: 1px dashed rgba(251,191,36,0.4); border-radius: 14px; background: rgba(251,191,36,0.05); }
+        .tmr-resolve-box h4 { color: #FDE68A; font-size: 0.86rem; font-weight: 900; margin-bottom: 4px; }
+        .tmr-resolve-q { margin: 10px 0; }
+        .tmr-resolve-q label { display: block; color: var(--tmr-fb-text); font-size: 0.8rem; font-weight: 700; margin-bottom: 4px; }
+        .tmr-resolve-q select, .tmr-resolve-q input { width: 100%; padding: 8px 10px; border: 1px solid var(--tmr-fb-border-strong); border-radius: 8px; background: rgba(15,23,42,0.76); color: var(--tmr-fb-text); font-family: inherit; font-size: 0.84rem; }
+        @media (max-width: 900px) { .tmr-game { grid-template-columns: 1fr; } .tmr-leaders { position: static; } }
+
         .tmr-empty-msg { margin: 18px; padding: 46px 24px; text-align: center; color: #AABBD0; border: 1px solid rgba(34,211,238,0.16); border-radius: 20px; background: radial-gradient(circle at 50% 0%, rgba(34,211,238,0.11), transparent 18rem), linear-gradient(180deg, rgba(13,27,45,0.78), rgba(5,10,18,0.84)); }
         .tmr-empty-msg .icon { display: inline-flex; align-items: center; justify-content: center; width: 58px; height: 58px; border-radius: 18px; font-size: 1.55rem; opacity: 1; margin-bottom: 14px; color: #67E8F9; background: rgba(34,211,238,0.10); border: 1px solid rgba(34,211,238,0.24); box-shadow: 0 14px 34px rgba(34,211,238,0.10); }
         .tmr-empty-msg strong { display: block; color: #F8FAFC; font-size: 1.02rem; margin-bottom: 5px; }
@@ -525,6 +586,7 @@
         categories: [],
         currentPollId: null,
         currentPollDetail: null,
+        currentGame: null,
         sessionUser: null
     };
 
@@ -796,10 +858,13 @@
             var deadlineHtml = deadline ? '<span class="sep">&middot;</span> Closes <strong>' + escHtml(fmtDate(deadline)) + '</strong>' : '';
             if (isScheduled) deadlineHtml = '<span class="sep">&middot;</span> Opens <strong>' + escHtml(fmtDate(publish)) + '</strong>' + deadlineHtml;
             var totalVotes = parseInt(p.vote_count || 0);
+            var qCount = parseInt(p.question_count || 0);
+            var gameChip = qCount > 1 ? '<span class="tmr-poll-status" style="background:rgba(56,189,248,0.16);color:#7DD3FC;border:1px solid rgba(56,189,248,0.32);"><i class="fas fa-layer-group"></i> Game &middot; ' + qCount + ' Qs</span>' : '';
             return '<div class="tmr-poll-card" onclick="openPoll(' + p.id + ')">' +
                 '<div class="tmr-poll-card-body">' +
                     '<div class="tmr-poll-card-head">' +
                         '<span class="tmr-poll-card-title">' + escHtml(p.title) + '</span>' +
+                        gameChip +
                         '<span class="tmr-poll-status ' + statusClass + '">' + statusLabel + '</span>' +
                     '</div>' +
                     pollBadgeHtml(p) +
@@ -820,10 +885,21 @@
     // ============== POLL DETAIL / VOTE ==============
     async function openPoll(pollId) {
         state.currentPollId = pollId;
+        state.currentGame = null;
         var detailEl = document.getElementById('pollDetail');
-        detailEl.innerHTML = '<div class="tmr-poll-detail"><div class="tmr-loading">Loading poll...</div></div>';
+        detailEl.innerHTML = '<div class="tmr-poll-detail"><div class="tmr-loading">Loading...</div></div>';
         detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         try {
+            // Detect multi-question games: /game returns children when present.
+            var game = null;
+            try { game = await api.request('/polls/' + pollId + '/game'); } catch(e) { game = null; }
+            if (game && game.questions && game.questions.length > 0) {
+                state.currentGame = game;
+                state.currentPollId = game.parent.id;
+                renderGame();
+                window.history.replaceState({}, '', '#poll-' + game.parent.id);
+                return;
+            }
             var data = await api.request('/polls/' + pollId);
             state.currentPollDetail = data;
             renderPollDetail();
@@ -963,6 +1039,241 @@
         document.getElementById('pollsList').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    // ============== MULTI-QUESTION GAME ==============
+    function markGameChoice(input) {
+        var box = input.closest('.tmr-q-opts');
+        if (box) box.querySelectorAll('.tmr-q-opt').forEach(function(o){ o.classList.remove('is-checked'); });
+        var li = input.closest('.tmr-q-opt');
+        if (li) li.classList.add('is-checked');
+    }
+
+    function renderGame() {
+        var g = state.currentGame;
+        if (!g || !g.parent) return;
+        var p = g.parent;
+        var questions = g.questions || [];
+        var leaders = g.leaderboard || [];
+        var isResolved = p.status === 'resolved';
+        var deadline = p.voting_deadline ? new Date(p.voting_deadline) : null;
+        var isExpired = deadline && deadline < new Date();
+        var loggedIn = isLoggedIn();
+        var uname = currentUsername();
+        var isCreator = loggedIn && uname && p.username && uname.toLowerCase() === String(p.username).toLowerCase();
+        var canAnswer = !isResolved && !isExpired && loggedIn;
+        var basePool = questions.reduce(function(s,q){ return s + (parseInt(q.base_points)||0); }, 0);
+
+        var statusLabel = isResolved ? 'Final' : (isExpired ? 'Locked' : 'Live');
+        var statusClass = isResolved ? 'closed' : (isExpired ? 'expired' : 'active');
+
+        // ---- Questions ----
+        var qsHtml = questions.map(function(q, qi) {
+            var worth = parseInt(q.base_points) || 0;
+            var ua = q.user_answer || null;
+            var head = '<div class="tmr-q-head"><div><span class="tmr-q-num">Q' + (qi+1) + '</span> <span class="tmr-q-title">' + escHtml(q.title) + '</span></div>' +
+                       '<span class="tmr-q-worth">' + worth + ' pts</span></div>';
+            var body = '';
+
+            if (q.scoring_mode === 'closest') {
+                if (isResolved) {
+                    var truth = (q.numeric_target != null) ? q.numeric_target : '—';
+                    var guess = ua && ua.numeric_value != null ? ua.numeric_value : null;
+                    var pts = ua && ua.points_earned != null ? ua.points_earned : null;
+                    body = '<div class="tmr-q-res-row"><span class="tmr-q-res-text">Correct answer: <strong>' + escHtml(truth) + '</strong></span>' +
+                           (guess != null ? '<span class="tmr-q-res-pct">You: ' + escHtml(guess) + (pts != null ? ' <span class="tmr-q-tag pts">+' + pts + '</span>' : '') + '</span>' : '<span class="tmr-q-res-pct">No answer</span>') + '</div>';
+                } else if (canAnswer) {
+                    var pre = ua && ua.numeric_value != null ? (' value="' + escHtml(ua.numeric_value) + '"') : '';
+                    body = '<input type="number" step="any" class="tmr-q-numinput" data-qid="' + q.id + '" data-mode="closest"' + pre + ' placeholder="Your number (closest wins)">';
+                } else {
+                    body = '<div class="tmr-q-res-pct">' + q.total_votes + ' prediction' + (q.total_votes===1?'':'s') + ' in. Closest to the real number wins.</div>';
+                }
+            } else {
+                var totalV = q.total_votes || 0;
+                var yourOpt = ua && ua.option_id != null ? parseInt(ua.option_id) : null;
+                if (isResolved || (!canAnswer)) {
+                    // read-only results
+                    body = '<div class="tmr-q-opts">' + (q.options||[]).map(function(o){
+                        var vc = parseInt(o.vote_count||0);
+                        var pct = totalV>0 ? (vc/totalV*100) : 0;
+                        var pctText = (parseFloat(o.vote_percentage||pct)||0).toFixed(0);
+                        var correct = isResolved && o.is_correct;
+                        var you = yourOpt === parseInt(o.id);
+                        var cls = 'tmr-q-opt' + (correct?' is-correct':'') + (you?' is-yourpick':'');
+                        var tags = (correct?'<span class="tmr-q-tag correct">Correct</span>':'') + (you?'<span class="tmr-q-tag you">You</span>':'');
+                        var ptsTag = (isResolved && you && ua && ua.points_earned!=null) ? '<span class="tmr-q-tag pts">+' + ua.points_earned + '</span>' : '';
+                        return '<div class="' + cls + '"><div class="tmr-q-res-row"><span class="tmr-q-res-text">' + escHtml(o.option_text) + tags + ptsTag + '</span>' +
+                               '<span class="tmr-q-res-pct">' + pctText + '% &middot; ' + vc + '</span></div>' +
+                               '<div class="tmr-q-bar"><div class="tmr-q-bar-fill" style="width:' + Math.min(100,pct) + '%"></div></div></div>';
+                    }).join('') + '</div>';
+                } else {
+                    // votable
+                    body = '<div class="tmr-q-opts">' + (q.options||[]).map(function(o){
+                        var checked = yourOpt === parseInt(o.id);
+                        return '<div class="tmr-q-opt' + (checked?' is-checked':'') + '"><label>' +
+                               '<input type="radio" name="q_' + q.id + '" value="' + o.id + '" data-qid="' + q.id + '" data-mode="option" onchange="markGameChoice(this)"' + (checked?' checked':'') + '> ' +
+                               '<span>' + escHtml(o.option_text) + '</span></label></div>';
+                    }).join('') + '</div>';
+                    if (q.scoring_mode === 'confidence') {
+                        var cval = ua && ua.confidence_level ? ua.confidence_level : 50;
+                        body += '<div class="tmr-q-conf"><span style="font-size:0.72rem;color:var(--tmr-fb-muted);font-weight:800;">Confidence</span>' +
+                                '<input type="range" min="1" max="100" value="' + cval + '" data-conf="' + q.id + '" oninput="this.nextElementSibling.textContent=this.value+\'%\'">' +
+                                '<span class="tmr-q-conf-val">' + cval + '%</span></div>';
+                    }
+                }
+            }
+            return '<div class="tmr-q">' + head + body + '</div>';
+        }).join('');
+
+        // ---- Submit / login ----
+        var actionHtml = '';
+        if (isResolved) {
+            actionHtml = '<div class="tmr-game-submit-row"><span class="tmr-game-sub">Game final &middot; ' + g.total_players + ' player' + (g.total_players===1?'':'s') + '</span>' +
+                '<button class="tmr-btn tmr-btn-outline" type="button" onclick="closePollDetail()"><i class="fas fa-arrow-left"></i> Back</button></div>';
+        } else if (!loggedIn) {
+            actionHtml = '<div class="tmr-empty-msg" style="padding:18px;margin:14px 0 0;"><a href="/login/">Log in</a> to lock in your picks for this game.</div>';
+        } else if (isExpired) {
+            actionHtml = '<div class="tmr-game-submit-row"><span class="tmr-game-sub">Voting is closed. Waiting on the creator to grade.</span></div>';
+        } else {
+            var hasAny = questions.some(function(q){ return q.user_answer; });
+            actionHtml = '<div class="tmr-game-submit-row"><span class="tmr-game-sub">Answer any or all &middot; one entry per player</span>' +
+                '<button class="tmr-poll-vote-btn" type="button" id="gameSubmitBtn" onclick="submitGameVote()"><i class="fas fa-check"></i> ' + (hasAny?'Update My Picks':'Lock In Picks') + '</button></div>';
+        }
+
+        // ---- Creator resolution ----
+        var resolveHtml = '';
+        if (isCreator && !isResolved) {
+            resolveHtml = '<div class="tmr-resolve-box"><h4><i class="fas fa-gavel"></i> Grade this game (creator only)</h4>' +
+                '<div class="tmr-game-sub" style="margin-bottom:6px;">Set the real outcome for each question, then score everyone.</div>' +
+                questions.map(function(q, qi){
+                    var inner;
+                    if (q.scoring_mode === 'closest') {
+                        inner = '<input type="number" step="any" data-rqid="' + q.id + '" data-rmode="closest" placeholder="Actual number">';
+                    } else {
+                        inner = '<select data-rqid="' + q.id + '" data-rmode="option"><option value="">Select winner...</option>' +
+                            (q.options||[]).map(function(o){ return '<option value="' + o.id + '">' + escHtml(o.option_text) + '</option>'; }).join('') + '</select>';
+                    }
+                    return '<div class="tmr-resolve-q"><label>Q' + (qi+1) + '. ' + escHtml(q.title) + '</label>' + inner + '</div>';
+                }).join('') +
+                '<button class="tmr-poll-vote-btn" type="button" id="gameResolveBtn" onclick="resolveGame()" style="margin-top:8px;"><i class="fas fa-flag-checkered"></i> Score Game</button></div>';
+        }
+
+        // ---- Leaders panel ----
+        var leadersHtml;
+        if (!leaders.length) {
+            leadersHtml = '<div class="tmr-leaders-empty">No entries yet. Be the first to lock in.</div>';
+        } else {
+            leadersHtml = '<ul class="tmr-leaders-list">' + leaders.map(function(l){
+                var right, sub;
+                if (l.provisional) {
+                    right = '<span class="tmr-leader-pts" style="color:#93A4BA;">' + l.questions_answered + '/' + questions.length + '</span>';
+                    sub = 'answered';
+                } else {
+                    right = '<span class="tmr-leader-pts">' + l.final_points + '</span>';
+                    var parts = [l.correct_count + '/' + questions.length + ' correct'];
+                    if (l.placement_bonus) parts.push('+' + l.placement_bonus + ' place');
+                    if (l.perfect_bonus) parts.push('+' + l.perfect_bonus + ' perfect');
+                    sub = parts.join(' &middot; ');
+                }
+                var sharp = (!l.provisional && l.avg_rarity >= 1.6) ? '<span class="tmr-sharp-badge" title="High-value contrarian correct picks">SHARP</span>' : '';
+                return '<li class="tmr-leader"><span class="tmr-leader-rank">' + (l.rank||'') + '</span>' +
+                       '<span><span class="tmr-leader-name"><a href="/u/' + encodeURIComponent(l.username) + '">' + escHtml(l.username) + '</a>' + sharp + '</span>' +
+                       '<span class="tmr-leader-sub">' + sub + '</span></span>' + right + '</li>';
+            }).join('') + '</ul>';
+        }
+
+        var rules = '<div class="tmr-game-rules">' +
+            '<span class="tmr-game-rule"><i class="fas fa-bolt"></i> Rarer correct = up to 3x points</span>' +
+            '<span class="tmr-game-rule"><i class="fas fa-star"></i> Perfect game +25%</span>' +
+            '<span class="tmr-game-rule"><i class="fas fa-trophy"></i> Top finishers earn placement points</span>' +
+            '<span class="tmr-game-rule">Pool: ' + basePool + ' base pts</span></div>';
+
+        document.getElementById('pollDetail').innerHTML =
+            '<div class="tmr-game">' +
+                '<div class="tmr-game-main">' +
+                    '<div class="tmr-game-head"><div>' +
+                        '<div class="tmr-game-title">' + escHtml(p.title) + '</div>' +
+                        '<div class="tmr-game-sub">By <strong data-tmr-username="' + escHtml(p.username||'') + '">' + escHtml(p.username||'unknown') + '</strong>' +
+                            (deadline ? ' &middot; ' + (isExpired||isResolved?'Closed ':'Closes ') + escHtml(fmtDate(deadline)) : '') +
+                            ' &middot; ' + questions.length + ' questions</div>' +
+                    '</div><span class="tmr-poll-status ' + statusClass + '">' + statusLabel + '</span></div>' +
+                    (p.description ? '<div class="tmr-poll-detail-desc" style="margin:8px 0;">' + escHtml(String(p.description).replace('[hide-results-until-vote]','').replace('[multi-choice]','').replace('[anonymous]','').trim()) + '</div>' : '') +
+                    rules +
+                    qsHtml +
+                    actionHtml +
+                    resolveHtml +
+                '</div>' +
+                '<aside class="tmr-leaders">' +
+                    '<div class="tmr-leaders-head"><h3><i class="fas fa-ranking-star"></i> Leaders</h3>' +
+                        '<span>' + (isResolved ? 'Final standings' : 'Live &middot; ' + g.total_players + ' in') + '</span></div>' +
+                    leadersHtml +
+                '</aside>' +
+            '</div>';
+    }
+
+    function collectGameAnswers() {
+        var answers = [];
+        var g = state.currentGame; if (!g) return answers;
+        g.questions.forEach(function(q){
+            if (q.scoring_mode === 'closest') {
+                var inp = document.querySelector('.tmr-q-numinput[data-qid="' + q.id + '"]');
+                if (inp && inp.value !== '' && !isNaN(Number(inp.value))) answers.push({ question_id: q.id, numeric_value: Number(inp.value) });
+            } else {
+                var sel = document.querySelector('input[name="q_' + q.id + '"]:checked');
+                if (sel) {
+                    var a = { question_id: q.id, option_id: parseInt(sel.value) };
+                    var conf = document.querySelector('input[data-conf="' + q.id + '"]');
+                    if (conf) a.confidence = parseInt(conf.value);
+                    answers.push(a);
+                }
+            }
+        });
+        return answers;
+    }
+
+    async function submitGameVote() {
+        if (!isLoggedIn()) { window.location.href = '/login/'; return; }
+        var answers = collectGameAnswers();
+        if (!answers.length) { showToast('Answer at least one question first.', 'error'); return; }
+        var btn = document.getElementById('gameSubmitBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Saving...'; }
+        try {
+            var res = await api.request('/polls/' + state.currentPollId + '/game/vote', { method: 'POST', body: { answers: answers } });
+            showToast('Picks locked in.', 'success');
+            if (res && res.game) { state.currentGame = res.game; renderGame(); }
+            else { await openPoll(state.currentPollId); }
+            loadPolls();
+        } catch(err) {
+            console.error('submitGameVote', err);
+            showToast(err && err.message ? err.message : 'Could not submit picks.', 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Lock In Picks'; }
+        }
+    }
+
+    async function resolveGame() {
+        var g = state.currentGame; if (!g) return;
+        var answers = [];
+        var missing = 0;
+        g.questions.forEach(function(q){
+            var el = document.querySelector('[data-rqid="' + q.id + '"]');
+            if (!el || el.value === '') { missing++; return; }
+            if (q.scoring_mode === 'closest') answers.push({ question_id: q.id, numeric_answer: Number(el.value) });
+            else answers.push({ question_id: q.id, winning_option_id: parseInt(el.value) });
+        });
+        if (missing > 0) { showToast('Set the outcome for all ' + g.questions.length + ' questions (' + missing + ' left).', 'error'); return; }
+        var btn = document.getElementById('gameResolveBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Scoring...'; }
+        try {
+            var res = await api.request('/polls/' + state.currentPollId + '/game/resolve', { method: 'PUT', body: { answers: answers } });
+            showToast('Game scored. Leaders updated.', 'success');
+            if (res && res.game) { state.currentGame = res.game; renderGame(); }
+            else { await openPoll(state.currentPollId); }
+            loadPolls();
+        } catch(err) {
+            console.error('resolveGame', err);
+            showToast(err && err.message ? err.message : 'Could not score game.', 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-flag-checkered"></i> Score Game'; }
+        }
+    }
+
     // ============== CREATE MODAL ==============
     function openCreatePollModal() {
         if (!isLoggedIn()) { window.location.href = '/login/'; return; }
@@ -1047,7 +1358,12 @@
                 '<strong style="color:var(--tmr-fb-text);font-size:0.86rem;">Sub-question ' + idx + '</strong>' +
                 '<button type="button" class="tmr-option-remove" onclick="this.parentElement.parentElement.remove();renumberSubQuestions();" title="Remove">&times;</button>' +
             '</div>' +
-            '<input type="text" maxlength="200" class="tmr-subq-title" placeholder="Sub-question title (e.g. \'Who scores first?\')" style="width:100%;margin-bottom:6px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
+            '<input type="text" maxlength="200" class="tmr-subq-title" placeholder="Question (e.g. \'How many strikeouts will Ohtani have? Over/Under 5.5\')" style="width:100%;margin-bottom:6px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
+            '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">' +
+                '<label style="font-size:11px;color:var(--tmr-fb-muted);font-weight:700;white-space:nowrap;">Base points</label>' +
+                '<input type="number" min="1" max="1000" class="tmr-subq-points" value="10" title="How many points a correct answer is worth. Bump the hard questions higher." style="width:78px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
+                '<span style="font-size:11px;color:var(--tmr-fb-muted);">Rarer correct picks pay up to 3x this.</span>' +
+            '</div>' +
             '<select class="tmr-subq-mode" onchange="onSubQModeChange(this)" style="width:100%;margin-bottom:6px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
                 '<option value="binary">Binary scoring</option>' +
                 '<option value="partial">Partial credit</option>' +
@@ -1140,6 +1456,9 @@
                 if (t.length < 5) continue;
                 var m = n.querySelector('.tmr-subq-mode').value;
                 var sq = { title: t, scoring_mode: m };
+                var ptsEl = n.querySelector('.tmr-subq-points');
+                var pts = ptsEl ? parseInt(ptsEl.value, 10) : 10;
+                sq.base_points = (isFinite(pts) && pts >= 1) ? Math.min(1000, pts) : 10;
                 if (m === 'closest') {
                     var nv = n.querySelector('.tmr-subq-numeric').value;
                     if (nv) sq.numeric_target = Number(nv);
