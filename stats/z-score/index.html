@@ -2,14 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link rel="canonical" href="https://trustmyrecord.com/stats/clv/">
+    <link rel="canonical" href="https://trustmyrecord.com/stats/z-score/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Closing Line Value (CLV) Explained | TrustMyRecord</title>
-    <meta name="description" content="What closing line value means, why beating the closing line is the classic test of betting skill, and how locked pick timestamps on TrustMyRecord make CLV">
-    <meta property="og:title" content="Closing Line Value (CLV) Explained">
-    <meta property="og:description" content="What closing line value means, why beating the closing line is the classic test of betting skill, and how locked pick timestamps on TrustMyRecord make CLV checkable.">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="https://trustmyrecord.com/stats/clv/">
+    <title>Betting Z-Score: Skill vs Luck | TrustMyRecord</title>
+    <meta name="description" content="What a z-score means for a betting record: the formula, worked examples, and how many standard deviations above break-even separate luck from real skill.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Betting Z-Score: Skill vs Luck | TrustMyRecord">
+    <meta property="og:description" content="What a z-score means for a betting record: the formula, worked examples, and how many standard deviations above break-even separate luck from real skill.">
+    <meta property="og:url" content="https://trustmyrecord.com/stats/z-score/">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Betting Z-Score: Skill vs Luck | TrustMyRecord">
+    <meta name="twitter:description" content="What a z-score means for a betting record: the formula, worked examples, and how many standard deviations above break-even separate luck from real skill.">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -19,15 +24,15 @@
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260604stats1"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <script type="application/ld+json">
-    {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "TrustMyRecord", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Stats", "item": "https://trustmyrecord.com/stats/"}, {"@type": "ListItem", "position": 3, "name": "Closing Line Value", "item": "https://trustmyrecord.com/stats/clv/"}]}
+    {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "TrustMyRecord", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Stats", "item": "https://trustmyrecord.com/stats/"}, {"@type": "ListItem", "position": 3, "name": "Z-Score", "item": "https://trustmyrecord.com/stats/z-score/"}]}
     </script>
     <script type="application/ld+json">
-    {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is closing line value in sports betting?", "acceptedAnswer": {"@type": "Answer", "text": "CLV is the difference between the odds a bettor took and the odds the market closed at. Consistently beating the close is strong evidence of skill because the closing line is the market's sharpest price."}}, {"@type": "Question", "name": "Why is CLV considered better evidence than results?", "acceptedAnswer": {"@type": "Answer", "text": "Short-term results are dominated by variance, but consistently getting better prices than the close is not something luck produces. Positive CLV tends to predict long-term profit before results confirm it."}}, {"@type": "Question", "name": "Does TrustMyRecord show a CLV stat?", "acceptedAnswer": {"@type": "Answer", "text": "A CLV card is planned for profile Advanced Capper Metrics and will display once enough graded line data is available. Locked odds and timestamps already make every record CLV-checkable."}}, {"@type": "Question", "name": "Can you have positive CLV and still lose?", "acceptedAnswer": {"@type": "Answer", "text": "Over a short sample, yes. Over a long sample it is rare, which is exactly why CLV paired with volume is such a respected measure of skill."}}]}
+    {"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is a z-score in sports betting?", "acceptedAnswer": {"@type": "Answer", "text": "A z-score measures how many standard deviations a betting record sits above or below the break-even expectation for its sample size and odds. It converts a win rate and a pick count into a single measure of how unlikely the record is under pure chance."}}, {"@type": "Question", "name": "What is a good z-score for a handicapper?", "acceptedAnswer": {"@type": "Answer", "text": "Around +2 starts to be interesting and sits near the top 2-3% of luck-only outcomes. Sustained +3 or higher over hundreds of graded picks is where chance stops being a plausible explanation."}}, {"@type": "Question", "name": "Why do pushes not count in the z-score?", "acceptedAnswer": {"@type": "Answer", "text": "A push settles at zero and provides no evidence about win skill either way, so the calculation uses decided picks only: wins plus losses."}}, {"@type": "Question", "name": "Can a z-score be faked?", "acceptedAnswer": {"@type": "Answer", "text": "The math cannot be faked, but the inputs can be if picks are deleted or backdated. TrustMyRecord locks picks before game time with no edits or deletions, so the wins and the sample size feeding the z-score are verifiable."}}, {"@type": "Question", "name": "Does a high z-score guarantee future profit?", "acceptedAnswer": {"@type": "Answer", "text": "No. It measures how unlikely the past record is under chance, not a guarantee about the future. Read it next to ROI, closing line value, and sample size."}}]}
     </script>
 <style>
         :root{--bg-dark:#0a0a0f;--bg-card:#1a1a2e;--border:#2a2a4a;--primary:#00aeff;--primary-dim:rgba(0,174,255,0.15);--accent-gold:#ffd700;--accent-green:#00ff88;--accent-red:#ff5566;--accent-purple:#a855f7;--text:#e8e8f0;--text-dim:#8888aa;--text-muted:#555577;--font-display:'Barlow',sans-serif;--font-body:'Inter',sans-serif;}
@@ -104,71 +109,59 @@
         @media(max-width:560px){.ss-hero{padding:30px 20px;}.ss-cards{grid-template-columns:1fr;}.ss-intro,.ss-angle,.ss-cta{padding:24px 20px;}}
 </style>
 </head>
-<body class="tmr-site-shell">
-<!-- TMR_STATS_HUB_20260604: documentation-style stat explainer. Sitewide nav + footer injected by tmr-sitewide.js -->
+<body>
 <main class="ss-wrap">
-
-    <nav class="ss-crumb" aria-label="Breadcrumb"><a href="/">Home</a> / <a href="/stats/">Stats</a> / Closing Line Value</nav>
-
     <section class="ss-hero">
-        <span class="ss-kicker"><i class="fas fa-chart-line"></i> Advanced Evaluation Stat</span>
-        <h1>Closing Line <span class="gold">Value</span> Explained</h1>
-        <p class="sub">Closing line value measures whether a bettor consistently got a better price than the line the market closed at.</p>
+        <div class="ss-crumbs"><a href="/">Home</a> &rsaquo; <a href="/stats/">Stats</a> &rsaquo; <span>Z-Score</span></div>
+        <h1>Betting <span class="gold">Z-Score</span>: Skill or Luck?</h1>
+        <p class="sub">The z-score asks one question about a betting record: <strong>how far is this win rate from what pure chance would produce</strong> over the same number of picks at the same odds?</p>
     </section>
-
     <section class="ss-section">
-        <div class="ss-section-head"><h2>Why CLV <span class="gold">matters</span></h2></div>
+        <div class="ss-section-head"><h2>What a z-score <span class="gold">measures</span></h2></div>
         <div class="ss-intro">
-            <p>The closing line is the sharpest line of the day: it has absorbed every bet, every injury report, and every model the market has. Beating it consistently, taking -2.5 on a game that closes -3.5, or +150 on a team that closes +120, is widely treated as the strongest available evidence of real betting skill, often before results themselves confirm it.</p>
-            <p>The logic is simple. Results over a short window are mostly <a href="/stats/sample-size/">variance</a>, but consistently getting better prices than the close is not something luck does. A bettor with positive CLV and a flat record is usually ahead of a bettor with a hot record and negative CLV.</p>
+            <p>Any coin-flip bettor will drift above and below break-even. The z-score measures how many standard deviations a record sits above (or below) the break-even expectation for its sample size. The bigger the z-score, the harder the record is to explain as luck.</p>
+            <p>It is the natural companion to <a href="/stats/win-percentage/">win percentage</a> and <a href="/stats/sample-size/">sample size</a>: win rate says how often the bettor won, sample size says how much evidence exists, and the z-score combines both into a single "is this real?" number.</p>
         </div>
     </section>
     <section class="ss-section">
-        <div class="ss-section-head"><h2>The <span class="gold">calculation</span></h2></div>
+        <div class="ss-section-head"><h2>The <span class="gold">formula</span></h2></div>
         <div class="ss-intro">
-        <div class="ss-formula">CLV = difference between the odds you locked and the closing odds on the same market</div>
-            <p style="margin-top:16px;">If you take +150 and the line closes +120, you beat the close. If you take -3.5 and it closes -2.5, the market moved against your number and your CLV on that pick is negative. Aggregated across hundreds of picks, the average tells you whether a bettor finds value before the market does or simply follows it.</p>
-        </div>
-    </section>
-    <section class="ss-section">
-        <div class="ss-section-head"><h2>How it works on <span class="gold">TrustMyRecord</span></h2></div>
-        <div class="ss-intro">
-            <p>Two things matter for CLV analysis, and the platform is built around both:</p>
+            <div class="ss-formula">z = (W &minus; N &times; p) &divide; &radic;(N &times; p &times; (1 &minus; p))</div>
+            <p style="margin-top:16px;">Where <strong>W</strong> is wins, <strong>N</strong> is decided picks (wins + losses, pushes excluded), and <strong>p</strong> is the break-even win probability implied by the odds. At the standard -110 juice, p is about 0.524; at even money it is 0.50. See <a href="/stats/average-odds/">average odds</a> for how a record's typical price sets its break-even bar.</p>
             <ul>
-                <li><strong>Locked odds:</strong> every pick records its odds at the moment it locks, and the <a href="/rules/">pick integrity rules</a> prevent edits and deletions afterward. The price a member claims is the price they took.</li>
-                <li><strong>Locked timestamps:</strong> picks lock before game time, so anyone comparing a pick to the closing line knows exactly when the position was taken.</li>
+                <li><strong>z around 0</strong>: indistinguishable from chance.</li>
+                <li><strong>z near +2</strong>: roughly the top 2-3% of luck-only outcomes. Interesting, not proof.</li>
+                <li><strong>z of +3 or more over hundreds of picks</strong>: chance alone almost never does this. This is where skill becomes the simpler explanation.</li>
             </ul>
-            <p>A dedicated CLV metric is planned for profile Advanced Capper Metrics and will appear once enough graded line data is available to compute it fairly. Until then, the locked ledger gives every record the raw material CLV analysis needs: real prices at real timestamps, with no way to rewrite either.</p>
+        </div>
+    </section>
+    <section class="ss-section">
+        <div class="ss-section-head"><h2>A quick <span class="gold">example</span></h2></div>
+        <div class="ss-intro">
+            <p>A bettor goes <strong>140-110</strong> (56.0%) over 250 decided picks at roughly -110. Expected wins by chance: 250 &times; 0.524 = 131. Standard deviation: &radic;(250 &times; 0.524 &times; 0.476) &asymp; 7.9. So z = (140 &minus; 131) &divide; 7.9 &asymp; <strong>+1.14</strong>: a good run, but well inside what variance produces. The same 56% held over 1,000 picks pushes z past +2.2, which is a very different claim. Sample size is the whole ballgame.</p>
         </div>
     </section>
     <section class="ss-section">
         <div class="ss-angle">
             <h2>The common <span class="purple">mistake</span></h2>
-            <p class="lead">Confusing winning with beating the market. A bettor can run hot for months with negative CLV, paying worse prices than the close on every play, and the market eventually collects. The reverse mistake is dismissing a bettor on a cold stretch whose numbers consistently beat the close; that is usually the record that turns. When you evaluate a <a href="/handicappers/">verified handicapper</a>, weigh the prices they take, not just the <a href="/stats/win-percentage/">win percentage</a> they show.</p>
-        </div>
-    </section>
-
-    <section class="ss-section">
-        <div class="ss-section-head"><h2>Frequently asked <span class="gold">questions</span></h2></div>
-        <div class="ss-faq">
-            <details><summary>What is closing line value in sports betting?</summary><p>The difference between the odds you took and the closing odds on the same market. Consistently beating the close is strong evidence of real skill.</p></details>
-            <details><summary>Why is CLV considered better evidence than results?</summary><p>Short-term results are dominated by variance; consistently getting better prices than the close is not. Positive CLV tends to predict long-term profit.</p></details>
-            <details><summary>Does TrustMyRecord show a CLV stat?</summary><p>A CLV card is planned for profile Advanced Capper Metrics and displays once enough graded line data is available. Locked odds and timestamps already make records CLV-checkable.</p></details>
-            <details><summary>Can you have positive CLV and still lose?</summary><p>Over a short sample, yes. Over a long sample it is rare, which is why CLV paired with volume is so respected.</p></details>
+            <p class="lead">Quoting a hot win rate without the sample behind it. A 65% record over 40 picks has a lower z-score than a 55% record over 600. On TrustMyRecord every profile shows <a href="/stats/graded-picks/">graded pick volume</a> next to win rate, and picks lock before game time with no edits and no deletes, so the wins and the sample are both real. That is what makes a z-score computed from a TrustMyRecord ledger meaningful, where one computed from screenshots is not.</p>
         </div>
     </section>
     <section class="ss-cta">
-        <h2>Lock picks the market can <span class="gold">judge</span></h2>
-        <p>Every TrustMyRecord pick locks with its odds and timestamp before game time. Build the kind of record CLV analysis respects.</p>
+        <h2>See the numbers on <span class="gold">real records</span></h2>
+        <p>Every stat on TrustMyRecord comes from locked, timestamped, auto-graded picks. Browse the leaderboard or start your own record.</p>
         <div class="ss-cta-actions">
-            <a class="btn btn-gold" href="/register/"><i class="fas fa-user-plus"></i> Create Free Account</a>
-            <a class="btn btn-outline" href="/how-it-works/"><i class="fas fa-gears"></i> How It Works</a>
+            <a class="btn btn-gold" href="/sports-picks-leaderboard/"><i class="fas fa-trophy"></i> View the Leaderboard</a>
+            <a class="btn btn-outline" href="/register/"><i class="fas fa-chart-line"></i> Start Tracking Free</a>
         </div>
     </section>
-
+    <section class="ss-section">
+        <div class="ss-section-head"><h2>Frequently asked <span class="gold">questions</span></h2></div>
+        <div class="ss-faq"><details><summary>What is a z-score in sports betting?</summary><p>A z-score measures how many standard deviations a betting record sits above or below the break-even expectation for its sample size and odds. It converts a win rate and a pick count into a single measure of how unlikely the record is under pure chance.</p></details><details><summary>What is a good z-score for a handicapper?</summary><p>Around +2 starts to be interesting and sits near the top 2-3% of luck-only outcomes. Sustained +3 or higher over hundreds of graded picks is where chance stops being a plausible explanation.</p></details><details><summary>Why do pushes not count in the z-score?</summary><p>A push settles at zero and provides no evidence about win skill either way, so the calculation uses decided picks only: wins plus losses.</p></details><details><summary>Can a z-score be faked?</summary><p>The math cannot be faked, but the inputs can be if picks are deleted or backdated. TrustMyRecord locks picks before game time with no edits or deletions, so the wins and the sample size feeding the z-score are verifiable.</p></details><details><summary>Does a high z-score guarantee future profit?</summary><p>No. It measures how unlikely the past record is under chance, not a guarantee about the future. Read it next to ROI, closing line value, and sample size.</p></details></div>
+    </section>
     <section class="ss-related">
         <h2>More from <span style="color:var(--accent-gold)">TrustMyRecord</span></h2>
-        <div class="ss-related-links"><a href="/stats/">Stats Hub</a><a href="/stats/clv-betting-meaning/">CLV Betting Meaning</a><a href="/stats/good-clv/">Good CLV</a><a href="/stats/bad-clv/">Bad CLV</a><a href="/stats/units/">Units</a><a href="/stats/roi/">ROI</a><a href="/stats/win-percentage/">Win Percentage</a><a href="/stats/average-odds/">Average Odds</a><a href="/stats/sample-size/">Sample Size</a><a href="/stats/streaks/">Streaks</a><a href="/stats/graded-picks/">Graded Picks</a><a href="/stats/pending-picks/">Pending Picks</a><a href="/stats/pick-diversity/">Pick Diversity</a><a href="/sportsbook/">Make Picks</a><a href="/handicappers/">Handicappers</a><a href="/sports-picks-leaderboard/">Leaderboard</a><a href="/rules/">Platform Rules</a><a href="/how-it-works/">How It Works</a><a href="/contests/">Contests</a><a href="/sports-betting-glossary/">Betting Glossary</a><a href="/stats/z-score/">Z-Score</a><a href="/stats/variance/">Variance</a></div>
+        <div class="ss-related-links"><a href="/stats/">Stats Hub</a><a href="/stats/units/">Units</a><a href="/stats/roi/">ROI</a><a href="/stats/win-percentage/">Win Percentage</a><a href="/stats/average-odds/">Average Odds</a><a href="/stats/sample-size/">Sample Size</a><a href="/stats/streaks/">Streaks</a><a href="/stats/clv/">Closing Line Value</a><a href="/stats/graded-picks/">Graded Picks</a><a href="/stats/pending-picks/">Pending Picks</a><a href="/stats/pick-diversity/">Pick Diversity</a><a href="/stats/z-score/">Z-Score</a><a href="/stats/variance/">Variance</a><a href="/how-grading-works/">How Grading Works</a><a href="/handicappers/">Handicappers</a><a href="/sports-picks-leaderboard/">Leaderboard</a><a href="/rules/">Platform Rules</a><a href="/sports-betting-glossary/">Betting Glossary</a></div>
     </section>
 </main>
 </body>
