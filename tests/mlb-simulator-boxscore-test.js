@@ -128,8 +128,15 @@ function assertBoxScore(result) {
   const homeTotal = box.home.innings.reduce((total, run) => total + run, 0);
   assert.strictEqual(awayTotal, box.away.runs, 'away inning runs add to final score');
   assert.strictEqual(homeTotal, box.home.runs, 'home inning runs add to final score');
-  assert.strictEqual(box.away.innings.length, 9, 'away has nine innings');
-  assert.strictEqual(box.home.innings.length, 9, 'home has nine innings');
+  // Away always completes its innings (9, or more in extras). Home matches the away
+  // column count, except when it wins in regulation and the bottom of the final inning
+  // is not played (skipped-final), in which case it is exactly one column short.
+  assert(box.away.innings.length >= 9, 'away has at least nine innings');
+  assert(
+    box.home.innings.length === box.away.innings.length ||
+    box.home.innings.length === box.away.innings.length - 1,
+    'home column count matches away (or one short on a skipped bottom-final)'
+  );
   assert(box.away.runs <= 20 && box.home.runs <= 20, 'individual runs remain capped');
   assert(box.away.runs + box.home.runs <= 30, 'combined runs remain capped');
   assert(box.away.hits >= box.away.runs && box.home.hits >= box.home.runs, 'hits are compatible with runs');
@@ -137,7 +144,7 @@ function assertBoxScore(result) {
   assert(box.away.errors <= 4 && box.home.errors <= 4, 'errors remain plausible');
   [box.away, box.home].forEach((line) => {
     assert(line.summaryStats, 'team summary stats exist');
-    ['doubles', 'triples', 'homeRuns', 'rbi', 'walks', 'strikeouts', 'stolenBases', 'caughtStealing', 'leftOnBase', 'totalPitches', 'totalStrikes', 'hits', 'runs', 'errors'].forEach((key) => {
+    ['doubles', 'triples', 'homeRuns', 'rbi', 'walks', 'strikeouts', 'stolenBases', 'caughtStealing', 'leftOnBase', 'totalPitches', 'totalStrikes', 'hits', 'runs', 'errors', 'sacFlies', 'sacBunts', 'hbp'].forEach((key) => {
       assert(Number.isFinite(line.summaryStats[key]), `${key} is numeric`);
     });
     assert(line.summaryStats.totalPitches >= line.summaryStats.totalStrikes, 'pitches are greater than or equal to strikes');
@@ -147,6 +154,18 @@ function assertBoxScore(result) {
   });
   assert(box.winner.id === (box.away.runs > box.home.runs ? result.away.id : result.home.id), 'winner matches line score');
   assert(result.winner.id === (result.homeWin >= result.awayWin ? result.home.id : result.away.id), 'projected winner matches higher win probability');
+  // SCORING_EVENT_LOG_20260703: the per-game event log must reconcile to the team
+  // totals — every home run in a team's summary is an event in the log, and vice versa.
+  assert(Array.isArray(box.scoringLog), 'scoring log is present');
+  const hrByTeam = {};
+  box.scoringLog.forEach((event) => {
+    assert(event.inning >= 1, 'scoring event has a valid inning');
+    assert(event.half === 'top' || event.half === 'bottom', 'scoring event has a valid half');
+    if (event.type === 'HR') hrByTeam[event.team] = (hrByTeam[event.team] || 0) + 1;
+  });
+  [[result.away, box.away], [result.home, box.home]].forEach(([team, line]) => {
+    assert.strictEqual(hrByTeam[team.abbreviation] || 0, line.summaryStats.homeRuns, 'HR event log count reconciles to team HR total for ' + team.abbreviation);
+  });
 }
 
 function assertCleanProjectedLineups(html, label) {
