@@ -461,6 +461,10 @@ def main():
     dry = "--dry-run" in sys.argv
     base = list_users()
     eligible_pages, excluded = [], []
+    linked_lowdata = set()   # verified users the directory/leaderboard links to
+                             # (prerender_directory.eligible: verified + picks>0)
+                             # but who fall below GRADED_MIN, so they need a real
+                             # noindex profile page or their /u/ link 404s.
     for u in base:
         un = u["username"]
         try:
@@ -470,14 +474,24 @@ def main():
             excluded.append((un, f"detail fetch failed: {ex}")); continue
         ok, why = eligible(d)
         if not ok:
+            # Mirror prerender_directory.eligible() so every linked capper has a page.
+            admin_ok = (not d.get("is_admin")) or (un in ADMIN_ALLOWLIST)
+            if (d.get("verification_status") == "verified"
+                    and un.lower() not in INTERNAL_DENYLIST
+                    and admin_ok
+                    and int(num(d.get("total_picks"))) > 0):
+                linked_lowdata.add(un)
             excluded.append((un, why)); continue
         eligible_pages.append(d)
 
     elig_names = {d["username"] for d in eligible_pages}
     # existing on-disk /u pages that are no longer eligible -> noindex
     existing = set(os.listdir(UDIR)) if os.path.isdir(UDIR) else set()
-    to_noindex = sorted(n for n in existing
-                        if os.path.isdir(os.path.join(UDIR, n)) and n not in elig_names)
+    # noindex set = existing low-data dirs UNION linked low-data users still
+    # missing a page (so a directory/leaderboard link never 404s).
+    to_noindex = sorted(({n for n in existing
+                          if os.path.isdir(os.path.join(UDIR, n))} | linked_lowdata)
+                        - elig_names)
 
     print(f"eligible (>= {GRADED_MIN} graded): {len(eligible_pages)}")
     for d in sorted(eligible_pages, key=lambda x: x["username"].lower()):
@@ -485,7 +499,7 @@ def main():
     print(f"excluded: {len(excluded)}")
     for un, why in sorted(excluded):
         print(f"  - {un}: {why}")
-    print(f"existing pages to noindex (low-data, kept on disk): {len(to_noindex)} -> {to_noindex}")
+    print(f"noindex low-data pages (existing + linked-but-missing): {len(to_noindex)} -> {to_noindex}")
     if dry:
         print("DRY RUN — no files written")
         return
@@ -500,6 +514,7 @@ def main():
         with open(os.path.join(ddir, "index.html"), "w", encoding="utf-8", newline="\n") as f:
             f.write(page_html(d, recent, avg_amer, sport_rows, m))
     for un in to_noindex:
+        os.makedirs(os.path.join(UDIR, un), exist_ok=True)
         with open(os.path.join(UDIR, un, "index.html"), "w", encoding="utf-8", newline="\n") as f:
             f.write(noindex_html(un))
     print(f"wrote {len(eligible_pages)} indexable + {len(to_noindex)} noindex pages under {UDIR}")

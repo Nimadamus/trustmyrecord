@@ -186,7 +186,7 @@ def lclass(v):        # leaderboards: pos/neg/neutral
 
 # ---------- row builders (match each page's JS markup) ----------
 def handi_row(r):
-    href = f"/profile/?user={e(r['username'])}"
+    href = f"/u/{e(r['username'])}/"
     label = f"View {r['username']} profile"
     has_graded = graded(r) > 0
     roi_cls = sclass(r["roi"]) if has_graded else "is-neutral"
@@ -216,7 +216,7 @@ def handi_row(r):
     )
 
 def lead_row(r, idx):
-    href = f"/profile/?user={e(r['username'])}"
+    href = f"/u/{e(r['username'])}/"
     rank_cls = "gold" if idx == 0 else "silver" if idx == 1 else "bronze" if idx == 2 else ""
     initial = e((r["display_name"] or "?")[:1].upper())
     if r["avatar_url"]:
@@ -329,7 +329,7 @@ def bake_leaderboards(rows):
 def home_preview_rows(rows, k=5):
     out = []
     for i, r in enumerate(rows[:k]):
-        href = f"/profile/?user={e(r['username'])}"
+        href = f"/u/{e(r['username'])}/"
         out.append(
             f'<tr><td class="rk">#{i+1}</td>'
             f'<td><a href="{href}">{e(r["display_name"])}</a></td>'
@@ -550,7 +550,7 @@ def home_highlights(rows, now):
         if un.lower() in seen:
             continue
         seen.add(un.lower())
-        href = f"/profile/?user={e(un)}"
+        href = f"/u/{e(un)}/"
         items.append(f'<li>{emoji} <a href="{href}"><b>{e(disp)}</b></a> {clause}.</li>')
         if len(items) >= HOME_HL_ROWS:
             break
