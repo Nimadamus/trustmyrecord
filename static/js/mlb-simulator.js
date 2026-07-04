@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ultrareal12-totalrecenter-20260629';
+    var UI_BUILD = 'mlb-simulator-boxscore-eventlog-20260703';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2196,8 +2196,13 @@
         if ((r -= v.b1) < 0) return 'b1';
         return 'out';
     }
-    function evNewBat() { return { pa: 0, ab: 0, h: 0, b2: 0, b3: 0, hr: 0, bb: 0, so: 0, r: 0, rbi: 0, sb: 0, cs: 0, sf: 0, gidp: 0, lob: 0 }; }
-    function evNewPit() { return { outs: 0, h: 0, bb: 0, so: 0, hr: 0, r: 0, er: 0, bf: 0, pitches: 0, strikes: 0 }; }
+    function evNewBat() { return { pa: 0, ab: 0, h: 0, b2: 0, b3: 0, hr: 0, bb: 0, so: 0, r: 0, rbi: 0, sb: 0, cs: 0, sf: 0, sac: 0, hbp: 0, gidp: 0, lob: 0 }; }
+    function evNewPit() { return { outs: 0, h: 0, bb: 0, so: 0, hr: 0, hbp: 0, r: 0, er: 0, bf: 0, pitches: 0, strikes: 0 }; }
+    // HBP_SHARE_20260703: hit-by-pitch is carved from the calibrated free-pass rate
+    // (identical base state to a walk), so run scoring / win probability are byte-
+    // unchanged; only the free pass's LABEL changes. ~0.13 of walks -> ~0.42 HBP/team-
+    // game (real MLB 2025 ~0.40), leaving BB ~2.8/team (well within the validator tol).
+    var EV_HBP_SHARE = 0.13;
     // Build per-team lineup (anchored batter vectors + display rows) and staff.
     function evBuildSide(team, oppPitcher, ownStarter, targetRuns, rosterContext, parkHr) {
         var roster = rosterForTeam(team, rosterContext);
@@ -2367,8 +2372,15 @@
     // deficit (checked at the end of each PA, so a walk-off HR counts every run).
     // ghostSlot (optional): extra-innings placed runner (2020+ rule) — that lineup
     // slot starts the inning on 2B and scores as an UNEARNED run for the pitcher.
-    function evPlayHalf(side, pitcher, random, endLead, ghostSlot, defSide) {
+    function evPlayHalf(side, pitcher, random, endLead, ghostSlot, defSide, log) {
         var lineup = side.lineup, outs = 0, bases = [null, null, null], runs = 0, errors = 0;
+        // SCORING_EVENT_LOG_20260703: when `log` is provided (only for the single
+        // displayed game, never the win-probability samples) record each notable event
+        // — HR, XBH, SB/CS, sacrifice, HBP — with the inning, batter/runner, responsible
+        // pitcher, outs and RBI, so the box score can render a real play-by-play detail
+        // section instead of one run-on sentence. No effect on the simulation math.
+        function bname(slot) { var p = lineup[slot]; return (p && (p.playerName || String(p.name || '').replace(/\s*\([^)]*\)\s*$/, ''))) || ''; }
+        function logEvent(e) { if (!log) return; e.inning = log.inning; e.half = log.half; e.team = log.teamAbbr; log.events.push(e); }
         // bp[k] = the pitcher responsible for the runner on base k (the arm that put him
         // there). Inherited runners that score charge THAT pitcher, not whoever is on the
         // mound when they cross — the correct rule once mid-inning changes exist.
@@ -2408,8 +2420,9 @@
             var rSteal = runner0 && runner0.stealRate != null ? runner0.stealRate : side.stealRate;
             var rSucc = runner0 && runner0.stealSuccess != null ? runner0.stealSuccess : side.stealSuccess;
             if (bases[0] !== null && bases[1] === null && random() < rSteal) {
-                if (random() < rSucc) { lineup[bases[0]].acc.sb++; side.sb++; bases[1] = bases[0]; bp[1] = bp[0]; bases[0] = null; bp[0] = null; }
-                else { lineup[bases[0]].acc.cs++; side.cs++; bases[0] = null; bp[0] = null; pitcher.acc.outs++; outs++; if (outs >= 3) break; }
+                var stealerName = bname(bases[0]);
+                if (random() < rSucc) { lineup[bases[0]].acc.sb++; side.sb++; logEvent({ type: 'SB', runner: stealerName, pitcher: pitcher.name, base: '2nd' }); bases[1] = bases[0]; bp[1] = bp[0]; bases[0] = null; bp[0] = null; }
+                else { lineup[bases[0]].acc.cs++; side.cs++; logEvent({ type: 'CS', runner: stealerName, pitcher: pitcher.name, base: '2nd' }); bases[0] = null; bp[0] = null; pitcher.acc.outs++; outs++; if (outs >= 3) break; }
             }
             var bi = side.idx % 9, b = lineup[bi];
             // INTENTIONAL_WALK_20260629: first base open, a runner in scoring position,
@@ -2440,10 +2453,14 @@
             // Event-sourced situational accounting (no post-hoc estimates):
             var preOuts = outs;
             var rispAtBat = bases[1] !== null || bases[2] !== null;
+            var runnersOnBefore = (bases[0] !== null ? 1 : 0) + (bases[1] !== null ? 1 : 0) + (bases[2] !== null ? 1 : 0);
             var abBefore = acc.ab, hBefore = acc.h;
             var rbi = 0;
             if (ev === 'bb') {
-                acc.bb++; pitcher.acc.bb++;
+                // A share of free passes are hit-by-pitch: same base state, but tracked
+                // and displayed as HBP instead of a walk (calibration-neutral).
+                if (random() < EV_HBP_SHARE) { acc.hbp = (acc.hbp || 0) + 1; side.hbp = (side.hbp || 0) + 1; pitcher.acc.hbp = (pitcher.acc.hbp || 0) + 1; logEvent({ type: 'HBP', batter: bname(bi), pitcher: pitcher.name }); }
+                else { acc.bb++; pitcher.acc.bb++; }
                 if (bases[0] !== null) { if (bases[1] !== null) { if (bases[2] !== null) { score(bases[2], true, bp[2]); rbi++; } bases[2] = bases[1]; bp[2] = bp[1]; } bases[1] = bases[0]; bp[1] = bp[0]; }
                 bases[0] = bi; bp[0] = pitcher;
             } else if (ev === 'so') { acc.ab++; acc.so++; pitcher.acc.so++; pitcher.acc.outs++; outs++;
@@ -2487,6 +2504,18 @@
                         // Sac fly: run scores, batter is NOT charged an at-bat (official scoring).
                         acc.ab--; acc.sf = (acc.sf || 0) + 1; side.sf = (side.sf || 0) + 1;
                         score(bases[2], true, bp[2]); rbi++; bases[2] = null; bp[2] = null; outs++;
+                        logEvent({ type: 'SF', batter: bname(bi), pitcher: pitcher.name, rbi: 1 });
+                    }
+                    else if (outs < 2 && bases[2] === null && (bases[1] !== null || bases[0] !== null) && (b.realOps == null || b.realOps < 0.680) && random() < 0.026) {
+                        // SAC_BUNT_20260703: weak hitter, <2 outs, a runner to advance and
+                        // third base open -> lay one down. Batter out (no AB, official
+                        // scoring), the lead runner(s) move up one base, no run scores, so
+                        // the run environment is essentially unchanged (calibration-safe).
+                        acc.ab--; acc.sac = (acc.sac || 0) + 1; side.sacBunts = (side.sacBunts || 0) + 1;
+                        if (bases[1] !== null) { bases[2] = bases[1]; bp[2] = bp[1]; bases[1] = null; bp[1] = null; }
+                        if (bases[0] !== null) { bases[1] = bases[0]; bp[1] = bp[0]; bases[0] = null; bp[0] = null; }
+                        outs++;
+                        logEvent({ type: 'SAC', batter: bname(bi), pitcher: pitcher.name });
                     }
                     else if (outs < 2 && bases[0] !== null && random() < 0.21) {
                         // GIDP rate calibrated June 4 2026: 0.11 produced 0.38/team
@@ -2496,6 +2525,12 @@
                     }
                     else outs++;
                 }
+            }
+            // Event log for extra-base hits (SB/CS/SF/SAC/HBP already recorded inline).
+            if (log) {
+                if (ev === 'hr') logEvent({ type: 'HR', batter: bname(bi), pitcher: pitcher.name, outs: preOuts, runners: runnersOnBefore, rbi: rbi });
+                else if (ev === 'b3') logEvent({ type: '3B', batter: bname(bi), pitcher: pitcher.name, rbi: rbi });
+                else if (ev === 'b2') logEvent({ type: '2B', batter: bname(bi), pitcher: pitcher.name, rbi: rbi });
             }
             // Per-PA pitch count, sampled from the event type (event-sourced totals).
             var paPitches = ev === 'so' ? 3 + Math.floor(random() * 4) : ev === 'bb' ? 4 + Math.floor(random() * 4) : 1 + Math.floor(random() * 6);
@@ -2577,7 +2612,7 @@
         }
         return evActivePitcher(side, outsRecorded);
     }
-    function evSimGame(awaySide, homeSide, random) {
+    function evSimGame(awaySide, homeSide, random, logSink) {
         [awaySide, homeSide].forEach(function (s) {
             // Restore the pitcher staff to its real arms (drop any blowout position
             // player appended in a prior sampled game) so resampling never accumulates.
@@ -2586,7 +2621,7 @@
             s.posPitcher = null; s.posPitcherIdx = -1;
             s.idx = 0; s.lob = 0; s.sb = 0; s.cs = 0; s.minArmIdx = 0; s.midChanges = 0; s.ibb = 0;
             // Event-sourced situational trackers (reset per game).
-            s.gidp = 0; s.sf = 0; s.rispAb = 0; s.rispHits = 0; s.twoOutRbi = 0;
+            s.gidp = 0; s.sf = 0; s.sacBunts = 0; s.hbp = 0; s.rispAb = 0; s.rispHits = 0; s.twoOutRbi = 0;
             s.lisp2out = 0; s.pickoffs = 0; s.ofAssists = 0; s.dpTurned = 0;
             // Per-game starter length: symmetric +/-8 out sample around the starter's
             // real per-start mean (mean-preserving). Pitching changes happen at inning
@@ -2603,18 +2638,19 @@
         var aRuns = 0, hRuns = 0, aErr = 0, hErr = 0, aInn = [], hInn = [], aPlaced = 0, hPlaced = 0;
         // Defensive stats (double plays turned, outfield assists) credit the side in
         // the field for that half.
-        function half(batSide, defSide, pitcher, endLead, ghostSlot) {
-            var r = evPlayHalf(batSide, pitcher, random, endLead, ghostSlot, defSide);
+        function half(batSide, defSide, pitcher, endLead, ghostSlot, inning, halfLabel) {
+            var log = logSink ? { events: logSink, inning: inning, half: halfLabel, teamAbbr: (batSide.team && batSide.team.abbreviation) || '' } : null;
+            var r = evPlayHalf(batSide, pitcher, random, endLead, ghostSlot, defSide, log);
             defSide.dpTurned += r.gidp; defSide.ofAssists += r.ofAssists;
             return r;
         }
         for (var inn = 0; inn < 9; inn++) {
             var ap = evDefPitcher(homeSide, sumOuts(homeSide), hRuns, aRuns, inn);
-            var ra = half(awaySide, homeSide, ap); aRuns += ra.runs; hErr += ra.errors; aInn.push(ra.runs);
+            var ra = half(awaySide, homeSide, ap, null, undefined, inn + 1, 'top'); aRuns += ra.runs; hErr += ra.errors; aInn.push(ra.runs);
             if (inn === 8 && hRuns > aRuns) { break; } // home leads, bottom 9 not played
             var hp = evDefPitcher(awaySide, sumOuts(awaySide), aRuns, hRuns, inn);
             // Bottom 9: walk-off rule applies (half ends when home takes the lead).
-            var rh = half(homeSide, awaySide, hp, inn === 8 ? (aRuns - hRuns) : null);
+            var rh = half(homeSide, awaySide, hp, inn === 8 ? (aRuns - hRuns) : null, undefined, inn + 1, 'bottom');
             hRuns += rh.runs; aErr += rh.errors; hInn.push(rh.runs);
         }
         // Extra innings: real per-inning tracking, placed runner on 2B (2020+ rule),
@@ -2622,10 +2658,10 @@
         var extra = 9;
         while (aRuns === hRuns && extra < 18) {
             var ap2 = evActivePitcher(homeSide, sumOuts(homeSide));
-            var rae = half(awaySide, homeSide, ap2, null, (awaySide.idx + 8) % 9);
+            var rae = half(awaySide, homeSide, ap2, null, (awaySide.idx + 8) % 9, extra + 1, 'top');
             aRuns += rae.runs; hErr += rae.errors; aInn.push(rae.runs); aPlaced++;
             var hp2 = evActivePitcher(awaySide, sumOuts(awaySide));
-            var rhe = half(homeSide, awaySide, hp2, aRuns - hRuns, (homeSide.idx + 8) % 9);
+            var rhe = half(homeSide, awaySide, hp2, aRuns - hRuns, (homeSide.idx + 8) % 9, extra + 1, 'bottom');
             hRuns += rhe.runs; aErr += rhe.errors; hInn.push(rhe.runs); hPlaced++;
             extra++;
         }
@@ -2703,13 +2739,14 @@
             totalPitches: totalPitches, totalStrikes: totalStrikes, hits: hits, runs: runs, errors: errors,
             totalBases: totalBases, twoOutRbi: side.twoOutRbi || 0,
             lispLeft2Out: side.lisp2out || 0, gidp: side.gidp || 0,
-            sacFlies: side.sf || 0,
+            sacFlies: side.sf || 0, sacBunts: side.sacBunts || 0, hbp: side.hbp || 0,
             rispText: (side.rispHits || 0) + '-for-' + (side.rispAb || 0), pickoffs: side.pickoffs || 0,
             outfieldAssists: side.ofAssists || 0, dp: side.dpTurned || 0, ibb: side.ibb || 0
         };
     }
     function assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random) {
-        var g = evSimGame(inputs.awaySide, inputs.homeSide, random);
+        var scoringLog = [];
+        var g = evSimGame(inputs.awaySide, inputs.homeSide, random, scoringLog);
         var awayHits = sum(inputs.awaySide.lineup.map(function (b) { return b.acc.h; }));
         var homeHits = sum(inputs.homeSide.lineup.map(function (b) { return b.acc.h; }));
         // Innings arrays are now complete per-inning (extras included). Home may be
@@ -2735,6 +2772,7 @@
         return {
             runId: String(Date.now()) + '-' + Math.floor(random() * 1000000),
             totalInnings: totalInnings, homeSkippedFinal: homeSkippedFinal,
+            scoringLog: scoringLog,
             away: awayLine, home: homeLine, winner: winner, loser: loser,
             players: {
                 away: { batters: awayBatters, pitchers: awayPitchers, rosterSource: evRosterSource(inputs.awaySide), lineupStatus: lineupStatusAway },
@@ -3936,11 +3974,63 @@
     function battingFieldingDetails(result) {
         function detail(label, line) {
             var s = line.summaryStats || {};
-            return '<p><strong>' + escapeHtml(label) + '</strong> 2B: ' + (s.doubles || 0) + '; 3B: ' + (s.triples || 0) + '; HR: ' + (s.homeRuns || 0) + '; TB: ' + (s.totalBases || 0) + '; RBI: ' + (s.rbi || 0) + '; 2-out RBI: ' + (s.twoOutRbi || 0) + '; Runners left in scoring position, 2 out: ' + (s.lispLeft2Out || 0) + '; GIDP: ' + (s.gidp || 0) + '; SF: ' + (s.sacFlies || 0) + '; IBB: ' + (s.ibb || 0) + '; Team RISP: ' + (s.rispText || '0-for-0') + '; Team LOB: ' + (s.leftOnBase || 0) + '; SB: ' + (s.stolenBases || 0) + '; CS: ' + (s.caughtStealing || 0) + '; Pickoffs: ' + (s.pickoffs || 0) + '; E: ' + (s.errors || 0) + '; Outfield assists: ' + (s.outfieldAssists || 0) + '; DP: ' + (s.dp || 0) + '</p>';
+            return '<p><strong>' + escapeHtml(label) + '</strong> 2B: ' + (s.doubles || 0) + '; 3B: ' + (s.triples || 0) + '; HR: ' + (s.homeRuns || 0) + '; TB: ' + (s.totalBases || 0) + '; RBI: ' + (s.rbi || 0) + '; 2-out RBI: ' + (s.twoOutRbi || 0) + '; BB: ' + (s.walks || 0) + '; SO: ' + (s.strikeouts || 0) + '; HBP: ' + (s.hbp || 0) + '; Runners left in scoring position, 2 out: ' + (s.lispLeft2Out || 0) + '; GIDP: ' + (s.gidp || 0) + '; SF: ' + (s.sacFlies || 0) + '; SAC (bunt): ' + (s.sacBunts || 0) + '; IBB: ' + (s.ibb || 0) + '; Team RISP: ' + (s.rispText || '0-for-0') + '; Team LOB: ' + (s.leftOnBase || 0) + '; SB: ' + (s.stolenBases || 0) + '; CS: ' + (s.caughtStealing || 0) + '; Pickoffs: ' + (s.pickoffs || 0) + '; E: ' + (s.errors || 0) + '; Outfield assists: ' + (s.outfieldAssists || 0) + '; DP: ' + (s.dp || 0) + '</p>';
         }
         return '<section class="batting-fielding-details"><h5>Batting, Baserunning &amp; Fielding</h5>' +
             detail(result.away.abbreviation, result.boxScore.away) +
             detail(result.home.abbreviation, result.boxScore.home) + '</section>';
+    }
+    // SCORING_DETAIL_20260703: render the event log as a clean, readable play-by-play
+    // detail — Home Runs / Scoring, Extra-Base Hits, Baserunning, and Sacrifices — each
+    // line with inning, player, team, responsible pitcher, and RBI, so users see exactly
+    // what happened instead of a single run-on summary line. Built entirely from the
+    // per-game scoringLog captured in the plate-appearance engine.
+    function scoringDetailSections(result) {
+        var box = result && result.boxScore;
+        var log = box && Array.isArray(box.scoringLog) ? box.scoringLog : [];
+        function ord(n) { n = Number(n) || 0; var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+        function frame(e) { return (e.half === 'bottom' ? 'Bot ' : 'Top ') + ord(e.inning); }
+        function named(e) { return e.batter || e.runner; }
+        var byType = { HR: [], XBH: [], RUN: [], SAC: [] };
+        log.forEach(function (e) {
+            if (!named(e)) return; // synthetic lineup with no player names -> nothing to show
+            if (e.type === 'HR') byType.HR.push(e);
+            else if (e.type === '2B' || e.type === '3B') byType.XBH.push(e);
+            else if (e.type === 'SB' || e.type === 'CS') byType.RUN.push(e);
+            else if (e.type === 'SF' || e.type === 'SAC') byType.SAC.push(e);
+        });
+        function line(text) { return '<li>' + escapeHtml(text) + '</li>'; }
+        function block(title, items, emptyText) {
+            var body = items.length ? '<ul class="scoring-detail-list">' + items.join('') + '</ul>' : '<p class="scoring-detail-empty">' + escapeHtml(emptyText) + '</p>';
+            return '<div class="scoring-detail-block"><h5>' + escapeHtml(title) + '</h5>' + body + '</div>';
+        }
+        var hr = byType.HR.map(function (e) {
+            var runs = (Number(e.rbi) || 1);
+            var men = Number(e.runners) || 0;
+            var outs = Number(e.outs) || 0;
+            return line(frame(e) + ' — ' + e.batter + ' (' + e.team + ') homered off ' + e.pitcher + ', ' +
+                runs + '-run HR, ' + men + (men === 1 ? ' runner on, ' : ' on base, ') + outs + (outs === 1 ? ' out' : ' outs'));
+        });
+        var xbh = byType.XBH.map(function (e) {
+            var verb = e.type === '3B' ? 'tripled' : 'doubled';
+            var rbi = Number(e.rbi) || 0;
+            return line(frame(e) + ' — ' + e.batter + ' (' + e.team + ') ' + verb + ' off ' + e.pitcher + (rbi ? ', ' + rbi + ' RBI' : ''));
+        });
+        var run = byType.RUN.map(function (e) {
+            var act = e.type === 'SB' ? 'stole ' + (e.base || '2nd') : 'caught stealing ' + (e.base || '2nd');
+            return line(frame(e) + ' — ' + e.runner + ' (' + e.team + ') ' + act + ' (battery: ' + e.pitcher + ')');
+        });
+        var sac = byType.SAC.map(function (e) {
+            if (e.type === 'SF') return line(frame(e) + ' — ' + e.batter + ' (' + e.team + ') sacrifice fly off ' + e.pitcher + ', 1 RBI');
+            return line(frame(e) + ' — ' + e.batter + ' (' + e.team + ') sacrifice bunt (advanced a runner)');
+        });
+        return '<section class="scoring-detail">' +
+            '<h4>Scoring Plays &amp; Detail</h4>' +
+            block('Home Runs', hr, 'No home runs in this simulated game.') +
+            block('Extra-Base Hits (2B / 3B)', xbh, 'No doubles or triples in this simulated game.') +
+            block('Baserunning (SB / CS)', run, 'No stolen-base attempts in this simulated game.') +
+            block('Sacrifices (SF / Bunt)', sac, 'No sacrifices in this simulated game.') +
+            '</section>';
     }
     function pitcherNoteLine(rows) {
         return (rows || []).filter(function (row) { return row && row.name; }).map(function (row) {
@@ -4061,6 +4151,7 @@
             battingTableSection(result.away, box.players.away) +
             battingTableSection(result.home, box.players.home) +
             battingFieldingDetails(result) +
+            scoringDetailSections(result) +
             '<h4>Pitching</h4>' +
             pitchingTableSection(result.away, box.players.away, awayWon, margin, { walkOff: walkOff, extra: extra, isHome: false }) +
             pitchingTableSection(result.home, box.players.home, !awayWon, margin, { walkOff: walkOff, extra: extra, isHome: true }) +
@@ -4173,8 +4264,33 @@
         lines.push('Team summary:');
         [box.away, box.home].forEach(function (line) {
             var s = line.summaryStats || {};
-            lines.push(line.team.abbreviation + ': 2B ' + (s.doubles || 0) + ', 3B ' + (s.triples || 0) + ', HR ' + (s.homeRuns || 0) + ', TB ' + (s.totalBases || 0) + ', RBI ' + (s.rbi || 0) + ', BB ' + (s.walks || 0) + ', SO ' + (s.strikeouts || 0) + ', SB ' + (s.stolenBases || 0) + ', CS ' + (s.caughtStealing || 0) + ', LOB ' + (s.leftOnBase || 0) + ', Pitches ' + (s.totalPitches || 0) + '-' + (s.totalStrikes || 0));
+            lines.push(line.team.abbreviation + ': 2B ' + (s.doubles || 0) + ', 3B ' + (s.triples || 0) + ', HR ' + (s.homeRuns || 0) + ', TB ' + (s.totalBases || 0) + ', RBI ' + (s.rbi || 0) + ', BB ' + (s.walks || 0) + ', SO ' + (s.strikeouts || 0) + ', HBP ' + (s.hbp || 0) + ', SF ' + (s.sacFlies || 0) + ', SAC ' + (s.sacBunts || 0) + ', SB ' + (s.stolenBases || 0) + ', CS ' + (s.caughtStealing || 0) + ', GIDP ' + (s.gidp || 0) + ', LOB ' + (s.leftOnBase || 0) + ', RISP ' + (s.rispText || '0-for-0') + ', E ' + (s.errors || 0) + ', DP ' + (s.dp || 0) + ', Pitches ' + (s.totalPitches || 0) + '-' + (s.totalStrikes || 0));
         });
+        if (Array.isArray(box.scoringLog) && box.scoringLog.length) {
+            var ordT = function (n) { n = Number(n) || 0; var a = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (a[(v - 20) % 10] || a[v] || a[0]); };
+            var frameT = function (e) { return (e.half === 'bottom' ? 'Bot ' : 'Top ') + ordT(e.inning); };
+            var hrT = box.scoringLog.filter(function (e) { return e.type === 'HR' && (e.batter || e.runner); });
+            if (hrT.length) {
+                lines.push('');
+                lines.push('Home Runs:');
+                hrT.forEach(function (e) {
+                    lines.push('  ' + frameT(e) + ': ' + e.batter + ' (' + e.team + '), ' + ((Number(e.rbi) || 1)) + '-run HR off ' + e.pitcher + ', ' + (Number(e.runners) || 0) + ' on, ' + (Number(e.outs) || 0) + ' out');
+                });
+            }
+            var otherT = box.scoringLog.filter(function (e) { return e.type !== 'HR' && (e.batter || e.runner); });
+            if (otherT.length) {
+                lines.push('');
+                lines.push('Other scoring/baserunning detail:');
+                otherT.forEach(function (e) {
+                    var who = e.batter || e.runner;
+                    var desc = e.type === '2B' ? 'double off ' + e.pitcher : e.type === '3B' ? 'triple off ' + e.pitcher
+                        : e.type === 'SB' ? 'stole ' + (e.base || '2nd') : e.type === 'CS' ? 'caught stealing ' + (e.base || '2nd')
+                        : e.type === 'SF' ? 'sacrifice fly off ' + e.pitcher : e.type === 'SAC' ? 'sacrifice bunt'
+                        : e.type === 'HBP' ? 'hit by pitch (' + e.pitcher + ')' : e.type;
+                    lines.push('  ' + frameT(e) + ': ' + who + ' (' + e.team + '), ' + desc + (e.rbi ? ', ' + e.rbi + ' RBI' : ''));
+                });
+            }
+        }
         lines.push('Matchup notes: ' + result.keyExplanation);
         lines.push('Projection notice: Simulation-based estimate, not sportsbook odds or a guaranteed result.');
         return lines.join('\n');
