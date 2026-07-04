@@ -461,10 +461,12 @@ def main():
     dry = "--dry-run" in sys.argv
     base = list_users()
     eligible_pages, excluded = [], []
-    linked_lowdata = set()   # verified users the directory/leaderboard links to
-                             # (prerender_directory.eligible: verified + picks>0)
-                             # but who fall below GRADED_MIN, so they need a real
-                             # noindex profile page or their /u/ link 404s.
+    linked_lowdata = set()   # every VERIFIED user the directory/leaderboard/sport
+                             # boards can render (incl. 0-pick members) but who
+                             # falls below GRADED_MIN. Each needs a real (noindex)
+                             # /u/ page so a leaderboard link to /u/<user>/ never
+                             # 404s once those boards point at /u/ instead of the
+                             # /profile/?user= shell.
     for u in base:
         un = u["username"]
         try:
@@ -474,12 +476,12 @@ def main():
             excluded.append((un, f"detail fetch failed: {ex}")); continue
         ok, why = eligible(d)
         if not ok:
-            # Mirror prerender_directory.eligible() so every linked capper has a page.
+            # Any verified, non-denylist, non-admin(unless allowlisted) member can
+            # surface on a board, so guarantee a /u/ page exists for all of them.
             admin_ok = (not d.get("is_admin")) or (un in ADMIN_ALLOWLIST)
             if (d.get("verification_status") == "verified"
                     and un.lower() not in INTERNAL_DENYLIST
-                    and admin_ok
-                    and int(num(d.get("total_picks"))) > 0):
+                    and admin_ok):
                 linked_lowdata.add(un)
             excluded.append((un, why)); continue
         eligible_pages.append(d)

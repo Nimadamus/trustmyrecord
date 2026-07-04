@@ -1329,7 +1329,7 @@
                     + '<td><span class="rank ' + rankClass + '">#' + (index + 1) + '</span></td>'
                     + '<td><div class="person">' + avatarHtml(entry.displayName, entry.avatarUrl)
                     +     '<div class="person-meta">'
-                    +       '<a class="person-name" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">' + escapeHtml(entry.displayName) + '</a>'
+                    +       '<a class="person-name" href="/u/' + encodeURIComponent(entry.username) + '/" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">' + escapeHtml(entry.displayName) + '</a>'
                     +       '<span class="person-sub">@' + escapeHtml(entry.username) + ' • ' + escapeHtml(entry.sport || 'All sports') + ' • streak ' + streakLabel + '</span>'
                     +     '</div></div></td>'
                     + '<td class="' + statClass(entry.winRate - 50) + '">' + record + '</td>'
@@ -1339,7 +1339,7 @@
                     + '<td>' + entry.totalPicks + '</td>'
                     + '<td><div class="link-actions">'
                     +     '<button type="button" class="mini-link" data-action="inspect-capper" data-username="' + escapeHtml(entry.username) + '">Inspect</button>'
-                    +     '<a class="mini-link" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">Profile</a>'
+                    +     '<a class="mini-link" href="/u/' + encodeURIComponent(entry.username) + '/" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">Profile</a>'
                     +     '<a class="mini-link" href="/arena/?challenge=' + encodeURIComponent(entry.username) + '" data-action="challenge-capper" data-username="' + escapeHtml(entry.username) + '" data-source="board">Challenge</a>'
                     + '</div></td>'
                     + '</tr>';
@@ -1353,7 +1353,7 @@
                 return;
             }
             rail.innerHTML = entries.map(function(entry) {
-                return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="streak_rail">'
+                return '<a class="rail-item" href="/u/' + encodeURIComponent(entry.username) + '/" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="streak_rail">'
                     + '<strong>' + escapeHtml(entry.displayName) + '</strong>'
                     + '<span>@' + escapeHtml(entry.username) + ' • ' + entry.winRate.toFixed(1) + '% win rate • ' + signed(entry.units, 'u') + '</span>'
                     + '<span class="badge">W' + entry.streak + ' current run</span>'
@@ -1368,7 +1368,7 @@
                 return;
             }
             rail.innerHTML = entries.map(function(entry) {
-                return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(entry.username) + '" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="volume_rail">'
+                return '<a class="rail-item" href="/u/' + encodeURIComponent(entry.username) + '/" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="volume_rail">'
                     + '<strong>' + escapeHtml(entry.displayName) + '</strong>'
                     + '<span>' + entry.totalPicks + ' picks • ' + signed(entry.roi, '%') + ' ROI • ' + signed(entry.units, 'u') + '</span>'
                     + '<span class="badge gold">Verified sample</span>'
@@ -1594,7 +1594,7 @@
                     + '<td><span class="rank ' + rankClassFor(index) + '">#' + (index + 1) + '</span></td>'
                     + '<td><div class="person">' + avatarHtml(displayName, entry.avatar_url)
                     +   '<div class="person-meta">'
-                    +     '<a class="person-name" href="/profile/?user=' + encodeURIComponent(username) + '">' + escapeHtml(displayName) + '</a>'
+                    +     '<a class="person-name" href="/u/' + encodeURIComponent(username) + '/">' + escapeHtml(displayName) + '</a>'
                     +     '<span class="person-sub">@' + escapeHtml(username) + '</span>'
                     +   '</div></div></td>'
                     + '<td class="pos">' + num(entry.total_points).toLocaleString() + '</td>'
@@ -1614,7 +1614,7 @@
             rail.innerHTML = entries.map(function(entry) {
                 const username = entry.username || '';
                 const display = entry.display_name || entry.displayName || username;
-                return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(username) + '">'
+                return '<a class="rail-item" href="/u/' + encodeURIComponent(username) + '/">'
                     + '<strong>' + escapeHtml(display) + '</strong>'
                     + '<span>@' + escapeHtml(username) + ' • ' + num(entry.questions_created) + ' questions authored</span>'
                     + '<span class="badge gold">Creator</span>'
@@ -1682,7 +1682,7 @@
                     + '<td><span class="rank ' + rankClassFor(index) + '">#' + (index + 1) + '</span></td>'
                     + '<td><div class="person">' + avatarHtml(displayName, entry.avatar_url)
                     +   '<div class="person-meta">'
-                    +     '<a class="person-name" href="/profile/?user=' + encodeURIComponent(username) + '">' + escapeHtml(displayName) + '</a>'
+                    +     '<a class="person-name" href="/u/' + encodeURIComponent(username) + '/">' + escapeHtml(displayName) + '</a>'
                     +     '<span class="person-sub">@' + escapeHtml(username) + '</span>'
                     +   '</div></div></td>'
                     + '<td class="pos">' + num(entry.total_points).toLocaleString() + '</td>'
@@ -1804,7 +1804,7 @@
             wrap.style.display = '';
             wrap.innerHTML = entries.map(function(entry) {
                 const winner = entry.winner_username || entry.winner || 'TBD';
-                return '<a class="rail-item" href="/profile/?user=' + encodeURIComponent(winner) + '">'
+                return '<a class="rail-item" href="/u/' + encodeURIComponent(winner) + '/">'
                     + '<strong>' + escapeHtml(winner) + ' won</strong>'
                     + '<span>' + escapeHtml(gamingChallengeLabel(entry)) + ' • ' + timeAgo(entry.completed_at || entry.updated_at || entry.created_at) + '</span>'
                     + '<span class="badge gold">Winner</span>'
@@ -1885,9 +1885,9 @@
                 const challengedHandle = entry.challenged_username || 'Opponent';
                 return '<tr>'
                     + '<td><div class="person">' + avatarHtml(challengerHandle, entry.challenger_avatar)
-                    +   '<div class="person-meta"><a class="person-name" href="/profile/?user=' + encodeURIComponent(challengerHandle) + '">@' + escapeHtml(challengerHandle) + '</a></div></div></td>'
+                    +   '<div class="person-meta"><a class="person-name" href="/u/' + encodeURIComponent(challengerHandle) + '/">@' + escapeHtml(challengerHandle) + '</a></div></div></td>'
                     + '<td><div class="person">' + avatarHtml(challengedHandle, entry.challenged_avatar)
-                    +   '<div class="person-meta"><a class="person-name" href="/profile/?user=' + encodeURIComponent(challengedHandle) + '">@' + escapeHtml(challengedHandle) + '</a></div></div></td>'
+                    +   '<div class="person-meta"><a class="person-name" href="/u/' + encodeURIComponent(challengedHandle) + '/">@' + escapeHtml(challengedHandle) + '</a></div></div></td>'
                     + '<td>' + escapeHtml(sport) + '</td>'
                     + '<td>' + escapeHtml(type) + '</td>'
                     + '<td><span class="badge ' + (status === 'completed' ? 'gold' : status === 'pending' ? 'muted' : '') + '">' + escapeHtml(status) + '</span></td>'

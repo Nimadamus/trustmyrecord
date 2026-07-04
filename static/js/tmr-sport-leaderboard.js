@@ -26,7 +26,7 @@
       var roi = ((Number(u.roi) || 0) >= 0 ? '+' : '') + (num(u.roi)) + '%';
       var rec = (u.wins || 0) + '-' + (u.losses || 0) + (u.pushes ? '-' + u.pushes : '');
       h += '<tr><td>' + (i + 1) + '</td>' +
-        '<td><a href="/profile/?user=' + encodeURIComponent(u.username) + '">' + esc(u.display_name || u.username) + '</a></td>' +
+        '<td><a href="/u/' + encodeURIComponent(u.username) + '/">' + esc(u.display_name || u.username) + '</a></td>' +
         '<td>' + rec + '</td>' +
         '<td class="' + cls + '">' + units + '</td>' +
         '<td class="' + cls + '">' + roi + '</td>' +

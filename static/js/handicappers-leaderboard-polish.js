@@ -155,7 +155,7 @@
             const hasGraded = wins + losses + pushes > 0;
             const units = num(userStat(member, ['net_units', 'netUnits', 'units'], 0));
             const avatar = member.avatar_url || member.avatarUrl || '/static/media/TMR-avatar-256.jpg';
-            const profileHref = '/profile/?user=' + encodeURIComponent(username);
+            const profileHref = '/u/' + encodeURIComponent(username) + '/';
             const record = wins + '-' + losses + (pushes ? '-' + pushes : '');
             return '<div class="hm-row hm-member-row" data-username="' + escapeHtml(username) + '" data-profile-href="' + profileHref + '" role="link" tabindex="0">' +
                 '<div class="hm-user"><a class="hm-avatar-link" href="' + profileHref + '"><img class="hm-avatar" src="' + escapeHtml(avatar) + '" alt="' + escapeHtml(display) + ' avatar"></a>' +
@@ -286,7 +286,7 @@
             profile.appendChild(strong);
             const link = document.createElement('a');
             link.className = 'hm-profile-chip';
-            link.href = '/profile/?user=' + encodeURIComponent(username);
+            link.href = '/u/' + encodeURIComponent(username) + '/';
             link.textContent = 'View Profile';
             card.appendChild(link);
             card.dataset.hmLeaderPolished = '1';
