@@ -1163,10 +1163,10 @@
             // Update the top stats bar with overview numbers
             const acEl = document.getElementById('pollsAccuracy');
             const vcEl = document.getElementById('pollsVoteCount');
-            const rkEl = document.getElementById('pollsRank');
             const ppEl = document.getElementById('pollsPoints');
 
-            if (rkEl) rkEl.textContent = data.active_polls || 0;
+            // Active Polls stat is set by updateActivePollsStat() from the
+            // Hangout-visible feed, not the site-wide /polls/stats count.
 
             // If user is logged in, try to get personal stats
             if (api.isLoggedIn()) {
@@ -1184,6 +1184,24 @@
         } catch (e) {
             console.error('Failed to fetch stats:', e);
         }
+    }
+
+    // Count only polls that are actually live and visible in the Hangout feed:
+    // current Hangout mode, not resolved, and voting deadline not passed.
+    // Category sub-filter is ignored so the stat reflects the whole Hangout feed.
+    function updateActivePollsStat() {
+        const rkEl = document.getElementById('pollsRank');
+        if (!rkEl) return;
+        const now = new Date();
+        let count = 0;
+        pollsCache.forEach(entry => {
+            const p = entry.poll;
+            if (!p || !isPollVisibleInMode(p)) return;
+            const deadline = p.voting_deadline;
+            const isExpired = p.status === 'resolved' || (deadline && new Date(deadline) <= now);
+            if (!isExpired) count++;
+        });
+        rkEl.textContent = count;
     }
 
     // ============ RENDER ============
@@ -1206,6 +1224,8 @@
             if (isExpired) expired.push(entry);
             else active.push(entry);
         });
+
+        updateActivePollsStat();
 
         if (active.length === 0 && expired.length === 0) {
             grid.innerHTML = '<div class="empty-state">' +
