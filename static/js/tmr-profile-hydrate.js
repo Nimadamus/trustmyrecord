@@ -1,6 +1,16 @@
 /* tmr-profile-hydrate.js
  * Progressive enhancement for static /u/<username>/ public profile pages.
  *
+ * FULL-PROFILE UPGRADE (July 4, 2026): for JS visitors this now loads the real
+ * interactive /profile/ app IN PLACE at the /u/<username>/ URL (same layout,
+ * nav, stat cards, correlated picks, breakdowns, share/embed, pick history as
+ * /profile/?user=X). The baked static HTML below stays the no-JS/crawler
+ * fallback, and the legacy lightweight hydrate below is the runtime fallback
+ * if fetching the app shell fails. The /profile/ app reads the username from
+ * the /u/ path (and window.__TMR_PROFILE_USERNAME), keeps canonical on /u/,
+ * and its own isOwnProfile/currentUser gating controls Follow/Send Message
+ * and hides account settings exactly like /profile/?user=.
+ *
  * SINGLE SOURCE OF TRUTH: the backend live aggregator GET /api/users/:username/metrics
  * — the SAME endpoint the logged-in /profile/ dashboard uses, and the same pick-log
  * recompute the /handicappers/ leaderboard converges to (statsFromPicks). Using it here
@@ -343,7 +353,8 @@
     if (sel && tbl) { sel.addEventListener('change', applyFilter); applyFilter(); }
   }
 
-  // ---------- run ----------
+  // ---------- legacy lightweight hydrate (fallback only) ----------
+  function runLegacyHydrate() {
   injectCSS();
   Promise.all([
     getJSON(API + '/users/' + encodeURIComponent(un) + '/metrics'),
@@ -366,4 +377,27 @@
       if (picks.length) { try { renderDeep({ splits: {}, summary: d, scores: {}, rolling_form: {}, streaks: { current: d.current_streak, best: d.best_streak } }, picks); } catch (e) {} }
     });
   });
+  }
+
+  // ---------- full-profile swap: load the real /profile/ app at this URL ----------
+  function swapToFullProfile() {
+    return fetch('/profile/', { headers: { Accept: 'text/html' } })
+      .then(function (r) {
+        if (!r.ok) throw new Error('shell HTTP ' + r.status);
+        return r.text();
+      })
+      .then(function (html) {
+        // sanity: only swap if this really is the profile app shell
+        if (html.indexOf('profileHeader') < 0) throw new Error('unexpected shell payload');
+        // Guarantee the app knows which user to load even before it parses the
+        // /u/ path (globals also persist across document.open, this is belt+braces).
+        html = html.replace(/<head>/i, '<head><script>window.__TMR_PROFILE_USERNAME=' +
+          JSON.stringify(un) + ';<\/script>');
+        document.open();
+        document.write(html);
+        document.close();
+      });
+  }
+
+  swapToFullProfile().catch(function () { runLegacyHydrate(); });
 })();

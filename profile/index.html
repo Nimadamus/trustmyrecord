@@ -11,6 +11,7 @@
     (function(){
       try{
         var u=(new URLSearchParams(location.search).get('user')||new URLSearchParams(location.search).get('username')||'').trim();
+        if(!u){var m=(location.pathname||'').match(/^\/u\/([^\/?#]+)/i);if(m)u=decodeURIComponent(m[1]);}
         if(!u) return;
         var url='https://trustmyrecord.com/u/'+encodeURIComponent(u)+'/';
         var c=document.querySelector('link[rel="canonical"]'); if(c) c.href=url;
@@ -5460,8 +5461,12 @@
     ];
 
     const urlParams = new URLSearchParams(window.location.search);
-    const pathProfileMatch = (window.location.pathname || '').match(/\/profile\/([^/?#]+)/i);
-    const requestedProfileLookup = (urlParams.get('user') || urlParams.get('username') || (pathProfileMatch ? decodeURIComponent(pathProfileMatch[1]) : '') || '').trim();
+    // /u/<username>/ static public pages load this same app in place (via
+    // tmr-profile-hydrate.js), so accept the username from the /u/ path or the
+    // window.__TMR_PROFILE_USERNAME the baked page sets, not only ?user=.
+    const pathProfileMatch = (window.location.pathname || '').match(/\/profile\/([^/?#]+)/i)
+        || (window.location.pathname || '').match(/^\/u\/([^/?#]+)/i);
+    const requestedProfileLookup = (urlParams.get('user') || urlParams.get('username') || (pathProfileMatch ? decodeURIComponent(pathProfileMatch[1]) : '') || (typeof window.__TMR_PROFILE_USERNAME === 'string' ? window.__TMR_PROFILE_USERNAME : '') || '').trim();
     let profileUsername = normalizeProfileLookup(requestedProfileLookup) || null;
     const profileView = (urlParams.get('view') || '').trim().toLowerCase();
     const SPORT_QUERY_ALIASES = {
