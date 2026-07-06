@@ -33,11 +33,18 @@ function stopNotificationsPolling() {
     }
 }
 
+let _notifAuthListenerBound = false;
+
 async function setupNotifications() {
     // Ensure a notifications container exists
     addNotificationDropdown();
 
-    // Bind bell click
+    // Bind bell click. Skip when the trigger carries its own inline onclick
+    // (the forum header and the sitewide global-nav bell both do) -- that
+    // inline handler survives even when the sitewide nav re-renders the
+    // account chip (login/logout, tab-visibility refresh) and destroys/
+    // recreates the #notificationsBtn node, whereas a listener attached here
+    // would be silently orphaned on the old node.
     const bell = getNotificationTrigger();
     if (bell && !bell.getAttribute('onclick')) {
         bell.addEventListener('click', toggleNotificationsDropdown);
@@ -52,6 +59,19 @@ async function setupNotifications() {
         }
     });
 
+    if (!_notifAuthListenerBound) {
+        _notifAuthListenerBound = true;
+        // The sitewide nav resolves the logged-in user asynchronously and
+        // re-renders on login/logout without a page reload. Re-check session
+        // state each time instead of only once at initial page load, or the
+        // badge/polling can get stuck on whatever state existed at load.
+        window.addEventListener('tmr-auth-changed', refreshNotificationSession);
+    }
+
+    await refreshNotificationSession();
+}
+
+async function refreshNotificationSession() {
     // Wait for API to be ready then start polling
     if (window.api) {
         try { await api.ready; } catch(e) {}
@@ -66,6 +86,7 @@ async function setupNotifications() {
         }
     } else {
         stopNotificationsPolling();
+        updateNotifBadge(0);
     }
 }
 
@@ -98,16 +119,17 @@ function addNotificationDropdown() {
         style.id = 'notifications-styles';
         style.textContent = `
             .notifications-dropdown {
-                position: absolute;
+                position: fixed;
                 top: 60px;
                 right: 20px;
                 width: 380px;
+                max-width: calc(100vw - 20px);
                 max-height: 500px;
                 background: #12121a;
                 border: 1px solid rgba(255, 255, 255, 0.1);
                 border-radius: 16px;
                 box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-                z-index: 10000;
+                z-index: 100000;
                 display: none;
                 overflow: hidden;
             }
@@ -279,6 +301,22 @@ function updateNotifBadge(count) {
     }
 }
 
+function positionNotificationsDropdown(dropdown) {
+    // Anchor under the actual bell instead of a hardcoded top/right guess --
+    // header height/layout differs across pages (forum's own header vs. the
+    // sitewide global nav vs. mobile).
+    const bell = getNotificationTrigger();
+    if (!bell || dropdown.id !== 'notificationsDropdown') return;
+    const rect = bell.getBoundingClientRect();
+    const width = Math.min(380, window.innerWidth - 20);
+    let left = rect.right - width;
+    left = Math.max(10, Math.min(left, window.innerWidth - width - 10));
+    dropdown.style.width = width + 'px';
+    dropdown.style.left = left + 'px';
+    dropdown.style.right = 'auto';
+    dropdown.style.top = Math.round(rect.bottom + 10) + 'px';
+}
+
 function toggleNotificationsDropdown(e) {
     if (e && typeof e.preventDefault === 'function') e.preventDefault();
     if (e && typeof e.stopPropagation === 'function') e.stopPropagation();
@@ -289,6 +327,7 @@ function toggleNotificationsDropdown(e) {
     if (dropdown.style.display === 'block') {
         dropdown.style.display = 'none';
     } else {
+        positionNotificationsDropdown(dropdown);
         dropdown.style.display = 'block';
         renderNotificationsList(_notifCache.notifications);
         // Refresh from server when opened

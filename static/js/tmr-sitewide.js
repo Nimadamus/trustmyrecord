@@ -258,6 +258,10 @@
                     <div class="tmr-user-menu-divider" role="separator"></div>
                     <button class="tmr-user-menu-item tmr-user-menu-item--logout" role="menuitem" type="button" data-tmr-logout><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Log Out</button>
                 </div>
+                <a href="/notifications/" id="notificationsBtn" class="tmr-global-nav__bell" data-tmr-notifications aria-label="Notifications" title="Notifications" onclick="if(typeof toggleNotifications==='function'){toggleNotifications(event);return false;}">
+                    <svg class="tmr-global-nav__bell-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v3.6L4.3 15a1 1 0 0 0 .9 1.4h13.6a1 1 0 0 0 .9-1.4L18 11.6V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.83-2H9.17A3 3 0 0 0 12 22Z"/></svg>
+                    <span id="notifBadge" class="tmr-global-nav__bell-badge" style="display:none;"></span>
+                </a>
                 <a class="tmr-mailbox-indicator" href="/messages/" data-tmr-mailbox aria-label="Unread messages" title="You have unread messages" hidden>
                     <svg class="tmr-mailbox-indicator__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-11Zm2.5-.5a.5.5 0 0 0-.5.5v.32l7 4.55 7-4.55V6.5a.5.5 0 0 0-.5-.5h-13Zm13.5 2.86-6.45 4.19a1 1 0 0 1-1.1 0L5 8.86V17.5a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5V8.86Z"/></svg>
                     <span class="tmr-mailbox-indicator__count" data-tmr-mailbox-count></span>
@@ -1061,6 +1065,29 @@
         navBadgesScript.setAttribute("data-tmr-nav-badges", "1");
         document.head.appendChild(navBadgesScript);
     }
+
+    // Jul 6, 2026 -- sitewide Alerts bell fix. The #notificationsBtn markup
+    // above is now on every page, but notifications.js (the dropdown engine)
+    // and its dependencies were previously hand-included on only a handful of
+    // pages (forum, sportsbook, friends, hangout, premium, trivia). Load
+    // whichever are missing so the bell works everywhere the global nav does.
+    // async=false on dynamically created scripts preserves execution order
+    // (config -> backend-api -> auth-persistent -> notifications) even though
+    // they fetch in parallel; any already present on the page already ran
+    // before this deferred script, so they're skipped.
+    [
+        ["/static/js/config.js", "config.js"],
+        ["/static/js/backend-api.js", "backend-api.js"],
+        ["/static/js/auth-persistent.js", "auth-persistent.js"],
+        ["/static/js/notifications.js", "notifications.js"]
+    ].forEach(([src, name]) => {
+        if (document.querySelector('script[src*="' + name + '"]')) return;
+        const depScript = document.createElement("script");
+        depScript.src = src + "?v=20260706sitewidealerts1";
+        depScript.async = false;
+        depScript.setAttribute("data-tmr-notifications-dep", name);
+        document.head.appendChild(depScript);
+    });
 
     const meta = routeMeta[currentFile];
     if (meta && currentFile !== "index.html" && currentFile !== "sportsbook.html" && currentFile !== "profile.html") {

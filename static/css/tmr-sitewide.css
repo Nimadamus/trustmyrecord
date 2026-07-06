@@ -4616,6 +4616,51 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
     }
 }
 
+/* --- Sitewide Alerts bell (Jul 6, 2026) ---
+   Previously the Alerts bell/dropdown only existed on the forum page's own
+   header. Every other authenticated page loaded the shared global nav, which
+   had no bell markup at all. Styled to match the adjacent mailbox indicator
+   so both sit consistently in the account chip. */
+.tmr-global-nav__bell {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(148, 163, 184, 0.12);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: #cbd5e1;
+    text-decoration: none;
+    line-height: 1;
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.tmr-global-nav__bell:hover {
+    transform: translateY(-1px);
+    background: rgba(148, 163, 184, 0.22);
+    color: #fff;
+}
+.tmr-global-nav__bell-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+}
+.tmr-global-nav__bell-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: #ff2c2c;
+    color: #fff;
+    font: 700 10px/16px "Inter", "Exo 2", Arial, sans-serif;
+    text-align: center;
+    box-shadow: 0 0 4px rgba(255, 44, 44, 0.85);
+}
+
 /* --- Unread messages mailbox indicator (sitewide profile chip) ---
    Permanent UX standard (May 20, 2026): unread private messages must
    surface a red, gently-pulsing envelope right next to the logged-in
