@@ -1923,6 +1923,7 @@ function starterPostFromThread(thread) {
         moderator_edited: !!thread.moderator_edited,
         author_is_admin: !!thread.author_is_admin,
         author_is_moderator: !!thread.author_is_moderator,
+        author_is_official_bot: !!thread.author_is_official_bot,
         like_count: numericValue(thread.like_count) || 0,
         liked_by_me: !!thread.liked_by_me,
         user_post_count: numericValue(thread.user_post_count),
@@ -2002,8 +2003,11 @@ function renderAuthorPanel(post) {
     }
     // Every post author's name/avatar link to their public /u/ profile, never
     // to User CP (User CP is only reachable from the viewer's own nav link).
+    // Official community bots (TMRPolls/TMRTrivia) have no public profile page,
+    // so they render as plain, non-clickable text instead of a dead link.
+    var isOfficialBot = !!(author.author_is_official_bot || author.is_official_bot);
     var profileUsername = author.username || author.display_name || '';
-    var profileHref = profileUsername ? ('/u/' + encodeURIComponent(profileUsername) + '/') : '';
+    var profileHref = (!isOfficialBot && profileUsername) ? ('/u/' + encodeURIComponent(profileUsername) + '/') : '';
     var profileLabel = 'View ' + who + ' profile';
     var avatarInner = avatar ? '<img src="' + escHtml(avatar) + '" alt="' + escHtml(who) + ' avatar">' : escHtml(initials);
     var avatarHtml = profileHref
