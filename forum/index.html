@@ -121,6 +121,9 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 .fthread-author{background:#eef1f5;border-right:1px solid var(--line);padding:10px;color:#555;font-size:12px}
 .fthread-avatar{width:64px;height:64px;border:1px solid #777;background:#dfe5ec;color:#222;display:grid;place-items:center;font:bold 24px Arial,Helvetica,sans-serif;margin-bottom:7px;overflow:hidden}
 .fthread-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+a.fthread-avatar{color:inherit;text-decoration:none;cursor:pointer}
+.fthread-author b a{color:inherit;text-decoration:none}
+.fthread-author b a:hover,a.fthread-avatar:hover{text-decoration:underline}
 .fthread-row-avatar{flex:0 0 28px;width:28px;height:28px;border:1px solid #9da7b5;background:#e6ebf2;color:#222;display:inline-grid;place-items:center;font:bold 11px Arial,Helvetica,sans-serif;border-radius:50%;overflow:hidden;margin-top:1px}
 .fthread-row-avatar img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
 @media (max-width:760px){.fthread-row-avatar{flex-basis:24px;width:24px;height:24px;font-size:10px}}
@@ -1997,9 +2000,21 @@ function renderAuthorPanel(post) {
         postCount = numericValue(postCount);
         if (postCount == null) postCount = threadCount;
     }
+    // Every post author's name/avatar link to their public /u/ profile, never
+    // to User CP (User CP is only reachable from the viewer's own nav link).
+    var profileUsername = author.username || author.display_name || '';
+    var profileHref = profileUsername ? ('/u/' + encodeURIComponent(profileUsername) + '/') : '';
+    var profileLabel = 'View ' + who + ' profile';
+    var avatarInner = avatar ? '<img src="' + escHtml(avatar) + '" alt="' + escHtml(who) + ' avatar">' : escHtml(initials);
+    var avatarHtml = profileHref
+        ? '<a class="fthread-avatar" href="' + profileHref + '" title="' + escHtml(profileLabel) + '" aria-label="' + escHtml(profileLabel) + '">' + avatarInner + '</a>'
+        : '<div class="fthread-avatar">' + avatarInner + '</div>';
+    var nameHtml = profileHref
+        ? '<b><a href="' + profileHref + '" title="' + escHtml(profileLabel) + '">' + escHtml(who) + '</a></b>'
+        : '<b>' + escHtml(who) + '</b>';
     return '<div class="fthread-author">'
-        + '<div class="fthread-avatar">' + (avatar ? '<img src="' + escHtml(avatar) + '" alt="' + escHtml(who) + ' avatar">' : escHtml(initials)) + '</div>'
-        + '<b>' + escHtml(who) + '</b>'
+        + avatarHtml
+        + nameHtml
         + authorRoleBadge(author)
         + '<div class="fthread-role">' + escHtml(role) + '</div>'
         + (hasFavTeam ? '<div class="fthread-fandom"><span class="fthread-fandom-dot"></span>' + escHtml(favTeam) + '</div>' : '')
