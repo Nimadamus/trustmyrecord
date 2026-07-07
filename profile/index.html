@@ -2970,15 +2970,30 @@
                     </div>
                 </div>
 
+                <style>
+                    .pollpts-card { border: 1px solid rgba(34,211,238,0.22); border-radius: 14px; background: linear-gradient(180deg, rgba(8,17,30,0.7), rgba(6,12,22,0.7)); padding: 16px; margin-bottom: 14px; }
+                    .pollpts-head { font-size: 0.86rem; font-weight: 900; color: #F1F5F9; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+                    .pollpts-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+                    @media (max-width: 560px) { .pollpts-grid { grid-template-columns: repeat(2, 1fr); } }
+                    .pollpts-stat { text-align: center; padding: 10px 6px; border-radius: 10px; background: rgba(14,25,42,0.55); }
+                    .pollpts-num { display: block; font-size: 1.4rem; font-weight: 900; color: #E5E7EB; font-variant-numeric: tabular-nums; line-height: 1.1; }
+                    .pollpts-lbl { display: block; margin-top: 3px; font-size: 0.64rem; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase; color: #93A4BA; }
+                    .pollpts-cats { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+                    .pollpts-cat { font-size: 0.7rem; font-weight: 700; color: #CBD5E1; background: rgba(34,211,238,0.10); border: 1px solid rgba(34,211,238,0.20); border-radius: 999px; padding: 3px 9px; }
+                    .pollpts-cat b { color: #67E8F9; }
+                    .pollpts-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 0.78rem; font-weight: 800; color: #67E8F9; text-decoration: none; }
+                    .pollpts-link:hover { text-decoration: underline; }
+                </style>
                 <!-- TAB: POLLS -->
                 <div class="profile-tab-panel" data-panel="polls">
                     <div class="profile-feed-card">
                         <div class="section-title">Polls</div>
-                        <div class="section-subtitle">Polls created or voted in by this user.</div>
-                        <div class="profile-feed-empty">
+                        <div class="section-subtitle">Prediction quiz points, poll votes, and results for this user.</div>
+                        <div id="profilePollPoints"></div>
+                        <div class="profile-feed-empty" id="profilePollEmpty">
                             <div class="profile-empty-icon"><i class="fas fa-square-poll-vertical"></i></div>
-                            <p class="profile-empty-title">No polls created yet</p>
-                            <p class="profile-empty-body">When this user runs or joins a poll, every vote and result lives here.</p>
+                            <p class="profile-empty-title">No poll points yet</p>
+                            <p class="profile-empty-body">Answer the daily prediction quiz and other polls to earn points. Every vote and result lives here.</p>
                         </div>
                     </div>
                 </div>
@@ -6366,6 +6381,7 @@
                 renderProfileStatsLoadError('Verified pick stats could not be loaded from the public ledger, so record metrics are hidden instead of showing zeroes.');
             });
             loadAdvancedMetrics(profileData.username || profileUsername || '');
+            loadPollPoints(profileData.username || profileUsername || '');
             analyticsTrackPickHistoryView({
                 view_type: isOwnProfile ? 'own' : 'public',
                 username: profileData.username || profileUsername || '',
@@ -6438,6 +6454,44 @@
     // Calls the new /api/users/:username/metrics aggregator and fills the
     // Advanced Metrics tab placeholders. Anything the aggregator returns
     // null for stays as the '—' placeholder per the no-fake-data rule.
+    // Prediction quiz / poll points for the Polls tab. Reads the public
+    // per-user poll stats (points earned from the daily MLB quiz + other polls).
+    async function loadPollPoints(username) {
+        var host = document.getElementById('profilePollPoints');
+        var empty = document.getElementById('profilePollEmpty');
+        if (!host || !username) return;
+        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        try {
+            var resp = await fetch(apiBase + '/api/polls/users/' + encodeURIComponent(username) + '/stats');
+            if (!resp.ok) return;
+            var data = await resp.json();
+            var o = (data && data.overall) || {};
+            var pts = parseInt(o.total_points || 0) || 0;
+            var voted = parseInt(o.polls_voted || 0) || 0;
+            var correct = parseInt(o.polls_correct || 0) || 0;
+            if (pts <= 0 && voted <= 0) return; // keep the empty state
+            var acc = (o.accuracy != null) ? (Math.round(parseFloat(o.accuracy) * 10) / 10) : (voted > 0 ? Math.round(correct / voted * 1000) / 10 : 0);
+            var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); };
+            var cats = (data.by_category || []).filter(function (c) { return parseInt(c.total_points || 0) > 0; })
+                .sort(function (a, b) { return (parseInt(b.total_points) || 0) - (parseInt(a.total_points) || 0); }).slice(0, 4);
+            var catHtml = cats.length ? ('<div class="pollpts-cats">' + cats.map(function (c) {
+                return '<span class="pollpts-cat">' + esc(c.category_name || c.name || c.slug || 'Category') + ' <b>' + (parseInt(c.total_points) || 0) + '</b></span>';
+            }).join('') + '</div>') : '';
+            host.innerHTML =
+                '<div class="pollpts-card">' +
+                    '<div class="pollpts-head"><i class="fas fa-square-poll-vertical"></i> Prediction Quiz &amp; Poll Points</div>' +
+                    '<div class="pollpts-grid">' +
+                        '<div class="pollpts-stat"><span class="pollpts-num" style="color:#67E8F9;">' + pts.toLocaleString() + '</span><span class="pollpts-lbl">Total points</span></div>' +
+                        '<div class="pollpts-stat"><span class="pollpts-num">' + voted.toLocaleString() + '</span><span class="pollpts-lbl">Questions answered</span></div>' +
+                        '<div class="pollpts-stat"><span class="pollpts-num">' + correct.toLocaleString() + '</span><span class="pollpts-lbl">Correct</span></div>' +
+                        '<div class="pollpts-stat"><span class="pollpts-num">' + acc + '%</span><span class="pollpts-lbl">Accuracy</span></div>' +
+                    '</div>' + catHtml +
+                    '<a class="pollpts-link" href="/polls/">Play today\'s prediction quiz <i class="fas fa-arrow-right"></i></a>' +
+                '</div>';
+            if (empty) empty.style.display = 'none';
+        } catch (e) { /* leave empty state on any error */ }
+    }
+
     async function loadAdvancedMetrics(username) {
         if (!username || !api || typeof api.request !== 'function') {
             setAdvancedMetricsEmpty('Metrics unavailable');
