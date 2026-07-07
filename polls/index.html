@@ -241,6 +241,14 @@
         /* Leaders panel */
         .tmr-leaders { position: sticky; top: 18px; background: linear-gradient(180deg, rgba(8,17,30,0.98), rgba(4,9,17,0.98)); border: 1px solid rgba(34,211,238,0.16); border-radius: 18px; overflow: hidden; box-shadow: var(--tmr-fb-shadow); }
         .tmr-q-model { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 5px; background: rgba(148,163,184,0.14); color: #9FB4CC; border: 1px solid rgba(148,163,184,0.22); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap; vertical-align: middle; }
+        .tmr-qr-box { display: flex; flex-direction: column; gap: 2px; }
+        .tmr-qr-row { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: center; padding: 5px 6px; border-radius: 7px; text-decoration: none; }
+        .tmr-qr-row:hover { background: rgba(34,211,238,0.08); }
+        .tmr-qr-rank { font-size: 0.72rem; font-weight: 900; color: #93A4BA; text-align: center; }
+        .tmr-qr-row:nth-child(1) .tmr-qr-rank { color: #FDE047; }
+        .tmr-qr-name { font-size: 0.8rem; font-weight: 750; color: var(--tmr-fb-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tmr-qr-elo { font-size: 0.82rem; font-weight: 900; color: #D8B4FE; font-variant-numeric: tabular-nums; }
+        .tmr-qr-empty { font-size: 0.72rem; color: var(--tmr-fb-muted); padding: 4px 6px; line-height: 1.4; }
         .tmr-champ { padding: 16px 16px 14px; text-align: center; background: linear-gradient(135deg, rgba(253,224,71,0.16), rgba(251,146,60,0.10)); border-bottom: 1px solid rgba(253,224,71,0.28); }
         .tmr-champ-label { font-size: 0.68rem; font-weight: 900; letter-spacing: 0.10em; text-transform: uppercase; color: #FDE047; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .tmr-champ-name { display: block; margin-top: 5px; font-size: 1.02rem; font-weight: 900; color: #FEF3C7; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -395,6 +403,11 @@
                     <ul class="tmr-fb-sidebar-list" id="pollCategoryList">
                         <li><a onclick="setCategoryFilter(null,'All Categories')"><span>All Categories</span></a></li>
                     </ul>
+                </div>
+                <div class="tmr-fb-sidebar-divider"></div>
+                <div class="tmr-fb-sidebar-section">
+                    <div class="tmr-fb-sidebar-label">Quiz Skill Leaders</div>
+                    <div id="quizRatingsBox" class="tmr-qr-box"><div class="tmr-qr-empty">Loading ratings...</div></div>
                 </div>
                 <div class="tmr-fb-sidebar-divider"></div>
                 <div class="tmr-fb-sidebar-section">
@@ -1576,11 +1589,29 @@
         }
     });
 
+    // Quiz skill-rating leaders (Elo vs the field) in the sidebar.
+    async function loadQuizRatings() {
+        var box = document.getElementById('quizRatingsBox');
+        if (!box) return;
+        try {
+            var data = await api.request('/polls/quiz/ratings?limit=8');
+            var rows = (data && data.ratings) || [];
+            if (!rows.length) { box.innerHTML = '<div class="tmr-qr-empty">No rated players yet. Play the daily quiz to earn a rating.</div>'; return; }
+            box.innerHTML = rows.map(function(r){
+                return '<a class="tmr-qr-row" href="/profile/?user=' + encodeURIComponent(r.username) + '">' +
+                    '<span class="tmr-qr-rank">' + r.rank + '</span>' +
+                    '<span class="tmr-qr-name">' + escHtml(r.username) + '</span>' +
+                    '<span class="tmr-qr-elo">' + r.rating + '</span></a>';
+            }).join('');
+        } catch (e) { box.innerHTML = '<div class="tmr-qr-empty">Ratings unavailable.</div>'; }
+    }
+
     // ============== INIT ==============
     document.addEventListener('DOMContentLoaded', async function() {
         try { if (window.api && api.ready) await api.ready; } catch(e){}
         initSportLeagueControls();
         await loadCategories();
+        loadQuizRatings();
         // Deep link
         var hash = window.location.hash || '';
         if (hash.indexOf('#poll-') === 0) {
