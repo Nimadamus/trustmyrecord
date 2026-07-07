@@ -2973,6 +2973,10 @@
                 <style>
                     .pollpts-card { border: 1px solid rgba(34,211,238,0.22); border-radius: 14px; background: linear-gradient(180deg, rgba(8,17,30,0.7), rgba(6,12,22,0.7)); padding: 16px; margin-bottom: 14px; }
                     .pollpts-head { font-size: 0.86rem; font-weight: 900; color: #F1F5F9; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+                    .pollpts-rating { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; padding: 10px 12px; margin-bottom: 12px; border-radius: 10px; background: linear-gradient(135deg, rgba(168,85,247,0.14), rgba(34,211,238,0.10)); border: 1px solid rgba(168,85,247,0.24); }
+                    .pollpts-elo { font-size: 1.5rem; font-weight: 900; color: #D8B4FE; font-variant-numeric: tabular-nums; line-height: 1; }
+                    .pollpts-elolbl { font-size: 0.72rem; font-weight: 800; color: #CBD5E1; }
+                    .pollpts-elometa { flex-basis: 100%; font-size: 0.66rem; font-weight: 700; color: #93A4BA; }
                     .pollpts-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
                     @media (max-width: 560px) { .pollpts-grid { grid-template-columns: repeat(2, 1fr); } }
                     .pollpts-stat { text-align: center; padding: 10px 6px; border-radius: 10px; background: rgba(14,25,42,0.55); }
@@ -6466,6 +6470,7 @@
             if (!resp.ok) return;
             var data = await resp.json();
             var o = (data && data.overall) || {};
+            var qr = data && data.quiz_rating;
             var pts = parseInt(o.total_points || 0) || 0;
             var voted = parseInt(o.polls_voted || 0) || 0;
             var correct = parseInt(o.polls_correct || 0) || 0;
@@ -6480,6 +6485,11 @@
             host.innerHTML =
                 '<div class="pollpts-card">' +
                     '<div class="pollpts-head"><i class="fas fa-square-poll-vertical"></i> Prediction Quiz &amp; Poll Points</div>' +
+                    (qr ? ('<div class="pollpts-rating">' +
+                        '<span class="pollpts-elo">' + (parseInt(qr.rating) || 1000) + '</span>' +
+                        '<span class="pollpts-elolbl">Quiz skill rating' + (qr.global_rank ? ' &middot; #' + qr.global_rank + ' overall' : '') + '</span>' +
+                        (qr.quizzes_played ? '<span class="pollpts-elometa">' + qr.quizzes_played + ' quizzes &middot; ' + (qr.wins || 0) + ' wins' + (qr.sharp_rating ? ' &middot; Sharp ' + qr.sharp_rating + 'x' : '') + '</span>' : '') +
+                    '</div>') : '') +
                     '<div class="pollpts-grid">' +
                         '<div class="pollpts-stat"><span class="pollpts-num" style="color:#67E8F9;">' + pts.toLocaleString() + '</span><span class="pollpts-lbl">Total points</span></div>' +
                         '<div class="pollpts-stat"><span class="pollpts-num">' + voted.toLocaleString() + '</span><span class="pollpts-lbl">Questions answered</span></div>' +
