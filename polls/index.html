@@ -240,6 +240,7 @@
 
         /* Leaders panel */
         .tmr-leaders { position: sticky; top: 18px; background: linear-gradient(180deg, rgba(8,17,30,0.98), rgba(4,9,17,0.98)); border: 1px solid rgba(34,211,238,0.16); border-radius: 18px; overflow: hidden; box-shadow: var(--tmr-fb-shadow); }
+        .tmr-q-model { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 5px; background: rgba(148,163,184,0.14); color: #9FB4CC; border: 1px solid rgba(148,163,184,0.22); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.02em; white-space: nowrap; vertical-align: middle; }
         .tmr-champ { padding: 16px 16px 14px; text-align: center; background: linear-gradient(135deg, rgba(253,224,71,0.16), rgba(251,146,60,0.10)); border-bottom: 1px solid rgba(253,224,71,0.28); }
         .tmr-champ-label { font-size: 0.68rem; font-weight: 900; letter-spacing: 0.10em; text-transform: uppercase; color: #FDE047; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .tmr-champ-name { display: block; margin-top: 5px; font-size: 1.02rem; font-weight: 900; color: #FEF3C7; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -1110,7 +1111,8 @@
                         var cls = 'tmr-q-opt' + (correct?' is-correct':'') + (you?' is-yourpick':'');
                         var tags = (correct?'<span class="tmr-q-tag correct">Correct</span>':'') + (you?'<span class="tmr-q-tag you">You</span>':'');
                         var ptsTag = (isResolved && you && ua && ua.points_earned!=null) ? '<span class="tmr-q-tag pts">+' + ua.points_earned + '</span>' : '';
-                        return '<div class="' + cls + '"><div class="tmr-q-res-row"><span class="tmr-q-res-text">' + escHtml(o.option_text) + tags + ptsTag + '</span>' +
+                        var modelBadge = (o.model_prob!=null) ? '<span class="tmr-q-model" title="Model implied probability">' + Math.round(o.model_prob*100) + '%' + ((o.longshot_mult&&o.longshot_mult>1.05)?' &middot; x'+o.longshot_mult:'') + '</span>' : '';
+                        return '<div class="' + cls + '"><div class="tmr-q-res-row"><span class="tmr-q-res-text">' + escHtml(o.option_text) + tags + ptsTag + modelBadge + '</span>' +
                                '<span class="tmr-q-res-pct">' + pctText + '% &middot; ' + vc + '</span></div>' +
                                '<div class="tmr-q-bar"><div class="tmr-q-bar-fill" style="width:' + Math.min(100,pct) + '%"></div></div></div>';
                     }).join('') + '</div>';
@@ -1118,9 +1120,10 @@
                     // votable
                     body = '<div class="tmr-q-opts">' + (q.options||[]).map(function(o){
                         var checked = yourOpt === parseInt(o.id);
+                        var modelBadge = (o.model_prob!=null) ? '<span class="tmr-q-model" title="Model implied probability + payoff if correct">' + Math.round(o.model_prob*100) + '%' + ((o.longshot_mult&&o.longshot_mult>1.05)?' &middot; x'+o.longshot_mult:'') + '</span>' : '';
                         return '<div class="tmr-q-opt' + (checked?' is-checked':'') + '"><label>' +
                                '<input type="radio" name="q_' + q.id + '" value="' + o.id + '" data-qid="' + q.id + '" data-mode="option" onchange="markGameChoice(this)"' + (checked?' checked':'') + '> ' +
-                               '<span>' + escHtml(o.option_text) + '</span></label></div>';
+                               '<span>' + escHtml(o.option_text) + '</span>' + modelBadge + '</label></div>';
                     }).join('') + '</div>';
                     if (q.scoring_mode === 'confidence') {
                         var cval = ua && ua.confidence_level ? ua.confidence_level : 50;
@@ -1205,6 +1208,7 @@
 
         var rules = '<div class="tmr-game-rules">' +
             '<span class="tmr-game-rule"><i class="fas fa-bolt"></i> Rarer correct = up to 3x points</span>' +
+            '<span class="tmr-game-rule"><i class="fas fa-chart-line"></i> Beat the model: longshots pay up to 2.5x</span>' +
             '<span class="tmr-game-rule"><i class="fas fa-star"></i> Perfect game +25%</span>' +
             '<span class="tmr-game-rule"><i class="fas fa-trophy"></i> Top finishers earn placement points</span>' +
             '<span class="tmr-game-rule">Pool: ' + basePool + ' base pts</span></div>';
