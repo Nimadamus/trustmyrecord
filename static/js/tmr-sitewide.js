@@ -1140,7 +1140,7 @@
                         <a href="/nfl-pick-tracker/">NFL Pick Tracker</a>
                         <a href="/nhl-pick-tracker/">NHL Pick Tracker</a>
                         <a href="/soccer-pick-tracker/">Soccer Pick Tracker</a>
-                        <a href="/make-picks/">Make a Pick</a>
+                        <a href="/public-picks/">Public Picks</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
