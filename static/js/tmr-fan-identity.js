@@ -76,6 +76,9 @@
   // Reusable team-logo mark: real logo with graceful initials fallback.
   // Used by every team chip so it stays consistent across profile/public/edit views.
   function teamLogoHtml(name, catalog) {
+    if (window.TMRTeamLogo && typeof window.TMRTeamLogo.html === 'function') {
+      return window.TMRTeamLogo.html(name, { className: 'tmr-fi-logo' });
+    }
     var url = logoForName(name, catalog);
     var initials = '<span class="tmr-fi-logo-fallback" aria-hidden="true">' + esc(initialsFor(name)) + '</span>';
     if (!url) return '<span class="tmr-fi-logo is-fallback">' + initials + '</span>';
