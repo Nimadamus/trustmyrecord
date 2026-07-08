@@ -53,6 +53,38 @@
     return null;
   }
 
+  // Team logo URL from the catalog data model (server-provided team.logo).
+  function logoForName(name, catalog) {
+    if (!catalog || !catalog.sports) return null;
+    for (var i = 0; i < catalog.sports.length; i++) {
+      var s = catalog.sports[i];
+      for (var j = 0; j < s.teams.length; j++) {
+        if (s.teams[j].name === name) return s.teams[j].logo || null;
+      }
+    }
+    return null;
+  }
+
+  // Up to two initials for a clean fallback when no logo asset exists.
+  function initialsFor(name) {
+    var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return '?';
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+  }
+
+  // Reusable team-logo mark: real logo with graceful initials fallback.
+  // Used by every team chip so it stays consistent across profile/public/edit views.
+  function teamLogoHtml(name, catalog) {
+    var url = logoForName(name, catalog);
+    var initials = '<span class="tmr-fi-logo-fallback" aria-hidden="true">' + esc(initialsFor(name)) + '</span>';
+    if (!url) return '<span class="tmr-fi-logo is-fallback">' + initials + '</span>';
+    return '<span class="tmr-fi-logo">' +
+      '<img class="tmr-fi-logo-img" src="' + esc(url) + '" alt="" loading="lazy" ' +
+      'onerror="this.style.display=\'none\';this.parentNode.classList.add(\'is-fallback\');" />' +
+      initials + '</span>';
+  }
+
   function isOwner(p) {
     try {
       return !!(window.currentUser && window.currentUser.username && p && p.username &&
@@ -75,6 +107,7 @@
     var lbl = sportLabelForName(name, catalog);
     var sportBadge = lbl ? '<span class="tmr-fi-chip-sport">' + esc(lbl) + '</span>' : '';
     var inner =
+      teamLogoHtml(name, catalog) +
       '<span class="tmr-fi-chip-name">' + esc(name) + '</span>' + sportBadge +
       (editable ? '<button type="button" class="tmr-fi-chip-x" data-list="' + listKey + '" data-i="' + idx + '" aria-label="Remove ' + esc(name) + '">&times;</button>' : '');
     if (editable) {
@@ -350,6 +383,10 @@
       'a.tmr-fi-chip:hover{filter:brightness(1.12)}',
       '.tmr-fi-chip.is-fav{background:rgba(0,174,255,.12);border:1px solid rgba(0,174,255,.4);color:#7cd4ff}',
       '.tmr-fi-chip.is-rival{background:rgba(255,77,90,.12);border:1px solid rgba(255,77,90,.4);color:#ff8e97}',
+      '.tmr-fi-logo{position:relative;display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;flex:0 0 20px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.06)}',
+      '.tmr-fi-logo-img{width:20px;height:20px;object-fit:contain;display:block}',
+      '.tmr-fi-logo-fallback{display:none;font-size:9px;font-weight:800;letter-spacing:.02em;color:#cfd5e6;text-transform:uppercase}',
+      '.tmr-fi-logo.is-fallback .tmr-fi-logo-fallback{display:block}',
       '.tmr-fi-chip-sport{padding:1px 6px;border-radius:5px;background:rgba(255,255,255,.12);color:#cfd5e6;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}',
       '.tmr-fi-chip-x{background:none;border:0;color:inherit;opacity:.7;font-size:16px;line-height:1;cursor:pointer;padding:0 0 0 1px;font-weight:700}.tmr-fi-chip-x:hover{opacity:1}',
       '.tmr-fi-empty{color:#6b7280;font-size:12.5px;padding:8px 0;font-style:italic}',
