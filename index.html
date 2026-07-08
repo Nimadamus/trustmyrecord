@@ -2044,7 +2044,7 @@ button{font:inherit;cursor:pointer}
       <span>TrustMyRecord</span>
     </a>
     <nav class="tmr-premium-links" aria-label="Main navigation">
-      <a href="/sportsbook/" class="tmr-premium-links__make-picks">Make Picks</a>
+      <a href="/sportsbook/" class="tmr-premium-links__make-picks">Sportsbook</a>
       <a href="/handicappers/">Handicappers</a>
       <a href="/marketplace/">Sell Your Picks</a>
       <a href="/contests/justbet-mlb/">Contest</a>
@@ -2483,16 +2483,17 @@ button{font:inherit;cursor:pointer}
   .tmr-premium-home a { color: inherit; text-decoration: none; }
   .tmr-premium-nav {
     height: 68px;
-    display: grid;
-    grid-template-columns: minmax(250px, auto) minmax(360px, 1fr) auto;
+    display: flex;
+    flex-wrap: nowrap;
     align-items: center;
-    gap: 28px;
-    padding: 0 clamp(26px, 3.2vw, 52px);
+    gap: clamp(16px, 2vw, 30px);
+    padding: 0 clamp(24px, 3vw, 48px);
     border-bottom: 1px solid rgba(134, 162, 190, .14);
     background: rgba(2, 8, 17, .96);
     box-shadow: 0 1px 0 rgba(255,255,255,.035) inset;
   }
   .tmr-premium-brand {
+    flex: 0 0 auto;
     display: inline-flex;
     align-items: center;
     gap: 9px;
@@ -2513,13 +2514,17 @@ button{font:inherit;cursor:pointer}
     filter: drop-shadow(0 0 14px rgba(55,214,193,.24));
   }
   .tmr-premium-links {
+    flex: 1 1 auto;
     display: flex;
+    flex-wrap: nowrap;
     justify-content: center;
-    gap: clamp(18px, 2.2vw, 34px);
+    align-items: center;
+    gap: clamp(12px, 1.6vw, 26px);
     color: #d6dee9;
     font-size: 13px;
     font-weight: 750;
   }
+  .tmr-premium-links a { white-space: nowrap; }
   .tmr-premium-links a:hover,
   .tmr-premium-login:hover { color: #fff; }
   .tmr-premium-links__make-picks {
@@ -2532,7 +2537,7 @@ button{font:inherit;cursor:pointer}
     box-shadow: 0 0 16px rgba(55,214,193,.32);
   }
   .tmr-premium-links__make-picks:hover { color: #0b1220 !important; filter: brightness(1.08); }
-  .tmr-premium-actions { display: flex; align-items: center; gap: 22px; font-size: 14px; font-weight: 700; }
+  .tmr-premium-actions { flex: 0 0 auto; margin-left: auto; display: flex; align-items: center; gap: 18px; font-size: 14px; font-weight: 700; white-space: nowrap; }
   .tmr-premium-signup {
     display: inline-flex;
     align-items: center;
@@ -3583,10 +3588,17 @@ button{font:inherit;cursor:pointer}
 
   @media (max-width: 1180px) {
     .tmr-premium-nav {
-      grid-template-columns: auto 1fr auto;
-      gap: 18px;
+      gap: 16px;
     }
-    .tmr-premium-links { gap: 18px; }
+    .tmr-premium-links {
+      gap: clamp(10px, 1.2vw, 16px);
+      font-size: 12.5px;
+      min-width: 0;
+      overflow-x: auto;
+      justify-content: flex-start;
+      scrollbar-width: none;
+    }
+    .tmr-premium-links::-webkit-scrollbar { display: none; }
     .tmr-premium-hero { grid-template-columns: 1fr; }
     .tmr-premium-dashboard { margin-top: 0; }
     .tmr-ledger-preview,
@@ -3597,7 +3609,6 @@ button{font:inherit;cursor:pointer}
   }
   @media (max-width: 760px) {
     .tmr-premium-nav {
-      grid-template-columns: 1fr auto;
       height: 64px;
       padding: 0 16px;
     }
