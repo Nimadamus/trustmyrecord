@@ -1107,28 +1107,26 @@
                         <span class="tmr-global-nav__mark">TMR</span>
                         <span>TRUST<span>MY</span>RECORD</span>
                     </a>
-                    <p>The sports social arena for permanent public records, locked picks, rivalry, and receipts that cannot be rewritten.</p>
+                    <p>Permanent public records, locked picks, and receipts that cannot be rewritten.</p>
                 </div>
                 <div class="tmr-global-footer__section">
                     <h3 class="tmr-global-footer__heading">Platform</h3>
                     <div class="tmr-global-footer__links">
                         <a href="/sportsbook/">Sportsbook</a>
                         <a href="/arena/">Arena</a>
+                        <a href="/marketplace/">Sell Your Picks</a>
                         <a href="/premium/">Premium</a>
-                        <a href="/profile/">Records</a>
+                        <a href="/profile/">My Record</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
-                    <h3 class="tmr-global-footer__heading">Verified Records &amp; Leaderboards</h3>
+                    <h3 class="tmr-global-footer__heading">Leaderboards</h3>
                     <div class="tmr-global-footer__links">
                         <a href="/leaderboards/">Sports Betting Leaderboards</a>
                         <a href="/sports-picks-leaderboard/">Sports Picks Leaderboard</a>
-                        <a href="/best-verified-sports-bettors/">Best Verified Sports Bettors</a>
+                        <a href="/best-verified-sports-bettors/">Best Verified Bettors</a>
                         <a href="/verified-handicapper-records/">Verified Handicapper Records</a>
-                        <a href="/sports-betting-record-tracker/">Sports Betting Record Tracker</a>
-                        <a href="/transparent-sports-betting-results/">Transparent Betting Results</a>
                         <a href="/handicappers/">Browse Handicappers</a>
-                        <a href="/teams/">Team Fan Pages</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
@@ -1140,33 +1138,6 @@
                         <a href="/nfl-pick-tracker/">NFL Pick Tracker</a>
                         <a href="/nhl-pick-tracker/">NHL Pick Tracker</a>
                         <a href="/soccer-pick-tracker/">Soccer Pick Tracker</a>
-                        <a href="/public-picks/">Public Picks</a>
-                    </div>
-                </div>
-                <div class="tmr-global-footer__section">
-                    <h3 class="tmr-global-footer__heading">Stat Guides</h3>
-                    <div class="tmr-global-footer__links">
-                        <a href="/sports-betting-glossary/">Sports Betting Glossary</a>
-                        <a href="/sports-betting-roi-explained/">What Is Betting ROI</a>
-                        <a href="/stats/roi/">ROI Explained</a>
-                        <a href="/stats/clv/">Closing Line Value (CLV)</a>
-                        <a href="/stats/units/">Units Explained</a>
-                        <a href="/stats/average-odds/">Average Odds</a>
-                        <a href="/stats/win-percentage/">Win Percentage</a>
-                        <a href="/stats/streaks/">Streaks</a>
-                    </div>
-                </div>
-                <div class="tmr-global-footer__section">
-                    <h3 class="tmr-global-footer__heading">Tools &amp; Contests</h3>
-                    <div class="tmr-global-footer__links">
-                        <a href="/mlb-season-simulator/">MLB Season Simulator</a>
-                        <a href="/mlb-simulator/">MLB Game Simulator</a>
-                        <a href="/trendspotter/">Trend Spotter</a>
-                        <a href="/model-builder/">Model Builder</a>
-                        <a href="/trustmyrecord-tools/">All TrustMyRecord Tools</a>
-                        <a href="/free-sports-betting-contest/">Free Sports Betting Contest</a>
-                        <a href="/mlb-betting-contest/">MLB Betting Contest</a>
-                        <a href="/contests/justbet-mlb/">JustBet MLB Contest</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
@@ -1174,13 +1145,10 @@
                     <div class="tmr-global-footer__links">
                         <a href="/feed/">Feed</a>
                         <a href="/forum/">Forum</a>
-                        <a href="/arena/leagues/">Arena Leagues</a>
-                        <a href="/arena/streaming/">Arena Streaming</a>
-                        <a href="/arena/sports-gaming/">Sports Gaming Arena</a>
-                        <a href="/arena/rankings/">Arena Rankings</a>
-                        <a href="/arena/free-predictions/">Free Predictions</a>
-                        <a href="/hangout/">Hangout</a>
                         <a href="/trivia/">Trivia</a>
+                        <a href="/polls/">Polls</a>
+                        <a href="/hangout/">Hangout</a>
+                        <a href="/arena/">Arena</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
@@ -1191,31 +1159,42 @@
                         <a href="/rules/">Rules</a>
                         <a href="/terms/">Terms</a>
                         <a href="/privacy/">Privacy</a>
-                        <a href="/dmca/">DMCA</a>
                         <a href="/contact/">Contact Us</a>
-                        <a href="/report-bug/">Report a Bug</a>
-                        <a href="/lease/">Lease / Acquire</a>
                     </div>
                 </div>
             </div>
-            <div class="tmr-global-footer__support" aria-label="Support links">
-                <strong>Support</strong>
-                <a href="/contact/">Contact Us</a>
-                <a href="/report-bug/">Report a Bug</a>
+            <div class="tmr-global-footer__guides" aria-label="Guides, tools, and contests">
+                <span class="tmr-global-footer__guides-label">Guides &amp; Tools</span>
+                <nav class="tmr-global-footer__guides-links">
+                    <a href="/sports-betting-glossary/">Betting Glossary</a>
+                    <a href="/sports-betting-roi-explained/">ROI Explained</a>
+                    <a href="/stats/clv/">CLV</a>
+                    <a href="/stats/units/">Units</a>
+                    <a href="/stats/average-odds/">Average Odds</a>
+                    <a href="/stats/win-percentage/">Win %</a>
+                    <a href="/stats/streaks/">Streaks</a>
+                    <a href="/sports-betting-record-tracker/">Record Tracker</a>
+                    <a href="/transparent-sports-betting-results/">Transparent Results</a>
+                    <a href="/mlb-season-simulator/">Season Simulator</a>
+                    <a href="/mlb-simulator/">Game Simulator</a>
+                    <a href="/trendspotter/">Trend Spotter</a>
+                    <a href="/model-builder/">Model Builder</a>
+                    <a href="/trustmyrecord-tools/">All Tools</a>
+                    <a href="/free-sports-betting-contest/">Free Contest</a>
+                    <a href="/mlb-betting-contest/">MLB Contest</a>
+                    <a href="/contests/justbet-mlb/">JustBet Contest</a>
+                    <a href="/teams/">Team Pages</a>
+                </nav>
             </div>
-            <nav class="tmr-global-footer__corenav" aria-label="Core site links" style="display:flex;flex-wrap:wrap;justify-content:center;gap:10px 22px;padding:18px 16px 4px;margin-top:10px;border-top:1px solid rgba(255,255,255,0.08);">
-                <a href="/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Home</a>
-                <a href="/sportsbook/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Sportsbook</a>
-                <a href="/leaderboards/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Leaderboard</a>
-                <a href="/contests/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Contest</a>
-                <a href="/public-picks/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Public Picks</a>
-                <a href="/forum/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Forum</a>
-                <a href="/rules/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Rules</a>
-                <a href="/contact/" style="color:#9fb0d0;text-decoration:none;font-size:0.9rem;font-weight:600;">Contact</a>
-            </nav>
             <div class="tmr-global-footer__bottom">
-                <p>&copy; 2026 TrustMyRecord.com. Transparent sports records, community competition, and locked receipts.</p>
-                <p>TrustMyRecord is not a gambling platform. No real money is wagered on this site.</p>
+                <nav class="tmr-global-footer__legal" aria-label="Legal and support">
+                    <span>&copy; 2026 TrustMyRecord</span>
+                    <a href="/terms/">Terms</a>
+                    <a href="/privacy/">Privacy</a>
+                    <a href="/contact/">Contact</a>
+                    <a href="/report-bug/">Report a Bug</a>
+                </nav>
+                <p class="tmr-global-footer__disclaimer">TrustMyRecord is not a gambling platform. No real money is wagered on this site.</p>
             </div>
         `;
         document.body.appendChild(footer);
