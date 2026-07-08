@@ -1555,22 +1555,22 @@
             </div>
             <div class="hm-counts hm-counts--quad" aria-label="Platform activity">
                 <div class="hm-count hm-count--primary">
-                    <strong id="hmVerifiedCount">9</strong>
+                    <strong id="hmVerifiedCount">–</strong>
                     <span>Verified Handicappers</span>
                     <small>25+ graded picks, public record</small>
                 </div>
                 <div class="hm-count">
-                    <strong id="hmPickMakers">29</strong>
+                    <strong id="hmPickMakers">–</strong>
                     <span>Pick Makers</span>
                     <small>Members building a record</small>
                 </div>
                 <div class="hm-count">
-                    <strong id="hmTotalPicks">1,630</strong>
+                    <strong id="hmTotalPicks">–</strong>
                     <span>Total Graded Picks</span>
                     <small>Across the directory</small>
                 </div>
                 <div class="hm-count">
-                    <strong id="hmActiveWeek">10</strong>
+                    <strong id="hmActiveWeek">–</strong>
                     <span>Active This Week</span>
                     <small>Locked a pick in 7 days</small>
                 </div>
@@ -1583,7 +1583,7 @@
                     <h2>Featured Verified Handicappers</h2>
                     <p>The serious leaderboard: 25+ graded picks, recent activity, and positive net units. Rising and new pick makers are listed below.</p>
                 </div>
-                <span class="hm-production-note"><strong id="hmVisibleMembers">9</strong> verified · <strong id="hmBuildingCount">20</strong> building records</span>
+                <span class="hm-production-note"><strong id="hmVisibleMembers">–</strong> verified · <strong id="hmBuildingCount">–</strong> building records</span>
             </div>
             <div class="hm-featured" id="hmFeaturedLeaders">
                 <div class="hm-leader-card hm-leader-card--empty"><b>Loading</b><strong>--</strong><span>Waiting for verified member data</span></div>
@@ -1762,6 +1762,11 @@
         // with zero picks. Distinct from `members`, which is filtered to users with
         // at least one pick. Used for the "Total Members" summary card.
         let totalRegistered = 0;
+        // Authoritative platform counts computed server-side from the production
+        // DB (/api/users/directory-counts). Single source of truth for the hero
+        // stat cards so they never drift from the database or fall back to stale
+        // hardcoded HTML. Null until the first successful fetch.
+        let authCounts = null;
         let visibleMembers = [];
         let displayMembers = [];
         let qualifiedPool = [];
@@ -2692,13 +2697,42 @@
             const weekCutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);
             const activeWeek = pickMakers.filter(member => lastPickTime(member) >= weekCutoff).length;
 
+            // Prefer authoritative DB-computed counts (single source of truth) for
+            // the platform-activity cards; fall back to the client-side aggregate
+            // only until directory-counts resolves. Never show hardcoded HTML.
+            const pickMakersCount = authCounts && Number.isFinite(authCounts.total_users_with_at_least_1_pick)
+                ? authCounts.total_users_with_at_least_1_pick
+                : pickMakers.length;
+            const totalGraded = authCounts && Number.isFinite(authCounts.total_graded_picks)
+                ? authCounts.total_graded_picks
+                : totalGradedPicks;
+            const activeWeekCount = authCounts && Number.isFinite(authCounts.active_pick_makers_7d)
+                ? authCounts.active_pick_makers_7d
+                : activeWeek;
+
             setText(els.verifiedCount, String(verifiedTier.length));
-            setText(els.pickMakers, String(Math.max(pickMakers.length, totalRegistered ? pickMakers.length : 0)));
-            setText(els.totalPicks, totalGradedPicks.toLocaleString());
-            setText(els.activeWeek, String(activeWeek));
+            setText(els.pickMakers, String(pickMakersCount));
+            setText(els.totalPicks, Number(totalGraded).toLocaleString());
+            setText(els.activeWeek, String(activeWeekCount));
             setText(els.visible, String(verifiedTier.length));
             setText(els.buildingCount, String(buildingTier.length));
             renderFeaturedLeaders();
+        }
+
+        // Fetch authoritative platform counts from the production DB and repaint
+        // the hero stat cards. Runs in parallel with the heavier member load so
+        // the headline numbers are correct even if pagination is slow.
+        async function fetchDirectoryCounts() {
+            try {
+                const data = await directoryRequest('/users/directory-counts');
+                if (data && data.counts) {
+                    authCounts = data.counts;
+                    console.info('[Handicappers] directory-counts', authCounts, 'generated_at', data.generated_at);
+                    renderSummary();
+                }
+            } catch (error) {
+                console.warn('[Handicappers] directory-counts unavailable:', error && error.message);
+            }
         }
 
         function renderFeaturedLeaders() {
@@ -3055,6 +3089,8 @@
                 const SPORT_PARAM_MAP = { mlb:'MLB', nba:'NBA', nfl:'NFL', nhl:'NHL', soccer:'Soccer', baseball_mlb:'MLB', basketball_nba:'NBA', americanfootball_nfl:'NFL', icehockey_nhl:'NHL' };
                 const rawSportParam = (params.get('sport') || '').trim();
                 pendingSportFilter = rawSportParam ? (SPORT_PARAM_MAP[rawSportParam.toLowerCase()] || rawSportParam) : '';
+                // Authoritative DB counts, in parallel with the member load.
+                fetchDirectoryCounts();
                 // Phase 0: instant paint from last cached snapshot (if any).
                 const cached = readDirectoryCache();
                 if (cached.length) {
@@ -3160,6 +3196,7 @@
             if (refreshing || document.hidden) return;
             refreshing = true;
             try {
+                fetchDirectoryCounts();
                 const sourceUsers = await fetchBackendUsers();
                 totalRegistered = sourceUsers.filter(user => normalizeUsername(user)).length;
                 // Preserve already-enriched picks so the Sport/Wager filters don't
