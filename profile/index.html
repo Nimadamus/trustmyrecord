@@ -3871,6 +3871,45 @@
             border-color: rgba(255,0,255,0.28);
             color: #f0abfc;
         }
+        .profile-aff-league {
+            width: 15px; height: 15px; object-fit: contain;
+            border-radius: 3px; display: inline-block; opacity: .95;
+        }
+        /* Favorite Teams block -- labeled row of team pills with logos. */
+        .profile-fav-teams { margin: 4px 0 14px; }
+        .profile-fav-teams-label {
+            display: block; margin-bottom: 7px;
+            font: 800 10px/1 'Barlow', 'Inter', sans-serif;
+            letter-spacing: 0.08em; text-transform: uppercase;
+            color: #8b93a7;
+        }
+        .profile-team-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+        .profile-team-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            height: 32px; padding: 0 12px 0 6px; border-radius: 999px;
+            background: rgba(10,19,34,0.76);
+            border: 1px solid rgba(148,163,184,0.20);
+            color: #e6e9f2;
+            font: 700 12.5px/1 'Inter', sans-serif;
+            white-space: nowrap; max-width: 100%;
+        }
+        .profile-team-pill-name { overflow: hidden; text-overflow: ellipsis; }
+        .profile-team-logo {
+            position: relative; display: inline-flex; align-items: center;
+            justify-content: center; flex: 0 0 22px; width: 22px; height: 22px;
+            border-radius: 50%; overflow: hidden;
+            background: rgba(255,255,255,0.08);
+        }
+        .profile-team-logo-img { width: 22px; height: 22px; object-fit: contain; display: block; }
+        .profile-team-logo-fallback {
+            display: none; font: 800 8.5px/1 'Inter', sans-serif;
+            letter-spacing: .02em; color: #cfd5e6; text-transform: uppercase;
+        }
+        .profile-team-logo.is-fallback .profile-team-logo-fallback { display: block; }
+        @media (max-width: 560px) {
+            .profile-team-pill { height: 30px; font-size: 12px; }
+            .profile-team-logo, .profile-team-logo-img { width: 20px; height: 20px; flex-basis: 20px; }
+        }
         .profile-affiliation-row--empty {
             background: rgba(255,255,255,0.02);
             border: 1px dashed rgba(0,255,255,0.32);
@@ -5430,6 +5469,7 @@
         };
     </script>
     <script src="/static/js/config.js?v=20260330"></script>
+    <script src="/static/js/tmr-team-logo.js?v=20260707logos1"></script>
     <script src="/static/js/analytics.js?v=20260405"></script>
     <script src="/static/js/backend-api.js?v=20260601nostorestats1"></script>
     <script src="/static/js/nav-badges.js"></script>
@@ -9150,15 +9190,28 @@
             : (p.favorite_sport ? [p.favorite_sport] : []));
         const favTeamsArr  = Array.isArray(p.favorite_teams) && p.favorite_teams.length ? p.favorite_teams : favTeamsFromGaming;
         const escTxt = (s) => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        const TL = window.TMRTeamLogo;
         let affiliationRow = '';
         if (favSportsArr.length || favTeamsArr.length) {
-            const sportChips = favSportsArr.slice(0, 3).map(s =>
-                '<span class="profile-affiliation-chip profile-affiliation-chip--sport"><i class="fas fa-circle"></i> ' + escTxt(s) + ' fan</span>'
-            ).join('');
-            const teamChips = favTeamsArr.slice(0, 5).map(t =>
-                '<span class="profile-affiliation-chip"><i class="fas fa-shield-alt"></i> ' + escTxt(t) + '</span>'
-            ).join('');
-            affiliationRow = '<div class="profile-affiliation-row">' + sportChips + teamChips + '</div>';
+            // Row: fan-identity chips (favorite sports) with league badge logos.
+            const sportChips = favSportsArr.slice(0, 3).map(function (s) {
+                const lu = TL ? TL.leagueUrl(s) : null;
+                const icon = lu
+                    ? '<img class="profile-aff-league" src="' + escTxt(lu) + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.nextSibling && (this.nextSibling.style.display=\'inline-block\');"><i class="fas fa-circle" style="display:none"></i>'
+                    : '<i class="fas fa-circle"></i>';
+                return '<span class="profile-affiliation-chip profile-affiliation-chip--sport">' + icon + ' ' + escTxt(s) + ' fan</span>';
+            }).join('');
+            // Row: Favorite Teams label + team pills, each with its team logo
+            // (shared TeamLogo helper; clean initials fallback when no logo).
+            const teamPills = favTeamsArr.slice(0, 8).map(function (t) {
+                const logo = TL ? TL.html(t, { className: 'profile-team-logo' })
+                    : '<span class="profile-team-logo is-fallback"><span class="profile-team-logo-fallback">' + escTxt(String(t).slice(0, 2).toUpperCase()) + '</span></span>';
+                return '<span class="profile-team-pill">' + logo + '<span class="profile-team-pill-name">' + escTxt(t) + '</span></span>';
+            }).join('');
+            if (sportChips) affiliationRow += '<div class="profile-affiliation-row">' + sportChips + '</div>';
+            if (teamPills) affiliationRow += '<div class="profile-fav-teams">'
+                + '<span class="profile-fav-teams-label">Favorite Teams</span>'
+                + '<div class="profile-team-pills">' + teamPills + '</div></div>';
         } else if (isOwnProfile) {
             affiliationRow = '<div class="profile-affiliation-row profile-affiliation-row--empty">'
                 + '<span class="profile-affiliation-empty">No teams yet.</span>'
@@ -14374,7 +14427,7 @@
 })();
 </script>
 
-    <script defer src="/static/js/tmr-fan-identity.js?v=20260622fi2"></script>
+    <script defer src="/static/js/tmr-fan-identity.js?v=20260707logos1"></script>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->
