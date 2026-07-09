@@ -65,10 +65,11 @@
         return document.querySelectorAll('a[href="messages/"], a[href="/messages/"], a[href="messages.html"], a[href="/messages.html"]');
     }
 
-    function findNotificationElements() {
-        // Find bell icons or notification links
-        return document.querySelectorAll('.notification-bell, a[href="notifications/"], a[href="/notifications/"], a[href="notifications.html"], .fa-bell');
-    }
+    // NOTE: The notification bell badge (#notifBadge) is owned exclusively by
+    // notifications.js, which now runs sitewide (Jul 6 2026 sitewide-alerts
+    // rollout). nav-badges.js must NOT also badge the bell -- doing so appended
+    // a second .nav-badge span on top of #notifBadge and rendered the stacked
+    // "99+ / 99+" duplicate badges. nav-badges.js is messages-only now.
 
     function setBadge(element, count) {
         if (!element) return;
@@ -122,21 +123,8 @@
                 }
             });
 
-            // Fetch notification unread count (backend returns { unreadCount }; tolerate { count } too)
-            const notifResult = await window.api.request('/notifications/unread-count').catch(() => null);
-            let notifCount = 0;
-            if (notifResult) {
-                if (typeof notifResult.unreadCount === 'number') notifCount = notifResult.unreadCount;
-                else if (typeof notifResult.count === 'number') notifCount = notifResult.count;
-            }
-
-            // Update notification bell elements
-            const notifElements = findNotificationElements();
-            notifElements.forEach(el => {
-                // If it's an <i> icon inside a parent, badge the parent
-                const target = el.tagName === 'I' ? el.parentElement : el;
-                setBadge(target, notifCount);
-            });
+            // Notification bell badge is handled by notifications.js (#notifBadge),
+            // not here -- see note above findNotificationElements' removal.
 
         } catch(e) {
             // Silently fail - badges are non-critical
