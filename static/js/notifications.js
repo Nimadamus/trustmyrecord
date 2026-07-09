@@ -91,7 +91,19 @@ async function refreshNotificationSession() {
 }
 
 function getNotificationTrigger() {
-    return document.getElementById('notificationsBtn') || document.getElementById('notificationBtn');
+    // Prefer a VISIBLE bell. On the homepage the sitewide global-nav bell
+    // (#notificationsBtn) is display:none and the visible bell lives in the
+    // baked premium header (#homeNotifBtn); anchoring the dropdown to the
+    // hidden node would drop it at 0,0.
+    var ids = ['notificationsBtn', 'notificationBtn', 'homeNotifBtn'];
+    var firstFound = null;
+    for (var i = 0; i < ids.length; i++) {
+        var el = document.getElementById(ids[i]);
+        if (!el) continue;
+        if (firstFound === null) firstFound = el;
+        if (el.offsetParent !== null || el.getClientRects().length) return el;
+    }
+    return firstFound;
 }
 
 // A legacy #notificationsPanel counts as the real container ONLY when it is a
@@ -299,14 +311,15 @@ async function fetchNotifications() {
 function updateNotifBadge(count) {
     const badges = [
         document.getElementById('notifBadge'),
-        document.getElementById('notificationBadge')
+        document.getElementById('notificationBadge'),
+        document.getElementById('homeNotifBadge')
     ].filter(Boolean);
     const unreadCount = getUnreadCountElement();
 
     badges.forEach(function(badge) {
         if (count > 0) {
             badge.textContent = count > 99 ? '99+' : count;
-            badge.style.display = badge.id === 'notifBadge' ? 'inline' : 'block';
+            badge.style.display = (badge.id === 'notifBadge' || badge.id === 'homeNotifBadge') ? 'inline' : 'block';
         } else {
             badge.style.display = 'none';
             badge.textContent = '0';
