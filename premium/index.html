@@ -790,7 +790,7 @@
                 <li><span class="check">✓</span> Custom challenges <span class="limit">3 active</span></li>
                 <li><span class="x">✗</span> Advanced analytics</li>
             </ul>
-            <button class="upgrade-btn secondary" onclick="upgrade('basic')">Upgrade to Basic</button>
+            <button class="upgrade-btn secondary" disabled title="Premium billing coming soon">Coming Soon</button>
         </div>
 
         <!-- Pro Tier -->
@@ -808,7 +808,7 @@
                 <li><span class="check">✓</span> Priority support</li>
                 <li><span class="check">✓</span> Early access features</li>
             </ul>
-            <button class="upgrade-btn primary" onclick="upgrade('pro')">Upgrade to Pro</button>
+            <button class="upgrade-btn primary" disabled title="Premium billing coming soon">Coming Soon</button>
         </div>
 
         <!-- Elite Tier -->
@@ -826,7 +826,7 @@
                 <li><span class="check">✓</span> Dedicated support</li>
                 <li><span class="check">✓</span> All Pro features</li>
             </ul>
-            <button class="upgrade-btn secondary" onclick="upgrade('elite')">Upgrade to Elite</button>
+            <button class="upgrade-btn secondary" disabled title="Premium billing coming soon">Coming Soon</button>
         </div>
     </div>
 
@@ -1272,6 +1272,13 @@
         }
 
         async function upgrade(tier) {
+            // LAUNCH GATE 20260709: Stripe is not configured on trustmyrecord-api
+            // (no STRIPE_* env vars), so paid upgrades are disabled to prevent any
+            // checkout/charge or simulated free premium grant. Free tier (tracking,
+            // leaderboards, simulator) stays fully open. Reversible: remove once
+            // Stripe keys are set on the backend.
+            showToast('Premium is coming soon. Free pick tracking, leaderboards, and the MLB simulator are fully open in the meantime.', 'info');
+            return;
             if (!api || !api.isLoggedIn()) {
                 showToast('Please log in to upgrade', 'error');
                 setTimeout(() => {
