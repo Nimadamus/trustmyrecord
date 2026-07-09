@@ -523,6 +523,13 @@
                 const next = '<a class="tmr-premium-login auth-link" href="' + href + '" style="display:inline-flex;align-items:center;gap:8px;">'
                            + '<img class="tmr-premium-avatar" src="' + avatar + '" alt="' + escapeHtml(display) + ' avatar" style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex:0 0 auto;border:1px solid rgba(148,163,184,.45);">'
                            + '<span>' + escapeHtml(display) + '</span></a>'
+                           // Sitewide alerts bell for the homepage baked header. The global-nav
+                           // bell is display:none on the homepage, so mirror it here between the
+                           // account chip and My Record. Reuses .tmr-global-nav__bell styling;
+                           // notifications.js wires the dropdown to #homeNotifBtn / badges #homeNotifBadge.
+                           + '<a href="/notifications/" id="homeNotifBtn" class="tmr-global-nav__bell tmr-premium-bell" data-tmr-notifications aria-label="Alerts" title="Alerts" onclick="if(typeof toggleNotifications===\'function\'){toggleNotifications(event);return false;}">'
+                           + '<svg class="tmr-global-nav__bell-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v3.6L4.3 15a1 1 0 0 0 .9 1.4h13.6a1 1 0 0 0 .9-1.4L18 11.6V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.83-2H9.17A3 3 0 0 0 12 22Z"/></svg>'
+                           + '<span id="homeNotifBadge" class="tmr-global-nav__bell-badge" style="display:none;"></span></a>'
                            + '<a class="tmr-premium-signup auth-link" href="' + href + '">My Record</a>';
                 if (box.getAttribute("data-tmr-auth-state") !== "in:" + username) {
                     box.innerHTML = next;
@@ -1083,7 +1090,7 @@
     ].forEach(([src, name]) => {
         if (document.querySelector('script[src*="' + name + '"]')) return;
         const depScript = document.createElement("script");
-        depScript.src = src + "?v=20260708alertsfix1";
+        depScript.src = src + "?v=20260709homebell1";
         depScript.async = false;
         depScript.setAttribute("data-tmr-notifications-dep", name);
         document.head.appendChild(depScript);
