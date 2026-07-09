@@ -49,6 +49,16 @@ def sport_label(key):
         return "Tennis"
     return key.replace("_", " ").upper() if key else "Other"
 
+SPORT_TRACKER = {
+    "MLB": "/mlb-pick-tracker/", "NBA": "/nba-pick-tracker/",
+    "NFL": "/nfl-pick-tracker/", "NHL": "/nhl-pick-tracker/",
+    "Soccer": "/soccer-pick-tracker/",
+}
+def sport_cell(lab):
+    """Sport label linked to its pick-tracker hub when one exists (internal mesh)."""
+    href = SPORT_TRACKER.get(lab)
+    return f'<a href="{href}">{html.escape(lab)}</a>' if href else html.escape(lab)
+
 def get(url):
     req = urllib.request.Request(url, headers={"Accept": "application/json"})
     with urllib.request.urlopen(req, timeout=45) as r:
@@ -164,7 +174,7 @@ def derive(picks):
     graded_sorted = sorted(graded, key=lambda p: p.get("graded_at") or "", reverse=True)
     return graded_sorted[:5], avg_amer, sport_rows, len(graded)
 
-def page_html(d, recent, avg_amer, sport_rows, m=None):
+def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
     e = html.escape
     un    = d["username"]
     disp  = d.get("display_name") or un
@@ -258,7 +268,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None):
             srows.append((lab, g, roi, wr))
         srows.sort(key=lambda x: -x[1]["t"])
         rows = "".join(
-            f'<tr><td>{e(lab)}</td>'
+            f'<tr><td>{sport_cell(lab)}</td>'
             f'<td>{g["w"]}-{g["l"]}' + (f'-{g["p"]}' if g["p"] else '') + '</td>'
             f'<td>{g["t"]}</td>'
             f'<td class="{clz(g["net"])}">{e(sgn_u(g["net"]))}</td>'
@@ -272,7 +282,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None):
             f'<tbody>{rows}</tbody></table></div></section>')
     elif sport_rows:
         rows = "".join(
-            f'<tr><td>{e(lab)}</td><td>{c[0]}-{c[1]}' + (f'-{c[2]}' if c[2] else '') + f'</td><td>{c[0]+c[1]+c[2]}</td></tr>'
+            f'<tr><td>{sport_cell(lab)}</td><td>{c[0]}-{c[1]}' + (f'-{c[2]}' if c[2] else '') + f'</td><td>{c[0]+c[1]+c[2]}</td></tr>'
             for lab, c in sport_rows)
         sport_html = (
             '<section class="u-block"><h2>Sport breakdown</h2>'
@@ -303,6 +313,13 @@ def page_html(d, recent, avg_amer, sport_rows, m=None):
             f'<tbody>{"".join(rows)}</tbody></table>'
             '<p class="u-note">Graded picks only. Pending picks are excluded until they settle.</p></section>')
 
+    related_html = ""
+    if siblings:
+        sib_links = " · ".join(
+            f'<a href="/u/{e(s)}/">{e(s)}</a>' for s in siblings[:6])
+        related_html = (
+            '<section class="u-block"><h2>Compare verified records</h2>'
+            f'<p class="u-links">{sib_links}</p></section>')
     ld = json.dumps({
         "@context": "https://schema.org", "@type": "ProfilePage",
         "mainEntity": {"@type": "Person", "name": disp, "url": url,
@@ -370,6 +387,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None):
   <div id="uDeep">
   {sport_html}
   {recent_html}
+  {related_html}
   </div>
   <div class="u-how">
     <strong>How this record is verified:</strong> every pick {e(disp)} makes is timestamped and
@@ -379,8 +397,12 @@ def page_html(d, recent, avg_amer, sport_rows, m=None):
   </div>
   <a class="u-cta" href="/register/">Start Your Free Verified Record</a>
   <div class="u-links">
+    <a href="/sportsbook/">Make a Verified Pick</a> ·
     <a href="/leaderboards/">Verified Leaderboards</a> ·
     <a href="/handicappers/">Handicappers</a> ·
+    <a href="/contests/">Contests</a> ·
+    <a href="/forum/">Forum</a> ·
+    <a href="/feed/">Activity Feed</a> ·
     <a href="/how-it-works/">How It Works</a> ·
     <a href="/profile/?user={e(un)}">Full interactive profile</a>
   </div>
@@ -447,8 +469,11 @@ def noindex_html(un):
   <div id="uDeep"></div>
   <p class="u-building">Building a public record. Full SEO feature listing unlocks at {GRADED_MIN} graded picks;
   the live stats above update automatically as picks settle.</p>
-  <div class="u-note"><a href="/leaderboards/">Verified Leaderboards</a> ·
+  <div class="u-note"><a href="/sportsbook/">Make a Verified Pick</a> ·
+     <a href="/leaderboards/">Verified Leaderboards</a> ·
      <a href="/handicappers/">Handicappers</a> ·
+     <a href="/contests/">Contests</a> ·
+     <a href="/forum/">Forum</a> ·
      <a href="/profile/?user={e(un)}">Full interactive profile</a></div>
 </main>
 <script>window.__TMR_PROFILE_USERNAME={json.dumps(un)};</script>
@@ -514,7 +539,8 @@ def main():
         ddir = os.path.join(UDIR, un)
         os.makedirs(ddir, exist_ok=True)
         with open(os.path.join(ddir, "index.html"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(page_html(d, recent, avg_amer, sport_rows, m))
+            sibs = [x for x in sorted(elig_names) if x != un]
+            f.write(page_html(d, recent, avg_amer, sport_rows, m, siblings=sibs))
     for un in to_noindex:
         os.makedirs(os.path.join(UDIR, un), exist_ok=True)
         with open(os.path.join(UDIR, un, "index.html"), "w", encoding="utf-8", newline="\n") as f:
