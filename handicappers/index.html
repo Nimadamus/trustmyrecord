@@ -1555,22 +1555,22 @@
             </div>
             <div class="hm-counts hm-counts--quad" aria-label="Platform activity">
                 <div class="hm-count hm-count--primary">
-                    <strong id="hmVerifiedCount">9</strong>
+                    <strong id="hmVerifiedCount" class="hm-stat-loading" aria-busy="true">…</strong>
                     <span>Verified Handicappers</span>
                     <small>25+ graded picks, public record</small>
                 </div>
                 <div class="hm-count">
-                    <strong id="hmPickMakers">30</strong>
+                    <strong id="hmPickMakers" class="hm-stat-loading" aria-busy="true">…</strong>
                     <span>Pick Makers</span>
                     <small>Members building a record</small>
                 </div>
                 <div class="hm-count">
-                    <strong id="hmTotalPicks">1,665</strong>
+                    <strong id="hmTotalPicks" class="hm-stat-loading" aria-busy="true">…</strong>
                     <span>Total Graded Picks</span>
                     <small>Across the directory</small>
                 </div>
                 <div class="hm-count">
-                    <strong id="hmActiveWeek">9</strong>
+                    <strong id="hmActiveWeek" class="hm-stat-loading" aria-busy="true">…</strong>
                     <span>Active This Week</span>
                     <small>Locked a pick in 7 days</small>
                 </div>
@@ -1583,7 +1583,7 @@
                     <h2>Featured Verified Handicappers</h2>
                     <p>The serious leaderboard: 25+ graded picks, recent activity, and positive net units. Rising and new pick makers are listed below.</p>
                 </div>
-                <span class="hm-production-note"><strong id="hmVisibleMembers">9</strong> verified · <strong id="hmBuildingCount">21</strong> building records</span>
+                <span class="hm-production-note"><strong id="hmVisibleMembers" class="hm-stat-loading" aria-busy="true">…</strong> verified · <strong id="hmBuildingCount" class="hm-stat-loading" aria-busy="true">…</strong> building records</span>
             </div>
             <div class="hm-featured" id="hmFeaturedLeaders">
                 <div class="hm-leader-card hm-leader-card--empty"><b>Loading</b><strong>--</strong><span>Waiting for verified member data</span></div>
@@ -1767,6 +1767,9 @@
         // stat cards so they never drift from the database or fall back to stale
         // hardcoded HTML. Null until the first successful fetch.
         let authCounts = null;
+        // True only once fresh backend members have loaded. Guards the hero/summary
+        // stat numbers so the localStorage Phase-0 snapshot never flashes stale counts.
+        let membersAreFresh = false;
         let visibleMembers = [];
         let displayMembers = [];
         let qualifiedPool = [];
@@ -2711,12 +2714,24 @@
                 ? authCounts.active_pick_makers_7d
                 : activeWeek;
 
-            setText(els.verifiedCount, String(verifiedTier.length));
-            setText(els.pickMakers, String(pickMakersCount));
-            setText(els.totalPicks, Number(totalGraded).toLocaleString());
-            setText(els.activeWeek, String(activeWeekCount));
-            setText(els.visible, String(verifiedTier.length));
-            setText(els.buildingCount, String(buildingTier.length));
+            // Member-derived counts must never be painted from the stale Phase-0
+            // localStorage snapshot. Only write them once fresh backend members load.
+            if (membersAreFresh) {
+                setText(els.verifiedCount, String(verifiedTier.length));
+                setText(els.visible, String(verifiedTier.length));
+                setText(els.buildingCount, String(buildingTier.length));
+            }
+            // The three activity cards prefer authoritative DB counts (fresh by
+            // definition) and otherwise fall back to fresh client aggregates only.
+            if (authCounts) {
+                setText(els.pickMakers, String(pickMakersCount));
+                setText(els.totalPicks, Number(totalGraded).toLocaleString());
+                setText(els.activeWeek, String(activeWeekCount));
+            } else if (membersAreFresh) {
+                setText(els.pickMakers, String(pickMakersCount));
+                setText(els.totalPicks, Number(totalGraded).toLocaleString());
+                setText(els.activeWeek, String(activeWeekCount));
+            }
             renderFeaturedLeaders();
         }
 
@@ -2737,6 +2752,9 @@
         }
 
         function renderFeaturedLeaders() {
+            // Hold the loading card until fresh backend members load, so the stale
+            // Phase-0 localStorage snapshot never flashes an outdated leader set.
+            if (!membersAreFresh) return;
             const pool = displayMembers.length ? displayMembers : members;
             const qualified = pool.filter(isQualifiedTopPerformer);
             const unitsLeader = qualifiedUnitsLeader(qualified);
@@ -3109,6 +3127,7 @@
                 members = sourceUsers
                     .map(user => normalizeMember(user, hydrateStats(user)))
                     .filter(member => member.username && isProductionDirectoryUser(member) && Number(member.stats?.totalPicks || 0) > 0);
+                membersAreFresh = true;
                 writeDirectoryCache(members);
                 renderSummary();
                 fillSports();
