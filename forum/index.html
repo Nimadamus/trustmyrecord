@@ -1912,6 +1912,7 @@ function starterPostFromThread(thread) {
         username: thread.username,
         display_name: thread.display_name || thread.username,
         avatar_url: thread.avatar_url,
+        headline: thread.headline,
         user_joined: thread.user_joined,
         created_at: thread.created_at,
         updated_at: thread.updated_at,
@@ -1935,6 +1936,7 @@ function starterPostFromThread(thread) {
             username: thread.username,
             display_name: thread.display_name || thread.username,
             avatar_url: thread.avatar_url,
+            headline: thread.headline,
             created_at: thread.user_joined,
             favorite_teams: thread.favorite_teams,
             favorite_team: thread.favorite_team,
@@ -1987,6 +1989,7 @@ function authorRoleBadge(author) {
 function renderAuthorPanel(post) {
     var author = authorSource(post);
     var who = author.display_name || author.username || 'user';
+    var headline = String(author.headline || '').trim();
     var avatar = author.avatar_url || author.avatar || '';
     var initials = String(who || '?').slice(0, 1).toUpperCase();
     var role = author.user_title || (userIsVerified(author) ? 'Verified Handicapper' : 'Member');
@@ -2019,6 +2022,7 @@ function renderAuthorPanel(post) {
     return '<div class="fthread-author">'
         + avatarHtml
         + nameHtml
+        + (headline ? '<div class="fthread-headline" style="margin-top:3px;color:#2dd4bf;font-style:italic;font-size:0.82rem;line-height:1.3;font-weight:600;">' + escHtml(headline) + '</div>' : '')
         + authorRoleBadge(author)
         + '<div class="fthread-role">' + escHtml(role) + '</div>'
         + (hasFavTeam ? '<div class="fthread-fandom"><span class="fthread-fandom-dot"></span>' + escHtml(favTeam) + '</div>' : '')
