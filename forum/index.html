@@ -468,9 +468,6 @@ body.classic-forum .fpost-content a{color:#0033cc !important}
 .fpost-embed{display:block;margin:10px 0;max-width:640px}
 .fpost-embed iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:6px;background:#000}
 .fpost-embed video{width:100%;max-height:480px;border-radius:6px;background:#000}
-.fpost-media{display:block;margin:10px 0}
-.fpost-media img{max-width:100%;max-height:520px;height:auto;border-radius:6px;border:1px solid rgba(0,0,0,.15);background:#f2f2f2;cursor:zoom-in}
-body.tmr-forum-live-redesign .fpost-media img{border-color:rgba(255,255,255,.15);background:#0a1422}
 .fpost-btn.is-delete{color:#b91c1c}
 .fpost-btn.is-delete:hover{background:#fee2e2;border-color:#fca5a5}
 .fpost-btn.is-mod{color:#7c2d12;border-color:#d8a48f;background:#fdf1ec}
@@ -1538,389 +1535,41 @@ body.classic-forum .sport-icon.cbb{background:#ece3ff !important;border-color:#b
   }
 }
 </style>
-<style id="tmr-forum-modern-community-2026">
-/* TMR_FORUM_MODERN_COMMUNITY_2026 — global forum polish layer.
-   Loads LAST in <head> so it wins the classic-forum cascade on every
-   forum/category/listing page. Visual only: no routes, auth, counts,
-   thread/post logic, links, or permissions touched. Applies to the live
-   body.classic-forum skin used by all forum pages. */
-body.classic-forum{
-  --f-accent:#18a66d;
-  --f-navy:#0e1b2e;
-  --f-navy-2:#132539;
-  --f-page:#eef1f6 !important;
-  --f-card:#ffffff;
-  --f-line:#e2e7ee;
-  --f-line-2:#d3dae4;
-  --f-ink:#16202e;
-  --f-muted:#5c6b7d;
-  --f-link:#155e8f;
-  background:#eef1f6 !important;
-  color:var(--f-ink) !important;
-  font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,Helvetica,sans-serif !important;
-  font-size:14px !important;
-  -webkit-font-smoothing:antialiased;
+<style id="tmr-forum-bot-persona-20260709">
+/* Official community bot persona card (TMRPolls / TMRTrivia and any future
+   is_official_bot account). PRESENTATION ONLY: no routes, auth, IDs, onclick
+   handlers, counts, or posting logic touched. Everything is scoped to the
+   .fthread-author--bot modifier + bot-only elements, so normal author panels
+   are completely unaffected. Loads last so it wins the classic-forum cascade. */
+.fthread-author--bot,
+body.classic-forum .fthread-author--bot{
+  background:linear-gradient(180deg,#eafcf8 0%,#e6f4ff 100%) !important;
+  border-right:1px solid #b7e4dc !important;
+  box-shadow:inset 3px 0 0 #16b8a6 !important;
 }
-body.classic-forum a{color:var(--f-link) !important}
-
-/* ===== Header ===== */
-body.classic-forum .fhead{
-  background:linear-gradient(180deg,var(--f-navy),var(--f-navy-2)) !important;
-  border:0 !important;
-  border-bottom:1px solid rgba(24,166,109,.35) !important;
-  box-shadow:0 8px 30px rgba(9,17,28,.28) !important;
+.fthread-author--bot .fthread-avatar,
+body.classic-forum .fthread-author--bot .fthread-avatar{
+  border:2px solid #16b8a6 !important;
+  box-shadow:0 0 0 3px rgba(22,184,166,.18) !important;
+  background:#d7f5ef !important;
 }
-body.classic-forum .fhead-in{
-  max-width:1360px !important;
-  padding:12px 18px !important;
-  gap:16px !important;
-  align-items:center !important;
+.fthread-author--bot .fthread-role,
+body.classic-forum .fthread-author--bot .fthread-role{
+  color:#0c6b60 !important;font-weight:bold !important;
 }
-body.classic-forum .fhead-logo{
-  display:flex !important;align-items:center !important;gap:11px !important;
-  color:#fff !important;
-  font:800 20px/1.05 Inter,Arial,Helvetica,sans-serif !important;
-  letter-spacing:-.01em !important;
+.fbot-badge,
+body.classic-forum .fbot-badge{
+  display:inline-block;margin:0 0 5px;padding:1px 8px;border-radius:999px;
+  background:linear-gradient(90deg,#12b3a3,#2dd4bf) !important;
+  border:1px solid #0e9e90 !important;color:#04231f !important;
+  font:bold 9px/1.6 Arial,Helvetica,sans-serif !important;letter-spacing:1.2px;
+  text-transform:uppercase;vertical-align:middle;
 }
-body.classic-forum .fhead-logo:before{
-  content:"TMR";
-  width:40px;height:34px;flex:0 0 40px;
-  display:grid;place-items:center;
-  background:linear-gradient(135deg,#18a66d,#12864f);
-  color:#04150d;border-radius:9px;
-  font:900 12px Inter,Arial,Helvetica,sans-serif;letter-spacing:.04em;
-  box-shadow:0 4px 14px rgba(24,166,109,.4);
-}
-body.classic-forum .fhead-logo b{color:#3ee08f !important}
-body.classic-forum .fhead-logo span{
-  display:block;color:#9db0c4;font:600 11px Inter,Arial,Helvetica,sans-serif;
-  margin-top:2px;letter-spacing:.01em;
-}
-body.classic-forum .fhead-search{
-  height:38px !important;max-width:360px !important;margin-left:auto !important;
-  background:#0a1626 !important;border:1px solid #26384c !important;
-  border-radius:10px !important;overflow:hidden !important;
-}
-body.classic-forum .fhead-search input{
-  background:transparent !important;color:#e8eef5 !important;
-  border:0 !important;padding:8px 12px !important;
-  font:500 13px Inter,Arial,Helvetica,sans-serif !important;
-}
-body.classic-forum .fhead-search input::placeholder{color:#7d8ea1 !important}
-body.classic-forum .fhead-search button{
-  background:linear-gradient(135deg,#18a66d,#12864f) !important;color:#04150d !important;
-  border:0 !important;padding:0 16px !important;
-  font:800 12px Inter,Arial,Helvetica,sans-serif !important;letter-spacing:.02em !important;
-}
-body.classic-forum .fhead-links{gap:8px !important}
-body.classic-forum .fhead-links a,
-body.classic-forum .fhead-links button{
-  color:#d8e2ee !important;
-  border:1px solid #2a3c50 !important;background:rgba(255,255,255,.03) !important;
-  border-radius:8px !important;padding:7px 11px !important;
-  font:700 12px Inter,Arial,Helvetica,sans-serif !important;
-}
-body.classic-forum .fhead-links a:hover,
-body.classic-forum .fhead-links button:hover{
-  background:rgba(24,166,109,.16) !important;border-color:rgba(24,166,109,.5) !important;color:#fff !important;text-decoration:none !important;
-}
-body.classic-forum .fhead-bell-badge{box-shadow:0 0 8px rgba(255,68,68,.6) !important}
-
-/* ===== Tabs ===== */
-body.classic-forum .ftabs{
-  background:#0b1626 !important;border:0 !important;border-bottom:1px solid #1c2c3e !important;
-}
-body.classic-forum .ftabs-in{max-width:1360px !important;padding:0 12px !important}
-body.classic-forum .ftabs a,
-body.classic-forum .ftabs button{
-  background:transparent !important;color:#b7c6d6 !important;
-  border:0 !important;border-bottom:2px solid transparent !important;
-  padding:11px 14px !important;
-  font:700 12.5px Inter,Arial,Helvetica,sans-serif !important;letter-spacing:.01em !important;
-}
-body.classic-forum .ftabs a:hover,
-body.classic-forum .ftabs button:hover{background:rgba(255,255,255,.05) !important;color:#fff !important;text-decoration:none !important}
-body.classic-forum .ftabs a.is-active{
-  color:#fff !important;border-bottom-color:#18a66d !important;background:rgba(24,166,109,.12) !important;
-}
-
-/* ===== Shell / layout ===== */
-body.classic-forum .fshell{
-  max-width:1360px !important;margin:18px auto 44px !important;padding:0 16px !important;
-  display:grid !important;grid-template-columns:262px minmax(0,1fr) !important;gap:18px !important;
-  min-height:0 !important;align-items:start !important;
-}
-body.classic-forum .fmain{width:100% !important;padding:0 !important;background:transparent !important}
-
-/* ===== Sidebar ===== */
-body.classic-forum .fside{
-  display:block !important;position:static !important;min-height:0 !important;max-height:none !important;
-  overflow:visible !important;background:transparent !important;border:0 !important;margin:0 !important;padding:0 !important;
-}
-body.classic-forum .fside-box{
-  background:var(--f-card) !important;border:1px solid var(--f-line) !important;
-  border-radius:14px !important;box-shadow:0 6px 22px rgba(20,34,54,.07) !important;
-  margin:0 0 14px 0 !important;overflow:hidden !important;
-}
-body.classic-forum .fside-box:last-child{border-bottom:1px solid var(--f-line) !important}
-body.classic-forum .fside .fside-head{
-  display:block !important;
-  background:linear-gradient(180deg,var(--f-navy),var(--f-navy-2)) !important;
-  color:#fff !important;border:0 !important;
-  padding:11px 15px !important;
-  font:800 11px Inter,Arial,Helvetica,sans-serif !important;
-  text-transform:uppercase !important;letter-spacing:.09em !important;
-}
-body.classic-forum .fside-list{padding:8px !important;display:block !important}
-body.classic-forum .fside-list a{
-  display:flex !important;align-items:center !important;justify-content:flex-start !important;
-  gap:9px !important;margin:2px 0 !important;padding:9px 11px !important;
-  color:var(--f-ink) !important;background:transparent !important;
-  border:0 !important;border-radius:9px !important;
-  font:600 13px Inter,Arial,Helvetica,sans-serif !important;
-  text-decoration:none !important;transition:background .12s,color .12s !important;
-}
-body.classic-forum .fside-list a:before{
-  content:"";width:8px;height:8px;border-radius:50%;flex:0 0 8px;
-  background:#c4cdd8;box-shadow:inset 0 0 0 2px #fff;transition:background .12s;
-}
-body.classic-forum .fside-list a:hover{background:#eef4f1 !important;color:#0d2a1c !important}
-body.classic-forum .fside-list a:hover:before{background:#18a66d}
-body.classic-forum .fside-list a.is-active{
-  background:linear-gradient(90deg,rgba(24,166,109,.16),rgba(24,166,109,.04)) !important;
-  color:#0c3222 !important;font-weight:800 !important;
-  box-shadow:inset 3px 0 0 #18a66d !important;
-}
-body.classic-forum .fside-list a.is-active:before{background:#18a66d}
-body.classic-forum .fside-list a.fside-loading{color:#8b97a5 !important;font-style:italic !important}
-body.classic-forum .fside-list a.fside-loading:before{display:none}
-
-/* ===== Breadcrumb / title / stats ===== */
-body.classic-forum .fcrumb{
-  background:transparent !important;border:0 !important;
-  padding:2px 2px 10px !important;color:var(--f-muted) !important;
-  font:600 12px Inter,Arial,Helvetica,sans-serif !important;
-}
-body.classic-forum .fcrumb a{color:var(--f-link) !important;font-weight:700 !important;cursor:pointer}
-body.classic-forum .ftitle{
-  position:relative !important;
-  background:var(--f-card) !important;border:1px solid var(--f-line) !important;
-  border-radius:14px 14px 0 0 !important;padding:20px 22px 18px 26px !important;
-  overflow:hidden !important;
-}
-body.classic-forum .ftitle:before{
-  content:"";position:absolute;left:0;top:0;bottom:0;width:6px;
-  background:var(--f-accent);
-}
-body.classic-forum .ftitle h1{
-  color:#111c2b !important;
-  font:800 25px/1.1 Inter,Arial,Helvetica,sans-serif !important;letter-spacing:-.02em !important;
-}
-body.classic-forum .ftitle p{color:var(--f-muted) !important;font:500 13.5px/1.5 Inter,Arial,Helvetica,sans-serif !important;margin-top:7px !important;max-width:760px}
-body.classic-forum .fstats{
-  background:var(--f-card) !important;border:1px solid var(--f-line) !important;border-top:0 !important;
-  border-radius:0 0 14px 14px !important;padding:11px 22px 11px 26px !important;
-  color:var(--f-muted) !important;gap:22px !important;
-  font:600 12.5px Inter,Arial,Helvetica,sans-serif !important;margin-bottom:16px !important;
-}
-body.classic-forum .fstats b{color:#18a66d !important;font-weight:800 !important;font-family:Inter,Arial,Helvetica,sans-serif !important}
-
-/* ===== Forum group tables (index + thread list) ===== */
-body.classic-forum .fgroup-table{
-  width:100% !important;border-collapse:separate !important;border-spacing:0 !important;
-  background:var(--f-card) !important;border:1px solid var(--f-line) !important;
-  border-radius:14px !important;overflow:hidden !important;margin:0 0 16px !important;
-  box-shadow:0 6px 22px rgba(20,34,54,.06) !important;
-}
-body.classic-forum .fgroup-table tr.fgroup-band td{
-  background:linear-gradient(180deg,var(--f-navy),var(--f-navy-2)) !important;color:#fff !important;
-  border:0 !important;padding:13px 18px !important;
-  font:800 14px Inter,Arial,Helvetica,sans-serif !important;letter-spacing:.01em !important;
-}
-body.classic-forum .fgroup-table tr.fgroup-band td.fgroup-meta{
-  color:#8ea3b8 !important;font:600 11px Inter,Arial,Helvetica,sans-serif !important;
-  text-transform:uppercase !important;letter-spacing:.08em !important;text-align:right !important;
-}
-body.classic-forum .fgroup-table tr.fcol-head td{
-  background:#f3f6fa !important;color:#57687b !important;
-  border-bottom:1px solid var(--f-line) !important;padding:9px 18px !important;
-  font:800 10.5px Inter,Arial,Helvetica,sans-serif !important;text-transform:uppercase !important;letter-spacing:.07em !important;
-}
-body.classic-forum .fgroup-table td.fcell{
-  background:var(--f-card) !important;color:var(--f-ink) !important;
-  border:0 !important;border-bottom:1px solid #eef1f5 !important;
-  padding:14px 18px !important;vertical-align:middle !important;
-  font:500 13px Inter,Arial,Helvetica,sans-serif !important;transition:background .12s !important;
-}
-body.classic-forum .fgroup-table tr:last-child td.fcell{border-bottom:0 !important}
-body.classic-forum .fgroup-table tr.row-alt td.fcell{background:var(--f-card) !important}
-body.classic-forum .fgroup-table tr.frow td.fcell:first-child{box-shadow:inset 4px 0 0 transparent !important}
-body.classic-forum .fgroup-table tr.frow:hover td.fcell{background:#f5faf7 !important;cursor:pointer !important}
-body.classic-forum .fgroup-table tr.frow:hover td.fcell:first-child{box-shadow:inset 4px 0 0 var(--row-accent,var(--f-accent)) !important}
-body.classic-forum .fgroup-table tr.frow:focus-visible td.fcell{background:#eef6f1 !important;outline:none !important}
-
-body.classic-forum .frowinner{gap:13px !important;align-items:center !important}
-body.classic-forum .fname{
-  color:#132638 !important;font:800 15px Inter,Arial,Helvetica,sans-serif !important;letter-spacing:-.01em !important;
-}
-body.classic-forum .fname:hover{color:#18a66d !important;text-decoration:none !important}
-body.classic-forum .fdesc{color:var(--f-muted) !important;font:500 12.5px/1.45 Inter,Arial,Helvetica,sans-serif !important;margin-top:3px !important}
-
-/* Sport / category chips */
-body.classic-forum .sport-icon{
-  flex:0 0 40px !important;width:40px !important;height:40px !important;
-  display:grid !important;place-items:center !important;border-radius:11px !important;
-  border:1px solid rgba(24,166,109,.35) !important;
-  background:linear-gradient(135deg,rgba(24,166,109,.16),rgba(24,166,109,.05)) !important;
-  color:#0f7a4f !important;font:900 12px Inter,Arial,Helvetica,sans-serif !important;
-  letter-spacing:.02em !important;box-shadow:none !important;
-}
-body.classic-forum .sport-icon.mlb{border-color:rgba(29,111,184,.4) !important;background:linear-gradient(135deg,rgba(29,111,184,.18),rgba(29,111,184,.05)) !important;color:#1a5fa0 !important}
-body.classic-forum .sport-icon.nfl{border-color:rgba(31,157,87,.4) !important;background:linear-gradient(135deg,rgba(31,157,87,.18),rgba(31,157,87,.05)) !important;color:#178048 !important}
-body.classic-forum .sport-icon.nba{border-color:rgba(224,123,26,.42) !important;background:linear-gradient(135deg,rgba(224,123,26,.2),rgba(224,123,26,.05)) !important;color:#b5610f !important}
-body.classic-forum .sport-icon.nhl{border-color:rgba(74,107,130,.42) !important;background:linear-gradient(135deg,rgba(74,107,130,.2),rgba(74,107,130,.06)) !important;color:#3a586d !important}
-body.classic-forum .sport-icon.cfb{border-color:rgba(184,134,43,.44) !important;background:linear-gradient(135deg,rgba(184,134,43,.2),rgba(184,134,43,.06)) !important;color:#8a6318 !important}
-body.classic-forum .sport-icon.cbb{border-color:rgba(122,82,199,.42) !important;background:linear-gradient(135deg,rgba(122,82,199,.2),rgba(122,82,199,.06)) !important;color:#5f3fb0 !important}
-
-/* Thread status marker (replaces the yellow folder) */
-body.classic-forum .fthreadstatus,
-body.classic-forum .ffolder{
-  flex:0 0 12px !important;width:12px !important;height:12px !important;margin-top:0 !important;
-  border-radius:50% !important;border:0 !important;background:#cfd8e2 !important;
-  box-shadow:inset 0 0 0 3px #fff,0 0 0 1px #cfd8e2 !important;position:relative !important;
-}
-body.classic-forum .fthreadstatus:before,
-body.classic-forum .fthreadstatus:after,
-body.classic-forum .ffolder:before,
-body.classic-forum .ffolder:after{display:none !important}
-body.classic-forum .fthreadstatus.is-active{background:#18a66d !important;box-shadow:inset 0 0 0 3px #fff,0 0 0 1px #18a66d,0 0 8px rgba(24,166,109,.5) !important}
-body.classic-forum .fthreadstatus.is-hot{background:#ef5b2b !important;box-shadow:inset 0 0 0 3px #fff,0 0 0 1px #ef5b2b,0 0 9px rgba(239,91,43,.55) !important}
-body.classic-forum .fthreadstatus.is-pinned,
-body.classic-forum .ffolder.is-pinned{background:#f5b400 !important;box-shadow:inset 0 0 0 3px #fff,0 0 0 1px #f5b400 !important}
-
-/* Badges */
-body.classic-forum .fbadge{
-  display:inline-block;vertical-align:middle;margin:0 0 0 7px;
-  padding:2px 8px;border-radius:999px;
-  font:800 9.5px/1.5 Inter,Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.05em;
-}
-body.classic-forum .fbadge.is-new{background:rgba(24,166,109,.14);color:#12864f;border:1px solid rgba(24,166,109,.32)}
-body.classic-forum .fbadge.is-hot{background:rgba(239,91,43,.14);color:#c9451f;border:1px solid rgba(239,91,43,.32)}
-body.classic-forum .fbadge.is-today{background:rgba(29,111,184,.14);color:#1a5fa0;border:1px solid rgba(29,111,184,.3)}
-body.classic-forum .fbadge.is-active{background:rgba(31,157,87,.13);color:#178048;border:1px solid rgba(31,157,87,.3)}
-body.classic-forum .fsticky-tag{
-  display:inline-block;margin-right:7px;padding:2px 8px;border-radius:999px;
-  background:rgba(245,180,0,.16);border:1px solid rgba(245,180,0,.4);color:#8a6600;
-  font:800 9.5px/1.5 Inter,Arial,Helvetica,sans-serif;text-transform:uppercase;letter-spacing:.05em;
-}
-
-/* Last post cell */
-body.classic-forum td.col-last{width:290px !important;color:var(--f-muted) !important}
-body.classic-forum .flpost-line{gap:9px !important;align-items:center !important}
-body.classic-forum .flpost-title{color:#28425a !important;font:700 12px Inter,Arial,Helvetica,sans-serif !important}
-body.classic-forum .flpost-title a{color:var(--f-link) !important}
-body.classic-forum .flpost-meta,
-body.classic-forum .flpost-empty{color:#8593a3 !important;font:500 11px Inter,Arial,Helvetica,sans-serif !important}
-body.classic-forum .flpost-empty{font-style:italic !important}
-body.classic-forum .fthread-row-avatar{
-  flex:0 0 30px !important;width:30px !important;height:30px !important;
-  border:2px solid #fff !important;border-radius:50% !important;
-  box-shadow:0 0 0 1px var(--f-line-2) !important;
-  background:linear-gradient(135deg,#e6edf5,#d5deea) !important;color:#3b4d61 !important;
-  font:800 11px Inter,Arial,Helvetica,sans-serif !important;
-}
-
-/* Stat columns (Replies / Views) */
-body.classic-forum .thread-table td:nth-child(2){display:none !important}
-body.classic-forum .fgroup-table td.col-num{
-  width:88px !important;text-align:center !important;vertical-align:middle !important;
-  color:#1c3348 !important;font:800 16px Inter,Arial,Helvetica,sans-serif !important;
-}
-body.classic-forum .fgroup-table tr.fcol-head td.col-num{
-  color:#57687b !important;font:800 10.5px Inter,Arial,Helvetica,sans-serif !important;
-}
-body.classic-forum .fgroup-table td.col-num:not(.col-last){letter-spacing:-.01em !important}
-
-/* Action row + buttons */
-body.classic-forum .factionrow,
-body.classic-forum .fjump{
-  background:var(--f-card) !important;border:1px solid var(--f-line) !important;
-  border-radius:12px !important;margin:0 0 14px !important;padding:10px 12px !important;
-  box-shadow:0 4px 16px rgba(20,34,54,.05) !important;gap:8px !important;
-}
-body.classic-forum .fbtn,
-body.classic-forum .btn{
-  border:1px solid var(--f-line-2) !important;background:#fff !important;color:#28425a !important;
-  border-radius:9px !important;padding:8px 13px !important;
-  font:800 12px Inter,Arial,Helvetica,sans-serif !important;letter-spacing:.01em !important;transition:all .12s !important;
-}
-body.classic-forum .fbtn:hover,
-body.classic-forum .btn:hover{background:#f2f6f4 !important;border-color:#bcc7d3 !important}
-body.classic-forum .fbtn.is-primary,
-body.classic-forum .btn-primary{
-  background:linear-gradient(135deg,#18a66d,#12864f) !important;color:#fff !important;border-color:transparent !important;
-  box-shadow:0 6px 16px rgba(24,166,109,.28) !important;
-}
-body.classic-forum .fbtn.is-primary:hover,
-body.classic-forum .btn-primary:hover{filter:brightness(1.05) !important}
-body.classic-forum .factionrow input[type="search"],
-body.classic-forum .fjump select{
-  border:1px solid var(--f-line-2) !important;background:#fff !important;color:#28425a !important;
-  border-radius:9px !important;padding:8px 11px !important;font:500 12px Inter,Arial,Helvetica,sans-serif !important;
-}
-
-/* Empty state */
-body.classic-forum .fempty{
-  background:var(--f-card) !important;border:1px dashed var(--f-line-2) !important;border-radius:12px !important;
-  padding:34px 18px !important;color:var(--f-muted) !important;
-}
-body.classic-forum .fempty-cta-msg{color:#5c6b7d !important;font:500 13.5px Inter,Arial,Helvetica,sans-serif !important}
-
-/* ===== Responsive ===== */
-@media (max-width:960px){
-  body.classic-forum .fshell{grid-template-columns:1fr !important;gap:12px !important}
-  body.classic-forum .fside{margin:0 !important;background:transparent !important;border:0 !important}
-  body.classic-forum .fside-box{margin-bottom:10px !important}
-  body.classic-forum .fside-box:nth-child(1) .fside-list{
-    display:flex !important;flex-wrap:nowrap !important;overflow-x:auto !important;
-    gap:8px !important;padding:10px !important;-webkit-overflow-scrolling:touch !important;
-    scroll-snap-type:x proximity !important;
-  }
-  body.classic-forum .fside-box:nth-child(1) .fside-list::-webkit-scrollbar{height:5px}
-  body.classic-forum .fside-box:nth-child(1) .fside-list::-webkit-scrollbar-thumb{background:#c4cdd8;border-radius:4px}
-  body.classic-forum .fside-box:nth-child(1) .fside-list a{
-    flex:0 0 auto !important;white-space:nowrap !important;scroll-snap-align:start !important;
-    background:#f4f7fa !important;border:1px solid var(--f-line) !important;
-  }
-  body.classic-forum .fside-box:nth-child(1) .fside-list a.is-active{background:linear-gradient(90deg,rgba(24,166,109,.18),rgba(24,166,109,.06)) !important;border-color:rgba(24,166,109,.4) !important}
-}
-@media (max-width:680px){
-  body.classic-forum .fhead-in{display:block !important;padding:11px !important}
-  body.classic-forum .fhead-logo{margin-bottom:9px !important}
-  body.classic-forum .fhead-logo span{display:none}
-  body.classic-forum .fhead-search{max-width:none !important;width:100% !important;margin:0 0 9px !important}
-  body.classic-forum .fhead-links{flex-wrap:wrap !important}
-  body.classic-forum .ftabs-in{overflow-x:auto !important;flex-wrap:nowrap !important;white-space:nowrap !important}
-  body.classic-forum .fshell{padding:0 10px !important;margin-top:12px !important}
-  body.classic-forum .ftitle{padding:16px 16px 15px 20px !important}
-  body.classic-forum .ftitle h1{font-size:21px !important}
-  body.classic-forum .fstats{padding:10px 16px 10px 20px !important;gap:16px !important}
-  /* Stack thread stats: hide desktop header row, label each number inline */
-  body.classic-forum .thread-table tr.fcol-head{display:none !important}
-  body.classic-forum .fgroup-table.thread-table td.col-last{display:none !important}
-  body.classic-forum .fgroup-table td.fcell{padding:13px 14px !important}
-  body.classic-forum .fgroup-table td.col-num{
-    display:inline-block !important;width:auto !important;min-width:74px !important;text-align:left !important;
-    padding:0 16px 12px 60px !important;font-size:14px !important;
-  }
-  body.classic-forum .fgroup-table td.col-num:before{
-    display:block;color:#8593a3;font:800 9.5px Inter,Arial,Helvetica,sans-serif;
-    text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px;
-  }
-  body.classic-forum .thread-table td.col-num:nth-child(4):before{content:"Replies"}
-  body.classic-forum .thread-table td.col-num:nth-child(5):before{content:"Views"}
-  body.classic-forum .frowinner{gap:11px !important}
-  body.classic-forum .sport-icon{flex-basis:34px !important;width:34px !important;height:34px !important}
+.fbot-badge::before{content:"\01F916";margin-right:4px;}
+.fbot-tagline,
+body.classic-forum .fbot-tagline{
+  color:#0c6b60 !important;font:italic 11px/1.4 Arial,Helvetica,sans-serif;
+  margin:0 0 7px;
 }
 </style>
 <script type="application/ld+json">
@@ -2139,69 +1788,6 @@ function forumSportBadge(slug, name) {
     return { code: 'TMR', cls: 'gen' };
 }
 
-// Per-category identity: accent color + subtitle so MLB/NBA/NFL/etc. each feel
-// intentional while sharing one design system. Falls back to the TMR green +
-// the backend description for any forum without a bespoke entry. Visual only.
-var FORUM_CAT_PROFILE = {
-    mlb: { accent: '#1d6fb8', subtitle: 'MLB picks, betting discussion, strategy, bad beats, and daily game threads.' },
-    nfl: { accent: '#1f9d57', subtitle: 'NFL picks, spreads, totals, futures, and weekly game threads.' },
-    nba: { accent: '#e07b1a', subtitle: 'NBA picks, props, betting angles, and live discussion.' },
-    nhl: { accent: '#4a6b82', subtitle: 'NHL picks, puck lines, totals, and nightly game threads.' },
-    cfb: { accent: '#b8862b', subtitle: 'College football picks, spreads, playoff futures, and Saturday game threads.' },
-    cbb: { accent: '#7a52c7', subtitle: 'College basketball picks, bracket busters, and tournament threads.' },
-    gen: { accent: '#18a66d', subtitle: 'Sports betting discussion, picks, and community threads.' }
-};
-function forumCatProfile(slug, name, description) {
-    var key = String(slug || name || '').toLowerCase();
-    var badge = forumSportBadge(slug, name);
-    var prof = FORUM_CAT_PROFILE[badge.cls] || FORUM_CAT_PROFILE.gen;
-    var accent = prof.accent;
-    var subtitle = prof.subtitle;
-    if (badge.cls === 'gen') {
-        if (key.indexOf('soccer') !== -1 || key.indexOf('football') !== -1 && key.indexOf('nfl') === -1 && key.indexOf('college') === -1) { accent = '#17a45a'; subtitle = 'Soccer picks, matchday threads, and worldwide league discussion.'; }
-        else if (key.indexOf('tennis') !== -1) { accent = '#8ba81f'; subtitle = 'Tennis picks, Grand Slam threads, and ATP/WTA discussion.'; }
-        else if (key.indexOf('challenge') !== -1 || key.indexOf('market') !== -1) { accent = '#c9871f'; subtitle = 'Challenges, contests, and the picks marketplace.'; }
-        else if (key.indexOf('support') !== -1 || key.indexOf('feedback') !== -1) { accent = '#5c6b7d'; subtitle = 'Site help, feedback, and community support.'; }
-        var desc = String(description || '').trim();
-        if (desc) subtitle = desc;
-    }
-    return { accent: accent, subtitle: subtitle, code: badge.code, cls: badge.cls };
-}
-
-// Activity signals for a thread row: a status dot + up to one contextual badge.
-// Purely derived from timestamps/counts already on the row; no new data.
-function forumThreadSignals(t) {
-    var now = Date.now();
-    var pinned = !!(t.is_pinned || t.sticky);
-    var replies = (t.reply_count != null ? t.reply_count : (t.replies || 0)) || 0;
-    var views = (t.view_count != null ? t.view_count : (t.views || 0)) || 0;
-    var createdMs = t.created_at ? new Date(t.created_at).getTime() : NaN;
-    var lastMs = new Date(t.last_post_at || t.last_post_created_at || t.last_activity || t.updated_at || t.created_at || 0).getTime();
-    var ageH = isFinite(createdMs) ? (now - createdMs) / 36e5 : Infinity;
-    var lastH = isFinite(lastMs) && lastMs > 0 ? (now - lastMs) / 36e5 : Infinity;
-    var hot = replies >= 8 || views >= 150;
-    var icon = pinned ? 'is-pinned' : (hot ? 'is-hot' : (lastH < 24 || replies > 0 ? 'is-active' : 'is-quiet'));
-    var badge = '';
-    if (hot) badge = '<span class="fbadge is-hot">Hot</span>';
-    else if (ageH < 24) badge = '<span class="fbadge is-new">New</span>';
-    else if (lastH < 12) badge = '<span class="fbadge is-active">Active</span>';
-    else if (lastH < 24) badge = '<span class="fbadge is-today">Today</span>';
-    return { icon: icon, badge: badge };
-}
-
-// Set the category-page accent + subtitle (or reset to the forum home defaults).
-function setForumCategoryTheme(slug, name, description) {
-    var sub = document.querySelector('.ftitle p');
-    if (slug || name) {
-        var prof = forumCatProfile(slug, name, description);
-        document.body.style.setProperty('--f-accent', prof.accent);
-        if (sub) sub.textContent = prof.subtitle;
-    } else {
-        document.body.style.removeProperty('--f-accent');
-        if (sub) sub.textContent = 'Classic bulletin board discussion for picks, handicappers, challenges, polls, trivia, and receipts.';
-    }
-}
-
 // Build the left sidebar forum list straight from the live categories so a
 // sidebar link can never dead-end on a slug the backend doesn't have.
 function renderForumSidebar() {
@@ -2245,10 +1831,9 @@ function renderCategories() {
                          + '<div class="flpost-meta">by <b>' + escHtml(lt.username || '') + '</b> ' + timeAgo(lt.created_at) + '</div>';
             }
             var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
-            var profile = forumCatProfile(cat.slug, cat.name, cat.description);
-            var badge = { code: profile.code, cls: profile.cls };
-            html += '<tr class="' + rowClass + '" style="--row-accent:' + profile.accent + '" onclick="showThreadsList(\'' + escHtml(cat.slug) + '\',\'' + escHtml(cat.name) + '\',' + (cat.id == null ? 'null' : (typeof cat.id === 'number' ? cat.id : ('\'' + escHtml(String(cat.id)) + '\''))) + ')">'
-                + '<td class="fcell"><div class="frowinner"><span class="sport-icon ' + badge.cls + '">' + escHtml(badge.code) + '</span><div><div class="fname">' + escHtml(cat.name) + '</div><div class="fdesc">' + escHtml(profile.subtitle) + '</div></div></div></td>'
+            var badge = forumSportBadge(cat.slug, cat.name);
+            html += '<tr class="' + rowClass + '" onclick="showThreadsList(\'' + escHtml(cat.slug) + '\',\'' + escHtml(cat.name) + '\',' + (cat.id == null ? 'null' : (typeof cat.id === 'number' ? cat.id : ('\'' + escHtml(String(cat.id)) + '\''))) + ')">'
+                + '<td class="fcell"><div class="frowinner"><span class="sport-icon ' + badge.cls + '">' + escHtml(badge.code) + '</span><div><div class="fname">' + escHtml(cat.name) + '</div><div class="fdesc">' + escHtml(cat.description || '') + '</div></div></div></td>'
                 + '<td class="fcell col-last">' + lastHtml + '</td>'
                 + '<td class="fcell col-num">' + threadCount + '</td>'
                 + '</tr>';
@@ -2298,8 +1883,7 @@ function renderThreads() {
     }
     body.innerHTML = cachedThreads.map(function(t, i) {
         var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
-        var sig = forumThreadSignals(t);
-        var folderClass = 'fthreadstatus ' + sig.icon;
+        var folderClass = 'ffolder' + (t.is_pinned || t.sticky ? ' is-pinned' : '');
         var stickyTag = (t.is_pinned || t.sticky) ? '<span class="fsticky-tag">Sticky</span>' : '';
         var starter = t.username || (t.user && t.user.username) || 'user';
         var starterAvatar = t.avatar_url || (t.user && (t.user.avatar_url || t.user.avatar)) || '';
@@ -2324,7 +1908,7 @@ function renderThreads() {
         return '<tr class="' + rowClass + '" role="link" tabindex="0" aria-label="Open thread: ' + ariaTitle + '" onclick="showThreadDetail(' + t.id + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();showThreadDetail(' + t.id + ');}">'
             + '<td class="fcell"><div class="frowinner"><span class="' + folderClass + '"></span>' + avatarHtml + '<div>'
             +   stickyTag
-            +   '<a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title || 'Thread') + '</a>' + sig.badge
+            +   '<a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title || 'Thread') + '</a>'
             +   '<div class="fdesc">Started by <b>' + escHtml(starter) + '</b> ' + (t.created_at ? timeAgo(t.created_at) : '') + '</div>'
             + '</div></div></td>'
             + '<td class="fcell col-num">&nbsp;</td>'
@@ -2445,7 +2029,9 @@ function renderAuthorPanel(post) {
     var headline = String(author.headline || '').trim();
     var avatar = author.avatar_url || author.avatar || '';
     var initials = String(who || '?').slice(0, 1).toUpperCase();
-    var role = author.user_title || (userIsVerified(author) ? 'Verified Handicapper' : 'Member');
+    var role = (author.author_is_official_bot || author.is_official_bot)
+        ? "TMR's Resident Bot"
+        : (author.user_title || (userIsVerified(author) ? 'Verified Handicapper' : 'Member'));
     var favTeam = firstFavoriteTeam(author);
     var hasFavTeam = favTeam && favTeam !== 'Not set';
     var joined = author.user_joined || author.created_at || author.joined_at;
@@ -2472,11 +2058,20 @@ function renderAuthorPanel(post) {
     var nameHtml = profileHref
         ? '<b><a href="' + profileHref + '" title="' + escHtml(profileLabel) + '">' + escHtml(who) + '</a></b>'
         : '<b>' + escHtml(who) + '</b>';
-    return '<div class="fthread-author">'
+    // Official community bots get a distinct persona card (badge + tagline +
+    // styled panel). Presentation only; profileHref/onclick/logic untouched.
+    var botClass = isOfficialBot ? ' fthread-author--bot' : '';
+    var botBadge = isOfficialBot ? '<div><span class="fbot-badge">Bot</span></div>' : '';
+    var botTagline = isOfficialBot
+        ? '<div class="fbot-tagline">' + escHtml((headline || '') || 'Your friendly TMR house bot') + '</div>'
+        : '';
+    return '<div class="fthread-author' + botClass + '">'
         + avatarHtml
         + nameHtml
+        + botBadge
         + authorRoleBadge(author)
         + '<div class="fthread-role">' + escHtml(role) + '</div>'
+        + botTagline
         + (hasFavTeam ? '<div class="fthread-fandom"><span class="fthread-fandom-dot"></span>' + escHtml(favTeam) + '</div>' : '')
         + '<div class="fthread-author-row">Joined: ' + escHtml(joined ? formatJoinedDate(joined) : 'Not available') + '</div>'
         + '<div class="fthread-author-row">Posts: ' + escHtml(formatCount(postCount)) + '</div>'
@@ -2542,51 +2137,20 @@ function renderThread() {
 // URL patterns operating on already-escaped text.
 function forumRenderContent(raw) {
     var esc = escHtml(String(raw == null ? '' : raw));
-    // Stash finished media HTML behind placeholder tokens so the bare-URL
-    // linkifier can never re-process a URL that already lives inside a tag.
-    var slots = [];
-    function slot(html) { slots.push(html); return '\u0000M' + (slots.length - 1) + '\u0000'; }
-    function ytEmbed(url) {
-        var yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-        return yt ? '<span class="fpost-embed"><iframe src="https://www.youtube.com/embed/' + yt[1] + '" title="Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></span>' : null;
-    }
-    function videoEmbed(url) {
-        return '<span class="fpost-embed"><video controls preload="metadata" playsinline><source src="' + url.replace(/"/g, '%22') + '"></video></span>';
-    }
-    function imgEmbed(url, kind) {
-        return '<span class="fpost-media"><img src="' + url.replace(/"/g, '%22') + '" alt="' + (kind || 'image') + '" loading="lazy"></span>';
-    }
-    function giphyDirect(url) {
-        var m = url.match(/(?:giphy\.com\/(?:gifs|embed|media|clips)|i\.giphy\.com)\/(?:[\w-]*-)?([A-Za-z0-9]{8,})/);
-        if (m) return 'https://media.giphy.com/media/' + m[1] + '/giphy.gif';
-        return null;
-    }
-    function isImageUrl(url) { return /\.(jpe?g|png|gif|webp|avif|bmp|svg)(\?|#|$)/i.test(url); }
-
-    // 1) Explicit BBCode media tags: [img]/[gif]/[video]...[/...]
-    esc = esc.replace(/\[(img|gif)\]\s*(https?:\/\/[^\s\]]+?)\s*\[\/\1\]/gi, function (_m, tag, u) {
-        return slot(imgEmbed(u.replace(/&amp;/g, '&'), tag === 'gif' ? 'gif' : 'image'));
-    });
-    esc = esc.replace(/\[video\]\s*(https?:\/\/[^\s\]]+?)\s*\[\/video\]/gi, function (_m, u) {
-        var url = u.replace(/&amp;/g, '&');
-        return slot(ytEmbed(url) || videoEmbed(url));
-    });
-
-    // 2) Bare URLs: auto-embed YouTube, video files, images, gifs, Giphy/Tenor.
     esc = esc.replace(/(https?:\/\/[^\s<]+)/g, function (m) {
         var url = m.replace(/&amp;/g, '&');
-        var y = ytEmbed(url);
-        if (y) return slot(y);
-        if (/\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(url)) return slot(videoEmbed(url));
-        var g = giphyDirect(url);
-        if (g) return slot(imgEmbed(g, 'gif'));
-        if (isImageUrl(url)) return slot(imgEmbed(url, /\.gif(\?|#|$)/i.test(url) ? 'gif' : 'image'));
+        var yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        if (yt) {
+            return '<span class="fpost-embed"><iframe src="https://www.youtube.com/embed/' + yt[1] + '" title="Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></span>';
+        }
+        if (/\.(mp4|webm|ogg)(\?|#|$)/i.test(url)) {
+            var vsrc = url.replace(/"/g, '%22');
+            return '<span class="fpost-embed"><video controls preload="metadata"><source src="' + vsrc + '"></video></span>';
+        }
         var href = url.replace(/"/g, '%22');
         return '<a href="' + href + '" target="_blank" rel="nofollow noopener noreferrer">' + m + '</a>';
     });
-
-    esc = esc.replace(/\n/g, '<br>');
-    return esc.replace(/\u0000M(\d+)\u0000/g, function (_m, i) { return slots[i]; });
+    return esc.replace(/\n/g, '<br>');
 }
 
 // Delete own post (reply) or own thread (when the post is the thread starter).
@@ -2738,7 +2302,6 @@ function forumEditPost(postId) {
         + '</div>';
     bodyEl.appendChild(box);
     box.querySelector('.fpost-edit-text').value = raw;
-    try { if (window.TMREmoji) TMREmoji.attach(box.querySelector('.fpost-edit-text')); } catch(e){}
     box.querySelector('[data-cancel]').onclick = function() {
         box.remove();
         if (contentEl) contentEl.style.display = '';
@@ -3010,7 +2573,6 @@ function showCategories() {
     document.getElementById('viewThread').style.display = 'none';
 
     setForumPageHeader('TrustMyRecord Sports Betting Forums');
-    setForumCategoryTheme(null, null, null);
     setActiveSidebar('sports-betting');
     document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span id="forumPageTitleLabel">Forum Home</span>';
     window.history.replaceState({}, '', '/forum/');
@@ -3077,8 +2639,6 @@ async function showThreadsList(slug, name, id) {
     document.getElementById('viewThread').style.display = 'none';
     document.getElementById('threadsCategoryLabel').textContent = currentCategoryName || 'Forum';
     setForumPageHeader(currentCategoryName || 'Forum');
-    var themeCat = (categories || []).find(function(c){ return (c.slug || '') === slug; });
-    setForumCategoryTheme(slug, currentCategoryName, themeCat && themeCat.description);
     setActiveSidebar(slug);
     document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(currentCategoryName || slug || 'Forum') + '</span>';
     if (slug) {
@@ -3251,7 +2811,6 @@ function renderReplyArea() {
         +   '<button type="button" class="fbtn" onclick="document.getElementById(\'replyText\').value=\'\'">Clear</button>'
         +   '<button type="button" class="fbtn is-primary" onclick="submitReply()">Post Reply</button>'
         + '</div>';
-    try { if (window.TMREmoji) TMREmoji.attach(document.getElementById('replyText')); } catch(e){}
 }
 
 /* removed: replaced in renders.js */
@@ -3315,7 +2874,6 @@ function openNewThread() {
     }
 
     modal.classList.add('is-open');
-    try { if (window.TMREmoji) TMREmoji.attach(document.getElementById('ntContent')); } catch(e){}
     setTimeout(function () {
         var t = document.getElementById('ntTitle');
         if (t) t.focus();
@@ -3627,261 +3185,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     showCategories();
 });
 
-</script>
-<script>
-/* ===================================================================
-   TMR Emoji / Emoticon picker  (SBRforum / Covers.com style, Jul 9 2026)
-   Full Unicode set + classic forum text-emoticons. Inserts at cursor
-   into any textarea via TMREmoji.attach(el).
-=================================================================== */
-(function(){
-  if (window.TMREmoji) return;
-
-  var CATS = [
-    { name:'Smileys', icon:'😀', list:'😀 😃 😄 😁 😆 😅 🤣 😂 🙂 🙃 😉 😊 😇 🥰 😍 🤩 😘 😗 😚 😋 😛 😜 🤪 😝 🤑 🤗 🤭 🤫 🤔 🤐 🤨 😐 😑 😶 😏 😒 🙄 😬 😌 😔 😪 🤤 😴 😷 🤒 🤕 🤢 🤮 🤧 🥵 🥶 🥴 😵 🤯 🤠 🥳 😎 🤓 🧐 😕 😟 🙁 ☹️ 😮 😯 😲 😳 🥺 😦 😧 😨 😰 😥 😢 😭 😱 😖 😣 😞 😓 😩 😫 🥱 😤 😡 😠 🤬 😈 👿 💀 💩 🤡 👹 👻 👽 🤖 😺 😸 😹 😻 😼 😽 🙀 😿 😾' },
-    { name:'Gestures', icon:'👍', list:'👍 👎 👌 🤌 🤏 ✌️ 🤞 🤟 🤘 🤙 👈 👉 👆 👇 ☝️ ✋ 🤚 🖐️ 🖖 👋 🤙 💪 👏 🙌 👐 🤲 🤝 🙏 ✍️ 💅 🤳 👊 ✊ 👋 🦵 🦶 👂 👃 🧠 👀 👁️ 👅 👄 🦷 🦴' },
-    { name:'People', icon:'🙋', list:'👶 👦 👧 🧑 👨 👩 🧓 👴 👵 🙍 🙎 🙅 🙆 💁 🙋 🧏 🙇 🤦 🤷 👮 🕵️ 💂 🥷 👷 🤴 👸 🤵 🤰 🤱 🙎‍♂️ 🏃 🚶 💃 🕺 👯 🧖 🧗 🤺 🏋️ 🤼 🤸 🤽 🧘 🛀 🛌 👪 👬 👭 💑 💏' },
-    { name:'Animals', icon:'🐶', list:'🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🙈 🙉 🙊 🐒 🐔 🐧 🐦 🐤 🦆 🦅 🦉 🦇 🐺 🐗 🐴 🦄 🐝 🐛 🦋 🐌 🐞 🐜 🦂 🦟 🕷️ 🐢 🐍 🦎 🦖 🐙 🦑 🦐 🦀 🐡 🐠 🐟 🐬 🐳 🐋 🦈 🐊 🐅 🐆 🦓 🦍 🦏 🐘 🦛 🐪 🐫 🦒 🐃 🐎 🐖 🐏 🐑 🐐 🐕 🦮 🐩 🐈 🐓 🦃 🕊️ 🐇 🦝 🦔 🦇 🐿️ 🦔 🌳 🌲 🌴 🌵 🌻 🌻 🌹 🌷 🌼 🌺 🍁 🍂 🍃 ⭐ 🌟 ⚡ 🔥 💥 ❄️ 🌈 ☀️ ⛅ ☁️ 🌙 🌊 💧' },
-    { name:'Food', icon:'🍔', list:'🍏 🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🍈 🍒 🍑 🍍 🥝 🍅 🍆 🥑 🌽 🌶️ 🥔 🍠 🥐 🍞 🥖 🧀 🥚 🍳 🥓 🥞 🍗 🍖 🌭 🍔 🍟 🍕 🥪 🌮 🌯 🥙 🥗 🍝 🍜 🍲 🍛 🍱 🍣 🍱 🍤 🍚 🍙 🍘 🍢 🍡 🍧 🍨 🍦 🍰 🎂 🍮 🍭 🍬 🍫 🍿 🍩 🍪 ☕ 🍵 🥤 🥛 🍼 🍺 🍻 🍷 🍸 🍹 🍾 🥂 🥃 🥜 🍴 🍽️' },
-    { name:'Sports', icon:'🏈', list:'⚾ 🏀 🏈 ⚽ 🏒 🎾 🏐 🏉 🎱 🏓 🏸 🥅 🏒 🏏 🥍 🥌 🥎 ⛳ 🏹 🎣 🥊 🥋 🎟️ 🎫 🏆 🥇 🥈 🥉 🏅 🎖️ 🏵️ 🎗️ 🎫 🎯 🎲 🎰 🎳 🎮 🎳 🚴 🏊 🏄 🏇 ⛷️ 🏂 🤺 🤼 🤽 🤾 🤸 🏋️ 🤼 🏌️ 🏎️ 🏍️' },
-    { name:'Travel', icon:'🚗', list:'🚗 🚕 🚙 🚌 🚎 🏎️ 🚓 🚑 🚒 🚐 🛻 🚚 🚛 🚜 🏍️ 🛵 🚲 🛴 🚏 🚋 🚝 🚄 🚅 🚈 🚞 ✈️ 🛫 🛬 🚁 🚟 🚠 🚡 🚢 ⛵ 🚤 🛳️ ⛴️ 🛥️ 🚀 🛎️ ⚓ 🗽 🗼 🏟️ 🏟️ 🏛️ 🏠 🏡 🏢 🏨 🏩 🏪 🏫 🏭 🎪 🗽 🕌 🏟️ ⛲ ⛺ 🌁 🌃 🌇 🌆 🌄 🌅 🌠' },
-    { name:'Objects', icon:'💰', list:'⌚ 📱 💻 ⌨️ 🖥️ 🖨️ 📷 📹 🎥 📺 📻 🎙️ ⏰ ⏱️ ⌛ ⏳ 🔋 💡 🔦 🕯️ 💸 💵 💴 💶 💷 💰 💳 🪙 💲 ⚖️ 🧾 🔧 🔨 ⚒️ 🛠️ ⛏️ 🔩 ⚙️ 🧰 🧲 🔫 💣 🔪 🛡️ 🔑 🔐 🔒 🔓 🔏 📜 📄 📰 📓 📕 📖 📚 📈 📉 📊 📋 📌 📍 📎 🖍️ ✏️ 🖊️ 📧 📩 📨 ✉️ 📤 📥 📦 🏷️ 🔔 🔕 📢 📣 🎵 🎶 🎤 🎧 🎸 🎹 🎺 🎻 🥁 🎬 🎮 🎲 🧩 🏁 🚩 🎌' },
-    { name:'Symbols', icon:'❤️', list:'❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟 ☮️ ✡️ ☯️ ☦️ 🔞 📴 📳 🌀 ⚛️ 🌐 ♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓ 🆔 ♻️ ✔️ ☑️ ✅ ❌ ❎ ➕ ➖ ➗ ❓ ❗ ‼️ ⚠️ 🚫 💯 🔝 🔛 🔜 🔝 ▶️ ⏸️ ⏹️ ⏺️ ⏭️ ⏮️ 🔀 🔁 🔂 ⭐ 🌟 ✨ ⚡ 🔥 💥 💢 💫 💦 💨 🕳️ 💤 🎰 🆒 🆕 🆖 🆚 🆗 🆘' },
-    { name:'Betting', icon:'💵', list:'💰 💵 💴 💶 💷 💸 💳 🪙 💲 🎰 🎲 🃏 ♠️ ♥️ ♦️ ♣️ 🏆 🥇 🥈 🥉 🏅 🎖️ 📈 📉 📊 🔥 🧊 🍻 🍾 💯 👍 👎 🤞 😤 🚀 💸 ✅ ❌ 🔒 🔑 👑 🎯 🤑 💰 🙏 🔥 ⚾ 🏈 🏀 ⚽ 🏒' },
-    { name:'Flags', icon:'🏁', list:'🏁 🚩 🎌 🏴 🏳️ 🏳️‍🌈 🏴‍☠️ 🇺🇸 🇨🇦 🇬🇧 🇮🇪 🇦🇺 🇲🇽 🇯🇵 🇰🇷 🇨🇳 🇧🇷 🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇵🇹 🇷🇺 🇳🇱 🇸🇪' }
-  ];
-
-  /* Classic SBRforum / Covers.com style text shortcuts -> insert value */
-  var CLASSIC = [
-    [':)','🙂'],[':-)','🙂'],[':D','😀'],[':-D','😀'],
-    ['=D','😄'],['xD','😆'],['XD','😆'],[':P','😛'],
-    [':-P','😛'],[';)','😉'],[';-)','😉'],[':(','🙁'],
-    [':-(','🙁'],[":'(",'😢'],[':o','😮'],[':O','😲'],
-    [':|','😐'],[':/','😕'],['>:(','😡'],['3:)','😈'],
-    ['O:)','😇'],['B)','😎'],['8)','😎'],['<3','❤️'],
-    ['</3','💔'],[':thumbsup:','👍'],[':thumbsdown:','👎'],
-    [':ok:','👌'],[':clap:','👏'],[':pray:','🙏'],
-    [':facepalm:','🤦'],[':shrug:','🤷'],[':fingerscrossed:','🤞'],
-    [':fire:','🔥'],[':100:','💯'],[':money:','💰'],
-    [':cash:','💵'],[':chart:','📈'],[':rocket:','🚀'],
-    [':cheers:','🍻'],[':beer:','🍺'],[':wine:','🍷'],
-    [':cool:','😎'],[':lol:','😂'],[':rofl:','🤣'],
-    [':cry:','😭'],[':rage:','🤬'],[':mad:','😡'],
-    [':sick:','🤢'],[':sweat:','😅'],[':think:','🤔'],
-    [':wink:','😉'],[':kiss:','😘'],[':heart:','❤️'],
-    [':star:','⭐'],[':check:','✅'],[':x:','❌'],[':lock:','🔒'],
-    [':dice:','🎲'],[':cards:','🃏'],[':slot:','🎰'],
-    [':trophy:','🏆'],[':crown:','👑'],[':target:','🎯'],
-    [':baseball:','⚾'],[':bball:','🏀'],[':fball:','🏈'],
-    [':soccer:','⚽'],[':hockey:','🏒'],[':snake:','🐍'],
-    [':party:','🥳'],[':wave:','👋'],[':zzz:','💤'],
-    [':puke:','🤮'],[':ban:','🚫'],[':boom:','💥'],
-    [':eyes:','👀'],[':sunglasses:','😎'],[':salute:','🫡'],
-    [':nerd:','🤓'],[':clown:','🤡'],[':skull:','💀'],
-    [':poop:','💩'],[':devil:','😈'],[':angel:','😇'],
-    [':muscle:','💪'],[':handshake:','🤝'],[':point:','👉'],
-    [':up:','👆'],[':down:','👇'],[':gg:','👏']
-  ];
-
-  function injectCSS(){
-    if (document.getElementById('tmr-emoji-css')) return;
-    var s = document.createElement('style');
-    s.id = 'tmr-emoji-css';
-    s.textContent =
-      '.tmr-emoji-bar{display:flex;align-items:center;gap:6px;margin:4px 0 4px;flex-wrap:wrap}'
-    + '.tmr-emoji-open{cursor:pointer;border:1px solid #aaa;background:#f4f4f4;color:#222;'
-    + 'border-radius:4px;padding:2px 8px;font-size:15px;line-height:1.4}'
-    + '.tmr-emoji-open:hover{background:#e7eef7}'
-    + '.tmr-emoji-quick{cursor:pointer;font-size:17px;line-height:1;padding:1px 2px;border-radius:4px}'
-    + '.tmr-emoji-quick:hover{background:#e7eef7}'
-    + '.tmr-emoji-panel{position:fixed;z-index:99999;width:320px;max-width:94vw;'
-    + 'background:#fff;border:1px solid #99a;border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.28);'
-    + 'font:13px Arial,Helvetica,sans-serif;color:#222;overflow:hidden}'
-    + '.tmr-emoji-tabs{display:flex;overflow-x:auto;border-bottom:1px solid #ddd;background:#f6f7f9}'
-    + '.tmr-emoji-tab{flex:0 0 auto;cursor:pointer;padding:6px 8px;font-size:16px;border:none;'
-    + 'background:transparent}'
-    + '.tmr-emoji-tab.on{background:#dbe7f5;box-shadow:inset 0 -2px 0 #14365b}'
-    + '.tmr-emoji-search{padding:6px}.tmr-emoji-search input{width:100%;box-sizing:border-box;'
-    + 'padding:5px 7px;border:1px solid #bbb;border-radius:4px;font-size:12px}'
-    + '.tmr-emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:1px;padding:6px;'
-    + 'max-height:230px;overflow-y:auto}'
-    + '.tmr-emoji-cell{cursor:pointer;font-size:20px;line-height:1;text-align:center;padding:4px 0;'
-    + 'border-radius:5px;background:transparent}'
-    + '.tmr-emoji-cell:hover{background:#e7eef7}'
-    + '.tmr-emoji-classic{grid-template-columns:repeat(4,1fr)}'
-    + '.tmr-emoji-classic .tmr-emoji-cell{font-size:12px;padding:5px 2px;border:1px solid #eee}'
-    + '.tmr-emoji-classic .tmr-emoji-cell b{font-size:16px}'
-    + 'body.tmr-forum-live-redesign .tmr-emoji-panel{background:#0d1a2b;color:#e8eef7;border-color:#2a4a72}'
-    + 'body.tmr-forum-live-redesign .tmr-emoji-tabs{background:#10233a}'
-    + 'body.tmr-forum-live-redesign .tmr-emoji-tab.on{background:#1b3a5c}'
-    + 'body.tmr-forum-live-redesign .tmr-emoji-cell:hover,'
-    + 'body.tmr-forum-live-redesign .tmr-emoji-open:hover{background:#1b3a5c}'
-    + 'body.tmr-forum-live-redesign .tmr-emoji-open{background:#16283f;border-color:#2a4a72;color:#e8eef7}'
-    // media insert buttons
-    + '.tmr-media-btn{cursor:pointer;border:1px solid #aaa;background:#f4f4f4;color:#222;'
-    + 'border-radius:4px;padding:2px 8px;font-size:12px;line-height:1.4}'
-    + '.tmr-media-btn:hover{background:#e7eef7}'
-    + 'body.tmr-forum-live-redesign .tmr-media-btn{background:#16283f;border-color:#2a4a72;color:#e8eef7}'
-    + 'body.tmr-forum-live-redesign .tmr-media-btn:hover{background:#1b3a5c}';
-    document.head.appendChild(s);
-  }
-
-  function insertAtCursor(el, text){
-    if (!el) return;
-    el.focus();
-    var s = el.selectionStart, e = el.selectionEnd, v = el.value;
-    if (typeof s === 'number') {
-      el.value = v.slice(0,s) + text + v.slice(e);
-      var pos = s + text.length;
-      el.selectionStart = el.selectionEnd = pos;
-    } else {
-      el.value = v + text;
-    }
-    el.dispatchEvent(new Event('input', {bubbles:true}));
-  }
-
-  var openPanel = null;
-  function closePanel(){ if (openPanel){ openPanel.remove(); openPanel = null; } }
-  document.addEventListener('click', function(ev){
-    if (openPanel && !openPanel.contains(ev.target) && !ev.target.classList.contains('tmr-emoji-open')) closePanel();
-  });
-  window.addEventListener('resize', closePanel);
-  window.addEventListener('scroll', closePanel, true);
-
-  function buildGrid(grid, activeIdx, filter){
-    grid.className = 'tmr-emoji-grid' + (activeIdx === 'classic' ? ' tmr-emoji-classic' : '');
-    grid.innerHTML = '';
-    var target = grid._target;
-    if (activeIdx === 'classic'){
-      CLASSIC.forEach(function(pair){
-        if (filter && pair[0].toLowerCase().indexOf(filter) === -1) return;
-        var c = document.createElement('div');
-        c.className = 'tmr-emoji-cell';
-        c.innerHTML = '<b>' + pair[1] + '</b><br>' + pair[0].replace(/</g,'&lt;');
-        c.title = pair[0];
-        c.onclick = function(){ insertAtCursor(target, pair[1]); };
-        grid.appendChild(c);
-      });
-      return;
-    }
-    var items;
-    if (activeIdx === 'search'){
-      items = CATS.reduce(function(a,c){ return a.concat(c.list.split(' ')); }, []);
-    } else {
-      items = CATS[activeIdx].list.split(' ');
-    }
-    items.forEach(function(em){
-      if (!em) return;
-      var c = document.createElement('div');
-      c.className = 'tmr-emoji-cell';
-      c.textContent = em;
-      c.onclick = function(){ insertAtCursor(target, em); };
-      grid.appendChild(c);
-    });
-  }
-
-  function openFor(btn, target){
-    closePanel();
-    injectCSS();
-    var panel = document.createElement('div');
-    panel.className = 'tmr-emoji-panel';
-    var tabs = '<div class="tmr-emoji-tabs">';
-    CATS.forEach(function(c,i){ tabs += '<button type="button" class="tmr-emoji-tab' + (i===0?' on':'') + '" data-i="'+i+'" title="'+c.name+'">'+c.icon+'</button>'; });
-    tabs += '<button type="button" class="tmr-emoji-tab" data-i="classic" title="Text emoticons">:-)</button></div>';
-    panel.innerHTML = tabs
-      + '<div class="tmr-emoji-search"><input type="text" placeholder="Search emoji / :shortcut:"></div>'
-      + '<div class="tmr-emoji-grid"></div>';
-    document.body.appendChild(panel);
-    var grid = panel.querySelector('.tmr-emoji-grid');
-    grid._target = target;
-    buildGrid(grid, 0);
-    var current = 0;
-    panel.querySelectorAll('.tmr-emoji-tab').forEach(function(tb){
-      tb.onclick = function(){
-        panel.querySelectorAll('.tmr-emoji-tab').forEach(function(x){ x.classList.remove('on'); });
-        tb.classList.add('on');
-        var i = tb.getAttribute('data-i');
-        current = (i === 'classic') ? 'classic' : parseInt(i,10);
-        panel.querySelector('.tmr-emoji-search input').value = '';
-        buildGrid(grid, current);
-      };
-    });
-    var search = panel.querySelector('.tmr-emoji-search input');
-    search.oninput = function(){
-      var q = search.value.trim().toLowerCase();
-      if (!q){ buildGrid(grid, current); return; }
-      buildGrid(grid, current === 'classic' ? 'classic' : 'search', q);
-    };
-    // position under the button, clamp to viewport
-    var r = btn.getBoundingClientRect();
-    var top = r.bottom + 4, left = r.left;
-    if (left + 320 > window.innerWidth) left = Math.max(6, window.innerWidth - 326);
-    if (top + 300 > window.innerHeight) top = Math.max(6, r.top - 304);
-    panel.style.top = top + 'px';
-    panel.style.left = left + 'px';
-    openPanel = panel;
-    setTimeout(function(){ search.focus(); }, 0);
-  }
-
-  var QUICK = ['🔥','💰','👍','😂','😭','🤑','🎯','🚀'];
-
-  var MEDIA = [
-    { tag:'img',   icon:'🖼️', label:'Image', hint:'Insert an image by URL',
-      prompt:'Paste an image URL (.jpg .png .webp):' },
-    { tag:'gif',   icon:'🎞️', label:'GIF',   hint:'Insert a GIF by URL (Giphy/Tenor/.gif)',
-      prompt:'Paste a GIF URL or Giphy/Tenor link:' },
-    { tag:'video', icon:'🎬', label:'Video', hint:'Insert a video (YouTube or .mp4/.webm)',
-      prompt:'Paste a YouTube link or a direct video URL (.mp4 .webm):' }
-  ];
-
-  function attach(el){
-    if (!el || el.dataset.tmrEmoji) return;
-    el.dataset.tmrEmoji = '1';
-    injectCSS();
-    var bar = document.createElement('div');
-    bar.className = 'tmr-emoji-bar';
-    var open = document.createElement('button');
-    open.type = 'button';
-    open.className = 'tmr-emoji-open';
-    open.innerHTML = '😀 Emoji';
-    open.onclick = function(e){ e.stopPropagation(); if (openPanel){ closePanel(); } else { openFor(open, el); } };
-    bar.appendChild(open);
-    QUICK.forEach(function(q){
-      var s = document.createElement('span');
-      s.className = 'tmr-emoji-quick';
-      s.textContent = q;
-      s.title = 'Insert ' + q;
-      s.onclick = function(){ insertAtCursor(el, q); };
-      bar.appendChild(s);
-    });
-    // Media insert buttons (image / gif / video) -> BBCode tags rendered
-    // by forumRenderContent. URL-based, same trust model as YouTube/mp4 embeds.
-    MEDIA.forEach(function(md){
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'tmr-media-btn';
-      b.innerHTML = md.icon + ' ' + md.label;
-      b.title = md.hint;
-      b.onclick = function(ev){
-        ev.stopPropagation();
-        var url = window.prompt(md.prompt, 'https://');
-        if (!url) return;
-        url = url.trim();
-        if (!/^https?:\/\//i.test(url)) { alert('Please paste a full http(s) link.'); return; }
-        insertAtCursor(el, '\n[' + md.tag + ']' + url + '[/' + md.tag + ']\n');
-      };
-      bar.appendChild(b);
-    });
-    el.parentNode.insertBefore(bar, el);
-  }
-
-  window.TMREmoji = { attach: attach, insert: insertAtCursor, CATS: CATS, CLASSIC: CLASSIC };
-
-  // Auto-attach the static new-thread textarea once DOM is ready.
-  function initStatic(){ attach(document.getElementById('ntContent')); }
-  if (document.readyState !== 'loading') initStatic();
-  else document.addEventListener('DOMContentLoaded', initStatic);
-})();
 </script>
 <script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
 <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
