@@ -468,9 +468,6 @@ body.classic-forum .fpost-content a{color:#0033cc !important}
 .fpost-embed{display:block;margin:10px 0;max-width:640px}
 .fpost-embed iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:6px;background:#000}
 .fpost-embed video{width:100%;max-height:480px;border-radius:6px;background:#000}
-.fpost-media{display:block;margin:10px 0}
-.fpost-media img{max-width:100%;max-height:520px;height:auto;border-radius:6px;border:1px solid rgba(0,0,0,.15);background:#f2f2f2;cursor:zoom-in}
-body.tmr-forum-live-redesign .fpost-media img{border-color:rgba(255,255,255,.15);background:#0a1422}
 .fpost-btn.is-delete{color:#b91c1c}
 .fpost-btn.is-delete:hover{background:#fee2e2;border-color:#fca5a5}
 .fpost-btn.is-mod{color:#7c2d12;border-color:#d8a48f;background:#fdf1ec}
@@ -1574,6 +1571,11 @@ body.classic-forum .fbot-tagline{
   color:#0c6b60 !important;font:italic 11px/1.4 Arial,Helvetica,sans-serif;
   margin:0 0 7px;
 }
+/* Real thread-follow toggle: "Following" (active) state on the Follow button. */
+.fpost-btn.is-sub.is-subscribed,
+body.classic-forum .fpost-btn.is-sub.is-subscribed{
+  background:#0f766e !important;border-color:#0b5f59 !important;color:#eafffb !important;
+}
 </style>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "TrustMyRecord Sports Betting Forums", "item": "https://trustmyrecord.com/forum/"}]}
@@ -1666,7 +1668,6 @@ body.classic-forum .fbot-tagline{
                 </table>
                 <div class="factionrow">
                     <button type="button" class="fbtn is-primary" onclick="openNewThread()">+ New Thread</button>
-                    <button type="button" class="fbtn" onclick="alert('Subscribe is wired to your account once you sign in.');">Subscribe</button>
                     <button type="button" class="fbtn" onclick="showCategories()">Mark Forum Read</button>
                     <input type="search" placeholder="Search this forum..." onkeyup="if(event.key==='Enter')handleSearch(this.value)">
                 </div>
@@ -1692,7 +1693,6 @@ body.classic-forum .fbot-tagline{
             </table>
             <div class="factionrow">
                 <button type="button" class="fbtn is-primary" onclick="openNewThread()">+ New Thread</button>
-                <button type="button" class="fbtn" onclick="alert('Subscribe is wired to your account once you sign in.');">Subscribe</button>
                 <button type="button" class="fbtn" onclick="showCategories()">Forum Home</button>
                 <input type="search" placeholder="Search this forum..." onkeyup="if(event.key==='Enter')handleSearch(this.value)">
             </div>
@@ -2116,6 +2116,7 @@ function renderThread() {
             + (likeTarget ? '<button type="button" class="fpost-btn is-like' + (p.liked_by_me ? ' is-liked' : '') + '" onclick="forumLikePost(\'' + escHtml(String(likeTarget)) + '\',' + (p.is_thread_starter ? 'true' : 'false') + ',this)">Like <span class="fpost-like-count">(' + likeCount + ')</span></button>' : '')
             + (isLoggedIn && postId ? '<button type="button" class="fpost-btn" onclick="forumQuotePost(\'' + escHtml(postId) + '\')">Quote</button>' : '')
             + '<button type="button" class="fpost-btn" onclick="forumFocusReply()">Reply</button>'
+            + (isLoggedIn && p.is_thread_starter ? '<button type="button" class="fpost-btn is-sub' + ((cachedThread && cachedThread.subscribed_by_me) ? ' is-subscribed' : '') + '" onclick="forumToggleSubscribe(this)">' + ((cachedThread && cachedThread.subscribed_by_me) ? '✓ Following' : 'Follow Thread') + '</button>' : '')
             + (canEdit && postId ? '<button type="button" class="fpost-btn is-edit" onclick="forumEditPost(\'' + escHtml(postId) + '\')">Edit</button>' : '')
             + (canEdit && postId ? '<button type="button" class="fpost-btn is-delete" onclick="forumDeletePost(\'' + escHtml(postId) + '\')">Delete</button>' : '')
             + (canModerate && p.is_thread_starter ? '<button type="button" class="fpost-btn is-mod" onclick="forumLockThread(this)">' + ((cachedThread && cachedThread.is_locked) ? 'Unlock Thread' : 'Lock Thread') + '</button>' : '')
@@ -2140,51 +2141,20 @@ function renderThread() {
 // URL patterns operating on already-escaped text.
 function forumRenderContent(raw) {
     var esc = escHtml(String(raw == null ? '' : raw));
-    // Stash finished media HTML behind placeholder tokens so the bare-URL
-    // linkifier can never re-process a URL that already lives inside a tag.
-    var slots = [];
-    function slot(html) { slots.push(html); return '\u0000M' + (slots.length - 1) + '\u0000'; }
-    function ytEmbed(url) {
-        var yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
-        return yt ? '<span class="fpost-embed"><iframe src="https://www.youtube.com/embed/' + yt[1] + '" title="Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></span>' : null;
-    }
-    function videoEmbed(url) {
-        return '<span class="fpost-embed"><video controls preload="metadata" playsinline><source src="' + url.replace(/"/g, '%22') + '"></video></span>';
-    }
-    function imgEmbed(url, kind) {
-        return '<span class="fpost-media"><img src="' + url.replace(/"/g, '%22') + '" alt="' + (kind || 'image') + '" loading="lazy"></span>';
-    }
-    function giphyDirect(url) {
-        var m = url.match(/(?:giphy\.com\/(?:gifs|embed|media|clips)|i\.giphy\.com)\/(?:[\w-]*-)?([A-Za-z0-9]{8,})/);
-        if (m) return 'https://media.giphy.com/media/' + m[1] + '/giphy.gif';
-        return null;
-    }
-    function isImageUrl(url) { return /\.(jpe?g|png|gif|webp|avif|bmp|svg)(\?|#|$)/i.test(url); }
-
-    // 1) Explicit BBCode media tags: [img]/[gif]/[video]...[/...]
-    esc = esc.replace(/\[(img|gif)\]\s*(https?:\/\/[^\s\]]+?)\s*\[\/\1\]/gi, function (_m, tag, u) {
-        return slot(imgEmbed(u.replace(/&amp;/g, '&'), tag === 'gif' ? 'gif' : 'image'));
-    });
-    esc = esc.replace(/\[video\]\s*(https?:\/\/[^\s\]]+?)\s*\[\/video\]/gi, function (_m, u) {
-        var url = u.replace(/&amp;/g, '&');
-        return slot(ytEmbed(url) || videoEmbed(url));
-    });
-
-    // 2) Bare URLs: auto-embed YouTube, video files, images, gifs, Giphy/Tenor.
     esc = esc.replace(/(https?:\/\/[^\s<]+)/g, function (m) {
         var url = m.replace(/&amp;/g, '&');
-        var y = ytEmbed(url);
-        if (y) return slot(y);
-        if (/\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(url)) return slot(videoEmbed(url));
-        var g = giphyDirect(url);
-        if (g) return slot(imgEmbed(g, 'gif'));
-        if (isImageUrl(url)) return slot(imgEmbed(url, /\.gif(\?|#|$)/i.test(url) ? 'gif' : 'image'));
+        var yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        if (yt) {
+            return '<span class="fpost-embed"><iframe src="https://www.youtube.com/embed/' + yt[1] + '" title="Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></span>';
+        }
+        if (/\.(mp4|webm|ogg)(\?|#|$)/i.test(url)) {
+            var vsrc = url.replace(/"/g, '%22');
+            return '<span class="fpost-embed"><video controls preload="metadata"><source src="' + vsrc + '"></video></span>';
+        }
         var href = url.replace(/"/g, '%22');
         return '<a href="' + href + '" target="_blank" rel="nofollow noopener noreferrer">' + m + '</a>';
     });
-
-    esc = esc.replace(/\n/g, '<br>');
-    return esc.replace(/\u0000M(\d+)\u0000/g, function (_m, i) { return slots[i]; });
+    return esc.replace(/\n/g, '<br>');
 }
 
 // Delete own post (reply) or own thread (when the post is the thread starter).
@@ -2315,6 +2285,31 @@ async function forumLikePost(targetId, isStarter, btn) {
     }
 }
 
+// Real per-thread subscription toggle. Calls POST /forum/threads/:id/subscribe
+// (backend toggles forum_subscriptions and returns {subscribed:bool}). Requires
+// login (redirects like the Like button). No fake state: the button reflects
+// exactly what the server returns, and cachedThread is kept in sync so a later
+// re-render preserves it. Subscribers are notified on new replies server-side.
+async function forumToggleSubscribe(btn) {
+    if (typeof isUserLoggedIn === 'function' && !isUserLoggedIn()) { window.location.href = '/login/'; return; }
+    if (!btn || btn.disabled) return;
+    var threadId = cachedThread && cachedThread.id;
+    if (!threadId) return;
+    btn.disabled = true;
+    try {
+        var resp = await api.request('/forum/threads/' + encodeURIComponent(threadId) + '/subscribe', { method: 'POST' });
+        var subbed = !!(resp && resp.subscribed);
+        if (cachedThread) cachedThread.subscribed_by_me = subbed;
+        btn.classList.toggle('is-subscribed', subbed);
+        btn.textContent = subbed ? '✓ Following' : 'Follow Thread';
+    } catch (err) {
+        console.error('Subscribe error:', err, err && err.detail);
+        alert((err && (err.message || err.detail)) || 'Failed to update subscription.');
+    } finally {
+        btn.disabled = false;
+    }
+}
+
 function forumEditPost(postId) {
     var p = window.__forumCachedPostsById && window.__forumCachedPostsById[postId];
     if (!p) return;
@@ -2336,7 +2331,6 @@ function forumEditPost(postId) {
         + '</div>';
     bodyEl.appendChild(box);
     box.querySelector('.fpost-edit-text').value = raw;
-    try { if (window.TMREmoji) TMREmoji.attach(box.querySelector('.fpost-edit-text')); } catch(e){}
     box.querySelector('[data-cancel]').onclick = function() {
         box.remove();
         if (contentEl) contentEl.style.display = '';
@@ -2846,7 +2840,6 @@ function renderReplyArea() {
         +   '<button type="button" class="fbtn" onclick="document.getElementById(\'replyText\').value=\'\'">Clear</button>'
         +   '<button type="button" class="fbtn is-primary" onclick="submitReply()">Post Reply</button>'
         + '</div>';
-    try { if (window.TMREmoji) TMREmoji.attach(document.getElementById('replyText')); } catch(e){}
 }
 
 /* removed: replaced in renders.js */
@@ -2910,7 +2903,6 @@ function openNewThread() {
     }
 
     modal.classList.add('is-open');
-    try { if (window.TMREmoji) TMREmoji.attach(document.getElementById('ntContent')); } catch(e){}
     setTimeout(function () {
         var t = document.getElementById('ntTitle');
         if (t) t.focus();
@@ -3222,261 +3214,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     showCategories();
 });
 
-</script>
-<script>
-/* ===================================================================
-   TMR Emoji / Emoticon picker  (SBRforum / Covers.com style, Jul 9 2026)
-   Full Unicode set + classic forum text-emoticons. Inserts at cursor
-   into any textarea via TMREmoji.attach(el).
-=================================================================== */
-(function(){
-  if (window.TMREmoji) return;
-
-  var CATS = [
-    { name:'Smileys', icon:'😀', list:'😀 😃 😄 😁 😆 😅 🤣 😂 🙂 🙃 😉 😊 😇 🥰 😍 🤩 😘 😗 😚 😋 😛 😜 🤪 😝 🤑 🤗 🤭 🤫 🤔 🤐 🤨 😐 😑 😶 😏 😒 🙄 😬 😌 😔 😪 🤤 😴 😷 🤒 🤕 🤢 🤮 🤧 🥵 🥶 🥴 😵 🤯 🤠 🥳 😎 🤓 🧐 😕 😟 🙁 ☹️ 😮 😯 😲 😳 🥺 😦 😧 😨 😰 😥 😢 😭 😱 😖 😣 😞 😓 😩 😫 🥱 😤 😡 😠 🤬 😈 👿 💀 💩 🤡 👹 👻 👽 🤖 😺 😸 😹 😻 😼 😽 🙀 😿 😾' },
-    { name:'Gestures', icon:'👍', list:'👍 👎 👌 🤌 🤏 ✌️ 🤞 🤟 🤘 🤙 👈 👉 👆 👇 ☝️ ✋ 🤚 🖐️ 🖖 👋 🤙 💪 👏 🙌 👐 🤲 🤝 🙏 ✍️ 💅 🤳 👊 ✊ 👋 🦵 🦶 👂 👃 🧠 👀 👁️ 👅 👄 🦷 🦴' },
-    { name:'People', icon:'🙋', list:'👶 👦 👧 🧑 👨 👩 🧓 👴 👵 🙍 🙎 🙅 🙆 💁 🙋 🧏 🙇 🤦 🤷 👮 🕵️ 💂 🥷 👷 🤴 👸 🤵 🤰 🤱 🙎‍♂️ 🏃 🚶 💃 🕺 👯 🧖 🧗 🤺 🏋️ 🤼 🤸 🤽 🧘 🛀 🛌 👪 👬 👭 💑 💏' },
-    { name:'Animals', icon:'🐶', list:'🐶 🐱 🐭 🐹 🐰 🦊 🐻 🐼 🐨 🐯 🦁 🐮 🐷 🐸 🐵 🙈 🙉 🙊 🐒 🐔 🐧 🐦 🐤 🦆 🦅 🦉 🦇 🐺 🐗 🐴 🦄 🐝 🐛 🦋 🐌 🐞 🐜 🦂 🦟 🕷️ 🐢 🐍 🦎 🦖 🐙 🦑 🦐 🦀 🐡 🐠 🐟 🐬 🐳 🐋 🦈 🐊 🐅 🐆 🦓 🦍 🦏 🐘 🦛 🐪 🐫 🦒 🐃 🐎 🐖 🐏 🐑 🐐 🐕 🦮 🐩 🐈 🐓 🦃 🕊️ 🐇 🦝 🦔 🦇 🐿️ 🦔 🌳 🌲 🌴 🌵 🌻 🌻 🌹 🌷 🌼 🌺 🍁 🍂 🍃 ⭐ 🌟 ⚡ 🔥 💥 ❄️ 🌈 ☀️ ⛅ ☁️ 🌙 🌊 💧' },
-    { name:'Food', icon:'🍔', list:'🍏 🍎 🍐 🍊 🍋 🍌 🍉 🍇 🍓 🍈 🍒 🍑 🍍 🥝 🍅 🍆 🥑 🌽 🌶️ 🥔 🍠 🥐 🍞 🥖 🧀 🥚 🍳 🥓 🥞 🍗 🍖 🌭 🍔 🍟 🍕 🥪 🌮 🌯 🥙 🥗 🍝 🍜 🍲 🍛 🍱 🍣 🍱 🍤 🍚 🍙 🍘 🍢 🍡 🍧 🍨 🍦 🍰 🎂 🍮 🍭 🍬 🍫 🍿 🍩 🍪 ☕ 🍵 🥤 🥛 🍼 🍺 🍻 🍷 🍸 🍹 🍾 🥂 🥃 🥜 🍴 🍽️' },
-    { name:'Sports', icon:'🏈', list:'⚾ 🏀 🏈 ⚽ 🏒 🎾 🏐 🏉 🎱 🏓 🏸 🥅 🏒 🏏 🥍 🥌 🥎 ⛳ 🏹 🎣 🥊 🥋 🎟️ 🎫 🏆 🥇 🥈 🥉 🏅 🎖️ 🏵️ 🎗️ 🎫 🎯 🎲 🎰 🎳 🎮 🎳 🚴 🏊 🏄 🏇 ⛷️ 🏂 🤺 🤼 🤽 🤾 🤸 🏋️ 🤼 🏌️ 🏎️ 🏍️' },
-    { name:'Travel', icon:'🚗', list:'🚗 🚕 🚙 🚌 🚎 🏎️ 🚓 🚑 🚒 🚐 🛻 🚚 🚛 🚜 🏍️ 🛵 🚲 🛴 🚏 🚋 🚝 🚄 🚅 🚈 🚞 ✈️ 🛫 🛬 🚁 🚟 🚠 🚡 🚢 ⛵ 🚤 🛳️ ⛴️ 🛥️ 🚀 🛎️ ⚓ 🗽 🗼 🏟️ 🏟️ 🏛️ 🏠 🏡 🏢 🏨 🏩 🏪 🏫 🏭 🎪 🗽 🕌 🏟️ ⛲ ⛺ 🌁 🌃 🌇 🌆 🌄 🌅 🌠' },
-    { name:'Objects', icon:'💰', list:'⌚ 📱 💻 ⌨️ 🖥️ 🖨️ 📷 📹 🎥 📺 📻 🎙️ ⏰ ⏱️ ⌛ ⏳ 🔋 💡 🔦 🕯️ 💸 💵 💴 💶 💷 💰 💳 🪙 💲 ⚖️ 🧾 🔧 🔨 ⚒️ 🛠️ ⛏️ 🔩 ⚙️ 🧰 🧲 🔫 💣 🔪 🛡️ 🔑 🔐 🔒 🔓 🔏 📜 📄 📰 📓 📕 📖 📚 📈 📉 📊 📋 📌 📍 📎 🖍️ ✏️ 🖊️ 📧 📩 📨 ✉️ 📤 📥 📦 🏷️ 🔔 🔕 📢 📣 🎵 🎶 🎤 🎧 🎸 🎹 🎺 🎻 🥁 🎬 🎮 🎲 🧩 🏁 🚩 🎌' },
-    { name:'Symbols', icon:'❤️', list:'❤️ 🧡 💛 💚 💙 💜 🖤 🤍 🤎 💔 ❣️ 💕 💞 💓 💗 💖 💘 💝 💟 ☮️ ✡️ ☯️ ☦️ 🔞 📴 📳 🌀 ⚛️ 🌐 ♈ ♉ ♊ ♋ ♌ ♍ ♎ ♏ ♐ ♑ ♒ ♓ 🆔 ♻️ ✔️ ☑️ ✅ ❌ ❎ ➕ ➖ ➗ ❓ ❗ ‼️ ⚠️ 🚫 💯 🔝 🔛 🔜 🔝 ▶️ ⏸️ ⏹️ ⏺️ ⏭️ ⏮️ 🔀 🔁 🔂 ⭐ 🌟 ✨ ⚡ 🔥 💥 💢 💫 💦 💨 🕳️ 💤 🎰 🆒 🆕 🆖 🆚 🆗 🆘' },
-    { name:'Betting', icon:'💵', list:'💰 💵 💴 💶 💷 💸 💳 🪙 💲 🎰 🎲 🃏 ♠️ ♥️ ♦️ ♣️ 🏆 🥇 🥈 🥉 🏅 🎖️ 📈 📉 📊 🔥 🧊 🍻 🍾 💯 👍 👎 🤞 😤 🚀 💸 ✅ ❌ 🔒 🔑 👑 🎯 🤑 💰 🙏 🔥 ⚾ 🏈 🏀 ⚽ 🏒' },
-    { name:'Flags', icon:'🏁', list:'🏁 🚩 🎌 🏴 🏳️ 🏳️‍🌈 🏴‍☠️ 🇺🇸 🇨🇦 🇬🇧 🇮🇪 🇦🇺 🇲🇽 🇯🇵 🇰🇷 🇨🇳 🇧🇷 🇫🇷 🇩🇪 🇪🇸 🇮🇹 🇵🇹 🇷🇺 🇳🇱 🇸🇪' }
-  ];
-
-  /* Classic SBRforum / Covers.com style text shortcuts -> insert value */
-  var CLASSIC = [
-    [':)','🙂'],[':-)','🙂'],[':D','😀'],[':-D','😀'],
-    ['=D','😄'],['xD','😆'],['XD','😆'],[':P','😛'],
-    [':-P','😛'],[';)','😉'],[';-)','😉'],[':(','🙁'],
-    [':-(','🙁'],[":'(",'😢'],[':o','😮'],[':O','😲'],
-    [':|','😐'],[':/','😕'],['>:(','😡'],['3:)','😈'],
-    ['O:)','😇'],['B)','😎'],['8)','😎'],['<3','❤️'],
-    ['</3','💔'],[':thumbsup:','👍'],[':thumbsdown:','👎'],
-    [':ok:','👌'],[':clap:','👏'],[':pray:','🙏'],
-    [':facepalm:','🤦'],[':shrug:','🤷'],[':fingerscrossed:','🤞'],
-    [':fire:','🔥'],[':100:','💯'],[':money:','💰'],
-    [':cash:','💵'],[':chart:','📈'],[':rocket:','🚀'],
-    [':cheers:','🍻'],[':beer:','🍺'],[':wine:','🍷'],
-    [':cool:','😎'],[':lol:','😂'],[':rofl:','🤣'],
-    [':cry:','😭'],[':rage:','🤬'],[':mad:','😡'],
-    [':sick:','🤢'],[':sweat:','😅'],[':think:','🤔'],
-    [':wink:','😉'],[':kiss:','😘'],[':heart:','❤️'],
-    [':star:','⭐'],[':check:','✅'],[':x:','❌'],[':lock:','🔒'],
-    [':dice:','🎲'],[':cards:','🃏'],[':slot:','🎰'],
-    [':trophy:','🏆'],[':crown:','👑'],[':target:','🎯'],
-    [':baseball:','⚾'],[':bball:','🏀'],[':fball:','🏈'],
-    [':soccer:','⚽'],[':hockey:','🏒'],[':snake:','🐍'],
-    [':party:','🥳'],[':wave:','👋'],[':zzz:','💤'],
-    [':puke:','🤮'],[':ban:','🚫'],[':boom:','💥'],
-    [':eyes:','👀'],[':sunglasses:','😎'],[':salute:','🫡'],
-    [':nerd:','🤓'],[':clown:','🤡'],[':skull:','💀'],
-    [':poop:','💩'],[':devil:','😈'],[':angel:','😇'],
-    [':muscle:','💪'],[':handshake:','🤝'],[':point:','👉'],
-    [':up:','👆'],[':down:','👇'],[':gg:','👏']
-  ];
-
-  function injectCSS(){
-    if (document.getElementById('tmr-emoji-css')) return;
-    var s = document.createElement('style');
-    s.id = 'tmr-emoji-css';
-    s.textContent =
-      '.tmr-emoji-bar{display:flex;align-items:center;gap:6px;margin:4px 0 4px;flex-wrap:wrap}'
-    + '.tmr-emoji-open{cursor:pointer;border:1px solid #aaa;background:#f4f4f4;color:#222;'
-    + 'border-radius:4px;padding:2px 8px;font-size:15px;line-height:1.4}'
-    + '.tmr-emoji-open:hover{background:#e7eef7}'
-    + '.tmr-emoji-quick{cursor:pointer;font-size:17px;line-height:1;padding:1px 2px;border-radius:4px}'
-    + '.tmr-emoji-quick:hover{background:#e7eef7}'
-    + '.tmr-emoji-panel{position:fixed;z-index:99999;width:320px;max-width:94vw;'
-    + 'background:#fff;border:1px solid #99a;border-radius:8px;box-shadow:0 8px 28px rgba(0,0,0,.28);'
-    + 'font:13px Arial,Helvetica,sans-serif;color:#222;overflow:hidden}'
-    + '.tmr-emoji-tabs{display:flex;overflow-x:auto;border-bottom:1px solid #ddd;background:#f6f7f9}'
-    + '.tmr-emoji-tab{flex:0 0 auto;cursor:pointer;padding:6px 8px;font-size:16px;border:none;'
-    + 'background:transparent}'
-    + '.tmr-emoji-tab.on{background:#dbe7f5;box-shadow:inset 0 -2px 0 #14365b}'
-    + '.tmr-emoji-search{padding:6px}.tmr-emoji-search input{width:100%;box-sizing:border-box;'
-    + 'padding:5px 7px;border:1px solid #bbb;border-radius:4px;font-size:12px}'
-    + '.tmr-emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:1px;padding:6px;'
-    + 'max-height:230px;overflow-y:auto}'
-    + '.tmr-emoji-cell{cursor:pointer;font-size:20px;line-height:1;text-align:center;padding:4px 0;'
-    + 'border-radius:5px;background:transparent}'
-    + '.tmr-emoji-cell:hover{background:#e7eef7}'
-    + '.tmr-emoji-classic{grid-template-columns:repeat(4,1fr)}'
-    + '.tmr-emoji-classic .tmr-emoji-cell{font-size:12px;padding:5px 2px;border:1px solid #eee}'
-    + '.tmr-emoji-classic .tmr-emoji-cell b{font-size:16px}'
-    + 'body.tmr-forum-live-redesign .tmr-emoji-panel{background:#0d1a2b;color:#e8eef7;border-color:#2a4a72}'
-    + 'body.tmr-forum-live-redesign .tmr-emoji-tabs{background:#10233a}'
-    + 'body.tmr-forum-live-redesign .tmr-emoji-tab.on{background:#1b3a5c}'
-    + 'body.tmr-forum-live-redesign .tmr-emoji-cell:hover,'
-    + 'body.tmr-forum-live-redesign .tmr-emoji-open:hover{background:#1b3a5c}'
-    + 'body.tmr-forum-live-redesign .tmr-emoji-open{background:#16283f;border-color:#2a4a72;color:#e8eef7}'
-    // media insert buttons
-    + '.tmr-media-btn{cursor:pointer;border:1px solid #aaa;background:#f4f4f4;color:#222;'
-    + 'border-radius:4px;padding:2px 8px;font-size:12px;line-height:1.4}'
-    + '.tmr-media-btn:hover{background:#e7eef7}'
-    + 'body.tmr-forum-live-redesign .tmr-media-btn{background:#16283f;border-color:#2a4a72;color:#e8eef7}'
-    + 'body.tmr-forum-live-redesign .tmr-media-btn:hover{background:#1b3a5c}';
-    document.head.appendChild(s);
-  }
-
-  function insertAtCursor(el, text){
-    if (!el) return;
-    el.focus();
-    var s = el.selectionStart, e = el.selectionEnd, v = el.value;
-    if (typeof s === 'number') {
-      el.value = v.slice(0,s) + text + v.slice(e);
-      var pos = s + text.length;
-      el.selectionStart = el.selectionEnd = pos;
-    } else {
-      el.value = v + text;
-    }
-    el.dispatchEvent(new Event('input', {bubbles:true}));
-  }
-
-  var openPanel = null;
-  function closePanel(){ if (openPanel){ openPanel.remove(); openPanel = null; } }
-  document.addEventListener('click', function(ev){
-    if (openPanel && !openPanel.contains(ev.target) && !ev.target.classList.contains('tmr-emoji-open')) closePanel();
-  });
-  window.addEventListener('resize', closePanel);
-  window.addEventListener('scroll', closePanel, true);
-
-  function buildGrid(grid, activeIdx, filter){
-    grid.className = 'tmr-emoji-grid' + (activeIdx === 'classic' ? ' tmr-emoji-classic' : '');
-    grid.innerHTML = '';
-    var target = grid._target;
-    if (activeIdx === 'classic'){
-      CLASSIC.forEach(function(pair){
-        if (filter && pair[0].toLowerCase().indexOf(filter) === -1) return;
-        var c = document.createElement('div');
-        c.className = 'tmr-emoji-cell';
-        c.innerHTML = '<b>' + pair[1] + '</b><br>' + pair[0].replace(/</g,'&lt;');
-        c.title = pair[0];
-        c.onclick = function(){ insertAtCursor(target, pair[1]); };
-        grid.appendChild(c);
-      });
-      return;
-    }
-    var items;
-    if (activeIdx === 'search'){
-      items = CATS.reduce(function(a,c){ return a.concat(c.list.split(' ')); }, []);
-    } else {
-      items = CATS[activeIdx].list.split(' ');
-    }
-    items.forEach(function(em){
-      if (!em) return;
-      var c = document.createElement('div');
-      c.className = 'tmr-emoji-cell';
-      c.textContent = em;
-      c.onclick = function(){ insertAtCursor(target, em); };
-      grid.appendChild(c);
-    });
-  }
-
-  function openFor(btn, target){
-    closePanel();
-    injectCSS();
-    var panel = document.createElement('div');
-    panel.className = 'tmr-emoji-panel';
-    var tabs = '<div class="tmr-emoji-tabs">';
-    CATS.forEach(function(c,i){ tabs += '<button type="button" class="tmr-emoji-tab' + (i===0?' on':'') + '" data-i="'+i+'" title="'+c.name+'">'+c.icon+'</button>'; });
-    tabs += '<button type="button" class="tmr-emoji-tab" data-i="classic" title="Text emoticons">:-)</button></div>';
-    panel.innerHTML = tabs
-      + '<div class="tmr-emoji-search"><input type="text" placeholder="Search emoji / :shortcut:"></div>'
-      + '<div class="tmr-emoji-grid"></div>';
-    document.body.appendChild(panel);
-    var grid = panel.querySelector('.tmr-emoji-grid');
-    grid._target = target;
-    buildGrid(grid, 0);
-    var current = 0;
-    panel.querySelectorAll('.tmr-emoji-tab').forEach(function(tb){
-      tb.onclick = function(){
-        panel.querySelectorAll('.tmr-emoji-tab').forEach(function(x){ x.classList.remove('on'); });
-        tb.classList.add('on');
-        var i = tb.getAttribute('data-i');
-        current = (i === 'classic') ? 'classic' : parseInt(i,10);
-        panel.querySelector('.tmr-emoji-search input').value = '';
-        buildGrid(grid, current);
-      };
-    });
-    var search = panel.querySelector('.tmr-emoji-search input');
-    search.oninput = function(){
-      var q = search.value.trim().toLowerCase();
-      if (!q){ buildGrid(grid, current); return; }
-      buildGrid(grid, current === 'classic' ? 'classic' : 'search', q);
-    };
-    // position under the button, clamp to viewport
-    var r = btn.getBoundingClientRect();
-    var top = r.bottom + 4, left = r.left;
-    if (left + 320 > window.innerWidth) left = Math.max(6, window.innerWidth - 326);
-    if (top + 300 > window.innerHeight) top = Math.max(6, r.top - 304);
-    panel.style.top = top + 'px';
-    panel.style.left = left + 'px';
-    openPanel = panel;
-    setTimeout(function(){ search.focus(); }, 0);
-  }
-
-  var QUICK = ['🔥','💰','👍','😂','😭','🤑','🎯','🚀'];
-
-  var MEDIA = [
-    { tag:'img',   icon:'🖼️', label:'Image', hint:'Insert an image by URL',
-      prompt:'Paste an image URL (.jpg .png .webp):' },
-    { tag:'gif',   icon:'🎞️', label:'GIF',   hint:'Insert a GIF by URL (Giphy/Tenor/.gif)',
-      prompt:'Paste a GIF URL or Giphy/Tenor link:' },
-    { tag:'video', icon:'🎬', label:'Video', hint:'Insert a video (YouTube or .mp4/.webm)',
-      prompt:'Paste a YouTube link or a direct video URL (.mp4 .webm):' }
-  ];
-
-  function attach(el){
-    if (!el || el.dataset.tmrEmoji) return;
-    el.dataset.tmrEmoji = '1';
-    injectCSS();
-    var bar = document.createElement('div');
-    bar.className = 'tmr-emoji-bar';
-    var open = document.createElement('button');
-    open.type = 'button';
-    open.className = 'tmr-emoji-open';
-    open.innerHTML = '😀 Emoji';
-    open.onclick = function(e){ e.stopPropagation(); if (openPanel){ closePanel(); } else { openFor(open, el); } };
-    bar.appendChild(open);
-    QUICK.forEach(function(q){
-      var s = document.createElement('span');
-      s.className = 'tmr-emoji-quick';
-      s.textContent = q;
-      s.title = 'Insert ' + q;
-      s.onclick = function(){ insertAtCursor(el, q); };
-      bar.appendChild(s);
-    });
-    // Media insert buttons (image / gif / video) -> BBCode tags rendered
-    // by forumRenderContent. URL-based, same trust model as YouTube/mp4 embeds.
-    MEDIA.forEach(function(md){
-      var b = document.createElement('button');
-      b.type = 'button';
-      b.className = 'tmr-media-btn';
-      b.innerHTML = md.icon + ' ' + md.label;
-      b.title = md.hint;
-      b.onclick = function(ev){
-        ev.stopPropagation();
-        var url = window.prompt(md.prompt, 'https://');
-        if (!url) return;
-        url = url.trim();
-        if (!/^https?:\/\//i.test(url)) { alert('Please paste a full http(s) link.'); return; }
-        insertAtCursor(el, '\n[' + md.tag + ']' + url + '[/' + md.tag + ']\n');
-      };
-      bar.appendChild(b);
-    });
-    el.parentNode.insertBefore(bar, el);
-  }
-
-  window.TMREmoji = { attach: attach, insert: insertAtCursor, CATS: CATS, CLASSIC: CLASSIC };
-
-  // Auto-attach the static new-thread textarea once DOM is ready.
-  function initStatic(){ attach(document.getElementById('ntContent')); }
-  if (document.readyState !== 'loading') initStatic();
-  else document.addEventListener('DOMContentLoaded', initStatic);
-})();
 </script>
 <script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
 <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
