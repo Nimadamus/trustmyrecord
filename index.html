@@ -2066,7 +2066,7 @@ button{font:inherit;cursor:pointer}
       <h1>Track Your Picks. Build Your Record. <em>Compete With Everybody.</em></h1>
       <p>TrustMyRecord gives every sports bettor a free verified public record, advanced performance stats, public profiles, pick selling tools, and community competitions built around real results.</p>
       <div class="tmr-premium-cta">
-        <a class="tmr-premium-primary auth-link" href="/register/">Start Tracking <span>→</span></a>
+        <a class="tmr-premium-primary auth-link" href="/register/">Start Your Free Record <span>→</span></a>
         <a class="tmr-premium-secondary" href="/leaderboards/">View Leaderboards</a>
       </div>
       <div class="tmr-premium-proof-row" aria-label="Trust features">
@@ -2115,6 +2115,59 @@ button{font:inherit;cursor:pointer}
         </div>
       </div>
     </aside>
+  </section>
+
+  <section class="tmr-statbar" aria-label="TrustMyRecord platform stats">
+    <style>
+      .tmr-statbar{max-width:1240px;margin:22px auto 0;padding:0 24px;}
+      .tmr-statbar__inner{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+        background:var(--premium-panel,rgba(8,18,31,.82));border:1px solid var(--premium-line,rgba(134,162,190,.22));
+        border-radius:16px;padding:18px 16px;}
+      .tmr-statbar .tmr-stat{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;
+        color:inherit;text-decoration:none;padding:4px 6px;border-radius:10px;transition:background .15s ease;}
+      .tmr-statbar .tmr-stat:hover{background:rgba(255,255,255,.05);}
+      .tmr-statbar .tmr-stat b{font-family:'Barlow','Inter',sans-serif;font-size:clamp(22px,3vw,30px);font-weight:800;
+        line-height:1;color:var(--premium-text,#f8fbff);font-variant-numeric:tabular-nums;}
+      .tmr-statbar .tmr-stat span{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--premium-muted,#a8b4c7);}
+      @media(max-width:640px){.tmr-statbar__inner{grid-template-columns:repeat(2,1fr);}}
+    </style>
+    <div class="tmr-statbar__inner">
+      <a class="tmr-stat" href="/handicappers/"><b id="tmrStatPicks">&mdash;</b><span>Picks Tracked</span></a>
+      <a class="tmr-stat" href="/handicappers/"><b id="tmrStatCappers">&mdash;</b><span>Verified Cappers</span></a>
+      <a class="tmr-stat" href="/leaderboards/"><b id="tmrStatMembers">&mdash;</b><span>Members</span></a>
+      <a class="tmr-stat" href="/contests/justbet-mlb/"><b>1</b><span>Free Contest</span></a>
+    </div>
+    <script>
+    (function(){
+      var API="https://trustmyrecord-api.onrender.com/api";
+      function set(id,v){var el=document.getElementById(id);if(el&&v!=null)el.textContent=v;}
+      var users=[],off=0;
+      function done(){
+        if(!users.length)return; /* leave em-dash fallback, never a fake number */
+        var picks=0,active=0;
+        for(var i=0;i<users.length;i++){
+          var tp=parseFloat(users[i].total_picks||users[i].totalPicks||0)||0;
+          picks+=tp;
+          if(tp>0&&users[i].verification_status==="verified")active++;
+        }
+        set("tmrStatPicks",picks.toLocaleString());
+        set("tmrStatCappers",String(active));
+        set("tmrStatMembers",String(users.length));
+      }
+      function page(){
+        fetch(API+"/users?limit=200&offset="+off,{headers:{Accept:"application/json"}})
+          .then(function(r){return r.ok?r.json():null;})
+          .then(function(d){
+            if(!d)return done();
+            var u=(d.users||[]);users=users.concat(u);
+            if(u.length>=200&&off<1000){off+=200;page();}else{done();}
+          })
+          .catch(function(){done();});
+      }
+      function start(){page();}
+      if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
+    })();
+    </script>
   </section>
 
   <!-- JOIN_COMMUNITY_20260708: insert-only community discovery band below hero. Links route to
@@ -2217,9 +2270,9 @@ button{font:inherit;cursor:pointer}
       <h2>Build a verified sports betting record <span class="g">nobody can fake.</span></h2>
       <p>Lock your picks before game time. TrustMyRecord auto-grades the results and publishes transparent records based on units, ROI, win percentage, and streaks. Free to use, public by default, and impossible to cherry-pick.</p>
       <div class="tmrhx-cta">
-        <a class="tmrhx-btn tmrhx-btn--gold" href="/register/">Start Your Free Verified Record</a>
+        <a class="tmrhx-btn tmrhx-btn--gold" href="/register/">Start Your Free Record</a>
         <a class="tmrhx-btn tmrhx-btn--blue" href="/sportsbook/">Make Your First Locked Pick</a>
-        <a class="tmrhx-btn tmrhx-btn--ghost" href="/leaderboards/">View Verified Leaderboards</a>
+        <a class="tmrhx-btn tmrhx-btn--ghost" href="/leaderboards/">View Leaderboards</a>
       </div>
     </div>
 
@@ -2237,7 +2290,7 @@ button{font:inherit;cursor:pointer}
         </ul>
         <div class="tmrhx-cta">
           <a class="tmrhx-btn tmrhx-btn--gold" href="/contests/justbet-mlb/">Join the Free MLB Contest</a>
-          <a class="tmrhx-btn tmrhx-btn--ghost" href="/register/">Start Your Verified Record</a>
+          <a class="tmrhx-btn tmrhx-btn--ghost" href="/register/">Start Your Free Record</a>
         </div>
         <p class="tmrhx-sub">Every entry is locked before first pitch and auto-graded by net units. Top 3 finishers paid. Sponsored by JustBet.</p>
       </div>
@@ -2248,7 +2301,7 @@ button{font:inherit;cursor:pointer}
           <thead><tr><th>#</th><th>User</th><th>Record</th><th>Units</th><th>ROI</th></tr></thead>
           <tbody><!--MK:homeLbPreview--><tr><td class="rk">#1</td><td><a href="/u/makaveli66/">makaveli66</a></td><td>142-96-3</td><td class="pos">+62.66u</td><td class="pos">2.2%</td></tr><tr><td class="rk">#2</td><td><a href="/u/MoneyMakers/">MoneyMakers</a></td><td>193-74</td><td class="pos">+13.78u</td><td class="pos">3.1%</td></tr><tr><td class="rk">#3</td><td><a href="/u/fade_my_picks/">fade_my_picks</a></td><td>79-55-8</td><td class="pos">+13.66u</td><td class="pos">10.2%</td></tr><tr><td class="rk">#4</td><td><a href="/u/Mike/">Mike</a></td><td>5-4</td><td class="pos">+6.76u</td><td class="pos">30.9%</td></tr><tr><td class="rk">#5</td><td><a href="/u/Bullshark/">Bullshark</a></td><td>1-0</td><td class="pos">+5.00u</td><td class="pos">90.9%</td></tr><!--/MK:homeLbPreview--></tbody>
         </table>
-        <a class="tmrhx-more" href="/leaderboards/">View Verified Leaderboards →</a>
+        <a class="tmrhx-more" href="/leaderboards/">View Leaderboards →</a>
 
         <h3 style="margin-top:20px;">Live highlights</h3>
         <ul class="tmrhx-hl"><!--MK:homeHighlights--><li>🔥 <a href="/u/fade_my_picks/"><b>fade_my_picks</b></a> has won 3 straight.</li><li>🔥 <a href="/u/patrick9/"><b>patrick9</b></a> hit the last 5 moneylines.</li><li>📈 <a href="/u/linda2026/"><b>linda2026</b></a> is 5-2 over the last 7 picks.</li><li>📈 <a href="/u/makaveli66/"><b>makaveli66</b></a> is 6-4 over the last 10 picks.</li><!--/MK:homeHighlights--></ul>
@@ -3744,7 +3797,7 @@ button{font:inherit;cursor:pointer}
     </ol>
 
     <div class="tmr-loop-cta">
-      <a class="hero-action hero-action--primary auth-link" href="/register/">Start Tracking Picks</a>
+      <a class="hero-action hero-action--primary auth-link" href="/register/">Start Your Free Record</a>
       <a class="hero-action hero-action--ghost" href="/sportsbook/">See the Board</a>
       <a class="hero-action hero-action--ghost" href="/how-it-works/">How It Works</a>
     </div>
