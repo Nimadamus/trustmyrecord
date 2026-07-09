@@ -1060,7 +1060,7 @@
     // and messages icons get unread-count badges without each page importing it.
     if (!document.querySelector('script[data-tmr-nav-badges]')) {
         const navBadgesScript = document.createElement("script");
-        navBadgesScript.src = "/static/js/nav-badges.js?v=20260520mailbox1";
+        navBadgesScript.src = "/static/js/nav-badges.js?v=20260708alertsfix1";
         navBadgesScript.async = true;
         navBadgesScript.setAttribute("data-tmr-nav-badges", "1");
         document.head.appendChild(navBadgesScript);
@@ -1083,7 +1083,7 @@
     ].forEach(([src, name]) => {
         if (document.querySelector('script[src*="' + name + '"]')) return;
         const depScript = document.createElement("script");
-        depScript.src = src + "?v=20260706sitewidealerts1";
+        depScript.src = src + "?v=20260708alertsfix1";
         depScript.async = false;
         depScript.setAttribute("data-tmr-notifications-dep", name);
         document.head.appendChild(depScript);
