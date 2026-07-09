@@ -173,6 +173,7 @@
         '</select></div></div>' +
         '<div class="tmr-fi-actions">' +
         '<button type="submit" id="tmrFiSave" class="tmr-fi-save">Save changes</button>' +
+        '<button type="button" id="tmrFiCancel" class="tmr-fi-cancel">Cancel</button>' +
         '<span class="tmr-fi-msg" id="tmrFiMsg"></span></div>' +
         '</form>';
     }
@@ -271,6 +272,14 @@
       if (on && hasCatalog) { try { sportSel.focus(); } catch (e) {} }
     }
     if (editBtn) editBtn.addEventListener('click', function () { setEditing(!editing); });
+    var cancelBtn = document.getElementById('tmrFiCancel');
+    if (cancelBtn) cancelBtn.addEventListener('click', function () {
+      // Revert unsaved edits back to the last-saved state, then collapse.
+      favSel = [].concat(Array.isArray(p.favorite_teams) ? p.favorite_teams : []);
+      rivSel = [].concat(Array.isArray(p.rival_teams) ? p.rival_teams : []);
+      flash(''); if (saveMsg) { saveMsg.textContent = ''; saveMsg.className = 'tmr-fi-msg'; }
+      setEditing(false);
+    });
 
     if (!hasCatalog) {
       [sportSel, teamSel].forEach(function (el) { if (el) el.disabled = true; });
@@ -353,6 +362,7 @@
       '.tmr-fi-personality{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:8px;background:rgba(168,85,247,.14);border:1px solid rgba(168,85,247,.4);color:#d6b4ff;font-size:12px;font-weight:700}',
       // editor
       '.tmr-fi-editor{margin:0 0 18px;padding:16px;background:#0f1320;border:1px solid #232a3b;border-radius:14px;display:grid;gap:12px}',
+      '.tmr-fi-editor[hidden]{display:none}',
       '.tmr-fi-ed-title{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#8b93a7;font-weight:800}',
       '.tmr-fi-banner{padding:9px 12px;border-radius:9px;font-size:12.5px;font-weight:600}.tmr-fi-banner.is-err{background:rgba(255,77,90,.12);border:1px solid rgba(255,77,90,.35);color:#ff8e97}',
       '.tmr-fi-addbar{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px}',
@@ -373,6 +383,7 @@
       '.tmr-fi-pick-msg{font-size:12.5px;min-height:16px;font-weight:600}.tmr-fi-pick-msg.is-ok{color:#46d39a}.tmr-fi-pick-msg.is-err{color:#ff8e97}',
       '.tmr-fi-actions{display:flex;align-items:center;gap:12px;margin-top:2px}',
       '.tmr-fi-save{background:#00d27a;color:#04210f;border:0;border-radius:9px;padding:10px 20px;font-weight:800;font-size:14px;cursor:pointer;transition:filter .12s}.tmr-fi-save:hover{filter:brightness(1.08)}',
+      '.tmr-fi-cancel{background:transparent;color:#aab2c6;border:1px solid #2c3346;border-radius:9px;padding:10px 18px;font-weight:700;font-size:14px;cursor:pointer;transition:border-color .12s,color .12s}.tmr-fi-cancel:hover{border-color:#3a4460;color:#e6e9f2}',
       '.tmr-fi-msg{font-size:12.5px;font-weight:700}.tmr-fi-msg.is-ok{color:#46d39a}.tmr-fi-msg.is-err{color:#ff8e97}',
       // teams columns + chips
       '.tmr-fi-teams{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}',
