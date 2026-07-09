@@ -8280,12 +8280,12 @@
         var KNOWN_BASES = { h2h: 1, spreads: 1, totals: 1, team_totals: 1 };
         function dvNorm(v) { return String(v == null ? '' : v).toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim(); }
         function dvDirection(sel) {
-            var s = ' ' + dvNorm(sel) + ' ';
-            if (/\sover\s/.test(s) || /\so\d/.test(s)) return 'over';
-            if (/\sunder\s/.test(s) || /\su\d/.test(s)) return 'under';
+            var s = dvNorm(sel);
+            if (/\bover\b/.test(s) || /\bo\s*\d/.test(s)) return 'over';
+            if (/\bunder\b/.test(s) || /\bu\s*\d/.test(s)) return 'under';
             return null;
         }
-        function dvBefore(sel) { var m = String(sel || '').match(/^(.*?)\b(over|under)\b/i); return m ? dvNorm(m[1]) : ''; }
+        function dvBefore(sel) { var m = dvNorm(sel).match(/^(.*?)(?:\bover\b|\bunder\b|\bo\s*\d|\bu\s*\d)/); return m ? dvNorm(m[1]) : ''; }
         function dvTeam(sel, home, away) {
             var s = dvNorm(sel), h = dvNorm(home), a = dvNorm(away);
             if (!s) return null;
