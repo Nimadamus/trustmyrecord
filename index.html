@@ -3567,6 +3567,12 @@ button{font:inherit;cursor:pointer}
       font-weight: 700;
     }
     .tmr-premium-signup { min-width: 76px; height: 36px; }
+    /* Logged-in mobile header: keep the alerts bell on-screen. The avatar
+       already links to the profile, so drop the redundant username text and
+       the "My Record" text link that otherwise overflow the viewport. */
+    .tmr-premium-actions[data-tmr-auth-state^="in:"] { gap: 12px; }
+    .tmr-premium-actions[data-tmr-auth-state^="in:"] .tmr-premium-login span { display: none; }
+    .tmr-premium-actions[data-tmr-auth-state^="in:"] .tmr-premium-signup { display: none; }
     .tmr-premium-hero {
       padding: 26px 16px 28px;
       min-height: auto;
