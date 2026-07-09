@@ -87,24 +87,24 @@
     moneyline: [
       { id: "team_win", label: "Team win trend", tokens: ["RECENT_FORM", "MONEYLINE"] },
       { id: "home_road", label: "Home / road split", tokens: ["HOME", "AWAY"] },
-      { id: "favorite", label: "Favorite trend", disabled: true, reason: "Favorite/underdog role data is not connected yet." },
-      { id: "underdog", label: "Underdog trend", disabled: true, reason: "Favorite/underdog role data is not connected yet." },
-      { id: "after_win", label: "After a win", disabled: true, reason: "Previous-result sequence data is not connected yet." },
-      { id: "after_loss", label: "After a loss", disabled: true, reason: "Previous-result sequence data is not connected yet." },
-      { id: "head_to_head", label: "Head to head", disabled: true, reason: "Head-to-head dataset is not connected yet." }
+      { id: "favorite", label: "Favorite trend" },
+      { id: "underdog", label: "Underdog trend" },
+      { id: "after_win", label: "After a win" },
+      { id: "after_loss", label: "After a loss" },
+      { id: "head_to_head", label: "Head to head" }
     ],
     spread: [
       { id: "ats", label: "ATS trend", tokens: ["SPREAD", "ATS", "RUN_LINE", "PUCK_LINE"] },
       { id: "home_road_ats", label: "Home / road ATS", tokens: ["HOME", "AWAY", "SPREAD", "ATS"] },
-      { id: "favorite_ats", label: "Favorite ATS", disabled: true, reason: "Favorite/underdog role data is not connected yet." },
-      { id: "underdog_ats", label: "Underdog ATS", disabled: true, reason: "Favorite/underdog role data is not connected yet." },
-      { id: "head_to_head_ats", label: "Head to head ATS", disabled: true, reason: "Head-to-head dataset is not connected yet." }
+      { id: "favorite_ats", label: "Favorite ATS" },
+      { id: "underdog_ats", label: "Underdog ATS" },
+      { id: "head_to_head_ats", label: "Head to head ATS" }
     ],
     total: [
       { id: "full_game_over_under", label: "Full game over / under", tokens: ["TOTAL", "SCORING"] },
       { id: "recent_over_under", label: "Recent games over / under", tokens: ["RECENT_FORM", "SCORING", "TOTAL"] },
       { id: "home_road_over_under", label: "Home / road over / under", tokens: ["HOME", "AWAY", "TOTAL"] },
-      { id: "head_to_head_over_under", label: "Head to head over / under", disabled: true, reason: "Head-to-head dataset is not connected yet." }
+      { id: "head_to_head_over_under", label: "Head to head over / under" }
     ],
     team_total: [
       { id: "team_total_over_under", label: "Team total over / under", tokens: ["TEAM_TOTAL", "TEAM TOTAL"] },
@@ -1042,7 +1042,7 @@
         if (state.location === "away" && r.h) return false;
         if (market.id === "total" && r.te) return false;
         if (market.id === "spread" && r.se) return false;
-        if (market.id === "team_total") return false;
+        // team_total is scored from team_runs vs the entered team-total line (TEAMTOTAL_ENABLED_20260709)
         if (kindId === "favorite" || kindId === "favorite_ats") {
           // Prefer real moneyline; fall back to spread sign for artifact rows.
           // Use explicit null/undefined check because Number(null) === 0,
