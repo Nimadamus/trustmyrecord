@@ -94,8 +94,24 @@ function getNotificationTrigger() {
     return document.getElementById('notificationsBtn') || document.getElementById('notificationBtn');
 }
 
+// A legacy #notificationsPanel counts as the real container ONLY when it is a
+// populated, visible panel (e.g. the notifications page). Some pages (the
+// sportsbook board) ship an EMPTY, force-hidden <div id="notificationsPanel">
+// stub; latching onto it made the bell a dead click target -- toggle set
+// display:block on an element pinned to display:none !important, so the panel
+// never opened and the real #notificationsDropdown was never built.
+function isUsablePanel(el) {
+    if (!el) return false;
+    if (el.hasAttribute('hidden')) return false;
+    if (!el.children || el.children.length === 0) return false;
+    return true;
+}
+
 function getNotificationsContainer() {
-    return document.getElementById('notificationsDropdown') || document.getElementById('notificationsPanel');
+    const dropdown = document.getElementById('notificationsDropdown');
+    if (dropdown) return dropdown;
+    const panel = document.getElementById('notificationsPanel');
+    return isUsablePanel(panel) ? panel : null;
 }
 
 function getNotificationsListElement() {
@@ -107,8 +123,9 @@ function getUnreadCountElement() {
 }
 
 function addNotificationDropdown() {
-    // Reuse the legacy notifications panel when it exists.
-    if (document.getElementById('notificationsPanel')) return;
+    // Reuse the legacy notifications panel ONLY when it is a real, populated,
+    // visible panel. An empty/hidden stub must not block building the dropdown.
+    if (isUsablePanel(document.getElementById('notificationsPanel'))) return;
 
     // Only add the dropdown container if it doesn't exist yet
     if (document.getElementById('notificationsDropdown')) return;
