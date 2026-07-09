@@ -3370,7 +3370,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (openPanel && !openPanel.contains(ev.target) && !ev.target.classList.contains('tmr-emoji-open')) closePanel();
   });
   window.addEventListener('resize', closePanel);
-  window.addEventListener('scroll', closePanel, true);
+  // Close on genuine page scroll, but NOT when the user is scrolling inside the
+  // picker itself (the emoji grid scrolls) - otherwise the panel closes mid-browse.
+  window.addEventListener('scroll', function (ev) {
+    if (openPanel && ev.target && openPanel.contains(ev.target)) return;
+    closePanel();
+  }, true);
 
   function buildGrid(grid, activeIdx, filter){
     grid.className = 'tmr-emoji-grid' + (activeIdx === 'classic' ? ' tmr-emoji-classic' : '');
