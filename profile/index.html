@@ -1803,9 +1803,9 @@
                          from the same graded public ledger as the table below (regular picks only;
                          contest picks live in a separate table and never reach this feed). -->
                     <article class="profile-advanced-metric" data-advanced-metric-card="pick_diversity">
-                        <span class="profile-advanced-metric__label">Pick Diversity <span class="profile-diversity-info" id="profileDiversityInfo" role="button" tabindex="0" aria-label="What is Pick Diversity?" title="Measures how much of this record comes from unique handicapping opinions versus repeated exposure on the same game, market, or alternate line.">?</span></span>
+                        <span class="profile-advanced-metric__label">Pick Diversity <span class="profile-diversity-info" id="profileDiversityInfo" role="button" tabindex="0" aria-label="What is Pick Diversity?" title="How broad this record actually is. 100 = opinions spread evenly across sports, market types, teams/players, and sides. It drops when a capper leans heavily on one category (e.g. mostly MLB overs) or stacks alternate lines on the same game. Click for the full breakdown.">?</span></span>
                         <strong class="profile-advanced-metric__value is-empty" id="profileAdvPickDiversity">Not enough data yet</strong>
-                        <span class="profile-advanced-metric__sub" id="profileAdvPickDiversitySub">Unique opinions vs repeated exposure</span>
+                        <span class="profile-advanced-metric__sub" id="profileAdvPickDiversitySub">How broad the opinions are across sports, markets, teams, and sides</span>
                     </article>
                     <!-- PICK_CORRELATION_20260607: Correlated Picks moved to the TOP profile
                          rail (next to Avg Odds). Card intentionally removed from this grid to
@@ -1814,7 +1814,7 @@
                 </div>
                 <details class="profile-diversity-detail" id="profileDiversityDetail" hidden>
                     <summary>Pick Diversity breakdown</summary>
-                    <p>Alternate lines and repeated same-game positions are grouped so users can see whether a record is built from independent picks or repeated exposure to the same handicap.</p>
+                    <p>Pick Diversity measures how broad a record really is. It blends how evenly the picks spread across sports, market types, teams/players, and sides (over/under, home/away) with a check for repeated same-game exposure (alternate lines and correlated positions). Heavy concentration in any one category lowers the score, so a high number means genuinely varied handicapping, not just technically unique rows.</p>
                     <ul id="profileDiversityDetailList"></ul>
                 </details>
                 <div class="profile-advanced-support-grid" aria-label="Advanced supporting sections">
@@ -8311,6 +8311,48 @@
             var day = String(p.commence_time || p.locked_at || p.created_at || '').slice(0, 10);
             return (h && a && day) ? ('m:' + a + '@' + h + ':' + day) : null;
         }
+        function dvLabelSport(k) {
+            var m = {
+                baseball_mlb: 'MLB', basketball_nba: 'NBA', basketball_nba_summer: 'NBA Summer League',
+                basketball_wnba: 'WNBA', basketball_ncaab: 'NCAAB', icehockey_nhl: 'NHL',
+                americanfootball_nfl: 'NFL', americanfootball_ncaaf: 'NCAAF', mma_mixed_martial_arts: 'MMA',
+                boxing_boxing: 'Boxing', tennis_atp: 'Tennis (ATP)', tennis_wta: 'Tennis (WTA)'
+            };
+            var kk = String(k || '').trim().replace(/\s+/g, '_');
+            if (m[kk]) return m[kk];
+            var s = kk.replace(/^[a-z]+_/, '').replace(/_/g, ' ').trim();
+            if (!s) return 'Unknown';
+            return s.replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+        }
+        function dvLabelFamily(f) {
+            if (f === 'h2h') return 'Moneyline';
+            if (f === 'spreads') return 'Spread / Run Line';
+            if (f === 'totals') return 'Game Total (O/U)';
+            if (f === 'team_totals') return 'Team Total';
+            if (f && f.indexOf('prop_') === 0) return (f.slice(5).replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }) + ' Prop').trim();
+            return f || 'Other';
+        }
+        function dvTitle(s) { return String(s || '').replace(/\b\w/g, function (c) { return c.toUpperCase(); }); }
+        // Effective number of distinct categories (exp of Shannon entropy) for a count Map.
+        // Captures BOTH breadth (how many categories) and balance (how evenly split).
+        function dvEff(map) {
+            var totalN = 0; map.forEach(function (v) { totalN += v; });
+            if (totalN <= 0) return { eff: 0, total: 0, top: null, topShare: 0, k: 0 };
+            var H = 0, topN = -1, topK = null, k = 0;
+            map.forEach(function (v, key) {
+                if (v <= 0) return; k++;
+                var pr = v / totalN; H += -pr * Math.log(pr);
+                if (v > topN) { topN = v; topK = key; }
+            });
+            return { eff: Math.exp(H), total: totalN, top: topK, topShare: totalN > 0 ? topN / totalN : 0, k: k };
+        }
+        // Per-dimension diversity 0..1. Kref = category count treated as "fully spread out".
+        // One category only => 0 (fully concentrated). No data => null (dimension dropped).
+        function dvDim(stat, Kref) {
+            if (!stat || stat.total <= 0) return null;
+            if (stat.k <= 1) return 0;
+            return Math.max(0, Math.min(1, (stat.eff - 1) / (Kref - 1)));
+        }
         function classify(p, i) {
             var sport = dvNorm(p.sport_key) || 'unknown';
             var market = dvMarket(p.market_type);
@@ -8334,11 +8376,28 @@
             else if (family === 'team_totals') relatedKey = sport + '|' + gameKey + '|tt|' + participant + '|' + direction;
             else relatedKey = sport + '|' + gameKey + '|' + family + '|' + participant + '|' + direction;
             var lineRaw = p.line_snapshot != null ? Number(p.line_snapshot) : (p.line != null ? Number(p.line) : null);
-            return { exactKey: base + '|' + direction, conflictKey: base, relatedKey: relatedKey, line: Number.isFinite(lineRaw) ? lineRaw : null };
+            // Concentration categories (independent of same-game redundancy):
+            var teamCat = null, sideCat = null;
+            if (family === 'h2h' || family === 'spreads') {
+                teamCat = direction.replace(/^(home|away|team):/, '') || null;
+                sideCat = /^home:/.test(direction) ? 'home' : (/^away:/.test(direction) ? 'away' : null);
+            } else if (family === 'totals') {
+                sideCat = (direction === 'over' || direction === 'under') ? direction : null;
+            } else {
+                teamCat = participant || null;
+                sideCat = (direction === 'over' || direction === 'under') ? direction : null;
+            }
+            return {
+                exactKey: base + '|' + direction, conflictKey: base, relatedKey: relatedKey,
+                line: Number.isFinite(lineRaw) ? lineRaw : null,
+                sport: sport, family: family, teamCat: teamCat, sideCat: sideCat
+            };
         }
         var rows = (Array.isArray(picks) ? picks : []).filter(Boolean);
         var total = rows.length;
         var exact = new Map(), conflict = new Map(), related = new Map();
+        var sportCounts = new Map(), familyCounts = new Map(), teamCounts = new Map(), sideCounts = new Map();
+        function bump(map, key) { if (key == null || key === '') return; map.set(key, (map.get(key) || 0) + 1); }
         rows.forEach(function (p, i) {
             var c = classify(p, i);
             if (!c) {
@@ -8351,6 +8410,10 @@
             conflict.get(c.conflictKey).add(c.exactKey);
             if (!related.has(c.relatedKey)) related.set(c.relatedKey, new Set());
             related.get(c.relatedKey).add(c.exactKey);
+            bump(sportCounts, dvLabelSport(c.sport));
+            bump(familyCounts, dvLabelFamily(c.family));
+            bump(teamCounts, c.teamCat ? dvTitle(c.teamCat) : null);
+            bump(sideCounts, c.sideCat);
         });
         var correlated = 0, altExtras = 0;
         exact.forEach(function (members) {
@@ -8364,8 +8427,38 @@
         var conflicts = 0;
         conflict.forEach(function (set) { if (set.size > 1) conflicts += 1; });
         function rate(n) { return total > 0 ? Number(((n / total) * 100).toFixed(2)) : 0; }
-        var score = null;
-        if (total > 0) score = Math.max(0, Math.min(100, Math.round(100 - ((correlated + 0.5 * relatedExtras) / total) * 100)));
+
+        // ---- Blended diversity score --------------------------------------
+        // Two independent failure modes lower the score:
+        //  (1) Same-game redundancy: alt lines / correlated positions on ONE game
+        //      (the original signal — rarely triggered for normal records, which is
+        //      why every record used to read ~100/100).
+        //  (2) Concentration: leaning heavily on one sport, market type, team, or
+        //      side (over/under). A capper who fires 400 unique-but-identical-shape
+        //      MLB overs is NOT diverse, and now scores accordingly.
+        var sportStat = dvEff(sportCounts), familyStat = dvEff(familyCounts),
+            teamStat = dvEff(teamCounts), sideStat = dvEff(sideCounts);
+        var sportDiv = dvDim(sportStat, 4), familyDiv = dvDim(familyStat, 4),
+            teamDiv = dvDim(teamStat, 8), sideDiv = dvDim(sideStat, 2);
+        var redundancyDiv = total > 0 ? Math.max(0, Math.min(1, 1 - ((correlated + 0.5 * relatedExtras) / total))) : null;
+        var parts = [
+            { w: 0.20, d: sportDiv }, { w: 0.25, d: familyDiv },
+            { w: 0.25, d: teamDiv }, { w: 0.15, d: sideDiv },
+            { w: 0.15, d: redundancyDiv }
+        ];
+        var wSum = 0, dSum = 0;
+        parts.forEach(function (x) { if (x.d != null) { wSum += x.w; dSum += x.w * x.d; } });
+        var score = (total > 0 && wSum > 0) ? Math.max(0, Math.min(100, Math.round((dSum / wSum) * 100))) : null;
+
+        function conc(stat, div, prettySide) {
+            if (!stat || stat.total <= 0) return null;
+            var lbl = stat.top;
+            if (prettySide && lbl) lbl = dvTitle(lbl);
+            return {
+                top_label: lbl, top_share: Number((stat.topShare * 100).toFixed(1)),
+                categories: stat.k, diversity: div == null ? null : Math.round(div * 100)
+            };
+        }
         return {
             total_graded_picks: total,
             unique_opinion_count: exact.size,
@@ -8376,6 +8469,11 @@
             related_exposure_count: relatedExtras,
             conflict_count: conflicts,
             has_conflicts: conflicts > 0,
+            redundancy_score: redundancyDiv == null ? null : Math.round(redundancyDiv * 100),
+            sport_concentration: conc(sportStat, sportDiv),
+            market_concentration: conc(familyStat, familyDiv),
+            team_concentration: conc(teamStat, teamDiv),
+            side_concentration: conc(sideStat, sideDiv, true),
             pick_diversity_score: score
         };
     }
@@ -8391,26 +8489,59 @@
             return st === 'won' || st === 'lost' || st === 'push';
         });
         var d = tmrComputePickDiversity(graded);
-        if (!d.total_graded_picks || d.pick_diversity_score == null) {
+        // Never advertise a confident score on a thin sample — a handful of picks
+        // can look "perfectly diverse" by accident. Show a conservative placeholder.
+        var MIN_SAMPLE = 15;
+        if (!d.total_graded_picks) {
             valueEl.textContent = 'Not enough data yet';
+            valueEl.classList.remove('is-pos', 'is-neg');
             valueEl.classList.add('is-empty');
+            if (detailEl) detailEl.hidden = true;
+            return;
+        }
+        if (d.pick_diversity_score == null || d.total_graded_picks < MIN_SAMPLE) {
+            valueEl.textContent = 'Needs review';
+            valueEl.classList.remove('is-pos', 'is-neg');
+            valueEl.classList.add('is-empty');
+            subEl.textContent = 'Sample too small for a reliable score (' + d.total_graded_picks + ' graded pick' + (d.total_graded_picks === 1 ? '' : 's') + ', need ' + MIN_SAMPLE + '+)';
             if (detailEl) detailEl.hidden = true;
             return;
         }
         valueEl.textContent = d.pick_diversity_score + '/100';
         valueEl.classList.remove('is-empty', 'is-pos', 'is-neg');
-        if (d.pick_diversity_score >= 85) valueEl.classList.add('is-pos');
-        else if (d.pick_diversity_score <= 50) valueEl.classList.add('is-neg');
-        subEl.textContent = d.unique_opinion_count + ' unique opinions of ' + d.total_graded_picks + ' graded picks';
+        if (d.pick_diversity_score >= 80) valueEl.classList.add('is-pos');
+        else if (d.pick_diversity_score <= 45) valueEl.classList.add('is-neg');
+        // Plain-language read of WHY the score is what it is.
+        var tag = d.pick_diversity_score >= 80 ? 'Broad range of opinions'
+            : d.pick_diversity_score >= 60 ? 'Fairly varied'
+            : d.pick_diversity_score >= 40 ? 'Somewhat concentrated'
+            : 'Heavily concentrated';
+        var lead = null;
+        var conc = [d.sport_concentration, d.market_concentration, d.team_concentration, d.side_concentration]
+            .filter(Boolean).filter(function (c) { return c.top_share >= 60; })
+            .sort(function (a, b) { return b.top_share - a.top_share; });
+        if (conc.length) lead = 'mostly ' + conc[0].top_label + ' (' + conc[0].top_share + '%)';
+        subEl.textContent = tag + (lead ? ' — ' + lead : '') + ' · ' + d.total_graded_picks + ' graded picks';
         if (detailEl && listEl) {
+            function concLi(name, c, unit) {
+                if (!c) return '';
+                var flag = c.top_share >= 60 ? ' class="is-conflict"' : '';
+                return '<li' + flag + '>' + name + ': <strong>' + c.top_label + '</strong> = ' + c.top_share + '% of picks'
+                    + ' <span style="opacity:.7">(' + c.categories + ' distinct ' + unit + (c.categories === 1 ? '' : 's')
+                    + (c.diversity == null ? '' : ', spread score ' + c.diversity + '/100') + ')</span></li>';
+            }
             var items = [
-                '<li>Pick Diversity Score: <strong>' + d.pick_diversity_score + '/100</strong></li>',
-                '<li>Unique Opinions: <strong>' + d.unique_opinion_count + ' of ' + d.total_graded_picks + '</strong> graded picks</li>',
-                '<li>Correlated Picks: <strong>' + d.correlated_pick_count + '</strong> (' + d.correlated_pick_rate.toFixed(1) + '% of record)</li>',
-                '<li>Alt-Line Exposure: <strong>' + d.alt_line_exposure_rate.toFixed(1) + '%</strong> (' + d.alt_line_exposure_count + ' stacked alt-line picks)</li>'
-            ];
-            if (d.related_exposure_count > 0) items.push('<li>Related Same-Game Exposure: <strong>' + d.related_exposure_count + '</strong> overlapping position' + (d.related_exposure_count === 1 ? '' : 's') + ' (e.g. ML + run line on the same team)</li>');
-            if (d.has_conflicts) items.push('<li class="is-conflict">Opposite-Side Conflicts: <strong>' + d.conflict_count + '</strong> (both sides of the same market in one game)</li>');
+                '<li>Overall Pick Diversity: <strong>' + d.pick_diversity_score + '/100</strong> — ' + tag + '</li>',
+                concLi('Sport concentration', d.sport_concentration, 'sport'),
+                concLi('Market-type concentration', d.market_concentration, 'market'),
+                concLi('Team / player concentration', d.team_concentration, 'team/player'),
+                concLi('Side lean (over/under, home/away)', d.side_concentration, 'side'),
+                '<li>Same-game non-redundancy: <strong>' + (d.redundancy_score == null ? 'n/a' : d.redundancy_score + '/100') + '</strong> ('
+                    + d.correlated_pick_count + ' correlated, ' + d.alt_line_exposure_count + ' stacked alt-line picks)</li>'
+            ].filter(Boolean);
+            if (d.related_exposure_count > 0) items.push('<li>Related same-game exposure: <strong>' + d.related_exposure_count + '</strong> overlapping position' + (d.related_exposure_count === 1 ? '' : 's') + ' (e.g. ML + run line on the same team)</li>');
+            if (d.has_conflicts) items.push('<li class="is-conflict">Opposite-side conflicts: <strong>' + d.conflict_count + '</strong> (both sides of the same market in one game)</li>');
+            items.push('<li style="opacity:.75">How it is scored: sport 20%, market type 25%, team/player 25%, side lean 15%, same-game non-redundancy 15%. Each drops the score when a record leans heavily on one category. A perfect 100 needs a genuinely even spread across all of them.</li>');
             listEl.innerHTML = items.join('');
             detailEl.hidden = false;
         }
