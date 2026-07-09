@@ -103,10 +103,14 @@ test.describe('core route and content locks', () => {
     expect(box && box.height, 'nav must have layout height').toBeGreaterThan(30);
   });
 
-  test('auth protected Model Builder shows login required when logged out', async ({ page }) => {
+  test('Model Builder research tool loads with verified data-source labels when logged out', async ({ page }) => {
     await page.context().clearCookies();
     await gotoRoute(page, '/model-builder/');
-    await expect(page.locator('body')).toContainText(/Login required|Checking access/i);
+    // Usable logged out: no hard access wall, real heading, verified-source copy.
+    await expect(page.locator('body')).not.toContainText(/Login required|Checking access/i);
+    await expect(page.locator('h1')).toContainText(/Model Builder/i);
+    await expect(page.locator('body')).toContainText(/verified/i);
+    // Saving/tracking still routes through login.
     await expect(page.locator('a[href*="/login/"]').first()).toBeVisible();
   });
 });

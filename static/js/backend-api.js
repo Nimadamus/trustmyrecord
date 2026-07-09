@@ -585,6 +585,65 @@ class TrustMyRecordAPI {
         });
     }
 
+    // ==================== MODEL BUILDER v2 (backtest + tracking) ====================
+    // Backed by /api/models. Backtests query the verified graded-picks ledger;
+    // forward tracking lives in isolated tables and is never mixed with history.
+
+    async modelCatalog() {
+        return this.request('/models/catalog');
+    }
+
+    async runBacktest(filters) {
+        return this.request('/models/backtest', { method: 'POST', body: { filters } });
+    }
+
+    async listModels(options = {}) {
+        const params = new URLSearchParams();
+        if (options.include_archived != null) params.set('include_archived', String(Boolean(options.include_archived)));
+        const q = params.toString();
+        return this.request(`/models${q ? `?${q}` : ''}`);
+    }
+
+    async createModel(model) {
+        return this.request('/models', { method: 'POST', body: model });
+    }
+
+    async updateModel(id, updates) {
+        return this.request(`/models/${encodeURIComponent(id)}`, { method: 'PATCH', body: updates });
+    }
+
+    async archiveModel(id) {
+        return this.request(`/models/${encodeURIComponent(id)}/archive`, { method: 'POST' });
+    }
+
+    async restoreModel(id) {
+        return this.request(`/models/${encodeURIComponent(id)}/restore`, { method: 'POST' });
+    }
+
+    async deleteModel(id) {
+        return this.request(`/models/${encodeURIComponent(id)}`, { method: 'DELETE' });
+    }
+
+    async trackModel(id) {
+        return this.request(`/models/${encodeURIComponent(id)}/track`, { method: 'POST' });
+    }
+
+    async untrackModel(id) {
+        return this.request(`/models/${encodeURIComponent(id)}/untrack`, { method: 'POST' });
+    }
+
+    async getModelForward(id) {
+        return this.request(`/models/${encodeURIComponent(id)}/forward`);
+    }
+
+    async requestPublicModel(id) {
+        return this.request(`/models/${encodeURIComponent(id)}/request-public`, { method: 'POST' });
+    }
+
+    async getPublicTrackedModels() {
+        return this.request('/models/public/tracked');
+    }
+
     // ==================== PICKS ROUTES ====================
 
     async getPicks(options = {}) {
