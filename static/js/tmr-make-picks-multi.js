@@ -164,7 +164,7 @@
     }
 
     function sportKey(item) {
-        var map = (window.TMR && window.TMR.sportKeyMap) || { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'WNBA': 'basketball_wnba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'Soccer': 'soccer_epl', 'MLS': 'soccer_usa_mls', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab' };
+        var map = (window.TMR && window.TMR.sportKeyMap) || { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NBASummer': 'basketball_nba_summer', 'WNBA': 'basketball_wnba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'Soccer': 'soccer_epl', 'MLS': 'soccer_usa_mls', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab' };
         return map[item.sport] || item.sport || '';
     }
 

@@ -14,6 +14,7 @@
 
     const SPORT_LABELS = {
         basketball_nba: 'NBA',
+        basketball_nba_summer: 'NBA Summer League',
         americanfootball_nfl: 'NFL',
         icehockey_nhl: 'NHL',
         baseball_mlb: 'MLB',

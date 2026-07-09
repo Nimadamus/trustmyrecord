@@ -45,6 +45,7 @@ const CONFIG = {
         supportedSports: [
             { id: "americanfootball_nfl", name: "NFL", category: "American Football" },
             { id: "basketball_nba", name: "NBA", category: "Basketball" },
+            { id: "basketball_nba_summer", name: "NBA Summer League", category: "Basketball" },
             { id: "baseball_mlb", name: "MLB", category: "Baseball" },
             { id: "icehockey_nhl", name: "NHL", category: "Ice Hockey" },
             { id: "soccer_epl", name: "Premier League", category: "Soccer" },

@@ -4606,6 +4606,7 @@ function escapeHtml(value) {
 
     function sportLabel(key) {
         const k = String(key || '').toLowerCase();
+        if (k.includes('nba_summer') || k.includes('summer_league')) return 'NBA Summer League';
         if (/mlb|baseball/.test(k)) return 'MLB';
         if (/nhl|hockey/.test(k)) return 'NHL';
         if (/nba|basketball/.test(k)) return 'NBA';

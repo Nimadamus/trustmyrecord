@@ -155,7 +155,7 @@
 
   function formatSportSafe(key) {
     const map = {
-      basketball_nba: "NBA", icehockey_nhl: "NHL", baseball_mlb: "MLB",
+      basketball_nba: "NBA", basketball_nba_summer: "NBA Summer League", icehockey_nhl: "NHL", baseball_mlb: "MLB",
       americanfootball_nfl: "NFL", basketball_ncaab: "NCAAB", americanfootball_ncaaf: "NCAAF",
       NFL: "NFL", NBA: "NBA", MLB: "MLB", NHL: "NHL", NCAAB: "NCAAB", NCAAF: "NCAAF", Soccer: "Soccer"
     };

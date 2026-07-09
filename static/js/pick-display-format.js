@@ -15,6 +15,8 @@
             nhl: 'NHL',
             basketball_nba: 'NBA',
             nba: 'NBA',
+            basketball_nba_summer: 'NBA Summer League',
+            nba_summer: 'NBA Summer League',
             americanfootball_nfl: 'NFL',
             football_nfl: 'NFL',
             nfl: 'NFL',

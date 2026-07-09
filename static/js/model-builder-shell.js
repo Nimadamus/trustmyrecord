@@ -110,6 +110,7 @@
         var map = {
             baseball_mlb: 'MLB',
             basketball_nba: 'NBA',
+            basketball_nba_summer: 'NBA Summer League',
             icehockey_nhl: 'NHL',
             americanfootball_nfl: 'NFL',
             basketball_ncaab: 'NCAAB'

@@ -42,7 +42,7 @@
   function streakTxt(v) { v = n(v); return v > 0 ? 'W' + v : v < 0 ? 'L' + Math.abs(v) : '0'; }
 
   var SPORTS = {
-    baseball_mlb: 'MLB', basketball_nba: 'NBA', basketball_wnba: 'WNBA',
+    baseball_mlb: 'MLB', basketball_nba: 'NBA', basketball_nba_summer: 'NBA Summer League', basketball_wnba: 'WNBA',
     icehockey_nhl: 'NHL', americanfootball_nfl: 'NFL',
     americanfootball_ncaaf: 'CFB', basketball_ncaab: 'CBB', tennis: 'Tennis'
   };

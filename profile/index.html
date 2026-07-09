@@ -5534,6 +5534,8 @@
         baseball_mlb: 'baseball_mlb',
         nba: 'basketball_nba',
         basketball_nba: 'basketball_nba',
+        nba_summer: 'basketball_nba_summer',
+        basketball_nba_summer: 'basketball_nba_summer',
         nfl: 'americanfootball_nfl',
         americanfootball_nfl: 'americanfootball_nfl',
         nhl: 'icehockey_nhl',
@@ -7012,7 +7014,7 @@
         // data renders human-readable even before sample-gating relaxes.
         const TMRX_LABELS = {
             // sports
-            baseball_mlb: 'MLB', basketball_nba: 'NBA', icehockey_nhl: 'NHL',
+            baseball_mlb: 'MLB', basketball_nba: 'NBA', basketball_nba_summer: 'NBA Summer League', icehockey_nhl: 'NHL',
             americanfootball_nfl: 'NFL', americanfootball_ncaaf: 'NCAAF',
             basketball_ncaab: 'NCAAB', soccer_epl: 'EPL', soccer_intl_friendly: 'Soccer (Intl Friendly)', mma_mixed_martial_arts: 'MMA',
             // markets
@@ -7572,7 +7574,7 @@
         };
         const sportName = function(k) {
             const known = {
-                baseball_mlb: 'MLB', basketball_nba: 'NBA', icehockey_nhl: 'NHL',
+                baseball_mlb: 'MLB', basketball_nba: 'NBA', basketball_nba_summer: 'NBA Summer League', icehockey_nhl: 'NHL',
                 americanfootball_nfl: 'NFL', americanfootball_ncaaf: 'NCAAF',
                 basketball_ncaab: 'NCAAB', basketball_wnba: 'WNBA',
                 soccer_epl: 'EPL', soccer_usa_mls: 'MLS', mma_mixed_martial_arts: 'MMA'
@@ -7933,7 +7935,7 @@
             return (x > 0 ? '+' : '') + Math.round(x);
         };
         const sportLabel = (k) => {
-            const m = { baseball_mlb:'MLB', basketball_nba:'NBA', icehockey_nhl:'NHL', americanfootball_nfl:'NFL', americanfootball_ncaaf:'NCAAF', basketball_ncaab:'NCAAB' };
+            const m = { baseball_mlb:'MLB', basketball_nba:'NBA', basketball_nba_summer:'NBA Summer League', icehockey_nhl:'NHL', americanfootball_nfl:'NFL', americanfootball_ncaaf:'NCAAF', basketball_ncaab:'NCAAB' };
             return m[String(k||'').toLowerCase()] || (k || '—').toUpperCase();
         };
         const marketLabel = (k) => {
@@ -8607,7 +8609,7 @@
 
     function pmSportLabel(s) {
         if (!s) return '—';
-        const map = { 'baseball_mlb':'MLB', 'basketball_nba':'NBA', 'basketball_ncaab':'NCAAB', 'icehockey_nhl':'NHL', 'americanfootball_nfl':'NFL', 'americanfootball_ncaaf':'NCAAF' };
+        const map = { 'baseball_mlb':'MLB', 'basketball_nba':'NBA', 'basketball_nba_summer':'NBA Summer League', 'basketball_ncaab':'NCAAB', 'icehockey_nhl':'NHL', 'americanfootball_nfl':'NFL', 'americanfootball_ncaaf':'NCAAF' };
         if (map[s]) return map[s];
         return String(s).toUpperCase().replace(/_/g, ' ');
     }
@@ -11472,6 +11474,7 @@
         const map = {
             baseball_mlb: 'mlb',
             basketball_nba: 'nba',
+            basketball_nba_summer: 'nba_summer',
             icehockey_nhl: 'nhl',
             americanfootball_nfl: 'nfl',
             basketball_ncaab: 'ncaab',
@@ -11541,7 +11544,7 @@
     }
 
     function fmtSport(k) {
-        return { americanfootball_nfl: 'NFL', basketball_nba: 'NBA', baseball_mlb: 'MLB', icehockey_nhl: 'NHL', soccer_epl: 'EPL', soccer_usa_mls: 'MLS', basketball_ncaab: 'NCAAB', americanfootball_ncaaf: 'NCAAF', basketball_wnba: 'WNBA' }[k] || k || 'Pick';
+        return { americanfootball_nfl: 'NFL', basketball_nba: 'NBA', basketball_nba_summer: 'NBA Summer League', baseball_mlb: 'MLB', icehockey_nhl: 'NHL', soccer_epl: 'EPL', soccer_usa_mls: 'MLS', basketball_ncaab: 'NCAAB', americanfootball_ncaaf: 'NCAAF', basketball_wnba: 'WNBA' }[k] || k || 'Pick';
     }
 
     function showToast(msg, type) {

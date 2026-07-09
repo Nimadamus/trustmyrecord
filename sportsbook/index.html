@@ -36,6 +36,7 @@
     window.TMR.sportKeyMap = {
         'NFL': 'americanfootball_nfl',
         'NBA': 'basketball_nba',
+        'NBASummer': 'basketball_nba_summer',
         'WNBA': 'basketball_wnba',
         'NHL': 'icehockey_nhl',
         'MLB': 'baseball_mlb',
@@ -57,6 +58,7 @@
     window.TMR.espnPaths = {
         'americanfootball_nfl': 'football/nfl',
         'basketball_nba': 'basketball/nba',
+        'basketball_nba_summer': 'basketball/nba-summer-las-vegas',
         'basketball_wnba': 'basketball/wnba',
         'icehockey_nhl': 'hockey/nhl',
         'baseball_mlb': 'baseball/mlb',
@@ -2376,7 +2378,7 @@
         }
 
         // Build pick object
-        var sportKeyMap = window.TMR.sportKeyMap || { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'WNBA': 'basketball_wnba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'Soccer': 'soccer_epl', 'MLS': 'soccer_usa_mls', 'UCL': 'soccer_uefa_champs_league', 'LaLiga': 'soccer_spain_la_liga', 'SerieA': 'soccer_italy_serie_a', 'Bundesliga': 'soccer_germany_bundesliga', 'Ligue1': 'soccer_france_ligue_one', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab', 'ATP': 'tennis_atp', 'WTA': 'tennis_wta' };
+        var sportKeyMap = window.TMR.sportKeyMap || { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NBASummer': 'basketball_nba_summer', 'WNBA': 'basketball_wnba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'Soccer': 'soccer_epl', 'MLS': 'soccer_usa_mls', 'UCL': 'soccer_uefa_champs_league', 'LaLiga': 'soccer_spain_la_liga', 'SerieA': 'soccer_italy_serie_a', 'Bundesliga': 'soccer_germany_bundesliga', 'Ligue1': 'soccer_france_ligue_one', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab', 'ATP': 'tennis_atp', 'WTA': 'tennis_wta' };
         var user = null;
         try { user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
         if (!user) {
@@ -2648,7 +2650,7 @@
             statsBar.innerHTML = s;
         }
 
-        var sportDisplayMap = { 'basketball_nba': 'NBA', 'basketball_wnba': 'WNBA', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL', 'baseball_mlb': 'MLB', 'soccer_epl': 'EPL', 'soccer_usa_mls': 'MLS', 'soccer_uefa_champs_league': 'UCL', 'soccer_spain_la_liga': 'La Liga', 'soccer_italy_serie_a': 'Serie A', 'soccer_germany_bundesliga': 'Bundesliga', 'soccer_france_ligue_one': 'Ligue 1', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB', 'tennis_atp': 'ATP', 'tennis_wta': 'WTA' };
+        var sportDisplayMap = { 'basketball_nba': 'NBA', 'basketball_nba_summer': 'NBA Summer League', 'basketball_wnba': 'WNBA', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL', 'baseball_mlb': 'MLB', 'soccer_epl': 'EPL', 'soccer_usa_mls': 'MLS', 'soccer_uefa_champs_league': 'UCL', 'soccer_spain_la_liga': 'La Liga', 'soccer_italy_serie_a': 'Serie A', 'soccer_germany_bundesliga': 'Bundesliga', 'soccer_france_ligue_one': 'Ligue 1', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB', 'tennis_atp': 'ATP', 'tennis_wta': 'WTA' };
         var formatPickDisplay = (window.TMR && window.TMR.formatPickDisplay) || function(pick) {
             var selection = String(pick.selection || 'Pick').trim();
             var market = String(pick.market_type || '').toLowerCase();
@@ -2852,10 +2854,10 @@
 
         // Collect unique sport paths needed and group pending picks by sport
         var sportKeyToPath = {
-            'americanfootball_nfl': 'football/nfl', 'basketball_nba': 'basketball/nba',
+            'americanfootball_nfl': 'football/nfl', 'basketball_nba': 'basketball/nba', 'basketball_nba_summer': 'basketball/nba-summer-las-vegas',
             'icehockey_nhl': 'hockey/nhl', 'baseball_mlb': 'baseball/mlb',
             'americanfootball_ncaaf': 'football/college-football', 'basketball_ncaab': 'basketball/mens-college-basketball',
-            'NFL': 'football/nfl', 'NBA': 'basketball/nba', 'NHL': 'hockey/nhl', 'MLB': 'baseball/mlb',
+            'NFL': 'football/nfl', 'NBA': 'basketball/nba', 'NBASummer': 'basketball/nba-summer-las-vegas', 'NHL': 'hockey/nhl', 'MLB': 'baseball/mlb',
             'NCAAF': 'football/college-football', 'NCAAB': 'basketball/mens-college-basketball'
         };
         var picksBySport = {};
@@ -10927,6 +10929,7 @@ window.toggleSportFamily = function (family) {
 (function () {
     var SPORT_LABELS = {
         NBA:    { kicker: 'NBA Board',    title: 'NBA · Game Board',         tagline: 'Pro basketball matchups. Tap any line to add it to your slip.', cols: ['Spread', 'Moneyline', 'Total'] },
+        NBASummer: { kicker: 'NBA Summer League Board', title: 'NBA Summer League · Game Board', tagline: 'NBA Summer League matchups. Tap any line to add it to your slip.', cols: ['Spread', 'Moneyline', 'Total'] },
         NHL:    { kicker: 'NHL Board',    title: 'NHL · Game Board',         tagline: 'Hockey matchups. Tap any line to add it to your slip.',         cols: ['Puck Line', 'Moneyline', 'Total'] },
         NFL:    { kicker: 'NFL Board',    title: 'NFL · Game Board',         tagline: 'Pro football matchups. Tap any line to add it to your slip.',  cols: ['Spread', 'Moneyline', 'Total'] },
         MLB:    { kicker: 'MLB Board',    title: 'MLB · Game Board',         tagline: 'Baseball matchups. Tap any line to add it to your slip.',      cols: ['Run Line', 'Moneyline', 'Total'] },
@@ -11370,6 +11373,7 @@ window.toggleSportFamily = function (family) {
     var ALT_PROP_TABS = [{k:'alts',label:'Alt Lines'},{k:'props',label:'Player Props'}];
     var PERIOD_CATALOGS = {
         'NBA':   [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
+        'NBASummer': [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
         'NCAAB': [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
         'NFL':   [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
         'NCAAF': [{k:'full',label:'Game Lines'},{k:'1h',label:'1st Half'},{k:'2h',label:'2nd Half'},{k:'q1',label:'1st Quarter'},{k:'q2',label:'2nd Quarter'},{k:'q3',label:'3rd Quarter'},{k:'q4',label:'4th Quarter'},{k:'tt',label:'Team Totals'}].concat(ALT_PROP_TABS),
@@ -23354,6 +23358,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const sportKeyMap = {
         'NFL': 'americanfootball_nfl',
         'NBA': 'basketball_nba',
+        'NBASummer': 'basketball_nba_summer',
         'WNBA': 'basketball_wnba',
         'NHL': 'icehockey_nhl',
         'MLB': 'baseball_mlb',
@@ -24136,7 +24141,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const marketType = marketTypeMap[pick.betType] || 'h2h';
             const selection = extractSelection(pick.pick, pick.betType, pick.game);
             const units = Math.max(0.5, Math.min(10, parseFloat(pick.units) || 1));
-            const sportKeyMap = window.TMR.sportKeyMap || { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'WNBA': 'basketball_wnba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'Soccer': 'soccer_epl', 'MLS': 'soccer_usa_mls', 'UCL': 'soccer_uefa_champs_league', 'LaLiga': 'soccer_spain_la_liga', 'SerieA': 'soccer_italy_serie_a', 'Bundesliga': 'soccer_germany_bundesliga', 'Ligue1': 'soccer_france_ligue_one', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab', 'ATP': 'tennis_atp', 'WTA': 'tennis_wta' };
+            const sportKeyMap = window.TMR.sportKeyMap || { 'NFL': 'americanfootball_nfl', 'NBA': 'basketball_nba', 'NBASummer': 'basketball_nba_summer', 'WNBA': 'basketball_wnba', 'NHL': 'icehockey_nhl', 'MLB': 'baseball_mlb', 'Soccer': 'soccer_epl', 'MLS': 'soccer_usa_mls', 'UCL': 'soccer_uefa_champs_league', 'LaLiga': 'soccer_spain_la_liga', 'SerieA': 'soccer_italy_serie_a', 'Bundesliga': 'soccer_germany_bundesliga', 'Ligue1': 'soccer_france_ligue_one', 'NCAAF': 'americanfootball_ncaaf', 'NCAAB': 'basketball_ncaab', 'ATP': 'tennis_atp', 'WTA': 'tennis_wta' };
             const user = window.auth.getCurrentUser();
 
             const newPick = {
@@ -26116,7 +26121,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentPicksTab = 'pending';
 
     const sportDisplayMap = {
-        'basketball_nba': 'NBA', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL',
+        'basketball_nba': 'NBA', 'basketball_nba_summer': 'NBA Summer League', 'americanfootball_nfl': 'NFL', 'icehockey_nhl': 'NHL',
         'baseball_mlb': 'MLB', 'basketball_wnba': 'WNBA', 'soccer_epl': 'EPL', 'soccer_usa_mls': 'MLS', 'soccer_uefa_champs_league': 'UCL', 'soccer_spain_la_liga': 'La Liga', 'soccer_italy_serie_a': 'Serie A', 'soccer_germany_bundesliga': 'Bundesliga', 'soccer_france_ligue_one': 'Ligue 1', 'americanfootball_ncaaf': 'NCAAF', 'basketball_ncaab': 'NCAAB', 'tennis_atp': 'ATP', 'tennis_wta': 'WTA'
     };
 
@@ -34447,6 +34452,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // groupOpen=true → also fires window.toggleSportFamily for league pickers.
         window.TMR.SPORT_CATALOG = [
             { id: 'NBA',    label: 'NBA',         hasFeed: true },
+            { id: 'NBASummer', label: 'NBA Summer League', hasFeed: true },
             { id: 'NHL',    label: 'NHL',         hasFeed: true },
             { id: 'NFL',    label: 'NFL',         hasFeed: true },
             { id: 'MLB',    label: 'MLB',         hasFeed: true },
@@ -34517,7 +34523,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!rail) return;
             rail.setAttribute('data-sport-catalog', 'v1');
             var subBySport = {
-                NBA: 'Pro Basketball', NHL: 'Hockey', NFL: 'Pro Football', MLB: 'Baseball',
+                NBA: 'Pro Basketball', NBASummer: 'Summer League', NHL: 'Hockey', NFL: 'Pro Football', MLB: 'Baseball',
                 NCAAB: 'College Basketball', NCAAF: 'College Football', WNBA: 'Pro Basketball',
                 Soccer: 'Leagues', Tennis: 'ATP · WTA', MMA: 'UFC · Bellator · PFL',
                 Boxing: 'Pro Boxing', Golf: 'PGA · LIV · Majors', NASCAR: 'Cup Series', F1: 'Formula 1'
