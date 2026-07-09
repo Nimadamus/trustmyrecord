@@ -8396,7 +8396,10 @@
         var rows = (Array.isArray(picks) ? picks : []).filter(Boolean);
         var total = rows.length;
         var exact = new Map(), conflict = new Map(), related = new Map();
-        var sportCounts = new Map(), familyCounts = new Map(), teamCounts = new Map(), sideCounts = new Map();
+        var sportCounts = new Map(), familyCounts = new Map(), teamCounts = new Map();
+        // Side lean is two INDEPENDENT axes; never merge them into one distribution
+        // or a heavy over/under lean gets masked by balanced home/away (and vice versa).
+        var ouCounts = new Map(), hoaCounts = new Map();
         function bump(map, key) { if (key == null || key === '') return; map.set(key, (map.get(key) || 0) + 1); }
         rows.forEach(function (p, i) {
             var c = classify(p, i);
@@ -8413,7 +8416,8 @@
             bump(sportCounts, dvLabelSport(c.sport));
             bump(familyCounts, dvLabelFamily(c.family));
             bump(teamCounts, c.teamCat ? dvTitle(c.teamCat) : null);
-            bump(sideCounts, c.sideCat);
+            if (c.sideCat === 'over' || c.sideCat === 'under') bump(ouCounts, c.sideCat);
+            else if (c.sideCat === 'home' || c.sideCat === 'away') bump(hoaCounts, c.sideCat);
         });
         var correlated = 0, altExtras = 0;
         exact.forEach(function (members) {
@@ -8437,9 +8441,22 @@
         //      side (over/under). A capper who fires 400 unique-but-identical-shape
         //      MLB overs is NOT diverse, and now scores accordingly.
         var sportStat = dvEff(sportCounts), familyStat = dvEff(familyCounts),
-            teamStat = dvEff(teamCounts), sideStat = dvEff(sideCounts);
+            teamStat = dvEff(teamCounts);
+        var ouStat = dvEff(ouCounts), hoaStat = dvEff(hoaCounts);
+        var ouDiv = dvDim(ouStat, 2), hoaDiv = dvDim(hoaStat, 2);
+        // Combine the two side axes weighted by how many picks fall on each.
+        var sideN = (ouStat.total || 0) + (hoaStat.total || 0);
+        var sideDivCombined = sideN > 0
+            ? (((ouDiv == null ? 0 : ouDiv * ouStat.total) + (hoaDiv == null ? 0 : hoaDiv * hoaStat.total)) / sideN)
+            : null;
+        // Headline the MORE one-sided axis so a lopsided lean is what users see.
+        var sideAxes = [];
+        if (ouStat.total > 0) sideAxes.push(ouStat);
+        if (hoaStat.total > 0) sideAxes.push(hoaStat);
+        sideAxes.sort(function (a, b) { return b.topShare - a.topShare; });
+        var sideHead = sideAxes.length ? sideAxes[0] : null;
         var sportDiv = dvDim(sportStat, 4), familyDiv = dvDim(familyStat, 4),
-            teamDiv = dvDim(teamStat, 8), sideDiv = dvDim(sideStat, 2);
+            teamDiv = dvDim(teamStat, 8), sideDiv = sideDivCombined;
         var redundancyDiv = total > 0 ? Math.max(0, Math.min(1, 1 - ((correlated + 0.5 * relatedExtras) / total))) : null;
         var parts = [
             { w: 0.20, d: sportDiv }, { w: 0.25, d: familyDiv },
@@ -8473,7 +8490,12 @@
             sport_concentration: conc(sportStat, sportDiv),
             market_concentration: conc(familyStat, familyDiv),
             team_concentration: conc(teamStat, teamDiv),
-            side_concentration: conc(sideStat, sideDiv, true),
+            side_concentration: sideHead ? {
+                top_label: dvTitle(sideHead.top),
+                top_share: Number((sideHead.topShare * 100).toFixed(1)),
+                categories: (ouStat.k || 0) + (hoaStat.k || 0),
+                diversity: sideDivCombined == null ? null : Math.round(sideDivCombined * 100)
+            } : null,
             pick_diversity_score: score
         };
     }
