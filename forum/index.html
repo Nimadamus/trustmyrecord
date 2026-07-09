@@ -1992,7 +1992,9 @@ function renderAuthorPanel(post) {
     var headline = String(author.headline || '').trim();
     var avatar = author.avatar_url || author.avatar || '';
     var initials = String(who || '?').slice(0, 1).toUpperCase();
-    var role = author.user_title || (userIsVerified(author) ? 'Verified Handicapper' : 'Member');
+    var role = (author.author_is_official_bot || author.is_official_bot)
+        ? "TMR's Resident Bot"
+        : (author.user_title || (userIsVerified(author) ? 'Verified Handicapper' : 'Member'));
     var favTeam = firstFavoriteTeam(author);
     var hasFavTeam = favTeam && favTeam !== 'Not set';
     var joined = author.user_joined || author.created_at || author.joined_at;
