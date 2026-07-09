@@ -138,6 +138,7 @@
     }
 
     function open() {
+        loadStylesheet();
         var parts = build();
         // Lock body scroll while open without clobbering any prior inline value.
         document.body.setAttribute('data-tmr-contest-prev-overflow', document.body.style.overflow || '');
@@ -176,10 +177,16 @@
     }
 
     function init() {
-        if (shouldSuppress()) return;
-        loadStylesheet();
-        // Flag was already written at IIFE-top (IS_FIRST_THIS_SESSION claim).
-        setTimeout(open, DELAY_MS);
+        // AUTO-OPEN DISABLED (Jul 9 2026, Nima): the contest promo must NEVER
+        // auto-open on page load or on a timer. The timed setTimeout(open) here
+        // rendered as a flashing full-screen popup on homepage/forum/profile.
+        // The contest stays reachable via the nav "Contest" link and the hero
+        // CTA (/contests/justbet-mlb/). The modal is exposed for optional,
+        // click-based triggering only -- nothing in this file auto-opens.
+        window.TMRContestPromo = { open: open, close: close };
+        // Reference retained so tooling/linters don't flag these as unused; they
+        // remain available if a future click trigger wants suppression logic.
+        void shouldSuppress; void rememberDismiss; void DELAY_MS;
     }
 
     if (document.readyState === 'loading') {
