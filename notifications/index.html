@@ -532,8 +532,12 @@
                 const meta = formatTime(n.created_at);
                 const icon = getNotifTheme(normalized.type);
                 const destination = getNotificationDestination(normalized);
+                const avatar = normalized.avatar_url || n.avatar_url;
+                const iconHtml = avatar
+                    ? '<div class="notif-icon" style="padding:0;overflow:hidden;"><img src="' + escapeHtml(avatar) + '" alt="' + escapeHtml(normalized.username || '') + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentNode.style.background=\'' + icon.bg + '\';this.parentNode.style.color=\'' + icon.fg + '\';this.parentNode.textContent=\'' + icon.label + '\';"></div>'
+                    : '<div class="notif-icon" style="background:' + icon.bg + ';color:' + icon.fg + ';">' + icon.label + '</div>';
                 return '<div class="notif ' + (normalized.isRead ? '' : 'unread') + '" onclick="openNotification(\'' + escapeJs(String(n.id || '')) + '\')">' +
-                    '<div class="notif-icon" style="background:' + icon.bg + ';color:' + icon.fg + ';">' + icon.label + '</div>' +
+                    iconHtml +
                     '<div class="notif-body">' +
                     '<div class="notif-message">' + escapeHtml(normalized.message) + '</div>' +
                     '<div class="notif-meta">' + meta + (normalized.username ? ' • @' + escapeHtml(normalized.username) : '') + '</div>' +
@@ -561,7 +565,7 @@
             const resourceType = String(notification.resource_type || notification.resourceType || notification.entity_type || notification.entityType || '').toLowerCase();
 
             if (['new_message', 'message'].includes(type)) return 'messages';
-            if (type.indexOf('forum') !== -1 || ['thread', 'reply'].includes(resourceType)) return 'forum';
+            if (type.indexOf('forum') !== -1 || resourceType.indexOf('forum') !== -1 || ['thread', 'reply'].includes(resourceType)) return 'forum';
             if (type.indexOf('pick') !== -1 || type.indexOf('bet') !== -1 || ['pick', 'receipt'].includes(resourceType)) return 'picks';
             if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention'].includes(type)) return 'social';
             return 'all';
@@ -598,11 +602,11 @@
             if (['new_message', 'message'].includes(type)) {
                     return { href: conversationUser ? '/messages/?to=' + encodeURIComponent(conversationUser) : '/messages/', label: 'Open messages' };
             }
-            if (type.indexOf('forum') !== -1 || ['thread', 'reply'].includes(resourceType)) {
+            if (type.indexOf('forum') !== -1 || resourceType.indexOf('forum') !== -1 || ['thread', 'reply'].includes(resourceType)) {
                     const href = threadId
                         ? '/forum/?thread=' + encodeURIComponent(threadId) + (postId ? '#post-' + encodeURIComponent(postId) : '')
                         : '/forum/';
-                    return { href: href, label: 'Open forum' };
+                    return { href: href, label: 'Open thread' };
             }
             if (type.indexOf('poll') !== -1 || pollId) {
                     return { href: '/hangout/', label: 'Open polls' };
@@ -665,6 +669,9 @@
                 forum_thread_reply: { label: 'R', bg: 'rgba(99,102,241,0.15)', fg: '#6366f1' },
                 forum_post_reply: { label: 'R', bg: 'rgba(99,102,241,0.15)', fg: '#6366f1' },
                 forum_mention: { label: '@', bg: 'rgba(31,122,224,0.15)', fg: '#1f7ae0' },
+                follow_new_thread: { label: 'Q', bg: 'rgba(139,92,246,0.15)', fg: '#8b5cf6' },
+                follow_new_post: { label: 'R', bg: 'rgba(99,102,241,0.15)', fg: '#6366f1' },
+                follow_new_pick: { label: 'P', bg: 'rgba(59,130,246,0.15)', fg: '#60a5fa' },
                 forum_post_like: { label: 'L', bg: 'rgba(239,68,68,0.15)', fg: '#f87171' },
                 new_message: { label: 'M', bg: 'rgba(45,212,191,0.15)', fg: '#14b8a6' },
                 message: { label: 'M', bg: 'rgba(45,212,191,0.15)', fg: '#14b8a6' }
