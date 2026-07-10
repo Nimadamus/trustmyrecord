@@ -65,23 +65,13 @@
         const a=p.get('a')||'', b=p.get('b')||'';
         if(!a||!b){ el.innerHTML='<div class="og-error">Two members are required for a head-to-head.</div>'; return; }
         try{
-            const resp=await fetch(apiBase()+'/api/gaming/h2h/'+encodeURIComponent(a)+'/'+encodeURIComponent(b));
+            const resp=await fetch(apiBase()+'/api/gaming/online-h2h/'+encodeURIComponent(a)+'/'+encodeURIComponent(b));
             if(!resp.ok) throw new Error('nf');
             const data=await resp.json();
-            const u1=data.user1, u2=data.user2;
+            const u1=data.a, u2=data.b;
             if(!u1||!u2){ el.innerHTML='<div class="og-error">One or both members could not be found.</div>'; return; }
-            const recs=data.h2h_records||[];
-            // Orient wins to u1 (=a) and u2 (=b). Records store lower id as user1_id.
-            let aW=0,bW=0,dr=0;
-            const perGame=recs.map(function(r){
-                const aIsLow = r.user1_id===u1.id;
-                const aw = aIsLow ? (parseInt(r.user1_wins)||0) : (parseInt(r.user2_wins)||0);
-                const bw = aIsLow ? (parseInt(r.user2_wins)||0) : (parseInt(r.user1_wins)||0);
-                const d = parseInt(r.draws)||0;
-                aW+=aw; bW+=bw; dr+=d;
-                return { title:r.game_title||r.game_slug, aw:aw, bw:bw, d:d, total:parseInt(r.total_matches)||0 };
-            });
-            const total=aW+bW+dr;
+            const aW=data.totals.a_wins||0, bW=data.totals.b_wins||0, dr=data.totals.draws||0, total=data.totals.meetings||0;
+            if(!total){ el.innerHTML='<h1>Head-to-Head</h1><div class="og-error">'+esc(u1.display_name||u1.username)+' and '+esc(u2.display_name||u2.username)+' have not completed any online gaming challenges yet.</div>'; return; }
             let html='<h1>Head-to-Head</h1>'+
                 '<div class="og-scoreline">'+
                     '<div class="og-p '+(aW>bW?'lead':'')+'">'+pLink(u1.username,u1.display_name)+'<div class="w">'+aW+'</div></div>'+
@@ -90,23 +80,21 @@
                 '</div>'+
                 '<div class="og-subttl">'+total+' total meeting'+(total===1?'':'s')+(dr?' · '+dr+' draw'+(dr===1?'':'s'):'')+'</div>';
 
+            const perGame=data.by_game||[];
             if(perGame.length){
                 html+='<div class="og-sub-head">By Game</div><table class="og-tbl"><thead><tr><th>Game</th><th>'+esc(u1.display_name||u1.username)+'</th><th>'+esc(u2.display_name||u2.username)+'</th><th>Draws</th><th>Meetings</th></tr></thead><tbody>';
-                perGame.forEach(function(g){ html+='<tr><td><b>'+esc(g.title)+'</b></td><td>'+g.aw+'</td><td>'+g.bw+'</td><td>'+g.d+'</td><td>'+g.total+'</td></tr>'; });
+                perGame.forEach(function(g){ html+='<tr><td><b>'+esc(g.title||g.slug)+'</b></td><td>'+(g.a_wins||0)+'</td><td>'+(g.b_wins||0)+'</td><td>'+(g.draws||0)+'</td><td>'+(g.meetings||0)+'</td></tr>'; });
                 html+='</tbody></table>';
             }
 
-            const matches=data.recent_matches||[];
+            const matches=data.meetings||[];
             if(matches.length){
                 html+='<div class="og-sub-head">Every Meeting</div><table class="og-tbl"><thead><tr><th>Date</th><th>Game</th><th>Result ('+esc(u1.display_name||u1.username)+')</th><th>Score</th><th></th></tr></thead><tbody>';
                 matches.forEach(function(m){
-                    const aIsP1 = m.player1_id===u1.id;
-                    const aScore = aIsP1 ? m.player1_score : m.player2_score;
-                    const bScore = aIsP1 ? m.player2_score : m.player1_score;
-                    let res='d'; if(!m.is_draw && m.winner_id!=null){ res = m.winner_id===u1.id?'w':'l'; }
+                    const res = m.result_for_a==='win'?'w':(m.result_for_a==='loss'?'l':'d');
                     const dt = m.played_at ? new Date(m.played_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
-                    const link = '<a href="/online-gaming/match/?id='+encodeURIComponent(m.id)+'">Box score</a>';
-                    html+='<tr><td>'+esc(dt)+'</td><td>'+esc(m.game_title||m.game_slug||'')+'</td><td>'+badge(res)+'</td><td><b>'+(parseInt(aScore)||0)+'–'+(parseInt(bScore)||0)+'</b></td><td>'+link+'</td></tr>';
+                    const link = m.box_score_url ? '<a href="'+esc(m.box_score_url)+'">Box score</a>' : '';
+                    html+='<tr><td>'+esc(dt)+'</td><td>'+esc((m.game&&(m.game.title||m.game.slug))||'')+'</td><td>'+badge(res)+'</td><td><b>'+(parseInt(m.a_score)||0)+'–'+(parseInt(m.b_score)||0)+'</b></td><td>'+link+'</td></tr>';
                 });
                 html+='</tbody></table>';
             }
