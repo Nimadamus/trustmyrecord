@@ -379,12 +379,14 @@ function renderNotificationsList(notifications) {
         const iconChar = getNotifIconChar(n.type);
         const isRead = n.is_read;
         const timeStr = timeAgo(n.created_at);
+        const avatar = n.avatar_url || n.avatarUrl;
+        const iconHtml = avatar
+            ? `<div class="notification-icon ${iconClass}" style="padding:0;overflow:hidden;"><img src="${escapeHtml(avatar)}" alt="${escapeHtml(n.username || '')}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.outerHTML='<i class=\\'fas ${iconChar}\\'></i>';"></div>`
+            : `<div class="notification-icon ${iconClass}"><i class="fas ${iconChar}"></i></div>`;
 
         return `
             <div class="notification-item ${isRead ? '' : 'unread'}" data-type="${getLegacyFilterType(n.type)}" onclick="handleNotifClick('${n.id}')">
-                <div class="notification-icon ${iconClass}">
-                    <i class="fas ${iconChar}"></i>
-                </div>
+                ${iconHtml}
                 <div class="notification-content">
                     <div class="notification-message">${escapeHtml(n.message || n.content || '')}</div>
                     <div class="notification-time">${timeStr}</div>
@@ -397,6 +399,8 @@ function renderNotificationsList(notifications) {
 
 function getLegacyFilterType(type) {
     const normalized = String(type || '').toLowerCase();
+    if (normalized.indexOf('follow_new_pick') !== -1) return 'picks';
+    if (normalized.indexOf('follow_new_thread') !== -1 || normalized.indexOf('follow_new_post') !== -1) return 'alerts';
     if (normalized.indexOf('forum') !== -1) return 'alerts';
     if (['friend_request', 'friend_accept', 'follow', 'mention', 'like', 'comment'].includes(normalized)) return 'social';
     if (['challenge_invite', 'challenge_result', 'challenge', 'system'].includes(normalized)) return 'alerts';
@@ -410,6 +414,7 @@ function getNotifIconClass(type) {
         new_message: 'message', message: 'message',
         forum_thread_reply: 'message', forum_post_reply: 'message',
         forum_mention: 'message', forum_post_like: 'friend',
+        follow_new_thread: 'message', follow_new_post: 'message', follow_new_pick: 'bet',
         challenge_invite: 'challenge', challenge_result: 'challenge', challenge: 'challenge',
         pick_won: 'bet', pick_lost: 'bet', bet_won: 'bet', bet_lost: 'bet',
         premium_upgrade: 'premium', premium_expired: 'premium',
@@ -424,6 +429,7 @@ function getNotifIconChar(type) {
         new_message: 'fa-comment', message: 'fa-comment',
         forum_thread_reply: 'fa-comments', forum_post_reply: 'fa-reply',
         forum_mention: 'fa-at', forum_post_like: 'fa-thumbs-up',
+        follow_new_thread: 'fa-comment-dots', follow_new_post: 'fa-reply', follow_new_pick: 'fa-chart-line',
         challenge_invite: 'fa-trophy', challenge_result: 'fa-trophy', challenge: 'fa-trophy',
         pick_won: 'fa-chart-line', pick_lost: 'fa-chart-line',
         bet_won: 'fa-chart-line', bet_lost: 'fa-chart-line',
@@ -447,6 +453,13 @@ function getNotificationDestination(notification) {
     if (type === 'premium_upgrade' || type === 'premium_expired') return '/premium/';
     if (type.indexOf('forum') !== -1 || resourceType === 'forum_thread' || resourceType === 'forum_post') {
         return threadId ? '/forum/?thread=' + encodeURIComponent(threadId) + (postId ? '#post-' + encodeURIComponent(postId) : '') : '/forum/';
+    }
+    if (type.indexOf('pick') !== -1 || resourceType === 'pick') {
+        const un = notification?.username || notification?.actor_username || notification?.from_username;
+        return un ? '/profile/?user=' + encodeURIComponent(un) + '&view=picks' : '/mypicks/';
+    }
+    if (type === 'follow' && (notification?.username)) {
+        return '/profile/?user=' + encodeURIComponent(notification.username);
     }
 
     return null;
