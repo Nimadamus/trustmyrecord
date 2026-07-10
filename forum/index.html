@@ -1763,7 +1763,7 @@ body.classic-forum .fpost-btn.is-sub.is-subscribed{
 </div>
 
 <script src="/static/js/config.js?v=20260421a"></script>
-<script src="/static/js/backend-api.js?v=20260423a"></script>
+<script src="/static/js/backend-api.js?v=follow20260710"></script>
 <script src="/static/js/auth-persistent.js?v=20260424a"></script>
 <script src="/static/js/notifications.js?v=20260708alertsfix1"></script>
 <script src="/static/js/forum-notification-bell.js?v=20260530bell4"></script>
@@ -2067,6 +2067,15 @@ function renderAuthorPanel(post) {
     // Official community bots get a distinct persona card (badge + tagline +
     // styled panel). Presentation only; profileHref/onclick/logic untouched.
     var botClass = isOfficialBot ? ' fthread-author--bot' : '';
+    // Follow-the-user control (distinct from the thread-subscription "Follow Thread"
+    // button). Lets a member follow this author straight from their forum post.
+    var fViewer = (typeof getForumSessionUser === 'function') ? getForumSessionUser() : null;
+    var fViewerName = fViewer && fViewer.username ? String(fViewer.username).toLowerCase() : '';
+    var fAuthorId = author.user_id || author.id || (author.user && author.user.id) || '';
+    var canFollowUser = !!fViewer && !isOfficialBot && profileUsername && String(profileUsername).toLowerCase() !== fViewerName;
+    var followUserHtml = canFollowUser
+        ? '<div class="fthread-author-row" style="margin-top:6px;"><button type="button" class="fpost-btn ffollow-user-btn" data-username="' + escHtml(profileUsername) + '" data-userid="' + escHtml(String(fAuthorId)) + '" onclick="forumFollowUser(this)">+ Follow</button></div>'
+        : '';
     var botBadge = isOfficialBot ? '<div><span class="fbot-badge">Bot</span></div>' : '';
     var botTagline = isOfficialBot
         ? '<div class="fbot-tagline">' + escHtml((headline || '') || 'Your friendly TMR house bot') + '</div>'
@@ -2083,7 +2092,38 @@ function renderAuthorPanel(post) {
         + '<div class="fthread-author-row">Posts: ' + escHtml(formatCount(postCount)) + '</div>'
         + '<div class="fthread-author-row">Threads: ' + escHtml(formatCount(threadCount)) + '</div>'
         + (userIsVerified(author) ? '<span class="fthread-badge">Verified record</span>' : '')
+        + followUserHtml
         + '</div>';
+}
+
+// Follow (or, once following, open the author's profile to manage preferences)
+// straight from a forum post's author panel.
+async function forumFollowUser(btn) {
+    if (!btn) return;
+    var username = btn.getAttribute('data-username') || '';
+    var userId = btn.getAttribute('data-userid') || '';
+    if (btn.getAttribute('data-following') === '1') {
+        window.location.href = '/profile/?user=' + encodeURIComponent(username);
+        return;
+    }
+    btn.disabled = true;
+    try {
+        if (!userId || userId === 'undefined' || userId === 'null') {
+            var prof = await api.getUser(username);
+            var u = (prof && (prof.user || prof)) || {};
+            userId = u.id;
+        }
+        if (!userId) throw new Error('no id');
+        await api.followUser(userId);
+        btn.textContent = '✓ Following';
+        btn.setAttribute('data-following', '1');
+        btn.setAttribute('data-userid', String(userId));
+        btn.title = 'Manage notification preferences on their profile';
+    } catch (e) {
+        alert((e && e.message) ? e.message : 'Could not follow this user');
+    } finally {
+        btn.disabled = false;
+    }
 }
 
 function renderThread() {
