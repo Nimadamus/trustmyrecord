@@ -5525,7 +5525,7 @@
     <script src="/static/js/config.js?v=20260330"></script>
     <script src="/static/js/tmr-team-logo.js?v=20260707logos1"></script>
     <script src="/static/js/analytics.js?v=20260405"></script>
-    <script src="/static/js/backend-api.js?v=20260601nostorestats1"></script>
+    <script src="/static/js/backend-api.js?v=follow20260710"></script>
     <script src="/static/js/nav-badges.js"></script>
     <script src="/static/js/auth-persistent.js?v=20260525noautologout"></script>
     <script src="/static/js/auto-grader-fixed.js?v=20260405b"></script>
@@ -9500,10 +9500,13 @@
         if (isOwnProfile) {
             primaryActions = '';
         } else if (currentUser) {
-            const ft = isFollowingProfile ? 'Unfollow' : 'Follow';
-            const fc = isFollowingProfile ? 'btn-secondary' : 'btn-primary';
-            const fa = isFollowingProfile ? 'doUnfollow' : 'doFollow';
-            primaryActions = '<button class="btn ' + fc + '" onclick="' + fa + '(' + profileUserId + ')">' + ft + '</button>' +
+            const followBtn = isFollowingProfile
+                ? '<span class="tmr-follow-wrap" style="position:relative;display:inline-block;">'
+                    + '<button class="btn btn-secondary" onclick="toggleFollowPrefs(' + profileUserId + ')"><i class="fas fa-check" style="margin-right:6px;"></i>Following <i class="fas fa-caret-down" style="margin-left:5px;"></i></button>'
+                    + '<div id="followPrefsPop" class="tmr-follow-pop" style="display:none;position:absolute;top:calc(100% + 8px);left:0;z-index:200;width:290px;background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;box-shadow:0 18px 48px rgba(0,0,0,0.45);"></div>'
+                    + '</span>'
+                : '<button class="btn btn-primary" onclick="doFollow(' + profileUserId + ')"><i class="fas fa-plus" style="margin-right:6px;"></i>Follow</button>';
+            primaryActions = followBtn +
                 '<button class="btn btn-secondary" onclick="location.href=\'/messages/?to=' + encodeURIComponent(p.username) + '\'">Send Message</button>' +
                 '<button class="btn btn-secondary" onclick="location.href=\'/arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button>';
         }
@@ -11947,6 +11950,60 @@
             renderProfileHeader(profileData);
         } catch(e) { showToast(e.message, 'error'); }
     }
+
+    // ---- Follow notification preferences popover ----
+    const FOLLOW_PREF_ROWS = [
+        { key: 'notify_new_thread', label: 'New threads', hint: 'When they start a new forum thread' },
+        { key: 'notify_post', label: 'Posts &amp; replies', hint: 'When they reply in the forum (batched)' },
+        { key: 'notify_pick', label: 'New picks', hint: 'When they publish a pick' },
+        { key: 'digest_mode', label: 'Digest mode', hint: 'Collapse into one daily alert' },
+        { key: 'email_enabled', label: 'Email me', hint: 'Also send email (off by default)' },
+        { key: 'paused', label: 'Pause this person', hint: 'Temporarily mute their alerts' }
+    ];
+    async function toggleFollowPrefs(id) {
+        const pop = document.getElementById('followPrefsPop');
+        if (!pop) return;
+        if (pop.style.display === 'block') { pop.style.display = 'none'; return; }
+        pop.style.display = 'block';
+        pop.innerHTML = '<div style="padding:14px;color:#9ba3b5;">Loading...</div>';
+        try {
+            const data = await api.getFollowPreferences(id);
+            renderFollowPrefsPopover(id, data.preferences || {});
+        } catch (e) {
+            pop.innerHTML = '<div style="padding:14px;color:#ef4444;">Could not load preferences.</div>';
+        }
+    }
+    function renderFollowPrefsPopover(id, prefs) {
+        const pop = document.getElementById('followPrefsPop');
+        if (!pop) return;
+        const rows = FOLLOW_PREF_ROWS.map(function(r) {
+            const on = prefs[r.key] === true;
+            return '<label style="display:flex;align-items:flex-start;gap:10px;padding:9px 6px;border-radius:8px;cursor:pointer;">' +
+                '<input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="setFollowPref(' + id + ',\'' + r.key + '\',this.checked)" style="margin-top:3px;">' +
+                '<span style="min-width:0;"><span style="display:block;font-weight:700;color:#eef2f7;font-size:.9rem;">' + r.label + '</span>' +
+                '<span style="display:block;color:#8b98ad;font-size:.76rem;">' + r.hint + '</span></span>' +
+                '</label>';
+        }).join('');
+        pop.innerHTML =
+            '<div style="padding:12px 14px;border-bottom:1px solid #2a2e3d;font-weight:800;font-size:.82rem;letter-spacing:.04em;color:#8b98ad;text-transform:uppercase;">Notify me when</div>' +
+            '<div style="padding:6px 8px;">' + rows + '</div>' +
+            '<div style="padding:10px 14px;border-top:1px solid #2a2e3d;">' +
+            '<button class="btn btn-secondary" style="width:100%;color:#f87171;border-color:#3a2530;" onclick="doUnfollow(' + id + ')"><i class="fas fa-user-minus" style="margin-right:6px;"></i>Unfollow</button>' +
+            '</div>';
+    }
+    async function setFollowPref(id, key, value) {
+        try {
+            const body = {}; body[key] = value;
+            await api.updateFollowPreferences(id, body);
+            showToast('Preference saved', 'success');
+        } catch (e) { showToast('Could not save preference', 'error'); }
+    }
+    // Close the popover on outside click.
+    document.addEventListener('click', function(e) {
+        const wrap = e.target.closest && e.target.closest('.tmr-follow-wrap');
+        const pop = document.getElementById('followPrefsPop');
+        if (pop && pop.style.display === 'block' && !wrap) pop.style.display = 'none';
+    });
 
     async function openSocialList(type) {
         if (!profileUserId) return;
