@@ -364,6 +364,17 @@
         .hm-leader-card--empty::before,
         .hm-leader-card--empty::after { display: none; }
 
+        .hm-leader-card--hot { display: block; text-decoration: none; color: inherit; }
+        .hm-leader-card--hot:focus-visible { outline: 2px solid var(--leader-accent, var(--teal)); outline-offset: 2px; }
+        .hm-info {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 14px; height: 14px; margin-left: 6px;
+            border-radius: 50%; border: 1px solid currentColor;
+            font-size: 0.6rem; font-style: normal; font-weight: 900;
+            line-height: 1; cursor: help; vertical-align: middle; opacity: 0.75;
+        }
+        .hm-info:hover, .hm-info:focus-visible { opacity: 1; }
+
         .hm-stat.is-neutral,
         .hm-count strong.is-muted {
             color: #9fb0c6;
@@ -2751,6 +2762,104 @@
             }
         }
 
+        // ---- Hottest Active Capper (trailing 30 days) --------------------
+        const HOT_WINDOW_DAYS = 30;
+        const HOT_RECENT_DAYS = 7;
+        const MIN_HOT_GRADED_PICKS = 10;
+        const HOT_INFO = 'Best net units over the last 30 days. Requires 10+ graded picks in that window, at least one graded pick in the last 7 days, a public profile, and settled (graded) picks only. Pending picks excluded. Ties: higher ROI, then more graded picks, then higher win %.';
+
+        // Settlement/graded timestamp for a pick - the date the pick was decided,
+        // never the submit/created date. Drives the entire 30-day window.
+        function pickGradedTime(pick) {
+            if (!pick) return 0;
+            const t = new Date(pick.graded_at || pick.grade_verified_at || 0).getTime();
+            return Number.isFinite(t) ? t : 0;
+        }
+
+        // Net units, ROI, win%, and graded count over the trailing 30 days,
+        // computed only from settled (won/lost/push) PUBLIC picks keyed on the
+        // graded/settlement date. Pending and void picks are excluded. Lifetime
+        // units are never used here.
+        function hotStats30d(member) {
+            const now = Date.now();
+            const windowStart = now - (HOT_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+            const recentStart = now - (HOT_RECENT_DAYS * 24 * 60 * 60 * 1000);
+            const picks = (member.rawPicks || [])
+                .filter(pick => pick && pick.is_public !== false)
+                .filter(pick => ['won', 'lost', 'push'].includes(pick._status))
+                .filter(pick => { const t = pickGradedTime(pick); return t >= windowStart && t <= now; });
+            if (!picks.length) return null;
+            let units = 0, risk = 0, wins = 0, losses = 0, latest = 0;
+            picks.forEach(pick => {
+                units += pickPL(pick);
+                const rk = Number(pick.risk_units);
+                if (Number.isFinite(rk) && rk > 0) {
+                    risk += rk;
+                } else {
+                    const stake = Number(pick.units || pick.stake || 1);
+                    const odds = Number(pick.odds_snapshot || pick.odds || pick.price || -110);
+                    risk += odds < 0 ? stake * Math.abs(odds) / 100 : stake;
+                }
+                if (pick._status === 'won') wins++;
+                else if (pick._status === 'lost') losses++;
+                const gt = pickGradedTime(pick);
+                if (gt > latest) latest = gt;
+            });
+            const decisions = wins + losses;
+            return {
+                units,
+                graded: picks.length,
+                roi: risk > 0 ? (units / risk) * 100 : null,
+                winRate: decisions > 0 ? (wins / decisions) * 100 : null,
+                lastGraded: latest,
+                recent: latest >= recentStart
+            };
+        }
+
+        function qualifiesHot(hot) {
+            return !!hot && hot.graded >= MIN_HOT_GRADED_PICKS && hot.recent;
+        }
+
+        // Best net 30-day units among qualifiers. Deterministic tie-break:
+        // ROI, then graded-pick count, then win%, then username.
+        function hottestActiveCapper(list) {
+            const ranked = list
+                .map(member => ({ member, hot: hotStats30d(member) }))
+                .filter(entry => qualifiesHot(entry.hot))
+                .sort((a, b) =>
+                    (b.hot.units - a.hot.units) ||
+                    (Number(b.hot.roi || 0) - Number(a.hot.roi || 0)) ||
+                    (b.hot.graded - a.hot.graded) ||
+                    (Number(b.hot.winRate || 0) - Number(a.hot.winRate || 0)) ||
+                    String(a.member.username || '').localeCompare(String(b.member.username || ''))
+                );
+            return ranked[0] || null;
+        }
+
+        function renderHottestCard(entry) {
+            if (!entry) {
+                return '<div class="hm-leader-card hm-leader-card--hot hm-leader-card--empty">' +
+                    '<b>Hottest Active Capper' +
+                        '<span class="hm-info" tabindex="0" role="img" aria-label="Qualification rules" title="' + escapeHtml(HOT_INFO) + '">i</span>' +
+                    '</b>' +
+                    '<strong>No qualifier yet</strong>' +
+                    '<span>Needs 10+ graded picks over the last 30 days</span>' +
+                '</div>';
+            }
+            const member = entry.member;
+            const hot = entry.hot;
+            const href = '/u/' + encodeURIComponent(member.username) + '/';
+            const unitsStr = (hot.units > 0 ? '+' : '') + hot.units.toFixed(2) + ' units';
+            return '<a class="hm-leader-card hm-leader-card--hot" href="' + href + '" aria-label="Hottest active capper: ' + escapeHtml(member.displayName) + ', ' + escapeHtml(unitsStr) + ' over the last 30 days">' +
+                '<b>Hottest Active Capper' +
+                    '<span class="hm-info" tabindex="0" role="img" aria-label="Qualification rules" title="' + escapeHtml(HOT_INFO) + '">i</span>' +
+                '</b>' +
+                '<strong>' + escapeHtml(member.displayName) + '</strong>' +
+                '<span class="' + statClass(hot.units) + '">@' + escapeHtml(member.username) + ' · ' + escapeHtml(unitsStr) + '</span>' +
+                '<span>' + hot.graded + ' graded picks · Last 30 days</span>' +
+            '</a>';
+        }
+
         function renderFeaturedLeaders() {
             // Hold the loading card until fresh backend members load, so the stale
             // Phase-0 localStorage snapshot never flashes an outdated leader set.
@@ -2761,7 +2870,7 @@
             const roiLeader = qualifiedRoiLeader(qualified);
             const winRateLeader = qualifiedWinRateLeader(qualified);
             const mostVerified = bestBy(pool, member => gradedCount(member) > 0, compareBy(gradedCount, member => Number(member.stats.units || 0)));
-            const newestActive = bestBy(qualified, member => getActivityTime(member) > 0, getActivityTime);
+            const hottest = hottestActiveCapper(pool);
             const minLabel = 'Minimum ' + MIN_TOP_PERFORMER_GRADED_PICKS + ' graded picks, recent activity, and positive net units required.';
 
             els.featured.innerHTML = [
@@ -2769,7 +2878,7 @@
                 renderLeaderCard('Best ROI', roiLeader, member => formatPercent(member.stats.roi, true), member => member.stats.roi, 'No positive ROI leader yet', minLabel),
                 renderLeaderCard('Best Win Percentage', winRateLeader, member => formatPercent(member.stats.winRate, true), member => member.stats.winRate == null ? null : Number(member.stats.winRate) - 50, 'Not enough graded picks yet', minLabel),
                 renderLeaderCard('Most Verified Picks', mostVerified, member => gradedCount(member) + ' graded picks', () => null, 'No graded picks yet', 'Highest verified pick count across all members.'),
-                renderLeaderCard('Newest Active Capper', newestActive, member => formatLastActive(member.stats.lastActivity || member.lastActive), () => null, 'No qualifying activity yet', minLabel)
+                renderHottestCard(hottest)
             ].join('');
         }
 
