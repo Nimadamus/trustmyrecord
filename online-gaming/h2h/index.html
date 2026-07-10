@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Head-to-Head Gaming Record | TrustMyRecord</title>
+    <meta name="description" content="Full head-to-head online gaming matchup history between two TrustMyRecord members across MLB The Show, Madden, NBA 2K, NHL, and EA FC.">
+    <link rel="canonical" href="https://trustmyrecord.com/online-gaming/h2h/">
+    <meta name="robots" content="index,follow">
+    <meta property="og:title" content="Head-to-Head Gaming Record | TrustMyRecord">
+    <meta property="og:description" content="Full head-to-head online gaming matchup history between two members.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <meta property="og:image" content="https://trustmyrecord.com/static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <script defer src="/static/js/config.js"></script>
+    <script defer src="/static/js/backend-api.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root { --bg:#0b1220; --text:#f1f6fc; --muted:#9fb0c3; --faint:#76879b; --cyan:#2dd4bf; --line:rgba(148,163,184,0.14); --line-2:rgba(148,163,184,0.22); }
+        * { box-sizing:border-box; }
+        a { color:var(--cyan); text-decoration:none; }
+        body { margin:0; color:var(--text); font-family:"Inter",system-ui,sans-serif; }
+        .page { width:min(920px,calc(100% - 36px)); margin:0 auto; padding:26px 0 90px; }
+        .og-crumb { color:var(--faint); font-size:12.5px; font-weight:600; margin-bottom:14px; }
+        .og-crumb a { color:var(--muted); }
+        .og-card { border:1px solid var(--line-2); border-radius:16px; background:linear-gradient(180deg,rgba(15,27,46,0.6),rgba(8,17,31,0.6)); padding:22px; box-shadow:0 16px 46px rgba(2,8,18,0.35); }
+        h1 { font-family:"Barlow","Inter",sans-serif; font-size:22px; margin:0 0 18px; }
+        .og-scoreline { display:flex; align-items:center; justify-content:center; gap:24px; flex-wrap:wrap; padding:8px 0 20px; }
+        .og-p { text-align:center; min-width:120px; }
+        .og-p a { font-weight:800; font-size:16px; }
+        .og-p .w { font-family:"Barlow",sans-serif; font-size:46px; font-weight:900; line-height:1; margin-top:6px; }
+        .og-p.lead .w { color:#86efac; }
+        .og-dash { color:var(--faint); font-weight:800; font-size:28px; }
+        .og-subttl { text-align:center; color:var(--faint); font-size:13px; margin-top:-8px; margin-bottom:6px; }
+        .og-sub-head { font-size:12.5px; font-weight:900; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); margin:24px 0 11px; }
+        table.og-tbl { width:100%; border-collapse:collapse; font-size:13px; }
+        table.og-tbl th { text-align:left; color:var(--faint); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; padding:7px 9px; border-bottom:1px solid var(--line); }
+        table.og-tbl td { padding:8px 9px; border-bottom:1px solid rgba(148,163,184,0.08); color:#c8d2e0; }
+        table.og-tbl td b { color:var(--text); }
+        .og-badge { display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:20px; padding:0 6px; border-radius:6px; font-size:11px; font-weight:900; }
+        .og-badge.w { background:rgba(34,197,94,0.16); color:#86efac; } .og-badge.l { background:rgba(239,68,68,0.16); color:#fca5a5; } .og-badge.d { background:rgba(148,163,184,0.16); color:#cbd5e1; }
+        .og-loading,.og-error { text-align:center; color:var(--muted); padding:50px 0; }
+    </style>
+</head>
+<body class="tmr-site-shell" data-tmr-route="online-gaming">
+<main class="page">
+    <div class="og-crumb"><a href="/online-gaming/">Online Gaming</a> / Head-to-Head</div>
+    <div class="og-card" id="ogH2H">
+        <div class="og-loading"><i class="fas fa-spinner fa-spin"></i> Loading matchup history…</div>
+    </div>
+</main>
+<script>
+(function () {
+    function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function apiBase(){ try{ if(window.api&&window.api.baseUrl) return String(window.api.baseUrl).replace(/\/$/,''); }catch(e){} return (window.TMR_API_BASE||window.API_BASE_URL||'https://trustmyrecord-api.onrender.com').replace(/\/$/,''); }
+    function pLink(u,d){ u=u||''; d=d||u; return u?'<a href="/profile/?user='+encodeURIComponent(u)+'">'+esc(d)+'</a>':esc(d); }
+    function badge(r){ return '<span class="og-badge '+r+'">'+r.toUpperCase()+'</span>'; }
+
+    async function load(){
+        const el=document.getElementById('ogH2H');
+        const p=new URLSearchParams(location.search);
+        const a=p.get('a')||'', b=p.get('b')||'';
+        if(!a||!b){ el.innerHTML='<div class="og-error">Two members are required for a head-to-head.</div>'; return; }
+        try{
+            const resp=await fetch(apiBase()+'/api/gaming/h2h/'+encodeURIComponent(a)+'/'+encodeURIComponent(b));
+            if(!resp.ok) throw new Error('nf');
+            const data=await resp.json();
+            const u1=data.user1, u2=data.user2;
+            if(!u1||!u2){ el.innerHTML='<div class="og-error">One or both members could not be found.</div>'; return; }
+            const recs=data.h2h_records||[];
+            // Orient wins to u1 (=a) and u2 (=b). Records store lower id as user1_id.
+            let aW=0,bW=0,dr=0;
+            const perGame=recs.map(function(r){
+                const aIsLow = r.user1_id===u1.id;
+                const aw = aIsLow ? (parseInt(r.user1_wins)||0) : (parseInt(r.user2_wins)||0);
+                const bw = aIsLow ? (parseInt(r.user2_wins)||0) : (parseInt(r.user1_wins)||0);
+                const d = parseInt(r.draws)||0;
+                aW+=aw; bW+=bw; dr+=d;
+                return { title:r.game_title||r.game_slug, aw:aw, bw:bw, d:d, total:parseInt(r.total_matches)||0 };
+            });
+            const total=aW+bW+dr;
+            let html='<h1>Head-to-Head</h1>'+
+                '<div class="og-scoreline">'+
+                    '<div class="og-p '+(aW>bW?'lead':'')+'">'+pLink(u1.username,u1.display_name)+'<div class="w">'+aW+'</div></div>'+
+                    '<div class="og-dash">–</div>'+
+                    '<div class="og-p '+(bW>aW?'lead':'')+'">'+pLink(u2.username,u2.display_name)+'<div class="w">'+bW+'</div></div>'+
+                '</div>'+
+                '<div class="og-subttl">'+total+' total meeting'+(total===1?'':'s')+(dr?' · '+dr+' draw'+(dr===1?'':'s'):'')+'</div>';
+
+            if(perGame.length){
+                html+='<div class="og-sub-head">By Game</div><table class="og-tbl"><thead><tr><th>Game</th><th>'+esc(u1.display_name||u1.username)+'</th><th>'+esc(u2.display_name||u2.username)+'</th><th>Draws</th><th>Meetings</th></tr></thead><tbody>';
+                perGame.forEach(function(g){ html+='<tr><td><b>'+esc(g.title)+'</b></td><td>'+g.aw+'</td><td>'+g.bw+'</td><td>'+g.d+'</td><td>'+g.total+'</td></tr>'; });
+                html+='</tbody></table>';
+            }
+
+            const matches=data.recent_matches||[];
+            if(matches.length){
+                html+='<div class="og-sub-head">Every Meeting</div><table class="og-tbl"><thead><tr><th>Date</th><th>Game</th><th>Result ('+esc(u1.display_name||u1.username)+')</th><th>Score</th><th></th></tr></thead><tbody>';
+                matches.forEach(function(m){
+                    const aIsP1 = m.player1_id===u1.id;
+                    const aScore = aIsP1 ? m.player1_score : m.player2_score;
+                    const bScore = aIsP1 ? m.player2_score : m.player1_score;
+                    let res='d'; if(!m.is_draw && m.winner_id!=null){ res = m.winner_id===u1.id?'w':'l'; }
+                    const dt = m.played_at ? new Date(m.played_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '';
+                    const link = '<a href="/online-gaming/match/?id='+encodeURIComponent(m.id)+'">Box score</a>';
+                    html+='<tr><td>'+esc(dt)+'</td><td>'+esc(m.game_title||m.game_slug||'')+'</td><td>'+badge(res)+'</td><td><b>'+(parseInt(aScore)||0)+'–'+(parseInt(bScore)||0)+'</b></td><td>'+link+'</td></tr>';
+                });
+                html+='</tbody></table>';
+            }
+            html+='<div style="margin-top:20px;color:var(--faint);font-size:12px;">Online gaming challenges only, kept separate from betting and handicapping records.</div>';
+            el.innerHTML=html;
+        }catch(e){
+            el.innerHTML='<div class="og-error">This matchup history could not be loaded.</div>';
+        }
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',load); else load();
+})();
+</script>
+</body>
+</html>
