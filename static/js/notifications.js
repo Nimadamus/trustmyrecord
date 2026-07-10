@@ -259,6 +259,22 @@ function addNotificationDropdown() {
                 margin-top: 6px;
                 flex-shrink: 0;
             }
+
+            .notification-item.no-destination { cursor: default; }
+            .notification-icon.linked { text-decoration: none; cursor: pointer; }
+            .notification-actor {
+                color: #00f3ff;
+                font-weight: 600;
+                text-decoration: none;
+                cursor: pointer;
+            }
+            .notification-actor:hover { text-decoration: underline; }
+            .notification-actor--disabled {
+                color: #8a8a99;
+                font-weight: 600;
+                cursor: not-allowed;
+                text-decoration: line-through;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -380,21 +396,85 @@ function renderNotificationsList(notifications) {
         const isRead = n.is_read;
         const timeStr = timeAgo(n.created_at);
         const avatar = n.avatar_url || n.avatarUrl;
-        const iconHtml = avatar
-            ? `<div class="notification-icon ${iconClass}" style="padding:0;overflow:hidden;"><img src="${escapeHtml(avatar)}" alt="${escapeHtml(n.username || '')}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.outerHTML='<i class=\\'fas ${iconChar}\\'></i>';"></div>`
-            : `<div class="notification-icon ${iconClass}"><i class="fas ${iconChar}"></i></div>`;
+        const actor = getNotifActor(n);
+        const iconInner = avatar
+            ? `<img src="${escapeHtml(avatar)}" alt="${escapeHtml(actor.display || n.username || '')}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.outerHTML='<i class=\\'fas ${iconChar}\\'></i>';">`
+            : `<i class="fas ${iconChar}"></i>`;
+        const iconStyle = avatar ? 'padding:0;overflow:hidden;' : '';
+        let iconHtml;
+        if (actor.available) {
+            iconHtml = `<a href="${actor.href}" class="notification-icon linked ${iconClass}" style="${iconStyle}" title="View ${escapeHtml(actor.display)}'s profile" onclick="handleActorClick(event, '${n.id}')">${iconInner}</a>`;
+        } else if (actor.referenced) {
+            iconHtml = `<div class="notification-icon ${iconClass}" style="${iconStyle};opacity:.55;" title="This account is no longer available">${iconInner}</div>`;
+        } else {
+            iconHtml = `<div class="notification-icon ${iconClass}" style="${iconStyle}">${iconInner}</div>`;
+        }
+
+        const destination = getNotificationDestination(n) || (actor.available ? actor.href : null);
+        const rowClass = destination ? '' : 'no-destination';
 
         return `
-            <div class="notification-item ${isRead ? '' : 'unread'}" data-type="${getLegacyFilterType(n.type)}" onclick="handleNotifClick('${n.id}')">
+            <div class="notification-item ${isRead ? '' : 'unread'} ${rowClass}" data-type="${getLegacyFilterType(n.type)}" onclick="handleNotifClick('${n.id}')">
                 ${iconHtml}
                 <div class="notification-content">
-                    <div class="notification-message">${escapeHtml(n.message || n.content || '')}</div>
+                    <div class="notification-message">${renderNotifMessage(n, actor)}</div>
                     <div class="notification-time">${timeStr}</div>
                 </div>
                 ${isRead ? '' : '<div class="notification-dot"></div>'}
             </div>
         `;
     }).join('');
+}
+
+// Resolve the actor (the user who triggered the notification) straight from the
+// payload -- related_user_id + the joined username/display_name/avatar. Never
+// from the message display text. When related_user_id points at a deleted or
+// deactivated account the LEFT JOIN yields no username, so we mark it
+// unavailable and render a disabled (non-link) state instead of a broken URL.
+function getNotifActor(notification) {
+    if (!notification) return { referenced: false, available: false, username: '', display: '', href: null };
+    const id = notification.related_user_id || notification.relatedUserId || notification.actor_id || notification.actorId;
+    const username = notification.username || notification.actor_username || notification.from_username || '';
+    const display = notification.display_name || notification.displayName || username || '';
+    const referenced = !!(id || username);
+    const available = !!username;
+    return {
+        referenced: referenced,
+        available: available,
+        username: username,
+        display: display,
+        href: available ? '/profile/?user=' + encodeURIComponent(username) : null
+    };
+}
+
+// Turn the actor's leading name in the message into a profile link. Only the
+// payload's real display_name/username is linkified (never arbitrary text), and
+// only when it is the leading token, so we never fabricate a URL from copy.
+function renderNotifMessage(notification, actor) {
+    const message = notification.message || notification.content || '';
+    const safe = escapeHtml(message);
+    if (!actor || !actor.referenced) return safe;
+
+    const token = [actor.display, actor.username].find(function(t) {
+        return t && message.indexOf(t) === 0;
+    });
+    if (!token) return safe; // name not leading; avatar link still opens the profile
+    const safeToken = escapeHtml(token);
+    const rest = safe.slice(safeToken.length);
+    const inner = actor.available
+        ? '<a href="' + actor.href + '" class="notification-actor" onclick="handleActorClick(event, \'' + notification.id + '\')">' + safeToken + '</a>'
+        : '<span class="notification-actor notification-actor--disabled" title="This account is no longer available">' + safeToken + '</span>';
+    return inner + rest;
+}
+
+// Click on the actor name/avatar: mark read (awaited so it persists) then open
+// the profile. stopPropagation prevents the row handler firing a second time.
+function handleActorClick(e, notifId) {
+    if (e) { if (e.stopPropagation) e.stopPropagation(); if (e.preventDefault) e.preventDefault(); }
+    const notification = _notifCache.notifications.find(function(x){ return String(x.id) === String(notifId); });
+    const actor = getNotifActor(notification);
+    if (!actor.available) return;
+    handleNotifClick(notifId, actor.href);
 }
 
 function getLegacyFilterType(type) {
@@ -465,7 +545,7 @@ function getNotificationDestination(notification) {
     return null;
 }
 
-async function handleNotifClick(notifId) {
+async function handleNotifClick(notifId, overrideHref) {
     const notification = _notifCache.notifications.find(x => String(x.id) === String(notifId));
 
     // Mark as read via backend
@@ -484,7 +564,11 @@ async function handleNotifClick(notifId) {
         }
     }
 
-    const destination = getNotificationDestination(notification);
+    let destination = overrideHref || getNotificationDestination(notification);
+    if (!destination) {
+        const actor = getNotifActor(notification);
+        if (actor.available) destination = actor.href;
+    }
     if (destination) {
         window.location.href = destination;
     }
