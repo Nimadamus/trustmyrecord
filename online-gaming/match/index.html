@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Gaming Box Score | TrustMyRecord</title>
+    <meta name="description" content="Permanent box score for a TrustMyRecord online gaming challenge. Inning-by-inning runs, hits, errors, home runs, and strikeouts for MLB The Show matchups.">
+    <link rel="canonical" href="https://trustmyrecord.com/online-gaming/match/">
+    <meta name="robots" content="index,follow">
+    <meta property="og:title" content="Online Gaming Box Score | TrustMyRecord">
+    <meta property="og:description" content="Permanent box score for a TrustMyRecord online gaming challenge.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="TrustMyRecord">
+    <meta property="og:image" content="https://trustmyrecord.com/static/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <script defer src="/static/js/config.js"></script>
+    <script defer src="/static/js/backend-api.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        :root { --bg:#0b1220; --text:#f1f6fc; --muted:#9fb0c3; --faint:#76879b; --cyan:#2dd4bf; --green:#22c55e; --red:#ef4444; --line:rgba(148,163,184,0.14); --line-2:rgba(148,163,184,0.22); }
+        * { box-sizing:border-box; }
+        a { color:var(--cyan); text-decoration:none; }
+        body { margin:0; color:var(--text); font-family:"Inter",system-ui,sans-serif; }
+        .page { width:min(920px,calc(100% - 36px)); margin:0 auto; padding:26px 0 90px; }
+        .og-crumb { color:var(--faint); font-size:12.5px; font-weight:600; margin-bottom:14px; }
+        .og-crumb a { color:var(--muted); }
+        .og-card { border:1px solid var(--line-2); border-radius:16px; background:linear-gradient(180deg,rgba(15,27,46,0.6),rgba(8,17,31,0.6)); padding:22px; box-shadow:0 16px 46px rgba(2,8,18,0.35); }
+        h1 { font-family:"Barlow","Inter",sans-serif; font-size:22px; margin:0 0 4px; }
+        .og-meta { color:var(--faint); font-size:13px; margin-bottom:18px; }
+        .og-final { display:flex; align-items:center; justify-content:center; gap:20px; flex-wrap:wrap; padding:16px 0 20px; }
+        .og-side { text-align:center; min-width:130px; }
+        .og-side .team { color:var(--muted); font-size:12px; font-weight:700; margin-top:3px; }
+        .og-side a { font-weight:800; font-size:15px; }
+        .og-side .sc { font-family:"Barlow",sans-serif; font-size:44px; font-weight:900; line-height:1; margin-top:6px; }
+        .og-side.win .sc { color:#86efac; } .og-side.win::after { content:"WIN"; display:inline-block; margin-top:6px; font-size:10px; font-weight:900; letter-spacing:0.1em; color:#86efac; }
+        .og-side.loss .sc { color:#f1f6fc; }
+        .og-vs { color:var(--faint); font-weight:800; font-size:13px; }
+        .og-tblwrap { overflow-x:auto; margin-top:10px; }
+        table.bs { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums; font-size:14px; min-width:460px; }
+        table.bs th, table.bs td { padding:9px 10px; text-align:center; border-bottom:1px solid var(--line); }
+        table.bs th { color:var(--faint); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; }
+        table.bs td.team, table.bs th.team { text-align:left; font-weight:800; white-space:nowrap; }
+        table.bs td.rhe { font-weight:900; }
+        table.bs td.r { color:#86efac; }
+        .og-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; margin-top:20px; }
+        @media (max-width:560px){ .og-summary{ grid-template-columns:repeat(2,1fr); } }
+        .og-sm { padding:11px; border:1px solid var(--line); border-radius:10px; background:rgba(14,25,42,0.5); text-align:center; }
+        .og-sm .v { font-size:18px; font-weight:900; } .og-sm .l { color:var(--faint); font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; margin-top:4px; }
+        .og-loading, .og-error { text-align:center; color:var(--muted); padding:50px 0; }
+    </style>
+</head>
+<body class="tmr-site-shell" data-tmr-route="online-gaming">
+<main class="page">
+    <div class="og-crumb"><a href="/online-gaming/">Online Gaming</a> / Box Score</div>
+    <div class="og-card" id="ogMatch">
+        <div class="og-loading"><i class="fas fa-spinner fa-spin"></i> Loading box score…</div>
+    </div>
+</main>
+<script>
+(function () {
+    function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function apiBase(){ try{ if(window.api&&window.api.baseUrl) return String(window.api.baseUrl).replace(/\/$/,''); }catch(e){} return (window.TMR_API_BASE||window.API_BASE_URL||'https://trustmyrecord-api.onrender.com').replace(/\/$/,''); }
+    function qid(){ const p=new URLSearchParams(location.search); return p.get('id')||''; }
+    function pLink(u,d){ u=u||''; d=d||u; return u?'<a href="/profile/?user='+encodeURIComponent(u)+'">'+esc(d)+'</a>':esc(d); }
+    function innings(arr){ if(Array.isArray(arr))return arr.map(function(x){return parseInt(x)||0;}); if(typeof arr==='string'){try{const p=JSON.parse(arr);return Array.isArray(p)?p.map(function(x){return parseInt(x)||0;}):[];}catch(e){return[];}} return []; }
+
+    async function load(){
+        const el=document.getElementById('ogMatch'); const id=qid();
+        if(!id){ el.innerHTML='<div class="og-error">No match specified.</div>'; return; }
+        try{
+            const resp=await fetch(apiBase()+'/api/gaming/matches/'+encodeURIComponent(id));
+            if(!resp.ok) throw new Error('not found');
+            const data=await resp.json();
+            const m=data.match, bs=data.box_score;
+            if(!m){ el.innerHTML='<div class="og-error">Match not found.</div>'; return; }
+            const p1win = !m.is_draw && m.winner_id===m.player1_id;
+            const p2win = !m.is_draw && m.winner_id===m.player2_id;
+            const date = m.played_at ? new Date(m.played_at).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}) : '';
+            let html='<h1>'+esc(m.game_title||'Online Gaming Match')+'</h1>'+
+                '<div class="og-meta">'+esc(date)+(m.is_draw?' · Draw':'')+'</div>'+
+                '<div class="og-final">'+
+                    '<div class="og-side '+(p1win?'win':(p2win?'loss':''))+'">'+pLink(m.player1_username,m.player1_display)+
+                        (bs&&bs.home_team_used?'<div class="team">'+esc(bs.home_team_used)+' (Home)</div>':'<div class="team">Home</div>')+
+                        '<div class="sc">'+(parseInt(m.player1_score)||0)+'</div></div>'+
+                    '<div class="og-vs">FINAL</div>'+
+                    '<div class="og-side '+(p2win?'win':(p1win?'loss':''))+'">'+pLink(m.player2_username,m.player2_display)+
+                        (bs&&bs.away_team_used?'<div class="team">'+esc(bs.away_team_used)+' (Away)</div>':'<div class="team">Away</div>')+
+                        '<div class="sc">'+(parseInt(m.player2_score)||0)+'</div></div>'+
+                '</div>';
+
+            if(bs){
+                const hi=innings(bs.home_innings), ai=innings(bs.away_innings);
+                const n=Math.max(hi.length,ai.length,9);
+                let head='<tr><th class="team">Team</th>';
+                for(let i=0;i<n;i++) head+='<th>'+(i+1)+'</th>';
+                head+='<th>R</th><th>H</th><th>E</th></tr>';
+                function row(name,inn,r,h,e){ let t='<tr><td class="team">'+name+'</td>'; for(let i=0;i<n;i++) t+='<td>'+(inn[i]!=null?inn[i]:'-')+'</td>'; t+='<td class="rhe r">'+r+'</td><td class="rhe">'+h+'</td><td class="rhe">'+e+'</td></tr>'; return t; }
+                html+='<div class="og-tblwrap"><table class="bs"><thead>'+head+'</thead><tbody>'+
+                    row(esc(bs.away_team_used||m.player2_username||'Away'),ai,parseInt(bs.away_runs)||0,parseInt(bs.away_hits)||0,parseInt(bs.away_errors)||0)+
+                    row(esc(bs.home_team_used||m.player1_username||'Home'),hi,parseInt(bs.home_runs)||0,parseInt(bs.home_hits)||0,parseInt(bs.home_errors)||0)+
+                    '</tbody></table></div>';
+                html+='<div class="og-summary">'+
+                    '<div class="og-sm"><div class="v">'+((parseInt(bs.home_home_runs)||0)+(parseInt(bs.away_home_runs)||0))+'</div><div class="l">Total HR</div></div>'+
+                    '<div class="og-sm"><div class="v">'+((parseInt(bs.home_strikeouts)||0)+(parseInt(bs.away_strikeouts)||0))+'</div><div class="l">Total K</div></div>'+
+                    '<div class="og-sm"><div class="v">'+(parseInt(bs.total_innings)||9)+'</div><div class="l">Innings</div></div>'+
+                    '<div class="og-sm"><div class="v">'+((parseInt(bs.home_hits)||0)+(parseInt(bs.away_hits)||0))+'</div><div class="l">Total Hits</div></div>'+
+                    '</div>';
+            }
+            html+='<div style="margin-top:20px;color:var(--faint);font-size:12px;">This is a permanent record of an online gaming challenge, separate from any betting or handicapping record.</div>';
+            el.innerHTML=html;
+        }catch(e){
+            el.innerHTML='<div class="og-error">This box score could not be loaded. It may have been removed or the match has no saved box score.</div>';
+        }
+    }
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',load); else load();
+})();
+</script>
+</body>
+</html>
