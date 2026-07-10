@@ -150,6 +150,28 @@ a:hover{color:var(--link-hover);text-decoration:underline}
                 </div>
             </div>
 
+            <div class="ucp-box ucp-section" id="ucpFollowingBox">
+                <div class="ucp-box-head">People You Follow &amp; Notifications</div>
+                <div class="ucp-box-body">
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;">
+                        <input id="ucpFollowSearch" type="text" placeholder="Search people you follow..." style="flex:1;min-width:160px;padding:6px 8px;border:1px solid var(--line);font-size:12px;">
+                        <select id="ucpFollowSort" style="padding:6px 8px;border:1px solid var(--line);font-size:12px;">
+                            <option value="recent">Recently followed</option>
+                            <option value="name">Name (A-Z)</option>
+                            <option value="active">Most active</option>
+                        </select>
+                    </div>
+                    <label style="display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:8px;">
+                        <input type="checkbox" id="ucpPauseAll"> <b>Pause all follow notifications</b> <span style="color:#777;">(temporarily mute everyone)</span>
+                    </label>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px;margin-bottom:10px;">
+                        <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="ucpHideFollowers"> Hide my followers list</label>
+                        <label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="ucpHideFollowing"> Hide my following list</label>
+                    </div>
+                    <ul class="ucp-list" id="ucpFollowingList"><li class="ucp-empty">Loading people you follow...</li></ul>
+                </div>
+            </div>
+
             <div class="ucp-box ucp-section">
                 <div class="ucp-box-head">My Threads</div>
                 <div class="ucp-box-body">
@@ -175,7 +197,7 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 </div>
 
 <script src="/static/js/config.js?v=20260421a"></script>
-<script src="/static/js/backend-api.js?v=20260423a"></script>
+<script src="/static/js/backend-api.js?v=follow20260710"></script>
 <script src="/static/js/auth-persistent.js?v=20260424a"></script>
 <script>
 (function(){
@@ -289,6 +311,76 @@ a:hover{color:var(--link-hover);text-decoration:underline}
     el.innerHTML = '<li class="ucp-empty">Thread subscriptions are not enabled yet. Threads you start or reply to appear under My Threads above.</li>';
   }
 
+  // ---------- Following management ----------
+  var FOLLOW_PREFS = [
+    {key:'notify_new_thread', label:'Threads'},
+    {key:'notify_post', label:'Posts'},
+    {key:'notify_pick', label:'Picks'},
+    {key:'digest_mode', label:'Digest'},
+    {key:'email_enabled', label:'Email'},
+    {key:'paused', label:'Pause'}
+  ];
+  var _followingCache = [];
+  function renderFollowing(list){
+    var el = document.getElementById('ucpFollowingList');
+    if(!el) return;
+    if(!list || !list.length){ el.innerHTML = '<li class="ucp-empty">You are not following anyone yet. Find people on the <a href="/handicappers/">handicappers</a> page or in the <a href="/forum/">forum</a>.</li>'; return; }
+    el.innerHTML = list.map(function(u){
+      var name = esc(u.display_name || u.username || 'User');
+      var av = u.avatar_url ? '<img src="'+esc(u.avatar_url)+'" alt="" style="width:34px;height:34px;border-radius:50%;object-fit:cover;flex:0 0 34px;">' : '<span style="width:34px;height:34px;border-radius:50%;background:#3b82f6;color:#fff;display:grid;place-items:center;font-weight:700;flex:0 0 34px;">'+name.charAt(0).toUpperCase()+'</span>';
+      var toggles = FOLLOW_PREFS.map(function(p){
+        var on = u[p.key]===true;
+        return '<label style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;white-space:nowrap;">'+
+          '<input type="checkbox" '+(on?'checked':'')+' onchange="ucpSetPref('+u.id+',\''+p.key+'\',this.checked)"> '+p.label+'</label>';
+      }).join('');
+      return '<li style="padding:10px 4px;">'+
+        '<div style="display:flex;align-items:center;gap:10px;">'+
+          av+
+          '<div style="min-width:0;flex:1;"><a href="/profile/?user='+encodeURIComponent(u.username||'')+'" style="font-weight:bold;">'+name+'</a>'+
+          '<div class="ucp-meta">@'+esc(u.username||'')+(u.followed_at?(' · followed '+timeAgo(u.followed_at)):'')+'</div></div>'+
+          '<button onclick="ucpUnfollow('+u.id+')" style="border:1px solid #c9a2a2;background:#f9efef;color:#a32727;font-size:11px;padding:5px 9px;cursor:pointer;border-radius:4px;">Unfollow</button>'+
+        '</div>'+
+        '<div style="margin-top:7px;font-size:11px;color:#444;display:flex;flex-wrap:wrap;gap:2px 0;">'+toggles+'</div>'+
+      '</li>';
+    }).join('');
+  }
+  async function loadFollowing(){
+    var el = document.getElementById('ucpFollowingList');
+    if(!window.api || !window.api.getFollowingManage){ if(el) el.innerHTML='<li class="ucp-empty">Following management unavailable right now.</li>'; return; }
+    try{
+      var q = (document.getElementById('ucpFollowSearch')||{}).value || '';
+      var sort = (document.getElementById('ucpFollowSort')||{}).value || 'recent';
+      var res = await window.api.getFollowingManage({q:q, sort:sort});
+      _followingCache = res.following || [];
+      renderFollowing(_followingCache);
+      var pa = document.getElementById('ucpPauseAll'); if(pa) pa.checked = !!res.all_paused;
+    }catch(e){ if(el) el.innerHTML='<li class="ucp-empty">Could not load your following list.</li>'; }
+  }
+  window.ucpSetPref = async function(id, key, val){
+    try{ var b={}; b[key]=val; await window.api.updateFollowPreferences(id, b); }catch(e){ alert('Could not save preference'); }
+  };
+  window.ucpUnfollow = async function(id){
+    try{ await window.api.unfollowUser(id); _followingCache=_followingCache.filter(function(u){return u.id!==id;}); renderFollowing(_followingCache); }catch(e){ alert('Could not unfollow'); }
+  };
+  async function loadPrivacy(){
+    if(!window.api || !window.api.getFollowPrivacy) return;
+    try{
+      var res = await window.api.getFollowPrivacy();
+      var p = res.privacy || {};
+      var hf=document.getElementById('ucpHideFollowers'), hg=document.getElementById('ucpHideFollowing'), pa=document.getElementById('ucpPauseAll');
+      if(hf) hf.checked = !!p.hide_followers;
+      if(hg) hg.checked = !!p.hide_following;
+      if(pa) pa.checked = !!p.follow_notifications_paused;
+    }catch(e){}
+  }
+  function wireFollowingControls(){
+    var s=document.getElementById('ucpFollowSearch'); if(s){ var t; s.addEventListener('input', function(){ clearTimeout(t); t=setTimeout(loadFollowing, 300); }); }
+    var so=document.getElementById('ucpFollowSort'); if(so) so.addEventListener('change', loadFollowing);
+    var pa=document.getElementById('ucpPauseAll'); if(pa) pa.addEventListener('change', function(){ window.api.pauseAllFollows(pa.checked).catch(function(){ alert('Could not update'); }); });
+    var hf=document.getElementById('ucpHideFollowers'); if(hf) hf.addEventListener('change', function(){ window.api.updateFollowPrivacy({hide_followers:hf.checked}).catch(function(){ alert('Could not update'); }); });
+    var hg=document.getElementById('ucpHideFollowing'); if(hg) hg.addEventListener('change', function(){ window.api.updateFollowPrivacy({hide_following:hg.checked}).catch(function(){ alert('Could not update'); }); });
+  }
+
   async function init(){
     var stored = getStoredUser();
     if(stored) paintAccount(stored);
@@ -305,6 +397,9 @@ a:hover{color:var(--link-hover);text-decoration:underline}
     loadMyThreads();
     loadMyPosts();
     loadSubscribed();
+    wireFollowingControls();
+    loadPrivacy();
+    loadFollowing();
   }
   init();
 })();
