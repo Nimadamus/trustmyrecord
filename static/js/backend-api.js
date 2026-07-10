@@ -806,6 +806,33 @@ class TrustMyRecordAPI {
         return this.request(`/social/following/${userId}?limit=${limit}&offset=${offset}`);
     }
 
+    // ---- Follow notification preferences / management ----
+    async getFollowPreferences(userId) {
+        return this.request(`/social/follow/${userId}/preferences`);
+    }
+    async updateFollowPreferences(userId, prefs) {
+        return this.request(`/social/follow/${userId}/preferences`, { method: 'PUT', body: prefs });
+    }
+    async getFollowingManage(options = {}) {
+        const { q = '', sort = 'recent' } = options;
+        return this.request(`/social/manage/following?q=${encodeURIComponent(q)}&sort=${encodeURIComponent(sort)}`);
+    }
+    async pauseAllFollows(paused) {
+        return this.request(`/social/follow/pause-all`, { method: 'PUT', body: { paused: !!paused } });
+    }
+    async getFollowPrivacy() {
+        return this.request(`/social/privacy`);
+    }
+    async updateFollowPrivacy(privacy) {
+        return this.request(`/social/privacy`, { method: 'PUT', body: privacy });
+    }
+    async blockUser(userId) {
+        return this.request(`/social/block/${userId}`, { method: 'POST' });
+    }
+    async unblockUser(userId) {
+        return this.request(`/social/block/${userId}`, { method: 'DELETE' });
+    }
+
     // ==================== MESSAGING ROUTES ====================
     // Note: These may need to be added to backend if not present
 
