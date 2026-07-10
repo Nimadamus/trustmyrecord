@@ -72,7 +72,9 @@
         table.compare th:first-child, table.compare td:first-child { text-align: left; }
         table.compare thead th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
         table.compare tbody tr:first-child td { color: #fff; font-weight: 700; }
-        .table-scroll { overflow-x: auto; }
+        .table-scroll { overflow-x: auto; max-width: 100%; }
+        .builder-panel { min-width: 0; }
+        .builder-grid > * { min-width: 0; }
         .chart-wrap { margin-top: 18px; }
         .chart-wrap svg { width: 100%; height: auto; display: block; }
         .warnings { display: grid; gap: 8px; margin-top: 16px; }
@@ -101,8 +103,8 @@
         .login-hint { margin-top: 12px; padding: 12px; border: 1px dashed var(--line); border-radius: 8px; color: var(--muted); font-size: 13px; }
         .login-hint a { font-weight: 800; }
         @media (max-width: 820px) {
-            .builder-grid { grid-template-columns: 1fr; }
-            .two-col { grid-template-columns: 1fr; }
+            .builder-grid { grid-template-columns: minmax(0, 1fr); }
+            .two-col { grid-template-columns: minmax(0, 1fr); }
         }
         [hidden] { display: none !important; }
     </style>
