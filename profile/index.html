@@ -2957,6 +2957,60 @@
                 </div>
 
                 <!-- TAB: ONLINE GAMING (separate from betting/handicapping record) -->
+                <style>
+                    /* ===== Online Gaming dashboard (og-*) — separate from betting record ===== */
+                    .og-sep-note { display:flex; align-items:center; gap:8px; margin:2px 0 16px; padding:9px 13px; border:1px solid rgba(45,212,191,0.24); border-radius:10px; background:rgba(45,212,191,0.06); color:#bfeee6; font-size:12.5px; font-weight:600; }
+                    .og-sep-note i { color:var(--cyan,#2dd4bf); }
+                    .og-grid { display:grid; gap:11px; }
+                    .og-stat-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:11px; }
+                    @media (max-width:900px){ .og-stat-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); } }
+                    @media (max-width:560px){ .og-stat-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+                    .og-stat { padding:13px 14px; border:1px solid var(--line-2,rgba(148,163,184,0.2)); border-radius:12px; background:linear-gradient(180deg,rgba(15,27,46,0.75),rgba(8,17,31,0.75)); min-width:0; }
+                    .og-stat .v { font-size:22px; font-weight:900; color:var(--text,#f1f6fc); line-height:1.05; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+                    .og-stat .v.pos { color:#86efac; } .og-stat .v.neg { color:#fca5a5; }
+                    .og-stat .l { margin-top:6px; font-size:10px; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#94a3b8; }
+                    .og-sub-head { font-size:12.5px; font-weight:900; letter-spacing:0.06em; text-transform:uppercase; color:#9fb0c3; margin:22px 0 11px; display:flex; align-items:center; gap:8px; }
+                    .og-sub-head i { color:var(--cyan,#2dd4bf); }
+                    .og-gcard { border:1px solid var(--line-2,rgba(148,163,184,0.2)); border-radius:14px; background:rgba(255,255,255,0.02); overflow:hidden; }
+                    .og-gcard + .og-gcard { margin-top:11px; }
+                    .og-gcard-head { display:flex; align-items:center; gap:12px; padding:14px 16px; cursor:pointer; user-select:none; }
+                    .og-gcard-head:hover { background:rgba(255,255,255,0.02); }
+                    .og-gicon { width:38px; height:38px; flex:0 0 38px; display:flex; align-items:center; justify-content:center; border-radius:10px; background:rgba(45,212,191,0.10); color:var(--cyan,#2dd4bf); font-size:17px; }
+                    .og-gtitle { font-weight:800; color:var(--text,#f1f6fc); font-size:15px; }
+                    .og-gtitle small { display:block; font-weight:600; color:#8391a7; font-size:11px; margin-top:1px; }
+                    .og-ghead-stats { margin-left:auto; display:flex; align-items:center; gap:16px; color:#9fb0c3; font-size:13px; flex-wrap:wrap; justify-content:flex-end; }
+                    .og-ghead-stats b { color:var(--text,#f1f6fc); }
+                    .og-chev { color:#76879b; transition:transform .18s ease; margin-left:4px; }
+                    .og-gcard.open .og-chev { transform:rotate(180deg); }
+                    .og-gcard-body { display:none; padding:4px 16px 16px; border-top:1px solid var(--line,rgba(148,163,184,0.12)); }
+                    .og-gcard.open .og-gcard-body { display:block; }
+                    .og-mini-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:9px; margin-top:13px; }
+                    @media (max-width:640px){ .og-mini-grid{ grid-template-columns:repeat(2,minmax(0,1fr)); } }
+                    .og-mini { padding:10px 11px; border:1px solid var(--line,rgba(148,163,184,0.12)); border-radius:10px; background:rgba(14,25,42,0.5); }
+                    .og-mini .v { font-size:15px; font-weight:800; color:var(--text,#f1f6fc); font-variant-numeric:tabular-nums; }
+                    .og-mini .v.pos { color:#86efac; } .og-mini .v.neg { color:#fca5a5; }
+                    .og-mini .l { margin-top:4px; font-size:9.5px; font-weight:800; letter-spacing:0.05em; text-transform:uppercase; color:#8391a7; }
+                    .og-tbl { width:100%; border-collapse:collapse; margin-top:13px; font-size:12.5px; }
+                    .og-tbl th { text-align:left; color:#8391a7; font-size:10px; font-weight:800; letter-spacing:0.06em; text-transform:uppercase; padding:6px 8px; border-bottom:1px solid var(--line,rgba(148,163,184,0.12)); }
+                    .og-tbl td { padding:7px 8px; border-bottom:1px solid rgba(148,163,184,0.07); color:#c8d2e0; }
+                    .og-tbl td b { color:var(--text,#f1f6fc); }
+                    .og-tbl a { color:var(--cyan,#2dd4bf); font-weight:700; }
+                    .og-badge { display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:20px; padding:0 6px; border-radius:6px; font-size:11px; font-weight:900; }
+                    .og-badge.w { background:rgba(34,197,94,0.16); color:#86efac; } .og-badge.l { background:rgba(239,68,68,0.16); color:#fca5a5; } .og-badge.d { background:rgba(148,163,184,0.16); color:#cbd5e1; }
+                    .og-recent { display:grid; gap:9px; }
+                    .og-rrow { display:flex; align-items:center; gap:12px; padding:11px 13px; border:1px solid var(--line-2,rgba(148,163,184,0.2)); border-radius:12px; background:rgba(255,255,255,0.02); }
+                    .og-rrow .og-rres { width:34px; flex:0 0 34px; text-align:center; }
+                    .og-rmid { min-width:0; flex:1; }
+                    .og-rmid .top { font-weight:700; color:var(--text,#f1f6fc); font-size:13.5px; }
+                    .og-rmid .top a { color:var(--cyan,#2dd4bf); }
+                    .og-rmid .sub { color:#8391a7; font-size:11.5px; margin-top:2px; }
+                    .og-rscore { font-size:17px; font-weight:900; color:var(--text,#f1f6fc); font-variant-numeric:tabular-nums; white-space:nowrap; }
+                    .og-rlink { flex:0 0 auto; color:var(--cyan,#2dd4bf); font-size:12px; font-weight:700; white-space:nowrap; }
+                    .og-h2h-search { width:100%; padding:11px 13px; border:1px solid var(--line-2,rgba(148,163,184,0.2)); border-radius:11px; background:rgba(8,17,31,0.7); color:var(--text,#f1f6fc); font-size:13.5px; margin-bottom:11px; }
+                    .og-h2h-search:focus { outline:none; border-color:var(--cyan,#2dd4bf); }
+                    .og-avatar { width:26px; height:26px; border-radius:50%; object-fit:cover; background:rgba(148,163,184,0.2); vertical-align:middle; }
+                    @media (max-width:560px){ .og-rlink{ display:none; } .og-ghead-stats{ gap:10px; font-size:12px; } }
+                </style>
                 <div class="profile-tab-panel" data-panel="gaming">
                     <div class="profile-feed-card">
                         <div class="section-title">Online Gaming Record</div>
@@ -9757,6 +9811,150 @@
                 body.appendChild(wrap);
             } catch (e) {}
         }
+        // ---- render helpers ----
+        function fmtDate(ts) {
+            if (!ts) return '';
+            try { return new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; }
+        }
+        function streakTxt(s) { s = parseInt(s) || 0; return s > 0 ? 'W' + s : (s < 0 ? 'L' + Math.abs(s) : '—'); }
+        function resBadge(r) { const k = r === 'win' ? 'w' : (r === 'loss' ? 'l' : 'd'); const t = r === 'win' ? 'W' : (r === 'loss' ? 'L' : 'D'); return '<span class="og-badge ' + k + '">' + t + '</span>'; }
+        function recBadge(w, l, d) { d = d || 0; return '<span class="og-badge w">' + w + '</span>-<span class="og-badge l">' + l + '</span>' + (d ? '-<span class="og-badge d">' + d + '</span>' : ''); }
+        function statCell(v, l, cls) { return '<div class="og-stat"><div class="v ' + (cls || '') + '">' + v + '</div><div class="l">' + l + '</div></div>'; }
+        function mini(v, l, cls) { return '<div class="og-mini"><div class="v ' + (cls || '') + '">' + v + '</div><div class="l">' + l + '</div></div>'; }
+        function signed(n) { n = parseInt(n) || 0; return (n > 0 ? '+' : '') + n; }
+        function oppLink(o) {
+            const nm = esc(o.display_name || o.username || 'Unknown');
+            if (o && o.public && o.username) return '<a href="/profile/?user=' + encodeURIComponent(o.username) + '">' + nm + '</a>';
+            return nm;
+        }
+
+        function renderOverall(ov) {
+            const rec = recBadge(ov.wins, ov.losses, ov.draws);
+            const diffCls = ov.differential > 0 ? 'pos' : (ov.differential < 0 ? 'neg' : '');
+            const fav = ov.favorite_game ? esc(ov.favorite_game.title) : '—';
+            return '<div class="og-stat-grid">' +
+                statCell(rec, 'Record (W-L' + (ov.draws ? '-D' : '') + ')') +
+                statCell(ov.win_pct + '%', 'Win %') +
+                statCell(streakTxt(ov.current_streak), 'Current Streak', ov.current_streak > 0 ? 'pos' : (ov.current_streak < 0 ? 'neg' : '')) +
+                statCell('W' + (ov.longest_win_streak || 0), 'Longest Win Streak') +
+                statCell(ov.games, 'Games Completed') +
+                statCell(ov.points_for, 'Runs / Pts For') +
+                statCell(ov.points_against, 'Runs / Pts Allowed') +
+                statCell(signed(ov.differential), 'Differential', diffCls) +
+                statCell(ov.unique_opponents, 'Unique Opponents') +
+                statCell(fav, 'Most-Played Game') +
+                '</div>';
+        }
+
+        function renderGameCard(g, idx) {
+            const icon = GAME_ICON[g.slug] || 'fa-gamepad';
+            const head = '<div class="og-gcard-head" data-og-toggle="' + idx + '">' +
+                '<div class="og-gicon"><i class="fas ' + icon + '"></i></div>' +
+                '<div class="og-gtitle">' + esc(g.title) + '<small>' + esc(g.sport || '') + '</small></div>' +
+                '<div class="og-ghead-stats">' +
+                    '<span>' + recBadge(g.wins, g.losses, g.draws) + '</span>' +
+                    '<span><b>' + g.win_pct + '%</b> win</span>' +
+                    '<span><b>' + streakTxt(g.current_streak) + '</b> streak</span>' +
+                    '<span><b>' + g.games + '</b> GP</span>' +
+                    '<i class="fas fa-chevron-down og-chev"></i>' +
+                '</div></div>';
+
+            let body = '<div class="og-gcard-body">';
+            body += '<div class="og-mini-grid">' +
+                mini(g.avg_score, 'Avg Score') +
+                mini(g.avg_opp_score, 'Avg Opp Score') +
+                mini('+' + g.avg_margin_win, 'Avg Margin (W)', 'pos') +
+                mini('-' + g.avg_margin_loss, 'Avg Margin (L)', 'neg') +
+                mini('W' + Math.abs(g.longest_win_streak || 0), 'Longest Win Streak') +
+                mini(g.close_record.wins + '-' + g.close_record.losses, 'Close Games (1)') +
+                mini(g.best_win ? g.best_win.line : '—', 'Best Win', 'pos') +
+                mini(g.worst_loss ? g.worst_loss.line : '—', 'Worst Loss', 'neg') +
+                '</div>';
+            if (g.most_used_team) body += '<div style="margin-top:12px;color:#9fb0c3;font-size:12.5px;">Most-used team: <b style="color:var(--text,#f1f6fc);">' + esc(g.most_used_team) + '</b></div>';
+
+            // MLB deep stats
+            if (g.mlb) {
+                const d = g.mlb;
+                body += '<div class="og-sub-head" style="margin-top:18px;"><i class="fas fa-baseball"></i>MLB The Show Box-Score Stats</div>';
+                body += '<div class="og-mini-grid">' +
+                    mini(d.runs, 'Runs') + mini(d.hits, 'Hits') + mini(d.errors, 'Errors') + mini(d.home_runs, 'Home Runs') +
+                    mini(d.strikeouts, 'Strikeouts') + mini(d.runs_pg, 'Runs / G') + mini(d.hits_pg, 'Hits / G') + mini(d.hr_pg, 'HR / G') +
+                    mini(d.k_pg, 'K / G') + mini(d.runs_allowed, 'Runs Allowed') + mini(d.runs_allowed_pg, 'RA / G') + mini(signed(d.run_diff), 'Run Diff', d.run_diff > 0 ? 'pos' : (d.run_diff < 0 ? 'neg' : '')) +
+                    mini(d.extra_innings.wins + '-' + d.extra_innings.losses, 'Extra Innings') + mini(d.shutouts, 'Shutouts') + mini(d.one_run.wins + '-' + d.one_run.losses, 'One-Run Games') + mini(d.largest_comeback, 'Largest Comeback') +
+                    mini(d.largest_lead, 'Largest Lead') +
+                    mini(d.highest_scoring ? d.highest_scoring.total : '—', 'Highest-Scoring') +
+                    mini(d.lowest_scoring ? d.lowest_scoring.total : '—', 'Lowest-Scoring') +
+                    '</div>';
+            }
+
+            // Record by team used
+            if (g.by_team && g.by_team.length) {
+                body += '<div class="og-sub-head"><i class="fas fa-shirt"></i>Record by Team Used</div><table class="og-tbl"><thead><tr><th>Team</th><th>W-L-D</th><th>Games</th></tr></thead><tbody>';
+                g.by_team.forEach(function (t) { body += '<tr><td><b>' + esc(t.team) + '</b></td><td>' + t.wins + '-' + t.losses + (t.draws ? '-' + t.draws : '') + '</td><td>' + t.games + '</td></tr>'; });
+                body += '</tbody></table>';
+            }
+
+            // Record vs each opponent
+            if (g.vs_opponents && g.vs_opponents.length) {
+                body += '<div class="og-sub-head"><i class="fas fa-users"></i>Record vs Opponent</div><table class="og-tbl"><thead><tr><th>Opponent</th><th>W-L-D</th><th>Win %</th><th>Diff</th><th>Last</th></tr></thead><tbody>';
+                g.vs_opponents.forEach(function (o) {
+                    body += '<tr><td>' + oppLink(o) + '</td><td>' + o.wins + '-' + o.losses + (o.draws ? '-' + o.draws : '') + '</td><td>' + o.win_pct + '%</td><td>' + signed(o.diff) + '</td><td>' + resBadge(o.last_result) + '</td></tr>';
+                });
+                body += '</tbody></table>';
+            }
+            body += '</div>';
+            return '<div class="og-gcard" data-og-card="' + idx + '">' + head + body + '</div>';
+        }
+
+        function renderRecent(recent) {
+            if (!recent || !recent.length) return '';
+            let html = '<div class="og-sub-head"><i class="fas fa-clock-rotate-left"></i>Recent Games</div><div class="og-recent">';
+            recent.forEach(function (m) {
+                const teams = (m.my_team || m.opp_team) ? ('<span> · ' + esc(m.my_team || '?') + ' vs ' + esc(m.opp_team || '?') + '</span>') : '';
+                let ks = '';
+                if (m.key_stats) { ks = ' · ' + m.key_stats.hits + 'H, ' + m.key_stats.home_runs + 'HR, ' + m.key_stats.strikeouts + 'K'; }
+                const link = m.box_score_url ? '<a class="og-rlink" href="' + esc(m.box_score_url) + '">Box score &rarr;</a>' : '';
+                html += '<div class="og-rrow">' +
+                    '<div class="og-rres">' + resBadge(m.result) + '</div>' +
+                    '<div class="og-rmid"><div class="top">' + esc(m.game.title) + ' vs ' + oppLink(m.opponent) + '</div>' +
+                        '<div class="sub">' + fmtDate(m.played_at) + teams + ks + '</div></div>' +
+                    '<div class="og-rscore">' + m.my_score + '–' + m.opp_score + '</div>' +
+                    link + '</div>';
+            });
+            html += '</div>';
+            return html;
+        }
+
+        function renderH2H(h2h) {
+            if (!h2h || !h2h.length) return '';
+            let html = '<div class="og-sub-head"><i class="fas fa-swords"></i>Head-to-Head</div>';
+            html += '<input type="text" class="og-h2h-search" id="ogH2HSearch" placeholder="Search opponents…" autocomplete="off">';
+            html += '<table class="og-tbl" id="ogH2HTable"><thead><tr><th>Opponent</th><th>Record</th><th>Win %</th><th>Meetings</th><th>Diff</th><th>Last</th><th></th></tr></thead><tbody>';
+            h2h.forEach(function (o) {
+                const nm = (o.display_name || o.username || '').toLowerCase();
+                const mh = o.matchup_url ? '<a href="' + esc(o.matchup_url) + '">History</a>' : '';
+                html += '<tr data-og-opp="' + esc(nm) + '"><td>' + oppLink(o) + '</td><td>' + recBadge(o.wins, o.losses, o.draws) + '</td><td>' + o.win_pct + '%</td><td>' + o.games + '</td><td>' + signed(o.diff) + '</td><td>' + resBadge(o.last_result) + '</td><td>' + mh + '</td></tr>';
+            });
+            html += '</tbody></table>';
+            return html;
+        }
+
+        function wire(body) {
+            body.addEventListener('click', function (e) {
+                const h = e.target.closest('[data-og-toggle]');
+                if (h) { const card = h.closest('.og-gcard'); if (card) card.classList.toggle('open'); }
+            });
+            const search = body.querySelector('#ogH2HSearch');
+            if (search) {
+                search.addEventListener('input', function () {
+                    const q = this.value.trim().toLowerCase();
+                    body.querySelectorAll('#ogH2HTable tbody tr').forEach(function (tr) {
+                        tr.style.display = (!q || (tr.getAttribute('data-og-opp') || '').indexOf(q) !== -1) ? '' : 'none';
+                    });
+                });
+            }
+        }
+
         async function load() {
             if (loaded) return; loaded = true;
             const body = document.getElementById('profileGamingBody');
@@ -9765,29 +9963,20 @@
                 if (body) body.innerHTML = emptyState(); return;
             }
             try {
-                const data = await api.request('/gaming/stats/' + encodeURIComponent(uname));
-                const games = (data && data.stats_by_game) ? data.stats_by_game : [];
-                const t = (data && data.totals) ? data.totals : {};
-                const tw = parseInt(t.total_wins) || 0, tl = parseInt(t.total_losses) || 0, td = parseInt(t.total_draws) || 0;
-                if (!games.length && !(tw + tl + td)) { body.innerHTML = emptyState(); loadArenaExtras(uname, body); return; }
-                let html = '<div class="tmrx-ribbon" style="margin-bottom:14px;">' +
-                    '<div class="tmrx-cell"><div class="tmrx-label">Gaming Record</div><div class="tmrx-value">' + tw + '-' + tl + (td ? '-' + td : '') + '</div><div class="tmrx-sub">W-L' + (td ? '-D' : '') + '</div></div>' +
-                    '<div class="tmrx-cell"><div class="tmrx-label">Games Played</div><div class="tmrx-value">' + games.length + '</div><div class="tmrx-sub">titles with results</div></div>' +
-                    '</div>';
-                html += '<div style="display:grid;gap:10px;">';
-                games.forEach(function (g) {
-                    const icon = GAME_ICON[g.game_slug] || 'fa-gamepad';
-                    const rec = (g.wins || 0) + '-' + (g.losses || 0) + ((g.draws ? '-' + g.draws : ''));
-                    html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border:1px solid var(--line-2,rgba(148,163,184,0.18));border-radius:12px;background:rgba(255,255,255,0.02);">' +
-                        '<div style="display:flex;align-items:center;gap:10px;font-weight:700;"><i class="fas ' + icon + '" style="color:var(--cyan,#2dd4bf);"></i>' + esc(g.game_title || g.game_slug) + '</div>' +
-                        '<div style="display:flex;gap:18px;color:var(--muted,#9fb0c3);font-size:13px;">' +
-                            '<span><b style="color:var(--text,#f1f6fc);">' + rec + '</b> rec</span>' +
-                            '<span><b style="color:var(--text,#f1f6fc);">' + (g.win_pct != null ? g.win_pct : 0) + '%</b> win</span>' +
-                            (g.current_streak ? '<span><b style="color:var(--text,#f1f6fc);">' + (g.current_streak > 0 ? 'W' + g.current_streak : 'L' + Math.abs(g.current_streak)) + '</b> streak</span>' : '') +
-                        '</div></div>';
-                });
-                html += '</div>';
+                const data = await api.request('/gaming/online-stats/' + encodeURIComponent(uname));
+                const ov = (data && data.overall) ? data.overall : null;
+                const games = (data && data.by_game) ? data.by_game : [];
+                if (!ov || (!ov.games && !games.length)) { body.innerHTML = emptyState(); loadArenaExtras(uname, body); return; }
+                let html = '<div class="og-sep-note"><i class="fas fa-shield-halved"></i>Online gaming challenges only. This record is kept completely separate from betting picks, units, ROI, and handicapping stats.</div>';
+                html += renderOverall(ov);
+                if (games.length) {
+                    html += '<div class="og-sub-head"><i class="fas fa-gamepad"></i>By Game</div>';
+                    games.forEach(function (g, i) { html += renderGameCard(g, i); });
+                }
+                html += renderRecent(data.recent);
+                html += renderH2H(data.h2h);
                 body.innerHTML = html;
+                wire(body);
                 loadArenaExtras(uname, body);
             } catch (err) {
                 body.innerHTML = emptyState();
