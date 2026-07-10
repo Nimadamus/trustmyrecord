@@ -263,6 +263,21 @@
             margin-top: 8px;
             flex-shrink: 0;
         }
+        .notif.no-destination { cursor: default; }
+        a.notif-icon { text-decoration: none; cursor: pointer; }
+        .notif-actor {
+            color: var(--accent-blue);
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .notif-actor:hover { text-decoration: underline; }
+        .notif-actor--disabled {
+            color: var(--text-muted);
+            font-weight: 700;
+            cursor: not-allowed;
+            text-decoration: line-through;
+        }
         @media (max-width: 700px) {
             .header-inner, .page { padding-left: 16px; padding-right: 16px; }
             nav { display: none; }
@@ -532,20 +547,73 @@
                 const meta = formatTime(n.created_at);
                 const icon = getNotifTheme(normalized.type);
                 const destination = getNotificationDestination(normalized);
+                const actor = getNotifActor(n, normalized);
+                const idJs = escapeJs(String(n.id || ''));
                 const avatar = normalized.avatar_url || n.avatar_url;
-                const iconHtml = avatar
-                    ? '<div class="notif-icon" style="padding:0;overflow:hidden;"><img src="' + escapeHtml(avatar) + '" alt="' + escapeHtml(normalized.username || '') + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentNode.style.background=\'' + icon.bg + '\';this.parentNode.style.color=\'' + icon.fg + '\';this.parentNode.textContent=\'' + icon.label + '\';"></div>'
-                    : '<div class="notif-icon" style="background:' + icon.bg + ';color:' + icon.fg + ';">' + icon.label + '</div>';
-                return '<div class="notif ' + (normalized.isRead ? '' : 'unread') + '" onclick="openNotification(\'' + escapeJs(String(n.id || '')) + '\')">' +
+                const iconInner = avatar
+                    ? '<img src="' + escapeHtml(avatar) + '" alt="' + escapeHtml(actor.display || normalized.username || '') + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentNode.style.background=\'' + icon.bg + '\';this.parentNode.style.color=\'' + icon.fg + '\';this.parentNode.textContent=\'' + icon.label + '\';">'
+                    : icon.label;
+                const iconStyle = avatar ? 'padding:0;overflow:hidden;' : 'background:' + icon.bg + ';color:' + icon.fg + ';';
+                let iconHtml;
+                if (actor.available) {
+                    iconHtml = '<a class="notif-icon" href="' + actor.href + '" style="' + iconStyle + '" title="View ' + escapeHtml(actor.display) + '&#39;s profile" onclick="handleActorClick(event, \'' + idJs + '\')">' + iconInner + '</a>';
+                } else if (actor.referenced) {
+                    iconHtml = '<div class="notif-icon" style="' + iconStyle + 'opacity:.55;" title="This account is no longer available">' + iconInner + '</div>';
+                } else {
+                    iconHtml = '<div class="notif-icon" style="' + iconStyle + '">' + iconInner + '</div>';
+                }
+                const hasDest = (destination.href && destination.href !== '/notifications/') || actor.available;
+                return '<div class="notif ' + (normalized.isRead ? '' : 'unread') + (hasDest ? '' : ' no-destination') + '" onclick="openNotification(\'' + idJs + '\')">' +
                     iconHtml +
                     '<div class="notif-body">' +
-                    '<div class="notif-message">' + escapeHtml(normalized.message) + '</div>' +
+                    '<div class="notif-message">' + renderNotifMessage(normalized, actor, idJs) + '</div>' +
                     '<div class="notif-meta">' + meta + (normalized.username ? ' • @' + escapeHtml(normalized.username) : '') + '</div>' +
                     '<div class="notif-tags"><span class="notif-tag">' + escapeHtml(destination.label) + '</span><span class="notif-tag">' + escapeHtml(formatCategoryLabel(normalized.category)) + '</span></div>' +
                     '</div>' +
                     (normalized.isRead ? '' : '<div class="notif-dot"></div>') +
                     '</div>';
             }).join('');
+        }
+
+        function getNotifActor(notification, normalized) {
+            const n = notification || {};
+            const norm = normalized || {};
+            const id = n.related_user_id || n.relatedUserId || n.actor_id || n.actorId;
+            const username = norm.username || n.username || n.actor_username || n.from_username || n.target_username || '';
+            const display = n.display_name || n.displayName || username || '';
+            const referenced = !!(id || username);
+            const available = !!username;
+            return {
+                referenced: referenced,
+                available: available,
+                username: username,
+                display: display,
+                href: available ? '/profile/?user=' + encodeURIComponent(username) : null
+            };
+        }
+
+        function renderNotifMessage(normalized, actor, idJs) {
+            const message = normalized.message || '';
+            const safe = escapeHtml(message);
+            if (!actor || !actor.referenced) return safe;
+            const token = [actor.display, actor.username].filter(Boolean).find(function(t) {
+                return message.indexOf(t) === 0;
+            });
+            if (!token) return safe;
+            const safeToken = escapeHtml(token);
+            const rest = safe.slice(safeToken.length);
+            if (actor.available) {
+                return '<a href="' + actor.href + '" class="notif-actor" onclick="handleActorClick(event, \'' + idJs + '\')">' + safeToken + '</a>' + rest;
+            }
+            return '<span class="notif-actor notif-actor--disabled" title="This account is no longer available">' + safeToken + '</span>' + rest;
+        }
+
+        function handleActorClick(e, id) {
+            if (e) { if (e.stopPropagation) e.stopPropagation(); if (e.preventDefault) e.preventDefault(); }
+            const notification = notifications.find(function(n) { return String(n.id) === String(id); });
+            const actor = getNotifActor(notification || {}, normalizeNotification(notification || {}));
+            if (!actor.available) return;
+            openNotification(id, actor.href);
         }
 
         function normalizeNotification(notification) {
@@ -629,7 +697,7 @@
                     return { href: '/notifications/', label: 'Stay here' };
         }
 
-        async function openNotification(id) {
+        async function openNotification(id, overrideHref) {
             const notification = notifications.find(function(n) { return String(n.id) === String(id); });
             const normalized = normalizeNotification(notification || {});
             try {
@@ -640,9 +708,18 @@
                 renderNotifications();
             } catch (e) {}
 
-            const destination = getNotificationDestination(normalized);
-            if (destination.href && destination.href !== '/notifications/') {
-                location.href = destination.href;
+            let href = overrideHref;
+            if (!href) {
+                const destination = getNotificationDestination(normalized);
+                if (destination.href && destination.href !== '/notifications/') {
+                    href = destination.href;
+                } else {
+                    const actor = getNotifActor(notification || {}, normalized);
+                    if (actor.available) href = actor.href;
+                }
+            }
+            if (href) {
+                location.href = href;
             }
         }
 
