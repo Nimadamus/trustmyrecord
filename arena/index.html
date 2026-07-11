@@ -50,7 +50,7 @@
         .arena-head { border-bottom: 1px solid var(--border); background: var(--bg-surface); padding: 22px 24px 16px; }
         .ah-inner { max-width: 1180px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
         .ah-title-row { display: flex; align-items: center; gap: 10px; }
-        .ah-title-row h1 { font-family: var(--font-display); font-size: 38px; font-weight: 800; line-height: 1; letter-spacing: -0.01em; color: var(--text); }
+        .arena-head .ah-title-row h1 { font-family: var(--font-display); font-size: 38px !important; font-weight: 800; line-height: 1; letter-spacing: -0.01em; color: var(--text); margin: 0; }
         .ah-beta { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); background: var(--primary-dim); border: 1px solid rgba(56,189,248,0.25); border-radius: 4px; padding: 3px 8px; }
         .ah-text p { margin-top: 8px; color: var(--text-dim); font-size: 15px; line-height: 1.5; max-width: 560px; }
         .ah-actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -271,7 +271,7 @@
         }
         @media (max-width: 640px) {
             .arena-head { padding: 18px 16px 14px; }
-            .ah-title-row h1 { font-size: 30px; }
+            .arena-head .ah-title-row h1 { font-size: 30px !important; }
             .main { padding: 14px 12px 40px; }
             .a-section { margin-top: 20px; }
             .a-section-head .btn { width: 100%; }
@@ -292,8 +292,8 @@
 
 <!-- Legacy hardcoded nav removed; sitewide global nav is injected by tmr-sitewide.js -->
 
-<!-- PAGE HEADER -->
-<header class="arena-head">
+<!-- PAGE HEADER (div, not <header>: tmr-sitewide suppresses legacy page headers) -->
+<div class="arena-head">
     <div class="ah-inner">
         <div class="ah-text">
             <div class="ah-title-row">
@@ -311,7 +311,7 @@
     <div class="ah-meta">
         <span class="ah-trust"><i class="fas fa-circle-check"></i> Both players confirm every result before it counts toward a record.</span>
     </div>
-</header>
+</div>
 
 <!-- MAIN CONTENT -->
 <main class="main">
