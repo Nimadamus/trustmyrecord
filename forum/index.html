@@ -2160,14 +2160,9 @@ function renderThread() {
     var isLoggedIn = !!sessionUser;
     window.__forumCachedPostsById = {};
     c.innerHTML = posts.map(function(p, idx) {
-        // Thread starter (#1) always shows a title. Replies show a title ONLY when the
-        // author intentionally entered one; the generic auto-value "Reply"/"Re: ..." is suppressed.
-        var rawReplyTitle = (p.title || '').toString().trim();
-        var isGenericReplyTitle = !rawReplyTitle || rawReplyTitle.toLowerCase() === 'reply'
-            || (cachedThread && cachedThread.title && rawReplyTitle.toLowerCase() === ('re: ' + String(cachedThread.title).toLowerCase()));
-        var postTitle = p.is_thread_starter
-            ? (p.title || (cachedThread && cachedThread.title) || 'Thread')
-            : (isGenericReplyTitle ? '' : rawReplyTitle);
+        // No per-post title row: the thread title is shown once in the thread
+        // header above the post list, so repeating it inside post #1 (or echoing
+        // it on replies) is redundant. Post body starts directly under the meta.
         var postNo = idx + 1;
         var postId = (p.id != null) ? String(p.id) : '';
         if (postId) window.__forumCachedPostsById[postId] = p;
@@ -2200,7 +2195,6 @@ function renderThread() {
             + renderAuthorPanel(p)
             + '<div class="fthread-body">'
             +   '<div class="meta"><span>' + (p.created_at ? formatForumDate(p.created_at) : '—') + (p.id ? '<a id="post-' + escHtml(p.id) + '"></a>' : '') + '</span><span class="fthread-post-num">#' + postNo + '</span></div>'
-            +   (postTitle ? '<div class="fthread-post-title">' + escHtml(postTitle) + '</div>' : '')
             +   '<div class="fpost-content" id="postContent-' + escHtml(postId) + '">' + forumRenderContent(p.content || p.body || '') + '</div>'
             +   editedLine
             +   actions
