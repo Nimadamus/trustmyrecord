@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/marketplace/seller/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Storefront | Pick Marketplace | TrustMyRecord</title>
+    <meta name="description" content="Buy picks from a verified TrustMyRecord handicapper. Inspect the seller's full public record before purchasing.">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#08111d; --panel:rgba(11,23,42,.92); --line:rgba(148,163,184,.18);
+            --text:#eef4fb; --muted:#96a7bb; --teal:#2dd4bf; --cyan:#22d3ee;
+            --amber:#fbbf24; --green:#4ade80; --red:#f87171;
+        }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { background:linear-gradient(180deg,#07111d,#0a1422); color:var(--text); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
+        a { color:inherit; text-decoration:none; }
+        .mp-shell { max-width:980px; margin:0 auto; padding:28px 24px 70px; }
+        .crumb { color:var(--muted); font-size:12.5px; margin-bottom:14px; }
+        .crumb a { color:var(--cyan); }
+        .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 18px; border-radius:10px; font-weight:800; font-size:13.5px; cursor:pointer; border:1px solid transparent; transition:.15s; font-family:inherit; }
+        .btn-primary { background:linear-gradient(135deg,var(--teal),var(--cyan)); color:#04111a; }
+        .btn-primary:hover { transform:translateY(-1px); }
+        .btn-primary:disabled { opacity:.55; cursor:not-allowed; transform:none; }
+        .btn-outline { background:rgba(255,255,255,.04); color:var(--text); border-color:var(--line); }
+        .panel { background:var(--panel); border:1px solid var(--line); border-radius:15px; padding:20px; margin-bottom:16px; }
+        .sf-top { display:flex; align-items:center; gap:16px; flex-wrap:wrap; }
+        .sf-ava { width:72px; height:72px; border-radius:50%; object-fit:cover; background:#12233c; border:1px solid var(--line); }
+        .sf-name { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; font-size:30px; text-transform:uppercase; letter-spacing:-.3px; line-height:1; display:flex; align-items:center; gap:8px; }
+        .sf-verified { color:var(--cyan); font-size:20px; }
+        .sf-user { color:var(--muted); font-size:13px; margin-top:4px; }
+        .sf-user a { color:var(--cyan); }
+        .sf-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(105px,1fr)); gap:8px; margin-top:16px; }
+        .sf-stat { background:rgba(7,14,26,.65); border:1px solid var(--line); border-radius:10px; padding:11px 8px; text-align:center; }
+        .sf-stat b { display:block; font-family:'JetBrains Mono',monospace; font-size:17px; }
+        .sf-stat span { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+        .pos { color:var(--green); } .neg { color:var(--red); }
+        .offer { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+        .offer h2 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:22px; }
+        .offer p { color:#c5cee0; font-size:13.5px; line-height:1.55; margin-top:6px; max-width:600px; }
+        .offer-price { font-family:'JetBrains Mono',monospace; font-weight:800; font-size:26px; text-align:right; }
+        .offer-price small { display:block; color:var(--muted); font-size:11px; font-weight:500; }
+        .terms-note { color:var(--muted); font-size:12px; line-height:1.6; margin-top:12px; }
+        .terms-note a { color:var(--cyan); }
+        h3.sec { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:20px; margin:22px 0 10px; }
+        .pick-row { background:var(--panel); border:1px solid var(--line); border-radius:13px; padding:14px 16px; display:flex; align-items:center; gap:14px; margin-bottom:9px; flex-wrap:wrap; }
+        .pr-lock { width:38px; height:38px; border-radius:10px; background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.35); display:flex; align-items:center; justify-content:center; color:var(--amber); font-size:16px; flex:none; }
+        .pr-main { flex:1; min-width:200px; }
+        .pr-game { font-weight:700; font-size:14.5px; }
+        .pr-meta { color:var(--muted); font-size:12px; margin-top:3px; }
+        .pr-meta b { color:#c5cee0; font-weight:600; }
+        .mp-empty { text-align:center; color:var(--muted); padding:40px 18px; border:1px dashed var(--line); border-radius:13px; font-size:13.5px; line-height:1.7; }
+        .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:#152741; border:1px solid var(--line); color:var(--text); padding:12px 18px; border-radius:11px; font-size:13.5px; display:none; z-index:60; max-width:92vw; }
+        /* modal */
+        .modal-back { position:fixed; inset:0; background:rgba(3,8,16,.78); display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
+        .modal { background:#0d1b30; border:1px solid var(--line); border-radius:16px; max-width:560px; width:100%; max-height:86vh; display:flex; flex-direction:column; }
+        .modal-head { padding:16px 20px; border-bottom:1px solid var(--line); font-weight:800; font-size:16px; }
+        .modal-body { padding:16px 20px; overflow-y:auto; color:#c5cee0; font-size:13px; line-height:1.65; }
+        .modal-body h4 { color:var(--text); margin:12px 0 4px; font-size:13.5px; }
+        .modal-foot { padding:14px 20px; border-top:1px solid var(--line); display:flex; gap:10px; justify-content:flex-end; align-items:center; flex-wrap:wrap; }
+        .modal-foot label { font-size:12.5px; color:var(--muted); display:flex; gap:7px; align-items:center; margin-right:auto; }
+        @media (max-width:560px) { .mp-shell { padding:20px 14px 56px; } .offer-price { text-align:left; } }
+    </style>
+</head>
+<body>
+
+<main class="mp-shell">
+    <div class="crumb"><a href="/marketplace/">&larr; Pick Marketplace</a></div>
+    <div id="content"><div class="mp-empty">Loading storefront…</div></div>
+</main>
+
+<div class="modal-back" id="termsModal" role="dialog" aria-modal="true" aria-label="Buyer terms">
+    <div class="modal">
+        <div class="modal-head">Before you buy</div>
+        <div class="modal-body">
+            <p>You are purchasing <b>one locked pick</b> from this seller. The pick is revealed in your <a href="/marketplace/purchases/" style="color:var(--cyan);">purchases dashboard</a> as soon as payment is confirmed, and remains viewable there permanently, including after the game grades.</p>
+            <h4>No guaranteed results</h4>
+            <p>Sports outcomes are uncertain. You are buying this seller's analysis and their transparent record — never a guaranteed winner, lock, or risk-free profit. Past performance does not predict future results.</p>
+            <h4>Refunds</h4>
+            <p>Because a pick is revealed immediately and cannot be "returned," completed purchases are final once the pick has been revealed, except where the purchase itself failed (duplicate charge, pick voided before reveal, technical failure) or where required by law. Full policy: <a href="/marketplace/terms/" target="_blank" rel="noopener" style="color:var(--cyan);">Marketplace Terms &amp; Refund Policy</a>.</p>
+            <h4>Responsible gambling</h4>
+            <p>You must be 21+ (or of legal age in your jurisdiction) and located where sports wagering content is lawful. Never bet money you cannot afford to lose. Help: 1-800-GAMBLER.</p>
+        </div>
+        <div class="modal-foot">
+            <label><input type="checkbox" id="agreeChk"> I have read and accept the Buyer Terms</label>
+            <button class="btn btn-outline" id="cancelBuy" type="button">Cancel</button>
+            <button class="btn btn-primary" id="confirmBuy" type="button" disabled>Continue to Payment</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/static/js/config.js?v=20260330"></script>
+<script src="/static/js/backend-api.js?v=20260423a"></script>
+<script>
+(function () {
+    const API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    const username = new URLSearchParams(location.search).get('u') || '';
+    const content = document.getElementById('content');
+    const modal = document.getElementById('termsModal');
+    const agreeChk = document.getElementById('agreeChk');
+    const confirmBtn = document.getElementById('confirmBuy');
+    let store = null;
+    let pendingPickId = null;
+
+    function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function money(cents, cur) { return new Intl.NumberFormat('en-US',{style:'currency',currency:(cur||'usd').toUpperCase()}).format((cents||0)/100); }
+    function units(v) { const n = Number(v)||0; return (n>0?'+':'')+n.toFixed(1); }
+    function toast(msg, ms) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.style.display = 'block';
+        clearTimeout(t._h); t._h = setTimeout(function(){ t.style.display='none'; }, ms || 4200);
+    }
+    function marketLabel(m) {
+        const map = { h2h:'Moneyline', spreads:'Spread', totals:'Total', team_totals:'Team Total',
+            f5_h2h:'F5 Moneyline', f5_spreads:'F5 Runline', f5_totals:'F5 Total' };
+        return map[m] || String(m || '').replace(/_/g,' ');
+    }
+    function gameTime(iso) {
+        try { return new Date(iso).toLocaleString('en-US',{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+        catch (e) { return ''; }
+    }
+
+    function render() {
+        const s = store.seller, l = store.listing;
+        const rec = s.record || {};
+        let html =
+        '<div class="panel"><div class="sf-top">' +
+            '<img class="sf-ava" src="' + esc(s.avatar_url || '/static/img/default-avatar.png') + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+            '<div><div class="sf-name">' + esc(s.display_name || s.username) + (s.verified ? ' <span class="sf-verified">&#10003;</span>' : '') + '</div>' +
+            '<div class="sf-user">@' + esc(s.username) + ' &middot; ' + s.completed_sales + ' marketplace sale' + (s.completed_sales===1?'':'s') + ' &middot; <a href="/profile/?u=' + encodeURIComponent(s.username) + '">Full profile &amp; pick history &rarr;</a></div></div>' +
+        '</div>' +
+        '<div class="sf-stats">' +
+            '<div class="sf-stat"><b>' + rec.wins + '-' + rec.losses + (rec.pushes?'-'+rec.pushes:'') + '</b><span>Record</span></div>' +
+            '<div class="sf-stat"><b class="' + ((Number(s.net_units)||0)>=0?'pos':'neg') + '">' + units(s.net_units) + '</b><span>Net Units</span></div>' +
+            '<div class="sf-stat"><b class="' + ((Number(s.roi)||0)>=0?'pos':'neg') + '">' + (Number(s.roi)||0).toFixed(1) + '%</b><span>ROI</span></div>' +
+            '<div class="sf-stat"><b>' + s.graded_picks + '</b><span>Graded Picks</span></div>' +
+        '</div></div>';
+
+        if (!s.storefront_active || !l) {
+            html += '<div class="mp-empty">This seller does not have an active storefront right now.</div>';
+            content.innerHTML = html; return;
+        }
+
+        html += '<div class="panel"><div class="offer">' +
+            '<div><h2>' + esc(l.title) + '</h2><p>' + esc(l.description || '') + '</p></div>' +
+            '<div class="offer-price">' + money(l.price_cents, l.currency) + '<small>per pick, one-time</small></div>' +
+        '</div>' +
+        '<p class="terms-note">Buying one pick reveals that single selection (side, line, and odds at lock) after payment confirms. 20% of the price is TrustMyRecord\'s platform commission; 80% goes to the seller. No refunds after reveal except as described in the <a href="/marketplace/terms/">refund policy</a>. Results are never guaranteed.</p></div>';
+
+        html += '<h3 class="sec">Picks Available Right Now (' + store.picks_for_sale.length + ')</h3>';
+        if (!store.marketplace_enabled) {
+            html += '<div class="mp-empty">Marketplace purchases are not enabled yet — final testing is in progress. Check back soon.</div>';
+        } else if (!store.picks_for_sale.length) {
+            html += '<div class="mp-empty">No pending picks are on the board right now. Follow the seller to catch the next release.</div>';
+        }
+        html += store.picks_for_sale.map(function (p) {
+            return '<div class="pick-row">' +
+                '<div class="pr-lock">&#128274;</div>' +
+                '<div class="pr-main"><div class="pr-game">' + esc(p.away_team) + ' @ ' + esc(p.home_team) + '</div>' +
+                '<div class="pr-meta"><b>' + esc(p.sport_title || p.sport_key) + '</b> &middot; ' + esc(marketLabel(p.market_type)) + ' &middot; ' + (p.units != null ? p.units + 'u &middot; ' : '') + gameTime(p.commence_time) + ' &middot; selection hidden until purchase</div></div>' +
+                (store.marketplace_enabled ? '<button class="btn btn-primary" data-buy="' + p.pick_id + '">Buy ' + money(l.price_cents, l.currency) + '</button>' : '') +
+            '</div>';
+        }).join('');
+
+        content.innerHTML = html;
+        content.querySelectorAll('[data-buy]').forEach(function (btn) {
+            btn.addEventListener('click', function () { startBuy(parseInt(btn.getAttribute('data-buy'), 10), btn); });
+        });
+    }
+
+    function startBuy(pickId) {
+        if (!api.token) {
+            toast('Log in to buy picks. Redirecting…');
+            setTimeout(function(){ location.href = '/login/?redirect=' + encodeURIComponent(location.pathname + location.search); }, 1200);
+            return;
+        }
+        pendingPickId = pickId;
+        agreeChk.checked = false;
+        confirmBtn.disabled = true;
+        modal.style.display = 'flex';
+    }
+
+    agreeChk.addEventListener('change', function(){ confirmBtn.disabled = !agreeChk.checked; });
+    document.getElementById('cancelBuy').addEventListener('click', function(){ modal.style.display = 'none'; });
+    modal.addEventListener('click', function(e){ if (e.target === modal) modal.style.display = 'none'; });
+
+    confirmBtn.addEventListener('click', async function () {
+        confirmBtn.disabled = true;
+        confirmBtn.textContent = 'Starting checkout…';
+        try {
+            await api.request('/marketplace/me/agreement', { method: 'POST', body: { role: 'buyer' } });
+            const out = await api.request('/marketplace/checkout', { method: 'POST', body: { pick_id: pendingPickId } });
+            if (out && out.checkout_url) { location.href = out.checkout_url; return; }
+            throw new Error((out && out.error) || 'Checkout failed');
+        } catch (err) {
+            modal.style.display = 'none';
+            toast(err && err.message ? err.message : 'Checkout failed. Please try again.');
+        } finally {
+            confirmBtn.textContent = 'Continue to Payment';
+            confirmBtn.disabled = false;
+        }
+    });
+
+    async function load() {
+        if (!username) { content.innerHTML = '<div class="mp-empty">No seller specified. <a href="/marketplace/" style="color:var(--cyan);">Back to the marketplace</a>.</div>'; return; }
+        try {
+            const res = await fetch(API_BASE + '/marketplace/storefront/' + encodeURIComponent(username), { cache: 'no-store' });
+            if (res.status === 404) { content.innerHTML = '<div class="mp-empty">Seller not found.</div>'; return; }
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            store = await res.json();
+            document.title = (store.seller.display_name || store.seller.username) + ' | Pick Marketplace | TrustMyRecord';
+            render();
+        } catch (err) {
+            content.innerHTML = '<div class="mp-empty">Could not load this storefront. Please refresh.</div>';
+        }
+    }
+    load();
+})();
+</script>
+<script src="/static/js/analytics.js?v=20260504a"></script>
+</body>
+</html>
