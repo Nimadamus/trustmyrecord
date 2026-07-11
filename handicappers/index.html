@@ -2899,9 +2899,14 @@
         async function enrichMembersWithPicks(targetMembers) {
             const list = targetMembers || members;
             if (!Array.isArray(list) || !list.length) return;
-            // Highest-volume members first (they power the featured cards) and
-            // low concurrency so the API's rate limiter is not tripped.
-            const ordered = list.slice().sort((a, b) => gradedCount(b) - gradedCount(a));
+            // Recently-active members first (only they can qualify for the
+            // Hottest Last 30 Days / Most Active / streak featured slots), then
+            // highest-volume, with low concurrency so the API's rate limiter is
+            // not tripped.
+            const activeCutoff = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            const recency = member => (lastPickTime(member) >= activeCutoff ? 1 : 0);
+            const ordered = list.slice().sort((a, b) =>
+                (recency(b) - recency(a)) || (gradedCount(b) - gradedCount(a)));
             // Progressive featured refresh: the Hottest Last 30 Days / Most
             // Active / streak slots depend on enriched pick histories, so
             // repaint the featured grid as members land (throttled) instead of
