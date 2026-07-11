@@ -1477,16 +1477,22 @@
         // Fetch a member's FULL graded history by paginating until the API reports
         // no more rows. The old single limit=100 call truncated heavy hitters
         // (e.g. 100 of 145 picks), so every recalculated stat was wrong.
+        // A page that fails mid-pagination is retried once, then the whole fetch
+        // throws: silently returning a truncated history made statsFromPicks
+        // overwrite correct backend aggregates with wrong partial stats (e.g.
+        // BetLegend 159-135-2 from 300 rows instead of 245-220-5 from 494).
         async function fetchPicksForParam(param) {
             const PAGE = 100;
             const MAX_PICKS = 2000; // hard safety ceiling
             const all = [];
             for (let offset = 0; offset < MAX_PICKS; offset += PAGE) {
+                const endpoint = '/picks?limit=' + PAGE + '&offset=' + offset + '&' + param;
                 let data;
                 try {
-                    data = await directoryRequest('/picks?limit=' + PAGE + '&offset=' + offset + '&' + param);
+                    data = await directoryRequest(endpoint);
                 } catch (error) {
-                    break;
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    data = await directoryRequest(endpoint);
                 }
                 const picks = Array.isArray(data) ? data : Array.isArray(data?.picks) ? data.picks : [];
                 all.push(...picks);
@@ -2802,8 +2808,12 @@
                 try {
                     const rawPicks = (await fetchUserPicks(member._user || {}, member.username) || []).map(normalizePickMeta);
                     if (!rawPicks.length) return;
-                    member.rawPicks = rawPicks;
                     const pickStats = statsFromPicks(member._user || {}, rawPicks);
+                    // A recomputed history with fewer graded picks than the backend
+                    // aggregate is incomplete; keep the aggregate stats and leave
+                    // rawPicks unset so the next refresh cycle retries the fetch.
+                    if (pickStats && Number(pickStats.gradedPicks || 0) < Number((member.stats && member.stats.gradedPicks) || 0)) return;
+                    member.rawPicks = rawPicks;
                     if (pickStats) member.stats = Object.assign({}, member.stats, pickStats);
                 } catch (error) {
                     // Keep aggregate stats if a member's picks fail to load.
