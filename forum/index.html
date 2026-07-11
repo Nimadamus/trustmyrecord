@@ -2188,7 +2188,7 @@ function renderCategories() {
                 /* 2+2 stacked format: bold title / by user / gray time */
                 lastHtml = '<div class="flpost-title">' + escHtml(ltTitle) + '</div>'
                          + '<div class="flpost-by">by ' + escHtml(lt.username || '') + '</div>'
-                         + '<div class="flpost-meta">' + timeAgo(lt.created_at) + '</div>';
+                         + '<div class="flpost-meta">' + timeAgo(lt.last_post_at || lt.created_at) + '</div>';
             }
             var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
             var badge = forumSportBadge(cat.slug, cat.name);
@@ -2959,12 +2959,34 @@ function escHtml(value) {
         .replace(/'/g, '&#039;');
 }
 
+/* All DB timestamps are UTC. Strings without an explicit zone (raw Postgres
+   TIMESTAMP serialized inside SQL json_build_object) must be parsed as UTC,
+   otherwise viewers west of UTC get a future date and every row clamps to
+   "1 sec ago". Returns a Date or null; never guesses. */
+function parseForumTimestamp(value) {
+    if (value == null || value === '') return null;
+    if (value instanceof Date) return isNaN(value.getTime()) ? null : value;
+    var s = String(value).trim();
+    if (/^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(s)) {
+        s = s.replace(' ', 'T') + 'Z';
+    }
+    var d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+}
+
 function timeAgo(dateString) {
-    if (!dateString) return 'just now';
-    var date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'just now';
+    var date = parseForumTimestamp(dateString);
+    if (!date) {
+        if (dateString) console.warn('timeAgo: invalid timestamp from API:', dateString);
+        return '--';
+    }
     var diff = Date.now() - date.getTime();
-    var sec = Math.max(1, Math.floor(diff / 1000));
+    if (diff < -120000) {
+        console.warn('timeAgo: timestamp is in the future (server/client zone mismatch?):', dateString);
+        return '--';
+    }
+    var sec = Math.floor(diff / 1000);
+    if (sec < 5) return 'just now';
     if (sec < 60) return sec + ' sec ago';
     var min = Math.floor(sec / 60);
     if (min < 60) return min + (min === 1 ? ' min ago' : ' mins ago');
@@ -2979,9 +3001,8 @@ function timeAgo(dateString) {
 }
 
 function formatForumDate(dateString) {
-    if (!dateString) return 'Unknown';
-    var date = new Date(dateString);
-    if (isNaN(date.getTime())) return 'Unknown';
+    var date = parseForumTimestamp(dateString);
+    if (!date) return 'Unknown';
     return date.toLocaleString();
 }
 
@@ -3577,7 +3598,7 @@ async function performSearch(query) {
                     '<div class="tmr-fb-thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong> &middot; ' + timeAgo(t.created_at) + '</div>' +
                 '</div></div></td>' +
                 '<td class="col-rating"></td>' +
-                '<td class="col-last"><div class="tmr-fb-lastpost-meta">' + timeAgo(t.created_at) + '</div></td>' +
+                '<td class="col-last"><div class="tmr-fb-lastpost-meta">' + timeAgo(t.last_post_at || t.created_at) + '</div></td>' +
                 '<td class="col-num">' + (t.reply_count || 0) + '</td>' +
                 '<td class="col-num">' + (t.view_count || 0) + '</td>' +
                 '</tr>';
