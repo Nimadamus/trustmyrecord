@@ -2501,6 +2501,10 @@ function forumRenderContent(raw) {
         var yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/|embed\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
         return yt ? '<span class="fpost-embed"><iframe src="https://www.youtube.com/embed/' + yt[1] + '" title="Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></span>' : null;
     }
+    function cfEmbed(url) {
+        var cf = url.match(/(?:iframe|watch|customer-[\w-]+)\.cloudflarestream\.com\/([A-Za-z0-9]{16,64})/);
+        return cf ? '<span class="fpost-embed"><iframe src="https://iframe.cloudflarestream.com/' + cf[1] + '" title="Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></span>' : null;
+    }
     function videoEmbed(url) {
         return '<span class="fpost-embed"><video controls preload="metadata" playsinline><source src="' + url.replace(/"/g, '%22') + '"></video></span>';
     }
@@ -2520,7 +2524,7 @@ function forumRenderContent(raw) {
     });
     esc = esc.replace(/\[video\]\s*(https?:\/\/[^\s\]]+?)\s*\[\/video\]/gi, function (_m, u) {
         var url = u.replace(/&amp;/g, '&');
-        return slot(ytEmbed(url) || videoEmbed(url));
+        return slot(ytEmbed(url) || cfEmbed(url) || videoEmbed(url));
     });
 
     // 2) Bare URLs: auto-embed YouTube, video files, images, gifs, Giphy/Tenor.
@@ -2528,6 +2532,8 @@ function forumRenderContent(raw) {
         var url = m.replace(/&amp;/g, '&');
         var y = ytEmbed(url);
         if (y) return slot(y);
+        var cf = cfEmbed(url);
+        if (cf) return slot(cf);
         if (/\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i.test(url)) return slot(videoEmbed(url));
         var g = giphyDirect(url);
         if (g) return slot(imgEmbed(g, 'gif'));
@@ -4023,6 +4029,70 @@ document.addEventListener('DOMContentLoaded', async function() {
       };
       bar.appendChild(b);
     });
+    // Upload Video: pick a file from the device, push it to Cloudflare Stream
+    // via a one-time direct-upload URL from the backend, then insert the
+    // Stream embed as a [video] tag. No YouTube account needed.
+    (function(){
+      var UPLOAD_LABEL = '📤 Upload Video';
+      var MAX_BYTES = 200 * 1024 * 1024; // Stream basic direct upload cap
+      var up = document.createElement('button');
+      up.type = 'button';
+      up.className = 'tmr-media-btn';
+      up.innerHTML = UPLOAD_LABEL;
+      up.title = 'Upload a video file from your device (max 200MB)';
+      var fileIn = document.createElement('input');
+      fileIn.type = 'file';
+      fileIn.accept = 'video/*';
+      fileIn.style.display = 'none';
+      function setState(txt, busy){
+        up.innerHTML = txt;
+        up.disabled = !!busy;
+        up.style.opacity = busy ? '.65' : '';
+      }
+      up.onclick = function(ev){
+        ev.stopPropagation();
+        if (up.disabled) return;
+        if (typeof isUserLoggedIn === 'function' && !isUserLoggedIn()) { window.location.href = '/login/'; return; }
+        fileIn.click();
+      };
+      fileIn.onchange = function(){
+        var f = fileIn.files && fileIn.files[0];
+        fileIn.value = '';
+        if (!f) return;
+        if (f.size > MAX_BYTES) { alert('That video is too large. Max size is 200MB.'); return; }
+        uploadVideo(f);
+      };
+      async function uploadVideo(f){
+        try {
+          setState('⏳ Preparing…', true);
+          var t = await api.request('/forum/video-upload-url', { method: 'POST' });
+          if (!t || !t.uploadURL || !t.uid) throw new Error((t && t.error) || 'no upload URL');
+          setState('⏳ Uploading…', true);
+          var fd = new FormData();
+          fd.append('file', f);
+          var resp = await fetch(t.uploadURL, { method: 'POST', body: fd });
+          if (!resp.ok) throw new Error('upload failed (HTTP ' + resp.status + ')');
+          setState('⏳ Processing…', true);
+          // Poll until Stream finishes encoding (up to ~5 min) so the embed
+          // plays the moment the post goes up. Insert anyway on timeout;
+          // Stream serves it as soon as encoding completes.
+          for (var i = 0; i < 100; i++) {
+            await new Promise(function(r){ setTimeout(r, 3000); });
+            var st = null;
+            try { st = await api.request('/forum/video-status/' + encodeURIComponent(t.uid)); } catch (e) {}
+            if (st && st.error) throw new Error(st.error);
+            if (st && st.ready) break;
+          }
+          insertAtCursor(el, '\n[video]https://iframe.cloudflarestream.com/' + t.uid + '[/video]\n');
+          setState(UPLOAD_LABEL, false);
+        } catch (e) {
+          setState(UPLOAD_LABEL, false);
+          alert('Video upload failed: ' + ((e && e.message) || 'unknown error') + '. Please try again.');
+        }
+      }
+      bar.appendChild(up);
+      bar.appendChild(fileIn);
+    })();
     el.parentNode.insertBefore(bar, el);
   }
 
