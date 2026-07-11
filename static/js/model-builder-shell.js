@@ -22,7 +22,7 @@
     nba_points: 'NBA points', nba_rebounds: 'NBA rebounds', nba_assists: 'NBA assists'
   };
 
-  var state = { catalog: null, models: [], forwardOpenId: null };
+  var state = { catalog: null, models: [], forwardOpenId: null, dataset: 'picks' };
 
   function api() { return window.api; }
   function el(id) { return document.getElementById(id); }
@@ -433,6 +433,159 @@
     }
   }
 
+  // ---------------- Game Results dataset ----------------
+  var gameState = { catalog: null, loaded: false };
+
+  function ensureGameCatalog() {
+    if (gameState.loaded) return Promise.resolve();
+    return api().request('/models/game-catalog').then(function (cat) {
+      gameState.catalog = cat; gameState.loaded = true;
+      populateGameSports(cat);
+      if (state.dataset === 'games') renderGameBadges(cat);
+    }).catch(function () {
+      el('gameSport').innerHTML = '<option value="">Coverage unavailable</option>';
+    });
+  }
+
+  function populateGameSports(cat) {
+    var sel = el('gameSport');
+    var sports = (cat.sports || []);
+    sel.innerHTML = sports.map(function (s) {
+      var label = sportLabel(s.sport_key) + ' (' + s.games + ' games)';
+      if (!s.researchable) label += ' - insufficient';
+      return '<option value="' + esc(s.sport_key) + '"' + (s.researchable ? '' : ' disabled') + '>' + esc(label) + '</option>';
+    }).join('');
+    var firstOk = sports.find(function (s) { return s.researchable; });
+    if (firstOk) sel.value = firstOk.sport_key;
+  }
+
+  function renderGameBadges(cat) {
+    var researchable = (cat.sports || []).filter(function (s) { return s.researchable; });
+    var totalGames = (cat.sports || []).reduce(function (a, s) { return a + s.games; }, 0);
+    var latest = researchable.map(function (s) { return s.last_date; }).filter(Boolean).sort().pop();
+    var fresh = cat.generated_at ? new Date(cat.generated_at).toLocaleString() : '-';
+    el('sourceBadges').innerHTML = [
+      '<span class="badge"><span class="dot"></span>Source: <b>Real game results (loaded daily)</b></span>',
+      '<span class="badge"><b>' + totalGames.toLocaleString() + '</b> completed games</span>',
+      '<span class="badge"><b>' + researchable.length + '</b> researchable sports</span>',
+      latest ? '<span class="badge">Data through <b>' + esc(String(latest).slice(0, 10)) + '</b></span>' : '',
+      '<span class="badge">Loaded ' + esc(fresh) + '</span>'
+    ].join('');
+  }
+
+  function gameFiltersFromForm() {
+    var f = { sport_key: el('gameSport').value, home_away: el('gameHomeAway').value };
+    if (el('gameTotalLine').value !== '') f.total_line = num(el('gameTotalLine').value);
+    if (el('gameMinTotal').value !== '') f.min_total = num(el('gameMinTotal').value);
+    if (el('gameMaxTotal').value !== '') f.max_total = num(el('gameMaxTotal').value);
+    if (el('gameDateFrom').value) f.date_from = el('gameDateFrom').value;
+    if (el('gameDateTo').value) f.date_to = el('gameDateTo').value;
+    if (el('gameTeamContains').value.trim()) f.team_contains = el('gameTeamContains').value.trim();
+    return f;
+  }
+
+  function setGameMessage(t, k) { var m = el('gameMessage'); if (m) { m.textContent = t || ''; m.className = 'notice' + (k ? ' ' + k : ''); } }
+
+  async function runGameBacktest(ev) {
+    if (ev) ev.preventDefault();
+    if (!el('gameSport').value) { setGameMessage('Pick a sport first.', 'error'); return; }
+    setGameMessage('');
+    el('gameRunBtn').disabled = true;
+    el('gameFreshness').textContent = 'Running...';
+    var tiles = ''; for (var i = 0; i < 6; i++) tiles += '<div class="metric skeleton" style="height:78px"></div>';
+    el('gameResultsBody').innerHTML = '<div class="metric-grid">' + tiles + '</div>';
+    try {
+      var res = await api().request('/models/game-backtest', { method: 'POST', body: { filters: gameFiltersFromForm() } });
+      renderGameResults(res);
+    } catch (e) {
+      el('gameFreshness').textContent = '';
+      el('gameResultsBody').innerHTML = '<p class="notice error">' + esc((e && e.message) || 'Game backtest failed.') + '</p>';
+    } finally { el('gameRunBtn').disabled = false; }
+  }
+
+  function gameCompareRow(label, m) {
+    if (!m) return '';
+    return '<tr><td>' + esc(label) + '</td><td>' + (m.home_win_pct == null ? '-' : m.home_win_pct + '%')
+      + '</td><td>' + (m.avg_total == null ? '-' : m.avg_total) + '</td><td>' + (m.avg_margin == null ? '-' : m.avg_margin)
+      + '</td><td>' + (m.sample_size || 0) + '</td></tr>';
+  }
+
+  function boxScoreBlocks(sport, games) {
+    if (!games || !games.length) return '';
+    var isBb = sport === 'baseball_mlb';
+    var blocks = games.map(function (g) {
+      var line;
+      if (g.away_line && g.home_line) {
+        var per = Math.max(g.away_line.length, g.home_line.length);
+        var head = '<tr><th></th>'; for (var i = 0; i < per; i++) head += '<th>' + (i + 1) + '</th>'; head += '<th>' + (isBb ? 'R' : 'T') + '</th></tr>';
+        var ar = '<tr><td>' + esc(g.away_team) + '</td>'; for (var j = 0; j < per; j++) ar += '<td>' + (g.away_line[j] != null ? g.away_line[j] : '') + '</td>'; ar += '<td class="final">' + g.away_score + '</td></tr>';
+        var hr = '<tr><td>' + esc(g.home_team) + '</td>'; for (var k = 0; k < per; k++) hr += '<td>' + (g.home_line[k] != null ? g.home_line[k] : '') + '</td>'; hr += '<td class="final">' + g.home_score + '</td></tr>';
+        line = '<table class="boxscore"><thead>' + head + '</thead><tbody>' + ar + hr + '</tbody></table>';
+      } else {
+        line = '<table class="boxscore"><tbody><tr><td>' + esc(g.away_team) + '</td><td class="final">' + g.away_score + '</td></tr>'
+          + '<tr><td>' + esc(g.home_team) + '</td><td class="final">' + g.home_score + '</td></tr></tbody></table>';
+      }
+      return '<div style="margin-top:12px"><p class="model-meta" style="margin:0 0 4px">' + esc(g.date) + ' &middot; Total ' + g.total
+        + (g.ou ? ' (' + String(g.ou).toUpperCase() + ')' : '') + '</p><div class="table-scroll">' + line + '</div></div>';
+    }).join('');
+    return '<h3 style="margin:20px 0 0;font-size:15px">Recent box scores</h3>' + blocks;
+  }
+
+  function renderGameResults(res) {
+    if (!res || res.ok === false) {
+      el('gameFreshness').textContent = '';
+      el('gameResultsBody').innerHTML = warningsHtml(res && res.warnings) || '<p class="notice error">No result.</p>';
+      return;
+    }
+    var m = res.model;
+    var blocked = (res.warnings || []).some(function (w) { return w.level === 'blocked'; });
+    el('gameFreshness').textContent = res.generated_at ? 'Last updated ' + new Date(res.generated_at).toLocaleString() : '';
+    if (blocked || !m || m.sample_size === 0) {
+      el('gameResultsBody').innerHTML = warningsHtml(res.warnings) + '<p class="notice">Data source: ' + esc(res.data_source) + '</p>';
+      return;
+    }
+    var tiles = [
+      metricTile('Games', String(m.sample_size), 'completed'),
+      metricTile('Home win', m.home_win_pct == null ? '-' : m.home_win_pct + '%', m.home_wins + '-' + m.away_wins + (m.ties ? '-' + m.ties : '')),
+      metricTile('Avg total', m.avg_total == null ? '-' : String(m.avg_total), 'per game'),
+      metricTile('Avg margin', m.avg_margin == null ? '-' : String(m.avg_margin), 'runs/points'),
+      metricTile('1-run/close', m.one_run_pct == null ? '-' : m.one_run_pct + '%', 'margin = 1'),
+      metricTile('Blowouts', m.blowout_pct == null ? '-' : m.blowout_pct + '%', 'margin 5+')
+    ];
+    if (m.side_win_pct != null) tiles.push(metricTile('Side win', m.side_win_pct + '%', el('gameHomeAway').value + ' teams'));
+    if (m.extra_innings_pct != null) tiles.push(metricTile('Extra inns', m.extra_innings_pct + '%', 'went to extras'));
+    if (m.first_five) tiles.push(metricTile('First 5 avg', String(m.first_five.avg_total), 'runs, n=' + m.first_five.sample));
+    if (m.over_under) tiles.push(metricTile('O/U ' + m.over_under.line, m.over_under.record, (m.over_under.over_pct == null ? '-' : m.over_under.over_pct + '% over')));
+
+    var c = res.comparisons || {};
+    var table = '<div class="table-scroll"><table class="compare"><thead><tr><th>Comparison</th><th>Home win%</th><th>Avg total</th><th>Avg margin</th><th>N</th></tr></thead><tbody>'
+      + gameCompareRow('Your filter', m)
+      + gameCompareRow((c.baseline && c.baseline.label) || 'Baseline', c.baseline)
+      + '</tbody></table></div>';
+
+    el('gameResultsBody').innerHTML = '<div class="metric-grid">' + tiles.join('') + '</div>'
+      + warningsHtml(res.warnings) + table
+      + boxScoreBlocks(res.filters.sport_key, res.box_scores)
+      + '<p class="model-meta" style="margin-top:12px">Data source: ' + esc(res.data_source) + ' &middot; ' + res.sport_games_total + ' completed games in this sport.</p>';
+  }
+
+  function switchDataset(ds) {
+    state.dataset = ds;
+    var isGames = ds === 'games';
+    Array.prototype.forEach.call(document.querySelectorAll('.ds-btn'), function (b) {
+      var on = b.getAttribute('data-ds') === ds;
+      b.classList.toggle('active', on); b.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    el('picksMode').hidden = isGames;
+    el('gamesMode').hidden = !isGames;
+    if (isGames) {
+      if (gameState.catalog) renderGameBadges(gameState.catalog);
+      ensureGameCatalog();
+    } else if (state.catalog) {
+      renderBadges(state.catalog);
+    }
+  }
+
   // ---------------- Wiring ----------------
   function wire() {
     el('modelBuilderForm').addEventListener('submit', runBacktest);
@@ -453,6 +606,12 @@
       if (act === 'forward') viewForward(id);
       if (act === 'delete') deleteModel(id);
     });
+    var dt = el('datasetToggle');
+    if (dt) dt.addEventListener('click', function (ev) { var b = ev.target.closest('.ds-btn'); if (b) switchDataset(b.getAttribute('data-ds')); });
+    var gf = el('gameForm');
+    if (gf) gf.addEventListener('submit', runGameBacktest);
+    var grb = el('gameResetBtn');
+    if (grb) grb.addEventListener('click', function () { el('gameForm').reset(); setGameMessage(''); });
   }
 
   async function init() {
