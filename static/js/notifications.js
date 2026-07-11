@@ -510,7 +510,7 @@ function getLegacyFilterType(type) {
     if (normalized.indexOf('follow_new_pick') !== -1) return 'picks';
     if (normalized.indexOf('follow_new_thread') !== -1 || normalized.indexOf('follow_new_post') !== -1) return 'alerts';
     if (normalized.indexOf('forum') !== -1) return 'alerts';
-    if (['friend_request', 'friend_accept', 'follow', 'mention', 'like', 'comment'].includes(normalized)) return 'social';
+    if (['friend_request', 'friend_accept', 'follow', 'mention', 'like', 'comment', 'milestone_congrats', 'award_received'].includes(normalized)) return 'social';
     if (['challenge_invite', 'challenge_result', 'challenge', 'system'].includes(normalized)) return 'alerts';
     if (['pick_won', 'pick_lost', 'bet_won', 'bet_lost', 'pick_graded'].includes(normalized)) return 'picks';
     return 'all';
@@ -534,6 +534,7 @@ function getNotifIconClass(type) {
 // Map a notification type to a colour tone (drives the icon chip + stroke).
 function getNotifTone(type) {
     const t = String(type || '').toLowerCase();
+    if (t === 'award_received' || t === 'milestone_congrats' || t.indexOf('award') !== -1 || t.indexOf('milestone') !== -1) return 'challenge';
     if (/pick_won|bet_won/.test(t) || (t.indexOf('graded') !== -1 && /win|won/.test(t))) return 'win';
     if (/pick_lost|bet_lost/.test(t) || (t.indexOf('graded') !== -1 && /lost|loss/.test(t))) return 'loss';
     if (t.indexOf('like') !== -1) return 'like';
@@ -580,6 +581,12 @@ function getNotificationDestination(notification) {
     const threadId = notification?.thread_id || notification?.threadId || relatedThreadId || (resourceType === 'forum_thread' ? notification?.resource_id || notification?.resourceId : null);
     const postId = notification?.post_id || notification?.postId || relatedPostId || (resourceType === 'forum_post' ? notification?.resource_id || notification?.resourceId : null);
 
+    if (type === 'award_received') {
+        // Land on the recipient's own Awards Received tab.
+        const me = (window.auth && auth.currentUser && auth.currentUser.username) || notification?.username;
+        return me ? '/profile/?user=' + encodeURIComponent(me) + '#awards' : '/profile/#awards';
+    }
+    if (type === 'milestone_congrats') return '/feed/?filter=milestones';
     if (type === 'friend_request' || type === 'friend_accept') return '/friends/';
     if (type === 'new_message' || type === 'message') {
         // Deep-link straight into the conversation with the sender so the row
