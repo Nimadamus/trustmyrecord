@@ -2192,6 +2192,26 @@
             return null;
         }
 
+        // Stale-while-revalidate for the featured grid: the last complete
+        // 6-card render (written only by this same selection code, so always
+        // unique-user) is painted instantly on the next visit, then replaced by
+        // the live selection once pick enrichment produces an equally complete
+        // grid. Live renders with FEWER cards never downgrade the cached view
+        // during the first minute; after that the live render always wins.
+        const FEATURED_CACHE_KEY = 'tmrFeaturedCardsV2';
+        const FEATURED_CACHE_TTL = 24 * 60 * 60 * 1000;
+        const featuredBootTime = Date.now();
+        function paintCachedFeatured() {
+            if (!els.featured) return;
+            try {
+                const cached = JSON.parse(localStorage.getItem(FEATURED_CACHE_KEY) || 'null');
+                if (cached && cached.html && Number(cached.count) >= 6 && (Date.now() - Number(cached.at || 0)) < FEATURED_CACHE_TTL) {
+                    els.featured.innerHTML = cached.html;
+                    els.featured.dataset.cachedCards = String(cached.count);
+                }
+            } catch (e) { /* no cache */ }
+        }
+
         const FEATURED_MIN_LABEL = 'Requires ' + MIN_TOP_PERFORMER_GRADED_PICKS + '+ graded picks, activity in the last 30 days, and positive net units.';
         const STREAK_INFO = FEATURED_MIN_LABEL + ' Longest active run of ' + MIN_STREAK_LENGTH + '+ consecutive graded wins. Ties: higher net units, then more graded picks.';
         const ACTIVE_INFO = 'Most official picks submitted or graded in the last 30 days (' + MIN_ACTIVE_PICKS_30D + '+ required). Only real locked picks count. Fills the grid when nobody currently qualifies for Hottest Last 30 Days or Best Current Streak.';
@@ -2280,9 +2300,19 @@
             }
             console.info('[Handicappers] featured selection', selectionLog.map(s => s.category + ' -> ' + s.username + ' (id ' + s.id + ')').join(' | '));
 
+            // While the cached full grid is on screen, a less-complete live
+            // render (enrichment still in flight) must not downgrade it. The
+            // guard expires after 60s so live data always wins eventually.
+            const cachedCount = Number(els.featured.dataset.cachedCards || 0);
+            if (cachedCount > 0 && cards.length < cachedCount && (Date.now() - featuredBootTime) < 60000) return;
+            delete els.featured.dataset.cachedCards;
+
             els.featured.innerHTML = cards.length
                 ? cards.join('')
                 : '<div class="hm-feat-empty">No featured leaders yet. Members qualify with ' + MIN_TOP_PERFORMER_GRADED_PICKS + '+ graded picks, recent activity, and positive net units.</div>';
+            if (cards.length >= 6) {
+                try { localStorage.setItem(FEATURED_CACHE_KEY, JSON.stringify({ html: cards.join(''), count: cards.length, at: Date.now() })); } catch (e) { /* storage full/blocked */ }
+            }
         }
 
         // Deep-link state: /handicappers/?sport=MLB pre-selects a sport. The sport
@@ -2709,6 +2739,7 @@
                 restoreFilters(!!initialQuery, !!pendingSportFilter);
                 // Authoritative DB counts, in parallel with the member load.
                 fetchDirectoryCounts();
+                paintCachedFeatured();
                 // Phase 0: instant paint from last cached snapshot (if any).
                 const cached = readDirectoryCache();
                 if (cached.length) {
