@@ -4461,23 +4461,46 @@
         var role = isProbable || (stat && gs >= 3 && (g === 0 || gs / g >= 0.5)) ? 'rotation' : 'bullpen';
         return { name: p.name, hand: handLabel(p.mlbId), gs: gs, g: g, era: era, sv: sv, rec: rec, role: role, hasStat: !!stat, isProbable: isProbable };
     }
-    function bullpenStatLine(i) {
-        var bits = [];
-        if (Number.isFinite(i.era)) bits.push('ERA ' + i.era.toFixed(2));
-        if (i.rec) bits.push(i.rec);
-        if (i.sv > 0) bits.push(i.sv + ' SV');
-        if (i.g > 0) bits.push(i.g + ' G' + (i.gs > 0 ? '/' + i.gs + ' GS' : ''));
-        return bits.length ? bits.join(' · ') : 'No 2026 stats loaded';
+    function bullpenEraClass(era) {
+        if (!Number.isFinite(era)) return 'era-na';
+        if (era < 3) return 'era-good';
+        if (era < 4.5) return 'era-mid';
+        return 'era-high';
+    }
+    function bullpenRowHtml(i) {
+        var era = Number.isFinite(i.era) ? i.era.toFixed(2) : '-';
+        var games = i.g > 0 ? (i.gs > 0 ? i.g + '/' + i.gs : String(i.g)) : '-';
+        return '<li class="bp-row">'
+            + '<span class="bp-name" title="' + escapeAttr(i.name) + '">' + escapeHtml(i.name) + (i.hasStat ? '' : '<span class="bp-nostat">No 2026 stats loaded</span>') + '</span>'
+            + '<span class="bp-hand">' + escapeHtml(i.hand) + '</span>'
+            + '<span class="bp-num ' + bullpenEraClass(i.era) + '">' + era + '</span>'
+            + '<span class="bp-num">' + (i.rec ? escapeHtml(i.rec) : '-') + '</span>'
+            + '<span class="bp-num">' + (i.sv > 0 ? i.sv : '-') + '</span>'
+            + '<span class="bp-num">' + games + '</span>'
+            + '</li>';
+    }
+    function bullpenColsHtml() {
+        return '<li class="bp-row bp-cols" aria-hidden="true"><span>Player</span><span>Thr</span><span>ERA</span><span>W-L</span><span>SV</span><span>G/GS</span></li>';
+    }
+    function bullpenSubhead(label, count, tip) {
+        return '<div class="bullpen-subhead">' + label
+            + (count != null ? ' <span class="bp-count">' + escapeHtml(String(count)) + '</span>' : '')
+            + ' <span class="bp-info" title="' + escapeAttr(tip) + '">i</span></div>';
     }
     function renderBullpenForTeam(team) {
-        var head = '<div class="bullpen-team"><h3 style="margin:0 0 6px;">' + escapeHtml(team ? team.name : 'Team') + '</h3>';
+        var colors = teamColors(team);
+        var head = '<div class="bullpen-team" style="--bp-accent:' + escapeAttr(colors[0]) + ';">'
+            + '<div class="bullpen-team-head">' + logoMarkup(team, 'bullpen-logo')
+            + '<h3>' + escapeHtml(team ? team.name : 'Team') + '</h3></div>'
+            + '<div class="bullpen-team-body">';
+        var close = '</div></div>';
         if (!team || team.era !== 'current') {
-            return head + '<div class="sim-empty">Active bullpen is shown for current MLB teams only. Classic/historical teams use rating profiles, not live rosters.</div></div>';
+            return head + '<div class="sim-empty">Active bullpen is shown for current MLB teams only. Classic/historical teams use rating profiles, not live rosters.</div>' + close;
         }
         var stored = state.liveContext.teamRosters && state.liveContext.teamRosters[team.abbreviation];
         var roster = validatedRosterForTeam(team, stored);
         if (!roster || !Array.isArray(roster.players)) {
-            return head + '<div class="sim-empty">Active bullpen unavailable: the live MLB active-roster feed did not load for ' + escapeHtml(team.abbreviation) + '. No names are shown rather than display stale data.</div></div>';
+            return head + '<div class="sim-empty">Active bullpen unavailable: the live MLB active-roster feed did not load for ' + escapeHtml(team.abbreviation) + '. No names are shown rather than display stale data.</div>' + close;
         }
         var seen = {}, pitchers = [];
         roster.players.filter(function (p) { return isPitcherPosition(p.position); }).forEach(function (p) {
@@ -4497,36 +4520,56 @@
             return ae - be;
         });
         var html = head;
-        // Probable / projected starter
+        // Probable / projected starter (featured)
         if (probable && probable.name) {
             var probInfo = infos.filter(function (i) { return i.isProbable; })[0];
-            html += '<div class="bullpen-starter"><span class="bullpen-tag bullpen-tag-confirmed">Today’s probable starter</span> <strong>' + escapeHtml(probable.name) + '</strong>'
-                + (probInfo ? ' <span class="bullpen-hand">' + escapeHtml(probInfo.hand) + '</span> <span class="bullpen-meta">' + escapeHtml(bullpenStatLine(probInfo)) + '</span>' : '') + '</div>';
+            var chips = '';
+            if (probInfo && probInfo.hasStat) {
+                chips = '<div class="bp-starter-stats">'
+                    + '<div class="bp-stat"><b class="' + bullpenEraClass(probInfo.era) + '">' + (Number.isFinite(probInfo.era) ? probInfo.era.toFixed(2) : '-') + '</b><span>ERA</span></div>'
+                    + '<div class="bp-stat"><b>' + escapeHtml(probInfo.rec || '-') + '</b><span>Record</span></div>'
+                    + '<div class="bp-stat"><b>' + probInfo.gs + '</b><span>Starts</span></div>'
+                    + '<div class="bp-stat"><b>' + probInfo.g + '</b><span>Games</span></div>'
+                    + (probInfo.sv > 0 ? '<div class="bp-stat"><b>' + probInfo.sv + '</b><span>Saves</span></div>' : '')
+                    + '</div>';
+            } else if (probInfo) {
+                chips = '<div class="bullpen-meta" style="margin-top:8px;">No 2026 stats loaded</div>';
+            }
+            html += '<div class="bullpen-starter">'
+                + '<div class="bp-starter-top"><span class="bullpen-tag bullpen-tag-confirmed" title="Today&#39;s probable starter from the official MLB schedule">Probable Starter</span>'
+                + (probInfo ? '<span class="bullpen-hand">' + escapeHtml(probInfo.hand) + '</span>' : '')
+                + '</div>'
+                + '<div class="bp-starter-name">' + escapeHtml(probable.name) + '</div>'
+                + chips + '</div>';
         } else {
-            html += '<div class="bullpen-starter"><span class="bullpen-tag bullpen-tag-projected">Probable starter not posted</span> <span class="bullpen-meta">Today’s starter is not yet listed on the MLB schedule.</span></div>';
+            html += '<div class="bullpen-starter">'
+                + '<div class="bp-starter-top"><span class="bullpen-tag bullpen-tag-projected">Starter Not Posted</span></div>'
+                + '<div class="bullpen-meta" style="margin-top:8px;">Today&#39;s starter is not yet listed on the MLB schedule.</div></div>';
         }
-        // Other rotation arms (inferred)
+        // Other rotation arms (roles inferred; disclosed in subhead tooltip + section header)
         var otherRotation = rotation.filter(function (i) { return !i.isProbable; });
         if (otherRotation.length) {
-            html += '<div class="bullpen-subhead">Rotation (inferred from games started) <span class="bullpen-note">not official roles</span></div><ul class="bullpen-list">';
-            otherRotation.forEach(function (i) {
-                html += '<li><span class="bullpen-name">' + escapeHtml(i.name) + '</span> <span class="bullpen-hand">' + escapeHtml(i.hand) + '</span> <span class="bullpen-meta">' + escapeHtml(bullpenStatLine(i)) + '</span></li>';
-            });
+            html += bullpenSubhead('Rotation Depth', otherRotation.length, 'Rotation roles are inferred from games started this season, not official role data. The active-roster feed publishes no roles.');
+            html += '<ul class="bullpen-list">' + bullpenColsHtml();
+            otherRotation.forEach(function (i) { html += bullpenRowHtml(i); });
             html += '</ul>';
         }
         // Active bullpen
-        html += '<div class="bullpen-subhead">Active Bullpen – ' + pen.length + ' arm' + (pen.length === 1 ? '' : 's') + ' <span class="bullpen-note">roles inferred; feed has no closer/setup data</span></div>';
+        html += bullpenSubhead('Available Bullpen', pen.length + ' arm' + (pen.length === 1 ? '' : 's'), 'Relief roles are inferred; the roster feed has no closer or setup data.');
         if (!pen.length) {
             html += '<div class="sim-empty">No relief arms classified from the current roster + loaded stats.</div>';
         } else {
-            html += '<ul class="bullpen-list">';
-            pen.forEach(function (i) {
-                html += '<li><span class="bullpen-name">' + escapeHtml(i.name) + '</span> <span class="bullpen-hand">' + escapeHtml(i.hand) + '</span> <span class="bullpen-meta">' + escapeHtml(bullpenStatLine(i)) + '</span></li>';
-            });
+            html += '<ul class="bullpen-list">' + bullpenColsHtml();
+            pen.forEach(function (i) { html += bullpenRowHtml(i); });
             html += '</ul>';
         }
-        html += '<div class="bullpen-foot">' + escapeHtml(roster.players.length + ' verified active roster players · ' + pitchers.length + ' pitchers') + (stored && stored.fetchedAt ? ' · updated ' + new Date(stored.fetchedAt).toLocaleTimeString() : '') + '</div>';
-        return html + '</div>';
+        html += '<div class="bullpen-foot">'
+            + '<span class="bp-chip"><span class="bp-dot"></span>Live roster data</span>'
+            + '<span class="bp-chip" title="Verified active roster players">' + roster.players.length + ' Active Players</span>'
+            + '<span class="bp-chip">' + pitchers.length + ' Pitchers</span>'
+            + (stored && stored.fetchedAt ? '<span class="bp-chip">Updated ' + escapeHtml(new Date(stored.fetchedAt).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })) + '</span>' : '')
+            + '</div>';
+        return html + close;
     }
     function renderBullpenPanels(result) {
         var panel = byId('bullpenPanel');
@@ -4538,7 +4581,7 @@
             return;
         }
         panel.setAttribute('data-bullpen-state', 'ready');
-        content.innerHTML = '<div class="bullpen-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;">'
+        content.innerHTML = '<div class="bullpen-grid">'
             + renderBullpenForTeam(result.away) + renderBullpenForTeam(result.home) + '</div>';
     }
     function renderResult(result) {
