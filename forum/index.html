@@ -2175,6 +2175,14 @@ function renderThread() {
         var postAuthorId = (p.user_id != null) ? String(p.user_id) : ((p.user && p.user.id != null) ? String(p.user.id) : '');
         var isOwner = !!myUsername && (postAuthorName === myUsername || (!!myUserId && !!postAuthorId && myUserId === postAuthorId));
         var canEdit = isOwner || canModerate;
+        // Regular users can delete their own post only within 15 min of posting.
+        // Moderators/admins are exempt. Backend enforces the same rule.
+        var withinDeleteWindow = false;
+        if (p.created_at) {
+            var createdMs = new Date(p.created_at).getTime();
+            withinDeleteWindow = !isNaN(createdMs) && (Date.now() - createdMs) <= (15 * 60 * 1000);
+        }
+        var canDelete = canModerate || (isOwner && withinDeleteWindow);
         var likeCount = numericValue(p.like_count); if (likeCount == null) likeCount = 0;
         var likeTarget = p.is_thread_starter ? (p.thread_id || (cachedThread && cachedThread.id)) : postId;
         var actions = '<div class="fpost-actions">'
@@ -2183,7 +2191,7 @@ function renderThread() {
             + '<button type="button" class="fpost-btn" onclick="forumFocusReply()">Reply</button>'
             + (isLoggedIn && p.is_thread_starter ? '<button type="button" class="fpost-btn is-sub' + ((cachedThread && cachedThread.subscribed_by_me) ? ' is-subscribed' : '') + '" onclick="forumToggleSubscribe(this)">' + ((cachedThread && cachedThread.subscribed_by_me) ? 'Unfollow Thread' : 'Follow Thread') + '</button>' : '')
             + (canEdit && postId ? '<button type="button" class="fpost-btn is-edit" onclick="forumEditPost(\'' + escHtml(postId) + '\')">Edit</button>' : '')
-            + (canEdit && postId ? '<button type="button" class="fpost-btn is-delete" onclick="forumDeletePost(\'' + escHtml(postId) + '\')">Delete</button>' : '')
+            + (canDelete && postId ? '<button type="button" class="fpost-btn is-delete" onclick="forumDeletePost(\'' + escHtml(postId) + '\')">Delete</button>' : '')
             + (canModerate && p.is_thread_starter ? '<button type="button" class="fpost-btn is-mod" onclick="forumLockThread(this)">' + ((cachedThread && cachedThread.is_locked) ? 'Unlock Thread' : 'Lock Thread') + '</button>' : '')
             + (canModerate && p.is_thread_starter ? '<button type="button" class="fpost-btn is-mod" onclick="forumPinThread(this)">' + ((cachedThread && cachedThread.is_pinned) ? 'Unpin Thread' : 'Pin Thread') + '</button>' : '')
             + '</div>';
