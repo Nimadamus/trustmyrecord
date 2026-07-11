@@ -2160,7 +2160,14 @@ function renderThread() {
     var isLoggedIn = !!sessionUser;
     window.__forumCachedPostsById = {};
     c.innerHTML = posts.map(function(p, idx) {
-        var postTitle = p.is_thread_starter ? (p.title || (cachedThread && cachedThread.title) || 'Thread') : (p.title || 'Reply');
+        // Thread starter (#1) always shows a title. Replies show a title ONLY when the
+        // author intentionally entered one; the generic auto-value "Reply"/"Re: ..." is suppressed.
+        var rawReplyTitle = (p.title || '').toString().trim();
+        var isGenericReplyTitle = !rawReplyTitle || rawReplyTitle.toLowerCase() === 'reply'
+            || (cachedThread && cachedThread.title && rawReplyTitle.toLowerCase() === ('re: ' + String(cachedThread.title).toLowerCase()));
+        var postTitle = p.is_thread_starter
+            ? (p.title || (cachedThread && cachedThread.title) || 'Thread')
+            : (isGenericReplyTitle ? '' : rawReplyTitle);
         var postNo = idx + 1;
         var postId = (p.id != null) ? String(p.id) : '';
         if (postId) window.__forumCachedPostsById[postId] = p;
@@ -2185,7 +2192,7 @@ function renderThread() {
             + renderAuthorPanel(p)
             + '<div class="fthread-body">'
             +   '<div class="meta"><span>' + (p.created_at ? formatForumDate(p.created_at) : '—') + (p.id ? ' &middot; <a href="#post-' + escHtml(p.id) + '" id="post-' + escHtml(p.id) + '">Permalink</a>' : '') + '</span><span class="fthread-post-num">#' + postNo + '</span></div>'
-            +   '<div class="fthread-post-title">' + escHtml(postTitle) + '</div>'
+            +   (postTitle ? '<div class="fthread-post-title">' + escHtml(postTitle) + '</div>' : '')
             +   '<div class="fpost-content" id="postContent-' + escHtml(postId) + '">' + forumRenderContent(p.content || p.body || '') + '</div>'
             +   editedLine
             +   actions
