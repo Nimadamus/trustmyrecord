@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/marketplace/admin/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace Admin | TrustMyRecord</title>
+    <meta name="description" content="TrustMyRecord marketplace administration.">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&family=Inter:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --panel:rgba(11,23,42,.92); --line:rgba(148,163,184,.18); --text:#eef4fb; --muted:#96a7bb; --teal:#2dd4bf; --cyan:#22d3ee; --amber:#fbbf24; --green:#4ade80; --red:#f87171; }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { background:linear-gradient(180deg,#07111d,#0a1422); color:var(--text); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
+        a { color:var(--cyan); text-decoration:none; }
+        .shell { max-width:1240px; margin:0 auto; padding:26px 22px 70px; }
+        h1 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:32px; margin-bottom:16px; }
+        .panel { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:14px; }
+        .panel h2 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:19px; margin-bottom:10px; }
+        table { width:100%; border-collapse:collapse; font-size:12.5px; }
+        th { text-align:left; color:var(--muted); font-size:10px; letter-spacing:.08em; text-transform:uppercase; padding:7px 9px; border-bottom:1px solid var(--line); white-space:nowrap; }
+        td { padding:7px 9px; border-bottom:1px solid rgba(148,163,184,.08); white-space:nowrap; }
+        .mono { font-family:'JetBrains Mono',monospace; }
+        .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:9px; font-weight:800; font-size:12px; cursor:pointer; border:1px solid transparent; font-family:inherit; }
+        .btn-primary { background:linear-gradient(135deg,var(--teal),var(--cyan)); color:#04111a; }
+        .btn-danger { background:rgba(248,113,113,.12); color:var(--red); border-color:rgba(248,113,113,.4); }
+        .btn-outline { background:rgba(255,255,255,.04); color:var(--text); border-color:var(--line); }
+        input, select { background:rgba(7,14,26,.8); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:8px 10px; font-size:12.5px; font-family:inherit; }
+        .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; margin-bottom:6px; }
+        .stat { background:rgba(7,14,26,.65); border:1px solid var(--line); border-radius:10px; padding:11px; text-align:center; }
+        .stat b { display:block; font-family:'JetBrains Mono',monospace; font-size:15px; }
+        .stat span { font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+        .tblwrap { overflow-x:auto; }
+        .pill { padding:3px 9px; border-radius:999px; font:700 10px/1 'JetBrains Mono',monospace; }
+        .pill-on { background:rgba(74,222,128,.12); color:var(--green); border:1px solid rgba(74,222,128,.4); }
+        .pill-off { background:rgba(248,113,113,.12); color:var(--red); border:1px solid rgba(248,113,113,.4); }
+        .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#152741; border:1px solid var(--line); padding:12px 18px; border-radius:10px; font-size:13px; display:none; z-index:60; }
+        .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    </style>
+</head>
+<body>
+<main class="shell">
+    <h1>Marketplace Admin</h1>
+    <div id="app"><div class="panel" style="color:var(--muted);">Checking access…</div></div>
+</main>
+<div class="toast" id="toast"></div>
+
+<script src="/static/js/config.js?v=20260330"></script>
+<script src="/static/js/backend-api.js?v=20260423a"></script>
+<script>
+(function () {
+    const app = document.getElementById('app');
+    let data = null;
+
+    function esc(v){ return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function money(c,cur){ return new Intl.NumberFormat('en-US',{style:'currency',currency:(cur||'usd').toUpperCase()}).format((Number(c)||0)/100); }
+    function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(()=>t.style.display='none',4500); }
+
+    function render() {
+        const s = data.settings;
+        const orderAgg = data.orders_by_status || [];
+        const ledger = data.ledger_by_type || [];
+        const paid = orderAgg.filter(o => ['paid','partially_refunded','refunded','disputed','dispute_won','dispute_lost'].includes(o.status));
+        const gross = paid.reduce((a,o)=>a+Number(o.gross_cents),0);
+        const fees = paid.reduce((a,o)=>a+Number(o.platform_fee_cents),0);
+        const alloc = paid.reduce((a,o)=>a+Number(o.seller_gross_cents),0);
+        const stripeFee = ledger.find(l=>l.type==='stripe_processing_fee');
+
+        let html = '<div class="panel"><h2>Kill Switch &amp; Settings</h2><div class="row">' +
+            '<span>Purchases: <span class="pill ' + (s.marketplace_enabled ? 'pill-on">ENABLED' : 'pill-off">DISABLED') + '</span></span>' +
+            '<button class="btn ' + (s.marketplace_enabled ? 'btn-danger' : 'btn-primary') + '" data-set="marketplace_enabled" data-val="' + (!s.marketplace_enabled) + '">' + (s.marketplace_enabled ? 'DISABLE all purchases' : 'Enable purchases') + '</button>' +
+            '<span style="margin-left:14px;">Selling/onboarding: <span class="pill ' + (s.selling_enabled ? 'pill-on">ON' : 'pill-off">OFF') + '</span></span>' +
+            '<button class="btn btn-outline" data-set="selling_enabled" data-val="' + (!s.selling_enabled) + '">' + (s.selling_enabled ? 'Pause selling' : 'Resume selling') + '</button>' +
+            '</div><div class="row" style="margin-top:10px;">' +
+            '<label>Min price ¢ <input id="setMin" type="number" value="' + Number(s.min_price_cents) + '" style="width:90px;"></label>' +
+            '<label>Max price ¢ <input id="setMax" type="number" value="' + Number(s.max_price_cents) + '" style="width:100px;"></label>' +
+            '<label>Min graded picks <input id="setGraded" type="number" value="' + Number(s.min_graded_picks) + '" style="width:80px;"></label>' +
+            '<button class="btn btn-outline" id="saveThresholds">Save thresholds</button>' +
+            '</div></div>';
+
+        html += '<div class="panel"><h2>Totals (all completed volume)</h2><div class="grid">' +
+            '<div class="stat"><b class="mono">' + money(gross) + '</b><span>Gross Volume</span></div>' +
+            '<div class="stat"><b class="mono">' + money(fees) + '</b><span>TMR 20% Commissions</span></div>' +
+            '<div class="stat"><b class="mono">' + money(alloc) + '</b><span>Seller Allocations</span></div>' +
+            '<div class="stat"><b class="mono">' + money(stripeFee ? -Number(stripeFee.amount_cents) : 0) + '</b><span>Stripe Processing</span></div>' +
+            orderAgg.map(o => '<div class="stat"><b>' + o.n + '</b><span>' + esc(o.status) + '</span></div>').join('') +
+        '</div></div>';
+
+        html += '<div class="panel"><h2>Sellers (' + data.sellers.length + ')</h2><div class="tblwrap"><table><thead><tr><th>User</th><th>Eligibility</th><th>Onboarding</th><th>Charges</th><th>Payouts</th><th>Stripe Acct</th><th>Paid Orders</th><th>Actions</th></tr></thead><tbody>' +
+        data.sellers.map(x =>
+            '<tr><td>@' + esc(x.username) + '</td>' +
+            '<td>' + esc(x.eligibility_status) + (x.suspension_reason ? ' <span title="' + esc(x.suspension_reason) + '">&#9432;</span>' : '') + '</td>' +
+            '<td>' + esc(x.onboarding_status) + '</td>' +
+            '<td>' + (x.charges_enabled ? 'yes' : 'no') + '</td><td>' + (x.payouts_enabled ? 'yes' : 'no') + '</td>' +
+            '<td class="mono">' + esc(x.stripe_account_id || '-') + '</td><td>' + x.paid_orders + '</td>' +
+            '<td>' + (x.eligibility_status === 'suspended'
+                ? '<button class="btn btn-outline" data-reinstate="' + x.user_id + '">Reinstate</button>'
+                : '<button class="btn btn-danger" data-suspend="' + x.user_id + '">Suspend</button>') + '</td></tr>'
+        ).join('') + '</tbody></table></div></div>';
+
+        html += '<div class="panel"><h2>Orders</h2><div class="row" style="margin-bottom:10px;">' +
+            '<input id="orderQ" placeholder="Search buyer / seller / pi_ / cs_ / acct_ / order uuid" style="min-width:320px;">' +
+            '<button class="btn btn-outline" id="orderSearch">Search</button></div>' +
+            '<div class="tblwrap" id="ordersTbl"><p style="color:var(--muted);font-size:13px;">Search or leave blank for latest.</p></div></div>';
+
+        html += '<div class="panel"><h2>Recent Disputes</h2><div class="tblwrap">' +
+            (data.recent_disputes.length ? '<table><thead><tr><th>Order</th><th>Dispute</th><th>Amount</th><th>Status</th><th>Outcome</th><th>Reversed</th></tr></thead><tbody>' +
+             data.recent_disputes.map(d => '<tr><td class="mono">' + esc(d.public_id) + '</td><td class="mono">' + esc(d.stripe_dispute_id) + '</td><td class="mono">' + money(d.amount_cents, d.currency) + '</td><td>' + esc(d.status) + '</td><td>' + esc(d.outcome || '-') + '</td><td class="mono">' + money(d.transfer_reversed_cents, d.currency) + '</td></tr>').join('') + '</tbody></table>'
+             : '<p style="color:var(--muted);font-size:13px;">No disputes.</p>') + '</div></div>';
+
+        html += '<div class="panel"><h2>Ledger by Type</h2><div class="tblwrap"><table><thead><tr><th>Type</th><th>Rows</th><th>Net Amount</th></tr></thead><tbody>' +
+            ledger.map(l => '<tr><td>' + esc(l.type) + '</td><td>' + l.n + '</td><td class="mono">' + money(l.amount_cents) + '</td></tr>').join('') +
+        '</tbody></table></div><p style="color:var(--muted);font-size:12px;margin-top:8px;"><a href="#" id="loadAudit">Load audit log</a></p><div class="tblwrap" id="auditTbl"></div></div>';
+
+        app.innerHTML = html;
+        bind();
+    }
+
+    function bind() {
+        app.querySelectorAll('[data-set]').forEach(b => b.addEventListener('click', async () => {
+            const key = b.getAttribute('data-set'), val = b.getAttribute('data-val') === 'true';
+            if (key === 'marketplace_enabled' && !val && !confirm('Disable ALL new marketplace purchases?')) return;
+            try { await api.request('/marketplace/admin/settings', { method: 'POST', body: { key, value: val } }); toast('Saved ' + key + ' = ' + val); boot(); }
+            catch (e) { toast(e.message || 'Failed'); }
+        }));
+        document.getElementById('saveThresholds').addEventListener('click', async () => {
+            try {
+                await api.request('/marketplace/admin/settings', { method: 'POST', body: { key: 'min_price_cents', value: parseInt(document.getElementById('setMin').value, 10) } });
+                await api.request('/marketplace/admin/settings', { method: 'POST', body: { key: 'max_price_cents', value: parseInt(document.getElementById('setMax').value, 10) } });
+                await api.request('/marketplace/admin/settings', { method: 'POST', body: { key: 'min_graded_picks', value: parseInt(document.getElementById('setGraded').value, 10) } });
+                toast('Thresholds saved'); boot();
+            } catch (e) { toast(e.message || 'Failed'); }
+        });
+        app.querySelectorAll('[data-suspend]').forEach(b => b.addEventListener('click', async () => {
+            const reason = prompt('Suspension reason:'); if (reason == null) return;
+            try { await api.request('/marketplace/admin/sellers/' + b.getAttribute('data-suspend') + '/suspend', { method: 'POST', body: { reason } }); toast('Suspended'); boot(); }
+            catch (e) { toast(e.message || 'Failed'); }
+        }));
+        app.querySelectorAll('[data-reinstate]').forEach(b => b.addEventListener('click', async () => {
+            try { await api.request('/marketplace/admin/sellers/' + b.getAttribute('data-reinstate') + '/reinstate', { method: 'POST', body: {} }); toast('Reinstated'); boot(); }
+            catch (e) { toast(e.message || 'Failed'); }
+        }));
+        document.getElementById('orderSearch').addEventListener('click', loadOrders);
+        document.getElementById('loadAudit').addEventListener('click', async (ev) => {
+            ev.preventDefault();
+            try {
+                const out = await api.request('/marketplace/admin/audit-log');
+                document.getElementById('auditTbl').innerHTML = '<table><thead><tr><th>Time</th><th>Actor</th><th>Action</th><th>Order</th><th>Details</th></tr></thead><tbody>' +
+                    out.audit_log.map(a => '<tr><td>' + new Date(a.created_at).toLocaleString() + '</td><td>' + esc(a.actor_username || a.actor_type) + '</td><td>' + esc(a.action) + '</td><td>' + (a.order_id || '-') + '</td><td class="mono" style="white-space:normal;max-width:420px;">' + esc(JSON.stringify(a.details)) + '</td></tr>').join('') + '</tbody></table>';
+            } catch (e) { toast(e.message || 'Failed'); }
+        });
+        loadOrders();
+    }
+
+    async function loadOrders() {
+        try {
+            const q = encodeURIComponent(document.getElementById('orderQ').value.trim());
+            const out = await api.request('/marketplace/admin/orders?q=' + q);
+            document.getElementById('ordersTbl').innerHTML = '<table><thead><tr><th>Created</th><th>Order</th><th>Buyer</th><th>Seller</th><th>Status</th><th>Price</th><th>Fee 20%</th><th>Seller 80%</th><th>PaymentIntent</th><th></th></tr></thead><tbody>' +
+                out.orders.map(o =>
+                    '<tr><td>' + new Date(o.created_at).toLocaleString() + '</td><td class="mono">' + esc(String(o.public_id).slice(0,8)) + '…</td>' +
+                    '<td>@' + esc(o.buyer_username) + '</td><td>@' + esc(o.seller_username) + '</td><td>' + esc(o.status) + '</td>' +
+                    '<td class="mono">' + money(o.price_cents, o.currency) + '</td><td class="mono">' + money(o.platform_fee_cents, o.currency) + '</td><td class="mono">' + money(o.seller_gross_cents, o.currency) + '</td>' +
+                    '<td class="mono">' + esc(o.stripe_payment_intent_id || '-') + '</td>' +
+                    '<td>' + (['paid','partially_refunded'].includes(o.status) ? '<button class="btn btn-danger" data-refund="' + esc(o.public_id) + '">Refund</button>' : '') + '</td></tr>'
+                ).join('') + '</tbody></table>';
+            document.querySelectorAll('[data-refund]').forEach(b => b.addEventListener('click', async () => {
+                const amt = prompt('Refund amount in cents (blank = full refund):');
+                if (amt === null) return;
+                try {
+                    const body = { reason: 'admin dashboard refund' };
+                    if (amt.trim()) body.amount_cents = parseInt(amt, 10);
+                    const out2 = await api.request('/marketplace/admin/orders/' + b.getAttribute('data-refund') + '/refund', { method: 'POST', body });
+                    toast('Refund ' + out2.refund_id + ' → ' + out2.status);
+                    loadOrders();
+                } catch (e) { toast(e.message || 'Refund failed'); }
+            }));
+        } catch (e) { toast(e.message || 'Order search failed'); }
+    }
+
+    async function boot() {
+        api.loadTokens && api.loadTokens();
+        try {
+            data = await api.request('/marketplace/admin/overview');
+            render();
+        } catch (e) {
+            app.innerHTML = '<div class="panel" style="color:var(--red);">Access denied. Log in as the founder account (or provide the admin token) to use this page.</div>';
+        }
+    }
+    boot();
+})();
+</script>
+</body>
+</html>
