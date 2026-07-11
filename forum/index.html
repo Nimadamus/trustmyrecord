@@ -131,6 +131,7 @@ a.fthread-avatar{color:inherit;text-decoration:none;cursor:pointer}
 @media (max-width:760px){.fthread-row-avatar{flex-basis:24px;width:24px;height:24px;font-size:10px}}
 .fthread-author b{display:block;color:#222;margin-bottom:3px}
 .fthread-role{color:#444;font-size:11px;margin-bottom:7px}
+.fthread-undertitle{color:#556;font-style:italic;font-size:11px;line-height:1.35;margin:2px 0 5px}
 /* Role badge under the username: red ADMIN (or MOD) chip, role-based from the API. */
 .fadmin-badge{display:inline-block;margin:0 0 5px;padding:1px 7px;border-radius:3px;background:#c0392b;border:1px solid #962d22;color:#fff;font:bold 9px/1.6 Arial,Helvetica,sans-serif;letter-spacing:1.2px;text-transform:uppercase;vertical-align:middle}
 body.classic-forum .fadmin-badge{background:#c0392b !important;color:#fff !important;border:1px solid #962d22 !important}
@@ -449,6 +450,7 @@ body.classic-forum .fthread-author b{color:#1f2937 !important}
 body.classic-forum .fthread-author{background:#eef1f5 !important;border-right:1px solid #c9c9c9 !important;color:#333 !important}
 body.classic-forum .fthread-author b{color:#1f2937 !important}
 body.classic-forum .fthread-role{color:#444 !important}
+body.classic-forum .fthread-undertitle{color:#555 !important}
 body.classic-forum .fthread-author-row{color:#333 !important}
 body.classic-forum .fthread-author-row a{color:#0033cc !important}
 body.classic-forum .fthread-avatar{background:#dfe5ec !important;border:1px solid #9aa7b8 !important;color:#222 !important}
@@ -1359,6 +1361,9 @@ body.tmr-forum-live-redesign .modal-body label {
 body.tmr-forum-live-redesign .fthread-role {
   color:#9fb6d4 !important;
 }
+body.tmr-forum-live-redesign .fthread-undertitle {
+  color:#5bd6dc !important;
+}
 body.tmr-forum-live-redesign .fthread-fandom {
   background:rgba(45,212,191,.14) !important;
   border-color:rgba(45,212,191,.4) !important;
@@ -2080,6 +2085,12 @@ function renderAuthorPanel(post) {
         ? '<div class="fthread-author-row" style="margin-top:6px;"><button type="button" class="fpost-btn ffollow-user-btn" data-username="' + escHtml(profileUsername) + '" data-userid="' + escHtml(String(fAuthorId)) + '" onclick="forumFollowUser(this)">+ Follow</button></div>'
         : '';
     var botBadge = isOfficialBot ? '<div><span class="fbot-badge">Bot</span></div>' : '';
+    // Custom undertitle (users.headline): shows beneath the username and ABOVE the
+    // "Verified Handicapper" role line. Non-bot only (bots use fbot-tagline). Empty
+    // headline renders nothing so there is no blank gap.
+    var undertitle = (!isOfficialBot && headline)
+        ? '<div class="fthread-undertitle">' + escHtml(headline) + '</div>'
+        : '';
     var botTagline = isOfficialBot
         ? '<div class="fbot-tagline">' + escHtml((headline || '') || 'Your friendly TMR house bot') + '</div>'
         : '';
@@ -2088,6 +2099,7 @@ function renderAuthorPanel(post) {
         + nameHtml
         + botBadge
         + authorRoleBadge(author)
+        + undertitle
         + '<div class="fthread-role">' + escHtml(role) + '</div>'
         + botTagline
         + (hasFavTeam ? '<div class="fthread-fandom"><span class="fthread-fandom-dot"></span>' + escHtml(favTeam) + '</div>' : '')
