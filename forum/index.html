@@ -108,6 +108,9 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 .fname:hover{color:var(--link-hover)}
 .fdesc{margin-top:2px;color:#555;font-size:12px;line-height:1.3}
 .fsticky-tag{display:inline-block;margin-right:5px;padding:1px 4px;background:#fff2bb;border:1px solid #c7a24d;color:#5d4700;font:bold 10px Arial,Helvetica,sans-serif}
+.fofficial-tag{display:inline-block;margin-left:6px;padding:1px 5px;background:#0f2f52;border:1px solid #0a2038;color:#ffd76a;font:bold 10px Arial,Helvetica,sans-serif;vertical-align:1px;letter-spacing:.4px;text-transform:uppercase}
+.fofficial-note{color:#5d4700;background:#fff2bb;border:1px solid #c7a24d;padding:3px 8px;font:bold 11px Arial,Helvetica,sans-serif}
+.sport-icon.official{background:#0f2f52 !important;border-color:#0a2038 !important;color:#ffd76a !important}
 .flpost-title{font:bold 12px Arial,Helvetica,sans-serif;color:#333}
 .flpost-title a{color:var(--link)}
 .flpost-meta,.flpost-empty{color:#666;font-size:11px}
@@ -1954,7 +1957,8 @@ body.classic-forum .freply,body.classic-forum .fthread-post{border:1px solid #e3
                 </tr>
             </table>
             <div class="factionrow">
-                <button type="button" class="fbtn is-primary" onclick="openNewThread()">+ New Thread</button>
+                <button type="button" class="fbtn is-primary" id="threadsNewBtn" onclick="openNewThread()">+ New Thread</button>
+                <span class="fofficial-note" id="threadsOfficialNote" style="display:none;">Official TrustMyRecord section: only staff can start threads. Replies are open.</span>
                 <button type="button" class="fbtn" onclick="showCategories()">Forum Home</button>
                 <input type="search" placeholder="Search this forum..." onkeyup="if(event.key==='Enter')handleSearch(this.value)">
             </div>
@@ -2050,6 +2054,7 @@ function forumSportBadge(slug, name) {
     if (key.indexOf('challenge') !== -1 || key.indexOf('market') !== -1) return { code: '$', cls: 'gen' };
     if (key.indexOf('support') !== -1 || key.indexOf('feedback') !== -1) return { code: '?', cls: 'gen' };
     if (key.indexOf('record') !== -1) return { code: 'REC', cls: 'gen' };
+    if (key.indexOf('update') !== -1 || key.indexOf('announce') !== -1) return { code: 'TMR', cls: 'official' };
     return { code: 'TMR', cls: 'gen' };
 }
 
@@ -2128,7 +2133,7 @@ function renderCategories() {
             var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
             var badge = forumSportBadge(cat.slug, cat.name);
             html += '<tr class="' + rowClass + '" onclick="showThreadsList(\'' + escHtml(cat.slug) + '\',\'' + escHtml(cat.name) + '\',' + (cat.id == null ? 'null' : (typeof cat.id === 'number' ? cat.id : ('\'' + escHtml(String(cat.id)) + '\''))) + ')">'
-                + '<td class="fcell"><div class="frowinner"><span class="sport-icon ' + badge.cls + '">' + escHtml(badge.code) + '</span><div><div class="fname">' + escHtml(cat.name) + '</div><div class="fdesc">' + escHtml(cat.description || '') + '</div></div></div></td>'
+                + '<td class="fcell"><div class="frowinner"><span class="sport-icon ' + badge.cls + '">' + escHtml(badge.code) + '</span><div><div class="fname">' + escHtml(cat.name) + (cat.is_official ? ' <span class="fofficial-tag">Official</span>' : '') + '</div><div class="fdesc">' + escHtml(cat.description || '') + '</div></div></div></td>'
                 + '<td class="fcell col-last">' + lastHtml + '</td>'
                 + '<td class="fcell col-num">' + threadCount + '</td>'
                 + '<td class="fcell col-num">' + postCount + '</td>'
@@ -2971,11 +2976,13 @@ function updateStats() {
 function groupCategoriesForDisplay() {
     var map = {};
     categories.forEach(function(cat) {
-        var key = cat.group || 'Forums';
+        var key = cat.is_official ? 'Official' : (cat.group || 'Forums');
         if (!map[key]) map[key] = [];
         map[key].push(cat);
     });
-    return Object.keys(map).map(function(groupName) {
+    return Object.keys(map).sort(function(a, b) {
+        return (a === 'Official' ? 0 : 1) - (b === 'Official' ? 0 : 1);
+    }).map(function(groupName) {
         return { name: groupName, categories: map[groupName] };
     });
 }
@@ -3059,6 +3066,12 @@ async function showThreadsList(slug, name, id) {
     document.body.classList.remove('is-forum-home');
     document.getElementById('viewThread').style.display = 'none';
     document.getElementById('threadsCategoryLabel').textContent = currentCategoryName || 'Forum';
+    var officialCat = (categories || []).find(function(c) { return (c.slug || '') === slug; });
+    var officialLocked = !!(officialCat && officialCat.is_official) && !tmrForumUserIsStaff();
+    var ntBtn = document.getElementById('threadsNewBtn');
+    if (ntBtn) ntBtn.style.display = officialLocked ? 'none' : '';
+    var ntNote = document.getElementById('threadsOfficialNote');
+    if (ntNote) ntNote.style.display = officialLocked ? '' : 'none';
     setForumPageHeader(currentCategoryName || 'Forum');
     setActiveSidebar(slug);
     document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(currentCategoryName || slug || 'Forum') + '</span>';
@@ -3288,7 +3301,9 @@ function openNewThread() {
     var sel = document.getElementById('ntCategory');
     if (sel) {
         var opts = ['<option value="">Select a forum...</option>'];
-        (categories || []).forEach(function (c) {
+        (categories || []).filter(function (c) {
+            return !c.is_official || tmrForumUserIsStaff();
+        }).forEach(function (c) {
             var label = c.name || c.slug || 'Forum';
             opts.push('<option value="' + escHtml(String(c.id)) + '" data-slug="' + escHtml(c.slug || '') + '" data-name="' + escHtml(label) + '">' + escHtml(label) + '</option>');
         });
@@ -3302,6 +3317,16 @@ function openNewThread() {
         var t = document.getElementById('ntTitle');
         if (t) t.focus();
     }, 30);
+}
+
+function tmrForumUserIsStaff() {
+    // Official sections: only admins/moderators/official bots may start
+    // threads. Backend enforces this on POST /forum/threads; this only
+    // controls what the composer offers.
+    var u = getForumSessionUser();
+    if (!u) return false;
+    var t = String(u.account_type || '').toLowerCase();
+    return t === 'admin' || t === 'moderator' || !!u.is_official_bot;
 }
 
 function closeNewThread() {
