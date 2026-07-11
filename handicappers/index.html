@@ -2079,9 +2079,10 @@
         const MIN_STREAK_LENGTH = 2;
         // Most Active: official picks submitted or graded in the last 30 days.
         const MIN_ACTIVE_PICKS_30D = 5;
-        // Diversity cap: one member may hold at most this many featured cards;
-        // a capped leader only yields when a genuinely qualified runner-up exists.
-        const MAX_FEATURED_CARDS_PER_MEMBER = 2;
+        // Featured grid is strictly one card per user: selection walks each
+        // category's ranked qualifiers (in display-priority order) and takes the
+        // highest-ranked member whose stable user id has not already claimed a
+        // card. A user is never duplicated to fill a slot.
         const HOT_INFO = 'Best net units over the last 30 days. Requires 10+ graded picks in that window, at least one graded pick in the last 7 days, a public profile, and settled (graded) picks only. Pending picks excluded. Ties: higher ROI, then more graded picks, then higher win %.';
 
         // Settlement/graded timestamp for a pick - the date the pick was decided,
@@ -2176,16 +2177,19 @@
                 );
         }
 
-        // Diversity pass: walk the category's ranked qualifiers and take the
-        // first member below the card cap; if every qualifier is capped, the
-        // rightful leader keeps the card (never a weaker or unqualified user).
-        function pickFeatured(ranked, cardCounts, memberOf) {
-            if (!ranked.length) return null;
+        // Unique-user pass: walk the category's ranked qualifiers and take the
+        // first member whose stable user id has not already claimed a featured
+        // card. If every qualifier is already featured, the category yields no
+        // card - a duplicate user is never used as filler.
+        function memberFeatureKey(member) {
+            const id = member && member.id != null && member.id !== '' ? member.id : (member && member.username);
+            return 'uid:' + String(id).toLowerCase();
+        }
+        function pickFeatured(ranked, selectedUserIds, memberOf) {
             for (const entry of ranked) {
-                const key = String(memberOf(entry).username || '').toLowerCase();
-                if ((cardCounts.get(key) || 0) < MAX_FEATURED_CARDS_PER_MEMBER) return entry;
+                if (!selectedUserIds.has(memberFeatureKey(memberOf(entry)))) return entry;
             }
-            return ranked[0];
+            return null;
         }
 
         const FEATURED_MIN_LABEL = 'Requires ' + MIN_TOP_PERFORMER_GRADED_PICKS + '+ graded picks, activity in the last 30 days, and positive net units.';
@@ -2200,17 +2204,23 @@
 
             // Six-card grid. Slots 1-4 are fixed categories; slot 5 is Best
             // Current Streak and slot 6 is Hottest Last 30 Days, each falling
-            // back to Most Active so no grid position is ever left empty.
+            // back to Most Active. Every card is a unique user: selection dedupes
+            // by stable user id while choosing (not after rendering), so a leader
+            // who tops multiple categories keeps the highest-priority card and
+            // the next eligible member takes the later category.
             const cards = [];
-            const cardCounts = new Map();
-            const claim = member => {
-                const key = String(member.username || '').toLowerCase();
-                cardCounts.set(key, (cardCounts.get(key) || 0) + 1);
-            };
-            const addCard = (ranked, memberOf, build) => {
-                const entry = pickFeatured(ranked, cardCounts, memberOf);
-                if (!entry) return false;
-                claim(memberOf(entry));
+            const selectedUserIds = new Set();
+            const selectionLog = [];
+            const addCard = (category, ranked, memberOf, build) => {
+                const entry = pickFeatured(ranked, selectedUserIds, memberOf);
+                if (!entry) {
+                    console.info('[Handicappers] featured: "' + category + '" unfilled - ' +
+                        (ranked.length ? ranked.length + ' qualifier(s), all already hold a featured card' : 'no qualifiers'));
+                    return false;
+                }
+                const member = memberOf(entry);
+                selectedUserIds.add(memberFeatureKey(member));
+                selectionLog.push({ category, id: member.id, username: member.username });
                 cards.push(build(entry));
                 return true;
             };
@@ -2221,30 +2231,24 @@
                 { label: 'Graded', value: String(gradedCount(member)) }
             ];
 
-            addCard(rankedUnitsLeaders(qualified), e => e, member =>
+            addCard('Units Leader', rankedUnitsLeaders(qualified), e => e, member =>
                 featuredCardHtml({ category: 'Units Leader', member, info: FEATURED_MIN_LABEL }));
-            addCard(rankedRoiLeaders(qualified), e => e, member =>
+            addCard('Best ROI', rankedRoiLeaders(qualified), e => e, member =>
                 featuredCardHtml({ category: 'Best ROI', member, info: FEATURED_MIN_LABEL }));
-            addCard(rankedWinRateLeaders(qualified), e => e, member =>
+            addCard('Best Win %', rankedWinRateLeaders(qualified), e => e, member =>
                 featuredCardHtml({ category: 'Best Win %', member, info: FEATURED_MIN_LABEL }));
-            addCard(rankedMostGraded(pool), e => e, member =>
+            addCard('Most Graded Picks', rankedMostGraded(pool), e => e, member =>
                 featuredCardHtml({ category: 'Most Graded Picks', member, info: 'Highest graded (verified) pick count across all members.' }));
 
-            let lastMostActive = null;
-            const addMostActive = () => {
-                const ranked = rankedMostActive(pool).filter(entry => entry.member !== lastMostActive);
-                return addCard(ranked, e => e.member, entry => {
-                    lastMostActive = entry.member;
-                    return featuredCardHtml({
-                        category: 'Most Active',
-                        member: entry.member,
-                        info: ACTIVE_INFO,
-                        cells: [{ label: 'Picks 30d', value: String(entry.picks30d), wide: true }].concat(lifetimeCells(entry.member))
-                    });
-                });
-            };
+            const addMostActive = () => addCard('Most Active', rankedMostActive(pool), e => e.member, entry =>
+                featuredCardHtml({
+                    category: 'Most Active',
+                    member: entry.member,
+                    info: ACTIVE_INFO,
+                    cells: [{ label: 'Picks 30d', value: String(entry.picks30d), wide: true }].concat(lifetimeCells(entry.member))
+                }));
 
-            const streakAdded = addCard(rankedStreakLeaders(qualified), e => e, member =>
+            const streakAdded = addCard('Best Current Streak', rankedStreakLeaders(qualified), e => e, member =>
                 featuredCardHtml({
                     category: 'Best Current Streak',
                     member,
@@ -2253,7 +2257,7 @@
                 }));
             if (!streakAdded) addMostActive();
 
-            const hotAdded = addCard(rankedHottest(pool), e => e.member, entry =>
+            const hotAdded = addCard('Hottest Last 30 Days', rankedHottest(pool), e => e.member, entry =>
                 featuredCardHtml({
                     category: 'Hottest Last 30 Days',
                     member: entry.member,
@@ -2266,6 +2270,15 @@
                     ]
                 }));
             if (!hotAdded) addMostActive();
+
+            // Backfill: if a slot's category and its Most Active fallback both
+            // came up empty, keep pulling the next UNIQUE Most Active member so
+            // the grid shows 6 cards whenever 6 unique eligible members exist.
+            while (cards.length < 6 && addMostActive()) { /* fill with unique members only */ }
+            if (cards.length < 6) {
+                console.info('[Handicappers] featured: only ' + cards.length + ' card(s) - fewer than 6 unique eligible members; never duplicating a user to fill the grid');
+            }
+            console.info('[Handicappers] featured selection', selectionLog.map(s => s.category + ' -> ' + s.username + ' (id ' + s.id + ')').join(' | '));
 
             els.featured.innerHTML = cards.length
                 ? cards.join('')
