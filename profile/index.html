@@ -2123,6 +2123,7 @@
                 <button type="button" class="profile-tab" data-tab="challenges" role="tab">Challenges</button>
                 <button type="button" class="profile-tab" data-tab="gaming" role="tab">Online Gaming</button>
                 <button type="button" class="profile-tab" data-tab="charts" role="tab">Charts</button>
+                <button type="button" class="profile-tab" data-tab="awards" id="profileAwardsTab" role="tab">Awards Received <span id="profileAwardsBadge" class="profile-tab-badge" hidden>0</span></button>
                 <button type="button" class="profile-tab" data-tab="inbox" id="profileInboxTab" role="tab" hidden>Inbox <span id="profileInboxBadge" class="profile-tab-badge" hidden>0</span></button>
             </div>
         </div>
@@ -3556,6 +3557,80 @@
                         <p style="margin-top:14px;color:var(--tmr-text-muted);font-size:.78rem;">Metrics not yet computed for this account show "&mdash;" instead of fabricated values. Once the underlying ledger has enough graded picks for a metric, the dashboard fills in automatically.</p>
                     </div>
                     </div><!-- /tmrx-legacy-stash -->
+                </div>
+
+                <!-- TAB: AWARDS RECEIVED -->
+                <div class="profile-tab-panel" data-panel="awards">
+                    <style>
+                    /* ===== Awards Received: premium holographic trophies ===== */
+                    .awd-card-wrap { background: linear-gradient(160deg, rgba(13,18,30,.96), rgba(8,11,20,.98)); border: 1px solid rgba(148,163,184,.14); border-radius: 16px; padding: 22px; }
+                    .awd-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
+                    .awd-title { font-size: 1.05rem; font-weight: 800; letter-spacing: .3px; color: var(--text, #f1f6fc); }
+                    .awd-sub { font-size: .8rem; color: #93a1b6; }
+                    .awd-summary { display: flex; align-items: center; gap: 10px; margin: 10px 0 18px; padding: 10px 14px; border: 1px solid rgba(255,215,0,.22); background: rgba(255,215,0,.06); border-radius: 12px; font-size: .85rem; color: #e8edf5; }
+                    .awd-summary strong { color: #ffd700; }
+                    .awd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
+                    .awd-card { position: relative; overflow: hidden; border-radius: 16px; padding: 24px 16px 18px; text-align: center; cursor: pointer; border: 1px solid rgba(148,163,184,.16); background: radial-gradient(120% 90% at 50% 0%, rgba(30,41,64,.65), rgba(9,12,20,.95) 60%); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+                    .awd-card:hover { transform: translateY(-4px); }
+                    .awd-card::before { content: ''; position: absolute; inset: -60%; background: conic-gradient(from 180deg, transparent 0deg, rgba(255,255,255,.05) 60deg, rgba(0,255,255,.10) 120deg, rgba(255,0,255,.09) 180deg, rgba(255,215,0,.10) 240deg, rgba(255,255,255,.05) 300deg, transparent 360deg); animation: awdHolo 9s linear infinite; pointer-events: none; }
+                    .awd-card::after { content: ''; position: absolute; top: 0; left: -80%; width: 55%; height: 100%; background: linear-gradient(105deg, transparent, rgba(255,255,255,.10), transparent); transform: skewX(-18deg); transition: left .55s ease; pointer-events: none; }
+                    .awd-card:hover::after { left: 130%; }
+                    @keyframes awdHolo { to { transform: rotate(360deg); } }
+                    .awd-card.awd-gold { border-color: rgba(255,215,0,.35); } .awd-card.awd-gold:hover { box-shadow: 0 10px 34px rgba(255,215,0,.16); }
+                    .awd-card.awd-green { border-color: rgba(52,211,153,.35); } .awd-card.awd-green:hover { box-shadow: 0 10px 34px rgba(52,211,153,.15); }
+                    .awd-card.awd-blue { border-color: rgba(56,189,248,.35); } .awd-card.awd-blue:hover { box-shadow: 0 10px 34px rgba(56,189,248,.15); }
+                    .awd-card.awd-violet { border-color: rgba(192,132,252,.35); } .awd-card.awd-violet:hover { box-shadow: 0 10px 34px rgba(192,132,252,.16); }
+                    .awd-trophy { position: relative; width: 92px; height: 92px; margin: 0 auto 10px; filter: drop-shadow(0 6px 18px rgba(0,0,0,.55)); }
+                    .awd-gold .awd-trophy { filter: drop-shadow(0 0 16px rgba(255,215,0,.35)) drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
+                    .awd-green .awd-trophy { filter: drop-shadow(0 0 16px rgba(52,211,153,.32)) drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
+                    .awd-blue .awd-trophy { filter: drop-shadow(0 0 16px rgba(56,189,248,.32)) drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
+                    .awd-violet .awd-trophy { filter: drop-shadow(0 0 16px rgba(192,132,252,.34)) drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
+                    .awd-name { font-weight: 800; font-size: .95rem; color: #f1f6fc; letter-spacing: .2px; margin-bottom: 4px; }
+                    .awd-period { font-size: .78rem; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: #ffd700; }
+                    .awd-green .awd-period { color: #34d399; } .awd-blue .awd-period { color: #38bdf8; } .awd-violet .awd-period { color: #c084fc; }
+                    .awd-date { margin-top: 6px; font-size: .72rem; color: #7e8aa0; }
+                    .awd-desc { margin-top: 6px; font-size: .78rem; color: #aab6c9; max-height: 3.2em; overflow: hidden; }
+                    .awd-empty { padding: 44px 16px; text-align: center; color: #93a1b6; font-size: .92rem; }
+                    .awd-empty svg { width: 54px; height: 54px; opacity: .45; margin-bottom: 10px; }
+                    /* modal */
+                    .awd-modal-overlay { position: fixed; inset: 0; background: rgba(3,7,14,.78); backdrop-filter: blur(4px); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 18px; }
+                    .awd-modal-overlay.show { display: flex; }
+                    .awd-modal { position: relative; width: min(420px, 94vw); border-radius: 18px; border: 1px solid rgba(255,215,0,.3); background: linear-gradient(165deg, #101827, #090d16); padding: 30px 24px 26px; text-align: center; overflow: hidden; }
+                    .awd-modal::before { content: ''; position: absolute; inset: -60%; background: conic-gradient(from 0deg, transparent, rgba(0,255,255,.08), rgba(255,0,255,.07), rgba(255,215,0,.09), transparent); animation: awdHolo 11s linear infinite; pointer-events: none; }
+                    .awd-modal .awd-trophy { width: 120px; height: 120px; }
+                    .awd-modal-close { position: absolute; top: 10px; right: 14px; background: none; border: 0; color: #93a1b6; font-size: 1.3rem; cursor: pointer; z-index: 2; }
+                    .awd-modal-title { font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin-top: 4px; }
+                    .awd-modal-meta { margin-top: 8px; font-size: .82rem; color: #aab6c9; line-height: 1.55; position: relative; }
+                    @media (max-width: 560px) { .awd-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; } .awd-trophy { width: 74px; height: 74px; } }
+                    </style>
+                    <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="awdGradGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe873"/><stop offset=".45" stop-color="#ffd700"/><stop offset="1" stop-color="#a8720a"/></linearGradient>
+                            <linearGradient id="awdGradGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86efac"/><stop offset=".45" stop-color="#34d399"/><stop offset="1" stop-color="#065f46"/></linearGradient>
+                            <linearGradient id="awdGradBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bae6fd"/><stop offset=".45" stop-color="#38bdf8"/><stop offset="1" stop-color="#075985"/></linearGradient>
+                            <linearGradient id="awdGradViolet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9d5ff"/><stop offset=".45" stop-color="#c084fc"/><stop offset="1" stop-color="#5b21b6"/></linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="awd-card-wrap">
+                        <div class="awd-head">
+                            <div>
+                                <div class="awd-title">Awards Received</div>
+                                <div class="awd-sub">Monthly performance awards and special recognition earned on TrustMyRecord.</div>
+                            </div>
+                        </div>
+                        <div class="awd-summary" id="awdSummary" style="display:none;"></div>
+                        <div class="awd-grid" id="awdGrid"></div>
+                        <div class="awd-empty" id="awdEmpty" style="display:none;">
+                            <svg viewBox="0 0 64 64" fill="none" stroke="#93a1b6" stroke-width="2.5"><path d="M18 10h28v12c0 9-6.3 16-14 16s-14-7-14-16z"/><path d="M18 14h-8c0 8 3.5 13 9.5 14.5M46 14h8c0 8-3.5 13-9.5 14.5M29 38h6v8h-6zM22 50h20l2 6H20z"/></svg>
+                            <div>No awards received yet.</div>
+                        </div>
+                    </div>
+                    <div class="awd-modal-overlay" id="awdModalOverlay">
+                        <div class="awd-modal" role="dialog" aria-modal="true">
+                            <button type="button" class="awd-modal-close" id="awdModalClose" aria-label="Close">&times;</button>
+                            <div id="awdModalBody"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- TAB: CHARTS -->
@@ -9773,6 +9848,106 @@
         } else {
             onReady();
         }
+    })();
+
+    // ---- Awards Received tab: isolated loader, read-only, never touches record ----
+    (function initProfileAwards() {
+        const API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        const STYLE_BY_TYPE = {
+            best_roi: { cls: 'awd-gold', grad: 'awdGradGold' },
+            most_units: { cls: 'awd-green', grad: 'awdGradGreen' },
+            most_active: { cls: 'awd-blue', grad: 'awdGradBlue' },
+            admin_discretion: { cls: 'awd-violet', grad: 'awdGradViolet' }
+        };
+        function awdEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        function awdUsername() {
+            try {
+                const qs = new URLSearchParams(location.search);
+                const q = qs.get('user') || qs.get('username');
+                if (q) return q;
+            } catch (_) {}
+            const m = location.pathname.match(/\/profile\/([^\/?#]+)/);
+            if (m && m[1] && m[1] !== 'index.html') return decodeURIComponent(m[1]);
+            if (window.__TMR_PROFILE_USERNAME) return window.__TMR_PROFILE_USERNAME;
+            try { if (window.auth && auth.currentUser && auth.currentUser.username) return auth.currentUser.username; } catch (_) {}
+            return null;
+        }
+        function trophySvg(grad) {
+            return '<svg class="awd-trophy" viewBox="0 0 64 64" fill="none">' +
+                '<path d="M18 10h28v12c0 9-6.3 16-14 16s-14-7-14-16z" fill="url(#' + grad + ')"/>' +
+                '<path d="M18 14h-8c0 8 3.5 13 9.5 14.5" stroke="url(#' + grad + ')" stroke-width="3.4" stroke-linecap="round"/>' +
+                '<path d="M46 14h8c0 8-3.5 13-9.5 14.5" stroke="url(#' + grad + ')" stroke-width="3.4" stroke-linecap="round"/>' +
+                '<path d="M24 16c1.5 5.5 4 8.5 7 10" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-linecap="round"/>' +
+                '<rect x="29" y="38" width="6" height="8" rx="1" fill="url(#' + grad + ')"/>' +
+                '<path d="M22 50h20l2.4 6H19.6z" fill="url(#' + grad + ')"/>' +
+                '<rect x="25" y="51.6" width="14" height="2.6" rx="1.3" fill="rgba(255,255,255,.35)"/>' +
+            '</svg>';
+        }
+        function fmtDate(d) {
+            try { return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); } catch (_) { return ''; }
+        }
+        let awardsCache = [];
+        function openAwdModal(idx) {
+            const a = awardsCache[idx];
+            if (!a) return;
+            const st = STYLE_BY_TYPE[a.award_type] || STYLE_BY_TYPE.admin_discretion;
+            const body = document.getElementById('awdModalBody');
+            body.innerHTML = trophySvg(st.grad) +
+                '<div class="awd-modal-title">' + awdEsc(a.title) + '</div>' +
+                '<div class="awd-modal-meta">' +
+                    (a.period_label ? '<div><strong>' + awdEsc(a.period_label) + '</strong></div>' : '') +
+                    (a.description ? '<div style="margin-top:6px;">' + awdEsc(a.description) + '</div>' : '') +
+                    '<div style="margin-top:6px;">Awarded ' + awdEsc(fmtDate(a.awarded_at)) + (a.awarded_by === 'admin' ? ' &bull; Special recognition' : '') + '</div>' +
+                '</div>';
+            document.getElementById('awdModalOverlay').classList.add('show');
+        }
+        function render(list) {
+            const grid = document.getElementById('awdGrid');
+            const empty = document.getElementById('awdEmpty');
+            const summary = document.getElementById('awdSummary');
+            const badge = document.getElementById('profileAwardsBadge');
+            if (!grid) return;
+            awardsCache = list;
+            if (badge && list.length) { badge.textContent = String(list.length); badge.hidden = false; }
+            if (!list.length) { empty.style.display = 'block'; grid.innerHTML = ''; summary.style.display = 'none'; return; }
+            empty.style.display = 'none';
+            summary.style.display = 'flex';
+            summary.innerHTML = '<strong>' + list.length + '</strong> award' + (list.length === 1 ? '' : 's') + ' earned &bull; latest: ' + awdEsc(list[0].title) + (list[0].period_label ? ' (' + awdEsc(list[0].period_label) + ')' : '');
+            grid.innerHTML = list.map(function (a, i) {
+                const st = STYLE_BY_TYPE[a.award_type] || STYLE_BY_TYPE.admin_discretion;
+                return '<div class="awd-card ' + st.cls + '" data-awd="' + i + '" role="button" tabindex="0" aria-label="' + awdEsc(a.title) + '">' +
+                    trophySvg(st.grad) +
+                    '<div class="awd-name">' + awdEsc(a.title) + '</div>' +
+                    (a.period_label ? '<div class="awd-period">' + awdEsc(a.period_label) + '</div>' : '<div class="awd-period">Special Recognition</div>') +
+                    (a.description ? '<div class="awd-desc">' + awdEsc(a.description) + '</div>' : '') +
+                    '<div class="awd-date">Awarded ' + awdEsc(fmtDate(a.awarded_at)) + '</div>' +
+                '</div>';
+            }).join('');
+            grid.querySelectorAll('.awd-card').forEach(function (el) {
+                el.addEventListener('click', function () { openAwdModal(Number(el.getAttribute('data-awd'))); });
+                el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openAwdModal(Number(el.getAttribute('data-awd'))); } });
+            });
+        }
+        async function load() {
+            const u = awdUsername();
+            if (!u) return;
+            try {
+                const res = await fetch(API_BASE + '/awards/user/' + encodeURIComponent(u), { cache: 'no-store' });
+                if (!res.ok) { render([]); return; }
+                const data = await res.json();
+                render(Array.isArray(data.awards) ? data.awards : []);
+            } catch (_) { render([]); }
+        }
+        function onReady() {
+            const overlay = document.getElementById('awdModalOverlay');
+            const closeBtn = document.getElementById('awdModalClose');
+            if (overlay) overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.classList.remove('show'); });
+            if (closeBtn) closeBtn.addEventListener('click', function () { overlay.classList.remove('show'); });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay) overlay.classList.remove('show'); });
+            load();
+        }
+        if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
+        else onReady();
     })();
 
     // ---- Online Gaming tab: isolated loader, never touches betting record ----
