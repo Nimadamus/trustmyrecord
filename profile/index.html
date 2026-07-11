@@ -6298,6 +6298,18 @@
         el.innerHTML = '<div class="error-message"><h3>Profile not found.</h3><p>' + escapeHtml(message || 'This profile could not be loaded right now.') + '</p>' +
             (myProfileUrl ? '<a class="btn btn-primary" href="' + escapeHtml(myProfileUrl) + '" style="margin-top:14px;">Go to my profile</a>' : '') +
             '</div>';
+        // Not-found is a terminal state: nothing below the header should render.
+        // Hide every profile content section (advanced capper metrics strip, tabs,
+        // body, glossary) so a missing user never shows empty/fabricated metrics.
+        [
+            '#profileAdvancedMetricsSection',
+            '.profile-tabs-section',
+            '.profile-body-section',
+            '#advancedMetricsGlossaryBottom',
+            '.summary-bar', '.picks-section', '.analytics-section'
+        ].forEach(function(sel) {
+            document.querySelectorAll(sel).forEach(function(node) { node.style.display = 'none'; });
+        });
     }
 
     function normalizeProfileLookup(value) {
