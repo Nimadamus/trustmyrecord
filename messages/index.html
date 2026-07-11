@@ -1729,6 +1729,23 @@
 
 
 <script src="/static/js/analytics.js?v=20260504a"></script>
+<!-- TMR Emoji Picker v2 (Jul 11, 2026): shared forum emoji library.
+     Media/animated BBCode tabs are off here (DMs render plain text). -->
+<script src="/static/js/twemoji.min.js?v=20260711a" defer></script>
+<script src="/static/js/tmr-emoji-picker.js?v=20260711a" defer></script>
+<script>
+(function () {
+    function initEmoji() {
+        if (!window.TMREmoji || !TMREmoji.v2) { setTimeout(initEmoji, 250); return; }
+        var chat = document.getElementById('messageInput');
+        if (chat) TMREmoji.attach(chat, { media: false, anim: false, barBefore: document.getElementById('chatInputArea') });
+        var comp = document.getElementById('composerMessage');
+        if (comp) TMREmoji.attach(comp, { media: false, anim: false });
+    }
+    if (document.readyState !== 'loading') initEmoji();
+    else document.addEventListener('DOMContentLoaded', initEmoji);
+})();
+</script>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:47:00 PM -->
