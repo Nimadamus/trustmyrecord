@@ -20,1132 +20,268 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     <style>
+        /* ===== ARENA DASHBOARD REDESIGN (ARENA_PRO_20260711) ===== */
         :root {
-            --bg-dark: #0a0a0f;
-            --bg-surface: #12121a;
-            --bg-card: #1a1a2e;
-            --bg-card-hover: #222240;
-            --border: #2a2a4a;
-            --border-glow: #3a3a6a;
-            --primary: #00aeff;
-            --primary-dim: rgba(0, 174, 255, 0.15);
-            --accent-gold: #ffd700;
-            --accent-green: #00ff88;
-            --accent-red: #ff4444;
-            --accent-purple: #a855f7;
-            --text: #e8e8f0;
-            --text-dim: #8888aa;
-            --text-muted: #555577;
+            --bg-dark: #0b0e14;
+            --bg-surface: #10141d;
+            --bg-card: #151a25;
+            --bg-card-hover: #1a202e;
+            --border: #232a3a;
+            --border-glow: #2f3a52;
+            --primary: #38bdf8;
+            --primary-dim: rgba(56, 189, 248, 0.12);
+            --accent-gold: #fbbf24;
+            --accent-green: #34d399;
+            --accent-red: #f87171;
+            --accent-purple: #a78bfa;
+            --text: #e6eaf2;
+            --text-dim: #94a0b8;
+            --text-muted: #64708a;
             --font-display: 'Barlow', sans-serif;
             --font-body: 'Inter', sans-serif;
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg-dark); color: var(--text); font-family: var(--font-body); min-height: 100vh; }
+        body { background: var(--bg-dark); color: var(--text); font-family: var(--font-body); font-size: 14px; min-height: 100vh; }
         a { color: var(--primary); text-decoration: none; }
-        a:hover { color: var(--accent-gold); }
+        a:hover { color: #7dd3fc; }
 
-        /* NAV */
-        .nav { background: var(--bg-surface); border-bottom: 1px solid var(--border); padding: 0 24px; display: flex; align-items: center; height: 60px; position: sticky; top: 0; z-index: 100; }
-        .nav-logo { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--primary); margin-right: 32px; letter-spacing: 1px; }
-        .nav-logo span { color: var(--accent-gold); }
-        .nav-links { display: flex; gap: 10px; flex-wrap: wrap; }
-        .nav-link { padding: 8px 16px; border-radius: 8px; color: var(--text-dim); font-weight: 500; font-size: 14px; transition: all 0.2s; }
-        .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-        .nav-link.active { color: var(--accent-gold); background: rgba(255, 215, 0, 0.1); }
-        .nav-right { margin-left: auto; display: flex; gap: 12px; align-items: center; }
-        .nav-user { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
-        .nav-user:hover { background: rgba(255,255,255,0.05); }
-        .nav-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary-dim); border: 2px solid var(--primary); object-fit: cover; }
-        .nav-username { font-size: 13px; color: var(--text); font-weight: 600; }
+        /* ===== PAGE HEADER ===== */
+        .arena-head { border-bottom: 1px solid var(--border); background: var(--bg-surface); padding: 22px 24px 16px; }
+        .ah-inner { max-width: 1180px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+        .ah-title-row { display: flex; align-items: center; gap: 10px; }
+        .ah-title-row h1 { font-family: var(--font-display); font-size: 38px; font-weight: 800; line-height: 1; letter-spacing: -0.01em; color: var(--text); }
+        .ah-beta { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); background: var(--primary-dim); border: 1px solid rgba(56,189,248,0.25); border-radius: 4px; padding: 3px 8px; }
+        .ah-text p { margin-top: 8px; color: var(--text-dim); font-size: 15px; line-height: 1.5; max-width: 560px; }
+        .ah-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .ah-meta { max-width: 1180px; margin: 12px auto 0; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+        .ah-trust { color: var(--text-muted); font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; }
+        .ah-trust i { color: var(--accent-green); font-size: 11px; }
 
-        /* HERO */
-        .hero { background: linear-gradient(135deg, rgba(0,174,255,0.08), rgba(168,85,247,0.08)); border-bottom: 1px solid var(--border); padding: 40px 24px; }
-        .hero h1 { font-family: var(--font-display); font-size: 32px; font-weight: 800; margin-bottom: 8px; }
-        .hero h1 .gold { color: var(--accent-gold); }
-        .hero h1 .blue { color: var(--primary); }
-        .hero p { color: var(--text-dim); font-size: 16px; max-width: 600px; margin: 0 auto 20px; }
-        .hero-stats { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; }
-        .hero-stat { text-align: center; }
-        .hero-stat .num { font-family: var(--font-display); font-size: 28px; font-weight: 800; color: var(--accent-gold); }
-        .hero-stat .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
-        .hero-shell { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(300px, 0.95fr); gap: 16px; align-items: stretch; }
-        .hero-copy-card, .hero-side-card { border: 1px solid rgba(148,163,184,0.14); border-radius: 22px; padding: 24px; background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)), rgba(11,20,34,0.9); box-shadow: 0 18px 42px rgba(0,0,0,0.22); }
-        .hero-kicker { display: inline-flex; align-items: center; border-radius: 999px; padding: 8px 12px; background: rgba(45,212,191,0.1); border: 1px solid rgba(45,212,191,0.22); color: #d7fffa; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 14px; }
-        .hero-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
-        .hero-side-card h3 { font-family: 'Barlow', sans-serif; font-size: 1.28rem; line-height: 1.02; letter-spacing: -0.02em; color: #eef4fb; margin-bottom: 12px; }
-        .hero-proof-list { display: grid; gap: 12px; }
-        .hero-proof-item { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: start; padding-top: 10px; border-top: 1px solid rgba(148,163,184,0.12); }
-        .hero-proof-item:first-child { border-top: none; padding-top: 0; }
-        .hero-proof-index { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 10px; background: rgba(45,212,191,0.12); color: #d7fffa; font-size: 0.95rem; font-weight: 800; }
-        .hero-proof-copy strong { display: block; color: #eef4fb; font-size: 0.92rem; }
-        .hero-proof-copy span { display: block; margin-top: 4px; color: #97a8bc; font-size: 0.82rem; line-height: 1.48; }
+        /* ===== MAIN ===== */
+        .main { max-width: 1180px; margin: 0 auto; padding: 18px 24px 48px; }
 
-        /* TABS */
-        .tabs { display: flex; gap: 4px; padding: 16px 24px; background: var(--bg-surface); border-bottom: 1px solid var(--border); overflow-x: auto; }
-        .tab { padding: 10px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; color: var(--text-dim); cursor: pointer; transition: all 0.2s; white-space: nowrap; border: 1px solid transparent; }
-        .tab:hover { color: var(--text); background: rgba(255,255,255,0.05); }
-        .tab.active { color: var(--accent-gold); background: rgba(255,215,0,0.1); border-color: rgba(255,215,0,0.3); }
-        .tab .badge { background: var(--accent-red); color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 10px; margin-left: 6px; }
+        /* ===== ACTION STRIP ===== */
+        .arena-actions-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .arena-action-card { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card); color: var(--text); cursor: pointer; text-align: left; font-family: var(--font-body); transition: border-color .15s ease, background .15s ease; }
+        .arena-action-card:hover { border-color: var(--border-glow); background: var(--bg-card-hover); }
+        .arena-action-icon { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 7px; background: var(--primary-dim); color: var(--primary); font-size: 13px; }
+        .aac-body { min-width: 0; flex: 1; }
+        .aac-title { display: block; font-size: 14px; font-weight: 600; color: var(--text); }
+        .aac-sub { display: block; margin-top: 1px; font-size: 12.5px; font-weight: 400; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .aac-go { color: var(--text-muted); font-size: 12px; }
+        .arena-action-card:hover .aac-go { color: var(--primary); }
 
-        /* MAIN LAYOUT */
-        .main { max-width: 1200px; margin: 0 auto; padding: 24px; }
-        .panel { display: none; }
-        .panel.active { display: block; }
+        /* ===== SECTIONS ===== */
+        .a-section { margin-top: 26px; }
+        .a-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; margin-bottom: 12px; flex-wrap: wrap; }
+        .a-section-head h2 { font-family: var(--font-display); font-size: 22px; font-weight: 700; line-height: 1.1; letter-spacing: -0.01em; }
+        .a-section-head .sub { margin-top: 3px; font-size: 13px; font-weight: 400; color: var(--text-muted); }
+        .a-card { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-surface); overflow: hidden; }
 
-        /* GAME FILTER PILLS */
-        .game-filters { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
-        .game-pill { padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; color: var(--text-dim); background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
-        .game-pill:hover { border-color: var(--primary); color: var(--text); }
-        .game-pill.active { border-color: var(--accent-gold); color: var(--accent-gold); background: rgba(255,215,0,0.08); }
-        .game-pill .icon { font-size: 16px; }
+        /* ===== CHALLENGE TABLE ===== */
+        .table-scroll { overflow-x: auto; }
+        .ch-table { width: 100%; border-collapse: collapse; min-width: 860px; }
+        .ch-table th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.015); white-space: nowrap; }
+        .ch-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+        .ch-table tbody tr:last-child td { border-bottom: 0; }
+        .ch-table tbody tr:hover td { background: rgba(255,255,255,0.02); }
+        .ch-table .ta-r { text-align: right; }
+        .ch-user { display: flex; align-items: center; gap: 10px; min-width: 160px; }
+        .ch-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--primary-dim); border: 1px solid var(--border); object-fit: cover; flex: none; }
+        .ch-name { font-weight: 600; color: var(--text); font-size: 14px; line-height: 1.2; }
+        .ch-sub { display: block; margin-top: 1px; font-size: 12px; color: var(--text-muted); font-weight: 400; max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .ch-record { font-family: var(--font-display); font-weight: 700; }
+        .ch-time { color: var(--text-muted); font-size: 12.5px; white-space: nowrap; }
+        .ch-cell-dim { color: var(--text-dim); }
+        .ch-action-group { display: inline-flex; gap: 6px; }
 
-        /* CHALLENGE CARDS */
-        .challenges-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-        .challenge-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; transition: all 0.3s; position: relative; overflow: hidden; }
-        .challenge-card:hover { border-color: var(--border-glow); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
-        .challenge-card.open { border-left: 3px solid var(--accent-green); }
-        .challenge-card.active { border-left: 3px solid var(--primary); }
-        .challenge-card.completed { border-left: 3px solid var(--accent-gold); }
+        /* ===== STATUS BADGES ===== */
+        .cc-status { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 4px; white-space: nowrap; }
+        .cc-status.pending { background: rgba(251,191,36,0.12); color: var(--accent-gold); }
+        .cc-status.accepted, .cc-status.in_progress { background: rgba(56,189,248,0.12); color: var(--primary); }
+        .cc-status.completed { background: rgba(52,211,153,0.12); color: var(--accent-green); }
+        .cc-status.open-slot { background: rgba(52,211,153,0.12); color: var(--accent-green); }
 
-        .cc-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-        .cc-game-badge { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .cc-game-badge.mlb { background: rgba(0,100,200,0.2); color: #4da6ff; }
-        .cc-game-badge.nba { background: rgba(200,100,0,0.2); color: #ff9933; }
-        .cc-game-badge.nfl { background: rgba(0,150,70,0.2); color: #00cc66; }
-        .cc-game-badge.nhl { background: rgba(150,0,200,0.2); color: #cc66ff; }
-        .cc-game-badge.soccer { background: rgba(200,200,0,0.2); color: #cccc33; }
-        .cc-status { font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; }
-        .cc-status.pending { background: rgba(255,215,0,0.15); color: var(--accent-gold); }
-        .cc-status.accepted, .cc-status.in_progress { background: rgba(0,174,255,0.15); color: var(--primary); }
-        .cc-status.completed { background: rgba(0,255,136,0.15); color: var(--accent-green); }
-
-        .cc-title { font-weight: 700; font-size: 16px; margin-bottom: 8px; }
-        .cc-players { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
-        .cc-player { display: flex; align-items: center; gap: 8px; flex: 1; }
-        .cc-player-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--primary-dim); border: 2px solid var(--border); object-fit: cover; }
-        .cc-player-info { font-size: 13px; }
-        .cc-player-name { font-weight: 700; color: var(--text); }
-        .cc-player-tag { font-size: 11px; color: var(--text-muted); }
-        .cc-vs { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--accent-red); }
-        .cc-score { font-family: var(--font-display); font-size: 24px; font-weight: 800; text-align: center; margin: 8px 0; }
-        .cc-score .win { color: var(--accent-green); }
-        .cc-score .loss { color: var(--accent-red); }
-
-        .cc-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text-muted); margin-top: 12px; }
-        .cc-meta i { margin-right: 4px; }
-        .cc-actions { display: flex; gap: 8px; margin-top: 16px; }
-
-        /* BUTTONS */
-        .btn { padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer; border: none; transition: all 0.2s; font-family: var(--font-body); }
-        .btn-primary { background: var(--primary); color: #000; }
-        .btn-primary:hover { background: #33bbff; transform: translateY(-1px); }
-        .btn-gold { background: var(--accent-gold); color: #000; }
-        .btn-gold:hover { background: #ffe033; }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+        /* ===== BUTTONS ===== */
+        .btn { padding: 8px 14px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; border: 1px solid transparent; transition: background .15s ease, border-color .15s ease, color .15s ease; font-family: var(--font-body); display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-primary { background: var(--primary); color: #0b1018; }
+        .btn-primary:hover { background: #5fcbfa; }
+        .btn-gold { background: var(--primary); color: #0b1018; }
+        .btn-gold:hover { background: #5fcbfa; }
+        .btn-outline { background: transparent; border-color: var(--border-glow); color: var(--text-dim); }
         .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-        .btn-danger { background: rgba(255,68,68,0.15); color: var(--accent-red); border: 1px solid rgba(255,68,68,0.3); }
-        .btn-success { background: rgba(0,255,136,0.15); color: var(--accent-green); border: 1px solid rgba(0,255,136,0.3); }
-        .btn-sm { padding: 6px 12px; font-size: 12px; }
-        .btn-block { width: 100%; text-align: center; }
-        .btn i { margin-right: 4px; }
+        .btn-danger { background: rgba(248,113,113,0.1); color: var(--accent-red); border-color: rgba(248,113,113,0.25); }
+        .btn-success { background: rgba(52,211,153,0.1); color: var(--accent-green); border-color: rgba(52,211,153,0.25); }
+        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-block { width: 100%; }
 
-        /* LEADERBOARD TABLE */
-        .lb-table { width: 100%; border-collapse: collapse; }
-        .lb-table th { text-align: left; padding: 12px 16px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
-        .lb-table td { padding: 12px 16px; border-bottom: 1px solid rgba(42,42,74,0.5); font-size: 14px; }
+        /* ===== MY CHALLENGES (compact rows) ===== */
+        .my-ch-list .challenge-card { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 12px 16px; background: transparent; }
+        .my-ch-list .challenge-card:last-child { border-bottom: 0; }
+        .cc-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .cc-game-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; background: rgba(255,255,255,0.05); color: var(--text-dim); }
+        .cc-game-badge.mlb { background: rgba(56,132,244,0.14); color: #6aa8ff; }
+        .cc-game-badge.nba { background: rgba(244,140,56,0.14); color: #fca55f; }
+        .cc-game-badge.nfl { background: rgba(52,211,153,0.14); color: var(--accent-green); }
+        .cc-game-badge.nhl { background: rgba(167,139,250,0.14); color: var(--accent-purple); }
+        .cc-game-badge.soccer { background: rgba(226,222,110,0.14); color: #d9d46a; }
+        .cc-title { font-weight: 600; font-size: 14px; margin: 6px 0 2px; }
+        .cc-meta { display: flex; gap: 14px; font-size: 12.5px; color: var(--text-muted); margin-top: 4px; flex-wrap: wrap; line-height: 1.5; }
+        .cc-meta i { margin-right: 4px; }
+        .cc-actions { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+        .cc-gamertag { font-size: 11px; color: var(--primary); background: var(--primary-dim); padding: 1px 6px; border-radius: 3px; display: inline-block; margin-top: 2px; }
+
+        /* ===== MATCH FEED (compact rows) ===== */
+        .match-feed { display: block; }
+        .match-item { display: flex; align-items: center; gap: 14px; padding: 11px 16px; border-bottom: 1px solid var(--border); }
+        .match-item:last-child { border-bottom: 0; }
+        .match-item:hover { background: rgba(255,255,255,0.02); }
+        .match-game-icon { font-size: 16px; width: 24px; text-align: center; flex: none; }
+        .match-players { flex: 1; min-width: 0; }
+        .match-players .names { font-weight: 600; font-size: 14px; }
+        .match-players .names .winner { color: var(--accent-green); }
+        .match-score-display { font-family: var(--font-display); font-size: 15px; font-weight: 700; min-width: 60px; text-align: center; white-space: nowrap; }
+        .match-time { font-size: 12px; color: var(--text-muted); text-align: right; white-space: nowrap; }
+        .match-badge { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+        .match-badge.verified { background: rgba(52,211,153,0.12); color: var(--accent-green); }
+        .match-badge.awaiting { background: rgba(251,191,36,0.12); color: var(--accent-gold); }
+        .match-badge.disputed { background: rgba(248,113,113,0.12); color: var(--accent-red); }
+        .match-badge.unverified { background: rgba(148,160,184,0.12); color: var(--text-muted); }
+        .match-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+        .match-status-col { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; min-width: 110px; }
+
+        /* ===== LEADERBOARD TABLE ===== */
+        .lb-table { width: 100%; border-collapse: collapse; min-width: 640px; }
+        .lb-table th { text-align: left; padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.015); }
+        .lb-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .lb-table tbody tr:last-child td { border-bottom: 0; }
         .lb-table tr:hover td { background: rgba(255,255,255,0.02); }
-        .lb-rank { font-family: var(--font-display); font-weight: 800; font-size: 16px; }
+        .lb-rank { font-family: var(--font-display); font-weight: 700; font-size: 14px; color: var(--text-dim); }
         .lb-rank.gold { color: var(--accent-gold); }
         .lb-rank.silver { color: #c0c0c0; }
         .lb-rank.bronze { color: #cd7f32; }
         .lb-user { display: flex; align-items: center; gap: 10px; }
-        .lb-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--primary-dim); object-fit: cover; }
+        .lb-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--primary-dim); object-fit: cover; }
         .lb-name { font-weight: 600; }
         .lb-record { font-family: var(--font-display); font-weight: 700; }
-        .lb-streak { font-weight: 700; }
+        .lb-streak { font-weight: 600; }
         .lb-streak.positive { color: var(--accent-green); }
         .lb-streak.negative { color: var(--accent-red); }
+        #leaderboardTable .table-wrap, #leaderboardTable, #mlbLeaderboard { overflow-x: auto; }
 
-        /* MATCH FEED */
-        .match-feed { display: flex; flex-direction: column; gap: 12px; }
-        .match-item { display: flex; align-items: center; gap: 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; transition: all 0.2s; }
-        .match-item:hover { border-color: var(--border-glow); }
-        .match-game-icon { font-size: 24px; width: 40px; text-align: center; }
-        .match-players { flex: 1; }
-        .match-players .names { font-weight: 700; font-size: 14px; }
-        .match-players .names .winner { color: var(--accent-green); }
-        .match-score-display { font-family: var(--font-display); font-size: 20px; font-weight: 800; min-width: 80px; text-align: center; }
-        .match-time { font-size: 12px; color: var(--text-muted); text-align: right; min-width: 80px; }
+        /* ===== GAME FILTER PILLS ===== */
+        .game-filters { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+        .game-pill { padding: 5px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 500; color: var(--text-dim); background: var(--bg-card); border: 1px solid var(--border); cursor: pointer; transition: border-color .15s, color .15s; }
+        .game-pill:hover { border-color: var(--border-glow); color: var(--text); }
+        .game-pill.active { border-color: rgba(56,189,248,0.4); color: var(--primary); background: var(--primary-dim); }
 
-        /* STAT CARDS */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 20px; text-align: center; }
-        .stat-card .value { font-family: var(--font-display); font-size: 28px; font-weight: 800; color: var(--accent-gold); margin-bottom: 4px; }
-        .stat-card .label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+        /* ===== PANELS (gaming room, hidden hubs) ===== */
+        .panel { display: none; margin-top: 26px; }
+        .panel.active { display: block; }
+        #panel-gaming-room, #panel-my-challenges, #panel-leaderboard, #panel-mlb-the-show, #panel-my-stats { padding: 18px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-surface); }
 
-        /* MODAL */
+        .section-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 14px; flex-wrap: wrap; }
+        .section-header h2 { font-family: var(--font-display); font-size: 18px; font-weight: 700; }
+        .section-header h3 { font-family: var(--font-body); font-size: 13px; font-weight: 400; color: var(--text-muted); }
+
+        /* ===== GAMING ROOM ===== */
+        .gaming-room { border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card); padding: 14px; }
+        .game-logo-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+        .game-logo-card { border: 1px solid var(--border); border-radius: 7px; padding: 10px 12px; cursor: pointer; background: var(--bg-surface); display: flex; flex-direction: column; gap: 3px; transition: border-color .15s, background .15s; text-align: left; font-family: var(--font-body); }
+        .game-logo-card:hover { border-color: var(--border-glow); background: var(--bg-card-hover); }
+        .game-logo-mark { font-family: var(--font-display); font-size: 15px; font-weight: 700; line-height: 1.1; color: var(--text); }
+        .game-logo-mark br { display: none; }
+        .game-logo-sub { color: var(--text-muted); font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+        .gaming-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+        /* ===== STAT CARDS ===== */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; margin-bottom: 18px; }
+        .stat-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+        .stat-card .value { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+        .stat-card .label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+        /* ===== MORE LINKS ===== */
+        .arena-more-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+        .arena-more-link { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card); color: var(--text); transition: border-color .15s, background .15s; }
+        .arena-more-link:hover { border-color: var(--border-glow); background: var(--bg-card-hover); color: var(--text); }
+        .arena-more-link > i { width: 16px; text-align: center; color: var(--text-muted); font-size: 13px; }
+        .arena-more-link .aml-title { font-size: 13.5px; font-weight: 600; }
+        .arena-more-link .aml-sub { display: block; font-size: 12px; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
+
+        /* ===== MODAL ===== */
         .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; justify-content: center; align-items: flex-start; padding: 40px 16px; overflow-y: auto; }
         .modal-overlay.open { display: flex; }
-        .modal { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 560px; padding: 32px; position: relative; }
-        .modal h2 { font-family: var(--font-display); font-size: 20px; font-weight: 800; margin-bottom: 24px; }
-        .modal .close-btn { position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+        .modal { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; width: 100%; max-width: 540px; padding: 24px; position: relative; }
+        .modal h2 { font-family: var(--font-display); font-size: 19px; font-weight: 700; margin-bottom: 18px; }
+        .modal .close-btn { position: absolute; top: 14px; right: 14px; background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
 
-        /* FORM */
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .form-control { width: 100%; padding: 10px 14px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 14px; font-family: var(--font-body); }
+        /* ===== FORM ===== */
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-dim); margin-bottom: 5px; }
+        .form-control { width: 100%; padding: 9px 12px; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 14px; font-family: var(--font-body); }
         .form-control:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); }
         select.form-control { cursor: pointer; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-        /* BOX SCORE TABLE */
-        .box-score { width: 100%; border-collapse: collapse; font-family: var(--font-display); font-size: 13px; margin: 16px 0; }
-        .box-score th, .box-score td { padding: 8px 10px; text-align: center; border: 1px solid var(--border); }
+        /* ===== BOX SCORE ===== */
+        .box-score { width: 100%; border-collapse: collapse; font-family: var(--font-display); font-size: 13px; margin: 14px 0; }
+        .box-score th, .box-score td { padding: 7px 9px; text-align: center; border: 1px solid var(--border); }
         .box-score th { background: var(--bg-card); color: var(--text-muted); font-size: 11px; font-weight: 700; }
         .box-score td { background: var(--bg-surface); }
         .box-score .team-col { text-align: left; font-weight: 700; min-width: 80px; }
         .box-score .total { font-weight: 800; color: var(--accent-gold); }
 
-        /* SECTION HEADERS */
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .section-header h2 { font-family: var(--font-display); font-size: 18px; font-weight: 700; }
-        .section-header h3 { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text-dim); }
-
-        /* EMPTY STATE */
-        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); max-width: 760px; margin: 0 auto; }
-        .empty-state i { font-size: 48px; margin-bottom: 16px; display: block; color: var(--border); }
-        .empty-state h3 { color: var(--text-dim); margin-bottom: 8px; }
-        .challenges-grid > .empty-state,
-        .challenges-grid > .loading {
-            grid-column: 1 / -1;
-            width: 100%;
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 22px; }
-            .hero-stats { gap: 20px; }
-            .challenges-grid { grid-template-columns: 1fr; }
-            .nav-links { display: none; }
-            .form-row { grid-template-columns: 1fr; }
-            .tabs { padding: 12px 16px; }
-            .main { padding: 16px; }
-            .match-item { flex-wrap: wrap; }
-            .stats-grid { grid-template-columns: repeat(2, 1fr); }
-            .hero-shell { grid-template-columns: 1fr; }
-        }
-
-        /* LOADING SPINNER */
-        .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        /* ===== EMPTY / LOADING ===== */
+        .empty-state { text-align: center; padding: 32px 20px; color: var(--text-muted); }
+        .empty-state i { font-size: 22px; margin-bottom: 10px; display: block; color: var(--text-muted); opacity: 0.7; }
+        .empty-state h3 { color: var(--text-dim); font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .empty-state p { font-size: 13px; margin: 4px 0 0; }
+        .empty-state .arena-empty-action { margin-top: 14px; }
+        .spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading { display: flex; justify-content: center; align-items: center; padding: 40px; }
+        .loading { display: flex; justify-content: center; align-items: center; padding: 32px; }
 
-        /* HAMBURGER */
-        .hamburger { display: none; background: none; border: none; color: var(--text); font-size: 24px; cursor: pointer; }
-        @media (max-width: 768px) {
-            .hamburger { display: block; }
-            .nav-links { position: fixed; top: 60px; left: 0; right: 0; background: var(--bg-surface); border-bottom: 1px solid var(--border); flex-direction: column; padding: 16px; z-index: 99; }
-            .nav-links.open { display: flex; }
-        }
-
-        /* GAMER PROFILE CARD */
-        .gamer-profile-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-bottom: 24px; position: relative; }
-        .gamer-profile-card .gp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .gamer-profile-card .gp-header h3 { font-family: var(--font-display); font-size: 16px; font-weight: 700; color: var(--accent-gold); display: flex; align-items: center; gap: 8px; }
-        .gp-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-        .gp-field { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 10px; }
-        .gp-field .gp-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 18px; flex-shrink: 0; }
+        /* ===== GAMER PROFILE ===== */
+        .gamer-profile-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 18px; }
+        .gamer-profile-card .gp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .gamer-profile-card .gp-header h3 { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .gp-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+        .gp-field { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--bg-surface); border: 1px solid var(--border); border-radius: 7px; }
+        .gp-field .gp-icon { width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; border-radius: 6px; font-size: 14px; flex-shrink: 0; }
         .gp-field .gp-icon.psn { background: rgba(0, 55, 145, 0.25); color: #4da6ff; }
         .gp-field .gp-icon.xbox { background: rgba(16, 124, 16, 0.25); color: #00cc66; }
         .gp-field .gp-icon.steam { background: rgba(102, 102, 153, 0.25); color: #a0a0cc; }
-        .gp-field .gp-icon.console { background: rgba(168, 85, 247, 0.25); color: var(--accent-purple); }
+        .gp-field .gp-icon.console { background: rgba(167, 139, 250, 0.2); color: var(--accent-purple); }
         .gp-field .gp-info { flex: 1; min-width: 0; }
-        .gp-field .gp-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
-        .gp-field .gp-value { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .gp-field .gp-label { font-size: 11px; color: var(--text-muted); margin-bottom: 1px; }
+        .gp-field .gp-value { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .gp-field .gp-value.empty { color: var(--text-muted); font-style: italic; font-weight: 400; }
 
-        /* GAMERTAG BADGE ON CHALLENGE CARDS */
-        .cc-gamertag { font-size: 11px; color: var(--primary); background: var(--primary-dim); padding: 2px 8px; border-radius: 4px; margin-top: 2px; display: inline-block; }
-
-        /* MATCH VERIFICATION BADGES */
-        .match-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
-        .match-badge.verified { background: rgba(0,255,136,0.15); color: var(--accent-green); border: 1px solid rgba(0,255,136,0.3); }
-        .match-badge.awaiting { background: rgba(255,215,0,0.15); color: var(--accent-gold); border: 1px solid rgba(255,215,0,0.3); }
-        .match-badge.disputed { background: rgba(255,68,68,0.15); color: var(--accent-red); border: 1px solid rgba(255,68,68,0.3); }
-        .match-badge.unverified { background: rgba(136,136,170,0.15); color: var(--text-muted); border: 1px solid rgba(136,136,170,0.3); }
-        .match-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
-        .match-status-col { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; min-width: 120px; }
-    </style>
-    <style>
-        body {
-            background:
-                radial-gradient(circle at 12% 0%, rgba(45, 212, 191, 0.12), transparent 28%),
-                linear-gradient(180deg, #08111d, #0d1726) !important;
-            color: #eef4fb;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .nav {
-            height: 68px;
-            padding: 0 20px;
-            background: rgba(8, 15, 26, 0.88);
-            border-bottom: 1px solid rgba(148, 163, 184, 0.14);
-            backdrop-filter: blur(18px);
-        }
-
-        .nav-logo,
-        .hero h1,
-        .section-header h2,
-        .section-header h3 {
-            font-family: 'Barlow', sans-serif;
-            letter-spacing: -0.03em;
-        }
-
-        .nav-logo {
-            font-size: 1.5rem;
-            color: #eef4fb;
-        }
-
-        .nav-logo span,
-        .tab.active,
-        .hero-stat .num {
-            color: #2dd4bf;
-        }
-
-        .nav-link {
-            border-radius: 999px;
-            color: #9aacbf;
-            font-weight: 700;
-        }
-
-        .nav-link:hover,
-        .nav-link.active {
-            background: rgba(255,255,255,0.05);
-        }
-
-        .hero {
-            padding: 38px 24px 30px;
-            background:
-                radial-gradient(circle at 50% 0%, rgba(45, 212, 191, 0.12), transparent 34%),
-                linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
-            border-bottom-color: rgba(148, 163, 184, 0.12);
-        }
-
-        .hero h1 {
-            font-size: clamp(2.35rem, 5vw, 3.8rem);
-            line-height: 0.96;
-            max-width: 11ch;
-            text-wrap: balance;
-            word-break: normal;
-            overflow-wrap: normal;
-        }
-
-        .hero h1 .gold,
-        .hero h1 .blue {
-            color: #eef4fb;
-        }
-
-        .hero p,
-        .hero-stat .label,
-        .section-header h3,
-        .cc-meta,
-        .match-time {
-            color: #97a8bc;
-        }
-
-        .tabs,
-        .challenge-card,
-        .match-item,
-        .stat-card,
-        .modal,
-        .game-pill {
-            border-color: rgba(148, 163, 184, 0.14);
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015)),
-                rgba(11, 20, 34, 0.9);
-            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
-        }
-
-        .main {
-            max-width: 1280px;
-            padding-top: 20px;
-        }
-
-        .tabs {
-            margin: 16px auto 0;
-            width: min(1280px, calc(100% - 32px));
-            border-radius: 18px;
-        }
-
-        .tab {
-            border-radius: 999px;
-            color: #9aacbf;
-            font-weight: 700;
-        }
-
-        .tab.active {
-            background: rgba(45, 212, 191, 0.12);
-            border-color: rgba(45, 212, 191, 0.24);
-        }
-
-        .challenge-card,
-        .match-item,
-        .stat-card,
-        .modal {
-            border-radius: 18px;
-        }
-
-        .challenge-card:hover,
-        .match-item:hover {
-            border-color: rgba(45, 212, 191, 0.24);
-            box-shadow: 0 24px 50px rgba(0, 0, 0, 0.24);
-        }
-
-        .btn-primary,
-        .btn-gold {
-            background: linear-gradient(135deg, #2dd4bf, #8df5ea);
-            color: #06120f;
-        }
-
-        .btn-outline {
-            color: #d7e2ee;
-            background: rgba(255,255,255,0.04);
-        }
-
-        .form-control {
-            background: rgba(255,255,255,0.045);
-            color: #eef4fb;
-        }
-
-        @media (min-width: 1024px) {
-            .hero-shell {
-                grid-template-columns: minmax(0, 1.16fr) minmax(320px, 0.84fr);
-                gap: 20px;
-            }
-
-            .hero-copy-card {
-                padding-right: 32px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .tabs {
-                flex-wrap: wrap;
-                overflow: visible;
-                gap: 8px;
-            }
-
-            .tab {
-                flex: 1 1 calc(50% - 8px);
-                text-align: center;
-                white-space: normal;
-                line-height: 1.2;
-            }
-
-            .section-header {
-                align-items: flex-start;
-                gap: 12px;
-            }
-
-            .section-header .btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .cc-header,
-            .cc-players,
-            .cc-meta,
-            .cc-actions {
-                flex-wrap: wrap;
-            }
-
-            .cc-player {
-                min-width: 0;
-            }
-
-            .cc-vs {
-                width: 100%;
-                text-align: center;
-            }
-        }
-
-        @media (max-width: 540px) {
-            .tab {
-                flex-basis: 100%;
-            }
-        }
-
-        /* ARENA REDESIGN */
-        body {
-            background:
-                radial-gradient(circle at 16% 8%, rgba(0, 174, 255, 0.18), transparent 26%),
-                radial-gradient(circle at 88% 18%, rgba(168, 85, 247, 0.16), transparent 24%),
-                linear-gradient(180deg, #050814 0%, #07111f 46%, #05070d 100%) !important;
-        }
-
-        .hero {
-            position: relative;
-            overflow: hidden;
-            padding: 42px 24px 30px;
-            background:
-                linear-gradient(135deg, rgba(0, 174, 255, 0.10), rgba(168, 85, 247, 0.08)),
-                linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0));
-        }
-
-        .hero::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            pointer-events: none;
-            background-image:
-                linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
-            background-size: 42px 42px;
-            mask-image: linear-gradient(180deg, rgba(0,0,0,0.75), transparent 82%);
-        }
-
-        .hero-shell { position: relative; z-index: 1; gap: 22px; }
-        .hero-copy-card, .hero-side-card, .arena-action-card, .gaming-room, .open-challenges-market {
-            border: 1px solid rgba(120, 210, 255, 0.18);
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.075), rgba(255,255,255,0.025)),
-                rgba(6, 16, 31, 0.88);
-            box-shadow: 0 24px 70px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
-            backdrop-filter: blur(18px);
-        }
-
-        .hero-copy-card { min-height: 100%; padding: clamp(24px, 4vw, 38px); }
-        .hero-side-card { padding: 24px; }
-        .hero-kicker { color: #9ff7ff; background: rgba(0,174,255,0.12); border-color: rgba(0,174,255,0.28); }
-        .hero h1 { max-width: 13ch; font-size: clamp(2.6rem, 5.6vw, 4.65rem); line-height: 0.92; }
-        .hero p { max-width: 720px; margin: 14px 0 0; color: #b7c6d8; font-size: 1rem; line-height: 1.65; }
-        .hero-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 24px; max-width: 620px; }
-        .hero-actions .btn { justify-content: center; padding: 13px 16px; display: inline-flex; align-items: center; gap: 7px; }
-        .hero-stats { display: grid !important; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px !important; margin-top: 24px !important; }
-        .hero-stat { border: 1px solid rgba(120, 210, 255, 0.14); border-radius: 14px; padding: 14px 10px; background: rgba(255,255,255,0.04); text-align: left; }
-        .hero-stat .num { color: #28e8ff; text-shadow: 0 0 20px rgba(40,232,255,0.4); }
-        .hero-stat .label { color: #9fb0c5; line-height: 1.25; }
-        .hero-proof-item { border-top-color: rgba(120, 210, 255, 0.13); }
-        .hero-proof-index { background: linear-gradient(135deg, rgba(0,174,255,0.2), rgba(168,85,247,0.16)); color: #bdf7ff; }
-
-        .arena-section { margin-bottom: 30px; }
-        .arena-section-title { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 16px; }
-        .arena-section-title h2 { font-family: var(--font-display); font-size: clamp(1.35rem, 3vw, 2rem); margin: 0; letter-spacing: -0.02em; }
-        .arena-section-title p { color: #9fb0c5; max-width: 680px; margin: 6px 0 0; line-height: 1.55; }
-        .arena-action-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-        .arena-action-card { min-height: 190px; border-radius: 18px; padding: 20px; color: #eef7ff; display: flex; flex-direction: column; gap: 12px; transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; text-align: left; font-family: var(--font-body); cursor: pointer; }
-        .arena-action-card:hover { transform: translateY(-4px); border-color: rgba(40,232,255,0.42); box-shadow: 0 28px 80px rgba(0,0,0,0.42), 0 0 34px rgba(0,174,255,0.12); color: #fff; }
-        .arena-action-icon { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; color: #06111f; background: linear-gradient(135deg, #28e8ff, #8df5ea); font-size: 1.25rem; box-shadow: 0 0 28px rgba(40,232,255,0.28); }
-        .arena-action-card h3 { margin: 4px 0 0; font-family: var(--font-display); font-size: 1.22rem; }
-        .arena-action-card p { margin: 0; color: #a9bad0; line-height: 1.5; font-size: .92rem; }
-        .arena-action-cta { margin-top: auto; color: #78e8ff; font-weight: 800; font-size: .86rem; }
-
-        .gaming-room { border-radius: 20px; padding: 22px; }
-        .game-logo-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
-        .game-logo-card { border: 1px solid rgba(120,210,255,0.16); border-radius: 16px; min-height: 132px; padding: 16px; cursor: pointer; background: linear-gradient(145deg, rgba(255,255,255,0.075), rgba(255,255,255,0.02)); display: flex; flex-direction: column; justify-content: space-between; transition: transform .2s ease, border-color .2s ease, background .2s ease; text-align: left; font-family: var(--font-body); }
-        .game-logo-card:hover { transform: translateY(-3px); border-color: rgba(40,232,255,0.46); background: linear-gradient(145deg, rgba(0,174,255,0.15), rgba(168,85,247,0.08)); }
-        .game-logo-mark { font-family: var(--font-display); font-size: clamp(1.35rem, 2.4vw, 2rem); font-weight: 800; line-height: .95; letter-spacing: 0; color: #fff; text-shadow: 0 0 24px rgba(40,232,255,0.28); }
-        .game-logo-sub { color: #9fb0c5; font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
-        .gaming-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-        .gaming-actions .btn { display: inline-flex; align-items: center; gap: 7px; padding: 12px 16px; }
-
-        .tabs { position: sticky; top: 72px; z-index: 40; gap: 8px; }
-        .tab { display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
-        .tab.active { color: #06111f; background: linear-gradient(135deg, #28e8ff, #8df5ea); border-color: transparent; }
-        .open-challenges-market { border-radius: 20px; padding: 20px; }
-        .challenge-card { min-height: 260px; }
-        .cc-title { font-size: 1.02rem; }
-        .cc-meta { flex-wrap: wrap; line-height: 1.4; }
-        .empty-state { border: 1px solid rgba(120,210,255,0.16); border-radius: 18px; background: rgba(255,255,255,0.035); }
-
-        @media (max-width: 980px) {
-            .arena-action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .game-logo-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-            .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        }
-
-        @media (max-width: 640px) {
-            .hero { padding: 24px 14px; }
-            .hero-actions, .arena-action-grid, .game-logo-grid { grid-template-columns: 1fr; }
-            .hero-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .hero h1 { font-size: 2.55rem; }
-            .arena-section-title { display: block; }
-            .gaming-actions .btn { width: 100%; justify-content: center; }
-            .tabs { position: relative; top: auto; width: calc(100% - 20px); }
-        }
-
-        /* FULL ARENA OVERHAUL */
-        body {
-            background:
-                linear-gradient(90deg, rgba(0, 234, 255, 0.04) 1px, transparent 1px),
-                linear-gradient(rgba(0, 234, 255, 0.035) 1px, transparent 1px),
-                linear-gradient(180deg, #02040b 0%, #06101d 42%, #03050c 100%) !important;
-            background-size: 54px 54px, 54px 54px, auto;
-        }
-
-        .hero {
-            min-height: min(820px, calc(100vh - 68px));
-            display: flex;
-            align-items: center;
-            padding: 54px 24px 34px;
-            border-bottom: 1px solid rgba(0, 234, 255, 0.22);
-            background:
-                linear-gradient(115deg, rgba(0, 234, 255, 0.15), transparent 38%),
-                linear-gradient(245deg, rgba(124, 58, 237, 0.18), transparent 34%),
-                #02040b;
-        }
-
-        .hero-shell {
-            width: min(1380px, 100%);
-            grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
-            gap: 26px;
-        }
-
-        .hero-copy-card,
-        .hero-side-card {
-            border-radius: 8px;
-            border: 1px solid rgba(80, 229, 255, 0.26);
-            background:
-                linear-gradient(180deg, rgba(255,255,255,0.065), rgba(255,255,255,0.018)),
-                rgba(3, 11, 23, 0.92);
-            box-shadow:
-                0 32px 90px rgba(0, 0, 0, 0.55),
-                inset 0 1px 0 rgba(255,255,255,0.09);
-        }
-
-        .hero-copy-card {
-            position: relative;
-            overflow: hidden;
-            padding: clamp(26px, 5vw, 54px);
-        }
-
-        .hero-copy-card::after {
-            content: "";
-            position: absolute;
-            inset: auto 0 0 0;
-            height: 4px;
-            background: linear-gradient(90deg, #00eaff, #7c3aed, #39ff88);
-            box-shadow: 0 0 30px rgba(0, 234, 255, 0.7);
-        }
-
-        .hero-kicker {
-            border-radius: 4px;
-            background: rgba(0, 234, 255, 0.12);
-            color: #baf9ff;
-            letter-spacing: .16em;
-        }
-
-        .hero h1 {
-            max-width: 10.5ch;
-            margin-top: 8px;
-            font-size: clamp(3.4rem, 7.2vw, 6.9rem);
-            line-height: .82;
-            text-transform: uppercase;
-        }
-
-        .hero p {
-            max-width: 780px;
-            font-size: clamp(1rem, 1.5vw, 1.22rem);
-            color: #c5d5e8;
-        }
-
-        .hero-actions {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            max-width: 100%;
-            gap: 10px;
-        }
-
-        .hero-actions .btn {
-            min-height: 76px;
-            border-radius: 6px;
-            flex-direction: column;
-            text-transform: uppercase;
-            letter-spacing: .04em;
-            font-size: .8rem;
-        }
-
-        .hero-stats {
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 1px !important;
-            border: 1px solid rgba(80,229,255,.18);
-            background: rgba(80,229,255,.16);
-        }
-
-        .hero-stat {
-            border: 0;
-            border-radius: 0;
-            background: rgba(2, 8, 18, .86);
-            padding: 16px 14px;
-        }
-
-        .hero-stat .num {
-            font-size: clamp(1.8rem, 3.5vw, 3rem);
-            color: #00eaff;
-        }
-
-        .arena-board {
-            display: grid;
-            gap: 14px;
-        }
-
-        .arena-board-top {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 12px;
-            align-items: center;
-            padding-bottom: 16px;
-            border-bottom: 1px solid rgba(80,229,255,.18);
-        }
-
-        .arena-board-title {
-            font-family: var(--font-display);
-            font-size: 1.85rem;
-            line-height: .95;
-            letter-spacing: 0;
-            text-transform: uppercase;
-        }
-
-        .arena-live-chip {
-            border: 1px solid rgba(57,255,136,.38);
-            background: rgba(57,255,136,.1);
-            color: #a9ffc9;
-            border-radius: 999px;
-            padding: 8px 11px;
-            font-size: .72rem;
-            font-weight: 900;
-            letter-spacing: .12em;
-        }
-
-        .arena-lanes {
-            display: grid;
-            gap: 10px;
-        }
-
-        .arena-lane {
-            display: grid;
-            grid-template-columns: 48px 1fr auto;
-            gap: 12px;
-            align-items: center;
-            padding: 13px;
-            border: 1px solid rgba(80,229,255,.15);
-            border-radius: 6px;
-            background: rgba(255,255,255,.035);
-        }
-
-        .arena-lane-icon {
-            width: 48px;
-            height: 48px;
-            display: grid;
-            place-items: center;
-            background: linear-gradient(135deg, #00eaff, #7c3aed);
-            color: #fff;
-            border-radius: 6px;
-            font-size: 1.15rem;
-        }
-
-        .arena-lane strong {
-            display: block;
-            color: #f3f8ff;
-            font-size: .98rem;
-        }
-
-        .arena-lane span {
-            display: block;
-            margin-top: 3px;
-            color: #9fb2c8;
-            font-size: .84rem;
-            line-height: 1.35;
-        }
-
-        .arena-lane-code {
-            color: #00eaff;
-            font-family: var(--font-display);
-            font-weight: 900;
-            font-size: .78rem;
-        }
-
-        .tabs {
-            top: 70px;
-            border-radius: 0;
-            width: 100%;
-            max-width: none;
-            margin: 0;
-            justify-content: center;
-            background: rgba(2, 7, 16, .94);
-            border-width: 1px 0;
-            box-shadow: 0 14px 36px rgba(0,0,0,.28);
-        }
-
-        .tab {
-            border-radius: 4px;
-            padding: 12px 16px;
-            text-transform: uppercase;
-            letter-spacing: .035em;
-            font-size: .78rem;
-        }
-
-        .main {
-            max-width: 1380px;
-            padding-top: 30px;
-        }
-
-        .arena-section-title {
-            border-left: 4px solid #00eaff;
-            padding-left: 14px;
-        }
-
-        .arena-action-grid {
-            grid-template-columns: repeat(6, minmax(0, 1fr));
-            gap: 10px;
-        }
-
-        .arena-action-card {
-            min-height: 244px;
-            border-radius: 6px;
-            padding: 18px;
-            border-color: rgba(80,229,255,.2);
-            background:
-                linear-gradient(160deg, rgba(0,234,255,.13), rgba(255,255,255,.025) 42%),
-                rgba(3, 10, 22, .92);
-        }
-
-        .arena-action-card:nth-child(2),
-        .arena-action-card:nth-child(5) {
-            background:
-                linear-gradient(160deg, rgba(124,58,237,.18), rgba(255,255,255,.025) 42%),
-                rgba(3, 10, 22, .92);
-        }
-
-        .arena-action-card:nth-child(3),
-        .arena-action-card:nth-child(6) {
-            background:
-                linear-gradient(160deg, rgba(57,255,136,.12), rgba(255,255,255,.025) 42%),
-                rgba(3, 10, 22, .92);
-        }
-
-        .arena-action-icon {
-            border-radius: 5px;
-        }
-
-        .gaming-room,
-        .open-challenges-market {
-            border-radius: 6px;
-            background:
-                linear-gradient(180deg, rgba(0,234,255,.08), rgba(255,255,255,.02)),
-                rgba(3, 10, 22, .92);
-        }
-
-        .game-logo-grid {
-            grid-template-columns: repeat(5, minmax(0, 1fr));
-            gap: 10px;
-        }
-
-        .game-logo-card {
-            min-height: 176px;
-            border-radius: 6px;
-            border-color: rgba(80,229,255,.22);
-            background:
-                linear-gradient(145deg, rgba(0,234,255,.12), rgba(124,58,237,.08)),
-                #07101d;
-        }
-
-        .game-logo-mark {
-            font-size: clamp(1.75rem, 3vw, 2.7rem);
-            text-transform: uppercase;
-        }
-
-        .challenges-grid {
-            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-        }
-
-        .challenge-card {
-            border-radius: 6px;
-            background:
-                linear-gradient(180deg, rgba(0,234,255,.075), rgba(255,255,255,.018)),
-                rgba(3, 10, 22, .94);
-        }
-
-        @media (max-width: 1180px) {
-            .hero-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .arena-action-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        }
-
-        @media (max-width: 860px) {
-            .hero { min-height: auto; }
-            .hero-shell { grid-template-columns: 1fr; }
-            .arena-action-grid, .game-logo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .tabs { position: relative; top: auto; justify-content: flex-start; }
-        }
-
-        @media (max-width: 560px) {
-            .hero-actions, .hero-stats, .arena-action-grid, .game-logo-grid { grid-template-columns: 1fr; }
-            .hero h1 { font-size: 3rem; }
-            .arena-lane { grid-template-columns: 42px 1fr; }
-            .arena-lane-code { display: none; }
-        }
-
-        /* CLEAN ARENA HUB */
-        /* ===== ARENA REDESIGN — calm / premium (ARENA_REDESIGN_20260615) ===== */
-        .arena-clean-hero {
-            padding: clamp(34px, 4vw, 58px) 24px clamp(28px, 3vw, 40px);
-            border-bottom: 1px solid var(--border);
-            background: linear-gradient(180deg, #0c0c17 0%, var(--bg-dark) 100%);
-            position: relative;
-        }
-
-        .arena-clean-inner {
-            width: min(1120px, 100%);
-            margin: 0 auto;
-            position: relative;
-            z-index: 1;
-        }
-
-        .arena-clean-kicker {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 5px 12px;
-            border: 1px solid var(--border-glow);
-            border-radius: 999px;
-            background: rgba(255,255,255,0.03);
-            color: var(--text-dim);
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 0.12em;
-            text-transform: uppercase;
-        }
-
-        .arena-clean-kicker i { color: var(--primary); font-size: 0.7rem; }
-
-        .arena-clean-hero h1 {
-            max-width: 720px;
-            margin: 16px 0 0;
-            font-family: var(--font-display);
-            font-size: clamp(1.7rem, 3.4vw, 2.6rem);
-            line-height: 1.05;
-            letter-spacing: 0;
-            color: var(--text);
-        }
-
-        .arena-clean-hero p {
-            max-width: 640px;
-            margin: 12px 0 0;
-            color: var(--text-dim);
-            font-size: clamp(0.92rem, 1.2vw, 1rem);
-            line-height: 1.6;
-        }
-
-        .arena-clean-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 22px;
-        }
-
-        .arena-clean-actions .btn,
-        .arena-clean-section .section-header .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            min-height: 42px;
-            padding: 11px 18px;
-        }
-
-        .arena-clean-proof {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-top: 20px;
-        }
-
-        .arena-clean-proof span {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .arena-clean-proof i { color: var(--primary); opacity: 0.85; }
-
-        .arena-clean-main {
-            max-width: 1120px;
-            padding-top: 6px;
-        }
-
-        /* Primary actions — three compact cards */
-        .arena-actions-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 14px;
-            margin: 26px 0 6px;
-        }
-
-        .arena-action-card {
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-            padding: 18px;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: var(--bg-card);
-            color: var(--text);
-            cursor: pointer;
-            text-align: left;
-            font-family: var(--font-body);
-            transition: border-color .2s ease, background .2s ease;
-        }
-
-        .arena-action-card:hover { border-color: var(--border-glow); background: var(--bg-card-hover); }
-
-        .arena-action-icon {
-            flex: none;
-            width: 38px;
-            height: 38px;
-            display: grid;
-            place-items: center;
-            border-radius: 10px;
-            background: var(--primary-dim);
-            color: var(--primary);
-            font-size: 1rem;
-        }
-
-        .arena-action-card h2 { margin: 0; font-family: var(--font-display); font-size: 1.02rem; font-weight: 700; }
-        .arena-action-card p { margin: 5px 0 0; color: var(--text-dim); font-size: 0.84rem; line-height: 1.45; }
-
-        /* Sections */
-        .arena-clean-section {
-            margin-top: 22px;
-            padding: 20px;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            background: var(--bg-surface);
-        }
-
-        .arena-clean-section .section-header { margin-bottom: 16px; }
-        .arena-clean-section .section-header h2 { font-size: 1.05rem; }
-        .arena-clean-section .section-header h3 {
-            margin-top: 3px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            text-transform: none;
-            letter-spacing: 0;
-        }
-
-        .arena-list-grid { grid-template-columns: 1fr; }
-        .arena-list-grid .challenge-card { min-height: 0; }
-
-        .arena-list-grid .challenge-card,
-        #myChallengesList .challenge-card {
-            border-radius: 12px;
-            border-color: var(--border);
-            background: var(--bg-card);
-        }
-
-        .arena-list-grid .challenge-card.pending,
-        #myChallengesList .challenge-card.pending { border-left: 3px solid var(--primary); }
-
-        .arena-list-grid .challenge-card.accepted,
-        .arena-list-grid .challenge-card.in_progress,
-        #myChallengesList .challenge-card.accepted,
-        #myChallengesList .challenge-card.in_progress { border-left: 3px solid var(--accent-green); }
-
-        /* Rankings banner */
-        .arena-rankings-banner {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-        .arena-rankings-banner .arb-text h2 { font-family: var(--font-display); font-size: 1.05rem; margin: 0; }
-        .arena-rankings-banner .arb-text p { margin: 4px 0 0; color: var(--text-dim); font-size: 0.85rem; }
-
-        /* Secondary features — compact links */
-        .arena-more-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-            gap: 10px;
-        }
-
-        .arena-more-link {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 14px;
-            border: 1px solid var(--border);
-            border-radius: 11px;
-            background: var(--bg-card);
-            color: var(--text);
-            transition: border-color .2s ease, background .2s ease;
-        }
-        .arena-more-link:hover { border-color: var(--border-glow); background: var(--bg-card-hover); color: var(--text); }
-        .arena-more-link > i { width: 18px; text-align: center; color: var(--text-dim); font-size: 0.95rem; }
-        .arena-more-link .aml-title { font-size: 0.9rem; font-weight: 600; }
-        .arena-more-link .aml-sub { display: block; font-size: 0.74rem; color: var(--text-muted); font-weight: 400; margin-top: 1px; }
-
-        .cc-status { border-radius: 999px; letter-spacing: 0.06em; }
-        .cc-actions .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
-
-        .panel { margin-top: 22px; }
-
-        #panel-gaming-room,
-        #panel-my-challenges,
-        #panel-leaderboard,
-        #panel-mlb-the-show,
-        #panel-my-stats {
-            padding: 20px;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            background: var(--bg-surface);
-        }
-
-        .empty-state {
-            padding: 40px 22px;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: var(--bg-card);
-        }
-
-        .empty-state i {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            font-size: 1.2rem;
-            margin-bottom: 12px;
-            color: var(--text-dim);
-            background: rgba(255,255,255,0.04);
-            border: 1px solid var(--border);
-        }
-
-        .empty-state h3 { color: var(--text); font-size: 0.98rem; }
-        .empty-state p { color: var(--text-dim); margin: 6px 0 0; }
-        .empty-state .arena-empty-action { margin-top: 16px; }
-
-        .loading {
-            min-height: 160px;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            background: var(--bg-card);
-        }
-
-        @media (max-width: 860px) {
+        /* ===== LEGACY GRID (my-challenges fallback) ===== */
+        .challenges-grid { display: block; }
+        .challenge-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 14px 16px; margin-bottom: 10px; }
+        .challenge-card:last-child { margin-bottom: 0; }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 900px) {
             .arena-actions-grid { grid-template-columns: 1fr; }
+            .game-logo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .ah-inner { align-items: flex-start; flex-direction: column; }
         }
-
         @media (max-width: 640px) {
-            .arena-clean-hero { padding: 32px 16px 26px; }
-            .arena-clean-actions .btn { width: 100%; }
-            .arena-clean-section .section-header { display: block; }
-            .arena-clean-section .section-header .btn { margin-top: 12px; }
-            .arena-rankings-banner .btn { width: 100%; }
+            .arena-head { padding: 18px 16px 14px; }
+            .ah-title-row h1 { font-size: 30px; }
+            .main { padding: 14px 12px 40px; }
+            .a-section { margin-top: 20px; }
+            .a-section-head .btn { width: 100%; }
+            .ah-actions { width: 100%; }
+            .ah-actions .btn { flex: 1 1 auto; }
+            .form-row { grid-template-columns: 1fr; }
+            .match-item { flex-wrap: wrap; }
+            .match-status-col { align-items: flex-start; min-width: 0; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .game-logo-grid { grid-template-columns: 1fr; }
         }
     </style>
 <script type="application/ld+json">
@@ -1156,93 +292,122 @@
 
 <!-- Legacy hardcoded nav removed; sitewide global nav is injected by tmr-sitewide.js -->
 
-<!-- HERO -->
-<section class="arena-clean-hero">
-    <div class="arena-clean-inner">
-        <span class="arena-clean-kicker"><i class="fas fa-shield-halved"></i> Competitive Beta</span>
-        <h1>The Arena</h1>
-        <p>Challenge other members head to head, log the result, and build a record both sides confirm. Same verification standard as the rest of TrustMyRecord, applied to direct matchups.</p>
-        <div class="arena-clean-actions">
-            <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Create Challenge</button>
-            <button class="btn btn-outline" onclick="scrollToChallenges(event)"><i class="fas fa-list"></i> Browse Open Challenges</button>
+<!-- PAGE HEADER -->
+<header class="arena-head">
+    <div class="ah-inner">
+        <div class="ah-text">
+            <div class="ah-title-row">
+                <h1>The Arena</h1>
+                <span class="ah-beta">Beta</span>
+            </div>
+            <p>Challenge other members, verify the result, and build a head-to-head record.</p>
         </div>
-        <div class="arena-clean-proof" aria-label="Arena standards">
-            <span><i class="fas fa-circle-check"></i> Verified outcomes only</span>
-            <span><i class="fas fa-user-group"></i> Both players confirm results</span>
-            <span><i class="fas fa-chart-line"></i> Records tied to real activity</span>
+        <div class="ah-actions">
+            <button class="btn btn-primary" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Create Challenge</button>
+            <button class="btn btn-outline" onclick="scrollToChallenges(event)">Open Challenges</button>
+            <button class="btn btn-outline" onclick="switchTab('gaming-room')"><i class="fas fa-gamepad"></i> Gaming Room</button>
         </div>
     </div>
-</section>
+    <div class="ah-meta">
+        <span class="ah-trust"><i class="fas fa-circle-check"></i> Both players confirm every result before it counts toward a record.</span>
+    </div>
+</header>
 
 <!-- MAIN CONTENT -->
-<main class="main arena-clean-main">
+<main class="main">
     <!-- PRIMARY ACTIONS -->
     <section class="arena-actions-grid" aria-label="Arena primary actions">
         <button class="arena-action-card" onclick="openCreateChallenge()">
             <span class="arena-action-icon"><i class="fas fa-plus"></i></span>
-            <span>
-                <h2>Create a Challenge</h2>
-                <p>Pick the game, format, and stakes, then send it to a member or post it open.</p>
+            <span class="aac-body">
+                <span class="aac-title">Create a Challenge</span>
+                <span class="aac-sub">Pick the game, format, and stake.</span>
             </span>
+            <span class="aac-go"><i class="fas fa-arrow-right"></i></span>
         </button>
         <button class="arena-action-card" onclick="scrollToChallenges(event)">
             <span class="arena-action-icon"><i class="fas fa-handshake"></i></span>
-            <span>
-                <h2>Join a Challenge</h2>
-                <p>Accept an open matchup from the board and start a head to head record.</p>
+            <span class="aac-body">
+                <span class="aac-title">Join a Challenge</span>
+                <span class="aac-sub">Accept an open matchup from the board.</span>
             </span>
+            <span class="aac-go"><i class="fas fa-arrow-right"></i></span>
         </button>
         <button class="arena-action-card" onclick="switchTab('gaming-room')">
             <span class="arena-action-icon"><i class="fas fa-gamepad"></i></span>
-            <span>
-                <h2>Gaming Room</h2>
-                <p>Log MLB The Show, 2K, Madden and more, then track results and standings.</p>
+            <span class="aac-body">
+                <span class="aac-title">Gaming Room</span>
+                <span class="aac-sub">MLB The Show, 2K, Madden, EA FC, NHL.</span>
             </span>
+            <span class="aac-go"><i class="fas fa-arrow-right"></i></span>
         </button>
     </section>
 
-    <section class="arena-clean-section open-challenges-market" id="openChallengesSection">
-        <div class="section-header">
+    <section class="a-section" id="openChallengesSection">
+        <div class="a-section-head">
             <div>
                 <h2>Open Challenges</h2>
-                <h3>Real Arena challenges available now</h3>
+                <div class="sub">Live challenges you can join right now</div>
             </div>
-            <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Create Challenge</button>
+            <button class="btn btn-primary btn-sm" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Create Challenge</button>
         </div>
-        <div id="challengesList" class="challenges-grid arena-list-grid">
+        <div id="challengesList" class="a-card">
             <div class="loading"><div class="spinner"></div></div>
         </div>
     </section>
 
-    <section class="arena-clean-section" id="recentResultsSection">
-        <div class="section-header">
+    <section class="a-section" id="myChallengesSection">
+        <div class="a-section-head">
+            <div>
+                <h2>My Challenges</h2>
+                <div class="sub">Your open, pending, and active matchups</div>
+            </div>
+        </div>
+        <div id="myChallengesList" class="a-card my-ch-list">
+            <div class="empty-state"><i class="fas fa-user-shield"></i><h3>Sign in to see your challenges</h3><p>Your direct challenges, accepted matchups, and pending responses will appear here.</p></div>
+        </div>
+    </section>
+
+    <section class="a-section" id="recentResultsSection">
+        <div class="a-section-head">
             <div>
                 <h2>Recent Results</h2>
-                <h3>Completed Arena results from real activity</h3>
+                <div class="sub">Completed matchups and their verification status</div>
             </div>
         </div>
-        <div id="matchesFeed" class="match-feed">
+        <div id="matchesFeed" class="match-feed a-card">
             <div class="loading"><div class="spinner"></div></div>
         </div>
     </section>
 
-    <!-- RANKINGS -->
-    <section class="arena-clean-section">
-        <div class="section-header arena-rankings-banner">
-            <div class="arb-text">
-                <h2>Rankings &amp; Records</h2>
-                <p>See who leads by verified wins, win percentage, and current streak.</p>
+    <!-- STANDINGS -->
+    <section class="a-section" id="standingsSection">
+        <div class="a-section-head">
+            <div>
+                <h2>Arena Standings</h2>
+                <div class="sub">Verified records ranked by wins</div>
             </div>
-            <a class="btn btn-outline" href="/arena/rankings/"><i class="fas fa-ranking-star"></i> View Rankings</a>
+            <a class="btn btn-outline btn-sm" href="/arena/rankings/"><i class="fas fa-ranking-star"></i> Full Rankings</a>
+        </div>
+        <div class="game-filters" id="lbGameFilters">
+            <div class="game-pill active" data-game="all" onclick="filterLeaderboard('all')">All Games</div>
+            <div class="game-pill" data-game="mlb-the-show-26" onclick="filterLeaderboard('mlb-the-show-26')">MLB The Show</div>
+            <div class="game-pill" data-game="nba-2k26" onclick="filterLeaderboard('nba-2k26')">NBA 2K</div>
+            <div class="game-pill" data-game="madden-26" onclick="filterLeaderboard('madden-26')">Madden</div>
+            <div class="game-pill" data-game="ea-fc-26" onclick="filterLeaderboard('ea-fc-26')">EA FC</div>
+            <div class="game-pill" data-game="nhl-26" onclick="filterLeaderboard('nhl-26')">NHL</div>
+        </div>
+        <div id="leaderboardTable" class="a-card">
+            <div class="loading"><div class="spinner"></div></div>
         </div>
     </section>
 
     <!-- MORE / SECONDARY FEATURES -->
-    <section class="arena-clean-section">
-        <div class="section-header">
+    <section class="a-section">
+        <div class="a-section-head">
             <div>
                 <h2>More in the Arena</h2>
-                <h3>Secondary features and community games</h3>
+                <div class="sub">Secondary features and community games</div>
             </div>
         </div>
         <div class="arena-more-grid">
@@ -1255,17 +420,6 @@
             <a class="arena-more-link" href="/arena/streaming/"><i class="fas fa-video"></i><span><span class="aml-title">Live Streaming</span><span class="aml-sub">Stream your matches</span></span></a>
         </div>
     </section>
-
-    <!-- ===== MY CHALLENGES TAB ===== -->
-    <div class="panel" id="panel-my-challenges">
-        <div class="section-header">
-            <h2>My Challenges</h2>
-            <button class="btn btn-gold" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Issue a Challenge</button>
-        </div>
-        <div id="myChallengesList" class="challenges-grid">
-            <div class="empty-state"><i class="fas fa-user-shield"></i><h3>Sign in to see your challenges</h3><p>Your direct challenges, accepted matchups, and pending responses will appear here.</p></div>
-        </div>
-    </div>
 
     <!-- ===== GAMING ROOM TAB ===== -->
     <div class="panel" id="panel-gaming-room">
@@ -1289,25 +443,7 @@
         <div class="section-header">
             <h3>Recent Gaming Results</h3>
         </div>
-        <div id="gamingRoomMatches" class="match-feed">
-            <div class="loading"><div class="spinner"></div></div>
-        </div>
-    </div>
-
-    <!-- ===== LEADERBOARD TAB ===== -->
-    <div class="panel" id="panel-leaderboard">
-        <div class="section-header">
-            <h2>Gaming Leaderboard</h2>
-        </div>
-        <div class="game-filters" id="lbGameFilters">
-            <div class="game-pill active" data-game="all" onclick="filterLeaderboard('all')">All Games</div>
-            <div class="game-pill" data-game="mlb-the-show-26" onclick="filterLeaderboard('mlb-the-show-26')">MLB The Show</div>
-            <div class="game-pill" data-game="nba-2k26" onclick="filterLeaderboard('nba-2k26')">NBA 2K</div>
-            <div class="game-pill" data-game="madden-26" onclick="filterLeaderboard('madden-26')">Madden</div>
-            <div class="game-pill" data-game="ea-fc-26" onclick="filterLeaderboard('ea-fc-26')">EA FC</div>
-            <div class="game-pill" data-game="nhl-26" onclick="filterLeaderboard('nhl-26')">NHL</div>
-        </div>
-        <div id="leaderboardTable">
+        <div id="gamingRoomMatches" class="match-feed a-card">
             <div class="loading"><div class="spinner"></div></div>
         </div>
     </div>
@@ -1332,7 +468,7 @@
         </div>
 
         <h3 style="font-family:var(--font-display);margin:24px 0 16px;color:var(--text-dim);">Recent MLB The Show Games</h3>
-        <div id="mlbRecentMatches" class="match-feed">
+        <div id="mlbRecentMatches" class="match-feed a-card">
             <div class="loading"><div class="spinner"></div></div>
         </div>
     </div>
@@ -1616,7 +752,7 @@
 </div>
 
 <!-- ARENA_PHASE1_DISCLAIMER_20260605 -->
-<div style="max-width:1200px;margin:30px auto 40px;padding:16px 24px;border:1px solid var(--border);border-radius:12px;background:var(--bg-surface);color:var(--text-muted);font-size:12.5px;line-height:1.65;">
+<div style="max-width:1132px;margin:26px auto 40px;padding:14px 18px;border:1px solid var(--border);border-radius:8px;background:var(--bg-surface);color:var(--text-muted);font-size:12px;line-height:1.6;">
     TrustMyRecord Arena is an unofficial sports-gaming community. It is not affiliated with, endorsed by, or sponsored by MLB, MLBPA, Sony Interactive Entertainment, PlayStation, San Diego Studio, EA Sports, Microsoft, Xbox, or any game publisher. Free predictions are for entertainment only. Arena Points have no cash value and cannot be purchased or withdrawn.
 </div>
 
@@ -1707,7 +843,11 @@ function switchTab(tab) {
     analyticsTrack('arena_tab_switched', { tab_name: tab });
     if (tab === 'my-stats') loadMyStats();
     if (tab === 'my-challenges') renderMyChallenges();
-    if (tab === 'gaming-room') loadGamingRoom();
+    if (tab === 'gaming-room') {
+        loadGamingRoom();
+        const p = document.getElementById('panel-gaming-room');
+        if (p && p.scrollIntoView) p.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 function scrollToChallenges(e) {
@@ -1811,13 +951,14 @@ async function loadChallenges() {
         const activeCount = allChallenges.filter(c => ['pending','accepted','in_progress'].includes(c.status)).length;
         const openStat = document.getElementById('statOpenChallenges');
         if (openStat) openStat.textContent = openCount || activeCount;
-        if (currentTab === 'my-challenges') renderMyChallenges();
+        renderMyChallenges();
     } catch (e) {
         console.error('Failed to load challenges:', e);
         allChallenges = [];
         const openStat = document.getElementById('statOpenChallenges');
         if (openStat) openStat.textContent = '0';
         renderOpenChallengesErrorState();
+        renderMyChallenges();
     }
 }
 
@@ -1839,71 +980,72 @@ function renderChallenges(challenges) {
         renderOpenChallengesEmptyState(!noneAtAll);
         return;
     }
-    container.innerHTML = challenges.map(ch => {
-        const sport = (ch.game_sport || ch.game_slug || '').toLowerCase().replace(/\s+/g,'');
-        const sportClass = sport.includes('mlb') ? 'mlb' : sport.includes('nba') ? 'nba' : sport.includes('nfl') ? 'nfl' : sport.includes('nhl') ? 'nhl' : sport.includes('soccer') ? 'soccer' : '';
+    const rows = challenges.map(ch => {
         const statusClass = ch.status;
         const isMyChallenge = currentUser && (ch.challenger_id === currentUser.id || ch.challenged_id === currentUser.id);
         const canAccept = ch.status === 'pending' && (!currentUser || ch.challenger_id !== currentUser.id) && (!ch.challenged_id || (currentUser && ch.challenged_id === currentUser.id));
         const canCancel = currentUser && ch.status === 'pending' && ch.challenger_id === (currentUser && currentUser.id);
 
-        return `
-        <div class="challenge-card ${statusClass}">
-            <div class="cc-header">
-                <div class="cc-game-badge ${sportClass}">${ch.game_title || ch.game_slug}</div>
-                <div class="cc-status ${statusClass}">${ch.status.replace('_',' ')}</div>
-            </div>
-            <div class="cc-title">${ch.title || (ch.game_title + ' Challenge')}</div>
-            ${ch.description ? `<div style="color:var(--text-dim);font-size:13px;line-height:1.45;margin:-2px 0 12px;">${ch.description}</div>` : ''}
-            <div class="cc-players">
-                <div class="cc-player">
-                    <img class="cc-player-avatar" src="${ch.challenger_avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + (ch.challenger_username||'user')}" alt="">
-                    <div class="cc-player-info">
-                        <div class="cc-player-name">${ch.challenger_display || ch.challenger_username || 'Challenger'}</div>
-                        <div class="cc-player-tag">${ch.platform || ''}</div>
-                        <div class="cc-gamertag-slot" data-username="${ch.challenger_username || ''}" data-platform="${ch.platform || ''}"></div>
-                    </div>
-                </div>
-                <div class="cc-vs">VS</div>
-                <div class="cc-player">
-                    ${ch.challenged_username
-                        ? `<img class="cc-player-avatar" src="${ch.challenged_avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + ch.challenged_username}" alt="">
-                           <div class="cc-player-info">
-                               <div class="cc-player-name">${ch.challenged_display || ch.challenged_username}</div>
-                               <div class="cc-player-tag">${ch.platform || ''}</div>
-                               <div class="cc-gamertag-slot" data-username="${ch.challenged_username}" data-platform="${ch.platform || ''}"></div>
-                           </div>`
-                        : `<div style="color:var(--accent-green);font-weight:700;">OPEN</div>`
-                    }
-                </div>
-            </div>
-            ${ch.status === 'completed' || ch.status === 'in_progress' ? `
-                <div class="cc-score">
-                    <span class="${ch.challenger_wins > ch.challenged_wins ? 'win' : 'loss'}">${ch.challenger_wins || 0}</span>
-                    <span style="color:var(--text-muted);margin:0 8px;">-</span>
-                    <span class="${ch.challenged_wins > ch.challenger_wins ? 'win' : 'loss'}">${ch.challenged_wins || 0}</span>
-                </div>
-            ` : ''}
-            <div class="cc-meta">
-                <span><i class="fas fa-gamepad"></i> Best of ${ch.best_of || 1}</span>
-                <span><i class="fas fa-scale-balanced"></i> ${ch.stake || ch.terms || 'Honor system'}</span>
-                <span><i class="fas fa-clock"></i> ${timeAgo(ch.created_at)}</span>
-            </div>
-            ${canAccept ? `<div class="cc-actions">
-                <button class="btn btn-success btn-sm" onclick="respondChallenge(${ch.id},'accept')"><i class="fas fa-check"></i> Accept Challenge</button>
-                ${currentUser ? `<button class="btn btn-danger btn-sm" onclick="respondChallenge(${ch.id},'decline')"><i class="fas fa-times"></i> Decline</button>` : ''}
-            </div>` : ''}
-            ${canCancel ? `<div class="cc-actions">
-                <button class="btn btn-outline btn-sm" onclick="cancelChallenge(${ch.id})"><i class="fas fa-ban"></i> Cancel</button>
-            </div>` : ''}
-            ${isMyChallenge && (ch.status === 'in_progress' || ch.status === 'accepted') ? `<div class="cc-actions">
-                <button class="btn btn-primary btn-sm" onclick="openLogMatchForChallenge(${ch.id}, '${ch.game_slug || ''}')"><i class="fas fa-plus"></i> Log Match Result</button>
-            </div>` : ''}
-        </div>`;
-    }).join('');
+        const challengerName = ch.challenger_display || ch.challenger_username || 'Challenger';
+        const oppLine = ch.challenged_username
+            ? 'vs ' + (ch.challenged_display || ch.challenged_username)
+            : (ch.title || '');
+        const seriesScore = (ch.status === 'completed' || ch.status === 'in_progress')
+            ? `<span style="margin-left:8px;color:var(--text-dim);font-weight:600;">${ch.challenger_wins || 0}-${ch.challenged_wins || 0}</span>` : '';
 
-    // Async load gamertags into challenge cards
+        let action = '';
+        if (canAccept) {
+            action = `<span class="ch-action-group">
+                <button class="btn btn-primary btn-sm" onclick="respondChallenge(${ch.id},'accept')"><i class="fas fa-check"></i> Join</button>
+                ${currentUser && ch.challenged_id === currentUser.id ? `<button class="btn btn-danger btn-sm" onclick="respondChallenge(${ch.id},'decline')">Decline</button>` : ''}
+            </span>`;
+        } else if (canCancel) {
+            action = `<button class="btn btn-outline btn-sm" onclick="cancelChallenge(${ch.id})">Cancel</button>`;
+        } else if (isMyChallenge && (ch.status === 'in_progress' || ch.status === 'accepted')) {
+            action = `<button class="btn btn-primary btn-sm" onclick="openLogMatchForChallenge(${ch.id}, '${ch.game_slug || ''}')">Log Result</button>`;
+        }
+
+        return `<tr>
+            <td><div class="ch-user">
+                <img class="ch-avatar" src="${ch.challenger_avatar || 'https://api.dicebear.com/7.x/identicon/svg?seed=' + (ch.challenger_username||'user')}" alt="">
+                <div>
+                    <div class="ch-name">${challengerName}</div>
+                    ${oppLine ? `<span class="ch-sub">${oppLine}</span>` : ''}
+                    <div class="cc-gamertag-slot" data-username="${ch.challenger_username || ''}" data-platform="${ch.platform || ''}"></div>
+                </div>
+            </div></td>
+            <td class="ch-cell-dim">${ch.game_title || ch.game_slug}</td>
+            <td class="ch-cell-dim">${ch.platform || 'Any'}</td>
+            <td class="ch-cell-dim">Best of ${ch.best_of || 1}${seriesScore}</td>
+            <td class="ch-cell-dim">${ch.stake || ch.terms || 'Honor system'}</td>
+            <td class="ch-record" data-username="${(ch.challenger_username || '').toLowerCase()}">&ndash;</td>
+            <td class="ch-time">${timeAgo(ch.created_at)}</td>
+            <td>${ch.challenged_username ? `<span class="cc-status ${statusClass}">${ch.status.replace('_',' ')}</span>` : '<span class="cc-status open-slot">Open</span>'}</td>
+            <td class="ta-r">${action}</td>
+        </tr>`;
+    });
+
+    container.innerHTML = `<div class="table-scroll"><table class="ch-table">
+        <thead><tr>
+            <th>Challenger</th><th>Game</th><th>Platform</th><th>Format</th><th>Stake</th><th>Record</th><th>Created</th><th>Status</th><th class="ta-r">Action</th>
+        </tr></thead>
+        <tbody>${rows.join('')}</tbody>
+    </table></div>`;
+
+    // Async load gamertags into challenge rows
     loadGamertagsForChallengeCards();
+    fillChallengeRecords();
+}
+
+// Fill Record column from the all-games leaderboard once it has loaded
+let arenaRecords = null;
+function fillChallengeRecords() {
+    if (!arenaRecords) return;
+    document.querySelectorAll('.ch-record[data-username]').forEach(td => {
+        const rec = arenaRecords[td.dataset.username];
+        if (rec) td.textContent = rec.wins + '-' + rec.losses;
+        else td.textContent = '0-0';
+    });
 }
 
 function renderMyChallenges() {
@@ -2098,6 +1240,18 @@ async function loadLeaderboard(game) {
         renderLeaderboard(container, data.leaderboard);
         const activeGamers = document.getElementById('statActiveGamers');
         if (activeGamers) activeGamers.textContent = data.leaderboard.length;
+        if (!game || game === 'all') {
+            arenaRecords = {};
+            data.leaderboard.forEach(e => {
+                const key = String(e.username || '').toLowerCase();
+                if (!key) return;
+                const rec = arenaRecords[key] || { wins: 0, losses: 0 };
+                rec.wins += parseInt(e.wins) || 0;
+                rec.losses += parseInt(e.losses) || 0;
+                arenaRecords[key] = rec;
+            });
+            fillChallengeRecords();
+        }
     } catch (e) {
         container.innerHTML = '<div class="empty-state"><i class="fas fa-trophy"></i><h3>No rankings yet</h3><p>The leaderboard will populate once enough matches are logged to compare players fairly.</p></div>';
     }
