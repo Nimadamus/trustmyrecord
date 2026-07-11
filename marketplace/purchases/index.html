@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/marketplace/purchases/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Purchased Picks | Pick Marketplace | TrustMyRecord</title>
+    <meta name="description" content="Your purchased picks on TrustMyRecord: revealed selections, order history, payment status, and receipts.">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#08111d; --panel:rgba(11,23,42,.92); --line:rgba(148,163,184,.18);
+            --text:#eef4fb; --muted:#96a7bb; --teal:#2dd4bf; --cyan:#22d3ee;
+            --amber:#fbbf24; --green:#4ade80; --red:#f87171;
+        }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { background:linear-gradient(180deg,#07111d,#0a1422); color:var(--text); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
+        a { color:inherit; text-decoration:none; }
+        .mp-shell { max-width:980px; margin:0 auto; padding:28px 24px 70px; }
+        .crumb { color:var(--muted); font-size:12.5px; margin-bottom:14px; }
+        .crumb a { color:var(--cyan); }
+        h1 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:clamp(28px,4vw,40px); letter-spacing:-.5px; margin-bottom:18px; }
+        h1 .accent { background:linear-gradient(135deg,var(--teal),var(--cyan)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+        .notice { border-radius:12px; padding:13px 16px; font-size:13.5px; line-height:1.55; margin-bottom:16px; display:none; }
+        .notice-wait { border:1px solid rgba(251,191,36,.4); background:rgba(251,191,36,.08); color:#fde8b0; }
+        .notice-ok { border:1px solid rgba(74,222,128,.4); background:rgba(74,222,128,.08); color:#c9f3d4; }
+        .order { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 18px; margin-bottom:11px; }
+        .o-head { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+        .o-ava { width:40px; height:40px; border-radius:50%; object-fit:cover; background:#12233c; border:1px solid var(--line); }
+        .o-name { font-weight:800; font-size:14.5px; }
+        .o-meta { color:var(--muted); font-size:12px; margin-top:2px; }
+        .o-right { margin-left:auto; text-align:right; }
+        .o-price { font-family:'JetBrains Mono',monospace; font-weight:800; font-size:16px; }
+        .status-pill { display:inline-flex; padding:4px 10px; border-radius:999px; font:700 10.5px/1 'JetBrains Mono',monospace; letter-spacing:.09em; text-transform:uppercase; margin-top:4px; }
+        .pill-green { background:rgba(74,222,128,.1); border:1px solid rgba(74,222,128,.4); color:var(--green); }
+        .pill-amber { background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.4); color:var(--amber); }
+        .pill-red { background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.4); color:var(--red); }
+        .btn { display:inline-flex; align-items:center; gap:7px; padding:9px 15px; border-radius:9px; font-weight:800; font-size:12.5px; cursor:pointer; border:1px solid transparent; transition:.15s; font-family:inherit; }
+        .btn-primary { background:linear-gradient(135deg,var(--teal),var(--cyan)); color:#04111a; }
+        .btn-outline { background:rgba(255,255,255,.04); color:var(--text); border-color:var(--line); }
+        .reveal { margin-top:12px; border-top:1px dashed rgba(148,163,184,.2); padding-top:12px; display:none; }
+        .rv-sel { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; font-size:22px; text-transform:uppercase; }
+        .rv-line { color:#c5cee0; font-size:13px; margin-top:4px; }
+        .rv-grade { margin-top:6px; font-size:13px; font-weight:800; }
+        .mp-empty { text-align:center; color:var(--muted); padding:52px 18px; border:1px dashed var(--line); border-radius:13px; font-size:13.5px; line-height:1.7; }
+        .mp-empty a { color:var(--cyan); }
+        @media (max-width:560px) { .mp-shell { padding:20px 14px 56px; } .o-right { text-align:left; margin-left:0; width:100%; } }
+    </style>
+</head>
+<body>
+
+<main class="mp-shell">
+    <div class="crumb"><a href="/marketplace/">&larr; Pick Marketplace</a></div>
+    <h1>My <span class="accent">Purchases</span></h1>
+    <div class="notice notice-wait" id="waitNotice">Payment received — confirming with Stripe and unlocking your pick. This usually takes a few seconds; this page refreshes automatically.</div>
+    <div class="notice notice-ok" id="okNotice">Your pick is unlocked below.</div>
+    <div id="list"><div class="mp-empty">Loading purchases…</div></div>
+</main>
+
+<script src="/static/js/config.js?v=20260330"></script>
+<script src="/static/js/backend-api.js?v=20260423a"></script>
+<script>
+(function () {
+    const list = document.getElementById('list');
+    const q = new URLSearchParams(location.search);
+    const highlightOrder = q.get('order');
+    const justPaid = q.get('status') === 'success';
+    let pollCount = 0;
+
+    function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function money(cents, cur) { return new Intl.NumberFormat('en-US',{style:'currency',currency:(cur||'usd').toUpperCase()}).format((cents||0)/100); }
+    function marketLabel(m) {
+        const map = { h2h:'Moneyline', spreads:'Spread', totals:'Total', team_totals:'Team Total', f5_h2h:'F5 Moneyline', f5_spreads:'F5 Runline', f5_totals:'F5 Total' };
+        return map[m] || String(m || '').replace(/_/g,' ');
+    }
+    function oddsFmt(o) { return o > 0 ? '+' + o : String(o); }
+
+    function pill(status, entStatus) {
+        if (status === 'paid' && entStatus === 'active') return '<span class="status-pill pill-green">Unlocked</span>';
+        if (status === 'pending_payment') return '<span class="status-pill pill-amber">Awaiting Payment</span>';
+        if (status === 'paid') return '<span class="status-pill pill-amber">Unlocking…</span>';
+        if (status === 'refunded' || status === 'partially_refunded') return '<span class="status-pill pill-red">Refunded</span>';
+        if (status === 'disputed' || status === 'dispute_lost') return '<span class="status-pill pill-red">Disputed</span>';
+        if (status === 'expired' || status === 'payment_failed') return '<span class="status-pill pill-red">' + esc(status.replace('_',' ')) + '</span>';
+        return '<span class="status-pill pill-amber">' + esc(status) + '</span>';
+    }
+
+    function render(purchases) {
+        if (!purchases.length) {
+            list.innerHTML = '<div class="mp-empty">No purchases yet.<br>Browse the <a href="/marketplace/">Pick Marketplace</a> to find sellers with verified records.</div>';
+            return;
+        }
+        list.innerHTML = purchases.map(function (p) {
+            const unlocked = p.status !== 'pending_payment' && p.entitlement_status === 'active';
+            return '<div class="order" data-order="' + esc(p.public_id) + '">' +
+                '<div class="o-head">' +
+                    '<img class="o-ava" src="' + esc(p.seller_avatar || '/static/img/default-avatar.png') + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
+                    '<div><div class="o-name">' + esc(p.seller_display_name || p.seller_username) + '</div>' +
+                    '<div class="o-meta">@' + esc(p.seller_username) + ' &middot; ' + new Date(p.created_at).toLocaleString() + ' &middot; ' + esc(p.product_type.replace('_',' ')) + (p.refunded_cents ? ' &middot; refunded ' + money(p.refunded_cents, p.currency) : '') + '</div></div>' +
+                    '<div class="o-right"><div class="o-price">' + money(p.price_cents, p.currency) + '</div>' + pill(p.status, p.entitlement_status) + '</div>' +
+                '</div>' +
+                (unlocked ? '<div style="margin-top:11px;"><button class="btn btn-primary" data-reveal="' + p.pick_id + '" data-target="rv-' + esc(p.public_id) + '">View Pick</button> <a class="btn btn-outline" href="/marketplace/seller/?u=' + encodeURIComponent(p.seller_username) + '">Storefront</a></div>' : '') +
+                '<div class="reveal" id="rv-' + esc(p.public_id) + '"></div>' +
+            '</div>';
+        }).join('');
+
+        list.querySelectorAll('[data-reveal]').forEach(function (btn) {
+            btn.addEventListener('click', async function () {
+                const target = document.getElementById(btn.getAttribute('data-target'));
+                if (target.style.display === 'block') { target.style.display = 'none'; return; }
+                btn.textContent = 'Loading…';
+                try {
+                    const out = await api.request('/marketplace/purchased-picks/' + btn.getAttribute('data-reveal'));
+                    const pk = out.pick;
+                    const graded = pk.status !== 'pending';
+                    target.innerHTML =
+                        '<div class="rv-sel">' + esc(pk.selection) + (pk.line != null ? ' ' + (pk.line > 0 && /spread/i.test(pk.market_type) ? '+' : '') + pk.line : '') + '</div>' +
+                        '<div class="rv-line">' + esc(pk.away_team) + ' @ ' + esc(pk.home_team) + ' &middot; ' + esc(marketLabel(pk.market_type)) + ' &middot; ' + oddsFmt(pk.odds) + ' &middot; ' + pk.units + 'u &middot; ' + new Date(pk.commence_time).toLocaleString() + '</div>' +
+                        (graded ? '<div class="rv-grade ' + (pk.status === 'won' ? 'pill-green' : pk.status === 'lost' ? 'pill-red' : '') + '" style="background:none;border:none;color:' + (pk.status==='won'?'var(--green)':pk.status==='lost'?'var(--red)':'var(--muted)') + ';">Result: ' + esc(pk.status.toUpperCase()) + (pk.result_units != null ? ' (' + (pk.result_units > 0 ? '+' : '') + pk.result_units + 'u)' : '') + (pk.home_score != null ? ' — final ' + pk.away_score + '-' + pk.home_score : '') + '</div>' : '') +
+                        '<p style="color:var(--muted);font-size:11.5px;margin-top:8px;">For your eyes only — redistributing purchased picks violates the buyer terms. Results are never guaranteed.</p>';
+                    target.style.display = 'block';
+                } catch (e) {
+                    target.innerHTML = '<p style="color:var(--red);font-size:13px;">' + esc(e.message || 'Could not load pick') + '</p>';
+                    target.style.display = 'block';
+                }
+                btn.textContent = 'View Pick';
+            });
+        });
+    }
+
+    async function load() {
+        api.loadTokens && api.loadTokens();
+        if (!api.token) {
+            list.innerHTML = '<div class="mp-empty">Log in to see your purchases.<br><a href="/login/?redirect=%2Fmarketplace%2Fpurchases%2F">Log In</a></div>';
+            return;
+        }
+        try {
+            const out = await api.request('/marketplace/me/purchases');
+            const purchases = out.purchases || [];
+            render(purchases);
+
+            if (justPaid && highlightOrder) {
+                const target = purchases.find(function (p) { return p.public_id === highlightOrder; });
+                const unlocked = target && target.entitlement_status === 'active';
+                document.getElementById('waitNotice').style.display = unlocked ? 'none' : 'block';
+                document.getElementById('okNotice').style.display = unlocked ? 'block' : 'none';
+                // Webhook fulfillment usually lands within seconds — poll up to ~60s.
+                if (!unlocked && pollCount < 20) { pollCount++; setTimeout(load, 3000); }
+            }
+        } catch (e) {
+            list.innerHTML = '<div class="mp-empty">Could not load purchases. Please refresh.</div>';
+        }
+    }
+    load();
+})();
+</script>
+<script src="/static/js/analytics.js?v=20260504a"></script>
+</body>
+</html>
