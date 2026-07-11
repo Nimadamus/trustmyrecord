@@ -131,6 +131,12 @@
         }
     }
 
+    // Expose a manual refresh so pages (e.g. /messages/) can force an immediate
+    // unread-count update right after sending or reading a message instead of
+    // waiting for the 60s poll.
+    window.TMRNavBadges = window.TMRNavBadges || {};
+    window.TMRNavBadges.refresh = fetchUnreadCounts;
+
     function init() {
         injectBadgeCSS();
 
