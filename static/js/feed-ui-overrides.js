@@ -187,6 +187,108 @@ function renderPollCard(item) {
     '</div>';
 }
 
+// ==================== COMMUNITY MILESTONES ====================
+var MILESTONE_META = {
+    joined: { icon: 'fa-user-plus', label: 'joined the community' },
+    first_pick: { icon: 'fa-flag-checkered', label: 'made their first official pick' },
+    first_win: { icon: 'fa-medal', label: 'recorded their first win' },
+    pick_count: { icon: 'fa-chart-line', label: 'hit a pick milestone' },
+    verified: { icon: 'fa-certificate', label: 'earned Verified Handicapper status' },
+    win_streak: { icon: 'fa-fire', label: 'is heating up' },
+    first_follower: { icon: 'fa-user-group', label: 'gained their first follower' },
+    profitable_month: { icon: 'fa-arrow-trend-up', label: 'finished a profitable month' },
+    award: { icon: 'fa-trophy', label: 'earned an award' },
+    joined_summary: { icon: 'fa-users', label: 'community update' }
+};
+
+function renderMilestoneCard(item) {
+    const mtype = String(item.post_type || item.milestone_type || 'milestone');
+    const meta = MILESTONE_META[mtype] || { icon: 'fa-star', label: 'community milestone' };
+    const badge = '<span class="fi-badge fi-badge-milestone"><i class="fas ' + meta.icon + '"></i> Milestone</span>';
+    const id = String(item.item_id || '');
+    const username = getUsername(item);
+
+    // Daily signup summary rows have no single user — render a compact site card.
+    if (mtype === 'joined_summary' || !username) {
+        return '<div class="feed-item fi-milestone" data-id="' + esc(id) + '" data-type="milestone">' +
+            '<div class="fi-header">' +
+                '<div class="fi-avatar fi-avatar-site"><i class="fas fa-users"></i></div>' +
+                '<div class="fi-meta"><div class="fi-top-row">' +
+                    '<span class="fi-name">TrustMyRecord</span>' +
+                    '<span class="fi-dot">&bull;</span>' +
+                    '<span class="fi-time">' + esc(timeAgo(item.created_at)) + '</span>' +
+                '</div></div>' +
+            '</div>' +
+            '<div class="fi-action-label">' + badge + '</div>' +
+            '<div class="fi-content">' + esc(item.content || '') + '</div>' +
+        '</div>';
+    }
+
+    const action = badge + ' <i class="fas ' + meta.icon + '"></i> ' + meta.label;
+    let detailLink = '';
+    if (mtype === 'award') {
+        detailLink = '<a class="fi-milestone-link" href="/profile/?user=' + encodeURIComponent(username) + '#awards"><i class="fas fa-trophy"></i> View awards</a>';
+    } else if (['pick_count', 'win_streak', 'first_win', 'first_pick', 'verified', 'profitable_month'].indexOf(mtype) !== -1) {
+        detailLink = '<a class="fi-milestone-link" href="/profile/?user=' + encodeURIComponent(username) + '&view=picks"><i class="fas fa-clipboard-list"></i> View record</a>';
+    }
+
+    const congrats = '<div class="fi-actions">' +
+        '<button class="fi-action fi-congrats ' + (item.congratsed_by_user ? 'is-congratsed' : '') + '" onclick="toggleCongrats(' + jsArg(id) + ', this)">' +
+            '<i class="fas fa-hands-clapping"></i> Congrats <span>' + (Number(item.likes_count) || 0) + '</span>' +
+        '</button>' +
+    '</div>';
+
+    return '<div class="feed-item fi-milestone" data-id="' + esc(id) + '" data-type="milestone">' +
+        renderFeedHeader(item, action) +
+        '<div class="fi-content">' + esc(item.content || '') + (detailLink ? ' ' + detailLink : '') + '</div>' +
+        congrats +
+    '</div>';
+}
+
+async function toggleCongrats(itemId, btn) {
+    const viewer = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    if (!viewer) { openModal('login'); return; }
+    const mid = String(itemId).replace(/^milestone:/, '');
+    if (!/^\d+$/.test(mid)) return;
+    const isOn = btn.classList.contains('is-congratsed');
+    btn.disabled = true;
+    try {
+        const res = await api.request('/milestones/' + mid + '/congrats', { method: isOn ? 'DELETE' : 'POST' });
+        btn.classList.toggle('is-congratsed', !isOn);
+        const span = btn.querySelector('span');
+        if (span && res && typeof res.congrats_count !== 'undefined') span.textContent = String(res.congrats_count);
+    } catch (e) {}
+    btn.disabled = false;
+}
+
+// Milestone privacy preference (small row near the feed tabs, logged-in only).
+async function initMilestonePref() {
+    const row = document.getElementById('milestonePrefRow');
+    if (!row) return;
+    const viewer = (typeof auth !== 'undefined' && auth.currentUser) ? auth.currentUser : null;
+    if (!viewer) { row.style.display = 'none'; return; }
+    try {
+        const s = await api.request('/milestones/settings');
+        row.style.display = 'flex';
+        renderMilestonePref(row, s.milestones_public !== false);
+    } catch (e) { row.style.display = 'none'; }
+}
+
+function renderMilestonePref(row, isOn) {
+    row.innerHTML = '<span><i class="fas fa-bullhorn"></i> Public milestone announcements</span>' +
+        '<button class="milestone-pref-toggle ' + (isOn ? 'is-on' : '') + '" onclick="toggleMilestonePref(this)">' + (isOn ? 'On' : 'Off') + '</button>';
+}
+
+async function toggleMilestonePref(btn) {
+    const row = document.getElementById('milestonePrefRow');
+    const next = !btn.classList.contains('is-on');
+    btn.disabled = true;
+    try {
+        const res = await api.request('/milestones/settings', { method: 'PUT', body: { milestones_public: next } });
+        renderMilestonePref(row, res.milestones_public !== false);
+    } catch (e) { btn.disabled = false; }
+}
+
 function renderActivityCard(item) {
     const type = item.notif_type || item.activity_type || item.type || 'activity';
     const labels = {
@@ -448,7 +550,9 @@ async function loadFeed() {
     let items = [];
     try {
         if (api && typeof api.request === 'function') {
-            const filterParam = currentFilter === 'hot-takes' ? 'posts' : currentFilter;
+            const filterParam = currentFilter === 'hot-takes' ? 'posts'
+                : currentFilter === 'site-updates' ? 'site_updates'
+                : currentFilter;
             const data = await api.request('/feed?limit=' + FEED_LIMIT + '&offset=' + feedOffset + '&filter=' + encodeURIComponent(filterParam));
             items = (data.feed || []).filter(isRealPublicFeedUser).map(item => {
                 if (
@@ -541,6 +645,7 @@ async function loadFeed() {
             if (currentFilter === 'hot-takes') items = items.filter(i => i.post_type === 'hot_take');
             if (currentFilter === 'picks') items = items.filter(i => i.item_type === 'pick' || i.post_type === 'pick' || i.post_type === 'pick_share');
             if (currentFilter === 'polls') items = items.filter(i => i.item_type === 'poll' || i.post_type === 'poll');
+            if (currentFilter === 'milestones') items = items.filter(i => i.item_type === 'milestone');
         }
     } catch(e) {
         renderFeedUnavailable('Live feed data is temporarily unavailable. TrustMyRecord does not substitute fake feed posts when the backend is unavailable.');
@@ -558,6 +663,11 @@ async function loadFeed() {
     c.innerHTML = items.map(renderFeedItem).join('');
     const lm = document.getElementById('loadMore');
     if (lm) lm.style.display = items.length >= FEED_LIMIT ? 'block' : 'none';
+
+    if (!window.__msPrefInit) {
+        window.__msPrefInit = true;
+        try { initMilestonePref(); } catch (e) {}
+    }
 }
 
 function updateHeroCounts(visibleCount) {
@@ -567,9 +677,11 @@ function updateHeroCounts(visibleCount) {
     const labels = {
         all: 'For You',
         picks: 'Picks',
+        milestones: 'Milestones',
         'hot-takes': 'Hot Takes',
         polls: 'Polls',
-        following: 'Following'
+        following: 'Following',
+        'site-updates': 'Site Updates'
     };
 
     if (activityEl) activityEl.textContent = visibleCount > 0 ? String(visibleCount) : 'Live';
@@ -670,3 +782,19 @@ function toggleType(type) {
     const input = document.getElementById('compInput');
     if (input) input.placeholder = postType === 'hot-take' ? 'What is your hottest take?' : postType === 'poll' ? 'Ask the community a sports question...' : postType === 'pick-recap' ? 'Recap a graded pick or angle...' : 'What is your take?';
 }
+
+// Honor /feed/?filter=<tab> deep links (used by milestone notifications).
+(function () {
+    try {
+        const f = new URLSearchParams(location.search).get('filter');
+        const valid = ['all', 'picks', 'milestones', 'hot-takes', 'polls', 'following', 'site-updates'];
+        if (f && valid.indexOf(f) !== -1 && typeof currentFilter !== 'undefined') {
+            currentFilter = f;
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('.feed-tab').forEach(b => {
+                    b.classList.toggle('active', (b.getAttribute('onclick') || '').indexOf("'" + f + "'") !== -1);
+                });
+            });
+        }
+    } catch (e) {}
+})();
