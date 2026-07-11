@@ -106,6 +106,14 @@
             .builder-grid { grid-template-columns: minmax(0, 1fr); }
             .two-col { grid-template-columns: minmax(0, 1fr); }
         }
+        .dataset-toggle { display:inline-flex; gap:6px; margin-top:18px; padding:5px; border:1px solid var(--line); border-radius:10px; background:rgba(15,23,36,0.7); }
+        .ds-btn { min-height:36px; padding:0 18px; border:none; border-radius:7px; background:transparent; color:var(--muted); font-weight:800; font-size:13px; cursor:pointer; }
+        .ds-btn.active { background:#14b8a6; color:#031312; }
+        table.boxscore { width:100%; border-collapse:collapse; font-size:12px; }
+        table.boxscore th, table.boxscore td { padding:5px 7px; border-bottom:1px solid var(--line); text-align:center; white-space:nowrap; }
+        table.boxscore th:first-child, table.boxscore td:first-child { text-align:left; color:#dbeafe; }
+        table.boxscore td.final { font-weight:800; color:#fff; }
+        table.boxscore thead th { color:var(--muted); font-size:10px; }
         [hidden] { display: none !important; }
     </style>
     <script src="/static/js/config.js"></script>
@@ -134,7 +142,12 @@
             </div>
         </section>
 
-        <div class="builder-grid">
+        <div class="dataset-toggle" id="datasetToggle" role="tablist" aria-label="Dataset">
+            <button type="button" class="ds-btn active" data-ds="picks" role="tab" aria-selected="true">Handicapper Picks</button>
+            <button type="button" class="ds-btn" data-ds="games" role="tab" aria-selected="false">Game Results</button>
+        </div>
+
+        <div class="builder-grid" id="picksMode">
             <!-- BUILD -->
             <section class="builder-panel" aria-label="Model filters">
                 <p class="panel-label">Build</p>
@@ -235,6 +248,59 @@
                 <div id="publicTrackedHost"><p class="placeholder">Loading tracked models...</p></div>
             </section>
         </div>
+
+        <div class="builder-grid" id="gamesMode" hidden>
+            <section class="builder-panel" aria-label="Game results filters">
+                <p class="panel-label">Build</p>
+                <h2>Model on real game results</h2>
+                <form id="gameForm">
+                    <div class="form-grid">
+                        <label>Sport / league
+                            <select id="gameSport"></select>
+                        </label>
+                        <label>Team perspective
+                            <select id="gameHomeAway">
+                                <option value="any">Both teams</option>
+                                <option value="home">Home side win rate</option>
+                                <option value="away">Away side win rate</option>
+                            </select>
+                        </label>
+                        <label>Total line (Over/Under test)
+                            <input id="gameTotalLine" type="number" placeholder="e.g. 8.5" step="0.5">
+                        </label>
+                        <div class="two-col">
+                            <label>Min total <input id="gameMinTotal" type="number" placeholder="optional" step="1"></label>
+                            <label>Max total <input id="gameMaxTotal" type="number" placeholder="optional" step="1"></label>
+                        </div>
+                        <div class="two-col">
+                            <label>From date <input id="gameDateFrom" type="date"></label>
+                            <label>To date <input id="gameDateTo" type="date"></label>
+                        </div>
+                        <label>Team contains
+                            <input id="gameTeamContains" type="text" placeholder="optional, e.g. Yankees">
+                        </label>
+                        <div class="button-row">
+                            <button type="submit" class="primary" id="gameRunBtn">Run on game results</button>
+                            <button type="button" id="gameResetBtn">Reset</button>
+                        </div>
+                        <p class="notice" id="gameMessage"></p>
+                    </div>
+                </form>
+            </section>
+            <section class="builder-panel" aria-label="Game results output">
+                <div class="results-head">
+                    <div>
+                        <p class="panel-label">Game results</p>
+                        <h2>Real outcomes &amp; box scores</h2>
+                    </div>
+                    <span class="freshness" id="gameFreshness"></span>
+                </div>
+                <div id="gameResultsBody">
+                    <p class="placeholder">Pick a sport and run to see real game outcomes: win rates, average totals and margins, Over/Under vs your line, first-5 splits, plus recent box scores. Loaded daily from completed games.</p>
+                </div>
+            </section>
+        </div>
+
     </main>
 
 <!-- tmr-internal-cluster : SEO internal linking (insert-only) -->
@@ -249,6 +315,6 @@
   </div>
 </section>
 
-    <script src="/static/js/model-builder-shell.js?v=20260709-backtest"></script>
+    <script src="/static/js/model-builder-shell.js?v=20260711-gameresults"></script>
 </body>
 </html>
