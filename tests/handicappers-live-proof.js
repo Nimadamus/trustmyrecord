@@ -11,7 +11,10 @@ const OUT_DIR = path.join(process.cwd(), 'artifacts');
 const DESKTOP_OUT = path.join(OUT_DIR, 'handicappers-live-browser-addressbar-proof.png');
 const MOBILE_OUT = path.join(OUT_DIR, 'handicappers-live-mobile-proof.png');
 const REPORT_OUT = path.join(OUT_DIR, 'handicappers-live-proof.json');
-const EXPECTED_HEADERS = ['Rank', 'Handicapper', 'Record', 'Win %', 'Net Units', 'ROI', 'Verified Picks', 'Last Active', 'Sports'];
+// Directory table columns (rank + 8 sortable columns + profile action).
+const EXPECTED_HEADERS = ['#', 'Handicapper', 'Record', 'Units', 'ROI', 'Win %', 'Picks', 'Streak', 'Activity', 'Profile'];
+// data-label attributes on every prerendered member-row stat cell.
+const EXPECTED_ROW_LABELS = ['Record', 'Units', 'ROI', 'Win %', 'Total picks', 'Current streak', 'Last active'];
 
 function fetchLive() {
   return new Promise((resolve, reject) => {
@@ -25,25 +28,20 @@ function fetchLive() {
 }
 
 function extractHeaders(html) {
-  const tableHead = html.match(/<tr class="hm-row hm-head" role="row">([\s\S]*?)<\/tr>/);
-  if (tableHead) {
-    return Array.from(tableHead[1].matchAll(/<th scope="col">([\s\S]*?)<\/th>/g)).map((m) => m[1].trim());
+  const block = html.match(/<div class="hm-row hm-head"[^>]*>([\s\S]*?)<\/div>\s*<div id="hmRows"/);
+  if (!block) return [];
+  const labels = [];
+  const rank = block[1].match(/<div class="hm-head-rank">([^<]*)<\/div>/);
+  if (rank) labels.push(rank[1].trim());
+  for (const m of block[1].matchAll(/data-sort="[^"]*"[^>]*aria-sort="[^"]*"><span>([^<]*)<\/span>/g)) {
+    labels.push(m[1].trim());
   }
-  const match = html.match(/<div class="hm-row hm-head" role="row">([\s\S]*?)<\/div>\s*<div id="hmRows">/);
-  if (!match) return [];
-  return Array.from(match[1].matchAll(/<div>(.*?)<\/div>/g)).map((m) => m[1].trim());
+  const actions = block[1].match(/<div class="hm-head-actions">([^<]*)<\/div>/);
+  if (actions) labels.push(actions[1].trim());
+  return labels;
 }
 
 function firstRowLabels(html) {
-  const renderer = html.slice(html.indexOf("return '<tr class=\"hm-row hm-member-row\""));
-  if (renderer) {
-    const labels = [];
-    for (const match of renderer.matchAll(/data-label="([^"]+)"/g)) {
-      labels.push(match[1]);
-      if (labels.length >= EXPECTED_HEADERS.length) break;
-    }
-    if (labels.length) return labels;
-  }
   const start = html.indexOf('<div class="hm-row hm-member-row"');
   if (start === -1) return [];
   const next = html.indexOf('<div class="hm-row hm-member-row"', start + 1);
@@ -51,7 +49,7 @@ function firstRowLabels(html) {
   const labels = [];
   for (const match of row.matchAll(/data-label="([^"]+)"/g)) {
     labels.push(match[1]);
-    if (labels.length >= EXPECTED_HEADERS.length) break;
+    if (labels.length >= EXPECTED_ROW_LABELS.length) break;
   }
   return labels;
 }
@@ -65,7 +63,9 @@ function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
   const labels = firstRowLabels(fetched.body);
   if (fetched.status !== 200) throw new Error('Live page returned ' + fetched.status);
   if (headers.join('|') !== EXPECTED_HEADERS.join('|')) throw new Error('Unexpected live headers: ' + headers.join('|'));
-  if (labels.slice(0, EXPECTED_HEADERS.length).join('|') !== EXPECTED_HEADERS.join('|')) throw new Error('Unexpected first row labels: ' + labels.join('|'));
+  if (labels.join('|') !== EXPECTED_ROW_LABELS.join('|')) throw new Error('Unexpected first row labels: ' + labels.join('|'));
+  if (!fetched.body.includes('id="hmTotalMembers"')) throw new Error('Total Members stat missing from live page');
+  if (!fetched.body.includes('id="hmTabs"')) throw new Error('Directory tabs missing from live page');
 
   const browserPath = chromium.executablePath();
   const profile = path.join(process.cwd(), '.tmp-handicappers-proof-profile');
@@ -101,7 +101,7 @@ function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
     http_status: fetched.status,
     last_modified: fetched.headers['last-modified'] || '',
     headers,
-    first_row_labels: labels.slice(0, EXPECTED_HEADERS.length),
+    first_row_labels: labels,
     screenshots: {
       desktop_addressbar: DESKTOP_OUT,
       mobile_page: MOBILE_OUT,
@@ -113,5 +113,3 @@ function sleep(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
   console.error(error);
   process.exit(1);
 });
-
-
