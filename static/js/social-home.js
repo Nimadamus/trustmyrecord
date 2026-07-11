@@ -435,6 +435,9 @@ function renderFeedItem(item) {
     if (type === 'trivia_activity') {
         return renderTriviaActivityCard(item);
     }
+    if (type === 'milestone') {
+        return typeof renderMilestoneCard === 'function' ? renderMilestoneCard(item) : renderActivityCard(item);
+    }
     if (type === 'activity') {
         return renderActivityCard(item);
     }
