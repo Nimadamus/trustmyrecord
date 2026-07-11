@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/marketplace/sell/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sell Your Picks | Seller Setup & Dashboard | TrustMyRecord</title>
+    <meta name="description" content="Become a verified pick seller on TrustMyRecord. Clear eligibility with your public record, connect Stripe payouts, set your price, and open your storefront.">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:#08111d; --panel:rgba(11,23,42,.92); --line:rgba(148,163,184,.18);
+            --text:#eef4fb; --muted:#96a7bb; --teal:#2dd4bf; --cyan:#22d3ee;
+            --amber:#fbbf24; --green:#4ade80; --red:#f87171;
+        }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { background:linear-gradient(180deg,#07111d,#0a1422); color:var(--text); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
+        a { color:inherit; text-decoration:none; }
+        .mp-shell { max-width:980px; margin:0 auto; padding:28px 24px 70px; }
+        .crumb { color:var(--muted); font-size:12.5px; margin-bottom:14px; }
+        .crumb a { color:var(--cyan); }
+        h1 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:clamp(28px,4vw,40px); letter-spacing:-.5px; }
+        h1 .accent { background:linear-gradient(135deg,var(--teal),var(--cyan)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+        .lede { color:var(--muted); font-size:14px; margin:8px 0 20px; max-width:680px; line-height:1.6; }
+        .panel { background:var(--panel); border:1px solid var(--line); border-radius:15px; padding:20px; margin-bottom:16px; }
+        .panel h2 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:21px; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+        .step-num { width:26px; height:26px; border-radius:8px; background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.35); color:var(--cyan); font:800 12px/1 'JetBrains Mono',monospace; display:inline-flex; align-items:center; justify-content:center; }
+        .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 18px; border-radius:10px; font-weight:800; font-size:13.5px; cursor:pointer; border:1px solid transparent; transition:.15s; font-family:inherit; }
+        .btn-primary { background:linear-gradient(135deg,var(--teal),var(--cyan)); color:#04111a; }
+        .btn-primary:hover { transform:translateY(-1px); }
+        .btn-primary:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+        .btn-outline { background:rgba(255,255,255,.04); color:var(--text); border-color:var(--line); }
+        .rule { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(148,163,184,.08); font-size:13.5px; color:#c5cee0; }
+        .rule:last-child { border-bottom:none; }
+        .rule .ok { color:var(--green); } .rule .no { color:var(--red); }
+        .rule small { color:var(--muted); margin-left:auto; font-size:12px; }
+        .field { margin-bottom:14px; }
+        .field label { display:block; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:6px; }
+        .field input, .field textarea, .field select {
+            width:100%; background:rgba(7,14,26,.8); border:1px solid var(--line); border-radius:9px;
+            color:var(--text); padding:10px 12px; font-size:13.5px; font-family:inherit;
+        }
+        .field input:focus, .field textarea:focus { outline:none; border-color:var(--cyan); }
+        .field textarea { min-height:90px; resize:vertical; }
+        .hint { color:var(--muted); font-size:12px; margin-top:5px; line-height:1.5; }
+        .split-note { background:rgba(45,212,191,.07); border:1px solid rgba(45,212,191,.25); border-radius:10px; padding:12px 14px; font-size:12.5px; color:#c5f5ec; line-height:1.6; margin-top:10px; }
+        .status-pill { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px; font:700 11px/1 'JetBrains Mono',monospace; letter-spacing:.1em; text-transform:uppercase; }
+        .pill-green { background:rgba(74,222,128,.1); border:1px solid rgba(74,222,128,.4); color:var(--green); }
+        .pill-amber { background:rgba(251,191,36,.1); border:1px solid rgba(251,191,36,.4); color:var(--amber); }
+        .pill-red { background:rgba(248,113,113,.1); border:1px solid rgba(248,113,113,.4); color:var(--red); }
+        table { width:100%; border-collapse:collapse; font-size:13px; }
+        th { text-align:left; color:var(--muted); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; padding:8px 10px; border-bottom:1px solid var(--line); }
+        td { padding:9px 10px; border-bottom:1px solid rgba(148,163,184,.08); }
+        .mono { font-family:'JetBrains Mono',monospace; }
+        .stat-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px; margin-bottom:14px; }
+        .stat { background:rgba(7,14,26,.65); border:1px solid var(--line); border-radius:10px; padding:12px 10px; text-align:center; }
+        .stat b { display:block; font-family:'JetBrains Mono',monospace; font-size:16px; }
+        .stat span { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+        .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:#152741; border:1px solid var(--line); color:var(--text); padding:12px 18px; border-radius:11px; font-size:13.5px; display:none; z-index:60; max-width:92vw; }
+        .tblwrap { overflow-x:auto; }
+        @media (max-width:560px) { .mp-shell { padding:20px 14px 56px; } }
+    </style>
+</head>
+<body>
+
+<main class="mp-shell">
+    <div class="crumb"><a href="/marketplace/">&larr; Pick Marketplace</a></div>
+    <h1>Sell Your <span class="accent">Picks</span></h1>
+    <p class="lede">Open a storefront attached to your verified record. You set the price, Stripe handles identity verification and payouts, and TrustMyRecord keeps a 20% platform commission on each sale — you receive an 80% gross allocation.</p>
+    <div id="app"><div class="panel" style="color:var(--muted);">Loading…</div></div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="/static/js/config.js?v=20260330"></script>
+<script src="/static/js/backend-api.js?v=20260423a"></script>
+<script>
+(function () {
+    const app = document.getElementById('app');
+    let elig = null, listing = null, dash = null, status = null;
+
+    function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function money(cents, cur) { return new Intl.NumberFormat('en-US',{style:'currency',currency:(cur||'usd').toUpperCase()}).format((cents||0)/100); }
+    function toast(msg, ms) {
+        const t = document.getElementById('toast');
+        t.textContent = msg; t.style.display = 'block';
+        clearTimeout(t._h); t._h = setTimeout(function(){ t.style.display='none'; }, ms || 4500);
+    }
+
+    const RULE_LABELS = {
+        account_exists_active: 'Active account',
+        email_verified: 'Email verified',
+        legitimate_account: 'Account in good standing (no test/bot/banned flags)',
+        min_graded_picks: 'Minimum officially graded picks',
+        selling_enabled: 'Marketplace selling open',
+        seller_agreement_accepted: 'Seller agreement accepted',
+        stripe_onboarding_complete: 'Stripe onboarding complete',
+        stripe_charges_enabled: 'Stripe charges enabled',
+        stripe_payouts_enabled: 'Stripe payouts enabled',
+        not_suspended: 'No marketplace suspension',
+    };
+
+    function renderLoggedOut() {
+        app.innerHTML = '<div class="panel"><h2>Log in to start selling</h2>' +
+            '<p style="color:#c5cee0;font-size:13.5px;line-height:1.6;margin-bottom:14px;">Selling requires a TrustMyRecord account with a public graded record. Log in or create an account, lock picks in the <a href="/sportsbook/" style="color:var(--cyan);">sportsbook</a>, and come back once your ledger has a real sample.</p>' +
+            '<a class="btn btn-primary" href="/login/?redirect=%2Fmarketplace%2Fsell%2F">Log In</a></div>';
+    }
+
+    function renderRules() {
+        return Object.keys(RULE_LABELS).map(function (k) {
+            const ok = Boolean(elig.rules[k]);
+            let extra = '';
+            if (k === 'min_graded_picks') extra = '<small>' + elig.graded_picks + ' / ' + elig.min_graded_picks + '</small>';
+            return '<div class="rule"><span class="' + (ok ? 'ok' : 'no') + '">' + (ok ? '&#10003;' : '&#10007;') + '</span> ' + RULE_LABELS[k] + extra + '</div>';
+        }).join('');
+    }
+
+    function render() {
+        let html = '';
+
+        // Step 1: eligibility
+        html += '<div class="panel"><h2><span class="step-num">1</span> Eligibility ' +
+            (elig.eligible ? '<span class="status-pill pill-green">Eligible</span>'
+             : elig.suspension_reason ? '<span class="status-pill pill-red">Suspended</span>'
+             : '<span class="status-pill pill-amber">In Progress</span>') + '</h2>' +
+            renderRules() +
+            (elig.suspension_reason ? '<p class="hint" style="color:var(--red);">Suspension reason: ' + esc(elig.suspension_reason) + '</p>' : '') +
+            (!elig.rules.min_graded_picks ? '<p class="hint">Keep locking picks in the <a href="/sportsbook/" style="color:var(--cyan);">sportsbook</a> — every officially graded pick moves you toward the threshold.</p>' : '') +
+        '</div>';
+
+        // Step 2: seller agreement
+        html += '<div class="panel"><h2><span class="step-num">2</span> Seller Agreement</h2>';
+        if (elig.rules.seller_agreement_accepted) {
+            html += '<p style="color:#c5cee0;font-size:13.5px;">Accepted (version ' + esc(elig.seller_agreement_version) + '). <a href="/marketplace/terms/#seller" style="color:var(--cyan);" target="_blank" rel="noopener">Read it again</a>.</p>';
+        } else {
+            html += '<p style="color:#c5cee0;font-size:13.5px;line-height:1.6;margin-bottom:12px;">Read the <a href="/marketplace/terms/#seller" style="color:var(--cyan);" target="_blank" rel="noopener">Seller Agreement</a> (commission, payouts, refund/chargeback responsibility, prohibited conduct, tax responsibility). You must accept it before connecting Stripe.</p>' +
+            '<label style="display:flex;gap:8px;align-items:flex-start;font-size:13px;color:#c5cee0;margin-bottom:12px;"><input type="checkbox" id="sellerAgreeChk" style="margin-top:2px;"> I have read and accept the Seller Agreement (v' + esc(elig.seller_agreement_version) + '), including that TrustMyRecord collects a 20% platform commission and that refunds, chargebacks, and dispute recoveries can reverse my 80% allocation.</label>' +
+            '<button class="btn btn-primary" id="acceptAgreementBtn" disabled>Accept Seller Agreement</button>';
+        }
+        html += '</div>';
+
+        // Step 3: Stripe onboarding
+        const st = elig.onboarding_status;
+        html += '<div class="panel"><h2><span class="step-num">3</span> Stripe Payouts ' +
+            (st === 'complete' ? '<span class="status-pill pill-green">Connected</span>' :
+             st === 'in_progress' ? '<span class="status-pill pill-amber">In Progress</span>' :
+             '<span class="status-pill pill-amber">Not Started</span>') + '</h2>' +
+            '<p style="color:#c5cee0;font-size:13.5px;line-height:1.6;margin-bottom:12px;">Stripe verifies your identity and collects your payout details directly — TrustMyRecord never sees or stores your banking information. You will be redirected to Stripe\'s secure onboarding.</p>';
+        if (elig.requirements_due && elig.requirements_due.length) {
+            html += '<p class="hint" style="color:var(--amber);">Stripe still needs: ' + elig.requirements_due.map(esc).join(', ') + '</p>';
+        }
+        if (st !== 'complete') {
+            html += '<button class="btn btn-primary" id="onboardBtn" ' + (elig.can_start_onboarding && elig.rules.seller_agreement_accepted ? '' : 'disabled') + '>' +
+                (st === 'in_progress' ? 'Resume Stripe Onboarding' : 'Connect with Stripe') + '</button>' +
+                (!elig.can_start_onboarding ? '<p class="hint">Finish the eligibility items in step 1 first.</p>' :
+                 !elig.rules.seller_agreement_accepted ? '<p class="hint">Accept the seller agreement in step 2 first.</p>' : '');
+        } else {
+            html += '<p style="color:#c5cee0;font-size:13px;">Charges: ' + (elig.rules.stripe_charges_enabled ? 'enabled' : '<span style="color:var(--red)">disabled</span>') +
+                ' &middot; Payouts: ' + (elig.rules.stripe_payouts_enabled ? 'enabled' : '<span style="color:var(--red)">disabled</span>') + '</p>';
+        }
+        html += '</div>';
+
+        // Step 4: listing
+        html += '<div class="panel"><h2><span class="step-num">4</span> Your Offering ' +
+            (listing ? (listing.status === 'published' ? '<span class="status-pill pill-green">Live</span>' : '<span class="status-pill pill-amber">' + esc(listing.status) + '</span>') : '') + '</h2>' +
+            '<div class="field"><label>Title</label><input id="lsTitle" maxlength="140" placeholder="e.g. Single Pick Access" value="' + esc(listing ? listing.title : 'Single Pick Access') + '"></div>' +
+            '<div class="field"><label>Description (what the buyer gets)</label><textarea id="lsDesc" maxlength="2000" placeholder="One locked pick of your choice from my pending board, revealed immediately after purchase.">' + esc(listing ? listing.description : '') + '</textarea>' +
+            '<p class="hint">No guaranteed-outcome language (guaranteed winner, lock, risk-free) — listings using it are rejected.</p></div>' +
+            '<div class="field"><label>Price per pick (USD)</label><input id="lsPrice" type="number" step="0.01" min="1" placeholder="20.00" value="' + (listing ? (listing.price_cents / 100).toFixed(2) : '') + '">' +
+            '<p class="hint" id="priceHint"></p>' +
+            '<div class="split-note" id="splitNote" style="display:none;"></div></div>' +
+            '<div class="field"><label>Sports you focus on (comma separated)</label><input id="lsSports" placeholder="MLB, NFL, NBA" value="' + esc(listing && listing.sports ? listing.sports.join(', ') : '') + '"></div>' +
+            '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+                '<button class="btn btn-outline" id="saveListingBtn">Save Draft</button>' +
+                (listing && listing.status === 'published'
+                    ? '<button class="btn btn-outline" id="unpubBtn" style="border-color:rgba(248,113,113,.4);color:var(--red);">Unpublish Storefront</button>'
+                    : '<button class="btn btn-primary" id="pubBtn" ' + (elig.eligible && listing ? '' : 'disabled') + '>Publish Storefront</button>') +
+                (listing ? '<a class="btn btn-outline" href="/marketplace/seller/?u=' + encodeURIComponent((window.auth && window.auth.user && window.auth.user.username) || (dash && dash._username) || '') + '" id="previewLink">Preview Storefront</a>' : '') +
+            '</div>' +
+            (!elig.eligible ? '<p class="hint">Publishing unlocks once every eligibility item in step 1 is green.</p>' : '') +
+        '</div>';
+
+        // Dashboard
+        if (dash) {
+            const t = dash.totals || {};
+            html += '<div class="panel"><h2>Seller Dashboard</h2>' +
+            '<div class="stat-row">' +
+                '<div class="stat"><b>' + (t.completed_orders || 0) + '</b><span>Completed Sales</span></div>' +
+                '<div class="stat"><b class="mono">' + money(t.gross_cents) + '</b><span>Gross Sales</span></div>' +
+                '<div class="stat"><b class="mono">' + money(t.platform_fee_cents) + '</b><span>TMR 20% Commission</span></div>' +
+                '<div class="stat"><b class="mono">' + money(t.seller_gross_cents) + '</b><span>Your 80% Gross*</span></div>' +
+                '<div class="stat"><b class="mono">' + money(dash.refunds ? dash.refunds.refunded_cents : 0) + '</b><span>Refunded</span></div>' +
+                '<div class="stat"><b>' + (t.disputed_orders || 0) + '</b><span>Disputes</span></div>' +
+            '</div>' +
+            (dash.stripe_balance ?
+                '<p class="hint">Stripe balance — available: <b class="mono">' + dash.stripe_balance.available.map(function(b){return money(b.amount_cents,b.currency);}).join(', ') + '</b> &middot; pending: <b class="mono">' + dash.stripe_balance.pending.map(function(b){return money(b.amount_cents,b.currency);}).join(', ') + '</b></p>'
+                : '<p class="hint">Live Stripe balance unavailable right now.</p>') +
+            '<p class="hint">*Gross allocation before any Stripe processing/payout costs, refunds, chargebacks, or taxes. Stripe pays out on its own schedule; manage payout details in your Stripe Express dashboard.</p>';
+
+            if (dash.recent_orders && dash.recent_orders.length) {
+                html += '<h2 style="margin-top:18px;font-size:17px;">Recent Orders</h2><div class="tblwrap"><table><thead><tr><th>Date</th><th>Buyer</th><th>Status</th><th>Price</th><th>Your 80%</th></tr></thead><tbody>' +
+                dash.recent_orders.map(function (o) {
+                    return '<tr><td>' + new Date(o.created_at).toLocaleDateString() + '</td><td>@' + esc(o.buyer_username) + '</td><td>' + esc(o.status) + '</td><td class="mono">' + money(o.price_cents, o.currency) + '</td><td class="mono">' + money(o.seller_gross_cents, o.currency) + '</td></tr>';
+                }).join('') + '</tbody></table></div>';
+            }
+            html += '</div>';
+        }
+
+        app.innerHTML = html;
+        bind();
+    }
+
+    function updateSplitNote() {
+        const el = document.getElementById('lsPrice');
+        const note = document.getElementById('splitNote');
+        const v = Math.round(parseFloat(el.value || '0') * 100);
+        if (!v || v <= 0) { note.style.display = 'none'; return; }
+        const fee = Math.round(v * 0.20);
+        note.style.display = 'block';
+        note.innerHTML = 'On a ' + money(v) + ' sale: TrustMyRecord platform commission (20%) = <b class="mono">' + money(fee) + '</b> &middot; your gross allocation (80%) = <b class="mono">' + money(v - fee) + '</b>. Stripe processing and payout costs are itemized separately and do not change this split.';
+    }
+
+    function bind() {
+        const agreeChk = document.getElementById('sellerAgreeChk');
+        if (agreeChk) {
+            agreeChk.addEventListener('change', function(){ document.getElementById('acceptAgreementBtn').disabled = !agreeChk.checked; });
+            document.getElementById('acceptAgreementBtn').addEventListener('click', async function () {
+                try {
+                    await api.request('/marketplace/me/agreement', { method: 'POST', body: { role: 'seller' } });
+                    toast('Seller agreement accepted.');
+                    boot();
+                } catch (e) { toast(e.message || 'Failed to record acceptance'); }
+            });
+        }
+        const onboardBtn = document.getElementById('onboardBtn');
+        if (onboardBtn) onboardBtn.addEventListener('click', async function () {
+            onboardBtn.disabled = true; onboardBtn.textContent = 'Opening Stripe…';
+            try {
+                const out = await api.request('/marketplace/me/stripe/onboard', { method: 'POST', body: {} });
+                if (out && out.url) { location.href = out.url; return; }
+                throw new Error((out && out.error) || 'Could not start onboarding');
+            } catch (e) { toast(e.message || 'Could not start onboarding'); onboardBtn.disabled = false; onboardBtn.textContent = 'Connect with Stripe'; }
+        });
+        const priceEl = document.getElementById('lsPrice');
+        if (priceEl) { priceEl.addEventListener('input', updateSplitNote); updateSplitNote(); }
+        const saveBtn = document.getElementById('saveListingBtn');
+        if (saveBtn) saveBtn.addEventListener('click', async function () {
+            const cents = Math.round(parseFloat(document.getElementById('lsPrice').value || '0') * 100);
+            const sports = document.getElementById('lsSports').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
+            try {
+                const out = await api.request('/marketplace/me/listing', { method: 'PUT', body: {
+                    title: document.getElementById('lsTitle').value,
+                    description: document.getElementById('lsDesc').value,
+                    price_cents: cents,
+                    sports: sports,
+                } });
+                if (out && out.error) throw new Error(out.error);
+                toast('Listing saved.');
+                boot();
+            } catch (e) { toast(e.message || 'Failed to save listing'); }
+        });
+        const pubBtn = document.getElementById('pubBtn');
+        if (pubBtn) pubBtn.addEventListener('click', async function () {
+            try {
+                const out = await api.request('/marketplace/me/listing/publish', { method: 'POST', body: {} });
+                if (out && out.error) throw new Error(out.error);
+                toast('Storefront published.');
+                boot();
+            } catch (e) { toast(e.message || 'Failed to publish'); }
+        });
+        const unpubBtn = document.getElementById('unpubBtn');
+        if (unpubBtn) unpubBtn.addEventListener('click', async function () {
+            try {
+                await api.request('/marketplace/me/listing/unpublish', { method: 'POST', body: {} });
+                toast('Storefront unpublished.');
+                boot();
+            } catch (e) { toast(e.message || 'Failed to unpublish'); }
+        });
+    }
+
+    async function boot() {
+        api.loadTokens && api.loadTokens();
+        if (!api.token) { renderLoggedOut(); return; }
+        try {
+            elig = await api.request('/marketplace/me/eligibility');
+        } catch (e) { renderLoggedOut(); return; }
+        try { const l = await api.request('/marketplace/me/listing'); listing = l && l.listing; } catch (e) { listing = null; }
+        try { dash = await api.request('/marketplace/me/dashboard'); } catch (e) { dash = null; }
+        // If returning from Stripe onboarding, refresh connected-account status
+        const q = new URLSearchParams(location.search);
+        if (q.get('onboard') === 'return') {
+            try { status = await api.request('/marketplace/me/stripe/status'); elig = await api.request('/marketplace/me/eligibility'); } catch (e) {}
+        }
+        render();
+    }
+    boot();
+})();
+</script>
+<script src="/static/js/analytics.js?v=20260504a"></script>
+</body>
+</html>
