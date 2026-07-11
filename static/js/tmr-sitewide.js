@@ -115,7 +115,9 @@
         try {
             if (window.api && typeof window.api.getCurrentUser === "function") {
                 const apiUser = window.api.getCurrentUser();
-                if (apiUser && (apiUser.username || apiUser.email)) {
+                if (apiUser && typeof apiUser.then === "function") {
+                    apiUser.catch(() => {});
+                } else if (apiUser && (apiUser.username || apiUser.email)) {
                     return apiUser;
                 }
             }
