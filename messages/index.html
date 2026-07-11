@@ -966,6 +966,48 @@
         footer {
             margin-top: 72px !important;
         }
+
+        /* ===== New Message composer ===== */
+        .modal { max-height: 90vh; overflow-y: auto; }
+        .composer-result {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: background 0.15s;
+        }
+        .composer-result:hover { background: #eef4fb; }
+        .composer-result-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, #1f7ae0, #102338);
+            color: #fff; font-weight: 700; font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; flex-shrink: 0;
+        }
+        .composer-result-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .composer-result-name { font-weight: 700; color: #162231; font-size: 0.95rem; }
+        .composer-result-sub { font-size: 0.78rem; color: #637389; margin-top: 2px; }
+        .composer-chip {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 12px; border-radius: 12px;
+            background: #eef4fb; border: 1px solid #c7d7ed;
+        }
+        .composer-chip .composer-result-avatar { width: 38px; height: 38px; }
+        .composer-chip-remove {
+            margin-left: auto; background: none; border: none; cursor: pointer;
+            color: #637389; font-size: 20px; line-height: 1; padding: 0 4px;
+        }
+        .composer-chip-remove:hover { color: #d64545; }
+        #composerMessage { display: block; width: 100%; }
+        .modal-btn.primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .empty-state-cta {
+            margin-top: 18px; padding: 12px 24px; font-size: 0.95rem;
+            border-radius: 999px; border: none; cursor: pointer; font-weight: 700;
+            background: linear-gradient(135deg, #f58220, #d66f17); color: #fff;
+            box-shadow: 0 12px 24px rgba(245, 130, 32, 0.16);
+        }
     </style>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -1036,8 +1078,9 @@
             <div class="chat-messages" id="chatMessages">
                 <div class="empty-state">
                     <div class="empty-state-icon">💬</div>
-                    <h3>Select a conversation</h3>
-                    <p>Open an existing thread or start one from a profile, pick context, or forum discussion.</p>
+                    <h3>Start a new message</h3>
+                    <p>Search for any member and send a direct message. No existing conversation required.</p>
+                    <button class="empty-state-cta" onclick="openNewMessageModal()">+ New Message</button>
                 </div>
             </div>
 
@@ -1048,22 +1091,36 @@
         </div>
     </div>
 
-    <!-- New Message Modal -->
+    <!-- New Message Modal / Composer -->
     <div class="modal-overlay" id="newMessageModal" onclick="if(event.target===this) closeNewMessageModal()">
         <div class="modal">
-            <h3>New Message</h3>
-            <input
-                type="text"
-                id="newMessageUsername"
-                class="modal-input"
-                placeholder="Search for a user by username..."
-                oninput="onUserSearchInput()"
-                autocomplete="off"
-            >
-            <div id="userSearchResults" style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+                <h3 style="margin:0;">New Message</h3>
+                <button type="button" onclick="closeNewMessageModal()" aria-label="Close" style="background:none;border:none;font-size:24px;line-height:1;cursor:pointer;color:#637389;">&times;</button>
+            </div>
+
+            <!-- Selected recipient chip -->
+            <div id="composerSelected" style="display:none;margin-bottom:14px;"></div>
+
+            <!-- Recipient search -->
+            <div id="composerSearchWrap">
+                <input
+                    type="text"
+                    id="newMessageUsername"
+                    class="modal-input"
+                    placeholder="Search by username or display name..."
+                    oninput="onUserSearchInput()"
+                    autocomplete="off"
+                >
+                <div id="userSearchResults" style="max-height: 220px; overflow-y: auto; margin-bottom: 8px;"></div>
+            </div>
+
+            <!-- Message body -->
+            <textarea id="composerMessage" class="modal-input" rows="3" placeholder="Write your message..." style="resize:vertical;min-height:84px;" oninput="updateComposerSendState()"></textarea>
+
             <div class="modal-buttons">
                 <button class="modal-btn secondary" onclick="closeNewMessageModal()">Cancel</button>
-                <button class="modal-btn primary" onclick="startNewConversation()">Start</button>
+                <button class="modal-btn primary" id="composerSendBtn" onclick="sendNewMessage()" disabled>Send</button>
             </div>
         </div>
     </div>
@@ -1199,10 +1256,11 @@
 
             if (conversations.length === 0) {
                 list.innerHTML = `
-                    <div class="empty-state" style="padding: 40px 20px;">
-                        <div style="font-size: 48px; margin-bottom: 15px;">📬</div>
-                        <p style="color: var(--text-muted);">No conversations yet</p>
-                        <p style="font-size: 13px; color: var(--text-muted); opacity: 0.7;">Start from a profile, feed card, challenge, or forum post so each message thread begins with visible context instead of cold outreach.</p>
+                    <div class="empty-state" style="padding: 28px 18px;">
+                        <div style="font-size: 44px; margin-bottom: 12px;">📬</div>
+                        <p style="color: #637389; font-weight: 700;">No conversations yet</p>
+                        <p style="font-size: 13px; color: #637389; opacity: 0.85; margin-top: 6px;">Start a new message with any member, or reach someone from their profile or a forum post.</p>
+                        <button class="empty-state-cta" style="margin-top:14px;padding:10px 20px;" onclick="openNewMessageModal()">+ New Message</button>
                     </div>
                 `;
                 return;
@@ -1363,6 +1421,7 @@
                 // Reload messages and conversations
                 await loadChatMessages(activeConversationUserId, true);
                 await loadConversations();
+                refreshMailboxBadge();
             } catch (e) {
                 console.error('Failed to send message:', e);
                 alert('Failed to send message. Please try again.');
@@ -1412,17 +1471,49 @@
             window.history.replaceState(null, '', next);
         }
 
-        function openNewMessageModal() {
+        let composerRecipient = null;   // { id, username, display_name, avatar_url, ... }
+        let composerResults = [];       // last search result set (for click lookup)
+        let composerSending = false;    // guards against duplicate sends/conversations
+
+        function openNewMessageModal(prefill) {
             document.getElementById('newMessageModal').classList.add('active');
-            document.getElementById('newMessageUsername').value = '';
-            document.getElementById('userSearchResults').innerHTML = '';
-            document.getElementById('newMessageUsername').focus();
+            clearComposerRecipient();
+            document.getElementById('composerMessage').value = '';
+            updateComposerSendState();
+            if (prefill && (prefill.id || prefill.username)) {
+                selectComposerRecipient(prefill);
+            } else {
+                document.getElementById('newMessageUsername').focus();
+            }
         }
 
         function closeNewMessageModal() {
             document.getElementById('newMessageModal').classList.remove('active');
             document.getElementById('newMessageUsername').value = '';
             document.getElementById('userSearchResults').innerHTML = '';
+            document.getElementById('composerMessage').value = '';
+            clearComposerRecipient();
+        }
+
+        function composerRecordSummary(u) {
+            const parts = [];
+            if (u.display_name && u.display_name.toLowerCase() !== (u.username || '').toLowerCase()) {
+                parts.push('@' + u.username);
+            }
+            const picks = parseInt(u.total_picks, 10);
+            if (Number.isFinite(picks) && picks > 0) {
+                const net = parseFloat(u.net_units);
+                if (Number.isFinite(net)) parts.push((net >= 0 ? '+' : '') + net.toFixed(2) + 'u');
+                parts.push(picks + ' pick' + (picks === 1 ? '' : 's'));
+            }
+            return parts.join(' · ');
+        }
+
+        function avatarMarkup(u) {
+            if (u.avatar_url) {
+                return '<img src="' + escapeHtml(u.avatar_url) + '" alt="' + escapeAttr(u.username) + '" onerror="this.remove()">';
+            }
+            return (u.username || '?').charAt(0).toUpperCase();
         }
 
         let searchTimeout = null;
@@ -1438,51 +1529,114 @@
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(async () => {
                 try {
-                    const data = await api.searchUsers(query, { limit: 5 });
+                    const data = await api.searchUsers(query, { limit: 8 });
                     const users = (data.users || []).filter(u => u.id !== currentUser.id);
+                    composerResults = users;
                     if (users.length === 0) {
-                        resultsDiv.innerHTML = '<p style="color: var(--text-muted); padding: 8px;">No users found</p>';
+                        resultsDiv.innerHTML = '<p style="color:#637389;padding:10px;">No matching users found</p>';
                         return;
                     }
-                    resultsDiv.innerHTML = users.map(u => `
-                        <div class="search-result-item" onclick="selectUserFromSearch(${u.id}, '${escapeAttr(u.username)}')"
-                             style="display: flex; align-items: center; gap: 10px; padding: 10px; cursor: pointer; border-radius: 8px; transition: background 0.2s;"
-                             onmouseover="this.style.background='rgba(0,255,255,0.1)'" onmouseout="this.style.background='transparent'">
-                            <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(45deg, var(--neon-cyan), var(--neon-purple)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;">${u.username.charAt(0).toUpperCase()}</div>
-                            <span style="font-weight: 600;">${escapeHtml(u.username)}</span>
-                        </div>
-                    `).join('');
+                    resultsDiv.innerHTML = users.map(u => {
+                        const sub = composerRecordSummary(u);
+                        return '<div class="composer-result" onclick="selectComposerRecipientById(' + u.id + ')">' +
+                            '<div class="composer-result-avatar">' + avatarMarkup(u) + '</div>' +
+                            '<div style="min-width:0;">' +
+                                '<div class="composer-result-name">' + escapeHtml(u.display_name || u.username) + '</div>' +
+                                (sub ? '<div class="composer-result-sub">' + escapeHtml(sub) + '</div>' : '') +
+                            '</div></div>';
+                    }).join('');
                 } catch (e) {
                     console.error('User search failed:', e);
-                    resultsDiv.innerHTML = '<p style="color: var(--text-muted); padding: 8px;">Search failed</p>';
+                    resultsDiv.innerHTML = '<p style="color:#637389;padding:10px;">Search failed. Try again.</p>';
                 }
-            }, 300);
+            }, 250);
         }
 
-        async function selectUserFromSearch(userId, username) {
-            closeNewMessageModal();
-            activeConversationUserId = userId;
-            activeConversationUsername = username;
-
-            renderChatHeader(username);
-            document.getElementById('chatHeader').style.display = 'flex';
-            document.getElementById('chatInputArea').style.display = 'flex';
-
-            await loadChatMessages(userId, true);
-            await loadConversations();
+        function selectComposerRecipientById(userId) {
+            const u = composerResults.find(x => x.id === userId);
+            if (u) selectComposerRecipient(u);
         }
 
-        async function startNewConversation() {
-            const username = document.getElementById('newMessageUsername').value.trim();
-            if (!username) return;
-
-            if (username.toLowerCase() === (currentUser.username || '').toLowerCase()) {
-                alert('You cannot message yourself!');
-                return;
+        function selectComposerRecipient(u) {
+            if (!u || (!u.id && !u.username)) return;
+            if (u.id && currentUser && u.id === currentUser.id) { alert('You cannot message yourself.'); return; }
+            if (u.username && currentUser && u.username.toLowerCase() === (currentUser.username || '').toLowerCase()) {
+                alert('You cannot message yourself.'); return;
             }
+            composerRecipient = u;
+            const chip = document.getElementById('composerSelected');
+            chip.innerHTML = '<div class="composer-chip">' +
+                '<div class="composer-result-avatar">' + avatarMarkup(u) + '</div>' +
+                '<div style="min-width:0;">' +
+                    '<div class="composer-result-name">' + escapeHtml(u.display_name || u.username) + '</div>' +
+                    '<div class="composer-result-sub">To: @' + escapeHtml(u.username) + '</div>' +
+                '</div>' +
+                '<button type="button" class="composer-chip-remove" title="Remove recipient" aria-label="Remove recipient" onclick="clearComposerRecipient()">&times;</button>' +
+            '</div>';
+            chip.style.display = 'block';
+            document.getElementById('composerSearchWrap').style.display = 'none';
+            document.getElementById('userSearchResults').innerHTML = '';
+            document.getElementById('composerMessage').focus();
+            updateComposerSendState();
+        }
 
-            closeNewMessageModal();
-            await startConversationWithUser(username);
+        function clearComposerRecipient() {
+            composerRecipient = null;
+            composerResults = [];
+            const chip = document.getElementById('composerSelected');
+            chip.style.display = 'none';
+            chip.innerHTML = '';
+            const wrap = document.getElementById('composerSearchWrap');
+            wrap.style.display = 'block';
+            document.getElementById('newMessageUsername').value = '';
+            document.getElementById('userSearchResults').innerHTML = '';
+            updateComposerSendState();
+            const input = document.getElementById('newMessageUsername');
+            if (document.getElementById('newMessageModal').classList.contains('active')) input.focus();
+        }
+
+        function updateComposerSendState() {
+            const btn = document.getElementById('composerSendBtn');
+            const hasRecipient = !!(composerRecipient && composerRecipient.id);
+            const hasText = document.getElementById('composerMessage').value.trim().length > 0;
+            btn.disabled = composerSending || !hasRecipient || !hasText;
+        }
+
+        async function sendNewMessage() {
+            if (composerSending) return;
+            const content = document.getElementById('composerMessage').value.trim();
+            if (!composerRecipient || !composerRecipient.id) { alert('Select a recipient first.'); return; }
+            if (!content) { alert('Write a message before sending.'); return; }
+
+            composerSending = true;
+            const btn = document.getElementById('composerSendBtn');
+            btn.disabled = true;
+            const prevLabel = btn.textContent;
+            btn.textContent = 'Sending...';
+
+            const recipient = composerRecipient;
+            try {
+                await api.sendMessage(recipient.id, content);
+                closeNewMessageModal();
+                await loadConversations();
+                await selectConversation(recipient.id, recipient.username);
+                refreshMailboxBadge();
+            } catch (e) {
+                console.error('Failed to send message:', e);
+                alert((e && e.message) ? e.message : 'Failed to send message. Please try again.');
+            } finally {
+                composerSending = false;
+                btn.textContent = prevLabel || 'Send';
+                updateComposerSendState();
+            }
+        }
+
+        function refreshMailboxBadge() {
+            try {
+                if (window.TMRNavBadges && typeof window.TMRNavBadges.refresh === 'function') {
+                    window.TMRNavBadges.refresh();
+                }
+            } catch (e) {}
         }
 
         function formatTime(timestamp) {
