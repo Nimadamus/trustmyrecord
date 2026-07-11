@@ -2902,6 +2902,17 @@
             // Highest-volume members first (they power the featured cards) and
             // low concurrency so the API's rate limiter is not tripped.
             const ordered = list.slice().sort((a, b) => gradedCount(b) - gradedCount(a));
+            // Progressive featured refresh: the Hottest Last 30 Days / Most
+            // Active / streak slots depend on enriched pick histories, so
+            // repaint the featured grid as members land (throttled) instead of
+            // leaving the grid at 4 cards until the full ~40s sweep completes.
+            let lastFeaturedRepaint = 0;
+            const repaintFeatured = () => {
+                const now = Date.now();
+                if (now - lastFeaturedRepaint < 1500) return;
+                lastFeaturedRepaint = now;
+                try { renderFeaturedLeaders(); } catch (e) { /* keep enriching */ }
+            };
             await mapWithConcurrency(ordered, 2, async member => {
                 if (Array.isArray(member.rawPicks) && member.rawPicks.length) return;
                 if (!Number((member.stats && member.stats.totalPicks) || 0)) return;
@@ -2915,6 +2926,7 @@
                     if (pickStats && Number(pickStats.gradedPicks || 0) < Number((member.stats && member.stats.gradedPicks) || 0)) return;
                     member.rawPicks = rawPicks;
                     if (pickStats) member.stats = Object.assign({}, member.stats, pickStats);
+                    repaintFeatured();
                 } catch (error) {
                     // Keep aggregate stats if a member's picks fail to load.
                 }
