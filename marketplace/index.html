@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <link rel="canonical" href="https://trustmyrecord.com/marketplace/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sell Your Picks | Coming Soon | TrustMyRecord</title>
-    <meta name="description" content="Selling on TrustMyRecord is coming later. Build a verified public record first, meet eligibility standards, and let buyers inspect the full ledger before">
-    <meta name="keywords" content="sell sports picks, verified handicapper marketplace, paid sports picks, sports pick service, handicapper packages, build betting record, public betting record">
+    <title>Pick Marketplace | Buy Picks From Verified Handicappers | TrustMyRecord</title>
+    <meta name="description" content="Browse verified handicappers selling picks on TrustMyRecord. Every seller has a public, ungameable record: net units, ROI, and full pick history you can inspect before buying.">
+    <meta name="keywords" content="buy sports picks, verified handicapper marketplace, paid sports picks, sell sports picks, handicapper storefront, sports betting picks marketplace">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://trustmyrecord.com/marketplace/">
-    <meta property="og:title" content="Sell Your Picks — Coming Soon | TrustMyRecord">
-    <meta property="og:description" content="Build your record now. Monetize it later. Selling picks is coming soon to TrustMyRecord.">
+    <meta property="og:title" content="Pick Marketplace | TrustMyRecord">
+    <meta property="og:description" content="Buy picks from handicappers with fully transparent, verified records. Inspect the ledger before you pay.">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260520mailbox1">
     <script defer src="/static/js/tmr-sitewide.js?v=20260529authhydrate3"></script>
@@ -19,402 +19,257 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg: #08111d;
-            --panel: rgba(11, 23, 42, 0.92);
-            --line: rgba(148, 163, 184, 0.18);
-            --text: #eef4fb;
-            --muted: #96a7bb;
-            --teal: #2dd4bf;
-            --cyan: #22d3ee;
-            --blue: #2563eb;
-            --orange: #ff6a3d;
-            --amber: #fbbf24;
-            --green: #4ade80;
-            --red: #f87171;
+            --bg: #08111d; --panel: rgba(11,23,42,.92); --panel2: rgba(15,28,48,.96);
+            --line: rgba(148,163,184,.18); --text: #eef4fb; --muted: #96a7bb;
+            --teal: #2dd4bf; --cyan: #22d3ee; --amber: #fbbf24; --green: #4ade80; --red: #f87171;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background:
-                radial-gradient(circle at 10% -10%, rgba(45,212,191,0.10), transparent 30%),
-                radial-gradient(circle at 95% -10%, rgba(37,99,235,0.10), transparent 30%),
-                linear-gradient(180deg, #07111d 0%, #0a1422 100%);
-            color: var(--text);
-            font-family: 'Inter', system-ui, sans-serif;
-            min-height: 100vh;
+            background: radial-gradient(circle at 10% -10%, rgba(45,212,191,.08), transparent 30%),
+                        radial-gradient(circle at 95% -10%, rgba(37,99,235,.08), transparent 30%),
+                        linear-gradient(180deg,#07111d 0%,#0a1422 100%);
+            color: var(--text); font-family: 'Inter', system-ui, sans-serif; min-height: 100vh;
         }
         a { color: inherit; text-decoration: none; }
-        .mp-shell {
-            max-width: 1180px;
-            margin: 0 auto;
-            padding: 36px 24px 80px;
+        .mp-shell { max-width: 1180px; margin: 0 auto; padding: 28px 24px 70px; }
+        .mp-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+        .mp-head h1 {
+            font-family: 'Barlow Condensed','Inter',sans-serif; font-weight: 900; text-transform: uppercase;
+            font-size: clamp(30px,4vw,44px); letter-spacing: -.5px; line-height: 1;
         }
-
-        /* Coming Soon hero */
-        .cs-hero {
-            position: relative;
-            background: linear-gradient(180deg, rgba(15,28,48,0.96), rgba(7,14,28,0.96));
-            border: 1px solid var(--line);
-            border-radius: 22px;
-            padding: 48px 44px;
-            overflow: hidden;
-            text-align: center;
-            margin-bottom: 28px;
-        }
-        .cs-hero::before {
-            content: "";
-            position: absolute; left: -120px; top: -120px;
-            width: 360px; height: 360px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(45,212,191,0.20), transparent 70%);
-            filter: blur(30px);
-            pointer-events: none;
-        }
-        .cs-hero::after {
-            content: "";
-            position: absolute; right: -120px; bottom: -160px;
-            width: 420px; height: 420px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(37,99,235,0.20), transparent 70%);
-            filter: blur(30px);
-            pointer-events: none;
-        }
-        .cs-hero > * { position: relative; z-index: 1; }
-
-        .cs-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 9px 16px;
-            border-radius: 999px;
-            background: rgba(251, 191, 36, 0.10);
-            border: 1px solid rgba(251, 191, 36, 0.45);
-            color: var(--amber);
-            font: 800 11px/1 'JetBrains Mono', 'Menlo', monospace;
-            letter-spacing: 0.22em;
-            text-transform: uppercase;
-            margin-bottom: 22px;
-        }
-        .cs-badge .dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            background: var(--amber);
-            box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.7);
-            animation: cs-pulse 2s infinite;
-        }
-        @keyframes cs-pulse {
-            0%   { box-shadow: 0 0 0 0   rgba(251, 191, 36, 0.6); }
-            70%  { box-shadow: 0 0 0 10px rgba(251, 191, 36, 0); }
-            100% { box-shadow: 0 0 0 0   rgba(251, 191, 36, 0); }
-        }
-
-        .cs-title {
-            font-family: 'Barlow Condensed', 'Inter', sans-serif;
-            font-weight: 900;
-            letter-spacing: -1.5px;
-            line-height: 0.95;
-            color: #ffffff;
-            font-size: clamp(44px, 7vw, 84px);
-            text-transform: uppercase;
-        }
-        .cs-title .accent {
-            display: block;
-            background: linear-gradient(135deg, var(--teal), var(--cyan));
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-top: 4px;
-        }
-        .cs-sub {
-            margin: 18px auto 26px;
-            max-width: 720px;
-            font-family: 'Barlow Condensed', 'Inter', sans-serif;
-            font-weight: 700;
-            font-size: clamp(20px, 2.4vw, 28px);
-            color: #d8e0ec;
-            letter-spacing: -0.2px;
-            line-height: 1.25;
-        }
-        .cs-lede {
-            margin: 0 auto 28px;
-            max-width: 760px;
-            color: #c5cee0;
-            font-size: 16px;
-            line-height: 1.65;
-        }
-
-        .cs-cta {
-            display: inline-flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 13px 22px;
-            border-radius: 11px;
-            font-family: inherit;
-            font-weight: 800;
-            font-size: 14px;
-            cursor: pointer;
-            border: 1px solid transparent;
-            text-decoration: none;
-            transition: transform .15s ease, border-color .15s ease, color .15s ease;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--teal), var(--cyan));
-            color: #04111A;
-        }
+        .mp-head h1 .accent { background: linear-gradient(135deg,var(--teal),var(--cyan)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+        .mp-head p { color: var(--muted); font-size: 14px; margin-top: 6px; max-width: 640px; line-height: 1.55; }
+        .btn { display: inline-flex; align-items: center; gap: 7px; padding: 11px 18px; border-radius: 10px; font-weight: 800; font-size: 13.5px; cursor: pointer; border: 1px solid transparent; transition: .15s; font-family: inherit; }
+        .btn-primary { background: linear-gradient(135deg,var(--teal),var(--cyan)); color: #04111a; }
         .btn-primary:hover { transform: translateY(-1px); }
-        .btn-outline {
-            background: rgba(255,255,255,0.04);
-            color: var(--text);
-            border-color: var(--line);
+        .btn-outline { background: rgba(255,255,255,.04); color: var(--text); border-color: var(--line); }
+        .btn-outline:hover { border-color: var(--cyan); }
+        .mp-banner {
+            margin: 14px 0 18px; border: 1px solid rgba(251,191,36,.4); background: rgba(251,191,36,.08);
+            color: #fde8b0; border-radius: 12px; padding: 12px 16px; font-size: 13.5px; line-height: 1.5; display: none;
         }
-        .btn-outline:hover { border-color: var(--cyan); color: #ffffff; }
-        .btn-ghost {
-            background: transparent;
-            color: var(--text);
-            border-color: rgba(148, 163, 184, 0.32);
+        /* Controls */
+        .mp-controls {
+            display: grid; grid-template-columns: minmax(180px,1.4fr) repeat(4, minmax(110px,1fr)) auto;
+            gap: 8px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 18px;
         }
-        .btn-ghost:hover { border-color: var(--cyan); color: var(--cyan); }
-
-        /* Feature columns */
-        .cs-section { margin-top: 36px; }
-        .cs-section-head {
-            text-align: center;
-            margin-bottom: 22px;
+        .mp-controls input, .mp-controls select {
+            width: 100%; background: rgba(7,14,26,.8); border: 1px solid var(--line); border-radius: 9px;
+            color: var(--text); padding: 9px 11px; font-size: 13px; font-family: inherit;
         }
-        .cs-section-head h2 {
-            font-family: 'Barlow Condensed', 'Inter', sans-serif;
-            font-size: clamp(26px, 3.2vw, 36px);
-            font-weight: 900;
-            letter-spacing: -0.4px;
-            line-height: 1.05;
-            text-transform: uppercase;
-            color: #ffffff;
-        }
-        .cs-section-head p {
-            color: var(--muted);
-            font-size: 14px;
-            max-width: 640px;
-            margin: 8px auto 0;
-            line-height: 1.6;
-        }
-
-        .cs-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 14px;
-        }
-        .cs-card {
-            background: var(--panel);
-            border: 1px solid var(--line);
-            border-radius: 16px;
-            padding: 22px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .cs-card .num {
-            font: 800 11px/1 'JetBrains Mono', 'Menlo', monospace;
-            letter-spacing: 0.22em;
-            text-transform: uppercase;
-            color: var(--cyan);
-        }
-        .cs-card h3 {
-            font-family: 'Barlow Condensed', 'Inter', sans-serif;
-            font-size: 22px;
-            font-weight: 900;
-            letter-spacing: -0.2px;
-            color: #ffffff;
-            line-height: 1.15;
-        }
-        .cs-card p {
-            color: #c5cee0;
-            font-size: 14px;
-            line-height: 1.6;
-        }
-
-        /* Permanent-pick warning box */
-        .cs-warn {
-            margin-top: 32px;
-            border: 1px solid rgba(248, 113, 113, 0.45);
-            border-radius: 16px;
-            background:
-                linear-gradient(180deg, rgba(248, 113, 113, 0.12), rgba(248, 113, 113, 0.04));
-            padding: 26px 28px;
-            display: grid;
-            grid-template-columns: 56px 1fr;
-            gap: 20px;
-            align-items: start;
-        }
-        .cs-warn__icon {
-            width: 56px; height: 56px;
-            border-radius: 14px;
-            background: rgba(248, 113, 113, 0.16);
-            border: 1px solid rgba(248, 113, 113, 0.40);
-            display: flex; align-items: center; justify-content: center;
-            font-family: 'Barlow Condensed', 'Inter', sans-serif;
-            font-size: 30px; font-weight: 900; color: var(--red);
-            line-height: 1;
-        }
-        .cs-warn__body strong {
-            display: block;
-            font-family: 'Barlow Condensed', 'Inter', sans-serif;
-            font-size: 22px;
-            font-weight: 900;
-            letter-spacing: -0.2px;
-            color: #ffffff;
-            text-transform: uppercase;
-            margin-bottom: 6px;
-        }
-        .cs-warn__body p {
-            color: #f1d6d6;
-            font-size: 14.5px;
-            line-height: 1.6;
-        }
-        .cs-warn__body p + p { margin-top: 8px; }
-
-        /* Closing CTA strip */
-        .cs-strip {
-            margin-top: 36px;
-            background: linear-gradient(135deg, rgba(45,212,191,0.10), rgba(37,99,235,0.10));
-            border: 1px solid rgba(45,212,191,0.30);
-            border-radius: 18px;
-            padding: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        .cs-strip h3 {
-            font-family: 'Barlow Condensed', 'Inter', sans-serif;
-            font-size: clamp(22px, 2.6vw, 30px);
-            font-weight: 900;
-            letter-spacing: -0.3px;
-            color: #ffffff;
-            line-height: 1.1;
-            text-transform: uppercase;
-        }
-        .cs-strip p {
-            color: #c5cee0;
-            font-size: 14px;
-            margin-top: 6px;
-            max-width: 640px;
-        }
-        .cs-strip .cs-cta { justify-content: flex-end; }
-
-        @media (max-width: 720px) {
-            .cs-hero { padding: 32px 22px; }
-            .cs-warn { grid-template-columns: 1fr; }
-            .cs-warn__icon { width: 48px; height: 48px; font-size: 24px; }
-            .cs-strip { flex-direction: column; align-items: flex-start; }
-            .cs-strip .cs-cta { justify-content: flex-start; }
-        }
-        @media (max-width: 560px) {
-            .mp-shell { padding: 24px 14px 60px; }
-        }
+        .mp-controls input:focus, .mp-controls select:focus { outline: none; border-color: var(--cyan); }
+        .mp-check { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--muted); white-space: nowrap; padding: 0 4px; }
+        /* Cards */
+        .mp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px,1fr)); gap: 14px; }
+        .sell-card { background: var(--panel); border: 1px solid var(--line); border-radius: 15px; padding: 18px; display: flex; flex-direction: column; gap: 12px; transition: border-color .15s; }
+        .sell-card:hover { border-color: rgba(45,212,191,.45); }
+        .sc-top { display: flex; align-items: center; gap: 12px; }
+        .sc-ava { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; background: #12233c; border: 1px solid var(--line); }
+        .sc-name { font-weight: 800; font-size: 15.5px; display: flex; align-items: center; gap: 6px; }
+        .sc-user { color: var(--muted); font-size: 12.5px; }
+        .sc-verified { color: var(--cyan); font-size: 13px; }
+        .sc-stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 6px; }
+        .sc-stat { background: rgba(7,14,26,.65); border: 1px solid var(--line); border-radius: 9px; padding: 8px 6px; text-align: center; }
+        .sc-stat b { display: block; font-family: 'JetBrains Mono',monospace; font-size: 14px; }
+        .sc-stat span { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+        .pos { color: var(--green); } .neg { color: var(--red); }
+        .sc-desc { color: #c5cee0; font-size: 13px; line-height: 1.5; min-height: 38px; }
+        .sc-sports { display: flex; gap: 5px; flex-wrap: wrap; }
+        .sc-chip { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--cyan); background: rgba(34,211,238,.09); border: 1px solid rgba(34,211,238,.25); padding: 3px 8px; border-radius: 999px; }
+        .sc-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; }
+        .sc-price { font-family: 'JetBrains Mono',monospace; font-weight: 800; font-size: 19px; }
+        .sc-price small { color: var(--muted); font-size: 10.5px; font-weight: 500; display: block; }
+        .mp-empty { text-align: center; color: var(--muted); padding: 60px 20px; border: 1px dashed var(--line); border-radius: 14px; font-size: 14px; line-height: 1.7; }
+        /* Rules */
+        .mp-rules { margin-top: 34px; background: var(--panel); border: 1px solid var(--line); border-radius: 15px; padding: 22px; }
+        .mp-rules h2 { font-family: 'Barlow Condensed','Inter',sans-serif; font-weight: 900; text-transform: uppercase; font-size: 24px; margin-bottom: 12px; }
+        .mp-rules ul { list-style: none; display: grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap: 10px 22px; }
+        .mp-rules li { color: #c5cee0; font-size: 13.5px; line-height: 1.55; padding-left: 18px; position: relative; }
+        .mp-rules li::before { content: "•"; color: var(--teal); position: absolute; left: 2px; }
+        .mp-rules .fine { margin-top: 14px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+        .mp-rules a { color: var(--cyan); }
+        @media (max-width: 900px) { .mp-controls { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 560px) { .mp-shell { padding: 20px 14px 56px; } .mp-controls { grid-template-columns: 1fr; } }
     </style>
 <script type="application/ld+json">
-{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Sell Your PicksComing Later", "item": "https://trustmyrecord.com/marketplace/"}]}
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Pick Marketplace", "item": "https://trustmyrecord.com/marketplace/"}]}
 </script>
 </head>
 <body>
 
 <main class="mp-shell">
-
-    <section class="cs-hero">
-        <span class="cs-badge"><span class="dot"></span>Coming Soon</span>
-        <h1 class="cs-title">Sell Your Picks<span class="accent">Coming Later</span></h1>
-        <p class="cs-sub">Build your verified record first. Earn trust before monetization.</p>
-        <p class="cs-lede">Marketplace access is not live yet, and TrustMyRecord is not becoming a hype shop. Sellers will need a transparent public ledger, a real sample size, and a record buyers can inspect before subscribing. The work to qualify starts now: lock picks, let them grade, and build credibility without deleting losses or hiding cold streaks.</p>
-        <div class="cs-cta">
-            <a class="btn btn-primary" href="/sportsbook/">Start Building Your Record</a>
-            <a class="btn btn-ghost" href="/handicappers/">View Leaderboards</a>
-        </div>
-    </section>
-
-    <section class="cs-section">
-        <div class="cs-section-head">
-            <h2>What's coming</h2>
-            <p>A future marketplace built around buyer protection, sample size, and records that cannot be edited, faked, or rewritten.</p>
-        </div>
-        <div class="cs-grid">
-            <div class="cs-card">
-                <span class="num">01</span>
-                <h3>Eligibility before selling</h3>
-                <p>Sellers will need enough graded picks, account history, and a full public ledger before paid access is available. One hot week will not be enough.</p>
-            </div>
-            <div class="cs-card">
-                <span class="num">02</span>
-                <h3>Strategy, not guaranteed winners</h3>
-                <p>Future sellers can package analysis, strategy, and premium access. The platform will not promote guaranteed outcomes or fake certainty.</p>
-            </div>
-            <div class="cs-card">
-                <span class="num">03</span>
-                <h3>Buyers inspect the ledger first</h3>
-                <p>Before subscribing, buyers should be able to review ROI, units, sample size, current streak, market splits, and every visible loss on the profile.</p>
-            </div>
-            <div class="cs-card">
-                <span class="num">04</span>
-                <h3>Public reputation comes first</h3>
-                <p>Followers track your record live. If the receipts are strong, interest follows. No fake screenshots, no hidden resets, no manufactured testimonials.</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="cs-section">
-        <div class="cs-section-head">
-            <h2>What you should be doing right now</h2>
-            <p>The selling features are not live yet. These are the credibility standards the page is being built around.</p>
-        </div>
-        <div class="cs-grid">
-            <div class="cs-card">
-                <span class="num">Step 1</span>
-                <h3>Lock picks publicly</h3>
-                <p>Every pick you submit becomes part of your permanent profile. Wins count. Losses count. Units count. No cherry picking, no deleting bad plays, no fake screenshots. Your record is your résumé.</p>
-            </div>
-            <div class="cs-card">
-                <span class="num">Step 2</span>
-                <h3>Stack a sample size</h3>
-                <p>One hot week is not a record. Buyers will eventually filter sellers by graded picks, time on platform, ROI, units, sport, and market type.</p>
-            </div>
-            <div class="cs-card">
-                <span class="num">Step 3</span>
-                <h3>Climb the leaderboards</h3>
-                <p>Public rankings and profile analytics help buyers understand who is active, who has a sample, and who has earned attention.</p>
-            </div>
-        </div>
-    </section>
-
-    <section class="cs-warn" role="note" aria-label="Picks are permanent">
-        <div class="cs-warn__icon">!</div>
-        <div class="cs-warn__body">
-            <strong>Picks are permanent. Choose carefully.</strong>
-            <p>Once a pick is entered on TrustMyRecord, it cannot be deleted from your record. Wins, losses, and pushes all stay on your profile forever. That's the point: buyers should see the same ledger everyone else sees.</p>
-            <p>Before you lock in a pick, make sure it is exactly what you want on your profile. There is no edit button, no delete button, and no second chance. If you want a clean record worth selling later, treat every entry like it's already on a buyer's screen.</p>
-        </div>
-    </section>
-
-    <section class="cs-strip">
+    <div class="mp-head">
         <div>
-            <h3>The window opens later. The work starts now.</h3>
-            <p>Lock your first pick today. By the time selling goes live, your record is already built.</p>
+            <h1>Pick <span class="accent">Marketplace</span></h1>
+            <p>Every seller here has a public, verified record that cannot be edited or reset. Inspect the full ledger, net units, ROI, and sample size before you spend a dollar. Results are never guaranteed.</p>
         </div>
-        <div class="cs-cta">
-            <a class="btn btn-primary" href="/sportsbook/">Start Building Your Record</a>
-            <a class="btn btn-outline" href="/handicappers/">View Leaderboards</a>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <a class="btn btn-primary" href="/marketplace/sell/">Start Selling</a>
+            <a class="btn btn-outline" href="/marketplace/purchases/">My Purchases</a>
         </div>
-    </section>
+    </div>
 
+    <div class="mp-banner" id="mpBanner"></div>
+
+    <div class="mp-controls">
+        <input type="search" id="fSearch" placeholder="Search sellers..." aria-label="Search sellers">
+        <select id="fSport" aria-label="Filter by sport"><option value="">All Sports</option></select>
+        <select id="fPrice" aria-label="Filter by price">
+            <option value="">Any Price</option>
+            <option value="0-1000">Under $10</option>
+            <option value="1000-2500">$10 – $25</option>
+            <option value="2500-5000">$25 – $50</option>
+            <option value="5000-">$50+</option>
+        </select>
+        <input type="number" id="fGraded" min="0" step="25" placeholder="Min graded picks" aria-label="Minimum graded picks">
+        <select id="fSort" aria-label="Sort sellers">
+            <option value="net_units">Net Units</option>
+            <option value="roi">ROI</option>
+            <option value="graded">Record Size</option>
+            <option value="sales">Marketplace Sales</option>
+            <option value="newest">Newest Sellers</option>
+            <option value="price_low">Price: Low to High</option>
+            <option value="price_high">Price: High to Low</option>
+        </select>
+        <label class="mp-check"><input type="checkbox" id="fVerified"> Verified only</label>
+    </div>
+
+    <div class="mp-grid" id="mpGrid">
+        <div class="mp-empty" style="grid-column:1/-1;">Loading sellers…</div>
+    </div>
+
+    <section class="mp-rules">
+        <h2>Marketplace Rules</h2>
+        <ul>
+            <li>Sellers must clear eligibility: a real, email-verified account with a large enough graded-pick record, completed Stripe onboarding, and an accepted seller agreement.</li>
+            <li>Records are computed by TrustMyRecord's grading engine. Sellers cannot edit, delete, or hide picks — wins, losses, and cold streaks all stay on the ledger.</li>
+            <li>A purchased pick stays concealed until payment is confirmed, then it is revealed in your <a href="/marketplace/purchases/">purchases dashboard</a>.</li>
+            <li>Picks cannot be sold after the game has started, and a seller cannot change a pick after it is locked.</li>
+            <li>No seller may promise guaranteed winners, locks, or risk-free profit. Sports outcomes are uncertain; buy analysis, not certainty.</li>
+            <li>TrustMyRecord collects a 20% platform commission on each sale; sellers receive an 80% gross allocation through Stripe.</li>
+        </ul>
+        <p class="fine">By purchasing you agree to the <a href="/marketplace/terms/">Marketplace Terms, Refund Policy, and Responsible Gambling notice</a>. 21+ (or legal age in your jurisdiction). Nothing here is betting advice with guaranteed outcomes; past performance does not predict future results.</p>
+    </section>
 </main>
 
 <script src="/static/js/config.js?v=20260330"></script>
 <script src="/static/js/backend-api.js?v=20260423a"></script>
+<script>
+(function () {
+    const API_BASE = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    const grid = document.getElementById('mpGrid');
+    const banner = document.getElementById('mpBanner');
+    let allSellers = [];
+    let marketplaceEnabled = false;
+    let debounceTimer = null;
+
+    function esc(v) {
+        return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+    function money(cents, currency) {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: (currency || 'usd').toUpperCase() }).format((cents || 0) / 100);
+    }
+    function units(v) {
+        const n = Number(v) || 0;
+        return (n > 0 ? '+' : '') + n.toFixed(1);
+    }
+
+    function buildQuery() {
+        const p = new URLSearchParams();
+        const s = document.getElementById('fSearch').value.trim();
+        if (s) p.set('search', s);
+        const sport = document.getElementById('fSport').value;
+        if (sport) p.set('sport', sport);
+        const price = document.getElementById('fPrice').value;
+        if (price) {
+            const [lo, hi] = price.split('-');
+            if (lo) p.set('price_min_cents', lo);
+            if (hi) p.set('price_max_cents', hi);
+        }
+        const graded = parseInt(document.getElementById('fGraded').value, 10);
+        if (graded > 0) p.set('min_graded', String(graded));
+        if (document.getElementById('fVerified').checked) p.set('verified', '1');
+        p.set('sort', document.getElementById('fSort').value);
+        p.set('limit', '48');
+        return p.toString();
+    }
+
+    function render(sellers) {
+        if (!sellers.length) {
+            grid.innerHTML = '<div class="mp-empty" style="grid-column:1/-1;">No sellers match these filters yet.<br>Sellers must build a verified record and clear eligibility before they can list here — <a href="/marketplace/sell/" style="color:var(--cyan);">see what it takes to start selling</a>.</div>';
+            return;
+        }
+        grid.innerHTML = sellers.map(function (s) {
+            const nu = Number(s.net_units) || 0;
+            const rec = s.record || {};
+            return '<div class="sell-card">' +
+                '<div class="sc-top">' +
+                    '<img class="sc-ava" src="' + esc(s.avatar_url || '/static/img/default-avatar.png') + '" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">' +
+                    '<div><div class="sc-name">' + esc(s.display_name || s.username) + (s.verified ? ' <span class="sc-verified" title="Verified">&#10003;</span>' : '') + '</div>' +
+                    '<div class="sc-user">@' + esc(s.username) + ' &middot; ' + s.completed_sales + ' sale' + (s.completed_sales === 1 ? '' : 's') + '</div></div>' +
+                '</div>' +
+                '<div class="sc-stats">' +
+                    '<div class="sc-stat"><b>' + rec.wins + '-' + rec.losses + (rec.pushes ? '-' + rec.pushes : '') + '</b><span>Record</span></div>' +
+                    '<div class="sc-stat"><b class="' + (nu >= 0 ? 'pos' : 'neg') + '">' + units(nu) + '</b><span>Units</span></div>' +
+                    '<div class="sc-stat"><b class="' + (Number(s.roi) >= 0 ? 'pos' : 'neg') + '">' + (Number(s.roi) || 0).toFixed(1) + '%</b><span>ROI</span></div>' +
+                    '<div class="sc-stat"><b>' + s.graded_picks + '</b><span>Graded</span></div>' +
+                '</div>' +
+                '<div class="sc-desc">' + esc((s.listing && s.listing.description) || '') + '</div>' +
+                (s.listing && s.listing.sports && s.listing.sports.length
+                    ? '<div class="sc-sports">' + s.listing.sports.slice(0, 5).map(function (sp) { return '<span class="sc-chip">' + esc(sp) + '</span>'; }).join('') + '</div>' : '') +
+                '<div class="sc-foot">' +
+                    '<div class="sc-price">' + money(s.listing.price_cents, s.listing.currency) + '<small>per pick &middot; ' + s.picks_available + ' available</small></div>' +
+                    '<a class="btn btn-primary" href="/marketplace/seller/?u=' + encodeURIComponent(s.username) + '">View Picks</a>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+    }
+
+    function populateSportFilter(sellers) {
+        const sel = document.getElementById('fSport');
+        if (sel.options.length > 1) return;
+        const sports = new Set();
+        sellers.forEach(function (s) { ((s.listing && s.listing.sports) || []).forEach(function (x) { sports.add(x); }); });
+        Array.from(sports).sort().forEach(function (sp) {
+            const o = document.createElement('option');
+            o.value = sp; o.textContent = sp;
+            sel.appendChild(o);
+        });
+    }
+
+    async function load() {
+        try {
+            const res = await fetch(API_BASE + '/marketplace/directory?' + buildQuery(), { cache: 'no-store' });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            marketplaceEnabled = Boolean(data.marketplace_enabled);
+            allSellers = data.sellers || [];
+            if (!marketplaceEnabled) {
+                banner.style.display = 'block';
+                banner.innerHTML = '<strong>Purchases are not enabled yet.</strong> The marketplace is in its final testing phase. You can browse sellers and start the seller-eligibility process now; buying goes live shortly.';
+            } else {
+                banner.style.display = 'none';
+            }
+            populateSportFilter(allSellers);
+            render(allSellers);
+        } catch (err) {
+            grid.innerHTML = '<div class="mp-empty" style="grid-column:1/-1;">The marketplace directory could not be loaded right now. Please refresh in a moment.</div>';
+        }
+    }
+
+    ['fSport', 'fPrice', 'fSort', 'fVerified'].forEach(function (id) {
+        document.getElementById(id).addEventListener('change', load);
+    });
+    ['fSearch', 'fGraded'].forEach(function (id) {
+        document.getElementById(id).addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(load, 350);
+        });
+    });
+
+    load();
+})();
+</script>
 <script src="/static/js/analytics.js?v=20260504a"></script>
 </body>
 </html>
