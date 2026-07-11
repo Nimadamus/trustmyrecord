@@ -2346,11 +2346,12 @@ function renderAuthorPanel(post) {
     }
     // Every post author's name/avatar link to their public /u/ profile, never
     // to User CP (User CP is only reachable from the viewer's own nav link).
-    // Official community bots (TMRPolls/TMRTrivia) have no public profile page,
-    // so they render as plain, non-clickable text instead of a dead link.
+    // Official community bots (TMRPolls/TMRTrivia) are publicly addressable
+    // since Jul 11 2026 (they author official TrustMyRecord Updates threads),
+    // so their names/avatars click through to /u/ like any member.
     var isOfficialBot = !!(author.author_is_official_bot || author.is_official_bot);
     var profileUsername = author.username || author.display_name || '';
-    var profileHref = (!isOfficialBot && profileUsername) ? ('/u/' + encodeURIComponent(profileUsername) + '/') : '';
+    var profileHref = profileUsername ? ('/u/' + encodeURIComponent(profileUsername) + '/') : '';
     var profileLabel = 'View ' + who + ' profile';
     var avatarInner = avatar ? '<img src="' + escHtml(avatar) + '" alt="' + escHtml(who) + ' avatar">' : escHtml(initials);
     var avatarHtml = profileHref
