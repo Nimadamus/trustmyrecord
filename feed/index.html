@@ -760,6 +760,69 @@
             background: rgba(0, 255, 255, 0.06);
         }
         .fi-action.is-liked { color: var(--accent-red); }
+        /* Community milestone cards */
+        .fi-milestone { border-left: 2px solid rgba(255, 215, 0, 0.45); }
+        .fi-badge-milestone {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 2px 9px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            color: var(--accent-gold);
+            background: var(--accent-gold-bg, rgba(255, 215, 0, 0.14));
+            border: 1px solid rgba(255, 215, 0, 0.35);
+            margin-right: 6px;
+        }
+        .fi-milestone-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-left: 8px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+        .fi-milestone-link:hover { color: var(--neon-cyan); }
+        .fi-congrats.is-congratsed { color: var(--accent-gold); }
+        .fi-congrats.is-congratsed:hover { color: var(--accent-gold); background: var(--accent-gold-bg, rgba(255, 215, 0, 0.14)); }
+        .fi-avatar-site {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-gold);
+            background: rgba(255, 215, 0, 0.12);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        .milestone-pref-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin: 10px 0 0;
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            font-size: 0.84rem;
+        }
+        .milestone-pref-row i { color: var(--accent-gold); margin-right: 6px; }
+        .milestone-pref-toggle {
+            border: 1px solid var(--border-light);
+            background: transparent;
+            color: var(--text-muted);
+            border-radius: 999px;
+            padding: 3px 14px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .milestone-pref-toggle.is-on { color: var(--accent-green); border-color: rgba(57, 255, 20, 0.4); background: var(--accent-green-bg, rgba(57, 255, 20, 0.12)); }
         .comments-section {
             display: none;
             margin: 12px 0 0 56px;
@@ -1218,10 +1281,14 @@
             <div class="feed-tabs">
                 <button class="feed-tab active" onclick="setFilter('all',this)"><i class="fas fa-stream"></i> For You</button>
                 <button class="feed-tab" onclick="setFilter('picks',this)"><i class="fas fa-crosshairs"></i> Picks</button>
+                <button class="feed-tab" onclick="setFilter('milestones',this)"><i class="fas fa-award"></i> Milestones</button>
                 <button class="feed-tab" onclick="setFilter('hot-takes',this)"><i class="fas fa-fire"></i> Hot Takes</button>
                 <button class="feed-tab" onclick="setFilter('polls',this)"><i class="fas fa-poll"></i> Polls</button>
                 <button class="feed-tab" onclick="setFilter('following',this)"><i class="fas fa-user-friends"></i> Following</button>
+                <button class="feed-tab" onclick="setFilter('site-updates',this)"><i class="fas fa-bullhorn"></i> Site Updates</button>
             </div>
+
+            <div class="milestone-pref-row" id="milestonePrefRow" style="display:none;"></div>
 
             <div class="feed-list" id="feedList">
                 <div class="feed-startup-state" id="feedStartupState">
@@ -1270,7 +1337,7 @@
     <script src="/static/js/analytics.js?v=20260405"></script>
     <script src="/static/js/backend-api.js?v=20260423a"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
-    <script src="/static/js/social-home.js?v=20260521feedpost1"></script>
-    <script src="/static/js/feed-ui-overrides.js?v=20260526gradedbreakdown1"></script>
+    <script src="/static/js/social-home.js?v=20260711milestones1"></script>
+    <script src="/static/js/feed-ui-overrides.js?v=20260711milestones1"></script>
 </body>
 </html>
