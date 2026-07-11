@@ -829,11 +829,11 @@
             <h1>Every leaderboard. Every challenge. Every record.</h1>
             <p>Track the top handicappers, trivia players, poll creators, challenge winners, and sports competitors across TrustMyRecord. Public results only. No fake records. No disappearing losses.</p>
             <div class="quick-stats" id="quickStats">
-                <div class="qs-card"><b id="qsHandicappers">30</b><span>Handicapping Records</span></div>
-                <div class="qs-card"><b id="qsTrivia">--</b><span>Trivia Players</span></div>
-                <div class="qs-card"><b id="qsPolls">--</b><span>Active Polls</span></div>
-                <div class="qs-card"><b id="qsChallenges">--</b><span>Active Challenges</span></div>
-                <div class="qs-card"><b id="qsH2H">--</b><span>Open Head-to-Heads</span></div>
+                <div class="qs-card"><b id="qsHandicappers">0</b><span>Handicapping Records</span></div>
+                <div class="qs-card"><b id="qsTrivia">0</b><span>Trivia Players</span></div>
+                <div class="qs-card"><b id="qsPolls">0</b><span>Active Polls</span></div>
+                <div class="qs-card"><b id="qsChallenges">0</b><span>Online Challenges</span></div>
+                <div class="qs-card"><b id="qsH2H">0</b><span>Handicapper Challenges</span></div>
             </div>
         </section>
 
@@ -1377,9 +1377,38 @@
             }).join('');
         }
 
+        /* =========================================================
+         * CANONICAL COUNTERS
+         * Every hero metric and its matching tab badge are written
+         * through setCount() from ONE source, so the two elements can
+         * never diverge. Do NOT set the qs or tabCount elements' textContent
+         * directly anywhere else -- the leaderboards-counts test enforces this.
+         * ========================================================= */
+        const COUNT_ELS = {
+            handicappers: ['qsHandicappers', 'tabCountHandicappers'],
+            trivia:       ['qsTrivia', 'tabCountTrivia'],
+            polls:        ['qsPolls', 'tabCountPolls'],
+            online:       ['qsChallenges', 'tabCountOnline'],
+            h2h:          ['qsH2H', 'tabCountH2H']
+        };
+        // "Currently active" status sets (exclude completed/cancelled/declined/expired/void).
+        const ONLINE_LIVE_STATUSES = ['pending', 'open', 'accepted', 'in_progress', 'live'];
+        const H2H_ACTIVE_STATUSES = ['pending', 'open', 'active', 'accepted', 'in_progress'];
+        function setCount(metric, n) {
+            const v = String(Math.max(0, Math.floor(Number(n) || 0)));
+            (COUNT_ELS[metric] || []).forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.textContent = v;
+            });
+        }
+        function countByStatus(list, statuses) {
+            return (Array.isArray(list) ? list : []).filter(function(c) {
+                return statuses.indexOf(String(c && c.status || '').toLowerCase()) !== -1;
+            }).length;
+        }
+
         function setQuickStats(handicapperEntries) {
-            document.getElementById('qsHandicappers').textContent = String(handicapperEntries.length);
-            document.getElementById('tabCountHandicappers').textContent = String(handicapperEntries.length);
+            setCount('handicappers', handicapperEntries.length);
         }
 
         function renderPreviewStats(entry, advancedData) {
@@ -1565,8 +1594,7 @@
             const state = document.getElementById('triviaState');
             const wrap = document.getElementById('triviaWrap');
             const body = document.getElementById('triviaBody');
-            document.getElementById('tabCountTrivia').textContent = String(entries.length);
-            document.getElementById('qsTrivia').textContent = String(entries.length);
+            setCount('trivia', entries.length);
 
             if (!entries.length) {
                 wrap.style.display = 'none';
@@ -1655,7 +1683,8 @@
             const state = document.getElementById('pollsState');
             const wrap = document.getElementById('pollsWrap');
             const body = document.getElementById('pollsBody');
-            document.getElementById('tabCountPolls').textContent = String(entries.length);
+            // Poll tab badge + hero both reflect ACTIVE polls (see loadPolls / primeCounts),
+            // never the number of leaderboard players -- that was the old hero/tab mismatch.
 
             if (!entries.length) {
                 wrap.style.display = 'none';
@@ -1715,9 +1744,9 @@
                 const active = await window.api.request('/polls/active?limit=50');
                 const list = Array.isArray(active && active.polls) ? active.polls
                     : Array.isArray(active) ? active : [];
-                document.getElementById('qsPolls').textContent = String(list.length);
+                setCount('polls', list.length);
             } catch (error) {
-                document.getElementById('qsPolls').textContent = '0';
+                setCount('polls', 0);
             }
         }
 
@@ -1815,7 +1844,7 @@
 
         async function loadOnlineChallenges() {
             try {
-                const data = await window.api.request('/gaming/challenges?limit=30');
+                const data = await window.api.request('/gaming/challenges?limit=100');
                 const all = Array.isArray(data && data.challenges) ? data.challenges : [];
                 const open = all.filter(function(c) {
                     const s = String(c.status || '').toLowerCase();
@@ -1834,15 +1863,12 @@
                 renderActiveChallenges(active);
                 renderCompletedChallenges(completed);
 
-                const liveCount = open.length + active.length;
-                document.getElementById('qsChallenges').textContent = String(liveCount);
-                document.getElementById('tabCountOnline').textContent = String(liveCount);
+                setCount('online', countByStatus(all, ONLINE_LIVE_STATUSES));
             } catch (error) {
                 renderOpenChallenges([]);
                 renderActiveChallenges([]);
                 renderCompletedChallenges([]);
-                document.getElementById('qsChallenges').textContent = '0';
-                document.getElementById('tabCountOnline').textContent = '0';
+                setCount('online', 0);
             }
         }
 
@@ -1853,8 +1879,9 @@
             const state = document.getElementById('h2hState');
             const wrap = document.getElementById('h2hWrap');
             const body = document.getElementById('h2hBody');
-            document.getElementById('tabCountH2H').textContent = String(entries.length);
-            document.getElementById('qsH2H').textContent = String(entries.length);
+            // Count only currently-active head-to-heads; the table still lists all
+            // (including completed) but completed/cancelled must not inflate the badge.
+            setCount('h2h', countByStatus(entries, H2H_ACTIVE_STATUSES));
 
             if (!entries.length) {
                 wrap.style.display = 'none';
@@ -1906,6 +1933,45 @@
             } catch (error) {
                 renderH2H([]);
             }
+        }
+
+        /* =========================================================
+         * PRIME HERO/TAB COUNTS ON FIRST PAINT
+         * Fetches ONLY the counts for the tabs that are lazy-loaded
+         * (trivia, polls, h2h) so every hero card and tab badge shows
+         * a real number (0 for valid empties, never "--") before any
+         * tab is opened. Handicappers + online are already loaded in
+         * bootstrapHub. Each uses the SAME endpoint + filter the tab
+         * loader uses, so opening a tab cannot change the number.
+         * ========================================================= */
+        async function primeCounts() {
+            const jobs = [
+                // Trivia players = unique users on the all-time trivia leaderboard.
+                (async function() {
+                    try {
+                        const d = await window.api.request('/trivia/leaderboard?period=all&limit=100');
+                        setCount('trivia', (d && Array.isArray(d.leaderboard) ? d.leaderboard : []).length);
+                    } catch (e) { setCount('trivia', 0); }
+                })(),
+                // Active polls = currently open, published, non-expired top-level polls.
+                (async function() {
+                    try {
+                        const d = await window.api.request('/polls/active?limit=100');
+                        const l = Array.isArray(d && d.polls) ? d.polls : (Array.isArray(d) ? d : []);
+                        setCount('polls', l.length);
+                    } catch (e) { setCount('polls', 0); }
+                })(),
+                // Handicapper challenges = currently active head-to-heads. Requires
+                // auth; logged-out visitors correctly see 0 (endpoint 401 -> catch).
+                (async function() {
+                    try {
+                        const d = await window.api.request('/challenges?limit=100');
+                        const entries = Array.isArray(d && d.challenges) ? d.challenges : [];
+                        setCount('h2h', countByStatus(entries, H2H_ACTIVE_STATUSES));
+                    } catch (e) { setCount('h2h', 0); }
+                })()
+            ];
+            await Promise.all(jobs);
         }
 
         /* =========================================================
@@ -1982,10 +2048,13 @@
 
             trackHub('leaderboards_hub_viewed', {});
 
-            // Always load handicapper data + online challenge count for hero stats
+            // Populate EVERY hero metric + tab badge on first paint (not just the
+            // active tab) so the two sections always agree. Lazy tab loaders still
+            // re-run on open and re-drive the same setCount(), so nothing diverges.
             await Promise.all([
                 loadHandicappers(),
-                loadOnlineChallenges()
+                loadOnlineChallenges(),
+                primeCounts()
             ]);
 
             // Activate tab from hash if present
