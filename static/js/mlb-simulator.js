@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-boxscore-eventlog-20260703';
+    var UI_BUILD = 'mlb-simulator-scriptclose-20260711';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -302,10 +302,20 @@
     function fetchJson(url, options) {
         if (typeof fetch !== 'function') return Promise.reject(new Error('fetch unavailable'));
         options = options || {};
-        return fetch(url, { headers: { 'Accept': 'application/json' }, cache: options.cache || 'default' }).then(function (res) {
+        // Hard timeout so a hung provider can never leave the tool loading forever;
+        // callers already fall back to the LOCAL_TEAMS baseline on rejection.
+        var timeoutMs = options.timeoutMs || 12000;
+        var controller = (typeof AbortController === 'function') ? new AbortController() : null;
+        var timer = controller ? setTimeout(function () { controller.abort(); }, timeoutMs) : null;
+        var fetchOpts = { headers: { 'Accept': 'application/json' }, cache: options.cache || 'default' };
+        if (controller) fetchOpts.signal = controller.signal;
+        return fetch(url, fetchOpts).then(function (res) {
             if (!res.ok) throw new Error('HTTP ' + res.status);
             return res.json();
-        });
+        }).catch(function (err) {
+            if (err && err.name === 'AbortError') throw new Error('Request timed out after ' + timeoutMs + 'ms');
+            throw err;
+        }).then(function (v) { if (timer) clearTimeout(timer); return v; }, function (e) { if (timer) clearTimeout(timer); throw e; });
     }
 
     function isoDateUtc(d) { return d.toISOString().slice(0, 10); }
