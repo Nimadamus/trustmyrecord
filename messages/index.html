@@ -1468,7 +1468,7 @@
 
         function syncConversationUrl(username) {
             if (!window.history || typeof window.history.replaceState !== 'function') return;
-            const next = username ? ('messages/?to=' + encodeURIComponent(username)) : 'messages/';
+            const next = username ? ('/messages/?to=' + encodeURIComponent(username)) : '/messages/';
             window.history.replaceState(null, '', next);
         }
 
