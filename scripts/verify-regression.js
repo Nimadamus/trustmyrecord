@@ -22,6 +22,7 @@ const allChecks = [
   ['unit/static: sportsbook team totals rendering', 'node', ['tests/sportsbook-team-totals-rendering-regression-test.js'], 'static'],
   ['unit/static: protected sportsbook file drift', 'node', ['tests/protected-file-drift-test.js'], 'static'],
   ['unit/static: critical DOM/content locks', 'node', ['tests/critical-dom-content-lock-test.js'], 'static'],
+  ['unit/static: leaderboards hero/tab count lock', 'node', ['tests/leaderboards-counts-lock-test.js'], 'static'],
   ['unit/static: profile market-type stats lock', 'node', ['tests/profile-market-type-stats-lock.test.js'], 'static'],
   ['unit/static: model builder shell', 'node', ['tests/model-builder-shell-test.js'], 'static'],
   ['unit/static: trend spotter guided flow', 'node', ['tests/trendspotter-accuracy-test.js'], 'static'],
