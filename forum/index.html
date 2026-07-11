@@ -1587,6 +1587,182 @@ body.classic-forum .fpost-btn.is-sub.is-subscribed{
   background:#0f766e !important;border-color:#0b5f59 !important;color:#eafffb !important;
 }
 </style>
+<style id="tmr-forum-2p2-refresh-20260710">
+/* =====================================================================
+   TMR FORUM REDESIGN v2 (2p2-quality unified system) - Jul 10 2026
+   Last-in-cascade authoritative layer for body.classic-forum. Rebuilds the
+   forum presentation as one coordinated system: charcoal global header, slim
+   integrated left nav, one merged page-header card, flat aligned thread rows,
+   restrained borders, clean toolbar, small status icons. Visual only - no
+   routes, auth, counts, alerts, thread/post logic, or IDs touched.
+   Every rule scoped to body.classic-forum so nothing else on the site moves.
+   ===================================================================== */
+body.classic-forum{
+  --f-page:#eef0f3;--f-surface:#ffffff;--f-ink:#1a1d21;--f-ink-2:#3a3f47;
+  --f-muted:#6b7280;--f-faint:#8b929c;--f-line:#e3e6ea;--f-line-2:#d4d8de;
+  --f-link:#12467e;--f-link-h:#0a2f57;--f-head:#23272e;--f-head-2:#2c313a;
+  --f-gold:#c8912a;--f-hover:#f4f8fd;--f-alt:#fafbfc;
+  background:var(--f-page) !important;color:var(--f-ink) !important;
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif !important;
+  font-size:14px !important;line-height:1.45 !important;
+}
+body.classic-forum a{color:var(--f-link) !important;text-decoration:none}
+body.classic-forum a:hover{color:var(--f-link-h) !important;text-decoration:underline}
+
+/* ---- Global header (charcoal, single primary row) ---- */
+body.classic-forum .fhead{background:var(--f-head) !important;border:0 !important;box-shadow:0 1px 0 rgba(0,0,0,.25) !important}
+body.classic-forum .fhead-in{max-width:1360px !important;margin:0 auto !important;min-height:56px !important;padding:0 22px !important;gap:20px !important;align-items:center !important}
+body.classic-forum .fhead-logo{color:#fff !important;font:800 20px "Inter",Arial,sans-serif !important;letter-spacing:-.01em !important}
+body.classic-forum .fhead-logo b{color:var(--f-gold) !important}
+body.classic-forum .fhead-logo span{color:#98a0ad !important;font:500 11px "Inter",Arial,sans-serif !important;margin-top:2px !important}
+body.classic-forum .fhead-search{height:34px !important;max-width:340px !important;width:340px !important;margin-left:auto !important;background:#fff !important;border:1px solid #3a4049 !important;border-radius:6px !important;overflow:hidden !important}
+body.classic-forum .fhead-search input{background:#fff !important;color:#1a1d21 !important;padding:0 12px !important;font:400 13px "Inter",Arial,sans-serif !important;border:0 !important}
+body.classic-forum .fhead-search button{background:#eceef1 !important;color:#2c313a !important;border:0 !important;border-left:1px solid #d4d8de !important;padding:0 14px !important;font:600 12px "Inter",Arial,sans-serif !important}
+body.classic-forum .fhead-search button:hover{background:#e0e3e8 !important}
+body.classic-forum .fhead-links{gap:16px !important;align-items:center !important}
+body.classic-forum .fhead-links a,body.classic-forum .fhead-links button{color:#cfd4dc !important;font:500 13px "Inter",Arial,sans-serif !important}
+body.classic-forum .fhead-links a:hover,body.classic-forum .fhead-links button:hover{color:#fff !important;text-decoration:none}
+body.classic-forum .fhead-bell-icon{width:16px !important;height:16px !important}
+
+/* ---- Secondary nav strip (one clean row) ---- */
+body.classic-forum .ftabs{background:var(--f-head-2) !important;border:0 !important;box-shadow:inset 0 -1px 0 rgba(255,255,255,.06) !important}
+body.classic-forum .ftabs-in{max-width:1360px !important;margin:0 auto !important;padding:0 14px !important;gap:2px !important}
+body.classic-forum .ftabs a,body.classic-forum .ftabs button{background:transparent !important;color:#c2c8d1 !important;border:0 !important;padding:10px 14px !important;font:600 13px "Inter",Arial,sans-serif !important;border-bottom:2px solid transparent !important}
+body.classic-forum .ftabs a:hover,body.classic-forum .ftabs button:hover{background:transparent !important;color:#fff !important;text-decoration:none}
+body.classic-forum .ftabs a.is-active{color:#fff !important;border-bottom-color:var(--f-gold) !important}
+body.classic-forum .ftabs a.is-mainsite{color:var(--f-gold) !important}
+/* redundant duplicate "Current Forum" link removed visually (keeps DOM/JS intact) */
+body.classic-forum .ftabs-in a[href="/forum/"]:nth-of-type(2){display:none !important}
+
+/* ---- Shell: centered, slim left nav + wide main ---- */
+body.classic-forum .fshell{max-width:1360px !important;margin:0 auto !important;padding:0 !important;display:grid !important;grid-template-columns:232px minmax(0,1fr) !important;gap:0 !important;align-items:start !important;min-height:calc(100vh - 100px) !important;background:var(--f-page) !important}
+
+/* ---- Left navigation (integrated, understated) ---- */
+body.classic-forum .fside{display:block !important;position:sticky !important;top:0 !important;align-self:start !important;min-height:calc(100vh - 100px) !important;max-height:none !important;overflow:visible !important;background:transparent !important;border:0 !important;border-right:1px solid var(--f-line-2) !important;margin:0 !important;padding:18px 0 !important}
+body.classic-forum .fside-box{background:transparent !important;border:0 !important;margin:0 0 14px !important;padding:0 !important;overflow:visible !important}
+body.classic-forum .fside-box:last-child{border:0 !important;margin-bottom:0 !important}
+body.classic-forum .fside-head{background:transparent !important;border:0 !important;color:var(--f-faint) !important;padding:4px 18px 6px !important;font:700 11px "Inter",Arial,sans-serif !important;text-transform:uppercase !important;letter-spacing:.08em !important}
+body.classic-forum .fside-list{padding:0 8px !important}
+body.classic-forum .fside-list a{display:block !important;justify-content:flex-start !important;margin:1px 0 !important;padding:7px 12px !important;color:var(--f-ink-2) !important;background:transparent !important;border:0 !important;border-left:3px solid transparent !important;border-radius:5px !important;font:500 14px "Inter",Arial,sans-serif !important}
+body.classic-forum .fside-list a:hover{background:#e6e9ee !important;color:var(--f-ink) !important;border-left-color:transparent !important;text-decoration:none !important}
+body.classic-forum .fside-list a.is-active{background:#e9edf3 !important;color:var(--f-ink) !important;border-left:3px solid var(--f-gold) !important;border-radius:0 5px 5px 0 !important;font-weight:700 !important}
+body.classic-forum .fside-list a.fside-loading{color:var(--f-faint) !important;font-style:italic !important;border-left-color:transparent !important;background:transparent !important}
+
+/* ---- Main column ---- */
+body.classic-forum .fmain{width:100% !important;padding:22px 26px 46px !important;background:var(--f-page) !important;min-width:0 !important}
+
+/* ---- Merged page-header card (crumb + title + desc + stats, one surface) ---- */
+body.classic-forum .fpagehead{background:var(--f-surface) !important;border:1px solid var(--f-line) !important;border-radius:10px !important;box-shadow:0 1px 2px rgba(20,25,35,.04) !important;padding:16px 22px 15px !important;margin:0 0 18px !important}
+body.classic-forum .fpagehead .fcrumb{background:transparent !important;border:0 !important;padding:0 !important;margin:0 0 8px !important;color:var(--f-muted) !important;font:500 12px "Inter",Arial,sans-serif !important}
+body.classic-forum .fpagehead .fcrumb a{color:var(--f-link) !important;font-weight:600 !important;cursor:pointer}
+body.classic-forum .fpagehead .fcrumb .sep{color:#b7bdc6 !important;padding:0 7px !important}
+body.classic-forum .fpagehead .ftitle{background:transparent !important;border:0 !important;padding:0 !important}
+body.classic-forum .fpagehead .ftitle h1{color:var(--f-ink) !important;font:800 29px "Inter",Arial,sans-serif !important;letter-spacing:-.02em !important;line-height:1.15 !important}
+body.classic-forum .fpagehead .ftitle p{color:var(--f-muted) !important;font:400 14px "Inter",Arial,sans-serif !important;margin:6px 0 0 !important;max-width:760px !important}
+body.classic-forum .fpagehead .fstats{background:transparent !important;border:0 !important;border-top:1px solid var(--f-line) !important;margin:14px 0 0 !important;padding:11px 0 0 !important;gap:22px !important;color:var(--f-muted) !important;font:400 13px "Inter",Arial,sans-serif !important}
+body.classic-forum .fpagehead .fstats b{color:var(--f-ink) !important;font-weight:700 !important}
+
+/* ---- Section tables (forum index groups + thread list) ---- */
+body.classic-forum .fgroup-table{width:100% !important;border:1px solid var(--f-line) !important;border-radius:10px !important;border-collapse:separate !important;border-spacing:0 !important;overflow:hidden !important;margin:0 0 18px !important;background:var(--f-surface) !important;box-shadow:0 1px 2px rgba(20,25,35,.04) !important}
+body.classic-forum .fgroup-table tr.fgroup-band td{background:#f4f5f7 !important;color:var(--f-ink) !important;border:0 !important;border-bottom:1px solid var(--f-line) !important;padding:11px 16px !important;font:700 14px "Inter",Arial,sans-serif !important;letter-spacing:.01em !important}
+body.classic-forum .fgroup-table tr.fgroup-band td.fgroup-meta{color:var(--f-faint) !important;font:500 11px "Inter",Arial,sans-serif !important;text-align:right !important;text-transform:uppercase !important;letter-spacing:.06em !important}
+body.classic-forum .fgroup-table tr.fcol-head td{background:#fafbfc !important;color:var(--f-faint) !important;border-bottom:1px solid var(--f-line) !important;padding:8px 16px !important;font:700 11px "Inter",Arial,sans-serif !important;text-transform:uppercase !important;letter-spacing:.05em !important}
+body.classic-forum .fgroup-table tr.fcol-head td.col-num{width:82px !important;text-align:center !important}
+body.classic-forum .fgroup-table tr.fcol-head td.col-last{width:300px !important;text-align:left !important}
+body.classic-forum .fgroup-table td.fcell{background:var(--f-surface) !important;border:0 !important;border-bottom:1px solid var(--f-line) !important;padding:14px 16px !important;color:var(--f-ink-2) !important;font:400 14px "Inter",Arial,sans-serif !important;vertical-align:middle !important}
+body.classic-forum .fgroup-table tr:last-child td.fcell{border-bottom:0 !important}
+body.classic-forum .fgroup-table tr.row-alt td.fcell{background:var(--f-surface) !important}
+body.classic-forum .fgroup-table tr.frow:hover td.fcell,body.classic-forum .fgroup-table tr.frow:focus-within td.fcell{background:var(--f-hover) !important;cursor:pointer}
+body.classic-forum .fgroup-table tr.frow:focus-visible{outline:2px solid var(--f-link) !important;outline-offset:-2px !important}
+body.classic-forum .frowinner{gap:13px !important;align-items:center !important}
+body.classic-forum .fname{color:var(--f-ink) !important;font:700 16px "Inter",Arial,sans-serif !important;letter-spacing:-.01em !important;line-height:1.3 !important}
+body.classic-forum .fname:hover{color:var(--f-link) !important}
+body.classic-forum .fdesc{color:var(--f-muted) !important;font:400 13px "Inter",Arial,sans-serif !important;margin-top:3px !important}
+body.classic-forum .fdesc b{color:var(--f-ink-2) !important;font-weight:600 !important}
+body.classic-forum .fdesc b a{color:var(--f-link) !important}
+body.classic-forum .fgroup-table td.col-num{color:var(--f-ink) !important;width:82px !important;text-align:center !important;vertical-align:middle !important;font:700 15px "Inter",Arial,sans-serif !important}
+body.classic-forum .fgroup-table td.col-last{width:300px !important;color:var(--f-muted) !important;vertical-align:middle !important;font:400 13px "Inter",Arial,sans-serif !important}
+body.classic-forum .flpost-line{gap:9px !important;align-items:center !important}
+body.classic-forum .flpost-title{color:var(--f-ink-2) !important;font:600 13px "Inter",Arial,sans-serif !important;line-height:1.25 !important}
+body.classic-forum .flpost-title a{color:var(--f-ink-2) !important}
+body.classic-forum .flpost-title a:hover{color:var(--f-link) !important}
+body.classic-forum .flpost-meta,body.classic-forum .flpost-empty{color:var(--f-faint) !important;font:400 12px "Inter",Arial,sans-serif !important}
+body.classic-forum .flpost-meta b{color:var(--f-muted) !important;font-weight:600 !important}
+body.classic-forum .fsticky-tag{background:#fbf1d6 !important;border:1px solid #e6cf8f !important;color:#7a5a12 !important;border-radius:3px !important;padding:1px 6px !important;font:700 10px "Inter",Arial,sans-serif !important;text-transform:uppercase !important;letter-spacing:.04em !important;margin-right:7px !important}
+
+/* Hide the always-empty Rating column in the thread list for cleaner alignment */
+body.classic-forum #viewThreads .thread-table tr > *:nth-child(2){display:none !important}
+
+/* ---- Small, restrained status icons ---- */
+body.classic-forum .ffolder{width:15px !important;height:15px !important;flex:0 0 15px !important;border:2px solid var(--f-gold) !important;background:transparent !important;border-radius:50% !important;margin:0 !important;position:relative !important}
+body.classic-forum .ffolder::before{content:"" !important;display:block !important;width:5px !important;height:5px !important;margin:3px auto 0 !important;background:var(--f-gold) !important;border:0 !important;border-radius:50% !important}
+body.classic-forum .ffolder.is-pinned{border-color:#c8912a !important;background:#fbf1d6 !important}
+body.classic-forum .ffolder.is-pinned::before{background:#a8781f !important}
+/* sport tag icons: small, flat, tinted */
+body.classic-forum .sport-icon{flex:0 0 30px !important;width:30px !important;height:24px !important;display:grid !important;place-items:center !important;border:1px solid var(--f-line-2) !important;background:#f2f4f7 !important;color:var(--f-ink-2) !important;border-radius:5px !important;font:800 9px "Inter",Arial,sans-serif !important;letter-spacing:.02em !important;box-shadow:none !important}
+body.classic-forum .sport-icon.mlb{background:#e8f1fb !important;border-color:#c2d6ee !important;color:#174765 !important}
+body.classic-forum .sport-icon.nfl{background:#e7f4ec !important;border-color:#bfe0cd !important;color:#155c37 !important}
+body.classic-forum .sport-icon.nba{background:#fdefdd !important;border-color:#eccfa4 !important;color:#7a4310 !important}
+body.classic-forum .sport-icon.nhl{background:#e7f2f7 !important;border-color:#c2dbe6 !important;color:#21556f !important}
+body.classic-forum .sport-icon.cfb{background:#f7efd6 !important;border-color:#e2d19a !important;color:#6f5215 !important}
+body.classic-forum .sport-icon.cbb{background:#efe8fb !important;border-color:#d5c6ee !important;color:#4f3477 !important}
+body.classic-forum .fthread-row-avatar{border:1px solid var(--f-line-2) !important;background:#eef1f5 !important;color:var(--f-ink-2) !important}
+
+/* ---- Clean toolbar (replaces dark band + button box) ---- */
+body.classic-forum .ftoolbar{display:flex !important;align-items:center !important;justify-content:space-between !important;gap:14px !important;flex-wrap:wrap !important;background:var(--f-surface) !important;border:1px solid var(--f-line) !important;border-radius:10px !important;box-shadow:0 1px 2px rgba(20,25,35,.04) !important;padding:11px 16px !important;margin:0 0 16px !important}
+body.classic-forum .ftoolbar-title{color:var(--f-ink) !important;font:700 17px "Inter",Arial,sans-serif !important;letter-spacing:-.01em !important;min-width:0 !important}
+body.classic-forum .ftoolbar-title span{color:var(--f-ink) !important}
+body.classic-forum .ftoolbar-meta{color:var(--f-faint) !important;font:500 12px "Inter",Arial,sans-serif !important;margin-left:9px !important}
+body.classic-forum .ftoolbar-meta:empty{display:none !important}
+body.classic-forum .ftoolbar-actions{display:flex !important;align-items:center !important;gap:9px !important;flex-wrap:wrap !important}
+body.classic-forum .ftoolbar-search{height:34px !important;width:210px !important;max-width:100% !important;border:1px solid var(--f-line-2) !important;border-radius:6px !important;background:#fff !important;color:var(--f-ink) !important;padding:0 11px !important;font:400 13px "Inter",Arial,sans-serif !important}
+body.classic-forum .ftoolbar-search:focus{outline:none !important;border-color:var(--f-link) !important}
+
+/* ---- Buttons ---- */
+body.classic-forum .fbtn,body.classic-forum .btn{background:#fff !important;color:var(--f-ink) !important;border:1px solid var(--f-line-2) !important;border-radius:6px !important;padding:8px 13px !important;font:600 13px "Inter",Arial,sans-serif !important;letter-spacing:0 !important;cursor:pointer}
+body.classic-forum .fbtn:hover,body.classic-forum .btn:hover{background:#f3f5f8 !important;border-color:#c0c6cf !important;text-decoration:none}
+body.classic-forum .fbtn.is-primary,body.classic-forum .btn-primary{background:var(--f-head) !important;color:#fff !important;border-color:var(--f-head) !important}
+body.classic-forum .fbtn.is-primary:hover,body.classic-forum .btn-primary:hover{background:#33383f !important;border-color:#33383f !important}
+
+/* ---- Forum jump / reply / posts ---- */
+body.classic-forum .fjump{background:var(--f-surface) !important;border:1px solid var(--f-line) !important;border-radius:8px !important;padding:10px 14px !important;margin:2px 0 0 !important;color:var(--f-muted) !important}
+body.classic-forum .factionrow{background:var(--f-surface) !important;border:1px solid var(--f-line) !important;border-radius:8px !important;margin:0 0 14px !important;padding:9px 12px !important}
+body.classic-forum .fthread-post{border:1px solid var(--f-line) !important;border-radius:10px !important;box-shadow:0 1px 2px rgba(20,25,35,.04) !important;overflow:hidden !important}
+body.classic-forum .fthread-author{background:#f7f8fa !important;border-right:1px solid var(--f-line) !important}
+body.classic-forum .freply{background:var(--f-surface) !important;border:1px solid var(--f-line) !important;border-radius:10px !important}
+body.classic-forum .fempty{border:1px solid var(--f-line) !important;border-radius:10px !important;background:var(--f-surface) !important}
+body.classic-forum .modal-box{border:1px solid var(--f-line-2) !important;border-radius:12px !important;box-shadow:0 24px 70px rgba(10,15,25,.4) !important;overflow:hidden !important}
+body.classic-forum .modal-head{background:#f4f5f7 !important;border-bottom:1px solid var(--f-line) !important}
+
+/* ---- Responsive ---- */
+@media (max-width:980px){
+  body.classic-forum .fhead-in,body.classic-forum .ftabs-in{padding-left:14px !important;padding-right:14px !important}
+  body.classic-forum .fshell{display:block !important;min-height:0 !important}
+  body.classic-forum .fside{position:static !important;min-height:0 !important;max-height:none !important;border-right:0 !important;border-bottom:1px solid var(--f-line-2) !important;padding:8px 0 !important;background:var(--f-surface) !important}
+  body.classic-forum .fside-box{margin:0 !important}
+  body.classic-forum .fside-list{display:flex !important;flex-wrap:nowrap !important;overflow-x:auto !important;gap:7px !important;padding:4px 12px 8px !important;-webkit-overflow-scrolling:touch !important}
+  body.classic-forum .fside-list a{flex:0 0 auto !important;white-space:nowrap !important;border:1px solid var(--f-line-2) !important;border-left:1px solid var(--f-line-2) !important;background:#fff !important;border-radius:7px !important;padding:7px 12px !important;font:600 13px "Inter",Arial,sans-serif !important}
+  body.classic-forum .fside-list a.is-active{border:1px solid var(--f-gold) !important;background:#fdf6e6 !important;border-radius:7px !important}
+  body.classic-forum .fmain{padding:16px 14px 34px !important}
+}
+@media (max-width:760px){
+  body.classic-forum .fhead-in{flex-wrap:wrap !important;padding:8px 14px !important}
+  body.classic-forum .fhead-search{order:3 !important;width:100% !important;max-width:none !important;margin:8px 0 0 !important}
+  body.classic-forum .fpagehead{padding:14px 16px !important}
+  body.classic-forum .fpagehead .ftitle h1{font-size:23px !important}
+  body.classic-forum .fpagehead .fstats{gap:14px !important;row-gap:6px !important;flex-wrap:wrap !important}
+  body.classic-forum .ftoolbar{padding:11px 13px !important}
+  body.classic-forum .ftoolbar-actions{width:100% !important}
+  body.classic-forum .ftoolbar-search{flex:1 1 auto !important;width:auto !important}
+  body.classic-forum .fgroup-table tr.fcol-head td.col-last,body.classic-forum .fgroup-table td.col-last{display:none !important}
+  body.classic-forum .fgroup-table td.fcell{padding:12px 12px !important}
+  body.classic-forum .fname{font-size:15px !important}
+}
+@media (max-width:440px){
+  body.classic-forum .fgroup-table tr.fcol-head td.col-num:last-child,body.classic-forum .fgroup-table td.col-num:last-child{display:none !important}
+  body.classic-forum .fpagehead .ftitle h1{font-size:21px !important}
+}
+</style>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "TrustMyRecord Sports Betting Forums", "item": "https://trustmyrecord.com/forum/"}]}
 </script>
@@ -1649,22 +1825,24 @@ body.classic-forum .fpost-btn.is-sub.is-subscribed{
 
     <main class="fmain">
 
-        <div class="fcrumb" id="breadcrumb">
-            <a onclick="showCategories()">TrustMyRecord Forums</a>
-            <span class="sep">&rsaquo;</span>
-            <span id="forumPageTitleLabel">Forum Home</span>
-        </div>
+        <div class="fpagehead">
+            <div class="fcrumb" id="breadcrumb">
+                <a onclick="showCategories()">TrustMyRecord Forums</a>
+                <span class="sep">&rsaquo;</span>
+                <span id="forumPageTitleLabel">Forum Home</span>
+            </div>
 
-        <div class="ftitle">
-            <h1 id="forumPageTitle">TrustMyRecord Sports Betting Forums</h1>
-            <p>Classic bulletin board discussion for picks, handicappers, challenges, polls, trivia, and receipts.</p>
-        </div>
+            <div class="ftitle">
+                <h1 id="forumPageTitle">TrustMyRecord Sports Betting Forums</h1>
+                <p>Classic bulletin board discussion for picks, handicappers, challenges, polls, trivia, and receipts.</p>
+            </div>
 
-        <div class="fstats" aria-label="Board stats">
-            <span><b id="statThreads">0</b> threads</span>
-            <span><b id="statPosts">0</b> posts</span>
-            <span><b id="statUsers">0</b> forums</span>
-            <span><b id="statOnline">0</b> active</span>
+            <div class="fstats" aria-label="Board stats">
+                <span><b id="statThreads">0</b> threads</span>
+                <span><b id="statPosts">0</b> posts</span>
+                <span><b id="statUsers">0</b> forums</span>
+                <span><b id="statOnline">0</b> active</span>
+            </div>
         </div>
 
         <div id="viewCategories">
@@ -1696,16 +1874,13 @@ body.classic-forum .fpost-btn.is-sub.is-subscribed{
         </div>
 
         <div id="viewThreads" style="display:none;">
-            <table class="fgroup-table" cellpadding="2" cellspacing="1">
-                <tr class="fgroup-band">
-                    <td>Threads in Forum: <span id="threadsCategoryLabel">Forum</span></td>
-                    <td class="fgroup-meta" id="threadsCategoryMeta">&nbsp;</td>
-                </tr>
-            </table>
-            <div class="factionrow">
-                <button type="button" class="fbtn is-primary" onclick="openNewThread()">+ New Thread</button>
-                <button type="button" class="fbtn" onclick="showCategories()">Forum Home</button>
-                <input type="search" placeholder="Search this forum..." onkeyup="if(event.key==='Enter')handleSearch(this.value)">
+            <div class="ftoolbar">
+                <div class="ftoolbar-title">Threads in <span id="threadsCategoryLabel">Forum</span><span class="ftoolbar-meta" id="threadsCategoryMeta"></span></div>
+                <div class="ftoolbar-actions">
+                    <input type="search" class="ftoolbar-search" placeholder="Search this forum..." onkeyup="if(event.key==='Enter')handleSearch(this.value)">
+                    <button type="button" class="fbtn" onclick="showCategories()">Forum Home</button>
+                    <button type="button" class="fbtn is-primary" onclick="openNewThread()">+ New Thread</button>
+                </div>
             </div>
             <table class="fgroup-table thread-table" cellpadding="2" cellspacing="1">
                 <tr class="fcol-head">
@@ -1724,15 +1899,12 @@ body.classic-forum .fpost-btn.is-sub.is-subscribed{
         </div>
 
         <div id="viewThread" style="display:none;">
-            <table class="fgroup-table" cellpadding="2" cellspacing="1">
-                <tr class="fgroup-band">
-                    <td id="threadDetailHeader">Thread</td>
-                    <td class="fgroup-meta">Single thread</td>
-                </tr>
-            </table>
-            <div class="factionrow">
-                <button class="fbtn" type="button" onclick="backToThreads()">&laquo; Back to Thread List</button>
-                <button class="fbtn is-primary" type="button" onclick="openNewThread()">+ New Thread</button>
+            <div class="ftoolbar">
+                <div class="ftoolbar-title" id="threadDetailHeader">Thread</div>
+                <div class="ftoolbar-actions">
+                    <button class="fbtn" type="button" onclick="backToThreads()">&laquo; Back to Thread List</button>
+                    <button class="fbtn is-primary" type="button" onclick="openNewThread()">+ New Thread</button>
+                </div>
             </div>
             <div id="postsContainer"></div>
             <div class="freply">
