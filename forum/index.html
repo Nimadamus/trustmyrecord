@@ -1590,41 +1590,162 @@ body.classic-forum .fpost-btn.is-sub.is-subscribed{
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "TrustMyRecord Sports Betting Forums", "item": "https://trustmyrecord.com/forum/"}]}
 </script>
+<style id="tmrfh-css">
+/* ============================================================
+   TMR Forum Header (2+2-style dark bar) — Jul 10 2026 rebuild.
+   Namespaced .tmrfh so it is untouched by legacy .fhead/.ftabs
+   override layers. Loaded last in <head> to win source order.
+============================================================ */
+.tmrfh{background:#171b26;border-bottom:1px solid #0d1017;font-family:Arial,Helvetica,sans-serif;position:relative;z-index:400}
+.tmrfh *{box-sizing:border-box}
+.tmrfh-in{max-width:1260px;margin:0 auto;min-height:52px;padding:0 14px;display:flex;align-items:center;gap:6px}
+.tmrfh-brand{display:flex;align-items:center;gap:9px;text-decoration:none;white-space:nowrap;padding:6px 6px 6px 0}
+.tmrfh-brand:hover{text-decoration:none}
+.tmrfh-mark{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,#b87500,#d99a1c);color:#1a1204;font:800 12px/1 Arial;letter-spacing:.3px;box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.tmrfh-brand-txt{color:#f2f4f8;font:700 15px/1 Arial}
+.tmrfh-brand-txt b{color:#f0b64a;font-weight:800}
+.tmrfh-brand-txt small{display:block;color:#8b95a7;font:600 10px/1.2 Arial;margin-top:2px;letter-spacing:.4px;text-transform:uppercase}
+.tmrfh-nav{display:flex;align-items:center;gap:2px;margin-left:10px}
+.tmrfh-nav a{color:#c3cad8;text-decoration:none;font:600 13px/1 Arial;padding:9px 11px;border-radius:7px;white-space:nowrap;transition:background .12s,color .12s}
+.tmrfh-nav a:hover{background:#232a3a;color:#fff;text-decoration:none}
+.tmrfh-nav a.is-active{color:#fff;background:#232a3a;box-shadow:inset 0 -2px 0 #b87500}
+.tmrfh-nav a.tmrfh-mainsite{color:#8fd0ff}
+.tmrfh-nav a.tmrfh-mainsite:hover{color:#bfe4ff}
+.tmrfh-spacer{flex:1 1 auto;min-width:8px}
+.tmrfh-right{display:flex;align-items:center;gap:4px}
+.tmrfh-icon{position:relative;display:inline-grid;place-items:center;width:36px;height:36px;border-radius:8px;border:0;background:transparent;color:#aab2c2;cursor:pointer;text-decoration:none;transition:background .12s,color .12s}
+.tmrfh-icon:hover{background:#232a3a;color:#fff;text-decoration:none}
+.tmrfh-icon svg{width:19px;height:19px;display:block}
+.tmrfh-badge{position:absolute;top:1px;right:1px;min-width:16px;height:16px;padding:0 4px;border-radius:9px;background:#e3342f;color:#fff;font:700 10px/16px Arial;text-align:center;box-shadow:0 0 0 2px #171b26}
+.tmrfh-search{display:flex;align-items:center}
+.tmrfh-search input{width:0;padding:0;border:0;opacity:0;background:#0f131c;color:#eef1f6;font:13px Arial;border-radius:8px;height:34px;transition:width .18s,opacity .12s,padding .12s}
+.tmrfh-search.is-open input{width:230px;opacity:1;padding:0 11px;border:1px solid #2b3446;margin-right:4px}
+.tmrfh-search input::placeholder{color:#7a8398}
+.tmrfh-authlink{color:#c3cad8;text-decoration:none;font:700 13px/1 Arial;padding:8px 12px;border-radius:8px;white-space:nowrap}
+.tmrfh-authlink:hover{background:#232a3a;color:#fff;text-decoration:none}
+.tmrfh-authlink--reg{background:linear-gradient(135deg,#b87500,#d99a1c);color:#1a1204}
+.tmrfh-authlink--reg:hover{filter:brightness(1.07);color:#1a1204;background:linear-gradient(135deg,#b87500,#d99a1c)}
+.tmrfh-user{position:relative;margin-left:2px}
+.tmrfh-userbtn{display:flex;align-items:center;gap:8px;border:0;background:transparent;cursor:pointer;padding:5px 7px;border-radius:9px;transition:background .12s}
+.tmrfh-userbtn:hover{background:#232a3a}
+.tmrfh-avatar{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#2b3446;color:#e8ebf1;font:700 12px/1 Arial;overflow:hidden;flex:0 0 30px}
+.tmrfh-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.tmrfh-username{color:#eef1f6;font:700 13px/1 Arial;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tmrfh-caret{width:12px;height:12px;color:#8b95a7;transition:transform .15s}
+.tmrfh-userbtn[aria-expanded="true"] .tmrfh-caret{transform:rotate(180deg)}
+.tmrfh-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:212px;background:#1b2130;border:1px solid #2b3446;border-radius:12px;box-shadow:0 16px 40px rgba(0,0,0,.5);padding:6px;display:none;z-index:600}
+.tmrfh-menu.is-open{display:block}
+.tmrfh-menu a{display:block;color:#d3d9e4;text-decoration:none;font:600 13px/1 Arial;padding:10px 12px;border-radius:8px;white-space:nowrap}
+.tmrfh-menu a:hover{background:#262f42;color:#fff;text-decoration:none}
+.tmrfh-menu-sep{height:1px;background:#2b3446;margin:6px 4px}
+.tmrfh-burger{display:none;place-items:center;width:38px;height:38px;border:0;background:transparent;color:#c3cad8;border-radius:8px;cursor:pointer}
+.tmrfh-burger:hover{background:#232a3a;color:#fff}
+.tmrfh-burger svg{width:22px;height:22px}
+/* Rules modal */
+.tmrfh-rules-overlay{position:fixed;inset:0;background:rgba(6,9,15,.66);z-index:99998;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.tmrfh-rules-overlay.is-open{display:flex}
+.tmrfh-rules-box{position:relative;max-width:620px;width:100%;background:#fff;color:#1c2430;border-radius:12px;box-shadow:0 24px 60px rgba(0,0,0,.5);padding:26px 28px 24px}
+.tmrfh-rules-box h2{margin:0 0 14px;font:800 21px Arial;color:#141a22}
+.tmrfh-rules-box ol{margin:0 0 12px;padding-left:20px}
+.tmrfh-rules-box li{margin:0 0 9px;font:14px/1.5 Arial;color:#333}
+.tmrfh-rules-box p{font:14px/1.5 Arial;color:#444;margin:0}
+.tmrfh-rules-x{position:absolute;top:12px;right:14px;border:0;background:transparent;font:400 26px/1 Arial;color:#8a94a2;cursor:pointer}
+.tmrfh-rules-x:hover{color:#333}
+/* tablet */
+@media(max-width:1000px){
+  .tmrfh-nav a.tmrfh-collapse{display:none}
+  .tmrfh-username{display:none}
+}
+/* mobile */
+@media(max-width:760px){
+  .tmrfh-in{gap:2px;padding:0 10px}
+  .tmrfh-brand-txt small{display:none}
+  .tmrfh-brand-txt{font-size:14px}
+  .tmrfh-burger{display:grid}
+  .tmrfh-nav{position:absolute;top:100%;left:0;right:0;flex-direction:column;align-items:stretch;gap:0;margin:0;background:#1b2130;border-bottom:1px solid #2b3446;padding:6px;display:none;z-index:500;box-shadow:0 16px 30px rgba(0,0,0,.45)}
+  .tmrfh.nav-open .tmrfh-nav{display:flex}
+  .tmrfh-nav a{padding:12px 12px;border-radius:8px}
+  .tmrfh-nav a.tmrfh-collapse{display:block}
+  .tmrfh-nav a.is-active{box-shadow:none;background:#262f42}
+  .tmrfh-search.is-open input{width:150px}
+  .tmrfh-authlink{padding:8px 9px}
+  .tmrfh-menu{position:fixed;top:56px;right:8px;left:auto;min-width:200px}
+}
+@media(max-width:400px){
+  .tmrfh-search.is-open input{width:104px}
+  .tmrfh-brand-txt{display:none}
+}
+</style>
 </head>
 <body class="classic-forum">
 
-<div class="fhead">
-    <div class="fhead-in">
-        <a href="/" class="fhead-logo">Trust<b>My</b>Record Forums<span>Sports betting discussion boards</span></a>
-        <div class="fhead-search">
-            <input type="search" id="searchInput" placeholder="Search forums" onkeyup="if(event.key==='Enter')handleSearch(this.value)" autocomplete="off">
-            <button type="button" onclick="handleSearch(document.getElementById('searchInput').value)">Search</button>
-        </div>
-        <div class="fhead-links" id="forumTopNav">
-            <a href="/messages/">Messages</a>
-            <a href="/notifications/" id="notificationsBtn" class="fhead-bell" aria-label="Notifications" title="Notifications" onclick="if(typeof toggleNotifications==='function'){toggleNotifications(event);return false;}"><svg class="fhead-bell-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v3.6L4.3 15a1 1 0 0 0 .9 1.4h13.6a1 1 0 0 0 .9-1.4L18 11.6V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.83-2H9.17A3 3 0 0 0 12 22Z"/></svg>Alerts<span id="notifBadge" class="fhead-bell-badge" style="display:none;"></span></a>
-            <a href="/profile/" id="forumTopProfileLink" style="display:none;">Profile</a>
-            <a href="/login/" id="forumTopLoginLink">Log In</a>
-            <a href="/register/" id="forumTopRegisterLink">Register</a>
-            <button type="button" onclick="logoutForumTop()" id="forumTopLogoutBtn" style="display:none;">Log Out</button>
-        </div>
-    </div>
-</div>
+<!-- ============================================================
+     TMR Forum Header — single dark bar (2+2-style), Jul 10 2026.
+     Left: brand + forum nav. Right: search, messages, alerts,
+     user chip w/ dropdown. Replaces old .fhead + .ftabs.
+============================================================ -->
+<header class="tmrfh" id="tmrForumHeader">
+    <div class="tmrfh-in">
+        <a href="/forum/" class="tmrfh-brand" aria-label="TrustMyRecord Forums home" onclick="event.preventDefault();tmrfhCloseNav();tmrfhSetActiveNav('Forum Home');showCategories();">
+            <span class="tmrfh-mark" aria-hidden="true">TMR</span>
+            <span class="tmrfh-brand-txt">Trust<b>My</b>Record<small>Forums</small></span>
+        </a>
 
-<div class="ftabs">
-    <div class="ftabs-in">
-        <a href="/forum/" class="is-active">Forums</a>
-        <a href="/forum/">Current Forum</a>
-        <a href="/leaderboard/">Leaderboard</a>
-        <a href="/handicappers/">Handicappers</a>
-        <a href="/sportsbook/">Sportsbook</a>
-        <a href="/" class="is-mainsite">Main Site</a>
-        <a href="/usercp/">User CP</a>
-        <a href="#" onclick="event.preventDefault();showCategories();">Forum Home</a>
-        <a href="#" onclick="event.preventDefault();showCategories();">Mark Forums Read</a>
-        <button type="button" onclick="openNewThread()">New Thread</button>
+        <nav class="tmrfh-nav" id="tmrfhNav" aria-label="Forum navigation">
+            <a href="/forum/" data-nav="home" class="is-active" onclick="event.preventDefault();tmrfhCloseNav();tmrfhSetActiveNav('Forum Home');showCategories();">Forum Home</a>
+            <a href="/forum/" data-nav="new" onclick="event.preventDefault();tmrfhCloseNav();showNewPosts();">New Posts</a>
+            <a href="/forum/" data-nav="subs" onclick="event.preventDefault();tmrfhCloseNav();showSubscribed();">Subscribed Threads</a>
+            <a href="/forum/" data-nav="rules" class="tmrfh-collapse" onclick="event.preventDefault();showRules();">Rules</a>
+            <a href="/" class="tmrfh-mainsite">Main Site</a>
+        </nav>
+
+        <div class="tmrfh-spacer"></div>
+
+        <div class="tmrfh-right">
+            <div class="tmrfh-search" id="tmrfhSearch">
+                <button type="button" class="tmrfh-icon" id="tmrfhSearchToggle" aria-label="Search" title="Search" onclick="tmrfhToggleSearch()">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm5 12 4 4"/></svg>
+                </button>
+                <input type="search" id="searchInput" placeholder="Search threads, posts, users" autocomplete="off" onkeyup="if(event.key==='Enter')handleSearch(this.value)">
+            </div>
+
+            <a href="/messages/" class="tmrfh-icon" id="tmrfhMsgBtn" aria-label="Messages" title="Messages" style="display:none;">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" d="M3 6h18v12H3z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="m3.5 6.5 8.5 6 8.5-6"/></svg>
+                <span class="tmrfh-badge" id="msgBadge" style="display:none;"></span>
+            </a>
+
+            <a href="/notifications/" id="notificationsBtn" class="tmrfh-icon" aria-label="Alerts" title="Alerts" style="display:none;" onclick="if(typeof toggleNotifications==='function'){toggleNotifications(event);return false;}">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v3.6L4.3 15a1 1 0 0 0 .9 1.4h13.6a1 1 0 0 0 .9-1.4L18 11.6V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.83-2H9.17A3 3 0 0 0 12 22Z"/></svg>
+                <span id="notifBadge" class="tmrfh-badge" style="display:none;"></span>
+            </a>
+
+            <a href="/login/" id="forumTopLoginLink" class="tmrfh-authlink">Log In</a>
+            <a href="/register/" id="forumTopRegisterLink" class="tmrfh-authlink tmrfh-authlink--reg">Register</a>
+
+            <div class="tmrfh-user" id="tmrfhUser" style="display:none;">
+                <button type="button" class="tmrfh-userbtn" id="tmrfhUserBtn" aria-haspopup="true" aria-expanded="false" onclick="tmrfhToggleMenu(event)">
+                    <span class="tmrfh-avatar" id="tmrfhAvatar">?</span>
+                    <span class="tmrfh-username" id="tmrfhUsername">Account</span>
+                    <svg class="tmrfh-caret" viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="tmrfh-menu" id="tmrfhMenu" role="menu" aria-label="Account menu">
+                    <a role="menuitem" id="tmrfhMenuProfile" href="/profile/">View Profile</a>
+                    <a role="menuitem" href="/usercp/">User Control Panel</a>
+                    <a role="menuitem" href="/forum/" onclick="event.preventDefault();tmrfhCloseMenu();showMyThreads();">My Threads</a>
+                    <a role="menuitem" href="/forum/" onclick="event.preventDefault();tmrfhCloseMenu();showSubscribed();">Subscribed Threads</a>
+                    <a role="menuitem" href="/messages/">Messages</a>
+                    <a role="menuitem" href="/account/">Account Settings</a>
+                    <div class="tmrfh-menu-sep"></div>
+                    <a role="menuitem" href="#" onclick="event.preventDefault();tmrfhCloseMenu();logoutForumTop();">Log Out</a>
+                </div>
+            </div>
+
+            <button type="button" class="tmrfh-burger" id="tmrfhBurger" aria-label="Menu" aria-expanded="false" onclick="tmrfhToggleNav()">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
+            </button>
+        </div>
     </div>
-</div>
+</header>
 
 <div class="fshell">
 
@@ -3214,28 +3335,196 @@ async function performSearch(query) {
 // INIT
 // ================================================================
 function updateForumNavAuth() {
-    var loginBtn = document.getElementById('forumHeaderLoginBtn');
-    var registerBtn = document.getElementById('forumHeaderRegisterBtn');
     var loggedIn = isUserLoggedIn();
-    var sessionUser = loggedIn ? getForumSessionUser() : null;
-    var profileLabel = sessionUser ? (sessionUser.displayName || sessionUser.display_name || sessionUser.username || sessionUser.email || 'Profile') : 'Profile';
-
-    if (loginBtn) loginBtn.style.display = loggedIn ? 'none' : '';
-    if (registerBtn) registerBtn.style.display = loggedIn ? 'none' : '';
+    var u = loggedIn ? getForumSessionUser() : null;
 
     var topLogin = document.getElementById('forumTopLoginLink');
     var topRegister = document.getElementById('forumTopRegisterLink');
-    var topProfile = document.getElementById('forumTopProfileLink');
-    var topLogout = document.getElementById('forumTopLogoutBtn');
+    var userWrap = document.getElementById('tmrfhUser');
+    var msgBtn = document.getElementById('tmrfhMsgBtn');
+    var bellBtn = document.getElementById('notificationsBtn');
+
     if (topLogin) topLogin.style.display = loggedIn ? 'none' : '';
     if (topRegister) topRegister.style.display = loggedIn ? 'none' : '';
-    if (topProfile) {
-        topProfile.style.display = loggedIn ? '' : 'none';
-        topProfile.textContent = profileLabel;
-        if (sessionUser && sessionUser.username) topProfile.href = '/profile/?user=' + encodeURIComponent(sessionUser.username);
+    if (userWrap) userWrap.style.display = loggedIn ? '' : 'none';
+    if (msgBtn) msgBtn.style.display = loggedIn ? '' : 'none';
+    if (bellBtn) bellBtn.style.display = loggedIn ? '' : 'none';
+
+    if (loggedIn && u) {
+        var name = u.displayName || u.display_name || u.username || u.email || 'Account';
+        var un = u.username || '';
+        var av = u.avatar_url || u.avatar || '';
+        var initial = String(name || '?').slice(0, 1).toUpperCase();
+        var unameEl = document.getElementById('tmrfhUsername');
+        if (unameEl) unameEl.textContent = name;
+        var avEl = document.getElementById('tmrfhAvatar');
+        if (avEl) {
+            if (av) {
+                avEl.innerHTML = '<img src="' + escHtml(av) + '" alt="" onerror="this.parentNode.textContent=\'' + escHtml(initial) + '\';">';
+            } else {
+                avEl.textContent = initial;
+            }
+        }
+        var prof = document.getElementById('tmrfhMenuProfile');
+        if (prof && un) prof.href = '/profile/?user=' + encodeURIComponent(un);
+        tmrfhLoadMsgBadge();
+    } else {
+        tmrfhSetBadge('msgBadge', 0);
     }
-    if (topLogout) topLogout.style.display = loggedIn ? '' : 'none';
 }
+
+/* ================= TMR forum header interactions ================= */
+function tmrfhToggleMenu(e) {
+    if (e) e.stopPropagation();
+    var m = document.getElementById('tmrfhMenu');
+    var b = document.getElementById('tmrfhUserBtn');
+    if (!m) return;
+    var open = m.classList.toggle('is-open');
+    if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function tmrfhCloseMenu() {
+    var m = document.getElementById('tmrfhMenu');
+    var b = document.getElementById('tmrfhUserBtn');
+    if (m) m.classList.remove('is-open');
+    if (b) b.setAttribute('aria-expanded', 'false');
+}
+function tmrfhToggleNav() {
+    var h = document.getElementById('tmrForumHeader');
+    var b = document.getElementById('tmrfhBurger');
+    if (!h) return;
+    var open = h.classList.toggle('nav-open');
+    if (b) b.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function tmrfhCloseNav() {
+    var h = document.getElementById('tmrForumHeader');
+    var b = document.getElementById('tmrfhBurger');
+    if (h) h.classList.remove('nav-open');
+    if (b) b.setAttribute('aria-expanded', 'false');
+}
+function tmrfhToggleSearch() {
+    var s = document.getElementById('tmrfhSearch');
+    if (!s) return;
+    var open = s.classList.toggle('is-open');
+    if (open) { var i = document.getElementById('searchInput'); if (i) setTimeout(function(){ i.focus(); }, 10); }
+}
+function tmrfhSetActiveNav(which) {
+    var map = { 'Forum Home': 'home', 'New Posts': 'new', 'Subscribed Threads': 'subs', 'My Threads': 'home', 'Rules': 'rules' };
+    var key = map[which] || 'home';
+    var links = document.querySelectorAll('.tmrfh-nav a[data-nav]');
+    for (var i = 0; i < links.length; i++) {
+        links[i].classList.toggle('is-active', links[i].getAttribute('data-nav') === key);
+    }
+}
+document.addEventListener('click', function(e) {
+    var u = document.getElementById('tmrfhUser');
+    if (u && !u.contains(e.target)) tmrfhCloseMenu();
+    var s = document.getElementById('tmrfhSearch');
+    if (s && !s.contains(e.target)) s.classList.remove('is-open');
+});
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        tmrfhCloseMenu();
+        var s = document.getElementById('tmrfhSearch'); if (s) s.classList.remove('is-open');
+        var rm = document.getElementById('tmrfhRulesModal'); if (rm) rm.classList.remove('is-open');
+    }
+});
+
+/* Messages unread badge — summed from conversations, logged-in only. */
+function tmrfhSetBadge(id, n) {
+    var b = document.getElementById(id);
+    if (!b) return;
+    if (n > 0) { b.textContent = n > 99 ? '99+' : String(n); b.style.display = 'inline-flex'; }
+    else { b.style.display = 'none'; b.textContent = '0'; }
+}
+async function tmrfhLoadMsgBadge() {
+    try {
+        if (!isUserLoggedIn() || !window.api || typeof api.getConversations !== 'function') return;
+        try { await api.ready; } catch (e) {}
+        var d = await api.getConversations();
+        var convs = (d && d.conversations) || [];
+        var n = convs.reduce(function(s, c) { return s + (parseInt(c.unread_count, 10) || 0); }, 0);
+        tmrfhSetBadge('msgBadge', n);
+    } catch (e) {}
+}
+
+/* Thread-feed views reusing the existing #viewThreads table. */
+async function tmrfhShowThreadFeed(title, filterFn) {
+    document.getElementById('viewCategories').style.display = 'none';
+    document.getElementById('viewThreads').style.display = '';
+    document.getElementById('viewThread').style.display = 'none';
+    var label = document.getElementById('threadsCategoryLabel');
+    if (label) label.textContent = title;
+    setForumPageHeader(title);
+    tmrfhSetActiveNav(title);
+    var bc = document.getElementById('breadcrumb');
+    if (bc) bc.innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(title) + '</span>';
+    var body = document.getElementById('threadsBody');
+    if (body) body.innerHTML = '<tr><td colspan="5" class="empty-msg">Loading threads...</td></tr>';
+    try {
+        var data = await api.getForumThreads({ limit: 40 });
+        var list = (data && data.threads) || [];
+        if (filterFn) list = list.filter(filterFn);
+        cachedThreads = list;
+        currentCategorySlug = null;
+        renderThreads();
+    } catch (err) {
+        if (body) body.innerHTML = '<tr><td colspan="5" class="empty-msg" style="color:var(--danger);">Could not load threads.</td></tr>';
+        console.error('Thread feed error:', err);
+    }
+    window.history.replaceState({}, '', '/forum/');
+}
+function showNewPosts() {
+    return tmrfhShowThreadFeed('New Posts', null);
+}
+function showMyThreads() {
+    if (!isUserLoggedIn()) { window.location.href = '/login/'; return; }
+    var u = getForumSessionUser();
+    var me = String((u && u.username) || '').toLowerCase();
+    return tmrfhShowThreadFeed('My Threads', function(t) {
+        return String(t.username || (t.user && t.user.username) || '').toLowerCase() === me && me !== '';
+    });
+}
+function showSubscribed() {
+    if (!isUserLoggedIn()) { window.location.href = '/login/'; return; }
+    return tmrfhShowThreadFeed('Subscribed Threads', function(t) {
+        return !!(t.subscribed_by_me || t.subscribed || t.is_subscribed);
+    });
+}
+function showRules() {
+    tmrfhCloseMenu(); tmrfhCloseNav();
+    var m = document.getElementById('tmrfhRulesModal');
+    if (!m) {
+        m = document.createElement('div');
+        m.id = 'tmrfhRulesModal';
+        m.className = 'tmrfh-rules-overlay';
+        m.innerHTML = '<div class="tmrfh-rules-box">'
+            + '<button type="button" class="tmrfh-rules-x" aria-label="Close" onclick="document.getElementById(\'tmrfhRulesModal\').classList.remove(\'is-open\')">&times;</button>'
+            + '<h2>Forum Rules &amp; Posting Guidelines</h2>'
+            + '<ol>'
+            + '<li>Post real picks and real results. Fabricated records, fake screenshots, or doctored receipts are not allowed.</li>'
+            + '<li>Stay on topic. Use the forum that matches your sport or discussion.</li>'
+            + '<li>No spam, no paid-pick advertising dumps, no affiliate link flooding.</li>'
+            + '<li>Be civil. No harassment, hate speech, doxxing, or personal attacks.</li>'
+            + '<li>One account per person. No ban evasion or impersonation.</li>'
+            + '<li>Keep it legal. Do not solicit illegal activity.</li>'
+            + '<li>Moderators may edit, move, lock, or remove posts that break these rules.</li>'
+            + '</ol>'
+            + '<p>Track your record honestly and let the results speak. That is what TrustMyRecord is about.</p>'
+            + '</div>';
+        m.addEventListener('click', function(e) { if (e.target === m) m.classList.remove('is-open'); });
+        document.body.appendChild(m);
+    }
+    m.classList.add('is-open');
+}
+
+/* Keep the messages badge fresh. */
+(function tmrfhMsgBadgeInit() {
+    var poll = function() { if (document.visibilityState !== 'hidden') tmrfhLoadMsgBadge(); };
+    setInterval(poll, 30000);
+    window.addEventListener('focus', poll);
+    document.addEventListener('visibilitychange', poll);
+    window.addEventListener('tmr-auth-changed', function() { setTimeout(updateForumNavAuth, 0); });
+})();
 
 function logoutForumTop() {
     try {
