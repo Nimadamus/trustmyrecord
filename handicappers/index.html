@@ -1985,7 +1985,7 @@
                 { label: 'Graded', value: String(gradedCount(member)) }
             ];
             const metaBits = [sport, formatPickActivity((stats.lastActivity || ''), Number(stats.totalPicks || 0) > 0, !!(member.rawPicks && member.rawPicks.length))].filter(Boolean);
-            return '<div class="hm-feat-card" data-profile-href="' + href + '" role="link" tabindex="0" aria-label="View ' + escapeHtml(member.username) + ' profile">' +
+            return '<div class="hm-feat-card" data-profile-href="' + href + '" data-user-id="' + escapeHtml(String(member.id != null ? member.id : member.username)) + '" role="link" tabindex="0" aria-label="View ' + escapeHtml(member.username) + ' profile">' +
                 '<div class="hm-feat-cat">' + escapeHtml(opts.category) + info + '</div>' +
                 '<div class="hm-feat-user">' +
                     '<img class="hm-feat-avatar" src="' + escapeHtml(member.avatar) + '" alt="' + escapeHtml(member.displayName) + ' avatar">' +
