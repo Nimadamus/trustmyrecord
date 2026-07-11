@@ -1042,6 +1042,9 @@
         .hm-counts--quad .hm-count--primary { grid-area: auto; padding: 18px 20px; }
         .hm-counts--quad .hm-count--primary strong { font-size: clamp(1.9rem, 3vw, 2.4rem); }
         @media (max-width: 560px) { .hm-counts--quad { grid-template-columns: 1fr 1fr; } }
+        /* Five-card hero: the primary (verified) card spans the full row, the
+           four activity cards sit in a 2x2 grid beneath it. */
+        .hm-counts--five .hm-count--primary { grid-column: 1 / -1; }
 
         /* Tier section dividers inside the leaderboard table */
         .hm-tier-header {
@@ -1564,11 +1567,16 @@
                 <h1>Find Verified Handicappers</h1>
                 <p>Discover members with real locked-pick activity, compare verified records, follow cappers, and open public pick histories.</p>
             </div>
-            <div class="hm-counts hm-counts--quad" aria-label="Platform activity">
+            <div class="hm-counts hm-counts--quad hm-counts--five" aria-label="Platform activity">
                 <div class="hm-count hm-count--primary">
                     <strong id="hmVerifiedCount" class="hm-stat-loading" aria-busy="true">…</strong>
                     <span>Verified Handicappers</span>
                     <small>25+ graded picks, public record</small>
+                </div>
+                <div class="hm-count">
+                    <strong id="hmTotalMembers" class="hm-stat-loading" aria-busy="true">…</strong>
+                    <span>Total Members</span>
+                    <small>Real registered accounts</small>
                 </div>
                 <div class="hm-count">
                     <strong id="hmPickMakers" class="hm-stat-loading" aria-busy="true">…</strong>
@@ -1710,6 +1718,7 @@
             sort: document.getElementById('hmSort'),
             status: document.getElementById('hmStatus'),
             verifiedCount: document.getElementById('hmVerifiedCount'),
+            totalMembers: document.getElementById('hmTotalMembers'),
             pickMakers: document.getElementById('hmPickMakers'),
             activeWeek: document.getElementById('hmActiveWeek'),
             buildingCount: document.getElementById('hmBuildingCount'),
@@ -2712,53 +2721,54 @@
             const weekCutoff = Date.now() - (7 * 24 * 60 * 60 * 1000);
             const activeWeek = pickMakers.filter(member => lastPickTime(member) >= weekCutoff).length;
 
-            // Prefer authoritative DB-computed counts (single source of truth) for
-            // the platform-activity cards; fall back to the client-side aggregate
-            // only until directory-counts resolves. Never show hardcoded HTML.
-            const pickMakersCount = authCounts && Number.isFinite(authCounts.total_users_with_at_least_1_pick)
-                ? authCounts.total_users_with_at_least_1_pick
-                : pickMakers.length;
-            const totalGraded = authCounts && Number.isFinite(authCounts.total_graded_picks)
-                ? authCounts.total_graded_picks
-                : totalGradedPicks;
-            const activeWeekCount = authCounts && Number.isFinite(authCounts.active_pick_makers_7d)
-                ? authCounts.active_pick_makers_7d
-                : activeWeek;
+            // Every hero card prefers the authoritative server-side calculation
+            // (/api/users/directory-metrics - one shared definition per metric,
+            // computed live from the production DB, no-store). Fresh client
+            // aggregates are only a fallback until the first metrics response,
+            // and the stale Phase-0 localStorage snapshot is never painted.
+            const metric = (key, fallback) => authCounts && Number.isFinite(authCounts[key])
+                ? Number(authCounts[key])
+                : fallback;
+            const totalMembersCount = metric('total_members', membersAreFresh ? totalRegistered : null);
+            const pickMakersCount = metric('pick_makers', membersAreFresh ? pickMakers.length : null);
+            const verifiedCount = metric('verified_handicappers', membersAreFresh ? verifiedTier.length : null);
+            const buildingCount = metric('building_records', membersAreFresh ? buildingTier.length : null);
+            const totalGraded = metric('total_graded_picks', membersAreFresh ? totalGradedPicks : null);
+            const activeWeekCount = metric('active_this_week', membersAreFresh ? activeWeek : null);
 
-            // Member-derived counts must never be painted from the stale Phase-0
-            // localStorage snapshot. Only write them once fresh backend members load.
-            if (membersAreFresh) {
-                setText(els.verifiedCount, String(verifiedTier.length));
-                setText(els.visible, String(verifiedTier.length));
-                setText(els.buildingCount, String(buildingTier.length));
+            if (verifiedCount != null) {
+                setText(els.verifiedCount, String(verifiedCount));
+                setText(els.visible, String(verifiedCount));
             }
-            // The three activity cards prefer authoritative DB counts (fresh by
-            // definition) and otherwise fall back to fresh client aggregates only.
-            if (authCounts) {
-                setText(els.pickMakers, String(pickMakersCount));
-                setText(els.totalPicks, Number(totalGraded).toLocaleString());
-                setText(els.activeWeek, String(activeWeekCount));
-            } else if (membersAreFresh) {
-                setText(els.pickMakers, String(pickMakersCount));
-                setText(els.totalPicks, Number(totalGraded).toLocaleString());
-                setText(els.activeWeek, String(activeWeekCount));
-            }
+            if (buildingCount != null) setText(els.buildingCount, String(buildingCount));
+            if (totalMembersCount != null) setText(els.totalMembers, Number(totalMembersCount).toLocaleString());
+            if (pickMakersCount != null) setText(els.pickMakers, String(pickMakersCount));
+            if (totalGraded != null) setText(els.totalPicks, Number(totalGraded).toLocaleString());
+            if (activeWeekCount != null) setText(els.activeWeek, String(activeWeekCount));
             renderFeaturedLeaders();
         }
 
-        // Fetch authoritative platform counts from the production DB and repaint
-        // the hero stat cards. Runs in parallel with the heavier member load so
-        // the headline numbers are correct even if pagination is slow.
+        // Fetch the authoritative platform metrics from the production DB and
+        // repaint the hero stat cards. Runs in parallel with the heavier member
+        // load so the headline numbers are correct even if pagination is slow,
+        // and re-runs on a short interval + tab focus so the cards track
+        // registrations, new picks, grades, and verification changes near
+        // real time without a reload.
+        let metricsInFlight = false;
         async function fetchDirectoryCounts() {
+            if (metricsInFlight) return;
+            metricsInFlight = true;
             try {
-                const data = await directoryRequest('/users/directory-counts');
-                if (data && data.counts) {
-                    authCounts = data.counts;
-                    console.info('[Handicappers] directory-counts', authCounts, 'generated_at', data.generated_at);
+                const data = await directoryRequest('/users/directory-metrics');
+                if (data && data.metrics) {
+                    authCounts = data.metrics;
+                    console.info('[Handicappers] directory-metrics', authCounts, 'generated_at', data.generated_at);
                     renderSummary();
                 }
             } catch (error) {
-                console.warn('[Handicappers] directory-counts unavailable:', error && error.message);
+                console.warn('[Handicappers] directory-metrics unavailable:', error && error.message);
+            } finally {
+                metricsInFlight = false;
             }
         }
 
@@ -3384,7 +3394,12 @@
 
         init();
         setInterval(refreshMembers, 90000);
-        document.addEventListener('visibilitychange', () => { if (!document.hidden) refreshMembers(); });
+        // Hero metrics revalidate on their own faster cadence (the endpoint is a
+        // single cheap aggregate query) so counts stay near real time even
+        // between the heavier member refreshes.
+        setInterval(() => { if (!document.hidden) fetchDirectoryCounts(); }, 45000);
+        window.addEventListener('focus', () => fetchDirectoryCounts());
+        document.addEventListener('visibilitychange', () => { if (!document.hidden) { fetchDirectoryCounts(); refreshMembers(); } });
     })();
     </script>
 
