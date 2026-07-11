@@ -581,7 +581,12 @@ function getNotificationDestination(notification) {
     const postId = notification?.post_id || notification?.postId || relatedPostId || (resourceType === 'forum_post' ? notification?.resource_id || notification?.resourceId : null);
 
     if (type === 'friend_request' || type === 'friend_accept') return '/friends/';
-    if (type === 'new_message' || type === 'message') return '/messages/';
+    if (type === 'new_message' || type === 'message') {
+        // Deep-link straight into the conversation with the sender so the row
+        // click opens the thread ready to reply, not the generic inbox.
+        const un = notification?.sender_username || notification?.from_username || notification?.username || notification?.actor_username;
+        return un ? '/messages/?to=' + encodeURIComponent(un) : '/messages/';
+    }
     if (type === 'challenge_invite' || type === 'challenge_result' || type === 'challenge') return '/challenges/';
     if (type === 'premium_upgrade' || type === 'premium_expired') return '/premium/';
     if (type.indexOf('forum') !== -1 || resourceType === 'forum_thread' || resourceType === 'forum_post') {
