@@ -20,7 +20,7 @@
 (function () {
   if (window.TMREmoji && window.TMREmoji.v2) return;
 
-  var VER = '20260711a';
+  var VER = '20260711b';
   var TW_JS = '/static/js/twemoji.min.js?v=' + VER;
   var DATA_JS = '/static/js/tmr-emoji-data.js?v=' + VER;
   var NOTO = 'https://fonts.gstatic.com/s/e/notoemoji/latest/';
