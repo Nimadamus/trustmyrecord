@@ -300,6 +300,7 @@
         .hm-featured {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-auto-rows: 1fr;
             gap: 14px;
         }
 
@@ -398,6 +399,10 @@
 
         .hm-feat-stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 
+        /* Signature stat (Streak / Picks 30d) spans the full stat-grid width. */
+        .hm-feat-stat--wide { grid-column: 1 / -1; }
+        .hm-feat-stat--wide strong { font-size: 1.15rem; }
+
         .hm-feat-stat span {
             font-size: 0.62rem;
             letter-spacing: 0.05em;
@@ -436,12 +441,6 @@
             border-radius: var(--radius);
             color: var(--muted);
             font-size: 0.8rem;
-        }
-
-        .hm-feat-missing {
-            margin: 8px 0 0;
-            font-size: 0.7rem;
-            color: var(--muted);
         }
 
         @media (max-width: 1100px) {
@@ -910,7 +909,6 @@
             <div class="hm-featured" id="hmFeaturedLeaders">
                 <div class="hm-feat-empty">Loading featured leaders…</div>
             </div>
-            <p class="hm-feat-missing" id="hmFeaturedMissing" hidden></p>
         </section>
 
         <div class="hm-toolbar">
@@ -968,7 +966,6 @@
             active30: document.getElementById('hmActive30'),
             followedOnly: document.getElementById('hmFollowedOnly'),
             tabs: document.getElementById('hmTabs'),
-            featuredMissing: document.getElementById('hmFeaturedMissing'),
             status: document.getElementById('hmStatus'),
             verifiedCount: document.getElementById('hmVerifiedCount'),
             totalMembers: document.getElementById('hmTotalMembers'),
@@ -1906,47 +1903,36 @@
             };
         }
 
-        function bestBy(list, predicate, sorterOrScore) {
-            const sorted = list
-                .filter(predicate)
-                .slice();
-            if (typeof sorterOrScore === 'function' && sorterOrScore.length >= 2) {
-                sorted.sort(sorterOrScore);
-            } else {
-                sorted.sort((a, b) => Number(sorterOrScore(b) || 0) - Number(sorterOrScore(a) || 0));
-            }
-            return sorted[0] || null;
-        }
-
         function positiveMetric(member, metric) {
             return Number(member?.stats?.[metric] || 0) > 0;
         }
 
-        function qualifiedWinRateLeader(list) {
-            return bestBy(
-                list,
-                member => member.stats.winRate != null && (Number(member.stats.wins || 0) + Number(member.stats.losses || 0)) > 0,
-                compareBy(
+        // Each featured category returns its FULL ranked qualifier list (leader
+        // first, same ordering criteria as before) so the diversity pass can
+        // fall to a genuinely qualified runner-up when the leader is capped.
+        function rankedWinRateLeaders(list) {
+            return list
+                .filter(member => member.stats.winRate != null && (Number(member.stats.wins || 0) + Number(member.stats.losses || 0)) > 0)
+                .slice()
+                .sort(compareBy(
                     member => Number(member.stats.winRate || 0),
                     member => gradedCount(member),
                     member => Number(member.stats.units || 0)
-                )
-            );
+                ));
         }
 
-        function qualifiedUnitsLeader(list) {
-            return bestBy(
-                list,
-                member => positiveMetric(member, 'units'),
-                compareBy(
+        function rankedUnitsLeaders(list) {
+            return list
+                .filter(member => positiveMetric(member, 'units'))
+                .slice()
+                .sort(compareBy(
                     member => Number(member.stats.units || 0),
                     member => Number(member.stats.roi || 0),
                     member => gradedCount(member)
-                )
-            );
+                ));
         }
 
-        function qualifiedRoiLeader(list) {
+        function rankedRoiLeaders(list) {
             return list
                 .filter(member => member.stats.roi != null && Number(member.stats.roi) > 0)
                 .slice()
@@ -1954,11 +1940,29 @@
                     member => Number(member.stats.roi || 0),
                     member => Number(member.stats.units || 0),
                     member => gradedCount(member)
-                ))[0] || null;
+                ));
+        }
+
+        function rankedMostGraded(list) {
+            return list
+                .filter(member => gradedCount(member) > 0)
+                .slice()
+                .sort(compareBy(gradedCount, member => Number(member.stats.units || 0)));
+        }
+
+        function rankedStreakLeaders(list) {
+            return list
+                .filter(member => Number(member.stats.currentStreak || 0) >= MIN_STREAK_LENGTH)
+                .slice()
+                .sort(compareBy(
+                    member => Number(member.stats.currentStreak || 0),
+                    member => Number(member.stats.units || 0),
+                    member => gradedCount(member)
+                ));
         }
 
         function featuredStatCell(cell) {
-            return '<div class="hm-feat-stat"><span>' + escapeHtml(cell.label) + '</span><strong class="' + (cell.cls || '') + '">' + escapeHtml(cell.value) + '</strong></div>';
+            return '<div class="hm-feat-stat' + (cell.wide ? ' hm-feat-stat--wide' : '') + '"><span>' + escapeHtml(cell.label) + '</span><strong class="' + (cell.cls || '') + '">' + escapeHtml(cell.value) + '</strong></div>';
         }
 
         function featuredCardHtml(opts) {
@@ -2067,6 +2071,13 @@
         const HOT_WINDOW_DAYS = 30;
         const HOT_RECENT_DAYS = 7;
         const MIN_HOT_GRADED_PICKS = 10;
+        // Best Current Streak: active run of consecutive graded wins required.
+        const MIN_STREAK_LENGTH = 2;
+        // Most Active: official picks submitted or graded in the last 30 days.
+        const MIN_ACTIVE_PICKS_30D = 5;
+        // Diversity cap: one member may hold at most this many featured cards;
+        // a capped leader only yields when a genuinely qualified runner-up exists.
+        const MAX_FEATURED_CARDS_PER_MEMBER = 2;
         const HOT_INFO = 'Best net units over the last 30 days. Requires 10+ graded picks in that window, at least one graded pick in the last 7 days, a public profile, and settled (graded) picks only. Pending picks excluded. Ties: higher ROI, then more graded picks, then higher win %.';
 
         // Settlement/graded timestamp for a pick - the date the pick was decided,
@@ -2121,10 +2132,10 @@
             return !!hot && hot.graded >= MIN_HOT_GRADED_PICKS && hot.recent;
         }
 
-        // Best net 30-day units among qualifiers. Deterministic tie-break:
-        // ROI, then graded-pick count, then win%, then username.
-        function hottestActiveCapper(list) {
-            const ranked = list
+        // Best net 30-day units among qualifiers, full ranked list. Deterministic
+        // tie-break: ROI, then graded-pick count, then win%, then username.
+        function rankedHottest(list) {
+            return list
                 .map(member => ({ member, hot: hotStats30d(member) }))
                 .filter(entry => qualifiesHot(entry.hot))
                 .sort((a, b) =>
@@ -2134,58 +2145,127 @@
                     (Number(b.hot.winRate || 0) - Number(a.hot.winRate || 0)) ||
                     String(a.member.username || '').localeCompare(String(b.member.username || ''))
                 );
-            return ranked[0] || null;
+        }
+
+        // Official pick activity in the trailing 30 days: non-void picks that
+        // were submitted (locked) or graded inside the window. Page visits,
+        // follows, and forum posts never count.
+        function activePicks30d(member) {
+            const now = Date.now();
+            const windowStart = now - (HOT_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+            return (member.rawPicks || []).filter(pick => {
+                if (!pick || VOID_PICK_STATUSES.has(pick._status)) return false;
+                const locked = new Date(pick.locked_at || pick.created_at || 0).getTime();
+                if (Number.isFinite(locked) && locked >= windowStart && locked <= now) return true;
+                const graded = pickGradedTime(pick);
+                return graded >= windowStart && graded <= now;
+            }).length;
+        }
+
+        function rankedMostActive(list) {
+            return list
+                .map(member => ({ member, picks30d: activePicks30d(member) }))
+                .filter(entry => entry.picks30d >= MIN_ACTIVE_PICKS_30D)
+                .sort((a, b) =>
+                    (b.picks30d - a.picks30d) ||
+                    compareBy(gradedCount, member => Number(member.stats.units || 0))(a.member, b.member)
+                );
+        }
+
+        // Diversity pass: walk the category's ranked qualifiers and take the
+        // first member below the card cap; if every qualifier is capped, the
+        // rightful leader keeps the card (never a weaker or unqualified user).
+        function pickFeatured(ranked, cardCounts, memberOf) {
+            if (!ranked.length) return null;
+            for (const entry of ranked) {
+                const key = String(memberOf(entry).username || '').toLowerCase();
+                if ((cardCounts.get(key) || 0) < MAX_FEATURED_CARDS_PER_MEMBER) return entry;
+            }
+            return ranked[0];
         }
 
         const FEATURED_MIN_LABEL = 'Requires ' + MIN_TOP_PERFORMER_GRADED_PICKS + '+ graded picks, activity in the last 30 days, and positive net units.';
+        const STREAK_INFO = FEATURED_MIN_LABEL + ' Longest active run of ' + MIN_STREAK_LENGTH + '+ consecutive graded wins. Ties: higher net units, then more graded picks.';
+        const ACTIVE_INFO = 'Most official picks submitted or graded in the last 30 days (' + MIN_ACTIVE_PICKS_30D + '+ required). Only real locked picks count. Fills the grid when nobody currently qualifies for Hottest Last 30 Days or Best Current Streak.';
         function renderFeaturedLeaders() {
             // Hold the loading card until fresh backend members load, so the stale
             // Phase-0 localStorage snapshot never flashes an outdated leader set.
             if (!membersAreFresh) return;
             const pool = displayMembers.length ? displayMembers : members;
             const qualified = pool.filter(isQualifiedTopPerformer);
-            const unitsLeader = qualifiedUnitsLeader(qualified);
-            const roiLeader = qualifiedRoiLeader(qualified);
-            const winRateLeader = qualifiedWinRateLeader(qualified);
-            const mostVerified = bestBy(pool, member => gradedCount(member) > 0, compareBy(gradedCount, member => Number(member.stats.units || 0)));
-            const hottest = hottestActiveCapper(pool);
 
-            // Only categories with a real qualifier get a card. Empty categories
-            // are demoted to one subdued line under the grid instead of a
-            // placeholder card with equal prominence.
+            // Six-card grid. Slots 1-4 are fixed categories; slot 5 is Best
+            // Current Streak and slot 6 is Hottest Last 30 Days, each falling
+            // back to Most Active so no grid position is ever left empty.
             const cards = [];
-            const missing = [];
-            if (unitsLeader) cards.push(featuredCardHtml({ category: 'Units Leader', member: unitsLeader, info: FEATURED_MIN_LABEL }));
-            else missing.push('Units Leader');
-            if (roiLeader) cards.push(featuredCardHtml({ category: 'Best ROI', member: roiLeader, info: FEATURED_MIN_LABEL }));
-            else missing.push('Best ROI');
-            if (winRateLeader) cards.push(featuredCardHtml({ category: 'Best Win %', member: winRateLeader, info: FEATURED_MIN_LABEL }));
-            else missing.push('Best Win %');
-            if (mostVerified) cards.push(featuredCardHtml({ category: 'Most Graded Picks', member: mostVerified, info: 'Highest graded (verified) pick count across all members.' }));
-            else missing.push('Most Graded Picks');
-            if (hottest) {
-                cards.push(featuredCardHtml({
+            const cardCounts = new Map();
+            const claim = member => {
+                const key = String(member.username || '').toLowerCase();
+                cardCounts.set(key, (cardCounts.get(key) || 0) + 1);
+            };
+            const addCard = (ranked, memberOf, build) => {
+                const entry = pickFeatured(ranked, cardCounts, memberOf);
+                if (!entry) return false;
+                claim(memberOf(entry));
+                cards.push(build(entry));
+                return true;
+            };
+            const lifetimeCells = member => [
+                { label: 'Record', value: formatRecord(member.stats) },
+                { label: 'Units', value: formatUnits(member.stats.units, true), cls: statClass(member.stats.units) },
+                { label: 'ROI', value: formatPercent(member.stats.roi, gradedCount(member) > 0), cls: statClass(member.stats.roi) },
+                { label: 'Graded', value: String(gradedCount(member)) }
+            ];
+
+            addCard(rankedUnitsLeaders(qualified), e => e, member =>
+                featuredCardHtml({ category: 'Units Leader', member, info: FEATURED_MIN_LABEL }));
+            addCard(rankedRoiLeaders(qualified), e => e, member =>
+                featuredCardHtml({ category: 'Best ROI', member, info: FEATURED_MIN_LABEL }));
+            addCard(rankedWinRateLeaders(qualified), e => e, member =>
+                featuredCardHtml({ category: 'Best Win %', member, info: FEATURED_MIN_LABEL }));
+            addCard(rankedMostGraded(pool), e => e, member =>
+                featuredCardHtml({ category: 'Most Graded Picks', member, info: 'Highest graded (verified) pick count across all members.' }));
+
+            let lastMostActive = null;
+            const addMostActive = () => {
+                const ranked = rankedMostActive(pool).filter(entry => entry.member !== lastMostActive);
+                return addCard(ranked, e => e.member, entry => {
+                    lastMostActive = entry.member;
+                    return featuredCardHtml({
+                        category: 'Most Active',
+                        member: entry.member,
+                        info: ACTIVE_INFO,
+                        cells: [{ label: 'Picks 30d', value: String(entry.picks30d), wide: true }].concat(lifetimeCells(entry.member))
+                    });
+                });
+            };
+
+            const streakAdded = addCard(rankedStreakLeaders(qualified), e => e, member =>
+                featuredCardHtml({
+                    category: 'Best Current Streak',
+                    member,
+                    info: STREAK_INFO,
+                    cells: [{ label: 'Streak', value: formatStreak(member.stats.currentStreak), cls: statClass(member.stats.currentStreak), wide: true }].concat(lifetimeCells(member))
+                }));
+            if (!streakAdded) addMostActive();
+
+            const hotAdded = addCard(rankedHottest(pool), e => e.member, entry =>
+                featuredCardHtml({
                     category: 'Hottest Last 30 Days',
-                    member: hottest.member,
+                    member: entry.member,
                     info: HOT_INFO,
                     cells: [
-                        { label: 'Units 30d', value: (hottest.hot.units > 0 ? '+' : '') + hottest.hot.units.toFixed(2), cls: statClass(hottest.hot.units) },
-                        { label: 'ROI 30d', value: formatPercent(hottest.hot.roi, true), cls: statClass(hottest.hot.roi) },
-                        { label: 'Win % 30d', value: formatPercent(hottest.hot.winRate, true), cls: statClass(hottest.hot.winRate == null ? null : Number(hottest.hot.winRate) - 50) },
-                        { label: 'Graded 30d', value: String(hottest.hot.graded) }
+                        { label: 'Units 30d', value: (entry.hot.units > 0 ? '+' : '') + entry.hot.units.toFixed(2), cls: statClass(entry.hot.units) },
+                        { label: 'ROI 30d', value: formatPercent(entry.hot.roi, true), cls: statClass(entry.hot.roi) },
+                        { label: 'Win % 30d', value: formatPercent(entry.hot.winRate, true), cls: statClass(entry.hot.winRate == null ? null : Number(entry.hot.winRate) - 50) },
+                        { label: 'Graded 30d', value: String(entry.hot.graded) }
                     ]
                 }));
-            } else {
-                missing.push('Hottest Last 30 Days (needs 10+ graded picks in the last 30 days)');
-            }
+            if (!hotAdded) addMostActive();
 
             els.featured.innerHTML = cards.length
                 ? cards.join('')
                 : '<div class="hm-feat-empty">No featured leaders yet. Members qualify with ' + MIN_TOP_PERFORMER_GRADED_PICKS + '+ graded picks, recent activity, and positive net units.</div>';
-            if (els.featuredMissing) {
-                els.featuredMissing.hidden = !(cards.length && missing.length);
-                els.featuredMissing.textContent = missing.length ? 'Not yet awarded: ' + missing.join(' · ') : '';
-            }
         }
 
         // Deep-link state: /handicappers/?sport=MLB pre-selects a sport. The sport
