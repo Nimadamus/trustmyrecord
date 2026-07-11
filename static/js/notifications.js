@@ -151,13 +151,13 @@ function addNotificationDropdown() {
                 position: fixed;
                 top: 60px;
                 right: 20px;
-                width: 380px;
+                width: 360px;
                 max-width: calc(100vw - 20px);
-                max-height: 500px;
-                background: #12121a;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 16px;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+                max-height: 70vh;
+                background: #13131c;
+                border: 1px solid rgba(255, 255, 255, 0.09);
+                border-radius: 14px;
+                box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
                 z-index: 100000;
                 display: none;
                 overflow: hidden;
@@ -167,103 +167,118 @@ function addNotificationDropdown() {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 15px 20px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding: 13px 16px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             }
 
             .notifications-header h4 {
                 font-family: 'Orbitron', sans-serif;
                 margin: 0;
                 color: #fff;
+                font-size: 15px;
+                letter-spacing: .3px;
             }
 
             .notifications-header button {
                 background: transparent;
                 border: none;
-                color: #00f3ff;
+                color: #35d0e6;
                 cursor: pointer;
                 font-size: 12px;
+                font-weight: 600;
+                padding: 4px 6px;
+                border-radius: 6px;
+                transition: background .15s, color .15s;
             }
             .notifications-header button:hover {
-                text-decoration: underline;
+                background: rgba(53, 208, 230, 0.12);
+                color: #6fe3f2;
+                text-decoration: none;
             }
 
             .notifications-list {
-                max-height: 400px;
+                max-height: calc(70vh - 52px);
                 overflow-y: auto;
             }
 
             .notification-item {
                 display: flex;
-                gap: 12px;
-                padding: 15px 20px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                align-items: flex-start;
+                gap: 11px;
+                padding: 11px 16px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.055);
                 cursor: pointer;
-                transition: background 0.2s;
+                transition: background 0.15s;
+                position: relative;
             }
-
-            .notification-item:hover {
-                background: rgba(255, 255, 255, 0.05);
-            }
-
-            .notification-item.unread {
-                background: rgba(0, 243, 255, 0.05);
-            }
+            .notification-item:last-child { border-bottom: 0; }
+            .notification-item:hover { background: rgba(255, 255, 255, 0.045); }
+            .notification-item.unread { background: rgba(53, 208, 230, 0.055); }
+            .notification-item.unread:hover { background: rgba(53, 208, 230, 0.085); }
 
             .notification-icon {
-                width: 40px;
-                height: 40px;
-                border-radius: 10px;
+                width: 34px;
+                height: 34px;
+                border-radius: 9px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 1.1rem;
                 flex-shrink: 0;
+                margin-top: 1px;
             }
+            .notification-icon svg { width: 18px; height: 18px; display: block; }
 
-            .notification-icon.friend { background: rgba(57, 255, 20, 0.1); color: #39ff14; }
-            .notification-icon.message { background: rgba(0, 243, 255, 0.1); color: #00f3ff; }
-            .notification-icon.challenge { background: rgba(255, 215, 0, 0.1); color: #ffd700; }
-            .notification-icon.bet { background: rgba(255, 0, 255, 0.1); color: #ff00ff; }
-            .notification-icon.system { background: rgba(255, 140, 0, 0.1); color: #ff8c00; }
-            .notification-icon.premium { background: rgba(255, 215, 0, 0.1); color: #ffd700; }
+            /* Type tones: soft tinted chip + matching stroke. */
+            .notification-icon.tone-win     { background: rgba(34, 197, 94, 0.14);  color: #22c55e; }
+            .notification-icon.tone-loss    { background: rgba(239, 68, 68, 0.14);  color: #ef4444; }
+            .notification-icon.tone-like    { background: rgba(244, 63, 94, 0.14);  color: #fb7185; }
+            .notification-icon.tone-follow  { background: rgba(139, 92, 246, 0.16); color: #a78bfa; }
+            .notification-icon.tone-reply   { background: rgba(53, 208, 230, 0.14); color: #35d0e6; }
+            .notification-icon.tone-mention { background: rgba(56, 189, 248, 0.14); color: #38bdf8; }
+            .notification-icon.tone-forum   { background: rgba(148, 163, 184, 0.15);color: #cbd5e1; }
+            .notification-icon.tone-mod     { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+            .notification-icon.tone-message { background: rgba(53, 208, 230, 0.14); color: #35d0e6; }
+            .notification-icon.tone-challenge{background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+            .notification-icon.tone-premium { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
+            .notification-icon.tone-system  { background: rgba(148, 163, 184, 0.15);color: #cbd5e1; }
 
-            .notification-content {
-                flex: 1;
-                min-width: 0;
-            }
+            .notification-content { flex: 1; min-width: 0; }
 
             .notification-message {
-                font-size: 14px;
-                line-height: 1.4;
-                margin-bottom: 4px;
-                color: #e0e0e0;
+                font-size: 13px;
+                line-height: 1.45;
+                color: #e7e9ee;
+                overflow-wrap: anywhere;
             }
+            .notification-message .res-win  { color: #22c55e; font-weight: 700; }
+            .notification-message .res-loss { color: #ef4444; font-weight: 700; }
 
             .notification-time {
-                font-size: 12px;
-                color: #606070;
+                font-size: 11px;
+                color: #7b8092;
+                margin-top: 3px;
             }
 
             .notification-empty {
-                padding: 40px;
+                padding: 36px 20px;
                 text-align: center;
-                color: #606070;
+                color: #6b7080;
+                font-size: 13px;
             }
 
             .notification-dot {
-                width: 8px;
-                height: 8px;
-                background: #ff073a;
+                width: 7px;
+                height: 7px;
+                background: #35d0e6;
                 border-radius: 50%;
                 margin-top: 6px;
                 flex-shrink: 0;
+                box-shadow: 0 0 6px rgba(53, 208, 230, 0.7);
             }
 
             .notification-item.no-destination { cursor: default; }
-            .notification-icon.linked { text-decoration: none; cursor: pointer; }
             .notification-actor {
-                color: #00f3ff;
+                color: #6fe3f2;
                 font-weight: 600;
                 text-decoration: none;
                 cursor: pointer;
@@ -391,24 +406,14 @@ function renderNotificationsList(notifications) {
     }
 
     list.innerHTML = notifications.map(n => {
-        const iconClass = getNotifIconClass(n.type);
-        const iconChar = getNotifIconChar(n.type);
+        const tone = getNotifTone(n.type);
         const isRead = n.is_read;
         const timeStr = timeAgo(n.created_at);
-        const avatar = n.avatar_url || n.avatarUrl;
         const actor = getNotifActor(n);
-        const iconInner = avatar
-            ? `<img src="${escapeHtml(avatar)}" alt="${escapeHtml(actor.display || n.username || '')}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;" onerror="this.outerHTML='<i class=\\'fas ${iconChar}\\'></i>';">`
-            : `<i class="fas ${iconChar}"></i>`;
-        const iconStyle = avatar ? 'padding:0;overflow:hidden;' : '';
-        let iconHtml;
-        if (actor.available) {
-            iconHtml = `<a href="${actor.href}" class="notification-icon linked ${iconClass}" style="${iconStyle}" title="View ${escapeHtml(actor.display)}'s profile" onclick="handleActorClick(event, '${n.id}')">${iconInner}</a>`;
-        } else if (actor.referenced) {
-            iconHtml = `<div class="notification-icon ${iconClass}" style="${iconStyle};opacity:.55;" title="This account is no longer available">${iconInner}</div>`;
-        } else {
-            iconHtml = `<div class="notification-icon ${iconClass}" style="${iconStyle}">${iconInner}</div>`;
-        }
+
+        // Always an inline SVG keyed to the alert type -- never a font glyph or a
+        // remote avatar, so there are no empty tinted boxes or broken images.
+        const iconHtml = `<div class="notification-icon tone-${tone}" aria-hidden="true">${getNotifIconSvg(n.type)}</div>`;
 
         const destination = getNotificationDestination(n) || (actor.available ? actor.href : null);
         const rowClass = destination ? '' : 'no-destination';
@@ -453,18 +458,41 @@ function getNotifActor(notification) {
 function renderNotifMessage(notification, actor) {
     const message = notification.message || notification.content || '';
     const safe = escapeHtml(message);
-    if (!actor || !actor.referenced) return safe;
+    if (!actor || !actor.referenced) return highlightResult(safe, notification.type);
 
     const token = [actor.display, actor.username].find(function(t) {
         return t && message.indexOf(t) === 0;
     });
-    if (!token) return safe; // name not leading; avatar link still opens the profile
+    if (!token) return highlightResult(safe, notification.type); // name not leading
     const safeToken = escapeHtml(token);
-    const rest = safe.slice(safeToken.length);
+    const rest = highlightResult(safe.slice(safeToken.length), notification.type);
     const inner = actor.available
         ? '<a href="' + actor.href + '" class="notification-actor" onclick="handleActorClick(event, \'' + notification.id + '\')">' + safeToken + '</a>'
         : '<span class="notification-actor notification-actor--disabled" title="This account is no longer available">' + safeToken + '</span>';
     return inner + rest;
+}
+
+// Color ONLY the result word and the unit amount (green win / red loss) inside
+// an already-escaped message -- never the whole row. Operates on escaped text,
+// so the inserted <span>s are the only markup. Applied to graded-pick alerts
+// and any message that carries an explicit +/- unit figure.
+function highlightResult(safeHtml, type) {
+    if (!safeHtml) return safeHtml;
+    const t = String(type || '').toLowerCase();
+    const isWin = /win|won/.test(t);
+    const isLoss = /lost|loss/.test(t);
+    let out = safeHtml;
+    // Standalone result words FIRST, while the string still has no <span> markup
+    // (the class names below contain "win"/"loss", so doing this after would
+    // re-match inside the attribute and corrupt the HTML).
+    if (isWin) out = out.replace(/\b(won|win)\b/gi, '<span class="res-win">$1</span>');
+    if (isLoss) out = out.replace(/\b(lost|loss)\b/gi, '<span class="res-loss">$1</span>');
+    // Then signed unit amounts, e.g. "+2.5 units", "-1 unit".
+    out = out.replace(/([+\-]\d+(?:\.\d+)?\s*units?)/gi, function(m) {
+        const cls = m.trim().charAt(0) === '-' ? 'res-loss' : 'res-win';
+        return '<span class="' + cls + '">' + m + '</span>';
+    });
+    return out;
 }
 
 // Click on the actor name/avatar: mark read (awaited so it persists) then open
@@ -503,20 +531,45 @@ function getNotifIconClass(type) {
     return map[type] || 'system';
 }
 
-function getNotifIconChar(type) {
-    const map = {
-        friend_request: 'fa-user-plus', friend_accept: 'fa-user-check',
-        new_message: 'fa-comment', message: 'fa-comment',
-        forum_thread_reply: 'fa-comments', forum_post_reply: 'fa-reply',
-        forum_mention: 'fa-at', forum_post_like: 'fa-thumbs-up',
-        follow_new_thread: 'fa-comment-dots', follow_new_post: 'fa-reply', follow_new_pick: 'fa-chart-line',
-        challenge_invite: 'fa-trophy', challenge_result: 'fa-trophy', challenge: 'fa-trophy',
-        pick_won: 'fa-chart-line', pick_lost: 'fa-chart-line',
-        bet_won: 'fa-chart-line', bet_lost: 'fa-chart-line',
-        premium_upgrade: 'fa-crown', premium_expired: 'fa-crown',
-        mention: 'fa-at', system: 'fa-info-circle'
-    };
-    return map[type] || 'fa-bell';
+// Map a notification type to a colour tone (drives the icon chip + stroke).
+function getNotifTone(type) {
+    const t = String(type || '').toLowerCase();
+    if (/pick_won|bet_won/.test(t) || (t.indexOf('graded') !== -1 && /win|won/.test(t))) return 'win';
+    if (/pick_lost|bet_lost/.test(t) || (t.indexOf('graded') !== -1 && /lost|loss/.test(t))) return 'loss';
+    if (t.indexOf('like') !== -1) return 'like';
+    if (t === 'friend_request' || t === 'friend_accept' || t === 'follow' || t === 'forum_thread_follow' || t.indexOf('follow_new') !== -1) return 'follow';
+    if (t.indexOf('mention') !== -1) return 'mention';
+    if (t === 'forum_mod_action') return 'mod';
+    if (t.indexOf('reply') !== -1 || t.indexOf('subscription') !== -1 || t.indexOf('quote') !== -1) return 'reply';
+    if (t === 'new_message' || t === 'message') return 'message';
+    if (t.indexOf('challenge') !== -1) return 'challenge';
+    if (t.indexOf('premium') !== -1) return 'premium';
+    if (t.indexOf('forum') !== -1) return 'forum';
+    return 'system';
+}
+
+// Inline SVG icons (stroke = currentColor). Always render regardless of whether
+// a font icon library is loaded on the host page -- this is what replaces the
+// empty FontAwesome boxes. 24x24 viewBox, 2px stroke, rounded.
+const NOTIF_SVG = {
+    win:    '<path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/>',
+    loss:   '<circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/>',
+    like:   '<path d="M20.8 8.6a5 5 0 0 0-8.8-3.2A5 5 0 0 0 3.2 8.6c0 3.6 4.2 6.7 8.8 10.4 4.6-3.7 8.8-6.8 8.8-10.4z"/>',
+    follow: '<circle cx="9" cy="8" r="3.2"/><path d="M4 19c0-2.8 2.2-5 5-5s5 2.2 5 5"/><path d="M18 8v6M15 11h6"/>',
+    reply:  '<path d="M21 12a7 7 0 0 1-7 7H7l-4 3V9a7 7 0 0 1 7-7h4a7 7 0 0 1 7 7z"/>',
+    mention:'<circle cx="12" cy="12" r="4"/><path d="M16 12v1.5a2.5 2.5 0 0 0 5 0V12a9 9 0 1 0-3.5 7.1"/>',
+    mod:    '<path d="M12 3l7 3v5c0 4.4-3 8.3-7 9.5C8 19.3 5 15.4 5 11V6z"/><path d="M9.5 12l1.8 1.8 3.2-3.6"/>',
+    message:'<path d="M4 5h16v11H8l-4 3z"/>',
+    challenge:'<path d="M7 4h10v3a5 5 0 0 1-10 0z"/><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3M9 15h6M10 15l-.5 4h5l-.5-4"/>',
+    premium:'<path d="M4 8l4 3 4-6 4 6 4-3-2 10H6z"/>',
+    forum:  '<path d="M4 5h16v10H10l-4 3v-3H4z"/>',
+    system: '<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/>'
+};
+
+function getNotifIconSvg(type) {
+    const inner = NOTIF_SVG[getNotifTone(type)] || NOTIF_SVG.system;
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+         + 'stroke-linecap="round" stroke-linejoin="round">' + inner + '</svg>';
 }
 
 function getNotificationDestination(notification) {
