@@ -5,6 +5,7 @@
 const TMR_NOTIF_POLL_INTERVAL = 60000; // 60 seconds
 let _notifPollTimer = null;
 let _notifCache = { notifications: [], unreadCount: 0 };
+let _notifAuthListenerBound = false; // declared before initNotifications IIFE (TDZ fix)
 
 function hasBackendNotificationSession() {
     if (!window.api || typeof api.isLoggedIn !== 'function') return false;
@@ -33,7 +34,6 @@ function stopNotificationsPolling() {
     }
 }
 
-let _notifAuthListenerBound = false;
 
 async function setupNotifications() {
     // Ensure a notifications container exists
