@@ -2191,7 +2191,7 @@ function renderThread() {
         return '<div class="fthread-post" data-post-id="' + escHtml(postId) + '">'
             + renderAuthorPanel(p)
             + '<div class="fthread-body">'
-            +   '<div class="meta"><span>' + (p.created_at ? formatForumDate(p.created_at) : '—') + (p.id ? ' &middot; <a href="#post-' + escHtml(p.id) + '" id="post-' + escHtml(p.id) + '">Permalink</a>' : '') + '</span><span class="fthread-post-num">#' + postNo + '</span></div>'
+            +   '<div class="meta"><span>' + (p.created_at ? formatForumDate(p.created_at) : '—') + (p.id ? '<a id="post-' + escHtml(p.id) + '"></a>' : '') + '</span><span class="fthread-post-num">#' + postNo + '</span></div>'
             +   (postTitle ? '<div class="fthread-post-title">' + escHtml(postTitle) + '</div>' : '')
             +   '<div class="fpost-content" id="postContent-' + escHtml(postId) + '">' + forumRenderContent(p.content || p.body || '') + '</div>'
             +   editedLine
