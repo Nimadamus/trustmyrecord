@@ -2181,7 +2181,7 @@ function renderThread() {
             + (likeTarget ? '<button type="button" class="fpost-btn is-like' + (p.liked_by_me ? ' is-liked' : '') + '" onclick="forumLikePost(\'' + escHtml(String(likeTarget)) + '\',' + (p.is_thread_starter ? 'true' : 'false') + ',this)">Like <span class="fpost-like-count">(' + likeCount + ')</span></button>' : '')
             + (isLoggedIn && postId ? '<button type="button" class="fpost-btn" onclick="forumQuotePost(\'' + escHtml(postId) + '\')">Quote</button>' : '')
             + '<button type="button" class="fpost-btn" onclick="forumFocusReply()">Reply</button>'
-            + (isLoggedIn && p.is_thread_starter ? '<button type="button" class="fpost-btn is-sub' + ((cachedThread && cachedThread.subscribed_by_me) ? ' is-subscribed' : '') + '" onclick="forumToggleSubscribe(this)">' + ((cachedThread && cachedThread.subscribed_by_me) ? '✓ Following' : 'Follow Thread') + '</button>' : '')
+            + (isLoggedIn && p.is_thread_starter ? '<button type="button" class="fpost-btn is-sub' + ((cachedThread && cachedThread.subscribed_by_me) ? ' is-subscribed' : '') + '" onclick="forumToggleSubscribe(this)">' + ((cachedThread && cachedThread.subscribed_by_me) ? 'Unfollow Thread' : 'Follow Thread') + '</button>' : '')
             + (canEdit && postId ? '<button type="button" class="fpost-btn is-edit" onclick="forumEditPost(\'' + escHtml(postId) + '\')">Edit</button>' : '')
             + (canEdit && postId ? '<button type="button" class="fpost-btn is-delete" onclick="forumDeletePost(\'' + escHtml(postId) + '\')">Delete</button>' : '')
             + (canModerate && p.is_thread_starter ? '<button type="button" class="fpost-btn is-mod" onclick="forumLockThread(this)">' + ((cachedThread && cachedThread.is_locked) ? 'Unlock Thread' : 'Lock Thread') + '</button>' : '')
@@ -2397,7 +2397,7 @@ async function forumToggleSubscribe(btn) {
         var subbed = !!(resp && resp.subscribed);
         if (cachedThread) cachedThread.subscribed_by_me = subbed;
         btn.classList.toggle('is-subscribed', subbed);
-        btn.textContent = subbed ? '✓ Following' : 'Follow Thread';
+        btn.textContent = subbed ? 'Unfollow Thread' : 'Follow Thread';
     } catch (err) {
         console.error('Subscribe error:', err, err && err.detail);
         alert((err && (err.message || err.detail)) || 'Failed to update subscription.');
