@@ -134,6 +134,9 @@
     generated: false
   };
   var cache = {};
+  // Per-sport matchup load status: "loading" | "ok" | "error".
+  // "ok" means a request completed; only then may we claim zero games.
+  var loadState = {};
 
   var els = {
     sport: document.getElementById("sportSelect"),
@@ -475,7 +478,26 @@
       return;
     }
     var matchups = matchupsForSport(state.sport);
+    var status = loadState[state.sport];
+    // Render any matchups we already have, even while a background refresh runs.
     if (!matchups.length) {
+      // Still loading (or never loaded yet) -> show a loading state, never a
+      // false "no games" claim.
+      if (state.loading || (status !== "ok" && status !== "error")) {
+        els.matchup.innerHTML = "<option value=\"\">Loading matchups…</option>";
+        els.matchup.disabled = true;
+        els.matchupDataSource.textContent = "Loading verified matchups from the TrustMyRecord schedule…";
+        return;
+      }
+      // Request failed -> surface a retryable error, not "no games".
+      if (status === "error") {
+        els.matchup.innerHTML = "<option value=\"\">Matchups unavailable</option>";
+        els.matchup.disabled = true;
+        els.matchupDataSource.innerHTML = "We could not load matchups (the schedule service did not respond). " +
+          "<button type=\"button\" id=\"matchupRetry\" class=\"ts-retry-btn\" style=\"margin-left:6px;padding:2px 10px;font:inherit;cursor:pointer;border:1px solid currentColor;border-radius:4px;background:transparent;color:inherit;\">Retry</button>";
+        return;
+      }
+      // status === "ok": a successful response confirmed zero supported games.
       els.matchup.innerHTML = "<option value=\"\">No matchup data available</option>";
       els.matchup.disabled = true;
       els.matchupDataSource.textContent = "No verified matchup data is available for this sport right now.";
@@ -691,36 +713,57 @@
     return "Trend calculation unavailable until dataset is connected.";
   }
 
+  // Fetch JSON with a hard timeout so a cold-starting/hung API surfaces as a
+  // retryable error instead of an indefinite spinner. Non-2xx is an error too.
+  async function fetchJson(url, timeoutMs) {
+    var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = controller ? setTimeout(function () { controller.abort(); }, timeoutMs || 45000) : null;
+    try {
+      var response = await fetch(url, {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+        signal: controller ? controller.signal : undefined
+      });
+      if (!response.ok) {
+        var httpErr = new Error("HTTP " + response.status);
+        httpErr.httpStatus = response.status;
+        throw httpErr;
+      }
+      return await response.json();
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
   async function loadSport(sport) {
     state.loading = true;
+    loadState[sport] = "loading";
     updateUi();
     cache[sport] = cache[sport] || {};
+    var verifiedOk = false;
     try {
-      var response = await fetch(apiBase() + "/trendspotter/verified?sport=" + encodeURIComponent(sport) + "&_=" + Date.now(), {
-        headers: { Accept: "application/json" },
-        cache: "no-store"
-      });
-      cache[sport] = await response.json().catch(function () { return { status: "missing", trends: [] }; });
+      cache[sport] = await fetchJson(apiBase() + "/trendspotter/verified?sport=" + encodeURIComponent(sport) + "&_=" + Date.now());
+      verifiedOk = true;
     } catch (error) {
       cache[sport] = { status: "error", trends: [], matchups: [], unavailable_data: [error.message] };
     }
+    var boardOk = true;
     if (!matchupsForSport(sport).length) {
-      await loadBoardMatchups(sport);
+      boardOk = await loadBoardMatchups(sport);
     }
     if (EXTENDED_SPORTS.includes(sport)) loadSportHistory(sport);
+    // "ok" only when a request actually succeeded (verified response, or a
+    // board response that produced matchups). Otherwise "error" -> retry UI.
+    loadState[sport] = (verifiedOk || (boardOk && matchupsForSport(sport).length)) ? "ok" : "error";
     state.loading = false;
     updateUi();
   }
 
   async function loadBoardMatchups(sport) {
     var boardKey = BOARD_KEYS[sport];
-    if (!boardKey) return;
+    if (!boardKey) return true;
     try {
-      var response = await fetch(apiBase() + "/games/board/" + encodeURIComponent(boardKey), {
-        headers: { Accept: "application/json" },
-        cache: "no-store"
-      });
-      var data = await response.json().catch(function () { return {}; });
+      var data = await fetchJson(apiBase() + "/games/board/" + encodeURIComponent(boardKey));
       var games = Array.isArray(data.games) ? data.games : Array.isArray(data) ? data : [];
       cache[sport].live_matchups = games.filter(function (game) {
         return game && game.away_team && game.home_team;
@@ -739,9 +782,11 @@
       cache[sport].matchup_source = cache[sport].live_matchups.length
         ? "Live schedule matchups loaded. Verified trend results still require matching Trend Spotter data."
         : "No schedule matchups are available for this sport right now.";
+      return true;
     } catch (error) {
       cache[sport].live_matchups = [];
       cache[sport].matchup_source = "Error state: schedule matchups could not be loaded.";
+      return false;
     }
   }
 
@@ -1379,6 +1424,10 @@
       state.sport = els.sport.value;
       resetForSport();
       updateUi();
+      if (state.sport) loadSport(state.sport);
+    });
+    els.matchupDataSource.addEventListener("click", function (event) {
+      if (!event.target.closest("#matchupRetry")) return;
       if (state.sport) loadSport(state.sport);
     });
     els.matchup.addEventListener("change", function () {
