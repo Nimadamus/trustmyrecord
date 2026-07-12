@@ -1122,33 +1122,50 @@
                     <h3 class="tmr-global-footer__heading">Platform</h3>
                     <div class="tmr-global-footer__links">
                         <a href="/sportsbook/">Sportsbook</a>
-                        <a href="/leaderboards/">Leaderboards</a>
-                        <a href="/handicappers/">Find Handicappers</a>
-                        <a href="/arena/">Arena</a>
+                        <a href="/my-record/">My Record</a>
                         <a href="/marketplace/">Sell Your Picks</a>
+                        <a href="/premium/">Premium</a>
+                    </div>
+                </div>
+                <div class="tmr-global-footer__section">
+                    <h3 class="tmr-global-footer__heading">Explore</h3>
+                    <div class="tmr-global-footer__links">
+                        <a href="/leaderboards/">Leaderboards</a>
+                        <a href="/handicappers/">Browse Handicappers</a>
+                        <a href="/verified-handicapper-records/">Verified Records</a>
+                        <a href="/sports-betting-record-tracker/">Pick Trackers</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
                     <h3 class="tmr-global-footer__heading">Community</h3>
                     <div class="tmr-global-footer__links">
-                        <a href="/feed/">Feed</a>
                         <a href="/forum/">Forum</a>
-                        <a href="/polls/">Polls</a>
+                        <a href="/feed/">Feed</a>
                         <a href="/trivia/">Trivia</a>
-                        <a href="/teams/">Team Pages</a>
+                        <a href="/polls/">Polls</a>
+                        <a href="/hangout/">Hangout</a>
                     </div>
                 </div>
                 <div class="tmr-global-footer__section">
-                    <h3 class="tmr-global-footer__heading">Company</h3>
+                    <h3 class="tmr-global-footer__heading">Support</h3>
                     <div class="tmr-global-footer__links">
-                        <a href="/about/">About</a>
                         <a href="/how-it-works/">How It Works</a>
                         <a href="/rules/">Rules</a>
+                        <a href="/about/">About</a>
                         <a href="/contact/">Contact</a>
                         <a href="/report-bug/">Report a Bug</a>
                     </div>
                 </div>
             </div>
+            <nav class="tmr-global-footer__resources" aria-label="Resources">
+                <span class="tmr-global-footer__resources-label">Resources</span>
+                <a href="/sports-betting-glossary/">Betting Glossary</a>
+                <a href="/sports-betting-roi-explained/">ROI Explained</a>
+                <a href="/stats/clv/">CLV</a>
+                <a href="/mlb-season-simulator/">Season Simulator</a>
+                <a href="/model-builder/">Model Builder</a>
+                <a href="/tools/">All Tools</a>
+            </nav>
             <div class="tmr-global-footer__bottom">
                 <nav class="tmr-global-footer__legal" aria-label="Legal">
                     <span>&copy; 2026 TrustMyRecord</span>
@@ -1159,6 +1176,12 @@
             </div>
         `;
         document.body.appendChild(footer);
+        footer.querySelectorAll(".tmr-global-footer__heading").forEach((heading) => {
+            heading.addEventListener("click", () => {
+                if (window.innerWidth > 860) return;
+                heading.parentElement.classList.toggle("is-open");
+            });
+        });
     }
 })();
 
