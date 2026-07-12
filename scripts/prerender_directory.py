@@ -605,11 +605,31 @@ def bake_homepage(rows, now):
     lb = collect_home_leaderboard()  # raises (fail-closed) on API error / empty set
     with open(HOME, encoding="utf-8") as f:
         t = f.read()
-    t = set_marker(t, "homeLbPreview", home_preview_rows(lb),
+    new_preview = home_preview_rows(lb)
+    new_hl = home_highlights(rows, now)
+    # Keep the existing "Last updated" stamp when this recalculation produced
+    # byte-identical preview + highlights AND the stamp is under 24h old.
+    # Avoids a timestamp-only commit + Pages rebuild on every 30-min tick while
+    # guaranteeing the line is re-stamped at least daily and immediately
+    # whenever grading actually changes the board. The stamp always reflects a
+    # real successful calculation of the exact data shown.
+    prev_pre = re.search(r"<!--MK:homeLbPreview-->(.*?)<!--/MK:homeLbPreview-->", t, re.S)
+    prev_hl = re.search(r"<!--MK:homeHighlights-->(.*?)<!--/MK:homeHighlights-->", t, re.S)
+    prev_ts = re.search(r"<!--MK:homeLbUpdated--><!--@([^>]+)-->(.*?)<!--/MK:homeLbUpdated-->", t, re.S)
+    updated_block = f"<!--@{now.isoformat()}-->{home_updated_line(now)}"
+    if (prev_pre and prev_pre.group(1) == new_preview
+            and prev_hl and prev_hl.group(1) == new_hl and prev_ts):
+        try:
+            prev_dt = datetime.datetime.fromisoformat(prev_ts.group(1))
+            if (now - prev_dt).total_seconds() < 24 * 3600:
+                updated_block = f"<!--@{prev_ts.group(1)}-->{prev_ts.group(2)}"
+        except ValueError:
+            pass
+    t = set_marker(t, "homeLbPreview", new_preview,
                    r'(<tbody>)(<tr><td colspan="5")', r'\g<1>@@BLOCK@@')  # unused fallback
-    t = set_marker(t, "homeLbUpdated", home_updated_line(now),
+    t = set_marker(t, "homeLbUpdated", updated_block,
                    r'(<p class="tmrhx-updated">)(</p>)', r'\g<1>@@BLOCK@@\g<2>')
-    t = set_marker(t, "homeHighlights", home_highlights(rows, now),
+    t = set_marker(t, "homeHighlights", new_hl,
                    r'(<ul class="tmrhx-hl">)(<li>)', r'\g<1>@@BLOCK@@')   # unused fallback
     with open(HOME, "w", encoding="utf-8", newline="\n") as f:
         f.write(t)
