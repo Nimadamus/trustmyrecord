@@ -41,11 +41,17 @@
         .sf-stat b { display:block; font-family:'JetBrains Mono',monospace; font-size:17px; }
         .sf-stat span { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
         .pos { color:var(--green); } .neg { color:var(--red); }
-        .offer { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
         .offer h2 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:22px; }
-        .offer p { color:#c5cee0; font-size:13.5px; line-height:1.55; margin-top:6px; max-width:600px; }
-        .offer-price { font-family:'JetBrains Mono',monospace; font-weight:800; font-size:26px; text-align:right; }
-        .offer-price small { display:block; color:var(--muted); font-size:11px; font-weight:500; }
+        .offer-desc { color:#c5cee0; font-size:13.5px; line-height:1.55; margin:6px 0 12px; max-width:640px; }
+        .pkg-row { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+        .pkg { background:rgba(7,14,26,.65); border:1px solid var(--line); border-radius:11px; padding:13px; display:flex; flex-direction:column; gap:8px; transition:border-color .15s; }
+        .pkg:hover { border-color:rgba(45,212,191,.45); }
+        .pkg-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+        .pkg-name { font-weight:800; font-size:13px; }
+        .pkg-dur { font:700 9.5px/1 'JetBrains Mono',monospace; letter-spacing:.08em; color:var(--cyan); background:rgba(34,211,238,.09); border:1px solid rgba(34,211,238,.25); padding:3px 7px; border-radius:999px; white-space:nowrap; }
+        .pkg-price { font-family:'JetBrains Mono',monospace; font-weight:800; font-size:21px; }
+        .pkg-price small { color:var(--muted); font-size:10.5px; font-weight:500; display:block; margin-top:2px; }
+        .pkg .btn { width:100%; padding:9px 12px; font-size:12.5px; margin-top:auto; }
         .terms-note { color:var(--muted); font-size:12px; line-height:1.6; margin-top:12px; }
         .terms-note a { color:var(--cyan); }
         h3.sec { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:20px; margin:22px 0 10px; }
@@ -79,7 +85,7 @@
     <div class="modal">
         <div class="modal-head">Before you buy</div>
         <div class="modal-body">
-            <p>You are purchasing <b>one locked pick</b> from this seller. The pick is revealed in your <a href="/marketplace/purchases/" style="color:var(--cyan);">purchases dashboard</a> as soon as payment is confirmed, and remains viewable there permanently, including after the game grades.</p>
+            <p>You are purchasing <b>locked picks</b> from this seller — either one specific pick or an access pass covering every pick for games starting inside your pass window. Everything is revealed in your <a href="/marketplace/purchases/" style="color:var(--cyan);">purchases dashboard</a> as soon as payment is confirmed, and remains viewable there permanently, including after the games grade.</p>
             <h4>No guaranteed results</h4>
             <p>Sports outcomes are uncertain. You are buying this seller's analysis and their transparent record — never a guaranteed winner, lock, or risk-free profit. Past performance does not predict future results.</p>
             <h4>Refunds</h4>
@@ -108,7 +114,7 @@
     const agreeChk = document.getElementById('agreeChk');
     const confirmBtn = document.getElementById('confirmBuy');
     let store = null;
-    let pendingPickId = null;
+    let pendingPurchase = null;
 
     function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
     function money(cents, cur) { return new Intl.NumberFormat('en-US',{style:'currency',currency:(cur||'usd').toUpperCase()}).format((cents||0)/100); }
@@ -144,18 +150,31 @@
             '<div class="sf-stat"><b>' + s.graded_picks + '</b><span>Graded Picks</span></div>' +
         '</div></div>';
 
-        if (!s.storefront_active || !l) {
+        const listings = store.listings && store.listings.length ? store.listings : (l ? [l] : []);
+        if (!s.storefront_active || !listings.length) {
             html += '<div class="mp-empty">This seller does not have an active storefront right now.</div>';
             content.innerHTML = html; return;
         }
+        const single = listings.find(function (x) { return x.product_type === 'single_pick'; });
+        const DUR = { single_pick: '1 PICK', daily_access: '24H', weekly_access: '7 DAYS', monthly_access: '30 DAYS' };
+        const PER = { single_pick: 'one pick, one-time', daily_access: 'all picks for 24 hours', weekly_access: 'all picks for 7 days', monthly_access: 'all picks for 30 days' };
 
-        html += '<div class="panel"><div class="offer">' +
-            '<div><h2>' + esc(l.title) + '</h2><p>' + esc(l.description || '') + '</p></div>' +
-            '<div class="offer-price">' + money(l.price_cents, l.currency) + '<small>per pick, one-time</small></div>' +
+        html += '<div class="panel"><h2 class="offer">Packages</h2>' +
+        (listings[0].description ? '<p class="offer-desc">' + esc(listings[0].description) + '</p>' : '') +
+        '<div class="pkg-row">' +
+        listings.map(function (x) {
+            return '<div class="pkg">' +
+                '<div class="pkg-head"><span class="pkg-name">' + esc(x.product_label || x.title) + '</span><span class="pkg-dur">' + (DUR[x.product_type] || '') + '</span></div>' +
+                '<div class="pkg-price">' + money(x.price_cents, x.currency) + '<small>' + (PER[x.product_type] || 'one-time') + '</small></div>' +
+                (store.marketplace_enabled && x.product_type !== 'single_pick'
+                    ? '<button class="btn btn-primary" data-buy-listing="' + x.id + '">Buy ' + esc(x.product_label || '') + '</button>'
+                    : x.product_type === 'single_pick' ? '<a class="btn btn-outline" href="#picks">Pick from the board &darr;</a>' : '') +
+            '</div>';
+        }).join('') +
         '</div>' +
-        '<p class="terms-note">Buying one pick reveals that single selection (side, line, and odds at lock) after payment confirms. 20% of the price is TrustMyRecord\'s platform commission; 80% goes to the seller. No refunds after reveal except as described in the <a href="/marketplace/terms/">refund policy</a>. Results are never guaranteed.</p></div>';
+        '<p class="terms-note">Single picks reveal one selection; passes reveal every pick this seller has for games starting inside your access window. Everything unlocks in your <a href="/marketplace/purchases/">purchases dashboard</a> after payment confirms. 20% of each sale is TrustMyRecord\'s platform commission; 80% goes to the seller. No refunds after reveal except as described in the <a href="/marketplace/terms/">refund policy</a>. Results are never guaranteed.</p></div>';
 
-        html += '<h3 class="sec">Picks Available Right Now (' + store.picks_for_sale.length + ')</h3>';
+        html += '<h3 class="sec" id="picks">Picks Available Right Now (' + store.picks_for_sale.length + ')</h3>';
         if (!store.marketplace_enabled) {
             html += '<div class="mp-empty">Marketplace purchases are not enabled yet — final testing is in progress. Check back soon.</div>';
         } else if (!store.picks_for_sale.length) {
@@ -166,23 +185,26 @@
                 '<div class="pr-lock">&#128274;</div>' +
                 '<div class="pr-main"><div class="pr-game">' + esc(p.away_team) + ' @ ' + esc(p.home_team) + '</div>' +
                 '<div class="pr-meta"><b>' + esc(p.sport_title || p.sport_key) + '</b> &middot; ' + esc(marketLabel(p.market_type)) + ' &middot; ' + (p.units != null ? p.units + 'u &middot; ' : '') + gameTime(p.commence_time) + ' &middot; selection hidden until purchase</div></div>' +
-                (store.marketplace_enabled ? '<button class="btn btn-primary" data-buy="' + p.pick_id + '">Buy ' + money(l.price_cents, l.currency) + '</button>' : '') +
+                (store.marketplace_enabled && single ? '<button class="btn btn-primary" data-buy="' + p.pick_id + '">Buy ' + money(single.price_cents, single.currency) + '</button>' : '') +
             '</div>';
         }).join('');
 
         content.innerHTML = html;
         content.querySelectorAll('[data-buy]').forEach(function (btn) {
-            btn.addEventListener('click', function () { startBuy(parseInt(btn.getAttribute('data-buy'), 10), btn); });
+            btn.addEventListener('click', function () { startBuy({ pick_id: parseInt(btn.getAttribute('data-buy'), 10) }); });
+        });
+        content.querySelectorAll('[data-buy-listing]').forEach(function (btn) {
+            btn.addEventListener('click', function () { startBuy({ listing_id: parseInt(btn.getAttribute('data-buy-listing'), 10) }); });
         });
     }
 
-    function startBuy(pickId) {
+    function startBuy(payload) {
         if (!api.token) {
             toast('Log in to buy picks. Redirecting…');
             setTimeout(function(){ location.href = '/login/?redirect=' + encodeURIComponent(location.pathname + location.search); }, 1200);
             return;
         }
-        pendingPickId = pickId;
+        pendingPurchase = payload;
         agreeChk.checked = false;
         confirmBtn.disabled = true;
         modal.style.display = 'flex';
@@ -197,7 +219,7 @@
         confirmBtn.textContent = 'Starting checkout…';
         try {
             await api.request('/marketplace/me/agreement', { method: 'POST', body: { role: 'buyer' } });
-            const out = await api.request('/marketplace/checkout', { method: 'POST', body: { pick_id: pendingPickId } });
+            const out = await api.request('/marketplace/checkout', { method: 'POST', body: pendingPurchase });
             if (out && out.checkout_url) { location.href = out.checkout_url; return; }
             throw new Error((out && out.error) || 'Checkout failed');
         } catch (err) {
