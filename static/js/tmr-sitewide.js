@@ -23,6 +23,7 @@
         ["/online-gaming/", "MLB The Show"],
         ["/challenges/", "Challenges"],
         ["/forum/", "Forums"],
+        ["/chat/", "Chat"],
         ["/polls/", "Polls"],
         ["/trivia/", "Trivia"]
     ];
@@ -32,7 +33,7 @@
     // Pages that should highlight Arena in the top nav even though they
     // have their own URL.
     const ARENA_GROUP = new Set(["arena.html"]);
-    const COMMUNITY_GROUP = new Set(["feed.html", "online-gaming.html", "mlb-the-show-stat-league.html", "arena.html", "challenges.html", "forum.html", "polls.html", "trivia.html", "hangout.html"]);
+    const COMMUNITY_GROUP = new Set(["feed.html", "online-gaming.html", "mlb-the-show-stat-league.html", "arena.html", "challenges.html", "forum.html", "chat.html", "polls.html", "trivia.html", "hangout.html"]);
     const MORE_GROUP = new Set(["marketplace.html", "rules.html"]);
 
     const routeMeta = {
@@ -48,6 +49,7 @@
         "trivia.html": ["Trivia", "Sports trivia, custom questions, leaderboards, and reputation."],
         "profile.html": ["Profile", "Verified pick record, posts, splits, marketplace, polls, trivia, and challenges."],
         "forum.html": ["Forums", "Hardcore sports discussion. Threads tied to verified profiles and locked records."],
+        "chat.html": ["Chat", "Open community chat room. Talk sports, picks, or anything else in real time."],
         "premium.html": ["Premium", "Optional membership tiers with extra analytics and limits beyond the free public-record product."],
         "marketplace.html": ["Sell Your Picks", "Buy and sell picks once a public record is built to back them up."],
         "about.html": ["About", "Why TrustMyRecord exists: no edits, no deletions, no record resets."],
