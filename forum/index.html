@@ -2439,11 +2439,12 @@ function renderAuthorPanel(post) {
           + '</div>'
         : '';
     var botBadge = isOfficialBot ? '<div><span class="fbot-badge">Bot</span></div>' : '';
-    // Custom undertitle (users.headline): shows beneath the username and ABOVE the
-    // "Verified Handicapper" role line. Non-bot only (bots use fbot-tagline). Empty
-    // headline renders nothing so there is no blank gap.
-    var undertitle = (!isOfficialBot && headline)
-        ? '<div class="fthread-undertitle">' + escHtml(headline) + '</div>'
+    // Forum posts never render the profile headline (users.headline) for regular
+    // members: it is a profile-page field (up to 140 chars) and does not belong in
+    // the author panel. The only undertitle is the short "Founder" tag on the
+    // founder/admin account. Bots keep their fbot-tagline below.
+    var undertitle = (!isOfficialBot && authorIsAdmin(author))
+        ? '<div class="fthread-undertitle">Founder</div>'
         : '';
     var botTagline = isOfficialBot
         ? '<div class="fbot-tagline">' + escHtml((headline || '') || 'Your friendly TMR house bot') + '</div>'
