@@ -2088,6 +2088,14 @@ body.classic-forum .fside-list a.fside-forum.is-active{padding:3px 8px !importan
      Left: brand + forum nav. Right: search, messages, alerts,
      user chip w/ dropdown. Replaces old .fhead + .ftabs.
 ============================================================ -->
+<style id="tmr-forum-chat-discover-20260712">
+/* Mobile burger menu was unclickable: .tmrfh (z-index:400) is a stacking
+   context below the fixed 2+2 sidebar (z-index:450), so the open nav panel
+   rendered beneath it and the sidebar intercepted every tap. Lift the header
+   above the sidebar ONLY while the menu is open; closed-state layering,
+   layout, and desktop are untouched. */
+@media(max-width:760px){ .tmrfh.nav-open{z-index:460 !important} }
+</style>
 <div class="tmrfh" id="tmrForumHeader" role="banner">
     <div class="tmrfh-in">
         <a href="/forum/" class="tmrfh-brand" aria-label="TrustMyRecord Forums home" onclick="event.preventDefault();tmrfhCloseNav();tmrfhSetActiveNav('Forum Home');showCategories();">
