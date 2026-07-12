@@ -320,6 +320,37 @@
         .hm-feat-card:hover { border-color: var(--line-strong); background: #12203a; }
         .hm-feat-card:focus-visible { outline: 2px solid var(--teal); outline-offset: 1px; }
 
+        /* Skeleton placeholders: six correctly-sized cards fill the grid from the
+           first visible render, so loading never shows a partial card set and the
+           section height/grid never shift when the real cards land. */
+        .hm-feat-skeleton {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 16px 18px;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: var(--surface);
+            min-width: 0;
+            min-height: 200px;
+        }
+        .hm-skel-bar {
+            border-radius: 6px;
+            background: linear-gradient(90deg, rgba(148,163,184,0.10) 25%, rgba(148,163,184,0.22) 50%, rgba(148,163,184,0.10) 75%);
+            background-size: 200% 100%;
+            animation: hmSkelShimmer 1.4s ease-in-out infinite;
+        }
+        @keyframes hmSkelShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .hm-skel-cat { width: 45%; height: 11px; }
+        .hm-skel-user { display: flex; align-items: center; gap: 10px; }
+        .hm-skel-avatar { width: 38px; height: 38px; border-radius: 50%; flex: none; }
+        .hm-skel-lines { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
+        .hm-skel-name { width: 60%; height: 12px; }
+        .hm-skel-handle { width: 40%; height: 10px; }
+        .hm-skel-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
+        .hm-skel-stat { height: 30px; }
+        .hm-skel-meta { width: 70%; height: 10px; margin-top: auto; }
+
         .hm-feat-cat {
             display: flex;
             align-items: center;
@@ -906,8 +937,13 @@
                 <h2>Featured Handicappers</h2>
                 <span class="hm-section-note"><strong id="hmVisibleMembers" class="hm-stat-loading" aria-busy="true">…</strong> verified · <strong id="hmBuildingCount" class="hm-stat-loading" aria-busy="true">…</strong> building records</span>
             </div>
-            <div class="hm-featured" id="hmFeaturedLeaders">
-                <div class="hm-feat-empty">Loading featured leaders…</div>
+            <div class="hm-featured" id="hmFeaturedLeaders" aria-busy="true">
+                <div class="hm-feat-skeleton" aria-hidden="true"><div class="hm-skel-bar hm-skel-cat"></div><div class="hm-skel-user"><div class="hm-skel-bar hm-skel-avatar"></div><div class="hm-skel-lines"><div class="hm-skel-bar hm-skel-name"></div><div class="hm-skel-bar hm-skel-handle"></div></div></div><div class="hm-skel-stats"><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div></div><div class="hm-skel-bar hm-skel-meta"></div></div>
+                <div class="hm-feat-skeleton" aria-hidden="true"><div class="hm-skel-bar hm-skel-cat"></div><div class="hm-skel-user"><div class="hm-skel-bar hm-skel-avatar"></div><div class="hm-skel-lines"><div class="hm-skel-bar hm-skel-name"></div><div class="hm-skel-bar hm-skel-handle"></div></div></div><div class="hm-skel-stats"><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div></div><div class="hm-skel-bar hm-skel-meta"></div></div>
+                <div class="hm-feat-skeleton" aria-hidden="true"><div class="hm-skel-bar hm-skel-cat"></div><div class="hm-skel-user"><div class="hm-skel-bar hm-skel-avatar"></div><div class="hm-skel-lines"><div class="hm-skel-bar hm-skel-name"></div><div class="hm-skel-bar hm-skel-handle"></div></div></div><div class="hm-skel-stats"><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div></div><div class="hm-skel-bar hm-skel-meta"></div></div>
+                <div class="hm-feat-skeleton" aria-hidden="true"><div class="hm-skel-bar hm-skel-cat"></div><div class="hm-skel-user"><div class="hm-skel-bar hm-skel-avatar"></div><div class="hm-skel-lines"><div class="hm-skel-bar hm-skel-name"></div><div class="hm-skel-bar hm-skel-handle"></div></div></div><div class="hm-skel-stats"><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div></div><div class="hm-skel-bar hm-skel-meta"></div></div>
+                <div class="hm-feat-skeleton" aria-hidden="true"><div class="hm-skel-bar hm-skel-cat"></div><div class="hm-skel-user"><div class="hm-skel-bar hm-skel-avatar"></div><div class="hm-skel-lines"><div class="hm-skel-bar hm-skel-name"></div><div class="hm-skel-bar hm-skel-handle"></div></div></div><div class="hm-skel-stats"><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div></div><div class="hm-skel-bar hm-skel-meta"></div></div>
+                <div class="hm-feat-skeleton" aria-hidden="true"><div class="hm-skel-bar hm-skel-cat"></div><div class="hm-skel-user"><div class="hm-skel-bar hm-skel-avatar"></div><div class="hm-skel-lines"><div class="hm-skel-bar hm-skel-name"></div><div class="hm-skel-bar hm-skel-handle"></div></div></div><div class="hm-skel-stats"><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div><div class="hm-skel-bar hm-skel-stat"></div></div><div class="hm-skel-bar hm-skel-meta"></div></div>
             </div>
         </section>
 
@@ -1984,7 +2020,7 @@
                 { label: 'ROI', value: formatPercent(stats.roi, gradedCount(member) > 0), cls: statClass(stats.roi) },
                 { label: 'Graded', value: String(gradedCount(member)) }
             ];
-            const metaBits = [sport, formatPickActivity((stats.lastActivity || ''), Number(stats.totalPicks || 0) > 0, !!(member.rawPicks && member.rawPicks.length))].filter(Boolean);
+            const metaBits = [sport, formatPickActivity((stats.lastActivity || ''), Number(stats.totalPicks || 0) > 0, !!((member.rawPicks && member.rawPicks.length) || featuredRowFor(member)))].filter(Boolean);
             return '<div class="hm-feat-card" data-profile-href="' + href + '" data-user-id="' + escapeHtml(String(member.id != null ? member.id : member.username)) + '" role="link" tabindex="0" aria-label="View ' + escapeHtml(member.username) + ' profile">' +
                 '<div class="hm-feat-cat">' + escapeHtml(opts.category) + info + '</div>' +
                 '<div class="hm-feat-user">' +
@@ -2071,6 +2107,50 @@
             }
         }
 
+        // ---- Featured stats: ONE authoritative server response ------------
+        // /api/users/featured-stats returns every member's trailing-30-day
+        // aggregates (picks_30d, graded/wins/losses/units/risk 30d, hot_recent)
+        // plus the canonical current_streak in a single request, so the six
+        // featured cards can all be selected and painted together on first
+        // load - no per-member pick-history fan-out, no 4-card partial grid.
+        let featuredStatsById = null;   // Map memberFeatureKey -> server row
+        let featuredStatsSettled = false;
+        let enrichmentComplete = false;
+        let featuredStatsInFlight = false;
+        function featuredRowFor(member) {
+            return featuredStatsById ? (featuredStatsById.get(memberFeatureKey(member)) || null) : null;
+        }
+        // Server values are authoritative for streaks and pick-activity recency:
+        // re-apply them whenever the member list is rebuilt or enrichment merges
+        // recomputed pick stats, so featured cards never flip identity later.
+        function syncFeaturedStatsIntoMembers() {
+            if (!featuredStatsById || !members.length) return;
+            members.forEach(member => {
+                const row = featuredRowFor(member);
+                if (!row) return;
+                member.stats.currentStreak = Number(row.current_streak || 0);
+                if (row.last_activity_at && getTime(row.last_activity_at) > getTime(member.stats.lastActivity)) {
+                    member.stats.lastActivity = row.last_activity_at;
+                }
+            });
+        }
+        async function fetchFeaturedStats() {
+            if (featuredStatsInFlight) return;
+            featuredStatsInFlight = true;
+            try {
+                const data = await directoryRequest('/users/featured-stats');
+                const rows = Array.isArray(data && data.stats) ? data.stats : [];
+                featuredStatsById = new Map(rows.map(row => ['uid:' + String(row.id).toLowerCase(), row]));
+                syncFeaturedStatsIntoMembers();
+            } catch (error) {
+                console.warn('[Handicappers] featured-stats unavailable:', error && error.message);
+            } finally {
+                featuredStatsSettled = true;
+                featuredStatsInFlight = false;
+                renderFeaturedLeaders();
+            }
+        }
+
         // ---- Hottest Active Capper (trailing 30 days) --------------------
         const HOT_WINDOW_DAYS = 30;
         const HOT_RECENT_DAYS = 7;
@@ -2098,6 +2178,27 @@
         // graded/settlement date. Pending and void picks are excluded. Lifetime
         // units are never used here.
         function hotStats30d(member) {
+            // Prefer the server-computed 30-day window (same math, one request,
+            // available on first paint); fall back to local pick history only
+            // when the featured-stats endpoint is unavailable.
+            const row = featuredRowFor(member);
+            if (row) {
+                const graded = Number(row.graded_30d || 0);
+                if (!graded) return null;
+                const units = Number(row.units_30d || 0);
+                const risk = Number(row.risk_30d || 0);
+                const wins = Number(row.wins_30d || 0);
+                const losses = Number(row.losses_30d || 0);
+                const decisions = wins + losses;
+                return {
+                    units,
+                    graded,
+                    roi: risk > 0 ? (units / risk) * 100 : null,
+                    winRate: decisions > 0 ? (wins / decisions) * 100 : null,
+                    lastGraded: getTime(row.last_graded_at),
+                    recent: !!row.hot_recent
+                };
+            }
             const now = Date.now();
             const windowStart = now - (HOT_WINDOW_DAYS * 24 * 60 * 60 * 1000);
             const recentStart = now - (HOT_RECENT_DAYS * 24 * 60 * 60 * 1000);
@@ -2156,6 +2257,8 @@
         // were submitted (locked) or graded inside the window. Page visits,
         // follows, and forum posts never count.
         function activePicks30d(member) {
+            const row = featuredRowFor(member);
+            if (row) return Number(row.picks_30d || 0);
             const now = Date.now();
             const windowStart = now - (HOT_WINDOW_DAYS * 24 * 60 * 60 * 1000);
             return (member.rawPicks || []).filter(pick => {
@@ -2192,33 +2295,18 @@
             return null;
         }
 
-        // Stale-while-revalidate for the featured grid: the last complete
-        // 6-card render (written only by this same selection code, so always
-        // unique-user) is painted instantly on the next visit, then replaced by
-        // the live selection once pick enrichment produces an equally complete
-        // grid. Live renders with FEWER cards never downgrade the cached view
-        // during the first minute; after that the live render always wins.
-        const FEATURED_CACHE_KEY = 'tmrFeaturedCardsV2';
-        const FEATURED_CACHE_TTL = 24 * 60 * 60 * 1000;
-        const featuredBootTime = Date.now();
-        function paintCachedFeatured() {
-            if (!els.featured) return;
-            try {
-                const cached = JSON.parse(localStorage.getItem(FEATURED_CACHE_KEY) || 'null');
-                if (cached && cached.html && Number(cached.count) >= 6 && (Date.now() - Number(cached.at || 0)) < FEATURED_CACHE_TTL) {
-                    els.featured.innerHTML = cached.html;
-                    els.featured.dataset.cachedCards = String(cached.count);
-                }
-            } catch (e) { /* no cache */ }
-        }
-
         const FEATURED_MIN_LABEL = 'Requires ' + MIN_TOP_PERFORMER_GRADED_PICKS + '+ graded picks, activity in the last 30 days, and positive net units.';
         const STREAK_INFO = FEATURED_MIN_LABEL + ' Longest active run of ' + MIN_STREAK_LENGTH + '+ consecutive graded wins. Ties: higher net units, then more graded picks.';
         const ACTIVE_INFO = 'Most official picks submitted or graded in the last 30 days (' + MIN_ACTIVE_PICKS_30D + '+ required). Only real locked picks count. Fills the grid when nobody currently qualifies for Hottest Last 30 Days or Best Current Streak.';
         function renderFeaturedLeaders() {
-            // Hold the loading card until fresh backend members load, so the stale
-            // Phase-0 localStorage snapshot never flashes an outdated leader set.
+            // Single-paint gate: hold the 6 skeleton cards until BOTH the fresh
+            // member list AND the complete featured dataset are in. All six
+            // cards then appear together in one render - never a partial grid
+            // that grows a few seconds later. If the featured-stats endpoint is
+            // down, the fallback is the full pick-history enrichment, and the
+            // grid still waits for it to COMPLETE before the first paint.
             if (!membersAreFresh) return;
+            if (!((featuredStatsSettled && featuredStatsById) || enrichmentComplete)) return;
             const pool = displayMembers.length ? displayMembers : members;
             const qualified = pool.filter(isQualifiedTopPerformer);
 
@@ -2300,19 +2388,10 @@
             }
             console.info('[Handicappers] featured selection', selectionLog.map(s => s.category + ' -> ' + s.username + ' (id ' + s.id + ')').join(' | '));
 
-            // While the cached full grid is on screen, a less-complete live
-            // render (enrichment still in flight) must not downgrade it. The
-            // guard expires after 60s so live data always wins eventually.
-            const cachedCount = Number(els.featured.dataset.cachedCards || 0);
-            if (cachedCount > 0 && cards.length < cachedCount && (Date.now() - featuredBootTime) < 60000) return;
-            delete els.featured.dataset.cachedCards;
-
             els.featured.innerHTML = cards.length
                 ? cards.join('')
                 : '<div class="hm-feat-empty">No featured leaders yet. Members qualify with ' + MIN_TOP_PERFORMER_GRADED_PICKS + '+ graded picks, recent activity, and positive net units.</div>';
-            if (cards.length >= 6) {
-                try { localStorage.setItem(FEATURED_CACHE_KEY, JSON.stringify({ html: cards.join(''), count: cards.length, at: Date.now() })); } catch (e) { /* storage full/blocked */ }
-            }
+            els.featured.removeAttribute('aria-busy');
         }
 
         // Deep-link state: /handicappers/?sport=MLB pre-selects a sport. The sport
@@ -2737,9 +2816,11 @@
                 const followedWrap = document.getElementById('hmFollowedWrap');
                 if (followedWrap) followedWrap.hidden = !signedIn;
                 restoreFilters(!!initialQuery, !!pendingSportFilter);
-                // Authoritative DB counts, in parallel with the member load.
+                // Authoritative DB counts + the one-shot featured dataset, in
+                // parallel with the member load. The featured grid holds its 6
+                // skeleton cards until both members and featured stats are in.
                 fetchDirectoryCounts();
-                paintCachedFeatured();
+                fetchFeaturedStats();
                 // Phase 0: instant paint from last cached snapshot (if any).
                 const cached = readDirectoryCache();
                 if (cached.length) {
@@ -2759,6 +2840,7 @@
                     .filter(member => member.username && isProductionDirectoryUser(member));
                 membersAreFresh = true;
                 applyFollowingSet();
+                syncFeaturedStatsIntoMembers();
                 writeDirectoryCache(members);
                 renderSummary();
                 fillSports();
@@ -2913,9 +2995,13 @@
                     .filter(member => member.username && isProductionDirectoryUser(member));
                 members = next;
                 applyFollowingSet();
+                syncFeaturedStatsIntoMembers();
                 writeDirectoryCache(members);
                 fillSports();
                 applyFilters();
+                // Refresh the featured dataset alongside the member refresh so
+                // the grid tracks new grades; still a single full re-render.
+                fetchFeaturedStats();
                 enrichMembersWithPicks();
             } catch (error) {
                 console.warn('[Handicappers] Auto-refresh failed:', error);
@@ -2938,17 +3024,10 @@
             const recency = member => (lastPickTime(member) >= activeCutoff ? 1 : 0);
             const ordered = list.slice().sort((a, b) =>
                 (recency(b) - recency(a)) || (gradedCount(b) - gradedCount(a)));
-            // Progressive featured refresh: the Hottest Last 30 Days / Most
-            // Active / streak slots depend on enriched pick histories, so
-            // repaint the featured grid as members land (throttled) instead of
-            // leaving the grid at 4 cards until the full ~40s sweep completes.
-            let lastFeaturedRepaint = 0;
-            const repaintFeatured = () => {
-                const now = Date.now();
-                if (now - lastFeaturedRepaint < 1500) return;
-                lastFeaturedRepaint = now;
-                try { renderFeaturedLeaders(); } catch (e) { /* keep enriching */ }
-            };
+            // NOTE: no progressive featured repaint here. The featured grid is
+            // fed by the one-shot /users/featured-stats response and paints all
+            // six cards together; enrichment only powers the Sport/Wager
+            // filters and sport tags, and re-renders once when fully done.
             await mapWithConcurrency(ordered, 2, async member => {
                 if (Array.isArray(member.rawPicks) && member.rawPicks.length) return;
                 if (!Number((member.stats && member.stats.totalPicks) || 0)) return;
@@ -2962,11 +3041,16 @@
                     if (pickStats && Number(pickStats.gradedPicks || 0) < Number((member.stats && member.stats.gradedPicks) || 0)) return;
                     member.rawPicks = rawPicks;
                     if (pickStats) member.stats = Object.assign({}, member.stats, pickStats);
-                    repaintFeatured();
+                    // Server streak stays authoritative (same definition as the
+                    // profile metrics endpoint) so a featured card never flips
+                    // identity when locally recomputed stats land later.
+                    const row = featuredRowFor(member);
+                    if (row) member.stats.currentStreak = Number(row.current_streak || 0);
                 } catch (error) {
                     // Keep aggregate stats if a member's picks fail to load.
                 }
             });
+            enrichmentComplete = true;
             fillSports();
             applyFilters();
         }
