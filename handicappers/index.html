@@ -314,7 +314,9 @@
             background: var(--surface);
             cursor: pointer;
             min-width: 0;
-            min-height: 200px;
+            /* Matches .hm-feat-skeleton so live cards replace placeholders with
+               zero shift, and every card in a row bottoms out identically. */
+            min-height: 305px;
         }
 
         .hm-feat-card:hover { border-color: var(--line-strong); background: #12203a; }
@@ -378,7 +380,7 @@
             cursor: help;
         }
 
-        .hm-feat-user { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .hm-feat-user { display: flex; align-items: center; gap: 10px; min-width: 0; min-height: 40px; }
 
         .hm-feat-avatar {
             width: 38px; height: 38px;
@@ -422,35 +424,43 @@
         .hm-feat-follow:hover { border-color: var(--teal); color: var(--teal); }
         .hm-feat-follow.is-following { border-color: var(--teal-dim); background: var(--teal-dim); color: var(--teal); }
 
+        /* One shared stat layout on every card: fixed 2-col x 2-row grid with
+           fixed row height and a fixed minimum area height, so all four
+           label/value pairs start at identical coordinates on every card and
+           the bottom divider sits at the same vertical position grid-wide. */
         .hm-feat-stats {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-rows: repeat(2, 44px);
             column-gap: 20px;
             row-gap: 12px;
+            align-content: start;
             border-top: 1px solid var(--line);
             padding-top: 12px;
+            min-height: 112px;
         }
 
-        .hm-feat-stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-
-        /* Signature stat (Streak / Picks 30d) spans the full stat-grid width. */
-        .hm-feat-stat--wide { grid-column: 1 / -1; }
-        .hm-feat-stat--wide strong { font-size: 1.15rem; }
+        .hm-feat-stat { display: flex; flex-direction: column; justify-content: flex-start; gap: 2px; min-width: 0; }
 
         .hm-feat-stat span {
             font-size: 0.62rem;
+            line-height: 14px;
             letter-spacing: 0.05em;
             text-transform: uppercase;
             color: var(--muted);
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .hm-feat-stat strong {
             font-size: 1rem;
             font-weight: 700;
-            line-height: 1.25;
+            line-height: 22px;
             font-variant-numeric: tabular-nums;
             white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .hm-feat-meta {
@@ -2004,8 +2014,11 @@
                 ));
         }
 
+        // Every featured card uses the same fixed 2x2 stat grid: exactly four
+        // cells (TL, TR, BL, BR). Category-specific cards swap labels/values
+        // only - never the slot count or slot positions.
         function featuredStatCell(cell) {
-            return '<div class="hm-feat-stat' + (cell.wide ? ' hm-feat-stat--wide' : '') + '"><span>' + escapeHtml(cell.label) + '</span><strong class="' + (cell.cls || '') + '">' + escapeHtml(cell.value) + '</strong></div>';
+            return '<div class="hm-feat-stat"><span>' + escapeHtml(cell.label) + '</span><strong class="' + (cell.cls || '') + '">' + escapeHtml(cell.value) + '</strong></div>';
         }
 
         function featuredCardHtml(opts) {
@@ -2335,13 +2348,6 @@
                 cards.push(build(entry));
                 return true;
             };
-            const lifetimeCells = member => [
-                { label: 'Record', value: formatRecord(member.stats) },
-                { label: 'Units', value: formatUnits(member.stats.units, true), cls: statClass(member.stats.units) },
-                { label: 'ROI', value: formatPercent(member.stats.roi, gradedCount(member) > 0), cls: statClass(member.stats.roi) },
-                { label: 'Graded', value: String(gradedCount(member)) }
-            ];
-
             addCard('Units Leader', rankedUnitsLeaders(qualified), e => e, member =>
                 featuredCardHtml({ category: 'Units Leader', member, info: FEATURED_MIN_LABEL }));
             addCard('Best ROI', rankedRoiLeaders(qualified), e => e, member =>
@@ -2356,7 +2362,12 @@
                     category: 'Most Active',
                     member: entry.member,
                     info: ACTIVE_INFO,
-                    cells: [{ label: 'Picks 30d', value: String(entry.picks30d), wide: true }].concat(lifetimeCells(entry.member))
+                    cells: [
+                        { label: 'Picks 30d', value: String(entry.picks30d) },
+                        { label: 'Record', value: formatRecord(entry.member.stats) },
+                        { label: 'ROI', value: formatPercent(entry.member.stats.roi, gradedCount(entry.member) > 0), cls: statClass(entry.member.stats.roi) },
+                        { label: 'Units', value: formatUnits(entry.member.stats.units, true), cls: statClass(entry.member.stats.units) }
+                    ]
                 }));
 
             const streakAdded = addCard('Best Current Streak', rankedStreakLeaders(qualified), e => e, member =>
@@ -2364,7 +2375,12 @@
                     category: 'Best Current Streak',
                     member,
                     info: STREAK_INFO,
-                    cells: [{ label: 'Streak', value: formatStreak(member.stats.currentStreak), cls: statClass(member.stats.currentStreak), wide: true }].concat(lifetimeCells(member))
+                    cells: [
+                        { label: 'Streak', value: formatStreak(member.stats.currentStreak), cls: statClass(member.stats.currentStreak) },
+                        { label: 'Record', value: formatRecord(member.stats) },
+                        { label: 'Units', value: formatUnits(member.stats.units, true), cls: statClass(member.stats.units) },
+                        { label: 'ROI', value: formatPercent(member.stats.roi, gradedCount(member) > 0), cls: statClass(member.stats.roi) }
+                    ]
                 }));
             if (!streakAdded) addMostActive();
 
