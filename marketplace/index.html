@@ -146,6 +146,7 @@
             <li>A purchased pick stays concealed until payment is confirmed, then it is revealed in your <a href="/marketplace/purchases/">purchases dashboard</a>.</li>
             <li>Picks cannot be sold after the game has started, and a seller cannot change a pick after it is locked.</li>
             <li>No seller may promise guaranteed winners, locks, or risk-free profit. Sports outcomes are uncertain; buy analysis, not certainty.</li>
+            <li>Sellers choose their own packages and prices — single picks, day passes, weekly passes, or monthly passes. A pass unlocks every pick the seller has for games starting inside your access window.</li>
             <li>TrustMyRecord collects a 20% platform commission on each sale; sellers receive an 80% gross allocation through Stripe.</li>
         </ul>
         <p class="fine">Want to be on the other side of the counter? Read the <a href="/sell-sports-picks/">guide to selling sports picks</a>, the <a href="/sell-your-picks/">Sell Your Picks overview</a>, or go straight to <a href="/marketplace/sell/">seller setup</a>.</p>
@@ -216,11 +217,16 @@
                     '<div class="sc-stat"><b>' + s.graded_picks + '</b><span>Graded</span></div>' +
                 '</div>' +
                 '<div class="sc-desc">' + esc((s.listing && s.listing.description) || '') + '</div>' +
-                (s.listing && s.listing.sports && s.listing.sports.length
-                    ? '<div class="sc-sports">' + s.listing.sports.slice(0, 5).map(function (sp) { return '<span class="sc-chip">' + esc(sp) + '</span>'; }).join('') + '</div>' : '') +
+                (function () {
+                    const PKG_LABEL = { single_pick: 'Single Pick', daily_access: 'Day Pass', weekly_access: 'Weekly Pass', monthly_access: 'Monthly Pass' };
+                    const ls = s.listings && s.listings.length ? s.listings : (s.listing ? [s.listing] : []);
+                    const chips = ls.map(function (x) { return '<span class="sc-chip">' + esc(PKG_LABEL[x.product_type] || x.product_type) + '</span>'; }).join('');
+                    const sports = ((s.listing && s.listing.sports) || []).slice(0, 3).map(function (sp) { return '<span class="sc-chip" style="color:var(--muted);border-color:var(--line);background:rgba(148,163,184,.06);">' + esc(sp) + '</span>'; }).join('');
+                    return '<div class="sc-sports">' + chips + sports + '</div>';
+                })() +
                 '<div class="sc-foot">' +
-                    '<div class="sc-price">' + money(s.listing.price_cents, s.listing.currency) + '<small>per pick &middot; ' + s.picks_available + ' available</small></div>' +
-                    '<a class="btn btn-primary" href="/marketplace/seller/?u=' + encodeURIComponent(s.username) + '">View Picks</a>' +
+                    '<div class="sc-price">' + (s.listings && s.listings.length > 1 ? 'From ' : '') + money(s.min_price_cents != null ? s.min_price_cents : (s.listing && s.listing.price_cents), (s.listing && s.listing.currency)) + '<small>' + s.picks_available + ' pick' + (s.picks_available === 1 ? '' : 's') + ' on the board</small></div>' +
+                    '<a class="btn btn-primary" href="/marketplace/seller/?u=' + encodeURIComponent(s.username) + '">View Packages</a>' +
                 '</div>' +
             '</div>';
         }).join('');
