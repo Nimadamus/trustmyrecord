@@ -1109,102 +1109,54 @@
     if (currentFile !== "404.html" && !document.querySelector(".tmr-global-footer")) {
         const footer = document.createElement("footer");
         footer.className = "tmr-global-footer site-footer";
-        footer.innerHTML = `
-            <div class="tmr-global-footer__grid">
-                <div class="tmr-global-footer__brand">
-                    <a class="tmr-global-footer__brand-mark" href="/">
-                        <span class="tmr-global-nav__mark">TMR</span>
-                        <span>TRUST<span>MY</span>RECORD</span>
-                    </a>
-                    <p>Permanent public records, locked picks, and receipts that cannot be rewritten.</p>
-                </div>
-                <div class="tmr-global-footer__section">
-                    <h3 class="tmr-global-footer__heading">Platform</h3>
-                    <div class="tmr-global-footer__links">
-                        <a href="/sportsbook/">Sportsbook</a>
-                        <a href="/arena/">Arena</a>
-                        <a href="/marketplace/">Sell Your Picks</a>
-                        <a href="/premium/">Premium</a>
-                        <a href="/profile/">My Record</a>
-                    </div>
-                </div>
-                <div class="tmr-global-footer__section">
-                    <h3 class="tmr-global-footer__heading">Leaderboards</h3>
-                    <div class="tmr-global-footer__links">
-                        <a href="/leaderboards/">Sports Betting Leaderboards</a>
-                        <a href="/sports-picks-leaderboard/">Sports Picks Leaderboard</a>
-                        <a href="/best-verified-sports-bettors/">Best Verified Bettors</a>
-                        <a href="/verified-handicapper-records/">Verified Handicapper Records</a>
-                        <a href="/handicappers/">Browse Handicappers</a>
-                    </div>
-                </div>
-                <div class="tmr-global-footer__section">
-                    <h3 class="tmr-global-footer__heading">Pick Tracking</h3>
-                    <div class="tmr-global-footer__links">
-                        <a href="/free-pick-tracking/">Free Pick Tracking</a>
-                        <a href="/mlb-pick-tracker/">MLB Pick Tracker</a>
-                        <a href="/nba-pick-tracker/">NBA Pick Tracker</a>
-                        <a href="/nfl-pick-tracker/">NFL Pick Tracker</a>
-                        <a href="/nhl-pick-tracker/">NHL Pick Tracker</a>
-                        <a href="/soccer-pick-tracker/">Soccer Pick Tracker</a>
-                    </div>
-                </div>
-                <div class="tmr-global-footer__section">
-                    <h3 class="tmr-global-footer__heading">Community</h3>
-                    <div class="tmr-global-footer__links">
-                        <a href="/feed/">Feed</a>
-                        <a href="/forum/">Forum</a>
-                        <a href="/trivia/">Trivia</a>
-                        <a href="/polls/">Polls</a>
-                        <a href="/hangout/">Hangout</a>
-                        <a href="/arena/">Arena</a>
-                    </div>
-                </div>
-                <div class="tmr-global-footer__section">
-                    <h3 class="tmr-global-footer__heading">Info</h3>
-                    <div class="tmr-global-footer__links">
-                        <a href="/about/">About</a>
-                        <a href="/how-it-works/">How It Works</a>
-                        <a href="/rules/">Rules</a>
-                        <a href="/terms/">Terms</a>
-                        <a href="/privacy/">Privacy</a>
-                        <a href="/contact/">Contact Us</a>
-                    </div>
-                </div>
-            </div>
-            <div class="tmr-global-footer__guides" aria-label="Guides, tools, and contests">
-                <span class="tmr-global-footer__guides-label">Guides &amp; Tools</span>
-                <nav class="tmr-global-footer__guides-links">
-                    <a href="/sports-betting-glossary/">Betting Glossary</a>
-                    <a href="/sports-betting-roi-explained/">ROI Explained</a>
-                    <a href="/stats/clv/">CLV</a>
-                    <a href="/stats/units/">Units</a>
-                    <a href="/stats/average-odds/">Average Odds</a>
-                    <a href="/stats/win-percentage/">Win %</a>
-                    <a href="/stats/streaks/">Streaks</a>
-                    <a href="/sports-betting-record-tracker/">Record Tracker</a>
-                    <a href="/transparent-sports-betting-results/">Transparent Results</a>
-                    <a href="/mlb-season-simulator/">Season Simulator</a>
-                    <a href="/mlb-simulator/">Game Simulator</a>
-                    <a href="/trendspotter/">Trend Spotter</a>
-                    <a href="/model-builder/">Model Builder</a>
-                    <a href="/trustmyrecord-tools/">All Tools</a>
-                    <a href="/free-sports-betting-contest/">Free Contest</a>
-                    <a href="/mlb-betting-contest/">MLB Contest</a>
-                    <a href="/contests/justbet-mlb/">JustBet Contest</a>
-                    <a href="/teams/">Team Pages</a>
-                </nav>
-            </div>
-            <div class="tmr-global-footer__bottom">
-                <nav class="tmr-global-footer__legal" aria-label="Legal and support">
-                    <span>&copy; 2026 TrustMyRecord</span>
-                    <a href="/terms/">Terms</a>
-                    <a href="/privacy/">Privacy</a>
-                    <a href="/contact/">Contact</a>
-                    <a href="/report-bug/">Report a Bug</a>
-                </nav>
-                <p class="tmr-global-footer__disclaimer">TrustMyRecord is not a gambling platform. No real money is wagered on this site.</p>
-            </div>
+        footer.innerHTML = `
+            <div class="tmr-global-footer__grid">
+                <div class="tmr-global-footer__brand">
+                    <a class="tmr-global-footer__brand-mark" href="/">
+                        <span class="tmr-global-nav__mark">TMR</span>
+                        <span>TRUST<span>MY</span>RECORD</span>
+                    </a>
+                    <p>Transparent sports records, locked picks, and verified results.</p>
+                </div>
+                <div class="tmr-global-footer__section">
+                    <h3 class="tmr-global-footer__heading">Platform</h3>
+                    <div class="tmr-global-footer__links">
+                        <a href="/sportsbook/">Sportsbook</a>
+                        <a href="/leaderboards/">Leaderboards</a>
+                        <a href="/handicappers/">Find Handicappers</a>
+                        <a href="/arena/">Arena</a>
+                        <a href="/marketplace/">Sell Your Picks</a>
+                    </div>
+                </div>
+                <div class="tmr-global-footer__section">
+                    <h3 class="tmr-global-footer__heading">Community</h3>
+                    <div class="tmr-global-footer__links">
+                        <a href="/feed/">Feed</a>
+                        <a href="/forum/">Forum</a>
+                        <a href="/polls/">Polls</a>
+                        <a href="/trivia/">Trivia</a>
+                        <a href="/teams/">Team Pages</a>
+                    </div>
+                </div>
+                <div class="tmr-global-footer__section">
+                    <h3 class="tmr-global-footer__heading">Company</h3>
+                    <div class="tmr-global-footer__links">
+                        <a href="/about/">About</a>
+                        <a href="/how-it-works/">How It Works</a>
+                        <a href="/rules/">Rules</a>
+                        <a href="/contact/">Contact</a>
+                        <a href="/report-bug/">Report a Bug</a>
+                    </div>
+                </div>
+            </div>
+            <div class="tmr-global-footer__bottom">
+                <nav class="tmr-global-footer__legal" aria-label="Legal">
+                    <span>&copy; 2026 TrustMyRecord</span>
+                    <a href="/terms/">Terms</a>
+                    <a href="/privacy/">Privacy</a>
+                </nav>
+                <p class="tmr-global-footer__disclaimer">TrustMyRecord is not a gambling platform. No real money is wagered on this site.</p>
+            </div>
         `;
         document.body.appendChild(footer);
     }
