@@ -345,6 +345,114 @@
             .tmr-filter-control, select.tmr-fb-action-btn, .tmr-fb-action-btn.is-primary { width: 100%; }
             .tmr-polls-count { width: 100%; text-align: center; }
         }
+
+        /* ============================================================
+           REDESIGN 2026-07-12: compact header, participation cards,
+           quick/quiz separation, quieter hierarchy
+           ============================================================ */
+        .tmr-shell2 { max-width: 1080px; margin: 0 auto; padding: 24px 20px 80px; }
+        .tmr-phead { display: flex; align-items: center; justify-content: space-between; gap: 22px; flex-wrap: wrap; padding: 22px 24px; border: 1px solid var(--tmr-fb-border); border-radius: 18px; background: linear-gradient(180deg, rgba(10,20,34,0.92), rgba(6,12,22,0.94)); box-shadow: var(--tmr-fb-shadow); margin-bottom: 20px; }
+        .tmr-phead-copy h1 { font-size: 1.7rem; font-weight: 900; color: #F8FAFC; letter-spacing: -0.01em; line-height: 1.1; }
+        .tmr-phead-copy p { color: #A9B9CC; font-size: 0.9rem; line-height: 1.5; max-width: 540px; margin-top: 7px; }
+        .tmr-phead-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .tmr-hbtn { display: inline-flex; align-items: center; gap: 7px; height: 42px; padding: 0 18px; border-radius: 11px; font-family: inherit; font-weight: 800; font-size: 0.85rem; cursor: pointer; border: 1px solid var(--tmr-fb-border-strong); background: rgba(15,23,42,0.72); color: #DDE9F7; text-decoration: none; white-space: nowrap; }
+        .tmr-hbtn:hover { border-color: rgba(34,211,238,0.42); color: #fff; background: rgba(22,35,55,0.92); text-decoration: none; }
+        .tmr-hbtn.is-primary { background: linear-gradient(135deg, var(--tmr-fb-green), var(--tmr-fb-cyan)); color: #06111F; border-color: rgba(34,211,238,0.5); box-shadow: 0 10px 26px rgba(34,211,238,0.16); }
+        .tmr-hbtn.is-primary:hover { background: linear-gradient(135deg, #4ADE80, #67E8F9); color: #06111F; }
+
+        .tmr-cards3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; margin-bottom: 24px; }
+        .tmr-pcard { display: flex; flex-direction: column; gap: 9px; padding: 18px; border: 1px solid var(--tmr-fb-border); border-radius: 16px; background: linear-gradient(180deg, rgba(9,18,31,0.92), rgba(5,10,18,0.94)); transition: border-color 0.16s ease; }
+        .tmr-pcard:hover { border-color: rgba(34,211,238,0.3); }
+        .tmr-pcard-ic { width: 38px; height: 38px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center; font-size: 1rem; color: #67E8F9; background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.22); }
+        .tmr-pcard.is-accent .tmr-pcard-ic { color: #06111F; background: linear-gradient(135deg, var(--tmr-fb-green), var(--tmr-fb-cyan)); border-color: transparent; }
+        .tmr-pcard h3 { font-size: 1rem; font-weight: 850; color: #F1F5F9; }
+        .tmr-pcard p { color: #93A4BA; font-size: 0.83rem; line-height: 1.45; flex: 1; }
+        .tmr-pcard-btn { margin-top: 2px; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 15px; border-radius: 9px; font-weight: 800; font-size: 0.81rem; color: #DDE9F7; background: rgba(15,23,42,0.72); border: 1px solid var(--tmr-fb-border-strong); cursor: pointer; font-family: inherit; text-decoration: none; }
+        .tmr-pcard-btn:hover { color: #fff; border-color: rgba(34,211,238,0.42); background: rgba(22,35,55,0.92); text-decoration: none; }
+        .tmr-pcard.is-accent .tmr-pcard-btn { background: linear-gradient(135deg, var(--tmr-fb-green), var(--tmr-fb-cyan)); color: #06111F; border-color: transparent; }
+        .tmr-pcard.is-accent .tmr-pcard-btn:hover { background: linear-gradient(135deg, #4ADE80, #67E8F9); color: #06111F; }
+
+        /* Primary tab bar */
+        .tmr-tabs2 { display: flex; gap: 4px; border-bottom: 1px solid var(--tmr-fb-border); margin-bottom: 22px; flex-wrap: wrap; }
+        .tmr-tab2 { position: relative; padding: 11px 16px; background: transparent; border: none; color: #93A4BA; font-family: inherit; font-size: 0.9rem; font-weight: 800; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+        .tmr-tab2:hover { color: #E2E8F0; }
+        .tmr-tab2.is-active { color: #F8FAFC; border-bottom-color: var(--tmr-fb-cyan); }
+        .tmr-tab2 .tmr-tab2-count { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: rgba(148,163,184,0.16); color: #AABBD0; font-size: 0.68rem; font-weight: 900; vertical-align: 1px; }
+
+        /* Section shell */
+        .tmr-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+        .tmr-sec-head h2 { font-size: 1.18rem; font-weight: 850; color: #F1F5F9; }
+        .tmr-sec-head .sub { color: #8FA1B7; font-size: 0.84rem; margin-top: 3px; }
+        .tmr-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .tmr-filters select.tmr-fb-action-btn { min-width: 132px; min-height: 38px; }
+        .tmr-filter-drawer-btn { display: none; }
+
+        /* Card list container (flat, quiet) */
+        .tmr-list2 { border: 1px solid var(--tmr-fb-border); border-radius: 16px; overflow: hidden; background: rgba(7,14,25,0.6); }
+        .tmr-card2 { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 15px 18px; border-bottom: 1px solid var(--tmr-fb-border); cursor: pointer; transition: background 0.12s ease; }
+        .tmr-card2:last-child { border-bottom: none; }
+        .tmr-card2:hover { background: var(--tmr-fb-row-hover); }
+        .tmr-card2-body { min-width: 0; }
+        .tmr-card2-title { color: #F1F5F9; font-size: 0.96rem; font-weight: 800; line-height: 1.32; margin-bottom: 5px; }
+        .tmr-card2-meta { color: var(--tmr-fb-muted); font-size: 0.78rem; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+        .tmr-card2-meta strong { color: #C6D3E4; font-weight: 700; }
+        .tmr-card2-meta .dot { opacity: 0.4; }
+        .tmr-chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.02em; border: 1px solid var(--tmr-fb-border-strong); background: rgba(15,23,42,0.6); color: #AEC0D6; }
+        .tmr-chip.is-quiz { color: #7DD3FC; border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.1); }
+        .tmr-chip.is-soon { color: #FDE68A; border-color: rgba(251,191,36,0.32); background: rgba(251,191,36,0.1); }
+        .tmr-chip.is-popular { color: #86EFAC; border-color: rgba(34,197,94,0.3); background: rgba(34,197,94,0.1); }
+        .tmr-chip.is-closed { color: #CBD5E1; border-color: rgba(148,163,184,0.22); background: rgba(148,163,184,0.1); }
+        .tmr-card2-cta { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 10px; background: rgba(34,211,238,0.1); color: #67E8F9; border: 1px solid rgba(34,211,238,0.28); font-weight: 800; font-size: 0.82rem; text-decoration: none; white-space: nowrap; }
+        .tmr-card2-cta:hover { color: #06111F; background: linear-gradient(135deg, #22C55E, #22D3EE); text-decoration: none; }
+        .tmr-card2-cta.is-muted { background: rgba(148,163,184,0.08); color: #C6D3E4; border-color: var(--tmr-fb-border-strong); }
+
+        /* Featured quiz */
+        .tmr-fquiz { border: 1px solid rgba(34,211,238,0.28); border-radius: 18px; padding: 22px 24px; background: linear-gradient(135deg, rgba(8,19,35,0.96), rgba(12,40,64,0.9) 62%, rgba(6,23,29,0.96)); box-shadow: var(--tmr-fb-shadow); margin-bottom: 20px; position: relative; overflow: hidden; }
+        .tmr-fquiz::after { content: ""; position: absolute; right: -80px; top: -90px; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(34,211,238,0.2), transparent 68%); pointer-events: none; }
+        .tmr-fquiz-eyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--tmr-fb-cyan); font-size: 0.68rem; font-weight: 900; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 8px; position: relative; }
+        .tmr-fquiz-title { font-size: 1.4rem; font-weight: 900; color: #fff; line-height: 1.15; margin-bottom: 6px; position: relative; }
+        .tmr-fquiz-facts { display: flex; gap: 8px 16px; flex-wrap: wrap; color: #C8D4E4; font-size: 0.82rem; font-weight: 600; margin-bottom: 14px; position: relative; }
+        .tmr-fquiz-facts span { display: inline-flex; align-items: center; gap: 6px; }
+        .tmr-fquiz-facts i { color: #67E8F9; }
+        .tmr-fquiz-progress { position: relative; margin-bottom: 14px; }
+        .tmr-fquiz-progress-bar { height: 7px; background: rgba(148,163,184,0.18); border-radius: 999px; overflow: hidden; margin-top: 6px; max-width: 340px; }
+        .tmr-fquiz-progress-fill { height: 100%; background: linear-gradient(90deg, var(--tmr-fb-green), var(--tmr-fb-cyan)); border-radius: 999px; }
+        .tmr-fquiz-progress span { color: #BAE6FD; font-size: 0.8rem; font-weight: 800; }
+        .tmr-fquiz-actions { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; position: relative; }
+        .tmr-fquiz-link { color: #A7F3D0; font-weight: 800; font-size: 0.82rem; }
+
+        /* Sub-grid for quiz upcoming/completed + performers */
+        .tmr-quiz-grid { display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 18px; align-items: start; }
+        .tmr-quiz-side { border: 1px solid var(--tmr-fb-border); border-radius: 16px; overflow: hidden; background: rgba(7,14,25,0.6); }
+        .tmr-quiz-side-head { padding: 12px 15px; background: rgba(15,43,68,0.5); border-bottom: 1px solid var(--tmr-fb-border); font-size: 0.86rem; font-weight: 850; color: #F1F5F9; display: flex; align-items: center; gap: 8px; }
+        @media (max-width: 900px) { .tmr-quiz-grid { grid-template-columns: 1fr; } }
+
+        /* Compact community CTA near bottom */
+        .tmr-cta2 { margin-top: 30px; padding: 22px 24px; border: 1px solid var(--tmr-fb-border); border-radius: 16px; background: linear-gradient(180deg, rgba(10,20,34,0.9), rgba(6,12,22,0.92)); display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+        .tmr-cta2 h3 { font-size: 1.05rem; font-weight: 850; color: #F1F5F9; }
+        .tmr-cta2 p { color: #93A4BA; font-size: 0.85rem; margin-top: 3px; }
+        .tmr-cta2-links { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        /* Create-type chooser step */
+        .tmr-typegrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .tmr-typebtn { display: flex; flex-direction: column; gap: 8px; padding: 18px; border: 1px solid var(--tmr-fb-border-strong); border-radius: 14px; background: rgba(15,23,42,0.6); cursor: pointer; text-align: left; font-family: inherit; }
+        .tmr-typebtn:hover { border-color: var(--tmr-fb-cyan); background: rgba(22,35,55,0.9); }
+        .tmr-typebtn .ic { width: 40px; height: 40px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.05rem; color: #67E8F9; background: rgba(34,211,238,0.1); border: 1px solid rgba(34,211,238,0.24); }
+        .tmr-typebtn b { color: #F1F5F9; font-size: 0.98rem; font-weight: 850; }
+        .tmr-typebtn small { color: #93A4BA; font-size: 0.8rem; line-height: 1.4; }
+        .tmr-back-link { background: none; border: none; color: var(--tmr-fb-link); font-family: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; padding: 0; margin-bottom: 12px; }
+
+        @media (max-width: 720px) {
+            .tmr-cards3 { grid-template-columns: 1fr; }
+            .tmr-phead { flex-direction: column; align-items: stretch; }
+            .tmr-phead-actions .tmr-hbtn { flex: 1; justify-content: center; }
+            .tmr-typegrid { grid-template-columns: 1fr; }
+            .tmr-filter-drawer-btn { display: inline-flex; }
+            .tmr-filters.is-collapsed select { display: none; }
+            .tmr-card2 { grid-template-columns: 1fr; }
+            .tmr-card2-cta { justify-self: flex-start; }
+            .tmr-cta2 { flex-direction: column; align-items: flex-start; }
+        }
     </style>
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Polls", "item": "https://trustmyrecord.com/polls/"}]}
@@ -369,128 +477,97 @@
         </div>
     </div>
 
-    <div class="tmr-fb-shell">
-        <aside class="tmr-fb-sidebar" id="pollsSidebar">
-            <button type="button" class="tmr-fb-sidebar-toggle" onclick="document.getElementById('pollsSidebar').classList.toggle('is-open');">Browse Polls</button>
-            <div class="tmr-fb-sidebar-collapsible">
-                <div class="tmr-fb-sidebar-section">
-                    <div class="tmr-fb-sidebar-label">Polls</div>
-                    <ul class="tmr-fb-sidebar-list">
-                        <li><a class="is-active" data-tab="active" onclick="switchTab('active')"><span>Active Polls</span></a></li>
-                        <li><a data-tab="newest" onclick="switchTab('newest')"><span>Newest</span></a></li>
-                        <li><a data-tab="most_voted" onclick="switchTab('most_voted')"><span>Most Voted</span></a></li>
-                        <li><a data-tab="expired" onclick="switchTab('expired')"><span>Expired / Closed</span></a></li>
-                        <li><a data-tab="mine" onclick="switchTab('mine')"><span>My Polls</span></a></li>
-                    </ul>
-                </div>
-                <div class="tmr-fb-sidebar-divider"></div>
-                <div class="tmr-fb-sidebar-section">
-                    <div class="tmr-fb-sidebar-label">Sport</div>
-                    <ul class="tmr-fb-sidebar-list" id="pollSportList">
-                        <li><a onclick="setSportFilter(null)"><span>All Sports</span></a></li>
-                    </ul>
-                </div>
-                <div class="tmr-fb-sidebar-divider"></div>
-                <div class="tmr-fb-sidebar-section">
-                    <div class="tmr-fb-sidebar-label">League</div>
-                    <ul class="tmr-fb-sidebar-list" id="pollLeagueList">
-                        <li><a onclick="setLeagueFilter(null)"><span>All Leagues</span></a></li>
-                    </ul>
-                </div>
-                <div class="tmr-fb-sidebar-divider"></div>
-                <div class="tmr-fb-sidebar-section">
-                    <div class="tmr-fb-sidebar-label">Categories</div>
-                    <ul class="tmr-fb-sidebar-list" id="pollCategoryList">
-                        <li><a onclick="setCategoryFilter(null,'All Categories')"><span>All Categories</span></a></li>
-                    </ul>
-                </div>
-                <div class="tmr-fb-sidebar-divider"></div>
-                <div class="tmr-fb-sidebar-section">
-                    <div class="tmr-fb-sidebar-label">Quiz Skill Leaders</div>
-                    <div id="quizRatingsBox" class="tmr-qr-box"><div class="tmr-qr-empty">Loading ratings...</div></div>
-                </div>
-                <div class="tmr-fb-sidebar-divider"></div>
-                <div class="tmr-fb-sidebar-section">
-                    <div class="tmr-fb-sidebar-label">Community</div>
-                    <ul class="tmr-fb-sidebar-list">
-                        <li><a href="/forum/"><span>Forums</span></a></li>
-                        <li><a href="/trivia/"><span>Trivia</span></a></li>
-                        <li><a href="/arena/"><span>Arena</span></a></li>
-                    </ul>
-                </div>
+    <div class="tmr-shell2">
+        <div class="tmr-fb-breadcrumb"><a href="/forum/">TrustMyRecord</a><span class="sep">&rsaquo;</span><span>Polls &amp; Predictions</span></div>
+
+        <!-- A. COMPACT HEADER -->
+        <header class="tmr-phead">
+            <div class="tmr-phead-copy">
+                <h1>Polls &amp; Predictions</h1>
+                <p>Vote on today's biggest sports questions, compete in prediction quizzes, or create a poll for the community.</p>
             </div>
-        </aside>
-
-        <main class="tmr-fb-main">
-            <div class="tmr-fb-breadcrumb"><a href="/forum/">TrustMyRecord</a><span class="sep">&rsaquo;</span><span id="pollPageCrumb">Polls</span></div>
-            <h1 class="tmr-fb-page-title" id="pollPageTitle">Polls</h1>
-            <p class="tmr-fb-page-subtitle">Sports debate, market angles, and prediction calls from the TrustMyRecord board.</p>
-
-            <div class="tmr-fb-banner">
-                <div class="tmr-fb-banner-grid">
-                    <div class="tmr-fb-banner-copy">
-                        <span class="tmr-fb-banner-eyebrow">Polls &amp; Predictions</span>
-                        <div class="tmr-fb-banner-headline">Ask the Board. Lock Your Take. See Who's With You.</div>
-                        <div class="tmr-fb-banner-sub">Run polls on tonight's matchups, MVP races, who's hot on the card, or anything bettors actually argue about. Every vote ties to a TrustMyRecord profile, so consensus has receipts.</div>
-                    </div>
-                    <div class="tmr-fb-banner-stats" aria-label="Poll standards">
-                        <div class="tmr-fb-banner-stat"><b>Verified</b><span>Profile-tied votes</span></div>
-                        <div class="tmr-fb-banner-stat"><b>Live</b><span>Market debates</span></div>
-                        <div class="tmr-fb-banner-stat"><b>Receipts</b><span>Public consensus</span></div>
-                    </div>
-                </div>
+            <div class="tmr-phead-actions">
+                <button type="button" class="tmr-hbtn" onclick="goTab('quick')"><i class="fas fa-check-to-slot"></i> Vote in Polls</button>
+                <button type="button" class="tmr-hbtn" onclick="goTab('quiz')"><i class="fas fa-trophy"></i> Enter Prediction Quiz</button>
+                <button type="button" class="tmr-hbtn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus"></i> Create a Poll</button>
             </div>
+        </header>
 
-            <div class="tmr-polls-panel">
-                <div class="tmr-fb-actionrow">
-                    <button type="button" class="tmr-fb-action-btn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus"></i> Create Poll</button>
-                    <div class="tmr-filter-control">
-                        <label for="sportFilter">Sport</label>
-                        <select id="sportFilter" class="tmr-fb-action-btn">
-                            <option value="">All Sports</option>
-                        </select>
-                    </div>
-                    <div class="tmr-filter-control">
-                        <label for="leagueFilter">League</label>
-                        <select id="leagueFilter" class="tmr-fb-action-btn">
-                            <option value="">All Leagues</option>
-                        </select>
-                    </div>
-                    <div class="tmr-filter-control">
-                        <label for="categoryFilter">Category</label>
-                        <select id="categoryFilter" class="tmr-fb-action-btn">
-                            <option value="">All Categories</option>
-                        </select>
-                    </div>
-                    <span class="tmr-fb-actionrow-spacer"></span>
-                    <span class="tmr-polls-count" id="pollsCount">&nbsp;</span>
-                </div>
-
-                <nav class="tmr-fb-tabs" role="tablist" id="pollsTabBar">
-                    <button type="button" class="tmr-fb-tab is-active" data-tab="active" onclick="switchTab('active')">Active</button>
-                    <button type="button" class="tmr-fb-tab" data-tab="newest" onclick="switchTab('newest')">Newest</button>
-                    <button type="button" class="tmr-fb-tab" data-tab="most_voted" onclick="switchTab('most_voted')">Most Voted</button>
-                    <button type="button" class="tmr-fb-tab" data-tab="expired" onclick="switchTab('expired')">Expired</button>
-                    <button type="button" class="tmr-fb-tab" data-tab="mine" onclick="switchTab('mine')">My Polls</button>
-                </nav>
-
-                <div class="tmr-poll-list-wrap" id="pollsList">
-                    <div class="tmr-loading">Loading polls...</div>
-                </div>
+        <!-- B. THREE PARTICIPATION OPTIONS -->
+        <div class="tmr-cards3">
+            <div class="tmr-pcard">
+                <span class="tmr-pcard-ic"><i class="fas fa-check-to-slot"></i></span>
+                <h3>Quick Polls</h3>
+                <p>One question. Cast your vote and immediately see where the community stands.</p>
+                <button type="button" class="tmr-pcard-btn" onclick="goTab('quick')">Browse Polls</button>
             </div>
+            <div class="tmr-pcard">
+                <span class="tmr-pcard-ic"><i class="fas fa-trophy"></i></span>
+                <h3>Prediction Quizzes</h3>
+                <p>Answer multiple game questions, earn a score, and compete against other members.</p>
+                <button type="button" class="tmr-pcard-btn" onclick="goTab('quiz')">Enter Competition</button>
+            </div>
+            <div class="tmr-pcard is-accent">
+                <span class="tmr-pcard-ic"><i class="fas fa-plus"></i></span>
+                <h3>Create a Poll</h3>
+                <p>Start a sports debate, ask the community for a prediction, or build your own quiz.</p>
+                <button type="button" class="tmr-pcard-btn" onclick="openCreatePollModal()">Create Poll</button>
+            </div>
+        </div>
 
-            <div id="pollDetail"></div>
-        </main>
+        <!-- C. PRIMARY TABS -->
+        <nav class="tmr-tabs2" role="tablist" id="pollsTabBar">
+            <button type="button" class="tmr-tab2 is-active" data-tab="quick" onclick="switchTab('quick')">Quick Polls</button>
+            <button type="button" class="tmr-tab2" data-tab="quiz" onclick="switchTab('quiz')">Prediction Quizzes</button>
+            <button type="button" class="tmr-tab2" data-tab="mine" onclick="switchTab('mine')">My Activity</button>
+            <button type="button" class="tmr-tab2" data-tab="closed" onclick="switchTab('closed')">Closed / Results</button>
+        </nav>
+
+        <main id="pollsSection"></main>
+        <div id="pollDetail"></div>
+
+        <!-- F. COMMUNITY CTA -->
+        <section class="tmr-cta2">
+            <div>
+                <h3>Have a take the board should settle?</h3>
+                <p>Post a quick poll or build a prediction quiz. Every vote ties to a public TrustMyRecord profile.</p>
+            </div>
+            <div class="tmr-cta2-links">
+                <button type="button" class="tmr-hbtn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus"></i> Create a Poll</button>
+                <a class="tmr-hbtn" href="/forum/"><i class="fas fa-comments"></i> Forum</a>
+                <a class="tmr-hbtn" href="/leaderboards/"><i class="fas fa-ranking-star"></i> Leaderboards</a>
+            </div>
+        </section>
     </div>
+
 
     <!-- ========== CREATE POLL MODAL ========== -->
     <div class="tmr-modal-overlay" id="createPollModal">
         <div class="tmr-modal">
             <div class="tmr-modal-head">
-                <h3>Create a New Poll</h3>
+                <h3 id="createPollHeading">Create a Poll</h3>
                 <button type="button" class="tmr-modal-close" onclick="closeCreatePollModal()">&times;</button>
             </div>
             <div class="tmr-modal-body">
+                <!-- STEP 1: choose type -->
+                <div id="createTypeStep">
+                    <p style="color:#A9B9CC;font-size:0.88rem;margin-bottom:14px;">What do you want to build?</p>
+                    <div class="tmr-typegrid">
+                        <button type="button" class="tmr-typebtn" onclick="setCreateType('quick')">
+                            <span class="ic"><i class="fas fa-check-to-slot"></i></span>
+                            <b>Quick Poll</b>
+                            <small>One question, a few answer choices. Members vote and see the consensus instantly.</small>
+                        </button>
+                        <button type="button" class="tmr-typebtn" onclick="setCreateType('quiz')">
+                            <span class="ic"><i class="fas fa-trophy"></i></span>
+                            <b>Multi-Question Quiz</b>
+                            <small>Bundle up to 10 predictions into one scored competition with a leaderboard.</small>
+                        </button>
+                    </div>
+                </div>
+                <!-- STEP 2: the form -->
+                <div id="createFormStep" style="display:none;">
+                <button type="button" class="tmr-back-link" onclick="backToTypeStep()"><i class="fas fa-arrow-left"></i> Choose a different type</button>
                 <div class="tmr-modal-error" id="createPollError"></div>
                 <form id="createPollForm" onsubmit="submitNewPoll(event)">
                     <div class="tmr-form-row">
@@ -523,7 +600,7 @@
                         <label for="pollDescription">Description (optional)</label>
                         <textarea id="pollDescription" maxlength="1500" placeholder="Context, betting angle, line, deadline reasoning..."></textarea>
                     </div>
-                    <div class="tmr-form-row">
+                    <div class="tmr-form-row" id="pollScoringModeRow">
                         <label for="pollScoringMode">Scoring mode</label>
                         <select id="pollScoringMode" onchange="onScoringModeChange()">
                             <option value="binary" selected>Binary &mdash; one correct answer, all-or-nothing points</option>
@@ -547,7 +624,7 @@
                         <input id="pollNumericTarget" type="number" step="any" placeholder="e.g. 247.5 (final game total), 32 (team rebounds)">
                         <div class="tmr-form-hint">For closest-numeric polls. Voters submit a number; whoever's closest to the truth wins.</div>
                     </div>
-                    <div class="tmr-form-row">
+                    <div class="tmr-form-row" id="pollSeasonToggleRow" style="display:none;">
                         <label class="tmr-form-toggle">
                             <input id="pollIsSeason" type="checkbox" onchange="onSeasonToggle()"><span>Multi-question / season-long poll (1&ndash;10 sub-questions)</span>
                         </label>
@@ -587,6 +664,7 @@
                         <button type="submit" class="tmr-btn tmr-btn-primary" id="createPollSubmit">Create Poll</button>
                     </div>
                 </form>
+                </div><!-- /createFormStep -->
             </div>
         </div>
     </div>
@@ -601,17 +679,23 @@
     //  TRUSTMYRECORD POLLS PAGE
     //  Full create / vote / results flow against /api/polls/* backend
     // ============================================================
+    // ============================================================
+    //  TRUSTMYRECORD POLLS & PREDICTIONS PAGE
+    //  Redesign 2026-07-12: quick polls / quizzes separated,
+    //  compact header, quieter hierarchy, expired never in active.
+    // ============================================================
     var state = {
-        tab: 'active',
+        tab: 'quick',            // quick | quiz | mine | closed
+        sort: 'newest',          // newest | most_voted | closing_soon
         sportFilter: '',
         leagueFilter: '',
         categoryFilter: '',
-        polls: [],
+        polls: [],               // last rendered list (for search)
         categories: [],
         currentPollId: null,
         currentPollDetail: null,
         currentGame: null,
-        sessionUser: null
+        createType: 'quick'
     };
 
     var SPORT_OPTIONS = ['Basketball', 'Baseball', 'Football', 'Hockey', 'Soccer', 'Tennis', 'Golf', 'MMA', 'Boxing', 'Esports', 'Other'];
@@ -674,239 +758,325 @@
         t._timer = setTimeout(function() { t.classList.remove('is-shown'); }, 3500);
     }
 
-    // ============== TABS ==============
+    // ============== POLL CLASSIFICATION ==============
+    function isQuiz(p) { return (parseInt(p.question_count || 0)) > 1; }
+    function pollDeadline(p) { return p.voting_deadline ? new Date(p.voting_deadline) : null; }
+    function isScheduled(p) { var pub = p.publish_at ? new Date(p.publish_at) : null; return !!(pub && pub > new Date()); }
+    function isExpired(p) { var dl = pollDeadline(p); return !!(dl && dl < new Date()); }
+    function isResolvedPoll(p) { return p.status === 'resolved' || p.status === 'closed'; }
+    function isClosedPoll(p) { return isResolvedPoll(p) || isExpired(p); }
+    function isActiveOpen(p) { return !isScheduled(p) && !isExpired(p) && !isResolvedPoll(p); }
+    function isClosingSoon(p) { var dl = pollDeadline(p); if (!dl || !isActiveOpen(p)) return false; var ms = dl - new Date(); return ms > 0 && ms < 24*3600*1000; }
+
+    // ============== FILTERS ==============
+    function allLeagues() {
+        return Object.keys(LEAGUES_BY_SPORT).reduce(function(acc, sport) {
+            LEAGUES_BY_SPORT[sport].forEach(function(l) { if (acc.indexOf(l) === -1) acc.push(l); });
+            return acc;
+        }, []);
+    }
+    function filterBarHtml(showSort) {
+        var sports = '<option value="">All Sports</option>' + SPORT_OPTIONS.map(function(s) {
+            return '<option ' + (state.sportFilter === s ? 'selected' : '') + ' value="' + escHtml(s) + '">' + escHtml(s) + '</option>';
+        }).join('');
+        var lg = state.sportFilter ? (LEAGUES_BY_SPORT[state.sportFilter] || ['Other']) : allLeagues();
+        var leagues = '<option value="">All Leagues</option>' + lg.map(function(l) {
+            return '<option ' + (state.leagueFilter === l ? 'selected' : '') + ' value="' + escHtml(l) + '">' + escHtml(l) + '</option>';
+        }).join('');
+        var sort = '';
+        if (showSort) {
+            var opts = [['newest','Newest'],['most_voted','Most Voted'],['closing_soon','Closing Soon']];
+            sort = '<select class="tmr-fb-action-btn" onchange="setSort(this.value)" aria-label="Sort">' + opts.map(function(o) {
+                return '<option ' + (state.sort === o[0] ? 'selected' : '') + ' value="' + o[0] + '">' + o[1] + '</option>';
+            }).join('') + '</select>';
+        }
+        return '<div class="tmr-filters is-collapsed" id="filterBar">' +
+            '<button type="button" class="tmr-fb-action-btn tmr-filter-drawer-btn" onclick="document.getElementById(\'filterBar\').classList.toggle(\'is-collapsed\')"><i class="fas fa-sliders"></i> Filters</button>' +
+            '<select class="tmr-fb-action-btn" onchange="setSportFilter(this.value)" aria-label="Sport">' + sports + '</select>' +
+            '<select class="tmr-fb-action-btn" onchange="setLeagueFilter(this.value)" aria-label="League">' + leagues + '</select>' +
+            sort + '</div>';
+    }
+    function setSportFilter(v) { state.sportFilter = v || ''; state.leagueFilter = ''; loadSection(); }
+    function setLeagueFilter(v) { state.leagueFilter = v || ''; loadSection(); }
+    function setSort(v) { state.sort = v || 'newest'; loadSection(); }
+
+    function applyFilters(polls) {
+        return polls.filter(function(p) {
+            if (state.sportFilter && (p.sport || 'Other') !== state.sportFilter) return false;
+            if (state.leagueFilter && (p.league || '') !== state.leagueFilter) return false;
+            return true;
+        });
+    }
+    function sortPolls(polls) {
+        var arr = polls.slice();
+        if (state.sort === 'most_voted') {
+            arr.sort(function(a, b) { return (parseInt(b.vote_count)||0) - (parseInt(a.vote_count)||0); });
+        } else if (state.sort === 'closing_soon') {
+            arr.sort(function(a, b) {
+                var da = pollDeadline(a), db = pollDeadline(b);
+                if (!da && !db) return 0; if (!da) return 1; if (!db) return -1;
+                return da - db;
+            });
+        } else {
+            arr.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+        }
+        return arr;
+    }
+
+    // ============== CARD RENDERING ==============
+    function pollCardHtml(p) {
+        var quiz = isQuiz(p);
+        var closed = isClosedPoll(p);
+        var scheduled = isScheduled(p);
+        var dl = pollDeadline(p);
+        var votes = parseInt(p.vote_count || 0);
+        var chip = '';
+        if (closed) chip = '<span class="tmr-chip is-closed">Closed</span>';
+        else if (scheduled) chip = '<span class="tmr-chip">Scheduled</span>';
+        else if (isClosingSoon(p)) chip = '<span class="tmr-chip is-soon"><i class="fas fa-clock"></i> Closing soon</span>';
+        else if (votes >= 25) chip = '<span class="tmr-chip is-popular"><i class="fas fa-fire"></i> Popular</span>';
+        var quizChip = quiz ? '<span class="tmr-chip is-quiz"><i class="fas fa-layer-group"></i> Quiz &middot; ' + parseInt(p.question_count) + ' Qs</span>' : '';
+        var sl = escHtml(p.league || p.sport || '');
+        var timeTxt = closed ? (dl ? 'Closed ' + escHtml(fmtDate(dl)) : 'Closed')
+                    : scheduled ? 'Opens ' + escHtml(fmtDate(p.publish_at))
+                    : (dl ? 'Closes ' + escHtml(fmtDate(dl)) : 'No deadline');
+        var cta = quiz
+            ? (closed ? '<i class="fas fa-chart-bar"></i> Results' : '<i class="fas fa-trophy"></i> Enter')
+            : (closed ? '<i class="fas fa-chart-bar"></i> Results' : '<i class="fas fa-check-to-slot"></i> Vote');
+        var ctaCls = 'tmr-card2-cta' + (closed ? ' is-muted' : '');
+        return '<div class="tmr-card2" onclick="openPoll(' + p.id + ')">' +
+            '<div class="tmr-card2-body">' +
+                '<div class="tmr-card2-title">' + escHtml(p.title) + '</div>' +
+                '<div class="tmr-card2-meta">' +
+                    (sl ? '<span>' + sl + '</span><span class="dot">&middot;</span>' : '') +
+                    (quizChip ? quizChip + '<span class="dot">&middot;</span>' : '') +
+                    '<span>By <strong data-tmr-username="' + escHtml(p.username || '') + '">' + escHtml(p.username || 'unknown') + '</strong></span><span class="dot">&middot;</span>' +
+                    '<span><strong>' + votes + '</strong> vote' + (votes === 1 ? '' : 's') + '</span><span class="dot">&middot;</span>' +
+                    '<span>' + timeTxt + '</span>' +
+                    (chip ? ' ' + chip : '') +
+                '</div>' +
+            '</div>' +
+            '<a class="' + ctaCls + '" href="#poll-' + p.id + '" onclick="event.stopPropagation();event.preventDefault();openPoll(' + p.id + ')">' + cta + '</a>' +
+        '</div>';
+    }
+    function listHtml(polls) {
+        return '<div class="tmr-list2">' + polls.map(pollCardHtml).join('') + '</div>';
+    }
+    function emptyHtml(icon, title, sub, ctaLabel) {
+        return '<div class="tmr-empty-msg"><div class="icon"><i class="fas fa-' + icon + '"></i></div>' +
+            '<strong>' + escHtml(title) + '</strong>' + (sub ? '<div>' + escHtml(sub) + '</div>' : '') +
+            (ctaLabel ? '<a href="#" onclick="event.preventDefault();openCreatePollModal()">' + escHtml(ctaLabel) + '</a>' : '') + '</div>';
+    }
+
+    // ============== SECTION DISPATCH ==============
+    function goTab(tab) { switchTab(tab); document.getElementById('pollsTabBar').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     function switchTab(tab) {
         state.tab = tab;
-        document.querySelectorAll('.tmr-fb-tab').forEach(function(b) {
+        document.querySelectorAll('.tmr-tab2').forEach(function(b) {
             b.classList.toggle('is-active', b.getAttribute('data-tab') === tab);
         });
-        document.querySelectorAll('.tmr-fb-sidebar-list a[data-tab]').forEach(function(a) {
-            a.classList.toggle('is-active', a.getAttribute('data-tab') === tab);
-        });
-        var titleMap = { active: 'Active Polls', newest: 'Newest Polls', most_voted: 'Most Voted Polls', expired: 'Expired Polls', mine: 'My Polls' };
-        document.getElementById('pollPageTitle').textContent = titleMap[tab] || 'Polls';
-        document.getElementById('pollPageCrumb').textContent = titleMap[tab] || 'Polls';
         document.getElementById('pollDetail').innerHTML = '';
         state.currentPollId = null;
-        loadPolls();
+        loadSection();
+    }
+    function loadSection() {
+        if (state.tab === 'quiz') return loadQuizTab();
+        if (state.tab === 'mine') return loadMineTab();
+        if (state.tab === 'closed') return loadClosedTab();
+        return loadQuickTab();
     }
 
-    function setCategoryFilter(slug, label) {
-        state.categoryFilter = slug || '';
-        var sel = document.getElementById('categoryFilter');
-        if (sel) sel.value = state.categoryFilter;
-        loadPolls();
+    async function fetchPolls(status, limit) {
+        var qs = ['status=' + status, 'limit=' + (limit || 100)];
+        if (state.sportFilter) qs.push('sport=' + encodeURIComponent(state.sportFilter));
+        if (state.leagueFilter) qs.push('league=' + encodeURIComponent(state.leagueFilter));
+        var data = await api.request('/polls?' + qs.join('&'));
+        return data.polls || [];
     }
 
-    function setSportFilter(sport) {
-        state.sportFilter = sport || '';
-        state.leagueFilter = '';
-        var sportSel = document.getElementById('sportFilter');
-        var leagueSel = document.getElementById('leagueFilter');
-        if (sportSel) sportSel.value = state.sportFilter;
-        populateLeagueSelect(leagueSel, state.sportFilter, true);
-        renderFilterSidebars();
-        loadPolls();
-    }
-
-    function setLeagueFilter(league) {
-        state.leagueFilter = league || '';
-        var leagueSel = document.getElementById('leagueFilter');
-        if (leagueSel) leagueSel.value = state.leagueFilter;
-        renderFilterSidebars();
-        loadPolls();
-    }
-
-    function populateLeagueSelect(sel, sport, includeAll) {
-        if (!sel) return;
-        var leagues = sport ? (LEAGUES_BY_SPORT[sport] || ['Other']) : [];
-        var first = includeAll ? 'All Leagues' : (sport ? 'No league selected' : 'Select sport first');
-        sel.innerHTML = '<option value="">' + first + '</option>' + leagues.map(function(l) {
-            return '<option value="' + escHtml(l) + '">' + escHtml(l) + '</option>';
-        }).join('');
-        sel.disabled = !includeAll && !sport;
-    }
-
-    function normalizePollSport(p) {
-        return (p && p.sport && String(p.sport).trim()) ? String(p.sport).trim() : 'Other';
-    }
-
-    function pollBadgeHtml(p) {
-        var sport = normalizePollSport(p);
-        var league = String((p && p.league) || '').trim();
-        var entity = String((p && (p.team_player || p.teamPlayer || p.team || p.player)) || '').trim();
-        var category = String((p && p.category_name) || '').trim();
-        var html = '';
-        html += '<span class="tmr-poll-badge">' + escHtml(league || sport) + '</span>';
-        if (entity) html += '<span class="tmr-poll-badge is-entity">' + escHtml(entity) + '</span>';
-        if (category) html += '<span class="tmr-poll-badge is-category">' + escHtml(category) + '</span>';
-        return html ? '<div class="tmr-poll-badges">' + html + '</div>' : '';
-    }
-
-    function renderFilterSidebars() {
-        var sportList = document.getElementById('pollSportList');
-        if (sportList) {
-            sportList.innerHTML = '<li><a class="' + (!state.sportFilter ? 'is-active' : '') + '" onclick="setSportFilter(null)"><span>All Sports</span></a></li>' +
-                SPORT_OPTIONS.map(function(s) {
-                    return '<li><a class="' + (state.sportFilter === s ? 'is-active' : '') + '" onclick="setSportFilter(\'' + escHtml(s) + '\')"><span>' + escHtml(s) + '</span></a></li>';
-                }).join('');
-        }
-        var leagueList = document.getElementById('pollLeagueList');
-        if (leagueList) {
-            var leagues = state.sportFilter ? (LEAGUES_BY_SPORT[state.sportFilter] || ['Other']) : Object.keys(LEAGUES_BY_SPORT).reduce(function(acc, sport) {
-                LEAGUES_BY_SPORT[sport].forEach(function(l) { if (acc.indexOf(l) === -1) acc.push(l); });
-                return acc;
-            }, []);
-            leagueList.innerHTML = '<li><a class="' + (!state.leagueFilter ? 'is-active' : '') + '" onclick="setLeagueFilter(null)"><span>All Leagues</span></a></li>' +
-                leagues.map(function(l) {
-                    return '<li><a class="' + (state.leagueFilter === l ? 'is-active' : '') + '" onclick="setLeagueFilter(\'' + escHtml(l) + '\')"><span>' + escHtml(l) + '</span></a></li>';
-                }).join('');
-        }
-    }
-
-    function initSportLeagueControls() {
-        var pollSport = document.getElementById('pollSport');
-        if (pollSport) {
-            pollSport.innerHTML = '<option value="">Select sport</option>' + SPORT_OPTIONS.map(function(s) {
-                return '<option value="' + escHtml(s) + '">' + escHtml(s) + '</option>';
-            }).join('');
-        }
-        populateLeagueSelect(document.getElementById('pollLeague'), '', false);
-        var sportFilter = document.getElementById('sportFilter');
-        if (sportFilter) {
-            sportFilter.innerHTML = '<option value="">All Sports</option>' + SPORT_OPTIONS.map(function(s) {
-                return '<option value="' + escHtml(s) + '">' + escHtml(s) + '</option>';
-            }).join('');
-            sportFilter.onchange = function() { setSportFilter(this.value); };
-        }
-        var leagueFilter = document.getElementById('leagueFilter');
-        populateLeagueSelect(leagueFilter, '', true);
-        if (leagueFilter) leagueFilter.onchange = function() { setLeagueFilter(this.value); };
-        renderFilterSidebars();
-    }
-
-    function onPollSportChange() {
-        var sport = document.getElementById('pollSport').value;
-        populateLeagueSelect(document.getElementById('pollLeague'), sport, false);
-    }
-
-    // ============== LOADERS ==============
-    async function loadCategories() {
+    // ---------- QUICK POLLS ----------
+    async function loadQuickTab() {
+        var sec = document.getElementById('pollsSection');
+        sec.innerHTML = sectionHead('Quick Polls', 'Cast one vote and see the community consensus.', filterBarHtml(true)) +
+            '<div class="tmr-loading">Loading polls...</div>';
         try {
-            var data = await api.request('/polls/categories');
-            state.categories = data.categories || [];
-            var sel = document.getElementById('categoryFilter');
-            sel.innerHTML = '<option value="">All Categories</option>' + state.categories.map(function(c) {
-                return '<option value="' + escHtml(c.slug) + '">' + escHtml(c.name) + '</option>';
-            }).join('');
-            sel.onchange = function() { state.categoryFilter = this.value; loadPolls(); };
-
-            var modalSel = document.getElementById('pollCategory');
-            modalSel.innerHTML = '<option value="">Select a category</option>' + state.categories.map(function(c) {
-                return '<option value="' + c.id + '">' + escHtml(c.name) + '</option>';
-            }).join('');
-
-            var sidebar = document.getElementById('pollCategoryList');
-            sidebar.innerHTML = '<li><a onclick="setCategoryFilter(null)"><span>All Categories</span></a></li>' +
-                state.categories.map(function(c) {
-                    return '<li><a onclick="setCategoryFilter(\'' + escHtml(c.slug) + '\')"><span>' + escHtml(c.name) + '</span><span class="tmr-fb-sidebar-count">' + (c.poll_count || 0) + '</span></a></li>';
-                }).join('');
-        } catch(err) {
-            console.error('loadCategories', err);
-        }
-    }
-
-    async function loadPolls() {
-        var listEl = document.getElementById('pollsList');
-        listEl.innerHTML = '<div class="tmr-loading">Loading polls...</div>';
-        try {
-            var endpoint, polls;
-            var filterQs = [];
-            if (state.sportFilter) filterQs.push('sport=' + encodeURIComponent(state.sportFilter));
-            if (state.leagueFilter) filterQs.push('league=' + encodeURIComponent(state.leagueFilter));
-            if (state.categoryFilter) filterQs.push('category=' + encodeURIComponent(state.categoryFilter));
-            if (state.tab === 'mine') {
-                var user = currentUsername();
-                if (!user) {
-                    listEl.innerHTML = '<div class="tmr-empty-msg"><div class="icon"><i class="fas fa-user-lock"></i></div><div><a href="/login/">Log in</a> to see polls you created.</div></div>';
-                    return;
-                }
-                var data = await api.request('/polls/users/' + encodeURIComponent(user) + '/created');
-                polls = data.polls || [];
-                if (state.sportFilter) polls = polls.filter(function(p) { return normalizePollSport(p) === state.sportFilter; });
-                if (state.leagueFilter) polls = polls.filter(function(p) { return (p.league || '') === state.leagueFilter; });
-                if (state.categoryFilter) polls = polls.filter(function(p) { return (p.category_slug || '') === state.categoryFilter; });
-            } else if (state.tab === 'active') {
-                var qs = ['status=active'].concat(filterQs);
-                var data = await api.request('/polls?' + qs.join('&'));
-                polls = data.polls || [];
-            } else if (state.tab === 'expired') {
-                // List polls and filter to closed/expired
-                var data = await api.request('/polls?' + ['status=all', 'limit=50'].concat(filterQs).join('&'));
-                polls = (data.polls || []).filter(function(p) {
-                    if (p.status === 'resolved' || p.status === 'closed') return true;
-                    if (p.voting_deadline && new Date(p.voting_deadline) < new Date()) return true;
-                    return false;
-                });
-            } else if (state.tab === 'most_voted') {
-                var data = await api.request('/polls?' + ['status=all', 'limit=50'].concat(filterQs).join('&'));
-                polls = (data.polls || []).slice().sort(function(a, b) { return (b.vote_count||0) - (a.vote_count||0); });
-            } else {
-                // newest
-                var data = await api.request('/polls?' + ['status=all', 'limit=30'].concat(filterQs).join('&'));
-                polls = (data.polls || []).slice().sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
-            }
+            var polls = await fetchPolls('active', 100);
+            // Quick = single-question, and never expired/scheduled (functional fix).
+            polls = polls.filter(function(p) { return !isQuiz(p) && isActiveOpen(p); });
+            polls = sortPolls(polls);
             state.polls = polls;
-            renderPolls();
-        } catch(err) {
-            console.error('loadPolls', err);
-            listEl.innerHTML = '<div class="tmr-empty-msg"><div class="icon"><i class="fas fa-triangle-exclamation"></i></div><div>Could not load polls. The server may be warming up — try again in a few seconds.</div></div>';
+            var body = polls.length ? listHtml(polls) : quickEmptyHtml();
+            renderSectionBody(body);
+        } catch (err) {
+            console.error('loadQuickTab', err);
+            renderSectionBody(emptyHtml('triangle-exclamation', 'Could not load polls.', 'The server may be warming up. Try again in a few seconds.', ''));
+        }
+    }
+    function quickEmptyHtml() {
+        var sport = state.sportFilter;
+        var title = sport ? ('No active ' + sport.toLowerCase() + ' polls right now.') : 'No active polls right now.';
+        var cta = sport ? ('Create ' + sport + ' Poll') : 'Create the first poll';
+        return emptyHtml('square-poll-vertical', title, 'Start the next debate.', cta);
+    }
+
+    // ---------- PREDICTION QUIZZES ----------
+    async function loadQuizTab() {
+        var sec = document.getElementById('pollsSection');
+        sec.innerHTML = sectionHead('Prediction Quiz Competition', 'Make your picks, submit your card, and see how your score compares with the community.', filterBarHtml(false)) +
+            '<div class="tmr-loading">Loading quizzes...</div>';
+        try {
+            var polls = applyFilters(await fetchPolls('all', 100)).filter(isQuiz);
+            var active = polls.filter(isActiveOpen).sort(function(a, b) {
+                var da = pollDeadline(a), db = pollDeadline(b);
+                if (!da && !db) return 0; if (!da) return 1; if (!db) return -1; return da - db;
+            });
+            var upcoming = polls.filter(isScheduled).sort(function(a, b) { return new Date(a.publish_at) - new Date(b.publish_at); });
+            var completed = polls.filter(isClosedPoll).sort(function(a, b) {
+                return (pollDeadline(b) || new Date(b.created_at)) - (pollDeadline(a) || new Date(a.created_at));
+            });
+
+            var featured = active[0] || null;
+            var moreActive = active.slice(1);
+
+            var html = '';
+            html += '<div id="featuredQuizSlot">' + (featured ? '<div class="tmr-loading">Loading featured quiz...</div>' : emptyHtml('trophy', 'No live quiz right now.', 'Check upcoming quizzes below, or build your own multi-question competition.', 'Create a Quiz')) + '</div>';
+
+            html += '<div class="tmr-quiz-grid">';
+            // Left column: more live + upcoming + completed
+            var left = '';
+            if (moreActive.length) {
+                left += '<div class="tmr-sec-head" style="margin-top:6px;"><div><h2 style="font-size:1rem;">More Live Quizzes</h2></div></div>' + listHtml(moreActive);
+            }
+            left += '<div class="tmr-sec-head" style="margin-top:18px;"><div><h2 style="font-size:1rem;">Upcoming Quizzes</h2></div></div>';
+            left += upcoming.length ? listHtml(upcoming) : '<div class="tmr-list2"><div class="tmr-card2" style="cursor:default;"><div class="tmr-card2-body"><div class="tmr-card2-meta">No scheduled quizzes yet.</div></div></div></div>';
+            left += '<div class="tmr-sec-head" style="margin-top:18px;"><div><h2 style="font-size:1rem;">Recently Completed</h2></div></div>';
+            left += completed.length ? listHtml(completed.slice(0, 10)) : '<div class="tmr-list2"><div class="tmr-card2" style="cursor:default;"><div class="tmr-card2-body"><div class="tmr-card2-meta">No completed quizzes yet.</div></div></div></div>';
+            html += '<div>' + left + '</div>';
+
+            // Right column: top performers
+            html += '<aside class="tmr-quiz-side">' +
+                '<div class="tmr-quiz-side-head"><i class="fas fa-ranking-star"></i> Top Performers</div>' +
+                '<div id="quizRatingsBox" class="tmr-qr-box" style="padding:12px 14px;"><div class="tmr-qr-empty">Loading ratings...</div></div>' +
+                '<div style="padding:0 14px 14px;"><a class="tmr-fquiz-link" href="/leaderboards/">View full leaderboard &rarr;</a></div>' +
+            '</aside>';
+            html += '</div>';
+
+            renderSectionBody(html);
+            loadQuizRatings();
+            if (featured) renderFeaturedQuiz(featured);
+        } catch (err) {
+            console.error('loadQuizTab', err);
+            renderSectionBody(emptyHtml('triangle-exclamation', 'Could not load quizzes.', 'Try again in a few seconds.', ''));
         }
     }
 
-    function renderPolls() {
-        var listEl = document.getElementById('pollsList');
-        var polls = state.polls;
-        document.getElementById('pollsCount').textContent = polls.length + ' poll' + (polls.length === 1 ? '' : 's');
-        if (!polls.length) {
-            listEl.innerHTML = '<div class="tmr-empty-msg"><div class="icon"><i class="fas fa-square-poll-vertical"></i></div><div><strong>No polls in this view yet.</strong><a href="#" onclick="event.preventDefault();openCreatePollModal()">Be the first to create one.</a></div></div>';
+    async function renderFeaturedQuiz(parent) {
+        var slot = document.getElementById('featuredQuizSlot');
+        if (!slot) return;
+        var game = null;
+        try { game = await api.request('/polls/' + parent.id + '/game'); } catch (e) { game = null; }
+        var questions = (game && game.questions) || [];
+        var total = questions.length || parseInt(parent.question_count || 0);
+        var answered = questions.filter(function(q) { return q.user_answer; }).length;
+        var entries = game ? (game.total_players || 0) : 0;
+        var dl = pollDeadline(parent);
+        var est = Math.max(1, Math.round((total || 10) * 0.5));
+        var started = answered > 0;
+        var done = total > 0 && answered >= total;
+        var btnLabel = done ? '<i class="fas fa-eye"></i> Review Your Card'
+                     : started ? '<i class="fas fa-play"></i> Continue Quiz (' + answered + '/' + total + ')'
+                     : '<i class="fas fa-play"></i> Enter Quiz';
+        var progress = '';
+        if (started && !done) {
+            var pct = total ? Math.round(answered / total * 100) : 0;
+            progress = '<div class="tmr-fquiz-progress"><span>You have answered ' + answered + ' of ' + total + ' questions</span>' +
+                '<div class="tmr-fquiz-progress-bar"><div class="tmr-fquiz-progress-fill" style="width:' + pct + '%"></div></div></div>';
+        }
+        var facts = '<div class="tmr-fquiz-facts">' +
+            '<span><i class="fas fa-baseball"></i> ' + escHtml(parent.league || parent.sport || 'Sports') + '</span>' +
+            '<span><i class="fas fa-list-ol"></i> ' + total + ' questions</span>' +
+            (dl ? '<span><i class="fas fa-clock"></i> Closes ' + escHtml(fmtDate(dl)) + '</span>' : '') +
+            '<span><i class="fas fa-users"></i> ' + entries + ' ' + (entries === 1 ? 'entry' : 'entries') + '</span>' +
+            '<span><i class="fas fa-hourglass-half"></i> ~' + est + ' min</span>' +
+        '</div>';
+        slot.innerHTML = '<div class="tmr-fquiz">' +
+            '<div class="tmr-fquiz-eyebrow"><i class="fas fa-bolt"></i> Live Competition</div>' +
+            '<div class="tmr-fquiz-title">' + escHtml(parent.title) + '</div>' +
+            facts + progress +
+            '<div class="tmr-fquiz-actions">' +
+                '<button type="button" class="tmr-poll-vote-btn" onclick="openPoll(' + parent.id + ')">' + btnLabel + '</button>' +
+                '<a class="tmr-fquiz-link" href="#poll-' + parent.id + '" onclick="event.preventDefault();openPoll(' + parent.id + ')">View leaderboard</a>' +
+            '</div>' +
+        '</div>';
+    }
+
+    // ---------- MY ACTIVITY ----------
+    async function loadMineTab() {
+        var sec = document.getElementById('pollsSection');
+        sec.innerHTML = sectionHead('My Activity', 'Polls and quizzes you created.', '') + '<div class="tmr-loading">Loading...</div>';
+        var user = currentUsername();
+        if (!user) {
+            renderSectionBody('<div class="tmr-empty-msg"><div class="icon"><i class="fas fa-user-lock"></i></div><strong>Log in to see your activity.</strong><a href="/login/">Log in</a></div>');
             return;
         }
-        listEl.innerHTML = polls.map(function(p) {
-            var deadline = p.voting_deadline ? new Date(p.voting_deadline) : null;
-            var isExpired = deadline && deadline < new Date();
-            var publish = p.publish_at ? new Date(p.publish_at) : null;
-            var isScheduled = publish && publish > new Date();
-            var statusLabel = (p.status === 'resolved' ? 'Closed' : (isScheduled ? 'Scheduled' : (isExpired ? 'Expired' : 'Active')));
-            var statusClass = (p.status === 'resolved' ? 'closed' : (isScheduled ? 'closed' : (isExpired ? 'expired' : 'active')));
-            var deadlineHtml = deadline ? '<span class="sep">&middot;</span> Closes <strong>' + escHtml(fmtDate(deadline)) + '</strong>' : '';
-            if (isScheduled) deadlineHtml = '<span class="sep">&middot;</span> Opens <strong>' + escHtml(fmtDate(publish)) + '</strong>' + deadlineHtml;
-            var totalVotes = parseInt(p.vote_count || 0);
-            var qCount = parseInt(p.question_count || 0);
-            var gameChip = qCount > 1 ? '<span class="tmr-poll-status" style="background:rgba(56,189,248,0.16);color:#7DD3FC;border:1px solid rgba(56,189,248,0.32);"><i class="fas fa-layer-group"></i> Game &middot; ' + qCount + ' Qs</span>' : '';
-            return '<div class="tmr-poll-card" onclick="openPoll(' + p.id + ')">' +
-                '<div class="tmr-poll-card-body">' +
-                    '<div class="tmr-poll-card-head">' +
-                        '<span class="tmr-poll-card-title">' + escHtml(p.title) + '</span>' +
-                        gameChip +
-                        '<span class="tmr-poll-status ' + statusClass + '">' + statusLabel + '</span>' +
-                    '</div>' +
-                    pollBadgeHtml(p) +
-                    '<div class="tmr-poll-card-meta">By <strong data-tmr-username="' + escHtml(p.username || '') + '">' + escHtml(p.username || 'unknown') + '</strong>' +
-                        (p.category_name ? '<span class="sep">&middot;</span> ' + escHtml(p.category_name) : '') +
-                        '<span class="sep">&middot;</span> <strong>' + totalVotes + '</strong> vote' + (totalVotes === 1 ? '' : 's') +
-                        '<span class="sep">&middot;</span> Posted ' + escHtml(timeAgo(p.created_at)) +
-                        deadlineHtml +
-                    '</div>' +
-                '</div>' +
-                '<a class="tmr-poll-card-action" href="#poll-' + p.id + '" onclick="event.stopPropagation();event.preventDefault();openPoll(' + p.id + ')">' +
-                    (statusLabel === 'Active' ? '<i class="fas fa-check-to-slot"></i> Vote' : '<i class="fas fa-chart-bar"></i> Results') +
-                '</a>' +
-            '</div>';
-        }).join('');
+        try {
+            var data = await api.request('/polls/users/' + encodeURIComponent(user) + '/created');
+            var polls = applyFilters(data.polls || []);
+            polls.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+            state.polls = polls;
+            renderSectionBody(polls.length ? listHtml(polls) : emptyHtml('user-pen', 'You have not created any polls yet.', 'Start a debate or build a quiz for the community.', 'Create a Poll'));
+        } catch (err) {
+            console.error('loadMineTab', err);
+            renderSectionBody(emptyHtml('triangle-exclamation', 'Could not load your activity.', 'Try again in a few seconds.', ''));
+        }
     }
 
-    // ============== POLL DETAIL / VOTE ==============
+    // ---------- CLOSED / RESULTS ----------
+    async function loadClosedTab() {
+        var sec = document.getElementById('pollsSection');
+        sec.innerHTML = sectionHead('Closed / Results', 'Final results from polls and quizzes that have closed.', filterBarHtml(false)) + '<div class="tmr-loading">Loading...</div>';
+        try {
+            var polls = applyFilters(await fetchPolls('all', 100)).filter(isClosedPoll);
+            polls.sort(function(a, b) { return (pollDeadline(b) || new Date(b.created_at)) - (pollDeadline(a) || new Date(a.created_at)); });
+            state.polls = polls;
+            renderSectionBody(polls.length ? listHtml(polls) : emptyHtml('flag-checkered', 'No closed polls yet.', 'Results show up here once a poll or quiz reaches its deadline.', ''));
+        } catch (err) {
+            console.error('loadClosedTab', err);
+            renderSectionBody(emptyHtml('triangle-exclamation', 'Could not load results.', 'Try again in a few seconds.', ''));
+        }
+    }
+
+    function sectionHead(title, sub, filters) {
+        return '<div class="tmr-sec-head"><div><h2>' + escHtml(title) + '</h2><div class="sub">' + escHtml(sub) + '</div></div>' + (filters || '') + '</div>';
+    }
+    function renderSectionBody(bodyHtml) {
+        var sec = document.getElementById('pollsSection');
+        // Replace only the content after the section head (last loading/list block)
+        var head = sec.querySelector('.tmr-sec-head');
+        var bodyWrap = document.getElementById('sectionBody');
+        if (!bodyWrap) {
+            bodyWrap = document.createElement('div');
+            bodyWrap.id = 'sectionBody';
+            sec.appendChild(bodyWrap);
+        }
+        // Remove stray loading node that sits outside bodyWrap
+        Array.prototype.slice.call(sec.children).forEach(function(ch) {
+            if (ch !== head && ch !== bodyWrap) sec.removeChild(ch);
+        });
+        bodyWrap.innerHTML = bodyHtml;
+        if (window.TMRUsernames && window.TMRUsernames.decorate) { try { window.TMRUsernames.decorate(sec); } catch(e){} }
+    }
+
+    // ============== POLL DETAIL / VOTE (single question) ==============
+    function pollBadgeHtml(p) {
+        var sport = (p && p.sport && String(p.sport).trim()) ? String(p.sport).trim() : 'Other';
+        var league = String((p && p.league) || '').trim();
+        var entity = String((p && (p.team_player || p.teamPlayer || p.team || p.player)) || '').trim();
+        var html = '<span class="tmr-poll-badge">' + escHtml(league || sport) + '</span>';
+        if (entity) html += '<span class="tmr-poll-badge is-entity">' + escHtml(entity) + '</span>';
+        return '<div class="tmr-poll-badges">' + html + '</div>';
+    }
+
     async function openPoll(pollId) {
         state.currentPollId = pollId;
         state.currentGame = null;
@@ -914,7 +1084,6 @@
         detailEl.innerHTML = '<div class="tmr-poll-detail"><div class="tmr-loading">Loading...</div></div>';
         detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
         try {
-            // Detect multi-question games: /game returns children when present.
             var game = null;
             try { game = await api.request('/polls/' + pollId + '/game'); } catch(e) { game = null; }
             if (game && game.questions && game.questions.length > 0) {
@@ -942,17 +1111,12 @@
         var totalVotes = d.total_votes || 0;
         var userVote = d.user_vote || null;
         var deadline = p.voting_deadline ? new Date(p.voting_deadline) : null;
-        var isExpired = deadline && deadline < new Date();
-        var isClosed = p.status === 'resolved' || isExpired;
+        var isExp = deadline && deadline < new Date();
+        var isClosed = p.status === 'resolved' || isExp;
         var canVote = !isClosed && !userVote && isLoggedIn();
-        // Public-results gate: when public_results is false (stored in description metadata or future column),
-        // hide results until the user has voted or the poll has closed.
         var isPublicResults = p.description == null || p.description.indexOf('[hide-results-until-vote]') === -1;
-        // A logged-in user who can still vote always gets the interactive ballot,
-        // even when results are public. Results render only when voting is not available.
         var showVoteForm = canVote;
         var showResults = !showVoteForm && (userVote || isClosed || isPublicResults);
-
         var winningVotes = options.reduce(function(m, o) { return Math.max(m, parseInt(o.vote_count || 0)); }, 0);
 
         var optionsHtml = '';
@@ -976,7 +1140,6 @@
                 '</div></li>';
             }).join('') + '</div>';
         } else if (showVoteForm) {
-            // Vote form
             optionsHtml = '<form id="voteForm" onsubmit="submitVote(event)"><div class="tmr-poll-options" role="radiogroup" aria-label="Poll options">' +
                 options.map(function(o) {
                     return '<li class="tmr-poll-option"><label><input type="radio" name="pollOption" value="' + o.id + '" onchange="markPollChoice(this)" required> <span>' + escHtml(o.option_text) + '</span></label></li>';
@@ -991,7 +1154,7 @@
         if (showResults) {
             noVoteFooter = '<div class="tmr-poll-detail-footer">' +
                 '<span><strong>' + totalVotes + '</strong> total vote' + (totalVotes === 1 ? '' : 's') +
-                    (deadline ? ' &middot; ' + (isExpired ? 'Closed ' : 'Closes ') + escHtml(fmtDate(deadline)) : '') +
+                    (deadline ? ' &middot; ' + (isExp ? 'Closed ' : 'Closes ') + escHtml(fmtDate(deadline)) : '') +
                 '</span>' +
                 '<button class="tmr-btn tmr-btn-outline" type="button" onclick="closePollDetail()"><i class="fas fa-arrow-left"></i> Back to list</button>' +
             '</div>';
@@ -1037,16 +1200,12 @@
         var btn = document.getElementById('voteSubmitBtn');
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Submitting...'; }
         try {
-            await api.request('/polls/' + state.currentPollId + '/vote', {
-                method: 'POST',
-                body: { option_id: optionId }
-            });
+            await api.request('/polls/' + state.currentPollId + '/vote', { method: 'POST', body: { option_id: optionId } });
             showToast('Vote locked in.', 'success');
-            // Reload detail to show results
             var data = await api.request('/polls/' + state.currentPollId);
             state.currentPollDetail = data;
             renderPollDetail();
-            loadPolls(); // refresh card list counts
+            loadSection();
         } catch(err) {
             console.error('submitVote', err);
             showToast(err && err.message ? err.message : 'Could not submit vote.', 'error');
@@ -1060,10 +1219,10 @@
         if (window.history && window.history.replaceState) {
             window.history.replaceState({}, '', window.location.pathname);
         }
-        document.getElementById('pollsList').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('pollsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    // ============== MULTI-QUESTION GAME ==============
+    // ============== MULTI-QUESTION GAME / QUIZ ==============
     function markGameChoice(input) {
         var box = input.closest('.tmr-q-opts');
         if (box) box.querySelectorAll('.tmr-q-opt').forEach(function(o){ o.classList.remove('is-checked'); });
@@ -1079,24 +1238,22 @@
         var leaders = g.leaderboard || [];
         var isResolved = p.status === 'resolved';
         var deadline = p.voting_deadline ? new Date(p.voting_deadline) : null;
-        var isExpired = deadline && deadline < new Date();
+        var isExp = deadline && deadline < new Date();
         var loggedIn = isLoggedIn();
         var uname = currentUsername();
         var isCreator = loggedIn && uname && p.username && uname.toLowerCase() === String(p.username).toLowerCase();
-        var canAnswer = !isResolved && !isExpired && loggedIn;
+        var canAnswer = !isResolved && !isExp && loggedIn;
         var basePool = questions.reduce(function(s,q){ return s + (parseInt(q.base_points)||0); }, 0);
 
-        var statusLabel = isResolved ? 'Final' : (isExpired ? 'Locked' : 'Live');
-        var statusClass = isResolved ? 'closed' : (isExpired ? 'expired' : 'active');
+        var statusLabel = isResolved ? 'Final' : (isExp ? 'Locked' : 'Live');
+        var statusClass = isResolved ? 'closed' : (isExp ? 'expired' : 'active');
 
-        // ---- Questions ----
         var qsHtml = questions.map(function(q, qi) {
             var worth = parseInt(q.base_points) || 0;
             var ua = q.user_answer || null;
             var head = '<div class="tmr-q-head"><div><span class="tmr-q-num">Q' + (qi+1) + '</span> <span class="tmr-q-title">' + escHtml(q.title) + '</span></div>' +
                        '<span class="tmr-q-worth">' + worth + ' pts</span></div>';
             var body = '';
-
             if (q.scoring_mode === 'closest') {
                 if (isResolved) {
                     var truth = (q.numeric_target != null) ? q.numeric_target : '—';
@@ -1114,7 +1271,6 @@
                 var totalV = q.total_votes || 0;
                 var yourOpt = ua && ua.option_id != null ? parseInt(ua.option_id) : null;
                 if (isResolved || (!canAnswer)) {
-                    // read-only results
                     body = '<div class="tmr-q-opts">' + (q.options||[]).map(function(o){
                         var vc = parseInt(o.vote_count||0);
                         var pct = totalV>0 ? (vc/totalV*100) : 0;
@@ -1130,7 +1286,6 @@
                                '<div class="tmr-q-bar"><div class="tmr-q-bar-fill" style="width:' + Math.min(100,pct) + '%"></div></div></div>';
                     }).join('') + '</div>';
                 } else {
-                    // votable
                     body = '<div class="tmr-q-opts">' + (q.options||[]).map(function(o){
                         var checked = yourOpt === parseInt(o.id);
                         var modelBadge = (o.model_prob!=null) ? '<span class="tmr-q-model" title="Model implied probability + payoff if correct">' + Math.round(o.model_prob*100) + '%' + ((o.longshot_mult&&o.longshot_mult>1.05)?' &middot; x'+o.longshot_mult:'') + '</span>' : '';
@@ -1149,14 +1304,13 @@
             return '<div class="tmr-q">' + head + body + '</div>';
         }).join('');
 
-        // ---- Submit / login ----
         var actionHtml = '';
         if (isResolved) {
             actionHtml = '<div class="tmr-game-submit-row"><span class="tmr-game-sub">Game final &middot; ' + g.total_players + ' player' + (g.total_players===1?'':'s') + '</span>' +
                 '<button class="tmr-btn tmr-btn-outline" type="button" onclick="closePollDetail()"><i class="fas fa-arrow-left"></i> Back</button></div>';
         } else if (!loggedIn) {
             actionHtml = '<div class="tmr-empty-msg" style="padding:18px;margin:14px 0 0;"><a href="/login/">Log in</a> to lock in your picks for this game.</div>';
-        } else if (isExpired) {
+        } else if (isExp) {
             actionHtml = '<div class="tmr-game-submit-row"><span class="tmr-game-sub">Voting is closed. Waiting on the creator to grade.</span></div>';
         } else {
             var hasAny = questions.some(function(q){ return q.user_answer; });
@@ -1164,7 +1318,6 @@
                 '<button class="tmr-poll-vote-btn" type="button" id="gameSubmitBtn" onclick="submitGameVote()"><i class="fas fa-check"></i> ' + (hasAny?'Update My Picks':'Lock In Picks') + '</button></div>';
         }
 
-        // ---- Creator resolution ----
         var resolveHtml = '';
         if (isCreator && !isResolved) {
             resolveHtml = '<div class="tmr-resolve-box"><h4><i class="fas fa-gavel"></i> Grade this game (creator only)</h4>' +
@@ -1182,7 +1335,6 @@
                 '<button class="tmr-poll-vote-btn" type="button" id="gameResolveBtn" onclick="resolveGame()" style="margin-top:8px;"><i class="fas fa-flag-checkered"></i> Score Game</button></div>';
         }
 
-        // ---- Leaders panel ----
         var leadersHtml;
         if (!leaders.length) {
             leadersHtml = '<div class="tmr-leaders-empty">No entries yet. Be the first to lock in.</div>';
@@ -1206,7 +1358,6 @@
             }).join('') + '</ul>';
         }
 
-        // ---- Winner banner (top-right, shown when the game is final) ----
         var champHtml = '';
         if (isResolved && leaders.length && !leaders[0].provisional) {
             var w = leaders[0];
@@ -1232,7 +1383,7 @@
                     '<div class="tmr-game-head"><div>' +
                         '<div class="tmr-game-title">' + escHtml(p.title) + '</div>' +
                         '<div class="tmr-game-sub">By <strong data-tmr-username="' + escHtml(p.username||'') + '">' + escHtml(p.username||'unknown') + '</strong>' +
-                            (deadline ? ' &middot; ' + (isExpired||isResolved?'Closed ':'Closes ') + escHtml(fmtDate(deadline)) : '') +
+                            (deadline ? ' &middot; ' + (isExp||isResolved?'Closed ':'Closes ') + escHtml(fmtDate(deadline)) : '') +
                             ' &middot; ' + questions.length + ' questions</div>' +
                     '</div><span class="tmr-poll-status ' + statusClass + '">' + statusLabel + '</span></div>' +
                     (p.description ? '<div class="tmr-poll-detail-desc" style="margin:8px 0;">' + escHtml(String(p.description).replace('[hide-results-until-vote]','').replace('[multi-choice]','').replace('[anonymous]','').trim()) + '</div>' : '') +
@@ -1281,7 +1432,7 @@
             showToast('Picks locked in.', 'success');
             if (res && res.game) { state.currentGame = res.game; renderGame(); }
             else { await openPoll(state.currentPollId); }
-            loadPolls();
+            loadSection();
         } catch(err) {
             console.error('submitGameVote', err);
             showToast(err && err.message ? err.message : 'Could not submit picks.', 'error');
@@ -1307,7 +1458,7 @@
             showToast('Game scored. Leaders updated.', 'success');
             if (res && res.game) { state.currentGame = res.game; renderGame(); }
             else { await openPoll(state.currentPollId); }
-            loadPolls();
+            loadSection();
         } catch(err) {
             console.error('resolveGame', err);
             showToast(err && err.message ? err.message : 'Could not score game.', 'error');
@@ -1315,7 +1466,40 @@
         }
     }
 
+    // ============== CATEGORIES (modal only) ==============
+    async function loadCategories() {
+        try {
+            var data = await api.request('/polls/categories');
+            state.categories = data.categories || [];
+            var modalSel = document.getElementById('pollCategory');
+            if (modalSel) modalSel.innerHTML = '<option value="">Select a category</option>' + state.categories.map(function(c) {
+                return '<option value="' + c.id + '">' + escHtml(c.name) + '</option>';
+            }).join('');
+        } catch(err) { console.error('loadCategories', err); }
+    }
+
     // ============== CREATE MODAL ==============
+    function populateLeagueSelect(sel, sport, includeAll) {
+        if (!sel) return;
+        var leagues = sport ? (LEAGUES_BY_SPORT[sport] || ['Other']) : [];
+        var first = includeAll ? 'All Leagues' : (sport ? 'No league selected' : 'Select sport first');
+        sel.innerHTML = '<option value="">' + first + '</option>' + leagues.map(function(l) {
+            return '<option value="' + escHtml(l) + '">' + escHtml(l) + '</option>';
+        }).join('');
+        sel.disabled = !includeAll && !sport;
+    }
+    function onPollSportChange() {
+        var sport = document.getElementById('pollSport').value;
+        populateLeagueSelect(document.getElementById('pollLeague'), sport, false);
+    }
+    function initModalSportSelect() {
+        var pollSport = document.getElementById('pollSport');
+        if (pollSport) pollSport.innerHTML = '<option value="">Select sport</option>' + SPORT_OPTIONS.map(function(s) {
+            return '<option value="' + escHtml(s) + '">' + escHtml(s) + '</option>';
+        }).join('');
+        populateLeagueSelect(document.getElementById('pollLeague'), '', false);
+    }
+
     function openCreatePollModal() {
         if (!isLoggedIn()) { window.location.href = '/login/'; return; }
         document.getElementById('createPollError').classList.remove('is-shown');
@@ -1323,15 +1507,41 @@
         document.getElementById('pollOptions').innerHTML =
             '<div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 1"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>' +
             '<div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 2"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>';
+        document.getElementById('pollSubQuestions').innerHTML = '';
         populateLeagueSelect(document.getElementById('pollLeague'), '', false);
         var nowLocal = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
         var exp = document.getElementById('pollExpires');
         if (exp) exp.min = nowLocal;
         var pub = document.getElementById('pollPublishAt');
         if (pub) { pub.min = nowLocal; pub.value = ''; }
+        // Show the type-chooser step first
+        document.getElementById('createTypeStep').style.display = '';
+        document.getElementById('createFormStep').style.display = 'none';
+        document.getElementById('createPollHeading').textContent = 'Create a Poll';
         document.getElementById('createPollModal').classList.add('is-open');
     }
     function closeCreatePollModal() { document.getElementById('createPollModal').classList.remove('is-open'); }
+    function backToTypeStep() {
+        document.getElementById('createFormStep').style.display = 'none';
+        document.getElementById('createTypeStep').style.display = '';
+        document.getElementById('createPollHeading').textContent = 'Create a Poll';
+    }
+    function setCreateType(type) {
+        state.createType = type;
+        var quiz = (type === 'quiz');
+        document.getElementById('pollIsSeason').checked = quiz;
+        onSeasonToggle();
+        // Quiz: hide parent-level answer choices, scoring mode, numeric row (each sub-question carries its own).
+        document.getElementById('pollOptionsRow').style.display = quiz ? 'none' : '';
+        document.getElementById('pollScoringModeRow').style.display = quiz ? 'none' : '';
+        document.getElementById('pollNumericRow').style.display = 'none';
+        if (!quiz) { document.getElementById('pollScoringMode').value = 'binary'; onScoringModeChange(); }
+        document.getElementById('createPollHeading').textContent = quiz ? 'Create a Multi-Question Quiz' : 'Create a Quick Poll';
+        document.getElementById('createPollSubmit').textContent = quiz ? 'Publish Quiz' : 'Publish Poll';
+        document.getElementById('createTypeStep').style.display = 'none';
+        document.getElementById('createFormStep').style.display = '';
+        if (quiz && document.querySelectorAll('#pollSubQuestions .tmr-subq').length === 0) addSubQuestion();
+    }
     window.addEventListener('click', function(e) {
         var m = document.getElementById('createPollModal');
         if (m && e.target === m) closeCreatePollModal();
@@ -1348,10 +1558,7 @@
     }
     function removeOptionRow(btn) {
         var container = btn.parentElement.parentElement;
-        if (container.querySelectorAll('.tmr-option-row').length <= 2) {
-            showToast('Polls need at least 2 options.', 'error');
-            return;
-        }
+        if (container.querySelectorAll('.tmr-option-row').length <= 2) { showToast('Polls need at least 2 options.', 'error'); return; }
         btn.parentElement.remove();
     }
 
@@ -1368,22 +1575,15 @@
         hint.textContent = hints[mode] || '';
         var optionsRow = document.getElementById('pollOptionsRow');
         var numericRow = document.getElementById('pollNumericRow');
-        if (mode === 'closest') {
-            optionsRow.style.display = 'none';
-            numericRow.style.display = '';
-        } else {
-            optionsRow.style.display = '';
-            numericRow.style.display = 'none';
-        }
+        if (state.createType === 'quiz') { optionsRow.style.display = 'none'; numericRow.style.display = 'none'; return; }
+        if (mode === 'closest') { optionsRow.style.display = 'none'; numericRow.style.display = ''; }
+        else { optionsRow.style.display = ''; numericRow.style.display = 'none'; }
     }
 
     function onSeasonToggle() {
         var on = document.getElementById('pollIsSeason').checked;
-        var row = document.getElementById('pollSubQuestionsRow');
-        row.style.display = on ? '' : 'none';
-        if (on && document.querySelectorAll('#pollSubQuestions .tmr-subq').length === 0) {
-            addSubQuestion();
-        }
+        document.getElementById('pollSubQuestionsRow').style.display = on ? '' : 'none';
+        if (on && document.querySelectorAll('#pollSubQuestions .tmr-subq').length === 0) addSubQuestion();
     }
 
     function addSubQuestion() {
@@ -1396,13 +1596,13 @@
         div.style.cssText = 'border:1px solid var(--tmr-fb-border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--tmr-fb-row-alt);';
         div.innerHTML =
             '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
-                '<strong style="color:var(--tmr-fb-text);font-size:0.86rem;">Sub-question ' + idx + '</strong>' +
+                '<strong style="color:var(--tmr-fb-text);font-size:0.86rem;">Question ' + idx + '</strong>' +
                 '<button type="button" class="tmr-option-remove" onclick="this.parentElement.parentElement.remove();renumberSubQuestions();" title="Remove">&times;</button>' +
             '</div>' +
             '<input type="text" maxlength="200" class="tmr-subq-title" placeholder="Question (e.g. \'How many strikeouts will Ohtani have? Over/Under 5.5\')" style="width:100%;margin-bottom:6px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
             '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">' +
                 '<label style="font-size:11px;color:var(--tmr-fb-muted);font-weight:700;white-space:nowrap;">Base points</label>' +
-                '<input type="number" min="1" max="1000" class="tmr-subq-points" value="10" title="How many points a correct answer is worth. Bump the hard questions higher." style="width:78px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
+                '<input type="number" min="1" max="1000" class="tmr-subq-points" value="10" title="How many points a correct answer is worth." style="width:78px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
                 '<span style="font-size:11px;color:var(--tmr-fb-muted);">Rarer correct picks pay up to 3x this.</span>' +
             '</div>' +
             '<select class="tmr-subq-mode" onchange="onSubQModeChange(this)" style="width:100%;margin-bottom:6px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
@@ -1419,23 +1619,16 @@
             '<input type="number" step="any" class="tmr-subq-numeric" placeholder="Numeric truth (optional, set at resolve time)" style="width:100%;margin-top:6px;padding:6px 9px;border:1px solid var(--tmr-fb-border-strong);border-radius:5px;font-family:inherit;font-size:12.5px;display:none;">';
         container.appendChild(div);
     }
-
     function onSubQModeChange(sel) {
         var subq = sel.parentElement;
         var optsBox = subq.querySelector('.tmr-subq-options');
         var numericBox = subq.querySelector('.tmr-subq-numeric');
-        if (sel.value === 'closest') {
-            optsBox.style.display = 'none';
-            numericBox.style.display = '';
-        } else {
-            optsBox.style.display = '';
-            numericBox.style.display = 'none';
-        }
+        if (sel.value === 'closest') { optsBox.style.display = 'none'; numericBox.style.display = ''; }
+        else { optsBox.style.display = ''; numericBox.style.display = 'none'; }
     }
-
     function renumberSubQuestions() {
         var nodes = document.querySelectorAll('#pollSubQuestions .tmr-subq strong');
-        for (var i = 0; i < nodes.length; i++) nodes[i].textContent = 'Sub-question ' + (i + 1);
+        for (var i = 0; i < nodes.length; i++) nodes[i].textContent = 'Question ' + (i + 1);
     }
 
     async function submitNewPoll(e) {
@@ -1460,7 +1653,7 @@
         var numericTargetRaw = document.getElementById('pollNumericTarget').value;
 
         var options = [];
-        if (scoringMode !== 'closest') {
+        if (!isSeason && scoringMode !== 'closest') {
             var optionInputs = document.querySelectorAll('#pollOptions input[type="text"]');
             optionInputs.forEach(function(inp) { var v = inp.value.trim(); if (v) options.push({ text: v }); });
         }
@@ -1476,18 +1669,13 @@
         }
         if (publishAt) {
             var pubDate = new Date(publishAt);
-            if (isNaN(pubDate.getTime())) {
-                errorEl.textContent = 'Start date is invalid.'; errorEl.classList.add('is-shown'); document.getElementById('pollPublishAt').focus(); return;
-            }
-            if (pubDate.getTime() >= expDate.getTime()) {
-                errorEl.textContent = 'Start date must be before the expiration date.'; errorEl.classList.add('is-shown'); document.getElementById('pollPublishAt').focus(); return;
-            }
+            if (isNaN(pubDate.getTime())) { errorEl.textContent = 'Start date is invalid.'; errorEl.classList.add('is-shown'); document.getElementById('pollPublishAt').focus(); return; }
+            if (pubDate.getTime() >= expDate.getTime()) { errorEl.textContent = 'Start date must be before the expiration date.'; errorEl.classList.add('is-shown'); document.getElementById('pollPublishAt').focus(); return; }
         }
-        if (scoringMode !== 'closest' && options.length < 2) {
+        if (!isSeason && scoringMode !== 'closest' && options.length < 2) {
             errorEl.textContent = 'Provide at least 2 answer choices (or switch to Closest-numeric scoring).'; errorEl.classList.add('is-shown'); return;
         }
 
-        // Build sub-questions if season-long mode is on
         var subQuestions = [];
         if (isSeason) {
             var nodes = document.querySelectorAll('#pollSubQuestions .tmr-subq');
@@ -1512,14 +1700,11 @@
                 subQuestions.push(sq);
             }
             if (subQuestions.length === 0) {
-                errorEl.textContent = 'Multi-question poll needs at least 1 valid sub-question (title >= 5 chars + 2 options or numeric truth).'; errorEl.classList.add('is-shown'); return;
+                errorEl.textContent = 'Quiz needs at least 1 valid question (title >= 5 chars + 2 options or numeric truth).'; errorEl.classList.add('is-shown'); return;
             }
-            if (subQuestions.length > 10) {
-                errorEl.textContent = 'Maximum 10 sub-questions per parent poll.'; errorEl.classList.add('is-shown'); return;
-            }
+            if (subQuestions.length > 10) { errorEl.textContent = 'Maximum 10 questions per quiz.'; errorEl.classList.add('is-shown'); return; }
         }
 
-        // Embed UX flags into description so backend round-trips them without a schema change
         var descParts = [];
         if (description) descParts.push(description);
         if (!publicResults) descParts.push('[hide-results-until-vote]');
@@ -1536,67 +1721,43 @@
             team_player: teamPlayer || '',
             category: categoryId || '',
             scoring_mode: scoringMode,
-            expires: expiresAt || '',
+            expires: expiresAt || ''
         };
-        if (scoringMode !== 'closest') payload.options = options;
-        else payload.options = []; // backend allows empty options on closest-numeric parents
-        if (numericTargetRaw && scoringMode === 'closest') payload.numeric_target = Number(numericTargetRaw);
+        if (isSeason) payload.options = [];
+        else if (scoringMode !== 'closest') payload.options = options;
+        else payload.options = [];
+        if (numericTargetRaw && scoringMode === 'closest' && !isSeason) payload.numeric_target = Number(numericTargetRaw);
         if (subQuestions.length) payload.sub_questions = subQuestions;
         if (categoryId) payload.category_id = parseInt(categoryId);
         if (expiresAt) payload.voting_deadline = new Date(expiresAt).toISOString();
         if (publishAt) payload.publish_at = new Date(publishAt).toISOString();
 
         var btn = document.getElementById('createPollSubmit');
-        btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Creating...';
+        var origLabel = btn.textContent;
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Publishing...';
         try {
             var data = await api.request('/polls', { method: 'POST', body: payload });
-            showToast('Poll created.', 'success');
+            showToast(isSeason ? 'Quiz published.' : 'Poll published.', 'success');
             closeCreatePollModal();
-            // Switch to newest tab so the new poll is visible
-            switchTab('newest');
-            if (data.poll && data.poll.id) {
-                setTimeout(function() { openPoll(data.poll.id); }, 200);
-            }
+            switchTab(isSeason ? 'quiz' : 'quick');
+            if (data.poll && data.poll.id) setTimeout(function() { openPoll(data.poll.id); }, 250);
         } catch(err) {
             console.error('createPoll', err);
             errorEl.textContent = (err && err.message) ? err.message : 'Could not create poll.';
             errorEl.classList.add('is-shown');
         } finally {
-            btn.disabled = false; btn.innerHTML = 'Create Poll';
+            btn.disabled = false; btn.textContent = origLabel;
         }
     }
 
-    // Search filter (client-side over loaded list)
-    document.addEventListener('DOMContentLoaded', function() {
-        var searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-            searchInput.addEventListener('input', function() {
-                var q = this.value.trim().toLowerCase();
-                if (!q) { renderPolls(); return; }
-                var filtered = state.polls.filter(function(p) {
-                    return (p.title || '').toLowerCase().indexOf(q) !== -1 ||
-                           (p.username || '').toLowerCase().indexOf(q) !== -1 ||
-                           normalizePollSport(p).toLowerCase().indexOf(q) !== -1 ||
-                           (p.league || '').toLowerCase().indexOf(q) !== -1 ||
-                           (p.team_player || '').toLowerCase().indexOf(q) !== -1 ||
-                           (p.description || '').toLowerCase().indexOf(q) !== -1;
-                });
-                var saved = state.polls;
-                state.polls = filtered;
-                renderPolls();
-                state.polls = saved;
-            });
-        }
-    });
-
-    // Quiz skill-rating leaders (Elo vs the field) in the sidebar.
+    // ============== QUIZ SKILL RATINGS ==============
     async function loadQuizRatings() {
         var box = document.getElementById('quizRatingsBox');
         if (!box) return;
         try {
             var data = await api.request('/polls/quiz/ratings?limit=8');
             var rows = (data && data.ratings) || [];
-            if (!rows.length) { box.innerHTML = '<div class="tmr-qr-empty">No rated players yet. Play the daily quiz to earn a rating.</div>'; return; }
+            if (!rows.length) { box.innerHTML = '<div class="tmr-qr-empty">No rated players yet. Play a quiz to earn a rating.</div>'; return; }
             box.innerHTML = rows.map(function(r){
                 return '<a class="tmr-qr-row" href="/profile/?user=' + encodeURIComponent(r.username) + '">' +
                     '<span class="tmr-qr-rank">' + r.rank + '</span>' +
@@ -1606,19 +1767,38 @@
         } catch (e) { box.innerHTML = '<div class="tmr-qr-empty">Ratings unavailable.</div>'; }
     }
 
+    // ============== SEARCH (client-side over loaded list) ==============
+    document.addEventListener('DOMContentLoaded', function() {
+        var searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                var q = this.value.trim().toLowerCase();
+                var bodyWrap = document.getElementById('sectionBody');
+                if (!bodyWrap) return;
+                if (!q) { bodyWrap.innerHTML = state.polls.length ? listHtml(state.polls) : bodyWrap.innerHTML; return; }
+                var filtered = state.polls.filter(function(p) {
+                    return (p.title || '').toLowerCase().indexOf(q) !== -1 ||
+                           (p.username || '').toLowerCase().indexOf(q) !== -1 ||
+                           (p.sport || '').toLowerCase().indexOf(q) !== -1 ||
+                           (p.league || '').toLowerCase().indexOf(q) !== -1 ||
+                           (p.team_player || '').toLowerCase().indexOf(q) !== -1;
+                });
+                bodyWrap.innerHTML = filtered.length ? listHtml(filtered) : emptyHtml('magnifying-glass', 'No matches for "' + q + '".', 'Try a different search.', '');
+            });
+        }
+    });
+
     // ============== INIT ==============
     document.addEventListener('DOMContentLoaded', async function() {
         try { if (window.api && api.ready) await api.ready; } catch(e){}
-        initSportLeagueControls();
+        initModalSportSelect();
         await loadCategories();
-        loadQuizRatings();
-        // Deep link
         var hash = window.location.hash || '';
         if (hash.indexOf('#poll-') === 0) {
             var pid = parseInt(hash.substring(6));
-            if (pid) { await loadPolls(); openPoll(pid); return; }
+            if (pid) { await loadSection(); openPoll(pid); return; }
         }
-        loadPolls();
+        loadSection();
     });
     </script>
 <script src="/static/js/analytics.js?v=20260504a"></script>
