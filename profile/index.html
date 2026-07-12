@@ -3562,53 +3562,83 @@
                 <!-- TAB: AWARDS RECEIVED -->
                 <div class="profile-tab-panel" data-panel="awards">
                     <style>
-                    /* ===== Awards Received: premium holographic trophies ===== */
+                    /* ===== Awards Received: dimensional metallic trophies with restrained iridescence ===== */
                     .awd-card-wrap { background: linear-gradient(160deg, rgba(13,18,30,.96), rgba(8,11,20,.98)); border: 1px solid rgba(148,163,184,.14); border-radius: 16px; padding: 22px; }
                     .awd-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 6px; }
                     .awd-title { font-size: 1.05rem; font-weight: 800; letter-spacing: .3px; color: var(--text, #f1f6fc); }
                     .awd-sub { font-size: .8rem; color: #93a1b6; }
                     .awd-summary { display: flex; align-items: center; gap: 10px; margin: 10px 0 18px; padding: 10px 14px; border: 1px solid rgba(255,215,0,.22); background: rgba(255,215,0,.06); border-radius: 12px; font-size: .85rem; color: #e8edf5; }
                     .awd-summary strong { color: #ffd700; }
-                    .awd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; }
-                    .awd-card { position: relative; overflow: hidden; border-radius: 16px; padding: 24px 16px 18px; text-align: center; cursor: pointer; border: 1px solid rgba(148,163,184,.16); background: radial-gradient(120% 90% at 50% 0%, rgba(30,41,64,.65), rgba(9,12,20,.95) 60%); transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
+                    .awd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); gap: 16px; align-items: stretch; }
+                    .awd-card { --awd-holo1: rgba(255,255,255,.05); --awd-holo2: rgba(255,255,255,.03); --awd-glow: rgba(148,163,184,.14);
+                        position: relative; overflow: hidden; border-radius: 18px; padding: 26px 16px 18px; text-align: center; cursor: pointer;
+                        display: flex; flex-direction: column; align-items: center; min-height: 252px;
+                        border: 1px solid var(--awd-glow);
+                        background: radial-gradient(90% 62% at 50% 20%, var(--awd-spot, rgba(30,41,64,.6)), transparent 70%), linear-gradient(170deg, rgba(17,24,39,.92), rgba(7,10,18,.98));
+                        box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 10px 26px rgba(0,0,0,.35);
+                        transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease; }
                     .awd-card:hover { transform: translateY(-4px); }
-                    .awd-card::before { content: ''; position: absolute; inset: -60%; background: conic-gradient(from 180deg, transparent 0deg, rgba(255,255,255,.05) 60deg, rgba(0,255,255,.10) 120deg, rgba(255,0,255,.09) 180deg, rgba(255,215,0,.10) 240deg, rgba(255,255,255,.05) 300deg, transparent 360deg); animation: awdHolo 9s linear infinite; pointer-events: none; }
-                    .awd-card::after { content: ''; position: absolute; top: 0; left: -80%; width: 55%; height: 100%; background: linear-gradient(105deg, transparent, rgba(255,255,255,.10), transparent); transform: skewX(-18deg); transition: left .55s ease; pointer-events: none; }
-                    .awd-card:hover::after { left: 130%; }
+                    /* refined holographic drift: two soft tinted lobes, slow, barely-there until hover */
+                    .awd-card::before { content: ''; position: absolute; inset: -55%;
+                        background: conic-gradient(from 210deg at 50% 42%, transparent 0deg, var(--awd-holo1) 80deg, transparent 150deg, var(--awd-holo2) 230deg, rgba(255,255,255,.03) 290deg, transparent 360deg);
+                        opacity: .55; animation: awdHolo 16s linear infinite; pointer-events: none; }
+                    .awd-card:hover::before { opacity: 1; }
+                    .awd-card::after { content: ''; position: absolute; top: 0; left: -85%; width: 45%; height: 100%;
+                        background: linear-gradient(105deg, transparent, rgba(255,255,255,.09), rgba(255,255,255,.02), transparent);
+                        transform: skewX(-18deg); transition: left .6s ease; pointer-events: none; }
+                    .awd-card:hover::after { left: 135%; }
                     @keyframes awdHolo { to { transform: rotate(360deg); } }
-                    .awd-card.awd-gold { border-color: rgba(255,215,0,.35); } .awd-card.awd-gold:hover { box-shadow: 0 10px 34px rgba(255,215,0,.16); }
-                    .awd-card.awd-green { border-color: rgba(52,211,153,.35); } .awd-card.awd-green:hover { box-shadow: 0 10px 34px rgba(52,211,153,.15); }
-                    .awd-card.awd-blue { border-color: rgba(56,189,248,.35); } .awd-card.awd-blue:hover { box-shadow: 0 10px 34px rgba(56,189,248,.15); }
-                    .awd-card.awd-violet { border-color: rgba(192,132,252,.35); } .awd-card.awd-violet:hover { box-shadow: 0 10px 34px rgba(192,132,252,.16); }
-                    .awd-trophy { position: relative; width: 92px; height: 92px; margin: 0 auto 10px; filter: drop-shadow(0 6px 18px rgba(0,0,0,.55)); }
-                    .awd-gold .awd-trophy { filter: drop-shadow(0 0 16px rgba(255,215,0,.35)) drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
-                    .awd-green .awd-trophy { filter: drop-shadow(0 0 16px rgba(52,211,153,.32)) drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
-                    .awd-blue .awd-trophy { filter: drop-shadow(0 0 16px rgba(56,189,248,.32)) drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
-                    .awd-violet .awd-trophy { filter: drop-shadow(0 0 16px rgba(192,132,252,.34)) drop-shadow(0 6px 14px rgba(0,0,0,.5)); }
-                    .awd-name { font-weight: 800; font-size: .95rem; color: #f1f6fc; letter-spacing: .2px; margin-bottom: 4px; }
-                    .awd-period { font-size: .78rem; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; color: #ffd700; }
-                    .awd-green .awd-period { color: #34d399; } .awd-blue .awd-period { color: #38bdf8; } .awd-violet .awd-period { color: #c084fc; }
-                    .awd-date { margin-top: 6px; font-size: .72rem; color: #7e8aa0; }
+                    .awd-card.awd-emerald { --awd-glow: rgba(52,211,153,.34); --awd-spot: rgba(6,78,59,.5); --awd-holo1: rgba(52,211,153,.10); --awd-holo2: rgba(190,242,100,.06); }
+                    .awd-card.awd-emerald:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 14px 38px rgba(16,185,129,.18); }
+                    .awd-card.awd-gold { --awd-glow: rgba(255,215,0,.36); --awd-spot: rgba(120,80,8,.42); --awd-holo1: rgba(255,215,0,.11); --awd-holo2: rgba(255,170,60,.06); }
+                    .awd-card.awd-gold:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 14px 38px rgba(255,196,0,.18); }
+                    .awd-card.awd-cyan { --awd-glow: rgba(56,189,248,.36); --awd-spot: rgba(7,89,133,.5); --awd-holo1: rgba(56,189,248,.11); --awd-holo2: rgba(45,212,191,.06); }
+                    .awd-card.awd-cyan:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 14px 38px rgba(56,189,248,.18); }
+                    .awd-card.awd-violet { --awd-glow: rgba(192,132,252,.38); --awd-spot: rgba(76,29,149,.5); --awd-holo1: rgba(192,132,252,.12); --awd-holo2: rgba(103,232,249,.07); }
+                    .awd-card.awd-violet:hover { box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 14px 38px rgba(167,139,250,.20); }
+                    .awd-trophy { position: relative; width: 118px; height: 130px; margin: 0 auto 8px; flex: 0 0 auto; }
+                    .awd-emerald .awd-trophy { filter: drop-shadow(0 0 14px rgba(52,211,153,.28)); }
+                    .awd-gold .awd-trophy { filter: drop-shadow(0 0 14px rgba(255,215,0,.30)); }
+                    .awd-cyan .awd-trophy { filter: drop-shadow(0 0 14px rgba(56,189,248,.28)); }
+                    .awd-violet .awd-trophy { filter: drop-shadow(0 0 14px rgba(192,132,252,.30)); }
+                    .awd-name { font-weight: 800; font-size: .95rem; color: #f1f6fc; letter-spacing: .2px; margin-bottom: 4px; line-height: 1.3; }
+                    .awd-period { font-size: .76rem; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; color: #ffd700; }
+                    .awd-emerald .awd-period { color: #34d399; } .awd-cyan .awd-period { color: #38bdf8; } .awd-violet .awd-period { color: #c084fc; }
                     .awd-desc { margin-top: 6px; font-size: .78rem; color: #aab6c9; max-height: 3.2em; overflow: hidden; }
+                    .awd-date { margin-top: auto; padding-top: 8px; font-size: .72rem; color: #7e8aa0; }
                     .awd-empty { padding: 44px 16px; text-align: center; color: #93a1b6; font-size: .92rem; }
                     .awd-empty svg { width: 54px; height: 54px; opacity: .45; margin-bottom: 10px; }
                     /* modal */
-                    .awd-modal-overlay { position: fixed; inset: 0; background: rgba(3,7,14,.78); backdrop-filter: blur(4px); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 18px; }
+                    .awd-modal-overlay { position: fixed; inset: 0; background: rgba(3,7,14,.8); backdrop-filter: blur(4px); z-index: 4000; display: none; align-items: center; justify-content: center; padding: 18px; }
                     .awd-modal-overlay.show { display: flex; }
-                    .awd-modal { position: relative; width: min(420px, 94vw); border-radius: 18px; border: 1px solid rgba(255,215,0,.3); background: linear-gradient(165deg, #101827, #090d16); padding: 30px 24px 26px; text-align: center; overflow: hidden; }
-                    .awd-modal::before { content: ''; position: absolute; inset: -60%; background: conic-gradient(from 0deg, transparent, rgba(0,255,255,.08), rgba(255,0,255,.07), rgba(255,215,0,.09), transparent); animation: awdHolo 11s linear infinite; pointer-events: none; }
-                    .awd-modal .awd-trophy { width: 120px; height: 120px; }
-                    .awd-modal-close { position: absolute; top: 10px; right: 14px; background: none; border: 0; color: #93a1b6; font-size: 1.3rem; cursor: pointer; z-index: 2; }
-                    .awd-modal-title { font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin-top: 4px; }
-                    .awd-modal-meta { margin-top: 8px; font-size: .82rem; color: #aab6c9; line-height: 1.55; position: relative; }
-                    @media (max-width: 560px) { .awd-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; } .awd-trophy { width: 74px; height: 74px; } }
+                    .awd-modal { position: relative; width: min(430px, 94vw); border-radius: 20px; border: 1px solid rgba(255,255,255,.14); background: radial-gradient(110% 60% at 50% 0%, rgba(30,41,64,.55), transparent 70%), linear-gradient(165deg, #101827, #090d16); padding: 32px 26px 28px; text-align: center; overflow: hidden; box-shadow: 0 24px 70px rgba(0,0,0,.6); }
+                    .awd-modal::before { content: ''; position: absolute; inset: -55%; background: conic-gradient(from 30deg at 50% 45%, transparent, rgba(0,255,255,.05) 90deg, transparent 160deg, rgba(255,0,255,.045) 240deg, rgba(255,215,0,.05) 300deg, transparent); animation: awdHolo 18s linear infinite; pointer-events: none; }
+                    .awd-modal .awd-trophy { width: 148px; height: 162px; }
+                    .awd-modal-close { position: absolute; top: 10px; right: 14px; background: none; border: 0; color: #93a1b6; font-size: 1.35rem; cursor: pointer; z-index: 2; }
+                    .awd-modal-title { font-size: 1.18rem; font-weight: 800; color: #f8fafc; margin-top: 6px; position: relative; }
+                    .awd-modal-meta { margin-top: 8px; font-size: .84rem; color: #aab6c9; line-height: 1.6; position: relative; }
+                    @media (max-width: 560px) { .awd-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; } .awd-card { min-height: 232px; padding: 20px 10px 14px; } .awd-trophy { width: 86px; height: 94px; } .awd-name { font-size: .86rem; } }
                     </style>
                     <svg width="0" height="0" style="position:absolute" aria-hidden="true">
                         <defs>
-                            <linearGradient id="awdGradGold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffe873"/><stop offset=".45" stop-color="#ffd700"/><stop offset="1" stop-color="#a8720a"/></linearGradient>
-                            <linearGradient id="awdGradGreen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#86efac"/><stop offset=".45" stop-color="#34d399"/><stop offset="1" stop-color="#065f46"/></linearGradient>
-                            <linearGradient id="awdGradBlue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#bae6fd"/><stop offset=".45" stop-color="#38bdf8"/><stop offset="1" stop-color="#075985"/></linearGradient>
-                            <linearGradient id="awdGradViolet" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9d5ff"/><stop offset=".45" stop-color="#c084fc"/><stop offset="1" stop-color="#5b21b6"/></linearGradient>
+                            <!-- Emerald (Best ROI) -->
+                            <linearGradient id="awdMetalEm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d1fae5"/><stop offset=".22" stop-color="#6ee7b7"/><stop offset=".5" stop-color="#10b981"/><stop offset=".78" stop-color="#047857"/><stop offset="1" stop-color="#064e3b"/></linearGradient>
+                            <linearGradient id="awdDarkEm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#059669"/><stop offset="1" stop-color="#022c22"/></linearGradient>
+                            <linearGradient id="awdRimEm" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ecfdf5"/><stop offset="1" stop-color="#059669"/></linearGradient>
+                            <!-- Gold (Most Units) -->
+                            <linearGradient id="awdMetalAu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff7c2"/><stop offset=".22" stop-color="#ffe873"/><stop offset=".5" stop-color="#ffd700"/><stop offset=".78" stop-color="#d99e00"/><stop offset="1" stop-color="#8a5a08"/></linearGradient>
+                            <linearGradient id="awdDarkAu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8860b"/><stop offset="1" stop-color="#4a3104"/></linearGradient>
+                            <linearGradient id="awdRimAu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffbe8"/><stop offset="1" stop-color="#d99e00"/></linearGradient>
+                            <!-- Cyan (Most Active) -->
+                            <linearGradient id="awdMetalCy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e0f2fe"/><stop offset=".22" stop-color="#7dd3fc"/><stop offset=".5" stop-color="#38bdf8"/><stop offset=".78" stop-color="#0284c7"/><stop offset="1" stop-color="#075985"/></linearGradient>
+                            <linearGradient id="awdDarkCy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0369a1"/><stop offset="1" stop-color="#082f49"/></linearGradient>
+                            <linearGradient id="awdRimCy" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f0f9ff"/><stop offset="1" stop-color="#0284c7"/></linearGradient>
+                            <!-- Violet / platinum-holo (Admin Discretion) -->
+                            <linearGradient id="awdMetalVi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5f3ff"/><stop offset=".22" stop-color="#e9d5ff"/><stop offset=".5" stop-color="#c084fc"/><stop offset=".78" stop-color="#8b5cf6"/><stop offset="1" stop-color="#4c1d95"/></linearGradient>
+                            <linearGradient id="awdDarkVi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7c3aed"/><stop offset="1" stop-color="#2e1065"/></linearGradient>
+                            <linearGradient id="awdRimVi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#faf5ff"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient>
+                            <!-- shared: restrained iridescent sheen band -->
+                            <linearGradient id="awdIri" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#67e8f9" stop-opacity=".55"/><stop offset=".5" stop-color="#f0abfc" stop-opacity=".4"/><stop offset="1" stop-color="#fde68a" stop-opacity=".45"/></linearGradient>
                         </defs>
                     </svg>
                     <div class="awd-card-wrap">
@@ -9853,11 +9883,13 @@
     // ---- Awards Received tab: isolated loader, read-only, never touches record ----
     (function initProfileAwards() {
         const API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        // Palette identity by award type: Best ROI = emerald, Most Units =
+        // gold, Most Active = cyan, Admin Discretion = violet/platinum-holo.
         const STYLE_BY_TYPE = {
-            best_roi: { cls: 'awd-gold', grad: 'awdGradGold' },
-            most_units: { cls: 'awd-green', grad: 'awdGradGreen' },
-            most_active: { cls: 'awd-blue', grad: 'awdGradBlue' },
-            admin_discretion: { cls: 'awd-violet', grad: 'awdGradViolet' }
+            best_roi: { cls: 'awd-emerald', metal: 'awdMetalEm', dark: 'awdDarkEm', rim: 'awdRimEm' },
+            most_units: { cls: 'awd-gold', metal: 'awdMetalAu', dark: 'awdDarkAu', rim: 'awdRimAu' },
+            most_active: { cls: 'awd-cyan', metal: 'awdMetalCy', dark: 'awdDarkCy', rim: 'awdRimCy' },
+            admin_discretion: { cls: 'awd-violet', metal: 'awdMetalVi', dark: 'awdDarkVi', rim: 'awdRimVi' }
         };
         function awdEsc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
         function awdUsername() {
@@ -9872,19 +9904,85 @@
             try { if (window.auth && auth.currentUser && auth.currentUser.username) return auth.currentUser.username; } catch (_) {}
             return null;
         }
-        function trophySvg(grad) {
-            return '<svg class="awd-trophy" viewBox="0 0 64 64" fill="none">' +
-                '<path d="M18 10h28v12c0 9-6.3 16-14 16s-14-7-14-16z" fill="url(#' + grad + ')"/>' +
-                '<path d="M18 14h-8c0 8 3.5 13 9.5 14.5" stroke="url(#' + grad + ')" stroke-width="3.4" stroke-linecap="round"/>' +
-                '<path d="M46 14h8c0 8-3.5 13-9.5 14.5" stroke="url(#' + grad + ')" stroke-width="3.4" stroke-linecap="round"/>' +
-                '<path d="M24 16c1.5 5.5 4 8.5 7 10" stroke="rgba(255,255,255,.55)" stroke-width="2" stroke-linecap="round"/>' +
-                '<rect x="29" y="38" width="6" height="8" rx="1" fill="url(#' + grad + ')"/>' +
-                '<path d="M22 50h20l2.4 6H19.6z" fill="url(#' + grad + ')"/>' +
-                '<rect x="25" y="51.6" width="14" height="2.6" rx="1.3" fill="rgba(255,255,255,.35)"/>' +
+        // Dimensional trophy: back-lit handles, elliptical mouth with dark
+        // interior, vertical metal gradient, specular streak, restrained
+        // iridescent sheen band, medallion emblem per award type, knurled
+        // stem, two-tier plinth with engraved plate, soft ground shadow.
+        function trophyEmblem(type) {
+            if (type === 'best_roi') {
+                return '<path d="M51.5 57.5l6.5-6.5 3.5 3.5 7-7.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".95" fill="none"/>' +
+                       '<path d="M63.5 46.5h5v5" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" opacity=".95" fill="none"/>';
+            }
+            if (type === 'most_units') {
+                return '<ellipse cx="60" cy="47.5" rx="7.2" ry="2.7" stroke="#fff" stroke-width="1.9" opacity=".95" fill="none"/>' +
+                       '<path d="M52.8 47.5v4.5c0 1.5 3.2 2.7 7.2 2.7s7.2-1.2 7.2-2.7v-4.5" stroke="#fff" stroke-width="1.9" opacity=".95" fill="none"/>' +
+                       '<path d="M52.8 52v4.5c0 1.5 3.2 2.7 7.2 2.7s7.2-1.2 7.2-2.7V52" stroke="#fff" stroke-width="1.9" opacity=".95" fill="none"/>';
+            }
+            if (type === 'most_active') {
+                return '<path d="M62 43.5L53.5 54h5.5l-1.8 8.5L66 51.5h-5.7l1.7-8z" fill="#fff" opacity=".95"/>';
+            }
+            return '<path d="M60 43.6l2.6 5.3 5.8.85-4.2 4.1 1 5.8-5.2-2.75-5.2 2.75 1-5.8-4.2-4.1 5.8-.85z" fill="#fff" opacity=".95"/>';
+        }
+        function trophySvg(st, type) {
+            const metal = 'url(#' + st.metal + ')', dark = 'url(#' + st.dark + ')', rim = 'url(#' + st.rim + ')';
+            return '<svg class="awd-trophy" viewBox="0 0 120 132" fill="none" aria-hidden="true">' +
+                // ground shadow
+                '<ellipse cx="60" cy="123" rx="33" ry="5.5" fill="rgba(0,0,0,.5)"/>' +
+                // handles (dark body + bright rim pass = dimensional)
+                '<path d="M30 35C12 37 10 58 31 64" stroke="' + dark + '" stroke-width="7" stroke-linecap="round"/>' +
+                '<path d="M90 35c18 2 20 23-1 29" stroke="' + dark + '" stroke-width="7" stroke-linecap="round"/>' +
+                '<path d="M30 35C12 37 10 58 31 64" stroke="' + metal + '" stroke-width="3" stroke-linecap="round" opacity=".85"/>' +
+                '<path d="M90 35c18 2 20 23-1 29" stroke="' + metal + '" stroke-width="3" stroke-linecap="round" opacity=".85"/>' +
+                // cup body
+                '<path d="M30 30h60v16c0 22-12.5 36-30 36S30 68 30 46z" fill="' + metal + '"/>' +
+                // right-side shade for roundness
+                '<path d="M74 31c9 1 14 2 16 5v10c0 20-11 33-26 35 13-6 19-20 17-38-1-6-4-9-7-12z" fill="rgba(4,10,18,.28)"/>' +
+                // restrained iridescent sheen band
+                '<path d="M70 33c11 3 16 11 13 22-3 11-11 19-21 22 11-12 14-31 8-44z" fill="url(#awdIri)" opacity=".28"/>' +
+                // left specular streak
+                '<path d="M39 38c-2 12 0 23 6 31" stroke="rgba(255,255,255,.6)" stroke-width="4.5" stroke-linecap="round" opacity=".5"/>' +
+                '<ellipse cx="44" cy="40" rx="3" ry="5.5" fill="rgba(255,255,255,.5)" opacity=".55"/>' +
+                // mouth: bright rim + dark interior
+                '<ellipse cx="60" cy="30" rx="30" ry="7" fill="' + rim + '"/>' +
+                '<ellipse cx="60" cy="30.7" rx="25.5" ry="5.1" fill="rgba(5,9,17,.82)"/>' +
+                '<ellipse cx="60" cy="29.4" rx="25.5" ry="4.6" fill="rgba(14,21,34,.9)"/>' +
+                // medallion emblem
+                '<circle cx="60" cy="52" r="13" fill="rgba(4,8,15,.5)"/>' +
+                '<circle cx="60" cy="52" r="13" stroke="rgba(255,255,255,.4)" stroke-width="1.3"/>' +
+                '<circle cx="60" cy="52" r="10.6" stroke="rgba(255,255,255,.14)" stroke-width=".8"/>' +
+                trophyEmblem(type) +
+                // stem: flared neck + collar
+                '<path d="M53 82c2.5 6 1.5 10-3.5 13h21c-5-3-6-7-3.5-13z" fill="' + dark + '"/>' +
+                '<ellipse cx="60" cy="83.5" rx="9.5" ry="3" fill="' + metal + '"/>' +
+                '<rect x="52.5" y="88.5" width="15" height="2.4" rx="1.2" fill="rgba(255,255,255,.25)"/>' +
+                // base tier 1 (metal bevel)
+                '<path d="M40 95h40l3.5 9h-47z" fill="' + metal + '"/>' +
+                '<path d="M40 95h40l1 2.6H39z" fill="rgba(255,255,255,.3)"/>' +
+                // base tier 2 (dark plinth) + top light + engraved plate
+                '<rect x="32" y="104" width="56" height="13" rx="2.5" fill="' + dark + '"/>' +
+                '<rect x="32" y="104" width="56" height="3.4" rx="1.7" fill="rgba(255,255,255,.2)"/>' +
+                '<rect x="44" y="107" width="32" height="7" rx="1.5" fill="rgba(7,11,19,.88)" stroke="rgba(255,255,255,.28)" stroke-width=".8"/>' +
+                '<rect x="47" y="109.6" width="26" height="1.1" rx=".55" fill="rgba(255,255,255,.22)"/>' +
+                '<rect x="50" y="111.6" width="20" height="1.1" rx=".55" fill="rgba(255,255,255,.14)"/>' +
             '</svg>';
         }
         function fmtDate(d) {
             try { return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); } catch (_) { return ''; }
+        }
+        // Real winning stats from the award metadata (set by the monthly run)
+        // so monthly trophies show WHY they were earned.
+        function awdStatLine(a) {
+            if (a.description) return a.description;
+            const m = a.metadata || {};
+            try {
+                if (a.award_type === 'best_roi' && m.roi_pct != null) return Number(m.roi_pct).toFixed(2) + '% ROI across ' + m.graded + ' graded picks';
+                if (a.award_type === 'most_units' && m.net_units != null) return (Number(m.net_units) >= 0 ? '+' : '') + Number(m.net_units).toFixed(2) + ' units across ' + m.graded + ' graded picks';
+                if (a.award_type === 'most_active' && m.score != null) {
+                    const posts = (Number(m.forum_posts) || 0) + (Number(m.feed_posts) || 0) + (Number(m.comments) || 0);
+                    return (Number(m.picks) || 0) + ' picks and ' + posts + ' community posts';
+                }
+            } catch (_) {}
+            return '';
         }
         let awardsCache = [];
         function openAwdModal(idx) {
@@ -9892,12 +9990,12 @@
             if (!a) return;
             const st = STYLE_BY_TYPE[a.award_type] || STYLE_BY_TYPE.admin_discretion;
             const body = document.getElementById('awdModalBody');
-            body.innerHTML = trophySvg(st.grad) +
+            body.innerHTML = trophySvg(st, a.award_type) +
                 '<div class="awd-modal-title">' + awdEsc(a.title) + '</div>' +
                 '<div class="awd-modal-meta">' +
                     (a.period_label ? '<div><strong>' + awdEsc(a.period_label) + '</strong></div>' : '') +
-                    (a.description ? '<div style="margin-top:6px;">' + awdEsc(a.description) + '</div>' : '') +
-                    '<div style="margin-top:6px;">Awarded ' + awdEsc(fmtDate(a.awarded_at)) + (a.awarded_by === 'admin' ? ' &bull; Special recognition' : '') + '</div>' +
+                    (awdStatLine(a) ? '<div style="margin-top:6px;">' + awdEsc(awdStatLine(a)) + '</div>' : '') +
+                    '<div style="margin-top:6px;">Awarded ' + awdEsc(fmtDate(a.awarded_at)) + (a.award_type === 'admin_discretion' ? ' &bull; Special recognition, issued by TrustMyRecord staff' : '') + '</div>' +
                 '</div>';
             document.getElementById('awdModalOverlay').classList.add('show');
         }
@@ -9916,10 +10014,10 @@
             grid.innerHTML = list.map(function (a, i) {
                 const st = STYLE_BY_TYPE[a.award_type] || STYLE_BY_TYPE.admin_discretion;
                 return '<div class="awd-card ' + st.cls + '" data-awd="' + i + '" role="button" tabindex="0" aria-label="' + awdEsc(a.title) + '">' +
-                    trophySvg(st.grad) +
+                    trophySvg(st, a.award_type) +
                     '<div class="awd-name">' + awdEsc(a.title) + '</div>' +
                     (a.period_label ? '<div class="awd-period">' + awdEsc(a.period_label) + '</div>' : '<div class="awd-period">Special Recognition</div>') +
-                    (a.description ? '<div class="awd-desc">' + awdEsc(a.description) + '</div>' : '') +
+                    (awdStatLine(a) ? '<div class="awd-desc">' + awdEsc(awdStatLine(a)) + '</div>' : '') +
                     '<div class="awd-date">Awarded ' + awdEsc(fmtDate(a.awarded_at)) + '</div>' +
                 '</div>';
             }).join('');
@@ -9938,12 +10036,40 @@
                 render(Array.isArray(data.awards) ? data.awards : []);
             } catch (_) { render([]); }
         }
+        // The pick-ledger ("record") panel stays rendered in flow on this page
+        // even when it is not the active tab, which buries the trophies under
+        // a long table. Scoped fix: while the Awards tab is selected, force
+        // every non-awards panel hidden; restore untouched styles on leave.
+        function enforceAwardsOnly(tab) {
+            document.querySelectorAll('.profile-tab-panel').forEach(function (p) {
+                const isAwards = p.getAttribute('data-panel') === 'awards';
+                if (tab === 'awards') {
+                    if (!isAwards && getComputedStyle(p).display !== 'none') {
+                        p.setAttribute('data-awd-hidden', '1');
+                        p.style.setProperty('display', 'none', 'important');
+                    }
+                } else if (p.hasAttribute('data-awd-hidden')) {
+                    p.removeAttribute('data-awd-hidden');
+                    p.style.removeProperty('display');
+                }
+            });
+        }
         function onReady() {
             const overlay = document.getElementById('awdModalOverlay');
             const closeBtn = document.getElementById('awdModalClose');
             if (overlay) overlay.addEventListener('click', function (e) { if (e.target === overlay) overlay.classList.remove('show'); });
             if (closeBtn) closeBtn.addEventListener('click', function () { overlay.classList.remove('show'); });
             document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && overlay) overlay.classList.remove('show'); });
+            const bar = document.getElementById('profileTabsBar');
+            if (bar) bar.addEventListener('click', function (e) {
+                const btn = e.target.closest('.profile-tab');
+                if (!btn) return;
+                // run after the site's own tab switcher has toggled panels
+                setTimeout(function () { enforceAwardsOnly(btn.getAttribute('data-tab')); }, 0);
+            });
+            if ((location.hash || '').replace('#', '') === 'awards') {
+                setTimeout(function () { enforceAwardsOnly('awards'); }, 250);
+            }
             load();
         }
         if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady);
