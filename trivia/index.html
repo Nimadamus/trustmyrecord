@@ -1554,9 +1554,10 @@ async function handleTimeUp() {
 
     try {
         var sessionId = currentSession.id || currentSession.session_id;
+        var qId = (currentQuestion && (currentQuestion.id || currentQuestion.question_id)) || null;
         var result = await api.request('/trivia/sessions/' + sessionId + '/answer', {
             method: 'POST',
-            body: { answer_id: null, timed_out: true }
+            body: { question_id: qId, answer_id: null, timed_out: true }
         });
         showAnswerResult(result, true);
     } catch(e) {
@@ -1618,9 +1619,10 @@ async function handleCheat() {
 
     try {
         var sessionId = currentSession.id || currentSession.session_id;
+        var qId = (currentQuestion && (currentQuestion.id || currentQuestion.question_id)) || null;
         await api.request('/trivia/sessions/' + sessionId + '/answer', {
             method: 'POST',
-            body: { answer_id: null, timed_out: true }
+            body: { question_id: qId, answer_id: null, timed_out: true }
         });
     } catch(e) { /* ignore */ }
 
@@ -1728,9 +1730,10 @@ async function submitQuizAnswer() {
 
     try {
         var sessionId = currentSession.id || currentSession.session_id;
+        var qId = (currentQuestion && (currentQuestion.id || currentQuestion.question_id)) || null;
         var result = await api.request('/trivia/sessions/' + sessionId + '/answer', {
             method: 'POST',
-            body: { answer_id: selectedAnswerId }
+            body: { question_id: qId, answer_id: selectedAnswerId }
         });
         showAnswerResult(result, false);
     } catch(e) {
