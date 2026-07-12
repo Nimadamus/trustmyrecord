@@ -761,6 +761,19 @@
 
         window.addEventListener('beforeunload', () => { if (refreshInterval) clearInterval(refreshInterval); });
 
+        // Size the inbox to exactly fill from its real top to the viewport bottom,
+        // so the sticky composer is always visible regardless of the injected nav height.
+        function sizeApp() {
+            const app = document.getElementById('msgApp');
+            if (!app) return;
+            const top = app.getBoundingClientRect().top + window.scrollY;
+            const h = window.innerHeight - top - 14;
+            app.style.height = Math.max(440, h) + 'px';
+        }
+        window.addEventListener('resize', sizeApp);
+        window.addEventListener('load', sizeApp);
+        [0, 300, 800, 1600].forEach(t => setTimeout(sizeApp, t));
+
         function idEq(a, b) { return String(a) === String(b); }
         // Single-quoted JS string literal safe to embed inside a double-quoted HTML onclick attribute
         function jsStr(v) {
