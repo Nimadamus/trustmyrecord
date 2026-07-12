@@ -63,6 +63,22 @@
         .stat span { font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
         .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%); background:#152741; border:1px solid var(--line); color:var(--text); padding:12px 18px; border-radius:11px; font-size:13.5px; display:none; z-index:60; max-width:92vw; }
         .tblwrap { overflow-x:auto; }
+        /* Package builder */
+        .pkg-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(205px,1fr)); gap:10px; margin-bottom:14px; }
+        .pkg { background:rgba(7,14,26,.65); border:1px solid var(--line); border-radius:11px; padding:12px; transition:border-color .15s; }
+        .pkg.on { border-color:rgba(45,212,191,.45); }
+        .pkg-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:9px; }
+        .pkg-name { font-weight:800; font-size:13px; }
+        .pkg-dur { font:700 9.5px/1 'JetBrains Mono',monospace; letter-spacing:.08em; color:var(--cyan); background:rgba(34,211,238,.09); border:1px solid rgba(34,211,238,.25); padding:3px 7px; border-radius:999px; white-space:nowrap; }
+        .pkg-price { display:flex; align-items:center; gap:6px; }
+        .pkg-price span { color:var(--muted); font-weight:700; font-size:13px; }
+        .pkg-price input { width:100%; background:rgba(11,23,42,.9); border:1px solid var(--line); border-radius:8px; color:var(--text); padding:8px 10px; font-size:13px; font-family:'JetBrains Mono',monospace; }
+        .pkg-price input:focus { outline:none; border-color:var(--cyan); }
+        .pkg-keep { color:var(--muted); font-size:10.5px; margin-top:6px; min-height:13px; }
+        .pkg-keep b { color:var(--green); font-family:'JetBrains Mono',monospace; }
+        .pkg-toggle { display:flex; align-items:center; gap:7px; font-size:11.5px; color:#c5cee0; margin-top:9px; cursor:pointer; }
+        .pkg-status { margin-left:auto; font:700 9.5px/1 'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; }
+        .pkg-status.live { color:var(--green); } .pkg-status.draft { color:var(--amber); } .pkg-status.off { color:var(--muted); }
         @media (max-width:560px) { .mp-shell { padding:20px 14px 56px; } }
     </style>
 </head>
@@ -71,7 +87,7 @@
 <main class="mp-shell">
     <div class="crumb"><a href="/marketplace/">&larr; Pick Marketplace</a></div>
     <h1>Sell Your <span class="accent">Picks</span></h1>
-    <p class="lede">Open a storefront attached to your verified record. You set the price, Stripe handles identity verification and payouts, and TrustMyRecord keeps a 20% platform commission on each sale — you receive an 80% gross allocation.</p>
+    <p class="lede">Open a storefront attached to your verified record. Choose which packages to sell — single picks, day, weekly, or monthly passes — and set your own price on each. Stripe handles identity verification and payouts; TrustMyRecord keeps a 20% platform commission on every sale and you receive 80%.</p>
     <div id="app"><div class="panel" style="color:var(--muted);">Loading…</div></div>
 
     <section class="panel" style="margin-top:24px;" aria-label="How selling picks works">
@@ -89,7 +105,14 @@
 <script>
 (function () {
     const app = document.getElementById('app');
-    let elig = null, listing = null, dash = null, status = null;
+    let elig = null, listing = null, listings = [], byType = {}, dash = null, status = null;
+
+    const PKG = [
+        { type: 'single_pick',   name: 'Single Pick',  dur: '1 PICK', ph: '20.00' },
+        { type: 'daily_access',  name: 'Day Pass',     dur: '24H',    ph: '35.00' },
+        { type: 'weekly_access', name: 'Weekly Pass',  dur: '7 DAYS', ph: '99.00' },
+        { type: 'monthly_access',name: 'Monthly Pass', dur: '30 DAYS',ph: '249.00' },
+    ];
 
     function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
     function money(cents, cur) { return new Intl.NumberFormat('en-US',{style:'currency',currency:(cur||'usd').toUpperCase()}).format((cents||0)/100); }
@@ -172,24 +195,33 @@
         }
         html += '</div>';
 
-        // Step 4: listing
-        html += '<div class="panel"><h2><span class="step-num">4</span> Your Offering ' +
-            (listing ? (listing.status === 'published' ? '<span class="status-pill pill-green">Live</span>' : '<span class="status-pill pill-amber">' + esc(listing.status) + '</span>') : '') + '</h2>' +
-            '<div class="field"><label>Title</label><input id="lsTitle" maxlength="140" placeholder="e.g. Single Pick Access" value="' + esc(listing ? listing.title : 'Single Pick Access') + '"></div>' +
-            '<div class="field"><label>Description (what the buyer gets)</label><textarea id="lsDesc" maxlength="2000" placeholder="One locked pick of your choice from my pending board, revealed immediately after purchase.">' + esc(listing ? listing.description : '') + '</textarea>' +
+        // Step 4: packages — seller picks which to offer and prices each one
+        const anyLive = listings.some(function (l) { return l.status === 'published'; });
+        html += '<div class="panel"><h2><span class="step-num">4</span> Your Packages ' +
+            (anyLive ? '<span class="status-pill pill-green">Live</span>' : listings.length ? '<span class="status-pill pill-amber">Draft</span>' : '') + '</h2>' +
+            '<p class="hint" style="margin-bottom:12px;">Offer any mix of packages. You set every price; on each sale TrustMyRecord keeps 20% and you receive 80%.</p>' +
+            '<div class="pkg-grid">' +
+            PKG.map(function (pk) {
+                const l = byType[pk.type];
+                const on = Boolean(l && l.status === 'published');
+                const price = l ? (l.price_cents / 100).toFixed(2) : '';
+                const status = !l ? '' : l.status === 'published' ? '<span class="pkg-status live">Live</span>' : '<span class="pkg-status draft">' + esc(l.status) + '</span>';
+                return '<div class="pkg' + (on ? ' on' : '') + '" id="pkg-' + pk.type + '">' +
+                    '<div class="pkg-head"><span class="pkg-name">' + pk.name + '</span><span class="pkg-dur">' + pk.dur + '</span></div>' +
+                    '<div class="pkg-price"><span>$</span><input type="number" step="0.01" min="1" placeholder="' + pk.ph + '" data-price="' + pk.type + '" value="' + price + '"></div>' +
+                    '<div class="pkg-keep" data-keep="' + pk.type + '"></div>' +
+                    '<label class="pkg-toggle"><input type="checkbox" data-offer="' + pk.type + '"' + (on ? ' checked' : '') + '> Offer this' + status + '</label>' +
+                '</div>';
+            }).join('') +
+            '</div>' +
+            '<div class="field"><label>About your picks (shown on every package)</label><textarea id="lsDesc" maxlength="2000" placeholder="Locked picks from my public board, revealed immediately after purchase.">' + esc(listing ? listing.description : '') + '</textarea>' +
             '<p class="hint">No guaranteed-outcome language (guaranteed winner, lock, risk-free) — listings using it are rejected.</p></div>' +
-            '<div class="field"><label>Price per pick (USD)</label><input id="lsPrice" type="number" step="0.01" min="1" placeholder="20.00" value="' + (listing ? (listing.price_cents / 100).toFixed(2) : '') + '">' +
-            '<p class="hint" id="priceHint"></p>' +
-            '<div class="split-note" id="splitNote" style="display:none;"></div></div>' +
             '<div class="field"><label>Sports you focus on (comma separated)</label><input id="lsSports" placeholder="MLB, NFL, NBA" value="' + esc(listing && listing.sports ? listing.sports.join(', ') : '') + '"></div>' +
             '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
-                '<button class="btn btn-outline" id="saveListingBtn">Save Draft</button>' +
-                (listing && listing.status === 'published'
-                    ? '<button class="btn btn-outline" id="unpubBtn" style="border-color:rgba(248,113,113,.4);color:var(--red);">Unpublish Storefront</button>'
-                    : '<button class="btn btn-primary" id="pubBtn" ' + (elig.eligible && listing ? '' : 'disabled') + '>Publish Storefront</button>') +
-                (listing ? '<a class="btn btn-outline" href="/marketplace/seller/?u=' + encodeURIComponent((window.auth && window.auth.user && window.auth.user.username) || (dash && dash._username) || '') + '" id="previewLink">Preview Storefront</a>' : '') +
+                '<button class="btn btn-primary" id="saveListingBtn">Save &amp; Publish Packages</button>' +
+                (listings.length ? '<a class="btn btn-outline" href="/marketplace/seller/?u=' + encodeURIComponent((window.auth && window.auth.user && window.auth.user.username) || (dash && dash._username) || '') + '" id="previewLink">Preview Storefront</a>' : '') +
             '</div>' +
-            (!elig.eligible ? '<p class="hint">Publishing unlocks once every eligibility item in step 1 is green.</p>' : '') +
+            (!elig.eligible ? '<p class="hint">Packages save as drafts now and publish automatically once every eligibility item in step 1 is green.</p>' : '') +
         '</div>';
 
         // Dashboard
@@ -210,9 +242,9 @@
             '<p class="hint">*Gross allocation before any Stripe processing/payout costs, refunds, chargebacks, or taxes. Stripe pays out on its own schedule; manage payout details in your Stripe Express dashboard.</p>';
 
             if (dash.recent_orders && dash.recent_orders.length) {
-                html += '<h2 style="margin-top:18px;font-size:17px;">Recent Orders</h2><div class="tblwrap"><table><thead><tr><th>Date</th><th>Buyer</th><th>Status</th><th>Price</th><th>Your 80%</th></tr></thead><tbody>' +
+                html += '<h2 style="margin-top:18px;font-size:17px;">Recent Orders</h2><div class="tblwrap"><table><thead><tr><th>Date</th><th>Buyer</th><th>Package</th><th>Status</th><th>Price</th><th>Your 80%</th></tr></thead><tbody>' +
                 dash.recent_orders.map(function (o) {
-                    return '<tr><td>' + new Date(o.created_at).toLocaleDateString() + '</td><td>@' + esc(o.buyer_username) + '</td><td>' + esc(o.status) + '</td><td class="mono">' + money(o.price_cents, o.currency) + '</td><td class="mono">' + money(o.seller_gross_cents, o.currency) + '</td></tr>';
+                    return '<tr><td>' + new Date(o.created_at).toLocaleDateString() + '</td><td>@' + esc(o.buyer_username) + '</td><td>' + esc(String(o.product_type || '').replace(/_/g,' ')) + '</td><td>' + esc(o.status) + '</td><td class="mono">' + money(o.price_cents, o.currency) + '</td><td class="mono">' + money(o.seller_gross_cents, o.currency) + '</td></tr>';
                 }).join('') + '</tbody></table></div>';
             }
             html += '</div>';
@@ -222,14 +254,12 @@
         bind();
     }
 
-    function updateSplitNote() {
-        const el = document.getElementById('lsPrice');
-        const note = document.getElementById('splitNote');
-        const v = Math.round(parseFloat(el.value || '0') * 100);
-        if (!v || v <= 0) { note.style.display = 'none'; return; }
-        const fee = Math.round(v * 0.20);
-        note.style.display = 'block';
-        note.innerHTML = 'On a ' + money(v) + ' sale: TrustMyRecord platform commission (20%) = <b class="mono">' + money(fee) + '</b> &middot; your gross allocation (80%) = <b class="mono">' + money(v - fee) + '</b>. Stripe processing and payout costs are itemized separately and do not change this split.';
+    function updateKeepLine(type) {
+        const input = app.querySelector('[data-price="' + type + '"]');
+        const keep = app.querySelector('[data-keep="' + type + '"]');
+        if (!input || !keep) return;
+        const v = Math.round(parseFloat(input.value || '0') * 100);
+        keep.innerHTML = v > 0 ? 'You keep <b>' + money(v - Math.round(v * 0.20)) + '</b> &middot; TMR 20% ' + money(Math.round(v * 0.20)) : '';
     }
 
     function bind() {
@@ -253,40 +283,39 @@
                 throw new Error((out && out.error) || 'Could not start onboarding');
             } catch (e) { toast(e.message || 'Could not start onboarding'); onboardBtn.disabled = false; onboardBtn.textContent = 'Connect with Stripe'; }
         });
-        const priceEl = document.getElementById('lsPrice');
-        if (priceEl) { priceEl.addEventListener('input', updateSplitNote); updateSplitNote(); }
+        PKG.forEach(function (pk) {
+            const input = app.querySelector('[data-price="' + pk.type + '"]');
+            if (input) { input.addEventListener('input', function(){ updateKeepLine(pk.type); }); updateKeepLine(pk.type); }
+            const chk = app.querySelector('[data-offer="' + pk.type + '"]');
+            if (chk) chk.addEventListener('change', function(){ document.getElementById('pkg-' + pk.type).classList.toggle('on', chk.checked); });
+        });
         const saveBtn = document.getElementById('saveListingBtn');
         if (saveBtn) saveBtn.addEventListener('click', async function () {
-            const cents = Math.round(parseFloat(document.getElementById('lsPrice').value || '0') * 100);
+            saveBtn.disabled = true;
+            const desc = document.getElementById('lsDesc').value;
             const sports = document.getElementById('lsSports').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
             try {
-                const out = await api.request('/marketplace/me/listing', { method: 'PUT', body: {
-                    title: document.getElementById('lsTitle').value,
-                    description: document.getElementById('lsDesc').value,
-                    price_cents: cents,
-                    sports: sports,
-                } });
-                if (out && out.error) throw new Error(out.error);
-                toast('Listing saved.');
+                for (const pk of PKG) {
+                    const offered = app.querySelector('[data-offer="' + pk.type + '"]').checked;
+                    const cents = Math.round(parseFloat(app.querySelector('[data-price="' + pk.type + '"]').value || '0') * 100);
+                    const existing = byType[pk.type];
+                    if (offered) {
+                        if (!cents) throw new Error(pk.name + ': set a price first');
+                        const out = await api.request('/marketplace/me/listing', { method: 'PUT', body: {
+                            product_type: pk.type, title: pk.name, description: desc, price_cents: cents, sports: sports,
+                        } });
+                        if (out && out.error) throw new Error(pk.name + ': ' + out.error);
+                        if (elig.eligible) {
+                            const p = await api.request('/marketplace/me/listing/publish', { method: 'POST', body: { product_type: pk.type } });
+                            if (p && p.error) throw new Error(pk.name + ': ' + p.error);
+                        }
+                    } else if (existing && existing.status === 'published') {
+                        await api.request('/marketplace/me/listing/unpublish', { method: 'POST', body: { product_type: pk.type } });
+                    }
+                }
+                toast(elig.eligible ? 'Packages saved and published.' : 'Packages saved as drafts.');
                 boot();
-            } catch (e) { toast(e.message || 'Failed to save listing'); }
-        });
-        const pubBtn = document.getElementById('pubBtn');
-        if (pubBtn) pubBtn.addEventListener('click', async function () {
-            try {
-                const out = await api.request('/marketplace/me/listing/publish', { method: 'POST', body: {} });
-                if (out && out.error) throw new Error(out.error);
-                toast('Storefront published.');
-                boot();
-            } catch (e) { toast(e.message || 'Failed to publish'); }
-        });
-        const unpubBtn = document.getElementById('unpubBtn');
-        if (unpubBtn) unpubBtn.addEventListener('click', async function () {
-            try {
-                await api.request('/marketplace/me/listing/unpublish', { method: 'POST', body: {} });
-                toast('Storefront unpublished.');
-                boot();
-            } catch (e) { toast(e.message || 'Failed to unpublish'); }
+            } catch (e) { toast(e.message || 'Failed to save packages'); saveBtn.disabled = false; }
         });
     }
 
@@ -296,7 +325,13 @@
         try {
             elig = await api.request('/marketplace/me/eligibility');
         } catch (e) { renderLoggedOut(); return; }
-        try { const l = await api.request('/marketplace/me/listing'); listing = l && l.listing; } catch (e) { listing = null; }
+        try {
+            const l = await api.request('/marketplace/me/listing');
+            listing = l && l.listing;
+            listings = (l && l.listings) || (listing ? [listing] : []);
+        } catch (e) { listing = null; listings = []; }
+        byType = {};
+        listings.forEach(function (x) { byType[x.product_type] = x; });
         try { dash = await api.request('/marketplace/me/dashboard'); } catch (e) { dash = null; }
         // If returning from Stripe onboarding, refresh connected-account status
         const q = new URLSearchParams(location.search);
