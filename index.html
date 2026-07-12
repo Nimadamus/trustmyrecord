@@ -2231,6 +2231,87 @@ button{font:inherit;cursor:pointer}
     </div>
   </section>
 
+
+  <!-- SPORTS_TALK_PREVIEW_20260712: insert-only Sports Talk homepage module. One compact
+       section, single-paint: skeleton rows render instantly and are replaced in ONE pass
+       by /api/forum/threads/recent?area=sports_talk. Empty/error states are intentional
+       copy, never fake activity. Does not touch hero, leaderboard, or contest modules. -->
+  <section class="tmr-sports-talk" aria-label="Sports Talk community preview">
+    <style>
+      .tmr-sports-talk{max-width:1240px;margin:18px auto 0;padding:0 24px;font-family:'Inter',system-ui,sans-serif;}
+      .tmr-sports-talk .stp-card{background:rgba(13,22,38,.94);border:1px solid rgba(148,163,184,.16);border-radius:16px;overflow:hidden;}
+      .tmr-sports-talk .stp-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 18px;border-bottom:1px solid rgba(148,163,184,.14);flex-wrap:wrap;}
+      .tmr-sports-talk .stp-h h2{font-family:'Barlow',sans-serif;font-weight:800;font-size:1.1rem;margin:0;color:#f8fafc;}
+      .tmr-sports-talk .stp-h h2 span{color:#f0a35e;}
+      .tmr-sports-talk .stp-h p{margin:0;color:#9aa8bc;font-size:.8rem;flex:1 1 100%;order:3;}
+      .tmr-sports-talk .stp-cta{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:9px;background:transparent;border:1px solid rgba(240,163,94,.45);color:#f0a35e;font-family:'Barlow',sans-serif;font-weight:700;font-size:.82rem;text-decoration:none;white-space:nowrap;}
+      .tmr-sports-talk .stp-cta:hover{background:rgba(240,163,94,.1);}
+      .tmr-sports-talk .stp-rows{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
+      .tmr-sports-talk .stp-row{display:flex;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(148,163,184,.09);text-decoration:none;min-width:0;}
+      .tmr-sports-talk .stp-row:hover{background:rgba(45,212,191,.05);}
+      .tmr-sports-talk .stp-row .t{color:#f8fafc;font-weight:600;font-size:.86rem;line-height:1.3;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+      .tmr-sports-talk .stp-row:hover .t{color:#2dd4bf;}
+      .tmr-sports-talk .stp-row .m{color:#9aa8bc;font-size:.7rem;display:block;margin-top:2px;}
+      .tmr-sports-talk .stp-row .m b{color:#f0a35e;font-weight:600;}
+      .tmr-sports-talk .stp-bd{min-width:0;flex:1;}
+      .tmr-sports-talk .stp-empty{grid-column:1 / -1;padding:22px 18px;color:#9aa8bc;font-size:.84rem;text-align:center;}
+      .tmr-sports-talk .stp-empty a{color:#2dd4bf;text-decoration:none;font-weight:600;}
+      .tmr-sports-talk .stp-skel i{display:block;height:10px;border-radius:6px;background:rgba(148,163,184,.1);margin:4px 0 6px;animation:stpPulse 1.4s ease-in-out infinite;}
+      .tmr-sports-talk .stp-skel i+i{width:45%;}
+      @keyframes stpPulse{50%{opacity:.5;}}
+      @media(max-width:720px){.tmr-sports-talk .stp-rows{grid-template-columns:1fr;}}
+    </style>
+    <div class="stp-card">
+      <div class="stp-h">
+        <h2><span>Sports Talk</span> &mdash; the fandom side of TMR</h2>
+        <a class="stp-cta" href="/sports-talk/">Join the Conversation &rarr;</a>
+        <p>Teams, players, trades, rivalries, fantasy, and collectibles. No betting record required.</p>
+      </div>
+      <div class="stp-rows" id="stpRows">
+        <div class="stp-row stp-skel"><span class="stp-bd"><i></i><i></i></span></div>
+        <div class="stp-row stp-skel"><span class="stp-bd"><i></i><i></i></span></div>
+        <div class="stp-row stp-skel"><span class="stp-bd"><i></i><i></i></span></div>
+        <div class="stp-row stp-skel"><span class="stp-bd"><i></i><i></i></span></div>
+      </div>
+    </div>
+    <script>
+    (function () {
+      var mount = document.getElementById('stpRows');
+      function esc(v) { var d = document.createElement('div'); d.textContent = String(v == null ? '' : v); return d.innerHTML; }
+      function ago(iso) {
+        var t = new Date(iso).getTime();
+        if (!isFinite(t)) return '';
+        var s = Math.max(1, Math.floor((Date.now() - t) / 1000));
+        if (s < 3600) return Math.max(1, Math.floor(s / 60)) + 'm ago';
+        if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+        return Math.floor(s / 86400) + 'd ago';
+      }
+      function paint(threads) {
+        if (!threads.length) {
+          mount.innerHTML = '<div class="stp-empty">Sports Talk just opened. <a href="/sports-talk/">Start the first discussion &rarr;</a></div>';
+          return;
+        }
+        mount.innerHTML = threads.slice(0, 4).map(function (t) {
+          return '<a class="stp-row" href="/sports-talk/?thread=' + encodeURIComponent(t.id) + '">'
+            + '<span class="stp-bd"><span class="t">' + esc(t.title) + '</span>'
+            + '<span class="m"><b>' + esc(t.category_name || '') + '</b> &middot; ' + esc(t.username || '') + ' &middot; '
+            + ago(t.last_post_at || t.created_at) + ' &middot; ' + (Number(t.reply_count) || 0) + ' replies</span></span></a>';
+        }).join('');
+      }
+      function load() {
+        var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+        fetch(base + '/forum/threads/recent?area=sports_talk&limit=4')
+          .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)); })
+          .then(function (data) { paint((data && data.threads) || []); })
+          .catch(function () {
+            mount.innerHTML = '<div class="stp-empty">Talk teams, trades, and takes in <a href="/sports-talk/">Sports Talk &rarr;</a></div>';
+          });
+      }
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load); else load();
+    })();
+    </script>
+  </section>
+
   <!-- SEO_CRAWLABLE_HOME_20260622: insert-only crawlable block (value prop + JustBet contest
        funnel + real leaderboard preview + live highlights + CTAs). Static copy is durable;
        the leaderboard/highlights rows between the MK markers are refreshed by
@@ -4506,7 +4587,7 @@ button{font:inherit;cursor:pointer}
 <script src="static/js/config.js?v=20260520rollback1"></script>
 <script src="static/js/backend-api.js?v=20260601nostorestats1"></script>
 <script src="static/js/auth-persistent.js?v=20260524noautologout"></script>
-<script defer src="static/js/tmr-sitewide.js?v=20260712chat1"></script>
+<script defer src="static/js/tmr-sitewide.js?v=20260712talk1"></script>
 <script src="static/js/analytics.js?v=20260520rollback1"></script>
 <script src="static/js/justbet-promo.js?v=20260613invite1"></script>
 <script>

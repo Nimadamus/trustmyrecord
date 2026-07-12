@@ -597,7 +597,11 @@ function getNotificationDestination(notification) {
     if (type === 'challenge_invite' || type === 'challenge_result' || type === 'challenge') return '/challenges/';
     if (type === 'premium_upgrade' || type === 'premium_expired') return '/premium/';
     if (type.indexOf('forum') !== -1 || resourceType === 'forum_thread' || resourceType === 'forum_post') {
-        return threadId ? '/forum/?thread=' + encodeURIComponent(threadId) + (postId ? '#post-' + encodeURIComponent(postId) : '') : '/forum/';
+        // thread_area (from GET /api/notifications) says which frontend owns the
+        // thread: Sports Talk fandom threads open in /sports-talk/, everything
+        // else keeps the betting forum destination.
+        var forumBase = String(notification?.thread_area || '').toLowerCase() === 'sports_talk' ? '/sports-talk/' : '/forum/';
+        return threadId ? forumBase + '?thread=' + encodeURIComponent(threadId) + (postId ? '#post-' + encodeURIComponent(postId) : '') : forumBase;
     }
     // A follower alert about someone ELSE's new pick goes to that poster's
     // profile; every other pick alert is about one of YOUR OWN picks.

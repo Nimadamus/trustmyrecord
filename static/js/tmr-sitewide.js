@@ -18,6 +18,7 @@
         ["/rules/", "Rules"]
     ];
     const communityRoutes = [
+        ["/sports-talk/", "Sports Talk"],
         ["/feed/", "Feed"],
         ["/arena/", "Arena"],
         ["/online-gaming/", "MLB The Show"],
@@ -33,7 +34,7 @@
     // Pages that should highlight Arena in the top nav even though they
     // have their own URL.
     const ARENA_GROUP = new Set(["arena.html"]);
-    const COMMUNITY_GROUP = new Set(["feed.html", "online-gaming.html", "mlb-the-show-stat-league.html", "arena.html", "challenges.html", "forum.html", "chat.html", "polls.html", "trivia.html", "hangout.html"]);
+    const COMMUNITY_GROUP = new Set(["sports-talk.html", "feed.html", "online-gaming.html", "mlb-the-show-stat-league.html", "arena.html", "challenges.html", "forum.html", "chat.html", "polls.html", "trivia.html", "hangout.html"]);
     const MORE_GROUP = new Set(["marketplace.html", "rules.html"]);
 
     const routeMeta = {
@@ -48,6 +49,7 @@
         "polls.html": ["Polls", "Sports polls, prediction polls, debates, and community calls."],
         "trivia.html": ["Trivia", "Sports trivia, custom questions, leaderboards, and reputation."],
         "profile.html": ["Profile", "Verified pick record, posts, splits, marketplace, polls, trivia, and challenges."],
+        "sports-talk.html": ["Sports Talk", "General sports fandom: teams, players, trades, rivalries, fantasy, and collectibles. No betting record required."],
         "forum.html": ["Forums", "Hardcore sports discussion. Threads tied to verified profiles and locked records."],
         "chat.html": ["Chat", "Open community chat room. Talk sports, picks, or anything else in real time."],
         "premium.html": ["Premium", "Optional membership tiers with extra analytics and limits beyond the free public-record product."],
@@ -1141,6 +1143,7 @@
                 <div class="tmr-global-footer__section">
                     <h3 class="tmr-global-footer__heading">Community</h3>
                     <div class="tmr-global-footer__links">
+                        <a href="/sports-talk/">Sports Talk</a>
                         <a href="/forum/">Forum</a>
                         <a href="/feed/">Feed</a>
                         <a href="/trivia/">Trivia</a>
