@@ -58,12 +58,16 @@
         .page-container {
             max-width: 900px;
             margin: 0 auto;
-            padding: 24px 16px 12px;
+            padding: 16px 16px 12px;
         }
 
-        .page-header h1 {
+        /* Compact hero so the chat room sits substantially higher.
+           Higher specificity beats the sitewide .tmr-site-shell h1 rule. */
+        body .page-header { margin-bottom: 6px; }
+        body .page-header h1 {
             font-family: 'Barlow', sans-serif;
-            font-size: 2rem;
+            font-size: clamp(1.4rem, 2vw, 1.7rem) !important;
+            line-height: 1.14 !important;
             font-weight: 800;
             background: linear-gradient(135deg, var(--neon-cyan), var(--neon-gold));
             -webkit-background-clip: text;
@@ -72,10 +76,10 @@
             margin-bottom: 4px;
         }
 
-        .page-header p { color: var(--text-secondary); font-size: 0.95rem; }
+        .page-header p { color: var(--text-secondary); font-size: 0.9rem; }
 
         .chat-shell {
-            margin-top: 20px;
+            margin-top: 12px;
             background: var(--card-bg);
             border: 1px solid var(--glass-border);
             border-radius: 14px;
