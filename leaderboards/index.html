@@ -108,9 +108,7 @@
         .hero {
             position: relative;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            align-items: center;
-            gap: 22px;
+            gap: 12px;
             padding: 16px 22px;
             margin: 2px 0 14px;
             border: 1px solid var(--line);
@@ -160,6 +158,13 @@
             font-size: clamp(1.4rem, 2.1vw, 1.7rem);
             line-height: 1.1;
             text-transform: none;
+        }
+
+        /* Sitewide CSS forces page h1 to ~56px condensed; keep this hero title compact. */
+        .hero h1 {
+            font-size: clamp(1.45rem, 2.1vw, 1.8rem) !important;
+            line-height: 1.12 !important;
+            letter-spacing: -0.01em !important;
         }
 
         .hero-lede { display: grid; gap: 6px; }
@@ -798,10 +803,9 @@
 
         /* ---------- RESPONSIVE ---------- */
         @media (max-width: 1080px) {
-            .hero { grid-template-columns: 1fr; gap: 14px; }
             .layout-2col { grid-template-columns: minmax(0, 1fr); }
             .preview-grid { grid-template-columns: minmax(0, 1fr); }
-            .quick-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+            .quick-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .filters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
 
