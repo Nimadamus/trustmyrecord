@@ -1439,7 +1439,8 @@
         // line 0.5 — graded from inning-1 runs by the backend per-period total grader.
         if (marketKey === 'first_inning') {
             html += '<div class="games-board-wrap" data-market="first_inning" data-sport="' + sport + '">';
-            html += '<div style="padding:8px 14px 2px;color:#94a3b8;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;font-weight:700;">1st Inning Run Line &middot; NRFI (no run) vs YRFI (yes run)</div>';
+            html += '<div style="padding:8px 14px 2px;color:#94a3b8;font-size:11.5px;letter-spacing:1px;text-transform:uppercase;font-weight:700;">1st Inning &middot; Will a run score?</div>';
+            html += '<div style="padding:2px 14px 8px;color:#8ea0bc;font-size:12px;line-height:1.5;">NRFI = <strong style="color:#cbd5e1;">No</strong> run scores in the 1st inning. YRFI = <strong style="color:#cbd5e1;">Yes</strong>, at least one run scores in the 1st. Pick <strong style="color:#cbd5e1;">No</strong> or <strong style="color:#cbd5e1;">Yes</strong> below.</div>';
             games.forEach(function(game, index) {
                 var items = collectItems(game);
                 var over = null, under = null;
@@ -1456,7 +1457,7 @@
                     var ln = (it.line != null ? it.line : 0.5);
                     return '<button class="odds-btn" data-mkt="total"'
                         + ' onclick="window.selectGameBet(' + index + ',\'' + type + '\',\'' + (type === 'firstinningover' ? 'Over' : 'Under') + '\',\'' + esc(pv(ln)) + '\',\'' + esc(pv(it.odds)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')">'
-                        + '<span class="odds-line">' + big + '<span style="display:block;font-size:10px;color:#8ea0bc;font-weight:700;">' + small + ' ' + ln + '</span></span>'
+                        + '<span class="odds-line">' + big + '<span style="display:block;font-size:10px;color:#8ea0bc;font-weight:700;">' + small + '</span></span>'
                         + '<span class="odds-value' + (Number(it.odds) > 0 ? ' positive' : '') + '">' + fmtOdds(it.odds) + '</span>'
                         + '</button>';
                 };
@@ -1464,8 +1465,8 @@
                     + '<div class="game-time-header"><span class="game-time">' + gameTime + '</span></div>'
                     + '<div class="team-row" style="display:flex;align-items:center;gap:8px;padding:8px 12px;">'
                     + '<div class="team-info" data-mkt="matchup" style="flex:1;min-width:0;"><div class="team-details"><div class="team-name">' + escHtml(game.away_team) + ' @ ' + escHtml(game.home_team) + '</div></div></div>'
-                    + fiBtn(under, 'firstinningunder', 'NRFI', 'Under')
-                    + fiBtn(over, 'firstinningover', 'YRFI', 'Over')
+                    + fiBtn(under, 'firstinningunder', 'No', 'No run (NRFI)')
+                    + fiBtn(over, 'firstinningover', 'Yes', 'Run scores (YRFI)')
                     + '</div></div>';
             });
             html += '</div>';
