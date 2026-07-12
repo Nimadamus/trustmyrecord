@@ -332,7 +332,10 @@
             border-radius: var(--radius);
             background: var(--surface);
             min-width: 0;
-            min-height: 200px;
+            /* Real rendered cards measure 305px at every viewport (equal-height
+               grid rows), so the skeleton matches exactly - zero layout shift
+               when the live cards replace the placeholders. */
+            min-height: 305px;
         }
         .hm-skel-bar {
             border-radius: 6px;
@@ -347,9 +350,9 @@
         .hm-skel-lines { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; }
         .hm-skel-name { width: 60%; height: 12px; }
         .hm-skel-handle { width: 40%; height: 10px; }
-        .hm-skel-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 14px; }
-        .hm-skel-stat { height: 30px; }
-        .hm-skel-meta { width: 70%; height: 10px; margin-top: auto; }
+        .hm-skel-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; flex: 1; }
+        .hm-skel-stat { height: 38px; }
+        .hm-skel-meta { width: 70%; height: 12px; margin-top: auto; }
 
         .hm-feat-cat {
             display: flex;
