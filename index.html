@@ -4965,31 +4965,65 @@ function escapeHtml(value) {
         // TREND_EXCLUDE_OWNER_20260605: keep the site owner's account out of the
         // homepage Trend Spotter module; someone else fills the slot.
         const TREND_EXCLUDE = { 'moneymakers': true };
-        // Candidate cappers: real users with at least one graded pick, richest
-        // records first. Cap fan-out at 16 lookups, display up to 8 winners.
-        const candidates = (users || [])
-            .filter(function (u) { return u && u.username && !TREND_EXCLUDE[String(u.username).toLowerCase()] && number(u.total_picks || u.totalPicks, 0) > 0; })
-            .sort(function (a, b) { return number(b.net_units || b.netUnits, -Infinity) - number(a.net_units || a.netUnits, -Infinity); })
-            .slice(0, 16);
+        // One-shot batch: /users/trend-highlights carries the top candidates
+        // AND each capper's latest 100 graded public picks in a single
+        // response, so this module renders without 16 per-user /picks
+        // requests. Highlight math, exclusions, ordering, and the 16-candidate
+        // cap are unchanged. The legacy per-user fan-out below remains as an
+        // automatic fallback if the batch endpoint is ever unavailable.
+        let results = null;
+        try {
+            const batch = await request('/users/trend-highlights?' + bust);
+            const rows = (batch && Array.isArray(batch.users)) ? batch.users : null;
+            if (rows && rows.length) {
+                results = rows
+                    .filter(function (u) { return u && u.username && !TREND_EXCLUDE[String(u.username).toLowerCase()] && number(u.total_picks || u.totalPicks, 0) > 0; })
+                    .sort(function (a, b) { return number(b.net_units || b.netUnits, -Infinity) - number(a.net_units || a.netUnits, -Infinity); })
+                    .slice(0, 16)
+                    .map(function (u) {
+                        const highlight = computeHighlight(Array.isArray(u.picks) ? u.picks : [], {
+                            net_units: u.net_units != null ? u.net_units : u.netUnits,
+                            roi: u.roi,
+                            total_picks: u.total_picks != null ? u.total_picks : u.totalPicks
+                        });
+                        if (!highlight) return null;
+                        return {
+                            usernameRaw: u.username,
+                            displayName: u.display_name || u.displayName || u.username,
+                            avatarUrl: u.avatar_url || u.avatarUrl || '',
+                            highlight: highlight
+                        };
+                    });
+            }
+        } catch (err) { results = null; }
 
-        const results = await Promise.all(candidates.map(async function (u) {
-            try {
-                const data = await request('/picks?username=' + encodeURIComponent(u.username) + '&limit=100&' + bust);
-                const picks = Array.isArray(data && data.picks) ? data.picks : [];
-                const highlight = computeHighlight(picks, {
-                    net_units: u.net_units != null ? u.net_units : u.netUnits,
-                    roi: u.roi,
-                    total_picks: u.total_picks != null ? u.total_picks : u.totalPicks
-                });
-                if (!highlight) return null;
-                return {
-                    usernameRaw: u.username,
-                    displayName: u.display_name || u.displayName || u.username,
-                    avatarUrl: u.avatar_url || u.avatarUrl || '',
-                    highlight: highlight
-                };
-            } catch (err) { return null; }
-        }));
+        if (!results) {
+            // Legacy path: candidate cappers with at least one graded pick,
+            // richest records first. Cap fan-out at 16 lookups.
+            const candidates = (users || [])
+                .filter(function (u) { return u && u.username && !TREND_EXCLUDE[String(u.username).toLowerCase()] && number(u.total_picks || u.totalPicks, 0) > 0; })
+                .sort(function (a, b) { return number(b.net_units || b.netUnits, -Infinity) - number(a.net_units || a.netUnits, -Infinity); })
+                .slice(0, 16);
+
+            results = await Promise.all(candidates.map(async function (u) {
+                try {
+                    const data = await request('/picks?username=' + encodeURIComponent(u.username) + '&limit=100&' + bust);
+                    const picks = Array.isArray(data && data.picks) ? data.picks : [];
+                    const highlight = computeHighlight(picks, {
+                        net_units: u.net_units != null ? u.net_units : u.netUnits,
+                        roi: u.roi,
+                        total_picks: u.total_picks != null ? u.total_picks : u.totalPicks
+                    });
+                    if (!highlight) return null;
+                    return {
+                        usernameRaw: u.username,
+                        displayName: u.display_name || u.displayName || u.username,
+                        avatarUrl: u.avatar_url || u.avatarUrl || '',
+                        highlight: highlight
+                    };
+                } catch (err) { return null; }
+            }));
+        }
 
         const TARGET_ROWS = 5;
         const entries = results.filter(Boolean)
