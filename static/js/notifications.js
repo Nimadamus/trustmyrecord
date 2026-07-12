@@ -599,6 +599,23 @@ function getNotificationDestination(notification) {
     if (type.indexOf('forum') !== -1 || resourceType === 'forum_thread' || resourceType === 'forum_post') {
         return threadId ? '/forum/?thread=' + encodeURIComponent(threadId) + (postId ? '#post-' + encodeURIComponent(postId) : '') : '/forum/';
     }
+    // A follower alert about someone ELSE's new pick goes to that poster's
+    // profile; every other pick alert is about one of YOUR OWN picks.
+    if (type === 'follow_new_pick') {
+        const un = notification?.username || notification?.actor_username || notification?.from_username;
+        return un ? '/profile/?user=' + encodeURIComponent(un) + '&view=picks' : '/mypicks/';
+    }
+    // Own-pick alerts (graded/won/lost/pushed, liked, commented) carry the pick
+    // id -- deep-link straight to that pick in My Picks so the row click opens
+    // the exact result, not the generic list. The sportsbook page reads ?pick=
+    // and highlights the card. ('like'/'comment' types are only ever created by
+    // the pick like/comment routes; forum likes are 'forum_post_like' and are
+    // handled by the forum branch above.)
+    const relatedPickId = notification?.related_pick_id || notification?.relatedPickId
+        || (resourceType === 'pick' ? (notification?.resource_id || notification?.resourceId) : null);
+    if (relatedPickId && (type.indexOf('pick') !== -1 || resourceType === 'pick' || type === 'like' || type === 'comment')) {
+        return '/sportsbook/?pick=' + encodeURIComponent(relatedPickId) + '#mypicks';
+    }
     if (type.indexOf('pick') !== -1 || resourceType === 'pick') {
         const un = notification?.username || notification?.actor_username || notification?.from_username;
         return un ? '/profile/?user=' + encodeURIComponent(un) + '&view=picks' : '/mypicks/';

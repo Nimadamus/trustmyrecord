@@ -143,7 +143,15 @@ function activateCanonicalLegacySection(sectionId, updateHistory = true) {
         ? window.showSection
         : null;
 
-    if (currentShowSection && currentShowSection !== showSection) {
+    // NOTE (Jul 11, 2026): compare via the __tmrNavRouterShowSection marker,
+    // not identity. `showSection` here is a top-level function declaration, so
+    // its binding IS window.showSection; after other scripts wrap
+    // window.showSection, `currentShowSection !== showSection` compared the
+    // wrapper to itself and was ALWAYS false. That silently skipped the
+    // showSection hook chain on hash routing (e.g. /sportsbook/#mypicks), so
+    // section data loaders like loadMyPicks never ran and My Picks sat on
+    // "Loading picks..." forever.
+    if (currentShowSection && !currentShowSection.__tmrNavRouterShowSection) {
         window.__tmrCanonicalLegacyGuard = true;
         try {
             currentShowSection(sectionId, updateHistory);
@@ -256,6 +264,7 @@ function handleRouting() {
 
 // Initialize when DOM is loaded
 if (typeof window !== 'undefined') {
+    showSection.__tmrNavRouterShowSection = true;
     window.showSection = showSection;
 
     document.addEventListener('DOMContentLoaded', function() {

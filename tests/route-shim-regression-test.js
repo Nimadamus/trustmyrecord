@@ -129,6 +129,10 @@ const shims = [
     target: '/sportsbook/#mypicks',
     canonical: 'https://trustmyrecord.com/sportsbook/#mypicks',
     label: 'Continue',
+    // Query-preserving JS redirect: keeps ?pick=<id> from notification deep
+    // links AHEAD of the #mypicks fragment (the old form appended ?pick after
+    // the hash, which the sportsbook page could never read).
+    scriptTarget: "location.replace('/sportsbook/' + window.location.search + '#mypicks')",
     forbiddenTargets: []
   },
   {
@@ -178,7 +182,7 @@ const shims = [
 for (const shim of shims) {
   const html = read(shim.file);
   assert(html.includes(`url=${shim.target}`) || html.includes(`url=${shim.target.replace(/\/$/, '')}`), `${shim.file} refresh target is wrong`);
-  assert(html.includes(`location.replace('${shim.target}'`) || html.includes(`location.replace("${shim.target}"`) || html.includes(`location.replace('${shim.target}' +`), `${shim.file} script target is wrong`);
+  assert(html.includes(`location.replace('${shim.target}'`) || html.includes(`location.replace("${shim.target}"`) || html.includes(`location.replace('${shim.target}' +`) || (shim.scriptTarget && html.includes(shim.scriptTarget)), `${shim.file} script target is wrong`);
   assert(html.includes(`href="${shim.target}"`), `${shim.file} fallback link is wrong`);
   assert(html.includes(shim.label), `${shim.file} fallback label is missing`);
 

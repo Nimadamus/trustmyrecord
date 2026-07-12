@@ -1013,7 +1013,22 @@
         });
     }
 
+    let currentPicksFetchPromise = null;
+
     async function fetchCurrentUserPicks() {
+        // Reuse a single in-flight request so simultaneous callers (showSection
+        // wrappers, tab switches, the mypicks entry watchdog) never stack
+        // duplicate /picks calls.
+        if (currentPicksFetchPromise) return currentPicksFetchPromise;
+        currentPicksFetchPromise = fetchCurrentUserPicksNow();
+        try {
+            return await currentPicksFetchPromise;
+        } finally {
+            currentPicksFetchPromise = null;
+        }
+    }
+
+    async function fetchCurrentUserPicksNow() {
         const user = getCurrentUser();
         if (!user) {
             state.currentUserPicks = [];
@@ -1026,9 +1041,6 @@
         let privatePendingResponse = null;
         try {
             response = await api.getPicks({ userId: user.id, limit: 100 });
-            if (typeof api.getPendingPicks === 'function') {
-                privatePendingResponse = await api.getPendingPicks({ limit: 100 });
-            }
         } catch (error) {
             // Do NOT clear auth on a 401/403 here. The picks list is a best-effort
             // read; backend-api.request() already owns the refresh-then-clear
@@ -1036,6 +1048,15 @@
             // 401s. Wiping it here logged users out when they returned to a
             // spun-down backend. (persistent-login fix)
             throw error;
+        }
+        if (typeof api.getPendingPicks === 'function') {
+            // Private pending picks are an enrichment; their failure must not
+            // blank the whole list.
+            try {
+                privatePendingResponse = await api.getPendingPicks({ limit: 100 });
+            } catch (error) {
+                privatePendingResponse = null;
+            }
         }
         const mergedById = new Map();
         (response.picks || response || []).forEach(function(pick) {
@@ -3457,6 +3478,8 @@
 
     function renderPickCard(pick) {
         const status = normalizeStatus(pick.status, pick.result);
+        const safePickId = String(pick.id == null ? '' : pick.id).replace(/[^a-zA-Z0-9_-]/g, '');
+        const pickIdAttrs = safePickId ? ' id="pick-' + safePickId + '" data-pick-id="' + safePickId + '"' : '';
         const statusColor = status === 'won' ? '#00c853' : status === 'lost' ? '#ff5252' : status === 'push' ? '#94a3b8' : '#f59e0b';
         const recordText = (window.TMR && typeof window.TMR.formatPickDisplay === 'function') ? window.TMR.formatPickDisplay(pick) : (pick.selection + (pick.line_snapshot != null ? ' ' + (function(l){if(l==null||l==='')return '';var n=Number(l);if(!Number.isFinite(n))return '';var s=String(n);if(s.indexOf('.')!==-1)s=s.replace(/0+$/,'').replace(/\.$/,'');return s;})(pick.line_snapshot) : ''));
         const marketText = getMarketLabel(pick.market_type);
@@ -3464,7 +3487,7 @@
         const dateText = new Date(pick.locked_at || pick.created_at || Date.now()).toLocaleString('en-US', {
             month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit'
         });
-        return '<div style="background:#22262e;border-radius:12px;padding:16px;margin-bottom:12px;border-left:4px solid ' + statusColor + ';">' +
+        return '<div' + pickIdAttrs + ' style="background:#22262e;border-radius:12px;padding:16px;margin-bottom:12px;border-left:4px solid ' + statusColor + ';">' +
             '<div style="display:flex;justify-content:space-between;gap:16px;align-items:flex-start;">' +
             '<div>' +
             '<div style="font-size:18px;font-weight:700;color:#fff;">' + escapeHtml(recordText) + '</div>' +
@@ -3480,12 +3503,127 @@
             '</div>';
     }
 
+    // ---- My Picks loader hardening (Jul 11, 2026) -------------------------
+    // The list must NEVER sit on an infinite "Loading picks..." placeholder:
+    // every path ends in cards, an empty state, a login prompt, or an error
+    // state with a Retry button. Alert deep links (/sportsbook/?pick=ID#mypicks)
+    // land on the All tab with the target pick highlighted.
+
+    let myPicksLoadSeq = 0;
+
+    function getRequestedPickId() {
+        try {
+            const params = new URLSearchParams(window.location.search || '');
+            const fromQuery = params.get('pick');
+            if (fromQuery) return String(fromQuery).replace(/[^a-zA-Z0-9_-]/g, '');
+            const hashMatch = (window.location.hash || '').match(/pick-([a-zA-Z0-9_-]+)/);
+            return hashMatch ? hashMatch[1] : null;
+        } catch (error) {
+            return null;
+        }
+    }
+
+    function setMyPicksTabStyles(tab) {
+        ['pending', 'graded', 'all'].forEach(function(t) {
+            const el = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+            if (!el) return;
+            el.style.color = t === tab ? '#00ffff' : '#6c7380';
+            el.style.borderBottomColor = t === tab ? '#00ffff' : 'transparent';
+        });
+    }
+
+    function renderMyPicksMessage(container, inner) {
+        container.innerHTML = '<div class="tmr-empty-state" style="text-align:center;padding:40px;color:#94a3b8;">' + inner + '</div>';
+    }
+
+    function hasStoredBackendCredentials() {
+        try {
+            return !!(localStorage.getItem('trustmyrecord_refresh_token') || getStoredAuthToken());
+        } catch (error) {
+            return false;
+        }
+    }
+
+    // Resolves true once auth is hydrated. When a remembered session exists in
+    // storage, the async backend restore can land seconds after DOMContentLoaded;
+    // waiting here prevents the old race where the list rendered an empty/login
+    // state before the session finished restoring.
+    function waitForAuthReady(maxMs) {
+        if (getCurrentUser()) return Promise.resolve(true);
+        if (!hasStoredBackendCredentials()) return Promise.resolve(false);
+        return new Promise(function(resolve) {
+            let settled = false;
+            let poll = null;
+            let timer = null;
+            function finish(value) {
+                if (settled) return;
+                settled = true;
+                window.removeEventListener('tmr-auth-changed', onChange);
+                if (poll) window.clearInterval(poll);
+                if (timer) window.clearTimeout(timer);
+                resolve(value);
+            }
+            function onChange() {
+                if (getCurrentUser()) finish(true);
+            }
+            window.addEventListener('tmr-auth-changed', onChange);
+            poll = window.setInterval(onChange, 500);
+            timer = window.setTimeout(function() { finish(!!getCurrentUser()); }, maxMs || 12000);
+        });
+    }
+
+    function highlightRequestedPick(container, pickId) {
+        const card = container.querySelector('[data-pick-id="' + pickId + '"]');
+        if (!card) return false;
+        card.style.outline = '2px solid #f2c94c';
+        card.style.boxShadow = '0 0 0 4px rgba(242,201,76,0.25)';
+        window.setTimeout(function() {
+            try { card.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (error) { card.scrollIntoView(); }
+        }, 50);
+        return true;
+    }
+
     async function loadMyPicks(tab) {
         const container = document.getElementById('myPicksList');
         if (!container) return;
 
+        const requestedPickId = getRequestedPickId();
+        // First render after arriving on a ?pick=<id> deep link always lands on
+        // the All tab so the target pick is present whatever its status, even
+        // when a showSection wrapper passed an explicit default tab.
+        if (requestedPickId && !window.__tmrPickDeepLinkApplied) {
+            window.__tmrPickDeepLinkApplied = true;
+            tab = 'all';
+        }
+        tab = tab || window.currentPicksTab || 'pending';
+        window.currentPicksTab = tab;
+        setMyPicksTabStyles(tab);
+
+        const seq = ++myPicksLoadSeq;
+        container.innerHTML = '<div class="loading-picks" style="text-align:center;padding:40px;color:#6c7380;"><div style="font-size:24px;margin-bottom:10px;">Loading picks...</div></div>';
+
         try {
-            const picks = await fetchCurrentUserPicks();
+            const authed = await waitForAuthReady(12000);
+            if (seq !== myPicksLoadSeq) return;
+            if (!authed && !getCurrentUser()) {
+                renderMyPicksMessage(container,
+                    '<h3 style="color:#fff;margin-bottom:10px;">Login Required</h3>' +
+                    '<p>Please log in to view your picks.</p>' +
+                    '<a href="/login/" style="display:inline-block;margin-top:16px;background:linear-gradient(135deg,#00ffff,#0088cc);padding:12px 24px;border-radius:8px;color:#000;font-weight:700;text-decoration:none;">Log In</a>');
+                return;
+            }
+
+            const picks = await Promise.race([
+                fetchCurrentUserPicks(),
+                new Promise(function(resolve, reject) {
+                    window.setTimeout(function() { reject(new Error('TMR_PICKS_TIMEOUT')); }, 25000);
+                })
+            ]);
+            if (seq !== myPicksLoadSeq) return;
+
+            // Record cards and the pick list render from this ONE completed
+            // response, so the summary numbers can never show while the list
+            // is withheld.
             syncRecordWidgets(picks);
 
             let filtered = picks;
@@ -3495,9 +3633,22 @@
             container.innerHTML = filtered.length
                 ? filtered.map(renderPickCard).join('')
                 : '<div class="tmr-empty-state">No ' + (tab || 'current') + ' picks found.</div>';
+
+            if (requestedPickId) highlightRequestedPick(container, requestedPickId);
         } catch (error) {
-            container.innerHTML = '<div class="tmr-empty-state">Unable to load picks from the backend.</div>';
+            if (seq !== myPicksLoadSeq) return;
+            const detail = error && error.message === 'TMR_PICKS_TIMEOUT'
+                ? 'The picks service is taking too long to respond.'
+                : 'Your picks could not be loaded right now.';
+            renderMyPicksMessage(container,
+                '<h3 style="color:#fff;margin-bottom:10px;">Could Not Load Picks</h3>' +
+                '<p>' + detail + '</p>' +
+                '<button onclick="window.loadMyPicks(window.currentPicksTab || \'pending\')" style="margin-top:16px;background:linear-gradient(135deg,#00ffff,#0088cc);border:none;padding:12px 28px;border-radius:8px;color:#000;font-weight:700;cursor:pointer;">Retry</button>');
         }
+    }
+
+    function switchPicksTabBackend(tab) {
+        loadMyPicks(tab === 'graded' || tab === 'all' ? tab : 'pending');
     }
 
     async function loadMyRecordPage() {
@@ -4174,6 +4325,7 @@
         window.updatePickSummary = updatePickSummary;
         lockFunction(window, 'loadGamesWithAllBets', loadGamesWithAllBetsOverride);
         lockFunction(window, 'loadMyPicks', loadMyPicks);
+        lockFunction(window, 'switchPicksTab', switchPicksTabBackend);
         lockFunction(window, 'loadMyRecordPage', loadMyRecordPage);
         lockFunction(window, 'calculateUserStatsById', calculateUserStatsById);
         window.ensureBackendPicks = function(callback) {
@@ -4190,15 +4342,16 @@
         if (typeof originalShowSection === 'function' && !window.__tmrProdShowSectionWrapped) {
             window.__tmrProdShowSectionWrapped = true;
             window.showSection = function(sectionId) {
+                const forwardedArgs = arguments;
                 if (redirectLegacySportsbookSection(sectionId)) return;
                 if (sectionId === 'picks') {
                     ensurePicksAccess().then(function(allowed) {
                         if (!allowed) return;
-                        originalShowSection(sectionId);
+                        originalShowSection.apply(null, forwardedArgs);
                     });
                     return;
                 }
-                originalShowSection(sectionId);
+                originalShowSection.apply(this, forwardedArgs);
                 if (sectionId === 'mypicks') {
                     loadMyPicks(window.currentPicksTab || 'pending');
                 } else if (sectionId === 'my-record' || sectionId === 'profile') {
@@ -4209,6 +4362,37 @@
                     renderConsensusPanel();
                 }
             };
+        }
+
+        // My Picks entry watchdog (Jul 11, 2026). The nav router's hash pass
+        // (navigation.js handleRouting -> activateCurrentPageSection) can
+        // activate the #mypicks section by toggling CSS classes WITHOUT going
+        // through window.showSection, so a direct /sportsbook/#mypicks visit
+        // (the notification deep-link path) previously left the static
+        // "Loading picks..." placeholder on screen forever. Cover every
+        // activation path: initial load, hash changes, login/logout, and any
+        // router that flips the section's class list directly.
+        function kickMyPicksIfActive() {
+            const section = document.getElementById('mypicks');
+            if (!section || !section.classList.contains('active')) return;
+            loadMyPicks(window.currentPicksTab);
+        }
+        kickMyPicksIfActive();
+        window.setTimeout(kickMyPicksIfActive, 250);
+        window.addEventListener('hashchange', function() {
+            window.setTimeout(kickMyPicksIfActive, 0);
+        });
+        window.addEventListener('tmr-auth-changed', function() {
+            kickMyPicksIfActive();
+        });
+        const myPicksSection = document.getElementById('mypicks');
+        if (myPicksSection && window.MutationObserver) {
+            let myPicksWasActive = myPicksSection.classList.contains('active');
+            new MutationObserver(function() {
+                const isActive = myPicksSection.classList.contains('active');
+                if (isActive && !myPicksWasActive) kickMyPicksIfActive();
+                myPicksWasActive = isActive;
+            }).observe(myPicksSection, { attributes: true, attributeFilter: ['class'] });
         }
 
         fetchCurrentUserPicks().then(syncRecordWidgets).catch(function() {});
