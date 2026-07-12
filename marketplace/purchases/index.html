@@ -80,7 +80,13 @@
     }
     function oddsFmt(o) { return o > 0 ? '+' + o : String(o); }
 
-    function pill(status, entStatus) {
+    function isPass(p) { return p.product_type && p.product_type !== 'single_pick'; }
+    function passLabel(t) {
+        return { daily_access: 'Day Pass', weekly_access: 'Weekly Pass', monthly_access: 'Monthly Pass' }[t] || String(t || '').replace(/_/g, ' ');
+    }
+    function pill(status, entStatus, p) {
+        if (status === 'paid' && entStatus === 'active' && p && isPass(p) && p.expires_at && new Date(p.expires_at) <= new Date())
+            return '<span class="status-pill pill-amber">Pass Ended</span>';
         if (status === 'paid' && entStatus === 'active') return '<span class="status-pill pill-green">Unlocked</span>';
         if (status === 'pending_payment') return '<span class="status-pill pill-amber">Awaiting Payment</span>';
         if (status === 'paid') return '<span class="status-pill pill-amber">Unlocking…</span>';
@@ -97,17 +103,49 @@
         }
         list.innerHTML = purchases.map(function (p) {
             const unlocked = p.status !== 'pending_payment' && p.entitlement_status === 'active';
+            const pass = isPass(p);
+            const meta = '@' + esc(p.seller_username) + ' &middot; ' + new Date(p.created_at).toLocaleString() +
+                ' &middot; ' + esc(pass ? passLabel(p.product_type) : 'single pick') +
+                (pass && p.expires_at ? ' &middot; access ' + (new Date(p.expires_at) > new Date() ? 'until ' : 'ended ') + new Date(p.expires_at).toLocaleString() : '') +
+                (p.refunded_cents ? ' &middot; refunded ' + money(p.refunded_cents, p.currency) : '');
+            const action = !unlocked ? '' :
+                pass ? '<div style="margin-top:11px;"><button class="btn btn-primary" data-pass="' + esc(p.public_id) + '" data-target="rv-' + esc(p.public_id) + '">View Picks</button> <a class="btn btn-outline" href="/marketplace/seller/?u=' + encodeURIComponent(p.seller_username) + '">Storefront</a></div>'
+                     : '<div style="margin-top:11px;"><button class="btn btn-primary" data-reveal="' + p.pick_id + '" data-target="rv-' + esc(p.public_id) + '">View Pick</button> <a class="btn btn-outline" href="/marketplace/seller/?u=' + encodeURIComponent(p.seller_username) + '">Storefront</a></div>';
             return '<div class="order" data-order="' + esc(p.public_id) + '">' +
                 '<div class="o-head">' +
                     '<img class="o-ava" src="' + esc(p.seller_avatar || '/static/img/default-avatar.png') + '" alt="" onerror="this.style.visibility=\'hidden\'">' +
                     '<div><div class="o-name">' + esc(p.seller_display_name || p.seller_username) + '</div>' +
-                    '<div class="o-meta">@' + esc(p.seller_username) + ' &middot; ' + new Date(p.created_at).toLocaleString() + ' &middot; ' + esc(p.product_type.replace('_',' ')) + (p.refunded_cents ? ' &middot; refunded ' + money(p.refunded_cents, p.currency) : '') + '</div></div>' +
-                    '<div class="o-right"><div class="o-price">' + money(p.price_cents, p.currency) + '</div>' + pill(p.status, p.entitlement_status) + '</div>' +
-                '</div>' +
-                (unlocked ? '<div style="margin-top:11px;"><button class="btn btn-primary" data-reveal="' + p.pick_id + '" data-target="rv-' + esc(p.public_id) + '">View Pick</button> <a class="btn btn-outline" href="/marketplace/seller/?u=' + encodeURIComponent(p.seller_username) + '">Storefront</a></div>' : '') +
+                    '<div class="o-meta">' + meta + '</div></div>' +
+                    '<div class="o-right"><div class="o-price">' + money(p.price_cents, p.currency) + '</div>' + pill(p.status, p.entitlement_status, p) + '</div>' +
+                '</div>' + action +
                 '<div class="reveal" id="rv-' + esc(p.public_id) + '"></div>' +
             '</div>';
         }).join('');
+
+        list.querySelectorAll('[data-pass]').forEach(function (btn) {
+            btn.addEventListener('click', async function () {
+                const target = document.getElementById(btn.getAttribute('data-target'));
+                if (target.style.display === 'block') { target.style.display = 'none'; return; }
+                btn.textContent = 'Loading…';
+                try {
+                    const out = await api.request('/marketplace/passes/' + btn.getAttribute('data-pass') + '/picks');
+                    target.innerHTML = (out.picks.length ? out.picks.map(function (pk) {
+                        const graded = pk.status !== 'pending';
+                        return '<div style="padding:9px 0;border-bottom:1px solid rgba(148,163,184,.1);">' +
+                            '<div class="rv-sel" style="font-size:18px;">' + esc(pk.selection) + (pk.line != null ? ' ' + (pk.line > 0 && /spread/i.test(pk.market_type) ? '+' : '') + pk.line : '') + '</div>' +
+                            '<div class="rv-line">' + esc(pk.away_team) + ' @ ' + esc(pk.home_team) + ' &middot; ' + esc(marketLabel(pk.market_type)) + ' &middot; ' + oddsFmt(pk.odds) + ' &middot; ' + pk.units + 'u &middot; ' + new Date(pk.commence_time).toLocaleString() +
+                            (graded ? ' &middot; <b style="color:' + (pk.status==='won'?'var(--green)':pk.status==='lost'?'var(--red)':'var(--muted)') + ';">' + esc(pk.status.toUpperCase()) + (pk.result_units != null ? ' (' + (pk.result_units > 0 ? '+' : '') + pk.result_units + 'u)' : '') + '</b>' : '') +
+                            '</div></div>';
+                    }).join('') : '<p style="color:var(--muted);font-size:13px;">No picks in your pass window yet — new picks from this seller appear here automatically while your pass is active.</p>') +
+                    '<p style="color:var(--muted);font-size:11.5px;margin-top:8px;">For your eyes only — redistributing purchased picks violates the buyer terms. Results are never guaranteed.</p>';
+                    target.style.display = 'block';
+                } catch (e) {
+                    target.innerHTML = '<p style="color:var(--red);font-size:13px;">' + esc(e.message || 'Could not load picks') + '</p>';
+                    target.style.display = 'block';
+                }
+                btn.textContent = 'View Picks';
+            });
+        });
 
         list.querySelectorAll('[data-reveal]').forEach(function (btn) {
             btn.addEventListener('click', async function () {
