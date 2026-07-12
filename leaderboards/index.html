@@ -108,9 +108,11 @@
         .hero {
             position: relative;
             display: grid;
-            gap: 14px;
-            padding: 24px 24px 22px;
-            margin: 4px 0 16px;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 22px;
+            padding: 16px 22px;
+            margin: 2px 0 14px;
             border: 1px solid var(--line);
             border-radius: 18px;
             background:
@@ -155,29 +157,30 @@
         }
 
         h1 {
-            font-size: clamp(1.6rem, 3.2vw, 2.35rem);
-            line-height: 1.05;
+            font-size: clamp(1.4rem, 2.1vw, 1.7rem);
+            line-height: 1.1;
             text-transform: none;
         }
 
+        .hero-lede { display: grid; gap: 6px; }
+
         .hero p {
-            max-width: 80ch;
+            max-width: 56ch;
             margin: 0;
             color: #c3d0dd;
-            font-size: 0.92rem;
-            line-height: 1.55;
+            font-size: 0.86rem;
+            line-height: 1.5;
         }
 
         .quick-stats {
             display: grid;
-            grid-template-columns: repeat(5, minmax(150px, 1fr));
-            gap: 10px;
-            margin-top: 4px;
+            grid-template-columns: repeat(5, minmax(94px, 1fr));
+            gap: 8px;
+            margin-top: 0;
         }
 
         .qs-card {
-            min-height: 78px;
-            padding: 12px 13px;
+            padding: 9px 12px;
             border-radius: 12px;
             border: 1px solid rgba(148,163,184,0.14);
             background:
@@ -188,7 +191,7 @@
 
         .qs-card b {
             display: block;
-            font-size: 1.18rem;
+            font-size: 1.05rem;
             line-height: 1;
             font-weight: 800;
         }
@@ -795,9 +798,10 @@
 
         /* ---------- RESPONSIVE ---------- */
         @media (max-width: 1080px) {
+            .hero { grid-template-columns: 1fr; gap: 14px; }
             .layout-2col { grid-template-columns: minmax(0, 1fr); }
             .preview-grid { grid-template-columns: minmax(0, 1fr); }
-            .quick-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+            .quick-stats { grid-template-columns: repeat(5, minmax(0, 1fr)); }
             .filters-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
 
@@ -825,9 +829,10 @@
     <main class="page">
         <!-- ============== HERO ============== -->
         <section class="hero">
-            <span class="hero-kicker">Leaderboards Hub</span>
-            <h1>Every leaderboard. Every challenge. Every record.</h1>
-            <p>Track the top handicappers, trivia players, poll creators, challenge winners, and sports competitors across TrustMyRecord. Public results only. No fake records. No disappearing losses.</p>
+            <div class="hero-lede">
+                <h1>Sports Betting Leaderboards</h1>
+                <p>Every verified record ranked in one place: handicappers, trivia, polls, and challenge winners. Public results only, no disappearing losses.</p>
+            </div>
             <div class="quick-stats" id="quickStats">
                 <div class="qs-card"><b id="qsHandicappers">30</b><span>Handicapping Records</span></div>
                 <div class="qs-card"><b id="qsTrivia">0</b><span>Trivia Players</span></div>
@@ -1273,7 +1278,16 @@
             const totalPicks = num(entry.total_picks != null ? entry.total_picks : entry.totalPicks != null ? entry.totalPicks : wins + losses + pushes);
             const roi = pct(entry.roi);
             const units = num(entry.net_units != null ? entry.net_units : entry.units);
-            const winRate = pct(entry.win_percentage != null ? entry.win_percentage : entry.winRate);
+            let winRate = pct(entry.win_percentage != null ? entry.win_percentage
+                            : entry.winRate != null ? entry.winRate
+                            : entry.win_rate != null ? entry.win_rate
+                            : entry.win_pct != null ? entry.win_pct : 0);
+            // API sometimes omits/zeros win %, which blanked the column to 0.0%.
+            // Fall back to the record when there are decided games.
+            const decidedGames = wins + losses;
+            if ((!Number.isFinite(winRate) || winRate === 0) && decidedGames > 0) {
+                winRate = (wins / decidedGames) * 100;
+            }
             const streak = num(entry.current_streak != null ? entry.current_streak : entry.currentStreak);
             return {
                 raw: entry,
