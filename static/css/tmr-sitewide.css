@@ -1059,22 +1059,20 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
 }
 
 .tmr-global-footer {
-    width: min(1360px, calc(100% - 32px));
-    margin: 32px auto 28px;
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    border-radius: 28px;
-    background:
-        radial-gradient(circle at top left, rgba(45, 212, 191, 0.13), transparent 24%),
-        linear-gradient(180deg, rgba(16, 24, 40, 0.94), rgba(8, 14, 26, 0.98));
-    box-shadow: 0 24px 60px rgba(2, 8, 18, 0.22);
+    width: min(1240px, calc(100% - 32px));
+    margin: 40px auto 28px;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 23px;
+    background: linear-gradient(180deg, rgba(14, 21, 35, 0.96), rgba(8, 14, 26, 0.98));
+    box-shadow: 0 10px 28px rgba(2, 8, 18, 0.16);
     overflow: hidden;
 }
 
 .tmr-global-footer__grid {
     display: grid;
-    grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
-    gap: 18px 24px;
-    padding: 24px 28px 18px;
+    grid-template-columns: 260px repeat(4, minmax(0, 1fr));
+    gap: 16px 28px;
+    padding: 32px 36px 20px;
 }
 
 .tmr-global-footer__brand {
@@ -1104,7 +1102,11 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
 .tmr-global-footer__bottom p {
     margin: 0;
     color: var(--tmr-muted);
-    font: 600 0.92rem/1.7 var(--tmr-font);
+    font: 500 0.85rem/1.55 var(--tmr-font);
+}
+
+.tmr-global-footer__brand {
+    max-width: 260px;
 }
 
 .tmr-global-footer__section {
@@ -1115,8 +1117,8 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
 
 .tmr-global-footer__heading {
     margin: 0;
-    font: 800 0.78rem/1 var(--tmr-font);
-    letter-spacing: 0.16em;
+    font: 700 0.72rem/1 var(--tmr-font);
+    letter-spacing: 0.1em;
     text-transform: uppercase;
 }
 
@@ -1129,16 +1131,43 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
 .tmr-global-footer__links a {
     display: inline-flex;
     align-items: center;
-    min-height: 26px;
-    color: #dce8f5;
+    color: rgba(226, 234, 244, 0.78);
     text-decoration: none;
-    font: 600 0.9rem/1.2 var(--tmr-font);
-    transition: color 0.18s ease, transform 0.18s ease;
+    font: 500 0.875rem/1.5 var(--tmr-font);
+    transition: color 0.18s ease;
 }
 
-.tmr-global-footer__links a:hover {
+.tmr-global-footer__links a:hover,
+.tmr-global-footer__links a:focus-visible {
     color: var(--tmr-teal);
-    transform: translateX(3px);
+}
+
+.tmr-global-footer__resources {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    padding: 12px 36px;
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.tmr-global-footer__resources-label {
+    color: var(--tmr-teal);
+    font: 700 0.72rem/1 var(--tmr-font);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.tmr-global-footer__resources a {
+    color: rgba(226, 234, 244, 0.78);
+    text-decoration: none;
+    font: 500 0.84rem/1.5 var(--tmr-font);
+    transition: color 0.18s ease;
+}
+
+.tmr-global-footer__resources a:hover,
+.tmr-global-footer__resources a:focus-visible {
+    color: var(--tmr-teal);
 }
 
 .tmr-global-footer__bottom {
@@ -1147,8 +1176,8 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
     align-items: center;
     gap: 12px 18px;
     flex-wrap: wrap;
-    padding: 12px 28px 14px;
-    border-top: 1px solid rgba(148, 163, 184, 0.12);
+    padding: 12px 36px 14px;
+    border-top: 1px solid rgba(148, 163, 184, 0.1);
 }
 
 .tmr-global-footer__legal {
@@ -2398,11 +2427,55 @@ html body.tmr-site-shell {
     }
 
     .tmr-global-footer__grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 22px 20px 8px;
+    }
+
+    .tmr-global-footer__brand {
+        max-width: none;
+        padding-bottom: 14px;
+    }
+
+    .tmr-global-footer__section {
+        gap: 0;
+        border-top: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .tmr-global-footer__section .tmr-global-footer__heading {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 44px;
+    }
+
+    .tmr-global-footer__section .tmr-global-footer__heading::after {
+        content: "+";
+        font-size: 1rem;
+        color: var(--tmr-muted);
+    }
+
+    .tmr-global-footer__section.is-open .tmr-global-footer__heading::after {
+        content: "−";
+    }
+
+    .tmr-global-footer__section .tmr-global-footer__links {
+        display: none;
+        padding-bottom: 12px;
+    }
+
+    .tmr-global-footer__section.is-open .tmr-global-footer__links {
+        display: flex;
+    }
+
+    .tmr-global-footer__resources {
+        padding: 12px 20px;
     }
 
     .tmr-global-footer__bottom {
         flex-direction: column;
+        align-items: flex-start;
     }
 
     .tmr-site-shell[data-tmr-route="about"] .features-grid {
@@ -2443,7 +2516,11 @@ html body.tmr-site-shell {
 
     .tmr-global-footer__grid {
         grid-template-columns: 1fr;
-        padding: 20px 18px 14px;
+        padding: 20px 18px 8px;
+    }
+
+    .tmr-global-footer__resources {
+        padding: 12px 18px;
     }
 
     .tmr-global-footer__bottom {
@@ -3029,12 +3106,9 @@ html body.tmr-site-shell::before {
 
 .tmr-global-footer {
     border-color: rgba(156, 173, 199, 0.12) !important;
-    border-radius: 30px !important;
-    background:
-        radial-gradient(circle at top left, rgba(0, 217, 255, 0.14), transparent 24%),
-        radial-gradient(circle at top right, rgba(241, 190, 72, 0.10), transparent 22%),
-        linear-gradient(180deg, rgba(12, 19, 31, 0.96), rgba(6, 10, 18, 0.98)) !important;
-    box-shadow: 0 28px 72px rgba(2, 8, 18, 0.3) !important;
+    border-radius: 23px !important;
+    background: linear-gradient(180deg, rgba(12, 19, 31, 0.96), rgba(6, 10, 18, 0.98)) !important;
+    box-shadow: 0 10px 28px rgba(2, 8, 18, 0.18) !important;
 }
 
 .tmr-site-shell .btn,
@@ -3233,7 +3307,7 @@ html body.tmr-site-shell::before {
 .tmr-site-shell .content-wrapper,
 .tmr-site-shell .main {
     padding-top: clamp(28px, 3vw, 44px) !important;
-    padding-bottom: clamp(8px, 1vw, 12px) !important;
+    padding-bottom: clamp(56px, 6vw, 92px) !important;
 }
 
 .tmr-site-shell .page-header,
@@ -3411,7 +3485,7 @@ html body.tmr-site-shell::before {
     .tmr-site-shell .content-wrapper,
     .tmr-site-shell .main {
         padding-top: 22px !important;
-        padding-bottom: 10px !important;
+        padding-bottom: 52px !important;
     }
 
     .tmr-site-shell .page-header,
