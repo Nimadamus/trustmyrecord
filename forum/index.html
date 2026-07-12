@@ -1872,6 +1872,110 @@ body.classic-forum .freply,body.classic-forum .fthread-post{border:1px solid #dd
   body.classic-forum .factionrow input[type="search"]{margin-left:0 !important;width:100% !important}
 }
 </style>
+<style id="tmr-forum-2p2-geometry-20260712">
+/* ============================================================
+   2+2 GEOMETRY PASS (Jul 12 2026) — final cascade layer.
+   Pixel-spec pass measured against the 1664x896 reference:
+   250px sidebar, 70px header, 34px main gutters, 31px bars,
+   58-60px index rows, 14px/700 forum names, 26px flat gold
+   square icons, cols ~54/35/5.5/5.5, zero heading indent.
+   Shared knobs live in the :root variables below — tune there,
+   not with scattered one-off overrides. No color/content changes.
+============================================================ */
+:root{
+  --f2p2-side-w:250px;   /* desktop sidebar width */
+  --f2p2-head-h:70px;    /* dark header height */
+  --f2p2-pad-x:34px;     /* main content + header horizontal gutter */
+  --f2p2-bar-h:31px;     /* category/section bar height */
+  --f2p2-cell-pad:8px;   /* row cell padding */
+  --f2p2-icon:26px;      /* forum icon square */
+  --f2p2-icon-gap:10px;  /* icon -> text gap */
+}
+/* --- shell: 250px sidebar, header + content notched right of it --- */
+body.classic-forum .fside{width:var(--f2p2-side-w) !important;padding:16px 20px !important}
+.tmrfh{margin-left:var(--f2p2-side-w) !important}
+body.classic-forum .fshell{margin-left:var(--f2p2-side-w) !important;min-height:calc(100vh - var(--f2p2-head-h)) !important}
+body.classic-forum .fmain{padding:10px var(--f2p2-pad-x) 60px var(--f2p2-pad-x) !important}
+/* --- header: exactly 70px, flex-centered, 34px gutters, 14px nav --- */
+.tmrfh-in{height:var(--f2p2-head-h) !important;min-height:var(--f2p2-head-h) !important;padding:0 var(--f2p2-pad-x) !important;align-items:center !important}
+#tmrForumHeader .tmrfh-nav a{font:400 14px/1 "Noto Sans","Segoe UI",Arial,sans-serif !important;padding:7px 9px !important}
+#tmrForumHeader .tmrfh-nav a.is-active{box-shadow:inset 0 -2px 0 #d99a1c !important}
+.tmrfh-icon{width:32px !important;height:32px !important}
+.tmrfh-icon svg{width:18px !important;height:18px !important}
+.tmrfh-avatar{width:28px !important;height:28px !important;flex-basis:28px !important;font-size:11.5px !important}
+.tmrfh-nav{margin-left:8px !important}
+.tmrfh-right{gap:3px !important}
+/* --- sidebar: 12px links on a 24px rhythm, compact bold headings --- */
+body.classic-forum .fside-box + .fside-box{margin-top:18px !important}
+body.classic-forum .fside-group + .fside-group{margin-top:18px !important}
+body.classic-forum .fside-box:last-child .fside-head{font:700 12.5px/1.3 "Noto Sans","Segoe UI",Arial,sans-serif !important;padding:0 0 4px !important}
+body.classic-forum .fside-list a.fside-gtitle,body.classic-forum .fside-gtitle{font:700 12.5px/1.3 "Noto Sans","Segoe UI",Arial,sans-serif !important;padding:0 0 3px !important}
+body.classic-forum .fside-list .fside-gbody a.fside-forum,
+body.classic-forum .fside-list a.fside-forum,
+body.classic-forum .fside-list .fside-gbody a,
+body.classic-forum .fside-box:last-child .fside-list a{font:400 12px/24px "Noto Sans","Segoe UI",Arial,sans-serif !important;padding:0 !important}
+body.classic-forum .fside-list .fside-gbody a.fside-forum.is-active,
+body.classic-forum .fside-list a.fside-forum.is-active{padding:0 8px !important;margin-left:-8px !important;line-height:24px !important}
+/* --- page title: 20px/24 bold, tight band above the labels --- */
+body.classic-forum .ftitle{padding:2px 0 6px !important}
+body.classic-forum .ftitle h1{font:700 20px/24px "Noto Sans","Segoe UI",Arial,sans-serif !important}
+/* --- column labels: 11px muted, flush with the content gutter --- */
+body.classic-forum .fgroup-table tr.fcol-head td{padding:3px var(--f2p2-cell-pad) 4px !important;font:400 11px/1.3 "Noto Sans","Segoe UI",Arial,sans-serif !important;color:rgba(0,0,0,.5) !important}
+body.classic-forum .fgroup-table tr.fcol-head td:first-child{padding-left:0 !important}
+body.classic-forum .fgroup-table tr.fcol-head td.col-num:last-child{padding-right:0 !important}
+/* --- section bars: 31px, 10px left pad, 2px radius, centered label --- */
+body.classic-forum .fgroup-table tr.fgroup-band td{height:var(--f2p2-bar-h) !important;padding:0 10px !important;font:700 14px/var(--f2p2-bar-h) "Noto Sans","Segoe UI",Arial,sans-serif !important;vertical-align:middle !important}
+body.classic-forum .fgroup-table tr.fgroup-band td:first-child{border-radius:2px 0 0 2px !important}
+body.classic-forum .fgroup-table tr.fgroup-band td:last-child{border-radius:0 2px 2px 0 !important}
+body.classic-forum .fgroup-table tr.fgroup-band td.fgroup-meta{font:400 11px/var(--f2p2-bar-h) "Noto Sans","Segoe UI",Arial,sans-serif !important;padding:0 10px !important}
+/* --- rows: 8px pad, ~59px pitch, flush left edge, 10px icon gap --- */
+body.classic-forum .fgroup-table td.fcell{padding:var(--f2p2-cell-pad) !important}
+body.classic-forum #categoriesContainer .fgroup-table td.fcell{padding:var(--f2p2-cell-pad) !important}
+body.classic-forum table.thread-table td.fcell{padding:var(--f2p2-cell-pad) !important}
+body.classic-forum .fgroup-table td.fcell:first-child{padding-left:0 !important}
+body.classic-forum .frowinner{gap:var(--f2p2-icon-gap) !important;min-height:42px !important}
+body.classic-forum .fname,
+body.classic-forum #categoriesContainer .fname{font:700 14px/17px "Noto Sans","Segoe UI",Arial,sans-serif !important}
+body.classic-forum .fdesc,
+body.classic-forum #categoriesContainer .fdesc{font:400 12px/15px "Noto Sans","Segoe UI",Arial,sans-serif !important;margin-top:1px !important}
+/* --- columns: Forum ~54 / Last Post 35 / Threads 5.5 / Posts 5.5 --- */
+body.classic-forum .fgroup-table tr.fcol-head td.col-last,
+body.classic-forum .fgroup-table td.col-last{width:35% !important}
+body.classic-forum .fgroup-table tr.fcol-head td.col-num,
+body.classic-forum .fgroup-table td.col-num{width:5.5% !important;min-width:56px !important}
+body.classic-forum .fgroup-table tr.fcol-head td.col-num:last-child,
+body.classic-forum .fgroup-table td.col-num:last-child{width:5.5% !important;padding-right:0 !important}
+body.classic-forum .fgroup-table td.col-num{font:400 13px/1 "Noto Sans","Segoe UI",Arial,sans-serif !important;font-variant-numeric:tabular-nums !important;padding-right:var(--f2p2-cell-pad) !important}
+/* --- last post cell: 12/700 title, 11.5px by/time, 15px lines --- */
+body.classic-forum .flpost-title{font:700 12px/15px "Noto Sans","Segoe UI",Arial,sans-serif !important}
+body.classic-forum .flpost-by{font:400 11.5px/15px "Noto Sans","Segoe UI",Arial,sans-serif !important}
+body.classic-forum .flpost-user{font:400 11.5px/15px "Noto Sans","Segoe UI",Arial,sans-serif !important}
+body.classic-forum .flpost-meta{font:400 11.5px/15px "Noto Sans","Segoe UI",Arial,sans-serif !important}
+body.classic-forum .flpost-empty{font:italic 12px/15px "Noto Sans","Segoe UI",Arial,sans-serif !important}
+/* --- icons: flat 26px gold rounded square + white page glyph --- */
+body.classic-forum .sport-icon,
+body.classic-forum .ffolder{flex:0 0 var(--f2p2-icon) !important;width:var(--f2p2-icon) !important;height:var(--f2p2-icon) !important;margin-top:0 !important;border-radius:4px !important;background:linear-gradient(180deg,#efb04a,#d98e1f) !important;border:0 !important;box-shadow:none !important;position:relative !important;color:transparent !important;font-size:0 !important;display:block !important}
+body.classic-forum .sport-icon::before,
+body.classic-forum .ffolder::before{content:"" !important;position:absolute !important;top:6px !important;left:7px !important;width:12px !important;height:14px !important;background:#fff !important;border:0 !important;border-radius:1.5px !important;margin:0 !important}
+body.classic-forum .sport-icon::after,
+body.classic-forum .ffolder::after{content:"";position:absolute;top:9px;left:9.5px;width:7px;height:9px;background:repeating-linear-gradient(180deg,#e6a139 0 1.5px,transparent 1.5px 3.5px)}
+body.classic-forum .ffolder.is-pinned{background:linear-gradient(180deg,#f6cf7e,#e8ab3c) !important}
+/* --- mobile/tablet: keep the existing responsive behavior --- */
+@media (max-width:900px){
+  .tmrfh{margin-left:0 !important}
+  body.classic-forum .fshell{margin-left:0 !important;min-height:0 !important}
+  body.classic-forum .fmain{padding:10px 12px 40px !important}
+  .tmrfh-in{height:auto !important;min-height:54px !important;padding:6px 12px !important}
+  body.classic-forum .fgroup-table td.fcell{padding:8px 6px !important}
+  body.classic-forum .fgroup-table td.fcell:first-child{padding-left:0 !important}
+  body.classic-forum .fgroup-table tr.fcol-head td.col-num,
+  body.classic-forum .fgroup-table td.col-num{width:48px !important;min-width:48px !important;padding-right:6px !important}
+  body.classic-forum .fgroup-table tr.fcol-head td.col-num:last-child,
+  body.classic-forum .fgroup-table td.col-num:last-child{padding-right:6px !important}
+  body.classic-forum .fgroup-table tr.fgroup-band td{height:auto !important;padding:8px 10px !important;font:700 13px/1.3 "Noto Sans","Segoe UI",Arial,sans-serif !important}
+  body.classic-forum .fgroup-table tr.fgroup-band td.fgroup-meta{font:400 11px/1.3 "Noto Sans","Segoe UI",Arial,sans-serif !important;padding:8px 10px !important}
+}
+</style>
 </head>
 <body class="classic-forum">
 
