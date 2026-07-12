@@ -762,6 +762,10 @@
         window.addEventListener('beforeunload', () => { if (refreshInterval) clearInterval(refreshInterval); });
 
         function idEq(a, b) { return String(a) === String(b); }
+        // Single-quoted JS string literal safe to embed inside a double-quoted HTML onclick attribute
+        function jsStr(v) {
+            return "'" + String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/</g, '\\x3C') + "'";
+        }
 
         async function loadConversations() {
             try {
@@ -899,7 +903,7 @@
                 const unread = conv.unread_count > 0;
                 return '' +
                     '<div class="msg-row ' + (isActive ? 'active ' : '') + (unread ? 'unread' : '') + '" ' +
-                        'onclick="selectConversation(' + JSON.stringify(conv.other_user_id) + ', ' + JSON.stringify(String(conv.other_username || '')) + ')">' +
+                        'onclick="selectConversation(' + jsStr(conv.other_user_id) + ', ' + jsStr(conv.other_username || '') + ')">' +
                         '<div class="msg-avatar">' + avatarInner(conv) + '</div>' +
                         '<div class="msg-row-mid">' +
                             '<div class="msg-row-name">' + escapeHtml(name) + '</div>' +
@@ -1148,7 +1152,7 @@
                     if (users.length === 0) { resultsDiv.innerHTML = '<p style="color:var(--msg-text-muted);padding:10px;">No matching users found</p>'; return; }
                     resultsDiv.innerHTML = users.map(u => {
                         const sub = composerRecordSummary(u);
-                        return '<div class="composer-result" onclick="selectComposerRecipientById(' + JSON.stringify(u.id) + ')">' +
+                        return '<div class="composer-result" onclick="selectComposerRecipientById(' + jsStr(u.id) + ')">' +
                             '<div class="composer-result-avatar">' + avatarMarkup(u) + '</div>' +
                             '<div style="min-width:0;">' +
                                 '<div class="composer-result-name">' + escapeHtml(u.display_name || u.username) + '</div>' +
