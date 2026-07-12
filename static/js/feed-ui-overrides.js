@@ -171,6 +171,7 @@ function renderPollCard(item) {
     const id = item.poll_id || item.id || item.item_id;
     const opts = Array.isArray(item.options) ? item.options : [];
     const total = Number(item.total_votes || item.votes_count || 0);
+    const questionCount = Number(item.question_count || 0);
     const optionsHtml = opts.length
         ? opts.map((opt, idx) => {
             const optionId = opt.id || opt.option_id || idx;
@@ -178,7 +179,9 @@ function renderPollCard(item) {
             const pct = total > 0 ? Math.round(votes / total * 100) : 0;
             return '<button class="poll-option" onclick="votePoll(' + jsArg(id) + ', ' + jsArg(optionId) + ')"><span>' + esc(opt.text || opt.label || ('Option ' + (idx + 1))) + '</span><strong>' + pct + '%</strong></button>';
         }).join('')
-        : '<div style="color:var(--text-muted);font-size:0.86rem;">Poll options are not available.</div>';
+        : questionCount > 1
+            ? '<a class="poll-option" href="/polls/#poll-' + esc(id) + '" style="text-decoration:none;"><span>' + questionCount + '-question prediction quiz</span><strong>Enter &rarr;</strong></a>'
+            : '<a class="poll-option" href="/polls/#poll-' + esc(id) + '" style="text-decoration:none;"><span>Open this poll to vote</span><strong>View &rarr;</strong></a>';
     return '<div class="feed-item" data-id="' + esc(id) + '" data-type="feed_post">' +
         renderFeedHeader(item, '<i class="fas fa-square-poll-vertical"></i> created a poll') +
         '<div class="fi-content">' + esc(item.content || item.title || '') + '</div>' +
@@ -589,21 +592,43 @@ async function loadFeed() {
             if (currentFilter === 'all' || currentFilter === 'polls') {
                 try {
                     const pollData = await api.request('/polls/active?limit=5');
-                    (pollData.polls || []).filter(isRealPublicFeedUser).forEach(p => items.push({
+                    const activePolls = (pollData.polls || []).filter(isRealPublicFeedUser);
+                    // /polls/active does not include the per-option array, which left
+                    // feed poll cards rendering "Poll options are not available."
+                    // Hydrate the options (and true vote totals) from each poll detail.
+                    const hydrated = await Promise.all(activePolls.map(async p => {
+                        const questionCount = parseInt(p.question_count) || 0;
+                        let options = Array.isArray(p.options) ? p.options : [];
+                        let totalVotes = parseInt(p.total_votes != null ? p.total_votes : p.vote_count) || 0;
+                        if (!options.length && questionCount <= 1) {
+                            try {
+                                const detail = await api.request('/polls/' + p.id);
+                                options = (detail.options || []).map(o => ({
+                                    id: o.id,
+                                    text: o.option_text,
+                                    votes: parseInt(o.vote_count) || 0
+                                }));
+                                totalVotes = parseInt(detail.total_votes) || totalVotes;
+                            } catch(e) {}
+                        }
+                        return { p: p, options: options, totalVotes: totalVotes, questionCount: questionCount };
+                    }));
+                    hydrated.forEach(h => items.push({
                         item_type: 'poll',
                         post_type: 'poll',
-                        item_id: 'poll_' + p.id,
-                        poll_id: p.id,
-                        content: p.title,
-                        description: p.description,
-                        username: p.creator_username || p.username,
-                        display_name: p.creator_display_name || p.display_name || p.username,
-                        avatar_url: p.avatar_url,
-                        sport: p.sport,
-                        created_at: p.created_at,
-                        options: p.options || [],
-                        total_votes: parseInt(p.total_votes) || 0,
-                        status: p.status,
+                        item_id: 'poll_' + h.p.id,
+                        poll_id: h.p.id,
+                        content: h.p.title,
+                        description: h.p.description,
+                        username: h.p.creator_username || h.p.username,
+                        display_name: h.p.creator_display_name || h.p.display_name || h.p.username,
+                        avatar_url: h.p.avatar_url,
+                        sport: h.p.sport,
+                        created_at: h.p.created_at,
+                        options: h.options,
+                        total_votes: h.totalVotes,
+                        question_count: h.questionCount,
+                        status: h.p.status,
                         likes_count: 0,
                         comments_count: 0
                     }));
