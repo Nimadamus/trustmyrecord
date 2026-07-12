@@ -13,6 +13,11 @@ on:
     # if rate/limits ever bite, change to '0 * * * *' (hourly).
     - cron: '*/30 * * * *'
   workflow_dispatch:
+  repository_dispatch:
+    # Fired by the backend grader (services/prerenderNotifier.js in
+    # trustmyrecord-backend) right after a grading run that changed records,
+    # so the homepage leaderboard preview never waits for the next cron tick.
+    types: [tmr-grading-completed]
 
 permissions:
   contents: write
@@ -61,3 +66,8 @@ jobs:
             git push origin HEAD:main
             echo "Pushed refreshed prerender output."
           fi
+
+      - name: Log refresh failure (last good bake stays live)
+        if: failure()
+        run: |
+          echo "::error::Prerender refresh FAILED (trigger: ${{ github.event_name }}). No commit was made, so the last successfully calculated leaderboard preview remains live on trustmyrecord.com. Inspect the failed step above; the homepage was NOT blanked or corrupted."

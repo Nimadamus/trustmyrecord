@@ -324,6 +324,40 @@ def bake_leaderboards(rows):
         f.write(t)
     return len(rows)
 
+# ---------- homepage "Verified leaderboard preview" ----------
+# Uses the SAME production source + eligibility as the full /leaderboards/ page:
+#   GET /api/users/leaderboard?sortBy=net_units (server-side eligibility:
+#   publicDirectoryUserWhere, final graded picks only, record_reset_at respected)
+# then the page JS's own visibility rule (leaderboards/index.html loadHandicappers):
+#   totalPicks >= 5 && net units > 0, ranked by net units desc.
+# No homepage-only logic: the top 5 here is by construction the top 5 a visitor
+# sees on /leaderboards/ with default filters.
+HOME_PREVIEW_MIN_PICKS = 5  # mirrors leaderboards sampleFilter default '5'
+
+def collect_home_leaderboard():
+    d = get(f"{API}/users/leaderboard?sortBy=net_units&limit=100&minPicks={HOME_PREVIEW_MIN_PICKS}")
+    entries = d.get("leaderboard", []) if isinstance(d, dict) else []
+    out = []
+    for r in entries:
+        row = {
+            "username": r.get("username") or "",
+            "display_name": r.get("display_name") or r.get("username") or "",
+            "wins": int(num(r.get("wins"))),
+            "losses": int(num(r.get("losses"))),
+            "pushes": int(num(r.get("pushes"))),
+            "total_picks": int(num(r.get("total_picks"))),
+            "net_units": num(r.get("net_units")),
+            "roi": num(r.get("roi")),
+        }
+        # exact page rule: entry.totalPicks >= 5 && entry.units > 0
+        if row["username"] and row["total_picks"] >= HOME_PREVIEW_MIN_PICKS and row["net_units"] > 0:
+            out.append(row)
+    if not out:
+        raise RuntimeError("home leaderboard preview: 0 eligible entries from live API - "
+                           "refusing to bake an empty/blank preview (last good bake stays live)")
+    # server already orders net_units DESC, total_picks DESC, username ASC; keep it.
+    return out
+
 def home_preview_rows(rows, k=5):
     out = []
     for i, r in enumerate(rows[:k]):
@@ -336,6 +370,17 @@ def home_preview_rows(rows, k=5):
             f'<td class="{lclass(r["roi"])}">{e(pct(r["roi"]))}</td></tr>'
         )
     return "".join(out)
+
+def home_updated_line(now):
+    """'Updated daily • Last updated July 11, 2026 at 11:45 PM PT' - stamped only
+    on a successful recalculation (this function runs after collect succeeds)."""
+    try:
+        from zoneinfo import ZoneInfo
+        pt = now.astimezone(ZoneInfo("America/Los_Angeles"))
+    except Exception:  # tzdata missing (bare Windows python) - PT = UTC-7 in Jul/DST
+        pt = now.astimezone(datetime.timezone(datetime.timedelta(hours=-7)))
+    stamp = f"{pt.strftime('%B')} {pt.day}, {pt.year} at {pt.strftime('%I:%M %p').lstrip('0')} PT"
+    return f"Updated daily &bull; Last updated {stamp}"
 
 # ---------- per-pick highlight engine (mirrors the homepage hero JS exactly) ----------
 # The hero "Live Highlights" card (#tmrHeroPicksList) computes these client-side
@@ -557,15 +602,18 @@ def home_highlights(rows, now):
     return "".join(items)
 
 def bake_homepage(rows, now):
+    lb = collect_home_leaderboard()  # raises (fail-closed) on API error / empty set
     with open(HOME, encoding="utf-8") as f:
         t = f.read()
-    t = set_marker(t, "homeLbPreview", home_preview_rows(rows),
+    t = set_marker(t, "homeLbPreview", home_preview_rows(lb),
                    r'(<tbody>)(<tr><td colspan="5")', r'\g<1>@@BLOCK@@')  # unused fallback
+    t = set_marker(t, "homeLbUpdated", home_updated_line(now),
+                   r'(<p class="tmrhx-updated">)(</p>)', r'\g<1>@@BLOCK@@\g<2>')
     t = set_marker(t, "homeHighlights", home_highlights(rows, now),
                    r'(<ul class="tmrhx-hl">)(<li>)', r'\g<1>@@BLOCK@@')   # unused fallback
     with open(HOME, "w", encoding="utf-8", newline="\n") as f:
         f.write(t)
-    return len(rows[:5])
+    return len(lb[:5])
 
 def main():
     now = datetime.datetime.now(datetime.timezone.utc)
