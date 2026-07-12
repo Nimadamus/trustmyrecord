@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260712footer4">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260712chat2">
 <script defer src="/static/js/tmr-sitewide.js?v=20260712chat1"></script>
     <script type="application/ld+json">
     {
@@ -215,6 +215,7 @@
         }
 
         .msg:hover .msg-delete { opacity: 1; }
+        @media (hover: none) { .msg-delete { opacity: 0.55; } }
         .msg-delete:hover { color: var(--neon-red); }
 
         .new-msgs-pill {
@@ -339,7 +340,7 @@
         .toast.success { border-color: var(--neon-green); }
 
         @media (max-width: 640px) {
-            .chat-shell { height: calc(100vh - 260px); min-height: 380px; }
+            .chat-shell { height: calc(100vh - 310px); min-height: 340px; }
             .page-header h1 { font-size: 1.5rem; }
             .send-btn { padding: 11px 16px; }
         }
@@ -426,6 +427,12 @@
         setTimeout(() => t.classList.remove('show'), 3000);
     }
 
+    function linkifySafe(text) {
+        return escapeHtml(text).replace(/https?:\/\/[^\s<]+/g, function(url) {
+            return '<a href="' + url + '" target="_blank" rel="noopener noreferrer nofollow ugc" style="color: var(--neon-cyan);">' + url + '</a>';
+        });
+    }
+
     function formatTime(ts) {
         const d = new Date(ts);
         const now = new Date();
@@ -476,7 +483,7 @@
                     badge +
                     '<span class="msg-time">' + formatTime(m.created_at) + '</span>' +
                 '</div>' +
-                '<div class="msg-text">' + escapeHtml(m.content) + '</div>' +
+                '<div class="msg-text">' + linkifySafe(m.content) + '</div>' +
             '</div>' +
             (canDelete ? '<button class="msg-delete" title="Delete message" onclick="deleteMessage(' + m.id + ')">&times;</button>' : '');
 
@@ -559,14 +566,16 @@
         sending = true;
         const btn = document.getElementById('sendBtn');
         btn.disabled = true;
+        // Clear now so anything typed while the POST is in flight is kept
+        // instead of being wiped by the success handler.
+        input.value = '';
+        input.style.height = 'auto';
 
         try {
             const data = await api.request('/chat/messages', {
                 method: 'POST',
                 body: { content }
             });
-            input.value = '';
-            input.style.height = 'auto';
             const empty = document.getElementById('chatEmpty');
             if (empty) empty.remove();
             if (data.message) {
@@ -574,10 +583,15 @@
                 scrollToBottom();
             }
         } catch (e) {
-            showToast(e.message || 'Could not send message', 'error');
+            if (!input.value) input.value = content;
+            const raw = (e && e.message) || '';
+            const friendly = /failed to fetch|networkerror|load failed/i.test(raw)
+                ? 'Connection problem. Your message was not sent, try again.'
+                : (raw || 'Could not send message');
+            showToast(friendly, 'error');
         } finally {
             sending = false;
-            btn.disabled = false;
+            btn.disabled = !input.value.trim();
             input.focus();
         }
     }
@@ -615,9 +629,12 @@
         }
 
         const input = document.getElementById('chatInput');
+        const sendBtnEl = document.getElementById('sendBtn');
+        sendBtnEl.disabled = true;
         input.addEventListener('input', () => {
             input.style.height = 'auto';
             input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+            if (!sending) sendBtnEl.disabled = !input.value.trim();
         });
 
         await loadInitial();

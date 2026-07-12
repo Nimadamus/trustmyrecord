@@ -4979,3 +4979,24 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
         gap: 6px !important;
     }
 }
+
+/* ============================================================================
+   Tablet/laptop nav overflow fix - 2026-07-12
+   The 2026-06-23 single-row redesign forces flex-wrap:nowrap with
+   min-width:max-content on the account cluster. Logged-in at 641-1339px the
+   row can exceed the viewport and body overflow-x:clip cuts off the alerts
+   bell and account menu (repro: 1024x768 logged in, scrollWidth 1223 vs 1024).
+   Allow the row to wrap at these widths: wrap only engages when the row
+   genuinely does not fit, so wide/logged-out layouts are unchanged.
+============================================================================ */
+@media (min-width: 641px) and (max-width: 1339px) {
+    body.tmr-site-shell .tmr-global-nav__inner,
+    body.tmr-site-shell[data-tmr-route] .tmr-global-nav__inner {
+        flex-wrap: wrap !important;
+        row-gap: 6px !important;
+    }
+
+    body.tmr-site-shell .tmr-global-nav__actions {
+        margin-left: auto !important;
+    }
+}
