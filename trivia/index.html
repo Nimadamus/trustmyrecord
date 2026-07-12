@@ -133,16 +133,16 @@
         /* ===== PAGE HEADER ===== */
         .page-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 20px;
         }
         .page-header h1 {
             font-family: 'Barlow', sans-serif;
-            font-size: 2.4rem;
+            font-size: clamp(1.5rem, 2.1vw, 1.8rem) !important;
+            line-height: 1.12 !important;
             font-weight: 800;
-            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
+            color: #f1f5f9 !important;
+            -webkit-text-fill-color: #f1f5f9 !important;
+            margin-bottom: 8px;
         }
         .page-header p {
             color: var(--text-muted);
@@ -246,13 +246,13 @@
             gap: 6px;
             padding: 13px 22px;
             border-radius: 12px;
-            background: linear-gradient(135deg, var(--neon-cyan, #2dd4bf) 0%, var(--neon-purple, #a855f7) 100%);
-            color: #000;
+            background: linear-gradient(135deg, #22c55e 0%, #22d3ee 100%);
+            color: #06111F;
             font-family: 'Barlow', 'Inter', sans-serif;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 800;
-            letter-spacing: 0.02em;
-            text-transform: uppercase;
+            letter-spacing: 0.01em;
+            text-transform: none;
             border: 0;
             cursor: pointer;
             box-shadow: 0 12px 28px rgba(45, 212, 191, 0.30);
@@ -266,7 +266,7 @@
         .trivia-pool-card {
             border: 1px solid rgba(45, 212, 191, 0.32) !important;
             background:
-                linear-gradient(180deg, rgba(45, 212, 191, 0.08) 0%, rgba(168, 85, 247, 0.05) 100%),
+                linear-gradient(180deg, rgba(34, 197, 94, 0.07) 0%, rgba(34, 211, 238, 0.05) 100%),
                 var(--bg-card, rgba(15, 20, 40, 0.85)) !important;
         }
 
@@ -962,8 +962,11 @@
         }
 
         /* ===== RESPONSIVE ===== */
+        @media (max-width: 720px) {
+            .trivia-info-row { grid-template-columns: 1fr !important; }
+        }
         @media (max-width: 640px) {
-            .page-header h1 { font-size: 1.8rem; }
+            .page-header h1 { font-size: 1.6rem !important; }
             .stats-bar {
                 display: grid;
                 grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1152,23 +1155,6 @@
         </div>
     </div>
 
-    <div class="glass-card" style="margin-bottom: 24px;">
-        <h2 style="margin-bottom: 10px;">How Trivia Scoring Works</h2>
-        <p style="color: var(--text-muted); line-height: 1.7; margin: 0;">
-            Correct answers earn base points, and faster correct answers can earn a speed bonus. Wrong answers, timeouts, and cheat-assisted answers do not earn points, so the leaderboard rewards both knowledge and fast decisions.
-        </p>
-    </div>
-
-    <div class="glass-card trivia-pool-card" style="margin-bottom: 24px;">
-        <h2 style="margin-bottom: 10px;">Build The Trivia Pool</h2>
-        <p style="color: var(--text-muted); line-height: 1.7; margin: 0 0 14px;">
-            TrustMyRecord trivia is community driven, not just preloaded quizzes. Users can submit NFL, NBA, MLB, NHL, soccer, betting history, stats, and pop culture sports questions. Approved questions can appear in public quizzes, leaderboards, and user profiles.
-        </p>
-        <button type="button" class="trivia-create-cta trivia-create-cta--inline" onclick="openCreateTrivia()">
-            <span aria-hidden="true">＋</span> Create Trivia Question
-        </button>
-    </div>
-
     <!-- View Tabs -->
     <div class="view-tabs" role="tablist" aria-label="Trivia modes">
         <button class="view-tab active" role="tab" onclick="switchView('play')">Play</button>
@@ -1212,6 +1198,25 @@
         <div class="glass-card" style="margin-top:24px;" id="customQuestionsCard">
             <h2>&#128221; Your Custom Questions</h2>
             <div id="customQuestionsList"></div>
+        </div>
+    </div>
+
+    <!-- Supporting info (moved below the game so the categories sit near the top) -->
+    <div class="trivia-info-row" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px;">
+        <div class="glass-card">
+            <h2 style="margin-bottom: 10px;font-size:1.05rem;">How Trivia Scoring Works</h2>
+            <p style="color: var(--text-muted); line-height: 1.6; margin: 0;font-size:14px;">
+                Correct answers earn base points, and faster correct answers can earn a speed bonus. Wrong answers, timeouts, and cheat-assisted answers do not earn points, so the leaderboard rewards both knowledge and fast decisions.
+            </p>
+        </div>
+        <div class="glass-card trivia-pool-card">
+            <h2 style="margin-bottom: 10px;font-size:1.05rem;">Build The Trivia Pool</h2>
+            <p style="color: var(--text-muted); line-height: 1.6; margin: 0 0 14px;font-size:14px;">
+                TrustMyRecord trivia is community driven, not just preloaded quizzes. Users can submit NFL, NBA, MLB, NHL, soccer, betting history, stats, and pop culture sports questions. Approved questions can appear in public quizzes, leaderboards, and user profiles.
+            </p>
+            <button type="button" class="trivia-create-cta trivia-create-cta--inline" onclick="openCreateTrivia()">
+                <span aria-hidden="true">＋</span> Create Trivia Question
+            </button>
         </div>
     </div>
 
