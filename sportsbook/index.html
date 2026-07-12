@@ -13459,16 +13459,59 @@ window.toggleSportFamily = function (family) {
                 .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'alts') rowsEl.innerHTML = emptyState(sport, 'Alternate-lines feed temporarily unavailable. Try again shortly.', 'closed'); });
         }
 
-        fetch(String(base).replace(/\/$/, '') + '/games/altlines/' + encodeURIComponent(key) + '?cb=' + Date.now(), { cache: 'no-store' })
-            .then(function (r) { return r.ok ? r.json() : null; })
-            .then(function (data) {
-                if (rowsEl.getAttribute('data-sport') !== sport || window.TMR.selectedPeriod !== 'alts') return;
-                if (data && data.supported === false) { rowsEl.innerHTML = emptyState(sport, 'Alternate lines are not offered for ' + sport + ' yet.', 'closed'); return; }
-                var games = (data && data.games) || [];
-                if (!games.length) { fallbackToBoard(); return; }
-                renderAltGames(games);
-            })
-            .catch(function () { if (rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'alts') fallbackToBoard(); });
+        // ALT_LINES_UNION_20260712 (Nima): "make alts ALWAYS appear for all games".
+        // The Bovada altlines feed can return a PARTIAL list (or, from the Render
+        // host, be blocked entirely). Previously we only fell back to the fuller
+        // FanDuel board when Bovada returned ZERO games, so any game Bovada omitted
+        // silently lost its alt lines even though the board carried them (this is
+        // what dropped Rockies/Giants). Now we fetch BOTH sources and render their
+        // UNION keyed by matchup, so every game with real alts from either source
+        // appears. Bovada is preferred where present (richer ladders); the board
+        // (FanDuel) guarantees full-slate coverage.
+        var altMatchupKey = function (g) {
+            var n = function (s) { return String(s == null ? '' : s).toLowerCase().replace(/[^a-z0-9]/g, ''); };
+            return [n(g.away_team), n(g.home_team)].sort().join('__');
+        };
+        var mergeAltGames = function (primaryGames, secondaryGames) {
+            var map = {}, order = [];
+            var add = function (g) {
+                if (!g || !(g.alt_groups || []).length) return;
+                var k = altMatchupKey(g);
+                if (!map[k]) { map[k] = g; order.push(k); return; }
+                // Union groups by key; keep the richer set of items per group.
+                var byKey = {};
+                (map[k].alt_groups || []).forEach(function (gr) { byKey[gr.key] = gr; });
+                (g.alt_groups || []).forEach(function (gr) {
+                    if (!byKey[gr.key] || (gr.items || []).length > (byKey[gr.key].items || []).length) byKey[gr.key] = gr;
+                });
+                map[k].alt_groups = Object.keys(byKey).map(function (kk) { return byKey[kk]; });
+            };
+            (primaryGames || []).forEach(add);   // Bovada first (preferred)
+            (secondaryGames || []).forEach(add); // then ensure every board game is present
+            return order.map(function (k) { return map[k]; });
+        };
+
+        var stillActive = function () { return rowsEl.getAttribute('data-sport') === sport && window.TMR.selectedPeriod === 'alts'; };
+        var boardUrl = String(base).replace(/\/$/, '') + '/games/board/' + encodeURIComponent(key) + '?limit=80';
+        var altUrl = String(base).replace(/\/$/, '') + '/games/altlines/' + encodeURIComponent(key) + '?cb=' + Date.now();
+        var safeFetch = function (u) { return fetch(u, { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); };
+
+        Promise.all([safeFetch(altUrl), safeFetch(boardUrl)]).then(function (res) {
+            if (!stillActive()) return;
+            var altData = res[0], boardData = res[1];
+            var bovadaGames = (altData && altData.games) || [];
+            var boardGames = altGamesFromBoard(boardData && boardData.games);
+            var merged = mergeAltGames(bovadaGames, boardGames);
+            if (!merged.length) {
+                if (altData && altData.supported === false && !boardGames.length) {
+                    rowsEl.innerHTML = emptyState(sport, 'Alternate lines are not offered for ' + sport + ' yet.', 'closed');
+                } else {
+                    rowsEl.innerHTML = emptyState(sport, 'No alternate lines posted right now. Check back when lines are up.', 'closed');
+                }
+                return;
+            }
+            renderAltGames(merged);
+        }).catch(function () { if (stillActive()) fallbackToBoard(); });
     }
 
     // NBA_NHL_PROPS_20260606: ESPN core propBets enrichment for the Player
