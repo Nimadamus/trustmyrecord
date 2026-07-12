@@ -1186,6 +1186,20 @@
             font-family: 'Barlow', sans-serif;
             font-size: 0.94rem;
         }
+
+        /* ---- 2026-07-12 compact hero: shrink oversized title + tighten the
+                gap before the feed. Higher specificity beats sitewide .tmr-site-shell h1. ---- */
+        body .feed-hero { padding: 14px 18px !important; margin-bottom: 12px !important; }
+        body .feed-hero h1 { font-size: clamp(1.4rem, 2vw, 1.75rem) !important; line-height: 1.14 !important; margin-bottom: 6px !important; }
+        body .feed-hero p { font-size: 0.86rem !important; line-height: 1.45; margin-bottom: 10px !important; max-width: 72ch; }
+        body .feed-hero-eyebrow { margin-bottom: 6px; }
+        body .feed-hero-points { gap: 6px; margin-bottom: 10px; }
+        body .feed-hero-point { min-height: 30px; padding: 6px 9px; font-size: 0.74rem; }
+        body .feed-hero-actions { gap: 8px; }
+        @media (max-width: 640px) {
+            body .feed-hero-points { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            body .feed-hero h1 { font-size: 1.4rem !important; }
+        }
     </style>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
@@ -1338,6 +1352,6 @@
     <script src="/static/js/backend-api.js?v=20260423a"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
     <script src="/static/js/social-home.js?v=20260711milestones1"></script>
-    <script src="/static/js/feed-ui-overrides.js?v=20260711milestones1"></script>
+    <script src="/static/js/feed-ui-overrides.js?v=20260712pollfix1"></script>
 </body>
 </html>
