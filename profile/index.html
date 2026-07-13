@@ -3796,8 +3796,8 @@
                         <span class="sidebar-card-label">Profile Stats</span>
                     </div>
                     <div class="sidebar-stat-list" id="sidebarStatList">
-                        <div class="sidebar-stat-row"><span class="sidebar-stat-key">Followers</span><span class="sidebar-stat-val" id="sidebarFollowers">&mdash;</span></div>
-                        <div class="sidebar-stat-row"><span class="sidebar-stat-key">Following</span><span class="sidebar-stat-val" id="sidebarFollowing">&mdash;</span></div>
+                        <button type="button" class="sidebar-stat-row is-clickable" onclick="openSocialList('followers')" aria-label="View followers"><span class="sidebar-stat-key">Followers</span><span class="sidebar-stat-val" id="sidebarFollowers">&mdash;</span></button>
+                        <button type="button" class="sidebar-stat-row is-clickable" onclick="openSocialList('following')" aria-label="View following"><span class="sidebar-stat-key">Following</span><span class="sidebar-stat-val" id="sidebarFollowing">&mdash;</span></button>
                         <div class="sidebar-stat-row"><span class="sidebar-stat-key">Tracked picks</span><span class="sidebar-stat-val" id="sidebarTrackedPicks">&mdash;</span></div>
                         <div class="sidebar-stat-row"><span class="sidebar-stat-key">Leaderboard</span><span class="sidebar-stat-val" id="sidebarLeaderboard">&mdash;</span></div>
                     </div>
@@ -4158,6 +4158,113 @@
             color: var(--tmr-text);
             font-size: 0.92rem;
             font-weight: 700;
+        }
+
+        /* Clickable Followers/Following cards + sidebar rows */
+        button.profile-overview-card {
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color .15s, background .15s, transform .05s;
+        }
+        button.profile-overview-card:hover {
+            border-color: var(--tmr-cyan, #5bd6dc);
+            background: var(--tmr-panel-2, #182031);
+        }
+        button.profile-overview-card:active { transform: translateY(1px); }
+        button.profile-overview-card:focus-visible {
+            outline: 2px solid var(--tmr-cyan, #5bd6dc);
+            outline-offset: 2px;
+        }
+        .sidebar-stat-row.is-clickable {
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            font: inherit;
+            color: inherit;
+            text-align: left;
+            border-radius: 8px;
+            transition: background .15s;
+        }
+        .sidebar-stat-row.is-clickable:hover { background: var(--tmr-panel-2, #182031); }
+        .sidebar-stat-row.is-clickable:focus-visible {
+            outline: 2px solid var(--tmr-cyan, #5bd6dc);
+            outline-offset: 1px;
+        }
+        .sidebar-stat-row.is-clickable .sidebar-stat-key { text-decoration: underline dotted transparent; }
+        .sidebar-stat-row.is-clickable:hover .sidebar-stat-key { text-decoration-color: var(--tmr-cyan, #5bd6dc); }
+
+        /* Social list drawer */
+        .tmr-social-modal {
+            position: fixed; inset: 0; z-index: 10000;
+            background: rgba(0,0,0,0.62);
+            display: flex; justify-content: flex-end;
+        }
+        .tmr-social-drawer {
+            width: 420px; max-width: 100%; height: 100%;
+            background: var(--tmr-panel, #1c1f2a);
+            border-left: 1px solid var(--tmr-border, #2a2e3d);
+            display: flex; flex-direction: column;
+            box-shadow: -18px 0 48px rgba(0,0,0,0.45);
+            animation: tmrSocialIn .18s ease-out;
+        }
+        @keyframes tmrSocialIn { from { transform: translateX(24px); opacity: .4; } to { transform: none; opacity: 1; } }
+        .tmr-social-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 18px; border-bottom: 1px solid var(--tmr-border, #2a2e3d);
+        }
+        .tmr-social-title { margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--tmr-text, #f0f2f5); }
+        .tmr-social-count { font-size: .8rem; color: var(--tmr-text-dim, #8b98ad); margin-top: 2px; }
+        .tmr-social-close {
+            background: none; border: none; color: #9ba3b5; font-size: 26px;
+            line-height: 1; cursor: pointer; padding: 0 4px; border-radius: 6px;
+        }
+        .tmr-social-close:hover { color: #fff; }
+        .tmr-social-close:focus-visible { outline: 2px solid var(--tmr-cyan, #5bd6dc); outline-offset: 2px; }
+        .tmr-social-items { list-style: none; margin: 0; padding: 6px 0; overflow-y: auto; flex: 1; }
+        .tmr-social-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 16px; border-bottom: 1px solid var(--tmr-border, #23283a);
+        }
+        .tmr-social-main {
+            display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;
+            text-decoration: none; color: inherit; border-radius: 8px;
+        }
+        .tmr-social-main:focus-visible { outline: 2px solid var(--tmr-cyan, #5bd6dc); outline-offset: 2px; }
+        .tmr-social-avatar {
+            width: 42px; height: 42px; border-radius: 50%; object-fit: cover;
+            flex-shrink: 0; border: 1px solid var(--tmr-border, #2a2e3d);
+        }
+        .tmr-social-avatar--letter {
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg,#3b82f6,#1d4ed8); color: #fff; font-weight: 800;
+        }
+        .tmr-social-copy { min-width: 0; }
+        .tmr-social-name {
+            display: flex; align-items: center; gap: 7px;
+            font-weight: 700; color: var(--tmr-text, #f0f2f5);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .tmr-social-handle { display: block; font-size: .8rem; color: var(--tmr-text-dim, #6b7280); }
+        .tmr-social-badge {
+            font-size: .58rem; font-weight: 800; letter-spacing: .06em;
+            padding: 2px 6px; border-radius: 6px; text-transform: uppercase; flex-shrink: 0;
+        }
+        .tmr-social-badge--verified { background: rgba(91,214,220,.15); color: #5bd6dc; text-transform: none; letter-spacing: .01em; }
+        .tmr-social-badge--admin { background: rgba(239,68,68,.16); color: #f87171; }
+        .tmr-social-badge--mod { background: rgba(168,85,247,.16); color: #c084fc; }
+        .tmr-social-follow { flex-shrink: 0; padding: 6px 14px !important; font-size: .82rem !important; }
+        .tmr-social-empty { padding: 28px 16px; text-align: center; color: var(--tmr-text-dim, #6b7280); }
+        .tmr-social-error { color: #f87171; }
+        .tmr-social-foot { padding: 12px 16px; border-top: 1px solid var(--tmr-border, #2a2e3d); }
+        .tmr-social-foot .btn { width: 100%; }
+        .tmr-social-items[aria-busy="true"]::after {
+            content: "Loading..."; display: block; padding: 24px 16px; text-align: center; color: var(--tmr-text-dim, #6b7280);
+        }
+        @media (max-width: 520px) {
+            .tmr-social-modal { justify-content: center; align-items: flex-end; }
+            .tmr-social-drawer { width: 100%; height: 88vh; border-left: none; border-top-left-radius: 16px; border-top-right-radius: 16px; }
         }
 
         body.profile-page .profile-meta,
@@ -9690,8 +9797,8 @@
               '</div>' +
             '</details>';
         const overview = '<div class="profile-overview-grid">' +
-            '<div class="profile-overview-card"><span class="profile-overview-label">Followers</span><span class="profile-overview-value">' + (Number(p.follower_count) || 0) + '</span></div>' +
-            '<div class="profile-overview-card"><span class="profile-overview-label">Following</span><span class="profile-overview-value">' + (Number(p.following_count) || 0) + '</span></div>' +
+            '<button type="button" class="profile-overview-card" onclick="openSocialList(\'followers\')" aria-label="View ' + escapeHtml(p.display_name || p.username || 'this user') + '’s ' + (Number(p.follower_count) || 0) + ' followers"><span class="profile-overview-label">Followers</span><span class="profile-overview-value">' + (Number(p.follower_count) || 0) + '</span></button>' +
+            '<button type="button" class="profile-overview-card" onclick="openSocialList(\'following\')" aria-label="View who ' + escapeHtml(p.display_name || p.username || 'this user') + ' is following (' + (Number(p.following_count) || 0) + ')"><span class="profile-overview-label">Following</span><span class="profile-overview-value">' + (Number(p.following_count) || 0) + '</span></button>' +
             '<div class="profile-overview-card"><span class="profile-overview-label">Location</span><span class="profile-overview-value">' + (p.location || 'N/A') + '</span></div>' +
             '<div class="profile-overview-card"><span class="profile-overview-label">Profile Type</span><span class="profile-overview-value">' + (verifiedText === 'Verified' ? 'Verified capper' : 'Community member') + '</span></div>' +
             '</div>';
@@ -12405,63 +12512,182 @@
         if (pop && pop.style.display === 'block' && !wrap) pop.style.display = 'none';
     });
 
-    async function openSocialList(type) {
-        if (!profileUserId) return;
+    // ---- Followers / Following social list drawer ----
+    // Right-side drawer (modal on small screens) that never replaces the page or
+    // loses scroll position. Rows carry avatar, display name, @handle, a
+    // verification/role badge, a live Follow/Following button (hidden for the
+    // viewer's own row and for logged-out visitors), and a link to the public
+    // profile. Progressive "load more" pagination; loading / empty / error
+    // states. Server already excludes deleted/suspended/blocked/private rows and
+    // sorts newest-relationship-first.
+    const SOCIAL_PAGE = 25;
+    let socialListState = null; // { type, offset, total, done, loading, prevFocus }
 
-        const existing = document.getElementById('socialListModal');
-        if (existing) existing.remove();
+    function socialBadge(user) {
+        if (user.is_admin) return '<span class="tmr-social-badge tmr-social-badge--admin">ADMIN</span>';
+        if (user.is_moderator) return '<span class="tmr-social-badge tmr-social-badge--mod">MOD</span>';
+        if (user.verification_status === 'verified') return '<span class="tmr-social-badge tmr-social-badge--verified" title="Verified record"><i class="fas fa-check-circle"></i> Verified</span>';
+        return '';
+    }
 
-        const modal = document.createElement('div');
-        modal.id = 'socialListModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
-        modal.innerHTML =
-            '<div style="background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;max-width:520px;width:100%;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">' +
-            '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #2a2e3d;">' +
-            '<h3 style="font-size:1rem;font-weight:700;margin:0;">' + (type === 'followers' ? 'Followers' : 'Following') + '</h3>' +
-            '<button type="button" onclick="closeSocialList()" style="background:none;border:none;color:#9ba3b5;font-size:24px;cursor:pointer;line-height:1;">&times;</button>' +
-            '</div>' +
-            '<div id="socialListBody" style="padding:16px;overflow:auto;color:#9ba3b5;">Loading...</div>' +
-            '</div>';
+    function socialRowHtml(user) {
+        const uid = Number(user.id);
+        const name = escapeHtml(user.display_name || user.username || 'User');
+        const handle = escapeHtml(user.username || '');
+        const initial = (user.display_name || user.username || 'U').charAt(0).toUpperCase();
+        const avatar = user.avatar_url
+            ? '<img src="' + escapeHtml(user.avatar_url) + '" alt="" class="tmr-social-avatar" loading="lazy">'
+            : '<span class="tmr-social-avatar tmr-social-avatar--letter">' + escapeHtml(initial) + '</span>';
+        const profileHref = '/profile/?user=' + encodeURIComponent(user.username || '');
+        // No follow button for the viewer's own row or for logged-out visitors.
+        const isSelf = currentUser && Number(currentUser.id) === uid;
+        let followBtn = '';
+        if (currentUser && !isSelf) {
+            followBtn = user.is_following
+                ? '<button type="button" class="btn btn-secondary tmr-social-follow" data-uid="' + uid + '" data-following="1" onclick="toggleSocialFollow(' + uid + ', this)">Following</button>'
+                : '<button type="button" class="btn btn-primary tmr-social-follow" data-uid="' + uid + '" data-following="0" onclick="toggleSocialFollow(' + uid + ', this)">Follow</button>';
+        }
+        return '<li class="tmr-social-row">' +
+            '<a class="tmr-social-main" href="' + profileHref + '">' +
+            avatar +
+            '<span class="tmr-social-copy">' +
+            '<span class="tmr-social-name">' + name + socialBadge(user) + '</span>' +
+            '<span class="tmr-social-handle">@' + handle + '</span>' +
+            '</span>' +
+            '</a>' +
+            followBtn +
+            '</li>';
+    }
 
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) closeSocialList();
-        });
-        document.body.appendChild(modal);
-
-        const body = document.getElementById('socialListBody');
-
+    async function toggleSocialFollow(uid, btn) {
+        if (!currentUser) return showToast('Log in first', 'error');
+        const wasFollowing = btn.getAttribute('data-following') === '1';
+        btn.disabled = true;
         try {
-            const data = type === 'followers'
-                ? await api.getFollowers(profileUserId, { limit: 100, offset: 0 })
-                : await api.getFollowing(profileUserId, { limit: 100, offset: 0 });
-            const users = data[type] || [];
-
-            if (!users.length) {
-                body.innerHTML = '<div style="padding:12px 4px;color:#6b7280;">No ' + type + ' yet.</div>';
-                return;
+            if (wasFollowing) {
+                await api.unfollowUser(uid);
+                btn.setAttribute('data-following', '0');
+                btn.textContent = 'Follow';
+                btn.className = 'btn btn-primary tmr-social-follow';
+            } else {
+                await api.followUser(uid);
+                btn.setAttribute('data-following', '1');
+                btn.textContent = 'Following';
+                btn.className = 'btn btn-secondary tmr-social-follow';
             }
-
-            body.innerHTML = users.map(function(user) {
-                const label = user.display_name || user.username || 'User';
-                return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px;border-bottom:1px solid #2a2e3d;">' +
-                    '<div style="display:flex;align-items:center;gap:12px;min-width:0;">' +
-                    '<div style="width:40px;height:40px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">' + label.charAt(0).toUpperCase() + '</div>' +
-                    '<div style="min-width:0;">' +
-                    '<div style="font-weight:700;color:#f0f2f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + label + '</div>' +
-                    '<div style="font-size:.8rem;color:#6b7280;">@' + (user.username || '') + '</div>' +
-                    '</div>' +
-                    '</div>' +
-                    '<a href="/profile/?user=' + encodeURIComponent(user.username || '') + '" class="btn btn-secondary" style="text-decoration:none;">View</a>' +
-                    '</div>';
-            }).join('');
-        } catch (error) {
-            body.innerHTML = '<div style="padding:12px 4px;color:#ef4444;">Failed to load ' + type + '.</div>';
+            // Live-sync the profile's own counts when the viewer is looking at
+            // their own following list (following someone from here adds to it).
+            if (isOwnProfile && socialListState && socialListState.type === 'following') {
+                const delta = wasFollowing ? -1 : 1;
+                profileData.following_count = Math.max(0, Number(profileData.following_count || 0) + delta);
+                renderProfileHeader(profileData);
+            }
+            // If the viewer unfollows/follows the very profile being viewed, keep
+            // that profile's header follow-state + follower count in sync too.
+            if (Number(uid) === Number(profileUserId)) {
+                isFollowingProfile = !wasFollowing;
+                profileData.follower_count = Math.max(0, Number(profileData.follower_count || 0) + (wasFollowing ? -1 : 1));
+                renderProfileHeader(profileData);
+            }
+        } catch (e) {
+            showToast((e && e.message) || 'Action failed', 'error');
+        } finally {
+            btn.disabled = false;
         }
     }
 
+    async function loadSocialPage() {
+        const st = socialListState;
+        if (!st || st.loading || st.done) return;
+        st.loading = true;
+        const listEl = document.getElementById('socialListItems');
+        const moreBtn = document.getElementById('socialListMore');
+        const status = document.getElementById('socialListStatus');
+        if (moreBtn) { moreBtn.disabled = true; moreBtn.textContent = 'Loading...'; }
+        try {
+            const data = st.type === 'followers'
+                ? await api.getFollowers(profileUserId, { limit: SOCIAL_PAGE, offset: st.offset })
+                : await api.getFollowing(profileUserId, { limit: SOCIAL_PAGE, offset: st.offset });
+            const users = data[st.type] || [];
+            const firstPage = st.offset === 0;
+            st.total = Number(data.total || 0);
+            st.offset += users.length;
+            st.done = !data.has_more || users.length === 0;
+
+            if (firstPage && users.length === 0) {
+                listEl.innerHTML = '<li class="tmr-social-empty">' +
+                    (st.type === 'followers' ? 'No followers yet' : 'Not following anyone yet') + '</li>';
+            } else {
+                listEl.insertAdjacentHTML('beforeend', users.map(socialRowHtml).join(''));
+            }
+            if (status) status.textContent = st.total + ' ' + (st.type === 'followers' ? 'followers' : 'following');
+            if (moreBtn) {
+                if (st.done) { moreBtn.remove(); }
+                else { moreBtn.disabled = false; moreBtn.textContent = 'Load more'; }
+            }
+        } catch (error) {
+            const hidden = error && /hidden/i.test(error.message || '');
+            if (st.offset === 0) {
+                listEl.innerHTML = '<li class="tmr-social-empty tmr-social-error">' +
+                    (hidden ? 'This list is private.' : 'Could not load this list. Please try again.') + '</li>';
+            }
+            if (moreBtn) { moreBtn.disabled = false; moreBtn.textContent = 'Retry'; }
+        } finally {
+            st.loading = false;
+        }
+    }
+
+    function openSocialList(type) {
+        if (!profileUserId) return;
+        closeSocialList();
+
+        socialListState = { type: type, offset: 0, total: null, done: false, loading: false, prevFocus: document.activeElement };
+
+        const titleName = escapeHtml((profileData && (profileData.display_name || profileData.username)) || 'this user');
+        const heading = type === 'followers' ? 'Followers' : 'Following';
+
+        const modal = document.createElement('div');
+        modal.id = 'socialListModal';
+        modal.className = 'tmr-social-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', heading + ' of ' + titleName);
+        modal.innerHTML =
+            '<div class="tmr-social-drawer" role="document">' +
+            '<div class="tmr-social-head">' +
+            '<div><h3 class="tmr-social-title">' + heading + '</h3>' +
+            '<div id="socialListStatus" class="tmr-social-count">Loading...</div></div>' +
+            '<button type="button" class="tmr-social-close" aria-label="Close" onclick="closeSocialList()">&times;</button>' +
+            '</div>' +
+            '<ul id="socialListItems" class="tmr-social-items" aria-busy="true"></ul>' +
+            '<div class="tmr-social-foot"><button type="button" id="socialListMore" class="btn btn-secondary" onclick="loadSocialPage()">Load more</button></div>' +
+            '</div>';
+
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeSocialList(); });
+        document.addEventListener('keydown', socialEscHandler);
+        document.body.appendChild(modal);
+        document.body.style.overflow = 'hidden';
+
+        const closeBtn = modal.querySelector('.tmr-social-close');
+        if (closeBtn) closeBtn.focus();
+
+        loadSocialPage().then(function () {
+            const items = document.getElementById('socialListItems');
+            if (items) items.setAttribute('aria-busy', 'false');
+        });
+    }
+
+    function socialEscHandler(e) { if (e.key === 'Escape') closeSocialList(); }
+
     function closeSocialList() {
         const modal = document.getElementById('socialListModal');
-        if (modal) modal.remove();
+        if (!modal) return;
+        modal.remove();
+        document.removeEventListener('keydown', socialEscHandler);
+        document.body.style.overflow = '';
+        const st = socialListState;
+        if (st && st.prevFocus && typeof st.prevFocus.focus === 'function') st.prevFocus.focus();
+        socialListState = null;
     }
 
     // ======================== CSV EXPORT ========================
