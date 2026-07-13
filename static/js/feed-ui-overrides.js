@@ -120,45 +120,92 @@ function normalizePickStatus(item) {
     return String(item.status || item.result || item.pick_status || '').toLowerCase();
 }
 
-// Single source of the grading-rules explanation. Shown once, on demand, via a
-// "How grading works" trigger beside the "Picks graded" heading -- never repeated
-// inside every graded-pick card.
+// Single source of the grading-rules explanation. The text lives in ONE shared
+// popover element appended to <body>; every "How grading works" trigger beside a
+// "Picks graded" heading points at that single element. It is never duplicated
+// inside individual graded-pick cards. Hover or click opens it; it is clamped to
+// the viewport so it never overflows on mobile.
 var GRADING_EXPLAIN_TEXT = 'Pushes, voids, and ineligible picks are processed but do not change the win/loss record. Pick details stay hidden until eligible for public record.';
 
 function gradingInfoHtml() {
-    return '<span class="grading-info">' +
-        '<button type="button" class="grading-info-btn" aria-label="How grading works" aria-expanded="false" onclick="toggleGradingInfo(event, this)"><i class="fas fa-circle-info"></i> How grading works</button>' +
-        '<span class="grading-info-pop" role="tooltip">' + GRADING_EXPLAIN_TEXT + '</span>' +
-    '</span>';
+    // Renders only the trigger button -- no per-card explanation text.
+    return ' <button type="button" class="grading-info-btn" aria-label="How grading works" aria-expanded="false"' +
+        ' onclick="toggleGradingInfo(event,this)" onmouseenter="showGradingInfo(this)" onmouseleave="scheduleHideGradingInfo()">' +
+        '<i class="fas fa-circle-info"></i> How grading works</button>';
+}
+
+function gradingInfoPopEl() {
+    var el = document.getElementById('gradingInfoPopover');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'gradingInfoPopover';
+        el.className = 'grading-info-pop';
+        el.setAttribute('role', 'tooltip');
+        el.textContent = GRADING_EXPLAIN_TEXT;
+        el.addEventListener('mouseenter', function () { if (_gradingHideTimer) { clearTimeout(_gradingHideTimer); _gradingHideTimer = null; } });
+        el.addEventListener('mouseleave', scheduleHideGradingInfo);
+        (document.body || document.documentElement).appendChild(el);
+    }
+    return el;
+}
+
+function positionGradingInfo(btn) {
+    var el = gradingInfoPopEl();
+    var r = btn.getBoundingClientRect();
+    var pw = el.offsetWidth || 260;
+    var ph = el.offsetHeight || 80;
+    var left = Math.max(10, Math.min(r.left, window.innerWidth - pw - 10));
+    var top = r.bottom + 8;
+    if (top + ph > window.innerHeight - 8) top = Math.max(8, r.top - ph - 8); // flip above if no room below
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+}
+
+var _gradingHideTimer = null;
+var _gradingPinned = false;
+
+function showGradingInfo(btn) {
+    if (_gradingHideTimer) { clearTimeout(_gradingHideTimer); _gradingHideTimer = null; }
+    positionGradingInfo(btn);
+    gradingInfoPopEl().classList.add('is-visible');
+}
+
+function scheduleHideGradingInfo() {
+    if (_gradingPinned) return;
+    _gradingHideTimer = setTimeout(function () { gradingInfoPopEl().classList.remove('is-visible'); }, 140);
 }
 
 function toggleGradingInfo(ev, btn) {
     if (ev) { ev.preventDefault(); ev.stopPropagation(); }
-    var wrap = btn.closest('.grading-info');
-    if (!wrap) return;
-    var open = wrap.classList.toggle('is-open');
-    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-    if (open) {
-        document.querySelectorAll('.grading-info.is-open').forEach(function (w) {
-            if (w !== wrap) { w.classList.remove('is-open'); var b = w.querySelector('.grading-info-btn'); if (b) b.setAttribute('aria-expanded', 'false'); }
-        });
+    var el = gradingInfoPopEl();
+    _gradingPinned = !_gradingPinned;
+    btn.setAttribute('aria-expanded', _gradingPinned ? 'true' : 'false');
+    if (_gradingPinned) {
+        positionGradingInfo(btn);
+        el.classList.add('is-visible');
         setTimeout(function () {
             document.addEventListener('click', function closer(e) {
-                if (!wrap.contains(e.target)) { wrap.classList.remove('is-open'); btn.setAttribute('aria-expanded', 'false'); document.removeEventListener('click', closer); }
+                if (e.target !== btn && !el.contains(e.target)) {
+                    _gradingPinned = false;
+                    el.classList.remove('is-visible');
+                    btn.setAttribute('aria-expanded', 'false');
+                    document.removeEventListener('click', closer);
+                }
             });
         }, 0);
+    } else {
+        el.classList.remove('is-visible');
     }
 }
 
 (function injectGradingInfoStyles() {
     if (typeof document === 'undefined' || document.getElementById('grading-info-styles')) return;
     var css =
-        '.grading-info{position:relative;display:inline-block;margin-left:8px;vertical-align:middle;font-weight:400;}' +
-        '.grading-info-btn{display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--border-color,rgba(255,255,255,.15));color:var(--text-secondary,#9aa4b2);font-size:0.72rem;line-height:1;padding:3px 8px;border-radius:999px;cursor:pointer;}' +
-        '.grading-info-btn:hover{color:var(--text-primary,#fff);border-color:var(--accent,#3b82f6);}' +
+        '.grading-info-btn{display:inline-flex;align-items:center;gap:5px;margin-left:8px;vertical-align:middle;font-weight:400;background:transparent;border:1px solid var(--border-color,rgba(255,255,255,.15));color:var(--text-secondary,#9aa4b2);font-size:0.72rem;line-height:1;padding:3px 8px;border-radius:999px;cursor:pointer;}' +
+        '.grading-info-btn:hover,.grading-info-btn:focus{color:var(--text-primary,#fff);border-color:var(--accent,#3b82f6);outline:none;}' +
         '.grading-info-btn i{font-size:0.78rem;}' +
-        '.grading-info-pop{position:absolute;top:calc(100% + 6px);left:0;z-index:60;width:260px;max-width:78vw;background:var(--card-bg,#1a2230);color:var(--text-secondary,#c5cdd8);border:1px solid var(--border-color,rgba(255,255,255,.15));border-radius:10px;padding:10px 12px;font-size:0.78rem;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .12s,transform .12s,visibility .12s;font-weight:400;}' +
-        '.grading-info:hover .grading-info-pop,.grading-info.is-open .grading-info-pop,.grading-info-btn:focus + .grading-info-pop{opacity:1;visibility:visible;transform:translateY(0);}';
+        '.grading-info-pop{position:fixed;left:0;top:0;z-index:9999;width:260px;max-width:calc(100vw - 20px);background:var(--card-bg,#1a2230);color:var(--text-secondary,#c5cdd8);border:1px solid var(--border-color,rgba(255,255,255,.18));border-radius:10px;padding:10px 12px;font-size:0.78rem;line-height:1.45;box-shadow:0 10px 28px rgba(0,0,0,.4);font-weight:400;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .12s,transform .12s,visibility .12s;pointer-events:none;}' +
+        '.grading-info-pop.is-visible{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto;}';
     var style = document.createElement('style');
     style.id = 'grading-info-styles';
     style.textContent = css;
