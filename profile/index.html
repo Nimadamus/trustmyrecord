@@ -3796,8 +3796,6 @@
                         <span class="sidebar-card-label">Profile Stats</span>
                     </div>
                     <div class="sidebar-stat-list" id="sidebarStatList">
-                        <button type="button" class="sidebar-stat-row is-clickable" onclick="openSocialList('followers')" aria-label="View followers"><span class="sidebar-stat-key">Followers</span><span class="sidebar-stat-val" id="sidebarFollowers">&mdash;</span></button>
-                        <button type="button" class="sidebar-stat-row is-clickable" onclick="openSocialList('following')" aria-label="View following"><span class="sidebar-stat-key">Following</span><span class="sidebar-stat-val" id="sidebarFollowing">&mdash;</span></button>
                         <div class="sidebar-stat-row"><span class="sidebar-stat-key">Tracked picks</span><span class="sidebar-stat-val" id="sidebarTrackedPicks">&mdash;</span></div>
                         <div class="sidebar-stat-row"><span class="sidebar-stat-key">Leaderboard</span><span class="sidebar-stat-val" id="sidebarLeaderboard">&mdash;</span></div>
                     </div>
@@ -4159,6 +4157,37 @@
             font-size: 0.92rem;
             font-weight: 700;
         }
+
+        /* Compact always-visible Followers/Following control in the profile header */
+        .profile-followcounts {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 12px 0 2px;
+        }
+        .profile-fc {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 5px;
+            background: var(--tmr-panel, #13131c);
+            border: 1px solid var(--tmr-border, #262636);
+            border-radius: 999px;
+            padding: 5px 13px;
+            cursor: pointer;
+            font: inherit;
+            color: var(--tmr-text, #e8e8f0);
+            transition: border-color .15s, background .15s;
+        }
+        .profile-fc:hover {
+            border-color: var(--tmr-cyan, #5bd6dc);
+            background: var(--tmr-panel-2, #182031);
+        }
+        .profile-fc:focus-visible {
+            outline: 2px solid var(--tmr-cyan, #5bd6dc);
+            outline-offset: 2px;
+        }
+        .profile-fc-n { font-weight: 800; }
+        .profile-fc-l { color: var(--tmr-text-dim, #8890ad); font-size: .85rem; }
 
         /* Clickable Followers/Following cards + sidebar rows */
         button.profile-overview-card {
@@ -9797,8 +9826,8 @@
               '</div>' +
             '</details>';
         const overview = '<div class="profile-overview-grid">' +
-            '<button type="button" class="profile-overview-card" onclick="openSocialList(\'followers\')" aria-label="View ' + escapeHtml(p.display_name || p.username || 'this user') + '’s ' + (Number(p.follower_count) || 0) + ' followers"><span class="profile-overview-label">Followers</span><span class="profile-overview-value">' + (Number(p.follower_count) || 0) + '</span></button>' +
-            '<button type="button" class="profile-overview-card" onclick="openSocialList(\'following\')" aria-label="View who ' + escapeHtml(p.display_name || p.username || 'this user') + ' is following (' + (Number(p.following_count) || 0) + ')"><span class="profile-overview-label">Following</span><span class="profile-overview-value">' + (Number(p.following_count) || 0) + '</span></button>' +
+            '<div class="profile-overview-card"><span class="profile-overview-label">Followers</span><span class="profile-overview-value">' + (Number(p.follower_count) || 0) + '</span></div>' +
+            '<div class="profile-overview-card"><span class="profile-overview-label">Following</span><span class="profile-overview-value">' + (Number(p.following_count) || 0) + '</span></div>' +
             '<div class="profile-overview-card"><span class="profile-overview-label">Location</span><span class="profile-overview-value">' + (p.location || 'N/A') + '</span></div>' +
             '<div class="profile-overview-card"><span class="profile-overview-label">Profile Type</span><span class="profile-overview-value">' + (verifiedText === 'Verified' ? 'Verified capper' : 'Community member') + '</span></div>' +
             '</div>';
@@ -9838,6 +9867,18 @@
                 ? '<div class="profile-headline profile-headline-empty" style="margin-top:6px;color:var(--text-muted,#9aacbf);font-size:0.85rem;"><a href="#" onclick="event.preventDefault();openProfileEditor && openProfileEditor();" style="color:inherit;text-decoration:underline;">Add a headline</a> &mdash; one line that defines you (140 chars).</div>'
                 : '');
 
+        // Compact, always-visible Followers/Following control in the header summary.
+        // Single source of truth (the hidden legacy overview grid + sidebar rows do
+        // not render these as clickable counts). Works for logged-out visitors;
+        // the drawer itself gates any follow action on auth.
+        var fcN = Number(p.follower_count) || 0;
+        var fgN = Number(p.following_count) || 0;
+        var fcWho = escapeHtml(p.display_name || p.username || 'this user');
+        var followCounts = '<div class="profile-followcounts">' +
+            '<button type="button" class="profile-fc" onclick="openSocialList(\'followers\')" aria-label="View ' + fcWho + '’s ' + fcN + ' followers"><span class="profile-fc-n">' + fcN + '</span> <span class="profile-fc-l">Followers</span></button>' +
+            '<button type="button" class="profile-fc" onclick="openSocialList(\'following\')" aria-label="View who ' + fcWho + ' is following (' + fgN + ')"><span class="profile-fc-n">' + fgN + '</span> <span class="profile-fc-l">Following</span></button>' +
+            '</div>';
+
         el.innerHTML = '<div class="profile-info">' +
             '<div class="profile-identity-row">' +
             '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + name + '">' : letter) + '</div>' +
@@ -9849,6 +9890,7 @@
             headlineHtml +
             '</div>' +
             '</div>' +
+            followCounts +
             trustPills +
             affiliationRow +
             (p.bio ? '<div class="profile-bio">' + p.bio + '</div>' : '<div class="profile-bio profile-bio-empty">No bio added yet.</div>') +
@@ -9964,16 +10006,6 @@
             el.classList.toggle('is-neg', !!isNeg);
         };
         const totalPicks = Number(p && (p.total_picks || p.totalPicks) || 0);
-        const fCount = Number((p && p.follower_count) || 0);
-        const gCount = Number((p && p.following_count) || 0);
-        const who = (p && (p.display_name || p.username)) || 'this user';
-        set('sidebarFollowers', String(fCount));
-        set('sidebarFollowing', String(gCount));
-        // Descriptive, count-aware labels for screen readers (e.g. "View BetLegend's 2 followers").
-        const fBtn = document.getElementById('sidebarFollowers');
-        const gBtn = document.getElementById('sidebarFollowing');
-        if (fBtn && fBtn.closest('.sidebar-stat-row')) fBtn.closest('.sidebar-stat-row').setAttribute('aria-label', 'View ' + who + '’s ' + fCount + ' followers');
-        if (gBtn && gBtn.closest('.sidebar-stat-row')) gBtn.closest('.sidebar-stat-row').setAttribute('aria-label', 'View who ' + who + ' is following (' + gCount + ')');
         set('sidebarTrackedPicks', String(totalPicks));
         set('sidebarLeaderboard', p && p.ranking_status ? p.ranking_status : (currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked'));
 
