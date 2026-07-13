@@ -5,8 +5,13 @@
     // every nav target should hit its directory route directly to avoid a
     // pointless redirect hop on every click.
     const sportsbookPicksHref = "/sportsbook/";
+    // Sportsbook is now a dropdown (Make Picks + Handicapping Hub), an EXPANSION
+    // of Sportsbook rather than a new permanent top-level item.
+    const sportsbookMenuRoutes = [
+        ["/sportsbook/", "Make Picks"],
+        ["/handicapping/", "Handicapping Hub"]
+    ];
     const routes = [
-        [sportsbookPicksHref, "Sportsbook"],
         ["/contests/justbet-mlb/", "Contest"],
         ["/tools/", "Tools"],
         ["/handicappers/", "Find Handicappers"]
@@ -36,6 +41,7 @@
     const ARENA_GROUP = new Set(["arena.html"]);
     const COMMUNITY_GROUP = new Set(["sports-talk.html", "feed.html", "online-gaming.html", "mlb-the-show-stat-league.html", "arena.html", "challenges.html", "forum.html", "chat.html", "polls.html", "trivia.html", "hangout.html"]);
     const MORE_GROUP = new Set(["marketplace.html", "rules.html"]);
+    const SPORTSBOOK_GROUP = new Set(["sportsbook.html", "handicapping.html"]);
 
     const routeMeta = {
         "sportsbook.html": ["Sportsbook", "Lock picks before games start. Build a public, permanent record."],
@@ -383,6 +389,25 @@
                 <span></span>
             </button>
             <div class="tmr-global-nav__panel">
+                <div class="tmr-sportsbook-menu${(SPORTSBOOK_GROUP.has(currentFile) || (location.pathname || "").indexOf("/handicapping") === 0) ? " is-current" : ""}">
+                    <button class="tmr-sportsbook-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
+                        Sportsbook
+                    </button>
+                    <div class="tmr-sportsbook-menu__panel" role="menu" aria-label="Sportsbook links">
+                        ${sportsbookMenuRoutes.map(([href, label]) => {
+                            const hrefPath = href.split("#")[0].toLowerCase();
+                            const segs = hrefPath.split("/").filter(Boolean);
+                            const hrefFile = segs.length
+                                ? (segs[segs.length - 1].endsWith(".html")
+                                    ? segs[segs.length - 1]
+                                    : segs[segs.length - 1] + ".html")
+                                : "index.html";
+                            const active = currentFile === hrefFile
+                                || (href === "/handicapping/" && (location.pathname || "").indexOf("/handicapping") === 0);
+                            return `<a href="${href}" role="menuitem"${active ? ' aria-current="page"' : ""}>${label}</a>`;
+                        }).join("")}
+                    </div>
+                </div>
                 <div class="tmr-global-nav__links">
                     ${visibleRoutes.filter(([href]) => href !== "profile.html").map(([href, label]) => {
                         const hrefPath = href.split("#")[0].toLowerCase();
@@ -453,6 +478,14 @@
     const communityTrigger = nav.querySelector(".tmr-community-menu__trigger");
     const supportMenu = nav.querySelector(".tmr-support-menu");
     const supportTrigger = nav.querySelector(".tmr-support-menu__trigger");
+    const sportsbookMenu = nav.querySelector(".tmr-sportsbook-menu");
+    const sportsbookTrigger = nav.querySelector(".tmr-sportsbook-menu__trigger");
+    function closeSportsbookMenu() {
+        if (sportsbookMenu && sportsbookTrigger) {
+            sportsbookMenu.classList.remove("is-open");
+            sportsbookTrigger.setAttribute("aria-expanded", "false");
+        }
+    }
 
     function setNavOpen(isOpen) {
         if (!toggleButton) return;
@@ -786,7 +819,12 @@
     }
 
     document.addEventListener("keydown", (ev) => {
-        if (ev.key === "Escape") closeUserMenu();
+        if (ev.key === "Escape") {
+            closeUserMenu();
+            closeSportsbookMenu();
+            if (communityMenu && communityTrigger) { communityMenu.classList.remove("is-open"); communityTrigger.setAttribute("aria-expanded", "false"); }
+            if (supportMenu && supportTrigger) { supportMenu.classList.remove("is-open"); supportTrigger.setAttribute("aria-expanded", "false"); }
+        }
     });
 
     function routeToSportsbookAuth(section) {
@@ -819,11 +857,25 @@
             setNavOpen(!nav.classList.contains("is-open"));
             return;
         }
+        const sportsbookToggle = event.target.closest(".tmr-sportsbook-menu__trigger");
+        if (sportsbookToggle) {
+            event.preventDefault();
+            const isOpen = sportsbookMenu && sportsbookMenu.classList.toggle("is-open");
+            sportsbookToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            if (isOpen) {
+                if (communityMenu && communityTrigger) { communityMenu.classList.remove("is-open"); communityTrigger.setAttribute("aria-expanded", "false"); }
+                if (supportMenu && supportTrigger) { supportMenu.classList.remove("is-open"); supportTrigger.setAttribute("aria-expanded", "false"); }
+                const first = sportsbookMenu.querySelector(".tmr-sportsbook-menu__panel a");
+                if (first) { try { first.focus(); } catch (e) {} }
+            }
+            return;
+        }
         const supportToggle = event.target.closest(".tmr-support-menu__trigger");
         if (supportToggle) {
             event.preventDefault();
             const isOpen = supportMenu && supportMenu.classList.toggle("is-open");
             supportToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            if (isOpen) closeSportsbookMenu();
             if (isOpen && communityMenu && communityTrigger) {
                 communityMenu.classList.remove("is-open");
                 communityTrigger.setAttribute("aria-expanded", "false");
@@ -835,6 +887,7 @@
             event.preventDefault();
             const isOpen = communityMenu && communityMenu.classList.toggle("is-open");
             communityToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
+            if (isOpen) closeSportsbookMenu();
             if (isOpen && supportMenu && supportTrigger) {
                 supportMenu.classList.remove("is-open");
                 supportTrigger.setAttribute("aria-expanded", "false");
@@ -870,9 +923,10 @@
             openSearchOverlay();
             return;
         }
-        const navLink = event.target.closest(".tmr-global-nav__links a, .tmr-global-nav__actions a, .tmr-community-menu__panel a, .tmr-support-menu__panel a");
+        const navLink = event.target.closest(".tmr-global-nav__links a, .tmr-global-nav__actions a, .tmr-community-menu__panel a, .tmr-support-menu__panel a, .tmr-sportsbook-menu__panel a");
         if (navLink) {
             setNavOpen(false);
+            closeSportsbookMenu();
             if (communityMenu && communityTrigger) {
                 communityMenu.classList.remove("is-open");
                 communityTrigger.setAttribute("aria-expanded", "false");
@@ -894,6 +948,9 @@
         if (supportMenu && supportTrigger && !supportMenu.contains(event.target)) {
             supportMenu.classList.remove("is-open");
             supportTrigger.setAttribute("aria-expanded", "false");
+        }
+        if (sportsbookMenu && sportsbookTrigger && !sportsbookMenu.contains(event.target)) {
+            closeSportsbookMenu();
         }
     });
 

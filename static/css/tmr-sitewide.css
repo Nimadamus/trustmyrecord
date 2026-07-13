@@ -5000,3 +5000,115 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
         margin-left: auto !important;
     }
 }
+
+/* ==========================================================================
+   Sportsbook nav dropdown (Make Picks + Handicapping Hub) — added for the
+   Handicapping Hub. Mirrors the Community/Support menu behaviour so it works
+   by click, keyboard (focus-within), and mobile tap; never hover-only.
+   ========================================================================== */
+.tmr-sportsbook-menu {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 4px;
+}
+.tmr-sportsbook-menu__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 7px 14px;
+    border: 1px solid rgba(45, 212, 191, 0.28);
+    border-radius: 999px;
+    background: rgba(45, 212, 191, 0.10);
+    color: #d7fffb;
+    font: 900 0.74rem/1 var(--tmr-display);
+    letter-spacing: 0.055em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.tmr-sportsbook-menu__trigger::after {
+    content: "";
+    width: 0;
+    height: 0;
+    margin-left: 7px;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid currentColor;
+    opacity: 0.82;
+}
+.tmr-sportsbook-menu__trigger:hover,
+.tmr-sportsbook-menu.is-open .tmr-sportsbook-menu__trigger,
+.tmr-sportsbook-menu.is-current .tmr-sportsbook-menu__trigger {
+    color: #ffffff;
+    border-color: rgba(45, 212, 191, 0.55);
+    background: rgba(45, 212, 191, 0.18);
+}
+.tmr-sportsbook-menu__panel {
+    position: absolute;
+    top: calc(100% + 9px);
+    left: 0;
+    z-index: 1200;
+    min-width: 208px;
+    padding: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 14px;
+    background: rgba(8, 14, 26, 0.98);
+    box-shadow: 0 22px 48px rgba(0, 0, 0, 0.34);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    pointer-events: none;
+    transition: opacity 0.16s ease, transform 0.16s ease, visibility 0.16s ease;
+}
+.tmr-sportsbook-menu.is-open .tmr-sportsbook-menu__panel,
+.tmr-sportsbook-menu:focus-within .tmr-sportsbook-menu__panel,
+.tmr-sportsbook-menu:hover .tmr-sportsbook-menu__panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.tmr-sportsbook-menu__panel a {
+    display: flex;
+    align-items: center;
+    min-height: 34px;
+    padding: 8px 10px;
+    border-radius: 9px;
+    color: #dce8f5;
+    text-decoration: none;
+    font: 800 0.82rem/1.15 var(--tmr-font);
+    letter-spacing: 0;
+    text-transform: none;
+}
+.tmr-sportsbook-menu__panel a:hover,
+.tmr-sportsbook-menu__panel a[aria-current="page"] {
+    color: var(--tmr-teal);
+    background: rgba(255, 255, 255, 0.06);
+}
+@media (max-width: 860px) {
+    .tmr-sportsbook-menu {
+        width: 100%;
+        justify-content: flex-start;
+        margin-right: 0;
+    }
+    .tmr-sportsbook-menu__panel {
+        position: static;
+        display: none;
+        width: 100%;
+        margin-top: 8px;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        pointer-events: auto;
+    }
+    .tmr-sportsbook-menu.is-open .tmr-sportsbook-menu__panel,
+    .tmr-sportsbook-menu:focus-within .tmr-sportsbook-menu__panel {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 6px;
+    }
+}

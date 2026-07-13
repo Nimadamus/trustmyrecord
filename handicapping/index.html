@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="canonical" href="https://trustmyrecord.com/handicapping/">
+    <title>Handicapping Hub | Research Every Matchup | TrustMyRecord</title>
+    <meta name="description" content="The TrustMyRecord Handicapping Hub is where you research matchups before you bet. Compare team and starter stats, injuries, key factors, ranked historical trends, and community consensus for every game, then make your pick.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="Handicapping Hub | TrustMyRecord">
+    <meta property="og:description" content="Research every matchup: stats, injuries, ranked trends, and community consensus. Then make your pick.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trustmyrecord.com/handicapping/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260713hub1">
+    <style>
+        :root {
+            --hh-bg: #06101f;
+            --hh-panel: rgba(15, 27, 46, 0.9);
+            --hh-panel-2: rgba(18, 31, 52, 0.96);
+            --hh-border: rgba(148, 163, 184, 0.18);
+            --hh-text: #f8fafc;
+            --hh-muted: #9aa8bc;
+            --hh-teal: #2dd4bf;
+            --hh-blue: #38bdf8;
+            --hh-gold: #d4a72c;
+            --hh-green: #22c55e;
+        }
+        body {
+            margin: 0;
+            background:
+                radial-gradient(circle at 12% 8%, rgba(45, 212, 191, 0.14), transparent 34%),
+                radial-gradient(circle at 88% 6%, rgba(56, 189, 248, 0.12), transparent 30%),
+                linear-gradient(180deg, var(--hh-bg) 0%, #0b1220 100%);
+            color: var(--hh-text);
+            font-family: "Inter", system-ui, sans-serif;
+        }
+        .hh-shell { width: min(1200px, calc(100% - 32px)); margin: 0 auto; padding: 108px 0 72px; }
+        .hh-hero {
+            background: linear-gradient(135deg, rgba(45,212,191,0.12), rgba(56,189,248,0.06));
+            border: 1px solid var(--hh-border);
+            border-radius: 20px;
+            padding: clamp(24px, 4vw, 44px);
+            margin-bottom: 34px;
+        }
+        .hh-kicker {
+            display: inline-block; margin: 0 0 12px;
+            font: 800 0.72rem/1 "Barlow Condensed", sans-serif;
+            letter-spacing: 0.18em; text-transform: uppercase; color: var(--hh-teal);
+        }
+        .hh-hero h1 {
+            margin: 0 0 14px; font: 800 clamp(1.9rem, 4vw, 3rem)/1.05 "Barlow Condensed", sans-serif;
+            letter-spacing: 0.01em;
+        }
+        .hh-hero p { margin: 0; max-width: 62ch; color: var(--hh-muted); font-size: 1.05rem; line-height: 1.55; }
+        .hh-flow {
+            display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px;
+        }
+        .hh-flow span {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 12px; border-radius: 999px;
+            background: rgba(255,255,255,0.04); border: 1px solid var(--hh-border);
+            font-size: 0.8rem; color: #cfe0f0;
+        }
+        .hh-flow span b { color: var(--hh-teal); }
+        .hh-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 0 0 16px; }
+        .hh-section-head h2 { margin: 0; font: 800 1.4rem/1.1 "Barlow Condensed", sans-serif; letter-spacing: 0.02em; }
+        .hh-section-head p { margin: 0; color: var(--hh-muted); font-size: 0.85rem; }
+        .hh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+        .hh-card {
+            position: relative; display: flex; flex-direction: column;
+            background: var(--hh-panel); border: 1px solid var(--hh-border); border-radius: 16px;
+            padding: 20px; text-decoration: none; color: inherit;
+            transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+        }
+        .hh-card.is-live:hover { transform: translateY(-3px); border-color: rgba(45,212,191,0.5); background: var(--hh-panel-2); }
+        .hh-card.is-soon { opacity: 0.72; }
+        .hh-card__top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .hh-card__badge {
+            font: 800 0.62rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.12em; text-transform: uppercase;
+            padding: 5px 9px; border-radius: 6px;
+        }
+        .badge-live { color: #041014; background: var(--hh-teal); }
+        .badge-soon { color: var(--hh-gold); border: 1px solid rgba(212,167,44,0.5); }
+        .badge-off { color: var(--hh-muted); border: 1px solid var(--hh-border); }
+        .hh-card__icon {
+            width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+            background: rgba(56,189,248,0.12); font-size: 1.4rem;
+        }
+        .hh-card h3 { margin: 0 0 4px; font: 800 1.3rem/1.05 "Barlow Condensed", sans-serif; letter-spacing: 0.02em; }
+        .hh-card .hh-league { margin: 0 0 14px; color: var(--hh-muted); font-size: 0.82rem; }
+        .hh-card__count { margin-top: auto; display: flex; align-items: baseline; gap: 8px; }
+        .hh-card__count strong { font: 800 1.5rem/1 "Barlow", sans-serif; color: var(--hh-teal); }
+        .hh-card__count.is-empty strong { color: var(--hh-muted); }
+        .hh-card__count span { font-size: 0.8rem; color: var(--hh-muted); }
+        .hh-card__cta {
+            margin-top: 14px; display: inline-flex; align-items: center; gap: 7px;
+            font: 800 0.78rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.06em; text-transform: uppercase;
+            color: var(--hh-teal);
+        }
+        .hh-card.is-soon .hh-card__cta { color: var(--hh-muted); }
+        .hh-note {
+            margin-top: 30px; padding: 18px 20px; border-radius: 14px;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--hh-border);
+            color: var(--hh-muted); font-size: 0.9rem; line-height: 1.55;
+        }
+        .hh-note b { color: var(--hh-text); }
+        @media (max-width: 620px) { .hh-shell { padding-top: 92px; } }
+    </style>
+</head>
+<body class="tmr-site-shell">
+    <main class="hh-shell">
+        <section class="hh-hero" aria-labelledby="hh-title">
+            <span class="hh-kicker">Handicapping Hub</span>
+            <h1 id="hh-title">Research every matchup before you make a pick.</h1>
+            <p>This is your research desk. Compare team and starter stats, check injuries and key factors, read the historical trends that actually apply to the game in front of you, see how the TrustMyRecord community is leaning, then head to the sportsbook and lock your pick with a public record behind it.</p>
+            <div class="hh-flow" aria-label="What you get on every matchup">
+                <span><b>1</b> Matchup &amp; lines</span>
+                <span><b>2</b> Team &amp; starter stats</span>
+                <span><b>3</b> Injuries &amp; key factors</span>
+                <span><b>4</b> Ranked trends</span>
+                <span><b>5</b> Community consensus</span>
+                <span><b>6</b> Make your pick</span>
+            </div>
+        </section>
+
+        <div class="hh-section-head">
+            <h2>Choose a sport</h2>
+            <p id="hh-updated">Live game counts for today</p>
+        </div>
+        <div class="hh-grid" id="hh-sportGrid"></div>
+
+        <div class="hh-note">
+            <b>Rolling out sport by sport.</b> The MLB research hub is live now with real lines, stats, probable pitchers, ranked trends, and community consensus. Other leagues show today's real game counts here and get their own full research hub next, so nothing on this page is a placeholder.
+        </div>
+    </main>
+
+    <script src="/static/js/config.js?v=20260713hub1"></script>
+    <script src="/static/js/tmr-sitewide.js?v=20260713hub1"></script>
+    <script>
+    (function () {
+        var API = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || "https://trustmyrecord-api.onrender.com/api";
+        // Only sports TrustMyRecord actually carries in the sportsbook. `built`
+        // flags which have a dedicated research sub-hub live today.
+        var SPORTS = [
+            { key: "baseball_mlb", name: "MLB", league: "Major League Baseball", icon: "⚾", built: true, href: "/handicapping/mlb/" },
+            { key: "basketball_nba_summer", name: "NBA Summer League", league: "Las Vegas Summer League", icon: "🏀", built: false },
+            { key: "basketball_wnba", name: "WNBA", league: "Women's National Basketball", icon: "🏀", built: false },
+            { key: "soccer", name: "Soccer", league: "Global leagues & cups", icon: "⚽", built: false },
+            { key: "basketball_nba", name: "NBA", league: "National Basketball Association", icon: "🏀", built: false, seasonal: true },
+            { key: "icehockey_nhl", name: "NHL", league: "National Hockey League", icon: "🏒", built: false, seasonal: true },
+            { key: "americanfootball_nfl", name: "NFL", league: "National Football League", icon: "🏈", built: false, seasonal: true },
+            { key: "americanfootball_ncaaf", name: "College Football", league: "NCAA FBS", icon: "🏈", built: false, seasonal: true }
+        ];
+
+        var grid = document.getElementById("hh-sportGrid");
+
+        function cardHtml(s) {
+            var live = s.built;
+            var badge = live
+                ? '<span class="hh-card__badge badge-live">Live hub</span>'
+                : (s.seasonal ? '<span class="hh-card__badge badge-off">In season soon</span>' : '<span class="hh-card__badge badge-soon">Hub next</span>');
+            var tag = live ? "a" : "div";
+            var attrs = live ? ' href="' + s.href + '"' : '';
+            var cls = "hh-card " + (live ? "is-live" : "is-soon");
+            var cta = live ? "Open MLB hub →" : "Counts only for now";
+            return "<" + tag + ' class="' + cls + '"' + attrs + ' data-key="' + s.key + '">' +
+                '<div class="hh-card__top"><div class="hh-card__icon">' + s.icon + '</div>' + badge + '</div>' +
+                '<h3>' + s.name + '</h3>' +
+                '<p class="hh-league">' + s.league + '</p>' +
+                '<div class="hh-card__count" data-count><strong>—</strong><span>checking today’s slate…</span></div>' +
+                '<span class="hh-card__cta">' + cta + '</span>' +
+                '</' + tag + '>';
+        }
+
+        grid.innerHTML = SPORTS.map(cardHtml).join("");
+
+        function setCount(card, n) {
+            var box = card.querySelector("[data-count]");
+            if (!box) return;
+            if (n === null) { box.classList.add("is-empty"); box.innerHTML = "<strong>–</strong><span>count unavailable</span>"; return; }
+            if (n === 0) { box.classList.add("is-empty"); box.innerHTML = "<strong>0</strong><span>no games today</span>"; return; }
+            box.classList.remove("is-empty");
+            box.innerHTML = "<strong>" + n + "</strong><span>game" + (n === 1 ? "" : "s") + " on the board</span>";
+        }
+
+        function todayCount(sport) {
+            var boardKey = sport.key === "soccer" ? "soccer" : sport.key;
+            return fetch(API + "/games/board/" + encodeURIComponent(boardKey) + "?limit=80", { headers: { "Accept": "application/json" } })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (d) {
+                    if (!d) return null;
+                    var games = (d.games || []);
+                    // Summer League is a filtered slice of the nba slug; approximate by count of games flagged summer, else all.
+                    return games.length;
+                })
+                .catch(function () { return null; });
+        }
+
+        SPORTS.forEach(function (s) {
+            var card = grid.querySelector('.hh-card[data-key="' + s.key + '"]');
+            if (!card) return;
+            todayCount(s).then(function (n) { setCount(card, n); });
+        });
+    })();
+    </script>
+</body>
+</html>
