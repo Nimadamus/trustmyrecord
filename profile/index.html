@@ -4197,7 +4197,7 @@
 
         /* Social list drawer */
         .tmr-social-modal {
-            position: fixed; inset: 0; z-index: 10000;
+            position: fixed; inset: 0; z-index: 100003; /* above global nav (99999) + mobile menu (100002) */
             background: rgba(0,0,0,0.62);
             display: flex; justify-content: flex-end;
         }
@@ -9964,8 +9964,16 @@
             el.classList.toggle('is-neg', !!isNeg);
         };
         const totalPicks = Number(p && (p.total_picks || p.totalPicks) || 0);
-        set('sidebarFollowers', String(Number((p && p.follower_count) || 0)));
-        set('sidebarFollowing', String(Number((p && p.following_count) || 0)));
+        const fCount = Number((p && p.follower_count) || 0);
+        const gCount = Number((p && p.following_count) || 0);
+        const who = (p && (p.display_name || p.username)) || 'this user';
+        set('sidebarFollowers', String(fCount));
+        set('sidebarFollowing', String(gCount));
+        // Descriptive, count-aware labels for screen readers (e.g. "View BetLegend's 2 followers").
+        const fBtn = document.getElementById('sidebarFollowers');
+        const gBtn = document.getElementById('sidebarFollowing');
+        if (fBtn && fBtn.closest('.sidebar-stat-row')) fBtn.closest('.sidebar-stat-row').setAttribute('aria-label', 'View ' + who + '’s ' + fCount + ' followers');
+        if (gBtn && gBtn.closest('.sidebar-stat-row')) gBtn.closest('.sidebar-stat-row').setAttribute('aria-label', 'View who ' + who + ' is following (' + gCount + ')');
         set('sidebarTrackedPicks', String(totalPicks));
         set('sidebarLeaderboard', p && p.ranking_status ? p.ranking_status : (currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked'));
 
@@ -12686,7 +12694,7 @@
         document.removeEventListener('keydown', socialEscHandler);
         document.body.style.overflow = '';
         const st = socialListState;
-        if (st && st.prevFocus && typeof st.prevFocus.focus === 'function') st.prevFocus.focus();
+        if (st && st.prevFocus && typeof st.prevFocus.focus === 'function') { try { st.prevFocus.focus({ preventScroll: true }); } catch (_) { st.prevFocus.focus(); } }
         socialListState = null;
     }
 
