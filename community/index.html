@@ -40,6 +40,8 @@
 
   /* Tight directory grid */
   .cgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+  /* Two-card trailing row: matches 3-col card width, centered in the container */
+  .cgrid--pair{grid-template-columns:repeat(2,minmax(0,1fr));max-width:calc((100% - 20px) * 2 / 3 + 10px);margin-left:auto;margin-right:auto;}
   .ccard{display:flex;align-items:flex-start;gap:12px;background:var(--c-panel);border:1px solid var(--c-line);border-radius:10px;padding:14px 15px;text-decoration:none;transition:border-color .15s,background .15s;}
   .ccard:hover{border-color:var(--c-line-strong);background:var(--c-panel-2);}
   .ccard .ic{flex:0 0 34px;width:34px;height:34px;display:grid;place-items:center;border-radius:8px;background:rgba(55,214,193,.09);border:1px solid var(--c-line-strong);color:var(--c-teal);}
@@ -54,8 +56,8 @@
   .cbtn--teal{background:linear-gradient(135deg,#37d6c1,#2bb6a4);color:#00201c;}
   .cbtn--ghost{background:transparent;border-color:var(--c-line-strong);color:var(--c-text);}
 
-  @media(max-width:860px){.cgrid{grid-template-columns:repeat(2,minmax(0,1fr));}}
-  @media(max-width:540px){.cgrid{grid-template-columns:1fr;}}
+  @media(max-width:860px){.cgrid{grid-template-columns:repeat(2,minmax(0,1fr));}.cgrid--pair{max-width:none;}}
+  @media(max-width:540px){.cgrid{grid-template-columns:1fr;}.cgrid--pair{grid-template-columns:1fr;}}
 </style>
 </head>
 <body class="tmr-community-page tmr-site-shell">
@@ -146,6 +148,10 @@
           <span class="go">Join the Discussion →</span>
         </span>
       </a>
+    </div>
+
+    <div class="csec">Discover &amp; Rankings</div>
+    <div class="cgrid cgrid--pair">
       <a class="ccard" href="/handicappers/">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.5" y2="16.5"/></svg></span>
         <span class="bd">
@@ -154,10 +160,6 @@
           <span class="go">Browse Members →</span>
         </span>
       </a>
-    </div>
-
-    <div class="csec">Rankings</div>
-    <div class="cgrid">
       <a class="ccard" href="/leaderboards/">
         <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="12" width="4" height="8"/><rect x="10" y="7" width="4" height="13"/><rect x="16" y="4" width="4" height="16"/></svg></span>
         <span class="bd">
