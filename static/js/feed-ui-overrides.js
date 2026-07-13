@@ -120,6 +120,51 @@ function normalizePickStatus(item) {
     return String(item.status || item.result || item.pick_status || '').toLowerCase();
 }
 
+// Single source of the grading-rules explanation. Shown once, on demand, via a
+// "How grading works" trigger beside the "Picks graded" heading -- never repeated
+// inside every graded-pick card.
+var GRADING_EXPLAIN_TEXT = 'Pushes, voids, and ineligible picks are processed but do not change the win/loss record. Pick details stay hidden until eligible for public record.';
+
+function gradingInfoHtml() {
+    return '<span class="grading-info">' +
+        '<button type="button" class="grading-info-btn" aria-label="How grading works" aria-expanded="false" onclick="toggleGradingInfo(event, this)"><i class="fas fa-circle-info"></i> How grading works</button>' +
+        '<span class="grading-info-pop" role="tooltip">' + GRADING_EXPLAIN_TEXT + '</span>' +
+    '</span>';
+}
+
+function toggleGradingInfo(ev, btn) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    var wrap = btn.closest('.grading-info');
+    if (!wrap) return;
+    var open = wrap.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) {
+        document.querySelectorAll('.grading-info.is-open').forEach(function (w) {
+            if (w !== wrap) { w.classList.remove('is-open'); var b = w.querySelector('.grading-info-btn'); if (b) b.setAttribute('aria-expanded', 'false'); }
+        });
+        setTimeout(function () {
+            document.addEventListener('click', function closer(e) {
+                if (!wrap.contains(e.target)) { wrap.classList.remove('is-open'); btn.setAttribute('aria-expanded', 'false'); document.removeEventListener('click', closer); }
+            });
+        }, 0);
+    }
+}
+
+(function injectGradingInfoStyles() {
+    if (typeof document === 'undefined' || document.getElementById('grading-info-styles')) return;
+    var css =
+        '.grading-info{position:relative;display:inline-block;margin-left:8px;vertical-align:middle;font-weight:400;}' +
+        '.grading-info-btn{display:inline-flex;align-items:center;gap:5px;background:transparent;border:1px solid var(--border-color,rgba(255,255,255,.15));color:var(--text-secondary,#9aa4b2);font-size:0.72rem;line-height:1;padding:3px 8px;border-radius:999px;cursor:pointer;}' +
+        '.grading-info-btn:hover{color:var(--text-primary,#fff);border-color:var(--accent,#3b82f6);}' +
+        '.grading-info-btn i{font-size:0.78rem;}' +
+        '.grading-info-pop{position:absolute;top:calc(100% + 6px);left:0;z-index:60;width:260px;max-width:78vw;background:var(--card-bg,#1a2230);color:var(--text-secondary,#c5cdd8);border:1px solid var(--border-color,rgba(255,255,255,.15));border-radius:10px;padding:10px 12px;font-size:0.78rem;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.35);opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .12s,transform .12s,visibility .12s;font-weight:400;}' +
+        '.grading-info:hover .grading-info-pop,.grading-info.is-open .grading-info-pop,.grading-info-btn:focus + .grading-info-pop{opacity:1;visibility:visible;transform:translateY(0);}';
+    var style = document.createElement('style');
+    style.id = 'grading-info-styles';
+    style.textContent = css;
+    (document.head || document.documentElement).appendChild(style);
+})();
+
 function renderPickCard(item) {
     const id = item.pick_id || item.id || item.item_id;
     const status = normalizePickStatus(item);
@@ -127,7 +172,7 @@ function renderPickCard(item) {
     const count = Number(item.pick_count || item.count || 1);
     const action = isPending
         ? '<i class="fas fa-lock"></i> Submitted locked picks'
-        : '<i class="fas fa-clipboard-check"></i> Picks graded';
+        : '<i class="fas fa-clipboard-check"></i> Picks graded' + gradingInfoHtml();
     let body;
     if (isPending) {
         body = '<div class="pick-embed is-private">' +
@@ -145,7 +190,6 @@ function renderPickCard(item) {
                 ? '<div class="pe-team">' + esc(breakdown) + '</div>'
                 : '<div class="pe-team">Verified record updated.</div>') +
             '<div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;">Current overall record: ' + esc(getRecordText(item)) + '</div>' +
-            '<div style="margin-top:8px;color:var(--text-secondary);font-size:0.82rem;">Pushes, voids, and ineligible picks are processed but do not change the win/loss record. Pick details stay hidden until eligible for public record.</div>' +
         '</div>';
     }
 
