@@ -2734,6 +2734,23 @@ function authorRoleBadge(author) {
     return '';
 }
 
+// Shared author-card custom title. The founder/admin account shows the short
+// "Founder" tag (its profile headline is a long bio, unfit for a post card).
+// Every other member's saved custom undertitle (users.headline) REPLACES the
+// generic "Verified Handicapper" role label, so short custom titles like
+// "TMR OG" render on every forum author card sitewide (threads, posts, replies).
+// Length-capped so an over-long headline can't break the card. Official bots
+// keep their own tagline and are excluded here. Returns '' when the member has
+// no saved custom title, so the caller falls back to the generic role label.
+function forumCustomTitle(author, headline) {
+    if (!author) return '';
+    if (author.author_is_official_bot || author.is_official_bot) return '';
+    if (authorIsAdmin(author)) return 'Founder';
+    var h = String(headline != null ? headline : (author.headline || '')).trim();
+    if (!h) return '';
+    return h.length > 48 ? (h.slice(0, 47).trim() + '…') : h;
+}
+
 function renderAuthorPanel(post) {
     var author = authorSource(post);
     var who = author.display_name || author.username || 'user';
@@ -2742,7 +2759,7 @@ function renderAuthorPanel(post) {
     var initials = String(who || '?').slice(0, 1).toUpperCase();
     var role = (author.author_is_official_bot || author.is_official_bot)
         ? "TMR's Resident Bot"
-        : (author.user_title || (userIsVerified(author) ? 'Verified Handicapper' : 'Member'));
+        : (forumCustomTitle(author, headline) || author.user_title || (userIsVerified(author) ? 'Verified Handicapper' : 'Member'));
     var favTeam = firstFavoriteTeam(author);
     var hasFavTeam = favTeam && favTeam !== 'Not set';
     var joined = author.user_joined || author.created_at || author.joined_at;
@@ -2786,22 +2803,9 @@ function renderAuthorPanel(post) {
           + '</div>'
         : '';
     var botBadge = isOfficialBot ? '<div><span class="fbot-badge">Bot</span></div>' : '';
-    // Author-card undertitle. Precedence: the founder/admin account shows the short
-    // "Founder" tag (its profile headline is a long bio, unfit for a post card). Every
-    // other member shows their saved custom undertitle (users.headline) so short custom
-    // titles like "TMR OG" render sitewide. A length cap keeps the card clean if a
-    // member sets an over-long headline. Bots keep their fbot-tagline below.
-    var undertitleText = '';
-    if (!isOfficialBot) {
-        if (authorIsAdmin(author)) {
-            undertitleText = 'Founder';
-        } else if (headline) {
-            undertitleText = headline.length > 48 ? (headline.slice(0, 47).trim() + '…') : headline;
-        }
-    }
-    var undertitle = undertitleText
-        ? '<div class="fthread-undertitle">' + escHtml(undertitleText) + '</div>'
-        : '';
+    // The author-card custom title (users.headline / "Founder" for admin) is now
+    // rendered as the single role line below via forumCustomTitle(), replacing the
+    // generic "Verified Handicapper" label rather than sitting on a second line.
     var botTagline = isOfficialBot
         ? '<div class="fbot-tagline">' + escHtml((headline || '') || 'Your friendly TMR house bot') + '</div>'
         : '';
@@ -2810,7 +2814,6 @@ function renderAuthorPanel(post) {
         + nameHtml
         + botBadge
         + authorRoleBadge(author)
-        + undertitle
         + '<div class="fthread-role">' + escHtml(role) + '</div>'
         + botTagline
         + (hasFavTeam ? '<div class="fthread-fandom"><span class="fthread-fandom-dot"></span>' + escHtml(favTeam) + '</div>' : '')
