@@ -177,6 +177,9 @@ body.tmr-forum-live-redesign .fpost-edit-box textarea{background:#0a1422 !import
 .modal-body{padding:12px}
 .modal-body label{display:block;margin:8px 0 4px;color:#333;font:bold 12px Arial,Helvetica,sans-serif}
 .fempty{padding:24px 12px;text-align:center;color:#666;font-style:italic;background:#fff;border:1px solid var(--line)}
+.ua-block{margin-bottom:14px}
+.ua-excerpt{margin-top:3px;color:#333;font:13px/1.4 Arial,Helvetica,sans-serif}
+body.classic-forum .ua-excerpt{color:#333 !important;font:13px/1.4 "Noto Sans","Segoe UI",Arial,sans-serif !important}
 .fempty-cta{display:flex;flex-direction:column;align-items:center;gap:12px;font-style:normal}
 .fempty-cta-msg{color:#555;font-size:13px}
 .fempty-cta-btn{font-size:13px;padding:9px 18px}
@@ -2333,6 +2336,24 @@ body.classic-forum .fthread-pages .fpage-ellip{color:#9aa2ac;font:400 10.5px/16p
             </div>
         </div>
 
+        <!-- Per-member forum contributions. Reached via /forum/?user=<username>
+             from the profile Community Activity section. #threads / #replies hash
+             deep-links to the matching section. -->
+        <div id="viewUserActivity" style="display:none;">
+            <table class="fgroup-table" cellpadding="2" cellspacing="1">
+                <tr class="fgroup-band">
+                    <td>Forum contributions: <span id="uaUsername">member</span></td>
+                    <td class="fgroup-meta" id="uaMeta">&nbsp;</td>
+                </tr>
+            </table>
+            <div class="factionrow">
+                <button type="button" class="fbtn" onclick="showCategories()">Forum Home</button>
+                <a class="fbtn" id="uaProfileLink" href="#">View Full Profile</a>
+            </div>
+            <div id="uaThreads" class="ua-block"></div>
+            <div id="uaReplies" class="ua-block"></div>
+        </div>
+
         <div id="viewThread" style="display:none;">
             <table class="fgroup-table" cellpadding="2" cellspacing="1">
                 <tr class="fgroup-band">
@@ -3555,6 +3576,73 @@ function backToThreads() {
     }
 }
 
+// Per-member forum contributions view (threads started + replies). Powers the
+// /forum/?user=<username> links from the profile Community Activity section.
+async function showUserActivity(username) {
+    var name = String(username || '').trim();
+    if (!name) { showCategories(); return; }
+    currentCategorySlug = null; currentCategoryName = null; currentCategoryId = null; currentThreadId = null;
+    document.getElementById('viewCategories').style.display = 'none';
+    document.getElementById('viewThreads').style.display = 'none';
+    document.getElementById('viewThread').style.display = 'none';
+    var view = document.getElementById('viewUserActivity');
+    view.style.display = '';
+    document.body.classList.remove('is-forum-home');
+    setForumPageHeader('Forum contributions');
+    document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(name) + '</span>';
+    var profLink = document.getElementById('uaProfileLink');
+    if (profLink) profLink.setAttribute('href', '/profile/?user=' + encodeURIComponent(name));
+    var threadsHost = document.getElementById('uaThreads');
+    var repliesHost = document.getElementById('uaReplies');
+    threadsHost.innerHTML = '<div class="fempty">Loading threads&hellip;</div>';
+    repliesHost.innerHTML = '';
+
+    var threads = [], posts = [];
+    try {
+        var td = await api.request('/forum/users/' + encodeURIComponent(name) + '/threads?limit=100');
+        threads = (td && Array.isArray(td.threads)) ? td.threads : [];
+    } catch (e) { threads = []; }
+    try {
+        var pd = await api.request('/forum/users/' + encodeURIComponent(name) + '/posts?limit=100');
+        posts = (pd && Array.isArray(pd.posts)) ? pd.posts : [];
+    } catch (e) { posts = []; }
+
+    document.getElementById('uaUsername').textContent = name;
+    document.getElementById('uaMeta').textContent = threads.length + ' threads · ' + posts.length + ' replies';
+
+    var stamp = function (v) { try { return formatForumStamp(v); } catch (_) { return ''; } };
+    var section = function (title, anchor, rowsHtml, emptyMsg) {
+        return '<table class="fgroup-table" cellpadding="2" cellspacing="1" id="' + anchor + '">'
+            + '<tr class="fgroup-band"><td colspan="2">' + escHtml(title) + '</td></tr></table>'
+            + '<table class="fgroup-table thread-table" cellpadding="2" cellspacing="1"><tbody>'
+            + (rowsHtml || ('<tr><td class="fcell"><div class="fempty">' + escHtml(emptyMsg) + '</div></td></tr>'))
+            + '</tbody></table>';
+    };
+    var threadRows = threads.map(function (t, i) {
+        var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
+        return '<tr class="' + rowClass + '" role="link" tabindex="0" onclick="showThreadDetail(' + t.id + ')" onkeydown="if(event.key===\'Enter\'){showThreadDetail(' + t.id + ');}">'
+            + '<td class="fcell"><a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title || 'Thread') + '</a>'
+            + '<div class="flpost-meta">' + escHtml(t.category_name || 'Forum') + ' · ' + stamp(t.created_at) + ' · ' + (Number(t.reply_count) || 0) + ' replies</div></td></tr>';
+    }).join('');
+    var replyRows = posts.map(function (p, i) {
+        var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
+        var ex = String(p.content || '').replace(/\s+/g, ' ').trim().slice(0, 160);
+        return '<tr class="' + rowClass + '" role="link" tabindex="0" onclick="showThreadDetail(' + p.thread_id + ')" onkeydown="if(event.key===\'Enter\'){showThreadDetail(' + p.thread_id + ');}">'
+            + '<td class="fcell"><a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + p.thread_id + ');">' + escHtml(p.thread_title || 'Thread') + '</a>'
+            + '<div class="ua-excerpt">' + escHtml(ex) + '</div>'
+            + '<div class="flpost-meta">' + escHtml(p.category_name || 'Forum') + ' · ' + stamp(p.created_at) + '</div></td></tr>';
+    }).join('');
+
+    threadsHost.innerHTML = section('Threads started (' + threads.length + ')', 'threads', threadRows, 'No threads started yet.');
+    repliesHost.innerHTML = section('Replies (' + posts.length + ')', 'replies', replyRows, 'No replies yet.');
+
+    window.history.replaceState({}, '', '/forum/?user=' + encodeURIComponent(name) + (location.hash || ''));
+    var hash = (location.hash || '').replace('#', '');
+    if (hash === 'threads' || hash === 'replies') {
+        setTimeout(function () { var el = document.getElementById(hash); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+    }
+}
+
 // ================================================================
 // LOAD & RENDER CATEGORIES
 // ================================================================
@@ -4216,6 +4304,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Check URL hash for deep link
     var params = new URLSearchParams(window.location.search);
+    var queryUser = (params.get('user') || '').trim();
+    if (queryUser) {
+        await showUserActivity(queryUser);
+        return;
+    }
     var queryThread = parseInt(params.get('thread'));
     if (queryThread) {
         await showThreadDetail(queryThread);
