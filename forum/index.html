@@ -1766,6 +1766,9 @@ body.classic-forum .fstats{display:none !important}
 body.classic-forum #viewThreads,body.classic-forum #viewThread{flex-direction:column}
 body.classic-forum #viewThreads:not([style*="none"]),body.classic-forum #viewThread:not([style*="none"]){display:flex}
 body.classic-forum .forum-sample-area{display:flex !important;flex-direction:column}
+/* Never flash the empty "Threads in Forum: ..." sample table until the live
+   forum data has definitively loaded. Prevents the fake empty-layout flash. */
+body:not(.forum-ready) .forum-sample-area{display:none !important}
 body.classic-forum #viewThreads .factionrow,body.classic-forum #viewThread .factionrow,body.classic-forum .forum-sample-area .factionrow{order:-1}
 /* --- tables: tight stacking, 32px #323232 bars, 11.5px labels --- */
 body.classic-forum .fgroup-table{width:100% !important;border:0 !important;border-collapse:collapse !important;margin:0 !important;background:transparent !important;box-shadow:none !important}
@@ -2453,6 +2456,14 @@ function tmrToggleSideGroup(el) {
 function renderForumSidebar() {
     var list = document.getElementById('forumSidebarList');
     if (!list) return;
+    if (forumLoadState === 'loading') {
+        list.innerHTML = '<a class="fside-loading">Loading forums&hellip;</a>';
+        return;
+    }
+    if (forumLoadState === 'error') {
+        list.innerHTML = '<a class="fside-loading" style="cursor:pointer;text-decoration:underline;" onclick="retryLoadCategories()">Couldn\'t load - retry</a>';
+        return;
+    }
     var cats = categories || [];
     if (!cats.length) {
         list.innerHTML = '<a class="fside-loading">No forums yet</a>';
@@ -2479,7 +2490,26 @@ function renderForumSidebar() {
 function renderCategories() {
     var container = document.getElementById('categoriesContainer');
     if (!container) return;
+    // Gate the decorative sample table on a real successful load.
+    document.body.classList.toggle('forum-ready', forumLoadState === 'loaded' && categories.length > 0);
+    // While the forum data is still loading OR the load failed, never paint the
+    // definitive "No forum categories yet" empty state - show a skeleton or a
+    // real error with retry instead.
+    if (forumLoadState === 'loading') {
+        container.innerHTML = '<div class="tmr-loading-state"><div class="tmr-spinner"></div><p>Loading forums&hellip;</p></div>';
+        return;
+    }
+    if (forumLoadState === 'error') {
+        container.innerHTML =
+            '<div class="tmr-loading-state">' +
+            '<p>Could not load the forums right now.</p>' +
+            '<p class="tmr-loading-slow" style="display:block;">The server may be warming up. Retrying automatically&hellip;</p>' +
+            '<div class="tmr-loading-retry" style="display:block;"><button type="button" onclick="retryLoadCategories()">Try Again</button></div>' +
+            '</div>';
+        return;
+    }
     if (!categories.length) {
+        // Reached only after a successful API response that genuinely returned [].
         container.innerHTML = '<div class="fempty">No forum categories yet.</div>';
         return;
     }
@@ -3230,6 +3260,14 @@ async function enrichForumAuthors(thread, posts) {
     }));
 }
 var categories = [];
+// Forum data load state. renderCategories()/renderForumSidebar() key off this
+// so a still-loading OR failed load can NEVER be painted as a definitive
+// "No forum categories yet" empty board. Only a successful API response that
+// genuinely returns [] is allowed to show the empty state (req: single source
+// of truth; no false empty; no stuck "Loading forums...").
+var forumLoadState = 'loading'; // 'loading' | 'loaded' | 'error'
+var _forumLoadGen = 0;          // monotonic token: ignore stale responses
+var _forumRetryTimer = null;
 var fallbackCategories = [
     {
         id: 'cat_general',
@@ -3656,32 +3694,66 @@ async function showUserActivity(username) {
 // LOAD & RENDER CATEGORIES
 // ================================================================
 async function loadCategories() {
-    var container = document.getElementById('categoriesContainer');
-    showLoading(container);
+    // Monotonic generation token: if loadCategories() is invoked again (nav,
+    // retry) while an earlier request is still in flight, only the newest one
+    // is allowed to commit results. Prevents a slow stale response (esp. an
+    // empty/failed one) from clobbering a later successful render.
+    var myGen = ++_forumLoadGen;
+    if (_forumRetryTimer) { clearTimeout(_forumRetryTimer); _forumRetryTimer = null; }
 
-    try {
-        var data = await api.request('/forum/categories');
-        categories = data.categories || [];
-        if (!categories.length) {
-            usingFallbackCategories = true;
-            categories = fallbackCategories.slice();
-        } else {
+    forumLoadState = 'loading';
+    renderCategories();
+    renderForumSidebar();
+
+    var maxAttempts = 4;      // bounded automatic retry for transient failures
+    var lastErr = null;
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+        if (myGen !== _forumLoadGen) return; // superseded by a newer load
+        try {
+            var data = await api.request('/forum/categories');
+            if (myGen !== _forumLoadGen) return; // stale response, drop it
+            var list = (data && Array.isArray(data.categories)) ? data.categories : null;
+            if (!list) throw new Error('Malformed categories response');
+
+            // Success. Only NOW may an empty board be shown, and only because
+            // the API definitively returned an empty array.
+            categories = list;
             usingFallbackCategories = false;
+            forumLoadState = 'loaded';
+            renderCategories();
+            renderForumSidebar();
+            updateStats();
+            updateForumJump();
+            return;
+        } catch (err) {
+            lastErr = err;
+            if (myGen !== _forumLoadGen) return;
+            console.warn('[Forum] categories load attempt ' + attempt + '/' + maxAttempts + ' failed:', err && err.message);
+            if (attempt < maxAttempts) {
+                // exponential backoff: 1s, 2s, 4s
+                await new Promise(function (r) { setTimeout(r, 1000 * Math.pow(2, attempt - 1)); });
+            }
         }
-        renderCategories();
-        renderForumSidebar();
-        updateStats();
-        updateForumJump();
-    } catch (err) {
-        console.error('Forum categories fallback:', err);
-        usingFallbackCategories = true;
-        categories = fallbackCategories.slice();
-        renderCategories();
-        renderForumSidebar();
-        updateStats();
-        updateForumJump();
-        container.insertAdjacentHTML('afterbegin', '<div class="forum-trust-note" style="margin-bottom:10px;">Live forum data is temporarily unavailable. Showing empty forum categories without fake threads or seeded users.</div>');
     }
+
+    if (myGen !== _forumLoadGen) return;
+    console.error('[Forum] categories load failed after ' + maxAttempts + ' attempts:', lastErr);
+    // Do NOT fall back to a fake/empty board. Show a clear error and keep
+    // auto-retrying in the background so the page self-heals with no manual
+    // refresh once the backend (e.g. Render cold start) comes up.
+    forumLoadState = 'error';
+    renderCategories();
+    renderForumSidebar();
+    _forumRetryTimer = setTimeout(function () {
+        if (myGen === _forumLoadGen) loadCategories();
+    }, 6000);
+}
+
+// Manual "Try again" from the error card. Resets and reloads immediately.
+function retryLoadCategories() {
+    if (_forumRetryTimer) { clearTimeout(_forumRetryTimer); _forumRetryTimer = null; }
+    loadCategories();
 }
 
 /* removed: replaced in renders.js */
