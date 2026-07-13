@@ -2786,12 +2786,21 @@ function renderAuthorPanel(post) {
           + '</div>'
         : '';
     var botBadge = isOfficialBot ? '<div><span class="fbot-badge">Bot</span></div>' : '';
-    // Forum posts never render the profile headline (users.headline) for regular
-    // members: it is a profile-page field (up to 140 chars) and does not belong in
-    // the author panel. The only undertitle is the short "Founder" tag on the
-    // founder/admin account. Bots keep their fbot-tagline below.
-    var undertitle = (!isOfficialBot && authorIsAdmin(author))
-        ? '<div class="fthread-undertitle">Founder</div>'
+    // Author-card undertitle. Precedence: the founder/admin account shows the short
+    // "Founder" tag (its profile headline is a long bio, unfit for a post card). Every
+    // other member shows their saved custom undertitle (users.headline) so short custom
+    // titles like "TMR OG" render sitewide. A length cap keeps the card clean if a
+    // member sets an over-long headline. Bots keep their fbot-tagline below.
+    var undertitleText = '';
+    if (!isOfficialBot) {
+        if (authorIsAdmin(author)) {
+            undertitleText = 'Founder';
+        } else if (headline) {
+            undertitleText = headline.length > 48 ? (headline.slice(0, 47).trim() + '…') : headline;
+        }
+    }
+    var undertitle = undertitleText
+        ? '<div class="fthread-undertitle">' + escHtml(undertitleText) + '</div>'
         : '';
     var botTagline = isOfficialBot
         ? '<div class="fbot-tagline">' + escHtml((headline || '') || 'Your friendly TMR house bot') + '</div>'
