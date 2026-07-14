@@ -5224,7 +5224,30 @@ function escapeHtml(value) {
                 });
             }
         }
-        renderTrendSpotter(entries);
+
+        // PIN_HOME_HIGHLIGHTS_20260714: always feature these accounts at the
+        // top of the hero highlights, using their authoritative /users totals
+        // (real net units / ROI / record only, no fabricated streaks).
+        const PIN = ['moneymakers', 'betlegend'];
+        const byName = {};
+        (users || []).forEach(function (u) { if (u && u.username) byName[String(u.username).toLowerCase()] = u; });
+        const pinnedEntries = [];
+        PIN.forEach(function (name) {
+            const existingIdx = entries.findIndex(function (e) { return String(e.usernameRaw).toLowerCase() === name; });
+            if (existingIdx >= 0) { pinnedEntries.push(entries.splice(existingIdx, 1)[0]); return; }
+            const u = byName[name];
+            if (!u) return;
+            const hl = fallbackHighlightFromUser(u);
+            if (!hl) return;
+            pinnedEntries.push({
+                usernameRaw: u.username,
+                displayName: u.display_name || u.displayName || u.username,
+                avatarUrl: u.avatar_url || u.avatarUrl || '',
+                highlight: hl
+            });
+        });
+        const finalEntries = pinnedEntries.concat(entries).slice(0, Math.max(TARGET_ROWS, pinnedEntries.length));
+        renderTrendSpotter(finalEntries);
     }
 
     async function hydrateHomepagePreview() {
