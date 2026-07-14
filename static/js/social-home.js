@@ -606,6 +606,29 @@ function renderPollCard(p) {
     const total = p.total_votes || 0;
     const options = p.options || [];
 
+    if (window.TMRPoll) {
+        return `<div class="feed-item" data-id="${p.item_id}" data-type="poll">
+        <div class="fi-header">
+            <div class="fi-avatar" style="background:var(--accent-purple);">${letter}</div>
+            <div class="fi-meta">
+                <div class="fi-top-row">
+            <span class="fi-name"><a href="/profile/?user=${encodeURIComponent(p.username || '')}">${p.display_name || p.username}</a></span>
+                    <span class="fi-handle">@${p.username}</span>
+                    <span class="fi-dot">&bull;</span>
+                    <span class="fi-time">${timeAgo(p.created_at)}</span>
+                </div>
+                <div style="display:flex;gap:4px;margin-top:3px;">
+                    <span class="fi-badge fi-badge-poll"><i class="fas fa-poll"></i> Poll</span>
+                    ${p.sport ? `<span class="fi-sport">${p.sport}</span>` : ''}
+                </div>
+            </div>
+        </div>
+        <div class="fi-content" style="font-weight:600;font-size:1.05rem;">${esc(p.content)}</div>
+        ${p.description ? `<div style="color:var(--text-secondary);font-size:0.9rem;margin-top:4px;">${esc(p.description)}</div>` : ''}
+        <div class="poll-display">${window.TMRPoll.optionsHTML(p)}</div>
+    </div>`;
+    }
+
     let optionsHtml = options.map(opt => {
         const votes = parseInt(opt.vote_count || opt.votes || 0);
         const pct = total > 0 ? Math.round(votes / total * 100) : 0;

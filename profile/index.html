@@ -51,8 +51,8 @@
     }
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260712chat2">
-<script defer src="/static/js/tmr-sitewide.js?v=20260712talk1"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260713hub1">
+<script defer src="/static/js/tmr-sitewide.js?v=20260713hub1"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1626,7 +1626,7 @@
         <span>Tracked picks and analytics</span>
         <span>Cleaner account presentation</span>
     </div>
-    <!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js -->
+    <!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js?v=20260713hub1 -->
 
     <!-- ==================== PROFILE HEADER ==================== -->
     <section class="profile-header-section">
@@ -1668,13 +1668,13 @@
             </div>
 
 
-            <!-- Avatar uploader for own profile. Body-card UI removed May 22, 2026 — account controls live in the top-right user menu dropdown (tmr-sitewide.js). File input retained so the header avatar click + dropdown "Change Avatar" can trigger the picker. -->
+            <!-- Avatar uploader for own profile. Body-card UI removed May 22, 2026 — account controls live in the top-right user menu dropdown (tmr-sitewide.js?v=20260713hub1). File input retained so the header avatar click + dropdown "Change Avatar" can trigger the picker. -->
             <div id="profileAvatarUploader" class="profile-avatar-uploader" hidden style="display:none !important;">
                 <input id="profileAvatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
                 <span class="profile-avatar-uploader__hint" id="profileAvatarHint" hidden></span>
             </div>
 
-            <!-- Change Password card. Body-card UI removed May 22, 2026 — password change now lives in the top-right user menu dropdown (tmr-sitewide.js). Hidden markup retained only so legacy direct-link callers do not 404. -->
+            <!-- Change Password card. Body-card UI removed May 22, 2026 — password change now lives in the top-right user menu dropdown (tmr-sitewide.js?v=20260713hub1). Hidden markup retained only so legacy direct-link callers do not 404. -->
             <div id="profileChangePassword" class="profile-change-password" hidden style="display:none !important;">
                 <strong style="display:block;margin-bottom:10px;font-size:0.95rem;letter-spacing:0.02em;"><i class="fas fa-key" style="margin-right:6px;color:#2dd4bf;"></i> Change Password</strong>
                 <form id="changePasswordForm" autocomplete="off" style="display:flex;flex-direction:column;gap:10px;">
@@ -1939,7 +1939,7 @@
             var avatarHint  = document.getElementById('profileAvatarHint');
 
             // May 22, 2026: account-edit body cards retired in favor of the top-right user menu dropdown
-            // (see static/js/tmr-sitewide.js). DO NOT unhide #profileAvatarUploader or
+            // (see static/js/tmr-sitewide.js?v=20260713hub1). DO NOT unhide #profileAvatarUploader or
             // #profileChangePassword on the profile body — they ship hidden + display:none.
             var changePwEl = document.getElementById('profileChangePassword');
 
@@ -2119,7 +2119,6 @@
             <div class="profile-tabs" role="tablist" id="profileTabsBar">
                 <button type="button" class="profile-tab active" data-tab="picks" id="profilePerformanceTab" role="tab" aria-selected="true">Overview</button>
                 <button type="button" class="profile-tab" data-tab="record" role="tab">Picks</button>
-                <button type="button" class="profile-tab" data-tab="posts" role="tab">Posts</button>
                 <button type="button" class="profile-tab" data-tab="challenges" role="tab">Challenges</button>
                 <button type="button" class="profile-tab" data-tab="gaming" role="tab">Online Gaming</button>
                 <button type="button" class="profile-tab" data-tab="charts" role="tab">Charts</button>
@@ -2179,6 +2178,32 @@
                           <div class="tmrx-period-cell" data-tmrx-period="365d"><div class="k">Last 365d</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
                           <div class="tmrx-period-cell" data-tmrx-period="all"><div class="k">All time</div><div class="v is-placeholder">&mdash;</div><div class="s"></div></div>
                         </div>
+                      </div>
+
+                      <!-- ===== COMMUNITY ACTIVITY (replaces the old empty "Posts" tab) =====
+                           Compact forum + feed participation summary. Every count is
+                           keyed to the permanent account id server-side and excludes
+                           deleted/hidden content, auto-shared picks, and bot likes.
+                           Filled by loadCommunityActivity(); shows clean zeros for a
+                           member with no activity (never a big empty-state card). -->
+                      <div class="tmrx-section tmrx-community" id="communityActivity">
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Community Activity</div>
+                            <div class="tmrx-section-sub">Forum and feed participation on TrustMyRecord. Auto-shared picks, deleted, and hidden content are not counted.</div>
+                          </div>
+                          <div class="tmrx-meta" id="caLastActiveMeta"></div>
+                        </div>
+                        <div class="tmrx-ribbon ca-ribbon">
+                          <a class="tmrx-cell ca-cell ca-forum ca-disabled" id="caForumPostsCell"><div class="tmrx-label">Forum Posts</div><div class="tmrx-value" id="caForumPosts">0</div><div class="tmrx-sub">replies in threads</div></a>
+                          <a class="tmrx-cell ca-cell ca-forum ca-disabled" id="caThreadsCell"><div class="tmrx-label">Threads Created</div><div class="tmrx-value" id="caThreads">0</div><div class="tmrx-sub">forum topics started</div></a>
+                          <div class="tmrx-cell ca-feed"><div class="tmrx-label">Feed Posts</div><div class="tmrx-value" id="caFeedPosts">0</div><div class="tmrx-sub">takes &amp; reactions</div></div>
+                          <div class="tmrx-cell ca-feed"><div class="tmrx-label">Comments</div><div class="tmrx-value" id="caComments">0</div><div class="tmrx-sub">replies on the feed</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Likes Received</div><div class="tmrx-value" id="caLikes">0</div><div class="tmrx-sub">on posts &amp; threads</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Member Since</div><div class="tmrx-value ca-date" id="caMemberSince">&mdash;</div><div class="tmrx-sub">account created</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Last Active</div><div class="tmrx-value ca-date" id="caLastActive">&mdash;</div><div class="tmrx-sub">most recent activity</div></div>
+                        </div>
+                        <div class="ca-highlights" id="caHighlights" hidden></div>
                       </div>
 
                       <div class="tmrx-section">
@@ -2558,23 +2583,6 @@
                         <p>Type a username to find a member, then start the thread.</p>
                         <input type="text" id="profileInboxModalUser" placeholder="Search username..." autocomplete="off" aria-label="Search user">
                         <div id="profileInboxModalResults" class="profile-inbox-modal-results"></div>
-                    </div>
-                </div>
-
-                <!-- TAB: POSTS -->
-                <div class="profile-tab-panel" data-panel="posts">
-                    <div class="profile-feed-card">
-                        <div class="profile-feed-head">
-                            <div>
-                                <div class="section-title">Social Posts</div>
-                                <div class="section-subtitle">Reactions, takes, debates, and replies from this profile.</div>
-                            </div>
-                        </div>
-                        <div class="profile-feed-empty">
-                            <div class="profile-empty-icon"><i class="fas fa-comment-dots"></i></div>
-                            <p class="profile-empty-title">No posts yet</p>
-                            <p class="profile-empty-body">Game reactions, hot takes, and replies will show up here once this user starts posting.</p>
-                        </div>
                     </div>
                 </div>
 
@@ -3788,8 +3796,6 @@
                         <span class="sidebar-card-label">Profile Stats</span>
                     </div>
                     <div class="sidebar-stat-list" id="sidebarStatList">
-                        <div class="sidebar-stat-row"><span class="sidebar-stat-key">Followers</span><span class="sidebar-stat-val" id="sidebarFollowers">&mdash;</span></div>
-                        <div class="sidebar-stat-row"><span class="sidebar-stat-key">Following</span><span class="sidebar-stat-val" id="sidebarFollowing">&mdash;</span></div>
                         <div class="sidebar-stat-row"><span class="sidebar-stat-key">Tracked picks</span><span class="sidebar-stat-val" id="sidebarTrackedPicks">&mdash;</span></div>
                         <div class="sidebar-stat-row"><span class="sidebar-stat-key">Leaderboard</span><span class="sidebar-stat-val" id="sidebarLeaderboard">&mdash;</span></div>
                     </div>
@@ -4150,6 +4156,144 @@
             color: var(--tmr-text);
             font-size: 0.92rem;
             font-weight: 700;
+        }
+
+        /* Compact always-visible Followers/Following control in the profile header */
+        .profile-followcounts {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 12px 0 2px;
+        }
+        .profile-fc {
+            display: inline-flex;
+            align-items: baseline;
+            gap: 5px;
+            background: var(--tmr-panel, #13131c);
+            border: 1px solid var(--tmr-border, #262636);
+            border-radius: 999px;
+            padding: 5px 13px;
+            cursor: pointer;
+            font: inherit;
+            color: var(--tmr-text, #e8e8f0);
+            transition: border-color .15s, background .15s;
+        }
+        .profile-fc:hover {
+            border-color: var(--tmr-cyan, #5bd6dc);
+            background: var(--tmr-panel-2, #182031);
+        }
+        .profile-fc:focus-visible {
+            outline: 2px solid var(--tmr-cyan, #5bd6dc);
+            outline-offset: 2px;
+        }
+        .profile-fc-n { font-weight: 800; }
+        .profile-fc-l { color: var(--tmr-text-dim, #8890ad); font-size: .85rem; }
+
+        /* Clickable Followers/Following cards + sidebar rows */
+        button.profile-overview-card {
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            transition: border-color .15s, background .15s, transform .05s;
+        }
+        button.profile-overview-card:hover {
+            border-color: var(--tmr-cyan, #5bd6dc);
+            background: var(--tmr-panel-2, #182031);
+        }
+        button.profile-overview-card:active { transform: translateY(1px); }
+        button.profile-overview-card:focus-visible {
+            outline: 2px solid var(--tmr-cyan, #5bd6dc);
+            outline-offset: 2px;
+        }
+        .sidebar-stat-row.is-clickable {
+            cursor: pointer;
+            border: none;
+            background: none;
+            width: 100%;
+            font: inherit;
+            color: inherit;
+            text-align: left;
+            border-radius: 8px;
+            transition: background .15s;
+        }
+        .sidebar-stat-row.is-clickable:hover { background: var(--tmr-panel-2, #182031); }
+        .sidebar-stat-row.is-clickable:focus-visible {
+            outline: 2px solid var(--tmr-cyan, #5bd6dc);
+            outline-offset: 1px;
+        }
+        .sidebar-stat-row.is-clickable .sidebar-stat-key { text-decoration: underline dotted transparent; }
+        .sidebar-stat-row.is-clickable:hover .sidebar-stat-key { text-decoration-color: var(--tmr-cyan, #5bd6dc); }
+
+        /* Social list drawer */
+        .tmr-social-modal {
+            position: fixed; inset: 0; z-index: 100003; /* above global nav (99999) + mobile menu (100002) */
+            background: rgba(0,0,0,0.62);
+            display: flex; justify-content: flex-end;
+        }
+        .tmr-social-drawer {
+            width: 420px; max-width: 100%; height: 100%;
+            background: var(--tmr-panel, #1c1f2a);
+            border-left: 1px solid var(--tmr-border, #2a2e3d);
+            display: flex; flex-direction: column;
+            box-shadow: -18px 0 48px rgba(0,0,0,0.45);
+            animation: tmrSocialIn .18s ease-out;
+        }
+        @keyframes tmrSocialIn { from { transform: translateX(24px); opacity: .4; } to { transform: none; opacity: 1; } }
+        .tmr-social-head {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 18px; border-bottom: 1px solid var(--tmr-border, #2a2e3d);
+        }
+        .tmr-social-title { margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--tmr-text, #f0f2f5); }
+        .tmr-social-count { font-size: .8rem; color: var(--tmr-text-dim, #8b98ad); margin-top: 2px; }
+        .tmr-social-close {
+            background: none; border: none; color: #9ba3b5; font-size: 26px;
+            line-height: 1; cursor: pointer; padding: 0 4px; border-radius: 6px;
+        }
+        .tmr-social-close:hover { color: #fff; }
+        .tmr-social-close:focus-visible { outline: 2px solid var(--tmr-cyan, #5bd6dc); outline-offset: 2px; }
+        .tmr-social-items { list-style: none; margin: 0; padding: 6px 0; overflow-y: auto; flex: 1; }
+        .tmr-social-row {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 16px; border-bottom: 1px solid var(--tmr-border, #23283a);
+        }
+        .tmr-social-main {
+            display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;
+            text-decoration: none; color: inherit; border-radius: 8px;
+        }
+        .tmr-social-main:focus-visible { outline: 2px solid var(--tmr-cyan, #5bd6dc); outline-offset: 2px; }
+        .tmr-social-avatar {
+            width: 42px; height: 42px; border-radius: 50%; object-fit: cover;
+            flex-shrink: 0; border: 1px solid var(--tmr-border, #2a2e3d);
+        }
+        .tmr-social-avatar--letter {
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg,#3b82f6,#1d4ed8); color: #fff; font-weight: 800;
+        }
+        .tmr-social-copy { min-width: 0; }
+        .tmr-social-name {
+            display: flex; align-items: center; gap: 7px;
+            font-weight: 700; color: var(--tmr-text, #f0f2f5);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .tmr-social-handle { display: block; font-size: .8rem; color: var(--tmr-text-dim, #6b7280); }
+        .tmr-social-badge {
+            font-size: .58rem; font-weight: 800; letter-spacing: .06em;
+            padding: 2px 6px; border-radius: 6px; text-transform: uppercase; flex-shrink: 0;
+        }
+        .tmr-social-badge--verified { background: rgba(91,214,220,.15); color: #5bd6dc; text-transform: none; letter-spacing: .01em; }
+        .tmr-social-badge--admin { background: rgba(239,68,68,.16); color: #f87171; }
+        .tmr-social-badge--mod { background: rgba(168,85,247,.16); color: #c084fc; }
+        .tmr-social-follow { flex-shrink: 0; padding: 6px 14px !important; font-size: .82rem !important; }
+        .tmr-social-empty { padding: 28px 16px; text-align: center; color: var(--tmr-text-dim, #6b7280); }
+        .tmr-social-error { color: #f87171; }
+        .tmr-social-foot { padding: 12px 16px; border-top: 1px solid var(--tmr-border, #2a2e3d); }
+        .tmr-social-foot .btn { width: 100%; }
+        .tmr-social-items[aria-busy="true"]::after {
+            content: "Loading..."; display: block; padding: 24px 16px; text-align: center; color: var(--tmr-text-dim, #6b7280);
+        }
+        @media (max-width: 520px) {
+            .tmr-social-modal { justify-content: center; align-items: flex-end; }
+            .tmr-social-drawer { width: 100%; height: 88vh; border-left: none; border-top-left-radius: 16px; border-top-right-radius: 16px; }
         }
 
         body.profile-page .profile-meta,
@@ -6599,6 +6743,7 @@
             });
             loadAdvancedMetrics(profileData.username || profileUsername || '');
             loadPollPoints(profileData.username || profileUsername || '');
+            loadCommunityActivity(profileData.username || profileUsername || '');
             analyticsTrackPickHistoryView({
                 view_type: isOwnProfile ? 'own' : 'public',
                 username: profileData.username || profileUsername || '',
@@ -6673,6 +6818,84 @@
     // null for stays as the '—' placeholder per the no-fake-data rule.
     // Prediction quiz / poll points for the Polls tab. Reads the public
     // per-user poll stats (points earned from the daily MLB quiz + other polls).
+    // ======================== COMMUNITY ACTIVITY ========================
+    // Fills the Overview "Community Activity" ribbon from the aggregator that
+    // counts by permanent account id (forum vs feed kept separate; deleted /
+    // hidden / auto pick-share / bot content excluded server-side). No activity
+    // renders as clean zeros, never a fake number and never a big empty card.
+    async function loadCommunityActivity(username) {
+        var section = document.getElementById('communityActivity');
+        if (!section || !username) return;
+        var apiBase = (window.TMR_API_BASE || window.API_BASE_URL || 'https://trustmyrecord-api.onrender.com').replace(/\/$/, '');
+        var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); };
+        var fmtDate = function (v) {
+            if (!v) return '—';
+            var d = new Date(v);
+            if (isNaN(d.getTime())) return '—';
+            return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        };
+        var setText = function (id, val) { var el = document.getElementById(id); if (el) el.textContent = val; };
+        var setCount = function (id, n) { setText(id, (Number(n) || 0).toLocaleString('en-US')); };
+        // Wire a stat cell as a link only when there is a real destination and a
+        // non-zero count; otherwise it stays a plain, non-clickable stat.
+        var wireCell = function (id, url) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            if (url) { el.setAttribute('href', url); el.classList.remove('ca-disabled'); }
+            else { el.removeAttribute('href'); el.classList.add('ca-disabled'); }
+        };
+        try {
+            var resp = await fetch(apiBase + '/api/users/' + encodeURIComponent(username) + '/community-activity');
+            if (!resp.ok) { wireCell('caForumPostsCell', null); wireCell('caThreadsCell', null); return; }
+            var d = await resp.json();
+            var forum = d.forum || {}, feed = d.feed || {};
+            setCount('caForumPosts', forum.posts);
+            setCount('caThreads', forum.threads);
+            setCount('caFeedPosts', feed.posts);
+            setCount('caComments', feed.comments);
+            setCount('caLikes', d.likes_received);
+            setText('caMemberSince', fmtDate(d.member_since));
+            setText('caLastActive', fmtDate(d.last_active));
+            var meta = document.getElementById('caLastActiveMeta');
+            if (meta) meta.textContent = d.last_active ? ('Last active ' + fmtDate(d.last_active)) : '';
+            wireCell('caForumPostsCell', forum.posts_url || null);
+            wireCell('caThreadsCell', forum.threads_url || null);
+
+            // Up to three highlights, only when the data exists.
+            var h = d.highlights || {};
+            var cards = [];
+            if (h.recent_thread && h.recent_thread.title) {
+                cards.push('<a class="ca-hl" href="' + esc(h.recent_thread.url) + '">'
+                    + '<div class="ca-hl-label">Most Recent Thread</div>'
+                    + '<div class="ca-hl-body">' + esc(h.recent_thread.title) + '</div>'
+                    + '<div class="ca-hl-meta">' + fmtDate(h.recent_thread.created_at)
+                    + (h.recent_thread.likes ? ' · ' + h.recent_thread.likes + ' likes' : '') + '</div></a>');
+            }
+            if (h.top_post && h.top_post.excerpt) {
+                cards.push('<a class="ca-hl" href="' + esc(h.top_post.url) + '">'
+                    + '<div class="ca-hl-label">Most-Liked Post</div>'
+                    + '<div class="ca-hl-body">' + esc(h.top_post.excerpt) + '</div>'
+                    + '<div class="ca-hl-meta">' + (Number(h.top_post.likes) || 0) + ' likes · ' + fmtDate(h.top_post.created_at) + '</div></a>');
+            }
+            if (h.latest_forum_post && h.latest_forum_post.excerpt) {
+                cards.push('<a class="ca-hl" href="' + esc(h.latest_forum_post.url) + '">'
+                    + '<div class="ca-hl-label">Latest Forum Contribution</div>'
+                    + '<div class="ca-hl-body">' + esc(h.latest_forum_post.excerpt) + '</div>'
+                    + '<div class="ca-hl-meta">' + (h.latest_forum_post.thread_title ? 'in ' + esc(h.latest_forum_post.thread_title) + ' · ' : '')
+                    + fmtDate(h.latest_forum_post.created_at) + '</div></a>');
+            }
+            var hl = document.getElementById('caHighlights');
+            if (hl) {
+                if (cards.length) { hl.innerHTML = cards.slice(0, 3).join(''); hl.hidden = false; }
+                else { hl.innerHTML = ''; hl.hidden = true; }
+            }
+        } catch (e) {
+            console.warn('[Profile] Community activity unavailable:', e && e.message ? e.message : e);
+            wireCell('caForumPostsCell', null);
+            wireCell('caThreadsCell', null);
+        }
+    }
+
     async function loadPollPoints(username) {
         var host = document.getElementById('profilePollPoints');
         var empty = document.getElementById('profilePollEmpty');
@@ -9612,7 +9835,7 @@
         let primaryActions = '';
         // May 22, 2026 (HARD RULE): account-management actions (Edit Profile / Change Avatar /
         // Change Password) live ONLY in the authenticated top-right avatar/username dropdown
-        // (static/js/tmr-sitewide.js). Do not re-render the body "Edit Profile" button — it
+        // (static/js/tmr-sitewide.js?v=20260713hub1). Do not re-render the body "Edit Profile" button — it
         // exposes private account controls inside the public profile card.
         if (isOwnProfile) {
             primaryActions = '';
@@ -9644,6 +9867,18 @@
                 ? '<div class="profile-headline profile-headline-empty" style="margin-top:6px;color:var(--text-muted,#9aacbf);font-size:0.85rem;"><a href="#" onclick="event.preventDefault();openProfileEditor && openProfileEditor();" style="color:inherit;text-decoration:underline;">Add a headline</a> &mdash; one line that defines you (140 chars).</div>'
                 : '');
 
+        // Compact, always-visible Followers/Following control in the header summary.
+        // Single source of truth (the hidden legacy overview grid + sidebar rows do
+        // not render these as clickable counts). Works for logged-out visitors;
+        // the drawer itself gates any follow action on auth.
+        var fcN = Number(p.follower_count) || 0;
+        var fgN = Number(p.following_count) || 0;
+        var fcWho = escapeHtml(p.display_name || p.username || 'this user');
+        var followCounts = '<div class="profile-followcounts">' +
+            '<button type="button" class="profile-fc" onclick="openSocialList(\'followers\')" aria-label="View ' + fcWho + '’s ' + fcN + ' followers"><span class="profile-fc-n">' + fcN + '</span> <span class="profile-fc-l">Followers</span></button>' +
+            '<button type="button" class="profile-fc" onclick="openSocialList(\'following\')" aria-label="View who ' + fcWho + ' is following (' + fgN + ')"><span class="profile-fc-n">' + fgN + '</span> <span class="profile-fc-l">Following</span></button>' +
+            '</div>';
+
         el.innerHTML = '<div class="profile-info">' +
             '<div class="profile-identity-row">' +
             '<div class="profile-avatar">' + (p.avatar_url ? '<img src="' + p.avatar_url + '" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" alt="' + name + '">' : letter) + '</div>' +
@@ -9655,6 +9890,7 @@
             headlineHtml +
             '</div>' +
             '</div>' +
+            followCounts +
             trustPills +
             affiliationRow +
             (p.bio ? '<div class="profile-bio">' + p.bio + '</div>' : '<div class="profile-bio profile-bio-empty">No bio added yet.</div>') +
@@ -9770,8 +10006,6 @@
             el.classList.toggle('is-neg', !!isNeg);
         };
         const totalPicks = Number(p && (p.total_picks || p.totalPicks) || 0);
-        set('sidebarFollowers', String(Number((p && p.follower_count) || 0)));
-        set('sidebarFollowing', String(Number((p && p.following_count) || 0)));
         set('sidebarTrackedPicks', String(totalPicks));
         set('sidebarLeaderboard', p && p.ranking_status ? p.ranking_status : (currentLeaderboardRank != null ? '#' + currentLeaderboardRank : 'Unranked'));
 
@@ -12318,63 +12552,182 @@
         if (pop && pop.style.display === 'block' && !wrap) pop.style.display = 'none';
     });
 
-    async function openSocialList(type) {
-        if (!profileUserId) return;
+    // ---- Followers / Following social list drawer ----
+    // Right-side drawer (modal on small screens) that never replaces the page or
+    // loses scroll position. Rows carry avatar, display name, @handle, a
+    // verification/role badge, a live Follow/Following button (hidden for the
+    // viewer's own row and for logged-out visitors), and a link to the public
+    // profile. Progressive "load more" pagination; loading / empty / error
+    // states. Server already excludes deleted/suspended/blocked/private rows and
+    // sorts newest-relationship-first.
+    const SOCIAL_PAGE = 25;
+    let socialListState = null; // { type, offset, total, done, loading, prevFocus }
 
-        const existing = document.getElementById('socialListModal');
-        if (existing) existing.remove();
+    function socialBadge(user) {
+        if (user.is_admin) return '<span class="tmr-social-badge tmr-social-badge--admin">ADMIN</span>';
+        if (user.is_moderator) return '<span class="tmr-social-badge tmr-social-badge--mod">MOD</span>';
+        if (user.verification_status === 'verified') return '<span class="tmr-social-badge tmr-social-badge--verified" title="Verified record"><i class="fas fa-check-circle"></i> Verified</span>';
+        return '';
+    }
 
-        const modal = document.createElement('div');
-        modal.id = 'socialListModal';
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
-        modal.innerHTML =
-            '<div style="background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;max-width:520px;width:100%;max-height:80vh;overflow:hidden;display:flex;flex-direction:column;">' +
-            '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid #2a2e3d;">' +
-            '<h3 style="font-size:1rem;font-weight:700;margin:0;">' + (type === 'followers' ? 'Followers' : 'Following') + '</h3>' +
-            '<button type="button" onclick="closeSocialList()" style="background:none;border:none;color:#9ba3b5;font-size:24px;cursor:pointer;line-height:1;">&times;</button>' +
-            '</div>' +
-            '<div id="socialListBody" style="padding:16px;overflow:auto;color:#9ba3b5;">Loading...</div>' +
-            '</div>';
+    function socialRowHtml(user) {
+        const uid = Number(user.id);
+        const name = escapeHtml(user.display_name || user.username || 'User');
+        const handle = escapeHtml(user.username || '');
+        const initial = (user.display_name || user.username || 'U').charAt(0).toUpperCase();
+        const avatar = user.avatar_url
+            ? '<img src="' + escapeHtml(user.avatar_url) + '" alt="" class="tmr-social-avatar" loading="lazy">'
+            : '<span class="tmr-social-avatar tmr-social-avatar--letter">' + escapeHtml(initial) + '</span>';
+        const profileHref = '/profile/?user=' + encodeURIComponent(user.username || '');
+        // No follow button for the viewer's own row or for logged-out visitors.
+        const isSelf = currentUser && Number(currentUser.id) === uid;
+        let followBtn = '';
+        if (currentUser && !isSelf) {
+            followBtn = user.is_following
+                ? '<button type="button" class="btn btn-secondary tmr-social-follow" data-uid="' + uid + '" data-following="1" onclick="toggleSocialFollow(' + uid + ', this)">Following</button>'
+                : '<button type="button" class="btn btn-primary tmr-social-follow" data-uid="' + uid + '" data-following="0" onclick="toggleSocialFollow(' + uid + ', this)">Follow</button>';
+        }
+        return '<li class="tmr-social-row">' +
+            '<a class="tmr-social-main" href="' + profileHref + '">' +
+            avatar +
+            '<span class="tmr-social-copy">' +
+            '<span class="tmr-social-name">' + name + socialBadge(user) + '</span>' +
+            '<span class="tmr-social-handle">@' + handle + '</span>' +
+            '</span>' +
+            '</a>' +
+            followBtn +
+            '</li>';
+    }
 
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) closeSocialList();
-        });
-        document.body.appendChild(modal);
-
-        const body = document.getElementById('socialListBody');
-
+    async function toggleSocialFollow(uid, btn) {
+        if (!currentUser) return showToast('Log in first', 'error');
+        const wasFollowing = btn.getAttribute('data-following') === '1';
+        btn.disabled = true;
         try {
-            const data = type === 'followers'
-                ? await api.getFollowers(profileUserId, { limit: 100, offset: 0 })
-                : await api.getFollowing(profileUserId, { limit: 100, offset: 0 });
-            const users = data[type] || [];
-
-            if (!users.length) {
-                body.innerHTML = '<div style="padding:12px 4px;color:#6b7280;">No ' + type + ' yet.</div>';
-                return;
+            if (wasFollowing) {
+                await api.unfollowUser(uid);
+                btn.setAttribute('data-following', '0');
+                btn.textContent = 'Follow';
+                btn.className = 'btn btn-primary tmr-social-follow';
+            } else {
+                await api.followUser(uid);
+                btn.setAttribute('data-following', '1');
+                btn.textContent = 'Following';
+                btn.className = 'btn btn-secondary tmr-social-follow';
             }
-
-            body.innerHTML = users.map(function(user) {
-                const label = user.display_name || user.username || 'User';
-                return '<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px;border-bottom:1px solid #2a2e3d;">' +
-                    '<div style="display:flex;align-items:center;gap:12px;min-width:0;">' +
-                    '<div style="width:40px;height:40px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">' + label.charAt(0).toUpperCase() + '</div>' +
-                    '<div style="min-width:0;">' +
-                    '<div style="font-weight:700;color:#f0f2f5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + label + '</div>' +
-                    '<div style="font-size:.8rem;color:#6b7280;">@' + (user.username || '') + '</div>' +
-                    '</div>' +
-                    '</div>' +
-                    '<a href="/profile/?user=' + encodeURIComponent(user.username || '') + '" class="btn btn-secondary" style="text-decoration:none;">View</a>' +
-                    '</div>';
-            }).join('');
-        } catch (error) {
-            body.innerHTML = '<div style="padding:12px 4px;color:#ef4444;">Failed to load ' + type + '.</div>';
+            // Live-sync the profile's own counts when the viewer is looking at
+            // their own following list (following someone from here adds to it).
+            if (isOwnProfile && socialListState && socialListState.type === 'following') {
+                const delta = wasFollowing ? -1 : 1;
+                profileData.following_count = Math.max(0, Number(profileData.following_count || 0) + delta);
+                renderProfileHeader(profileData);
+            }
+            // If the viewer unfollows/follows the very profile being viewed, keep
+            // that profile's header follow-state + follower count in sync too.
+            if (Number(uid) === Number(profileUserId)) {
+                isFollowingProfile = !wasFollowing;
+                profileData.follower_count = Math.max(0, Number(profileData.follower_count || 0) + (wasFollowing ? -1 : 1));
+                renderProfileHeader(profileData);
+            }
+        } catch (e) {
+            showToast((e && e.message) || 'Action failed', 'error');
+        } finally {
+            btn.disabled = false;
         }
     }
 
+    async function loadSocialPage() {
+        const st = socialListState;
+        if (!st || st.loading || st.done) return;
+        st.loading = true;
+        const listEl = document.getElementById('socialListItems');
+        const moreBtn = document.getElementById('socialListMore');
+        const status = document.getElementById('socialListStatus');
+        if (moreBtn) { moreBtn.disabled = true; moreBtn.textContent = 'Loading...'; }
+        try {
+            const data = st.type === 'followers'
+                ? await api.getFollowers(profileUserId, { limit: SOCIAL_PAGE, offset: st.offset })
+                : await api.getFollowing(profileUserId, { limit: SOCIAL_PAGE, offset: st.offset });
+            const users = data[st.type] || [];
+            const firstPage = st.offset === 0;
+            st.total = Number(data.total || 0);
+            st.offset += users.length;
+            st.done = !data.has_more || users.length === 0;
+
+            if (firstPage && users.length === 0) {
+                listEl.innerHTML = '<li class="tmr-social-empty">' +
+                    (st.type === 'followers' ? 'No followers yet' : 'Not following anyone yet') + '</li>';
+            } else {
+                listEl.insertAdjacentHTML('beforeend', users.map(socialRowHtml).join(''));
+            }
+            if (status) status.textContent = st.total + ' ' + (st.type === 'followers' ? 'followers' : 'following');
+            if (moreBtn) {
+                if (st.done) { moreBtn.remove(); }
+                else { moreBtn.disabled = false; moreBtn.textContent = 'Load more'; }
+            }
+        } catch (error) {
+            const hidden = error && /hidden/i.test(error.message || '');
+            if (st.offset === 0) {
+                listEl.innerHTML = '<li class="tmr-social-empty tmr-social-error">' +
+                    (hidden ? 'This list is private.' : 'Could not load this list. Please try again.') + '</li>';
+            }
+            if (moreBtn) { moreBtn.disabled = false; moreBtn.textContent = 'Retry'; }
+        } finally {
+            st.loading = false;
+        }
+    }
+
+    function openSocialList(type) {
+        if (!profileUserId) return;
+        closeSocialList();
+
+        socialListState = { type: type, offset: 0, total: null, done: false, loading: false, prevFocus: document.activeElement };
+
+        const titleName = escapeHtml((profileData && (profileData.display_name || profileData.username)) || 'this user');
+        const heading = type === 'followers' ? 'Followers' : 'Following';
+
+        const modal = document.createElement('div');
+        modal.id = 'socialListModal';
+        modal.className = 'tmr-social-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-label', heading + ' of ' + titleName);
+        modal.innerHTML =
+            '<div class="tmr-social-drawer" role="document">' +
+            '<div class="tmr-social-head">' +
+            '<div><h3 class="tmr-social-title">' + heading + '</h3>' +
+            '<div id="socialListStatus" class="tmr-social-count">Loading...</div></div>' +
+            '<button type="button" class="tmr-social-close" aria-label="Close" onclick="closeSocialList()">&times;</button>' +
+            '</div>' +
+            '<ul id="socialListItems" class="tmr-social-items" aria-busy="true"></ul>' +
+            '<div class="tmr-social-foot"><button type="button" id="socialListMore" class="btn btn-secondary" onclick="loadSocialPage()">Load more</button></div>' +
+            '</div>';
+
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeSocialList(); });
+        document.addEventListener('keydown', socialEscHandler);
+        document.body.appendChild(modal);
+        document.body.style.overflow = 'hidden';
+
+        const closeBtn = modal.querySelector('.tmr-social-close');
+        if (closeBtn) closeBtn.focus();
+
+        loadSocialPage().then(function () {
+            const items = document.getElementById('socialListItems');
+            if (items) items.setAttribute('aria-busy', 'false');
+        });
+    }
+
+    function socialEscHandler(e) { if (e.key === 'Escape') closeSocialList(); }
+
     function closeSocialList() {
         const modal = document.getElementById('socialListModal');
-        if (modal) modal.remove();
+        if (!modal) return;
+        modal.remove();
+        document.removeEventListener('keydown', socialEscHandler);
+        document.body.style.overflow = '';
+        const st = socialListState;
+        if (st && st.prevFocus && typeof st.prevFocus.focus === 'function') { try { st.prevFocus.focus({ preventScroll: true }); } catch (_) { st.prevFocus.focus(); } }
+        socialListState = null;
     }
 
     // ======================== CSV EXPORT ========================
@@ -12899,7 +13252,7 @@
     });
 
     // ?action=edit / ?action=change-avatar deep links from the top-right user-menu dropdown
-    // (tmr-sitewide.js). Fires once profileData is loaded so openEditModal has its data.
+    // (tmr-sitewide.js?v=20260713hub1). Fires once profileData is loaded so openEditModal has its data.
     (function wireProfileActionDeepLink() {
         try {
             const params = new URLSearchParams(window.location.search || '');
@@ -12930,7 +13283,7 @@
     init();
     </script>
 
-        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js -->
+        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=20260713hub1 -->
 
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
@@ -12987,6 +13340,23 @@
       .tmrx-value.is-neg { color: #ef4444; }
       .tmrx-value.is-placeholder { color: #94a3b8; font-weight: 800; }
       .tmrx-sub { margin-top: 8px; font-size: 11.5px; color: #8391a7; font-weight: 700; line-height: 1.25; }
+      /* ---- Community Activity section ---- */
+      .tmrx-community .ca-date { font-size: 15px; font-weight: 800; white-space: normal; line-height: 1.15; }
+      .tmrx-community a.ca-cell { text-decoration: none; transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease; position: relative; }
+      .tmrx-community a.ca-cell:hover { border-color: rgba(45,212,191,.65); transform: translateY(-1px); box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 14px 30px rgba(0,0,0,.28); }
+      .tmrx-community a.ca-cell::after { content: "\2192"; position: absolute; top: 12px; right: 14px; font-size: 13px; font-weight: 900; color: #2dd4bf; opacity: 0; transition: opacity .15s ease; }
+      .tmrx-community a.ca-cell:hover::after { opacity: 1; }
+      .tmrx-community a.ca-cell.ca-disabled { pointer-events: none; }
+      .tmrx-community a.ca-cell.ca-disabled::after { display: none; }
+      .tmrx-community .ca-cell.ca-forum .tmrx-value { color: #7dd3fc; }
+      .tmrx-community .ca-cell.ca-feed .tmrx-value { color: #c4b5fd; }
+      .ca-highlights { margin-top: 14px; display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 12px; }
+      .ca-hl { display: block; text-decoration: none; padding: 13px 14px; border: 1px solid rgba(68,91,126,.55); border-radius: 10px; background: rgba(11,20,35,.6); }
+      a.ca-hl:hover { border-color: rgba(45,212,191,.55); background: rgba(13,26,44,.85); }
+      .ca-hl-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: #7a8499; }
+      .ca-hl-body { margin-top: 6px; font-size: 13px; font-weight: 700; color: #e7edf6; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+      .ca-hl-meta { margin-top: 7px; font-size: 11px; color: #8391a7; font-weight: 700; }
+      @media (max-width: 760px) { .ca-highlights { grid-template-columns: 1fr; } }
 
       .tmrx-period-strip { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 8px; }
       .tmrx-period-cell { padding: 10px; border: 1px solid rgba(31,51,80,.55); border-radius: 10px; background: rgba(2,6,23,.40); text-align: center; }
@@ -13421,6 +13791,10 @@
       }
       body.profile-page.tmr-social-profile .tmrx-section:has(.tmrx-ribbon) { order: 10 !important; }
       body.profile-page.tmr-social-profile .tmrx-section:has(.tmrx-period-strip) { order: 20 !important; }
+      /* Community Activity sits just under the headline stat ribbon + period strip.
+         Its own ribbon would otherwise inherit order:10 from the :has(.tmrx-ribbon)
+         rule, so pin it explicitly at 25. */
+      body.profile-page.tmr-social-profile .tmrx-section#communityActivity { order: 25 !important; }
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvancedTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced) {
         order: 50 !important;

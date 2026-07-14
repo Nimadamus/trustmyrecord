@@ -15,7 +15,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260712chat2">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260713hub1">
 <style>
 /* TrustMyRecord Forums - light classic forum index skin */
 :root{
@@ -177,6 +177,9 @@ body.tmr-forum-live-redesign .fpost-edit-box textarea{background:#0a1422 !import
 .modal-body{padding:12px}
 .modal-body label{display:block;margin:8px 0 4px;color:#333;font:bold 12px Arial,Helvetica,sans-serif}
 .fempty{padding:24px 12px;text-align:center;color:#666;font-style:italic;background:#fff;border:1px solid var(--line)}
+.ua-block{margin-bottom:14px}
+.ua-excerpt{margin-top:3px;color:#333;font:13px/1.4 Arial,Helvetica,sans-serif}
+body.classic-forum .ua-excerpt{color:#333 !important;font:13px/1.4 "Noto Sans","Segoe UI",Arial,sans-serif !important}
 .fempty-cta{display:flex;flex-direction:column;align-items:center;gap:12px;font-style:normal}
 .fempty-cta-msg{color:#555;font-size:13px}
 .fempty-cta-btn{font-size:13px;padding:9px 18px}
@@ -1763,6 +1766,9 @@ body.classic-forum .fstats{display:none !important}
 body.classic-forum #viewThreads,body.classic-forum #viewThread{flex-direction:column}
 body.classic-forum #viewThreads:not([style*="none"]),body.classic-forum #viewThread:not([style*="none"]){display:flex}
 body.classic-forum .forum-sample-area{display:flex !important;flex-direction:column}
+/* Never flash the empty "Threads in Forum: ..." sample table until the live
+   forum data has definitively loaded. Prevents the fake empty-layout flash. */
+body:not(.forum-ready) .forum-sample-area{display:none !important}
 body.classic-forum #viewThreads .factionrow,body.classic-forum #viewThread .factionrow,body.classic-forum .forum-sample-area .factionrow{order:-1}
 /* --- tables: tight stacking, 32px #323232 bars, 11.5px labels --- */
 body.classic-forum .fgroup-table{width:100% !important;border:0 !important;border-collapse:collapse !important;margin:0 !important;background:transparent !important;box-shadow:none !important}
@@ -2080,6 +2086,80 @@ body.classic-forum .fside-box:last-child .fside-list a{padding:3px 0 !important}
 body.classic-forum .fside-list .fside-gbody a.fside-forum.is-active,
 body.classic-forum .fside-list a.fside-forum.is-active{padding:3px 8px !important}
 </style>
+<style id="tmr-forum-2p2-sharpen-20260712">
+/* ============================================================
+   SHARPEN PASS (Jul 12 2026) — final cascade layer, wins over
+   every earlier forum block. Goal: tighter, darker, crisper text
+   that reads like the 2+2 reference. Switch the whole forum to a
+   pure Arial/Helvetica stack (sharper than Noto Sans), drop sizes
+   a hair, and push contrast up so titles/links are near-black
+   instead of soft gray. Geometry unchanged. Also styles the new
+   inline thread pagination. NO layout/feature changes.
+============================================================ */
+:root{ --f2p2-font:Arial,Helvetica,sans-serif; }
+body.classic-forum,
+body.classic-forum .fside,
+body.classic-forum .fmain{font-family:var(--f2p2-font) !important}
+body.classic-forum{font:400 12px/1.3 var(--f2p2-font) !important;color:#161616 !important}
+/* header nav: 13px, sharp, darker idle color */
+#tmrForumHeader .tmrfh-nav a{font:500 13px/1 var(--f2p2-font) !important;letter-spacing:normal !important}
+.tmrfh-brand-txt{font-family:var(--f2p2-font) !important}
+.tmrfh-brand-txt small{font-family:var(--f2p2-font) !important}
+.tmrfh-username,.tmrfh-authlink{font-family:var(--f2p2-font) !important}
+/* page title: 19/700 near-black */
+body.classic-forum .ftitle h1{font:700 19px/1.2 var(--f2p2-font) !important;color:#141414 !important}
+/* column labels: 11px, darker muted */
+body.classic-forum .fgroup-table tr.fcol-head td{font:400 11px/1 var(--f2p2-font) !important;color:#666 !important;letter-spacing:0 !important;text-transform:none !important}
+/* section bars: 13/700 (unchanged geometry) */
+body.classic-forum .fgroup-table tr.fgroup-band td{font:700 13px/1 var(--f2p2-font) !important}
+body.classic-forum .fgroup-table tr.fgroup-band td.fgroup-meta{font:400 11px/1 var(--f2p2-font) !important}
+/* forum names: 13.5/700 near-black, crisp */
+body.classic-forum .fname,
+body.classic-forum #categoriesContainer .fname,
+body.classic-forum .thread-table .fname{font:700 13.5px/1.15 var(--f2p2-font) !important;color:#141414 !important}
+body.classic-forum .fname:hover,
+body.classic-forum #categoriesContainer .fname:hover{color:#1d5fb0 !important}
+/* descriptions: 11px, readable secondary gray (darker than before) */
+body.classic-forum .fdesc,
+body.classic-forum #categoriesContainer .fdesc{font:400 11px/1.3 var(--f2p2-font) !important;color:#4a4a4a !important;margin-top:2px !important}
+body.classic-forum .fdesc b{font-weight:600 !important;color:#333 !important}
+/* last-post stack: 11.5/700 dark title, 11px darker meta */
+body.classic-forum .flpost-title{font:700 11.5px/1.25 var(--f2p2-font) !important;color:#141414 !important}
+body.classic-forum .flpost-title a{color:#1d5fb0 !important}
+body.classic-forum .flpost-by,
+body.classic-forum .flpost-user{font:400 11px/1.25 var(--f2p2-font) !important;color:#2a2a2a !important}
+body.classic-forum .flpost-user b{font-weight:700 !important;color:#161616 !important}
+body.classic-forum .flpost-meta{font:400 11px/1.25 var(--f2p2-font) !important;color:#555 !important;margin-top:1px !important}
+body.classic-forum .flpost-meta b{font-weight:400 !important;color:#555 !important}
+body.classic-forum .flpost-empty{font:italic 400 11px/1.25 var(--f2p2-font) !important;color:#777 !important}
+/* counts: 12px tabular, dark */
+body.classic-forum .fgroup-table td.col-num{font:400 12px/1 var(--f2p2-font) !important;color:#2a2a2a !important;font-variant-numeric:tabular-nums !important}
+/* sidebar: 11.5px links, tighter rhythm, darker text, 12px 700 headings */
+body.classic-forum .fside-box:last-child .fside-head,
+body.classic-forum .fside-list a.fside-gtitle,
+body.classic-forum .fside-gtitle{font:700 12px/1.3 var(--f2p2-font) !important;color:#111 !important}
+body.classic-forum .fside-list .fside-gbody a.fside-forum,
+body.classic-forum .fside-list a.fside-forum,
+body.classic-forum .fside-list .fside-gbody a,
+body.classic-forum .fside-box:last-child .fside-list a{font:400 11.5px/1.3 var(--f2p2-font) !important;color:#2b2b2b !important;padding:2px 0 !important}
+body.classic-forum .fside-list .fside-gbody a.fside-forum:hover,
+body.classic-forum .fside-list a.fside-forum:hover{color:#1d5fb0 !important}
+body.classic-forum .fside-list .fside-gbody a.fside-forum.is-active,
+body.classic-forum .fside-list a.fside-forum.is-active{padding:2px 8px !important;color:#111 !important;font-weight:700 !important}
+/* tighten sidebar group separation a touch for density */
+body.classic-forum .fside-group + .fside-group,
+body.classic-forum .fside-box + .fside-box{margin-top:clamp(12px,2.1vh,20px) !important;padding-top:clamp(12px,2.1vh,20px) !important}
+/* --- inline thread-list pagination (compact, secondary) --- */
+body.classic-forum .fthread-pages{display:inline-flex;flex-wrap:wrap;align-items:center;gap:3px;margin:2px 0 0 0;vertical-align:middle}
+body.classic-forum .fthread-pages .fpage{display:inline-block;min-width:15px;padding:0 4px;font:400 10.5px/16px var(--f2p2-font);color:#5a6472;border:1px solid #d3d8de;border-radius:2px;background:#f4f6f8;text-align:center;text-decoration:none}
+body.classic-forum .fthread-pages .fpage:hover{color:#1d5fb0;border-color:#b7c2cf;background:#eaeef3}
+body.classic-forum .fthread-pages .fpage.fpage-last{font-weight:600;color:#444}
+body.classic-forum .fthread-pages .fpage-ellip{color:#9aa2ac;font:400 10.5px/16px var(--f2p2-font);padding:0 1px}
+@media (max-width:760px){
+  body.classic-forum .fthread-pages{gap:2px}
+  body.classic-forum .fthread-pages .fpage{min-width:14px;padding:0 3px;font-size:10px;line-height:15px}
+}
+</style>
 </head>
 <body class="classic-forum">
 
@@ -2259,6 +2339,24 @@ body.classic-forum .fside-list a.fside-forum.is-active{padding:3px 8px !importan
             </div>
         </div>
 
+        <!-- Per-member forum contributions. Reached via /forum/?user=<username>
+             from the profile Community Activity section. #threads / #replies hash
+             deep-links to the matching section. -->
+        <div id="viewUserActivity" style="display:none;">
+            <table class="fgroup-table" cellpadding="2" cellspacing="1">
+                <tr class="fgroup-band">
+                    <td>Forum contributions: <span id="uaUsername">member</span></td>
+                    <td class="fgroup-meta" id="uaMeta">&nbsp;</td>
+                </tr>
+            </table>
+            <div class="factionrow">
+                <button type="button" class="fbtn" onclick="showCategories()">Forum Home</button>
+                <a class="fbtn" id="uaProfileLink" href="#">View Full Profile</a>
+            </div>
+            <div id="uaThreads" class="ua-block"></div>
+            <div id="uaReplies" class="ua-block"></div>
+        </div>
+
         <div id="viewThread" style="display:none;">
             <table class="fgroup-table" cellpadding="2" cellspacing="1">
                 <tr class="fgroup-band">
@@ -2307,7 +2405,7 @@ body.classic-forum .fside-list a.fside-forum.is-active{padding:3px 8px !importan
 </div>
 
 <script src="/static/js/config.js?v=20260421a"></script>
-<script src="/static/js/backend-api.js?v=follow20260710"></script>
+<script src="/static/js/backend-api.js?v=forumtimeout20260713"></script>
 <script src="/static/js/auth-persistent.js?v=20260424a"></script>
 <script src="/static/js/notifications.js?v=20260712talkdeeplink1"></script>
 <script src="/static/js/forum-notification-bell.js?v=20260530bell4"></script>
@@ -2358,6 +2456,14 @@ function tmrToggleSideGroup(el) {
 function renderForumSidebar() {
     var list = document.getElementById('forumSidebarList');
     if (!list) return;
+    if (forumLoadState === 'loading') {
+        list.innerHTML = '<a class="fside-loading">Loading forums&hellip;</a>';
+        return;
+    }
+    if (forumLoadState === 'error') {
+        list.innerHTML = '<a class="fside-loading" style="cursor:pointer;text-decoration:underline;" onclick="retryLoadCategories()">Couldn\'t load - retry</a>';
+        return;
+    }
     var cats = categories || [];
     if (!cats.length) {
         list.innerHTML = '<a class="fside-loading">No forums yet</a>';
@@ -2384,7 +2490,26 @@ function renderForumSidebar() {
 function renderCategories() {
     var container = document.getElementById('categoriesContainer');
     if (!container) return;
+    // Gate the decorative sample table on a real successful load.
+    document.body.classList.toggle('forum-ready', forumLoadState === 'loaded' && categories.length > 0);
+    // While the forum data is still loading OR the load failed, never paint the
+    // definitive "No forum categories yet" empty state - show a skeleton or a
+    // real error with retry instead.
+    if (forumLoadState === 'loading') {
+        container.innerHTML = '<div class="tmr-loading-state"><div class="tmr-spinner"></div><p>Loading forums&hellip;</p></div>';
+        return;
+    }
+    if (forumLoadState === 'error') {
+        container.innerHTML =
+            '<div class="tmr-loading-state">' +
+            '<p>Could not load the forums right now.</p>' +
+            '<p class="tmr-loading-slow" style="display:block;">The server may be warming up. Retrying automatically&hellip;</p>' +
+            '<div class="tmr-loading-retry" style="display:block;"><button type="button" onclick="retryLoadCategories()">Try Again</button></div>' +
+            '</div>';
+        return;
+    }
     if (!categories.length) {
+        // Reached only after a successful API response that genuinely returned [].
         container.innerHTML = '<div class="fempty">No forum categories yet.</div>';
         return;
     }
@@ -2409,7 +2534,7 @@ function renderCategories() {
                 /* 2+2 stacked format: bold title / by user / gray time */
                 lastHtml = '<div class="flpost-title">' + escHtml(ltTitle) + '</div>'
                          + '<div class="flpost-by">by ' + escHtml(lt.username || '') + '</div>'
-                         + '<div class="flpost-meta">' + timeAgo(lt.last_post_at || lt.created_at) + '</div>';
+                         + '<div class="flpost-meta">' + formatForumStamp(lt.last_post_at || lt.created_at) + '</div>';
             }
             var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
             var badge = forumSportBadge(cat.slug, cat.name);
@@ -2444,6 +2569,39 @@ function renderSampleThreads() {
             + '<td class="fcell col-num">' + t.views + '</td>'
             + '</tr>';
     }).join('');
+}
+
+// Posts per page for in-thread pagination. Page count in the thread list is
+// derived from the real reply_count; clicking a page number opens the thread
+// and jumps to that page's first post. Tune here if the thread view changes.
+var FORUM_POSTS_PER_PAGE = 20;
+
+function threadTotalPages(t) {
+    var replies = Number(t.reply_count != null ? t.reply_count : (t.replies || 0));
+    if (!Number.isFinite(replies) || replies < 0) replies = 0;
+    return Math.max(1, Math.ceil((replies + 1) / FORUM_POSTS_PER_PAGE));
+}
+
+// Compact "1 2 3 4 5 … Last" links beside a multi-page thread title. Returns ''
+// for single-page threads so nothing renders. Numbers are real (from reply_count).
+function threadPagesHtml(t) {
+    var pages = threadTotalPages(t);
+    if (pages <= 1) return '';
+    var id = t.id;
+    var call = function (p, label, extra) {
+        return '<a class="fpage' + (extra || '') + '" href="#" title="Page ' + p + '" '
+            + 'onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + id + ',' + p + ');">' + label + '</a>';
+    };
+    var out = '<span class="fthread-pages" aria-label="Thread pages">';
+    if (pages <= 6) {
+        for (var p = 1; p <= pages; p++) out += call(p, p);
+    } else {
+        for (var q = 1; q <= 5; q++) out += call(q, q);
+        out += '<span class="fpage-ellip" aria-hidden="true">&hellip;</span>';
+        out += call(pages, 'Last', ' fpage-last');
+    }
+    out += '</span>';
+    return out;
 }
 
 function renderThreads() {
@@ -2484,14 +2642,15 @@ function renderThreads() {
             : '<span class="fthread-row-avatar" aria-hidden="true">' + escHtml(lastInitials) + '</span>';
         var lastWhen = t.last_post_at || t.last_post_created_at || t.last_activity || t.updated_at;
         var lastHtml = lastWhen
-            ? '<div class="flpost-line">' + lastAvatarHtml + '<div class="flpost-text"><div class="flpost-user"><b>' + escHtml(lastUser) + '</b></div><div class="flpost-meta">' + timeAgo(lastWhen) + '</div></div></div>'
+            ? '<div class="flpost-line">' + lastAvatarHtml + '<div class="flpost-text"><div class="flpost-user"><b>' + escHtml(lastUser) + '</b></div><div class="flpost-meta">' + formatForumStamp(lastWhen) + '</div></div></div>'
             : '<span class="flpost-empty">No replies yet</span>';
         var ariaTitle = escHtml(t.title || 'Thread');
         return '<tr class="' + rowClass + '" role="link" tabindex="0" aria-label="Open thread: ' + ariaTitle + '" onclick="showThreadDetail(' + t.id + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();showThreadDetail(' + t.id + ');}">'
             + '<td class="fcell"><div class="frowinner"><span class="' + folderClass + '"></span>' + avatarHtml + '<div>'
             +   stickyTag
             +   '<a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title || 'Thread') + '</a>'
-            +   '<div class="fdesc">Started by <b>' + escHtml(starter) + '</b> ' + (t.created_at ? timeAgo(t.created_at) : '') + '</div>'
+            +   threadPagesHtml(t)
+            +   '<div class="fdesc">Started by <b>' + escHtml(starter) + '</b> ' + (t.created_at ? formatForumStamp(t.created_at) : '') + '</div>'
             + '</div></div></td>'
             + '<td class="fcell col-num">&nbsp;</td>'
             + '<td class="fcell col-last">' + lastHtml + '</td>'
@@ -2657,12 +2816,21 @@ function renderAuthorPanel(post) {
           + '</div>'
         : '';
     var botBadge = isOfficialBot ? '<div><span class="fbot-badge">Bot</span></div>' : '';
-    // Forum posts never render the profile headline (users.headline) for regular
-    // members: it is a profile-page field (up to 140 chars) and does not belong in
-    // the author panel. The only undertitle is the short "Founder" tag on the
-    // founder/admin account. Bots keep their fbot-tagline below.
-    var undertitle = (!isOfficialBot && authorIsAdmin(author))
-        ? '<div class="fthread-undertitle">Founder</div>'
+    // Author-card undertitle. Precedence: the founder/admin account shows the short
+    // "Founder" tag (its profile headline is a long bio, unfit for a post card). Every
+    // other member shows their saved custom undertitle (users.headline) so short custom
+    // titles like "TMR OG" render sitewide. A length cap keeps the card clean if a
+    // member sets an over-long headline. Bots keep their fbot-tagline below.
+    var undertitleText = '';
+    if (!isOfficialBot) {
+        if (authorIsAdmin(author)) {
+            undertitleText = 'Founder';
+        } else if (headline) {
+            undertitleText = headline.length > 48 ? (headline.slice(0, 47).trim() + '…') : headline;
+        }
+    }
+    var undertitle = undertitleText
+        ? '<div class="fthread-undertitle">' + escHtml(undertitleText) + '</div>'
         : '';
     var botTagline = isOfficialBot
         ? '<div class="fbot-tagline">' + escHtml((headline || '') || 'Your friendly TMR house bot') + '</div>'
@@ -3092,6 +3260,14 @@ async function enrichForumAuthors(thread, posts) {
     }));
 }
 var categories = [];
+// Forum data load state. renderCategories()/renderForumSidebar() key off this
+// so a still-loading OR failed load can NEVER be painted as a definitive
+// "No forum categories yet" empty board. Only a successful API response that
+// genuinely returns [] is allowed to show the empty state (req: single source
+// of truth; no false empty; no stuck "Loading forums...").
+var forumLoadState = 'loading'; // 'loading' | 'loaded' | 'error'
+var _forumLoadGen = 0;          // monotonic token: ignore stale responses
+var _forumRetryTimer = null;
 var fallbackCategories = [
     {
         id: 'cat_general',
@@ -3220,6 +3396,31 @@ function timeAgo(dateString) {
     if (months < 12) return months + (months === 1 ? ' month ago' : ' months ago');
     var years = Math.floor(months / 12);
     return years + (years === 1 ? ' year ago' : ' years ago');
+}
+
+// Compact absolute stamp in the viewer's LOCAL timezone, 2+2-style:
+//   "Today 10:17 PM" / "Yesterday 4:22 PM" / "Jul 10, 8:35 PM" / "Jul 10 2025, 8:35 PM"
+// Replaces relative "x hours ago" text for last-post/thread-list displays.
+function formatForumStamp(dateString) {
+    var date = parseForumTimestamp(dateString);
+    if (!date) return '--';
+    var now = new Date();
+    var time;
+    try {
+        time = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', hour12: true });
+    } catch (e) {
+        var h = date.getHours(), m = date.getMinutes();
+        var ap = h >= 12 ? 'PM' : 'AM'; var h12 = h % 12; if (h12 === 0) h12 = 12;
+        time = h12 + ':' + (m < 10 ? '0' + m : m) + ' ' + ap;
+    }
+    var startOfDay = function (d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); };
+    var dayDiff = Math.round((startOfDay(now) - startOfDay(date)) / 86400000);
+    if (dayDiff === 0) return 'Today ' + time;
+    if (dayDiff === 1) return 'Yesterday ' + time;
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var label = months[date.getMonth()] + ' ' + date.getDate();
+    if (date.getFullYear() !== now.getFullYear()) label += ' ' + date.getFullYear();
+    return label + ', ' + time;
 }
 
 function formatForumDate(dateString) {
@@ -3385,7 +3586,7 @@ async function showThreadsList(slug, name, id) {
     await loadThreads();
 }
 
-async function showThreadDetail(threadId) {
+async function showThreadDetail(threadId, page) {
     currentThreadId = threadId;
     document.getElementById('viewCategories').style.display = 'none';
     document.getElementById('viewThreads').style.display = 'none';
@@ -3401,6 +3602,17 @@ async function showThreadDetail(threadId) {
     crumbParts.push('<span class="sep">&raquo;</span><span>' + escHtml(currentThreadTitle || 'Thread') + '</span>');
     document.getElementById('breadcrumb').innerHTML = crumbParts.join('');
     window.history.replaceState({}, '', '/forum/#thread-' + encodeURIComponent(threadId));
+    var pg = parseInt(page, 10);
+    if (Number.isFinite(pg) && pg > 1) {
+        // Jump to the first post of the requested page. All posts render on one
+        // page in the thread view, so page N = the (N-1)*PER_PAGE-th post node.
+        setTimeout(function () {
+            var nodes = document.querySelectorAll('#postsContainer .fthread-post');
+            var idx = (pg - 1) * FORUM_POSTS_PER_PAGE;
+            var target = nodes[idx] || nodes[nodes.length - 1];
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 60);
+    }
 }
 
 function backToThreads() {
@@ -3411,36 +3623,137 @@ function backToThreads() {
     }
 }
 
+// Per-member forum contributions view (threads started + replies). Powers the
+// /forum/?user=<username> links from the profile Community Activity section.
+async function showUserActivity(username) {
+    var name = String(username || '').trim();
+    if (!name) { showCategories(); return; }
+    currentCategorySlug = null; currentCategoryName = null; currentCategoryId = null; currentThreadId = null;
+    document.getElementById('viewCategories').style.display = 'none';
+    document.getElementById('viewThreads').style.display = 'none';
+    document.getElementById('viewThread').style.display = 'none';
+    var view = document.getElementById('viewUserActivity');
+    view.style.display = '';
+    document.body.classList.remove('is-forum-home');
+    setForumPageHeader('Forum contributions');
+    document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(name) + '</span>';
+    var profLink = document.getElementById('uaProfileLink');
+    if (profLink) profLink.setAttribute('href', '/profile/?user=' + encodeURIComponent(name));
+    var threadsHost = document.getElementById('uaThreads');
+    var repliesHost = document.getElementById('uaReplies');
+    threadsHost.innerHTML = '<div class="fempty">Loading threads&hellip;</div>';
+    repliesHost.innerHTML = '';
+
+    var threads = [], posts = [];
+    try {
+        var td = await api.request('/forum/users/' + encodeURIComponent(name) + '/threads?limit=100');
+        threads = (td && Array.isArray(td.threads)) ? td.threads : [];
+    } catch (e) { threads = []; }
+    try {
+        var pd = await api.request('/forum/users/' + encodeURIComponent(name) + '/posts?limit=100');
+        posts = (pd && Array.isArray(pd.posts)) ? pd.posts : [];
+    } catch (e) { posts = []; }
+
+    document.getElementById('uaUsername').textContent = name;
+    document.getElementById('uaMeta').textContent = threads.length + ' threads · ' + posts.length + ' replies';
+
+    var stamp = function (v) { try { return formatForumStamp(v); } catch (_) { return ''; } };
+    var section = function (title, anchor, rowsHtml, emptyMsg) {
+        return '<table class="fgroup-table" cellpadding="2" cellspacing="1" id="' + anchor + '">'
+            + '<tr class="fgroup-band"><td colspan="2">' + escHtml(title) + '</td></tr></table>'
+            + '<table class="fgroup-table thread-table" cellpadding="2" cellspacing="1"><tbody>'
+            + (rowsHtml || ('<tr><td class="fcell"><div class="fempty">' + escHtml(emptyMsg) + '</div></td></tr>'))
+            + '</tbody></table>';
+    };
+    var threadRows = threads.map(function (t, i) {
+        var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
+        return '<tr class="' + rowClass + '" role="link" tabindex="0" onclick="showThreadDetail(' + t.id + ')" onkeydown="if(event.key===\'Enter\'){showThreadDetail(' + t.id + ');}">'
+            + '<td class="fcell"><a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title || 'Thread') + '</a>'
+            + '<div class="flpost-meta">' + escHtml(t.category_name || 'Forum') + ' · ' + stamp(t.created_at) + ' · ' + (Number(t.reply_count) || 0) + ' replies</div></td></tr>';
+    }).join('');
+    var replyRows = posts.map(function (p, i) {
+        var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
+        var ex = String(p.content || '').replace(/\s+/g, ' ').trim().slice(0, 160);
+        return '<tr class="' + rowClass + '" role="link" tabindex="0" onclick="showThreadDetail(' + p.thread_id + ')" onkeydown="if(event.key===\'Enter\'){showThreadDetail(' + p.thread_id + ');}">'
+            + '<td class="fcell"><a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + p.thread_id + ');">' + escHtml(p.thread_title || 'Thread') + '</a>'
+            + '<div class="ua-excerpt">' + escHtml(ex) + '</div>'
+            + '<div class="flpost-meta">' + escHtml(p.category_name || 'Forum') + ' · ' + stamp(p.created_at) + '</div></td></tr>';
+    }).join('');
+
+    threadsHost.innerHTML = section('Threads started (' + threads.length + ')', 'threads', threadRows, 'No threads started yet.');
+    repliesHost.innerHTML = section('Replies (' + posts.length + ')', 'replies', replyRows, 'No replies yet.');
+
+    window.history.replaceState({}, '', '/forum/?user=' + encodeURIComponent(name) + (location.hash || ''));
+    var hash = (location.hash || '').replace('#', '');
+    if (hash === 'threads' || hash === 'replies') {
+        setTimeout(function () { var el = document.getElementById(hash); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+    }
+}
+
 // ================================================================
 // LOAD & RENDER CATEGORIES
 // ================================================================
 async function loadCategories() {
-    var container = document.getElementById('categoriesContainer');
-    showLoading(container);
+    // Monotonic generation token: if loadCategories() is invoked again (nav,
+    // retry) while an earlier request is still in flight, only the newest one
+    // is allowed to commit results. Prevents a slow stale response (esp. an
+    // empty/failed one) from clobbering a later successful render.
+    var myGen = ++_forumLoadGen;
+    if (_forumRetryTimer) { clearTimeout(_forumRetryTimer); _forumRetryTimer = null; }
 
-    try {
-        var data = await api.request('/forum/categories');
-        categories = data.categories || [];
-        if (!categories.length) {
-            usingFallbackCategories = true;
-            categories = fallbackCategories.slice();
-        } else {
+    forumLoadState = 'loading';
+    renderCategories();
+    renderForumSidebar();
+
+    var maxAttempts = 4;      // bounded automatic retry for transient failures
+    var lastErr = null;
+
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+        if (myGen !== _forumLoadGen) return; // superseded by a newer load
+        try {
+            var data = await api.request('/forum/categories');
+            if (myGen !== _forumLoadGen) return; // stale response, drop it
+            var list = (data && Array.isArray(data.categories)) ? data.categories : null;
+            if (!list) throw new Error('Malformed categories response');
+
+            // Success. Only NOW may an empty board be shown, and only because
+            // the API definitively returned an empty array.
+            categories = list;
             usingFallbackCategories = false;
+            forumLoadState = 'loaded';
+            renderCategories();
+            renderForumSidebar();
+            updateStats();
+            updateForumJump();
+            return;
+        } catch (err) {
+            lastErr = err;
+            if (myGen !== _forumLoadGen) return;
+            console.warn('[Forum] categories load attempt ' + attempt + '/' + maxAttempts + ' failed:', err && err.message);
+            if (attempt < maxAttempts) {
+                // exponential backoff: 1s, 2s, 4s
+                await new Promise(function (r) { setTimeout(r, 1000 * Math.pow(2, attempt - 1)); });
+            }
         }
-        renderCategories();
-        renderForumSidebar();
-        updateStats();
-        updateForumJump();
-    } catch (err) {
-        console.error('Forum categories fallback:', err);
-        usingFallbackCategories = true;
-        categories = fallbackCategories.slice();
-        renderCategories();
-        renderForumSidebar();
-        updateStats();
-        updateForumJump();
-        container.insertAdjacentHTML('afterbegin', '<div class="forum-trust-note" style="margin-bottom:10px;">Live forum data is temporarily unavailable. Showing empty forum categories without fake threads or seeded users.</div>');
     }
+
+    if (myGen !== _forumLoadGen) return;
+    console.error('[Forum] categories load failed after ' + maxAttempts + ' attempts:', lastErr);
+    // Do NOT fall back to a fake/empty board. Show a clear error and keep
+    // auto-retrying in the background so the page self-heals with no manual
+    // refresh once the backend (e.g. Render cold start) comes up.
+    forumLoadState = 'error';
+    renderCategories();
+    renderForumSidebar();
+    _forumRetryTimer = setTimeout(function () {
+        if (myGen === _forumLoadGen) loadCategories();
+    }, 6000);
+}
+
+// Manual "Try again" from the error card. Resets and reloads immediately.
+function retryLoadCategories() {
+    if (_forumRetryTimer) { clearTimeout(_forumRetryTimer); _forumRetryTimer = null; }
+    loadCategories();
 }
 
 /* removed: replaced in renders.js */
@@ -3817,10 +4130,10 @@ async function performSearch(query) {
                 '<td><div class="tmr-fb-thread-cell"><span class="tmr-fb-thread-icon">T</span><div class="tmr-fb-thread-body">' +
                     '<span class="tag-pill">' + escHtml(catName) + '</span>' +
                     '<a class="tmr-fb-thread-title" href="#" onclick="event.preventDefault();event.stopPropagation();currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ');">' + escHtml(t.title) + '</a>' +
-                    '<div class="tmr-fb-thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong> &middot; ' + timeAgo(t.created_at) + '</div>' +
+                    '<div class="tmr-fb-thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong> &middot; ' + formatForumStamp(t.created_at) + '</div>' +
                 '</div></div></td>' +
                 '<td class="col-rating"></td>' +
-                '<td class="col-last"><div class="tmr-fb-lastpost-meta">' + timeAgo(t.last_post_at || t.created_at) + '</div></td>' +
+                '<td class="col-last"><div class="tmr-fb-lastpost-meta">' + formatForumStamp(t.last_post_at || t.created_at) + '</div></td>' +
                 '<td class="col-num">' + (t.reply_count || 0) + '</td>' +
                 '<td class="col-num">' + (t.view_count || 0) + '</td>' +
                 '</tr>';
@@ -4072,6 +4385,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Check URL hash for deep link
     var params = new URLSearchParams(window.location.search);
+    var queryUser = (params.get('user') || '').trim();
+    if (queryUser) {
+        await showUserActivity(queryUser);
+        return;
+    }
     var queryThread = parseInt(params.get('thread'));
     if (queryThread) {
         await showThreadDetail(queryThread);

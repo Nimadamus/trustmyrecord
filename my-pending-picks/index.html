@@ -9,8 +9,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260712chat2">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260712talk1"></script>
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260713hub1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260713hub1"></script>
     <style>
         :root {
             --page-bg: #060b12;
@@ -208,6 +208,25 @@
             color: var(--muted);
             line-height: 1.55;
         }
+        /* Compact loading skeleton (mirrors summary strip + pick rows) */
+        .skeleton { pointer-events: none; }
+        .skeleton .summary-strip { margin-bottom: 18px; }
+        .sk-block { position: relative; overflow: hidden; background: rgba(148,163,184,0.14); border-radius: 6px; }
+        .sk-block::after { content: ''; position: absolute; inset: 0; transform: translateX(-100%);
+            background: linear-gradient(90deg, transparent, rgba(148,163,184,0.22), transparent);
+            animation: sk-shimmer 1.15s infinite; }
+        @keyframes sk-shimmer { 100% { transform: translateX(100%); } }
+        .sk-summary { padding: 18px; border: 1px solid rgba(148,163,184,0.18); border-radius: 8px; background: rgba(15,23,42,0.52); }
+        .sk-line { height: 12px; margin: 8px 0; }
+        .sk-line.lg { height: 22px; width: 60%; }
+        .sk-line.sm { width: 40%; }
+        .sk-rows { margin-top: 14px; border: 1px solid rgba(148,163,184,0.18); border-radius: 8px; overflow: hidden; }
+        .sk-row { display: grid; grid-template-columns: 1.4fr 0.7fr 1.3fr 0.6fr 0.6fr 0.6fr 0.6fr 1fr 0.8fr; gap: 14px;
+            padding: 16px 18px; border-bottom: 1px solid rgba(148,163,184,0.10); }
+        .sk-row:last-child { border-bottom: 0; }
+        .sk-cell { height: 14px; }
+        @media (prefers-reduced-motion: reduce) { .sk-block::after { animation: none; } }
+        @media (max-width: 820px) { .sk-rows { display: none; } }
         [hidden] { display: none !important; }
         @media (max-width: 820px) {
             .pending-page { width: min(100% - 22px, 620px); padding-top: 92px; }
@@ -265,6 +284,20 @@
                 <a class="btn btn-primary" href="/sportsbook/">Make Picks</a>
             </nav>
         </header>
+
+        <section id="loadingSkeleton" class="skeleton" aria-hidden="true">
+            <div class="summary-strip">
+                <div class="sk-summary"><div class="sk-block sk-line sm"></div><div class="sk-block sk-line lg"></div></div>
+                <div class="sk-summary"><div class="sk-block sk-line sm"></div><div class="sk-block sk-line lg"></div></div>
+                <div class="sk-summary"><div class="sk-block sk-line sm"></div><div class="sk-block sk-line lg"></div></div>
+            </div>
+            <div class="sk-rows">
+                <div class="sk-row"><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span></div>
+                <div class="sk-row"><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span></div>
+                <div class="sk-row"><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span></div>
+                <div class="sk-row"><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span><span class="sk-block sk-cell"></span></div>
+            </div>
+        </section>
 
         <section id="authState" class="auth-state" hidden>
             <h2 id="authHeading">Log in to view pending picks</h2>
@@ -327,6 +360,7 @@
     <script>
     (function () {
         var authState = document.getElementById('authState');
+        var skeleton = document.getElementById('loadingSkeleton');
         var content = document.getElementById('pendingContent');
         var emptyState = document.getElementById('emptyState');
         var panel = document.getElementById('pendingPanel');
@@ -554,6 +588,7 @@
             var pending = (Array.isArray(picks) ? picks : []).filter(function (pick) {
                 return pick && String(pick.status || 'pending').toLowerCase() === 'pending';
             });
+            skeleton.hidden = true;
             var totalUnits = pending.reduce(function (sum, pick) { return sum + Number(pick.units || 0); }, 0);
             var earliest = pending.map(function (pick) { return pick.commence_time; }).filter(Boolean).sort()[0] || null;
 
@@ -595,6 +630,7 @@
 
         function showLoginRequired() {
             content.hidden = true;
+            skeleton.hidden = true;
             authState.hidden = false;
             authHeading.textContent = 'Log in to view pending picks';
             authMessage.textContent = 'This page is private to your account and only loads picks tied to your authenticated session.';
@@ -605,45 +641,48 @@
             }, 900);
         }
 
-        // COLD_START_NEVER_ERROR_20260614: a logged-in user must NEVER see
-        // "Could not load pending picks". The Render web service is on the free
-        // plan and cold-starts can take 30-60s, during which the first request
-        // 5xxs. Instead of giving up after one retry, we retry persistently
-        // through the entire cold-start window with backoff, showing an honest
-        // "waking the server" loading state (NOT an error, NO Log In button).
-        function showWaking() {
-            content.hidden = true;
-            authState.hidden = false;
-            authHeading.textContent = 'Loading your pending picks…';
-            authMessage.textContent = 'Waking the server. First load after idle can take up to a minute, hang tight.';
-            authLoginBtn.hidden = true;
-            authRetryBtn.hidden = true;
-        }
-
         function showLoadError() {
-            // Reached only after the full cold-start window is exhausted (server
-            // genuinely down). Logged-in user: no Log In button, offer Retry.
+            // Reached only after a few quick auto-retries fail (backend genuinely
+            // unreachable). Logged-in user: no Log In button, offer a clear Retry.
             content.hidden = true;
+            skeleton.hidden = true;
             authState.hidden = false;
-            authHeading.textContent = 'Still loading…';
-            authMessage.textContent = 'The server is taking longer than usual to wake. Your account and pending picks are safe. Keep this open or tap Retry.';
+            authHeading.textContent = 'Could not load your pending picks';
+            authMessage.textContent = 'The server did not respond. Your account and picks are safe. Tap Retry.';
             authLoginBtn.hidden = true;
             authRetryBtn.hidden = false;
+        }
+
+        // Reject a hung request instead of spinning forever (req #9).
+        function withTimeout(promise, ms) {
+            return new Promise(function (resolve, reject) {
+                var t = setTimeout(function () {
+                    reject(Object.assign(new Error('request timeout'), { status: 0 }));
+                }, ms);
+                promise.then(
+                    function (v) { clearTimeout(t); resolve(v); },
+                    function (e) { clearTimeout(t); reject(e); }
+                );
+            });
         }
 
         async function loadPending() {
             authState.hidden = true;
             authLoginBtn.hidden = true;
             authRetryBtn.hidden = true;
-            await window.api.getCurrentUser();
-            var data = await window.api.getPendingPicks({ limit: 100 });
+            skeleton.hidden = false; // compact skeleton, not a footer-only empty page
+            // Independent requests run in parallel; the page never blocks the pick
+            // list on the (optional) session refresh, and that refresh can't fail render.
+            var mePromise = window.api.getCurrentUser().catch(function () { return null; });
+            var data = await withTimeout(window.api.getPendingPicks({ limit: 100 }), 12000);
             render(data && data.picks);
+            void mePromise;
         }
 
-        // Backoff schedule covering ~5 min of cold-start/transient outage before
-        // we ever surface a retryable state. In practice a cold start recovers
-        // well inside this window, so the error copy is effectively unreachable.
-        var RETRY_DELAYS_MS = [1500, 2000, 3000, 4000, 5000, 6000, 8000, 10000, 12000, 15000, 15000, 20000, 20000, 30000, 30000, 30000, 45000, 45000];
+        // Backend is on an always-on plan, so a normal load succeeds on the first
+        // try. Keep a few short auto-retries only to ride out a transient blip,
+        // then surface a real Retry button instead of an endless spinner.
+        var RETRY_DELAYS_MS = [1200, 2500, 5000];
         var attempt = 0;
         var retryTimer = null;
 
@@ -657,22 +696,20 @@
                 await loadPending();
                 attempt = 0;
             } catch (error) {
-                // Token genuinely rejected (refresh already attempted in api.request)
-                // -> real auth failure -> route to login.
                 if (error && (error.status === 401 || error.status === 403)) {
                     showLoginRequired();
                     return;
                 }
-                // Transient (cold-start 5xx / network). Retry FOREVER with an
-                // honest loading state. We never surface an error-looking screen
-                // for a logged-in user: backoff ramps up then holds at the max
-                // interval indefinitely until the server wakes and succeeds.
-                showWaking();
-                var idx = attempt < RETRY_DELAYS_MS.length ? attempt : RETRY_DELAYS_MS.length - 1;
-                var delay = RETRY_DELAYS_MS[idx];
-                attempt += 1;
-                retryTimer = setTimeout(function () { boot(); }, delay);
-                return;
+                if (attempt < RETRY_DELAYS_MS.length) {
+                    // Keep the skeleton up (no scary copy) during quick auto-retries.
+                    skeleton.hidden = false;
+                    authState.hidden = true;
+                    var delay = RETRY_DELAYS_MS[attempt];
+                    attempt += 1;
+                    retryTimer = setTimeout(function () { boot(); }, delay);
+                    return;
+                }
+                showLoadError();
             }
         }
 

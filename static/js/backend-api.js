@@ -227,6 +227,16 @@ class TrustMyRecordAPI {
                 config.body = JSON.stringify(config.body);
             }
 
+            // Default request timeout. Without this, a stalled Render cold-start
+            // connection (socket accepted but no response) leaves the caller's
+            // await hanging forever - which is exactly what left the forum
+            // sidebar stuck on "Loading forums..." indefinitely. A GET gets 30s
+            // (covers a warm-but-slow cold start); writes/uploads get 45s.
+            // Callers that pass their own options.signal keep full control.
+            if (!config.signal && typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
+                config.signal = AbortSignal.timeout(_method === 'GET' ? 30000 : 45000);
+            }
+
             try {
                 // Proactively refresh when the access token is missing OR
                 // expired/near-expiry, so a stale 15-min token never rides along

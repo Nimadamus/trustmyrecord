@@ -120,6 +120,98 @@ function normalizePickStatus(item) {
     return String(item.status || item.result || item.pick_status || '').toLowerCase();
 }
 
+// Single source of the grading-rules explanation. The text lives in ONE shared
+// popover element appended to <body>; every "How grading works" trigger beside a
+// "Picks graded" heading points at that single element. It is never duplicated
+// inside individual graded-pick cards. Hover or click opens it; it is clamped to
+// the viewport so it never overflows on mobile.
+var GRADING_EXPLAIN_TEXT = 'Pushes, voids, and ineligible picks are processed but do not change the win/loss record. Pick details stay hidden until eligible for public record.';
+
+function gradingInfoHtml() {
+    // Renders only the trigger button -- no per-card explanation text.
+    return ' <button type="button" class="grading-info-btn" aria-label="How grading works" aria-expanded="false"' +
+        ' onclick="toggleGradingInfo(event,this)" onmouseenter="showGradingInfo(this)" onmouseleave="scheduleHideGradingInfo()">' +
+        '<i class="fas fa-circle-info"></i> How grading works</button>';
+}
+
+function gradingInfoPopEl() {
+    var el = document.getElementById('gradingInfoPopover');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'gradingInfoPopover';
+        el.className = 'grading-info-pop';
+        el.setAttribute('role', 'tooltip');
+        el.textContent = GRADING_EXPLAIN_TEXT;
+        el.addEventListener('mouseenter', function () { if (_gradingHideTimer) { clearTimeout(_gradingHideTimer); _gradingHideTimer = null; } });
+        el.addEventListener('mouseleave', scheduleHideGradingInfo);
+        (document.body || document.documentElement).appendChild(el);
+    }
+    return el;
+}
+
+function positionGradingInfo(btn) {
+    var el = gradingInfoPopEl();
+    var r = btn.getBoundingClientRect();
+    var pw = el.offsetWidth || 260;
+    var ph = el.offsetHeight || 80;
+    var left = Math.max(10, Math.min(r.left, window.innerWidth - pw - 10));
+    var top = r.bottom + 8;
+    if (top + ph > window.innerHeight - 8) top = Math.max(8, r.top - ph - 8); // flip above if no room below
+    el.style.left = left + 'px';
+    el.style.top = top + 'px';
+}
+
+var _gradingHideTimer = null;
+var _gradingPinned = false;
+
+function showGradingInfo(btn) {
+    if (_gradingHideTimer) { clearTimeout(_gradingHideTimer); _gradingHideTimer = null; }
+    positionGradingInfo(btn);
+    gradingInfoPopEl().classList.add('is-visible');
+}
+
+function scheduleHideGradingInfo() {
+    if (_gradingPinned) return;
+    _gradingHideTimer = setTimeout(function () { gradingInfoPopEl().classList.remove('is-visible'); }, 140);
+}
+
+function toggleGradingInfo(ev, btn) {
+    if (ev) { ev.preventDefault(); ev.stopPropagation(); }
+    var el = gradingInfoPopEl();
+    _gradingPinned = !_gradingPinned;
+    btn.setAttribute('aria-expanded', _gradingPinned ? 'true' : 'false');
+    if (_gradingPinned) {
+        positionGradingInfo(btn);
+        el.classList.add('is-visible');
+        setTimeout(function () {
+            document.addEventListener('click', function closer(e) {
+                if (e.target !== btn && !el.contains(e.target)) {
+                    _gradingPinned = false;
+                    el.classList.remove('is-visible');
+                    btn.setAttribute('aria-expanded', 'false');
+                    document.removeEventListener('click', closer);
+                }
+            });
+        }, 0);
+    } else {
+        el.classList.remove('is-visible');
+    }
+}
+
+(function injectGradingInfoStyles() {
+    if (typeof document === 'undefined' || document.getElementById('grading-info-styles')) return;
+    var css =
+        '.grading-info-btn{display:inline-flex;align-items:center;gap:5px;margin-left:8px;vertical-align:middle;font-weight:400;background:transparent;border:1px solid var(--border-color,rgba(255,255,255,.15));color:var(--text-secondary,#9aa4b2);font-size:0.72rem;line-height:1;padding:3px 8px;border-radius:999px;cursor:pointer;}' +
+        '.grading-info-btn:hover,.grading-info-btn:focus{color:var(--text-primary,#fff);border-color:var(--accent,#3b82f6);outline:none;}' +
+        '.grading-info-btn i{font-size:0.78rem;}' +
+        '.grading-info-pop{position:fixed;left:0;top:0;z-index:9999;width:260px;max-width:calc(100vw - 20px);background:var(--card-bg,#1a2230);color:var(--text-secondary,#c5cdd8);border:1px solid var(--border-color,rgba(255,255,255,.18));border-radius:10px;padding:10px 12px;font-size:0.78rem;line-height:1.45;box-shadow:0 10px 28px rgba(0,0,0,.4);font-weight:400;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .12s,transform .12s,visibility .12s;pointer-events:none;}' +
+        '.grading-info-pop.is-visible{opacity:1;visibility:visible;transform:translateY(0);pointer-events:auto;}';
+    var style = document.createElement('style');
+    style.id = 'grading-info-styles';
+    style.textContent = css;
+    (document.head || document.documentElement).appendChild(style);
+})();
+
 function renderPickCard(item) {
     const id = item.pick_id || item.id || item.item_id;
     const status = normalizePickStatus(item);
@@ -127,7 +219,7 @@ function renderPickCard(item) {
     const count = Number(item.pick_count || item.count || 1);
     const action = isPending
         ? '<i class="fas fa-lock"></i> Submitted locked picks'
-        : '<i class="fas fa-clipboard-check"></i> Picks graded';
+        : '<i class="fas fa-clipboard-check"></i> Picks graded' + gradingInfoHtml();
     let body;
     if (isPending) {
         body = '<div class="pick-embed is-private">' +
@@ -145,7 +237,6 @@ function renderPickCard(item) {
                 ? '<div class="pe-team">' + esc(breakdown) + '</div>'
                 : '<div class="pe-team">Verified record updated.</div>') +
             '<div style="margin-top:5px;color:var(--text-muted);font-size:0.86rem;">Current overall record: ' + esc(getRecordText(item)) + '</div>' +
-            '<div style="margin-top:8px;color:var(--text-secondary);font-size:0.82rem;">Pushes, voids, and ineligible picks are processed but do not change the win/loss record. Pick details stay hidden until eligible for public record.</div>' +
         '</div>';
     }
 
@@ -170,19 +261,23 @@ function renderTextPost(item) {
 function renderPollCard(item) {
     const id = item.poll_id || item.id || item.item_id;
     const opts = Array.isArray(item.options) ? item.options : [];
-    const total = Number(item.total_votes || item.votes_count || 0);
-    const optionsHtml = opts.length
-        ? opts.map((opt, idx) => {
-            const optionId = opt.id || opt.option_id || idx;
-            const votes = Number(opt.votes || opt.vote_count || 0);
-            const pct = total > 0 ? Math.round(votes / total * 100) : 0;
-            return '<button class="poll-option" onclick="votePoll(' + jsArg(id) + ', ' + jsArg(optionId) + ')"><span>' + esc(opt.text || opt.label || ('Option ' + (idx + 1))) + '</span><strong>' + pct + '%</strong></button>';
-        }).join('')
-        : '<div style="color:var(--text-muted);font-size:0.86rem;">Poll options are not available.</div>';
+    const questionCount = Number(item.question_count || 0);
+    // Multi-question quizzes have no single option array in the feed - link out.
+    let body;
+    if (!opts.length && questionCount > 1) {
+        body = '<div class="tmrp" data-poll-id="' + esc(id) + '">' +
+            '<a class="tmrp-opt tmrp-link" href="/polls/#poll-' + esc(id) + '">' +
+            '<span class="tmrp-label">' + questionCount + '-question prediction quiz</span>' +
+            '<span class="tmrp-pct">Enter &rarr;</span></a></div>';
+    } else if (window.TMRPoll) {
+        body = window.TMRPoll.optionsHTML(item);
+    } else {
+        body = '<a class="tmrp-opt tmrp-link" href="/polls/#poll-' + esc(id) + '"><span class="tmrp-label">Open this poll to vote</span><span class="tmrp-pct">View &rarr;</span></a>';
+    }
     return '<div class="feed-item" data-id="' + esc(id) + '" data-type="feed_post">' +
         renderFeedHeader(item, '<i class="fas fa-square-poll-vertical"></i> created a poll') +
         '<div class="fi-content">' + esc(item.content || item.title || '') + '</div>' +
-        '<div class="pick-embed"><div style="display:grid;gap:8px;">' + optionsHtml + '</div><div style="margin-top:9px;color:var(--text-muted);font-size:0.78rem;">' + total + ' vote' + (total === 1 ? '' : 's') + '</div></div>' +
+        '<div class="pick-embed">' + body + '</div>' +
         renderActionRow(id, 'feed_post', item.liked_by_user || item.user_liked, item.likes_count, item.comments_count, true) +
     '</div>';
 }
@@ -589,21 +684,50 @@ async function loadFeed() {
             if (currentFilter === 'all' || currentFilter === 'polls') {
                 try {
                     const pollData = await api.request('/polls/active?limit=5');
-                    (pollData.polls || []).filter(isRealPublicFeedUser).forEach(p => items.push({
+                    const activePolls = (pollData.polls || []).filter(isRealPublicFeedUser);
+                    // /polls/active does not include the per-option array, which left
+                    // feed poll cards rendering "Poll options are not available."
+                    // Hydrate the options (and true vote totals) from each poll detail.
+                    const hydrated = await Promise.all(activePolls.map(async p => {
+                        const questionCount = parseInt(p.question_count) || 0;
+                        let options = Array.isArray(p.options) ? p.options : [];
+                        let totalVotes = parseInt(p.total_votes != null ? p.total_votes : p.vote_count) || 0;
+                        let userVote = null;
+                        let allowChange = p.allow_vote_change;
+                        if (!options.length && questionCount <= 1) {
+                            try {
+                                const detail = await api.request('/polls/' + p.id);
+                                options = (detail.options || []).map(o => ({
+                                    id: o.id,
+                                    text: o.option_text,
+                                    votes: parseInt(o.vote_count) || 0
+                                }));
+                                totalVotes = parseInt(detail.total_votes) || totalVotes;
+                                userVote = detail.user_vote || null;
+                                if (detail.poll && detail.poll.allow_vote_change != null) allowChange = detail.poll.allow_vote_change;
+                            } catch(e) {}
+                        }
+                        return { p: p, options: options, totalVotes: totalVotes, questionCount: questionCount, userVote: userVote, allowChange: allowChange };
+                    }));
+                    hydrated.forEach(h => items.push({
                         item_type: 'poll',
                         post_type: 'poll',
-                        item_id: 'poll_' + p.id,
-                        poll_id: p.id,
-                        content: p.title,
-                        description: p.description,
-                        username: p.creator_username || p.username,
-                        display_name: p.creator_display_name || p.display_name || p.username,
-                        avatar_url: p.avatar_url,
-                        sport: p.sport,
-                        created_at: p.created_at,
-                        options: p.options || [],
-                        total_votes: parseInt(p.total_votes) || 0,
-                        status: p.status,
+                        item_id: 'poll_' + h.p.id,
+                        poll_id: h.p.id,
+                        content: h.p.title,
+                        description: h.p.description,
+                        username: h.p.creator_username || h.p.username,
+                        display_name: h.p.creator_display_name || h.p.display_name || h.p.username,
+                        avatar_url: h.p.avatar_url,
+                        sport: h.p.sport,
+                        created_at: h.p.created_at,
+                        options: h.options,
+                        total_votes: h.totalVotes,
+                        question_count: h.questionCount,
+                        status: h.p.status,
+                        voting_deadline: h.p.voting_deadline,
+                        allow_vote_change: h.allowChange,
+                        user_vote: h.userVote,
                         likes_count: 0,
                         comments_count: 0
                     }));
