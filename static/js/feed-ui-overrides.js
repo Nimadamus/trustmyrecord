@@ -261,22 +261,23 @@ function renderTextPost(item) {
 function renderPollCard(item) {
     const id = item.poll_id || item.id || item.item_id;
     const opts = Array.isArray(item.options) ? item.options : [];
-    const total = Number(item.total_votes || item.votes_count || 0);
     const questionCount = Number(item.question_count || 0);
-    const optionsHtml = opts.length
-        ? opts.map((opt, idx) => {
-            const optionId = opt.id || opt.option_id || idx;
-            const votes = Number(opt.votes || opt.vote_count || 0);
-            const pct = total > 0 ? Math.round(votes / total * 100) : 0;
-            return '<button class="poll-option" onclick="votePoll(' + jsArg(id) + ', ' + jsArg(optionId) + ')"><span>' + esc(opt.text || opt.label || ('Option ' + (idx + 1))) + '</span><strong>' + pct + '%</strong></button>';
-        }).join('')
-        : questionCount > 1
-            ? '<a class="poll-option" href="/polls/#poll-' + esc(id) + '" style="text-decoration:none;"><span>' + questionCount + '-question prediction quiz</span><strong>Enter &rarr;</strong></a>'
-            : '<a class="poll-option" href="/polls/#poll-' + esc(id) + '" style="text-decoration:none;"><span>Open this poll to vote</span><strong>View &rarr;</strong></a>';
+    // Multi-question quizzes have no single option array in the feed - link out.
+    let body;
+    if (!opts.length && questionCount > 1) {
+        body = '<div class="tmrp" data-poll-id="' + esc(id) + '">' +
+            '<a class="tmrp-opt tmrp-link" href="/polls/#poll-' + esc(id) + '">' +
+            '<span class="tmrp-label">' + questionCount + '-question prediction quiz</span>' +
+            '<span class="tmrp-pct">Enter &rarr;</span></a></div>';
+    } else if (window.TMRPoll) {
+        body = window.TMRPoll.optionsHTML(item);
+    } else {
+        body = '<a class="tmrp-opt tmrp-link" href="/polls/#poll-' + esc(id) + '"><span class="tmrp-label">Open this poll to vote</span><span class="tmrp-pct">View &rarr;</span></a>';
+    }
     return '<div class="feed-item" data-id="' + esc(id) + '" data-type="feed_post">' +
         renderFeedHeader(item, '<i class="fas fa-square-poll-vertical"></i> created a poll') +
         '<div class="fi-content">' + esc(item.content || item.title || '') + '</div>' +
-        '<div class="pick-embed"><div style="display:grid;gap:8px;">' + optionsHtml + '</div><div style="margin-top:9px;color:var(--text-muted);font-size:0.78rem;">' + total + ' vote' + (total === 1 ? '' : 's') + '</div></div>' +
+        '<div class="pick-embed">' + body + '</div>' +
         renderActionRow(id, 'feed_post', item.liked_by_user || item.user_liked, item.likes_count, item.comments_count, true) +
     '</div>';
 }
@@ -691,6 +692,8 @@ async function loadFeed() {
                         const questionCount = parseInt(p.question_count) || 0;
                         let options = Array.isArray(p.options) ? p.options : [];
                         let totalVotes = parseInt(p.total_votes != null ? p.total_votes : p.vote_count) || 0;
+                        let userVote = null;
+                        let allowChange = p.allow_vote_change;
                         if (!options.length && questionCount <= 1) {
                             try {
                                 const detail = await api.request('/polls/' + p.id);
@@ -700,9 +703,11 @@ async function loadFeed() {
                                     votes: parseInt(o.vote_count) || 0
                                 }));
                                 totalVotes = parseInt(detail.total_votes) || totalVotes;
+                                userVote = detail.user_vote || null;
+                                if (detail.poll && detail.poll.allow_vote_change != null) allowChange = detail.poll.allow_vote_change;
                             } catch(e) {}
                         }
-                        return { p: p, options: options, totalVotes: totalVotes, questionCount: questionCount };
+                        return { p: p, options: options, totalVotes: totalVotes, questionCount: questionCount, userVote: userVote, allowChange: allowChange };
                     }));
                     hydrated.forEach(h => items.push({
                         item_type: 'poll',
@@ -720,6 +725,9 @@ async function loadFeed() {
                         total_votes: h.totalVotes,
                         question_count: h.questionCount,
                         status: h.p.status,
+                        voting_deadline: h.p.voting_deadline,
+                        allow_vote_change: h.allowChange,
+                        user_vote: h.userVote,
                         likes_count: 0,
                         comments_count: 0
                     }));
