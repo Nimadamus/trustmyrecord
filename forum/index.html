@@ -132,6 +132,19 @@ a.fthread-avatar{color:inherit;text-decoration:none;cursor:pointer}
 .fthread-author b a:hover,a.fthread-avatar:hover{text-decoration:underline}
 .fthread-row-avatar{flex:0 0 28px;width:28px;height:28px;border:1px solid #9da7b5;background:#e6ebf2;color:#222;display:inline-grid;place-items:center;font:bold 11px Arial,Helvetica,sans-serif;border-radius:50%;overflow:hidden;margin-top:1px}
 .fthread-row-avatar img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+a.fthread-row-avatar{color:inherit;text-decoration:none;cursor:pointer}
+a.fthread-row-avatar:hover{border-color:var(--link)}
+/* Usernames read as plain text until hovered so the thread title stays the
+   loudest thing in a row, but they are real links everywhere. */
+.fuser-link{color:inherit;text-decoration:none}
+.fuser-link:hover{color:var(--link-hover);text-decoration:underline}
+.flpost-by .fuser-link,.fdesc .fuser-link{color:var(--link)}
+a.fpost-permalink{color:inherit;text-decoration:none}
+a.fpost-permalink:hover{color:var(--link);text-decoration:underline}
+/* Deep-link target flash: what /forum/?thread=..&post=..#post-.. landed on. */
+.fthread-post.is-target{outline:2px solid #1f5f9f;outline-offset:-2px;background:#fffbe6}
+body.tmr-forum-live-redesign .fthread-post.is-target{outline-color:#38bdf8;background:rgba(56,189,248,.10)}
+@media (prefers-reduced-motion:no-preference){.fthread-post{transition:background .3s ease,outline-color .3s ease}}
 @media (max-width:760px){.fthread-row-avatar{flex-basis:24px;width:24px;height:24px;font-size:10px}}
 .fthread-author b{display:block;color:#222;margin-bottom:3px}
 .fthread-role{color:#444;font-size:11px;margin-bottom:7px}
@@ -2487,6 +2500,91 @@ function renderForumSidebar() {
     if (currentCategorySlug) setActiveSidebar(currentCategorySlug);
 }
 
+/* ---------------------------------------------------------------------------
+   Shared member-link helpers (Jul 15, 2026)
+
+   Every username and avatar in the forum -- thread rows, the Last Post cell,
+   the category index, search results, and the post author panel -- clicks
+   through to that member's public profile at /u/<username>/, where the Forum
+   Activity section lists their full Posts and Threads history. Keep every
+   render site going through these helpers so the destination cannot drift
+   apart again.
+
+   Rows in the thread/category tables are themselves click targets (the whole
+   <tr> carries role="link" + onclick), so links built here stop propagation:
+   clicking a name opens the profile, not the thread underneath it.
+
+   TMR_FORUM_SAMPLE_THREADS placeholders ('TrustMyRecord', 'user') are literal
+   strings rather than accounts, so they render as plain text, never as a link
+   that would 404.
+--------------------------------------------------------------------------- */
+var FORUM_NON_MEMBER_NAMES = { 'user': 1, 'trustmyrecord': 1, '': 1 };
+
+function forumProfileHref(username) {
+    var name = String(username == null ? '' : username).trim();
+    if (!name || FORUM_NON_MEMBER_NAMES[name.toLowerCase()]) return '';
+    return '/u/' + encodeURIComponent(name) + '/';
+}
+
+function forumUserLinkHtml(username, extraClass) {
+    var name = String(username == null ? '' : username).trim();
+    var href = forumProfileHref(name);
+    if (!href) return escHtml(name);
+    return '<a class="fuser-link' + (extraClass ? ' ' + extraClass : '') + '"'
+        + ' href="' + href + '"'
+        + ' title="View ' + escHtml(name) + ' profile"'
+        + ' onclick="event.stopPropagation();">' + escHtml(name) + '</a>';
+}
+
+/* 28px row avatar, linked when the name is a real member. A linked avatar
+   becomes a real tab stop, so it drops aria-hidden and is labelled instead;
+   the <img> keeps an empty alt because the adjacent username link already
+   names the same destination. */
+function forumRowAvatarHtml(username, avatarUrl) {
+    var name = String(username == null ? '' : username).trim();
+    var initials = String(name || '?').slice(0, 1).toUpperCase();
+    var inner = avatarUrl
+        ? '<img src="' + escHtml(avatarUrl) + '" alt="" loading="lazy" onerror="this.parentNode.textContent=\'' + escHtml(initials) + '\';">'
+        : escHtml(initials);
+    var href = forumProfileHref(name);
+    if (!href) return '<span class="fthread-row-avatar" aria-hidden="true">' + inner + '</span>';
+    return '<a class="fthread-row-avatar" href="' + href + '"'
+        + ' aria-label="View ' + escHtml(name) + ' profile"'
+        + ' onclick="event.stopPropagation();">' + inner + '</a>';
+}
+
+/* Canonical permalink to a single post. The thread view renders every post in
+   one document, so #post-<id> alone locates the reply -- ?thread= and ?post=
+   ride along so the link still resolves on a cold load, where the hash by
+   itself would not tell the router which thread to open. */
+function forumPostPermalink(threadId, postId) {
+    var tid = (threadId != null) ? String(threadId) : '';
+    var pid = (postId != null) ? String(postId) : '';
+    if (!tid) return '#post-' + encodeURIComponent(pid);
+    if (!pid) return '/forum/?thread=' + encodeURIComponent(tid);
+    return '/forum/?thread=' + encodeURIComponent(tid)
+        + '&post=' + encodeURIComponent(pid)
+        + '#post-' + encodeURIComponent(pid);
+}
+
+/* Scroll one reply into view and flash it so the visitor sees which post the
+   link meant. Callers run this after the thread has rendered, so there is no
+   timeout racing the paint. Returns true when the post existed. */
+function forumScrollToPost(postId) {
+    var pid = String(postId == null ? '' : postId).trim();
+    if (!pid) return false;
+    var esc = (window.CSS && CSS.escape) ? CSS.escape(pid) : pid.replace(/"/g, '\\"');
+    var target = document.getElementById('post-' + pid)
+        || document.querySelector('#postsContainer .fthread-post[data-post-id="' + esc + '"]');
+    if (!target) return false;
+    var prev = document.querySelectorAll('#postsContainer .fthread-post.is-target');
+    for (var i = 0; i < prev.length; i++) prev[i].classList.remove('is-target');
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    target.classList.add('is-target');
+    setTimeout(function () { target.classList.remove('is-target'); }, 2600);
+    return true;
+}
+
 function renderCategories() {
     var container = document.getElementById('categoriesContainer');
     if (!container) return;
@@ -2533,7 +2631,7 @@ function renderCategories() {
                 var ltTitle = (lt.title || '').length > 44 ? lt.title.substring(0, 44) + '...' : (lt.title || '');
                 /* 2+2 stacked format: bold title / by user / gray time */
                 lastHtml = '<div class="flpost-title">' + escHtml(ltTitle) + '</div>'
-                         + '<div class="flpost-by">by ' + escHtml(lt.username || '') + '</div>'
+                         + '<div class="flpost-by">by ' + forumUserLinkHtml(lt.username || '') + '</div>'
                          + '<div class="flpost-meta">' + formatForumStamp(lt.last_post_at || lt.created_at) + '</div>';
             }
             var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
@@ -2627,22 +2725,16 @@ function renderThreads() {
         var stickyTag = (t.is_pinned || t.sticky) ? '<span class="fsticky-tag">Sticky</span>' : '';
         var starter = t.username || (t.user && t.user.username) || 'user';
         var starterAvatar = t.avatar_url || (t.user && (t.user.avatar_url || t.user.avatar)) || '';
-        var starterInitials = String(starter || '?').slice(0, 1).toUpperCase();
-        var avatarHtml = starterAvatar
-            ? '<span class="fthread-row-avatar" aria-hidden="true"><img src="' + escHtml(starterAvatar) + '" alt="' + escHtml(starter) + ' avatar" loading="lazy" onerror="this.parentNode.textContent=\'' + escHtml(starterInitials) + '\';"></span>'
-            : '<span class="fthread-row-avatar" aria-hidden="true">' + escHtml(starterInitials) + '</span>';
+        var avatarHtml = forumRowAvatarHtml(starter, starterAvatar);
         /* LAST_POST_NO_TITLE_20260711: the Last Post cell shows poster + time only.
            Never repeat the thread title here; it already leads the row (2+2 layout). */
         var lastUser = t.last_post_username || t.last_username || starter;
         var lastAvatar = t.last_post_avatar_url || t.last_avatar_url || t.last_user_avatar
             || ((lastUser && starter && lastUser === starter) ? starterAvatar : '');
-        var lastInitials = String(lastUser || '?').slice(0, 1).toUpperCase();
-        var lastAvatarHtml = lastAvatar
-            ? '<span class="fthread-row-avatar" aria-hidden="true"><img src="' + escHtml(lastAvatar) + '" alt="' + escHtml(lastUser) + ' avatar" loading="lazy" onerror="this.parentNode.textContent=\'' + escHtml(lastInitials) + '\';"></span>'
-            : '<span class="fthread-row-avatar" aria-hidden="true">' + escHtml(lastInitials) + '</span>';
+        var lastAvatarHtml = forumRowAvatarHtml(lastUser, lastAvatar);
         var lastWhen = t.last_post_at || t.last_post_created_at || t.last_activity || t.updated_at;
         var lastHtml = lastWhen
-            ? '<div class="flpost-line">' + lastAvatarHtml + '<div class="flpost-text"><div class="flpost-user"><b>' + escHtml(lastUser) + '</b></div><div class="flpost-meta">' + formatForumStamp(lastWhen) + '</div></div></div>'
+            ? '<div class="flpost-line">' + lastAvatarHtml + '<div class="flpost-text"><div class="flpost-user"><b>' + forumUserLinkHtml(lastUser) + '</b></div><div class="flpost-meta">' + formatForumStamp(lastWhen) + '</div></div></div>'
             : '<span class="flpost-empty">No replies yet</span>';
         var ariaTitle = escHtml(t.title || 'Thread');
         return '<tr class="' + rowClass + '" role="link" tabindex="0" aria-label="Open thread: ' + ariaTitle + '" onclick="showThreadDetail(' + t.id + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();showThreadDetail(' + t.id + ');}">'
@@ -2650,7 +2742,7 @@ function renderThreads() {
             +   stickyTag
             +   '<a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title || 'Thread') + '</a>'
             +   threadPagesHtml(t)
-            +   '<div class="fdesc">Started by <b>' + escHtml(starter) + '</b> ' + (t.created_at ? formatForumStamp(t.created_at) : '') + '</div>'
+            +   '<div class="fdesc">Started by <b>' + forumUserLinkHtml(starter) + '</b> ' + (t.created_at ? formatForumStamp(t.created_at) : '') + '</div>'
             + '</div></div></td>'
             + '<td class="fcell col-num">&nbsp;</td>'
             + '<td class="fcell col-last">' + lastHtml + '</td>'
@@ -2932,10 +3024,24 @@ function renderThread() {
             + (canModerate && p.is_thread_starter ? '<button type="button" class="fpost-btn is-mod" onclick="forumPinThread(this)">' + ((cachedThread && cachedThread.is_pinned) ? 'Unpin Thread' : 'Pin Thread') + '</button>' : '')
             + '</div>';
         var editedLine = (p.is_edited && p.edited_at) ? '<div class="fpost-edited" id="postEdited-' + escHtml(postId) + '">Last edited ' + escHtml(formatEditedDate(p.edited_at)) + (p.moderator_edited ? ' by moderator' : '') + '</div>' : '';
-        return '<div class="fthread-post" data-post-id="' + escHtml(postId) + '">'
+        // The post card itself carries id="post-<id>" so a #post-<id> deep link
+        // (from a profile's Forum Activity list, a notification, or a copied
+        // permalink) scrolls to AND can highlight the whole reply. The id used to
+        // sit on an empty zero-height <a> inside .meta, which scrolled roughly
+        // right but could never be highlighted -- do not reintroduce that anchor
+        // here or the two nodes collide on a duplicate id.
+        // Thread-starter ids are the synthetic string 'thread-<id>-starter'
+        // (see starterPostFromThread), so nothing here may assume a numeric id.
+        var permalink = forumPostPermalink(p.thread_id || (cachedThread && cachedThread.id), postId);
+        return '<div class="fthread-post" data-post-id="' + escHtml(postId) + '"'
+            + (postId ? ' id="post-' + escHtml(postId) + '"' : '') + '>'
             + renderAuthorPanel(p)
             + '<div class="fthread-body">'
-            +   '<div class="meta"><span>' + (p.created_at ? formatForumDate(p.created_at) : '—') + (p.id ? '<a id="post-' + escHtml(p.id) + '"></a>' : '') + '</span><span class="fthread-post-num">#' + postNo + '</span></div>'
+            +   '<div class="meta"><span>' + (p.created_at ? formatForumDate(p.created_at) : '—') + '</span>'
+            +   (postId
+                    ? '<a class="fthread-post-num fpost-permalink" href="' + escHtml(permalink) + '" title="Permalink to this post">#' + postNo + '</a>'
+                    : '<span class="fthread-post-num">#' + postNo + '</span>')
+            +   '</div>'
             +   '<div class="fpost-content" id="postContent-' + escHtml(postId) + '">' + forumRenderContent(p.content || p.body || '') + '</div>'
             +   editedLine
             +   actions
@@ -3586,7 +3692,7 @@ async function showThreadsList(slug, name, id) {
     await loadThreads();
 }
 
-async function showThreadDetail(threadId, page) {
+async function showThreadDetail(threadId, page, postId) {
     currentThreadId = threadId;
     document.getElementById('viewCategories').style.display = 'none';
     document.getElementById('viewThreads').style.display = 'none';
@@ -3601,7 +3707,15 @@ async function showThreadDetail(threadId, page) {
     }
     crumbParts.push('<span class="sep">&raquo;</span><span>' + escHtml(currentThreadTitle || 'Thread') + '</span>');
     document.getElementById('breadcrumb').innerHTML = crumbParts.join('');
-    window.history.replaceState({}, '', '/forum/#thread-' + encodeURIComponent(threadId));
+    // When a specific post was requested, keep the shareable permalink in the
+    // address bar instead of collapsing it to the bare #thread-<id> form --
+    // otherwise a reply link opened from a profile silently loses the post it
+    // pointed at the moment the thread renders.
+    var wantPost = (postId != null && postId !== '') ? String(postId) : '';
+    window.history.replaceState({}, '',
+        wantPost ? forumPostPermalink(threadId, wantPost)
+                 : '/forum/#thread-' + encodeURIComponent(threadId));
+    if (wantPost && forumScrollToPost(wantPost)) return;
     var pg = parseInt(page, 10);
     if (Number.isFinite(pg) && pg > 1) {
         // Jump to the first post of the requested page. All posts render on one
@@ -3613,6 +3727,32 @@ async function showThreadDetail(threadId, page) {
             if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 60);
     }
+}
+
+/* A permalink clicked while its thread is already open should scroll, not
+   reload the page for a post that is on screen already. Bound once, delegated,
+   and it deliberately falls through to a normal navigation when the post is not
+   in this document. */
+if (!window.__forumPermalinkBound) {
+    window.__forumPermalinkBound = true;
+    document.addEventListener('click', function (e) {
+        var a = e.target.closest && e.target.closest('a.fpost-permalink');
+        if (!a) return;
+        var m = (a.getAttribute('href') || '').match(/#post-(.+)$/);
+        if (!m) return;
+        var pid = decodeURIComponent(m[1]);
+        if (!document.getElementById('post-' + pid)) return;
+        e.preventDefault();
+        window.history.replaceState({}, '', a.getAttribute('href'));
+        forumScrollToPost(pid);
+    });
+    // Back/forward between permalinks in an open thread, and #post- links that
+    // arrive after load, still resolve. The router only reads the hash once at
+    // DOMContentLoaded, so without this a hash change is dropped on the floor.
+    window.addEventListener('hashchange', function () {
+        var m = (window.location.hash || '').match(/^#post-(.+)$/);
+        if (m) forumScrollToPost(decodeURIComponent(m[1]));
+    });
 }
 
 function backToThreads() {
@@ -4130,7 +4270,7 @@ async function performSearch(query) {
                 '<td><div class="tmr-fb-thread-cell"><span class="tmr-fb-thread-icon">T</span><div class="tmr-fb-thread-body">' +
                     '<span class="tag-pill">' + escHtml(catName) + '</span>' +
                     '<a class="tmr-fb-thread-title" href="#" onclick="event.preventDefault();event.stopPropagation();currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ');">' + escHtml(t.title) + '</a>' +
-                    '<div class="tmr-fb-thread-meta">Started by <strong>' + escHtml(t.username || '') + '</strong> &middot; ' + formatForumStamp(t.created_at) + '</div>' +
+                    '<div class="tmr-fb-thread-meta">Started by <strong>' + forumUserLinkHtml(t.username || '') + '</strong> &middot; ' + formatForumStamp(t.created_at) + '</div>' +
                 '</div></div></td>' +
                 '<td class="col-rating"></td>' +
                 '<td class="col-last"><div class="tmr-fb-lastpost-meta">' + formatForumStamp(t.last_post_at || t.created_at) + '</div></td>' +
@@ -4392,7 +4532,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     var queryThread = parseInt(params.get('thread'));
     if (queryThread) {
-        await showThreadDetail(queryThread);
+        // ?post=<id> (or a bare #post-<id> riding alongside ?thread=) opens the
+        // thread and scrolls to that exact reply. Post ids are not always
+        // numeric -- the thread starter is 'thread-<id>-starter' -- so this is
+        // read as a string and never parseInt'd.
+        var queryPost = (params.get('post') || '').trim();
+        if (!queryPost) {
+            var postHash = (window.location.hash || '').match(/^#post-(.+)$/);
+            if (postHash) queryPost = decodeURIComponent(postHash[1]);
+        }
+        await showThreadDetail(queryThread, null, queryPost || null);
         return;
     }
     var queryCategory = params.get('category');

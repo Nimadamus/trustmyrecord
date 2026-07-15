@@ -2206,6 +2206,32 @@
                         <div class="ca-highlights" id="caHighlights" hidden></div>
                       </div>
 
+                      <!-- ===== FORUM ACTIVITY (Jul 15, 2026) =====
+                           The member's full forum history, newest first, in two
+                           tabs: every reply they wrote (Posts) and every thread
+                           they started (Threads). Read live from the forum
+                           tables via /api/users/:username/forum-activity -- never
+                           a placeholder count and never a cached sample. The
+                           server excludes deactivated sections and forum rows are
+                           hard-deleted, so removed content cannot surface here.
+                           Paginated server-side so a heavy poster's profile does
+                           not drag in their whole history on first paint. -->
+                      <div class="tmrx-section tmrx-forum" id="forumActivity" hidden>
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Forum Activity</div>
+                            <div class="tmrx-section-sub">Every thread this member started and every reply they posted, newest first. Each entry opens the exact post.</div>
+                          </div>
+                          <div class="tmrx-meta" id="faTotalMeta"></div>
+                        </div>
+                        <div class="tmr-cap-tabs fa-tabs" role="tablist" id="faTabs">
+                          <button type="button" class="tmr-cap-tab is-active" data-fa-tab="posts" role="tab" aria-selected="true">Posts <span class="fa-tab-count" id="faPostsCount"></span></button>
+                          <button type="button" class="tmr-cap-tab" data-fa-tab="threads" role="tab" aria-selected="false">Threads <span class="fa-tab-count" id="faThreadsCount"></span></button>
+                        </div>
+                        <div class="fa-list" id="faList" aria-live="polite"></div>
+                        <div class="tmrx-pagination fa-pagination" id="faPagination" hidden></div>
+                      </div>
+
                       <div class="tmrx-section">
                         <div class="tmrx-section-head">
                           <div>
@@ -6744,6 +6770,7 @@
             loadAdvancedMetrics(profileData.username || profileUsername || '');
             loadPollPoints(profileData.username || profileUsername || '');
             loadCommunityActivity(profileData.username || profileUsername || '');
+            loadForumActivity(profileData.username || profileUsername || '');
             analyticsTrackPickHistoryView({
                 view_type: isOwnProfile ? 'own' : 'public',
                 username: profileData.username || profileUsername || '',
@@ -6818,6 +6845,186 @@
     // null for stays as the '—' placeholder per the no-fake-data rule.
     // Prediction quiz / poll points for the Polls tab. Reads the public
     // per-user poll stats (points earned from the daily MLB quiz + other polls).
+    // ======================== FORUM ACTIVITY ========================
+    // Full, paginated forum history for the profile: Posts (every reply the
+    // member wrote) and Threads (every thread they started), newest first.
+    //
+    // Every row is a live read of the forum tables through
+    // GET /api/users/:username/forum-activity -- there is no placeholder count,
+    // no sample row, and no client-side cache to go stale. The server owns
+    // visibility (deactivated sections excluded; forum rows are hard-deleted so
+    // removed content is already gone) and owns the sort and the paging, so a
+    // member with hundreds of posts still loads one small page at a time.
+    var FA_PER_PAGE = 10;
+    var faState = { username: '', tab: 'posts', page: { posts: 1, threads: 1 }, loading: false, seq: 0 };
+
+    function faEsc(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    // Exact date AND time -- a forum history is a timeline, so "3 days ago" is
+    // not enough to place a post against a game or a line move.
+    function faStamp(value) {
+        if (!value) return '';
+        var d = new Date(value);
+        if (isNaN(d.getTime())) return '';
+        return d.toLocaleString(undefined, {
+            year: 'numeric', month: 'short', day: 'numeric',
+            hour: 'numeric', minute: '2-digit'
+        });
+    }
+
+    function faPlural(n, one, many) {
+        return Number(n).toLocaleString() + ' ' + (Number(n) === 1 ? one : many);
+    }
+
+    function faRenderItems(items, tab) {
+        if (!items.length) {
+            return '<div class="fa-empty">' + (tab === 'threads'
+                ? 'No threads started yet.'
+                : 'No forum replies yet.') + '</div>';
+        }
+        return items.map(function (it) {
+            var meta = [faEsc(faStamp(it.created_at))];
+            if (tab === 'threads') {
+                meta.push('<span class="fa-stat">' + faPlural(it.reply_count || 0, 'reply', 'replies') + '</span>');
+                meta.push('<span class="fa-stat">' + faPlural(it.view_count || 0, 'view', 'views') + '</span>');
+            } else {
+                if (it.like_count) meta.push('<span class="fa-stat">' + faPlural(it.like_count, 'like', 'likes') + '</span>');
+                meta.push('in ' + faEsc(it.title || 'thread'));
+            }
+            var label = tab === 'threads'
+                ? 'Open thread: ' + (it.title || '')
+                : 'Open this reply in: ' + (it.title || '');
+            return '<a class="fa-item" href="' + faEsc(it.url) + '" aria-label="' + faEsc(label) + '">'
+                + '<div class="fa-item-top">'
+                +   '<span class="fa-item-title">' + faEsc(it.title || 'Untitled thread') + '</span>'
+                +   (it.category_name ? '<span class="fa-cat">' + faEsc(it.category_name) + '</span>' : '')
+                + '</div>'
+                + (it.preview ? '<div class="fa-preview">' + faEsc(it.preview) + '</div>' : '')
+                + '<div class="fa-meta">' + meta.join('<span aria-hidden="true">&middot;</span>') + '</div>'
+                + '</a>';
+        }).join('');
+    }
+
+    function faRenderPager(p) {
+        var pager = document.getElementById('faPagination');
+        if (!pager) return;
+        var pages = p && p.pages ? p.pages : 1;
+        if (pages <= 1) { pager.hidden = true; pager.innerHTML = ''; return; }
+        var cur = p.page;
+        var from = ((cur - 1) * p.limit) + 1;
+        var to = Math.min(cur * p.limit, p.total);
+        var html = '<div class="tmrx-page-info">Showing ' + from + '&ndash;' + to + ' of '
+            + Number(p.total).toLocaleString() + ' &middot; Page ' + cur + ' of ' + pages + '</div>';
+        html += '<button type="button" data-fa-page="' + (cur - 1) + '"' + (cur === 1 ? ' disabled' : '') + '>Previous</button>';
+        var nums = [];
+        for (var i = 1; i <= pages; i++) {
+            if (i === 1 || i === pages || (i >= cur - 1 && i <= cur + 1)) nums.push(i);
+        }
+        var prev = 0;
+        nums.forEach(function (i) {
+            if (i - prev > 1) html += '<span class="tmrx-page-gap">&hellip;</span>';
+            html += '<button type="button" class="' + (i === cur ? 'is-active' : '') + '" data-fa-page="' + i + '"'
+                + (i === cur ? ' disabled' : '') + '>' + i + '</button>';
+            prev = i;
+        });
+        html += '<button type="button" data-fa-page="' + (cur + 1) + '"' + (cur === pages ? ' disabled' : '') + '>Next</button>';
+        pager.hidden = false;
+        pager.innerHTML = html;
+    }
+
+    async function faFetch(tab, page) {
+        var list = document.getElementById('faList');
+        if (!list || !faState.username) return;
+        // Guard against an out-of-order response overwriting a newer tab/page.
+        var seq = ++faState.seq;
+        faState.loading = true;
+        list.innerHTML = '<div class="fa-empty">Loading&hellip;</div>';
+        try {
+            var resp = await window.api.request('/users/' + encodeURIComponent(faState.username)
+                + '/forum-activity?tab=' + encodeURIComponent(tab)
+                + '&page=' + encodeURIComponent(page)
+                + '&limit=' + FA_PER_PAGE);
+            if (seq !== faState.seq) return;
+            var items = (resp && Array.isArray(resp.items)) ? resp.items : [];
+            list.innerHTML = faRenderItems(items, tab);
+            faRenderPager(resp && resp.pagination);
+            var meta = document.getElementById('faTotalMeta');
+            if (meta && resp && resp.pagination) {
+                meta.textContent = Number(resp.pagination.total).toLocaleString()
+                    + (tab === 'threads' ? ' threads started' : ' replies posted');
+            }
+        } catch (err) {
+            if (seq !== faState.seq) return;
+            // Never fake a zero on failure -- an empty list and "no activity"
+            // mean different things and the difference matters on a profile.
+            list.innerHTML = '<div class="fa-empty fa-error">Forum activity could not be loaded. '
+                + '<button type="button" data-fa-retry="1">Retry</button></div>';
+            var pgr = document.getElementById('faPagination');
+            if (pgr) { pgr.hidden = true; pgr.innerHTML = ''; }
+        } finally {
+            if (seq === faState.seq) faState.loading = false;
+        }
+    }
+
+    function faSetTab(tab) {
+        faState.tab = tab;
+        var tabs = document.getElementById('faTabs');
+        if (tabs) {
+            tabs.querySelectorAll('.tmr-cap-tab').forEach(function (b) {
+                var on = b.getAttribute('data-fa-tab') === tab;
+                b.classList.toggle('is-active', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+        }
+        faFetch(tab, faState.page[tab] || 1);
+    }
+
+    async function loadForumActivity(username) {
+        var section = document.getElementById('forumActivity');
+        if (!section || !username) return;
+        faState.username = username;
+        section.hidden = false;
+        faSetTab('posts');
+    }
+
+    // Delegated, bound once: tab switches, pager clicks, retry, and the
+    // Community Activity counts, which now scroll down to this section instead
+    // of bouncing the visitor out to /forum/.
+    if (!window.__faBound) {
+        window.__faBound = true;
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest) return;
+            var tabBtn = e.target.closest('#faTabs .tmr-cap-tab');
+            if (tabBtn) { faSetTab(tabBtn.getAttribute('data-fa-tab')); return; }
+            var pageBtn = e.target.closest('#faPagination button[data-fa-page]');
+            if (pageBtn && !pageBtn.disabled) {
+                var p = parseInt(pageBtn.getAttribute('data-fa-page'), 10);
+                if (!Number.isFinite(p) || p < 1) return;
+                faState.page[faState.tab] = p;
+                faFetch(faState.tab, p);
+                var sec = document.getElementById('forumActivity');
+                if (sec && sec.scrollIntoView) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            if (e.target.closest('[data-fa-retry]')) {
+                faFetch(faState.tab, faState.page[faState.tab] || 1);
+                return;
+            }
+            var caCell = e.target.closest('#caForumPostsCell, #caThreadsCell');
+            if (caCell) {
+                var sect = document.getElementById('forumActivity');
+                if (!sect || sect.hidden) return;
+                e.preventDefault();
+                faSetTab(caCell.id === 'caThreadsCell' ? 'threads' : 'posts');
+                sect.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
     // ======================== COMMUNITY ACTIVITY ========================
     // Fills the Overview "Community Activity" ribbon from the aggregator that
     // counts by permanent account id (forum vs feed kept separate; deleted /
@@ -6858,8 +7065,15 @@
             setText('caLastActive', fmtDate(d.last_active));
             var meta = document.getElementById('caLastActiveMeta');
             if (meta) meta.textContent = d.last_active ? ('Last active ' + fmtDate(d.last_active)) : '';
-            wireCell('caForumPostsCell', forum.posts_url || null);
-            wireCell('caThreadsCell', forum.threads_url || null);
+            // Point the two forum counts at the Forum Activity section on this
+            // page (the click handler intercepts and switches tabs); fall back to
+            // the server's /forum/ URL if that section never rendered.
+            wireCell('caForumPostsCell', forum.posts ? '#forumActivity' : (forum.posts_url || null));
+            wireCell('caThreadsCell', forum.threads ? '#forumActivity' : (forum.threads_url || null));
+            var faPc = document.getElementById('faPostsCount');
+            if (faPc) faPc.textContent = forum.posts ? '(' + Number(forum.posts).toLocaleString() + ')' : '';
+            var faTc = document.getElementById('faThreadsCount');
+            if (faTc) faTc.textContent = forum.threads ? '(' + Number(forum.threads).toLocaleString() + ')' : '';
 
             // Up to three highlights, only when the data exists.
             var h = d.highlights || {};
@@ -13358,6 +13572,63 @@
       .ca-hl-meta { margin-top: 7px; font-size: 11px; color: #8391a7; font-weight: 700; }
       @media (max-width: 760px) { .ca-highlights { grid-template-columns: 1fr; } }
 
+      /* ---- Forum Activity section ----
+         A stacked card list, deliberately not a .tmrx-table: tables here are
+         pinned to min-width 920px with nowrap cells, which would force a
+         horizontal scroll for post previews. Cards line-clamp and collapse to
+         one column instead. Sky (#7dd3fc) is the established forum accent. */
+      .tmrx-forum .fa-tabs { margin: 14px 22px 0 !important; }
+      .tmrx-forum .fa-tab-count { opacity: .7; font-weight: 800; margin-left: 3px; }
+      .tmrx-forum .fa-list { display: grid; gap: 10px; margin: 14px 22px 0; }
+      .tmrx-forum .fa-pagination { margin: 14px 22px 20px; }
+      .fa-item {
+        display: block; text-decoration: none; padding: 13px 15px;
+        border: 1px solid rgba(68,91,126,.55); border-radius: 10px;
+        background: rgba(11,20,35,.6);
+        transition: border-color .15s ease, background .15s ease, transform .15s ease;
+      }
+      a.fa-item:hover {
+        border-color: rgba(125,211,252,.55); background: rgba(13,26,44,.85);
+        transform: translateY(-1px);
+      }
+      .fa-item-top { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+      .fa-item-title {
+        font-size: 13.5px; font-weight: 800; color: #e7edf6; line-height: 1.35;
+        min-width: 0; overflow-wrap: anywhere;
+      }
+      a.fa-item:hover .fa-item-title { color: #bfe6ff; }
+      .fa-cat {
+        flex: 0 0 auto; font-size: 10px; font-weight: 900; text-transform: uppercase;
+        letter-spacing: .1em; color: #7dd3fc; border: 1px solid rgba(125,211,252,.32);
+        border-radius: 999px; padding: 2px 8px; background: rgba(125,211,252,.08);
+      }
+      .fa-preview {
+        margin-top: 7px; font-size: 12.5px; color: #a8b4c7; line-height: 1.45;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        overflow: hidden; overflow-wrap: anywhere;
+      }
+      .fa-meta {
+        margin-top: 8px; display: flex; gap: 6px 12px; flex-wrap: wrap;
+        font-size: 11px; font-weight: 700; color: #8391a7;
+      }
+      .fa-meta .fa-stat { color: #7dd3fc; }
+      .fa-empty {
+        padding: 24px 16px; text-align: center; color: #64748b;
+        font-size: 12.5px; font-style: italic;
+      }
+      .fa-error { color: #f0a4a4; font-style: normal; }
+      .fa-error button {
+        margin-left: 8px; padding: 4px 10px; border-radius: 8px;
+        border: 1px solid rgba(125,211,252,.4); background: transparent;
+        color: #7dd3fc; font-size: 11.5px; font-weight: 800; cursor: pointer;
+      }
+      @media (max-width: 760px) {
+        .tmrx-forum .fa-tabs, .tmrx-forum .fa-list,
+        .tmrx-forum .fa-pagination { margin-left: 14px !important; margin-right: 14px !important; }
+        .fa-item { padding: 12px 13px; }
+        .fa-item-title { font-size: 13px; }
+      }
+
       .tmrx-period-strip { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); gap: 8px; }
       .tmrx-period-cell { padding: 10px; border: 1px solid rgba(31,51,80,.55); border-radius: 10px; background: rgba(2,6,23,.40); text-align: center; }
       .tmrx-period-cell .k { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; color: #7a8499; }
@@ -14821,6 +15092,13 @@
       }
       body.profile-page.tmr-social-profile .tmrx-section:has(.tmrx-ribbon) {
         order: 80 !important;
+      }
+      /* Forum Activity sits directly under Community Activity, whose ribbon
+         also resolves to order:80 here. Without an explicit order this section
+         would inherit nothing and float to the end of the flex column, away
+         from the counts it expands on. */
+      body.profile-page.tmr-social-profile .tmrx-section#forumActivity {
+        order: 82 !important;
       }
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvancedTop),
       body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableAdvanced) {
