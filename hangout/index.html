@@ -138,7 +138,7 @@
         /* Stats Card */
         .user-stats-card {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 16px;
             margin-bottom: 28px;
             padding: 24px;
@@ -614,6 +614,78 @@
             color: var(--text-muted);
         }
 
+        /* Poll answer choices (dynamic list) */
+        .poll-choice-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .poll-choice-row .poll-choice-input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .remove-choice-btn {
+            flex: 0 0 auto;
+            width: 38px;
+            height: 42px;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            line-height: 1;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .remove-choice-btn:hover {
+            border-color: #ff5470;
+            color: #ff5470;
+            background: rgba(255, 84, 112, 0.1);
+        }
+
+        .add-choice-btn {
+            width: 100%;
+            padding: 11px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px dashed var(--glass-border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-choice-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.07);
+        }
+
+        .add-choice-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .choice-limit-note {
+            margin-top: 8px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            min-height: 1em;
+        }
+
+        @media (max-width: 480px) {
+            .remove-choice-btn {
+                width: 34px;
+            }
+        }
+
         .submit-btn {
             width: 100%;
             padding: 14px;
@@ -878,10 +950,6 @@
                 <div class="stat-value" id="pollsRank">--</div>
                 <div class="stat-label">Active Polls</div>
             </div>
-            <div class="stat-item">
-                <div class="stat-value" id="pollsPoints">0</div>
-                <div class="stat-label">Your Points</div>
-            </div>
         </div>
 
         <!-- Action Bar -->
@@ -894,9 +962,6 @@
                 <div class="category-filters" id="categoryFilters"></div>
             </div>
             <div style="display: flex; gap: 10px;">
-                <button class="create-poll-btn" onclick="openLeaderboardModal()" style="background: linear-gradient(135deg, var(--neon-gold), var(--neon-cyan));">
-                    <span>&#x1F3C6;</span> Leaderboard
-                </button>
                 <button class="create-poll-btn" onclick="openCreatePollModal()">
                     <span>&#x2795;</span> Start A Poll
                 </button>
@@ -933,27 +998,21 @@
                     <input type="text" id="pollQuestion" placeholder="e.g., Is it weird to text back the next day?" required>
                 </div>
                 <div class="form-group">
-                    <label id="pollOptionsLabel">Options (2-4)</label>
-                    <input type="text" id="pollOption1" placeholder="Option 1" required>
-                    <input type="text" id="pollOption2" placeholder="Option 2" required>
-                    <input type="text" id="pollOption3" placeholder="Option 3 (optional)">
-                    <input type="text" id="pollOption4" placeholder="Option 4 (optional)">
+                    <label id="pollOptionsLabel">Answer Choices</label>
+                    <div id="pollOptionsList">
+                        <div class="poll-choice-row">
+                            <input type="text" id="pollOption1" class="poll-choice-input" placeholder="Choice 1" required>
+                        </div>
+                        <div class="poll-choice-row">
+                            <input type="text" id="pollOption2" class="poll-choice-input" placeholder="Choice 2" required>
+                        </div>
+                    </div>
+                    <button type="button" class="add-choice-btn" id="addChoiceBtn" onclick="addChoiceRow()">+ Add another choice</button>
+                    <div id="choiceLimitNote" class="choice-limit-note"></div>
                 </div>
                 <div class="form-group">
                     <label id="pollEndTimeLabel">End Time</label>
                     <input type="datetime-local" id="pollEndTime" required>
-                </div>
-                <div class="form-group">
-                    <label id="pollPointsLabel">Points Reward</label>
-                    <select id="pollPoints">
-                        <option value="25">25 points (Easy)</option>
-                        <option value="50" selected>50 points (Medium)</option>
-                        <option value="75">75 points (Hard)</option>
-                        <option value="100">100 points (Expert)</option>
-                    </select>
-                    <div id="pollPointsHelp" style="margin-top: 8px; color: var(--text-muted); font-size: 0.85rem; line-height: 1.5;">
-                        Use points to reward participation, strong questions, and community activity across the Hangout.
-                    </div>
                 </div>
                 <button type="submit" class="submit-btn" id="createPollSubmitLabel">Post Poll</button>
             </form>
@@ -979,19 +1038,6 @@
         </div>
     </div>
 
-    <!-- Leaderboard Modal -->
-    <div class="modal-overlay" id="leaderboardModal">
-        <div class="modal-box" style="max-width: 560px;">
-            <button class="modal-close" onclick="closeLeaderboardModal()">&times;</button>
-            <h2 style="margin-bottom: 8px;">Hangout Leaderboard</h2>
-            <div style="display: flex; gap: 6px; margin-bottom: 18px;">
-                <button class="filter-btn active" onclick="loadLeaderboard('all', this)">All Time</button>
-                <button class="filter-btn" onclick="loadLeaderboard('month', this)">Month</button>
-                <button class="filter-btn" onclick="loadLeaderboard('week', this)">Week</button>
-            </div>
-            <div id="leaderboardContent"><!-- filled by JS --></div>
-        </div>
-    </div>
 
 <script src="/static/js/config.js"></script>
 <script src="/static/js/analytics.js?v=20260405"></script>
@@ -1078,25 +1124,109 @@
         const questionLabel = document.getElementById('pollQuestionLabel');
         const questionInput = document.getElementById('pollQuestion');
         const optionsLabel = document.getElementById('pollOptionsLabel');
-        const option1 = document.getElementById('pollOption1');
-        const option2 = document.getElementById('pollOption2');
-        const option3 = document.getElementById('pollOption3');
-        const option4 = document.getElementById('pollOption4');
-        const pointsHelp = document.getElementById('pollPointsHelp');
         const heading = document.getElementById('createPollHeading');
         const submit = document.getElementById('createPollSubmitLabel');
 
         if (heading) heading.textContent = 'Start A Hangout Poll';
         if (categoryLabel) categoryLabel.textContent = 'Hangout Topic';
         if (questionLabel) questionLabel.textContent = 'Poll Question';
-        if (optionsLabel) optionsLabel.textContent = 'Answer Choices (2-4)';
+        if (optionsLabel) optionsLabel.textContent = 'Answer Choices';
         if (questionInput) questionInput.placeholder = 'e.g., Is it weird to text back the next day?';
-        if (option1) option1.placeholder = 'Choice 1';
-        if (option2) option2.placeholder = 'Choice 2';
-        if (option3) option3.placeholder = 'Optional choice 3';
-        if (option4) option4.placeholder = 'Optional choice 4';
         if (submit) submit.textContent = 'Post Poll';
-        if (pointsHelp) pointsHelp.textContent = 'Use points to reward participation and keep the Hangout active.';
+        renumberChoiceRows();
+    }
+
+    // ============ ANSWER CHOICES ============
+
+    const MIN_POLL_CHOICES = 2;
+    const MAX_POLL_CHOICES = 20;
+
+    function getChoiceRows() {
+        const list = document.getElementById('pollOptionsList');
+        return list ? Array.from(list.querySelectorAll('.poll-choice-row')) : [];
+    }
+
+    function renumberChoiceRows() {
+        const rows = getChoiceRows();
+        rows.forEach((row, i) => {
+            const input = row.querySelector('.poll-choice-input');
+            if (!input) return;
+            const n = i + 1;
+            input.placeholder = 'Choice ' + n;
+            input.id = 'pollOption' + n;
+            if (n <= MIN_POLL_CHOICES) {
+                input.required = true;
+            } else {
+                input.required = false;
+            }
+        });
+
+        const addBtn = document.getElementById('addChoiceBtn');
+        if (addBtn) addBtn.disabled = rows.length >= MAX_POLL_CHOICES;
+
+        const note = document.getElementById('choiceLimitNote');
+        if (note) {
+            note.textContent = rows.length >= MAX_POLL_CHOICES
+                ? 'Maximum of ' + MAX_POLL_CHOICES + ' choices reached.'
+                : '';
+        }
+    }
+
+    function addChoiceRow() {
+        const list = document.getElementById('pollOptionsList');
+        if (!list) return;
+        if (getChoiceRows().length >= MAX_POLL_CHOICES) return;
+
+        const row = document.createElement('div');
+        row.className = 'poll-choice-row';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'poll-choice-input';
+        row.appendChild(input);
+
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'remove-choice-btn';
+        remove.setAttribute('aria-label', 'Remove this choice');
+        remove.innerHTML = '&times;';
+        remove.onclick = function () { removeChoiceRow(remove); };
+        row.appendChild(remove);
+
+        list.appendChild(row);
+        renumberChoiceRows();
+        input.focus();
+    }
+
+    function removeChoiceRow(btn) {
+        const row = btn.closest('.poll-choice-row');
+        if (!row) return;
+        if (getChoiceRows().length <= MIN_POLL_CHOICES) return;
+        row.remove();
+        renumberChoiceRows();
+    }
+
+    function resetChoiceRows() {
+        const list = document.getElementById('pollOptionsList');
+        if (!list) return;
+        getChoiceRows().forEach((row, i) => {
+            if (i < MIN_POLL_CHOICES) {
+                const input = row.querySelector('.poll-choice-input');
+                if (input) input.value = '';
+            } else {
+                row.remove();
+            }
+        });
+        renumberChoiceRows();
+    }
+
+    function collectChoiceValues() {
+        return getChoiceRows()
+            .map(row => {
+                const input = row.querySelector('.poll-choice-input');
+                return input ? input.value.trim() : '';
+            })
+            .filter(v => v.length > 0);
     }
 
     function populateCreateCategoryOptions() {
@@ -1163,7 +1293,6 @@
             // Update the top stats bar with overview numbers
             const acEl = document.getElementById('pollsAccuracy');
             const vcEl = document.getElementById('pollsVoteCount');
-            const ppEl = document.getElementById('pollsPoints');
 
             // Active Polls stat is set by updateActivePollsStat() from the
             // Hangout-visible feed, not the site-wide /polls/stats count.
@@ -1177,7 +1306,6 @@
                         const overall = userStats.overall || {};
                         if (acEl) acEl.textContent = overall.accuracy ? overall.accuracy + '%' : '--';
                         if (vcEl) vcEl.textContent = overall.polls_voted || 0;
-                        if (ppEl) ppEl.textContent = overall.total_points || 0;
                     }
                 } catch (e) { /* user stats unavailable, keep overview */ }
             }
@@ -1304,7 +1432,6 @@
         });
 
         card += '<div class="poll-footer">';
-        card += '<span>\uD83C\uDFC6 ' + (poll.points_correct || 100) + ' pts</span>';
         card += '<span>' + totalVotes + ' total votes</span>';
         card += '</div>';
 
@@ -1470,6 +1597,8 @@
     function closeCreatePollModal() {
         document.getElementById('createPollModal').classList.remove('active');
         document.getElementById('createPollForm').reset();
+        // form.reset() clears values but leaves appended rows behind.
+        resetChoiceRows();
         setCreatePollType('opinion');
     }
 
@@ -1493,25 +1622,20 @@
 
         const question = document.getElementById('pollQuestion').value.trim();
         const categoryId = document.getElementById('pollCategory').value;
-        const opt1 = document.getElementById('pollOption1').value.trim();
-        const opt2 = document.getElementById('pollOption2').value.trim();
-        const opt3 = document.getElementById('pollOption3').value.trim();
-        const opt4 = document.getElementById('pollOption4').value.trim();
         const endTime = document.getElementById('pollEndTime').value;
-        const points = document.getElementById('pollPoints').value;
+        const choices = collectChoiceValues();
 
-        if (!question || !opt1 || !opt2) {
-            showToast('Please fill in the question and at least 2 options.', 'error');
+        if (!question || choices.length < MIN_POLL_CHOICES) {
+            showToast('Please fill in the question and at least ' + MIN_POLL_CHOICES + ' answer choices.', 'error');
             return;
         }
 
-        const options = [{ text: opt1 }, { text: opt2 }];
-        if (opt3) options.push({ text: opt3 });
-        if (opt4) options.push({ text: opt4 });
+        if (choices.length > MAX_POLL_CHOICES) {
+            showToast('A poll can have at most ' + MAX_POLL_CHOICES + ' answer choices.', 'error');
+            return;
+        }
 
-        // Map points select to scoring
-        const pointsMap = { '25': 25, '50': 50, '75': 75, '100': 100 };
-        const pointsCorrect = pointsMap[points] || 50;
+        const options = choices.map(text => ({ text }));
 
         const fallbackOpinionCategory = getOpinionFallbackCategory();
         const resolvedCategoryId = categoryId
@@ -1526,8 +1650,6 @@
                     title: question,
                     description: 'Life poll from the Hangout.',
                     scoring_type: 'binary',
-                    points_correct: pointsCorrect,
-                    points_incorrect: 0,
                     voting_deadline: endTime ? new Date(endTime).toISOString() : new Date(Date.now() + 86400000).toISOString(),
                     options
                 }
@@ -1561,70 +1683,16 @@
         renderPollsGrid();
     }
 
-    // ============ LEADERBOARD ============
-
-    function openLeaderboardModal() {
-        document.getElementById('leaderboardModal').classList.add('active');
-        loadLeaderboard('all');
-    }
-
-    function closeLeaderboardModal() {
-        document.getElementById('leaderboardModal').classList.remove('active');
-    }
-
-    async function loadLeaderboard(period, btnEl) {
-        if (btnEl) {
-            btnEl.closest('div').querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            btnEl.classList.add('active');
-        }
-        const container = document.getElementById('leaderboardContent');
-        container.innerHTML = '<p style="color: var(--text-muted);">Loading...</p>';
-
-        try {
-            const data = await api.request('/polls/leaderboard?period=' + period + '&limit=25');
-            const lb = data.leaderboard || [];
-
-            if (lb.length === 0) {
-                container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 30px 0;">No leaderboard data yet.</p>';
-                return;
-            }
-
-            let html = '<div style="display: flex; flex-direction: column; gap: 6px;">';
-            lb.forEach((entry, idx) => {
-                const medals = ['\uD83E\uDD47', '\uD83E\uDD48', '\uD83E\uDD49'];
-                const rankDisplay = idx < 3 ? medals[idx] : '#' + entry.rank;
-                const accuracy = entry.accuracy ? entry.accuracy + '%' : '--';
-                html += '<div style="display: flex; align-items: center; padding: 10px 14px; background: rgba(255,255,255,0.04); border-radius: 10px; gap: 12px;">';
-                html += '<span style="font-size: 1.1rem; width: 32px; text-align: center; font-weight: 700;">' + rankDisplay + '</span>';
-                html += '<span style="flex: 1; color: var(--text-primary); font-weight: 600;">@' + escapeHtml(entry.username) + '</span>';
-                html += '<span style="color: var(--accent-green); font-weight: 700; font-size: 0.9rem;">' + (entry.total_points || 0) + ' pts</span>';
-                html += '<span style="color: var(--text-muted); font-size: 0.8rem; width: 50px; text-align: right;">' + accuracy + '</span>';
-                html += '</div>';
-            });
-            html += '</div>';
-            container.innerHTML = html;
-        } catch (e) {
-            container.innerHTML = '<p style="color: var(--accent-red);">Failed to load leaderboard.</p>';
-            console.error(e);
-        }
-    }
-
-    // ============ MODAL HANDLERS ============
-
     document.getElementById('createPollModal').addEventListener('click', function(e) {
         if (e.target === this) closeCreatePollModal();
     });
     document.getElementById('pollDetailModal').addEventListener('click', function(e) {
         if (e.target === this) closePollDetailModal();
     });
-    document.getElementById('leaderboardModal').addEventListener('click', function(e) {
-        if (e.target === this) closeLeaderboardModal();
-    });
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeCreatePollModal();
             closePollDetailModal();
-            closeLeaderboardModal();
         }
     });
 
