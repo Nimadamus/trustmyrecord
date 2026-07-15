@@ -2570,14 +2570,33 @@ function forumRowAvatarHtml(username, avatarUrl) {
    one document, so #post-<id> alone locates the reply -- ?thread= and ?post=
    ride along so the link still resolves on a cold load, where the hash by
    itself would not tell the router which thread to open. */
-function forumPostPermalink(threadId, postId) {
+/* Clean canonical thread URL: /forum/thread/<id>/<slug>/ (built by
+   scripts/build_forum_threads.py). The ID is authoritative and always present --
+   slugs are NOT unique across threads, so the id disambiguates. When no slug is
+   known (a payload that doesn't carry one), fall back to the legacy ?thread=
+   form, which still works. */
+function forumThreadSlug(t) {
+    if (!t) return '';
+    return String(t.slug || t.thread_slug || '');
+}
+function forumThreadUrl(threadId, slug) {
+    var tid = (threadId != null) ? String(threadId) : '';
+    if (!tid) return '/forum/';
+    var s = slug ? String(slug) : '';
+    if (!s) return '/forum/?thread=' + encodeURIComponent(tid);
+    return '/forum/thread/' + encodeURIComponent(tid) + '/' + encodeURIComponent(s) + '/';
+}
+function forumPostPermalink(threadId, postId, slug) {
     var tid = (threadId != null) ? String(threadId) : '';
     var pid = (postId != null) ? String(postId) : '';
     if (!tid) return '#post-' + encodeURIComponent(pid);
-    if (!pid) return '/forum/?thread=' + encodeURIComponent(tid);
-    return '/forum/?thread=' + encodeURIComponent(tid)
-        + '&post=' + encodeURIComponent(pid)
-        + '#post-' + encodeURIComponent(pid);
+    var base = forumThreadUrl(tid, slug || (cachedThread && cachedThread.id == tid
+        ? forumThreadSlug(cachedThread) : ''));
+    if (!pid) return base;
+    // Clean URL renders every post in one document, so #post-<id> alone locates
+    // the reply. The legacy fallback still needs ?post= to survive a cold load.
+    if (base.indexOf('?') === -1) return base + '#post-' + encodeURIComponent(pid);
+    return base + '&post=' + encodeURIComponent(pid) + '#post-' + encodeURIComponent(pid);
 }
 
 /* Scroll one reply into view and flash it so the visitor sees which post the
@@ -2753,7 +2772,7 @@ function renderThreads() {
         return '<tr class="' + rowClass + '" role="link" tabindex="0" aria-label="Open thread: ' + ariaTitle + '" onclick="showThreadDetail(' + t.id + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();showThreadDetail(' + t.id + ');}">'
             + '<td class="fcell"><div class="frowinner"><span class="' + folderClass + '"></span>' + avatarHtml + '<div>'
             +   stickyTag
-            +   '<a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title || 'Thread') + '</a>'
+            +   '<a class="fname" href="' + escHtml(forumThreadUrl(t.id, forumThreadSlug(t))) + '" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title || 'Thread') + '</a>'
             +   threadPagesHtml(t)
             +   '<div class="fdesc">Started by <b>' + forumUserLinkHtml(starter) + '</b> ' + (t.created_at ? formatForumStamp(t.created_at) : '') + '</div>'
             + '</div></div></td>'
@@ -3045,7 +3064,8 @@ function renderThread() {
         // here or the two nodes collide on a duplicate id.
         // Thread-starter ids are the synthetic string 'thread-<id>-starter'
         // (see starterPostFromThread), so nothing here may assume a numeric id.
-        var permalink = forumPostPermalink(p.thread_id || (cachedThread && cachedThread.id), postId);
+        var permalink = forumPostPermalink(p.thread_id || (cachedThread && cachedThread.id), postId,
+            forumThreadSlug(cachedThread));
         return '<div class="fthread-post" data-post-id="' + escHtml(postId) + '"'
             + (postId ? ' id="post-' + escHtml(postId) + '"' : '') + '>'
             + renderAuthorPanel(p)
@@ -3725,9 +3745,21 @@ async function showThreadDetail(threadId, page, postId) {
     // otherwise a reply link opened from a profile silently loses the post it
     // pointed at the moment the thread renders.
     var wantPost = (postId != null && postId !== '') ? String(postId) : '';
-    window.history.replaceState({}, '',
-        wantPost ? forumPostPermalink(threadId, wantPost)
-                 : '/forum/#thread-' + encodeURIComponent(threadId));
+    // On a clean /forum/thread/<id>/<slug>/ URL the address bar is already
+    // canonical -- never rewrite it back to /forum/#thread-<id>, that would throw
+    // away the indexable URL the visitor arrived on. Only move the hash to the
+    // requested post.
+    var onCleanThreadUrl = (window.__TMR_FORUM_THREAD_ID != null)
+        && String(window.__TMR_FORUM_THREAD_ID) === String(threadId);
+    if (onCleanThreadUrl) {
+        if (wantPost) {
+            window.history.replaceState({}, '', '#post-' + encodeURIComponent(wantPost));
+        }
+    } else {
+        window.history.replaceState({}, '',
+            wantPost ? forumPostPermalink(threadId, wantPost)
+                     : '/forum/#thread-' + encodeURIComponent(threadId));
+    }
     if (wantPost && forumScrollToPost(wantPost)) return;
     var pg = parseInt(page, 10);
     if (Number.isFinite(pg) && pg > 1) {
@@ -3821,14 +3853,14 @@ async function showUserActivity(username) {
     var threadRows = threads.map(function (t, i) {
         var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
         return '<tr class="' + rowClass + '" role="link" tabindex="0" onclick="showThreadDetail(' + t.id + ')" onkeydown="if(event.key===\'Enter\'){showThreadDetail(' + t.id + ');}">'
-            + '<td class="fcell"><a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title || 'Thread') + '</a>'
+            + '<td class="fcell"><a class="fname" href="' + escHtml(forumThreadUrl(t.id, forumThreadSlug(t))) + '" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + t.id + ');">' + escHtml(t.title || 'Thread') + '</a>'
             + '<div class="flpost-meta">' + escHtml(t.category_name || 'Forum') + ' · ' + stamp(t.created_at) + ' · ' + (Number(t.reply_count) || 0) + ' replies</div></td></tr>';
     }).join('');
     var replyRows = posts.map(function (p, i) {
         var rowClass = 'frow' + (i % 2 === 1 ? ' row-alt' : '');
         var ex = String(p.content || '').replace(/\s+/g, ' ').trim().slice(0, 160);
         return '<tr class="' + rowClass + '" role="link" tabindex="0" onclick="showThreadDetail(' + p.thread_id + ')" onkeydown="if(event.key===\'Enter\'){showThreadDetail(' + p.thread_id + ');}">'
-            + '<td class="fcell"><a class="fname" href="#" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + p.thread_id + ');">' + escHtml(p.thread_title || 'Thread') + '</a>'
+            + '<td class="fcell"><a class="fname" href="' + escHtml(forumThreadUrl(p.thread_id, p.thread_slug || '')) + '" onclick="event.preventDefault();event.stopPropagation();showThreadDetail(' + p.thread_id + ');">' + escHtml(p.thread_title || 'Thread') + '</a>'
             + '<div class="ua-excerpt">' + escHtml(ex) + '</div>'
             + '<div class="flpost-meta">' + escHtml(p.category_name || 'Forum') + ' · ' + stamp(p.created_at) + '</div></td></tr>';
     }).join('');
@@ -4282,7 +4314,7 @@ async function performSearch(query) {
             return '<tr onclick="currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ')">' +
                 '<td><div class="tmr-fb-thread-cell"><span class="tmr-fb-thread-icon">T</span><div class="tmr-fb-thread-body">' +
                     '<span class="tag-pill">' + escHtml(catName) + '</span>' +
-                    '<a class="tmr-fb-thread-title" href="#" onclick="event.preventDefault();event.stopPropagation();currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ');">' + escHtml(t.title) + '</a>' +
+                    '<a class="tmr-fb-thread-title" href="' + escHtml(forumThreadUrl(t.id, forumThreadSlug(t))) + '" onclick="event.preventDefault();event.stopPropagation();currentCategorySlug=\'' + escHtml(catSlug) + '\';currentCategoryName=\'' + escHtml(catName) + '\';showThreadDetail(' + t.id + ');">' + escHtml(t.title) + '</a>' +
                     '<div class="tmr-fb-thread-meta">Started by <strong>' + forumUserLinkHtml(t.username || '') + '</strong> &middot; ' + formatForumStamp(t.created_at) + '</div>' +
                 '</div></div></td>' +
                 '<td class="col-rating"></td>' +
@@ -4534,6 +4566,20 @@ document.addEventListener('DOMContentLoaded', async function() {
             '<div class="tmr-loading-retry" style="display:block;"><button onclick="location.reload()">Try Again</button></div>' +
             '</div>';
         return;
+    }
+
+    // Clean thread URL: /forum/thread/<id>/<slug>/ served a baked static page and
+    // tmr-forum-thread-hydrate.js swapped this shell in, setting the thread id.
+    // Boot straight into that thread and leave the address bar on the clean URL.
+    if (window.__TMR_FORUM_THREAD_ID) {
+        var cleanTid = parseInt(window.__TMR_FORUM_THREAD_ID, 10);
+        if (cleanTid) {
+            var cleanPost = '';
+            var cleanHash = (window.location.hash || '').match(/^#post-(.+)$/);
+            if (cleanHash) cleanPost = decodeURIComponent(cleanHash[1]);
+            await showThreadDetail(cleanTid, null, cleanPost || null);
+            return;
+        }
     }
 
     // Check URL hash for deep link

@@ -51,18 +51,26 @@ jobs:
       - name: Regenerate eligible /u/ profile pages + sitemap
         run: python scripts/build_profile_pages.py
 
+      - name: Regenerate crawlable /forum/thread/<id>/<slug>/ pages + sitemap
+        # Every thread gets a real indexable URL. Fails closed: if the API's own
+        # reported thread total does not match what was enumerated, the script
+        # aborts rather than emit a short list that would drop live threads out
+        # of the sitemap. A failure here stops the commit; the last good bake stays.
+        run: python scripts/build_forum_threads.py
+
       - name: Commit only if generated output changed
         run: |
           # Stage every crawlable SEO surface, incl. NEW profile dirs for users
           # that just crossed the graded-pick threshold (untracked files need
-          # `git add` before a --cached diff can see them).
-          git add -A handicappers/index.html leaderboards/index.html index.html u sitemap.xml
+          # `git add` before a --cached diff can see them) and NEW/renamed forum
+          # thread dirs.
+          git add -A handicappers/index.html leaderboards/index.html index.html u forum/thread sitemap.xml
           if git diff --cached --quiet; then
             echo "No data change in generated output — skipping commit."
           else
             git config user.name "tmr-prerender-bot"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            git commit -m "chore(prerender): refresh crawlable directory + homepage + profile pages + sitemap [skip ci]"
+            git commit -m "chore(prerender): refresh crawlable directory + homepage + profile pages + forum threads + sitemap [skip ci]"
             git push origin HEAD:main
             echo "Pushed refreshed prerender output."
           fi
