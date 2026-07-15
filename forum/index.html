@@ -2082,7 +2082,20 @@ body.classic-forum .fofficial-tag{font:700 9px/1.1 "Noto Sans",Arial,sans-serif 
    with subtle dividers, 8px heading-to-links gap, ~6px link
    rhythm. No width/background/font-size/main-layout changes.
 ============================================================ */
-body.classic-forum .fside{display:flex !important;flex-direction:column !important;gap:0 !important}
+/* The sidebar is position:fixed/left:0/z-index:450 on the desktop shell, and
+   the mobile block above (@media (max-width:900px)) hides it and un-notches
+   the header/content for exactly that reason. This layer is the LAST rule
+   touching .fside display, so an unconditional display:flex here silently beat
+   that display:none at equal specificity and left the fixed sidebar covering
+   the whole thread list below 900px -- every thread title, username, pager and
+   Last Post link under it was unclickable (fixed Jul 15 2026).
+   display: therefore stays desktop-only. flex-direction/gap are inert while the
+   sidebar is hidden, so they stay unscoped and this remains a sidebar-only
+   cosmetic pass, exactly as intended above. */
+@media (min-width:901px){
+  body.classic-forum .fside{display:flex !important}
+}
+body.classic-forum .fside{flex-direction:column !important;gap:0 !important}
 body.classic-forum .fside-box{flex:0 0 auto !important}
 /* one consistent rule for every group boundary: divider + scaled gap */
 body.classic-forum .fside-group + .fside-group,
