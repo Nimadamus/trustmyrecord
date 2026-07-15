@@ -7,11 +7,18 @@ Why: /profile/?user=X is a single client-rendered shell whose canonical only
 rewrites in JS. Search engines need a real, self-canonical, no-JS page per
 public verified record. This bakes that page and regenerates sitemap.xml.
 
-Inclusion rule: only profiles with REAL graded history are indexed. Threshold =
-GRADED_MIN settled picks (won/lost/push). Profiles below the threshold that
-already exist on disk are rewritten as noindex stubs and dropped from the
-sitemap, so empty/low-data shells never get indexed. Pending/void picks are
-never written into the crawlable SEO HTML.
+INDEXING: every public profile is `index, follow`. This site NEVER uses noindex,
+on any page, for any reason (owner rule, restated July 15 2026: "There's no reason
+to noindex anything. If Google doesn't want to index them they won't."). The old
+GRADED_MIN noindex gate is GONE. GRADED_MIN now only selects which TEMPLATE a
+profile gets -- full (>= GRADED_MIN settled picks) or compact -- never whether it
+may be indexed. Do not reintroduce a noindex gate here under any rationale.
+
+Sitemap: only full profiles are submitted. Compact profiles are still fully
+indexable and reachable via internal links; they are simply not listed. That is a
+submission choice, NOT a noindex, and it is deliberate (owner instruction).
+
+Pending/void picks are never written into the crawlable SEO HTML.
 
 Build only. Does NOT commit or deploy. Run from the repo root:
     python scripts/build_profile_pages.py
@@ -413,13 +420,15 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
 </html>
 """
 
-def noindex_html(un):
-    """Noindex (low-data) profile for an existing /u page that doesn't yet meet
-    the SEO indexing threshold. Still a REAL profile for visitors: the same
-    headline/#uStats + #uDeep mounts that tmr-profile-hydrate.js fills live from
-    the metrics aggregator, so clicking "View" from the leaderboard for a rising
-    or new member shows their real (if smaller) stats, not a dead-end stub. It's
-    noindex only — SEO is gated on graded volume, the live experience is not."""
+def compact_html(un):
+    """Compact profile for an existing /u page below GRADED_MIN. A REAL profile
+    for visitors: the same headline/#uStats + #uDeep mounts that
+    tmr-profile-hydrate.js fills live from the metrics aggregator, so clicking
+    "View" from the leaderboard for a rising or new member shows their real (if
+    smaller) stats, not a dead-end stub.
+
+    INDEXABLE — `index, follow`, like every other page on this site. Never add a
+    noindex here."""
     e = html.escape
     url = f"{SITE}/u/{un}/"
     return f"""<!DOCTYPE html>
@@ -427,7 +436,7 @@ def noindex_html(un):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="robots" content="noindex, follow">
+<meta name="robots" content="index, follow">
 <link rel="canonical" href="{url}">
 <title>{e(un)} | TrustMyRecord</title>
 <meta name="description" content="Public TrustMyRecord profile for {e(un)} - verified locked-pick record, units, ROI, and history. Building toward the featured leaderboard.">
@@ -488,7 +497,7 @@ def main():
     eligible_pages, excluded = [], []
     linked_lowdata = set()   # every VERIFIED user the directory/leaderboard/sport
                              # boards can render (incl. 0-pick members) but who
-                             # falls below GRADED_MIN. Each needs a real (noindex)
+                             # falls below GRADED_MIN. Each needs a real (compact)
                              # /u/ page so a leaderboard link to /u/<user>/ never
                              # 404s once those boards point at /u/ instead of the
                              # /profile/?user= shell.
@@ -512,11 +521,11 @@ def main():
         eligible_pages.append(d)
 
     elig_names = {d["username"] for d in eligible_pages}
-    # existing on-disk /u pages that are no longer eligible -> noindex
+    # existing on-disk /u pages below GRADED_MIN -> compact template (still indexable)
     existing = set(os.listdir(UDIR)) if os.path.isdir(UDIR) else set()
-    # noindex set = existing low-data dirs UNION linked low-data users still
+    # compact set = existing low-data dirs UNION linked low-data users still
     # missing a page (so a directory/leaderboard link never 404s).
-    to_noindex = sorted(({n for n in existing
+    to_compact = sorted(({n for n in existing
                           if os.path.isdir(os.path.join(UDIR, n))} | linked_lowdata)
                         - elig_names)
 
@@ -526,7 +535,7 @@ def main():
     print(f"excluded: {len(excluded)}")
     for un, why in sorted(excluded):
         print(f"  - {un}: {why}")
-    print(f"noindex low-data pages (existing + linked-but-missing): {len(to_noindex)} -> {to_noindex}")
+    print(f"compact low-data pages (existing + linked-but-missing): {len(to_compact)} -> {to_compact}")
     if dry:
         print("DRY RUN — no files written")
         return
@@ -541,11 +550,11 @@ def main():
         with open(os.path.join(ddir, "index.html"), "w", encoding="utf-8", newline="\n") as f:
             sibs = [x for x in sorted(elig_names) if x != un]
             f.write(page_html(d, recent, avg_amer, sport_rows, m, siblings=sibs))
-    for un in to_noindex:
+    for un in to_compact:
         os.makedirs(os.path.join(UDIR, un), exist_ok=True)
         with open(os.path.join(UDIR, un, "index.html"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(noindex_html(un))
-    print(f"wrote {len(eligible_pages)} indexable + {len(to_noindex)} noindex pages under {UDIR}")
+            f.write(compact_html(un))
+    print(f"wrote {len(eligible_pages)} full + {len(to_compact)} compact pages under {UDIR} (ALL index, follow)")
 
     regen_sitemap(sorted(elig_names))
 
