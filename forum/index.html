@@ -4026,9 +4026,49 @@ async function loadThread(threadId) {
         var detailHeader = document.getElementById('threadDetailHeader');
         if (detailHeader) detailHeader.textContent = currentThreadTitle || 'Thread';
     } catch (err) {
-        showError(container, 'Failed to load thread.');
+        // A 404 from the API means the thread genuinely does not exist (bad id or
+        // removed thread). Render an explicit not-found state instead of a generic
+        // failure, so /forum/?thread=999999 reads as gone to visitors and crawlers
+        // rather than looking like a working page.
+        // NOTE: the HTTP status stays 200 -- /forum/ is a static file on GitHub
+        // Pages and a query string cannot change the response status. The honest
+        // not-found body is what makes Google treat it as a soft 404 and drop it.
+        // No noindex and no redirect are used.
+        if (err && err.status === 404) {
+            forumRenderThreadNotFound(threadId, container);
+        } else {
+            showError(container, 'Failed to load thread.');
+        }
         console.error('Load thread error:', err);
     }
+}
+
+/* Explicit thread-not-found view: API returned 404 for this thread id, i.e. it
+   never existed or was removed. Keeps the visitor inside the forum with real
+   links instead of an empty shell or a misleading error. */
+function forumRenderThreadNotFound(threadId, container) {
+    cachedThread = null;
+    cachedPosts = [];
+    currentThreadTitle = 'Thread not found';
+    document.title = 'Thread not found | TrustMyRecord Forum';
+    if (container) {
+        container.innerHTML =
+            '<div class="fthread-missing" style="background:#13131c;border:1px solid #262636;'
+            + 'border-radius:12px;padding:22px;text-align:center;color:#c9d0e4;">'
+            + '<h2 style="margin:0 0 8px;font-family:Barlow,sans-serif;font-size:19px;">Thread not found</h2>'
+            + '<p style="margin:0 0 14px;color:#8890ad;font-size:14px;">'
+            + 'This thread does not exist, or it was removed. Nothing was redirected.</p>'
+            + '<p style="margin:0;font-size:14px;">'
+            + '<a href="/forum/" style="color:#00aeff;text-decoration:none;">Browse all forums</a></p>'
+            + '</div>';
+    }
+    var replyArea = document.getElementById('replyArea');
+    if (replyArea) replyArea.innerHTML = '';
+    var detailHeader = document.getElementById('threadDetailHeader');
+    if (detailHeader) detailHeader.textContent = 'Thread not found';
+    var crumb = document.getElementById('breadcrumb');
+    if (crumb) crumb.innerHTML = '<a onclick="showCategories()">Forums</a>'
+        + '<span class="sep">&raquo;</span><span>Thread not found</span>';
 }
 
 // Quick-Reply box gets rebuilt every time a thread loads. Logged-out

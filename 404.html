@@ -10,11 +10,11 @@
       gtag('js', new Date());
       gtag('config', 'G-V5MCVXS2HE');
     </script>
-    <script src="static/js/config.js?v=20260330"></script>
-    <script src="static/js/analytics.js?v=20260417"></script>
+    <script src="/static/js/config.js?v=20260330"></script>
+    <script src="/static/js/analytics.js?v=20260417"></script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260713hub1">
-<script defer src="static/js/tmr-sitewide.js?v=20260713hub1"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260713hub1">
+<script defer src="/static/js/tmr-sitewide.js?v=20260713hub1"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -45,6 +45,7 @@
             text-align: center;
         }
 
+        .nf-links a{color:#7fd7ff;text-decoration:none;margin:0 2px;}
         .redirect-kicker {
             display: inline-flex;
             align-items: center;
@@ -142,21 +143,30 @@
             );
         } else if (mappedRoute) {
             window.location.replace(window.location.origin + '/' + mappedRoute);
-        } else {
-            // Preserve unknown paths for index-level recovery when needed.
-            window.location.replace(
-                window.location.origin + '/?p=' + encodeURIComponent(path) +
-                (query ? '&q=' + encodeURIComponent(query.slice(1)) : '') +
-                hash
-            );
         }
+        // NO catch-all redirect. A genuinely nonexistent URL must stay a genuine
+        // 404 and render the not-found page below. This branch used to do
+        //   location.replace('/?p=' + path)
+        // which bounced every unknown URL to the homepage -- a soft-404 machine:
+        // the visitor lost the failed URL and search engines saw 404s that behave
+        // like the homepage. The redirects above are kept because they are real
+        // pretty-URL routers (/profile/<user>, /embed/<user>, legacy aliases),
+        // not 404 concealment. Owner rule: never redirect a nonexistent public URL.
     </script>
 </head>
 <body>
     <div class="redirect-shell">
-        <div class="redirect-kicker">Page redirect</div>
-        <h1>Taking you back into TrustMyRecord.</h1>
-        <p>If the automatic redirect stalls, go to <a href="/">the homepage</a>.</p>
+        <div class="redirect-kicker">Page not found</div>
+        <h1>We couldn&#39;t find that page.</h1>
+        <p>The link may be broken, or the page may have been removed. This URL returns
+           a genuine 404 &mdash; nothing is redirected.</p>
+        <p class="nf-links">
+            <a href="/">Homepage</a> &middot;
+            <a href="/forum/">Forums</a> &middot;
+            <a href="/handicappers/">Handicappers</a> &middot;
+            <a href="/leaderboards/">Leaderboards</a> &middot;
+            <a href="/sportsbook/">Sportsbook</a>
+        </p>
     </div>
 </body>
 </html>
