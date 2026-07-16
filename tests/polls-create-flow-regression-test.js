@@ -27,11 +27,16 @@ for (const required of [
   'id="pollAllowMultiple"',
   'id="pollPublicResults"',
   'id="pollAnonymous"',
-  'id="sportFilter"',
-  'id="leagueFilter"',
-  'id="categoryFilter"',
+  // The Jul 12 polls redesign moved the sport/league filters off standalone DOM
+  // ids and onto the `state` object, and replaced the single category filter
+  // with the shared #filterBar container. Guard the current shape.
+  'state.sportFilter',
+  'state.leagueFilter',
+  'id="filterBar"',
   'id="pollsTabBar"',
-  "switchTab('newest')",
+  // Same redesign replaced the 'newest' tab with Quick Polls / Prediction Quizzes.
+  "switchTab('quick')",
+  "switchTab('quiz')",
   'openPoll(data.poll.id);',
   "api.request('/polls', { method: 'POST', body: payload })",
   "payload.options = options;",
@@ -40,7 +45,7 @@ for (const required of [
   "if (allowMultiple) descParts.push('[multi-choice]');",
   "if (anonymous) descParts.push('[anonymous]');",
   'payload.numeric_target = Number(numericTargetRaw)',
-  'Be the first to create one.',
+  'Be the first to lock in.',
 ]) {
   assert(html.includes(required), `polls create-flow guard missing: ${required}`);
 }
