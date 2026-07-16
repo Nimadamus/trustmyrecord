@@ -352,7 +352,8 @@
            ============================================================ */
         .tmr-shell2 { max-width: 1080px; margin: 0 auto; padding: 16px 20px 52px; }
         .tmr-phead { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 12px 16px; border: 1px solid var(--tmr-fb-border); border-radius: 14px; background: linear-gradient(180deg, rgba(10,20,34,0.92), rgba(6,12,22,0.94)); box-shadow: var(--tmr-fb-shadow); margin-bottom: 12px; }
-        .tmr-phead-copy h1 { font-size: 1.24rem; font-weight: 900; color: #F8FAFC; letter-spacing: -0.01em; line-height: 1.15; }
+        /* !important beats the sitewide global h1 (56-60px) so the hero stays compact */
+        .tmr-phead-copy h1 { font-size: 1.24rem !important; font-weight: 900 !important; color: #F8FAFC; letter-spacing: -0.01em; line-height: 1.15 !important; margin: 0 !important; }
         .tmr-phead-copy p { color: #A9B9CC; font-size: 0.82rem; line-height: 1.45; max-width: 560px; margin-top: 3px; }
         .tmr-phead-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .tmr-hbtn { display: inline-flex; align-items: center; gap: 7px; height: 42px; padding: 0 18px; border-radius: 11px; font-family: inherit; font-weight: 800; font-size: 0.85rem; cursor: pointer; border: 1px solid var(--tmr-fb-border-strong); background: rgba(15,23,42,0.72); color: #DDE9F7; text-decoration: none; white-space: nowrap; }
@@ -384,7 +385,9 @@
         .tmr-sec-head h2 { font-size: 1.18rem; font-weight: 850; color: #F1F5F9; }
         .tmr-sec-head .sub { color: #8FA1B7; font-size: 0.84rem; margin-top: 3px; }
         .tmr-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .tmr-filters select.tmr-fb-action-btn { min-width: 132px; min-height: 38px; }
+        /* width:auto !important defeats the sitewide global select{width:100%} that
+           otherwise stretches each filter full-width and stacks them vertically */
+        .tmr-filters select.tmr-fb-action-btn { width: auto !important; min-width: 132px; max-width: 180px; min-height: 38px; flex: 0 0 auto; }
         .tmr-filter-drawer-btn { display: none; }
 
         /* Card list container (flat, quiet) */
