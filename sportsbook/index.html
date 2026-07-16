@@ -13077,7 +13077,64 @@ window.toggleSportFamily = function (family) {
             ]
         };
     }
+    // FI_YESNO_20260716 (Nima): MLB 1st-inning market renders as a plain
+    // "Will there be a run in the first inning?" Yes/No card, NOT the generic
+    // Spread/ML/Total grid. Yes = YRFI (Over 0.5), No = NRFI (Under 0.5). Bet
+    // wiring is unchanged under the hood (betType firstinningover/under →
+    // market_type first_inning_totals); only the display label is Yes/No.
+    function _fiSideBtn(gameIndex, item, game, displayLabel) {
+        if (!item || item.odds == null) return oddsButton('—', '—');
+        var isUnder = /\bunder\b/i.test(item.selection_label || item.selection || '');
+        return oddsButton(displayLabel, _ttFmtOdds(item.odds), {
+            gameIndex: gameIndex,
+            betType: isUnder ? 'firstinningunder' : 'firstinningover',
+            team: isUnder ? 'Under' : 'Over',
+            line: item.line == null ? '' : item.line,
+            odds: item.odds,
+            awayTeam: game.away_team || '',
+            homeTeam: game.home_team || ''
+        });
+    }
+    function renderFirstInningRows(sport, rowsEl, games) {
+        var playable = (games || []).filter(function (g) { return !_ttGameStarted(g); });
+        window.TMR.currentGames = playable;
+        var cards = '';
+        playable.forEach(function (game, idx) {
+            var items = [];
+            (game.market_groups || []).forEach(function (group) {
+                if (group.key === 'first_inning') items = items.concat(group.items || []);
+            });
+            items = items.filter(function (it) {
+                return it && it.odds != null && String(it.market_type || it.market_key) === 'first_inning_totals';
+            });
+            var over = items.find(function (it) { return /\bover\b/i.test(it.selection_label || it.selection || ''); });
+            var under = items.find(function (it) { return /\bunder\b/i.test(it.selection_label || it.selection || ''); });
+            if (!over && !under) return;
+            var away = game.away_team || 'Away', home = game.home_team || 'Home';
+            var whenText = '';
+            try {
+                var d = new Date(game.commence_time || game.start_time || '');
+                if (!isNaN(d)) whenText = d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+            } catch (e) {}
+            cards += '<article class="sportsbook-game-card sportsbook-game-card--fi">' +
+                '<div class="game-meta-row">' + (whenText || '&nbsp;') + '<span class="board-meta-chip">1st Inning</span></div>' +
+                '<div style="padding:6px 14px 12px;font-weight:800;color:#e2e8f0;font-size:15px;">' + _ttHtmlEsc(away) + ' <span style="color:#8ea0bc;font-weight:600;">@</span> ' + _ttHtmlEsc(home) + '</div>' +
+                '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px;">' +
+                    '<div style="display:flex;flex-direction:column;gap:6px;align-items:stretch;"><span style="text-align:center;font-weight:700;color:#cbd5e1;font-size:12.5px;letter-spacing:.5px;">YES <span style="color:#8ea0bc;font-weight:600;">(YRFI)</span></span>' + _fiSideBtn(idx, over, game, 'Yes') + '</div>' +
+                    '<div style="display:flex;flex-direction:column;gap:6px;align-items:stretch;"><span style="text-align:center;font-weight:700;color:#cbd5e1;font-size:12.5px;letter-spacing:.5px;">NO <span style="color:#8ea0bc;font-weight:600;">(NRFI)</span></span>' + _fiSideBtn(idx, under, game, 'No') + '</div>' +
+                '</div>' +
+            '</article>';
+        });
+        if (!cards) {
+            rowsEl.innerHTML = emptyState(sport, 'No 1st inning (NRFI / YRFI) odds available right now. Check back closer to first pitch.', 'closed');
+            return;
+        }
+        rowsEl.innerHTML = '<div style="padding:14px 16px 4px;color:#e2e8f0;font-size:16px;font-weight:800;">Will there be a run in the first inning?</div>' +
+            '<div style="padding:0 16px 12px;color:#8ea0bc;font-size:12.5px;line-height:1.5;">Pick <strong style="color:#cbd5e1;">Yes</strong> (YRFI, a run scores in the 1st) or <strong style="color:#cbd5e1;">No</strong> (NRFI, no run scores in the 1st). Settles on the first inning only.</div>' +
+            cards;
+    }
     function renderPeriodRows(sport, rowsEl, games, period, sourceLabel) {
+        if (period === 'fi') { return renderFirstInningRows(sport, rowsEl, games); }
         var keys = PERIOD_GROUP_KEYS[period] || [];
         var label = PERIOD_LABELS[period] || 'Market';
         var playable = (games || []).filter(function (g) { return !_ttGameStarted(g); });
