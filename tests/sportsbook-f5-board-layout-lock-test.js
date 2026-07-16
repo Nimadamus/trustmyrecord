@@ -8,9 +8,18 @@ const root = path.resolve(__dirname, '..');
 const sportsbook = fs.readFileSync(path.join(root, 'sportsbook', 'index.html'), 'utf8');
 const reliability = fs.readFileSync(path.join(root, 'static', 'js', 'sportsbook-production-fix-persist-reliability.js'), 'utf8');
 
+const reliabilityScript = sportsbook.match(
+  /<script\s+src="\/static\/js\/sportsbook-production-fix-persist-reliability\.js\?v=([^"&]+)&cb=([^"&]+)"\s*><\/script>/
+);
+
 assert(
-  sportsbook.includes('sportsbook-production-fix-persist-reliability.js?v=20260517teamrowneat2&cb=20260517teamrowneat2'),
-  'sportsbook page must load the verified team-row layout runtime cache key'
+  reliabilityScript,
+  'sportsbook page must load the verified team-row layout runtime with versioned cache keys'
+);
+assert.strictEqual(
+  reliabilityScript[1],
+  reliabilityScript[2],
+  'sportsbook reliability runtime cache keys must match so browsers load the intended build'
 );
 
 assert(
