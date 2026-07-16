@@ -61,6 +61,7 @@
         return n < 1 ? n.toFixed(3).replace(/^0\./, ".") : n.toFixed(3);
     }
     function fmtPct(v) { return hasVal(v) && !isNaN(Number(v)) ? Number(v).toFixed(1) + "%" : null; }
+    function fmt2(v) { return hasVal(v) && !isNaN(Number(v)) ? Number(v).toFixed(2) : (hasVal(v) ? String(v) : null); }
     function fmtSigned(v, suffix) {
         if (!hasVal(v) || isNaN(Number(v))) return null;
         var n = Number(v);
@@ -121,16 +122,33 @@
         if (sec.available === false) return unavailableHtml(sec.reason || fallbackReason, sec.detail);
         return null;
     }
-    /** Explicit, visible list of metrics the providers do not supply. */
+    /** Explicit, visible list of metrics the providers do not supply. Short tokens
+        render as chips; the API also returns prose entries explaining WHY a metric
+        is missing, and those get a readable list instead of an unreadable chip. */
     function notAvailableList(lists) {
-        var seen = {}, out = [];
+        /* The pitchers and savant payloads both disclose the same gaps: one as a
+           bare token ("SIERA"), one as prose explaining why ("SIERA (proprietary
+           regression...)"). Dedupe on the leading token and keep the entry that
+           explains the reason, so a metric is never listed twice. */
+        var byKey = {}, order = [];
         (lists || []).forEach(function (l) {
-            (l || []).forEach(function (m) { var k = String(m); if (!seen[k]) { seen[k] = 1; out.push(k); } });
+            (l || []).forEach(function (m) {
+                var s = String(m).trim();
+                if (!s) return;
+                var key = s.split(" (")[0].trim().toLowerCase().replace(/\s+/g, " ");
+                if (!(key in byKey)) { byKey[key] = s; order.push(key); }
+                else if (s.length > byKey[key].length) { byKey[key] = s; }
+            });
         });
+        var out = order.map(function (k) { return byKey[k]; });
         if (!out.length) return "";
+        var prose = out.some(function (m) { return m.length > 40; });
+        var body = prose
+            ? '<ul class="hh-nm__list">' + out.map(function (m) { return "<li>" + esc(m) + "</li>"; }).join("") + '</ul>'
+            : out.map(function (m) { return '<span class="hh-nm__chip">' + esc(m) + '</span>'; }).join("");
         return '<div class="hh-nm">' +
-            '<span class="hh-nm__label">Not available from current providers:</span> ' +
-            out.map(function (m) { return '<span class="hh-nm__chip">' + esc(m) + '</span>'; }).join("") +
+            '<span class="hh-nm__label">Not available from current providers:</span>' +
+            (prose ? "" : " ") + body +
             '</div>';
     }
     function sourceLine(d, keys) {
@@ -216,6 +234,122 @@
     }
 
     /* ---------------- PITCHERS ---------------- */
+    /* ERA / FIP / xERA is the whole point of this tab, so it leads rather than
+       sitting in a table row. ERA is what happened; FIP strips out defence and
+       sequencing; xERA prices the contact quality actually allowed. When they
+       diverge, that gap is the handicapping read. The ERA-xERA delta below is
+       plain subtraction of two real provider numbers, labelled as such. It is a
+       description of the gap, never a projection. */
+    function runPrevCard(name, hand, side, p, sv) {
+        var xera = (sv && sv.available) ? sv.xera : null;
+        var vals = [
+            { k: "ERA", v: p.era, t: "Earned runs actually allowed" },
+            { k: "FIP", v: p.fip, t: "Fielding independent: strips out defence and sequencing" },
+            { k: "xERA", v: xera, t: "Expected ERA from the contact quality allowed (Statcast)" }
+        ];
+        var cells = vals.map(function (c) {
+            return '<div class="hh-rp__cell" title="' + esc(c.t) + '">' +
+                '<span class="hh-rp__k">' + esc(c.k) + '</span>' +
+                '<span class="hh-rp__v">' + (hasVal(c.v) ? esc(Number(c.v).toFixed(2)) : '<span class="hh-na">n/a</span>') + '</span>' +
+                '</div>';
+        }).join('<span class="hh-rp__sep" aria-hidden="true">/</span>');
+
+        var verdict = "";
+        if (hasVal(p.era) && hasVal(xera)) {
+            var delta = Number(p.era) - Number(xera);
+            var abs = Math.abs(delta).toFixed(2);
+            var cls, txt;
+            if (delta <= -0.5) {
+                cls = "is-warn";
+                txt = "ERA is " + abs + " lower than xERA. The run prevention is running ahead of the contact quality allowed.";
+            } else if (delta >= 0.5) {
+                cls = "is-good";
+                txt = "ERA is " + abs + " higher than xERA. The contact quality allowed has been better than the ERA shows.";
+            } else {
+                cls = "is-flat";
+                txt = "ERA and xERA are within " + abs + ". Results line up with the contact allowed.";
+            }
+            verdict = '<p class="hh-rp__verdict ' + cls + '">' + esc(txt) + '</p>';
+        } else if (hasVal(p.era) && !hasVal(xera)) {
+            verdict = '<p class="hh-rp__verdict is-flat">xERA is unavailable for this starter, so ERA cannot be compared to contact quality.</p>';
+        }
+        return '<div class="hh-rp__card">' +
+            '<div class="hh-rp__head"><span class="hh-rp__side">' + esc(side) + '</span>' +
+                '<strong>' + esc(name) + '</strong>' + (hand ? '<span class="hh-hand">' + esc(hand) + 'HP</span>' : "") + '</div>' +
+            '<div class="hh-rp__row">' + cells + '</div>' + verdict +
+            '</div>';
+    }
+
+    function statcastHtml(aName, hName, asv, hsv) {
+        var aOk = asv && asv.available, hOk = hsv && hsv.available;
+        if (!aOk && !hOk) {
+            var why = [];
+            if (asv && asv.reason) why.push(aName + ": " + asv.reason + (asv.detail ? " (" + asv.detail + ")" : ""));
+            if (hsv && hsv.reason) why.push(hName + ": " + hsv.reason + (hsv.detail ? " (" + hsv.detail + ")" : ""));
+            return unavailableHtml("Statcast data is not available for either starter.", why.join(" · ") || undefined);
+        }
+        var a = aOk ? asv : {}, h = hOk ? hsv : {};
+        var partial = "";
+        if (!aOk && asv) partial += '<div class="hh-half-na">' + esc(aName) + ': ' + esc(asv.reason || "no Statcast row") + (asv.detail ? " (" + esc(asv.detail) + ")" : "") + '</div>';
+        if (!hOk && hsv) partial += '<div class="hh-half-na">' + esc(hName) + ': ' + esc(hsv.reason || "no Statcast row") + (hsv.detail ? " (" + esc(hsv.detail) + ")" : "") + '</div>';
+
+        var quality = compareTable(aName, hName, [
+            { label: "xERA", a: a.xera, h: h.xera, better: "low", fmt: fmt2 },
+            { label: "Barrel%", a: a.barrel_pct, h: h.barrel_pct, better: "low", fmt: fmtPct },
+            { label: "Hard-hit%", a: a.hard_hit_pct, h: h.hard_hit_pct, better: "low", fmt: fmtPct },
+            { label: "Barrels", a: a.barrels, h: h.barrels, better: "low" },
+            { label: "Batted balls", a: a.batted_balls, h: h.batted_balls },
+            { label: "wOBA against", a: a.woba, h: h.woba, better: "low", fmt: fmtRate },
+            { label: "xwOBA against", a: a.est_woba, h: h.est_woba, better: "low", fmt: fmtRate },
+            { label: "xBA against", a: a.est_ba, h: h.est_ba, better: "low", fmt: fmtRate },
+            { label: "xSLG against", a: a.est_slg, h: h.est_slg, better: "low", fmt: fmtRate }
+        ]);
+        /* These two Savant columns are AVERAGE EXIT VELOCITY in mph for each
+           batted-ball group. They are NOT GB%/FB% and no rate is derived from
+           them. Unit is rendered on every value so they can't be misread. */
+        function mph(v) { return hasVal(v) ? Number(v).toFixed(1) + " mph" : null; }
+        var ev = compareTable(aName, hName, [
+            { label: "Avg exit velocity", a: a.avg_exit_velocity, h: h.avg_exit_velocity, better: "low", fmt: mph },
+            { label: "Max exit velocity", a: a.max_exit_velocity, h: h.max_exit_velocity, better: "low", fmt: mph },
+            { label: "Avg EV, ground balls", a: a.avg_exit_velocity_groundballs, h: h.avg_exit_velocity_groundballs, better: "low", fmt: mph },
+            { label: "Avg EV, fly balls + line drives", a: a.avg_exit_velocity_fb_ld, h: h.avg_exit_velocity_fb_ld, better: "low", fmt: mph }
+        ]);
+        return partial +
+            (quality ? '<div class="hh-sub"><h4 class="hh-sub__title">Contact quality allowed <span class="hh-count">lower is better for the pitcher</span></h4>' + quality + '</div>' : "") +
+            (ev ? '<div class="hh-sub"><h4 class="hh-sub__title">Exit velocity splits <span class="hh-count">mph, not batted-ball rates</span></h4>' + ev +
+                  '<p class="hh-trend__why">These are average exit velocities in mph for each batted-ball group. They are not GB% / FB% and no batted-ball rate is derived from them.</p></div>' : "");
+    }
+
+    function pitchMixTable(name, sv) {
+        if (!sv || !sv.available) {
+            return '<div class="hh-mix"><h5 class="hh-mix__name">' + esc(name) + '</h5>' +
+                unavailableHtml("Pitch mix is not available for this starter.",
+                    sv && sv.reason ? sv.reason + (sv.detail ? " (" + sv.detail + ")" : "") : undefined) + '</div>';
+        }
+        var mix = (sv.pitch_mix || []).slice().sort(function (x, y) { return (Number(y.usage_pct) || 0) - (Number(x.usage_pct) || 0); });
+        if (!mix.length) {
+            return '<div class="hh-mix"><h5 class="hh-mix__name">' + esc(name) + '</h5>' +
+                unavailableHtml("No pitch-mix rows were returned for this starter.") + '</div>';
+        }
+        var rows = mix.map(function (p) {
+            var usage = Number(p.usage_pct) || 0;
+            return '<tr>' +
+                '<td class="hh-mix__pitch"><span class="hh-mix__bar" style="width:' + Math.max(0, Math.min(100, usage)) + '%" aria-hidden="true"></span>' +
+                    '<span class="hh-mix__label">' + esc(p.pitch || "") + '</span></td>' +
+                '<td>' + (hasVal(p.usage_pct) ? esc(usage.toFixed(1)) + "%" : '<span class="hh-na">n/a</span>') + '</td>' +
+                '<td>' + (hasVal(p.pitches) ? esc(p.pitches) : '<span class="hh-na">n/a</span>') + '</td>' +
+                '<td>' + (hasVal(p.whiff_pct) ? esc(Number(p.whiff_pct).toFixed(1)) + "%" : '<span class="hh-na">n/a</span>') + '</td>' +
+                '<td>' + (hasVal(p.k_pct) ? esc(Number(p.k_pct).toFixed(1)) + "%" : '<span class="hh-na">n/a</span>') + '</td>' +
+                '<td>' + (hasVal(p.est_woba) ? esc(fmtRate(p.est_woba)) : '<span class="hh-na">n/a</span>') + '</td>' +
+                '<td>' + (hasVal(p.hard_hit_pct) ? esc(Number(p.hard_hit_pct).toFixed(1)) + "%" : '<span class="hh-na">n/a</span>') + '</td>' +
+                '</tr>';
+        }).join("");
+        return '<div class="hh-mix"><h5 class="hh-mix__name">' + esc(name) + ' <span class="hh-count">' + mix.length + ' pitches</span></h5>' +
+            '<div class="hh-mixscroll"><table class="hh-mixtbl">' +
+            '<thead><tr><th>Pitch</th><th>Usage</th><th>#</th><th>Whiff%</th><th>K%</th><th>xwOBA</th><th>Hard-hit%</th></tr></thead>' +
+            '<tbody>' + rows + '</tbody></table></div></div>';
+    }
+
     function pitchersHtml(d, game) {
         var sec = d.pitchers;
         if (!sec) return unavailableHtml("Starting pitcher stats were not returned by the research API.");
@@ -226,27 +360,56 @@
         if (aNa && hNa) return unavailableHtml((a.reason || "") + (h.reason && h.reason !== a.reason ? " " + h.reason : "") || "Neither starter has stats available.");
 
         var ov = d.overview || {};
-        var aName = (ov.away_starter && ov.away_starter.name) || shortTeam(game.away_team) + " starter";
-        var hName = (ov.home_starter && ov.home_starter.name) || shortTeam(game.home_team) + " starter";
-        var table = compareTable(aName, hName, [
-            { label: "ERA", a: a.era, h: h.era, better: "low" },
-            { label: "WHIP", a: a.whip, h: h.whip, better: "low" },
+        var aS = ov.away_starter || {}, hS = ov.home_starter || {};
+        var aName = aS.name || shortTeam(game.away_team) + " starter";
+        var hName = hS.name || shortTeam(game.home_team) + " starter";
+        var asv = a.savant || null, hsv = h.savant || null;
+
+        var partial = "";
+        if (aNa) partial += '<div class="hh-half-na">' + esc(aName) + ': ' + esc(a.reason || "stats unavailable") + '</div>';
+        if (hNa) partial += '<div class="hh-half-na">' + esc(hName) + ': ' + esc(h.reason || "stats unavailable") + '</div>';
+
+        var fipSrc = a.fip_constant_source || h.fip_constant_source;
+        var runPrev = '<div class="hh-sub"><h4 class="hh-sub__title">Run prevention <span class="hh-count">ERA vs FIP vs xERA</span></h4>' +
+            '<div class="hh-rp">' +
+                runPrevCard(aName, aS.hand, "Away", a, asv) +
+                runPrevCard(hName, hS.hand, "Home", h, hsv) +
+            '</div>' +
+            (fipSrc ? '<p class="hh-src">FIP constant: ' + esc(fipSrc) + '. xERA: Baseball Savant.</p>' : "") +
+            '</div>';
+
+        /* Rate stats keep a fixed 2dp so the season line and the run-prevention
+           cards can't disagree cosmetically (4.1 vs 4.10). */
+        var trad = compareTable(aName, hName, [
+            { label: "ERA", a: a.era, h: h.era, better: "low", fmt: fmt2 },
+            { label: "FIP", a: a.fip, h: h.fip, better: "low", fmt: fmt2 },
+            { label: "WHIP", a: a.whip, h: h.whip, better: "low", fmt: fmt2 },
             { label: "Innings", a: a.innings_pitched, h: h.innings_pitched },
             { label: "Games started", a: a.games_started, h: h.games_started },
             { label: "Strikeouts", a: a.strikeouts, h: h.strikeouts, better: "high" },
             { label: "Walks", a: a.walks, h: h.walks, better: "low" },
+            { label: "Hit by pitch", a: a.hit_by_pitch, h: h.hit_by_pitch, better: "low" },
             { label: "Batters faced", a: a.batters_faced, h: h.batters_faced },
             { label: "K%", a: a.k_pct, h: h.k_pct, better: "high", fmt: fmtPct },
             { label: "BB%", a: a.bb_pct, h: h.bb_pct, better: "low", fmt: fmtPct },
             { label: "K-BB%", a: a.k_bb_pct, h: h.k_bb_pct, better: "high", fmt: fmtPct },
             { label: "HR allowed", a: a.home_runs_allowed, h: h.home_runs_allowed, better: "low" }
         ]);
-        var partial = "";
-        if (aNa) partial += '<div class="hh-half-na">' + esc(aName) + ': ' + esc(a.reason || "stats unavailable") + '</div>';
-        if (hNa) partial += '<div class="hh-half-na">' + esc(hName) + ': ' + esc(h.reason || "stats unavailable") + '</div>';
-        return partial + (table || unavailableHtml("No starter stat lines were returned.")) +
-            notAvailableList([a.unavailable_metrics, h.unavailable_metrics]) +
-            sourceLine(d, ["pitchers"]);
+        var tradBlock = trad
+            ? '<div class="hh-sub"><h4 class="hh-sub__title">Season line</h4>' + trad + '</div>'
+            : unavailableHtml("No starter stat lines were returned.");
+
+        var mixBlock = '<div class="hh-sub"><h4 class="hh-sub__title">Pitch mix <span class="hh-count">usage, whiff and contact by pitch</span></h4>' +
+            pitchMixTable(aName, asv) + pitchMixTable(hName, hsv) + '</div>';
+
+        return partial + runPrev + tradBlock +
+            statcastHtml(aName, hName, asv, hsv) +
+            mixBlock +
+            notAvailableList([
+                a.unavailable_metrics, h.unavailable_metrics,
+                asv && asv.unavailable_metrics, hsv && hsv.unavailable_metrics
+            ]) +
+            sourceLine(d, ["pitchers", "savant"]);
     }
 
     /* ---------------- OFFENSE ---------------- */
