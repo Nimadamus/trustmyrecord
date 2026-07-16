@@ -12,7 +12,11 @@ for (const required of [
   'id="tmr-forum-premium-social-ui-20260508"',
   '<link rel="canonical" href="https://trustmyrecord.com/forum/">',
   'tmr-sitewide.css?v=',
-  'class="classic-forum tmr-forum-live-redesign"',
+  // 50c3243d dropped the dark redesign layer for the light Two Plus Two classic
+  // skin, so the body no longer carries tmr-forum-live-redesign. Lock the skin
+  // that replaced it, by its own marker.
+  'class="classic-forum"',
+  'TWO_PLUS_TWO_FORUM_STYLE_TARGET_20260531',
   'id="categoriesContainer"',
   'id="threadsBody"',
   'id="postsContainer"',
@@ -50,6 +54,9 @@ const liveLayer = html.indexOf('tmr-live-forum-redesign-20260504');
 assert(liveLayer !== -1 && finalLayer > liveLayer, 'premium forum layer must load after older forum redesign layer');
 
 assert(!html.includes('sampleThreads = ['), 'forum page must not reintroduce hard-coded fake sample threads');
-assert(html.includes('No threads in this forum yet. Be the first to post.'), 'forum empty thread copy must remain');
+// 9f32dc69 reworded the empty state and added the log-in CTA. Both variants
+// (logged in / logged out) must stay helpful rather than render blank.
+assert(html.includes('No threads here yet. Be the first to start the discussion.'), 'forum empty thread copy must remain');
+assert(html.includes('No threads here yet. Be the first to start this discussion. Log in to post.'), 'forum logged-out empty thread CTA must remain');
 
 console.log('forum page visual regression test passed');

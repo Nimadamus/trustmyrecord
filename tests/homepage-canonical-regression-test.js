@@ -14,15 +14,18 @@ for (const required of [
   'window.location.protocol === "http:"',
   'window.location.pathname === "/index.html"',
   'window.location.replace(canonicalHomepage);',
-  'HOMEPAGE_PREMIUM_DARK_UI_20260508',
-  '<style id="tmr-home-premium-dark-ui-20260508">',
+  // 4be927f3 installed the premium desktop homepage, replacing the
+  // 20260508 dark-UI layer (and its <style id>) with the tmr-premium-* shell.
+  // Guard the layer that replaced it.
+  'class="tmr-premium-home"',
+  'class="tmr-premium-hero"',
 ]) {
   assert(page.includes(required), `homepage canonical guard missing: ${required}`);
 }
 
 const canonicalIndex = page.indexOf('<link rel="canonical" href="https://trustmyrecord.com/">');
 const redirectIndex = page.indexOf('var canonicalHomepage = "https://trustmyrecord.com/";');
-const premiumIndex = page.indexOf('HOMEPAGE_PREMIUM_DARK_UI_20260508');
+const premiumIndex = page.indexOf('class="tmr-premium-home"');
 
 assert(canonicalIndex !== -1, 'homepage canonical tag is missing');
 assert(redirectIndex > canonicalIndex, 'canonical redirect script should follow the canonical tag');

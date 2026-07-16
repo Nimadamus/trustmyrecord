@@ -10,17 +10,22 @@ const html = fs.readFileSync(path.join(root, 'polls', 'index.html'), 'utf8');
 for (const required of [
   'tmr-sitewide.css?v=',
   'tmr-sitewide.js?v=',
-  'class="tmr-fb-sidebar"',
-  'class="tmr-polls-panel"',
-  'class="tmr-fb-banner-grid"',
-  'Ask the Board. Lock Your Take. See Who',
-  'class="tmr-fb-action-btn is-primary"',
-  'id="sportFilter"',
-  'id="leagueFilter"',
-  'id="categoryFilter"',
+  // ea233c70 rebuilt this page: the tmr-fb-sidebar / tmr-polls-panel / banner-grid
+  // shell became the tmr-shell2 layout with three participation cards, the filters
+  // moved from standalone ids onto `state` behind #filterBar, and the hero copy
+  // and empty-state wording changed. Lock the current shape.
+  'class="tmr-shell2"',
+  'class="tmr-pcard"',
+  'class="tmr-pcard is-accent"',
+  '<h1>Polls &amp; Predictions</h1>',
+  'class="tmr-hbtn is-primary"',
+  'id="filterBar"',
+  'state.sportFilter',
+  'state.leagueFilter',
   'id="pollsTabBar"',
-  'No polls in this view yet.',
-  'Be the first to create one.',
+  'class="tmr-tab2 is-active"',
+  'id="featuredQuizSlot"',
+  'Be the first to lock in.',
 ]) {
   assert(html.includes(required), `polls page missing required visual/function marker: ${required}`);
 }

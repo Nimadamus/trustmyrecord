@@ -291,3 +291,41 @@ body.tmr-site-shell {
     .hh-gamesscroll { max-height: 260px; }
     .hh-facts { grid-template-columns: 1fr 1fr; }
 }
+
+/* ---- Pitchers tab: run prevention (ERA/FIP/xERA), Statcast, pitch mix ---- */
+.hh-rp { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.hh-rp__card { border: 1px solid var(--hh-line); border-radius: 12px; padding: 14px; background: rgba(255,255,255,0.02); min-width: 0; }
+.hh-rp__head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.hh-rp__side { font: 800 0.6rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hh-muted); }
+.hh-rp__head strong { font: 800 1rem/1.2 "Barlow", sans-serif; overflow-wrap: anywhere; }
+.hh-rp__row { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.hh-rp__cell { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; min-width: 0; }
+.hh-rp__k { font: 800 0.62rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hh-muted); }
+.hh-rp__v { font: 800 1.5rem/1 "Barlow", sans-serif; font-variant-numeric: tabular-nums; color: var(--hh-text); }
+.hh-rp__sep { color: var(--hh-line-strong); font-weight: 800; flex-shrink: 0; }
+.hh-rp__verdict { margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--hh-line); font-size: 0.78rem; line-height: 1.5; color: var(--hh-muted); }
+.hh-rp__verdict.is-warn { color: #f6c96b; }
+.hh-rp__verdict.is-good { color: var(--hh-green); }
+.hh-rp__verdict.is-flat { color: var(--hh-muted); }
+
+.hh-nm__list { margin: 8px 0 0; padding-left: 18px; color: var(--hh-muted); line-height: 1.6; }
+.hh-nm__list li { margin-bottom: 3px; }
+
+.hh-mix { margin-bottom: 14px; }
+.hh-mix__name { margin: 0 0 8px; font: 800 0.84rem/1 "Barlow", sans-serif; display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.hh-mixscroll { overflow-x: auto; border: 1px solid var(--hh-line); border-radius: 10px; }
+.hh-mixtbl { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.hh-mixtbl th, .hh-mixtbl td { padding: 7px 10px; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.hh-mixtbl th:first-child, .hh-mixtbl td:first-child { text-align: left; }
+.hh-mixtbl thead th { background: var(--hh-panel-2); color: var(--hh-muted); font: 800 0.64rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.08em; text-transform: uppercase; }
+.hh-mixtbl tbody tr { border-top: 1px solid var(--hh-line); }
+.hh-mix__pitch { position: relative; min-width: 148px; }
+.hh-mix__bar { position: absolute; left: 0; top: 3px; bottom: 3px; background: rgba(45,212,191,0.16); border-radius: 4px; z-index: 0; }
+.hh-mix__label { position: relative; z-index: 1; font-weight: 700; }
+
+@media (max-width: 720px) {
+    .hh-rp { grid-template-columns: 1fr; }
+    .hh-rp__v { font-size: 1.3rem; }
+    .hh-mixtbl th, .hh-mixtbl td { padding: 6px 7px; font-size: 0.74rem; }
+    .hh-mix__pitch { min-width: 120px; }
+}
