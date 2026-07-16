@@ -8496,7 +8496,7 @@
         let all = [];
         try {
             for (let offset = 0, guard = 0; guard < 200; offset += PAGE, guard++) {
-                const resp = await window.api.request('/picks?username=' + encodeURIComponent(username) + '&limit=' + PAGE + '&offset=' + offset);
+                const resp = await window.api.request('/picks' + '?username=' + encodeURIComponent(username) + '&limit=' + PAGE + '&offset=' + offset);
                 const batch = (resp && Array.isArray(resp.picks)) ? resp.picks : [];
                 all = all.concat(batch);
                 if (!resp || !resp.pagination || !resp.pagination.hasMore || batch.length < PAGE) break;
@@ -9240,7 +9240,7 @@
             let hasMoreByUsername = true, usernameOffset = 0;
             while (hasMoreByUsername) {
                 try {
-                    const data = await withTimeout(api.request('/picks?username=' + encodeURIComponent(profileData.username) + '&limit=100&offset=' + usernameOffset), 7000, 'Pick history request');
+                    const data = await withTimeout(api.request('/picks' + '?username=' + encodeURIComponent(profileData.username) + '&limit=100&offset=' + usernameOffset), 7000, 'Pick history request');
                     const batch = data && Array.isArray(data.picks) ? data.picks : [];
                     pickRequestSucceeded = true;
                     picks = picks.concat(batch);

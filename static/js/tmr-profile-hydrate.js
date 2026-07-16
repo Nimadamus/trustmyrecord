@@ -79,7 +79,7 @@
   function fetchAllPicks(user) {
     var out = [];
     function page(off) {
-      return getJSON(API + '/picks?username=' + encodeURIComponent(user) + '&limit=100&offset=' + off)
+      return getJSON(API + '/picks' + '?username=' + encodeURIComponent(user) + '&limit=100&offset=' + off)
         .then(function (d) {
           var ps = (d && d.picks) || [];
           out = out.concat(ps);

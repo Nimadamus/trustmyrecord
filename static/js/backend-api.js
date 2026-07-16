@@ -482,7 +482,7 @@ class TrustMyRecordAPI {
 
     async searchUsers(query, options = {}) {
         const { limit = 20, offset = 0 } = options;
-        return this.request(`/users?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`);
+        return this.request(`/users` + `?query=${encodeURIComponent(query)}&limit=${limit}&offset=${offset}`);
     }
 
     async getLeaderboard(options = {}, legacyOptions = {}) {
@@ -660,7 +660,7 @@ class TrustMyRecordAPI {
         const { userId, sport, status, page, limit = 20, offset } = options;
         // Backend uses offset, not page. Support both for compatibility.
         const effectiveOffset = offset != null ? offset : (page ? (page - 1) * limit : 0);
-        let url = `/picks?limit=${limit}&offset=${effectiveOffset}`;
+        let url = `/picks` + `?limit=${limit}&offset=${effectiveOffset}`;
         if (userId) url += `&userId=${userId}`;
         if (sport) url += `&sport=${sport}`;
         if (status) url += `&status=${status}`;

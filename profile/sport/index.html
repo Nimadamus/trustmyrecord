@@ -602,7 +602,7 @@
     async function loadAllPicks() {
       const out = [];
       for (let offset = 0; offset < 1000; offset += 100) {
-        const data = await apiRequest('/picks?username=' + encodeURIComponent(username) + '&sport=' + encodeURIComponent(sportKey) + '&limit=100&offset=' + offset);
+        const data = await apiRequest('/picks' + '?username=' + encodeURIComponent(username) + '&sport=' + encodeURIComponent(sportKey) + '&limit=100&offset=' + offset);
         const rows = Array.isArray(data.picks) ? data.picks : [];
         out.push(...rows);
         if (rows.length < 100) break;

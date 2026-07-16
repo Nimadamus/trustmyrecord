@@ -5181,7 +5181,7 @@ function escapeHtml(value) {
 
             results = await Promise.all(candidates.map(async function (u) {
                 try {
-                    const data = await request('/picks?username=' + encodeURIComponent(u.username) + '&limit=100&' + bust);
+                    const data = await request('/picks' + '?username=' + encodeURIComponent(u.username) + '&limit=100&' + bust);
                     const picks = Array.isArray(data && data.picks) ? data.picks : [];
                     const highlight = computeHighlight(picks, {
                         net_units: u.net_units != null ? u.net_units : u.netUnits,
@@ -5256,7 +5256,7 @@ function escapeHtml(value) {
         const bust = '_=' + Date.now();
         let users = [];
         try {
-            const usersData = await requestRetry('/users?limit=100&' + bust);
+            const usersData = await requestRetry('/users' + '?limit=100&' + bust);
             users = Array.isArray(usersData && usersData.users) ? usersData.users : [];
             renderUsers(users);
         } catch (error) {

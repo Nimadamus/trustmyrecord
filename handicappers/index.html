@@ -1532,7 +1532,7 @@
             const MAX_PICKS = 2000; // hard safety ceiling
             const all = [];
             for (let offset = 0; offset < MAX_PICKS; offset += PAGE) {
-                const endpoint = '/picks?limit=' + PAGE + '&offset=' + offset + '&' + param;
+                const endpoint = '/picks' + '?limit=' + PAGE + '&offset=' + offset + '&' + param;
                 // Up to 4 attempts with exponential backoff + jitter: the API
                 // rate-limits (429) under the enrichment fan-out and a single
                 // quick retry was not enough for high-volume histories.
@@ -1700,7 +1700,7 @@
             for (let offset = 0; offset < 5000; offset += PAGE) {
                 let batch;
                 try {
-                    batch = extractUserArray(await directoryRequest('/users?limit=' + PAGE + '&offset=' + offset));
+                    batch = extractUserArray(await directoryRequest('/users' + '?limit=' + PAGE + '&offset=' + offset));
                 } catch (error) {
                     if (offset === 0) throw error;
                     break;

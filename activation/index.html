@@ -88,8 +88,8 @@
                 try {
                     if (!window.api || typeof window.api.request !== 'function') throw new Error('API client unavailable.');
                     const [usersPayload, picksPayload] = await Promise.all([
-                        window.api.request('/users?query=&limit=100&offset=0'),
-                        window.api.request('/picks?limit=100&offset=0')
+                        window.api.request('/users' + '?query=&limit=100&offset=0'),
+                        window.api.request('/picks' + '?limit=100&offset=0')
                     ]);
                     const users = asArray(usersPayload, 'users');
                     const picks = asArray(picksPayload, 'picks');

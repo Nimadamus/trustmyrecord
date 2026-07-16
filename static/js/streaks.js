@@ -158,7 +158,7 @@
         let offset = 0;
         const picks = [];
         while (offset < 1000) {
-            const data = await root.api.request('/picks?username=' + encodeURIComponent(user) + '&limit=100&offset=' + offset);
+            const data = await root.api.request('/picks' + '?username=' + encodeURIComponent(user) + '&limit=100&offset=' + offset);
             const batch = Array.isArray(data && data.picks) ? data.picks : [];
             picks.push.apply(picks, batch);
             if (batch.length < 100) break;
