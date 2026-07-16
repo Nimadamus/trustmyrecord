@@ -87,13 +87,13 @@
 <main class="mp-shell">
     <div class="crumb"><a href="/marketplace/">&larr; Pick Marketplace</a></div>
     <h1>Sell Your <span class="accent">Picks</span></h1>
-    <p class="lede">Open a storefront attached to your verified record. Choose which packages to sell — single picks, day, weekly, or monthly passes — and set your own price on each. Stripe handles identity verification and payouts; TrustMyRecord keeps a 20% platform commission on every sale and you receive 80%.</p>
+    <p class="lede">Open a storefront attached to your verified record. Choose which packages to sell, single picks or day, weekly, and monthly passes, and set your own price on each. You connect your own Stripe account, so buyers pay you directly and payouts go straight to your bank. TrustMyRecord keeps a 20% platform commission on every sale and you keep the rest.</p>
     <div id="app"><div class="panel" style="color:var(--muted);">Loading…</div></div>
 
     <section class="panel" style="margin-top:24px;" aria-label="How selling picks works">
         <h2>How Selling Picks on TrustMyRecord Works</h2>
         <p class="lede" style="font-size:15px;">Seller storefronts are built on top of your existing public record. Eligibility is based on the history you have already built on the platform: locked picks, automatic grading, and results nobody can edit after the fact. Buyers see that record before they spend anything, which is the entire point - you are selling picks from a track record people can inspect first.</p>
-        <p class="lede" style="font-size:15px;">Setup takes three steps. First, meet the eligibility bar with your public TrustMyRecord history. Second, connect Stripe, which handles identity verification, secure payment processing, and payouts to your bank. Third, set your own prices for single picks or subscription access. TrustMyRecord keeps a 20% platform commission on each sale and you receive an 80% gross allocation, with the full terms spelled out in the <a href="/marketplace/terms/">Marketplace Terms</a>.</p>
+        <p class="lede" style="font-size:15px;">Setup takes three steps. First, confirm your account is active and your email is verified. Second, connect your own Stripe account, which handles identity verification, secure payment processing, and payouts to your bank. Third, set your own prices for single picks or pass access. TrustMyRecord keeps a 20% platform commission on each sale and you keep the rest, with the full terms spelled out in the <a href="/marketplace/terms/">Marketplace Terms</a>.</p>
         <p class="lede" style="font-size:15px;">Not ready to sell yet? <a href="/join/">Create a free account</a> and start locking picks so your record is ready when you are. You can browse existing sellers in the <a href="/marketplace/">Pick Marketplace</a>, read the <a href="/sell-sports-picks/">guide to selling sports picks</a>, or check the <a href="/sell-your-picks/">Sell Your Picks overview</a> for the roadmap.</p>
     </section>
 </main>
@@ -137,12 +137,15 @@
 
     function renderLoggedOut() {
         app.innerHTML = '<div class="panel"><h2>Log in to start selling</h2>' +
-            '<p style="color:#c5cee0;font-size:13.5px;line-height:1.6;margin-bottom:14px;">Selling requires a TrustMyRecord account with a public graded record. Log in or create an account, lock picks in the <a href="/sportsbook/" style="color:var(--cyan);">sportsbook</a>, and come back once your ledger has a real sample.</p>' +
+            '<p style="color:#c5cee0;font-size:13.5px;line-height:1.6;margin-bottom:14px;">Anyone with a verified TrustMyRecord account can open a storefront — connect your own Stripe account, set your prices, and sell. Your public record travels with every listing, so <a href="/sportsbook/" style="color:var(--cyan);">locking picks in the sportsbook</a> is what earns buyers.</p>' +
             '<a class="btn btn-primary" href="/login/?redirect=%2Fmarketplace%2Fsell%2F">Log In</a></div>';
     }
 
     function renderRules() {
         return Object.keys(RULE_LABELS).map(function (k) {
+            // No graded-pick threshold is in force, so listing a 0/0 rule is
+            // just noise on a bar nobody can fail. Reappears if one is ever set.
+            if (k === 'min_graded_picks' && Number(elig.min_graded_picks) === 0) return '';
             const ok = Boolean(elig.rules[k]);
             let extra = '';
             if (k === 'min_graded_picks') extra = '<small>' + elig.graded_picks + ' / ' + elig.min_graded_picks + '</small>';
@@ -174,24 +177,27 @@
         }
         html += '</div>';
 
-        // Step 3: Stripe onboarding
+        // Step 3: connect the seller's OWN Stripe account (Connect Standard OAuth)
         const st = elig.onboarding_status;
-        html += '<div class="panel"><h2><span class="step-num">3</span> Stripe Payouts ' +
+        html += '<div class="panel"><h2><span class="step-num">3</span> Your Stripe Account ' +
             (st === 'complete' ? '<span class="status-pill pill-green">Connected</span>' :
-             st === 'in_progress' ? '<span class="status-pill pill-amber">In Progress</span>' :
-             '<span class="status-pill pill-amber">Not Started</span>') + '</h2>' +
-            '<p style="color:#c5cee0;font-size:13.5px;line-height:1.6;margin-bottom:12px;">Stripe verifies your identity and collects your payout details directly — TrustMyRecord never sees or stores your banking information. You will be redirected to Stripe\'s secure onboarding.</p>';
+             st === 'in_progress' ? '<span class="status-pill pill-amber">Finishing Setup</span>' :
+             '<span class="status-pill pill-amber">Not Connected</span>') + '</h2>' +
+            '<p style="color:#c5cee0;font-size:13.5px;line-height:1.6;margin-bottom:12px;">You sell through <strong>your own Stripe account</strong>. Buyers pay it directly, so the money is yours from the moment of the sale and payouts land in your bank on your own schedule. Sign in to Stripe, or create an account there in a couple of minutes, and approve the connection. TrustMyRecord never asks for, sees, or stores your Stripe keys or your banking details, and you can disconnect whenever you want.</p>' +
+            '<p style="color:#c5cee0;font-size:13.5px;line-height:1.6;margin-bottom:12px;">Stripe charges its standard processing fee and TrustMyRecord\'s 20% commission is collected automatically on each sale. You keep the rest.</p>';
         if (elig.requirements_due && elig.requirements_due.length) {
             html += '<p class="hint" style="color:var(--amber);">Stripe still needs: ' + elig.requirements_due.map(esc).join(', ') + '</p>';
         }
         if (st !== 'complete') {
             html += '<button class="btn btn-primary" id="onboardBtn" ' + (elig.can_start_onboarding && elig.rules.seller_agreement_accepted ? '' : 'disabled') + '>' +
-                (st === 'in_progress' ? 'Resume Stripe Onboarding' : 'Connect with Stripe') + '</button>' +
+                (st === 'in_progress' ? 'Finish connecting Stripe' : 'Connect your Stripe account') + '</button>' +
                 (!elig.can_start_onboarding ? '<p class="hint">Finish the eligibility items in step 1 first.</p>' :
                  !elig.rules.seller_agreement_accepted ? '<p class="hint">Accept the seller agreement in step 2 first.</p>' : '');
         } else {
             html += '<p style="color:#c5cee0;font-size:13px;">Charges: ' + (elig.rules.stripe_charges_enabled ? 'enabled' : '<span style="color:var(--red)">disabled</span>') +
-                ' &middot; Payouts: ' + (elig.rules.stripe_payouts_enabled ? 'enabled' : '<span style="color:var(--red)">disabled</span>') + '</p>';
+                ' &middot; Payouts: ' + (elig.rules.stripe_payouts_enabled ? 'enabled' : '<span style="color:var(--red)">disabled</span>') + '</p>' +
+                '<p class="hint">Disconnecting stops new sales and unpublishes your packages. Your Stripe account, your balance, and past payouts are untouched.</p>' +
+                '<button class="btn" id="disconnectBtn" style="margin-top:4px;">Disconnect Stripe</button>';
         }
         html += '</div>';
 
@@ -276,12 +282,28 @@
         }
         const onboardBtn = document.getElementById('onboardBtn');
         if (onboardBtn) onboardBtn.addEventListener('click', async function () {
+            const label = onboardBtn.textContent;
             onboardBtn.disabled = true; onboardBtn.textContent = 'Opening Stripe…';
             try {
-                const out = await api.request('/marketplace/me/stripe/onboard', { method: 'POST', body: {} });
+                // Hands back Stripe's hosted OAuth URL. The seller authorizes
+                // their own account there; no key is ever entered on TMR.
+                const out = await api.request('/marketplace/me/stripe/connect-link', { method: 'POST', body: {} });
                 if (out && out.url) { location.href = out.url; return; }
-                throw new Error((out && out.error) || 'Could not start onboarding');
-            } catch (e) { toast(e.message || 'Could not start onboarding'); onboardBtn.disabled = false; onboardBtn.textContent = 'Connect with Stripe'; }
+                throw new Error((out && out.error) || 'Could not start the Stripe connection');
+            } catch (e) { toast(e.message || 'Could not start the Stripe connection'); onboardBtn.disabled = false; onboardBtn.textContent = label; }
+        });
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        if (disconnectBtn) disconnectBtn.addEventListener('click', async function () {
+            if (!confirm('Disconnect your Stripe account? New sales stop and your packages are unpublished until you reconnect. Your Stripe balance and past payouts are not affected.')) return;
+            disconnectBtn.disabled = true; disconnectBtn.textContent = 'Disconnecting…';
+            try {
+                await api.request('/marketplace/me/stripe/disconnect', { method: 'POST', body: {} });
+                toast('Stripe disconnected.');
+                boot();
+            } catch (e) {
+                toast(e.message || 'Could not disconnect');
+                disconnectBtn.disabled = false; disconnectBtn.textContent = 'Disconnect Stripe';
+            }
         });
         PKG.forEach(function (pk) {
             const input = app.querySelector('[data-price="' + pk.type + '"]');
@@ -333,12 +355,24 @@
         byType = {};
         listings.forEach(function (x) { byType[x.product_type] = x; });
         try { dash = await api.request('/marketplace/me/dashboard'); } catch (e) { dash = null; }
-        // If returning from Stripe onboarding, refresh connected-account status
+        // Coming back from Stripe's OAuth screen: re-sync the connected account
+        // so the page reflects the link straight away instead of on next load.
         const q = new URLSearchParams(location.search);
-        if (q.get('onboard') === 'return') {
+        const stripeResult = q.get('stripe');
+        if (stripeResult === 'connected' || q.get('onboard') === 'return') {
             try { status = await api.request('/marketplace/me/stripe/status'); elig = await api.request('/marketplace/me/eligibility'); } catch (e) {}
         }
         render();
+        if (stripeResult === 'connected') toast('Stripe account connected.');
+        else if (stripeResult === 'denied') toast('Stripe connection cancelled. You can try again whenever you are ready.');
+        else if (stripeResult === 'error') {
+            const reason = q.get('reason') || '';
+            toast(reason === 'account_already_linked_to_another_user'
+                ? 'That Stripe account is already linked to another TrustMyRecord user.'
+                : 'Stripe connection failed' + (reason ? ': ' + reason : '') + '. Please try again.');
+        }
+        // Drop the Stripe params so a refresh does not replay the toast.
+        if (stripeResult) history.replaceState({}, '', location.pathname);
     }
     boot();
 })();
