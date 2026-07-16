@@ -36,7 +36,9 @@ for (const required of [
 for (const cssToken of [
   'body::before',
   '.hero::after',
-  'grid-template-columns: repeat(5, minmax(150px, 1fr))',
+  // df54dc56 compacted the hero (was ~500px tall); the 5-column quick-stats grid
+  // stayed but its min track narrowed from 150px to 94px.
+  'grid-template-columns: repeat(5, minmax(94px, 1fr))',
   'appearance: none',
   '.empty-state {',
   'radial-gradient(circle at top, rgba(45,212,191,0.07)',

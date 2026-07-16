@@ -10,11 +10,12 @@ const html = fs.readFileSync(path.join(root, 'arena', 'index.html'), 'utf8');
 for (const required of [
   'tmr-sitewide.css?v=',
   'tmr-sitewide.js?v=',
-  'class="arena-clean-hero"',
-  'class="arena-clean-proof"',
-  'Verified outcomes only',
-  'Rivalry-ready matchups',
-  'Records tied to activity',
+  // e5269b2b replaced the arena-clean-* hero/proof strip with the compact
+  // dashboard layout. Lock that redesign by its own marker and structure.
+  'ARENA_PRO_20260711',
+  'class="arena-head"',
+  'class="arena-actions-grid"',
+  'class="arena-action-card"',
   'id="openChallengesSection"',
   'id="challengesList"',
   'onclick="openCreateChallenge()"',
@@ -26,12 +27,12 @@ for (const required of [
 }
 
 for (const requiredStyle of [
-  '.arena-clean-hero::before',
-  '.arena-clean-proof span',
-  '.arena-hub-card {',
-  'radial-gradient(circle at 20% 0%, rgba(45, 212, 191, 0.10)',
-  '.arena-clean-section {',
-  '.arena-list-grid .challenge-card',
+  // Styles of the ARENA_PRO_20260711 dashboard that replaced arena-clean-*.
+  '.arena-head {',
+  '.arena-actions-grid {',
+  '.arena-action-card {',
+  '.arena-action-icon {',
+  '.arena-more-grid {',
   '.cc-status {',
   '.empty-state .arena-empty-action',
   '.loading {',
