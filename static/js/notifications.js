@@ -455,8 +455,27 @@ function getNotifActor(notification) {
 // Turn the actor's leading name in the message into a profile link. Only the
 // payload's real display_name/username is linkified (never arbitrary text), and
 // only when it is the leading token, so we never fabricate a URL from copy.
+// Never render a raw object, JSON.stringify payload, or arbitrary metadata as
+// notification text. Coerce non-strings and serialized-object content to a safe,
+// human-readable fallback so a malformed/legacy row can never leak backend fields.
+function coerceSafeNotifText(notification) {
+    var type = String((notification && notification.type) || '').toLowerCase();
+    var fallback = type === 'support_submission' ? 'New support request' : 'New notification';
+    var raw = notification && (notification.message != null ? notification.message : notification.content);
+    if (raw == null) return fallback;
+    if (typeof raw !== 'string') return fallback;
+    var trimmed = raw.trim();
+    if (trimmed && (trimmed.charAt(0) === '{' || trimmed.charAt(0) === '[')) {
+        try {
+            var parsed = JSON.parse(trimmed);
+            if (parsed && typeof parsed === 'object') return fallback;
+        } catch (e) { /* not JSON -> render as-is */ }
+    }
+    return raw;
+}
+
 function renderNotifMessage(notification, actor) {
-    const message = notification.message || notification.content || '';
+    const message = coerceSafeNotifText(notification);
     const safe = escapeHtml(message);
     if (!actor || !actor.referenced) return highlightResult(safe, notification.type);
 
