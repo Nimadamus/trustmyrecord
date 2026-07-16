@@ -184,3 +184,110 @@ body.tmr-site-shell {
     .hh-game__at .hh-venue { display: none; }
 }
 @media (max-width: 620px) { .hh-shell { padding-top: 88px; } }
+
+/* ============================================================
+   Matchup research dashboard — tabs, states, markets, trends.
+   Added with the tabbed matchup rebuild. Scoped to .hh-* only:
+   nothing here touches the shared nav/footer CSS.
+   ============================================================ */
+
+/* Tabs */
+.hh-tabsbar { margin: 4px 0 0; border-bottom: 1px solid var(--hh-line); overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
+.hh-tabs { display: flex; gap: 2px; min-width: max-content; }
+.hh-tab {
+    appearance: none; background: none; border: 0; border-bottom: 2px solid transparent;
+    color: var(--hh-muted); cursor: pointer; white-space: nowrap;
+    padding: 12px 14px; min-height: 44px;
+    font: 800 0.78rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.1em; text-transform: uppercase;
+}
+.hh-tab:hover { color: var(--hh-text); }
+.hh-tab[aria-selected="true"] { color: var(--hh-teal); border-bottom-color: var(--hh-teal); }
+.hh-tab:focus-visible { outline: 2px solid var(--hh-blue); outline-offset: -2px; border-radius: 6px 6px 0 0; }
+.hh-panels { padding-top: 14px; }
+.hh-panel { min-height: 90px; }
+.hh-panel:focus-visible { outline: 2px solid rgba(56,189,248,0.5); outline-offset: 4px; border-radius: 10px; }
+
+/* Section states: loading / unavailable / provider error */
+.hh-state { border-radius: 12px; padding: 14px 16px; font-size: 0.86rem; border: 1px solid var(--hh-line); background: rgba(255,255,255,0.02); }
+.hh-state strong { display: block; font: 800 0.72rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 6px; }
+.hh-state p { margin: 0; color: var(--hh-muted); line-height: 1.5; }
+.hh-state__detail { margin-top: 6px !important; font-size: 0.78rem; opacity: 0.85; }
+.hh-state--loading { display: flex; align-items: center; gap: 10px; color: var(--hh-muted); border-style: dashed; }
+.hh-state--na { border-style: dashed; }
+.hh-state--na strong { color: var(--hh-muted); }
+.hh-state--err { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.06); }
+.hh-state--err strong { color: var(--hh-red); }
+.hh-retry { margin-top: 10px; background: none; border: 1px solid var(--hh-line-strong); color: var(--hh-text); border-radius: 9px; padding: 8px 14px; font-weight: 800; font-size: 0.78rem; cursor: pointer; min-height: 38px; }
+.hh-retry:hover { border-color: var(--hh-red); }
+.hh-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--hh-line-strong); border-top-color: var(--hh-teal); animation: hh-spin 0.8s linear infinite; flex-shrink: 0; }
+@keyframes hh-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .hh-spin { animation-duration: 2.4s; } }
+.hh-half-na { font-size: 0.8rem; color: var(--hh-muted); border-left: 2px solid var(--hh-line-strong); padding: 4px 0 4px 10px; margin-bottom: 10px; }
+.hh-na { color: var(--hh-muted); font-weight: 400; font-size: 0.8rem; }
+
+/* Explicit unavailable-metric disclosure (never hidden) */
+.hh-nm { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--hh-line); font-size: 0.74rem; line-height: 2; }
+.hh-nm__label { color: var(--hh-muted); font-weight: 700; margin-right: 6px; }
+.hh-nm__chip { display: inline-block; padding: 2px 7px; margin: 0 4px 0 0; border-radius: 6px; background: rgba(255,255,255,0.03); border: 1px solid var(--hh-line); color: var(--hh-muted); }
+.hh-src { margin: 10px 0 0; font-size: 0.7rem; color: var(--hh-muted); }
+
+/* Overview */
+.hh-starters { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; margin-bottom: 14px; }
+.hh-start { border: 1px solid var(--hh-line); border-radius: 12px; padding: 12px 14px; background: rgba(255,255,255,0.02); display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.hh-start__side { font: 800 0.6rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.14em; text-transform: uppercase; color: var(--hh-muted); }
+.hh-start strong { font: 800 1rem/1.2 "Barlow", sans-serif; overflow-wrap: anywhere; }
+.hh-hand { font-size: 0.72rem; color: var(--hh-teal); font-weight: 800; }
+.hh-vs { font: 800 0.72rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hh-muted); }
+.hh-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 0 0 12px; }
+.hh-facts > div { border: 1px solid var(--hh-line); border-radius: 10px; padding: 10px 12px; background: rgba(255,255,255,0.02); }
+.hh-facts dt { font: 800 0.6rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hh-muted); margin-bottom: 4px; }
+.hh-facts dd { margin: 0; font-size: 0.88rem; font-weight: 700; overflow-wrap: anywhere; }
+.hh-facts--glance { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.hh-facts__cap { grid-column: 1 / -1; border: 0 !important; background: none !important; padding: 0 !important; font: 800 0.62rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hh-muted); }
+
+/* Markets — full game / F5 / 1st inning stay visually separate */
+.hh-mkt { border: 1px solid var(--hh-line); border-left-width: 3px; border-radius: 12px; padding: 14px; margin-bottom: 14px; background: rgba(255,255,255,0.015); }
+.hh-mkt__title { margin: 0 0 4px; font: 800 0.76rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.12em; text-transform: uppercase; }
+.hh-mkt__note { margin: 0 0 12px; font-size: 0.74rem; color: var(--hh-muted); }
+.hh-mkt--full { border-left-color: var(--hh-teal); }
+.hh-mkt--full .hh-mkt__title { color: var(--hh-teal); }
+.hh-mkt--f5 { border-left-color: var(--hh-blue); }
+.hh-mkt--f5 .hh-mkt__title { color: var(--hh-blue); }
+.hh-mkt--fi { border-left-color: var(--hh-gold); }
+.hh-mkt--fi .hh-mkt__title { color: var(--hh-gold); }
+.hh-mkt__unpriced { margin: 10px 0 0; font-size: 0.74rem; color: var(--hh-muted); font-style: italic; }
+.hh-linenum { color: var(--hh-muted); }
+.hh-chip--muted { color: var(--hh-muted); }
+
+/* Trends */
+.hh-sub { margin-bottom: 18px; }
+.hh-sub__title { margin: 0 0 10px; font: 800 0.74rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hh-muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.hh-edge { display: inline-block; margin-bottom: 8px; padding: 5px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; border: 1px solid var(--hh-line-strong); color: var(--hh-muted); }
+.hh-edge.is-pos { color: var(--hh-green); border-color: rgba(34,197,94,0.45); background: rgba(34,197,94,0.08); }
+.hh-edge.is-neg { color: var(--hh-red); border-color: rgba(239,68,68,0.45); background: rgba(239,68,68,0.08); }
+.hh-edge__note { font-weight: 600; opacity: 0.9; font-size: 0.72rem; }
+.hh-trend__stats b.is-pos { color: var(--hh-green); }
+.hh-trend__stats b.is-neg { color: var(--hh-red); }
+.hh-trend__games { margin-top: 10px; }
+.hh-trend__games summary { cursor: pointer; font-size: 0.76rem; color: var(--hh-blue); min-height: 30px; }
+.hh-gamesbox { margin-top: 8px; }
+.hh-gamesscroll { max-height: 320px; overflow: auto; border: 1px solid var(--hh-line); border-radius: 10px; }
+.hh-gamestbl { width: 100%; border-collapse: collapse; font-size: 0.76rem; }
+.hh-gamestbl th, .hh-gamestbl td { padding: 6px 9px; text-align: left; white-space: nowrap; }
+.hh-gamestbl thead th { position: sticky; top: 0; background: var(--hh-panel-2); color: var(--hh-muted); font: 800 0.66rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.08em; text-transform: uppercase; }
+.hh-gamestbl tbody tr { border-top: 1px solid var(--hh-line); }
+.hh-gamestbl .is-win { color: var(--hh-green); font-weight: 800; }
+.hh-gamestbl .is-loss { color: var(--hh-red); font-weight: 800; }
+.hh-gamestbl .is-push { color: var(--hh-muted); font-weight: 800; }
+.hh-sql { margin-top: 8px; }
+.hh-sql summary { cursor: pointer; font-size: 0.72rem; color: var(--hh-muted); }
+.hh-sql pre { margin: 8px 0 0; padding: 10px; border: 1px solid var(--hh-line); border-radius: 8px; background: rgba(0,0,0,0.28); color: var(--hh-muted); font-size: 0.7rem; overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+@media (max-width: 720px) {
+    .hh-tab { padding: 11px 11px; font-size: 0.72rem; letter-spacing: 0.06em; }
+    .hh-starters { grid-template-columns: 1fr; gap: 8px; }
+    .hh-vs { justify-self: center; }
+    .hh-compare th, .hh-compare td { padding: 7px 5px; font-size: 0.82rem; }
+    .hh-gamesscroll { max-height: 260px; }
+    .hh-facts { grid-template-columns: 1fr 1fr; }
+}
