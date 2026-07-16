@@ -350,10 +350,10 @@
            REDESIGN 2026-07-12: compact header, participation cards,
            quick/quiz separation, quieter hierarchy
            ============================================================ */
-        .tmr-shell2 { max-width: 1080px; margin: 0 auto; padding: 24px 20px 80px; }
-        .tmr-phead { display: flex; align-items: center; justify-content: space-between; gap: 22px; flex-wrap: wrap; padding: 22px 24px; border: 1px solid var(--tmr-fb-border); border-radius: 18px; background: linear-gradient(180deg, rgba(10,20,34,0.92), rgba(6,12,22,0.94)); box-shadow: var(--tmr-fb-shadow); margin-bottom: 20px; }
-        .tmr-phead-copy h1 { font-size: 1.7rem; font-weight: 900; color: #F8FAFC; letter-spacing: -0.01em; line-height: 1.1; }
-        .tmr-phead-copy p { color: #A9B9CC; font-size: 0.9rem; line-height: 1.5; max-width: 540px; margin-top: 7px; }
+        .tmr-shell2 { max-width: 1080px; margin: 0 auto; padding: 16px 20px 52px; }
+        .tmr-phead { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 12px 16px; border: 1px solid var(--tmr-fb-border); border-radius: 14px; background: linear-gradient(180deg, rgba(10,20,34,0.92), rgba(6,12,22,0.94)); box-shadow: var(--tmr-fb-shadow); margin-bottom: 12px; }
+        .tmr-phead-copy h1 { font-size: 1.24rem; font-weight: 900; color: #F8FAFC; letter-spacing: -0.01em; line-height: 1.15; }
+        .tmr-phead-copy p { color: #A9B9CC; font-size: 0.82rem; line-height: 1.45; max-width: 560px; margin-top: 3px; }
         .tmr-phead-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .tmr-hbtn { display: inline-flex; align-items: center; gap: 7px; height: 42px; padding: 0 18px; border-radius: 11px; font-family: inherit; font-weight: 800; font-size: 0.85rem; cursor: pointer; border: 1px solid var(--tmr-fb-border-strong); background: rgba(15,23,42,0.72); color: #DDE9F7; text-decoration: none; white-space: nowrap; }
         .tmr-hbtn:hover { border-color: rgba(34,211,238,0.42); color: #fff; background: rgba(22,35,55,0.92); text-decoration: none; }
@@ -373,7 +373,7 @@
         .tmr-pcard.is-accent .tmr-pcard-btn:hover { background: linear-gradient(135deg, #4ADE80, #67E8F9); color: #06111F; }
 
         /* Primary tab bar */
-        .tmr-tabs2 { display: flex; gap: 4px; border-bottom: 1px solid var(--tmr-fb-border); margin-bottom: 22px; flex-wrap: wrap; }
+        .tmr-tabs2 { display: flex; gap: 4px; border-bottom: 1px solid var(--tmr-fb-border); margin-bottom: 14px; flex-wrap: wrap; }
         .tmr-tab2 { position: relative; padding: 11px 16px; background: transparent; border: none; color: #93A4BA; font-family: inherit; font-size: 0.9rem; font-weight: 800; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
         .tmr-tab2:hover { color: #E2E8F0; }
         .tmr-tab2.is-active { color: #F8FAFC; border-bottom-color: var(--tmr-fb-cyan); }
@@ -472,7 +472,6 @@
                 <a href="/trivia/"><i class="fas fa-circle-question"></i> Trivia</a>
                 <a href="/messages/"><i class="fas fa-envelope"></i> Messages</a>
                 <a href="/profile/"><i class="fas fa-user"></i> Profile</a>
-                <button type="button" class="tmr-fb-cta" onclick="openCreatePollModal()"><i class="fas fa-plus"></i> Create Poll</button>
             </nav>
         </div>
     </div>
@@ -484,38 +483,14 @@
         <header class="tmr-phead">
             <div class="tmr-phead-copy">
                 <h1>Polls &amp; Predictions</h1>
-                <p>Vote on today's biggest sports questions, compete in prediction quizzes, or create a poll for the community.</p>
+                <p>Vote on today's biggest sports questions, compete in prediction quizzes, or start your own.</p>
             </div>
             <div class="tmr-phead-actions">
-                <button type="button" class="tmr-hbtn" onclick="goTab('quick')"><i class="fas fa-check-to-slot"></i> Vote in Polls</button>
-                <button type="button" class="tmr-hbtn" onclick="goTab('quiz')"><i class="fas fa-trophy"></i> Enter Prediction Quiz</button>
                 <button type="button" class="tmr-hbtn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus"></i> Create a Poll</button>
             </div>
         </header>
 
-        <!-- B. THREE PARTICIPATION OPTIONS -->
-        <div class="tmr-cards3">
-            <div class="tmr-pcard">
-                <span class="tmr-pcard-ic"><i class="fas fa-check-to-slot"></i></span>
-                <h3>Quick Polls</h3>
-                <p>One question. Cast your vote and immediately see where the community stands.</p>
-                <button type="button" class="tmr-pcard-btn" onclick="goTab('quick')">Browse Polls</button>
-            </div>
-            <div class="tmr-pcard">
-                <span class="tmr-pcard-ic"><i class="fas fa-trophy"></i></span>
-                <h3>Prediction Quizzes</h3>
-                <p>Answer multiple game questions, earn a score, and compete against other members.</p>
-                <button type="button" class="tmr-pcard-btn" onclick="goTab('quiz')">Enter Competition</button>
-            </div>
-            <div class="tmr-pcard is-accent">
-                <span class="tmr-pcard-ic"><i class="fas fa-plus"></i></span>
-                <h3>Create a Poll</h3>
-                <p>Start a sports debate, ask the community for a prediction, or build your own quiz.</p>
-                <button type="button" class="tmr-pcard-btn" onclick="openCreatePollModal()">Create Poll</button>
-            </div>
-        </div>
-
-        <!-- C. PRIMARY TABS -->
+        <!-- C. PRIMARY TABS (compact nav row) -->
         <nav class="tmr-tabs2" role="tablist" id="pollsTabBar">
             <button type="button" class="tmr-tab2 is-active" data-tab="quick" onclick="switchTab('quick')">Quick Polls</button>
             <button type="button" class="tmr-tab2" data-tab="quiz" onclick="switchTab('quiz')">Prediction Quizzes</button>
@@ -525,19 +500,6 @@
 
         <main id="pollsSection"></main>
         <div id="pollDetail"></div>
-
-        <!-- F. COMMUNITY CTA -->
-        <section class="tmr-cta2">
-            <div>
-                <h3>Have a take the board should settle?</h3>
-                <p>Post a quick poll or build a prediction quiz. Every vote ties to a public TrustMyRecord profile.</p>
-            </div>
-            <div class="tmr-cta2-links">
-                <button type="button" class="tmr-hbtn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus"></i> Create a Poll</button>
-                <a class="tmr-hbtn" href="/forum/"><i class="fas fa-comments"></i> Forum</a>
-                <a class="tmr-hbtn" href="/leaderboards/"><i class="fas fa-ranking-star"></i> Leaderboards</a>
-            </div>
-        </section>
     </div>
 
 
