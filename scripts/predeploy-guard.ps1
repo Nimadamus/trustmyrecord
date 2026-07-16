@@ -154,6 +154,7 @@ try {
         "tests/sportsbook-polish-regression.test.js",
         "tests/sportsbook-reliability-guard-test.js",
         "tests/sportsbook-stake-mode-ui-test.js",
+        "tests/sportsbook-first-inning-yesno-lock-test.js",
         "tests/auto-grader-regression-test.js"
     )
     foreach ($file in $requiredFiles) {
@@ -200,6 +201,7 @@ try {
     Invoke-StaleQuarantineCommand "sportsbook polish regression test" @("node", "tests/sportsbook-polish-regression.test.js") "data-col team-total markers not in current sportsbook/index.html on origin/main; pre-existing failure unrelated to Make Picks UX"
     Invoke-GuardCommand "sportsbook reliability regression test" @("node", "tests/sportsbook-reliability-guard-test.js")
     Invoke-GuardCommand "sportsbook stake-mode regression test" @("node", "tests/sportsbook-stake-mode-ui-test.js")
+    Invoke-GuardCommand "sportsbook 1st-inning Yes/No lock test" @("node", "tests/sportsbook-first-inning-yesno-lock-test.js")
     Invoke-GuardCommand "auto-grader regression test" @("node", "tests/auto-grader-regression-test.js")
 
     $productSystem = Get-Content -LiteralPath "TRUSTMYRECORD_PRODUCT_UPGRADE_SYSTEM.md" -Raw
