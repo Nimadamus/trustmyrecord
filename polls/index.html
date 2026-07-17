@@ -816,7 +816,11 @@
                     (sl ? '<span>' + sl + '</span><span class="dot">&middot;</span>' : '') +
                     (quizChip ? quizChip + '<span class="dot">&middot;</span>' : '') +
                     '<span>By <strong data-tmr-username="' + escHtml(p.username || '') + '">' + escHtml(p.username || 'unknown') + '</strong></span><span class="dot">&middot;</span>' +
-                    '<span><strong>' + votes + '</strong> vote' + (votes === 1 ? '' : 's') + '</span><span class="dot">&middot;</span>' +
+                    (quiz
+                        ? ''
+                        : (votes > 0
+                            ? '<span><strong>' + votes + '</strong> vote' + (votes === 1 ? '' : 's') + '</span><span class="dot">&middot;</span>'
+                            : '<span style="color:var(--tmr-fb-green,#34d399);font-weight:800;">Be the first to vote</span><span class="dot">&middot;</span>')) +
                     '<span>' + timeTxt + '</span>' +
                     (chip ? ' ' + chip : '') +
                 '</div>' +
@@ -957,11 +961,15 @@
             progress = '<div class="tmr-fquiz-progress"><span>You have answered ' + answered + ' of ' + total + ' questions</span>' +
                 '<div class="tmr-fquiz-progress-bar"><div class="tmr-fquiz-progress-fill" style="width:' + pct + '%"></div></div></div>';
         }
+        var ptsAvail = questions.reduce(function(s, q) { return s + (parseInt(q.base_points) || 0); }, 0);
         var facts = '<div class="tmr-fquiz-facts">' +
             '<span><i class="fas fa-baseball"></i> ' + escHtml(parent.league || parent.sport || 'Sports') + '</span>' +
             '<span><i class="fas fa-list-ol"></i> ' + total + ' questions</span>' +
+            (ptsAvail ? '<span><i class="fas fa-coins"></i> ' + ptsAvail + ' pts available</span>' : '') +
             (dl ? '<span><i class="fas fa-clock"></i> Closes ' + escHtml(fmtDate(dl)) + '</span>' : '') +
-            '<span><i class="fas fa-users"></i> ' + entries + ' ' + (entries === 1 ? 'entry' : 'entries') + '</span>' +
+            (entries > 0
+                ? '<span><i class="fas fa-users"></i> ' + entries + ' ' + (entries === 1 ? 'entry' : 'entries') + '</span>'
+                : '<span style="color:var(--tmr-fb-green,#34d399);font-weight:800;"><i class="fas fa-bolt"></i> Be the first to predict</span>') +
             '<span><i class="fas fa-hourglass-half"></i> ~' + est + ' min</span>' +
         '</div>';
         slot.innerHTML = '<div class="tmr-fquiz">' +

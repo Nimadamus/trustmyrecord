@@ -115,7 +115,8 @@
             ' data-allow-change="' + (n.allowChange ? 1 : 0) + '"' +
             ' data-voted-option="' + (n.votedOption != null ? esc(n.votedOption) : '') + '">' +
             opts +
-            '<div class="tmrp-foot"><span class="tmrp-total" data-total>' + n.total + ' vote' + (n.total === 1 ? '' : 's') + '</span>' +
+            '<div class="tmrp-foot"><span class="tmrp-total" data-total>' +
+            ((n.total === 0 && n.votedOption == null && !n.closed) ? 'Be the first to vote' : (n.total + ' vote' + (n.total === 1 ? '' : 's'))) + '</span>' +
             lockedNote + closedNote +
             '<span class="tmrp-error" data-error hidden></span></div>' +
             '</div>';
