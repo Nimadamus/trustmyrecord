@@ -284,11 +284,13 @@
     btn.disabled = true; var html = btn.innerHTML; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Saving...';
     try {
       var res = await req('/polls/' + st.f.id + '/game/vote', { method: 'POST', body: { answers: answers } });
+      // The vote response is authoritative (includes the user's answers +
+      // updated counts). Keep it; do NOT let a lagged /featured read wipe it.
       if (res && res.game) st.game = res.game;
-      // refresh featured meta (entries/answer counts) best-effort
+      // Best-effort meta refresh only (entries), never the game payload.
       try {
         var fresh = await req('/polls/featured');
-        if (fresh && fresh.featured && String(fresh.featured.id) === String(st.f.id)) { st.f = fresh.featured; st.game = fresh.game; }
+        if (fresh && fresh.featured && String(fresh.featured.id) === String(st.f.id)) st.f = fresh.featured;
       } catch (e) {}
       st.sel = null;
       render(container);
