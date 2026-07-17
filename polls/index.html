@@ -820,7 +820,9 @@
                         ? ''
                         : (votes > 0
                             ? '<span><strong>' + votes + '</strong> vote' + (votes === 1 ? '' : 's') + '</span><span class="dot">&middot;</span>'
-                            : '<span style="color:var(--tmr-fb-green,#34d399);font-weight:800;">Be the first to vote</span><span class="dot">&middot;</span>')) +
+                            : (closed
+                                ? '<span><strong>0</strong> votes</span><span class="dot">&middot;</span>'
+                                : '<span style="color:var(--tmr-fb-green,#34d399);font-weight:800;">Be the first to vote</span><span class="dot">&middot;</span>'))) +
                     '<span>' + timeTxt + '</span>' +
                     (chip ? ' ' + chip : '') +
                 '</div>' +

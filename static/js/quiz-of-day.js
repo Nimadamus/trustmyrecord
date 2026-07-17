@@ -190,7 +190,9 @@
       (f.closes_at ? '<span><i class="fas fa-clock"></i>' + (resolved ? 'Closed ' : 'Closes ') + esc(fmtDate(f.closes_at)) + '</span>' : '') +
       (entries > 0
         ? '<span><i class="fas fa-users"></i>' + entries + (entries === 1 ? ' entry' : ' entries') + '</span>'
-        : '<span class="first"><i class="fas fa-bolt"></i>Be the first to predict</span>') +
+        : (resolved
+            ? '<span><i class="fas fa-users"></i>No entries</span>'
+            : '<span class="first"><i class="fas fa-bolt"></i>Be the first to predict</span>')) +
       '</div>';
 
     var qMode = answerMode ? 'answer' : 'results';
