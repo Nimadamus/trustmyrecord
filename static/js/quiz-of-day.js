@@ -175,33 +175,38 @@
     if (!st) return;
     var f = st.f, game = st.game;
     var qs = (game && game.questions) || [];
+    var isOpen = f.featured_status === 'open' && f.status !== 'resolved';
     var resolved = f.featured_status === 'results' || f.status === 'resolved';
+    var pending = !isOpen && !resolved; // answering closed, awaiting grading
     var loggedIn = isLoggedIn();
-    var answerMode = !resolved && loggedIn;
+    var answerMode = isOpen && loggedIn;
     var entries = f.total_players || 0;
 
     var chip = resolved ? '<span class="tmr-qotd-chip done">Final Results</span>' :
+      pending ? '<span class="tmr-qotd-chip done">Awaiting Results</span>' :
       '<span class="tmr-qotd-chip live">Live</span>';
 
     var facts = '<div class="tmr-qotd-facts">' +
       '<span><i class="fas fa-baseball"></i>' + esc(f.sport || 'Sports') + '</span>' +
       '<span><i class="fas fa-list-ol"></i>' + (f.question_count || qs.length) + ' questions</span>' +
       '<span><i class="fas fa-coins"></i>' + (f.points_available || 0) + ' pts available</span>' +
-      (f.closes_at ? '<span><i class="fas fa-clock"></i>' + (resolved ? 'Closed ' : 'Closes ') + esc(fmtDate(f.closes_at)) + '</span>' : '') +
+      (f.closes_at ? '<span><i class="fas fa-clock"></i>' + (isOpen ? 'Closes ' : 'Closed ') + esc(fmtDate(f.closes_at)) + '</span>' : '') +
       (entries > 0
         ? '<span><i class="fas fa-users"></i>' + entries + (entries === 1 ? ' entry' : ' entries') + '</span>'
-        : (resolved
-            ? '<span><i class="fas fa-users"></i>No entries</span>'
-            : '<span class="first"><i class="fas fa-bolt"></i>Be the first to predict</span>')) +
+        : (isOpen
+            ? '<span class="first"><i class="fas fa-bolt"></i>Be the first to predict</span>'
+            : '<span><i class="fas fa-users"></i>No entries</span>')) +
       '</div>';
 
     var qMode = answerMode ? 'answer' : 'results';
     var qsHtml = qs.map(function (q) { return questionHTML(q, qMode); }).join('');
 
     var actions;
-    if (resolved) {
+    if (!isOpen) {
+      var linkLabel = resolved ? 'View full results &amp; leaderboard &rarr;' : 'View quiz &amp; standings &rarr;';
       actions = '<div class="tmr-qotd-actions">' +
-        '<a class="tmr-qotd-link" href="/polls/#poll-' + f.id + '">View full results &amp; leaderboard &rarr;</a></div>';
+        (pending ? '<span class="tmr-qotd-note">Answering closed &middot; grading soon</span>' : '') +
+        '<a class="tmr-qotd-link" href="/polls/#poll-' + f.id + '">' + linkLabel + '</a></div>';
     } else if (!loggedIn) {
       actions = '<div class="tmr-qotd-actions">' +
         '<a class="tmr-qotd-btn" href="' + loginUrl() + '"><i class="fas fa-right-to-bracket"></i> Log in to play</a>' +
