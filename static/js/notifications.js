@@ -615,6 +615,11 @@ function getNotificationDestination(notification) {
     }
     if (type === 'challenge_invite' || type === 'challenge_result' || type === 'challenge') return '/challenges/';
     if (type === 'premium_upgrade' || type === 'premium_expired') return '/premium/';
+    // Daily featured Prediction Quiz reminder -> deep-link straight to the quiz.
+    if (type === 'daily_quiz' || resourceType === 'quiz') {
+        const qid = notification?.resource_id || notification?.resourceId;
+        return qid ? '/polls/#poll-' + encodeURIComponent(qid) : '/polls/';
+    }
     if (type.indexOf('forum') !== -1 || resourceType === 'forum_thread' || resourceType === 'forum_post') {
         // thread_area (from GET /api/notifications) says which frontend owns the
         // thread: Sports Talk fandom threads open in /sports-talk/, everything
