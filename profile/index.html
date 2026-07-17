@@ -626,6 +626,27 @@
 
         .breakdown-grid { display: grid; gap: 8px; }
 
+        /* Performance by Team table */
+        .team-breakdown-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .team-breakdown-table { width: 100%; border-collapse: collapse; min-width: 560px; font-size: 0.9rem; }
+        .team-breakdown-table th, .team-breakdown-table td { padding: 10px 12px; text-align: right; white-space: nowrap; }
+        .team-breakdown-table th.tb-left, .team-breakdown-table td.tb-left { text-align: left; }
+        .team-breakdown-table thead th {
+            position: sticky; top: 0; background: var(--bg-card, #12161d);
+            color: var(--text-muted, #9fb0c3); font-weight: 700; font-size: 0.72rem;
+            text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer;
+            border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08)); user-select: none;
+        }
+        .team-breakdown-table thead th:hover { color: var(--text, #f1f6fc); }
+        .team-breakdown-table tbody tr { border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.05)); }
+        .team-breakdown-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+        .team-breakdown-table td.tb-team { font-weight: 700; color: var(--text, #f1f6fc); }
+        .tb-league { color: var(--text-muted, #9fb0c3); font-size: 0.82rem; }
+        .tb-pos { color: var(--accent-green, #22c55e); }
+        .tb-neg { color: var(--accent-red, #ef4444); }
+        .tb-arrow { font-size: 0.65rem; opacity: 0.7; }
+        @media (max-width: 560px) { .team-breakdown-table { font-size: 0.82rem; } .team-breakdown-table th, .team-breakdown-table td { padding: 8px 9px; } }
+
         .stats-table-card {
             margin-bottom: 24px;
             overflow: hidden;
@@ -2859,6 +2880,32 @@
                         <div class="support-module-note">Open exposure and queue</div>
                     </div>
                     <div class="breakdown-grid" id="pendingSummaryGrid"></div>
+                </div>
+            </div>
+
+            <!-- Performance by Team: settled team-based picks (ML / spread / team total)
+                 grouped by the team the capper backed. Separate from the Online Gaming tab. -->
+            <div class="support-module" id="teamBreakdownModule" style="margin-top:14px;">
+                <div class="support-module-head">
+                    <div class="section-title">Performance by Team</div>
+                    <div class="support-module-note">Settled record by the team you backed (moneyline, spread, team totals). Totals, props, and futures are excluded.</div>
+                </div>
+                <div class="team-breakdown-wrap">
+                    <table class="team-breakdown-table" id="teamBreakdownTable" aria-label="Performance by team">
+                        <thead>
+                            <tr>
+                                <th data-team-sort="team" class="tb-th tb-left">Team <span class="tb-arrow"></span></th>
+                                <th data-team-sort="league" class="tb-th tb-left">League <span class="tb-arrow"></span></th>
+                                <th data-team-sort="record" class="tb-th">Record <span class="tb-arrow"></span></th>
+                                <th data-team-sort="units" class="tb-th">Units <span class="tb-arrow"></span></th>
+                                <th data-team-sort="roi" class="tb-th">ROI <span class="tb-arrow"></span></th>
+                                <th data-team-sort="avg_odds" class="tb-th">Avg Odds <span class="tb-arrow"></span></th>
+                                <th data-team-sort="picks" class="tb-th">Picks <span class="tb-arrow"></span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="teamBreakdownBody"></tbody>
+                    </table>
+                    <div id="teamBreakdownEmpty" class="empty-state" style="padding:16px;display:none;">No settled team-based picks yet</div>
                 </div>
             </div>
 
@@ -12137,7 +12184,12 @@
         }[value] || 'Newest first';
     }
 
+    let teamSortInited = false;
     async function refreshAdvancedBreakdowns() {
+        // Performance by Team is backend-sourced and filter-independent; load it
+        // on every refresh regardless of which advanced-stats branch runs.
+        if (!teamSortInited) { initTeamBreakdownSort(); teamSortInited = true; }
+        loadTeamBreakdown();
         if (!profileUsername || !api || typeof api.getUserAdvancedStats !== 'function') {
             await loadSportBreakdown();
             renderBetTypeBreakdownFromPicks();
@@ -12573,6 +12625,110 @@
             const sportLabel = fmtSport(sportKey);
             return bRowExtended(escapeHtml(sportLabel), w + '-' + l + '-' + p + ' (' + t + ' picks)', wr, units, buildProfileSportBreakdownUrl(sportKey));
         }).join('');
+    }
+
+    // ======================== PERFORMANCE BY TEAM ========================
+    // Source of truth: backend `team` breakdown category (bucket = "sportKey|team").
+    // Settled-only aggregate; totals/props/futures never appear (backend derivation).
+    let teamBreakdownRows = [];
+    let teamSort = { key: 'units', dir: 'desc' };
+
+    async function loadTeamBreakdown() {
+        const module = document.getElementById('teamBreakdownModule');
+        if (!module || !profileUsername || !api || typeof api.request !== 'function') return;
+        try {
+            const data = await api.request('/users/' + encodeURIComponent(profileUsername) + '/stats/breakdowns?category=team');
+            const rows = (data && Array.isArray(data.breakdowns)) ? data.breakdowns : [];
+            teamBreakdownRows = rows.map(function (r) {
+                const bucket = String(r.bucket || '');
+                const sep = bucket.indexOf('|');
+                const sportKey = sep >= 0 ? bucket.slice(0, sep) : '';
+                const team = sep >= 0 ? bucket.slice(sep + 1) : bucket;
+                const w = Number(r.wins) || 0, l = Number(r.losses) || 0, p = Number(r.pushes) || 0;
+                return {
+                    team: team,
+                    league: fmtSport(sportKey),
+                    wins: w, losses: l, pushes: p,
+                    picks: Number(r.total_picks) || (w + l + p),
+                    units: Number(r.net_units) || 0,
+                    roi: Number(r.roi) || 0,
+                    avg_odds: Number(r.avg_odds) || 0
+                };
+            });
+            renderTeamBreakdown();
+        } catch (e) {
+            // Non-fatal: leave the panel empty rather than breaking the profile.
+            teamBreakdownRows = [];
+            renderTeamBreakdown();
+        }
+    }
+
+    function renderTeamBreakdown() {
+        const body = document.getElementById('teamBreakdownBody');
+        const empty = document.getElementById('teamBreakdownEmpty');
+        const table = document.getElementById('teamBreakdownTable');
+        if (!body) return;
+        if (!teamBreakdownRows.length) {
+            body.innerHTML = '';
+            if (empty) empty.style.display = 'block';
+            if (table) table.style.display = 'none';
+            return;
+        }
+        if (empty) empty.style.display = 'none';
+        if (table) table.style.display = '';
+
+        const dir = teamSort.dir === 'asc' ? 1 : -1;
+        const key = teamSort.key;
+        const sorted = teamBreakdownRows.slice().sort(function (a, b) {
+            let av, bv;
+            if (key === 'team' || key === 'league') { av = String(a[key]).toLowerCase(); bv = String(b[key]).toLowerCase(); }
+            else if (key === 'record') { av = a.wins + a.losses + a.pushes ? a.wins / (a.wins + a.losses || 1) : 0; bv = b.wins + b.losses + b.pushes ? b.wins / (b.wins + b.losses || 1) : 0; }
+            else { av = Number(a[key]) || 0; bv = Number(b[key]) || 0; }
+            if (av < bv) return -1 * dir;
+            if (av > bv) return 1 * dir;
+            return 0;
+        });
+
+        body.innerHTML = sorted.map(function (r) {
+            const rec = r.wins + '-' + r.losses + (r.pushes ? '-' + r.pushes : '');
+            const uCls = r.units >= 0 ? 'tb-pos' : 'tb-neg';
+            const uTxt = (r.units >= 0 ? '+' : '') + r.units.toFixed(2) + 'u';
+            const roiCls = r.roi >= 0 ? 'tb-pos' : 'tb-neg';
+            const roiTxt = (r.roi >= 0 ? '+' : '') + r.roi.toFixed(1) + '%';
+            const odds = r.avg_odds ? (r.avg_odds > 0 ? '+' + Math.round(r.avg_odds) : Math.round(r.avg_odds)) : '--';
+            return '<tr>' +
+                '<td class="tb-left tb-team">' + escapeHtml(r.team) + '</td>' +
+                '<td class="tb-left tb-league">' + escapeHtml(r.league) + '</td>' +
+                '<td>' + rec + '</td>' +
+                '<td class="' + uCls + '">' + uTxt + '</td>' +
+                '<td class="' + roiCls + '">' + roiTxt + '</td>' +
+                '<td>' + odds + '</td>' +
+                '<td>' + r.picks + '</td>' +
+                '</tr>';
+        }).join('');
+        updateTeamSortArrows();
+    }
+
+    function updateTeamSortArrows() {
+        const ths = document.querySelectorAll('#teamBreakdownTable th[data-team-sort]');
+        ths.forEach(function (th) {
+            const arrow = th.querySelector('.tb-arrow');
+            if (!arrow) return;
+            arrow.textContent = (th.getAttribute('data-team-sort') === teamSort.key)
+                ? (teamSort.dir === 'asc' ? '▲' : '▼') : '';
+        });
+    }
+
+    function initTeamBreakdownSort() {
+        const ths = document.querySelectorAll('#teamBreakdownTable th[data-team-sort]');
+        ths.forEach(function (th) {
+            th.addEventListener('click', function () {
+                const key = th.getAttribute('data-team-sort');
+                if (teamSort.key === key) teamSort.dir = (teamSort.dir === 'asc' ? 'desc' : 'asc');
+                else { teamSort.key = key; teamSort.dir = (key === 'team' || key === 'league') ? 'asc' : 'desc'; }
+                renderTeamBreakdown();
+            });
+        });
     }
     // ======================== UTILITY ========================
     function escapeHtml(value) {
