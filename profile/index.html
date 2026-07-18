@@ -10085,7 +10085,10 @@
         const emptyLedgerNote = showEmptyLedgerNote
             ? '<div class="profile-empty-ledger">' +
                 '<p><strong>No picks yet.</strong></p>' +
-                '<p>Graded picks will build this public record after they are settled.</p>' +
+                '<p>Graded picks will build this public record after they are settled. Lock your first play to get started.</p>' +
+                '<p style="margin-top:12px;"><a href="/sportsbook/?first_pick=1" class="profile-empty-cta" ' +
+                  'onclick="if(window.TMRAnalytics){try{window.TMRAnalytics.firstPickCtaClicked({cta_location:\'profile_page_empty_ledger\'});}catch(e){}}" ' +
+                  'style="display:inline-block;background:linear-gradient(135deg,#2dd4bf,#14b8a6);color:#06231f;font-weight:800;text-decoration:none;border-radius:10px;padding:10px 20px;font-size:14px;">Post Your First Pick</a></p>' +
               '</div>'
             : '';
         const rail = '<div class="profile-rail" aria-label="Pick monitor stats">' +

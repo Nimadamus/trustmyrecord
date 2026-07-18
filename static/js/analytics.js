@@ -307,7 +307,31 @@
             trackRouteViewed(getPagePath());
             this.bindAutoTracking();
             this.setUserContext();
+            try { this.detectReturnAfterSignup(); } catch (e) {}
             console.log('[TMR Analytics] Module ready');
+        },
+
+        // Fires `returned_after_signup` once, on the first page-load that
+        // happens on a calendar day AFTER the signup day, for a user who has
+        // not yet been marked activated. Purely client-side (localStorage);
+        // never fires for a user who already made a pick.
+        detectReturnAfterSignup: function () {
+            var signupTs = null;
+            try { signupTs = parseInt(localStorage.getItem('tmr_signup_ts') || '', 10); } catch (e) {}
+            if (!signupTs || isNaN(signupTs)) return;
+            var alreadyFired = false, activated = false;
+            try {
+                alreadyFired = localStorage.getItem('tmr_returned_fired') === '1';
+                activated = localStorage.getItem('tmr_has_posted_pick') === '1';
+            } catch (e) {}
+            if (alreadyFired) return;
+            var now = Date.now();
+            var dayMs = 24 * 60 * 60 * 1000;
+            // Only count a genuine return: a new day since signup.
+            if (now - signupTs < dayMs) return;
+            var days = Math.floor((now - signupTs) / dayMs);
+            this.returnedAfterSignup({ days_since_signup: days, has_picks: activated ? 'yes' : 'no' });
+            try { localStorage.setItem('tmr_returned_fired', '1'); } catch (e) {}
         },
 
         trackInitialPageView: function () {
@@ -377,6 +401,54 @@
             });
             // Update user context after login
             this.setUserContext();
+        },
+
+        emailVerified: function (params) {
+            trackEvent('email_verified', {
+                method: 'email_link',
+                ...params
+            });
+        },
+
+        // --- ONBOARDING / FIRST-PICK ACTIVATION FUNNEL ---
+        // Instruments the signup -> first-pick journey so the zero-pick
+        // activation gap is measurable in GA4/GTM. All additive; no PII.
+
+        onboardingDisplayed: function (params) {
+            trackEvent('onboarding_displayed', {
+                surface: params?.surface || 'first_pick_banner',
+                ...params
+            });
+        },
+
+        firstPickCtaClicked: function (params) {
+            trackEvent('first_pick_cta_clicked', {
+                cta_location: params?.cta_location || 'unknown',
+                ...params
+            });
+        },
+
+        pickEntryOpened: function (params) {
+            trackEvent('pick_entry_opened', {
+                source: params?.source || 'unknown',
+                ...params
+            });
+        },
+
+        firstPickSubmitted: function (params) {
+            trackEvent('first_pick_submitted', {
+                sport: params?.sport || 'unknown',
+                pick_type: params?.pick_type || 'unknown',
+                ...params
+            });
+        },
+
+        returnedAfterSignup: function (params) {
+            trackEvent('returned_after_signup', {
+                days_since_signup: params?.days_since_signup,
+                has_picks: params?.has_picks || 'no',
+                ...params
+            });
         },
 
         // --- PICK EVENTS ---
@@ -873,14 +945,23 @@
                     try {
                         if (response && response.ok && info.method === 'POST') {
                             if (/\/picks(?:\?|$|\/)/.test(info.url)) {
-                                self.pickSubmitted({
+                                var pickParams = {
                                     sport: body.sport_key || body.sport || body.league,
                                     league: body.league,
                                     pick_type: body.market_type || body.pick_type,
                                     odds: body.odds_snapshot || body.odds,
                                     units: body.units,
                                     source: 'api_success'
-                                });
+                                };
+                                self.pickSubmitted(pickParams);
+                                // First-pick activation: fire once, then mark the
+                                // account activated so return-detection reports it.
+                                var hadPosted = false;
+                                try { hadPosted = localStorage.getItem('tmr_has_posted_pick') === '1'; } catch (e) {}
+                                if (!hadPosted) {
+                                    self.firstPickSubmitted(pickParams);
+                                    try { localStorage.setItem('tmr_has_posted_pick', '1'); } catch (e) {}
+                                }
                             } else if (/\/feed(?:\?|$|\/)|\/posts(?:\?|$|\/)|\/forum(?:\?|$|\/)|\/forums(?:\?|$|\/)|\/threads(?:\?|$|\/)|\/polls(?:\?|$|\/)/.test(info.url)) {
                                 const route = routeNameFromPath(window.location.pathname);
                                 const params = {

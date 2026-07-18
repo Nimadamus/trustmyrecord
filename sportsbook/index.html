@@ -2626,7 +2626,7 @@
         }
 
         if (picks.length === 0) {
-            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><div style="font-size:48px;margin-bottom:15px;">&#127919;</div><p>No picks locked yet. Submit your first play to start the record.</p></div>';
+            container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-muted);"><div style="font-size:48px;margin-bottom:15px;">&#127919;</div><p>No picks locked yet. Submit your first play to start the record.</p><button type="button" onclick="if(window.TMRAnalytics){try{window.TMRAnalytics.firstPickCtaClicked({cta_location:\'profile_empty_state\'});window.TMRAnalytics.pickEntryOpened({source:\'profile_empty_state\'});}catch(e){}} if(typeof window.showSection===\'function\'){window.showSection(\'picks\');}" style="margin-top:18px;background:linear-gradient(135deg,#2dd4bf,#14b8a6);color:#06231f;font-weight:800;border:0;border-radius:10px;padding:11px 22px;cursor:pointer;font-size:14px;">Post Your First Pick</button></div>';
             if (statsBar) statsBar.innerHTML = '';
             return;
         }
@@ -10310,6 +10310,20 @@
             </div>
         </div>
 
+        <!-- First-pick welcome banner: shown once to a freshly-registered user
+             (URL ?first_pick=1 or the tmr_show_first_pick_welcome flag). It is
+             dismissible and does NOT trap the user (nav stays usable). Consumes
+             the previously-dead ?first_pick=1 param. -->
+        <div class="first-pick-welcome" id="firstPickWelcome" role="status" aria-live="polite" style="display:none;">
+            <button type="button" class="first-pick-welcome__close" id="firstPickWelcomeClose" aria-label="Dismiss">&times;</button>
+            <div class="first-pick-welcome__icon" aria-hidden="true">&#127919;</div>
+            <div class="first-pick-welcome__body">
+                <div class="first-pick-welcome__title">You're in. Now lock your first pick.</div>
+                <p class="first-pick-welcome__sub">Pick any game below, choose a market, and lock it before it starts. That single pick starts your verified public record.</p>
+                <button type="button" class="first-pick-welcome__cta" id="firstPickWelcomeCta">Post Your First Pick</button>
+            </div>
+        </div>
+
         <div class="section-header sportsbook-page-shell make-picks-header">
             <div class="sportsbook-page-topbar">
                 <div class="sportsbook-page-intro">
@@ -14211,6 +14225,48 @@ window.toggleSportFamily = function (family) {
     max-width: 1200px;
     margin: 0 auto;
     padding: 16px 20px 40px;
+}
+
+/* First-pick welcome banner (new-user activation nudge) */
+#picks .first-pick-welcome {
+    position: relative;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    margin: 6px 0 18px;
+    padding: 18px 44px 18px 20px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(45,212,191,0.14), rgba(56,189,248,0.10));
+    border: 1px solid rgba(45,212,191,0.38);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.28);
+}
+#picks .first-pick-welcome__icon { font-size: 30px; line-height: 1; margin-top: 2px; }
+#picks .first-pick-welcome__title { font-size: 18px; font-weight: 800; color: #ffffff; margin-bottom: 4px; }
+#picks .first-pick-welcome__sub { color: #cdd7e6; font-size: 14px; line-height: 1.55; margin: 0 0 12px; max-width: 640px; }
+#picks .first-pick-welcome__cta {
+    display: inline-block;
+    background: linear-gradient(135deg, #2dd4bf, #14b8a6);
+    color: #06231f;
+    font-weight: 800;
+    font-size: 14px;
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    letter-spacing: .2px;
+}
+#picks .first-pick-welcome__cta:hover { filter: brightness(1.06); }
+#picks .first-pick-welcome__close {
+    position: absolute;
+    top: 8px; right: 12px;
+    background: none; border: 0;
+    color: #9fb0c6; font-size: 22px; line-height: 1;
+    cursor: pointer;
+}
+#picks .first-pick-welcome__close:hover { color: #ffffff; }
+@media (max-width: 560px) {
+    #picks .first-pick-welcome { flex-direction: column; gap: 8px; padding: 16px 40px 16px 16px; }
+    #picks .first-pick-welcome__cta { width: 100%; }
 }
 
 /* Functional Make Picks header (replaces the marketing kicker/h2) */
@@ -26168,6 +26224,60 @@ document.addEventListener('DOMContentLoaded', function() {
 
     window.addEventListener('hashchange', function() {
         applySportsbookHashRoute();
+    });
+
+    // =====================================================
+    // FIRST-PICK WELCOME BANNER (new-user activation nudge)
+    // Shows once for a freshly-registered user, consumes the
+    // previously-dead ?first_pick=1 param, and routes them to
+    // post their first pick. Never traps: dismissible, nav intact.
+    // =====================================================
+    window.tmrMaybeShowFirstPickWelcome = function() {
+        try {
+            var banner = document.getElementById('firstPickWelcome');
+            if (!banner) return;
+            var params = new URLSearchParams(window.location.search || '');
+            var fromParam = params.get('first_pick') === '1';
+            var fromFlag = false;
+            try { fromFlag = sessionStorage.getItem('tmr_show_first_pick_welcome') === '1'; } catch (e) {}
+            if (!fromParam && !fromFlag) return;
+            // Never re-show once the user has already posted a pick.
+            var hasPosted = false;
+            try { hasPosted = localStorage.getItem('tmr_has_posted_pick') === '1'; } catch (e) {}
+            if (hasPosted) { try { sessionStorage.removeItem('tmr_show_first_pick_welcome'); } catch (e) {} return; }
+
+            // Make sure the picks section is the visible one.
+            if (typeof window.showSection === 'function' && typeof getActivePageSectionId === 'function' && getActivePageSectionId() !== 'picks') {
+                window.showSection('picks', { preserveScroll: true });
+            }
+            banner.style.display = 'flex';
+            try { sessionStorage.removeItem('tmr_show_first_pick_welcome'); } catch (e) {}
+            if (typeof window.TMRAnalytics !== 'undefined') {
+                try { window.TMRAnalytics.onboardingDisplayed({ surface: 'first_pick_banner' }); } catch (e) {}
+            }
+
+            var cta = document.getElementById('firstPickWelcomeCta');
+            if (cta && !cta.__wired) {
+                cta.__wired = true;
+                cta.addEventListener('click', function() {
+                    if (typeof window.TMRAnalytics !== 'undefined') {
+                        try { window.TMRAnalytics.firstPickCtaClicked({ cta_location: 'first_pick_banner' }); } catch (e) {}
+                        try { window.TMRAnalytics.pickEntryOpened({ source: 'first_pick_banner' }); } catch (e) {}
+                    }
+                    // Scroll to the live board so the very next action is picking a game.
+                    var board = document.querySelector('#picks .sportsbook-page-shell') || document.querySelector('#picks .make-picks-header');
+                    if (board && board.scrollIntoView) board.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            }
+            var closeBtn = document.getElementById('firstPickWelcomeClose');
+            if (closeBtn && !closeBtn.__wired) {
+                closeBtn.__wired = true;
+                closeBtn.addEventListener('click', function() { banner.style.display = 'none'; });
+            }
+        } catch (e) { /* non-fatal */ }
+    };
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(window.tmrMaybeShowFirstPickWelcome, 400);
     });
 
     // =====================================================

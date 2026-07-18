@@ -278,6 +278,7 @@
         }
 
         function showSuccess() {
+            if (typeof window.TMRAnalytics !== 'undefined') { try { window.TMRAnalytics.emailVerified({ surface: 'verify_email_page' }); } catch (e) {} }
             document.getElementById('loading-state').classList.add('hidden');
             document.getElementById('success-state').classList.remove('hidden');
             setTimeout(function() {

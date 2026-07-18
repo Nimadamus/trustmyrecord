@@ -276,6 +276,11 @@ async function handleSignup(event) {
         const modal = document.getElementById('signupModal');
         if (modal) modal.style.display = 'none';
 
+        // Activation funnel markers: remember when they signed up (for
+        // returned_after_signup) and request the first-pick welcome banner.
+        try { localStorage.setItem('tmr_signup_ts', String(Date.now())); } catch (e) {}
+        try { sessionStorage.setItem('tmr_show_first_pick_welcome', '1'); } catch (e) {}
+
         // Check for post-auth redirect (e.g., user clicked "Post a Pick" from homepage)
         var postAuthRedirect = sessionStorage.getItem('tmr_post_auth_redirect');
         if (postAuthRedirect) {
@@ -284,11 +289,14 @@ async function handleSignup(event) {
                 window.showSection(postAuthRedirect);
             }
         } else {
-            // Navigate to profile within SPA
+            // Land new users on the pick board (not their empty profile) so the
+            // very next step is posting their first pick. The first-pick welcome
+            // banner keys off the sessionStorage flag set above.
             if (typeof window.showSection === 'function') {
-                window.showSection('profile');
+                window.showSection('picks');
             }
         }
+        try { if (typeof window.tmrMaybeShowFirstPickWelcome === 'function') window.tmrMaybeShowFirstPickWelcome(); } catch (e) {}
         if (typeof updateHeroCta === 'function') updateHeroCta();
         if (typeof updateHeaderAuthButtons === 'function') updateHeaderAuthButtons();
         if (typeof updateProfileLink === 'function') updateProfileLink();

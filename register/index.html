@@ -518,6 +518,10 @@
                         await persistBackendLogin(data.user);
                         var ru = data.user || {};
                         try { sessionStorage.setItem('tmr_post_auth_redirect', 'picks'); } catch (error) {}
+                        // Activation funnel markers (returned_after_signup + first-pick welcome banner).
+                        try { localStorage.setItem('tmr_signup_ts', String(Date.now())); } catch (error) {}
+                        try { sessionStorage.setItem('tmr_show_first_pick_welcome', '1'); } catch (error) {}
+                        if (typeof window.TMRAnalytics !== 'undefined') { try { window.TMRAnalytics.signUpCompleted({ method: 'email', button_location: 'register_page' }); } catch (error) {} }
                         window.location.replace('/sportsbook/?first_pick=1');
                         return;
                     }
