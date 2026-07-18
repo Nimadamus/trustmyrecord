@@ -4107,6 +4107,21 @@
                         selection = teamRaw;
                         selectionLabel = teamRaw + ' F5 ML';
                         break;
+                    case 'firstinningover':
+                        // MLB 1st-inning run market (NRFI/YRFI). Yes = YRFI = Over 0.5.
+                        // Without this case the bridge fell through to the default
+                        // h2h/moneyline mapping, so the backend rejected every NRFI/
+                        // YRFI pick with 'Selection "Over/Under" does not match either team'.
+                        marketType = 'first_inning_totals'; groupLabel = '1st Inning';
+                        selection = 'Over';
+                        selectionLabel = 'YRFI (Over' + (lineDisp ? ' ' + lineDisp : '') + ')';
+                        break;
+                    case 'firstinningunder':
+                        // MLB 1st-inning run market (NRFI/YRFI). No = NRFI = Under 0.5.
+                        marketType = 'first_inning_totals'; groupLabel = '1st Inning';
+                        selection = 'Under';
+                        selectionLabel = 'NRFI (Under' + (lineDisp ? ' ' + lineDisp : '') + ')';
+                        break;
                     case 'firsthalfml':
                         marketType = 'first_half_h2h'; groupLabel = 'First Half';
                         selection = teamRaw;
