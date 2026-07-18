@@ -3030,6 +3030,14 @@
                         displayTeam = '';
                         sideLabel = /under/i.test(label) ? 'F5 Under' : 'F5 Over';
                         break;
+                    case 'first_inning_totals':
+                        // MLB 1st-inning run market. Under = NRFI, Over = YRFI.
+                        // Without this case the slip headline defaulted to '<sel> ML'
+                        // (showed 'Under ML') even though the pick records correctly.
+                        betType = /under/i.test(label) ? 'firstinningunder' : 'firstinningover';
+                        displayTeam = '';
+                        sideLabel = /under/i.test(label) ? 'NRFI (No 1st-Inning Run)' : 'YRFI (Run in 1st)';
+                        break;
                     case 'f5_team_totals':
                         betType = /under/i.test(label) ? 'f5teamunder' : 'f5teamover';
                         displayTeam = option.selection || label.replace(/\s+[+-]?\d+(\.\d+)?\s*$/,'').trim();
