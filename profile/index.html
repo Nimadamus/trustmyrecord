@@ -7891,33 +7891,54 @@
         renderSplitTable('tmrxTableFavDog',     'fav_dog',     splits.by_fav_dog,     { cols: 6, minSample: 1 });
         renderSplitTable('tmrxTableDow',        'day_of_week', splits.by_day_of_week, { cols: 6 });
 
-        const setFormRow = (sel, label, total, w, l, net, roi) => {
+        // Picks column = every settled pick in the window (W + L + Pushes), so
+        // the W-L(-P) cell always reconciles to the Picks total. Net units + ROI
+        // come straight from the backend (same ledger math as the summary/splits);
+        // this widget never re-derives them.
+        const setFormRow = (sel, label, w, l, p, net, roi) => {
             const tr = document.querySelector(sel);
             if (!tr) return;
+            w = Number(w) || 0; l = Number(l) || 0; p = Number(p) || 0;
             const dec = w + l;
+            const total = w + l + p;
             const wp = dec > 0 ? (w / dec) * 100 : 0;
             const wpCls = dec > 0 ? (wp >= 50 ? 'pos' : 'neg') : 'zero';
             const netN = Number(net) || 0;
             const roiN = Number(roi) || 0;
+            const wlText = total > 0 ? (w + '-' + l + (p ? '-' + p : '')) : '—';
             tr.innerHTML =
                 '<td class="name">' + label + '</td>' +
-                '<td class="num">' + (total != null ? total : '—') + '</td>' +
-                '<td class="num">' + (w != null ? w + '-' + l : '—') + '</td>' +
+                '<td class="num">' + (total > 0 ? total : '—') + '</td>' +
+                '<td class="num">' + wlText + '</td>' +
                 '<td class="num ' + wpCls + '">' + (dec > 0 ? wp.toFixed(1) + '%' : '—') + '</td>' +
-                '<td class="num ' + (netN > 0 ? 'pos' : netN < 0 ? 'neg' : 'zero') + '">' + (total ? fmtSigned(netN, 'u', 2) : '—') + '</td>' +
-                '<td class="num ' + (roiN > 0 ? 'pos' : roiN < 0 ? 'neg' : 'zero') + '">' + (total ? fmtSigned(roiN, '%', 2) : '—') + '</td>';
+                '<td class="num ' + (netN > 0 ? 'pos' : netN < 0 ? 'neg' : 'zero') + '">' + (total > 0 ? fmtSigned(netN, 'u', 2) : '—') + '</td>' +
+                '<td class="num ' + (roiN > 0 ? 'pos' : roiN < 0 ? 'neg' : 'zero') + '">' + (total > 0 ? fmtSigned(roiN, '%', 2) : '—') + '</td>';
         };
         for (const N of [25, 50, 100]) {
             const f = form['last_' + N];
-            if (f && f.total) setFormRow('[data-tmrx-form="' + N + '"]', 'Last ' + N, f.total, f.wins || 0, f.losses || 0, f.net_units, f.roi);
+            if (f && f.total) setFormRow('[data-tmrx-form="' + N + '"]', 'Last ' + N, f.wins || 0, f.losses || 0, f.pushes || 0, f.net_units, f.roi);
         }
-        if (st.best != null) setFormRow('[data-tmrx-streak="best"]', 'Best Win Streak', Math.abs(Number(st.best)), Math.abs(Number(st.best)), 0, null, null);
-        if (st.worst != null) setFormRow('[data-tmrx-streak="worst"]', 'Worst Loss Streak', Math.abs(Number(st.worst)), 0, Math.abs(Number(st.worst)), null, null);
-        if (st.current != null) {
+        // Streak rows carry the real net units + ROI of the picks inside each
+        // streak (backend *_detail). Fallback to length-only if an older backend
+        // response lacks the detail objects.
+        const bd = st.best_detail, wd = st.worst_detail, cd = st.current_detail;
+        if (bd && bd.length) {
+            setFormRow('[data-tmrx-streak="best"]', 'Best Win Streak', bd.wins, bd.losses, bd.pushes, bd.net_units, bd.roi);
+        } else if (st.best != null && Math.abs(Number(st.best)) > 0) {
+            setFormRow('[data-tmrx-streak="best"]', 'Best Win Streak', Math.abs(Number(st.best)), 0, 0, null, null);
+        }
+        if (wd && wd.length) {
+            setFormRow('[data-tmrx-streak="worst"]', 'Worst Loss Streak', wd.wins, wd.losses, wd.pushes, wd.net_units, wd.roi);
+        } else if (st.worst != null && Math.abs(Number(st.worst)) > 0) {
+            setFormRow('[data-tmrx-streak="worst"]', 'Worst Loss Streak', 0, Math.abs(Number(st.worst)), 0, null, null);
+        }
+        if (cd && cd.length) {
+            const label = cd.direction === 'won' ? 'Current Streak (W)' : cd.direction === 'lost' ? 'Current Streak (L)' : 'Current Streak';
+            setFormRow('[data-tmrx-streak="current"]', label, cd.wins, cd.losses, cd.pushes, cd.net_units, cd.roi);
+        } else if (st.current != null) {
             const cs = Number(st.current);
-            const total = Math.abs(cs);
-            if (cs > 0) setFormRow('[data-tmrx-streak="current"]', 'Current Streak (W)', total, total, 0, null, null);
-            else if (cs < 0) setFormRow('[data-tmrx-streak="current"]', 'Current Streak (L)', total, 0, total, null, null);
+            if (cs > 0) setFormRow('[data-tmrx-streak="current"]', 'Current Streak (W)', cs, 0, 0, null, null);
+            else if (cs < 0) setFormRow('[data-tmrx-streak="current"]', 'Current Streak (L)', 0, Math.abs(cs), 0, null, null);
             else setFormRow('[data-tmrx-streak="current"]', 'Current Streak', 0, 0, 0, null, null);
         }
 
