@@ -521,6 +521,10 @@
 
         .hm-page-summary { font-size: 0.74rem; color: var(--muted); }
 
+        .hm-newest-member { display: block; margin-top: 2px; }
+        .hm-newest-member a { color: var(--link, #2f6bd8); font-weight: 600; text-decoration: none; }
+        .hm-newest-member a:hover { text-decoration: underline; }
+
         .hm-page-actions { display: flex; align-items: center; gap: 8px; }
 
         .hm-page-button {
@@ -849,6 +853,7 @@
                     <strong id="hmTotalMembers" class="hm-stat-loading" aria-busy="true">…</strong>
                     <span>Total Members</span>
                     <small>Unique members since launch</small>
+                    <small id="hmNewestMember" class="hm-newest-member" hidden></small>
                 </div>
                 <div class="hm-metric" title="Members who have locked at least one pick. A member may have joined without making a pick yet.">
                     <strong id="hmPickMakers" class="hm-stat-loading" aria-busy="true">…</strong>
@@ -1659,6 +1664,22 @@
                 throw new Error(data.error || data.message || 'Directory API request failed');
             }
             return data;
+        }
+
+        async function loadNewestMember() {
+            const el = document.getElementById('hmNewestMember');
+            if (!el) return;
+            try {
+                const data = await directApiRequest('/users/newest-member');
+                const m = data && data.member;
+                if (!m || !m.username) { el.hidden = true; return; }
+                const name = m.display_name || m.username;
+                const href = m.profile_url || ('/u/' + encodeURIComponent(m.username) + '/');
+                el.innerHTML = 'Newest member: <a href="' + escapeHtml(href) + '">' + escapeHtml(name) + '</a>';
+                el.hidden = false;
+            } catch (error) {
+                el.hidden = true;
+            }
         }
 
         async function directoryRequest(endpoint) {
@@ -2840,6 +2861,7 @@
                 // skeleton cards until both members and featured stats are in.
                 fetchDirectoryCounts();
                 fetchFeaturedStats();
+                loadNewestMember();
                 // Phase 0: instant paint from last cached snapshot (if any).
                 const cached = readDirectoryCache();
                 if (cached.length) {

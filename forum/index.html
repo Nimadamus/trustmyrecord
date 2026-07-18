@@ -79,6 +79,10 @@ a:hover{color:var(--link-hover);text-decoration:underline}
 .ftitle p{margin:4px 0 0 0;color:#555;font-size:12px}
 .fstats{background:#f5f7fa;border-left:1px solid var(--line);border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 10px;color:#555;font-size:12px;display:flex;gap:14px;flex-wrap:wrap}
 .fstats b{color:#222;font-weight:bold}
+.tmr-newest-welcome{margin:0 0 10px;padding:7px 12px;background:#eef4ff;border:1px solid #cddcf5;border-radius:6px;color:#33415c;font-size:13px;line-height:1.4}
+.tmr-newest-welcome a{color:var(--link);font-weight:bold;text-decoration:none}
+.tmr-newest-welcome a:hover{text-decoration:underline}
+@media (max-width:760px){.tmr-newest-welcome{font-size:12px;padding:6px 10px}}
 .fgroup-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);margin:10px 0 12px 0}
 .fgroup-table tr.fgroup-band td{background:var(--bar);color:#222;font:bold 12px Arial,Helvetica,sans-serif;padding:6px 8px;border-bottom:1px solid var(--line);text-transform:none;letter-spacing:0}
 .fgroup-table tr.fgroup-band td:first-child::before{content:"";margin:0}
@@ -2309,6 +2313,7 @@ body.classic-forum .fthread-pages .fpage-ellip{color:#9aa2ac;font:400 10.5px/16p
         </div>
 
         <div id="viewCategories">
+            <div id="newestMemberWelcome" class="tmr-newest-welcome" hidden></div>
             <div id="categoriesContainer"></div>
 
             <div class="forum-sample-area">
@@ -3599,6 +3604,22 @@ function showError(el, message) {
     if (!el) return;
     el.innerHTML = '<div class="empty-msg"><div style="color:var(--danger);">' + escHtml(message || 'Something went wrong.') + '</div></div>';
 }
+function loadNewestMember() {
+    var el = document.getElementById('newestMemberWelcome');
+    if (!el) return;
+    var base = (window.api && window.api.baseUrl) || (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    fetch(base + '/users/newest-member', { cache: 'no-store' })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(data){
+            var m = data && data.member;
+            if (!m || !m.username) { el.hidden = true; return; }
+            var name = m.display_name || m.username;
+            var href = m.profile_url || ('/u/' + encodeURIComponent(m.username) + '/');
+            el.innerHTML = '👋 Welcome to our newest member, <a href="' + href + '">' + escHtml(name) + '</a>!';
+            el.hidden = false;
+        })
+        .catch(function(){ el.hidden = true; });
+}
 function updateStats() {
     var threadCount = 0;
     var postCount = 0;
@@ -4672,6 +4693,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Default: load and show the live forum index.
     await loadCategories();
     showCategories();
+    loadNewestMember();
 });
 
 </script>
