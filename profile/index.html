@@ -2793,6 +2793,37 @@
         </div>
     </section>
 
+    <!-- Performance by Team: moved OUT of the legacy #analyticsSection (which is
+         display:none !important on social profiles) so it renders on the visible
+         Record tab for every profile. Data loads via loadTeamBreakdown(). -->
+    <section id="teamBreakdownSection" style="margin-top:8px;">
+        <div class="container">
+            <div class="support-module" id="teamBreakdownModule">
+                <div class="support-module-head">
+                    <div class="section-title">Performance by Team</div>
+                    <div class="support-module-note">Settled record by the team you backed (moneyline, spread, team totals). Totals, props, and futures are excluded.</div>
+                </div>
+                <div class="team-breakdown-wrap">
+                    <table class="team-breakdown-table" id="teamBreakdownTable" aria-label="Performance by team">
+                        <thead>
+                            <tr>
+                                <th data-team-sort="team" class="tb-th tb-left">Team <span class="tb-arrow"></span></th>
+                                <th data-team-sort="league" class="tb-th tb-left">League <span class="tb-arrow"></span></th>
+                                <th data-team-sort="record" class="tb-th">Record <span class="tb-arrow"></span></th>
+                                <th data-team-sort="units" class="tb-th">Units <span class="tb-arrow"></span></th>
+                                <th data-team-sort="roi" class="tb-th">ROI <span class="tb-arrow"></span></th>
+                                <th data-team-sort="avg_odds" class="tb-th">Avg Odds <span class="tb-arrow"></span></th>
+                                <th data-team-sort="picks" class="tb-th">Picks <span class="tb-arrow"></span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="teamBreakdownBody"></tbody>
+                    </table>
+                    <div id="teamBreakdownEmpty" class="empty-state" style="padding:16px;display:none;">No settled team-based picks yet</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="analytics-section" id="analyticsSection" style="display:none;">
         <div class="container">
             <div class="stats-table-card">
@@ -2880,32 +2911,6 @@
                         <div class="support-module-note">Open exposure and queue</div>
                     </div>
                     <div class="breakdown-grid" id="pendingSummaryGrid"></div>
-                </div>
-            </div>
-
-            <!-- Performance by Team: settled team-based picks (ML / spread / team total)
-                 grouped by the team the capper backed. Separate from the Online Gaming tab. -->
-            <div class="support-module" id="teamBreakdownModule" style="margin-top:14px;">
-                <div class="support-module-head">
-                    <div class="section-title">Performance by Team</div>
-                    <div class="support-module-note">Settled record by the team you backed (moneyline, spread, team totals). Totals, props, and futures are excluded.</div>
-                </div>
-                <div class="team-breakdown-wrap">
-                    <table class="team-breakdown-table" id="teamBreakdownTable" aria-label="Performance by team">
-                        <thead>
-                            <tr>
-                                <th data-team-sort="team" class="tb-th tb-left">Team <span class="tb-arrow"></span></th>
-                                <th data-team-sort="league" class="tb-th tb-left">League <span class="tb-arrow"></span></th>
-                                <th data-team-sort="record" class="tb-th">Record <span class="tb-arrow"></span></th>
-                                <th data-team-sort="units" class="tb-th">Units <span class="tb-arrow"></span></th>
-                                <th data-team-sort="roi" class="tb-th">ROI <span class="tb-arrow"></span></th>
-                                <th data-team-sort="avg_odds" class="tb-th">Avg Odds <span class="tb-arrow"></span></th>
-                                <th data-team-sort="picks" class="tb-th">Picks <span class="tb-arrow"></span></th>
-                            </tr>
-                        </thead>
-                        <tbody id="teamBreakdownBody"></tbody>
-                    </table>
-                    <div id="teamBreakdownEmpty" class="empty-state" style="padding:16px;display:none;">No settled team-based picks yet</div>
                 </div>
             </div>
 
