@@ -72,6 +72,8 @@
         .sc-stat { background: rgba(7,14,26,.65); border: 1px solid var(--line); border-radius: 9px; padding: 8px 6px; text-align: center; }
         .sc-stat b { display: block; font-family: 'JetBrains Mono',monospace; font-size: 14px; }
         .sc-stat span { font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+        .sc-meta { font-size: 11px; color: var(--muted); margin-top: 6px; }
+        .sc-meta b { color: #cbd5e1; font-family: 'JetBrains Mono',monospace; font-weight: 600; }
         .pos { color: var(--green); } .neg { color: var(--red); }
         .sc-desc { color: #c5cee0; font-size: 13px; line-height: 1.5; min-height: 38px; }
         .sc-sports { display: flex; gap: 5px; flex-wrap: wrap; }
@@ -176,6 +178,20 @@
         return (n > 0 ? '+' : '') + n.toFixed(1);
     }
 
+    function fmtOdds(o) {
+        if (o == null || o === '' || isNaN(Number(o))) return 'n/a';
+        const n = Math.round(Number(o));
+        return (n > 0 ? '+' : '') + n;
+    }
+
+    function filtersActive() {
+        return Boolean(document.getElementById('fSearch').value.trim()) ||
+            Boolean(document.getElementById('fSport').value) ||
+            Boolean(document.getElementById('fPrice').value) ||
+            (parseInt(document.getElementById('fGraded').value, 10) > 0) ||
+            document.getElementById('fVerified').checked;
+    }
+
     function buildQuery() {
         const p = new URLSearchParams();
         const s = document.getElementById('fSearch').value.trim();
@@ -198,7 +214,11 @@
 
     function render(sellers) {
         if (!sellers.length) {
-            grid.innerHTML = '<div class="mp-empty" style="grid-column:1/-1;">No sellers match these filters yet.<br>Sellers must build a verified record and clear eligibility before they can list here — <a href="/marketplace/sell/" style="color:var(--cyan);">see what it takes to start selling</a>.</div>';
+            if (filtersActive()) {
+                grid.innerHTML = '<div class="mp-empty" style="grid-column:1/-1;">No sellers match these filters.<br>Try widening your search, price range, or minimum graded picks, or <a href="/marketplace/" style="color:var(--cyan);">clear all filters</a>.</div>';
+            } else {
+                grid.innerHTML = '<div class="mp-empty" style="grid-column:1/-1;">No active sellers yet.<br>Sellers must build a verified record and clear eligibility before they can list here — <a href="/marketplace/sell/" style="color:var(--cyan);">see what it takes to start selling</a>.</div>';
+            }
             return;
         }
         grid.innerHTML = sellers.map(function (s) {
@@ -216,6 +236,7 @@
                     '<div class="sc-stat"><b class="' + (Number(s.roi) >= 0 ? 'pos' : 'neg') + '">' + (Number(s.roi) || 0).toFixed(1) + '%</b><span>ROI</span></div>' +
                     '<div class="sc-stat"><b>' + s.graded_picks + '</b><span>Graded</span></div>' +
                 '</div>' +
+                '<div class="sc-meta">Avg odds <b>' + fmtOdds(s.avg_odds) + '</b> &middot; sample <b>' + s.graded_picks + '</b> graded picks</div>' +
                 '<div class="sc-desc">' + esc((s.listing && s.listing.description) || '') + '</div>' +
                 (function () {
                     const PKG_LABEL = { single_pick: 'Single Pick', daily_access: 'Day Pass', weekly_access: 'Weekly Pass', monthly_access: 'Monthly Pass' };
