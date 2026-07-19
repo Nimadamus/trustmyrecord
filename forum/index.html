@@ -4356,13 +4356,17 @@ async function submitThread(e) {
         });
         closeNewThread();
 
-        // After posting, switch into that category and refresh — same
-        // experience whether the user posted from the index or from a
-        // thread list.
+        // After posting, open the NEW THREAD itself so the creator lands on its
+        // permanent URL (/forum/thread/<id>/<slug>/) — the address bar holds the
+        // shareable link the moment the thread exists. Category context is set
+        // first so the breadcrumb and back-to-list navigation stay correct.
         currentCategoryId = postCategoryId;
         currentCategorySlug = postCategorySlug || currentCategorySlug;
         currentCategoryName = postCategoryName || currentCategoryName;
-        if (typeof showThreadsList === 'function' && currentCategorySlug) {
+        var newId = data && data.thread ? data.thread.id : null;
+        if (newId) {
+            await showThreadDetail(newId);
+        } else if (typeof showThreadsList === 'function' && currentCategorySlug) {
             await showThreadsList(currentCategorySlug, currentCategoryName, currentCategoryId);
         } else {
             await loadThreads();
