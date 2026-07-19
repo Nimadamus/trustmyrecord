@@ -112,7 +112,7 @@
         .tmr-fb-breadcrumb a:hover { color: var(--tmr-fb-link); }
         .tmr-fb-breadcrumb .sep { margin: 0 7px; color: var(--muted); opacity: 0.6; }
         .tmr-phead { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
-        .tmr-phead-copy h1 { font-size: 1.3rem !important; font-weight: 700 !important; color: var(--text); letter-spacing: -0.01em; line-height: 1.2 !important; margin: 0 !important; }
+        html body .tmr-phead-copy h1 { font-size: 1.3rem !important; font-weight: 700 !important; color: var(--text) !important; letter-spacing: -0.01em; line-height: 1.2 !important; margin: 0 !important; }
         .tmr-phead-copy p { color: var(--muted); font-size: var(--fs-sm); line-height: 1.5; max-width: 560px; margin-top: 4px; }
         .tmr-phead-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
         .tmr-hbtn { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 16px; border-radius: var(--r-sm); font-weight: 600; font-size: 0.83rem; cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); text-decoration: none; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; }
@@ -127,9 +127,13 @@
         .tmr-tab2.is-active { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
         .tmr-tab2 .tmr-tab2-count { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 0.66rem; font-weight: 600; vertical-align: 1px; }
 
-        /* Section head + filter toolbar (aligned to one baseline) */
+        /* Section head + filter toolbar (aligned to one baseline).
+           !important beats the sitewide globals (h2 clamp(1.8-3.2rem)!important + display font). */
+        .tmr-shell2 h1, .tmr-shell2 h2, .tmr-shell2 h3, .tmr-shell2 h4, .tmr-modal h3 { font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important; }
         .tmr-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
-        .tmr-sec-head h2 { font-size: 0.98rem; font-weight: 600; color: var(--text); letter-spacing: -0.005em; }
+        html body .tmr-sec-head h2 { font-size: 0.98rem !important; font-weight: 600 !important; line-height: 1.3 !important; color: var(--text) !important; letter-spacing: -0.005em; }
+        /* Official creator badge (injected by official-badge.js) — keep, but quieter */
+        .tmr-shell2 .tmr-official-chip { font-size: 0.62rem !important; padding: 1px 7px !important; border-radius: 5px !important; font-weight: 700 !important; letter-spacing: 0.03em !important; }
         .tmr-sec-head .sub { color: var(--muted); font-size: var(--fs-sm); margin-top: 3px; }
         .tmr-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .tmr-fb-action-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: var(--r-sm); border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); font-size: 0.79rem; font-weight: 500; cursor: pointer; text-decoration: none; transition: border-color 0.15s ease, background 0.15s ease; }
@@ -253,7 +257,7 @@
         .tmr-q-model { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: var(--surface-3); color: var(--muted); border: 1px solid var(--border-strong); font-size: 0.6rem; font-weight: 600; white-space: nowrap; vertical-align: middle; }
         .tmr-game-submit-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; }
         .tmr-resolve-box { margin-top: 14px; padding: 14px 16px; border: 1px dashed rgba(228,185,91,0.4); border-radius: var(--r-md); background: rgba(228,185,91,0.04); }
-        .tmr-resolve-box h4 { color: var(--gold); font-size: 0.84rem; font-weight: 650; margin-bottom: 4px; }
+        .tmr-resolve-box h4 { color: var(--gold) !important; font-size: 0.84rem !important; font-weight: 650 !important; margin-bottom: 4px; }
         .tmr-resolve-q { margin: 10px 0; }
         .tmr-resolve-q label { display: block; color: var(--text); font-size: var(--fs-sm); font-weight: 600; margin-bottom: 4px; }
         .tmr-resolve-q select, .tmr-resolve-q input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface-1); color: var(--text); font-size: 0.82rem; }
@@ -261,7 +265,7 @@
         /* Leaders panel */
         .tmr-leaders { position: sticky; top: 18px; background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
         .tmr-leaders-head { padding: 12px 15px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
-        .tmr-leaders-head h3 { font-size: 0.86rem; font-weight: 650; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .tmr-leaders-head h3 { font-size: 0.86rem !important; font-weight: 650 !important; line-height: 1.3 !important; color: var(--text) !important; display: flex; align-items: center; gap: 8px; }
         .tmr-leaders-head h3 i { color: var(--accent); font-size: 0.78rem; }
         .tmr-leaders-head span { color: var(--muted); font-size: 0.7rem; font-weight: 500; }
         .tmr-leaders-list { list-style: none; max-height: 560px; overflow-y: auto; }
@@ -302,7 +306,7 @@
 
         /* Quiz tab sub-grid */
         .tmr-quiz-grid { display: grid; grid-template-columns: minmax(0,1fr) 292px; gap: 18px; align-items: start; }
-        .tmr-quiz-side { border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; background: var(--surface-1); }
+        .tmr-quiz-side { position: sticky; top: 18px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; background: var(--surface-1); }
         .tmr-quiz-side-head { padding: 11px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); font-size: 0.84rem; font-weight: 650; color: var(--text); display: flex; align-items: center; gap: 8px; }
         .tmr-quiz-side-head i { color: var(--accent); font-size: 0.76rem; }
         .tmr-qr-box { display: flex; flex-direction: column; gap: 2px; }
@@ -313,14 +317,14 @@
         .tmr-qr-name { font-size: 0.79rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .tmr-qr-elo { font-size: 0.8rem; font-weight: 700; color: #C4B5FD; font-variant-numeric: tabular-nums; }
         .tmr-qr-empty { font-size: 0.72rem; color: var(--muted); padding: 4px 6px; line-height: 1.45; }
-        @media (max-width: 900px) { .tmr-quiz-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 900px) { .tmr-quiz-grid { grid-template-columns: 1fr; } .tmr-quiz-side { position: static; } }
 
         /* Modal */
         .tmr-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(4, 8, 12, 0.72); z-index: 9000; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; backdrop-filter: blur(6px); }
         .tmr-modal-overlay.is-open { display: flex; }
         .tmr-modal { width: 100%; max-width: 620px; background: var(--surface-1); border: 1px solid var(--border-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
         .tmr-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 15px 18px; background: var(--surface-2); color: var(--text); border-bottom: 1px solid var(--border); }
-        .tmr-modal-head h3 { font-size: 0.98rem; font-weight: 650; }
+        .tmr-modal-head h3 { font-size: 0.98rem !important; font-weight: 650 !important; line-height: 1.3 !important; color: var(--text) !important; }
         .tmr-modal-close { background: transparent; border: none; color: var(--muted); font-size: 1.5rem; line-height: 1; cursor: pointer; }
         .tmr-modal-close:hover { color: var(--text); }
         .tmr-modal-body { padding: 18px; max-height: calc(100vh - 160px); overflow-y: auto; }
@@ -369,8 +373,11 @@
             .tmr-shell2 { padding: 16px 14px 48px; }
             .tmr-phead { flex-direction: column; align-items: stretch; gap: 10px; }
             .tmr-phead-actions .tmr-hbtn { flex: 1; justify-content: center; min-height: 42px; }
-            .tmr-tabs2 { gap: 0; }
-            .tmr-tab2 { padding: 9px 10px; font-size: 0.82rem; }
+            .tmr-tabs2 { gap: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+            .tmr-tabs2::-webkit-scrollbar { display: none; }
+            .tmr-tab2 { padding: 9px 10px; font-size: 0.82rem; white-space: nowrap; flex: 0 0 auto; }
+            html body .tmr-phead-copy h1 { font-size: 1.2rem !important; }
+            html body .tmr-sec-head h2 { font-size: 0.95rem !important; }
             .tmr-typegrid { grid-template-columns: 1fr; }
             .tmr-filter-drawer-btn { display: inline-flex; min-height: 38px; }
             .tmr-filters.is-collapsed select { display: none; }
