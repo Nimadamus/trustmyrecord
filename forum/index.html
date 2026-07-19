@@ -2478,6 +2478,21 @@ body.classic-forum select, body.classic-forum .fjump select { font:12px Arial,He
   --link:#111111;
   --link-hover:#000000;
 }
+/* ---------- teal purge: tmr-redesign-overrides.css (loaded at end of body)
+   sets `body a:not(.sportsbook-sports-nav a){color:var(--tmr-teal)!important}`
+   at specificity (0,1,3). These catch-alls out-specify it for the whole forum
+   route; the more specific parity rules below win ties via source order. --- */
+#tmrForumHeader a{color:#fff !important}
+#tmrForumHeader a:hover{color:#fff !important}
+#tmrForumHeader .tmrfh-menu a{color:#222 !important}
+#tmrForumHeader .tmrfh-menu a:hover{color:#000 !important}
+#tmrForumHeader a.tmrfh-authlink--reg{color:#1a1204 !important}
+#tmrForumHeader a.tmrfh-authlink--reg:hover{color:#1a1204 !important}
+body.classic-forum .fside a{color:#202020 !important}
+body.classic-forum .fside a:hover{color:#000 !important}
+body.classic-forum .fmain a{color:#111 !important}
+body.classic-forum .fmain a:hover{color:#000 !important}
+body.classic-forum .modal-box a,body.classic-forum .tmrfh-rules-box a{color:#111 !important}
 /* ---------- global: Arial 13px, neutral gray page ---------- */
 html{background:#f2f2f2 !important}
 body.classic-forum{background:#f2f2f2 !important;font:400 13px/1.25 var(--f2p2-font) !important;color:#111 !important;letter-spacing:normal !important}
@@ -2626,8 +2641,9 @@ body.classic-forum .fgroup-table td.col-num{width:90px !important;min-width:70px
 body.classic-forum .fgroup-table td.col-num{font:400 13px/1.2 var(--f2p2-font) !important;color:#111 !important;font-variant-numeric:tabular-nums !important;vertical-align:middle !important}
 body.classic-forum .fgroup-table tr.fcol-head td.col-num{font:400 11px/1.3 var(--f2p2-font) !important;color:#777 !important}
 /* ---------- Official label: small, single quiet style ---------- */
-body.classic-forum .fofficial-tag,
-body.classic-forum .tmr-official-chip{display:inline-block !important;font:700 9px/1 var(--f2p2-font) !important;padding:2px 5px !important;margin-left:5px !important;border-radius:2px !important;background:#1f3447 !important;border:0 !important;color:#f6bd3d !important;letter-spacing:normal !important;text-transform:uppercase !important;vertical-align:1px !important}
+body.classic-forum .fofficial-tag{display:inline-block !important;font:700 9px/1 var(--f2p2-font) !important;padding:2px 5px !important;margin-left:5px !important;border-radius:2px !important;background:#1f3447 !important;border:0 !important;color:#f6bd3d !important;letter-spacing:normal !important;text-transform:uppercase !important;vertical-align:1px !important}
+body.classic-forum .tmr-official-chip{display:inline-flex !important;align-items:center !important;gap:3px !important;font:700 9px/1 var(--f2p2-font) !important;padding:2px 5px !important;margin-left:5px !important;border-radius:2px !important;background:#1f3447 !important;border:0 !important;color:#f6bd3d !important;letter-spacing:normal !important;text-transform:uppercase !important;vertical-align:1px !important}
+body.classic-forum .tmr-official-chip svg{width:8px !important;height:8px !important;display:block !important}
 body.classic-forum .fsticky-tag{font:700 9px/1 var(--f2p2-font) !important;padding:2px 4px !important;border-radius:2px !important}
 /* ---------- action row / buttons / pagination: flat neutral ---------- */
 body.classic-forum .factionrow{background:transparent !important;border:0 !important;padding:2px 0 8px !important;margin:0 !important}
