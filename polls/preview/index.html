@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/polls/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Polls &amp; Predictions Design Preview | TrustMyRecord</title>
+    <meta name="description" content="Vote in sports prediction polls across MLB, NBA, NFL, NHL, soccer, UFC, and more. Game winners, MVP races, player props">
+    <meta name="keywords" content="sports polls, sports prediction polls, MLB polls, NBA polls, NFL polls, NHL polls, MVP polls, player prop polls, fan voting, sports community polls">
+    <meta property="og:title" content="Sports Polls | Game Predictions, MVP &amp; Player Prop Polls">
+    <meta property="og:description" content="Vote in sports prediction polls. Game winners, MVPs, player props — every vote tied to your public profile.">
+    <meta property="og:url" content="https://trustmyrecord.com/polls/">
+    <meta property="og:type" content="website">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260713hub1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260713hub1"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+           TMR POLLS DESIGN SYSTEM — 2026-07-19 preview
+           Token-driven surface + type hierarchy. Approve here, then
+           extend the same tokens site-wide.
+           ============================================================ */
+        :root {
+            /* Surfaces (page -> card -> nested -> hover) */
+            --bg: #080D12;
+            --surface-1: #0E141B;
+            --surface-2: #121A22;
+            --surface-3: #18212B;
+            --border: rgba(154, 172, 192, 0.13);
+            --border-strong: rgba(154, 172, 192, 0.24);
+            /* Text */
+            --text: #E9EFF6;
+            --text-2: #B3BFCD;
+            --muted: #8595A7;
+            /* Accents */
+            --accent: #22D3EE;
+            --accent-dim: rgba(34, 211, 238, 0.12);
+            --accent-border: rgba(34, 211, 238, 0.30);
+            --accent-ink: #06222B;
+            --green: #34D399;
+            --green-dim: rgba(52, 211, 153, 0.12);
+            --gold: #E4B95B;
+            --gold-dim: rgba(228, 185, 91, 0.12);
+            --red: #F87171;
+            /* Shape + type scale */
+            --r-sm: 6px;
+            --r-md: 10px;
+            --r-lg: 14px;
+            --fs-xs: 0.72rem;
+            --fs-sm: 0.78rem;
+            --fs-base: 0.875rem;
+            --fs-md: 0.95rem;
+            --fs-lg: 1.1rem;
+            --fs-xl: 1.3rem;
+
+            /* Legacy aliases — inline styles in the JS reference these. Keep mapped. */
+            --tmr-fb-bg: var(--bg);
+            --tmr-fb-text: var(--text);
+            --tmr-fb-muted: var(--muted);
+            --tmr-fb-link: #67E8F9;
+            --tmr-fb-link-hover: #A5F3FC;
+            --tmr-fb-border: var(--border);
+            --tmr-fb-border-strong: var(--border-strong);
+            --tmr-fb-row-alt: var(--surface-2);
+            --tmr-fb-row-hover: var(--surface-3);
+            --tmr-fb-cyan: var(--accent);
+            --tmr-fb-blue: #38BDF8;
+            --tmr-fb-green: var(--green);
+            --tmr-fb-amber: var(--gold);
+            --tmr-fb-red: var(--red);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important;
+            background: radial-gradient(64rem 26rem at 50% -12rem, rgba(34, 211, 238, 0.055), transparent 70%), var(--bg) !important;
+            color: var(--text) !important;
+            font-size: 14px;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+        body.tmr-site-shell > header { display: none !important; }
+        a { color: var(--tmr-fb-link); text-decoration: none; }
+        a:hover { color: var(--tmr-fb-link-hover); text-decoration: underline; }
+        button, select, input, a { font-family: inherit; }
+        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: var(--r-sm); }
+
+        /* Top community bar — same background family as the page, one hairline */
+        .tmr-fb-topbar { background: rgba(8, 13, 18, 0.94); border-bottom: 1px solid var(--border); backdrop-filter: blur(12px); position: relative; z-index: 20; }
+        .tmr-fb-topbar-inner { max-width: 1080px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .tmr-fb-brand { display: inline-flex; align-items: center; gap: 8px; color: #FFFFFF; font-weight: 700; font-size: 0.95rem; text-decoration: none; }
+        .tmr-fb-brand:hover { color: #FFFFFF; text-decoration: none; }
+        .tmr-fb-brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: var(--r-sm); background: linear-gradient(135deg, var(--green), var(--accent)); color: var(--accent-ink); font-weight: 800; font-size: 0.72rem; }
+        .tmr-fb-brand small { color: var(--muted); font-weight: 500; font-size: 0.76rem; margin-left: 2px; }
+        .tmr-fb-search { flex: 1 1 300px; min-width: 190px; position: relative; }
+        .tmr-fb-search input { width: 100%; height: 34px; padding: 0 12px 0 32px; border-radius: var(--r-sm); border: 1px solid var(--border); background: var(--surface-1); color: var(--text); font-size: 0.82rem; outline: none; transition: border-color 0.15s ease; }
+        .tmr-fb-search input::placeholder { color: var(--muted); }
+        .tmr-fb-search input:focus { border-color: var(--accent-border); }
+        .tmr-fb-search::before { content: "\f002"; font-family: 'Font Awesome 6 Free'; font-weight: 900; position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 0.78rem; pointer-events: none; }
+        .tmr-fb-topnav { display: flex; align-items: center; gap: 2px; flex-wrap: wrap; }
+        .tmr-fb-topnav a, .tmr-fb-topnav button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: var(--r-sm); color: var(--text-2); font-size: 0.8rem; font-weight: 500; background: transparent; border: 1px solid transparent; cursor: pointer; text-decoration: none; white-space: nowrap; }
+        .tmr-fb-topnav a:hover, .tmr-fb-topnav button:hover { color: #FFFFFF; background: var(--surface-2); text-decoration: none; }
+        .tmr-fb-topnav i { font-size: 0.74rem; color: var(--muted); }
+        .tmr-fb-topnav a:hover i { color: var(--accent); }
+
+        /* Page shell + header row (no card wrapper — divider comes from the tab bar) */
+        .tmr-shell2 { max-width: 1080px; margin: 0 auto; padding: 20px 20px 64px; }
+        .tmr-fb-breadcrumb { color: var(--muted); font-size: var(--fs-sm); margin-bottom: 16px; }
+        .tmr-fb-breadcrumb a { color: var(--muted); font-weight: 500; cursor: pointer; }
+        .tmr-fb-breadcrumb a:hover { color: var(--tmr-fb-link); }
+        .tmr-fb-breadcrumb .sep { margin: 0 7px; color: var(--muted); opacity: 0.6; }
+        .tmr-phead { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+        .tmr-phead-copy h1 { font-size: 1.3rem !important; font-weight: 700 !important; color: var(--text); letter-spacing: -0.01em; line-height: 1.2 !important; margin: 0 !important; }
+        .tmr-phead-copy p { color: var(--muted); font-size: var(--fs-sm); line-height: 1.5; max-width: 560px; margin-top: 4px; }
+        .tmr-phead-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .tmr-hbtn { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 16px; border-radius: var(--r-sm); font-weight: 600; font-size: 0.83rem; cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); text-decoration: none; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; }
+        .tmr-hbtn:hover { border-color: var(--accent-border); color: var(--text); background: var(--surface-3); text-decoration: none; }
+        .tmr-hbtn.is-primary { background: linear-gradient(135deg, #1FB98A, #1FB6D4); color: var(--accent-ink); border-color: transparent; font-weight: 700; }
+        .tmr-hbtn.is-primary:hover { background: linear-gradient(135deg, #2BCB9A, #33C7E3); color: var(--accent-ink); }
+
+        /* Primary tabs — quiet underline */
+        .tmr-tabs2 { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 20px; flex-wrap: wrap; }
+        .tmr-tab2 { position: relative; padding: 9px 13px; background: transparent; border: none; color: var(--muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s ease; }
+        .tmr-tab2:hover { color: var(--text); }
+        .tmr-tab2.is-active { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
+        .tmr-tab2 .tmr-tab2-count { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 0.66rem; font-weight: 600; vertical-align: 1px; }
+
+        /* Section head + filter toolbar (aligned to one baseline) */
+        .tmr-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+        .tmr-sec-head h2 { font-size: 0.98rem; font-weight: 600; color: var(--text); letter-spacing: -0.005em; }
+        .tmr-sec-head .sub { color: var(--muted); font-size: var(--fs-sm); margin-top: 3px; }
+        .tmr-filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .tmr-fb-action-btn { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px; border-radius: var(--r-sm); border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); font-size: 0.79rem; font-weight: 500; cursor: pointer; text-decoration: none; transition: border-color 0.15s ease, background 0.15s ease; }
+        select.tmr-fb-action-btn { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='M5 7.5l5 5 5-5' stroke='%238595A7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px !important; }
+        select.tmr-fb-action-btn option { background: var(--surface-1); color: var(--text); }
+        .tmr-fb-action-btn:hover { background: var(--surface-3); color: var(--text); border-color: var(--accent-border); }
+        .tmr-fb-action-btn.is-primary { background: linear-gradient(135deg, #1FB98A, #1FB6D4); color: var(--accent-ink); border-color: transparent; font-weight: 700; }
+        .tmr-fb-action-btn.is-primary:hover { background: linear-gradient(135deg, #2BCB9A, #33C7E3); color: var(--accent-ink); }
+        /* width:auto !important defeats the sitewide global select{width:100%} */
+        .tmr-filters select.tmr-fb-action-btn { width: auto !important; min-width: 126px; max-width: 180px; height: 32px; flex: 0 0 auto; }
+        .tmr-filter-drawer-btn { display: none; }
+
+        /* Poll list — refined rows, one container */
+        .tmr-list2 { border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; background: var(--surface-1); }
+        .tmr-card2 { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 13px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s ease; }
+        .tmr-card2:last-child { border-bottom: none; }
+        .tmr-card2:hover { background: var(--surface-3); }
+        .tmr-card2:hover .tmr-card2-title { color: var(--tmr-fb-link); }
+        .tmr-card2-body { min-width: 0; }
+        .tmr-card2-title { color: var(--text); font-size: 0.92rem; font-weight: 600; line-height: 1.35; margin-bottom: 4px; transition: color 0.12s ease; }
+        .tmr-card2-meta { color: var(--muted); font-size: 0.76rem; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+        .tmr-card2-meta strong { color: var(--text-2); font-weight: 600; }
+        .tmr-card2-meta .dot { opacity: 0.45; }
+        .tmr-chip { display: inline-flex; align-items: center; gap: 5px; padding: 1px 7px; border-radius: 5px; font-size: 0.67rem; font-weight: 600; letter-spacing: 0.01em; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); }
+        .tmr-chip.is-quiz { color: #7DD3FC; border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.09); }
+        .tmr-chip.is-soon { color: var(--gold); border-color: rgba(228,185,91,0.34); background: var(--gold-dim); }
+        .tmr-chip.is-popular { color: var(--green); border-color: rgba(52,211,153,0.3); background: var(--green-dim); }
+        .tmr-chip.is-closed { color: var(--muted); border-color: var(--border-strong); background: var(--surface-2); }
+        .tmr-card2-cta { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border-radius: var(--r-sm); background: var(--accent-dim); color: var(--tmr-fb-link); border: 1px solid var(--accent-border); font-weight: 600; font-size: 0.79rem; text-decoration: none; white-space: nowrap; transition: background 0.12s ease, color 0.12s ease; }
+        .tmr-card2-cta:hover { color: var(--accent-ink); background: linear-gradient(135deg, #2BCB9A, #33C7E3); border-color: transparent; text-decoration: none; }
+        .tmr-card2-cta.is-muted { background: var(--surface-2); color: var(--text-2); border-color: var(--border-strong); }
+
+        /* Empty + loading states */
+        .tmr-empty-msg { padding: 44px 24px; text-align: center; color: var(--text-2); border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-1); }
+        .tmr-empty-msg .icon { display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: var(--r-md); font-size: 1.2rem; margin-bottom: 12px; color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent-border); }
+        .tmr-empty-msg strong { display: block; color: var(--text); font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; }
+        .tmr-empty-msg div { font-size: var(--fs-sm); }
+        .tmr-empty-msg a { display: inline-block; margin-top: 10px; color: var(--tmr-fb-link); font-weight: 600; font-size: var(--fs-base); }
+        .tmr-loading { padding: 34px; text-align: center; color: var(--muted); font-size: var(--fs-sm); }
+
+        /* Poll detail / vote view */
+        .tmr-poll-detail { background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px; margin-top: 20px; }
+        .tmr-poll-detail-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+        .tmr-poll-detail-title { font-size: 1.1rem; font-weight: 650; color: var(--text); margin-bottom: 6px; letter-spacing: -0.005em; }
+        .tmr-poll-detail-question { font-size: var(--fs-md); color: var(--text); margin-bottom: 6px; }
+        .tmr-poll-detail-desc { color: var(--text-2); font-size: var(--fs-base); line-height: 1.55; }
+        .tmr-poll-detail-meta { color: var(--muted); font-size: var(--fs-sm); margin-top: 6px; }
+        .tmr-poll-detail-meta strong { color: var(--text-2); font-weight: 600; }
+        .tmr-poll-status { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 5px; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
+        .tmr-poll-status.active { background: var(--green-dim); color: var(--green); border: 1px solid rgba(52,211,153,0.3); }
+        .tmr-poll-status.active::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+        .tmr-poll-status.closed { background: var(--surface-2); color: var(--text-2); border: 1px solid var(--border-strong); }
+        .tmr-poll-status.expired { background: rgba(248,113,113,0.12); color: #FCA5A5; border: 1px solid rgba(248,113,113,0.26); }
+        .tmr-poll-badges { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 5px 0 4px; }
+        .tmr-poll-badge { display: inline-flex; align-items: center; max-width: 210px; padding: 2px 8px; border-radius: 5px; border: 1px solid rgba(56,189,248,0.3); background: rgba(56,189,248,0.09); color: #9BD9F8; font-size: 0.68rem; font-weight: 600; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tmr-poll-badge.is-entity { border-color: rgba(52,211,153,0.3); background: var(--green-dim); color: #9BE8C8; }
+        .tmr-poll-badge.is-category { border-color: rgba(228,185,91,0.32); background: var(--gold-dim); color: var(--gold); }
+
+        .tmr-poll-options { list-style: none; display: flex; flex-direction: column; gap: 8px; margin: 0 0 14px; }
+        .tmr-poll-option { padding: 0; border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface-2); overflow: hidden; transition: border-color 0.12s ease; }
+        .tmr-poll-option label { display: flex; align-items: center; gap: 10px; padding: 11px 13px; cursor: pointer; font-weight: 500; font-size: var(--fs-base); }
+        .tmr-poll-option input { accent-color: var(--accent); }
+        .tmr-poll-option:hover { border-color: var(--accent-border); }
+        .tmr-poll-option.is-disabled label { cursor: default; }
+        .tmr-poll-option.is-checked { border-color: var(--accent-border); background: var(--accent-dim); box-shadow: inset 2px 0 0 var(--accent); }
+
+        .tmr-poll-result { padding: 11px 13px; }
+        .tmr-poll-result-row { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 6px; font-size: var(--fs-base); }
+        .tmr-poll-result-text { color: var(--text); font-weight: 600; }
+        .tmr-poll-result-pct { color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; font-size: var(--fs-sm); }
+        .tmr-poll-bar { height: 6px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
+        .tmr-poll-bar-fill { height: 100%; background: linear-gradient(90deg, #38BDF8, var(--accent)); border-radius: 999px; transition: width 0.4s ease; }
+        .tmr-poll-result.is-winner { background: var(--green-dim); }
+        .tmr-poll-result.is-winner .tmr-poll-bar-fill { background: var(--green); }
+        .tmr-poll-result.is-user-pick { background: rgba(34,211,238,0.07); }
+        .tmr-poll-result-tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-left: 8px; vertical-align: middle; }
+        .tmr-poll-result-tag.winner { background: var(--green); color: var(--accent-ink); }
+        .tmr-poll-result-tag.user { background: #38BDF8; color: #06222B; }
+        .tmr-poll-result-tag.locked { background: var(--surface-3); color: var(--text-2); }
+
+        .tmr-poll-detail-footer { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 12px; flex-wrap: wrap; color: var(--muted); font-size: var(--fs-sm); }
+        .tmr-poll-vote-btn { display: inline-flex; align-items: center; gap: 7px; min-height: 36px; padding: 8px 18px; border-radius: var(--r-sm); background: linear-gradient(135deg, #1FB98A, #1FB6D4); color: var(--accent-ink); border: none; font-weight: 700; font-size: 0.84rem; cursor: pointer; transition: filter 0.12s ease; }
+        .tmr-poll-vote-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .tmr-poll-vote-btn:hover:not(:disabled) { filter: brightness(1.12); }
+
+        /* Multi-question game / quiz */
+        .tmr-game { display: grid; grid-template-columns: minmax(0, 1fr) 292px; gap: 18px; margin-top: 20px; align-items: start; }
+        .tmr-game-main { min-width: 0; background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--r-md); padding: 20px; }
+        .tmr-game-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; padding-bottom: 14px; border-bottom: 1px solid var(--border); }
+        .tmr-game-title { font-size: 1.1rem; font-weight: 650; color: var(--text); margin-bottom: 4px; letter-spacing: -0.005em; }
+        .tmr-game-sub { color: var(--muted); font-size: var(--fs-sm); }
+        .tmr-game-sub strong { color: var(--text-2); font-weight: 600; }
+        .tmr-game-rules { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 4px; }
+        .tmr-game-rule { padding: 3px 9px; border-radius: 5px; background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2); color: #9BD9F8; font-size: 0.7rem; font-weight: 600; }
+        .tmr-q { border: 1px solid var(--border); border-radius: var(--r-md); padding: 13px 15px; margin: 12px 0; background: var(--surface-2); }
+        .tmr-q-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin-bottom: 10px; }
+        .tmr-q-title { font-weight: 600; color: var(--text); font-size: var(--fs-base); }
+        .tmr-q-num { color: var(--accent); font-weight: 700; font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; }
+        .tmr-q-worth { color: var(--gold); font-weight: 600; font-size: 0.72rem; white-space: nowrap; }
+        .tmr-q-opts { display: flex; flex-direction: column; gap: 7px; }
+        .tmr-q-opt { border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface-1); overflow: hidden; transition: border-color 0.12s ease; }
+        .tmr-q-opt label { display: flex; align-items: center; gap: 10px; padding: 9px 12px; cursor: pointer; font-weight: 500; font-size: var(--fs-base); }
+        .tmr-q-opt input { accent-color: var(--accent); }
+        .tmr-q-opt:hover { border-color: var(--accent-border); }
+        .tmr-q-opt.is-checked { border-color: var(--accent-border); background: var(--accent-dim); box-shadow: inset 2px 0 0 var(--accent); }
+        .tmr-q-opt.is-correct { border-color: rgba(52,211,153,0.5); background: var(--green-dim); }
+        .tmr-q-opt.is-yourpick { box-shadow: inset 2px 0 0 #38BDF8; }
+        .tmr-q-res-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 12px; }
+        .tmr-q-res-text { color: var(--text); font-weight: 600; font-size: var(--fs-base); }
+        .tmr-q-res-pct { color: var(--muted); font-weight: 600; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+        .tmr-q-bar { height: 5px; background: var(--surface-3); border-radius: 999px; overflow: hidden; margin: 0 12px 8px; }
+        .tmr-q-bar-fill { height: 100%; background: linear-gradient(90deg, #38BDF8, var(--accent)); border-radius: 999px; }
+        .tmr-q-tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-left: 6px; }
+        .tmr-q-tag.correct { background: var(--green); color: var(--accent-ink); }
+        .tmr-q-tag.you { background: #38BDF8; color: #06222B; }
+        .tmr-q-tag.pts { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(228,185,91,0.3); }
+        .tmr-q-numinput { width: 100%; padding: 9px 12px; border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface-1); color: var(--text); font-size: var(--fs-base); }
+        .tmr-q-conf { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+        .tmr-q-conf input[type=range] { flex: 1; accent-color: var(--accent); }
+        .tmr-q-conf-val { color: var(--accent); font-weight: 700; min-width: 42px; text-align: right; font-variant-numeric: tabular-nums; }
+        .tmr-q-model { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: var(--surface-3); color: var(--muted); border: 1px solid var(--border-strong); font-size: 0.6rem; font-weight: 600; white-space: nowrap; vertical-align: middle; }
+        .tmr-game-submit-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+        .tmr-resolve-box { margin-top: 14px; padding: 14px 16px; border: 1px dashed rgba(228,185,91,0.4); border-radius: var(--r-md); background: rgba(228,185,91,0.04); }
+        .tmr-resolve-box h4 { color: var(--gold); font-size: 0.84rem; font-weight: 650; margin-bottom: 4px; }
+        .tmr-resolve-q { margin: 10px 0; }
+        .tmr-resolve-q label { display: block; color: var(--text); font-size: var(--fs-sm); font-weight: 600; margin-bottom: 4px; }
+        .tmr-resolve-q select, .tmr-resolve-q input { width: 100%; padding: 8px 10px; border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface-1); color: var(--text); font-size: 0.82rem; }
+
+        /* Leaders panel */
+        .tmr-leaders { position: sticky; top: 18px; background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+        .tmr-leaders-head { padding: 12px 15px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+        .tmr-leaders-head h3 { font-size: 0.86rem; font-weight: 650; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .tmr-leaders-head h3 i { color: var(--accent); font-size: 0.78rem; }
+        .tmr-leaders-head span { color: var(--muted); font-size: 0.7rem; font-weight: 500; }
+        .tmr-leaders-list { list-style: none; max-height: 560px; overflow-y: auto; }
+        .tmr-leader { display: grid; grid-template-columns: 26px 1fr auto; gap: 8px; align-items: center; padding: 9px 14px; border-bottom: 1px solid var(--border); }
+        .tmr-leader:last-child { border-bottom: none; }
+        .tmr-leader-rank { font-weight: 700; color: var(--muted); font-size: var(--fs-sm); text-align: center; font-variant-numeric: tabular-nums; }
+        .tmr-leader:nth-child(1) .tmr-leader-rank { color: var(--gold); }
+        .tmr-leader:nth-child(2) .tmr-leader-rank { color: #CBD5E1; }
+        .tmr-leader:nth-child(3) .tmr-leader-rank { color: #D9A06B; }
+        .tmr-leader-name { color: var(--text); font-weight: 600; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tmr-leader-name a { color: var(--text); }
+        .tmr-leader-sub { color: var(--muted); font-size: 0.68rem; font-weight: 500; }
+        .tmr-leader-pts { color: var(--accent); font-weight: 700; font-size: 0.86rem; text-align: right; font-variant-numeric: tabular-nums; }
+        .tmr-sharp-badge { display: inline-block; margin-left: 5px; padding: 0 5px; border-radius: 4px; background: rgba(168,85,247,0.16); color: #D8B4FE; border: 1px solid rgba(168,85,247,0.32); font-size: 0.58rem; font-weight: 700; letter-spacing: 0.04em; }
+        .tmr-leaders-empty { padding: 26px 16px; text-align: center; color: var(--muted); font-size: var(--fs-sm); }
+        .tmr-champ { padding: 15px 16px 13px; text-align: center; background: linear-gradient(180deg, rgba(228,185,91,0.12), rgba(228,185,91,0.03)); border-bottom: 1px solid rgba(228,185,91,0.26); }
+        .tmr-champ-label { font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .tmr-champ-name { display: block; margin-top: 5px; font-size: 0.98rem; font-weight: 650; color: #F3E4C2; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tmr-champ-name:hover { text-decoration: underline; }
+        .tmr-champ-pts { margin-top: 3px; font-size: 1.4rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; line-height: 1.05; }
+        .tmr-champ-pts span { font-size: 0.66rem; font-weight: 600; color: var(--muted); margin-left: 4px; }
+        .tmr-champ-sub { font-size: 0.68rem; font-weight: 500; color: var(--muted); }
+        @media (max-width: 900px) { .tmr-game { grid-template-columns: 1fr; } .tmr-leaders { position: static; } }
+
+        /* Featured quiz — same card system, restrained accent frame */
+        .tmr-fquiz { border: 1px solid var(--accent-border); border-radius: var(--r-md); padding: 20px 22px; background: linear-gradient(135deg, var(--surface-1), rgba(19, 38, 48, 0.85)); margin-bottom: 20px; position: relative; overflow: hidden; }
+        .tmr-fquiz-eyebrow { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-size: 0.66rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+        .tmr-fquiz-title { font-size: 1.15rem; font-weight: 650; color: var(--text); line-height: 1.25; margin-bottom: 8px; letter-spacing: -0.005em; }
+        .tmr-fquiz-facts { display: flex; gap: 6px 16px; flex-wrap: wrap; color: var(--text-2); font-size: var(--fs-sm); font-weight: 500; margin-bottom: 14px; }
+        .tmr-fquiz-facts span { display: inline-flex; align-items: center; gap: 6px; }
+        .tmr-fquiz-facts i { color: var(--accent); font-size: 0.72rem; }
+        .tmr-fquiz-progress { margin-bottom: 14px; }
+        .tmr-fquiz-progress-bar { height: 6px; background: var(--surface-3); border-radius: 999px; overflow: hidden; margin-top: 6px; max-width: 340px; }
+        .tmr-fquiz-progress-fill { height: 100%; background: linear-gradient(90deg, var(--green), var(--accent)); border-radius: 999px; }
+        .tmr-fquiz-progress span { color: var(--text-2); font-size: var(--fs-sm); font-weight: 600; }
+        .tmr-fquiz-actions { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+        .tmr-fquiz-link { color: var(--tmr-fb-link); font-weight: 600; font-size: var(--fs-sm); }
+
+        /* Quiz tab sub-grid */
+        .tmr-quiz-grid { display: grid; grid-template-columns: minmax(0,1fr) 292px; gap: 18px; align-items: start; }
+        .tmr-quiz-side { border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; background: var(--surface-1); }
+        .tmr-quiz-side-head { padding: 11px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); font-size: 0.84rem; font-weight: 650; color: var(--text); display: flex; align-items: center; gap: 8px; }
+        .tmr-quiz-side-head i { color: var(--accent); font-size: 0.76rem; }
+        .tmr-qr-box { display: flex; flex-direction: column; gap: 2px; }
+        .tmr-qr-row { display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; align-items: center; padding: 6px; border-radius: var(--r-sm); text-decoration: none; }
+        .tmr-qr-row:hover { background: var(--surface-3); text-decoration: none; }
+        .tmr-qr-rank { font-size: 0.7rem; font-weight: 700; color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+        .tmr-qr-row:nth-child(1) .tmr-qr-rank { color: var(--gold); }
+        .tmr-qr-name { font-size: 0.79rem; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tmr-qr-elo { font-size: 0.8rem; font-weight: 700; color: #C4B5FD; font-variant-numeric: tabular-nums; }
+        .tmr-qr-empty { font-size: 0.72rem; color: var(--muted); padding: 4px 6px; line-height: 1.45; }
+        @media (max-width: 900px) { .tmr-quiz-grid { grid-template-columns: 1fr; } }
+
+        /* Modal */
+        .tmr-modal-overlay { display: none; position: fixed; inset: 0; background: rgba(4, 8, 12, 0.72); z-index: 9000; align-items: flex-start; justify-content: center; padding: 40px 20px; overflow-y: auto; backdrop-filter: blur(6px); }
+        .tmr-modal-overlay.is-open { display: flex; }
+        .tmr-modal { width: 100%; max-width: 620px; background: var(--surface-1); border: 1px solid var(--border-strong); border-radius: var(--r-lg); overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,0.5); }
+        .tmr-modal-head { display: flex; justify-content: space-between; align-items: center; padding: 15px 18px; background: var(--surface-2); color: var(--text); border-bottom: 1px solid var(--border); }
+        .tmr-modal-head h3 { font-size: 0.98rem; font-weight: 650; }
+        .tmr-modal-close { background: transparent; border: none; color: var(--muted); font-size: 1.5rem; line-height: 1; cursor: pointer; }
+        .tmr-modal-close:hover { color: var(--text); }
+        .tmr-modal-body { padding: 18px; max-height: calc(100vh - 160px); overflow-y: auto; }
+        .tmr-form-row { margin-bottom: 14px; }
+        .tmr-form-row label { display: block; color: var(--text); font-weight: 600; font-size: 0.82rem; margin-bottom: 6px; }
+        .tmr-form-row input, .tmr-form-row textarea, .tmr-form-row select { width: 100%; padding: 9px 12px; border: 1px solid var(--border-strong); border-radius: var(--r-sm); font-size: 0.85rem; color: var(--text); background: var(--surface-2); }
+        .tmr-form-row textarea { resize: vertical; min-height: 70px; }
+        .tmr-form-row input:focus, .tmr-form-row textarea:focus, .tmr-form-row select:focus { border-color: var(--accent-border); outline: none; }
+        .tmr-form-row.is-inline { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+        .tmr-form-row .tmr-form-hint { color: var(--muted); font-size: 0.75rem; margin-top: 4px; line-height: 1.45; }
+        .tmr-form-toggle { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--r-sm); font-size: 0.82rem; cursor: pointer; }
+        .tmr-form-toggle input { width: 15px; height: 15px; accent-color: var(--accent); }
+        .tmr-option-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+        .tmr-option-row input[type="text"] { flex: 1; }
+        .tmr-option-row .tmr-option-remove { width: 34px; height: 34px; border-radius: var(--r-sm); border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--red); cursor: pointer; flex: 0 0 auto; }
+        .tmr-option-row .tmr-option-remove:hover { border-color: rgba(248,113,113,0.4); background: rgba(248,113,113,0.1); }
+        .tmr-add-option-btn { padding: 7px 13px; border-radius: var(--r-sm); border: 1px dashed var(--accent-border); background: var(--accent-dim); color: var(--tmr-fb-link); font-weight: 600; font-size: 0.79rem; cursor: pointer; }
+        .tmr-add-option-btn:hover { background: rgba(34,211,238,0.18); }
+        .tmr-modal-footer { display: flex; justify-content: flex-end; gap: 8px; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 8px; }
+        .tmr-modal-error { padding: 9px 12px; border-radius: var(--r-sm); background: rgba(248,113,113,0.12); border: 1px solid rgba(248,113,113,0.3); color: #FCA5A5; font-size: 0.82rem; margin-bottom: 12px; display: none; }
+        .tmr-modal-error.is-shown { display: block; }
+        .tmr-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 8px 16px; border-radius: var(--r-sm); font-size: 0.83rem; font-weight: 600; cursor: pointer; border: 1px solid transparent; }
+        .tmr-btn-primary { background: linear-gradient(135deg, #1FB98A, #1FB6D4); color: var(--accent-ink); font-weight: 700; }
+        .tmr-btn-primary:hover:not(:disabled) { filter: brightness(1.12); }
+        .tmr-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+        .tmr-btn-outline { background: var(--surface-2); color: var(--text-2); border-color: var(--border-strong); }
+        .tmr-btn-outline:hover { background: var(--surface-3); color: var(--text); }
+
+        /* Create-type chooser step */
+        .tmr-typegrid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .tmr-typebtn { display: flex; flex-direction: column; gap: 8px; padding: 16px; border: 1px solid var(--border-strong); border-radius: var(--r-md); background: var(--surface-2); cursor: pointer; text-align: left; transition: border-color 0.12s ease, background 0.12s ease; }
+        .tmr-typebtn:hover { border-color: var(--accent-border); background: var(--surface-3); }
+        .tmr-typebtn .ic { width: 38px; height: 38px; border-radius: var(--r-md); display: inline-flex; align-items: center; justify-content: center; font-size: 0.98rem; color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent-border); }
+        .tmr-typebtn b { color: var(--text); font-size: 0.92rem; font-weight: 650; }
+        .tmr-typebtn small { color: var(--muted); font-size: 0.78rem; line-height: 1.45; }
+        .tmr-back-link { background: none; border: none; color: var(--tmr-fb-link); font-size: var(--fs-sm); font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 12px; }
+
+        /* Toast */
+        .tmr-toast { position: fixed; bottom: 22px; right: 22px; max-width: 380px; padding: 11px 15px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--border-strong); color: var(--text); box-shadow: 0 14px 30px rgba(0,0,0,0.4); font-size: 0.84rem; z-index: 9100; display: none; }
+        .tmr-toast.is-shown { display: block; }
+        .tmr-toast.is-error { border-color: rgba(248,113,113,0.5); background: #2A1417; color: #FECACA; }
+        .tmr-toast.is-success { border-color: rgba(52,211,153,0.5); background: #0D231C; color: #A7F3D0; }
+
+        /* Responsive */
+        @media (max-width: 720px) {
+            .tmr-shell2 { padding: 16px 14px 48px; }
+            .tmr-phead { flex-direction: column; align-items: stretch; gap: 10px; }
+            .tmr-phead-actions .tmr-hbtn { flex: 1; justify-content: center; min-height: 42px; }
+            .tmr-tabs2 { gap: 0; }
+            .tmr-tab2 { padding: 9px 10px; font-size: 0.82rem; }
+            .tmr-typegrid { grid-template-columns: 1fr; }
+            .tmr-filter-drawer-btn { display: inline-flex; min-height: 38px; }
+            .tmr-filters.is-collapsed select { display: none; }
+            .tmr-filters select.tmr-fb-action-btn { width: 100% !important; max-width: none; min-height: 38px; }
+            .tmr-filters { width: 100%; }
+            .tmr-sec-head { align-items: stretch; flex-direction: column; }
+            .tmr-card2 { grid-template-columns: 1fr; gap: 10px; padding: 13px 14px; }
+            .tmr-card2-cta { justify-self: flex-start; min-height: 38px; }
+            .tmr-card2-meta { row-gap: 4px; }
+            .tmr-form-row.is-inline { grid-template-columns: 1fr; }
+            .tmr-fquiz { padding: 16px; }
+            .tmr-poll-detail, .tmr-game-main { padding: 16px; }
+        }
+    </style>
+<script type="application/ld+json">
+{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Polls", "item": "https://trustmyrecord.com/polls/"}]}
+</script>
+</head>
+<body class="polls-page tmr-site-shell">
+    <!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js?v=20260713hub1 -->
+
+    <div class="tmr-fb-topbar">
+        <div class="tmr-fb-topbar-inner">
+            <a href="/forum/" class="tmr-fb-brand"><span class="tmr-fb-brand-mark">TR</span> TrustMyRecord <small>Community</small></a>
+            <div class="tmr-fb-search">
+                <input type="search" id="searchInput" placeholder="Search polls by title, question, or creator..." autocomplete="off">
+            </div>
+            <nav class="tmr-fb-topnav">
+                <a href="/forum/"><i class="fas fa-comments"></i> Forum</a>
+                <a href="/trivia/"><i class="fas fa-circle-question"></i> Trivia</a>
+                <a href="/messages/"><i class="fas fa-envelope"></i> Messages</a>
+                <a href="/profile/"><i class="fas fa-user"></i> Profile</a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="tmr-shell2">
+        <div class="tmr-fb-breadcrumb"><a href="/forum/">TrustMyRecord</a><span class="sep">&rsaquo;</span><span>Polls &amp; Predictions</span></div>
+
+        <!-- A. COMPACT HEADER -->
+        <header class="tmr-phead">
+            <div class="tmr-phead-copy">
+                <h1>Polls &amp; Predictions</h1>
+                <p>Vote on today's biggest sports questions, compete in prediction quizzes, or start your own.</p>
+            </div>
+            <div class="tmr-phead-actions">
+                <button type="button" class="tmr-hbtn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus"></i> Create a Poll</button>
+            </div>
+        </header>
+
+        <!-- C. PRIMARY TABS (compact nav row) -->
+        <nav class="tmr-tabs2" role="tablist" id="pollsTabBar">
+            <button type="button" class="tmr-tab2 is-active" data-tab="quick" onclick="switchTab('quick')">Quick Polls</button>
+            <button type="button" class="tmr-tab2" data-tab="quiz" onclick="switchTab('quiz')">Prediction Quizzes</button>
+            <button type="button" class="tmr-tab2" data-tab="mine" onclick="switchTab('mine')">My Activity</button>
+            <button type="button" class="tmr-tab2" data-tab="closed" onclick="switchTab('closed')">Closed / Results</button>
+        </nav>
+
+        <main id="pollsSection"></main>
+        <div id="pollDetail"></div>
+    </div>
+
+
+    <!-- ========== CREATE POLL MODAL ========== -->
+    <div class="tmr-modal-overlay" id="createPollModal">
+        <div class="tmr-modal">
+            <div class="tmr-modal-head">
+                <h3 id="createPollHeading">Create a Poll</h3>
+                <button type="button" class="tmr-modal-close" onclick="closeCreatePollModal()">&times;</button>
+            </div>
+            <div class="tmr-modal-body">
+                <!-- STEP 1: choose type -->
+                <div id="createTypeStep">
+                    <p style="color:#A9B9CC;font-size:0.88rem;margin-bottom:14px;">What do you want to build?</p>
+                    <div class="tmr-typegrid">
+                        <button type="button" class="tmr-typebtn" onclick="setCreateType('quick')">
+                            <span class="ic"><i class="fas fa-check-to-slot"></i></span>
+                            <b>Quick Poll</b>
+                            <small>One question, a few answer choices. Members vote and see the consensus instantly.</small>
+                        </button>
+                        <button type="button" class="tmr-typebtn" onclick="setCreateType('quiz')">
+                            <span class="ic"><i class="fas fa-trophy"></i></span>
+                            <b>Multi-Question Quiz</b>
+                            <small>Bundle up to 10 predictions into one scored competition with a leaderboard.</small>
+                        </button>
+                    </div>
+                </div>
+                <!-- STEP 2: the form -->
+                <div id="createFormStep" style="display:none;">
+                <button type="button" class="tmr-back-link" onclick="backToTypeStep()"><i class="fas fa-arrow-left"></i> Choose a different type</button>
+                <div class="tmr-modal-error" id="createPollError"></div>
+                <form id="createPollForm" onsubmit="submitNewPoll(event)">
+                    <div class="tmr-form-row">
+                        <label for="pollTitle">Poll Title</label>
+                        <input id="pollTitle" type="text" maxlength="180" placeholder="Short, scannable title (e.g. 'Lakers @ Celtics tonight')" required>
+                    </div>
+                    <div class="tmr-form-row">
+                        <label for="pollQuestion">Question</label>
+                        <input id="pollQuestion" type="text" maxlength="300" placeholder="The actual question being voted on" required>
+                    </div>
+                    <div class="tmr-form-row is-inline">
+                        <div>
+                            <label for="pollSport">Sport <span style="color:var(--tmr-fb-red);">*</span></label>
+                            <select id="pollSport" onchange="onPollSportChange()" required>
+                                <option value="">Select sport</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="pollLeague">League <span style="color:var(--tmr-fb-muted);font-weight:600;">(recommended)</span></label>
+                            <select id="pollLeague">
+                                <option value="">Select sport first</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="tmr-form-row">
+                        <label for="pollTeamPlayer">Team or Player (optional)</label>
+                        <input id="pollTeamPlayer" type="text" maxlength="160" placeholder="e.g. San Francisco Giants, New York Giants, Caitlin Clark">
+                    </div>
+                    <div class="tmr-form-row">
+                        <label for="pollDescription">Description (optional)</label>
+                        <textarea id="pollDescription" maxlength="1500" placeholder="Context, betting angle, line, deadline reasoning..."></textarea>
+                    </div>
+                    <div class="tmr-form-row" id="pollScoringModeRow">
+                        <label for="pollScoringMode">Scoring mode</label>
+                        <select id="pollScoringMode" onchange="onScoringModeChange()">
+                            <option value="binary" selected>Binary &mdash; one correct answer, all-or-nothing points</option>
+                            <option value="partial">Partial credit &mdash; rarer correct picks earn more points</option>
+                            <option value="weighted">Weighted by odds &mdash; underdog picks earn more</option>
+                            <option value="confidence">Confidence weighted &mdash; voter sets 1&ndash;100 confidence</option>
+                            <option value="closest">Closest answer &mdash; free-form numeric prediction (1st = most points, then 70/50/30/15/10%)</option>
+                        </select>
+                        <div class="tmr-form-hint" id="pollScoringHint">Default. Each voter picks one option; correct answer wins full points.</div>
+                    </div>
+                    <div class="tmr-form-row" id="pollOptionsRow">
+                        <label>Answer Choices <span style="color:var(--tmr-fb-muted);font-weight:600;">(minimum 2)</span></label>
+                        <div id="pollOptions">
+                            <div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 1"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>
+                            <div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 2"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>
+                        </div>
+                        <button type="button" class="tmr-add-option-btn" onclick="addOptionRow('pollOptions')"><i class="fas fa-plus"></i> Add Choice</button>
+                    </div>
+                    <div class="tmr-form-row" id="pollNumericRow" style="display:none;">
+                        <label for="pollNumericTarget">Numeric truth (optional &mdash; can be set at resolution time)</label>
+                        <input id="pollNumericTarget" type="number" step="any" placeholder="e.g. 247.5 (final game total), 32 (team rebounds)">
+                        <div class="tmr-form-hint">For closest-numeric polls. Voters submit a number; whoever's closest to the truth wins.</div>
+                    </div>
+                    <div class="tmr-form-row" id="pollSeasonToggleRow" style="display:none;">
+                        <label class="tmr-form-toggle">
+                            <input id="pollIsSeason" type="checkbox" onchange="onSeasonToggle()"><span>Multi-question / season-long poll (1&ndash;10 sub-questions)</span>
+                        </label>
+                        <div class="tmr-form-hint">Bundle multiple predictions under one parent poll. Each voter answers every sub-question; per-question points sum into the parent leaderboard.</div>
+                    </div>
+                    <div class="tmr-form-row" id="pollSubQuestionsRow" style="display:none;">
+                        <label>Sub-questions <span style="color:var(--tmr-fb-muted);font-weight:600;">(1&ndash;10)</span></label>
+                        <div id="pollSubQuestions"></div>
+                        <button type="button" class="tmr-add-option-btn" onclick="addSubQuestion()"><i class="fas fa-plus"></i> Add Sub-Question</button>
+                    </div>
+                    <div class="tmr-form-row is-inline">
+                        <div>
+                            <label for="pollCategory">Category <span style="color:var(--tmr-fb-red);">*</span></label>
+                            <select id="pollCategory" required><option value="">Select a category</option></select>
+                        </div>
+                        <div>
+                            <label for="pollExpires">Expiration Date <span style="color:var(--tmr-fb-red);">*</span></label>
+                            <input id="pollExpires" type="datetime-local" required onclick="try{this.showPicker&&this.showPicker()}catch(e){}" onfocus="try{this.showPicker&&this.showPicker()}catch(e){}">
+                            <div class="tmr-form-hint">Voting closes at this date/time. Required so votes can't be cast after the outcome.</div>
+                        </div>
+                    </div>
+                    <div class="tmr-form-row">
+                        <label for="pollPublishAt">Start Date / Publish Date <span style="color:var(--tmr-fb-muted);font-weight:600;">(optional)</span></label>
+                        <input id="pollPublishAt" type="datetime-local" onclick="try{this.showPicker&&this.showPicker()}catch(e){}" onfocus="try{this.showPicker&&this.showPicker()}catch(e){}">
+                        <div class="tmr-form-hint">Leave empty to publish immediately. Set a future date/time to schedule. Voting is blocked until then. Must be before the expiration date.</div>
+                    </div>
+                    <div class="tmr-form-row is-inline">
+                        <label class="tmr-form-toggle"><input id="pollAllowMultiple" type="checkbox"><span>Allow multiple choice</span></label>
+                        <label class="tmr-form-toggle"><input id="pollPublicResults" type="checkbox" checked><span>Public results before vote</span></label>
+                    </div>
+                    <div class="tmr-form-row">
+                        <label class="tmr-form-toggle"><input id="pollAnonymous" type="checkbox"><span>Anonymous voting</span></label>
+                        <div class="tmr-form-hint">Anonymous polls hide voter usernames from the public results page. Votes are still tied to your account so you cannot vote twice.</div>
+                    </div>
+                    <div class="tmr-modal-footer">
+                        <button type="button" class="tmr-btn tmr-btn-outline" onclick="closeCreatePollModal()">Cancel</button>
+                        <button type="submit" class="tmr-btn tmr-btn-primary" id="createPollSubmit">Create Poll</button>
+                    </div>
+                </form>
+                </div><!-- /createFormStep -->
+            </div>
+        </div>
+    </div>
+
+    <div class="tmr-toast" id="pollToast"></div>
+
+    <script src="/static/js/config.js?v=20260330"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/auth-persistent.js?v=20260424a"></script>
+    <script>
+    // ============================================================
+    //  TRUSTMYRECORD POLLS PAGE
+    //  Full create / vote / results flow against /api/polls/* backend
+    // ============================================================
+    // ============================================================
+    //  TRUSTMYRECORD POLLS & PREDICTIONS PAGE
+    //  Redesign 2026-07-12: quick polls / quizzes separated,
+    //  compact header, quieter hierarchy, expired never in active.
+    // ============================================================
+    var state = {
+        tab: 'quick',            // quick | quiz | mine | closed
+        sort: 'newest',          // newest | most_voted | closing_soon
+        sportFilter: '',
+        leagueFilter: '',
+        categoryFilter: '',
+        polls: [],               // last rendered list (for search)
+        categories: [],
+        currentPollId: null,
+        currentPollDetail: null,
+        currentGame: null,
+        createType: 'quick'
+    };
+
+    var SPORT_OPTIONS = ['Basketball', 'Baseball', 'Football', 'Hockey', 'Soccer', 'Tennis', 'Golf', 'MMA', 'Boxing', 'Esports', 'Other'];
+    var LEAGUES_BY_SPORT = {
+        Baseball: ['MLB', 'MiLB', 'NCAA Baseball', 'KBO', 'NPB', 'Other'],
+        Football: ['NFL', 'NCAAF', 'UFL', 'CFL', 'Other'],
+        Basketball: ['NBA', 'WNBA', 'NCAAB', 'EuroLeague', 'Other'],
+        Hockey: ['NHL', 'NCAAH', 'AHL', 'Other'],
+        Soccer: ['EPL', 'MLS', 'Champions League', 'La Liga', 'Serie A', 'Bundesliga', 'Ligue 1', 'World Cup', 'Other'],
+        Tennis: ['ATP', 'WTA', 'Grand Slam', 'Other'],
+        Golf: ['PGA Tour', 'LPGA', 'LIV Golf', 'Other'],
+        MMA: ['UFC', 'Bellator', 'PFL', 'ONE', 'Other'],
+        Boxing: ['WBC', 'WBA', 'IBF', 'WBO', 'Other'],
+        Esports: ['League of Legends', 'CS2', 'Valorant', 'Dota 2', 'Call of Duty League', 'Other'],
+        Other: ['Other']
+    };
+
+    function escHtml(v) {
+        return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+    function timeAgo(d) {
+        if (!d) return '';
+        var diff = Date.now() - new Date(d).getTime();
+        if (isNaN(diff)) return '';
+        var s = Math.max(1, Math.floor(diff/1000));
+        if (s < 60) return s + 's ago';
+        var m = Math.floor(s/60); if (m < 60) return m + 'm ago';
+        var h = Math.floor(m/60); if (h < 24) return h + 'h ago';
+        var dd = Math.floor(h/24); if (dd < 30) return dd + 'd ago';
+        var mo = Math.floor(dd/30); if (mo < 12) return mo + 'mo ago';
+        return Math.floor(mo/12) + 'y ago';
+    }
+    function fmtDate(d) {
+        if (!d) return '';
+        var dt = new Date(d);
+        if (isNaN(dt.getTime())) return '';
+        return dt.toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
+    }
+    function isLoggedIn() {
+        if (window.api && api.isLoggedIn && api.isLoggedIn()) return true;
+        try { var s = JSON.parse(localStorage.getItem('trustmyrecord_session') || 'null'); if (s && (s.user || s).username) return true; } catch(e){}
+        return false;
+    }
+    function currentUsername() {
+        try {
+            if (window.auth && auth.getCurrentUser) {
+                var u = auth.getCurrentUser();
+                if (u && u.username) return u.username;
+            }
+            var s = JSON.parse(localStorage.getItem('trustmyrecord_session') || 'null');
+            if (s) return (s.user || s).username || null;
+        } catch(e) {}
+        return null;
+    }
+    function showToast(message, kind) {
+        var t = document.getElementById('pollToast');
+        t.textContent = message;
+        t.className = 'tmr-toast is-shown' + (kind ? (' is-' + kind) : '');
+        clearTimeout(t._timer);
+        t._timer = setTimeout(function() { t.classList.remove('is-shown'); }, 3500);
+    }
+
+    // ============== POLL CLASSIFICATION ==============
+    function isQuiz(p) { return (parseInt(p.question_count || 0)) > 1; }
+    function pollDeadline(p) { return p.voting_deadline ? new Date(p.voting_deadline) : null; }
+    function isScheduled(p) { var pub = p.publish_at ? new Date(p.publish_at) : null; return !!(pub && pub > new Date()); }
+    function isExpired(p) { var dl = pollDeadline(p); return !!(dl && dl < new Date()); }
+    function isResolvedPoll(p) { return p.status === 'resolved' || p.status === 'closed'; }
+    function isClosedPoll(p) { return isResolvedPoll(p) || isExpired(p); }
+    function isActiveOpen(p) { return !isScheduled(p) && !isExpired(p) && !isResolvedPoll(p); }
+    function isClosingSoon(p) { var dl = pollDeadline(p); if (!dl || !isActiveOpen(p)) return false; var ms = dl - new Date(); return ms > 0 && ms < 24*3600*1000; }
+
+    // ============== FILTERS ==============
+    function allLeagues() {
+        return Object.keys(LEAGUES_BY_SPORT).reduce(function(acc, sport) {
+            LEAGUES_BY_SPORT[sport].forEach(function(l) { if (acc.indexOf(l) === -1) acc.push(l); });
+            return acc;
+        }, []);
+    }
+    function filterBarHtml(showSort) {
+        var sports = '<option value="">All Sports</option>' + SPORT_OPTIONS.map(function(s) {
+            return '<option ' + (state.sportFilter === s ? 'selected' : '') + ' value="' + escHtml(s) + '">' + escHtml(s) + '</option>';
+        }).join('');
+        var lg = state.sportFilter ? (LEAGUES_BY_SPORT[state.sportFilter] || ['Other']) : allLeagues();
+        var leagues = '<option value="">All Leagues</option>' + lg.map(function(l) {
+            return '<option ' + (state.leagueFilter === l ? 'selected' : '') + ' value="' + escHtml(l) + '">' + escHtml(l) + '</option>';
+        }).join('');
+        var sort = '';
+        if (showSort) {
+            var opts = [['newest','Newest'],['most_voted','Most Voted'],['closing_soon','Closing Soon']];
+            sort = '<select class="tmr-fb-action-btn" onchange="setSort(this.value)" aria-label="Sort">' + opts.map(function(o) {
+                return '<option ' + (state.sort === o[0] ? 'selected' : '') + ' value="' + o[0] + '">' + o[1] + '</option>';
+            }).join('') + '</select>';
+        }
+        return '<div class="tmr-filters is-collapsed" id="filterBar">' +
+            '<button type="button" class="tmr-fb-action-btn tmr-filter-drawer-btn" onclick="document.getElementById(\'filterBar\').classList.toggle(\'is-collapsed\')"><i class="fas fa-sliders"></i> Filters</button>' +
+            '<select class="tmr-fb-action-btn" onchange="setSportFilter(this.value)" aria-label="Sport">' + sports + '</select>' +
+            '<select class="tmr-fb-action-btn" onchange="setLeagueFilter(this.value)" aria-label="League">' + leagues + '</select>' +
+            sort + '</div>';
+    }
+    function setSportFilter(v) { state.sportFilter = v || ''; state.leagueFilter = ''; loadSection(); }
+    function setLeagueFilter(v) { state.leagueFilter = v || ''; loadSection(); }
+    function setSort(v) { state.sort = v || 'newest'; loadSection(); }
+
+    function applyFilters(polls) {
+        return polls.filter(function(p) {
+            if (state.sportFilter && (p.sport || 'Other') !== state.sportFilter) return false;
+            if (state.leagueFilter && (p.league || '') !== state.leagueFilter) return false;
+            return true;
+        });
+    }
+    function sortPolls(polls) {
+        var arr = polls.slice();
+        if (state.sort === 'most_voted') {
+            arr.sort(function(a, b) { return (parseInt(b.vote_count)||0) - (parseInt(a.vote_count)||0); });
+        } else if (state.sort === 'closing_soon') {
+            arr.sort(function(a, b) {
+                var da = pollDeadline(a), db = pollDeadline(b);
+                if (!da && !db) return 0; if (!da) return 1; if (!db) return -1;
+                return da - db;
+            });
+        } else {
+            arr.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+        }
+        return arr;
+    }
+
+    // ============== CARD RENDERING ==============
+    function pollCardHtml(p) {
+        var quiz = isQuiz(p);
+        var closed = isClosedPoll(p);
+        var scheduled = isScheduled(p);
+        var dl = pollDeadline(p);
+        var votes = parseInt(p.vote_count || 0);
+        var chip = '';
+        if (closed) chip = '<span class="tmr-chip is-closed">Closed</span>';
+        else if (scheduled) chip = '<span class="tmr-chip">Scheduled</span>';
+        else if (isClosingSoon(p)) chip = '<span class="tmr-chip is-soon"><i class="fas fa-clock"></i> Closing soon</span>';
+        else if (votes >= 25) chip = '<span class="tmr-chip is-popular"><i class="fas fa-fire"></i> Popular</span>';
+        var quizChip = quiz ? '<span class="tmr-chip is-quiz"><i class="fas fa-layer-group"></i> Quiz &middot; ' + parseInt(p.question_count) + ' Qs</span>' : '';
+        var sl = escHtml(p.league || p.sport || '');
+        var timeTxt = closed ? (dl ? 'Closed ' + escHtml(fmtDate(dl)) : 'Closed')
+                    : scheduled ? 'Opens ' + escHtml(fmtDate(p.publish_at))
+                    : (dl ? 'Closes ' + escHtml(fmtDate(dl)) : 'No deadline');
+        var cta = quiz
+            ? (closed ? '<i class="fas fa-chart-bar"></i> Results' : '<i class="fas fa-trophy"></i> Enter')
+            : (closed ? '<i class="fas fa-chart-bar"></i> Results' : '<i class="fas fa-check-to-slot"></i> Vote');
+        var ctaCls = 'tmr-card2-cta' + (closed ? ' is-muted' : '');
+        return '<div class="tmr-card2" onclick="openPoll(' + p.id + ')">' +
+            '<div class="tmr-card2-body">' +
+                '<div class="tmr-card2-title">' + escHtml(p.title) + '</div>' +
+                '<div class="tmr-card2-meta">' +
+                    (sl ? '<span>' + sl + '</span><span class="dot">&middot;</span>' : '') +
+                    (quizChip ? quizChip + '<span class="dot">&middot;</span>' : '') +
+                    '<span>By <strong data-tmr-username="' + escHtml(p.username || '') + '">' + escHtml(p.username || 'unknown') + '</strong></span><span class="dot">&middot;</span>' +
+                    (quiz
+                        ? ''
+                        : (votes > 0
+                            ? '<span><strong>' + votes + '</strong> vote' + (votes === 1 ? '' : 's') + '</span><span class="dot">&middot;</span>'
+                            : (closed
+                                ? '<span><strong>0</strong> votes</span><span class="dot">&middot;</span>'
+                                : '<span style="color:var(--tmr-fb-green,#34d399);font-weight:800;">Be the first to vote</span><span class="dot">&middot;</span>'))) +
+                    '<span>' + timeTxt + '</span>' +
+                    (chip ? ' ' + chip : '') +
+                '</div>' +
+            '</div>' +
+            '<a class="' + ctaCls + '" href="#poll-' + p.id + '" onclick="event.stopPropagation();event.preventDefault();openPoll(' + p.id + ')">' + cta + '</a>' +
+        '</div>';
+    }
+    function listHtml(polls) {
+        return '<div class="tmr-list2">' + polls.map(pollCardHtml).join('') + '</div>';
+    }
+    function emptyHtml(icon, title, sub, ctaLabel) {
+        return '<div class="tmr-empty-msg"><div class="icon"><i class="fas fa-' + icon + '"></i></div>' +
+            '<strong>' + escHtml(title) + '</strong>' + (sub ? '<div>' + escHtml(sub) + '</div>' : '') +
+            (ctaLabel ? '<a href="#" onclick="event.preventDefault();openCreatePollModal()">' + escHtml(ctaLabel) + '</a>' : '') + '</div>';
+    }
+
+    // ============== SECTION DISPATCH ==============
+    function goTab(tab) { switchTab(tab); document.getElementById('pollsTabBar').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+    function switchTab(tab) {
+        state.tab = tab;
+        document.querySelectorAll('.tmr-tab2').forEach(function(b) {
+            b.classList.toggle('is-active', b.getAttribute('data-tab') === tab);
+        });
+        document.getElementById('pollDetail').innerHTML = '';
+        state.currentPollId = null;
+        loadSection();
+    }
+    function loadSection() {
+        if (state.tab === 'quiz') return loadQuizTab();
+        if (state.tab === 'mine') return loadMineTab();
+        if (state.tab === 'closed') return loadClosedTab();
+        return loadQuickTab();
+    }
+
+    async function fetchPolls(status, limit) {
+        var qs = ['status=' + status, 'limit=' + (limit || 100)];
+        if (state.sportFilter) qs.push('sport=' + encodeURIComponent(state.sportFilter));
+        if (state.leagueFilter) qs.push('league=' + encodeURIComponent(state.leagueFilter));
+        var data = await api.request('/polls?' + qs.join('&'));
+        return data.polls || [];
+    }
+
+    // ---------- QUICK POLLS ----------
+    async function loadQuickTab() {
+        var sec = document.getElementById('pollsSection');
+        sec.innerHTML = sectionHead('Quick Polls', 'Cast one vote and see the community consensus.', filterBarHtml(true)) +
+            '<div class="tmr-loading">Loading polls...</div>';
+        try {
+            var polls = await fetchPolls('active', 100);
+            // Quick = single-question, and never expired/scheduled (functional fix).
+            polls = polls.filter(function(p) { return !isQuiz(p) && isActiveOpen(p); });
+            polls = sortPolls(polls);
+            state.polls = polls;
+            var body = polls.length ? listHtml(polls) : quickEmptyHtml();
+            renderSectionBody(body);
+        } catch (err) {
+            console.error('loadQuickTab', err);
+            renderSectionBody(emptyHtml('triangle-exclamation', 'Could not load polls.', 'The server may be warming up. Try again in a few seconds.', ''));
+        }
+    }
+    function quickEmptyHtml() {
+        var sport = state.sportFilter;
+        var title = sport ? ('No active ' + sport.toLowerCase() + ' polls right now.') : 'No active polls right now.';
+        var cta = sport ? ('Create ' + sport + ' Poll') : 'Create the first poll';
+        return emptyHtml('square-poll-vertical', title, 'Start the next debate.', cta);
+    }
+
+    // ---------- PREDICTION QUIZZES ----------
+    async function loadQuizTab() {
+        var sec = document.getElementById('pollsSection');
+        sec.innerHTML = sectionHead('Prediction Quiz Competition', 'Make your picks, submit your card, and see how your score compares with the community.', filterBarHtml(false)) +
+            '<div class="tmr-loading">Loading quizzes...</div>';
+        try {
+            var polls = applyFilters(await fetchPolls('all', 100)).filter(isQuiz);
+            var active = polls.filter(isActiveOpen).sort(function(a, b) {
+                var da = pollDeadline(a), db = pollDeadline(b);
+                if (!da && !db) return 0; if (!da) return 1; if (!db) return -1; return da - db;
+            });
+            var upcoming = polls.filter(isScheduled).sort(function(a, b) { return new Date(a.publish_at) - new Date(b.publish_at); });
+            var completed = polls.filter(isClosedPoll).sort(function(a, b) {
+                return (pollDeadline(b) || new Date(b.created_at)) - (pollDeadline(a) || new Date(a.created_at));
+            });
+
+            var featured = active[0] || null;
+            var moreActive = active.slice(1);
+
+            var html = '';
+            html += '<div id="featuredQuizSlot">' + (featured ? '<div class="tmr-loading">Loading featured quiz...</div>' : emptyHtml('trophy', 'No live quiz right now.', 'Check upcoming quizzes below, or build your own multi-question competition.', 'Create a Quiz')) + '</div>';
+
+            html += '<div class="tmr-quiz-grid">';
+            // Left column: more live + upcoming + completed
+            var left = '';
+            if (moreActive.length) {
+                left += '<div class="tmr-sec-head" style="margin-top:6px;"><div><h2 style="font-size:1rem;">More Live Quizzes</h2></div></div>' + listHtml(moreActive);
+            }
+            left += '<div class="tmr-sec-head" style="margin-top:18px;"><div><h2 style="font-size:1rem;">Upcoming Quizzes</h2></div></div>';
+            left += upcoming.length ? listHtml(upcoming) : '<div class="tmr-list2"><div class="tmr-card2" style="cursor:default;"><div class="tmr-card2-body"><div class="tmr-card2-meta">No scheduled quizzes yet.</div></div></div></div>';
+            left += '<div class="tmr-sec-head" style="margin-top:18px;"><div><h2 style="font-size:1rem;">Recently Completed</h2></div></div>';
+            left += completed.length ? listHtml(completed.slice(0, 10)) : '<div class="tmr-list2"><div class="tmr-card2" style="cursor:default;"><div class="tmr-card2-body"><div class="tmr-card2-meta">No completed quizzes yet.</div></div></div></div>';
+            html += '<div>' + left + '</div>';
+
+            // Right column: top performers
+            html += '<aside class="tmr-quiz-side">' +
+                '<div class="tmr-quiz-side-head"><i class="fas fa-ranking-star"></i> Top Performers</div>' +
+                '<div id="quizRatingsBox" class="tmr-qr-box" style="padding:12px 14px;"><div class="tmr-qr-empty">Loading ratings...</div></div>' +
+                '<div style="padding:0 14px 14px;"><a class="tmr-fquiz-link" href="/leaderboards/">View full leaderboard &rarr;</a></div>' +
+            '</aside>';
+            html += '</div>';
+
+            renderSectionBody(html);
+            loadQuizRatings();
+            if (featured) renderFeaturedQuiz(featured);
+        } catch (err) {
+            console.error('loadQuizTab', err);
+            renderSectionBody(emptyHtml('triangle-exclamation', 'Could not load quizzes.', 'Try again in a few seconds.', ''));
+        }
+    }
+
+    async function renderFeaturedQuiz(parent) {
+        var slot = document.getElementById('featuredQuizSlot');
+        if (!slot) return;
+        var game = null;
+        try { game = await api.request('/polls/' + parent.id + '/game'); } catch (e) { game = null; }
+        var questions = (game && game.questions) || [];
+        var total = questions.length || parseInt(parent.question_count || 0);
+        var answered = questions.filter(function(q) { return q.user_answer; }).length;
+        var entries = game ? (game.total_players || 0) : 0;
+        var dl = pollDeadline(parent);
+        var est = Math.max(1, Math.round((total || 10) * 0.5));
+        var started = answered > 0;
+        var done = total > 0 && answered >= total;
+        var btnLabel = done ? '<i class="fas fa-eye"></i> Review Your Card'
+                     : started ? '<i class="fas fa-play"></i> Continue Quiz (' + answered + '/' + total + ')'
+                     : '<i class="fas fa-play"></i> Enter Quiz';
+        var progress = '';
+        if (started && !done) {
+            var pct = total ? Math.round(answered / total * 100) : 0;
+            progress = '<div class="tmr-fquiz-progress"><span>You have answered ' + answered + ' of ' + total + ' questions</span>' +
+                '<div class="tmr-fquiz-progress-bar"><div class="tmr-fquiz-progress-fill" style="width:' + pct + '%"></div></div></div>';
+        }
+        var ptsAvail = questions.reduce(function(s, q) { return s + (parseInt(q.base_points) || 0); }, 0);
+        var facts = '<div class="tmr-fquiz-facts">' +
+            '<span><i class="fas fa-baseball"></i> ' + escHtml(parent.league || parent.sport || 'Sports') + '</span>' +
+            '<span><i class="fas fa-list-ol"></i> ' + total + ' questions</span>' +
+            (ptsAvail ? '<span><i class="fas fa-coins"></i> ' + ptsAvail + ' pts available</span>' : '') +
+            (dl ? '<span><i class="fas fa-clock"></i> Closes ' + escHtml(fmtDate(dl)) + '</span>' : '') +
+            (entries > 0
+                ? '<span><i class="fas fa-users"></i> ' + entries + ' ' + (entries === 1 ? 'entry' : 'entries') + '</span>'
+                : '<span style="color:var(--tmr-fb-green,#34d399);font-weight:800;"><i class="fas fa-bolt"></i> Be the first to predict</span>') +
+            '<span><i class="fas fa-hourglass-half"></i> ~' + est + ' min</span>' +
+        '</div>';
+        slot.innerHTML = '<div class="tmr-fquiz">' +
+            '<div class="tmr-fquiz-eyebrow"><i class="fas fa-bolt"></i> Live Competition</div>' +
+            '<div class="tmr-fquiz-title">' + escHtml(parent.title) + '</div>' +
+            facts + progress +
+            '<div class="tmr-fquiz-actions">' +
+                '<button type="button" class="tmr-poll-vote-btn" onclick="openPoll(' + parent.id + ')">' + btnLabel + '</button>' +
+                '<a class="tmr-fquiz-link" href="#poll-' + parent.id + '" onclick="event.preventDefault();openPoll(' + parent.id + ')">View leaderboard</a>' +
+            '</div>' +
+        '</div>';
+    }
+
+    // ---------- MY ACTIVITY ----------
+    async function loadMineTab() {
+        var sec = document.getElementById('pollsSection');
+        sec.innerHTML = sectionHead('My Activity', 'Polls and quizzes you created.', '') + '<div class="tmr-loading">Loading...</div>';
+        var user = currentUsername();
+        if (!user) {
+            renderSectionBody('<div class="tmr-empty-msg"><div class="icon"><i class="fas fa-user-lock"></i></div><strong>Log in to see your activity.</strong><a href="/login/">Log in</a></div>');
+            return;
+        }
+        try {
+            var data = await api.request('/polls/users/' + encodeURIComponent(user) + '/created');
+            var polls = applyFilters(data.polls || []);
+            polls.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
+            state.polls = polls;
+            renderSectionBody(polls.length ? listHtml(polls) : emptyHtml('user-pen', 'You have not created any polls yet.', 'Start a debate or build a quiz for the community.', 'Create a Poll'));
+        } catch (err) {
+            console.error('loadMineTab', err);
+            renderSectionBody(emptyHtml('triangle-exclamation', 'Could not load your activity.', 'Try again in a few seconds.', ''));
+        }
+    }
+
+    // ---------- CLOSED / RESULTS ----------
+    async function loadClosedTab() {
+        var sec = document.getElementById('pollsSection');
+        sec.innerHTML = sectionHead('Closed / Results', 'Final results from polls and quizzes that have closed.', filterBarHtml(false)) + '<div class="tmr-loading">Loading...</div>';
+        try {
+            var polls = applyFilters(await fetchPolls('all', 100)).filter(isClosedPoll);
+            polls.sort(function(a, b) { return (pollDeadline(b) || new Date(b.created_at)) - (pollDeadline(a) || new Date(a.created_at)); });
+            state.polls = polls;
+            renderSectionBody(polls.length ? listHtml(polls) : emptyHtml('flag-checkered', 'No closed polls yet.', 'Results show up here once a poll or quiz reaches its deadline.', ''));
+        } catch (err) {
+            console.error('loadClosedTab', err);
+            renderSectionBody(emptyHtml('triangle-exclamation', 'Could not load results.', 'Try again in a few seconds.', ''));
+        }
+    }
+
+    function sectionHead(title, sub, filters) {
+        return '<div class="tmr-sec-head"><div><h2>' + escHtml(title) + '</h2><div class="sub">' + escHtml(sub) + '</div></div>' + (filters || '') + '</div>';
+    }
+    function renderSectionBody(bodyHtml) {
+        var sec = document.getElementById('pollsSection');
+        // Replace only the content after the section head (last loading/list block)
+        var head = sec.querySelector('.tmr-sec-head');
+        var bodyWrap = document.getElementById('sectionBody');
+        if (!bodyWrap) {
+            bodyWrap = document.createElement('div');
+            bodyWrap.id = 'sectionBody';
+            sec.appendChild(bodyWrap);
+        }
+        // Remove stray loading node that sits outside bodyWrap
+        Array.prototype.slice.call(sec.children).forEach(function(ch) {
+            if (ch !== head && ch !== bodyWrap) sec.removeChild(ch);
+        });
+        bodyWrap.innerHTML = bodyHtml;
+        if (window.TMRUsernames && window.TMRUsernames.decorate) { try { window.TMRUsernames.decorate(sec); } catch(e){} }
+    }
+
+    // ============== POLL DETAIL / VOTE (single question) ==============
+    function pollBadgeHtml(p) {
+        var sport = (p && p.sport && String(p.sport).trim()) ? String(p.sport).trim() : 'Other';
+        var league = String((p && p.league) || '').trim();
+        var entity = String((p && (p.team_player || p.teamPlayer || p.team || p.player)) || '').trim();
+        var html = '<span class="tmr-poll-badge">' + escHtml(league || sport) + '</span>';
+        if (entity) html += '<span class="tmr-poll-badge is-entity">' + escHtml(entity) + '</span>';
+        return '<div class="tmr-poll-badges">' + html + '</div>';
+    }
+
+    async function openPoll(pollId) {
+        state.currentPollId = pollId;
+        state.currentGame = null;
+        var detailEl = document.getElementById('pollDetail');
+        detailEl.innerHTML = '<div class="tmr-poll-detail"><div class="tmr-loading">Loading...</div></div>';
+        detailEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        try {
+            var game = null;
+            try { game = await api.request('/polls/' + pollId + '/game'); } catch(e) { game = null; }
+            if (game && game.questions && game.questions.length > 0) {
+                state.currentGame = game;
+                state.currentPollId = game.parent.id;
+                renderGame();
+                window.history.replaceState({}, '', '#poll-' + game.parent.id);
+                return;
+            }
+            var data = await api.request('/polls/' + pollId);
+            state.currentPollDetail = data;
+            renderPollDetail();
+            window.history.replaceState({}, '', '#poll-' + pollId);
+        } catch(err) {
+            console.error('openPoll', err);
+            detailEl.innerHTML = '<div class="tmr-poll-detail"><div class="tmr-empty-msg">Could not load this poll.</div></div>';
+        }
+    }
+
+    function renderPollDetail() {
+        var d = state.currentPollDetail;
+        if (!d || !d.poll) return;
+        var p = d.poll;
+        var options = d.options || [];
+        var totalVotes = d.total_votes || 0;
+        var userVote = d.user_vote || null;
+        var deadline = p.voting_deadline ? new Date(p.voting_deadline) : null;
+        var isExp = deadline && deadline < new Date();
+        var isClosed = p.status === 'resolved' || isExp;
+        var canVote = !isClosed && !userVote && isLoggedIn();
+        var isPublicResults = p.description == null || p.description.indexOf('[hide-results-until-vote]') === -1;
+        var showVoteForm = canVote;
+        var showResults = !showVoteForm && (userVote || isClosed || isPublicResults);
+        var winningVotes = options.reduce(function(m, o) { return Math.max(m, parseInt(o.vote_count || 0)); }, 0);
+
+        var optionsHtml = '';
+        if (showResults) {
+            optionsHtml = '<div class="tmr-poll-options" role="group">' + options.map(function(o) {
+                var votes = parseInt(o.vote_count || 0);
+                var pct = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+                var pctText = (parseFloat(o.vote_percentage || pct) || 0).toFixed(1);
+                var isWinner = isClosed && votes === winningVotes && winningVotes > 0;
+                var isUser = userVote && parseInt(userVote.option_id) === parseInt(o.id);
+                var rowClass = 'tmr-poll-result' + (isWinner ? ' is-winner' : '') + (isUser ? ' is-user-pick' : '');
+                var tagHtml = '';
+                if (isWinner) tagHtml += '<span class="tmr-poll-result-tag winner">Winner</span>';
+                if (isUser) tagHtml += '<span class="tmr-poll-result-tag user">Your Vote</span>';
+                return '<li class="tmr-poll-option is-disabled"><div class="' + rowClass + '">' +
+                    '<div class="tmr-poll-result-row">' +
+                        '<span class="tmr-poll-result-text">' + escHtml(o.option_text) + tagHtml + '</span>' +
+                        '<span class="tmr-poll-result-pct">' + pctText + '% &middot; ' + votes + ' vote' + (votes === 1 ? '' : 's') + '</span>' +
+                    '</div>' +
+                    '<div class="tmr-poll-bar"><div class="tmr-poll-bar-fill" style="width:' + Math.min(100, pct) + '%"></div></div>' +
+                '</div></li>';
+            }).join('') + '</div>';
+        } else if (showVoteForm) {
+            optionsHtml = '<form id="voteForm" onsubmit="submitVote(event)"><div class="tmr-poll-options" role="radiogroup" aria-label="Poll options">' +
+                options.map(function(o) {
+                    return '<li class="tmr-poll-option"><label><input type="radio" name="pollOption" value="' + o.id + '" onchange="markPollChoice(this)" required> <span>' + escHtml(o.option_text) + '</span></label></li>';
+                }).join('') +
+                '</div><div class="tmr-poll-detail-footer">' +
+                    '<span>One vote per account &middot; ' + totalVotes + ' votes already</span>' +
+                    '<button class="tmr-poll-vote-btn" type="submit" id="voteSubmitBtn"><i class="fas fa-check"></i> Submit Vote</button>' +
+                '</div></form>';
+        }
+
+        var noVoteFooter = '';
+        if (showResults) {
+            noVoteFooter = '<div class="tmr-poll-detail-footer">' +
+                '<span><strong>' + totalVotes + '</strong> total vote' + (totalVotes === 1 ? '' : 's') +
+                    (deadline ? ' &middot; ' + (isExp ? 'Closed ' : 'Closes ') + escHtml(fmtDate(deadline)) : '') +
+                '</span>' +
+                '<button class="tmr-btn tmr-btn-outline" type="button" onclick="closePollDetail()"><i class="fas fa-arrow-left"></i> Back to list</button>' +
+            '</div>';
+        }
+
+        var loginPrompt = '';
+        if (!isLoggedIn() && !isClosed && !userVote) {
+            loginPrompt = '<div class="tmr-empty-msg" style="padding:20px;border:1px dashed var(--tmr-fb-border-strong);border-radius:6px;margin-bottom:14px;"><a href="/login/">Log in</a> to vote on this poll.' + (isPublicResults ? '' : ' Results unlock for you after you cast a vote.') + '</div>';
+            if (!showResults) optionsHtml = '';
+        }
+
+        document.getElementById('pollDetail').innerHTML = '<div class="tmr-poll-detail" id="poll-' + p.id + '">' +
+            '<div class="tmr-poll-detail-head">' +
+                '<div>' +
+                    '<div class="tmr-poll-detail-title">' + escHtml(p.title) + '</div>' +
+                    pollBadgeHtml(p) +
+                    (p.description ? '<div class="tmr-poll-detail-desc">' + escHtml(String(p.description).replace('[hide-results-until-vote]','').trim()) + '</div>' : '') +
+                    '<div class="tmr-poll-detail-meta">By <strong data-tmr-username="' + escHtml(p.username || '') + '">' + escHtml(p.username || 'unknown') + '</strong>' +
+                        (p.category_name ? ' &middot; ' + escHtml(p.category_name) : '') +
+                        ' &middot; Posted ' + escHtml(timeAgo(p.created_at)) +
+                    '</div>' +
+                '</div>' +
+                '<span class="tmr-poll-status ' + (isClosed ? 'closed' : 'active') + '">' + (isClosed ? 'Closed' : 'Active') + '</span>' +
+            '</div>' +
+            loginPrompt +
+            optionsHtml +
+            noVoteFooter +
+        '</div>';
+    }
+
+    function markPollChoice(input) {
+        document.querySelectorAll('.tmr-poll-option').forEach(function(li) { li.classList.remove('is-checked'); });
+        var li = input.closest ? input.closest('.tmr-poll-option') : null;
+        if (li) li.classList.add('is-checked');
+    }
+
+    async function submitVote(e) {
+        e.preventDefault();
+        if (!isLoggedIn()) { window.location.href = '/login/'; return; }
+        var sel = document.querySelector('input[name="pollOption"]:checked');
+        if (!sel) return;
+        var optionId = parseInt(sel.value);
+        var btn = document.getElementById('voteSubmitBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Submitting...'; }
+        try {
+            await api.request('/polls/' + state.currentPollId + '/vote', { method: 'POST', body: { option_id: optionId } });
+            showToast('Vote locked in.', 'success');
+            var data = await api.request('/polls/' + state.currentPollId);
+            state.currentPollDetail = data;
+            renderPollDetail();
+            loadSection();
+        } catch(err) {
+            console.error('submitVote', err);
+            showToast(err && err.message ? err.message : 'Could not submit vote.', 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Submit Vote'; }
+        }
+    }
+
+    function closePollDetail() {
+        document.getElementById('pollDetail').innerHTML = '';
+        state.currentPollId = null;
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+        document.getElementById('pollsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ============== MULTI-QUESTION GAME / QUIZ ==============
+    function markGameChoice(input) {
+        var box = input.closest('.tmr-q-opts');
+        if (box) box.querySelectorAll('.tmr-q-opt').forEach(function(o){ o.classList.remove('is-checked'); });
+        var li = input.closest('.tmr-q-opt');
+        if (li) li.classList.add('is-checked');
+    }
+
+    function renderGame() {
+        var g = state.currentGame;
+        if (!g || !g.parent) return;
+        var p = g.parent;
+        var questions = g.questions || [];
+        var leaders = g.leaderboard || [];
+        var isResolved = p.status === 'resolved';
+        var deadline = p.voting_deadline ? new Date(p.voting_deadline) : null;
+        var isExp = deadline && deadline < new Date();
+        var loggedIn = isLoggedIn();
+        var uname = currentUsername();
+        var isCreator = loggedIn && uname && p.username && uname.toLowerCase() === String(p.username).toLowerCase();
+        var canAnswer = !isResolved && !isExp && loggedIn;
+        var basePool = questions.reduce(function(s,q){ return s + (parseInt(q.base_points)||0); }, 0);
+
+        var statusLabel = isResolved ? 'Final' : (isExp ? 'Locked' : 'Live');
+        var statusClass = isResolved ? 'closed' : (isExp ? 'expired' : 'active');
+
+        var qsHtml = questions.map(function(q, qi) {
+            var worth = parseInt(q.base_points) || 0;
+            var ua = q.user_answer || null;
+            var head = '<div class="tmr-q-head"><div><span class="tmr-q-num">Q' + (qi+1) + '</span> <span class="tmr-q-title">' + escHtml(q.title) + '</span></div>' +
+                       '<span class="tmr-q-worth">' + worth + ' pts</span></div>';
+            var body = '';
+            if (q.scoring_mode === 'closest') {
+                if (isResolved) {
+                    var truth = (q.numeric_target != null) ? q.numeric_target : '—';
+                    var guess = ua && ua.numeric_value != null ? ua.numeric_value : null;
+                    var pts = ua && ua.points_earned != null ? ua.points_earned : null;
+                    body = '<div class="tmr-q-res-row"><span class="tmr-q-res-text">Correct answer: <strong>' + escHtml(truth) + '</strong></span>' +
+                           (guess != null ? '<span class="tmr-q-res-pct">You: ' + escHtml(guess) + (pts != null ? ' <span class="tmr-q-tag pts">+' + pts + '</span>' : '') + '</span>' : '<span class="tmr-q-res-pct">No answer</span>') + '</div>';
+                } else if (canAnswer) {
+                    var pre = ua && ua.numeric_value != null ? (' value="' + escHtml(ua.numeric_value) + '"') : '';
+                    body = '<input type="number" step="any" class="tmr-q-numinput" data-qid="' + q.id + '" data-mode="closest"' + pre + ' placeholder="Your number (closest wins)">';
+                } else {
+                    body = '<div class="tmr-q-res-pct">' + q.total_votes + ' prediction' + (q.total_votes===1?'':'s') + ' in. Closest to the real number wins.</div>';
+                }
+            } else {
+                var totalV = q.total_votes || 0;
+                var yourOpt = ua && ua.option_id != null ? parseInt(ua.option_id) : null;
+                if (isResolved || (!canAnswer)) {
+                    body = '<div class="tmr-q-opts">' + (q.options||[]).map(function(o){
+                        var vc = parseInt(o.vote_count||0);
+                        var pct = totalV>0 ? (vc/totalV*100) : 0;
+                        var pctText = (parseFloat(o.vote_percentage||pct)||0).toFixed(0);
+                        var correct = isResolved && o.is_correct;
+                        var you = yourOpt === parseInt(o.id);
+                        var cls = 'tmr-q-opt' + (correct?' is-correct':'') + (you?' is-yourpick':'');
+                        var tags = (correct?'<span class="tmr-q-tag correct">Correct</span>':'') + (you?'<span class="tmr-q-tag you">You</span>':'');
+                        var ptsTag = (isResolved && you && ua && ua.points_earned!=null) ? '<span class="tmr-q-tag pts">+' + ua.points_earned + '</span>' : '';
+                        var modelBadge = (o.model_prob!=null) ? '<span class="tmr-q-model" title="Model implied probability">' + Math.round(o.model_prob*100) + '%' + ((o.longshot_mult&&o.longshot_mult>1.05)?' &middot; x'+o.longshot_mult:'') + '</span>' : '';
+                        return '<div class="' + cls + '"><div class="tmr-q-res-row"><span class="tmr-q-res-text">' + escHtml(o.option_text) + tags + ptsTag + modelBadge + '</span>' +
+                               '<span class="tmr-q-res-pct">' + pctText + '% &middot; ' + vc + '</span></div>' +
+                               '<div class="tmr-q-bar"><div class="tmr-q-bar-fill" style="width:' + Math.min(100,pct) + '%"></div></div></div>';
+                    }).join('') + '</div>';
+                } else {
+                    body = '<div class="tmr-q-opts">' + (q.options||[]).map(function(o){
+                        var checked = yourOpt === parseInt(o.id);
+                        var modelBadge = (o.model_prob!=null) ? '<span class="tmr-q-model" title="Model implied probability + payoff if correct">' + Math.round(o.model_prob*100) + '%' + ((o.longshot_mult&&o.longshot_mult>1.05)?' &middot; x'+o.longshot_mult:'') + '</span>' : '';
+                        return '<div class="tmr-q-opt' + (checked?' is-checked':'') + '"><label>' +
+                               '<input type="radio" name="q_' + q.id + '" value="' + o.id + '" data-qid="' + q.id + '" data-mode="option" onchange="markGameChoice(this)"' + (checked?' checked':'') + '> ' +
+                               '<span>' + escHtml(o.option_text) + '</span>' + modelBadge + '</label></div>';
+                    }).join('') + '</div>';
+                    if (q.scoring_mode === 'confidence') {
+                        var cval = ua && ua.confidence_level ? ua.confidence_level : 50;
+                        body += '<div class="tmr-q-conf"><span style="font-size:0.72rem;color:var(--tmr-fb-muted);font-weight:800;">Confidence</span>' +
+                                '<input type="range" min="1" max="100" value="' + cval + '" data-conf="' + q.id + '" oninput="this.nextElementSibling.textContent=this.value+\'%\'">' +
+                                '<span class="tmr-q-conf-val">' + cval + '%</span></div>';
+                    }
+                }
+            }
+            return '<div class="tmr-q">' + head + body + '</div>';
+        }).join('');
+
+        var actionHtml = '';
+        if (isResolved) {
+            actionHtml = '<div class="tmr-game-submit-row"><span class="tmr-game-sub">Game final &middot; ' + g.total_players + ' player' + (g.total_players===1?'':'s') + '</span>' +
+                '<button class="tmr-btn tmr-btn-outline" type="button" onclick="closePollDetail()"><i class="fas fa-arrow-left"></i> Back</button></div>';
+        } else if (!loggedIn) {
+            actionHtml = '<div class="tmr-empty-msg" style="padding:18px;margin:14px 0 0;"><a href="/login/">Log in</a> to lock in your picks for this game.</div>';
+        } else if (isExp) {
+            actionHtml = '<div class="tmr-game-submit-row"><span class="tmr-game-sub">Voting is closed. Waiting on the creator to grade.</span></div>';
+        } else {
+            var hasAny = questions.some(function(q){ return q.user_answer; });
+            actionHtml = '<div class="tmr-game-submit-row"><span class="tmr-game-sub">Answer any or all &middot; one entry per player</span>' +
+                '<button class="tmr-poll-vote-btn" type="button" id="gameSubmitBtn" onclick="submitGameVote()"><i class="fas fa-check"></i> ' + (hasAny?'Update My Picks':'Lock In Picks') + '</button></div>';
+        }
+
+        var resolveHtml = '';
+        if (isCreator && !isResolved) {
+            resolveHtml = '<div class="tmr-resolve-box"><h4><i class="fas fa-gavel"></i> Grade this game (creator only)</h4>' +
+                '<div class="tmr-game-sub" style="margin-bottom:6px;">Set the real outcome for each question, then score everyone.</div>' +
+                questions.map(function(q, qi){
+                    var inner;
+                    if (q.scoring_mode === 'closest') {
+                        inner = '<input type="number" step="any" data-rqid="' + q.id + '" data-rmode="closest" placeholder="Actual number">';
+                    } else {
+                        inner = '<select data-rqid="' + q.id + '" data-rmode="option"><option value="">Select winner...</option>' +
+                            (q.options||[]).map(function(o){ return '<option value="' + o.id + '">' + escHtml(o.option_text) + '</option>'; }).join('') + '</select>';
+                    }
+                    return '<div class="tmr-resolve-q"><label>Q' + (qi+1) + '. ' + escHtml(q.title) + '</label>' + inner + '</div>';
+                }).join('') +
+                '<button class="tmr-poll-vote-btn" type="button" id="gameResolveBtn" onclick="resolveGame()" style="margin-top:8px;"><i class="fas fa-flag-checkered"></i> Score Game</button></div>';
+        }
+
+        var leadersHtml;
+        if (!leaders.length) {
+            leadersHtml = '<div class="tmr-leaders-empty">No entries yet. Be the first to lock in.</div>';
+        } else {
+            leadersHtml = '<ul class="tmr-leaders-list">' + leaders.map(function(l){
+                var right, sub;
+                if (l.provisional) {
+                    right = '<span class="tmr-leader-pts" style="color:#93A4BA;">' + l.questions_answered + '/' + questions.length + '</span>';
+                    sub = 'answered';
+                } else {
+                    right = '<span class="tmr-leader-pts">' + l.final_points + '</span>';
+                    var parts = [l.correct_count + '/' + questions.length + ' correct'];
+                    if (l.placement_bonus) parts.push('+' + l.placement_bonus + ' place');
+                    if (l.perfect_bonus) parts.push('+' + l.perfect_bonus + ' perfect');
+                    sub = parts.join(' &middot; ');
+                }
+                var sharp = (!l.provisional && l.avg_rarity >= 1.6) ? '<span class="tmr-sharp-badge" title="High-value contrarian correct picks">SHARP</span>' : '';
+                return '<li class="tmr-leader"><span class="tmr-leader-rank">' + (l.rank||'') + '</span>' +
+                       '<span><span class="tmr-leader-name"><a href="/profile/?user=' + encodeURIComponent(l.username) + '">' + escHtml(l.username) + '</a>' + sharp + '</span>' +
+                       '<span class="tmr-leader-sub">' + sub + '</span></span>' + right + '</li>';
+            }).join('') + '</ul>';
+        }
+
+        var champHtml = '';
+        if (isResolved && leaders.length && !leaders[0].provisional) {
+            var w = leaders[0];
+            var wsub = w.correct_count + '/' + questions.length + ' correct';
+            if (w.perfect_bonus) wsub += ' &middot; PERFECT';
+            champHtml = '<div class="tmr-champ">' +
+                '<div class="tmr-champ-label"><i class="fas fa-crown"></i> Winner</div>' +
+                '<a class="tmr-champ-name" href="/profile/?user=' + encodeURIComponent(w.username) + '">' + escHtml(w.username) + '</a>' +
+                '<div class="tmr-champ-pts">' + w.final_points + '<span>pts</span></div>' +
+                '<div class="tmr-champ-sub">' + wsub + '</div></div>';
+        }
+
+        var rules = '<div class="tmr-game-rules">' +
+            '<span class="tmr-game-rule"><i class="fas fa-bolt"></i> Rarer correct = up to 3x points</span>' +
+            '<span class="tmr-game-rule"><i class="fas fa-chart-line"></i> Beat the model: longshots pay up to 2.5x</span>' +
+            '<span class="tmr-game-rule"><i class="fas fa-star"></i> Perfect game +25%</span>' +
+            '<span class="tmr-game-rule"><i class="fas fa-trophy"></i> Top finishers earn placement points</span>' +
+            '<span class="tmr-game-rule">Pool: ' + basePool + ' base pts</span></div>';
+
+        document.getElementById('pollDetail').innerHTML =
+            '<div class="tmr-game">' +
+                '<div class="tmr-game-main">' +
+                    '<div class="tmr-game-head"><div>' +
+                        '<div class="tmr-game-title">' + escHtml(p.title) + '</div>' +
+                        '<div class="tmr-game-sub">By <strong data-tmr-username="' + escHtml(p.username||'') + '">' + escHtml(p.username||'unknown') + '</strong>' +
+                            (deadline ? ' &middot; ' + (isExp||isResolved?'Closed ':'Closes ') + escHtml(fmtDate(deadline)) : '') +
+                            ' &middot; ' + questions.length + ' questions</div>' +
+                    '</div><span class="tmr-poll-status ' + statusClass + '">' + statusLabel + '</span></div>' +
+                    (p.description ? '<div class="tmr-poll-detail-desc" style="margin:8px 0;">' + escHtml(String(p.description).replace('[hide-results-until-vote]','').replace('[multi-choice]','').replace('[anonymous]','').trim()) + '</div>' : '') +
+                    rules +
+                    qsHtml +
+                    actionHtml +
+                    resolveHtml +
+                '</div>' +
+                '<aside class="tmr-leaders">' +
+                    champHtml +
+                    '<div class="tmr-leaders-head"><h3><i class="fas fa-ranking-star"></i> Leaders</h3>' +
+                        '<span>' + (isResolved ? 'Final standings' : 'Live &middot; ' + g.total_players + ' in') + '</span></div>' +
+                    leadersHtml +
+                '</aside>' +
+            '</div>';
+    }
+
+    function collectGameAnswers() {
+        var answers = [];
+        var g = state.currentGame; if (!g) return answers;
+        g.questions.forEach(function(q){
+            if (q.scoring_mode === 'closest') {
+                var inp = document.querySelector('.tmr-q-numinput[data-qid="' + q.id + '"]');
+                if (inp && inp.value !== '' && !isNaN(Number(inp.value))) answers.push({ question_id: q.id, numeric_value: Number(inp.value) });
+            } else {
+                var sel = document.querySelector('input[name="q_' + q.id + '"]:checked');
+                if (sel) {
+                    var a = { question_id: q.id, option_id: parseInt(sel.value) };
+                    var conf = document.querySelector('input[data-conf="' + q.id + '"]');
+                    if (conf) a.confidence = parseInt(conf.value);
+                    answers.push(a);
+                }
+            }
+        });
+        return answers;
+    }
+
+    async function submitGameVote() {
+        if (!isLoggedIn()) { window.location.href = '/login/'; return; }
+        var answers = collectGameAnswers();
+        if (!answers.length) { showToast('Answer at least one question first.', 'error'); return; }
+        var btn = document.getElementById('gameSubmitBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Saving...'; }
+        try {
+            var res = await api.request('/polls/' + state.currentPollId + '/game/vote', { method: 'POST', body: { answers: answers } });
+            showToast('Picks locked in.', 'success');
+            if (res && res.game) { state.currentGame = res.game; renderGame(); }
+            else { await openPoll(state.currentPollId); }
+            loadSection();
+        } catch(err) {
+            console.error('submitGameVote', err);
+            showToast(err && err.message ? err.message : 'Could not submit picks.', 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Lock In Picks'; }
+        }
+    }
+
+    async function resolveGame() {
+        var g = state.currentGame; if (!g) return;
+        var answers = [];
+        var missing = 0;
+        g.questions.forEach(function(q){
+            var el = document.querySelector('[data-rqid="' + q.id + '"]');
+            if (!el || el.value === '') { missing++; return; }
+            if (q.scoring_mode === 'closest') answers.push({ question_id: q.id, numeric_answer: Number(el.value) });
+            else answers.push({ question_id: q.id, winning_option_id: parseInt(el.value) });
+        });
+        if (missing > 0) { showToast('Set the outcome for all ' + g.questions.length + ' questions (' + missing + ' left).', 'error'); return; }
+        var btn = document.getElementById('gameResolveBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Scoring...'; }
+        try {
+            var res = await api.request('/polls/' + state.currentPollId + '/game/resolve', { method: 'PUT', body: { answers: answers } });
+            showToast('Game scored. Leaders updated.', 'success');
+            if (res && res.game) { state.currentGame = res.game; renderGame(); }
+            else { await openPoll(state.currentPollId); }
+            loadSection();
+        } catch(err) {
+            console.error('resolveGame', err);
+            showToast(err && err.message ? err.message : 'Could not score game.', 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-flag-checkered"></i> Score Game'; }
+        }
+    }
+
+    // ============== CATEGORIES (modal only) ==============
+    async function loadCategories() {
+        try {
+            var data = await api.request('/polls/categories');
+            state.categories = data.categories || [];
+            var modalSel = document.getElementById('pollCategory');
+            if (modalSel) modalSel.innerHTML = '<option value="">Select a category</option>' + state.categories.map(function(c) {
+                return '<option value="' + c.id + '">' + escHtml(c.name) + '</option>';
+            }).join('');
+        } catch(err) { console.error('loadCategories', err); }
+    }
+
+    // ============== CREATE MODAL ==============
+    function populateLeagueSelect(sel, sport, includeAll) {
+        if (!sel) return;
+        var leagues = sport ? (LEAGUES_BY_SPORT[sport] || ['Other']) : [];
+        var first = includeAll ? 'All Leagues' : (sport ? 'No league selected' : 'Select sport first');
+        sel.innerHTML = '<option value="">' + first + '</option>' + leagues.map(function(l) {
+            return '<option value="' + escHtml(l) + '">' + escHtml(l) + '</option>';
+        }).join('');
+        sel.disabled = !includeAll && !sport;
+    }
+    function onPollSportChange() {
+        var sport = document.getElementById('pollSport').value;
+        populateLeagueSelect(document.getElementById('pollLeague'), sport, false);
+    }
+    function initModalSportSelect() {
+        var pollSport = document.getElementById('pollSport');
+        if (pollSport) pollSport.innerHTML = '<option value="">Select sport</option>' + SPORT_OPTIONS.map(function(s) {
+            return '<option value="' + escHtml(s) + '">' + escHtml(s) + '</option>';
+        }).join('');
+        populateLeagueSelect(document.getElementById('pollLeague'), '', false);
+    }
+
+    function openCreatePollModal() {
+        if (!isLoggedIn()) { window.location.href = '/login/'; return; }
+        document.getElementById('createPollError').classList.remove('is-shown');
+        document.getElementById('createPollForm').reset();
+        document.getElementById('pollOptions').innerHTML =
+            '<div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 1"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>' +
+            '<div class="tmr-option-row"><input type="text" maxlength="200" placeholder="Option 2"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button></div>';
+        document.getElementById('pollSubQuestions').innerHTML = '';
+        populateLeagueSelect(document.getElementById('pollLeague'), '', false);
+        var nowLocal = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        var exp = document.getElementById('pollExpires');
+        if (exp) exp.min = nowLocal;
+        var pub = document.getElementById('pollPublishAt');
+        if (pub) { pub.min = nowLocal; pub.value = ''; }
+        // Show the type-chooser step first
+        document.getElementById('createTypeStep').style.display = '';
+        document.getElementById('createFormStep').style.display = 'none';
+        document.getElementById('createPollHeading').textContent = 'Create a Poll';
+        document.getElementById('createPollModal').classList.add('is-open');
+    }
+    function closeCreatePollModal() { document.getElementById('createPollModal').classList.remove('is-open'); }
+    function backToTypeStep() {
+        document.getElementById('createFormStep').style.display = 'none';
+        document.getElementById('createTypeStep').style.display = '';
+        document.getElementById('createPollHeading').textContent = 'Create a Poll';
+    }
+    function setCreateType(type) {
+        state.createType = type;
+        var quiz = (type === 'quiz');
+        document.getElementById('pollIsSeason').checked = quiz;
+        onSeasonToggle();
+        // Quiz: hide parent-level answer choices, scoring mode, numeric row (each sub-question carries its own).
+        document.getElementById('pollOptionsRow').style.display = quiz ? 'none' : '';
+        document.getElementById('pollScoringModeRow').style.display = quiz ? 'none' : '';
+        document.getElementById('pollNumericRow').style.display = 'none';
+        if (!quiz) { document.getElementById('pollScoringMode').value = 'binary'; onScoringModeChange(); }
+        document.getElementById('createPollHeading').textContent = quiz ? 'Create a Multi-Question Quiz' : 'Create a Quick Poll';
+        document.getElementById('createPollSubmit').textContent = quiz ? 'Publish Quiz' : 'Publish Poll';
+        document.getElementById('createTypeStep').style.display = 'none';
+        document.getElementById('createFormStep').style.display = '';
+        if (quiz && document.querySelectorAll('#pollSubQuestions .tmr-subq').length === 0) addSubQuestion();
+    }
+    window.addEventListener('click', function(e) {
+        var m = document.getElementById('createPollModal');
+        if (m && e.target === m) closeCreatePollModal();
+    });
+
+    function addOptionRow(containerId) {
+        var container = document.getElementById(containerId);
+        var rows = container.querySelectorAll('.tmr-option-row').length;
+        if (rows >= 10) { showToast('Maximum 10 options.', 'error'); return; }
+        var div = document.createElement('div');
+        div.className = 'tmr-option-row';
+        div.innerHTML = '<input type="text" maxlength="200" placeholder="Option ' + (rows + 1) + '"><button type="button" class="tmr-option-remove" onclick="removeOptionRow(this)" title="Remove">&times;</button>';
+        container.appendChild(div);
+    }
+    function removeOptionRow(btn) {
+        var container = btn.parentElement.parentElement;
+        if (container.querySelectorAll('.tmr-option-row').length <= 2) { showToast('Polls need at least 2 options.', 'error'); return; }
+        btn.parentElement.remove();
+    }
+
+    function onScoringModeChange() {
+        var mode = document.getElementById('pollScoringMode').value;
+        var hint = document.getElementById('pollScoringHint');
+        var hints = {
+            binary: 'Each voter picks one option. Correct answer wins full points; wrong answers earn the configured penalty (default 0).',
+            partial: 'Rarer correct picks earn more points (popularity-adjusted). Best for guess-the-upset polls.',
+            weighted: 'Picks scale by odds: underdog calls earn more points than chalk when right.',
+            confidence: 'Voter sets a 1-100 confidence on their pick. Points scale by confidence in both directions.',
+            closest: '1st place gets full points. Then 70 / 50 / 30 / 15 / 10 percent falloff by rank. Ties share buckets.'
+        };
+        hint.textContent = hints[mode] || '';
+        var optionsRow = document.getElementById('pollOptionsRow');
+        var numericRow = document.getElementById('pollNumericRow');
+        if (state.createType === 'quiz') { optionsRow.style.display = 'none'; numericRow.style.display = 'none'; return; }
+        if (mode === 'closest') { optionsRow.style.display = 'none'; numericRow.style.display = ''; }
+        else { optionsRow.style.display = ''; numericRow.style.display = 'none'; }
+    }
+
+    function onSeasonToggle() {
+        var on = document.getElementById('pollIsSeason').checked;
+        document.getElementById('pollSubQuestionsRow').style.display = on ? '' : 'none';
+        if (on && document.querySelectorAll('#pollSubQuestions .tmr-subq').length === 0) addSubQuestion();
+    }
+
+    function addSubQuestion() {
+        var container = document.getElementById('pollSubQuestions');
+        var existing = container.querySelectorAll('.tmr-subq').length;
+        if (existing >= 10) { showToast('Maximum 10 sub-questions per parent poll.', 'error'); return; }
+        var idx = existing + 1;
+        var div = document.createElement('div');
+        div.className = 'tmr-subq';
+        div.style.cssText = 'border:1px solid var(--tmr-fb-border);border-radius:8px;padding:10px 12px;margin-bottom:8px;background:var(--tmr-fb-row-alt);';
+        div.innerHTML =
+            '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+                '<strong style="color:var(--tmr-fb-text);font-size:0.86rem;">Question ' + idx + '</strong>' +
+                '<button type="button" class="tmr-option-remove" onclick="this.parentElement.parentElement.remove();renumberSubQuestions();" title="Remove">&times;</button>' +
+            '</div>' +
+            '<input type="text" maxlength="200" class="tmr-subq-title" placeholder="Question (e.g. \'How many strikeouts will Ohtani have? Over/Under 5.5\')" style="width:100%;margin-bottom:6px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
+            '<div style="display:flex;gap:6px;margin-bottom:6px;align-items:center;">' +
+                '<label style="font-size:11px;color:var(--tmr-fb-muted);font-weight:700;white-space:nowrap;">Base points</label>' +
+                '<input type="number" min="1" max="1000" class="tmr-subq-points" value="10" title="How many points a correct answer is worth." style="width:78px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
+                '<span style="font-size:11px;color:var(--tmr-fb-muted);">Rarer correct picks pay up to 3x this.</span>' +
+            '</div>' +
+            '<select class="tmr-subq-mode" onchange="onSubQModeChange(this)" style="width:100%;margin-bottom:6px;padding:7px 10px;border:1px solid var(--tmr-fb-border-strong);border-radius:6px;font-family:inherit;font-size:13px;">' +
+                '<option value="binary">Binary scoring</option>' +
+                '<option value="partial">Partial credit</option>' +
+                '<option value="weighted">Weighted by odds</option>' +
+                '<option value="confidence">Confidence weighted</option>' +
+                '<option value="closest">Closest numeric answer</option>' +
+            '</select>' +
+            '<div class="tmr-subq-options" style="display:flex;flex-direction:column;gap:4px;">' +
+                '<input type="text" class="tmr-subq-opt" maxlength="160" placeholder="Option 1" style="padding:6px 9px;border:1px solid var(--tmr-fb-border-strong);border-radius:5px;font-family:inherit;font-size:12.5px;">' +
+                '<input type="text" class="tmr-subq-opt" maxlength="160" placeholder="Option 2" style="padding:6px 9px;border:1px solid var(--tmr-fb-border-strong);border-radius:5px;font-family:inherit;font-size:12.5px;">' +
+            '</div>' +
+            '<input type="number" step="any" class="tmr-subq-numeric" placeholder="Numeric truth (optional, set at resolve time)" style="width:100%;margin-top:6px;padding:6px 9px;border:1px solid var(--tmr-fb-border-strong);border-radius:5px;font-family:inherit;font-size:12.5px;display:none;">';
+        container.appendChild(div);
+    }
+    function onSubQModeChange(sel) {
+        var subq = sel.parentElement;
+        var optsBox = subq.querySelector('.tmr-subq-options');
+        var numericBox = subq.querySelector('.tmr-subq-numeric');
+        if (sel.value === 'closest') { optsBox.style.display = 'none'; numericBox.style.display = ''; }
+        else { optsBox.style.display = ''; numericBox.style.display = 'none'; }
+    }
+    function renumberSubQuestions() {
+        var nodes = document.querySelectorAll('#pollSubQuestions .tmr-subq strong');
+        for (var i = 0; i < nodes.length; i++) nodes[i].textContent = 'Question ' + (i + 1);
+    }
+
+    async function submitNewPoll(e) {
+        e.preventDefault();
+        var errorEl = document.getElementById('createPollError');
+        errorEl.classList.remove('is-shown');
+
+        var title = document.getElementById('pollTitle').value.trim();
+        var question = document.getElementById('pollQuestion').value.trim();
+        var description = document.getElementById('pollDescription').value.trim();
+        var sport = document.getElementById('pollSport').value.trim();
+        var league = document.getElementById('pollLeague').value.trim();
+        var teamPlayer = document.getElementById('pollTeamPlayer').value.trim();
+        var categoryId = document.getElementById('pollCategory').value;
+        var expiresAt = document.getElementById('pollExpires').value;
+        var publishAt = document.getElementById('pollPublishAt').value;
+        var publicResults = document.getElementById('pollPublicResults').checked;
+        var allowMultiple = document.getElementById('pollAllowMultiple').checked;
+        var anonymous = document.getElementById('pollAnonymous').checked;
+        var scoringMode = document.getElementById('pollScoringMode').value;
+        var isSeason = document.getElementById('pollIsSeason').checked;
+        var numericTargetRaw = document.getElementById('pollNumericTarget').value;
+
+        var options = [];
+        if (!isSeason && scoringMode !== 'closest') {
+            var optionInputs = document.querySelectorAll('#pollOptions input[type="text"]');
+            optionInputs.forEach(function(inp) { var v = inp.value.trim(); if (v) options.push({ text: v }); });
+        }
+
+        if (title.length < 5) { errorEl.textContent = 'Title must be at least 5 characters.'; errorEl.classList.add('is-shown'); return; }
+        if (question.length < 5) { errorEl.textContent = 'Question must be at least 5 characters.'; errorEl.classList.add('is-shown'); return; }
+        if (!sport) { errorEl.textContent = 'Choose a sport so this poll can be organized correctly.'; errorEl.classList.add('is-shown'); return; }
+        if (!categoryId) { errorEl.textContent = 'Category is required. Pick General, MLB, NFL, NBA, NHL, etc.'; errorEl.classList.add('is-shown'); document.getElementById('pollCategory').focus(); return; }
+        if (!expiresAt) { errorEl.textContent = 'Expiration date is required. Voting must close before the real outcome.'; errorEl.classList.add('is-shown'); document.getElementById('pollExpires').focus(); return; }
+        var expDate = new Date(expiresAt);
+        if (isNaN(expDate.getTime()) || expDate.getTime() <= Date.now()) {
+            errorEl.textContent = 'Expiration date must be in the future.'; errorEl.classList.add('is-shown'); document.getElementById('pollExpires').focus(); return;
+        }
+        if (publishAt) {
+            var pubDate = new Date(publishAt);
+            if (isNaN(pubDate.getTime())) { errorEl.textContent = 'Start date is invalid.'; errorEl.classList.add('is-shown'); document.getElementById('pollPublishAt').focus(); return; }
+            if (pubDate.getTime() >= expDate.getTime()) { errorEl.textContent = 'Start date must be before the expiration date.'; errorEl.classList.add('is-shown'); document.getElementById('pollPublishAt').focus(); return; }
+        }
+        if (!isSeason && scoringMode !== 'closest' && options.length < 2) {
+            errorEl.textContent = 'Provide at least 2 answer choices (or switch to Closest-numeric scoring).'; errorEl.classList.add('is-shown'); return;
+        }
+
+        var subQuestions = [];
+        if (isSeason) {
+            var nodes = document.querySelectorAll('#pollSubQuestions .tmr-subq');
+            for (var i = 0; i < nodes.length; i++) {
+                var n = nodes[i];
+                var t = n.querySelector('.tmr-subq-title').value.trim();
+                if (t.length < 5) continue;
+                var m = n.querySelector('.tmr-subq-mode').value;
+                var sq = { title: t, scoring_mode: m };
+                var ptsEl = n.querySelector('.tmr-subq-points');
+                var pts = ptsEl ? parseInt(ptsEl.value, 10) : 10;
+                sq.base_points = (isFinite(pts) && pts >= 1) ? Math.min(1000, pts) : 10;
+                if (m === 'closest') {
+                    var nv = n.querySelector('.tmr-subq-numeric').value;
+                    if (nv) sq.numeric_target = Number(nv);
+                } else {
+                    var subOpts = [];
+                    n.querySelectorAll('.tmr-subq-opt').forEach(function(inp) { var v = inp.value.trim(); if (v) subOpts.push({ text: v }); });
+                    if (subOpts.length < 2) continue;
+                    sq.options = subOpts;
+                }
+                subQuestions.push(sq);
+            }
+            if (subQuestions.length === 0) {
+                errorEl.textContent = 'Quiz needs at least 1 valid question (title >= 5 chars + 2 options or numeric truth).'; errorEl.classList.add('is-shown'); return;
+            }
+            if (subQuestions.length > 10) { errorEl.textContent = 'Maximum 10 questions per quiz.'; errorEl.classList.add('is-shown'); return; }
+        }
+
+        var descParts = [];
+        if (description) descParts.push(description);
+        if (!publicResults) descParts.push('[hide-results-until-vote]');
+        if (allowMultiple) descParts.push('[multi-choice]');
+        if (anonymous) descParts.push('[anonymous]');
+        var fullDescription = descParts.join('\n\n');
+
+        var payload = {
+            title: title + ' — ' + question,
+            question: question,
+            description: fullDescription,
+            sport: sport,
+            league: league || '',
+            team_player: teamPlayer || '',
+            category: categoryId || '',
+            scoring_mode: scoringMode,
+            expires: expiresAt || ''
+        };
+        if (isSeason) payload.options = [];
+        else if (scoringMode !== 'closest') payload.options = options;
+        else payload.options = [];
+        if (numericTargetRaw && scoringMode === 'closest' && !isSeason) payload.numeric_target = Number(numericTargetRaw);
+        if (subQuestions.length) payload.sub_questions = subQuestions;
+        if (categoryId) payload.category_id = parseInt(categoryId);
+        if (expiresAt) payload.voting_deadline = new Date(expiresAt).toISOString();
+        if (publishAt) payload.publish_at = new Date(publishAt).toISOString();
+
+        var btn = document.getElementById('createPollSubmit');
+        var origLabel = btn.textContent;
+        btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Publishing...';
+        try {
+            var data = await api.request('/polls', { method: 'POST', body: payload });
+            showToast(isSeason ? 'Quiz published.' : 'Poll published.', 'success');
+            closeCreatePollModal();
+            switchTab(isSeason ? 'quiz' : 'quick');
+            if (data.poll && data.poll.id) setTimeout(function() { openPoll(data.poll.id); }, 250);
+        } catch(err) {
+            console.error('createPoll', err);
+            errorEl.textContent = (err && err.message) ? err.message : 'Could not create poll.';
+            errorEl.classList.add('is-shown');
+        } finally {
+            btn.disabled = false; btn.textContent = origLabel;
+        }
+    }
+
+    // ============== QUIZ SKILL RATINGS ==============
+    async function loadQuizRatings() {
+        var box = document.getElementById('quizRatingsBox');
+        if (!box) return;
+        try {
+            var data = await api.request('/polls/quiz/ratings?limit=8');
+            var rows = (data && data.ratings) || [];
+            if (!rows.length) { box.innerHTML = '<div class="tmr-qr-empty">No rated players yet. Play a quiz to earn a rating.</div>'; return; }
+            box.innerHTML = rows.map(function(r){
+                return '<a class="tmr-qr-row" href="/profile/?user=' + encodeURIComponent(r.username) + '">' +
+                    '<span class="tmr-qr-rank">' + r.rank + '</span>' +
+                    '<span class="tmr-qr-name">' + escHtml(r.username) + '</span>' +
+                    '<span class="tmr-qr-elo">' + r.rating + '</span></a>';
+            }).join('');
+        } catch (e) { box.innerHTML = '<div class="tmr-qr-empty">Ratings unavailable.</div>'; }
+    }
+
+    // ============== SEARCH (client-side over loaded list) ==============
+    document.addEventListener('DOMContentLoaded', function() {
+        var searchInput = document.getElementById('searchInput');
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                var q = this.value.trim().toLowerCase();
+                var bodyWrap = document.getElementById('sectionBody');
+                if (!bodyWrap) return;
+                if (!q) { bodyWrap.innerHTML = state.polls.length ? listHtml(state.polls) : bodyWrap.innerHTML; return; }
+                var filtered = state.polls.filter(function(p) {
+                    return (p.title || '').toLowerCase().indexOf(q) !== -1 ||
+                           (p.username || '').toLowerCase().indexOf(q) !== -1 ||
+                           (p.sport || '').toLowerCase().indexOf(q) !== -1 ||
+                           (p.league || '').toLowerCase().indexOf(q) !== -1 ||
+                           (p.team_player || '').toLowerCase().indexOf(q) !== -1;
+                });
+                bodyWrap.innerHTML = filtered.length ? listHtml(filtered) : emptyHtml('magnifying-glass', 'No matches for "' + q + '".', 'Try a different search.', '');
+            });
+        }
+    });
+
+    // ============== INIT ==============
+    document.addEventListener('DOMContentLoaded', async function() {
+        try { if (window.api && api.ready) await api.ready; } catch(e){}
+        initModalSportSelect();
+        await loadCategories();
+        var hash = window.location.hash || '';
+        if (hash.indexOf('#poll-') === 0) {
+            var pid = parseInt(hash.substring(6));
+            if (pid) { await loadSection(); openPoll(pid); return; }
+        }
+        loadSection();
+    });
+    </script>
+<script src="/static/js/analytics.js?v=20260504a"></script>
+</body>
+</html>
