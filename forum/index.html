@@ -2190,6 +2190,118 @@ body.classic-forum .fthread-pages .fpage-ellip{color:#9aa2ac;font:400 10.5px/16p
   body.classic-forum .fthread-pages .fpage{min-width:14px;padding:0 3px;font-size:10px;line-height:15px}
 }
 </style>
+<style id="tmr-forum-2p2-density-20260719">
+/* ============================================================
+   DENSITY + HIERARCHY PASS (Jul 19 2026) — final cascade layer,
+   wins over every earlier forum block. Goal: compact, information
+   rich index like an established forum. Slimmer header (52px),
+   narrower sidebar (224px) with tighter rhythm + stronger group
+   labels, 27px section bars, vertically-centered ~40px rows,
+   one-line last-post meta ("by user · time"), clamped descriptions,
+   right-aligned numeric columns. No color scheme, feature, markup
+   or route changes.
+============================================================ */
+:root{
+  --f2p2-side-w:224px;   /* was 250px */
+  --f2p2-head-h:52px;    /* was 70px */
+  --f2p2-bar-h:27px;     /* was 31px */
+  --f2p2-cell-pad:5px;   /* was 8px */
+  --f2p2-icon:20px;      /* was 26px */
+  --f2p2-icon-gap:8px;
+}
+/* --- header: slimmer bar, smaller brand + nav --- */
+.tmrfh-mark{width:20px !important;height:20px !important;font-size:8.5px !important}
+.tmrfh-brand-txt{font:700 14px/1.1 var(--f2p2-font) !important}
+#tmrForumHeader .tmrfh-nav a{font:500 12.5px/1 var(--f2p2-font) !important;padding:6px 7px !important}
+.tmrfh-authlink{font:600 12px/1 var(--f2p2-font) !important;padding:6px 11px !important}
+.tmrfh-icon{width:28px !important;height:28px !important}
+.tmrfh-icon svg{width:16px !important;height:16px !important}
+.tmrfh-search input{height:26px !important;border-radius:13px !important;font-size:12px !important}
+.tmrfh-avatar{width:24px !important;height:24px !important;flex-basis:24px !important;font-size:10px !important}
+/* --- page title + welcome: tight band, no dead air --- */
+body.classic-forum .fmain{padding:8px var(--f2p2-pad-x) 50px !important}
+body.classic-forum .ftitle{padding:0 0 4px !important}
+body.classic-forum .ftitle h1{font:700 17px/1.2 var(--f2p2-font) !important;color:#141414 !important}
+.tmr-newest-welcome{margin:0 0 7px !important;padding:4px 10px !important;font-size:12px !important;line-height:1.35 !important;border-radius:4px !important}
+/* --- column labels: small, muted, flush --- */
+body.classic-forum .fgroup-table tr.fcol-head td{padding:2px var(--f2p2-cell-pad) 3px !important;font:400 10.5px/1.2 var(--f2p2-font) !important;color:#6e6e6e !important}
+/* --- section bars: 27px, restrained label, tighter stacking --- */
+body.classic-forum .fgroup-table tr.fgroup-band td{height:var(--f2p2-bar-h) !important;padding:0 9px !important;font:700 12.5px/var(--f2p2-bar-h) var(--f2p2-font) !important}
+body.classic-forum .fgroup-table tr.fgroup-band td.fgroup-meta{font:400 10.5px/var(--f2p2-bar-h) var(--f2p2-font) !important;padding:0 9px !important}
+body.classic-forum #categoriesContainer .fgroup-table{margin-top:5px !important}
+/* --- rows: 5px pad, vertically centered, ~40px pitch --- */
+body.classic-forum .fgroup-table td.fcell,
+body.classic-forum #categoriesContainer .fgroup-table td.fcell,
+body.classic-forum table.thread-table td.fcell{padding:5px var(--f2p2-cell-pad) !important;vertical-align:middle !important;border-bottom:1px solid #ddd !important}
+body.classic-forum .fgroup-table td.fcell:first-child,
+body.classic-forum #categoriesContainer .fgroup-table td.fcell:first-child{padding-left:0 !important}
+body.classic-forum .frowinner{gap:var(--f2p2-icon-gap) !important;min-height:0 !important;align-items:center !important}
+/* --- hierarchy: compact bold dark name; smaller, lighter one-line desc --- */
+body.classic-forum .fname,
+body.classic-forum #categoriesContainer .fname,
+body.classic-forum .thread-table .fname{font:700 13px/1.2 var(--f2p2-font) !important;color:#111 !important}
+body.classic-forum .fdesc,
+body.classic-forum #categoriesContainer .fdesc{display:-webkit-box !important;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;max-width:64ch;font:400 11px/1.3 var(--f2p2-font) !important;color:#5c5c5c !important;margin-top:1px !important}
+body.classic-forum .fdesc b{font-weight:600 !important;color:#444 !important}
+/* --- last post: bold-but-small title, single "by user · time" meta line --- */
+body.classic-forum .flpost-text{min-width:0 !important;overflow:hidden !important}
+body.classic-forum .flpost-title{font:700 11.5px/1.3 var(--f2p2-font) !important;color:#141414 !important}
+body.classic-forum #categoriesContainer .flpost-by,
+body.classic-forum .thread-table .flpost-by{display:inline !important;font:400 10.5px/1.3 var(--f2p2-font) !important;color:#555 !important;margin:0 !important}
+body.classic-forum #categoriesContainer .flpost-meta,
+body.classic-forum .thread-table .flpost-meta{display:inline !important;font:400 10.5px/1.3 var(--f2p2-font) !important;color:#777 !important;margin:0 0 0 4px !important}
+body.classic-forum #categoriesContainer .flpost-meta::before,
+body.classic-forum .thread-table .flpost-meta::before{content:"\00b7";color:#999;margin-right:4px}
+body.classic-forum .flpost-user{font:400 10.5px/1.3 var(--f2p2-font) !important;color:#555 !important}
+body.classic-forum .flpost-user b{font-weight:600 !important;color:#333 !important}
+body.classic-forum .flpost-empty{font:italic 400 10.5px/1.3 var(--f2p2-font) !important;color:#8a8a8a !important}
+/* --- numeric columns: right-aligned, tabular, clearly separated --- */
+body.classic-forum .fgroup-table tr.fcol-head td.col-last,
+body.classic-forum .fgroup-table td.col-last{width:33% !important}
+body.classic-forum .fgroup-table tr.fcol-head td.col-num,
+body.classic-forum .fgroup-table td.col-num{width:6% !important;min-width:60px !important;padding-left:10px !important;text-align:right !important}
+body.classic-forum .fgroup-table td.col-num{font:400 11.5px/1 var(--f2p2-font) !important;color:#333 !important;font-variant-numeric:tabular-nums !important;padding-right:var(--f2p2-cell-pad) !important}
+body.classic-forum .fgroup-table tr.fcol-head td.col-num:last-child,
+body.classic-forum .fgroup-table td.col-num:last-child{padding-right:2px !important}
+/* --- icons: 20px flat gold square, glyph rescaled --- */
+body.classic-forum .sport-icon::before,
+body.classic-forum .ffolder::before{top:4px !important;left:5px !important;width:10px !important;height:12px !important}
+body.classic-forum .sport-icon::after,
+body.classic-forum .ffolder::after{top:6px !important;left:6.5px !important;width:6px !important;height:8px !important;background:repeating-linear-gradient(180deg,#e6a139 0 1.5px,transparent 1.5px 3px) !important}
+body.classic-forum .sport-icon,body.classic-forum .ffolder{border-radius:3px !important}
+/* --- sidebar: narrower, tighter rhythm, stronger group labels --- */
+body.classic-forum .fside{padding:12px 16px !important}
+body.classic-forum .fside-box:last-child .fside-head,
+body.classic-forum .fside-list a.fside-gtitle,
+body.classic-forum .fside-gtitle{font:700 11px/1.3 var(--f2p2-font) !important;color:#333 !important;text-transform:uppercase !important;letter-spacing:.5px !important;padding:0 0 5px !important}
+body.classic-forum .fside-star{font-size:9px !important}
+body.classic-forum .fside-list .fside-gbody a.fside-forum,
+body.classic-forum .fside-list a.fside-forum,
+body.classic-forum .fside-list .fside-gbody a,
+body.classic-forum .fside-box:last-child .fside-list a{font:400 11.5px/1.3 var(--f2p2-font) !important;color:#1f1f1f !important;padding:2px 0 !important}
+body.classic-forum .fside-list .fside-gbody a.fside-forum.is-active,
+body.classic-forum .fside-list a.fside-forum.is-active{padding:2px 7px !important;margin-left:-7px !important;color:#000 !important}
+body.classic-forum .fside-group + .fside-group,
+body.classic-forum .fside-box + .fside-box{margin-top:11px !important;padding-top:11px !important;border-top:1px solid #c6cbcd !important}
+/* --- action row: compact 26px controls --- */
+body.classic-forum .factionrow{padding:2px 0 7px !important;gap:6px !important}
+body.classic-forum .factionrow input[type="search"]{height:26px !important;width:190px !important;font-size:12px !important}
+body.classic-forum .fbtn,
+body.classic-forum .btn{height:26px !important;padding:0 10px !important;font:600 12px/1 var(--f2p2-font) !important}
+/* --- mobile: restore the roomier touch targets the earlier layers set --- */
+@media (max-width:900px){
+  body.classic-forum .fgroup-table td.fcell,
+  body.classic-forum #categoriesContainer .fgroup-table td.fcell{padding:7px 6px !important}
+  body.classic-forum .fgroup-table tr.fgroup-band td{height:auto !important;padding:7px 10px !important;font:700 12.5px/1.3 var(--f2p2-font) !important}
+  body.classic-forum .fgroup-table tr.fgroup-band td.fgroup-meta{font:400 10.5px/1.3 var(--f2p2-font) !important;padding:7px 10px !important}
+  body.classic-forum .ftitle h1{font-size:16px !important}
+  body.classic-forum .fdesc,body.classic-forum #categoriesContainer .fdesc{max-width:none !important}
+  body.classic-forum .fgroup-table tr.fcol-head td.col-num,
+  body.classic-forum .fgroup-table td.col-num{width:46px !important;min-width:46px !important;padding-left:4px !important;padding-right:6px !important}
+  body.classic-forum .fgroup-table tr.fcol-head td.col-num:last-child,
+  body.classic-forum .fgroup-table td.col-num:last-child{padding-right:6px !important}
+}
+</style>
 </head>
 <body class="classic-forum">
 
