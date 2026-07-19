@@ -270,7 +270,9 @@ a:hover{color:var(--link-hover);text-decoration:underline}
     el.innerHTML = threads.map(function(t){
       var id = t.id || t.thread_id;
       var title = t.title || 'Thread';
-      var href = '/forum/?thread=' + encodeURIComponent(id);
+      var slug = t.slug || t.thread_slug || '';
+      var href = slug ? '/forum/thread/' + encodeURIComponent(id) + '/' + encodeURIComponent(slug) + '/'
+                      : '/forum/?thread=' + encodeURIComponent(id);
       var meta = (t.reply_count!=null?(t.reply_count+' replies'):'') + (t.created_at?(' · '+timeAgo(t.created_at)):'');
       return '<li><a href="'+esc(href)+'">'+esc(title)+'</a><div class="ucp-meta">'+esc(meta)+'</div></li>';
     }).join('');

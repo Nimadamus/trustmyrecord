@@ -428,8 +428,11 @@ def main():
         with open(os.path.join(d, "index.html"), "w", encoding="utf-8", newline="\n") as f:
             f.write(html_out)
 
-    # Remove stale slug dirs (thread renamed) and dirs for threads that are gone.
-    removed = 0
+    # Dirs for threads that are GONE are removed. Dirs for a RENAMED thread's old
+    # slug are NOT removed: an edited title must never break the original URL, so
+    # the old slug dir becomes a redirect stub whose canonical points at the
+    # current slug. The stub is tiny, noindex-free, and instant for humans.
+    removed = redirected = 0
     if os.path.isdir(TDIR):
         for idname in os.listdir(TDIR):
             idpath = os.path.join(TDIR, idname)
@@ -439,9 +442,22 @@ def main():
                 shutil.rmtree(idpath); removed += 1; continue
             for slugname in os.listdir(idpath):
                 if slugname != keep[idname]:
-                    shutil.rmtree(os.path.join(idpath, slugname)); removed += 1
+                    cur = thread_url(int(idname), keep[idname])
+                    stub = ('<!DOCTYPE html><html lang="en"><head><meta charset="utf-8">'
+                            f'<title>Redirecting&hellip;</title>'
+                            f'<link rel="canonical" href="{cur}">'
+                            f'<meta http-equiv="refresh" content="0;url={cur}">'
+                            f'<script>location.replace({json.dumps(cur)}+location.hash);</script>'
+                            '</head><body>'
+                            f'<p>This thread moved to <a href="{cur}">{cur}</a>.</p>'
+                            '</body></html>\n')
+                    with open(os.path.join(idpath, slugname, "index.html"), "w",
+                              encoding="utf-8", newline="\n") as f:
+                        f.write(stub)
+                    redirected += 1
 
-    print(f"wrote {len(built)} thread pages under {TDIR} (all index, follow); removed {removed} stale dirs")
+    print(f"wrote {len(built)} thread pages under {TDIR} (all index, follow); "
+          f"removed {removed} gone-thread dirs; {redirected} renamed-slug redirect stubs")
     regen_sitemap(entries)
 
 

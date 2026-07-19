@@ -83,6 +83,7 @@
         var hash = window.location.hash;
         var profilePathMatch = path.match(/^profile\/([^\/?#]+)$/i);
         var embedPathMatch   = path.match(/^embed\/([^\/?#]+)$/i);
+        var forumThreadMatch = path.match(/^forum\/thread\/(\d+)(?:\/.*)?$/i);
         var legacyRouteMap = {
             '': '',
             'home': '',
@@ -141,6 +142,20 @@
             window.location.replace(
                 window.location.origin + '/profile/' + profileQuery + hash
             );
+        } else if (forumThreadMatch) {
+            // /forum/thread/<id>/<slug>/ pages are baked static by the 30-min
+            // prerender cron. A thread created between runs (or opened under a
+            // renamed slug) has no static page yet, so the path lands here. The
+            // thread's existence is confirmed against the API first: real thread
+            // -> route into the forum app, which canonicalizes the address bar
+            // back to the clean URL; nonexistent id -> stays a genuine 404.
+            (function (tid) {
+                fetch('https://trustmyrecord-api.onrender.com/api/forum/threads/' + tid)
+                    .then(function (r) {
+                        if (r.ok) window.location.replace(window.location.origin + '/forum/?thread=' + tid + hash);
+                    })
+                    .catch(function () { /* API unreachable: honest 404 stays */ });
+            })(forumThreadMatch[1]);
         } else if (mappedRoute) {
             window.location.replace(window.location.origin + '/' + mappedRoute);
         }

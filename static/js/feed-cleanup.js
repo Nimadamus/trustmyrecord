@@ -694,7 +694,10 @@
       forumsList.innerHTML = threads.map(t => {
         const title = t.title || t.name || "Forum thread";
         const id = t.id || t.thread_id || "";
-        const href = id ? `/forum/?thread=${encodeURIComponent(id)}` : "/forum/";
+        const slug = t.slug || t.thread_slug || "";
+        const href = id
+          ? (slug ? `/forum/thread/${encodeURIComponent(id)}/${encodeURIComponent(slug)}/` : `/forum/?thread=${encodeURIComponent(id)}`)
+          : "/forum/";
         const replies = Number(t.reply_count || t.replies_count || t.posts_count || 0);
         const meta = replies > 0 ? `${replies} repl${replies === 1 ? "y" : "ies"}` : timeAgo(t.updated_at || t.created_at);
         return `<a class="rs-thread-row" href="${href}"><i class="fas fa-comments"></i><div><div class="rs-thread-title">${esc(title)}</div><div class="rs-thread-meta">${esc(meta)}</div></div></a>`;

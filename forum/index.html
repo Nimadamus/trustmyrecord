@@ -3652,6 +3652,25 @@ function groupCategoriesForDisplay() {
     });
 }
 
+/* History integration (Jul 18, 2026): every in-app navigation writes the REAL
+   canonical URL into the address bar -- /forum/thread/<id>/<slug>/ for threads,
+   never the old /forum/#thread-<id> form -- via pushState, so refresh, share,
+   copy-link, and back/forward all keep the exact view. popstate re-renders the
+   view for the entry being returned to. */
+var forumHistoryNav = false;   // true while handling popstate: never push, only replace
+var forumDefaultTitle = document.title;
+function forumSetHistory(url, state, replace) {
+    try {
+        var here = window.location.pathname + window.location.search + window.location.hash;
+        if (forumHistoryNav || replace || here === url) window.history.replaceState(state, '', url);
+        else window.history.pushState(state, '', url);
+    } catch (e) { /* history API unavailable: address bar just stays put */ }
+}
+function forumSetCanonical(path) {
+    var el = document.querySelector('link[rel="canonical"]');
+    if (el) el.setAttribute('href', 'https://trustmyrecord.com' + path);
+}
+
 function showCategories() {
     currentCategorySlug = null;
     currentCategoryName = null;
@@ -3667,7 +3686,9 @@ function showCategories() {
     setForumPageHeader('TrustMyRecord Forums');
     setActiveSidebar('sports-betting');
     document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span id="forumPageTitleLabel">Forum Home</span>';
-    window.history.replaceState({}, '', '/forum/');
+    forumSetHistory('/forum/', { fview: 'home' }, false);
+    document.title = forumDefaultTitle;
+    forumSetCanonical('/forum/');
     renderCategories();
     updateStats();
     updateForumJump();
@@ -3704,7 +3725,7 @@ function onSidebarPick(el, slug, name) {
         document.getElementById('viewThreads').style.display = 'none';
         document.getElementById('viewThread').style.display = 'none';
         document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(name) + '</span>';
-        window.history.replaceState({}, '', '/forum/#cat-' + encodeURIComponent(slug));
+        forumSetHistory('/forum/#cat-' + encodeURIComponent(slug), { fview: 'cat', slug: slug, name: name }, false);
     }
 }
 
@@ -3719,7 +3740,7 @@ var TMR_FORUM_SAMPLE_THREADS = [
 /* removed: replaced in renders.js */
 
 
-async function showThreadsList(slug, name, id) {
+async function showThreadsList(slug, name, id, histReplace) {
     currentCategorySlug = slug;
     currentCategoryName = name || slug;
     currentCategoryId = id || null;
@@ -3741,12 +3762,15 @@ async function showThreadsList(slug, name, id) {
     setActiveSidebar(slug);
     document.getElementById('breadcrumb').innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(currentCategoryName || slug || 'Forum') + '</span>';
     if (slug) {
-        window.history.replaceState({}, '', '/forum/#cat-' + encodeURIComponent(slug));
+        forumSetHistory('/forum/#cat-' + encodeURIComponent(slug),
+            { fview: 'cat', slug: slug, name: currentCategoryName, id: currentCategoryId }, !!histReplace);
     }
+    document.title = forumDefaultTitle;
+    forumSetCanonical('/forum/');
     await loadThreads();
 }
 
-async function showThreadDetail(threadId, page, postId) {
+async function showThreadDetail(threadId, page, postId, histReplace) {
     currentThreadId = threadId;
     document.getElementById('viewCategories').style.display = 'none';
     document.getElementById('viewThreads').style.display = 'none';
@@ -3761,26 +3785,21 @@ async function showThreadDetail(threadId, page, postId) {
     }
     crumbParts.push('<span class="sep">&raquo;</span><span>' + escHtml(currentThreadTitle || 'Thread') + '</span>');
     document.getElementById('breadcrumb').innerHTML = crumbParts.join('');
-    // When a specific post was requested, keep the shareable permalink in the
-    // address bar instead of collapsing it to the bare #thread-<id> form --
-    // otherwise a reply link opened from a profile silently loses the post it
-    // pointed at the moment the thread renders.
+    // Address bar always ends up on the permanent thread URL
+    // /forum/thread/<id>/<slug>/ (the slug arrives with the thread payload).
+    // Legacy entry points (?thread=<id>, #thread-<id>) resolve here and are
+    // canonicalized in place; in-app clicks PUSH a new entry so back/forward
+    // walk the visit history. When a specific post was requested, keep the
+    // shareable permalink so the post anchor survives the render.
     var wantPost = (postId != null && postId !== '') ? String(postId) : '';
-    // On a clean /forum/thread/<id>/<slug>/ URL the address bar is already
-    // canonical -- never rewrite it back to /forum/#thread-<id>, that would throw
-    // away the indexable URL the visitor arrived on. Only move the hash to the
-    // requested post.
-    var onCleanThreadUrl = (window.__TMR_FORUM_THREAD_ID != null)
-        && String(window.__TMR_FORUM_THREAD_ID) === String(threadId);
-    if (onCleanThreadUrl) {
-        if (wantPost) {
-            window.history.replaceState({}, '', '#post-' + encodeURIComponent(wantPost));
-        }
-    } else {
-        window.history.replaceState({}, '',
-            wantPost ? forumPostPermalink(threadId, wantPost)
-                     : '/forum/#thread-' + encodeURIComponent(threadId));
-    }
+    var threadSlug = (cachedThread && String(cachedThread.id) === String(threadId))
+        ? forumThreadSlug(cachedThread) : '';
+    var cleanUrl = forumThreadUrl(threadId, threadSlug);
+    var histState = { fview: 'thread', tid: threadId, slug: threadSlug, post: wantPost || null };
+    forumSetHistory(wantPost ? forumPostPermalink(threadId, wantPost, threadSlug) : cleanUrl,
+        histState, !!histReplace);
+    if (cleanUrl.indexOf('?') === -1) forumSetCanonical(cleanUrl);
+    if (currentThreadTitle) document.title = currentThreadTitle + ' | TrustMyRecord Forum';
     if (wantPost && forumScrollToPost(wantPost)) return;
     var pg = parseInt(page, 10);
     if (Number.isFinite(pg) && pg > 1) {
@@ -3809,7 +3828,7 @@ if (!window.__forumPermalinkBound) {
         var pid = decodeURIComponent(m[1]);
         if (!document.getElementById('post-' + pid)) return;
         e.preventDefault();
-        window.history.replaceState({}, '', a.getAttribute('href'));
+        window.history.replaceState(window.history.state || {}, '', a.getAttribute('href'));
         forumScrollToPost(pid);
     });
     // Back/forward between permalinks in an open thread, and #post- links that
@@ -3819,6 +3838,68 @@ if (!window.__forumPermalinkBound) {
         var m = (window.location.hash || '').match(/^#post-(.+)$/);
         if (m) forumScrollToPost(decodeURIComponent(m[1]));
     });
+    // Real back/forward navigation between forum views. Each pushState carries a
+    // state object naming its view; entries without one (older links, hash-only
+    // permalink hops) are routed off the URL itself.
+    window.addEventListener('popstate', async function (e) {
+        var s = e.state || null;
+        forumHistoryNav = true;
+        try {
+            if (s && s.fview === 'thread' && s.tid) {
+                await forumOpenThreadFromHistory(s.tid, s.post || '');
+            } else if (s && s.fview === 'cat' && s.slug) {
+                if (!categories || !categories.length) await loadCategories();
+                var c = (categories || []).find(function (x) { return x.slug === s.slug; });
+                await showThreadsList(s.slug, (c && c.name) || s.name || s.slug, (c && c.id) || s.id || null, true);
+            } else if (s && s.fview === 'home') {
+                if (!categories || !categories.length) await loadCategories();
+                showCategories();
+            } else {
+                await forumRouteFromLocation();
+            }
+        } finally { forumHistoryNav = false; }
+    });
+}
+
+/* Open a thread for a history entry. When the thread is already on screen the
+   render is skipped and only the requested post is scrolled to. */
+async function forumOpenThreadFromHistory(tid, post) {
+    var threadView = document.getElementById('viewThread');
+    if (String(currentThreadId) === String(tid) && threadView && threadView.style.display !== 'none') {
+        if (post) forumScrollToPost(post);
+        return;
+    }
+    await showThreadDetail(tid, null, post || null, true);
+}
+
+/* Route straight off the current URL: clean /forum/thread/<id>/<slug>/ path,
+   legacy ?thread= / #thread- / #cat- forms, else the forum home. Used for
+   popstate entries that carry no state object. */
+async function forumRouteFromLocation() {
+    var mPath = window.location.pathname.match(/^\/forum\/thread\/(\d+)(?:\/|$)/);
+    var params = new URLSearchParams(window.location.search);
+    var hash = window.location.hash || '';
+    var post = '';
+    var mPost = hash.match(/^#post-(.+)$/);
+    if (mPost) post = decodeURIComponent(mPost[1]);
+    if (mPath) { await forumOpenThreadFromHistory(parseInt(mPath[1], 10), post); return; }
+    var qt = parseInt(params.get('thread'), 10);
+    if (qt) { await forumOpenThreadFromHistory(qt, post || (params.get('post') || '').trim()); return; }
+    if (hash.indexOf('#thread-') === 0) {
+        var htid = parseInt(hash.substring(8), 10);
+        if (htid) { await forumOpenThreadFromHistory(htid, ''); return; }
+    }
+    if (hash.indexOf('#cat-') === 0) {
+        var hslug = hash.substring(5);
+        if (hslug) {
+            if (!categories || !categories.length) await loadCategories();
+            var hc = (categories || []).find(function (x) { return x.slug === hslug; });
+            await showThreadsList(hslug, hc ? hc.name : hslug, hc ? hc.id : null, true);
+            return;
+        }
+    }
+    if (!categories || !categories.length) await loadCategories();
+    showCategories();
 }
 
 function backToThreads() {
@@ -4638,7 +4719,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             var cleanPost = '';
             var cleanHash = (window.location.hash || '').match(/^#post-(.+)$/);
             if (cleanHash) cleanPost = decodeURIComponent(cleanHash[1]);
-            await showThreadDetail(cleanTid, null, cleanPost || null);
+            await showThreadDetail(cleanTid, null, cleanPost || null, true);
             return;
         }
     }
@@ -4661,14 +4742,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             var postHash = (window.location.hash || '').match(/^#post-(.+)$/);
             if (postHash) queryPost = decodeURIComponent(postHash[1]);
         }
-        await showThreadDetail(queryThread, null, queryPost || null);
+        await showThreadDetail(queryThread, null, queryPost || null, true);
         return;
     }
     var queryCategory = params.get('category');
     if (queryCategory) {
         await loadCategories();
         var queryCatMatch = categories.find(function(item) { return item.slug === queryCategory; });
-        await showThreadsList(queryCategory, queryCatMatch ? queryCatMatch.name : queryCategory, queryCatMatch ? queryCatMatch.id : null);
+        await showThreadsList(queryCategory, queryCatMatch ? queryCatMatch.name : queryCategory, queryCatMatch ? queryCatMatch.id : null, true);
         return;
     }
 
@@ -4676,7 +4757,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (hash && hash.indexOf('#thread-') === 0) {
         var tid = parseInt(hash.substring(8));
         if (tid) {
-            await showThreadDetail(tid);
+            await showThreadDetail(tid, null, null, true);
             return;
         }
     }
@@ -4685,7 +4766,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         if (slug) {
             await loadCategories();
             var hashCatMatch = categories.find(function(item) { return item.slug === slug; });
-            await showThreadsList(slug, hashCatMatch ? hashCatMatch.name : slug, hashCatMatch ? hashCatMatch.id : null);
+            await showThreadsList(slug, hashCatMatch ? hashCatMatch.name : slug, hashCatMatch ? hashCatMatch.id : null, true);
             return;
         }
     }

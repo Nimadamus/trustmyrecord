@@ -627,7 +627,8 @@
       // Betting-forum threads opened here bounce to the betting forum UI.
       const cat = categories.find(c => c.id === t.category_id);
       if (!cat && t.category_slug && !String(t.category_slug).startsWith('talk-')) {
-        location.href = '/forum/?thread=' + encodeURIComponent(id);
+        location.href = t.slug ? '/forum/thread/' + encodeURIComponent(id) + '/' + encodeURIComponent(t.slug) + '/'
+                               : '/forum/?thread=' + encodeURIComponent(id);
         return;
       }
       document.title = t.title + ' | Sports Talk | TrustMyRecord';
