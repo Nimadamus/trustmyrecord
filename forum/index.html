@@ -2460,12 +2460,13 @@ body.classic-forum select, body.classic-forum .fjump select { font:12px Arial,He
 </style>
 <style id="tmr-f2p2-parity-20260719">
 /* ===================================================================
-   TWO PLUS TWO VISUAL PARITY — v2 (2026-07-19, final cascade layer)
-   v2 corrections per Nima: exact 2+2 type scale (13/700 titles, 11/400
-   descriptions, 11/700 last-post titles, 10/400 metadata, 12/400
-   counts, 10/400 column labels, 11px sidebar), pale-orange document
-   TILE icon (no Windows folder tab), softer gray tints (#f2f2f2 main,
-   #f1f1f1 rows, #e1e4e6 sidebar, #d2d2d2 borders), 56px rows.
+   TWO PLUS TWO VISUAL PARITY — v3 (2026-07-19, final cascade layer)
+   v3 precision pass per Nima: border-box 255px sidebar (was leaking
+   to 295px with padding), 35px left gutter, Last Post fixed 390px +
+   80px count columns (Forum column takes all remaining width),
+   band titles optically lowered 1px (span wrap), chevron centered
+   independently, two-overlapping-pages icon on #efb75f, warmer
+   #f4f4f4/#f3f3f3 tints, #ddd row separators, 13px line-heights.
    Overrides every earlier skin layer. Zero functional changes.
    =================================================================== */
 :root{
@@ -2495,14 +2496,14 @@ body.classic-forum .fmain a{color:#111 !important}
 body.classic-forum .fmain a:hover{color:#000 !important}
 body.classic-forum .modal-box a,body.classic-forum .tmrfh-rules-box a{color:#111 !important}
 /* ---------- global: Arial, soft gray page ---------- */
-html{background:#f2f2f2 !important}
-body.classic-forum{background:#f2f2f2 !important;font:400 12px/1.25 var(--f2p2-font) !important;color:#111 !important;letter-spacing:normal !important}
+html{background:#f4f4f4 !important}
+body.classic-forum{background:#f4f4f4 !important;font:400 12px/1.25 var(--f2p2-font) !important;color:#111 !important;letter-spacing:normal !important}
 #tmrForumHeader,#tmrForumHeader *,
 body.classic-forum .fside,body.classic-forum .fside *,
 body.classic-forum .fmain,body.classic-forum .fmain *{font-family:var(--f2p2-font) !important;letter-spacing:normal !important}
 /* ---------- shell ---------- */
 body.classic-forum .fshell{max-width:none !important;margin-left:var(--f2p2-side-w) !important}
-body.classic-forum .fmain{background:#f2f2f2 !important;padding:12px 30px 60px var(--f2p2-pad-x) !important}
+body.classic-forum .fmain{background:#f4f4f4 !important;padding:0 28px 60px 35px !important}
 /* ---------- top bar: #2f2f2f, 72px, centered, quiet ---------- */
 .tmrfh{background:#2f2f2f !important;border-bottom:0 !important;margin-left:var(--f2p2-side-w) !important}
 .tmrfh-in{height:var(--f2p2-head-h) !important;min-height:var(--f2p2-head-h) !important;padding:0 30px 0 var(--f2p2-pad-x) !important;align-items:center !important}
@@ -2515,7 +2516,7 @@ body.classic-forum .fmain{background:#f2f2f2 !important;padding:12px 30px 60px v
 #tmrForumHeader .tmrfh-nav a:hover{background:rgba(255,255,255,.08) !important;color:#fff !important;text-decoration:none !important}
 #tmrForumHeader .tmrfh-nav a.is-active{font-weight:700 !important;color:#fff !important;background:transparent !important;box-shadow:none !important}
 #tmrForumHeader .tmrfh-nav a.tmrfh-mainsite{color:#fff !important}
-.tmrfh-right{gap:10px !important}
+.tmrfh-right{gap:14px !important}
 .tmrfh-icon{width:32px !important;height:32px !important;border-radius:3px !important;color:#e6e6e6 !important}
 .tmrfh-icon:hover{background:rgba(255,255,255,.08) !important;color:#fff !important}
 .tmrfh-icon svg{width:17px !important;height:17px !important}
@@ -2536,86 +2537,87 @@ body.classic-forum .fmain{background:#f2f2f2 !important;padding:12px 30px 60px v
 .tmrfh-menu a:hover{background:#eee !important}
 .tmrfh-menu-sep{background:#ddd !important}
 /* ---------- left sidebar: 255px, #e1e4e6, 11px links on 3px rhythm ---------- */
-body.classic-forum .fside{width:var(--f2p2-side-w) !important;background:#e1e4e6 !important;padding:14px 18px 20px 22px !important;border:0 !important;border-radius:0 !important;box-shadow:none !important}
+body.classic-forum .fside{box-sizing:border-box !important;width:var(--f2p2-side-w) !important;min-width:var(--f2p2-side-w) !important;max-width:var(--f2p2-side-w) !important;background:#e4e7e9 !important;padding:14px 18px 20px 22px !important;border:0 !important;border-radius:0 !important;box-shadow:none !important}
 body.classic-forum .fside-box{background:transparent !important;border:0 !important;border-radius:0 !important;box-shadow:none !important}
 body.classic-forum .fside-box:last-child .fside-head,
 body.classic-forum .fside-list a.fside-gtitle,
-body.classic-forum .fside-gtitle{font:700 11px/14px var(--f2p2-font) !important;color:#222 !important;text-transform:none !important;letter-spacing:normal !important;margin:0 !important;padding:0 0 6px !important;background:transparent !important}
+body.classic-forum .fside-gtitle{font:700 11px/13px var(--f2p2-font) !important;color:#222 !important;text-transform:none !important;letter-spacing:normal !important;margin:0 !important;padding:0 0 6px !important;background:transparent !important}
 body.classic-forum .fside-list .fside-gbody a.fside-forum,
 body.classic-forum .fside-list a.fside-forum,
 body.classic-forum .fside-list .fside-gbody a,
-body.classic-forum .fside-box:last-child .fside-list a{display:block !important;font:400 11px/14px var(--f2p2-font) !important;color:#202020 !important;padding:3px 0 !important;margin:0 !important;background:transparent !important;border:0 !important;text-decoration:none !important}
+body.classic-forum .fside-box:last-child .fside-list a{display:block !important;font:400 11px/13px var(--f2p2-font) !important;color:#252525 !important;padding:3px 0 !important;margin:0 !important;background:transparent !important;border:0 !important;text-decoration:none !important}
 body.classic-forum .fside-list .fside-gbody a.fside-forum:hover,
 body.classic-forum .fside-list a.fside-forum:hover,
 body.classic-forum .fside-box:last-child .fside-list a:hover{color:#000 !important;background:transparent !important;text-decoration:underline !important}
 body.classic-forum .fside-list .fside-gbody a.fside-forum.is-active,
 body.classic-forum .fside-list a.fside-forum.is-active{font-weight:700 !important;color:#000 !important;background:transparent !important;padding:3px 0 !important;margin:0 !important;border:0 !important}
 body.classic-forum .fside-group + .fside-group,
-body.classic-forum .fside-box + .fside-box{margin-top:12px !important;padding-top:12px !important;border-top:1px solid #c8cccf !important}
+body.classic-forum .fside-box + .fside-box{margin-top:12px !important;padding-top:12px !important;border-top:1px solid #cdd0d2 !important}
 body.classic-forum .fside-arrow{border-color:#555 !important}
 body.classic-forum .fside-star{color:#333 !important;font-size:9px !important}
 body.classic-forum .fside-loading{color:#666 !important;font:italic 11px var(--f2p2-font) !important}
 /* ---------- page heading ---------- */
-body.classic-forum .ftitle{background:transparent !important;border:0 !important;padding:12px 0 8px !important;margin:0 !important}
-body.classic-forum .ftitle h1{font:700 20px/1.2 var(--f2p2-font) !important;color:#111 !important;margin:0 !important}
+body.classic-forum .ftitle{background:transparent !important;border:0 !important;padding:0 !important;margin:24px 0 10px !important}
+body.classic-forum .ftitle h1{font:700 20px/24px var(--f2p2-font) !important;color:#111 !important;letter-spacing:0 !important;margin:0 !important;padding:0 !important}
 body.classic-forum .fcrumb{background:transparent !important;border:0 !important;padding:0 0 4px !important;font:12px var(--f2p2-font) !important;color:#555 !important}
 body.classic-forum .fcrumb a{color:#333 !important;font-weight:400 !important}
 /* ---------- newest-member line ---------- */
 body.classic-forum .tmr-newest-welcome{background:transparent !important;border:0 !important;border-radius:0 !important;margin:0 !important;padding:2px 0 10px !important;font:400 12px/1.35 var(--f2p2-font) !important;color:#444 !important}
 body.classic-forum .tmr-newest-welcome a{color:#111 !important;font-weight:700 !important}
 /* ---------- tables: one continuous soft-gray list ---------- */
-body.classic-forum .fgroup-table{border:1px solid #d2d2d2 !important;margin:10px 0 0 !important;background:transparent !important}
+body.classic-forum .fgroup-table{border:1px solid #d5d5d5 !important;margin:10px 0 0 !important;background:transparent !important}
 body.classic-forum #categoriesContainer .fgroup-table{margin-top:10px !important}
 body.classic-forum .fgroup-table.f2p2-labels,
 body.classic-forum #categoriesContainer .fgroup-table.f2p2-labels{border:0 !important;margin:0 !important}
 /* column labels: 10/400 #777, transparent, extremely understated */
 body.classic-forum .fgroup-table tr.fcol-head td{background:transparent !important;border:0 !important;padding:0 10px 6px !important;font:400 10px/12px var(--f2p2-font) !important;color:#777 !important;text-transform:none !important;letter-spacing:normal !important}
 /* section bars: #303030, 32px, 13/700 white, 3px radius */
-body.classic-forum .fgroup-table tr.fgroup-band td{background:#303030 !important;color:#fff !important;border:0 !important;height:var(--f2p2-bar-h) !important;padding:0 12px !important;font:700 13px/16px var(--f2p2-font) !important;vertical-align:middle !important}
+body.classic-forum .fgroup-table tr.fgroup-band td{background:#303030 !important;background-image:none !important;box-shadow:none !important;color:#fff !important;border:0 !important;height:var(--f2p2-bar-h) !important;min-height:var(--f2p2-bar-h) !important;box-sizing:border-box !important;padding:0 12px !important;font:700 13px/16px var(--f2p2-font) !important;vertical-align:middle !important}
+body.classic-forum .fgroup-table tr.fgroup-band .fband-txt{display:inline-block !important;position:relative !important;top:1px !important;margin:0 !important;padding:0 !important;font:700 13px/16px var(--f2p2-font) !important}
 body.classic-forum .fgroup-table tr.fgroup-band td:first-child{border-radius:3px 0 0 3px !important}
 body.classic-forum .fgroup-table tr.fgroup-band td:last-child{border-radius:0 3px 3px 0 !important}
-body.classic-forum .fgroup-table tr.fgroup-band td.fgroup-meta{color:#bdbdbd !important;font:400 11px/16px var(--f2p2-font) !important;padding:0 12px !important;text-align:right !important}
-body.classic-forum .fgroup-table tr.fgroup-band td.fgroup-meta::after{color:#bdbdbd !important;font-size:12px !important}
+body.classic-forum .fgroup-table tr.fgroup-band td.fgroup-meta{color:#bdbdbd !important;font:400 11px/16px var(--f2p2-font) !important;padding:0 12px !important;text-align:right !important;position:relative !important}
+body.classic-forum .fgroup-table tr.fgroup-band td.fgroup-meta::after{color:#bdbdbd !important;font-size:11px !important;position:absolute !important;right:12px !important;top:50% !important;transform:translateY(-50%) !important;line-height:1 !important}
 /* rows: ~56px, 8px 10px pad, #f1f1f1, #d2d2d2 separators */
 body.classic-forum .fgroup-table td.fcell,
 body.classic-forum #categoriesContainer .fgroup-table td.fcell,
-body.classic-forum table.thread-table td.fcell{background:#f1f1f1 !important;border:0 !important;border-bottom:1px solid #d2d2d2 !important;padding:8px 10px !important;font:400 12px/1.25 var(--f2p2-font) !important;color:#111 !important;vertical-align:middle !important;border-radius:0 !important;box-shadow:none !important}
+body.classic-forum table.thread-table td.fcell{background:#f3f3f3 !important;border:0 !important;border-bottom:1px solid #ddd !important;box-sizing:border-box !important;padding:8px 10px !important;font:400 12px/1.25 var(--f2p2-font) !important;color:#111 !important;vertical-align:middle !important;border-radius:0 !important;box-shadow:none !important}
 body.classic-forum .fgroup-table td.fcell:first-child,
 body.classic-forum #categoriesContainer .fgroup-table td.fcell:first-child{padding-left:10px !important}
-body.classic-forum .fgroup-table tr.row-alt td.fcell{background:#f1f1f1 !important}
+body.classic-forum .fgroup-table tr.row-alt td.fcell{background:#f3f3f3 !important}
 body.classic-forum .fgroup-table tr.frow:hover td.fcell,
-body.classic-forum .fgroup-table tr.frow:focus-within td.fcell{background:#ececec !important;cursor:pointer}
+body.classic-forum .fgroup-table tr.frow:focus-within td.fcell{background:#eee !important;cursor:pointer}
 body.classic-forum .fgroup-table tr.frow:focus-visible{outline:1px solid #888 !important;outline-offset:-1px !important}
 body.classic-forum .frowinner{gap:var(--f2p2-icon-gap) !important;align-items:flex-start !important;min-height:40px !important}
 /* ---------- icon: pale-orange document TILE (no folder tab) ----------
    26x26 flat #efb45a rounded square; pale rear page + white front page
    drawn with the two pseudo-elements, front sits slightly right of
    center. Replaces the Windows-style tabbed folder entirely. */
-body.classic-forum .sport-icon{flex:0 0 26px !important;width:26px !important;min-width:26px !important;max-width:26px !important;height:26px !important;margin-top:1px !important;align-self:flex-start !important;background:#efb45a !important;border:0 !important;border-radius:2px !important;color:transparent !important;font-size:0 !important;box-shadow:none !important;position:relative !important;display:block !important;overflow:hidden !important}
-body.classic-forum .sport-icon::before{content:"" !important;position:absolute !important;top:5px !important;left:8px !important;width:11px !important;height:14px !important;background:rgba(255,255,255,.55) !important;border:0 !important;border-radius:1px !important;margin:0 !important}
-body.classic-forum .sport-icon::after{content:"" !important;position:absolute !important;top:7px !important;left:11px !important;width:11px !important;height:14px !important;background:#fff !important;border:0 !important;border-radius:1px !important;margin:0 !important}
+body.classic-forum .sport-icon{flex:0 0 26px !important;width:26px !important;min-width:26px !important;max-width:26px !important;height:26px !important;margin-top:1px !important;align-self:flex-start !important;background:#efb75f !important;border:0 !important;border-radius:2px !important;color:transparent !important;font-size:0 !important;box-shadow:none !important;position:relative !important;display:block !important;overflow:hidden !important}
+body.classic-forum .sport-icon::before{content:"" !important;position:absolute !important;top:5px !important;left:7px !important;width:9px !important;height:13px !important;background:#fff !important;border:0 !important;border-radius:1px !important;margin:0 !important}
+body.classic-forum .sport-icon::after{content:"" !important;position:absolute !important;top:7px !important;left:11px !important;width:10px !important;height:14px !important;background:#fff !important;border:0 !important;border-radius:1px !important;margin:0 !important;box-shadow:-1.5px -1.5px 0 0 #efb75f !important}
 body.classic-forum .sport-icon.mlb,body.classic-forum .sport-icon.nfl,body.classic-forum .sport-icon.nba,
 body.classic-forum .sport-icon.nhl,body.classic-forum .sport-icon.cfb,body.classic-forum .sport-icon.cbb,
-body.classic-forum .sport-icon.official,body.classic-forum .sport-icon.gen{background:#efb45a !important;border:0 !important}
-body.classic-forum .ffolder{flex:0 0 20px !important;width:20px !important;height:20px !important;background:#efb45a !important;border:0 !important;border-radius:2px !important;margin-top:1px !important;position:relative !important;overflow:hidden !important}
-body.classic-forum .ffolder::before{content:"" !important;position:absolute !important;top:4px !important;left:5px !important;width:8px !important;height:11px !important;background:rgba(255,255,255,.55) !important;border:0 !important;border-radius:1px !important;margin:0 !important}
-body.classic-forum .ffolder::after{content:"" !important;position:absolute !important;top:5px !important;left:8px !important;width:8px !important;height:11px !important;background:#fff !important;border:0 !important;border-radius:1px !important}
+body.classic-forum .sport-icon.official,body.classic-forum .sport-icon.gen{background:#efb75f !important;border:0 !important}
+body.classic-forum .ffolder{flex:0 0 20px !important;width:20px !important;height:20px !important;background:#efb75f !important;border:0 !important;border-radius:2px !important;margin-top:1px !important;position:relative !important;overflow:hidden !important}
+body.classic-forum .ffolder::before{content:"" !important;position:absolute !important;top:4px !important;left:4px !important;width:7px !important;height:10px !important;background:#fff !important;border:0 !important;border-radius:1px !important;margin:0 !important}
+body.classic-forum .ffolder::after{content:"" !important;position:absolute !important;top:6px !important;left:8px !important;width:8px !important;height:11px !important;background:#fff !important;border:0 !important;border-radius:1px !important;box-shadow:-1.5px -1.5px 0 0 #efb75f !important}
 body.classic-forum .ffolder.is-pinned{background:#f6d488 !important;border:0 !important}
 body.classic-forum .ffolder.is-pinned::before{background:rgba(255,255,255,.55) !important}
 /* ---------- forum titles 13/700, descriptions 11/400 ---------- */
 body.classic-forum .fname,
 body.classic-forum #categoriesContainer .fname,
-body.classic-forum .thread-table .fname{font:700 13px/15px var(--f2p2-font) !important;color:#080808 !important;text-decoration:none !important;margin:0 !important;padding:0 !important}
+body.classic-forum .thread-table .fname{font:700 13px/15px var(--f2p2-font) !important;letter-spacing:-.1px !important;color:#080808 !important;text-decoration:none !important;margin:0 !important;padding:0 !important}
 body.classic-forum .fname:hover,
 body.classic-forum #categoriesContainer .fname:hover,
 body.classic-forum .thread-table .fname:hover{color:#000 !important;text-decoration:underline !important}
 body.classic-forum .fdesc,
-body.classic-forum #categoriesContainer .fdesc{display:block !important;overflow:visible !important;max-width:none !important;-webkit-line-clamp:unset !important;font:400 11px/14px var(--f2p2-font) !important;color:#242424 !important;margin:1px 0 0 !important}
+body.classic-forum #categoriesContainer .fdesc{display:block !important;overflow:visible !important;max-width:none !important;-webkit-line-clamp:unset !important;font:400 11px/13px var(--f2p2-font) !important;color:#242424 !important;margin:1px 0 0 !important}
 body.classic-forum .fdesc b{font-weight:700 !important;color:#111 !important}
 body.classic-forum .fdesc .fuser-link{color:#111 !important}
 /* ---------- Last Post: 11/700 title, 10/400 metadata ---------- */
 body.classic-forum .fgroup-table tr.fcol-head td.col-last,
-body.classic-forum .fgroup-table td.col-last{width:30% !important;text-align:left !important;vertical-align:middle !important;color:#111 !important}
+body.classic-forum .fgroup-table td.col-last{width:390px !important;min-width:200px !important;text-align:left !important;vertical-align:middle !important;color:#111 !important}
 body.classic-forum .flpost-line{gap:0 !important;align-items:flex-start !important}
 body.classic-forum .flpost-text{display:block !important;min-width:0 !important;overflow:hidden !important}
 body.classic-forum .flpost-title,
@@ -2641,12 +2643,12 @@ body.classic-forum .flpost-meta b{font-weight:400 !important;color:#6b6b6b !impo
 body.classic-forum .flpost-empty{font:400 10px/12px var(--f2p2-font) !important;color:#777 !important;font-style:normal !important}
 /* ---------- counts: 12/400 dark, right-aligned, tabular ---------- */
 body.classic-forum .fgroup-table tr.fcol-head td.col-num,
-body.classic-forum .fgroup-table td.col-num{width:90px !important;min-width:70px !important;text-align:right !important;padding-right:14px !important}
+body.classic-forum .fgroup-table td.col-num{width:80px !important;min-width:60px !important;text-align:right !important;padding-right:14px !important}
 body.classic-forum .fgroup-table td.col-num{font:400 12px/14px var(--f2p2-font) !important;color:#111 !important;font-variant-numeric:tabular-nums !important;vertical-align:middle !important}
 body.classic-forum .fgroup-table tr.fcol-head td.col-num{font:400 10px/12px var(--f2p2-font) !important;color:#777 !important}
 /* ---------- Official label: 8/700 compact ---------- */
-body.classic-forum .fofficial-tag{display:inline-block !important;font:700 8px/1 var(--f2p2-font) !important;padding:2px 4px !important;margin-left:5px !important;border-radius:2px !important;background:#1f3447 !important;border:0 !important;color:#f6bd3d !important;letter-spacing:normal !important;text-transform:uppercase !important;vertical-align:1px !important}
-body.classic-forum .tmr-official-chip{display:inline-flex !important;align-items:center !important;gap:3px !important;font:700 8px/1 var(--f2p2-font) !important;padding:2px 4px !important;margin-left:5px !important;border-radius:2px !important;background:#1f3447 !important;border:0 !important;color:#f6bd3d !important;letter-spacing:normal !important;text-transform:uppercase !important;vertical-align:1px !important}
+body.classic-forum .fofficial-tag{display:inline-flex !important;align-items:center !important;height:13px !important;box-sizing:border-box !important;font:700 8px/1 var(--f2p2-font) !important;padding:0 4px !important;margin-left:5px !important;border-radius:2px !important;background:#1f3447 !important;border:0 !important;color:#f6bd3d !important;letter-spacing:normal !important;text-transform:uppercase !important;vertical-align:1px !important}
+body.classic-forum .tmr-official-chip{display:inline-flex !important;align-items:center !important;height:13px !important;box-sizing:border-box !important;gap:3px !important;font:700 8px/1 var(--f2p2-font) !important;padding:0 4px !important;margin-left:5px !important;border-radius:2px !important;background:#1f3447 !important;border:0 !important;color:#f6bd3d !important;letter-spacing:normal !important;text-transform:uppercase !important;vertical-align:1px !important}
 body.classic-forum .tmr-official-chip svg{width:7px !important;height:7px !important;display:block !important}
 body.classic-forum .fsticky-tag{font:700 8px/1 var(--f2p2-font) !important;padding:2px 4px !important;border-radius:2px !important}
 /* ---------- action row / buttons / pagination: flat neutral ---------- */
@@ -2665,6 +2667,10 @@ body.classic-forum .fthread-fandom{background:#eee !important;border:1px solid #
 body.classic-forum .fthread-fandom-dot{background:#888 !important}
 body.classic-forum a.fthread-row-avatar:hover{border-color:#555 !important}
 body.classic-forum a.fpost-permalink:hover{color:#000 !important}
+@media (max-width:1250px){
+  body.classic-forum .fgroup-table tr.fcol-head td.col-last,
+  body.classic-forum .fgroup-table td.col-last{width:31% !important}
+}
 /* ---------- mobile: keep parity scale, sidebar collapses ---------- */
 @media (max-width:900px){
   body.classic-forum .fside{display:none !important}
@@ -2813,7 +2819,7 @@ body.classic-forum a.fpost-permalink:hover{color:#000 !important}
             <div class="forum-sample-area">
                 <table class="fgroup-table" cellpadding="2" cellspacing="1">
                     <tr class="fgroup-band">
-                        <td>Threads in Forum: <span id="indexSampleSectionName">Sports Betting</span></td>
+                        <td><span class="fband-txt">Threads in Forum: <span id="indexSampleSectionName">Sports Betting</span></span></td>
                         <td class="fgroup-meta">Sample thread layout</td>
                     </tr>
                 </table>
@@ -2838,7 +2844,7 @@ body.classic-forum a.fpost-permalink:hover{color:#000 !important}
         <div id="viewThreads" style="display:none;">
             <table class="fgroup-table" cellpadding="2" cellspacing="1">
                 <tr class="fgroup-band">
-                    <td>Threads in Forum: <span id="threadsCategoryLabel">Forum</span></td>
+                    <td><span class="fband-txt">Threads in Forum: <span id="threadsCategoryLabel">Forum</span></span></td>
                     <td class="fgroup-meta" id="threadsCategoryMeta">&nbsp;</td>
                 </tr>
             </table>
@@ -2870,7 +2876,7 @@ body.classic-forum a.fpost-permalink:hover{color:#000 !important}
         <div id="viewUserActivity" style="display:none;">
             <table class="fgroup-table" cellpadding="2" cellspacing="1">
                 <tr class="fgroup-band">
-                    <td>Forum contributions: <span id="uaUsername">member</span></td>
+                    <td><span class="fband-txt">Forum contributions: <span id="uaUsername">member</span></span></td>
                     <td class="fgroup-meta" id="uaMeta">&nbsp;</td>
                 </tr>
             </table>
@@ -3152,7 +3158,7 @@ function renderCategories() {
              + '</table>';
     groups.forEach(function(group) {
         html += '<table class="fgroup-table" cellpadding="2" cellspacing="1">';
-        html += '<tr class="fgroup-band"><td colspan="3">' + escHtml(group.name) + '</td><td class="fgroup-meta" aria-hidden="true"></td></tr>';
+        html += '<tr class="fgroup-band"><td colspan="3"><span class="fband-txt">' + escHtml(group.name) + '</span></td><td class="fgroup-meta" aria-hidden="true"></td></tr>';
         group.categories.forEach(function(cat, i) {
             var threadCount = formatForumCountValue(cat.thread_count);
             var postCount = formatForumCountValue(cat.post_count);
@@ -4450,7 +4456,7 @@ async function showUserActivity(username) {
     var stamp = function (v) { try { return formatForumStamp(v); } catch (_) { return ''; } };
     var section = function (title, anchor, rowsHtml, emptyMsg) {
         return '<table class="fgroup-table" cellpadding="2" cellspacing="1" id="' + anchor + '">'
-            + '<tr class="fgroup-band"><td colspan="2">' + escHtml(title) + '</td></tr></table>'
+            + '<tr class="fgroup-band"><td colspan="2"><span class="fband-txt">' + escHtml(title) + '</span></td></tr></table>'
             + '<table class="fgroup-table thread-table" cellpadding="2" cellspacing="1"><tbody>'
             + (rowsHtml || ('<tr><td class="fcell"><div class="fempty">' + escHtml(emptyMsg) + '</div></td></tr>'))
             + '</tbody></table>';
