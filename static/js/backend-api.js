@@ -868,6 +868,12 @@ class TrustMyRecordAPI {
         });
     }
 
+    async deleteMessage(messageId) {
+        return this.request(`/messages/message/${messageId}`, {
+            method: 'DELETE'
+        });
+    }
+
     // ==================== NOTIFICATIONS ROUTES ====================
 
     async getNotifications(options = {}) {
