@@ -67,7 +67,11 @@ function isPlaceholder(html) {
   const { chromium } = require('playwright');
   const srv = await serve();
   const port = srv.address().port;
-  const browser = await chromium.launch();
+  // channel:'chromium' launches the FULL chromium build. Without it Playwright 1.49+
+  // reaches for the separate "chromium_headless_shell" download, which
+  // `playwright install chromium` does not fetch - CI then dies with
+  // "Executable doesn't exist at .../chromium_headless_shell-1148/...".
+  const browser = await chromium.launch({ channel: 'chromium' });
   let out = null, failure = null;
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1200 } });
