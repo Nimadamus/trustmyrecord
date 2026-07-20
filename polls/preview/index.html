@@ -8,7 +8,7 @@
     <meta name="description" content="Vote in sports prediction polls across MLB, NBA, NFL, NHL, soccer, UFC, and more. Game winners, MVP races, player props">
     <meta name="keywords" content="sports polls, sports prediction polls, MLB polls, NBA polls, NFL polls, NHL polls, MVP polls, player prop polls, fan voting, sports community polls">
     <meta property="og:title" content="Sports Polls | Game Predictions, MVP &amp; Player Prop Polls">
-    <meta property="og:description" content="Vote in sports prediction polls. Game winners, MVPs, player props — every vote tied to your public profile.">
+    <meta property="og:description" content="Vote in sports prediction polls. Game winners, MVPs, player props, every vote tied to your public profile.">
     <meta property="og:url" content="https://trustmyrecord.com/polls/">
     <meta property="og:type" content="website">
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
@@ -137,6 +137,7 @@
         .tmr-tab2.is-active { color: #FFFFFF; font-weight: 600; border-bottom-color: var(--accent); }
         .tmr-tab2 .tmr-tab2-count { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-size: 0.64rem; font-weight: 700; vertical-align: 1px; font-variant-numeric: tabular-nums; }
         .tmr-tab2.is-active .tmr-tab2-count { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }
+        .tmr-tab2 .tmr-tab2-count[hidden] { display: none !important; }
 
         /* Section head + filter toolbar (aligned to one baseline).
            !important beats the sitewide globals (h2 clamp(1.8-3.2rem)!important + display font). */
@@ -1037,7 +1038,7 @@
     };
     function quickEmptyHtml() {
         var sport = state.sportFilter;
-        var title = sport ? ('No active ' + sport.toLowerCase() + ' polls right now.') : 'You’re early — start today’s debate.';
+        var title = sport ? ('No active ' + sport.toLowerCase() + ' polls right now.') : "You're early. Start today's debate.";
         var chips = Object.keys(POLL_TEMPLATES).map(function(k) {
             var t = POLL_TEMPLATES[k];
             return '<button type="button" class="tmr-tpl" onclick="openCreateFromTemplate(\'' + k + '\')"><i class="fas fa-' + t.icon + '"></i> ' + t.label + '</button>';
@@ -1419,7 +1420,7 @@
             var body = '';
             if (q.scoring_mode === 'closest') {
                 if (isResolved) {
-                    var truth = (q.numeric_target != null) ? q.numeric_target : '—';
+                    var truth = (q.numeric_target != null) ? q.numeric_target : '-';
                     var guess = ua && ua.numeric_value != null ? ua.numeric_value : null;
                     var pts = ua && ua.points_earned != null ? ua.points_earned : null;
                     body = '<div class="tmr-q-res-row"><span class="tmr-q-res-text">Correct answer: <strong>' + escHtml(truth) + '</strong></span>' +
@@ -1877,7 +1878,7 @@
         var fullDescription = descParts.join('\n\n');
 
         var payload = {
-            title: title + ' — ' + question,
+            title: title + ' - ' + question,
             question: question,
             description: fullDescription,
             sport: sport,
