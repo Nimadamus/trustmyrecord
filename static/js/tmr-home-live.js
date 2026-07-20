@@ -126,7 +126,15 @@
       ? top.favorite_sports.join(', ') : 'All sports') + ' · ' + num(top.total_picks) + ' tracked picks';
     var cells = spot.querySelectorAll('.g3 b');
     if (cells.length >= 3) {
-      cells[0].textContent = top.wins != null ? top.wins + '-' + top.losses + (num(top.pushes) ? '-' + top.pushes : '') : num(top.total_picks) + ' picks';
+      // RECORD must be the real W-L-P record, never a pick count.
+      // /api/users (list) omits W/L, so read the capper's own record endpoint.
+      cells[0].textContent = '…';
+      j('/users/' + encodeURIComponent(top.username)).then(function (du) {
+        var u2 = (du && (du.user || du)) || {};
+        var W = u2.wins, L = u2.losses, P = num(u2.pushes);
+        if (W == null || L == null) { cells[0].textContent = num(top.total_picks) + ' picks'; return; }
+        cells[0].textContent = W + '-' + L + (P ? '-' + P : '');
+      });
       cells[1].textContent = sign(num(top.net_units)); cells[1].className = 'num pos';
       cells[2].textContent = num(top.roi).toFixed(1) + '%'; cells[2].className = 'num pos';
     }

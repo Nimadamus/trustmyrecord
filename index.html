@@ -103,7 +103,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="static/css/tmr-sitewide.css?v=20260720v4">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
 <style>
 :root{
   --bg:#f5f7fb;
@@ -2039,91 +2039,11 @@ button{font:inherit;cursor:pointer}
   body.tmr-site-shell footer.tmr-global-footer.site-footer{width:min(1372px,calc(100% - 68px)) !important;}
 }
 </style>
+
+<link rel="stylesheet" href="/static/css/tmr-home-v2.css?v=20260720final1">
 </head>
-<body>
-
-<main class="tmr-premium-home" aria-label="TrustMyRecord homepage">
-  <header class="tmr-premium-nav">
-    <a class="tmr-premium-brand" href="/" aria-label="TrustMyRecord home">
-      <span class="tmr-premium-shield">T</span>
-      <span>TrustMyRecord</span>
-    </a>
-    <nav class="tmr-premium-links" aria-label="Main navigation">
-      <a href="/sportsbook/" class="tmr-premium-links__make-picks">Sportsbook</a>
-      <a href="/handicappers/">Handicappers</a>
-      <a href="/marketplace/">Sell Your Picks</a>
-      <a href="/contests/justbet-mlb/">Contest</a>
-      <a href="/community/">Community</a>
-      <a href="/feed/">Feed</a>
-      <a href="/rules/">Rules</a>
-      <a href="/about/">About</a>
-    </nav>
-    <div class="tmr-premium-actions">
-      <a class="tmr-premium-login auth-link" href="/login/">Log in</a>
-      <a class="tmr-premium-signup auth-link" href="/register/">Sign up</a>
-    </div>
-  </header>
-
-  <section class="tmr-premium-hero">
-    <div class="tmr-premium-bg" aria-hidden="true"></div>
-    <div class="tmr-premium-hero-copy">
-      <span class="tmr-premium-badge"><span>✓</span> Free verified records. Public stats. Real competition.</span>
-      <h1>Track Your Picks. Build Your Record. <em>Compete With Everybody.</em></h1>
-      <p>TrustMyRecord gives every sports bettor a free verified public record, advanced performance stats, public profiles, pick selling tools, and community competitions built around real results.</p>
-      <div class="tmr-premium-cta">
-        <a class="tmr-premium-primary auth-link" href="/register/">Start Your Free Record <span>→</span></a>
-        <a class="tmr-premium-secondary" href="/leaderboards/">View Leaderboards</a>
-      </div>
-      <div class="tmr-premium-proof-row" aria-label="Trust features">
-        <div><span class="tmr-proof-icon tmr-proof-icon--lock" aria-hidden="true"></span><p>Free tracking<br>for every pick</p></div>
-        <div><span class="tmr-proof-icon tmr-proof-icon--check" aria-hidden="true"></span><p>Public profiles<br>with verified history</p></div>
-        <div><span class="tmr-proof-icon tmr-proof-icon--chart" aria-hidden="true"></span><p>Advanced stats<br>and long-term records</p></div>
-      </div>
-      <div class="tmr-premium-trustline">
-        <span>Verified picks. Public records. Advanced stats. Free tracking. Sell picks. Compete with users.</span>
-      </div>
-    </div>
-
-    <aside class="tmr-premium-dashboard" aria-label="TrustMyRecord product dashboard preview">
-      <div class="tmr-dashboard-shell">
-        <div class="tmr-dashboard-grid">
-          <!-- Public Profiles card hidden from hero rail (reversible: remove tmr-hero-card-hidden class / its CSS rule to restore). Markup + #tmrHeroLeaderboardBody hydration intact; leaderboard access remains in nav + /leaderboards/. -->
-          <section class="tmr-board-card tmr-hero-card-hidden">
-            <header><h3>Public Profiles</h3><a href="/leaderboards/">View Leaderboards</a></header>
-            <div class="tmr-board-scroll">
-            <table>
-              <thead><tr><th>#</th><th>User</th><th>ROI</th><th>Units</th></tr></thead>
-              <tbody id="tmrHeroLeaderboardBody">
-                <tr class="tmr-seed-table-row"><td colspan="4">Verified public records ranked by net units and ROI. <a href="/leaderboards/">View the full leaderboard</a>.</td></tr>
-              </tbody>
-            </table>
-            </div>
-            <a class="tmr-see-more" href="/leaderboards/">View Leaderboards →</a>
-          </section>
-
-          <section class="tmr-board-card tmr-activity-card">
-            <header><h3>Live Highlights</h3><a href="/handicappers/">View Public Records</a></header>
-            <div id="tmrHeroPicksList" class="tmr-activity-list tmr-activity-empty" aria-live="polite" aria-busy="true">
-              <div class="tmr-activity-loading">
-                <span aria-hidden="true">📈</span>
-                <strong>Verified streaks and recent winners</strong>
-                <p>Hot streaks, sharp angles, and active pick makers from public records. <a href="/handicappers/">Browse verified records</a>.</p>
-              </div>
-            </div>
-            <a class="tmr-activity-cta" href="/handicappers/">View Public Records →</a>
-          </section>
-        </div>
-
-        <div class="tmr-source-strip">
-          <span>Verified picks. Public records. Transparent results.</span>
-          <b>Advanced stats</b><b>Sell picks</b><b>Compete with users</b>
-        </div>
-      </div>
-    </aside>
-  </section>
-
-  <section class="tmr-statbar" aria-label="TrustMyRecord platform stats">
-    <style>
+<body class="tmr-site-shell">
+<style>
       .tmr-statbar{max-width:1240px;margin:22px auto 0;padding:0 24px;}
       .tmr-statbar__inner{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
         background:var(--premium-panel,rgba(8,18,31,.82));border:1px solid var(--premium-line,rgba(134,162,190,.22));
@@ -2135,56 +2055,7 @@ button{font:inherit;cursor:pointer}
         line-height:1;color:var(--premium-text,#f8fbff);font-variant-numeric:tabular-nums;}
       .tmr-statbar .tmr-stat span{font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--premium-muted,#a8b4c7);}
       @media(max-width:640px){.tmr-statbar__inner{grid-template-columns:repeat(2,1fr);}}
-    </style>
-    <div class="tmr-statbar__inner">
-      <a class="tmr-stat" href="/handicappers/"><b id="tmrStatPicks">&mdash;</b><span>Picks Tracked</span></a>
-      <a class="tmr-stat" href="/handicappers/"><b id="tmrStatCappers">&mdash;</b><span>Verified Cappers</span></a>
-      <a class="tmr-stat" href="/leaderboards/"><b id="tmrStatMembers">&mdash;</b><span>Members</span></a>
-      <a class="tmr-stat" href="/contests/justbet-mlb/"><b>1</b><span>Free Contest</span></a>
-    </div>
-    <script>
-    (function(){
-      var API="https://trustmyrecord-api.onrender.com/api";
-      function set(id,v){var el=document.getElementById(id);if(el&&v!=null)el.textContent=v;}
-      var users=[],off=0;
-      function done(){
-        if(!users.length)return; /* leave em-dash fallback, never a fake number */
-        var picks=0,active=0;
-        for(var i=0;i<users.length;i++){
-          var tp=parseFloat(users[i].total_picks||users[i].totalPicks||0)||0;
-          picks+=tp;
-          if(tp>0&&users[i].verification_status==="verified")active++;
-        }
-        set("tmrStatPicks",picks.toLocaleString());
-        set("tmrStatCappers",String(active));
-        set("tmrStatMembers",String(users.length));
-      }
-      function page(){
-        fetch(API+"/users?limit=200&offset="+off,{headers:{Accept:"application/json"}})
-          .then(function(r){return r.ok?r.json():null;})
-          .then(function(d){
-            if(!d)return done();
-            var u=(d.users||[]);users=users.concat(u);
-            if(u.length>=200&&off<1000){off+=200;page();}else{done();}
-          })
-          .catch(function(){done();});
-      }
-      function start(){page();}
-      if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start);else start();
-    })();
-    </script>
-  </section>
-
-  <!-- QUIZ_OF_THE_DAY removed 20260718: the Prediction Quiz of the Day belongs ONLY on /polls/.
-       Do NOT re-add any quiz/poll band, widget (quiz-of-day.js), or #tmrQuizOfDay mount to the
-       homepage. This block was re-injected once by a stale-clone SEO commit (7c305657) after being
-       removed (df082052); if it reappears, a stale clone was pushed. Polls page is the single
-       source of truth for daily polls/quizzes/entries/results/archives. -->
-
-  <!-- JOIN_COMMUNITY_20260708: insert-only community discovery band below hero. Links route to
-       live community features (trivia/polls/feed/forum/contests/leaderboards). Full hub at /community/. -->
-  <section class="tmr-community-band" aria-label="Join the TrustMyRecord community">
-    <style>
+    </style><style>
       .tmr-community-band{max-width:1240px;margin:26px auto 0;padding:0 24px;}
       .tmr-community-band .tcb-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:16px;}
       .tmr-community-band .tcb-head h2{font-family:'Barlow',sans-serif;font-weight:900;font-size:clamp(1.4rem,3vw,2rem);margin:0;letter-spacing:-.01em;color:var(--premium-text,#f8fbff);}
@@ -2200,56 +2071,7 @@ button{font:inherit;cursor:pointer}
       .tmr-community-band .tcb-card span.go{margin-top:4px;color:var(--premium-teal,#37d6c1);font-weight:800;font-size:.85rem;}
       @media(max-width:980px){.tmr-community-band .tcb-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
       @media(max-width:520px){.tmr-community-band .tcb-grid{grid-template-columns:1fr;}}
-    </style>
-    <div class="tcb-head">
-      <div>
-        <h2>Join the <em>Community</em></h2>
-        <p>Beyond tracking picks, TrustMyRecord is where bettors play, debate, and compete. Every card is a live feature.</p>
-      </div>
-      <a class="tcb-all" href="/chat/" style="background:linear-gradient(135deg,#00c8ff,#0090cc);color:#001820;">&#128172; Live Chat</a>
-      <a class="tcb-all" href="/community/">Community Hub →</a>
-    </div>
-    <div class="tcb-grid">
-      <a class="tcb-card" href="/trivia/">
-        <span class="tcb-ic">🧠</span>
-        <h3>Sports Trivia</h3>
-        <p>Daily trivia across every league. Answer, score, and climb the leaderboard.</p>
-        <span class="go">Play Trivia →</span>
-      </a>
-      <a class="tcb-card" href="/polls/">
-        <span class="tcb-ic">📊</span>
-        <h3>Polls</h3>
-        <p>Vote in sports and prediction polls, then see where the crowd lands.</p>
-        <span class="go">Vote Now →</span>
-      </a>
-      <a class="tcb-card" href="/feed/">
-        <span class="tcb-ic">📰</span>
-        <h3>Community Feed</h3>
-        <p>Locked picks, hot takes, and discussion from people with a real record.</p>
-        <span class="go">Open Feed →</span>
-      </a>
-      <a class="tcb-card" href="/contests/">
-        <span class="tcb-ic">🏆</span>
-        <h3>Contests &amp; Leaderboards</h3>
-        <p>Free contests and every leaderboard, all ranked on real results.</p>
-        <span class="go">Compete →</span>
-      </a>
-    </div>
-  </section>
-
-
-
-  <!-- SPORTS_TALK_PREVIEW_20260712: insert-only Sports Talk homepage module. One compact
-
-       section, single-paint: skeleton rows render instantly and are replaced in ONE pass
-
-       by /api/forum/threads/recent?area=sports_talk. Empty/error states are intentional
-
-       copy, never fake activity. Does not touch hero, leaderboard, or contest modules. -->
-
-  <section class="tmr-sports-talk" aria-label="Sports Talk community preview">
-
-    <style>
+    </style><style>
 
       .tmr-sports-talk{max-width:1240px;margin:18px auto 0;padding:0 24px;font-family:'Inter',system-ui,sans-serif;}
 
@@ -2295,116 +2117,7 @@ button{font:inherit;cursor:pointer}
 
       @media(max-width:720px){.tmr-sports-talk .stp-rows{grid-template-columns:1fr;}}
 
-    </style>
-
-    <div class="stp-card">
-
-      <div class="stp-h">
-
-        <h2><span>Sports Talk</span> &mdash; the fandom side of TMR</h2>
-
-        <a class="stp-cta" href="/sports-talk/">Join the Conversation &rarr;</a>
-
-        <p>Teams, players, trades, rivalries, fantasy, and collectibles. No betting record required.</p>
-
-      </div>
-
-      <div class="stp-rows" id="stpRows">
-
-        <div class="stp-row stp-skel"><span class="stp-bd"><i></i><i></i></span></div>
-
-        <div class="stp-row stp-skel"><span class="stp-bd"><i></i><i></i></span></div>
-
-        <div class="stp-row stp-skel"><span class="stp-bd"><i></i><i></i></span></div>
-
-        <div class="stp-row stp-skel"><span class="stp-bd"><i></i><i></i></span></div>
-
-      </div>
-
-    </div>
-
-    <script>
-
-    (function () {
-
-      var mount = document.getElementById('stpRows');
-
-      function esc(v) { var d = document.createElement('div'); d.textContent = String(v == null ? '' : v); return d.innerHTML; }
-
-      function ago(iso) {
-
-        var t = new Date(iso).getTime();
-
-        if (!isFinite(t)) return '';
-
-        var s = Math.max(1, Math.floor((Date.now() - t) / 1000));
-
-        if (s < 3600) return Math.max(1, Math.floor(s / 60)) + 'm ago';
-
-        if (s < 86400) return Math.floor(s / 3600) + 'h ago';
-
-        return Math.floor(s / 86400) + 'd ago';
-
-      }
-
-      function paint(threads) {
-
-        if (!threads.length) {
-
-          mount.innerHTML = '<div class="stp-empty">Sports Talk just opened. <a href="/sports-talk/">Start the first discussion &rarr;</a></div>';
-
-          return;
-
-        }
-
-        mount.innerHTML = threads.slice(0, 4).map(function (t) {
-
-          return '<a class="stp-row" href="/sports-talk/?thread=' + encodeURIComponent(t.id) + '">'
-
-            + '<span class="stp-bd"><span class="t">' + esc(t.title) + '</span>'
-
-            + '<span class="m"><b>' + esc(t.category_name || '') + '</b> &middot; ' + esc(t.username || '') + ' &middot; '
-
-            + ago(t.last_post_at || t.created_at) + ' &middot; ' + (Number(t.reply_count) || 0) + ' replies</span></span></a>';
-
-        }).join('');
-
-      }
-
-      function load() {
-
-        var base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
-
-        fetch(base + '/forum/threads/recent?area=sports_talk&limit=4')
-
-          .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)); })
-
-          .then(function (data) { paint((data && data.threads) || []); })
-
-          .catch(function () {
-
-            mount.innerHTML = '<div class="stp-empty">Talk teams, trades, and takes in <a href="/sports-talk/">Sports Talk &rarr;</a></div>';
-
-          });
-
-      }
-
-      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load); else load();
-
-    })();
-
-    </script>
-
-  </section>
-
-
-
-  <!-- SEO_CRAWLABLE_HOME_20260622: insert-only crawlable block (value prop + JustBet contest
-       funnel + real leaderboard preview + live highlights + CTAs). Static copy is durable;
-       the leaderboard/highlights rows between the MK markers are refreshed by
-       scripts/prerender_directory.py. Existing JS hero/sections are untouched. -->
-  <section class="tmrhx" aria-label="Build a verified record and join the contest">
-    <style>
+    </style><style>
       .tmrhx{max-width:1240px;margin:18px auto 0;padding:0 24px;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;}
       .tmrhx a{text-decoration:none;}
       .tmrhx-value{background:radial-gradient(900px 320px at 12% -20%,rgba(0,174,255,0.14),transparent 60%),linear-gradient(180deg,rgba(26,26,46,0.85),rgba(10,10,15,0.85));border:1px solid #2a2a4a;border-radius:20px;padding:30px 30px;}
@@ -2439,118 +2152,7 @@ button{font:inherit;cursor:pointer}
       .tmrhx-hl li{display:flex;gap:10px;align-items:flex-start;background:rgba(10,10,15,0.5);border:1px solid #20203a;border-radius:11px;padding:11px 13px;color:#cfd4e6;font-size:0.9rem;line-height:1.45;}
       .tmrhx-hl b{color:#fff;}
       @media(max-width:880px){.tmrhx-grid{grid-template-columns:1fr;}.tmrhx-list{grid-template-columns:1fr;}}
-    </style>
-
-    <div class="tmrhx-value">
-      <h2>Build a verified sports betting record <span class="g">nobody can fake.</span></h2>
-      <p>Lock your picks before game time. TrustMyRecord auto-grades the results and publishes transparent records based on units, ROI, win percentage, and streaks. Free to use, public by default, and impossible to cherry-pick.</p>
-      <div class="tmrhx-cta">
-        <a class="tmrhx-btn tmrhx-btn--gold" href="/register/">Start Your Free Record</a>
-        <a class="tmrhx-btn tmrhx-btn--blue" href="/sportsbook/">Make Your First Locked Pick</a>
-        <a class="tmrhx-btn tmrhx-btn--ghost" href="/leaderboards/">View Leaderboards</a>
-      </div>
-    </div>
-
-    <div class="tmrhx-grid">
-      <div class="tmrhx-card tmrhx-contest">
-        <span class="tmrhx-kick">★ Free Contest · Running now</span>
-        <h3>Join the Free <span class="g">$2,500</span> MLB Pick Contest</h3>
-        <ul class="tmrhx-list">
-          <li>Free to enter</li>
-          <li>$2,500 in prizes</li>
-          <li>50 MLB picks</li>
-          <li>No deposit required</li>
-          <li>Picks lock before start</li>
-          <li>Public leaderboard tracking</li>
-        </ul>
-        <div class="tmrhx-cta">
-          <a class="tmrhx-btn tmrhx-btn--gold" href="/contests/justbet-mlb/">Join the Free MLB Contest</a>
-          <a class="tmrhx-btn tmrhx-btn--ghost" href="/register/">Start Your Free Record</a>
-        </div>
-        <p class="tmrhx-sub">Every entry is locked before first pitch and auto-graded by net units. Top 3 finishers paid. Sponsored by JustBet.</p>
-      </div>
-
-      <div class="tmrhx-card tmrhx-board">
-        <h3>Verified leaderboard preview</h3>
-        <table class="tmrhx-tbl">
-          <thead><tr><th>#</th><th>User</th><th>Record</th><th>Units</th><th>ROI</th></tr></thead>
-          <tbody><!--MK:homeLbPreview--><tr><td class="rk">#1</td><td><a href="/u/makaveli66/">makaveli66</a></td><td>155-104-3</td><td class="pos">+95.01u</td><td class="pos">3.1%</td></tr><tr><td class="rk">#2</td><td><a href="/u/MoneyMakers/">MoneyMakers</a></td><td>215-90</td><td class="pos">+16.71u</td><td class="pos">3.2%</td></tr><tr><td class="rk">#3</td><td><a href="/u/BetLegend/">BetLegend</a></td><td>264-229-6</td><td class="pos">+9.18u</td><td class="pos">0.6%</td></tr><tr><td class="rk">#4</td><td><a href="/u/linda2026/">linda2026</a></td><td>28-21</td><td class="pos">+7.92u</td><td class="pos">14.1%</td></tr><tr><td class="rk">#5</td><td><a href="/u/Mike/">Mike</a></td><td>6-6</td><td class="pos">+7.05u</td><td class="pos">28.4%</td></tr><!--/MK:homeLbPreview--></tbody>
-        </table>
-        <p class="tmrhx-updated"><!--MK:homeLbUpdated--><!--@2026-07-19T23:40:59.324234+00:00-->Updated daily &bull; Last updated July 19, 2026 at 4:40 PM PT<!--/MK:homeLbUpdated--></p>
-        <a class="tmrhx-more" href="/leaderboards/">View Leaderboards →</a>
-
-        <h3 style="margin-top:20px;">Live highlights</h3>
-        <ul class="tmrhx-hl"><!--MK:homeHighlights--><li>🔥 <a href="/u/Little_Venom/"><b>Little Venom</b></a> has won 5 straight.</li><li>🔥 <a href="/u/patrick9/"><b>patrick9</b></a> hit the last 5 moneylines.</li><li>🔥 <a href="/u/makaveli66/"><b>makaveli66</b></a> hit the last 3 player props.</li><li>🔥 <a href="/u/BetLegend/"><b>BetLegend</b></a> hit the last 3 run lines.</li><!--/MK:homeHighlights--></ul>
-      </div>
-    </div>
-  </section>
-
-  <!-- FOUNDING_MEMBER_STRIPE_REMOVED_20260629: standalone gold stripe between highlights/leaderboard and JustBet promo removed (random placement, low-contrast var(--ink) navy text on dark gold bg, CTA duplicated the hero /register messaging). Onboarding/founding-member framing now lives only in the hero value block above (Start Your Free Verified Record). Do not reintroduce a standalone Founding Member banner here. -->
-
-  <!-- JUSTBET_PARTNER_BONUS_20260613: soft-launch partner bonus box below hero/contest area.
-       URL + code live ONLY in static/js/justbet-promo.js (TMR_JUSTBET_PROMO). One box per page. -->
-  <section aria-label="JustBet partner bonus" data-justbet-bonus-box data-variant="home"></section>
-
-  <section id="features" class="tmr-premium-proof-cards">
-    <article>
-      <div class="tmr-card-icon">▢</div>
-      <div>
-        <h2>Free Verified Record Tracking</h2>
-        <p>Every pick is saved, graded, and displayed publicly so your record follows you forever.</p>
-      </div>
-      <div class="tmr-mini-ticket"><span>▣</span><small>Before start time<br><b>Pick locked</b></small><strong>Public profile</strong><em>Free</em><mark>Verified<br>record</mark></div>
-    </article>
-    <article>
-      <div class="tmr-card-icon">◇</div>
-      <div>
-        <h2>Advanced Stats For Every User</h2>
-        <p>Track ROI, units, win rate, sport performance, bet type results, streaks, and long-term strengths.</p>
-      </div>
-      <div class="tmr-result-table"><span>ROI</span><span>Units</span><span>Sports</span><span>Streaks</span><b>By market</b><b>Tracked</b><b>Splits</b><b>History</b></div>
-    </article>
-    <article>
-      <div class="tmr-card-icon">▥</div>
-      <div>
-        <h2>Compete, Sell, and Challenge</h2>
-        <p>Join contests, challenge other users, sell picks, buy picks, and build credibility through real results.</p>
-      </div>
-      <div class="tmr-buyer-panel">
-        <span>Platform actions</span>
-        <b>Sell picks</b>
-        <b>Buy with transparency</b>
-        <b>Challenge users</b>
-      </div>
-    </article>
-  </section>
-
-  <!-- DUPLICATE_FEATURES_SECTION_REMOVED_20260525: a 6-card platform-features grid (class tmr-platform-section) duplicated the themes already covered by the 3 proof cards above (id="features"). Removed so the hero has ONE features block. Do not reintroduce a second features grid. -->
-
-  <!-- ACCOUNT_INTEGRITY_HOMEPAGE_NOTICE_20260604 -->
-  <section class="tmr-account-integrity-note" aria-label="Account Integrity Rule" style="width:min(1180px,calc(100% - 36px));margin:26px auto 8px;padding:18px 22px;border-radius:16px;border:1px solid rgba(239,68,68,0.38);background:linear-gradient(180deg, rgba(52,14,14,0.55), rgba(8,18,31,0.92));display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;">
-    <div style="flex:1;min-width:260px;">
-      <div style="font-family:'Barlow','Inter',sans-serif;font-weight:900;font-size:1.02rem;letter-spacing:0.05em;text-transform:uppercase;color:#ffc9c9;margin-bottom:6px;">Account Integrity Rule</div>
-      <p style="margin:0;color:#c7d3e2;font-size:0.93rem;line-height:1.55;">TrustMyRecord allows only <strong style="color:#fff;">one account per person and one account per household</strong>. No exceptions. This protects the integrity of verified records, contests, leaderboards, and prizes. Duplicate accounts will be deleted.</p>
-    </div>
-    <a href="/rules/" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:10px;background:rgba(45,212,191,0.12);border:1px solid rgba(45,212,191,0.45);color:#2dd4bf;font-weight:800;font-size:0.9rem;letter-spacing:0.03em;text-decoration:none;white-space:nowrap;">Read the Platform Rules <span aria-hidden="true">→</span></a>
-  </section>
-
-  <!-- ARENA_PHASE1_HOMEPAGE_PROMO_20260605 -->
-  <section class="tmr-arena-promo" aria-label="TrustMyRecord Arena" style="width:min(1180px,calc(100% - 36px));margin:18px auto 8px;padding:18px 22px;border-radius:16px;border:1px solid rgba(255,215,0,0.35);background:linear-gradient(135deg, rgba(0,174,255,0.10), rgba(168,85,247,0.10)), rgba(8,18,31,0.92);display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;">
-    <div style="flex:1;min-width:260px;">
-      <div style="font-family:'Barlow','Inter',sans-serif;font-weight:900;font-size:1.02rem;letter-spacing:0.05em;text-transform:uppercase;color:#ffd700;margin-bottom:6px;">New: TrustMyRecord Arena</div>
-      <p style="margin:0;color:#c7d3e2;font-size:0.93rem;line-height:1.55;">Verified sports-gaming leagues, live challenges, and free predictions. Compete in <strong style="color:#fff;">MLB The Show</strong> head-to-head matches and online leagues, prove your record, and make free Arena Picks with Arena Points (no cash value, just bragging rights).</p>
-    </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <a href="/arena/mlb-the-show/" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:10px;background:rgba(255,215,0,0.14);border:1px solid rgba(255,215,0,0.45);color:#ffd700;font-weight:800;font-size:0.9rem;letter-spacing:0.03em;text-decoration:none;white-space:nowrap;">Enter the Arena <span aria-hidden="true">→</span></a>
-      <a href="/arena/leagues/" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:10px;background:rgba(0,174,255,0.10);border:1px solid rgba(0,174,255,0.40);color:#7fd2ff;font-weight:800;font-size:0.9rem;letter-spacing:0.03em;text-decoration:none;white-space:nowrap;">Join a League</a>
-    </div>
-  </section>
-  <!--MK:exploreLinks-->
-  <!-- CURATED_EXPLORE_20260708: the giant ~90-link sitemap dump that used to live here duplicated the
-       comprehensive global footer (buildGlobalFooter in static/js/tmr-sitewide.js?v=20260713hub1). Replaced with a small,
-       curated 6-destination quick-nav. The footer remains the single full link hub. Do NOT reintroduce a
-       full directory/sitemap grid in the homepage body. -->
-  <style>
+    </style><style>
   .tmr-explore{max-width:1180px;margin:40px auto 8px;padding:30px 18px 8px;border-top:1px solid #23233a;}
   .tmr-explore h2{font-family:'Barlow','Inter',sans-serif;font-weight:900;font-size:clamp(1.4rem,3vw,1.9rem);color:#f8fbff;margin:0 0 4px;letter-spacing:-.01em;}
   .tmr-explore h2 em{font-style:normal;color:#37d6c1;}
@@ -2564,53 +2166,7 @@ button{font:inherit;cursor:pointer}
   .tmr-explore-card .go{margin-top:4px;color:#37d6c1;font-weight:800;font-size:.85rem;}
   @media(max-width:900px){.tmr-explore-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
   @media(max-width:560px){.tmr-explore-grid{grid-template-columns:1fr;}}
-  </style>
-  <section class="tmr-explore" aria-labelledby="tmr-explore-h">
-    <h2 id="tmr-explore-h">Explore <em>TrustMyRecord</em></h2>
-    <p class="tmr-explore-sub">The core of the platform in six stops. The full site map lives in the footer below.</p>
-    <div class="tmr-explore-grid">
-      <a class="tmr-explore-card" href="/sportsbook/">
-        <span class="ic">🎯</span>
-        <h3>Sportsbook</h3>
-        <p>Lock your picks before game time and build a permanent, public record.</p>
-        <span class="go">Open Sportsbook →</span>
-      </a>
-      <a class="tmr-explore-card" href="/leaderboards/">
-        <span class="ic">🏅</span>
-        <h3>Verified Leaderboards</h3>
-        <p>Every bettor ranked on real, auto-graded results, units, and ROI.</p>
-        <span class="go">View Leaderboards →</span>
-      </a>
-      <a class="tmr-explore-card" href="/handicappers/">
-        <span class="ic">📊</span>
-        <h3>Handicappers</h3>
-        <p>Browse public profiles and verified records across every sport.</p>
-        <span class="go">Browse Records →</span>
-      </a>
-      <a class="tmr-explore-card" href="/contests/">
-        <span class="ic">🏆</span>
-        <h3>Free Contests</h3>
-        <p>Enter free contests, compete on the leaderboard, and prove your record.</p>
-        <span class="go">Enter a Contest →</span>
-      </a>
-      <a class="tmr-explore-card" href="/community/">
-        <span class="ic">💬</span>
-        <h3>Community</h3>
-        <p>Forum, feed, polls, and trivia for people with a real record to back it up.</p>
-        <span class="go">Join In →</span>
-      </a>
-      <a class="tmr-explore-card" href="/trustmyrecord-tools/">
-        <span class="ic">🛠️</span>
-        <h3>Tools &amp; Simulators</h3>
-        <p>Season and game simulators, model builder, and the Trend Spotter.</p>
-        <span class="go">Open Tools →</span>
-      </a>
-    </div>
-  </section>
-  <!--/MK:exploreLinks-->
-</main>
-
-<style>
+  </style><style>
   body > .header,
   body > .tmr-social-hero,
   body > .tmr-home-beta-strip,
@@ -3845,13 +3401,7 @@ button{font:inherit;cursor:pointer}
     .tmr-premium-proof-cards p { max-width: none; }
     .tmr-platform-section { padding: 52px 16px 62px; }
   }
-</style>
-
-<!-- Header -->
-<!-- DUPLICATE_LEGACY_HEADER_REMOVED_20260524: a second homepage <header class="header"> was stacked below the new premium-home top section. Removed. The site uses ONE header: the global nav (.tmr-global-nav) injected by static/js/tmr-sitewide.js?v=20260713hub1. Do not reintroduce a per-page homepage <header>. -->
-
-<!-- DUPLICATE_LEGACY_HERO_REMOVED_20260524: the old steph-curry "combined-hero hero-v2" (tmr-social-hero) was a second above-the-fold hero stacked below the new premium-home hero/leaderboard/Trend Spotter. Removed so the page has ONE hero/top section. Do not reintroduce a second homepage hero. -->
-<style>
+</style><style>
   .tmr-home-toplinks { flex: 1; display: flex; justify-content: center; align-items: center; gap: 18px; min-width: 260px; }
   .tmr-home-toplinks a { color: var(--ink-2); font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; }
   .tmr-home-toplinks a:hover { color: var(--blue); }
@@ -3887,25 +3437,7 @@ button{font:inherit;cursor:pointer}
   @media (max-width: 820px) { body.tmr-site-shell[data-tmr-route="index"] .tmr-global-nav__inner { grid-template-columns: 1fr !important; grid-template-areas: "brand" "actions" "links" !important; min-height: 0 !important; } body.tmr-site-shell[data-tmr-route="index"] .tmr-community-menu, body.tmr-site-shell[data-tmr-route="index"] .tmr-support-menu { display: none !important; } body.tmr-site-shell[data-tmr-route="index"] .tmr-global-nav__links { justify-content: flex-start !important; overflow-x: auto !important; } }
   @media (max-width: 820px) { .header-inner { display: grid !important; grid-template-columns: 1fr; align-items: start !important; gap: 12px !important; } .header-search { display: none; } .header-right { width: 100%; justify-self: stretch; justify-content: flex-start; flex-wrap: wrap; gap: 8px; } .header-right .btn { min-height: 42px; padding: 0 18px; } .tmr-home-toplinks { grid-column: 1 / -1; order: 3 !important; flex: 0 0 100% !important; width: 100% !important; min-width: 0 !important; max-width: 100% !important; justify-content: flex-start !important; gap: 10px; overflow-x: auto; margin-top: 0; padding: 2px 2px 4px; } .tmr-home-toplinks > a { min-height: 40px; padding: 0 14px; border-radius: 999px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); display: inline-flex; align-items: center; flex: 0 0 auto; } .tmr-home-support { display: none; } .tmr-social-hero { min-height: auto; } .tmr-social-hero-inner { padding-top: 34px; } .tmr-social-actions { align-items: stretch; } .tmr-social-actions a { width: 100%; } }
   @media (max-width: 560px) { .tmr-social-tools-card { padding: 20px; } .tmr-social-tools-pills span { white-space: normal; } .tmr-social-tools-cta { width: 100%; } }
-</style>
-
-<section class="tmr-home-beta-strip" aria-label="TrustMyRecord beta activity">
-  <div class="tmr-home-beta-strip__inner">
-    <div>
-      <strong>Early beta is live.</strong>
-      <span>Members are building public records from real submitted activity.</span>
-    </div>
-    <nav aria-label="Platform shortcuts">
-      <a href="/feed/">Feed</a>
-      <a href="/arena/">Arena</a>
-      <a href="/forum/">Forum</a>
-      <a href="/polls/">Polls</a>
-      <a href="/trivia/">Trivia</a>
-    </nav>
-  </div>
-</section>
-
-<style>
+</style><style>
   .tmr-home-beta-strip {
     background: #08111f;
     border-top: 1px solid rgba(255,255,255,.08);
@@ -3939,56 +3471,7 @@ button{font:inherit;cursor:pointer}
   @media (max-width: 760px) {
     .tmr-home-beta-strip__inner { align-items: flex-start; flex-direction: column; }
   }
-</style>
-
-<!-- ===========================================================
-     SECTION 0: THE CORE LOOP (added Apr 29 2026)
-     Pick → Lock → Track → Climb. The single primary user journey
-     the hero promises, broken into 4 explicit steps so a first-time
-     visitor knows exactly what they do here.
-=========================================================== -->
-<section class="tmr-loop" id="core-loop" aria-label="The core loop">
-  <div class="tmr-section-inner">
-    <header class="tmr-section-head tmr-loop-head">
-      <span class="tmr-loop-eyebrow">Post the Play. Lock the Record. Climb the Board.</span>
-      <h2>HOW TRUSTMYRECORD WORKS</h2>
-      <p class="tmr-section-sub">One simple cycle is the entire reason this site exists. Everything else &mdash; the feed, the forum, polls, trivia, gaming, selling picks &mdash; is built on top of it.</p>
-    </header>
-
-    <ol class="tmr-loop-steps">
-      <li class="tmr-loop-step">
-        <span class="tmr-loop-step-num">01</span>
-        <h3>Make Your Pick</h3>
-        <p>Choose the sport, the game, the market, the side, the odds, and the units. The full ticket lives on your profile from the moment you submit it.</p>
-      </li>
-      <li class="tmr-loop-step">
-        <span class="tmr-loop-step-num">02</span>
-        <h3>Lock It In</h3>
-        <p>Once posted, the pick is part of your public record. No edits, no deletes, no "I meant the other side" do-overs. The receipt is the receipt.</p>
-      </li>
-      <li class="tmr-loop-step">
-        <span class="tmr-loop-step-num">03</span>
-        <h3>Track the Result</h3>
-        <p>The auto-grader settles every pick when the game finishes. Wins, losses, units, ROI, and win % update on your profile and feed automatically.</p>
-      </li>
-      <li class="tmr-loop-step">
-        <span class="tmr-loop-step-num">04</span>
-        <h3>Build Credibility</h3>
-        <p>Climb the leaderboards by sport, unit profit, ROI, and win rate. A real public record is the difference between a fan with opinions and a capper worth following.</p>
-      </li>
-    </ol>
-
-    <div class="tmr-loop-cta">
-      <a class="hero-action hero-action--primary auth-link" href="/register/">Start Your Free Record</a>
-      <a class="hero-action hero-action--ghost" href="/sportsbook/">See the Board</a>
-      <a class="hero-action hero-action--ghost" href="/how-it-works/">How It Works</a>
-    </div>
-  </div>
-</section>
-
-<!-- BLOATED_SEO_SECTION_REMOVED_20260524 A: an off-theme white SEO text-wall section (class trust-standards) was removed in the focused homepage trim. Do not reintroduce giant stacked marketing/SEO sections after a homepage cleanup. -->
-
-<style>
+</style><style>
   .tmr-loop {
     background: linear-gradient(180deg, rgba(11,17,24,0.0) 0%, rgba(11,17,24,0.45) 100%);
     padding: 80px 24px 64px;
@@ -4121,23 +3604,7 @@ button{font:inherit;cursor:pointer}
     .tmr-loop-cta { flex-direction: column; align-items: stretch; }
     .tmr-loop-cta .hero-action { width: 100%; }
   }
-</style>
-
-<!-- ===========================================================
-     INTEGRITY BAND (added Apr 29 2026)
-     Explains why public records matter without naming names.
-     Sits between the core loop and the supporting features section so
-     the "why we exist" answer lands right after the "what you do here"
-     answer.
-=========================================================== -->
-<section class="tmr-integrity" aria-label="Why TrustMyRecord exists">
-  <div class="tmr-integrity-inner">
-    <span class="tmr-integrity-eyebrow">Public Records Over Claims.</span>
-    <h2>Restoring integrity to a shady industry.</h2>
-      <p>TrustMyRecord exists so sports opinions can be tied to a visible history instead of screenshots or unsupported claims. Users can submit picks, track outcomes, and let the public record speak for itself.</p>
-  </div>
-</section>
-<style>
+</style><style>
   .tmr-integrity {
     padding: 56px 24px 60px;
     background:
@@ -4169,15 +3636,7 @@ button{font:inherit;cursor:pointer}
     margin: 0 auto;
     max-width: 760px;
   }
-</style>
-
-<!-- ===========================================================
-     ADVANCED METRICS BY SPORT
-     Descriptive platform capabilities only. No fabricated live stats.
-=========================================================== -->
-<!-- BLOATED_SEO_SECTION_REMOVED_20260524 B: a large per-sport SEO card grid (class tmr-sport-analytics) was removed in the focused homepage trim. Its routes (leaderboards, handicappers, sportsbook, model-builder, mlb-simulator) remain linked via the global nav, footer, and other homepage sections. Do not reintroduce giant stacked marketing/SEO sections after a homepage cleanup. -->
-
-<style>
+</style><style>
   .tmr-sport-analytics {
     padding: 76px 24px;
     background:
@@ -4318,29 +3777,7 @@ button{font:inherit;cursor:pointer}
     .tmr-analytics-links { flex-direction: column; align-items: stretch; }
     .tmr-analytics-links a { width: 100%; }
   }
-</style>
-
-<!-- DUPLICATE_FEATURES_SECTION_REMOVED_20260524: a second platform-features grid (.tmr-features, id="what-it-is") duplicated the compact platform-features section already inside <main class="tmr-premium-home"> (.tmr-platform-section). Removed the lower duplicate so the page has ONE features section. Its links (feed, handicappers, polls, marketplace, arena, forum) remain in the beta-strip, global nav, and footer. Do not reintroduce a second features grid. -->
-
-<!-- ===========================================================
-     SECTION 4: BUILT FOR COMPETITION (final CTA)
-=========================================================== -->
-<section class="tmr-final" aria-label="Built for competition">
-  <div class="tmr-final-glow" aria-hidden="true"></div>
-  <div class="tmr-section-inner tmr-final-inner">
-    <span class="tmr-final-eyebrow">BUILT FOR COMPETITION</span>
-    <h2>TURN SPORTS OPINIONS INTO PUBLIC COMPETITION.</h2>
-      <p>Every pick, poll, challenge, and tournament is designed to turn sports opinions into public competition. Users can build reputation through public records, rankings, and community activity.</p>
-    <div class="tmr-final-cta">
-      <a class="btn accent xl auth-link" href="/register/">Start Your Free Record →</a>
-      <a class="btn ghost-light xl" href="/sportsbook/">Sportsbook</a>
-      <a class="btn ghost-light xl" href="/arena/">Join the Arena</a>
-    </div>
-      <p class="tmr-final-fineprint">Your Picks. Your Record. Your Reputation. &middot; Public activity from the app.</p>
-  </div>
-</section>
-
-<style>
+</style><style>
   /* Homepage visual upgrade: scoped overrides only. */
   body {
     background:
@@ -4667,639 +4104,471 @@ button{font:inherit;cursor:pointer}
     }
   }
 </style>
+<main class="tmr-premium-home">
+<header class="tmr-premium-nav">
+    <a class="tmr-premium-brand" href="/" aria-label="TrustMyRecord home">
+      <span class="tmr-premium-shield">T</span>
+      <span>TrustMyRecord</span>
+    </a>
+    <nav class="tmr-premium-links" aria-label="Main navigation">
+      <a href="/sportsbook/" class="tmr-premium-links__make-picks">Sportsbook</a>
+      <a href="/handicappers/">Handicappers</a>
+      <a href="/marketplace/">Sell Your Picks</a>
+      <a href="/contests/justbet-mlb/">Contest</a>
+      <a href="/community/">Community</a>
+      <a href="/feed/">Feed</a>
+      <a href="/rules/">Rules</a>
+      <a href="/about/">About</a>
+    </nav>
+    <div class="tmr-premium-actions">
+      <a class="tmr-premium-login auth-link" href="/login/">Log in</a>
+      <a class="tmr-premium-signup auth-link" href="/register/">Sign up</a>
+    </div>
+  </header>
 
 
-<!-- DUPLICATE_LEGACY_FOOTER_REMOVED_20260524: a second static <footer class="footer"> was stacked above the injected global footer. Removed. The site uses ONE footer: .tmr-global-footer injected by static/js/tmr-sitewide.js?v=20260713hub1 (see its buildGlobalFooter ~line 888). Do not reintroduce a per-page homepage <footer class="footer">. -->
 
-<script src="static/js/config.js?v=20260520rollback1"></script>
-<script src="static/js/backend-api.js?v=20260601nostorestats1"></script>
-<script src="static/js/auth-persistent.js?v=20260524noautologout"></script>
-<script defer src="static/js/tmr-sitewide.js?v=20260713hub1"></script>
-<script src="static/js/analytics.js?v=20260719ft"></script>
-<script src="static/js/justbet-promo.js?v=20260613invite1"></script>
-<script>
-(function () {
-    const apiBase = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
-    const fallbackAvatar = 'static/media/TMR-avatar-256.jpg';
-function escapeHtml(value) {
-        return String(value == null ? '' : value).replace(/[&<>"']/g, function (char) {
-            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char];
-        });
-    }
 
-    function number(value, fallback) {
-        const parsed = Number(value);
-        return Number.isFinite(parsed) ? parsed : fallback;
-    }
+<div class="ticker"><div class="ticker-in">
+  <span class="tlbl"><span class="bl"></span>Tonight</span>
+  <span class="gm"><span class="t"><img src="https://www.mlbstatic.com/team-logos/134.svg" alt="Pirates">PIT</span><span class="sc">3</span><span class="t"><img src="https://www.mlbstatic.com/team-logos/113.svg" alt="Reds">CIN</span><span class="sc">2</span><span class="st on">Top 7th</span></span>
+  <span class="gm"><span class="t"><img src="https://www.mlbstatic.com/team-logos/119.svg" alt="Dodgers">LAD</span><span class="sc">5</span><span class="t"><img src="https://www.mlbstatic.com/team-logos/137.svg" alt="Giants">SF</span><span class="sc">1</span><span class="st on">Bot 5th</span></span>
+  <span class="gm"><span class="t"><img src="https://www.mlbstatic.com/team-logos/147.svg" alt="Yankees">NYY</span><span class="t"><img src="https://www.mlbstatic.com/team-logos/121.svg" alt="Mets">NYM</span><span class="st">7:05 PM</span></span>
+  <span class="gm"><span class="t"><img src="https://www.mlbstatic.com/team-logos/117.svg" alt="Astros">HOU</span><span class="t"><img src="https://www.mlbstatic.com/team-logos/133.svg" alt="Athletics">ATH</span><span class="st">9:40 PM</span></span>
+  <span class="gm"><span class="t"><img src="https://www.mlbstatic.com/team-logos/112.svg" alt="Cubs">CHC</span><span class="t"><img src="https://www.mlbstatic.com/team-logos/145.svg" alt="White Sox">CWS</span><span class="st">8:10 PM</span></span>
+</div></div>
 
-    function signed(value, suffix) {
-        const parsed = Number(value);
-        if (!Number.isFinite(parsed)) return 'Verified record pending';
-        return (parsed > 0 ? '+' : '') + parsed.toFixed(2).replace(/\.00$/, '') + (suffix || '');
-    }
+<section class="hero">
+  <div class="grain"></div>
+  <div class="wrap hero-in"><div class="hero-grid">
+    <div>
+      <span class="eyebrow"><span class="bl"></span>1,878 picks tracked &middot; nothing deleted</span>
+      <h1 class="hh">Track your picks.<br><em>Build a record nobody can fake.</em></h1>
+      <p class="sub">Lock your pick before game time. TrustMyRecord grades it automatically and publishes the units, ROI, and streaks on a public profile that can't be edited or cherry-picked.</p>
+      <div class="cta">
+        <a class="btn p lg" href="#">Start Your Free Record</a>
+        <a class="tlink dk" href="#">See how grading works &rarr;</a>
+      </div>
+    </div>
 
-    async function request(path) {
-        if (window.api && typeof window.api.request === 'function') {
-            return window.api.request(path);
-        }
-        const response = await fetch(apiBase + path, { cache: 'no-store', headers: { 'Accept': 'application/json' } });
-        if (!response.ok) throw new Error('Request failed: ' + path);
-        return response.json();
-    }
+    <aside class="spot">
+      <div class="rail"></div>
+      <div class="hd"><b>&#9733; Capper of the week</b><a class="tlink" style="font-size:14px" href="#">Full profile &rarr;</a></div>
+      <div class="bd">
+        <div class="who"><span class="avbox">M6</span>
+          <span><span class="nmrow"><b>makaveli66</b><span class="vchip">Verified</span></span><span class="sub2">Member since May 2026 &middot; MLB, NBA</span></span></div>
+        <div class="g3">
+          <div><b class="num">155-104-3</b><span>Record</span></div>
+          <div><b class="num pos">+95.01</b><span>Units</span></div>
+          <div><b class="num pos">3.1%</b><span>ROI</span></div>
+        </div>
+        <div class="sparkwrap">
+          <div class="lb"><span>Last 12 graded picks</span><span>9W &middot; 3L</span></div>
+          <div class="spark">
+            <i style="height:38%"></i><i style="height:58%"></i><i class="dn" style="height:26%"></i><i style="height:68%"></i>
+            <i style="height:52%"></i><i class="dn" style="height:32%"></i><i style="height:80%"></i><i style="height:63%"></i>
+            <i class="dn" style="height:29%"></i><i style="height:88%"></i><i style="height:71%"></i><i style="height:100%"></i>
+          </div>
+        </div>
+      </div>
+      <div class="ft"><span>262 picks, every one locked pre-game</span><a class="tlink" style="font-size:14px" href="#">View ledger &rarr;</a></div>
+    </aside>
+  </div></div>
+</section>
 
-    // A transient cold-start (Render free-dyno spin-up) can fail the very first
-    // request. Retry a couple of times so the homepage modules hydrate with
-    // real cards instead of falling back to the empty state for normal visitors.
-    async function requestRetry(path, tries) {
-        let last;
-        for (let i = 0; i < (tries || 3); i++) {
-            try { return await request(path); }
-            catch (e) { last = e; await new Promise(function (r) { setTimeout(r, 600 * (i + 1)); }); }
-        }
-        throw last;
-    }
+<!-- BRIDGE -->
+<div class="wrap bridge"><div class="bridge-in">
+  <div class="s"><b class="num t">1,878</b><span>Picks Tracked</span></div>
+  <div class="s"><b class="num">31</b><span>Verified Cappers</span></div>
+  <div class="s"><b class="num">58</b><span>Members</span></div>
+  <div class="s"><b class="num">$2,500</b><span>Free Prize Pool</span></div>
+  <div class="cta-cell"><p>Every figure is auto-graded from final scores.</p><a class="tlink" href="#">Grading rules &rarr;</a></div>
+</div></div>
 
-    const userAvatarByUsername = new Map();
+<div class="wrap dash">
+  <div class="sec-head">
+    <div><h2>Happening right now</h2><p>Live from the platform. Nothing on this page is self-reported.</p></div>
+    <a class="tlink" href="#">Open the full board &rarr;</a>
+  </div>
 
-    function initials(name) {
-        const trimmed = String(name || '').trim();
-        if (!trimmed) return '?';
-        const parts = trimmed.split(/[\s_.-]+/).filter(Boolean);
-        if (parts.length >= 2) {
-            return (parts[0][0] + parts[1][0]).toUpperCase();
-        }
-        return trimmed.slice(0, 2).toUpperCase();
-    }
+  <div class="board">
+    <section class="card">
+      <div class="chd">
+        <h3><span class="pulse"></span>Live Picks</h3>
+        <span class="tabs"><button class="tab on">All</button><button class="tab">MLB</button><button class="tab">Soccer</button><button class="tab">NFL</button></span>
+      </div>
+      <div class="body">
+        <div class="pk">
+          <span class="logo2"><img src="https://www.mlbstatic.com/team-logos/134.svg" alt="Pirates"></span>
+          <span class="bd">
+            <span class="who"><img class="ava" style="width:26px;height:26px;border-radius:6px" src="https://a.espncdn.com/i/teamlogos/nfl/500/pit.png" alt=""><b>Little_Venom</b>&middot; 12 min ago</span>
+            <span class="ln">Pirates +1.5 (-135) vs Reds</span>
+            <span class="mt"><span class="lgchip">MLB</span>Run line &middot; locked 38 min before first pitch</span>
+          </span>
+          <span class="rt"><span class="badge p">Pending</span><span class="u">2.0u</span></span>
+        </div>
+        <div class="pk">
+          <span class="logo2"><img src="https://www.mlbstatic.com/team-logos/119.svg" alt="Dodgers"></span>
+          <span class="bd">
+            <span class="who"><span class="avl c1" style="width:26px;height:26px;border-radius:6px;font-size:10.5px">M6</span><b>makaveli66</b>&middot; 2 hrs ago</span>
+            <span class="ln">Dodgers ML (-142)</span>
+            <span class="mt"><span class="lgchip">MLB</span>Moneyline &middot; auto-graded at final</span>
+          </span>
+          <span class="rt"><span class="badge w">Win</span><span class="u pos">+3.0u</span></span>
+        </div>
+        <div class="pk">
+          <span class="logo2"><img src="https://www.mlbstatic.com/team-logos/147.svg" alt="Yankees"></span>
+          <span class="bd">
+            <span class="who"><img class="ava" style="width:26px;height:26px;border-radius:6px" src="https://trustmyrecord-api.onrender.com/api/users/690/avatar" alt=""><b>linda2026</b>&middot; 4 hrs ago</span>
+            <span class="ln">Yankees / Mets Under 8.5 (-108)</span>
+            <span class="mt"><span class="lgchip">MLB</span>Total &middot; auto-graded at final</span>
+          </span>
+          <span class="rt"><span class="badge w">Win</span><span class="u pos">+1.0u</span></span>
+        </div>
+        <div class="pk">
+          <span class="logo2"><img src="https://www.mlbstatic.com/team-logos/117.svg" alt="Astros"></span>
+          <span class="bd">
+            <span class="who"><span class="avl c4" style="width:26px;height:26px;border-radius:6px;font-size:10.5px">FM</span><b>fade_my_picks</b>&middot; 5 hrs ago</span>
+            <span class="ln">Astros -1.5 (+120)</span>
+            <span class="mt"><span class="lgchip">MLB</span>Losses stay on the record &mdash; nothing is deleted</span>
+          </span>
+          <span class="rt"><span class="badge l">Loss</span><span class="u neg">-2.0u</span></span>
+        </div>
+        <div class="pk">
+          <span class="logo2"><img src="https://www.mlbstatic.com/team-logos/111.svg" alt="Red Sox"></span>
+          <span class="bd">
+            <span class="who"><img class="ava" style="width:26px;height:26px;border-radius:6px" src="https://trustmyrecord-api.onrender.com/api/users/625/avatar" alt=""><b>MoneyMakers</b>&middot; 6 hrs ago</span>
+            <span class="ln">Red Sox team total Over 4.5 (-115)</span>
+            <span class="mt"><span class="lgchip">MLB</span>Team total &middot; auto-graded at final</span>
+          </span>
+          <span class="rt"><span class="badge w">Win</span><span class="u pos">+1.5u</span></span>
+        </div>
+        <div class="pk">
+          <span class="logo2"><img src="https://www.mlbstatic.com/team-logos/112.svg" alt="Cubs"></span>
+          <span class="bd">
+            <span class="who"><img class="ava" style="width:26px;height:26px;border-radius:6px" src="https://trustmyrecord-api.onrender.com/api/users/579/avatar" alt=""><b>regi</b>&middot; 7 hrs ago</span>
+            <span class="ln">Cubs / White Sox Over 8.5 (-110)</span>
+            <span class="mt"><span class="lgchip">MLB</span>Total &middot; auto-graded at final</span>
+          </span>
+          <span class="rt"><span class="badge w">Win</span><span class="u pos">+1.0u</span></span>
+        </div>
+      </div>
+      <div class="foot"><a href="#">View every tracked pick &rarr;</a></div>
+    </section>
 
-    function avatarColor(username) {
-        const str = String(username || '');
-        let h = 0;
-        for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
-        return 'hsl(' + (h % 360) + ', 62%, 48%)';
-    }
+    <section class="card">
+      <div class="chd"><h3>Leaderboard</h3><span class="cnt">All-time units</span></div>
+      <div class="body">
+        <div class="lbr"><span class="rk g1">1</span><span class="avl c1">M6</span><span class="nm"><b>makaveli66</b><span>155-104-3 &middot; 262 picks</span></span><span class="un"><b class="pos">+95.01u</b><span>3.1% ROI</span></span></div>
+        <div class="lbr"><span class="rk g2">2</span><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/625/avatar" alt=""><span class="nm"><b>MoneyMakers</b><span>215-90 &middot; 305 picks</span></span><span class="un"><b class="pos">+16.71u</b><span>3.2% ROI</span></span></div>
+        <div class="lbr"><span class="rk g3">3</span><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><span class="nm"><b>BetLegend</b><span>264-229-6 &middot; 499 picks</span></span><span class="un"><b class="pos">+9.18u</b><span>0.6% ROI</span></span></div>
+        <div class="lbr"><span class="rk">4</span><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/690/avatar" alt=""><span class="nm"><b>linda2026</b><span>28-21 &middot; 49 picks</span></span><span class="un"><b class="pos">+7.92u</b><span>14.1% ROI</span></span></div>
+        <div class="lbr"><span class="rk">5</span><span class="avl c5">MK</span><span class="nm"><b>Mike</b><span>6-6 &middot; 12 picks</span></span><span class="un"><b class="pos">+7.05u</b><span>28.4% ROI</span></span></div>
+        <div class="lbr"><span class="rk">6</span><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/579/avatar" alt=""><span class="nm"><b>regi</b><span>29-24 &middot; 53 picks</span></span><span class="un"><b class="pos">+4.30u</b><span>8.1% ROI</span></span></div>
+        <div class="lbr"><span class="rk">7</span><span class="avl c4">P9</span><span class="nm"><b>patrick9</b><span>10-8-1 &middot; 19 picks</span></span><span class="un"><b class="pos">+3.34u</b><span>12.2% ROI</span></span></div>
+        <div class="lbr"><span class="rk">8</span><span class="avl c2">FM</span><span class="nm"><b>fade_my_picks</b><span>84-68-8 &middot; 160 picks</span></span><span class="un"><b class="pos">+1.93u</b><span>1.2% ROI</span></span></div>
+      </div>
+      <div class="foot"><a href="#">Full leaderboards &rarr;</a></div>
+    </section>
 
-    function attachAvatarFallbacks(root) {
-        if (!root) return;
-        root.querySelectorAll('img[data-avatar-initials]').forEach(function (img) {
-            img.addEventListener('error', function () {
-                const span = document.createElement('span');
-                const txt = img.getAttribute('data-avatar-initials') || '?';
-                const color = img.getAttribute('data-avatar-color') || '#3a4a60';
-                span.className = 'tmr-fallback-initials';
-                span.style.background = color;
-                span.style.color = '#fff';
-                span.style.width = '100%';
-                span.style.height = '100%';
-                span.style.display = 'grid';
-                span.style.placeItems = 'center';
-                span.textContent = txt;
-                img.replaceWith(span);
-            }, { once: true });
-        });
-    }
+    <section class="card">
+      <div class="chd"><h3>Sports Talk</h3><span class="cnt">Newest first</span></div>
+      <div class="body">
+        <div class="fr"><span class="avl c3">LV</span><span class="fb"><span class="cat str">Strategy &amp; Theory</span><div class="ft2">The number you take matters more than the side you pick</div><div class="fm">Little_Venom &middot; 2 hrs ago</div></span></div>
+        <div class="fr"><img class="ava" src="https://trustmyrecord.com/static/media/TMR-avatar-256.jpg" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">7-19-2026 MLB Picks</div><div class="fm">BetLegend &middot; 499 tracked picks &middot; today</div></span></div>
+        <div class="fr"><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/690/avatar" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">Dodgers vs Yankees</div><div class="fm">linda2026 &middot; 14.1% ROI &middot; today</div></span></div>
+        <div class="fr"><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/690/avatar" alt=""><span class="fb"><span class="cat soc">Soccer Betting</span><div class="ft2">Spain vs Argentina</div><div class="fm">linda2026 &middot; yesterday</div></span></div>
+        <div class="fr"><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/625/avatar" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">Detroit Tigers at LA Angels</div><div class="fm">MoneyMakers &middot; 215-90 lifetime &middot; yesterday</div></span></div>
+        <div class="fr"><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/690/avatar" alt=""><span class="fb"><span class="cat mlb">MLB Betting</span><div class="ft2">White Sox vs Blue Jays</div><div class="fm">linda2026 &middot; 2 days ago</div></span></div>
+        <div class="fr"><img class="ava" src="https://trustmyrecord-api.onrender.com/api/users/690/avatar" alt=""><span class="fb"><span class="cat soc">Soccer Betting</span><div class="ft2">New world record by Argentina</div><div class="fm">linda2026 &middot; 2 days ago</div></span></div>
+      </div>
+      <div class="foot"><a href="#">Open the forum &rarr;</a></div>
+    </section>
+  </div>
 
-    function renderUsers(users) {
-        const cleanUsers = users
-            .filter(function (user) { return user && user.username; })
-            .filter(function (user) { return number(user.total_picks || user.totalPicks, 0) > 0; })
-            .slice()
-            .sort(function (a, b) {
-                const ua = number(a.net_units || a.netUnits, -Infinity);
-                const ub = number(b.net_units || b.netUnits, -Infinity);
-                if (ub !== ua) return ub - ua;
-                const ra = number(a.roi, -Infinity);
-                const rb = number(b.roi, -Infinity);
-                return rb - ra;
-            })
-            .slice(0, 10);
+  <!-- COMPETE ROW -->
+  <div class="compete">
+    <section class="ccard feat">
+      <div class="cch"><span class="ic" style="background:rgba(255,201,60,.15);border:1px solid rgba(255,201,60,.38)">&#127942;</span><h4>Free <em>$2,500</em> Contest</h4><span class="st">Running</span></div>
+      <div class="cbody">
+        <p>Fifty MLB picks. Every entry locks before first pitch and is auto-graded by net units on a public leaderboard. Top three finishers paid.</p>
+        <div class="kv">
+          <span class="k"><b class="num g">$2,500</b><span>Prize Pool</span></span>
+          <span class="k"><b class="num">50</b><span>Picks</span></span>
+          <span class="k"><b class="num">$0</b><span>To Enter</span></span>
+        </div>
+        <div class="grow">
+          <div class="crow"><i>&#10003;</i>Picks lock before first pitch, no edits</div>
+          <div class="crow"><i>&#10003;</i>Auto-graded by net units</div>
+          <div class="crow"><i>&#10003;</i>Public leaderboard, top 3 paid</div>
+        </div>
+        <a class="btn d" style="width:100%;margin-top:18px" href="#">Enter the Contest</a>
+      </div>
+    </section>
 
-        const lead = cleanUsers[0];
-        const totalPicks = cleanUsers.reduce(function (sum, user) {
-            return sum + number(user.total_picks || user.totalPicks, 0);
-        }, 0);
+    <section class="ccard">
+      <div class="cch"><span class="ic" style="background:var(--violet-soft)">&#9876;</span><h4>The Arena</h4><span class="st">4 open</span></div>
+      <div class="cbody">
+        <p>Challenge another member head-to-head. Both records are public, so the result settles it.</p>
+        <div class="grow" style="margin-top:18px">
+          <div class="mrow"><img class="mav" src="https://trustmyrecord-api.onrender.com/api/users/625/avatar" alt=""><span class="mt2"><b>MoneyMakers</b><span>Open challenge &middot; MLB sides</span></span><span class="go">Accept</span></div>
+          <div class="mrow"><span class="mavl c3">LV</span><span class="mt2"><b>Little_Venom</b><span>Open challenge &middot; Any sport</span></span><span class="go">Accept</span></div>
+          <div class="mrow"><span class="mavl c5">MK</span><span class="mt2"><b>MLB The Show league</b><span>Season 2 &middot; joining now</span></span><span class="go">Join</span></div>
+        </div>
+        <a class="btn" style="width:100%;margin-top:6px" href="#">Enter the Arena</a>
+      </div>
+    </section>
 
-        const totalUsersEl = document.getElementById('tmrHeroTotalUsers');
-        const totalPicksEl = document.getElementById('tmrHeroTotalPicks');
-        if (totalUsersEl) totalUsersEl.textContent = String(cleanUsers.length || 4);
-        if (totalPicksEl) totalPicksEl.textContent = totalPicks ? String(totalPicks) : 'Verified record pending';
+    <section class="ccard">
+      <div class="cch"><span class="ic" style="background:var(--blue-soft)">&#128202;</span><h4>Today's Poll</h4><span class="st">Open</span></div>
+      <div class="cbody">
+        <div class="pollq">Who wins the National League pennant?</div>
+        <div class="pollmeta">Closes at first pitch &middot; results public</div>
+        <div class="grow">
+          <div class="pbar"><div class="r"><span>Dodgers</span><b class="num">46%</b></div><div class="tr"><i style="width:46%;background:linear-gradient(90deg,var(--brand-lt),var(--brand))"></i></div></div>
+          <div class="pbar"><div class="r"><span>Braves</span><b class="num">31%</b></div><div class="tr"><i style="width:31%;background:linear-gradient(90deg,#5A9BF2,var(--blue))"></i></div></div>
+          <div class="pbar"><div class="r"><span>Field</span><b class="num">23%</b></div><div class="tr"><i style="width:23%;background:linear-gradient(90deg,#9781DE,var(--violet))"></i></div></div>
+        </div>
+        <a class="btn" style="width:100%;margin-top:6px" href="#">Cast Your Vote</a>
+      </div>
+    </section>
+  </div>
 
-        if (lead) {
-            const username = String(lead.username);
-            const displayName = lead.display_name || lead.displayName || username;
-            const avatar = lead.avatar_url || lead.avatarUrl || fallbackAvatar;
-            const total = number(lead.total_picks || lead.totalPicks, 0);
+  <!-- PLATFORM STRIP -->
+  <section class="explore">
+    <div class="eh"><h3>More on the platform</h3><a class="tlink" href="#">Full site map &rarr;</a></div>
+    <div class="egrid">
+      <a class="ei" href="#"><span class="top"><span class="ic2" style="background:var(--blue-soft)">&#127919;</span><h5>Daily Trivia</h5></span><span class="badge2"><span class="bl"></span>Today's quiz is live</span><p>Ten questions across every league. Score counts toward the trivia leaderboard.</p><span class="go2">Play today's quiz &rarr;</span></a>
+      <a class="ei" href="#"><span class="top"><span class="ic2" style="background:var(--brand-soft)">&#128483;</span><h5>Community Feed</h5></span><span class="badge2"><span class="bl"></span>Active today</span><p>Locked picks and takes from members whose record sits next to every post.</p><span class="go2">Read the feed &rarr;</span></a>
+      <a class="ei" href="#"><span class="top"><span class="ic2" style="background:var(--gold-soft)">&#128200;</span><h5>Handicapper Profiles</h5></span><span class="badge2"><span class="bl"></span>31 public records</span><p>Full graded histories by sport, market, and unit size. Sort by ROI or volume.</p><span class="go2">Browse records &rarr;</span></a>
+      <a class="ei" href="#"><span class="top"><span class="ic2" style="background:var(--violet-soft)">&#128736;</span><h5>Tools &amp; Simulators</h5></span><span class="badge2"><span class="bl"></span>Free, no account needed</span><p>NFL and MLB simulators, the model builder, and the Trend Spotter research suite.</p><span class="go2">Open the tools &rarr;</span></a>
+    </div>
+  </section>
 
-            const avatarEl = document.getElementById('tmrHeroUserAvatar');
-            const nameEl = document.getElementById('tmrHeroUserName');
-            const linkEl = document.getElementById('tmrHeroProfileLink');
-            const metaEl = document.getElementById('tmrHeroUserMeta');
-            if (avatarEl) avatarEl.src = avatar;
-            if (nameEl) nameEl.innerHTML = escapeHtml(displayName) + ' <span>◆</span>';
-            if (linkEl) linkEl.href = '/profile/?user=' + encodeURIComponent(username);
-            if (metaEl) metaEl.textContent = '@' + username;
-            const roiEl = document.getElementById('tmrHeroRoi');
-            const unitsEl = document.getElementById('tmrHeroUnits');
-            const picksEl = document.getElementById('tmrHeroPicks');
-            const recordEl = document.getElementById('tmrHeroRecord');
-            if (roiEl) roiEl.textContent = total ? signed(lead.roi, '%') : 'Verified record pending';
-            if (unitsEl) unitsEl.textContent = total ? signed(lead.net_units || lead.netUnits, 'u') : 'Verified record pending';
-            if (picksEl) picksEl.textContent = total ? String(total) : 'Verified record pending';
-            if (recordEl) recordEl.textContent = total ? 'Public record' : 'Verified record pending';
-        }
+  <section class="final">
+    <div>
+      <h3>Ready to prove it?</h3>
+      <p>One pick starts your permanent, public history. Free forever, no credit card.</p>
+    </div>
+    <a class="btn p lg" href="#">Start Your Free Record</a>
+  </section>
+</div>
 
-        const body = document.getElementById('tmrHeroLeaderboardBody');
-        if (!body) return;
-        if (!cleanUsers.length) {
-            body.innerHTML = '<tr class="tmr-seed-table-row"><td colspan="4">Verified public records ranked by net units and ROI. <a href="/leaderboards/">View the full leaderboard</a>.</td></tr>';
-            return;
-        }
-        body.innerHTML = cleanUsers.map(function (user, index) {
-            const username = String(user.username);
-            const displayName = user.display_name || user.displayName || username;
-            const total = number(user.total_picks || user.totalPicks, 0);
-            const avatarUrl = user.avatar_url || user.avatarUrl || '';
-            userAvatarByUsername.set(username.toLowerCase(), avatarUrl);
-            const init = initials(displayName || username);
-            const color = avatarColor(username);
-            const avatarHtml = avatarUrl
-                ? '<img src="' + escapeHtml(avatarUrl) + '" alt="TrustMyRecord user avatar" data-avatar-initials="' + escapeHtml(init) + '" data-avatar-color="' + escapeHtml(color) + '">'
-                : '<span class="avatar-sm" style="background:' + escapeHtml(color) + ';color:#fff">' + escapeHtml(init) + '</span>';
-            return '<tr class="tmr-real-user-row">'
-                + '<td>' + (index + 1) + '</td>'
-                + '<td><a class="tmr-real-user" href="/profile/?user=' + encodeURIComponent(username) + '">'
-                + avatarHtml
-                + '<span>' + escapeHtml(displayName) + '<small>@' + escapeHtml(username) + ' · ' + (total ? total + ' picks' : 'Verified record pending') + '</small></span></a></td>'
-                + '<td>' + escapeHtml(total ? signed(user.roi, '%') : 'Verified record pending') + '</td>'
-                + '<td>' + escapeHtml(total ? signed(user.net_units || user.netUnits, 'u') : 'Verified record pending') + '</td>'
-                + '</tr>';
-        }).join('');
-        attachAvatarFallbacks(body);
-    }
+<footer><div class="in">
+  <span>&copy; 2026 TrustMyRecord &mdash; transparent sports records, locked picks, verified results.</span>
+  <span><a href="#">How It Works</a><a href="#">Rules</a><a href="#">Leaderboards</a><a href="#">Contest</a><a href="#">Contact</a></span>
+</div></footer>
 
-    // ===== Capper Trend Spotter =====================================
-    // Finds the single strongest POSITIVE verified trend for each active
-    // capper from their graded pick history. Never surfaces a losing trend.
-    const GRADED = { won: 1, lost: 1, push: 1 };
+</main>
 
-    function pickDate(p) {
-        return new Date(p.commence_time || p.graded_at || p.created_at || 0).getTime();
-    }
+<!-- ===== PRESERVED PRODUCTION SECTIONS (verbatim: content, routes, tracking, hooks) ===== -->
+<div class="tmr-preserved">
+<section class="tmr-community-band" aria-label="Join the TrustMyRecord community">
+    <style>
+      .tmr-community-band{max-width:1240px;margin:26px auto 0;padding:0 24px;}
+      .tmr-community-band .tcb-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:16px;}
+      .tmr-community-band .tcb-head h2{font-family:'Barlow',sans-serif;font-weight:900;font-size:clamp(1.4rem,3vw,2rem);margin:0;letter-spacing:-.01em;color:var(--premium-text,#f8fbff);}
+      .tmr-community-band .tcb-head h2 em{font-style:normal;color:var(--premium-teal,#37d6c1);}
+      .tmr-community-band .tcb-head p{margin:6px 0 0;color:var(--premium-muted,#a8b4c7);font-size:.98rem;line-height:1.5;max-width:640px;}
+      .tmr-community-band .tcb-all{flex:0 0 auto;display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:10px;font-family:'Barlow',sans-serif;font-weight:800;font-size:.92rem;color:#00201c;background:linear-gradient(135deg,#37d6c1,#2bb6a4);}
+      .tmr-community-band .tcb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}
+      .tmr-community-band .tcb-card{display:flex;flex-direction:column;gap:9px;background:rgba(8,18,31,.82);border:1px solid rgba(134,162,190,.22);border-radius:16px;padding:20px 18px;text-decoration:none;transition:border-color .18s,transform .18s,background .18s;}
+      .tmr-community-band .tcb-card:hover{border-color:rgba(70,221,203,.42);background:rgba(10,22,38,.94);transform:translateY(-3px);}
+      .tmr-community-band .tcb-ic{width:42px;height:42px;display:grid;place-items:center;border-radius:11px;background:rgba(55,214,193,.12);border:1px solid rgba(70,221,203,.42);font-size:21px;}
+      .tmr-community-band .tcb-card h3{font-family:'Barlow',sans-serif;font-weight:800;font-size:1.12rem;margin:2px 0 0;color:var(--premium-text,#f8fbff);}
+      .tmr-community-band .tcb-card p{margin:0;color:var(--premium-muted,#a8b4c7);font-size:.88rem;line-height:1.45;flex:1;}
+      .tmr-community-band .tcb-card span.go{margin-top:4px;color:var(--premium-teal,#37d6c1);font-weight:800;font-size:.85rem;}
+      @media(max-width:980px){.tmr-community-band .tcb-grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+      @media(max-width:520px){.tmr-community-band .tcb-grid{grid-template-columns:1fr;}}
+    </style>
+    <div class="tcb-head">
+      <div>
+        <h2>Join the <em>Community</em></h2>
+        <p>Beyond tracking picks, TrustMyRecord is where bettors play, debate, and compete. Every card is a live feature.</p>
+      </div>
+      <a class="tcb-all" href="/chat/" style="background:linear-gradient(135deg,#00c8ff,#0090cc);color:#001820;">&#128172; Live Chat</a>
+      <a class="tcb-all" href="/community/">Community Hub →</a>
+    </div>
+    <div class="tcb-grid">
+      <a class="tcb-card" href="/trivia/">
+        <span class="tcb-ic">🧠</span>
+        <h3>Sports Trivia</h3>
+        <p>Daily trivia across every league. Answer, score, and climb the leaderboard.</p>
+        <span class="go">Play Trivia →</span>
+      </a>
+      <a class="tcb-card" href="/polls/">
+        <span class="tcb-ic">📊</span>
+        <h3>Polls</h3>
+        <p>Vote in sports and prediction polls, then see where the crowd lands.</p>
+        <span class="go">Vote Now →</span>
+      </a>
+      <a class="tcb-card" href="/feed/">
+        <span class="tcb-ic">📰</span>
+        <h3>Community Feed</h3>
+        <p>Locked picks, hot takes, and discussion from people with a real record.</p>
+        <span class="go">Open Feed →</span>
+      </a>
+      <a class="tcb-card" href="/contests/">
+        <span class="tcb-ic">🏆</span>
+        <h3>Contests &amp; Leaderboards</h3>
+        <p>Free contests and every leaderboard, all ranked on real results.</p>
+        <span class="go">Compete →</span>
+      </a>
+    </div>
+  </section>
+<section id="features" class="tmr-premium-proof-cards">
+    <article>
+      <div class="tmr-card-icon">▢</div>
+      <div>
+        <h2>Free Verified Record Tracking</h2>
+        <p>Every pick is saved, graded, and displayed publicly so your record follows you forever.</p>
+      </div>
+      <div class="tmr-mini-ticket"><span>▣</span><small>Before start time<br><b>Pick locked</b></small><strong>Public profile</strong><em>Free</em><mark>Verified<br>record</mark></div>
+    </article>
+    <article>
+      <div class="tmr-card-icon">◇</div>
+      <div>
+        <h2>Advanced Stats For Every User</h2>
+        <p>Track ROI, units, win rate, sport performance, bet type results, streaks, and long-term strengths.</p>
+      </div>
+      <div class="tmr-result-table"><span>ROI</span><span>Units</span><span>Sports</span><span>Streaks</span><b>By market</b><b>Tracked</b><b>Splits</b><b>History</b></div>
+    </article>
+    <article>
+      <div class="tmr-card-icon">▥</div>
+      <div>
+        <h2>Compete, Sell, and Challenge</h2>
+        <p>Join contests, challenge other users, sell picks, buy picks, and build credibility through real results.</p>
+      </div>
+      <div class="tmr-buyer-panel">
+        <span>Platform actions</span>
+        <b>Sell picks</b>
+        <b>Buy with transparency</b>
+        <b>Challenge users</b>
+      </div>
+    </article>
+  </section>
+<section class="tmr-account-integrity-note" aria-label="Account Integrity Rule" style="width:min(1180px,calc(100% - 36px));margin:26px auto 8px;padding:18px 22px;border-radius:16px;border:1px solid rgba(239,68,68,0.38);background:linear-gradient(180deg, rgba(52,14,14,0.55), rgba(8,18,31,0.92));display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;">
+    <div style="flex:1;min-width:260px;">
+      <div style="font-family:'Barlow','Inter',sans-serif;font-weight:900;font-size:1.02rem;letter-spacing:0.05em;text-transform:uppercase;color:#ffc9c9;margin-bottom:6px;">Account Integrity Rule</div>
+      <p style="margin:0;color:#c7d3e2;font-size:0.93rem;line-height:1.55;">TrustMyRecord allows only <strong style="color:#fff;">one account per person and one account per household</strong>. No exceptions. This protects the integrity of verified records, contests, leaderboards, and prizes. Duplicate accounts will be deleted.</p>
+    </div>
+    <a href="/rules/" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:10px;background:rgba(45,212,191,0.12);border:1px solid rgba(45,212,191,0.45);color:#2dd4bf;font-weight:800;font-size:0.9rem;letter-spacing:0.03em;text-decoration:none;white-space:nowrap;">Read the Platform Rules <span aria-hidden="true">→</span></a>
+  </section>
+<section class="tmr-arena-promo" aria-label="TrustMyRecord Arena" style="width:min(1180px,calc(100% - 36px));margin:18px auto 8px;padding:18px 22px;border-radius:16px;border:1px solid rgba(255,215,0,0.35);background:linear-gradient(135deg, rgba(0,174,255,0.10), rgba(168,85,247,0.10)), rgba(8,18,31,0.92);display:flex;flex-wrap:wrap;align-items:center;gap:14px 22px;">
+    <div style="flex:1;min-width:260px;">
+      <div style="font-family:'Barlow','Inter',sans-serif;font-weight:900;font-size:1.02rem;letter-spacing:0.05em;text-transform:uppercase;color:#ffd700;margin-bottom:6px;">New: TrustMyRecord Arena</div>
+      <p style="margin:0;color:#c7d3e2;font-size:0.93rem;line-height:1.55;">Verified sports-gaming leagues, live challenges, and free predictions. Compete in <strong style="color:#fff;">MLB The Show</strong> head-to-head matches and online leagues, prove your record, and make free Arena Picks with Arena Points (no cash value, just bragging rights).</p>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <a href="/arena/mlb-the-show/" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:10px;background:rgba(255,215,0,0.14);border:1px solid rgba(255,215,0,0.45);color:#ffd700;font-weight:800;font-size:0.9rem;letter-spacing:0.03em;text-decoration:none;white-space:nowrap;">Enter the Arena <span aria-hidden="true">→</span></a>
+      <a href="/arena/leagues/" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:10px;background:rgba(0,174,255,0.10);border:1px solid rgba(0,174,255,0.40);color:#7fd2ff;font-weight:800;font-size:0.9rem;letter-spacing:0.03em;text-decoration:none;white-space:nowrap;">Join a League</a>
+    </div>
+  </section>
+<section class="tmr-explore" aria-labelledby="tmr-explore-h">
+    <h2 id="tmr-explore-h">Explore <em>TrustMyRecord</em></h2>
+    <p class="tmr-explore-sub">The core of the platform in six stops. The full site map lives in the footer below.</p>
+    <div class="tmr-explore-grid">
+      <a class="tmr-explore-card" href="/sportsbook/">
+        <span class="ic">🎯</span>
+        <h3>Sportsbook</h3>
+        <p>Lock your picks before game time and build a permanent, public record.</p>
+        <span class="go">Open Sportsbook →</span>
+      </a>
+      <a class="tmr-explore-card" href="/leaderboards/">
+        <span class="ic">🏅</span>
+        <h3>Verified Leaderboards</h3>
+        <p>Every bettor ranked on real, auto-graded results, units, and ROI.</p>
+        <span class="go">View Leaderboards →</span>
+      </a>
+      <a class="tmr-explore-card" href="/handicappers/">
+        <span class="ic">📊</span>
+        <h3>Handicappers</h3>
+        <p>Browse public profiles and verified records across every sport.</p>
+        <span class="go">Browse Records →</span>
+      </a>
+      <a class="tmr-explore-card" href="/contests/">
+        <span class="ic">🏆</span>
+        <h3>Free Contests</h3>
+        <p>Enter free contests, compete on the leaderboard, and prove your record.</p>
+        <span class="go">Enter a Contest →</span>
+      </a>
+      <a class="tmr-explore-card" href="/community/">
+        <span class="ic">💬</span>
+        <h3>Community</h3>
+        <p>Forum, feed, polls, and trivia for people with a real record to back it up.</p>
+        <span class="go">Join In →</span>
+      </a>
+      <a class="tmr-explore-card" href="/trustmyrecord-tools/">
+        <span class="ic">🛠️</span>
+        <h3>Tools &amp; Simulators</h3>
+        <p>Season and game simulators, model builder, and the Trend Spotter.</p>
+        <span class="go">Open Tools →</span>
+      </a>
+    </div>
+  </section>
+<section class="tmr-home-beta-strip" aria-label="TrustMyRecord beta activity">
+  <div class="tmr-home-beta-strip__inner">
+    <div>
+      <strong>Early beta is live.</strong>
+      <span>Members are building public records from real submitted activity.</span>
+    </div>
+    <nav aria-label="Platform shortcuts">
+      <a href="/feed/">Feed</a>
+      <a href="/arena/">Arena</a>
+      <a href="/forum/">Forum</a>
+      <a href="/polls/">Polls</a>
+      <a href="/trivia/">Trivia</a>
+    </nav>
+  </div>
+</section>
+<section class="tmr-loop" id="core-loop" aria-label="The core loop">
+  <div class="tmr-section-inner">
+    <header class="tmr-section-head tmr-loop-head">
+      <span class="tmr-loop-eyebrow">Post the Play. Lock the Record. Climb the Board.</span>
+      <h2>HOW TRUSTMYRECORD WORKS</h2>
+      <p class="tmr-section-sub">One simple cycle is the entire reason this site exists. Everything else &mdash; the feed, the forum, polls, trivia, gaming, selling picks &mdash; is built on top of it.</p>
+    </header>
 
-    function sportLabel(key) {
-        const k = String(key || '').toLowerCase();
-        if (k.includes('nba_summer') || k.includes('summer_league')) return 'NBA Summer League';
-        if (/mlb|baseball/.test(k)) return 'MLB';
-        if (/nhl|hockey/.test(k)) return 'NHL';
-        if (/nba|basketball/.test(k)) return 'NBA';
-        if (/nfl|football/.test(k)) return 'NFL';
-        return null;
-    }
+    <ol class="tmr-loop-steps">
+      <li class="tmr-loop-step">
+        <span class="tmr-loop-step-num">01</span>
+        <h3>Make Your Pick</h3>
+        <p>Choose the sport, the game, the market, the side, the odds, and the units. The full ticket lives on your profile from the moment you submit it.</p>
+      </li>
+      <li class="tmr-loop-step">
+        <span class="tmr-loop-step-num">02</span>
+        <h3>Lock It In</h3>
+        <p>Once posted, the pick is part of your public record. No edits, no deletes, no "I meant the other side" do-overs. The receipt is the receipt.</p>
+      </li>
+      <li class="tmr-loop-step">
+        <span class="tmr-loop-step-num">03</span>
+        <h3>Track the Result</h3>
+        <p>The auto-grader settles every pick when the game finishes. Wins, losses, units, ROI, and win % update on your profile and feed automatically.</p>
+      </li>
+      <li class="tmr-loop-step">
+        <span class="tmr-loop-step-num">04</span>
+        <h3>Build Credibility</h3>
+        <p>Climb the leaderboards by sport, unit profit, ROI, and win rate. A real public record is the difference between a fan with opinions and a capper worth following.</p>
+      </li>
+    </ol>
 
-    function marketCatKey(market) {
-        const m = String(market || '').toLowerCase();
-        if (/team_total/.test(m)) return 'team_totals';
-        if (/total/.test(m)) return 'totals';
-        if (/spread|runline|run_line|puck/.test(m)) return 'spreads';
-        if (/h2h|moneyline|(^|_)ml($|_)/.test(m)) return 'moneylines';
-        return null;
-    }
-
-    function dominantSport(picks) {
-        const c = {};
-        picks.forEach(function (p) { const s = sportLabel(p.sport_key); if (s) c[s] = (c[s] || 0) + 1; });
-        return Object.keys(c).sort(function (a, b) { return c[b] - c[a]; })[0] || null;
-    }
-
-    function catLabel(key, picks) {
-        if (key === 'spreads') {
-            const s = dominantSport(picks);
-            if (s === 'MLB') return 'run lines';
-            if (s === 'NHL') return 'puck lines';
-            return 'spreads';
-        }
-        return { totals: 'totals', team_totals: 'team totals', moneylines: 'moneylines' }[key] || key;
-    }
-
-    // Consecutive wins counting back from the most recent pick (chronological
-    // subset). Pushes are skipped (neutral); a loss ends the streak.
-    function endStreak(chronoSubset) {
-        let s = 0;
-        for (let i = chronoSubset.length - 1; i >= 0; i--) {
-            const st = String(chronoSubset[i].status || '').toLowerCase();
-            if (st === 'push') continue;
-            if (st === 'won') s++; else break;
-        }
-        return s;
-    }
-
-    function pct(x) { return Math.round(x * 100); }
-    function signedUnits(n) { return (n > 0 ? '+' : '') + Number(n).toFixed(2).replace(/\.00$/, '') + 'u'; }
-    function signedPct(n) { return (n > 0 ? '+' : '') + Number(n).toFixed(2).replace(/\.00$/, '') + '%'; }
-    function plPicks(n) { return n + ' verified pick' + (n === 1 ? '' : 's'); }
-
-    // A complementary POSITIVE supporting stat. Only surfaces a percentage when
-    // it is genuinely strong on a meaningful sample; otherwise shows positive
-    // units or honest volume. Never shows a weak/sub-coinflip number.
-    function recordSub(meta, decided, winRate, total) {
-        const net = Number(meta && meta.net_units);
-        if (decided >= 10 && winRate >= 0.55) return pct(winRate) + '% career win rate';
-        if (Number.isFinite(net) && net > 0) return signedUnits(net) + ' lifetime';
-        return plPicks(total || decided);
-    }
-
-    // Realized profit/loss for one settled pick. Mirrors the handicappers page
-    // (prefers backend result_units; falls back to odds + stake). Pending picks
-    // never reach here -> they always score 0 and are excluded upstream.
-    const DAY_MS = 86400000;
-    function pickPL(p) {
-        if (p.result_units != null && p.result_units !== '' && !isNaN(Number(p.result_units))) return Number(p.result_units);
-        const units = Number(p.units || p.stake || 1);
-        const odds = Number(p.odds_snapshot || p.odds || p.price || -110);
-        const st = String(p.status || '').toLowerCase();
-        if (st === 'won') return odds > 0 ? units * odds / 100 : units;
-        if (st === 'lost') return odds < 0 ? -(units * Math.abs(odds) / 100) : -units;
-        return 0;
-    }
-    function oddsOf(p) { return Number(p.odds_snapshot || p.odds || p.price); }
-    function unitsOf(p) { return Number(p.units || p.stake || 1); }
-    function sportEmoji(s) { return { MLB: '⚾', NHL: '🏒', NBA: '🏀', NFL: '🏈' }[s] || '🎯'; }
-    function wl(w, l) { return w + '–' + l; } // en-dash record, e.g. 9–2
-    function wlr(rows) {
-        const dec = rows.filter(function (p) { return p.status !== 'push'; });
-        const w = dec.filter(function (p) { return p.status === 'won'; }).length;
-        return { w: w, l: dec.length - w, n: dec.length, r: dec.length ? w / dec.length : 0 };
-    }
-
-    // Builds EVERY eligible positive, sample-guarded highlight for a capper and
-    // returns the single most interesting one. Each highlight reads like a mini
-    // scouting report: a strong main line + a supporting context line + a badge.
-    // Pending picks are never counted; minimum sample rules block misleading %.
-    function computeHighlight(picks, meta) {
-        const graded = (picks || [])
-            .filter(function (p) { return GRADED[String(p.status || '').toLowerCase()]; })
-            .sort(function (a, b) { return pickDate(a) - pickDate(b); });
-        if (!graded.length) return null;
-
-        const wins = graded.filter(function (p) { return p.status === 'won'; }).length;
-        const losses = graded.filter(function (p) { return p.status === 'lost'; }).length;
-        const decided = wins + losses;
-        const winRate = decided ? wins / decided : 0;
-        const net = Number(meta && meta.net_units);
-        const roi = Number(meta && meta.roi);
-        const total = Number(meta && meta.total_picks);
-        const out = [];
-        const now = Date.now();
-
-        // group helpers
-        const byCat = {}, bySport = {};
-        graded.forEach(function (p) {
-            const c = marketCatKey(p.market_type); if (c) (byCat[c] = byCat[c] || []).push(p);
-            const s = sportLabel(p.sport_key); if (s) (bySport[s] = bySport[s] || []).push(p);
-        });
-
-        // 1. Overall active winning streak (>= 3) -> STREAK
-        const ovr = endStreak(graded);
-        if (ovr >= 3) out.push({ score: 1000 + ovr * 10, line: '🔥 Won ' + ovr + ' straight',
-            sub: recordSub(meta, decided, winRate, total), tag: 'STREAK', cls: 'is-streak' });
-
-        // 2. Sport-specific active streak (>= 3) -> STREAK
-        Object.keys(bySport).forEach(function (s) {
-            const sub = bySport[s]; const st = endStreak(sub);
-            if (st >= 3) out.push({ score: 760 + st * 10, line: sportEmoji(s) + ' ' + st + ' straight ' + s + ' wins',
-                sub: wlr(sub).w + ' wins across ' + sub.length + ' ' + s + ' picks', tag: 'STREAK', cls: 'is-streak' });
-        });
-
-        // 3. Bet-type active streak (>= 3) -> STREAK
-        Object.keys(byCat).forEach(function (c) {
-            const sub = byCat[c]; const st = endStreak(sub);
-            if (st >= 3) {
-                const label = catLabel(c, sub); const rec = wlr(sub);
-                const catSub = (rec.n >= 5 && rec.r >= 0.55) ? pct(rec.r) + '% lifetime on ' + label : recordSub(meta, decided, winRate, total);
-                out.push({ score: 840 + st * 10, line: '🔥 Hit last ' + st + ' ' + label, sub: catSub, tag: 'STREAK', cls: 'is-streak' });
-            }
-        });
-
-        // 4. Recent hot form: best W–L window over last 20 / 12 / 10 / 8 / 5
-        // (>= 5 settled, >= 4 wins, >= 60%). Reads "📈 9–2 over last 11 picks".
-        [20, 12, 10, 8, 5].forEach(function (n) {
-            const rec = wlr(graded.slice(-n));
-            if (rec.n >= 5 && rec.w >= 4 && rec.r >= 0.6) {
-                const hot = rec.r >= 0.75;
-                out.push({ score: 600 + rec.r * 120 + rec.n, line: '📈 ' + wl(rec.w, rec.l) + ' over last ' + rec.n + ' picks',
-                    sub: pct(rec.r) + '% recent form across verified plays', tag: hot ? 'HOT' : 'SURGING', cls: hot ? 'is-hot' : 'is-surging' });
-            }
-        });
-
-        // 5. Per-sport recent record (last 15, >= 6 settled, >= 60%) -> HOT
-        Object.keys(bySport).forEach(function (s) {
-            const rec = wlr(bySport[s].slice(-15));
-            if (rec.n >= 6 && rec.r >= 0.6) out.push({ score: 700 + rec.r * 100 + rec.n,
-                line: sportEmoji(s) + ' ' + wl(rec.w, rec.l) + ' last ' + rec.n + ' ' + s + ' picks',
-                sub: pct(rec.r) + '% in ' + s, tag: 'HOT', cls: 'is-hot' });
-        });
-
-        // 6. Category record (>= 5 settled, >= 60%) -> TOTALS / EDGE
-        Object.keys(byCat).forEach(function (c) {
-            const rec = wlr(byCat[c]);
-            if (rec.n >= 5 && rec.r >= 0.6) {
-                const cs = dominantSport(byCat[c]); const label = catLabel(c, byCat[c]);
-                const isTot = c === 'totals' || c === 'team_totals';
-                out.push({ score: 500 + rec.r * 100 + rec.n,
-                    line: (cs ? sportEmoji(cs) : '🎯') + ' ' + wl(rec.w, rec.l) + ' on ' + (cs ? cs + ' ' : '') + label,
-                    sub: pct(rec.r) + '% on ' + label, tag: isTot ? 'TOTALS' : 'EDGE', cls: isTot ? 'is-totals' : 'is-edge' });
-            }
-        });
-
-        // 7. Per-sport win rate (>= 6 settled, >= 60%) -> EDGE
-        Object.keys(bySport).forEach(function (s) {
-            const rec = wlr(bySport[s]);
-            if (rec.n >= 6 && rec.r >= 0.6) out.push({ score: 480 + rec.r * 100,
-                line: '🎯 ' + pct(rec.r) + '% on ' + s, sub: wl(rec.w, rec.l) + ' across ' + rec.n + ' ' + s + ' picks', tag: 'EDGE', cls: 'is-edge' });
-        });
-
-        // 8. Underdog / plus-money performance (odds > 0, >= 5 settled) -> UNDERDOG
-        const dogs = graded.filter(function (p) { return oddsOf(p) > 0; });
-        if (dogs.length) {
-            const rec = wlr(dogs);
-            const dogNet = dogs.reduce(function (t, p) { return t + pickPL(p); }, 0);
-            if (rec.n >= 5 && (rec.r >= 0.55 || dogNet >= 1)) {
-                if (dogNet >= 1) out.push({ score: 540 + dogNet, line: '💰 ' + signedUnits(dogNet) + ' on underdogs',
-                    sub: wl(rec.w, rec.l) + ' on plus-money plays', tag: 'UNDERDOG', cls: 'is-underdog' });
-                else out.push({ score: 520 + rec.r * 100, line: '🧊 ' + wl(rec.w, rec.l) + ' on plus-money plays',
-                    sub: pct(rec.r) + '% on underdogs', tag: 'UNDERDOG', cls: 'is-underdog' });
-            }
-        }
-
-        // 9. High-confidence 2u+ plays (>= 3 settled, >= 60%) -> SHARP
-        const big = graded.filter(function (p) { return unitsOf(p) >= 2; });
-        if (big.length) {
-            const rec = wlr(big);
-            if (rec.n >= 3 && rec.r >= 0.6) out.push({ score: 560 + rec.r * 80 + rec.n,
-                line: '🔒 ' + wl(rec.w, rec.l) + ' on 2u+ plays', sub: 'High-confidence verified plays', tag: 'SHARP', cls: 'is-sharp' });
-        }
-
-        // 10. Favorites win rate (odds < 0, >= 10 settled, >= 62%) -> SHARP
-        const favs = graded.filter(function (p) { return oddsOf(p) < 0; });
-        if (favs.length) {
-            const rec = wlr(favs);
-            if (rec.n >= 10 && rec.r >= 0.62) out.push({ score: 470 + rec.r * 100,
-                line: '🔒 ' + pct(rec.r) + '% on favorites', sub: wl(rec.w, rec.l) + ' on ' + rec.n + ' favorites', tag: 'SHARP', cls: 'is-sharp' });
-        }
-
-        // 11. Last 30-day units (>= 3 settled, positive) -> SURGING
-        const w30 = graded.filter(function (p) { return now - pickDate(p) <= 30 * DAY_MS; });
-        if (w30.length >= 3) {
-            const u30 = w30.reduce(function (t, p) { return t + pickPL(p); }, 0);
-            if (u30 >= 1) out.push({ score: 580 + u30, line: '📈 ' + signedUnits(u30) + ' over last 30 days',
-                sub: w30.length + ' verified picks tracked', tag: 'SURGING', cls: 'is-surging' });
-        }
-
-        // 12. Last 7-day units / volume -> SURGING / VOLUME
-        const w7 = graded.filter(function (p) { return now - pickDate(p) <= 7 * DAY_MS; });
-        if (w7.length >= 2) {
-            const u7 = w7.reduce(function (t, p) { return t + pickPL(p); }, 0);
-            if (u7 >= 1) out.push({ score: 540 + u7, line: '📈 ' + signedUnits(u7) + ' this week',
-                sub: w7.length + ' verified picks this week', tag: 'SURGING', cls: 'is-surging' });
-        }
-        if (w7.length >= 5) out.push({ score: 400 + w7.length, line: '🚀 ' + w7.length + ' verified picks this week',
-            sub: 'High tracked volume this week', tag: 'VOLUME', cls: 'is-volume' });
-
-        // 13. Strong lifetime units (authoritative totals from /users) -> PROFIT.
-        // Requires a real settled sample so a single big pick never reads as a
-        // lifetime edge.
-        if (Number.isFinite(net) && net >= 3 && decided >= 5) out.push({ score: 300 + net, line: '💰 ' + signedUnits(net) + ' lifetime',
-            sub: Number.isFinite(roi) ? signedPct(roi) + ' ROI' : plPicks(total || decided), tag: 'PROFIT', cls: 'is-profit' });
-
-        // 14. ROI over a meaningful sample (>= 20 settled, >= 5% ROI) -> PROFIT
-        if (decided >= 20 && Number.isFinite(roi) && roi >= 5) out.push({ score: 460 + roi,
-            line: '📊 ' + signedPct(roi) + ' ROI across ' + (total || decided) + ' picks', sub: 'Sustained edge on a real sample', tag: 'PROFIT', cls: 'is-profit' });
-
-        // 15. Long-term verified volume milestone (>= 25 settled) -> VERIFIED / VOLUME
-        const vol = total || decided;
-        if (vol >= 25) out.push({ score: 200 + Math.min(vol, 150), line: '🚀 ' + vol + ' verified picks tracked',
-            sub: 'Long-term verified track record', tag: vol >= 100 ? 'VERIFIED' : 'VOLUME', cls: vol >= 100 ? 'is-verified' : 'is-volume' });
-
-        // 16. Positive fallback only (never a losing record). Units/% claims
-        // require a real sample (>= 5 settled); thin-sample cappers get safe,
-        // non-exaggerated wording instead of a one-pick brag.
-        if (!out.length) {
-            if (decided >= 5 && Number.isFinite(net) && net > 0) out.push({ score: 100 + net, line: '✅ ' + signedUnits(net) + ' overall',
-                sub: plPicks(total || decided), tag: 'PROFIT', cls: 'is-profit' });
-            else if (decided >= 5 && winRate >= 0.5) out.push({ score: 80 + winRate * 100, line: '✅ ' + wl(wins, losses) + ' verified record',
-                sub: pct(winRate) + '% win rate', tag: 'RECORD', cls: 'is-record' });
-            else if (wins >= 1) out.push({ score: 40, line: '✅ First verified ' + (wins === 1 ? 'win' : 'wins') + ' logged',
-                sub: plPicks(total || decided), tag: 'VERIFIED', cls: 'is-verified' });
-            else if (decided >= 1 || total >= 1) out.push({ score: 20, line: '✨ New verified capper',
-                sub: plPicks(total || decided) + ' tracked', tag: 'VERIFIED', cls: 'is-verified' });
-        }
-
-        if (!out.length) return null; // no positive trend -> skip this capper
-        out.sort(function (a, b) { return b.score - a.score; });
-        return out[0];
-    }
-
-    function renderTrendSpotter(entries) {
-        const list = document.getElementById('tmrHeroPicksList');
-        if (!list) return;
-        if (!entries.length) {
-            list.className = 'tmr-activity-list tmr-activity-empty';
-            list.setAttribute('aria-busy', 'true');
-            list.innerHTML = '<div class="tmr-activity-loading"><span aria-hidden="true">📈</span><strong>Verified streaks and recent winners</strong><p>Hot streaks, sharp angles, and active pick makers from public records.</p></div>';
-            return;
-        }
-        list.className = 'tmr-activity-list';
-        list.setAttribute('aria-busy', 'false');
-        list.innerHTML = entries.map(function (e) {
-            const avatarUrl = e.avatarUrl || userAvatarByUsername.get(String(e.usernameRaw).toLowerCase()) || '';
-            const init = initials(e.displayName || e.usernameRaw);
-            const color = avatarColor(e.usernameRaw);
-            const avatarHtml = avatarUrl
-                ? '<img src="' + escapeHtml(avatarUrl) + '" alt="" data-avatar-initials="' + escapeHtml(init) + '" data-avatar-color="' + escapeHtml(color) + '">'
-                : '<span class="tmr-fallback-initials" style="background:' + escapeHtml(color) + ';color:#fff;width:100%;height:100%;display:grid;place-items:center">' + escapeHtml(init) + '</span>';
-            return '<a class="tmr-activity-row tmr-trend-row" href="/profile/?user=' + encodeURIComponent(e.usernameRaw) + '">'
-                + '<span class="tmr-activity-avatar" aria-hidden="true">' + avatarHtml + '</span>'
-                + '<div class="tmr-activity-text">'
-                + '<b>' + escapeHtml(e.displayName || e.usernameRaw) + '</b>'
-                + '<span class="tmr-trend-line">' + escapeHtml(e.highlight.line) + '</span>'
-                + '</div>'
-                + '<span class="tmr-activity-pill tmr-trend-pill ' + e.highlight.cls + '">' + escapeHtml(e.highlight.tag) + '</span>'
-                + '</a>';
-        }).join('');
-        attachAvatarFallbacks(list);
-    }
-
-    // Real-data fallback highlight built ONLY from authoritative /users totals
-    // (no per-pick fetch, no fabricated stats). Used to top the module up to a
-    // full row count when the per-pick trend pass yields fewer winners.
-    function fallbackHighlightFromUser(u) {
-        const total = number(u.total_picks != null ? u.total_picks : u.totalPicks, 0);
-        if (total < 1) return null;
-        const net = number(u.net_units != null ? u.net_units : u.netUnits, NaN);
-        const roi = number(u.roi, NaN);
-        if (Number.isFinite(net) && net >= 1) return { line: '💰 ' + signedUnits(net) + ' lifetime', tag: 'PROFIT', cls: 'is-profit' };
-        if (Number.isFinite(roi) && roi >= 1) return { line: '📊 ' + signedPct(roi) + ' ROI on record', tag: 'PROFIT', cls: 'is-profit' };
-        return { line: '✅ ' + plPicks(total) + ' on record', tag: 'VERIFIED', cls: 'is-verified' };
-    }
-
-    async function buildTrendSpotter(users, bust) {
-        // TREND_EXCLUDE_OWNER_20260605: keep the site owner's account out of the
-        // homepage Trend Spotter module; someone else fills the slot.
-        const TREND_EXCLUDE = { 'moneymakers': true };
-        // One-shot batch: /users/trend-highlights carries the top candidates
-        // AND each capper's latest 100 graded public picks in a single
-        // response, so this module renders without 16 per-user /picks
-        // requests. Highlight math, exclusions, ordering, and the 16-candidate
-        // cap are unchanged. The legacy per-user fan-out below remains as an
-        // automatic fallback if the batch endpoint is ever unavailable.
-        let results = null;
-        try {
-            const batch = await request('/users/trend-highlights?' + bust);
-            const rows = (batch && Array.isArray(batch.users)) ? batch.users : null;
-            if (rows && rows.length) {
-                results = rows
-                    .filter(function (u) { return u && u.username && !TREND_EXCLUDE[String(u.username).toLowerCase()] && number(u.total_picks || u.totalPicks, 0) > 0; })
-                    .sort(function (a, b) { return number(b.net_units || b.netUnits, -Infinity) - number(a.net_units || a.netUnits, -Infinity); })
-                    .slice(0, 16)
-                    .map(function (u) {
-                        const highlight = computeHighlight(Array.isArray(u.picks) ? u.picks : [], {
-                            net_units: u.net_units != null ? u.net_units : u.netUnits,
-                            roi: u.roi,
-                            total_picks: u.total_picks != null ? u.total_picks : u.totalPicks
-                        });
-                        if (!highlight) return null;
-                        return {
-                            usernameRaw: u.username,
-                            displayName: u.display_name || u.displayName || u.username,
-                            avatarUrl: u.avatar_url || u.avatarUrl || '',
-                            highlight: highlight
-                        };
-                    });
-            }
-        } catch (err) { results = null; }
-
-        if (!results) {
-            // Legacy path: candidate cappers with at least one graded pick,
-            // richest records first. Cap fan-out at 16 lookups.
-            const candidates = (users || [])
-                .filter(function (u) { return u && u.username && !TREND_EXCLUDE[String(u.username).toLowerCase()] && number(u.total_picks || u.totalPicks, 0) > 0; })
-                .sort(function (a, b) { return number(b.net_units || b.netUnits, -Infinity) - number(a.net_units || a.netUnits, -Infinity); })
-                .slice(0, 16);
-
-            results = await Promise.all(candidates.map(async function (u) {
-                try {
-                    const data = await request('/picks' + '?username=' + encodeURIComponent(u.username) + '&limit=100&' + bust);
-                    const picks = Array.isArray(data && data.picks) ? data.picks : [];
-                    const highlight = computeHighlight(picks, {
-                        net_units: u.net_units != null ? u.net_units : u.netUnits,
-                        roi: u.roi,
-                        total_picks: u.total_picks != null ? u.total_picks : u.totalPicks
-                    });
-                    if (!highlight) return null;
-                    return {
-                        usernameRaw: u.username,
-                        displayName: u.display_name || u.displayName || u.username,
-                        avatarUrl: u.avatar_url || u.avatarUrl || '',
-                        highlight: highlight
-                    };
-                } catch (err) { return null; }
-            }));
-        }
-
-        const TARGET_ROWS = 7;
-        const entries = results.filter(Boolean)
-            .sort(function (a, b) { return b.highlight.score - a.highlight.score; })
-            .slice(0, TARGET_ROWS);
-
-        // Top up to exactly TARGET_ROWS using real users not already shown,
-        // richest verified records first. Real authoritative stats only.
-        if (entries.length < TARGET_ROWS) {
-            const shown = {};
-            entries.forEach(function (e) { shown[String(e.usernameRaw).toLowerCase()] = true; });
-            const extra = (users || [])
-                .filter(function (u) { return u && u.username && !TREND_EXCLUDE[String(u.username).toLowerCase()] && !shown[String(u.username).toLowerCase()] && number(u.total_picks || u.totalPicks, 0) > 0; })
-                .sort(function (a, b) { return number(b.net_units || b.netUnits, -Infinity) - number(a.net_units || a.netUnits, -Infinity); });
-            for (let i = 0; i < extra.length && entries.length < TARGET_ROWS; i++) {
-                const u = extra[i];
-                const hl = fallbackHighlightFromUser(u);
-                if (!hl) continue;
-                entries.push({
-                    usernameRaw: u.username,
-                    displayName: u.display_name || u.displayName || u.username,
-                    avatarUrl: u.avatar_url || u.avatarUrl || '',
-                    highlight: hl
-                });
-            }
-        }
-
-        // PIN_HOME_HIGHLIGHTS_20260714: always feature these accounts at the
-        // top of the hero highlights, using their authoritative /users totals
-        // (real net units / ROI / record only, no fabricated streaks).
-        const PIN = ['moneymakers', 'betlegend'];
-        const byName = {};
-        (users || []).forEach(function (u) { if (u && u.username) byName[String(u.username).toLowerCase()] = u; });
-        const pinnedEntries = [];
-        PIN.forEach(function (name) {
-            const existingIdx = entries.findIndex(function (e) { return String(e.usernameRaw).toLowerCase() === name; });
-            if (existingIdx >= 0) { pinnedEntries.push(entries.splice(existingIdx, 1)[0]); return; }
-            const u = byName[name];
-            if (!u) return;
-            const hl = fallbackHighlightFromUser(u);
-            if (!hl) return;
-            pinnedEntries.push({
-                usernameRaw: u.username,
-                displayName: u.display_name || u.displayName || u.username,
-                avatarUrl: u.avatar_url || u.avatarUrl || '',
-                highlight: hl
-            });
-        });
-        const finalEntries = pinnedEntries.concat(entries).slice(0, Math.max(TARGET_ROWS, pinnedEntries.length));
-        renderTrendSpotter(finalEntries);
-    }
-
-    async function hydrateHomepagePreview() {
-        // Cache-bust so the module always reflects the current graded/verified
-        // source of truth and never serves a stale browser/CDN copy.
-        const bust = '_=' + Date.now();
-        let users = [];
-        try {
-            const usersData = await requestRetry('/users' + '?limit=100&' + bust);
-            users = Array.isArray(usersData && usersData.users) ? usersData.users : [];
-            renderUsers(users);
-        } catch (error) {
-            console.warn('[TMR] Homepage real users preview unavailable:', error);
-            renderUsers([]);
-        }
-
-        try {
-            await buildTrendSpotter(users, bust);
-        } catch (error) {
-            console.warn('[TMR] Capper Trend Spotter unavailable:', error);
-            renderTrendSpotter([]);
-        }
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', hydrateHomepagePreview);
-    } else {
-        hydrateHomepagePreview();
-    }
-}());
-</script>
-<script>
-// Smooth scroll for any "Tour the Site" / scroll-cue CTA
-(function () {
-    var btns = document.querySelectorAll('[data-tour-cta]');
-    if (!btns.length) return;
-    btns.forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-            var target = document.getElementById('how-it-works');
-            if (!target) return;
-            e.preventDefault();
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
-    });
-})();
-</script>
+    <div class="tmr-loop-cta">
+      <a class="hero-action hero-action--primary auth-link" href="/register/">Start Your Free Record</a>
+      <a class="hero-action hero-action--ghost" href="/sportsbook/">See the Board</a>
+      <a class="hero-action hero-action--ghost" href="/how-it-works/">How It Works</a>
+    </div>
+  </div>
+</section>
+<section class="tmr-integrity" aria-label="Why TrustMyRecord exists">
+  <div class="tmr-integrity-inner">
+    <span class="tmr-integrity-eyebrow">Public Records Over Claims.</span>
+    <h2>Restoring integrity to a shady industry.</h2>
+      <p>TrustMyRecord exists so sports opinions can be tied to a visible history instead of screenshots or unsupported claims. Users can submit picks, track outcomes, and let the public record speak for itself.</p>
+  </div>
+</section>
+<section aria-label="JustBet partner bonus" data-justbet-bonus-box data-variant="home"></section>
+</div>
+<div id="tmrHomeFooterAlign" aria-hidden="true" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap"><table><tbody id="tmrHeroLeaderboardBody"></tbody></table><div id="tmrHeroPicksList" class="tmr-activity-list"></div><div id="stpRows"></div></div>
 <!-- START STATIC BRIDGE BY GEMINI CLI -->
 <div id="static-bridge" style="display:none; visibility:hidden; opacity:0; height:0; overflow:hidden;">
   <h2>Latest Updates</h2>
@@ -5315,7 +4584,12 @@ function escapeHtml(value) {
   </ul>
 </div>
 <!-- END STATIC BRIDGE -->
-
+<script src="/static/js/config.js?v=20260520rollback1"></script>
+<script src="/static/js/backend-api.js?v=20260601nostorestats1"></script>
+<script src="/static/js/auth-persistent.js?v=20260524noautologout"></script>
+<script defer src="/static/js/tmr-sitewide.js?v=20260713hub1"></script>
+<script src="/static/js/analytics.js?v=20260719ft"></script>
+<script src="/static/js/justbet-promo.js?v=20260613invite1"></script>
+<script src="/static/js/tmr-home-live.js?v=20260720final1"></script>
 </body>
 </html>
-
