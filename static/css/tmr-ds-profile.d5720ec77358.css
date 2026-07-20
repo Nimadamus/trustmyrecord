@@ -905,3 +905,40 @@ html body.tmr-ds.profile-page.tmr-social-profile span.profile-admin-badge span{
   background:var(--red);
   color:#fff;
 }
+
+/* ---------------------------------------------------------------------------
+   20. TABLET WIDTHS — grid children must be allowed to shrink
+   -----------------------------------------------------------------------------
+   At 900px the page scrolled sideways (content 1153px). The offender was
+   .tmrx-table-shell at 1086px inside an unclassed grid child with the default
+   `min-width:auto`: the wide stats table sets the child's min-content, the track
+   grows to fit, and the shell's own max-width:100% is then measured against an
+   already-too-wide parent.
+
+   Same root cause as the leaderboards and Sports Talk fixes: a grid child cannot
+   shrink below min-content unless told to. The table keeps its own horizontal
+   scroll, so no columns are lost.
+   --------------------------------------------------------------------------- */
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-grid-2,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-grid-3,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-grid{
+  grid-template-columns:repeat(auto-fit,minmax(0,1fr));
+}
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-grid-2 > *,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-grid-3 > *,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-grid > *,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-section > *,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-main > *,
+html body.tmr-ds.profile-page.tmr-social-profile .container > *{
+  min-width:0;
+}
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-table-shell{
+  max-width:100%;
+  overflow-x:auto;
+}
+@media(max-width:1180px){
+  html body.tmr-ds.profile-page.tmr-social-profile .tmrx-grid-2,
+  html body.tmr-ds.profile-page.tmr-social-profile .tmrx-grid-3{
+    grid-template-columns:minmax(0,1fr);
+  }
+}
