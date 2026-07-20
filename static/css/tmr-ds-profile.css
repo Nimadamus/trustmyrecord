@@ -971,3 +971,77 @@ html body.tmr-ds.profile-page.tmr-social-profile .profile-name{
 @media(max-width:760px){
   html body.tmr-ds.profile-page.tmr-social-profile .profile-name{font-size:27px}
 }
+
+/* ---------------------------------------------------------------------------
+   22. FORM CONTROLS, PAGINATION AND THE LAST TWO CHIPS
+   -----------------------------------------------------------------------------
+   These slipped past the automated sweep because it only reported dark surfaces
+   at least 120x24px, and a <select> is narrower than that. Found by reading the
+   page instead: the whole Filters row was still dark navy dropdowns, and the
+   ledger pagination was dark pills, on an otherwise light page.
+   --------------------------------------------------------------------------- */
+html body.tmr-ds.profile-page.tmr-social-profile select,
+html body.tmr-ds.profile-page.tmr-social-profile input[type="text"],
+html body.tmr-ds.profile-page.tmr-social-profile input[type="number"],
+html body.tmr-ds.profile-page.tmr-social-profile input[type="search"],
+html body.tmr-ds.profile-page.tmr-social-profile textarea{
+  height:40px;
+  padding:0 12px;
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+  background:var(--panel);
+  color:var(--ink);
+  font-family:var(--font);
+  font-size:14px;
+  font-weight:600;
+}
+html body.tmr-ds.profile-page.tmr-social-profile textarea{height:auto;padding:11px 12px}
+html body.tmr-ds.profile-page.tmr-social-profile select:focus,
+html body.tmr-ds.profile-page.tmr-social-profile input:focus,
+html body.tmr-ds.profile-page.tmr-social-profile textarea:focus{
+  outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft);
+}
+html body.tmr-ds.profile-page.tmr-social-profile select option{background:var(--panel);color:var(--ink)}
+html body.tmr-ds.profile-page.tmr-social-profile label{color:var(--muted)}
+
+/* ledger pagination */
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination button,
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination-controls button,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-page-btn{
+  min-height:34px;
+  padding:0 13px;
+  border:1px solid var(--line-2);
+  border-radius:var(--r-sm);
+  background:var(--panel);
+  color:var(--ink-2);
+  font-size:13.5px;
+  font-weight:800;
+}
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination button:hover:not(:disabled),
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination-controls button:hover:not(:disabled){
+  border-color:var(--brand);color:var(--brand-dk);
+}
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination button.is-active,
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination button[aria-current],
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination-controls button.is-active{
+  background:var(--brand-soft);border-color:var(--brand);color:var(--brand-dk);
+}
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination button:disabled{opacity:.5}
+
+/* SHARE was a cyan #22d3ee button - the old accent, not the brand */
+html body.tmr-ds.profile-page.tmr-social-profile .profile-share-btn,
+html body.tmr-ds.profile-page.tmr-social-profile .btn-share{
+  background:linear-gradient(180deg,#13B0A5,#0A8A83);
+  border-color:transparent;
+  color:#fff;
+  box-shadow:0 2px 10px rgba(12,148,140,.32);
+}
+/* the Founding Member chip was dark gold-on-brown */
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-personality,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-identity-badge{
+  background:var(--gold-soft);
+  border:1px solid var(--gold);
+  color:var(--gold);
+  border-radius:5px;
+  font-weight:800;
+}
