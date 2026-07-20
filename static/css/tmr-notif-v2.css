@@ -91,7 +91,7 @@ html body.nv-body .nv-btn:disabled{opacity:.55;cursor:default}
 /* Destructive action (Clear all). Reads as danger on the dark header and on the
    light confirmation dialog, so one class covers both surfaces. */
 html body.nv-body .nv-btn.dg{
-  background:rgba(214,60,60,.16) !important;border-color:rgba(255,138,138,.55) !important;color:#FFD9D9 !important;
+  background:rgba(214,60,60,.3) !important;border-color:rgba(255,150,150,.8) !important;color:#FFE3E3 !important;
 }
 html body.nv-body .nv-btn.dg:hover{background:rgba(214,60,60,.3) !important;border-color:#FF9A9A !important;color:#fff !important}
 html body.nv-body .nv-dialog .nv-btn.dg{
@@ -110,8 +110,13 @@ html body.nv-body .nv-dialog .nv-btn.dg:hover{background:linear-gradient(180deg,
   width:100%;max-width:420px;background:var(--nv-panel);border-radius:var(--nv-r);
   box-shadow:0 24px 60px rgba(8,20,32,.4);padding:24px;text-align:left;
 }
-.nv-dialog h2{margin:0 0 8px;font-size:20px;font-weight:900;color:var(--nv-ink)}
-.nv-dialog p{margin:0 0 20px;font-size:14.5px;line-height:1.55;color:var(--nv-muted)}
+/* tmr-sitewide.css paints every h1/h2/h3 #f8fbff !important for its dark
+   surfaces; on this white dialog that is invisible, so the ink is forced back. */
+html body.nv-body .nv-dialog h2{
+  margin:0 0 8px;font-size:20px !important;line-height:1.25 !important;font-weight:900;
+  color:var(--nv-ink) !important;-webkit-text-fill-color:var(--nv-ink);
+}
+html body.nv-body .nv-dialog p{margin:0 0 20px;font-size:14.5px;line-height:1.55;color:var(--nv-muted) !important}
 .nv-dialog-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
 @media (max-width:480px){
   .nv-dialog-actions{flex-direction:column-reverse}
