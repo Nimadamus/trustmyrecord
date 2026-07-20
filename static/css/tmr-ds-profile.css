@@ -880,3 +880,28 @@ html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-chip span{color:#EAF2FA
 html body.tmr-ds.profile-page.tmr-social-profile .s,
 html body.tmr-ds.profile-page.tmr-social-profile .profile-main .s,
 html body.tmr-ds.profile-page.tmr-social-profile .container .s{color:var(--muted)}
+
+/* ---------------------------------------------------------------------------
+   19. THREE CHIPS, ELEMENT-QUALIFIED
+   -----------------------------------------------------------------------------
+   The favourite-team chips sit on a LIGHT sunken surface, not a dark one — my
+   section-18 assumption was wrong and painted their labels near-white on
+   #F6F9FC (1.07:1). And the ADMIN badge kept losing to the generic span rule at
+   an equal-weight tie, so both are element-qualified here (span.x = one element
+   more) to settle it outright.
+   --------------------------------------------------------------------------- */
+html body.tmr-ds.profile-page.tmr-social-profile span.tmr-fi-chip-name,
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-chip .tmr-fi-chip-name{
+  color:var(--ink);
+  font-weight:800;
+}
+html body.tmr-ds.profile-page.tmr-social-profile span.tmr-fi-chip-sport,
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-chip .tmr-fi-chip-sport{
+  color:var(--muted);
+}
+html body.tmr-ds.profile-page.tmr-social-profile span.profile-admin-badge,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-header span.profile-admin-badge,
+html body.tmr-ds.profile-page.tmr-social-profile span.profile-admin-badge span{
+  background:var(--red);
+  color:#fff;
+}
