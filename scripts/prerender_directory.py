@@ -602,9 +602,19 @@ def home_highlights(rows, now):
     return "".join(items)
 
 def bake_homepage(rows, now):
-    lb = collect_home_leaderboard()  # raises (fail-closed) on API error / empty set
     with open(HOME, encoding="utf-8") as f:
         t = f.read()
+    # The v2 homepage rebuild (July 2026) replaced the leaderboard-preview table and
+    # the "Live highlights" list with a different layout, so the anchors below no
+    # longer exist. Its live regions are baked by scripts/prerender_home_snapshot.cjs
+    # instead. Skip cleanly rather than raising: this function running last used to
+    # abort the whole job, which silently froze /handicappers/, /leaderboards/, the
+    # profile pages, the forum threads and the sitemap along with it.
+    if '<p class="tmrhx-updated">' not in t and "<!--MK:homeLbPreview-->" not in t:
+        print("homepage: v2 layout detected (no tmrhx anchors) - "
+              "live regions are baked by scripts/prerender_home_snapshot.cjs, skipping here")
+        return 0
+    lb = collect_home_leaderboard()  # raises (fail-closed) on API error / empty set
     new_preview = home_preview_rows(lb)
     new_hl = home_highlights(rows, now)
     # Keep the existing "Last updated" stamp when this recalculation produced

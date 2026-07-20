@@ -61,6 +61,13 @@ def main():
     src = fetch(LIVE) if "--live" in sys.argv else open(HOME, encoding="utf-8").read()
     m = BLOCK_RE.search(src)
     if not m:
+        # The v2 homepage (July 2026) does not render the "Live highlights" list at
+        # all, so there is no block to police. Only treat a MISSING block as a
+        # failure on a homepage that still ships that section - otherwise this
+        # verifier blocks the whole refresh job over a section that no longer exists.
+        if "tmrhx-hl" not in src:
+            print("SKIP: homepage does not render the Live highlights section (v2 layout) - nothing to verify")
+            return 0
         print("FAIL: homeHighlights marker block not found")
         return 1
     block = m.group(1)

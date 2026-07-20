@@ -262,6 +262,17 @@ try {
     # holding a stale index.html (Cache-Control: max-age=600) would otherwise
     # pair old markup with current CSS/JS and render a broken page. The homepage
     # CSS must stay inlined and the homepage JS must stay content-hashed.
+    # Prerendered first paint. The v2 rebuild silently dropped the anchors that
+    # scripts/prerender_directory.py wrote into, which froze the whole 30-min refresh
+    # job AND shipped a homepage whose live regions were em-dash placeholders for ~8s
+    # on every visit. These assertions fail the deploy if that happens again.
+    foreach ($mk in @("homeTicker", "homeStats", "homeCapper", "homeLivePicks", "homeLeaderboard", "homeSportsTalk")) {
+        Assert-Match "Homepage prerender" $homeIndex "<!--MK:$mk-->" "index.html lost the <!--MK:$mk--> prerender anchor - scripts/prerender_home_snapshot.cjs can no longer bake real data into the first paint."
+        Assert-Match "Homepage prerender" $homeIndex "<!--/MK:$mk-->" "index.html lost the closing <!--/MK:$mk--> prerender anchor."
+    }
+    Assert-NoMatch "Homepage prerender" $homeIndex '<div class="loading">' "homepage still ships 'Loading ...' placeholders - run: node scripts/prerender_home_snapshot.cjs"
+    Assert-NoMatch "Homepage prerender" $homeIndex '>—<' "homepage still ships em-dash placeholders - run: node scripts/prerender_home_snapshot.cjs"
+
     Assert-Match "Homepage" $homeIndex "BEGIN HOME CRITICAL CSS" "homepage critical CSS is no longer inlined - run: python scripts/build_home_critical.py"
     Assert-NoMatch "Homepage" $homeIndex "tmr-home-(auth|live)\.js\?" "homepage JS reverted to ?v= busting, which GitHub Pages ignores - run: python scripts/build_home_critical.py"
     & python scripts/build_home_critical.py --check

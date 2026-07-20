@@ -42,6 +42,21 @@ jobs:
       - name: Bake directory + homepage (/handicappers/, /leaderboards/, /)
         run: python scripts/prerender_directory.py
 
+      - name: Set up Node (homepage snapshot prerender)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright chromium
+        run: npm install --no-save playwright@1.49.1 && npx playwright install --with-deps chromium
+
+      - name: Bake real live data into the homepage first paint
+        # Runs the homepage's own JS against the live API and writes the resulting
+        # markup into index.html between <!--MK:--> markers, so the first frame shows
+        # real numbers instead of em-dash placeholders. Fail-closed: if any region is
+        # still a placeholder when it times out, nothing is written and this fails.
+        run: node scripts/prerender_home_snapshot.cjs
+
       - name: Verify homepage highlights are reproducible from live graded picks
         # Fail closed: if any baked "Live highlights" row cannot be re-derived from
         # real graded picks (fake/stale/hand-injected), the job stops here and the
