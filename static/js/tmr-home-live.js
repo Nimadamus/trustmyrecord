@@ -51,17 +51,23 @@
                    .sort(function (a, b) { return new Date(a.commence_time) - new Date(b.commence_time); })
                    .slice(0, 6);
       if (!games.length) { box.style.display = 'none'; return; }
+      var TEAM_ABBR = {"Arizona Diamondbacks": "ARI", "Atlanta Braves": "ATL", "Baltimore Orioles": "BAL", "Boston Red Sox": "BOS", "Chicago Cubs": "CHC", "Chicago White Sox": "CWS", "Cincinnati Reds": "CIN", "Cleveland Guardians": "CLE", "Colorado Rockies": "COL", "Detroit Tigers": "DET", "Houston Astros": "HOU", "Kansas City Royals": "KC", "Los Angeles Angels": "LAA", "Los Angeles Dodgers": "LAD", "Miami Marlins": "MIA", "Milwaukee Brewers": "MIL", "Minnesota Twins": "MIN", "New York Mets": "NYM", "New York Yankees": "NYY", "Athletics": "ATH", "Oakland Athletics": "ATH", "Philadelphia Phillies": "PHI", "Pittsburgh Pirates": "PIT", "San Diego Padres": "SD", "San Francisco Giants": "SF", "Seattle Mariners": "SEA", "St. Louis Cardinals": "STL", "Tampa Bay Rays": "TB", "Texas Rangers": "TEX", "Toronto Blue Jays": "TOR", "Washington Nationals": "WSH"};
       var abbr = function (t) {
-        var w = String(t || '').split(' '); return (w[w.length - 1] || '').slice(0, 3).toUpperCase();
+        var n = String(t || '').trim();
+        if (TEAM_ABBR[n]) return TEAM_ABBR[n];
+        var hit = Object.keys(TEAM_ABBR).filter(function (k) { return n.indexOf(k) > -1 || k.indexOf(n) > -1; })[0];
+        if (hit) return TEAM_ABBR[hit];
+        var w = n.split(' ');                       // last resort: initials, never a nickname slice
+        return w.length > 1 ? (w[0][0] + w[w.length - 1][0]).toUpperCase() : n.slice(0, 3).toUpperCase();
       };
       var html = '<span class="tlbl"><span class="bl"></span>Today</span>';
       games.forEach(function (g) {
         var t = new Date(g.commence_time);
         var when = t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        html += '<span class="gm">' +
+        html += '<a class="gm" href="/sportsbook/">' +
           '<span class="t">' + esc(abbr(g.away_team)) + '</span>' +
           '<span class="t">' + esc(abbr(g.home_team)) + '</span>' +
-          '<span class="st">' + esc(when) + '</span></span>';
+          '<span class="st">' + esc(when) + '</span></a>';
       });
       box.querySelector('.ticker-in').innerHTML = html;
     });
