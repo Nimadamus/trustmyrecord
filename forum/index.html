@@ -3777,6 +3777,9 @@ function forumEditPost(postId) {
     bodyEl.appendChild(box);
     box.querySelector('.fpost-edit-text').value = raw;
     try { if (window.TMREmoji) TMREmoji.attach(box.querySelector('.fpost-edit-text')); } catch(e){}
+    // FORUM_IMAGE_PASTE_20260720: inline post edit keeps paste/drop/upload, so an
+    // image can be added (or an existing [img] left untouched) while editing.
+    try { if (window.TMRForumImages) TMRForumImages.attach(box.querySelector('.fpost-edit-text')); } catch(e){}
     box.querySelector('[data-cancel]').onclick = function() {
         box.remove();
         if (contentEl) contentEl.style.display = '';
@@ -4662,6 +4665,9 @@ function renderReplyArea() {
         +   '<button type="button" class="fbtn is-primary" onclick="submitReply()">Post Reply</button>'
         + '</div>';
     try { if (window.TMREmoji) TMREmoji.attach(document.getElementById('replyText')); } catch(e){}
+    // FORUM_IMAGE_PASTE_20260720: quick reply (and therefore quote reply, which
+    // writes into this same box) accepts pasted/dropped/picked images.
+    try { if (window.TMRForumImages) TMRForumImages.attach(document.getElementById('replyText')); } catch(e){}
 }
 
 /* removed: replaced in renders.js */
@@ -4728,6 +4734,7 @@ function openNewThread() {
 
     modal.classList.add('is-open');
     try { if (window.TMREmoji) TMREmoji.attach(document.getElementById('ntContent')); } catch(e){}
+    try { if (window.TMRForumImages) TMRForumImages.attach(document.getElementById('ntContent')); } catch(e){}
     setTimeout(function () {
         var t = document.getElementById('ntTitle');
         if (t) t.focus();
@@ -5267,6 +5274,9 @@ document.addEventListener('DOMContentLoaded', async function() {
      Twemoji renders posted emojis consistently on every device. -->
 <script src="/static/js/twemoji.min.js?v=20260711b" defer></script>
 <script src="/static/js/tmr-emoji-picker.js?v=20260711b" defer></script>
+<!-- FORUM_IMAGE_PASTE_20260720: Ctrl+V / drag-drop / file-pick image upload in
+     every composer (new thread, quick reply, quote reply, inline post edit). -->
+<script src="/static/js/tmr-forum-image-upload.js?v=20260720a" defer></script>
 
 <script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
 <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260710nolines">
