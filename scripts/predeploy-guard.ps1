@@ -213,6 +213,8 @@ try {
     $handicappers = Get-Content -LiteralPath "handicappers/index.html" -Raw
     $reliability = Get-Content -LiteralPath "static/js/sportsbook-production-fix-persist-reliability.js" -Raw
     $homeIndex = Get-Content -LiteralPath "index.html" -Raw
+    $tickerCss = Get-Content -LiteralPath "static/css/tmr-home-v2.css" -Raw
+    $homeLive = Get-Content -LiteralPath "static/js/tmr-home-live.js" -Raw
 
     Assert-Match "Product Upgrade System" $productSystem "Design Bible" "Design Bible section is missing."
     Assert-Match "Product Upgrade System" $productSystem "UX Rubric" "UX Rubric section is missing."
@@ -271,6 +273,14 @@ try {
         Assert-Match "Homepage prerender" $homeIndex "<!--/MK:$mk-->" "index.html lost the closing <!--/MK:$mk--> prerender anchor."
     }
     Assert-NoMatch "Homepage prerender" $homeIndex '<div class="loading">' "homepage still ships 'Loading ...' placeholders - run: node scripts/prerender_home_snapshot.cjs"
+
+    # Ticker layout. The TODAY label must be its OWN static column with the games in a
+    # separate scrolling container. It used to be position:sticky inside the scrolling
+    # strip, which let the first game card render underneath it.
+    Assert-Match "Homepage ticker" $homeIndex '<span class="tlbl">.*?</span><!--MK:homeTicker--><div class="ticker-games">' "the TODAY label must sit outside <div class=\"ticker-games\"> - games would render under the label again."
+    Assert-NoMatch "Homepage ticker" $tickerCss "\.tlbl\{[^}]*position:sticky" "the TODAY label is position:sticky inside the scrolling ticker again - games will slide underneath it."
+    Assert-Match "Homepage ticker" $tickerCss "\.ticker-games\{[^}]*overflow-x:auto" "only .ticker-games may scroll; the label column must stay stationary."
+    Assert-NoMatch "Homepage ticker" $homeLive "ticker-in'\)\.innerHTML" "tmr-home-live.js writes the ticker into .ticker-in again - that wipes the TODAY label column."
     Assert-NoMatch "Homepage prerender" $homeIndex '>—<' "homepage still ships em-dash placeholders - run: node scripts/prerender_home_snapshot.cjs"
 
     Assert-Match "Homepage" $homeIndex "BEGIN HOME CRITICAL CSS" "homepage critical CSS is no longer inlined - run: python scripts/build_home_critical.py"

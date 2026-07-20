@@ -31,13 +31,16 @@ const HOME = path.join(ROOT, 'index.html');
 const TIMEOUT_MS = 120000;
 
 // Region key -> selector whose innerHTML the page's own JS owns.
+// `need` is a selector that MUST exist inside the region before it counts as
+// populated. Without it a region holding nothing but its own <!--MK:--> comments
+// reads as "non-empty" and the markers get baked in place of the real content.
 const REGIONS = [
-  { key: 'homeTicker', sel: '.ticker-in' },
-  { key: 'homeStats', sel: '.bridge-in' },
-  { key: 'homeCapper', sel: '.spot .bd' },
-  { key: 'homeLivePicks', sel: '.board .card:nth-of-type(1) .body' },
-  { key: 'homeLeaderboard', sel: '.board .card:nth-of-type(2) .body' },
-  { key: 'homeSportsTalk', sel: '.board .card:nth-of-type(3) .body' },
+  { key: 'homeTicker', sel: '.ticker-games', need: '.gm' },
+  { key: 'homeStats', sel: '.bridge-in', need: '.s b' },
+  { key: 'homeCapper', sel: '.spot .bd', need: '.g3 b' },
+  { key: 'homeLivePicks', sel: '.board .card:nth-of-type(1) .body', need: '*' },
+  { key: 'homeLeaderboard', sel: '.board .card:nth-of-type(2) .body', need: '*' },
+  { key: 'homeSportsTalk', sel: '.board .card:nth-of-type(3) .body', need: '*' },
 ];
 
 const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.png': 'image/png', '.jpg': 'image/jpeg', '.gif': 'image/gif', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.ico': 'image/x-icon' };
@@ -58,9 +61,11 @@ function serve() {
   });
 }
 
-// A region is unusable if it still carries a placeholder the client meant to replace.
+// A region is unusable if it is empty once its own marker comments are removed, or if
+// it still carries a placeholder the client meant to replace.
 function isPlaceholder(html) {
-  return !html || !html.trim() || /class="loading"/.test(html) || />\s*—\s*</.test(html);
+  const stripped = (html || '').replace(/<!--[\s\S]*?-->/g, '').trim();
+  return !stripped || /class="loading"/.test(html) || />\s*—\s*</.test(html);
 }
 
 (async () => {
@@ -82,14 +87,18 @@ function isPlaceholder(html) {
       return regions.every(r => {
         const el = document.querySelector(r.sel);
         if (!el) return false;
+        if (r.need && !el.querySelector(r.need)) return false;
         const h = el.innerHTML;
-        return h && h.trim() && !/class="loading"/.test(h) && !/>\s*—\s*</.test(h);
+        const stripped = h.replace(/<!--[\s\S]*?-->/g, '').trim();
+        return stripped && !/class="loading"/.test(h) && !/>\s*—\s*</.test(h);
       });
     }, REGIONS, { timeout: TIMEOUT_MS });
 
+    // outerHTML, not innerHTML: the <!--MK:--> markers wrap the element from the
+    // outside, so replacing the whole element keeps exactly one marker pair forever.
     const baked = await page.evaluate((regions) => {
       const o = {};
-      for (const r of regions) o[r.key] = document.querySelector(r.sel).innerHTML;
+      for (const r of regions) o[r.key] = document.querySelector(r.sel).outerHTML;
       return o;
     }, REGIONS);
 
@@ -97,7 +106,11 @@ function isPlaceholder(html) {
     let changed = 0;
     for (const r of REGIONS) {
       const html = baked[r.key];
-      if (isPlaceholder(html)) throw new Error(`region ${r.key} came back as a placeholder - refusing to write`);
+      // Markers sit OUTSIDE the captured element, so a capture can never contain one.
+      // If that ever changes, every run would nest another pair - fail instead.
+      if (html.includes(`<!--MK:${r.key}-->`) || html.includes(`<!--/MK:${r.key}-->`))
+        throw new Error(`region ${r.key} captured its own marker - refusing to write`);
+      if (isPlaceholder(html)) throw new Error(`region ${r.key} came back empty or as a placeholder - refusing to write`);
       const re = new RegExp(`(<!--MK:${r.key}-->)[\\s\\S]*?(<!--/MK:${r.key}-->)`);
       if (!re.test(text)) throw new Error(`marker <!--MK:${r.key}--> missing from index.html - the homepage markup lost its prerender anchor`);
       const next = text.replace(re, (_m, a, b) => a + html + b);
