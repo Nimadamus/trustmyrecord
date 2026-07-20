@@ -735,12 +735,31 @@ html body.tmr-ds.profile-page.tmr-social-profile .profile-corr-cluster__legs li:
 html body.tmr-ds.profile-page.tmr-social-profile .profile-corr-cluster__legs strong:not([class]),
 html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination-controls button:not([class]),
 html body.tmr-ds.profile-page.tmr-social-profile .tmr-chart-stage__canvas div:not([class]),
-html body.tmr-ds.profile-page.tmr-social-profile summary:not([class]),
-html body.tmr-ds.profile-page.tmr-social-profile .profile-corr-explain p:not([class]),
-html body.tmr-ds.profile-page.tmr-social-profile p:not([class]),
-html body.tmr-ds.profile-page.tmr-social-profile s:not([class]),
+/* NOTE the .profile-main / .container scoping on the generic tag rules below.
+   An unscoped `p:not([class])` reached into the shared .ds-footer and repainted
+   its tagline --ink-2 on navy (1.76:1). Generic tag selectors must never be
+   allowed to escape the page content. */
+html body.tmr-ds.profile-page.tmr-social-profile .profile-main summary:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .container summary:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .profile-main p:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .container p:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .profile-main s:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .container s:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .profile-main td:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .container td:not([class]),
 html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-card span:not([class]){
   color:var(--ink-2);
+}
+/* a table head that was still painted dark, so its labels sat dark-on-dark */
+html body.tmr-ds.profile-page.tmr-social-profile .profile-main th,
+html body.tmr-ds.profile-page.tmr-social-profile .container th{
+  background:var(--panel-2);
+  color:var(--muted);
+}
+/* the last two legacy greys */
+html body.tmr-ds.profile-page.tmr-social-profile .profile-main span:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .container span:not([class]){
+  color:var(--muted);
 }
 /* the ticket ref was #ffd700, a gold picked for a black page */
 html body.tmr-ds.profile-page.tmr-social-profile .ledger-pick-meta span:not([class]){color:var(--muted)}
