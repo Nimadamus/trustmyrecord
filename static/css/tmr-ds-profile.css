@@ -651,6 +651,63 @@ html body.tmr-ds.profile-page.tmr-social-profile .v.is-neg,
 html body.tmr-ds.profile-page.tmr-social-profile .num.neg,
 html body.tmr-ds.profile-page.tmr-social-profile .tmrx-value.is-neg{color:var(--red)}
 
+/* ---------------------------------------------------------------------------
+   13. INHERITED TEXT COLOUR ON CONTAINERS
+   -----------------------------------------------------------------------------
+   The last band of failures was not on classed text nodes at all: unclassed
+   <td>/<li>/<span>/<b> inheriting a near-white colour set on their CONTAINER.
+   site-qa/ds_unclassed_probe.cjs reports the nearest classed ancestor for
+   exactly this reason - the fix has to land on the container, not the tag.
+   --------------------------------------------------------------------------- */
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-table,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-row-void,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-unavail-note,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-advanced-support-grid,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-diversity-detail,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-corr-stats,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-corr-cluster__legs,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-corr-panel__body,
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination-controls,
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-chart-stage__canvas,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-inbox-modal-card,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-feed-card,
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pick-meta{
+  color:var(--ink-2);
+}
+/* the message modal was still a dark card, so its heading was dark-on-dark */
+html body.tmr-ds.profile-page.tmr-social-profile .profile-inbox-modal-card{
+  background:var(--panel);
+  border:1px solid var(--edge);
+  border-radius:var(--r);
+  box-shadow:var(--sh-up);
+}
+html body.tmr-ds.profile-page.tmr-social-profile .profile-inbox-modal-card h3{color:var(--ink)}
+/* ticket refs were #ffd700, a gold picked for a black page */
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pick-meta span{color:var(--muted)}
+
+/* ---------------------------------------------------------------------------
+   14. MUTED, ONE STEP DARKER — ON THIS PAGE ONLY
+   -----------------------------------------------------------------------------
+   --muted (#5E7590) measures 4.83:1 on white (passes) but 4.49:1 on --panel-2
+   (#F6F9FC), i.e. a hair under AA. The homepage rarely puts muted text on a
+   sunken surface; this page does it constantly - table meta, stat captions,
+   pagination. Rather than change an approved sitewide token, it is nudged one
+   step darker HERE. Visually the same grey-blue; 5.955:1 on white and 5.53:1 on
+   --panel-2, so both pass comfortably.
+   --------------------------------------------------------------------------- */
+html body.tmr-ds.profile-page{--muted:#4E6379}
+
+/* legacy greys that never went through a token */
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-stat-label,
+html body.tmr-ds.profile-page.tmr-social-profile .ca-hl-meta,
+html body.tmr-ds.profile-page.tmr-social-profile .ca-hl-label,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-advanced-metric__sub,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-meta,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-page-info,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-rail-corr-sub{
+  color:var(--muted);
+}
+
 @media(max-width:760px){
   body.tmr-ds .profile-header,body.tmr-ds .profile-top-card{padding:20px}
   body.tmr-ds .profile-name{font-size:27px}
