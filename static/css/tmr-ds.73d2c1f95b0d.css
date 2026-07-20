@@ -481,6 +481,50 @@ body.tmr-ds .ds-footer-legal{display:flex;align-items:center;gap:16px;flex-wrap:
 }
 
 /* ---------------------------------------------------------------------------
+   12b. SEO INTERNAL-LINK CLUSTER
+   -----------------------------------------------------------------------------
+   `.tmr-internal-cluster` is an insert-only block that appears on 25 pages. It
+   shipped with its colours in inline style="" attributes on the old arena
+   palette (#12121a / #2a2a4a / #00aeff links / #ffd700 chevrons), which no
+   stylesheet can override without !important. Adoption strips those inline
+   attributes on design-system pages and this rule takes over. Every link and
+   every word of copy is preserved — only the presentation moves.
+   --------------------------------------------------------------------------- */
+body.tmr-ds .tmr-internal-cluster{
+  max-width:var(--wrap);
+  margin:40px auto 0;
+  padding:24px;
+  background:var(--panel);
+  border:1px solid var(--edge);
+  border-radius:var(--r);
+  box-shadow:var(--sh);
+  font-family:var(--font);
+}
+body.tmr-ds .tmr-internal-cluster h2{
+  font-family:var(--display);
+  font-size:22px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.01em;
+  color:var(--ink);
+  margin:0 0 14px;
+}
+body.tmr-ds .tmr-internal-cluster > div{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:10px 20px;
+}
+body.tmr-ds .tmr-internal-cluster a{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:4px 0;
+  font-size:14.5px;font-weight:700;
+  color:var(--brand-dk);
+}
+body.tmr-ds .tmr-internal-cluster a:hover{color:var(--brand);text-decoration:underline}
+body.tmr-ds .tmr-internal-cluster a span{color:var(--muted);font-weight:900}
+body.tmr-ds .tmr-internal-cluster p{font-size:14px;color:var(--muted);line-height:1.55}
+
+/* ---------------------------------------------------------------------------
    13. RESPONSIVE — the approved two-breakpoint system, plus a phone step
    --------------------------------------------------------------------------- */
 @media(max-width:1400px){

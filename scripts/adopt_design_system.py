@@ -60,6 +60,29 @@ def assets():
     return m["static/css/tmr-ds.css"], m["static/js/tmr-ds-nav.js"], m
 
 
+CLUSTER_RE = re.compile(r'(?s)(<section class="tmr-internal-cluster".*?</section>)')
+STYLE_ATTR_RE = re.compile(r'\s+style="[^"]*"')
+
+
+def clean_seo_cluster(html):
+    """Strip inline style="" attributes inside .tmr-internal-cluster so the
+    design system can style it. The block ships its colours inline on the old
+    arena palette, which no stylesheet can beat without !important. Links, text
+    and structure are untouched — only presentation attributes are removed.
+
+    Only safe on pages that load tmr-ds.css; on any other page it would leave the
+    block unstyled."""
+    total = 0
+
+    def repl(m):
+        nonlocal total
+        block, n = STYLE_ATTR_RE.subn("", m.group(1))
+        total += n
+        return block
+
+    return CLUSTER_RE.sub(repl, html), total
+
+
 def strip_important_in_styles(html):
     """Drop `!important` inside <style> blocks only. Inline style="" attributes
     and any JS strings are left alone."""
@@ -112,6 +135,11 @@ def adopt(path, page_css_name, dark=False, keep_nav=False, strip_important=False
     if not keep_nav:
         html, n_js = SITEWIDE_JS_RE.subn("", html)
         notes.append(f"removed tmr-sitewide.js tags: {n_js}")
+
+    # 3a. the shared SEO cluster carries its palette inline
+    html, n_seo = clean_seo_cluster(html)
+    if n_seo:
+        notes.append(f"stripped inline styles in .tmr-internal-cluster: {n_seo}")
 
     # 3b. optional: retire the page's own !important war
     if strip_important:
