@@ -368,7 +368,13 @@ body.tmr-ds .empty-state .icon{color:var(--muted)}
    10. RESPONSIVE
    --------------------------------------------------------------------------- */
 @media(max-width:1180px){
-  body.tmr-ds .layout-2col{grid-template-columns:1fr}
+  /* minmax(0,1fr), never a bare 1fr: a bare `1fr` track takes its minimum from
+     the item's min-content, and this page contains a table with min-width:760px.
+     Even though that table sits in an overflow-x:auto wrapper, its min-content
+     still propagates up through the grid item, and the track blows out to 871px
+     on a 390px viewport. The page's own rule had minmax(0,1fr) for exactly this
+     reason; this override has to keep it. */
+  body.tmr-ds .layout-2col{grid-template-columns:minmax(0,1fr)}
 }
 @media(max-width:760px){
   body.tmr-ds .page{padding:16px var(--gutter) 48px}
