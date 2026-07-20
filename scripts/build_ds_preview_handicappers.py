@@ -22,6 +22,7 @@ Canonical is deliberately left pointing at the production URL.
 
 Run:  python scripts/build_ds_preview_handicappers.py
 """
+import json
 import pathlib
 import sys
 
@@ -29,16 +30,24 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "handicappers" / "index.html"
 OUT = ROOT / "preview" / "handicappers" / "index.html"
 
+# Content-hashed asset URLs. `?v=` is useless here — the CDN caches by path and
+# ignores the query string — so the filename itself has to change.
+# Run scripts/build_ds_assets.py first; it writes this manifest.
+ASSETS = json.loads((ROOT / "static" / "ds-assets.json").read_text(encoding="utf-8"))
+DS_CSS = ASSETS["static/css/tmr-ds.css"]
+DS_PAGE_CSS = ASSETS["static/css/tmr-ds-handicappers.css"]
+DS_NAV = ASSETS["static/js/tmr-ds-nav.js"]
+
 OLD_FONTS = ('<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800;900'
              '&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">')
 NEW_FONTS = ('<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900'
              '&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">\n'
-             '    <link rel="stylesheet" href="/static/css/tmr-ds.css?v=20260720ds2">\n'
-             '    <link rel="stylesheet" href="/static/css/tmr-ds-handicappers.css?v=20260720ds2">')
+             f'    <link rel="stylesheet" href="{DS_CSS}">\n'
+             f'    <link rel="stylesheet" href="{DS_PAGE_CSS}">')
 
 SITEWIDE_CSS = '<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">'
 SITEWIDE_JS = '<script defer src="/static/js/tmr-sitewide.js?v=20260720alerts"></script>'
-DS_NAV_JS = '<script src="/static/js/tmr-ds-nav.js?v=20260720ds2"></script>\n</body>'
+DS_NAV_JS = f'<script src="{DS_NAV}"></script>\n</body>'
 
 
 def sub_once(html, old, new, label):
