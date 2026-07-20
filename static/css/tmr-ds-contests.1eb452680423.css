@@ -1,0 +1,168 @@
+/* =============================================================================
+   TrustMyRecord — Contests index, design-system adoption layer.
+   -----------------------------------------------------------------------------
+   The JustBet contest card is deliberately gold-branded and that identity is
+   kept — but expressed through the design system's own --gold / --gold-soft
+   tokens instead of a bespoke #ffb800 on a brown-black gradient, so it reads as
+   a sponsored card inside the product rather than a different product.
+
+   Note this page declares --bg/--panel/--line/--muted/--text at :root, names the
+   design system also owns. Because the DS declares them on body.tmr-ds (which
+   the content descends from), the DS values win automatically — no renaming and
+   no !important needed.
+
+   Created Jul 20, 2026.
+   ============================================================================= */
+
+body.tmr-ds{
+  --bg:var(--page);
+  --panel-2:#F6F9FC;
+  --line-strong:var(--line-2);
+  --text:var(--ink);
+  --faint:var(--muted);
+  --cyan:var(--brand);
+  --gold-bright:var(--gold-b);
+  --justbet:var(--gold);
+}
+
+body.tmr-ds{background:var(--page)}
+body.tmr-ds .page{
+  width:100%;
+  max-width:var(--wrap);
+  margin:0 auto;
+  padding:24px var(--gutter) 60px;
+}
+body.tmr-ds h1,body.tmr-ds h2,body.tmr-ds h3{font-family:var(--display);letter-spacing:.008em}
+body.tmr-ds h1{font-size:34px;font-weight:900;text-transform:uppercase;line-height:1.04}
+body.tmr-ds h2{font-size:22px;font-weight:900;text-transform:uppercase;line-height:1.08}
+
+/* ---------- hero: shared navy head band ---------- */
+body.tmr-ds .hero{
+  margin-top:0;
+  padding:30px 28px;
+  border:0;
+  border-radius:var(--r);
+  box-shadow:var(--sh);
+  background:
+    radial-gradient(46rem 20rem at 88% -6rem, rgba(34,210,192,.20), transparent 60%),
+    linear-gradient(174deg,var(--navy) 0%, var(--navy-2) 64%, var(--navy-3) 100%);
+}
+body.tmr-ds .hero h1{color:#fff}
+body.tmr-ds .hero p{color:#B7CEE4;font-size:15.5px;line-height:1.5;max-width:62ch}
+body.tmr-ds .hero .eyebrow{
+  padding:6px 14px;
+  border:1px solid rgba(34,210,192,.34);
+  background:rgba(34,210,192,.12);
+  color:#8DEDE0;
+  font-size:13px;
+  font-weight:800;
+  letter-spacing:.02em;
+  text-transform:none;
+}
+
+/* ---------- contest cards ---------- */
+body.tmr-ds .contest-list{gap:var(--gap);margin-top:var(--gap)}
+body.tmr-ds .contest-card{
+  padding:22px 24px;
+  border:1px solid var(--edge);
+  border-radius:var(--r);
+  background:var(--panel);
+  box-shadow:var(--sh);
+}
+body.tmr-ds .contest-card .sponsor{
+  padding:4px 10px;
+  border:0;
+  border-radius:5px;
+  background:var(--gold-soft);
+  color:var(--gold);
+  font-family:var(--font);
+  font-size:11.5px;
+  font-weight:900;
+  letter-spacing:.04em;
+}
+body.tmr-ds .contest-card .live{
+  padding:3px 9px;
+  border:0;
+  border-radius:5px;
+  background:var(--green-soft);
+  color:var(--green);
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.06em;
+}
+body.tmr-ds .contest-card .live .dot{background:var(--green);box-shadow:none}
+body.tmr-ds .contest-card .title{
+  font-family:var(--display);
+  font-size:26px;
+  font-weight:900;
+  letter-spacing:.008em;
+  text-transform:uppercase;
+  color:var(--ink);
+}
+body.tmr-ds .contest-card .meta{gap:10px}
+body.tmr-ds .contest-card .meta .k{
+  font-size:11px;font-weight:900;letter-spacing:.1em;color:var(--muted);
+}
+body.tmr-ds .contest-card .meta .v{
+  margin-top:3px;
+  font-family:var(--display);
+  font-size:22px;
+  font-weight:900;
+  letter-spacing:-.028em;
+  color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+body.tmr-ds .contest-card .desc{color:var(--ink-2);font-size:14.5px;line-height:1.55}
+body.tmr-ds .contest-card .desc strong{color:var(--ink);font-weight:800}
+
+/* ---------- CTAs ---------- */
+body.tmr-ds .cta-primary{
+  height:46px;
+  padding:0 24px;
+  border-radius:var(--r-sm);
+  border:1.5px solid transparent;
+  background:linear-gradient(180deg,#13B0A5,#0A8A83);
+  color:#fff;
+  font-size:15.5px;
+  font-weight:800;
+  letter-spacing:-.012em;
+  text-transform:none;
+  box-shadow:0 2px 10px rgba(12,148,140,.32);
+  transition:.15s;
+}
+body.tmr-ds .cta-primary:hover{background:linear-gradient(180deg,#17C2B5,#0C9A92)}
+body.tmr-ds .cta-ghost{
+  height:46px;
+  padding:0 20px;
+  border-radius:var(--r-sm);
+  border:1.5px solid var(--line-2);
+  background:var(--panel);
+  color:var(--ink-2);
+  font-size:15.5px;
+  font-weight:800;
+}
+body.tmr-ds .cta-ghost:hover{border-color:var(--brand);color:var(--brand-dk)}
+
+/* ---------- note ---------- */
+body.tmr-ds .iso-note{
+  margin-top:24px;
+  padding:18px 20px;
+  border:1px dashed var(--line-2);
+  border-radius:var(--r);
+  background:var(--panel-2);
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.55;
+}
+body.tmr-ds .iso-note strong{color:var(--ink);font-weight:800}
+body.tmr-ds .iso-note code{
+  background:var(--panel-3);color:var(--ink-2);border-radius:4px;padding:1px 6px;font-size:13px;
+}
+
+@media(max-width:760px){
+  body.tmr-ds .page{padding:16px var(--gutter) 48px}
+  body.tmr-ds .hero{padding:20px 18px}
+  body.tmr-ds h1{font-size:26px}
+  body.tmr-ds .contest-card{padding:16px}
+  body.tmr-ds .contest-list{grid-template-columns:minmax(0,1fr)}
+}

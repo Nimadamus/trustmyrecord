@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="canonical" href="https://trustmyrecord.com/handicapping/mlb/">
+    <title>MLB Handicapping Hub | Matchups, Trends &amp; Consensus | TrustMyRecord</title>
+    <meta name="description" content="Research today's MLB games: probable pitchers, starter and bullpen stats, team offense, verified historical trends with full sample games, full-game and First 5 betting lines, and community consensus for every matchup.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:title" content="MLB Handicapping Hub | TrustMyRecord">
+    <meta property="og:description" content="Probable pitchers, ranked trends, lines, and community consensus for every MLB matchup.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://trustmyrecord.com/handicapping/mlb/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
+    <link rel="stylesheet" href="/static/css/handicapping.css?v=20260720hubtrend1">
+</head>
+<body class="tmr-site-shell">
+    <main class="hh-shell">
+        <nav class="hh-breadcrumb" aria-label="Breadcrumb">
+            <a href="/handicapping/">Handicapping Hub</a> <span aria-hidden="true">/</span> <span>MLB</span>
+        </nav>
+
+        <header class="hh-subhero">
+            <div>
+                <span class="hh-kicker">MLB Research</span>
+                <h1>MLB Handicapping Hub</h1>
+                <p>Every game on the board with probable pitchers, starter and bullpen stats, team offense, verified trends you can audit down to the individual game, full-game and First 5 lines, and how the community is leaning. Expand any matchup for the full research dashboard.</p>
+            </div>
+        </header>
+
+        <div class="hh-datebar" role="group" aria-label="Slate date">
+            <button type="button" class="hh-datebtn" id="hh-prev" aria-label="Previous day" disabled title="Date archive arrives with the full matchup engine">‹</button>
+            <div class="hh-datelabel">
+                <strong id="hh-dateMain">Today’s Slate</strong>
+                <span id="hh-dateSub">Loading games…</span>
+            </div>
+            <button type="button" class="hh-datebtn" id="hh-today" aria-current="date">Today</button>
+            <button type="button" class="hh-datebtn" id="hh-next" aria-label="Next day" disabled title="Date archive arrives with the full matchup engine">›</button>
+            <div class="hh-find">
+                <input type="search" id="hh-find" placeholder="Find a team…" aria-label="Find a team or matchup" autocomplete="off">
+            </div>
+        </div>
+
+        <div id="hh-status" class="hh-status" role="status" aria-live="polite">Loading today’s MLB slate…</div>
+        <div id="hh-games" class="hh-games"></div>
+    </main>
+
+    <template id="hh-game-tpl">
+        <article class="hh-game" data-game>
+            <button type="button" class="hh-game__header" data-toggle aria-expanded="false">
+                <div class="hh-game__teams">
+                    <div class="hh-team hh-team--away">
+                        <img class="hh-team__logo" alt="" loading="lazy" data-away-logo>
+                        <div class="hh-team__meta"><span class="hh-team__side">Away</span><strong data-away-name></strong></div>
+                    </div>
+                    <div class="hh-game__at">
+                        <span data-time></span>
+                        <span class="hh-at">@</span>
+                        <span class="hh-venue" data-venue></span>
+                    </div>
+                    <div class="hh-team hh-team--home">
+                        <img class="hh-team__logo" alt="" loading="lazy" data-home-logo>
+                        <div class="hh-team__meta"><span class="hh-team__side">Home</span><strong data-home-name></strong></div>
+                    </div>
+                </div>
+                <div class="hh-game__quick" data-quicklines></div>
+                <span class="hh-game__chev" aria-hidden="true">▾</span>
+            </button>
+            <div class="hh-game__body" data-body hidden></div>
+        </article>
+    </template>
+
+    <script src="/static/js/config.js?v=20260716hub3"></script>
+    <script src="/static/js/tmr-sitewide.js?v=20260716hub3"></script>
+    <script src="/static/js/handicapping-mlb.js?v=20260720hubtrend1"></script>
+</body>
+</html>

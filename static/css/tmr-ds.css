@@ -74,6 +74,41 @@ body.tmr-ds.tmr-ds--dark{
 }
 
 /* ---------------------------------------------------------------------------
+   1b. COMPATIBILITY: the retired --tmr-* vocabulary
+   -----------------------------------------------------------------------------
+   Many pages consume sitewide tokens defensively, e.g. `var(--tmr-text,#f8fafc)`.
+   Adoption removes tmr-sitewide.css, which is where those were defined — so
+   without this block every one of those declarations would silently fall back to
+   its hardcoded DARK default and produce white text on a white page. Mapping the
+   names here keeps those pages correct while their own CSS is migrated.
+
+   These are a migration aid, not part of the design system. Do not author new
+   CSS against --tmr-* names.
+   --------------------------------------------------------------------------- */
+body.tmr-ds{
+  --tmr-bg:var(--page);          --tmr-bg-soft:var(--panel-2);
+  --tmr-app-bg:var(--page);      --tmr-app-bg-2:var(--panel-2);
+  --tmr-panel:var(--panel);      --tmr-panel-2:var(--panel-2);
+  --tmr-card:var(--panel);       --tmr-card-strong:var(--panel);
+  --tmr-card-soft:var(--panel-2);
+  --tmr-line:var(--line);        --tmr-line-strong:var(--line-2);
+  --tmr-border:var(--line);      --tmr-border-strong:var(--line-2);
+  --tmr-text:var(--ink);         --tmr-text-strong:var(--ink);
+  --tmr-text-soft:var(--ink-2);  --tmr-text-muted:var(--muted);
+  --tmr-muted:var(--muted);
+  --tmr-teal:var(--brand);       --tmr-accent:var(--brand);
+  --tmr-accent-2:var(--blue);    --tmr-action:var(--brand-dk);
+  --tmr-gold:var(--gold);        --tmr-warning:var(--gold);
+  --tmr-green:var(--green);      --tmr-success:var(--green);
+  --tmr-red:var(--red);          --tmr-danger:var(--red);
+  --tmr-radius:var(--r);         --tmr-radius-sm:var(--r-sm);
+  --tmr-radius-md:var(--r);      --tmr-radius-lg:var(--r);
+  --tmr-shadow:var(--sh);        --tmr-shadow-card:var(--sh-up);
+  --tmr-font:var(--font);        --tmr-display:var(--display);
+  --tmr-page-max:var(--wrap);    --tmr-page-pad:var(--gutter);
+}
+
+/* ---------------------------------------------------------------------------
    2. PAGE SHELL
    --------------------------------------------------------------------------- */
 body.tmr-ds{

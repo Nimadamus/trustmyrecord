@@ -1,0 +1,187 @@
+/* =============================================================================
+   TrustMyRecord — Tools hub, design-system adoption layer.
+   -----------------------------------------------------------------------------
+   Notes specific to this page:
+   - `.tools-shell{padding-top:112px}` is another hardcoded offset for the old
+     FIXED nav; the design-system nav is sticky and in flow, so it goes.
+   - h1 was `clamp(44px,6vw,76px)` — a display scale used nowhere else on the
+     site. It comes onto the shared head-band size.
+   - Several surfaces here have NO border-radius at all (square hero panel) while
+     others use 8px; both come onto the 10px/7px pair.
+   - The CTA buttons were uppercase 12px teal->blue gradients. They become the
+     shared primary/secondary buttons.
+
+   Zero !important. Card content, links and copy untouched.
+
+   Created Jul 20, 2026.
+   ============================================================================= */
+
+body.tmr-ds{
+  --tools-bg:var(--page);
+  --tools-panel:var(--panel);
+  --tools-panel-strong:var(--panel);
+  --tools-border:var(--line);
+  --tools-text:var(--ink);
+  --tools-muted:var(--muted);
+  --tools-teal:var(--brand);
+  --tools-blue:var(--blue);
+  --tools-gold:var(--gold);
+}
+
+body.tmr-ds{background:var(--page)}
+body.tmr-ds .tools-shell{
+  width:100%;
+  max-width:var(--wrap);
+  margin:0 auto;
+  padding:24px var(--gutter) 60px;
+}
+
+/* ---------- hero: copy panel becomes the shared navy head band ---------- */
+body.tmr-ds .tools-hero{gap:var(--gap);margin-bottom:24px}
+body.tmr-ds .tools-hero-copy{
+  padding:32px 30px;
+  border:0;
+  border-radius:var(--r);
+  box-shadow:var(--sh);
+  background:
+    radial-gradient(46rem 20rem at 88% -6rem, rgba(34,210,192,.20), transparent 60%),
+    linear-gradient(174deg,var(--navy) 0%, var(--navy-2) 64%, var(--navy-3) 100%);
+}
+body.tmr-ds .tools-hero-copy h1{
+  margin:12px 0 14px;
+  font-family:var(--display);
+  font-size:clamp(30px,3.6vw,42px);
+  font-weight:900;
+  line-height:1.02;
+  letter-spacing:.006em;
+  text-transform:uppercase;
+  color:#fff;
+}
+body.tmr-ds .tools-lead{
+  font-size:16px;
+  font-weight:500;
+  line-height:1.55;
+  color:#B7CEE4;
+  max-width:62ch;
+}
+body.tmr-ds .tools-kicker{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.1em;
+  color:#8DEDE0;
+}
+
+/* ---------- buttons ---------- */
+body.tmr-ds .tools-actions{gap:10px;margin-top:22px}
+body.tmr-ds .tools-actions a,
+body.tmr-ds .tool-card a{
+  min-height:46px;
+  padding:0 24px;
+  border-radius:var(--r-sm);
+  border:1.5px solid transparent;
+  background:linear-gradient(180deg,#13B0A5,#0A8A83);
+  color:#fff;
+  font-size:15.5px;
+  font-weight:800;
+  letter-spacing:-.012em;
+  text-transform:none;
+  box-shadow:0 2px 10px rgba(12,148,140,.32);
+  transition:.15s;
+}
+body.tmr-ds .tools-actions a:hover,
+body.tmr-ds .tool-card a:hover{background:linear-gradient(180deg,#17C2B5,#0C9A92);color:#fff}
+body.tmr-ds .tools-actions a.secondary{
+  background:rgba(255,255,255,.11);
+  border-color:rgba(255,255,255,.32);
+  color:#fff;
+  box-shadow:none;
+}
+body.tmr-ds .tools-actions a.secondary:hover{background:rgba(255,255,255,.2);border-color:#fff}
+body.tmr-ds .tool-card a.is-muted{
+  background:var(--panel);
+  border-color:var(--line-2);
+  color:var(--ink-2);
+  box-shadow:none;
+}
+body.tmr-ds .tool-card a.is-muted:hover{background:var(--panel);border-color:var(--brand);color:var(--brand-dk)}
+
+/* ---------- status / stat tiles (they sit beside the dark hero) ---------- */
+body.tmr-ds .tools-status{
+  gap:12px;
+  padding:18px;
+  border:1px solid var(--edge);
+  border-radius:var(--r);
+  background:var(--panel);
+  box-shadow:var(--sh);
+}
+body.tmr-ds .tools-stat{
+  min-height:0;
+  padding:18px;
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+  background:var(--panel-2);
+}
+body.tmr-ds .tools-stat span{
+  font-size:11px;font-weight:900;letter-spacing:.1em;color:var(--muted);
+}
+body.tmr-ds .tools-stat strong{
+  margin-top:8px;
+  font-family:var(--display);
+  font-size:26px;
+  font-weight:900;
+  letter-spacing:-.03em;
+  color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+body.tmr-ds .tools-stat p{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.45}
+
+/* ---------- intro + tool cards ---------- */
+body.tmr-ds .tools-intro{margin-bottom:16px}
+body.tmr-ds .tools-intro h2{
+  font-family:var(--display);
+  font-size:22px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.01em;
+  color:var(--ink);
+}
+body.tmr-ds .tools-intro p{font-size:14.5px;color:var(--muted);line-height:1.55;max-width:76ch}
+
+body.tmr-ds .tools-grid{gap:var(--gap)}
+body.tmr-ds .tool-card{
+  min-height:0;
+  gap:12px;
+  padding:22px;
+  border:1px solid var(--edge);
+  border-radius:var(--r);
+  background:var(--panel);
+  box-shadow:var(--sh);
+  transition:.15s;
+}
+body.tmr-ds .tool-card:hover{box-shadow:var(--sh-up);border-color:var(--line-2)}
+body.tmr-ds .tool-card h2{
+  font-family:var(--display);
+  font-size:24px;
+  font-weight:900;
+  line-height:1.06;
+  letter-spacing:.008em;
+  text-transform:uppercase;
+  color:var(--ink);
+}
+body.tmr-ds .tool-card p{font-size:14.5px;color:var(--ink-2);line-height:1.55}
+body.tmr-ds .tool-card span{
+  font-size:11px;font-weight:900;letter-spacing:.1em;color:var(--brand-dk);
+}
+
+/* ---------- responsive ---------- */
+@media(max-width:1180px){
+  body.tmr-ds .tools-hero{grid-template-columns:minmax(0,1fr)}
+  body.tmr-ds .tools-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  body.tmr-ds .tools-shell{padding:16px var(--gutter) 48px}
+  body.tmr-ds .tools-hero-copy{padding:22px 18px}
+  body.tmr-ds .tools-grid{grid-template-columns:minmax(0,1fr)}
+  body.tmr-ds .tools-status{grid-template-columns:minmax(0,1fr)}
+  body.tmr-ds .tool-card{padding:16px}
+}
