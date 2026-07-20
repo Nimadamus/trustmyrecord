@@ -151,6 +151,15 @@ def adopt(path, page_css_name, dark=False, keep_nav=False, strip_important=False
     notes.append(f"Barlow -> Barlow Condensed in font links: {n_font}")
     html, n_900 = ensure_bc_900(html)
     notes.append(f"Barlow Condensed weight 900 ensured: {n_900}")
+    # A page that loads Inter but no Barlow Condensed would render every display
+    # heading in the Inter fallback, which quietly breaks the type hierarchy.
+    if "Barlow+Condensed" not in html:
+        m2 = re.search(r'(fonts\.googleapis\.com/css2\?family=)(Inter[^"\']*)', html)
+        if m2:
+            html = html.replace(m2.group(0), m2.group(1) + "Barlow+Condensed:wght@600;700;800;900&family=" + m2.group(2), 1)
+            notes.append("added Barlow Condensed to the font request")
+        else:
+            notes.append("WARNING: no Google-Fonts link found - display face not loaded")
 
     # 5. design-system stylesheets, immediately before </head> so they load last
     if "tmr-ds.css" in html or ds_css in html:
