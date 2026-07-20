@@ -73,9 +73,15 @@ body.tmr-ds{
    and that block sits well below the design-system <link>, so it kept the page
    on its dark radial-gradient #050a14 shell. Matching all three classes settles
    it by specificity rather than by an !important. */
-body.tmr-ds.profile-page,
-body.tmr-ds.profile-page.tmr-social-profile{
-  background:var(--page);
+html body.tmr-ds.profile-page,
+html body.tmr-ds.profile-page.tmr-social-profile{
+  /* background-image is reset explicitly rather than relying on the shorthand:
+     the page paints its shell with stacked radial-gradients over #050a14, and
+     several blocks re-declare it. Setting colour and image separately means a
+     later gradient-only declaration cannot leave a dark plate behind the light
+     colour. */
+  background-color:var(--page);
+  background-image:none;
   color:var(--ink);
   font-family:var(--font);
 }
