@@ -591,6 +591,66 @@ body.tmr-ds.profile-page.tmr-social-profile .profile-top-strip{
   font-weight:600;
 }
 
+/* ---------------------------------------------------------------------------
+   12. TEXT COLOUR PASS
+   -----------------------------------------------------------------------------
+   With every surface converted, what remained were purely text colours chosen
+   for a black page: near-whites (#f8fbff, #e8f0fb, #e2eaf4), pale blues
+   (#7cd4ff, #9fd0ff, #d8f4ff) and pastels (#d6b4ff, #fbbf24) — all of which are
+   invisible-to-marginal on white, measured between 1.01:1 and 2.66:1 where AA
+   needs 4.5:1.
+
+   The `html body.tmr-ds…` prefix is (0,4,2). Several of these collide with page
+   rules at (0,4,1) — e.g. `.v.is-pos` — where a plain class match would tie and
+   lose on source order. The extra element selector settles it.
+   --------------------------------------------------------------------------- */
+html body.tmr-ds.profile-page.tmr-social-profile .name,
+html body.tmr-ds.profile-page.tmr-social-profile .td,
+html body.tmr-ds.profile-page.tmr-social-profile .div,
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-stat-value,
+html body.tmr-ds.profile-page.tmr-social-profile .ca-hl-body{
+  color:var(--ink);
+}
+html body.tmr-ds.profile-page.tmr-social-profile .li,
+html body.tmr-ds.profile-page.tmr-social-profile .strong,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-corr-explain,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-tab,
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-cap-tab,
+html body.tmr-ds.profile-page.tmr-social-profile .fa-tab{
+  color:var(--ink-2);
+}
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-chip-sport,
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-stat-sub,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-rail-corr-sub,
+html body.tmr-ds.profile-page.tmr-social-profile .num.zero,
+html body.tmr-ds.profile-page.tmr-social-profile .zero{
+  color:var(--muted);
+}
+/* interactive / brand-coloured text */
+html body.tmr-ds.profile-page.tmr-social-profile .summary,
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-chip-name,
+html body.tmr-ds.profile-page.tmr-social-profile .fa-tab-count{
+  color:var(--brand-dk);
+}
+/* active tabs read as the brand pill, not white-on-white */
+html body.tmr-ds.profile-page.tmr-social-profile .profile-tab.active,
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-cap-tab.is-active,
+html body.tmr-ds.profile-page.tmr-social-profile .fa-tab.is-active{
+  background:var(--brand-soft);
+  border:1px solid var(--brand);
+  color:var(--brand-dk);
+}
+/* categorical accents kept, but at readable weight on white */
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-personality{color:var(--violet)}
+html body.tmr-ds.profile-page.tmr-social-profile .is-conflict{color:var(--gold)}
+/* semantic greens/reds: catch the compound-class cases that tie at (0,4,1) */
+html body.tmr-ds.profile-page.tmr-social-profile .v.is-pos,
+html body.tmr-ds.profile-page.tmr-social-profile .num.pos,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-value.is-pos{color:var(--green)}
+html body.tmr-ds.profile-page.tmr-social-profile .v.is-neg,
+html body.tmr-ds.profile-page.tmr-social-profile .num.neg,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-value.is-neg{color:var(--red)}
+
 @media(max-width:760px){
   body.tmr-ds .profile-header,body.tmr-ds .profile-top-card{padding:20px}
   body.tmr-ds .profile-name{font-size:27px}
