@@ -1,0 +1,192 @@
+/* =============================================================================
+   TrustMyRecord — Notifications, v2 design language.
+   Matches the approved homepage system (tmr-home-v2.css): light page, navy
+   header band, teal accents, Barlow Condensed display type, thin-line cards.
+   Loaded LAST on /notifications/ so it wins over tmr-sitewide.css without
+   selector rewrites. Also carries the sitewide alerts dropdown skin.
+   Created Jul 20, 2026.
+   ============================================================================= */
+
+:root{
+  --nv-page:#EFF3F8;
+  --nv-panel:#FFFFFF; --nv-panel-2:#F6F9FC; --nv-panel-3:#E6EDF5;
+  --nv-ink:#07182A; --nv-ink-2:#2E4459; --nv-muted:#5E7590;
+  --nv-line:#D2DEEA; --nv-line-2:#B7C8DA;
+  --nv-brand:#0C948C; --nv-brand-dk:#07736D; --nv-brand-lt:#22D2C0; --nv-brand-soft:#DEF4F2;
+  --nv-navy:#08192B; --nv-navy-2:#10334F; --nv-navy-3:#164A73;
+  --nv-gold:#B98505; --nv-gold-soft:#FBF1D8;
+  --nv-green:#0A8B4E; --nv-green-soft:#DFF3E8;
+  --nv-red:#BC372E; --nv-red-soft:#FAE9E7;
+  --nv-violet:#5940AE; --nv-violet-soft:#EBE7F9;
+  --nv-blue:#1E5BBF; --nv-blue-soft:#E3ECFB;
+  --nv-r:10px; --nv-r-sm:7px;
+  --nv-sh:0 1px 1px rgba(7,24,42,.05), 0 2px 8px rgba(7,24,42,.05);
+}
+
+/* ---------- page shell (beats the sitewide dark shell) ---------- */
+html body.nv-body,
+html body.nv-body.tmr-site-shell{
+  background:var(--nv-page) !important;
+  font-family:Inter,'Segoe UI',Arial,sans-serif !important;
+  /* the old page carried its own reset; without it the UA's 8px body margin
+     leaves 8px of horizontal overflow on mobile */
+  margin:0 !important;
+}
+body.nv-body *{box-sizing:border-box}
+/* Ink is scoped to the page content, never to <body>: the sitewide nav and
+   footer are dark surfaces and inherit their own light text from
+   tmr-sitewide.css. Forcing a dark body colour turned the footer links into
+   dark-on-dark. */
+html body.nv-body .nv-main{color:var(--nv-ink)}
+html body.nv-body.tmr-site-shell::before,
+html body.nv-body.tmr-site-shell::after{display:none !important}
+
+/* the sitewide route note repeats the hero copy word for word on this page */
+html body.nv-body .tmr-route-note{display:none !important}
+
+.nv-wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+
+/* ---------- header band ---------- */
+.nv-head{
+  background:
+    radial-gradient(46rem 20rem at 88% -6rem, rgba(34,210,192,.20), transparent 60%),
+    linear-gradient(174deg,var(--nv-navy) 0%, var(--nv-navy-2) 64%, var(--nv-navy-3) 100%);
+  border-bottom:1px solid rgba(255,255,255,.08);
+  padding:34px 0 30px;
+}
+.nv-head-in{display:flex;align-items:flex-end;justify-content:space-between;gap:28px;flex-wrap:wrap}
+.nv-eyebrow{
+  display:inline-flex;align-items:center;gap:9px;padding:6px 14px;border-radius:999px;
+  background:rgba(34,210,192,.12);border:1px solid rgba(34,210,192,.34);
+  color:#8DEDE0;font-size:12px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+}
+.nv-eyebrow .bl{width:7px;height:7px;border-radius:50%;background:var(--nv-brand-lt)}
+html body.nv-body h1.nv-title{
+  color:#fff !important;font-family:'Barlow Condensed',Inter,sans-serif !important;
+  font-size:46px !important;line-height:1.04 !important;font-weight:900 !important;
+  text-transform:uppercase;letter-spacing:.004em;margin:14px 0 8px !important;
+  background:none !important;-webkit-text-fill-color:#fff !important;
+}
+.nv-sub{color:#B9D0E4;font-size:15.5px;max-width:56ch;margin:0}
+.nv-head-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+
+/* ---------- buttons ---------- */
+html body.nv-body .nv-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;height:42px;padding:0 20px;
+  border-radius:var(--nv-r-sm);font-size:14.5px;font-weight:800;cursor:pointer;
+  border:1.5px solid rgba(255,255,255,.32);background:rgba(255,255,255,.11);color:#fff !important;
+  white-space:nowrap;transition:.15s;font-family:inherit;
+}
+html body.nv-body .nv-btn:hover{background:rgba(255,255,255,.2);border-color:#fff}
+html body.nv-body .nv-btn.p{
+  background:linear-gradient(180deg,#13B0A5,#0A8A83) !important;border-color:transparent !important;
+  color:#fff !important;box-shadow:0 2px 10px rgba(12,148,140,.32);
+}
+html body.nv-body .nv-btn.p:hover{background:linear-gradient(180deg,#17C2B5,#0C9A92) !important}
+html body.nv-body .nv-btn.lt{
+  background:var(--nv-panel) !important;border-color:var(--nv-line-2) !important;color:var(--nv-ink-2) !important;
+}
+html body.nv-body .nv-btn.lt:hover{border-color:var(--nv-brand) !important;color:var(--nv-brand-dk) !important}
+html body.nv-body .nv-btn:disabled{opacity:.55;cursor:default}
+
+/* ---------- body ---------- */
+.nv-main{padding:26px 0 60px}
+
+.nv-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+html body.nv-body .nv-chip{
+  height:36px;padding:0 16px;border-radius:999px;border:1.5px solid var(--nv-line);
+  background:var(--nv-panel) !important;color:var(--nv-ink-2) !important;
+  font-size:14px;font-weight:800;cursor:pointer;transition:.15s;font-family:inherit;
+  display:inline-flex;align-items:center;gap:7px;
+}
+html body.nv-body .nv-chip:hover{border-color:var(--nv-line-2);color:var(--nv-ink) !important}
+html body.nv-body .nv-chip.on{
+  background:var(--nv-navy) !important;border-color:var(--nv-navy) !important;color:#fff !important;
+}
+.nv-chip .n{font-variant-numeric:tabular-nums;font-size:12.5px;opacity:.75}
+.nv-toolbar-right{margin-left:auto;display:flex;gap:10px}
+
+.nv-panel{
+  background:var(--nv-panel);border:1px solid var(--nv-line);border-radius:var(--nv-r);
+  box-shadow:var(--nv-sh);overflow:hidden;margin-bottom:18px;
+}
+.nv-panel-head{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:16px 20px;border-bottom:1px solid var(--nv-line);background:var(--nv-panel-2);
+}
+html body.nv-body .nv-panel-head h2{
+  margin:0 !important;font-size:14px !important;font-weight:900 !important;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--nv-ink) !important;background:none !important;
+  -webkit-text-fill-color:var(--nv-ink) !important;font-family:Inter,sans-serif !important;
+}
+.nv-panel-body{padding:18px 20px}
+
+/* ---------- settings ---------- */
+.nv-prefs{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px}
+.nv-pref{
+  display:flex;align-items:center;gap:11px;padding:11px 13px;border:1px solid var(--nv-line);
+  border-radius:var(--nv-r-sm);background:var(--nv-panel-2);font-size:14.5px;font-weight:600;
+  color:var(--nv-ink-2);cursor:pointer;transition:.15s;
+}
+.nv-pref:hover{border-color:var(--nv-line-2);background:#fff}
+.nv-pref input{width:17px;height:17px;flex:0 0 17px;cursor:pointer;accent-color:var(--nv-brand)}
+.nv-pref-note{margin:0 0 14px;font-size:14px;color:var(--nv-muted)}
+.nv-pref-status{margin-top:12px;font-size:13px;font-weight:700;color:var(--nv-muted);min-height:18px}
+
+/* ---------- list ---------- */
+.nv-row{
+  display:flex;align-items:flex-start;gap:14px;padding:16px 20px;
+  border-bottom:1px solid var(--nv-line);cursor:pointer;transition:background .13s;
+  position:relative;text-align:left;
+}
+.nv-row:last-child{border-bottom:0}
+.nv-row:hover{background:var(--nv-panel-2)}
+.nv-row.unread{background:linear-gradient(90deg,var(--nv-brand-soft),#fff 62%)}
+.nv-row.unread:hover{background:linear-gradient(90deg,#CFEFEB,#F6F9FC 62%)}
+.nv-row.nv-row--flat{cursor:default}
+
+.nv-ico{
+  width:38px;height:38px;flex:0 0 38px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:14px;overflow:hidden;text-decoration:none;
+}
+.nv-ico img{width:100%;height:100%;object-fit:cover}
+.nv-ico svg{width:19px;height:19px}
+.nv-ico.t-win{background:var(--nv-green-soft);color:var(--nv-green)}
+.nv-ico.t-loss{background:var(--nv-red-soft);color:var(--nv-red)}
+.nv-ico.t-pick{background:var(--nv-blue-soft);color:var(--nv-blue)}
+.nv-ico.t-forum{background:var(--nv-violet-soft);color:var(--nv-violet)}
+.nv-ico.t-social{background:var(--nv-brand-soft);color:var(--nv-brand-dk)}
+.nv-ico.t-message{background:var(--nv-brand-soft);color:var(--nv-brand-dk)}
+.nv-ico.t-alert{background:var(--nv-gold-soft);color:var(--nv-gold)}
+.nv-ico.t-system{background:var(--nv-panel-3);color:var(--nv-ink-2)}
+
+.nv-row-body{flex:1;min-width:0}
+.nv-msg{font-size:15px;line-height:1.5;color:var(--nv-ink);overflow-wrap:anywhere}
+.nv-msg .nv-actor{color:var(--nv-brand-dk);font-weight:800;text-decoration:none}
+.nv-msg .nv-actor:hover{text-decoration:underline}
+.nv-msg .nv-actor--off{color:var(--nv-muted);font-weight:700;text-decoration:line-through;cursor:not-allowed}
+.nv-msg .res-win{color:var(--nv-green);font-weight:800}
+.nv-msg .res-loss{color:var(--nv-red);font-weight:800}
+.nv-meta{margin-top:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:12.5px;color:var(--nv-muted);font-weight:600}
+.nv-tag{
+  display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;
+  background:var(--nv-panel-3);color:var(--nv-ink-2);font-size:11.5px;font-weight:800;
+  letter-spacing:.04em;text-transform:uppercase;
+}
+.nv-dot{width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:var(--nv-brand);margin-top:15px;box-shadow:0 0 0 4px rgba(12,148,140,.14)}
+
+.nv-state{padding:52px 24px;text-align:center;color:var(--nv-muted);font-size:15px}
+.nv-state strong{display:block;color:var(--nv-ink);font-size:17px;font-weight:800;margin-bottom:6px}
+.nv-state .nv-btn{margin-top:16px}
+
+@media (max-width:760px){
+  html body.nv-body h1.nv-title{font-size:34px !important}
+  .nv-head{padding:26px 0 24px}
+  .nv-head-in{align-items:flex-start}
+  .nv-row{padding:14px 15px;gap:11px}
+  .nv-panel-body{padding:15px}
+  .nv-wrap{padding:0 15px}
+}
+
+/* The sitewide alerts dropdown (built by static/js/notifications.js) carries its
+   own v2 skin inside that file so every page gets it without an extra request. */

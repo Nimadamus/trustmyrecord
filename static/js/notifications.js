@@ -147,20 +147,23 @@ function addNotificationDropdown() {
         const style = document.createElement('style');
         style.id = 'notifications-styles';
         style.textContent = `
+            /* v2 design system (matches the approved homepage): light panel,
+               navy header, teal accents, Barlow Condensed display type. */
             .notifications-dropdown {
                 position: fixed;
                 top: 60px;
                 right: 20px;
-                width: 360px;
+                width: 392px;
                 max-width: calc(100vw - 20px);
-                max-height: 70vh;
-                background: #13131c;
-                border: 1px solid rgba(255, 255, 255, 0.09);
-                border-radius: 14px;
-                box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55);
+                max-height: 72vh;
+                background: #FFFFFF;
+                border: 1px solid #B7C8DA;
+                border-radius: 12px;
+                box-shadow: 0 18px 44px rgba(7, 24, 42, 0.22);
                 z-index: 100000;
                 display: none;
                 overflow: hidden;
+                font-family: Inter, 'Segoe UI', Arial, sans-serif;
             }
 
             .notifications-header {
@@ -168,57 +171,60 @@ function addNotificationDropdown() {
                 justify-content: space-between;
                 align-items: center;
                 padding: 13px 16px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                background: #08192B;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.10);
             }
 
             .notifications-header h4 {
-                font-family: 'Orbitron', sans-serif;
+                font-family: 'Barlow Condensed', Inter, sans-serif;
                 margin: 0;
                 color: #fff;
-                font-size: 15px;
-                letter-spacing: .3px;
+                font-size: 19px;
+                font-weight: 900;
+                letter-spacing: .03em;
+                text-transform: uppercase;
             }
 
             .notifications-header button {
                 background: transparent;
                 border: none;
-                color: #35d0e6;
+                color: #7FEBDC;
                 cursor: pointer;
-                font-size: 12px;
-                font-weight: 600;
-                padding: 4px 6px;
+                font-size: 12.5px;
+                font-weight: 800;
+                padding: 4px 7px;
                 border-radius: 6px;
                 transition: background .15s, color .15s;
             }
             .notifications-header button:hover {
-                background: rgba(53, 208, 230, 0.12);
-                color: #6fe3f2;
+                background: rgba(34, 210, 192, 0.14);
+                color: #A9F5EA;
                 text-decoration: none;
             }
 
             .notifications-list {
-                max-height: calc(70vh - 52px);
+                max-height: calc(72vh - 104px);
                 overflow-y: auto;
             }
 
             .notification-item {
                 display: flex;
                 align-items: flex-start;
-                gap: 11px;
-                padding: 11px 16px;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+                gap: 12px;
+                padding: 12px 16px;
+                border-bottom: 1px solid #D2DEEA;
                 cursor: pointer;
-                transition: background 0.15s;
+                transition: background 0.13s;
                 position: relative;
             }
             .notification-item:last-child { border-bottom: 0; }
-            .notification-item:hover { background: rgba(255, 255, 255, 0.045); }
-            .notification-item.unread { background: rgba(53, 208, 230, 0.055); }
-            .notification-item.unread:hover { background: rgba(53, 208, 230, 0.085); }
+            .notification-item:hover { background: #F6F9FC; }
+            .notification-item.unread { background: #DEF4F2; }
+            .notification-item.unread:hover { background: #CFEFEB; }
 
             .notification-icon {
-                width: 34px;
-                height: 34px;
+                width: 36px;
+                height: 36px;
                 border-radius: 9px;
                 display: flex;
                 align-items: center;
@@ -228,65 +234,81 @@ function addNotificationDropdown() {
             }
             .notification-icon svg { width: 18px; height: 18px; display: block; }
 
-            /* Type tones: soft tinted chip + matching stroke. */
-            .notification-icon.tone-win     { background: rgba(34, 197, 94, 0.14);  color: #22c55e; }
-            .notification-icon.tone-loss    { background: rgba(239, 68, 68, 0.14);  color: #ef4444; }
-            .notification-icon.tone-like    { background: rgba(244, 63, 94, 0.14);  color: #fb7185; }
-            .notification-icon.tone-follow  { background: rgba(139, 92, 246, 0.16); color: #a78bfa; }
-            .notification-icon.tone-reply   { background: rgba(53, 208, 230, 0.14); color: #35d0e6; }
-            .notification-icon.tone-mention { background: rgba(56, 189, 248, 0.14); color: #38bdf8; }
-            .notification-icon.tone-forum   { background: rgba(148, 163, 184, 0.15);color: #cbd5e1; }
-            .notification-icon.tone-mod     { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-            .notification-icon.tone-message { background: rgba(53, 208, 230, 0.14); color: #35d0e6; }
-            .notification-icon.tone-challenge{background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-            .notification-icon.tone-premium { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
-            .notification-icon.tone-system  { background: rgba(148, 163, 184, 0.15);color: #cbd5e1; }
+            /* Type tones: soft tinted chip + matching stroke, v2 palette. */
+            .notification-icon.tone-win     { background: #DFF3E8; color: #0A8B4E; }
+            .notification-icon.tone-loss    { background: #FAE9E7; color: #BC372E; }
+            .notification-icon.tone-like    { background: #FAE9E7; color: #D1495B; }
+            .notification-icon.tone-follow  { background: #EBE7F9; color: #5940AE; }
+            .notification-icon.tone-reply   { background: #DEF4F2; color: #07736D; }
+            .notification-icon.tone-mention { background: #E3ECFB; color: #1E5BBF; }
+            .notification-icon.tone-forum   { background: #E6EDF5; color: #2E4459; }
+            .notification-icon.tone-mod     { background: #FBF1D8; color: #B98505; }
+            .notification-icon.tone-message { background: #DEF4F2; color: #07736D; }
+            .notification-icon.tone-challenge{background: #FBF1D8; color: #B98505; }
+            .notification-icon.tone-premium { background: #FBF1D8; color: #B98505; }
+            .notification-icon.tone-system  { background: #E6EDF5; color: #2E4459; }
 
             .notification-content { flex: 1; min-width: 0; }
 
             .notification-message {
-                font-size: 13px;
+                font-size: 13.5px;
                 line-height: 1.45;
-                color: #e7e9ee;
+                color: #07182A;
                 overflow-wrap: anywhere;
             }
-            .notification-message .res-win  { color: #22c55e; font-weight: 700; }
-            .notification-message .res-loss { color: #ef4444; font-weight: 700; }
+            .notification-message .res-win  { color: #0A8B4E; font-weight: 800; }
+            .notification-message .res-loss { color: #BC372E; font-weight: 800; }
 
             .notification-time {
-                font-size: 11px;
-                color: #7b8092;
+                font-size: 11.5px;
+                color: #5E7590;
+                font-weight: 600;
                 margin-top: 3px;
             }
 
             .notification-empty {
                 padding: 36px 20px;
                 text-align: center;
-                color: #6b7080;
-                font-size: 13px;
+                color: #5E7590;
+                font-size: 13.5px;
             }
 
             .notification-dot {
-                width: 7px;
-                height: 7px;
-                background: #35d0e6;
+                width: 8px;
+                height: 8px;
+                background: #0C948C;
                 border-radius: 50%;
                 margin-top: 6px;
                 flex-shrink: 0;
-                box-shadow: 0 0 6px rgba(53, 208, 230, 0.7);
+                box-shadow: 0 0 0 3px rgba(12, 148, 140, 0.16);
             }
+
+            /* The bell is a peek at the latest alerts; this is the way through to
+               the full archive + per-type settings on /notifications/. */
+            .notifications-footer {
+                display: block;
+                padding: 12px 16px;
+                text-align: center;
+                background: #F6F9FC;
+                border-top: 1px solid #D2DEEA;
+                color: #07736D;
+                font-size: 13.5px;
+                font-weight: 800;
+                text-decoration: none;
+            }
+            .notifications-footer:hover { background: #DEF4F2; color: #0C948C; text-decoration: none; }
 
             .notification-item.no-destination { cursor: default; }
             .notification-actor {
-                color: #6fe3f2;
-                font-weight: 600;
+                color: #07736D;
+                font-weight: 800;
                 text-decoration: none;
                 cursor: pointer;
             }
             .notification-actor:hover { text-decoration: underline; }
             .notification-actor--disabled {
-                color: #8a8a99;
-                font-weight: 600;
+                color: #5E7590;
+                font-weight: 700;
                 cursor: not-allowed;
                 text-decoration: line-through;
             }
@@ -306,6 +328,7 @@ function addNotificationDropdown() {
         <div class="notifications-list" id="notificationsList">
             <div class="notification-empty">No notifications yet</div>
         </div>
+        <a class="notifications-footer" href="/notifications/">View all notifications</a>
     `;
     document.body.appendChild(dropdown);
 }

@@ -1153,7 +1153,7 @@
     ].forEach(([src, name]) => {
         if (document.querySelector('script[src*="' + name + '"]')) return;
         const depScript = document.createElement("script");
-        depScript.src = src + "?v=alertsredesign20260711";
+        depScript.src = src + "?v=alertsv2-20260720";
         depScript.async = false;
         depScript.setAttribute("data-tmr-notifications-dep", name);
         document.head.appendChild(depScript);

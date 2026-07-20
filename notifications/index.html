@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Notifications | TrustMyRecord</title>
     <meta name="robots" content="index, follow">
-    <meta name="description" content="Review likes, comments, follows, challenge activity, and updates on TrustMyRecord.">
+    <meta name="description" content="Your full TrustMyRecord alert history: replies, follows, graded picks, messages, challenges, and account updates, with per-alert settings.">
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -15,816 +15,112 @@
       gtag('config', 'G-V5MCVXS2HE');
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
-<link rel="stylesheet" href="/static/css/tmr-page-polish.css?v=20260429a">
-<script defer src="/static/js/tmr-sitewide.js?v=20260713hub1"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-primary: #f3f5f8;
-            --bg-secondary: #ffffff;
-            --bg-card: #ffffff;
-            --border-color: #d8dde6;
-            --text-primary: #162231;
-            --text-secondary: #637389;
-            --text-muted: #637389;
-            --accent-blue: #1f7ae0;
-            --accent-green: #22c55e;
-            --accent-red: #ef4444;
-            --accent-gold: #f58220;
-        }
-
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-        }
-        .notifications-top-strip,
-        header,
-        .page {
-            max-width: 1440px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        .notifications-top-strip {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            overflow-x: auto;
-            white-space: nowrap;
-            background: #102338;
-            color: #ffffff;
-            padding: 10px 24px;
-            font-size: 0.9rem;
-            scrollbar-width: none;
-        }
-        .notifications-top-strip::-webkit-scrollbar { display: none; }
-        header {
-            background: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            box-shadow: 0 1px 0 rgba(0,0,0,0.03);
-            position: static;
-            z-index: 100;
-        }
-        .header-inner, .page {
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-        .header-inner {
-            min-height: 78px;
-            display: grid;
-            grid-template-columns: auto minmax(760px, 1fr);
-            align-items: center;
-            gap: 24px;
-        }
-        .logo {
-            color: var(--text-primary);
-            text-decoration: none;
-            font-family: 'Barlow', 'Inter', sans-serif;
-            font-weight: 800;
-            font-size: 1.58rem;
-            letter-spacing: -0.03em;
-        }
-        .logo span { color: var(--accent-gold); }
-        nav {
-            display: flex;
-            width: 100%;
-            gap: 28px;
-            flex-wrap: wrap;
-            justify-content: space-evenly;
-        }
-        nav a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 1.08rem;
-            font-weight: 700;
-            padding: 14px 8px;
-            border-radius: 0;
-            text-align: center;
-        }
-        nav a.active, nav a:hover {
-            background: transparent;
-            color: var(--accent-gold);
-        }
-        .page {
-            padding-top: 22px;
-            padding-bottom: 48px;
-        }
-        .hero {
-            display: grid;
-            grid-template-columns: 1.08fr 0.92fr;
-            gap: 18px;
-            margin-bottom: 20px;
-            border-radius: 18px;
-            border: 1px solid #d8dde6;
-            background: linear-gradient(135deg, #102338 0%, #163451 100%);
-            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
-            overflow: hidden;
-        }
-        .hero-copy { padding: 28px; }
-        .hero-image {
-            background:
-                radial-gradient(circle at 70% 18%, rgba(45,212,191,0.24), transparent 28%),
-                radial-gradient(circle at 14% 86%, rgba(212,167,44,0.18), transparent 30%),
-                linear-gradient(135deg, #081523 0%, #122a43 48%, #0b1725 100%);
-        }
-        .eyebrow {
-            display: inline-flex;
-            padding: 7px 11px;
-            margin-bottom: 14px;
-            border-radius: 999px;
-            background: rgba(255,255,255,0.1);
-            color: #ffffff;
-            font-size: 0.74rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-        }
-        .hero h1 {
-            margin: 0 0 6px;
-            font-family: 'Barlow', 'Inter', sans-serif;
-            font-size: 2.4rem;
-            letter-spacing: -0.05em;
-            color: #ffffff;
-        }
-        .hero p {
-            margin: 0;
-            color: rgba(255,255,255,0.82);
-        }
-        .btn {
-            border: 1px solid var(--border-color);
-            background: #ffffff;
-            color: var(--text-primary);
-            border-radius: 10px;
-            padding: 10px 16px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-        .btn.primary {
-            background: var(--accent-gold);
-            border-color: var(--accent-gold);
-            color: white;
-        }
-        .filters {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .filter {
-            border: 1px solid var(--border-color);
-            background: var(--bg-card);
-            color: var(--text-secondary);
-            border-radius: 999px;
-            padding: 8px 14px;
-            font-size: .85rem;
-            cursor: pointer;
-        }
-        .filter.active {
-            color: var(--accent-blue);
-            border-color: var(--accent-blue);
-            background: rgba(31, 122, 224, 0.1);
-        }
-        .card {
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 18px 48px rgba(18, 32, 49, 0.08);
-        }
-        .list-empty, .list-loading {
-            padding: 40px 24px;
-            text-align: center;
-            color: var(--text-secondary);
-        }
-        .notif {
-            display: flex;
-            gap: 14px;
-            align-items: flex-start;
-            padding: 18px 20px;
-            border-bottom: 1px solid var(--border-color);
-            cursor: pointer;
-        }
-        .notif:last-child { border-bottom: none; }
-        .notif.unread { background: rgba(59, 130, 246, 0.08); }
-        .notif:hover { background: #f8fafc; }
-        .notif-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            font-weight: 800;
-            flex-shrink: 0;
-        }
-        .notif-body {
-            min-width: 0;
-            flex: 1;
-        }
-        .notif-message {
-            color: var(--text-primary);
-            font-size: .96rem;
-            line-height: 1.45;
-            margin-bottom: 6px;
-        }
-        .notif-meta {
-            color: var(--text-muted);
-            font-size: .8rem;
-        }
-        .notif-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 8px;
-        }
-        .notif-tag {
-            display: inline-flex;
-            align-items: center;
-            padding: 4px 8px;
-            border-radius: 999px;
-            background: #eef4fb;
-            color: #47627e;
-            font-size: .72rem;
-            font-weight: 700;
-            letter-spacing: .02em;
-        }
-        .notif-dot {
-            width: 10px;
-            height: 10px;
-            background: var(--accent-red);
-            border-radius: 50%;
-            margin-top: 8px;
-            flex-shrink: 0;
-        }
-        .notif.no-destination { cursor: default; }
-        a.notif-icon { text-decoration: none; cursor: pointer; }
-        .notif-actor {
-            color: var(--accent-blue);
-            font-weight: 700;
-            text-decoration: none;
-            cursor: pointer;
-        }
-        .notif-actor:hover { text-decoration: underline; }
-        .notif-actor--disabled {
-            color: var(--text-muted);
-            font-weight: 700;
-            cursor: not-allowed;
-            text-decoration: line-through;
-        }
-        @media (max-width: 700px) {
-            .header-inner, .page { padding-left: 16px; padding-right: 16px; }
-            nav { display: none; }
-            .hero h1 { font-size: 1.5rem; }
-            .hero { grid-template-columns: 1fr; }
-            .hero-image { min-height: 180px; }
-        }
-    </style>
-    <style>
-        /* Premium refinement pass */
-        :root {
-            --bg-primary: #07111d;
-            --bg-secondary: rgba(10, 19, 33, 0.9);
-            --bg-card: rgba(12, 23, 39, 0.94);
-            --border-color: rgba(148, 163, 184, 0.14);
-            --text-primary: #f4f7fb;
-            --text-secondary: #97abc1;
-            --text-muted: #7f92aa;
-            --accent-blue: #2dd4bf;
-            --accent-green: #22c55e;
-            --accent-red: #ef4444;
-            --accent-gold: #d4a72c;
-        }
-
-        body {
-            background:
-                radial-gradient(circle at top left, rgba(45, 212, 191, 0.12), transparent 26%),
-                radial-gradient(circle at top right, rgba(212, 167, 44, 0.08), transparent 20%),
-                linear-gradient(180deg, #07111d 0%, #0b1523 52%, #0d1828 100%) !important;
-        }
-
-        .notifications-top-strip,
-        header,
-        .page {
-            max-width: 1380px;
-        }
-
-        .notifications-top-strip {
-            background: rgba(8, 15, 28, 0.82) !important;
-            border: 1px solid rgba(45, 212, 191, 0.16);
-            border-radius: 18px;
-            color: #9cb0c8;
-            margin-top: 14px;
-            backdrop-filter: blur(18px);
-        }
-
-        header {
-            background: rgba(7, 15, 27, 0.86) !important;
-            border: 1px solid rgba(45, 212, 191, 0.16) !important;
-            border-radius: 22px;
-            margin-top: 14px;
-            box-shadow: 0 24px 54px rgba(0, 0, 0, 0.28);
-        }
-
-        .header-inner { min-height: 72px; }
-
-        .logo {
-            font-family: 'Inter', sans-serif;
-            font-weight: 800;
-            letter-spacing: 0.04em;
-            color: #f4f7fb !important;
-        }
-
-        header a,
-        header .active {
-            color: #9fb0c6 !important;
-        }
-
-        header .active,
-        header a:hover {
-            color: #f4f7fb !important;
-        }
-
-        .page {
-            padding-top: 28px;
-            padding-bottom: 72px;
-        }
-
-        .hero,
-        .card {
-            background: linear-gradient(180deg, rgba(12, 23, 39, 0.94), rgba(8, 16, 28, 0.92)) !important;
-            border: 1px solid rgba(148, 163, 184, 0.14) !important;
-            box-shadow: 0 24px 44px rgba(0, 0, 0, 0.24);
-        }
-
-        .hero { border-radius: 28px; }
-        .hero-copy { padding: 30px !important; }
-
-        .hero h1 {
-            font-size: clamp(2rem, 4vw, 3rem) !important;
-            line-height: 0.95;
-            letter-spacing: 0.01em;
-        }
-
-        .hero p { color: #97abc1 !important; }
-
-        .btn.primary {
-            background: linear-gradient(135deg, #1dbaa8, #159e8f) !important;
-            box-shadow: none;
-        }
-
-        .filters { gap: 10px; }
-
-        .filter {
-            border-radius: 999px;
-            background: rgba(12, 23, 39, 0.9) !important;
-            border: 1px solid rgba(148, 163, 184, 0.12) !important;
-            color: #97abc1 !important;
-        }
-
-        .filter.active {
-            background: rgba(45, 212, 191, 0.11) !important;
-            border-color: rgba(45, 212, 191, 0.24) !important;
-            color: #f4f7fb !important;
-        }
-
-        .card { border-radius: 24px; }
-
-        .list-empty,
-        .list-loading { color: #97abc1 !important; }
-
-        .notif { border-bottom: 1px solid rgba(148, 163, 184, 0.1) !important; }
-        .notif.unread { background: rgba(45, 212, 191, 0.08) !important; }
-        .notif:hover { background: rgba(255, 255, 255, 0.03) !important; }
-        .notif-message { color: #edf4fb !important; }
-        .notif-meta,
-        .notif-tag { color: #7f92aa !important; }
-        .notif-dot { background: #2dd4bf !important; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
+<script defer src="/static/js/tmr-sitewide.js?v=20260720alerts"></script>
+<!-- v2 design system, loaded last so it wins the cascade without !important wars -->
+<link rel="stylesheet" href="/static/css/tmr-notif-v2.css?v=20260720nv1">
 </head>
-<body class="tmr-polished-page">
-    <div class="notifications-top-strip">
-        <strong>Today:</strong>
-        <span>Likes and replies</span>
-        <span>Follow and friend activity</span>
-        <span>Challenge updates</span>
-        <span>Account alerts</span>
-    </div>
-    <header>
-        <div class="header-inner">
-            <a href="/" class="logo">Trust<span>My</span>Record</a>
-            <nav>
-                <a href="/sportsbook/">Odds</a>
-                <a href="/sportsbook/">Scores &amp; Matchups</a>
-                <a href="/feed/">News</a>
-                <a href="/picks/">Picks</a>
-                <a href="/leaderboards/">Leaderboards</a>
-                <a href="/forum/">Forum</a>
-                <a href="/messages/">Messages</a>
-                <a href="/profile/">My Account</a>
-                <a href="/notifications/" class="active">Notifications</a>
-            </nav>
+<body class="nv-body">
+    <!-- section, not <header>: tmr-sitewide.js hides any body > header as a legacy nav -->
+    <section class="nv-head">
+        <div class="nv-wrap nv-head-in">
+            <div>
+                <span class="nv-eyebrow"><span class="bl"></span><span id="nvUnreadLabel">Your alert history</span></span>
+                <h1 class="nv-title">Notifications</h1>
+                <p class="nv-sub">Every reply, follow, graded pick, message, and challenge update on your account, oldest to newest, with the alert types you receive under your control.</p>
+            </div>
+            <div class="nv-head-actions">
+                <button id="notifPrefsToggle" class="nv-btn" type="button">Alert settings</button>
+                <button id="markAllBtn" class="nv-btn p" type="button">Mark all read</button>
+            </div>
         </div>
-    </header>
+    </section>
 
-    <main class="page">
-        <section class="hero">
-            <div class="hero-copy">
-                <div class="eyebrow">Reference-Led Direction</div>
-                <h1>Notifications</h1>
-                <p>Track follows, likes, comments, challenge activity, and account updates without dropping back into an older product shell.</p>
+    <main class="nv-main">
+        <div class="nv-wrap">
+            <div class="nv-toolbar" id="nvFilters">
+                <button class="nv-chip on" data-filter="all" type="button">All <span class="n" data-count="all"></span></button>
+                <button class="nv-chip" data-filter="unread" type="button">Unread <span class="n" data-count="unread"></span></button>
+                <button class="nv-chip" data-filter="picks" type="button">Picks <span class="n" data-count="picks"></span></button>
+                <button class="nv-chip" data-filter="forum" type="button">Forum <span class="n" data-count="forum"></span></button>
+                <button class="nv-chip" data-filter="social" type="button">Social <span class="n" data-count="social"></span></button>
+                <button class="nv-chip" data-filter="messages" type="button">Messages <span class="n" data-count="messages"></span></button>
             </div>
-            <div class="hero-copy" style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;">
-                <div></div>
-                <button id="markAllBtn" class="btn primary" type="button">Mark All Read</button>
-            </div>
-        </section>
 
-        <section class="filters">
-            <button class="filter active" data-filter="all" type="button">All</button>
-            <button class="filter" data-filter="unread" type="button">Unread</button>
-            <button class="filter" data-filter="picks" type="button">Picks</button>
-            <button class="filter" data-filter="forum" type="button">Forum</button>
-            <button class="filter" data-filter="social" type="button">Social</button>
-            <button class="filter" data-filter="messages" type="button">Messages</button>
-        </section>
-
-        <section class="card" id="notifPrefsCard" style="display:none;margin-bottom:16px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
-                <h2 style="margin:0;font-size:1.05rem;">Notification settings</h2>
-                <button id="notifPrefsToggle" class="btn" type="button" style="font-size:.82rem;">Show settings</button>
-            </div>
-            <div id="notifPrefsBody" style="display:none;margin-top:14px;">
-                <p style="margin:0 0 12px;font-size:.86rem;opacity:.8;">Turn each alert type on or off. Changes save instantly.</p>
-                <div id="notifPrefsList" style="display:grid;grid-template-columns:1fr;gap:10px;max-width:520px;">
-                    <label class="notif-pref-row"><input type="checkbox" data-pref="notify_replies"> <span>Replies to your threads and posts</span></label>
-                    <label class="notif-pref-row"><input type="checkbox" data-pref="notify_quotes"> <span>Quotes of your posts</span></label>
-                    <label class="notif-pref-row"><input type="checkbox" data-pref="notify_likes"> <span>Likes on your posts</span></label>
-                    <label class="notif-pref-row"><input type="checkbox" data-pref="notify_mentions"> <span>@mentions of your username</span></label>
-                    <label class="notif-pref-row"><input type="checkbox" data-pref="notify_followed_thread"> <span>New replies in threads you follow</span></label>
-                    <label class="notif-pref-row"><input type="checkbox" data-pref="notify_thread_follow"> <span>Someone follows your thread</span></label>
-                    <label class="notif-pref-row"><input type="checkbox" data-pref="notify_mod_actions"> <span>Moderator actions on your content</span></label>
-                    <label class="notif-pref-row"><input type="checkbox" data-pref="notify_daily_quiz"> <span>Daily Prediction Quiz</span></label>
-                    <label class="notif-pref-row"><input type="checkbox" data-pref="autosubscribe_on_reply"> <span>Auto-follow threads when I reply</span></label>
+            <section class="nv-panel" id="notifPrefsCard" hidden>
+                <div class="nv-panel-head">
+                    <h2>Alert settings</h2>
+                    <button id="notifPrefsClose" class="nv-btn lt" type="button" style="height:34px;font-size:13.5px;">Hide</button>
                 </div>
-                <div id="notifPrefsStatus" style="margin-top:10px;font-size:.82rem;opacity:.75;"></div>
-            </div>
-        </section>
+                <div class="nv-panel-body">
+                    <p class="nv-pref-note">Turn each alert type on or off. Changes save instantly.</p>
+                    <div class="nv-prefs" id="notifPrefsList">
+                        <label class="nv-pref"><input type="checkbox" data-pref="notify_replies"> <span>Replies to your threads and posts</span></label>
+                        <label class="nv-pref"><input type="checkbox" data-pref="notify_quotes"> <span>Quotes of your posts</span></label>
+                        <label class="nv-pref"><input type="checkbox" data-pref="notify_likes"> <span>Likes on your posts</span></label>
+                        <label class="nv-pref"><input type="checkbox" data-pref="notify_mentions"> <span>@mentions of your username</span></label>
+                        <label class="nv-pref"><input type="checkbox" data-pref="notify_followed_thread"> <span>New replies in threads you follow</span></label>
+                        <label class="nv-pref"><input type="checkbox" data-pref="notify_thread_follow"> <span>Someone follows your thread</span></label>
+                        <label class="nv-pref"><input type="checkbox" data-pref="notify_mod_actions"> <span>Moderator actions on your content</span></label>
+                        <label class="nv-pref"><input type="checkbox" data-pref="notify_daily_quiz"> <span>Daily Prediction Quiz</span></label>
+                        <label class="nv-pref"><input type="checkbox" data-pref="autosubscribe_on_reply"> <span>Auto-follow threads when I reply</span></label>
+                    </div>
+                    <div class="nv-pref-status" id="notifPrefsStatus"></div>
+                </div>
+            </section>
 
-        <section class="card">
-            <div id="notifList" class="list-loading">Loading notifications...</div>
-        </section>
+            <section class="nv-panel">
+                <div id="notifList"><div class="nv-state">Loading notifications...</div></div>
+            </section>
+        </div>
     </main>
-    <style>
-        .notif-pref-row{display:flex;align-items:center;gap:10px;font-size:.92rem;cursor:pointer;}
-        .notif-pref-row input{width:18px;height:18px;flex:0 0 18px;cursor:pointer;}
-    </style>
 
     <script src="/static/js/config.js?v=20260330"></script>
     <script src="/static/js/backend-api.js?v=20260525noautologout"></script>
-<script src="/static/js/auth-persistent.js?v=20260525noautologout"></script>
+    <script src="/static/js/auth-persistent.js?v=20260525noautologout"></script>
     <script src="/static/js/analytics.js?v=20260719ft"></script>
     <script>
-        let notifFilter = 'all';
-        let notifications = [];
+    /* =========================================================================
+       Notifications page controller.
+       Fully scoped inside this IIFE and driven by event delegation. The sitewide
+       alerts engine (static/js/notifications.js) is injected on every page and
+       defines its own globals (getNotificationDestination, getNotifActor,
+       renderNotifMessage, ...). This page previously declared same-named globals
+       and the later-loading engine clobbered them, so every row rendered with an
+       empty destination chip and 10 of 13 rows became dead clicks. Nothing here
+       touches window; routing is delegated to the shared engine when present so
+       the bell dropdown and this page always agree on where a click lands.
+       Rebuilt in the approved v2 design system, Jul 20, 2026.
+       ========================================================================= */
+    (function () {
+        'use strict';
 
-        function getSessionUser() {
-            try {
-                if (typeof auth !== 'undefined' && typeof auth.getCurrentUser === 'function') {
-                    const authUser = auth.getCurrentUser();
-                    if (authUser && (authUser.username || authUser.email || authUser.id)) return authUser;
-                }
-            } catch (e) {}
+        var filter = 'all';
+        var items = [];
 
-            const keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
-            for (const key of keys) {
-                try {
-                    const raw = localStorage.getItem(key);
-                    if (!raw) continue;
-                    const parsed = JSON.parse(raw);
-                    const user = parsed && parsed.user ? parsed.user : parsed;
-                    if (user && (user.username || user.email || user.id)) return user;
-                } catch (e) {}
-            }
+        var listEl = document.getElementById('notifList');
+        var prefsCard = document.getElementById('notifPrefsCard');
+        var prefsToggle = document.getElementById('notifPrefsToggle');
+        var prefsClose = document.getElementById('notifPrefsClose');
+        var prefsStatus = document.getElementById('notifPrefsStatus');
+        var filtersEl = document.getElementById('nvFilters');
+        var unreadLabel = document.getElementById('nvUnreadLabel');
+        var markAllBtn = document.getElementById('markAllBtn');
 
-            return null;
+        /* ---------- helpers ---------- */
+        function esc(v) {
+            var d = document.createElement('div');
+            d.textContent = v == null ? '' : String(v);
+            return d.innerHTML;
         }
 
-        document.addEventListener('DOMContentLoaded', async function() {
-            document.querySelectorAll('.filter').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    document.querySelectorAll('.filter').forEach(function(el) { el.classList.remove('active'); });
-                    btn.classList.add('active');
-                    notifFilter = btn.dataset.filter;
-                    renderNotifications();
-                });
-            });
-
-            document.getElementById('markAllBtn').addEventListener('click', markAllRead);
-
-            if (typeof api !== 'undefined' && api.ready) {
-                try { await api.ready; } catch (e) {}
-            }
-
-            const sessionUser = getSessionUser();
-            const isLoggedIn = !!sessionUser || (api && typeof api.isLoggedIn === 'function' && api.isLoggedIn());
-            if (!api || typeof api.getNotifications !== 'function' || !isLoggedIn) {
-                document.getElementById('notifList').innerHTML = '<div class="list-empty">Log in to view your notifications.<div style="margin-top:8px;font-size:.86rem;">Replies, follows, graded picks, and social alerts show up here once your account is active.</div></div>';
-                return;
-            }
-
-            await loadNotifications();
-            await setupNotifPrefs();
-        });
-
-        async function setupNotifPrefs() {
-            if (!api || typeof api.getNotificationPreferences !== 'function') return;
-            const card = document.getElementById('notifPrefsCard');
-            const body = document.getElementById('notifPrefsBody');
-            const toggle = document.getElementById('notifPrefsToggle');
-            const status = document.getElementById('notifPrefsStatus');
-            let prefs;
-            try {
-                const resp = await api.getNotificationPreferences();
-                prefs = (resp && resp.preferences) || resp || {};
-            } catch (e) { return; }
-            card.style.display = 'block';
-            document.querySelectorAll('#notifPrefsList input[data-pref]').forEach(function(cb) {
-                const key = cb.getAttribute('data-pref');
-                cb.checked = prefs[key] !== false;
-                cb.addEventListener('change', async function() {
-                    status.textContent = 'Saving...';
-                    try {
-                        const patch = {}; patch[key] = cb.checked;
-                        await api.updateNotificationPreferences(patch);
-                        status.textContent = 'Saved.';
-                    } catch (err) {
-                        cb.checked = !cb.checked;
-                        status.textContent = 'Could not save. Try again.';
-                    }
-                });
-            });
-            toggle.addEventListener('click', function() {
-                const open = body.style.display !== 'none';
-                body.style.display = open ? 'none' : 'block';
-                toggle.textContent = open ? 'Show settings' : 'Hide settings';
-            });
-        }
-
-        async function loadNotifications() {
-            const list = document.getElementById('notifList');
-            list.innerHTML = '<div class="list-loading">Loading notifications...</div>';
-            try {
-                const data = await api.getNotifications({ limit: 100 });
-                notifications = data.notifications || [];
-                renderNotifications();
-            } catch (error) {
-                if (error && (error.status === 401 || error.status === 403)) {
-                    list.innerHTML = '<div class="list-empty">Your session has expired. Log in again to see your notifications.<div style="margin-top:12px;"><a href="/login/" style="display:inline-block;background:var(--accent-blue);color:#fff;text-decoration:none;font-weight:700;padding:10px 22px;border-radius:8px;">Log In</a></div></div>';
-                    return;
-                }
-                list.innerHTML = '<div class="list-empty">Unable to load notifications.<div style="margin-top:12px;"><button onclick="loadNotifications()" style="background:var(--accent-blue);color:#fff;border:none;font-weight:700;font-size:.95rem;padding:10px 22px;border-radius:8px;cursor:pointer;">Retry</button></div></div>';
-            }
-        }
-
-        function renderNotifications() {
-            const list = document.getElementById('notifList');
-            const visible = notifications.filter(function(n) {
-                const normalized = normalizeNotification(n);
-                if (notifFilter === 'unread') return !normalized.isRead;
-                if (notifFilter === 'all') return true;
-                return normalized.category === notifFilter;
-            });
-
-            if (!visible.length) {
-                list.innerHTML = '<div class="list-empty">' + (notifFilter === 'unread' ? 'No unread notifications.' : 'No notifications yet.') + '<div style="margin-top:8px;font-size:.86rem;">Once people reply, follow, grade picks, or message you, the alert trail will build here.</div></div>';
-                return;
-            }
-
-            list.innerHTML = visible.map(function(n) {
-                const normalized = normalizeNotification(n);
-                const meta = formatTime(n.created_at);
-                const icon = getNotifTheme(normalized.type);
-                const destination = getNotificationDestination(normalized);
-                const actor = getNotifActor(n, normalized);
-                const idJs = escapeJs(String(n.id || ''));
-                const avatar = normalized.avatar_url || n.avatar_url;
-                const iconInner = avatar
-                    ? '<img src="' + escapeHtml(avatar) + '" alt="' + escapeHtml(actor.display || normalized.username || '') + '" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display=\'none\';this.parentNode.style.background=\'' + icon.bg + '\';this.parentNode.style.color=\'' + icon.fg + '\';this.parentNode.textContent=\'' + icon.label + '\';">'
-                    : icon.label;
-                const iconStyle = avatar ? 'padding:0;overflow:hidden;' : 'background:' + icon.bg + ';color:' + icon.fg + ';';
-                let iconHtml;
-                if (actor.available) {
-                    iconHtml = '<a class="notif-icon" href="' + actor.href + '" style="' + iconStyle + '" title="View ' + escapeHtml(actor.display) + '&#39;s profile" onclick="handleActorClick(event, \'' + idJs + '\')">' + iconInner + '</a>';
-                } else if (actor.referenced) {
-                    iconHtml = '<div class="notif-icon" style="' + iconStyle + 'opacity:.55;" title="This account is no longer available">' + iconInner + '</div>';
-                } else {
-                    iconHtml = '<div class="notif-icon" style="' + iconStyle + '">' + iconInner + '</div>';
-                }
-                const hasDest = (destination.href && destination.href !== '/notifications/') || actor.available;
-                return '<div class="notif ' + (normalized.isRead ? '' : 'unread') + (hasDest ? '' : ' no-destination') + '" onclick="openNotification(\'' + idJs + '\')">' +
-                    iconHtml +
-                    '<div class="notif-body">' +
-                    '<div class="notif-message">' + renderNotifMessage(normalized, actor, idJs) + '</div>' +
-                    '<div class="notif-meta">' + meta + (normalized.username ? ' • @' + escapeHtml(normalized.username) : '') + '</div>' +
-                    '<div class="notif-tags"><span class="notif-tag">' + escapeHtml(destination.label) + '</span><span class="notif-tag">' + escapeHtml(formatCategoryLabel(normalized.category)) + '</span></div>' +
-                    '</div>' +
-                    (normalized.isRead ? '' : '<div class="notif-dot"></div>') +
-                    '</div>';
-            }).join('');
-        }
-
-        function getNotifActor(notification, normalized) {
-            const n = notification || {};
-            const norm = normalized || {};
-            const id = n.related_user_id || n.relatedUserId || n.actor_id || n.actorId;
-            const username = norm.username || n.username || n.actor_username || n.from_username || n.target_username || '';
-            const display = n.display_name || n.displayName || username || '';
-            const referenced = !!(id || username);
-            const available = !!username;
-            return {
-                referenced: referenced,
-                available: available,
-                username: username,
-                display: display,
-                href: available ? '/profile/?user=' + encodeURIComponent(username) : null
-            };
-        }
-
-        function renderNotifMessage(normalized, actor, idJs) {
-            const message = normalized.message || '';
-            const safe = escapeHtml(message);
-            if (!actor || !actor.referenced) return safe;
-            const token = [actor.display, actor.username].filter(Boolean).find(function(t) {
-                return message.indexOf(t) === 0;
-            });
-            if (!token) return safe;
-            const safeToken = escapeHtml(token);
-            const rest = safe.slice(safeToken.length);
-            if (actor.available) {
-                return '<a href="' + actor.href + '" class="notif-actor" onclick="handleActorClick(event, \'' + idJs + '\')">' + safeToken + '</a>' + rest;
-            }
-            return '<span class="notif-actor notif-actor--disabled" title="This account is no longer available">' + safeToken + '</span>' + rest;
-        }
-
-        function handleActorClick(e, id) {
-            if (e) { if (e.stopPropagation) e.stopPropagation(); if (e.preventDefault) e.preventDefault(); }
-            const notification = notifications.find(function(n) { return String(n.id) === String(id); });
-            const actor = getNotifActor(notification || {}, normalizeNotification(notification || {}));
-            if (!actor.available) return;
-            openNotification(id, actor.href);
-        }
-
-        function normalizeNotification(notification) {
-            return {
-                ...notification,
-                id: notification.id,
-                type: String(notification.type || '').toLowerCase(),
-                isRead: !!(notification.is_read || notification.read),
-                message: notification.content || notification.message || '',
-                username: notification.username || notification.actor_username || notification.from_username || notification.target_username || '',
-                category: getNotificationCategory(notification)
-            };
-        }
-
-        function getNotificationCategory(notification) {
-            const type = String(notification.type || '').toLowerCase();
-            const resourceType = String(notification.resource_type || notification.resourceType || notification.entity_type || notification.entityType || '').toLowerCase();
-
-            if (['new_message', 'message'].includes(type)) return 'messages';
-            if (type.indexOf('forum') !== -1 || resourceType.indexOf('forum') !== -1 || ['thread', 'reply'].includes(resourceType)) return 'forum';
-            if (type.indexOf('pick') !== -1 || type.indexOf('bet') !== -1 || ['pick', 'receipt'].includes(resourceType)) return 'picks';
-            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention'].includes(type)) return 'social';
-            return 'all';
-        }
-
-        function formatCategoryLabel(category) {
-            return {
-                all: 'General',
-                picks: 'Picks',
-                forum: 'Forum',
-                social: 'Social',
-                messages: 'Messages'
-            }[category] || 'General';
-        }
-
-        function getNotificationDestination(notification) {
-            const type = String(notification.type || '').toLowerCase();
-            const resourceType = String(notification.resource_type || notification.resourceType || notification.entity_type || notification.entityType || '').toLowerCase();
-            const username = notification.username || notification.actor_username || notification.from_username || notification.target_username;
-            const relatedThreadId = notification.related_thread_id || notification.relatedThreadId;
-            const relatedPostId = notification.related_post_id || notification.relatedPostId;
-            const threadId = notification.thread_id || notification.threadId || relatedThreadId || (resourceType === 'forum_thread' ? notification.resource_id || notification.resourceId : null);
-            const postId = notification.post_id || notification.postId || relatedPostId || (resourceType === 'forum_post' ? notification.resource_id || notification.resourceId : null);
-            const pickId = notification.pick_id || notification.pickId || notification.bet_id || notification.betId;
-            const pollId = notification.poll_id || notification.pollId;
-            const conversationUser = notification.sender_username || notification.from_username || notification.username;
-
-            if (['follow'].includes(type) && username) {
-                    return { href: '/profile/?user=' + encodeURIComponent(username), label: 'Open profile' };
-            }
-            if (['friend_request', 'friend_accept'].includes(type)) {
-                    return { href: '/friends/', label: 'Open friends' };
-            }
-            if (['new_message', 'message'].includes(type)) {
-                    return { href: conversationUser ? '/messages/?to=' + encodeURIComponent(conversationUser) : '/messages/', label: 'Open messages' };
-            }
-            if (type.indexOf('forum') !== -1 || resourceType.indexOf('forum') !== -1 || ['thread', 'reply'].includes(resourceType)) {
-                    const href = threadId
-                        ? '/forum/?thread=' + encodeURIComponent(threadId) + (postId ? '#post-' + encodeURIComponent(postId) : '')
-                        : '/forum/';
-                    return { href: href, label: 'Open thread' };
-            }
-            if (type.indexOf('poll') !== -1 || pollId) {
-                    return { href: '/hangout/', label: 'Open polls' };
-            }
-            if (type.indexOf('trivia') !== -1) {
-                    return { href: '/trivia/', label: 'Open trivia' };
-            }
-            if (type.indexOf('pick') !== -1 || type.indexOf('bet') !== -1 || pickId) {
-                return {
-                        href: username ? '/profile/?user=' + encodeURIComponent(username) + '&view=picks' : '/mypicks/',
-                    label: username ? 'Open capper record' : 'Open record'
-                };
-            }
-            if (['like', 'comment', 'mention'].includes(type)) {
-                    return { href: '/feed/', label: 'Open feed' };
-            }
-            if (['challenge', 'challenge_invite', 'challenge_result'].includes(type)) {
-                    return { href: '/arena/', label: 'Open arena' };
-            }
-                    return { href: '/notifications/', label: 'Stay here' };
-        }
-
-        async function openNotification(id, overrideHref) {
-            const notification = notifications.find(function(n) { return String(n.id) === String(id); });
-            const normalized = normalizeNotification(notification || {});
-            try {
-                await api.markNotificationRead(id);
-                notifications = notifications.map(function(n) {
-                    return String(n.id) === String(id) ? { ...n, is_read: true, read: true } : n;
-                });
-                renderNotifications();
-            } catch (e) {}
-
-            let href = overrideHref;
-            if (!href) {
-                const destination = getNotificationDestination(normalized);
-                if (destination.href && destination.href !== '/notifications/') {
-                    href = destination.href;
-                } else {
-                    const actor = getNotifActor(notification || {}, normalized);
-                    if (actor.available) href = actor.href;
-                }
-            }
-            if (href) {
-                location.href = href;
-            }
-        }
-
-        async function markAllRead() {
-            try {
-                await api.markAllNotificationsRead();
-                notifications = notifications.map(function(n) { return { ...n, is_read: true }; });
-                renderNotifications();
-                if (window.TMR && typeof TMR.refreshNotifications === 'function') TMR.refreshNotifications();
-            } catch (error) {}
-        }
-
-        function getNotifTheme(type) {
-            const map = {
-                follow: { label: 'F', bg: 'rgba(59,130,246,0.15)', fg: '#60a5fa' },
-                like: { label: 'L', bg: 'rgba(239,68,68,0.15)', fg: '#f87171' },
-                comment: { label: 'C', bg: 'rgba(34,197,94,0.15)', fg: '#4ade80' },
-                mention: { label: '@', bg: 'rgba(31,122,224,0.15)', fg: '#1f7ae0' },
-                challenge: { label: 'T', bg: 'rgba(245,158,11,0.15)', fg: '#fbbf24' },
-                challenge_invite: { label: 'T', bg: 'rgba(245,158,11,0.15)', fg: '#fbbf24' },
-                challenge_result: { label: 'T', bg: 'rgba(245,158,11,0.15)', fg: '#fbbf24' },
-                pick_graded: { label: 'P', bg: 'rgba(59,130,246,0.15)', fg: '#60a5fa' },
-                forum_thread_created: { label: 'Q', bg: 'rgba(139,92,246,0.15)', fg: '#8b5cf6' },
-                forum_reply_created: { label: 'R', bg: 'rgba(99,102,241,0.15)', fg: '#6366f1' },
-                forum_thread_reply: { label: 'R', bg: 'rgba(99,102,241,0.15)', fg: '#6366f1' },
-                forum_post_reply: { label: 'R', bg: 'rgba(99,102,241,0.15)', fg: '#6366f1' },
-                forum_mention: { label: '@', bg: 'rgba(31,122,224,0.15)', fg: '#1f7ae0' },
-                follow_new_thread: { label: 'Q', bg: 'rgba(139,92,246,0.15)', fg: '#8b5cf6' },
-                follow_new_post: { label: 'R', bg: 'rgba(99,102,241,0.15)', fg: '#6366f1' },
-                follow_new_pick: { label: 'P', bg: 'rgba(59,130,246,0.15)', fg: '#60a5fa' },
-                forum_post_like: { label: 'L', bg: 'rgba(239,68,68,0.15)', fg: '#f87171' },
-                new_message: { label: 'M', bg: 'rgba(45,212,191,0.15)', fg: '#14b8a6' },
-                message: { label: 'M', bg: 'rgba(45,212,191,0.15)', fg: '#14b8a6' }
-            };
-            return map[type] || { label: 'N', bg: 'rgba(255,255,255,0.08)', fg: '#e5e7eb' };
-        }
-
-        function formatTime(value) {
-            const date = new Date(value);
-            const diff = Math.floor((Date.now() - date.getTime()) / 1000);
+        function timeAgo(value) {
+            var date = new Date(value);
+            var diff = Math.floor((Date.now() - date.getTime()) / 1000);
+            if (!isFinite(diff)) return '';
             if (diff < 60) return 'just now';
             if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
             if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
@@ -832,18 +128,343 @@
             return date.toLocaleDateString();
         }
 
-        function escapeHtml(value) {
-            const div = document.createElement('div');
-            div.textContent = value || '';
-            return div.innerHTML;
+        function normalize(n) {
+            n = n || {};
+            return {
+                raw: n,
+                id: n.id,
+                type: String(n.type || '').toLowerCase(),
+                resourceType: String(n.resource_type || n.resourceType || '').toLowerCase(),
+                isRead: !!(n.is_read || n.read),
+                message: n.content || n.message || '',
+                username: n.username || n.actor_username || n.from_username || n.target_username || '',
+                created_at: n.created_at,
+                avatar_url: n.avatar_url,
+                category: category(n)
+            };
         }
 
-        function escapeJs(value) {
-            return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        function category(n) {
+            var type = String(n.type || '').toLowerCase();
+            var rt = String(n.resource_type || n.resourceType || '').toLowerCase();
+            if (type === 'new_message' || type === 'message') return 'messages';
+            if (type.indexOf('forum') !== -1 || rt.indexOf('forum') !== -1 || rt === 'thread' || rt === 'reply') return 'forum';
+            if (type.indexOf('pick') !== -1 || type.indexOf('bet') !== -1 || rt === 'pick' || rt === 'receipt') return 'picks';
+            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention'].indexOf(type) !== -1) return 'social';
+            return 'general';
         }
+
+        /* Where a row click lands. The sitewide engine owns this map (it also
+           powers the bell dropdown); this local table is only the fallback for
+           the case where the engine has not loaded. */
+        function destination(nn) {
+            if (typeof window.getNotificationDestination === 'function') {
+                try {
+                    var shared = window.getNotificationDestination(nn.raw);
+                    if (typeof shared === 'string' && shared) return shared;
+                } catch (e) {}
+            }
+            var t = nn.type, rt = nn.resourceType, raw = nn.raw;
+            var un = nn.username;
+            if (t === 'daily_quiz' || rt === 'quiz') {
+                var qid = raw.resource_id || raw.resourceId;
+                return qid ? '/polls/#poll-' + encodeURIComponent(qid) : '/polls/';
+            }
+            if (t === 'friend_request' || t === 'friend_accept') return '/friends/';
+            if (t === 'new_message' || t === 'message') return un ? '/messages/?to=' + encodeURIComponent(un) : '/messages/';
+            if (t.indexOf('challenge') !== -1) return '/challenges/';
+            if (t.indexOf('premium') !== -1) return '/premium/';
+            if (t.indexOf('trivia') !== -1) return '/trivia/';
+            if (t.indexOf('forum') !== -1 || rt.indexOf('forum') !== -1) {
+                var threadId = raw.related_thread_id || raw.thread_id || (rt === 'forum_thread' ? raw.resource_id : null);
+                var postId = raw.related_post_id || raw.post_id || (rt === 'forum_post' ? raw.resource_id : null);
+                var base = String(raw.thread_area || '').toLowerCase() === 'sports_talk' ? '/sports-talk/' : '/forum/';
+                return threadId ? base + '?thread=' + encodeURIComponent(threadId) + (postId ? '#post-' + encodeURIComponent(postId) : '') : base;
+            }
+            var pickId = raw.related_pick_id || (rt === 'pick' ? raw.resource_id : null);
+            if (pickId) return '/sportsbook/?pick=' + encodeURIComponent(pickId) + '#mypicks';
+            if (t.indexOf('pick') !== -1 || rt === 'pick') return un ? '/profile/?user=' + encodeURIComponent(un) + '&view=picks' : '/mypicks/';
+            if (t === 'follow' && un) return '/profile/?user=' + encodeURIComponent(un);
+            if (t === 'like' || t === 'comment' || t === 'mention') return '/feed/';
+            return null;
+        }
+
+        /* Human label for the destination chip, derived from the resolved href so
+           the chip can never disagree with where the click actually goes. */
+        function destinationLabel(href) {
+            if (!href) return '';
+            if (href.indexOf('/polls/') === 0) return 'Open quiz';
+            if (href.indexOf('/trivia/') === 0) return 'Open trivia';
+            if (href.indexOf('/messages/') === 0) return 'Open messages';
+            if (href.indexOf('/friends/') === 0) return 'Open friends';
+            if (href.indexOf('/challenges/') === 0) return 'Open challenge';
+            if (href.indexOf('/premium/') === 0) return 'Open premium';
+            if (href.indexOf('/feed/') === 0) return 'Open feed';
+            if (href.indexOf('/forum/') === 0 || href.indexOf('/sports-talk/') === 0) return 'Open thread';
+            if (href.indexOf('/sportsbook/') === 0 || href.indexOf('/mypicks/') === 0) return 'Open pick';
+            if (href.indexOf('/profile/') === 0) return 'Open profile';
+            return 'Open';
+        }
+
+        function actor(nn) {
+            var raw = nn.raw;
+            var id = raw.related_user_id || raw.relatedUserId || raw.actor_id;
+            var username = nn.username;
+            var display = raw.display_name || raw.displayName || username || '';
+            return {
+                referenced: !!(id || username),
+                available: !!username,
+                username: username,
+                display: display,
+                href: username ? '/profile/?user=' + encodeURIComponent(username) : null
+            };
+        }
+
+        var ICONS = {
+            win: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+            loss: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+            pick: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><polyline points="21 3 21 9 15 9"/></svg>',
+            forum: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+            social: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>',
+            message: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22 6 12 13 2 6"/></svg>',
+            alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>',
+            system: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+        };
+
+        function tone(nn) {
+            var t = nn.type, m = nn.message.toLowerCase();
+            if (t.indexOf('pick') !== -1 || t.indexOf('bet') !== -1) {
+                if (m.indexOf('won') !== -1) return 'win';
+                if (m.indexOf('lost') !== -1) return 'loss';
+                return 'pick';
+            }
+            if (t === 'daily_quiz' || nn.resourceType === 'quiz' || t.indexOf('trivia') !== -1) return 'alert';
+            if (t.indexOf('challenge') !== -1 || t.indexOf('premium') !== -1 || t.indexOf('mod') !== -1) return 'alert';
+            if (t === 'new_message' || t === 'message') return 'message';
+            if (t.indexOf('forum') !== -1) return 'forum';
+            if (['follow', 'friend_request', 'friend_accept', 'like', 'comment', 'mention'].indexOf(t) !== -1) return 'social';
+            return 'system';
+        }
+
+        /* Linkify only the actor's real name when it leads the message. Never
+           fabricate a link out of arbitrary copy. */
+        function messageHtml(nn, a) {
+            var safe = esc(nn.message);
+            if (!a.referenced) return safe;
+            var token = [a.display, a.username].filter(Boolean).filter(function (t) {
+                return nn.message.indexOf(t) === 0;
+            })[0];
+            if (!token) return safe;
+            var safeToken = esc(token);
+            var rest = safe.slice(safeToken.length);
+            if (a.available) {
+                return '<a href="' + a.href + '" class="nv-actor" data-actor="1">' + safeToken + '</a>' + rest;
+            }
+            return '<span class="nv-actor nv-actor--off" title="This account is no longer available">' + safeToken + '</span>' + rest;
+        }
+
+        /* ---------- render ---------- */
+        function counts() {
+            var c = { all: items.length, unread: 0, picks: 0, forum: 0, social: 0, messages: 0 };
+            items.forEach(function (n) {
+                var nn = normalize(n);
+                if (!nn.isRead) c.unread++;
+                if (c[nn.category] != null) c[nn.category]++;
+            });
+            return c;
+        }
+
+        function render() {
+            var c = counts();
+            filtersEl.querySelectorAll('[data-count]').forEach(function (el) {
+                var v = c[el.getAttribute('data-count')];
+                el.textContent = v ? v : '';
+            });
+            unreadLabel.textContent = c.unread ? c.unread + ' unread' : 'All caught up';
+            markAllBtn.disabled = !c.unread;
+
+            var visible = items.filter(function (n) {
+                var nn = normalize(n);
+                if (filter === 'unread') return !nn.isRead;
+                if (filter === 'all') return true;
+                return nn.category === filter;
+            });
+
+            if (!visible.length) {
+                listEl.innerHTML = '<div class="nv-state"><strong>' +
+                    (filter === 'unread' ? 'No unread alerts' : 'Nothing here yet') + '</strong>' +
+                    'Replies, follows, graded picks, and messages land here as they happen.</div>';
+                return;
+            }
+
+            listEl.innerHTML = visible.map(function (n) {
+                var nn = normalize(n);
+                var a = actor(nn);
+                var href = destination(nn) || a.href;
+                var label = destinationLabel(href);
+                var tn = tone(nn);
+                var icon = nn.avatar_url
+                    ? '<img src="' + esc(nn.avatar_url) + '" alt="">'
+                    : (ICONS[tn] || ICONS.system);
+                var iconTag = a.available
+                    ? '<a class="nv-ico t-' + tn + '" href="' + a.href + '" data-actor="1" title="View ' + esc(a.display) + '">' + icon + '</a>'
+                    : '<div class="nv-ico t-' + tn + '">' + icon + '</div>';
+
+                return '<div class="nv-row' + (nn.isRead ? '' : ' unread') + (href ? '' : ' nv-row--flat') +
+                        '" data-id="' + esc(nn.id) + '"' + (href ? ' data-href="' + esc(href) + '"' : '') + '>' +
+                    iconTag +
+                    '<div class="nv-row-body">' +
+                        '<div class="nv-msg">' + messageHtml(nn, a) + '</div>' +
+                        '<div class="nv-meta">' +
+                            '<span>' + esc(timeAgo(nn.created_at)) + '</span>' +
+                            (nn.username ? '<span>@' + esc(nn.username) + '</span>' : '') +
+                            (label ? '<span class="nv-tag">' + esc(label) + '</span>' : '') +
+                        '</div>' +
+                    '</div>' +
+                    (nn.isRead ? '' : '<div class="nv-dot"></div>') +
+                '</div>';
+            }).join('');
+        }
+
+        /* ---------- data ---------- */
+        function sessionUser() {
+            try {
+                if (typeof auth !== 'undefined' && typeof auth.getCurrentUser === 'function') {
+                    var u = auth.getCurrentUser();
+                    if (u && (u.username || u.email || u.id)) return u;
+                }
+            } catch (e) {}
+            var keys = ['trustmyrecord_session', 'tmr_current_user', 'currentUser'];
+            for (var i = 0; i < keys.length; i++) {
+                try {
+                    var raw = localStorage.getItem(keys[i]);
+                    if (!raw) continue;
+                    var parsed = JSON.parse(raw);
+                    var user = parsed && parsed.user ? parsed.user : parsed;
+                    if (user && (user.username || user.email || user.id)) return user;
+                } catch (e) {}
+            }
+            return null;
+        }
+
+        function state(html) { listEl.innerHTML = '<div class="nv-state">' + html + '</div>'; }
+
+        async function load() {
+            state('Loading notifications...');
+            try {
+                var data = await api.getNotifications({ limit: 100 });
+                items = data.notifications || [];
+                render();
+            } catch (error) {
+                if (error && (error.status === 401 || error.status === 403)) {
+                    state('<strong>Your session expired</strong>Log in again to see your alert history.' +
+                        '<div><a class="nv-btn p" href="/login/" style="margin-top:16px;">Log in</a></div>');
+                    return;
+                }
+                state('<strong>Could not load your notifications</strong>The alerts service did not respond.' +
+                    '<div><button class="nv-btn p" type="button" data-retry="1" style="margin-top:16px;">Retry</button></div>');
+            }
+        }
+
+        async function setupPrefs() {
+            if (!window.api || typeof api.getNotificationPreferences !== 'function') return;
+            var prefs;
+            try {
+                var resp = await api.getNotificationPreferences();
+                prefs = (resp && resp.preferences) || resp || {};
+            } catch (e) { prefsToggle.hidden = true; return; }
+
+            prefsCard.querySelectorAll('#notifPrefsList input[data-pref]').forEach(function (cb) {
+                var key = cb.getAttribute('data-pref');
+                cb.checked = prefs[key] !== false;
+                cb.addEventListener('change', async function () {
+                    prefsStatus.textContent = 'Saving...';
+                    try {
+                        var patch = {}; patch[key] = cb.checked;
+                        await api.updateNotificationPreferences(patch);
+                        prefsStatus.textContent = 'Saved.';
+                    } catch (err) {
+                        cb.checked = !cb.checked;
+                        prefsStatus.textContent = 'Could not save. Try again.';
+                    }
+                });
+            });
+        }
+
+        async function open(id, overrideHref) {
+            var row = items.filter(function (n) { return String(n.id) === String(id); })[0];
+            var href = overrideHref;
+            if (!href && row) {
+                var nn = normalize(row);
+                href = destination(nn) || actor(nn).href;
+            }
+            try {
+                if (row && !(row.is_read || row.read)) {
+                    await api.markNotificationRead(id);
+                    row.is_read = true;
+                    render();
+                }
+            } catch (e) {}
+            if (href) location.href = href;
+        }
+
+        async function markAll() {
+            try {
+                await api.markAllNotificationsRead();
+                items = items.map(function (n) { n.is_read = true; return n; });
+                render();
+                if (typeof window.updateNotifBadge === 'function') window.updateNotifBadge(0);
+            } catch (e) {}
+        }
+
+        /* ---------- events (delegated: no globals, no inline handlers) ---------- */
+        filtersEl.addEventListener('click', function (e) {
+            var btn = e.target.closest('.nv-chip');
+            if (!btn) return;
+            filtersEl.querySelectorAll('.nv-chip').forEach(function (b) { b.classList.remove('on'); });
+            btn.classList.add('on');
+            filter = btn.getAttribute('data-filter');
+            render();
+        });
+
+        listEl.addEventListener('click', function (e) {
+            if (e.target.closest('[data-retry]')) { load(); return; }
+            var actorLink = e.target.closest('[data-actor]');
+            var row = e.target.closest('.nv-row');
+            if (!row) return;
+            e.preventDefault();
+            open(row.getAttribute('data-id'), actorLink ? actorLink.getAttribute('href') : row.getAttribute('data-href'));
+        });
+
+        markAllBtn.addEventListener('click', markAll);
+
+        function togglePrefs(force) {
+            var show = force != null ? force : prefsCard.hidden;
+            prefsCard.hidden = !show;
+            prefsToggle.textContent = show ? 'Hide settings' : 'Alert settings';
+            if (show) prefsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        prefsToggle.addEventListener('click', function () { togglePrefs(); });
+        prefsClose.addEventListener('click', function () { togglePrefs(false); });
+
+        /* ---------- boot ---------- */
+        document.addEventListener('DOMContentLoaded', async function () {
+            if (window.api && api.ready) { try { await api.ready; } catch (e) {} }
+
+            var loggedIn = !!sessionUser() || !!(window.api && typeof api.isLoggedIn === 'function' && api.isLoggedIn());
+            if (!window.api || typeof api.getNotifications !== 'function' || !loggedIn) {
+                prefsToggle.hidden = true;
+                markAllBtn.hidden = true;
+                unreadLabel.textContent = 'Your alert history';
+                state('<strong>Log in to see your notifications</strong>Replies, follows, graded picks, and messages show up here once your account is active.' +
+                    '<div><a class="nv-btn p" href="/login/" style="margin-top:16px;">Log in</a></div>');
+                return;
+            }
+
+            await load();
+            await setupPrefs();
+        });
+    })();
     </script>
 </body>
 </html>
-<!-- Deploy: Tue, Apr 14, 2026  8:18:00 PM -->
-
-
