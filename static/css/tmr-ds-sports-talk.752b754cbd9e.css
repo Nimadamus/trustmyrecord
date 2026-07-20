@@ -197,3 +197,22 @@ body.tmr-ds .st-seo h2{
 
 /* keep the sticky sidebar clear of the sticky nav */
 body.tmr-ds .st-side{top:calc(var(--nav-h) + 16px)}
+
+/* ---------------------------------------------------------------------------
+   Grid minimums. Both grid children must be allowed to shrink below their
+   min-content, otherwise a single nowrap element deep inside a panel (community
+   names, thread meta) sets the track width and the page scrolls sideways —
+   measured 517px of content in a 390px viewport. Same class of bug as the
+   leaderboards 2-col collapse: a bare `1fr` takes its minimum from min-content.
+   --------------------------------------------------------------------------- */
+body.tmr-ds .st-grid{grid-template-columns:minmax(0,1fr) 300px}
+body.tmr-ds .st-main,
+body.tmr-ds .st-side,
+body.tmr-ds .st-panel{min-width:0}
+@media(max-width:920px){
+  body.tmr-ds .st-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:760px){
+  body.tmr-ds .st-row{padding:12px 14px}
+  body.tmr-ds .st-post{padding:14px}
+}

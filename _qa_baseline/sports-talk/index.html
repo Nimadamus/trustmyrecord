@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/sports-talk/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Talk | NFL, NBA, MLB, NHL &amp; Fandom Discussion | TrustMyRecord</title>
+    <meta name="description" content="Sports Talk on TrustMyRecord: general sports fandom discussion for NFL, NBA, MLB, NHL, college sports, soccer, combat sports, fantasy, collectibles, and more. Talk teams, players, trades, and rivalries. No betting record required.">
+    <meta name="keywords" content="sports talk forum, sports discussion, NFL forum, NBA forum, MLB forum, NHL forum, fantasy sports discussion, sports fan community, sports collectibles forum">
+    <meta property="og:title" content="Sports Talk | TrustMyRecord">
+    <meta property="og:description" content="General sports fandom discussion. Teams, players, trades, rivalries, fantasy, and collectibles. Separate from the betting forum.">
+    <meta property="og:url" content="https://trustmyrecord.com/sports-talk/">
+    <meta property="og:type" content="website">
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
+<script defer src="/static/js/tmr-sitewide.js?v=20260720alerts"></script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Sports Talk",
+        "url": "https://trustmyrecord.com/sports-talk/",
+        "description": "General sports fandom discussion community: NFL, NBA, MLB, NHL, college sports, soccer, combat sports, golf, motorsports, fantasy sports, sports gaming, and collectibles.",
+        "isPartOf": { "@type": "WebSite", "name": "TrustMyRecord", "url": "https://trustmyrecord.com/" }
+    }
+    </script>
+    <style>
+    /* ============================================================
+       Sports Talk — compact editorial fandom board.
+       Scoped under body.st-page. Uses the shared TMR tokens with a
+       restrained warm accent so the area reads slightly more
+       energetic than record pages without becoming a new brand.
+       ============================================================ */
+    body.st-page{margin:0;font-family:var(--tmr-font,Inter,system-ui,sans-serif);}
+    .st-wrap{max-width:1180px;margin:0 auto;padding:0 18px;}
+
+    /* Header band */
+    .st-head{padding:30px 0 14px;}
+    .st-kick{font-family:Barlow,sans-serif;font-weight:800;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:#f0a35e;}
+    .st-head h1{font-family:Barlow,sans-serif;font-weight:800;font-size:clamp(1.7rem,3.4vw,2.35rem);letter-spacing:-.01em;margin:4px 0 6px;color:var(--tmr-text,#f8fafc);}
+    .st-sub{color:var(--tmr-muted,#9aa8bc);font-size:.92rem;max-width:640px;line-height:1.5;margin:0;}
+    .st-head-row{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+    .st-head-actions{display:flex;gap:9px;flex-wrap:wrap;}
+    .st-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:9px;font-family:Barlow,sans-serif;font-weight:700;font-size:.88rem;border:1px solid transparent;text-decoration:none;cursor:pointer;line-height:1;}
+    .st-btn--primary{background:linear-gradient(135deg,#37d6c1,#2bb6a4);color:#00201c;}
+    .st-btn--primary:hover{filter:brightness(1.06);}
+    .st-btn--ghost{background:transparent;border-color:rgba(148,163,184,.32);color:var(--tmr-text,#f8fafc);}
+    .st-btn--ghost:hover{border-color:rgba(45,212,191,.5);}
+    .st-btn[disabled]{opacity:.55;cursor:not-allowed;}
+
+    /* Area switch note */
+    .st-area-note{display:inline-flex;align-items:center;gap:7px;margin-top:10px;font-size:.76rem;color:var(--tmr-muted,#9aa8bc);background:rgba(15,23,42,.55);border:1px solid rgba(148,163,184,.16);border-radius:999px;padding:5px 12px;}
+    .st-area-note a{color:#2dd4bf;text-decoration:none;font-weight:600;}
+    .st-area-note a:hover{text-decoration:underline;}
+
+    /* Filter chips */
+    .st-chips{display:flex;gap:7px;overflow-x:auto;padding:14px 0 4px;scrollbar-width:none;}
+    .st-chips::-webkit-scrollbar{display:none;}
+    .st-chip{flex:0 0 auto;padding:6px 13px;border-radius:999px;border:1px solid rgba(148,163,184,.24);background:rgba(15,23,42,.6);color:var(--tmr-muted,#9aa8bc);font-size:.78rem;font-weight:600;cursor:pointer;white-space:nowrap;transition:border-color .12s,color .12s;}
+    .st-chip:hover{border-color:rgba(240,163,94,.5);color:var(--tmr-text,#f8fafc);}
+    .st-chip.is-on{background:rgba(240,163,94,.12);border-color:rgba(240,163,94,.55);color:#f0a35e;}
+
+    /* Layout */
+    .st-grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;padding:12px 0 48px;align-items:start;}
+    .st-main{min-width:0;}
+    .st-side{display:flex;flex-direction:column;gap:14px;position:sticky;top:76px;}
+
+    /* Panels */
+    .st-panel{background:rgba(13,22,38,.94);border:1px solid rgba(148,163,184,.16);border-radius:12px;overflow:hidden;}
+    .st-panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid rgba(148,163,184,.14);}
+    .st-panel-h h2{font-family:Barlow,sans-serif;font-weight:800;font-size:.78rem;letter-spacing:.11em;text-transform:uppercase;color:var(--tmr-muted,#9aa8bc);margin:0;}
+
+    /* Tabs */
+    .st-tabs{display:flex;gap:2px;}
+    .st-tab{padding:5px 11px;border-radius:7px;border:0;background:transparent;color:var(--tmr-muted,#9aa8bc);font-size:.76rem;font-weight:700;cursor:pointer;}
+    .st-tab.is-on{background:rgba(45,212,191,.12);color:#2dd4bf;}
+
+    /* Thread rows */
+    .st-rows{display:block;}
+    .st-row{display:flex;gap:11px;padding:11px 14px;border-bottom:1px solid rgba(148,163,184,.10);text-decoration:none;transition:background .12s;cursor:pointer;}
+    .st-row:last-child{border-bottom:0;}
+    .st-row:hover{background:rgba(45,212,191,.05);}
+    .st-ava{flex:0 0 34px;width:34px;height:34px;border-radius:50%;object-fit:cover;background:#16233c;border:1px solid rgba(148,163,184,.2);}
+    .st-ava--txt{display:grid;place-items:center;color:#2dd4bf;font-weight:700;font-size:.85rem;font-family:Barlow,sans-serif;}
+    .st-row-bd{min-width:0;flex:1;}
+    .st-row-title{display:block;color:var(--tmr-text,#f8fafc);font-weight:600;font-size:.92rem;line-height:1.32;margin:0 0 3px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;}
+    .st-row:hover .st-row-title{color:#2dd4bf;}
+    .st-row-meta{display:flex;align-items:center;flex-wrap:wrap;gap:5px 10px;font-size:.72rem;color:var(--tmr-muted,#9aa8bc);}
+    .st-row-meta .st-comm{color:#f0a35e;font-weight:600;}
+    .st-row-meta a{color:inherit;text-decoration:none;}
+    .st-row-meta a:hover{color:#2dd4bf;}
+    .st-row-stats{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:.72rem;color:var(--tmr-muted,#9aa8bc);padding-top:2px;}
+    .st-row-stats b{color:var(--tmr-text,#f8fafc);font-weight:700;}
+    .st-badge{display:inline-block;padding:1px 7px;border-radius:999px;font-size:.62rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;vertical-align:2px;margin-right:5px;}
+    .st-badge--pin{background:rgba(212,167,44,.14);color:#d4a72c;border:1px solid rgba(212,167,44,.35);}
+    .st-badge--official{background:rgba(45,212,191,.12);color:#2dd4bf;border:1px solid rgba(45,212,191,.35);}
+    .st-badge--hot{background:rgba(240,163,94,.13);color:#f0a35e;border:1px solid rgba(240,163,94,.4);}
+    .st-badge--bot{background:rgba(148,163,184,.14);color:#9aa8bc;border:1px solid rgba(148,163,184,.3);}
+
+    /* Sidebar communities */
+    .st-comms{display:block;}
+    .st-comm-row{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid rgba(148,163,184,.08);text-decoration:none;transition:background .12s;}
+    .st-comm-row:last-child{border-bottom:0;}
+    .st-comm-row:hover{background:rgba(240,163,94,.06);}
+    .st-comm-ic{flex:0 0 30px;width:30px;height:30px;display:grid;place-items:center;border-radius:8px;background:rgba(240,163,94,.09);border:1px solid rgba(240,163,94,.25);font-size:.95rem;}
+    .st-comm-bd{min-width:0;flex:1;}
+    .st-comm-bd b{display:block;color:var(--tmr-text,#f8fafc);font-size:.83rem;font-weight:600;line-height:1.2;}
+    .st-comm-bd span{display:block;color:var(--tmr-muted,#9aa8bc);font-size:.68rem;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    .st-comm-n{flex:0 0 auto;font-size:.72rem;color:var(--tmr-muted,#9aa8bc);font-weight:700;}
+
+    .st-about{padding:13px 14px;color:var(--tmr-muted,#9aa8bc);font-size:.78rem;line-height:1.55;}
+    .st-about b{color:var(--tmr-text,#f8fafc);}
+    .st-about a{color:#2dd4bf;text-decoration:none;font-weight:600;}
+    .st-about a:hover{text-decoration:underline;}
+
+    /* Category view */
+    .st-cat-head{display:flex;align-items:center;gap:13px;padding:16px 0 4px;}
+    .st-cat-ic{flex:0 0 46px;width:46px;height:46px;display:grid;place-items:center;border-radius:12px;background:rgba(240,163,94,.1);border:1px solid rgba(240,163,94,.3);font-size:1.4rem;}
+    .st-cat-head h1{font-family:Barlow,sans-serif;font-weight:800;font-size:1.5rem;margin:0;color:var(--tmr-text,#f8fafc);}
+    .st-cat-head p{margin:2px 0 0;color:var(--tmr-muted,#9aa8bc);font-size:.83rem;}
+    .st-back{display:inline-flex;align-items:center;gap:5px;color:var(--tmr-muted,#9aa8bc);font-size:.78rem;text-decoration:none;margin-top:14px;font-weight:600;}
+    .st-back:hover{color:#2dd4bf;}
+
+    /* Thread view */
+    .st-thread-head{padding:16px 0 10px;}
+    .st-thread-head h1{font-family:Barlow,sans-serif;font-weight:800;font-size:clamp(1.25rem,2.6vw,1.7rem);line-height:1.25;margin:6px 0 8px;color:var(--tmr-text,#f8fafc);}
+    .st-thread-meta{display:flex;align-items:center;flex-wrap:wrap;gap:6px 12px;font-size:.76rem;color:var(--tmr-muted,#9aa8bc);}
+    .st-thread-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+    .st-act{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:8px;border:1px solid rgba(148,163,184,.26);background:rgba(15,23,42,.6);color:var(--tmr-muted,#9aa8bc);font-size:.78rem;font-weight:600;cursor:pointer;}
+    .st-act:hover{border-color:rgba(45,212,191,.45);color:var(--tmr-text,#f8fafc);}
+    .st-act.is-on{background:rgba(45,212,191,.1);border-color:rgba(45,212,191,.5);color:#2dd4bf;}
+    .st-post{display:flex;gap:12px;padding:14px;border-bottom:1px solid rgba(148,163,184,.1);}
+    .st-post:last-child{border-bottom:0;}
+    .st-post.is-target{background:rgba(240,163,94,.07);}
+    .st-post-bd{min-width:0;flex:1;}
+    .st-post-top{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;margin-bottom:6px;}
+    .st-post-top a{color:var(--tmr-text,#f8fafc);font-weight:700;font-size:.85rem;text-decoration:none;}
+    .st-post-top a:hover{color:#2dd4bf;}
+    .st-post-top time{color:var(--tmr-muted,#9aa8bc);font-size:.7rem;}
+    .st-post-content{color:#dbe4f0;font-size:.88rem;line-height:1.62;word-wrap:break-word;overflow-wrap:break-word;}
+    .st-post-content blockquote{margin:8px 0;padding:8px 12px;border-left:3px solid rgba(45,212,191,.5);background:rgba(45,212,191,.05);border-radius:0 8px 8px 0;color:var(--tmr-muted,#9aa8bc);font-size:.82rem;}
+    .st-post-content blockquote cite{display:block;font-style:normal;font-weight:700;color:#2dd4bf;font-size:.7rem;margin-bottom:3px;}
+    .st-post-foot{display:flex;gap:9px;margin-top:9px;}
+    .st-mini{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;border:1px solid rgba(148,163,184,.2);background:transparent;color:var(--tmr-muted,#9aa8bc);font-size:.7rem;font-weight:600;cursor:pointer;}
+    .st-mini:hover{border-color:rgba(45,212,191,.45);color:var(--tmr-text,#f8fafc);}
+    .st-mini.is-on{color:#2dd4bf;border-color:rgba(45,212,191,.5);}
+
+    /* Composer */
+    .st-compose{padding:14px;}
+    .st-compose label{display:block;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tmr-muted,#9aa8bc);margin:0 0 5px;}
+    .st-compose select,.st-compose input,.st-compose textarea{width:100%;background:rgba(8,15,28,.85);border:1px solid rgba(148,163,184,.24);border-radius:9px;color:var(--tmr-text,#f8fafc);font-family:inherit;font-size:.88rem;padding:10px 12px;margin-bottom:12px;}
+    .st-compose textarea{min-height:130px;resize:vertical;line-height:1.55;}
+    .st-compose select:focus,.st-compose input:focus,.st-compose textarea:focus{outline:none;border-color:rgba(45,212,191,.55);}
+    .st-compose-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+    .st-compose-hint{font-size:.7rem;color:var(--tmr-muted,#9aa8bc);}
+    .st-err{color:#ef8484;font-size:.78rem;margin:0 0 10px;display:none;}
+    .st-err.is-on{display:block;}
+
+    /* Modal */
+    .st-modal{position:fixed;inset:0;background:rgba(4,8,16,.72);display:none;align-items:flex-start;justify-content:center;z-index:1200;padding:56px 16px 24px;overflow-y:auto;}
+    .st-modal.is-open{display:flex;}
+    .st-modal-card{width:100%;max-width:620px;background:#0e1930;border:1px solid rgba(148,163,184,.22);border-radius:14px;box-shadow:0 28px 80px rgba(0,0,0,.5);}
+    .st-modal-h{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;border-bottom:1px solid rgba(148,163,184,.14);}
+    .st-modal-h h2{font-family:Barlow,sans-serif;font-weight:800;font-size:1.02rem;margin:0;color:var(--tmr-text,#f8fafc);}
+    .st-x{background:none;border:0;color:var(--tmr-muted,#9aa8bc);font-size:1.25rem;cursor:pointer;line-height:1;padding:4px;}
+    .st-x:hover{color:var(--tmr-text,#f8fafc);}
+
+    /* Skeletons + empty states */
+    .st-skel{padding:6px 0;}
+    .st-skel-row{display:flex;gap:11px;padding:11px 14px;}
+    .st-skel-a{width:34px;height:34px;border-radius:50%;background:rgba(148,163,184,.1);}
+    .st-skel-l{flex:1;}
+    .st-skel-l i{display:block;height:11px;border-radius:6px;background:rgba(148,163,184,.1);margin-bottom:7px;}
+    .st-skel-l i:last-child{width:45%;}
+    @keyframes stPulse{50%{opacity:.55;}}
+    .st-skel-a,.st-skel-l i{animation:stPulse 1.4s ease-in-out infinite;}
+    .st-empty{padding:34px 20px;text-align:center;}
+    .st-empty h3{font-family:Barlow,sans-serif;font-weight:700;font-size:1rem;color:var(--tmr-text,#f8fafc);margin:0 0 5px;}
+    .st-empty p{color:var(--tmr-muted,#9aa8bc);font-size:.82rem;margin:0 0 14px;}
+
+    /* Pagination */
+    .st-pager{display:flex;justify-content:center;gap:8px;padding:14px;}
+    .st-pager button{padding:6px 13px;border-radius:8px;border:1px solid rgba(148,163,184,.26);background:transparent;color:var(--tmr-muted,#9aa8bc);font-size:.76rem;font-weight:700;cursor:pointer;}
+    .st-pager button:hover:not([disabled]){border-color:rgba(45,212,191,.45);color:var(--tmr-text,#f8fafc);}
+    .st-pager button[disabled]{opacity:.4;cursor:default;}
+    .st-pager span{align-self:center;font-size:.74rem;color:var(--tmr-muted,#9aa8bc);}
+
+    /* SEO copy block */
+    .st-seo{padding:8px 0 54px;color:var(--tmr-muted,#9aa8bc);font-size:.82rem;line-height:1.65;max-width:840px;}
+    .st-seo h2{font-family:Barlow,sans-serif;font-weight:800;font-size:1rem;color:var(--tmr-text,#f8fafc);margin:0 0 8px;}
+    .st-seo a{color:#2dd4bf;text-decoration:none;}
+    .st-seo a:hover{text-decoration:underline;}
+
+    .st-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(8px);background:#10233d;border:1px solid rgba(45,212,191,.4);color:var(--tmr-text,#f8fafc);padding:10px 18px;border-radius:10px;font-size:.83rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:1400;max-width:90vw;}
+    .st-toast.is-on{opacity:1;transform:translateX(-50%) translateY(0);}
+
+    @media(max-width:920px){
+      .st-grid{grid-template-columns:1fr;}
+      .st-side{position:static;}
+    }
+    @media(max-width:600px){
+      .st-head{padding-top:20px;}
+      .st-row{padding:10px 11px;}
+      .st-row-stats{display:none;}
+      .st-post{padding:12px 11px;}
+    }
+    </style>
+</head>
+<body class="tmr-site-shell st-page">
+
+<main class="st-wrap" id="stApp">
+
+  <!-- HOME VIEW -->
+  <section id="stHome">
+    <div class="st-head">
+      <div class="st-head-row">
+        <div>
+          <span class="st-kick">TrustMyRecord Community</span>
+          <h1>Sports Talk</h1>
+          <p class="st-sub">General sports fandom: teams, players, games, trades, rivalries, fantasy, and collectibles. Everyone is welcome here, no betting record required.</p>
+        </div>
+        <div class="st-head-actions">
+          <button class="st-btn st-btn--primary" id="stNewThreadBtn" type="button">+ Start a Discussion</button>
+          <a class="st-btn st-btn--ghost" href="/forum/">Betting Forum &rarr;</a>
+        </div>
+      </div>
+      <span class="st-area-note">You are in <b>&nbsp;Sports Talk&nbsp;</b> &mdash; picks, records, and handicapping live in the <a href="/forum/">Betting &amp; Handicapping Forum</a>.</span>
+    </div>
+
+    <div class="st-chips" id="stChips" role="tablist" aria-label="Filter by sport"></div>
+
+    <div class="st-grid">
+      <div class="st-main">
+        <div class="st-panel">
+          <div class="st-panel-h">
+            <h2 id="stListTitle">Discussions</h2>
+            <div class="st-tabs">
+              <button class="st-tab is-on" data-sort="latest" type="button">Latest</button>
+              <button class="st-tab" data-sort="active" type="button">Most Active</button>
+            </div>
+          </div>
+          <div class="st-rows" id="stThreadList">
+            <div class="st-skel">
+              <div class="st-skel-row"><div class="st-skel-a"></div><div class="st-skel-l"><i></i><i></i></div></div>
+              <div class="st-skel-row"><div class="st-skel-a"></div><div class="st-skel-l"><i></i><i></i></div></div>
+              <div class="st-skel-row"><div class="st-skel-a"></div><div class="st-skel-l"><i></i><i></i></div></div>
+              <div class="st-skel-row"><div class="st-skel-a"></div><div class="st-skel-l"><i></i><i></i></div></div>
+              <div class="st-skel-row"><div class="st-skel-a"></div><div class="st-skel-l"><i></i><i></i></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="st-side">
+        <div class="st-panel">
+          <div class="st-panel-h"><h2>Communities</h2></div>
+          <div class="st-comms" id="stCommList">
+            <div class="st-skel">
+              <div class="st-skel-row"><div class="st-skel-a"></div><div class="st-skel-l"><i></i><i></i></div></div>
+              <div class="st-skel-row"><div class="st-skel-a"></div><div class="st-skel-l"><i></i><i></i></div></div>
+              <div class="st-skel-row"><div class="st-skel-a"></div><div class="st-skel-l"><i></i><i></i></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="st-panel">
+          <div class="st-panel-h"><h2>About Sports Talk</h2></div>
+          <div class="st-about">
+            <b>Sports Talk</b> is the fandom side of TrustMyRecord: teams, games, news, debates, fantasy, and the hobby. Verified picks, records, and handicapping stay in the <a href="/forum/">Betting Forum</a>. One account works everywhere &mdash; follow people you like and reply from any device.
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="st-seo">
+      <h2>Talk sports with people who put their name on it</h2>
+      <p>Sports Talk is TrustMyRecord's general sports community: NFL, NBA, MLB, NHL, college football and basketball, soccer, combat sports, golf, motorsports, fantasy sports, sports gaming, and sports collectibles. Start a thread about a trade, argue a ranking, run through your fantasy roster, or show off a card. You never need to make a pick to join the conversation, and when you do want to track calls publicly, your same account carries a <a href="/how-it-works/">verified record</a> on the handicapping side of the site.</p>
+    </div>
+  </section>
+
+  <!-- CATEGORY VIEW -->
+  <section id="stCategory" hidden>
+    <a class="st-back" href="/sports-talk/" data-nav="home">&larr; All Sports Talk</a>
+    <div class="st-cat-head" id="stCatHead"></div>
+    <div class="st-grid">
+      <div class="st-main">
+        <div class="st-panel">
+          <div class="st-panel-h">
+            <h2>Discussions</h2>
+            <button class="st-btn st-btn--primary" id="stCatNewBtn" type="button" style="padding:6px 13px;font-size:.78rem;">+ New Thread</button>
+          </div>
+          <div class="st-rows" id="stCatThreads"></div>
+          <div class="st-pager" id="stCatPager" hidden></div>
+        </div>
+      </div>
+      <aside class="st-side">
+        <div class="st-panel">
+          <div class="st-panel-h"><h2>Communities</h2></div>
+          <div class="st-comms" id="stCommList2"></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- THREAD VIEW -->
+  <section id="stThread" hidden>
+    <a class="st-back" href="/sports-talk/" id="stThreadBack">&larr; Back</a>
+    <div class="st-thread-head" id="stThreadHead"></div>
+    <div class="st-panel" style="margin-bottom:16px;">
+      <div id="stPosts"></div>
+      <div class="st-pager" id="stPostPager" hidden></div>
+    </div>
+    <div class="st-panel" id="stReplyPanel">
+      <div class="st-panel-h"><h2>Join the discussion</h2></div>
+      <div class="st-compose" id="stReplyBox"></div>
+    </div>
+    <div style="height:44px;"></div>
+  </section>
+
+</main>
+
+<!-- NEW THREAD MODAL -->
+<div class="st-modal" id="stModal" role="dialog" aria-modal="true" aria-labelledby="stModalTitle">
+  <div class="st-modal-card">
+    <div class="st-modal-h">
+      <h2 id="stModalTitle">Start a Discussion</h2>
+      <button class="st-x" id="stModalClose" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div class="st-compose">
+      <p class="st-err" id="stModalErr"></p>
+      <label for="stNtCat">Community</label>
+      <select id="stNtCat"></select>
+      <label for="stNtTitle">Title</label>
+      <input id="stNtTitle" maxlength="300" placeholder="What do you want to talk about?">
+      <label for="stNtBody">Post</label>
+      <textarea id="stNtBody" maxlength="50000" placeholder="Say it. Takes, questions, breakdowns, hot starts, trade ideas..."></textarea>
+      <div class="st-compose-foot">
+        <span class="st-compose-hint">Mention people with @username. Keep it about the game &mdash; trash talk yes, harassment no.</span>
+        <button class="st-btn st-btn--primary" id="stNtSubmit" type="button">Post Discussion</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="st-toast" id="stToast"></div>
+
+<script src="/static/js/config.js"></script>
+<script src="/static/js/analytics.js?v=20260719ft"></script>
+<script src="/static/js/backend-api.js?v=20260423a"></script>
+<script src="/static/js/auth-persistent.js?v=20260424a"></script>
+<script src="/static/js/nav-badges.js"></script>
+<script src="/static/js/notifications.js?v=20260716quiznotif1"></script>
+<script>
+(() => {
+  'use strict';
+
+  // ============ STATE ============
+  const AREA = 'sports_talk';
+  let categories = [];          // sports_talk categories from the API
+  let recentThreads = [];       // landing-page thread pool
+  let chipFilter = 'all';       // sport_key filter on the landing list
+  let sortMode = 'latest';
+  let currentCategory = null;   // slug when in category view
+  let currentThread = null;     // thread object when in thread view
+  let catPage = 1, postPage = 1;
+
+  const $ = (id) => document.getElementById(id);
+
+  // ============ UTILITIES ============
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function timeAgo(iso) {
+    if (!iso) return '';
+    const t = new Date(iso).getTime();
+    if (!isFinite(t)) return '';
+    const s = Math.max(1, Math.floor((Date.now() - t) / 1000));
+    if (s < 60) return s + 's ago';
+    const m = Math.floor(s / 60); if (m < 60) return m + 'm ago';
+    const h = Math.floor(m / 60); if (h < 24) return h + 'h ago';
+    const d = Math.floor(h / 24); if (d < 30) return d + 'd ago';
+    const mo = Math.floor(d / 30); if (mo < 12) return mo + 'mo ago';
+    return Math.floor(mo / 12) + 'y ago';
+  }
+
+  function avatarHtml(url, username) {
+    if (url) return '<img class="st-ava" src="' + esc(url) + '" alt="" loading="lazy" onerror="this.style.visibility=&quot;hidden&quot;">';
+    return '<span class="st-ava st-ava--txt">' + esc(String(username || '?').charAt(0).toUpperCase()) + '</span>';
+  }
+
+  // Plain text + [quote=Name]...[/quote] blocks -> safe HTML.
+  function renderContent(raw) {
+    let out = '';
+    let rest = String(raw || '');
+    const quoteRe = /\[quote=([^\]]{1,60})\]([\s\S]*?)\[\/quote\]/i;
+    let guard = 0;
+    while (guard++ < 50) {
+      const m = rest.match(quoteRe);
+      if (!m) break;
+      out += esc(rest.slice(0, m.index)).replace(/\n/g, '<br>');
+      out += '<blockquote><cite>' + esc(m[1]) + ' said:</cite>' + esc(m[2].trim()).replace(/\n/g, '<br>') + '</blockquote>';
+      rest = rest.slice(m.index + m[0].length);
+    }
+    out += esc(rest).replace(/\n/g, '<br>');
+    return out;
+  }
+
+  function loggedInUser() {
+    try {
+      if (window.auth && window.auth.currentUser) return window.auth.currentUser;
+      const raw = localStorage.getItem('tmr_current_user') || localStorage.getItem('currentUser');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+
+  let toastTimer = null;
+  function toast(msg) {
+    const el = $('stToast');
+    el.textContent = msg;
+    el.classList.add('is-on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('is-on'), 3200);
+  }
+
+  function apiErrMessage(err, fallback) {
+    const m = err && (err.message || err.error);
+    return (typeof m === 'string' && m.length < 200) ? m : fallback;
+  }
+
+  // ============ ROUTING ============
+  // /sports-talk/?category=slug | ?thread=id (#post-N) | landing
+  function navigate(params, replace) {
+    const url = '/sports-talk/' + (params ? '?' + params : '');
+    if (replace) history.replaceState(null, '', url); else history.pushState(null, '', url);
+    route();
+  }
+
+  let lastThreadId = null;
+  function route() {
+    const q = new URLSearchParams(location.search);
+    const threadId = q.get('thread');
+    const catSlug = q.get('category');
+    $('stHome').hidden = !!(threadId || catSlug);
+    $('stCategory').hidden = !catSlug || !!threadId;
+    $('stThread').hidden = !threadId;
+    if (threadId) {
+      if (threadId !== lastThreadId) { postPage = 1; lastThreadId = threadId; }
+      loadThread(threadId);
+    }
+    else if (catSlug) { currentCategory = catSlug; catPage = 1; loadCategory(catSlug); }
+    else { document.title = 'Sports Talk | NFL, NBA, MLB, NHL & Fandom Discussion | TrustMyRecord'; }
+    window.scrollTo(0, 0);
+  }
+
+  window.addEventListener('popstate', route);
+
+  // Intercept internal links so back/forward stays snappy.
+  document.addEventListener('click', (e) => {
+    const a = e.target.closest('a[data-st-cat], a[data-st-thread], a[data-nav="home"]');
+    if (!a) return;
+    e.preventDefault();
+    if (a.dataset.nav === 'home') return navigate('');
+    if (a.dataset.stCat) return navigate('category=' + encodeURIComponent(a.dataset.stCat));
+    if (a.dataset.stThread) return navigate('thread=' + encodeURIComponent(a.dataset.stThread));
+  });
+
+  // ============ RENDER HELPERS ============
+  function threadRow(t) {
+    const commName = t.category_name || (categories.find(c => c.id === t.category_id) || {}).name || '';
+    const commSlug = t.category_slug || (categories.find(c => c.id === t.category_id) || {}).slug || '';
+    const hot = Number(t.reply_count) >= 10;
+    const badges =
+      (t.is_pinned ? '<span class="st-badge st-badge--pin">Pinned</span>' : '') +
+      (t.author_is_official_bot ? '<span class="st-badge st-badge--bot">Resident Bot</span>' : '') +
+      (hot ? '<span class="st-badge st-badge--hot">Hot</span>' : '');
+    const last = t.last_post_username && t.last_post_username !== t.username
+      ? ' &middot; latest by <b>' + esc(t.last_post_username) + '</b>' : '';
+    return '<a class="st-row" href="/sports-talk/?thread=' + t.id + '" data-st-thread="' + t.id + '">'
+      + avatarHtml(t.avatar_url, t.username)
+      + '<span class="st-row-bd">'
+      +   '<span class="st-row-title">' + badges + esc(t.title) + '</span>'
+      +   '<span class="st-row-meta">'
+      +     (commName ? '<span class="st-comm">' + esc(commName) + '</span>' : '')
+      +     '<span>' + esc(t.username || '') + '</span>'
+      +     '<span>' + timeAgo(t.last_post_at || t.created_at) + last + '</span>'
+      +   '</span>'
+      + '</span>'
+      + '<span class="st-row-stats">'
+      +   '<span><b>' + (Number(t.reply_count) || 0) + '</b> ' + (Number(t.reply_count) === 1 ? 'reply' : 'replies') + '</span>'
+      +   '<span><b>' + (Number(t.like_count) || 0) + '</b> ' + (Number(t.like_count) === 1 ? 'like' : 'likes') + '</span>'
+      + '</span>'
+      + '</a>';
+  }
+
+  function emptyState(title, sub, showCta) {
+    return '<div class="st-empty"><h3>' + esc(title) + '</h3><p>' + esc(sub) + '</p>'
+      + (showCta ? '<button class="st-btn st-btn--primary" type="button" onclick="document.getElementById(\'stNewThreadBtn\').click()">+ Start a Discussion</button>' : '')
+      + '</div>';
+  }
+
+  function commRows(mountId) {
+    const el = $(mountId);
+    if (!el) return;
+    if (!categories.length) { el.innerHTML = emptyState('Communities are loading', 'If this persists, refresh the page.', false); return; }
+    el.innerHTML = categories.map(c =>
+      '<a class="st-comm-row" href="/sports-talk/?category=' + esc(c.slug) + '" data-st-cat="' + esc(c.slug) + '">'
+      + '<span class="st-comm-ic">' + esc(c.icon || '🏆') + '</span>'
+      + '<span class="st-comm-bd"><b>' + esc(c.name) + '</b><span>' + esc(c.description || '') + '</span></span>'
+      + '<span class="st-comm-n">' + (Number(c.thread_count) || 0) + '</span>'
+      + '</a>').join('');
+  }
+
+  // ============ HOME ============
+  function renderChips() {
+    const chips = [['all', 'All Sports']].concat(categories.map(c => [c.slug, c.name]));
+    $('stChips').innerHTML = chips.map(([key, label]) =>
+      '<button class="st-chip' + (chipFilter === key ? ' is-on' : '') + '" data-chip="' + esc(key) + '" type="button">' + esc(label) + '</button>').join('');
+  }
+
+  $('stChips').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-chip]');
+    if (!b) return;
+    chipFilter = b.dataset.chip;
+    renderChips();
+    renderHomeList();
+  });
+
+  document.querySelectorAll('.st-tab').forEach(tab => tab.addEventListener('click', () => {
+    document.querySelectorAll('.st-tab').forEach(t => t.classList.toggle('is-on', t === tab));
+    sortMode = tab.dataset.sort;
+    renderHomeList();
+  }));
+
+  function renderHomeList() {
+    let list = recentThreads.slice();
+    if (chipFilter !== 'all') list = list.filter(t => t.category_slug === chipFilter);
+    if (sortMode === 'active') {
+      list.sort((a, b) => ((Number(b.reply_count) || 0) * 2 + (Number(b.like_count) || 0)) - ((Number(a.reply_count) || 0) * 2 + (Number(a.like_count) || 0)));
+    }
+    $('stListTitle').textContent = chipFilter === 'all' ? 'Discussions' : ((categories.find(c => c.slug === chipFilter) || {}).name || 'Discussions');
+    $('stThreadList').innerHTML = list.length
+      ? list.map(threadRow).join('')
+      : emptyState('No discussions here yet', 'Be the first voice in this community.', true);
+  }
+
+  async function loadHome() {
+    try {
+      const [catRes, recentRes] = await Promise.all([
+        api.request('/forum/categories?area=' + AREA),
+        api.request('/forum/threads/recent?area=' + AREA + '&limit=30')
+      ]);
+      categories = (catRes && catRes.categories) || [];
+      recentThreads = (recentRes && recentRes.threads) || [];
+      renderChips();
+      renderHomeList();
+      commRows('stCommList');
+      commRows('stCommList2');
+      fillComposerCats();
+    } catch (e) {
+      console.error('SportsTalk home load failed:', e);
+      $('stThreadList').innerHTML = emptyState('Could not load discussions', 'The community server may be waking up. Refresh in a few seconds.', false);
+      $('stCommList').innerHTML = '';
+    }
+  }
+
+  // ============ CATEGORY ============
+  async function loadCategory(slug) {
+    $('stCatHead').innerHTML = '';
+    $('stCatThreads').innerHTML = '<div class="st-skel">' + '<div class="st-skel-row"><div class="st-skel-a"></div><div class="st-skel-l"><i></i><i></i></div></div>'.repeat(4) + '</div>';
+    try {
+      const res = await api.request('/forum/categories/' + encodeURIComponent(slug) + '?page=' + catPage + '&limit=25');
+      const cat = res.category;
+      // Guard: only sports_talk categories render in this app.
+      if (cat && cat.content_area && cat.content_area !== 'sports_talk') {
+        location.href = '/forum/?category=' + encodeURIComponent(slug);
+        return;
+      }
+      document.title = cat.name + ' | Sports Talk | TrustMyRecord';
+      $('stCatHead').innerHTML =
+        '<span class="st-cat-ic">' + esc(cat.icon || '🏆') + '</span>'
+        + '<div><h1>' + esc(cat.name) + '</h1><p>' + esc(cat.description || '') + '</p></div>';
+      const threads = res.threads || [];
+      $('stCatThreads').innerHTML = threads.length
+        ? threads.map(threadRow).join('')
+        : emptyState('No discussions yet in ' + cat.name, 'Every community starts with one thread. Make it yours.', true);
+      const pg = res.pagination || {};
+      const pager = $('stCatPager');
+      if (pg.pages > 1) {
+        pager.hidden = false;
+        pager.innerHTML = '<button type="button" ' + (catPage <= 1 ? 'disabled' : '') + ' data-pg="prev">&larr; Prev</button>'
+          + '<span>Page ' + pg.page + ' of ' + pg.pages + '</span>'
+          + '<button type="button" ' + (catPage >= pg.pages ? 'disabled' : '') + ' data-pg="next">Next &rarr;</button>';
+        pager.onclick = (e) => {
+          const b = e.target.closest('[data-pg]');
+          if (!b || b.disabled) return;
+          catPage += (b.dataset.pg === 'next' ? 1 : -1);
+          loadCategory(slug);
+        };
+      } else { pager.hidden = true; }
+      if (!categories.length) {
+        const catRes = await api.request('/forum/categories?area=' + AREA);
+        categories = (catRes && catRes.categories) || [];
+        fillComposerCats();
+      }
+      commRows('stCommList2');
+      const sel = $('stNtCat');
+      const opt = Array.from(sel.options).find(o => o.dataset.slug === slug);
+      if (opt) sel.value = opt.value;
+    } catch (e) {
+      console.error('SportsTalk category load failed:', e);
+      $('stCatThreads').innerHTML = emptyState('Community not found', 'It may have moved. Head back to Sports Talk.', false);
+    }
+  }
+
+  // ============ THREAD ============
+  async function loadThread(id) {
+    $('stThreadHead').innerHTML = '';
+    $('stPosts').innerHTML = '<div class="st-skel">' + '<div class="st-skel-row"><div class="st-skel-a"></div><div class="st-skel-l"><i></i><i></i><i></i></div></div>'.repeat(3) + '</div>';
+    try {
+      const res = await api.request('/forum/threads/' + encodeURIComponent(id) + '?page=' + postPage + '&limit=25');
+      const t = res.thread;
+      currentThread = t;
+      // Betting-forum threads opened here bounce to the betting forum UI.
+      const cat = categories.find(c => c.id === t.category_id);
+      if (!cat && t.category_slug && !String(t.category_slug).startsWith('talk-')) {
+        location.href = t.slug ? '/forum/thread/' + encodeURIComponent(id) + '/' + encodeURIComponent(t.slug) + '/'
+                               : '/forum/?thread=' + encodeURIComponent(id);
+        return;
+      }
+      document.title = t.title + ' | Sports Talk | TrustMyRecord';
+      $('stThreadBack').href = '/sports-talk/?category=' + esc(t.category_slug || '');
+      $('stThreadBack').dataset.stCat = t.category_slug || '';
+      $('stThreadBack').innerHTML = '&larr; ' + esc(t.category_name || 'Sports Talk');
+
+      $('stThreadHead').innerHTML =
+        '<span class="st-row-meta"><span class="st-comm">' + esc(t.category_name || '') + '</span>'
+        + (t.is_pinned ? '<span class="st-badge st-badge--pin">Pinned</span>' : '')
+        + (t.is_locked ? '<span class="st-badge st-badge--bot">Locked</span>' : '')
+        + '</span>'
+        + '<h1>' + esc(t.title) + '</h1>'
+        + '<div class="st-thread-meta">'
+        +   '<span>Started by <a href="/u/' + esc(t.username || '') + '/" style="color:#2dd4bf;text-decoration:none;font-weight:600;">' + esc(t.username || '') + '</a>'
+        +   (t.author_is_official_bot ? ' <span class="st-badge st-badge--bot">Resident Bot</span>' : '') + '</span>'
+        +   '<span>' + timeAgo(t.created_at) + '</span>'
+        +   '<span>' + (Number(t.view_count) || 0) + ' views</span>'
+        +   '<span>' + (Number(t.reply_count) || 0) + ' replies</span>'
+        + '</div>'
+        + '<div class="st-thread-actions">'
+        +   '<button class="st-act' + (t.liked_by_me ? ' is-on' : '') + '" id="stLikeThread" type="button">&#10084; <span>' + (Number(t.like_count) || 0) + '</span></button>'
+        +   '<button class="st-act' + (t.subscribed_by_me ? ' is-on' : '') + '" id="stFollowThread" type="button">' + (t.subscribed_by_me ? 'Following' : 'Follow Thread') + '</button>'
+        + '</div>';
+
+      $('stLikeThread').onclick = async () => {
+        if (!requireLogin()) return;
+        try {
+          const r = await api.request('/forum/threads/' + t.id + '/like', { method: 'POST' });
+          $('stLikeThread').classList.toggle('is-on', !!r.liked);
+          $('stLikeThread').querySelector('span').textContent = r.like_count;
+        } catch (e) { toast(apiErrMessage(e, 'Could not update like.')); }
+      };
+      $('stFollowThread').onclick = async () => {
+        if (!requireLogin()) return;
+        try {
+          const r = await api.request('/forum/threads/' + t.id + '/subscribe', { method: 'POST' });
+          $('stFollowThread').classList.toggle('is-on', !!r.subscribed);
+          $('stFollowThread').textContent = r.subscribed ? 'Following' : 'Follow Thread';
+          toast(r.subscribed ? 'You will get an alert when this thread gets replies.' : 'Unfollowed this thread.');
+        } catch (e) { toast(apiErrMessage(e, 'Could not update follow.')); }
+      };
+
+      // Opening post renders as the first entry, then the replies.
+      const opHtml =
+        '<div class="st-post" id="post-op">'
+        + avatarHtml(t.avatar_url, t.username)
+        + '<div class="st-post-bd">'
+        +   '<div class="st-post-top"><a href="/u/' + esc(t.username || '') + '/">' + esc(t.username || '') + '</a>'
+        +   (t.author_is_official_bot ? '<span class="st-badge st-badge--bot">Resident Bot</span>' : '')
+        +   '<time>' + timeAgo(t.created_at) + '</time></div>'
+        +   '<div class="st-post-content">' + renderContent(t.content) + '</div>'
+        + '</div></div>';
+
+      const posts = res.posts || [];
+      $('stPosts').innerHTML = opHtml + posts.map(p =>
+        '<div class="st-post" id="post-' + p.id + '">'
+        + avatarHtml(p.avatar_url, p.username)
+        + '<div class="st-post-bd">'
+        +   '<div class="st-post-top"><a href="/u/' + esc(p.username || '') + '/">' + esc(p.username || '') + '</a>'
+        +   (p.author_is_official_bot ? '<span class="st-badge st-badge--bot">Resident Bot</span>' : '')
+        +   '<time>' + timeAgo(p.created_at) + (p.is_edited ? ' &middot; edited' : '') + '</time></div>'
+        +   '<div class="st-post-content">' + renderContent(p.content) + '</div>'
+        +   '<div class="st-post-foot">'
+        +     '<button class="st-mini' + (p.liked_by_me ? ' is-on' : '') + '" data-like-post="' + p.id + '" type="button">&#10084; <span>' + (Number(p.like_count) || 0) + '</span></button>'
+        +     '<button class="st-mini" data-quote="' + p.id + '" data-quote-user="' + esc(p.username || '') + '" type="button">Quote</button>'
+        +   '</div>'
+        + '</div></div>').join('');
+
+      $('stPosts').onclick = async (e) => {
+        const likeBtn = e.target.closest('[data-like-post]');
+        if (likeBtn) {
+          if (!requireLogin()) return;
+          try {
+            const r = await api.request('/forum/posts/' + likeBtn.dataset.likePost + '/like', { method: 'POST' });
+            likeBtn.classList.toggle('is-on', !!r.liked);
+            likeBtn.querySelector('span').textContent = r.like_count;
+          } catch (err) { toast(apiErrMessage(err, 'Could not update like.')); }
+          return;
+        }
+        const quoteBtn = e.target.closest('[data-quote]');
+        if (quoteBtn) {
+          const src = posts.find(p => String(p.id) === quoteBtn.dataset.quote);
+          const ta = document.querySelector('#stReplyBox textarea');
+          if (ta && src) {
+            const excerpt = String(src.content || '').slice(0, 240);
+            ta.value = '[quote=' + quoteBtn.dataset.quoteUser + ']' + excerpt + '[/quote]\n' + ta.value;
+            ta.focus();
+            ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      };
+
+      const pg = res.pagination || {};
+      const pager = $('stPostPager');
+      if (pg.pages > 1) {
+        pager.hidden = false;
+        pager.innerHTML = '<button type="button" ' + (postPage <= 1 ? 'disabled' : '') + ' data-pg="prev">&larr; Prev</button>'
+          + '<span>Page ' + pg.page + ' of ' + pg.pages + '</span>'
+          + '<button type="button" ' + (postPage >= pg.pages ? 'disabled' : '') + ' data-pg="next">Next &rarr;</button>';
+        pager.onclick = (e) => {
+          const b = e.target.closest('[data-pg]');
+          if (!b || b.disabled) return;
+          postPage += (b.dataset.pg === 'next' ? 1 : -1);
+          loadThread(id);
+        };
+      } else { pager.hidden = true; }
+
+      renderReplyBox(t);
+
+      // Deep-link highlight: /sports-talk/?thread=ID#post-N
+      if (location.hash && /^#post-\d+$/.test(location.hash)) {
+        const target = document.querySelector(location.hash);
+        if (target) {
+          target.classList.add('is-target');
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    } catch (e) {
+      console.error('SportsTalk thread load failed:', e);
+      $('stPosts').innerHTML = emptyState('Thread not found', 'It may have been removed. Head back to Sports Talk.', false);
+      $('stReplyPanel').hidden = true;
+    }
+  }
+
+  function renderReplyBox(t) {
+    const box = $('stReplyBox');
+    $('stReplyPanel').hidden = false;
+    if (t.is_locked) {
+      box.innerHTML = '<p style="color:var(--tmr-muted);font-size:.83rem;margin:0;">This thread is locked. No new replies.</p>';
+      return;
+    }
+    if (!loggedInUser()) {
+      box.innerHTML = '<p style="color:var(--tmr-muted);font-size:.83rem;margin:0 0 12px;">Log in to reply, react, and follow threads.</p>'
+        + '<a class="st-btn st-btn--primary" href="/login/">Log In</a> <a class="st-btn st-btn--ghost" href="/register/" style="margin-left:6px;">Create Free Account</a>';
+      return;
+    }
+    box.innerHTML = '<p class="st-err" id="stReplyErr"></p>'
+      + '<textarea id="stReplyText" maxlength="50000" placeholder="Write a reply... quote with the Quote button, mention with @username."></textarea>'
+      + '<div class="st-compose-foot"><span class="st-compose-hint">Be loud about the game, decent to the person.</span>'
+      + '<button class="st-btn st-btn--primary" id="stReplySubmit" type="button">Post Reply</button></div>';
+    $('stReplySubmit').onclick = async () => {
+      const ta = $('stReplyText');
+      const err = $('stReplyErr');
+      err.classList.remove('is-on');
+      const content = ta.value.trim();
+      if (!content) { err.textContent = 'Write something first.'; err.classList.add('is-on'); return; }
+      $('stReplySubmit').disabled = true;
+      try {
+        await api.request('/forum/threads/' + t.id + '/posts', { method: 'POST', body: JSON.stringify({ content }) });
+        ta.value = '';
+        toast('Reply posted.');
+        postPage = 1;
+        loadThread(t.id);
+      } catch (e2) {
+        err.textContent = apiErrMessage(e2, 'Could not post your reply. Try again.');
+        err.classList.add('is-on');
+      } finally {
+        $('stReplySubmit').disabled = false;
+      }
+    };
+  }
+
+  function requireLogin() {
+    if (loggedInUser()) return true;
+    toast('Log in to do that.');
+    setTimeout(() => { location.href = '/login/'; }, 900);
+    return false;
+  }
+
+  // ============ NEW THREAD ============
+  function fillComposerCats() {
+    const sel = $('stNtCat');
+    sel.innerHTML = categories.map(c => '<option value="' + c.id + '" data-slug="' + esc(c.slug) + '">' + esc(c.icon || '') + ' ' + esc(c.name) + '</option>').join('');
+  }
+
+  function openComposer() {
+    if (!loggedInUser()) { requireLogin(); return; }
+    $('stModalErr').classList.remove('is-on');
+    $('stModal').classList.add('is-open');
+    if (currentCategory) {
+      const opt = Array.from($('stNtCat').options).find(o => o.dataset.slug === currentCategory);
+      if (opt) $('stNtCat').value = opt.value;
+    }
+    setTimeout(() => $('stNtTitle').focus(), 50);
+  }
+
+  $('stNewThreadBtn').addEventListener('click', openComposer);
+  $('stCatNewBtn').addEventListener('click', openComposer);
+  $('stModalClose').addEventListener('click', () => $('stModal').classList.remove('is-open'));
+  $('stModal').addEventListener('click', (e) => { if (e.target === $('stModal')) $('stModal').classList.remove('is-open'); });
+
+  $('stNtSubmit').addEventListener('click', async () => {
+    const err = $('stModalErr');
+    err.classList.remove('is-on');
+    const title = $('stNtTitle').value.trim();
+    const content = $('stNtBody').value.trim();
+    const category_id = parseInt($('stNtCat').value, 10);
+    if (title.length < 5) { err.textContent = 'Title needs at least 5 characters.'; err.classList.add('is-on'); return; }
+    if (content.length < 10) { err.textContent = 'Post needs at least 10 characters.'; err.classList.add('is-on'); return; }
+    $('stNtSubmit').disabled = true;
+    try {
+      const r = await api.request('/forum/threads', { method: 'POST', body: JSON.stringify({ category_id, title, content }) });
+      $('stModal').classList.remove('is-open');
+      $('stNtTitle').value = ''; $('stNtBody').value = '';
+      toast('Discussion posted.');
+      postPage = 1;
+      navigate('thread=' + r.thread.id);
+    } catch (e2) {
+      err.textContent = apiErrMessage(e2, 'Could not post. Check the fields and try again.');
+      err.classList.add('is-on');
+    } finally {
+      $('stNtSubmit').disabled = false;
+    }
+  });
+
+  // ============ INIT ============
+  (async () => {
+    try { await api.ready; } catch (e) { /* api.ready never rejects today; belt and braces */ }
+    await loadHome();
+    route();
+  })();
+})();
+</script>
+</body>
+</html>
