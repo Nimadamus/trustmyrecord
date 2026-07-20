@@ -130,6 +130,103 @@ body.tmr-site-shell {
 .hh-compare .hh-val { font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; }
 .hh-compare .hh-val.is-better { color: var(--hh-teal); }
 
+/* ---------------------------------------------------------------------------
+   Matchup Trends section (.hh-tsec) + trend card (.hh-tc)
+   Deliberately built on fresh class names rather than the old .hh-trend block:
+   the design-system layer restyles .hh-trend generically, and these need to own
+   their own density. Every colour goes through a --hh-* token, which the DS
+   layer remaps, so the section themes itself on both the dark base sheet and
+   the light design system without a second rule set.
+   --------------------------------------------------------------------------- */
+.hh-tsec__head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; }
+.hh-tsec__title {
+    margin: 0; font: 800 1rem/1.1 "Barlow Condensed", sans-serif;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--hh-text);
+}
+.hh-tsec__count {
+    font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; color: var(--hh-muted);
+    border: 1px solid var(--hh-line); border-radius: 999px; padding: 2px 9px; white-space: nowrap;
+}
+/* Two-up on wide panels. A single 1,340px-wide column left most of each card
+   empty, which is what made the old section read as a stack of blank boxes. */
+.hh-tsec__list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 520px), 1fr)); gap: 8px; }
+
+/* Card: fixed-width numeric rail + flexible copy column. The rail is what stops
+   the card reading as a blank box — the headline number is the trend. */
+.hh-tc {
+    display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px;
+    align-items: start; padding: 12px 14px;
+    border: 1px solid var(--hh-line); border-left: 3px solid var(--hh-line-strong);
+    border-radius: 10px; background: rgba(255,255,255,0.02);
+}
+.hh-tc.tier-high { border-left-color: var(--hh-teal); }
+.hh-tc.tier-moderate { border-left-color: var(--hh-gold); }
+.hh-tc.tier-supporting { border-left-color: var(--hh-blue); }
+.hh-tc.tier-low { border-left-color: var(--hh-line-strong); }
+
+.hh-tc__rail { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.05; }
+.hh-tc__pct {
+    font: 800 1.5rem/1 "Barlow Condensed", sans-serif; letter-spacing: -0.01em;
+    color: var(--hh-text); font-variant-numeric: tabular-nums;
+}
+.hh-tc__rec {
+    margin-top: 3px; font-size: 0.78rem; font-weight: 700; color: var(--hh-muted);
+    font-variant-numeric: tabular-nums;
+}
+.hh-tc__body { min-width: 0; }
+.hh-tc__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.hh-tc__mkt {
+    font: 800 0.7rem/1.2 "Barlow Condensed", sans-serif; letter-spacing: 0.09em;
+    text-transform: uppercase; color: var(--hh-muted);
+}
+.hh-tc__mkt i { font-style: normal; opacity: 0.55; margin: 0 2px; }
+.hh-tc__tags { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.hh-tc__stance, .hh-tc__tier {
+    font: 800 0.6rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.09em;
+    text-transform: uppercase; padding: 4px 8px; border-radius: 999px; white-space: nowrap;
+}
+.hh-tc__stance.is-for { color: var(--hh-green); border: 1px solid var(--hh-green); }
+.hh-tc__stance.is-against { color: var(--hh-red); border: 1px solid var(--hh-red); }
+.hh-tc__stance.is-even { color: var(--hh-muted); border: 1px solid var(--hh-line-strong); }
+.hh-tc__tier { color: var(--hh-muted); border: 1px solid var(--hh-line); }
+.hh-tc.tier-high .hh-tc__tier { color: var(--hh-teal); border-color: var(--hh-teal); }
+
+.hh-tc__claim { margin: 5px 0 0; font-size: 0.9rem; line-height: 1.4; color: var(--hh-text); }
+.hh-tc__meta {
+    display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 5px;
+    font-size: 0.74rem; color: var(--hh-muted); font-variant-numeric: tabular-nums;
+}
+.hh-tc__meta span + span::before { content: "·"; margin-right: 12px; opacity: 0.6; }
+.hh-tc__note { margin: 6px 0 0; font-size: 0.74rem; color: var(--hh-muted); }
+.hh-tc__rel { margin-top: 8px; line-height: 1; }
+.hh-tc__rel summary {
+    cursor: pointer; font-size: 0.74rem; font-weight: 700; color: var(--hh-blue);
+    list-style: none; display: inline-flex; align-items: center; gap: 5px;
+}
+.hh-tc__rel summary::-webkit-details-marker { display: none; }
+.hh-tc__rel summary::before { content: "+"; font-weight: 800; }
+.hh-tc__rel[open] summary::before { content: "–"; }
+.hh-tc__rel ul { margin: 7px 0 0; padding-left: 16px; font-size: 0.78rem; line-height: 1.5; color: var(--hh-muted); }
+
+.hh-tsec__all {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; margin-top: 10px; padding: 11px 16px; cursor: pointer;
+    border: 1px solid var(--hh-line-strong); border-radius: 10px;
+    background: rgba(255,255,255,0.02); color: var(--hh-teal);
+    font: 800 0.82rem/1 inherit; letter-spacing: 0.01em;
+}
+.hh-tsec__all:hover { border-color: var(--hh-teal); }
+.hh-tsec__arrow { transition: transform 0.15s ease; }
+.hh-tsec__all:hover .hh-tsec__arrow { transform: translateX(3px); }
+
+@media (max-width: 560px) {
+    .hh-tc { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 11px 12px; }
+    .hh-tc__rail { flex-direction: row; align-items: baseline; gap: 8px; }
+    .hh-tc__rec { margin-top: 0; }
+    .hh-tc__head { gap: 6px; }
+    .hh-tc__claim { font-size: 0.86rem; }
+}
+
 /* Trends */
 .hh-trend { border: 1px solid var(--hh-line); border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; background: rgba(255,255,255,0.02); }
 .hh-trend__top { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px; }
@@ -263,6 +360,8 @@ body.tmr-site-shell {
 .hh-sub { margin-bottom: 18px; }
 /* Trend block pinned under Overview: separated from the stats above it. */
 .hh-sub--ovtrends { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--hh-line); }
+.hh-tsec--ov { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--hh-line); }
+.hh-tsec + .hh-tsec, .hh-sub + .hh-tsec { margin-top: 18px; }
 .hh-sub__title { margin: 0 0 10px; font: 800 0.74rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.1em; text-transform: uppercase; color: var(--hh-muted); display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .hh-edge { display: inline-block; margin-bottom: 8px; padding: 5px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 800; border: 1px solid var(--hh-line-strong); color: var(--hh-muted); }
 .hh-edge.is-pos { color: var(--hh-green); border-color: rgba(34,197,94,0.45); background: rgba(34,197,94,0.08); }

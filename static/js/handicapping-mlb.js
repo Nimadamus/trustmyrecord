@@ -122,6 +122,31 @@
         if (sec.available === false) return unavailableHtml(sec.reason || fallbackReason, sec.detail);
         return null;
     }
+    /** Provider/metric identifiers arrive as raw snake_case tokens. Readers are
+        bettors, not engineers, so they are humanised before they ever render.
+        Known acronyms and stat names keep their canonical casing. */
+    var LABEL_FIXED = {
+        "mlb_stats_api": "MLB Stats API", "baseball_savant": "Baseball Savant",
+        "espn": "ESPN", "action_network": "Action Network",
+        "xfip": "xFIP", "siera": "SIERA", "xera": "xERA", "fip": "FIP", "wrc+": "wRC+",
+        "era": "ERA", "whip": "WHIP", "ops": "OPS", "woba": "wOBA", "xwoba": "xwOBA",
+        "lhp": "LHP", "rhp": "RHP", "gb%": "GB%", "fb%": "FB%", "nrfi": "NRFI"
+    };
+    function humanLabel(raw) {
+        var s = String(raw === null || raw === undefined ? "" : raw).trim();
+        if (!s) return "";
+        var key = s.toLowerCase();
+        if (LABEL_FIXED[key]) return LABEL_FIXED[key];
+        /* Only reshape machine tokens; prose sentences pass through untouched. */
+        if (/\s/.test(s) && !/_/.test(s)) return s;
+        var parts = s.split(/[_\s]+/).map(function (w) {
+            var lw = w.toLowerCase();
+            return LABEL_FIXED[lw] || w;
+        });
+        var out = parts.join(" ");
+        return out.charAt(0).toUpperCase() + out.slice(1);
+    }
+
     /** Explicit, visible list of metrics the providers do not supply. Short tokens
         render as chips; the API also returns prose entries explaining WHY a metric
         is missing, and those get a readable list instead of an unreadable chip. */
@@ -140,14 +165,14 @@
                 else if (s.length > byKey[key].length) { byKey[key] = s; }
             });
         });
-        var out = order.map(function (k) { return byKey[k]; });
+        var out = order.map(function (k) { return humanLabel(byKey[k]); });
         if (!out.length) return "";
         var prose = out.some(function (m) { return m.length > 40; });
         var body = prose
             ? '<ul class="hh-nm__list">' + out.map(function (m) { return "<li>" + esc(m) + "</li>"; }).join("") + '</ul>'
             : out.map(function (m) { return '<span class="hh-nm__chip">' + esc(m) + '</span>'; }).join("");
         return '<div class="hh-nm">' +
-            '<span class="hh-nm__label">Not available from current providers:</span>' +
+            '<span class="hh-nm__label">Not tracked in this table:</span>' +
             (prose ? "" : " ") + body +
             '</div>';
     }
@@ -155,6 +180,7 @@
         var srcs = [];
         (keys || []).forEach(function (k) {
             var v = d && d.data_sources && d.data_sources[k];
+            v = v ? humanLabel(v) : v;
             if (v && srcs.indexOf(v) < 0) srcs.push(v);
         });
         return srcs.length ? '<p class="hh-src">Source: ' + esc(srcs.join(" · ")) + '</p>' : "";
@@ -228,9 +254,13 @@
             }).join("") + '</dl>' : "") +
             (glance.length ? '<dl class="hh-facts hh-facts--glance"><div class="hh-facts__cap">' + esc(shortTeam(game.away_team)) + ' / ' + esc(shortTeam(game.home_team)) + '</div>' + glance.map(function (f) {
                 return '<div><dt>' + esc(f[0]) + '</dt><dd>' + esc(f[1]) + '</dd></div>';
-            }).join("") + '</dl>' : "") +
-            notAvailableList([ov.unavailable_metrics]) +
-            sourceLine(d, ["pitchers", "handedness"]);
+            }).join("") + '</dl>' : "");
+        /* The overview deliberately renders NO provider-gap list and no source
+           credit. Its gaps (weather, park factor, lineups, line movement) are
+           whole features that simply are not built yet, not columns missing from
+           a table on screen — listing raw feed tokens on a public research page
+           read as a developer TODO and told a bettor nothing. Sections that DO
+           show a stat table still disclose which of its columns are absent. */
     }
 
     /* ---------------- PITCHERS ---------------- */
@@ -520,7 +550,6 @@
             (edgeTxt ? '<div class="hh-edge ' + edgeCls + '">' + esc(edgeTxt) + (edge < 0 ? ' <span class="hh-edge__note">under-performs the baseline (fade signal)</span>' : "") + '</div>' : "") +
             '<div class="hh-trend__stats">' + stats.map(function (s) { return "<span>" + s + "</span>"; }).join("") + '</div>' +
             baseline +
-            (t.data_source ? '<p class="hh-src">Source: ' + esc(t.data_source) + '</p>' : "") +
             games + related +
             '</div>';
     }
@@ -568,12 +597,16 @@
         var total = api + reps.length;
         if (!total) return "";
         var TOP = 3;
-        return '<div class="hh-sub hh-sub--ovtrends">' +
-            '<h4 class="hh-sub__title">TrendSpotter trends <span class="hh-count">verified feed · ' + total + '</span></h4>' +
-            reps.slice(0, TOP).map(trendCardHtml).join("") +
-            '<button type="button" class="hh-viewall" data-gototrends>' +
-                (total > TOP ? 'See all ' + total + ' trends for this matchup' : 'Open the Trends tab') +
-            '</button></div>';
+        return '<section class="hh-tsec hh-tsec--ov">' +
+            '<div class="hh-tsec__head">' +
+                '<h4 class="hh-tsec__title">Matchup Trends</h4>' +
+                '<span class="hh-tsec__count">' + total + ' verified</span>' +
+            '</div>' +
+            '<div class="hh-tsec__list">' + reps.slice(0, TOP).map(trendCardHtml).join("") + '</div>' +
+            '<button type="button" class="hh-tsec__all" data-gototrends>' +
+                '<span>' + (total > TOP ? 'See all ' + total + ' trends' : 'Open the Trends tab') + '</span>' +
+                '<span class="hh-tsec__arrow" aria-hidden="true">→</span>' +
+            '</button></section>';
     }
 
     /* Trends panel order: real trends first, engine notices after. The strict
@@ -595,10 +628,17 @@
         var reps = legacy.length ? rankTrends(legacy) : [];
         if (reps.length) {
             var TOP = 6;
-            out += '<div class="hh-sub"><h4 class="hh-sub__title">TrendSpotter trends <span class="hh-count">verified feed · ' + reps.length + '</span></h4>' +
-                reps.slice(0, TOP).map(trendCardHtml).join("") +
-                (reps.length > TOP ? '<button type="button" class="hh-viewall" data-viewall>View all ' + reps.length + ' TrendSpotter trends</button><div data-more hidden>' + reps.slice(TOP).map(trendCardHtml).join("") + '</div>' : "") +
-                '</div>';
+            out += '<section class="hh-tsec">' +
+                '<div class="hh-tsec__head">' +
+                    '<h4 class="hh-tsec__title">Matchup Trends</h4>' +
+                    '<span class="hh-tsec__count">' + reps.length + ' verified</span>' +
+                '</div>' +
+                '<div class="hh-tsec__list">' + reps.slice(0, TOP).map(trendCardHtml).join("") + '</div>' +
+                (reps.length > TOP
+                    ? '<button type="button" class="hh-tsec__all" data-viewall><span>Show the remaining ' + (reps.length - TOP) + '</span><span class="hh-tsec__arrow" aria-hidden="true">↓</span></button>' +
+                      '<div class="hh-tsec__list" data-more hidden>' + reps.slice(TOP).map(trendCardHtml).join("") + '</div>'
+                    : "") +
+                '</section>';
         }
 
         if (!trends.length) {
@@ -609,8 +649,9 @@
                 ("No trend cleared the engine's thresholds for this matchup" +
                  (hasVal(meta.min_sample) ? " (minimum sample " + meta.min_sample + " games)" : "") + ".");
             if (reps.length) {
-                out += '<p class="hh-src">Strict matchup engine: ' + esc(note) +
-                    (meta.baseline ? " " + esc(meta.baseline) + "." : "") + '</p>';
+                var bl = meta.baseline ? String(meta.baseline) : "";
+                if (bl) bl = " " + bl.charAt(0).toUpperCase() + bl.slice(1) + ".";
+                out += '<p class="hh-src">Strict matchup engine: ' + esc(note) + esc(bl) + '</p>';
             } else {
                 out += '<div class="hh-state hh-state--na"><strong>No verified trends</strong><p>' + esc(note) + '</p>' +
                     (meta.baseline ? '<p class="hh-state__detail">' + esc(meta.baseline) + '</p>' : "") + '</div>';
@@ -631,10 +672,92 @@
     }
     function sideText(t, bucket) {
         if (bucket === "TOTAL" || bucket === "TEAM_TOTAL") {
+            var explicit = String(t.side || "").toUpperCase();
+            if (explicit === "OVER" || explicit === "UNDER") {
+                return { label: explicit === "OVER" ? "Over" : "Under", type: "total" };
+            }
             var over = /over/i.test(t.claim || "") && !/under/i.test((t.claim || "").split(/over/i)[0] || "");
             return { label: over ? "Over" : (/under/i.test(t.claim || "") ? "Under" : "Total"), type: "total" };
         }
         return { label: t.team_abbr || t.team || "", type: "side" };
+    }
+
+    /* ---------------- reader-facing trend copy ----------------
+       The feed ships engineer-grade claim strings: "Los Angeles Dodgers is 7-3
+       on the SPREAD in its last 10 completed games with verified spread lines."
+       Wrong number agreement, a raw market enum, and a data-provenance clause a
+       bettor did not ask for. Every field needed to write the sentence properly
+       is already structured on the trend, so the sentence is rebuilt here and
+       the backend string is only a fallback. Nothing about the DATA changes —
+       record, sample, hit rate and market all still come straight off the feed. */
+    var MARKET_LABEL = { MONEYLINE: "Moneyline", SPREAD: "Run line", TOTAL: "Total", TEAM_TOTAL: "Team total" };
+    /** "Los Angeles Dodgers" -> "Dodgers"; keeps two-word nicknames intact. */
+    function teamNick(name) {
+        var parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+        if (!parts.length) return "";
+        var last = parts[parts.length - 1];
+        if (parts.length > 1 && /^(sox|jays)$/i.test(last)) return parts.slice(-2).join(" ");
+        return last;
+    }
+    function recordWins(rec) {
+        var m = String(rec || "").match(/^(\d+)\s*-\s*(\d+)/);
+        return m ? Number(m[1]) : null;
+    }
+    /** Last-resort cleanup of a backend claim we could not rebuild from fields. */
+    function sanitizeClaim(s) {
+        return String(s || "")
+            .replace(/\bon the SPREAD\b/g, "on the run line")
+            .replace(/\bSPREAD\b/g, "run line")
+            .replace(/\bMONEYLINE\b/g, "moneyline")
+            .replace(/\bTEAM_TOTAL\b/g, "team total")
+            .replace(/\bTOTAL\b/g, "total")
+            .replace(/\s+with verified [a-z- ]*lines\b/gi, "")
+            .replace(/\bin its last\b/g, "in their last")
+            .replace(/^(.*?) is (\d+-\d+)/, "The $1 are $2");
+    }
+    function trendStatement(t, bucket, side) {
+        var nick = teamNick(t.team_abbr || t.team || "");
+        var n = Number(t.sample) || 0;
+        var rec = String(t.record || "");
+        var wins = recordWins(rec);
+        var kind = String(t.kind || t.trend_type || "").toUpperCase();
+        var span = kind === "HOME" ? "home games" : kind === "AWAY" ? "road games" : "games";
+        if (!nick || !n || !rec) return sanitizeClaim(t.claim);
+        if (bucket === "MONEYLINE") {
+            return "The " + nick + " are " + rec + " straight up over their last " + n + " " + span + ".";
+        }
+        if (bucket === "SPREAD") {
+            return "The " + nick + " are " + rec + " against the run line over their last " + n + " " + span + ".";
+        }
+        if (wins === null) return sanitizeClaim(t.claim);
+        if (bucket === "TOTAL") {
+            return nick + " games have gone " + side.label + " in " + wins + " of the last " + n + ".";
+        }
+        return "The " + nick + " have gone " + side.label + " their team total in " + wins +
+            " of their last " + n + " games.";
+    }
+    /** "Supports" is a claim about direction and is only earned above 50%.
+        A losing split is still worth showing — it is a fade signal — but saying
+        a 4-6 run-line record "supports" that side is simply false. */
+    function trendStance(rel, side) {
+        var wp = Number(rel.wp);
+        /* The card head already names the team, so a team-side badge only has to
+           carry the direction; totals still need Over/Under spelled out. */
+        var who = side.type === "total" ? (side.label || "") : "";
+        if (isNaN(wp) || (side.type === "total" && !who)) return null;
+        var suffix = who ? " " + who : "";
+        if (wp > 0.5) return { cls: "is-for", text: "Supports" + suffix };
+        if (wp < 0.5) return { cls: "is-against", text: "Fades" + suffix };
+        return { cls: "is-even", text: "Even split" };
+    }
+    var MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    /** "2026-06-13 to 2026-07-19" -> "Jun 13 – Jul 19". Returns "" if unparsable. */
+    function compactRange(dr) {
+        var m = String(dr || "").match(/(\d{4})-(\d{2})-(\d{2}).*?(\d{4})-(\d{2})-(\d{2})/);
+        if (!m) return "";
+        var a = MON[Number(m[2]) - 1] + " " + Number(m[3]);
+        var b = MON[Number(m[5]) - 1] + " " + Number(m[6]);
+        return a === b ? a : a + " – " + b;
     }
     function relevance(t, bucket) {
         var sample = Number(t.sample) || 0;
@@ -660,13 +783,31 @@
         else if (score >= 6.5 && sample >= 5) tier = "moderate";
         else if (score >= 5 && sample >= 4) tier = "supporting";
         else tier = "low";
+        /* A split within a hair of even is noise however good the rest of the
+           score looks — a 5-5 record dressed as "moderate" is the exact kind of
+           false confidence this panel is supposed to avoid. */
+        if (!isNaN(wp) && Math.abs(wp - 0.5) < 0.06) tier = "low";
         return { score: score, tier: tier, sample: sample, wp: wp, dataMined: dataMined };
     }
     var TIER_RANK = { high: 0, moderate: 1, supporting: 2, low: 3 };
     function rankTrends(trends) {
         var enriched = trends.map(function (t) {
             var bucket = marketBucket(t);
-            return { t: t, bucket: bucket, rel: relevance(t, bucket), side: sideText(t, bucket) };
+            var side = sideText(t, bucket);
+            var e = { t: t, bucket: bucket, rel: relevance(t, bucket), side: side };
+            e.statement = trendStatement(t, bucket, side);
+            return e;
+        });
+        /* The slate feed carries the same trend more than once when a game has
+           both an ESPN and an Action Network row. Left alone that inflated the
+           "N verified" count and filled every card's related list with copies of
+           the card above it. Identical statement = same finding, keep one. */
+        var seenStatement = {};
+        enriched = enriched.filter(function (e) {
+            var k = (e.statement || "").toLowerCase();
+            if (!k || seenStatement[k]) return false;
+            seenStatement[k] = true;
+            return true;
         });
         var groups = {};
         enriched.forEach(function (e) {
@@ -686,33 +827,51 @@
         });
         return reps;
     }
+    var TIER_LABEL = { high: "High relevance", moderate: "Moderate", supporting: "Context", low: "Weak signal" };
     function trendCardHtml(e) {
         var t = e.t, rel = e.rel;
-        var relLabel = { high: "High Relevance", moderate: "Moderate", supporting: "Supporting", low: "Low Sample" }[rel.tier];
-        var sideLabel = e.side.type === "total"
-            ? ("Supports " + esc(e.side.label))
-            : ("Supports " + esc(e.side.label) + " " + esc(e.bucket === "MONEYLINE" ? "ML" : e.bucket === "SPREAD" ? "run line" : ""));
+        var subject = e.side.type === "total"
+            ? teamNick(t.team_abbr || t.team || "")
+            : teamNick(e.side.label);
+        var market = MARKET_LABEL[e.bucket] || e.bucket.replace(/_/g, " ");
+        var stance = trendStance(rel, e.side);
         var pct = isNaN(rel.wp) ? "" : Math.round(rel.wp * 100) + "%";
-        var why = (t.applies_because && t.applies_because.length) ? t.applies_because[0] : "";
+        var range = compactRange(t.date_range);
+
         var related = "";
         if (e.related && e.related.length) {
-            related = '<details class="hh-trend__related"><summary>' + e.related.length + ' related trend' + (e.related.length > 1 ? "s" : "") + '</summary><ul>' +
-                e.related.map(function (r) { return "<li>" + esc(r.t.claim || "") + " (" + esc(r.t.record || "") + ")</li>"; }).join("") + '</ul></details>';
+            related = '<details class="hh-tc__rel"><summary>' + e.related.length + ' related trend' +
+                (e.related.length > 1 ? "s" : "") + '</summary><ul>' +
+                e.related.map(function (r) {
+                    var rb = r.bucket || marketBucket(r.t);
+                    return "<li>" + esc(r.statement || trendStatement(r.t, rb, r.side || sideText(r.t, rb))) + "</li>";
+                }).join("") + '</ul></details>';
         }
-        var mined = rel.dataMined ? '<p class="hh-trend__why">Situational scoring split, shown as context rather than a predictive edge.</p>' : "";
-        return '<div class="hh-trend">' +
-            '<div class="hh-trend__top"><span class="hh-trend__side">' + sideLabel + '</span><span class="hh-trend__rel rel-' + rel.tier + '">' + relLabel + '</span></div>' +
-            '<p class="hh-trend__claim">' + esc(t.claim || "") + '</p>' +
-            '<div class="hh-trend__stats">' +
-                (t.record ? '<span>Record <b>' + esc(t.record) + '</b></span>' : "") +
-                (pct ? '<span>Hit <b>' + pct + '</b></span>' : "") +
-                (rel.sample ? '<span>Sample <b>' + rel.sample + '</b></span>' : "") +
-                (t.date_range ? '<span>Range <b>' + esc(t.date_range) + '</b></span>' : "") +
-                '<span>Market <b>' + esc(e.bucket.replace("_", " ")) + '</b></span>' +
+        /* Situational scoring splits are context, not an edge, and say so once. */
+        var mined = rel.dataMined
+            ? '<p class="hh-tc__note">Situational scoring split, shown as context rather than an edge.</p>' : "";
+
+        return '<article class="hh-tc tier-' + rel.tier + '">' +
+            '<div class="hh-tc__rail">' +
+                (pct ? '<span class="hh-tc__pct">' + pct + '</span>' : "") +
+                (t.record ? '<span class="hh-tc__rec">' + esc(t.record) + '</span>' : "") +
             '</div>' +
-            (why ? '<p class="hh-trend__why">' + esc(why) + '</p>' : "") +
-            mined + related +
-            '</div>';
+            '<div class="hh-tc__body">' +
+                '<div class="hh-tc__head">' +
+                    '<span class="hh-tc__mkt">' + (subject ? esc(subject) + ' <i>·</i> ' : "") + esc(market) + '</span>' +
+                    '<span class="hh-tc__tags">' +
+                        (stance ? '<span class="hh-tc__stance ' + stance.cls + '">' + esc(stance.text) + '</span>' : "") +
+                        '<span class="hh-tc__tier">' + esc(TIER_LABEL[rel.tier] || rel.tier) + '</span>' +
+                    '</span>' +
+                '</div>' +
+                '<p class="hh-tc__claim">' + esc(e.statement || trendStatement(t, e.bucket, e.side)) + '</p>' +
+                '<div class="hh-tc__meta">' +
+                    (rel.sample ? '<span>' + rel.sample + ' game' + (rel.sample === 1 ? "" : "s") + '</span>' : "") +
+                    (range ? '<span>' + esc(range) + '</span>' : "") +
+                '</div>' +
+                mined + related +
+            '</div>' +
+        '</article>';
     }
 
     /* ---------------- MARKETS ---------------- */
