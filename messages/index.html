@@ -336,6 +336,18 @@
             border-bottom-right-radius: 3px;
         }
         .msg-bubble-time { font-size: 0.68rem; margin-top: 4px; opacity: 0.7; }
+        .msg-bubble-delete {
+            position: absolute; top: 50%; left: -30px; transform: translateY(-50%);
+            width: 24px; height: 24px; border-radius: 50%;
+            display: none; align-items: center; justify-content: center;
+            background: var(--msg-surface-3); border: 1px solid var(--msg-border);
+            color: var(--msg-text-muted); cursor: pointer; padding: 0;
+        }
+        .msg-bubble-delete svg { width: 13px; height: 13px; }
+        .msg-bubble-delete:hover { color: var(--msg-danger); border-color: var(--msg-danger); }
+        .msg-bubble.sent { position: relative; }
+        .msg-bubble.sent:hover .msg-bubble-delete, .msg-bubble.sent:focus-within .msg-bubble-delete { display: flex; }
+        @media (hover: none) { .msg-bubble.sent .msg-bubble-delete { display: flex; opacity: 0.65; } }
 
         /* ---------- Composer (sticky bottom of pane) ---------- */
         #chatInputArea {
@@ -686,7 +698,7 @@
     </div>
 
     <script src="/static/js/config.js?v=20260421a"></script>
-    <script src="/static/js/backend-api.js?v=20260525noautologout"></script>
+    <script src="/static/js/backend-api.js?v=20260719delmsg"></script>
     <script src="/static/js/auth-persistent.js?v=20260525noautologout"></script>
     <script>
         let currentUser = null;
@@ -1020,8 +1032,13 @@
                 const day = dayLabel(msg.created_at);
                 if (day && day !== lastDay) { parts.push('<div class="msg-day-sep">' + escapeHtml(day) + '</div>'); lastDay = day; }
                 const isSent = idEq(msg.sender_id, currentUser.id);
+                const deleteBtn = (isSent && msg.id) ?
+                    '<button type="button" class="msg-bubble-delete" title="Delete message" aria-label="Delete message" onclick="deleteOwnMessage(' + jsStr(msg.id) + ')">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+                    '</button>' : '';
                 parts.push(
                     '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' +
+                        deleteBtn +
                         '<div class="msg-bubble-content">' + linkify(msg.content) + '</div>' +
                         '<div class="msg-bubble-time">' + escapeHtml(formatTime(msg.created_at)) + '</div>' +
                     '</div>'
@@ -1059,6 +1076,22 @@
             } finally {
                 sendBtn.disabled = false;
                 sendBtn.textContent = 'Send';
+            }
+        }
+
+        async function deleteOwnMessage(messageId) {
+            if (!messageId || !activeConversationUserId) return;
+            if (!confirm('Delete this message? This cannot be undone.')) return;
+            try {
+                if (api && typeof api.deleteMessage === 'function') {
+                    await api.deleteMessage(messageId);
+                }
+                await loadChatMessages(activeConversationUserId, false);
+                await loadConversations();
+                refreshMailboxBadge();
+            } catch (e) {
+                console.error('Failed to delete message:', e);
+                alert((e && e.message) ? e.message : 'Failed to delete message. Please try again.');
             }
         }
 
