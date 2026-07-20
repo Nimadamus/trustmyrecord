@@ -212,6 +212,7 @@ try {
     $sportsbook = Get-Content -LiteralPath "sportsbook/index.html" -Raw
     $handicappers = Get-Content -LiteralPath "handicappers/index.html" -Raw
     $reliability = Get-Content -LiteralPath "static/js/sportsbook-production-fix-persist-reliability.js" -Raw
+    $homeIndex = Get-Content -LiteralPath "index.html" -Raw
 
     Assert-Match "Product Upgrade System" $productSystem "Design Bible" "Design Bible section is missing."
     Assert-Match "Product Upgrade System" $productSystem "UX Rubric" "UX Rubric section is missing."
@@ -257,7 +258,18 @@ try {
     Assert-MatchStaleQuarantine "Handicappers" $handicappers "Minimum 20 graded picks" "ranking eligibility copy was rewritten; specific 20-pick wording no longer used"
     Assert-Match "Handicappers" $handicappers "positive net units" "positive-unit rank eligibility copy is missing."
 
-    Write-Output "Predeploy guard passed: clean current main, Windows-safe tree, profile, handicappers, simulator, sportsbook, and regression tests are intact."
+    # Homepage atomicity. GitHub Pages ignores ?v= query strings, so a browser
+    # holding a stale index.html (Cache-Control: max-age=600) would otherwise
+    # pair old markup with current CSS/JS and render a broken page. The homepage
+    # CSS must stay inlined and the homepage JS must stay content-hashed.
+    Assert-Match "Homepage" $homeIndex "BEGIN HOME CRITICAL CSS" "homepage critical CSS is no longer inlined - run: python scripts/build_home_critical.py"
+    Assert-NoMatch "Homepage" $homeIndex "tmr-home-(auth|live)\.js\?" "homepage JS reverted to ?v= busting, which GitHub Pages ignores - run: python scripts/build_home_critical.py"
+    & python scripts/build_home_critical.py --check
+    if ($LASTEXITCODE -ne 0) {
+        throw "Homepage guard failed: index.html is out of sync with the homepage CSS/JS. Run: python scripts/build_home_critical.py"
+    }
+
+    Write-Output "Predeploy guard passed: clean current main, Windows-safe tree, homepage atomicity, profile, handicappers, simulator, sportsbook, and regression tests are intact."
 }
 finally {
     Pop-Location
