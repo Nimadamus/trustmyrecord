@@ -433,6 +433,10 @@ body.tmr-ds .hm-foot-note a{color:var(--brand-dk);font-weight:800}
   body.tmr-ds .hm-header{padding:20px 18px;gap:18px}
   body.tmr-ds .hm-header-text h1{font-size:26px}
   body.tmr-ds .hm-metric strong{font-size:20px}
+  /* Two tiles per row leaves room to wrap, so stop truncating the labels —
+     "Verified Handi…" and "Total Graded P…" are unreadable. Desktop keeps the
+     single-line ellipsis because the 5-up grid is genuinely narrow. */
+  body.tmr-ds .hm-metric span{white-space:normal;overflow:visible;text-overflow:clip}
 
   /* mobile card-stack rows keep the shared card treatment */
   body.tmr-ds .hm-row{
