@@ -513,7 +513,16 @@
                     var headline = (document.getElementById('headlineValue').value || '').trim();
                     var favoriteSports = (typeof window.collectFavSports === 'function') ? window.collectFavSports() : [];
                     var favoriteTeams = (typeof window.collectFavTeams === 'function') ? window.collectFavTeams() : [];
-                    const data = await window.api.register({ username, email, password, headline, favoriteSports, favoriteTeams });
+                    var signupSource = null;
+                    try { signupSource = JSON.parse(localStorage.getItem('tmr_first_touch')); } catch (error) {}
+                    const data = await window.api.register({ username, email, password, headline, favoriteSports, favoriteTeams, signupSource });
+                    try {
+                        if (window.TMRAnalytics) {
+                            window.TMRAnalytics.signUpCompleted({
+                                source: (signupSource && (signupSource.utm_source || signupSource.referrer)) || 'direct'
+                            });
+                        }
+                    } catch (error) {}
                     if (data && data.user && (data.accessToken || data.access_token || data.tokens)) {
                         await persistBackendLogin(data.user);
                         var ru = data.user || {};
@@ -541,6 +550,6 @@
             });
         })();
     </script>
-<script src="/static/js/analytics.js?v=20260504a"></script>
+<script src="/static/js/analytics.js?v=20260719ft"></script>
 </body>
 </html>

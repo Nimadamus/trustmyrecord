@@ -280,6 +280,38 @@
     }
 
     // =========================================================================
+    // FIRST-TOUCH ATTRIBUTION
+    // Captured once per browser on the first page ever visited, so the signup
+    // form can report where the user originally came from.
+    // =========================================================================
+
+    function captureFirstTouch() {
+        try {
+            if (localStorage.getItem('tmr_first_touch')) return;
+            const params = new URLSearchParams(window.location.search);
+            const touch = {
+                referrer: (document.referrer || '').slice(0, 500),
+                landing: (window.location.pathname + window.location.search).slice(0, 500),
+                ts: new Date().toISOString()
+            };
+            ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(function (key) {
+                const value = params.get(key);
+                if (value) touch[key] = value.slice(0, 500);
+            });
+            localStorage.setItem('tmr_first_touch', JSON.stringify(touch));
+        } catch (e) { /* storage unavailable */ }
+    }
+
+    function getFirstTouch() {
+        try {
+            const raw = localStorage.getItem('tmr_first_touch');
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    // =========================================================================
     // HELPER: GET CURRENT USER
     // =========================================================================
 
@@ -302,6 +334,7 @@
     const TMRAnalytics = {
         // --- Initialization ---
         init: function () {
+            captureFirstTouch();
             initGA4();
             initGTM();
             trackRouteViewed(getPagePath());
@@ -676,6 +709,7 @@
 
         track: trackEvent,
         pageView: trackPageView,
+        getFirstTouch: getFirstTouch,
         setUser: setUserProperties,
         debugStatus: function () {
             const status = {
