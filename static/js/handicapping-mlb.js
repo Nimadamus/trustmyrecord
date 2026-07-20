@@ -557,6 +557,30 @@
         });
     }
 
+    /* Compact trend block pinned under Overview so opening a matchup shows the
+       research dashboard AND its verified trends without a second click. Same
+       ranked data the Trends tab renders — top 3, then a jump to the full tab.
+       Renders nothing at all when there is no trend to show. */
+    function overviewTrendsHtml(d, game) {
+        var api = (d.trends || []).length;
+        var legacy = STATE.trendsByMatchup[game.matchupKey] || [];
+        var reps = legacy.length ? rankTrends(legacy) : [];
+        var total = api + reps.length;
+        if (!total) return "";
+        var TOP = 3;
+        return '<div class="hh-sub hh-sub--ovtrends">' +
+            '<h4 class="hh-sub__title">TrendSpotter trends <span class="hh-count">verified feed · ' + total + '</span></h4>' +
+            reps.slice(0, TOP).map(trendCardHtml).join("") +
+            '<button type="button" class="hh-viewall" data-gototrends>' +
+                (total > TOP ? 'See all ' + total + ' trends for this matchup' : 'Open the Trends tab') +
+            '</button></div>';
+    }
+
+    /* Trends panel order: real trends first, engine notices after. The strict
+       matchup engine and the TrendSpotter slate feed run different thresholds,
+       so the engine returning nothing while the feed has verified trends is
+       normal — leading with its "no verified trends" state made a panel holding
+       real trends read as empty. Nothing about the data itself changes here. */
     function trendsHtml(d, game, uid) {
         var out = "";
         var trends = d.trends || [];
@@ -564,27 +588,35 @@
         if (trends.length) {
             out += '<div class="hh-sub"><h4 class="hh-sub__title">Verified trends <span class="hh-count">' + trends.length + ' cleared the engine</span></h4>' +
                 trends.map(function (t, i) { return apiTrendHtml(t, i, uid); }).join("") + '</div>';
-        } else {
-            /* No invented filler. State the engine's real reason + real thresholds. */
+        }
+
+        /* TrendSpotter slate feed, kept alive alongside the verified engine. */
+        var legacy = STATE.trendsByMatchup[game.matchupKey] || [];
+        var reps = legacy.length ? rankTrends(legacy) : [];
+        if (reps.length) {
+            var TOP = 6;
+            out += '<div class="hh-sub"><h4 class="hh-sub__title">TrendSpotter trends <span class="hh-count">verified feed · ' + reps.length + '</span></h4>' +
+                reps.slice(0, TOP).map(trendCardHtml).join("") +
+                (reps.length > TOP ? '<button type="button" class="hh-viewall" data-viewall>View all ' + reps.length + ' TrendSpotter trends</button><div data-more hidden>' + reps.slice(TOP).map(trendCardHtml).join("") + '</div>' : "") +
+                '</div>';
+        }
+
+        if (!trends.length) {
+            /* No invented filler. State the engine's real reason + real thresholds.
+               Demoted to a footnote when the feed already supplied trends above,
+               kept as the full empty state when the panel is genuinely empty. */
             var note = meta.note ||
                 ("No trend cleared the engine's thresholds for this matchup" +
                  (hasVal(meta.min_sample) ? " (minimum sample " + meta.min_sample + " games)" : "") + ".");
-            out += '<div class="hh-state hh-state--na"><strong>No verified trends</strong><p>' + esc(note) + '</p>' +
-                (meta.baseline ? '<p class="hh-state__detail">' + esc(meta.baseline) + '</p>' : "") + '</div>';
-        }
-        if (meta.baseline && trends.length) {
+            if (reps.length) {
+                out += '<p class="hh-src">Strict matchup engine: ' + esc(note) +
+                    (meta.baseline ? " " + esc(meta.baseline) + "." : "") + '</p>';
+            } else {
+                out += '<div class="hh-state hh-state--na"><strong>No verified trends</strong><p>' + esc(note) + '</p>' +
+                    (meta.baseline ? '<p class="hh-state__detail">' + esc(meta.baseline) + '</p>' : "") + '</div>';
+            }
+        } else if (meta.baseline) {
             out += '<p class="hh-src">Baseline: ' + esc(meta.baseline) + '</p>';
-        }
-
-        /* Legacy TrendSpotter slate feed, kept alive alongside the verified engine. */
-        var legacy = STATE.trendsByMatchup[game.matchupKey] || [];
-        if (legacy.length) {
-            var reps = rankTrends(legacy);
-            var TOP = 6;
-            out += '<div class="hh-sub"><h4 class="hh-sub__title">Slate trends <span class="hh-count">TrendSpotter feed · ' + reps.length + '</span></h4>' +
-                reps.slice(0, TOP).map(trendCardHtml).join("") +
-                (reps.length > TOP ? '<button type="button" class="hh-viewall" data-viewall>View all ' + reps.length + ' slate trends</button><div data-more hidden>' + reps.slice(TOP).map(trendCardHtml).join("") + '</div>' : "") +
-                '</div>';
         }
         return out;
     }
@@ -925,7 +957,12 @@
             });
         }
         function paint(d) {
-            P.overview.innerHTML = overviewHtml(d, game);
+            P.overview.innerHTML = overviewHtml(d, game) + overviewTrendsHtml(d, game);
+            var goTrends = P.overview.querySelector("[data-gototrends]");
+            if (goTrends) goTrends.addEventListener("click", function () {
+                var tab = bodyEl.querySelector("#tab-" + uid + "-trends");
+                if (tab) { tab.click(); tab.scrollIntoView({ behavior: "smooth", block: "center" }); }
+            });
             P.pitchers.innerHTML = pitchersHtml(d, game);
             P.offense.innerHTML = offenseHtml(d, game);
             P.bullpens.innerHTML = bullpensHtml(d, game);
