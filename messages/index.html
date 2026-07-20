@@ -346,8 +346,41 @@
         .msg-bubble-delete svg { width: 13px; height: 13px; }
         .msg-bubble-delete:hover { color: var(--msg-danger); border-color: var(--msg-danger); }
         .msg-bubble.sent { position: relative; }
+        .msg-bubble.received { position: relative; }
         .msg-bubble.sent:hover .msg-bubble-delete, .msg-bubble.sent:focus-within .msg-bubble-delete { display: flex; }
         @media (hover: none) { .msg-bubble.sent .msg-bubble-delete { display: flex; opacity: 0.65; } }
+        .msg-bubble-react {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            width: 24px; height: 24px; border-radius: 50%;
+            display: none; align-items: center; justify-content: center;
+            background: var(--msg-surface-3); border: 1px solid var(--msg-border);
+            color: var(--msg-text-muted); cursor: pointer; padding: 0; font-size: 0.8rem; line-height: 1;
+        }
+        .msg-bubble-react:hover { color: var(--msg-text); border-color: var(--msg-text-muted); }
+        .msg-bubble.received .msg-bubble-react { right: -30px; }
+        .msg-bubble.sent .msg-bubble-react { left: -30px; }
+        .msg-bubble.sent .msg-bubble-delete { left: -58px; }
+        .msg-bubble:hover .msg-bubble-react, .msg-bubble:focus-within .msg-bubble-react { display: flex; }
+        @media (hover: none) { .msg-bubble .msg-bubble-react { display: flex; opacity: 0.65; } }
+        .msg-reactions { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
+        .msg-reaction-chip {
+            display: inline-flex; align-items: center; gap: 3px;
+            font-size: 0.72rem; padding: 1px 7px; border-radius: 12px;
+            background: rgba(0,0,0,0.18); border: 1px solid transparent;
+            cursor: pointer; color: inherit; line-height: 1.5;
+        }
+        .msg-reaction-chip.mine { border-color: currentColor; }
+        .msg-react-palette {
+            position: fixed; z-index: 300; display: flex; gap: 2px;
+            background: var(--msg-surface-3); border: 1px solid var(--msg-border);
+            border-radius: 18px; padding: 4px 6px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+        }
+        .msg-react-palette button {
+            background: none; border: none; font-size: 1.05rem; line-height: 1;
+            cursor: pointer; padding: 3px 5px; border-radius: 8px;
+        }
+        .msg-react-palette button:hover { background: rgba(255,255,255,0.08); }
 
         /* ---------- Composer (sticky bottom of pane) ---------- */
         #chatInputArea {
@@ -698,7 +731,7 @@
     </div>
 
     <script src="/static/js/config.js?v=20260421a"></script>
-    <script src="/static/js/backend-api.js?v=20260719delmsg"></script>
+    <script src="/static/js/backend-api.js?v=20260719reactions"></script>
     <script src="/static/js/auth-persistent.js?v=20260525noautologout"></script>
     <script>
         let currentUser = null;
@@ -1036,10 +1069,16 @@
                     '<button type="button" class="msg-bubble-delete" title="Delete message" aria-label="Delete message" onclick="deleteOwnMessage(' + jsStr(msg.id) + ')">' +
                         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
                     '</button>' : '';
+                const canReact = msg.id && api && typeof api.reactToMessage === 'function';
+                const reactBtn = canReact ?
+                    '<button type="button" class="msg-bubble-react" title="React" aria-label="React to message" onclick="openReactionPalette(event, ' + jsStr(msg.id) + ')">' +
+                        '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' +
+                    '</button>' : '';
                 parts.push(
                     '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' +
-                        deleteBtn +
+                        deleteBtn + reactBtn +
                         '<div class="msg-bubble-content">' + linkify(msg.content) + '</div>' +
+                        reactionChips(msg) +
                         '<div class="msg-bubble-time">' + escapeHtml(formatTime(msg.created_at)) + '</div>' +
                     '</div>'
                 );
@@ -1076,6 +1115,57 @@
             } finally {
                 sendBtn.disabled = false;
                 sendBtn.textContent = 'Send';
+            }
+        }
+
+        // ---- Message reactions ----
+        const REACTION_EMOJI = { like: '👍', love: '❤️', laugh: '😂', wow: '😮', sad: '😢', fire: '🔥' };
+
+        function reactionChips(msg) {
+            const rs = msg.reactions || [];
+            if (!rs.length) return '';
+            return '<div class="msg-reactions">' + rs.map(r =>
+                '<button type="button" class="msg-reaction-chip' + (r.mine ? ' mine' : '') + '" ' +
+                    'title="' + escapeAttr(r.reaction) + '" ' +
+                    'onclick="toggleReaction(' + jsStr(msg.id) + ', ' + jsStr(r.reaction) + ')">' +
+                    (REACTION_EMOJI[r.reaction] || '') + ' ' + r.count +
+                '</button>'
+            ).join('') + '</div>';
+        }
+
+        function openReactionPalette(ev, messageId) {
+            ev.stopPropagation();
+            closeReactionPalette();
+            const pal = document.createElement('div');
+            pal.className = 'msg-react-palette';
+            pal.id = 'reactPalette';
+            pal.innerHTML = Object.keys(REACTION_EMOJI).map(key =>
+                '<button type="button" title="' + escapeAttr(key) + '" onclick="toggleReaction(' + jsStr(messageId) + ', ' + jsStr(key) + ')">' + REACTION_EMOJI[key] + '</button>'
+            ).join('');
+            document.body.appendChild(pal);
+            const rect = ev.currentTarget.getBoundingClientRect();
+            const palWidth = 6 * 34 + 12;
+            let left = rect.left + rect.width / 2 - palWidth / 2;
+            left = Math.max(8, Math.min(left, window.innerWidth - palWidth - 8));
+            pal.style.left = left + 'px';
+            pal.style.top = Math.max(8, rect.top - 44) + 'px';
+        }
+        function closeReactionPalette() {
+            const pal = document.getElementById('reactPalette');
+            if (pal) pal.remove();
+        }
+        document.addEventListener('click', closeReactionPalette);
+        document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeReactionPalette(); });
+
+        async function toggleReaction(messageId, reaction) {
+            closeReactionPalette();
+            if (!api || typeof api.reactToMessage !== 'function' || !activeConversationUserId) return;
+            try {
+                await api.reactToMessage(messageId, reaction);
+                await loadChatMessages(activeConversationUserId, false);
+            } catch (e) {
+                console.error('Failed to react:', e);
+                alert((e && e.message) ? e.message : 'Failed to react. Please try again.');
             }
         }
 
