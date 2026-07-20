@@ -331,3 +331,138 @@ html body .is-loss, html body .loss, html body .negative, html body .tmr-negativ
   html body .tmr-board-card table th,
   html body .tmr-board-card table td{ padding:12px 16px; }
 }
+
+/* ==========================================================================
+   FIX PASS — elements whose colour came from inline style= attributes or
+   from tag selectors my first pass missed. Presentation only.
+   ========================================================================== */
+
+/* ---- Community band: heading + card titles were white-on-white ---- */
+html body .tmr-community-band h2{ color:var(--v2-ink) !important; }
+html body .tmr-community-band h2 span,
+html body .tmr-community-band h2 em{ color:var(--v2-brand-dk) !important; }
+html body .tmr-community-band h3,
+html body .tmr-community-band h4{ color:var(--v2-ink) !important; font-weight:900; letter-spacing:-.03em; }
+html body .tmr-community-band p,
+html body .tmr-community-band small,
+html body .tmr-community-band li{ color:var(--v2-ink-2) !important; }
+html body .tmr-community-band .tcb-head p{ color:var(--v2-ink-2) !important; }
+
+/* ---- Proof cards: h2/b were white on the new white panel ---- */
+html body .tmr-premium-proof-cards article h2,
+html body .tmr-premium-proof-cards article h3,
+html body .tmr-premium-proof-cards article b,
+html body .tmr-premium-proof-cards article strong{ color:var(--v2-ink) !important; }
+html body .tmr-premium-proof-cards article p,
+html body .tmr-premium-proof-cards article span,
+html body .tmr-premium-proof-cards article small,
+html body .tmr-premium-proof-cards article em,
+html body .tmr-premium-proof-cards article li{ color:var(--v2-ink-2) !important; }
+/* nested mini panels inside the proof cards */
+html body .tmr-premium-proof-cards .tmr-result-table,
+html body .tmr-premium-proof-cards .tmr-mini-ticket{
+  background:var(--v2-panel-2) !important;
+  border:1px solid var(--v2-line) !important;
+  border-radius:var(--v2-r-sm) !important;
+}
+html body .tmr-premium-proof-cards .tmr-result-table span,
+html body .tmr-premium-proof-cards .tmr-result-table b{ color:var(--v2-ink-2) !important; }
+html body .tmr-premium-proof-cards .tmr-result-table b:first-child{ color:var(--v2-ink) !important; }
+/* keep the green "verified/positive" marks green */
+html body .tmr-premium-proof-cards mark{
+  color:var(--v2-green) !important; background:var(--v2-green-soft) !important;
+}
+html body .tmr-premium-proof-cards .tmr-result-table b[style*="105,238,143"],
+html body .tmr-premium-proof-cards b[style*="105,238,143"]{ color:var(--v2-green) !important; }
+
+/* ---- Explore heading ---- */
+html body .tmr-explore h2{ color:var(--v2-ink) !important; }
+html body .tmr-explore h2 span,
+html body .tmr-explore h2 em{ color:var(--v2-brand-dk) !important; }
+
+/* ---- Integrity + Arena: inline style="" backgrounds need !important ---- */
+html body .tmr-account-integrity-note{
+  background:var(--v2-red-soft) !important;
+  border:1px solid rgba(188,55,46,.30) !important;
+  border-radius:var(--v2-r) !important;
+  color:var(--v2-ink) !important;
+  max-width:var(--v2-max) !important;
+  width:auto !important;
+}
+html body .tmr-account-integrity-note strong,
+html body .tmr-account-integrity-note b{ color:var(--v2-ink) !important; }
+html body .tmr-account-integrity-note span,
+html body .tmr-account-integrity-note p,
+html body .tmr-account-integrity-note div{ color:var(--v2-ink-2) !important; }
+
+html body .tmr-arena-promo{
+  background:var(--v2-panel) !important;
+  border:1px solid var(--v2-edge) !important;
+  border-radius:var(--v2-r) !important;
+  box-shadow:var(--v2-sh) !important;
+  color:var(--v2-ink) !important;
+  max-width:var(--v2-max) !important;
+  width:auto !important;
+}
+html body .tmr-arena-promo strong,
+html body .tmr-arena-promo b{ color:var(--v2-ink) !important; }
+html body .tmr-arena-promo span,
+html body .tmr-arena-promo p,
+html body .tmr-arena-promo div{ color:var(--v2-ink-2) !important; }
+
+/* ---- tmrhx band: stays dark (approved), but the leaderboard preview card
+        becomes a white panel so records/units/ROI are scannable ---- */
+html body .tmrhx-card.tmrhx-board{
+  background:var(--v2-panel) !important;
+  border:1px solid var(--v2-edge) !important;
+  border-radius:var(--v2-r) !important;
+  color:var(--v2-ink) !important;
+}
+html body .tmrhx-board h3,
+html body .tmrhx-board h4,
+html body .tmrhx-board b,
+html body .tmrhx-board strong{ color:var(--v2-ink) !important; }
+html body .tmrhx-board p,
+html body .tmrhx-board small,
+html body .tmrhx-board span:not(.g){ color:var(--v2-ink-2) !important; }
+html body .tmrhx-board a{ color:var(--v2-brand-dk) !important; font-weight:800; }
+html body .tmrhx-board table th{
+  background:var(--v2-panel-2) !important; color:var(--v2-muted) !important;
+  border-bottom:1px solid var(--v2-line) !important;
+}
+html body .tmrhx-board table td{
+  border-bottom:1px solid var(--v2-line) !important; color:var(--v2-ink) !important;
+}
+html body .tmrhx-board table tr:hover td{ background:var(--v2-panel-2) !important; }
+/* live-highlight rows inside the board card */
+html body .tmrhx-board .tmr-activity-row,
+html body .tmrhx-board [class*="highlight"]{
+  background:var(--v2-panel-2) !important;
+  border:1px solid var(--v2-line) !important;
+  border-radius:var(--v2-r-sm) !important;
+  color:var(--v2-ink) !important;
+}
+html body .tmrhx-board .tmr-activity-row b{ color:var(--v2-ink) !important; }
+/* positive/negative stay semantic inside the board */
+html body .tmrhx-board .pos, html body .tmrhx-board [class*="pos"]{ color:var(--v2-green) !important; }
+html body .tmrhx-board .neg, html body .tmrhx-board [class*="neg"]{ color:var(--v2-red) !important; }
+
+/* contest card keeps the dark treatment (approved) but tightened */
+html body .tmrhx-card.tmrhx-contest{ border-radius:var(--v2-r) !important; }
+
+/* ---- Sports Talk: remove the leftover dark tail strip ---- */
+html body .tmr-sports-talk .stp-rows{ background:transparent !important; }
+html body .tmr-sports-talk .stp-row{ background:transparent !important; }
+html body .tmr-sports-talk .stp-row:hover{ background:var(--v2-panel-2) !important; }
+html body .tmr-sports-talk h2{ color:var(--v2-ink) !important; }
+html body .tmr-sports-talk h2 span{ color:var(--v2-brand-dk) !important; }
+
+/* ---- Beta strip + loop + integrity text on the light field ---- */
+html body .tmr-home-beta-strip,
+html body .tmr-home-beta-strip *{ color:var(--v2-ink-2) !important; }
+html body .tmr-loop h2, html body .tmr-integrity h2{ color:var(--v2-ink) !important; }
+html body .tmr-loop p, html body .tmr-integrity p,
+html body .tmr-loop-step p{ color:var(--v2-ink-2) !important; }
+html body .tmr-loop-step h3, html body .tmr-loop-step h4,
+html body .tmr-loop-step-num{ color:var(--v2-ink) !important; }
+html body .tmr-loop-eyebrow, html body .tmr-integrity-eyebrow{ color:var(--v2-brand-dk) !important; }
