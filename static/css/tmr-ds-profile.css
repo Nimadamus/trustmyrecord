@@ -67,7 +67,18 @@ body.tmr-ds{
   --tmr-card-border:var(--line); --tmr-card-border-hot:var(--brand);
 }
 
-body.tmr-ds.profile-page{background:var(--page);color:var(--ink);font-family:var(--font)}
+/* The page's own "May 1 2026 direct profile redesign layer" targets
+   `body.profile-page.tmr-social-profile` — 2 classes + 1 element, exactly the
+   same specificity as `body.tmr-ds.profile-page`. On a tie the later rule wins,
+   and that block sits well below the design-system <link>, so it kept the page
+   on its dark radial-gradient #050a14 shell. Matching all three classes settles
+   it by specificity rather than by an !important. */
+body.tmr-ds.profile-page,
+body.tmr-ds.profile-page.tmr-social-profile{
+  background:var(--page);
+  color:var(--ink);
+  font-family:var(--font);
+}
 
 /* ---------------------------------------------------------------------------
    2. HEADINGS
@@ -271,6 +282,128 @@ body.tmr-ds .empty{
   font-size:15px;
 }
 body.tmr-ds .empty-state strong{color:var(--ink);font-size:17px;font-weight:800}
+
+/* ---------------------------------------------------------------------------
+   9. THE 0,3,1 LAYER
+   -----------------------------------------------------------------------------
+   The page's "direct profile redesign layer" scopes 123 component classes under
+   `body.profile-page.tmr-social-profile .x` — specificity (0,3,1), which beats
+   the (0,2,0) of `body.tmr-ds .x` everywhere. Rather than restate 123 rules,
+   these match at the same weight and assign SURFACE ROLES by shape: anything
+   that is a card/panel/cell gets the panel treatment, anything that is a table
+   gets the table treatment, and so on. Adding a new component to the page picks
+   up the right role automatically as long as it follows the naming.
+   --------------------------------------------------------------------------- */
+body.tmr-ds.profile-page.tmr-social-profile{
+  /* elevated surfaces */
+}
+/* cards, panels, monitors, sections, workspace blocks */
+body.tmr-ds.profile-page.tmr-social-profile .analytics-card,
+body.tmr-ds.profile-page.tmr-social-profile .capper-monitor,
+body.tmr-ds.profile-page.tmr-social-profile .capper-table-card,
+body.tmr-ds.profile-page.tmr-social-profile .ledger-filter-card,
+body.tmr-ds.profile-page.tmr-social-profile .stats-table-card,
+body.tmr-ds.profile-page.tmr-social-profile .workspace-panel,
+body.tmr-ds.profile-page.tmr-social-profile .advanced-glossary-card,
+body.tmr-ds.profile-page.tmr-social-profile .tmr-cap-card,
+body.tmr-ds.profile-page.tmr-social-profile .picks-table-wrapper,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-table-shell,
+body.tmr-ds.profile-page.tmr-social-profile .capper-history-scroll{
+  background:var(--panel);
+  border:1px solid var(--edge);
+  border-radius:var(--r);
+  box-shadow:var(--sh);
+  color:var(--ink-2);
+}
+/* sunken cells, rows, bars and chips */
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-cell,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-dd-cell,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-period-cell,
+body.tmr-ds.profile-page.tmr-social-profile .tmr-cap-metric,
+body.tmr-ds.profile-page.tmr-social-profile .capper-stat,
+body.tmr-ds.profile-page.tmr-social-profile .capper-main-row,
+body.tmr-ds.profile-page.tmr-social-profile .capper-second-row,
+body.tmr-ds.profile-page.tmr-social-profile .capper-filter-bar,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-filter-bar,
+body.tmr-ds.profile-page.tmr-social-profile .filter-chip-row,
+body.tmr-ds.profile-page.tmr-social-profile .ledger-filter-head,
+body.tmr-ds.profile-page.tmr-social-profile .records-section-head,
+body.tmr-ds.profile-page.tmr-social-profile .profile-advanced-metric{
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+  box-shadow:none;
+  color:var(--ink-2);
+}
+/* tables */
+body.tmr-ds.profile-page.tmr-social-profile .capper-table th,
+body.tmr-ds.profile-page.tmr-social-profile .capper-history-table th,
+body.tmr-ds.profile-page.tmr-social-profile .picks-table th,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-drill-table th,
+body.tmr-ds.profile-page.tmr-social-profile .advanced-glossary-table th{
+  background:var(--panel-2);
+  border-bottom:1px solid var(--line-2);
+  color:var(--muted);
+  font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
+}
+body.tmr-ds.profile-page.tmr-social-profile .capper-table td,
+body.tmr-ds.profile-page.tmr-social-profile .capper-history-table td,
+body.tmr-ds.profile-page.tmr-social-profile .picks-table td,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-drill-table td,
+body.tmr-ds.profile-page.tmr-social-profile .advanced-glossary-table td{
+  background:transparent;
+  border-bottom:1px solid var(--line);
+  color:var(--ink-2);
+  font-size:14px;
+}
+/* labels, values, meta */
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-label,
+body.tmr-ds.profile-page.tmr-social-profile .tmr-cap-metric__label,
+body.tmr-ds.profile-page.tmr-social-profile .profile-advanced-metric__label,
+body.tmr-ds.profile-page.tmr-social-profile .section-subtitle,
+body.tmr-ds.profile-page.tmr-social-profile .table-note{
+  color:var(--muted);
+}
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-value,
+body.tmr-ds.profile-page.tmr-social-profile .tmr-cap-metric__value,
+body.tmr-ds.profile-page.tmr-social-profile .profile-advanced-metric__value{
+  color:var(--ink);
+  font-family:var(--display);
+  font-weight:900;
+  letter-spacing:-.03em;
+}
+body.tmr-ds.profile-page.tmr-social-profile .section-title{color:var(--ink)}
+/* controls */
+body.tmr-ds.profile-page.tmr-social-profile .filter-control,
+body.tmr-ds.profile-page.tmr-social-profile .filter-search-input,
+body.tmr-ds.profile-page.tmr-social-profile .filter-search-wrap{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+  color:var(--ink);
+}
+body.tmr-ds.profile-page.tmr-social-profile .filter-button,
+body.tmr-ds.profile-page.tmr-social-profile .quick-filter-btn,
+body.tmr-ds.profile-page.tmr-social-profile .capper-filter-pill{
+  background:var(--panel);
+  border:1px solid var(--line-2);
+  border-radius:var(--r-sm);
+  color:var(--ink-2);
+  font-weight:800;
+}
+body.tmr-ds.profile-page.tmr-social-profile .filter-button.is-active,
+body.tmr-ds.profile-page.tmr-social-profile .quick-filter-btn.is-active,
+body.tmr-ds.profile-page.tmr-social-profile .capper-filter-pill.is-active{
+  background:var(--brand-soft);
+  border-color:var(--brand);
+  color:var(--brand-dk);
+}
+/* badges keep semantics */
+body.tmr-ds.profile-page.tmr-social-profile .result-badge,
+body.tmr-ds.profile-page.tmr-social-profile .rail-corr-badge{
+  border-radius:5px;font-size:11.5px;font-weight:800;letter-spacing:.02em;
+}
+body.tmr-ds.profile-page.tmr-social-profile .profit-cell{font-variant-numeric:tabular-nums;font-weight:800}
 
 @media(max-width:760px){
   body.tmr-ds .profile-header,body.tmr-ds .profile-top-card{padding:20px}
