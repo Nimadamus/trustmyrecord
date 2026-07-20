@@ -1,0 +1,199 @@
+/* =============================================================================
+   TrustMyRecord — Sports Talk, design-system adoption layer.
+   -----------------------------------------------------------------------------
+   This page was the best-behaved in the audit: it already consumed sitewide
+   tokens defensively, e.g. `var(--tmr-text,#f8fafc)`. The --tmr-* compatibility
+   block in tmr-ds.css therefore does most of the work — but the hardcoded
+   FALLBACKS are exactly why that block had to exist, since without it every one
+   of those declarations would have resolved to its dark default on a light page.
+
+   What remains here is the set of hardcoded dark surfaces the tokens never
+   covered: rgba(13,22,38,.94) panels, rgba(15,23,42,.6) chips and actions,
+   rgba(8,15,28,.85) inputs, #0e1930 modal, #10233d toast, #dbe4f0 post copy.
+
+   The section's deliberate warm accent (#f0a35e) is kept — it is what makes
+   Sports Talk read as more energetic than the record pages — but it is now
+   expressed through --gold so it belongs to the palette instead of sitting
+   outside it.
+
+   Zero !important.
+   Created Jul 20, 2026.
+   ============================================================================= */
+
+body.tmr-ds.st-page{background:var(--page);color:var(--ink);font-family:var(--font)}
+body.tmr-ds .st-wrap{max-width:var(--wrap);padding:0 var(--gutter)}
+
+/* ---------- header ---------- */
+body.tmr-ds .st-head{padding:26px 0 14px}
+body.tmr-ds .st-kick{
+  font-family:var(--font);font-size:11px;font-weight:900;letter-spacing:.1em;color:var(--gold);
+}
+body.tmr-ds .st-head h1,
+body.tmr-ds .st-cat-head h1,
+body.tmr-ds .st-thread-head h1{
+  font-family:var(--display);
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.008em;
+  color:var(--ink);
+}
+body.tmr-ds .st-head h1{font-size:clamp(28px,3.4vw,38px);line-height:1.04}
+body.tmr-ds .st-cat-head h1{font-size:26px}
+body.tmr-ds .st-thread-head h1{font-size:clamp(22px,2.6vw,30px);line-height:1.12;text-transform:none}
+body.tmr-ds .st-sub{color:var(--muted);font-size:15px;line-height:1.5;max-width:62ch}
+
+/* ---------- buttons ---------- */
+body.tmr-ds .st-btn{
+  height:40px;padding:0 18px;border-radius:var(--r-sm);
+  border:1.5px solid var(--line-2);background:var(--panel);color:var(--ink-2);
+  font-family:var(--font);font-size:14.5px;font-weight:800;letter-spacing:-.012em;
+}
+body.tmr-ds .st-btn--primary{
+  background:linear-gradient(180deg,#13B0A5,#0A8A83);border-color:transparent;color:#fff;
+  box-shadow:0 2px 10px rgba(12,148,140,.32);
+}
+body.tmr-ds .st-btn--primary:hover{filter:none;background:linear-gradient(180deg,#17C2B5,#0C9A92)}
+body.tmr-ds .st-btn--ghost{background:var(--panel);border-color:var(--line-2);color:var(--ink-2)}
+body.tmr-ds .st-btn--ghost:hover{border-color:var(--brand);color:var(--brand-dk)}
+
+/* ---------- chips / notes ---------- */
+body.tmr-ds .st-area-note{
+  background:var(--panel-2);border:1px solid var(--line);color:var(--muted);font-size:13px;
+}
+body.tmr-ds .st-area-note a{color:var(--brand-dk);font-weight:700}
+body.tmr-ds .st-chip{
+  padding:6px 13px;border:1px solid var(--line);background:var(--panel);
+  color:var(--ink-2);font-size:13px;font-weight:700;
+}
+body.tmr-ds .st-chip:hover{border-color:var(--line-2);color:var(--ink)}
+body.tmr-ds .st-chip.is-on{background:var(--gold-soft);border-color:var(--gold);color:var(--gold)}
+
+/* ---------- panels ---------- */
+body.tmr-ds .st-panel{
+  background:var(--panel);border:1px solid var(--edge);
+  border-radius:var(--r);box-shadow:var(--sh);
+}
+body.tmr-ds .st-panel-h{
+  padding:14px 16px;border-bottom:2px solid var(--panel-3);background:var(--panel-2);
+}
+body.tmr-ds .st-panel-h h2{
+  font-family:var(--font);font-size:11px;font-weight:900;letter-spacing:.1em;color:var(--muted);
+}
+body.tmr-ds .st-tab{
+  padding:6px 12px;border-radius:var(--r-sm);color:var(--muted);font-size:13px;font-weight:800;
+}
+body.tmr-ds .st-tab.is-on{background:var(--brand-soft);color:var(--brand-dk)}
+
+/* ---------- thread rows ---------- */
+body.tmr-ds .st-row{padding:14px 16px;border-bottom:1px solid var(--line)}
+body.tmr-ds .st-row:hover{background:var(--panel-2)}
+body.tmr-ds .st-row-title{color:var(--ink);font-weight:700;font-size:15px}
+body.tmr-ds .st-row:hover .st-row-title{color:var(--brand-dk)}
+body.tmr-ds .st-row-meta,body.tmr-ds .st-row-stats{color:var(--muted);font-size:12.5px;font-weight:600}
+body.tmr-ds .st-row-meta .st-comm{color:var(--gold);font-weight:800}
+body.tmr-ds .st-row-meta a:hover{color:var(--brand-dk)}
+body.tmr-ds .st-row-stats b{color:var(--ink);font-weight:800}
+body.tmr-ds .st-ava{background:var(--panel-3);border:1px solid var(--line)}
+body.tmr-ds .st-ava--txt{color:var(--brand-dk);font-family:var(--display);font-weight:900}
+
+/* ---------- badges ---------- */
+body.tmr-ds .st-badge{
+  padding:2px 8px;border-radius:5px;border:0;
+  font-size:10.5px;font-weight:900;letter-spacing:.05em;
+}
+body.tmr-ds .st-badge--pin{background:var(--gold-soft);color:var(--gold)}
+body.tmr-ds .st-badge--official{background:var(--brand-soft);color:var(--brand-dk)}
+body.tmr-ds .st-badge--hot{background:var(--red-soft);color:var(--red)}
+body.tmr-ds .st-badge--bot{background:var(--panel-3);color:var(--muted)}
+
+/* ---------- sidebar ---------- */
+body.tmr-ds .st-comm-row{padding:11px 16px;border-bottom:1px solid var(--line)}
+body.tmr-ds .st-comm-row:hover{background:var(--panel-2)}
+body.tmr-ds .st-comm-ic{
+  border-radius:8px;background:var(--gold-soft);border:0;color:var(--gold);
+}
+body.tmr-ds .st-comm-bd b{color:var(--ink);font-size:14px;font-weight:800}
+body.tmr-ds .st-comm-bd span,body.tmr-ds .st-comm-n{color:var(--muted);font-size:12px}
+body.tmr-ds .st-about{color:var(--muted);font-size:13.5px;line-height:1.55}
+body.tmr-ds .st-about b{color:var(--ink)}
+body.tmr-ds .st-about a,body.tmr-ds .st-seo a{color:var(--brand-dk);font-weight:700}
+
+/* ---------- category / thread view ---------- */
+body.tmr-ds .st-cat-ic{border-radius:9px;background:var(--gold-soft);border:0}
+body.tmr-ds .st-cat-head p,body.tmr-ds .st-thread-meta{color:var(--muted);font-size:13px;font-weight:600}
+body.tmr-ds .st-back{color:var(--muted);font-size:13px;font-weight:700}
+body.tmr-ds .st-back:hover{color:var(--brand-dk)}
+body.tmr-ds .st-act,body.tmr-ds .st-mini,body.tmr-ds .st-pager button{
+  border:1px solid var(--line-2);background:var(--panel);color:var(--ink-2);font-weight:700;
+}
+body.tmr-ds .st-act{height:34px;padding:0 14px;border-radius:var(--r-sm);font-size:13px}
+body.tmr-ds .st-act:hover,body.tmr-ds .st-mini:hover,
+body.tmr-ds .st-pager button:hover:not([disabled]){border-color:var(--brand);color:var(--brand-dk)}
+body.tmr-ds .st-act.is-on,body.tmr-ds .st-mini.is-on{
+  background:var(--brand-soft);border-color:var(--brand);color:var(--brand-dk);
+}
+body.tmr-ds .st-pager span{color:var(--muted);font-size:13px}
+
+body.tmr-ds .st-post{padding:16px;border-bottom:1px solid var(--line)}
+body.tmr-ds .st-post.is-target{background:var(--gold-soft)}
+body.tmr-ds .st-post-top a{color:var(--ink);font-weight:800;font-size:14.5px}
+body.tmr-ds .st-post-top a:hover{color:var(--brand-dk)}
+body.tmr-ds .st-post-top time{color:var(--muted);font-size:12px}
+body.tmr-ds .st-post-content{color:var(--ink-2);font-size:15px;line-height:1.62}
+body.tmr-ds .st-post-content blockquote{
+  border-left:3px solid var(--brand);background:var(--brand-soft);
+  color:var(--ink-2);border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:14px;
+}
+body.tmr-ds .st-post-content blockquote cite{color:var(--brand-dk);font-weight:800}
+
+/* ---------- composer + modal ---------- */
+body.tmr-ds .st-compose label{
+  font-size:11px;font-weight:900;letter-spacing:.1em;color:var(--muted);
+}
+body.tmr-ds .st-compose select,
+body.tmr-ds .st-compose input,
+body.tmr-ds .st-compose textarea{
+  background:var(--panel);border:1px solid var(--line);border-radius:var(--r-sm);
+  color:var(--ink);font-size:14.5px;font-weight:600;padding:11px 13px;
+}
+body.tmr-ds .st-compose select:focus,
+body.tmr-ds .st-compose input:focus,
+body.tmr-ds .st-compose textarea:focus{
+  border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft);
+}
+body.tmr-ds .st-compose-hint{color:var(--muted);font-size:12.5px}
+body.tmr-ds .st-err{color:var(--red);font-size:13.5px;font-weight:700}
+
+body.tmr-ds .st-modal{background:rgba(7,24,42,.55)}
+body.tmr-ds .st-modal-card{
+  background:var(--panel);border:1px solid var(--edge);
+  border-radius:var(--r);box-shadow:var(--sh-up);
+}
+body.tmr-ds .st-modal-h{padding:16px;border-bottom:2px solid var(--panel-3)}
+body.tmr-ds .st-modal-h h2{
+  font-family:var(--display);font-size:22px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.01em;color:var(--ink);
+}
+body.tmr-ds .st-x{color:var(--muted)}
+body.tmr-ds .st-x:hover{color:var(--ink)}
+body.tmr-ds .st-toast{
+  background:var(--navy);border:1px solid var(--navy-3);color:#fff;
+  border-radius:var(--r-sm);font-size:14px;
+}
+
+/* ---------- skeletons + states ---------- */
+body.tmr-ds .st-skel-a,body.tmr-ds .st-skel-l i{background:var(--panel-3)}
+body.tmr-ds .st-empty{padding:44px 24px}
+body.tmr-ds .st-empty h3{
+  font-family:var(--display);font-size:20px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.01em;color:var(--ink);
+}
+body.tmr-ds .st-empty p{color:var(--muted);font-size:14.5px}
+body.tmr-ds .st-seo{color:var(--muted);font-size:14px;line-height:1.65;max-width:84ch}
+body.tmr-ds .st-seo h2{
+  font-family:var(--display);font-size:20px;font-weight:900;
+  text-transform:uppercase;letter-spacing:.01em;color:var(--ink);
+}
+
+/* keep the sticky sidebar clear of the sticky nav */
+body.tmr-ds .st-side{top:calc(var(--nav-h) + 16px)}
