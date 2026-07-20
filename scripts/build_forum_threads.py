@@ -369,6 +369,162 @@ def page_html(t, posts):
 """
 
 
+def list_categories():
+    """Active betting-area categories (what /forum/ itself lists). Sports-talk
+    categories live on /sports-talk/ and are not baked here."""
+    d = get(f"{API}/forum/categories")
+    cats = d.get("categories") or []
+    out = []
+    for c in cats:
+        if not c.get("is_active", True):
+            continue
+        if (c.get("content_area") or "betting") != "betting":
+            continue
+        if not c.get("slug") or c["slug"] == "thread":
+            continue
+        out.append(c)
+    return out
+
+
+def cat_url(slug):
+    return f"{SITE}/forum/{slug}/"
+
+
+def cat_page_html(cat, cat_threads):
+    """Crawler / no-JS view for one category: real H1, description, thread list
+    with real links. tmr-forum-cat-hydrate.js swaps in the interactive /forum/
+    app at this URL for JS visitors (same pattern as the thread pages)."""
+    e = html.escape
+    slug = cat["slug"]
+    name = (cat.get("name") or slug).strip()
+    desc_txt = (cat.get("description") or "").strip() or (
+        f"{name} discussion on the TrustMyRecord sports betting forum.")
+    url = cat_url(slug)
+    page_title = f"{name} Forum | TrustMyRecord"
+    n = len(cat_threads)
+
+    ld = {
+        "@context": "https://schema.org",
+        "@graph": [
+            {
+                "@type": "CollectionPage",
+                "@id": url + "#category",
+                "mainEntityOfPage": url,
+                "name": f"{name} Forum",
+                "description": desc_txt,
+                "url": url,
+                "isPartOf": {"@type": "WebSite", "name": "TrustMyRecord", "url": SITE + "/"},
+                "mainEntity": {
+                    "@type": "ItemList",
+                    "numberOfItems": n,
+                    "itemListElement": [
+                        {"@type": "ListItem", "position": i + 1,
+                         "name": (t.get("title") or "Thread").strip(),
+                         "url": thread_url(t["id"], t.get("slug") or slugify(t.get("title")))}
+                        for i, t in enumerate(cat_threads[:50])
+                    ],
+                },
+            },
+            {
+                "@type": "BreadcrumbList",
+                "itemListElement": [
+                    {"@type": "ListItem", "position": 1, "name": "Forums",
+                     "item": f"{SITE}/forum/"},
+                    {"@type": "ListItem", "position": 2, "name": name, "item": url},
+                ],
+            },
+        ],
+    }
+    ld_json = json.dumps(ld, indent=2, ensure_ascii=False)
+
+    if cat_threads:
+        items = []
+        for t in cat_threads:
+            slug_t = t.get("slug") or slugify(t.get("title"))
+            items.append(
+                f'<li class="fc-item"><a href="/forum/thread/{t["id"]}/{e(slug_t)}/">'
+                f'{e((t.get("title") or "Thread").strip())}</a>'
+                f'<span class="fc-meta">by {e(t.get("username") or "Member")}'
+                f' &middot; {e(human_date(t.get("last_post_at") or t.get("created_at")))}'
+                f' &middot; {int(t.get("reply_count") or 0)} replies</span></li>')
+        list_html = f'<ol class="fc-list">{"".join(items)}</ol>'
+    else:
+        list_html = '<p class="fc-none">No threads yet. Be the first to post.</p>'
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="{url}">
+<title>{e(page_title)}</title>
+<meta name="description" content="{e(desc_txt)}">
+<meta property="og:type" content="website">
+<meta property="og:title" content="{e(page_title)}">
+<meta property="og:url" content="{url}">
+<meta property="og:description" content="{e(desc_txt)}">
+<meta property="og:site_name" content="TrustMyRecord">
+<meta name="twitter:card" content="summary">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css">
+<script type="application/ld+json">
+{ld_json}
+</script>
+<style>
+.fc-wrap{{max-width:900px;margin:0 auto;padding:22px 18px 70px;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;}}
+.fc-wrap a{{color:#00aeff;text-decoration:none;}}
+.fc-crumb{{font-size:13px;color:#8890ad;margin:2px 0 14px;}}
+.fc-title{{font-family:'Barlow',sans-serif;font-size:27px;line-height:1.25;margin:0 0 6px;}}
+.fc-sub{{color:#8890ad;font-size:14px;margin:0 0 18px;line-height:1.5;}}
+.fc-list{{list-style:none;margin:0;padding:0;}}
+.fc-item{{background:#13131c;border:1px solid #262636;border-radius:10px;padding:12px 14px;margin:0 0 10px;font-size:15px;}}
+.fc-meta{{display:block;color:#8890ad;font-size:12.5px;margin-top:4px;}}
+.fc-none{{color:#8890ad;font-size:14px;}}
+.fc-cta{{display:inline-block;margin-top:18px;background:#ffd700;color:#1a1200;font-family:'Barlow',sans-serif;font-weight:800;padding:11px 20px;border-radius:11px;}}
+.fc-links{{margin-top:16px;font-size:14px;color:#8890ad;}}
+@media(max-width:640px){{.fc-title{{font-size:22px;}}.fc-wrap{{padding:16px 14px 60px;}}}}
+</style>
+</head>
+<body>
+<main class="fc-wrap">
+  <nav class="fc-crumb" aria-label="Breadcrumb"><a href="/forum/">Forums</a> &rsaquo; <span>{e(name)}</span></nav>
+  <h1 class="fc-title">{e(name)}</h1>
+  <p class="fc-sub">{e(desc_txt)} &middot; {n} {"thread" if n == 1 else "threads"}</p>
+  {list_html}
+  <a class="fc-cta" href="/register/">Join the discussion</a>
+  <p class="fc-links"><a href="/forum/">All TrustMyRecord forums</a> &middot;
+     <a href="/handicappers/">Verified handicappers</a> &middot;
+     <a href="/leaderboards/">Leaderboards</a></p>
+</main>
+<script>window.__TMR_FORUM_CAT_SLUG={json.dumps(slug)};</script>
+<script src="/static/js/tmr-forum-cat-hydrate.js" defer></script>
+</body>
+</html>
+"""
+
+
+def regen_sitemap_cats(entries):
+    """entries: list of (url, lastmod_iso_date) for category pages. Own marker
+    block so it never clobbers the thread/profile generators' blocks."""
+    if not os.path.exists(SITEMAP):
+        print("sitemap.xml not found, skipping cat urls"); return
+    with open(SITEMAP, encoding="utf-8") as f:
+        xml = f.read()
+    xml = re.sub(r"\s*<!-- BEGIN_FORUM_CAT_URLS -->.*?<!-- END_FORUM_CAT_URLS -->",
+                 "", xml, flags=re.S)
+    block = ["  <!-- BEGIN_FORUM_CAT_URLS -->"]
+    for url, lastmod in entries:
+        lm = f"<lastmod>{lastmod}</lastmod>" if lastmod else ""
+        block.append(f"  <url><loc>{url}</loc>{lm}"
+                     f"<changefreq>daily</changefreq><priority>0.6</priority></url>")
+    block.append("  <!-- END_FORUM_CAT_URLS -->")
+    xml = xml.replace("</urlset>", "\n".join(block) + "\n</urlset>")
+    with open(SITEMAP, "w", encoding="utf-8", newline="\n") as f:
+        f.write(xml)
+    print(f"sitemap.xml updated with {len(entries)} forum category URLs")
+
+
 def regen_sitemap(entries):
     """entries: list of (url, lastmod_iso_date). Mirrors the BEGIN/END marker
     pattern build_profile_pages.py uses so the two generators never clobber
@@ -459,6 +615,38 @@ def main():
     print(f"wrote {len(built)} thread pages under {TDIR} (all index, follow); "
           f"removed {removed} gone-thread dirs; {redirected} renamed-slug redirect stubs")
     regen_sitemap(entries)
+
+    # ---- category pages: /forum/<slug>/ (crawler view + hydrate) ----
+    # Never deletes anything under forum/ - it only (re)writes the index.html of
+    # each currently-active betting category. Category removals are rare and
+    # handled manually, never by this cron.
+    try:
+        cats = list_categories()
+    except Exception as ex:
+        print(f"  ! categories fetch failed ({ex}) - keeping existing category pages")
+        cats = []
+    by_cat = {}
+    for tid, slug, t, posts in built:
+        by_cat.setdefault(t.get("category_slug") or "", []).append(t)
+    for lst in by_cat.values():
+        lst.sort(key=lambda t: (t.get("last_post_at") or t.get("created_at") or ""), reverse=True)
+    cat_entries = []
+    for c in cats:
+        cthreads = by_cat.get(c["slug"], [])
+        d = os.path.join(ROOT, "forum", c["slug"])
+        os.makedirs(d, exist_ok=True)
+        page = cat_page_html(c, cthreads)
+        if not page.strip():
+            raise SystemExit(f"ABORT: empty HTML generated for category {c['slug']}")
+        with open(os.path.join(d, "index.html"), "w", encoding="utf-8", newline="\n") as f:
+            f.write(page)
+        last = ""
+        if cthreads:
+            last = (iso_date(cthreads[0].get("last_post_at") or cthreads[0].get("created_at")) or "")[:10]
+        cat_entries.append((cat_url(c["slug"]), last))
+    if cats:
+        print(f"wrote {len(cat_entries)} category pages under forum/<slug>/")
+        regen_sitemap_cats(cat_entries)
 
 
 if __name__ == "__main__":
