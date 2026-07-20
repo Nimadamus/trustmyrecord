@@ -874,6 +874,20 @@ class TrustMyRecordAPI {
         });
     }
 
+    async deleteConversation(otherUserId) {
+        return this.request(`/messages/conversation/${otherUserId}`, {
+            method: 'DELETE'
+        });
+    }
+
+    // payload: { scope: 'conversations' | 'sent' | 'folder', userIds?: [] }
+    async deleteAllMessages(payload) {
+        return this.request('/messages/delete-all', {
+            method: 'POST',
+            body: payload
+        });
+    }
+
     async reactToMessage(messageId, reaction) {
         return this.request(`/messages/message/${messageId}/reactions`, {
             method: 'POST',

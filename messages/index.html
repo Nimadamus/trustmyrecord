@@ -296,6 +296,30 @@
         .msg-action-btn:hover { background: var(--msg-surface-3); color: var(--msg-text); border-color: var(--msg-accent); }
         .msg-action-btn:focus-visible { outline: 2px solid var(--msg-accent); outline-offset: 1px; }
 
+        .msg-folder-danger { color: var(--msg-danger); }
+        .msg-folder-danger:hover { background: rgba(220, 60, 70, 0.12); color: var(--msg-danger); }
+        .msg-row-delete {
+            width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: transparent; border: 1px solid transparent;
+            color: var(--msg-text-muted); cursor: pointer; padding: 0;
+            opacity: 0; transition: opacity 0.12s ease;
+        }
+        .msg-row-delete svg { width: 13px; height: 13px; }
+        .msg-row:hover .msg-row-delete, .msg-row:focus-within .msg-row-delete { opacity: 0.7; }
+        .msg-row-delete:hover { opacity: 1; color: var(--msg-danger); border-color: var(--msg-danger); }
+        @media (hover: none) { .msg-row .msg-row-delete { opacity: 0.6; } }
+        .msg-delete-options { display: grid; gap: 8px; }
+        .msg-delete-option {
+            text-align: left; display: grid; gap: 3px;
+            padding: 11px 13px; border-radius: 10px; cursor: pointer;
+            background: var(--msg-surface-2); border: 1px solid var(--msg-border);
+            color: var(--msg-text);
+        }
+        .msg-delete-option:hover { border-color: var(--msg-danger); }
+        .msg-delete-option strong { font-size: 0.9rem; }
+        .msg-delete-option span { font-size: 0.78rem; color: var(--msg-text-muted); line-height: 1.4; }
+
         .msg-thread {
             flex: 1;
             overflow-y: auto;
@@ -638,6 +662,10 @@
                 <span class="msg-folder-label">Sent</span>
                 <span class="msg-folder-count" id="countSent" data-count="0">0</span>
             </button>
+            <button class="msg-folder msg-folder-danger" type="button" onclick="openDeleteAllMenu()" aria-haspopup="dialog">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                <span class="msg-folder-label">Delete all messages</span>
+            </button>
             <button class="msg-folder" data-folder="archived" onclick="setFolder('archived')" aria-pressed="false">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8"/><path d="M10 12h4"/></svg>
                 <span class="msg-folder-label">Archived</span>
@@ -737,8 +765,35 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="deleteAllModal" onclick="if(event.target===this) closeDeleteAllMenu()" role="dialog" aria-modal="true" aria-label="Delete messages">
+        <div class="modal">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <h3 style="margin:0;">Delete messages</h3>
+                <button type="button" class="modal-close" onclick="closeDeleteAllMenu()" aria-label="Close">&times;</button>
+            </div>
+            <p style="margin:0 0 14px;font-size:0.86rem;opacity:0.8;">Pick what you want removed. Deletes cannot be undone.</p>
+            <div class="msg-delete-options">
+                <button type="button" class="msg-delete-option" onclick="runDeleteAll('conversations')">
+                    <strong>All my conversations</strong>
+                    <span>Every thread disappears from your view. Your own messages are deleted for both sides.</span>
+                </button>
+                <button type="button" class="msg-delete-option" onclick="runDeleteAll('sent')">
+                    <strong>Only messages I sent</strong>
+                    <span>Hard-deletes every message you wrote, in every thread, for everyone.</span>
+                </button>
+                <button type="button" class="msg-delete-option" onclick="runDeleteAll('folder')">
+                    <strong>Only this folder (<span id="deleteAllFolderLabel">Inbox</span>)</strong>
+                    <span>Deletes just the conversations currently shown in the folder you are viewing.</span>
+                </button>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeDeleteAllMenu()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/js/config.js?v=20260421a"></script>
-    <script src="/static/js/backend-api.js?v=20260720msgactions"></script>
+    <script src="/static/js/backend-api.js?v=20260720msgdelete"></script>
     <script src="/static/js/auth-persistent.js?v=20260525noautologout"></script>
     <script>
         let currentUser = null;
@@ -976,6 +1031,10 @@
                         '<div class="msg-row-right">' +
                             '<div class="msg-row-time">' + escapeHtml(time) + '</div>' +
                             (unread ? '<span class="msg-unread-badge">' + conv.unread_count + '</span>' : '') +
+                            '<button type="button" class="msg-row-delete" title="Delete conversation" aria-label="Delete conversation with ' + escapeAttr(name) + '" ' +
+                                'onclick="event.stopPropagation();deleteConversation(' + jsStr(conv.other_user_id) + ', ' + jsStr(name) + ')">' +
+                                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+                            '</button>' +
                         '</div>' +
                     '</div>';
             }).join('');
@@ -1072,8 +1131,12 @@
                 const day = dayLabel(msg.created_at);
                 if (day && day !== lastDay) { parts.push('<div class="msg-day-sep">' + escapeHtml(day) + '</div>'); lastDay = day; }
                 const isSent = idEq(msg.sender_id, currentUser.id);
-                const deleteBtn = (isSent && msg.id) ?
-                    '<button type="button" class="msg-bubble-delete" title="Delete message" aria-label="Delete message" onclick="deleteOwnMessage(' + jsStr(msg.id) + ')">' +
+                // Own message = deleted for everyone; received = removed from your view only.
+                const deleteBtn = msg.id ?
+                    '<button type="button" class="msg-bubble-delete" ' +
+                        'title="' + (isSent ? 'Delete message' : 'Remove from my view') + '" ' +
+                        'aria-label="' + (isSent ? 'Delete message' : 'Remove message from my view') + '" ' +
+                        'onclick="deleteOwnMessage(' + jsStr(msg.id) + ', ' + (isSent ? 'true' : 'false') + ')">' +
                         '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
                     '</button>' : '';
                 const canReact = msg.id && api && typeof api.reactToMessage === 'function';
@@ -1272,9 +1335,12 @@
             }
         }
 
-        async function deleteOwnMessage(messageId) {
+        async function deleteOwnMessage(messageId, mine) {
             if (!messageId || !activeConversationUserId) return;
-            if (!confirm('Delete this message? This cannot be undone.')) return;
+            const prompt = mine === false
+                ? 'Remove this message from your view? It stays in the sender’s copy.'
+                : 'Delete this message? This cannot be undone.';
+            if (!confirm(prompt)) return;
             try {
                 if (api && typeof api.deleteMessage === 'function') {
                     await api.deleteMessage(messageId);
@@ -1285,6 +1351,70 @@
             } catch (e) {
                 console.error('Failed to delete message:', e);
                 alert((e && e.message) ? e.message : 'Failed to delete message. Please try again.');
+            }
+        }
+
+        async function deleteConversation(otherUserId, name) {
+            if (!otherUserId) return;
+            if (!confirm('Delete the whole conversation with ' + (name || 'this member') + '?\n\nYour messages are deleted for both of you. Their messages are removed from your view only.')) return;
+            try {
+                await api.deleteConversation(otherUserId);
+                if (idEq(activeConversationUserId, otherUserId)) {
+                    activeConversationUserId = null;
+                    activeConversationUsername = null;
+                    syncConversationUrl(null);
+                    document.getElementById('msgApp').classList.remove('viewing-thread');
+                    document.getElementById('chatHeader').style.display = 'none';
+                    document.getElementById('chatInputArea').style.display = 'none';
+                    document.getElementById('chatMessages').innerHTML =
+                        '<div class="msg-empty"><h3>Conversation deleted</h3><p>Pick another conversation on the left, or start a new message.</p></div>';
+                }
+                await loadConversations();
+                refreshMailboxBadge();
+            } catch (e) {
+                console.error('Failed to delete conversation:', e);
+                alert((e && e.message) ? e.message : 'Failed to delete conversation. Please try again.');
+            }
+        }
+
+        // ---- Delete all messages (left nav) ----
+        function openDeleteAllMenu() {
+            document.getElementById('deleteAllModal').classList.add('active');
+            document.getElementById('deleteAllFolderLabel').textContent = FOLDER_TITLES[currentFolder] || 'Inbox';
+        }
+        function closeDeleteAllMenu() {
+            document.getElementById('deleteAllModal').classList.remove('active');
+        }
+
+        async function runDeleteAll(scope) {
+            const prompts = {
+                conversations: 'Delete ALL of your conversations?\n\nEvery thread disappears from your view and your own messages are deleted for both sides. This cannot be undone.',
+                sent: 'Delete every message you have ever sent?\n\nThey are removed for you AND for everyone you sent them to. This cannot be undone.',
+                folder: 'Delete every conversation currently shown in ' + (FOLDER_TITLES[currentFolder] || 'this folder') + '?\n\nThis cannot be undone.'
+            };
+            if (!confirm(prompts[scope] || 'Delete these messages?')) return;
+
+            const payload = { scope };
+            if (scope === 'folder') {
+                payload.userIds = getFilteredConversations().map(c => c.other_user_id);
+                if (!payload.userIds.length) { closeDeleteAllMenu(); alert('Nothing to delete in this folder.'); return; }
+            }
+            try {
+                await api.deleteAllMessages(payload);
+                closeDeleteAllMenu();
+                activeConversationUserId = null;
+                activeConversationUsername = null;
+                syncConversationUrl(null);
+                document.getElementById('msgApp').classList.remove('viewing-thread');
+                document.getElementById('chatHeader').style.display = 'none';
+                document.getElementById('chatInputArea').style.display = 'none';
+                document.getElementById('chatMessages').innerHTML =
+                    '<div class="msg-empty"><h3>Messages deleted</h3><p>Start a new message whenever you are ready.</p></div>';
+                await loadConversations();
+                refreshMailboxBadge();
+            } catch (e) {
+                console.error('Bulk delete failed:', e);
+                alert((e && e.message) ? e.message : 'Failed to delete messages. Please try again.');
             }
         }
 
