@@ -336,32 +336,34 @@
             border-bottom-right-radius: 3px;
         }
         .msg-bubble-time { font-size: 0.68rem; margin-top: 4px; opacity: 0.7; }
-        .msg-bubble-delete {
-            position: absolute; top: 50%; left: -30px; transform: translateY(-50%);
-            width: 24px; height: 24px; border-radius: 50%;
-            display: none; align-items: center; justify-content: center;
-            background: var(--msg-surface-3); border: 1px solid var(--msg-border);
-            color: var(--msg-text-muted); cursor: pointer; padding: 0;
-        }
-        .msg-bubble-delete svg { width: 13px; height: 13px; }
-        .msg-bubble-delete:hover { color: var(--msg-danger); border-color: var(--msg-danger); }
         .msg-bubble.sent { position: relative; }
         .msg-bubble.received { position: relative; }
-        .msg-bubble.sent:hover .msg-bubble-delete, .msg-bubble.sent:focus-within .msg-bubble-delete { display: flex; }
-        @media (hover: none) { .msg-bubble.sent .msg-bubble-delete { display: flex; opacity: 0.65; } }
-        .msg-bubble-react {
-            position: absolute; top: 50%; transform: translateY(-50%);
-            width: 24px; height: 24px; border-radius: 50%;
-            display: none; align-items: center; justify-content: center;
-            background: var(--msg-surface-3); border: 1px solid var(--msg-border);
-            color: var(--msg-text-muted); cursor: pointer; padding: 0; font-size: 0.8rem; line-height: 1;
+        /* Message action buttons live INSIDE the bubble so they are never clipped by
+           the thread's scroll container, and are always visible (not hover-only). */
+        .msg-bubble-actions {
+            position: absolute; top: 4px; right: 6px;
+            display: flex; gap: 4px; z-index: 2;
         }
-        .msg-bubble-react:hover { color: var(--msg-text); border-color: var(--msg-text-muted); }
-        .msg-bubble.received .msg-bubble-react { right: -30px; }
-        .msg-bubble.sent .msg-bubble-react { left: -30px; }
-        .msg-bubble.sent .msg-bubble-delete { left: -58px; }
-        .msg-bubble:hover .msg-bubble-react, .msg-bubble:focus-within .msg-bubble-react { display: flex; }
-        @media (hover: none) { .msg-bubble .msg-bubble-react { display: flex; opacity: 0.65; } }
+        .msg-bubble.received .msg-bubble-actions { right: 6px; }
+        .msg-bubble-delete, .msg-bubble-react {
+            width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.22);
+            color: inherit; cursor: pointer; padding: 0;
+            font-size: 0.8rem; line-height: 1; opacity: 0.55;
+            transition: opacity 0.12s ease;
+        }
+        .msg-bubble.received .msg-bubble-delete, .msg-bubble.received .msg-bubble-react {
+            background: var(--msg-surface-2); border-color: var(--msg-border); color: var(--msg-text-muted);
+        }
+        .msg-bubble:hover .msg-bubble-delete, .msg-bubble:hover .msg-bubble-react,
+        .msg-bubble:focus-within .msg-bubble-delete, .msg-bubble:focus-within .msg-bubble-react { opacity: 1; }
+        .msg-bubble-delete svg { width: 13px; height: 13px; }
+        .msg-bubble-delete:hover { color: var(--msg-danger); border-color: var(--msg-danger); opacity: 1; }
+        .msg-bubble-react:hover { opacity: 1; }
+        /* keep text clear of the action buttons */
+        .msg-bubble.has-actions { padding-top: 9px; padding-right: 40px; }
+        .msg-bubble.has-actions.two-actions { padding-right: 66px; }
         .msg-reactions { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
         .msg-reaction-chip {
             display: inline-flex; align-items: center; gap: 3px;
@@ -736,7 +738,7 @@
     </div>
 
     <script src="/static/js/config.js?v=20260421a"></script>
-    <script src="/static/js/backend-api.js?v=20260719reactions"></script>
+    <script src="/static/js/backend-api.js?v=20260720msgactions"></script>
     <script src="/static/js/auth-persistent.js?v=20260525noautologout"></script>
     <script>
         let currentUser = null;
@@ -1079,9 +1081,13 @@
                     '<button type="button" class="msg-bubble-react" title="React" aria-label="React to message" onclick="openReactionPalette(event, ' + jsStr(msg.id) + ')">' +
                         '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' +
                     '</button>' : '';
+                const actionCount = (deleteBtn ? 1 : 0) + (reactBtn ? 1 : 0);
+                const actionsWrap = actionCount ?
+                    '<div class="msg-bubble-actions">' + deleteBtn + reactBtn + '</div>' : '';
+                const actionCls = actionCount ? ' has-actions' + (actionCount > 1 ? ' two-actions' : '') : '';
                 parts.push(
-                    '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + '">' +
-                        deleteBtn + reactBtn +
+                    '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + actionCls + '">' +
+                        actionsWrap +
                         '<div class="msg-bubble-content">' + linkify(msg.content) + '</div>' +
                         reactionChips(msg) +
                         '<div class="msg-bubble-time">' + escapeHtml(formatTime(msg.created_at)) + (isSent ? readTicks(msg) : '') + '</div>' +
