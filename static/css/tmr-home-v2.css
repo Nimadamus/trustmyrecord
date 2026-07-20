@@ -549,3 +549,197 @@ html body .tmr-sports-talk .stp-card a[class*="join"]{
   background:linear-gradient(180deg,#13B0A5,#0A8A83) !important;
   color:#fff !important; border:1.5px solid transparent !important;
 }
+
+/* ==========================================================================
+   HERO / STAT-BAR TRANSITION PASS
+   Moves the stat rail fully into the light field, softens the hero base,
+   and lightens the Live Highlights card footer.
+   ========================================================================== */
+
+/* --- 7 + 8. Live Highlights card: light, compact footer instead of a heavy
+       dark band. Content and links are unchanged. --- */
+html body .tmr-premium-hero .tmr-source-strip,
+html body .tmr-source-strip{
+  background:var(--v2-panel-2) !important;
+  border-top:1px solid var(--v2-line) !important;
+  border-radius:0 0 12px 12px !important;
+  padding:11px 20px !important;
+  min-height:0 !important;
+  display:flex !important;
+  align-items:center !important;
+  gap:10px !important;
+  flex-wrap:wrap !important;
+  box-shadow:none !important;
+}
+html body .tmr-source-strip span{
+  color:var(--v2-muted) !important;
+  font-size:12px !important;
+  font-weight:600 !important;
+  letter-spacing:.02em !important;
+  text-transform:none !important;
+}
+html body .tmr-source-strip b{
+  color:var(--v2-brand-dk) !important;
+  background:transparent !important;
+  border:0 !important;
+  padding:0 !important;
+  font-size:12px !important;
+  font-weight:800 !important;
+  letter-spacing:.01em !important;
+  text-transform:none !important;
+}
+html body .tmr-source-strip b + b{ margin-left:2px; }
+html body .tmr-source-strip b:not(:last-child)::after{
+  content:"·"; color:var(--v2-line-2); margin-left:8px; font-weight:600;
+}
+
+/* --- 4 (hero base weight). Trim the dark hero's bottom padding and fade it
+       gently into the light field so the change of surface is gradual. --- */
+html body .tmr-premium-hero{
+  padding-bottom:76px !important;
+  /* fade layer is part of the hero background itself, so no extra element and
+     no stacking context is introduced (which would disturb the hero grid) */
+  background:
+    linear-gradient(180deg,
+      rgba(239,243,248,0) calc(100% - 160px),
+      rgba(239,243,248,.20) calc(100% - 92px),
+      rgba(239,243,248,.66) calc(100% - 34px),
+      var(--v2-page) 100%),
+    radial-gradient(62rem 28rem at 82% -6rem, rgba(34,210,192,.20), transparent 60%),
+    linear-gradient(174deg, var(--v2-navy) 0%, var(--v2-navy-2) 62%, var(--v2-navy-3) 100%) !important;
+}
+
+/* --- 1 + 2 + 3. Stat rail sits fully in the light section, with a hairline
+       divider above it and clean breathing room on both sides. --- */
+html body .tmr-statbar{
+  position:static !important;
+  margin:0 auto !important;
+  max-width:1320px !important;
+  padding:0 24px !important;
+}
+html body .tmr-statbar::before{
+  content:"";
+  display:block;
+  height:1px;
+  background:linear-gradient(90deg, transparent, var(--v2-line) 18%, var(--v2-line) 82%, transparent);
+  margin:0 0 40px;          /* 40px clean gap between hero edge and the rail */
+}
+
+/* --- 5 + 7. Four balanced cells: equal width, centred vertically,
+       consistent label baseline, less flat. --- */
+html body .tmr-statbar__inner{
+  background:var(--v2-panel) !important;
+  border:1px solid var(--v2-edge) !important;
+  border-radius:12px !important;
+  box-shadow:0 1px 2px rgba(7,24,42,.06), 0 10px 28px rgba(7,24,42,.09) !important;
+  display:grid !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  gap:0 !important;
+  padding:0 !important;
+  overflow:hidden !important;
+}
+html body .tmr-statbar .tmr-stat{
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:center !important;
+  align-items:flex-start !important;
+  text-align:left !important;
+  min-height:98px !important;
+  padding:22px 28px !important;
+  border-right:1px solid var(--v2-line) !important;
+  border-radius:0 !important;
+  gap:0 !important;
+}
+html body .tmr-statbar .tmr-stat:last-child{ border-right:none !important; }
+html body .tmr-statbar .tmr-stat:hover{ background:var(--v2-panel-2) !important; }
+html body .tmr-statbar .tmr-stat b{
+  display:block !important;
+  color:var(--v2-ink) !important;
+  font-size:32px !important;
+  font-weight:900 !important;
+  letter-spacing:-.04em !important;
+  line-height:1 !important;
+  font-variant-numeric:tabular-nums !important;
+}
+html body .tmr-statbar .tmr-stat:first-child b{ color:var(--v2-brand-dk) !important; }
+html body .tmr-statbar .tmr-stat span{
+  display:block !important;
+  margin-top:9px !important;
+  color:var(--v2-muted) !important;
+  font-size:11.5px !important;
+  font-weight:800 !important;
+  letter-spacing:.1em !important;
+  text-transform:uppercase !important;
+  line-height:1.2 !important;
+}
+
+/* --- 9. The first light content section gets deliberate top padding so the
+       page breathes after the rail. --- */
+html body .tmr-community-band{
+  margin-top:0 !important;
+  padding-top:48px !important;
+}
+
+@media (max-width:1400px){
+  html body .tmr-statbar{ max-width:100% !important; }
+}
+@media (max-width:900px){
+  html body .tmr-statbar__inner{ grid-template-columns:repeat(2,minmax(0,1fr)) !important; }
+  html body .tmr-statbar .tmr-stat:nth-child(2){ border-right:none !important; }
+  html body .tmr-statbar .tmr-stat:nth-child(1),
+  html body .tmr-statbar .tmr-stat:nth-child(2){ border-bottom:1px solid var(--v2-line) !important; }
+}
+@media (max-width:760px){
+  html body .tmr-premium-hero{ padding-bottom:56px !important; }
+  html body .tmr-statbar::before{ margin-bottom:32px; }
+  html body .tmr-statbar__inner{ grid-template-columns:1fr !important; }
+  html body .tmr-statbar .tmr-stat{
+    border-right:none !important; border-bottom:1px solid var(--v2-line) !important;
+    min-height:0 !important; padding:16px 18px !important;
+  }
+  html body .tmr-statbar .tmr-stat:last-child{ border-bottom:none !important; }
+  html body .tmr-statbar .tmr-stat b{ font-size:27px !important; }
+  html body .tmr-community-band{ padding-top:36px !important; }
+  html body .tmr-source-strip{ padding:10px 16px !important; }
+}
+
+/* --- Live Highlights card: title contrast, drop the dark outer frame, keep
+       the footer strip on one tidy line. --- */
+html body .tmr-premium-hero aside,
+html body .tmr-premium-hero .tmr-hero-aside{
+  background:transparent !important;
+  border:0 !important;
+  padding:0 !important;
+  box-shadow:none !important;
+}
+html body .tmr-premium-hero .tmr-board-card{
+  border-radius:12px 12px 0 0 !important;
+  box-shadow:none !important;
+  border:1px solid rgba(255,255,255,.45) !important;
+  border-bottom:0 !important;
+}
+html body .tmr-premium-hero .tmr-board-card > header h3,
+html body .tmr-premium-hero .tmr-activity-card > header h3{
+  color:var(--v2-ink) !important;
+  -webkit-text-fill-color:var(--v2-ink) !important;
+  background:none !important;
+  font-family:'Barlow Condensed','Barlow','Inter',sans-serif !important;
+  text-transform:uppercase !important;
+  font-size:22px !important; font-weight:900 !important; letter-spacing:.008em !important;
+}
+html body .tmr-premium-hero .tmr-board-card > header a{
+  color:var(--v2-brand-dk) !important; font-weight:800 !important;
+}
+/* the whole aside now reads as one card: white body + light footer strip */
+html body .tmr-source-strip{
+  border:1px solid rgba(255,255,255,.45) !important;
+  border-top:1px solid var(--v2-line) !important;
+  border-radius:0 0 12px 12px !important;
+  padding:10px 20px !important;
+  box-shadow:0 18px 40px rgba(2,12,22,.22) !important;
+  font-size:0 !important;            /* collapse whitespace between inline kids */
+  line-height:1.5 !important;
+}
+html body .tmr-source-strip span,
+html body .tmr-source-strip b{ font-size:11.5px !important; }
+html body .tmr-source-strip span{ margin-right:8px !important; }
