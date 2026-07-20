@@ -743,3 +743,172 @@ html body .tmr-source-strip{
 html body .tmr-source-strip span,
 html body .tmr-source-strip b{ font-size:11.5px !important; }
 html body .tmr-source-strip span{ margin-right:8px !important; }
+
+/* ==========================================================================
+   APPROVED V2 HERO — ported verbatim from FINAL-premium-light-v2.html
+   Namespaced .v2h-* so it cannot collide with legacy homepage styles.
+   ========================================================================== */
+
+.v2h-legacy-hooks{
+  position:absolute !important; width:1px; height:1px;
+  overflow:hidden; clip:rect(0 0 0 0); clip-path:inset(50%);
+  white-space:nowrap; border:0; padding:0; margin:-1px;
+}
+
+/* ---- ticker ---- */
+.v2h-ticker{ background:#050F1B; border-bottom:1px solid rgba(255,255,255,.07); }
+.v2h-ticker-in{
+  max-width:1720px; margin:0 auto; padding:0 28px; height:54px;
+  display:flex; align-items:center; gap:12px; overflow-x:auto; overflow-y:hidden;
+  scrollbar-width:none; -ms-overflow-style:none;
+}
+.v2h-ticker-in::-webkit-scrollbar{ display:none; }
+.v2h-tlbl{
+  display:flex; align-items:center; gap:9px; color:#22D2C0;
+  font-size:12px; font-weight:900; letter-spacing:.13em; text-transform:uppercase;
+  white-space:nowrap; padding-right:16px; border-right:1px solid rgba(255,255,255,.14); height:24px;
+}
+.v2h-tlbl .bl{ width:7px; height:7px; border-radius:50%; background:#22D2C0; box-shadow:0 0 0 4px rgba(34,210,192,.2); }
+.v2h-gm{
+  display:flex; align-items:center; gap:11px; padding:6px 15px; border-radius:7px;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); white-space:nowrap; flex:0 0 auto;
+}
+.v2h-gm .t{ display:flex; align-items:center; gap:7px; color:#DFEBF6; font-size:14.5px; font-weight:700; }
+.v2h-gm .t img{ width:21px; height:21px; display:block; }
+.v2h-gm .sc{ color:#fff; font-weight:900; font-size:16px; font-variant-numeric:tabular-nums; }
+.v2h-gm .st{ color:#7593B1; font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.07em; padding-left:4px; }
+.v2h-gm .st.on{ color:#22D2C0; }
+
+/* ---- hero ---- */
+.v2h-hero{
+  position:relative; overflow:hidden; padding:46px 0 76px;
+  background:
+    linear-gradient(180deg, rgba(239,243,248,0) calc(100% - 160px), rgba(239,243,248,.20) calc(100% - 92px),
+      rgba(239,243,248,.66) calc(100% - 34px), #EFF3F8 100%),
+    radial-gradient(62rem 28rem at 82% -6rem, rgba(34,210,192,.20), transparent 60%),
+    linear-gradient(174deg,#08192B 0%, #10334F 62%, #164A73 100%);
+}
+.v2h-grain{
+  position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(110deg, rgba(255,255,255,.028) 0 1.5px, transparent 1.5px 24px);
+}
+.v2h-wrap{ max-width:1720px; margin:0 auto; padding:0 28px; position:relative; z-index:3; }
+.v2h-grid{ display:grid; grid-template-columns:minmax(0,1fr) 520px; gap:72px; align-items:center; }
+
+.v2h-eyebrow{
+  display:inline-flex; align-items:center; gap:10px; padding:7px 16px; border-radius:999px;
+  background:rgba(34,210,192,.12); border:1px solid rgba(34,210,192,.34); color:#8DEDE0;
+  font-size:13px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+}
+.v2h-eyebrow .bl{ width:7px; height:7px; border-radius:50%; background:#22D2C0; }
+h1.v2h-h1{
+  color:#fff; font-family:'Barlow Condensed','Barlow','Inter',sans-serif;
+  font-size:clamp(38px,4.2vw,64px); line-height:1.02; font-weight:900;
+  text-transform:uppercase; letter-spacing:.004em; margin:22px 0 18px;
+}
+h1.v2h-h1 em{ font-style:normal; color:#22D2C0; }
+.v2h-sub{ color:#B7CEE4; font-size:18px; line-height:1.6; max-width:600px; font-weight:450; margin:0; }
+.v2h-cta{ display:flex; align-items:center; gap:26px; margin-top:30px; flex-wrap:wrap; }
+.v2h-btn{
+  display:inline-flex; align-items:center; justify-content:center; gap:9px;
+  height:54px; padding:0 32px; border-radius:7px; font-size:17px; font-weight:800;
+  letter-spacing:-.012em; text-decoration:none; white-space:nowrap; transition:.15s;
+  border:1.5px solid transparent;
+}
+.v2h-btn--p{
+  background:linear-gradient(180deg,#13B0A5,#0A8A83); color:#fff;
+  box-shadow:0 2px 10px rgba(12,148,140,.32);
+}
+.v2h-btn--p:hover{ background:linear-gradient(180deg,#17C2B5,#0C9A92); color:#fff; }
+.v2h-tlink{ display:inline-flex; align-items:center; gap:7px; font-size:15px; font-weight:800; color:#7FEBDC; text-decoration:none; }
+.v2h-tlink:hover{ color:#A8F4E9; }
+.v2h-tlink--sm{ font-size:14px; color:#07736D; }
+.v2h-tlink--sm:hover{ color:#0C948C; }
+
+/* ---- Capper of the Week card ---- */
+.v2h-spot{
+  background:#fff; border-radius:12px; overflow:hidden;
+  box-shadow:0 6px 16px rgba(2,12,22,.22), 0 26px 56px rgba(2,12,22,.26);
+}
+.v2h-rail{ height:4px; background:linear-gradient(90deg,#FFC93C,#22D2C0); }
+.v2h-hd{
+  padding:15px 24px; display:flex; align-items:center; justify-content:space-between;
+  border-bottom:1px solid #D2DEEA; background:#F6F9FC;
+}
+.v2h-hd b{
+  font-size:12.5px; font-weight:900; letter-spacing:.12em; text-transform:uppercase;
+  color:#B98505; display:flex; align-items:center; gap:8px;
+}
+.v2h-bd{ padding:26px 24px 24px; }
+.v2h-who{ display:flex; align-items:center; gap:16px; margin-bottom:22px; }
+.v2h-avbox{
+  width:66px; height:66px; border-radius:12px; flex:0 0 auto;
+  background:linear-gradient(140deg,#0C948C,#07736D);
+  display:flex; align-items:center; justify-content:center;
+  color:#fff; font-weight:900; font-size:22px;
+}
+.v2h-nmrow{ display:flex; align-items:center; gap:11px; }
+.v2h-who b{ font-size:27px; font-weight:900; letter-spacing:-.035em; line-height:1.1; color:#07182A; }
+.v2h-sub2{ display:block; font-size:14.5px; color:#5E7590; font-weight:600; margin-top:5px; }
+.v2h-vchip{
+  display:inline-flex; align-items:center; padding:4px 10px; border-radius:5px;
+  background:#DEF4F2; color:#07736D; border:1px solid rgba(12,148,140,.28);
+  font-size:11.5px; font-weight:900; letter-spacing:.08em; text-transform:uppercase; line-height:1; flex:0 0 auto;
+}
+.v2h-g3{
+  display:grid; grid-template-columns:repeat(3,1fr);
+  border:1px solid rgba(7,24,42,.13); border-radius:8px; overflow:hidden;
+}
+.v2h-g3 > div{ padding:18px; border-right:1px solid #D2DEEA; background:#F6F9FC; }
+.v2h-g3 > div:last-child{ border-right:none; }
+.v2h-g3 b{
+  display:block; font-size:26px; font-weight:900; letter-spacing:-.04em; line-height:1.1;
+  color:#07182A; font-variant-numeric:tabular-nums;
+}
+.v2h-g3 b.is-pos{ color:#0A8B4E; }
+.v2h-g3 span{
+  display:block; font-size:11px; font-weight:800; letter-spacing:.1em;
+  text-transform:uppercase; color:#5E7590; margin-top:6px;
+}
+.v2h-sparkwrap{ margin-top:22px; }
+.v2h-lb{
+  display:flex; justify-content:space-between; font-size:12px; font-weight:800;
+  letter-spacing:.06em; text-transform:uppercase; color:#5E7590; margin-bottom:9px;
+}
+.v2h-spark{ display:flex; align-items:flex-end; gap:4px; height:56px; }
+.v2h-spark i{ flex:1; border-radius:2px 2px 0 0; background:linear-gradient(180deg,#22D2C0,#0C948C); display:block; }
+.v2h-spark i.dn{ background:#EFC3BE; }
+.v2h-ft{
+  padding:15px 24px; border-top:1px solid #D2DEEA; background:#F6F9FC;
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:14px; color:#5E7590; font-weight:600; gap:12px; flex-wrap:wrap;
+}
+
+@media (max-width:1400px){
+  .v2h-grid{ grid-template-columns:1fr; gap:40px; }
+  h1.v2h-h1{ font-size:clamp(34px,6vw,50px); }
+}
+@media (max-width:760px){
+  .v2h-ticker-in{ height:50px; padding:0 18px; gap:10px; }
+  .v2h-gm{ padding:6px 12px; gap:9px; }
+  .v2h-gm .t{ font-size:13.5px; }
+  .v2h-gm .sc{ font-size:15px; }
+  .v2h-wrap{ padding:0 18px; }
+  .v2h-hero{ padding:32px 0 56px; }
+  h1.v2h-h1{ font-size:34px; margin:18px 0 14px; }
+  .v2h-sub{ font-size:16px; }
+  .v2h-cta{ gap:16px; }
+  .v2h-btn{ width:100%; height:50px; font-size:16px; }
+  .v2h-grid{ gap:28px; }
+  .v2h-who b{ font-size:23px; }
+  .v2h-avbox{ width:56px; height:56px; font-size:19px; }
+  .v2h-g3 b{ font-size:21px; }
+}
+
+/* card links must win against sitewide link colours */
+html body .v2h-hd .v2h-tlink--sm,
+html body .v2h-ft .v2h-tlink--sm{ color:#07736D !important; font-weight:800 !important; }
+html body .v2h-hd .v2h-tlink--sm:hover,
+html body .v2h-ft .v2h-tlink--sm:hover{ color:#0C948C !important; }
+html body .v2h-cta .v2h-tlink{ color:#7FEBDC !important; }
+html body .v2h-btn--p{ color:#fff !important; }
