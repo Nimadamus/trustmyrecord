@@ -381,6 +381,11 @@
             cursor: pointer; padding: 3px 5px; border-radius: 8px;
         }
         .msg-react-palette button:hover { background: rgba(255,255,255,0.08); }
+        .msg-bubble-time { display: flex; align-items: center; gap: 4px; }
+        .msg-bubble.sent .msg-bubble-time { justify-content: flex-end; }
+        .msg-ticks { display: inline-flex; align-items: center; opacity: 0.75; }
+        .msg-ticks svg { width: 14px; height: 14px; }
+        .msg-ticks.read { color: #67e8f9; opacity: 1; }
 
         /* ---------- Composer (sticky bottom of pane) ---------- */
         #chatInputArea {
@@ -1079,7 +1084,7 @@
                         deleteBtn + reactBtn +
                         '<div class="msg-bubble-content">' + linkify(msg.content) + '</div>' +
                         reactionChips(msg) +
-                        '<div class="msg-bubble-time">' + escapeHtml(formatTime(msg.created_at)) + '</div>' +
+                        '<div class="msg-bubble-time">' + escapeHtml(formatTime(msg.created_at)) + (isSent ? readTicks(msg) : '') + '</div>' +
                     '</div>'
                 );
             });
@@ -1117,6 +1122,34 @@
                 sendBtn.textContent = 'Send';
             }
         }
+
+        // ---- Read receipts ----
+        function readTicks(msg) {
+            // is_read is undefined on localStorage-fallback messages; show nothing there
+            if (typeof msg.is_read === 'undefined' || msg.is_read === null) return '';
+            const read = !!msg.is_read;
+            const single = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+            const dbl = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 7 6.5 16.5 2.5 12.5"/><polyline points="21.5 7 12 16.5 10.5 15"/></svg>';
+            return '<span class="msg-ticks' + (read ? ' read' : '') + '" title="' + (read ? 'Read' : 'Sent') + '" aria-label="' + (read ? 'Read' : 'Sent') + '">' + (read ? dbl : single) + '</span>';
+        }
+
+        // Keep receipts (and incoming messages) fresh while a thread is open
+        let threadRefreshTimer = null;
+        function startThreadRefresh() {
+            if (threadRefreshTimer) return;
+            threadRefreshTimer = setInterval(async () => {
+                if (!activeConversationUserId || document.hidden) return;
+                if (document.getElementById('reactPalette')) return;
+                const container = document.getElementById('chatMessages');
+                const atBottom = container && (container.scrollHeight - container.scrollTop - container.clientHeight < 40);
+                const prevTop = container ? container.scrollTop : 0;
+                try {
+                    await loadChatMessages(activeConversationUserId, false);
+                    if (container) container.scrollTop = atBottom ? container.scrollHeight : prevTop;
+                } catch (e) {}
+            }, 30000);
+        }
+        startThreadRefresh();
 
         // ---- Message reactions ----
         const REACTION_EMOJI = { like: '👍', love: '❤️', laugh: '😂', wow: '😮', sad: '😢', fire: '🔥' };
