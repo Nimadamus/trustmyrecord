@@ -1,0 +1,333 @@
+/* ==========================================================================
+   TrustMyRecord - Homepage theme v2
+   Visual target: approved preview FINAL-premium-light-v2.html (2026-07-20)
+
+   PRESENTATION LAYER ONLY. Loaded LAST on the page so it wins the cascade
+   without !important gymnastics. Adds no markup, removes no content, and
+   touches no IDs, data attributes, scripts, links or hooks.
+   ========================================================================== */
+
+:root{
+  --v2-page:#EFF3F8;
+  --v2-panel:#FFFFFF; --v2-panel-2:#F6F9FC; --v2-panel-3:#E6EDF5;
+  --v2-ink:#07182A; --v2-ink-2:#2E4459; --v2-muted:#5E7590;
+  --v2-line:#D2DEEA; --v2-line-2:#B7C8DA; --v2-edge:rgba(7,24,42,.13);
+  --v2-brand:#0C948C; --v2-brand-dk:#07736D; --v2-brand-lt:#22D2C0; --v2-brand-soft:#DEF4F2;
+  --v2-navy:#08192B; --v2-navy-2:#10334F; --v2-navy-3:#164A73;
+  --v2-gold:#B98505; --v2-gold-b:#FFC93C; --v2-gold-soft:#FBF1D8;
+  --v2-green:#0A8B4E; --v2-green-soft:#DFF3E8;
+  --v2-red:#BC372E; --v2-red-soft:#FAE9E7;
+  --v2-r:10px; --v2-r-sm:7px;
+  --v2-sh:0 1px 1px rgba(7,24,42,.05), 0 2px 8px rgba(7,24,42,.05);
+  --v2-sh-up:0 1px 2px rgba(7,24,42,.07), 0 10px 30px rgba(7,24,42,.10);
+  --v2-max:1720px; --v2-gutter:28px;
+}
+
+/* ---------- page field ---------- */
+html body{ background:var(--v2-page); color:var(--v2-ink); }
+html body main, html body .tmr-premium-home{ background:var(--v2-page); }
+
+/* widen every homepage section container to the approved width */
+html body .tmr-statbar,
+html body .tmr-community-band,
+html body .tmr-sports-talk,
+html body .tmrhx,
+html body .tmr-premium-proof-cards,
+html body .tmr-account-integrity-note,
+html body .tmr-arena-promo,
+html body .tmr-explore,
+html body .tmr-home-beta-strip,
+html body .tmr-loop,
+html body .tmr-integrity,
+html body .tmr-final{
+  max-width:var(--v2-max) !important;
+  width:auto !important;
+  margin-left:auto !important; margin-right:auto !important;
+  padding-left:var(--v2-gutter) !important; padding-right:var(--v2-gutter) !important;
+}
+
+/* ---------- HERO (stays dark, tightened) ---------- */
+html body .tmr-premium-hero{
+  background:
+    radial-gradient(62rem 28rem at 82% -6rem, rgba(34,210,192,.20), transparent 60%),
+    linear-gradient(174deg, var(--v2-navy) 0%, var(--v2-navy-2) 62%, var(--v2-navy-3) 100%);
+  padding-bottom:118px;
+}
+html body .tmr-premium-bg{ opacity:.14; }
+html body .tmr-premium-hero > div,
+html body .tmr-premium-inner{ max-width:var(--v2-max); }
+html body .tmr-premium-hero h1{
+  font-family:'Barlow Condensed','Barlow','Inter',sans-serif;
+  text-transform:uppercase;
+  font-size:clamp(38px,4.2vw,62px);
+  line-height:1.02; letter-spacing:.004em; font-weight:900; color:#fff;
+}
+html body .tmr-premium-badge{
+  background:rgba(34,210,192,.12); border:1px solid rgba(34,210,192,.34);
+  color:#8DEDE0; border-radius:999px; font-weight:800;
+  letter-spacing:.06em; text-transform:uppercase;
+}
+html body .tmr-premium-hero p{ color:#B7CEE4; }
+
+/* hero Live Highlights card -> white panel */
+html body .tmr-premium-hero .tmr-board-card,
+html body .tmr-premium-hero .tmr-activity-card{
+  background:var(--v2-panel); border:1px solid rgba(255,255,255,.5);
+  border-radius:12px; box-shadow:0 6px 16px rgba(2,12,22,.22), 0 26px 56px rgba(2,12,22,.26);
+}
+
+/* ---------- BRIDGE stat rail ---------- */
+html body .tmr-statbar{ margin-top:-58px !important; position:relative; z-index:20; }
+html body .tmr-statbar__inner{
+  background:var(--v2-panel); border:1px solid var(--v2-edge);
+  border-radius:12px; box-shadow:var(--v2-sh-up);
+  display:grid; grid-template-columns:repeat(4,1fr); gap:0; padding:0; overflow:hidden;
+}
+html body .tmr-statbar .tmr-stat{
+  align-items:flex-start; text-align:left; padding:20px 26px;
+  border-right:1px solid var(--v2-line); border-radius:0; gap:6px;
+}
+html body .tmr-statbar .tmr-stat:last-child{ border-right:none; }
+html body .tmr-statbar .tmr-stat:hover{ background:var(--v2-panel-2); }
+html body .tmr-statbar .tmr-stat b{
+  color:var(--v2-ink); font-size:30px; font-weight:900;
+  letter-spacing:-.04em; line-height:1.08;
+}
+html body .tmr-statbar .tmr-stat:first-child b{ color:var(--v2-brand-dk); }
+html body .tmr-statbar .tmr-stat span{
+  color:var(--v2-muted); font-size:11.5px; font-weight:800;
+  letter-spacing:.1em; text-transform:uppercase;
+}
+
+/* ---------- LIGHT SECTIONS ---------- */
+html body .tmr-community-band,
+html body .tmr-sports-talk,
+html body .tmr-explore,
+html body .tmr-loop,
+html body .tmr-integrity,
+html body .tmr-home-beta-strip,
+html body .tmr-premium-proof-cards{
+  background:var(--v2-page);
+  border-color:var(--v2-line);
+  color:var(--v2-ink);
+}
+
+/* section headings get the accent bar */
+html body .tmr-community-band > h2,
+html body .tmr-sports-talk > h2,
+html body .tmr-explore > h2,
+html body .tmr-loop h2,
+html body .tmr-integrity h2{
+  font-family:'Barlow Condensed','Barlow','Inter',sans-serif;
+  text-transform:uppercase; font-size:clamp(26px,2.4vw,36px);
+  font-weight:900; letter-spacing:.006em; line-height:1; color:var(--v2-ink);
+  display:flex; align-items:center; gap:13px;
+}
+html body .tmr-community-band > h2::before,
+html body .tmr-sports-talk > h2::before,
+html body .tmr-explore > h2::before{
+  content:""; width:6px; height:30px; border-radius:2px; flex:0 0 auto;
+  background:linear-gradient(180deg,var(--v2-brand-lt),var(--v2-brand));
+}
+html body .tmr-community-band p,
+html body .tmr-sports-talk p,
+html body .tmr-explore p,
+html body .tmr-explore-sub,
+html body .tmr-loop p,
+html body .tmr-integrity p{ color:var(--v2-ink-2); }
+
+/* ---------- CARDS (community, explore, proof, loop) ---------- */
+html body .tmr-community-band a[class*="card"],
+html body .tmr-community-band .tmr-card,
+html body .tmr-explore-card,
+html body .tmr-premium-proof-cards > *,
+html body .tmr-loop-step,
+html body .tmr-mini-ticket,
+html body .tmr-buyer-panel{
+  background:var(--v2-panel);
+  border:1px solid var(--v2-edge);
+  border-radius:var(--v2-r);
+  box-shadow:var(--v2-sh);
+  color:var(--v2-ink);
+}
+html body .tmr-explore-card:hover{ box-shadow:var(--v2-sh-up); border-color:var(--v2-brand); }
+html body .tmr-community-band h3, html body .tmr-community-band h4,
+html body .tmr-explore-card h3, html body .tmr-explore-card h4,
+html body .tmr-premium-proof-cards h3, html body .tmr-premium-proof-cards h4,
+html body .tmr-loop-step h3, html body .tmr-loop-step h4{
+  color:var(--v2-ink); font-weight:900; letter-spacing:-.03em;
+}
+html body .tmr-community-band .tmr-card p,
+html body .tmr-explore-card p,
+html body .tmr-premium-proof-cards p,
+html body .tmr-loop-step p,
+html body .tmr-premium-proof-cards li,
+html body .tmr-premium-proof-cards td,
+html body .tmr-premium-proof-cards th{ color:var(--v2-ink-2); }
+html body .tmr-explore-card a,
+html body .tmr-community-band a[class*="card"] > span:last-child{
+  color:var(--v2-brand-dk); font-weight:800;
+}
+html body .tmr-card-icon{ background:var(--v2-brand-soft); border:1px solid rgba(12,148,140,.22); }
+
+/* ---------- SPORTS TALK ---------- */
+html body .tmr-sports-talk{
+  background:var(--v2-panel); border:1px solid var(--v2-edge);
+  border-radius:var(--v2-r); box-shadow:var(--v2-sh);
+  padding-top:20px !important; padding-bottom:8px !important;
+}
+html body .tmr-sports-talk .stp-rows{ background:transparent; }
+html body .tmr-sports-talk .stp-rows > *{
+  border-bottom:1px solid var(--v2-line); color:var(--v2-ink);
+}
+html body .tmr-sports-talk .stp-rows a{ color:var(--v2-ink); font-weight:700; }
+html body .tmr-sports-talk .stp-rows a:hover{ color:var(--v2-brand-dk); }
+html body .tmr-sports-talk .stp-rows small,
+html body .tmr-sports-talk .stp-rows span{ color:var(--v2-muted); }
+
+/* ---------- BOARD CARDS (contest + leaderboard preview) ---------- */
+html body .tmr-board-card{
+  background:var(--v2-panel); border:1px solid var(--v2-edge);
+  border-radius:var(--v2-r); box-shadow:var(--v2-sh); color:var(--v2-ink);
+  overflow:hidden;
+}
+html body .tmr-board-card > header{
+  padding:18px 24px; border-bottom:2px solid var(--v2-panel-3); background:transparent;
+}
+html body .tmr-board-card > header h3{
+  font-family:'Barlow Condensed','Barlow','Inter',sans-serif;
+  text-transform:uppercase; font-size:24px; font-weight:900;
+  letter-spacing:.008em; line-height:1; color:var(--v2-ink);
+}
+html body .tmr-board-card > header a{ color:var(--v2-brand-dk); font-weight:800; font-size:13.5px; }
+html body .tmr-board-card h3, html body .tmr-board-card h4,
+html body .tmr-board-card b, html body .tmr-board-card strong{ color:var(--v2-ink); }
+html body .tmr-board-card p, html body .tmr-board-card li{ color:var(--v2-ink-2); }
+html body .tmr-board-card table th{
+  background:var(--v2-panel-2); color:var(--v2-muted);
+  font-size:11.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+  border-bottom:1px solid var(--v2-line); padding:11px 24px;
+}
+html body .tmr-board-card table td{
+  border-bottom:1px solid var(--v2-line); color:var(--v2-ink);
+  padding:14px 24px; font-size:15px;
+}
+html body .tmr-board-card table tr:hover td{ background:var(--v2-panel-2); }
+
+/* activity rows (Live Highlights / live picks) */
+html body .tmr-activity-list{ background:transparent; }
+html body .tmr-activity-row{
+  padding:15px 22px; border-bottom:1px solid var(--v2-line); color:var(--v2-ink);
+}
+html body .tmr-activity-row:last-child{ border-bottom:none; }
+html body .tmr-activity-row:hover{ background:var(--v2-panel-2); }
+html body .tmr-activity-text{ color:var(--v2-ink); font-size:15px; }
+html body .tmr-activity-text b, html body .tmr-activity-text strong{ color:var(--v2-ink); font-weight:800; }
+html body .tmr-activity-avatar{ border-radius:9px; border:1px solid var(--v2-line); }
+html body .tmr-fallback-initials{ background:linear-gradient(140deg,var(--v2-brand),var(--v2-brand-dk)); color:#fff; }
+html body .tmr-activity-pill{
+  border-radius:5px; font-size:11px; font-weight:900;
+  letter-spacing:.09em; text-transform:uppercase; padding:4px 11px;
+  background:var(--v2-panel-3); color:var(--v2-ink-2); border:1px solid var(--v2-line);
+}
+html body .tmr-activity-cta{ color:var(--v2-brand-dk); font-weight:800; }
+html body .tmr-activity-loading{ color:var(--v2-muted); }
+
+/* ---------- DARK FEATURE BAND (kept dark, approved) ---------- */
+html body .tmrhx{
+  background:linear-gradient(150deg,var(--v2-navy),var(--v2-navy-2));
+  border-radius:var(--v2-r); box-shadow:var(--v2-sh-up);
+}
+html body .tmrhx h2, html body .tmrhx h3{ color:#fff; }
+html body .tmrhx p{ color:#B7CEE4; }
+
+/* ---------- NOTICES ---------- */
+html body .tmr-account-integrity-note{
+  background:var(--v2-red-soft); border:1px solid rgba(188,55,46,.30);
+  border-radius:var(--v2-r); color:var(--v2-ink);
+}
+html body .tmr-account-integrity-note strong,
+html body .tmr-account-integrity-note b{ color:var(--v2-ink); }
+html body .tmr-account-integrity-note span,
+html body .tmr-account-integrity-note p{ color:var(--v2-ink-2); }
+html body .tmr-arena-promo{
+  background:var(--v2-panel); border:1px solid var(--v2-edge);
+  border-radius:var(--v2-r); box-shadow:var(--v2-sh); color:var(--v2-ink);
+}
+html body .tmr-arena-promo strong, html body .tmr-arena-promo b{ color:var(--v2-ink); }
+html body .tmr-arena-promo span, html body .tmr-arena-promo p{ color:var(--v2-ink-2); }
+html body .tmr-home-beta-strip{ color:var(--v2-ink-2); }
+
+/* JustBet partner block: light gold panel, readable */
+html body [data-justbet-bonus-box] > *{
+  background:var(--v2-gold-soft) !important;
+  border:1px solid rgba(185,133,5,.30) !important;
+  border-radius:var(--v2-r) !important;
+  color:var(--v2-ink) !important;
+}
+html body [data-justbet-bonus-box] h3,
+html body [data-justbet-bonus-box] h4,
+html body [data-justbet-bonus-box] strong,
+html body [data-justbet-bonus-box] b{ color:var(--v2-ink) !important; }
+html body [data-justbet-bonus-box] p,
+html body [data-justbet-bonus-box] span,
+html body [data-justbet-bonus-box] li,
+html body [data-justbet-bonus-box] small{ color:var(--v2-ink-2) !important; }
+html body [data-justbet-bonus-box] a:not([class]){ color:var(--v2-brand-dk) !important; font-weight:800; }
+
+/* ---------- BUTTONS ---------- */
+html body .hero-action--primary,
+html body .tmr-premium-actions > a:first-child{
+  background:linear-gradient(180deg,#13B0A5,#0A8A83);
+  border:1.5px solid transparent; color:#fff;
+  box-shadow:0 2px 10px rgba(12,148,140,.32);
+  border-radius:var(--v2-r-sm); font-weight:800;
+}
+html body .hero-action--ghost{
+  background:rgba(255,255,255,.11); color:#fff;
+  border:1.5px solid rgba(255,255,255,.32); border-radius:var(--v2-r-sm); font-weight:800;
+}
+/* buttons that sit on the light field */
+html body .tmr-community-band a[class*="btn"],
+html body .tmr-explore a[class*="btn"],
+html body .tmr-arena-promo a[class*="btn"],
+html body .tmr-account-integrity-note a[class*="btn"]{
+  border-radius:var(--v2-r-sm); font-weight:800;
+}
+
+/* ---------- FINAL CTA ---------- */
+html body .tmr-final{
+  background:linear-gradient(150deg,var(--v2-navy),var(--v2-navy-2));
+  border-radius:var(--v2-r); box-shadow:var(--v2-sh-up);
+}
+html body .tmr-final h2, html body .tmr-final h3{
+  font-family:'Barlow Condensed','Barlow','Inter',sans-serif;
+  text-transform:uppercase; font-weight:900; letter-spacing:.006em; color:#fff;
+}
+html body .tmr-final p, html body .tmr-final-fineprint{ color:#A9C3DA; }
+html body .tmr-final-eyebrow{ color:var(--v2-brand-lt); }
+
+/* ---------- semantics preserved: green = win/positive, red = loss/negative -- */
+html body .is-win, html body .win, html body .positive, html body .tmr-positive{ color:var(--v2-green); }
+html body .is-loss, html body .loss, html body .negative, html body .tmr-negative{ color:var(--v2-red); }
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:1400px){
+  html body .tmr-statbar__inner{ grid-template-columns:repeat(2,1fr); }
+  html body .tmr-statbar .tmr-stat:nth-child(2){ border-right:none; }
+  html body .tmr-statbar .tmr-stat:nth-child(1),
+  html body .tmr-statbar .tmr-stat:nth-child(2){ border-bottom:1px solid var(--v2-line); }
+}
+@media (max-width:760px){
+  :root{ --v2-gutter:18px; }
+  html body .tmr-premium-hero{ padding-bottom:86px; }
+  html body .tmr-statbar{ margin-top:-34px !important; }
+  html body .tmr-statbar__inner{ grid-template-columns:1fr; }
+  html body .tmr-statbar .tmr-stat{ padding:15px 18px; border-right:none; border-bottom:1px solid var(--v2-line); }
+  html body .tmr-statbar .tmr-stat:last-child{ border-bottom:none; }
+  html body .tmr-statbar .tmr-stat b{ font-size:26px; }
+  html body .tmr-board-card > header{ padding:16px 18px; }
+  html body .tmr-activity-row{ padding:14px 18px; }
+  html body .tmr-board-card table th,
+  html body .tmr-board-card table td{ padding:12px 16px; }
+}
