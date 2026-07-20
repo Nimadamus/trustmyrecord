@@ -34,58 +34,37 @@
     return Math.floor(s / 86400) + ' d ago';
   }
 
-  /* ---------- 1. TICKER — real scheduled MLB games, official abbreviations only.
-     A game renders only if BOTH team names resolve in MLB_ABBR; nothing is
-     generated or truncated. If no game validates, the ticker says so. -------- */
-  var MLB_ABBR = {
-    'Arizona Diamondbacks': 'ARI', 'Athletics': 'ATH', 'Oakland Athletics': 'OAK',
-    'Atlanta Braves': 'ATL', 'Baltimore Orioles': 'BAL', 'Boston Red Sox': 'BOS',
-    'Chicago Cubs': 'CHC', 'Chicago White Sox': 'CWS', 'Cincinnati Reds': 'CIN',
-    'Cleveland Guardians': 'CLE', 'Colorado Rockies': 'COL', 'Detroit Tigers': 'DET',
-    'Houston Astros': 'HOU', 'Kansas City Royals': 'KC', 'Los Angeles Angels': 'LAA',
-    'Los Angeles Dodgers': 'LAD', 'Miami Marlins': 'MIA', 'Milwaukee Brewers': 'MIL',
-    'Minnesota Twins': 'MIN', 'New York Mets': 'NYM', 'New York Yankees': 'NYY',
-    'Philadelphia Phillies': 'PHI', 'Pittsburgh Pirates': 'PIT', 'San Diego Padres': 'SD',
-    'San Francisco Giants': 'SF', 'Seattle Mariners': 'SEA', 'St. Louis Cardinals': 'STL',
-    'Tampa Bay Rays': 'TB', 'Texas Rangers': 'TEX', 'Toronto Blue Jays': 'TOR',
-    'Washington Nationals': 'WSH'
-  };
+  /* ---------- 1. TICKER — real scheduled games (no invented scores) -------- */
   function ticker() {
     var box = el('.ticker'); if (!box) return;
-    var empty = function () {
-      box.querySelector('.ticker-in').innerHTML =
-        '<span class="tlbl"><span class="bl"></span>Today</span>' +
-        '<span class="gm"><span class="st">No verified MLB games available right now.</span></span>';
-    };
     j('/games').then(function (d) {
       var games = (d && d.games) || [];
-      var now = Date.now(), todayStr = new Date().toDateString(), seen = {};
+      if (!games.length) { box.style.display = 'none'; return; }
+      var now = Date.now();
+      var seen = {};
       games = games.filter(function (g) {
-        if (!g || g.sport_key !== 'baseball_mlb') return false;
-        var away = MLB_ABBR[g.away_team], home = MLB_ABBR[g.home_team];
-        if (!away || !home || away === home) return false;
-        var ts = new Date(g.commence_time).getTime();
-        if (isNaN(ts)) return false;
-        if (new Date(ts).toDateString() !== todayStr) return false;
-        if (ts <= now - 6 * 3600e3) return false;
-        var key = g.away_team + '|' + g.home_team;
-        if (seen[key]) return false;
+        var key = g.id || (g.away_team + '@' + g.home_team + '|' + g.commence_time);
+        if (seen[key]) return false;                       // dedupe on the real event id
         seen[key] = 1;
-        return true;
-      }).sort(function (a, b) { return new Date(a.commence_time) - new Date(b.commence_time); })
-        .slice(0, 6);
-      if (!games.length) { empty(); return; }
+        return new Date(g.commence_time).getTime() > now - 6 * 3600e3;
+      })
+                   .sort(function (a, b) { return new Date(a.commence_time) - new Date(b.commence_time); })
+                   .slice(0, 6);
+      if (!games.length) { box.style.display = 'none'; return; }
+      var abbr = function (t) {
+        var w = String(t || '').split(' '); return (w[w.length - 1] || '').slice(0, 3).toUpperCase();
+      };
       var html = '<span class="tlbl"><span class="bl"></span>Today</span>';
       games.forEach(function (g) {
         var t = new Date(g.commence_time);
         var when = t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        html += '<a class="gm" href="/sportsbook/">' +
-          '<span class="t">' + esc(MLB_ABBR[g.away_team]) + '</span>' +
-          '<span class="t">' + esc(MLB_ABBR[g.home_team]) + '</span>' +
-          '<span class="st">' + esc(when) + '</span></a>';
+        html += '<span class="gm">' +
+          '<span class="t">' + esc(abbr(g.away_team)) + '</span>' +
+          '<span class="t">' + esc(abbr(g.home_team)) + '</span>' +
+          '<span class="st">' + esc(when) + '</span></span>';
       });
       box.querySelector('.ticker-in').innerHTML = html;
-    }).catch(empty);
+    });
   }
 
   /* ---------- 2. LIVE PICKS — real graded/pending picks -------------------- */
@@ -180,6 +159,11 @@
       if (lb) { var w2 = picks.filter(function (p) { return /won/i.test(p.status); }).length;
         lb.innerHTML = '<span>Last ' + picks.length + ' graded picks</span><span>' + w2 + 'W &middot; ' + (picks.length - w2) + 'L</span>'; }
     }
+  }
+
+  function sparkFallback() {
+    var wrap = el('.spot .sparkwrap');
+    if (wrap) wrap.innerHTML = '<div class="lb"><span>Recent picks</span><span>Data unavailable</span></div>';
   }
 
   /* ---------- 5. SPORTS TALK --------------------------------------------- */
@@ -310,7 +294,25 @@
       leaderboard(all);
       platform(all);
       j('/users/trend-highlights').then(function (d) {
-        if (d && d.users && d.users.length) livePicks(d.users);
+        if (!(d && d.users && d.users.length)) { sparkFallback(); return; }
+        livePicks(d.users);
+        // capper chart: real graded picks for the top-ranked capper
+        var topName = (document.querySelector('.spot .nmrow b') || {}).textContent;
+        var match = d.users.filter(function (u) { return u.username === topName; })[0];
+        var graded = match ? (match.picks || []).filter(function (x) {
+          return /won|lost/i.test(x.status || ''); }).slice(0, 12).reverse() : [];
+        var sp = el('.spot .spark'), lb = el('.spot .lb');
+        if (!sp) return;
+        if (!graded.length) { sparkFallback(); return; }
+        var mx = Math.max.apply(null, graded.map(function (x) {
+          return Math.abs(num(x.result_units)) || 1; })) || 1;
+        sp.innerHTML = graded.map(function (x) {
+          var v = num(x.result_units), h = Math.max(18, Math.round(Math.abs(v) / mx * 100));
+          return '<i class="' + (v < 0 ? 'dn' : '') + '" style="height:' + h + '%"></i>';
+        }).join('');
+        if (lb) { var w = graded.filter(function (x) { return /won/i.test(x.status); }).length;
+          lb.innerHTML = '<span>Last ' + graded.length + ' graded picks</span><span>' +
+            w + 'W · ' + (graded.length - w) + 'L</span>'; }
       });
     }
   }
