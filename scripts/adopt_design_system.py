@@ -48,6 +48,13 @@ REDESIGN_OVERRIDE_RE = re.compile(
     r'[ \t]*<link[^>]+href="/static/css/tmr-redesign-overrides[^"]*"[^>]*>\n?')
 REDESIGN_IMPORT_RE = re.compile(
     r'[ \t]*@import\s+url\([\'"]?/static/css/tmr-redesign-overrides[^)]*\)\s*;\n?')
+# The third legacy override mechanism, and the only one a stylesheet cannot beat.
+# tmr-redesign-loader.js injects ~18KB of dark CSS into <head> on window.load,
+# every declaration !important, and its own header says it runs late so it "wins
+# source-order ties even against page-specific runtime style injection". Any
+# design-system page that still loads it stays dark no matter what.
+REDESIGN_LOADER_RE = re.compile(
+    r'[ \t]*<script[^>]+src="/static/js/tmr-redesign-loader\.js[^"]*"[^>]*>\s*</script>\n?')
 # Any Google-Fonts link that requests plain Barlow -> Barlow Condensed.
 BARLOW_RE = re.compile(r'(fonts\.googleapis\.com/css2\?family=)Barlow(:wght|&|")')
 # The design system sets display type at weight 900. Pages that already load
@@ -145,6 +152,9 @@ def adopt(path, page_css_name, dark=False, keep_nav=False, strip_important=False
     html, n_ri = REDESIGN_IMPORT_RE.subn("", html)
     if n_ro or n_ri:
         notes.append(f"removed tmr-redesign-overrides links/imports: {n_ro}/{n_ri}")
+    html, n_rl = REDESIGN_LOADER_RE.subn("", html)
+    if n_rl:
+        notes.append(f"removed tmr-redesign-loader.js tags: {n_rl}")
     if not keep_nav:
         html, n_js = SITEWIDE_JS_RE.subn("", html)
         notes.append(f"removed tmr-sitewide.js tags: {n_js}")
