@@ -64,6 +64,58 @@
     'Tampa Bay Rays': 'TB', 'Texas Rangers': 'TEX', 'Toronto Blue Jays': 'TOR',
     'Washington Nationals': 'WSH'
   };
+  /* Short TrendSpotter line, built ONLY from the verified trend's structured
+     fields (record / sample / market / kind / side). Nothing is paraphrased or
+     invented: if a trend's shape is not one this function understands exactly,
+     it returns '' and the card falls back to the honest Hub message. For TOTAL
+     trends the OVER/UNDER direction lives only in the engine's own statement,
+     so it is read back out of that statement and the record digits must match
+     the structured record or the trend is discarded. */
+  var TREND_FALLBACK = 'Trend analysis available in Hub';
+  function trendLine(t) {
+    if (!t) return '';
+    var abbr = MLB_ABBR[t.team_abbr]; if (!abbr) return '';
+    var rec = String(t.record || ''); if (!/^\d+-\d+$/.test(rec)) return '';
+    var n = parseInt(t.sample, 10); if (!n || n < 5) return '';
+    var market = String(t.market || t.bet_type || '').toUpperCase();
+    var kind = String(t.kind || t.trend_type || '').toUpperCase();
+    var side = String(t.side || '').toUpperCase();
+    if (market === 'MONEYLINE') {
+      if (kind === 'AWAY') return abbr + ' ' + rec + ' ML in last ' + n + ' road games';
+      if (kind === 'HOME') return abbr + ' ' + rec + ' ML in last ' + n + ' home games';
+      if (kind === 'RECENT_FORM') return abbr + ' ' + rec + ' ML in last ' + n + ' games';
+      return '';
+    }
+    if (market === 'SPREAD' && kind === 'RECENT_FORM') {
+      return abbr + ' ' + rec + ' ATS in last ' + n + ' games';
+    }
+    if (market === 'TOTAL') {
+      var m = /\bto the (OVER|UNDER) is (\d+)-(\d+)\b/.exec(String(t.claim || ''));
+      if (!m || m[2] + '-' + m[3] !== rec) return '';
+      return m[1].charAt(0) + m[1].slice(1).toLowerCase() + ' is ' + rec +
+        ' in ' + abbr + "'s last " + n;
+    }
+    if (market === 'TEAM_TOTAL' && (side === 'OVER' || side === 'UNDER')) {
+      return abbr + ' team total ' + side.charAt(0) + side.slice(1).toLowerCase() +
+        ' ' + rec + ' in last ' + n;
+    }
+    return '';
+  }
+  /* Strongest verified trend for a matchup: engine score first, then hit rate.
+     A .500-or-worse record is not a trend and never renders. */
+  function bestTrendFor(list) {
+    var best = null, bestKey = -1;
+    (list || []).forEach(function (t) {
+      if (t.is_current === false || t.current_matchup_valid === false) return;
+      var wp = parseFloat(t.win_percentage);
+      if (isNaN(wp) || wp <= 0.5) return;
+      if (!trendLine(t)) return;
+      var score = (parseFloat(t.mind_blowing_score) || 0) * 100 + wp * 10;
+      if (score > bestKey) { bestKey = score; best = t; }
+    });
+    return best;
+  }
+
   function ticker() {
     var box = el('.ticker'); if (!box) return;
     var empty = function () {
@@ -71,11 +123,18 @@
         '<span class="tlbl"><span class="bl"></span>Today</span>' +
         '<span class="gm"><span class="st">No verified MLB games available right now.</span></span>';
     };
-    j('/games').then(function (d) {
+    /* Board endpoint = the exact source (and the exact game ids) the Handicapping
+       Hub renders, so every card deep-links to its own matchup, not a generic page. */
+    Promise.all([
+      j('/games/board/baseball_mlb?limit=80'),
+      j('/trendspotter/verified?sport=MLB')
+    ]).then(function (res) {
+      var d = res[0], td = res[1];
       var games = (d && d.games) || [];
       var now = Date.now(), todayStr = new Date().toDateString(), seen = {};
       games = games.filter(function (g) {
-        if (!g || g.sport_key !== 'baseball_mlb') return false;
+        if (!g || !g.id) return false;
+        if (g.sport_key && g.sport_key !== 'baseball_mlb') return false;
         var away = MLB_ABBR[g.away_team], home = MLB_ABBR[g.home_team];
         if (!away || !home || away === home) return false;
         var ts = new Date(g.commence_time).getTime();
@@ -89,14 +148,35 @@
       }).sort(function (a, b) { return new Date(a.commence_time) - new Date(b.commence_time); })
         .slice(0, 6);
       if (!games.length) { empty(); return; }
+
+      var byMatchup = {};
+      ((td && td.trends) || []).forEach(function (t) {
+        var a = t.away_abbr, h = t.home_abbr;
+        if ((!a || !h) && t.matchup) {
+          var p = String(t.matchup).split('@');
+          if (p.length === 2) { a = p[0].trim(); h = p[1].trim(); }
+        }
+        if (!MLB_ABBR[a] || !MLB_ABBR[h]) return;
+        var k = a + '|' + h;
+        (byMatchup[k] = byMatchup[k] || []).push(t);
+      });
+
       var html = '<span class="tlbl"><span class="bl"></span>Today</span>';
       games.forEach(function (g) {
         var t = new Date(g.commence_time);
         var when = t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-        html += '<a class="gm" href="/sportsbook/">' +
-          '<span class="t">' + teamLogo(MLB_ABBR[g.away_team]) + esc(MLB_ABBR[g.away_team]) + '</span>' +
-          '<span class="t">' + teamLogo(MLB_ABBR[g.home_team]) + esc(MLB_ABBR[g.home_team]) + '</span>' +
-          '<span class="st">' + esc(when) + '</span></a>';
+        var best = bestTrendFor(byMatchup[g.away_team + '|' + g.home_team]);
+        var line = best ? trendLine(best) : '';
+        var href = '/handicapping/mlb/#game-' + encodeURIComponent(g.id);
+        html += '<a class="gm" href="' + esc(href) + '">' +
+          '<span class="gm-top">' +
+            '<span class="t">' + teamLogo(MLB_ABBR[g.away_team]) + esc(MLB_ABBR[g.away_team]) + '</span>' +
+            '<span class="t">' + teamLogo(MLB_ABBR[g.home_team]) + esc(MLB_ABBR[g.home_team]) + '</span>' +
+            '<span class="st">' + esc(when) + '</span>' +
+          '</span>' +
+          '<span class="gm-tr' + (line ? '' : ' is-na') + '">' +
+            '<span class="ts" aria-hidden="true"></span>' + esc(line || TREND_FALLBACK) +
+          '</span></a>';
       });
       box.querySelector('.ticker-in').innerHTML = html;
     }).catch(empty);
