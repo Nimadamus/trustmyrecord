@@ -1964,7 +1964,11 @@
             if (g >= TIER_VERIFIED_MIN) return null;
             if (g >= TIER_RISING_MIN) return { label: 'Building Record', cls: 'building', title: 'Needs ' + TIER_VERIFIED_MIN + ' graded picks to be verified' };
             if (g >= 1) return { label: 'Small Sample', cls: 'sample', title: 'Small sample - record still forming' };
-            return { label: 'Recently Joined', cls: 'joined', title: 'No graded picks yet' };
+            const joinedDate = member && member.createdAt ? new Date(member.createdAt) : null;
+            const joinedLabel = joinedDate && !isNaN(joinedDate.getTime())
+                ? 'Joined ' + joinedDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                : 'Recently Joined';
+            return { label: joinedLabel, cls: 'joined', title: 'No graded picks yet' };
         }
 
         function compareBy(...getters) {
