@@ -1138,6 +1138,7 @@
         function startThreadRefresh() {
             if (threadRefreshTimer) return;
             threadRefreshTimer = setInterval(async () => {
+                if (sseConnected) return; // SSE is live; this timer is the fallback
                 if (!activeConversationUserId || document.hidden) return;
                 if (document.getElementById('reactPalette')) return;
                 const container = document.getElementById('chatMessages');
@@ -1150,6 +1151,69 @@
             }, 30000);
         }
         startThreadRefresh();
+
+        // ---- Live updates via SSE (the 30s timer above is the fallback) ----
+        let sse = null, sseConnected = false, sseReconnectDelay = 5000, sseRefreshDebounce = null;
+
+        async function connectSSE() {
+            if (typeof EventSource === 'undefined') return; // fallback timer covers it
+            if (!api || typeof api.request !== 'function' || !currentUser) {
+                setTimeout(connectSSE, 2000); // init() may not have resolved the user yet
+                return;
+            }
+            try {
+                const t = await api.request('/messages/stream-ticket', { method: 'POST' });
+                const base = String(api.baseUrl || '').replace(/\/$/, '');
+                sse = new EventSource(base + '/messages/stream?ticket=' + encodeURIComponent(t.ticket));
+                sse.onopen = function () { sseConnected = true; sseReconnectDelay = 5000; };
+                sse.onmessage = function (ev) {
+                    try { handleLiveEvent(JSON.parse(ev.data)); } catch (e) {}
+                };
+                sse.onerror = function () {
+                    // Tickets are single-use, so EventSource's auto-reconnect can't
+                    // succeed; close and reconnect ourselves with a fresh ticket.
+                    sseConnected = false;
+                    try { sse.close(); } catch (e) {}
+                    sse = null;
+                    setTimeout(connectSSE, sseReconnectDelay);
+                    sseReconnectDelay = Math.min(sseReconnectDelay * 2, 60000);
+                };
+            } catch (e) {
+                sseConnected = false;
+                setTimeout(connectSSE, sseReconnectDelay);
+                sseReconnectDelay = Math.min(sseReconnectDelay * 2, 60000);
+            }
+        }
+
+        function handleLiveEvent(ev) {
+            if (!ev || !ev.type) return;
+            if (ev.type === 'message') loadConversations();
+            if (!activeConversationUserId) return;
+            const active = String(activeConversationUserId);
+            const involvesActive =
+                (ev.from != null && String(ev.from) === active) ||
+                (ev.to != null && String(ev.to) === active) ||
+                (ev.by != null && String(ev.by) === active) ||
+                (ev.with != null && String(ev.with) === active);
+            if (!involvesActive) return;
+            clearTimeout(sseRefreshDebounce);
+            sseRefreshDebounce = setTimeout(async () => {
+                const container = document.getElementById('chatMessages');
+                const atBottom = container && (container.scrollHeight - container.scrollTop - container.clientHeight < 40);
+                const prevTop = container ? container.scrollTop : 0;
+                if (ev.type === 'message' && ev.from != null && String(ev.from) === active && !document.hidden) {
+                    // Incoming message while the thread is open: mark read now so
+                    // the sender's receipt flips instantly.
+                    try { await api.markAsRead(activeConversationUserId); } catch (e) {}
+                }
+                try {
+                    await loadChatMessages(activeConversationUserId, false);
+                    if (container) container.scrollTop = atBottom ? container.scrollHeight : prevTop;
+                } catch (e) {}
+            }, 200);
+        }
+
+        connectSSE();
 
         // ---- Message reactions ----
         const REACTION_EMOJI = { like: '👍', love: '❤️', laugh: '😂', wow: '😮', sad: '😢', fire: '🔥' };
