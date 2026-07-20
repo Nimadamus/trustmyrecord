@@ -223,6 +223,30 @@
   }
   function initials(n) { return String(n || '?').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase(); }
 
+  /* The bell opens the alerts dropdown in place, which is owned by
+     notifications.js (it anchors to #homeNotifBtn). The nav this replaces pulled
+     that engine in via tmr-sitewide.js, so without it a signed-in user's bell
+     would silently degrade to a plain link to /notifications/. Load the same
+     chain the homepage loads, in order, and only what is actually missing. */
+  var NOTIF_CHAIN = [
+    '/static/js/config.js?v=20260330',
+    '/static/js/backend-api.js?v=20260525noautologout',
+    '/static/js/auth-persistent.js?v=20260525noautologout',
+    '/static/js/notifications.js?v=20260720nv1'
+  ];
+
+  function loadChain(list, i) {
+    i = i || 0;
+    if (i >= list.length) return;
+    var base = list[i].split('?')[0];
+    if (document.querySelector('script[src^="' + base + '"]')) return loadChain(list, i + 1);
+    var s = document.createElement('script');
+    s.src = list[i];
+    s.onload = function () { loadChain(list, i + 1); };
+    s.onerror = function () { loadChain(list, i + 1); };
+    document.head.appendChild(s);
+  }
+
   function renderUser(user) {
     var right = document.querySelector('.ds-nav .ds-nav-right');
     if (!right || !user) return;
@@ -243,6 +267,8 @@
         '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
         '<span class="v2nav-badge" id="homeNotifBadge" hidden></span></a>' +
       '<a class="ds-btn p sm" href="/my-record/">My Record</a>';
+
+    if (typeof window.toggleNotifications !== 'function') loadChain(NOTIF_CHAIN);
 
     fetch(API + '/notifications/unread-count', {
       headers: { Accept: 'application/json', Authorization: 'Bearer ' + token() }
