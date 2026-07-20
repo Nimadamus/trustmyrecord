@@ -16,6 +16,15 @@ Usage:
 Options:
     --dark        add `tmr-ds--dark` (navy surface mode, for data-dense tools)
     --keep-nav    leave tmr-sitewide.js in place (for pages mid-migration)
+    --strip-important
+                  remove `!important` from the page's own inline <style> blocks.
+                  Those declarations exist almost entirely to out-shout
+                  tmr-sitewide.css (which declares h1/h2 !important 4+ times and
+                  forces the shell background). Once that file is gone they have
+                  nothing to fight, and leaving them behind would force the
+                  design system to escalate to !important too - which is exactly
+                  the specificity war this project exists to end. Always follow
+                  with a visual + parity check.
     --dry-run     report what would change, write nothing
 """
 import argparse
@@ -39,7 +48,23 @@ def assets():
     return m["static/css/tmr-ds.css"], m["static/js/tmr-ds-nav.js"], m
 
 
-def adopt(path, page_css_name, dark=False, keep_nav=False, dry_run=False):
+def strip_important_in_styles(html):
+    """Drop `!important` inside <style> blocks only. Inline style="" attributes
+    and any JS strings are left alone."""
+    total = 0
+
+    def repl(m):
+        nonlocal total
+        block = m.group(0)
+        block, n = re.subn(r"\s*!\s*important", "", block)
+        total += n
+        return block
+
+    html = re.sub(r"(?s)<style.*?</style>", repl, html)
+    return html, total
+
+
+def adopt(path, page_css_name, dark=False, keep_nav=False, strip_important=False, dry_run=False):
     ds_css, ds_nav, manifest = assets()
     page_css_key = f"static/css/{page_css_name}"
     if page_css_key not in manifest:
@@ -75,6 +100,11 @@ def adopt(path, page_css_name, dark=False, keep_nav=False, dry_run=False):
     if not keep_nav:
         html, n_js = SITEWIDE_JS_RE.subn("", html)
         notes.append(f"removed tmr-sitewide.js tags: {n_js}")
+
+    # 3b. optional: retire the page's own !important war
+    if strip_important:
+        html, n_imp = strip_important_in_styles(html)
+        notes.append(f"stripped !important from inline <style>: {n_imp}")
 
     # 4. display face
     html, n_font = BARLOW_RE.subn(r"\1Barlow+Condensed\2", html)
@@ -121,6 +151,8 @@ if __name__ == "__main__":
     ap.add_argument("--page-css", required=True)
     ap.add_argument("--dark", action="store_true")
     ap.add_argument("--keep-nav", action="store_true")
+    ap.add_argument("--strip-important", action="store_true")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args()
-    adopt(a.path, a.page_css, dark=a.dark, keep_nav=a.keep_nav, dry_run=a.dry_run)
+    adopt(a.path, a.page_css, dark=a.dark, keep_nav=a.keep_nav,
+          strip_important=a.strip_important, dry_run=a.dry_run)

@@ -22,17 +22,24 @@ import json
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SOURCES = [
-    ROOT / "static" / "css" / "tmr-ds.css",
-    ROOT / "static" / "css" / "tmr-ds-handicappers.css",
-    ROOT / "static" / "js" / "tmr-ds-nav.js",
-]
 MANIFEST = ROOT / "static" / "ds-assets.json"
+
+
+def sources():
+    """Every unhashed tmr-ds* source, discovered rather than listed, so adding a
+    page's adoption layer needs no edit here. A hashed build has three
+    dot-separated parts (name.hash.ext) and is skipped."""
+    found = []
+    for d, ext in ((ROOT / "static" / "css", ".css"), (ROOT / "static" / "js", ".js")):
+        for p in sorted(d.glob(f"tmr-ds*{ext}")):
+            if len(p.name.split(".")) == 2:
+                found.append(p)
+    return found
 
 
 def main():
     mapping = {}
-    for src in SOURCES:
+    for src in sources():
         raw = src.read_bytes()
         digest = hashlib.sha256(raw).hexdigest()[:12]
         hashed = src.with_name(f"{src.stem}.{digest}{src.suffix}")
