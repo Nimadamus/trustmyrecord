@@ -45,6 +45,10 @@
     ['/polls/', 'Polls'],
     ['/trivia/', 'Trivia']
   ];
+  var SUPPORT = [
+    ['/contact/', 'Contact Us'],
+    ['/report-bug/', 'Report a Bug']
+  ];
   var MORE = [
     ['/marketplace/', 'Sell Your Picks'],
     ['/rules/', 'Rules']
@@ -133,6 +137,7 @@
             menu('Sportsbook', SPORTSBOOK) +
             links(PRIMARY) +
             menu('Community', COMMUNITY) +
+            menu('Support', SUPPORT) +
             menu('More', MORE) +
           '</div>' +
           '<div class="ds-nav-right">' +

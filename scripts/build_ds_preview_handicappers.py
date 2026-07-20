@@ -33,12 +33,12 @@ OLD_FONTS = ('<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@6
              '&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">')
 NEW_FONTS = ('<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900'
              '&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">\n'
-             '    <link rel="stylesheet" href="/static/css/tmr-ds.css?v=20260720ds1">\n'
-             '    <link rel="stylesheet" href="/static/css/tmr-ds-handicappers.css?v=20260720ds1">')
+             '    <link rel="stylesheet" href="/static/css/tmr-ds.css?v=20260720ds2">\n'
+             '    <link rel="stylesheet" href="/static/css/tmr-ds-handicappers.css?v=20260720ds2">')
 
 SITEWIDE_CSS = '<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">'
 SITEWIDE_JS = '<script defer src="/static/js/tmr-sitewide.js?v=20260720alerts"></script>'
-DS_NAV_JS = '<script src="/static/js/tmr-ds-nav.js?v=20260720ds1"></script>\n</body>'
+DS_NAV_JS = '<script src="/static/js/tmr-ds-nav.js?v=20260720ds2"></script>\n</body>'
 
 
 def sub_once(html, old, new, label):
