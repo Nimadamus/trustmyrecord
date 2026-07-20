@@ -48,7 +48,12 @@ jobs:
           node-version: '20'
 
       - name: Install Playwright chromium
-        run: npm install --no-save playwright@1.49.1 && npx playwright install --with-deps chromium
+        # Drive the LOCAL playwright binary, not `npx playwright`: npx resolves the
+        # latest release from the registry, which downloads a browser build the
+        # pinned module cannot find ("Executable doesn't exist at .../chromium_headless_shell-1148").
+        run: |
+          npm install --no-save playwright@1.49.1
+          ./node_modules/.bin/playwright install --with-deps chromium
 
       - name: Bake real live data into the homepage first paint
         # Runs the homepage's own JS against the live API and writes the resulting
