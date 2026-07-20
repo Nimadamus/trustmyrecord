@@ -1,0 +1,256 @@
+/* =============================================================================
+   TrustMyRecord homepage — live production data binding
+   Fills the approved v2 layout from real API data only. Never invents values:
+   if an endpoint fails or returns nothing, the affected block is left as-is or
+   hidden rather than showing fabricated activity.
+   ============================================================================= */
+(function () {
+  'use strict';
+  var API = 'https://trustmyrecord-api.onrender.com/api';
+
+  function j(path) {
+    return fetch(API + path, { headers: { Accept: 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; });
+  }
+  function el(sel, root) { return (root || document).querySelector(sel); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+  function sign(n) { return (n > 0 ? '+' : '') + n.toFixed(2); }
+  function initials(name) { return String(name || '?').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase(); }
+  function avatar(u, cls) {
+    if (u && u.avatar_url) return '<img class="' + cls + '" src="' + esc(u.avatar_url) + '" alt="">';
+    if (u && u.id) return '<img class="' + cls + '" src="' + API + '/users/' + u.id + '/avatar" alt="" ' +
+      'onerror="this.outerHTML=\'<span class=&quot;' + cls.replace('ava', 'avl') + '&quot;>' + initials(u.username) + '</span>\'">';
+    return '<span class="' + cls.replace('ava', 'avl') + '">' + initials(u && u.username) + '</span>';
+  }
+  function timeAgo(ts) {
+    if (!ts) return '';
+    var s = Math.floor((Date.now() - new Date(ts).getTime()) / 1000);
+    if (s < 60) return s + ' sec ago';
+    if (s < 3600) return Math.floor(s / 60) + ' min ago';
+    if (s < 86400) return Math.floor(s / 3600) + ' hr ago';
+    return Math.floor(s / 86400) + ' d ago';
+  }
+
+  /* ---------- 1. TICKER — real scheduled games (no invented scores) -------- */
+  function ticker() {
+    var box = el('.ticker'); if (!box) return;
+    j('/games').then(function (d) {
+      var games = (d && d.games) || [];
+      if (!games.length) { box.style.display = 'none'; return; }
+      var now = Date.now();
+      games = games.filter(function (g) { return new Date(g.commence_time).getTime() > now - 6 * 3600e3; })
+                   .sort(function (a, b) { return new Date(a.commence_time) - new Date(b.commence_time); })
+                   .slice(0, 6);
+      if (!games.length) { box.style.display = 'none'; return; }
+      var abbr = function (t) {
+        var w = String(t || '').split(' '); return (w[w.length - 1] || '').slice(0, 3).toUpperCase();
+      };
+      var html = '<span class="tlbl"><span class="bl"></span>Today</span>';
+      games.forEach(function (g) {
+        var t = new Date(g.commence_time);
+        var when = t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+        html += '<span class="gm">' +
+          '<span class="t">' + esc(abbr(g.away_team)) + '</span>' +
+          '<span class="t">' + esc(abbr(g.home_team)) + '</span>' +
+          '<span class="st">' + esc(when) + '</span></span>';
+      });
+      box.querySelector('.ticker-in').innerHTML = html;
+    });
+  }
+
+  /* ---------- 2. LIVE PICKS — real graded/pending picks -------------------- */
+  function livePicks(users) {
+    var card = el('.board .card:nth-child(1) .body'); if (!card || !users) return;
+    var rows = [];
+    users.forEach(function (u) {
+      (u.picks || []).forEach(function (p) { rows.push({ u: u, p: p }); });
+    });
+    rows.sort(function (a, b) {
+      return new Date(b.p.created_at || b.p.game_time || 0) - new Date(a.p.created_at || a.p.game_time || 0);
+    });
+    rows = rows.slice(0, 6);
+    if (!rows.length) return;
+    card.innerHTML = rows.map(function (r) {
+      var p = r.p, u = r.u;
+      var st = String(p.status || '').toLowerCase();
+      var badge = st === 'won' ? '<span class="badge w">Win</span>'
+                : st === 'lost' ? '<span class="badge l">Loss</span>'
+                : '<span class="badge p">Pending</span>';
+      var ru = num(p.result_units);
+      var units = st === 'pending' || !st ? num(p.units).toFixed(1) + 'u'
+                : '<span class="' + (ru >= 0 ? 'pos' : 'neg') + '">' + sign(ru) + 'u</span>';
+      var sel = p.selection || p.pick || p.market_type || 'Pick';
+      var line = p.line_snapshot != null ? ' ' + p.line_snapshot : '';
+      var odds = p.odds_snapshot != null ? ' (' + (num(p.odds_snapshot) > 0 ? '+' : '') + p.odds_snapshot + ')' : '';
+      var lg = (p.sport_title || p.sport_key || 'PICK').toString().toUpperCase().slice(0, 4);
+      return '<div class="pk">' +
+        '<span class="logo2"><span class="lgchip">' + esc(lg) + '</span></span>' +
+        '<span class="bd">' +
+          '<span class="who">' + avatar(u, 'ava') + '<a class="who-link" href="/u/' + encodeURIComponent(u.username) + '/"><b>' + esc(u.username) + '</b></a>&middot; ' + esc(timeAgo(p.created_at)) + '</span>' +
+          '<span class="ln">' + esc(sel) + esc(line) + esc(odds) + '</span>' +
+          '<span class="mt"><span class="lgchip">' + esc(lg) + '</span>' + esc(p.market_type || '') + ' &middot; auto-graded</span>' +
+        '</span>' +
+        '<span class="rt">' + badge + '<span class="u">' + units + '</span></span>' +
+      '</div>';
+    }).join('');
+  }
+
+  /* ---------- 3. LEADERBOARD + 4. CAPPER OF THE WEEK ---------------------- */
+  function leaderboard(users) {
+    var body = el('.board .card:nth-child(2) .body'); if (!body || !users) return;
+    var ranked = users.filter(function (u) { return num(u.total_picks) > 0; })
+                      .sort(function (a, b) { return num(b.net_units) - num(a.net_units); });
+    if (!ranked.length) return;
+    body.innerHTML = ranked.slice(0, 8).map(function (u, i) {
+      var rk = i < 3 ? 'rk g' + (i + 1) : 'rk';
+      var w = u.wins != null ? u.wins + '-' + u.losses + (num(u.pushes) ? '-' + u.pushes : '') : num(u.total_picks) + ' picks';
+      return '<div class="lbr"><span class="' + rk + '">' + (i + 1) + '</span>' +
+        avatar(u, 'ava') +
+        '<span class="nm"><a href="/u/' + encodeURIComponent(u.username) + '/"><b>' + esc(u.username) + '</b></a><span>' + esc(w) + ' &middot; ' + num(u.total_picks) + ' picks</span></span>' +
+        '<span class="un"><b class="' + (num(u.net_units) >= 0 ? 'pos' : 'neg') + '">' + sign(num(u.net_units)) + 'u</b>' +
+        '<span>' + num(u.roi).toFixed(1) + '% ROI</span></span></div>';
+    }).join('');
+
+    var top = ranked[0]; if (!top) return;
+    var spot = el('.spot'); if (!spot) return;
+    var nm = el('.spot .nmrow b', document);
+    if (nm) { nm.textContent = top.username;
+      var pl = nm.closest('.nmrow'); if (pl && !pl.dataset.linked) { pl.dataset.linked='1';
+        nm.outerHTML = '<a href="/profile/?user=' + encodeURIComponent(top.username) + '"><b>' + top.username + '</b></a>'; } }
+    var fullProfile = el('.spot .hd a'); if (fullProfile) fullProfile.href = '/u/' + encodeURIComponent(top.username) + '/';
+    var ledger = el('.spot .ft a'); if (ledger) ledger.href = '/u/' + encodeURIComponent(top.username) + '/';
+    var sub = el('.spot .sub2'); if (sub) sub.textContent = (top.favorite_sports && top.favorite_sports.length
+      ? top.favorite_sports.join(', ') : 'All sports') + ' · ' + num(top.total_picks) + ' tracked picks';
+    var cells = spot.querySelectorAll('.g3 b');
+    if (cells.length >= 3) {
+      cells[0].textContent = top.wins != null ? top.wins + '-' + top.losses + (num(top.pushes) ? '-' + top.pushes : '') : num(top.total_picks) + ' picks';
+      cells[1].textContent = sign(num(top.net_units)); cells[1].className = 'num pos';
+      cells[2].textContent = num(top.roi).toFixed(1) + '%'; cells[2].className = 'num pos';
+    }
+    var av = el('.spot .avbox'); if (av) av.textContent = initials(top.username);
+    var ft = el('.spot .ft span'); if (ft) ft.textContent = num(top.total_picks) + ' picks, every one locked pre-game';
+    // sparkline from the capper's real recent graded picks
+    var sp = el('.spot .spark');
+    var picks = (top.picks || []).filter(function (p) { return /won|lost/i.test(p.status || ''); }).slice(0, 12).reverse();
+    if (sp && picks.length) {
+      var mx = Math.max.apply(null, picks.map(function (p) { return Math.abs(num(p.result_units)) || 1; })) || 1;
+      sp.innerHTML = picks.map(function (p) {
+        var v = num(p.result_units), h = Math.max(18, Math.round(Math.abs(v) / mx * 100));
+        return '<i class="' + (v < 0 ? 'dn' : '') + '" style="height:' + h + '%"></i>';
+      }).join('');
+      var lb = el('.spot .lb');
+      if (lb) { var w2 = picks.filter(function (p) { return /won/i.test(p.status); }).length;
+        lb.innerHTML = '<span>Last ' + picks.length + ' graded picks</span><span>' + w2 + 'W &middot; ' + (picks.length - w2) + 'L</span>'; }
+    }
+  }
+
+  /* ---------- 5. SPORTS TALK --------------------------------------------- */
+  function sportsTalk() {
+    var body = el('.board .card:nth-child(3) .body'); if (!body) return;
+    j('/forum/threads/recent?limit=6').then(function (d) {
+      var t = (d && (d.threads || d.data)) || (Array.isArray(d) ? d : []);
+      if (!t || !t.length) return;
+      body.innerHTML = t.slice(0, 6).map(function (x) {
+        var cat = x.category_name || x.category || 'Forum';
+        var cls = /mlb/i.test(cat) ? 'mlb' : /soccer|football/i.test(cat) ? 'soc' : 'str';
+        var u = { id: x.user_id, username: x.username, avatar_url: x.avatar_url };
+        var href = x.slug ? '/forum/thread/' + encodeURIComponent(x.slug) + '/' : '/forum/';
+        return '<a class="fr" href="' + href + '">' + avatar(u, 'ava') +
+          '<span class="fb"><span class="cat ' + cls + '">' + esc(cat) + '</span>' +
+          '<div class="ft2">' + esc(x.title) + '</div>' +
+          '<div class="fm">' + esc(x.username || '') + ' &middot; ' + esc(timeAgo(x.created_at)) + '</div></span></a>';
+      }).join('');
+    });
+  }
+
+  /* ---------- 6. POLL ----------------------------------------------------- */
+  function poll() {
+    var card = document.querySelectorAll('.compete .ccard')[2]; if (!card) return;
+    j('/polls/active').then(function (d) {
+      var p = (d && (d.polls || d.data)) || (Array.isArray(d) ? d : []);
+      p = Array.isArray(p) ? p[0] : p;
+      if (!p) return;
+      var q = el('.pollq', card); if (q) q.textContent = p.question || p.title || q.textContent;
+      var meta = el('.pollmeta', card);
+      var total = (p.options || []).reduce(function (s, o) { return s + num(o.votes || o.vote_count); }, 0);
+      if (meta) meta.textContent = total + ' vote' + (total === 1 ? '' : 's') + ' · results public';
+      var opts = (p.options || []).slice(0, 3);
+      if (opts.length) {
+        var colors = ['linear-gradient(90deg,var(--brand-lt),var(--brand))',
+                      'linear-gradient(90deg,#5A9BF2,var(--blue))',
+                      'linear-gradient(90deg,#9781DE,var(--violet))'];
+        var wrap = card.querySelectorAll('.pbar');
+        opts.forEach(function (o, i) {
+          if (!wrap[i]) return;
+          var pct = total ? Math.round(num(o.votes || o.vote_count) / total * 100) : 0;
+          wrap[i].querySelector('.r').innerHTML = '<span>' + esc(o.text || o.label || o.option_text) + '</span><b class="num">' + pct + '%</b>';
+          wrap[i].querySelector('.tr i').style.cssText = 'width:' + pct + '%;background:' + colors[i];
+        });
+        for (var k = opts.length; k < wrap.length; k++) wrap[k].style.display = 'none';
+      }
+      var cta = card.querySelector('.cch .st'); if (cta) cta.textContent = p.is_closed ? 'Closed' : 'Open';
+    });
+  }
+
+  /* ---------- 7. ARENA — real open challenges ----------------------------- */
+  function arena() {
+    var card = document.querySelectorAll('.compete .ccard')[1]; if (!card) return;
+    j('/challenges/open').then(function (d) {
+      var c = (d && d.challenges) || [];
+      var chip = card.querySelector('.cch .st');
+      if (chip) chip.textContent = c.length ? c.length + ' open' : 'Open to join';
+      var grow = el('.grow', card); if (!grow) return;
+      if (!c.length) {
+        grow.innerHTML = '<div class="mrow"><span class="mt2"><b>No open challenges right now</b>' +
+          '<span>Create one and any member can accept it</span></span><span class="go">Start</span></div>';
+        return;
+      }
+      grow.innerHTML = c.slice(0, 3).map(function (x) {
+        var u = { id: x.creator_id, username: x.creator_username, avatar_url: x.creator_avatar };
+        return '<div class="mrow">' + avatar(u, 'mav') +
+          '<span class="mt2"><b>' + esc(x.creator_username || 'Member') + '</b>' +
+          '<span>Open challenge &middot; ' + esc(x.sport || 'Any sport') + '</span></span>' +
+          '<span class="go">Accept</span></div>';
+      }).join('');
+    });
+  }
+
+  /* ---------- 8. PLATFORM STRIP live counters ----------------------------- */
+  function platform(users) {
+    if (!users) return;
+    var verified = users.filter(function (u) {
+      return num(u.total_picks) > 0 && u.verification_status === 'verified'; }).length;
+    var badges = document.querySelectorAll('.explore .ei .badge2');
+    if (badges[2]) badges[2].innerHTML = '<span class="bl"></span>' + verified + ' public records';
+  }
+
+  /* ---------- boot -------------------------------------------------------- */
+  function boot() {
+    ticker();
+    sportsTalk();
+    poll();
+    arena();
+    var all = [], off = 0;
+    (function page() {
+      j('/users?limit=200&offset=' + off).then(function (d) {
+        if (!d) return finish();
+        var u = d.users || [];
+        all = all.concat(u);
+        if (u.length >= 200 && off < 1000) { off += 200; page(); } else finish();
+      });
+    })();
+    function finish() {
+      if (!all.length) return;
+      leaderboard(all);
+      platform(all);
+      j('/users/trend-highlights').then(function (d) {
+        if (d && d.users && d.users.length) livePicks(d.users);
+      });
+    }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
