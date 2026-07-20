@@ -874,6 +874,13 @@ class TrustMyRecordAPI {
         });
     }
 
+    async reactToMessage(messageId, reaction) {
+        return this.request(`/messages/message/${messageId}/reactions`, {
+            method: 'POST',
+            body: { reaction }
+        });
+    }
+
     // ==================== NOTIFICATIONS ROUTES ====================
 
     async getNotifications(options = {}) {
