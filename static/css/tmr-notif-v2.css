@@ -88,6 +88,35 @@ html body.nv-body .nv-btn.lt{
 }
 html body.nv-body .nv-btn.lt:hover{border-color:var(--nv-brand) !important;color:var(--nv-brand-dk) !important}
 html body.nv-body .nv-btn:disabled{opacity:.55;cursor:default}
+/* Destructive action (Clear all). Reads as danger on the dark header and on the
+   light confirmation dialog, so one class covers both surfaces. */
+html body.nv-body .nv-btn.dg{
+  background:rgba(214,60,60,.16) !important;border-color:rgba(255,138,138,.55) !important;color:#FFD9D9 !important;
+}
+html body.nv-body .nv-btn.dg:hover{background:rgba(214,60,60,.3) !important;border-color:#FF9A9A !important;color:#fff !important}
+html body.nv-body .nv-dialog .nv-btn.dg{
+  background:linear-gradient(180deg,#D8453F,#B3302B) !important;border-color:transparent !important;color:#fff !important;
+  box-shadow:0 2px 10px rgba(179,48,43,.3);
+}
+html body.nv-body .nv-dialog .nv-btn.dg:hover{background:linear-gradient(180deg,#E4534D,#C13731) !important}
+
+/* ---------- confirmation dialog ---------- */
+.nv-modal{
+  position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:rgba(8,20,32,.62);backdrop-filter:blur(2px);
+}
+.nv-modal[hidden]{display:none}
+.nv-dialog{
+  width:100%;max-width:420px;background:var(--nv-panel);border-radius:var(--nv-r);
+  box-shadow:0 24px 60px rgba(8,20,32,.4);padding:24px;text-align:left;
+}
+.nv-dialog h2{margin:0 0 8px;font-size:20px;font-weight:900;color:var(--nv-ink)}
+.nv-dialog p{margin:0 0 20px;font-size:14.5px;line-height:1.55;color:var(--nv-muted)}
+.nv-dialog-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+@media (max-width:480px){
+  .nv-dialog-actions{flex-direction:column-reverse}
+  .nv-dialog-actions .nv-btn{width:100%}
+}
 
 /* ---------- body ---------- */
 .nv-main{padding:26px 0 60px}

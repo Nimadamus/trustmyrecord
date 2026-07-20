@@ -21,7 +21,7 @@
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
 <script defer src="/static/js/tmr-sitewide.js?v=20260720alerts"></script>
 <!-- v2 design system, loaded last so it wins the cascade without !important wars -->
-<link rel="stylesheet" href="/static/css/tmr-notif-v2.css?v=20260720nv1">
+<link rel="stylesheet" href="/static/css/tmr-notif-v2.css?v=20260720nv2">
 </head>
 <body class="nv-body">
     <!-- section, not <header>: tmr-sitewide.js hides any body > header as a legacy nav -->
@@ -35,6 +35,7 @@
             <div class="nv-head-actions">
                 <button id="notifPrefsToggle" class="nv-btn" type="button">Alert settings</button>
                 <button id="markAllBtn" class="nv-btn p" type="button">Mark all read</button>
+                <button id="clearAllBtn" class="nv-btn dg" type="button">Clear all</button>
             </div>
         </div>
     </section>
@@ -78,8 +79,23 @@
         </div>
     </main>
 
+    <!-- Clear all confirmation. Alerts only: nothing here touches messages,
+         forum posts, picks, or account data. -->
+    <div class="nv-modal" id="clearConfirm" role="dialog" aria-modal="true" aria-labelledby="clearConfirmTitle" hidden>
+        <div class="nv-dialog">
+            <h2 id="clearConfirmTitle">Clear all notifications? This cannot be undone.</h2>
+            <p>This removes every alert from your notification list. Your messages, forum posts, picks, and account data are not affected.</p>
+            <div class="nv-dialog-actions">
+                <button id="clearCancelBtn" class="nv-btn lt" type="button">Cancel</button>
+                <button id="clearConfirmBtn" class="nv-btn dg" type="button">Clear all</button>
+            </div>
+        </div>
+    </div>
+
     <script src="/static/js/config.js?v=20260330"></script>
-    <script src="/static/js/backend-api.js?v=20260525noautologout"></script>
+    <!-- backend-api bust bumped for clearAllNotifications(); a cached copy would
+         otherwise leave the Clear all button without its endpoint method. -->
+    <script src="/static/js/backend-api.js?v=20260720clearall"></script>
     <script src="/static/js/auth-persistent.js?v=20260525noautologout"></script>
     <script src="/static/js/analytics.js?v=20260719ft"></script>
     <script>
@@ -109,6 +125,10 @@
         var filtersEl = document.getElementById('nvFilters');
         var unreadLabel = document.getElementById('nvUnreadLabel');
         var markAllBtn = document.getElementById('markAllBtn');
+        var clearAllBtn = document.getElementById('clearAllBtn');
+        var clearModal = document.getElementById('clearConfirm');
+        var clearCancelBtn = document.getElementById('clearCancelBtn');
+        var clearConfirmBtn = document.getElementById('clearConfirmBtn');
 
         /* ---------- helpers ---------- */
         function esc(v) {
@@ -282,6 +302,7 @@
             });
             unreadLabel.textContent = c.unread ? c.unread + ' unread' : 'All caught up';
             markAllBtn.disabled = !c.unread;
+            clearAllBtn.disabled = !c.all;
 
             var visible = items.filter(function (n) {
                 var nn = normalize(n);
@@ -417,6 +438,46 @@
             } catch (e) {}
         }
 
+        /* Clear all. Deletes only the notification rows; the messages, threads,
+           picks and account records they point at are untouched. Local state is
+           emptied and re-rendered on success, so every category count drops to 0
+           and the bell badge clears without a refresh. */
+        var lastFocus = null;
+        function showClearConfirm(show) {
+            if (show) {
+                lastFocus = document.activeElement;
+                clearModal.hidden = false;
+                document.body.style.overflow = 'hidden';
+                clearConfirmBtn.focus();
+            } else {
+                clearModal.hidden = true;
+                document.body.style.overflow = '';
+                clearConfirmBtn.disabled = false;
+                clearConfirmBtn.textContent = 'Clear all';
+                if (lastFocus && typeof lastFocus.focus === 'function') lastFocus.focus();
+            }
+        }
+
+        async function clearAll() {
+            clearConfirmBtn.disabled = true;
+            clearConfirmBtn.textContent = 'Clearing...';
+            try {
+                await api.clearAllNotifications();
+                items = [];
+                filter = 'all';
+                filtersEl.querySelectorAll('.nv-chip').forEach(function (b) {
+                    b.classList.toggle('on', b.getAttribute('data-filter') === 'all');
+                });
+                render();
+                if (typeof window.updateNotifBadge === 'function') window.updateNotifBadge(0);
+                showClearConfirm(false);
+            } catch (e) {
+                clearConfirmBtn.disabled = false;
+                clearConfirmBtn.textContent = 'Clear all';
+                alert('Could not clear your notifications. Please try again.');
+            }
+        }
+
         /* ---------- events (delegated: no globals, no inline handlers) ---------- */
         filtersEl.addEventListener('click', function (e) {
             var btn = e.target.closest('.nv-chip');
@@ -438,6 +499,17 @@
 
         markAllBtn.addEventListener('click', markAll);
 
+        clearAllBtn.addEventListener('click', function () { showClearConfirm(true); });
+        clearCancelBtn.addEventListener('click', function () { showClearConfirm(false); });
+        clearConfirmBtn.addEventListener('click', clearAll);
+        /* Backdrop tap closes on mobile; the dialog itself must not. */
+        clearModal.addEventListener('click', function (e) {
+            if (e.target === clearModal) showClearConfirm(false);
+        });
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && !clearModal.hidden) showClearConfirm(false);
+        });
+
         function togglePrefs(force) {
             var show = force != null ? force : prefsCard.hidden;
             prefsCard.hidden = !show;
@@ -455,11 +527,14 @@
             if (!window.api || typeof api.getNotifications !== 'function' || !loggedIn) {
                 prefsToggle.hidden = true;
                 markAllBtn.hidden = true;
+                clearAllBtn.hidden = true;
                 unreadLabel.textContent = 'Your alert history';
                 state('<strong>Log in to see your notifications</strong>Replies, follows, graded picks, and messages show up here once your account is active.' +
                     '<div><a class="nv-btn p" href="/login/" style="margin-top:16px;">Log in</a></div>');
                 return;
             }
+
+            if (typeof api.clearAllNotifications !== 'function') clearAllBtn.hidden = true;
 
             await load();
             await setupPrefs();

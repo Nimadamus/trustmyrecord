@@ -916,6 +916,14 @@ class TrustMyRecordAPI {
         });
     }
 
+    // Removes every notification row for the logged-in user. Alerts only:
+    // messages, forum posts, picks and account data are not touched.
+    async clearAllNotifications() {
+        return this.request('/notifications/all', {
+            method: 'DELETE'
+        });
+    }
+
     async getNotificationPreferences() {
         return this.request('/notifications/preferences');
     }
