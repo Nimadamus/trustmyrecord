@@ -838,3 +838,45 @@ html body.tmr-ds.profile-page.tmr-social-profile .row-lost div{color:var(--ink-2
 
 /* brand-coloured interactive text keeps its role */
 html body.tmr-ds.profile-page.tmr-social-profile a:not([class]){color:var(--brand-dk)}
+
+/* ---------------------------------------------------------------------------
+   18. CONTAINMENT + BADGES
+   -----------------------------------------------------------------------------
+   Two regressions the audit caught immediately after section 17 landed, both the
+   same mistake in different clothes: a generic tag rule escaping the page
+   content into shared chrome.
+
+     - `a` with no class matched the NAV links (.ds-mainnav a), repainting them
+       --brand-dk on navy at 3.11:1.
+     - the generic `span` rule repainted the red ADMIN badge and the dark team
+       pills --muted, at 1.14:1 and 3:1.
+
+   Generic tag selectors are re-scoped to page content, and the two coloured
+   chips get explicit treatment rather than inheriting body text colour.
+   --------------------------------------------------------------------------- */
+html body.tmr-ds.profile-page.tmr-social-profile .ds-nav a,
+html body.tmr-ds.profile-page.tmr-social-profile .ds-nav .ds-mainnav a{color:#AEC6DC}
+html body.tmr-ds.profile-page.tmr-social-profile .ds-nav a:hover{color:#fff}
+html body.tmr-ds.profile-page.tmr-social-profile .ds-footer a{color:#93AEC7}
+html body.tmr-ds.profile-page.tmr-social-profile .ds-footer a:hover{color:var(--brand-lt)}
+html body.tmr-ds.profile-page.tmr-social-profile .ds-footer p{color:#7593B1}
+
+/* solid-colour chips: white text, not body text */
+html body.tmr-ds.profile-page.tmr-social-profile .profile-admin-badge,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-admin-badge span{
+  background:var(--red);
+  color:#fff;
+  border-radius:5px;
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.06em;
+}
+/* team pills carry club colours, so they stay dark - their label goes light */
+html body.tmr-ds.profile-page.tmr-social-profile .profile-team-pill-name,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-team-pill span,
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-chip span{color:#EAF2FA}
+
+/* the last legacy grey: a `.s` sub-label on a sunken surface */
+html body.tmr-ds.profile-page.tmr-social-profile .s,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-main .s,
+html body.tmr-ds.profile-page.tmr-social-profile .container .s{color:var(--muted)}
