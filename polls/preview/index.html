@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <link rel="canonical" href="https://trustmyrecord.com/polls/">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Polls &amp; Predictions Design Preview | TrustMyRecord</title>
+    <title>Sports Polls: Game, MVP &amp; Prop Predictions | TrustMyRecord</title>
     <meta name="description" content="Vote in sports prediction polls across MLB, NBA, NFL, NHL, soccer, UFC, and more. Game winners, MVP races, player props">
     <meta name="keywords" content="sports polls, sports prediction polls, MLB polls, NBA polls, NFL polls, NHL polls, MVP polls, player prop polls, fan voting, sports community polls">
     <meta property="og:title" content="Sports Polls | Game Predictions, MVP &amp; Player Prop Polls">
@@ -89,7 +89,7 @@
 
         /* Top community bar — same background family as the page, one hairline */
         .tmr-fb-topbar { background: rgba(8, 13, 18, 0.94); border-bottom: 1px solid var(--border); backdrop-filter: blur(12px); position: relative; z-index: 20; }
-        .tmr-fb-topbar-inner { max-width: 1080px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .tmr-fb-topbar-inner { max-width: 1080px; margin: 0 auto; padding: 8px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
         .tmr-fb-brand { display: inline-flex; align-items: center; gap: 8px; color: #FFFFFF; font-weight: 700; font-size: 0.95rem; text-decoration: none; }
         .tmr-fb-brand:hover { color: #FFFFFF; text-decoration: none; }
         .tmr-fb-brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: var(--r-sm); background: linear-gradient(135deg, var(--green), var(--accent)); color: var(--accent-ink); font-weight: 800; font-size: 0.72rem; }
@@ -105,32 +105,44 @@
         .tmr-fb-topnav i { font-size: 0.74rem; color: var(--muted); }
         .tmr-fb-topnav a:hover i { color: var(--accent); }
 
-        /* Page shell + header row (no card wrapper — divider comes from the tab bar) */
-        .tmr-shell2 { max-width: 1080px; margin: 0 auto; padding: 20px 20px 64px; }
-        .tmr-fb-breadcrumb { color: var(--muted); font-size: var(--fs-sm); margin-bottom: 16px; }
+        /* Page shell — tight vertical rhythm; polls appear near the top */
+        .tmr-shell2 { max-width: 1080px; margin: 0 auto; padding: 12px 20px 56px; }
+        .tmr-fb-breadcrumb { color: var(--muted); font-size: 0.7rem; margin-bottom: 6px; }
         .tmr-fb-breadcrumb a { color: var(--muted); font-weight: 500; cursor: pointer; }
         .tmr-fb-breadcrumb a:hover { color: var(--tmr-fb-link); }
-        .tmr-fb-breadcrumb .sep { margin: 0 7px; color: var(--muted); opacity: 0.6; }
-        .tmr-phead { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
-        html body .tmr-phead-copy h1 { font-size: 1.3rem !important; font-weight: 700 !important; color: var(--text) !important; letter-spacing: -0.01em; line-height: 1.2 !important; margin: 0 !important; }
-        .tmr-phead-copy p { color: var(--muted); font-size: var(--fs-sm); line-height: 1.5; max-width: 560px; margin-top: 4px; }
+        .tmr-fb-breadcrumb .sep { margin: 0 6px; color: var(--muted); opacity: 0.6; }
+
+        /* Participation-first hero: one compact block — title, call to action,
+           and a slim stats strip. No banner, no filler copy. */
+        .tmr-phead { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 10px; }
+        html body .tmr-phead-copy h1 { font-size: 1.35rem !important; font-weight: 700 !important; color: #FFFFFF !important; letter-spacing: -0.015em; line-height: 1.15 !important; margin: 0 !important; }
+        .tmr-phead-copy p { color: var(--text-2); font-size: var(--fs-sm); line-height: 1.45; margin-top: 3px; font-weight: 500; }
         .tmr-phead-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .tmr-stats { display: flex; align-items: stretch; gap: 0; flex-wrap: wrap; margin-bottom: 12px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-1); overflow: hidden; }
+        .tmr-stat { flex: 1 1 auto; min-width: 110px; display: flex; flex-direction: column; gap: 1px; padding: 8px 16px 7px; border-right: 1px solid var(--border); }
+        .tmr-stat:last-child { border-right: none; }
+        .tmr-stat b { color: #FFFFFF; font-size: 1.02rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; line-height: 1.2; }
+        .tmr-stat b .u { color: var(--muted); font-size: 0.68rem; font-weight: 600; margin-left: 2px; }
+        .tmr-stat span { color: var(--muted); font-size: 0.64rem; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; white-space: nowrap; }
+        .tmr-stat.is-me b { color: var(--accent); }
         .tmr-hbtn { display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 16px; border-radius: var(--r-sm); font-weight: 600; font-size: 0.83rem; cursor: pointer; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); text-decoration: none; white-space: nowrap; transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease; }
         .tmr-hbtn:hover { border-color: var(--accent-border); color: var(--text); background: var(--surface-3); text-decoration: none; }
         .tmr-hbtn.is-primary { background: linear-gradient(135deg, #1FB98A, #1FB6D4); color: var(--accent-ink); border-color: transparent; font-weight: 700; }
         .tmr-hbtn.is-primary:hover { background: linear-gradient(135deg, #2BCB9A, #33C7E3); color: var(--accent-ink); }
 
-        /* Primary tabs — quiet underline */
-        .tmr-tabs2 { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 20px; flex-wrap: wrap; }
-        .tmr-tab2 { position: relative; padding: 9px 13px; background: transparent; border: none; color: var(--muted); font-size: 0.85rem; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s ease; }
-        .tmr-tab2:hover { color: var(--text); }
-        .tmr-tab2.is-active { color: var(--text); font-weight: 600; border-bottom-color: var(--accent); }
-        .tmr-tab2 .tmr-tab2-count { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: 0.66rem; font-weight: 600; vertical-align: 1px; }
+        /* Primary tabs — crisp underline, readable inactive state */
+        .tmr-tabs2 { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 14px; flex-wrap: wrap; }
+        .tmr-tab2 { position: relative; padding: 8px 12px; background: transparent; border: none; color: var(--text-2); font-size: 0.84rem; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s ease; letter-spacing: 0.005em; }
+        .tmr-tab2:hover { color: #FFFFFF; }
+        .tmr-tab2.is-active { color: #FFFFFF; font-weight: 600; border-bottom-color: var(--accent); }
+        .tmr-tab2 .tmr-tab2-count { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); font-size: 0.64rem; font-weight: 700; vertical-align: 1px; font-variant-numeric: tabular-nums; }
+        .tmr-tab2.is-active .tmr-tab2-count { background: var(--accent-dim); border-color: var(--accent-border); color: var(--accent); }
 
         /* Section head + filter toolbar (aligned to one baseline).
            !important beats the sitewide globals (h2 clamp(1.8-3.2rem)!important + display font). */
         .tmr-shell2 h1, .tmr-shell2 h2, .tmr-shell2 h3, .tmr-shell2 h4, .tmr-modal h3 { font-family: 'Inter', 'Segoe UI', Arial, sans-serif !important; }
-        .tmr-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+        .tmr-sec-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; margin-bottom: 10px; }
+        .tmr-sec-head.is-toolbar { align-items: center; justify-content: flex-end; margin-bottom: 10px; }
         html body .tmr-sec-head h2 { font-size: 0.98rem !important; font-weight: 600 !important; line-height: 1.3 !important; color: var(--text) !important; letter-spacing: -0.005em; }
         /* Official creator badge (injected by official-badge.js) — keep, but quieter */
         .tmr-shell2 .tmr-official-chip { font-size: 0.62rem !important; padding: 1px 7px !important; border-radius: 5px !important; font-weight: 700 !important; letter-spacing: 0.03em !important; }
@@ -146,25 +158,59 @@
         .tmr-filters select.tmr-fb-action-btn { width: auto !important; min-width: 126px; max-width: 180px; height: 32px; flex: 0 0 auto; }
         .tmr-filter-drawer-btn { display: none; }
 
-        /* Poll list — refined rows, one container */
-        .tmr-list2 { border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; background: var(--surface-1); }
-        .tmr-card2 { display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: center; padding: 13px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background 0.12s ease; }
-        .tmr-card2:last-child { border-bottom: none; }
-        .tmr-card2:hover { background: var(--surface-3); }
-        .tmr-card2:hover .tmr-card2-title { color: var(--tmr-fb-link); }
-        .tmr-card2-body { min-width: 0; }
-        .tmr-card2-title { color: var(--text); font-size: 0.92rem; font-weight: 600; line-height: 1.35; margin-bottom: 4px; transition: color 0.12s ease; }
-        .tmr-card2-meta { color: var(--muted); font-size: 0.76rem; display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
-        .tmr-card2-meta strong { color: var(--text-2); font-weight: 600; }
-        .tmr-card2-meta .dot { opacity: 0.45; }
+        /* Poll cards — compact clickable tiles, two-up on desktop */
+        .tmr-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+        .tmr-quiz-grid .tmr-grid2 { grid-template-columns: 1fr; }
+        .tmr-pcard { position: relative; display: flex; flex-direction: column; gap: 7px; padding: 12px 14px 11px; background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--r-md); cursor: pointer; transition: border-color 0.13s ease, background 0.13s ease, transform 0.13s ease, box-shadow 0.13s ease; }
+        .tmr-pcard:hover { border-color: var(--accent-border); background: var(--surface-2); transform: translateY(-1px); box-shadow: 0 6px 18px rgba(0,0,0,0.28); }
+        .tmr-pcard:hover .tmr-pcard-title { color: var(--tmr-fb-link); }
+        .tmr-pcard:active { transform: translateY(0); }
+        .tmr-pcard-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 18px; }
+        .tmr-pcard-league { display: inline-flex; align-items: center; gap: 5px; padding: 1px 8px; border-radius: 4px; border: 1px solid rgba(56,189,248,0.28); background: rgba(56,189,248,0.08); color: #9BD9F8; font-size: 0.64rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
+        .tmr-pcard-title { color: var(--text); font-size: 0.9rem; font-weight: 650; line-height: 1.35; letter-spacing: -0.005em; transition: color 0.12s ease; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .tmr-pcard-meta { color: var(--muted); font-size: 0.73rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-weight: 500; }
+        .tmr-pcard-meta strong { color: var(--text-2); font-weight: 600; }
+        .tmr-pcard-meta .dot { opacity: 0.45; }
+        .tmr-pcard-meta .is-first { color: var(--green); font-weight: 700; }
+        .tmr-pcard-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 7px; border-top: 1px solid var(--border); }
+        .tmr-pcard-by { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 0.72rem; font-weight: 500; min-width: 0; overflow: hidden; }
+        .tmr-pcard-by strong { color: var(--text-2); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tmr-pcard-av { flex: 0 0 auto; width: 18px; height: 18px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: var(--surface-3); border: 1px solid var(--border-strong); color: var(--text-2); font-size: 0.56rem; font-weight: 800; text-transform: uppercase; }
+        .tmr-pcard-cta { display: inline-flex; align-items: center; gap: 6px; height: 27px; padding: 0 12px; border-radius: var(--r-sm); background: var(--accent-dim); color: var(--tmr-fb-link); border: 1px solid var(--accent-border); font-weight: 700; font-size: 0.72rem; text-decoration: none; white-space: nowrap; transition: background 0.12s ease, color 0.12s ease; }
+        .tmr-pcard:hover .tmr-pcard-cta { color: var(--accent-ink); background: linear-gradient(135deg, #2BCB9A, #33C7E3); border-color: transparent; }
+        .tmr-pcard-cta.is-muted, .tmr-pcard:hover .tmr-pcard-cta.is-muted { background: var(--surface-2); color: var(--text-2); border-color: var(--border-strong); }
+
+        /* Featured poll — one compact spotlight with inline voting */
+        .tmr-feat { border: 1px solid var(--accent-border); border-radius: var(--r-md); padding: 15px 18px 14px; background: linear-gradient(135deg, var(--surface-1), rgba(17, 34, 43, 0.9)); margin-bottom: 12px; }
+        .tmr-feat-eyebrow { display: flex; align-items: center; gap: 8px; color: var(--accent); font-size: 0.64rem; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; margin-bottom: 7px; flex-wrap: wrap; }
+        .tmr-feat-eyebrow .sep { color: var(--muted); opacity: 0.7; }
+        .tmr-feat-eyebrow .when { color: var(--gold); }
+        .tmr-feat-title { font-size: 1.12rem; font-weight: 700; color: #FFFFFF; line-height: 1.25; letter-spacing: -0.01em; margin-bottom: 11px; }
+        .tmr-feat-opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; margin-bottom: 10px; }
+        .tmr-feat-opt { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 14px; border-radius: var(--r-sm); border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text); font-size: 0.88rem; font-weight: 700; letter-spacing: 0.005em; cursor: pointer; text-align: center; transition: border-color 0.12s ease, background 0.12s ease, transform 0.1s ease, box-shadow 0.12s ease; }
+        .tmr-feat-opt:hover:not(:disabled) { border-color: var(--accent-border); background: var(--surface-3); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.3); }
+        .tmr-feat-opt:active:not(:disabled) { transform: translateY(0); background: var(--accent-dim); }
+        .tmr-feat-opt:disabled { opacity: 0.55; cursor: wait; }
+        .tmr-feat-sub { display: flex; align-items: center; justify-content: space-between; gap: 10px; color: var(--muted); font-size: 0.74rem; font-weight: 500; flex-wrap: wrap; }
+        .tmr-feat-sub b { color: var(--text-2); font-weight: 700; font-variant-numeric: tabular-nums; }
+        .tmr-feat-sub .reveal { color: var(--text-2); font-weight: 600; }
+        .tmr-feat .tmr-poll-options { margin-bottom: 8px; }
+
+        /* Compact empty state + poll templates */
+        .tmr-empty2 { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px 20px 22px; text-align: center; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-1); }
+        .tmr-empty2 .icon { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: var(--r-md); font-size: 1rem; color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent-border); }
+        .tmr-empty2 strong { color: var(--text); font-size: 0.94rem; font-weight: 650; }
+        .tmr-empty2 .sub { color: var(--muted); font-size: var(--fs-sm); }
+        .tmr-empty2 .tmr-hbtn { margin-top: 4px; }
+        .tmr-tpl-row { display: flex; gap: 7px; flex-wrap: wrap; justify-content: center; margin-top: 8px; }
+        .tmr-tpl { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); font-size: 0.73rem; font-weight: 600; cursor: pointer; transition: border-color 0.12s ease, color 0.12s ease, background 0.12s ease; }
+        .tmr-tpl:hover { border-color: var(--accent-border); color: var(--text); background: var(--surface-3); }
+        .tmr-tpl i { color: var(--accent); font-size: 0.66rem; }
         .tmr-chip { display: inline-flex; align-items: center; gap: 5px; padding: 1px 7px; border-radius: 5px; font-size: 0.67rem; font-weight: 600; letter-spacing: 0.01em; border: 1px solid var(--border-strong); background: var(--surface-2); color: var(--text-2); }
         .tmr-chip.is-quiz { color: #7DD3FC; border-color: rgba(56,189,248,0.3); background: rgba(56,189,248,0.09); }
         .tmr-chip.is-soon { color: var(--gold); border-color: rgba(228,185,91,0.34); background: var(--gold-dim); }
         .tmr-chip.is-popular { color: var(--green); border-color: rgba(52,211,153,0.3); background: var(--green-dim); }
         .tmr-chip.is-closed { color: var(--muted); border-color: var(--border-strong); background: var(--surface-2); }
-        .tmr-card2-cta { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 14px; border-radius: var(--r-sm); background: var(--accent-dim); color: var(--tmr-fb-link); border: 1px solid var(--accent-border); font-weight: 600; font-size: 0.79rem; text-decoration: none; white-space: nowrap; transition: background 0.12s ease, color 0.12s ease; }
-        .tmr-card2-cta:hover { color: var(--accent-ink); background: linear-gradient(135deg, #2BCB9A, #33C7E3); border-color: transparent; text-decoration: none; }
-        .tmr-card2-cta.is-muted { background: var(--surface-2); color: var(--text-2); border-color: var(--border-strong); }
 
         /* Empty + loading states */
         .tmr-empty-msg { padding: 44px 24px; text-align: center; color: var(--text-2); border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface-1); }
@@ -205,7 +251,7 @@
         .tmr-poll-result-text { color: var(--text); font-weight: 600; }
         .tmr-poll-result-pct { color: var(--muted); font-weight: 600; font-variant-numeric: tabular-nums; font-size: var(--fs-sm); }
         .tmr-poll-bar { height: 6px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
-        .tmr-poll-bar-fill { height: 100%; background: linear-gradient(90deg, #38BDF8, var(--accent)); border-radius: 999px; transition: width 0.4s ease; }
+        .tmr-poll-bar-fill { height: 100%; background: linear-gradient(90deg, #38BDF8, var(--accent)); border-radius: 999px; transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
         .tmr-poll-result.is-winner { background: var(--green-dim); }
         .tmr-poll-result.is-winner .tmr-poll-bar-fill { background: var(--green); }
         .tmr-poll-result.is-user-pick { background: rgba(34,211,238,0.07); }
@@ -245,7 +291,7 @@
         .tmr-q-res-text { color: var(--text); font-weight: 600; font-size: var(--fs-base); }
         .tmr-q-res-pct { color: var(--muted); font-weight: 600; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
         .tmr-q-bar { height: 5px; background: var(--surface-3); border-radius: 999px; overflow: hidden; margin: 0 12px 8px; }
-        .tmr-q-bar-fill { height: 100%; background: linear-gradient(90deg, #38BDF8, var(--accent)); border-radius: 999px; }
+        .tmr-q-bar-fill { height: 100%; background: linear-gradient(90deg, #38BDF8, var(--accent)); border-radius: 999px; transition: width 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
         .tmr-q-tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; margin-left: 6px; }
         .tmr-q-tag.correct { background: var(--green); color: var(--accent-ink); }
         .tmr-q-tag.you { background: #38BDF8; color: #06222B; }
@@ -369,14 +415,20 @@
         .tmr-toast.is-success { border-color: rgba(52,211,153,0.5); background: #0D231C; color: #A7F3D0; }
 
         /* Responsive */
+        @media (max-width: 860px) {
+            .tmr-grid2 { grid-template-columns: 1fr; }
+        }
         @media (max-width: 720px) {
-            .tmr-shell2 { padding: 16px 14px 48px; }
-            .tmr-phead { flex-direction: column; align-items: stretch; gap: 10px; }
+            .tmr-shell2 { padding: 10px 14px 44px; }
+            .tmr-phead { flex-direction: column; align-items: stretch; gap: 8px; }
             .tmr-phead-actions .tmr-hbtn { flex: 1; justify-content: center; min-height: 42px; }
+            .tmr-stats { border-radius: var(--r-sm); }
+            .tmr-stat { min-width: 0; flex: 1 1 40%; padding: 7px 12px 6px; }
+            .tmr-stat b { font-size: 0.94rem; }
             .tmr-tabs2 { gap: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
             .tmr-tabs2::-webkit-scrollbar { display: none; }
-            .tmr-tab2 { padding: 9px 10px; font-size: 0.82rem; white-space: nowrap; flex: 0 0 auto; }
-            html body .tmr-phead-copy h1 { font-size: 1.2rem !important; }
+            .tmr-tab2 { padding: 8px 10px; font-size: 0.8rem; white-space: nowrap; flex: 0 0 auto; }
+            html body .tmr-phead-copy h1 { font-size: 1.22rem !important; }
             html body .tmr-sec-head h2 { font-size: 0.95rem !important; }
             .tmr-typegrid { grid-template-columns: 1fr; }
             .tmr-filter-drawer-btn { display: inline-flex; min-height: 38px; }
@@ -384,9 +436,10 @@
             .tmr-filters select.tmr-fb-action-btn { width: 100% !important; max-width: none; min-height: 38px; }
             .tmr-filters { width: 100%; }
             .tmr-sec-head { align-items: stretch; flex-direction: column; }
-            .tmr-card2 { grid-template-columns: 1fr; gap: 10px; padding: 13px 14px; }
-            .tmr-card2-cta { justify-self: flex-start; min-height: 38px; }
-            .tmr-card2-meta { row-gap: 4px; }
+            .tmr-sec-head.is-toolbar { flex-direction: column; align-items: stretch; }
+            .tmr-feat { padding: 13px 14px 12px; }
+            .tmr-feat-title { font-size: 1.02rem; }
+            .tmr-feat-opts { grid-template-columns: 1fr; }
             .tmr-form-row.is-inline { grid-template-columns: 1fr; }
             .tmr-fquiz { padding: 16px; }
             .tmr-poll-detail, .tmr-game-main { padding: 16px; }
@@ -415,23 +468,23 @@
     </div>
 
     <div class="tmr-shell2">
-        <div class="tmr-fb-breadcrumb"><a href="/forum/">TrustMyRecord</a><span class="sep">&rsaquo;</span><span>Polls &amp; Predictions</span></div>
-
-        <!-- A. COMPACT HEADER -->
+        <!-- PARTICIPATION-FIRST HERO: breadcrumb + title + CTA + slim stats -->
         <header class="tmr-phead">
             <div class="tmr-phead-copy">
+                <div class="tmr-fb-breadcrumb"><a href="/forum/">TrustMyRecord</a><span class="sep">&rsaquo;</span><span>Polls</span></div>
                 <h1>Polls &amp; Predictions</h1>
-                <p>Vote on today's biggest sports questions, compete in prediction quizzes, or start your own.</p>
+                <p>Make your call. See where the community stands.</p>
             </div>
             <div class="tmr-phead-actions">
                 <button type="button" class="tmr-hbtn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus"></i> Create a Poll</button>
             </div>
         </header>
+        <div class="tmr-stats" id="pollStatsRow" hidden></div>
 
-        <!-- C. PRIMARY TABS (compact nav row) -->
+        <!-- PRIMARY TABS (compact nav row, live counts) -->
         <nav class="tmr-tabs2" role="tablist" id="pollsTabBar">
-            <button type="button" class="tmr-tab2 is-active" data-tab="quick" onclick="switchTab('quick')">Quick Polls</button>
-            <button type="button" class="tmr-tab2" data-tab="quiz" onclick="switchTab('quiz')">Prediction Quizzes</button>
+            <button type="button" class="tmr-tab2 is-active" data-tab="quick" onclick="switchTab('quick')">Quick Polls<span class="tmr-tab2-count" id="tabCountQuick" hidden></span></button>
+            <button type="button" class="tmr-tab2" data-tab="quiz" onclick="switchTab('quiz')">Prediction Quizzes<span class="tmr-tab2-count" id="tabCountQuiz" hidden></span></button>
             <button type="button" class="tmr-tab2" data-tab="mine" onclick="switchTab('mine')">My Activity</button>
             <button type="button" class="tmr-tab2" data-tab="closed" onclick="switchTab('closed')">Closed / Results</button>
         </nav>
@@ -634,6 +687,33 @@
         if (isNaN(dt.getTime())) return '';
         return dt.toLocaleString(undefined, { month:'short', day:'numeric', hour:'numeric', minute:'2-digit' });
     }
+    function timeLeftTxt(d) {
+        if (!d) return '';
+        var ms = new Date(d).getTime() - Date.now();
+        if (isNaN(ms)) return '';
+        if (ms <= 0) return 'Closed';
+        var m = Math.floor(ms / 60000);
+        if (m < 60) return m + 'm left';
+        var h = Math.floor(m / 60);
+        if (h < 24) return h + 'h ' + (m % 60) + 'm left';
+        var dd = Math.floor(h / 24);
+        return dd + 'd ' + (h % 24) + 'h left';
+    }
+    function initialOf(name) {
+        var s = String(name || '?').trim();
+        return escHtml(s.charAt(0) || '?');
+    }
+    // Result bars render at width 0 with a data-w target, then animate out on
+    // the next frame so every reveal feels earned.
+    function animateBars(root) {
+        if (!root) return;
+        var fills = root.querySelectorAll('[data-w]');
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                fills.forEach(function(el) { el.style.width = el.getAttribute('data-w') + '%'; });
+            });
+        });
+    }
     function isLoggedIn() {
         if (window.api && api.isLoggedIn && api.isLoggedIn()) return true;
         try { var s = JSON.parse(localStorage.getItem('trustmyrecord_session') || 'null'); if (s && (s.user || s).username) return true; } catch(e){}
@@ -730,49 +810,78 @@
         var scheduled = isScheduled(p);
         var dl = pollDeadline(p);
         var votes = parseInt(p.vote_count || 0);
+        var comments = parseInt(p.comment_count || 0);
         var chip = '';
         if (closed) chip = '<span class="tmr-chip is-closed">Closed</span>';
         else if (scheduled) chip = '<span class="tmr-chip">Scheduled</span>';
         else if (isClosingSoon(p)) chip = '<span class="tmr-chip is-soon"><i class="fas fa-clock"></i> Closing soon</span>';
         else if (votes >= 25) chip = '<span class="tmr-chip is-popular"><i class="fas fa-fire"></i> Popular</span>';
-        var quizChip = quiz ? '<span class="tmr-chip is-quiz"><i class="fas fa-layer-group"></i> Quiz &middot; ' + parseInt(p.question_count) + ' Qs</span>' : '';
-        var sl = escHtml(p.league || p.sport || '');
+        var quizChip = quiz ? '<span class="tmr-chip is-quiz"><i class="fas fa-layer-group"></i> ' + parseInt(p.question_count) + '-Q Quiz</span>' : '';
+        var sl = escHtml(p.league || p.sport || 'Sports');
         var timeTxt = closed ? (dl ? 'Closed ' + escHtml(fmtDate(dl)) : 'Closed')
                     : scheduled ? 'Opens ' + escHtml(fmtDate(p.publish_at))
-                    : (dl ? 'Closes ' + escHtml(fmtDate(dl)) : 'No deadline');
+                    : (dl ? escHtml(timeLeftTxt(dl)) : 'No deadline');
+        var votesTxt = quiz ? ''
+            : (votes > 0
+                ? '<span><strong>' + votes + '</strong> vote' + (votes === 1 ? '' : 's') + '</span><span class="dot">&middot;</span>'
+                : (closed
+                    ? '<span><strong>0</strong> votes</span><span class="dot">&middot;</span>'
+                    : '<span class="is-first">Be the first to vote</span><span class="dot">&middot;</span>'));
+        var commentsTxt = comments > 0 ? '<span class="dot">&middot;</span><span><strong>' + comments + '</strong> comment' + (comments === 1 ? '' : 's') + '</span>' : '';
+        var revealTxt = (!quiz && !closed && !scheduled && votes > 0) ? '<span class="dot">&middot;</span><span>Vote to reveal results</span>' : '';
         var cta = quiz
             ? (closed ? '<i class="fas fa-chart-bar"></i> Results' : '<i class="fas fa-trophy"></i> Enter')
             : (closed ? '<i class="fas fa-chart-bar"></i> Results' : '<i class="fas fa-check-to-slot"></i> Vote');
-        var ctaCls = 'tmr-card2-cta' + (closed ? ' is-muted' : '');
-        return '<div class="tmr-card2" onclick="openPoll(' + p.id + ')">' +
-            '<div class="tmr-card2-body">' +
-                '<div class="tmr-card2-title">' + escHtml(p.title) + '</div>' +
-                '<div class="tmr-card2-meta">' +
-                    (sl ? '<span>' + sl + '</span><span class="dot">&middot;</span>' : '') +
-                    (quizChip ? quizChip + '<span class="dot">&middot;</span>' : '') +
-                    '<span>By <strong data-tmr-username="' + escHtml(p.username || '') + '">' + escHtml(p.username || 'unknown') + '</strong></span><span class="dot">&middot;</span>' +
-                    (quiz
-                        ? ''
-                        : (votes > 0
-                            ? '<span><strong>' + votes + '</strong> vote' + (votes === 1 ? '' : 's') + '</span><span class="dot">&middot;</span>'
-                            : (closed
-                                ? '<span><strong>0</strong> votes</span><span class="dot">&middot;</span>'
-                                : '<span style="color:var(--tmr-fb-green,#34d399);font-weight:800;">Be the first to vote</span><span class="dot">&middot;</span>'))) +
-                    '<span>' + timeTxt + '</span>' +
-                    (chip ? ' ' + chip : '') +
-                '</div>' +
+        var ctaCls = 'tmr-pcard-cta' + (closed ? ' is-muted' : '');
+        return '<div class="tmr-pcard" onclick="openPoll(' + p.id + ')">' +
+            '<div class="tmr-pcard-top"><span class="tmr-pcard-league">' + sl + '</span>' + (quizChip || chip || '') + '</div>' +
+            '<div class="tmr-pcard-title">' + escHtml(p.title) + '</div>' +
+            '<div class="tmr-pcard-meta">' + votesTxt + '<span>' + timeTxt + '</span>' + commentsTxt + revealTxt + '</div>' +
+            '<div class="tmr-pcard-foot">' +
+                '<span class="tmr-pcard-by"><span class="tmr-pcard-av">' + initialOf(p.username) + '</span><strong data-tmr-username="' + escHtml(p.username || '') + '">' + escHtml(p.username || 'unknown') + '</strong></span>' +
+                '<a class="' + ctaCls + '" href="#poll-' + p.id + '" onclick="event.stopPropagation();event.preventDefault();openPoll(' + p.id + ')">' + cta + '</a>' +
             '</div>' +
-            '<a class="' + ctaCls + '" href="#poll-' + p.id + '" onclick="event.stopPropagation();event.preventDefault();openPoll(' + p.id + ')">' + cta + '</a>' +
         '</div>';
     }
     function listHtml(polls) {
-        return '<div class="tmr-list2">' + polls.map(pollCardHtml).join('') + '</div>';
+        return '<div class="tmr-grid2">' + polls.map(pollCardHtml).join('') + '</div>';
     }
     function emptyHtml(icon, title, sub, ctaLabel) {
         return '<div class="tmr-empty-msg"><div class="icon"><i class="fas fa-' + icon + '"></i></div>' +
             '<strong>' + escHtml(title) + '</strong>' + (sub ? '<div>' + escHtml(sub) + '</div>' : '') +
             (ctaLabel ? '<a href="#" onclick="event.preventDefault();openCreatePollModal()">' + escHtml(ctaLabel) + '</a>' : '') + '</div>';
     }
+
+    // ============== HERO STATS + TAB COUNTS ==============
+    async function loadStats() {
+        var row = document.getElementById('pollStatsRow');
+        if (!row) return;
+        try {
+            var s = await api.request('/polls/stats');
+            var chips = [];
+            if (s.active_polls != null) chips.push('<div class="tmr-stat"><b>' + parseInt(s.active_polls) + '</b><span>Active Polls</span></div>');
+            if (s.votes_today != null) chips.push('<div class="tmr-stat"><b>' + parseInt(s.votes_today) + '</b><span>Votes Today</span></div>');
+            if (s.community_accuracy != null) chips.push('<div class="tmr-stat"><b>' + s.community_accuracy + '<span class="u">%</span></b><span>Community Accuracy</span></div>');
+            if (s.me && s.me.streak_days != null && s.me.streak_days > 0) chips.push('<div class="tmr-stat is-me"><b>' + parseInt(s.me.streak_days) + '<span class="u">day' + (s.me.streak_days === 1 ? '' : 's') + '</span></b><span>Your Streak</span></div>');
+            else if (s.me && s.me.votes_total != null && s.me.votes_total > 0) chips.push('<div class="tmr-stat is-me"><b>' + parseInt(s.me.votes_total) + '</b><span>Your Votes</span></div>');
+            if (s.me && s.me.accuracy != null) chips.push('<div class="tmr-stat is-me"><b>' + s.me.accuracy + '<span class="u">%</span></b><span>Your Accuracy</span></div>');
+            if (chips.length) { row.innerHTML = chips.join(''); row.hidden = false; }
+            else row.hidden = true;
+        } catch (e) { row.hidden = true; }
+    }
+    async function refreshTabCounts() {
+        try {
+            var data = await api.request('/polls?status=active&limit=100');
+            var polls = (data.polls || []).filter(isActiveOpen);
+            var quick = polls.filter(function(p) { return !isQuiz(p); }).length;
+            var quiz = polls.filter(isQuiz).length;
+            var qEl = document.getElementById('tabCountQuick');
+            var zEl = document.getElementById('tabCountQuiz');
+            if (qEl) { qEl.textContent = quick; qEl.hidden = quick === 0; }
+            if (zEl) { zEl.textContent = quiz; zEl.hidden = quiz === 0; }
+        } catch (e) { /* counts are decorative */ }
+    }
+
 
     // ============== SECTION DISPATCH ==============
     function goTab(tab) { switchTab(tab); document.getElementById('pollsTabBar').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
@@ -801,9 +910,22 @@
     }
 
     // ---------- QUICK POLLS ----------
+    // Featured pick: most-voted open poll with a deadline; ties break to the
+    // one closing soonest so the spotlight always feels urgent.
+    function pickFeatured(polls) {
+        if (!polls.length) return null;
+        var ranked = polls.slice().sort(function(a, b) {
+            var va = parseInt(a.vote_count) || 0, vb = parseInt(b.vote_count) || 0;
+            if (vb !== va) return vb - va;
+            var da = pollDeadline(a), db = pollDeadline(b);
+            if (!da && !db) return 0; if (!da) return 1; if (!db) return -1;
+            return da - db;
+        });
+        return ranked[0];
+    }
     async function loadQuickTab() {
         var sec = document.getElementById('pollsSection');
-        sec.innerHTML = sectionHead('Quick Polls', 'Cast one vote and see the community consensus.', filterBarHtml(true)) +
+        sec.innerHTML = '<div class="tmr-sec-head is-toolbar">' + filterBarHtml(true) + '</div>' +
             '<div class="tmr-loading">Loading polls...</div>';
         try {
             var polls = await fetchPolls('active', 100);
@@ -811,24 +933,141 @@
             polls = polls.filter(function(p) { return !isQuiz(p) && isActiveOpen(p); });
             polls = sortPolls(polls);
             state.polls = polls;
-            var body = polls.length ? listHtml(polls) : quickEmptyHtml();
+            if (!polls.length) { renderSectionBody(quickEmptyHtml()); return; }
+            var featured = pickFeatured(polls);
+            var rest = polls.filter(function(p) { return p.id !== featured.id; });
+            var body = '<div id="featSlot"></div>' + (rest.length ? listHtml(rest) : '');
             renderSectionBody(body);
+            renderFeaturedPoll(featured);
         } catch (err) {
             console.error('loadQuickTab', err);
             renderSectionBody(emptyHtml('triangle-exclamation', 'Could not load polls.', 'The server may be warming up. Try again in a few seconds.', ''));
         }
     }
+
+    // Featured poll block: question + big tactile answer buttons. Voting inline
+    // reveals animated results without leaving the feed.
+    async function renderFeaturedPoll(p) {
+        var slot = document.getElementById('featSlot');
+        if (!slot || !p) return;
+        var d = null;
+        try { d = await api.request('/polls/' + p.id); } catch (e) { d = null; }
+        if (!d || !d.poll) { slot.innerHTML = pollCardHtml(p); return; }
+        var poll = d.poll, options = d.options || [], totalVotes = d.total_votes || 0, userVote = d.user_vote || null;
+        var dl = pollDeadline(poll);
+        var eyebrow = '<div class="tmr-feat-eyebrow"><span><i class="fas fa-bolt"></i> Featured Poll</span>' +
+            '<span class="sep">&middot;</span><span>' + escHtml(poll.league || poll.sport || 'Sports') + '</span>' +
+            (dl ? '<span class="sep">&middot;</span><span class="when">' + escHtml(timeLeftTxt(dl)) + '</span>' : '') + '</div>';
+        var body, sub;
+        if (userVote) {
+            body = featResultsHtml(options, totalVotes, userVote);
+            sub = '<div class="tmr-feat-sub"><span><b>' + totalVotes + '</b> vote' + (totalVotes === 1 ? '' : 's') + ' &middot; you are locked in</span>' +
+                '<a href="#poll-' + poll.id + '" onclick="event.preventDefault();openPoll(' + poll.id + ')" style="font-weight:600;">Discussion &rarr;</a></div>';
+        } else {
+            body = '<div class="tmr-feat-opts">' + options.map(function(o) {
+                return '<button type="button" class="tmr-feat-opt" onclick="featVote(' + poll.id + ',' + o.id + ',this)">' + escHtml(o.option_text) + '</button>';
+            }).join('') + '</div>';
+            sub = '<div class="tmr-feat-sub"><span><b>' + totalVotes + '</b> vote' + (totalVotes === 1 ? '' : 's') + ' so far</span>' +
+                '<span class="reveal"><i class="fas fa-lock" style="font-size:0.62rem;"></i> Vote to reveal results</span></div>';
+        }
+        slot.innerHTML = '<div class="tmr-feat" id="featuredPollBox">' + eyebrow +
+            '<div class="tmr-feat-title">' + escHtml(poll.title) + '</div>' + body + sub + '</div>';
+        animateBars(slot);
+    }
+    function featResultsHtml(options, totalVotes, userVote) {
+        var winning = options.reduce(function(m, o) { return Math.max(m, parseInt(o.vote_count || 0)); }, 0);
+        return '<div class="tmr-poll-options" role="group">' + options.map(function(o) {
+            var votes = parseInt(o.vote_count || 0);
+            var pct = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
+            var pctText = (parseFloat(o.vote_percentage || pct) || 0).toFixed(1);
+            var isUser = userVote && parseInt(userVote.option_id) === parseInt(o.id);
+            var lead = votes === winning && winning > 0;
+            return '<li class="tmr-poll-option is-disabled"><div class="tmr-poll-result' + (lead ? ' is-winner' : '') + (isUser ? ' is-user-pick' : '') + '">' +
+                '<div class="tmr-poll-result-row">' +
+                    '<span class="tmr-poll-result-text">' + escHtml(o.option_text) + (isUser ? '<span class="tmr-poll-result-tag user">Your Vote</span>' : '') + '</span>' +
+                    '<span class="tmr-poll-result-pct">' + pctText + '% &middot; ' + votes + '</span>' +
+                '</div>' +
+                '<div class="tmr-poll-bar"><div class="tmr-poll-bar-fill" style="width:0%" data-w="' + Math.min(100, pct).toFixed(1) + '"></div></div>' +
+            '</div></li>';
+        }).join('') + '</div>';
+    }
+    async function featVote(pollId, optionId, btn) {
+        if (!isLoggedIn()) { window.location.href = '/login/'; return; }
+        var box = document.getElementById('featuredPollBox');
+        if (box) box.querySelectorAll('.tmr-feat-opt').forEach(function(b) { b.disabled = true; });
+        if (btn) btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> ' + btn.textContent;
+        try {
+            await api.request('/polls/' + pollId + '/vote', { method: 'POST', body: { option_id: optionId } });
+            showToast('Vote locked in.', 'success');
+            var d = await api.request('/polls/' + pollId);
+            var slot = document.getElementById('featSlot');
+            if (slot && d && d.poll) {
+                renderFeaturedFromDetail(d);
+            }
+            loadStats(); refreshTabCounts();
+        } catch (err) {
+            console.error('featVote', err);
+            showToast(err && err.message ? err.message : 'Could not submit vote.', 'error');
+            if (box) box.querySelectorAll('.tmr-feat-opt').forEach(function(b) { b.disabled = false; });
+        }
+    }
+    function renderFeaturedFromDetail(d) {
+        var slot = document.getElementById('featSlot');
+        if (!slot) return;
+        var poll = d.poll, dl = pollDeadline(poll), totalVotes = d.total_votes || 0;
+        var eyebrow = '<div class="tmr-feat-eyebrow"><span><i class="fas fa-bolt"></i> Featured Poll</span>' +
+            '<span class="sep">&middot;</span><span>' + escHtml(poll.league || poll.sport || 'Sports') + '</span>' +
+            (dl ? '<span class="sep">&middot;</span><span class="when">' + escHtml(timeLeftTxt(dl)) + '</span>' : '') + '</div>';
+        slot.innerHTML = '<div class="tmr-feat" id="featuredPollBox">' + eyebrow +
+            '<div class="tmr-feat-title">' + escHtml(poll.title) + '</div>' +
+            featResultsHtml(d.options || [], totalVotes, d.user_vote || null) +
+            '<div class="tmr-feat-sub"><span><b>' + totalVotes + '</b> vote' + (totalVotes === 1 ? '' : 's') + ' &middot; you are locked in</span>' +
+            '<a href="#poll-' + poll.id + '" onclick="event.preventDefault();openPoll(' + poll.id + ')" style="font-weight:600;">Discussion &rarr;</a></div></div>';
+        animateBars(slot);
+    }
+
+    // Compact empty state: never a giant dead rectangle. Template chips
+    // pre-fill the create modal so starting a poll takes one tap.
+    var POLL_TEMPLATES = {
+        winner:  { label: 'Game Winner', icon: 'trophy', title: 'Who wins tonight?', question: 'Which side takes this game?' },
+        total:   { label: 'Over / Under', icon: 'arrows-up-down', title: 'Over or under tonight?', question: 'Does this game go over or under the total?' },
+        best:    { label: 'Best Bet', icon: 'fire', title: 'Best bet on the board today', question: 'Which of these is the strongest play today?' },
+        player:  { label: 'Player Comparison', icon: 'user-group', title: 'Who is having the better season?', question: 'Which player takes it?' },
+        debate:  { label: 'Community Debate', icon: 'comments', title: 'Settle the debate', question: 'Where do you stand?' }
+    };
     function quickEmptyHtml() {
         var sport = state.sportFilter;
-        var title = sport ? ('No active ' + sport.toLowerCase() + ' polls right now.') : 'No active polls right now.';
-        var cta = sport ? ('Create ' + sport + ' Poll') : 'Create the first poll';
-        return emptyHtml('square-poll-vertical', title, 'Start the next debate.', cta);
+        var title = sport ? ('No active ' + sport.toLowerCase() + ' polls right now.') : 'You’re early — start today’s debate.';
+        var chips = Object.keys(POLL_TEMPLATES).map(function(k) {
+            var t = POLL_TEMPLATES[k];
+            return '<button type="button" class="tmr-tpl" onclick="openCreateFromTemplate(\'' + k + '\')"><i class="fas fa-' + t.icon + '"></i> ' + t.label + '</button>';
+        }).join('');
+        return '<div class="tmr-empty2"><span class="icon"><i class="fas fa-square-poll-vertical"></i></span>' +
+            '<strong>' + escHtml(title) + '</strong>' +
+            '<span class="sub">Ask the community anything: game winners, totals, best bets, hot takes.</span>' +
+            '<button type="button" class="tmr-hbtn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus"></i> Create a Poll</button>' +
+            '<div class="tmr-tpl-row">' + chips + '</div></div>';
+    }
+    function openCreateFromTemplate(key) {
+        var t = POLL_TEMPLATES[key];
+        openCreatePollModal();
+        if (!t) return;
+        setCreateType('quick');
+        var titleEl = document.getElementById('pollTitle');
+        var qEl = document.getElementById('pollQuestion');
+        if (titleEl) titleEl.value = t.title;
+        if (qEl) qEl.value = t.question;
+        if (state.sportFilter) {
+            var s = document.getElementById('pollSport');
+            if (s) { s.value = state.sportFilter; onPollSportChange(); }
+        }
+        if (titleEl) { titleEl.focus(); titleEl.select(); }
     }
 
     // ---------- PREDICTION QUIZZES ----------
     async function loadQuizTab() {
         var sec = document.getElementById('pollsSection');
-        sec.innerHTML = sectionHead('Prediction Quiz Competition', 'Make your picks, submit your card, and see how your score compares with the community.', filterBarHtml(false)) +
+        sec.innerHTML = '<div class="tmr-sec-head is-toolbar">' + filterBarHtml(false) + '</div>' +
             '<div class="tmr-loading">Loading quizzes...</div>';
         try {
             var polls = applyFilters(await fetchPolls('all', 100)).filter(isQuiz);
@@ -854,9 +1093,9 @@
                 left += '<div class="tmr-sec-head" style="margin-top:6px;"><div><h2 style="font-size:1rem;">More Live Quizzes</h2></div></div>' + listHtml(moreActive);
             }
             left += '<div class="tmr-sec-head" style="margin-top:18px;"><div><h2 style="font-size:1rem;">Upcoming Quizzes</h2></div></div>';
-            left += upcoming.length ? listHtml(upcoming) : '<div class="tmr-list2"><div class="tmr-card2" style="cursor:default;"><div class="tmr-card2-body"><div class="tmr-card2-meta">No scheduled quizzes yet.</div></div></div></div>';
+            left += upcoming.length ? listHtml(upcoming) : '<div class="tmr-empty2" style="padding:16px;"><span class="sub">No scheduled quizzes yet.</span></div>';
             left += '<div class="tmr-sec-head" style="margin-top:18px;"><div><h2 style="font-size:1rem;">Recently Completed</h2></div></div>';
-            left += completed.length ? listHtml(completed.slice(0, 10)) : '<div class="tmr-list2"><div class="tmr-card2" style="cursor:default;"><div class="tmr-card2-body"><div class="tmr-card2-meta">No completed quizzes yet.</div></div></div></div>';
+            left += completed.length ? listHtml(completed.slice(0, 10)) : '<div class="tmr-empty2" style="padding:16px;"><span class="sub">No completed quizzes yet.</span></div>';
             html += '<div>' + left + '</div>';
 
             // Right column: top performers
@@ -944,7 +1183,7 @@
     // ---------- CLOSED / RESULTS ----------
     async function loadClosedTab() {
         var sec = document.getElementById('pollsSection');
-        sec.innerHTML = sectionHead('Closed / Results', 'Final results from polls and quizzes that have closed.', filterBarHtml(false)) + '<div class="tmr-loading">Loading...</div>';
+        sec.innerHTML = '<div class="tmr-sec-head is-toolbar">' + filterBarHtml(false) + '</div><div class="tmr-loading">Loading...</div>';
         try {
             var polls = applyFilters(await fetchPolls('all', 100)).filter(isClosedPoll);
             polls.sort(function(a, b) { return (pollDeadline(b) || new Date(b.created_at)) - (pollDeadline(a) || new Date(a.created_at)); });
@@ -1046,7 +1285,7 @@
                         '<span class="tmr-poll-result-text">' + escHtml(o.option_text) + tagHtml + '</span>' +
                         '<span class="tmr-poll-result-pct">' + pctText + '% &middot; ' + votes + ' vote' + (votes === 1 ? '' : 's') + '</span>' +
                     '</div>' +
-                    '<div class="tmr-poll-bar"><div class="tmr-poll-bar-fill" style="width:' + Math.min(100, pct) + '%"></div></div>' +
+                    '<div class="tmr-poll-bar"><div class="tmr-poll-bar-fill" style="width:0%" data-w="' + Math.min(100, pct).toFixed(1) + '"></div></div>' +
                 '</div></li>';
             }).join('') + '</div>';
         } else if (showVoteForm) {
@@ -1066,7 +1305,10 @@
                 '<span><strong>' + totalVotes + '</strong> total vote' + (totalVotes === 1 ? '' : 's') +
                     (deadline ? ' &middot; ' + (isExp ? 'Closed ' : 'Closes ') + escHtml(fmtDate(deadline)) : '') +
                 '</span>' +
-                '<button class="tmr-btn tmr-btn-outline" type="button" onclick="closePollDetail()"><i class="fas fa-arrow-left"></i> Back to list</button>' +
+                '<span style="display:inline-flex;gap:8px;">' +
+                    '<button class="tmr-btn tmr-btn-outline" type="button" onclick="sharePoll(' + p.id + ')"><i class="fas fa-share-nodes"></i> Share</button>' +
+                    '<button class="tmr-btn tmr-btn-outline" type="button" onclick="closePollDetail()"><i class="fas fa-arrow-left"></i> Back to list</button>' +
+                '</span>' +
             '</div>';
         }
 
@@ -1093,6 +1335,16 @@
             optionsHtml +
             noVoteFooter +
         '</div>';
+        animateBars(document.getElementById('pollDetail'));
+    }
+
+    function sharePoll(pollId) {
+        var url = window.location.origin + window.location.pathname + '#poll-' + pollId;
+        function done() { showToast('Poll link copied.', 'success'); }
+        function fail() { showToast(url, ''); }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(done, fail);
+        } else { fail(); }
     }
 
     function markPollChoice(input) {
@@ -1116,6 +1368,7 @@
             state.currentPollDetail = data;
             renderPollDetail();
             loadSection();
+            loadStats(); refreshTabCounts();
         } catch(err) {
             console.error('submitVote', err);
             showToast(err && err.message ? err.message : 'Could not submit vote.', 'error');
@@ -1193,7 +1446,7 @@
                         var modelBadge = (o.model_prob!=null) ? '<span class="tmr-q-model" title="Model implied probability">' + Math.round(o.model_prob*100) + '%' + ((o.longshot_mult&&o.longshot_mult>1.05)?' &middot; x'+o.longshot_mult:'') + '</span>' : '';
                         return '<div class="' + cls + '"><div class="tmr-q-res-row"><span class="tmr-q-res-text">' + escHtml(o.option_text) + tags + ptsTag + modelBadge + '</span>' +
                                '<span class="tmr-q-res-pct">' + pctText + '% &middot; ' + vc + '</span></div>' +
-                               '<div class="tmr-q-bar"><div class="tmr-q-bar-fill" style="width:' + Math.min(100,pct) + '%"></div></div></div>';
+                               '<div class="tmr-q-bar"><div class="tmr-q-bar-fill" style="width:0%" data-w="' + Math.min(100,pct).toFixed(1) + '"></div></div></div>';
                     }).join('') + '</div>';
                 } else {
                     body = '<div class="tmr-q-opts">' + (q.options||[]).map(function(o){
@@ -1309,6 +1562,7 @@
                     leadersHtml +
                 '</aside>' +
             '</div>';
+        animateBars(document.getElementById('pollDetail'));
     }
 
     function collectGameAnswers() {
@@ -1702,6 +1956,8 @@
     document.addEventListener('DOMContentLoaded', async function() {
         try { if (window.api && api.ready) await api.ready; } catch(e){}
         initModalSportSelect();
+        loadStats();
+        refreshTabCounts();
         await loadCategories();
         var hash = window.location.hash || '';
         if (hash.indexOf('#poll-') === 0) {
