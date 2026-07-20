@@ -1,5 +1,8 @@
-/* TrustMyRecord homepage v2 — approved design.
-   Source: FINAL-premium-light-v2.html (approved 2026-07-20). Tracked repo asset. */
+/* TrustMyRecord homepage v2 - APPROVED standalone design.
+   Frozen reference: approved/homepage-v2/index.html (sha256 a6729bcf...).
+   Standalone: no legacy homepage CSS is loaded on this page. */
+
+
 
 :root{
   --page:#EFF3F8;
@@ -257,37 +260,15 @@ footer a:hover{color:#fff}
   h1.hh{font-size:50px}
 }
 
-/* ---------------------------------------------------------------------------
-   Guards: the production homepage stylesheets also load on this page (they
-   style the global header and the preserved sections below). These rules keep
-   the approved components' own colours from being inherited by them.
-   Presentational only — no layout change.
-   --------------------------------------------------------------------------- */
-.spot .who b, .spot .nmrow b, .spot .who a b { color:#07182A !important; }
-.spot .hd a, .spot .ft a, .spot .hd .tlink, .spot .ft .tlink { color:#07736D !important; }
-.spot .g3 b { color:#07182A !important; }
-.spot .g3 b.pos, .spot .g3 b.is-pos { color:#0A8B4E !important; }
-.spot .sub2, .spot .lb, .spot .ft span { color:#5E7590 !important; }
-.card .chd h3, .card h3 { color:#07182A !important; }
-.card .foot a, .sec-head .tlink, .card .chd .tlink { color:#07736D !important; }
-.lbr .nm b, .lbr .nm a b { color:#07182A !important; }
-.lbr .nm span, .lbr .un span { color:#5E7590 !important; }
-.lbr .un b.pos { color:#0A8B4E !important; }
-.lbr .un b.neg { color:#BC372E !important; }
-.pk .who b, .pk .who a b, .pk .ln { color:#07182A !important; }
-.pk .mt, .pk .who { color:#5E7590 !important; }
-.fr .ft2 { color:#07182A !important; }
-.fr .fm { color:#5E7590 !important; }
-.bridge .s b { color:#07182A !important; }
-.bridge .s b.t, .bridge .s b.is-brand { color:#07736D !important; }
-.bridge .s span, .bridge__cta p { color:#5E7590 !important; }
-.ccard h4 { color:#07182A !important; }
-.ccard.feat h4 { color:#fff !important; }
-.ccard.feat h4 em { color:#FFC93C !important; }
-.ei h5 { color:#07182A !important; }
-.ei p { color:#2E4459 !important; }
-.ei .go2, .explore .eh .tlink { color:#07736D !important; }
-.pollq { color:#07182A !important; }
-.mrow .mt2 b { color:#07182A !important; }
-.mrow .mt2 span { color:#5E7590 !important; }
-.mrow .go { color:#07736D !important; }
+
+
+/* ---- logged-in nav state (minimal; approved nav layout unchanged) ---- */
+.v2nav-user{display:inline-flex;align-items:center;gap:9px;color:#fff;font-weight:700;font-size:14.5px;text-decoration:none}
+.v2nav-user:hover{color:#7FEBDC}
+.v2nav-ava{width:30px;height:30px;border-radius:8px;object-fit:cover;display:block;border:1px solid rgba(255,255,255,.25)}
+.v2nav-avl{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(140deg,#22D2C0,#0C948C);color:#04211F;font-weight:900;font-size:11.5px}
+.v2nav-name{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v2nav-bell{position:relative;display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:9px;color:#AEC6DC;border:1px solid rgba(255,255,255,.18)}
+.v2nav-bell:hover{color:#fff;border-color:rgba(255,255,255,.4)}
+.v2nav-badge{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#E5484D;color:#fff;font-size:10.5px;font-weight:900;display:flex;align-items:center;justify-content:center}
+@media(max-width:760px){.v2nav-name{display:none}}
