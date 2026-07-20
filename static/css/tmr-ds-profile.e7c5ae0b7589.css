@@ -942,3 +942,32 @@ html body.tmr-ds.profile-page.tmr-social-profile .tmrx-table-shell{
     grid-template-columns:minmax(0,1fr);
   }
 }
+
+/* ---------------------------------------------------------------------------
+   21. DISPLAY FACE
+   -----------------------------------------------------------------------------
+   .profile-name was still computing to "Barlow, Inter" — the section-2 rule at
+   (0,2,0) lost to the page's own heading rules. Barlow and Barlow Condensed are
+   different faces, so the profile title did not match the head-band typography
+   anywhere else on the site. Restated at the layer's own weight.
+   --------------------------------------------------------------------------- */
+html body.tmr-ds.profile-page.tmr-social-profile .profile-name,
+html body.tmr-ds.profile-page.tmr-social-profile .section-title,
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-section-title,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-inbox-modal-card h3,
+html body.tmr-ds.profile-page.tmr-social-profile h1,
+html body.tmr-ds.profile-page.tmr-social-profile h2,
+html body.tmr-ds.profile-page.tmr-social-profile h3{
+  font-family:var(--display);
+  font-weight:900;
+  letter-spacing:.008em;
+}
+html body.tmr-ds.profile-page.tmr-social-profile .profile-name{
+  font-size:36px;
+  line-height:1.02;
+  letter-spacing:.006em;
+  text-transform:uppercase;
+}
+@media(max-width:760px){
+  html body.tmr-ds.profile-page.tmr-social-profile .profile-name{font-size:27px}
+}
