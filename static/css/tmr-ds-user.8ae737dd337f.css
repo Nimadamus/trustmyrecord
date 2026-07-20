@@ -1,0 +1,164 @@
+/* =============================================================================
+   TrustMyRecord — public /u/<username>/ profiles, design-system adoption layer.
+   -----------------------------------------------------------------------------
+   IMPORTANT CONTEXT: these 59 pages are a two-audience surface.
+
+   For JS visitors, static/js/tmr-profile-hydrate.js fetches /profile/ and
+   document.write()s it over this page, so what a real user sees is the /profile/
+   app, not this markup. The baked HTML below is the CRAWLER and no-JS view, and
+   the runtime fallback if that fetch fails.
+
+   So this layer fixes the SEO/no-JS view — which until now shipped with no site
+   header at all, on the neon-arcade palette (#13131c cards, #00aeff links,
+   #00ff88/#ff5566 results, #ffd700 CTA). /profile/ adopting the design system is
+   what changes the experience for logged-in humans, and all 59 of these inherit
+   it automatically at that point.
+
+   Zero !important — the layer's body.tmr-ds prefix (0,2,0) already outranks the
+   page's bare .u-* rules (0,1,0).
+
+   Created Jul 20, 2026.
+   ============================================================================= */
+
+body.tmr-ds .u-wrap{
+  max-width:1180px;
+  margin:0 auto;
+  padding:28px var(--gutter) 70px;
+  color:var(--ink);
+  font-family:var(--font);
+}
+body.tmr-ds .u-wrap a{color:var(--brand-dk);font-weight:700}
+body.tmr-ds .u-wrap a:hover{color:var(--brand)}
+
+/* ---------- identity ---------- */
+body.tmr-ds .u-head{gap:18px;margin:4px 0 8px}
+body.tmr-ds .u-avatar{border:2px solid var(--line)}
+body.tmr-ds .u-name{
+  font-family:var(--display);
+  font-size:36px;
+  font-weight:900;
+  line-height:1.02;
+  letter-spacing:.006em;
+  text-transform:uppercase;
+  color:var(--ink);
+}
+body.tmr-ds .u-bio{color:var(--ink-2);font-size:15px;line-height:1.5;margin-top:7px}
+body.tmr-ds .u-tag{color:var(--muted);font-size:13px;font-weight:600;margin-top:3px}
+
+/* ---------- stat cells ---------- */
+body.tmr-ds .u-stats{gap:var(--gap);margin:22px 0}
+body.tmr-ds .u-stat{
+  padding:18px;
+  background:var(--panel);
+  border:1px solid var(--edge);
+  border-radius:var(--r);
+  box-shadow:var(--sh);
+}
+body.tmr-ds .u-stat b{
+  font-family:var(--display);
+  font-size:26px;
+  font-weight:900;
+  letter-spacing:-.03em;
+  color:var(--ink);
+  font-variant-numeric:tabular-nums;
+}
+body.tmr-ds .u-stat span{
+  font-size:11px;font-weight:900;letter-spacing:.1em;color:var(--muted);
+}
+
+/* ---------- sections ---------- */
+body.tmr-ds .u-block{margin-top:30px}
+body.tmr-ds .u-block h2{
+  font-family:var(--display);
+  font-size:22px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.01em;
+  color:var(--ink);
+  margin-bottom:12px;
+}
+
+/* ---------- pick table ---------- */
+body.tmr-ds .u-scroll{
+  border:1px solid var(--edge);
+  border-radius:var(--r);
+  box-shadow:var(--sh);
+  overflow-x:auto;
+  background:var(--panel);
+}
+body.tmr-ds .u-table{
+  background:var(--panel);
+  border:0;
+  border-radius:0;
+  font-size:14px;
+}
+body.tmr-ds .u-table th{
+  padding:12px 14px;
+  background:var(--panel-2);
+  border-bottom:1px solid var(--line-2);
+  color:var(--muted);
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.1em;
+}
+body.tmr-ds .u-table td{
+  padding:13px 14px;
+  border-bottom:1px solid var(--line);
+  color:var(--ink-2);
+}
+body.tmr-ds .u-table tr:last-child td{border-bottom:0}
+body.tmr-ds .u-table tr:hover td{background:var(--panel-2)}
+body.tmr-ds .u-win{color:var(--green);font-weight:800}
+body.tmr-ds .u-loss{color:var(--red);font-weight:800}
+body.tmr-ds .u-push{color:var(--muted);font-weight:800}
+
+body.tmr-ds .u-note,
+body.tmr-ds .u-links{color:var(--muted);font-size:12.5px;font-weight:600;margin-top:10px}
+body.tmr-ds .u-links{font-size:14px}
+
+/* ---------- explainer + CTA ---------- */
+body.tmr-ds .u-how{
+  margin-top:30px;
+  padding:20px;
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  color:var(--ink-2);
+  font-size:14.5px;
+  line-height:1.6;
+}
+body.tmr-ds .u-how b{color:var(--ink);font-weight:800}
+body.tmr-ds .u-cta{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:46px;
+  margin-top:16px;
+  padding:0 24px;
+  border-radius:var(--r-sm);
+  border:1.5px solid transparent;
+  background:linear-gradient(180deg,#13B0A5,#0A8A83);
+  color:#fff;
+  font-family:var(--font);
+  font-size:15.5px;
+  font-weight:800;
+  letter-spacing:-.012em;
+  box-shadow:0 2px 10px rgba(12,148,140,.32);
+}
+body.tmr-ds .u-cta:hover{background:linear-gradient(180deg,#17C2B5,#0C9A92);color:#fff}
+
+/* ---------- "still building" empty state ---------- */
+body.tmr-ds .u-building{
+  padding:36px 24px;
+  background:var(--panel-2);
+  border:1px dashed var(--line-2);
+  border-radius:var(--r);
+  color:var(--muted);
+  font-size:15px;
+  text-align:center;
+}
+
+@media(max-width:760px){
+  body.tmr-ds .u-wrap{padding:20px var(--gutter) 56px}
+  body.tmr-ds .u-name{font-size:27px}
+  body.tmr-ds .u-stat{padding:14px}
+  body.tmr-ds .u-stat b{font-size:22px}
+}

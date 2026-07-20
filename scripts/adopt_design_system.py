@@ -159,7 +159,20 @@ def adopt(path, page_css_name, dark=False, keep_nav=False, strip_important=False
             html = html.replace(m2.group(0), m2.group(1) + "Barlow+Condensed:wght@600;700;800;900&family=" + m2.group(2), 1)
             notes.append("added Barlow Condensed to the font request")
         else:
-            notes.append("WARNING: no Google-Fonts link found - display face not loaded")
+            # No Google-Fonts request at all. Several pages (all 59 /u/ profiles)
+            # name 'Inter' and 'Barlow' in CSS but never load either, so they have
+            # always rendered in the system fallback. Insert the real request.
+            if html.count("</head>") == 1:
+                html = html.replace(
+                    "</head>",
+                    '    <link rel="preconnect" href="https://fonts.googleapis.com">\n'
+                    '    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+                    '    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900'
+                    '&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">\n</head>',
+                    1)
+                notes.append("no font request existed - added Barlow Condensed + Inter")
+            else:
+                notes.append("WARNING: no Google-Fonts link and no unique </head>")
 
     # 5. design-system stylesheets, immediately before </head> so they load last
     if "tmr-ds.css" in html or ds_css in html:
