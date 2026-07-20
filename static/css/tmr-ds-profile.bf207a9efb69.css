@@ -411,6 +411,56 @@ body.tmr-ds.profile-page.tmr-social-profile .rail-corr-badge{
 }
 body.tmr-ds.profile-page.tmr-social-profile .profit-cell{font-variant-numeric:tabular-nums;font-weight:800}
 
+/* ---------------------------------------------------------------------------
+   10. REMAINING DARK SURFACES
+   -----------------------------------------------------------------------------
+   Found by walking the rendered page for elements wider than 200px whose
+   computed background is dark, rather than by reading 297KB of CSS. The worst
+   of these was `.tmrx-section-title` rendering dark-on-dark ("SPORTS IDENTITY"
+   was invisible), which no DOM-level check would have caught.
+   --------------------------------------------------------------------------- */
+body.tmr-ds .tmrx-section,
+body.tmr-ds .profile-corr-cluster,
+body.tmr-ds .profile-rail-card,
+body.tmr-ds .fa-preview,
+body.tmr-ds .tmrx-market-drill-row,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-section,
+body.tmr-ds.profile-page.tmr-social-profile .profile-corr-cluster,
+body.tmr-ds.profile-page.tmr-social-profile .profile-rail-card{
+  background:var(--panel);
+  border:1px solid var(--edge);
+  border-radius:var(--r);
+  box-shadow:var(--sh);
+  color:var(--ink-2);
+}
+body.tmr-ds .profile-corr-cluster__head,
+body.tmr-ds .profile-corr-cluster__legs,
+body.tmr-ds .profile-corr-cluster__meta,
+body.tmr-ds .tmrx-section-head,
+body.tmr-ds .fa-item,
+body.tmr-ds .fa-item-top,
+body.tmr-ds .fa-meta,
+body.tmr-ds .breakdown-row-indicator,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-section-head{
+  background:var(--panel-2);
+  border-color:var(--line);
+  color:var(--ink-2);
+}
+/* the legibility bug: these were painting dark text on a dark panel */
+body.tmr-ds .tmrx-section-title,
+body.tmr-ds .fa-item-title,
+body.tmr-ds .profile-rail-value,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-section-title,
+body.tmr-ds.profile-page.tmr-social-profile .profile-rail-value{color:var(--ink)}
+body.tmr-ds .tmrx-section-sub,
+body.tmr-ds .profile-rail-label,
+body.tmr-ds .fa-meta,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-section-sub,
+body.tmr-ds.profile-page.tmr-social-profile .profile-rail-label{color:var(--muted)}
+body.tmr-ds .tmrx-table{background:var(--panel)}
+body.tmr-ds .tmrx-row-won{background:var(--green-soft)}
+body.tmr-ds .tmrx-row-lost{background:var(--red-soft)}
+
 @media(max-width:760px){
   body.tmr-ds .profile-header,body.tmr-ds .profile-top-card{padding:20px}
   body.tmr-ds .profile-name{font-size:27px}
