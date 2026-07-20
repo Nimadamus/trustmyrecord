@@ -39,6 +39,15 @@ MANIFEST = ROOT / "static" / "ds-assets.json"
 # The sitewide pair is matched by pattern because pages carry different ?v= tags.
 SITEWIDE_CSS_RE = re.compile(r'[ \t]*<link[^>]+href="/static/css/tmr-sitewide\.css[^"]*"[^>]*>\n?')
 SITEWIDE_JS_RE = re.compile(r'[ \t]*<script[^>]+src="/static/js/tmr-sitewide\.js[^"]*"[^>]*>\s*</script>\n?')
+# Pure legacy override layers. They exist only to re-skin the old design and are
+# ~58% !important by line, including `html,body{background:#080d12 !important}`.
+# /profile/ and /sportsbook/ link them MORE THAN ONCE, and the later copy loads
+# after the design-system stylesheets, so leaving them would hand the page back
+# to the dark theme no matter what the design system says.
+REDESIGN_OVERRIDE_RE = re.compile(
+    r'[ \t]*<link[^>]+href="/static/css/tmr-redesign-overrides[^"]*"[^>]*>\n?')
+REDESIGN_IMPORT_RE = re.compile(
+    r'[ \t]*@import\s+url\([\'"]?/static/css/tmr-redesign-overrides[^)]*\)\s*;\n?')
 # Any Google-Fonts link that requests plain Barlow -> Barlow Condensed.
 BARLOW_RE = re.compile(r'(fonts\.googleapis\.com/css2\?family=)Barlow(:wght|&|")')
 # The design system sets display type at weight 900. Pages that already load
@@ -132,6 +141,10 @@ def adopt(path, page_css_name, dark=False, keep_nav=False, strip_important=False
     #      and the MutationObserver that force-hides nav.nav)
     html, n_css = SITEWIDE_CSS_RE.subn("", html)
     notes.append(f"removed tmr-sitewide.css links: {n_css}")
+    html, n_ro = REDESIGN_OVERRIDE_RE.subn("", html)
+    html, n_ri = REDESIGN_IMPORT_RE.subn("", html)
+    if n_ro or n_ri:
+        notes.append(f"removed tmr-redesign-overrides links/imports: {n_ro}/{n_ri}")
     if not keep_nav:
         html, n_js = SITEWIDE_JS_RE.subn("", html)
         notes.append(f"removed tmr-sitewide.js tags: {n_js}")
