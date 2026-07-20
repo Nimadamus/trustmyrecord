@@ -1045,3 +1045,39 @@ html body.tmr-ds.profile-page.tmr-social-profile .profile-identity-badge{
   border-radius:5px;
   font-weight:800;
 }
+
+/* ---------------------------------------------------------------------------
+   23. PAGINATION — the real container is .tmrx-pagination
+   -----------------------------------------------------------------------------
+   My previous pass guessed .ledger-pagination and missed. The buttons live in
+   `.tmrx-pagination` / `.fa-pagination`, carry no class of their own, and were
+   still #0a1322 pills with the active page on the old cyan #22d3ee.
+   --------------------------------------------------------------------------- */
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-pagination button,
+html body.tmr-ds.profile-page.tmr-social-profile .fa-pagination button{
+  min-height:34px;
+  padding:0 13px;
+  border:1px solid var(--line-2);
+  border-radius:var(--r-sm);
+  background:var(--panel);
+  color:var(--ink-2);
+  font-family:var(--font);
+  font-size:13.5px;
+  font-weight:800;
+}
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-pagination button:hover:not(:disabled),
+html body.tmr-ds.profile-page.tmr-social-profile .fa-pagination button:hover:not(:disabled){
+  border-color:var(--brand);
+  color:var(--brand-dk);
+}
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-pagination button.is-active,
+html body.tmr-ds.profile-page.tmr-social-profile .fa-pagination button.is-active{
+  background:var(--brand-soft);
+  border-color:var(--brand);
+  color:var(--brand-dk);
+}
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-pagination button:disabled,
+html body.tmr-ds.profile-page.tmr-social-profile .fa-pagination button:disabled{
+  opacity:.5;
+  background:var(--panel-2);
+}
