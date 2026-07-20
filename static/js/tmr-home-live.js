@@ -6,6 +6,20 @@
    ============================================================================= */
 (function () {
   'use strict';
+  var MLB_LOGO = {
+    ARI:'ari', ATH:'ath', ATL:'atl', BAL:'bal', BOS:'bos', CHC:'chc', CWS:'chw',
+    CIN:'cin', CLE:'cle', COL:'col', DET:'det', HOU:'hou', KC:'kc', LAA:'laa',
+    LAD:'lad', MIA:'mia', MIL:'mil', MIN:'min', NYM:'nym', NYY:'nyy', PHI:'phi',
+    PIT:'pit', SD:'sd', SF:'sf', SEA:'sea', STL:'stl', TB:'tb', TEX:'tex',
+    TOR:'tor', WSH:'wsh'
+  };
+  function teamLogo(abbr) {
+    var slug = MLB_LOGO[abbr];   // exact map only, same doctrine as MLB_ABBR
+    return slug
+      ? '<img src="https://a.espncdn.com/i/teamlogos/mlb/500-dark/' + slug + '.png" alt="" loading="lazy" onerror="this.remove()">'
+      : '';
+  }
+
   var API = 'https://trustmyrecord-api.onrender.com/api';
 
   function j(path) {
@@ -80,8 +94,8 @@
         var t = new Date(g.commence_time);
         var when = t.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
         html += '<a class="gm" href="/sportsbook/">' +
-          '<span class="t">' + esc(MLB_ABBR[g.away_team]) + '</span>' +
-          '<span class="t">' + esc(MLB_ABBR[g.home_team]) + '</span>' +
+          '<span class="t">' + teamLogo(MLB_ABBR[g.away_team]) + esc(MLB_ABBR[g.away_team]) + '</span>' +
+          '<span class="t">' + teamLogo(MLB_ABBR[g.home_team]) + esc(MLB_ABBR[g.home_team]) + '</span>' +
           '<span class="st">' + esc(when) + '</span></a>';
       });
       box.querySelector('.ticker-in').innerHTML = html;
