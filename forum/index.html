@@ -3398,9 +3398,15 @@ function renderAuthorPanel(post) {
     // other member shows their saved custom undertitle (users.headline) so short custom
     // titles like "TMR OG" render sitewide. A length cap keeps the card clean if a
     // member sets an over-long headline. Bots keep their fbot-tagline below.
+    // users.forum_undertitle is an admin-assigned permanent post undertitle
+    // (e.g. "TMR OG", "TMR QUEEN"); it wins over the headline-derived one and
+    // never touches the headline, role line, or badges.
+    var customUndertitle = String(author.forum_undertitle || '').trim();
     var undertitleText = '';
     if (!isOfficialBot) {
-        if (authorIsAdmin(author)) {
+        if (customUndertitle) {
+            undertitleText = customUndertitle.length > 48 ? (customUndertitle.slice(0, 47).trim() + '…') : customUndertitle;
+        } else if (authorIsAdmin(author)) {
             undertitleText = 'Founder';
         } else if (headline) {
             undertitleText = headline.length > 48 ? (headline.slice(0, 47).trim() + '…') : headline;
@@ -5262,6 +5268,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 <script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
 <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260710nolines">
-<script src="/static/js/analytics.js?v=20260719ft"></script>
+<script src="/static/js/analytics.js?v=20260504a"></script>
 </body>
 </html>
