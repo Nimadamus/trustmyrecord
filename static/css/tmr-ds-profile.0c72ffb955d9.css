@@ -461,6 +461,136 @@ body.tmr-ds .tmrx-table{background:var(--panel)}
 body.tmr-ds .tmrx-row-won{background:var(--green-soft)}
 body.tmr-ds .tmrx-row-lost{background:var(--red-soft)}
 
+/* ---------------------------------------------------------------------------
+   11. FINAL CONVERSION PASS
+   -----------------------------------------------------------------------------
+   Driven by site-qa/ds_contrast_audit.cjs, which walks the RENDERED page for
+   (a) opaque dark surfaces and (b) text below WCAG AA against its effective
+   background. That catches what DOM checks cannot: text that is present and
+   correct but unreadable.
+
+   The `body.tmr-ds.profile-page.tmr-social-profile` prefix is (0,4,1), which
+   beats the page's own `body.profile-page.tmr-social-profile` (0,3,1) layer
+   outright, so none of this needs !important.
+
+   Three failure modes are fixed here:
+     1. surfaces still painted dark
+     2. legacy ON-DARK text colours now sitting on light surfaces (light-on-light)
+     3. neon semantic colours (#5ee68a, #4ade80, #48e08a, #fde68a, #ff8a8a) that
+        were tuned for a black page and fail on white
+   --------------------------------------------------------------------------- */
+
+/* --- 1. remaining dark surfaces --------------------------------------------- */
+body.tmr-ds.profile-page.tmr-social-profile .profile-top-strip,
+body.tmr-ds.profile-page.tmr-social-profile .profile-advanced-strip-card,
+body.tmr-ds.profile-page.tmr-social-profile .profile-advanced-support-grid,
+body.tmr-ds.profile-page.tmr-social-profile .profile-corr-panel,
+body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-card,
+body.tmr-ds.profile-page.tmr-social-profile .profile-identity,
+body.tmr-ds.profile-page.tmr-social-profile .profile-identity-card{
+  background:var(--panel);
+  border:1px solid var(--edge);
+  border-radius:var(--r);
+  box-shadow:var(--sh);
+  color:var(--ink-2);
+}
+body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-stat,
+body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-teamcol,
+body.tmr-ds.profile-page.tmr-social-profile .ca-hl{
+  background:var(--panel-2);
+  border-color:var(--line);
+  color:var(--ink-2);
+}
+/* tab rails are containers, not surfaces */
+body.tmr-ds.profile-page.tmr-social-profile .profile-tabs,
+body.tmr-ds.profile-page.tmr-social-profile .tmr-cap-tabs,
+body.tmr-ds.profile-page.tmr-social-profile .fa-tabs{
+  background:transparent;
+  border:0;
+  box-shadow:none;
+}
+/* .num is used both as a dark pill and as a plain numeric span */
+body.tmr-ds.profile-page.tmr-social-profile .num{
+  background-color:transparent;
+  color:var(--ink);
+}
+body.tmr-ds.profile-page.tmr-social-profile .is-soon{
+  background:var(--panel-3);
+  border-color:var(--line);
+  color:var(--muted);
+}
+
+/* --- 2. legacy on-dark text now on light surfaces --------------------------- */
+body.tmr-ds.profile-page.tmr-social-profile .v,
+body.tmr-ds.profile-page.tmr-social-profile .name,
+body.tmr-ds.profile-page.tmr-social-profile .td,
+body.tmr-ds.profile-page.tmr-social-profile .h2,
+body.tmr-ds.profile-page.tmr-social-profile .strong,
+body.tmr-ds.profile-page.tmr-social-profile .profile-corr-h4,
+body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-stat b,
+body.tmr-ds.profile-page.tmr-social-profile .profile-identity h2,
+body.tmr-ds.profile-page.tmr-social-profile .profile-identity h3{
+  color:var(--ink);
+}
+body.tmr-ds.profile-page.tmr-social-profile .li,
+body.tmr-ds.profile-page.tmr-social-profile .k,
+body.tmr-ds.profile-page.tmr-social-profile .breakdown-row-indicator,
+body.tmr-ds.profile-page.tmr-social-profile .profile-top-strip span,
+body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-stat span{
+  color:var(--muted);
+}
+body.tmr-ds.profile-page.tmr-social-profile .profile-corr-ticket,
+body.tmr-ds.profile-page.tmr-social-profile .fa-cat,
+body.tmr-ds.profile-page.tmr-social-profile .fa-stat{
+  color:var(--brand-dk);
+}
+
+/* --- 3. semantic colours tuned for black, retuned for white ----------------- */
+body.tmr-ds.profile-page.tmr-social-profile .pos,
+body.tmr-ds.profile-page.tmr-social-profile .num.pos,
+body.tmr-ds.profile-page.tmr-social-profile .v.is-pos,
+body.tmr-ds.profile-page.tmr-social-profile .is-positive,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-value.is-pos,
+body.tmr-ds.profile-page.tmr-social-profile .profile-rail-value.is-positive,
+body.tmr-ds.profile-page.tmr-social-profile .profile-advanced-metric__value.is-pos,
+body.tmr-ds.profile-page.tmr-social-profile .profile-corr-status--won,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-result-won{
+  color:var(--green);
+}
+body.tmr-ds.profile-page.tmr-social-profile .neg,
+body.tmr-ds.profile-page.tmr-social-profile .num.neg,
+body.tmr-ds.profile-page.tmr-social-profile .v.is-neg,
+body.tmr-ds.profile-page.tmr-social-profile .is-negative,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-value.is-neg,
+body.tmr-ds.profile-page.tmr-social-profile .profile-rail-value.is-negative,
+body.tmr-ds.profile-page.tmr-social-profile .profile-advanced-metric__value.is-neg,
+body.tmr-ds.profile-page.tmr-social-profile .profile-corr-status--lost,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-result-lost{
+  color:var(--red);
+}
+body.tmr-ds.profile-page.tmr-social-profile .rail-corr-badge.corr-moderate,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-result-pending{
+  background:var(--gold-soft);
+  color:var(--gold);
+}
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-result-void,
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-result-push{
+  background:var(--panel-3);
+  color:var(--ink-2);
+}
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-result-won{background:var(--green-soft)}
+body.tmr-ds.profile-page.tmr-social-profile .tmrx-result-lost{background:var(--red-soft)}
+
+/* --- the sub-nav strip: a quiet rule under the head band, not a dark slab --- */
+body.tmr-ds.profile-page.tmr-social-profile .profile-top-strip{
+  background:var(--panel-2);
+  border:1px solid var(--line);
+  box-shadow:none;
+  color:var(--muted);
+  font-size:12.5px;
+  font-weight:600;
+}
+
 @media(max-width:760px){
   body.tmr-ds .profile-header,body.tmr-ds .profile-top-card{padding:20px}
   body.tmr-ds .profile-name{font-size:27px}
