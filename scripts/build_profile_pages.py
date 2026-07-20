@@ -20,6 +20,15 @@ submission choice, NOT a noindex, and it is deliberate (owner instruction).
 
 Pending/void picks are never written into the crawlable SEO HTML.
 
+DESIGN SYSTEM (July 20, 2026): these pages are GENERATED, so the design system
+has to be applied HERE, not to the output. Hand-editing /u/*/index.html is
+pointless — the scheduled prerender workflow regenerates all 59 files and reverts
+it (that is exactly what happened once already). Every page now emits
+tmr-ds.css + tmr-ds-user.css + tmr-ds-nav.js and `<body class="tmr-ds">`, so the
+crawler/no-JS view carries the shared nav and footer instead of shipping with no
+site header at all. Asset URLs are content-hashed and read from
+static/ds-assets.json at build time, so a CSS change never leaves these stale.
+
 Build only. Does NOT commit or deploy. Run from the repo root:
     python scripts/build_profile_pages.py
 Add --dry-run to print the eligible/excluded sets without writing files.
@@ -29,6 +38,41 @@ import json, os, sys, html, urllib.request, datetime, re
 API   = "https://trustmyrecord-api.onrender.com/api"
 SITE  = "https://trustmyrecord.com"
 ROOT  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # repo root
+
+
+def _ds_assets():
+    """Content-hashed design-system asset URLs, read from the manifest that
+    scripts/build_ds_assets.py writes. Hashing is required because the CDN in
+    front of this site caches by path and ignores the query string, so `?v=`
+    bumps serve stale bytes. Falls back to the unhashed names if the manifest is
+    missing, which still renders correctly, just without cache-busting."""
+    try:
+        with open(os.path.join(ROOT, "static", "ds-assets.json"), encoding="utf-8") as fh:
+            m = json.load(fh)
+        return (m["static/css/tmr-ds.css"],
+                m["static/css/tmr-ds-user.css"],
+                m["static/js/tmr-ds-nav.js"])
+    except Exception:
+        return ("/static/css/tmr-ds.css",
+                "/static/css/tmr-ds-user.css",
+                "/static/js/tmr-ds-nav.js")
+
+
+_DS_CSS, _DS_USER_CSS, _DS_NAV = _ds_assets()
+
+# Head block: the design system replaces tmr-sitewide.css. These pages also named
+# 'Inter' and 'Barlow' in CSS while loading NEITHER, so they rendered in the
+# system fallback font from the day they were created; the real request is here.
+DS_HEAD = (
+    '<link rel="preconnect" href="https://fonts.googleapis.com">\n'
+    '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>\n'
+    '<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900'
+    '&amp;family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">\n'
+    f'<link rel="stylesheet" href="{_DS_CSS}">\n'
+    f'<link rel="stylesheet" href="{_DS_USER_CSS}">'
+)
+# Shared nav + footer, so these pages are no longer chrome-less dead ends.
+DS_FOOT = f'<script src="{_DS_NAV}"></script>'
 UDIR  = os.path.join(ROOT, "u")
 SITEMAP = os.path.join(ROOT, "sitemap.xml")
 
@@ -347,7 +391,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
 <meta property="og:url" content="{url}">
 <meta property="og:description" content="{desc}">{og_img}
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css">
+{DS_HEAD}
 <script type="application/ld+json">
 {ld}
 </script>
@@ -378,7 +422,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
 @media(max-width:640px){{.u-stats{{grid-template-columns:repeat(2,1fr);}}.u-table{{font-size:12.5px;}}}}
 </style>
 </head>
-<body>
+<body class="tmr-ds">
 <main class="u-wrap">
   <div class="u-head">
     {avatar_html}
@@ -416,6 +460,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
 </main>
 <script>window.__TMR_PROFILE_USERNAME={json.dumps(un)};</script>
 <script src="/static/js/tmr-profile-hydrate.js" defer></script>
+{DS_FOOT}
 </body>
 </html>
 """
@@ -441,7 +486,7 @@ def compact_html(un):
 <title>{e(un)} | TrustMyRecord</title>
 <meta name="description" content="Public TrustMyRecord profile for {e(un)} - verified locked-pick record, units, ROI, and history. Building toward the featured leaderboard.">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css">
+{DS_HEAD}
 <style>
 .u-wrap{{max-width:820px;margin:0 auto;padding:24px 18px 70px;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;}}
 .u-wrap a{{color:#00aeff;text-decoration:none;}}
@@ -464,7 +509,7 @@ def compact_html(un):
 @media(max-width:640px){{.u-stats{{grid-template-columns:repeat(2,1fr);}}.u-table{{font-size:12.5px;}}}}
 </style>
 </head>
-<body>
+<body class="tmr-ds">
 <main class="u-wrap">
   <div class="u-head">
     <div>
@@ -487,6 +532,7 @@ def compact_html(un):
 </main>
 <script>window.__TMR_PROFILE_USERNAME={json.dumps(un)};</script>
 <script src="/static/js/tmr-profile-hydrate.js" defer></script>
+{DS_FOOT}
 </body>
 </html>
 """
