@@ -708,6 +708,65 @@ html body.tmr-ds.profile-page.tmr-social-profile .profile-rail-corr-sub{
   color:var(--muted);
 }
 
+/* ---------------------------------------------------------------------------
+   15. UNCLASSED DESCENDANTS
+   -----------------------------------------------------------------------------
+   Setting colour on the CONTAINER did not fix these: the td/li/span/b elements
+   carry their own colour rules, and a direct rule on an element always beats an
+   inherited value, no matter how specific the ancestor rule is.
+
+   So they are targeted directly — but only where they have no class of their
+   own (`:not([class])`). That deliberately leaves .pos/.neg/.is-pos and every
+   other semantic class alone, so win/loss colouring inside these tables is not
+   flattened to body text.
+   --------------------------------------------------------------------------- */
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-table td:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-table th:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-table b:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-row-void td:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-unavail-note b:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .tmrx-unavail-note code:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .profile-advanced-support-grid div:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .profile-diversity-detail li:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .profile-diversity-detail strong:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .profile-diversity-detail span:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .profile-corr-stats li:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .profile-corr-cluster__legs li:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .profile-corr-cluster__legs strong:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pagination-controls button:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-chart-stage__canvas div:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile summary:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .profile-corr-explain p:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile p:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile s:not([class]),
+html body.tmr-ds.profile-page.tmr-social-profile .tmr-fi-card span:not([class]){
+  color:var(--ink-2);
+}
+/* the ticket ref was #ffd700, a gold picked for a black page */
+html body.tmr-ds.profile-page.tmr-social-profile .ledger-pick-meta span:not([class]){color:var(--muted)}
+/* the New Message modal card was still dark, so its heading sat dark-on-dark */
+html body.tmr-ds.profile-page.tmr-social-profile .profile-inbox-modal-card,
+html body.tmr-ds.profile-page.tmr-social-profile .profile-inbox-modal .profile-inbox-modal-card{
+  background:var(--panel);
+  color:var(--ink-2);
+}
+
+/* ---------------------------------------------------------------------------
+   16. SEMANTIC COLOURS ON DENSE SURFACES — ON THIS PAGE ONLY
+   -----------------------------------------------------------------------------
+   Same reasoning as --muted in section 14. --green (#0A8B4E) is 4.36:1 on white
+   and 3.76:1 inside a --green-soft badge; --gold (#B98505) is 3.27:1 on white
+   and 2.91:1 inside a --gold-soft badge. Fine on the homepage, which uses them
+   as large accent numerals; not fine here, where they label small table cells
+   and badges. Nudged darker on this page only — same hue, AA-clear:
+   green 5.68:1 on white / 4.90:1 on tint, gold 5.12:1 / 4.55:1.
+   --------------------------------------------------------------------------- */
+html body.tmr-ds.profile-page{
+  --green:#07743F;
+  --gold:#8A6304;
+  --red:#A82A22;
+}
+
 @media(max-width:760px){
   body.tmr-ds .profile-header,body.tmr-ds .profile-top-card{padding:20px}
   body.tmr-ds .profile-name{font-size:27px}
