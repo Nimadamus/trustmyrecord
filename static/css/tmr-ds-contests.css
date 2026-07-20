@@ -155,6 +155,20 @@ body.tmr-ds .iso-note{
   line-height:1.55;
 }
 body.tmr-ds .iso-note strong{color:var(--ink);font-weight:800}
+
+/* The Account Integrity rule is a warning, not a footnote. It previously carried
+   its palette inline (border rgba(239,68,68,.4) on background rgba(40,12,12,.45)
+   with #ffc9c9 and #fff text) — tuned for a dark page, it rendered as a muddy
+   mauve box with washed-out text once the page went light. Those inline
+   attributes are removed and it is now a proper warning surface. */
+body.tmr-ds .iso-note--warn{
+  border:1px solid var(--red);
+  border-left-width:3px;
+  background:var(--red-soft);
+  color:var(--ink-2);
+}
+body.tmr-ds .iso-note--warn strong{color:var(--red)}
+body.tmr-ds .iso-note--warn a{color:var(--red);font-weight:800;text-decoration:underline}
 body.tmr-ds .iso-note code{
   background:var(--panel-3);color:var(--ink-2);border-radius:4px;padding:1px 6px;font-size:13px;
 }
