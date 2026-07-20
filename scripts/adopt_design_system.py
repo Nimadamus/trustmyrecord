@@ -41,6 +41,18 @@ SITEWIDE_CSS_RE = re.compile(r'[ \t]*<link[^>]+href="/static/css/tmr-sitewide\.c
 SITEWIDE_JS_RE = re.compile(r'[ \t]*<script[^>]+src="/static/js/tmr-sitewide\.js[^"]*"[^>]*>\s*</script>\n?')
 # Any Google-Fonts link that requests plain Barlow -> Barlow Condensed.
 BARLOW_RE = re.compile(r'(fonts\.googleapis\.com/css2\?family=)Barlow(:wght|&|")')
+# The design system sets display type at weight 900. Pages that already load
+# Barlow Condensed often stop at 800, which silently synthesises a fake bold.
+BC_WEIGHTS_RE = re.compile(r'(Barlow\+Condensed:wght@)([\d;]+)')
+
+
+def ensure_bc_900(html):
+    def fix(m):
+        weights = [w for w in m.group(2).split(";") if w]
+        if "900" not in weights:
+            weights.append("900")
+        return m.group(1) + ";".join(sorted(weights, key=int))
+    return BC_WEIGHTS_RE.subn(fix, html)
 
 
 def assets():
@@ -109,6 +121,8 @@ def adopt(path, page_css_name, dark=False, keep_nav=False, strip_important=False
     # 4. display face
     html, n_font = BARLOW_RE.subn(r"\1Barlow+Condensed\2", html)
     notes.append(f"Barlow -> Barlow Condensed in font links: {n_font}")
+    html, n_900 = ensure_bc_900(html)
+    notes.append(f"Barlow Condensed weight 900 ensured: {n_900}")
 
     # 5. design-system stylesheets, immediately before </head> so they load last
     if "tmr-ds.css" in html or ds_css in html:
