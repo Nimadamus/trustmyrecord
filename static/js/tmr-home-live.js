@@ -174,33 +174,50 @@
     });
   }
 
-  /* ---------- 6. POLL ----------------------------------------------------- */
+  /* ---------- 6. POLL — real options, real votes, honest empty states ------ */
   function poll() {
     var card = document.querySelectorAll('.compete .ccard')[2]; if (!card) return;
+    var qEl = el('.pollq', card), mEl = el('.pollmeta', card), body = el('.pollbars', card);
+    var fail = function (msg) {
+      if (qEl) qEl.textContent = msg;
+      if (mEl) mEl.textContent = '';
+      if (body) body.innerHTML = '';
+      var chip = card.querySelector('.cch .st'); if (chip) chip.textContent = '';
+    };
     j('/polls/active').then(function (d) {
-      var p = (d && (d.polls || d.data)) || (Array.isArray(d) ? d : []);
-      p = Array.isArray(p) ? p[0] : p;
-      if (!p) return;
-      var q = el('.pollq', card); if (q) q.textContent = p.question || p.title || q.textContent;
-      var meta = el('.pollmeta', card);
-      var total = (p.options || []).reduce(function (s, o) { return s + num(o.votes || o.vote_count); }, 0);
-      if (meta) meta.textContent = total + ' vote' + (total === 1 ? '' : 's') + ' · results public';
-      var opts = (p.options || []).slice(0, 3);
-      if (opts.length) {
-        var colors = ['linear-gradient(90deg,var(--brand-lt),var(--brand))',
-                      'linear-gradient(90deg,#5A9BF2,var(--blue))',
-                      'linear-gradient(90deg,#9781DE,var(--violet))'];
-        var wrap = card.querySelectorAll('.pbar');
-        opts.forEach(function (o, i) {
-          if (!wrap[i]) return;
-          var pct = total ? Math.round(num(o.votes || o.vote_count) / total * 100) : 0;
-          wrap[i].querySelector('.r').innerHTML = '<span>' + esc(o.text || o.label || o.option_text) + '</span><b class="num">' + pct + '%</b>';
-          wrap[i].querySelector('.tr i').style.cssText = 'width:' + pct + '%;background:' + colors[i];
-        });
-        for (var k = opts.length; k < wrap.length; k++) wrap[k].style.display = 'none';
-      }
-      var cta = card.querySelector('.cch .st'); if (cta) cta.textContent = p.is_closed ? 'Closed' : 'Open';
-    });
+      if (d === null) { fail('Data unavailable'); return; }   // genuine request failure
+      var list = (d && (d.polls || d.data)) || (Array.isArray(d) ? d : []);
+      var head = Array.isArray(list) ? list[0] : list;
+      if (!head || !head.id) { fail('No active poll right now.'); return; }
+      j('/polls/' + head.id).then(function (full) {
+        if (!full) { fail('Data unavailable'); return; }
+        var p = full.poll || full;
+        var opts = full.options || [];
+        var total = num(full.total_votes != null ? full.total_votes : p.total_votes);
+        if (!opts.length) { fail('No active poll right now.'); return; }
+
+        if (qEl) qEl.textContent = p.title || p.question || '';
+        if (mEl) mEl.textContent = total + ' vote' + (total === 1 ? '' : 's') +
+          (p.status === 'active' ? ' · results public' : ' · closed');
+        var chip = card.querySelector('.cch .st');
+        if (chip) chip.textContent = p.status === 'active' ? 'Open' : 'Closed';
+
+        var fills = ['linear-gradient(90deg,var(--brand-lt),var(--brand))',
+                     'linear-gradient(90deg,#5A9BF2,var(--blue))',
+                     'linear-gradient(90deg,#9781DE,var(--violet))',
+                     'linear-gradient(90deg,#F0A199,var(--red))'];
+        if (body) {
+          body.innerHTML = opts.slice(0, 4).map(function (o, i) {
+            var votes = num(o.vote_count);
+            // percentages are derived from stored votes only; 0 votes => 0%
+            var pct = total > 0 ? Math.round(votes / total * 100) : 0;
+            return '<div class="pbar"><div class="r"><span>' + esc(o.option_text || o.text || '') +
+              '</span><b class="num">' + pct + '%</b></div>' +
+              '<div class="tr"><i style="width:' + pct + '%;background:' + fills[i % 4] + '"></i></div></div>';
+          }).join('');
+        }
+      });
+    }).catch(function () { fail('Data unavailable'); });
   }
 
   /* ---------- 7. ARENA — real open challenges ----------------------------- */
@@ -252,6 +269,17 @@
     })();
     function finish() {
       if (!all.length) return;
+      // bridge rail: derived from real users only
+      var picksTotal = 0, verified = 0;
+      all.forEach(function (u) {
+        var tp = num(u.total_picks);
+        picksTotal += tp;
+        if (tp > 0 && u.verification_status === 'verified') verified++;
+      });
+      var cells = document.querySelectorAll('.bridge .s b');
+      if (cells[0]) cells[0].textContent = picksTotal.toLocaleString();
+      if (cells[1]) cells[1].textContent = String(verified);
+      if (cells[2]) cells[2].textContent = String(all.length);
       leaderboard(all);
       platform(all);
       j('/users/trend-highlights').then(function (d) {
@@ -259,6 +287,23 @@
       });
     }
   }
+
+  /* ---------- INTEGRITY SAFEGUARD -----------------------------------------
+     Production must never show mock/demo/fallback engagement data. Any module
+     whose live request failed is left with an honest state, never invented
+     numbers. Runs after the data calls have had time to resolve.
+     ----------------------------------------------------------------------- */
+  function integritySweep() {
+    document.querySelectorAll('.loading').forEach(function (n) {
+      n.textContent = 'Data unavailable';
+    });
+    var bridge = document.querySelectorAll('.bridge .s b');
+    bridge.forEach(function (b) { if (!b.textContent.trim()) b.textContent = '—'; });
+    var t = document.querySelector('.ticker');
+    if (t && !t.querySelectorAll('.gm').length) t.style.display = 'none';
+  }
+  setTimeout(integritySweep, 12000);
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
