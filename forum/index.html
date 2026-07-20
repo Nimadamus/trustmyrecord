@@ -2628,6 +2628,31 @@ body.classic-forum a.fpost-permalink:hover{color:#000 !important}
   body.classic-forum .fgroup-table td.col-last{width:150px !important}
 }
 </style>
+<style id="tmr-forum-stats-20260720">
+/* Forum Statistics — traditional bulletin-board footer block at the bottom of
+   the forum index. Reuses the existing .fgroup-table / .fgroup-band chrome so
+   the dark charcoal header bar matches every other forum section header. All
+   numbers come live from GET /api/forum/stats; nothing here is cached or
+   hardcoded. Block stays hidden until real numbers arrive. */
+.fstatblock{margin:14px 0 0 0}
+.fstatblock .fgroup-table{margin:0 !important}
+.fstatblock-body{background:#fff;border:1px solid var(--line);border-top:0;padding:10px 12px}
+body.classic-forum .fstatblock-body{border-color:#d6d6d6 !important;font-family:var(--f2p2-font) !important}
+.fstatblock-nums{display:flex;flex-wrap:wrap;gap:10px}
+.fstatblock-num{flex:1 1 0;min-width:130px;background:#f7f8fa;border:1px solid #e2e5ea;border-radius:3px;padding:8px 10px;text-align:center}
+.fstatblock-num b{display:block;font:bold 20px/1.15 var(--f2p2-font,Arial,Helvetica,sans-serif);color:#1c1c1c;letter-spacing:-0.2px}
+.fstatblock-num span{display:block;margin-top:2px;font:400 11px/1.2 var(--f2p2-font,Arial,Helvetica,sans-serif);color:#666;text-transform:uppercase;letter-spacing:.4px}
+.fstatblock-newest{margin-top:9px;padding-top:8px;border-top:1px solid #ececec;font:400 12px/1.4 var(--f2p2-font,Arial,Helvetica,sans-serif);color:#444}
+.fstatblock-newest b{font-weight:bold;color:#222}
+.fstatblock-newest a{color:#1f5f9f;font-weight:bold;text-decoration:none}
+.fstatblock-newest a:hover{text-decoration:underline}
+@media(max-width:640px){
+  .fstatblock-nums{flex-direction:column;gap:6px}
+  .fstatblock-num{min-width:0;display:flex;align-items:baseline;justify-content:space-between;text-align:left;padding:7px 10px}
+  .fstatblock-num b{display:inline;font-size:16px}
+  .fstatblock-num span{display:inline;margin-top:0}
+}
+</style>
 
 </head>
 <body class="classic-forum">
@@ -2778,6 +2803,24 @@ body.classic-forum a.fpost-permalink:hover{color:#000 !important}
                     <tbody id="sampleThreadBody"></tbody>
                 </table>
             </div>
+
+            <!-- Forum Statistics: live production totals, filled by loadForumStatistics(). -->
+            <section class="fstatblock" id="forumStatBlock" aria-label="Forum statistics" hidden>
+                <table class="fgroup-table" cellpadding="2" cellspacing="1">
+                    <tr class="fgroup-band">
+                        <td><span class="fband-txt">Forum Statistics</span></td>
+                        <td class="fgroup-meta" id="forumStatMeta">&nbsp;</td>
+                    </tr>
+                </table>
+                <div class="fstatblock-body">
+                    <div class="fstatblock-nums">
+                        <div class="fstatblock-num"><b id="fstatMembers">0</b><span>Total Members</span></div>
+                        <div class="fstatblock-num"><b id="fstatThreads">0</b><span>Total Threads</span></div>
+                        <div class="fstatblock-num"><b id="fstatPosts">0</b><span>Total Posts</span></div>
+                    </div>
+                    <div class="fstatblock-newest" id="fstatNewest" hidden></div>
+                </div>
+            </section>
         </div>
 
         <div id="viewThreads" style="display:none;">
@@ -4079,6 +4122,48 @@ function loadNewestMember() {
         })
         .catch(function(){ el.hidden = true; });
 }
+
+// Forum Statistics block (bottom of the forum index). Every number is a live
+// COUNT(*) from GET /api/forum/stats -- total_posts already includes thread
+// starters plus replies, and deleted/test content is excluded server-side.
+// The block stays hidden unless real numbers come back, so a failed request
+// never paints zeros or placeholders.
+function formatStatNumber(value) {
+    var n = parseInt(value, 10);
+    if (!isFinite(n) || n < 0) return null;
+    return n.toLocaleString('en-US');
+}
+function loadForumStatistics() {
+    var block = document.getElementById('forumStatBlock');
+    if (!block) return;
+    var base = (window.api && window.api.baseUrl) || (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+    fetch(base + '/forum/stats', { cache: 'no-store' })
+        .then(function(r){ return r.ok ? r.json() : null; })
+        .then(function(data){
+            if (!data) { block.hidden = true; return; }
+            var members = formatStatNumber(data.total_members);
+            var threads = formatStatNumber(data.total_threads);
+            var posts = formatStatNumber(data.total_posts);
+            if (members === null || threads === null || posts === null) { block.hidden = true; return; }
+            document.getElementById('fstatMembers').textContent = members;
+            document.getElementById('fstatThreads').textContent = threads;
+            document.getElementById('fstatPosts').textContent = posts;
+
+            var newestEl = document.getElementById('fstatNewest');
+            var m = data.newest_member;
+            if (newestEl && m && m.username) {
+                var name = m.display_name || m.username;
+                var href = m.profile_url || ('/u/' + encodeURIComponent(m.username) + '/');
+                newestEl.innerHTML = 'Newest Member: <a href="' + href + '">' + escHtml(name) + '</a>';
+                newestEl.hidden = false;
+            } else if (newestEl) {
+                newestEl.hidden = true;
+            }
+            block.hidden = false;
+        })
+        .catch(function(){ block.hidden = true; });
+}
+
 function updateStats() {
     var threadCount = 0;
     var postCount = 0;
@@ -5266,6 +5351,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     await loadCategories();
     showCategories();
     loadNewestMember();
+    loadForumStatistics();
 });
 
 </script>
