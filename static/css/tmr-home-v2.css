@@ -466,3 +466,86 @@ html body .tmr-loop-step p{ color:var(--v2-ink-2) !important; }
 html body .tmr-loop-step h3, html body .tmr-loop-step h4,
 html body .tmr-loop-step-num{ color:var(--v2-ink) !important; }
 html body .tmr-loop-eyebrow, html body .tmr-integrity-eyebrow{ color:var(--v2-brand-dk) !important; }
+
+/* ==========================================================================
+   FIX PASS 2 — final contrast cleanups on the light field.
+   ========================================================================== */
+
+/* leaderboard-card highlight rows were dark chips on a white panel */
+html body .tmrhx-board .tmrhx-hl li{
+  background:var(--v2-panel-2) !important;
+  border:1px solid var(--v2-line) !important;
+  border-radius:var(--v2-r-sm) !important;
+  color:var(--v2-ink-2) !important;
+}
+html body .tmrhx-board .tmrhx-hl li b,
+html body .tmrhx-board .tmrhx-hl li strong{ color:var(--v2-ink) !important; }
+
+/* explore sub-line was pale grey on light */
+html body .tmr-explore-sub{ color:var(--v2-ink-2) !important; }
+
+/* arena buttons: readable on the white panel, brand-consistent */
+html body .tmr-arena-promo a{
+  border-radius:var(--v2-r-sm) !important;
+  font-weight:800 !important;
+  border:1.5px solid var(--v2-line-2) !important;
+  background:var(--v2-panel) !important;
+  color:var(--v2-ink-2) !important;
+}
+html body .tmr-arena-promo a:first-of-type{
+  background:linear-gradient(180deg,#13B0A5,#0A8A83) !important;
+  border-color:transparent !important;
+  color:#fff !important;
+  box-shadow:0 2px 10px rgba(12,148,140,.32) !important;
+}
+html body .tmr-arena-promo a:hover{ border-color:var(--v2-brand) !important; color:var(--v2-brand-dk) !important; }
+html body .tmr-arena-promo a:first-of-type:hover{ color:#fff !important; }
+
+/* integrity CTA button on the light red panel */
+html body .tmr-account-integrity-note a{
+  border-radius:var(--v2-r-sm) !important;
+  font-weight:800 !important;
+  background:var(--v2-panel) !important;
+  border:1.5px solid rgba(188,55,46,.35) !important;
+  color:var(--v2-red) !important;
+}
+html body .tmr-account-integrity-note a:hover{ background:#fff !important; border-color:var(--v2-red) !important; }
+
+/* sports-talk: kill any residual dark plate behind the rows */
+html body .tmr-sports-talk,
+html body .tmr-sports-talk *:not(a):not(button){ background-color:transparent; }
+html body .tmr-sports-talk{ background:var(--v2-panel) !important; }
+html body .tmr-sports-talk .stp-row:hover{ background:var(--v2-panel-2) !important; }
+html body .tmr-sports-talk .stp-row{
+  border-bottom:1px solid var(--v2-line) !important;
+  padding:14px 18px !important;
+}
+html body .tmr-sports-talk .stp-rows{ border-radius:0 0 var(--v2-r) var(--v2-r) !important; overflow:hidden; }
+
+/* community band "Live Chat" pill + hub button consistency */
+html body .tmr-community-band a[class*="chat"],
+html body .tmr-community-band a[class*="hub"]{ border-radius:var(--v2-r-sm) !important; font-weight:800 !important; }
+
+/* FIX 3 — the Sports Talk dark plate is .stp-card (inner wrapper) */
+html body .tmr-sports-talk .stp-card{
+  background:var(--v2-panel) !important;
+  border:1px solid var(--v2-edge) !important;
+  border-radius:var(--v2-r) !important;
+  box-shadow:var(--v2-sh) !important;
+  color:var(--v2-ink) !important;
+}
+html body .tmr-sports-talk .stp-card h2,
+html body .tmr-sports-talk .stp-card h3{ color:var(--v2-ink) !important; }
+html body .tmr-sports-talk .stp-card h2 span{ color:var(--v2-brand-dk) !important; }
+html body .tmr-sports-talk .stp-card p,
+html body .tmr-sports-talk .stp-card small,
+html body .tmr-sports-talk .stp-card span{ color:var(--v2-ink-2) !important; }
+html body .tmr-sports-talk .stp-row{ color:var(--v2-ink) !important; }
+html body .tmr-sports-talk .stp-row b,
+html body .tmr-sports-talk .stp-row strong{ color:var(--v2-ink) !important; }
+html body .tmr-sports-talk .stp-card a[class*="btn"],
+html body .tmr-sports-talk .stp-card a[class*="join"]{
+  border-radius:var(--v2-r-sm) !important; font-weight:800 !important;
+  background:linear-gradient(180deg,#13B0A5,#0A8A83) !important;
+  color:#fff !important; border:1.5px solid transparent !important;
+}
