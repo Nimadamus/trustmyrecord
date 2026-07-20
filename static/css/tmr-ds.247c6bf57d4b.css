@@ -155,7 +155,11 @@ body.tmr-ds .ds-logo .wd{
 }
 body.tmr-ds .ds-logo .wd em{font-style:normal;color:var(--brand-lt)}
 
-body.tmr-ds .ds-mainnav{display:flex;align-items:center;gap:22px;min-width:0}
+/* The panel holds the links and the right-hand cluster. On desktop it has to be
+   a flex row itself — as a plain block it stacked "Log in / Start Free" onto a
+   second line under the links. It becomes a column inside the mobile sheet. */
+body.tmr-ds .ds-nav-panel{display:flex;align-items:center;gap:26px;flex:1 1 auto;min-width:0}
+body.tmr-ds .ds-mainnav{display:flex;align-items:center;gap:22px;min-width:0;flex-wrap:wrap}
 body.tmr-ds .ds-mainnav a,
 body.tmr-ds .ds-menu>button{
   font-size:15.5px;font-weight:700;color:#AEC6DC;
@@ -224,8 +228,8 @@ body.tmr-ds .ds-nav-toggle{
     background:var(--navy);border-top:1px solid rgba(255,255,255,.10);
     padding:14px var(--gutter) 20px;flex-direction:column;gap:4px;
   }
-  body.tmr-ds .ds-nav.is-open .ds-nav-panel{display:flex}
-  body.tmr-ds .ds-mainnav{flex-direction:column;align-items:stretch;gap:0}
+  body.tmr-ds .ds-nav.is-open .ds-nav-panel{display:flex;align-items:stretch;gap:4px}
+  body.tmr-ds .ds-mainnav{flex-direction:column;align-items:stretch;gap:0;flex-wrap:nowrap}
   body.tmr-ds .ds-mainnav a,body.tmr-ds .ds-menu>button{padding:11px 0;width:100%}
   body.tmr-ds .ds-menu-panel{position:static;display:flex;box-shadow:none;border:0;background:none;padding:0 0 6px 14px}
   body.tmr-ds .ds-menu-panel a{color:#AEC6DC;padding:8px 0}
