@@ -43,17 +43,16 @@ jobs:
         run: python scripts/prerender_directory.py
 
       - name: Set up Node (homepage snapshot prerender)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: 22
 
-      - name: Install Playwright chromium
-        # Drive the LOCAL playwright binary, not `npx playwright`: npx resolves the
-        # latest release from the registry, which downloads a browser build the
-        # pinned module cannot find ("Executable doesn't exist at .../chromium_headless_shell-1148").
-        run: |
-          npm install --no-save playwright@1.49.1
-          ./node_modules/.bin/playwright install --with-deps chromium
+      # Same pattern as every other Playwright workflow in this repo: install from
+      # the repo's own lockfile so the module and the downloaded browser are the
+      # same version. Installing an ad-hoc pinned playwright alongside the lock
+      # gives you a module and a browser build that do not match, and launch fails.
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
 
       - name: Bake real live data into the homepage first paint
         # Runs the homepage's own JS against the live API and writes the resulting
