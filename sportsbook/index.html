@@ -21814,10 +21814,28 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             });
 
-            // Calculate forum stats from localStorage
-            var forumPosts = [];
-            try { forumPosts = JSON.parse(localStorage.getItem('trustMyRecordForumPosts') || '[]'); } catch(e) {}
-            var myForumPosts = forumPosts.filter(function(p) { return p.author === username; });
+            // Forum stats come from the API (source of truth), never localStorage.
+            // Forum Posts = threads started + replies; see backend
+            // utils/forumStats.js. Posts can never be lower than threads.
+            (function loadForumStatsFromApi() {
+                if (!username) return;
+                var apiBase = (window.api && window.api.baseUrl) || (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+                fetch(String(apiBase).replace(/\/$/, '') + '/users/' + encodeURIComponent(username) + '/community-activity')
+                    .then(function(r) { return r.ok ? r.json() : null; })
+                    .then(function(j) {
+                        if (!j) return;
+                        var f = j.forum || {};
+                        var posts = Number(f.posts != null ? f.posts : 0);
+                        var threads = Number(f.threads != null ? f.threads : 0);
+                        var likes = Number((f.likes_received != null ? f.likes_received : (j.likes_received || 0)));
+                        var el;
+                        el = document.getElementById('forumPostsMade'); if (el) el.textContent = posts;
+                        el = document.getElementById('forumThreadsCreated'); if (el) el.textContent = threads;
+                        el = document.getElementById('communityForumPosts'); if (el) el.textContent = posts;
+                        el = document.getElementById('forumLikesReceived'); if (el && likes) el.textContent = likes;
+                    })
+                    .catch(function() {});
+            })();
 
             var totalCommunityPoints = triviaPoints + pollPoints;
 
@@ -21826,7 +21844,6 @@ document.addEventListener('DOMContentLoaded', function() {
             el = document.getElementById('communityTotalPoints'); if (el) el.textContent = totalCommunityPoints;
             el = document.getElementById('communityTriviaAnswered'); if (el) el.textContent = triviaAnswered;
             el = document.getElementById('communityPollsVoted'); if (el) el.textContent = pollsVoted;
-            el = document.getElementById('communityForumPosts'); if (el) el.textContent = myForumPosts.length;
 
             // Update trivia stats
             el = document.getElementById('triviaQuestionsAnswered'); if (el) el.textContent = triviaAnswered;
@@ -21837,9 +21854,6 @@ document.addEventListener('DOMContentLoaded', function() {
             // Update poll stats
             el = document.getElementById('pollsVoted'); if (el) el.textContent = pollsVoted;
             el = document.getElementById('pollsTotalPoints'); if (el) el.textContent = pollPoints;
-
-            // Update forum stats
-            el = document.getElementById('forumPostsMade'); if (el) el.textContent = myForumPosts.length;
 
             // Update overview tab points
             el = document.getElementById('profileTriviaPoints'); if (el) el.textContent = triviaPoints;
