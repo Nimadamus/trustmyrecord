@@ -424,21 +424,40 @@ footer a:hover{color:#fff}
 (function () {
   'use strict';
   try {
-    var tok = localStorage.getItem('trustmyrecord_token') ||
-              localStorage.getItem('tmr_token') ||
-              localStorage.getItem('accessToken');
+    var get = function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } };
+    var firstOf = function (keys) {
+      for (var i = 0; i < keys.length; i++) { var v = get(keys[i]); if (v) return v; }
+      return null;
+    };
+    // A session exists if EITHER token is present. The access token expires after
+    // 60 minutes; the refresh token lasts a year, so its presence alone means the
+    // member is still signed in and the logged-out header must not be painted.
+    var tok = firstOf(['trustmyrecord_token', 'tmr_token', 'accessToken', 'access_token', 'token',
+                       'trustmyrecord_refresh_token', 'refreshToken', 'refresh_token', 'tmr_refresh_token']);
     if (!tok) return;                       // logged out: approved nav stays as designed
-    var raw = localStorage.getItem('currentUser') || localStorage.getItem('trustMyRecordProfile');
-    if (!raw) return;                       // no cached identity: let auth.js fill it in
-    var u = JSON.parse(raw); u = u && (u.user || u);
-    var name = u && (u.username || u.display_name);
-    if (!name) return;
     var right = document.querySelector('.nav-right');
     if (!right) return;
+    // Every key the site has ever cached an identity under. auth-persistent.js
+    // migrates `currentUser` into `trustmyrecord_session`, so reading only the
+    // former used to come up empty and flash the logged-out header.
+    var raw = firstOf(['currentUser', 'trustmyrecord_session', 'tmr_current_user', 'trustMyRecordProfile']);
+    var u = raw ? JSON.parse(raw) : null; u = u && (u.user || u);
+    var name = u && (u.username || u.display_name || u.displayName);
+    if (!name) {
+      // Session present, identity not cached yet: show a neutral placeholder
+      // until /auth/me answers. Never "Log in / Start Free" for a member.
+      right.innerHTML =
+        '<span class="v2nav-authpending" aria-busy="true" aria-label="Loading account" ' +
+          'style="display:inline-flex;align-items:center;gap:8px;opacity:.55">' +
+          '<span style="width:26px;height:26px;border-radius:50%;background:currentColor;opacity:.18"></span>' +
+          '<span style="width:74px;height:10px;border-radius:5px;background:currentColor;opacity:.18"></span>' +
+        '</span>';
+      return;
+    }
     var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) {
       return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
     var initials = String(name).replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase();
-    var src = u.avatar_url || (u.id ? 'https://trustmyrecord-api.onrender.com/api/users/' + u.id + '/avatar' : '');
+    var src = u.avatar_url || u.avatarUrl || (u.id ? 'https://trustmyrecord-api.onrender.com/api/users/' + u.id + '/avatar' : '');
     right.innerHTML =
       '<a class="v2nav-user" href="/u/' + encodeURIComponent(name) + '/" title="' + esc(name) + '">' +
         (src ? '<img class="v2nav-ava" src="' + esc(src) + '" alt="" onerror="this.outerHTML=\'<span class=&quot;v2nav-avl&quot;>' + initials + '</span>\'">'
@@ -612,7 +631,8 @@ footer a:hover{color:#fff}
   </ul>
 </div>
 <!-- END STATIC BRIDGE -->
-<script src="/static/js/tmr-home-auth.4ab024b0c143.js"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script>
+<script src="/static/js/tmr-home-auth.f6260b601cae.js"></script>
 <script src="/static/js/tmr-home-live.236f5e4a52e5.js"></script>
 <!-- Alerts dropdown for the nav bell. Same engine every other page uses, so the
      bell shows the latest alerts in place instead of navigating away. These four

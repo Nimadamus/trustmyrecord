@@ -113,10 +113,16 @@ class PersistentAuthSystem {
             let sessionData = localStorage.getItem(this.sessionKey);
             if (!sessionData) {
                 sessionData = localStorage.getItem('currentUser');
-                if (sessionData) {
-                    localStorage.setItem(this.sessionKey, sessionData);
-                    localStorage.removeItem('currentUser');
-                }
+                if (sessionData) localStorage.setItem(this.sessionKey, sessionData);
+            }
+            // Jul 20 2026: `currentUser` is ALSO the cached identity the pre-paint
+            // header script reads before any JS module loads. Deleting it here (the
+            // old migration step) meant that from the second page load onward there
+            // was no identity to paint from, so an authenticated member saw the
+            // logged-out header until /auth/me answered. Keep both keys in sync
+            // instead of moving the value.
+            else if (!localStorage.getItem('currentUser')) {
+                localStorage.setItem('currentUser', sessionData);
             }
             if (sessionData) {
                 const parsed = JSON.parse(sessionData);
