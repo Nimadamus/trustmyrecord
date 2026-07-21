@@ -14297,7 +14297,10 @@
       .tmrx-team-drill-row .tmrx-drill-caret { font-size: 9px; color: #7a8499; transition: transform .15s ease; display: inline-block; }
       .tmrx-team-drill-row.tmrx-drill-open .tmrx-drill-caret { transform: rotate(90deg); color: #22d3ee; }
       tr.tmrx-team-drill-expansion > td { padding: 0 !important; background: #060d18; }
-      .tmrx-team-drill { padding: 12px 14px 16px; }
+      /* width:0 + min-width:100% keeps the nested history table from widening
+         the parent team table (which would push ROI off the right edge). */
+      .tmrx-team-drill { padding: 12px 14px 16px; width: 0; min-width: 100%; box-sizing: border-box; }
+      .tmrx-team-drill .tmrx-table-shell { overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .tmrx-team-drill-head { font-size: 12px; font-weight: 900; letter-spacing: .06em; text-transform: uppercase; color: #9fb0c9; margin-bottom: 10px; }
       .tmrx-team-drill-note { text-transform: none; letter-spacing: 0; font-weight: 700; color: #7a8499; }
       .tmrx-team-drill-empty { color: #7a8499; font-size: 13px; font-weight: 700; }
