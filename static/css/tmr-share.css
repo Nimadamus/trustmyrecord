@@ -1,0 +1,179 @@
+/* ============================================================
+   SHARE_SYSTEM_PHASE1_20260721 - sitewide share menu.
+
+   Self-contained and namespaced (.tmrsh-*) so it renders identically on the
+   legacy dark pages and on the tmr-ds pages without either stylesheet leaking
+   in. No !important anywhere (tmr-ds house rule); specificity is kept high
+   enough by the .tmrsh- prefix alone. Dark surface on both themes on purpose:
+   the menu sits above a dimmed backdrop, not inside the page surface.
+   ============================================================ */
+
+/* Solid teal chip rather than a tinted outline: these buttons land on both the
+   dark legacy pages and the light tmr-ds pages, and a translucent teal-on-teal
+   treatment drops below 3:1 contrast on the light ones. A solid fill is the one
+   styling that stays legible on every surface it can appear on. */
+.tmrsh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #0a7d76;
+  background: #0c948c;
+  color: #ffffff;
+  font: 600 0.86rem/1 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.tmrsh-btn:hover { background: #0a7d76; border-color: #086c66; }
+.tmrsh-btn:focus-visible { outline: 3px solid #2dd4bf; outline-offset: 2px; }
+.tmrsh-btn svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
+
+/* Compact icon-only variant for dense rows (forum post actions, ledger rows). */
+.tmrsh-btn--icon { padding: 7px; border-radius: 9px; gap: 0; }
+
+/* ---- overlay ---- */
+.tmrsh-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(4, 10, 18, 0.74);
+  backdrop-filter: blur(3px);
+  animation: tmrsh-fade 0.14s ease-out;
+}
+@keyframes tmrsh-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.tmrsh-sheet {
+  width: min(460px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: linear-gradient(180deg, #0d1b2c, #0a1626);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  color: #eef4fb;
+  font-family: 'Inter', system-ui, sans-serif;
+  animation: tmrsh-rise 0.16s ease-out;
+}
+@keyframes tmrsh-rise { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+.tmrsh-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.14);
+}
+.tmrsh-title { flex: 1; min-width: 0; }
+.tmrsh-title-main { font-size: 1.02rem; font-weight: 800; letter-spacing: 0.01em; }
+.tmrsh-title-sub {
+  margin-top: 3px;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: #9aa8bc;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.tmrsh-close {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd8e8;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.tmrsh-close:hover { background: rgba(255, 255, 255, 0.1); }
+.tmrsh-close:focus-visible { outline: 3px solid #2dd4bf; outline-offset: 2px; }
+
+.tmrsh-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 16px 18px 6px;
+}
+.tmrsh-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 4px 10px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(255, 255, 255, 0.035);
+  color: #dbe6f3;
+  font: 600 0.72rem/1.2 'Inter', system-ui, sans-serif;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+.tmrsh-item:hover { background: rgba(45, 212, 191, 0.12); border-color: rgba(45, 212, 191, 0.38); color: #fff; }
+.tmrsh-item:focus-visible { outline: 3px solid #2dd4bf; outline-offset: 2px; }
+.tmrsh-item svg { width: 21px; height: 21px; fill: currentColor; }
+.tmrsh-item--wide { grid-column: span 4; flex-direction: row; justify-content: center; gap: 10px; padding: 12px; font-size: 0.85rem; }
+
+.tmrsh-linkrow { display: flex; gap: 8px; padding: 10px 18px 18px; }
+.tmrsh-url {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: #060d18;
+  color: #cfe0f2;
+  font: 500 0.78rem/1.2 ui-monospace, Menlo, Consolas, monospace;
+  text-overflow: ellipsis;
+}
+.tmrsh-url:focus-visible { outline: 3px solid #2dd4bf; outline-offset: 1px; }
+.tmrsh-copy {
+  flex: none;
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(45, 212, 191, 0.42);
+  background: rgba(45, 212, 191, 0.14);
+  color: #2dd4bf;
+  font: 700 0.8rem/1.2 'Inter', system-ui, sans-serif;
+  cursor: pointer;
+}
+.tmrsh-copy:hover { background: rgba(45, 212, 191, 0.24); }
+.tmrsh-copy:focus-visible { outline: 3px solid #2dd4bf; outline-offset: 2px; }
+.tmrsh-copy[data-copied="1"] { background: rgba(63, 208, 138, 0.2); border-color: rgba(63, 208, 138, 0.5); color: #6ee7a8; }
+
+/* Screen-reader-only live region for copy confirmation. */
+.tmrsh-sr {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 560px) {
+  .tmrsh-overlay { align-items: flex-end; padding: 0; }
+  .tmrsh-sheet {
+    width: 100%;
+    max-height: 88vh;
+    border-radius: 18px 18px 0 0;
+    border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    animation: tmrsh-slide 0.18s ease-out;
+  }
+  @keyframes tmrsh-slide { from { transform: translateY(24px); } to { transform: none; } }
+  .tmrsh-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .tmrsh-item { padding: 14px 4px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tmrsh-overlay, .tmrsh-sheet { animation: none; }
+}

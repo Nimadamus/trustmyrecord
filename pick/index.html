@@ -1,2 +1,193 @@
-<!doctype html><meta charset="utf-8"><meta name="robots" content="index, follow"><link rel="canonical" href="https://trustmyrecord.com/sportsbook/"><meta http-equiv="refresh" content="0;url=/sportsbook/"><script>location.replace('/sportsbook/'+location.search+location.hash)</script><a href="/sportsbook/">Make Picks</a>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="index, follow">
+<title>Verified Pick | TrustMyRecord</title>
+<meta name="description" content="A pick locked before game time and graded from the final result on TrustMyRecord.">
+<!-- SHARE_SYSTEM_PHASE1_20260721
+     Bare /pick/ still means "go make a pick" and still lands on /sportsbook/,
+     canonical included - that route is unchanged. What is new is /pick/?id=<n>,
+     the permanent public URL for one locked pick.
+
+     Head tags below are DEFAULTS. For a shared /pick/?id=<n> link the
+     Cloudflare Worker rewrites title/description/canonical/og:*/twitter:* in
+     place from /api/share/meta/pick/<n> before a crawler sees this document.
+     If the Worker is bypassed or fails, the origin still returns 200 and the
+     pick renders client-side. This page is never a redirect for a real pick id
+     and is never noindexed. -->
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="TrustMyRecord">
+<meta property="og:title" content="Verified Pick | TrustMyRecord">
+<meta property="og:description" content="A pick locked before game time and graded from the final result on TrustMyRecord.">
+<meta property="og:url" content="https://trustmyrecord.com/pick/">
+<meta property="og:image" content="https://trustmyrecord.com/static/og/og-home.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://trustmyrecord.com/static/og/og-home.png">
+<link rel="canonical" href="https://trustmyrecord.com/sportsbook/">
+<link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<script src="/static/js/config.js?v=20260330"></script>
 <script src="/static/js/analytics.js?v=20260719ft"></script>
+<script src="/static/js/pick-display-format.js?v=20260721share1"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
+<script defer src="/static/js/tmr-sitewide.js?v=20260720alerts"></script>
+<link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
+<script defer src="/static/js/tmr-share.js?v=20260721share1"></script>
+<style>
+.pk-wrap{max-width:760px;margin:0 auto;padding:26px 18px 70px;color:#eef4fb;font-family:'Inter',system-ui,sans-serif;}
+.pk-card{border:1px solid rgba(148,163,184,.18);border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.012)),rgba(11,20,34,.9);padding:22px;}
+.pk-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+.pk-av{width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(45,212,191,.5);background:#10334f;flex:none;}
+.pk-who{font-weight:800;font-size:1rem;}
+.pk-who a{color:#eef4fb;text-decoration:none;}
+.pk-who a:hover{color:#2dd4bf;}
+.pk-sub{color:#9aa8bc;font-size:.8rem;}
+.pk-spacer{flex:1;}
+.pk-pills{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+.pk-pill{padding:6px 13px;border-radius:999px;font-size:.74rem;font-weight:800;letter-spacing:.06em;border:1px solid rgba(148,163,184,.24);background:rgba(255,255,255,.05);color:#cbd8e8;}
+.pk-pill.is-won{color:#3fd08a;border-color:rgba(63,208,138,.5);background:rgba(63,208,138,.12);}
+.pk-pill.is-lost{color:#f1867c;border-color:rgba(241,134,124,.5);background:rgba(241,134,124,.12);}
+.pk-pill.is-pending{color:#ffc93c;border-color:rgba(255,201,60,.45);background:rgba(255,201,60,.1);}
+.pk-matchup{color:#9aa8bc;font-size:1rem;margin:0 0 6px;}
+.pk-sel{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:2.1rem;line-height:1.1;margin:0 0 18px;}
+.pk-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;}
+.pk-stat{border:1px solid rgba(148,163,184,.16);border-radius:12px;background:rgba(255,255,255,.035);padding:12px 13px;}
+.pk-stat span{display:block;color:#8faecb;font-size:.66rem;letter-spacing:.1em;font-weight:700;text-transform:uppercase;}
+.pk-stat b{display:block;font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:700;margin-top:3px;}
+.pk-pos{color:#3fd08a;}.pk-neg{color:#f1867c;}
+.pk-note{margin-top:18px;padding-top:16px;border-top:1px solid rgba(148,163,184,.14);color:#9aa8bc;font-size:.83rem;line-height:1.55;}
+.pk-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px;}
+.pk-link{display:inline-flex;align-items:center;padding:8px 14px;border-radius:999px;border:1px solid rgba(148,163,184,.24);background:rgba(255,255,255,.04);color:#cbd8e8;font-size:.86rem;font-weight:600;text-decoration:none;}
+.pk-link:hover{border-color:rgba(45,212,191,.5);color:#fff;}
+.pk-cta{margin-top:20px;border:1px solid rgba(45,212,191,.28);border-radius:16px;background:rgba(45,212,191,.07);padding:18px 20px;}
+.pk-cta h2{margin:0 0 6px;font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;}
+.pk-cta p{margin:0 0 12px;color:#a9b8ca;font-size:.9rem;line-height:1.55;}
+.pk-cta a{display:inline-block;background:#2dd4bf;color:#062018;font-weight:800;padding:11px 20px;border-radius:11px;text-decoration:none;}
+.pk-msg{padding:26px 22px;text-align:center;color:#9aa8bc;}
+.pk-msg a{color:#2dd4bf;}
+@media(max-width:620px){.pk-grid{grid-template-columns:repeat(2,minmax(0,1fr));}.pk-sel{font-size:1.7rem;}}
+</style>
+</head>
+<body>
+<main class="pk-wrap">
+  <div id="pkRoot" class="pk-card"><div class="pk-msg">Loading pick…</div></div>
+</main>
+<noscript><p style="text-align:center;color:#9aa8bc;font-family:Inter,sans-serif;">This pick needs JavaScript to load. <a style="color:#2dd4bf" href="/handicappers/">Browse verified members</a>.</p></noscript>
+<script>
+(function () {
+  'use strict';
+  var API = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+  var params = new URLSearchParams(location.search);
+  var id = (params.get('id') || params.get('pick') || '').trim();
+
+  if (!/^\d+$/.test(id)) {
+    location.replace('/sportsbook/' + location.hash);
+    return;
+  }
+
+  var root = document.getElementById('pkRoot');
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function signed(n, d) { var v = Number(n); return isFinite(v) ? (v > 0 ? '+' : '') + v.toFixed(d == null ? 2 : d) : null; }
+
+  var shareUrl = 'https://trustmyrecord.com/pick/?id=' + id;
+  var canonical = document.querySelector('link[rel="canonical"]');
+  if (canonical) canonical.href = shareUrl;
+  var ogUrl = document.querySelector('meta[property="og:url"]');
+  if (ogUrl) ogUrl.setAttribute('content', shareUrl);
+
+  var STATUS = { won: 'WON', lost: 'LOST', push: 'PUSH', void: 'VOID', cancelled: 'VOID', pending: 'PENDING' };
+
+  function ctaHtml() {
+    return '<section class="pk-cta">' +
+      '<h2>Track your own record</h2>' +
+      '<p>Every pick on TrustMyRecord is locked before game time and graded from the final result. No edits, no deletions, no screenshots.</p>' +
+      '<a href="/signup/?utm_source=shared_pick&amp;utm_medium=cta&amp;utm_campaign=tmr_share">Create a free account</a>' +
+      '</section>';
+  }
+
+  Promise.all([
+    fetch(API + '/picks/' + id).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+    fetch(API + '/share/meta/pick/' + id).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+  ]).then(function (res) {
+    var pick = res[0] && res[0].pick;
+    var meta = res[1];
+
+    if (!pick && !meta) {
+      root.innerHTML = '<div class="pk-msg">This pick is not available.<br><br><a href="/handicappers/">Browse verified members</a></div>';
+      return;
+    }
+
+    if (meta && meta.title) {
+      document.title = meta.title;
+      var d = document.querySelector('meta[name="description"]');
+      if (d) d.setAttribute('content', meta.description || '');
+    }
+
+    // Another member's PENDING pick stays sealed: /api/picks/:id withholds it
+    // until it is graded, and this page reports that honestly instead of
+    // guessing at the selection.
+    if (!pick) {
+      root.innerHTML = '<div class="pk-msg">' + esc((meta && meta.description) || 'This pick is sealed until it is graded.') + '</div>';
+      root.insertAdjacentHTML('afterend', ctaHtml());
+      return;
+    }
+
+    var status = String(pick.status || 'pending').toLowerCase();
+    var graded = status !== 'pending';
+    var who = pick.display_name || pick.username;
+    var league = (window.TMR && TMR.formatLeagueLabel) ? TMR.formatLeagueLabel(pick.sport_key) : String(pick.sport_key || '').toUpperCase();
+    var label = (window.TMR && TMR.formatPickDisplayLabel) ? TMR.formatPickDisplayLabel(pick) : (pick.selection || 'Pick');
+    var matchup = (pick.away_team && pick.home_team) ? (pick.away_team + ' @ ' + pick.home_team) : '';
+    var odds = Number(pick.odds_snapshot);
+    var units = Number(pick.units);
+    var ru = pick.result_units == null ? null : Number(pick.result_units);
+
+    var stats = '';
+    if (isFinite(odds) && odds !== 0) stats += '<div class="pk-stat"><span>Odds</span><b>' + (odds > 0 ? '+' : '') + Math.round(odds) + '</b></div>';
+    if (isFinite(units) && units > 0) stats += '<div class="pk-stat"><span>Units risked</span><b>' + units + '</b></div>';
+    if (graded && ru != null) stats += '<div class="pk-stat"><span>Result</span><b class="' + (ru > 0 ? 'pk-pos' : (ru < 0 ? 'pk-neg' : '')) + '">' + signed(ru) + 'u</b></div>';
+    var when = pick.locked_at ? new Date(pick.locked_at) : null;
+    if (when) {
+      stats += '<div class="pk-stat"><span>Locked</span><b style="font-size:1.05rem">' +
+        when.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '</b></div>';
+    }
+
+    root.innerHTML =
+      '<div class="pk-top">' +
+        '<img class="pk-av" alt="" src="' + esc(API + '/users/' + encodeURIComponent(pick.username) + '/avatar') + '" onerror="this.style.visibility=\'hidden\'">' +
+        '<div><div class="pk-who"><a href="/u/' + encodeURIComponent(pick.username) + '/">' + esc(who) + '</a></div>' +
+        '<div class="pk-sub">Verified record on TrustMyRecord</div></div>' +
+        '<div class="pk-spacer"></div>' +
+        (window.TMRShare ? TMRShare.buttonHtml({ type: 'pick', id: id, url: shareUrl, label: 'Share', tooltip: 'Share this pick', ariaLabel: 'Share this pick' }) : '') +
+      '</div>' +
+      '<div class="pk-pills">' +
+        '<span class="pk-pill is-' + esc(status) + '">' + esc(STATUS[status] || status.toUpperCase()) + '</span>' +
+        '<span class="pk-pill">' + esc(league) + '</span>' +
+      '</div>' +
+      (matchup ? '<p class="pk-matchup">' + esc(matchup) + '</p>' : '') +
+      '<h1 class="pk-sel">' + esc(graded ? label : (pick.selection ? label : 'Pick locked — sealed until graded')) + '</h1>' +
+      '<div class="pk-grid">' + stats + '</div>' +
+      '<p class="pk-note">' + (graded
+        ? 'This pick was locked before game time and graded from the final result. Locked picks cannot be edited or deleted on TrustMyRecord.'
+        : 'This pick is locked and time-stamped. It has not been graded yet — the result appears here once the game is final.') +
+      '</p>' +
+      '<div class="pk-actions">' +
+        '<a class="pk-link" href="/u/' + encodeURIComponent(pick.username) + '/">' + esc(who) + '’s full record</a>' +
+        '<a class="pk-link" href="/leaderboards/">Leaderboard</a>' +
+      '</div>';
+
+    root.insertAdjacentHTML('afterend', ctaHtml());
+  });
+}());
+</script>
+</body>
+</html>

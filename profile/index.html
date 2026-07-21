@@ -53,6 +53,8 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
 <script defer src="/static/js/tmr-sitewide.js?v=20260720alerts"></script>
+<link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
+<script defer src="/static/js/tmr-share.js?v=20260721share1"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -2167,6 +2169,7 @@
                             <div class="tmrx-section-sub">Reads from the same ledger the autograder writes to. Pending picks are excluded from W/L/Push, ROI, and streaks.</div>
                           </div>
                           <div class="tmrx-meta" id="tmrxLastGradedTop"></div>
+                          <button type="button" class="tmrsh-btn tmrsh-btn--icon" onclick="openShareModal()" title="Share this record" aria-label="Share this verified record"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.1c-.8 0-1.5.3-2 .8l-7.1-4.2c.1-.2.1-.5.1-.7s0-.5-.1-.7L16 7.1c.5.5 1.2.8 2 .8 1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3c0 .2 0 .5.1.7L8 9.8c-.5-.5-1.2-.8-2-.8-1.7 0-3 1.3-3 3s1.3 3 3 3c.8 0 1.5-.3 2-.8l7.1 4.2c-.1.2-.1.4-.1.7 0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9-1.2-3-2.8-3z"/></svg></button>
                         </div>
                         <div class="tmrx-ribbon">
                           <div class="tmrx-cell"><div class="tmrx-label">Record</div><div class="tmrx-value is-placeholder" id="tmrxRecordTop">&mdash;</div><div class="tmrx-sub">W-L-P · settled</div></div>
@@ -2448,8 +2451,9 @@
                               <th>Submitted</th><th>Sport</th><th>Game</th><th>Pick</th><th>Market</th>
                               <th class="num">Line</th><th class="num">Odds</th><th class="num">Units</th>
                               <th>Result</th><th class="num">Net</th>
+                              <th class="tmrx-share-col"><span class="tmrsh-sr">Share</span></th>
                             </tr></thead>
-                            <tbody><tr class="empty"><td colspan="10">Loading pick history&hellip;</td></tr></tbody>
+                            <tbody><tr class="empty"><td colspan="11">Loading pick history&hellip;</td></tr></tbody>
                           </table>
                         </div>
                         <div class="tmrx-pagination" id="tmrxPicksPagination" hidden></div>
@@ -8560,7 +8564,7 @@
         if (!tbody) return;
         if (pager) { pager.hidden = true; pager.innerHTML = ''; }
         if (!username || !window.api || typeof window.api.request !== 'function') {
-            tbody.innerHTML = '<tr class="empty"><td colspan="10">Pick history unavailable.</td></tr>';
+            tbody.innerHTML = '<tr class="empty"><td colspan="11">Pick history unavailable.</td></tr>';
             return;
         }
         // Pull the user's FULL settled public history by paging the API until
@@ -8575,7 +8579,7 @@
                 if (!resp || !resp.pagination || !resp.pagination.hasMore || batch.length < PAGE) break;
             }
         } catch (err) {
-            tbody.innerHTML = '<tr class="empty"><td colspan="10">Pick history unavailable.</td></tr>';
+            tbody.innerHTML = '<tr class="empty"><td colspan="11">Pick history unavailable.</td></tr>';
             return;
         }
         // Public Ledger = settled picks only; pending stays hidden until graded.
@@ -8585,7 +8589,7 @@
         tmrxLedgerPage = 1;
         if (meta) meta.textContent = tmrxLedgerPicks.length + ' settled public pick' + (tmrxLedgerPicks.length === 1 ? '' : 's');
         if (!tmrxLedgerPicks.length) {
-            tbody.innerHTML = '<tr class="empty"><td colspan="10">No settled picks yet.</td></tr>';
+            tbody.innerHTML = '<tr class="empty"><td colspan="11">No settled picks yet.</td></tr>';
             return;
         }
         tmrxRenderLedgerPage();
@@ -8632,9 +8636,27 @@
             const s = raw === 'pushed' ? 'push' : raw === 'cancelled' ? 'canceled' : raw === 'voided' ? 'void' : raw;
             return 'tmrx-row-' + s;
         };
+        // Share cell for a ledger row. Only rendered when the pick has a real
+        // numeric id AND is either settled or owned by the profile owner --
+        // another member's pending pick must never expose a share link.
+        const shareCell = (p) => {
+            const pid = Number(p && p.id);
+            if (!Number.isFinite(pid) || pid <= 0) return '<td class="tmrx-share-col"></td>';
+            const settled = SETTLED_RE.test(String(p.status || ''));
+            if (!settled && !isOwnProfile) return '<td class="tmrx-share-col"></td>';
+            if (!window.TMRShare || typeof window.TMRShare.buttonHtml !== 'function') return '<td class="tmrx-share-col"></td>';
+            return '<td class="tmrx-share-col">' + window.TMRShare.buttonHtml({
+                type: 'pick',
+                id: pid,
+                url: 'https://trustmyrecord.com/pick/?id=' + pid,
+                compact: true,
+                tooltip: 'Share this pick',
+                ariaLabel: 'Share this pick'
+            }) + '</td>';
+        };
         tbody.innerHTML = picks.map(p => {
             if (p.redacted) {
-                return '<tr class="' + rowStatusClass(p.status) + '"><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td></tr>';
+                return '<tr class="' + rowStatusClass(p.status) + '"><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td>' + shareCell(p) + '</tr>';
             }
             const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : '—';
             const line = p.line_snapshot != null ? Number(p.line_snapshot).toFixed(1) : '—';
@@ -8654,6 +8676,7 @@
                 '<td class="num">' + units + '</td>' +
                 '<td>' + resultTag(p.status) + '</td>' +
                 '<td class="num ' + netCls + '">' + netTxt + '</td>' +
+                shareCell(p) +
             '</tr>';
         }).join('');
 
@@ -13186,7 +13209,13 @@
             utm_campaign: 'user_profile',
             utm_content: user
         });
-        return 'https://trustmyrecord.com/profile/?user=' + encodeURIComponent(user) + '&' + params.toString();
+        // Share the BAKED profile page (/u/<username>/), not /profile/?user=.
+        // /profile/ is the interactive shell: it renders after JS runs and
+        // carries only the generic site og:image, so a shared link previews
+        // with no member card. /u/<username>/ is pre-rendered and crawlable
+        // and now ships a per-member og:image, which is what social unfurlers
+        // and search engines actually read. Same profile, same content.
+        return 'https://trustmyrecord.com/u/' + encodeURIComponent(user) + '/?' + params.toString();
     }
 
     function buildShareText() {
@@ -13211,7 +13240,36 @@
         return 'Track @' + user + '’s verified betting record on TrustMyRecord' + stats + '.';
     }
 
+    // Delegates to the sitewide share component (tmr-share.js) so a profile
+    // shares through exactly the same menu as picks, threads and posts.
+    // buildShareText() still scrapes the live ribbon, so the copy is always
+    // the real, currently-displayed record -- never a cached number.
     function openShareModal() {
+        const user = profileUsername || (profileData && profileData.username) || '';
+        if (!user) { showToast('Profile not loaded yet', 'error'); return; }
+
+        // Soft dependency: if tmr-share.js failed to load, fall back to the
+        // original in-page modal rather than leaving the button dead.
+        if (!window.TMRShare || typeof window.TMRShare.open !== 'function') {
+            return openLegacyShareModal();
+        }
+
+        window.TMRShare.open({
+            type: 'profile',
+            id: user,
+            url: buildShareUrl(),
+            // No `title` override on purpose: the component then uses the live
+            // title from /api/share/meta, which is what becomes the Reddit
+            // submission title and the email subject. A static "Share profile"
+            // string would post to Reddit under that meaningless headline.
+            text: buildShareText()
+        });
+
+        analyticsTrack('profile_share_modal_opened', { username: user });
+    }
+
+    // Original pre-component modal. Kept as the fallback path only.
+    function openLegacyShareModal() {
         const existing = document.getElementById('shareModal');
         if (existing) existing.remove();
 
@@ -15827,14 +15885,16 @@
     }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(1)  { width: 11%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(2)  { width: 9%; }
-    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(3)  { width: 20%; }
-    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(4)  { width: 17%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(3)  { width: 17%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(4)  { width: 15%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(5)  { width: 10%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(6)  { width: 6.5%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(7)  { width: 6.5%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(8)  { width: 6%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(9)  { width: 7%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(10) { width: 7%; }
+    /* Share column: 5% taken from Game/Pick so the fixed layout still sums 100%. */
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(11) { width: 5%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(n+6),
     body.profile-page.tmr-social-profile #tmrxTablePicks td:nth-child(n+6) {
       white-space: nowrap !important;
@@ -15855,14 +15915,15 @@
     }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(1)  { width: 10.5%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(2)  { width: 8%; }
-    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(3)  { width: 17%; }
-    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(4)  { width: 16%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(3)  { width: 14%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(4)  { width: 14%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(5)  { width: 9.5%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(6)  { width: 6%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(7)  { width: 7%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(8)  { width: 6.5%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(9)  { width: 9.5%; }
     body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(10) { width: 10%; }
+    body.profile-page.tmr-social-profile #tmrxTablePicks th:nth-child(11) { width: 5%; }
   }
   /* Mobile (<=720px): re-assert the stacked card layout. The May 27 r2
      hard-fix above (display:table / width:max-content / nowrap, declared

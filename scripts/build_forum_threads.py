@@ -39,6 +39,33 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TDIR = os.path.join(ROOT, "forum", "thread")
 SITEMAP = os.path.join(ROOT, "sitemap.xml")
 
+# ---------------------------------------------------------------------------
+# SHARE_SYSTEM_PHASE1_20260721
+# Per-thread Open Graph card + the Share control on the baked (no-JS, crawler)
+# thread page. The interactive forum app adds its own Share Thread / Share post
+# buttons; this is the version a logged-out visitor and a crawler see.
+# ---------------------------------------------------------------------------
+OG_CARD_BASE = "https://trustmyrecord-api.onrender.com/api/share/og"
+
+_SHARE_ICON = (
+    '<svg viewBox="0 0 24 24" aria-hidden="true" width="15" height="15" fill="currentColor">'
+    '<path d="M18 16.1c-.8 0-1.5.3-2 .8l-7.1-4.2c.1-.2.1-.5.1-.7s0-.5-.1-.7L16 7.1c.5.5 1.2.8 2 .8 '
+    '1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3c0 .2 0 .5.1.7L8 9.8c-.5-.5-1.2-.8-2-.8-1.7 0-3 1.3-3 3s1.3 3 3 3c.8 0 '
+    '1.5-.3 2-.8l7.1 4.2c-.1.2-.1.4-.1.7 0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9-1.2-3-2.8-3z"/></svg>'
+)
+
+
+def share_button(tid, title_txt, url):
+    e = html.escape
+    return (
+        '<div class="ft-actions">'
+        f'<button type="button" class="tmrsh-btn" data-tmr-share data-share-type="thread" '
+        f'data-share-id="{tid}" data-share-url="{e(url)}" '
+        f'title="Share this thread" aria-label="Share the thread {e(title_txt)}">'
+        + _SHARE_ICON +
+        '<span>Share thread</span></button></div>'
+    )
+
 PAGE = 100          # threads per enumeration request
 POSTS_PAGE = 100    # posts per request
 
@@ -301,6 +328,14 @@ def page_html(t, posts):
 
     locked = ('<p class="ft-note">This thread is locked.</p>' if t.get("is_locked") else "")
 
+    # SHARE_SYSTEM_PHASE1_20260721: thread pages used to share with NO og:image
+    # at all and a small `summary` card. Each thread now previews as itself -
+    # title, excerpt, author and category rendered by the API from the live
+    # thread row. The endpoint falls back to the static site image if the
+    # renderer is unavailable, so a preview can degrade but never break.
+    og_card = f"{OG_CARD_BASE}/thread/{tid}.png"
+    share_html = share_button(tid, title_txt, url)
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -315,11 +350,18 @@ def page_html(t, posts):
 <meta property="og:url" content="{url}">
 <meta property="og:description" content="{e(desc)}">
 <meta property="og:site_name" content="TrustMyRecord">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="{og_card}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{e(title_txt)} - TrustMyRecord forum thread">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="{e(title_txt)}">
 <meta name="twitter:description" content="{e(desc)}">
+<meta name="twitter:image" content="{og_card}">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css">
+<link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
+<script defer src="/static/js/tmr-share.js?v=20260721share1"></script>
 <script type="application/ld+json">
 {ld_json}
 </script>
@@ -329,7 +371,8 @@ def page_html(t, posts):
 .ft-crumb{{font-size:13px;color:#8890ad;margin:2px 0 14px;}}
 .ft-crumb span{{color:#8890ad;}}
 .ft-title{{font-family:'Barlow',sans-serif;font-size:27px;line-height:1.25;margin:0 0 6px;}}
-.ft-sub{{color:#8890ad;font-size:13px;margin:0 0 18px;}}
+.ft-sub{{color:#8890ad;font-size:13px;margin:0 0 12px;}}
+.ft-actions{{margin:0 0 16px;}}
 .ft-block{{margin-top:26px;}}
 .ft-block h2{{font-family:'Barlow',sans-serif;font-size:17px;margin:0 0 12px;color:#c9d0e4;}}
 .ft-post{{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px 16px;margin:0 0 12px;}}
@@ -354,6 +397,7 @@ def page_html(t, posts):
   <p class="ft-sub">Posted by <a href="/u/{e(author)}/">{e(author)}</a> in
      {(f'<a href="/forum/#cat-{e(cat_slug)}">{e(cat_name)}</a>' if cat_slug else e(cat_name))}
      &middot; {e(human_date(created))} &middot; {reply_n} {"reply" if reply_n == 1 else "replies"}</p>
+  {share_html}
   {locked}
   <section class="ft-block"><h2>Original post</h2>{op_html}</section>
   {reply_html}

@@ -33,7 +33,7 @@ Build only. Does NOT commit or deploy. Run from the repo root:
     python scripts/build_profile_pages.py
 Add --dry-run to print the eligible/excluded sets without writing files.
 """
-import json, os, sys, html, urllib.request, datetime, re
+import json, os, sys, html, urllib.request, urllib.parse, datetime, re
 
 API   = "https://trustmyrecord-api.onrender.com/api"
 SITE  = "https://trustmyrecord.com"
@@ -73,6 +73,52 @@ DS_HEAD = (
 )
 # Shared nav + footer, so these pages are no longer chrome-less dead ends.
 DS_FOOT = f'<script src="{_DS_NAV}"></script>'
+
+# ---------------------------------------------------------------------------
+# SHARE_SYSTEM_PHASE1_20260721
+# Share assets + the per-member Open Graph card endpoint. The card is rendered
+# by the API from this member's live ledger; if that renderer is unavailable
+# the endpoint serves the existing static site card, so a preview degrades
+# rather than breaking.
+# ---------------------------------------------------------------------------
+OG_CARD_BASE = "https://trustmyrecord-api.onrender.com/api/share/og"
+SHARE_HEAD = (
+    '<link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">\n'
+    '<script defer src="/static/js/tmr-share.js?v=20260721share1"></script>'
+)
+
+
+def share_description(disp, w, l, p, graded, units, roi):
+    """Social description built from the numbers already baked into the page.
+
+    Never invents a stat: a member with nothing graded yet gets the plain
+    verification sentence instead of a zeroed record."""
+    if not graded:
+        return (f"{disp} on TrustMyRecord. Every pick is locked before game time and graded "
+                f"from the final result — no edits, no deletions.")
+    rec = f"{w}-{l}" + (f"-{p}" if p else "")
+    units_s = ("+" if units > 0 else "") + f"{units:.2f}"
+    roi_s = ("+" if roi > 0 else "") + f"{roi:.2f}"
+    return (f"{disp}: {rec} on {graded} graded picks, {units_s} units, {roi_s}% ROI. "
+            f"Every pick is locked before game time and graded from the final result "
+            f"on TrustMyRecord.")
+
+
+def share_button(un, disp):
+    """Share control for a baked profile page. Real button, real aria-label,
+    keyboard reachable; the menu itself comes from tmr-share.js."""
+    e = html.escape
+    return (
+        '<div class="u-actions">'
+        f'<button type="button" class="tmrsh-btn" data-tmr-share data-share-type="profile" '
+        f'data-share-id="{e(un)}" data-share-url="{SITE}/u/{urllib.parse.quote(un)}/" '
+        f'title="Share this profile" aria-label="Share {e(disp)}’s verified record">'
+        '<svg viewBox="0 0 24 24" aria-hidden="true" width="15" height="15" fill="currentColor">'
+        '<path d="M18 16.1c-.8 0-1.5.3-2 .8l-7.1-4.2c.1-.2.1-.5.1-.7s0-.5-.1-.7L16 7.1c.5.5 1.2.8 2 .8 '
+        '1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3c0 .2 0 .5.1.7L8 9.8c-.5-.5-1.2-.8-2-.8-1.7 0-3 1.3-3 3s1.3 3 3 3c.8 0 '
+        '1.5-.3 2-.8l7.1 4.2c-.1.2-.1.4-.1.7 0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9-1.2-3-2.8-3z"/></svg>'
+        '<span>Share</span></button></div>'
+    )
 UDIR  = os.path.join(ROOT, "u")
 SITEMAP = os.path.join(ROOT, "sitemap.xml")
 
@@ -263,14 +309,25 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
     desc  = (f"View {disp}'s verified TrustMyRecord betting record, including graded picks, "
              f"units, ROI, win percentage, streaks, and public performance history.")
     desc  = e(desc)
-    og_img = ('\n<meta property="og:image" content="https://trustmyrecord.com/static/og/og-profile.png">'
+    # SHARE_SYSTEM_PHASE1_20260721: one card PER MEMBER, rendered on demand by
+    # the API from this member's live ledger, instead of the single generic
+    # og-profile.png that every profile used to share. The endpoint falls back
+    # to that static image if the renderer is unavailable, so this can only
+    # improve a preview, never break one.
+    og_card = OG_CARD_BASE + "/profile/" + urllib.parse.quote(un) + ".png"
+    og_desc = e(share_description(disp, w, l, p, tp, units, roi))
+    og_img = (f'\n<meta property="og:image" content="{og_card}">'
               '\n<meta property="og:image:width" content="1200">'
               '\n<meta property="og:image:height" content="630">'
+              f'\n<meta property="og:image:alt" content="{e(disp)} - verified record on TrustMyRecord">'
               '\n<meta name="twitter:card" content="summary_large_image">'
-              '\n<meta name="twitter:image" content="https://trustmyrecord.com/static/og/og-profile.png">')
+              f'\n<meta name="twitter:title" content="{e(disp)} - Verified Sports Betting Record | TrustMyRecord">'
+              f'\n<meta name="twitter:description" content="{og_desc}">'
+              f'\n<meta name="twitter:image" content="{og_card}">')
     avatar_html = (f'<img class="u-avatar" src="{e(avatar)}" alt="{e(disp)} avatar" '
                    f'width="84" height="84">') if avatar else ""
     bio_html = f'<p class="u-bio">{e(bio)}</p>' if bio else ""
+    share_html = share_button(un, disp)
 
     def stat(big, lab):
         return f'<div class="u-stat"><b>{e(big)}</b><span>{e(lab)}</span></div>'
@@ -389,9 +446,10 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
 <meta property="og:type" content="profile">
 <meta property="og:title" content="{e(disp)} - Verified Sports Betting Record | TrustMyRecord">
 <meta property="og:url" content="{url}">
-<meta property="og:description" content="{desc}">{og_img}
+<meta property="og:description" content="{og_desc}">{og_img}
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 {DS_HEAD}
+{SHARE_HEAD}
 <script type="application/ld+json">
 {ld}
 </script>
@@ -399,6 +457,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
 .u-wrap{{max-width:820px;margin:0 auto;padding:24px 18px 70px;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;}}
 .u-wrap a{{color:#00aeff;text-decoration:none;}}
 .u-head{{display:flex;gap:16px;align-items:center;margin:8px 0 6px;}}
+.u-actions{{margin:2px 0 10px;}}
 .u-avatar{{border-radius:50%;object-fit:cover;border:2px solid #262636;}}
 .u-name{{font-size:26px;margin:0;font-family:'Barlow',sans-serif;}}
 .u-bio{{color:#9aa;margin:6px 0 0;}}
@@ -432,6 +491,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
       {bio_html}
     </div>
   </div>
+  {share_html}
   <section class="u-stats" id="uStats">
     {stats_html}
   </section>
@@ -476,6 +536,13 @@ def compact_html(un):
     noindex here."""
     e = html.escape
     url = f"{SITE}/u/{un}/"
+    # Same per-member card the full template uses. The API renders it from this
+    # member's live ledger, so a profile with few graded picks still previews as
+    # itself instead of borrowing the generic site image.
+    og_card = OG_CARD_BASE + "/profile/" + urllib.parse.quote(un) + ".png"
+    cdesc = e(f"Public TrustMyRecord profile for {un} - verified locked-pick record, units, ROI "
+              f"and history. Every pick is locked before game time and graded from the final result.")
+    share_html = share_button(un, un)
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -485,12 +552,27 @@ def compact_html(un):
 <link rel="canonical" href="{url}">
 <title>{e(un)} | TrustMyRecord</title>
 <meta name="description" content="Public TrustMyRecord profile for {e(un)} - verified locked-pick record, units, ROI, and history. Building toward the featured leaderboard.">
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="TrustMyRecord">
+<meta property="og:title" content="{e(un)} | TrustMyRecord">
+<meta property="og:url" content="{url}">
+<meta property="og:description" content="{cdesc}">
+<meta property="og:image" content="{og_card}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{e(un)} - verified record on TrustMyRecord">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="{e(un)} | TrustMyRecord">
+<meta name="twitter:description" content="{cdesc}">
+<meta name="twitter:image" content="{og_card}">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 {DS_HEAD}
+{SHARE_HEAD}
 <style>
 .u-wrap{{max-width:820px;margin:0 auto;padding:24px 18px 70px;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;}}
 .u-wrap a{{color:#00aeff;text-decoration:none;}}
 .u-head{{display:flex;gap:16px;align-items:center;margin:8px 0 6px;}}
+.u-actions{{margin:2px 0 10px;}}
 .u-name{{font-size:26px;margin:0;font-family:'Barlow',sans-serif;}}
 .u-tag{{color:#8890ad;font-size:13px;margin:2px 0 0;}}
 .u-stats{{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0;}}
@@ -517,6 +599,7 @@ def compact_html(un):
       <p class="u-tag">@{e(un)} · Public pick record</p>
     </div>
   </div>
+  {share_html}
   <section class="u-stats" id="uStats">
     <div class="u-stat"><b>&mdash;</b><span>Loading record</span></div>
   </section>

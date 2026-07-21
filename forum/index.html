@@ -16,6 +16,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
+<link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
+<script defer src="/static/js/tmr-share.js?v=20260721share1"></script>
 <style>
 /* TrustMyRecord Forums - light classic forum index skin */
 :root{
@@ -2879,6 +2881,15 @@ body.classic-forum .fstatblock-body{border-color:#d6d6d6 !important;font-family:
             <div class="factionrow">
                 <button class="fbtn" type="button" onclick="backToThreads()">&laquo; Back to Thread List</button>
                 <button class="fbtn is-primary" type="button" onclick="openNewThread()">+ New Thread</button>
+                <!-- SHARE_SYSTEM_PHASE1_20260721: thread-level share. Kept OUTSIDE
+                     #threadDetailHeader because that node is written with
+                     textContent on every thread open, which would wipe a child
+                     button. showThreadDetail() injects the button here (and
+                     clears it when the thread did not load), built from the same
+                     id+slug that produces the canonical
+                     /forum/thread/<id>/<slug>/ URL. The slot is emptied rather
+                     than hidden because `body.classic-forum .fbtn` sets
+                     display:inline-flex !important, which beats [hidden]. --><span id="threadShareSlot"></span>
             </div>
             <div id="postsContainer"></div>
             <div class="freply">
@@ -3548,11 +3559,38 @@ function renderThread() {
         var canDelete = canModerate || (isOwner && withinDeleteWindow);
         var likeCount = numericValue(p.like_count); if (likeCount == null) likeCount = 0;
         var likeTarget = p.is_thread_starter ? (p.thread_id || (cachedThread && cachedThread.id)) : postId;
+        /* SHARE_SYSTEM_PHASE1_20260721: per-post share control.
+           The thread opener has no forum_posts row (synthetic id
+           'thread-<id>-starter'), so it shares the THREAD, not a post. The URL is
+           built from forumThreadUrl(), the same builder the address bar and the
+           canonical use, so no second URL format is introduced -- the ?post= /
+           #post- pair is appended for replies because that is the shape the
+           shared-link arrival handlers read. */
+        var shareTid = p.thread_id || (cachedThread && cachedThread.id) || currentThreadId;
+        var shareSlug = forumThreadSlug(cachedThread);
+        var shareIsThread = !!p.is_thread_starter;
+        var shareType = shareIsThread ? 'thread' : 'post';
+        var shareId = shareIsThread ? String(shareTid == null ? '' : shareTid) : postId;
+        var sharePath = '';
+        if (shareTid) {
+            var shareBase = forumThreadUrl(shareTid, shareSlug);
+            sharePath = shareIsThread
+                ? shareBase
+                : shareBase + (shareBase.indexOf('?') === -1 ? '?' : '&')
+                    + 'post=' + encodeURIComponent(postId) + '#post-' + encodeURIComponent(postId);
+        }
+        var shareLabel = shareIsThread ? 'Share this thread' : 'Share this post';
+        /* Deleted / removed content is never rendered here in the first place
+           (see normalizedThreadPosts + forumDeletePost), but if a soft-delete or
+           moderation flag ever arrives on a post, no share control is emitted. */
+        var canShare = !!sharePath && !!shareId
+            && !(p.is_deleted || p.deleted_at || p.is_removed || p.is_hidden || p.is_moderated);
         var actions = '<div class="fpost-actions">'
             + (likeTarget ? '<button type="button" class="fpost-btn is-like' + (p.liked_by_me ? ' is-liked' : '') + '" onclick="forumLikePost(\'' + escHtml(String(likeTarget)) + '\',' + (p.is_thread_starter ? 'true' : 'false') + ',this)">Like <span class="fpost-like-count">(' + likeCount + ')</span></button>' : '')
             + (isLoggedIn && postId ? '<button type="button" class="fpost-btn" onclick="forumQuotePost(\'' + escHtml(postId) + '\')">Quote</button>' : '')
             + '<button type="button" class="fpost-btn" onclick="forumFocusReply()">Reply</button>'
             + (isLoggedIn && p.is_thread_starter ? '<button type="button" class="fpost-btn is-sub' + ((cachedThread && cachedThread.subscribed_by_me) ? ' is-subscribed' : '') + '" onclick="forumToggleSubscribe(this)">' + ((cachedThread && cachedThread.subscribed_by_me) ? 'Unfollow Thread' : 'Follow Thread') + '</button>' : '')
+            + (canShare ? '<button type="button" class="fpost-btn" data-tmr-share data-share-type="' + shareType + '" data-share-id="' + escHtml(String(shareId)) + '" data-share-url="' + escHtml('https://trustmyrecord.com' + sharePath) + '" title="' + escHtml(shareLabel) + '" aria-label="' + escHtml(shareLabel) + '">Share</button>' : '')
             + (canEdit && postId ? '<button type="button" class="fpost-btn is-edit" onclick="forumEditPost(\'' + escHtml(postId) + '\')">Edit</button>' : '')
             + (canDelete && postId ? '<button type="button" class="fpost-btn is-delete" onclick="forumDeletePost(\'' + escHtml(postId) + '\')">Delete</button>' : '')
             + (canModerate && p.is_thread_starter ? '<button type="button" class="fpost-btn is-mod" onclick="forumLockThread(this)">' + ((cachedThread && cachedThread.is_locked) ? 'Unlock Thread' : 'Lock Thread') + '</button>' : '')
@@ -4351,6 +4389,21 @@ async function showThreadDetail(threadId, page, postId, histReplace) {
         histState, !!histReplace);
     if (cleanUrl.indexOf('?') === -1) forumSetCanonical(cleanUrl);
     if (currentThreadTitle) document.title = currentThreadTitle + ' | TrustMyRecord Forum';
+    // SHARE_SYSTEM_PHASE1_20260721: point the header share control at this thread.
+    // Same cleanUrl the address bar/canonical use, so no second URL format exists.
+    // Emitted only when the thread actually loaded: a 404 (removed thread) runs
+    // forumRenderThreadNotFound(), which nulls cachedThread, so there is nothing
+    // to share and the slot stays empty.
+    var shareSlot = document.getElementById('threadShareSlot');
+    if (shareSlot) {
+        shareSlot.innerHTML = (cachedThread && String(cachedThread.id) === String(threadId))
+            ? '<button class="fbtn" type="button" data-tmr-share data-share-type="thread"'
+                + ' data-share-id="' + escHtml(String(threadId)) + '"'
+                + ' data-share-url="' + escHtml('https://trustmyrecord.com' + cleanUrl) + '"'
+                + (currentThreadTitle ? ' data-share-title="' + escHtml(currentThreadTitle) + '"' : '')
+                + ' title="Share this thread" aria-label="Share this thread">Share</button>'
+            : '';
+    }
     if (wantPost && forumScrollToPost(wantPost)) return;
     var pg = parseInt(page, 10);
     if (Number.isFinite(pg) && pg > 1) {
@@ -4433,6 +4486,9 @@ async function forumRouteFromLocation() {
     var post = '';
     var mPost = hash.match(/^#post-(.+)$/);
     if (mPost) post = decodeURIComponent(mPost[1]);
+    // SHARE_SYSTEM_PHASE1_20260721: shared links carry ?post=<id> alongside the
+    // #post-<id> fragment; honour the query form too when the fragment is absent.
+    if (!post) post = (params.get('post') || '').trim();
     if (mPath) { await forumOpenThreadFromHistory(parseInt(mPath[1], 10), post); return; }
     var mCat = window.location.pathname.match(/^\/forum\/([a-z0-9_-]+)\/?$/i);
     if (mCat && mCat[1].toLowerCase() !== 'thread') {
@@ -5285,6 +5341,14 @@ document.addEventListener('DOMContentLoaded', async function() {
             var cleanPost = '';
             var cleanHash = (window.location.hash || '').match(/^#post-(.+)$/);
             if (cleanHash) cleanPost = decodeURIComponent(cleanHash[1]);
+            // SHARE_SYSTEM_PHASE1_20260721: shared post links are
+            // /forum/thread/<id>/<slug>/?post=<pid>#post-<pid>. Read ?post= as
+            // well, since a fragment can be dropped in transit (chat apps,
+            // redirectors). No new highlight code: showThreadDetail() already
+            // routes this through forumScrollToPost().
+            if (!cleanPost) {
+                cleanPost = (new URLSearchParams(window.location.search).get('post') || '').trim();
+            }
             await showThreadDetail(cleanTid, null, cleanPost || null, true);
             return;
         }

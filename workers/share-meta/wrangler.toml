@@ -1,0 +1,19 @@
+name = "tmr-share-meta"
+main = "worker.js"
+compatibility_date = "2026-07-01"
+workers_dev = false
+
+# Only two URL shapes reach this Worker. Everything else on the site is served
+# straight from the origin and is never in its path.
+#   /pick*                  -> a shared individual pick (/pick/?id=<n>)
+#   /forum/thread/*         -> a shared individual reply (?post=<n>);
+#                              a plain thread URL is passed through untouched
+#                              because the baked page already has its metadata.
+routes = [
+  { pattern = "trustmyrecord.com/pick", zone_name = "trustmyrecord.com" },
+  { pattern = "trustmyrecord.com/pick/*", zone_name = "trustmyrecord.com" },
+  { pattern = "trustmyrecord.com/forum/thread/*", zone_name = "trustmyrecord.com" },
+  { pattern = "www.trustmyrecord.com/pick", zone_name = "trustmyrecord.com" },
+  { pattern = "www.trustmyrecord.com/pick/*", zone_name = "trustmyrecord.com" },
+  { pattern = "www.trustmyrecord.com/forum/thread/*", zone_name = "trustmyrecord.com" },
+]

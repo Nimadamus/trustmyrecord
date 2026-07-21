@@ -828,6 +828,8 @@
 <!--/SCHEMA_ORG_BLOCK-->
     <link rel="stylesheet" href="/static/css/tmr-ds.9faf16e3fee3.css">
     <link rel="stylesheet" href="/static/css/tmr-ds-leaderboards.21c89f76f25f.css">
+    <link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
+    <script defer src="/static/js/tmr-share.js?v=20260721share1"></script>
 </head>
 <body class="tmr-ds tmr-site-shell">
     <main class="page">
@@ -1365,6 +1367,15 @@
                     +     '<button type="button" class="mini-link" data-action="inspect-capper" data-username="' + escapeHtml(entry.username) + '">Inspect</button>'
                     +     '<a class="mini-link" href="/u/' + encodeURIComponent(entry.username) + '/" data-action="open-profile" data-username="' + escapeHtml(entry.username) + '" data-source="board">Profile</a>'
                     +     '<a class="mini-link" href="/arena/?challenge=' + encodeURIComponent(entry.username) + '" data-action="challenge-capper" data-username="' + escapeHtml(entry.username) + '" data-source="board">Challenge</a>'
+                    // SHARE_SYSTEM_PHASE1_20260721: shares the member's public
+                    // /u/ page, which carries their own Open Graph card. The
+                    // rank itself is not baked into the link - a leaderboard
+                    // position changes, and a shared link must never claim a
+                    // standing that has since moved.
+                    +     '<button type="button" class="mini-link" data-tmr-share data-share-type="profile"'
+                    +       ' data-share-id="' + escapeHtml(entry.username) + '"'
+                    +       ' data-share-url="https://trustmyrecord.com/u/' + encodeURIComponent(entry.username) + '/"'
+                    +       ' title="Share this record" aria-label="Share ' + escapeHtml(entry.displayName) + '’s verified record">Share</button>'
                     + '</div></td>'
                     + '</tr>';
             }).join('');
