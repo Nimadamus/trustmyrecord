@@ -80,6 +80,7 @@
             grid-template-columns: var(--msg-nav-w) var(--msg-list-w) 1fr;
             gap: 14px;
             height: calc(100vh - 168px);
+            height: calc(100dvh - 168px);
             min-height: 520px;
         }
 
@@ -322,6 +323,7 @@
 
         .msg-thread {
             flex: 1;
+            min-height: 0;
             overflow-y: auto;
             overscroll-behavior: contain;
             padding: 18px 18px 12px;
@@ -419,6 +421,7 @@
             border-top: 1px solid var(--msg-border);
             background: var(--msg-surface);
             padding: 12px 14px;
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
             display: grid;
             grid-template-columns: 1fr auto;
             grid-template-areas: "input input" "tools send";
@@ -600,6 +603,7 @@
             .msg-app {
                 grid-template-columns: 1fr;
                 height: calc(100vh - 150px);
+                height: calc(100dvh - 150px);
             }
             .msg-nav { display: none; }
             .msg-pane { display: none; }
@@ -872,12 +876,36 @@
         function sizeApp() {
             const app = document.getElementById('msgApp');
             if (!app) return;
-            const top = app.getBoundingClientRect().top + window.scrollY;
-            const h = window.innerHeight - top - 14;
-            app.style.height = Math.max(440, h) + 'px';
+            const appTop = app.getBoundingClientRect().top; // viewport-relative
+            const vv = window.visualViewport;
+            // Bottom edge of the *visual* viewport in layout coords. When the mobile
+            // on-screen keyboard opens, vv.height shrinks, so the app shrinks with it
+            // and the sticky composer stays visible above the keyboard.
+            const visualBottom = vv ? (vv.offsetTop + vv.height) : window.innerHeight;
+            const h = visualBottom - appTop - 14;
+            app.style.height = Math.max(360, h) + 'px';
+            // Keep the newest message visible when the pane resizes (e.g. keyboard).
+            const thread = document.getElementById('chatMessages');
+            if (thread && Math.abs(thread.scrollHeight - thread.clientHeight - thread.scrollTop) < 120) {
+                thread.scrollTop = thread.scrollHeight;
+            }
         }
         window.addEventListener('resize', sizeApp);
         window.addEventListener('load', sizeApp);
+        if (window.visualViewport) {
+            window.visualViewport.addEventListener('resize', sizeApp);
+            window.visualViewport.addEventListener('scroll', sizeApp);
+        }
+        // The global nav is injected asynchronously; re-size once it (or its images) reflow.
+        try {
+            const navRO = new ResizeObserver(function () { sizeApp(); });
+            const navObserve = function () {
+                const nav = document.querySelector('.tmr-global-nav, nav[class*="global-nav"], header');
+                if (nav) navRO.observe(nav);
+            };
+            navObserve();
+            setTimeout(navObserve, 500);
+        } catch (e) {}
         [0, 300, 800, 1600].forEach(t => setTimeout(sizeApp, t));
 
         function idEq(a, b) { return String(a) === String(b); }
@@ -894,23 +922,46 @@
                 } else {
                     conversations = loadLocalConversations();
                 }
-                // Seed "Sent" from server (last message sent by me)
+                // "Sent" = conversations whose latest message I sent. Recompute
+                // from the server on EVERY load (not an additive localStorage set)
+                // so a thread leaves Sent the moment the other person replies. The
+                // old sticky set kept threads in Sent forever and mis-counted it.
+                sentIds = new Set();
                 conversations.forEach(c => {
                     if (c.last_sender_id != null && idEq(c.last_sender_id, currentUser.id)) {
                         sentIds.add(String(c.other_user_id));
                     }
+                    // Reconcile server-side archive state (persists cross-device).
+                    if (c.archived === true) archivedIds.add(String(c.other_user_id));
+                    else if (c.archived === false) archivedIds.delete(String(c.other_user_id));
                 });
-                saveIdSet(SENT_KEY, sentIds);
+                if (conversations.some(c => c.archived !== undefined)) saveIdSet(ARCHIVE_KEY, archivedIds);
                 conversationsLoaded = true;
                 renderConversationsList();
                 updateFolderCounts();
             } catch (e) {
                 console.error('Failed to load conversations:', e);
-                conversations = loadLocalConversations();
                 conversationsLoaded = true;
-                renderConversationsList();
-                updateFolderCounts();
+                // Don't wipe a good list on a transient poll error; only surface an
+                // error state when we have nothing to show.
+                if (!conversations || conversations.length === 0) {
+                    renderConversationsError();
+                } else {
+                    renderConversationsList();
+                    updateFolderCounts();
+                }
             }
+        }
+
+        function renderConversationsError() {
+            const list = document.getElementById('conversationsList');
+            if (!list) return;
+            list.innerHTML =
+                '<div class="msg-empty" style="height:100%;">' +
+                    '<div class="msg-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>' +
+                    '<h3>Couldn’t load conversations</h3><p>Check your connection and try again.</p>' +
+                    '<button class="msg-empty-cta" onclick="loadConversations()">Retry</button>' +
+                '</div>';
         }
 
         function loadLocalConversations() {
@@ -1456,14 +1507,25 @@
             if (!label) return;
             label.textContent = (activeConversationUserId != null && isArchived(activeConversationUserId)) ? 'Unarchive' : 'Archive';
         }
-        function toggleArchiveActive() {
+        async function toggleArchiveActive() {
             if (activeConversationUserId == null) return;
             const id = String(activeConversationUserId);
-            if (archivedIds.has(id)) archivedIds.delete(id); else archivedIds.add(id);
+            const willArchive = !archivedIds.has(id);
+            // Optimistic: update local state + all folders/counters immediately.
+            if (willArchive) archivedIds.add(id); else archivedIds.delete(id);
             saveIdSet(ARCHIVE_KEY, archivedIds);
             updateArchiveBtn();
             renderConversationsList();
             updateFolderCounts();
+            // Persist server-side so the archive follows the user across devices.
+            try {
+                if (api && typeof api.request === 'function') {
+                    await api.request('/messages/conversation/' + encodeURIComponent(activeConversationUserId) + '/archive',
+                        { method: 'POST', body: { archived: willArchive } });
+                }
+            } catch (e) {
+                console.error('Archive sync failed:', e);
+            }
         }
 
         // ---- New message composer ----
