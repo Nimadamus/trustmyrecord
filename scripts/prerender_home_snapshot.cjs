@@ -34,8 +34,13 @@ const TIMEOUT_MS = 120000;
 // `need` is a selector that MUST exist inside the region before it counts as
 // populated. Without it a region holding nothing but its own <!--MK:--> comments
 // reads as "non-empty" and the markers get baked in place of the real content.
+// NOTE: homeTicker is deliberately NOT prerendered. The MLB strip is tied to a
+// specific America/Los_Angeles slate date, so anything baked here goes stale the
+// moment the date rolls over — and a baked game id goes stale even sooner, when
+// the odds provider reissues ids for the same matchup. It is rendered live from
+// /api/nav/mlb-slate instead, and tmr-home-live.js drops any baked markup whose
+// data-slate-date is not today. Do not re-add it.
 const REGIONS = [
-  { key: 'homeTicker', sel: '.ticker-games', need: '.gm' },
   { key: 'homeStats', sel: '.bridge-in', need: '.s b' },
   { key: 'homeCapper', sel: '.spot .bd', need: '.g3 b' },
   { key: 'homeLivePicks', sel: '.board .card:nth-of-type(1) .body', need: '*' },

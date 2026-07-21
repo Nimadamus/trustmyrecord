@@ -1481,7 +1481,22 @@
     els.sport.value = sport;
     state.sport = sport;
     loadSport(sport).then(function () {
-      var first = matchupsForSport(sport)[0];
+      var list = matchupsForSport(sport);
+      /* ?matchup=Away Team@Home Team selects that exact game (used by the
+         homepage MLB strip, so a trend click lands on its own matchup rather
+         than whichever game happens to sort first). Unknown value => first. */
+      var wanted = (params.get("matchup") || "").trim();
+      var picked = null;
+      if (wanted) {
+        var parts = wanted.split("@");
+        var away = (parts[0] || "").trim(), home = (parts[1] || "").trim();
+        picked = list.filter(function (m) {
+          return m.away_abbr === away && m.home_abbr === home;
+        })[0] || list.filter(function (m) {
+          return String(m.matchup || "").trim() === wanted;
+        })[0] || null;
+      }
+      var first = picked || list[0];
       if (first) {
         state.matchupKey = first.key;
         var market = params.get("market") || "";
