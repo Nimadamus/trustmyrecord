@@ -2314,6 +2314,40 @@
                         </div>
                       </div>
 
+                      <!-- Performance by Team: settled team-based picks (moneyline / spread /
+                           team totals) grouped by the team the member backed. Source is the
+                           backend `team` breakdown category (bucket = "<sport_key>|<team>"),
+                           which counts won/lost/push only - voided and cancelled picks never
+                           enter the aggregate. -->
+                      <div class="tmrx-section" id="tmrxTeamSection">
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">Performance by Team</div>
+                            <div class="tmrx-section-sub">Settled record by the team backed on moneyline, spread, and team totals. Pushes count as a pick at 0 units; full-game totals, props, and futures are excluded.</div>
+                          </div>
+                          <div class="tmrx-team-filters">
+                            <label class="tmrx-team-filter"><span>Sport</span><select id="tmrxTeamSportFilter"><option value="">All sports</option></select></label>
+                            <label class="tmrx-team-filter"><span>League</span><select id="tmrxTeamLeagueFilter"><option value="">All leagues</option></select></label>
+                          </div>
+                        </div>
+                        <div class="tmrx-table-shell">
+                          <table class="tmrx-table tmrx-team-table" id="tmrxTableTeamTop">
+                            <thead><tr>
+                              <th class="tmrx-sortable" data-tmrx-team-sort="team">Team <span class="tmrx-sort-arrow"></span></th>
+                              <th class="tmrx-sortable" data-tmrx-team-sort="sport">Sport <span class="tmrx-sort-arrow"></span></th>
+                              <th class="tmrx-sortable" data-tmrx-team-sort="league">League <span class="tmrx-sort-arrow"></span></th>
+                              <th class="num tmrx-sortable" data-tmrx-team-sort="picks">Picks <span class="tmrx-sort-arrow"></span></th>
+                              <th class="num tmrx-sortable" data-tmrx-team-sort="record">W-L-P <span class="tmrx-sort-arrow"></span></th>
+                              <th class="num tmrx-sortable" data-tmrx-team-sort="win_rate">Win % <span class="tmrx-sort-arrow"></span></th>
+                              <th class="num tmrx-sortable" data-tmrx-team-sort="avg_odds">Avg Odds <span class="tmrx-sort-arrow"></span></th>
+                              <th class="num tmrx-sortable" data-tmrx-team-sort="units">Net Units <span class="tmrx-sort-arrow"></span></th>
+                              <th class="num tmrx-sortable" data-tmrx-team-sort="roi">ROI <span class="tmrx-sort-arrow"></span></th>
+                            </tr></thead>
+                            <tbody><tr class="empty"><td colspan="9">No settled team-based picks yet.</td></tr></tbody>
+                          </table>
+                        </div>
+                      </div>
+
                       <div class="tmrx-section">
                         <div class="tmrx-grid-2">
                           <div>
@@ -12685,9 +12719,44 @@
     let teamBreakdownRows = [];
     let teamSort = { key: 'units', dir: 'desc' };
 
+    // sport_key -> [sport, league] so the stats table can filter on each
+    // independently ("Soccer" vs "FIFA World Cup"). Unknown keys fall back to
+    // splitting at the first underscore.
+    const TMRX_SPORT_KEY_MAP = {
+        americanfootball_nfl: ['Football', 'NFL'], americanfootball_ncaaf: ['Football', 'NCAAF'],
+        basketball_nba: ['Basketball', 'NBA'], basketball_nba_summer: ['Basketball', 'NBA Summer League'],
+        basketball_wnba: ['Basketball', 'WNBA'], basketball_ncaab: ['Basketball', 'NCAAB'],
+        baseball_mlb: ['Baseball', 'MLB'], icehockey_nhl: ['Hockey', 'NHL'],
+        soccer_epl: ['Soccer', 'EPL'], soccer_usa_mls: ['Soccer', 'MLS']
+    };
+    const TMRX_SPORT_PREFIX = {
+        americanfootball: 'Football', basketball: 'Basketball', baseball: 'Baseball',
+        icehockey: 'Hockey', soccer: 'Soccer', mma: 'MMA', boxing: 'Boxing',
+        tennis: 'Tennis', golf: 'Golf', cricket: 'Cricket', rugbyleague: 'Rugby',
+        rugbyunion: 'Rugby', aussierules: 'Aussie Rules'
+    };
+    const TMRX_WORD_CASE = { fifa: 'FIFA', uefa: 'UEFA', mls: 'MLS', epl: 'EPL', usa: 'USA', intl: "Int'l", ncaa: 'NCAA', wc: 'WC' };
+    function tmrxTitleize(v) {
+        return String(v || '').split('_').filter(Boolean).map(function (w) {
+            return TMRX_WORD_CASE[w] || (w.charAt(0).toUpperCase() + w.slice(1));
+        }).join(' ');
+    }
+    function tmrxSportParts(sportKey) {
+        const key = String(sportKey || '').trim().toLowerCase();
+        if (TMRX_SPORT_KEY_MAP[key]) return TMRX_SPORT_KEY_MAP[key];
+        if (!key) return ['Other', 'Other'];
+        const i = key.indexOf('_');
+        const prefix = i > 0 ? key.slice(0, i) : key;
+        const rest = i > 0 ? key.slice(i + 1) : '';
+        const sport = TMRX_SPORT_PREFIX[prefix] || tmrxTitleize(prefix);
+        const league = rest ? (rest.length <= 5 && rest.indexOf('_') < 0 ? rest.toUpperCase() : tmrxTitleize(rest)) : sport;
+        return [sport || 'Other', league || 'Other'];
+    }
+
     async function loadTeamBreakdown() {
-        const module = document.getElementById('teamBreakdownModule');
-        if (!module || !profileUsername || !api || typeof api.request !== 'function') return;
+        const hasLegacy = !!document.getElementById('teamBreakdownModule');
+        const hasStats = !!document.getElementById('tmrxTableTeamTop');
+        if ((!hasLegacy && !hasStats) || !profileUsername || !api || typeof api.request !== 'function') return;
         try {
             const data = await api.request('/users/' + encodeURIComponent(profileUsername) + '/stats/breakdowns?category=team');
             const rows = (data && Array.isArray(data.breakdowns)) ? data.breakdowns : [];
@@ -12697,21 +12766,32 @@
                 const sportKey = sep >= 0 ? bucket.slice(0, sep) : '';
                 const team = sep >= 0 ? bucket.slice(sep + 1) : bucket;
                 const w = Number(r.wins) || 0, l = Number(r.losses) || 0, p = Number(r.pushes) || 0;
+                const parts = tmrxSportParts(sportKey);
+                const wagered = Number(r.total_units_wagered) || 0;
+                const net = Number(r.net_units) || 0;
                 return {
                     team: team,
-                    league: fmtSport(sportKey),
+                    sport_key: sportKey,
+                    sport: parts[0],
+                    // Legacy record-tab table keeps its single "League" column label.
+                    league: parts[1],
                     wins: w, losses: l, pushes: p,
                     picks: Number(r.total_picks) || (w + l + p),
-                    units: Number(r.net_units) || 0,
-                    roi: Number(r.roi) || 0,
+                    wagered: wagered,
+                    units: net,
+                    // Decisions only: pushes are picks but not wins or losses.
+                    win_rate: (w + l) > 0 ? (w / (w + l)) * 100 : 0,
+                    roi: Number(r.roi) || (wagered > 0 ? (net / wagered) * 100 : 0),
                     avg_odds: Number(r.avg_odds) || 0
                 };
             });
             renderTeamBreakdown();
+            renderTmrxTeamTable(true);
         } catch (e) {
             // Non-fatal: leave the panel empty rather than breaking the profile.
             teamBreakdownRows = [];
             renderTeamBreakdown();
+            renderTmrxTeamTable(true);
         }
     }
 
@@ -12782,6 +12862,139 @@
             });
         });
     }
+
+    // ---- Stats-tab (Overview) Performance by Team: sortable + sport/league filters ----
+    let tmrxTeamSort = { key: 'units', dir: 'desc' };
+    let tmrxTeamFilters = { sport: '', league: '' };
+    let tmrxTeamWired = false;
+
+    function tmrxTeamLogoHtml(name) {
+        if (window.TMRTeamLogo && typeof window.TMRTeamLogo.html === 'function') {
+            return window.TMRTeamLogo.html(name, { className: 'tmrx-tl' });
+        }
+        return '';
+    }
+
+    function tmrxTeamFiltered() {
+        return teamBreakdownRows.filter(function (r) {
+            if (tmrxTeamFilters.sport && r.sport !== tmrxTeamFilters.sport) return false;
+            if (tmrxTeamFilters.league && r.league !== tmrxTeamFilters.league) return false;
+            return true;
+        });
+    }
+
+    function tmrxTeamSyncFilterOptions() {
+        const sportSel = document.getElementById('tmrxTeamSportFilter');
+        const leagueSel = document.getElementById('tmrxTeamLeagueFilter');
+        if (!sportSel || !leagueSel) return;
+        const sports = [];
+        teamBreakdownRows.forEach(function (r) { if (sports.indexOf(r.sport) < 0) sports.push(r.sport); });
+        sports.sort();
+        if (tmrxTeamFilters.sport && sports.indexOf(tmrxTeamFilters.sport) < 0) tmrxTeamFilters.sport = '';
+        sportSel.innerHTML = '<option value="">All sports</option>' + sports.map(function (s) {
+            return '<option value="' + escapeHtml(s) + '">' + escapeHtml(s) + '</option>';
+        }).join('');
+        sportSel.value = tmrxTeamFilters.sport;
+
+        // Leagues are scoped to the selected sport so the two filters compose.
+        const leagues = [];
+        teamBreakdownRows.forEach(function (r) {
+            if (tmrxTeamFilters.sport && r.sport !== tmrxTeamFilters.sport) return;
+            if (leagues.indexOf(r.league) < 0) leagues.push(r.league);
+        });
+        leagues.sort();
+        if (tmrxTeamFilters.league && leagues.indexOf(tmrxTeamFilters.league) < 0) tmrxTeamFilters.league = '';
+        leagueSel.innerHTML = '<option value="">All leagues</option>' + leagues.map(function (s) {
+            return '<option value="' + escapeHtml(s) + '">' + escapeHtml(s) + '</option>';
+        }).join('');
+        leagueSel.value = tmrxTeamFilters.league;
+    }
+
+    function renderTmrxTeamTable(syncFilters) {
+        const table = document.getElementById('tmrxTableTeamTop');
+        if (!table) return;
+        if (!tmrxTeamWired) { tmrxTeamWireControls(); tmrxTeamWired = true; }
+        if (syncFilters) tmrxTeamSyncFilterOptions();
+        const body = table.querySelector('tbody');
+        if (!body) return;
+
+        const rows = tmrxTeamFiltered();
+        if (!rows.length) {
+            body.innerHTML = '<tr class="empty"><td colspan="9">' +
+                (teamBreakdownRows.length ? 'No teams match these filters.' : 'No settled team-based picks yet.') +
+                '</td></tr>';
+            tmrxTeamSyncArrows();
+            return;
+        }
+
+        const dir = tmrxTeamSort.dir === 'asc' ? 1 : -1;
+        const key = tmrxTeamSort.key;
+        const sorted = rows.slice().sort(function (a, b) {
+            let av, bv;
+            if (key === 'team' || key === 'sport' || key === 'league') {
+                av = String(a[key]).toLowerCase(); bv = String(b[key]).toLowerCase();
+            } else if (key === 'record') {
+                // Record sorts by wins, then by fewest losses.
+                av = a.wins * 1000 - a.losses; bv = b.wins * 1000 - b.losses;
+            } else {
+                av = Number(a[key]) || 0; bv = Number(b[key]) || 0;
+            }
+            if (av < bv) return -1 * dir;
+            if (av > bv) return 1 * dir;
+            return String(a.team).localeCompare(String(b.team));
+        });
+
+        body.innerHTML = sorted.map(function (r) {
+            const rec = r.wins + '-' + r.losses + '-' + r.pushes;
+            const uCls = r.units > 0 ? 'pos' : (r.units < 0 ? 'neg' : '');
+            const roiCls = r.roi > 0 ? 'pos' : (r.roi < 0 ? 'neg' : '');
+            const odds = r.avg_odds ? (r.avg_odds > 0 ? '+' + Math.round(r.avg_odds) : String(Math.round(r.avg_odds))) : '&mdash;';
+            return '<tr>' +
+                '<td><span class="tmrx-team-cell">' + tmrxTeamLogoHtml(r.team) + '<span class="tmrx-team-name">' + escapeHtml(r.team) + '</span></span></td>' +
+                '<td>' + escapeHtml(r.sport) + '</td>' +
+                '<td>' + escapeHtml(r.league) + '</td>' +
+                '<td class="num">' + r.picks + '</td>' +
+                '<td class="num">' + rec + '</td>' +
+                '<td class="num">' + r.win_rate.toFixed(1) + '%</td>' +
+                '<td class="num">' + odds + '</td>' +
+                '<td class="num ' + uCls + '">' + (r.units >= 0 ? '+' : '') + r.units.toFixed(2) + 'u</td>' +
+                '<td class="num ' + roiCls + '">' + (r.roi >= 0 ? '+' : '') + r.roi.toFixed(1) + '%</td>' +
+                '</tr>';
+        }).join('');
+        tmrxTeamSyncArrows();
+    }
+
+    function tmrxTeamSyncArrows() {
+        document.querySelectorAll('#tmrxTableTeamTop th[data-tmrx-team-sort]').forEach(function (th) {
+            const arrow = th.querySelector('.tmrx-sort-arrow');
+            const active = th.getAttribute('data-tmrx-team-sort') === tmrxTeamSort.key;
+            th.classList.toggle('is-sorted', active);
+            if (arrow) arrow.textContent = active ? (tmrxTeamSort.dir === 'asc' ? '▲' : '▼') : '';
+        });
+    }
+
+    function tmrxTeamWireControls() {
+        document.querySelectorAll('#tmrxTableTeamTop th[data-tmrx-team-sort]').forEach(function (th) {
+            th.addEventListener('click', function () {
+                const key = th.getAttribute('data-tmrx-team-sort');
+                if (tmrxTeamSort.key === key) tmrxTeamSort.dir = (tmrxTeamSort.dir === 'asc' ? 'desc' : 'asc');
+                else { tmrxTeamSort.key = key; tmrxTeamSort.dir = (key === 'team' || key === 'sport' || key === 'league') ? 'asc' : 'desc'; }
+                renderTmrxTeamTable(false);
+            });
+        });
+        const sportSel = document.getElementById('tmrxTeamSportFilter');
+        const leagueSel = document.getElementById('tmrxTeamLeagueFilter');
+        if (sportSel) sportSel.addEventListener('change', function () {
+            tmrxTeamFilters.sport = sportSel.value;
+            tmrxTeamFilters.league = '';
+            renderTmrxTeamTable(true);
+        });
+        if (leagueSel) leagueSel.addEventListener('change', function () {
+            tmrxTeamFilters.league = leagueSel.value;
+            renderTmrxTeamTable(false);
+        });
+    }
+
     // ======================== UTILITY ========================
     function escapeHtml(value) {
         return String(value == null ? '' : value)
@@ -13894,6 +14107,34 @@
       .tmrx-table .pos { color: #86efac; }
       .tmrx-table .neg { color: #fca5a5; }
       .tmrx-table .zero { color: #94a3b8; }
+
+      /* Performance by Team (Overview/stats tab): sortable headers, team logos,
+         sport + league filters. */
+      .tmrx-table thead th.tmrx-sortable { cursor: pointer; user-select: none; white-space: nowrap; }
+      .tmrx-table thead th.tmrx-sortable:hover { color: #cbd5e1; }
+      .tmrx-table thead th.tmrx-sortable.is-sorted { color: #22d3ee; }
+      .tmrx-sort-arrow { font-size: 9px; margin-left: 2px; }
+      #tmrxTeamSection .tmrx-section-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; flex-wrap: wrap; }
+      .tmrx-team-filters { display: flex; gap: 10px; flex-wrap: wrap; }
+      .tmrx-team-filter { display: flex; flex-direction: column; gap: 4px; }
+      .tmrx-team-filter > span { font-size: 10px; font-weight: 900; letter-spacing: .10em; text-transform: uppercase; color: #7a8499; }
+      .tmrx-team-filter select {
+        background: #08111f; color: #dbe5f4; border: 1px solid #1F3350; border-radius: 8px;
+        padding: 7px 10px; font-size: 12px; font-weight: 700; min-width: 132px; cursor: pointer;
+      }
+      .tmrx-team-filter select:focus { outline: none; border-color: #22d3ee; }
+      .tmrx-team-cell { display: inline-flex; align-items: center; gap: 9px; }
+      .tmrx-team-name { font-weight: 800; color: #f1f5fb; white-space: nowrap; }
+      .tmrx-tl { width: 22px; height: 22px; flex: 0 0 22px; display: inline-flex; align-items: center; justify-content: center; position: relative; }
+      .tmrx-tl-img { width: 22px; height: 22px; object-fit: contain; }
+      .tmrx-tl-fallback { display: none; font-size: 9px; font-weight: 900; color: #7a8499; border: 1px solid #1F3350; border-radius: 5px; width: 22px; height: 22px; align-items: center; justify-content: center; }
+      .tmrx-tl.is-fallback .tmrx-tl-fallback { display: inline-flex; }
+      @media (max-width: 640px) {
+        #tmrxTeamSection .tmrx-section-head { align-items: stretch; }
+        .tmrx-team-filters { width: 100%; }
+        .tmrx-team-filter { flex: 1 1 46%; }
+        .tmrx-team-filter select { width: 100%; min-width: 0; }
+      }
 
       /* TMRX_LEDGER_RESULT_COLOR_20260527: Public Ledger must read win=green, loss=red,
          everything else=neutral at a glance, regardless of horizontal scroll position. */
