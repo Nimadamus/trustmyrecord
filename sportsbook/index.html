@@ -34656,6 +34656,193 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(renderAll, 600);
     })();
     </script>
+
+    <!-- ============================================================
+         PARLAY BUILDER (self-contained, runtime-injected).
+         Adds a multi-leg parlay flow WITHOUT modifying the visual-locked
+         single-pick board/slip markup: it reads the existing selection
+         (window.TMR.currentSelectedPick + the slip's odds/line inputs),
+         accumulates legs, shows combined odds + payout, and submits the
+         whole slip as ONE wager to POST /api/parlays.
+    ============================================================ -->
+    <style>
+      #tmrParlayFab{position:fixed;right:18px;bottom:18px;z-index:9998;background:linear-gradient(135deg,#22d3ee,#3b82f6);color:#04121f;font-weight:800;border:none;border-radius:999px;padding:12px 18px;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.35);font-family:inherit;display:none;align-items:center;gap:8px}
+      #tmrParlayFab .cnt{background:#04121f;color:#7dd3fc;border-radius:999px;font-size:12px;padding:1px 8px;min-width:20px;text-align:center}
+      #tmrParlayPanel{position:fixed;right:18px;bottom:18px;z-index:9999;width:min(360px,calc(100vw - 32px));max-height:min(78vh,640px);display:none;flex-direction:column;background:#0d1830;border:1px solid #23324e;border-radius:16px;box-shadow:0 18px 48px rgba(0,0,0,.5);color:#e7eefc;font-family:inherit;overflow:hidden}
+      #tmrParlayPanel header{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;border-bottom:1px solid #23324e;background:#101d38}
+      #tmrParlayPanel header b{font-size:15px;letter-spacing:.2px}
+      #tmrParlayPanel header .x{background:none;border:none;color:#9fb2d0;font-size:20px;cursor:pointer;line-height:1;padding:0 4px}
+      #tmrParlayLegs{overflow-y:auto;padding:8px 12px;flex:1;min-height:60px}
+      .tmr-pl-leg{display:flex;gap:8px;align-items:flex-start;padding:9px 10px;border:1px solid #22304c;border-radius:10px;margin-bottom:8px;background:#0f1c36}
+      .tmr-pl-leg .m{flex:1;min-width:0}
+      .tmr-pl-leg .sel{font-weight:700;font-size:13.5px;color:#f4f8ff;white-space:normal}
+      .tmr-pl-leg .mt{font-size:11.5px;color:#9fb2d0;margin-top:2px}
+      .tmr-pl-leg .od{font-weight:800;color:#7dd3fc;font-size:13.5px;white-space:nowrap}
+      .tmr-pl-leg .rm{background:none;border:none;color:#7f8ca8;cursor:pointer;font-size:16px;line-height:1;padding:0 2px}
+      .tmr-pl-leg .rm:hover{color:#f87171}
+      #tmrParlayEmpty{color:#8ea3c4;font-size:13px;text-align:center;padding:22px 12px}
+      #tmrParlayFoot{border-top:1px solid #23324e;padding:12px 14px;background:#101d38}
+      .tmr-pl-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:7px;color:#c7d5ec}
+      .tmr-pl-row b{color:#f4f8ff}
+      .tmr-pl-row .big{font-size:16px;color:#7dd3fc;font-weight:800}
+      #tmrParlayUnits{width:64px;background:#0a162c;border:1px solid #2a3a58;color:#eaf2ff;border-radius:8px;padding:6px 8px;font-family:inherit;font-size:14px;text-align:center}
+      #tmrParlaySubmit{width:100%;margin-top:8px;background:linear-gradient(135deg,#22d3ee,#3b82f6);color:#04121f;font-weight:800;border:none;border-radius:10px;padding:11px;cursor:pointer;font-size:14.5px;font-family:inherit}
+      #tmrParlaySubmit:disabled{opacity:.5;cursor:not-allowed}
+      #tmrParlayClear{background:none;border:none;color:#8ea3c4;font-size:12px;cursor:pointer;margin-top:6px;width:100%;text-align:center}
+      #tmrParlayToast{position:fixed;left:50%;transform:translateX(-50%);bottom:96px;z-index:10000;background:#101d38;border:1px solid #2a3a58;color:#eaf2ff;padding:11px 18px;border-radius:10px;font-size:13.5px;box-shadow:0 8px 24px rgba(0,0,0,.4);display:none;max-width:90vw;text-align:center}
+      #tmrParlayToast.ok{border-color:#22c55e}#tmrParlayToast.err{border-color:#f87171}
+      .tmr-addparlay-btn{display:block;width:100%;margin-top:8px;background:transparent;border:1px dashed #3b82f6;color:#7dd3fc;font-weight:700;border-radius:10px;padding:9px;cursor:pointer;font-family:inherit;font-size:13.5px}
+      .tmr-addparlay-btn:hover{background:rgba(59,130,246,.12)}
+    </style>
+    <script>
+    (function () {
+      'use strict';
+      var legs = [];
+      var MAX_LEGS = 12;
+
+      function amDec(a){a=Number(a);return a>0?1+a/100:1+100/Math.abs(a);}
+      function decAm(d){if(!(d>1))return 0;return d>=2?Math.round((d-1)*100):Math.round(-100/(d-1));}
+      function fmtOdds(a){a=Number(a);return (a>0?'+':'')+a;}
+      function combinedDecimal(){return legs.reduce(function(a,l){return a*amDec(l.odds_snapshot);},1);}
+
+      var MTMAP={ml:'h2h',spread:'spreads',over:'totals',under:'totals',teamover:'team_totals',teamunder:'team_totals',f5spread:'f5_spreads',f5ml:'f5_h2h',f5over:'f5_totals',f5under:'f5_totals',f5teamover:'f5_team_totals',f5teamunder:'f5_team_totals',firstinningover:'first_inning_totals',firstinningunder:'first_inning_totals',firsthalfml:'first_half_h2h',firsthalfspread:'first_half_spreads',firsthalfover:'first_half_totals',firsthalfunder:'first_half_totals',secondhalfml:'second_half_h2h',secondhalfspread:'second_half_spreads',secondhalfover:'second_half_totals',secondhalfunder:'second_half_totals',period1ml:'period_1_h2h',period1spread:'period_1_spreads',period1over:'period_1_totals',period1under:'period_1_totals',period2ml:'period_2_h2h',period2spread:'period_2_spreads',period2over:'period_2_totals',period2under:'period_2_totals',period3ml:'period_3_h2h',period3spread:'period_3_spreads',period3over:'period_3_totals',period3under:'period_3_totals',period4ml:'period_4_h2h',period4spread:'period_4_spreads',period4over:'period_4_totals',period4under:'period_4_totals'};
+
+      function currentLeg(){
+        var T=window.TMR||{};var p=T.currentSelectedPick;if(!p)return null;
+        var betType=T.selectedBetType||p.betType||'ml';
+        var oddsInp=document.getElementById('pickOddsInput');
+        var lineInp=document.getElementById('pickLineInput');
+        var odds=parseInt((oddsInp&&oddsInp.value)||p.odds||'',10);
+        if(isNaN(odds)||(odds>-100&&odds<100&&odds!==0))return {error:'Enter valid American odds for this pick first.'};
+        var market=MTMAP[betType]||'h2h';
+        var line=null;
+        if(/spread|over|under/.test(betType)){var lv=(lineInp&&lineInp.value)||p.line||'';line=parseFloat(lv);if(isNaN(line))line=null;}
+        var _l=(line!=null&&T.formatLine)?T.formatLine(line):(line!=null?String(line):'');
+        var rawTeam=String(p.team||'').replace(/\s+(over|under)\s*$/i,'').trim();
+        var selection;
+        if(/^(over|f5over|firstinningover)$/.test(betType))selection=_l?('Over '+_l):'Over';
+        else if(/^(under|f5under|firstinningunder)$/.test(betType))selection=_l?('Under '+_l):'Under';
+        else if(/^(teamover|f5teamover)$/.test(betType))selection=(rawTeam+' Over'+(_l?' '+_l:'')).trim();
+        else if(/^(teamunder|f5teamunder)$/.test(betType))selection=(rawTeam+' Under'+(_l?' '+_l:'')).trim();
+        else selection=rawTeam;
+        if(!selection)return {error:'Pick a side/line before adding to the parlay.'};
+        var skMap=T.sportKeyMap||{};
+        var gameId=p.gameId||(T.currentGames&&T.currentGames[p.gameIndex]?T.currentGames[p.gameIndex].id:null);
+        if(!gameId)return {error:'Could not identify this game.'};
+        var commence=p.gameTime||null;
+        if(commence&&Date.parse(commence)<=Date.now())return {error:'That game has already started.'};
+        return {
+          game_id:gameId, sport_key:(skMap[p.sport]||p.sport||''), market_type:market,
+          selection:selection, line_snapshot:line, odds_snapshot:odds,
+          home_team:p.homeTeam, away_team:p.awayTeam, commence_time:commence,
+          _label:(p.awayTeam&&p.homeTeam)?(p.awayTeam+' @ '+p.homeTeam):(p.sport||'')
+        };
+      }
+
+      function toast(msg,type){var t=document.getElementById('tmrParlayToast');if(!t)return;t.textContent=msg;t.className=type||'';t.style.display='block';clearTimeout(t._h);t._h=setTimeout(function(){t.style.display='none';},3200);}
+
+      function addCurrent(){
+        if(legs.length>=MAX_LEGS){toast('A parlay can have at most '+MAX_LEGS+' legs.','err');return;}
+        var leg=currentLeg();
+        if(!leg){toast('Select a pick on the board first, then add it.','err');return;}
+        if(leg.error){toast(leg.error,'err');return;}
+        if(legs.some(function(l){return String(l.game_id)===String(leg.game_id);})){toast('You already have a leg from that game. One leg per game.','err');return;}
+        legs.push(leg);render();openPanel();toast('Leg added — '+leg.selection,'ok');
+      }
+      function removeLeg(i){legs.splice(i,1);render();}
+      function clearLegs(){legs=[];render();}
+
+      function ensureUI(){
+        if(document.getElementById('tmrParlayPanel'))return;
+        var fab=document.createElement('button');fab.id='tmrParlayFab';fab.innerHTML='Parlay <span class="cnt">0</span>';fab.onclick=openPanel;document.body.appendChild(fab);
+        var p=document.createElement('div');p.id='tmrParlayPanel';
+        p.innerHTML=''+
+          '<header><b>Parlay Slip</b><button class="x" aria-label="Close" onclick="window.TMRParlay.close()">&times;</button></header>'+
+          '<div id="tmrParlayLegs"></div>'+
+          '<div id="tmrParlayFoot">'+
+            '<div class="tmr-pl-row"><span>Legs</span><b id="tmrPlLegCount">0</b></div>'+
+            '<div class="tmr-pl-row"><span>Combined odds</span><b class="big" id="tmrPlOdds">—</b></div>'+
+            '<div class="tmr-pl-row"><span>Risk (units)</span><input id="tmrParlayUnits" type="number" min="0.1" step="0.5" value="1"></div>'+
+            '<div class="tmr-pl-row"><span>To win</span><b id="tmrPlToWin">—</b></div>'+
+            '<div class="tmr-pl-row"><span>Total return</span><b id="tmrPlReturn">—</b></div>'+
+            '<button id="tmrParlaySubmit" onclick="window.TMRParlay.submit()">Submit parlay</button>'+
+            '<button id="tmrParlayClear" onclick="window.TMRParlay.clear()">Clear all legs</button>'+
+          '</div>';
+        document.body.appendChild(p);
+        var toastEl=document.createElement('div');toastEl.id='tmrParlayToast';document.body.appendChild(toastEl);
+        var u=document.getElementById('tmrParlayUnits');if(u)u.addEventListener('input',render);
+        render();
+      }
+      function openPanel(){ensureUI();if(legs.length===0)return;document.getElementById('tmrParlayPanel').style.display='flex';document.getElementById('tmrParlayFab').style.display='none';}
+      function closePanel(){var p=document.getElementById('tmrParlayPanel');if(p)p.style.display='none';var f=document.getElementById('tmrParlayFab');if(f)f.style.display=legs.length?'inline-flex':'none';}
+
+      function render(){
+        ensureUI();
+        var box=document.getElementById('tmrParlayLegs');
+        var fab=document.getElementById('tmrParlayFab');
+        if(fab){fab.querySelector('.cnt').textContent=legs.length;fab.style.display=(legs.length&&document.getElementById('tmrParlayPanel').style.display!=='flex')?'inline-flex':(legs.length?fab.style.display:'none');if(!legs.length){fab.style.display='none';}}
+        if(!legs.length){box.innerHTML='<div id="tmrParlayEmpty">No legs yet. Select a pick on the board and tap <b>Add to parlay</b>.</div>';}
+        else{
+          box.innerHTML=legs.map(function(l,i){return ''+
+            '<div class="tmr-pl-leg"><div class="m"><div class="sel">'+esc(l.selection)+'</div>'+
+            '<div class="mt">'+esc(l._label||'')+'</div></div>'+
+            '<div class="od">'+fmtOdds(l.odds_snapshot)+'</div>'+
+            '<button class="rm" title="Remove" onclick="window.TMRParlay.remove('+i+')">&times;</button></div>';
+          }).join('');
+        }
+        var lc=document.getElementById('tmrPlLegCount');if(lc)lc.textContent=legs.length;
+        var dec=combinedDecimal();var am=decAm(dec);
+        var unitsEl=document.getElementById('tmrParlayUnits');var units=Math.max(0,parseFloat(unitsEl&&unitsEl.value)||0);
+        var oddsEl=document.getElementById('tmrPlOdds');var twEl=document.getElementById('tmrPlToWin');var retEl=document.getElementById('tmrPlReturn');
+        var ok=legs.length>=2;
+        if(oddsEl)oddsEl.textContent=ok?fmtOdds(am):'—';
+        if(twEl)twEl.textContent=ok&&units>0?(units*(dec-1)).toFixed(2)+'u':'—';
+        if(retEl)retEl.textContent=ok&&units>0?(units*dec).toFixed(2)+'u':'—';
+        var sub=document.getElementById('tmrParlaySubmit');
+        if(sub){sub.disabled=!(ok&&units>0);sub.textContent=legs.length<2?'Add at least 2 legs':'Submit '+legs.length+'-leg parlay';}
+      }
+      function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+      function isLoggedIn(){try{if(window.auth&&window.auth.isLoggedIn&&window.auth.isLoggedIn())return true;}catch(e){}return localStorage.getItem('tmr_is_logged_in')==='true'||localStorage.getItem('trustmyrecord_session')!==null||!!localStorage.getItem('accessToken');}
+
+      function submit(){
+        if(legs.length<2){toast('A parlay needs at least 2 legs.','err');return;}
+        if(!isLoggedIn()){toast('Log in to submit a parlay.','err');try{if(window.showSection)window.showSection('login');}catch(e){}return;}
+        var unitsEl=document.getElementById('tmrParlayUnits');var units=parseFloat(unitsEl&&unitsEl.value)||0;
+        if(!(units>0)){toast('Enter your risk units.','err');return;}
+        if(!window.api||typeof window.api.request!=='function'){toast('Not ready — please refresh.','err');return;}
+        var sub=document.getElementById('tmrParlaySubmit');sub.disabled=true;sub.textContent='Submitting…';
+        var payload={units:units,stake_mode:(window.TMR&&window.TMR.selectedUnitsMode)||'risk',legs:legs.map(function(l){return{game_id:l.game_id,sport_key:l.sport_key,market_type:l.market_type,selection:l.selection,line_snapshot:l.line_snapshot,odds_snapshot:l.odds_snapshot,home_team:l.home_team,away_team:l.away_team,commence_time:l.commence_time};})};
+        window.api.request('/parlays',{method:'POST',body:payload}).then(function(res){
+          toast('Parlay locked! '+ (res&&res.parlay?fmtOdds(res.parlay.combined_odds):'') +' — good luck.','ok');
+          clearLegs();closePanel();
+          try{if(window.loadPendingPicks)window.loadPendingPicks();if(window.renderPicksList)window.renderPicksList();}catch(e){}
+        }).catch(function(err){
+          var msg=(err&&(err.message||err.error))||'Failed to submit parlay.';
+          toast(msg,'err');
+        }).finally(function(){render();});
+      }
+
+      // Inject an "Add to parlay" button into the pick slip, under the lock button.
+      function injectAddButton(){
+        try{
+          var lockBtn=document.querySelector('.submit-pick-btn');
+          if(!lockBtn)return;
+          var host=lockBtn.parentNode;if(!host)return;
+          if(host.querySelector('.tmr-addparlay-btn'))return;
+          var b=document.createElement('button');b.type='button';b.className='tmr-addparlay-btn';b.textContent='＋ Add to parlay';
+          b.onclick=addCurrent;
+          lockBtn.insertAdjacentElement('afterend',b);
+        }catch(e){}
+      }
+
+      window.TMRParlay={add:addCurrent,remove:removeLeg,clear:clearLegs,submit:submit,open:openPanel,close:closePanel,_legs:function(){return legs;}};
+
+      function boot(){ensureUI();injectAddButton();}
+      if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+      setTimeout(boot,900);setInterval(injectAddButton,1500);
+    })();
+    </script>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  7:32:00 PM -->
