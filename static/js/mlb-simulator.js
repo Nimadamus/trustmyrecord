@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-scriptclose-20260711';
+    var UI_BUILD = 'mlb-simulator-lineup-integrity-20260722';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -473,7 +473,11 @@
             confirmed: isLiveOrFinal,
             lineupStatus: isLiveOrFinal ? 'confirmed' : 'posted',
             source: isLiveOrFinal ? "Today's confirmed MLB lineup" : "Today's posted MLB lineup (pregame)",
-            gamePk: found.game.gamePk || null
+            gamePk: found.game.gamePk || null,
+            sourceGamePk: found.game.gamePk || null,
+            sourceGameDate: todayIsoLocal(),
+            fetchedAt: Date.now(),
+            substitutesRejected: []
         };
     }
     function todaysProbableStarterForTeam(games, team) {
@@ -738,6 +742,44 @@
             return null;
         });
     }
+    // LINEUP_INTEGRITY_20260722: same-day transaction detection. Any move made
+    // today (option, recall, IL placement, trade, release, DFA) invalidates a
+    // cached lineup, so the signature of today's transactions is part of the
+    // roster cache key.
+    var TRANSACTIONS_TTL_MS = 300000;
+    // How many recent completed games to walk back through looking for a usable
+    // starting lineup before giving up and using the active-roster fallback.
+    var MAX_LINEUP_LOOKBACK_GAMES = 5;
+    function fetchTodaysTransactions(team) {
+        var teamId = team && MLB_TEAM_IDS[team.abbreviation];
+        if (!teamId) return Promise.resolve([]);
+        state.liveContext.teamTransactions = state.liveContext.teamTransactions || {};
+        var cached = state.liveContext.teamTransactions[team.abbreviation];
+        if (cached && (Date.now() - cached.fetchedAt) < TRANSACTIONS_TTL_MS) return Promise.resolve(cached.list);
+        var day = todayIsoLocal();
+        var url = 'https://statsapi.mlb.com/api/v1/transactions?teamId=' + teamId + '&startDate=' + day + '&endDate=' + day;
+        return fetchJson(url, { cache: 'no-store' }).then(function (data) {
+            var list = (Array.isArray(data && data.transactions) ? data.transactions : []).map(function (t) {
+                return {
+                    id: t.id || null,
+                    type: t.typeDesc || t.typeCode || '',
+                    player: t.person && t.person.fullName || '',
+                    playerId: t.person && t.person.id || null,
+                    description: t.description || ''
+                };
+            });
+            state.liveContext.teamTransactions[team.abbreviation] = { fetchedAt: Date.now(), list: list };
+            return list;
+        }).catch(function () {
+            state.liveContext.teamTransactions[team.abbreviation] = { fetchedAt: Date.now(), list: (cached && cached.list) || [] };
+            return (cached && cached.list) || [];
+        });
+    }
+    function transactionSignature(team) {
+        var cached = state.liveContext.teamTransactions && state.liveContext.teamTransactions[team && team.abbreviation];
+        if (!cached || !cached.list) return '';
+        return cached.list.map(function (t) { return t.id || (t.type + ':' + t.playerId); }).sort().join(',');
+    }
     function pitcherQualityFromEra(era) {
         var n = Number(era);
         if (!Number.isFinite(n)) return 100;
@@ -831,23 +873,98 @@
         var hitters = players.filter(function (player) { return !/Pitcher|P$|SP|RP|CP/i.test(player.position); }).sort(function (a, b) { return rosterSortValue(a) - rosterSortValue(b); });
         var pitchers = players.filter(function (player) { return /Pitcher|P$|SP|RP|CP/i.test(player.position); });
         var orderedHitters = [];
+        var lineupRemovals = [];
+        var lineupBackfills = [];
         if (recentLineup && Array.isArray(recentLineup.players) && recentLineup.players.length >= 9) {
             var activeByName = {};
-            players.forEach(function (player) { activeByName[normalizeName(player.name)] = player; });
-            // The lineup feed (today's posted/confirmed lineup, or the most recent game's
-            // batting order) is itself the source of truth for the order. Enrich each slot
-            // with active-roster metadata (mlbId/position) when names match, but do NOT drop
-            // a real lineup hitter just because the active-roster name string differs.
+            var activeById = {};
+            players.forEach(function (player) {
+                activeByName[normalizeName(player.name)] = player;
+                if (player.mlbId) activeById[String(player.mlbId)] = player;
+            });
+            var injuredList = (state.liveContext.teamInjured && state.liveContext.teamInjured[team && team.abbreviation]) || [];
+            var injuredByName = {};
+            injuredList.forEach(function (p) { if (p && p.name) injuredByName[normalizeName(p.name)] = p.status || 'injured list'; });
+            // LINEUP_INTEGRITY_20260722 - hierarchy step 3. An official lineup posted
+            // for TODAY is authoritative and is trusted as-is. A carried-forward
+            // "recent" lineup is only a projection, so every slot must still be a
+            // player who is on the team's active roster RIGHT NOW: anyone optioned,
+            // designated, traded, released or placed on the IL since that game gets
+            // dropped here (matched by MLB player id first, name only as a fallback).
+            var officialToday = recentLineup.lineupStatus === 'confirmed' || recentLineup.lineupStatus === 'posted';
+            var usedKeys = {};
             orderedHitters = recentLineup.players.slice(0, 9).map(function (player, index) {
-                var active = activeByName[normalizeName(player.name)];
+                var active = (player.mlbId && activeById[String(player.mlbId)]) || activeByName[normalizeName(player.name)] || null;
+                var slot = index + 1;
+                if (playerBlockedForTeam(team, player.name)) {
+                    lineupRemovals.push({ slot: slot, name: player.name, reason: 'blocked (reported roster mismatch)' });
+                    return null;
+                }
+                if (!officialToday) {
+                    if (!active) {
+                        lineupRemovals.push({ slot: slot, name: player.name, reason: 'no longer on the active roster (optioned, traded, released or IL)' });
+                        return null;
+                    }
+                    if (injuredByName[normalizeName(player.name)]) {
+                        lineupRemovals.push({ slot: slot, name: player.name, reason: injuredByName[normalizeName(player.name)] });
+                        return null;
+                    }
+                }
+                var key = String(player.mlbId || normalizeName(player.name));
+                if (usedKeys[key]) {
+                    lineupRemovals.push({ slot: slot, name: player.name, reason: 'duplicate lineup entry' });
+                    return null;
+                }
+                usedKeys[key] = true;
+                var position = player.position || (active && active.position) || '';
+                if (!isDefensivePosition(position)) position = (active && isDefensivePosition(active.position)) ? active.position : 'DH';
                 return Object.assign({}, active || {}, {
                     name: player.name,
-                    position: player.position || (active && active.position) || '',
+                    position: position,
                     teamId: String(expectedId || ''),
-                    battingOrder: (index + 1) * 100,
+                    battingOrder: slot * 100,
                     mlbId: player.mlbId || (active && active.mlbId) || null
                 });
-            }).filter(function (player) { return player.name && !playerBlockedForTeam(team, player.name); });
+            });
+            // Hierarchy step 4: refill emptied slots ONLY from the current active
+            // roster, best available position first, never duplicating a player.
+            if (lineupRemovals.length) {
+                var bench = hitters.filter(function (p) {
+                    return !usedKeys[String(p.mlbId || normalizeName(p.name))] && !injuredByName[normalizeName(p.name)];
+                });
+                // Track which defensive spots the surviving starters already cover so a
+                // backfill does not field a second catcher / second shortstop. A bench
+                // player whose spot is taken is still eligible - he just slots in at DH.
+                var filledPositions = {};
+                orderedHitters.forEach(function (p) {
+                    if (p && isDefensivePosition(p.position) && p.position !== 'DH') filledPositions[String(p.position).toUpperCase()] = true;
+                });
+                orderedHitters = orderedHitters.map(function (player, index) {
+                    if (player) return player;
+                    // Prefer a bench bat who covers a position nobody else is playing.
+                    var pickIndex = -1;
+                    for (var b = 0; b < bench.length; b += 1) {
+                        var pos = String(bench[b].position || '').toUpperCase();
+                        if (isDefensivePosition(pos) && pos !== 'DH' && !filledPositions[pos]) { pickIndex = b; break; }
+                    }
+                    if (pickIndex === -1) pickIndex = 0;
+                    var pick = bench.splice(pickIndex, 1)[0];
+                    if (!pick) return null;
+                    usedKeys[String(pick.mlbId || normalizeName(pick.name))] = true;
+                    var pos2 = String(pick.position || '').toUpperCase();
+                    var assigned = (isDefensivePosition(pos2) && pos2 !== 'DH' && !filledPositions[pos2]) ? pos2 : 'DH';
+                    if (assigned !== 'DH') filledPositions[assigned] = true;
+                    lineupBackfills.push({ slot: index + 1, name: pick.name, position: assigned });
+                    return Object.assign({}, pick, {
+                        teamId: String(expectedId || ''),
+                        battingOrder: (index + 1) * 100,
+                        position: assigned
+                    });
+                });
+            }
+            // Hierarchy step 5: only a complete, de-duplicated 9 counts as a lineup.
+            orderedHitters = orderedHitters.filter(Boolean);
+            if (orderedHitters.length < 9) orderedHitters = [];
         }
         // Only claim a lineup-backed order when we actually applied 9 ordered hitters.
         // Otherwise fall back honestly to the active-roster (no set batting order).
@@ -902,7 +1019,20 @@
             lineupSource: labels.lineupSource,
             lineupStatus: lineupStatus,
             lineupBadge: labels.badge,
-            lineupConfirmed: lineupConfirmed
+            lineupConfirmed: lineupConfirmed,
+            // LINEUP_INTEGRITY_20260722 - hierarchy step 6: freshness + provenance.
+            rosterFeed: 'MLB Stats API /teams/' + expectedId + '/roster?rosterType=active',
+            rosterFetchedAt: Date.now(),
+            lineupFeed: lineupStatus === 'confirmed' || lineupStatus === 'posted'
+                ? 'MLB Stats API /schedule?hydrate=lineups (today)'
+                : (lineupStatus === 'recent' ? 'MLB Stats API game feed/live boxscore starters (battingOrder N00)' : 'none - active roster order'),
+            lineupFetchedAt: (recentLineup && recentLineup.fetchedAt) || Date.now(),
+            lineupSourceGamePk: (recentLineup && recentLineup.sourceGamePk) || (recentLineup && recentLineup.gamePk) || null,
+            lineupSourceGameDate: (recentLineup && recentLineup.sourceGameDate) || null,
+            lineupRemovals: lineupRemovals,
+            lineupBackfills: lineupBackfills,
+            substitutesRejected: (recentLineup && recentLineup.substitutesRejected) || [],
+            injuredCount: ((state.liveContext.teamInjured && state.liveContext.teamInjured[team && team.abbreviation]) || []).length
         });
     }
     function mlbDateString(date) {
@@ -933,7 +1063,7 @@
         if (sideId('away') === teamId) return 'away';
         return '';
     }
-    function latestFinalGame(data, team) {
+    function latestFinalGames(data, team) {
         var games = [];
         (Array.isArray(data && data.dates) ? data.dates : []).forEach(function (date) {
             (Array.isArray(date && date.games) ? date.games : []).forEach(function (game) {
@@ -941,33 +1071,96 @@
             });
         });
         games.sort(function (a, b) { return new Date(b.gameDate || b.officialDate || 0).getTime() - new Date(a.gameDate || a.officialDate || 0).getTime(); });
-        return games[0] || null;
+        return games;
+    }
+    function latestFinalGame(data, team) {
+        return latestFinalGames(data, team)[0] || null;
+    }
+    // LINEUP_INTEGRITY_20260722: a batting-order slot's position can be a
+    // non-defensive in-game role (PH pinch hitter, PR pinch runner). Never let
+    // those reach the lineup as a fielding assignment - fall back to the
+    // player's own primary position, then DH.
+    var DEFENSIVE_POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
+    var NON_DEFENSIVE_ROLE = /^(PH|PR|SUB)$/i;
+    function isDefensivePosition(pos) {
+        return DEFENSIVE_POSITIONS.indexOf(String(pos || '').toUpperCase()) !== -1;
     }
     function playerFromBoxscore(boxTeam, feed, id) {
         var key = 'ID' + id;
         var row = boxTeam && boxTeam.players && boxTeam.players[key] || null;
         var gamePlayer = feed && feed.gameData && feed.gameData.players && feed.gameData.players[key] || null;
         var person = row && row.person || gamePlayer || {};
-        var position = row && row.position || person.primaryPosition || {};
+        var primary = person.primaryPosition || (gamePlayer && gamePlayer.primaryPosition) || {};
+        var position = row && row.position || primary || {};
+        var abbr = position.abbreviation || position.name || '';
+        if (!abbr || NON_DEFENSIVE_ROLE.test(abbr)) abbr = primary.abbreviation || primary.name || abbr;
         return {
             name: person.fullName || person.nameFirstLast || person.boxscoreName || '',
-            position: position.abbreviation || position.name || '',
+            position: abbr,
             teamId: ''
         };
     }
-    function collectRecentStartingLineup(feed, team) {
+    // LINEUP_INTEGRITY_20260722 (ROOT CAUSE FIX): boxscore.teams[side].battingOrder
+    // is the END-OF-GAME occupant of each slot, NOT the player who started there.
+    // Every pinch hitter / pinch runner / defensive replacement overwrites the real
+    // starter, which is why bench players and PR/PH roles were showing up in
+    // projected lineups (verified 2026-07-22: 21/30 teams, 34 bad slots, e.g.
+    // SF slot 6 "Grant McCray (PR)" instead of Jung Hoo Lee).
+    // The authoritative starter for slot N is the player whose OWN battingOrder
+    // field is exactly N*100 (substitutes get N01, N02, ...).
+    function startersBySlotFromBoxscore(boxTeam) {
+        var bySlot = {};
+        var players = boxTeam && boxTeam.players || {};
+        Object.keys(players).forEach(function (key) {
+            var p = players[key];
+            var bo = Number(p && p.battingOrder || 0);
+            if (!bo || bo % 100 !== 0) return;
+            var slot = bo / 100;
+            if (slot < 1 || slot > 9) return;
+            if (bySlot[slot] == null) bySlot[slot] = p.person && p.person.id || null;
+        });
+        return bySlot;
+    }
+    function collectRecentStartingLineup(feed, team, gameMeta) {
         var side = teamSideInGame(feed && feed.gameData, team);
         var boxTeam = side && feed && feed.liveData && feed.liveData.boxscore && feed.liveData.boxscore.teams && feed.liveData.boxscore.teams[side];
-        var order = Array.isArray(boxTeam && boxTeam.battingOrder) ? boxTeam.battingOrder : [];
+        if (!boxTeam) return null;
+        var order = Array.isArray(boxTeam.battingOrder) ? boxTeam.battingOrder : [];
+        var starters = startersBySlotFromBoxscore(boxTeam);
         var teamId = String(MLB_TEAM_IDS[team && team.abbreviation] || '');
-        var players = order.slice(0, 9).map(function (id, index) {
+        var usedIds = {};
+        var players = [];
+        var substitutesRejected = [];
+        for (var slot = 1; slot <= 9; slot += 1) {
+            // Prefer the true starter; only fall back to the end-of-game occupant
+            // when this game's feed has no %100 batting-order entry for the slot.
+            var id = starters[slot] != null ? starters[slot] : order[slot - 1];
+            if (!id || usedIds[String(id)]) continue;
+            var endOfGameId = order[slot - 1];
+            if (starters[slot] != null && endOfGameId && String(endOfGameId) !== String(starters[slot])) {
+                var subbed = playerFromBoxscore(boxTeam, feed, endOfGameId);
+                if (subbed.name) substitutesRejected.push({ slot: slot, name: subbed.name });
+            }
             var player = playerFromBoxscore(boxTeam, feed, id);
+            if (!player.name) continue;
             player.teamId = teamId;
-            player.battingOrder = (index + 1) * 100;
+            player.battingOrder = slot * 100;
             player.mlbId = id || null;
-            return player;
-        }).filter(function (player) { return player.name && playerBelongsToTeam(player, team); });
-        return players.length >= 9 ? { players: players, source: 'Most recent game starting lineup (projected)', confirmed: false, lineupStatus: 'recent' } : null;
+            if (!playerBelongsToTeam(player, team)) continue;
+            usedIds[String(id)] = true;
+            players.push(player);
+        }
+        if (players.length < 9) return null;
+        return {
+            players: players,
+            source: 'Most recent game starting lineup (projected)',
+            confirmed: false,
+            lineupStatus: 'recent',
+            sourceGamePk: gameMeta && gameMeta.gamePk || null,
+            sourceGameDate: gameMeta && gameMeta.officialDate || null,
+            fetchedAt: Date.now(),
+            substitutesRejected: substitutesRejected
+        };
     }
     function fetchRecentStartingLineup(team) {
         return fetchTodaysSchedule().then(function (sched) {
@@ -975,11 +1168,27 @@
             if (todays && Array.isArray(todays.players) && todays.players.length >= 9) return todays;
             var url = recentLineupUrl(team);
             if (!url) return null;
+            // LINEUP_INTEGRITY_20260722 - hierarchy step 2: the most recent VALID
+            // starting lineup. The schedule feed sometimes reports a game that has
+            // NOT been played yet as abstractGameState 'Final' (its live feed is
+            // still 'Preview' with an empty boxscore). Taking only the single
+            // newest "Final" game therefore silently produced NO lineup at all and
+            // dropped the team to the unordered active-roster fallback (observed
+            // 2026-07-22 for BAL, BOS, NYY, PIT). So walk back through recent
+            // finals and keep the first one that actually yields nine starters.
             return fetchJson(url, { cache: 'no-store' }).then(function (schedule) {
-                var game = latestFinalGame(schedule, team);
-                if (!game || !game.link) return null;
-                var feedUrl = /^https?:\/\//.test(game.link) ? game.link : 'https://statsapi.mlb.com' + game.link;
-                return fetchJson(feedUrl, { cache: 'no-store' }).then(function (feed) { return collectRecentStartingLineup(feed, team); });
+                var games = latestFinalGames(schedule, team).filter(function (g) { return g && g.link; }).slice(0, MAX_LINEUP_LOOKBACK_GAMES);
+                if (!games.length) return null;
+                function tryGame(index) {
+                    if (index >= games.length) return Promise.resolve(null);
+                    var game = games[index];
+                    var feedUrl = /^https?:\/\//.test(game.link) ? game.link : 'https://statsapi.mlb.com' + game.link;
+                    return fetchJson(feedUrl, { cache: 'no-store' }).then(function (feed) {
+                        var lineup = collectRecentStartingLineup(feed, team, game);
+                        return lineup || tryGame(index + 1);
+                    }).catch(function () { return tryGame(index + 1); });
+                }
+                return tryGame(0);
             });
         }).catch(function () {
             return null;
@@ -1101,16 +1310,26 @@
         // path — keep caching it unchanged). A pre-game FALLBACK ("recent" last-game
         // order or active-roster) is only cached briefly, so once MLB posts today's
         // lineup a later Run picks it up instead of showing the old lineup forever.
-        if (cachedRoster && cachedRoster.uiBuild === UI_BUILD) {
+        // LINEUP_INTEGRITY_20260722: a cached lineup is also dropped when today's
+        // transaction list changes (a call-up/option/IL move/trade made mid-day),
+        // and a confirmed lineup is no longer cached forever - it re-validates
+        // against the active roster at least every TRANSACTIONS_TTL_MS.
+        if (cachedRoster && cachedRoster.uiBuild === UI_BUILD && cachedRoster.txnSignature === transactionSignature(team)) {
             var isTodayLineup = cachedRoster.lineupStatus === 'confirmed' || cachedRoster.lineupStatus === 'posted';
-            if (isTodayLineup || (Date.now() - (cachedRoster.fetchedAt || 0)) < TODAY_SCHEDULE_TTL_MS) return Promise.resolve(cachedRoster);
+            var age = Date.now() - (cachedRoster.fetchedAt || 0);
+            if (age < (isTodayLineup ? TRANSACTIONS_TTL_MS : TODAY_SCHEDULE_TTL_MS)) return Promise.resolve(cachedRoster);
         }
         var url = teamRosterUrl(team);
         if (!url) return Promise.resolve(null);
+        // LINEUP_INTEGRITY_20260722: the injured list and today's transactions must
+        // land BEFORE the lineup is assembled - they are inputs to the validation
+        // stage, not after-the-fact decoration (they used to be fired afterwards,
+        // so the first build of every lineup ran with an empty IL).
         return Promise.all([
             fetchJson(url, { cache: 'no-store' }),
-            fetchRecentStartingLineup(team),
-            fetchTodaysSchedule()
+            fetchInjuredRoster(team).then(function () { return fetchRecentStartingLineup(team); }),
+            fetchTodaysSchedule(),
+            fetchTodaysTransactions(team)
         ]).then(function (results) {
             var roster = collectMlbTeamRoster(results[0], team, results[1]);
             var probable = results[2] ? todaysProbableStarterForTeam(results[2].games, team) : null;
@@ -1118,9 +1337,10 @@
                 roster.uiBuild = UI_BUILD;
                 roster.fetchedAt = Date.now();
                 roster.todayProbableStarter = probable || null;
+                roster.todayTransactions = results[3] || [];
+                roster.txnSignature = transactionSignature(team);
             }
             state.liveContext.teamRosters[team.abbreviation] = roster;
-            fetchInjuredRoster(team);
             // Wait for the real season stats so the simulation and the pitcher
             // dropdowns use verified numbers, then upgrade any labels already
             // rendered with baseline profiles (REAL_ERA_LABELS_20260606).
@@ -1865,8 +2085,51 @@
         return {
             status: roster.lineupStatus || 'roster',
             badge: roster.lineupBadge || 'Active roster fallback (not a set batting order)',
-            confirmed: !!roster.lineupConfirmed
+            confirmed: !!roster.lineupConfirmed,
+            // LINEUP_INTEGRITY_20260722 - hierarchy step 6 (freshness + provenance)
+            rosterFeed: roster.rosterFeed || null,
+            rosterFetchedAt: roster.rosterFetchedAt || roster.fetchedAt || null,
+            lineupFeed: roster.lineupFeed || null,
+            lineupFetchedAt: roster.lineupFetchedAt || null,
+            lineupSourceGamePk: roster.lineupSourceGamePk || null,
+            lineupSourceGameDate: roster.lineupSourceGameDate || null,
+            removals: roster.lineupRemovals || [],
+            backfills: roster.lineupBackfills || [],
+            substitutesRejected: roster.substitutesRejected || [],
+            todayTransactions: roster.todayTransactions || []
         };
+    }
+    // LINEUP_INTEGRITY_20260722: human-readable "how fresh is this" line.
+    function lineupFreshnessNote(info) {
+        if (!info) return '';
+        var bits = [];
+        function ago(ts) {
+            if (!ts) return null;
+            var mins = Math.max(0, Math.round((Date.now() - ts) / 60000));
+            return mins < 1 ? 'just now' : (mins < 60 ? mins + ' min ago' : Math.round(mins / 60) + ' hr ago');
+        }
+        var rAgo = ago(info.rosterFetchedAt);
+        if (info.rosterFeed) bits.push('Active roster: ' + info.rosterFeed + (rAgo ? ' (refreshed ' + rAgo + ')' : ''));
+        var lAgo = ago(info.lineupFetchedAt);
+        if (info.lineupFeed) {
+            bits.push('Lineup: ' + info.lineupFeed +
+                (info.lineupSourceGameDate ? ', game ' + info.lineupSourceGameDate : '') +
+                (info.lineupSourceGamePk ? ' #' + info.lineupSourceGamePk : '') +
+                (lAgo ? ' (refreshed ' + lAgo + ')' : ''));
+        }
+        if (info.substitutesRejected && info.substitutesRejected.length) {
+            bits.push('In-game substitutes excluded: ' + info.substitutesRejected.map(function (s) { return s.name + ' (slot ' + s.slot + ')'; }).join(', '));
+        }
+        if (info.removals && info.removals.length) {
+            bits.push('Removed as inactive: ' + info.removals.map(function (r) { return r.name + ' - ' + r.reason; }).join('; '));
+        }
+        if (info.backfills && info.backfills.length) {
+            bits.push('Backfilled from active roster: ' + info.backfills.map(function (b) { return b.name + ' (slot ' + b.slot + ')'; }).join(', '));
+        }
+        if (info.todayTransactions && info.todayTransactions.length) {
+            bits.push('Same-day transactions detected: ' + info.todayTransactions.length);
+        }
+        return bits.join(' | ');
     }
     function modeledPlayerBox(away, home, awayLine, homeLine, awayPitcher, homePitcher, random, rosterContext) {
         var awayRoster = rosterForTeam(away, rosterContext && rosterContext.away);
@@ -4124,7 +4387,9 @@
         if (!hasBatters) {
             return '<section class="player-team-box">' + headerLabel + '<p class="player-source-note">Roster source: ' + escapeHtml(source) + '.</p><div class="sim-empty">Lineup unavailable. Verified roster data could not be loaded.</div></section>';
         }
-        return '<section class="player-team-box">' + headerLabel + '<p class="player-source-note">Lineup source: ' + escapeHtml(source) + '.</p>' +
+        var freshness = lineupFreshnessNote(players && players.lineupStatus);
+        var freshnessHtml = freshness ? '<p class="player-source-note lineup-freshness-note">' + escapeHtml(freshness) + '</p>' : '';
+        return '<section class="player-team-box">' + headerLabel + '<p class="player-source-note">Lineup source: ' + escapeHtml(source) + '.</p>' + freshnessHtml +
             '<div class="player-table-wrap"><table class="player-box-table"><thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>SO</th><th>LOB</th><th>AVG</th><th>OPS</th></tr></thead><tbody>' + batterTableRows(players.batters) + '</tbody></table></div></section>';
     }
     function pitchingTableSection(team, players, isWinner, margin, ctx) {
@@ -4958,6 +5223,14 @@
         collectMlbTeamRoster: collectMlbTeamRoster,
         todaysLineupForTeam: todaysLineupForTeam,
         teamRosterUrl: teamRosterUrl,
+        // LINEUP_INTEGRITY_20260722 verification hooks (read-only)
+        collectRecentStartingLineup: collectRecentStartingLineup,
+        startersBySlotFromBoxscore: startersBySlotFromBoxscore,
+        fetchRecentStartingLineup: fetchRecentStartingLineup,
+        fetchTodaysTransactions: fetchTodaysTransactions,
+        fetchInjuredRoster: fetchInjuredRoster,
+        lineupFreshnessNote: lineupFreshnessNote,
+        lineupStatusFor: lineupStatusFor,
         // Test-only hook (additive, no runtime effect): lets the offline validation
         // harness drive the plate-appearance engine with controlled inputs and read
         // raw per-game accumulators for integrity + distribution calibration.
