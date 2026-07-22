@@ -391,8 +391,8 @@ def page_html(t, posts):
 <meta name="twitter:image" content="{og_card}">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css">
-<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav3">
-<script defer src="/static/js/tmr-linkhub.js?v=20260721nav3"></script>
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">
+<script defer src="/static/js/tmr-linkhub.js?v=20260721nav4"></script>
 <link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
 <script defer src="/static/js/tmr-share.js?v=20260721share1"></script>
 <script type="application/ld+json">
@@ -565,8 +565,8 @@ def cat_page_html(cat, cat_threads):
 <meta name="twitter:card" content="summary">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css">
-<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav3">
-<script defer src="/static/js/tmr-linkhub.js?v=20260721nav3"></script>
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">
+<script defer src="/static/js/tmr-linkhub.js?v=20260721nav4"></script>
 <script type="application/ld+json">
 {ld_json}
 </script>

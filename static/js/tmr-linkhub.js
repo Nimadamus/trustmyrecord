@@ -695,11 +695,27 @@
             .observe(document.body, { childList: true, subtree: true });
     }
 
-    /* The two existing shells append their footer on DOMContentLoaded, so this
-       runs after load and stands down the moment any footer exists. */
-    function mountFooter() {
-        if (qs('.tmr-global-footer, .ds-footer, .tmrlh-footer') || qs('footer')) return;
-        document.body.appendChild(buildFooter());
+
+    /* Reconciles rather than fires once. tmr-sitewide.js and tmr-ds-nav.js append
+       their footer on their own schedule, and on a hydrating page (a /u/ profile
+       on mobile) that can land AFTER ours — which shipped two stacked footers.
+       So: if a native footer exists, ours is removed; if none exists, ours is
+       added. Safe to call repeatedly. */
+    function nativeFooter() {
+        var all = document.querySelectorAll('footer');
+        for (var i = 0; i < all.length; i++) {
+            if (!all[i].closest('.tmrlh-footwrap')) return all[i];
+        }
+        return null;
+    }
+
+    function syncFooter() {
+        var ours = qs('.tmrlh-footwrap');
+        if (nativeFooter()) {
+            if (ours && ours.parentNode) ours.parentNode.removeChild(ours);
+            return;
+        }
+        if (!ours) document.body.appendChild(buildFooter());
     }
 
     function ready(fn) {
@@ -714,9 +730,23 @@
         try { mountCrumbs(); } catch (e) { /* never break the page */ }
         try { mountRelated(); } catch (e) {}
 
+        /* A settling window on top of the observer. The forum board can finish
+           rendering with no further DOM mutations, and a hydrating profile can
+           append its own footer seconds after load — an observer alone left
+           /forum/ with no crumb and /u/ on mobile with two footers in a live
+           run. Fifteen one-second reconciles cover both, then it goes quiet and
+           the observer handles later in-app navigation. */
         var late = function () {
-            try { mountFooter(); } catch (e) {}
+            try { syncFooter(); } catch (e) {}
             try { watchCrumbs(); } catch (e) {}
+
+            var ticks = 0;
+            var timer = setInterval(function () {
+                ticks++;
+                try { syncFooter(); } catch (e) {}
+                try { scheduleCrumbCheck(); } catch (e) {}
+                if (ticks >= 15) clearInterval(timer);
+            }, 1000);
         };
         if (document.readyState === 'complete') setTimeout(late, 400);
         else window.addEventListener('load', function () { setTimeout(late, 400); });
