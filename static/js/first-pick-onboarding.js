@@ -113,7 +113,8 @@
     // when the answer cannot be determined (never guess "eligible" on error —
     // an existing user must not be shown a new-user prompt because the API
     // hiccuped).
-    function fetchActivationStatus() {
+    function fetchActivationStatus(attempt) {
+        attempt = attempt || 1;
         if (!window.api || typeof window.api.request !== 'function') return Promise.resolve(null);
         var ready = window.api.ready && typeof window.api.ready.then === 'function'
             ? window.api.ready.catch(function () {})
@@ -124,7 +125,15 @@
             if (!data || typeof data.hasPicks !== 'boolean') return null;
             return data;
         }).catch(function (err) {
-            log('activation-status failed', err && err.message);
+            var msg = (err && err.message) || '';
+            log('activation-status failed (attempt ' + attempt + ')', msg);
+            // Busy pages (profile especially) can trip the 120 req/min limit
+            // before this call lands. One delayed retry, then give up quietly.
+            if (attempt < 2 && /too many requests|429|rate/i.test(msg)) {
+                return new Promise(function (resolve) {
+                    setTimeout(function () { resolve(fetchActivationStatus(attempt + 1)); }, 4000);
+                });
+            }
             return null;
         });
     }
