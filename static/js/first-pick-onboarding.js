@@ -199,17 +199,17 @@
             '50%{box-shadow:0 0 0 12px rgba(0,255,255,0);}}',
             '@media(prefers-reduced-motion:reduce){.tmr-fp-highlight{animation:none;}}',
             /* small reminder strip */
-            '.tmr-fp-reminder{display:flex;align-items:center;gap:12px;flex-wrap:wrap;',
-            'max-width:1180px;margin:12px auto;padding:11px 15px;border-radius:12px;',
-            'background:linear-gradient(90deg,rgba(0,255,255,0.09),rgba(10,17,24,0.92));',
+            '.tmr-fp-reminder{position:relative;display:flex;align-items:center;gap:12px;flex-wrap:wrap;',
+            'max-width:1180px;margin:12px auto;padding:11px 44px 11px 15px;border-radius:12px;',
+            'background:linear-gradient(90deg,rgba(0,110,124,0.30),rgba(10,17,24,0.97));',
             'border:1px solid rgba(0,255,255,0.26);color:#dbe6f3;font:600 0.92rem/1.4 Inter,sans-serif;}',
             '.tmr-fp-reminder__icon{flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:flex;',
             'align-items:center;justify-content:center;background:rgba(0,255,255,0.14);color:#67e8f9;font-size:14px;}',
             '.tmr-fp-reminder__text{flex:1 1 200px;}',
             '.tmr-fp-reminder__text strong{color:#f8fafc;font-weight:800;}',
             '.tmr-fp-reminder .tmr-fp-btn{padding:9px 16px;font-size:0.85rem;}',
-            '.tmr-fp-reminder__close{flex:0 0 auto;background:transparent;border:0;color:#7f8ea6;font-size:18px;',
-            'line-height:1;cursor:pointer;padding:4px 6px;}',
+            '.tmr-fp-reminder__close{position:absolute;top:8px;right:10px;background:transparent;border:0;',
+            'color:#7f8ea6;font-size:18px;line-height:1;cursor:pointer;padding:4px 6px;}',
             '#tmr-fp-reminder .tmr-fp-reminder__close{background:transparent !important;border:0 !important;',
             'box-shadow:none !important;color:#7f8ea6 !important;}',
             '.tmr-fp-reminder__close:hover{color:#e2e8f0 !important;}',
@@ -526,12 +526,18 @@
         showFirstPickModal();
     }
 
+    // Abandonment = they were on the sportsbook, saw the prompt, and left
+    // without locking anything. Fired at most once per session, otherwise
+    // every page-to-page navigation would report another abandonment.
     function markAbandoned() {
         if (state.abandonSent || state.submitted || !state.eligible || !state.viewed) return;
+        if (!isSportsbook()) return;
+        if (sessionFlags().abandonSent) { state.abandonSent = true; return; }
         state.abandonSent = true;
+        setSessionFlag('abandonSent', true);
         track('first_pick_abandoned', {
             reached_pick_entry: state.started ? 'yes' : 'no',
-            surface: isSportsbook() ? 'sportsbook' : 'sitewide'
+            surface: 'sportsbook'
         });
     }
 
