@@ -82,8 +82,16 @@ const DEF = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH'];
 
   for (const t of teams) {
     if (ONLY && ONLY.indexOf(t.abbreviation) === -1) continue;
+    // statsapi throttles bursts, so a single miss is not a real failure. Retry the
+    // whole team a few times (clearing the cached null) before declaring it down.
     let roster = null, err = null;
-    try { roster = await SIM.fetchTeamRoster(t); } catch (e) { err = e.message; }
+    for (let attempt = 1; attempt <= 4 && !roster; attempt++) {
+      try { roster = await SIM.fetchTeamRoster(t); } catch (e) { err = e.message; }
+      if (!roster) {
+        if (SIM.state.liveContext.teamRosters) delete SIM.state.liveContext.teamRosters[t.abbreviation];
+        if (attempt < 4) await new Promise(s => setTimeout(s, 1500 * attempt));
+      }
+    }
     if (!roster) {
       report.teams[t.abbreviation] = { ok: false, error: err || 'roster unavailable' };
       console.log(`${t.abbreviation.padEnd(4)} FAIL  ${err || 'roster unavailable'}`);
