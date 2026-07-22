@@ -1107,7 +1107,7 @@
         .categories-grid { gap: 18px !important; }
 
         /* ===================== TRIVIA v3 ===================== */
-        .stats-bar--six { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
+        .stats-bar--six { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
         @media (max-width: 900px) { .stats-bar--six { grid-template-columns:repeat(3,1fr); } }
         @media (max-width: 520px) { .stats-bar--six { grid-template-columns:repeat(2,1fr); } }
 
@@ -1613,6 +1613,14 @@
         <div class="stat-box">
             <div class="stat-value" id="statAvgTime">--</div>
             <div class="stat-label">Avg Response</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="statGames">0</div>
+            <div class="stat-label">Games Played</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-value" id="statBestGame">0</div>
+            <div class="stat-label">Best Game</div>
         </div>
     </div>
 
@@ -2848,10 +2856,13 @@ async function renderLeaderboard() {
             else primary = (Number(entry[board.metric]) || 0).toLocaleString() + board.suffix;
 
             var secondaryBits = [];
-            if (entry.attempts != null) secondaryBits.push(entry.attempts + ' attempts');
+            if (entry.games_played != null) secondaryBits.push(entry.games_played + ' game' + (Number(entry.games_played) === 1 ? '' : 's'));
+            if (entry.attempts != null) secondaryBits.push(entry.attempts + ' questions');
             if (entry.correct != null) secondaryBits.push(entry.correct + ' correct');
+            if (entry.accuracy != null && board.metric !== 'accuracy') secondaryBits.push(Number(entry.accuracy).toFixed(1) + '% accuracy');
+            if (entry.points_per_question != null) secondaryBits.push(Number(entry.points_per_question).toFixed(1) + ' pts/question');
             if (entry.best_streak != null && board.metric !== 'best_streak') secondaryBits.push('best streak ' + entry.best_streak);
-            if (entry.points != null && board.metric !== 'points') secondaryBits.push(entry.points + ' pts');
+            if (entry.points != null && board.metric !== 'points') secondaryBits.push(Number(entry.points).toLocaleString() + ' pts');
             if (board.metric === 'avg_response_ms' && entry.best_response_ms != null) secondaryBits.push('best ' + fmtMs(entry.best_response_ms));
 
             return '<div class="lb-row">' +
@@ -3358,7 +3369,7 @@ async function renderCustomQuestionsList() {
 // ================================================================
 async function loadUserStats() {
     var ids = ['statTotalPoints', 'statQuestionsAnswered', 'statQuestionsCorrect',
-               'statAccuracy', 'statStreak', 'statAvgTime'];
+               'statAccuracy', 'statStreak', 'statAvgTime', 'statGames', 'statBestGame'];
     function set(id, v) { var el = document.getElementById(id); if (el) el.textContent = v; }
     function zero() { ids.forEach(function (i) { set(i, i === 'statAccuracy' ? '0%' : i === 'statAvgTime' ? '--' : '0'); }); }
 
@@ -3374,6 +3385,8 @@ async function loadUserStats() {
         set('statAccuracy', (Number(st.accuracy) || 0).toFixed(1) + '%');
         set('statStreak', Number(st.current_streak) || 0);
         set('statAvgTime', st.avg_response_ms ? (st.avg_response_ms / 1000).toFixed(1) + 's' : '--');
+        set('statGames', Number(st.games_played) || 0);
+        set('statBestGame', (Number(st.best_game_score) || 0).toLocaleString());
     } catch (e) {
         console.error('Failed to load user stats:', e);
         zero();

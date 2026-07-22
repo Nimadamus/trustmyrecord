@@ -204,6 +204,8 @@
                 stat((Number(s.points_per_correct) || 0).toFixed(1), 'Pts / Correct') +
                 stat(fmtMs(s.avg_response_ms), 'Avg Response') +
                 stat(fmtMs(s.best_response_ms), 'Best Response') +
+                stat(s.games_played || 0, 'Games Played') +
+                stat((Number(s.best_game_score) || 0).toLocaleString(), 'Best Game') +
                 stat(s.forfeited || 0, 'Forfeited') +
                 stat(s.expired || 0, 'Expired');
 
