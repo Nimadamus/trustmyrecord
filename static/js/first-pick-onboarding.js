@@ -148,9 +148,16 @@
             'border-radius:11px;font:800 0.95rem/1 Barlow,Inter,sans-serif;letter-spacing:.02em;cursor:pointer;',
             'border:1px solid transparent;text-decoration:none;transition:transform .14s ease,box-shadow .14s ease;}',
             '.tmr-fp-btn:hover{transform:translateY(-2px);}',
-            '.tmr-fp-btn--primary{background:linear-gradient(135deg,#00ffff,#67e8f9);color:#04111a;',
-            'box-shadow:0 12px 30px rgba(0,255,255,0.24);}',
-            '.tmr-fp-btn--ghost{background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.16);color:#dbe6f3;}',
+            // ID-scoped + !important on purpose: the sportsbook ships
+            // `body button:not(...):not(...) { background: ... !important }`,
+            // which out-specifies any plain class rule and would repaint these
+            // CTAs as flat navy. Only an id in the selector reliably wins.
+            '#tmr-fp-panel .tmr-fp-btn--primary,#tmr-fp-modal .tmr-fp-btn--primary,',
+            '#tmr-fp-reminder .tmr-fp-btn--primary{background:linear-gradient(135deg,#00ffff,#67e8f9) !important;',
+            'color:#04111a !important;box-shadow:0 12px 30px rgba(0,255,255,0.24) !important;text-decoration:none !important;}',
+            '#tmr-fp-panel .tmr-fp-btn--ghost,#tmr-fp-modal .tmr-fp-btn--ghost,',
+            '#tmr-fp-reminder .tmr-fp-btn--ghost{background:rgba(255,255,255,0.05) !important;',
+            'border-color:rgba(255,255,255,0.16) !important;color:#dbe6f3 !important;text-decoration:none !important;}',
             '.tmr-fp-steps{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px;padding-top:18px;',
             'border-top:1px solid rgba(255,255,255,0.08);}',
             '.tmr-fp-step{flex:1 1 190px;display:flex;align-items:flex-start;gap:10px;padding:11px 13px;border-radius:11px;',
@@ -158,8 +165,9 @@
             '.tmr-fp-step__dot{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:flex;align-items:center;',
             'justify-content:center;font:900 11px/1 Inter,sans-serif;background:rgba(255,255,255,0.08);color:#8ea0bc;',
             'border:1px solid rgba(255,255,255,0.12);}',
-            '.tmr-fp-step__label{font:800 9.5px/1 Inter,sans-serif;letter-spacing:.13em;text-transform:uppercase;color:#7f8ea6;}',
-            '.tmr-fp-step__name{margin-top:5px;font:700 13px/1.3 Inter,sans-serif;color:#cbd5e1;}',
+            '.tmr-fp-step__label{display:block;font:800 9.5px/1 Inter,sans-serif;letter-spacing:.13em;',
+            'text-transform:uppercase;color:#7f8ea6;}',
+            '.tmr-fp-step__name{display:block;margin-top:5px;font:700 13px/1.3 Inter,sans-serif;color:#cbd5e1;}',
             '.tmr-fp-step--done{border-color:rgba(74,222,128,0.34);background:rgba(74,222,128,0.07);}',
             '.tmr-fp-step--done .tmr-fp-step__dot{background:#22c55e;border-color:#22c55e;color:#04240f;}',
             '.tmr-fp-step--done .tmr-fp-step__label{color:#4ade80;}',
@@ -193,7 +201,9 @@
             '.tmr-fp-reminder .tmr-fp-btn{padding:9px 16px;font-size:0.85rem;}',
             '.tmr-fp-reminder__close{flex:0 0 auto;background:transparent;border:0;color:#7f8ea6;font-size:18px;',
             'line-height:1;cursor:pointer;padding:4px 6px;}',
-            '.tmr-fp-reminder__close:hover{color:#e2e8f0;}',
+            '#tmr-fp-reminder .tmr-fp-reminder__close{background:transparent !important;border:0 !important;',
+            'box-shadow:none !important;color:#7f8ea6 !important;}',
+            '.tmr-fp-reminder__close:hover{color:#e2e8f0 !important;}',
             '@media(max-width:640px){.tmr-fp-reminder{margin:10px 12px;}.tmr-fp-reminder .tmr-fp-btn{flex:1 1 100%;}}',
             /* confirmation modal */
             '.tmr-fp-modal{position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;',
@@ -298,7 +308,54 @@
         return candidates.find(function (el) { return !!el; }) || null;
     }
 
-    function goToGames() {
+    function boardHasGames() {
+        var body = document.getElementById('lobbyBoardRows');
+        if (body && body.querySelector('.sportsbook-game-card')) return true;
+        var list = document.getElementById('gamesListContainer');
+        return !!(list && list.querySelector('.games-board-wrap, .sportsbook-game-card'));
+    }
+
+    // The lobby defaults to NBA, which is empty for most of the year. Telling a
+    // brand-new user to "choose a game below" and then showing them an empty
+    // board is the whole failure this flow exists to fix, so probe the boards
+    // and switch to one that actually has games today.
+    function ensureBoardWithGames() {
+        if (boardHasGames()) return Promise.resolve(false);
+        if (!window.api || !window.api.baseUrl) return Promise.resolve(false);
+
+        var order = ['MLB', 'WNBA', 'NBASummer', 'NFL', 'NCAAF', 'NHL', 'NCAAB', 'NBA', 'Soccer'];
+        var keyMap = (window.TMR && window.TMR.sportKeyMap) || {};
+        var probes = order
+            .filter(function (s) { return !!keyMap[s]; })
+            .map(function (sport) {
+                return fetch(window.api.baseUrl + '/games/board/' + encodeURIComponent(keyMap[sport]) + '?limit=5')
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (j) {
+                        return { sport: sport, count: (j && Array.isArray(j.games)) ? j.games.length : 0 };
+                    })
+                    .catch(function () { return { sport: sport, count: 0 }; });
+            });
+
+        return Promise.all(probes).then(function (results) {
+            var bySport = {};
+            results.forEach(function (r) { bySport[r.sport] = r.count; });
+            var chosen = null;
+            for (var i = 0; i < order.length; i++) {
+                if (bySport[order[i]] > 0) { chosen = order[i]; break; }
+            }
+            if (!chosen) return false;
+            var btn = document.querySelector('.sportsbook-rail-board[data-sport="' + chosen + '"]');
+            if (btn) { btn.click(); }
+            else if (typeof window.__tmrSelectSportBoard === 'function') { window.__tmrSelectSportBoard(chosen); }
+            else if (typeof window.TMR.setSport === 'function') { window.TMR.setSport(chosen); }
+            else { return false; }
+            log('switched board to ' + chosen + ' (' + bySport[chosen] + ' games)');
+            // Give the board a moment to paint before we scroll to it.
+            return new Promise(function (resolve) { setTimeout(function () { resolve(true); }, 900); });
+        }).catch(function () { return false; });
+    }
+
+    function scrollAndHighlight() {
         var target = findGamesArea();
         if (!target) return;
         var highlightEl = target.closest ? (target.closest('.sportsbook-board-shell') || target) : target;
@@ -309,6 +366,13 @@
         }
         highlightEl.classList.add('tmr-fp-highlight');
         setTimeout(function () { highlightEl.classList.remove('tmr-fp-highlight'); }, 4200);
+    }
+
+    function goToGames() {
+        scrollAndHighlight();
+        ensureBoardWithGames().then(function (switched) {
+            if (switched) scrollAndHighlight();
+        });
     }
 
     function collapsePanelToReminder() {
