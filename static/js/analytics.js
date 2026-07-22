@@ -469,6 +469,11 @@
         },
 
         firstPickSubmitted: function (params) {
+            // Two independent detectors can see the same first lock (this
+            // fetch interceptor and first-pick-onboarding.js watching the
+            // board's confirmation step). Emit the event exactly once.
+            if (window.__tmrFirstPickSubmittedSent) return;
+            window.__tmrFirstPickSubmittedSent = true;
             trackEvent('first_pick_submitted', {
                 sport: params?.sport || 'unknown',
                 pick_type: params?.pick_type || 'unknown',

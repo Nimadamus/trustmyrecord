@@ -497,9 +497,21 @@
         if (state.submitted) return;
         state.submitted = true;
         state.eligible = false;
+
+        // analytics.js has its own first-pick detector on the POST /picks
+        // response. It flips tmr_has_posted_pick to '1' right after it emits,
+        // so if the flag is already set by the time the board reaches its
+        // confirmation step, the event has been sent and we must not repeat it.
+        var alreadySent = false;
+        try { alreadySent = localStorage.getItem(LS_ACTIVATED) === '1'; } catch (e) {}
+        if (window.__tmrFirstPickSubmittedSent) alreadySent = true;
+
         try { localStorage.setItem(LS_ACTIVATED, '1'); } catch (e) {}
         setSessionFlag('submitted', true);
-        track('first_pick_submitted', meta || {});
+        if (!alreadySent) {
+            window.__tmrFirstPickSubmittedSent = true;
+            track('first_pick_submitted', meta || {});
+        }
         removePanel();
         removeReminder();
         showFirstPickModal();
