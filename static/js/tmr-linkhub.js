@@ -408,6 +408,7 @@
         nav.className = 'tmrlh-crumbs';
         nav.setAttribute('aria-label', 'Breadcrumb');
         nav.setAttribute('data-tmr-linkhub', 'crumbs');
+        nav.setAttribute('data-path', location.pathname);
         nav.innerHTML = html;
         return nav;
     }
@@ -424,6 +425,41 @@
 
     /* A page that already has a trail keeps it — we only guarantee the home
        link is the first thing in it. */
+    function visible(el) {
+        if (!el) return false;
+        var r = el.getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+    }
+
+    /* True only when a home crumb is actually on screen. An adopted trail that
+       the host app has since hidden does not count. */
+    function haveVisibleCrumbs() {
+        var own = qs('.tmrlh-crumbs');
+        /* The forum app pushState's between boards without a reload, so a bar
+           built for the old path is stale and has to be rebuilt. */
+        if (own && own.getAttribute('data-path') !== location.pathname) {
+            if (own.parentNode) own.parentNode.removeChild(own);
+            own = null;
+        }
+        if (visible(own)) return true;
+        var a = qs('.tmrlh-adopted');
+        /* The forum app rewrites .fcrumb's innerHTML on every view change, which
+           wipes the home link but leaves our marker class on the node — so the
+           marker alone is not proof the crumb is still there. */
+        return visible(a) && !!a.querySelector('.tmrlh-home-inline');
+    }
+
+    /* Drop the marker from a trail we adopted that is no longer rendered, so the
+       next attempt is free to inject our own bar instead. */
+    function releaseHiddenAdoption() {
+        var a = qs('.tmrlh-adopted');
+        if (a && !visible(a)) {
+            a.classList.remove('tmrlh-adopted');
+            var inline = a.querySelector('.tmrlh-home-inline');
+            if (inline && inline.parentNode) inline.parentNode.remove();
+        }
+    }
+
     function adoptExistingCrumbs(existing) {
         if (existing.querySelector('.tmrlh-home-inline')) return;
         var first = existing.querySelector('a');
@@ -562,18 +598,24 @@
         var segs = segments();
         var t = tone(contentHost());
 
-        /* Visibility matters: the forum shell ships a .fcrumb node that stays
-           display:none on the board index and is only filled in on a thread
-           view. Adopting a hidden trail would silently swallow the home crumb on
-           /forum/ itself. */
+        /* Visibility matters: the forum shell ships a .fcrumb node that is only
+           populated on a thread view and is display:none on the board index —
+           and it is still measurable at DOMContentLoaded, before the app hides
+           it. Adopting it silently swallowed the home crumb on /forum/. So we
+           only adopt trails that are rendered, and we hand back an adoption the
+           app has since hidden. */
+        releaseHiddenAdoption();
+
         var existing = null;
         var candidates = document.querySelectorAll(EXISTING_CRUMB_SEL);
         for (var ci = 0; ci < candidates.length; ci++) {
-            var rect = candidates[ci].getBoundingClientRect();
-            if (rect.width > 0 && rect.height > 0) { existing = candidates[ci]; break; }
+            if (visible(candidates[ci])) { existing = candidates[ci]; break; }
         }
 
         if (existing) {
+            /* The host app rendered its own trail — ours would be a duplicate. */
+            var ours = qs('.tmrlh-crumbs');
+            if (ours && ours.parentNode) ours.parentNode.removeChild(ours);
             adoptExistingCrumbs(existing);
         } else if (segs.length && !qs('.tmrlh-crumbs')) {
             var bar = buildCrumbs();
@@ -628,12 +670,29 @@
        breadcrumb with them. Re-mount a bounded number of times so the home crumb
        survives that swap; each attempt adopts the app's own trail if it has one,
        so this can never stack two breadcrumbs. */
-    function remountCrumbs(attempt) {
-        if (qs('.tmrlh-crumbs, .tmrlh-adopted')) return;
-        try { mountCrumbs(); } catch (e) {}
-        if (attempt < 2 && !qs('.tmrlh-crumbs, .tmrlh-adopted')) {
-            setTimeout(function () { remountCrumbs(attempt + 1); }, 900);
-        }
+    /* The forum and profile shells replace their content — and rewrite their own
+       breadcrumb — on every in-app view change, long after load. Rather than
+       guess at a settling time, watch the document and restore the home crumb
+       whenever it goes missing. Debounced, and a no-op the moment a visible home
+       crumb exists, so a busy board costs one cheap selector check. */
+    var crumbCheckPending = false;
+
+    function scheduleCrumbCheck() {
+        if (crumbCheckPending) return;
+        crumbCheckPending = true;
+        setTimeout(function () {
+            crumbCheckPending = false;
+            if (!haveVisibleCrumbs()) {
+                try { mountCrumbs(); } catch (e) {}
+            }
+        }, 400);
+    }
+
+    function watchCrumbs() {
+        scheduleCrumbCheck();
+        if (typeof MutationObserver !== 'function') return;
+        new MutationObserver(scheduleCrumbCheck)
+            .observe(document.body, { childList: true, subtree: true });
     }
 
     /* The two existing shells append their footer on DOMContentLoaded, so this
@@ -657,7 +716,7 @@
 
         var late = function () {
             try { mountFooter(); } catch (e) {}
-            setTimeout(function () { remountCrumbs(0); }, 700);
+            try { watchCrumbs(); } catch (e) {}
         };
         if (document.readyState === 'complete') setTimeout(late, 400);
         else window.addEventListener('load', function () { setTimeout(late, 400); });

@@ -71,11 +71,11 @@ DS_HEAD = (
     f'<link rel="stylesheet" href="{_DS_CSS}">\n'
     f'<link rel="stylesheet" href="{_DS_USER_CSS}">\n'
     # NAV_20260721: shared breadcrumb / related-links / footer component.
-    '<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav2">'
+    '<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav3">'
 )
 # Shared nav + footer, so these pages are no longer chrome-less dead ends.
 DS_FOOT = (f'<script src="{_DS_NAV}"></script>'
-           '<script defer src="/static/js/tmr-linkhub.js?v=20260721nav2"></script>')
+           '<script defer src="/static/js/tmr-linkhub.js?v=20260721nav3"></script>')
 
 # ---------------------------------------------------------------------------
 # SHARE_SYSTEM_PHASE1_20260721
