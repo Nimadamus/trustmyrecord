@@ -280,6 +280,12 @@ async function handleSignup(event) {
         // returned_after_signup) and request the first-pick welcome banner.
         try { localStorage.setItem('tmr_signup_ts', String(Date.now())); } catch (e) {}
         try { sessionStorage.setItem('tmr_show_first_pick_welcome', '1'); } catch (e) {}
+        try { sessionStorage.removeItem('tmr_fp_session'); localStorage.removeItem('tmr_has_posted_pick'); } catch (e) {}
+        try {
+            if (typeof window.gtag === 'function') window.gtag('event', 'account_created', { method: 'email' });
+            window.dataLayer = window.dataLayer || [];
+            window.dataLayer.push({ event: 'account_created', method: 'email' });
+        } catch (e) {}
 
         // Check for post-auth redirect (e.g., user clicked "Post a Pick" from homepage)
         var postAuthRedirect = sessionStorage.getItem('tmr_post_auth_redirect');

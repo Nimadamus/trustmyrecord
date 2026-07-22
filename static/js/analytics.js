@@ -476,6 +476,38 @@
             });
         },
 
+        // --- FIRST-PICK ACTIVATION FUNNEL (canonical event names) ---
+        // The signup -> first-pick funnel is measured with exactly these six
+        // events: account_created, sportsbook_onboarding_viewed,
+        // first_pick_cta_clicked, first_pick_started, first_pick_submitted,
+        // first_pick_abandoned. first-pick-onboarding.js emits 2-6 directly;
+        // these wrappers exist so any other surface fires identical names.
+
+        accountCreated: function (params) {
+            trackEvent('account_created', { method: 'email', ...params });
+        },
+
+        sportsbookOnboardingViewed: function (params) {
+            trackEvent('sportsbook_onboarding_viewed', {
+                surface: params?.surface || 'sportsbook_panel',
+                ...params
+            });
+        },
+
+        firstPickStarted: function (params) {
+            trackEvent('first_pick_started', {
+                sport: params?.sport || 'unknown',
+                ...params
+            });
+        },
+
+        firstPickAbandoned: function (params) {
+            trackEvent('first_pick_abandoned', {
+                reached_pick_entry: params?.reached_pick_entry || 'no',
+                ...params
+            });
+        },
+
         returnedAfterSignup: function (params) {
             trackEvent('returned_after_signup', {
                 days_since_signup: params?.days_since_signup,

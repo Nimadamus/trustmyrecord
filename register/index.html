@@ -532,6 +532,16 @@
                         // Activation funnel markers (returned_after_signup + first-pick welcome banner).
                         try { localStorage.setItem('tmr_signup_ts', String(Date.now())); } catch (error) {}
                         try { sessionStorage.setItem('tmr_show_first_pick_welcome', '1'); } catch (error) {}
+                        // Reset the per-tab onboarding flags so the new account
+                        // gets a clean funnel even if a previous account used this tab.
+                        try { sessionStorage.removeItem('tmr_fp_session'); localStorage.removeItem('tmr_has_posted_pick'); } catch (error) {}
+                        // Activation funnel: step 1 of signup -> first pick.
+                        try {
+                            var acctParams = { method: 'email', source: (signupSource && (signupSource.utm_source || signupSource.referrer)) || 'direct' };
+                            if (typeof window.gtag === 'function') window.gtag('event', 'account_created', acctParams);
+                            window.dataLayer = window.dataLayer || [];
+                            window.dataLayer.push(Object.assign({ event: 'account_created' }, acctParams));
+                        } catch (error) {}
                         if (typeof window.TMRAnalytics !== 'undefined') { try { window.TMRAnalytics.signUpCompleted({ method: 'email', button_location: 'register_page' }); } catch (error) {} }
                         window.location.replace('/sportsbook/?first_pick=1');
                         return;
