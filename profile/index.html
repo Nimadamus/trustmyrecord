@@ -2283,6 +2283,8 @@
                           <div class="tmrx-cell"><div class="tmrx-label">Current Streak</div><div class="tmrx-value" id="tvStreak">0</div><div class="tmrx-sub">correct in a row</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Best Streak</div><div class="tmrx-value" id="tvBestStreak">0</div><div class="tmrx-sub">career high</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Avg Response</div><div class="tmrx-value" id="tvAvgTime">&mdash;</div><div class="tmrx-sub">time to answer</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Games Played</div><div class="tmrx-value" id="tvGames">0</div><div class="tmrx-sub">completed quizzes</div></div>
+                          <div class="tmrx-cell"><div class="tmrx-label">Best Game</div><div class="tmrx-value" id="tvBestGame">0</div><div class="tmrx-sub">highest single game</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Forfeited</div><div class="tmrx-value" id="tvForfeits">0</div><div class="tmrx-sub">left the page mid-question</div></div>
                         </div>
                         <div class="trivia-empty" id="triviaEmpty" hidden>
@@ -16644,6 +16646,8 @@
     set('tvBestStreak', Number(st.best_streak) || 0);
     set('tvAvgTime', fmtMs(st.avg_response_ms));
     set('tvForfeits', Number(st.forfeited) || 0);
+    set('tvGames', Number(st.games_played) || 0);
+    set('tvBestGame', (Number(st.best_game_score) || 0).toLocaleString());
 
     var empty = document.getElementById('triviaEmpty');
     if (empty) empty.hidden = attempts > 0;
@@ -16668,6 +16672,9 @@
         cell('Best Streak', Number(st.best_streak) || 0, 'career high') +
         cell('Avg Response', fmtMs(st.avg_response_ms), 'time to answer') +
         cell('Best Response', fmtMs(st.best_response_ms), 'fastest correct') +
+        cell('Games Played', Number(st.games_played) || 0, 'completed quizzes') +
+        cell('Best Game', (Number(st.best_game_score) || 0).toLocaleString(), 'highest single game') +
+        cell('Avg Game', (Number(st.avg_game_score) || 0).toLocaleString(), 'points per game') +
         cell('Forfeited', Number(st.forfeited) || 0, 'left the page mid-question') +
         cell('Expired', Number(st.expired) || 0, 'ran out of time') +
         cell('This Week', (Number(st.week_points) || 0).toLocaleString(), 'points this week') +
