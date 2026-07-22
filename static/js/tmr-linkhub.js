@@ -562,7 +562,17 @@
         var segs = segments();
         var t = tone(contentHost());
 
-        var existing = qs(EXISTING_CRUMB_SEL);
+        /* Visibility matters: the forum shell ships a .fcrumb node that stays
+           display:none on the board index and is only filled in on a thread
+           view. Adopting a hidden trail would silently swallow the home crumb on
+           /forum/ itself. */
+        var existing = null;
+        var candidates = document.querySelectorAll(EXISTING_CRUMB_SEL);
+        for (var ci = 0; ci < candidates.length; ci++) {
+            var rect = candidates[ci].getBoundingClientRect();
+            if (rect.width > 0 && rect.height > 0) { existing = candidates[ci]; break; }
+        }
+
         if (existing) {
             adoptExistingCrumbs(existing);
         } else if (segs.length && !qs('.tmrlh-crumbs')) {

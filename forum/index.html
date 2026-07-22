@@ -2656,8 +2656,8 @@ body.classic-forum .fstatblock-body{border-color:#d6d6d6 !important;font-family:
 }
 </style>
 
-<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav1">
-<script defer src="/static/js/tmr-linkhub.js?v=20260721nav1"></script>
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav2">
+<script defer src="/static/js/tmr-linkhub.js?v=20260721nav2"></script>
 </head>
 <body class="classic-forum">
 
@@ -2696,7 +2696,12 @@ body.classic-forum .fstatblock-body{border-color:#d6d6d6 !important;font-family:
    clipped the far right of the right rail. Letting the link row compress keeps
    every header control on screen without dropping a single link. */
 @media(min-width:761px){
-    #tmrForumHeader .tmrfh-nav{min-width:0;flex-shrink:1;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+    #tmrForumHeader .tmrfh-nav{min-width:0;flex-shrink:1;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;
+        /* Fades the last item when the row is scrolled rather than clipping a
+           word mid-letter. Nothing is hidden: the row scrolls, and Rules / Chat /
+           Sports Talk are also in the left sidebar. */
+        -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);
+        mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent)}
     #tmrForumHeader .tmrfh-nav::-webkit-scrollbar{display:none}
     #tmrForumHeader .tmrfh-right{flex:none}
 }
@@ -2812,6 +2817,8 @@ body.classic-forum .fstatblock-body{border-color:#d6d6d6 !important;font-family:
                 <a href="/contests/">Contests</a>
                 <a href="/marketplace/">Pick Marketplace</a>
                 <a href="/sports-talk/">Sports Talk</a>
+                <a href="/chat/">Chat</a>
+                <a href="/rules/">Rules</a>
             </div>
         </section>
     </aside>
