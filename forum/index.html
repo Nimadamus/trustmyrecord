@@ -482,6 +482,7 @@ body.classic-forum .fpost-content a{color:#0033cc !important}
 .fpost-embed{display:block;margin:10px 0;max-width:640px}
 .fpost-embed iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:6px;background:#000}
 .fpost-embed video{width:100%;max-height:480px;border-radius:6px;background:#000}
+img.tmr-smilie{display:inline-block;vertical-align:middle;max-width:40px;max-height:40px;margin:0 2px;border:0;background:none;box-shadow:none}
 .fpost-media{display:block;margin:10px 0}
 .fpost-media img{max-width:100%;max-height:520px;height:auto;border-radius:6px;border:1px solid rgba(0,0,0,.15);background:#f2f2f2;cursor:zoom-in}
 body.tmr-forum-live-redesign .fpost-media img{border-color:rgba(255,255,255,.15);background:#0a1422}
@@ -3694,6 +3695,8 @@ function renderThread() {
 // URL patterns operating on already-escaped text.
 function forumRenderContent(raw) {
     var esc = escHtml(String(raw == null ? '' : raw));
+    // :shortcode: -> classic board smilie GIF (safe: runs on escaped text).
+    if (window.TMRSmilies) esc = TMRSmilies.toHtml(esc);
     // Stash finished media HTML behind placeholder tokens so the bare-URL
     // linkifier can never re-process a URL that already lives inside a tag.
     var slots = [];
@@ -5487,7 +5490,10 @@ document.addEventListener('DOMContentLoaded', async function() {
      /static/js/tmr-emoji-picker.js (+ lazy-loaded tmr-emoji-data.js).
      Twemoji renders posted emojis consistently on every device. -->
 <script src="/static/js/twemoji.min.js?v=20260711b" defer></script>
-<script src="/static/js/tmr-emoji-picker.js?v=20260711b" defer></script>
+<script src="/static/js/tmr-emoji-picker.js?v=20260722a" defer></script>
+<!-- BOARD_SMILIES_20260722: classic Covers/SBR-style animated smilie pack,
+     self-hosted at /static/emoticons/. Typing :lmao: in a post renders it. -->
+<script src="/static/js/tmr-smilies.js?v=20260722a" defer></script>
 <!-- FORUM_IMAGE_PASTE_20260720: Ctrl+V / drag-drop / file-pick image upload in
      every composer (new thread, quick reply, quote reply, inline post edit). -->
 <script src="/static/js/tmr-forum-image-upload.js?v=20260720a" defer></script>

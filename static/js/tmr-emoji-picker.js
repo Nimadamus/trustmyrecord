@@ -20,9 +20,10 @@
 (function () {
   if (window.TMREmoji && window.TMREmoji.v2) return;
 
-  var VER = '20260711b';
-  var TW_JS = '/static/js/twemoji.min.js?v=' + VER;
-  var DATA_JS = '/static/js/tmr-emoji-data.js?v=' + VER;
+  var VER = '20260722a';
+  var TW_JS = '/static/js/twemoji.min.js?v=20260711b';
+  var DATA_JS = '/static/js/tmr-emoji-data.js?v=20260711b';
+  var SMILIE_JS = '/static/js/tmr-smilies.js?v=' + VER;
   var NOTO = 'https://fonts.gstatic.com/s/e/notoemoji/latest/';
   var TW_BASE = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/';
   var LS_RECENT = 'tmrEmojiRecent2';
@@ -50,6 +51,10 @@
   function withTwemoji(cb) {
     if (window.twemoji) { cb(); return; }
     loadScript(TW_JS, function () { if (window.twemoji) cb(); });
+  }
+  function withSmilies(cb) {
+    if (window.TMRSmilies) { cb(); return; }
+    loadScript(SMILIE_JS, function () { cb(); });
   }
 
   /* ---------- consistent rendering of posted content ---------- */
@@ -127,6 +132,10 @@
     + '.tmr-emoji-grid.anim{grid-template-columns:repeat(auto-fill,minmax(62px,1fr))}'
     + '.tmr-emoji-grid.anim .tmr-emoji-cell{min-height:64px}'
     + '.tmr-emoji-grid.anim .tmr-emoji-cell img{width:52px;height:52px}'
+    /* board smilies: bigger cells, animated GIFs render at natural size */
+    + '.tmr-emoji-grid.smilies{grid-template-columns:repeat(auto-fill,minmax(48px,1fr))}'
+    + '.tmr-emoji-grid.smilies .tmr-emoji-cell{min-height:48px}'
+    + '.tmr-emoji-cell img.tmr-sm{width:auto;height:auto;max-width:40px;max-height:40px}'
     + '.tmr-emoji-grid.classic{grid-template-columns:repeat(auto-fill,minmax(88px,1fr))}'
     + '.tmr-emoji-grid.classic .tmr-emoji-cell{flex-direction:column;gap:2px;font-size:11px;color:#456;border:1px solid #e4e8ee;min-height:52px}'
     + '.tmr-emoji-empty{grid-column:1/-1;color:#789;text-align:center;padding:18px 6px;font-size:12px}'
@@ -265,6 +274,23 @@
       return c;
     });
   }
+  // Board smilies (Covers/SBR-style animated GIF pack). Inserts the :shortcode:
+  // so posts stay readable and editable; forumRenderContent expands it.
+  function cellsForSmilies(list, target) {
+    return list.map(function (s) {
+      var file = s[0], code = s[1], label = s[2];
+      var c = makeCell(label + '  :' + code + ':', function () {
+        insertAtCursor(target, ' :' + code + ': ');
+        noteUse({ t: 's', v: code, n: label, f: file });
+      });
+      var i = document.createElement('img');
+      i.src = window.TMRSmilies.url(file);
+      i.alt = label; i.loading = 'lazy'; i.decoding = 'async';
+      i.className = 'tmr-sm';
+      c.appendChild(i);
+      return c;
+    });
+  }
   function cellsForClassic(list, target) {
     return list.map(function (pair) {
       var code = pair[0], ch = pair[1];
@@ -293,6 +319,7 @@
 
   function buildTabList(D, allowAnim) {
     var tabs = [{ id: 'recent', name: 'Recently & frequently used', label: '🕘' }];
+    if (window.TMRSmilies) tabs.push({ id: 'smilies', name: 'Board smilies (classic forum pack)', label: 'BOARD', text: true });
     D.tabs.forEach(function (t) { tabs.push({ id: t.id, name: t.name, label: t.icon }); });
     tabs.push({ id: 'betting', name: 'Betting & winning', label: '💰' });
     if (allowAnim) tabs.push({ id: 'anim', name: 'Animated reactions', label: 'GIF', text: true });
@@ -302,7 +329,7 @@
 
   function renderTab(grid, D, tabId, target, allowAnim) {
     grid._gen = (grid._gen || 0) + 1;
-    grid.className = 'tmr-emoji-grid' + (tabId === 'anim' ? ' anim' : tabId === 'classic' ? ' classic' : '');
+    grid.className = 'tmr-emoji-grid' + (tabId === 'anim' ? ' anim' : tabId === 'classic' ? ' classic' : tabId === 'smilies' ? ' smilies' : '');
     grid.innerHTML = '';
     grid.scrollTop = 0;
     var nodes = [];
@@ -317,6 +344,10 @@
       function recCells(list) {
         return list.map(function (r) {
           if (r.t === 'a') return cellsForAnim([[r.n, r.v]], target, allowAnim)[0];
+          if (r.t === 's') {
+            if (!window.TMRSmilies) return document.createTextNode('');
+            return cellsForSmilies([[r.f, r.v, r.n, '']], target)[0];
+          }
           var c = makeCell(r.n || r.v, function () {
             insertAtCursor(target, r.v);
             noteUse(r);
@@ -328,6 +359,14 @@
       }
       if (freq.length) { nodes.push(secName('Frequently used')); nodes = nodes.concat(recCells(freq)); }
       if (rec.length) { nodes.push(secName('Recently used')); nodes = nodes.concat(recCells(rec)); }
+    } else if (tabId === 'smilies') {
+      var S = window.TMRSmilies;
+      S.GROUPS.forEach(function (g) {
+        var inGroup = S.LIST.filter(function (s) { return s[3] === g; });
+        if (!inGroup.length) return;
+        nodes.push(secName(g));
+        nodes = nodes.concat(cellsForSmilies(inGroup, target));
+      });
     } else if (tabId === 'betting') {
       nodes = cellsForUnicode(D.betting, target);
     } else if (tabId === 'anim') {
@@ -346,6 +385,17 @@
     grid.innerHTML = '';
     q = q.toLowerCase();
     var nodes = [], seen = {};
+    // board smilies first -- they are what people hunt for by name
+    if (window.TMRSmilies) {
+      var sm = window.TMRSmilies.LIST.filter(function (s) {
+        return s[1].indexOf(q) !== -1 || s[2].toLowerCase().indexOf(q) !== -1;
+      }).slice(0, 60);
+      if (sm.length) {
+        nodes.push(secName('Board smilies'));
+        nodes = nodes.concat(cellsForSmilies(sm, target));
+        nodes.push(secName('Emojis'));
+      }
+    }
     // classic shortcode exact-ish matches first
     var cl = D.classic.filter(function (p) { return p[0].toLowerCase().indexOf(q) !== -1; }).slice(0, 24);
     if (cl.length) {
@@ -405,7 +455,7 @@
   function openFor(btn, target, opts) {
     closePanel();
     injectCSS();
-    withTwemoji(function () { withData(function () {
+    withTwemoji(function () { withData(function () { withSmilies(function () {
       if (openPanel) return;
       var D = window.TMR_EMOJI_DATA;
       var allowAnim = opts.anim !== false;
@@ -445,7 +495,8 @@
       panel.appendChild(grid);
 
       var total = Object.keys(D.cats).reduce(function (a, k) { return a + D.cats[k].length; }, 0)
-        + D.anim.length + D.classic.length;
+        + D.anim.length + D.classic.length
+        + (window.TMRSmilies ? window.TMRSmilies.LIST.length : 0);
       var foot = document.createElement('div');
       foot.className = 'tmr-emoji-foot';
       foot.innerHTML = '<span>' + total + '+ emojis & reactions</span><span>Twemoji · Noto Animated (CC-BY 4.0)</span>';
@@ -507,7 +558,7 @@
       }
       openPanel = panel;
       if (window.innerWidth > 640) setTimeout(function () { search.focus(); }, 0);
-    }); });
+    }); }); });
   }
 
   // Compute a twemoji filename for a single emoji char (tab icons only).
