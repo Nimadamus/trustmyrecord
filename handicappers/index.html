@@ -553,9 +553,12 @@
 
         .hm-row {
             display: grid;
-            grid-template-columns: 34px minmax(200px, 1.7fr) 88px repeat(4, minmax(64px, 0.85fr)) 62px minmax(120px, 1.1fr) 58px;
+            /* Record is a wide value ("155-104-3") sitting next to Units; its track
+               is sized to hold the longest record with slack and the column gap is
+               wide enough that the two numbers never read as one string. */
+            grid-template-columns: 34px minmax(200px, 1.7fr) 104px repeat(4, minmax(64px, 0.85fr)) 62px minmax(120px, 1.1fr) 58px;
             align-items: center;
-            gap: 8px;
+            gap: 14px;
             padding: 7px 12px;
             border-bottom: 1px solid var(--line);
             font-size: 0.82rem;
@@ -756,7 +759,10 @@
             .hm-metrics { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); }
             .hm-controls { grid-template-columns: repeat(3, minmax(0, 1fr)); }
             .hm-controls .hm-field:first-child { grid-column: 1 / -1; }
-            .hm-row { grid-template-columns: 30px minmax(160px, 1.6fr) 80px repeat(4, minmax(56px, 0.85fr)) 52px minmax(100px, 1fr) 52px; gap: 6px; }
+            /* Tablet keeps the same Record/Units breathing room, paid for by
+               trimming the flexible name/activity mins so the row's minimum
+               width stays at/below what it was before. */
+            .hm-row { grid-template-columns: 30px minmax(146px, 1.6fr) 100px repeat(4, minmax(52px, 0.85fr)) 52px minmax(90px, 1fr) 52px; gap: 8px; }
         }
 
         @media (max-width: 768px) {
@@ -772,7 +778,7 @@
             .hm-row {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 6px 10px;
+                gap: 6px 16px;
                 padding: 10px 12px;
                 border: 1px solid var(--line);
                 border-radius: var(--radius);
