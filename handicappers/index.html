@@ -859,7 +859,7 @@
     <link rel="stylesheet" href="/static/css/tmr-ds.9faf16e3fee3.css">
     <link rel="stylesheet" href="/static/css/tmr-ds-handicappers.68795e5f6069.css">
     <link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
-    <script defer src="/static/js/tmr-share.js?v=20260721share1"></script>
+    <script defer src="/static/js/tmr-share.js?v=20260722owner1"></script>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">
 <script defer src="/static/js/tmr-linkhub.js?v=20260721nav4"></script>
 </head>
@@ -2084,8 +2084,13 @@
             return member.username + "'s verified record on TrustMyRecord: " + bits.join(', ') + '.';
         }
 
+        // PROFILE_SHARE_OWNER_ONLY_20260722: a member may broadcast their own
+        // record; nobody gets a one-click control for broadcasting someone
+        // else's profile. Returns empty markup for every other entry, so the
+        // action row simply renders without a Share control.
         function shareButtonHtml(member, opts) {
             opts = opts || {};
+            if (!member || !member.isCurrentUser) return '';
             const label = opts.compact ? '' : '<span>Share</span>';
             return '<button type="button" class="tmrsh-btn' + (opts.compact ? ' tmrsh-btn--icon' : '') +
                 (opts.className ? ' ' + opts.className : '') + '" data-tmr-share' +

@@ -92,6 +92,60 @@
   }
 
   // ---------------------------------------------------------
+  // ownership gate (PROFILE_SHARE_OWNER_ONLY_20260722)
+  //
+  // A member may broadcast their OWN record. Nobody gets a one-click control
+  // for broadcasting somebody else's profile - that is the profile owner's
+  // call to make, not a stranger's. Enforced centrally here so it holds on
+  // every surface at once: the leaderboards, the handicapper directory and
+  // the 60+ prerendered /u/ pages, none of which have to know the rule.
+  //
+  // Only type="profile" is gated. Threads, posts, picks and pages stay
+  // shareable by anyone - they are public content, not someone's identity.
+  // ---------------------------------------------------------
+  function currentUsername() {
+    var raw = null;
+    try {
+      raw = localStorage.getItem('tmr_current_user') || localStorage.getItem('currentUser');
+    } catch (e) {}
+    if (!raw) return '';
+    try {
+      var u = JSON.parse(raw);
+      return u && u.username ? String(u.username).toLowerCase() : '';
+    } catch (e) { return ''; }
+  }
+
+  function isOwnProfileShare(type, id) {
+    if (String(type || '') !== 'profile') return true;
+    var me = currentUsername();
+    return !!me && String(id || '').toLowerCase() === me;
+  }
+
+  // Removes, rather than hides, every foreign profile-share trigger in the
+  // DOM. Hiding would leave the control reachable by keyboard and by the
+  // capture-phase delegate below.
+  function sweepForeignProfileShares(root) {
+    var scope = (root && root.querySelectorAll) ? root : document;
+    var nodes;
+    try {
+      nodes = scope.querySelectorAll('[data-tmr-share][data-share-type="profile"]');
+    } catch (e) { return; }
+    Array.prototype.forEach.call(nodes, function (el) {
+      if (isOwnProfileShare('profile', el.getAttribute('data-share-id'))) return;
+      if (el.parentNode) el.parentNode.removeChild(el);
+    });
+  }
+
+  function watchForeignProfileShares() {
+    sweepForeignProfileShares(document);
+    if (typeof MutationObserver !== 'function' || !document.body) return;
+    try {
+      new MutationObserver(function () { sweepForeignProfileShares(document); })
+        .observe(document.body, { childList: true, subtree: true });
+    } catch (e) {}
+  }
+
+  // ---------------------------------------------------------
   // icons (inline so the menu needs no icon font and no network)
   // ---------------------------------------------------------
   var ICONS = {
@@ -262,6 +316,9 @@
 
   function open(cfg) {
     cfg = cfg || {};
+    // Ownership gate also covers the imperative entry point, so a page that
+    // calls TMRShare.open({type:'profile'}) directly cannot bypass it.
+    if (!isOwnProfileShare(cfg.type, cfg.id)) return;
     close();
 
     var overlay = document.createElement('div');
@@ -365,6 +422,7 @@
     // existing handler.
     document.addEventListener('click', onDocClick, true);
     document.addEventListener('keydown', onDocKey, true);
+    watchForeignProfileShares();
   }
 
   // ---------------------------------------------------------
@@ -408,8 +466,16 @@
   bind();
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', trackArrival);
+    document.addEventListener('DOMContentLoaded', function () {
+      trackArrival();
+      watchForeignProfileShares();
+    });
   } else {
     trackArrival();
   }
+
+  // Logging in or out changes who owns what, so re-evaluate every trigger.
+  try {
+    window.addEventListener('tmr-auth-changed', function () { sweepForeignProfileShares(document); });
+  } catch (e) {}
 }());

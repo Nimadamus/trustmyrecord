@@ -54,7 +54,7 @@
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
 <script defer src="/static/js/tmr-sitewide.js?v=20260720alerts"></script>
 <link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
-<script defer src="/static/js/tmr-share.js?v=20260721share1"></script>
+<script defer src="/static/js/tmr-share.js?v=20260722owner1"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -10268,10 +10268,14 @@
                 '<button class="btn btn-secondary" onclick="location.href=\'/messages/?to=' + encodeURIComponent(p.username) + '\'">Send Message</button>' +
                 '<button class="btn btn-secondary" onclick="location.href=\'/arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button>';
         }
-        // Share + Embed always render, even for logged-out viewers, so any
-        // visitor can broadcast or embed a public profile.
+        // PROFILE_SHARE_OWNER_ONLY_20260722: Share renders only on your OWN
+        // profile. A visitor can still read, follow, message or challenge a
+        // public profile - broadcasting it is the owner's call, not theirs.
+        // Embed is unchanged (it publishes the same public widget either way).
         const shareActions =
-            '<button class="btn btn-secondary" onclick="openShareModal()" title="Share this profile" data-tmr-share-btn><i class="fas fa-share-alt" style="margin-right:6px;"></i>Share</button>' +
+            (isOwnProfile
+                ? '<button class="btn btn-secondary" onclick="openShareModal()" title="Share your profile" data-tmr-share-btn><i class="fas fa-share-alt" style="margin-right:6px;"></i>Share</button>'
+                : '') +
             '<button class="btn btn-secondary" onclick="showEmbedModal()" title="Embed this profile on your site" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed</button>';
         const actions = '<div class="profile-actions">' + primaryActions + shareActions + '</div>';
 

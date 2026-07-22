@@ -530,7 +530,7 @@
         var gid = "tg-" + uid + "-" + idx;
         var games = (t.games && t.games.length)
             ? '<details class="hh-trend__games" data-games="' + esc(gid) + '">' +
-                '<summary>Inspect all ' + t.games.length + ' sample game' + (t.games.length === 1 ? "" : "s") + '</summary>' +
+                '<summary>View all ' + t.games.length + ' sample game' + (t.games.length === 1 ? "" : "s") + '</summary>' +
                 '<div class="hh-gamesbox" data-gamesbox><p class="hh-skel">Building game list…</p></div>' +
               '</details>'
             : "";

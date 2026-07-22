@@ -109,7 +109,12 @@ def share_description(disp, w, l, p, graded, units, roi):
 
 def share_button(un, disp):
     """Share control for a baked profile page. Real button, real aria-label,
-    keyboard reachable; the menu itself comes from tmr-share.js."""
+    keyboard reachable; the menu itself comes from tmr-share.js.
+
+    PROFILE_SHARE_OWNER_ONLY_20260722: a baked page cannot know who is looking
+    at it, so the button is emitted for every profile and tmr-share.js removes
+    it at runtime for anyone who is not the profile owner. Do not treat this
+    markup as evidence that a visitor can share someone else's profile."""
     e = html.escape
     return (
         '<div class="u-actions">'
