@@ -1,0 +1,342 @@
+/* =============================================================================
+   TrustMyRecord — INTERNAL LINKING / NAVIGATION HUB  (tmr-linkhub.css)
+   -----------------------------------------------------------------------------
+   Styles for the shared components injected by /static/js/tmr-linkhub.js:
+
+     .tmrlh-crumbs  breadcrumb bar whose FIRST crumb is always a link home
+     .tmrlh-related "More on TrustMyRecord" contextual internal-link block
+     .tmrlh-footer  fallback global footer for pages that have none
+
+   These are additive only. They never hide, move, or restyle an existing nav,
+   header, or footer, and they never change a URL. The bar is deliberately quiet
+   (translucent surface, inherited text colour) so it reads as part of whatever
+   skin the host page already uses — the classic light forum, the dark design
+   system pages, and the legacy dark homepage all render it correctly.
+
+   Tone: the script measures the page background and stamps data-tone="light" or
+   "dark" on each block, because TMR pages are a mix of both and a single hard
+   coded palette is unreadable on half of them.
+
+   Created Jul 21, 2026.
+   ============================================================================= */
+
+.tmrlh-crumbs,
+.tmrlh-related,
+.tmrlh-footer {
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.tmrlh-crumbs *,
+.tmrlh-related *,
+.tmrlh-footer * {
+    box-sizing: border-box;
+}
+
+
+/* -----------------------------------------------------------------------------
+   Specificity note: these blocks are injected onto ~290 pages carrying a dozen
+   legacy stylesheets, several of which set blanket `a { color: ... !important }`
+   (tmr-sitewide.css paints every link cyan; body.classic-forum paints them near
+   black). Colour declarations inside the tmrlh- blocks are therefore forced, so
+   the component reads identically everywhere instead of inheriting whichever
+   sheet happened to load last. Scope stays inside .tmrlh-*; nothing outside it
+   is affected.
+
+   The forced rules also carry a second class (`a.tmrlh-a`) because
+   tmr-redesign-overrides.css ships
+   `body a:not(.sportsbook-sports-nav a) { color: var(--tmr-teal) !important }`,
+   whose specificity (0,1,3) beats a single-class `.tmrlh-footer a` even when
+   both are !important. Every anchor tmr-linkhub.js emits carries tmrlh-a.
+   -------------------------------------------------------------------------- */
+
+/* --- tone tokens ---------------------------------------------------------- */
+.tmrlh-crumbs[data-tone="dark"],
+.tmrlh-related[data-tone="dark"],
+.tmrlh-footer[data-tone="dark"] {
+    --tmrlh-fg: #e8ecf5;
+    --tmrlh-muted: #93a0b8;
+    --tmrlh-link: #6cc4ff;
+    --tmrlh-link-hover: #a5dcff;
+    --tmrlh-surface: rgba(148, 163, 184, 0.09);
+    --tmrlh-surface-2: rgba(148, 163, 184, 0.05);
+    --tmrlh-line: rgba(148, 163, 184, 0.24);
+}
+
+.tmrlh-crumbs[data-tone="light"],
+.tmrlh-related[data-tone="light"],
+.tmrlh-footer[data-tone="light"] {
+    --tmrlh-fg: #1d2430;
+    --tmrlh-muted: #5c6675;
+    --tmrlh-link: #1f5f9f;
+    --tmrlh-link-hover: #0f3f72;
+    --tmrlh-surface: rgba(31, 45, 66, 0.05);
+    --tmrlh-surface-2: rgba(31, 45, 66, 0.03);
+    --tmrlh-line: rgba(31, 45, 66, 0.16);
+}
+
+/* --- breadcrumb bar ------------------------------------------------------- */
+/* Layout is forced for the same reason the colours are: several page skins style
+   bare `nav` (the profile shell sets justify-content: space-evenly), which would
+   otherwise fling the crumbs to opposite ends of a 1200px bar. */
+.tmrlh-crumbs {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    text-align: left !important;
+    gap: 6px 8px;
+    margin: 0 0 16px;
+    padding: 8px 12px;
+    background: var(--tmrlh-surface);
+    border: 1px solid var(--tmrlh-line);
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.35;
+    color: var(--tmrlh-muted);
+}
+
+.tmrlh-crumbs a.tmrlh-a {
+    color: var(--tmrlh-link) !important;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.tmrlh-crumbs a.tmrlh-a:hover,
+.tmrlh-crumbs a.tmrlh-a:focus-visible {
+    color: var(--tmrlh-link-hover) !important;
+    text-decoration: underline;
+}
+
+/* The home crumb is the guaranteed way back to trustmyrecord.com from every
+   public page, so it is a real target, not a 13px word in a row of grey text. */
+.tmrlh-home.tmrlh-a {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 5px 11px 5px 8px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #b87500, #d99a1c);
+    color: #1a1204 !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.2px;
+    min-height: 32px;
+    white-space: nowrap;
+}
+
+.tmrlh-home.tmrlh-a:hover,
+.tmrlh-home.tmrlh-a:focus-visible {
+    color: #1a1204 !important;
+    text-decoration: none !important;
+    filter: brightness(1.08);
+}
+
+.tmrlh-home-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    background: rgba(26, 18, 4, 0.86);
+    color: #f0b64a;
+    font: 800 10px/1 Arial, sans-serif;
+    letter-spacing: 0.3px;
+}
+
+.tmrlh-sep {
+    color: var(--tmrlh-muted) !important;
+    opacity: 0.7;
+    user-select: none;
+}
+
+.tmrlh-crumbs .tmrlh-current {
+    color: var(--tmrlh-fg) !important;
+    font-weight: 600;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Home crumb prepended to a breadcrumb trail the page already had. */
+.tmrlh-home-inline.tmrlh-a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-weight: 700;
+}
+
+/* --- related links block -------------------------------------------------- */
+.tmrlh-related {
+    margin: 30px 0 0;
+    padding: 16px 18px;
+    background: var(--tmrlh-surface-2);
+    border: 1px solid var(--tmrlh-line);
+    border-radius: 12px;
+    color: var(--tmrlh-muted);
+}
+
+.tmrlh-related h2 {
+    margin: 0 0 4px;
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--tmrlh-fg) !important;
+}
+
+.tmrlh-related-note {
+    margin: 0 0 12px;
+    font-size: 12.5px;
+    color: var(--tmrlh-muted);
+}
+
+.tmrlh-related-links {
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+    gap: 8px;
+}
+
+.tmrlh-related-links a.tmrlh-a {
+    display: inline-block;
+    padding: 7px 12px;
+    border: 1px solid var(--tmrlh-line);
+    border-radius: 999px;
+    background: var(--tmrlh-surface);
+    color: var(--tmrlh-link) !important;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    line-height: 1.3;
+}
+
+.tmrlh-related-links a.tmrlh-a:hover,
+.tmrlh-related-links a.tmrlh-a:focus-visible {
+    color: var(--tmrlh-link-hover) !important;
+    border-color: var(--tmrlh-link);
+    text-decoration: none;
+}
+
+/* --- fallback footer ------------------------------------------------------ */
+.tmrlh-footwrap {
+    margin-top: 48px;
+}
+
+.tmrlh-footer {
+    padding: 30px 18px 26px;
+    border-top: 1px solid var(--tmrlh-line);
+    background: var(--tmrlh-surface-2);
+    color: var(--tmrlh-muted);
+    font-size: 13.5px;
+}
+
+.tmrlh-footer-in {
+    max-width: 1180px;
+    margin: 0 auto;
+}
+
+.tmrlh-footer-grid {
+    display: grid;
+    grid-template-columns: 1.3fr repeat(4, 1fr);
+    gap: 22px 26px;
+}
+
+.tmrlh-footer-brand a.tmrlh-a {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    color: var(--tmrlh-fg) !important;
+    font-weight: 800;
+    font-size: 16px;
+    text-decoration: none;
+}
+
+.tmrlh-footer-brand p {
+    margin: 10px 0 0;
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--tmrlh-muted);
+    max-width: 34ch;
+}
+
+.tmrlh-footer h3 {
+    margin: 0 0 9px;
+    font-size: 11.5px;
+    font-weight: 800;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+    color: var(--tmrlh-fg) !important;
+}
+
+.tmrlh-footer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.tmrlh-footer a.tmrlh-a {
+    color: var(--tmrlh-link) !important;
+    text-decoration: none;
+}
+
+.tmrlh-footer a.tmrlh-a:hover,
+.tmrlh-footer a.tmrlh-a:focus-visible {
+    color: var(--tmrlh-link-hover) !important;
+    text-decoration: underline;
+}
+
+.tmrlh-footer-bottom {
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px solid var(--tmrlh-line);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    align-items: center;
+    font-size: 12.5px;
+}
+
+.tmrlh-footer-legal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+}
+
+.tmrlh-footer-note {
+    margin: 0;
+    width: 100%;
+    color: var(--tmrlh-muted);
+    font-size: 12px;
+}
+
+@media (max-width: 900px) {
+    .tmrlh-footer-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .tmrlh-footer-brand {
+        grid-column: 1 / -1;
+    }
+}
+
+@media (max-width: 640px) {
+    .tmrlh-crumbs {
+        font-size: 12.5px;
+        padding: 7px 9px;
+        border-radius: 9px;
+    }
+    /* Deep trails wrap rather than overflow the viewport on phones. */
+    .tmrlh-crumbs .tmrlh-current {
+        white-space: normal;
+    }
+    .tmrlh-related {
+        padding: 14px;
+    }
+    .tmrlh-footer-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+    }
+}

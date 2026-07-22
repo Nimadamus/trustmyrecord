@@ -69,10 +69,13 @@ DS_HEAD = (
     '<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900'
     '&amp;family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">\n'
     f'<link rel="stylesheet" href="{_DS_CSS}">\n'
-    f'<link rel="stylesheet" href="{_DS_USER_CSS}">'
+    f'<link rel="stylesheet" href="{_DS_USER_CSS}">\n'
+    # NAV_20260721: shared breadcrumb / related-links / footer component.
+    '<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav1">'
 )
 # Shared nav + footer, so these pages are no longer chrome-less dead ends.
-DS_FOOT = f'<script src="{_DS_NAV}"></script>'
+DS_FOOT = (f'<script src="{_DS_NAV}"></script>'
+           '<script defer src="/static/js/tmr-linkhub.js?v=20260721nav1"></script>')
 
 # ---------------------------------------------------------------------------
 # SHARE_SYSTEM_PHASE1_20260721
@@ -456,6 +459,8 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
 <style>
 .u-wrap{{max-width:820px;margin:0 auto;padding:24px 18px 70px;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;}}
 .u-wrap a{{color:#00aeff;text-decoration:none;}}
+.u-crumb{{font-size:13px;color:#8890ad;margin:0 0 14px;}}
+.u-crumb span{{color:#c9d0e4;}}
 .u-head{{display:flex;gap:16px;align-items:center;margin:8px 0 6px;}}
 .u-actions{{margin:2px 0 10px;}}
 .u-avatar{{border-radius:50%;object-fit:cover;border:2px solid #262636;}}
@@ -483,6 +488,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
 </head>
 <body class="tmr-ds">
 <main class="u-wrap">
+  <nav class="u-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/handicappers/">Handicappers</a> &rsaquo; <span>{e(disp)}</span></nav>
   <div class="u-head">
     {avatar_html}
     <div>
@@ -508,14 +514,28 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
   </div>
   <a class="u-cta" href="/register/">Start Your Free Verified Record</a>
   <div class="u-links">
+    <strong>More from {e(disp)}:</strong>
+    <a href="/profile/?user={e(un)}">Full interactive profile</a> ·
+    <a href="/profile/?user={e(un)}#record">Picks &amp; record</a> ·
+    <a href="/profile/?user={e(un)}#charts">Performance charts</a> ·
+    <a href="/profile/?user={e(un)}#challenges">Challenges entered</a> ·
+    <a href="/profile/?user={e(un)}#followers">Followers &amp; following</a> ·
+    <a href="/forum/">Forum posts</a> ·
+    <a href="/marketplace/seller/?u={e(un)}">Pick storefront</a>
+  </div>
+  <div class="u-links">
+    <strong>Explore TrustMyRecord:</strong>
+    <a href="/">Home</a> ·
     <a href="/sportsbook/">Make a Verified Pick</a> ·
     <a href="/leaderboards/">Verified Leaderboards</a> ·
     <a href="/handicappers/">Handicappers</a> ·
+    <a href="/handicapping/">Handicapping Hub</a> ·
+    <a href="/tools/">Tools &amp; Simulators</a> ·
+    <a href="/challenges/">Challenges</a> ·
     <a href="/contests/">Contests</a> ·
     <a href="/forum/">Forum</a> ·
     <a href="/feed/">Activity Feed</a> ·
-    <a href="/how-it-works/">How It Works</a> ·
-    <a href="/profile/?user={e(un)}">Full interactive profile</a>
+    <a href="/how-it-works/">How It Works</a>
   </div>
 </main>
 <script>window.__TMR_PROFILE_USERNAME={json.dumps(un)};</script>
@@ -571,6 +591,8 @@ def compact_html(un):
 <style>
 .u-wrap{{max-width:820px;margin:0 auto;padding:24px 18px 70px;color:#e8e8f0;font-family:'Inter',system-ui,sans-serif;}}
 .u-wrap a{{color:#00aeff;text-decoration:none;}}
+.u-crumb{{font-size:13px;color:#8890ad;margin:0 0 14px;}}
+.u-crumb span{{color:#c9d0e4;}}
 .u-head{{display:flex;gap:16px;align-items:center;margin:8px 0 6px;}}
 .u-actions{{margin:2px 0 10px;}}
 .u-name{{font-size:26px;margin:0;font-family:'Barlow',sans-serif;}}
@@ -593,6 +615,7 @@ def compact_html(un):
 </head>
 <body class="tmr-ds">
 <main class="u-wrap">
+  <nav class="u-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/handicappers/">Handicappers</a> &rsaquo; <span>{e(un)}</span></nav>
   <div class="u-head">
     <div>
       <h1 class="u-name">{e(un)}</h1>
@@ -606,12 +629,20 @@ def compact_html(un):
   <div id="uDeep"></div>
   <p class="u-building">Building a public record. Full SEO feature listing unlocks at {GRADED_MIN} graded picks;
   the live stats above update automatically as picks settle.</p>
-  <div class="u-note"><a href="/sportsbook/">Make a Verified Pick</a> ·
+  <div class="u-note"><strong>More from {e(un)}:</strong>
+     <a href="/profile/?user={e(un)}">Full interactive profile</a> ·
+     <a href="/profile/?user={e(un)}#record">Picks &amp; record</a> ·
+     <a href="/profile/?user={e(un)}#followers">Followers &amp; following</a> ·
+     <a href="/marketplace/seller/?u={e(un)}">Pick storefront</a></div>
+  <div class="u-note"><strong>Explore:</strong>
+     <a href="/">Home</a> ·
+     <a href="/sportsbook/">Make a Verified Pick</a> ·
      <a href="/leaderboards/">Verified Leaderboards</a> ·
      <a href="/handicappers/">Handicappers</a> ·
+     <a href="/tools/">Tools &amp; Simulators</a> ·
+     <a href="/challenges/">Challenges</a> ·
      <a href="/contests/">Contests</a> ·
-     <a href="/forum/">Forum</a> ·
-     <a href="/profile/?user={e(un)}">Full interactive profile</a></div>
+     <a href="/forum/">Forum</a></div>
 </main>
 <script>window.__TMR_PROFILE_USERNAME={json.dumps(un)};</script>
 <script src="/static/js/tmr-profile-hydrate.js" defer></script>

@@ -2656,6 +2656,8 @@ body.classic-forum .fstatblock-body{border-color:#d6d6d6 !important;font-family:
 }
 </style>
 
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav1">
+<script defer src="/static/js/tmr-linkhub.js?v=20260721nav1"></script>
 </head>
 <body class="classic-forum">
 
@@ -2672,9 +2674,48 @@ body.classic-forum .fstatblock-body{border-color:#d6d6d6 !important;font-family:
    layout, and desktop are untouched. */
 @media(max-width:760px){ .tmrfh.nav-open{z-index:460 !important} }
 </style>
+<style id="tmr-forum-mainsite-20260721">
+/* NAV_20260721 — "Main Site" is now a real, always-visible button in the right
+   rail of the forum header (desktop AND mobile), not a low-contrast text link
+   that disappeared into the burger menu on phones. */
+#tmrForumHeader .tmrfh-right .tmrfh-mainsite{
+    display:inline-flex !important;align-items:center;gap:6px;
+    height:32px;padding:0 12px 0 10px;margin-right:4px;
+    border-radius:16px;border:1px solid #d99a1c;
+    background:linear-gradient(135deg,#b87500,#d99a1c);
+    color:#1a1204 !important;text-decoration:none;
+    font:800 12.5px/1 "Noto Sans","Segoe UI",Arial,sans-serif !important;
+    white-space:nowrap;transition:filter .12s;
+}
+#tmrForumHeader .tmrfh-right .tmrfh-mainsite:hover,
+#tmrForumHeader .tmrfh-right .tmrfh-mainsite:focus-visible{
+    color:#1a1204 !important;text-decoration:none !important;filter:brightness(1.1);
+}
+#tmrForumHeader .tmrfh-right .tmrfh-mainsite svg{width:15px;height:15px;flex:none}
+/* The header row overflowed its 278px-notched width on ~1265px viewports and
+   clipped the far right of the right rail. Letting the link row compress keeps
+   every header control on screen without dropping a single link. */
+@media(min-width:761px){
+    #tmrForumHeader .tmrfh-nav{min-width:0;flex-shrink:1;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+    #tmrForumHeader .tmrfh-nav::-webkit-scrollbar{display:none}
+    #tmrForumHeader .tmrfh-right{flex:none}
+}
+@media(max-width:520px){
+    /* Below this the logged-out auth pair (Log In + Register) plus a text
+       label overflows a 375px phone by ~55px, so the label is dropped and
+       the home glyph carries the button (aria-label + title keep it named). */
+    #tmrForumHeader .tmrfh-right .tmrfh-mainsite{padding:0 9px}
+    #tmrForumHeader .tmrfh-right .tmrfh-mainsite .tmrfh-mainsite-txt{display:none}
+}
+</style>
 <div class="tmrfh" id="tmrForumHeader" role="banner">
     <div class="tmrfh-in">
-        <a href="/forum/" class="tmrfh-brand" aria-label="TrustMyRecord Forums home" onclick="event.preventDefault();tmrfhCloseNav();tmrfhSetActiveNav('Forum Home');showCategories();">
+        <!-- NAV_20260721: the logo is now a plain link to the main site. It used
+             to preventDefault into showCategories(), which meant the one control
+             every user reaches for to "get back to TrustMyRecord" silently kept
+             them inside the forum. Forum Home is still one click away in the nav
+             immediately to the right. -->
+        <a href="https://trustmyrecord.com/" class="tmrfh-brand" rel="home" aria-label="TrustMyRecord home">
             <span class="tmrfh-mark" aria-hidden="true">TMR</span>
             <span class="tmrfh-brand-txt">Trust<b>My</b>Record<small>Forums</small></span>
         </a>
@@ -2686,12 +2727,20 @@ body.classic-forum .fstatblock-body{border-color:#d6d6d6 !important;font-family:
             <a href="/forum/" data-nav="rules" class="tmrfh-collapse" onclick="event.preventDefault();showRules();">Rules</a>
             <a href="/chat/" class="tmrfh-collapse" title="Community chat room">Chat</a>
             <a href="/sports-talk/" class="tmrfh-collapse" title="General sports fandom discussion (separate from the betting forum)">Sports Talk</a>
-            <a href="/" class="tmrfh-mainsite">Main Site</a>
         </nav>
 
         <div class="tmrfh-spacer"></div>
 
         <div class="tmrfh-right">
+            <!-- NAV_20260721: "Main Site" lives in the always-visible right rail,
+                 not inside .tmrfh-nav. Inside the nav it collapsed into the
+                 mobile burger, which is exactly where a "get me back to the main
+                 site" link must not be. -->
+            <a href="https://trustmyrecord.com/" class="tmrfh-mainsite" rel="home" aria-label="Main site home" title="Back to the main TrustMyRecord site">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 11 12 4l8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1Z"/></svg>
+                <span class="tmrfh-mainsite-txt">Main Site</span>
+            </a>
+
             <div class="tmrfh-search" id="tmrfhSearch">
                 <button type="button" class="tmrfh-icon" id="tmrfhSearchToggle" aria-label="Search" title="Search" onclick="tmrfhToggleSearch()">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14Zm5 12 4 4"/></svg>
@@ -2749,11 +2798,20 @@ body.classic-forum .fstatblock-body{border-color:#d6d6d6 !important;font-family:
         </section>
         <section class="fside-box">
             <div class="fside-head">TrustMyRecord</div>
+            <!-- NAV_20260721: the forum used to expose only four site links from
+                 the sidebar. Home leads, then the sections a forum reader
+                 actually wants next. -->
             <div class="fside-list">
+                <a href="https://trustmyrecord.com/" rel="home"><b>&#8962; Main Site Home</b></a>
                 <a href="/handicappers/">Handicappers</a>
-                <a href="/leaderboard/">Leaderboard</a>
+                <a href="/leaderboards/">Leaderboards</a>
                 <a href="/sportsbook/">Sportsbook</a>
+                <a href="/handicapping/">Handicapping Hub</a>
+                <a href="/tools/">Tools &amp; Simulators</a>
                 <a href="/challenges/">Challenges</a>
+                <a href="/contests/">Contests</a>
+                <a href="/marketplace/">Pick Marketplace</a>
+                <a href="/sports-talk/">Sports Talk</a>
             </div>
         </section>
     </aside>

@@ -206,6 +206,23 @@ def plain_excerpt(raw, limit=155):
     return t[:limit - 1].rsplit(" ", 1)[0] + "…"
 
 
+def has_profile_page(name):
+    """True when /u/<name>/ actually exists in this checkout.
+
+    Thread pages linked every author to /u/<author>/ unconditionally, which 404s
+    for members with no baked profile page (bots, deactivated accounts —
+    /u/TMRTrivia/ was live and broken). build_profile_pages.py owns that
+    directory, so existence on disk is the authoritative test. NAV_20260721.
+    """
+    return bool(name) and os.path.isdir(os.path.join(ROOT, "u", name))
+
+
+def author_link(name):
+    """Author name as a link when a profile page exists, plain text otherwise."""
+    return f'<a href="/u/{html.escape(name)}/">{html.escape(name)}</a>' \
+        if has_profile_page(name) else html.escape(name)
+
+
 def thread_url(tid, slug):
     return f"{SITE}/forum/thread/{tid}/{slug}/"
 
@@ -213,7 +230,10 @@ def thread_url(tid, slug):
 def author_block(name, when, is_op=False, headline=None):
     e = html.escape
     who = e(name or "Member")
-    prof = f'<a class="ft-au" href="/u/{who}/">{who}</a>' if name else '<span class="ft-au">Member</span>'
+    # NAV_20260721: link only when the profile page actually exists, otherwise
+    # this renders a 404 for every post by a member without one.
+    prof = (f'<a class="ft-au" href="/u/{who}/">{who}</a>'
+            if has_profile_page(name) else f'<span class="ft-au">{who}</span>')
     when_h = human_date(when)
     dt = iso_date(when)
     tag = '<span class="ft-op">Original poster</span>' if is_op else ""
@@ -232,6 +252,13 @@ def page_html(t, posts):
     author = t.get("username") or "Member"
     created = t.get("created_at")
     reply_n = len(posts)
+
+    # NAV_20260721: thread pages link back to their own board and to the poster's
+    # verified record, so a thread is never a leaf with only three exits.
+    cat_link_html = (f'<a href="/forum/{e(cat_slug)}/">{e(cat_name)} board</a> &middot;\n     '
+                     if cat_slug else '')
+    author_record_link = (f'<a href="/u/{e(author)}/">{e(author)}&#39;s verified record</a> &middot;\n     '
+                          if has_profile_page(author) else '')
 
     # The thread's own title, verbatim, and nothing else. Members reuse titles
     # ("Athletics" twice, "Weekly leaderboard talk..." three times) exactly like
@@ -320,7 +347,11 @@ def page_html(t, posts):
         reply_html = ('<section class="ft-block"><h2>Replies</h2>'
                       '<p class="ft-none">No replies yet. Be the first to post.</p></section>')
 
+    # NAV_20260721: every crawlable thread page now starts with a home crumb, so
+    # the path back to trustmyrecord.com exists in the no-JS HTML and is not
+    # dependent on tmr-linkhub.js hydrating.
     crumb = (f'<nav class="ft-crumb" aria-label="Breadcrumb">'
+             f'<a href="/">Home</a> &rsaquo; '
              f'<a href="/forum/">Forums</a> &rsaquo; '
              + (f'<a href="/forum/#cat-{e(cat_slug)}">{e(cat_name)}</a> &rsaquo; ' if cat_slug
                 else f'<span>{e(cat_name)}</span> &rsaquo; ')
@@ -360,6 +391,8 @@ def page_html(t, posts):
 <meta name="twitter:image" content="{og_card}">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css">
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav1">
+<script defer src="/static/js/tmr-linkhub.js?v=20260721nav1"></script>
 <link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
 <script defer src="/static/js/tmr-share.js?v=20260721share1"></script>
 <script type="application/ld+json">
@@ -394,7 +427,7 @@ def page_html(t, posts):
 <main class="ft-wrap">
   {crumb}
   <h1 class="ft-title">{e(title_txt)}</h1>
-  <p class="ft-sub">Posted by <a href="/u/{e(author)}/">{e(author)}</a> in
+  <p class="ft-sub">Posted by {author_link(author)} in
      {(f'<a href="/forum/#cat-{e(cat_slug)}">{e(cat_name)}</a>' if cat_slug else e(cat_name))}
      &middot; {e(human_date(created))} &middot; {reply_n} {"reply" if reply_n == 1 else "replies"}</p>
   {share_html}
@@ -402,9 +435,16 @@ def page_html(t, posts):
   <section class="ft-block"><h2>Original post</h2>{op_html}</section>
   {reply_html}
   <a class="ft-cta" href="/register/">Join the discussion</a>
-  <p class="ft-links"><a href="/forum/">All TrustMyRecord forums</a> &middot;
-     <a href="/handicappers/">Verified handicappers</a> &middot;
-     <a href="/leaderboards/">Leaderboards</a></p>
+  <p class="ft-links"><a href="/">TrustMyRecord home</a> &middot;
+     <a href="/forum/">All forum boards</a> &middot;
+     {cat_link_html}
+     {author_record_link}<a href="/handicappers/">Verified handicappers</a> &middot;
+     <a href="/leaderboards/">Leaderboards</a> &middot;
+     <a href="/sportsbook/">Sportsbook</a> &middot;
+     <a href="/handicapping/">Handicapping Hub</a> &middot;
+     <a href="/tools/">Tools &amp; simulators</a> &middot;
+     <a href="/challenges/">Challenges</a> &middot;
+     <a href="/marketplace/">Pick marketplace</a></p>
 </main>
 <script>window.__TMR_FORUM_THREAD_ID={json.dumps(tid)};window.__TMR_FORUM_THREAD_SLUG={json.dumps(slug)};</script>
 <script src="/static/js/tmr-forum-thread-hydrate.js" defer></script>
@@ -446,6 +486,19 @@ def cat_page_html(cat, cat_threads):
     url = cat_url(slug)
     page_title = f"{name} Forum | TrustMyRecord"
     n = len(cat_threads)
+
+    # NAV_20260721: a sport board links to that sport's hub/tracker, not just to
+    # the generic site sections.
+    _SPORT_LINKS = {
+        "mlb":    [("/handicapping/mlb/", "MLB Handicapping Hub"), ("/mlb-pick-tracker/", "MLB pick tracker"), ("/mlb-simulator/", "MLB simulator")],
+        "nba":    [("/nba-pick-tracker/", "NBA pick tracker"), ("/nba-handicappers/", "NBA handicappers")],
+        "nfl":    [("/nfl-pick-tracker/", "NFL pick tracker"), ("/nfl-simulator/", "NFL simulator"), ("/nfl-handicappers/", "NFL handicappers")],
+        "nhl":    [("/nhl-pick-tracker/", "NHL pick tracker")],
+        "soccer": [("/soccer-pick-tracker/", "Soccer pick tracker")],
+    }
+    sport_links = "".join(
+        f'<a href="{href}">{e(txt)}</a> &middot;\n     '
+        for href, txt in _SPORT_LINKS.get(slug, []))
 
     ld = {
         "@context": "https://schema.org",
@@ -512,6 +565,8 @@ def cat_page_html(cat, cat_threads):
 <meta name="twitter:card" content="summary">
 <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css">
+<link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav1">
+<script defer src="/static/js/tmr-linkhub.js?v=20260721nav1"></script>
 <script type="application/ld+json">
 {ld_json}
 </script>
@@ -532,14 +587,21 @@ def cat_page_html(cat, cat_threads):
 </head>
 <body>
 <main class="fc-wrap">
-  <nav class="fc-crumb" aria-label="Breadcrumb"><a href="/forum/">Forums</a> &rsaquo; <span>{e(name)}</span></nav>
+  <nav class="fc-crumb" aria-label="Breadcrumb"><a href="/">Home</a> &rsaquo; <a href="/forum/">Forums</a> &rsaquo; <span>{e(name)}</span></nav>
   <h1 class="fc-title">{e(name)}</h1>
   <p class="fc-sub">{e(desc_txt)} &middot; {n} {"thread" if n == 1 else "threads"}</p>
   {list_html}
   <a class="fc-cta" href="/register/">Join the discussion</a>
-  <p class="fc-links"><a href="/forum/">All TrustMyRecord forums</a> &middot;
+  <p class="fc-links"><a href="/">TrustMyRecord home</a> &middot;
+     <a href="/forum/">All forum boards</a> &middot;
+     {sport_links}
      <a href="/handicappers/">Verified handicappers</a> &middot;
-     <a href="/leaderboards/">Leaderboards</a></p>
+     <a href="/leaderboards/">Leaderboards</a> &middot;
+     <a href="/sportsbook/">Sportsbook</a> &middot;
+     <a href="/handicapping/">Handicapping Hub</a> &middot;
+     <a href="/tools/">Tools &amp; simulators</a> &middot;
+     <a href="/challenges/">Challenges</a> &middot;
+     <a href="/marketplace/">Pick marketplace</a></p>
 </main>
 <script>window.__TMR_FORUM_CAT_SLUG={json.dumps(slug)};</script>
 <script src="/static/js/tmr-forum-cat-hydrate.js" defer></script>
