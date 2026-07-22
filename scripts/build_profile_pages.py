@@ -651,6 +651,35 @@ def compact_html(un):
 </html>
 """
 
+def forum_thread_authors():
+    """Usernames the forum links to as /u/<name>/.
+
+    NAV_20260721: the interactive forum renders every thread/post author as a
+    link to /u/<author>/, but this builder only guaranteed a page for members the
+    directory and leaderboards can surface — which are gated on
+    verification_status. An official bot account slipped through that gap and
+    /u/TMRTrivia/ was live and 404ing from the Strategy board. Link integrity is
+    the whole point of linked_lowdata, so forum authors feed it too.
+
+    Fails soft: if the forum API is unreachable the build carries on with the
+    leaderboard-derived set, exactly as before.
+    """
+    out, page = set(), 1
+    try:
+        while True:
+            d = get(f"{API}/forum/threads?limit=100&page={page}")
+            for t in d.get("threads") or []:
+                if t.get("username"):
+                    out.add(t["username"])
+            pg = d.get("pagination") or {}
+            if page >= int(pg.get("pages", 1) or 1):
+                break
+            page += 1
+    except Exception as ex:
+        print(f"  ! forum author fetch failed ({ex}) - continuing without it")
+    return out
+
+
 def main():
     dry = "--dry-run" in sys.argv
     base = list_users()
@@ -685,8 +714,13 @@ def main():
     existing = set(os.listdir(UDIR)) if os.path.isdir(UDIR) else set()
     # compact set = existing low-data dirs UNION linked low-data users still
     # missing a page (so a directory/leaderboard link never 404s).
+    # NAV_20260721: forum author links are the other place the site points at
+    # /u/<name>/, so they get the same guarantee.
+    forum_linked = {n for n in forum_thread_authors()
+                    if n.lower() not in INTERNAL_DENYLIST}
     to_compact = sorted(({n for n in existing
-                          if os.path.isdir(os.path.join(UDIR, n))} | linked_lowdata)
+                          if os.path.isdir(os.path.join(UDIR, n))}
+                         | linked_lowdata | forum_linked)
                         - elig_names)
 
     print(f"eligible (>= {GRADED_MIN} graded): {len(eligible_pages)}")
