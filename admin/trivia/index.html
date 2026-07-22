@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Trivia Question Admin | TrustMyRecord</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <script src="/static/js/config.js"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body { margin:0; background:#0b1117; color:#e8eef5; font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif; }
+    .wrap { max-width:1240px; margin:0 auto; padding:26px 18px 70px; }
+    h1 { margin:0 0 4px; font-size:26px; }
+    h2 { font-size:17px; margin:0 0 10px; }
+    .muted { color:#9bacbd; font-size:13px; line-height:1.6; }
+    .panel { background:#121a23; border:1px solid #263546; border-radius:10px; padding:16px; margin-bottom:14px; }
+    label { display:block; font-size:11px; color:#9bacbd; text-transform:uppercase; letter-spacing:.05em; margin:10px 0 4px; }
+    input, select, textarea {
+      background:#0d141c; border:1px solid #304155; border-radius:7px; color:#e8eef5;
+      padding:8px 10px; font-family:inherit; font-size:13.5px; width:100%; box-sizing:border-box;
+    }
+    textarea { min-height:70px; resize:vertical; }
+    button {
+      background:#1c66d6; border:1px solid #2a7ae8; color:#fff; border-radius:7px;
+      padding:9px 15px; font-size:13px; font-weight:600; cursor:pointer;
+    }
+    button.ghost { background:#182230; border-color:#2c3d51; color:#cfe0f2; }
+    button.danger { background:#7f1d1d; border-color:#b91c1c; }
+    button.good   { background:#14532d; border-color:#16a34a; }
+    button[disabled] { opacity:.45; cursor:default; }
+    .row { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; }
+    .row > div { flex:1 1 170px; }
+    .grid4 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    @media (max-width:700px){ .grid4 { grid-template-columns:1fr; } }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th, td { text-align:left; padding:8px 8px; border-bottom:1px solid #1e2a38; vertical-align:top; }
+    th { color:#9bacbd; font-size:11px; text-transform:uppercase; letter-spacing:.05em; }
+    .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:10.5px; font-weight:700; text-transform:uppercase; }
+    .pill.on  { background:rgba(22,163,74,.2); color:#4ade80; }
+    .pill.off { background:rgba(148,163,184,.2); color:#94a3b8; }
+    .pill.easy { background:rgba(22,163,74,.16); color:#4ade80; }
+    .pill.medium { background:rgba(45,212,191,.16); color:#5eead4; }
+    .pill.hard { background:rgba(239,68,68,.16); color:#f87171; }
+    .note { margin:10px 0; font-size:13px; padding:9px 12px; border-radius:8px; }
+    .note.ok  { background:rgba(22,163,74,.15); color:#86efac; }
+    .note.err { background:rgba(185,28,28,.18); color:#fca5a5; }
+    .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    @media (max-width:700px){ .stats { grid-template-columns:repeat(2,1fr); } }
+    .stat { background:#0d141c; border:1px solid #223142; border-radius:9px; padding:12px; text-align:center; }
+    .stat .v { font-size:21px; font-weight:800; }
+    .stat .l { font-size:10.5px; color:#9bacbd; text-transform:uppercase; letter-spacing:.05em; margin-top:3px; }
+    .ansrow { display:flex; gap:8px; align-items:center; margin-bottom:6px; }
+    .ansrow input[type=radio] { width:auto; }
+    details summary { cursor:pointer; color:#9bacbd; font-size:13px; margin-bottom:8px; }
+    code { background:#0d141c; padding:1px 5px; border-radius:4px; font-size:12px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Trivia Question Admin</h1>
+  <p class="muted">Add, edit, import, disable and review trivia questions without touching code.
+     Requires an admin account. Editing or disabling a question never affects players' history &mdash;
+     every attempt snapshots the question at play time.</p>
+
+  <div class="panel">
+    <label for="adminToken">Bearer token (optional &mdash; your logged-in token is used automatically)</label>
+    <div class="row">
+      <div style="flex:3 1 400px;"><input id="adminToken" type="password" autocomplete="off" placeholder="Paste a bearer token to override"></div>
+      <div style="flex:0 0 auto;"><button id="saveTokenBtn" class="ghost">Save token</button></div>
+    </div>
+  </div>
+
+  <div id="notes"></div>
+
+  <!-- ============================ SUMMARY ============================ -->
+  <div class="panel">
+    <h2>Bank Health</h2>
+    <div class="stats" id="summaryStats"></div>
+    <div style="margin-top:14px;"><table id="summaryTable"></table></div>
+    <p class="muted" id="scoringNote" style="margin-top:12px;"></p>
+  </div>
+
+  <!-- ============================ ADD / EDIT ============================ -->
+  <div class="panel">
+    <h2 id="editorTitle">Add a Question</h2>
+    <input type="hidden" id="qId">
+    <div class="grid4">
+      <div>
+        <label for="qCategory">Category</label>
+        <select id="qCategory"></select>
+      </div>
+      <div>
+        <label for="qDifficulty">Difficulty (sets base points + time limit)</label>
+        <select id="qDifficulty">
+          <option value="easy">Easy &mdash; 100 base, 20s</option>
+          <option value="medium" selected>Medium &mdash; 200 base, 25s</option>
+          <option value="hard">Hard &mdash; 300 base, 30s</option>
+        </select>
+      </div>
+    </div>
+    <label for="qText">Question</label>
+    <textarea id="qText" maxlength="1000" placeholder="Who holds the MLB career record for..."></textarea>
+
+    <label>Answers (mark exactly one correct)</label>
+    <div id="qAnswers">
+      <div class="ansrow"><input type="radio" name="qCorrect" value="0"><input type="text" class="qa" placeholder="Answer A" maxlength="500"></div>
+      <div class="ansrow"><input type="radio" name="qCorrect" value="1"><input type="text" class="qa" placeholder="Answer B" maxlength="500"></div>
+      <div class="ansrow"><input type="radio" name="qCorrect" value="2"><input type="text" class="qa" placeholder="Answer C" maxlength="500"></div>
+      <div class="ansrow"><input type="radio" name="qCorrect" value="3"><input type="text" class="qa" placeholder="Answer D" maxlength="500"></div>
+    </div>
+
+    <label for="qExplanation">Explanation / supporting fact (required &mdash; shown after the player answers)</label>
+    <textarea id="qExplanation" maxlength="2000"></textarea>
+
+    <div class="grid4">
+      <div><label for="qTopic">Topic tag (optional)</label><input id="qTopic" maxlength="60" placeholder="career-records"></div>
+      <div><label for="qSource">Source note (optional)</label><input id="qSource" maxlength="300"></div>
+    </div>
+    <label for="qKey">External key (optional &mdash; stable id used for re-import upserts)</label>
+    <input id="qKey" maxlength="160" placeholder="mlb.career-hr">
+
+    <div class="row" style="margin-top:14px;">
+      <div style="flex:0 0 auto;"><button id="saveQBtn">Save question</button></div>
+      <div style="flex:0 0 auto;"><button id="clearQBtn" class="ghost">Clear form</button></div>
+    </div>
+  </div>
+
+  <!-- ============================ IMPORT ============================ -->
+  <div class="panel">
+    <h2>Bulk Import</h2>
+    <p class="muted">Paste a JSON array of questions. Each needs
+      <code>category_slug</code>, <code>question_text</code>, <code>difficulty</code>,
+      <code>explanation</code> and exactly four <code>answers</code>
+      (<code>{answer_text, is_correct}</code>). Add <code>external_key</code> to make
+      re-imports update instead of duplicate. Validate first with a dry run.</p>
+    <textarea id="importJson" style="min-height:180px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;"
+      placeholder='[{"category_slug":"mlb","question_text":"...","difficulty":"medium","explanation":"...","external_key":"mlb.example","answers":[{"answer_text":"A","is_correct":true},{"answer_text":"B","is_correct":false},{"answer_text":"C","is_correct":false},{"answer_text":"D","is_correct":false}]}]'></textarea>
+    <div class="row" style="margin-top:10px;">
+      <div style="flex:0 0 auto;"><button id="dryRunBtn" class="ghost">Dry run (validate)</button></div>
+      <div style="flex:0 0 auto;"><button id="importBtn">Import</button></div>
+    </div>
+    <pre id="importOut" class="muted" style="white-space:pre-wrap;margin-top:10px;"></pre>
+  </div>
+
+  <!-- ============================ BROWSE ============================ -->
+  <div class="panel">
+    <h2>Review Questions</h2>
+    <div class="row">
+      <div><label for="fCat">Category</label><select id="fCat"><option value="">All</option></select></div>
+      <div><label for="fDiff">Difficulty</label><select id="fDiff"><option value="">All</option><option>easy</option><option>medium</option><option>hard</option></select></div>
+      <div><label for="fStatus">Status</label><select id="fStatus"><option value="all">All</option><option value="active">Active</option><option value="disabled">Disabled</option></select></div>
+      <div style="flex:2 1 240px;"><label for="fSearch">Search text</label><input id="fSearch" placeholder="Bonds"></div>
+      <div style="flex:0 0 auto;"><button id="searchBtn">Search</button></div>
+    </div>
+    <div style="overflow-x:auto;margin-top:14px;"><table id="qTable"></table></div>
+    <div class="row" style="justify-content:center;margin-top:12px;">
+      <div style="flex:0 0 auto;"><button id="pgPrev" class="ghost">&larr; Prev</button></div>
+      <div style="flex:0 0 auto;text-align:center;" class="muted"><span id="pgLabel"></span></div>
+      <div style="flex:0 0 auto;"><button id="pgNext" class="ghost">Next &rarr;</button></div>
+    </div>
+  </div>
+
+  <!-- ============================ REPORTS ============================ -->
+  <div class="panel">
+    <h2>Player Reports</h2>
+    <div style="overflow-x:auto;"><table id="reportTable"></table></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var API = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+  var tokenInput = document.getElementById('adminToken');
+  tokenInput.value = localStorage.getItem('tmr_admin_token') || '';
+  var page = 1, pages = 1, categories = [];
+
+  function esc(t) { var d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
+  function token() {
+    return (tokenInput.value && tokenInput.value.trim()) ||
+      localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken') ||
+      localStorage.getItem('access_token') || localStorage.getItem('token') || localStorage.getItem('tmr_token');
+  }
+  function headers() { return { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (token() || '') }; }
+  function call(path, opts) {
+    return fetch(API + path, Object.assign({ headers: headers() }, opts || {}))
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; }); });
+  }
+  function note(msg, isErr) {
+    var d = document.createElement('div');
+    d.className = 'note ' + (isErr ? 'err' : 'ok');
+    d.textContent = msg;
+    document.getElementById('notes').prepend(d);
+    setTimeout(function () { d.remove(); }, 7000);
+  }
+
+  // ---------------------------------------------------------------- summary
+  function loadSummary() {
+    call('/trivia/v2/admin/summary').then(function (d) {
+      var t = d.totals || {};
+      document.getElementById('summaryStats').innerHTML =
+        '<div class="stat"><div class="v">' + Number(t.active_questions || 0).toLocaleString() + '</div><div class="l">Active Questions</div></div>' +
+        '<div class="stat"><div class="v">' + Number(t.settled_attempts || 0).toLocaleString() + '</div><div class="l">Settled Attempts</div></div>' +
+        '<div class="stat"><div class="v">' + Number(t.players || 0).toLocaleString() + '</div><div class="l">Players</div></div>' +
+        '<div class="stat"><div class="v">' + Number(t.points_awarded || 0).toLocaleString() + '</div><div class="l">Points Awarded</div></div>';
+
+      document.getElementById('summaryTable').innerHTML =
+        '<tr><th>Category</th><th>Active</th><th>Disabled</th><th>Easy</th><th>Medium</th><th>Hard</th></tr>' +
+        (d.by_category || []).map(function (c) {
+          return '<tr><td>' + esc(c.name) + ' <span class="muted">(' + esc(c.slug) + ')</span></td>' +
+            '<td>' + c.active + '</td><td>' + c.disabled + '</td>' +
+            '<td>' + c.easy + '</td><td>' + c.medium + '</td><td>' + c.hard + '</td></tr>';
+        }).join('');
+
+      var sc = d.scoring || {};
+      document.getElementById('scoringNote').innerHTML =
+        '<strong>Scoring:</strong> ' + esc(sc.formula || '') + '. Base points ' +
+        esc(JSON.stringify(sc.base_points || {})) + '. Speed multiplier ' +
+        esc(String((sc.speed_multiplier || {}).min)) + 'x to ' + esc(String((sc.speed_multiplier || {}).max)) + 'x. ' +
+        'Zero points for: ' + esc((sc.zero_points_when || []).join(', ')) + '.' +
+        (d.questions_missing_explanation
+          ? ' <strong style="color:#fbbf24;">' + d.questions_missing_explanation + ' active questions are missing an explanation.</strong>' : '');
+    }).catch(function (e) { note('Summary: ' + e.message, true); });
+  }
+
+  // ------------------------------------------------------------- categories
+  function loadCategories() {
+    return fetch(API + '/trivia/categories').then(function (r) { return r.json(); }).then(function (d) {
+      categories = d.categories || [];
+      var opts = categories.map(function (c) {
+        return '<option value="' + esc(c.slug) + '">' + esc(c.name) + '</option>';
+      }).join('');
+      document.getElementById('qCategory').innerHTML = opts;
+      document.getElementById('fCat').innerHTML = '<option value="">All</option>' + opts;
+    });
+  }
+
+  // ----------------------------------------------------------------- editor
+  function clearForm() {
+    document.getElementById('qId').value = '';
+    document.getElementById('qText').value = '';
+    document.getElementById('qExplanation').value = '';
+    document.getElementById('qTopic').value = '';
+    document.getElementById('qSource').value = '';
+    document.getElementById('qKey').value = '';
+    document.querySelectorAll('#qAnswers .qa').forEach(function (i) { i.value = ''; });
+    document.querySelectorAll('input[name=qCorrect]').forEach(function (r) { r.checked = false; });
+    document.getElementById('editorTitle').textContent = 'Add a Question';
+  }
+
+  function readForm() {
+    var answers = [];
+    var inputs = document.querySelectorAll('#qAnswers .qa');
+    var correct = document.querySelector('input[name=qCorrect]:checked');
+    for (var i = 0; i < inputs.length; i++) {
+      answers.push({ answer_text: inputs[i].value.trim(), is_correct: !!(correct && Number(correct.value) === i) });
+    }
+    return {
+      category_slug: document.getElementById('qCategory').value,
+      question_text: document.getElementById('qText').value.trim(),
+      difficulty: document.getElementById('qDifficulty').value,
+      explanation: document.getElementById('qExplanation').value.trim(),
+      topic: document.getElementById('qTopic').value.trim() || null,
+      source_note: document.getElementById('qSource').value.trim() || null,
+      external_key: document.getElementById('qKey').value.trim() || null,
+      answers: answers
+    };
+  }
+
+  document.getElementById('saveQBtn').onclick = function () {
+    var id = document.getElementById('qId').value;
+    var body = readForm();
+    var p = id
+      ? call('/trivia/v2/admin/questions/' + id, { method: 'PUT', body: JSON.stringify(body) })
+      : call('/trivia/v2/admin/questions', { method: 'POST', body: JSON.stringify(body) });
+    p.then(function (d) {
+      note(id ? 'Question #' + id + ' updated.' : (d.created ? 'Question created (#' + d.id + ').' : 'Existing question updated (#' + d.id + ').'));
+      clearForm(); loadSummary(); loadQuestions();
+    }).catch(function (e) { note('Save failed: ' + e.message, true); });
+  };
+  document.getElementById('clearQBtn').onclick = clearForm;
+
+  // ----------------------------------------------------------------- import
+  function doImport(dry) {
+    var out = document.getElementById('importOut');
+    var raw = document.getElementById('importJson').value.trim();
+    var parsed;
+    try { parsed = JSON.parse(raw); } catch (e) { out.textContent = 'Invalid JSON: ' + e.message; return; }
+    if (!Array.isArray(parsed)) { out.textContent = 'Expected a JSON array.'; return; }
+    out.textContent = 'Working...';
+    call('/trivia/v2/admin/questions/import', {
+      method: 'POST', body: JSON.stringify({ questions: parsed, dry_run: !!dry })
+    }).then(function (d) {
+      out.textContent = JSON.stringify(d, null, 2);
+      if (!dry) { note('Imported ' + d.imported + ' (' + d.created + ' new, ' + d.updated + ' updated).'); loadSummary(); loadQuestions(); }
+    }).catch(function (e) { out.textContent = 'Import failed: ' + e.message; });
+  }
+  document.getElementById('dryRunBtn').onclick = function () { doImport(true); };
+  document.getElementById('importBtn').onclick = function () { doImport(false); };
+
+  // ----------------------------------------------------------------- browse
+  function loadQuestions() {
+    var p = ['page=' + page, 'limit=25'];
+    var c = document.getElementById('fCat').value;
+    var d = document.getElementById('fDiff').value;
+    var st = document.getElementById('fStatus').value;
+    var q = document.getElementById('fSearch').value.trim();
+    if (c) p.push('category=' + encodeURIComponent(c));
+    if (d) p.push('difficulty=' + encodeURIComponent(d));
+    if (st) p.push('status=' + encodeURIComponent(st));
+    if (q) p.push('q=' + encodeURIComponent(q));
+
+    call('/trivia/v2/admin/questions?' + p.join('&')).then(function (res) {
+      pages = res.pagination.pages || 1;
+      document.getElementById('pgLabel').textContent = 'Page ' + res.pagination.page + ' of ' + pages +
+        ' (' + res.pagination.total + ' questions)';
+      document.getElementById('qTable').innerHTML =
+        '<tr><th>#</th><th>Question</th><th>Cat</th><th>Diff</th><th>Plays</th><th>Correct%</th><th>Status</th><th>Actions</th></tr>' +
+        res.questions.map(function (row) {
+          var pct = row.times_played > 0 ? Math.round((row.times_correct / row.times_played) * 100) + '%' : '--';
+          var ans = (row.answers || []).map(function (a) {
+            return (a.is_correct ? '<strong style="color:#4ade80;">' : '<span style="color:#8fa3b8;">') +
+              esc(a.answer_text) + (a.is_correct ? '</strong>' : '</span>');
+          }).join(' | ');
+          return '<tr>' +
+            '<td>' + row.id + '</td>' +
+            '<td style="max-width:420px;">' + esc(row.question_text) +
+              '<div class="muted" style="margin-top:4px;">' + ans + '</div>' +
+              (row.explanation ? '<div class="muted" style="margin-top:4px;font-style:italic;">' + esc(row.explanation) + '</div>'
+                               : '<div style="color:#fbbf24;margin-top:4px;font-size:12px;">No explanation</div>') +
+            '</td>' +
+            '<td>' + esc(row.category_slug) + '</td>' +
+            '<td><span class="pill ' + esc(row.difficulty) + '">' + esc(row.difficulty) + '</span></td>' +
+            '<td>' + row.times_played + '</td><td>' + pct + '</td>' +
+            '<td><span class="pill ' + (row.is_active ? 'on">Active' : 'off">Disabled') + '</span></td>' +
+            '<td style="white-space:nowrap;">' +
+              '<button class="ghost" data-edit="' + row.id + '">Edit</button> ' +
+              '<button class="' + (row.is_active ? 'danger" data-toggle-off="' : 'good" data-toggle-on="') + row.id + '">' +
+                (row.is_active ? 'Disable' : 'Enable') + '</button>' +
+            '</td></tr>';
+        }).join('');
+
+      document.querySelectorAll('[data-edit]').forEach(function (b) {
+        b.onclick = function () {
+          var row = res.questions.filter(function (r) { return String(r.id) === b.getAttribute('data-edit'); })[0];
+          if (!row) return;
+          document.getElementById('qId').value = row.id;
+          document.getElementById('editorTitle').textContent = 'Edit Question #' + row.id;
+          document.getElementById('qCategory').value = row.category_slug;
+          document.getElementById('qDifficulty').value = row.difficulty;
+          document.getElementById('qText').value = row.question_text;
+          document.getElementById('qExplanation').value = row.explanation || '';
+          document.getElementById('qTopic').value = row.topic || '';
+          document.getElementById('qSource').value = row.source_note || '';
+          document.getElementById('qKey').value = row.external_key || '';
+          var inputs = document.querySelectorAll('#qAnswers .qa');
+          var radios = document.querySelectorAll('input[name=qCorrect]');
+          (row.answers || []).forEach(function (a, i) {
+            if (inputs[i]) inputs[i].value = a.answer_text;
+            if (radios[i]) radios[i].checked = !!a.is_correct;
+          });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+      });
+      document.querySelectorAll('[data-toggle-off],[data-toggle-on]').forEach(function (b) {
+        b.onclick = function () {
+          var off = b.getAttribute('data-toggle-off');
+          var id = off || b.getAttribute('data-toggle-on');
+          call('/trivia/v2/admin/questions/' + id, { method: 'PUT', body: JSON.stringify({ is_active: !off }) })
+            .then(function () { note('Question #' + id + (off ? ' disabled.' : ' enabled.')); loadQuestions(); loadSummary(); })
+            .catch(function (e) { note('Failed: ' + e.message, true); });
+        };
+      });
+    }).catch(function (e) { note('Load questions: ' + e.message, true); });
+  }
+  document.getElementById('searchBtn').onclick = function () { page = 1; loadQuestions(); };
+  document.getElementById('pgPrev').onclick = function () { if (page > 1) { page--; loadQuestions(); } };
+  document.getElementById('pgNext').onclick = function () { if (page < pages) { page++; loadQuestions(); } };
+
+  // ---------------------------------------------------------------- reports
+  function loadReports() {
+    call('/trivia/admin/reports?status=pending').then(function (d) {
+      var rows = d.reports || [];
+      document.getElementById('reportTable').innerHTML =
+        '<tr><th>#</th><th>Question</th><th>Reason</th><th>Details</th><th>By</th><th>When</th><th>Actions</th></tr>' +
+        (rows.length ? rows.map(function (r) {
+          return '<tr><td>' + r.id + '</td><td style="max-width:380px;">' + esc(r.question_text) + '</td>' +
+            '<td>' + esc(r.reason) + '</td><td class="muted">' + esc(r.details || '') + '</td>' +
+            '<td>' + esc(r.reporter_username || '') + '</td>' +
+            '<td class="muted">' + new Date(r.created_at).toLocaleString() + '</td>' +
+            '<td style="white-space:nowrap;">' +
+              '<button class="ghost" data-res="' + r.id + '">Resolve</button> ' +
+              '<button class="ghost" data-dis="' + r.id + '">Dismiss</button></td></tr>';
+        }).join('') : '<tr><td colspan="7" class="muted">No pending reports.</td></tr>');
+
+      document.querySelectorAll('[data-res],[data-dis]').forEach(function (b) {
+        b.onclick = function () {
+          var id = b.getAttribute('data-res') || b.getAttribute('data-dis');
+          var status = b.hasAttribute('data-res') ? 'resolved' : 'dismissed';
+          call('/trivia/admin/reports/' + id + '/resolve', { method: 'POST', body: JSON.stringify({ status: status }) })
+            .then(function () { note('Report #' + id + ' ' + status + '.'); loadReports(); })
+            .catch(function (e) { note('Failed: ' + e.message, true); });
+        };
+      });
+    }).catch(function (e) { note('Reports: ' + e.message, true); });
+  }
+
+  document.getElementById('saveTokenBtn').onclick = function () {
+    localStorage.setItem('tmr_admin_token', tokenInput.value.trim());
+    note('Token saved.');
+    loadSummary(); loadQuestions(); loadReports();
+  };
+
+  loadCategories().then(function () {
+    loadSummary(); loadQuestions(); loadReports();
+  });
+})();
+</script>
+</body>
+</html>
