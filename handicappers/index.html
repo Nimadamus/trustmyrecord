@@ -1286,7 +1286,7 @@
                 basketball_nba: 'NBA',
                 basketball_nba_summer: 'NBA Summer League',
                 basketball_ncaab: 'NCAAB',
-                baseball_mlb: 'MLB',
+                baseball_mlb: 'MLB', baseball_npb: 'Japan NPB',
                 icehockey_nhl: 'NHL',
                 soccer_epl: 'EPL'
             };
@@ -2907,7 +2907,7 @@
                 if (initialQuery) els.search.value = initialQuery;
                 // Deep-link support: /handicappers/?sport=MLB (or mlb / baseball_mlb)
                 // lets the sport-tracker pages open this board pre-filtered to one sport.
-                const SPORT_PARAM_MAP = { mlb:'MLB', nba:'NBA', nfl:'NFL', nhl:'NHL', soccer:'Soccer', baseball_mlb:'MLB', basketball_nba:'NBA', americanfootball_nfl:'NFL', icehockey_nhl:'NHL' };
+                const SPORT_PARAM_MAP = { mlb:'MLB', nba:'NBA', nfl:'NFL', nhl:'NHL', soccer:'Soccer', baseball_mlb:'MLB', baseball_npb:'Japan NPB', basketball_nba:'NBA', americanfootball_nfl:'NFL', icehockey_nhl:'NHL' };
                 const rawSportParam = (params.get('sport') || '').trim();
                 pendingSportFilter = rawSportParam ? (SPORT_PARAM_MAP[rawSportParam.toLowerCase()] || rawSportParam) : '';
                 // Signed-in-only UI: the Following tab and Followed-only filter.

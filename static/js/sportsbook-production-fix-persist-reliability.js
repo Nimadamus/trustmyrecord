@@ -2598,7 +2598,42 @@
         return null;
     }
 
+    // NPB_LEAGUE_20260722: the 12 Nippon Professional Baseball clubs.
+    // ESPN carries no NPB team art, so these resolve to the official npb.jp
+    // club marks instead of the ESPN CDN. Keys are lowercase alphanumeric-only
+    // so they survive the same normalization the ESPN map uses.
+    const NPB_LOGO_CODES = {
+        yomiurigiants: 'g',
+        hanshintigers: 't',
+        yokohamadenabaystars: 'db',
+        yokohamabaystars: 'db',
+        hiroshimatoyocarp: 'c',
+        tokyoyakultswallows: 's',
+        chunichidragons: 'd',
+        fukuokasoftbankhawks: 'h',
+        hokkaidonipponhamfighters: 'f',
+        chibalottemarines: 'm',
+        tohokurakutengoldeneagles: 'e',
+        saitamaseibulions: 'l',
+        orixbuffaloes: 'b'
+    };
+    const NPB_LOGO_BASE = 'https://npb.jp/img/common/logo/';
+
+    function npbLogoUrl(teamName) {
+        const key = String(teamName || '').toLowerCase().replace(/[^a-z0-9]+/g, '');
+        const code = NPB_LOGO_CODES[key];
+        if (!code) return '';
+        // Season-versioned path; the club marks are re-published each year.
+        return NPB_LOGO_BASE + new Date().getFullYear() + '/logo_' + code + '_s.gif';
+    }
+
     function resolveTeamLogo(teamName, sportKey, suppliedLogo) {
+        if (String(sportKey || '') === 'baseball_npb') {
+            // Never fall through to the ESPN map for NPB: several NPB clubs
+            // share a nickname with an MLB club (Giants, Tigers, Lions) and
+            // would otherwise render the wrong league's crest.
+            return npbLogoUrl(teamName) || suppliedLogo || '';
+        }
         const canonical = getCanonicalLogoEntry(teamName, sportKey);
         if (canonical) return ESPN_LOGO_BASE + canonical[0] + '/500/' + canonical[1] + '.png';
         return suppliedLogo || '';

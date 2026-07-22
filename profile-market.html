@@ -35,7 +35,7 @@
     const apiClient=window.api&&typeof window.api.request==='function'?window.api:new TrustMyRecordAPI();
     function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]))}
     function marketLabel(v){const k=String(v||'').toLowerCase();return{h2h:'Moneyline',moneyline:'Moneyline',spreads:'Spreads',spread:'Spreads',totals:'Totals',total:'Totals',team_totals:'Team Totals',run_line:'Run Line',puck_line:'Puck Line',first_five:'First Five',halves:'Halves',periods:'Periods',alts:'Alts',props:'Player Props'}[k]||String(v||'Market').replace(/[-_]+/g,' ').replace(/\b\w/g,c=>c.toUpperCase())}
-    function sportLabel(v){return{baseball_mlb:'MLB',basketball_nba:'NBA',icehockey_nhl:'NHL',americanfootball_nfl:'NFL',basketball_ncaab:'NCAAB',americanfootball_ncaaf:'NCAAF'}[String(v||'').toLowerCase()]||String(v||'').replace(/_/g,' ').toUpperCase()}
+    function sportLabel(v){return{baseball_mlb:'MLB', baseball_npb:'Japan NPB',basketball_nba:'NBA',icehockey_nhl:'NHL',americanfootball_nfl:'NFL',basketball_ncaab:'NCAAB',americanfootball_ncaaf:'NCAAF'}[String(v||'').toLowerCase()]||String(v||'').replace(/_/g,' ').toUpperCase()}
     function fmtUnits(v){const n=Number(v||0);return'<span class="'+(n>0?'pos':n<0?'neg':'neutral')+'">'+(n>0?'+':'')+n.toFixed(2)+'u</span>'}
     function fmtPct(v){const n=Number(v||0);return'<span class="'+(n>0?'pos':n<0?'neg':'neutral')+'">'+(n>0?'+':'')+n.toFixed(2)+'%</span>'}
     function fmtOdds(v){const n=Number(v);return !Number.isFinite(n)||n===0?'N/A':(n>0?'+'+n:String(n))}
