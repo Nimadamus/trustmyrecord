@@ -672,7 +672,16 @@
         .is-negative { color: var(--red); }
         .is-muted, .is-neutral { color: var(--muted); }
 
-        .hm-actions { display: flex; justify-content: center; }
+        .hm-actions { display: flex; justify-content: center; align-items: center; gap: 6px; }
+
+        /* Share keeps the sitewide teal pill so it reads as the same control
+           everywhere; only the metrics are tightened to sit level with the
+           adjacent View pill in a dense directory row. */
+        .hm-actions .hm-action-share { padding: 4px 8px; border-radius: var(--radius-sm); }
+        .hm-actions .hm-action-share svg { width: 13px; height: 13px; }
+        .hm-feat-cta { display: inline-flex; align-items: center; gap: 8px; }
+        .hm-feat-share { padding: 4px 11px; font-size: 0.72rem; border-radius: var(--radius-sm); gap: 5px; }
+        .hm-feat-share svg { width: 13px; height: 13px; }
 
         .hm-action-btn {
             display: inline-flex;
@@ -789,6 +798,10 @@
 
             .hm-actions { grid-column: 1 / -1; justify-content: stretch; }
             .hm-actions .hm-action-btn { width: 100%; min-height: 36px; }
+            /* On mobile the share control gets a text label and an equal share
+               of the row, so it is a real tap target rather than a 14px glyph. */
+            .hm-actions .hm-action-share { flex: 1; min-height: 36px; gap: 6px; }
+            .hm-actions .hm-action-share::after { content: 'Share'; font-size: 0.7rem; font-weight: 600; }
 
             .hm-tier-header {
                 border: 0;
@@ -839,6 +852,8 @@
 <!--/SCHEMA_ORG_BLOCK-->
     <link rel="stylesheet" href="/static/css/tmr-ds.9faf16e3fee3.css">
     <link rel="stylesheet" href="/static/css/tmr-ds-handicappers.68795e5f6069.css">
+    <link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
+    <script defer src="/static/js/tmr-share.js?v=20260721share1"></script>
 </head>
 <body class="tmr-ds">
     <main class="hm-page">
@@ -2046,6 +2061,35 @@
             return '<div class="hm-feat-stat"><span>' + escapeHtml(cell.label) + '</span><strong class="' + (cell.cls || '') + '">' + escapeHtml(cell.value) + '</strong></div>';
         }
 
+        // Share control for a directory entry. The markup is emitted directly
+        // rather than through TMRShare.buttonHtml() so a row still renders a
+        // working button if the deferred share script has not executed yet -
+        // the click is handled by document-level delegation either way.
+        const SHARE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" width="14" height="14" fill="currentColor"><path d="M18 16.1c-.8 0-1.5.3-2 .8l-7.1-4.2c.1-.2.1-.5.1-.7s0-.5-.1-.7L16 7.1c.5.5 1.2.8 2 .8 1.7 0 3-1.3 3-3s-1.3-3-3-3-3 1.3-3 3c0 .2 0 .5.1.7L8 9.8c-.5-.5-1.2-.8-2-.8-1.7 0-3 1.3-3 3s1.3 3 3 3c.8 0 1.5-.3 2-.8l7.1 4.2c-.1.2-.1.4-.1.7 0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9-1.2-3-2.8-3z"/></svg>';
+
+        function shareTextFor(member) {
+            const stats = member.stats || defaultStats();
+            const graded = gradedCount(member) > 0;
+            const bits = [formatRecord(stats)];
+            if (Number(stats.totalPicks || 0) > 0) bits.push(formatUnits(stats.units, true) + 'u');
+            if (graded) bits.push(formatPercent(stats.roi, true) + ' ROI');
+            return member.username + "'s verified record on TrustMyRecord: " + bits.join(', ') + '.';
+        }
+
+        function shareButtonHtml(member, opts) {
+            opts = opts || {};
+            const label = opts.compact ? '' : '<span>Share</span>';
+            return '<button type="button" class="tmrsh-btn' + (opts.compact ? ' tmrsh-btn--icon' : '') +
+                (opts.className ? ' ' + opts.className : '') + '" data-tmr-share' +
+                ' data-share-type="profile"' +
+                ' data-share-id="' + escapeHtml(member.username) + '"' +
+                ' data-share-url="https://trustmyrecord.com/u/' + encodeURIComponent(member.username) + '/"' +
+                ' data-share-text="' + escapeHtml(shareTextFor(member)) + '"' +
+                ' title="Share ' + escapeHtml(member.username) + '"' +
+                ' aria-label="Share ' + escapeHtml(member.username) + '’s verified record">' +
+                SHARE_ICON + label + '</button>';
+        }
+
         function featuredCardHtml(opts) {
             const member = opts.member;
             const stats = member.stats || defaultStats();
@@ -2070,7 +2114,7 @@
                     followBtn +
                 '</div>' +
                 '<div class="hm-feat-stats">' + cells.map(featuredStatCell).join('') + '</div>' +
-                '<div class="hm-feat-meta"><span>' + escapeHtml(metaBits.join(' · ')) + '</span><a class="hm-feat-view" href="' + href + '">View Profile</a></div>' +
+                '<div class="hm-feat-meta"><span>' + escapeHtml(metaBits.join(' · ')) + '</span><span class="hm-feat-cta">' + shareButtonHtml(member, { className: 'hm-feat-share' }) + '<a class="hm-feat-view" href="' + href + '">View Profile</a></span></div>' +
             '</div>';
         }
 
@@ -2652,7 +2696,7 @@
                 '<div class="hm-stat" data-label="Total picks">' + Number(stats.totalPicks || 0) + '</div>' +
                 '<div class="hm-stat ' + statClass(stats.currentStreak) + '" data-label="Current streak">' + escapeHtml(formatStreak(stats.currentStreak)) + '</div>' +
                 '<div class="hm-stat is-muted" data-label="Last active">' + escapeHtml(formatPickActivity((stats && stats.lastActivity) || '', Number(stats.totalPicks || 0) > 0, !!(member.rawPicks && member.rawPicks.length))) + '</div>' +
-                '<div class="hm-actions"><a class="hm-action-btn hm-action-btn--view" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '">View</a></div>' +
+                '<div class="hm-actions"><a class="hm-action-btn hm-action-btn--view" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '">View</a>' + shareButtonHtml(member, { compact: true, className: 'hm-action-share' }) + '</div>' +
             '</div>';
         }
 

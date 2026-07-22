@@ -590,6 +590,11 @@
             box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
             transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
         }
+        /* Arrival highlight for a post opened from a shared ?post= link. */
+        .feed-item.is-shared-target {
+            outline: 3px solid var(--neon-cyan, #00ffff);
+            outline-offset: 2px;
+        }
         .feed-item:hover {
             transform: translateY(-2px);
             border-color: rgba(0, 255, 255, 0.35);
@@ -1212,6 +1217,8 @@
 <script type="application/ld+json">
 {"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Home", "item": "https://trustmyrecord.com/"}, {"@type": "ListItem", "position": 2, "name": "Your Sports Network", "item": "https://trustmyrecord.com/feed/"}]}
 </script>
+<link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
+<script defer src="/static/js/tmr-share.js?v=20260721share1"></script>
 </head>
 <body class="tmr-site-shell">
     <div class="page-layout">
@@ -1356,8 +1363,8 @@
     <script src="/static/js/backend-api.js?v=20260423a"></script>
     <script src="/static/js/auth-persistent.js?v=20260424a"></script>
     <script src="/static/js/poll-widget.js?v=20260716qotd1"></script>
-    <script src="/static/js/social-home.js?v=20260711milestones1"></script>
-    <script src="/static/js/feed-ui-overrides.js?v=20260714feedpolls1"></script>
+    <script src="/static/js/social-home.js?v=20260722share2"></script>
+    <script src="/static/js/feed-ui-overrides.js?v=20260722share2"></script>
     <script src="/static/js/quiz-of-day.js?v=20260716qotd6"></script>
     <script>if(window.TMRQuizOfDay)TMRQuizOfDay.mount('#tmrQuizOfDay');</script>
 </body>

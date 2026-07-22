@@ -382,6 +382,29 @@ async function loadFeed() {
     updateHeroCounts(items.length);
     c.innerHTML = items.map(renderFeedItem).join('');
     document.getElementById('loadMore').style.display = items.length >= FEED_LIMIT ? 'block' : 'none';
+    focusSharedFeedItem();
+}
+
+// A shared feed link carries ?post=<item_id>. Without this the link resolved to
+// an undifferentiated feed, so a share advertised one post and delivered the
+// whole timeline. Mirrors the forum's ?post= behaviour: scroll to the item and
+// outline it.
+//
+// The highlight is re-applied on EVERY render, not latched after the first hit:
+// loadFeed() replaces feedList.innerHTML, so a refresh or filter change rebuilds
+// the node and drops the class. Only the scroll is one-shot, so a later refresh
+// does not yank the page around under someone who has already scrolled away.
+let sharedFeedScrolled = false;
+function focusSharedFeedItem() {
+    let wanted = '';
+    try { wanted = new URLSearchParams(location.search).get('post') || ''; } catch (e) { return; }
+    if (!wanted) return;
+    const el = document.querySelector('.feed-item[data-id="' + wanted.replace(/[\\"]/g, '\\$&') + '"]');
+    if (!el) return;
+    el.classList.add('is-shared-target');
+    if (sharedFeedScrolled) return;
+    sharedFeedScrolled = true;
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' });
 }
 
 function updateHeroCounts(visibleCount) {
@@ -811,9 +834,39 @@ async function votePoll(pollId, optionId) {
     }
 }
 
+// Feed share. Previously this silently copied a link to the clipboard with no
+// platform choices, which is why the feed read as having no share affordance at
+// all. It now opens the sitewide share menu (X / Facebook / Reddit / LinkedIn /
+// WhatsApp / Telegram / Email / copy / native) and falls back to the old
+// copy-only behaviour if tmr-share.js is unavailable.
+//
+// `id` is either a bare feed-post id or the string `pick-<pickId>`. Pick shares
+// resolve through /api/share/meta/pick/<id>, which redacts a pick that is still
+// sealed - the menu never exposes a selection the feed itself is hiding.
 function sharePost(id) {
-        navigator.clipboard?.writeText(`${location.origin}/feed/?post=${id}`);
-    const el = event.currentTarget;
+    const el = (typeof event !== 'undefined' && event) ? event.currentTarget : null;
+    const raw = String(id);
+    // Only a bare numeric pick id has a /pick/ page. Grouped record-update
+    // cards use synthetic ids like `pick_group_<user>_graded_<date>`, which
+    // belong to the feed and would 404 as a pick permalink.
+    const isPick = /^pick-\d+$/.test(raw);
+    const pickId = isPick ? raw.slice(5) : '';
+    const url = isPick
+        ? `${location.origin}/pick/?id=${encodeURIComponent(pickId)}`
+        : `${location.origin}/feed/?post=${encodeURIComponent(raw)}`;
+
+    if (window.TMRShare && typeof window.TMRShare.open === 'function') {
+        window.TMRShare.open({
+            type: isPick ? 'pick' : 'page',
+            id: isPick ? pickId : '',
+            url: url,
+            title: isPick ? 'Verified pick on TrustMyRecord' : 'Post on TrustMyRecord'
+        });
+        return;
+    }
+
+    navigator.clipboard?.writeText(url);
+    if (!el) return;
     const orig = el.innerHTML;
     el.innerHTML = '<i class="fas fa-check"></i> Copied!';
     setTimeout(() => el.innerHTML = orig, 1500);

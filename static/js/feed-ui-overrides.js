@@ -785,6 +785,10 @@ async function loadFeed() {
     }
 
     c.innerHTML = items.map(renderFeedItem).join('');
+    // This file replaces social-home.js's loadFeed wholesale, so the shared-link
+    // (?post=) highlight has to be re-invoked here too - otherwise a shared feed
+    // URL lands on an undifferentiated timeline.
+    if (typeof focusSharedFeedItem === 'function') focusSharedFeedItem();
     const lm = document.getElementById('loadMore');
     if (lm) lm.style.display = items.length >= FEED_LIMIT ? 'block' : 'none';
 
