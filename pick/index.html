@@ -33,6 +33,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&amp;family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
 <script src="/static/js/config.js?v=20260330"></script>
+<script src="/static/js/tmr-doubleheader.js?v=20260723dh1"></script>
 <script src="/static/js/analytics.js?v=20260719ft"></script>
 <script src="/static/js/pick-display-format.js?v=20260721share1"></script>
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
@@ -148,7 +149,7 @@
     var who = pick.display_name || pick.username;
     var league = (window.TMR && TMR.formatLeagueLabel) ? TMR.formatLeagueLabel(pick.sport_key) : String(pick.sport_key || '').toUpperCase();
     var label = (window.TMR && TMR.formatPickDisplayLabel) ? TMR.formatPickDisplayLabel(pick) : (pick.selection || 'Pick');
-    var matchup = (pick.away_team && pick.home_team) ? (pick.away_team + ' @ ' + pick.home_team) : '';
+    var matchup = (pick.away_team && pick.home_team) ? (pick.away_team + ' @ ' + pick.home_team + (window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(pick) : '')) : '';
     var odds = Number(pick.odds_snapshot);
     var units = Number(pick.units);
     var ru = pick.result_units == null ? null : Number(pick.result_units);

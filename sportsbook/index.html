@@ -1162,7 +1162,7 @@
                 byLabel[label].push(it);
             });
             html += '<div class="tmr-pp-game">'
-                + '<div class="tmr-pp-game-head">' + escHtml(game.away_team) + ' @ ' + escHtml(game.home_team)
+                + '<div class="tmr-pp-game-head">' + escHtml(game.away_team) + ' @ ' + escHtml(game.home_team) + escHtml((window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(game) : ''))
                 + (gameTime ? ' <span class="tmr-pp-time">' + escHtml(gameTime) + '</span>' : '') + '</div>';
             order.forEach(function(label) {
                 html += '<div class="tmr-pp-group"><div class="tmr-pp-group-label">' + escHtml(label) + '</div><div class="tmr-pp-rows">';
@@ -1470,7 +1470,7 @@
                 html += '<div class="game-row">'
                     + '<div class="game-time-header"><span class="game-time">' + gameTime + '</span></div>'
                     + '<div class="team-row" style="display:flex;align-items:center;gap:8px;padding:8px 12px;">'
-                    + '<div class="team-info" data-mkt="matchup" style="flex:1;min-width:0;"><div class="team-details"><div class="team-name">' + escHtml(game.away_team) + ' @ ' + escHtml(game.home_team) + '</div></div></div>'
+                    + '<div class="team-info" data-mkt="matchup" style="flex:1;min-width:0;"><div class="team-details"><div class="team-name">' + escHtml(game.away_team) + ' @ ' + escHtml(game.home_team) + escHtml((window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(game) : '')) + '</div></div></div>'
                     + fiBtn(under, 'firstinningunder', 'No', 'No run (NRFI)')
                     + fiBtn(over, 'firstinningover', 'Yes', 'Run scores (YRFI)')
                     + '</div></div>';
@@ -1493,7 +1493,7 @@
             html += '<div class="game-row">'
                 + '<div class="game-time-header"><span class="game-time">' + gameTime + '</span></div>'
                 + '<div style="padding:6px 12px 4px;color:#94a3b8;font-size:11.5px;letter-spacing:1.2px;text-transform:uppercase;font-weight:700;">'
-                + escHtml(game.away_team) + ' @ ' + escHtml(game.home_team) + ' &middot; ' + headerLabel
+                + escHtml(game.away_team) + ' @ ' + escHtml(game.home_team) + escHtml((window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(game) : '')) + ' &middot; ' + headerLabel
                 + '</div>'
                 + '<div style="padding:6px 12px 12px;display:grid;grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));gap:6px;">';
             items.forEach(function(item) {
@@ -1732,7 +1732,7 @@
             var awayLogoHtml = window.TMR._teamLogo(game.away_logo, game.away_abbr, game.away_team);
             var homeLogoHtml = window.TMR._teamLogo(game.home_logo, game.home_abbr, game.home_team);
             html += '<div class="game-row' + (hasMoreBets ? ' game-row--with-more' : '') + '">' +
-                '<div class="game-time-header"><span class="game-time">' + gameTime + sourceIndicator + '</span>' + pendingBadge + '</div>' +
+                '<div class="game-time-header"><span class="game-time">' + gameTime + sourceIndicator + '</span>' + (window.TMR && window.TMR.dhBadge ? window.TMR.dhBadge(game) : '') + pendingBadge + '</div>' +
                 '<div class="team-row">' +
                 '<div class="team-info" data-mkt="matchup">' + awayLogoHtml + '<div class="team-details"><div class="team-name">' + game.away_team + '</div>' + awayPitcherHtml + '</div></div>' +
                 '<button class="odds-btn' + noOddsClass + '" data-mkt="spread" onclick="window.selectGameBet(' + index + ',\'spread\',\'' + esc(game.away_team) + '\',\'' + esc(pv(awaySpread.point != null ? fmtSpread(awaySpread.point) : '')) + '\',\'' + esc(pv(awaySpread.price)) + '\',\'' + esc(game.away_team) + '\',\'' + esc(game.home_team) + '\')"><span class="odds-line">' + spdLine(awaySpread.point) + '</span><span class="odds-value">' + spdOdds(awaySpread.price) + '</span></button>' +
@@ -10108,6 +10108,7 @@
          depending on sportsbook-specific chrome or late body includes. -->
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
     <script defer src="/static/js/tmr-sitewide.js?v=20260720alerts"></script>
+    <script src="/static/js/tmr-doubleheader.js?v=20260723dh1"></script>
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1">
     <!-- Contest Mode adapter: when /sportsbook/?contest=<id> is loaded, shows a

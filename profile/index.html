@@ -53,6 +53,7 @@
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
 <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
 <script defer src="/static/js/tmr-sitewide.js?v=20260720alerts"></script>
+<script src="/static/js/tmr-doubleheader.js?v=20260723dh1"></script>
 <link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
 <script defer src="/static/js/tmr-share.js?v=20260722owner1"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -8763,7 +8764,7 @@
             if (p.redacted) {
                 return '<tr class="' + rowStatusClass(p.status) + '"><td>' + fmtDate(p.created_at || p.locked_at) + '</td><td>' + sportLabel(p.sport_key) + '</td><td colspan="6" class="zero" style="font-style:italic;">Pending — pick details revealed once graded</td><td>' + resultTag(p.status) + '</td><td class="num zero">—</td>' + shareCell(p) + '</tr>';
             }
-            const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : '—';
+            const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team + (window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(p) : '')) : '—';
             const line = p.line_snapshot != null ? Number(p.line_snapshot).toFixed(1) : '—';
             const units = p.units != null ? Number(p.units).toFixed(1) + 'u' : '—';
             const result = String(p.status || 'pending').toLowerCase();
@@ -9949,7 +9950,7 @@
         tbody.innerHTML = rows.slice(0, 100).map(p => {
             const status = capStatus(p);
             const pl = isCapGraded(p) ? capPL(p) : 0;
-            const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team) : (p.game || p.game_name || '—');
+            const game = (p.away_team && p.home_team) ? (p.away_team + ' @ ' + p.home_team + (window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(p) : '')) : (p.game || p.game_name || '—');
             const line = p.line_snapshot != null ? p.line_snapshot : (p.line != null ? p.line : '—');
             const odds = capOdds(p);
             return '<tr>'
@@ -11413,7 +11414,7 @@
         const odds = formatOddsValue(p.odds_snapshot != null ? p.odds_snapshot : p.odds);
         const line = formatPickLineValue(p);
         const sel = formatPickDisplayValue(p);
-        const matchup = (p.away_team && p.home_team) ? p.away_team + ' @ ' + p.home_team : (p.event_name || '--');
+        const matchup = (p.away_team && p.home_team) ? p.away_team + ' @ ' + p.home_team + (window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(p) : '') : (p.event_name || '--');
         const units = formatUnitsValue(p.units);
         const status = normalizeStatus(p.status);
         const market = marketTypeLabel(p.market_type);
@@ -13136,7 +13137,7 @@
             const counted = (status === 'won' || status === 'lost' || status === 'push');
             const resultCls = status === 'won' ? 'pos' : (status === 'lost' ? 'neg' : '');
             const matchup = (p.away_team && p.home_team)
-                ? (escapeHtml(p.away_team) + ' @ ' + escapeHtml(p.home_team)) : '&mdash;';
+                ? (escapeHtml(p.away_team) + ' @ ' + escapeHtml(p.home_team) + escapeHtml((window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(p) : ''))) : '&mdash;';
             return '<tr' + (counted ? '' : ' class="tmrx-team-drill-excluded"') + '>' +
                 '<td>' + fmtDate(p.commence_time || p.created_at) + '</td>' +
                 '<td>' + matchup + '</td>' +
@@ -13614,7 +13615,7 @@
             const date = p.locked_at || p.created_at || '';
             const d = date ? new Date(date).toLocaleDateString('en-US', { timeZone: 'America/New_York' }) : '';
             const sport = fmtSport(p.sport_key);
-            const matchup = (p.away_team || '') + ' @ ' + (p.home_team || '');
+            const matchup = (p.away_team || '') + ' @ ' + (p.home_team || '') + (window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(p) : '');
             const pick = p.selection || '';
             const line = p.line_snapshot != null ? p.line_snapshot : '';
             const odds = p.odds_snapshot != null ? p.odds_snapshot : '';

@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260720v4">
     <script defer src="/static/js/tmr-sitewide.js?v=20260720alerts"></script>
+    <script src="/static/js/tmr-doubleheader.js?v=20260723dh1"></script>
     <style>
         :root {
             --page-bg: #060b12;
@@ -523,7 +524,7 @@
             return selection || 'Pick';
         }
         function matchup(pick) {
-            if (pick.away_team || pick.home_team) return [pick.away_team, pick.home_team].filter(Boolean).join(' @ ');
+            if (pick.away_team || pick.home_team) return [pick.away_team, pick.home_team].filter(Boolean).join(' @ ') + (window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(pick) : '');
             return 'Matchup pending';
         }
         function statusText(pick) {

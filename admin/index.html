@@ -122,6 +122,7 @@
   </main>
 
   <script src="/static/js/config.js"></script>
+  <script src="/static/js/tmr-doubleheader.js?v=20260723dh1"></script>
   <script>
     const API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
     const tokenInput = document.getElementById('adminToken');
@@ -181,7 +182,7 @@
       rows.innerHTML = samples.length ? samples.map((row) => `
         <tr>
           <td>#${row.pick_id}<br><span class="muted">${row.sport_key || ''}</span></td>
-          <td>${row.away_team || '?'} @ ${row.home_team || '?'}<br><span class="muted">${fmt(row.commence_time)}</span></td>
+          <td>${row.away_team || '?'} @ ${row.home_team || '?'}${(window.TMR && window.TMR.dhSuffix ? window.TMR.dhSuffix(row) : '')}<br><span class="muted">${fmt(row.commence_time)}</span></td>
           <td>${row.market_type || '-'}<br><span class="muted">${row.selection || ''}</span></td>
           <td>${row.grader_last_error || '-'}</td>
           <td>${row.grader_retries || 0}</td>
