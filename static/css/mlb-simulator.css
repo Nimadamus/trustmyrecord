@@ -3401,3 +3401,31 @@ select.pitcher-select option {
     .player-box-table th,
     .player-box-table td { font-size: 0.78rem; padding: 0.35rem 0.4rem; }
 }
+
+/* =====================================================================
+   TMR_ROSTER_STATE_20260723 (Stage 3) — substitutions, injuries, ejections.
+   ===================================================================== */
+.bx-sub-row th[scope="row"] { padding-left: 0.4rem; }
+.bx-sub-row td, .bx-sub-row th { color: #55607a; font-style: italic; background: rgba(120,120,120,0.05); }
+.bx-sub-arrow { color: #94681c; margin-right: 0.2rem; font-style: normal; }
+.bx-slot-sub { min-width: 1.15em; display: inline-block; }
+
+.roster-moves { margin-top: 1.5rem; }
+.rm-block { margin-bottom: 0.9rem; }
+.rm-block h5 { margin: 0 0 0.35rem; color: #14264d; }
+.rm-block ul { margin: 0; padding-left: 1.1rem; font-size: 0.86rem; line-height: 1.5; }
+.rm-block li { margin-bottom: 0.2rem; }
+.rm-injury { border-left: 3px solid #b4531c; padding-left: 0.6rem; background: rgba(180,83,28,0.05); border-radius: 0 4px 4px 0; }
+.rm-ejection { border-left: 3px solid #94281c; padding-left: 0.6rem; background: rgba(148,40,28,0.05); border-radius: 0 4px 4px 0; }
+.rm-sim-tag {
+    font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em;
+    color: #b4531c; background: rgba(180,83,28,0.12); padding: 0.1rem 0.4rem; border-radius: 3px; margin-left: 0.4rem;
+    vertical-align: middle;
+}
+.pbp-list li.pbp-injury { background: rgba(180,83,28,0.09); font-style: italic; }
+.pbp-list li.pbp-ejection { background: rgba(148,40,28,0.10); font-style: italic; font-weight: 500; }
+
+@media (prefers-color-scheme: dark) {
+    .rm-block h5 { color: #cdd7ee; }
+    .bx-sub-row td, .bx-sub-row th { color: #9aa6c0; }
+}

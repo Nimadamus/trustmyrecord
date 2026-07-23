@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-eventlog-boxscore-20260723';
+    var UI_BUILD = 'mlb-simulator-eventlog-rosterstate-20260723';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2501,6 +2501,7 @@
             var plainName = (s && s.name) || (names[i] ? names[i].replace(/\s*\([^)]*\)\s*$/, '') : '');
             var rawPos = (s && s.position) || ((names[i] || '').match(/\(([A-Z0-9]+)\)\s*$/) || [null, ''])[1];
             lineup.push({
+                pid: (s && s.mlbId) ? ('id' + s.mlbId) : ('sl' + i + '_' + normalizeName(plainName || ('slot' + i))),
                 baseVec: baseVec,
                 baseVecVsL: baseVecVsL,
                 baseVecVsR: baseVecVsR,
@@ -2576,8 +2577,11 @@
             pitchers.push({ name: staffNames[1] || (team.abbreviation + ' RP'), vec: penVec, acc: evNewPit(), role: 'RP' });
             pitchers.push({ name: staffNames[2] || (team.abbreviation + ' CL'), vec: penVec, acc: evNewPit(), role: 'CL' });
         }
+        // TMR_ROSTER_STATE_20260723: the bench pool (verified reserves) is built once
+        // here and only ever consumed in the displayed game. Empty for synthetic teams.
+        var benchPool = roster ? evBuildBench(team, roster, parkHr) : [];
         return {
-            team: team, lineup: lineup, anchorFactor: anchorFactor, pitchers: pitchers,
+            team: team, lineup: lineup, benchPool: benchPool, anchorFactor: anchorFactor, pitchers: pitchers,
             starterOuts: starterOuts, roster: roster, hasNamedLineup: !!(roster && roster.players && roster.players.length),
             // Error-rate calibration (June 4, 2026 vs real MLB 2025): engine ran
             // 0.31 errors/team vs real 0.504 — reach-on-error base raised to match.
@@ -2825,6 +2829,131 @@
         }
         return { pitches: seq, count: seq.length, strikes: strikes };
     }
+    // =====================================================================
+    // TMR_ROSTER_STATE_20260723 (Stage 3) — legal in-game roster state:
+    // substitutions, injuries, ejections.
+    //
+    // This entire subsystem runs ONLY in the displayed (event-logged) game. The
+    // 2000-game win-probability sample and the offline calibration gate call
+    // evSimGame WITHOUT a log sink, so none of this fires there and the model
+    // stays byte-identical (verified by the calibration gate being unchanged).
+    //
+    // Substitution mechanism: base runners are stored as batting-order SLOT
+    // indices and lineup[slot] holds the current occupant, so a substitution is a
+    // single occupant swap — a pinch hitter swaps before batting, a pinch runner
+    // swaps while the slot is on base (inheriting the base), a defensive/injury/
+    // ejection replacement swaps and the outgoing player is marked removed and can
+    // never re-enter. Every slot keeps the full history of who occupied it
+    // (lineupSlots[slot]) so the box score shows starter + subs indented.
+    // =====================================================================
+    var EL_INJURY = {
+        // Per-event probabilities, tuned so total injuries land ≈0.25/game (≤0.35
+        // cap, calibrated against real MLB in-game injury frequency). A test hook
+        // scales all of these via window.__EL_INJURY_MULT for the legality fuzzer.
+        perPa: 0.00080,     // swing / general
+        perHbp: 0.026,      // hit by pitch — the classic in-game injury
+        perSteal: 0.0060,   // sliding into a base
+        perPitcherAppearance: 0.0040, // pitching motion, per arm per game
+        perBip: 0.00075     // fielding / running out a batted ball
+    };
+    var EL_EJECT = {
+        // Ejections are rarer than injuries (real MLB ≈0.05/game across everyone).
+        perCloseCallPa: 0.00055,  // arguing a call, elevated in tight games
+        perHbp: 0.0050,           // benches-warned / retaliation reads
+        managerShare: 0.62        // share of ejections that are the manager, not a player
+    };
+    // Body areas drawn from a pool appropriate to how the injury happened, so an HBP
+    // hurts a hand/wrist and a pitching-motion injury is an arm/shoulder — not random.
+    var EL_BODY_AREAS = {
+        pitch: ['left shoulder', 'right shoulder', 'left elbow', 'right elbow', 'right forearm', 'left forearm', 'lat', 'right oblique'],
+        hbp: ['left hand', 'right hand', 'left wrist', 'right wrist', 'left forearm', 'right elbow', 'left foot', 'right knee'],
+        run: ['left hamstring', 'right hamstring', 'left quad', 'right quad', 'left ankle', 'right ankle', 'left knee', 'right knee'],
+        swing: ['left oblique', 'right oblique', 'lower back', 'left wrist', 'right wrist', 'left hand', 'right hand'],
+        field: ['left ankle', 'right ankle', 'left knee', 'right knee', 'left shoulder', 'right shoulder', 'left wrist', 'lower back']
+    };
+    function elBodyArea(mechanism, r) {
+        var pool = /hit by pitch/.test(mechanism) ? EL_BODY_AREAS.hbp
+            : /pitching/.test(mechanism) ? EL_BODY_AREAS.pitch
+            : /baserunning|slide|collision/.test(mechanism) ? EL_BODY_AREAS.run
+            : /swing/.test(mechanism) ? EL_BODY_AREAS.swing
+            : EL_BODY_AREAS.field;
+        return pool[Math.floor(r() * pool.length)];
+    }
+    var EL_EJECT_CAUSES = ['arguing a called third strike', 'arguing a ball/strike call',
+        'arguing a safe/out call at a base', 'arguing a checked-swing call',
+        'arguing after a hit-by-pitch', 'continued arguing after a warning'];
+    function elInjurySeverity(r) {
+        // Weighted toward minor. Returns { severity, outcome, remains, missedGames, penalty }.
+        var x = r();
+        if (x < 0.55) return { severity: 'minor', outcome: 'evaluated and remained in the game', remains: true, missedGames: 0, penalty: 0 };
+        if (x < 0.78) return { severity: 'minor', outcome: 'remained in the game with reduced effectiveness', remains: true, missedGames: 0, penalty: 0.35 };
+        if (x < 0.93) return { severity: 'moderate', outcome: 'removed from the game as a precaution', remains: false, missedGames: 0, penalty: 0 };
+        if (x < 0.985) return { severity: 'moderate', outcome: 'unable to continue; listed day-to-day', remains: false, missedGames: 3, penalty: 0 };
+        return { severity: 'significant', outcome: 'unable to continue; expected multi-game absence', remains: false, missedGames: 15, penalty: 0 };
+    }
+    // Build the bench: verified non-pitchers beyond the nine starters, as full
+    // batter objects ready to be swapped into a lineup slot. Empty for synthetic
+    // teams (no roster) — which is exactly why the offline gate never substitutes.
+    function evBuildBench(team, roster, parkHr) {
+        var players = Array.isArray(roster && roster.players) ? roster.players : [];
+        var pitcherRe = /^(P|SP|RP|CP|Relief|Pitcher)$/i;
+        var nonPitchers = players.filter(function (p) { return p && !pitcherRe.test(String(p.position || '')); });
+        var benchPlayers = nonPitchers.slice(9); // beyond the 9 starters
+        return benchPlayers.map(function (p) {
+            var seasonStat = p.mlbId ? cachedPlayerStat(p.mlbId, 'hitting') : null;
+            var pa = seasonStat ? Number(seasonStat.plateAppearances || 0) : 0;
+            var rw = clamp(pa / 250, 0.15, 1);
+            var LG = { ops: 0.715, avg: 0.245, slg: 0.400, kRate: 0.225, bbRate: 0.085, hrRate: 0.033 };
+            function reg(obs, lg) { return (obs == null || !Number.isFinite(obs)) ? lg : obs * rw + lg * (1 - rw); }
+            var hasReal = !!(seasonStat && Number.isFinite(Number(seasonStat.ops)) && pa >= 15);
+            var statObj = hasReal ? {
+                real: true, ops: reg(Number(seasonStat.ops), LG.ops), avg: reg(Number(seasonStat.avg), LG.avg),
+                slg: reg(Number(seasonStat.slg), LG.slg),
+                kRate: reg(Number(seasonStat.strikeOuts || 0) / Math.max(1, pa), LG.kRate),
+                bbRate: reg(Number(seasonStat.baseOnBalls || 0) / Math.max(1, pa), LG.bbRate),
+                hrRate: reg(Number(seasonStat.homeRuns || 0) / Math.max(1, Number(seasonStat.atBats || 1)), LG.hrRate),
+                ab: Number(seasonStat.atBats || 0), pa: pa
+            } : null;
+            var baseVec = statObj ? evBatterVector(statObj) : evSyntheticVector(team && team.offense, 7);
+            var pos = playerPositionLabel(p) || 'PH';
+            return {
+                pid: p.mlbId ? ('id' + p.mlbId) : ('nm' + normalizeName(p.name)),
+                baseVec: baseVec, baseVecVsL: baseVec, baseVecVsR: baseVec,
+                playerName: p.name, name: p.name + ' (' + pos + ')', rawPos: pos,
+                realAvg: hasReal ? Number(seasonStat.avg) : null,
+                realOps: hasReal ? Number(seasonStat.ops) : null,
+                statSource: hasReal ? ('Real ' + seasonYear() + ' season') : null,
+                speed: 1.0, stealRate: 0.09, stealSuccess: 0.75,
+                acc: evNewBat(), isBench: true, injuryPenalty: 0
+            };
+        });
+    }
+    // Test-only: a synthetic bench so the offline roster-legality fuzzer can force
+    // substitutions (real benches only exist in-browser with live rosters). Not used
+    // by the product; exposed via _engine for validate-roster-state.cjs.
+    function makeSyntheticBench(prefix, n, offense) {
+        var out = [];
+        for (var i = 0; i < n; i++) {
+            var v = evSyntheticVector(offense || 100, 6);
+            out.push({
+                pid: prefix + '_bench' + i,
+                baseVec: v, baseVecVsL: v, baseVecVsR: v,
+                playerName: prefix + ' Bench ' + (i + 1), name: prefix + ' Bench ' + (i + 1) + ' (PH)', rawPos: 'PH',
+                realAvg: 0.245, realOps: 0.700, statSource: 'synthetic',
+                speed: 0.95, stealRate: 0.09, stealSuccess: 0.75, acc: evNewBat(), isBench: true, injuryPenalty: 0
+            });
+        }
+        return out;
+    }
+    // Apply an outcome-vector penalty to an injured-but-still-playing batter.
+    function elApplyInjuryVector(v, penalty) {
+        if (!penalty) return v;
+        // Shift probability mass from hits toward outs; leave BB/K structure alone.
+        var out = {};
+        for (var k in v) if (Object.prototype.hasOwnProperty.call(v, k)) out[k] = v[k];
+        ['b1', 'b2', 'b3', 'hr'].forEach(function (h) { if (out[h]) { out.out = (out.out || 0) + out[h] * penalty; out[h] *= (1 - penalty); } });
+        return out;
+    }
     function evPlayHalf(side, pitcher, random, endLead, ghostSlot, defSide, log) {
         var lineup = side.lineup, outs = 0, bases = [null, null, null], runs = 0, errors = 0;
         // SCORING_EVENT_LOG_20260703: when `log` is provided (only for the single
@@ -2870,6 +2999,188 @@
             };
             for (var k in fields) if (Object.prototype.hasOwnProperty.call(fields, k)) e[k] = fields[k];
             return elPush(el, e);
+        }
+        // ---- Stage 3: in-game substitutions (batting side) -------------------
+        // Swap the occupant of a batting-order slot. The base runners reference the
+        // SLOT, not the player, so a runner already on base simply becomes the new
+        // occupant — which is exactly a pinch runner. The outgoing player is marked
+        // removed and can never legally re-enter. Returns the incoming batter.
+        function elPullBench(preferPos) {
+            var pool = side.bench || [];
+            if (!pool.length) return null;
+            // Prefer a bench player who covers the vacated position; else best OPS.
+            var idx = -1;
+            if (preferPos) {
+                for (var i = 0; i < pool.length; i++) {
+                    if (String(pool[i].rawPos || '').toUpperCase() === String(preferPos).toUpperCase()) { idx = i; break; }
+                }
+            }
+            if (idx < 0) {
+                idx = 0; var best = -1;
+                pool.forEach(function (p, i) { var o = p.realOps != null ? p.realOps : 0.7; if (o > best) { best = o; idx = i; } });
+            }
+            return pool.splice(idx, 1)[0];
+        }
+        function elSwapSlot(slot, role, reason, opts) {
+            if (!el || !side.bench || !side.bench.length) return null;
+            var outgoing = lineup[slot];
+            var incoming = (opts && opts.incoming) || elPullBench(outgoing && outgoing.rawPos);
+            if (!incoming) return null;
+            // Legality: never re-use a player already used or removed. Pull it back
+            // out of the failed splice so the bench player is not silently lost.
+            if (incoming.pid && (side.usedPids[incoming.pid] || side.removedPids[incoming.pid])) { if (side.bench.indexOf(incoming) < 0) side.bench.push(incoming); return null; }
+            lineup[slot] = incoming;
+            side.lineupSlots[slot].push(incoming);
+            if (outgoing && outgoing.pid) { side.removedPids[outgoing.pid] = true; }
+            if (incoming.pid) side.usedPids[incoming.pid] = true;
+            side.subCount = (side.subCount || 0) + 1;
+            var roleLabel = role === 'PH' ? 'Pinch Hitter' : role === 'PR' ? 'Pinch Runner' : role === 'INJ' ? 'Injury Replacement' : role === 'EJ' ? 'Ejection Replacement' : 'Defensive Substitution';
+            elEmit(EL_TYPES.SUB, {
+                subjectTeam: log.battingTeam,
+                baseStateBefore: baseSnapshot(), baseStateAfter: baseSnapshot(),
+                runnerPitcher: pitcherRefs(),
+                outsBefore: outs, outsAfter: outs,
+                scoreBefore: elScore(), scoreAfter: elScore(),
+                substitutionData: {
+                    out: outgoing ? (outgoing.playerName || outgoing.name) : null,
+                    in: incoming.playerName || incoming.name,
+                    role: role, slot: slot, position: incoming.rawPos || null, reason: reason || roleLabel
+                },
+                result: { code: 'SUB', detail: roleLabel + ': ' + (incoming.playerName || incoming.name) + ' replaces ' + (outgoing ? (outgoing.playerName || outgoing.name) : 'starter') + ' (batting ' + (slot + 1) + ')' + (reason ? ' — ' + reason : '') },
+                runsScored: [], rbi: 0
+            });
+            return incoming;
+        }
+        // ---- Stage 3: injuries (batting side) --------------------------------
+        function elMaybeInjury(slot, mechanism, baseRate) {
+            if (!el) return false;
+            var mult = (typeof window !== 'undefined' && Number(window.__EL_INJURY_MULT)) || 1;
+            if (random() >= baseRate * mult) return false;
+            var victim = lineup[slot];
+            if (!victim || (victim.pid && side.removedPids[victim.pid])) return false;
+            var sev = elInjurySeverity(random);
+            var area = elBodyArea(mechanism, random);
+            var vname = victim.playerName || victim.name;
+            var replacement = null;
+            if (!sev.remains) {
+                var repl = elSwapSlot(slot, 'INJ', vname + ' (' + area + ')');
+                replacement = repl ? (repl.playerName || repl.name) : null;
+                // No bench left: the player must stay in under official rules.
+                if (!repl) { sev.remains = true; sev.outcome = 'no available replacement; forced to remain in the game'; }
+            } else if (sev.penalty) {
+                victim.injuryPenalty = Math.max(victim.injuryPenalty || 0, sev.penalty);
+            }
+            var rec = {
+                player: vname, team: log.teamAbbr, inning: log.inning, half: log.half,
+                mechanism: mechanism, bodyArea: area, severity: sev.severity, outcome: sev.outcome,
+                remains: sev.remains, missedGames: sev.missedGames, replacement: replacement, side: 'batting'
+            };
+            side.injuries.push(rec);
+            elEmit(EL_TYPES.INJURY, {
+                subjectTeam: log.battingTeam,
+                batterId: vname, batterSlot: slot,
+                baseStateBefore: baseSnapshot(), baseStateAfter: baseSnapshot(),
+                runnerPitcher: pitcherRefs(), outsBefore: outs, outsAfter: outs,
+                scoreBefore: elScore(), scoreAfter: elScore(),
+                injuryData: rec,
+                result: { code: 'INJURY', detail: vname + ' — ' + mechanism + '; ' + area + ' (' + sev.severity + '). ' + sev.outcome + (replacement ? '. ' + replacement + ' enters.' : '') },
+                runsScored: [], rbi: 0
+            });
+            return !sev.remains;
+        }
+        // ---- Stage 3: ejections (batting side) -------------------------------
+        function elMaybeEjection(slot, trigger, baseRate) {
+            if (!el) return false;
+            var mult = (typeof window !== 'undefined' && Number(window.__EL_EJECT_MULT)) || 1;
+            if (random() >= baseRate * mult) return false;
+            var isManager = random() < EL_EJECT.managerShare;
+            var cause = EL_EJECT_CAUSES[Math.floor(random() * EL_EJECT_CAUSES.length)];
+            if (isManager) {
+                if (side.managerEjected) return false;
+                side.managerEjected = true;
+                var mrec = { person: (side.team && side.team.abbreviation ? side.team.abbreviation + ' manager' : 'Manager'), personType: 'manager', cause: cause, team: log.teamAbbr, inning: log.inning, half: log.half, replacement: 'bench coach assumes strategy' };
+                side.ejections.push(mrec);
+                elEmit(EL_TYPES.EJECTION, {
+                    subjectTeam: log.battingTeam,
+                    baseStateBefore: baseSnapshot(), baseStateAfter: baseSnapshot(), runnerPitcher: pitcherRefs(),
+                    outsBefore: outs, outsAfter: outs, scoreBefore: elScore(), scoreAfter: elScore(),
+                    ejectionData: mrec,
+                    result: { code: 'EJECTION', detail: mrec.person + ' ejected — ' + cause + '. Bench coach assumes in-game strategy.' },
+                    runsScored: [], rbi: 0
+                });
+                return false; // manager ejection does not remove a player
+            }
+            var victim = lineup[slot];
+            if (!victim || (victim.pid && side.removedPids[victim.pid])) return false;
+            var vname = victim.playerName || victim.name;
+            var repl = elSwapSlot(slot, 'EJ', vname + ' ejected (' + cause + ')');
+            var erec = { person: vname, personType: 'player', cause: cause, team: log.teamAbbr, inning: log.inning, half: log.half, replacement: repl ? (repl.playerName || repl.name) : null };
+            side.ejections.push(erec);
+            elEmit(EL_TYPES.EJECTION, {
+                subjectTeam: log.battingTeam,
+                batterId: vname, batterSlot: slot,
+                baseStateBefore: baseSnapshot(), baseStateAfter: baseSnapshot(), runnerPitcher: pitcherRefs(),
+                outsBefore: outs, outsAfter: outs, scoreBefore: elScore(), scoreAfter: elScore(),
+                ejectionData: erec,
+                result: { code: 'EJECTION', detail: vname + ' ejected by the umpire — ' + cause + (repl ? '. ' + (repl.playerName || repl.name) + ' enters.' : '. No replacement available.') },
+                runsScored: [], rbi: 0
+            });
+            return !!repl;
+        }
+        // ---- Stage 3: pitcher injury / ejection (fielding side) --------------
+        // Checked once per half-inning entry (~one appearance touch). On removal the
+        // next bullpen arm enters; an ejected pitcher can never return. Bases are
+        // empty at a half boundary, so there are no inherited runners to charge.
+        function elMaybePitcherEvent() {
+            if (!el || !defSide || !Array.isArray(defSide.pitchers)) return;
+            var arms = defSide.pitchers, idx = arms.indexOf(pitcher);
+            if (idx < 0 || idx >= arms.length - 1) return; // no arm available to replace him
+            var injMult = (typeof window !== 'undefined' && Number(window.__EL_INJURY_MULT)) || 1;
+            var ejMult = (typeof window !== 'undefined' && Number(window.__EL_EJECT_MULT)) || 1;
+            var injured = random() < EL_INJURY.perPitcherAppearance * injMult;
+            var ejected = !injured && random() < EL_EJECT.perCloseCallPa * 3 * ejMult;
+            if (!injured && !ejected) return;
+            var subjectTeam = log.battingTeam === 'home' ? 'away' : 'home';
+            var outgoing = pitcher;
+            var pname = String(outgoing.name).replace(/\s*\((LHP|RHP)\)$/, '');
+            pitcher = arms[idx + 1];
+            defSide.minArmIdx = Math.max(defSide.minArmIdx || 0, idx + 1);
+            if (outgoing.pid) defSide.removedPids && (defSide.removedPids[outgoing.pid] = true);
+            outgoing.removed = true;
+            if (injured) {
+                var sev = elInjurySeverity(random);
+                var area = elBodyArea('pitching', random);
+                var rec = { player: pname, team: log.defAbbr, inning: log.inning, half: log.half, mechanism: 'pitching motion', bodyArea: area, severity: sev.severity, outcome: 'removed from the game', remains: false, missedGames: sev.missedGames, replacement: String(pitcher.name).replace(/\s*\((LHP|RHP)\)$/, ''), side: 'pitching' };
+                (defSide.injuries = defSide.injuries || []).push(rec);
+                elEmit(EL_TYPES.INJURY, {
+                    subjectTeam: subjectTeam,
+                    baseStateBefore: baseSnapshot(), baseStateAfter: baseSnapshot(), runnerPitcher: pitcherRefs(),
+                    outsBefore: outs, outsAfter: outs, scoreBefore: elScore(), scoreAfter: elScore(),
+                    injuryData: rec,
+                    result: { code: 'INJURY', detail: pname + ' (P) — pitching motion; ' + area + ' (' + sev.severity + '). Removed from the game. ' + rec.replacement + ' enters.' },
+                    runsScored: [], rbi: 0
+                });
+            } else {
+                var cause = EL_EJECT_CAUSES[Math.floor(random() * EL_EJECT_CAUSES.length)];
+                var erec = { person: pname, personType: 'pitcher', cause: cause, team: log.defAbbr, inning: log.inning, half: log.half, replacement: String(pitcher.name).replace(/\s*\((LHP|RHP)\)$/, '') };
+                (defSide.ejections = defSide.ejections || []).push(erec);
+                elEmit(EL_TYPES.EJECTION, {
+                    subjectTeam: subjectTeam,
+                    baseStateBefore: baseSnapshot(), baseStateAfter: baseSnapshot(), runnerPitcher: pitcherRefs(),
+                    outsBefore: outs, outsAfter: outs, scoreBefore: elScore(), scoreAfter: elScore(),
+                    ejectionData: erec,
+                    result: { code: 'EJECTION', detail: pname + ' (P) ejected — ' + cause + '. ' + erec.replacement + ' enters.' },
+                    runsScored: [], rbi: 0
+                });
+            }
+            elEmit(EL_TYPES.SUB, {
+                subjectTeam: subjectTeam,
+                baseStateBefore: baseSnapshot(), baseStateAfter: baseSnapshot(), runnerPitcher: pitcherRefs(),
+                outsBefore: outs, outsAfter: outs, scoreBefore: elScore(), scoreAfter: elScore(),
+                substitutionData: { out: pname, in: String(pitcher.name).replace(/\s*\((LHP|RHP)\)$/, ''), role: 'P', reason: injured ? 'injury' : 'ejection', inheritedRunners: 0, midInning: false },
+                result: { code: 'PITCHING_CHANGE', detail: 'Pitching Change: ' + String(pitcher.name).replace(/\s*\((LHP|RHP)\)$/, '') + ' replaces ' + pname + ' (' + (injured ? 'injury' : 'ejection') + ')' },
+                runsScored: [], rbi: 0
+            });
         }
         // bp[k] = the pitcher responsible for the runner on base k (the arm that put him
         // there). Inherited runners that score charge THAT pitcher, not whoever is on the
@@ -2929,6 +3240,8 @@
             }
         }
         var gidp = 0, ofAssists = 0;
+        // Stage 3: one pitcher injury/ejection check as the arm takes the mound.
+        if (el) elMaybePitcherEvent();
         while (outs < 3) {
             // Pickoff: rare live event with a runner on 1B (real MLB ~0.05/team-game).
             if (bases[0] !== null && random() < 0.0035) {
@@ -2951,12 +3264,13 @@
             var rSteal = runner0 && runner0.stealRate != null ? runner0.stealRate : side.stealRate;
             var rSucc = runner0 && runner0.stealSuccess != null ? runner0.stealSuccess : side.stealSuccess;
             if (bases[0] !== null && bases[1] === null && random() < rSteal) {
+                var stealerSlot = bases[0];
                 var stealerName = bname(bases[0]);
                 var stBefore = baseSnapshot(), stOuts = outs;
                 if (random() < rSucc) { lineup[bases[0]].acc.sb++; side.sb++; logEvent({ type: 'SB', runner: stealerName, pitcher: pitcher.name, base: '2nd' }); bases[1] = bases[0]; bp[1] = bp[0]; bases[0] = null; bp[0] = null; }
                 else { lineup[bases[0]].acc.cs++; side.cs++; logEvent({ type: 'CS', runner: stealerName, pitcher: pitcher.name, base: '2nd' }); bases[0] = null; bp[0] = null; pitcher.acc.outs++; outs++; }
                 elEmit(EL_TYPES.STEAL, {
-                    runnerId: stealerName, base: '2nd', safe: outs === stOuts,
+                    runnerId: stealerName, runnerSlot: stealerSlot, base: '2nd', safe: outs === stOuts,
                     baseStateBefore: stBefore, baseStateAfter: baseSnapshot(),
                     runnerPitcher: pitcherRefs(),
                     outsBefore: stOuts, outsAfter: outs,
@@ -2970,6 +3284,13 @@
                 if (outs >= 3) break;
             }
             var bi = side.idx % 9, b = lineup[bi];
+            // Stage 3 strategic pinch hitter: late innings, a clearly weak bat due up,
+            // bench available. Displayed game only (el present) so calibration is
+            // untouched. Emits a SUB and the pinch hitter takes the at-bat.
+            if (el && log.inning >= 7 && side.bench && side.bench.length && b && b.realOps != null && b.realOps < 0.660 && random() < 0.06) {
+                var ph = elSwapSlot(bi, 'PH', 'strategic move');
+                if (ph) b = lineup[bi];
+            }
             // INTENTIONAL_WALK_20260629: first base open, a runner in scoring position,
             // two outs, an elite bat up and a clearly weaker on-deck hitter -> the manager
             // puts him on (real MLB ~0.2 IBB/team-game). Needs real OPS, so synthetic teams
@@ -3005,6 +3326,10 @@
             var batVec = pitcher.hand === 'L' ? (b.baseVecVsL || b.baseVec)
                        : pitcher.hand === 'R' ? (b.baseVecVsR || b.baseVec)
                        : b.baseVec;
+            // Stage 3: an injured-but-still-playing batter hits with reduced power.
+            // injuryPenalty is 0 outside the displayed game, so this is a no-op for
+            // the calibration path.
+            if (b.injuryPenalty) batVec = elApplyInjuryVector(batVec, b.injuryPenalty);
             var v = evScale(evApplyTto(evApplyParkHr(evCombine(batVec, pitcher.vec), side.parkHr), evTtoMultipliers(timesThrough)), side.anchorFactor);
             var ev = evSample(v, random), acc = b.acc; acc.pa++; pitcher.acc.bf++;
             // Event-sourced situational accounting (no post-hoc estimates):
@@ -3139,6 +3464,21 @@
             side.idx++;
             // Walk-off: the game ends the moment the batting side takes the lead.
             if (endLead !== undefined && endLead !== null && runs > endLead) break;
+            // Stage 3: injury / ejection / strategic pinch runner after the PA
+            // (displayed game only). A hit-by-pitch carries the highest injury risk.
+            if (el) {
+                var reached = bases.indexOf(bi) >= 0 || paErrorReach;
+                var mech = paIsHbp ? 'hit by pitch' : (reached ? 'baserunning collision/slide' : (ev === 'so' || ev === 'bb' ? 'swing/plate appearance' : 'fielding a batted ball'));
+                var iRate = paIsHbp ? EL_INJURY.perHbp : (reached ? EL_INJURY.perBip : EL_INJURY.perPa);
+                var removed = elMaybeInjury(bi, mech, iRate);
+                if (!removed) {
+                    if (ev === 'so') removed = elMaybeEjection(bi, 'called strike three', EL_EJECT.perCloseCallPa);
+                    else if (paIsHbp) removed = elMaybeEjection(bi, 'hit by pitch', EL_EJECT.perHbp);
+                }
+                if (!removed && reached && log.inning >= 8 && side.bench && side.bench.length && (b.speed || 1) < 1.0 && random() < 0.03) {
+                    elSwapSlot(bi, 'PR', 'strategic move');
+                }
+            }
             if (outs < 3) maybeChange();
         }
         // Runners stranded in scoring position when the 3rd out was recorded.
@@ -3224,6 +3564,25 @@
             // Event-sourced situational trackers (reset per game).
             s.gidp = 0; s.sf = 0; s.sacBunts = 0; s.hbp = 0; s.rispAb = 0; s.rispHits = 0; s.twoOutRbi = 0;
             s.lisp2out = 0; s.pickoffs = 0; s.ofAssists = 0; s.dpTurned = 0; s._lastPitcher = null;
+            // TMR_ROSTER_STATE_20260723: reset the in-game roster state. lineupSlots[k]
+            // is the ordered history of who has occupied batting slot k (starter first).
+            // These are cheap no-ops for synthetic teams (empty bench) and are only
+            // mutated when a game is being event-logged.
+            // Restore the ORIGINAL starting nine before each game. Substitutions in a
+            // prior displayed game replaced lineup[slot] with bench players; without
+            // this the lineup (and usedPids) would carry those subs into the next game.
+            if (!s._starters) s._starters = s.lineup.slice();
+            else s.lineup = s._starters.slice();
+            s.lineupSlots = s.lineup.map(function (b) { b.isBench = false; b.injuryPenalty = 0; return [b]; });
+            s.bench = (s.benchPool || []).slice();
+            s.bench.forEach(function (b) { b.acc = evNewBat(); b.injuryPenalty = 0; });
+            s.removedPids = {};
+            s.usedPids = {};
+            s.lineup.forEach(function (b) { if (b.pid) s.usedPids[b.pid] = true; });
+            s.injuries = [];
+            s.ejections = [];
+            s.managerEjected = false;
+            s.subCount = 0;
             // Per-game starter length: symmetric +/-8 out sample around the starter's
             // real per-start mean (mean-preserving). Pitching changes happen at inning
             // boundaries, so realized outings quantize to whole innings (4-8 IP range,
@@ -3359,8 +3718,28 @@
         if (statsOut && total) { statsOut.awayMean = aSum / total; statsOut.homeMean = hSum / total; }
         return total ? homeWins / total : 0.5;
     }
+    // Every batter who appeared, across all slots (starter first, then subs). With no
+    // substitutions this is exactly side.lineup. Used everywhere team batting is summed,
+    // because side.lineup only holds the CURRENT occupants and would drop the stats of
+    // a starter who was pinch-hit / injured / ejected out of the game.
+    function evAllBatters(side) {
+        var occupants = [];
+        if (Array.isArray(side.lineupSlots)) {
+            side.lineupSlots.forEach(function (slotArr, slotIdx) {
+                slotArr.forEach(function (b, occIdx) { occupants.push({ b: b, slot: slotIdx, sub: occIdx > 0 }); });
+            });
+        } else {
+            side.lineup.forEach(function (b, slotIdx) { occupants.push({ b: b, slot: slotIdx, sub: false }); });
+        }
+        return occupants;
+    }
     function evBatterRows(side) {
-        return side.lineup.map(function (b) {
+        // Stage 3: iterate the full slot history (starter first, then each
+        // substitute in the same batting-order slot) so subs get their own line
+        // indented under the starter. With no substitutions each slot has exactly
+        // one occupant and this is identical to mapping side.lineup.
+        return evAllBatters(side).map(function (rec) {
+            var b = rec.b;
             var a = b.acc;
             // TMR_EVENTLOG_20260723: GAME rate stats are computed from this game's
             // own line and kept STRICTLY separate from the player's season figures.
@@ -3373,6 +3752,7 @@
             var gameSlg = a.ab > 0 ? tb / a.ab : null;
             return {
                 name: b.name, playerName: b.playerName, rawPos: b.rawPos,
+                slot: rec.slot, sub: rec.sub, subRole: b.isBench ? (b.rawPos === 'PH' ? 'PH' : 'sub') : null,
                 pa: a.pa, ab: a.ab, r: a.r, h: a.h, hr: a.hr, rbi: a.rbi, bb: a.bb, ibb: a.ibb || 0,
                 so: a.so, lob: a.lob, hbp: a.hbp || 0, gidp: a.gidp || 0, sf: a.sf || 0, sh: a.sac || 0,
                 b1: a.b1 || 0, b2: a.b2, b3: a.b3, tb: tb, sb: a.sb || 0, cs: a.cs || 0,
@@ -3403,7 +3783,7 @@
     // Every situational stat here is EVENT-SOURCED from the simulated plate
     // appearances (June 4, 2026) — no post-hoc estimates, no random garnish.
     function evSummaryStats(side, runs, hits, errors, random) {
-        var rows = side.lineup.map(function (b) { return b.acc; });
+        var rows = evAllBatters(side).map(function (rec) { return rec.b.acc; });
         var doubles = sum(rows.map(function (r) { return r.b2; }));
         var triples = sum(rows.map(function (r) { return r.b3; }));
         var homeRuns = sum(rows.map(function (r) { return r.hr; }));
@@ -3431,8 +3811,8 @@
         var scoringLog = [];
         var eventLog = elNewLog('sim-' + Date.now());
         var g = evSimGame(inputs.awaySide, inputs.homeSide, random, { scoring: scoringLog, el: eventLog });
-        var awayHits = sum(inputs.awaySide.lineup.map(function (b) { return b.acc.h; }));
-        var homeHits = sum(inputs.homeSide.lineup.map(function (b) { return b.acc.h; }));
+        var awayHits = sum(evAllBatters(inputs.awaySide).map(function (rec) { return rec.b.acc.h; }));
+        var homeHits = sum(evAllBatters(inputs.homeSide).map(function (rec) { return rec.b.acc.h; }));
         // Innings arrays are now complete per-inning (extras included). Home may be
         // one inning short when the bottom 9th was skipped — shown as X, never 0.
         var totalInnings = Math.max(9, g.aInn.length);
@@ -3518,21 +3898,32 @@
         return { away: away, home: home };
     }
     function foldBatting(log, team) {
-        var slots = {};
+        // Keyed by slot + player, so a substitute in the same batting-order slot is
+        // its OWN row (starter and sub appear separately, as on a real box score),
+        // while rows stay ordered by batting slot then entry order.
+        var rows = {}, order = [];
         function row(slot, name) {
-            if (!slots[slot]) slots[slot] = {
-                slot: slot, name: name, pa: 0, ab: 0, r: 0, h: 0, b1: 0, b2: 0, b3: 0, hr: 0, rbi: 0,
-                bb: 0, ibb: 0, so: 0, hbp: 0, sb: 0, cs: 0, gidp: 0, sf: 0, sh: 0, lob: 0, tb: 0
-            };
-            if (name && !slots[slot].name) slots[slot].name = name;
-            return slots[slot];
+            var key = slot + '|' + (name || '?');
+            if (!rows[key]) {
+                rows[key] = {
+                    slot: slot, name: name, entry: order.length, sub: false, pa: 0, ab: 0, r: 0, h: 0,
+                    b1: 0, b2: 0, b3: 0, hr: 0, rbi: 0, bb: 0, ibb: 0, so: 0, hbp: 0, sb: 0, cs: 0,
+                    gidp: 0, sf: 0, sh: 0, lob: 0, tb: 0
+                };
+                order.push(rows[key]);
+            }
+            return rows[key];
         }
-        var byName = {};
         log.events.forEach(function (e) {
+            if (e.battingTeam !== team && !(e.eventType === EL_TYPES.SUB && e.subjectTeam === team)) return;
+            if (e.eventType === EL_TYPES.SUB && e.substitutionData && e.substitutionData.role !== 'P' && e.subjectTeam === team) {
+                var sr = row(e.substitutionData.slot, e.substitutionData.in);
+                sr.sub = true;
+                return;
+            }
             if (e.battingTeam !== team) return;
             if (elIsPa(e)) {
                 var r = row(e.batterSlot, e.batterId);
-                byName[e.batterId] = r;
                 var c = e.result.code;
                 r.pa++;
                 if (c !== 'BB' && c !== 'IBB' && c !== 'HBP' && c !== 'SF' && c !== 'SH') r.ab++;
@@ -3553,9 +3944,9 @@
                 if (x.runnerSlot === undefined || x.runnerSlot === null) return;
                 row(x.runnerSlot, x.runnerId).r++;
             });
-            if (e.eventType === EL_TYPES.STEAL) {
-                var sr = byName[e.runnerId];
-                if (sr) { if (e.safe) sr.sb++; else sr.cs++; }
+            if (e.eventType === EL_TYPES.STEAL && e.runnerSlot != null) {
+                var st = row(e.runnerSlot, e.runnerId);
+                if (e.safe) st.sb++; else st.cs++;
             }
             if (e.eventType === EL_TYPES.INNING_END && e.lob) {
                 // Charge the batter who made the inning-ending out, as on a real
@@ -3569,7 +3960,7 @@
                 if (prev) row(prev.batterSlot, prev.batterId).lob += e.lob;
             }
         });
-        return Object.keys(slots).sort(function (a, b) { return a - b; }).map(function (k) { return slots[k]; });
+        return order.sort(function (a, b) { return (a.slot - b.slot) || (a.entry - b.entry); });
     }
     function foldPitching(log, team) {
         // `team` is the FIELDING side here.
@@ -3695,10 +4086,17 @@
             if (e.eventType === EL_TYPES.STEAL && isBat) { if (e.safe) n.sb.push(e.runnerId); else { n.cs.push(e.runnerId); n.outsOnBases++; } }
             if (e.eventType === EL_TYPES.PICKOFF && isBat) { n.pickoffs.push(e.runnerId); n.outsOnBases++; }
             if (e.eventType === EL_TYPES.INNING_END && isBat) n.lob += e.lob || 0;
-            if (e.eventType === EL_TYPES.SUB && isFld && e.substitutionData) {
+            if (e.eventType === EL_TYPES.SUB && isFld && e.substitutionData && e.substitutionData.role === 'P') {
                 n.pitchingChanges.push(e.substitutionData);
                 n.inherited += e.substitutionData.inheritedRunners || 0;
             }
+            // Substitutions, injuries and ejections attribute to the SUBJECT's team.
+            if (e.eventType === EL_TYPES.SUB && e.subjectTeam === team && e.substitutionData && e.substitutionData.role !== 'P') {
+                n.substitutions = n.substitutions || [];
+                n.substitutions.push(e.substitutionData);
+            }
+            if (e.eventType === EL_TYPES.INJURY && e.subjectTeam === team && e.injuryData) n.injuries.push(e.injuryData);
+            if (e.eventType === EL_TYPES.EJECTION && e.subjectTeam === team && e.ejectionData) n.ejections.push(e.ejectionData);
         });
         // Inherited runners that scored, read straight off the run ledger.
         log.events.forEach(function (e) {
@@ -4909,20 +5307,29 @@
         { k: 'lob', h: 'LOB', t: 'Runners left on base' }
     ];
     function batterTableRows(rows, showAdvanced) {
-        var positions = assignLineupPositions(rows);
-        var lineup = rows.slice(0, 9);
+        // Stage 3: rows may contain substitutes (row.sub true) sharing a batting-order
+        // slot with a starter. Show the order number only on the first occupant of each
+        // slot and indent the substitutes, as on a professional box score. Positions
+        // are assigned from the STARTERS (the first occupant of each slot).
+        var starters = rows.filter(function (r) { return !r.sub; });
+        var positions = assignLineupPositions(starters);
+        var posBySlot = {};
+        starters.forEach(function (r, i) { posBySlot[r.slot != null ? r.slot : i] = positions[i]; });
         var cols = BX_BAT_COLS.filter(function (c) { return showAdvanced || !c.adv; });
         var totals = { tb: 0 }, obDen = 0, obNum = 0;
         cols.forEach(function (c) { totals[c.k] = 0; });
-        var body = lineup.map(function (row, index) {
+        var body = rows.map(function (row, index) {
             cols.forEach(function (c) { totals[c.k] += Number(row[c.k] || 0); });
             totals.tb += Number(row.tb || 0);
             obDen += Number(row.ab || 0) + Number(row.bb || 0) + Number(row.hbp || 0) + Number(row.sf || 0);
             obNum += Number(row.h || 0) + Number(row.bb || 0) + Number(row.hbp || 0);
             var plain = (row.playerName || String(row.name || '').replace(/\s*\([^)]*\)\s*$/, ''));
-            var name = escapeHtml(plain) + ' <span class="bx-pos">' + escapeHtml(positions[index]) + '</span>';
+            var slotNum = row.slot != null ? row.slot : index;
+            var posLabel = row.sub ? (row.subRole || 'PH') : (posBySlot[slotNum] || row.rawPos || '');
+            var name = (row.sub ? '<span class="bx-sub-arrow">↳</span> ' : '') + escapeHtml(plain) + ' <span class="bx-pos">' + escapeHtml(posLabel) + '</span>';
+            var slotCell = row.sub ? '<span class="bx-slot bx-slot-sub"></span>' : '<span class="bx-slot">' + (slotNum + 1) + '</span>';
             var cells = cols.map(function (c) { return '<td>' + Number(row[c.k] || 0) + '</td>'; }).join('');
-            return '<tr><th scope="row"><span class="bx-slot">' + (index + 1) + '</span> ' + name + '</th>' + cells +
+            return '<tr' + (row.sub ? ' class="bx-sub-row"' : '') + '><th scope="row">' + slotCell + ' ' + name + '</th>' + cells +
                 '<td class="bx-rate">' + fmt3(row.gameAvg) + '</td>' +
                 '<td class="bx-rate">' + fmt3(row.gameObp) + '</td>' +
                 '<td class="bx-rate">' + fmt3(row.gameSlg) + '</td>' +
@@ -5192,6 +5599,41 @@
         if (on.length === 3) return 'bases loaded';
         return 'runner' + (on.length > 1 ? 's' : '') + ' on ' + on.join(' and ');
     }
+    // TMR_ROSTER_STATE_20260723: professional-style roster-move notes — substitutions,
+    // injuries and ejections — all folded from the event log. Only rendered when the
+    // displayed game actually produced one (most games have none).
+    function rosterMovesSection(result) {
+        var folded = result && result.boxScore && result.boxScore.folded;
+        if (!folded || !folded.notes) return '';
+        var away = folded.notes.away, home = folded.notes.home;
+        function ord(n) { n = Number(n) || 0; var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+        function frame(half, inn) { return (half === 'bottom' ? 'Bot ' : 'Top ') + ord(inn); }
+        var blocks = [];
+        // Substitutions (position players)
+        var subs = [].concat(away.substitutions || [], home.substitutions || []);
+        if (subs.length) {
+            blocks.push('<div class="rm-block"><h5>Substitutions</h5><ul>' + subs.map(function (s) {
+                var role = s.role === 'PH' ? 'Pinch hitter' : s.role === 'PR' ? 'Pinch runner' : s.role === 'INJ' ? 'Injury replacement' : s.role === 'EJ' ? 'Ejection replacement' : 'Defensive substitution';
+                return '<li>' + escapeHtml(role + ': ' + s.in + ' for ' + (s.out || 'starter') + ' (batting ' + ((s.slot != null ? s.slot + 1 : '?')) + ')') + '</li>';
+            }).join('') + '</ul></div>');
+        }
+        // Injuries — always labeled SIMULATED so no reader thinks a real player is hurt.
+        var injuries = [].concat(away.injuries || [], home.injuries || []);
+        if (injuries.length) {
+            blocks.push('<div class="rm-block rm-injury"><h5>Injuries <span class="rm-sim-tag">simulated event — not a real injury report</span></h5><ul>' + injuries.map(function (i) {
+                return '<li>' + escapeHtml(frame(i.half, i.inning) + ' — ' + i.player + ' (' + i.team + '): ' + i.mechanism + ', ' + i.bodyArea + ' (' + i.severity + '). ' + i.outcome + (i.replacement ? '; ' + i.replacement + ' in' : '') + (i.missedGames ? '; est. ' + i.missedGames + '-game absence' : '')) + '</li>';
+            }).join('') + '</ul></div>');
+        }
+        // Ejections
+        var ejections = [].concat(away.ejections || [], home.ejections || []);
+        if (ejections.length) {
+            blocks.push('<div class="rm-block rm-ejection"><h5>Ejections</h5><ul>' + ejections.map(function (e) {
+                return '<li>' + escapeHtml(frame(e.half, e.inning) + ' — ' + e.person + ' (' + e.team + ') ejected: ' + e.cause + (e.replacement ? '; ' + e.replacement + (e.personType === 'manager' ? '' : ' in') : '')) + '</li>';
+            }).join('') + '</ul></div>');
+        }
+        if (!blocks.length) return '';
+        return '<section class="roster-moves"><h4>Roster Moves</h4>' + blocks.join('') + '</section>';
+    }
     function playByPlaySection(result) {
         var folded = result && result.boxScore && result.boxScore.folded;
         var halves = folded && folded.playByPlay;
@@ -5201,7 +5643,7 @@
             var label = (h.half === 'bottom' ? 'Bottom ' : 'Top ') + elOrdinal(h.inning) + ' — ' + escapeHtml(h.battingTeamAbbr || '');
             var summary = h.runs + (h.runs === 1 ? ' run' : ' runs') + ', ' + h.hits + (h.hits === 1 ? ' hit' : ' hits') + ', ' + h.lob + ' LOB';
             var plays = h.plays.map(function (p) {
-                var cls = p.type === 'SUB' ? 'pbp-sub' : (p.runs > 0 ? 'pbp-scoring' : '');
+                var cls = p.type === 'SUB' ? 'pbp-sub' : p.type === 'INJURY' ? 'pbp-injury' : p.type === 'EJECTION' ? 'pbp-ejection' : (p.runs > 0 ? 'pbp-scoring' : '');
                 var meta = [];
                 if (p.type === 'PA') {
                     meta.push(p.outsBefore + (p.outsBefore === 1 ? ' out' : ' outs'));
@@ -5271,6 +5713,7 @@
             pitchingTableSection(result.away, box.players.away, awayWon, margin, { walkOff: walkOff, extra: extra, isHome: false }, foldedSideFor(result, 'away')) +
             pitchingTableSection(result.home, box.players.home, !awayWon, margin, { walkOff: walkOff, extra: extra, isHome: true }, foldedSideFor(result, 'home')) +
             pitchingGameNotes(result) +
+            rosterMovesSection(result) +
             playByPlaySection(result) +
             reconciliationPanel(result);
     }
@@ -6095,6 +6538,9 @@
             foldNotes: foldNotes,
             elReconcile: elReconcile,
             pitcherDecisions: pitcherDecisions,
+            makeSyntheticBench: makeSyntheticBench,
+            EL_INJURY: EL_INJURY,
+            EL_EJECT: EL_EJECT,
             EL_TYPES: EL_TYPES
         }
     };
