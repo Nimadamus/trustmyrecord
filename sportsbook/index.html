@@ -11107,7 +11107,17 @@ window.toggleSportFamily = function (family) {
     // ---- MLB probable pitcher (lobby board) -------------------------------
     // Display-only line under each MLB team name: "Probable Pitcher: <name|TBD>".
     // MLB only. Backend (Action Network) games carry no pitcher, so the names
-    // are enriched from ESPN's public MLB scoreboard, matched by team name.
+    // are enriched from ESPN's public MLB scoreboard, matched by TEAM + GAME DATE.
+    //
+    // PITCHER_DATE_FIX_20260723 (Nima): the old version called the ESPN
+    // scoreboard with NO ?dates= param, which always returns TODAY's slate.
+    // The board itself shows the next UPCOMING slate (today's games are already
+    // under way and get filtered out), so the two never lined up: most teams
+    // missed the map entirely and rendered TBD, and any team that happened to
+    // play both days got YESTERDAY's starter printed on tomorrow's game. Fix =
+    // request the exact date range the board is showing, key the map by
+    // team+ET-game-date (with start time as the doubleheader tiebreak), and
+    // re-poll every 5 minutes so late scratches/announcements land on their own.
     // Fail-open: any miss simply shows TBD; never blocks odds rendering.
     function lobbyIsMlb(game, sport) {
         var s = String(sport || (game && (game.sport_key || game.sport_title)) || '').toUpperCase();
@@ -11120,70 +11130,187 @@ window.toggleSportFamily = function (family) {
             : (game.away_pitcher || game.away_probable_pitcher || game.away_starter || (game.starters && game.starters.away));
         return v ? String(v).trim() : '';
     }
-    function lobbyPitcherHtml(game, side, sport) {
+    function lobbyPitcherHtml(game, side, sport, gameIndex) {
         if (!lobbyIsMlb(game, sport)) return '';
         var nm = lobbyPitcherName(game, side);
         var val = nm ? _sbEsc(nm) : 'TBD';
-        return '<div class="sb-team-pitcher">' + val + '</div>';
+        // data-* hooks let the 5-minute refresher retarget this exact line
+        // without repainting the row (odds/buttons are never touched).
+        return '<div class="sb-team-pitcher" data-sb-pitcher-side="' + side +
+               '" data-sb-pitcher-gi="' + (gameIndex == null ? '' : gameIndex) + '">' + val + '</div>';
     }
-    var _lobbyMlbProbable = { map: null, fetchedAt: 0, inflight: false };
+    // entries: [{ keys:[teamKey...], dateKey:'YYYYMMDD', startMs:Number, name:String }]
+    var _lobbyMlbProbable = { entries: null, range: '', fetchedAt: 0, inflight: false };
+    var _lobbyPitcherTimer = null;
+    // games[] that produced each cached board HTML, so a cache restore can
+    // re-target its own pitcher lines (never another sport's).
+    var _lobbyBoardGames = {};
     function _lobbyTeamKey(s) { return String(s || '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
-    function lobbyApplyProbableMap(games, map) {
-        if (!map || !Array.isArray(games)) return false;
+    // MLB "game date" is the Eastern-time calendar day (a 10:15pm PT first pitch
+    // is still that day's game), so every date key is computed in America/New_York.
+    function _lobbyEtDateKey(ms) {
+        var d = new Date(ms);
+        if (isNaN(d.getTime())) return '';
+        try {
+            var parts = new Intl.DateTimeFormat('en-CA', {
+                timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+            }).format(d);
+            return parts.replace(/-/g, '');
+        } catch (e) {
+            return d.toISOString().slice(0, 10).replace(/-/g, '');
+        }
+    }
+    function _lobbyGameStartMs(g) {
+        var t = new Date(g && (g.commence_time || g.commenceTime || g.start_time || g.date) || '');
+        return isNaN(t.getTime()) ? 0 : t.getTime();
+    }
+    // Date range the board is actually showing, as ESPN wants it: YYYYMMDD-YYYYMMDD.
+    function _lobbyBoardDateRange(games) {
+        var keys = [];
+        games.forEach(function (g) {
+            var ms = _lobbyGameStartMs(g);
+            if (ms) { var k = _lobbyEtDateKey(ms); if (k) keys.push(k); }
+        });
+        if (!keys.length) return '';
+        keys.sort();
+        return keys[0] + '-' + keys[keys.length - 1];
+    }
+    // Team + ET date must both match. Doubleheaders (same team, same date, two
+    // games) resolve to whichever ESPN event starts closest to this game.
+    function _lobbyLookup(entries, teamKeys, dateKey, startMs) {
+        var best = null, bestDelta = Infinity;
+        for (var i = 0; i < entries.length; i++) {
+            var e = entries[i];
+            if (e.dateKey !== dateKey) continue;
+            var matched = false;
+            for (var j = 0; j < teamKeys.length; j++) {
+                if (teamKeys[j] && e.keys.indexOf(teamKeys[j]) >= 0) { matched = true; break; }
+            }
+            if (!matched) continue;
+            var delta = Math.abs((e.startMs || 0) - (startMs || 0));
+            if (delta < bestDelta) { bestDelta = delta; best = e; }
+        }
+        return best ? best.name : '';
+    }
+    function lobbyApplyProbableMap(games, entries) {
+        if (!entries || !Array.isArray(games)) return false;
         var changed = false;
         games.forEach(function (g) {
+            var startMs = _lobbyGameStartMs(g);
+            var dateKey = _lobbyEtDateKey(startMs);
             ['away', 'home'].forEach(function (side) {
-                if (lobbyPitcherName(g, side)) return;
+                // Never overwrite a name the odds feed itself supplied.
+                if (lobbyPitcherName(g, side) && !g['_' + side + '_pitcher_espn']) return;
                 var team = side === 'home' ? g.home_team : g.away_team;
                 var abbr = side === 'home' ? (g.home_abbr || g.homeAbbr) : (g.away_abbr || g.awayAbbr);
                 var nick = String(team || '').trim().split(/\s+/).pop();
-                var hit = map[_lobbyTeamKey(team)] || map[_lobbyTeamKey(abbr)] || map[_lobbyTeamKey(nick)];
-                if (hit) { g[side + '_pitcher'] = hit; changed = true; }
+                var hit = _lobbyLookup(entries, [
+                    _lobbyTeamKey(team), _lobbyTeamKey(abbr), _lobbyTeamKey(nick)
+                ], dateKey, startMs);
+                var prev = g[side + '_pitcher'] || '';
+                // hit wins; an ESPN-sourced name with no current hit is dropped
+                // back to TBD so a scratched/removed starter can never linger.
+                g[side + '_pitcher'] = hit || '';
+                g['_' + side + '_pitcher_espn'] = true;
+                if (prev !== g[side + '_pitcher']) changed = true;
             });
         });
         return changed;
     }
+    // Rewrites the already-painted pitcher lines in place. Touches nothing else.
+    function lobbyRepaintPitcherLines(games) {
+        try {
+            var nodes = document.querySelectorAll('.sb-team-pitcher[data-sb-pitcher-gi]');
+            for (var i = 0; i < nodes.length; i++) {
+                var el = nodes[i];
+                var gi = parseInt(el.getAttribute('data-sb-pitcher-gi'), 10);
+                var side = el.getAttribute('data-sb-pitcher-side');
+                if (isNaN(gi) || !games[gi]) continue;
+                var nm = lobbyPitcherName(games[gi], side);
+                el.textContent = nm || 'TBD';
+            }
+        } catch (e) {}
+    }
+    function _lobbyParseEspnProbables(data) {
+        var entries = [];
+        if (!data || !Array.isArray(data.events)) return entries;
+        data.events.forEach(function (evt) {
+            var comp = evt.competitions && evt.competitions[0];
+            if (!comp || !Array.isArray(comp.competitors)) return;
+            var startMs = new Date(evt.date || comp.date || '').getTime();
+            if (isNaN(startMs)) startMs = 0;
+            var dateKey = _lobbyEtDateKey(startMs);
+            comp.competitors.forEach(function (c) {
+                var pr = c.probables, nm = '';
+                if (Array.isArray(pr) && pr[0] && pr[0].athlete) {
+                    var a = pr[0].athlete;
+                    nm = a.displayName || a.fullName || a.shortName || '';
+                }
+                // ESPN itself prints "TBD" when a club has not named a starter.
+                if (!nm || /^tbd$/i.test(nm.trim())) return;
+                var t = c.team || {};
+                var keys = [];
+                [t.displayName, t.shortDisplayName, t.name, t.nickname, t.location, t.abbreviation].forEach(function (k) {
+                    var kk = _lobbyTeamKey(k);
+                    if (kk && keys.indexOf(kk) < 0) keys.push(kk);
+                });
+                if (!keys.length) return;
+                entries.push({ keys: keys, dateKey: dateKey, startMs: startMs, name: nm.trim() });
+            });
+        });
+        return entries;
+    }
     // Ensures MLB games carry probable pitchers, then calls done(). Always calls
     // done() (even on failure) so the board paints regardless.
-    function lobbyEnsureMlbPitchers(games, done) {
+    function lobbyEnsureMlbPitchers(games, done, opts) {
+        opts = opts || {};
+        var finished = false;
+        var finish = function () { if (finished) return; finished = true; if (done) done(); };
         try {
-            if (!Array.isArray(games) || !games.length) { done(); return; }
-            var fresh = _lobbyMlbProbable.map && (Date.now() - _lobbyMlbProbable.fetchedAt < 600000);
-            if (fresh) { lobbyApplyProbableMap(games, _lobbyMlbProbable.map); done(); return; }
-            if (_lobbyMlbProbable.inflight) { done(); return; }
+            if (!Array.isArray(games) || !games.length) { finish(); return; }
+            var range = _lobbyBoardDateRange(games);
+            if (!range) { finish(); return; }
+            // Cache is scoped to the slate it was fetched for — a cached map from
+            // a previous slate can never be reused on a new one.
+            var fresh = !opts.force && _lobbyMlbProbable.entries &&
+                        _lobbyMlbProbable.range === range &&
+                        (Date.now() - _lobbyMlbProbable.fetchedAt < 300000);
+            if (fresh) { lobbyApplyProbableMap(games, _lobbyMlbProbable.entries); finish(); return; }
+            if (_lobbyMlbProbable.inflight) { finish(); return; }
             _lobbyMlbProbable.inflight = true;
-            var finished = false;
-            var finish = function () { if (finished) return; finished = true; done(); };
-            var guard = setTimeout(finish, 4500);
-            fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard', { cache: 'no-store' })
+            var guard = setTimeout(finish, 6000);
+            fetch('https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard?dates=' +
+                  encodeURIComponent(range) + '&limit=200', { cache: 'no-store' })
                 .then(function (r) { return r.ok ? r.json() : null; })
                 .then(function (data) {
                     _lobbyMlbProbable.inflight = false;
-                    if (data && Array.isArray(data.events)) {
-                        var map = {};
-                        data.events.forEach(function (evt) {
-                            var comp = evt.competitions && evt.competitions[0];
-                            if (!comp || !Array.isArray(comp.competitors)) return;
-                            comp.competitors.forEach(function (c) {
-                                var pr = c.probables, nm = '';
-                                if (Array.isArray(pr) && pr[0] && pr[0].athlete) {
-                                    nm = pr[0].athlete.displayName || pr[0].athlete.fullName || pr[0].athlete.shortName || '';
-                                }
-                                if (!nm) return;
-                                var t = c.team || {};
-                                [t.displayName, t.shortDisplayName, t.name, t.nickname, t.location, t.abbreviation].forEach(function (k) {
-                                    if (k) map[_lobbyTeamKey(k)] = nm;
-                                });
-                            });
-                        });
-                        _lobbyMlbProbable.map = map;
+                    var entries = _lobbyParseEspnProbables(data);
+                    if (entries.length) {
+                        _lobbyMlbProbable.entries = entries;
+                        _lobbyMlbProbable.range = range;
                         _lobbyMlbProbable.fetchedAt = Date.now();
-                        lobbyApplyProbableMap(games, map);
+                        lobbyApplyProbableMap(games, entries);
                     }
                     clearTimeout(guard); finish();
                 })
                 .catch(function () { _lobbyMlbProbable.inflight = false; clearTimeout(guard); finish(); });
-        } catch (e) { done(); }
+        } catch (e) { finish(); }
+    }
+    // Probables change all day (announcements, scratches). Re-pull every 5 min
+    // and rewrite only the pitcher lines of the currently painted MLB board.
+    function lobbyStartPitcherRefresh(games) {
+        try {
+            if (_lobbyPitcherTimer) { clearInterval(_lobbyPitcherTimer); _lobbyPitcherTimer = null; }
+            if (!Array.isArray(games) || !games.length) return;
+            _lobbyPitcherTimer = setInterval(function () {
+                if (!document.querySelector('.sb-team-pitcher[data-sb-pitcher-gi]')) {
+                    clearInterval(_lobbyPitcherTimer); _lobbyPitcherTimer = null; return;
+                }
+                lobbyEnsureMlbPitchers(games, function () {
+                    lobbyRepaintPitcherLines(games);
+                }, { force: true });
+            }, 300000);
+        } catch (e) {}
     }
 
     function renderRow(game, gameIndex, sport) {
@@ -11250,8 +11377,8 @@ window.toggleSportFamily = function (family) {
         var whenText = [dateStr, timeStr].filter(Boolean).join(' • ');
         var awayLogo = sportsbookTeamLogoMarkup(away, game.away_logo || game.awayLogo || '', game.away_abbr || game.awayAbbr || '');
         var homeLogo = sportsbookTeamLogoMarkup(home, game.home_logo || game.homeLogo || '', game.home_abbr || game.homeAbbr || '');
-        var awayPitcherHtml = lobbyPitcherHtml(game, 'away', sport);
-        var homePitcherHtml = lobbyPitcherHtml(game, 'home', sport);
+        var awayPitcherHtml = lobbyPitcherHtml(game, 'away', sport, gameIndex);
+        var homePitcherHtml = lobbyPitcherHtml(game, 'home', sport, gameIndex);
 
         // TT_TAB_20260607 (Nima): the SOCCER_TT_20260606 mini TT chips that
         // were crammed under the team names are GONE. Main Lines stays clean
@@ -14051,10 +14178,19 @@ window.toggleSportFamily = function (family) {
         // the first call succeeded). Cache key bumped to v2 (Apr 30 2026) to
         // invalidate dead-button HTML from before the click-wiring fix.
         window.TMR._fullBoardCache = window.TMR._fullBoardCache || {};
-        var cacheKey = sport + ':v4mlbpitcher';
+        var cacheKey = sport + ':v5mlbpitcherdate';
         var cached = window.TMR._fullBoardCache[cacheKey];
         if (cached) {
             rows.innerHTML = cached;
+            // Restored HTML can carry pitcher lines from earlier in the session.
+            // Re-pull probables for this slate and rewrite just those lines.
+            var cachedGames = _lobbyBoardGames[cacheKey];
+            if (lobbyIsMlb(null, sport) && Array.isArray(cachedGames) && cachedGames.length) {
+                lobbyEnsureMlbPitchers(cachedGames, function () {
+                    lobbyRepaintPitcherLines(cachedGames);
+                    lobbyStartPitcherRefresh(cachedGames);
+                }, { force: true });
+            }
             return;
         }
 
@@ -14098,11 +14234,15 @@ window.toggleSportFamily = function (family) {
                 if (window.TMR && window.TMR._fullBoardCache) {
                     window.TMR._fullBoardCache[cacheKey] = html;
                 }
+                _lobbyBoardGames[cacheKey] = games;
                 console.log('[TMR][lobby] ' + sport + ' rendered ' + games.length + ' games. Source: ' + sourceLabel);
             };
             // MLB: enrich with probable pitchers (ESPN) before paint; always paints.
             if (lobbyIsMlb(null, sport)) {
-                lobbyEnsureMlbPitchers(games, doPaint);
+                lobbyEnsureMlbPitchers(games, function () {
+                    doPaint();
+                    lobbyStartPitcherRefresh(games);
+                });
             } else {
                 doPaint();
             }
