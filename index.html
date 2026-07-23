@@ -82,16 +82,24 @@ img{display:block;max-width:100%}
 
 /* ---------- TICKER ---------- */
 .ticker{background:#050F1B;border-bottom:1px solid rgba(255,255,255,.07)}
-/* Two real columns: [TODAY][scrollable games]. The label used to be position:sticky
-   INSIDE the scrolling strip, so the first game card slid underneath it. The label is
-   now a static flex column of its own and ONLY .ticker-games scrolls, so the games can
-   never render beneath the label. No absolute positioning, no negative margins. */
+/* Columns: [TODAY][‹][paged games viewport][›]. The games no longer scroll; they
+   are split by JS into groups that each fit the viewport width and rotate in place.
+   .ticker-games is the fixed-width viewport (overflow hidden); .ticker-track holds one
+   full-width .ticker-page per group and slides horizontally between them. This keeps
+   the strip exactly one row tall so the page never grows and never overflows sideways. */
 .ticker-in{max-width:1720px;margin:0 auto;padding:9px 28px;display:flex;align-items:stretch;gap:0;
   overflow:hidden}
-.ticker-games{flex:1 1 auto;min-width:0;display:flex;align-items:stretch;gap:12px;
-  overflow-x:auto;overflow-y:hidden;scroll-behavior:smooth;scroll-snap-type:x proximity;
-  scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior-x:contain}
-.ticker-games::-webkit-scrollbar{display:none}
+.ticker-games{flex:1 1 auto;min-width:0;position:relative;overflow:hidden}
+.ticker-track{display:flex;transition:transform .5s cubic-bezier(.4,0,.2,1);will-change:transform}
+.ticker-page{flex:0 0 100%;width:100%;min-width:0;display:flex;align-items:stretch;gap:12px}
+.tk-nav{flex:0 0 auto;align-self:center;width:26px;height:26px;display:flex;align-items:center;
+  justify-content:center;padding:0;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);
+  border-radius:6px;color:#9FBCD6;font-size:15px;line-height:1;cursor:pointer;
+  transition:background .15s ease,border-color .15s ease,color .15s ease}
+.tk-nav:hover{background:rgba(34,210,192,.12);border-color:rgba(34,210,192,.34);color:#fff}
+.tk-nav:disabled,.tk-nav[hidden]{display:none}
+.tk-prev{margin-right:10px}
+.tk-next{margin-left:10px}
 .tlbl{align-self:center;display:flex;align-items:center;gap:9px;color:var(--brand-lt);font-size:12px;font-weight:900;letter-spacing:.13em;text-transform:uppercase;white-space:nowrap;height:24px;flex:0 0 auto;padding-right:18px;margin-right:18px;border-right:1px solid rgba(255,255,255,.14)}
 .tlbl .bl{width:7px;height:7px;border-radius:50%;background:var(--brand-lt);box-shadow:0 0 0 4px rgba(34,210,192,.2)}
 a.gm{text-decoration:none}
@@ -477,7 +485,7 @@ footer a:hover{color:#fff}
 })();
 </script>
 
-<div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><div class="ticker-games" data-slate-date=""><span class="gm is-msg"><span class="st">Loading today&rsquo;s MLB slate&hellip;</span></span></div></div></div>
+<div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><button type="button" class="tk-nav tk-prev" aria-label="Previous games" hidden>&lsaquo;</button><div class="ticker-games" data-slate-date=""><div class="ticker-track"><div class="ticker-page"><span class="gm is-msg"><span class="st">Loading today&rsquo;s MLB slate&hellip;</span></span></div></div></div><button type="button" class="tk-nav tk-next" aria-label="Next games" hidden>&rsaquo;</button></div></div></div>
 
 <section class="hero"><div class="hero-bg" aria-hidden="true"></div>
   <div class="grain"></div>
@@ -637,7 +645,7 @@ footer a:hover{color:#fff}
 <!-- END STATIC BRIDGE -->
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script>
 <script src="/static/js/tmr-home-auth.3aa95a4599c4.js"></script>
-<script src="/static/js/tmr-home-live.e5d73eb6c663.js"></script>
+<script src="/static/js/tmr-home-live.5be1fa1c91c5.js"></script>
 <!-- Alerts dropdown for the nav bell. Same engine every other page uses, so the
      bell shows the latest alerts in place instead of navigating away. These four
      touch no homepage markup (auth-persistent only binds selectors this page

@@ -52,8 +52,18 @@
   }
 
   var TICKER_REFRESH_MS = 90 * 1000;   // pitching changes, PPDs, live status, finals
+  var TICKER_ROTATE_MS = 7000;         // dwell time on each group before advancing
   var tickerTimer = null;
   var tickerSlateDate = null;
+
+  /* Group-rotation state. The slate is split into groups that each fit the viewport
+     width; one group shows at a time and they cycle. Index/count persist across the
+     90s data refresh so a refresh does not yank the reader back to group one. */
+  var tkPageIndex = 0;
+  var tkPageCount = 1;
+  var tkRotTimer = null;
+  var tkPaused = false;
+  var tkWired = false;
 
   function logoImg(url) {
     return url ? '<img src="' + esc(url) + '" alt="" loading="lazy" onerror="this.remove()">' : '';
@@ -86,20 +96,26 @@
     return '<span class="gm-sp">' + esc(short(g.away_pitcher)) + ' vs ' + esc(short(g.home_pitcher)) + '</span>';
   }
 
+  function laneMsg(lane, text, slateDate) {
+    lane.innerHTML = '<div class="ticker-track"><div class="ticker-page">' +
+      '<span class="gm is-msg"><span class="st">' + esc(text) + '</span></span>' +
+      '</div></div>';
+    lane.setAttribute('data-slate-date', slateDate || '');
+    tkPageIndex = 0; tkPageCount = 1;
+    stopTickerRotate();
+    updateTickerNav();
+  }
+
   function renderTicker(payload) {
     var lane = el('.ticker .ticker-games'); if (!lane) return;
 
     if (!payload || payload.ok === false) {
-      lane.innerHTML = '<span class="gm is-msg"><span class="st">' +
-        'MLB matchups are currently unavailable</span></span>';
-      lane.setAttribute('data-slate-date', '');
+      laneMsg(lane, 'MLB matchups are currently unavailable', '');
       return;
     }
     var games = payload.games || [];
     if (!games.length) {
-      lane.innerHTML = '<span class="gm is-msg"><span class="st">' +
-        'No MLB games scheduled today</span></span>';
-      lane.setAttribute('data-slate-date', payload.slate_date || '');
+      laneMsg(lane, 'No MLB games scheduled today', payload.slate_date || '');
       return;
     }
 
@@ -123,7 +139,9 @@
       }
       html += '</a>';
     });
-    lane.innerHTML = html;
+    /* Render every card into one measuring row inside the track, then split into
+       width-fitted groups. Cards are never dropped, duplicated or reordered here. */
+    lane.innerHTML = '<div class="ticker-track"><div class="ticker-page">' + html + '</div></div>';
     lane.setAttribute('data-slate-date', payload.slate_date || '');
 
     /* Clicking the trend goes to TrendSpotter; the rest of the card goes to the
@@ -135,6 +153,120 @@
         ev.preventDefault(); ev.stopPropagation();
         window.location.href = href;
       });
+    });
+
+    wireTickerControls();
+    layoutTicker();
+  }
+
+  /* Split the single measuring row into groups that each fit the viewport width,
+     then rebuild the track as one full-width page per group. Re-runnable on resize
+     and after every data refresh; the active group index is preserved and clamped. */
+  function layoutTicker() {
+    var lane = el('.ticker .ticker-games'); if (!lane) return;
+    var track = lane.querySelector('.ticker-track'); if (!track) return;
+
+    var cards = Array.prototype.slice.call(track.querySelectorAll('.gm'));
+    if (!cards.length) return;
+    if (cards[0].classList.contains('is-msg')) {
+      tkPageIndex = 0; tkPageCount = 1;
+      track.style.transform = 'translateX(0)';
+      stopTickerRotate(); updateTickerNav();
+      return;
+    }
+
+    /* Flatten everything back into one row so natural card widths can be measured. */
+    var row = document.createElement('div');
+    row.className = 'ticker-page';
+    cards.forEach(function (c) { row.appendChild(c); });
+    track.innerHTML = '';
+    track.appendChild(row);
+
+    var vw = lane.clientWidth;
+    var GAP = 12;
+    var pages = [];
+    if (vw <= 0) {
+      pages = [cards.slice()];                 // hidden/unmeasurable: one group, no clipping
+    } else {
+      var cur = [], used = 0;
+      cards.forEach(function (c) {
+        var w = c.offsetWidth;
+        var add = w + (cur.length ? GAP : 0);
+        if (cur.length && used + add > vw) { pages.push(cur); cur = []; used = 0; add = w; }
+        cur.push(c); used += add;
+      });
+      if (cur.length) pages.push(cur);
+    }
+
+    track.innerHTML = '';
+    pages.forEach(function (grp) {
+      var pg = document.createElement('div');
+      pg.className = 'ticker-page';
+      grp.forEach(function (c) { pg.appendChild(c); });
+      track.appendChild(pg);
+    });
+
+    tkPageCount = pages.length;
+    if (tkPageIndex >= tkPageCount) tkPageIndex = 0;
+    applyTickerPage();
+    updateTickerNav();
+    startTickerRotate();
+  }
+
+  function applyTickerPage() {
+    var lane = el('.ticker .ticker-games'); if (!lane) return;
+    var track = lane.querySelector('.ticker-track'); if (!track) return;
+    track.style.transform = 'translateX(-' + (tkPageIndex * 100) + '%)';
+  }
+
+  function goTicker(delta) {
+    if (tkPageCount <= 1) return;
+    tkPageIndex = (tkPageIndex + delta + tkPageCount) % tkPageCount;
+    applyTickerPage();
+    updateTickerNav();
+    startTickerRotate();          // manual move resets the dwell timer
+  }
+
+  function updateTickerNav() {
+    var prev = el('.ticker .tk-prev'), next = el('.ticker .tk-next');
+    var show = tkPageCount > 1;
+    if (prev) prev.hidden = !show;
+    if (next) next.hidden = !show;
+  }
+
+  function startTickerRotate() {
+    stopTickerRotate();
+    if (tkPageCount <= 1) return;
+    tkRotTimer = setInterval(function () {
+      if (tkPaused || document.hidden) return;
+      tkPageIndex = (tkPageIndex + 1) % tkPageCount;
+      applyTickerPage();
+      updateTickerNav();
+    }, TICKER_ROTATE_MS);
+  }
+
+  function stopTickerRotate() {
+    if (tkRotTimer) { clearInterval(tkRotTimer); tkRotTimer = null; }
+  }
+
+  /* Hover-pause, prev/next clicks and resize re-layout are wired once. */
+  var tkResizeTimer = null;
+  function wireTickerControls() {
+    if (tkWired) return;
+    tkWired = true;
+    var ticker = el('.ticker');
+    if (ticker) {
+      ticker.addEventListener('mouseenter', function () { tkPaused = true; });
+      ticker.addEventListener('mouseleave', function () { tkPaused = false; });
+      ticker.addEventListener('focusin', function () { tkPaused = true; });
+      ticker.addEventListener('focusout', function () { tkPaused = false; });
+    }
+    var prev = el('.ticker .tk-prev'), next = el('.ticker .tk-next');
+    if (prev) prev.addEventListener('click', function () { goTicker(-1); });
+    if (next) next.addEventListener('click', function () { goTicker(1); });
+    window.addEventListener('resize', function () {
+      if (tkResizeTimer) clearTimeout(tkResizeTimer);
+      tkResizeTimer = setTimeout(layoutTicker, 180);
     });
   }
 
