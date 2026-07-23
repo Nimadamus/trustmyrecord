@@ -3268,3 +3268,136 @@ select.pitcher-select option {
     .box-score-final .bsf-score strong { font-size: 28px; }
     .box-score-final { gap: 6px; }
 }
+
+/* =====================================================================
+   TMR_EVENTLOG_20260723 (Stage 2) — event-sourced box score presentation.
+   Appended so every rule here wins over the earlier sheet by source order;
+   no existing selector is modified.
+   ===================================================================== */
+.bx-mode-legend {
+    font-size: 0.78rem;
+    line-height: 1.45;
+    margin: 0.35rem 0 0.6rem;
+    padding: 0.45rem 0.6rem;
+    border-left: 3px solid #1c3f94;
+    background: rgba(28, 63, 148, 0.06);
+    color: #33415c;
+    border-radius: 0 4px 4px 0;
+}
+.bx-mode-legend strong { color: #14264d; }
+
+.bx-slot {
+    display: inline-block;
+    min-width: 1.15em;
+    margin-right: 0.35em;
+    color: #7b8794;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+}
+.player-box-table th,
+.player-box-table td { font-variant-numeric: tabular-nums; }
+.player-box-table .bx-rate { background: rgba(28, 63, 148, 0.045); }
+.player-box-table .bx-season {
+    background: rgba(120, 120, 120, 0.07);
+    color: #55607a;
+    font-style: italic;
+}
+.player-box-table thead .bx-rate,
+.player-box-table thead .bx-season { font-style: normal; }
+.bx-bat-table th[title],
+.bx-pit-table th[title] { cursor: help; text-decoration: underline dotted rgba(0,0,0,0.28); text-underline-offset: 3px; }
+
+/* Dense-but-readable tables: the name column stays put while stats scroll. */
+.player-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.bx-bat-table th[scope="row"],
+.bx-pit-table th[scope="row"] {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: #fff;
+    white-space: nowrap;
+    box-shadow: 1px 0 0 rgba(0, 0, 0, 0.08);
+}
+.bx-bat-table tr:nth-child(even) th[scope="row"],
+.bx-pit-table tr:nth-child(even) th[scope="row"] { background: #f7f8fa; }
+.bx-bat-table .totals-row th[scope="row"],
+.bx-pit-table .totals-row th[scope="row"] { background: #eef1f6; }
+
+/* ---- Play-by-play --------------------------------------------------- */
+.pbp-section { margin-top: 1.6rem; }
+.pbp-half {
+    border: 1px solid rgba(20, 38, 77, 0.14);
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    background: #fff;
+}
+.pbp-half > summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0.55rem 0.75rem;
+    cursor: pointer;
+    list-style: none;
+    font-size: 0.9rem;
+}
+.pbp-half > summary::-webkit-details-marker { display: none; }
+.pbp-half > summary::before {
+    content: "\25B8";
+    margin-right: 0.4rem;
+    color: #1c3f94;
+    transition: transform 0.15s ease;
+    display: inline-block;
+}
+.pbp-half[open] > summary::before { transform: rotate(90deg); }
+.pbp-half-label { font-weight: 700; color: #14264d; }
+.pbp-half-summary { color: #6b7688; font-size: 0.82rem; }
+.pbp-list {
+    margin: 0;
+    padding: 0 0 0.5rem;
+    list-style: none;
+    border-top: 1px solid rgba(20, 38, 77, 0.1);
+}
+.pbp-list li {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.15rem 0.75rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid rgba(20, 38, 77, 0.06);
+    font-size: 0.86rem;
+    line-height: 1.4;
+}
+.pbp-list li:last-child { border-bottom: none; }
+.pbp-list li.pbp-scoring { background: rgba(28, 148, 76, 0.07); }
+.pbp-list li.pbp-sub { background: rgba(148, 104, 28, 0.08); font-style: italic; }
+.pbp-text { grid-column: 1; color: #22304d; }
+.pbp-meta { grid-column: 1; color: #7b8794; font-size: 0.76rem; }
+.pbp-score {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: #14264d;
+    white-space: nowrap;
+}
+
+/* ---- Development diagnostic (?simdiag=1) ---------------------------- */
+.sim-diagnostic {
+    margin-top: 1.4rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px dashed #1c3f94;
+    border-radius: 6px;
+    background: rgba(28, 63, 148, 0.04);
+    font-size: 0.84rem;
+}
+.sim-diagnostic h4 { margin: 0 0 0.4rem; }
+
+@media (max-width: 720px) {
+    .pbp-list li { grid-template-columns: 1fr; }
+    .pbp-score { grid-column: 1; grid-row: auto; align-self: start; }
+    .bx-mode-legend { font-size: 0.74rem; }
+    .player-box-table th,
+    .player-box-table td { font-size: 0.78rem; padding: 0.35rem 0.4rem; }
+}
