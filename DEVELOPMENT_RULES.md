@@ -1,5 +1,22 @@
 # TrustMyRecord Development Rules
 
+## MLB probable pitchers on the sportsbook board (Jul 23, 2026) — HARD RULE (PERMANENT)
+`PITCHER_DATE_FIX_20260723`. On Jul 23 2026 every MLB game on `/sportsbook/` showed **TBD**, and any team that played back-to-back days showed the **previous day's** starter. Cause: the lobby board asked ESPN for the *default* scoreboard (`.../baseball/mlb/scoreboard` with **no `?dates=`**), which always returns TODAY — while the board itself renders the next **UPCOMING** slate (in-progress games are filtered out). The two datasets never lined up.
+
+The odds feed (Action Network) carries **no pitcher data at all**; ESPN is the only source. Non-negotiable rules for that block in `sportsbook/index.html`:
+1. **Always `?dates=`.** The range is derived from the board's own `commence_time` values (`_lobbyBoardDateRange`), never assumed. A bare scoreboard URL in this block is a production outage.
+2. **MLB game date = America/New_York calendar day** (`_lobbyEtDateKey`). A 10:15pm ET first pitch belongs to that ET day. Never use the browser's local date.
+3. **Key probables by team AND ET date** (`_lobbyLookup`), with start-time proximity as the doubleheader tiebreak. Team-name-only matching is what printed yesterday's starter on tomorrow's game.
+4. **Scope the cache to the date range** (`_lobbyMlbProbable.range`), so a map fetched for a previous slate can never be reused on a new one.
+5. **Re-poll every 5 minutes** (`lobbyStartPitcherRefresh`, `{force: true}`) — starters are announced and scratched all day.
+6. **The refresher rewrites only `.sb-team-pitcher[data-sb-pitcher-gi]` text.** It must never repaint the row: odds, buttons, and an in-progress pick selection are untouchable.
+7. **TBD only when the source genuinely has no starter.** ESPN's own literal `TBD` athlete is skipped, not stored as a name.
+8. **Fail-open.** `lobbyEnsureMlbPitchers` always calls `done()`; a pitcher lookup failure can never block odds from rendering.
+
+Guards (do not delete or `continue-on-error` these):
+- `tests/sportsbook-pitcher-regression-test.js` — static source guard, runs in **Sportsbook Regression Guards** and **Sportsbook Pitcher Monitor**. Fails the build if any of the 8 rules above is edited away.
+- `tests/sportsbook-pitcher-live-monitor.js` — **hourly** live monitor (`.github/workflows/sportsbook-pitcher-monitor.yml`). Loads production, reads every rendered starter with its own game date, and cross-checks it against ESPN for that ET date. Fails on: no pitcher lines at all, all-TBD, TBD-while-ESPN-has-a-name, or a name ESPN does not list for that date. Skips (never false-alarms) when there is no MLB slate or ESPN is unreachable. Self-test: `TMR_PITCHER_MONITOR_SELFTEST=all-tbd|stale`.
+
 ## Alt Lines tab source + fail-open fallback (May 30, 2026) — HARD RULE (PERMANENT)
 `ALT_LINES_BOARD_FALLBACK_20260530`. The sportsbook **Alt Lines** tab (alt run/puck lines + alt game totals — NOT the Alternate Team Totals under Team Totals) has TWO independent data sources:
 - **Primary:** the dedicated backend route `/api/games/altlines/:sportKey`, sourced from **Bovada** (`bovadaOddsProvider`). Bovada is frequently **unreachable from the Render host** (`reason: "coupon_error:ECONNABORTED"`, `games: []`) — treat it as unreliable.

@@ -1,0 +1,49 @@
+name: Sportsbook Pitcher Monitor
+
+# Standing wall around the MLB probable-pitcher line on the live sportsbook
+# board (the Jul 23 2026 all-TBD outage). Runs hourly against production and
+# cross-checks every rendered starter against ESPN for that game's ET date, so
+# a silent regression is caught by CI instead of by users.
+
+on:
+  schedule:
+    - cron: '20 * * * *'   # hourly, :20
+  push:
+    branches: [main]
+    paths:
+      - 'sportsbook/**'
+      - 'tests/sportsbook-pitcher-live-monitor.js'
+      - 'tests/sportsbook-pitcher-regression-test.js'
+      - '.github/workflows/sportsbook-pitcher-monitor.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: sportsbook-pitcher-monitor
+  cancel-in-progress: false
+
+jobs:
+  source-guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - name: Probable-pitcher source guard
+        run: node tests/sportsbook-pitcher-regression-test.js
+
+  live-monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - name: Live probable-pitcher monitor
+        run: node tests/sportsbook-pitcher-live-monitor.js
+        env:
+          TMR_SPORTSBOOK_URL: https://trustmyrecord.com/sportsbook/
