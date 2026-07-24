@@ -556,7 +556,7 @@
             /* Record is a wide value ("155-104-3") sitting next to Units; its track
                is sized to hold the longest record with slack and the column gap is
                wide enough that the two numbers never read as one string. */
-            grid-template-columns: 34px minmax(200px, 1.7fr) 104px repeat(4, minmax(64px, 0.85fr)) 62px minmax(120px, 1.1fr) 58px;
+            grid-template-columns: 34px minmax(200px, 1.7fr) 104px repeat(4, minmax(64px, 0.85fr)) 62px minmax(120px, 1.1fr) 108px;
             align-items: center;
             gap: 14px;
             padding: 7px 12px;
@@ -675,13 +675,26 @@
         .is-negative { color: var(--red); }
         .is-muted, .is-neutral { color: var(--muted); }
 
-        .hm-actions { display: flex; justify-content: center; align-items: center; gap: 6px; }
+        /* One fixed-width action group per row, pinned to the right of the
+           Profile column. Every row reserves the Share slot (real button on the
+           owner's row, an invisible placeholder elsewhere) so the View pill lands
+           at the same x on every row and the column never looks cramped. */
+        .hm-actions { display: flex; justify-content: flex-end; align-items: center; gap: 8px; min-width: 100px; }
 
         /* Share keeps the sitewide teal pill so it reads as the same control
-           everywhere; only the metrics are tightened to sit level with the
-           adjacent View pill in a dense directory row. */
-        .hm-actions .hm-action-share { padding: 4px 8px; border-radius: var(--radius-sm); }
+           everywhere; height, vertical alignment and radius are matched to the
+           adjacent View pill so the two read as one integrated control, not a
+           floating square. */
+        .hm-actions .hm-action-share,
+        .hm-actions .hm-action-share-placeholder {
+            width: 32px;
+            min-height: 26px;
+            flex: none;
+            box-sizing: border-box;
+        }
+        .hm-actions .hm-action-share { padding: 0; border-radius: var(--radius-sm); }
         .hm-actions .hm-action-share svg { width: 13px; height: 13px; }
+        .hm-actions .hm-action-share-placeholder { visibility: hidden; }
         .hm-feat-cta { display: inline-flex; align-items: center; gap: 8px; }
         .hm-feat-share { padding: 4px 11px; font-size: 0.72rem; border-radius: var(--radius-sm); gap: 5px; }
         .hm-feat-share svg { width: 13px; height: 13px; }
@@ -690,6 +703,8 @@
             display: inline-flex;
             align-items: center;
             justify-content: center;
+            min-height: 26px;
+            box-sizing: border-box;
             padding: 3px 10px;
             border: 1px solid var(--line-strong);
             border-radius: var(--radius-sm);
@@ -762,7 +777,7 @@
             /* Tablet keeps the same Record/Units breathing room, paid for by
                trimming the flexible name/activity mins so the row's minimum
                width stays at/below what it was before. */
-            .hm-row { grid-template-columns: 30px minmax(146px, 1.6fr) 100px repeat(4, minmax(52px, 0.85fr)) 52px minmax(90px, 1fr) 52px; gap: 8px; }
+            .hm-row { grid-template-columns: 30px minmax(146px, 1.6fr) 100px repeat(4, minmax(52px, 0.85fr)) 52px minmax(90px, 1fr) 100px; gap: 8px; }
         }
 
         @media (max-width: 768px) {
@@ -802,11 +817,14 @@
                 color: var(--muted);
             }
 
-            .hm-actions { grid-column: 1 / -1; justify-content: stretch; }
+            .hm-actions { grid-column: 1 / -1; justify-content: stretch; min-width: 0; }
             .hm-actions .hm-action-btn { width: 100%; min-height: 36px; }
+            /* Cards stack on mobile with View full-width, so the desktop
+               space-reservation placeholder is not needed here. */
+            .hm-actions .hm-action-share-placeholder { display: none; }
             /* On mobile the share control gets a text label and an equal share
                of the row, so it is a real tap target rather than a 14px glyph. */
-            .hm-actions .hm-action-share { flex: 1; min-height: 36px; gap: 6px; }
+            .hm-actions .hm-action-share { flex: 1; width: auto; min-height: 36px; padding: 0 10px; gap: 6px; }
             .hm-actions .hm-action-share::after { content: 'Share'; font-size: 0.7rem; font-weight: 600; }
 
             .hm-tier-header {
@@ -2709,7 +2727,7 @@
                 '<div class="hm-stat" data-label="Total picks">' + Number(stats.totalPicks || 0) + '</div>' +
                 '<div class="hm-stat ' + statClass(stats.currentStreak) + '" data-label="Current streak">' + escapeHtml(formatStreak(stats.currentStreak)) + '</div>' +
                 '<div class="hm-stat is-muted" data-label="Last active">' + escapeHtml(formatPickActivity((stats && stats.lastActivity) || '', Number(stats.totalPicks || 0) > 0, !!(member.rawPicks && member.rawPicks.length))) + '</div>' +
-                '<div class="hm-actions"><a class="hm-action-btn hm-action-btn--view" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '">View</a>' + shareButtonHtml(member, { compact: true, className: 'hm-action-share' }) + '</div>' +
+                '<div class="hm-actions"><a class="hm-action-btn hm-action-btn--view" href="' + profileHref + '" aria-label="' + escapeHtml(profileLabel) + '" title="' + escapeHtml(profileLabel) + '">View</a>' + (shareButtonHtml(member, { compact: true, className: 'hm-action-share' }) || '<span class="hm-action-share-placeholder" aria-hidden="true"></span>') + '</div>' +
             '</div>';
         }
 
