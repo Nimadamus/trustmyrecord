@@ -375,8 +375,10 @@ function updateNotifBadge(count) {
             badge.textContent = count > 99 ? '99+' : count;
             badge.style.display = (badge.id === 'notifBadge' || badge.id === 'homeNotifBadge') ? 'inline' : 'block';
         } else {
+            // Zero unread: hide AND empty it. Leaving a literal "0" behind meant
+            // any stylesheet that re-showed the span painted a red "0" pill.
             badge.style.display = 'none';
-            badge.textContent = '0';
+            badge.textContent = '';
         }
     });
 

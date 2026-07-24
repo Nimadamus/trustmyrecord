@@ -5110,3 +5110,139 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
         gap: 6px;
     }
 }
+
+/* ============================================================================
+   ALERTS BELL - single, armored, EOF-authoritative (Jul 23, 2026)
+
+   Two defects fixed here:
+
+   1) DUPLICATE CONTROL. The profile chip used to render the alerts bell AND a
+      red pulsing .tmr-mailbox-indicator side by side. With 1 unread
+      notification + 1 unread message that is two round red "1" buttons in a
+      row, which reads as duplicate notification tabs. The mailbox markup is
+      gone from tmr-sitewide.js; the rule below makes sure any legacy/baked
+      copy on an individual page can never re-introduce it into the nav at any
+      breakpoint. Unread messages are badged on the account-menu Messages item.
+
+   2) SQUASHED ICON. sportsbook-pro.css (and the same pattern in other route
+      sheets) forces `padding: 12px 24px !important; min-height: 48px
+      !important` on EVERY a/button inside .tmr-global-nav__actions to build
+      chunky pill buttons. The bell is a 32px border-box circle, so 24px of
+      horizontal padding left ~4px of content width: the 18px SVG collapsed to
+      a sliver and the circle stretched to 44px tall. The bell is not a pill
+      and must opt out. The route-scoped selectors below are (0,4,2) +
+      !important so they beat the (0,3,1) !important route rules regardless of
+      sheet order; the plain .tmr-global-nav__bell selector carries the same
+      look to the bells that live outside .tmr-global-nav__actions (the
+      homepage baked premium header and the forum header).
+   ============================================================================ */
+
+html body.tmr-site-shell .tmr-global-nav .tmr-mailbox-indicator,
+html body.tmr-site-shell .tmr-global-nav [data-tmr-mailbox] {
+    display: none !important;
+}
+
+html body.tmr-site-shell .tmr-global-nav__bell,
+html body.tmr-site-shell .tmr-global-nav__actions .tmr-global-nav__bell,
+html body.tmr-site-shell[data-tmr-route] .tmr-global-nav__actions .tmr-global-nav__bell {
+    /* geometry: fixed square, zero padding, so the glyph always centers */
+    box-sizing: border-box !important;
+    flex: 0 0 auto !important;
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+    max-width: 36px !important;
+    max-height: 36px !important;
+    padding: 0 !important;
+    margin: 0 0 0 10px !important;
+    align-self: center !important;
+
+    /* layout: dead-center the bell glyph on both axes */
+    position: relative !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1 !important;
+
+    /* navy/blue header styling - NOT the old red border */
+    border-radius: 50% !important;
+    background: rgba(30, 58, 95, 0.55) !important;
+    border: 1px solid rgba(96, 141, 196, 0.45) !important;
+    color: #dbe7f7 !important;
+    text-decoration: none !important;
+    box-shadow: none !important;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.15s ease !important;
+}
+
+html body.tmr-site-shell .tmr-global-nav__bell:hover,
+html body.tmr-site-shell .tmr-global-nav__bell:focus-visible,
+html body.tmr-site-shell .tmr-global-nav__actions .tmr-global-nav__bell:hover,
+html body.tmr-site-shell .tmr-global-nav__actions .tmr-global-nav__bell:focus-visible,
+html body.tmr-site-shell[data-tmr-route] .tmr-global-nav__actions .tmr-global-nav__bell:hover,
+html body.tmr-site-shell[data-tmr-route] .tmr-global-nav__actions .tmr-global-nav__bell:focus-visible {
+    background: rgba(45, 84, 134, 0.85) !important;
+    border-color: rgba(125, 176, 236, 0.75) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px) !important;
+    outline: none !important;
+}
+
+/* The SVG is a flex item: min-width:auto would let it shrink below 18px inside
+   a cramped actions row, which is the other half of the "icon missing" bug. */
+html body.tmr-site-shell .tmr-global-nav__bell .tmr-global-nav__bell-icon,
+html body.tmr-site-shell .tmr-global-nav__actions .tmr-global-nav__bell .tmr-global-nav__bell-icon,
+html body.tmr-site-shell[data-tmr-route] .tmr-global-nav__actions .tmr-global-nav__bell .tmr-global-nav__bell-icon {
+    display: block !important;
+    flex: 0 0 auto !important;
+    width: 19px !important;
+    height: 19px !important;
+    min-width: 19px !important;
+    min-height: 19px !important;
+    max-width: 19px !important;
+    color: inherit !important;
+    fill: currentColor !important;
+    pointer-events: none !important;
+}
+
+/* Single unread badge, top-right of the button. Hidden at zero: notifications.js
+   sets display:none AND clears the text, so :empty is a belt-and-braces guard
+   against a stale empty span painting a bare red dot. */
+html body.tmr-site-shell .tmr-global-nav__bell .tmr-global-nav__bell-badge,
+html body.tmr-site-shell .tmr-global-nav__actions .tmr-global-nav__bell .tmr-global-nav__bell-badge,
+html body.tmr-site-shell[data-tmr-route] .tmr-global-nav__actions .tmr-global-nav__bell .tmr-global-nav__bell-badge {
+    position: absolute !important;
+    top: -5px !important;
+    right: -5px !important;
+    min-width: 17px !important;
+    height: 17px !important;
+    padding: 0 4px !important;
+    border-radius: 9px !important;
+    background: #e11d2e !important;
+    border: 2px solid rgba(8, 14, 25, 0.95) !important;
+    color: #ffffff !important;
+    font: 700 10px/13px "Inter", "Exo 2", Arial, sans-serif !important;
+    text-align: center !important;
+    box-shadow: none !important;
+    pointer-events: none !important;
+}
+
+html body.tmr-site-shell .tmr-global-nav__bell .tmr-global-nav__bell-badge:empty {
+    display: none !important;
+}
+
+/* Tablet / mobile: same single bell, slightly tighter, still 100% centered and
+   still a legitimate tap target. */
+@media (max-width: 900px) {
+    html body.tmr-site-shell .tmr-global-nav__bell,
+    html body.tmr-site-shell .tmr-global-nav__actions .tmr-global-nav__bell,
+    html body.tmr-site-shell[data-tmr-route] .tmr-global-nav__actions .tmr-global-nav__bell {
+        width: 34px !important;
+        height: 34px !important;
+        min-width: 34px !important;
+        min-height: 34px !important;
+        max-width: 34px !important;
+        max-height: 34px !important;
+        margin-left: 8px !important;
+    }
+}

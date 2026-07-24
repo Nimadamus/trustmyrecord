@@ -274,10 +274,13 @@
                     <svg class="tmr-global-nav__bell-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v3.6L4.3 15a1 1 0 0 0 .9 1.4h13.6a1 1 0 0 0 .9-1.4L18 11.6V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.83-2H9.17A3 3 0 0 0 12 22Z"/></svg>
                     <span id="notifBadge" class="tmr-global-nav__bell-badge" style="display:none;"></span>
                 </a>
-                <a class="tmr-mailbox-indicator" href="/messages/" data-tmr-mailbox aria-label="Unread messages" title="You have unread messages" hidden>
-                    <svg class="tmr-mailbox-indicator__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5v11a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-11Zm2.5-.5a.5.5 0 0 0-.5.5v.32l7 4.55 7-4.55V6.5a.5.5 0 0 0-.5-.5h-13Zm13.5 2.86-6.45 4.19a1 1 0 0 1-1.1 0L5 8.86V17.5a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5V8.86Z"/></svg>
-                    <span class="tmr-mailbox-indicator__count" data-tmr-mailbox-count></span>
-                </a>
+                <!-- Jul 23, 2026: the red pulsing .tmr-mailbox-indicator that used to sit
+                     here was removed. It rendered as a SECOND round badge-bearing control
+                     immediately beside the alerts bell, so a user with 1 unread notification
+                     and 1 unread message saw two near-identical red "1" buttons and read the
+                     header as having duplicate notification tabs. Unread messages now surface
+                     on the "Messages" item inside the account menu (nav-badges.js badges every
+                     a[href="/messages/"]). Exactly ONE bell lives in the header. -->
             </span>
         `;
     }

@@ -1641,7 +1641,7 @@
         <span>Tracked picks and analytics</span>
         <span>Cleaner account presentation</span>
     </div>
-    <!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js?v=20260720alerts -->
+    <!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js?v=20260723bell1 -->
 
     <!-- ==================== PROFILE HEADER ==================== -->
     <section class="profile-header-section">
@@ -1683,13 +1683,13 @@
             </div>
 
 
-            <!-- Avatar uploader for own profile. Body-card UI removed May 22, 2026 — account controls live in the top-right user menu dropdown (tmr-sitewide.js?v=20260720alerts). File input retained so the header avatar click + dropdown "Change Avatar" can trigger the picker. -->
+            <!-- Avatar uploader for own profile. Body-card UI removed May 22, 2026 — account controls live in the top-right user menu dropdown (tmr-sitewide.js?v=20260723bell1). File input retained so the header avatar click + dropdown "Change Avatar" can trigger the picker. -->
             <div id="profileAvatarUploader" class="profile-avatar-uploader" hidden style="display:none !important;">
                 <input id="profileAvatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
                 <span class="profile-avatar-uploader__hint" id="profileAvatarHint" hidden></span>
             </div>
 
-            <!-- Change Password card. Body-card UI removed May 22, 2026 — password change now lives in the top-right user menu dropdown (tmr-sitewide.js?v=20260720alerts). Hidden markup retained only so legacy direct-link callers do not 404. -->
+            <!-- Change Password card. Body-card UI removed May 22, 2026 — password change now lives in the top-right user menu dropdown (tmr-sitewide.js?v=20260723bell1). Hidden markup retained only so legacy direct-link callers do not 404. -->
             <div id="profileChangePassword" class="profile-change-password" hidden style="display:none !important;">
                 <strong style="display:block;margin-bottom:10px;font-size:0.95rem;letter-spacing:0.02em;"><i class="fas fa-key" style="margin-right:6px;color:#2dd4bf;"></i> Change Password</strong>
                 <form id="changePasswordForm" autocomplete="off" style="display:flex;flex-direction:column;gap:10px;">
@@ -1954,7 +1954,7 @@
             var avatarHint  = document.getElementById('profileAvatarHint');
 
             // May 22, 2026: account-edit body cards retired in favor of the top-right user menu dropdown
-            // (see static/js/tmr-sitewide.js?v=20260720alerts). DO NOT unhide #profileAvatarUploader or
+            // (see static/js/tmr-sitewide.js?v=20260723bell1). DO NOT unhide #profileAvatarUploader or
             // #profileChangePassword on the profile body — they ship hidden + display:none.
             var changePwEl = document.getElementById('profileChangePassword');
 
@@ -10119,7 +10119,7 @@
         let primaryActions = '';
         // May 22, 2026 (HARD RULE): account-management actions (Edit Profile / Change Avatar /
         // Change Password) live ONLY in the authenticated top-right avatar/username dropdown
-        // (static/js/tmr-sitewide.js?v=20260720alerts). Do not re-render the body "Edit Profile" button — it
+        // (static/js/tmr-sitewide.js?v=20260723bell1). Do not re-render the body "Edit Profile" button — it
         // exposes private account controls inside the public profile card.
         if (isOwnProfile) {
             primaryActions = '';
@@ -13645,7 +13645,7 @@
     });
 
     // ?action=edit / ?action=change-avatar deep links from the top-right user-menu dropdown
-    // (tmr-sitewide.js?v=20260720alerts). Fires once profileData is loaded so openEditModal has its data.
+    // (tmr-sitewide.js?v=20260723bell1). Fires once profileData is loaded so openEditModal has its data.
     (function wireProfileActionDeepLink() {
         try {
             const params = new URLSearchParams(window.location.search || '');
@@ -13676,7 +13676,7 @@
     init();
     </script>
 
-        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=20260720alerts -->
+        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=20260723bell1 -->
 
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>

@@ -270,7 +270,7 @@
     '/static/js/config.js?v=20260330',
     '/static/js/backend-api.js?v=20260525noautologout',
     '/static/js/auth-persistent.js?v=20260525noautologout',
-    '/static/js/notifications.js?v=20260720nv1'
+    '/static/js/notifications.js?v=20260723bell1'
   ];
 
   function loadChain(list, i) {
