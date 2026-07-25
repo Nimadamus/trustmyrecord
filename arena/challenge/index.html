@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="canonical" href="https://trustmyrecord.com/arena/challenge/">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Challenge | TrustMyRecord Arena</title>
+    <meta name="description" content="View a head-to-head gaming challenge on TrustMyRecord Arena.">
+    <meta name="robots" content="noindex">
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-V5MCVXS2HE"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-V5MCVXS2HE');
+    </script>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260725coins1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260725coins1"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="/static/js/config.js?v=20260405"></script>
+    <script src="/static/js/backend-api.js?v=20260423a"></script>
+    <script src="/static/js/auth-persistent.js?v=20260424a"></script>
+    <style>
+        :root {
+            --bg-dark: #0b0e14;
+            --bg-surface: #10141d;
+            --bg-card: #151a25;
+            --border: #232a3a;
+            --primary: #38bdf8;
+            --primary-dim: rgba(56, 189, 248, 0.12);
+            --accent-gold: #fbbf24;
+            --accent-green: #34d399;
+            --accent-red: #f87171;
+            --text: #e6eaf2;
+            --text-dim: #94a0b8;
+            --text-muted: #64708a;
+            --font-display: 'Barlow', sans-serif;
+            --font-body: 'Inter', sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg-dark); color: var(--text); font-family: var(--font-body); }
+        .ch-breadcrumb { max-width: 720px; margin: 20px auto 0; padding: 0 20px; font-size: 13px; color: var(--text-muted); }
+        .ch-breadcrumb a { color: var(--text-dim); text-decoration: none; }
+        .ch-breadcrumb a:hover { color: var(--primary); }
+        .ch-breadcrumb .sep { margin: 0 6px; }
+        .ch-wrap { max-width: 720px; margin: 16px auto 60px; padding: 0 20px; }
+        .ch-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+        .ch-status { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; padding: 3px 8px; border-radius: 4px; }
+        .ch-status.pending { background: rgba(251,191,36,0.12); color: var(--accent-gold); }
+        .ch-status.accepted, .ch-status.in_progress { background: rgba(56,189,248,0.12); color: var(--primary); }
+        .ch-status.completed { background: rgba(52,211,153,0.12); color: var(--accent-green); }
+        .ch-status.cancelled, .ch-status.declined { background: rgba(100,112,138,0.15); color: var(--text-muted); }
+        .ch-title { font-family: var(--font-display); font-size: 22px; font-weight: 700; margin: 12px 0 4px; }
+        .ch-sub { color: var(--text-dim); font-size: 14px; margin-bottom: 18px; }
+        .ch-players { display: flex; align-items: center; gap: 16px; margin: 18px 0; }
+        .ch-player { flex: 1; text-align: center; }
+        .ch-player img { width: 56px; height: 56px; border-radius: 50%; border: 2px solid var(--border); }
+        .ch-player .name { font-weight: 600; margin-top: 8px; }
+        .ch-vs { color: var(--text-muted); font-family: var(--font-display); font-weight: 700; }
+        .ch-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; margin: 20px 0; padding: 16px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .ch-meta div { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+        .ch-meta strong { display: block; color: var(--text); font-size: 14px; font-weight: 600; text-transform: none; margin-top: 4px; letter-spacing: normal; }
+        .ch-matches { margin-top: 20px; }
+        .ch-match-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .ch-match-row:last-child { border-bottom: 0; }
+        .ch-actions { margin-top: 20px; display: flex; gap: 10px; }
+        .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; text-decoration: none; }
+        .btn-primary { background: linear-gradient(135deg, var(--primary), var(--accent-green)); color: #06202e; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-dim); }
+        .ch-empty, .ch-loading { text-align: center; padding: 60px 20px; color: var(--text-dim); }
+        .ch-empty i, .ch-loading i { font-size: 32px; color: var(--text-muted); margin-bottom: 14px; }
+        .ch-empty h2 { font-family: var(--font-display); font-size: 18px; color: var(--text); margin-bottom: 8px; }
+        .ch-empty a { color: var(--primary); }
+    </style>
+</head>
+<body class="tmr-site-shell">
+
+<nav class="ch-breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><a href="/arena/">Arena</a><span class="sep">/</span><span aria-current="page">Challenge</span>
+</nav>
+
+<main class="ch-wrap">
+    <div id="chLoading" class="ch-card ch-loading"><i class="fas fa-circle-notch fa-spin"></i><div>Loading challenge...</div></div>
+    <div id="chNotFound" class="ch-card ch-empty" style="display:none">
+        <i class="fas fa-ghost"></i>
+        <h2>Challenge not found</h2>
+        <p>This challenge doesn't exist, was removed, or isn't visible to you.</p>
+        <p style="margin-top:14px"><a href="/arena/">&larr; Back to Arena</a></p>
+    </div>
+    <div id="chCard" class="ch-card" style="display:none"></div>
+</main>
+
+<script>
+(function () {
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+    const $loading = document.getElementById('chLoading');
+    const $notFound = document.getElementById('chNotFound');
+    const $card = document.getElementById('chCard');
+
+    function showNotFound() {
+        $loading.style.display = 'none';
+        $card.style.display = 'none';
+        $notFound.style.display = 'block';
+    }
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+    function timeAgo(iso) {
+        if (!iso) return '';
+        const d = new Date(iso);
+        return isNaN(d) ? '' : d.toLocaleDateString();
+    }
+    function avatarUrl(u) {
+        return u.avatar || u.avatar_url || ('https://api.dicebear.com/7.x/identicon/svg?seed=' + encodeURIComponent(u.username || 'user'));
+    }
+
+    let currentUser = null;
+
+    async function resolveCurrentUser() {
+        try {
+            if (typeof auth !== 'undefined' && auth.currentUser) {
+                currentUser = auth.currentUser;
+            } else if (typeof api !== 'undefined' && api.isLoggedIn()) {
+                const me = await api.getCurrentUser();
+                if (me && me.user) currentUser = me.user;
+            }
+        } catch (e) { /* not logged in */ }
+    }
+
+    async function load() {
+        if (!id || !/^\d+$/.test(id)) return showNotFound();
+        await resolveCurrentUser();
+
+        let res;
+        try {
+            res = await api.request('/gaming/challenges/' + id);
+        } catch (e) {
+            console.error('Failed to load challenge:', e);
+            return showNotFound();
+        }
+        if (!res || !res.challenge) return showNotFound();
+
+        renderChallenge(res.challenge, res.matches || []);
+    }
+
+    function renderChallenge(ch, matches) {
+        document.getElementById('pageTitle').textContent =
+            (ch.challenger_display || ch.challenger_username) + ' vs ' +
+            (ch.challenged_display || ch.challenged_username || 'Open') + ' | TrustMyRecord Arena';
+
+        const challenger = { username: ch.challenger_username, display: ch.challenger_display, avatar: ch.challenger_avatar };
+        const challenged = ch.challenged_username
+            ? { username: ch.challenged_username, display: ch.challenged_display, avatar: ch.challenged_avatar }
+            : null;
+
+        const statusLabel = ch.status === 'pending' && !ch.challenged_username ? 'Open' : ch.status.replace('_', ' ');
+
+        let matchesHtml = '';
+        if (matches.length) {
+            matchesHtml = '<div class="ch-matches"><h3 style="font-size:14px;margin-bottom:8px;color:var(--text-dim)">Match history</h3>' +
+                matches.map(m => `<div class="ch-match-row">
+                    <span>Game ${esc(m.match_number)}</span>
+                    <span>${esc(m.player1_username)} ${esc(m.player1_score)} &ndash; ${esc(m.player2_score)} ${esc(m.player2_username)}</span>
+                    <span style="color:${m.is_confirmed ? 'var(--accent-green)' : 'var(--text-muted)'}">${m.is_confirmed ? 'Confirmed' : 'Unconfirmed'}</span>
+                </div>`).join('') + '</div>';
+        }
+
+        let actionsHtml = '';
+        const uid = currentUser && currentUser.id;
+        const canAccept = ch.status === 'pending' && uid && ch.challenger_id !== uid && (!ch.challenged_id || ch.challenged_id === uid);
+        const canCancel = ch.status === 'pending' && uid === ch.challenger_id;
+        if (canAccept) {
+            actionsHtml = `<div class="ch-actions"><button class="btn btn-primary" onclick="window.chRespond(${ch.id},'accept')"><i class="fas fa-check"></i> Accept Challenge</button></div>`;
+        } else if (canCancel) {
+            actionsHtml = `<div class="ch-actions"><button class="btn btn-outline" onclick="window.chRespond(${ch.id},'cancel')">Cancel</button></div>`;
+        }
+
+        document.getElementById('chCard').innerHTML = `
+            <span class="ch-status ${esc(ch.status)}">${esc(statusLabel)}</span>
+            <div class="ch-title">${esc(ch.title || ch.game_title)}</div>
+            <div class="ch-sub">${esc(ch.game_title)} &middot; ${esc(ch.platform || 'Any platform')} &middot; Best of ${esc(ch.best_of || 1)}</div>
+            <div class="ch-players">
+                <div class="ch-player">
+                    <img src="${esc(avatarUrl(challenger))}" alt="">
+                    <div class="name">${esc(challenger.display || challenger.username)}</div>
+                </div>
+                <div class="ch-vs">VS</div>
+                <div class="ch-player">
+                    ${challenged
+                        ? `<img src="${esc(avatarUrl(challenged))}" alt=""><div class="name">${esc(challenged.display || challenged.username)}</div>`
+                        : `<div style="width:56px;height:56px;border-radius:50%;border:2px dashed var(--border);margin:0 auto;display:flex;align-items:center;justify-content:center;color:var(--text-muted)"><i class="fas fa-question"></i></div><div class="name" style="color:var(--text-muted)">Open slot</div>`}
+                </div>
+            </div>
+            <div class="ch-meta">
+                <div>Stakes<strong>${esc(ch.stake_type === 'bragging_rights' ? 'Bragging rights' : (ch.stake_type || 'Honor system'))}</strong></div>
+                <div>Score<strong>${esc(ch.challenger_wins || 0)}&ndash;${esc(ch.challenged_wins || 0)}</strong></div>
+                <div>Created<strong>${esc(timeAgo(ch.created_at))}</strong></div>
+            </div>
+            ${ch.description ? `<p style="color:var(--text-dim);font-size:14px;margin-bottom:10px">${esc(ch.description)}</p>` : ''}
+            ${matchesHtml}
+            ${actionsHtml}
+        `;
+        document.getElementById('chLoading').style.display = 'none';
+        document.getElementById('chCard').style.display = 'block';
+    }
+
+    window.chRespond = async function (challengeId, action) {
+        if (!api.isLoggedIn()) {
+            location.href = '/login/?next=' + encodeURIComponent(location.pathname + location.search);
+            return;
+        }
+        try {
+            if (action === 'cancel') {
+                await api.request('/gaming/challenges/' + challengeId, { method: 'DELETE' });
+            } else {
+                await api.request('/gaming/challenges/' + challengeId + '/respond', { method: 'PUT', body: { action } });
+            }
+            location.reload();
+        } catch (e) {
+            alert('Failed: ' + (e.error || e.message || e));
+        }
+    };
+
+    load();
+})();
+</script>
+</body>
+</html>
