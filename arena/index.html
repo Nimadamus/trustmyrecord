@@ -46,31 +46,39 @@
         a { color: var(--primary); text-decoration: none; }
         a:hover { color: #7dd3fc; }
 
+        /* ===== BREADCRUMB ===== */
+        .ah-breadcrumb { max-width: 1180px; margin: 0 auto; padding: 10px 24px 0; font-size: 12.5px; color: var(--text-muted); }
+        .ah-breadcrumb a { color: var(--text-muted); }
+        .ah-breadcrumb a:hover { color: var(--primary); }
+        .ah-breadcrumb .sep { margin: 0 6px; color: var(--text-muted); opacity: 0.6; }
+        .ah-breadcrumb [aria-current] { color: var(--text-dim); }
+
         /* ===== PAGE HEADER ===== */
-        .arena-head { border-bottom: 1px solid var(--border); background: var(--bg-surface); padding: 22px 24px 16px; }
-        .ah-inner { max-width: 1180px; margin: 0 auto; display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+        .arena-head { border-bottom: 1px solid var(--border); background: var(--bg-surface); padding: 8px 24px 0; }
+        .ah-inner { max-width: 1180px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 10px 0 12px; }
         .ah-title-row { display: flex; align-items: center; gap: 10px; }
-        .arena-head .ah-title-row h1 { font-family: var(--font-display); font-size: 38px !important; font-weight: 800; line-height: 1; letter-spacing: -0.01em; color: var(--text); margin: 0; }
-        .ah-beta { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); background: var(--primary-dim); border: 1px solid rgba(56,189,248,0.25); border-radius: 4px; padding: 3px 8px; }
-        .ah-text p { margin-top: 8px; color: var(--text-dim); font-size: 15px; line-height: 1.5; max-width: 560px; }
-        .ah-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .ah-meta { max-width: 1180px; margin: 12px auto 0; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-        .ah-trust { color: var(--text-muted); font-size: 12.5px; display: inline-flex; align-items: center; gap: 6px; }
-        .ah-trust i { color: var(--accent-green); font-size: 11px; }
+        .arena-head .ah-title-row h1 { font-family: var(--font-display); font-size: 26px !important; font-weight: 800; line-height: 1; letter-spacing: -0.01em; color: var(--text); margin: 0; }
+        .ah-beta { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--primary); background: var(--primary-dim); border: 1px solid rgba(56,189,248,0.25); border-radius: 4px; padding: 2px 7px; }
+        .ah-text p { margin-top: 4px; color: var(--text-dim); font-size: 13px; line-height: 1.4; max-width: 520px; }
+        .ah-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .ah-trust { color: var(--text-muted); font-size: 11.5px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+        .ah-trust i { color: var(--accent-green); font-size: 10px; }
+
+        /* ===== SUB-NAV ===== */
+        .arena-subnav { max-width: 1180px; margin: 0 auto; display: flex; gap: 4px; overflow-x: auto; }
+        .subnav-link { flex: none; padding: 9px 4px; margin-bottom: -1px; border: none; border-bottom: 2px solid transparent; background: none; color: var(--text-muted); font-family: var(--font-body); font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .subnav-link + .subnav-link { margin-left: 14px; }
+        .subnav-link:hover { color: var(--text-dim); }
+        .subnav-link.active { color: var(--primary); border-bottom-color: var(--primary); }
 
         /* ===== MAIN ===== */
         .main { max-width: 1180px; margin: 0 auto; padding: 18px 24px 48px; }
 
-        /* ===== ACTION STRIP ===== */
-        .arena-actions-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-        .arena-action-card { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg-card); color: var(--text); cursor: pointer; text-align: left; font-family: var(--font-body); transition: border-color .15s ease, background .15s ease; }
-        .arena-action-card:hover { border-color: var(--border-glow); background: var(--bg-card-hover); }
-        .arena-action-icon { flex: none; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 7px; background: var(--primary-dim); color: var(--primary); font-size: 13px; }
-        .aac-body { min-width: 0; flex: 1; }
-        .aac-title { display: block; font-size: 14px; font-weight: 600; color: var(--text); }
-        .aac-sub { display: block; margin-top: 1px; font-size: 12.5px; font-weight: 400; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .aac-go { color: var(--text-muted); font-size: 12px; }
-        .arena-action-card:hover .aac-go { color: var(--primary); }
+        /* ===== SUMMARY STATS ===== */
+        .arena-stats-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-bottom: 24px; }
+        .stat-chip { border: 1px solid var(--border); border-radius: 8px; background: var(--bg-surface); padding: 12px 14px; }
+        .stat-chip .value { font-family: var(--font-display); font-size: 22px; font-weight: 800; color: var(--text); line-height: 1.1; }
+        .stat-chip .label { margin-top: 3px; font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
 
         /* ===== SECTIONS ===== */
         .a-section { margin-top: 26px; }
@@ -115,6 +123,7 @@
         .btn-success { background: rgba(52,211,153,0.1); color: var(--accent-green); border-color: rgba(52,211,153,0.25); }
         .btn-sm { padding: 5px 10px; font-size: 12px; }
         .btn-block { width: 100%; }
+        .ch-accept-btn { box-shadow: 0 0 0 1px rgba(56,189,248,0.35); }
 
         /* ===== MY CHALLENGES (compact rows) ===== */
         .my-ch-list .challenge-card { border: 0; border-bottom: 1px solid var(--border); border-radius: 0; padding: 12px 16px; background: transparent; }
@@ -265,22 +274,26 @@
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 900px) {
-            .arena-actions-grid { grid-template-columns: 1fr; }
             .game-logo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .ah-inner { align-items: flex-start; flex-direction: column; }
+            .arena-stats-row { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 640px) {
-            .arena-head { padding: 18px 16px 14px; }
-            .arena-head .ah-title-row h1 { font-size: 30px !important; }
+            .arena-head { padding: 6px 16px 0; }
+            .ah-breadcrumb { padding: 8px 16px 0; }
+            .arena-head .ah-title-row h1 { font-size: 22px !important; }
+            .ah-text p { display: none; }
             .main { padding: 14px 12px 40px; }
             .a-section { margin-top: 20px; }
             .a-section-head .btn { width: 100%; }
             .ah-actions { width: 100%; }
             .ah-actions .btn { flex: 1 1 auto; }
+            .ah-trust { display: none; }
             .form-row { grid-template-columns: 1fr; }
             .match-item { flex-wrap: wrap; }
             .match-status-col { align-items: flex-start; min-width: 0; }
             .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .arena-stats-row { grid-template-columns: repeat(2, 1fr); }
             .game-logo-grid { grid-template-columns: 1fr; }
         }
     </style>
@@ -294,55 +307,42 @@
 
 <!-- Legacy hardcoded nav removed; sitewide global nav is injected by tmr-sitewide.js?v=20260723bell1 -->
 
+<!-- BREADCRUMB -->
+<nav class="ah-breadcrumb" aria-label="Breadcrumb">
+    <a href="/">Home</a><span class="sep">/</span><span aria-current="page">Arena</span>
+</nav>
+
 <!-- PAGE HEADER (div, not <header>: tmr-sitewide suppresses legacy page headers) -->
 <div class="arena-head">
     <div class="ah-inner">
         <div class="ah-text">
             <div class="ah-title-row">
-                <h1>The Arena</h1>
+                <h1>Arena</h1>
                 <span class="ah-beta">Beta</span>
             </div>
-            <p>Challenge other members, verify the result, and build a head-to-head record.</p>
+            <p>Challenge other members, verify the result together, and build a head-to-head record.</p>
         </div>
         <div class="ah-actions">
+            <span class="ah-trust"><i class="fas fa-circle-check"></i> Both players confirm every result</span>
             <button class="btn btn-primary" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Create Challenge</button>
-            <button class="btn btn-outline" onclick="scrollToChallenges(event)">Open Challenges</button>
-            <button class="btn btn-outline" onclick="switchTab('gaming-room')"><i class="fas fa-gamepad"></i> Gaming Room</button>
         </div>
     </div>
-    <div class="ah-meta">
-        <span class="ah-trust"><i class="fas fa-circle-check"></i> Both players confirm every result before it counts toward a record.</span>
-    </div>
+    <nav class="arena-subnav" aria-label="Arena sections">
+        <button class="subnav-link active" data-subnav="overview" onclick="arenaNavTo('overview', event)">Overview</button>
+        <button class="subnav-link" data-subnav="open" onclick="arenaNavTo('open', event)">Open Challenges</button>
+        <button class="subnav-link" data-subnav="mine" onclick="arenaNavTo('mine', event)">My Challenges</button>
+        <button class="subnav-link" data-subnav="gaming-room" onclick="arenaNavTo('gaming-room', event)">Gaming Room</button>
+    </nav>
 </div>
 
 <!-- MAIN CONTENT -->
-<main class="main">
-    <!-- PRIMARY ACTIONS -->
-    <section class="arena-actions-grid" aria-label="Arena primary actions">
-        <button class="arena-action-card" onclick="openCreateChallenge()">
-            <span class="arena-action-icon"><i class="fas fa-plus"></i></span>
-            <span class="aac-body">
-                <span class="aac-title">Create a Challenge</span>
-                <span class="aac-sub">Pick the game, format, and stake.</span>
-            </span>
-            <span class="aac-go"><i class="fas fa-arrow-right"></i></span>
-        </button>
-        <button class="arena-action-card" onclick="scrollToChallenges(event)">
-            <span class="arena-action-icon"><i class="fas fa-handshake"></i></span>
-            <span class="aac-body">
-                <span class="aac-title">Join a Challenge</span>
-                <span class="aac-sub">Accept an open matchup from the board.</span>
-            </span>
-            <span class="aac-go"><i class="fas fa-arrow-right"></i></span>
-        </button>
-        <button class="arena-action-card" onclick="switchTab('gaming-room')">
-            <span class="arena-action-icon"><i class="fas fa-gamepad"></i></span>
-            <span class="aac-body">
-                <span class="aac-title">Gaming Room</span>
-                <span class="aac-sub">MLB The Show, 2K, Madden, EA FC, NHL.</span>
-            </span>
-            <span class="aac-go"><i class="fas fa-arrow-right"></i></span>
-        </button>
+<main class="main" id="arenaOverviewTop">
+    <!-- SUMMARY STATS -->
+    <section class="arena-stats-row" aria-label="Arena summary stats">
+        <div class="stat-chip"><div class="value" id="statOpenChallenges">&ndash;</div><div class="label">Open Challenges</div></div>
+        <div class="stat-chip"><div class="value" id="statActiveMatchups">&ndash;</div><div class="label">Active Matchups</div></div>
+        <div class="stat-chip"><div class="value" id="statCompletedMatches">&ndash;</div><div class="label">Completed Matches</div></div>
+        <div class="stat-chip"><div class="value" id="statMyRecord">&ndash;</div><div class="label">My Arena Record</div></div>
     </section>
 
     <section class="a-section" id="openChallengesSection">
@@ -351,7 +351,6 @@
                 <h2>Open Challenges</h2>
                 <div class="sub">Live challenges you can join right now</div>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="openCreateChallenge()"><i class="fas fa-plus"></i> Create Challenge</button>
         </div>
         <div id="challengesList" class="a-card">
             <div class="loading"><div class="spinner"></div></div>
@@ -541,7 +540,7 @@
 <div class="modal-overlay" id="createChallengeModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('createChallengeModal')">&times;</button>
-        <h2><i class="fas fa-gamepad" style="color:var(--accent-gold);margin-right:8px;"></i>Create Challenge</h2>
+        <h2><i class="fas fa-gamepad" style="color:var(--primary);margin-right:8px;"></i>Create Challenge</h2>
         <form id="createChallengeForm" onsubmit="submitChallenge(event)">
             <div class="form-group">
                 <label>Game</label>
@@ -642,7 +641,7 @@
 
             <!-- MLB BOX SCORE (shown only for MLB The Show) -->
             <div id="mlbBoxScoreSection" style="display:none;">
-                <h3 style="font-family:var(--font-display);font-size:14px;color:var(--accent-gold);margin:16px 0 12px;border-top:1px solid var(--border);padding-top:16px;">
+                <h3 style="font-family:var(--font-display);font-size:14px;color:var(--primary);margin:16px 0 12px;border-top:1px solid var(--border);padding-top:16px;">
                     <i class="fas fa-baseball"></i> MLB Box Score (Optional)
                 </h3>
                 <div class="form-row">
@@ -696,7 +695,7 @@
 <div class="modal-overlay" id="editProfileModal">
     <div class="modal">
         <button class="close-btn" onclick="closeModal('editProfileModal')">&times;</button>
-        <h2><i class="fas fa-id-card" style="color:var(--accent-gold);margin-right:8px;"></i>Edit Gamer Profile</h2>
+        <h2><i class="fas fa-id-card" style="color:var(--primary);margin-right:8px;"></i>Edit Gamer Profile</h2>
         <form id="editProfileForm" onsubmit="submitProfile(event)">
             <div class="form-group">
                 <label><i class="fab fa-playstation" style="color:#4da6ff;margin-right:4px;"></i> PSN Username</label>
@@ -772,6 +771,32 @@ let currentGameFilter = 'all';
 let currentLbGameFilter = 'all';
 let currentUser = null;
 let allChallenges = [];
+let lastMatchCount = null;
+
+function updateArenaTopStats() {
+    const openStat = document.getElementById('statOpenChallenges');
+    const activeStat = document.getElementById('statActiveMatchups');
+    const completedStat = document.getElementById('statCompletedMatches');
+    const recordStat = document.getElementById('statMyRecord');
+
+    if (openStat) {
+        const openCount = allChallenges.filter(c => c.status === 'pending' && !c.challenged_id).length;
+        openStat.textContent = openCount;
+    }
+    if (activeStat) {
+        const activeCount = allChallenges.filter(c => c.status === 'accepted' || c.status === 'in_progress').length;
+        activeStat.textContent = activeCount;
+    }
+    if (completedStat) completedStat.textContent = lastMatchCount === null ? '–' : lastMatchCount;
+    if (recordStat) {
+        if (!currentUser) {
+            recordStat.textContent = '–';
+        } else {
+            const rec = arenaRecords && arenaRecords[String(currentUser.username || '').toLowerCase()];
+            recordStat.textContent = rec ? `${rec.wins}-${rec.losses}` : '0-0';
+        }
+    }
+}
 
 function analyticsTrack(eventName, params) {
     if (typeof window.TMRAnalytics !== 'undefined' && typeof window.TMRAnalytics.track === 'function') {
@@ -852,12 +877,26 @@ function switchTab(tab) {
     }
 }
 
-function scrollToChallenges(e) {
+// ============================================
+// SUB-NAV (Overview / Open Challenges / My Challenges / Gaming Room)
+// ============================================
+function arenaNavTo(section, e) {
     if (e && e.preventDefault) e.preventDefault();
-    switchTab('challenges');
-    const target = document.getElementById('openChallengesSection') || document.querySelector('.tabs');
+    document.querySelectorAll('.subnav-link').forEach(l => l.classList.toggle('active', l.dataset.subnav === section));
+
+    let target = null;
+    if (section === 'overview') {
+        target = document.getElementById('arenaOverviewTop');
+    } else if (section === 'open') {
+        target = document.getElementById('openChallengesSection');
+    } else if (section === 'mine') {
+        target = document.getElementById('myChallengesSection');
+    } else if (section === 'gaming-room') {
+        switchTab('gaming-room');
+        return;
+    }
     if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    analyticsTrack('arena_view_open_challenges_click', {});
+    analyticsTrack('arena_subnav_click', { section_name: section });
 }
 
 function updateArenaSummaryStats() {
@@ -949,16 +988,12 @@ async function loadChallenges() {
         if (!data || !data.challenges) data = { challenges: [] };
         allChallenges = arenaFilterTestChallenges(data.challenges);
         renderChallenges(allChallenges);
-        const openCount = allChallenges.filter(c => c.status === 'pending' && !c.challenged_id).length;
-        const activeCount = allChallenges.filter(c => ['pending','accepted','in_progress'].includes(c.status)).length;
-        const openStat = document.getElementById('statOpenChallenges');
-        if (openStat) openStat.textContent = openCount || activeCount;
         renderMyChallenges();
+        updateArenaTopStats();
     } catch (e) {
         console.error('Failed to load challenges:', e);
         allChallenges = [];
-        const openStat = document.getElementById('statOpenChallenges');
-        if (openStat) openStat.textContent = '0';
+        updateArenaTopStats();
         renderOpenChallengesErrorState();
         renderMyChallenges();
     }
@@ -998,7 +1033,7 @@ function renderChallenges(challenges) {
         let action = '';
         if (canAccept) {
             action = `<span class="ch-action-group">
-                <button class="btn btn-primary btn-sm" onclick="respondChallenge(${ch.id},'accept')"><i class="fas fa-check"></i> Join</button>
+                <button class="btn btn-primary btn-sm ch-accept-btn" onclick="respondChallenge(${ch.id},'accept')"><i class="fas fa-check"></i> Accept Challenge</button>
                 ${currentUser && ch.challenged_id === currentUser.id ? `<button class="btn btn-danger btn-sm" onclick="respondChallenge(${ch.id},'decline')">Decline</button>` : ''}
             </span>`;
         } else if (canCancel) {
@@ -1140,6 +1175,7 @@ async function loadRecentMatches(game) {
         if (!data || !data.matches) data = { matches: [] };
         data.matches = arenaFilterTestMatches(data.matches);
         renderMatchFeed(container, data.matches);
+        if (!game) { lastMatchCount = data.matches.length; updateArenaTopStats(); }
         const gamingRoomContainer = document.getElementById('gamingRoomMatches');
         if (gamingRoomContainer && currentTab === 'gaming-room') renderMatchFeed(gamingRoomContainer, data.matches);
     } catch (e) {
@@ -1253,6 +1289,7 @@ async function loadLeaderboard(game) {
                 arenaRecords[key] = rec;
             });
             fillChallengeRecords();
+            updateArenaTopStats();
         }
     } catch (e) {
         container.innerHTML = '<div class="empty-state"><i class="fas fa-trophy"></i><h3>No rankings yet</h3><p>The leaderboard will populate once enough matches are logged to compare players fairly.</p></div>';
