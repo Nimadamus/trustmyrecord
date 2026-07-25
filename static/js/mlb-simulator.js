@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-ux-audit-fixes-20260725c';
+    var UI_BUILD = 'mlb-simulator-pbp-playback-20260725d';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -5884,7 +5884,80 @@
         }).join('');
         return '<section class="pbp-section"><h4>Play-by-Play</h4>' +
             '<p class="player-source-note">Every line below is generated from the simulated event log — the same log that produced the line score and both stat tables.</p>' +
+            pbpPlaybackControlsHtml() +
             body + '</section>';
+    }
+    // PBP_PLAYBACK_20260725: the game is already fully simulated and shown
+    // instantly by default (batch Monte Carlo, not a live game) - these
+    // controls are a purely OPT-IN presentation layer over that same pre-
+    // computed play-by-play data. Nothing changes for a user who ignores them;
+    // pressing Play re-collapses every half-inning and reveals them one at a
+    // time on a timer, Pause/Skip/Restart/speed control that reveal. No new
+    // simulation state, no engine changes - this only ever manipulates the
+    // `open` attribute on already-rendered <details> elements.
+    function pbpPlaybackControlsHtml() {
+        return '<div class="pbp-controls">' +
+            '<button type="button" class="pbp-btn" data-pbp-action="toggle">▶ Play</button>' +
+            '<button type="button" class="pbp-btn" data-pbp-action="skip">⏭ Skip to End</button>' +
+            '<button type="button" class="pbp-btn" data-pbp-action="restart">↺ Restart</button>' +
+            '<label class="pbp-speed-label">Speed ' +
+            '<select class="pbp-speed">' +
+            '<option value="2400">0.5x</option>' +
+            '<option value="1200" selected>1x</option>' +
+            '<option value="600">2x</option>' +
+            '<option value="250">4x</option>' +
+            '</select></label>' +
+            '<span class="pbp-playback-status">Full game shown instantly below — press Play to step through it inning by inning instead.</span>' +
+            '</div>';
+    }
+    var pbpPlaybackState = { timer: null, halves: [], idx: 0, speedMs: 1200, playing: false };
+    function pbpPlaybackStop() {
+        if (pbpPlaybackState.timer) { clearInterval(pbpPlaybackState.timer); pbpPlaybackState.timer = null; }
+        pbpPlaybackState.playing = false;
+    }
+    function pbpPlaybackReset(container) {
+        pbpPlaybackStop();
+        pbpPlaybackState.halves = container ? Array.prototype.slice.call(container.querySelectorAll('details.pbp-half')) : [];
+        pbpPlaybackState.halves.forEach(function (d) { d.open = false; });
+        pbpPlaybackState.idx = 0;
+    }
+    function pbpPlaybackUpdateStatus(container) {
+        if (!container) return;
+        var status = container.querySelector('.pbp-playback-status');
+        var playBtn = container.querySelector('[data-pbp-action="toggle"]');
+        var done = pbpPlaybackState.idx >= pbpPlaybackState.halves.length;
+        if (status) {
+            status.textContent = done ? 'All ' + pbpPlaybackState.halves.length + ' half-innings shown.' :
+                'Half-inning ' + pbpPlaybackState.idx + ' of ' + pbpPlaybackState.halves.length + ' shown.';
+        }
+        if (playBtn) playBtn.innerHTML = pbpPlaybackState.playing ? '⏸ Pause' : (done ? '↺ Replay' : '▶ Play');
+    }
+    function pbpPlaybackTick(container) {
+        if (pbpPlaybackState.idx >= pbpPlaybackState.halves.length) { pbpPlaybackStop(); pbpPlaybackUpdateStatus(container); return; }
+        var d = pbpPlaybackState.halves[pbpPlaybackState.idx];
+        d.open = true;
+        if (typeof d.scrollIntoView === 'function') d.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        pbpPlaybackState.idx++;
+        pbpPlaybackUpdateStatus(container);
+        if (pbpPlaybackState.idx >= pbpPlaybackState.halves.length) pbpPlaybackStop();
+    }
+    function pbpPlaybackAction(action, container) {
+        if (action === 'toggle') {
+            if (pbpPlaybackState.playing) { pbpPlaybackStop(); pbpPlaybackUpdateStatus(container); return; }
+            if (!pbpPlaybackState.halves.length || pbpPlaybackState.idx >= pbpPlaybackState.halves.length) pbpPlaybackReset(container);
+            pbpPlaybackState.playing = true;
+            pbpPlaybackTick(container);
+            if (pbpPlaybackState.playing) pbpPlaybackState.timer = setInterval(function () { pbpPlaybackTick(container); }, pbpPlaybackState.speedMs);
+        } else if (action === 'skip') {
+            if (!pbpPlaybackState.halves.length) pbpPlaybackReset(container);
+            pbpPlaybackStop();
+            pbpPlaybackState.halves.forEach(function (d) { d.open = true; });
+            pbpPlaybackState.idx = pbpPlaybackState.halves.length;
+            pbpPlaybackUpdateStatus(container);
+        } else if (action === 'restart') {
+            pbpPlaybackReset(container);
+            pbpPlaybackUpdateStatus(container);
+        }
     }
     // Development diagnostic: shows the reconciliation result between the folded
     // event log and the engine accumulators. Hidden unless ?simdiag=1 is present,
@@ -5909,6 +5982,11 @@
         var panel = byId('playerBoxScorePanel');
         var content = byId('playerBoxScoreContent');
         if (!panel || !content) return;
+        // A previous game's playback timer/state must not survive into this
+        // render - content.innerHTML is about to be replaced wholesale, which
+        // would otherwise leave pbpPlaybackState.halves pointing at detached
+        // <details> nodes and an interval still ticking against them.
+        pbpPlaybackReset(null);
         if (!result || !result.boxScore || !result.boxScore.players) {
             panel.setAttribute('data-player-box-state', 'empty');
             content.innerHTML = '<div class="sim-empty">Run a simulation to generate batter and pitcher simulation lines.</div>';
@@ -6691,6 +6769,28 @@
         if (current) current.addEventListener('click', function () { switchMode('current'); });
         if (historical) historical.addEventListener('click', function () { switchMode('historical'); });
         if (mixed) mixed.addEventListener('click', function () { switchMode('mixed'); });
+        // PBP_PLAYBACK_20260725: the play-by-play controls live inside content
+        // that gets wholesale-replaced by renderPlayerBoxScore's innerHTML
+        // assignment on every simulation, so direct listeners on the buttons
+        // would be destroyed each time. Delegate from the STABLE container
+        // (bound once here, persists across re-renders) instead.
+        var pbpContainer = byId('playerBoxScoreContent');
+        if (pbpContainer) {
+            pbpContainer.addEventListener('click', function (e) {
+                var btn = e.target && e.target.closest && e.target.closest('[data-pbp-action]');
+                if (!btn) return;
+                e.preventDefault();
+                pbpPlaybackAction(btn.getAttribute('data-pbp-action'), pbpContainer);
+            });
+            pbpContainer.addEventListener('change', function (e) {
+                if (!e.target || !e.target.classList || !e.target.classList.contains('pbp-speed')) return;
+                pbpPlaybackState.speedMs = Number(e.target.value) || 1200;
+                if (pbpPlaybackState.playing) {
+                    clearInterval(pbpPlaybackState.timer);
+                    pbpPlaybackState.timer = setInterval(function () { pbpPlaybackTick(pbpContainer); }, pbpPlaybackState.speedMs);
+                }
+            });
+        }
     }
 
     function init() {
@@ -6762,6 +6862,8 @@
             foldNotes: foldNotes,
             elReconcile: elReconcile,
             pitcherDecisions: pitcherDecisions,
+            evTurningPoint: evTurningPoint,
+            assembleEventBoxScore: assembleEventBoxScore,
             makeSyntheticBench: makeSyntheticBench,
             EL_INJURY: EL_INJURY,
             EL_EJECT: EL_EJECT,
