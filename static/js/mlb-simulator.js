@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-pbp-playback-20260725d';
+    var UI_BUILD = 'mlb-simulator-pbp-race-fix-20260725e';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -230,6 +230,7 @@
             error: null
         },
         backendProjectionStatus: null,
+        liveContextPromise: null,
         awayTeamId: LOCAL_TEAMS.current[0].id,
         homeTeamId: LOCAL_TEAMS.current[1].id,
         awayPitcherId: '',
@@ -6573,11 +6574,25 @@
         renderLoading(away, home);
         setLiveInputsForMatchup(away, home);
         setText('projectionNotice', 'Loading verified MLB active roster names before rendering the player box score.');
-        return Promise.all([
-            ensureRostersForTeams(away, home),
-            fetchBackendProjectionStatus(state.activeLiveContext),
-            fetchLeagueSeasonStrength()
-        ]).then(function () {
+        // Wait (briefly) for the page's initial live-context fetch (schedule/board/injury
+        // data) so this simulation uses full context on the FIRST render. Previously,
+        // loadLiveContext() would instead silently re-simulate and replace an
+        // already-displayed box score once it finished loading late, which reset any
+        // in-progress play-by-play playback and changed the final score under the
+        // user's eyes. A capped wait here means state.simulation is only ever set once
+        // per click. See PBP_PLAYBACK_STATE_RESET_FIX_20260725.
+        var liveContextWait = state.liveContextPromise ? Promise.race([
+            state.liveContextPromise,
+            new Promise(function (resolve) { setTimeout(resolve, 2500); })
+        ]) : Promise.resolve();
+        return liveContextWait.then(function () {
+            setLiveInputsForMatchup(away, home);
+            return Promise.all([
+                ensureRostersForTeams(away, home),
+                fetchBackendProjectionStatus(state.activeLiveContext),
+                fetchLeagueSeasonStrength()
+            ]);
+        }).then(function () {
             setLiveInputsForMatchup(away, home);
             renderPitcherOptions('away', away, state.activeLiveContext);
             renderPitcherOptions('home', home, state.activeLiveContext);
@@ -6701,19 +6716,12 @@
                     error: null
                 };
                 renderSelectors();
-                if (state.simulation) {
-                    var away = findTeamInPool(state.awayTeamId, state.awayPool);
-                    var home = findTeamInPool(state.homeTeamId, state.homePool);
-                    var count = state.simulationCount || 1;
-                    var stamp = Date.now();
-                    var results = [];
-                    for (var i = 0; i < count; i += 1) {
-                        results.push(simulate(away, home, state.activeLiveContext, count === 1 ? 'single-' + stamp : 'batch-' + stamp + '-' + i, count > 1));
-                    }
-                    state.aggregate = count > 1 ? buildAggregate(results, away, home) : null;
-                    state.simulation = results[results.length - 1];
-                    renderResult(state.simulation);
-                }
+                // NOTE: this used to re-simulate and re-render an already-displayed game
+                // once live context finished loading late, silently replacing the score
+                // and wiping play-by-play playback state out from under the user. That
+                // race is now avoided by having runSimulation() wait on
+                // state.liveContextPromise up front, so no simulation is ever run twice
+                // for one click. See PBP_PLAYBACK_STATE_RESET_FIX_20260725.
             });
         }).catch(function (error) {
             state.liveContext.status = 'unavailable';
@@ -6797,7 +6805,7 @@
         wireEvents();
         renderSelectors();
         renderResult(null);
-        loadLiveContext();
+        state.liveContextPromise = loadLiveContext();
         if (typeof window !== 'undefined' && window.location && /[?&]tmrAutoRun=ari-atl\b/.test(window.location.search || '')) {
             setTimeout(function () {
                 state.awayPool = 'current';
