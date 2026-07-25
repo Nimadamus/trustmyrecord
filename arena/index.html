@@ -987,7 +987,7 @@ async function loadChallenges() {
         const data = await requestOpenChallenges();
         if (!data || !data.challenges) data = { challenges: [] };
         allChallenges = arenaFilterTestChallenges(data.challenges);
-        renderChallenges(allChallenges);
+        renderChallenges(allChallenges.filter(c => c.status === 'pending'));
         renderMyChallenges();
         updateArenaTopStats();
     } catch (e) {
