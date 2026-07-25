@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-full-realism-audit-20260725b';
+    var UI_BUILD = 'mlb-simulator-ux-audit-fixes-20260725c';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2242,8 +2242,20 @@
                 }
                 labels[wIdx] = 'W';
                 if (rows.length > 1 && last !== wIdx) {
-                    var longFinish = Number(rows[last].outs || 0) >= 9;
-                    if (m <= 3 || longFinish) labels[last] = 'SV';
+                    var closerRow = rows[last];
+                    var longFinish = Number(closerRow.outs || 0) >= 9;
+                    // SAVE_ENTRY_MARGIN_FIX_20260725: save eligibility (outside the
+                    // long-finish exemption, which is legitimately margin-independent)
+                    // must be judged by the lead when the closer ENTERED, not the
+                    // final score. The old check used the FINAL margin `m`, so a
+                    // reliever who entered up 6 and allowed 4 runs (down to a 2-run
+                    // final margin) still "protected a 1-3 run lead" by the numbers at
+                    // the final buzzer - not a real save situation, and not what
+                    // actually happened. Falls back to the final margin only when
+                    // enterMargin wasn't tracked (a mid-inning emergency entry has no
+                    // tracked margin; same fallback the HOLD rule above documents).
+                    var saveMargin = closerRow.enterMargin != null ? closerRow.enterMargin : m;
+                    if (longFinish || (saveMargin >= 1 && saveMargin <= 3)) labels[last] = 'SV';
                 }
             }
         } else {
@@ -3983,6 +3995,37 @@
             outfieldAssists: side.ofAssists || 0, dp: side.dpTurned || 0, ibb: side.ibb || 0
         };
     }
+    // TURNING_POINT_20260725: a one-sentence postgame callout, derived purely
+    // from the already-simulated per-inning run arrays (no new randomness).
+    // Finds the inning where the eventual winner took the lead for good (the
+    // last change of leader); if the winner led wire-to-wire (no lead change to
+    // describe), falls back to naming their biggest single inning, then to a
+    // generic "led throughout" line if the game was a stranger-than-fiction
+    // shutout with no single big frame.
+    function evOrdinal(n) {
+        var s = ['th', 'st', 'nd', 'rd'], v = n % 100;
+        return n + (s[(v - 20) % 10] || s[v] || s[0]);
+    }
+    function evTurningPoint(aInn, hInn, awayName, homeName, awayFinal, homeFinal) {
+        var aRun = 0, hRun = 0, lastLeader = null, leadInning = null;
+        var maxLen = Math.max(aInn.length, hInn.length);
+        for (var i = 0; i < maxLen; i++) {
+            aRun += aInn[i] || 0;
+            if (i < hInn.length) hRun += hInn[i] || 0;
+            var leader = aRun > hRun ? 'away' : (hRun > aRun ? 'home' : null);
+            if (leader && leader !== lastLeader) { lastLeader = leader; leadInning = i + 1; }
+        }
+        var winnerSide = homeFinal > awayFinal ? 'home' : 'away';
+        var winnerName = winnerSide === 'home' ? homeName : awayName;
+        if (lastLeader === winnerSide && leadInning != null) {
+            return winnerName + ' took the lead for good in the ' + evOrdinal(leadInning) + '.';
+        }
+        var winnerInn = winnerSide === 'home' ? hInn : aInn;
+        var bestInn = 0, bestRuns = 0;
+        winnerInn.forEach(function (r, idx) { if ((r || 0) > bestRuns) { bestRuns = r || 0; bestInn = idx + 1; } });
+        if (bestRuns >= 2) return winnerName + '’s ' + bestRuns + '-run ' + evOrdinal(bestInn) + ' proved decisive.';
+        return winnerName + ' led throughout and was never seriously challenged.';
+    }
     function assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random) {
         var scoringLog = [];
         var eventLog = elNewLog('sim-' + Date.now());
@@ -4036,7 +4079,7 @@
                 away: { batters: awayBatters, pitchers: awayPitchers, rosterSource: evRosterSource(inputs.awaySide), lineupStatus: lineupStatusAway },
                 home: { batters: homeBatters, pitchers: homePitchers, rosterSource: evRosterSource(inputs.homeSide), lineupStatus: lineupStatusHome }
             },
-            summary: winner.name + ' defeats ' + loser.name + ', ' + Math.max(g.aRuns, g.hRuns) + '-' + Math.min(g.aRuns, g.hRuns) + extraNote + '. ' + (winnerPitcher ? winnerPitcher.name + ' starts for the winning side. ' : '') + 'Box score simulated plate-appearance by plate-appearance.',
+            summary: winner.name + ' defeats ' + loser.name + ', ' + Math.max(g.aRuns, g.hRuns) + '-' + Math.min(g.aRuns, g.hRuns) + extraNote + '. ' + (winnerPitcher ? winnerPitcher.name + ' starts for the winning side. ' : '') + evTurningPoint(g.aInn, g.hInn, away.name, home.name, g.aRuns, g.hRuns) + ' Box score simulated plate-appearance by plate-appearance.',
             pitcherLines: [
                 away.name + ': ' + (awayPitchers[0] ? awayPitchers[0].name + ' ' + awayPitchers[0].ip + ' IP, ' + awayPitchers[0].h + ' H, ' + awayPitchers[0].r + ' R, ' + awayPitchers[0].so + ' K' : 'Starter unavailable'),
                 home.name + ': ' + (homePitchers[0] ? homePitchers[0].name + ' ' + homePitchers[0].ip + ' IP, ' + homePitchers[0].h + ' H, ' + homePitchers[0].r + ' R, ' + homePitchers[0].so + ' K' : 'Starter unavailable')
@@ -5831,7 +5874,12 @@
                 return '<li class="' + cls + '"><span class="pbp-text">' + escapeHtml(p.detail) + '</span>' +
                     (meta.length ? '<span class="pbp-meta">' + escapeHtml(meta.join(' · ')) + '</span>' : '') + score + '</li>';
             }).join('');
-            return '<details class="pbp-half"><summary><span class="pbp-half-label">' + label + '</span>' +
+            // AUTO_EXPAND_SCORING_INNINGS_20260725: a half-inning where a run
+            // scored is the "broadcast-relevant" one - auto-open it so the play
+            // text is visible without a click, instead of every inning defaulting
+            // to a bare run/hit/LOB line. Scoreless innings stay collapsed, same
+            // as a real broadcast glossing over a 1-2-3 frame.
+            return '<details class="pbp-half"' + (h.runs > 0 ? ' open' : '') + '><summary><span class="pbp-half-label">' + label + '</span>' +
                 '<span class="pbp-half-summary">' + escapeHtml(summary) + '</span></summary><ol class="pbp-list">' + plays + '</ol></details>';
         }).join('');
         return '<section class="pbp-section"><h4>Play-by-Play</h4>' +
