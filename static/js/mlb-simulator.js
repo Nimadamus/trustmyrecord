@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-eventlog-rosterstate-20260723';
+    var UI_BUILD = 'mlb-simulator-pitching-workload-fix-20260725';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2585,6 +2585,9 @@
             starterOuts: starterOuts, roster: roster, hasNamedLineup: !!(roster && roster.players && roster.players.length),
             // Error-rate calibration (June 4, 2026 vs real MLB 2025): engine ran
             // 0.31 errors/team vs real 0.504 — reach-on-error base raised to match.
+            // ERROR_GAME_CAP_20260725: applied per-team-per-game in evPlayHalf via
+            // defSide.gameErrors / ERROR_GAME_CAP, not here (this object is built once
+            // per team, before any game is played).
             errRate: clamp(0.034 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.016, 0.055),
             parkHr: parkHr || 1, stealRate: 0.10, stealSuccess: 0.78, sb: 0, cs: 0
         };
@@ -3222,6 +3225,7 @@
             var threshold = idx === 0 ? 5 : 3; // shelled starter: 5 runs; reliever: 3
             if (apptRuns >= threshold) {
                 var outgoing = pitcher;
+                outgoing.removed = true; // mid-inning pull - can never return this game
                 pitcher = arms[idx + 1]; apptRuns = 0; defSide.minArmIdx = Math.max(defSide.minArmIdx || 0, idx + 1); defSide.midChanges = (defSide.midChanges || 0) + 1;
                 // The incoming arm inherits whoever is on base; bp[] already charges
                 // those runners to the pitcher who put them there.
@@ -3377,8 +3381,19 @@
                 if (bases[0] !== null) { if (random() < clamp(0.28 * (lineup[bases[0]].speed || 1), 0.12, 0.5) && bases[2] === null) { bases[2] = bases[0]; bp[2] = bp[0]; } else { bases[1] = bases[0]; bp[1] = bp[0]; } bases[0] = null; bp[0] = null; }
                 bases[0] = bi; bp[0] = pitcher;
             } else { // out in play, with a small chance of a reach-on-error (unearned)
-                if (random() < side.errRate) {
-                    errors++; paErrorReach = true; // batter reaches as if a single but no hit, runs charged unearned
+                // ERROR_ATTRIBUTION_FIX_20260725: an error is a FIELDING mistake, so it
+                // must roll off the team in the field (defSide), not the team at bat
+                // (side) - the prior code had a bad defense boost ITS OWN offense with
+                // extra reach-on-errors while it batted, instead of leaking runs to the
+                // opponent while it fields. defSide.errRate carries that same team's own
+                // runPrevention-based rate; only which object reads it was wrong.
+                // ERROR_GAME_CAP_20260725: real MLB team-game error counts essentially
+                // never exceed a handful (2025 mean 0.504/team-game; 5-6 in one game is a
+                // multi-decade rarity) - cap the roll so a long or chaotic (extra-innings)
+                // game cannot compound errors past a realistic ceiling.
+                var errCap = (defSide.gameErrors || 0) < ERROR_GAME_CAP;
+                if (errCap && random() < defSide.errRate) {
+                    errors++; defSide.gameErrors = (defSide.gameErrors || 0) + 1; paErrorReach = true; // batter reaches as if a single but no hit, runs charged unearned
                     // A run that scores on an error is NOT an RBI (official scoring).
                     if (bases[2] !== null) { score(bases[2], false, bp[2], false); bases[2] = null; bp[2] = null; }
                     if (bases[1] !== null) { bases[2] = bases[1]; bp[2] = bp[1]; bases[1] = null; bp[1] = null; }
@@ -3500,7 +3515,30 @@
         });
         return { runs: runs, errors: errors, gidp: gidp, ofAssists: ofAssists, lob: stranded };
     }
-    function evActivePitcher(side, outsRecorded) {
+    // PITCHING_WORKLOAD_CAPS_20260725: realistic single-appearance ceilings so no
+    // reliever is left in for starter-length innings. Measured in OUTS RECORDED
+    // THIS GAME (the engine has no per-pitch fatigue model, so outs is the
+    // workload proxy) across every pocket that arm has covered, regulation or
+    // extras. CL/SU cap at 2 IP (an emergency multi-inning save is real; a 5-6
+    // inning outing is not). RP/bridge caps at 3 IP, the traditional long-man
+    // ceiling. SP/POS are uncapped here (SP already has its own starterOuts
+    // model; POS is the position-player emergency arm with no realistic cap).
+    var ROLE_OUT_CAP = { CL: 6, SU: 6, RP: 9 };
+    // ERROR_GAME_CAP_20260725: hard ceiling on reach-on-errors charged to one team in
+    // one simulated game (see evPlayHalf). 2025 MLB mean is 0.504 errors/team-game;
+    // a 5-6 error game is a real but multi-decade-rare outlier, so the independent
+    // per-play roll is capped rather than left free to compound in a long game.
+    var ERROR_GAME_CAP = 4;
+    function armOutsThisGame(p) { return (p.acc && p.acc.outs) || 0; }
+    // .removed is the hard "left the game, can never return" flag (mirrors real
+    // baseball substitution rules). armUnderCap folds it in: a removed arm is
+    // never eligible again regardless of how few outs it recorded.
+    function armUnderCap(p) {
+        if (p.removed) return false;
+        var cap = ROLE_OUT_CAP[p.role];
+        return !cap || armOutsThisGame(p) < cap;
+    }
+    function evActivePitcher(side, outsRecorded, extraInnings) {
         // starterOutsGame: per-game sampled hook point (real starters do not throw
         // an identical inning count every outing); falls back to the season mean.
         var starterOuts = side.starterOutsGame || side.starterOuts;
@@ -3517,14 +3555,60 @@
         // order, so the highest-leverage arm (setup) covers the latest pocket.
         var closerIdx = arms.length - 1;
         var CLOSER_FLOOR = 24; // 9th inning begins at the 24th defensive out
-        if (outsRecorded < starterOuts) return pick(0);
-        if (outsRecorded >= Math.max(starterOuts, CLOSER_FLOOR)) return pick(closerIdx);
-        var midCount = closerIdx - 1; // arms between the starter and the closer
-        if (midCount <= 0) return pick(closerIdx);
-        var span = CLOSER_FLOOR - starterOuts;
-        if (span <= 0) return pick(closerIdx);
-        var k = clamp(Math.floor(((outsRecorded - starterOuts) / span) * midCount), 0, midCount - 1);
-        return pick(1 + k);
+        // BULLPEN_FATIGUE_ROTATION_20260725: fallback once every scheduled pocket is
+        // spoken for (past the 9th in regulation, or ANY extra inning - there is no
+        // fixed pocket left there at all). Picks whichever relief arm is still
+        // eligible - never one already substituted out (.removed, folded into
+        // armUnderCap) - preferring one still under its role cap; only when every
+        // arm is spent does it fall back to the least-fatigued regardless of cap
+        // (evDefPitcher's marathon-emergency rule is the real escape valve past
+        // that). Deliberately ignores minArmIdx/floor: that ratchet exists only to
+        // stop a same-appearance revert; a genuinely UNUSED arm (e.g. the setup man
+        // never needed because the starter went 8 strong) must still be reachable
+        // even though its scheduled pocket index is "behind" where the game has
+        // since moved on to.
+        function freshestArm() {
+            var candidates = [];
+            for (var i = 1; i < arms.length; i++) {
+                var p = arms[i];
+                if ((p.role === 'CL' || p.role === 'SU' || p.role === 'RP') && !p.removed) candidates.push(p);
+            }
+            if (!candidates.length) return arms[closerIdx];
+            var fresh = candidates.filter(function (p) { var cap = ROLE_OUT_CAP[p.role]; return !cap || armOutsThisGame(p) < cap; });
+            var pool = (fresh.length ? fresh : candidates).slice().sort(function (a, b) { return armOutsThisGame(a) - armOutsThisGame(b); });
+            return pool[0];
+        }
+        if (extraInnings) return freshestArm();
+        // Scheduled pocket for this point in the game, same three zones as before
+        // an out-cap ever existed: the starter while under his sampled length, then
+        // bridge -> setup -> closer splitting the innings up to the 9th.
+        var scheduledIdx;
+        if (outsRecorded < starterOuts) {
+            scheduledIdx = 0;
+        } else if (outsRecorded >= Math.max(starterOuts, CLOSER_FLOOR)) {
+            scheduledIdx = closerIdx;
+        } else {
+            var midCount = closerIdx - 1; // arms between the starter and the closer
+            if (midCount <= 0) {
+                scheduledIdx = closerIdx;
+            } else {
+                var span = CLOSER_FLOOR - starterOuts;
+                var k = span > 0 ? clamp(Math.floor(((outsRecorded - starterOuts) / span) * midCount), 0, midCount - 1) : 0;
+                scheduledIdx = 1 + k;
+            }
+        }
+        // WORKLOAD_CAP_20260725: whatever the schedule says, never hand an arm more
+        // innings than a realistic single outing - advance forward (never backward,
+        // via floor) past anything already at/over its role cap or already
+        // substituted out. This also covers the case a mid-inning change promoted a
+        // reliever into the STARTER's pocket after an early knockout (scheduledIdx
+        // 0 no longer means "the starter"; pick(0) already resolves through floor to
+        // whoever replaced him, and that arm needs the same cap enforcement). If
+        // even the closer pocket is spent, fall back to the freshest relief arm.
+        var idx = Math.max(scheduledIdx, floor);
+        while (idx < closerIdx && !armUnderCap(pick(idx))) idx++;
+        var finalPick = pick(idx);
+        return armUnderCap(finalPick) ? finalPick : freshestArm();
     }
     // A position player on the mound: real teams down big late send a hitter out to
     // soak innings and save the bullpen. Lobs strikes -> almost no strikeouts, lots of
@@ -3551,7 +3635,44 @@
             }
             if (side.posPitcher) { side.minArmIdx = side.posPitcherIdx; return side.posPitcher; }
         }
-        return evActivePitcher(side, outsRecorded);
+        var extraInnings = inn >= 9;
+        // BULLPEN_EXHAUSTION_EMERGENCY_20260725: applies in REGULATION or extras,
+        // not just late innings. The engine only names 3 relief arms (the ones
+        // with real season stats worth tracking); a genuine bullpen-day disaster
+        // (starter knocked out early, then the named relievers ALSO shelled
+        // early) can burn through all 3 well before the 7th-inning blowout mercy
+        // rule above would ever fire, with no arm left to hand off to. Once every
+        // named relief arm is either already substituted out or would need to
+        // pitch past a generous "emergency long block" ceiling (12 outs / 4 IP -
+        // rare in real life but not absurd), there is no realistic NAMED arm left:
+        // real teams would by now be into an unnamed 4th/5th/6th reliever (not
+        // modeled individually here) or, in the genuine extreme, a position
+        // player - same fallback as the blowout rule, triggered by workload
+        // instead of score margin. This bounds the worst case at roughly 4-5 IP
+        // for any single relief appearance, matching the rare real historic
+        // long-relief outing, not an unbounded one.
+        var EMERGENCY_ARM_CEILING = 12;
+        var relievers = side.pitchers.filter(function (p) { return p.role === 'CL' || p.role === 'SU' || p.role === 'RP'; });
+        var allSpent = relievers.length > 0 && relievers.every(function (p) { return p.removed || armOutsThisGame(p) >= EMERGENCY_ARM_CEILING; });
+        if (allSpent) {
+            if (!side.posPitcher) {
+                var pp2 = evMakePositionPitcher(side);
+                if (pp2) { side.pitchers.push(pp2); side.posPitcherIdx = side.pitchers.length - 1; side.posPitcher = pp2; }
+            }
+            if (side.posPitcher) { side.minArmIdx = side.posPitcherIdx; return side.posPitcher; }
+        }
+        var chosen = evActivePitcher(side, outsRecorded, extraInnings);
+        // ARM_REMOVAL_TRACKING_20260725: the moment a half-inning boundary hands
+        // off to a DIFFERENT arm than last time, the previous arm has left the
+        // game for good (real baseball: no pitcher re-enters once replaced). This
+        // is what freshestArm's !p.removed check relies on to never recall an
+        // already-pulled reliever, on top of the injury/ejection and mid-inning-
+        // change paths (elsewhere) which mark the same flag for those exits.
+        if (side._activePitcher && side._activePitcher !== chosen && armOutsThisGame(side._activePitcher) > 0) {
+            side._activePitcher.removed = true;
+        }
+        side._activePitcher = chosen;
+        return chosen;
     }
     function evSimGame(awaySide, homeSide, random, logSink) {
         [awaySide, homeSide].forEach(function (s) {
@@ -3559,11 +3680,11 @@
             // player appended in a prior sampled game) so resampling never accumulates.
             if (s._baseArms === undefined) s._baseArms = s.pitchers.length;
             else if (s.pitchers.length > s._baseArms) s.pitchers.length = s._baseArms;
-            s.posPitcher = null; s.posPitcherIdx = -1;
+            s.posPitcher = null; s.posPitcherIdx = -1; s._activePitcher = null;
             s.idx = 0; s.lob = 0; s.sb = 0; s.cs = 0; s.minArmIdx = 0; s.midChanges = 0; s.ibb = 0;
             // Event-sourced situational trackers (reset per game).
             s.gidp = 0; s.sf = 0; s.sacBunts = 0; s.hbp = 0; s.rispAb = 0; s.rispHits = 0; s.twoOutRbi = 0;
-            s.lisp2out = 0; s.pickoffs = 0; s.ofAssists = 0; s.dpTurned = 0; s._lastPitcher = null;
+            s.lisp2out = 0; s.pickoffs = 0; s.ofAssists = 0; s.dpTurned = 0; s._lastPitcher = null; s.gameErrors = 0;
             // TMR_ROSTER_STATE_20260723: reset the in-game roster state. lineupSlots[k]
             // is the ordered history of who has occupied batting slot k (starter first).
             // These are cheap no-ops for synthetic teams (empty bench) and are only
@@ -3593,7 +3714,7 @@
             // 8-IP outings. Mean-preserving; floor lifted off 8 so quick hooks stay rare.
             s.starterOutsGame = clamp(s.starterOuts + Math.round((random() + random() - 1) * 6), 9, 24);
             s.lineup.forEach(function (b) { b.acc = evNewBat(); });
-            s.pitchers.forEach(function (p) { p.acc = evNewPit(); });
+            s.pitchers.forEach(function (p) { p.acc = evNewPit(); p.removed = false; });
         });
         var aRuns = 0, hRuns = 0, aErr = 0, hErr = 0, aInn = [], hInn = [], aPlaced = 0, hPlaced = 0, walkOff = false;
         // Defensive stats (double plays turned, outfield assists) credit the side in
