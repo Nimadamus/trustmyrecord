@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-weather-rain-delay-20260726a';
+    var UI_BUILD = 'mlb-simulator-managerial-narration-20260726b';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2813,7 +2813,7 @@
     var EL_BIP_NAMES = { GB: 'ground ball', LD: 'line drive', FB: 'fly ball', PU: 'pop up' };
     // Every play-by-play sentence is generated from the structured event, never
     // written by hand: outcome code + batted-ball detail + the run ledger.
-    function elDescribePa(code, batter, pitcherName, bip, runsScored, outsAfter, ofAssist) {
+    function elDescribePa(code, batter, pitcherName, bip, runsScored, outsAfter, ofAssist, isWalkOff) {
         var where = bip ? (EL_FIELD_NAMES[bip.field] || bip.field) : null;
         var shape = bip ? EL_BIP_NAMES[bip.type] : null;
         var s;
@@ -2834,7 +2834,11 @@
         if (scorers.length === 1) s += '. ' + scorers[0] + ' scores';
         else if (scorers.length > 1) s += '. ' + scorers.slice(0, -1).join(', ') + ' and ' + scorers[scorers.length - 1] + ' score';
         if (ofAssist) s += '. Runner thrown out at home';
-        s += '. ' + (outsAfter >= 3 ? '3 outs' : outsAfter === 1 ? '1 out' : outsAfter + ' outs');
+        // WALKOFF_NARRATION_20260726: the game just ended on this play - say so
+        // instead of an outs count that no longer means anything (the half-inning
+        // stops immediately, whatever the out total happened to be).
+        s += isWalkOff ? (code === 'HR' ? '. Walk-off home run! Game over' : '. Walk-off! Game over') :
+            '. ' + (outsAfter >= 3 ? '3 outs' : outsAfter === 1 ? '1 out' : outsAfter + ' outs');
         return s;
     }
     var EL_FIELDS_GB = ['3B', 'SS', '2B', '1B', 'P'];
@@ -3548,6 +3552,11 @@
                 var isBip = paCode !== 'BB' && paCode !== 'HBP' && paCode !== 'K';
                 var bipDetail = isBip ? elBattedBall(ev, elHashSeed(el.gameId, el.seq + 1, bi, preOuts)) : null;
                 if (paCode === 'HR' && bipDetail) { paSeq.pitches[paSeq.pitches.length - 1].hr = true; }
+                // WALKOFF_NARRATION_20260726: `runs > endLead` is the exact same
+                // condition the half-inning loop checks right after this PA to decide
+                // whether the game just ended - reusing it here means the narration
+                // and the actual walk-off rule can never disagree.
+                var isWalkOffPlay = evRuns.length > 0 && endLead !== undefined && endLead !== null && runs > endLead;
                 elEmit(EL_TYPES.PA, {
                     batterId: paName, batterSlot: bi,
                     fieldersInvolved: bipDetail ? [{ pos: bipDetail.field, role: paErrorReach ? 'error' : (paCode === 'OUT' || paCode === 'GIDP' || paCode === 'SF' || paCode === 'SH' ? 'putout' : 'fielded') }] : [],
@@ -3560,7 +3569,7 @@
                         code: paCode,
                         bip: bipDetail,
                         ofAssist: paOfAssist,
-                        detail: elDescribePa(paCode, paName, pitcher && pitcher.name, bipDetail, evRuns, outs, paOfAssist)
+                        detail: elDescribePa(paCode, paName, pitcher && pitcher.name, bipDetail, evRuns, outs, paOfAssist, isWalkOffPlay)
                     },
                     pitches: paSeq.pitches,
                     runsScored: evRuns.slice(),
@@ -3641,6 +3650,20 @@
         // an identical inning count every outing); falls back to the season mean.
         var starterOuts = side.starterOutsGame || side.starterOuts;
         var arms = side.pitchers;
+        // STARTER_ROCKY_HOOK_20260726: the pre-game sampled length above is a fixed
+        // target set before a single pitch is thrown - real managers pull a starter
+        // who is getting shelled well before that, "he doesn't have it today"
+        // regardless of expected workload. Only fires with at least 2 innings in
+        // (6 outs, so one bad frame that could still stabilize isn't an instant
+        // hook) and only for a genuinely bad line (5+ earned runs in under 5
+        // innings, or 6+ in under 6) - a real quick-hook threshold, not a hair
+        // trigger that would look erratic across many merely-mediocre starts.
+        if (arms.length && !arms[0].removed && outsRecorded < starterOuts) {
+            var spAcc = arms[0].acc, spOuts = spAcc.outs || 0, spEr = spAcc.er || 0;
+            if (spOuts >= 6 && ((spOuts < 15 && spEr >= 5) || (spOuts < 18 && spEr >= 6))) {
+                starterOuts = Math.min(starterOuts, spOuts);
+            }
+        }
         if (arms.length <= 1) return arms[0];
         // minArmIdx floors the selection: once a mid-inning change has advanced to a later
         // arm, the next inning never reverts to an earlier one (no using the closer in the
