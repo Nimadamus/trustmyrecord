@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-pbp-race-fix-20260725e';
+    var UI_BUILD = 'mlb-simulator-weather-rain-delay-20260726a';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -196,6 +196,30 @@
         return PARK_HR_FACTORS[homeTeam && homeTeam.abbreviation] || 1;
     }
 
+    // SIM_WEATHER_20260726: user-selected HYPOTHETICAL pregame conditions for this
+    // one simulated game - distinct from the separate verified-live-ESPN/MLB
+    // weather feed used elsewhere in simulate() (context.espnGame.weather /
+    // todaysWeatherForTeam / weatherRunAdjustment), which reflects REAL reported
+    // conditions when available. This table is a "what if it were raining"
+    // control, always labeled as simulated/selected in the UI, never presented as
+    // verified. All multipliers are small and bounded (<=30% on any single factor,
+    // most far tighter) so no condition can produce an absurd statistical
+    // distortion; delayChance is 0 for every condition except the two rain states,
+    // matching real MLB (wind/heat/cold do not by themselves stop play).
+    var SIM_WEATHER_CONDITIONS = [
+        { key: 'clear', label: 'Clear', description: 'Clear skies, no weather impact on play.', hr: 1.00, bb: 1.00, err: 1.00, fatigue: 1.00, delayChance: 0 },
+        { key: 'cloudy', label: 'Cloudy', description: 'Overcast, no material effect on play.', hr: 1.00, bb: 1.00, err: 1.00, fatigue: 1.00, delayChance: 0 },
+        { key: 'light-rain', label: 'Light Rain', description: 'Intermittent light rain; footing and grip slightly affected, and there is a real chance of a rain delay.', hr: 0.97, bb: 1.03, err: 1.15, fatigue: 1.03, delayChance: 0.05 },
+        { key: 'heavy-rain', label: 'Heavy Rain', description: 'Steady heavy rain; carry is down, errors are up, and this game has a meaningful chance of a rain delay (including a possible suspension).', hr: 0.90, bb: 1.07, err: 1.30, fatigue: 1.06, delayChance: 0.32 },
+        { key: 'wind', label: 'Windy', description: 'Strong wind; ball carry and fielding conditions are affected.', hr: 1.06, bb: 1.00, err: 1.08, fatigue: 1.00, delayChance: 0 },
+        { key: 'heat', label: 'Extreme Heat', description: 'High heat; ball carries a bit more and pitcher stamina drops faster.', hr: 1.05, bb: 1.00, err: 1.00, fatigue: 1.09, delayChance: 0 },
+        { key: 'cold', label: 'Cold', description: 'Cold conditions; reduced carry, grip and feel affected.', hr: 0.93, bb: 1.04, err: 1.00, fatigue: 1.04, delayChance: 0 }
+    ];
+    function simWeatherByKey(key) {
+        for (var i = 0; i < SIM_WEATHER_CONDITIONS.length; i++) if (SIM_WEATHER_CONDITIONS[i].key === key) return SIM_WEATHER_CONDITIONS[i];
+        return SIM_WEATHER_CONDITIONS[0];
+    }
+
     var LIVE_INPUT_SOURCES = [
         ['scheduleFinals', 'MLB schedule/finals', 'Unavailable', 'No verified current schedule or final score match is connected.'],
         ['teamRecords', 'Team records', 'Unavailable', 'No verified team record match is connected.'],
@@ -231,6 +255,7 @@
         },
         backendProjectionStatus: null,
         liveContextPromise: null,
+        simWeatherCondition: 'clear',
         awayTeamId: LOCAL_TEAMS.current[0].id,
         homeTeamId: LOCAL_TEAMS.current[1].id,
         awayPitcherId: '',
@@ -2458,6 +2483,12 @@
         if (!hrFactor || hrFactor === 1) return v;
         return evNormalize({ bb: v.bb, so: v.so, hr: v.hr * hrFactor, b3: v.b3, b2: v.b2, b1: v.b1, out: v.out });
     }
+    // SIM_WEATHER_20260726: same shape as evApplyParkHr, scaling bb instead of hr -
+    // rain/cold grip and visibility issues raise walk rate a bounded amount.
+    function evApplyWeatherBb(v, bbFactor) {
+        if (!bbFactor || bbFactor === 1) return v;
+        return evNormalize({ bb: v.bb * bbFactor, so: v.so, hr: v.hr, b3: v.b3, b2: v.b2, b1: v.b1, out: v.out });
+    }
     function evBlend(v1, v2, w) {
         var k = ['bb', 'so', 'hr', 'b3', 'b2', 'b1', 'out'], o = {};
         k.forEach(function (key) { o[key] = v1[key] * w + v2[key] * (1 - w); });
@@ -2528,7 +2559,7 @@
     // game (real MLB 2025 ~0.40), leaving BB ~2.8/team (well within the validator tol).
     var EV_HBP_SHARE = 0.13;
     // Build per-team lineup (anchored batter vectors + display rows) and staff.
-    function evBuildSide(team, oppPitcher, ownStarter, targetRuns, rosterContext, parkHr) {
+    function evBuildSide(team, oppPitcher, ownStarter, targetRuns, rosterContext, parkHr, simWeather) {
         var roster = rosterForTeam(team, rosterContext);
         var oppHand = oppPitcher && oppPitcher.mlbId ? pitchHandOf(oppPitcher.mlbId) : null;
         var slotStats = roster ? rosterBatterSlotStats(roster, oppHand) : [];
@@ -2607,6 +2638,13 @@
         var starterVec = evPitcherVector(ownStarter, 100);
         var penVec = evStaffVector(team, true);
         var starterOuts = evStarterOuts(ownStarter, team);
+        // SIM_WEATHER_20260726: fatigue>1 (heat/cold/rain) shortens the expected
+        // starter outing a bounded amount; re-clamped to the same 9-24 out range
+        // evStarterOuts already uses, so this can never push a starter outside a
+        // realistic length on its own.
+        if (simWeather && simWeather.fatigue && simWeather.fatigue !== 1) {
+            starterOuts = clamp(Math.round(starterOuts / simWeather.fatigue), 9, 24);
+        }
         // Multi-arm bullpen (Layer 2, June 22 2026): when verified reliever season
         // stats exist, sequence the real bridge -> setup -> closer, each with their
         // OWN K/BB/HR vector, real name, and handedness (when the profile is cached),
@@ -2639,8 +2677,8 @@
             // ERROR_GAME_CAP_20260725: applied per-team-per-game in evPlayHalf via
             // defSide.gameErrors / ERROR_GAME_CAP, not here (this object is built once
             // per team, before any game is played).
-            errRate: clamp(0.034 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.016, 0.055),
-            parkHr: parkHr || 1, stealRate: 0.10, stealSuccess: 0.78, sb: 0, cs: 0
+            errRate: clamp(clamp(0.034 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.016, 0.055) * ((simWeather && simWeather.err) || 1), 0.016, 0.075),
+            parkHr: parkHr || 1, simWeatherBb: (simWeather && simWeather.bb) || 1, stealRate: 0.10, stealSuccess: 0.78, sb: 0, cs: 0
         };
     }
     // Layer 1: choose real bullpen arms from verified roster + cached season stats.
@@ -3394,7 +3432,7 @@
             // injuryPenalty is 0 outside the displayed game, so this is a no-op for
             // the calibration path.
             if (b.injuryPenalty) batVec = elApplyInjuryVector(batVec, b.injuryPenalty);
-            var v = evScale(evApplyTto(evApplyParkHr(evCombine(batVec, pitcher.vec), side.parkHr), evTtoMultipliers(timesThrough)), side.anchorFactor);
+            var v = evScale(evApplyTto(evApplyWeatherBb(evApplyParkHr(evCombine(batVec, pitcher.vec), side.parkHr), side.simWeatherBb), evTtoMultipliers(timesThrough)), side.anchorFactor);
             var ev = evSample(v, random), acc = b.acc; acc.pa++; pitcher.acc.bf++;
             // Event-sourced situational accounting (no post-hoc estimates):
             var paBefore = baseSnapshot(), paName = bname(bi), paRunnerPitchers = pitcherRefs();
@@ -3741,7 +3779,7 @@
         if (chosen._enterMargin === undefined) chosen._enterMargin = defRuns - oppRuns;
         return chosen;
     }
-    function evSimGame(awaySide, homeSide, random, logSink) {
+    function evSimGame(awaySide, homeSide, random, logSink, simWeather) {
         [awaySide, homeSide].forEach(function (s) {
             // Restore the pitcher staff to its real arms (drop any blowout position
             // player appended in a prior sampled game) so resampling never accumulates.
@@ -3784,6 +3822,58 @@
             s.pitchers.forEach(function (p) { p.acc = evNewPit(); p.removed = false; p._enterMargin = undefined; });
         });
         var aRuns = 0, hRuns = 0, aErr = 0, hErr = 0, aInn = [], hInn = [], aPlaced = 0, hPlaced = 0, walkOff = false;
+        // WEATHER_DELAY_20260726: at most one delay per game, and only within
+        // regulation (halves 1-17, i.e. up through the scheduled top of the 9th -
+        // always played regardless of score, so this target is always reachable).
+        // Only rain conditions carry a nonzero delayChance (see SIM_WEATHER_CONDITIONS).
+        // Extra innings are intentionally out of scope for a weather delay: a delay
+        // that would matter has, by construction, already been resolved (resume,
+        // suspend, or official) before extras could ever begin.
+        var weatherDelay = null;
+        var halvesPlayed = 0;
+        var delayHalfTarget = (simWeather && simWeather.delayChance > 0 && random() < simWeather.delayChance) ? (1 + Math.floor(random() * 17)) : -1;
+        // PREGAME_DELAY_20260726: independent of the mid-game mechanic above - a
+        // delay to first pitch has no game-state to disrupt (nothing has been
+        // played yet), so it is purely informational: a duration and a status
+        // note, never a forced pitching change or a suspension. Rolled at half
+        // the mid-game rate (a real rainout risk shows up as ONE delay far more
+        // often than two in the same game, not zero).
+        var pregameDelay = (simWeather && simWeather.delayChance > 0 && random() < simWeather.delayChance * 0.5) ? { durationMinutes: 10 + Math.floor(random() * 36) } : null;
+        function resolveWeatherDelay(halvesNow, awayRunsNow, homeRunsNow) {
+            var inningNumber = Math.ceil(halvesNow / 2);
+            var topJustCompleted = (halvesNow % 2 === 1);
+            // Official/regulation game: 5 full innings played, OR the visiting team
+            // has completed the top of the 5th (or later) with the home team ahead
+            // (home does not need to bat again to preserve a lead it already has).
+            // A tie is never official regardless of inning - MLB does not end games
+            // in a tie; a tied stoppage is always a suspension, not a final.
+            var official = inningNumber >= 5 && (!topJustCompleted || homeRunsNow > awayRunsNow) && homeRunsNow !== awayRunsNow;
+            var isHeavy = simWeather.key === 'heavy-rain';
+            var duration = isHeavy ? (20 + Math.floor(random() * 101)) : (10 + Math.floor(random() * 51));
+            var band = duration >= 60 ? 'long' : (duration >= 30 ? 'medium' : 'short');
+            var result = {
+                weather: simWeather.key, inning: inningNumber, half: topJustCompleted ? 'top' : 'bottom',
+                durationMinutes: duration, band: band, officialAtStoppage: official,
+                pitcherChanges: [], outcome: 'resume'
+            };
+            // PITCHER_REMOVAL_RISK_20260726: a medium-or-longer stoppage carries a real
+            // (bounded, coin-flip-ish) chance either side's arm doesn't return - reuses
+            // the existing .removed flag, which evActivePitcher/armUnderCap already
+            // treat as "never eligible again", so the next half-inning naturally hands
+            // off to the next arm in the SAME rotation logic every other pitching
+            // change already goes through. No new pitcher-selection code needed.
+            if (band === 'medium' || band === 'long') {
+                [awaySide, homeSide].forEach(function (side) {
+                    var p = side._activePitcher;
+                    if (p && !p.removed && random() < 0.5) {
+                        p.removed = true;
+                        result.pitcherChanges.push({ team: side.team && side.team.abbreviation, pitcher: p.name });
+                    }
+                });
+            }
+            if (band === 'long') result.outcome = official ? 'official' : 'suspended';
+            return result;
+        }
         // Defensive stats (double plays turned, outfield assists) credit the side in
         // the field for that half.
         // logSink accepts the legacy scoring array or { scoring, el } where `el` is
@@ -3838,20 +3928,32 @@
         for (var inn = 0; inn < 9; inn++) {
             var ap = evDefPitcher(homeSide, sumOuts(homeSide), hRuns, aRuns, inn);
             var ra = half(awaySide, homeSide, ap, null, undefined, inn + 1, 'top'); aRuns += ra.runs; hErr += ra.errors; aInn.push(ra.runs);
+            halvesPlayed++;
+            if (!weatherDelay && halvesPlayed === delayHalfTarget) {
+                weatherDelay = resolveWeatherDelay(halvesPlayed, aRuns, hRuns);
+                if (weatherDelay.outcome !== 'resume') break;
+            }
             if (inn === 8 && hRuns > aRuns) { break; } // home leads, bottom 9 not played
             var hp = evDefPitcher(awaySide, sumOuts(awaySide), aRuns, hRuns, inn);
             // Bottom 9: walk-off rule applies (half ends when home takes the lead).
             var hBefore = hRuns;
             var rh = half(homeSide, awaySide, hp, inn === 8 ? (aRuns - hRuns) : null, undefined, inn + 1, 'bottom');
             hRuns += rh.runs; aErr += rh.errors; hInn.push(rh.runs);
+            halvesPlayed++;
+            if (!weatherDelay && halvesPlayed === delayHalfTarget) {
+                weatherDelay = resolveWeatherDelay(halvesPlayed, aRuns, hRuns);
+                if (weatherDelay.outcome !== 'resume') break;
+            }
             // A walk-off is the game ENDING on the home team taking the lead in the
             // 9th or later - not any late go-ahead rally.
             if (inn === 8 && hBefore <= aRuns && hRuns > aRuns) walkOff = true;
         }
         // Extra innings: real per-inning tracking, placed runner on 2B (2020+ rule),
-        // walk-off termination for the home half.
+        // walk-off termination for the home half. Skipped entirely if a weather
+        // stoppage already ended the game in regulation (suspended or official).
         var extra = 9;
-        while (aRuns === hRuns && extra < 18) {
+        var stoppedForWeather = !!(weatherDelay && weatherDelay.outcome !== 'resume');
+        while (!stoppedForWeather && aRuns === hRuns && extra < 18) {
             // evDefPitcher (not evActivePitcher): extra innings must keep the same
             // blowout position-player-pitching rule the regulation loop uses.
             var ap2 = evDefPitcher(homeSide, sumOuts(homeSide), hRuns, aRuns, extra);
@@ -3864,31 +3966,43 @@
             if (hBeforeX <= aRuns && hRuns > aRuns) walkOff = true;
             extra++;
         }
+        // WEATHER_DELAY_20260726: a weather-stopped game reports its ACTUAL played
+        // innings (aInn/hInn length), not the regulation-loop's `extra` counter,
+        // which never advances past 9 when the game was cut short before extras.
+        var actualInnings = stoppedForWeather ? Math.max(aInn.length, hInn.length) : extra;
+        var gameStatus = weatherDelay && weatherDelay.outcome === 'suspended' ? 'suspended' :
+            weatherDelay && weatherDelay.outcome === 'official' ? 'official' : 'final';
         if (sinkEl) {
+            var statusCode = gameStatus === 'suspended' ? 'SUSPENDED' : gameStatus === 'official' ? 'OFFICIAL' : 'FINAL';
+            var statusDetail = gameStatus === 'suspended' ? 'Suspended' : gameStatus === 'official' ? 'Official (weather-shortened)' : 'Final';
             elPush(sinkEl, {
-                eventType: EL_TYPES.GAME_END, inning: extra, half: 'final',
+                eventType: EL_TYPES.GAME_END, inning: actualInnings, half: 'final',
                 battingTeam: null, fieldingTeam: null,
                 baseStateBefore: [null, null, null], baseStateAfter: [null, null, null],
                 outsBefore: 0, outsAfter: 0,
                 scoreBefore: { away: aRuns, home: hRuns }, scoreAfter: { away: aRuns, home: hRuns },
-                result: { code: 'FINAL', detail: 'Final: ' + aRuns + '-' + hRuns + (extra > 9 ? ' (' + extra + ' innings)' : '') },
+                result: { code: statusCode, detail: statusDetail + ': ' + aRuns + '-' + hRuns + (actualInnings !== 9 ? ' (' + actualInnings + ' innings' + (stoppedForWeather ? ', weather' : '') + ')' : '') },
                 runsScored: [], rbi: 0
             });
-            sinkEl.final = { away: aRuns, home: hRuns, innings: extra };
+            sinkEl.final = { away: aRuns, home: hRuns, innings: actualInnings, status: gameStatus };
         }
-        return { aRuns: aRuns, hRuns: hRuns, aInn: aInn, hInn: hInn, aErr: aErr, hErr: hErr, extra: extra, aPlaced: aPlaced, hPlaced: hPlaced, walkOff: walkOff };
+        return { aRuns: aRuns, hRuns: hRuns, aInn: aInn, hInn: hInn, aErr: aErr, hErr: hErr, extra: actualInnings, aPlaced: aPlaced, hPlaced: hPlaced, walkOff: walkOff, weatherDelay: weatherDelay, gameStatus: gameStatus, pregameDelay: pregameDelay };
     }
     function sumOuts(side) { return side.pitchers.reduce(function (t, p) { return t + p.acc.outs; }, 0); }
 
-    function buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext, eventInputs) {
+    function buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext, eventInputs, simWeather) {
         var random = Math.random;
-        var inputs = eventInputs || buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext);
-        return assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random);
+        var inputs = eventInputs || buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext, simWeather);
+        return assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random, simWeather);
     }
-    function buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext) {
-        var parkHr = parkHrFactor(home); // both clubs hit in the home park
-        var awaySide = evBuildSide(away, homePitcher, awayPitcher, awayRuns, rosterContext && rosterContext.away, parkHr);
-        var homeSide = evBuildSide(home, awayPitcher, homePitcher, homeRuns, rosterContext && rosterContext.home, parkHr);
+    function buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext, simWeather) {
+        // SIM_WEATHER_20260726: HR/carry factor folds into the same parkHr channel
+        // every plate appearance already applies (evApplyParkHr at PA-resolution
+        // time), so no new per-PA call site is needed for this effect. Clamped as a
+        // safety net; SIM_WEATHER_CONDITIONS values are already far inside this range.
+        var parkHr = clamp(parkHrFactor(home) * ((simWeather && simWeather.hr) || 1), 0.5, 2.0); // both clubs hit in the home park
+        var awaySide = evBuildSide(away, homePitcher, awayPitcher, awayRuns, rosterContext && rosterContext.away, parkHr, simWeather);
+        var homeSide = evBuildSide(home, awayPitcher, homePitcher, homeRuns, rosterContext && rosterContext.home, parkHr, simWeather);
         return { awaySide: awaySide, homeSide: homeSide };
     }
     function eventWinProbability(inputs, samples, statsOut) {
@@ -4027,15 +4141,30 @@
         if (bestRuns >= 2) return winnerName + '’s ' + bestRuns + '-run ' + evOrdinal(bestInn) + ' proved decisive.';
         return winnerName + ' led throughout and was never seriously challenged.';
     }
-    function assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random) {
+    // WEATHER_DELAY_20260726: shared label for every place the "Final" badge is
+    // rendered, so a suspended/weather-shortened game never displays the same
+    // "FINAL" text as a genuinely completed game.
+    function gameStatusLabel(box) {
+        if (!box || !box.gameStatus || box.gameStatus === 'final') return 'Final';
+        if (box.gameStatus === 'official') return 'Official (weather-shortened)';
+        return 'Suspended';
+    }
+    function assembleEventBoxScore(inputs, away, home, awayPitcher, homePitcher, random, simWeather) {
         var scoringLog = [];
         var eventLog = elNewLog('sim-' + Date.now());
-        var g = evSimGame(inputs.awaySide, inputs.homeSide, random, { scoring: scoringLog, el: eventLog });
+        var g = evSimGame(inputs.awaySide, inputs.homeSide, random, { scoring: scoringLog, el: eventLog }, simWeather);
         var awayHits = sum(evAllBatters(inputs.awaySide).map(function (rec) { return rec.b.acc.h; }));
         var homeHits = sum(evAllBatters(inputs.homeSide).map(function (rec) { return rec.b.acc.h; }));
         // Innings arrays are now complete per-inning (extras included). Home may be
         // one inning short when the bottom 9th was skipped — shown as X, never 0.
-        var totalInnings = Math.max(9, g.aInn.length);
+        // WEATHER_DELAY_20260726: a suspended/weather-shortened game must NEVER be
+        // padded up to a false 9-inning minimum (evPadInnings pads with 0s, which
+        // would fabricate a 4-0 shutout line for innings that were never played).
+        // Only a genuine final (which always naturally has aInn.length >= 9
+        // already, since the loop plays every top-9 unconditionally) uses the
+        // floor; it is a no-op safety clamp there, never real padding.
+        var weatherStopped = g.gameStatus && g.gameStatus !== 'final';
+        var totalInnings = weatherStopped ? g.aInn.length : Math.max(9, g.aInn.length);
         var homeSkippedFinal = g.hInn.length < g.aInn.length;
         var awayInnings = evPadInnings(g.aInn, totalInnings);
         var homeInnings = evPadInnings(g.hInn, homeSkippedFinal ? totalInnings - 1 : totalInnings);
@@ -4069,10 +4198,32 @@
             awayPitchers: awayPitchers, homePitchers: homePitchers,
             awaySide: inputs.awaySide, homeSide: inputs.homeSide
         });
+        // WEATHER_DELAY_20260726: a one-clause note describing the stoppage itself
+        // (condition, inning, duration, any forced pitching change), prepended to
+        // whichever summary sentence fits the outcome. gameStatus/gameStatusLabel
+        // (not the free-text summary) is the source of truth the UI reads for
+        // final-vs-suspended-vs-official display logic elsewhere.
+        var pregameNote = g.pregameDelay ? ' First pitch was delayed ' + g.pregameDelay.durationMinutes + ' minutes by ' + simWeatherByKey(simWeather ? simWeather.key : 'clear').label.toLowerCase() + '.' : '';
+        var weatherNote = '';
+        if (g.weatherDelay) {
+            var wd = g.weatherDelay, wCond = simWeatherByKey(wd.weather);
+            weatherNote = ' Play was stopped by ' + wCond.label.toLowerCase() + ' in the ' + wd.half + ' of the ' + evOrdinal(wd.inning) + ' (a ' + wd.durationMinutes + '-minute delay).';
+            wd.pitcherChanges.forEach(function (c) { weatherNote += ' ' + c.pitcher + ' did not return after the delay.'; });
+        }
+        var summaryText;
+        if (g.gameStatus === 'suspended') {
+            summaryText = pregameNote + ' Game suspended.' + weatherNote + ' ' + away.name + ' ' + g.aRuns + ', ' + home.name + ' ' + g.hRuns + ' at the moment of the stoppage - no decision has been recorded; in a real broadcast this game would resume from this exact point.';
+        } else if (g.gameStatus === 'official') {
+            summaryText = pregameNote + ' ' + winner.name + ' wins an official, weather-shortened game over ' + loser.name + ', ' + Math.max(g.aRuns, g.hRuns) + '-' + Math.min(g.aRuns, g.hRuns) + '.' + weatherNote + ' ' + (winnerPitcher ? winnerPitcher.name + ' starts for the winning side. ' : '') + 'Box score simulated plate-appearance by plate-appearance.';
+        } else {
+            summaryText = pregameNote + ' ' + winner.name + ' defeats ' + loser.name + ', ' + Math.max(g.aRuns, g.hRuns) + '-' + Math.min(g.aRuns, g.hRuns) + extraNote + '.' + weatherNote + ' ' + (winnerPitcher ? winnerPitcher.name + ' starts for the winning side. ' : '') + evTurningPoint(g.aInn, g.hInn, away.name, home.name, g.aRuns, g.hRuns) + ' Box score simulated plate-appearance by plate-appearance.';
+        }
+        summaryText = summaryText.trim();
         return {
             runId: String(Date.now()) + '-' + Math.floor(random() * 1000000),
             totalInnings: totalInnings, homeSkippedFinal: homeSkippedFinal,
             walkOff: g.walkOff, extraInnings: g.extra > 9,
+            gameStatus: g.gameStatus, weatherDelay: g.weatherDelay, pregameDelay: g.pregameDelay, simWeather: simWeather ? { key: simWeather.key, label: simWeather.label, description: simWeather.description } : null,
             scoringLog: scoringLog,
             eventLog: eventLog, folded: folded, reconciliation: reconciliation,
             away: awayLine, home: homeLine, winner: winner, loser: loser,
@@ -4080,7 +4231,7 @@
                 away: { batters: awayBatters, pitchers: awayPitchers, rosterSource: evRosterSource(inputs.awaySide), lineupStatus: lineupStatusAway },
                 home: { batters: homeBatters, pitchers: homePitchers, rosterSource: evRosterSource(inputs.homeSide), lineupStatus: lineupStatusHome }
             },
-            summary: winner.name + ' defeats ' + loser.name + ', ' + Math.max(g.aRuns, g.hRuns) + '-' + Math.min(g.aRuns, g.hRuns) + extraNote + '. ' + (winnerPitcher ? winnerPitcher.name + ' starts for the winning side. ' : '') + evTurningPoint(g.aInn, g.hInn, away.name, home.name, g.aRuns, g.hRuns) + ' Box score simulated plate-appearance by plate-appearance.',
+            summary: summaryText,
             pitcherLines: [
                 away.name + ': ' + (awayPitchers[0] ? awayPitchers[0].name + ' ' + awayPitchers[0].ip + ' IP, ' + awayPitchers[0].h + ' H, ' + awayPitchers[0].r + ' R, ' + awayPitchers[0].so + ' K' : 'Starter unavailable'),
                 home.name + ': ' + (homePitchers[0] ? homePitchers[0].name + ' ' + homePitchers[0].ip + ' IP, ' + homePitchers[0].h + ' H, ' + homePitchers[0].r + ' R, ' + homePitchers[0].so + ' K' : 'Starter unavailable')
@@ -4960,7 +5111,8 @@
         if (!report) return 0;
         return clamp((report.ilCount * 0.32) + (report.dayToDay * 0.12) + (report.relieverCount * 0.12), 0, 2.8);
     }
-    function simulate(away, home, context, seedSalt, allowUpset) {
+    function simulate(away, home, context, seedSalt, allowUpset, simWeatherKey) {
+        var simWeather = simWeatherByKey(simWeatherKey || 'clear');
         // Home-field run environment (Layer 3 calibration). HOME_FIELD_HOME_BONUS +
         // HOME_FIELD_AWAY_BONUS is held CONSTANT (= 0.32) so total runs/game and
         // league runs/team are unchanged; only the home/away split shifts. Shifting
@@ -5180,7 +5332,7 @@
             awayRuns = clamp(awayRuns * (1 - RSRA_W) + rExpA * RSRA_W, 1.6, 9.4);
             homeRuns = clamp(homeRuns * (1 - RSRA_W) + rExpH * RSRA_W, 1.6, 9.4);
         }
-        var eventInputs = buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext);
+        var eventInputs = buildEventInputs(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, rosterContext, simWeather);
         // Win probability is the simulated frequency from the same plate-appearance
         // engine that produces the box score, so the displayed win % and the box
         // scores are one consistent model. The run-based blend above is the fallback.
@@ -5222,7 +5374,7 @@
         var awayWin = 1 - homeWin;
         var winner = homeWin >= awayWin ? home : away;
         var winnerPct = Math.max(homeWin, awayWin);
-        var boxScore = buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext, eventInputs);
+        var boxScore = buildBoxScore(away, home, awayPitcher, homePitcher, awayRuns, homeRuns, awayWin, homeWin, seedSalt, allowUpset, rosterContext, eventInputs, simWeather);
         var projectedAwayScore = boxScore.away.runs;
         var projectedHomeScore = boxScore.home.runs;
         var finalWinner = boxScore.winner;
@@ -5594,7 +5746,11 @@
         return (((Number(row.h || 0) + Number(row.bb || 0)) * 3) / outs).toFixed(2);
     }
     function pitcherTableRows(rows, isWinner, margin, ctx, foldStaff) {
-        var decisions = pitcherDecisions(rows, isWinner, margin, ctx);
+        // WEATHER_DELAY_20260726: a suspended game has no winner/loser/save/hold yet
+        // - MLB does not award decisions until a suspended game is completed and
+        // resumed. Skipping pitcherDecisions entirely (rather than passing it a
+        // margin that isn't real) keeps this honest instead of fabricating labels.
+        var decisions = (ctx && ctx.suspended) ? rows.map(function () { return null; }) : pitcherDecisions(rows, isWinner, margin, ctx);
         var byName = {};
         (foldStaff || []).forEach(function (p) { byName[p.name] = p; });
         var totals = { h: 0, r: 0, er: 0, bb: 0, so: 0, hr: 0, hbp: 0, bf: 0, outs: 0, pc: 0, st: 0, gb: 0, fb: 0, ir: 0, irs: 0 };
@@ -5729,6 +5885,15 @@
         var awayPlayers = box.players.away || {};
         var homePlayers = box.players.home || {};
         var rows = [];
+        // WEATHER_DELAY_20260726: always show the simulated condition played under
+        // (postgame weather note) - the same field the pregame selector set, so
+        // the box score is self-contained without scrolling back up.
+        if (box.simWeather) {
+            var weatherDetail = box.simWeather.description +
+                (box.pregameDelay ? ' First pitch was delayed ' + box.pregameDelay.durationMinutes + ' minutes.' : '') +
+                (box.weatherDelay ? ' A weather delay occurred during this game - see the Play-by-Play section for details.' : '');
+            rows.push(['Weather (simulated)', box.simWeather.label + ' - ' + weatherDetail]);
+        }
         var awayPitches = pitcherNoteLine(awayPlayers.pitchers);
         var homePitches = pitcherNoteLine(homePlayers.pitchers);
         if (awayPitches || homePitches) rows.push(['Pitches-strikes', [awayPitches, homePitches].filter(Boolean).join('; ')]);
@@ -5854,6 +6019,27 @@
         if (!blocks.length) return '';
         return '<section class="roster-moves"><h4>Roster Moves</h4>' + blocks.join('') + '</section>';
     }
+    // WEATHER_DELAY_BANNER_20260726: a real broadcast-style graphic for the
+    // delay itself - condition, inning/half, duration, any forced pitching
+    // change, and the resume/suspend/official outcome. Pure derivation from
+    // box.weatherDelay/box.gameStatus/box.simWeather, no new randomness.
+    function weatherDelayBannerHtml(box) {
+        var wd = box && box.weatherDelay;
+        if (!wd) return '';
+        var cond = simWeatherByKey(wd.weather);
+        var outcomeLine;
+        if (wd.outcome === 'resume') {
+            outcomeLine = 'Play resumed after the delay' + (wd.pitcherChanges.length ? '; ' + wd.pitcherChanges.map(function (c) { return c.pitcher + ' (' + c.team + ') did not return.'; }).join(' ') : ', with the same pitchers.') + ' Game completed to a final.';
+        } else if (wd.outcome === 'suspended') {
+            outcomeLine = 'Game SUSPENDED at the point of the stoppage - not yet an official game, no decision recorded. Would resume from this exact point in a real broadcast.';
+        } else {
+            outcomeLine = 'Game called OFFICIAL at the point of the stoppage - a regulation game was already in progress, so this stands as a final result.';
+        }
+        return '<div class="weather-delay-banner" data-outcome="' + escapeAttr(wd.outcome) + '">' +
+            '<div class="wdb-head">🌧 Weather Delay</div>' +
+            '<p class="wdb-detail">' + escapeHtml(cond.label) + ' forced a ' + wd.durationMinutes + '-minute delay in the ' + escapeHtml(wd.half) + ' of the ' + escapeHtml(String(elOrdinal(wd.inning))) + '.</p>' +
+            '<p class="wdb-outcome">' + escapeHtml(outcomeLine) + '</p></div>';
+    }
     function playByPlaySection(result) {
         var folded = result && result.boxScore && result.boxScore.folded;
         var halves = folded && folded.playByPlay;
@@ -5880,11 +6066,12 @@
             // text is visible without a click, instead of every inning defaulting
             // to a bare run/hit/LOB line. Scoreless innings stay collapsed, same
             // as a real broadcast glossing over a 1-2-3 frame.
-            return '<details class="pbp-half"' + (h.runs > 0 ? ' open' : '') + '><summary><span class="pbp-half-label">' + label + '</span>' +
+            return '<details class="pbp-half" data-inning="' + h.inning + '" data-half="' + escapeAttr(h.half) + '"' + (h.runs > 0 ? ' open' : '') + '><summary><span class="pbp-half-label">' + label + '</span>' +
                 '<span class="pbp-half-summary">' + escapeHtml(summary) + '</span></summary><ol class="pbp-list">' + plays + '</ol></details>';
         }).join('');
         return '<section class="pbp-section"><h4>Play-by-Play</h4>' +
             '<p class="player-source-note">Every line below is generated from the simulated event log — the same log that produced the line score and both stat tables.</p>' +
+            weatherDelayBannerHtml(result.boxScore) +
             pbpPlaybackControlsHtml() +
             body + '</section>';
     }
@@ -5911,7 +6098,7 @@
             '<span class="pbp-playback-status">Full game shown instantly below — press Play to step through it inning by inning instead.</span>' +
             '</div>';
     }
-    var pbpPlaybackState = { timer: null, halves: [], idx: 0, speedMs: 1200, playing: false };
+    var pbpPlaybackState = { timer: null, halves: [], idx: 0, speedMs: 1200, playing: false, delayIndex: -1, delayShown: false };
     function pbpPlaybackStop() {
         if (pbpPlaybackState.timer) { clearInterval(pbpPlaybackState.timer); pbpPlaybackState.timer = null; }
         pbpPlaybackState.playing = false;
@@ -5921,24 +6108,48 @@
         pbpPlaybackState.halves = container ? Array.prototype.slice.call(container.querySelectorAll('details.pbp-half')) : [];
         pbpPlaybackState.halves.forEach(function (d) { d.open = false; });
         pbpPlaybackState.idx = 0;
+        // WEATHER_DELAY_PLAYBACK_20260726: locate the half-inning index (if any)
+        // matching this game's weather delay, so pbpPlaybackTick can pause there
+        // for a real, explicit "Resume After Delay" click instead of auto-
+        // advancing straight through the stoppage like nothing happened.
+        pbpPlaybackState.delayIndex = -1;
+        pbpPlaybackState.delayShown = false;
+        var wd = state.simulation && state.simulation.boxScore && state.simulation.boxScore.weatherDelay;
+        if (wd && container) {
+            for (var i = 0; i < pbpPlaybackState.halves.length; i++) {
+                var d = pbpPlaybackState.halves[i];
+                if (Number(d.getAttribute('data-inning')) === wd.inning && d.getAttribute('data-half') === wd.half) {
+                    pbpPlaybackState.delayIndex = i;
+                    break;
+                }
+            }
+        }
     }
-    function pbpPlaybackUpdateStatus(container) {
+    function pbpPlaybackUpdateStatus(container, atDelay) {
         if (!container) return;
         var status = container.querySelector('.pbp-playback-status');
         var playBtn = container.querySelector('[data-pbp-action="toggle"]');
         var done = pbpPlaybackState.idx >= pbpPlaybackState.halves.length;
         if (status) {
-            status.textContent = done ? 'All ' + pbpPlaybackState.halves.length + ' half-innings shown.' :
+            status.textContent = atDelay ? '⏸ Paused for a weather delay after half-inning ' + pbpPlaybackState.idx + ' of ' + pbpPlaybackState.halves.length + '. Press Resume to continue.' :
+                done ? 'All ' + pbpPlaybackState.halves.length + ' half-innings shown.' :
                 'Half-inning ' + pbpPlaybackState.idx + ' of ' + pbpPlaybackState.halves.length + ' shown.';
         }
-        if (playBtn) playBtn.innerHTML = pbpPlaybackState.playing ? '⏸ Pause' : (done ? '↺ Replay' : '▶ Play');
+        if (playBtn) playBtn.innerHTML = atDelay ? '▶ Resume After Delay' : (pbpPlaybackState.playing ? '⏸ Pause' : (done ? '↺ Replay' : '▶ Play'));
     }
     function pbpPlaybackTick(container) {
         if (pbpPlaybackState.idx >= pbpPlaybackState.halves.length) { pbpPlaybackStop(); pbpPlaybackUpdateStatus(container); return; }
         var d = pbpPlaybackState.halves[pbpPlaybackState.idx];
         d.open = true;
         if (typeof d.scrollIntoView === 'function') d.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        var justRevealedIdx = pbpPlaybackState.idx;
         pbpPlaybackState.idx++;
+        if (pbpPlaybackState.delayIndex >= 0 && justRevealedIdx === pbpPlaybackState.delayIndex && !pbpPlaybackState.delayShown) {
+            pbpPlaybackState.delayShown = true;
+            pbpPlaybackStop();
+            pbpPlaybackUpdateStatus(container, true);
+            return;
+        }
         pbpPlaybackUpdateStatus(container);
         if (pbpPlaybackState.idx >= pbpPlaybackState.halves.length) pbpPlaybackStop();
     }
@@ -5952,6 +6163,7 @@
         } else if (action === 'skip') {
             if (!pbpPlaybackState.halves.length) pbpPlaybackReset(container);
             pbpPlaybackStop();
+            pbpPlaybackState.delayShown = true;
             pbpPlaybackState.halves.forEach(function (d) { d.open = true; });
             pbpPlaybackState.idx = pbpPlaybackState.halves.length;
             pbpPlaybackUpdateStatus(container);
@@ -6013,8 +6225,8 @@
             battingFieldingDetails(result) +
             scoringDetailSections(result) +
             '<h4>Pitching</h4>' +
-            pitchingTableSection(result.away, box.players.away, awayWon, margin, { walkOff: walkOff, extra: extra, isHome: false }, foldedSideFor(result, 'away')) +
-            pitchingTableSection(result.home, box.players.home, !awayWon, margin, { walkOff: walkOff, extra: extra, isHome: true }, foldedSideFor(result, 'home')) +
+            pitchingTableSection(result.away, box.players.away, awayWon, margin, { walkOff: walkOff, extra: extra, isHome: false, suspended: box.gameStatus === 'suspended' }, foldedSideFor(result, 'away')) +
+            pitchingTableSection(result.home, box.players.home, !awayWon, margin, { walkOff: walkOff, extra: extra, isHome: true, suspended: box.gameStatus === 'suspended' }, foldedSideFor(result, 'home')) +
             pitchingGameNotes(result) +
             rosterMovesSection(result) +
             playByPlaySection(result) +
@@ -6044,9 +6256,9 @@
         var loserLine = awayWon ? box.home : box.away;
         var headerCols = [];
         for (var n = 1; n <= totalInnings; n++) headerCols.push('<th class="sb-inning">' + n + '</th>');
-        wrap.setAttribute('data-state', 'final');
+        wrap.setAttribute('data-state', box.gameStatus === 'suspended' ? 'suspended' : 'final');
         wrap.innerHTML = '<div class="sb-topline">' +
-            '<span class="sb-final-tag">Final' + (totalInnings > 9 ? '/' + totalInnings : '') + '</span>' +
+            '<span class="sb-final-tag">' + gameStatusLabel(box) + (totalInnings > 9 ? '/' + totalInnings : (box.gameStatus && box.gameStatus !== 'final' ? '/' + totalInnings : '')) + '</span>' +
             '<span class="sb-final-score">' + escapeHtml(winnerLine.team.abbreviation) + ' ' + winnerLine.runs + ', ' + escapeHtml(loserLine.team.abbreviation) + ' ' + loserLine.runs + '</span>' +
             '<span class="sb-sim-tag">Simulated</span></div>' +
             '<div class="sb-scroll"><table class="sb-table" aria-label="Simulated line score by inning">' +
@@ -6071,12 +6283,13 @@
                 '<span>' + escapeHtml(line.team.name) + '</span>' +
                 '<small>' + line.hits + ' H / ' + line.errors + ' E</small></div></div>';
         }
+        var statusLabel = gameStatusLabel(box).toUpperCase();
         card.innerHTML = '<div class="box-score-matchup-main">' +
-            teamCard('away', box.away, box.away.runs > box.home.runs) +
-            '<div class="box-score-final"><span class="bsf-score"><strong>' + box.away.runs + '</strong><em>-</em><strong>' + box.home.runs + '</strong></span><span class="bsf-final">· FINAL</span></div>' +
-            teamCard('home', box.home, box.home.runs > box.away.runs) +
+            teamCard('away', box.away, box.gameStatus !== 'suspended' && box.away.runs > box.home.runs) +
+            '<div class="box-score-final' + (box.gameStatus === 'suspended' ? ' box-score-suspended' : '') + '"><span class="bsf-score"><strong>' + box.away.runs + '</strong><em>-</em><strong>' + box.home.runs + '</strong></span><span class="bsf-final">· ' + escapeHtml(statusLabel) + '</span></div>' +
+            teamCard('home', box.home, box.gameStatus !== 'suspended' && box.home.runs > box.away.runs) +
             '</div>' +
-            '<p class="box-score-honesty">Simulated final score, not official MLB stats.</p>';
+            '<p class="box-score-honesty">' + (box.gameStatus === 'suspended' ? 'Simulated score at the point of a weather stoppage, not a final result - no decision has been recorded yet.' : 'Simulated final score, not official MLB stats.') + '</p>';
     }
     function boxScoreText(result) {
         if (!result || !result.boxScore) return '';
@@ -6601,7 +6814,7 @@
             var stamp = Date.now();
             var results = [];
             for (var i = 0; i < count; i += 1) {
-                results.push(simulate(away, home, state.activeLiveContext, count === 1 ? 'single-' + stamp : 'batch-' + stamp + '-' + i, count > 1));
+                results.push(simulate(away, home, state.activeLiveContext, count === 1 ? 'single-' + stamp : 'batch-' + stamp + '-' + i, count > 1, state.simWeatherCondition));
             }
             state.aggregate = count > 1 ? buildAggregate(results, away, home) : null;
             state.simulation = results[results.length - 1];
@@ -6739,6 +6952,17 @@
         var homePitcherSelect = byId('homePitcherSelect');
         var run = byId('runSimulationButton');
         var simulationCountSelect = byId('simulationCountSelect');
+        var simWeatherSelect = byId('simWeatherSelect');
+        if (simWeatherSelect) {
+            simWeatherSelect.addEventListener('change', function () {
+                state.simWeatherCondition = simWeatherSelect.value;
+                var note = byId('simWeatherNote');
+                if (note) {
+                    var cond = simWeatherByKey(state.simWeatherCondition);
+                    note.textContent = cond.label + ': ' + cond.description + (cond.delayChance > 0 ? '' : ' This is a simulated condition you choose for this game - not a verified live forecast.');
+                }
+            });
+        }
         var refresh = byId('refreshTeamsButton');
         var copyBox = byId('copyBoxScoreButton');
         var saveBox = byId('saveBoxScoreButton');
@@ -6830,6 +7054,8 @@
         pitcherOptionsFor: pitcherOptionsFor,
         runSimulation: runSimulation,
         simulate: simulate,
+        simWeatherConditions: SIM_WEATHER_CONDITIONS,
+        simWeatherByKey: simWeatherByKey,
         boxScoreText: boxScoreText,
         copyBoxScore: copyBoxScore,
         saveBoxScore: saveBoxScore,
@@ -6872,6 +7098,10 @@
             pitcherDecisions: pitcherDecisions,
             evTurningPoint: evTurningPoint,
             assembleEventBoxScore: assembleEventBoxScore,
+            gameStatusLabel: gameStatusLabel,
+            simWeatherByKey: simWeatherByKey,
+            simWeatherConditions: SIM_WEATHER_CONDITIONS,
+            buildBoxScore: buildBoxScore,
             makeSyntheticBench: makeSyntheticBench,
             EL_INJURY: EL_INJURY,
             EL_EJECT: EL_EJECT,
