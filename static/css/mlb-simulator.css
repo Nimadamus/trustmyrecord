@@ -3333,6 +3333,52 @@ select.pitcher-select option {
 
 /* ---- Play-by-play --------------------------------------------------- */
 .pbp-section { margin-top: 1.6rem; }
+/* PBP_PLAYBACK_20260725: opt-in step-through controls over the already-
+   rendered play-by-play - Play/Pause, Skip to End, Restart, speed. */
+.pbp-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0 0.9rem;
+    padding: 0.5rem 0.7rem;
+    background: #f7f8fa;
+    border: 1px solid rgba(20, 38, 77, 0.14);
+    border-radius: 6px;
+}
+.pbp-btn {
+    font: 700 0.78rem/1 Inter, Arial, sans-serif;
+    color: #14264d;
+    background: #ffffff;
+    border: 1px solid rgba(20, 38, 77, 0.25);
+    border-radius: 999px;
+    padding: 0.4rem 0.75rem;
+    cursor: pointer;
+}
+.pbp-btn:hover { background: #eef1f6; }
+.pbp-speed-label {
+    font: 500 0.76rem/1 Inter, Arial, sans-serif;
+    color: #6b7688;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+.pbp-speed {
+    font: 700 0.76rem/1 Inter, Arial, sans-serif;
+    color: #14264d;
+    border: 1px solid rgba(20, 38, 77, 0.25);
+    border-radius: 4px;
+    padding: 0.2rem 0.35rem;
+    background: #ffffff;
+}
+.pbp-playback-status {
+    color: #7b8794;
+    font-size: 0.76rem;
+    margin-left: auto;
+}
+@media (max-width: 640px) {
+    .pbp-playback-status { margin-left: 0; flex-basis: 100%; }
+}
 .pbp-half {
     border: 1px solid rgba(20, 38, 77, 0.14);
     border-radius: 6px;
