@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-pitching-workload-fix-20260725';
+    var UI_BUILD = 'mlb-simulator-full-realism-audit-20260725b';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2231,21 +2231,43 @@
         var last = rows.length - 1;
         var m = Number.isFinite(margin) ? margin : 1;
         if (isWinner) {
-            if (ctx.walkOff && ctx.isHome) { labels[last] = 'W'; return labels; }
-            var wIdx;
-            if (ctx.extra) {
-                wIdx = last >= 2 ? last - 1 : (rows.length > 1 ? 1 : 0);
+            if (ctx.walkOff && ctx.isHome) {
+                labels[last] = 'W';
             } else {
-                wIdx = Number(rows[0].outs || 0) >= 15 ? 0 : (rows.length > 1 ? 1 : 0);
-            }
-            labels[wIdx] = 'W';
-            if (rows.length > 1 && last !== wIdx) {
-                var longFinish = Number(rows[last].outs || 0) >= 9;
-                if (m <= 3 || longFinish) labels[last] = 'SV';
+                var wIdx;
+                if (ctx.extra) {
+                    wIdx = last >= 2 ? last - 1 : (rows.length > 1 ? 1 : 0);
+                } else {
+                    wIdx = Number(rows[0].outs || 0) >= 15 ? 0 : (rows.length > 1 ? 1 : 0);
+                }
+                labels[wIdx] = 'W';
+                if (rows.length > 1 && last !== wIdx) {
+                    var longFinish = Number(rows[last].outs || 0) >= 9;
+                    if (m <= 3 || longFinish) labels[last] = 'SV';
+                }
             }
         } else {
             labels[ctx.walkOff && !ctx.isHome ? last : 0] = 'L';
         }
+        // HOLD_20260725: any reliever who (a) didn't get the W/L/SV, (b) entered
+        // with his team leading by 1-3 runs (the simplified save-situation
+        // criterion the SV logic above already uses), (c) recorded at least one
+        // out, and (d) allowed FEWER runs than the lead he inherited (a proxy for
+        // "left the game with his team still in front" - the real rule is about
+        // not relinquishing the lead during his own stint, which needs point-in-
+        // time score tracking the engine doesn't keep; runs-allowed-vs-inherited-
+        // margin is the closest derivable approximation). Only rows carrying
+        // enterMargin (set by evDefPitcher at natural inning-boundary hand-offs)
+        // are eligible - a mid-inning emergency entry has no tracked margin and
+        // is correctly never credited a hold under this rule.
+        rows.forEach(function (row, i) {
+            if (labels[i] !== '' || i === 0) return;
+            var em = row.enterMargin;
+            if (em == null || em < 1 || em > 3) return;
+            if (!(Number(row.outs || 0) >= 1)) return;
+            if (Number(row.r || 0) >= em) return;
+            labels[i] = 'HLD';
+        });
         return labels;
     }
     // =========================================================================
@@ -2368,6 +2390,20 @@
     // not a run-target hack.
     var EV_BB_BIAS = 0.80; // shrink the above-league walk excess (1.0 = raw log5)
     var EV_HR_BIAS = 0.92; // light same-direction shrink for the low-base HR combine
+    // HIT_RATE_TRIM_20260725: hits/team ran +0.9-1.0 hot (audit measured ~9.4 vs
+    // real 2025 MLB ~8.4-8.5, TeamRankings/Covers-sourced) - an UNGATED metric the
+    // existing calibration harness computed internally but never printed or
+    // targeted, so it drifted unnoticed while BB/HR/K (each independently bias-
+    // corrected above) stayed on target. Unlike BB/HR, b1/b2/b3 are not run
+    // through the log5 odds-ratio combine at all (just the batter's own rate x
+    // the pitcher's hitFactor), so they never got a same-treatment correction.
+    // Trimmed the same way EV_K_TRIM trims strikeouts (mass moved to `out`, so
+    // on-base/run rates stay anchored - evAnchorFactor re-solves its own scale
+    // against the now-smaller pre-anchor hit rate, so team RUNS stay targeted;
+    // only the hit-vs-out composition underneath changes). This also directly
+    // addresses the LOB overage (~7.7-8.3 vs real 6-7): fewer hits -> fewer
+    // baserunners -> less left on base, without touching BB/HR/K/GIDP/errors.
+    var EV_HIT_TRIM = 0.85;
     function evCombine(bv, pv) {
         function orc(b, p, l) { return evFromOdds(evOdds(b) * evOdds(p) / evOdds(l)); }
         function deskew(raw, league, k) { return raw > league ? league + (raw - league) * k : raw; }
@@ -2376,12 +2412,14 @@
         var soTrimmed = soRaw * EV_K_TRIM;
         var bb = clamp(deskew(orc(bv.bb, pv.bb, EV_LEAGUE.bb), EV_LEAGUE.bb, EV_BB_BIAS), 0.02, 0.150);
         var hr = clamp(deskew(orc(bv.hr, pv.hr, EV_LEAGUE.hr), EV_LEAGUE.hr, EV_HR_BIAS), 0.004, 0.090);
+        var b3Raw = bv.b3 * hf, b2Raw = bv.b2 * hf, b1Raw = bv.b1 * hf;
+        var b3T = b3Raw * EV_HIT_TRIM, b2T = b2Raw * EV_HIT_TRIM, b1T = b1Raw * EV_HIT_TRIM;
         return evNormalize({
             bb: bb,
             so: soTrimmed,
             hr: hr,
-            b3: bv.b3 * hf, b2: bv.b2 * hf, b1: bv.b1 * hf,
-            out: Math.max(0.02, bv.out) + (soRaw - soTrimmed)
+            b3: b3T, b2: b2T, b1: b1T,
+            out: Math.max(0.02, bv.out) + (soRaw - soTrimmed) + (b3Raw - b3T) + (b2Raw - b2T) + (b1Raw - b1T)
         });
     }
     // ULTRA_REAL_20260628: the run anchor flexes a lineup to its target run level by
@@ -2632,20 +2670,29 @@
         if (stat) {
             var ip = Number(String(stat.inningsPitched || '0')); var gs = Number(stat.gamesStarted || 0);
             if (ip > 0 && gs > 0) {
-                // STARTER_LEN_REGRESS_20260628: outs-per-start from raw ip/gs is unstable
-                // for small samples (a swingman with 3 starts + long relief reads as a
-                // 7-IP "starter"). Regress toward the league per-start mean (~17 outs /
-                // 5.2 IP) with weight by games started, and cap at 21 outs (7 IP) so no
-                // simulated starter routinely throws a complete game. Established starters
-                // (12+ GS) keep their real workload.
+                // STARTER_LEN_REGRESS_20260628 (retuned 20260725): outs-per-start from
+                // raw ip/gs is unstable for small samples (a swingman with 3 starts +
+                // long relief reads as a 7-IP "starter"). Regress toward the league
+                // per-start mean with weight by games started, and cap at 21 outs (7 IP)
+                // so no simulated starter routinely throws a complete game. Established
+                // starters (12+ GS) keep their real workload. FIX 20260725: the regress
+                // target was 17 outs, mislabeled "5.2 IP" in the original comment - 17
+                // outs is actually 5.67 DECIMAL innings (baseball box-score notation
+                // "5.2" means 5-and-two-thirds, i.e. 17 outs, which is NOT the same as
+                // the sabermetric decimal average). The real modern-MLB DECIMAL average
+                // is ~5.2-5.3 IP/start (16 outs) - audit measured the engine averaging
+                // 6.1 decimal IP against that target before this fix. Retargeted to 16.
                 var perStartOuts = (ip / gs) * 3;
                 var w = clamp(gs / 12, 0, 1);
-                return clamp(Math.round(perStartOuts * w + 17 * (1 - w)), 12, 21);
+                return clamp(Math.round(perStartOuts * w + 16 * (1 - w)), 12, 21);
             }
         }
-        var outs = 18 + (quality - 100) * 0.10;
+        // No-data fallback (synthetic teams, uncached pitchers): same 20260725 fix -
+        // base shifted from 18 (6.0 decimal IP) to 15.6 (5.2 decimal IP, the real
+        // modern-MLB average), clamp shifted down to match.
+        var outs = 15.6 + (quality - 100) * 0.10;
         if (Number.isFinite(era)) outs += (4.2 - era) * 0.9;
-        return clamp(Math.round(outs), 11, 22);
+        return clamp(Math.round(outs), 9, 20);
     }
     // Simulate one half inning for `bat` side against the active pitcher object.
     // endLead (optional): walk-off rule — the half ends as soon as runs exceed this
@@ -3672,6 +3719,13 @@
             side._activePitcher.removed = true;
         }
         side._activePitcher = chosen;
+        // HOLD_TRACKING_20260725: the run margin (own runs - opponent runs) the
+        // moment this arm FIRST takes the mound this game - pitcherDecisions uses
+        // it to credit a hold (entered a 1-3 run save situation, recorded an out,
+        // didn't personally allow enough runs to erase the lead he inherited).
+        // Captured once per appearance (not overwritten on repeat half-inning
+        // calls for the same still-active arm).
+        if (chosen._enterMargin === undefined) chosen._enterMargin = defRuns - oppRuns;
         return chosen;
     }
     function evSimGame(awaySide, homeSide, random, logSink) {
@@ -3714,7 +3768,7 @@
             // 8-IP outings. Mean-preserving; floor lifted off 8 so quick hooks stay rare.
             s.starterOutsGame = clamp(s.starterOuts + Math.round((random() + random() - 1) * 6), 9, 24);
             s.lineup.forEach(function (b) { b.acc = evNewBat(); });
-            s.pitchers.forEach(function (p) { p.acc = evNewPit(); p.removed = false; });
+            s.pitchers.forEach(function (p) { p.acc = evNewPit(); p.removed = false; p._enterMargin = undefined; });
         });
         var aRuns = 0, hRuns = 0, aErr = 0, hErr = 0, aInn = [], hInn = [], aPlaced = 0, hPlaced = 0, walkOff = false;
         // Defensive stats (double plays turned, outfield assists) credit the side in
@@ -3897,7 +3951,8 @@
                 name: p.name + handTag, outs: a.outs, ip: outsToIp(a.outs), h: a.h, r: a.r,
                 er: Math.min(a.r, a.er), bb: a.bb, ibb: a.ibb || 0, so: a.so, hr: a.hr, hbp: a.hbp || 0,
                 bf: a.bf || 0, pitches: a.pitches || 0, strikes: a.strikes || 0,
-                fps: a.fps || 0, whiff: a.whiff || 0, ir: a.ir || 0, irs: a.irs || 0
+                fps: a.fps || 0, whiff: a.whiff || 0, ir: a.ir || 0, irs: a.irs || 0,
+                enterMargin: p._enterMargin
             };
         });
     }
