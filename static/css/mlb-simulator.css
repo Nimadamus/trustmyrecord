@@ -2612,9 +2612,17 @@
     }
 }
 
-.box-score-team-totals,
-.box-score-summary {
+.box-score-team-totals {
     display: none !important;
+}
+/* POSTGAME_SUMMARY_20260725: this was previously hidden alongside
+   .box-score-team-totals, which suppressed a fully-computed postgame
+   narrative (result sentence, winning/losing pitcher lines, key performers)
+   that appears nowhere else on the page. Restored to visible; panel
+   background already matches the surrounding white box-score card (see the
+   base .box-score-summary rule above), so no color/theme changes needed. */
+.box-score-summary {
+    display: grid !important;
 }
 
 /* Browser QA hardening: starter selects are injected by JS, so force them to
