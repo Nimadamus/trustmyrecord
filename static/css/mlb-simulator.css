@@ -1138,6 +1138,23 @@
     letter-spacing: 0.08em;
 }
 
+/* BOXSCORE_BUTTON_CONTRAST_20260725: .sim-button.secondary's near-white mint
+   text (#dffcf8) is correct on the dark .sim-panel gradient it was designed
+   for, but .box-score-panel overrides its background to solid white, which
+   made "Copy Box Score" / "Save Box Score" / "View Box Score" effectively
+   invisible (readable only by highlighting the text) while still clickable. */
+.box-score-panel .sim-button.secondary {
+    background: rgba(15, 118, 110, 0.08);
+    border-color: rgba(15, 118, 110, 0.35);
+    color: #0f766e;
+}
+.box-score-panel .sim-button.secondary:not(:disabled):hover {
+    background: rgba(15, 118, 110, 0.14);
+}
+.box-score-panel .sim-button:disabled {
+    color: #64748b;
+}
+
 .box-score-actions {
     display: flex;
     flex-wrap: wrap;
