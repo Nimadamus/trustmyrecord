@@ -1195,6 +1195,47 @@ class TrustMyRecordAPI {
             return { activity: [] };
         }
     }
+
+    // ==================== COINS ROUTES ====================
+    // TMR Coin -- internal, non-monetary reward currency. No purchase,
+    // transfer, cash-out, or redemption endpoint exists on the backend.
+
+    async getCoinBalance() {
+        try {
+            return await this.request('/coins/balance');
+        } catch (error) {
+            return { balance: null, is_frozen: false, error: true };
+        }
+    }
+
+    async getCoinTransactions(options = {}) {
+        const { limit = 50, before, category } = options;
+        const params = new URLSearchParams();
+        params.set('limit', limit);
+        if (before != null) params.set('before', before);
+        if (category) params.set('category', category);
+        try {
+            return await this.request(`/coins/history?${params}`);
+        } catch (error) {
+            return { entries: [], error: true };
+        }
+    }
+
+    async getCoinRewards() {
+        try {
+            return await this.request('/coins/rewards');
+        } catch (error) {
+            return { rewards: [] };
+        }
+    }
+
+    async getCoinCatalog() {
+        try {
+            return await this.request('/coins/catalog');
+        } catch (error) {
+            return { items: [], redemption_available: false, error: true };
+        }
+    }
 }
 
 if (typeof window !== 'undefined') {

@@ -4691,6 +4691,34 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
    header. Every other authenticated page loaded the shared global nav, which
    had no bell markup at all. Styled to match the adjacent mailbox indicator
    so both sit consistently in the account chip. */
+.tmr-global-nav__coins {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 32px;
+    padding: 0 11px;
+    border-radius: 999px;
+    background: rgba(250, 204, 21, 0.12);
+    border: 1px solid rgba(250, 204, 21, 0.35);
+    color: #facc15;
+    text-decoration: none;
+    line-height: 1;
+    font: 700 12.5px/1 "Inter", "Exo 2", Arial, sans-serif;
+    white-space: nowrap;
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.tmr-global-nav__coins:hover {
+    transform: translateY(-1px);
+    background: rgba(250, 204, 21, 0.22);
+    color: #fff;
+}
+.tmr-global-nav__coins[hidden] { display: none; }
+.tmr-global-nav__coins.is-frozen {
+    color: #cbd5e1;
+    background: rgba(148, 163, 184, 0.12);
+    border-color: rgba(148, 163, 184, 0.35);
+}
 .tmr-global-nav__bell {
     position: relative;
     display: inline-flex;

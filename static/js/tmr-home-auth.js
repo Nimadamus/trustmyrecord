@@ -55,6 +55,8 @@
     right.innerHTML =
       '<a class="v2nav-user" href="/u/' + encodeURIComponent(name) + '/" title="' + name + '">' +
         av + '<span class="v2nav-name">' + name + '</span></a>' +
+      '<a class="v2nav-coins" id="navCoinPill" href="/wallet/" title="TMR Coin balance" hidden>' +
+        '<span aria-hidden="true">\u{1FA99}</span><span id="navCoinBalance">—</span></a>' +
       // The bell opens the alerts dropdown in place (notifications.js owns it and
       // anchors to #homeNotifBtn). It stays an <a href> so it still works as a
       // plain link if that engine has not finished loading -- clicking the bell
@@ -78,6 +80,19 @@
       // A failed/unauthorised count must never leave a red dot behind: the badge
       // only ever shows a number the server actually returned.
       .catch(function () { setBellBadge(0); });
+
+    (S ? S.authFetch(API + '/coins/balance')
+       : fetch(API + '/coins/balance', {
+           headers: { Accept: 'application/json', Authorization: 'Bearer ' + token() }
+         }))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || d.balance == null) return;
+        var pill = document.getElementById('navCoinPill');
+        var bal = document.getElementById('navCoinBalance');
+        if (bal) bal.textContent = Number(d.balance).toLocaleString('en-US');
+        if (pill) { pill.hidden = false; if (d.is_frozen) pill.classList.add('is-frozen'); }
+      }).catch(function () {});
   }
 
   // The inline script in index.html already painted the signed-in header (or a

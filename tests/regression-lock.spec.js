@@ -10,6 +10,8 @@ const ROUTES = [
   { name: 'arena', path: '/arena/', visual: false },
   { name: 'forum', path: '/forum/', visual: false },
   { name: 'login', path: '/login/', visual: false },
+  { name: 'wallet', path: '/wallet/', visual: false },
+  { name: 'wallet-rewards', path: '/wallet/rewards/', visual: false },
 ];
 
 const SPORT_TABS = ['NBA', 'NHL', 'NFL', 'MLB', 'NCAAB', 'NCAAF', 'Soccer'];

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Coin Wallet | TrustMyRecord</title>
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://trustmyrecord.com/wallet/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260725coins1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260725coins1"></script>
+    <style>
+        :root {
+            --page-bg: #060b12;
+            --panel: #0b111b;
+            --panel-2: #101826;
+            --line: rgba(148, 163, 184, 0.16);
+            --text: #f8fafc;
+            --muted: #9aa8ba;
+            --gold: #facc15;
+            --green: #22c55e;
+            --red: #f87171;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 14% 0%, rgba(250, 204, 21, 0.10), transparent 30%),
+                linear-gradient(180deg, #07111d 0%, var(--page-bg) 44%, #04070d 100%);
+            color: var(--text);
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .wallet-page { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 112px 0 56px; }
+        .wallet-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; margin-bottom: 18px; flex-wrap: wrap; }
+        .wallet-kicker { margin: 0 0 10px; color: var(--gold); font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+        h1 { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(34px, 5vw, 56px); line-height: 0.95; }
+        .wallet-subtitle { margin: 12px 0 0; max-width: 640px; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+        .wallet-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 15px; border-radius: 8px; border: 1px solid rgba(45, 212, 191, 0.28); color: #dffcf8; background: rgba(15, 23, 42, 0.72); text-decoration: none; font-weight: 800; font-size: 13px; cursor: pointer; }
+        .disclaimer { margin: 18px 0; padding: 12px 16px; border: 1px solid rgba(250, 204, 21, 0.28); background: rgba(250, 204, 21, 0.07); border-radius: 8px; color: #fde68a; font-size: 13px; line-height: 1.5; }
+        .frozen-banner { margin: 0 0 18px; padding: 14px 16px; border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1); border-radius: 8px; color: #fecaca; font-size: 14px; font-weight: 700; }
+        .frozen-banner[hidden] { display: none; }
+        .balance-card { padding: 26px; border: 1px solid rgba(250, 204, 21, 0.3); border-radius: 10px; background: linear-gradient(180deg, rgba(30, 26, 10, 0.9), rgba(8, 13, 22, 0.96)); margin-bottom: 22px; }
+        .balance-label { margin: 0 0 8px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
+        .balance-value { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(38px, 6vw, 58px); color: var(--gold); font-weight: 800; line-height: 1; }
+        .balance-hint { margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+        .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 16px; }
+        .chip { border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+        .chip.on { border-color: rgba(250, 204, 21, 0.55); background: rgba(250, 204, 21, 0.14); color: var(--gold); }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--line); }
+        tbody td { padding: 12px; font-size: 13.5px; border-bottom: 1px solid var(--line); }
+        .table-wrap { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+        .amt-pos { color: var(--green); font-weight: 800; }
+        .amt-neg { color: var(--red); font-weight: 800; }
+        .mobile-cards { display: none; }
+        .mc-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 10px; background: var(--panel); }
+        .mc-row { display: flex; justify-content: space-between; font-size: 13px; margin-top: 4px; }
+        @media (max-width: 760px) {
+            .table-wrap { display: none; }
+            .mobile-cards { display: block; }
+        }
+        .skeleton .sk-line { height: 14px; border-radius: 6px; background: rgba(148,163,184,.14); margin-bottom: 8px; }
+        .sk-block { display: inline-block; background: rgba(148,163,184,.14); border-radius: 6px; }
+        .auth-state, .empty-state { padding: 40px 20px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+        .auth-state[hidden], .empty-state[hidden], #loadingSkeleton[hidden], #walletContent[hidden] { display: none; }
+    </style>
+</head>
+<body class="tmr-site-shell" data-tmr-route="wallet">
+    <main class="wallet-page">
+        <header class="wallet-head">
+            <div>
+                <p class="wallet-kicker">TMR Coin</p>
+                <h1>Wallet</h1>
+                <p class="wallet-subtitle">Your TMR Coin balance and complete transaction history.</p>
+            </div>
+            <nav class="wallet-actions" aria-label="Wallet actions">
+                <a class="btn" href="/wallet/rewards/">Rewards Catalog</a>
+                <a class="btn" href="/profile/">Profile</a>
+            </nav>
+        </header>
+
+        <div class="disclaimer">TMR Coin is an internal promotional platform currency. It has no cash value and cannot be purchased, cashed out, transferred, or redeemed for money.</div>
+
+        <section id="loadingSkeleton" class="skeleton" aria-hidden="true">
+            <div class="sk-block" style="height:120px;border-radius:10px;margin-bottom:22px;"></div>
+            <div class="sk-line" style="width:140px;"></div>
+            <div class="sk-line" style="width:100%;height:44px;"></div>
+            <div class="sk-line" style="width:100%;height:44px;"></div>
+            <div class="sk-line" style="width:100%;height:44px;"></div>
+        </section>
+
+        <section id="authState" class="auth-state" hidden>
+            <h2 id="authHeading">Log in to view your wallet</h2>
+            <p id="authMessage">This page is private to your account.</p>
+            <a id="authLoginBtn" class="btn" href="/login/?next=/wallet/">Log In</a>
+            <button id="authRetryBtn" type="button" class="btn" hidden>Retry</button>
+        </section>
+
+        <section id="walletContent" hidden>
+            <div id="frozenBanner" class="frozen-banner" hidden>
+                Your wallet is frozen. Coins cannot be earned or spent while frozen, but your balance and history are safe. Contact support if you believe this is a mistake.
+            </div>
+
+            <div class="balance-card">
+                <p class="balance-label">Current Balance</p>
+                <p class="balance-value" id="balanceValue">&mdash;</p>
+                <p class="balance-hint">TMR Coin &middot; internal promotional currency &middot; no cash value</p>
+            </div>
+
+            <div class="toolbar" id="historyFilters" role="group" aria-label="Filter transaction history">
+                <button class="chip on" data-filter="" type="button">All</button>
+                <button class="chip" data-filter="earned" type="button">Earned</button>
+                <button class="chip" data-filter="granted" type="button">Granted</button>
+                <button class="chip" data-filter="deducted" type="button">Deducted</button>
+                <button class="chip" data-filter="reversed" type="button">Reversed</button>
+                <button class="chip" data-filter="expired" type="button">Expired</button>
+                <button class="chip" data-filter="redeemed" type="button">Redeemed</button>
+            </div>
+
+            <div id="emptyState" class="empty-state" hidden>
+                <h2>No transactions yet</h2>
+                <p>Coins you earn or that are granted to you will show up here with a running balance.</p>
+            </div>
+
+            <section id="historyPanel" hidden>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Description</th>
+                                <th>Amount</th>
+                                <th>Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyRows"></tbody>
+                    </table>
+                </div>
+                <div id="historyCards" class="mobile-cards"></div>
+            </section>
+        </section>
+    </main>
+
+    <script src="/static/js/config.js?v=20260430a"></script>
+    <script src="/static/js/backend-api.js?v=20260725coins1"></script>
+    <script>
+    (function () {
+        var authState = document.getElementById('authState');
+        var skeleton = document.getElementById('loadingSkeleton');
+        var content = document.getElementById('walletContent');
+        var emptyState = document.getElementById('emptyState');
+        var panel = document.getElementById('historyPanel');
+        var rows = document.getElementById('historyRows');
+        var cards = document.getElementById('historyCards');
+        var frozenBanner = document.getElementById('frozenBanner');
+        var filtersEl = document.getElementById('historyFilters');
+
+        var TYPE_LABELS = {
+            reward: 'Earned', admin_grant: 'Granted', admin_adjustment: 'Adjusted',
+            wallet_frozen: 'Wallet Frozen', wallet_unfrozen: 'Wallet Unfrozen',
+        };
+
+        function esc(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+            });
+        }
+        function fmtDate(iso) {
+            if (!iso) return '—';
+            var d = new Date(iso);
+            if (isNaN(d.getTime())) return '—';
+            return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+        }
+        function typeLabel(t) { return TYPE_LABELS[t] || t; }
+        function amountHtml(amount) {
+            var sign = amount > 0 ? '+' : '';
+            var cls = amount > 0 ? 'amt-pos' : (amount < 0 ? 'amt-neg' : '');
+            return '<span class="' + cls + '">' + sign + amount.toLocaleString('en-US') + '</span>';
+        }
+        function descriptionFor(entry) {
+            if (entry.note) return esc(entry.note);
+            if (entry.related_entity_type) return esc(entry.related_entity_type + (entry.related_entity_id ? ' #' + entry.related_entity_id : ''));
+            return typeLabel(entry.type);
+        }
+
+        function rowHtml(entry) {
+            return '<tr><td>' + fmtDate(entry.created_at) + '</td><td>' + esc(typeLabel(entry.type)) + '</td>' +
+                '<td>' + descriptionFor(entry) + '</td><td>' + amountHtml(entry.amount) + '</td>' +
+                '<td>' + entry.balance_after.toLocaleString('en-US') + '</td></tr>';
+        }
+        function cardHtml(entry) {
+            return '<div class="mc-card">' +
+                '<div class="mc-row"><strong>' + esc(typeLabel(entry.type)) + '</strong>' + amountHtml(entry.amount) + '</div>' +
+                '<div class="mc-row"><span>' + descriptionFor(entry) + '</span></div>' +
+                '<div class="mc-row"><span>' + fmtDate(entry.created_at) + '</span><span>Balance: ' + entry.balance_after.toLocaleString('en-US') + '</span></div>' +
+                '</div>';
+        }
+
+        var allEntries = [];
+        function render(entries) {
+            content.hidden = false;
+            if (!entries.length) {
+                emptyState.hidden = false;
+                panel.hidden = true;
+                return;
+            }
+            emptyState.hidden = true;
+            panel.hidden = false;
+            rows.innerHTML = entries.map(rowHtml).join('');
+            cards.innerHTML = entries.map(cardHtml).join('');
+        }
+
+        var activeFilter = '';
+        filtersEl.addEventListener('click', function (ev) {
+            var btn = ev.target.closest('.chip');
+            if (!btn) return;
+            activeFilter = btn.getAttribute('data-filter') || '';
+            Array.prototype.forEach.call(filtersEl.querySelectorAll('.chip'), function (c) { c.classList.toggle('on', c === btn); });
+            loadHistory();
+        });
+
+        function isLoggedIn() { return !!(window.api && window.api.isLoggedIn()); }
+
+        function showLoginRequired() {
+            content.hidden = true; skeleton.hidden = true; authState.hidden = false;
+            document.getElementById('authHeading').textContent = 'Log in to view your wallet';
+            document.getElementById('authMessage').textContent = 'This page is private to your account.';
+            document.getElementById('authLoginBtn').hidden = false;
+            document.getElementById('authRetryBtn').hidden = true;
+            setTimeout(function () { window.location.href = '/login/?next=/wallet/'; }, 900);
+        }
+        function showLoadError() {
+            content.hidden = true; skeleton.hidden = true; authState.hidden = false;
+            document.getElementById('authHeading').textContent = 'Could not load your wallet';
+            document.getElementById('authMessage').textContent = 'The server did not respond. Your balance is safe. Tap Retry.';
+            document.getElementById('authLoginBtn').hidden = true;
+            document.getElementById('authRetryBtn').hidden = false;
+        }
+        function withTimeout(promise, ms) {
+            return new Promise(function (resolve, reject) {
+                var t = setTimeout(function () { reject(Object.assign(new Error('request timeout'), { status: 0 })); }, ms);
+                promise.then(function (v) { clearTimeout(t); resolve(v); }, function (e) { clearTimeout(t); reject(e); });
+            });
+        }
+
+        async function loadHistory() {
+            var data = await withTimeout(window.api.getCoinTransactions({ limit: 100, category: activeFilter || undefined }), 12000);
+            allEntries = (data && data.entries) || [];
+            render(allEntries);
+        }
+
+        async function loadBalance() {
+            var bal = await withTimeout(window.api.getCoinBalance(), 12000);
+            document.getElementById('balanceValue').textContent = (bal && typeof bal.balance === 'number' ? bal.balance : 0).toLocaleString('en-US');
+            frozenBanner.hidden = !(bal && bal.is_frozen);
+        }
+
+        var RETRY_DELAYS_MS = [1200, 2500, 5000];
+        var attempt = 0;
+        var retryTimer = null;
+
+        async function boot() {
+            if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+            if (!isLoggedIn()) { showLoginRequired(); return; }
+            try {
+                skeleton.hidden = false;
+                authState.hidden = true;
+                await loadBalance();
+                await loadHistory();
+                attempt = 0;
+            } catch (error) {
+                if (error && (error.status === 401 || error.status === 403)) { showLoginRequired(); return; }
+                if (attempt < RETRY_DELAYS_MS.length) {
+                    var delay = RETRY_DELAYS_MS[attempt];
+                    attempt += 1;
+                    retryTimer = setTimeout(function () { boot(); }, delay);
+                    return;
+                }
+                showLoadError();
+            }
+        }
+
+        document.getElementById('authRetryBtn').addEventListener('click', function () { attempt = 0; boot(); });
+        boot();
+    })();
+    </script>
+</body>
+</html>

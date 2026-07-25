@@ -129,6 +129,22 @@
         } catch(e) {
             // Silently fail - badges are non-critical
         }
+
+        // TMR Coin balance chip. Same fetch/poll cadence as the rest of this
+        // file; failures leave the chip hidden rather than showing a stale
+        // or wrong number.
+        try {
+            const coinResult = await window.api.request('/coins/balance').catch(() => null);
+            const chip = document.getElementById('navCoinChip');
+            const balanceEl = document.getElementById('navCoinBalance');
+            if (chip && coinResult && typeof coinResult.balance === 'number') {
+                if (balanceEl) balanceEl.textContent = coinResult.balance.toLocaleString('en-US');
+                chip.hidden = false;
+                chip.classList.toggle('is-frozen', !!coinResult.is_frozen);
+            }
+        } catch (e) {
+            // Silently fail - the chip just stays hidden.
+        }
     }
 
     // Expose a manual refresh so pages (e.g. /messages/) can force an immediate

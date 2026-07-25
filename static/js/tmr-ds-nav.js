@@ -294,6 +294,10 @@
 
     return '<a class="v2nav-user" href="/u/' + encodeURIComponent(name) + '/" title="' + esc(name) + '">' +
         av + '<span class="v2nav-name">' + esc(name) + '</span></a>' +
+      // TMR Coin balance pill. Hidden until populated so it never flashes a
+      // stale/zero value; links to the wallet page.
+      '<a class="v2nav-coins" id="navCoinPill" href="/wallet/" title="TMR Coin balance" hidden>' +
+        '<span aria-hidden="true">\u{1FA99}</span><span id="navCoinBalance">—</span></a>' +
       // Stays an <a href> so the bell is never a dead target if the alerts
       // engine has not finished loading.
       '<a class="v2nav-bell" id="homeNotifBtn" data-tmr-notifications href="/notifications/" aria-label="Alerts" title="Alerts" ' +
@@ -320,6 +324,19 @@
         var n = d && (d.unreadCount != null ? d.unreadCount : (d.count != null ? d.count : d.unread));
         var b = document.getElementById('homeNotifBadge');
         if (b && n > 0) { b.textContent = n > 99 ? '99+' : n; b.hidden = false; b.style.display = 'inline'; }
+      }).catch(function () {});
+
+    (S ? S.authFetch(API + '/coins/balance')
+       : fetch(API + '/coins/balance', {
+           headers: { Accept: 'application/json', Authorization: 'Bearer ' + token() }
+         }))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || d.balance == null) return;
+        var pill = document.getElementById('navCoinPill');
+        var bal = document.getElementById('navCoinBalance');
+        if (bal) bal.textContent = Number(d.balance).toLocaleString('en-US');
+        if (pill) { pill.hidden = false; if (d.is_frozen) pill.classList.add('is-frozen'); }
       }).catch(function () {});
   }
 

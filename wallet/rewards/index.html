@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Coin Rewards Catalog | TrustMyRecord</title>
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://trustmyrecord.com/wallet/rewards/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260725coins1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260725coins1"></script>
+    <style>
+        :root { --page-bg: #060b12; --panel: #0b111b; --line: rgba(148, 163, 184, 0.16); --text: #f8fafc; --muted: #9aa8ba; --gold: #facc15; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh;
+            background: radial-gradient(circle at 14% 0%, rgba(250, 204, 21, 0.10), transparent 30%), linear-gradient(180deg, #07111d 0%, var(--page-bg) 44%, #04070d 100%);
+            color: var(--text); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .rewards-page { width: min(1080px, calc(100% - 32px)); margin: 0 auto; padding: 112px 0 56px; }
+        .rewards-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; margin-bottom: 18px; flex-wrap: wrap; }
+        .rewards-kicker { margin: 0 0 10px; color: var(--gold); font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+        h1 { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(34px, 5vw, 56px); line-height: 0.95; }
+        .rewards-subtitle { margin: 12px 0 0; max-width: 640px; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 15px; border-radius: 8px; border: 1px solid rgba(45, 212, 191, 0.28); color: #dffcf8; background: rgba(15, 23, 42, 0.72); text-decoration: none; font-weight: 800; font-size: 13px; }
+        .disclaimer { margin: 18px 0 24px; padding: 14px 16px; border: 1px solid rgba(250, 204, 21, 0.28); background: rgba(250, 204, 21, 0.07); border-radius: 8px; color: #fde68a; font-size: 13.5px; line-height: 1.55; font-weight: 600; }
+        .catalog-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+        .catalog-card { border: 1px solid var(--line); border-radius: 10px; padding: 20px; background: var(--panel); position: relative; }
+        .catalog-card .badge { position: absolute; top: 14px; right: 14px; font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 9px; border-radius: 999px; background: rgba(148,163,184,.16); color: var(--muted); }
+        .catalog-card h3 { margin: 0 0 8px; font-size: 17px; }
+        .catalog-card p { margin: 0 0 14px; color: var(--muted); font-size: 13.5px; line-height: 1.5; }
+        .catalog-cost { font-weight: 800; color: var(--gold); font-size: 14px; }
+        #catalogEmpty, #catalogError { padding: 30px; text-align: center; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+        #catalogEmpty[hidden], #catalogError[hidden], #catalogGrid[hidden] { display: none; }
+    </style>
+</head>
+<body class="tmr-site-shell" data-tmr-route="wallet-rewards">
+    <main class="rewards-page">
+        <header class="rewards-head">
+            <div>
+                <p class="rewards-kicker">TMR Coin</p>
+                <h1>Rewards Catalog</h1>
+                <p class="rewards-subtitle">A preview of future rewards. None of these are available to redeem yet.</p>
+            </div>
+            <a class="btn" href="/wallet/">My Wallet</a>
+        </header>
+
+        <div class="disclaimer" id="disclaimerText">TMR Coin is an internal promotional platform currency. It has no cash value and cannot be purchased, cashed out, transferred, or redeemed for money.</div>
+
+        <div id="catalogGrid" class="catalog-grid" hidden></div>
+        <div id="catalogEmpty" hidden>No catalog items yet. Check back soon.</div>
+        <div id="catalogError" hidden>Could not load the rewards catalog right now.</div>
+    </main>
+
+    <script src="/static/js/config.js?v=20260430a"></script>
+    <script src="/static/js/backend-api.js?v=20260725coins1"></script>
+    <script>
+    (function () {
+        function esc(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+            });
+        }
+        function cardHtml(item) {
+            return '<div class="catalog-card">' +
+                '<span class="badge">Coming Soon</span>' +
+                '<h3>' + esc(item.label) + '</h3>' +
+                '<p>' + esc(item.description || '') + '</p>' +
+                '<div class="catalog-cost">' + Number(item.coins_cost).toLocaleString('en-US') + ' TMR Coin</div>' +
+                '</div>';
+        }
+
+        async function boot() {
+            var grid = document.getElementById('catalogGrid');
+            var empty = document.getElementById('catalogEmpty');
+            var errorEl = document.getElementById('catalogError');
+            try {
+                var data = await window.api.getCoinCatalog();
+                if (data.disclaimer) document.getElementById('disclaimerText').textContent = data.disclaimer;
+                var items = data.items || [];
+                if (!items.length) { empty.hidden = false; return; }
+                grid.innerHTML = items.map(cardHtml).join('');
+                grid.hidden = false;
+            } catch (e) {
+                errorEl.hidden = false;
+            }
+        }
+        boot();
+    })();
+    </script>
+</body>
+</html>

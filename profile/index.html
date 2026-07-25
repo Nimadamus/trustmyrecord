@@ -51,8 +51,8 @@
     }
     </script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
-<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260723bell1">
-<script defer src="/static/js/tmr-sitewide.js?v=20260723bell1"></script>
+<link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260725coins1">
+<script defer src="/static/js/tmr-sitewide.js?v=20260725coins1"></script>
 <script src="/static/js/tmr-doubleheader.js?v=20260723dh1"></script>
 <link rel="stylesheet" href="/static/css/tmr-share.css?v=20260721share1">
 <script defer src="/static/js/tmr-share.js?v=20260722owner1"></script>
@@ -1680,7 +1680,7 @@
         <span>Tracked picks and analytics</span>
         <span>Cleaner account presentation</span>
     </div>
-    <!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js?v=20260723bell1 -->
+    <!-- Legacy hardcoded header removed; sitewide global nav is injected by tmr-sitewide.js?v=20260725coins1 -->
 
     <!-- ==================== PROFILE HEADER ==================== -->
     <section class="profile-header-section">
@@ -1722,13 +1722,13 @@
             </div>
 
 
-            <!-- Avatar uploader for own profile. Body-card UI removed May 22, 2026 — account controls live in the top-right user menu dropdown (tmr-sitewide.js?v=20260723bell1). File input retained so the header avatar click + dropdown "Change Avatar" can trigger the picker. -->
+            <!-- Avatar uploader for own profile. Body-card UI removed May 22, 2026 — account controls live in the top-right user menu dropdown (tmr-sitewide.js?v=20260725coins1). File input retained so the header avatar click + dropdown "Change Avatar" can trigger the picker. -->
             <div id="profileAvatarUploader" class="profile-avatar-uploader" hidden style="display:none !important;">
                 <input id="profileAvatarFile" type="file" accept="image/png,image/jpeg,image/webp" hidden>
                 <span class="profile-avatar-uploader__hint" id="profileAvatarHint" hidden></span>
             </div>
 
-            <!-- Change Password card. Body-card UI removed May 22, 2026 — password change now lives in the top-right user menu dropdown (tmr-sitewide.js?v=20260723bell1). Hidden markup retained only so legacy direct-link callers do not 404. -->
+            <!-- Change Password card. Body-card UI removed May 22, 2026 — password change now lives in the top-right user menu dropdown (tmr-sitewide.js?v=20260725coins1). Hidden markup retained only so legacy direct-link callers do not 404. -->
             <div id="profileChangePassword" class="profile-change-password" hidden style="display:none !important;">
                 <strong style="display:block;margin-bottom:10px;font-size:0.95rem;letter-spacing:0.02em;"><i class="fas fa-key" style="margin-right:6px;color:#2dd4bf;"></i> Change Password</strong>
                 <form id="changePasswordForm" autocomplete="off" style="display:flex;flex-direction:column;gap:10px;">
@@ -1993,7 +1993,7 @@
             var avatarHint  = document.getElementById('profileAvatarHint');
 
             // May 22, 2026: account-edit body cards retired in favor of the top-right user menu dropdown
-            // (see static/js/tmr-sitewide.js?v=20260723bell1). DO NOT unhide #profileAvatarUploader or
+            // (see static/js/tmr-sitewide.js?v=20260725coins1). DO NOT unhide #profileAvatarUploader or
             // #profileChangePassword on the profile body — they ship hidden + display:none.
             var changePwEl = document.getElementById('profileChangePassword');
 
@@ -2214,6 +2214,18 @@
                           <div class="tmrx-cell"><div class="tmrx-label">Graded</div><div class="tmrx-value is-placeholder" id="tmrxGradedTop">&mdash;</div><div class="tmrx-sub">settled picks</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Current Streak</div><div class="tmrx-value is-placeholder" id="tmrxStreakTop">&mdash;</div><div class="tmrx-sub">live W/L run</div></div>
                           <div class="tmrx-cell"><div class="tmrx-label">Best Streak</div><div class="tmrx-value is-placeholder" id="tmrxBestStreakTop">&mdash;</div><div class="tmrx-sub">longest win run</div></div>
+                        </div>
+                      </div>
+
+                      <div class="tmrx-section" id="tmrxCoinSection" hidden>
+                        <div class="tmrx-section-head">
+                          <div>
+                            <div class="tmrx-section-title">TMR Coin</div>
+                            <div class="tmrx-section-sub">Internal promotional platform currency. No cash value; cannot be purchased, cashed out, transferred, or redeemed for money.</div>
+                          </div>
+                        </div>
+                        <div class="tmrx-ribbon">
+                          <div class="tmrx-cell"><div class="tmrx-label">Balance</div><div class="tmrx-value is-placeholder" id="tmrxCoinBalance">&mdash;</div><div class="tmrx-sub"><a href="/wallet/">View wallet &rarr;</a></div></div>
                         </div>
                       </div>
 
@@ -5962,7 +5974,7 @@
     <script src="/static/js/config.js?v=20260330"></script>
     <script src="/static/js/tmr-team-logo.js?v=20260707logos1"></script>
     <script src="/static/js/analytics.js?v=20260719ft"></script>
-    <script src="/static/js/backend-api.js?v=follow20260710"></script>
+    <script src="/static/js/backend-api.js?v=20260725coins1"></script>
     <script src="/static/js/nav-badges.js"></script>
     <script src="/static/js/auth-persistent.js?v=20260525noautologout"></script>
     <script src="/static/js/auto-grader-fixed.js?v=20260405b"></script>
@@ -6970,6 +6982,19 @@
                     renderUpdatedHeader();
                 }
             } catch(e) { profileData._fav_teams = {}; }
+
+            try {
+                const coinData = await withTimeout(api.getCoinBalance(), 4500, 'Coin balance request');
+                if (coinData && typeof coinData.balance === 'number') {
+                    const coinSection = document.getElementById('tmrxCoinSection');
+                    const coinCell = document.getElementById('tmrxCoinBalance');
+                    if (coinCell) {
+                        coinCell.textContent = coinData.balance.toLocaleString('en-US') + (coinData.is_frozen ? ' (frozen)' : '');
+                        coinCell.classList.remove('is-placeholder');
+                    }
+                    if (coinSection) coinSection.hidden = false;
+                }
+            } catch (e) { /* wallet is a soft enrichment -- never blocks the profile */ }
 
             try {
                 const gamerData = await withTimeout(api.request('/gaming/profile/' + encodeURIComponent(profileUsername)), 4500, 'Gamer profile request');
@@ -10254,7 +10279,7 @@
         let primaryActions = '';
         // May 22, 2026 (HARD RULE): account-management actions (Edit Profile / Change Avatar /
         // Change Password) live ONLY in the authenticated top-right avatar/username dropdown
-        // (static/js/tmr-sitewide.js?v=20260723bell1). Do not re-render the body "Edit Profile" button — it
+        // (static/js/tmr-sitewide.js?v=20260725coins1). Do not re-render the body "Edit Profile" button — it
         // exposes private account controls inside the public profile card.
         if (isOwnProfile) {
             primaryActions = '';
@@ -14160,7 +14185,7 @@
     });
 
     // ?action=edit / ?action=change-avatar deep links from the top-right user-menu dropdown
-    // (tmr-sitewide.js?v=20260723bell1). Fires once profileData is loaded so openEditModal has its data.
+    // (tmr-sitewide.js?v=20260725coins1). Fires once profileData is loaded so openEditModal has its data.
     (function wireProfileActionDeepLink() {
         try {
             const params = new URLSearchParams(window.location.search || '');
@@ -14191,7 +14216,7 @@
     init();
     </script>
 
-        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=20260723bell1 -->
+        <!-- LEGACY_PAGE_FOOTER_REMOVED_20260712: duplicate static footer removed; global footer is injected once by /static/js/tmr-sitewide.js?v=20260725coins1 -->
 
 
     <script src="/static/js/platform-production-fix.js?v=20260415d"></script>
