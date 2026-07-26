@@ -841,7 +841,7 @@
                     if (stored) { const parsed = JSON.parse(stored); currentUser = parsed.user || parsed; }
                 } catch(e) {}
             }
-            if (!currentUser) { window.location.href = '/login/'; return; }
+            if (!currentUser) { window.location.href = '/login/?next=' + encodeURIComponent('/messages/'); return; }
 
             renderSkeletonList();
             await loadConversations();

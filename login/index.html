@@ -480,6 +480,16 @@
                 };
             }
 
+            // Only accept an on-site relative path (single leading slash, no
+            // "//" or "://") so a crafted ?next=https://evil.example can't
+            // turn this into an open redirect.
+            function safeNextPath(raw) {
+                if (!raw) return '';
+                try { raw = decodeURIComponent(raw); } catch (error) {}
+                if (!/^\/(?!\/)/.test(raw) || raw.indexOf('://') !== -1) return '';
+                return raw;
+            }
+
             function finishLoginRedirect(user) {
                 var redirect = '';
                 try {
@@ -489,6 +499,17 @@
 
                 if (redirect === 'picks' || redirect === 'sportsbook') {
                     window.location.replace('/sportsbook/');
+                    return;
+                }
+
+                // Pages that bounce a logged-out visitor to /login/ pass the
+                // page they came from as ?next= (a few legacy ones use
+                // ?redirect=) so a login actually returns them where they
+                // were headed instead of always landing on /profile/.
+                var params = new URLSearchParams(window.location.search);
+                var next = safeNextPath(params.get('next') || params.get('redirect'));
+                if (next) {
+                    window.location.replace(next);
                     return;
                 }
 
