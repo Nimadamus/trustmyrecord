@@ -270,7 +270,7 @@
                     <div class="tmr-user-menu-divider" role="separator"></div>
                     <button class="tmr-user-menu-item tmr-user-menu-item--logout" role="menuitem" type="button" data-tmr-logout><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Log Out</button>
                 </div>
-                <a href="/wallet/" id="navCoinChip" class="tmr-global-nav__coins" data-tmr-coin-balance aria-label="${(window.TMR_TERMINOLOGY && window.TMR_TERMINOLOGY.full) || 'TMR Competition Credits'} balance" title="${(window.TMR_TERMINOLOGY && window.TMR_TERMINOLOGY.full) || 'TMR Competition Credits'} balance" hidden>
+                <a href="/wallet/" id="navCoinChip" class="tmr-global-nav__coins" data-tmr-coin-balance aria-label="TMR Competition Credits balance" title="TMR Competition Credits balance" hidden>
                     <span aria-hidden="true">&#x1FA99;</span><span id="navCoinBalance">0</span>
                 </a>
                 <a href="/notifications/" id="notificationsBtn" class="tmr-global-nav__bell" data-tmr-notifications aria-label="Notifications" title="Notifications" onclick="if(typeof toggleNotifications==='function'){toggleNotifications(event);return false;}">
@@ -1080,48 +1080,13 @@
         }
     });
 
-    // CROSS_TAB_LOGOUT_BANNER_20260726: the storage listener below already
-    // refreshed the nav header on cross-tab auth changes, but a tab left open
-    // on a protected page (notifications, messages, profile, ...) kept
-    // showing its already-fetched data verbatim -- no indication the session
-    // died elsewhere, and any retry mutation just failed silently (server
-    // correctly 401s it; the UI gave zero feedback). This adds a single,
-    // page-agnostic "signed out elsewhere" banner with a next=-carrying login
-    // link, without needing every page's own script to handle it.
-    function isLocallyAuthed() {
-        try {
-            return !!(localStorage.getItem("trustmyrecord_token") || localStorage.getItem("currentUser"));
-        } catch (e) { return false; }
-    }
-    let tmrWasLoggedIn = isLocallyAuthed();
-    function showCrossTabSignedOutBanner() {
-        if (document.getElementById("tmrCrossTabSignedOut")) return;
-        const banner = document.createElement("div");
-        banner.id = "tmrCrossTabSignedOut";
-        banner.setAttribute("role", "alert");
-        banner.style.cssText = "position:fixed;top:0;left:0;right:0;z-index:99999;background:#B91C1C;color:#fff;padding:12px 16px;text-align:center;font:600 14px/1.4 Inter,system-ui,sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.3);";
-        const next = encodeURIComponent(window.location.pathname + window.location.search);
-        banner.innerHTML = "You were signed out in another tab. This page may show stale data. "
-            + '<a href="/login/?next=' + next + '" style="color:#fff;text-decoration:underline;font-weight:800;margin-left:4px;">Log in again</a>';
-        (document.body || document.documentElement).prepend(banner);
-        requestAnimationFrame(() => {
-            document.body.style.paddingTop = (banner.offsetHeight + 8) + "px";
-        });
-    }
-    function handleCrossTabStorageChange() {
-        renderActions();
-        const nowLoggedIn = isLocallyAuthed();
-        if (tmrWasLoggedIn && !nowLoggedIn) showCrossTabSignedOutBanner();
-        tmrWasLoggedIn = nowLoggedIn;
-    }
-
     renderActions();
     window.addEventListener("resize", () => {
         if (window.innerWidth > 860) {
             setNavOpen(false);
         }
     });
-    window.addEventListener("storage", handleCrossTabStorageChange);
+    window.addEventListener("storage", renderActions);
     window.addEventListener("tmr-auth-changed", renderActions);
     document.addEventListener("visibilitychange", () => {
         if (!document.hidden) renderActions();
