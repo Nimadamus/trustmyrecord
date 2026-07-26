@@ -5,6 +5,15 @@
 .season-field-checkbox { flex-direction: row; align-items: center; gap: 8px; }
 .season-field-checkbox input { min-height: auto; width: 18px; height: 18px; }
 
+/* BUGFIX 20260728: .season-field (mlb-sim-season.css) sets `display: grid`
+   unconditionally, which has the same specificity as the UA [hidden] rule
+   and loads later - so it was winning and showing #genCustomWrap/
+   #regenCustomWrap even while `hidden` was set (visible confirmed via a
+   live Playwright QA pass: the custom games/team box appeared alongside
+   "Full season (162)"). !important on the concrete IDs restores hiding
+   without touching the shared .season-field rule other pages depend on. */
+#genCustomWrap[hidden], #regenCustomWrap[hidden] { display: none !important; }
+
 .regen-details { margin-top: 16px; border-top: 1px dashed rgba(148, 163, 184, 0.25); padding-top: 12px; }
 .regen-details summary { cursor: pointer; color: #93c5fd; font-weight: 700; font-size: 0.85rem; }
 .regen-details .new-season-form { margin-top: 10px; }
