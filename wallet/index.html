@@ -42,6 +42,15 @@
         .wallet-actions { display: flex; gap: 10px; flex-wrap: wrap; }
         .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 15px; border-radius: 8px; border: 1px solid rgba(45, 212, 191, 0.28); color: #dffcf8; background: rgba(15, 23, 42, 0.72); text-decoration: none; font-weight: 800; font-size: 13px; cursor: pointer; }
         .disclaimer { margin: 18px 0; padding: 12px 16px; border: 1px solid rgba(250, 204, 21, 0.28); background: rgba(250, 204, 21, 0.07); border-radius: 8px; color: #fde68a; font-size: 13px; line-height: 1.5; }
+        .earn-card { padding: 22px 26px; border: 1px solid rgba(250, 204, 21, 0.28); border-radius: 10px; background: linear-gradient(180deg, rgba(30, 26, 10, 0.55), rgba(8, 13, 22, 0.9)); margin: 18px 0 22px; }
+        .earn-kicker { margin: 0 0 14px; color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
+        .earn-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+        .earn-list li { padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; background: rgba(15, 23, 42, 0.4); }
+        .earn-item-head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; flex-wrap: wrap; }
+        .earn-coins { font-family: Barlow, Inter, sans-serif; font-size: 18px; font-weight: 800; color: var(--green); min-width: 40px; }
+        .earn-title { font-weight: 800; font-size: 14.5px; }
+        .earn-desc { margin: 0 0 10px; color: var(--muted); font-size: 13px; line-height: 1.5; }
+        .earn-list li .btn { min-height: 34px; padding: 0 13px; font-size: 12.5px; }
         .frozen-banner { margin: 0 0 18px; padding: 14px 16px; border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1); border-radius: 8px; color: #fecaca; font-size: 14px; font-weight: 700; }
         .frozen-banner[hidden] { display: none; }
         .balance-card { padding: 26px; border: 1px solid rgba(250, 204, 21, 0.3); border-radius: 10px; background: linear-gradient(180deg, rgba(30, 26, 10, 0.9), rgba(8, 13, 22, 0.96)); margin-bottom: 22px; }
@@ -93,7 +102,29 @@
             </nav>
         </header>
 
-        <div class="disclaimer">TMR Coin is the platform currency of TrustMyRecord. Every new member receives TMR Coin when they sign up. Members can earn additional coins through platform participation, achievements, referrals, contests, and competitions. Additional purchase and redemption options may be introduced as the platform develops.</div>
+        <section class="earn-card" aria-labelledby="earnHeading">
+            <p class="earn-kicker" id="earnHeading">How to Earn TMR Coins</p>
+            <ul class="earn-list">
+                <li>
+                    <div class="earn-item-head"><span class="earn-coins">+25</span><span class="earn-title">Create your account</span></div>
+                    <p class="earn-desc">Every new member receives 25 TMR Coins after signing up.</p>
+                </li>
+                <li>
+                    <div class="earn-item-head"><span class="earn-coins">+10</span><span class="earn-title">Make your first Sportsbook pick</span></div>
+                    <p class="earn-desc">Submit your first valid pick through the TMR Sportsbook to earn a one-time 10-coin bonus.</p>
+                    <a class="btn" href="/sportsbook/">Make a Pick</a>
+                </li>
+                <li>
+                    <div class="earn-item-head"><span class="earn-coins">+5</span><span class="earn-title">Create your first forum thread</span></div>
+                    <p class="earn-desc">Create your first valid community forum thread to receive a one-time 5-coin bonus.</p>
+                    <a class="btn" href="/forum/">Create a Thread</a>
+                </li>
+                <li>
+                    <div class="earn-item-head"><span class="earn-coins">+1</span><span class="earn-title">Create forum threads</span></div>
+                    <p class="earn-desc">Earn 1 TMR Coin whenever you create a valid forum thread.</p>
+                </li>
+            </ul>
+        </section>
 
         <section id="loadingSkeleton" class="skeleton" aria-hidden="true">
             <div class="sk-block" style="height:120px;border-radius:10px;margin-bottom:22px;"></div>
