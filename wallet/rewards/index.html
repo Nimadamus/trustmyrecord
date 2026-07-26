@@ -35,13 +35,14 @@
         .catalog-cost { font-weight: 800; color: var(--gold); font-size: 14px; }
         #catalogEmpty, #catalogError { padding: 30px; text-align: center; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
         #catalogEmpty[hidden], #catalogError[hidden], #catalogGrid[hidden] { display: none; }
+        .tmr-coin-icon { width: 1em; height: 1em; vertical-align: -0.15em; margin-right: 0.35em; flex: 0 0 auto; }
     </style>
 </head>
 <body class="tmr-site-shell" data-tmr-route="wallet-rewards">
     <main class="rewards-page">
         <header class="rewards-head">
             <div>
-                <p class="rewards-kicker">TMR Coin</p>
+                <p class="rewards-kicker"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">TMR Coin</p>
                 <h1>Rewards Catalog</h1>
                 <p class="rewards-subtitle">A preview of future rewards. None of these are available to redeem yet.</p>
             </div>
@@ -70,7 +71,7 @@
                 '<span class="badge">Coming Soon</span>' +
                 '<h3>' + esc(item.label) + '</h3>' +
                 '<p>' + esc(item.description || '') + '</p>' +
-                '<div class="catalog-cost">' + Number(item.coins_cost).toLocaleString('en-US') + ' coins</div>' +
+                '<div class="catalog-cost"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">' + Number(item.coins_cost).toLocaleString('en-US') + ' coins</div>' +
                 '</div>';
         }
 

@@ -85,13 +85,16 @@
         .sk-block { display: inline-block; background: rgba(148,163,184,.14); border-radius: 6px; }
         .auth-state, .empty-state { padding: 40px 20px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
         .auth-state[hidden], .empty-state[hidden], #loadingSkeleton[hidden], #walletContent[hidden] { display: none; }
+        .tmr-coin-icon { width: 1em; height: 1em; vertical-align: -0.15em; margin-right: 0.35em; flex: 0 0 auto; }
+        .history-heading { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
+        .history-heading .tmr-coin-icon { width: 15px; height: 15px; }
     </style>
 </head>
 <body class="tmr-site-shell" data-tmr-route="wallet">
     <main class="wallet-page">
         <header class="wallet-head">
             <div>
-                <p class="wallet-kicker">TMR Coin</p>
+                <p class="wallet-kicker"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">TMR Coin</p>
                 <h1>Wallet</h1>
                 <p class="wallet-subtitle">Your TMR Coin balance and complete transaction history.</p>
             </div>
@@ -120,8 +123,8 @@
                     <a class="btn" href="/forum/">Create a Thread</a>
                 </li>
                 <li>
-                    <div class="earn-item-head"><span class="earn-coins">+1</span><span class="earn-title">Create a qualifying forum thread</span></div>
-                    <p class="earn-desc">Earn 1 TMR Coin per thread for every qualifying forum thread you create &mdash; not just your first one.</p>
+                    <div class="earn-item-head"><span class="earn-coins">+1</span><span class="earn-title">Create a qualifying forum thread (after your first)</span></div>
+                    <p class="earn-desc">Earn 1 TMR Coin for the first qualifying forum thread you create each calendar day. Additional threads that same day don't earn extra &mdash; the next coin unlocks the following day.</p>
                 </li>
             </ul>
         </section>
@@ -147,14 +150,14 @@
             </div>
 
             <div class="balance-card">
-                <p class="balance-label">Current Balance</p>
+                <p class="balance-label"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">Current Balance</p>
                 <p class="balance-value" id="balanceValue">&mdash;</p>
                 <p class="balance-hint">TMR Coin &middot; the platform currency of TrustMyRecord</p>
             </div>
 
             <section class="tmrcoin-card" id="tmrCoinCard" aria-labelledby="tmrCoinHeading">
                 <div class="tmrcoin-head">
-                    <p class="tmrcoin-label" id="tmrCoinHeading">TMR Coin</p>
+                    <p class="tmrcoin-label" id="tmrCoinHeading"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">TMR Coin</p>
                     <span class="tmrcoin-testnet-badge">TESTNET</span>
                 </div>
                 <p class="tmrcoin-note">This is a separate, experimental blockchain token on the Base Sepolia
@@ -171,6 +174,7 @@
                 </div>
             </section>
 
+            <p class="history-heading"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">Transaction History</p>
             <div class="toolbar" id="historyFilters" role="group" aria-label="Filter transaction history">
                 <button class="chip on" data-filter="" type="button">All</button>
                 <button class="chip" data-filter="earned" type="button">Earned</button>
