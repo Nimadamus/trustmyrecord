@@ -1,9 +1,72 @@
-/* MLB_SIM_SEASON_STATS_20260730: stats/roster page styling. Reuses
-   .standings-table/.season-status-chip/.regen-details/.new-season-form from
-   mlb-sim-season-calendar.css - only adds what that file doesn't already. */
+/* MLB_SIM_SEASON_STATS_20260726: player/team stats, roster, pitcher
+   availability, and injury-report sections on the season calendar page.
+   Builds on mlb-sim-season.css / mlb-sim-season-calendar.css (season-panel,
+   sim-button, season-field, standings-table, status chips) - only adds what
+   those files don't already define. */
 
-.stats-content { overflow-x: auto; }
-.stats-content[data-state="loading"] p,
-.stats-content[data-state="empty"] p,
-.stats-content[data-state="error"] p { color: #94a3b8; font-size: 0.9rem; }
-.stats-content[data-state="error"] p { color: #fca5a5; }
+.stats-section-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 4px 0 18px;
+}
+.stats-section-nav a {
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #cbd5e1;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+.stats-section-nav a:hover { border-color: #93c5fd; color: #93c5fd; }
+
+.stats-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.stats-table-wrap { overflow-x: auto; }
+.stats-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 640px; }
+.stats-table caption { text-align: left; color: #dbeafe; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.stats-table th, .stats-table td { padding: 6px 10px; text-align: right; border-bottom: 1px solid rgba(148, 163, 184, 0.15); color: #e2e8f0; white-space: nowrap; }
+.stats-table th:first-child, .stats-table td:first-child,
+.stats-table th:nth-child(2), .stats-table td:nth-child(2) { text-align: left; }
+.stats-table th:first-child, .stats-table td:first-child { font-weight: 800; color: #f1f5f9; }
+.stats-table thead th { color: #94a3b8; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; cursor: pointer; user-select: none; }
+.stats-table thead th:hover { color: #93c5fd; }
+.stats-table thead th[data-sort-active] { color: #93c5fd; }
+.stats-table thead th[data-sort-active]::after { content: attr(data-sort-arrow); margin-left: 4px; }
+.stats-table tbody tr:hover { background: rgba(148, 163, 184, 0.06); }
+
+.availability-badge {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.availability-badge[data-state="active"] { background: rgba(34, 197, 94, 0.18); color: #86efac; }
+.availability-badge[data-state="injured"] { background: rgba(248, 113, 113, 0.18); color: #fca5a5; }
+.availability-badge[data-state="rest-watch"] { background: rgba(234, 179, 8, 0.18); color: #fde68a; }
+
+.sim-data-disclaimer {
+    font-size: 0.78rem;
+    color: #94a3b8;
+    background: rgba(148, 163, 184, 0.08);
+    border: 1px dashed rgba(148, 163, 184, 0.28);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+}
+
+@media (max-width: 640px) {
+    .stats-filters { flex-direction: column; align-items: stretch; }
+    .stats-table { min-width: 560px; }
+    .stats-section-nav { gap: 6px; }
+    .stats-section-nav a { flex: 1 1 auto; text-align: center; }
+}

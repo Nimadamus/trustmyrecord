@@ -346,15 +346,26 @@
             byId('scheduleExistsState').hidden = false;
             loadSchedule();
             loadStandings();
+            // Player/team stats, roster, pitcher availability, and injury
+            // report live in a separate module (mlb-sim-season-stats.js) -
+            // this page owns auth-gate/seasonId resolution, that module owns
+            // its own data fetch/render once handed a confirmed seasonId.
+            if (window.MlbSimSeasonStats) window.MlbSimSeasonStats.init(seasonId);
         }
     }
 
     function wireFilters() {
         var teamSel = byId('teamFilter');
+        var statsTeamSel = byId('statsTeamFilter');
         TEAMS.forEach(function (t) {
             var opt = document.createElement('option');
             opt.value = t.abbr; opt.textContent = t.abbr + ' - ' + t.name;
             teamSel.appendChild(opt);
+            if (statsTeamSel) {
+                var opt2 = document.createElement('option');
+                opt2.value = t.abbr; opt2.textContent = t.abbr + ' - ' + t.name;
+                statsTeamSel.appendChild(opt2);
+            }
         });
         teamSel.addEventListener('change', loadSchedule);
         byId('statusFilter').addEventListener('change', loadSchedule);
@@ -413,11 +424,6 @@
             byId('noSeasonIdState').hidden = false;
             return;
         }
-        var statsHref = '/mlb-simulator/season/stats/?seasonId=' + encodeURIComponent(seasonId);
-        var statsLink = byId('statsLink');
-        if (statsLink) statsLink.href = statsHref;
-        var statsLinkBadge = byId('statsLinkBadge');
-        if (statsLinkBadge) statsLinkBadge.href = statsHref;
         if (!window.api || typeof window.api.getCurrentUser !== 'function') {
             gate.setAttribute('data-state', 'error');
             gate.innerHTML = '<div class="auth-gate-prompt"><p>Could not load (backend client unavailable). Please refresh.</p></div>';
