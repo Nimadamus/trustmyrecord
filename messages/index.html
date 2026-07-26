@@ -947,7 +947,7 @@
                 // Don't wipe a good list on a transient poll error; only surface an
                 // error state when we have nothing to show.
                 if (!conversations || conversations.length === 0) {
-                    renderConversationsError();
+                    renderConversationsError(e);
                 } else {
                     renderConversationsList();
                     updateFolderCounts();
@@ -955,12 +955,26 @@
             }
         }
 
-        function renderConversationsError() {
+        // SESSION_EXPIRED_MESSAGE_FIX_20260726: this used to show the same
+        // generic "check your connection" text for every failure, including
+        // an expired/invalidated session (401/403) -- misleading, since the
+        // real fix is logging back in, not checking wifi. Matches the
+        // pattern already used on /notifications/.
+        function renderConversationsError(err) {
             const list = document.getElementById('conversationsList');
             if (!list) return;
+            const isAuthError = err && (err.status === 401 || err.status === 403);
+            const icon = '<div class="msg-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>';
+            if (isAuthError) {
+                list.innerHTML =
+                    '<div class="msg-empty" style="height:100%;">' + icon +
+                        '<h3>Your session expired</h3><p>Log in again to see your messages.</p>' +
+                        '<a class="msg-empty-cta" href="/login/?next=' + encodeURIComponent('/messages/') + '">Log in</a>' +
+                    '</div>';
+                return;
+            }
             list.innerHTML =
-                '<div class="msg-empty" style="height:100%;">' +
-                    '<div class="msg-empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4"/><path d="M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>' +
+                '<div class="msg-empty" style="height:100%;">' + icon +
                     '<h3>Couldn’t load conversations</h3><p>Check your connection and try again.</p>' +
                     '<button class="msg-empty-cta" onclick="loadConversations()">Retry</button>' +
                 '</div>';

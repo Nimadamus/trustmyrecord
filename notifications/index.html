@@ -381,7 +381,7 @@
             } catch (error) {
                 if (error && (error.status === 401 || error.status === 403)) {
                     state('<strong>Your session expired</strong>Log in again to see your alert history.' +
-                        '<div><a class="nv-btn p" href="/login/" style="margin-top:16px;">Log in</a></div>');
+                        '<div><a class="nv-btn p" href="/login/?next=' + encodeURIComponent('/notifications/') + '" style="margin-top:16px;">Log in</a></div>');
                     return;
                 }
                 state('<strong>Could not load your notifications</strong>The alerts service did not respond.' +
@@ -532,7 +532,7 @@
                 clearAllBtn.hidden = true;
                 unreadLabel.textContent = 'Your alert history';
                 state('<strong>Log in to see your notifications</strong>Replies, follows, graded picks, and messages show up here once your account is active.' +
-                    '<div><a class="nv-btn p" href="/login/" style="margin-top:16px;">Log in</a></div>');
+                    '<div><a class="nv-btn p" href="/login/?next=' + encodeURIComponent('/notifications/') + '" style="margin-top:16px;">Log in</a></div>');
                 return;
             }
 
