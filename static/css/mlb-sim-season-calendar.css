@@ -1,0 +1,85 @@
+/* MLB_SIM_SEASON_CALENDAR_20260728: schedule/standings page styling. Builds
+   on mlb-sim-season.css (season-panel, season-field, sim-button, status
+   chips) - only adds what that file doesn't already define. */
+
+.season-field-checkbox { flex-direction: row; align-items: center; gap: 8px; }
+.season-field-checkbox input { min-height: auto; width: 18px; height: 18px; }
+
+.regen-details { margin-top: 16px; border-top: 1px dashed rgba(148, 163, 184, 0.25); padding-top: 12px; }
+.regen-details summary { cursor: pointer; color: #93c5fd; font-weight: 700; font-size: 0.85rem; }
+.regen-details .new-season-form { margin-top: 10px; }
+
+.schedule-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+.date-nav { display: flex; align-items: center; gap: 6px; }
+.date-nav input[type="date"] {
+    min-height: 42px;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(15, 23, 42, 0.72);
+    color: #f1f5f9;
+    padding: 0 10px;
+}
+.date-nav .sim-button { min-height: 42px; padding: 0 14px; }
+
+.season-field select {
+    min-height: 42px;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(15, 23, 42, 0.72);
+    color: #f1f5f9;
+    padding: 0 10px;
+    font-size: 14px;
+}
+
+.schedule-list { display: grid; gap: 8px; }
+.schedule-list[data-state="loading"] p,
+.schedule-list[data-state="empty"] p,
+.schedule-list[data-state="error"] p { color: #94a3b8; font-size: 0.9rem; }
+.schedule-list[data-state="error"] p { color: #fca5a5; }
+
+.schedule-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.5);
+}
+.schedule-row-info { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; min-width: 0; }
+.schedule-row-date { color: #94a3b8; font-size: 0.8rem; min-width: 90px; }
+.schedule-row-matchup { color: #f1f5f9; font-weight: 700; font-size: 0.9rem; }
+.schedule-row .sim-button { min-height: 40px; padding: 0 14px; font-size: 12px; }
+
+/* Reuse the season-status-chip color scheme from mlb-sim-season.css, adding
+   the PHASE2 statuses that file doesn't define yet. */
+.season-status-chip[data-status="scheduled"] { background: rgba(96, 165, 250, 0.18); color: #93c5fd; }
+.season-status-chip[data-status="in_progress"] { background: rgba(45, 212, 191, 0.18); color: #5eead4; }
+.season-status-chip[data-status="suspended"] { background: rgba(234, 179, 8, 0.18); color: #fde68a; }
+.season-status-chip[data-status="postponed"] { background: rgba(234, 179, 8, 0.18); color: #fde68a; }
+.season-status-chip[data-status="cancelled"] { background: rgba(148, 163, 184, 0.18); color: #cbd5e1; }
+.season-status-chip[data-status="final"], .season-status-chip[data-status="official"] { background: rgba(168, 85, 247, 0.18); color: #d8b4fe; }
+
+.standings-content { overflow-x: auto; }
+.standings-tables-wrap { display: grid; gap: 20px; }
+.standings-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; min-width: 560px; }
+.standings-table caption { text-align: left; color: #dbeafe; font-weight: 800; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+.standings-table th, .standings-table td { padding: 6px 10px; text-align: right; border-bottom: 1px solid rgba(148, 163, 184, 0.15); color: #e2e8f0; }
+.standings-table th:first-child, .standings-table td:first-child { text-align: left; font-weight: 800; color: #f1f5f9; }
+.standings-table thead th { color: #94a3b8; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; }
+
+@media (max-width: 640px) {
+    .schedule-filters { flex-direction: column; align-items: stretch; }
+    .date-nav { justify-content: space-between; }
+    .schedule-row { flex-direction: column; align-items: stretch; }
+    .schedule-row .sim-button { width: 100%; }
+    .standings-table { min-width: 520px; }
+}
