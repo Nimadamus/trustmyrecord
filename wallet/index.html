@@ -48,6 +48,14 @@
         .balance-label { margin: 0 0 8px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
         .balance-value { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(38px, 6vw, 58px); color: var(--gold); font-weight: 800; line-height: 1; }
         .balance-hint { margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+        .tmrcoin-card { padding: 22px 26px; border: 1px solid rgba(45, 212, 191, 0.32); border-radius: 10px; background: linear-gradient(180deg, rgba(10, 26, 28, 0.9), rgba(8, 13, 22, 0.96)); margin-bottom: 22px; }
+        .tmrcoin-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+        .tmrcoin-label { margin: 0; color: #99f6e4; font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
+        .tmrcoin-testnet-badge { display: inline-block; padding: 3px 9px; border-radius: 999px; background: rgba(248, 113, 113, 0.16); border: 1px solid rgba(248, 113, 113, 0.45); color: #fecaca; font-size: 10.5px; font-weight: 800; letter-spacing: 0.08em; }
+        .tmrcoin-note { margin: 6px 0 16px; color: var(--muted); font-size: 12.5px; line-height: 1.5; max-width: 62ch; }
+        .tmrcoin-address { margin: 0 0 6px; color: var(--muted); font-size: 12.5px; font-family: monospace; word-break: break-all; }
+        .tmrcoin-balance { margin: 0 0 14px; font-family: Barlow, Inter, sans-serif; font-size: 28px; color: #99f6e4; font-weight: 800; }
+        .tmrcoin-hint { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
         .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 16px; }
         .chip { border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 999px; padding: 7px 14px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
         .chip.on { border-color: rgba(250, 204, 21, 0.55); background: rgba(250, 204, 21, 0.14); color: var(--gold); }
@@ -113,6 +121,25 @@
                 <p class="balance-hint">TMR Competition Credits &middot; internal promotional rewards &middot; no cash value</p>
             </div>
 
+            <section class="tmrcoin-card" id="tmrCoinCard" aria-labelledby="tmrCoinHeading">
+                <div class="tmrcoin-head">
+                    <p class="tmrcoin-label" id="tmrCoinHeading">TMR Coin</p>
+                    <span class="tmrcoin-testnet-badge">TESTNET</span>
+                </div>
+                <p class="tmrcoin-note">TMR Coin is a separate, experimental blockchain token on the Base Sepolia
+                    test network. It is not TMR Competition Credits, has no value, and Credits do not convert into
+                    it. Nothing below can be purchased, sold, or redeemed.</p>
+                <div id="tmrCoinDisconnected">
+                    <button class="btn" id="tmrCoinConnectBtn" type="button">Connect Wallet</button>
+                    <p class="tmrcoin-hint" id="tmrCoinHint"></p>
+                </div>
+                <div id="tmrCoinConnected" hidden>
+                    <p class="tmrcoin-address" id="tmrCoinAddress"></p>
+                    <p class="tmrcoin-balance" id="tmrCoinBalance">&mdash; TMR</p>
+                    <button class="btn" id="tmrCoinClaimBtn" type="button" disabled title="Coming soon">Claim (Coming Soon)</button>
+                </div>
+            </section>
+
             <div class="toolbar" id="historyFilters" role="group" aria-label="Filter transaction history">
                 <button class="chip on" data-filter="" type="button">All</button>
                 <button class="chip" data-filter="earned" type="button">Earned</button>
@@ -150,6 +177,8 @@
 
     <script src="/static/js/config.js?v=20260430a"></script>
     <script src="/static/js/backend-api.js?v=20260725coins1"></script>
+    <script src="/static/js/vendor/ethers.umd.min.js?v=1"></script>
+    <script src="/static/js/tmr-coin-wallet.js?v=1"></script>
     <script>
     (function () {
         var authState = document.getElementById('authState');

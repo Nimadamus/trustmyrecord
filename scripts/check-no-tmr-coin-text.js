@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 // Regression guard for the TMR Coin -> TMR Competition Credits rebrand.
 // Fails if the literal phrase "TMR Coin" appears in any tracked .html/.js file
-// outside the allow-listed internal identifiers below (table/column names,
-// route paths, JS API method names, dev-only comments) that intentionally
-// were not renamed this phase.
+// as old-style Competition-Credits branding, outside the allow-listed internal
+// identifiers below (table/column names, route paths, JS API method names,
+// dev-only comments) or the new, clearly-separate Base Sepolia testnet
+// blockchain widget, where "TMR Coin" is the correct, intentional name.
 const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
 
 const ROOT = path.join(__dirname, "..");
+
+// This file's own source (regexes/strings mentioning the phrase) is exempt.
+const EXEMPT_FILES = new Set(["scripts/check-no-tmr-coin-text.js"]);
 
 const ALLOWED_LINE_PATTERNS = [
   /tmr_coin_wallets/,
@@ -26,11 +30,18 @@ const ALLOWED_LINE_PATTERNS = [
   /^\s*\/\//, // dev-only comment lines are allowed to still reference the old name
   /how-tmr-coin-works/, // URL slug intentionally kept unchanged this phase
   /\?v=.*coins/, // cache-busting query strings on asset URLs, not display text
+  // The new, clearly-labeled "TMR Coin -- Base Sepolia (Testnet)" blockchain
+  // widget intentionally displays "TMR Coin" as its real, separate name.
+  /tmrcoin-|tmrCoinCard|tmrCoinHeading|tmrCoinConnect|tmrCoinDisconnected|tmrCoinConnected|tmrCoinAddress|tmrCoinBalance|tmrCoinClaim|tmrCoinHint|tmr-coin-wallet\.js|\/api\/tmr-coin|TMR Coin Admin|TMR Coin \(Blockchain\)/,
 ];
 
 function listTrackedFiles() {
   const out = execSync('git ls-files "*.html" "*.js"', { cwd: ROOT, encoding: "utf8" });
-  return out.split("\n").filter(Boolean).filter((f) => !f.startsWith("node_modules/"));
+  return out
+    .split("\n")
+    .filter(Boolean)
+    .filter((f) => !f.startsWith("node_modules/"))
+    .filter((f) => !EXEMPT_FILES.has(f));
 }
 
 function main() {
