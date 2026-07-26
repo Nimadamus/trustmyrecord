@@ -558,7 +558,18 @@
 
                     window.location.replace('/login/');
                 } catch (error) {
-                    setMessage(error && error.message ? error.message : 'Registration failed.', 'error');
+                    // A raw network failure (offline, DNS, CORS-blocked, server
+                    // unreachable) surfaces here as a bare TypeError whose
+                    // .message is the browser's internal string ("Failed to
+                    // fetch" in Chrome, "NetworkError when attempting to fetch
+                    // resource" in Firefox) -- not something a user should see.
+                    // Server-provided errors (validation, duplicate account,
+                    // etc.) are regular Errors with a real message and pass
+                    // through unchanged.
+                    var friendlyMessage = (error instanceof TypeError)
+                        ? "Couldn't reach the server. Check your connection and try again."
+                        : (error && error.message) || 'Registration failed.';
+                    setMessage(friendlyMessage, 'error');
                     document.getElementById('passwordValue').value = '';
                     document.getElementById('confirmValue').value = '';
                 } finally {

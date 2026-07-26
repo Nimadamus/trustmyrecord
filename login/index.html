@@ -537,7 +537,13 @@
                     await persistBackendLogin(result.user || {}, rememberMe);
                     finishLoginRedirect((result && result.user) || {});
                 } catch (error) {
-                    setMessage(error && error.message ? error.message : 'Login failed.', 'error');
+                    // See register/index.html: a raw network failure surfaces
+                    // as a bare TypeError with the browser's internal message
+                    // ("Failed to fetch"), not something a user should see.
+                    var friendlyMessage = (error instanceof TypeError)
+                        ? "Couldn't reach the server. Check your connection and try again."
+                        : (error && error.message) || 'Login failed.';
+                    setMessage(friendlyMessage, 'error');
                     document.getElementById('passwordValue').value = '';
                 } finally {
                     submitBtn.disabled = false;
