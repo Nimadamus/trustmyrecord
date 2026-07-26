@@ -55,7 +55,8 @@
     right.innerHTML =
       '<a class="v2nav-user" href="/u/' + encodeURIComponent(name) + '/" title="' + name + '">' +
         av + '<span class="v2nav-name">' + name + '</span></a>' +
-      '<a class="v2nav-coins" id="navCoinPill" href="/wallet/" title="TMR Competition Credits balance" hidden>' +
+      '<a class="v2nav-coins" id="navCoinPill" href="/wallet/" title="' +
+        ((window.TMR_TERMINOLOGY && window.TMR_TERMINOLOGY.full) || 'TMR Competition Credits') + ' balance" hidden>' +
         '<span aria-hidden="true">\u{1FA99}</span><span id="navCoinBalance">—</span></a>' +
       // The bell opens the alerts dropdown in place (notifications.js owns it and
       // anchors to #homeNotifBtn). It stays an <a href> so it still works as a

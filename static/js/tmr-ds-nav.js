@@ -294,9 +294,10 @@
 
     return '<a class="v2nav-user" href="/u/' + encodeURIComponent(name) + '/" title="' + esc(name) + '">' +
         av + '<span class="v2nav-name">' + esc(name) + '</span></a>' +
-      // TMR Competition Credits balance pill. Hidden until populated so it never flashes a
-      // stale/zero value; links to the wallet page.
-      '<a class="v2nav-coins" id="navCoinPill" href="/wallet/" title="TMR Competition Credits balance" hidden>' +
+      // TMR Competition Credits balance pill. Hidden until populated so it
+      // never flashes a stale/zero value; links to the wallet page.
+      '<a class="v2nav-coins" id="navCoinPill" href="/wallet/" title="' +
+        esc((window.TMR_TERMINOLOGY && window.TMR_TERMINOLOGY.full) || 'TMR Competition Credits') + ' balance" hidden>' +
         '<span aria-hidden="true">\u{1FA99}</span><span id="navCoinBalance">—</span></a>' +
       // Stays an <a href> so the bell is never a dead target if the alerts
       // engine has not finished loading.
