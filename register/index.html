@@ -497,6 +497,9 @@
 
                 if (password !== confirm) {
                     setMessage('Passwords do not match.', 'error');
+                    document.getElementById('passwordValue').value = '';
+                    document.getElementById('confirmValue').value = '';
+                    document.getElementById('passwordValue').focus();
                     return;
                 }
 
@@ -556,6 +559,8 @@
                     window.location.replace('/login/');
                 } catch (error) {
                     setMessage(error && error.message ? error.message : 'Registration failed.', 'error');
+                    document.getElementById('passwordValue').value = '';
+                    document.getElementById('confirmValue').value = '';
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'CREATE ACCOUNT';

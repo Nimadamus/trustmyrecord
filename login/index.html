@@ -517,6 +517,7 @@
                     finishLoginRedirect((result && result.user) || {});
                 } catch (error) {
                     setMessage(error && error.message ? error.message : 'Login failed.', 'error');
+                    document.getElementById('passwordValue').value = '';
                 } finally {
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'LOG IN';
