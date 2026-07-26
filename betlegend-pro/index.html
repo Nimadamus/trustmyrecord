@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetLegend Pro Handicap Inquiry | TrustMyRecord</title>
+    <meta name="robots" content="index, follow">
+    <meta name="description" content="Ask a handicapping question and get verified historical trend, ATS, and O/U data from BetLegend Pro's 130,000+ game database. First inquiry free, then 5 TMR Coin per inquiry.">
+    <link rel="canonical" href="https://trustmyrecord.com/betlegend-pro/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260725coins1">
+    <script defer src="/static/js/tmr-terminology.js?v=1"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=20260726tabsync1"></script>
+    <style>
+        :root {
+            --page-bg: #060b12;
+            --panel: #0b111b;
+            --panel-2: #101826;
+            --line: rgba(148, 163, 184, 0.16);
+            --text: #f8fafc;
+            --muted: #9aa8ba;
+            --gold: #facc15;
+            --green: #22c55e;
+            --red: #f87171;
+            --teal: #2dd4bf;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 14% 0%, rgba(45, 212, 191, 0.10), transparent 30%),
+                linear-gradient(180deg, #07111d 0%, var(--page-bg) 44%, #04070d 100%);
+            color: var(--text);
+            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .blp-page { width: min(880px, calc(100% - 32px)); margin: 0 auto; padding: 112px 0 56px; }
+        .blp-head { margin-bottom: 18px; }
+        .blp-kicker { margin: 0 0 10px; color: var(--teal); font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+        h1 { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(30px, 4.5vw, 48px); line-height: 0.98; }
+        .blp-subtitle { margin: 12px 0 0; max-width: 640px; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+        .blp-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 15px; border-radius: 8px; border: 1px solid rgba(45, 212, 191, 0.28); color: #dffcf8; background: rgba(15, 23, 42, 0.72); text-decoration: none; font-weight: 800; font-size: 13px; cursor: pointer; }
+        .btn.primary { border-color: transparent; color: #06111f; background: linear-gradient(135deg, #2dd4bf, #38bdf8); }
+        .btn.primary:disabled { opacity: 0.55; cursor: not-allowed; }
+        .pricing-card { padding: 18px 22px; border: 1px solid rgba(250, 204, 21, 0.28); border-radius: 10px; background: rgba(250, 204, 21, 0.07); margin: 18px 0 22px; display: flex; flex-wrap: wrap; gap: 18px; align-items: center; justify-content: space-between; }
+        .pricing-rules { display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 13px; color: #fde68a; }
+        .pricing-rules strong { color: #fff; }
+        .balance-chip { padding: 8px 14px; border-radius: 999px; background: rgba(15, 23, 42, 0.55); border: 1px solid var(--line); font-size: 13px; color: var(--muted); white-space: nowrap; }
+        .balance-chip strong { color: var(--gold); font-size: 15px; }
+        .frozen-banner, .ineligible-banner { margin: 0 0 18px; padding: 14px 16px; border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1); border-radius: 8px; color: #fecaca; font-size: 14px; font-weight: 700; }
+        .frozen-banner[hidden], .ineligible-banner[hidden] { display: none; }
+        .form-card { padding: 22px 26px; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); margin-bottom: 20px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .form-field { display: flex; flex-direction: column; gap: 6px; }
+        .form-field label { font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+        .form-field select, .form-field input {
+            height: 42px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line);
+            background: var(--panel-2); color: var(--text); font-size: 14px;
+        }
+        .form-note { margin: 0 0 16px; color: var(--muted); font-size: 12.5px; }
+        #submitError { margin: 0 0 14px; padding: 12px 14px; border-radius: 8px; border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(248, 113, 113, 0.1); color: #fecaca; font-size: 13.5px; line-height: 1.5; }
+        #submitError[hidden] { display: none; }
+        #submitError a { color: #fecaca; text-decoration: underline; }
+        .result-card { padding: 22px 26px; border: 1px solid rgba(45, 212, 191, 0.32); border-radius: 10px; background: linear-gradient(180deg, rgba(10, 26, 28, 0.9), rgba(8, 13, 22, 0.96)); }
+        .result-card[hidden] { display: none; }
+        .result-billing { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+        .billing-pill { padding: 6px 12px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
+        .billing-pill.free { background: rgba(34, 197, 94, 0.16); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.4); }
+        .billing-pill.charged { background: rgba(250, 204, 21, 0.16); color: #fde68a; border: 1px solid rgba(250, 204, 21, 0.4); }
+        .billing-pill.not-charged { background: rgba(148, 163, 184, 0.16); color: var(--muted); border: 1px solid var(--line); }
+        .result-balances { color: var(--muted); font-size: 13px; }
+        .result-title { margin: 0 0 6px; font-family: Barlow, Inter, sans-serif; font-size: 22px; }
+        .result-meta { margin: 0 0 16px; color: var(--muted); font-size: 13px; }
+        .result-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 12px; }
+        .stat-box { padding: 12px; border-radius: 8px; background: rgba(15, 23, 42, 0.5); border: 1px solid var(--line); text-align: center; }
+        .stat-box .v { font-family: Barlow, Inter, sans-serif; font-size: 22px; color: #99f6e4; }
+        .stat-box .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+        .receipt-link { margin-top: 14px; font-size: 12.5px; color: var(--muted); }
+        .receipt-link a { color: #99f6e4; }
+        .auth-state { padding: 40px 20px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+        .auth-state[hidden] { display: none; }
+        @media (max-width: 640px) {
+            .form-row { grid-template-columns: 1fr; }
+            .pricing-card { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body class="tmr-site-shell" data-tmr-route="betlegend-pro">
+    <main class="blp-page">
+        <header class="blp-head">
+            <p class="blp-kicker">Research Tool</p>
+            <h1>BetLegend Pro Handicap Inquiry</h1>
+            <p class="blp-subtitle">Ask a handicapping question and get verified historical trend, ATS, and O/U data from BetLegend Pro's 130,000+ game database. This is research data, not a pick or prediction.</p>
+            <nav class="blp-actions" aria-label="BetLegend Pro actions">
+                <a class="btn" href="/tools/">Back to Tools</a>
+                <a class="btn" href="/wallet/">Wallet</a>
+                <a class="btn" href="/how-tmr-coin-works/">How to Earn TMR Coin</a>
+            </nav>
+        </header>
+
+        <section id="authState" class="auth-state" hidden>
+            <h2 id="authHeading">Log in to use BetLegend Pro</h2>
+            <p id="authMessage">This tool is private to your account.</p>
+            <a id="authLoginBtn" class="btn" href="/login/?next=/betlegend-pro/">Log In</a>
+        </section>
+
+        <div id="mainContent" hidden>
+            <div class="pricing-card">
+                <div class="pricing-rules">
+                    <span><strong>First successful inquiry:</strong> Free</span>
+                    <span><strong>Every inquiry after that:</strong> 5 TMR Coin</span>
+                </div>
+                <div class="balance-chip">Balance: <strong id="balanceValue">&mdash;</strong> TMR Coin</div>
+            </div>
+
+            <div id="frozenBanner" class="frozen-banner" hidden>Your TMR Coin wallet is frozen. Contact support to resolve this before submitting a paid inquiry.</div>
+            <div id="ineligibleBanner" class="ineligible-banner" hidden>This account is not eligible to submit a BetLegend Pro inquiry.</div>
+
+            <form class="form-card" id="inquiryForm">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="sportSelect">Sport</label>
+                        <select id="sportSelect" name="sport" required>
+                            <option value="NBA">NBA</option>
+                            <option value="NFL">NFL</option>
+                            <option value="MLB">MLB</option>
+                            <option value="NHL">NHL</option>
+                            <option value="NCAAF">NCAAF</option>
+                            <option value="NCAAB">NCAAB</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="teamInput">Team</label>
+                        <input id="teamInput" name="team" type="text" placeholder="Full team name, e.g. New York Yankees" required autocomplete="off">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field" style="grid-column: 1 / -1;">
+                        <label for="situationSelect">Situation</label>
+                        <select id="situationSelect" name="situation" required>
+                            <option value="home_favorite">Home Favorites</option>
+                            <option value="road_underdog">Road Underdogs</option>
+                            <option value="after_loss">After a Loss</option>
+                            <option value="after_win">After a Win</option>
+                            <option value="three_game_win_streak">On 3+ Game Win Streak</option>
+                            <option value="three_game_losing_streak">On 3+ Game Losing Streak</option>
+                            <option value="division_rival">vs Division Rivals</option>
+                            <option value="rest_advantage">With Rest Advantage (2+ days)</option>
+                            <option value="large_spread">Large Spread (7+)</option>
+                            <option value="close_spread">Close Spread (within 3)</option>
+                            <option value="home">Home Games</option>
+                            <option value="away">Away Games</option>
+                            <option value="as_favorite">As Favorite</option>
+                            <option value="as_underdog">As Underdog</option>
+                            <option value="conference">Conference Games</option>
+                            <option value="day_game">Day Games</option>
+                            <option value="night_game">Night Games</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="form-note">Submitting only bills TMR Coin if a real, non-empty result is returned. Failed, timed-out, canceled, or empty-result inquiries always cost 0.</p>
+                <div id="submitError" hidden></div>
+                <button class="btn primary" id="submitBtn" type="submit">Submit Inquiry</button>
+            </form>
+
+            <section class="result-card" id="resultCard" hidden>
+                <div class="result-billing">
+                    <span class="billing-pill" id="billingPill"></span>
+                    <span class="result-balances" id="resultBalances"></span>
+                </div>
+                <h2 class="result-title" id="resultTitle"></h2>
+                <p class="result-meta" id="resultMeta"></p>
+                <div class="result-stats" id="resultStats"></div>
+                <p class="receipt-link" id="receiptLink"></p>
+            </section>
+        </div>
+    </main>
+
+    <script src="/static/js/config.js?v=20260430a"></script>
+    <script src="/static/js/backend-api.js?v=20260725coins1"></script>
+    <script>
+    (function () {
+        var authState = document.getElementById('authState');
+        var mainContent = document.getElementById('mainContent');
+        var balanceValue = document.getElementById('balanceValue');
+        var frozenBanner = document.getElementById('frozenBanner');
+        var ineligibleBanner = document.getElementById('ineligibleBanner');
+        var form = document.getElementById('inquiryForm');
+        var submitBtn = document.getElementById('submitBtn');
+        var submitError = document.getElementById('submitError');
+        var resultCard = document.getElementById('resultCard');
+        var billingPill = document.getElementById('billingPill');
+        var resultBalances = document.getElementById('resultBalances');
+        var resultTitle = document.getElementById('resultTitle');
+        var resultMeta = document.getElementById('resultMeta');
+        var resultStats = document.getElementById('resultStats');
+        var receiptLink = document.getElementById('receiptLink');
+
+        function isLoggedIn() { return !!(window.api && window.api.isLoggedIn()); }
+
+        function uuid() {
+            if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
+            });
+        }
+
+        function esc(value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
+            });
+        }
+
+        async function refreshBalance() {
+            try {
+                var status = await window.api.getBetLegendProStatus();
+                balanceValue.textContent = typeof status.balance === 'number' ? status.balance.toLocaleString('en-US') : '0';
+                frozenBanner.hidden = !status.isFrozen;
+                ineligibleBanner.hidden = !!status.eligible;
+                submitBtn.disabled = !!status.isFrozen || !status.eligible;
+            } catch (err) {
+                balanceValue.textContent = '—';
+            }
+        }
+
+        function showSubmitError(message, links) {
+            var html = esc(message);
+            if (links) {
+                html += '<br>' + links.map(function (l) { return '<a href="' + l.href + '">' + esc(l.label) + '</a>'; }).join(' &middot; ');
+            }
+            submitError.innerHTML = html;
+            submitError.hidden = false;
+        }
+
+        var lastKey = null;
+        var lastSignature = null;
+
+        form.addEventListener('submit', async function (ev) {
+            ev.preventDefault();
+            submitError.hidden = true;
+            resultCard.hidden = true;
+
+            var sport = document.getElementById('sportSelect').value;
+            var team = document.getElementById('teamInput').value.trim();
+            var situation = document.getElementById('situationSelect').value;
+            if (!team) return;
+
+            var signature = sport + '|' + team + '|' + situation;
+            var idempotencyKey = (signature === lastSignature && lastKey) ? lastKey : uuid();
+            lastSignature = signature;
+            lastKey = idempotencyKey;
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting…';
+
+            try {
+                var res = await window.api.submitBetLegendProInquiry({
+                    sport: sport, team: team, situation: situation, idempotency_key: idempotencyKey,
+                });
+
+                // A successful call (billed or not) always represents a resolved
+                // attempt -- the next distinct click should mint a fresh key.
+                lastSignature = null; lastKey = null;
+
+                if (res.billed) {
+                    billingPill.className = 'billing-pill charged';
+                    billingPill.textContent = 'Charged 5 TMR Coin';
+                } else if (res.was_free_inquiry) {
+                    billingPill.className = 'billing-pill free';
+                    billingPill.textContent = 'Free Inquiry';
+                } else {
+                    billingPill.className = 'billing-pill not-charged';
+                    billingPill.textContent = 'Not Charged';
+                }
+                var balBefore = res.balance_before != null ? res.balance_before.toLocaleString('en-US') : '—';
+                var balAfter = res.balance_after != null ? res.balance_after.toLocaleString('en-US') : '—';
+                resultBalances.textContent = 'Balance: ' + balBefore + ' → ' + balAfter + ' TMR Coin';
+
+                var r = res.result || {};
+                resultTitle.textContent = (r.situation || situation) + ' — ' + (r.team || team);
+                resultMeta.textContent = (r.sport || sport) + ' · ' + (typeof r.total_games === 'number' ? r.total_games.toLocaleString('en-US') : '0') + ' games matched';
+                if (res.note) resultMeta.textContent += ' · ' + res.note;
+
+                var s = r.summary || {};
+                var stats = [];
+                if (s.su_record) stats.push({ v: s.su_record, l: 'Straight Up' });
+                if (typeof s.su_win_pct === 'number') stats.push({ v: (s.su_win_pct * 100).toFixed(1) + '%', l: 'SU Win %' });
+                if (s.ats_record) stats.push({ v: s.ats_record, l: 'Against the Spread' });
+                if (typeof s.ats_win_pct === 'number') stats.push({ v: (s.ats_win_pct * 100).toFixed(1) + '%', l: 'ATS Win %' });
+                if (s.ou_record) stats.push({ v: s.ou_record, l: 'Over/Under' });
+                if (typeof s.over_pct === 'number') stats.push({ v: (s.over_pct * 100).toFixed(1) + '%', l: 'Over %' });
+                resultStats.innerHTML = stats.map(function (st) {
+                    return '<div class="stat-box"><div class="v">' + esc(st.v) + '</div><div class="l">' + esc(st.l) + '</div></div>';
+                }).join('');
+
+                receiptLink.innerHTML = res.ledger_entry_id
+                    ? 'Receipt #' + esc(res.ledger_entry_id) + (res.was_replay ? ' (duplicate submission — not re-charged)' : '') + ' · <a href="/wallet/">View in Wallet</a>'
+                    : '';
+
+                resultCard.hidden = false;
+                await refreshBalance();
+            } catch (err) {
+                var data = err && err.data;
+                if (err && err.status === 402) {
+                    showSubmitError('Insufficient TMR Coin balance — this inquiry costs ' + (data && data.cost) + ' TMR Coin, you have ' + (data && data.balance) + '.', [
+                        { href: (data && data.how_to_earn_url) || '/how-tmr-coin-works/', label: 'How to Earn TMR Coin' },
+                        { href: (data && data.wallet_url) || '/wallet/', label: 'Wallet' },
+                    ]);
+                } else if (err && err.status === 403) {
+                    showSubmitError((data && data.error) || 'This request could not be processed.');
+                } else if (err && err.status === 400) {
+                    showSubmitError((data && data.error) || 'Please check your inquiry and try again.');
+                    lastSignature = null; lastKey = null;
+                } else {
+                    showSubmitError('BetLegend Pro could not complete this inquiry (' + ((data && data.error) || 'server error') + '). It was not charged — you can try again.');
+                }
+                await refreshBalance();
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Inquiry';
+            }
+        });
+
+        async function boot() {
+            if (!isLoggedIn()) {
+                authState.hidden = false;
+                return;
+            }
+            mainContent.hidden = false;
+            await refreshBalance();
+        }
+        boot();
+    })();
+    </script>
+</body>
+</html>
