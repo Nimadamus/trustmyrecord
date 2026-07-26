@@ -130,7 +130,7 @@
             // Silently fail - badges are non-critical
         }
 
-        // TMR Competition Credits balance chip. Same fetch/poll cadence as the rest of this
+        // TMR Coin balance chip. Same fetch/poll cadence as the rest of this
         // file; failures leave the chip hidden rather than showing a stale
         // or wrong number.
         try {

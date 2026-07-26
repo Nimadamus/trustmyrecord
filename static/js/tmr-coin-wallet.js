@@ -1,5 +1,5 @@
 // TMR Coin (Base Sepolia testnet) wallet-connect widget. Entirely separate
-// from TMR Competition Credits (backend-api.js's getCoinBalance/etc.) -- this
+// from the in-platform TMR Coin currency (backend-api.js's getCoinBalance/etc.) -- this
 // only reads a real on-chain balance via /api/tmr-coin/*. No purchase, claim,
 // or transfer action is wired here; the Claim button stays disabled until
 // the backend feature flag (and required legal sign-off) is enabled.

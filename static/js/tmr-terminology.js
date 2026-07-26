@@ -1,11 +1,10 @@
 // Single source of truth for the platform-currency display name. Update here,
-// not in individual page templates -- the "TMR Coin" vs "Competition Credits"
-// wording drift this file fixes happened because the label was hardcoded
-// independently in ~10 places over time.
+// not in individual page templates -- wording drift happens when the label
+// is hardcoded independently in many places over time.
 window.TMR_TERMINOLOGY = {
-  full: 'TMR Competition Credits',
-  short: 'Credits',
-  disclaimer: 'TMR Competition Credits are internal promotional rewards with no cash value. They cannot be purchased, transferred, redeemed, withdrawn, or cashed out.',
+  full: 'TMR Coin',
+  short: 'coins',
+  disclaimer: 'TMR Coin is the platform currency of TrustMyRecord. Every new member receives TMR Coin when they sign up. Members can earn additional coins through platform participation, achievements, referrals, contests, and competitions. Additional purchase and redemption options may be introduced as the platform develops.',
 };
 
 document.addEventListener('DOMContentLoaded', () => {
