@@ -38,6 +38,19 @@
         d.setUTCDate(d.getUTCDate() + delta);
         return d.toISOString().slice(0, 10);
     }
+    // The API serializes a DATE column as a full ISO datetime
+    // ("2026-03-26T00:00:00.000Z") since pg parses it into a JS Date object
+    // first - normalize to plain YYYY-MM-DD right where games enter this
+    // page. This is not just cosmetic: an un-normalized value breaks the
+    // "is this today's game" equality check in renderTodayNext() below (a
+    // "...T00:00:00.000Z" string can never strictly equal a plain
+    // "YYYY-MM-DD" today string, so today's games would silently never be
+    // detected).
+    function normalizeDate(v) { return (typeof v === 'string' && v.length > 10) ? v.slice(0, 10) : v; }
+    function normalizeGameDates(games) {
+        games.forEach(function (g) { g.scheduled_date = normalizeDate(g.scheduled_date); });
+        return games;
+    }
     function setMessage(el, text, tone) {
         el.textContent = text || '';
         if (tone) el.setAttribute('data-tone', tone); else el.removeAttribute('data-tone');
@@ -117,7 +130,7 @@
         params.set('limit', '500');
         try {
             var resp = await apiRequest('/seasons/' + seasonId + '/schedule?' + params.toString());
-            var games = resp.games || [];
+            var games = normalizeGameDates(resp.games || []);
             renderTodayNext(games.length && !team && !status && !dateNav ? games : (await loadAllGamesForToday()));
             if (!games.length) {
                 listEl.setAttribute('data-state', 'empty');
@@ -139,7 +152,7 @@
     async function loadAllGamesForToday() {
         if (_allGamesCache) return _allGamesCache;
         var resp = await apiRequest('/seasons/' + seasonId + '/schedule?limit=2000');
-        _allGamesCache = resp.games || [];
+        _allGamesCache = normalizeGameDates(resp.games || []);
         return _allGamesCache;
     }
 
@@ -153,6 +166,7 @@
         try {
             var resp = await apiRequest('/games/' + gameId);
             var g = resp.game;
+            g.scheduled_date = normalizeDate(g.scheduled_date);
             title.textContent = g.away_team_abbr + ' @ ' + g.home_team_abbr + ' (' + (g.scheduled_date || 'TBD') + ')';
             var isFinal = g.status === 'final' || g.status === 'official';
             var isLocked = ['suspended', 'postponed', 'cancelled'].indexOf(g.status) !== -1;
