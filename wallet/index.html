@@ -74,6 +74,7 @@
         .table-wrap { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
         .amt-pos { color: var(--green); font-weight: 800; }
         .amt-neg { color: var(--red); font-weight: 800; }
+        .muted-count { color: var(--muted); font-size: 12px; cursor: help; }
         .mobile-cards { display: none; }
         .mc-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 10px; background: var(--panel); }
         .mc-row { display: flex; justify-content: space-between; font-size: 13px; margin-top: 4px; }
@@ -179,7 +180,7 @@
                 <button class="chip on" data-filter="" type="button">All</button>
                 <button class="chip" data-filter="earned" type="button">Earned</button>
                 <button class="chip" data-filter="granted" type="button">Granted</button>
-                <button class="chip" data-filter="deducted" type="button">Deducted</button>
+                <button class="chip" data-filter="deducted" type="button">Adjustment</button>
                 <button class="chip" data-filter="reversed" type="button">Reversed</button>
                 <button class="chip" data-filter="expired" type="button">Expired</button>
                 <button class="chip" data-filter="redeemed" type="button">Redeemed</button>
@@ -206,6 +207,9 @@
                     </table>
                 </div>
                 <div id="historyCards" class="mobile-cards"></div>
+                <div id="loadMoreWrap" style="text-align:center;margin-top:14px;" hidden>
+                    <button id="loadMoreBtn" class="btn" type="button">Load More</button>
+                </div>
             </section>
         </section>
     </main>
@@ -225,12 +229,8 @@
         var cards = document.getElementById('historyCards');
         var frozenBanner = document.getElementById('frozenBanner');
         var filtersEl = document.getElementById('historyFilters');
-
-        var TYPE_LABELS = {
-            reward: 'Earned', admin_grant: 'Granted', admin_adjustment: 'Adjusted',
-            wallet_frozen: 'Wallet Frozen', wallet_unfrozen: 'Wallet Unfrozen',
-            betlegend_pro_inquiry_free: 'BetLegend Pro (Free)', betlegend_pro_inquiry_charge: 'BetLegend Pro',
-        };
+        var loadMoreWrap = document.getElementById('loadMoreWrap');
+        var loadMoreBtn = document.getElementById('loadMoreBtn');
 
         function esc(value) {
             return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
@@ -243,43 +243,51 @@
             if (isNaN(d.getTime())) return '—';
             return d.toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
         }
-        function typeLabel(t) { return TYPE_LABELS[t] || t; }
         function amountHtml(amount) {
             var sign = amount > 0 ? '+' : '';
             var cls = amount > 0 ? 'amt-pos' : (amount < 0 ? 'amt-neg' : '');
             return '<span class="' + cls + '">' + sign + amount.toLocaleString('en-US') + '</span>';
         }
+        // description/type are already clean, user-facing text from the
+        // backend serializer (routes/coins.js -> services/tmrCoinLabels.js)
+        // -- no raw admin_note/reward_key ever reaches this page.
         function descriptionFor(entry) {
-            if (entry.note) return esc(entry.note);
-            if (entry.related_entity_type) return esc(entry.related_entity_type + (entry.related_entity_id ? ' #' + entry.related_entity_id : ''));
-            return typeLabel(entry.type);
+            var text = esc(entry.description);
+            if (entry.consolidated_count > 1) {
+                text += ' <span class="muted-count" title="' + entry.consolidated_count + ' corrections combined into this one entry">(' + entry.consolidated_count + ' combined)</span>';
+            }
+            return text;
         }
 
         function rowHtml(entry) {
-            return '<tr><td>' + fmtDate(entry.created_at) + '</td><td>' + esc(typeLabel(entry.type)) + '</td>' +
+            return '<tr><td>' + fmtDate(entry.created_at) + '</td><td>' + esc(entry.type) + '</td>' +
                 '<td>' + descriptionFor(entry) + '</td><td>' + amountHtml(entry.amount) + '</td>' +
                 '<td>' + entry.balance_after.toLocaleString('en-US') + '</td></tr>';
         }
         function cardHtml(entry) {
             return '<div class="mc-card">' +
-                '<div class="mc-row"><strong>' + esc(typeLabel(entry.type)) + '</strong>' + amountHtml(entry.amount) + '</div>' +
+                '<div class="mc-row"><strong>' + esc(entry.type) + '</strong>' + amountHtml(entry.amount) + '</div>' +
                 '<div class="mc-row"><span>' + descriptionFor(entry) + '</span></div>' +
                 '<div class="mc-row"><span>' + fmtDate(entry.created_at) + '</span><span>Balance: ' + entry.balance_after.toLocaleString('en-US') + '</span></div>' +
                 '</div>';
         }
 
         var allEntries = [];
+        var hasMore = false;
+        var nextBefore = null;
         function render(entries) {
             content.hidden = false;
             if (!entries.length) {
                 emptyState.hidden = false;
                 panel.hidden = true;
+                loadMoreWrap.hidden = true;
                 return;
             }
             emptyState.hidden = true;
             panel.hidden = false;
             rows.innerHTML = entries.map(rowHtml).join('');
             cards.innerHTML = entries.map(cardHtml).join('');
+            loadMoreWrap.hidden = !hasMore;
         }
 
         var activeFilter = '';
@@ -315,11 +323,33 @@
             });
         }
 
+        var HISTORY_PAGE_SIZE = 25;
+
         async function loadHistory() {
-            var data = await withTimeout(window.api.getCoinTransactions({ limit: 100, category: activeFilter || undefined }), 12000);
+            var data = await withTimeout(window.api.getCoinTransactions({ limit: HISTORY_PAGE_SIZE, category: activeFilter || undefined }), 12000);
             allEntries = (data && data.entries) || [];
+            hasMore = !!(data && data.has_more);
+            nextBefore = (data && data.next_before) || null;
             render(allEntries);
         }
+
+        async function loadMoreHistory() {
+            if (!hasMore || nextBefore == null) return;
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.textContent = 'Loading…';
+            try {
+                var data = await withTimeout(window.api.getCoinTransactions({ limit: HISTORY_PAGE_SIZE, category: activeFilter || undefined, before: nextBefore }), 12000);
+                var more = (data && data.entries) || [];
+                allEntries = allEntries.concat(more);
+                hasMore = !!(data && data.has_more);
+                nextBefore = (data && data.next_before) || null;
+                render(allEntries);
+            } finally {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.textContent = 'Load More';
+            }
+        }
+        loadMoreBtn.addEventListener('click', loadMoreHistory);
 
         async function loadBalance() {
             var bal = await withTimeout(window.api.getCoinBalance(), 12000);
