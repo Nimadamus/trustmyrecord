@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-production-audit-20260727c';
+    var UI_BUILD = 'mlb-simulator-starter-row-fix-20260727d';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -4548,8 +4548,22 @@
             };
         }).filter(function (row) { return row.name; });
     }
+    // STARTER_ROW_VISIBILITY_FIX_20260727: root cause of a real live defect - a
+    // pitcher (including the STARTER) injured/ejected in elMaybePitcherEvent
+    // before recording a single out, walk, or hit (it fires once, the instant an
+    // arm takes the mound, before any batter is faced) had every counting stat
+    // still at zero, so the old outs/h/bb-only filter silently dropped him from
+    // the pitching rows entirely - while the box score's separate away.starter/
+    // home.starter DISPLAY field (populated straight from the selected starter
+    // object, independent of this filter) still correctly named him. Result: a
+    // player labeled "today's starter" who never appeared in the pitching table.
+    // p.removed is set on EVERY pitcher who ever left the game for ANY reason
+    // (natural handoff, mid-inning pull, injury, ejection) regardless of stats
+    // recorded, and p.acc.bf>0 catches anyone who faced a batter (a reach-on-
+    // error charges no h/bb but does increment bf) - together they cover every
+    // real way a pitcher can have appeared without tripping the old stat check.
     function evPitcherRows(side) {
-        return side.pitchers.filter(function (p) { return p.acc.outs > 0 || p.acc.h > 0 || p.acc.bb > 0; }).map(function (p) {
+        return side.pitchers.filter(function (p) { return p.removed === true || p.acc.bf > 0 || p.acc.outs > 0 || p.acc.h > 0 || p.acc.bb > 0; }).map(function (p) {
             var a = p.acc;
             // RELIEVER_HAND_20260623: show the real throw hand on bullpen arms (LHP/RHP)
             // when the profile is available; cosmetic only (does not affect the sim math).
@@ -4844,6 +4858,17 @@
                 var inc = row(e.substitutionData.in);
                 if (inc.entered === null) inc.entered = { inning: e.inning, half: e.half };
                 inc.ir += e.substitutionData.inheritedRunners || 0;
+                // STARTER_ROW_VISIBILITY_FIX_20260727: the outgoing pitcher must get
+                // a row here too, even with zero other stats - the INJURY/EJECTION
+                // event that triggered this SUB is stamped with the INCOMING
+                // pitcher's pitcherId (elEmit's auto-stamp reads the reassigned
+                // `pitcher` variable, which has already changed by the time it
+                // fires), so `row(e.pitcherId)` below never creates one for him. A
+                // pitcher (including the starter) pulled before recording a single
+                // stat would otherwise never appear in this independent fold at
+                // all, while evPitcherRows (the live-accumulator side) now
+                // correctly includes him - an undetected fork between the two.
+                if (e.substitutionData.out) row(e.substitutionData.out);
                 return;
             }
             if (!e.pitcherId) return;
@@ -7635,6 +7660,7 @@
             pitcherDecisions: pitcherDecisions,
             evTurningPoint: evTurningPoint,
             assembleEventBoxScore: assembleEventBoxScore,
+            evPitcherRows: evPitcherRows,
             gameStatusLabel: gameStatusLabel,
             simWeatherByKey: simWeatherByKey,
             simWeatherConditions: SIM_WEATHER_CONDITIONS,
