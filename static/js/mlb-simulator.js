@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-controls-audit-20260726c';
+    var UI_BUILD = 'mlb-simulator-optfield-init-20260726e';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3256,7 +3256,7 @@
                 var sev = elInjurySeverity(random);
                 var area = elBodyArea('pitching', random);
                 var rec = { player: pname, team: log.defAbbr, inning: log.inning, half: log.half, mechanism: 'pitching motion', bodyArea: area, severity: sev.severity, outcome: 'removed from the game', remains: false, missedGames: sev.missedGames, replacement: String(pitcher.name).replace(/\s*\((LHP|RHP)\)$/, ''), side: 'pitching' };
-                (defSide.injuries = defSide.injuries || []).push(rec);
+                defSide.injuries.push(rec); // always initialized in evSimGame's per-game reset - not lazy
                 elEmit(EL_TYPES.INJURY, {
                     subjectTeam: subjectTeam,
                     baseStateBefore: baseSnapshot(), baseStateAfter: baseSnapshot(), runnerPitcher: pitcherRefs(),
@@ -3268,7 +3268,7 @@
             } else {
                 var cause = EL_EJECT_CAUSES[Math.floor(random() * EL_EJECT_CAUSES.length)];
                 var erec = { person: pname, personType: 'pitcher', cause: cause, team: log.defAbbr, inning: log.inning, half: log.half, replacement: String(pitcher.name).replace(/\s*\((LHP|RHP)\)$/, '') };
-                (defSide.ejections = defSide.ejections || []).push(erec);
+                defSide.ejections.push(erec); // always initialized in evSimGame's per-game reset - not lazy
                 elEmit(EL_TYPES.EJECTION, {
                     subjectTeam: subjectTeam,
                     baseStateBefore: baseSnapshot(), baseStateAfter: baseSnapshot(), runnerPitcher: pitcherRefs(),
@@ -4446,13 +4446,19 @@
         return halves;
     }
     function foldNotes(log, team) {
+        // OPTIONAL_FIELD_INIT_20260726: every collection this fold can produce is
+        // initialized here up front, even ones that may end up empty (a game with
+        // zero substitutions/ejections is common and must never be a "missing
+        // field" case for a consumer). No field on this object is ever created
+        // lazily inside the loop below - `n.x.push(...)` always has a real array
+        // to push onto, on every game, regardless of what happened in it.
         var n = {
             doubles: [], triples: [], homeRuns: [], rbi: [], twoOutRbi: 0, sacFlies: [], sacBunts: [],
             gidp: [], risp: { h: 0, ab: 0 }, lob: 0,
             sb: [], cs: [], pickoffs: [], outsOnBases: 0,
             errors: [], dp: 0, ofAssists: 0,
             hbp: [], ibb: [], inherited: 0, inheritedScored: 0,
-            pitchingChanges: [], injuries: [], ejections: []
+            pitchingChanges: [], injuries: [], ejections: [], substitutions: []
         };
         log.events.forEach(function (e) {
             var isBat = e.battingTeam === team;
@@ -4486,7 +4492,6 @@
             }
             // Substitutions, injuries and ejections attribute to the SUBJECT's team.
             if (e.eventType === EL_TYPES.SUB && e.subjectTeam === team && e.substitutionData && e.substitutionData.role !== 'P') {
-                n.substitutions = n.substitutions || [];
                 n.substitutions.push(e.substitutionData);
             }
             if (e.eventType === EL_TYPES.INJURY && e.subjectTeam === team && e.injuryData) n.injuries.push(e.injuryData);
