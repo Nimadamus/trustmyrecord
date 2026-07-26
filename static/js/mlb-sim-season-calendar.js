@@ -413,6 +413,8 @@
             byId('noSeasonIdState').hidden = false;
             return;
         }
+        var statsLink = byId('statsLink');
+        if (statsLink) statsLink.href = '/mlb-simulator/season/stats/?seasonId=' + encodeURIComponent(seasonId);
         if (!window.api || typeof window.api.getCurrentUser !== 'function') {
             gate.setAttribute('data-state', 'error');
             gate.innerHTML = '<div class="auth-gate-prompt"><p>Could not load (backend client unavailable). Please refresh.</p></div>';
