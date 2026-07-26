@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="canonical" href="https://trustmyrecord.com/mlb-simulator/season/">
+    <title>MLB Simulator Season Mode (Foundation Preview) | TrustMyRecord</title>
+    <meta name="description" content="Early foundation preview of MLB Simulator season mode: create and resume saved seasons. Schedules, standings, and full season simulation are not built yet.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-page-polish.css">
+    <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260726d-touchtarget">
+    <link rel="stylesheet" href="/static/css/mlb-sim-season.css?v=20260727a">
+    <script src="/static/js/config.js"></script>
+    <script src="/static/js/backend-api.js"></script>
+</head>
+<body class="tmr-polished-page mlb-sim-season-page">
+    <header class="sim-topbar" aria-label="TrustMyRecord navigation">
+        <a class="sim-brand" href="/">TrustMyRecord</a>
+        <nav class="sim-nav" aria-label="Primary">
+            <a href="/sportsbook/">Sportsbook</a>
+            <a href="/handicappers/">Handicappers</a>
+            <a href="/leaderboard/">Leaderboard</a>
+            <a href="/mlb-simulator/">MLB Simulator</a>
+        </nav>
+    </header>
+
+    <main class="sim-shell season-hub-shell">
+        <section class="sim-hero">
+            <div>
+                <p class="sim-kicker">Data Lab</p>
+                <h1>MLB Simulator Season Mode</h1>
+                <p class="foundation-badge">⚠ FOUNDATION PREVIEW — this is the persistence layer only. Schedules, standings, full season-stat tracking, cross-game pitcher fatigue, transactions, and playoffs do not exist yet. Today this page can only create/save/resume/archive individual saved games within a season shell.</p>
+                <p class="sim-subtitle">Create a season, then play games one at a time from the <a href="/mlb-simulator/">MLB Simulator</a> and save them here.</p>
+            </div>
+        </section>
+
+        <section id="authGate" class="sim-panel season-panel" data-state="loading">
+            <p>Checking your sign-in status…</p>
+        </section>
+
+        <section id="seasonHubContent" class="season-hub-content" hidden>
+            <section class="sim-panel season-panel">
+                <div class="sim-panel-heading">
+                    <p class="sim-label">Season Mode</p>
+                    <h2>New Season</h2>
+                </div>
+                <form id="newSeasonForm" class="new-season-form">
+                    <label class="season-field">
+                        <span>Season name</span>
+                        <input type="text" id="newSeasonName" maxlength="120" placeholder="My 2026 Season" required>
+                    </label>
+                    <label class="season-field season-field-narrow">
+                        <span>Year</span>
+                        <input type="number" id="newSeasonYear" min="1900" max="2100" value="2026">
+                    </label>
+                    <button type="submit" class="sim-button primary" id="createSeasonBtn">Create Season</button>
+                </form>
+                <p id="createSeasonMessage" class="season-message" role="status"></p>
+            </section>
+
+            <section class="sim-panel season-panel">
+                <div class="sim-panel-heading">
+                    <p class="sim-label">Continue</p>
+                    <h2>My Seasons</h2>
+                </div>
+                <div id="activeSeasonsList" class="seasons-list" data-state="loading">
+                    <p>Loading your seasons…</p>
+                </div>
+            </section>
+
+            <section class="sim-panel season-panel">
+                <div class="sim-panel-heading">
+                    <p class="sim-label">Archive</p>
+                    <h2>Archived Seasons</h2>
+                </div>
+                <div id="archivedSeasonsList" class="seasons-list" data-state="loading">
+                    <p>Loading archived seasons…</p>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <script src="/static/js/mlb-sim-season.js?v=20260727a"></script>
+</body>
+</html>
