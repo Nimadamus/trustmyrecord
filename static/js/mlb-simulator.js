@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-production-audit-20260727b';
+    var UI_BUILD = 'mlb-simulator-production-audit-20260727c';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -2296,7 +2296,7 @@
     }
     function pitcherDecisions(rows, isWinner, margin, ctx) {
         var labels = (rows || []).map(function () { return ''; });
-        if (!rows || !rows.length) return labels;
+        if (!rows || !rows.length) return { labels: labels, blownSaves: [] };
         ctx = ctx || {};
         var last = rows.length - 1;
         var m = Number.isFinite(margin) ? margin : 1;
@@ -2370,7 +2370,27 @@
             if (Number(row.r || 0) >= em) return;
             labels[i] = 'HLD';
         });
-        return labels;
+        // BLOWN_SAVE_20260727: a reliever (never the starter, row 0) who ENTERED a
+        // real save situation (the same 1-3 run enterMargin criterion the SV/HOLD
+        // logic above already uses) and then allowed runs equal to or exceeding
+        // that margin - i.e. surrendered the lead he was protecting - is charged a
+        // blown save. This is INDEPENDENT of W/L/SV/HLD (a pitcher can blow the
+        // save and still get the win if his team retakes the lead while he's still
+        // in, or the loss, or neither) - tracked as a separate parallel array
+        // rather than overloading `labels`, so existing W/L/SV/HLD equality checks
+        // elsewhere are unaffected. Note this is exactly the population the HOLD
+        // rule above excludes via its own `r >= em` guard - the two are already
+        // mutually exclusive by construction, matching the real rule (a stint
+        // cannot be both a hold and a blown save).
+        var blownSaves = rows.map(function () { return false; });
+        rows.forEach(function (row, i) {
+            if (i === 0) return;
+            var em = row.enterMargin;
+            if (em == null || em < 1 || em > 3) return;
+            if (!(Number(row.outs || 0) >= 1)) return;
+            if (Number(row.r || 0) >= em) blownSaves[i] = true;
+        });
+        return { labels: labels, blownSaves: blownSaves };
     }
     // =========================================================================
     // Plate-appearance Monte Carlo engine. Box scores are simulated bottom-up,
@@ -2615,8 +2635,8 @@
         if ((r -= v.b1) < 0) return 'b1';
         return 'out';
     }
-    function evNewBat() { return { pa: 0, ab: 0, h: 0, b1: 0, b2: 0, b3: 0, hr: 0, bb: 0, ibb: 0, so: 0, r: 0, rbi: 0, sb: 0, cs: 0, sf: 0, sac: 0, hbp: 0, gidp: 0, lob: 0 }; }
-    function evNewPit() { return { outs: 0, h: 0, bb: 0, ibb: 0, so: 0, hr: 0, hbp: 0, r: 0, er: 0, bf: 0, pitches: 0, strikes: 0, fps: 0, whiff: 0, gb: 0, fb: 0, ir: 0, irs: 0 }; }
+    function evNewBat() { return { pa: 0, ab: 0, h: 0, b1: 0, b2: 0, b3: 0, hr: 0, bb: 0, ibb: 0, so: 0, r: 0, rbi: 0, sb: 0, cs: 0, sf: 0, sac: 0, hbp: 0, gidp: 0, lob: 0, ci: 0 }; }
+    function evNewPit() { return { outs: 0, h: 0, bb: 0, ibb: 0, so: 0, hr: 0, hbp: 0, r: 0, er: 0, bf: 0, pitches: 0, strikes: 0, fps: 0, whiff: 0, gb: 0, fb: 0, ir: 0, irs: 0, wp: 0, bk: 0 }; }
     // HBP_SHARE_20260703: hit-by-pitch is carved from the calibrated free-pass rate
     // (identical base state to a walk), so run scoring / win probability are byte-
     // unchanged; only the free pass's LABEL changes. ~0.13 of walks -> ~0.42 HBP/team-
@@ -2701,13 +2721,20 @@
         var staffNames = roster ? rosterNamesForPitchers(roster, ownStarter) : (ownStarter && ownStarter.name ? [ownStarter.name] : []);
         var starterVec = evPitcherVector(ownStarter, 100);
         var penVec = evStaffVector(team, true);
-        var starterOuts = evStarterOuts(ownStarter, team);
+        var starterOutsInfo = evStarterOuts(ownStarter, team);
+        var starterOuts = starterOutsInfo.outs;
+        var isOpenerGame = starterOutsInfo.isOpener;
         // SIM_WEATHER_20260726: fatigue>1 (heat/cold/rain) shortens the expected
         // starter outing a bounded amount; re-clamped to the same 9-24 out range
         // evStarterOuts already uses, so this can never push a starter outside a
-        // realistic length on its own.
+        // realistic length on its own. OPENER_BULLPEN_GAME_20260727: that 9-24
+        // clamp would force a true opener's 3-9 out target back up past a full
+        // inning-plus minimum, undoing the detection above - use the opener's own
+        // narrower range instead when this is an opener game.
         if (simWeather && simWeather.fatigue && simWeather.fatigue !== 1) {
-            starterOuts = clamp(Math.round(starterOuts / simWeather.fatigue), 9, 24);
+            starterOuts = isOpenerGame
+                ? clamp(Math.round(starterOuts / simWeather.fatigue), 3, 9)
+                : clamp(Math.round(starterOuts / simWeather.fatigue), 9, 24);
         }
         // Multi-arm bullpen (Layer 2, June 22 2026): when verified reliever season
         // stats exist, sequence the real bridge -> setup -> closer, each with their
@@ -2722,12 +2749,18 @@
             { name: staffNames[0] || (ownStarter && ownStarter.name) || (team.abbreviation + ' SP'), vec: starterVec, acc: evNewPit(), role: 'SP', hand: ownStarter && ownStarter.mlbId ? pitchHandOf(ownStarter.mlbId) : null }
         ];
         if (arms) {
-            arms.ordered.forEach(function (a) {
-                var role = a === arms.closer ? 'CL' : (a === arms.setup ? 'SU' : 'RP');
+            arms.ordered.forEach(function (a, idx) {
+                // OPENER_BULLPEN_GAME_20260727: the arm right after a real opener is
+                // the "bulk" reliever expected to cover the bulk of the game (a real
+                // 4-6 IP role, not a normal 3-IP bridge man) - only the FIRST arm in
+                // the sequence, so a true multi-inning bullpen day still hands off to
+                // the normal setup/closer pockets afterward rather than every arm
+                // getting an extended cap.
+                var role = a === arms.closer ? 'CL' : (a === arms.setup ? 'SU' : (isOpenerGame && idx === 0 ? 'BULK' : 'RP'));
                 pitchers.push({ name: a.name, vec: evPitcherVector({ mlbId: a.mlbId }, 100), acc: evNewPit(), role: role, hand: a.hand || null });
             });
         } else {
-            pitchers.push({ name: staffNames[1] || (team.abbreviation + ' RP'), vec: penVec, acc: evNewPit(), role: 'RP' });
+            pitchers.push({ name: staffNames[1] || (team.abbreviation + ' RP'), vec: penVec, acc: evNewPit(), role: isOpenerGame ? 'BULK' : 'RP' });
             pitchers.push({ name: staffNames[2] || (team.abbreviation + ' CL'), vec: penVec, acc: evNewPit(), role: 'CL' });
         }
         // TMR_ROSTER_STATE_20260723: the bench pool (verified reserves) is built once
@@ -2742,6 +2775,20 @@
             // defSide.gameErrors / ERROR_GAME_CAP, not here (this object is built once
             // per team, before any game is played).
             errRate: clamp(clamp(0.034 + (100 - (team && team.runPrevention || 100)) * 0.0006, 0.016, 0.055) * ((simWeather && simWeather.err) || 1), 0.016, 0.075),
+            // DEFENSE_REALISM_20260727: two more places a fielding team's real
+            // quality now moves the outcome, beyond the flat error rate and the
+            // team-wide OAA run-scale (defenseRunAdjustment). No per-fielder
+            // arm/range data is fetched by this engine (that would need a new
+            // Statcast-per-player data pipeline, out of scope this pass) - both
+            // factors use the same team.runPrevention rating errRate already
+            // does, so a genuinely elite or poor defense moves both, not just
+            // errors. armFactor scales DOWN extra-base-taking against a good
+            // defense (suppresses the runner-speed-only advancement formulas by
+            // up to 15%) and UP against a poor one; dpFactor mirrors that for
+            // double-play conversion (a good middle infield actually turns more
+            // of them, not the same flat rate regardless of who's fielding).
+            armFactor: clamp(1 + (100 - (team && team.runPrevention || 100)) * 0.003, 0.85, 1.15),
+            dpFactor: clamp(1 - (100 - (team && team.runPrevention || 100)) * 0.003, 0.85, 1.15),
             parkHr: parkHr || 1, simWeatherBb: (simWeather && simWeather.bb) || 1, stealRate: 0.10, stealSuccess: 0.78, sb: 0, cs: 0
         };
     }
@@ -2785,6 +2832,21 @@
         if (stat) {
             var starterOutsTotal = ipStringToOuts(stat.inningsPitched); var gs = Number(stat.gamesStarted || 0);
             if (starterOutsTotal > 0 && gs > 0) {
+                var perStartOuts = starterOutsTotal / gs;
+                // OPENER_DETECTION_20260727: a real opener's per-start average is
+                // nothing like a short-outing regular starter - nobody averages
+                // under 3 IP/start across 8+ real starts without being used as an
+                // opener specifically (an actual bad starter still averages 4+ IP
+                // before getting pulled from the rotation). Detected from the SAME
+                // real ip/gs data already fetched for every starter - not a
+                // fabricated toggle. Bypasses the normal regression (which floors
+                // at 12 outs / 4 IP and would otherwise force even a true opener
+                // up to a full start-length outing) and returns his own real short
+                // length directly, flagged so evBuildSide can model the next arm
+                // as a BULK reliever instead of a normal 3-IP bridge man.
+                if (gs >= 8 && perStartOuts < 9) {
+                    return { outs: clamp(Math.round(perStartOuts), 3, 9), isOpener: true };
+                }
                 // STARTER_LEN_REGRESS_20260628 (retuned 20260725): outs-per-start from
                 // raw ip/gs is unstable for small samples (a swingman with 3 starts +
                 // long relief reads as a 7-IP "starter"). Regress toward the league
@@ -2797,9 +2859,8 @@
                 // the sabermetric decimal average). The real modern-MLB DECIMAL average
                 // is ~5.2-5.3 IP/start (16 outs) - audit measured the engine averaging
                 // 6.1 decimal IP against that target before this fix. Retargeted to 16.
-                var perStartOuts = starterOutsTotal / gs;
                 var w = clamp(gs / 12, 0, 1);
-                return clamp(Math.round(perStartOuts * w + 16 * (1 - w)), 12, 21);
+                return { outs: clamp(Math.round(perStartOuts * w + 16 * (1 - w)), 12, 21), isOpener: false };
             }
         }
         // No-data fallback (synthetic teams, uncached pitchers): same 20260725 fix -
@@ -2807,13 +2868,15 @@
         // modern-MLB average), clamp shifted down to match.
         var outs = 15.6 + (quality - 100) * 0.10;
         if (Number.isFinite(era)) outs += (4.2 - era) * 0.9;
-        return clamp(Math.round(outs), 9, 20);
+        return { outs: clamp(Math.round(outs), 9, 20), isOpener: false };
     }
     // Simulate one half inning for `bat` side against the active pitcher object.
     // endLead (optional): walk-off rule — the half ends as soon as runs exceed this
     // deficit (checked at the end of each PA, so a walk-off HR counts every run).
-    // ghostSlot (optional): extra-innings placed runner (2020+ rule) — that lineup
-    // slot starts the inning on 2B and scores as an UNEARNED run for the pitcher.
+    // EXTRA_INNINGS_RULE_REMOVAL_20260727: extra innings start bases-empty, same
+    // as any other half-inning - real MLB discontinued the automatic placed-
+    // runner-on-2nd rule after the 2022 season, and this engine no longer models
+    // it (see the extra-innings loop in evSimGame for the removal).
     // =====================================================================
     // TMR_EVENTLOG_20260723 (Stage 2) — the authoritative structured event log.
     //
@@ -2832,7 +2895,8 @@
     // =====================================================================
     var EL_TYPES = {
         PA: 'PA', STEAL: 'STEAL', PICKOFF: 'PICKOFF', SUB: 'SUB', INJURY: 'INJURY',
-        EJECTION: 'EJECTION', INNING_START: 'INNING_START', INNING_END: 'INNING_END', GAME_END: 'GAME_END'
+        EJECTION: 'EJECTION', INNING_START: 'INNING_START', INNING_END: 'INNING_END', GAME_END: 'GAME_END',
+        WILD_PITCH: 'WILD_PITCH', PASSED_BALL: 'PASSED_BALL', BALK: 'BALK', INTERFERENCE: 'INTERFERENCE'
     };
     function elNewLog(gameId) {
         return { gameId: gameId || 'sim', seq: 0, events: [], scoring: [] };
@@ -3123,7 +3187,7 @@
         ['b1', 'b2', 'b3', 'hr'].forEach(function (h) { if (out[h]) { out.out = (out.out || 0) + out[h] * penalty; out[h] *= (1 - penalty); } });
         return out;
     }
-    function evPlayHalf(side, pitcher, random, endLead, ghostSlot, defSide, log) {
+    function evPlayHalf(side, pitcher, random, endLead, defSide, log) {
         var lineup = side.lineup, outs = 0, bases = [null, null, null], runs = 0, errors = 0;
         // SCORING_EVENT_LOG_20260703: when `log` is provided (only for the single
         // displayed game, never the win-probability samples) record each notable event
@@ -3390,9 +3454,6 @@
         // hit was wrongly charged earned. bu[] rides along with bases[]/bp[] through
         // every shift/advance so the taint survives until he scores or is put out.
         var bu = [false, false, false];
-        var hasGhost = ghostSlot !== undefined && ghostSlot !== null;
-        var ghostScored = false;
-        if (hasGhost) { bases[1] = ghostSlot; bp[1] = pitcher; }
         var apptRuns = 0; // runs scored during the current pitcher's appearance this inning
         // Per-event run ledger: every run is recorded with the runner, whether it
         // was earned, which pitcher is charged, and whether it is an RBI. The
@@ -3400,7 +3461,6 @@
         // one ledger, so they cannot disagree.
         var evRuns = [];
         function score(slot, earned, resp, rbiCredited) {
-            if (hasGhost && !ghostScored && slot === ghostSlot) { ghostScored = true; earned = false; }
             lineup[slot].acc.r++; runs++; apptRuns++;
             var rp = resp || pitcher; rp.acc.r++; if (earned) rp.acc.er++;
             // Inherited runner scored: charged to the arm that put him on, but it
@@ -3409,8 +3469,7 @@
             evRuns.push({
                 runnerSlot: slot, runnerId: bname(slot), earned: !!earned,
                 chargedPitcherId: rp ? rp.name : null,
-                rbiCredited: rbiCredited !== false,
-                placed: hasGhost && slot === ghostSlot
+                rbiCredited: rbiCredited !== false
             });
         }
         // MID_INNING_CHANGE_20260628: real managers pull a reliever (and a shelled
@@ -3463,6 +3522,82 @@
                 });
                 if (outs >= 3) break;
             }
+            // BALK_WP_PB_CI_20260727: real-rate mid-inning events, independent of the
+            // batter's own PA outcome, same architectural pattern as the pickoff
+            // check above (unconditional - affects the fast calibration track too,
+            // not just the displayed/event-logged game).
+            var anyOnBase = bases[0] !== null || bases[1] !== null || bases[2] !== null;
+            // Wild pitch (real MLB ~0.35/team-game, essentially all of it with a
+            // runner on): every occupied base advances one, in earned-run terms no
+            // different from a stolen base (uses each runner's existing bu[] taint,
+            // does not introduce a new one). Charged to the pitcher (his own stat).
+            if (anyOnBase && random() < 0.0196) {
+                evRuns = [];
+                var wpBefore = baseSnapshot();
+                if (bases[2] !== null) { score(bases[2], !bu[2], bp[2]); bases[2] = null; bp[2] = null; bu[2] = false; }
+                if (bases[1] !== null) { bases[2] = bases[1]; bp[2] = bp[1]; bu[2] = bu[1]; bases[1] = null; bp[1] = null; bu[1] = false; }
+                if (bases[0] !== null) { bases[1] = bases[0]; bp[1] = bp[0]; bu[1] = bu[0]; bases[0] = null; bp[0] = null; bu[0] = false; }
+                pitcher.acc.wp = (pitcher.acc.wp || 0) + 1; defSide.wp = (defSide.wp || 0) + 1;
+                // WALKOFF_NONPA_EVENTS_20260727: a wild pitch/passed ball/balk can
+                // itself be the game-ending play (a runner scores the winning run on
+                // one) - same `runs > endLead` condition the PA path and the half-
+                // inning loop's own termination check already use, so narration and
+                // the actual end-of-game rule can never disagree here either.
+                var wpWalkOff = evRuns.length > 0 && endLead !== undefined && endLead !== null && runs > endLead;
+                elEmit(EL_TYPES.WILD_PITCH, {
+                    baseStateBefore: wpBefore, baseStateAfter: baseSnapshot(),
+                    runnerPitcher: pitcherRefs(), outsBefore: outs, outsAfter: outs,
+                    scoreBefore: elScore(-Math.max(0, evRuns.length)), scoreAfter: elScore(),
+                    result: { code: 'WP', detail: pitcher.name + ' uncorks a wild pitch' + (wpWalkOff ? '. Walk-off! Game over' : '') },
+                    runsScored: evRuns.slice(), rbi: 0
+                });
+                evRuns = [];
+                if (wpWalkOff) break;
+                maybeChange();
+            }
+            // Passed ball (real MLB ~0.10/team-game): same baserunning mechanics as a
+            // wild pitch, but it is the CATCHER's miscue, not the pitcher's - charged
+            // to the fielding team, never to the pitcher's own line.
+            else if (anyOnBase && random() < 0.006) {
+                evRuns = [];
+                var pbBefore = baseSnapshot();
+                if (bases[2] !== null) { score(bases[2], !bu[2], bp[2]); bases[2] = null; bp[2] = null; bu[2] = false; }
+                if (bases[1] !== null) { bases[2] = bases[1]; bp[2] = bp[1]; bu[2] = bu[1]; bases[1] = null; bp[1] = null; bu[1] = false; }
+                if (bases[0] !== null) { bases[1] = bases[0]; bp[1] = bp[0]; bu[1] = bu[0]; bases[0] = null; bp[0] = null; bu[0] = false; }
+                defSide.pb = (defSide.pb || 0) + 1;
+                var pbWalkOff = evRuns.length > 0 && endLead !== undefined && endLead !== null && runs > endLead;
+                elEmit(EL_TYPES.PASSED_BALL, {
+                    baseStateBefore: pbBefore, baseStateAfter: baseSnapshot(),
+                    runnerPitcher: pitcherRefs(), outsBefore: outs, outsAfter: outs,
+                    scoreBefore: elScore(-Math.max(0, evRuns.length)), scoreAfter: elScore(),
+                    result: { code: 'PB', detail: 'Passed ball' + (pbWalkOff ? '. Walk-off! Game over' : '') },
+                    runsScored: evRuns.slice(), rbi: 0
+                });
+                evRuns = [];
+                if (pbWalkOff) break;
+                maybeChange();
+            }
+            // Balk (real MLB ~0.03/team-game, rare): every runner advances one base,
+            // same mechanics again, charged to the pitcher as his own violation.
+            else if (anyOnBase && random() < 0.0018) {
+                evRuns = [];
+                var bkBefore = baseSnapshot();
+                if (bases[2] !== null) { score(bases[2], !bu[2], bp[2]); bases[2] = null; bp[2] = null; bu[2] = false; }
+                if (bases[1] !== null) { bases[2] = bases[1]; bp[2] = bp[1]; bu[2] = bu[1]; bases[1] = null; bp[1] = null; bu[1] = false; }
+                if (bases[0] !== null) { bases[1] = bases[0]; bp[1] = bp[0]; bu[1] = bu[0]; bases[0] = null; bp[0] = null; bu[0] = false; }
+                pitcher.acc.bk = (pitcher.acc.bk || 0) + 1; defSide.bk = (defSide.bk || 0) + 1;
+                var bkWalkOff = evRuns.length > 0 && endLead !== undefined && endLead !== null && runs > endLead;
+                elEmit(EL_TYPES.BALK, {
+                    baseStateBefore: bkBefore, baseStateAfter: baseSnapshot(),
+                    runnerPitcher: pitcherRefs(), outsBefore: outs, outsAfter: outs,
+                    scoreBefore: elScore(-Math.max(0, evRuns.length)), scoreAfter: elScore(),
+                    result: { code: 'BK', detail: pitcher.name + ' balks' + (bkWalkOff ? '. Walk-off! Game over' : '') },
+                    runsScored: evRuns.slice(), rbi: 0
+                });
+                evRuns = [];
+                if (bkWalkOff) break;
+                maybeChange();
+            }
             // Steal attempt with a runner on 1B and 2B open (live event, not post-hoc).
             // Per-runner rate/success (real SB profile) when available, else team default.
             var runner0 = lineup[bases[0]];
@@ -3502,6 +3637,31 @@
             if (el && log.inning >= 7 && side.bench && side.bench.length && b && b.realOps != null && b.realOps < 0.660 && random() < 0.06) {
                 var ph = elSwapSlot(bi, 'PH', 'strategic move');
                 if (ph) b = lineup[bi];
+            }
+            // CATCHERS_INTERFERENCE_20260727: rare (real MLB ~0.02/team-game), does not
+            // need a runner on base - the batter's swing is interfered with by the
+            // catcher's mitt. Batter awarded first base (like a walk, but not scored
+            // as one), existing runners forced up only if the force applies. Entirely
+            // the catcher's fault - never charged to the pitcher's own line.
+            if (random() < 0.00053) {
+                evRuns = [];
+                var ciBefore = baseSnapshot(), ciName = bname(bi);
+                b.acc.pa++; b.acc.ci = (b.acc.ci || 0) + 1; defSide.ci = (defSide.ci || 0) + 1;
+                if (bases[0] !== null) { if (bases[1] !== null) { if (bases[2] !== null) { score(bases[2], !bu[2], bp[2]); bases[2] = null; bp[2] = null; bu[2] = false; } bases[2] = bases[1]; bp[2] = bp[1]; bu[2] = bu[1]; } bases[1] = bases[0]; bp[1] = bp[0]; bu[1] = bu[0]; }
+                bases[0] = bi; bp[0] = pitcher; bu[0] = false; side.idx++;
+                var ciWalkOff = evRuns.length > 0 && endLead !== undefined && endLead !== null && runs > endLead;
+                elEmit(EL_TYPES.INTERFERENCE, {
+                    batterId: ciName, batterSlot: bi,
+                    baseStateBefore: ciBefore, baseStateAfter: baseSnapshot(),
+                    runnerPitcher: pitcherRefs(),
+                    outsBefore: outs, outsAfter: outs,
+                    scoreBefore: elScore(-evRuns.length), scoreAfter: elScore(),
+                    result: { code: 'CI', detail: ciName + ' reaches on catcher\'s interference' + (ciWalkOff ? '. Walk-off! Game over' : '') },
+                    runsScored: evRuns.slice(), rbi: 0
+                });
+                evRuns = [];
+                if (ciWalkOff) break;
+                continue;
             }
             // INTENTIONAL_WALK_20260629: first base open, a runner in scoring position,
             // two outs, an elite bat up and a clearly weaker on-deck hitter -> the manager
@@ -3547,7 +3707,12 @@
             // rather than a new adjustment path - a mop-up appearance just runs
             // with a higher effective anchor for its half-inning.
             var mopUpFactor = pitcher._mopUp ? MOP_UP_FACTOR : 1;
-            var v = evScale(evApplyTto(evApplyWeatherBb(evApplyParkHr(evCombine(batVec, pitcher.vec), side.parkHr), side.simWeatherBb), evTtoMultipliers(timesThrough)), side.anchorFactor * mopUpFactor);
+            // NO_HITTER_CALIBRATION_20260727: same anchor-scaling mechanism, the
+            // suppressive counterpart to MOP_UP_FACTOR - a starter on a detected
+            // "dealing" day (see evSimGame) pitches with a lower effective anchor
+            // for his own outing only (never touches relievers or the opponent).
+            var dealingFactor = pitcher._dealing ? 0.42 : 1;
+            var v = evScale(evApplyTto(evApplyWeatherBb(evApplyParkHr(evCombine(batVec, pitcher.vec), side.parkHr), side.simWeatherBb), evTtoMultipliers(timesThrough)), side.anchorFactor * mopUpFactor * dealingFactor);
             var ev = evSample(v, random), acc = b.acc; acc.pa++; pitcher.acc.bf++;
             // Event-sourced situational accounting (no post-hoc estimates):
             var paBefore = baseSnapshot(), paName = bname(bi), paRunnerPitchers = pitcherRefs();
@@ -3578,20 +3743,24 @@
                 acc.ab++; acc.h++; acc.b2++; pitcher.acc.h++;
                 if (bases[2] !== null) { score(bases[2], !bu[2], bp[2]); rbi++; bases[2] = null; bp[2] = null; bu[2] = false; }
                 if (bases[1] !== null) { score(bases[1], !bu[1], bp[1]); rbi++; bases[1] = null; bp[1] = null; bu[1] = false; }
-                if (bases[0] !== null) { if (random() < clamp(0.40 * (lineup[bases[0]].speed || 1), 0.18, 0.72)) { score(bases[0], !bu[0], bp[0]); rbi++; } else { bases[2] = bases[0]; bp[2] = bp[0]; bu[2] = bu[0]; } bases[0] = null; bp[0] = null; bu[0] = false; }
+                if (bases[0] !== null) { if (random() < clamp(0.40 * (lineup[bases[0]].speed || 1) * (defSide.armFactor || 1), 0.18, 0.72)) { score(bases[0], !bu[0], bp[0]); rbi++; } else { bases[2] = bases[0]; bp[2] = bp[0]; bu[2] = bu[0]; } bases[0] = null; bp[0] = null; bu[0] = false; }
                 bases[1] = bi; bp[1] = pitcher; bu[1] = false;
             } else if (ev === 'b1') {
                 acc.ab++; acc.h++; acc.b1 = (acc.b1 || 0) + 1; pitcher.acc.h++;
                 if (bases[2] !== null) { score(bases[2], !bu[2], bp[2]); rbi++; bases[2] = null; bp[2] = null; bu[2] = false; }
                 if (bases[1] !== null) {
                     var sp2 = lineup[bases[1]].speed || 1;
-                    var scoreT = clamp(0.60 * sp2, 0.42, 0.82), outT = scoreT + 0.10;
+                    // DEFENSE_REALISM_20260727: defSide.armFactor (>1 weak D, <1
+                    // strong D) scales the send probability directly and the kill
+                    // window inversely, so a good outfield arm both holds runners
+                    // more AND throws out more of the ones who still go.
+                    var scoreT = clamp(0.60 * sp2 * (defSide.armFactor || 1), 0.42, 0.82), outT = scoreT + 0.10 / (defSide.armFactor || 1);
                     var send = random();
                     if (send < scoreT) { score(bases[1], !bu[1], bp[1]); rbi++; bases[1] = null; bp[1] = null; bu[1] = false; }
                     else if (send < outT) { ofAssists++; paOfAssist = true; pitcher.acc.outs++; outs++; bases[1] = null; bp[1] = null; bu[1] = false; } // thrown out at home (outfield assist)
                     else { bases[2] = bases[1]; bp[2] = bp[1]; bu[2] = bu[1]; bases[1] = null; bp[1] = null; bu[1] = false; }
                 }
-                if (bases[0] !== null) { if (random() < clamp(0.28 * (lineup[bases[0]].speed || 1), 0.12, 0.5) && bases[2] === null) { bases[2] = bases[0]; bp[2] = bp[0]; bu[2] = bu[0]; } else { bases[1] = bases[0]; bp[1] = bp[0]; bu[1] = bu[0]; } bases[0] = null; bp[0] = null; bu[0] = false; }
+                if (bases[0] !== null) { if (random() < clamp(0.28 * (lineup[bases[0]].speed || 1) * (defSide.armFactor || 1), 0.12, 0.5) && bases[2] === null) { bases[2] = bases[0]; bp[2] = bp[0]; bu[2] = bu[0]; } else { bases[1] = bases[0]; bp[1] = bp[0]; bu[1] = bu[0]; } bases[0] = null; bp[0] = null; bu[0] = false; }
                 bases[0] = bi; bp[0] = pitcher; bu[0] = false;
             } else { // out in play, with a small chance of a reach-on-error (unearned)
                 // ERROR_ATTRIBUTION_FIX_20260725: an error is a FIELDING mistake, so it
@@ -3631,9 +3800,12 @@
                         outs++;
                         logEvent({ type: 'SAC', batter: bname(bi), pitcher: pitcher.name });
                     }
-                    else if (outs < 2 && bases[0] !== null && random() < 0.21) {
+                    else if (outs < 2 && bases[0] !== null && random() < 0.21 * (defSide.dpFactor || 1)) {
                         // GIDP rate calibrated June 4 2026: 0.11 produced 0.38/team
-                        // vs real 0.72; 0.21 lands on the real rate.
+                        // vs real 0.72; 0.21 lands on the real rate. DEFENSE_REALISM_
+                        // 20260727: defSide.dpFactor (>1 strong D, <1 weak D) scales
+                        // that base rate - a good middle infield actually turns more
+                        // double plays, not the same flat rate regardless of fielder.
                         acc.gidp = (acc.gidp || 0) + 1; side.gidp = (side.gidp || 0) + 1; gidp++; paGidp = true;
                         outs += 2; pitcher.acc.outs++; bases[0] = null; bp[0] = null; bu[0] = false;
                     }
@@ -3747,7 +3919,11 @@
     // inning outing is not). RP/bridge caps at 3 IP, the traditional long-man
     // ceiling. SP/POS are uncapped here (SP already has its own starterOuts
     // model; POS is the position-player emergency arm with no realistic cap).
-    var ROLE_OUT_CAP = { CL: 6, SU: 6, RP: 9 };
+    // OPENER_BULLPEN_GAME_20260727: BULK is the "bulk reliever" who follows a true
+    // opener (see evBuildSide's isOpenerGame detection) and is expected to cover
+    // the bulk of the game's innings - a real 4-6 IP role, not a normal 3-IP
+    // bridge man. 18 outs = 6 IP, the realistic ceiling for that role.
+    var ROLE_OUT_CAP = { CL: 6, SU: 6, RP: 9, BULK: 18 };
     // MOP_UP_EFFECTIVENESS_20260727: bounded batter-favoring scale (same units as
     // evAnchorFactor/evScale's run-environment scaling) applied only while
     // evDefPitcher's mop-up flag is set for that half-inning. Kept modest and
@@ -3774,7 +3950,7 @@
         var cap = ROLE_OUT_CAP[p.role];
         return !cap || armOutsThisGame(p) < cap;
     }
-    function evActivePitcher(side, outsRecorded, extraInnings, defRuns, oppRuns) {
+    function evActivePitcher(side, outsRecorded, extraInnings, defRuns, oppRuns, oppHand) {
         // starterOutsGame: per-game sampled hook point (real starters do not throw
         // an identical inning count every outing); falls back to the season mean.
         var starterOuts = side.starterOutsGame || side.starterOuts;
@@ -3821,11 +3997,26 @@
             var candidates = [];
             for (var i = 1; i < arms.length; i++) {
                 var p = arms[i];
-                if ((p.role === 'CL' || p.role === 'SU' || p.role === 'RP') && !p.removed) candidates.push(p);
+                if ((p.role === 'CL' || p.role === 'SU' || p.role === 'RP' || p.role === 'BULK') && !p.removed) candidates.push(p);
             }
             if (!candidates.length) return arms[closerIdx];
             var fresh = candidates.filter(function (p) { var cap = ROLE_OUT_CAP[p.role]; return !cap || armOutsThisGame(p) < cap; });
             var pool = (fresh.length ? fresh : candidates).slice().sort(function (a, b) { return armOutsThisGame(a) - armOutsThisGame(b); });
+            // RELIEVER_MATCHUP_20260727: workload/freshness stays the PRIMARY factor
+            // (a manager doesn't burn his best-rested arm on a handedness whim) -
+            // this only breaks a tie among arms that are practically equally fresh
+            // (within one inning's workload of the least-used candidate), preferring
+            // whichever arm's throwing hand matches the upcoming batter's. A real,
+            // common tactic (same-side reliever for a same-side bat) this engine
+            // previously had zero handedness input into WHICH arm gets picked -
+            // platoon splits already affected the AT-BAT once a pitcher was chosen
+            // (PLATOON_VS_RELIEVER_20260623), but never the selection itself.
+            if (oppHand && pool.length > 1) {
+                var minOuts = armOutsThisGame(pool[0]);
+                var tier = pool.filter(function (p) { return armOutsThisGame(p) - minOuts <= 3; });
+                var matched = tier.filter(function (p) { return p.hand === oppHand; });
+                if (matched.length) return matched.sort(function (a, b) { return armOutsThisGame(a) - armOutsThisGame(b); })[0];
+            }
             return pool[0];
         }
         if (extraInnings) return freshestArm();
@@ -3895,7 +4086,14 @@
     // (down 8+ in the 8th inning or later) send a position player instead of burning a
     // real reliever. The pos pitcher is appended once and pinned via minArmIdx; the
     // per-game reset truncates it so win-probability resampling never accumulates arms.
-    function evDefPitcher(side, outsRecorded, defRuns, oppRuns, inn) {
+    // RELIEVER_MATCHUP_20260727: the upcoming leadoff batter's bat side for the
+    // half about to be played - real batSide data when available, null otherwise
+    // (matches freshestArm's own null-safe check, a no-op for synthetic teams).
+    function evNextBatterHand(side) {
+        var b = side && side.lineup && side.lineup[(side.idx || 0) % 9];
+        return (b && b.batSide) || null;
+    }
+    function evDefPitcher(side, outsRecorded, defRuns, oppRuns, inn, oppHand) {
         if (inn >= 7 && (oppRuns - defRuns) >= 8) {
             if (!side.posPitcher) {
                 var pp = evMakePositionPitcher(side);
@@ -3920,7 +4118,7 @@
         // for any single relief appearance, matching the rare real historic
         // long-relief outing, not an unbounded one.
         var EMERGENCY_ARM_CEILING = 12;
-        var relievers = side.pitchers.filter(function (p) { return p.role === 'CL' || p.role === 'SU' || p.role === 'RP'; });
+        var relievers = side.pitchers.filter(function (p) { return p.role === 'CL' || p.role === 'SU' || p.role === 'RP' || p.role === 'BULK'; });
         var allSpent = relievers.length > 0 && relievers.every(function (p) { return p.removed || armOutsThisGame(p) >= EMERGENCY_ARM_CEILING; });
         if (allSpent) {
             // EMERGENCY_DEPTH_ARM_20260727: only 3 relief arms are ever named (the
@@ -3954,7 +4152,7 @@
             }
             if (side.posPitcher) { side.minArmIdx = side.posPitcherIdx; return side.posPitcher; }
         }
-        var chosen = evActivePitcher(side, outsRecorded, extraInnings, defRuns, oppRuns);
+        var chosen = evActivePitcher(side, outsRecorded, extraInnings, defRuns, oppRuns, oppHand);
         // ARM_REMOVAL_TRACKING_20260725: the moment a half-inning boundary hands
         // off to a DIFFERENT arm than last time, the previous arm has left the
         // game for good (real baseball: no pitcher re-enters once replaced). This
@@ -3995,6 +4193,7 @@
             // Event-sourced situational trackers (reset per game).
             s.gidp = 0; s.sf = 0; s.sacBunts = 0; s.hbp = 0; s.rispAb = 0; s.rispHits = 0; s.twoOutRbi = 0;
             s.lisp2out = 0; s.pickoffs = 0; s.ofAssists = 0; s.dpTurned = 0; s._lastPitcher = null; s.gameErrors = 0;
+            s.wp = 0; s.pb = 0; s.bk = 0; s.ci = 0;
             // TMR_ROSTER_STATE_20260723: reset the in-game roster state. lineupSlots[k]
             // is the ordered history of who has occupied batting slot k (starter first).
             // These are cheap no-ops for synthetic teams (empty bench) and are only
@@ -4022,11 +4221,39 @@
             // length clusters near the starter's real average (real start IP SD ~1.5),
             // instead of the old flat +/-8-out swing that produced too many 3-IP and
             // 8-IP outings. Mean-preserving; floor lifted off 8 so quick hooks stay rare.
-            s.starterOutsGame = clamp(s.starterOuts + Math.round((random() + random() - 1) * 6), 9, 24);
+            // COMPLETE_GAME_CEILING_FIX_20260727: the old 24-out (8 IP) cap made a
+            // true 9-inning complete game (27 outs) mathematically impossible
+            // regardless of how dominant a start was - measured CG% sat at
+            // 0.03-0.06% vs the real ~0.4% target, an 8x-plus shortfall, not noise.
+            // Raised to 27 so a genuinely efficient outing can reach one in the
+            // extreme tail of the distribution (still needs a high real starterOuts
+            // base AND a max-positive variance roll) - the mean is unaffected, only
+            // the previously-unreachable top of the range.
+            // COMPLETE_GAME_TAIL_FIX_20260727: raising the ceiling alone measured
+            // ZERO change to CG% - root cause is that the triangular variance term
+            // is a BOUNDED distribution (hard support on [-6,+6]), so any starter
+            // whose real per-start baseline is below ~21 outs can never reach 27
+            // regardless of the ceiling, even though real complete games are mostly
+            // driven by a rare "dealing" day (low pitch count), not a high seasonal
+            // average - the modern-MLB real per-start average is nowhere near 21
+            // outs even for aces. A separate, rare (~1.2% of starts) exceptional-
+            // outing bonus models that "hot hand" tail event directly, independent
+            // of the starter's normal baseline, matching how real complete games
+            // actually happen.
+            var dealingBonus = random() < 0.019 ? (4 + Math.floor(random() * 5)) : 0;
+            s.starterOutsGame = clamp(s.starterOuts + Math.round((random() + random() - 1) * 6) + dealingBonus, 9, 27);
             s.lineup.forEach(function (b) { b.acc = evNewBat(); });
             s.pitchers.forEach(function (p) { p.acc = evNewPit(); p.removed = false; p._enterMargin = undefined; });
+            // NO_HITTER_CALIBRATION_20260727: the same rare "dealing" day that
+            // extends a starter's expected length also needs to suppress what he
+            // allows, or a no-hitter is nearly impossible even on a day he goes the
+            // distance (27 independent PAs each need to avoid a hit - an AVERAGE
+            // day's per-PA hit rate makes that vanishingly rare regardless of
+            // outing length). One flag drives both effects together, matching how
+            // a real "he's got it today" start actually presents.
+            if (s.pitchers[0]) s.pitchers[0]._dealing = dealingBonus > 0;
         });
-        var aRuns = 0, hRuns = 0, aErr = 0, hErr = 0, aInn = [], hInn = [], aPlaced = 0, hPlaced = 0, walkOff = false;
+        var aRuns = 0, hRuns = 0, aErr = 0, hErr = 0, aInn = [], hInn = [], walkOff = false;
         // WEATHER_DELAY_20260726: at most one delay per game, and only within
         // regulation (halves 1-17, i.e. up through the scheduled top of the 9th -
         // always played regardless of score, so this target is always reachable).
@@ -4085,7 +4312,7 @@
         // the authoritative structured event log (elNewLog).
         var sinkScoring = Array.isArray(logSink) ? logSink : (logSink && logSink.scoring) || null;
         var sinkEl = (logSink && !Array.isArray(logSink) && logSink.el) || null;
-        function half(batSide, defSide, pitcher, endLead, ghostSlot, inning, halfLabel) {
+        function half(batSide, defSide, pitcher, endLead, inning, halfLabel) {
             var isHomeBat = batSide === homeSide;
             var log = (sinkScoring || sinkEl) ? {
                 events: sinkScoring || [], el: sinkEl,
@@ -4123,7 +4350,7 @@
                     runsScored: [], rbi: 0
                 });
             }
-            var r = evPlayHalf(batSide, pitcher, random, endLead, ghostSlot, defSide, log);
+            var r = evPlayHalf(batSide, pitcher, random, endLead, defSide, log);
             defSide.dpTurned += r.gidp; defSide.ofAssists += r.ofAssists;
             // Track the arm that FINISHED the half (mid-inning changes move it on),
             // so the next half only reports a change when one really happened.
@@ -4137,9 +4364,9 @@
         // only - extra innings and walk-offs already have correct dedicated rules.
         var apLog = {}, hpLog = {}, marginLog = [];
         for (var inn = 0; inn < 9; inn++) {
-            var ap = evDefPitcher(homeSide, sumOuts(homeSide), hRuns, aRuns, inn);
+            var ap = evDefPitcher(homeSide, sumOuts(homeSide), hRuns, aRuns, inn, evNextBatterHand(awaySide));
             apLog[inn + 1] = ap;
-            var ra = half(awaySide, homeSide, ap, null, undefined, inn + 1, 'top'); aRuns += ra.runs; hErr += ra.errors; aInn.push(ra.runs);
+            var ra = half(awaySide, homeSide, ap, null, inn + 1, 'top'); aRuns += ra.runs; hErr += ra.errors; aInn.push(ra.runs);
             marginLog.push({ inning: inn + 1, half: 'top', homeMinusAway: hRuns - aRuns });
             halvesPlayed++;
             if (!weatherDelay && halvesPlayed === delayHalfTarget) {
@@ -4147,11 +4374,11 @@
                 if (weatherDelay.outcome !== 'resume') break;
             }
             if (inn === 8 && hRuns > aRuns) { break; } // home leads, bottom 9 not played
-            var hp = evDefPitcher(awaySide, sumOuts(awaySide), aRuns, hRuns, inn);
+            var hp = evDefPitcher(awaySide, sumOuts(awaySide), aRuns, hRuns, inn, evNextBatterHand(homeSide));
             hpLog[inn + 1] = hp;
             // Bottom 9: walk-off rule applies (half ends when home takes the lead).
             var hBefore = hRuns;
-            var rh = half(homeSide, awaySide, hp, inn === 8 ? (aRuns - hRuns) : null, undefined, inn + 1, 'bottom');
+            var rh = half(homeSide, awaySide, hp, inn === 8 ? (aRuns - hRuns) : null, inn + 1, 'bottom');
             hRuns += rh.runs; aErr += rh.errors; hInn.push(rh.runs);
             marginLog.push({ inning: inn + 1, half: 'bottom', homeMinusAway: hRuns - aRuns });
             halvesPlayed++;
@@ -4163,21 +4390,31 @@
             // 9th or later - not any late go-ahead rally.
             if (inn === 8 && hBefore <= aRuns && hRuns > aRuns) walkOff = true;
         }
-        // Extra innings: real per-inning tracking, placed runner on 2B (2020+ rule),
-        // walk-off termination for the home half. Skipped entirely if a weather
+        // Extra innings: real per-inning tracking, bases empty (current MLB rule -
+        // see EXTRA_INNINGS_RULE_REMOVAL_20260727 above), walk-off termination for
+        // the home half. Skipped entirely if a weather
         // stoppage already ended the game in regulation (suspended or official).
+        // EXTRA_INNINGS_RULE_REMOVAL_20260727: real MLB discontinued the automatic
+        // placed-runner-on-2nd rule after the 2022 season - extra innings here are
+        // now genuinely bases-empty, same as any other half-inning, matching the
+        // current actual rule. The cap is raised from 18 to 30 total innings (21
+        // extra frames) because bases-empty extra innings resolve less often per
+        // half-inning than with a free runner in scoring position, so a true
+        // marathon game (rare, but real MLB history has games past 20 innings)
+        // needs more room before hitting a safety ceiling - see the recalibration
+        // pass in scripts/validate-mlb-simulator.cjs for how often this cap binds.
         var extra = 9;
         var stoppedForWeather = !!(weatherDelay && weatherDelay.outcome !== 'resume');
-        while (!stoppedForWeather && aRuns === hRuns && extra < 18) {
+        while (!stoppedForWeather && aRuns === hRuns && extra < 30) {
             // evDefPitcher (not evActivePitcher): extra innings must keep the same
             // blowout position-player-pitching rule the regulation loop uses.
-            var ap2 = evDefPitcher(homeSide, sumOuts(homeSide), hRuns, aRuns, extra);
-            var rae = half(awaySide, homeSide, ap2, null, (awaySide.idx + 8) % 9, extra + 1, 'top');
-            aRuns += rae.runs; hErr += rae.errors; aInn.push(rae.runs); aPlaced++;
-            var hp2 = evDefPitcher(awaySide, sumOuts(awaySide), aRuns, hRuns, extra);
+            var ap2 = evDefPitcher(homeSide, sumOuts(homeSide), hRuns, aRuns, extra, evNextBatterHand(awaySide));
+            var rae = half(awaySide, homeSide, ap2, null, extra + 1, 'top');
+            aRuns += rae.runs; hErr += rae.errors; aInn.push(rae.runs);
+            var hp2 = evDefPitcher(awaySide, sumOuts(awaySide), aRuns, hRuns, extra, evNextBatterHand(homeSide));
             var hBeforeX = hRuns;
-            var rhe = half(homeSide, awaySide, hp2, aRuns - hRuns, (homeSide.idx + 8) % 9, extra + 1, 'bottom');
-            hRuns += rhe.runs; aErr += rhe.errors; hInn.push(rhe.runs); hPlaced++;
+            var rhe = half(homeSide, awaySide, hp2, aRuns - hRuns, extra + 1, 'bottom');
+            hRuns += rhe.runs; aErr += rhe.errors; hInn.push(rhe.runs);
             if (hBeforeX <= aRuns && hRuns > aRuns) walkOff = true;
             extra++;
         }
@@ -4229,7 +4466,7 @@
                 derivedLosePitcherName = loseArm2 ? loseArm2.name : null;
             }
         }
-        return { aRuns: aRuns, hRuns: hRuns, aInn: aInn, hInn: hInn, aErr: aErr, hErr: hErr, extra: actualInnings, aPlaced: aPlaced, hPlaced: hPlaced, walkOff: walkOff, weatherDelay: weatherDelay, gameStatus: gameStatus, pregameDelay: pregameDelay, derivedWinPitcherName: derivedWinPitcherName, derivedLosePitcherName: derivedLosePitcherName };
+        return { aRuns: aRuns, hRuns: hRuns, aInn: aInn, hInn: hInn, aErr: aErr, hErr: hErr, extra: actualInnings, walkOff: walkOff, weatherDelay: weatherDelay, gameStatus: gameStatus, pregameDelay: pregameDelay, derivedWinPitcherName: derivedWinPitcherName, derivedLosePitcherName: derivedLosePitcherName };
     }
     function sumOuts(side) { return side.pitchers.reduce(function (t, p) { return t + p.acc.outs; }, 0); }
 
@@ -4350,7 +4587,8 @@
             lispLeft2Out: side.lisp2out || 0, gidp: side.gidp || 0,
             sacFlies: side.sf || 0, sacBunts: side.sacBunts || 0, hbp: side.hbp || 0,
             rispText: (side.rispHits || 0) + '-for-' + (side.rispAb || 0), pickoffs: side.pickoffs || 0,
-            outfieldAssists: side.ofAssists || 0, dp: side.dpTurned || 0, ibb: side.ibb || 0
+            outfieldAssists: side.ofAssists || 0, dp: side.dpTurned || 0, ibb: side.ibb || 0,
+            wildPitches: side.wp || 0, passedBalls: side.pb || 0, balks: side.bk || 0, interference: side.ci || 0
         };
     }
     // TURNING_POINT_20260725: a one-sentence postgame callout, derived purely
@@ -4501,13 +4739,22 @@
             var fld = e.battingTeam === 'home' ? away : home;
             if (e.eventType === EL_TYPES.INNING_START) {
                 while (bat.innings.length < e.inning) bat.innings.push(0);
-            } else if (elIsPa(e)) {
-                if (HIT[e.result.code]) bat.h++;
-                if (e.result.code === 'E') fld.e++;
-                bat.r += (e.runsScored || []).length;
-                if (bat.innings.length >= e.inning) bat.innings[e.inning - 1] += (e.runsScored || []).length;
             } else if (e.eventType === EL_TYPES.INNING_END) {
                 bat.lob += e.lob || 0;
+            } else {
+                if (elIsPa(e)) {
+                    if (HIT[e.result.code]) bat.h++;
+                    if (e.result.code === 'E') fld.e++;
+                }
+                // WP/PASSED_BALL/BALK/INTERFERENCE also carry runsScored (a runner
+                // advancing home on one of these is not a plate appearance, but the
+                // run is just as real) - line score totals must count them or they
+                // silently drift from the live accumulators (and from foldPitching/
+                // foldBatting, whose own run-crediting is already unconditional).
+                if ((e.runsScored || []).length) {
+                    bat.r += e.runsScored.length;
+                    if (bat.innings.length >= e.inning) bat.innings[e.inning - 1] += e.runsScored.length;
+                }
             }
         });
         return { away: away, home: home };
@@ -5999,7 +6246,9 @@
         // - MLB does not award decisions until a suspended game is completed and
         // resumed. Skipping pitcherDecisions entirely (rather than passing it a
         // margin that isn't real) keeps this honest instead of fabricating labels.
-        var decisions = (ctx && ctx.suspended) ? rows.map(function () { return null; }) : pitcherDecisions(rows, isWinner, margin, ctx);
+        var decisionResult = (ctx && ctx.suspended) ? { labels: rows.map(function () { return null; }), blownSaves: rows.map(function () { return false; }) } : pitcherDecisions(rows, isWinner, margin, ctx);
+        var decisions = decisionResult.labels;
+        var blownSaves = decisionResult.blownSaves;
         var byName = {};
         (foldStaff || []).forEach(function (p) { byName[p.name] = p; });
         var totals = { h: 0, r: 0, er: 0, bb: 0, so: 0, hr: 0, hbp: 0, bf: 0, outs: 0, pc: 0, st: 0, gb: 0, fb: 0, ir: 0, irs: 0 };
@@ -6012,8 +6261,12 @@
             var f = byName[row.name] || byName[String(row.name).replace(/\s*\((LHP|RHP)\)$/, '')] || null;
             var gb = f ? f.gb : null, fb = f ? f.fb : null;
             if (f) { totals.gb += f.gb || 0; totals.fb += f.fb || 0; }
-            var decClass = decisions[index] ? ' bx-dec-' + String(decisions[index]).replace(/[^A-Za-z]/g, '').toUpperCase() : '';
-            var name = escapeHtml(row.name) + (decisions[index] ? ' <span class="bx-dec' + decClass + '">' + escapeHtml(decisions[index]) + '</span>' : '');
+            // BLOWN_SAVE_20260727: rendered alongside whatever decision (if any) this
+            // pitcher also got, e.g. "L, BS" or standalone "BS" - matches real box
+            // scores, since a blown save is independent of W/L/SV/HLD.
+            var decText = [decisions[index], blownSaves[index] ? 'BS' : null].filter(Boolean).join(', ');
+            var decClass = decText ? ' bx-dec-' + decText.replace(/[^A-Za-z]/g, '').toUpperCase() : '';
+            var name = escapeHtml(row.name) + (decText ? ' <span class="bx-dec' + decClass + '">' + escapeHtml(decText) + '</span>' : '');
             var stPct = ps.pc ? Math.round((ps.st / ps.pc) * 100) + '%' : '—';
             return '<tr><th scope="row">' + name + '</th><td>' + escapeHtml(row.ip) + '</td><td>' + row.h + '</td><td>' + row.r + '</td><td>' + row.er + '</td><td>' + row.bb + '</td><td>' + row.so + '</td><td>' + row.hr + '</td>' +
                 '<td>' + Number(row.hbp || 0) + '</td><td>' + Number(row.bf || 0) + '</td>' +
@@ -7392,7 +7645,9 @@
             EL_TYPES: EL_TYPES,
             ipStringToOuts: ipStringToOuts,
             ipStringToDecimal: ipStringToDecimal,
-            INJURY_GAME_CAP: INJURY_GAME_CAP
+            INJURY_GAME_CAP: INJURY_GAME_CAP,
+            evStarterOuts: evStarterOuts,
+            ROLE_OUT_CAP: ROLE_OUT_CAP
         }
     };
 
