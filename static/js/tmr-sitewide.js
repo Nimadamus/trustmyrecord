@@ -270,7 +270,7 @@
                     <div class="tmr-user-menu-divider" role="separator"></div>
                     <button class="tmr-user-menu-item tmr-user-menu-item--logout" role="menuitem" type="button" data-tmr-logout><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Log Out</button>
                 </div>
-                <a href="/wallet/" id="navCoinChip" class="tmr-global-nav__coins" data-tmr-coin-balance aria-label="TMR Coin balance" title="TMR Coin balance" hidden>
+                <a href="/wallet/" id="navCoinChip" class="tmr-global-nav__coins" data-tmr-coin-balance aria-label="${(window.TMR_TERMINOLOGY && window.TMR_TERMINOLOGY.full) || 'TMR Competition Credits'} balance" title="${(window.TMR_TERMINOLOGY && window.TMR_TERMINOLOGY.full) || 'TMR Competition Credits'} balance" hidden>
                     <span aria-hidden="true">&#x1FA99;</span><span id="navCoinBalance">0</span>
                 </a>
                 <a href="/notifications/" id="notificationsBtn" class="tmr-global-nav__bell" data-tmr-notifications aria-label="Notifications" title="Notifications" onclick="if(typeof toggleNotifications==='function'){toggleNotifications(event);return false;}">
