@@ -43,6 +43,7 @@
             '</div>' +
             '<div class="season-card-actions">' +
             '<button type="button" class="sim-button secondary" data-action="view" data-id="' + season.id + '">View Games</button>' +
+            '<a class="sim-button secondary" href="/mlb-simulator/season/calendar/?seasonId=' + season.id + '">Schedule &amp; Standings</a>' +
             (canArchive ? '<button type="button" class="sim-button secondary" data-action="archive" data-id="' + season.id + '">Archive</button>' : '') +
             '</div></div>' +
             '<div class="season-games-detail" data-season-id="' + season.id + '" hidden></div>' +
