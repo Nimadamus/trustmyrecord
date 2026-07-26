@@ -966,8 +966,18 @@ function renderOpenChallengesErrorState() {
 const ARENA_TEST_USER_RE = /^([a-z]*test_\d{6,}|tmrqa[_a-z0-9]*)$/i;
 function arenaIsTestName(n){ return !!n && ARENA_TEST_USER_RE.test(String(n).trim()); }
 function arenaFilterTestChallenges(list){
-    return (list||[]).filter(c => !arenaIsTestName(c.challenger_username) && !arenaIsTestName(c.challenged_username)
-        && !arenaIsTestName(c.challenger_display) && !arenaIsTestName(c.challenged_display));
+    // A QA-tagged account must still see its OWN challenges in its own
+    // Arena view -- same "hide from everyone else, not from yourself" rule
+    // as the backend's GET /gaming/challenges (fixed 2026-07-26 after a
+    // full production UI audit showed a QA account's own just-created
+    // challenge silently vanishing from its own Open Challenges table).
+    const myUsername = currentUser && currentUser.username ? String(currentUser.username).toLowerCase() : null;
+    const isMine = c => myUsername && (
+        String(c.challenger_username || '').toLowerCase() === myUsername ||
+        String(c.challenged_username || '').toLowerCase() === myUsername
+    );
+    return (list||[]).filter(c => isMine(c) || (!arenaIsTestName(c.challenger_username) && !arenaIsTestName(c.challenged_username)
+        && !arenaIsTestName(c.challenger_display) && !arenaIsTestName(c.challenged_display)));
 }
 function arenaFilterTestMatches(list){
     return (list||[]).filter(m => !arenaIsTestName(m.player1_username) && !arenaIsTestName(m.player2_username)
