@@ -1,0 +1,119 @@
+/* MLB_SIM_SEASON_20260727: season-hub-specific styling. Reuses .sim-panel,
+   .sim-button, .sim-topbar/.sim-nav/.sim-hero etc from mlb-simulator.css
+   (loaded alongside this file) for visual consistency with the simulator
+   itself - this file only adds what that page doesn't already define. */
+
+.foundation-badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: rgba(234, 179, 8, 0.12);
+    border: 1px solid rgba(234, 179, 8, 0.45);
+    border-radius: 6px;
+    color: #fde68a;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.5;
+    max-width: 720px;
+}
+
+.season-hub-shell { display: grid; gap: 20px; }
+.season-panel { padding: 20px; }
+
+.new-season-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 12px;
+    margin-top: 10px;
+}
+.season-field {
+    display: grid;
+    gap: 6px;
+    flex: 1 1 220px;
+}
+.season-field-narrow { flex: 0 1 120px; }
+.season-field span {
+    color: #dbeafe;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+.season-field input {
+    min-height: 42px;
+    border-radius: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: rgba(15, 23, 42, 0.72);
+    color: #f1f5f9;
+    padding: 0 12px;
+    font-size: 14px;
+}
+.season-message {
+    margin-top: 10px;
+    font-size: 0.85rem;
+    color: #94a3b8;
+    min-height: 1.2em;
+}
+.season-message[data-tone="error"] { color: #fca5a5; }
+.season-message[data-tone="success"] { color: #86efac; }
+
+.seasons-list { margin-top: 12px; display: grid; gap: 10px; }
+.seasons-list[data-state="loading"] p,
+.seasons-list[data-state="empty"] p,
+.seasons-list[data-state="error"] p,
+.seasons-list[data-state="offline"] p { color: #94a3b8; font-size: 0.9rem; }
+.seasons-list[data-state="error"] p { color: #fca5a5; }
+
+.season-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.55);
+}
+.season-card-info { display: grid; gap: 4px; min-width: 0; }
+.season-card-name { font-weight: 800; color: #f1f5f9; font-size: 1rem; }
+.season-card-meta { color: #94a3b8; font-size: 0.8rem; }
+.season-status-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-left: 8px;
+}
+.season-status-chip[data-status="setup"] { background: rgba(96, 165, 250, 0.18); color: #93c5fd; }
+.season-status-chip[data-status="active"] { background: rgba(45, 212, 191, 0.18); color: #5eead4; }
+.season-status-chip[data-status="completed"] { background: rgba(168, 85, 247, 0.18); color: #d8b4fe; }
+.season-status-chip[data-status="archived"] { background: rgba(148, 163, 184, 0.18); color: #cbd5e1; }
+
+.season-card-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.season-card-actions .sim-button { min-height: 36px; padding: 0 14px; font-size: 12px; }
+
+.auth-gate-prompt { text-align: center; padding: 30px 16px; }
+.auth-gate-prompt a.sim-button { display: inline-flex; margin-top: 12px; }
+
+.season-card-wrap { display: grid; gap: 8px; }
+.season-games-detail {
+    padding: 12px 14px;
+    border: 1px dashed rgba(148, 163, 184, 0.3);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.35);
+}
+.season-games-list { margin: 0 0 10px; padding-left: 18px; color: #cbd5e1; font-size: 0.85rem; display: grid; gap: 6px; }
+.season-games-note { font-style: italic; margin-bottom: 10px; }
+
+@media (max-width: 640px) {
+    .new-season-form { flex-direction: column; align-items: stretch; }
+    .season-field-narrow { flex-basis: auto; }
+    .season-card { flex-direction: column; align-items: stretch; }
+    .season-card-actions { justify-content: stretch; }
+    .season-card-actions .sim-button { flex: 1 1 auto; }
+}
