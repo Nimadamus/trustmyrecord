@@ -198,6 +198,26 @@
             background: rgba(255, 255, 255, 0.05);
         }
 
+        .tool-card-pricing {
+            flex: none;
+            margin: -4px 0 0;
+            color: var(--tools-gold);
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.4;
+        }
+
+        .tool-card-balance {
+            flex: none;
+            margin: 0;
+            color: var(--tools-muted);
+            font-size: 12.5px;
+        }
+
+        .tool-card-balance strong {
+            color: #fff;
+        }
+
         .tools-note {
             margin-top: 18px;
             padding: 16px 18px;
@@ -298,6 +318,14 @@
                 <p>Scan market and team patterns that can support research before a pick is locked.</p>
                 <a href="/trendspotter/">Open TrendSpotter</a>
             </article>
+            <article class="tool-card" id="betlegendProCard">
+                <span>Research Tool</span>
+                <h2>BetLegend Pro</h2>
+                <p>Ask a real handicapping question and get verified historical trend, ATS, and O/U data from a 130,000+ game database.</p>
+                <p class="tool-card-pricing">First inquiry free &middot; 5 TMR Coin per inquiry after that</p>
+                <p class="tool-card-balance" id="betlegendProBalance" hidden>Your balance: <strong id="betlegendProBalanceValue">&mdash;</strong> TMR Coin</p>
+                <a href="/betlegend-pro/">Open BetLegend Pro</a>
+            </article>
             <article class="tool-card">
                 <span>Models</span>
                 <h2>Model Builder</h2>
@@ -342,5 +370,20 @@
 </section>
 
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.f1ad0816c15b.js"></script>
+<script src="/static/js/config.js?v=20260430a"></script>
+<script src="/static/js/backend-api.js?v=20260725coins1"></script>
+<script>
+(function () {
+    var el = document.getElementById('betlegendProBalance');
+    var valueEl = document.getElementById('betlegendProBalanceValue');
+    if (!el || !valueEl) return;
+    if (!window.api || !window.api.isLoggedIn || !window.api.isLoggedIn()) return;
+    window.api.getBetLegendProStatus().then(function (status) {
+        if (!status || typeof status.balance !== 'number') return;
+        valueEl.textContent = status.balance.toLocaleString('en-US');
+        el.hidden = false;
+    }).catch(function () { /* card still works without a balance preview */ });
+})();
+</script>
 </body>
 </html>
