@@ -1237,6 +1237,19 @@ class TrustMyRecordAPI {
         }
     }
 
+    // ==================== BETLEGEND PRO (Handicap Inquiry) ====================
+    // Errors are NOT swallowed here (unlike the read-only coin getters above) --
+    // the inquiry UI needs the thrown error's .status and .data (cost, balance,
+    // how_to_earn_url) to render insufficient-balance / frozen / failure states.
+
+    async getBetLegendProStatus() {
+        return this.request('/betlegend-pro/status');
+    }
+
+    async submitBetLegendProInquiry(payload) {
+        return this.request('/betlegend-pro/inquiry', { method: 'POST', body: payload });
+    }
+
     async getMyReferrals() {
         return this.request('/referrals/me');
     }
