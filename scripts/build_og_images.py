@@ -13,6 +13,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "static", "og")
 os.makedirs(OUT, exist_ok=True)
 
+BADGE = Image.open(os.path.join(ROOT, "static", "media", "tmr1-coin.png")).convert("RGBA")
+
 BG = (10, 10, 15)
 CARD = (19, 19, 28)
 BLUE = (0, 174, 255)
@@ -60,11 +62,11 @@ def make(name, headline, sub):
         d.line([(0, y), (W, y)], fill=(BG[0] + a // 3, BG[1] + a // 2, BG[2] + a))
     # inner card frame
     d.rounded_rectangle([40, 40, W - 40, H - 40], radius=28, outline=BORDER, width=2, fill=CARD)
-    # brand row: check shield + wordmark
-    bx, by = 80, 86
-    d.rounded_rectangle([bx, by, bx + 56, by + 56], radius=14, fill=BLUE)
-    d.text((bx + 16, by + 8), "T", font=font(True, 40), fill=(0, 16, 24))
-    d.text((bx + 74, by + 6), "TrustMyRecord", font=font(True, 40), fill=WHITE)
+    # brand row: TMR coin badge + wordmark
+    bx, by = 80, 78
+    badge = BADGE.resize((72, 72), Image.LANCZOS)
+    img.paste(badge, (bx, by), badge)
+    d.text((bx + 88, by + 14), "TrustMyRecord", font=font(True, 40), fill=WHITE)
     # green verified pill
     pill = "VERIFIED PUBLIC RECORDS"
     pf = font(True, 22)
