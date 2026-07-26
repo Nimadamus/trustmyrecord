@@ -347,7 +347,7 @@
     }).join('');
   }
 
-  /* ---------- 3. LEADERBOARD + 4. CAPPER OF THE WEEK ---------------------- */
+  /* ---------- 3. LEADERBOARD --------------------------------------------- */
   function leaderboard(users) {
     var body = el('.board .card:nth-child(2) .body'); if (!body || !users) return;
     var ranked = users.filter(function (u) { return num(u.total_picks) > 0; })
@@ -362,50 +362,68 @@
         '<span class="un"><b class="' + (num(u.net_units) >= 0 ? 'pos' : 'neg') + '">' + sign(num(u.net_units)) + 'u</b>' +
         '<span>' + num(u.roi).toFixed(1) + '% ROI</span></span></div>';
     }).join('');
+  }
 
-    var top = ranked[0]; if (!top) return;
-    var spot = el('.spot'); if (!spot) return;
-    var nm = el('.spot .nmrow b', document);
-    if (nm) { nm.textContent = top.username;
-      var pl = nm.closest('.nmrow'); if (pl && !pl.dataset.linked) { pl.dataset.linked='1';
-        nm.outerHTML = '<a href="/profile/?user=' + encodeURIComponent(top.username) + '"><b>' + top.username + '</b></a>'; } }
-    var fullProfile = el('.spot .hd a'); if (fullProfile) fullProfile.href = '/u/' + encodeURIComponent(top.username) + '/';
-    var ledger = el('.spot .ft a'); if (ledger) ledger.href = '/u/' + encodeURIComponent(top.username) + '/';
-    var sub = el('.spot .sub2'); if (sub) sub.textContent = (top.favorite_sports && top.favorite_sports.length
-      ? top.favorite_sports.join(', ') : 'All sports') + ' · ' + num(top.total_picks) + ' tracked picks';
-    var cells = spot.querySelectorAll('.g3 b');
-    if (cells.length >= 3) {
-      // RECORD must be the real W-L-P record, never a pick count.
-      // /api/users (list) omits W/L, so read the capper's own record endpoint.
-      // Do NOT blank the cell while that request is in flight: the prerendered
-      // markup already carries a real baked record, and replacing it with a
-      // spinner-ish '…' is the visible mid-load swap this page is meant to avoid.
-      // Only fill in when the slot is genuinely empty (placeholder or no bake).
-      if (!cells[0].textContent.trim() || cells[0].textContent.trim() === '—') cells[0].textContent = '…';
-      j('/users/' + encodeURIComponent(top.username)).then(function (du) {
-        var u2 = (du && (du.user || du)) || {};
-        var W = u2.wins, L = u2.losses, P = num(u2.pushes);
-        if (W == null || L == null) { cells[0].textContent = num(top.total_picks) + ' picks'; return; }
-        cells[0].textContent = W + '-' + L + (P ? '-' + P : '');
+  /* ---------- 4. CAPPER OF THE WEEK ---------------------------------------
+     Editorially designated (GET /users/capper-of-week), not the leaderboard
+     leader. Every figure shown here is fetched live from the same endpoints
+     his own profile page uses (/users/:username and
+     /users/:username/stats/advanced) — nothing is computed or cached in this
+     file, so the card can never drift from his real record. If no capper is
+     designated, the prerendered/baked markup is left exactly as-is. */
+  function capperOfWeek() {
+    j('/users/capper-of-week').then(function (d) {
+      var username = d && d.username; if (!username) return;
+      var spot = el('.spot'); if (!spot) return;
+
+      var nm = el('.spot .nmrow b', document);
+      if (nm) { nm.textContent = username;
+        var pl = nm.closest('.nmrow'); if (pl && !pl.dataset.linked) { pl.dataset.linked = '1';
+          nm.outerHTML = '<a href="/profile/?user=' + encodeURIComponent(username) + '"><b>' + esc(username) + '</b></a>'; } }
+      var fullProfile = el('.spot .hd a'); if (fullProfile) fullProfile.href = '/u/' + encodeURIComponent(username) + '/';
+      var ledger = el('.spot .ft a'); if (ledger) ledger.href = '/u/' + encodeURIComponent(username) + '/';
+      var av = el('.spot .avbox'); if (av) av.textContent = initials(username);
+
+      j('/users/' + encodeURIComponent(username)).then(function (du) {
+        var u = du && du.user; if (!u) return;
+        var cells = spot.querySelectorAll('.g3 b');
+        if (cells.length >= 3) {
+          var W = u.wins, L = u.losses, P = num(u.pushes);
+          cells[0].textContent = (W == null || L == null) ? num(u.total_picks) + ' picks' : (W + '-' + L + (P ? '-' + P : ''));
+          cells[1].textContent = sign(num(u.net_units)); cells[1].className = 'num ' + (num(u.net_units) >= 0 ? 'pos' : 'neg');
+          cells[2].textContent = num(u.roi).toFixed(1) + '%'; cells[2].className = 'num ' + (num(u.roi) >= 0 ? 'pos' : 'neg');
+        }
+        var ft = el('.spot .ft span'); if (ft) ft.textContent = num(u.total_picks) + ' picks, every one locked pre-game';
+
+        j('/users/' + encodeURIComponent(username) + '/stats/advanced').then(function (adv) {
+          var s = (adv && adv.summary) || {};
+          var winRate = num(s.win_rate);
+          var avgOdds = Math.round(num(s.avg_odds));
+          var streak = num(u.current_streak);
+          var streakTxt = streak > 0 ? 'W' + streak : streak < 0 ? 'L' + Math.abs(streak) : 'no active streak';
+          var sub2 = el('.spot .sub2');
+          if (sub2) sub2.textContent = (u.favorite_sports && u.favorite_sports.length
+            ? u.favorite_sports.join(', ') : 'All sports') + ' · ' + num(u.total_picks) + ' tracked picks' +
+            ' · ' + winRate.toFixed(1) + '% win rate · ' + (avgOdds > 0 ? '+' : '') + avgOdds + ' avg odds · ' + streakTxt;
+        });
       });
-      cells[1].textContent = sign(num(top.net_units)); cells[1].className = 'num pos';
-      cells[2].textContent = num(top.roi).toFixed(1) + '%'; cells[2].className = 'num pos';
-    }
-    var av = el('.spot .avbox'); if (av) av.textContent = initials(top.username);
-    var ft = el('.spot .ft span'); if (ft) ft.textContent = num(top.total_picks) + ' picks, every one locked pre-game';
-    // sparkline from the capper's real recent graded picks
-    var sp = el('.spot .spark');
-    var picks = (top.picks || []).filter(function (p) { return /won|lost/i.test(p.status || ''); }).slice(0, 12).reverse();
-    if (sp && picks.length) {
-      var mx = Math.max.apply(null, picks.map(function (p) { return Math.abs(num(p.result_units)) || 1; })) || 1;
-      sp.innerHTML = picks.map(function (p) {
-        var v = num(p.result_units), h = Math.max(18, Math.round(Math.abs(v) / mx * 100));
-        return '<i class="' + (v < 0 ? 'dn' : '') + '" style="height:' + h + '%"></i>';
-      }).join('');
-      var lb = el('.spot .lb');
-      if (lb) { var w2 = picks.filter(function (p) { return /won/i.test(p.status); }).length;
-        lb.innerHTML = '<span>Last ' + picks.length + ' graded picks</span><span>' + w2 + 'W &middot; ' + (picks.length - w2) + 'L</span>'; }
-    }
+
+      j('/picks?username=' + encodeURIComponent(username) + '&limit=20').then(function (dp) {
+        var all = (dp && (dp.picks || dp.data)) || (Array.isArray(dp) ? dp : []);
+        var picks = all.filter(function (p) { return /won|lost/i.test(p.status || ''); }).slice(0, 12).reverse();
+        var sp = el('.spot .spark');
+        if (!sp) return;
+        if (!picks.length) { sparkFallback(); return; }
+        var mx = Math.max.apply(null, picks.map(function (p) { return Math.abs(num(p.result_units)) || 1; })) || 1;
+        sp.innerHTML = picks.map(function (p) {
+          var v = num(p.result_units), h = Math.max(18, Math.round(Math.abs(v) / mx * 100));
+          return '<i class="' + (v < 0 ? 'dn' : '') + '" style="height:' + h + '%"></i>';
+        }).join('');
+        var lb = el('.spot .lb');
+        if (lb) { var w2 = picks.filter(function (p) { return /won/i.test(p.status); }).length;
+          lb.innerHTML = '<span>Last ' + picks.length + ' graded picks</span><span>' + w2 + 'W &middot; ' + (picks.length - w2) + 'L</span>'; }
+      });
+    });
   }
 
   function sparkFallback() {
@@ -542,26 +560,9 @@
       if (cells[2]) cells[2].textContent = String(all.length);
       leaderboard(all);
       platform(all);
+      capperOfWeek();
       j('/users/trend-highlights').then(function (d) {
-        if (!(d && d.users && d.users.length)) { sparkFallback(); return; }
-        livePicks(d.users);
-        // capper chart: real graded picks for the top-ranked capper
-        var topName = (document.querySelector('.spot .nmrow b') || {}).textContent;
-        var match = d.users.filter(function (u) { return u.username === topName; })[0];
-        var graded = match ? (match.picks || []).filter(function (x) {
-          return /won|lost/i.test(x.status || ''); }).slice(0, 12).reverse() : [];
-        var sp = el('.spot .spark'), lb = el('.spot .lb');
-        if (!sp) return;
-        if (!graded.length) { sparkFallback(); return; }
-        var mx = Math.max.apply(null, graded.map(function (x) {
-          return Math.abs(num(x.result_units)) || 1; })) || 1;
-        sp.innerHTML = graded.map(function (x) {
-          var v = num(x.result_units), h = Math.max(18, Math.round(Math.abs(v) / mx * 100));
-          return '<i class="' + (v < 0 ? 'dn' : '') + '" style="height:' + h + '%"></i>';
-        }).join('');
-        if (lb) { var w = graded.filter(function (x) { return /won/i.test(x.status); }).length;
-          lb.innerHTML = '<span>Last ' + graded.length + ' graded picks</span><span>' +
-            w + 'W · ' + (graded.length - w) + 'L</span>'; }
+        if (d && d.users && d.users.length) livePicks(d.users);
       });
     }
   }
