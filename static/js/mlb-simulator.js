@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-managerial-narration-20260726b';
+    var UI_BUILD = 'mlb-simulator-controls-audit-20260726c';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -6109,6 +6109,8 @@
     function pbpPlaybackControlsHtml() {
         return '<div class="pbp-controls">' +
             '<button type="button" class="pbp-btn" data-pbp-action="toggle">▶ Play</button>' +
+            '<button type="button" class="pbp-btn" data-pbp-action="skip-half">⏵ Skip Half-Inning</button>' +
+            '<button type="button" class="pbp-btn" data-pbp-action="skip-inning">⏵⏵ Skip Inning</button>' +
             '<button type="button" class="pbp-btn" data-pbp-action="skip">⏭ Skip to End</button>' +
             '<button type="button" class="pbp-btn" data-pbp-action="restart">↺ Restart</button>' +
             '<label class="pbp-speed-label">Speed ' +
@@ -6176,6 +6178,27 @@
         pbpPlaybackUpdateStatus(container);
         if (pbpPlaybackState.idx >= pbpPlaybackState.halves.length) pbpPlaybackStop();
     }
+    // SKIP_GRANULARITY_20260726: reveal up to `count` more half-innings right
+    // now (no timer), respecting the same weather-delay pause every other
+    // advance path honors - a skip must never bypass a delay interstitial any
+    // more than Play does. Shared by "Skip Half-Inning" (count 1), "Skip
+    // Inning" (count 2, i.e. both halves of whichever inning is next), and
+    // "Skip to End" (count Infinity).
+    function pbpPlaybackAdvance(container, count) {
+        pbpPlaybackStop();
+        for (var n = 0; n < count && pbpPlaybackState.idx < pbpPlaybackState.halves.length; n++) {
+            var justRevealedIdx = pbpPlaybackState.idx;
+            var d = pbpPlaybackState.halves[justRevealedIdx];
+            d.open = true;
+            pbpPlaybackState.idx++;
+            if (pbpPlaybackState.delayIndex >= 0 && justRevealedIdx === pbpPlaybackState.delayIndex && !pbpPlaybackState.delayShown) {
+                pbpPlaybackState.delayShown = true;
+                pbpPlaybackUpdateStatus(container, true);
+                return;
+            }
+        }
+        pbpPlaybackUpdateStatus(container);
+    }
     function pbpPlaybackAction(action, container) {
         if (action === 'toggle') {
             if (pbpPlaybackState.playing) { pbpPlaybackStop(); pbpPlaybackUpdateStatus(container); return; }
@@ -6183,7 +6206,17 @@
             pbpPlaybackState.playing = true;
             pbpPlaybackTick(container);
             if (pbpPlaybackState.playing) pbpPlaybackState.timer = setInterval(function () { pbpPlaybackTick(container); }, pbpPlaybackState.speedMs);
+        } else if (action === 'skip-half') {
+            if (!pbpPlaybackState.halves.length) pbpPlaybackReset(container);
+            pbpPlaybackAdvance(container, 1);
+        } else if (action === 'skip-inning') {
+            if (!pbpPlaybackState.halves.length) pbpPlaybackReset(container);
+            pbpPlaybackAdvance(container, 2);
         } else if (action === 'skip') {
+            // Skip to End is an explicit "show me everything now" request - unlike
+            // Play/Skip Half-Inning/Skip Inning, it does NOT pause at a weather
+            // delay along the way; the delay banner above the play-by-play still
+            // shows the same information as always.
             if (!pbpPlaybackState.halves.length) pbpPlaybackReset(container);
             pbpPlaybackStop();
             pbpPlaybackState.delayShown = true;
