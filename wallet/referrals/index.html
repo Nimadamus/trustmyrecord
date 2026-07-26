@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Referrals | TrustMyRecord</title>
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://trustmyrecord.com/wallet/referrals/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260725coins1">
+    <script defer src="/static/js/tmr-sitewide.js?v=20260725coins1"></script>
+    <style>
+        :root { --page-bg: #060b12; --panel: #0b111b; --panel-2: #101826; --line: rgba(148, 163, 184, 0.16); --text: #f8fafc; --muted: #9aa8ba; --gold: #facc15; --green: #22c55e; --red: #f87171; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; min-height: 100vh;
+            background: radial-gradient(circle at 14% 0%, rgba(250, 204, 21, 0.10), transparent 30%), linear-gradient(180deg, #07111d 0%, var(--page-bg) 44%, #04070d 100%);
+            color: var(--text); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        .ref-page { width: min(920px, calc(100% - 32px)); margin: 0 auto; padding: 112px 0 56px; }
+        .ref-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 22px; margin-bottom: 18px; flex-wrap: wrap; }
+        .ref-kicker { margin: 0 0 10px; color: var(--gold); font-size: 12px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; }
+        h1 { margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(32px, 5vw, 52px); line-height: 0.95; }
+        .ref-subtitle { margin: 12px 0 0; max-width: 640px; color: var(--muted); font-size: 14.5px; line-height: 1.55; }
+        .btn { display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 15px; border-radius: 8px; border: 1px solid rgba(45, 212, 191, 0.28); color: #dffcf8; background: rgba(15, 23, 42, 0.72); text-decoration: none; font-weight: 800; font-size: 13px; cursor: pointer; }
+        .disclaimer { margin: 18px 0; padding: 12px 16px; border: 1px solid rgba(250, 204, 21, 0.28); background: rgba(250, 204, 21, 0.07); border-radius: 8px; color: #fde68a; font-size: 13px; line-height: 1.5; }
+        .link-card { padding: 22px; border: 1px solid rgba(45, 212, 191, 0.3); border-radius: 10px; background: linear-gradient(180deg, rgba(10, 30, 26, 0.9), rgba(8, 13, 22, 0.96)); margin-bottom: 22px; }
+        .link-label { margin: 0 0 10px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: 0.13em; text-transform: uppercase; }
+        .link-row { display: flex; gap: 8px; flex-wrap: wrap; }
+        .link-box { flex: 1; min-width: 220px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); color: var(--text); font-family: monospace; font-size: 13px; overflow-x: auto; white-space: nowrap; }
+        .copy-btn { border-color: rgba(45, 212, 191, 0.5); }
+        .copy-btn.copied { border-color: rgba(34, 197, 94, 0.7); color: #bbf7d0; }
+        .rules-list { margin: 14px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 13px; line-height: 1.9; }
+        .rules-list li { padding-left: 20px; position: relative; }
+        .rules-list li::before { content: "\2022"; position: absolute; left: 4px; color: var(--gold); }
+        .stats-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 0 0 22px; }
+        .stat-cell { padding: 14px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); text-align: center; }
+        .stat-value { font-family: Barlow, Inter, sans-serif; font-size: 26px; font-weight: 800; }
+        .stat-label { margin-top: 4px; color: var(--muted); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+        .stat-cell.pending .stat-value { color: var(--gold); }
+        .stat-cell.rewarded .stat-value { color: var(--green); }
+        .stat-cell.rejected .stat-value, .stat-cell.reversed .stat-value { color: var(--red); }
+        table { width: 100%; border-collapse: collapse; }
+        thead th { text-align: left; padding: 10px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 1px solid var(--line); }
+        tbody td { padding: 12px; font-size: 13.5px; border-bottom: 1px solid var(--line); }
+        .table-wrap { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+        .status-pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 800; text-transform: capitalize; }
+        .status-pending { background: rgba(250, 204, 21, 0.14); color: var(--gold); }
+        .status-rewarded { background: rgba(34, 197, 94, 0.14); color: var(--green); }
+        .status-rejected, .status-reversed { background: rgba(248, 113, 113, 0.14); color: var(--red); }
+        .mobile-cards { display: none; }
+        .mc-card { border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 10px; background: var(--panel); display: flex; justify-content: space-between; align-items: center; }
+        @media (max-width: 700px) {
+            .table-wrap { display: none; }
+            .mobile-cards { display: block; }
+            .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .stat-cell.invited { grid-column: 1 / -1; }
+        }
+        .skeleton .sk-line { height: 14px; border-radius: 6px; background: rgba(148,163,184,.14); margin-bottom: 8px; }
+        .auth-state, .empty-state { padding: 40px 20px; text-align: center; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
+        .auth-state[hidden], .empty-state[hidden], #loadingSkeleton[hidden], #refContent[hidden] { display: none; }
+    </style>
+</head>
+<body class="tmr-site-shell" data-tmr-route="wallet-referrals">
+    <main class="ref-page">
+        <header class="ref-head">
+            <div>
+                <p class="ref-kicker">TMR Coin</p>
+                <h1>Referrals</h1>
+                <p class="ref-subtitle">Invite people to TrustMyRecord. Signing up alone earns nothing for either of you -- coins are only ever awarded once a referred account is real and active.</p>
+            </div>
+            <a class="btn" href="/wallet/">My Wallet</a>
+        </header>
+
+        <div class="disclaimer" id="disclaimerText">Referral rewards are not guaranteed. A referred account must verify its email, stay active for at least a week, and take part in the platform for real before anything is paid out -- and only a limited number of referrals count toward rewards each month.</div>
+
+        <section id="loadingSkeleton" class="skeleton" aria-hidden="true">
+            <div class="sk-line" style="height:90px;border-radius:10px;margin-bottom:22px;"></div>
+            <div class="sk-line" style="width:100%;height:60px;"></div>
+        </section>
+
+        <section id="authState" class="auth-state" hidden>
+            <h2 id="authHeading">Log in to view your referrals</h2>
+            <p id="authMessage">This page is private to your account.</p>
+            <a id="authLoginBtn" class="btn" href="/login/?next=/wallet/referrals/">Log In</a>
+            <button id="authRetryBtn" type="button" class="btn" hidden>Retry</button>
+        </section>
+
+        <section id="refContent" hidden>
+            <div class="link-card">
+                <p class="link-label">Your Referral Link</p>
+                <div class="link-row">
+                    <div class="link-box" id="referralLinkBox">&mdash;</div>
+                    <button class="btn copy-btn" id="copyLinkBtn" type="button">Copy Link</button>
+                </div>
+                <ul class="rules-list" id="qualificationRules">
+                    <li>Registration alone earns 0 coins for anyone</li>
+                </ul>
+            </div>
+
+            <div class="stats-grid" aria-label="Referral summary">
+                <div class="stat-cell invited"><div class="stat-value" id="statInvited">0</div><div class="stat-label">Invited</div></div>
+                <div class="stat-cell pending"><div class="stat-value" id="statPending">0</div><div class="stat-label">Pending</div></div>
+                <div class="stat-cell rewarded"><div class="stat-value" id="statRewarded">0</div><div class="stat-label">Rewarded</div></div>
+                <div class="stat-cell rejected"><div class="stat-value" id="statRejected">0</div><div class="stat-label">Rejected</div></div>
+                <div class="stat-cell reversed"><div class="stat-value" id="statReversed">0</div><div class="stat-label">Reversed</div></div>
+            </div>
+
+            <div id="emptyState" class="empty-state" hidden>
+                <h2>No referrals yet</h2>
+                <p>Share your link above. You'll see each invite's status here as it progresses -- no fraud signals or personal details are ever shown, just where things stand.</p>
+            </div>
+
+            <section id="refPanel" hidden>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Invited</th><th>Status</th><th>Rewarded</th></tr></thead>
+                        <tbody id="refRows"></tbody>
+                    </table>
+                </div>
+                <div id="refCards" class="mobile-cards"></div>
+            </section>
+        </section>
+    </main>
+
+    <script src="/static/js/config.js?v=20260430a"></script>
+    <script src="/static/js/backend-api.js?v=20260725coins1"></script>
+    <script>
+    (function () {
+        var authState = document.getElementById('authState');
+        var skeleton = document.getElementById('loadingSkeleton');
+        var content = document.getElementById('refContent');
+        var emptyState = document.getElementById('emptyState');
+        var panel = document.getElementById('refPanel');
+        var rows = document.getElementById('refRows');
+        var cards = document.getElementById('refCards');
+
+        function fmtDate(iso) {
+            if (!iso) return '—';
+            var d = new Date(iso);
+            if (isNaN(d.getTime())) return '—';
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+        function statusLabel(s) {
+            return { pending: 'Pending', rewarded: 'Rewarded', rejected: 'Rejected', reversed: 'Reversed' }[s] || s;
+        }
+        function rowHtml(r) {
+            return '<tr><td>' + fmtDate(r.createdAt) + '</td>' +
+                '<td><span class="status-pill status-' + r.status + '">' + statusLabel(r.status) + '</span></td>' +
+                '<td>' + fmtDate(r.activatedAt) + '</td></tr>';
+        }
+        function cardHtml(r) {
+            return '<div class="mc-card"><span>' + fmtDate(r.createdAt) + '</span>' +
+                '<span class="status-pill status-' + r.status + '">' + statusLabel(r.status) + '</span></div>';
+        }
+
+        function render(data) {
+            content.hidden = false;
+            document.getElementById('referralLinkBox').textContent = data.referralLink || '—';
+            var rules = document.getElementById('qualificationRules');
+            rules.innerHTML =
+                '<li>Registration alone earns 0 coins for anyone</li>' +
+                '<li>Referred account must verify email and stay active ' + (data.qualificationRules ? data.qualificationRules.minAccountAgeDays : 7) + '+ days</li>' +
+                '<li>Referred account must complete at least ' + (data.qualificationRules ? data.qualificationRules.minLegitimateActivities : 5) + ' real platform activities</li>' +
+                '<li>Up to ' + (data.monthlyCap || 5) + ' rewarded referrals per calendar month</li>';
+
+            var s = data.stats || {};
+            document.getElementById('statInvited').textContent = s.invited || 0;
+            document.getElementById('statPending').textContent = s.pending || 0;
+            document.getElementById('statRewarded').textContent = s.rewarded || 0;
+            document.getElementById('statRejected').textContent = s.rejected || 0;
+            document.getElementById('statReversed').textContent = s.reversed || 0;
+
+            var list = data.referrals || [];
+            if (!list.length) {
+                emptyState.hidden = false;
+                panel.hidden = true;
+                return;
+            }
+            emptyState.hidden = true;
+            panel.hidden = false;
+            rows.innerHTML = list.map(rowHtml).join('');
+            cards.innerHTML = list.map(cardHtml).join('');
+        }
+
+        document.getElementById('copyLinkBtn').addEventListener('click', function () {
+            var text = document.getElementById('referralLinkBox').textContent;
+            if (!text || text === '—') return;
+            var btn = this;
+            (navigator.clipboard && navigator.clipboard.writeText
+                ? navigator.clipboard.writeText(text)
+                : Promise.reject()
+            ).then(function () {
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(function () { btn.textContent = 'Copy Link'; btn.classList.remove('copied'); }, 2000);
+            }).catch(function () {
+                var range = document.createRange();
+                range.selectNodeContents(document.getElementById('referralLinkBox'));
+                var sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            });
+        });
+
+        function isLoggedIn() { return !!(window.api && window.api.isLoggedIn()); }
+        function showLoginRequired() {
+            content.hidden = true; skeleton.hidden = true; authState.hidden = false;
+            document.getElementById('authLoginBtn').hidden = false;
+            document.getElementById('authRetryBtn').hidden = true;
+            setTimeout(function () { window.location.href = '/login/?next=/wallet/referrals/'; }, 900);
+        }
+        function showLoadError() {
+            content.hidden = true; skeleton.hidden = true; authState.hidden = false;
+            document.getElementById('authHeading').textContent = 'Could not load your referrals';
+            document.getElementById('authMessage').textContent = 'The server did not respond. Tap Retry.';
+            document.getElementById('authLoginBtn').hidden = true;
+            document.getElementById('authRetryBtn').hidden = false;
+        }
+        function withTimeout(promise, ms) {
+            return new Promise(function (resolve, reject) {
+                var t = setTimeout(function () { reject(Object.assign(new Error('request timeout'), { status: 0 })); }, ms);
+                promise.then(function (v) { clearTimeout(t); resolve(v); }, function (e) { clearTimeout(t); reject(e); });
+            });
+        }
+
+        var RETRY_DELAYS_MS = [1200, 2500, 5000];
+        var attempt = 0;
+        var retryTimer = null;
+
+        async function boot() {
+            if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
+            if (!isLoggedIn()) { showLoginRequired(); return; }
+            try {
+                skeleton.hidden = false;
+                authState.hidden = true;
+                var data = await withTimeout(window.api.getMyReferrals(), 12000);
+                render(data);
+                attempt = 0;
+            } catch (error) {
+                if (error && (error.status === 401 || error.status === 403)) { showLoginRequired(); return; }
+                if (attempt < RETRY_DELAYS_MS.length) {
+                    var delay = RETRY_DELAYS_MS[attempt];
+                    attempt += 1;
+                    retryTimer = setTimeout(function () { boot(); }, delay);
+                    return;
+                }
+                showLoadError();
+            }
+        }
+
+        document.getElementById('authRetryBtn').addEventListener('click', function () { attempt = 0; boot(); });
+        boot();
+    })();
+    </script>
+</body>
+</html>

@@ -1236,6 +1236,10 @@ class TrustMyRecordAPI {
             return { items: [], redemption_available: false, error: true };
         }
     }
+
+    async getMyReferrals() {
+        return this.request('/referrals/me');
+    }
 }
 
 if (typeof window !== 'undefined') {
