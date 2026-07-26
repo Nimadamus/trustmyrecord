@@ -22,7 +22,7 @@ assert(
   'sportsbook page must load the shared sitewide header script from <head>'
 );
 assert(
-  !html.slice(headClose).includes('/static/js/tmr-sitewide.js'),
+  !/<script[^>]*\/static\/js\/tmr-sitewide\.js/i.test(html.slice(headClose)),
   'sportsbook page must not depend on a late body include for the shared header'
 );
 

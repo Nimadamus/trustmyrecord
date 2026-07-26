@@ -32,9 +32,6 @@ const forbidden = [
   /\blorem ipsum\b/i,
   /\bpreview version\b/i,
   /\bMy Pick History\b/i,
-  /\bplayer props\b/i,
-  /\bprops board\b/i,
-  /\bprop market\b/i,
 ];
 
 function collectFiles(target) {

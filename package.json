@@ -9,7 +9,11 @@
     "verify:regression:visual": "playwright test --config=playwright.regression.config.cjs",
     "baseline:regression": "playwright test --config=playwright.regression.config.cjs --update-snapshots",
     "verify:audit-regression": "playwright test --config=playwright.regression-audit.config.cjs",
-    "check:no-tmr-coin-text": "node scripts/check-no-tmr-coin-text.js"
+    "test:unit": "node scripts/verify-regression.js --static-only",
+    "test:security": "node tests/recursion-retry-guard-test.js && node ../trustmyrecord-backend/tests/cors-origin-guard-test.js && node ../trustmyrecord-backend/tests/auth-bruteforce-guard-test.js && node ../trustmyrecord-backend/tests/profile-self-view-gate-test.js && node ../trustmyrecord-backend/tests/arena-challenge-detail-privacy-test.js && node ../trustmyrecord-backend/tests/official-pick-isolation-regression-test.js && node ../trustmyrecord-backend/tests/disputed-pick-soft-delete-test.js && node ../trustmyrecord-backend/tests/gaming-favorite-teams-selfheal-test.js",
+    "test:e2e": "playwright test --config=playwright.regression.config.cjs",
+    "test:ci": "npm run test:unit && npm run test:security",
+    "test": "npm run test:ci"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

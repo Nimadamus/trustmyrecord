@@ -67,7 +67,7 @@ const items = [
   { selection: 'Boston Red Sox Under', selection_label: 'Boston Red Sox Alt Under +4.5', line: 4.5, odds: -135, market_key: 'alternate_team_totals', market_type: 'alternate_team_totals', group_key: 'alternate_team_totals', source: 'sportsbook' },
 ];
 
-const context = { console, game, items, result: null };
+const context = { console, game, items, result: null, window: {} };
 vm.createContext(context);
 vm.runInContext(`${sportsbook.slice(start, end)}\nresult = _ttSplitItems(game, items);`, context, { timeout: 5000 });
 

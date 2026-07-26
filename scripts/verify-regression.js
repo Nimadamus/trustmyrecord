@@ -21,19 +21,20 @@ const allChecks = [
   ['unit/static: sportsbook backend board contract', 'node', ['tests/sportsbook-backend-board-render-contract-test.js'], 'static'],
   ['unit/static: sportsbook market hydration', 'node', ['tests/sportsbook-market-groups-hydration-test.js'], 'static'],
   ['unit/static: sportsbook team totals rendering', 'node', ['tests/sportsbook-team-totals-rendering-regression-test.js'], 'static'],
-  ['unit/static: protected sportsbook file drift', 'node', ['tests/protected-file-drift-test.js'], 'static'],
+  ['unit/static: protected sportsbook file drift', 'node', ['tests/protected-baseline-regression-test.js'], 'static'],
   ['unit/static: critical DOM/content locks', 'node', ['tests/critical-dom-content-lock-test.js'], 'static'],
   ['unit/static: leaderboards hero/tab count lock', 'node', ['tests/leaderboards-counts-lock-test.js'], 'static'],
   ['unit/static: profile market-type stats lock', 'node', ['tests/profile-market-type-stats-lock.test.js'], 'static'],
   ['unit/static: model builder shell', 'node', ['tests/model-builder-shell-test.js'], 'static'],
   ['unit/static: trend spotter guided flow', 'node', ['tests/trendspotter-accuracy-test.js'], 'static'],
+  ['unit/static: recursion/retry-pattern guard', 'node', ['tests/recursion-retry-guard-test.js'], 'static'],
   ['live static: sportsbook public loading', 'node', ['tests/sportsbook-public-loading-regression-test.js'], 'static'],
   ['forbidden text scan', 'node', ['scripts/forbidden-text-scan.js'], 'static'],
   ['visual/function: Playwright regression lock', 'npx', ['playwright', 'test', '--config=playwright.regression.config.cjs'], 'playwright'],
   ['live browser: sportsbook proof', 'npx', ['playwright', 'test', '--config=playwright.config.cjs'], 'playwright'],
 ];
 
-const staticOnly = process.env.TMR_REGRESSION_STATIC_ONLY === '1';
+const staticOnly = process.env.TMR_REGRESSION_STATIC_ONLY === '1' || process.argv.includes('--static-only');
 const checks = staticOnly ? allChecks.filter(([, , , type]) => type === 'static') : allChecks;
 
 function resolveCommand(command) {
@@ -51,20 +52,30 @@ async function runInlineNodeCheck(name, args) {
   let failure = null;
 
   process.argv = [process.execPath, scriptPath, ...args.slice(1)];
+  // Tests call process.exit() as their final statement -- some do it from
+  // inside an async .catch() handler (e.g. trendspotter-accuracy-test.js),
+  // which runs outside this function's synchronous try/catch. Throwing here
+  // used to escape as an unhandled rejection and crash the whole runner
+  // instead of just failing that one check. Just record the code instead;
+  // nothing in any test file runs after its own process.exit() call.
   process.exit = (code = 0) => {
     exitCode = Number(code) || 0;
-    if (exitCode !== 0) throw new Error(`process.exit(${exitCode})`);
   };
+  const unhandled = [];
+  const onUnhandledRejection = (error) => unhandled.push(error);
+  process.on('unhandledRejection', onUnhandledRejection);
 
   try {
     delete require.cache[require.resolve(scriptPath)];
     require(scriptPath);
     await new Promise((resolve) => setTimeout(resolve, 2500));
+    if (unhandled.length) throw unhandled[0];
   } catch (error) {
     failure = error;
   } finally {
     process.exit = originalExit;
     process.argv = originalArgv;
+    process.removeListener('unhandledRejection', onUnhandledRejection);
   }
 
   return {
