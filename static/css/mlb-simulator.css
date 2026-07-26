@@ -3377,6 +3377,12 @@ select.pitcher-select option {
     border-radius: 999px;
     padding: 0.4rem 0.75rem;
     cursor: pointer;
+    /* TOUCH_TARGET_20260726: padding alone left these at ~25px tall - under any
+       reasonable mobile tap-target minimum. Matches the 42px .sim-button
+       convention already used elsewhere on this page. */
+    min-height: 42px;
+    display: inline-flex;
+    align-items: center;
 }
 .pbp-btn:hover { background: #eef1f6; }
 .pbp-speed-label {
