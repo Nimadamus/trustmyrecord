@@ -7239,7 +7239,9 @@
             else { el.removeAttribute('href'); el.classList.add('ca-disabled'); }
         };
         try {
-            var resp = await fetch(apiBase + '/api/users/' + encodeURIComponent(username) + '/community-activity');
+            var resp = await fetch(apiBase + '/api/users/' + encodeURIComponent(username) + '/community-activity', {
+                headers: (window.api && window.api.getAuthHeaders) ? window.api.getAuthHeaders() : {}
+            });
             if (!resp.ok) { wireCell('caForumPostsCell', null); wireCell('caThreadsCell', null); return; }
             var d = await resp.json();
             var forum = d.forum || {}, feed = d.feed || {};
@@ -7674,7 +7676,8 @@
             try {
                 const resp = await fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(username) + '/metrics', {
                     cache: 'no-store',
-                    signal: AbortSignal.timeout(10000)
+                    signal: AbortSignal.timeout(10000),
+                    headers: (window.api && window.api.getAuthHeaders) ? window.api.getAuthHeaders() : {}
                 });
                 if (resp.ok) data = await resp.json();
             } catch (err) {
@@ -10712,7 +10715,10 @@
             const u = awdUsername();
             if (!u) return;
             try {
-                const res = await fetch(API_BASE + '/awards/user/' + encodeURIComponent(u), { cache: 'no-store' });
+                const res = await fetch(API_BASE + '/awards/user/' + encodeURIComponent(u), {
+                    cache: 'no-store',
+                    headers: (window.api && window.api.getAuthHeaders) ? window.api.getAuthHeaders() : {}
+                });
                 if (!res.ok) { render([]); return; }
                 const data = await res.json();
                 render(Array.isArray(data.awards) ? data.awards : []);
