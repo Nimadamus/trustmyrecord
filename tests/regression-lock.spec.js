@@ -12,6 +12,7 @@ const ROUTES = [
   { name: 'login', path: '/login/', visual: false },
   { name: 'wallet', path: '/wallet/', visual: false },
   { name: 'wallet-rewards', path: '/wallet/rewards/', visual: false },
+  { name: 'how-tmr-coin-works', path: '/how-tmr-coin-works/', visual: false },
 ];
 
 const SPORT_TABS = ['NBA', 'NHL', 'NFL', 'MLB', 'NCAAB', 'NCAAF', 'Soccer'];
