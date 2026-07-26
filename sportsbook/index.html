@@ -2575,7 +2575,21 @@
     window.submitPickNew = window.lockInPick; // alias
 
     // ============ RENDER PICKS LIST (localStorage version) ============
-    window.renderPicksList = function() {
+    // INFINITE_PICKS_POLL_FIX_20260726: the backend-fetch success handler
+    // below used to call window.renderPicksList() with no arguments, which
+    // re-entered this SAME fetch block and issued another api.getPicks()
+    // call, whose own success handler recursed again, forever -- a tight,
+    // undelayed self-recursive loop with no termination condition (any
+    // account with >=1 pick has backendPicks.length > 0 always). Reproduced
+    // live during a production audit: 229 consecutive GET /api/picks calls
+    // in a few seconds until the emergency rate limiter (added 2026-06-07
+    // for this exact symptom -- see EMERGENCY_RATE_LIMIT_20260607 in
+    // server.js) cut it off with 429s. That limiter capped the damage but
+    // never fixed the loop itself. skipFetch=true is passed ONLY by that
+    // recursive call, so it renders once from the now-cached data instead
+    // of re-fetching; every other caller (post-submit refresh, tab
+    // switches, etc.) is unaffected and still fetches fresh data.
+    window.renderPicksList = function(skipFetch) {
         var container = document.getElementById('picksListContainer');
         var statsBar = document.getElementById('picksStatsBar');
         if (!container) return;
@@ -2594,7 +2608,7 @@
         var picks = [];
 
         // Try backend API first (async, will re-render when data arrives)
-        if (typeof api !== 'undefined' && typeof api.getPicks === 'function' && !window._tmrPicksLoading) {
+        if (!skipFetch && typeof api !== 'undefined' && typeof api.getPicks === 'function' && !window._tmrPicksLoading) {
             window._tmrPicksLoading = true;
             var _user = null;
             try { _user = window.auth && window.auth.getCurrentUser ? window.auth.getCurrentUser() : null; } catch(e) {}
@@ -2604,7 +2618,7 @@
                 var backendPicks = result.picks || result || [];
                 if (backendPicks.length > 0) {
                     window._tmrBackendPicks = backendPicks;
-                    window.renderPicksList(); // Re-render with backend data (won't loop because data is cached)
+                    window.renderPicksList(true); // Render the now-cached data; do NOT re-fetch (see fix note above).
                 }
             }).catch(function(e) {
                 window._tmrPicksLoading = false;
