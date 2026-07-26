@@ -1,7 +1,7 @@
 (function () {
     'use strict';
 
-    var UI_BUILD = 'mlb-simulator-optfield-init-20260726e';
+    var UI_BUILD = 'mlb-simulator-blowout-calibration-20260727a';
     if (typeof console !== 'undefined' && console.info) console.info('MLB Simulator UI build: ' + UI_BUILD);
 
     var CURRENT_TEAMS = [
@@ -3436,7 +3436,12 @@
             // injuryPenalty is 0 outside the displayed game, so this is a no-op for
             // the calibration path.
             if (b.injuryPenalty) batVec = elApplyInjuryVector(batVec, b.injuryPenalty);
-            var v = evScale(evApplyTto(evApplyWeatherBb(evApplyParkHr(evCombine(batVec, pitcher.vec), side.parkHr), side.simWeatherBb), evTtoMultipliers(timesThrough)), side.anchorFactor);
+            // MOP_UP_EFFECTIVENESS_20260727: folds into the SAME anchor-scaling
+            // mechanism already used for run-environment calibration (evScale),
+            // rather than a new adjustment path - a mop-up appearance just runs
+            // with a higher effective anchor for its half-inning.
+            var mopUpFactor = pitcher._mopUp ? MOP_UP_FACTOR : 1;
+            var v = evScale(evApplyTto(evApplyWeatherBb(evApplyParkHr(evCombine(batVec, pitcher.vec), side.parkHr), side.simWeatherBb), evTtoMultipliers(timesThrough)), side.anchorFactor * mopUpFactor);
             var ev = evSample(v, random), acc = b.acc; acc.pa++; pitcher.acc.bf++;
             // Event-sourced situational accounting (no post-hoc estimates):
             var paBefore = baseSnapshot(), paName = bname(bi), paRunnerPitchers = pitcherRefs();
@@ -3631,6 +3636,12 @@
     // ceiling. SP/POS are uncapped here (SP already has its own starterOuts
     // model; POS is the position-player emergency arm with no realistic cap).
     var ROLE_OUT_CAP = { CL: 6, SU: 6, RP: 9 };
+    // MOP_UP_EFFECTIVENESS_20260727: bounded batter-favoring scale (same units as
+    // evAnchorFactor/evScale's run-environment scaling) applied only while
+    // evDefPitcher's mop-up flag is set for that half-inning. Kept modest and
+    // capped well inside the range park/weather factors already use elsewhere in
+    // this engine - see evDefPitcher for the trigger condition.
+    var MOP_UP_FACTOR = 1.12;
     // ERROR_GAME_CAP_20260725: hard ceiling on reach-on-errors charged to one team in
     // one simulated game (see evPlayHalf). 2025 MLB mean is 0.504 errors/team-game;
     // a 5-6 error game is a real but multi-decade-rare outlier, so the independent
@@ -3800,6 +3811,16 @@
         // Captured once per appearance (not overwritten on repeat half-inning
         // calls for the same still-active arm).
         if (chosen._enterMargin === undefined) chosen._enterMargin = defRuns - oppRuns;
+        // MOP_UP_EFFECTIVENESS_20260727: a team already trailing by a lot from the
+        // 6th inning on has conceded the game - the manager stops using trusted
+        // bullpen arms at full effort/quality and rides out whoever is left. Real
+        // blowouts compound this way (the losing bullpen keeps giving up runs
+        // once the game is in hand); this engine's arms otherwise pitch at full,
+        // uniform effectiveness regardless of score, which was suppressing the
+        // blowout tail even though average scoring correctly widens with team
+        // quality (see calibration notes for the diagnosis). Recomputed fresh on
+        // every call (score changes inning to inning), not cached on the arm.
+        chosen._mopUp = inn >= 4 && (oppRuns - defRuns) >= 4;
         return chosen;
     }
     function evSimGame(awaySide, homeSide, random, logSink, simWeather) {
@@ -7143,6 +7164,8 @@
             evSimGame: evSimGame,
             eventWinProbability: eventWinProbability,
             evActivePitcher: evActivePitcher,
+            evDefPitcher: evDefPitcher,
+            MOP_UP_FACTOR: MOP_UP_FACTOR,
             evRelieverArms: evRelieverArms,
             parkHrFactor: parkHrFactor,
             league: EV_LEAGUE,
