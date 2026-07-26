@@ -413,8 +413,11 @@
             byId('noSeasonIdState').hidden = false;
             return;
         }
+        var statsHref = '/mlb-simulator/season/stats/?seasonId=' + encodeURIComponent(seasonId);
         var statsLink = byId('statsLink');
-        if (statsLink) statsLink.href = '/mlb-simulator/season/stats/?seasonId=' + encodeURIComponent(seasonId);
+        if (statsLink) statsLink.href = statsHref;
+        var statsLinkBadge = byId('statsLinkBadge');
+        if (statsLinkBadge) statsLinkBadge.href = statsHref;
         if (!window.api || typeof window.api.getCurrentUser !== 'function') {
             gate.setAttribute('data-state', 'error');
             gate.innerHTML = '<div class="auth-gate-prompt"><p>Could not load (backend client unavailable). Please refresh.</p></div>';
