@@ -57,7 +57,7 @@
         av + '<span class="v2nav-name">' + name + '</span></a>' +
       '<a class="v2nav-coins" id="navCoinPill" href="/wallet/" title="' +
         ((window.TMR_TERMINOLOGY && window.TMR_TERMINOLOGY.full) || 'TMR Coin') + ' balance" hidden>' +
-        '<span aria-hidden="true">\u{1FA99}</span><span id="navCoinBalance">—</span></a>' +
+        '<img class="v2nav-coins-icon" src="/static/favicon.svg" alt="" aria-hidden="true"><span id="navCoinBalance">—</span></a>' +
       // The bell opens the alerts dropdown in place (notifications.js owns it and
       // anchors to #homeNotifBtn). It stays an <a href> so it still works as a
       // plain link if that engine has not finished loading -- clicking the bell

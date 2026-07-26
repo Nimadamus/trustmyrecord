@@ -271,7 +271,7 @@
                     <button class="tmr-user-menu-item tmr-user-menu-item--logout" role="menuitem" type="button" data-tmr-logout><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Log Out</button>
                 </div>
                 <a href="/wallet/" id="navCoinChip" class="tmr-global-nav__coins" data-tmr-coin-balance aria-label="${(window.TMR_TERMINOLOGY && window.TMR_TERMINOLOGY.full) || 'TMR Coin'} balance" title="${(window.TMR_TERMINOLOGY && window.TMR_TERMINOLOGY.full) || 'TMR Coin'} balance" hidden>
-                    <span aria-hidden="true">&#x1FA99;</span><span id="navCoinBalance">0</span>
+                    <img class="tmr-global-nav__coins-icon" src="/static/favicon.svg" alt="" aria-hidden="true"><span id="navCoinBalance">0</span>
                 </a>
                 <a href="/notifications/" id="notificationsBtn" class="tmr-global-nav__bell" data-tmr-notifications aria-label="Notifications" title="Notifications" onclick="if(typeof toggleNotifications==='function'){toggleNotifications(event);return false;}">
                     <svg class="tmr-global-nav__bell-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 2a6 6 0 0 0-6 6v3.6L4.3 15a1 1 0 0 0 .9 1.4h13.6a1 1 0 0 0 .9-1.4L18 11.6V8a6 6 0 0 0-6-6Zm0 20a3 3 0 0 0 2.83-2H9.17A3 3 0 0 0 12 22Z"/></svg>
