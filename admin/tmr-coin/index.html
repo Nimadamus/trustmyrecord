@@ -69,7 +69,7 @@
         async function loadContract() {
             var el = document.getElementById('contractInfo');
             try {
-                var cfg = await fetch('/api/tmr-coin/config', { cache: 'no-store' }).then(function (r) { return r.json(); });
+                var cfg = await window.api.request('/tmr-coin/config', { cache: 'no-store' });
                 el.innerHTML = '<table><tbody>' +
                     '<tr><th>Network</th><td>' + esc(cfg.network) + ' (chain ' + esc(cfg.chain_id) + ')</td></tr>' +
                     '<tr><th>Contract</th><td>' + (cfg.contract_address ? esc(cfg.contract_address) : '<em>not deployed yet</em>') + '</td></tr>' +

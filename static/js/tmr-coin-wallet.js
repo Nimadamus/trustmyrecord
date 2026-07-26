@@ -21,9 +21,7 @@
   }
 
   async function getConfig() {
-    var res = await fetch('/api/tmr-coin/config', { cache: 'no-store' });
-    if (!res.ok) throw new Error('Could not load TMR Coin network config');
-    return res.json();
+    return window.api.request('/tmr-coin/config', { cache: 'no-store' });
   }
 
   async function ensureBaseSepoliaNetwork(provider, cfg) {
