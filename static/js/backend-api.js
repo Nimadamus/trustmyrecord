@@ -1250,6 +1250,23 @@ class TrustMyRecordAPI {
         return this.request('/betlegend-pro/inquiry', { method: 'POST', body: payload });
     }
 
+    async submitBetLegendProReport(payload) {
+        return this.request('/betlegend-pro/report', { method: 'POST', body: payload });
+    }
+
+    async submitBetLegendProSimulation(payload) {
+        return this.request('/betlegend-pro/simulation', { method: 'POST', body: payload });
+    }
+
+    async getBetLegendProHistory(limit) {
+        const q = limit ? `?limit=${encodeURIComponent(limit)}` : '';
+        return this.request(`/betlegend-pro/history${q}`);
+    }
+
+    async getBetLegendProHistoryDetail(id) {
+        return this.request(`/betlegend-pro/history/${encodeURIComponent(id)}`);
+    }
+
     async getMyReferrals() {
         return this.request('/referrals/me');
     }
