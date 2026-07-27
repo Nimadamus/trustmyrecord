@@ -1,4 +1,4 @@
-// TMR Coin (Base Sepolia testnet) wallet-connect widget. Entirely separate
+// TMR Coin (Base mainnet) wallet-connect widget. Entirely separate
 // from the in-platform TMR Coin currency (backend-api.js's getCoinBalance/etc.) -- this
 // only reads a real on-chain balance via /api/tmr-coin/*. No purchase, claim,
 // or transfer action is wired here; the Claim button stays disabled until
@@ -10,6 +10,9 @@
   var hintEl = document.getElementById('tmrCoinHint');
   var addressEl = document.getElementById('tmrCoinAddress');
   var balanceEl = document.getElementById('tmrCoinBalance');
+  var networkBadgeEl = document.getElementById('tmrCoinNetworkBadge');
+  var explorerLinkEl = document.getElementById('tmrCoinExplorerLink');
+  var verifiedBadgeEl = document.getElementById('tmrCoinVerifiedBadge');
   if (!connectBtn) return; // page doesn't have the widget
 
   function short(addr) {
@@ -24,10 +27,17 @@
     return window.api.request('/tmr-coin/config', { cache: 'no-store' });
   }
 
-  async function ensureBaseSepoliaNetwork(provider, cfg) {
+  function renderPageInfo(cfg) {
+    if (networkBadgeEl) networkBadgeEl.textContent = cfg.is_testnet ? 'BASE SEPOLIA (TESTNET)' : 'BASE MAINNET';
+    if (explorerLinkEl && cfg.explorer_url) explorerLinkEl.href = cfg.explorer_url;
+    if (verifiedBadgeEl) verifiedBadgeEl.hidden = !!cfg.explorer_verified;
+  }
+
+  async function ensureBaseNetwork(provider, cfg) {
     var network = await provider.getNetwork();
     if (Number(network.chainId) === cfg.chain_id) return;
     var hexChainId = '0x' + cfg.chain_id.toString(16);
+    var isTestnet = cfg.is_testnet;
     try {
       await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: hexChainId }] });
     } catch (switchErr) {
@@ -36,10 +46,12 @@
           method: 'wallet_addEthereumChain',
           params: [{
             chainId: hexChainId,
-            chainName: 'Base Sepolia',
-            nativeCurrency: { name: 'Sepolia ETH', symbol: 'ETH', decimals: 18 },
-            rpcUrls: ['https://sepolia.base.org'],
-            blockExplorerUrls: ['https://sepolia.basescan.org'],
+            chainName: isTestnet ? 'Base Sepolia' : 'Base',
+            nativeCurrency: isTestnet
+              ? { name: 'Sepolia ETH', symbol: 'ETH', decimals: 18 }
+              : { name: 'ETH', symbol: 'ETH', decimals: 18 },
+            rpcUrls: [isTestnet ? 'https://sepolia.base.org' : 'https://mainnet.base.org'],
+            blockExplorerUrls: [isTestnet ? 'https://sepolia.basescan.org' : 'https://basescan.org'],
           }],
         });
       } else {
@@ -47,6 +59,8 @@
       }
     }
   }
+
+  getConfig().then(renderPageInfo).catch(function () {});
 
   async function loadOnChainBalance(address, cfg) {
     if (!cfg.contract_address) {
@@ -94,11 +108,11 @@
       var accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
       var address = accounts[0];
       var provider = new window.ethers.BrowserProvider(window.ethereum);
-      await ensureBaseSepoliaNetwork(provider, cfg);
+      await ensureBaseNetwork(provider, cfg);
 
       disconnectedEl.hidden = true;
       connectedEl.hidden = false;
-      addressEl.textContent = short(address) + ' · Base Sepolia';
+      addressEl.textContent = short(address) + ' · ' + (cfg.is_testnet ? 'Base Sepolia' : 'Base');
       await loadOnChainBalance(address, cfg);
       await linkWallet(address);
     } catch (err) {

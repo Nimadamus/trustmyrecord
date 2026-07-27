@@ -35,7 +35,7 @@
 <body>
     <div class="bar">
         <h1>TMR Coin Admin</h1>
-        <span class="badge">TESTNET / BASE SEPOLIA</span>
+        <span class="badge" id="networkBadge">Loading…</span>
     </div>
     <main>
         <div class="msg" id="topMsg"></div>
@@ -70,10 +70,16 @@
             var el = document.getElementById('contractInfo');
             try {
                 var cfg = await window.api.request('/tmr-coin/config', { cache: 'no-store' });
+                document.getElementById('networkBadge').textContent = cfg.is_testnet ? 'TESTNET / BASE SEPOLIA' : 'BASE MAINNET';
+                var ti = cfg.token_info || {};
+                var perm = cfg.permissions || {};
                 el.innerHTML = '<table><tbody>' +
                     '<tr><th>Network</th><td>' + esc(cfg.network) + ' (chain ' + esc(cfg.chain_id) + ')</td></tr>' +
                     '<tr><th>Contract</th><td>' + (cfg.contract_address ? esc(cfg.contract_address) : '<em>not deployed yet</em>') + '</td></tr>' +
                     '<tr><th>Explorer</th><td>' + (cfg.explorer_url ? '<a href="' + esc(cfg.explorer_url) + '" target="_blank" rel="noopener">' + esc(cfg.explorer_url) + '</a>' : '—') + '</td></tr>' +
+                    '<tr><th>Source verified</th><td>' + (cfg.explorer_verified ? 'Yes' : 'No') + '</td></tr>' +
+                    '<tr><th>Token</th><td>' + esc(ti.name) + ' (' + esc(ti.symbol) + '), ' + esc(ti.totalSupply) + ' fixed supply</td></tr>' +
+                    '<tr><th>Permissions</th><td>mint: ' + (perm.mintable ? 'yes' : 'no') + ' &middot; pause: ' + (perm.pausable ? 'yes' : 'no') + ' &middot; blacklist: ' + (perm.blacklistable ? 'yes' : 'no') + ' &middot; admin: ' + (perm.hasAdmin ? 'yes' : 'no') + '</td></tr>' +
                     '</tbody></table>';
             } catch (err) {
                 el.textContent = 'Failed to load: ' + err.message;
