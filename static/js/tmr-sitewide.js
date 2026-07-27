@@ -1225,7 +1225,7 @@
                     <h3 class="tmr-global-footer__heading">Platform</h3>
                     <div class="tmr-global-footer__links">
                         <a href="/sportsbook/">Sportsbook</a>
-                        <a href="/how-tmr-coin-works/">TMR Coin</a>
+                        <a href="/tmr-coin/">TMR Coin</a>
                         <a href="/my-record/">My Record</a>
                         <a href="/marketplace/">Sell Your Picks</a>
                         <a href="/premium/">Premium</a>
