@@ -84,6 +84,7 @@
         var profilePathMatch = path.match(/^profile\/([^\/?#]+)$/i);
         var embedPathMatch   = path.match(/^embed\/([^\/?#]+)$/i);
         var forumThreadMatch = path.match(/^forum\/thread\/(\d+)(?:\/.*)?$/i);
+        var userProfileMatch = path.match(/^u\/([^\/?#]+)$/i);
         var legacyRouteMap = {
             '': '',
             'home': '',
@@ -156,6 +157,30 @@
                     })
                     .catch(function () { /* API unreachable: honest 404 stays */ });
             })(forumThreadMatch[1]);
+        } else if (userProfileMatch) {
+            // /u/<username>/ pages are baked static (case-sensitive filenames) by
+            // the 30-min prerender cron from scripts/build_profile_pages.py. Two
+            // ways to land here for a REAL member: (1) the URL was typed/linked in
+            // the wrong case (GitHub Pages is case-sensitive; the DB lookup is
+            // not), or (2) the member just verified and their page hasn't been
+            // baked yet. Confirm the username against the live API (case-insensitive
+            // lookup, same as every /u/ link generator on the site) first:
+            // real member whose canonical username differs in case from what's in
+            // the URL -> redirect to the canonical-case URL (fixes case 1 without
+            // masking anything, exactly like the forum-thread router above);
+            // canonical case already matches (case 2, page just not baked yet) or
+            // no such member -> stays a genuine 404, same as any other real gap.
+            (function (typedName) {
+                fetch('https://trustmyrecord-api.onrender.com/api/users/' + encodeURIComponent(decodeURIComponent(typedName)))
+                    .then(function (r) { return r.ok ? r.json() : null; })
+                    .then(function (d) {
+                        var canonical = d && d.user && d.user.username;
+                        if (canonical && canonical !== typedName) {
+                            window.location.replace(window.location.origin + '/u/' + encodeURIComponent(canonical) + '/' + hash);
+                        }
+                    })
+                    .catch(function () { /* API unreachable: honest 404 stays */ });
+            })(userProfileMatch[1]);
         } else if (mappedRoute) {
             window.location.replace(window.location.origin + '/' + mappedRoute);
         }
