@@ -2227,6 +2227,11 @@
                         <div class="tmrx-ribbon">
                           <div class="tmrx-cell"><div class="tmrx-label">Balance</div><div class="tmrx-value is-placeholder" id="tmrxCoinBalance">&mdash;</div><div class="tmrx-sub"><a href="/wallet/">View wallet &rarr;</a></div></div>
                         </div>
+                        <div class="tmrx-coin-recent" id="tmrxCoinRecent" hidden style="margin-top:0.75rem;">
+                          <div class="tmrx-section-sub" style="margin-bottom:0.35rem;">Recent activity</div>
+                          <div id="tmrxCoinRecentList" style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.85rem;"></div>
+                          <div style="margin-top:0.5rem;"><a href="/wallet/">View full transaction history &rarr;</a></div>
+                        </div>
                       </div>
 
                       <div class="tmrx-section">
@@ -6995,6 +7000,30 @@
                     if (coinSection) coinSection.hidden = false;
                 }
             } catch (e) { /* wallet is a soft enrichment -- never blocks the profile */ }
+
+            try {
+                const txData = await withTimeout(api.getCoinTransactions({ limit: 5 }), 4500, 'Coin transaction history request');
+                const entries = (txData && Array.isArray(txData.entries)) ? txData.entries : [];
+                if (entries.length) {
+                    const escTx = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (ch) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
+                    const fmtTxDate = (iso) => {
+                        const d = new Date(iso);
+                        return isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                    };
+                    const rows = entries.map((entry) => {
+                        const sign = entry.amount > 0 ? '+' : '';
+                        const color = entry.amount > 0 ? '#1a9e5c' : (entry.amount < 0 ? '#c0392b' : 'inherit');
+                        return '<div style="display:flex;justify-content:space-between;gap:0.75rem;">' +
+                            '<span style="opacity:0.8;">' + fmtTxDate(entry.created_at) + '&nbsp;&mdash;&nbsp;' + escTx(entry.description) + '</span>' +
+                            '<span style="color:' + color + ';white-space:nowrap;">' + sign + entry.amount.toLocaleString('en-US') + '</span>' +
+                            '</div>';
+                    }).join('');
+                    const recentList = document.getElementById('tmrxCoinRecentList');
+                    const recentWrap = document.getElementById('tmrxCoinRecent');
+                    if (recentList) recentList.innerHTML = rows;
+                    if (recentWrap) recentWrap.hidden = false;
+                }
+            } catch (e) { /* recent-activity list is a soft enrichment -- never blocks the profile */ }
 
             try {
                 const gamerData = await withTimeout(api.request('/gaming/profile/' + encodeURIComponent(profileUsername)), 4500, 'Gamer profile request');
