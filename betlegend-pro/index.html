@@ -271,8 +271,10 @@
                             </select>
                         </div>
                         <div class="form-field">
-                            <label for="teamInput">Team</label>
-                            <input id="teamInput" name="team" type="text" placeholder="Full team name, e.g. New York Yankees" required autocomplete="off">
+                            <label for="teamSelect">Team</label>
+                            <select id="teamSelect" name="team" required disabled>
+                                <option value="">Loading teams…</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-row">
@@ -589,15 +591,40 @@
         var submitBtn = document.getElementById('submitBtn');
         var submitError = document.getElementById('submitError');
         var resultCard = document.getElementById('resultCard');
+        var teamSelect = document.getElementById('teamSelect');
+        var sportSelectEl = document.getElementById('sportSelect');
         submitDisableEls.push(submitBtn);
+
+        var teamsCache = {};
+        async function loadTeamsForSport(sport) {
+            teamSelect.disabled = true;
+            teamSelect.innerHTML = '<option value="">Loading teams…</option>';
+            try {
+                var teams = teamsCache[sport];
+                if (!teams) {
+                    var res = await window.api.getBetLegendProTeams(sport);
+                    teams = (res && res.teams) || [];
+                    teamsCache[sport] = teams;
+                }
+                teamSelect.innerHTML = teams.map(function (t) {
+                    return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
+                }).join('');
+            } catch (err) {
+                teamSelect.innerHTML = '<option value="">Could not load teams — try again</option>';
+            } finally {
+                teamSelect.disabled = false;
+            }
+        }
+        sportSelectEl.addEventListener('change', function () { loadTeamsForSport(sportSelectEl.value); });
+        loadTeamsForSport(sportSelectEl.value);
 
         var lastKey = null, lastSignature = null;
         form.addEventListener('submit', async function (ev) {
             ev.preventDefault();
             submitError.hidden = true;
             resultCard.hidden = true;
-            var sport = document.getElementById('sportSelect').value;
-            var team = document.getElementById('teamInput').value.trim();
+            var sport = sportSelectEl.value;
+            var team = teamSelect.value;
             var situation = document.getElementById('situationSelect').value;
             if (!team) return;
 

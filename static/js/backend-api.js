@@ -1267,6 +1267,10 @@ class TrustMyRecordAPI {
         return this.request(`/betlegend-pro/history/${encodeURIComponent(id)}`);
     }
 
+    async getBetLegendProTeams(sport) {
+        return this.request(`/betlegend-pro/teams/${encodeURIComponent(sport)}`);
+    }
+
     async getMyReferrals() {
         return this.request('/referrals/me');
     }
