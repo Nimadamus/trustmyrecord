@@ -80,6 +80,10 @@
         .pkg-status { margin-left:auto; font:700 9.5px/1 'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; }
         .pkg-group-label { font-weight:800; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--cyan); margin:4px 0 8px; }
         .pkg-help { color:var(--muted); font-size:11px; line-height:1.45; margin-top:7px; }
+        .next-action { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; background:rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.3); border-radius:12px; padding:14px 16px; margin-bottom:16px; font-size:14px; }
+        .next-action b { font-weight:800; }
+        .next-action.next-green { background:rgba(74,222,128,.08); border-color:rgba(74,222,128,.35); }
+        .next-action.next-red { background:rgba(248,113,113,.08); border-color:rgba(248,113,113,.35); }
         .pkg-status.live { color:var(--green); } .pkg-status.draft { color:var(--amber); } .pkg-status.off { color:var(--muted); }
         @media (max-width:560px) { .mp-shell { padding:20px 14px 56px; } }
     </style>
@@ -177,11 +181,31 @@
         }).join('');
     }
 
+    function renderNextAction() {
+        const anyLive = listings.some(function (l) { return l.status === 'published'; });
+        const st = elig.onboarding_status;
+        if (elig.suspension_reason) {
+            return '<div class="next-action next-red"><b>Selling is paused on your account:</b> ' + esc(elig.suspension_reason) + '</div>';
+        }
+        let label, target, cta;
+        if (!elig.rules.seller_agreement_accepted) {
+            label = 'Next: accept the Seller Agreement'; target = '#step2'; cta = 'Go to Step 2';
+        } else if (st !== 'complete') {
+            if (!elig.can_start_onboarding) { label = 'Next: finish the eligibility items in Step 1'; target = '#step1'; cta = 'Go to Step 1'; }
+            else { label = 'Next: connect your Stripe account'; target = '#step3'; cta = 'Go to Step 3'; }
+        } else if (!anyLive) {
+            label = 'Next: set your prices and publish a package'; target = '#step4'; cta = 'Go to Step 4';
+        } else {
+            return '<div class="next-action next-green"><b>Your storefront is live.</b> Manage packages and pricing in Step 4 below.</div>';
+        }
+        return '<div class="next-action"><b>' + label + '</b><a class="btn btn-primary" href="' + target + '">' + cta + '</a></div>';
+    }
+
     function render() {
-        let html = '';
+        let html = renderNextAction();
 
         // Step 1: eligibility
-        html += '<div class="panel"><h2><span class="step-num">1</span> Eligibility ' +
+        html += '<div class="panel" id="step1"><h2><span class="step-num">1</span> Eligibility ' +
             (elig.eligible ? '<span class="status-pill pill-green">Eligible</span>'
              : elig.suspension_reason ? '<span class="status-pill pill-red">Suspended</span>'
              : '<span class="status-pill pill-amber">In Progress</span>') + '</h2>' +
@@ -191,7 +215,7 @@
         '</div>';
 
         // Step 2: seller agreement
-        html += '<div class="panel"><h2><span class="step-num">2</span> Seller Agreement</h2>';
+        html += '<div class="panel" id="step2"><h2><span class="step-num">2</span> Seller Agreement</h2>';
         if (elig.rules.seller_agreement_accepted) {
             html += '<p style="color:#c5cee0;font-size:13.5px;">Accepted (version ' + esc(elig.seller_agreement_version) + '). <a href="/marketplace/terms/#seller" style="color:var(--cyan);" target="_blank" rel="noopener">Read it again</a>.</p>';
         } else {
@@ -203,7 +227,7 @@
 
         // Step 3: connect the seller's OWN Stripe account (Connect Standard OAuth)
         const st = elig.onboarding_status;
-        html += '<div class="panel"><h2><span class="step-num">3</span> Your Stripe Account ' +
+        html += '<div class="panel" id="step3"><h2><span class="step-num">3</span> Your Stripe Account ' +
             (st === 'complete' ? '<span class="status-pill pill-green">Connected</span>' :
              st === 'in_progress' ? '<span class="status-pill pill-amber">Finishing Setup</span>' :
              '<span class="status-pill pill-amber">Not Connected</span>') + '</h2>' +
@@ -227,7 +251,7 @@
 
         // Step 4: packages — seller picks which to offer and prices each one
         const anyLive = listings.some(function (l) { return l.status === 'published'; });
-        html += '<div class="panel"><h2><span class="step-num">4</span> Your Packages ' +
+        html += '<div class="panel" id="step4"><h2><span class="step-num">4</span> Your Packages ' +
             (anyLive ? '<span class="status-pill pill-green">Live</span>' : listings.length ? '<span class="status-pill pill-amber">Draft</span>' : '') + '</h2>' +
             '<p class="hint" style="margin-bottom:12px;">Offer any mix of packages. You set every price; on each sale TrustMyRecord keeps 20% and you receive 80%.</p>' +
             '<div class="pkg-group-label">Sell picks one at a time</div>' +
