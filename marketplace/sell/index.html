@@ -78,6 +78,8 @@
         .pkg-keep b { color:var(--green); font-family:'JetBrains Mono',monospace; }
         .pkg-toggle { display:flex; align-items:center; gap:7px; font-size:11.5px; color:#c5cee0; margin-top:9px; cursor:pointer; }
         .pkg-status { margin-left:auto; font:700 9.5px/1 'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; }
+        .pkg-group-label { font-weight:800; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--cyan); margin:4px 0 8px; }
+        .pkg-help { color:var(--muted); font-size:11px; line-height:1.45; margin-top:7px; }
         .pkg-status.live { color:var(--green); } .pkg-status.draft { color:var(--amber); } .pkg-status.off { color:var(--muted); }
         @media (max-width:560px) { .mp-shell { padding:20px 14px 56px; } }
     </style>
@@ -115,6 +117,12 @@
         { type: 'weekly_access', name: 'Weekly Pass',  dur: '7 DAYS', ph: '99.00' },
         { type: 'monthly_access',name: 'Monthly Pass', dur: '30 DAYS',ph: '249.00' },
     ];
+    const PKG_HELP = {
+        single_pick: 'List one pick at a time. Set a price and publish - every locked pick you post afterward is purchasable on its own until you turn this off.',
+        daily_access: 'Buyer gets every pick you post in the 24 hours after they pay.',
+        weekly_access: 'Buyer gets every pick you post in the 7 days after they pay.',
+        monthly_access: 'Buyer gets every pick you post in the 30 days after they pay.',
+    };
 
     function esc(v) { return String(v == null ? '' : v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
     function money(cents, cur) { return new Intl.NumberFormat('en-US',{style:'currency',currency:(cur||'usd').toUpperCase()}).format((cents||0)/100); }
@@ -141,6 +149,20 @@
         app.innerHTML = '<div class="panel"><h2>Log in to start selling</h2>' +
             '<p style="color:#c5cee0;font-size:13.5px;line-height:1.6;margin-bottom:14px;">Anyone with a verified TrustMyRecord account can open a storefront — connect your own Stripe account, set your prices, and sell. Your public record travels with every listing, so <a href="/sportsbook/" style="color:var(--cyan);">locking picks in the sportsbook</a> is what earns buyers.</p>' +
             '<a class="btn btn-primary" href="/login/?redirect=%2Fmarketplace%2Fsell%2F">Log In</a></div>';
+    }
+
+    function renderPkgCard(pk) {
+        const l = byType[pk.type];
+        const on = Boolean(l && l.status === 'published');
+        const price = l ? (l.price_cents / 100).toFixed(2) : '';
+        const status = !l ? '' : l.status === 'published' ? '<span class="pkg-status live">Live</span>' : '<span class="pkg-status draft">' + esc(l.status) + '</span>';
+        return '<div class="pkg' + (on ? ' on' : '') + '" id="pkg-' + pk.type + '">' +
+            '<div class="pkg-head"><span class="pkg-name">' + pk.name + '</span><span class="pkg-dur">' + pk.dur + '</span></div>' +
+            '<div class="pkg-price"><span>$</span><input type="number" step="0.01" min="1" placeholder="' + pk.ph + '" data-price="' + pk.type + '" value="' + price + '"></div>' +
+            '<div class="pkg-keep" data-keep="' + pk.type + '"></div>' +
+            '<label class="pkg-toggle"><input type="checkbox" data-offer="' + pk.type + '"' + (on ? ' checked' : '') + '> Offer this' + status + '</label>' +
+            '<div class="pkg-help">' + esc(PKG_HELP[pk.type] || '') + '</div>' +
+        '</div>';
     }
 
     function renderRules() {
@@ -208,19 +230,11 @@
         html += '<div class="panel"><h2><span class="step-num">4</span> Your Packages ' +
             (anyLive ? '<span class="status-pill pill-green">Live</span>' : listings.length ? '<span class="status-pill pill-amber">Draft</span>' : '') + '</h2>' +
             '<p class="hint" style="margin-bottom:12px;">Offer any mix of packages. You set every price; on each sale TrustMyRecord keeps 20% and you receive 80%.</p>' +
+            '<div class="pkg-group-label">Sell picks one at a time</div>' +
+            '<div class="pkg-grid">' + renderPkgCard(PKG[0]) + '</div>' +
+            '<div class="pkg-group-label" style="margin-top:14px;">Or sell access passes</div>' +
             '<div class="pkg-grid">' +
-            PKG.map(function (pk) {
-                const l = byType[pk.type];
-                const on = Boolean(l && l.status === 'published');
-                const price = l ? (l.price_cents / 100).toFixed(2) : '';
-                const status = !l ? '' : l.status === 'published' ? '<span class="pkg-status live">Live</span>' : '<span class="pkg-status draft">' + esc(l.status) + '</span>';
-                return '<div class="pkg' + (on ? ' on' : '') + '" id="pkg-' + pk.type + '">' +
-                    '<div class="pkg-head"><span class="pkg-name">' + pk.name + '</span><span class="pkg-dur">' + pk.dur + '</span></div>' +
-                    '<div class="pkg-price"><span>$</span><input type="number" step="0.01" min="1" placeholder="' + pk.ph + '" data-price="' + pk.type + '" value="' + price + '"></div>' +
-                    '<div class="pkg-keep" data-keep="' + pk.type + '"></div>' +
-                    '<label class="pkg-toggle"><input type="checkbox" data-offer="' + pk.type + '"' + (on ? ' checked' : '') + '> Offer this' + status + '</label>' +
-                '</div>';
-            }).join('') +
+            PKG.slice(1).map(renderPkgCard).join('') +
             '</div>' +
             '<div class="field"><label>About your picks (shown on every package)</label><textarea id="lsDesc" maxlength="2000" placeholder="Locked picks from my public board, revealed immediately after purchase.">' + esc(listing ? listing.description : '') + '</textarea>' +
             '<p class="hint">No guaranteed-outcome language (guaranteed winner, lock, risk-free) — listings using it are rejected.</p></div>' +
