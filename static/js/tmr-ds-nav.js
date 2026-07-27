@@ -51,6 +51,7 @@
   ];
   var MORE = [
     ['/marketplace/', 'Sell Your Picks'],
+    ['/tmr-coin/', 'TMR Coin'],
     ['/rules/', 'Rules']
   ];
 

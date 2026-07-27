@@ -20,7 +20,7 @@
     // row never wraps on desktop.
     const moreRoutes = [
         ["/marketplace/", "Sell Your Picks"],
-        ["/how-tmr-coin-works/", "TMR Coin"],
+        ["/tmr-coin/", "TMR Coin"],
         ["/rules/", "Rules"]
     ];
     const communityRoutes = [
@@ -41,7 +41,7 @@
     // have their own URL.
     const ARENA_GROUP = new Set(["arena.html"]);
     const COMMUNITY_GROUP = new Set(["sports-talk.html", "feed.html", "online-gaming.html", "mlb-the-show-stat-league.html", "arena.html", "challenges.html", "forum.html", "chat.html", "polls.html", "trivia.html", "hangout.html"]);
-    const MORE_GROUP = new Set(["marketplace.html", "rules.html"]);
+    const MORE_GROUP = new Set(["marketplace.html", "tmr-coin.html", "rules.html"]);
     const SPORTSBOOK_GROUP = new Set(["sportsbook.html", "handicapping.html"]);
 
     const routeMeta = {
