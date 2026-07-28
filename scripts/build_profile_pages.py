@@ -170,9 +170,21 @@ def get(url):
         return json.load(r)
 
 def list_users():
+    """Every verified public-directory member, regardless of graded-pick count.
+
+    GET /api/users (the search/browse endpoint) additionally requires a
+    settled public pick so search results never show an empty profile -- that
+    filter is correct there, but it means a brand-new member with zero picks
+    never appears in it, so this discovery loop used to never see them and
+    never baked even a compact page for them (a guaranteed 404 the moment
+    /api/users/newest-member surfaced them). /api/users/directory-usernames
+    applies the same publicDirectoryUserWhere member filter WITHOUT the
+    settled-pick requirement, so it can't miss anyone this script needs to
+    guarantee a page for.
+    """
     out, off = [], 0
     while True:
-        d = get(f"{API}/users?limit=200&offset={off}")
+        d = get(f"{API}/users/directory-usernames?limit=200&offset={off}")
         u = d.get("users", [])
         out += u
         if len(u) < 200:
