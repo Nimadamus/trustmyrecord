@@ -136,7 +136,7 @@
     var s = document.createElement('style');
     s.id = STYLE_ID;
     s.textContent =
-      '.simc-panel{margin-top:18px;padding:20px;border-radius:14px;background:#12121a;border:1px solid #2a2a4a;font-family:Inter,system-ui,sans-serif;color:#e8e8f0;}' +
+      '.simc-panel{grid-column:1/-1;width:100%;box-sizing:border-box;margin-top:18px;padding:20px;border-radius:14px;background:#12121a;border:1px solid #2a2a4a;font-family:Inter,system-ui,sans-serif;color:#e8e8f0;}' +
       '.simc-panel h3{margin:0 0 6px;font-family:Barlow,Inter,sans-serif;font-weight:800;font-size:1.05rem;color:#fff;}' +
       '.simc-panel p{margin:0 0 14px;color:#93a4bf;font-size:0.92rem;line-height:1.5;}' +
       '.simc-row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}' +
