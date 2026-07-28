@@ -480,7 +480,7 @@
     </main>
 
     <script src="/static/js/config.js?v=20260430a"></script>
-    <script src="/static/js/backend-api.js?v=20260728matchup1"></script>
+    <script src="/static/js/backend-api.js?v=20260728matchup2"></script>
     <script>
     (function () {
         var authState = document.getElementById('authState');
@@ -699,16 +699,40 @@
             return labels[market] || market;
         }
 
+        var matchupTeamsInFlight = {};
+
+        // Both team selects call this for the same sport at once on sport
+        // change/boot -- sharing one in-flight promise (rather than each
+        // firing its own request) avoids two redundant upstream calls, and
+        // means a transient failure on one no longer leaves ONE select stuck
+        // while the other loads fine. One retry on failure absorbs a single
+        // transient 502 (observed live against the Render free-tier proxy)
+        // without masking a genuinely broken upstream.
+        function fetchMatchupTeams(sport) {
+            if (matchupTeamsCache[sport]) return Promise.resolve(matchupTeamsCache[sport]);
+            if (matchupTeamsInFlight[sport]) return matchupTeamsInFlight[sport];
+            var attempt = function (retriesLeft) {
+                return window.api.getBetLegendProTeams(sport).then(function (res) {
+                    var teams = (res && res.teams) || [];
+                    matchupTeamsCache[sport] = teams;
+                    return teams;
+                }).catch(function (err) {
+                    if (retriesLeft > 0) {
+                        return new Promise(function (r) { setTimeout(r, 800); }).then(function () { return attempt(retriesLeft - 1); });
+                    }
+                    throw err;
+                });
+            };
+            var p = attempt(1).finally(function () { delete matchupTeamsInFlight[sport]; });
+            matchupTeamsInFlight[sport] = p;
+            return p;
+        }
+
         async function loadMatchupTeams(sport, selectEl) {
             selectEl.disabled = true;
             selectEl.innerHTML = '<option value="">Loading teams…</option>';
             try {
-                var teams = matchupTeamsCache[sport];
-                if (!teams) {
-                    var res = await window.api.getBetLegendProTeams(sport);
-                    teams = (res && res.teams) || [];
-                    matchupTeamsCache[sport] = teams;
-                }
+                var teams = await fetchMatchupTeams(sport);
                 selectEl.innerHTML = '<option value="">Select team…</option>' + teams.map(function (t) {
                     return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
                 }).join('');
