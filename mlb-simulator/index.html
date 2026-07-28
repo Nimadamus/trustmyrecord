@@ -565,6 +565,12 @@
 
     <script src="/static/js/mlb-simulator.js?v=20260727a-blowoutfix"></script>
 
+    <!-- MLB_SIM_CONVERSION_20260728: post-result save/signup panel. Flip
+         any value to false + redeploy to disable instantly; the simulator
+         above is fully independent of this and keeps working either way. -->
+    <script>window.SIMULATOR_FLAGS = { conversionPanel: true, savedResults: true, teamFollowing: true };</script>
+    <script defer src="/static/js/mlb-simulator-conversion.js?v=20260728a"></script>
+
 <!-- tmr-internal-cluster : SEO internal linking (insert-only) -->
 <section class="tmr-internal-cluster" aria-label="Related pages on TrustMyRecord" style="max-width:1140px;margin:46px auto 0;padding:26px 22px;background:#12121a;border:1px solid #2a2a4a;border-radius:18px;font-family:'Inter',system-ui,sans-serif;">
   <h2 style="font-family:'Barlow','Inter',sans-serif;font-weight:800;font-size:1.15rem;color:#e8e8f0;margin:0 0 14px;">Related TrustMyRecord Tools</h2>
