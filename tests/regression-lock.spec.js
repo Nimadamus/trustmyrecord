@@ -189,3 +189,51 @@ test.describe('sportsbook functional locks', () => {
     expect(bodyWidth, 'mobile layout should not create major horizontal overflow').toBeLessThanOrEqual(viewportWidth + 24);
   });
 });
+
+test.describe('handicappers directory canonical profile links', () => {
+  // Regression for the "Newest member" link 404 (Jul 2026): a brand-new,
+  // zero-graded-pick member was surfaced by /api/users/newest-member the
+  // moment they verified, but build_profile_pages.py's discovery loop only
+  // saw members returned by GET /api/users -- which requires a settled pick
+  // -- so it never baked even a compact /u/<username>/ page for them. Fixed
+  // by adding GET /api/users/directory-usernames (no settled-pick
+  // requirement) as the discovery source. This test locks two things: the
+  // newest-member widget must build its href with the exact same /u/
+  // convention every directory card uses, and that URL must actually
+  // resolve (not the redirect-shell 404) once baked.
+  test('newest member link matches the canonical /u/<username>/ route used by directory cards, and resolves', async ({ page, request }) => {
+    const api = await request.get('https://trustmyrecord-api.onrender.com/api/users/newest-member');
+    expect(api.ok(), 'newest-member API should respond').toBeTruthy();
+    const { member } = await api.json();
+    test.skip(!member, 'no eligible newest member returned right now');
+
+    await gotoRoute(page, '/handicappers/');
+    const newestLink = page.locator('#hmNewestMember a, .hm-newest-member a').first();
+    await expect(newestLink, 'newest member link should render').toBeVisible({ timeout: 20000 });
+
+    const newestHref = await newestLink.getAttribute('href');
+    const expectedHref = `/u/${encodeURIComponent(member.username)}/`;
+    expect(newestHref, 'newest-member link must point at the canonical /u/<username>/ route, not /profile/?user= or anything else').toBe(expectedHref);
+
+    // Same href-building convention must be used by ordinary directory cards
+    // elsewhere on this same page -- one shared pattern, not two link builders.
+    const cardHrefs = await page.locator('a[href^="/u/"]').evaluateAll((els) => els.map((el) => el.getAttribute('href')));
+    expect(cardHrefs.length, 'directory should render at least one member card /u/ link').toBeGreaterThan(0);
+    for (const href of cardHrefs) {
+      expect(href, `every /u/ link on the directory must follow the /u/<username>/ shape (got ${href})`).toMatch(/^\/u\/[^/]+\/$/);
+    }
+
+    // The freshly-verified member's page may still be mid-bake (prerender
+    // dispatch fires on verification but isn't instant) -- poll briefly
+    // rather than treat that legitimate race as a hard failure.
+    let response = null;
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      response = await page.goto(newestHref, { waitUntil: 'domcontentloaded' });
+      if (response && response.status() !== 404) break;
+      await page.waitForTimeout(15000);
+    }
+    expect(response && response.status(), `${newestHref} (newest member) must not 404`).not.toBe(404);
+    await expect(page).not.toHaveTitle(/page not found/i);
+    await expect(page.locator('body'), 'must not land on the generic 404 redirect shell').not.toContainText(/we couldn.t find that page/i);
+  });
+});
