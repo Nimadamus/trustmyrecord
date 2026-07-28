@@ -5658,5 +5658,45 @@ document.addEventListener('DOMContentLoaded', async function() {
 <script src="/static/js/tmr-redesign-loader.js?v=20260501a" defer></script>
 <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260710nolines">
 <script src="/static/js/analytics.js?v=20260719ft"></script>
+<script>
+// SIMULATOR_FORUM_PREFILL_20260728: additive-only. If a page (e.g. the MLB
+// Simulator's post-result "Post This Result in the Forum" link) sends the
+// visitor here with ?simThreadTitle=&simThreadBody=&simCategorySlug=, open
+// the existing New Thread composer pre-filled with a DRAFT the visitor
+// still has to review and click "Post Thread" on themselves - nothing here
+// ever submits automatically. No such params (every normal /forum/ visit
+// today) makes this a complete no-op.
+(function () {
+    var params = new URLSearchParams(window.location.search);
+    var title = params.get('simThreadTitle');
+    var body = params.get('simThreadBody');
+    if (!title && !body) return;
+    var categorySlug = params.get('simCategorySlug') || '';
+
+    function tryOpen(attemptsLeft) {
+        if (typeof window.openNewThread !== 'function' || typeof categories === 'undefined' || !categories.length) {
+            if (attemptsLeft > 0) { setTimeout(function () { tryOpen(attemptsLeft - 1); }, 250); }
+            return;
+        }
+        window.openNewThread();
+        var t = document.getElementById('ntTitle');
+        var c = document.getElementById('ntContent');
+        if (t && title) t.value = title.slice(0, 160);
+        if (c && body) c.value = body;
+        if (categorySlug) {
+            var sel = document.getElementById('ntCategory');
+            if (sel) {
+                var match = null;
+                for (var i = 0; i < sel.options.length; i++) {
+                    if (sel.options[i].getAttribute('data-slug') === categorySlug) { match = sel.options[i]; break; }
+                }
+                if (match) sel.value = match.value;
+            }
+        }
+    }
+    if (document.readyState === 'complete') tryOpen(20);
+    else window.addEventListener('load', function () { tryOpen(20); });
+})();
+</script>
 </body>
 </html>
