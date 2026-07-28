@@ -171,6 +171,17 @@ body.classic-forum .fadmin-badge{background:#c0392b !important;color:#fff !impor
 .fpost-actions .fpost-btn.is-edit:hover{background:#ffe790;color:#3d2f00}
 .fpost-actions .fpost-btn.is-like.is-liked{background:#dff0e0;border-color:#5a9e63;color:#1f5a2a}
 .fpost-actions .fpost-btn .fpost-like-count{font-weight:normal;opacity:.85}
+.fpost-actions .fpost-btn.is-tip{background:#fff6dc;border-color:#c7a24d;color:#5d4700}
+.fpost-actions .fpost-btn.is-tip:hover{background:#ffedb8;color:#3d2f00}
+.fpost-tips{margin-top:8px;display:flex;flex-direction:column;gap:3px}
+.fpost-tip-line{font-size:12px;color:#8a6d1f;font-weight:bold}
+.fpost-tip-box{margin-top:10px;padding:10px 12px;border:1px solid #c7a24d;border-radius:4px;background:#fffaf0;display:flex;flex-direction:column;gap:8px}
+.fpost-tip-row{display:flex;align-items:center;gap:8px}
+.fpost-tip-row label{font:bold 12px Arial,Helvetica,sans-serif;color:#5d4700}
+.fpost-tip-input{width:80px;padding:4px 6px;border:1px solid var(--button-border);border-radius:2px}
+.fpost-tip-balance{font-size:12px;color:#5d4700}
+.fpost-tip-error{font-size:12px;color:#a3251f;font-weight:bold}
+.fpost-tip-buttons{display:flex;gap:6px}
 .fpost-edit-box{margin-top:8px;border:1px solid var(--line);background:#fbfbfb;padding:8px}
 .fpost-edit-box textarea{width:100%;border:1px solid #aaa;background:#fff;color:#222;padding:7px;font:12px Arial,Helvetica,sans-serif;min-height:120px;box-sizing:border-box}
 .fpost-edit-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:6px}
@@ -179,6 +190,11 @@ body.tmr-forum-live-redesign .fpost-actions .fpost-btn{background:#0e1a2c !impor
 body.tmr-forum-live-redesign .fpost-actions .fpost-btn:hover{background:#16243d !important;color:#fff !important}
 body.tmr-forum-live-redesign .fpost-actions .fpost-btn.is-edit{background:#3a2a08 !important;border-color:#c7a24d !important;color:#ffe5a3 !important}
 body.tmr-forum-live-redesign .fpost-actions .fpost-btn.is-edit:hover{background:#523c0f !important;color:#fff7d6 !important}
+body.tmr-forum-live-redesign .fpost-actions .fpost-btn.is-tip{background:#2c2408 !important;border-color:#c7a24d !important;color:#ffe5a3 !important}
+body.tmr-forum-live-redesign .fpost-actions .fpost-btn.is-tip:hover{background:#3d3010 !important;color:#fff7d6 !important}
+body.tmr-forum-live-redesign .fpost-tip-line{color:#e8c34a !important}
+body.tmr-forum-live-redesign .fpost-tip-box{background:#1a1608 !important;border-color:#c7a24d !important}
+body.tmr-forum-live-redesign .fpost-tip-row label,body.tmr-forum-live-redesign .fpost-tip-balance{color:#e8c34a !important}
 body.tmr-forum-live-redesign .fpost-edit-box{background:#0e1a2c !important;border-color:rgba(255,255,255,.12) !important}
 body.tmr-forum-live-redesign .fpost-edit-box textarea{background:#0a1422 !important;border-color:rgba(255,255,255,.18) !important;color:#e8eef7 !important}
 .freply{background:#fff;border:1px solid var(--line);padding:10px;margin-top:10px}
@@ -3651,10 +3667,18 @@ function renderThread() {
            moderation flag ever arrives on a post, no share control is emitted. */
         var canShare = !!sharePath && !!shareId
             && !(p.is_deleted || p.deleted_at || p.is_removed || p.is_hidden || p.is_moderated);
+        // Tipping only applies to a real forum_posts row (a numeric id) -- the
+        // thread starter uses the synthetic 'thread-<id>-starter' id and has no
+        // ledger-addressable author to resolve server-side the same way, so it
+        // is excluded here the same way canShare/canEdit treat it elsewhere.
+        // Self-tip is also excluded client-side as a UX nicety; the server
+        // re-checks this authoritatively regardless (SelfTipError).
+        var canTip = isLoggedIn && postId && /^\d+$/.test(postId) && !!postAuthorId && postAuthorId !== myUserId;
         var actions = '<div class="fpost-actions">'
             + (likeTarget ? '<button type="button" class="fpost-btn is-like' + (p.liked_by_me ? ' is-liked' : '') + '" onclick="forumLikePost(\'' + escHtml(String(likeTarget)) + '\',' + (p.is_thread_starter ? 'true' : 'false') + ',this)">Like <span class="fpost-like-count">(' + likeCount + ')</span></button>' : '')
             + (isLoggedIn && postId ? '<button type="button" class="fpost-btn" onclick="forumQuotePost(\'' + escHtml(postId) + '\')">Quote</button>' : '')
             + '<button type="button" class="fpost-btn" onclick="forumFocusReply()">Reply</button>'
+            + (canTip ? '<button type="button" class="fpost-btn is-tip" onclick="forumTipPost(\'' + escHtml(postId) + '\',this)">🪙 Tip TMR</button>' : '')
             + (isLoggedIn && p.is_thread_starter ? '<button type="button" class="fpost-btn is-sub' + ((cachedThread && cachedThread.subscribed_by_me) ? ' is-subscribed' : '') + '" onclick="forumToggleSubscribe(this)">' + ((cachedThread && cachedThread.subscribed_by_me) ? 'Unfollow Thread' : 'Follow Thread') + '</button>' : '')
             + (canShare ? '<button type="button" class="fpost-btn" data-tmr-share data-share-type="' + shareType + '" data-share-id="' + escHtml(String(shareId)) + '" data-share-url="' + escHtml('https://trustmyrecord.com' + sharePath) + '" title="' + escHtml(shareLabel) + '" aria-label="' + escHtml(shareLabel) + '">Share</button>' : '')
             + (canEdit && postId ? '<button type="button" class="fpost-btn is-edit" onclick="forumEditPost(\'' + escHtml(postId) + '\')">Edit</button>' : '')
@@ -3673,6 +3697,15 @@ function renderThread() {
         // (see starterPostFromThread), so nothing here may assume a numeric id.
         var permalink = forumPostPermalink(p.thread_id || (cachedThread && cachedThread.id), postId,
             forumThreadSlug(cachedThread));
+        // TMR tip display: public to every viewer (not just the tipper/author),
+        // rendered from the batched per-post summary the backend already
+        // attaches to each post (routes/forum.js getTipSummaryForPosts).
+        var tipsLine = '';
+        if (Array.isArray(p.tips) && p.tips.length) {
+            tipsLine = '<div class="fpost-tips" id="postTips-' + escHtml(postId) + '">' + p.tips.map(function(t) {
+                return '<span class="fpost-tip-line">🪙 ' + escHtml(t.username) + ' gave ' + Number(t.amount) + ' TMR for this post</span>';
+            }).join('') + '</div>';
+        }
         return '<div class="fthread-post" data-post-id="' + escHtml(postId) + '"'
             + (postId ? ' id="post-' + escHtml(postId) + '"' : '') + '>'
             + renderAuthorPanel(p)
@@ -3685,6 +3718,7 @@ function renderThread() {
             +   '<div class="fpost-content" id="postContent-' + escHtml(postId) + '">' + forumRenderContent(p.content || p.body || '') + '</div>'
             +   editedLine
             +   actions
+            +   tipsLine
             + '</div></div>';
     }).join('');
 }
@@ -3874,6 +3908,122 @@ async function forumLikePost(targetId, isStarter, btn) {
         console.error('Like error:', err, err && err.detail);
         alert((err && (err.message || err.detail)) || 'Failed to like post.');
     } finally {
+        btn.disabled = false;
+    }
+}
+
+// TMR tipping. Opens a small inline box (same pattern as forumEditPost's
+// inline edit box, not a separate modal component) showing the tipper's
+// current balance, an amount field, and a confirm/cancel pair. The server
+// re-validates everything authoritatively (self-tip, balance, frozen
+// wallets, account age, daily recipient cap) -- this UI only prevents the
+// obvious mistakes before a round trip.
+async function forumTipPost(postId, btn) {
+    if (typeof isUserLoggedIn === 'function' && !isUserLoggedIn()) { window.location.href = '/login/'; return; }
+    var bodyEl = document.querySelector('.fthread-post[data-post-id="' + postId + '"] .fthread-body');
+    if (!bodyEl) return;
+    if (bodyEl.querySelector('.fpost-tip-box')) return; // already open for this post
+
+    var box = document.createElement('div');
+    box.className = 'fpost-tip-box';
+    box.innerHTML =
+        '<div class="fpost-tip-row">'
+        + '<label for="tipAmount-' + postId + '">TMR to send:</label>'
+        + '<input type="number" id="tipAmount-' + postId + '" min="1" max="10000" step="1" value="5" class="fpost-tip-input">'
+        + '</div>'
+        + '<div class="fpost-tip-balance" id="tipBalance-' + postId + '">Loading your balance…</div>'
+        + '<div class="fpost-tip-error" id="tipError-' + postId + '" hidden></div>'
+        + '<div class="fpost-tip-buttons">'
+        + '<button type="button" class="fpost-btn is-tip-confirm" onclick="forumSubmitTip(\'' + postId + '\', this)">Send Tip</button>'
+        + '<button type="button" class="fpost-btn" onclick="forumCancelTip(\'' + postId + '\')">Cancel</button>'
+        + '</div>';
+    bodyEl.appendChild(box);
+
+    try {
+        var bal = await api.request('/coins/balance');
+        var balEl = document.getElementById('tipBalance-' + postId);
+        var balNum = (bal && typeof bal.balance === 'number') ? bal.balance : null;
+        if (balEl) {
+            balEl.textContent = balNum != null
+                ? 'Your balance: ' + balNum.toLocaleString('en-US') + ' TMR' + (bal.is_frozen ? ' (wallet frozen)' : '')
+                : 'Could not load your balance.';
+        }
+        box.dataset.balance = balNum != null ? String(balNum) : '';
+    } catch (err) {
+        var balEl2 = document.getElementById('tipBalance-' + postId);
+        if (balEl2) balEl2.textContent = 'Could not load your balance.';
+    }
+}
+
+function forumCancelTip(postId) {
+    var bodyEl = document.querySelector('.fthread-post[data-post-id="' + postId + '"] .fthread-body');
+    var box = bodyEl && bodyEl.querySelector('.fpost-tip-box');
+    if (box) box.remove();
+}
+
+async function forumSubmitTip(postId, btn) {
+    var bodyEl = document.querySelector('.fthread-post[data-post-id="' + postId + '"] .fthread-body');
+    var box = bodyEl && bodyEl.querySelector('.fpost-tip-box');
+    if (!box || !btn || btn.disabled) return;
+    var input = document.getElementById('tipAmount-' + postId);
+    var errEl = document.getElementById('tipError-' + postId);
+    var amount = parseInt(input && input.value, 10);
+    if (errEl) { errEl.hidden = true; errEl.textContent = ''; }
+
+    if (!Number.isInteger(amount) || amount < 1) {
+        if (errEl) { errEl.hidden = false; errEl.textContent = 'Enter a whole number of at least 1 TMR.'; }
+        return;
+    }
+    var knownBalance = box.dataset.balance ? parseInt(box.dataset.balance, 10) : null;
+    if (knownBalance != null && amount > knownBalance) {
+        if (errEl) { errEl.hidden = false; errEl.textContent = 'You only have ' + knownBalance + ' TMR available.'; }
+        return;
+    }
+
+    btn.disabled = true;
+    // A fresh id per click/submission -- a double-click or network retry of
+    // THIS submission replays server-side instead of tipping twice. Sending a
+    // separate tip later (even to the same post) uses a new id, which is
+    // correct: that is a deliberate second tip, not a duplicate of this one.
+    var idemKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('tip-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+    try {
+        var resp = await api.request('/forum/posts/' + encodeURIComponent(postId) + '/tip', {
+            method: 'POST',
+            body: { amount: amount, idempotencyKey: idemKey },
+        });
+        var tipsEl = document.getElementById('postTips-' + postId);
+        var sessionUser = (typeof getForumSessionUser === 'function') ? getForumSessionUser() : null;
+        var myName = (sessionUser && sessionUser.username) || 'You';
+        var line = document.createElement('span');
+        line.className = 'fpost-tip-line';
+        line.textContent = '🪙 ' + myName + ' gave ' + amount + ' TMR for this post';
+        if (!tipsEl) {
+            tipsEl = document.createElement('div');
+            tipsEl.className = 'fpost-tips';
+            tipsEl.id = 'postTips-' + postId;
+            bodyEl.appendChild(tipsEl);
+        }
+        tipsEl.appendChild(line);
+        if (Array.isArray(cachedPosts)) {
+            for (var i = 0; i < cachedPosts.length; i++) {
+                if (String(cachedPosts[i].id) === String(postId)) {
+                    cachedPosts[i].tip_total = resp.tip_total;
+                    if (!Array.isArray(cachedPosts[i].tips)) cachedPosts[i].tips = [];
+                    cachedPosts[i].tips.push({ username: myName, amount: amount });
+                    break;
+                }
+            }
+        }
+        box.remove();
+    } catch (err) {
+        var msg;
+        if (err && err.data && err.data.available != null) {
+            msg = 'Insufficient balance: needs ' + err.data.required + ' TMR, you have ' + err.data.available + '.';
+        } else {
+            msg = (err && err.message) || 'Failed to send tip.';
+        }
+        var errEl2 = document.getElementById('tipError-' + postId);
+        if (errEl2) { errEl2.hidden = false; errEl2.textContent = msg; } else { alert(msg); }
         btn.disabled = false;
     }
 }

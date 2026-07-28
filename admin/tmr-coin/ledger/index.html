@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TMR Coin Ledger Audit | TrustMyRecord Admin</title>
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <style>
+        :root { color-scheme: dark; --bg:#060b12; --panel:#0b111b; --panel2:#101826; --line:rgba(148,163,184,0.16); --text:#f8fafc; --muted:#9aa8ba; --cyan:#2dd4bf; --red:#f87171; --gold:#e8c34a; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; }
+        .bar { padding: 16px 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .bar h1 { font-size: 18px; margin: 0; color: var(--cyan); }
+        .bar a { color: var(--muted); font-size: 12.5px; text-decoration: none; }
+        .bar a:hover { color: var(--cyan); }
+        main { padding: 20px; max-width: 1100px; margin: 0 auto; }
+        .msg { margin-bottom: 14px; font-size: 13px; }
+        .msg.err { color: var(--red); }
+        .msg.ok { color: #4ade80; }
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; margin-bottom: 18px; }
+        .panel h2 { margin: 0 0 12px; font-size: 15px; color: var(--text); }
+        .stat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+        .stat-cell { background: var(--panel2); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+        .stat-cell .n { font-size: 20px; font-weight: 800; color: var(--gold); }
+        .stat-cell .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+        table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+        th, td { text-align: left; padding: 7px 9px; border-bottom: 1px solid var(--line); vertical-align: top; }
+        th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; }
+        .amt-pos { color: #4ade80; font-weight: 700; }
+        .amt-neg { color: var(--red); font-weight: 700; }
+        select, button { background: var(--panel2); color: var(--text); border: 1px solid rgba(45,212,191,0.3); border-radius: 8px; padding: 6px 10px; font-size: 12.5px; cursor: pointer; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+        .reverse-btn { border-color: rgba(248,113,113,0.4); }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="bar">
+        <h1>TMR Coin Ledger Audit</h1>
+        <a href="/admin/tmr-coin/">On-chain admin →</a>
+    </div>
+    <main>
+        <div class="msg" id="topMsg"></div>
+
+        <section class="panel">
+            <h2>Platform Summary</h2>
+            <div id="summaryBody">Loading…</div>
+        </section>
+
+        <div class="two-col">
+            <section class="panel">
+                <h2>Top Holders</h2>
+                <div id="topHoldersBody">Loading…</div>
+            </section>
+            <section class="panel">
+                <h2>Top Tippers &amp; Recipients</h2>
+                <div id="topTipsBody">Loading…</div>
+            </section>
+        </div>
+
+        <section class="panel">
+            <h2>Recent Activity</h2>
+            <div class="toolbar">
+                <label for="typeFilter" style="color:var(--muted);font-size:12.5px;">Filter:</label>
+                <select id="typeFilter">
+                    <option value="">All types</option>
+                    <option value="reward">reward</option>
+                    <option value="admin_grant">admin_grant</option>
+                    <option value="admin_adjustment">admin_adjustment</option>
+                    <option value="reversed">reversed</option>
+                    <option value="tip_sent">tip_sent</option>
+                    <option value="tip_received">tip_received</option>
+                    <option value="betlegend_pro_inquiry_free">betlegend_pro_inquiry_free</option>
+                    <option value="betlegend_pro_inquiry_charge">betlegend_pro_inquiry_charge</option>
+                </select>
+            </div>
+            <div id="activityBody">Loading…</div>
+            <div class="toolbar" style="margin-top:12px;">
+                <button id="loadMoreBtn" type="button">Load more</button>
+            </div>
+        </section>
+    </main>
+
+    <script src="/static/js/config.js?v=20260430a"></script>
+    <script src="/static/js/backend-api.js?v=20260725coins1"></script>
+    <script>
+    (function () {
+        var topMsg = document.getElementById('topMsg');
+        function msg(kind, text) { topMsg.className = 'msg ' + kind; topMsg.textContent = text; }
+        function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) { return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+        function fmtAmt(n) {
+            var num = Number(n);
+            var cls = num >= 0 ? 'amt-pos' : 'amt-neg';
+            return '<span class="' + cls + '">' + (num >= 0 ? '+' : '') + num.toLocaleString('en-US') + '</span>';
+        }
+
+        async function loadSummary() {
+            var el = document.getElementById('summaryBody');
+            var holdersEl = document.getElementById('topHoldersBody');
+            var tipsEl = document.getElementById('topTipsBody');
+            try {
+                var data = await window.api.request('/admin/coins/summary');
+                var w = data.wallets || {};
+                el.innerHTML = '<div class="stat-grid">' +
+                    '<div class="stat-cell"><div class="n">' + esc(w.wallet_count) + '</div><div class="l">Wallets</div></div>' +
+                    '<div class="stat-cell"><div class="n">' + Number(w.total_balance_held || 0).toLocaleString('en-US') + '</div><div class="l">TMR Held</div></div>' +
+                    '<div class="stat-cell"><div class="n">' + esc(w.frozen_wallet_count) + '</div><div class="l">Frozen</div></div>' +
+                    '</div>' +
+                    '<table style="margin-top:14px;"><thead><tr><th>Entry Type</th><th># Entries</th><th>Net Amount</th></tr></thead><tbody>' +
+                    (data.by_entry_type || []).map(function (r) {
+                        return '<tr><td>' + esc(r.entry_type) + '</td><td>' + esc(r.entry_count) + '</td><td>' + fmtAmt(r.total_amount) + '</td></tr>';
+                    }).join('') + '</tbody></table>';
+
+                holdersEl.innerHTML = (data.top_holders || []).length
+                    ? '<table><thead><tr><th>User</th><th>Balance</th></tr></thead><tbody>' +
+                      data.top_holders.map(function (r) { return '<tr><td>' + esc(r.username) + ' (#' + esc(r.user_id) + ')</td><td>' + Number(r.balance).toLocaleString('en-US') + '</td></tr>'; }).join('') +
+                      '</tbody></table>'
+                    : '<p style="color:var(--muted);">No wallets yet.</p>';
+
+                tipsEl.innerHTML = '<p style="color:var(--muted);font-size:11.5px;margin:0 0 6px;">Sent</p>' +
+                    ((data.top_tip_senders || []).length
+                        ? '<table><thead><tr><th>User</th><th>Tips</th><th>Total</th></tr></thead><tbody>' +
+                          data.top_tip_senders.map(function (r) { return '<tr><td>' + esc(r.username) + '</td><td>' + esc(r.tip_count) + '</td><td>' + Number(r.total_tipped).toLocaleString('en-US') + '</td></tr>'; }).join('') +
+                          '</tbody></table>'
+                        : '<p style="color:var(--muted);">None yet.</p>') +
+                    '<p style="color:var(--muted);font-size:11.5px;margin:14px 0 6px;">Received</p>' +
+                    ((data.top_tip_recipients || []).length
+                        ? '<table><thead><tr><th>User</th><th>Tips</th><th>Total</th></tr></thead><tbody>' +
+                          data.top_tip_recipients.map(function (r) { return '<tr><td>' + esc(r.username) + '</td><td>' + esc(r.tip_count) + '</td><td>' + Number(r.total_received).toLocaleString('en-US') + '</td></tr>'; }).join('') +
+                          '</tbody></table>'
+                        : '<p style="color:var(--muted);">None yet.</p>');
+            } catch (err) {
+                el.textContent = 'Failed to load (admin login required): ' + err.message;
+                holdersEl.textContent = '';
+                tipsEl.textContent = '';
+            }
+        }
+
+        var nextBefore = null;
+        var loadedRows = [];
+        async function loadActivity(reset) {
+            var el = document.getElementById('activityBody');
+            var loadMoreBtn = document.getElementById('loadMoreBtn');
+            var entryType = document.getElementById('typeFilter').value;
+            if (reset) { nextBefore = null; loadedRows = []; }
+            try {
+                var params = { limit: 50 };
+                if (entryType) params.entry_type = entryType;
+                if (nextBefore) params.before = nextBefore;
+                var qs = Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&');
+                var data = await window.api.request('/admin/coins/activity?' + qs);
+                loadedRows = loadedRows.concat(data.entries || []);
+                nextBefore = data.next_before;
+                loadMoreBtn.disabled = !data.has_more;
+
+                el.innerHTML = loadedRows.length
+                    ? '<table><thead><tr><th>Time</th><th>User</th><th>Type</th><th>Amount</th><th>Related</th><th>Note</th><th></th></tr></thead><tbody>' +
+                      loadedRows.map(function (r) {
+                          return '<tr data-ledger-id="' + esc(r.id) + '">' +
+                              '<td>' + esc(new Date(r.created_at).toLocaleString()) + '</td>' +
+                              '<td>' + esc(r.username) + ' (#' + esc(r.user_id) + ')</td>' +
+                              '<td>' + esc(r.entry_type) + '</td>' +
+                              '<td>' + fmtAmt(r.amount) + '</td>' +
+                              '<td>' + esc(r.related_entity_type) + (r.related_entity_id ? ':' + esc(r.related_entity_id) : '') + '</td>' +
+                              '<td>' + esc(r.admin_note) + '</td>' +
+                              '<td>' + (r.entry_type !== 'reversed' ? '<button type="button" class="reverse-btn" data-id="' + esc(r.id) + '">Reverse</button>' : '') + '</td>' +
+                              '</tr>';
+                      }).join('') + '</tbody></table>'
+                    : '<p style="color:var(--muted);">No activity.</p>';
+
+                el.querySelectorAll('.reverse-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var id = btn.getAttribute('data-id');
+                        var reason = prompt('Reason for reversing ledger entry #' + id + ':');
+                        if (!reason || !reason.trim()) return;
+                        reverseEntry(id, reason.trim());
+                    });
+                });
+            } catch (err) {
+                el.textContent = 'Failed to load (admin login required): ' + err.message;
+            }
+        }
+
+        async function reverseEntry(ledgerId, reason) {
+            try {
+                await window.api.request('/admin/coins/reverse/' + encodeURIComponent(ledgerId), {
+                    method: 'POST',
+                    body: { reason: reason },
+                });
+                msg('ok', 'Reversed ledger entry #' + ledgerId + '.');
+                loadActivity(true);
+                loadSummary();
+            } catch (err) {
+                msg('err', 'Failed to reverse #' + ledgerId + ': ' + err.message);
+            }
+        }
+
+        document.getElementById('typeFilter').addEventListener('change', function () { loadActivity(true); });
+        document.getElementById('loadMoreBtn').addEventListener('click', function () { loadActivity(false); });
+
+        loadSummary();
+        loadActivity(true);
+    })();
+    </script>
+</body>
+</html>
