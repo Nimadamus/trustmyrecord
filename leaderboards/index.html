@@ -1118,6 +1118,7 @@
          * ========================================================= */
         let fullLeaderboard = [];
         let filteredLeaderboard = [];
+        let totalEligibleHandicappersCount = null;
 
         // PROFILE_SHARE_OWNER_ONLY_20260722: reads the sitewide session record
         // written by auth.js. Synchronous on purpose - rows render before any
@@ -1173,7 +1174,12 @@
             const body = document.getElementById('leaderboardBody');
             const count = document.getElementById('resultCount');
 
-            count.textContent = entries.length + ' cappers';
+            // When the ranked/filtered view is a subset of the platform total,
+            // say so explicitly -- never let this chip read like a platform
+            // count when it's actually a filtered one.
+            count.textContent = (Number.isFinite(totalEligibleHandicappersCount) && totalEligibleHandicappersCount > entries.length)
+                ? entries.length + ' of ' + totalEligibleHandicappersCount + ' cappers match your filters'
+                : entries.length + ' cappers';
             if (!entries.length) {
                 wrap.style.display = 'none';
                 state.style.display = 'block';
@@ -1291,8 +1297,15 @@
             }).length;
         }
 
-        function setQuickStats(handicapperEntries) {
-            setCount('handicappers', handicapperEntries.length);
+        function setQuickStats(handicapperEntries, totalEligible) {
+            // totalEligible is the backend's true COUNT(DISTINCT) of every
+            // eligible user platform-wide; handicapperEntries.length is only the
+            // ranked/filtered slice actually rendered in the table below. Use
+            // the real total so this card can't regress into reporting a
+            // filtered subset as the platform total. Fall back to the rendered
+            // count only if the API response is missing the field.
+            const total = Number.isFinite(totalEligible) ? totalEligible : handicapperEntries.length;
+            setCount('handicappers', total);
         }
 
         function applyHandicapperFilters() {
@@ -1343,7 +1356,9 @@
                     return entry.username && entry.totalPicks >= 5 && entry.units > 0;
                 });
 
-                setQuickStats(fullLeaderboard);
+                const totalEligibleHandicappers = Number(data && data.total_eligible_handicappers);
+                totalEligibleHandicappersCount = Number.isFinite(totalEligibleHandicappers) ? totalEligibleHandicappers : null;
+                setQuickStats(fullLeaderboard, totalEligibleHandicappers);
                 renderStreakRail(fullLeaderboard
                     .filter(function(entry) { return entry.streak > 0; })
                     .sort(function(a, b) { return b.streak - a.streak; })
