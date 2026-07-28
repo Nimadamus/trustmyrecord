@@ -1254,6 +1254,10 @@ class TrustMyRecordAPI {
         return this.request('/betlegend-pro/report', { method: 'POST', body: payload });
     }
 
+    async submitBetLegendProMatchupReport(payload) {
+        return this.request('/betlegend-pro/matchup-report', { method: 'POST', body: payload });
+    }
+
     async submitBetLegendProSimulation(payload) {
         return this.request('/betlegend-pro/simulation', { method: 'POST', body: payload });
     }

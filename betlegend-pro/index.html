@@ -114,6 +114,32 @@
         .sources-line { margin-top: 12px; font-size: 12px; color: #5f6f83; }
         .timing-line { margin-top: 6px; font-size: 11px; color: #445064; }
 
+        /* ---- Matchup Analyzer specifics ---- */
+        .team-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: end; margin-bottom: 14px; }
+        .team-swap-btn { min-height: 42px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); cursor: pointer; font-weight: 800; }
+        .market-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+        .market-chip { padding: 9px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer; }
+        .market-chip.active { border-color: rgba(45, 212, 191, 0.5); color: var(--teal); background: rgba(45, 212, 191, 0.08); }
+        .filter-chip-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+        .filter-chip { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; }
+        .filter-chip.active { border-color: rgba(45, 212, 191, 0.5); color: var(--teal); background: rgba(45, 212, 191, 0.08); }
+        .assessment-card { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; padding: 16px 18px; border-radius: 10px; border: 1px solid var(--line); background: rgba(15, 23, 42, 0.5); margin-bottom: 16px; }
+        .assessment-label { font-family: Barlow, Inter, sans-serif; font-size: 22px; font-weight: 800; }
+        .assessment-label.supports, .assessment-label.slightly-supports { color: var(--green); }
+        .assessment-label.opposes, .assessment-label.slightly-opposes { color: var(--red); }
+        .assessment-label.inconclusive { color: var(--muted); }
+        .assessment-basis { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); }
+        .team-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .team-card { padding: 14px 16px; border-radius: 8px; background: rgba(15, 23, 42, 0.45); border: 1px solid var(--line); }
+        .team-card h4 { margin: 0 0 8px; font-size: 14px; }
+        .team-card .row { display: flex; justify-content: space-between; font-size: 12.5px; color: #cbd5e1; padding: 3px 0; }
+        .team-card .row span:last-child { color: #99f6e4; font-weight: 700; }
+        @media (max-width: 640px) {
+            .team-row { grid-template-columns: 1fr; }
+            .team-swap-btn { justify-self: center; }
+            .team-cards { grid-template-columns: 1fr; }
+        }
+
         .history-list { display: flex; flex-direction: column; gap: 8px; }
         .history-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 8px; background: var(--panel-2); border: 1px solid var(--line); }
         .history-item .h-main { min-width: 0; }
@@ -168,14 +194,131 @@
             <div id="ineligibleBanner" class="ineligible-banner" hidden>This account is not eligible to submit a BetLegend Pro inquiry.</div>
 
             <div class="tabs" role="tablist">
-                <button class="tab-btn active" data-tab="report" type="button">AI Handicapping Report</button>
+                <button class="tab-btn active" data-tab="matchup" type="button">Matchup Analyzer</button>
+                <button class="tab-btn" data-tab="report" type="button">AI Handicapping Report</button>
                 <button class="tab-btn" data-tab="simulation" type="button">Monte Carlo Simulator</button>
-                <button class="tab-btn" data-tab="quick" type="button">Quick Trend Query</button>
+                <button class="tab-btn" data-tab="quick" type="button">Single-Team Trend Search</button>
                 <button class="tab-btn" data-tab="history" type="button">Saved Reports</button>
             </div>
 
+            <!-- ==================== MATCHUP ANALYZER (primary) ==================== -->
+            <section class="tab-panel active" id="panel-matchup">
+                <form class="form-card" id="matchupForm">
+                    <h2>BetLegend Matchup Analyzer</h2>
+                    <p class="desc">Two teams, a specific market and line, real database figures — a full report on whether the wager is supported. Grounded only in what's actually in the historical dataset (MLB, NBA, NFL, NHL); no first-half/quarter/first-five-inning or NRFI/YRFI markets and no soccer, because no historical data exists for them here.</p>
+
+                    <div class="form-field" style="max-width:220px;margin-bottom:14px;">
+                        <label for="matchupSport">Sport</label>
+                        <select id="matchupSport" required>
+                            <option value="NBA">NBA</option>
+                            <option value="NFL">NFL</option>
+                            <option value="MLB">MLB</option>
+                            <option value="NHL">NHL</option>
+                        </select>
+                    </div>
+
+                    <div class="team-row">
+                        <div class="form-field">
+                            <label for="matchupAway">Away Team</label>
+                            <select id="matchupAway" required disabled><option value="">Loading teams…</option></select>
+                        </div>
+                        <button class="team-swap-btn" id="matchupSwapBtn" type="button" title="Swap teams">⇄</button>
+                        <div class="form-field">
+                            <label for="matchupHome">Home Team</label>
+                            <select id="matchupHome" required disabled><option value="">Loading teams…</option></select>
+                        </div>
+                    </div>
+
+                    <div class="form-field full" style="margin-bottom:14px;">
+                        <label>Market</label>
+                        <div class="market-grid" id="matchupMarketGrid">
+                            <button class="market-chip active" data-market="spread" type="button">Spread</button>
+                            <button class="market-chip" data-market="moneyline" type="button">Moneyline</button>
+                            <button class="market-chip" data-market="total" type="button">Game Total</button>
+                            <button class="market-chip" data-market="team_total_home" type="button">Home Team Total</button>
+                            <button class="market-chip" data-market="team_total_away" type="button">Away Team Total</button>
+                        </div>
+                    </div>
+
+                    <div class="form-row" id="matchupSelectionRow">
+                        <div class="form-field">
+                            <label id="matchupSelectionLabel" for="matchupSelection">Team getting the line</label>
+                            <select id="matchupSelection"></select>
+                        </div>
+                        <div class="form-field" id="matchupLineField">
+                            <label for="matchupLine">Line</label>
+                            <input id="matchupLine" type="number" step="0.5" placeholder="6.5">
+                        </div>
+                    </div>
+
+                    <div class="form-field full" style="margin-bottom:14px;">
+                        <label>Situational filters <span class="opt">(applied to both teams, optional)</span></label>
+                        <div class="filter-chip-grid" id="matchupFilterGrid">
+                            <button class="filter-chip" data-situation="home" type="button">Home Games</button>
+                            <button class="filter-chip" data-situation="away" type="button">Away Games</button>
+                            <button class="filter-chip" data-situation="home_favorite" type="button">Home Favorite</button>
+                            <button class="filter-chip" data-situation="road_underdog" type="button">Road Underdog</button>
+                            <button class="filter-chip" data-situation="as_favorite" type="button">As Favorite</button>
+                            <button class="filter-chip" data-situation="as_underdog" type="button">As Underdog</button>
+                            <button class="filter-chip" data-situation="after_loss" type="button">After Loss</button>
+                            <button class="filter-chip" data-situation="after_win" type="button">After Win</button>
+                            <button class="filter-chip" data-situation="three_game_win_streak" type="button">3+ Win Streak</button>
+                            <button class="filter-chip" data-situation="three_game_losing_streak" type="button">3+ Lose Streak</button>
+                            <button class="filter-chip" data-situation="division_rival" type="button">Division Rivalry</button>
+                            <button class="filter-chip" data-situation="rest_advantage" type="button">Rest Advantage</button>
+                            <button class="filter-chip" data-situation="conference" type="button">Conference Games</button>
+                            <button class="filter-chip" data-situation="large_spread" type="button">Large Spread (7+)</button>
+                            <button class="filter-chip" data-situation="close_spread" type="button">Close Spread</button>
+                        </div>
+                    </div>
+
+                    <div class="form-field" style="max-width:220px;margin-bottom:14px;">
+                        <label for="matchupSampleSize">Recent-form sample size</label>
+                        <select id="matchupSampleSize">
+                            <option value="10">Last 10</option>
+                            <option value="20" selected>Last 20</option>
+                            <option value="30">Last 30</option>
+                            <option value="50">Last 50</option>
+                        </select>
+                    </div>
+
+                    <p class="form-note">Submitting only bills TMR Coin if a complete, real assessment is returned. A failed, timed-out, or unsupported request always costs 0.</p>
+                    <div id="matchupError" class="submit-error" hidden></div>
+                    <button class="btn primary" id="matchupSubmitBtn" type="submit" disabled>Analyze Matchup &mdash; <span class="report-cost">5 TMR Coin</span></button>
+                </form>
+
+                <p id="matchupLoading" class="loading-line" hidden><span class="spin"></span> Pulling matchup and situational history, running the assessment, writing the report — this takes 15&ndash;40 seconds…</p>
+
+                <section class="result-card" id="matchupResult" hidden>
+                    <div class="result-billing">
+                        <span class="billing-pill" id="matchupBillingPill"></span>
+                        <span class="result-balances" id="matchupBalances"></span>
+                    </div>
+                    <h2 class="result-title" id="matchupTitle"></h2>
+                    <p class="result-meta" id="matchupMeta"></p>
+
+                    <div class="assessment-card">
+                        <div>
+                            <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);">Overall Assessment</p>
+                            <p class="assessment-label" id="matchupAssessmentLabel"></p>
+                        </div>
+                        <div>
+                            <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);text-align:right;">Confidence</p>
+                            <span class="confidence-badge" id="matchupConfidenceBadge"></span>
+                        </div>
+                    </div>
+                    <p class="assessment-basis" id="matchupAssessmentBasis"></p>
+
+                    <div class="team-cards" id="matchupTeamCards"></div>
+
+                    <div class="report-sections" id="matchupSections"></div>
+                    <p class="timing-line" id="matchupNotAvailableNote"></p>
+                    <p class="receipt-link" id="matchupReceipt"></p>
+                </section>
+            </section>
+
             <!-- ==================== AI HANDICAPPING REPORT ==================== -->
-            <section class="tab-panel active" id="panel-report">
+            <section class="tab-panel" id="panel-report">
                 <form class="form-card" id="reportForm">
                     <h2>AI Handicapping Report</h2>
                     <p class="desc">Ask one question in plain English — a matchup, a team situation, today's best bet, or a parlay. BetLegend Pro returns a full report: matchup overview, situational splits with real sample sizes, odds when a provider has a current line, a bet-or-pass recommendation, a confidence score, and risk factors. Sections with no real data in this dataset are labeled "Not available" rather than guessed.</p>
@@ -337,7 +480,7 @@
     </main>
 
     <script src="/static/js/config.js?v=20260430a"></script>
-    <script src="/static/js/backend-api.js?v=20260726report2"></script>
+    <script src="/static/js/backend-api.js?v=20260728matchup1"></script>
     <script>
     (function () {
         var authState = document.getElementById('authState');
@@ -523,6 +666,266 @@
             }
         });
 
+        // ==================== MATCHUP ANALYZER (primary) ====================
+        var matchupForm = document.getElementById('matchupForm');
+        var matchupSubmitBtn = document.getElementById('matchupSubmitBtn');
+        var matchupError = document.getElementById('matchupError');
+        var matchupLoading = document.getElementById('matchupLoading');
+        var matchupResult = document.getElementById('matchupResult');
+        var matchupSportEl = document.getElementById('matchupSport');
+        var matchupAwayEl = document.getElementById('matchupAway');
+        var matchupHomeEl = document.getElementById('matchupHome');
+        var matchupSelectionEl = document.getElementById('matchupSelection');
+        var matchupSelectionLabelEl = document.getElementById('matchupSelectionLabel');
+        var matchupLineField = document.getElementById('matchupLineField');
+        var matchupLineEl = document.getElementById('matchupLine');
+        submitDisableEls.push(matchupSubmitBtn);
+
+        var MARKET_CONFIG = {
+            spread: { needsLine: true, mode: 'team', label: 'Team getting the line' },
+            moneyline: { needsLine: false, mode: 'team', label: "Team's moneyline" },
+            total: { needsLine: true, mode: 'over_under', label: 'Side' },
+            team_total_home: { needsLine: true, mode: 'over_under', label: 'Side (home team total)' },
+            team_total_away: { needsLine: true, mode: 'over_under', label: 'Side (away team total)' },
+        };
+        var matchupMarket = 'spread';
+        var matchupFilters = [];
+        var matchupTeamsCache = {};
+
+        function marketLabelFor(sport, market) {
+            if (market === 'spread' && sport === 'MLB') return 'Run Line';
+            if (market === 'spread' && sport === 'NHL') return 'Puck Line';
+            var labels = { spread: 'Spread', moneyline: 'Moneyline', total: 'Game Total', team_total_home: 'Home Team Total', team_total_away: 'Away Team Total' };
+            return labels[market] || market;
+        }
+
+        async function loadMatchupTeams(sport, selectEl) {
+            selectEl.disabled = true;
+            selectEl.innerHTML = '<option value="">Loading teams…</option>';
+            try {
+                var teams = matchupTeamsCache[sport];
+                if (!teams) {
+                    var res = await window.api.getBetLegendProTeams(sport);
+                    teams = (res && res.teams) || [];
+                    matchupTeamsCache[sport] = teams;
+                }
+                selectEl.innerHTML = '<option value="">Select team…</option>' + teams.map(function (t) {
+                    return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
+                }).join('');
+            } catch (err) {
+                selectEl.innerHTML = '<option value="">Could not load teams — try again</option>';
+            } finally {
+                selectEl.disabled = false;
+                refreshMatchupSelectionOptions();
+                refreshMatchupSubmitEnabled();
+            }
+        }
+
+        function refreshMatchupSelectionOptions() {
+            var cfg = MARKET_CONFIG[matchupMarket];
+            matchupSelectionLabelEl.textContent = cfg.label;
+            matchupLineField.hidden = !cfg.needsLine;
+            var prev = matchupSelectionEl.value;
+            if (cfg.mode === 'over_under') {
+                matchupSelectionEl.innerHTML = '<option value="over">Over</option><option value="under">Under</option>';
+                matchupSelectionEl.value = (prev === 'over' || prev === 'under') ? prev : 'over';
+            } else {
+                var away = matchupAwayEl.value, home = matchupHomeEl.value;
+                var opts = [];
+                if (away) opts.push(away);
+                if (home) opts.push(home);
+                matchupSelectionEl.innerHTML = opts.length
+                    ? opts.map(function (t) { return '<option value="' + esc(t) + '">' + esc(t) + '</option>'; }).join('')
+                    : '<option value="">Select both teams first</option>';
+                if (opts.indexOf(prev) !== -1) matchupSelectionEl.value = prev;
+            }
+        }
+
+        function refreshMatchupSubmitEnabled() {
+            var away = matchupAwayEl.value, home = matchupHomeEl.value;
+            var cfg = MARKET_CONFIG[matchupMarket];
+            var lineOk = !cfg.needsLine || (matchupLineEl.value !== '' && !isNaN(Number(matchupLineEl.value)));
+            var ok = !!away && !!home && away !== home && !!matchupSelectionEl.value && lineOk;
+            matchupSubmitBtn.disabled = !ok;
+        }
+
+        document.getElementById('matchupMarketGrid').querySelectorAll('.market-chip').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+                matchupMarket = chip.dataset.market;
+                document.querySelectorAll('#matchupMarketGrid .market-chip').forEach(function (c) { c.classList.toggle('active', c === chip); });
+                refreshMatchupSelectionOptions();
+                refreshMatchupSubmitEnabled();
+            });
+        });
+        document.getElementById('matchupFilterGrid').querySelectorAll('.filter-chip').forEach(function (chip) {
+            chip.addEventListener('click', function () {
+                var s = chip.dataset.situation;
+                var idx = matchupFilters.indexOf(s);
+                if (idx === -1) { matchupFilters.push(s); chip.classList.add('active'); }
+                else { matchupFilters.splice(idx, 1); chip.classList.remove('active'); }
+            });
+        });
+        document.getElementById('matchupSwapBtn').addEventListener('click', function () {
+            var a = matchupAwayEl.value, h = matchupHomeEl.value;
+            matchupAwayEl.value = h; matchupHomeEl.value = a;
+            refreshMatchupSelectionOptions();
+            refreshMatchupSubmitEnabled();
+        });
+        matchupSportEl.addEventListener('change', function () {
+            matchupAwayEl.value = ''; matchupHomeEl.value = '';
+            loadMatchupTeams(matchupSportEl.value, matchupAwayEl);
+            loadMatchupTeams(matchupSportEl.value, matchupHomeEl);
+        });
+        matchupAwayEl.addEventListener('change', function () { refreshMatchupSelectionOptions(); refreshMatchupSubmitEnabled(); });
+        matchupHomeEl.addEventListener('change', function () { refreshMatchupSelectionOptions(); refreshMatchupSubmitEnabled(); });
+        matchupSelectionEl.addEventListener('change', refreshMatchupSubmitEnabled);
+        matchupLineEl.addEventListener('input', refreshMatchupSubmitEnabled);
+        loadMatchupTeams(matchupSportEl.value, matchupAwayEl);
+        loadMatchupTeams(matchupSportEl.value, matchupHomeEl);
+
+        var MATCHUP_SECTION_LABELS = {
+            executive_summary: 'Executive Summary',
+            home_team_analysis: 'Home Team Analysis',
+            away_team_analysis: 'Away Team Analysis',
+            head_to_head_analysis: 'Head-to-Head Analysis',
+            market_specific_trends: 'Market-Specific Trends',
+            situational_trends: 'Situational Trends',
+            sample_size_and_data_quality_notes: 'Sample Size & Data Quality Notes',
+            final_conclusion: 'Final Conclusion',
+        };
+        var CONFIDENCE_CLASS = { Low: 'low', Moderate: 'moderate', Strong: 'high', 'Very Strong': 'high' };
+
+        function teamBucketLine(bucket) {
+            if (!bucket) return null;
+            if (bucket.market === 'spread') return { l: 'ATS near ' + bucket.line, v: (bucket.trend && bucket.trend.ats_record) || '0-0-0' };
+            if (bucket.market === 'total') return { l: 'O/U near ' + bucket.line, v: (bucket.trend && bucket.trend.ou_record) || '0-0-0' };
+            if (bucket.market === 'team_total_home' || bucket.market === 'team_total_away') return { l: 'vs ' + bucket.line + ' team total', v: bucket.over_record || '0-0-0' };
+            if (bucket.market === 'moneyline') return { l: 'Fav / Dog SU', v: ((bucket.as_favorite && bucket.as_favorite.su_record) || '0-0-0') + ' / ' + ((bucket.as_underdog && bucket.as_underdog.su_record) || '0-0-0') };
+            return null;
+        }
+
+        function teamCardHtml(name, form, bucket) {
+            var bl = teamBucketLine(bucket);
+            var rows = [
+                { l: 'Overall Record', v: (form && form.su_record) || '0-0-0' },
+                { l: 'ATS Record', v: (form && form.ats_record) || '0-0-0' },
+                { l: 'O/U Record', v: (form && form.ou_record) || '0-0-0' },
+            ];
+            if (bl) rows.push(bl);
+            return '<div class="team-card"><h4>' + esc(name) + '</h4>' +
+                rows.map(function (r) { return '<div class="row"><span>' + esc(r.l) + '</span><span>' + esc(r.v) + '</span></div>'; }).join('') +
+                '</div>';
+        }
+
+        function matchupSectionsHtml(r) {
+            var narrative = r.narrative;
+            var html = '';
+            if (!r.narrative_available) {
+                html += '<div class="report-section"><p class="unavailable">The written narrative is unavailable right now — every figure above is still real and complete; only the prose write-up could not be generated.</p></div>';
+            }
+            if (narrative) {
+                ['executive_summary', 'home_team_analysis', 'away_team_analysis', 'head_to_head_analysis', 'market_specific_trends', 'situational_trends'].forEach(function (key) {
+                    var text = narrative[key];
+                    if (!text) return;
+                    var unavailable = UNAVAILABLE_RE.test(text);
+                    html += '<div class="report-section"><h3>' + esc(MATCHUP_SECTION_LABELS[key]) + '</h3><p class="' + (unavailable ? 'unavailable' : '') + '">' + esc(text) + '</p></div>';
+                });
+                if (Array.isArray(narrative.key_supporting_factors) && narrative.key_supporting_factors.length) {
+                    html += '<div class="report-section"><h3>Key Supporting Factors</h3><ul class="risk-list">' +
+                        narrative.key_supporting_factors.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul></div>';
+                }
+                if (Array.isArray(narrative.key_risk_factors) && narrative.key_risk_factors.length) {
+                    html += '<div class="report-section"><h3>Key Risk Factors</h3><ul class="risk-list">' +
+                        narrative.key_risk_factors.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul></div>';
+                }
+                ['sample_size_and_data_quality_notes', 'final_conclusion'].forEach(function (key) {
+                    var text = narrative[key];
+                    if (!text) return;
+                    var unavailable = UNAVAILABLE_RE.test(text);
+                    html += '<div class="report-section' + (key === 'final_conclusion' ? ' recommendation' : '') + '"><h3>' + esc(MATCHUP_SECTION_LABELS[key]) + '</h3><p class="' + (unavailable ? 'unavailable' : '') + '">' + esc(text) + '</p></div>';
+                });
+            }
+            return html;
+        }
+
+        function renderMatchupReport(payload) {
+            var r = payload.result || {};
+            document.getElementById('matchupTitle').textContent = (r.away_team || '') + ' @ ' + (r.home_team || '');
+            var marketLbl = marketLabelFor(r.sport, r.market);
+            var lineTxt = r.market === 'moneyline' ? (r.selection + ' ML')
+                : (r.market === 'total' || r.market === 'team_total_home' || r.market === 'team_total_away')
+                    ? ((r.selection === 'over' ? 'Over' : 'Under') + ' ' + r.line)
+                    : (r.selection + ' ' + (r.line > 0 ? '+' + r.line : r.line));
+            document.getElementById('matchupMeta').textContent = [r.sport, marketLbl + ': ' + lineTxt].filter(Boolean).join(' · ');
+
+            var a = r.assessment || {};
+            var labelEl = document.getElementById('matchupAssessmentLabel');
+            labelEl.textContent = a.label || '—';
+            labelEl.className = 'assessment-label ' + String(a.label || '').toLowerCase().replace(/\s+/g, '-');
+            var confEl = document.getElementById('matchupConfidenceBadge');
+            confEl.textContent = a.confidence || '—';
+            confEl.className = 'confidence-badge ' + (CONFIDENCE_CLASS[a.confidence] || 'low');
+            document.getElementById('matchupAssessmentBasis').textContent = a.basis || '';
+
+            document.getElementById('matchupTeamCards').innerHTML =
+                teamCardHtml(r.away_team, r.away_form, r.away_market) + teamCardHtml(r.home_team, r.home_form, r.home_market);
+
+            document.getElementById('matchupSections').innerHTML = matchupSectionsHtml(r);
+
+            billingPillHtml(document.getElementById('matchupBillingPill'), payload);
+            document.getElementById('matchupBalances').textContent = 'Balance: ' + fmtBal(payload.balance_before) + ' → ' + fmtBal(payload.balance_after) + ' TMR Coin';
+            document.getElementById('matchupReceipt').innerHTML = payload.ledger_entry_id
+                ? 'Receipt #' + esc(payload.ledger_entry_id) + (payload.was_replay ? ' (duplicate submission — not re-charged)' : '') + ' · <a href="/wallet/">View in Wallet</a>'
+                : '';
+            matchupResult.hidden = false;
+        }
+
+        var matchupLastKey = null, matchupLastSig = null;
+        matchupForm.addEventListener('submit', async function (ev) {
+            ev.preventDefault();
+            matchupError.hidden = true;
+            matchupResult.hidden = true;
+            var cfg = MARKET_CONFIG[matchupMarket];
+            var payload = {
+                sport: matchupSportEl.value,
+                home_team: matchupHomeEl.value,
+                away_team: matchupAwayEl.value,
+                market: matchupMarket,
+                selection: matchupSelectionEl.value,
+                situations: matchupFilters.slice(),
+                num_games: Number(document.getElementById('matchupSampleSize').value),
+            };
+            if (cfg.needsLine) payload.line = Number(matchupLineEl.value);
+
+            var sig = JSON.stringify(payload);
+            var idempotencyKey = (sig === matchupLastSig && matchupLastKey) ? matchupLastKey : uuid();
+            matchupLastSig = sig; matchupLastKey = idempotencyKey;
+
+            matchupSubmitBtn.disabled = true;
+            matchupLoading.hidden = false;
+            try {
+                var res = await window.api.submitBetLegendProMatchupReport(Object.assign({ idempotency_key: idempotencyKey }, payload));
+                matchupLastSig = null; matchupLastKey = null;
+                if (!res.result || !res.result.assessment) {
+                    matchupError.textContent = (res.note) || 'BetLegend Pro could not produce a matchup assessment, so it was not charged.';
+                    matchupError.hidden = false;
+                } else {
+                    renderMatchupReport(res);
+                }
+                await refreshBalance();
+                loadHistory();
+            } catch (err) {
+                var data = err && err.data;
+                if (err && err.status === 402) insufficientBalanceMessage(matchupError, data);
+                else if (err && (err.status === 403 || err.status === 400)) showError(matchupError, (data && data.error) || 'Please check your matchup inputs and try again.');
+                else showError(matchupError, 'BetLegend Pro could not complete this matchup analysis (' + ((data && data.error) || 'server error') + '). It was not charged — you can try again.');
+                await refreshBalance();
+            } finally {
+                refreshMatchupSubmitEnabled();
+                matchupLoading.hidden = true;
+            }
+        });
+
         // ==================== MONTE CARLO SIMULATOR ====================
         var simForm = document.getElementById('simForm');
         var simSubmitBtn = document.getElementById('simSubmitBtn');
@@ -679,7 +1082,7 @@
         var historyList = document.getElementById('historyList');
         var historyDetail = document.getElementById('historyDetail');
         var historyLoaded = false;
-        var KIND_LABEL = { report: 'AI Report', simulation: 'Monte Carlo Sim', inquiry: 'Quick Trend Query' };
+        var KIND_LABEL = { report: 'AI Report', simulation: 'Monte Carlo Sim', inquiry: 'Single-Team Trend Search', matchup_report: 'Matchup Analyzer' };
 
         async function loadHistory() {
             try {
@@ -715,6 +1118,16 @@
                         body += '<div class="report-section"><h3>' + esc(REPORT_SECTION_LABELS[key]) + '</h3><p class="' + (UNAVAILABLE_RE.test(rep[key]) ? 'unavailable' : '') + '">' + esc(rep[key]) + '</p></div>';
                     });
                     body = '<div class="report-sections">' + body + '</div>';
+                } else if (detail.kind === 'matchup_report') {
+                    var mr = detail.result || {};
+                    var a = mr.assessment || {};
+                    body = '<div class="assessment-card"><div><p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);">Overall Assessment</p>' +
+                        '<p class="assessment-label ' + esc(String(a.label || '').toLowerCase().replace(/\s+/g, '-')) + '">' + esc(a.label || '—') + '</p></div>' +
+                        '<div><p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);text-align:right;">Confidence</p>' +
+                        '<span class="confidence-badge ' + esc(CONFIDENCE_CLASS[a.confidence] || 'low') + '">' + esc(a.confidence || '—') + '</span></div></div>' +
+                        '<p class="assessment-basis">' + esc(a.basis || '') + '</p>' +
+                        '<div class="team-cards">' + teamCardHtml(mr.away_team, mr.away_form, mr.away_market) + teamCardHtml(mr.home_team, mr.home_form, mr.home_market) + '</div>' +
+                        '<div class="report-sections">' + matchupSectionsHtml(mr) + '</div>';
                 } else {
                     body = '<pre style="white-space:pre-wrap;font-size:12.5px;color:#c8d3e0;background:rgba(15,23,42,0.5);padding:12px;border-radius:8px;">' + esc(JSON.stringify(detail.result, null, 2)) + '</pre>';
                 }
