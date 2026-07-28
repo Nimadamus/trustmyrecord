@@ -13511,7 +13511,11 @@
         const avatar = user.avatar_url
             ? '<img src="' + escapeHtml(user.avatar_url) + '" alt="" class="tmr-social-avatar" loading="lazy">'
             : '<span class="tmr-social-avatar tmr-social-avatar--letter">' + escapeHtml(initial) + '</span>';
-        const profileHref = '/profile/?user=' + encodeURIComponent(user.username || '');
+        // Same canonical /u/<username>/ route as the directory, forum, and
+        // newest-member links -- not /profile/?user=, which is a different
+        // (also-working) page for the same member and shouldn't exist as a
+        // second convention for "view this member's profile".
+        const profileHref = '/u/' + encodeURIComponent(user.username || '') + '/';
         // No follow button for the viewer's own row or for logged-out visitors.
         const isSelf = currentUser && Number(currentUser.id) === uid;
         let followBtn = '';
