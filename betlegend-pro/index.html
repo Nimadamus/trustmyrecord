@@ -253,6 +253,10 @@
 
                     <div class="form-field full" style="margin-bottom:14px;">
                         <label>Situational filters <span class="opt">(applied to both teams, optional)</span></label>
+                        <!-- rest_advantage intentionally omitted: matchup.py declines it server-side
+                             (unbounded per-opponent full-dataset scan, reproduced live taking 90+s
+                             and crashing the free-tier service for a two-team MLB request). Still
+                             available in the Single-Team Trend Search tab, unchanged. -->
                         <div class="filter-chip-grid" id="matchupFilterGrid">
                             <button class="filter-chip" data-situation="home" type="button">Home Games</button>
                             <button class="filter-chip" data-situation="away" type="button">Away Games</button>
@@ -265,7 +269,6 @@
                             <button class="filter-chip" data-situation="three_game_win_streak" type="button">3+ Win Streak</button>
                             <button class="filter-chip" data-situation="three_game_losing_streak" type="button">3+ Lose Streak</button>
                             <button class="filter-chip" data-situation="division_rival" type="button">Division Rivalry</button>
-                            <button class="filter-chip" data-situation="rest_advantage" type="button">Rest Advantage</button>
                             <button class="filter-chip" data-situation="conference" type="button">Conference Games</button>
                             <button class="filter-chip" data-situation="large_spread" type="button">Large Spread (7+)</button>
                             <button class="filter-chip" data-situation="close_spread" type="button">Close Spread</button>
@@ -728,20 +731,32 @@
             return p;
         }
 
+        // Reproduced live: switching sport quickly (NBA -> NFL) let the
+        // slower/earlier NBA fetch resolve AFTER the newer NFL one and
+        // silently overwrite the team list with stale NBA options, with
+        // matchupSportEl.value already reading "NFL" -- the request succeeded
+        // (200), the UI just applied the wrong one. Guarded by checking the
+        // sport is still selected at resolution time, same pattern as
+        // NLReportPage.tsx's requestSeq guard in the React app for the exact
+        // same class of out-of-order-response bug.
         async function loadMatchupTeams(sport, selectEl) {
             selectEl.disabled = true;
             selectEl.innerHTML = '<option value="">Loading teams…</option>';
             try {
                 var teams = await fetchMatchupTeams(sport);
+                if (matchupSportEl.value !== sport) return; // superseded by a newer sport change
                 selectEl.innerHTML = '<option value="">Select team…</option>' + teams.map(function (t) {
                     return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
                 }).join('');
             } catch (err) {
+                if (matchupSportEl.value !== sport) return;
                 selectEl.innerHTML = '<option value="">Could not load teams — try again</option>';
             } finally {
-                selectEl.disabled = false;
-                refreshMatchupSelectionOptions();
-                refreshMatchupSubmitEnabled();
+                if (matchupSportEl.value === sport) {
+                    selectEl.disabled = false;
+                    refreshMatchupSelectionOptions();
+                    refreshMatchupSubmitEnabled();
+                }
             }
         }
 
