@@ -711,22 +711,29 @@
         // while the other loads fine. One retry on failure absorbs a single
         // transient 502 (observed live against the Render free-tier proxy)
         // without masking a genuinely broken upstream.
+        // Backoff schedule covers the free-tier API's observed transient-502
+        // window (measured live at ~50s during production verification on
+        // 2026-07-28) without making a genuinely-down backend hang the sport
+        // switch forever -- 3 retries at 800/2000/4000ms is real coverage for
+        // a blip, not an attempt to ride out a full outage.
+        var MATCHUP_TEAMS_RETRY_DELAYS_MS = [800, 2000, 4000];
         function fetchMatchupTeams(sport) {
             if (matchupTeamsCache[sport]) return Promise.resolve(matchupTeamsCache[sport]);
             if (matchupTeamsInFlight[sport]) return matchupTeamsInFlight[sport];
-            var attempt = function (retriesLeft) {
+            var attempt = function (retryIndex) {
                 return window.api.getBetLegendProTeams(sport).then(function (res) {
                     var teams = (res && res.teams) || [];
                     matchupTeamsCache[sport] = teams;
                     return teams;
                 }).catch(function (err) {
-                    if (retriesLeft > 0) {
-                        return new Promise(function (r) { setTimeout(r, 800); }).then(function () { return attempt(retriesLeft - 1); });
+                    if (retryIndex < MATCHUP_TEAMS_RETRY_DELAYS_MS.length) {
+                        var delay = MATCHUP_TEAMS_RETRY_DELAYS_MS[retryIndex];
+                        return new Promise(function (r) { setTimeout(r, delay); }).then(function () { return attempt(retryIndex + 1); });
                     }
                     throw err;
                 });
             };
-            var p = attempt(1).finally(function () { delete matchupTeamsInFlight[sport]; });
+            var p = attempt(0).finally(function () { delete matchupTeamsInFlight[sport]; });
             matchupTeamsInFlight[sport] = p;
             return p;
         }
