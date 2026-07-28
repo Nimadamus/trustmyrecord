@@ -547,6 +547,29 @@
                             window.dataLayer.push(Object.assign({ event: 'account_created' }, acctParams));
                         } catch (error) {}
                         if (typeof window.TMRAnalytics !== 'undefined') { try { window.TMRAnalytics.signUpCompleted({ method: 'email', button_location: 'register_page' }); } catch (error) {} }
+                        // A page that sent the visitor here to sign up (e.g. the MLB
+                        // Simulator's post-result "Save My Results" panel) can pass
+                        // ?return=/path/&pendingToken=... to get them back to exactly
+                        // where they were instead of always landing on /sportsbook/.
+                        // Only an on-site relative path is honored (mirrors the
+                        // existing safeNextPath() guard in login/index.html) so a
+                        // crafted ?return=https://evil.example can't become an open
+                        // redirect. No ?return= present (every other signup flow on
+                        // the site today) falls straight through, unchanged.
+                        var returnParams = new URLSearchParams(window.location.search);
+                        var returnRaw = returnParams.get('return');
+                        var returnTo = '';
+                        if (returnRaw) {
+                            try { returnRaw = decodeURIComponent(returnRaw); } catch (error) {}
+                            if (/^\/(?!\/)/.test(returnRaw) && returnRaw.indexOf('://') === -1) returnTo = returnRaw;
+                        }
+                        if (returnTo) {
+                            var pendingToken = returnParams.get('pendingToken');
+                            var returnUrl = returnTo + (returnTo.indexOf('?') === -1 ? '?' : '&') + 'signedUp=1' +
+                                (pendingToken ? '&pendingToken=' + encodeURIComponent(pendingToken) : '');
+                            window.location.replace(returnUrl);
+                            return;
+                        }
                         window.location.replace('/sportsbook/?first_pick=1');
                         return;
                     }
