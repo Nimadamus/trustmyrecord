@@ -20,27 +20,31 @@ Checklist before any sitemap addition:
 2. The page is pushed/deployed.
 3. `curl -I https://trustmyrecord.com/<path>/` returns `200` (not 404, not 301/302, not meta-refresh).
 
-## 2. noindex policy
-Keep `noindex` ONLY on: auth pages (`/login/`, `/register/`, `/signup/`, `/reset-password/`,
-`/verify-email/`, `/activation/`), user-private pages (`/friends/`, `/messages/`,
-`/notifications/`, `/my-pending-picks/`, `/my-record/`, `/mypicks/`, `/usercp/`,
-`/profile/sport/`), admin pages (`/admin/`, contest admin), embeds/widgets/previews/tests
-(`/embed/`, `/extra-markets/`, `*-test/`, `handicappers/preview/`), `/report-bug/`, and
-redirect stubs (legacy flat `.html` files and alias dirs, section 3).
-Every other public page MUST be indexable (no robots meta, or `index, follow`).
-`/how-it-works/` and `/contact/` are PUBLIC INDEXABLE pages (fixed June 3, 2026 — how-it-works
-was an accidental noindex meta-refresh stub, contact had a leftover noindex).
+## 2. noindex policy (superseded July 15, 2026 — owner directive: "never noindex anything")
+As of July 15, 2026, noindex was intentionally removed sitewide, including from all auth
+pages and redirect stubs previously listed here — see `scripts/build_profile_pages.py:10-15`
+for the standing directive. Do NOT re-add noindex to any public page, including the auth/
+redirect-stub examples that used to be listed in this section.
+The only `noindex` tags that should exist are on genuinely private/gated surfaces: admin
+tools (`/admin/tmr-coin/`), and confirm-before-touching gated features flagged separately
+to the owner (currently `/arena/challenge/` per-invite pages, `/mlb-simulator/season/` +
+`/mlb-simulator/season/calendar/` login-gated pages). Anything else with `noindex` is a bug —
+grep both repos for `noindex`/`X-Robots-Tag` and report it rather than assuming it's policy.
+`/how-it-works/`, `/contact/`, and `/community/` are PUBLIC INDEXABLE pages, in the sitemap.
 NEVER ship a page with `noindex` that is also listed in `sitemap.xml`.
 
 ## 3. Redirect stubs
-Legacy `*.html` files and keyword alias dirs keep `noindex` + canonical to the target and a
-meta-refresh. They MUST NOT appear in sitemap.xml — only the canonical destination does.
-Full alias-stub list (all noindex as of June 3, 2026): `/cappers/`->`/handicappers/`,
-`/leaderboard/`->`/leaderboards/`, `/community/`->`/feed/`, `/directory/`+`/members/`->`/handicappers/`,
-`/dashboard/`+`/account/`->`/profile/`, `/make-picks/`+`/submit/`+`/submit-pick/`+`/pick/`->`/sportsbook/`,
-`/signin/`->`/login/`, `/signup/`->`/register/`, `/forums/`->`/forum/`, `/groups/`->`/friends/`,
-`/promos/`+`/live/`->`/sportsbook/`, `/polls-trivia/`->`/polls/`.
-Any NEW redirect stub must ship with `noindex, follow` from day one.
+Legacy `*.html` files and keyword alias dirs keep a canonical to the target and a meta-refresh,
+and (per the July 15, 2026 policy above) now ship `index, follow`, NOT noindex. They MUST NOT
+appear in sitemap.xml — only the canonical destination does. Full alias-stub list: `/cappers/`,
+`/directory/`, `/members/` -> `/handicappers/`; `/leaderboard/` -> `/leaderboards/`;
+`/dashboard/`+`/account/` -> `/profile/`; `/make-picks/`+`/submit/`+`/submit-pick/` -> `/sportsbook/`;
+`/signin/` -> `/login/`; `/signup/` -> `/register/`; `/forums/` -> `/forum/`;
+`/groups/` -> `/friends/`; `/promos/`+`/live/` -> `/sportsbook/`; `/polls-trivia/` -> `/polls/`.
+`/community/` is NOT a stub — it was rebuilt into a real indexable content hub; do not treat it
+as an alias to `/feed/` (that entry above is stale). Every stub must carry both `index, follow`
+AND a self-consistent `<link rel="canonical">` to its target (audited/fixed July 28, 2026 —
+`/dashboard/`, `/account/`, `/signin/`, `/signup/` were missing canonical entirely).
 
 ## 4. Canonical tags
 Every indexable page has a self-referencing canonical

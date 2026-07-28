@@ -225,13 +225,13 @@ Marketplace and onboarding pages must NOT show multiple CTA buttons that lead to
 No new public-facing page (`*/index.html` or top-level `*.html` meant for visitors) is complete until it is indexing-ready. Before marking done, confirm ALL of:
 1. Returns **200** on the live URL (verify after deploy, not just locally).
 2. Not blocked by `robots.txt` (`robots.txt` stays `Allow: /` + `Sitemap:` line; never disallow a content page).
-3. **No `noindex`** robots meta on a real content page. Only utility pages (reset-password, verify-email, report-bug, pure redirect stubs) may carry `noindex,follow`.
+3. **No `noindex`** robots meta on a real content page. As of July 15, 2026 this extends to redirect stubs and auth utility pages too — owner directive is "never noindex anything" except genuinely private/gated surfaces (admin tools, per-invite/login-gated features — confirm with owner before adding any new noindex).
 4. **Self-referencing canonical** with the clean trailing-slash URL (e.g. `https://trustmyrecord.com/foo/`), NOT `/foo/index.html`.
 5. Listed in `sitemap.xml`. **Sitemap rule: include only canonical indexable pages.** Never list redirect stubs (`<meta http-equiv="refresh">`), `noindex` pages, or login-gated/user-dynamic shells (profile, my-record, my-pending-picks). Bump `<lastmod>`.
 6. **At least one crawlable inbound internal link** from homepage nav/footer, the `/tools/` hub, or another indexable page. Repoint dead `#` footer links to real pages instead of adding orphans.
 7. Real `<title>` + `<meta name="description">` (no empty/placeholder).
 8. Page is useful to Google without login (server/static content, not login-only).
-Redirect stubs (`/leaderboard/`, `/signup/`, `/make-picks/`, `/directory/`, `/community/`, `/forums/`, `/how-it-works/`) must keep `noindex,follow` + canonical to their target and stay OUT of the sitemap.
+Redirect stubs (`/leaderboard/`, `/signup/`, `/make-picks/`, `/directory/`, `/forums/`) ship `index,follow` + canonical to their target (per July 15, 2026 no-noindex policy) and stay OUT of the sitemap. `/community/` and `/how-it-works/` are NOT stubs — both are real indexable content hubs, correctly IN the sitemap.
 
 ## Profile Header Long-Username Layout (May 23, 2026) — HARD RULE (PERMANENT)
 The public profile masthead (`profile/index.html`, `#profileHeader` grid: left `.profile-info` / right `.profile-rail` stat card) must keep long usernames on ONE line on desktop while the stats panel auto-yields space — never overlap, never an ugly mid-word two-line break on desktop.
@@ -874,7 +874,7 @@ Forbidden in schema:
 
 Hard guard rails:
 - Do NOT rewrite an existing page's canonical without an explicit approval line in the PR description.
-- Do NOT add SEO meta to authenticated-only surfaces (e.g. `/account/`, `/messages/`, `/notifications/`, admin tools). They should stay `noindex`.
+- Do NOT add rich/promotional SEO meta (OG images, JSON-LD) to authenticated-only surfaces (e.g. `/messages/`, `/notifications/`, admin tools) beyond a plain title/description. Per the July 15, 2026 no-noindex policy these ship `index, follow` like everything else — do not add `noindex` back without owner approval; `/account/` is a redirect stub to `/profile/`, not gated content itself.
 - Do NOT expose pending picks, autograder internals, admin endpoints, or user PII in any meta tag or JSON-LD.
 - Profile pages: schema describes the public profile surface generically — never bake a specific username into the static head; the dynamic page logic can update `og:title` / `og:url` per profile at runtime if needed.
 
@@ -1051,7 +1051,7 @@ thread/post counts, or thread/reply logic when restyling.
 
 The forum nav "User CP" tab must route to the dedicated private control panel
 `/usercp/` (`usercp/index.html`), never to `/profile/`.
-- `/usercp/` is private (login-gated; `noindex`) and uses the light `classic-forum` skin.
+- `/usercp/` is private (login-gated) and uses the light `classic-forum` skin. It currently ships `index, follow` per the sitewide July 15, 2026 no-noindex policy — gating is by login requirement, not robots meta.
 - It holds account tools only: Edit Profile (`/profile/?action=edit`), Change Avatar
   (`/profile/?action=change-avatar`), Account Settings, Notification Settings,
   Messages/Inbox (`/messages/`), Alerts (`/notifications/`), My Threads (live, filtered
