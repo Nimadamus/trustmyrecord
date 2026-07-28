@@ -696,6 +696,17 @@
             .lb-tab { min-width: 0; padding: 8px 12px; font-size: 0.78rem; }
             h1 { font-size: clamp(1.5rem, 6vw, 2rem); }
         }
+
+        /* Poll leaderboard: rules disclosure + accuracy tooltip + qualification note */
+        .tmr-howscore { margin: 10px 0 4px; border: 1px solid var(--line); border-radius: 10px; background: rgba(255,255,255,0.02); }
+        .tmr-howscore summary { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; color: var(--muted); font-size: 0.78rem; font-weight: 600; cursor: pointer; list-style: none; }
+        .tmr-howscore summary::-webkit-details-marker { display: none; }
+        .tmr-howscore[open] summary { border-bottom: 1px solid var(--line); }
+        .tmr-howscore ul { margin: 0; padding: 10px 14px 12px 26px; color: var(--muted); font-size: 0.79rem; line-height: 1.6; }
+        .acc-info { display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; margin-left: 4px; border-radius: 50%; border: 1px solid var(--muted); color: var(--muted); font-size: 0.62rem; font-style: normal; cursor: help; vertical-align: middle; }
+        .lb-subcount { margin: 2px 0 0; color: var(--muted); font-size: 0.76rem; }
+        .not-qualified { color: var(--muted); font-size: 0.74rem; font-style: italic; }
+        .qual-frac { color: var(--muted); font-size: 0.72rem; margin-right: 4px; }
     </style>
 <!--SCHEMA_ORG_BLOCK-->
 <script type="application/ld+json">
@@ -738,7 +749,7 @@
                 Trivia Points<span class="lb-tab-count" id="tabCountTrivia">0</span>
             </button>
             <button type="button" class="lb-tab" data-tab="polls" role="tab" aria-selected="false">
-                Polls<span class="lb-tab-count" id="tabCountPolls">0</span>
+                Poll Leaderboard<span class="lb-tab-count" id="tabCountPolls" title="Active polls">0</span>
             </button>
             <button type="button" class="lb-tab" data-tab="online" role="tab" aria-selected="false">
                 Online Challenges<span class="lb-tab-count" id="tabCountOnline">0</span>
@@ -904,6 +915,18 @@
                     <div>
                         <h2>Poll leaders</h2>
                         <p>Top voters by points earned on resolved prediction polls.</p>
+                        <details class="tmr-howscore">
+                            <summary>&#9432; How poll rankings work</summary>
+                            <ul>
+                                <li><b>Scored:</b> only single-choice and multi-select prediction polls that have been resolved with an official answer count toward accuracy.</li>
+                                <li><b>Single-choice:</b> correct if you picked the winning option.</li>
+                                <li><b>Multi-select:</b> correct only on an exact match of the winning set &mdash; picking part of it, or adding an extra wrong option, is incorrect. No partial credit.</li>
+                                <li><b>Excluded:</b> opinion polls, surveys, canceled polls, and polls that are still open or were never resolved never affect accuracy.</li>
+                                <li><b>Poll Points</b> are whatever you actually earned from resolved, scored polls (including per-question quiz-game bonuses) &mdash; never mixed with TMR Coin, signup, or referral rewards.</li>
+                                <li><b>Prediction Accuracy</b> = Correct Predictions &divide; Scored Predictions.</li>
+                                <li>You need at least 5 scored predictions before you're ranked by accuracy.</li>
+                            </ul>
+                        </details>
                     </div>
                     <div class="link-actions">
                         <select id="pollsPeriod" class="mini-link" style="padding:0 12px;height:30px;border-radius:999px;background:rgba(255,255,255,0.04);color:var(--text);border:1px solid rgba(148,163,184,0.18);font-weight:800;font-size:0.7rem;">
@@ -914,6 +937,7 @@
                         <a class="mini-link" href="/polls/">Open Polls</a>
                     </div>
                 </div>
+                <p id="pollsResultCount" class="lb-subcount"></p>
                 <div id="pollsState" class="loading">Loading poll leaderboard...</div>
                 <div id="pollsWrap" class="table-wrap" style="display:none;">
                     <table>
@@ -921,10 +945,11 @@
                             <tr>
                                 <th style="width:54px;">Rank</th>
                                 <th>Player</th>
-                                <th>Total Points</th>
-                                <th>Polls Voted</th>
-                                <th>Correct</th>
-                                <th>Accuracy</th>
+                                <th>Poll Points</th>
+                                <th>Total Participated</th>
+                                <th>Scored Predictions</th>
+                                <th>Correct Predictions</th>
+                                <th>Prediction Accuracy <i class="acc-info" title="Percentage of resolved, objectively scored prediction polls answered correctly. Opinion polls, surveys, open polls, and unscored polls are excluded.">i</i></th>
                             </tr>
                         </thead>
                         <tbody id="pollsBody"></tbody>
@@ -1477,12 +1502,17 @@
             const state = document.getElementById('pollsState');
             const wrap = document.getElementById('pollsWrap');
             const body = document.getElementById('pollsBody');
+            const resultCount = document.getElementById('pollsResultCount');
             // Poll tab badge + hero both reflect ACTIVE polls (see loadPolls / primeCounts),
             // never the number of leaderboard players -- that was the old hero/tab mismatch.
+            // This line is the OTHER count: how many ranked participants are in the
+            // table below, so "6 Active Polls" (tab) and "N Ranked Participants"
+            // (here) never get confused for the same number.
 
             if (!entries.length) {
                 wrap.style.display = 'none';
                 state.style.display = 'block';
+                if (resultCount) resultCount.textContent = '';
                 setStateAsEmpty(state, emptyStateHtml({
                     icon: '◎',
                     title: 'No poll leaders yet',
@@ -1496,10 +1526,22 @@
             }
             state.style.display = 'none';
             wrap.style.display = '';
+            if (resultCount) resultCount.textContent = entries.length + ' Ranked Participant' + (entries.length === 1 ? '' : 's');
             body.innerHTML = entries.map(function(entry, index) {
-                const accuracy = entry.accuracy != null ? num(entry.accuracy).toFixed(1) + '%' : '--';
-                const correct = num(entry.polls_correct);
-                const total = num(entry.polls_voted);
+                const scored = num(entry.scored_predictions);
+                const correct = num(entry.correct_predictions);
+                const participated = num(entry.total_polls_participated);
+                const qualified = !!entry.qualified;
+                let accCell;
+                if (!scored) {
+                    accCell = '--';
+                } else if (!qualified) {
+                    // "1/1 -- 100%" style fraction, not a bare qualifying-looking percentage.
+                    accCell = '<span class="qual-frac">' + correct + '/' + scored + '</span>' + num(entry.prediction_accuracy).toFixed(1) + '%'
+                        + '<div class="not-qualified">Not yet qualified for accuracy ranking</div>';
+                } else {
+                    accCell = num(entry.prediction_accuracy).toFixed(1) + '%';
+                }
                 const username = entry.username || '';
                 const displayName = entry.display_name || entry.displayName || username;
                 return '<tr>'
@@ -1510,9 +1552,10 @@
                     +     '<span class="person-sub">@' + escapeHtml(username) + '</span>'
                     +   '</div></div></td>'
                     + '<td class="pos">' + num(entry.total_points).toLocaleString() + '</td>'
-                    + '<td>' + total + '</td>'
+                    + '<td>' + participated + '</td>'
+                    + '<td>' + scored + '</td>'
                     + '<td>' + correct + '</td>'
-                    + '<td>' + accuracy + '</td>'
+                    + '<td>' + accCell + '</td>'
                     + '</tr>';
             }).join('');
         }

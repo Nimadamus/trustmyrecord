@@ -734,8 +734,19 @@
                         <div class="tmr-form-hint">Leave empty to publish immediately. Set a future date/time to schedule. Voting is blocked until then. Must be before the expiration date.</div>
                     </div>
                     <div class="tmr-form-row is-inline">
-                        <label class="tmr-form-toggle"><input id="pollAllowMultiple" type="checkbox"><span>Allow multiple choice</span></label>
+                        <label class="tmr-form-toggle"><input id="pollAllowMultiple" type="checkbox" onchange="onAllowMultipleChange()"><span>Allow multiple choice</span></label>
                         <label class="tmr-form-toggle"><input id="pollPublicResults" type="checkbox" checked><span>Public results before vote</span></label>
+                    </div>
+                    <div class="tmr-form-row is-inline" id="pollMultiSelectRow" style="display:none;">
+                        <div>
+                            <label for="pollMinSelect">Min. selections required</label>
+                            <input id="pollMinSelect" type="number" min="1" value="1">
+                        </div>
+                        <div>
+                            <label for="pollMaxSelect">Max. selections allowed</label>
+                            <input id="pollMaxSelect" type="number" min="1" value="2">
+                        </div>
+                        <div class="tmr-form-hint" style="flex-basis:100%;">Multi-select is scored by exact match at resolve time &mdash; a voter must pick the whole winning set to be marked correct.</div>
                     </div>
                     <div class="tmr-form-row">
                         <label class="tmr-form-toggle"><input id="pollAnonymous" type="checkbox"><span>Anonymous voting</span></label>
@@ -1422,6 +1433,10 @@
         var entity = String((p && (p.team_player || p.teamPlayer || p.team || p.player)) || '').trim();
         var html = '<span class="tmr-poll-badge">' + escHtml(league || sport) + '</span>';
         if (entity) html += '<span class="tmr-poll-badge is-entity">' + escHtml(entity) + '</span>';
+        if (p && p.poll_type === 'prediction_multi') {
+            var need = (p.min_select === p.max_select) ? ('pick ' + p.min_select) : ('pick ' + p.min_select + '-' + p.max_select);
+            html += '<span class="tmr-poll-badge is-entity" title="Scored by exact match &mdash; you must pick the whole winning set">Multi-select &middot; ' + escHtml(need) + '</span>';
+        }
         return '<div class="tmr-poll-badges">' + html + '</div>';
     }
 
@@ -1458,6 +1473,8 @@
         var options = d.options || [];
         var totalVotes = d.total_votes || 0;
         var userVote = d.user_vote || null;
+        var isMultiSelect = p.poll_type === 'prediction_multi';
+        var selectedIds = (userVote && Array.isArray(userVote.selected_option_ids)) ? userVote.selected_option_ids.map(Number) : [];
         var deadline = p.voting_deadline ? new Date(p.voting_deadline) : null;
         var isExp = deadline && deadline < new Date();
         var isClosed = p.status === 'resolved' || isExp;
@@ -1466,6 +1483,8 @@
         var showVoteForm = canVote;
         var showResults = !showVoteForm && (userVote || isClosed || isPublicResults);
         var winningVotes = options.reduce(function(m, o) { return Math.max(m, parseInt(o.vote_count || 0)); }, 0);
+        var uname = currentUsername();
+        var isCreator = isLoggedIn() && uname && p.username && uname.toLowerCase() === String(p.username).toLowerCase();
 
         var optionsHtml = '';
         if (showResults) {
@@ -1473,12 +1492,12 @@
                 var votes = parseInt(o.vote_count || 0);
                 var pct = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
                 var pctText = (parseFloat(o.vote_percentage || pct) || 0).toFixed(1);
-                var isWinner = isClosed && votes === winningVotes && winningVotes > 0;
-                var isUser = userVote && parseInt(userVote.option_id) === parseInt(o.id);
+                var isWinner = isClosed && (isMultiSelect ? !!o.is_correct : (votes === winningVotes && winningVotes > 0));
+                var isUser = isMultiSelect ? selectedIds.indexOf(parseInt(o.id)) !== -1 : (userVote && parseInt(userVote.option_id) === parseInt(o.id));
                 var rowClass = 'tmr-poll-result' + (isWinner ? ' is-winner' : '') + (isUser ? ' is-user-pick' : '');
                 var tagHtml = '';
                 if (isWinner) tagHtml += '<span class="tmr-poll-result-tag winner">Winner</span>';
-                if (isUser) tagHtml += '<span class="tmr-poll-result-tag user">Your Vote</span>';
+                if (isUser) tagHtml += '<span class="tmr-poll-result-tag user">' + (isMultiSelect ? 'Your Selection' : 'Your Vote') + '</span>';
                 return '<li class="tmr-poll-option is-disabled"><div class="' + rowClass + '">' +
                     '<div class="tmr-poll-result-row">' +
                         '<span class="tmr-poll-result-text">' + escHtml(o.option_text) + tagHtml + '</span>' +
@@ -1487,6 +1506,17 @@
                     '<div class="tmr-poll-bar"><div class="tmr-poll-bar-fill" style="width:0%" data-w="' + Math.min(100, pct).toFixed(1) + '"></div></div>' +
                 '</div></li>';
             }).join('') + '</div>';
+        } else if (showVoteForm && isMultiSelect) {
+            var minSel = p.min_select || 1, maxSel = p.max_select || options.length;
+            optionsHtml = '<form id="voteForm" onsubmit="submitVote(event)"><div class="tmr-poll-options" role="group" aria-label="Poll options (choose ' +
+                (minSel === maxSel ? minSel : (minSel + '-' + maxSel)) + ')">' +
+                options.map(function(o) {
+                    return '<li class="tmr-poll-option"><label><input type="checkbox" name="pollOption" value="' + o.id + '" onchange="markMultiChoice(this,' + minSel + ',' + maxSel + ')"> <span>' + escHtml(o.option_text) + '</span></label></li>';
+                }).join('') +
+                '</div><div class="tmr-poll-detail-footer">' +
+                    '<span id="multiSelectHint">Choose ' + (minSel === maxSel ? minSel : (minSel + ' to ' + maxSel)) + ' option' + (maxSel === 1 ? '' : 's') + ' &middot; ' + totalVotes + ' votes already</span>' +
+                    '<button class="tmr-poll-vote-btn" type="submit" id="voteSubmitBtn" disabled><i class="fas fa-check"></i> Submit Vote</button>' +
+                '</div></form>';
         } else if (showVoteForm) {
             optionsHtml = '<form id="voteForm" onsubmit="submitVote(event)"><div class="tmr-poll-options" role="radiogroup" aria-label="Poll options">' +
                 options.map(function(o) {
@@ -1496,6 +1526,29 @@
                     '<span>One vote per account &middot; ' + totalVotes + ' votes already</span>' +
                     '<button class="tmr-poll-vote-btn" type="submit" id="voteSubmitBtn"><i class="fas fa-check"></i> Submit Vote</button>' +
                 '</div></form>';
+        }
+
+        var resolveHtml = '';
+        if (isCreator && !isClosed && options.length) {
+            if (isMultiSelect) {
+                resolveHtml = '<div class="tmr-resolve-box"><h4><i class="fas fa-gavel"></i> Resolve this poll (creator only)</h4>' +
+                    '<div class="tmr-resolve-q"><label>Select the full winning set &mdash; an exact match is required to score correct</label>' +
+                    '<div class="tmr-poll-options" role="group">' + options.map(function(o) {
+                        return '<li class="tmr-poll-option"><label><input type="checkbox" name="winOption" value="' + o.id + '"> <span>' + escHtml(o.option_text) + '</span></label></li>';
+                    }).join('') + '</div></div>' +
+                    '<button class="tmr-poll-vote-btn" type="button" id="pollResolveBtn" onclick="resolveStandardPoll()"><i class="fas fa-flag-checkered"></i> Mark Winning Set</button></div>';
+            } else if (p.scoring_mode === 'closest') {
+                resolveHtml = '<div class="tmr-resolve-box"><h4><i class="fas fa-gavel"></i> Resolve this poll (creator only)</h4>' +
+                    '<div class="tmr-resolve-q"><label>Correct numeric answer</label><input type="number" step="any" id="pollResolveNumeric"></div>' +
+                    '<button class="tmr-poll-vote-btn" type="button" id="pollResolveBtn" onclick="resolveStandardPoll()"><i class="fas fa-flag-checkered"></i> Set Correct Answer</button></div>';
+            } else {
+                resolveHtml = '<div class="tmr-resolve-box"><h4><i class="fas fa-gavel"></i> Resolve this poll (creator only)</h4>' +
+                    '<div class="tmr-resolve-q"><label>Winning option</label>' +
+                    '<div class="tmr-poll-options" role="radiogroup">' + options.map(function(o) {
+                        return '<li class="tmr-poll-option"><label><input type="radio" name="winOption" value="' + o.id + '"> <span>' + escHtml(o.option_text) + '</span></label></li>';
+                    }).join('') + '</div></div>' +
+                    '<button class="tmr-poll-vote-btn" type="button" id="pollResolveBtn" onclick="resolveStandardPoll()"><i class="fas fa-flag-checkered"></i> Mark Winner</button></div>';
+            }
         }
 
         var noVoteFooter = '';
@@ -1533,6 +1586,7 @@
             loginPrompt +
             optionsHtml +
             noVoteFooter +
+            resolveHtml +
         '</div>';
         animateBars(document.getElementById('pollDetail'));
     }
@@ -1552,16 +1606,44 @@
         if (li) li.classList.add('is-checked');
     }
 
+    // Multi-select voting: enforce min/max picks client-side before letting
+    // the voter submit (the server re-validates the same bounds).
+    function markMultiChoice(input, minSelect, maxSelect) {
+        var checked = document.querySelectorAll('input[name="pollOption"]:checked');
+        var li = input.closest ? input.closest('.tmr-poll-option') : null;
+        if (li) li.classList.toggle('is-checked', input.checked);
+        if (checked.length > maxSelect) {
+            input.checked = false;
+            if (li) li.classList.remove('is-checked');
+            showToast('You can only pick up to ' + maxSelect + ' option' + (maxSelect === 1 ? '' : 's') + '.', '');
+            checked = document.querySelectorAll('input[name="pollOption"]:checked');
+        }
+        var btn = document.getElementById('voteSubmitBtn');
+        var hint = document.getElementById('multiSelectHint');
+        var ok = checked.length >= minSelect && checked.length <= maxSelect;
+        if (btn) btn.disabled = !ok;
+        if (hint) hint.textContent = checked.length + ' selected (need ' + (minSelect === maxSelect ? minSelect : (minSelect + '-' + maxSelect)) + ')';
+    }
+
     async function submitVote(e) {
         e.preventDefault();
         if (!isLoggedIn()) { window.location.href = '/login/'; return; }
-        var sel = document.querySelector('input[name="pollOption"]:checked');
-        if (!sel) return;
-        var optionId = parseInt(sel.value);
+        var d = state.currentPollDetail;
+        var isMultiSelect = d && d.poll && d.poll.poll_type === 'prediction_multi';
+        var body;
+        if (isMultiSelect) {
+            var checkedEls = document.querySelectorAll('input[name="pollOption"]:checked');
+            if (!checkedEls.length) return;
+            body = { option_ids: Array.prototype.map.call(checkedEls, function(el) { return parseInt(el.value); }) };
+        } else {
+            var sel = document.querySelector('input[name="pollOption"]:checked');
+            if (!sel) return;
+            body = { option_id: parseInt(sel.value) };
+        }
         var btn = document.getElementById('voteSubmitBtn');
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Submitting...'; }
         try {
-            await api.request('/polls/' + state.currentPollId + '/vote', { method: 'POST', body: { option_id: optionId } });
+            await api.request('/polls/' + state.currentPollId + '/vote', { method: 'POST', body: body });
             showToast('Vote locked in.', 'success');
             var data = await api.request('/polls/' + state.currentPollId);
             state.currentPollDetail = data;
@@ -1582,6 +1664,43 @@
             window.history.replaceState({}, '', window.location.pathname);
         }
         document.getElementById('pollsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Creator-only resolve for a standalone (non-game) poll: single winner,
+    // multi-select winning SET, or a closest-numeric truth value, depending
+    // on the poll's type/scoring_mode.
+    async function resolveStandardPoll() {
+        var d = state.currentPollDetail;
+        if (!d || !d.poll) return;
+        var p = d.poll;
+        var body = {};
+        if (p.poll_type === 'prediction_multi') {
+            var checked = document.querySelectorAll('input[name="winOption"]:checked');
+            if (!checked.length) { showToast('Pick the winning set first.', 'error'); return; }
+            body.winning_option_ids = Array.prototype.map.call(checked, function(el) { return parseInt(el.value); });
+        } else if (p.scoring_mode === 'closest') {
+            var numEl = document.getElementById('pollResolveNumeric');
+            if (!numEl || numEl.value === '') { showToast('Enter the correct numeric answer.', 'error'); return; }
+            body.numeric_answer = parseFloat(numEl.value);
+        } else {
+            var sel = document.querySelector('input[name="winOption"]:checked');
+            if (!sel) { showToast('Pick the winning option first.', 'error'); return; }
+            body.winning_option_id = parseInt(sel.value);
+        }
+        var btn = document.getElementById('pollResolveBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Resolving...'; }
+        try {
+            await api.request('/polls/' + state.currentPollId + '/resolve', { method: 'PUT', body: body });
+            showToast('Poll resolved and points awarded.', 'success');
+            var data = await api.request('/polls/' + state.currentPollId);
+            state.currentPollDetail = data;
+            renderPollDetail();
+            loadSection();
+        } catch (err) {
+            console.error('resolveStandardPoll', err);
+            showToast(err && err.message ? err.message : 'Could not resolve poll.', 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-flag-checkered"></i> Resolve'; }
+        }
     }
 
     // ============== MULTI-QUESTION GAME / QUIZ ==============
@@ -1955,12 +2074,27 @@
         if (state.createType === 'quiz') { optionsRow.style.display = 'none'; numericRow.style.display = 'none'; return; }
         if (mode === 'closest') { optionsRow.style.display = 'none'; numericRow.style.display = ''; }
         else { optionsRow.style.display = ''; numericRow.style.display = 'none'; }
+        // Closest-numeric polls have no options to multi-select from.
+        var multiToggle = document.getElementById('pollAllowMultiple');
+        multiToggle.disabled = (mode === 'closest');
+        if (mode === 'closest' && multiToggle.checked) { multiToggle.checked = false; onAllowMultipleChange(); }
     }
 
     function onSeasonToggle() {
         var on = document.getElementById('pollIsSeason').checked;
         document.getElementById('pollSubQuestionsRow').style.display = on ? '' : 'none';
         if (on && document.querySelectorAll('#pollSubQuestions .tmr-subq').length === 0) addSubQuestion();
+        // Quiz sub-questions don't support a per-question winning SET (the
+        // shared quiz-scoring engine grades one winning_option_id per
+        // question) -- multi-select is standalone-poll only.
+        var multiToggle = document.getElementById('pollAllowMultiple');
+        multiToggle.disabled = on;
+        if (on) { multiToggle.checked = false; onAllowMultipleChange(); }
+    }
+
+    function onAllowMultipleChange() {
+        var on = document.getElementById('pollAllowMultiple').checked;
+        document.getElementById('pollMultiSelectRow').style.display = on ? '' : 'none';
     }
 
     function addSubQuestion() {
@@ -2052,6 +2186,16 @@
         if (!isSeason && scoringMode !== 'closest' && options.length < 2) {
             errorEl.textContent = 'Provide at least 2 answer choices (or switch to Closest-numeric scoring).'; errorEl.classList.add('is-shown'); return;
         }
+        var minSelect = 1, maxSelect = 1;
+        if (allowMultiple && !isSeason && scoringMode !== 'closest') {
+            minSelect = parseInt(document.getElementById('pollMinSelect').value, 10) || 1;
+            maxSelect = parseInt(document.getElementById('pollMaxSelect').value, 10) || options.length;
+            if (maxSelect > options.length) maxSelect = options.length;
+            if (minSelect > maxSelect) minSelect = maxSelect;
+            if (maxSelect < 2) {
+                errorEl.textContent = 'Multi-select needs a max of at least 2 (or turn off "Allow multiple choice").'; errorEl.classList.add('is-shown'); return;
+            }
+        }
 
         var subQuestions = [];
         if (isSeason) {
@@ -2085,7 +2229,6 @@
         var descParts = [];
         if (description) descParts.push(description);
         if (!publicResults) descParts.push('[hide-results-until-vote]');
-        if (allowMultiple) descParts.push('[multi-choice]');
         if (anonymous) descParts.push('[anonymous]');
         var fullDescription = descParts.join('\n\n');
 
@@ -2100,6 +2243,11 @@
             scoring_mode: scoringMode,
             expires: expiresAt || ''
         };
+        if (allowMultiple && !isSeason && scoringMode !== 'closest') {
+            payload.poll_type = 'prediction_multi';
+            payload.min_select = minSelect;
+            payload.max_select = maxSelect;
+        }
         if (isSeason) payload.options = [];
         else if (scoringMode !== 'closest') payload.options = options;
         else payload.options = [];

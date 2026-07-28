@@ -942,11 +942,11 @@
         <div class="user-stats-card">
             <div class="stat-item">
                 <div class="stat-value" id="pollsAccuracy">--</div>
-                <div class="stat-label">Your Accuracy</div>
+                <div class="stat-label" title="Percentage of your resolved, objectively scored prediction polls answered correctly. Opinion polls (including Hangout polls), surveys, open polls, and unscored polls are excluded.">Prediction Accuracy</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="pollsVoteCount">0</div>
-                <div class="stat-label">Your Votes</div>
+                <div class="stat-label">Scored Predictions</div>
             </div>
             <div class="stat-item">
                 <div class="stat-value" id="pollsRank">--</div>
@@ -1306,7 +1306,13 @@
                     if (me && me.user && me.user.username) {
                         const userStats = await api.request('/polls/users/' + encodeURIComponent(me.user.username) + '/stats');
                         const overall = userStats.overall || {};
-                        if (acEl) acEl.textContent = overall.accuracy ? overall.accuracy + '%' : '--';
+                        // Below the 5-scored-prediction qualification minimum, show the
+                        // raw fraction so a single lucky vote doesn't read as a stable 100%.
+                        if (acEl) {
+                            if (!overall.scored_predictions) acEl.textContent = '--';
+                            else if (!overall.qualified) acEl.textContent = overall.correct_predictions + '/' + overall.scored_predictions + ' — ' + overall.prediction_accuracy + '%';
+                            else acEl.textContent = overall.prediction_accuracy + '%';
+                        }
                         if (vcEl) vcEl.textContent = overall.polls_voted || 0;
                     }
                 } catch (e) { /* user stats unavailable, keep overview */ }

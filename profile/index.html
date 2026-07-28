@@ -7343,7 +7343,12 @@
             var voted = parseInt(o.polls_voted || 0) || 0;
             var correct = parseInt(o.polls_correct || 0) || 0;
             if (pts <= 0 && voted <= 0) return; // keep the empty state
-            var acc = (o.accuracy != null) ? (Math.round(parseFloat(o.accuracy) * 10) / 10) : (voted > 0 ? Math.round(correct / voted * 1000) / 10 : 0);
+            var qualified = !!o.qualified;
+            var accRaw = (o.prediction_accuracy != null) ? (Math.round(parseFloat(o.prediction_accuracy) * 10) / 10) : (voted > 0 ? Math.round(correct / voted * 1000) / 10 : 0);
+            // Below the 5-scored-prediction ranking minimum, show the raw
+            // fraction alongside the percentage instead of a bare number that
+            // looks more stable than it is (e.g. "1/1 -- 100%").
+            var accDisplay = qualified ? (accRaw + '%') : (correct + '/' + voted + ' &mdash; ' + accRaw + '%');
             var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); };
             var cats = (data.by_category || []).filter(function (c) { return parseInt(c.total_points || 0) > 0; })
                 .sort(function (a, b) { return (parseInt(b.total_points) || 0) - (parseInt(a.total_points) || 0); }).slice(0, 4);
@@ -7359,10 +7364,10 @@
                         (qr.quizzes_played ? '<span class="pollpts-elometa">' + qr.quizzes_played + ' quizzes &middot; ' + (qr.wins || 0) + ' wins' + (qr.sharp_rating ? ' &middot; Sharp ' + qr.sharp_rating + 'x' : '') + '</span>' : '') +
                     '</div>') : '') +
                     '<div class="pollpts-grid">' +
-                        '<div class="pollpts-stat"><span class="pollpts-num" style="color:#67E8F9;">' + pts.toLocaleString() + '</span><span class="pollpts-lbl">Total points</span></div>' +
-                        '<div class="pollpts-stat"><span class="pollpts-num">' + voted.toLocaleString() + '</span><span class="pollpts-lbl">Questions answered</span></div>' +
-                        '<div class="pollpts-stat"><span class="pollpts-num">' + correct.toLocaleString() + '</span><span class="pollpts-lbl">Correct</span></div>' +
-                        '<div class="pollpts-stat"><span class="pollpts-num">' + acc + '%</span><span class="pollpts-lbl">Accuracy</span></div>' +
+                        '<div class="pollpts-stat"><span class="pollpts-num" style="color:#67E8F9;">' + pts.toLocaleString() + '</span><span class="pollpts-lbl">Poll Points</span></div>' +
+                        '<div class="pollpts-stat"><span class="pollpts-num">' + voted.toLocaleString() + '</span><span class="pollpts-lbl">Scored Predictions</span></div>' +
+                        '<div class="pollpts-stat"><span class="pollpts-num">' + correct.toLocaleString() + '</span><span class="pollpts-lbl">Correct Predictions</span></div>' +
+                        '<div class="pollpts-stat"><span class="pollpts-num">' + accDisplay + '</span><span class="pollpts-lbl">Prediction Accuracy' + (qualified ? '' : ' &middot; not yet qualified') + '</span></div>' +
                     '</div>' + catHtml +
                     '<a class="pollpts-link" href="/polls/">Play today\'s prediction quiz <i class="fas fa-arrow-right"></i></a>' +
                 '</div>';
