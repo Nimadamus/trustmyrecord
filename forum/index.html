@@ -3539,12 +3539,19 @@ function renderAuthorPanel(post) {
     // (e.g. "TMR OG", "TMR QUEEN"); it wins over the headline-derived one and
     // never touches the headline, role line, or badges.
     var customUndertitle = String(author.forum_undertitle || '').trim();
+    // custom_flair_text is a user-set flair, self-service (routes/users.js PUT
+    // /forum-flair), gated on redeeming the TMR Coin 'custom_forum_flair'
+    // catalog item -- ranks below the admin-assigned forum_undertitle (which
+    // must always win) but above the default headline fallback.
+    var customFlair = String(author.custom_flair_text || '').trim();
     var undertitleText = '';
     if (!isOfficialBot) {
         if (customUndertitle) {
             undertitleText = customUndertitle.length > 48 ? (customUndertitle.slice(0, 47).trim() + '…') : customUndertitle;
         } else if (authorIsAdmin(author)) {
             undertitleText = 'Founder';
+        } else if (customFlair) {
+            undertitleText = customFlair.length > 48 ? (customFlair.slice(0, 47).trim() + '…') : customFlair;
         } else if (headline) {
             undertitleText = headline.length > 48 ? (headline.slice(0, 47).trim() + '…') : headline;
         }

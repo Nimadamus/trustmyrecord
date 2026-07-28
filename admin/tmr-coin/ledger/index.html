@@ -35,6 +35,12 @@
         .reverse-btn { border-color: rgba(248,113,113,0.4); }
         .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
         @media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+        .catalog-row { display: grid; grid-template-columns: 1fr auto auto auto auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+        .catalog-row:last-child { border-bottom: none; }
+        .catalog-row .key { font-size: 11px; color: var(--muted); }
+        .catalog-row input[type=number] { width: 80px; background: var(--panel2); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font-size: 12.5px; }
+        .catalog-row label { font-size: 11.5px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+        @media (max-width: 720px) { .catalog-row { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
@@ -60,6 +66,14 @@
                 <div id="topTipsBody">Loading…</div>
             </section>
         </div>
+
+        <section class="panel">
+            <h2>Redemption Catalog</h2>
+            <p style="color:var(--muted);font-size:12px;margin-top:0;">Toggling Available is the only thing that makes an item actually
+                redeemable -- everything is seeded off by default. Duration (days) is only meaningful for perks that expire
+                (leave blank for a permanent perk like a badge).</p>
+            <div id="catalogAdminBody">Loading…</div>
+        </section>
 
         <section class="panel">
             <h2>Recent Activity</h2>
@@ -198,10 +212,57 @@
             }
         }
 
+        async function loadCatalogAdmin() {
+            var el = document.getElementById('catalogAdminBody');
+            try {
+                var data = await window.api.request('/admin/coins/catalog');
+                var items = data.items || [];
+                el.innerHTML = items.length ? items.map(function (item) {
+                    return '<div class="catalog-row" data-key="' + esc(item.key) + '">' +
+                        '<div><strong>' + esc(item.label) + '</strong> — ' + Number(item.coins_cost).toLocaleString('en-US') + ' TMR<div class="key">' + esc(item.key) + '</div></div>' +
+                        '<label><input type="checkbox" class="cat-available"' + (item.is_available ? ' checked' : '') + '> Available</label>' +
+                        '<label>Duration (days): <input type="number" class="cat-duration" min="1" value="' + (item.duration_days != null ? esc(item.duration_days) : '') + '" placeholder="permanent"></label>' +
+                        '<button type="button" class="cat-save-btn">Save</button>' +
+                        '<span class="cat-save-status" style="font-size:11.5px;color:var(--muted);"></span>' +
+                        '</div>';
+                }).join('') : '<p style="color:var(--muted);">No catalog items.</p>';
+
+                el.querySelectorAll('.cat-save-btn').forEach(function (btn) {
+                    btn.addEventListener('click', function () {
+                        var row = btn.closest('.catalog-row');
+                        var key = row.getAttribute('data-key');
+                        var isAvailable = row.querySelector('.cat-available').checked;
+                        var durationRaw = row.querySelector('.cat-duration').value.trim();
+                        var duration = durationRaw ? parseInt(durationRaw, 10) : null;
+                        saveCatalogItem(key, isAvailable, duration, row.querySelector('.cat-save-status'));
+                    });
+                });
+            } catch (err) {
+                el.textContent = 'Failed to load (admin login required): ' + err.message;
+            }
+        }
+
+        async function saveCatalogItem(key, isAvailable, duration, statusEl) {
+            statusEl.textContent = 'Saving…';
+            statusEl.style.color = 'var(--muted)';
+            try {
+                await window.api.request('/admin/coins/catalog/' + encodeURIComponent(key), {
+                    method: 'PUT',
+                    body: { is_available: isAvailable, duration_days: duration },
+                });
+                statusEl.textContent = 'Saved.';
+                statusEl.style.color = '#4ade80';
+            } catch (err) {
+                statusEl.textContent = 'Failed: ' + err.message;
+                statusEl.style.color = 'var(--red)';
+            }
+        }
+
         document.getElementById('typeFilter').addEventListener('change', function () { loadActivity(true); });
         document.getElementById('loadMoreBtn').addEventListener('click', function () { loadActivity(false); });
 
         loadSummary();
+        loadCatalogAdmin();
         loadActivity(true);
     })();
     </script>

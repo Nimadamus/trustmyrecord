@@ -241,6 +241,19 @@
             letter-spacing: 1.4px;
             text-transform: uppercase;
         }
+        .profile-early-access-badge {
+            display: inline-block;
+            margin: -6px 0 12px;
+            padding: 2px 9px;
+            border-radius: 3px;
+            background: rgba(250,204,21,.16);
+            border: 1px solid rgba(250,204,21,.4);
+            color: #facc15;
+            font-weight: 800;
+            font-size: 0.66rem;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+        }
         .profile-trust-row {
             display: flex;
             gap: 8px;
@@ -10372,6 +10385,7 @@
             '<div class="profile-name">' + name + '</div>' +
             '<div class="profile-handle">@' + p.username + '</div>' +
             (p.is_admin ? '<div><span class="profile-admin-badge">ADMIN</span></div>' : (p.is_moderator ? '<div><span class="profile-admin-badge">MOD</span></div>' : '')) +
+            (p.has_early_access_badge ? '<div><span class="profile-early-access-badge">🪙 TMR Early Access</span></div>' : '') +
             headlineHtml +
             '</div>' +
             '</div>' +

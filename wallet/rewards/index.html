@@ -36,6 +36,14 @@
         #catalogEmpty, #catalogError { padding: 30px; text-align: center; color: var(--muted); border: 1px solid var(--line); border-radius: 10px; background: var(--panel); }
         #catalogEmpty[hidden], #catalogError[hidden], #catalogGrid[hidden] { display: none; }
         .tmr-coin-icon { width: 1em; height: 1em; vertical-align: -0.15em; margin-right: 0.35em; flex: 0 0 auto; }
+        .catalog-card .badge.is-available { background: rgba(74,222,128,.16); color: #4ade80; }
+        .catalog-card .badge.is-owned { background: rgba(56,189,248,.16); color: #38bdf8; }
+        .catalog-actions { margin-top: 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .redeem-btn { min-height: 34px; padding: 0 13px; border-radius: 7px; border: 1px solid rgba(250,204,21,.4); background: rgba(250,204,21,.1); color: var(--gold); font-weight: 800; font-size: 12.5px; cursor: pointer; }
+        .redeem-btn:disabled { opacity: .5; cursor: not-allowed; }
+        .redeem-status { font-size: 12.5px; color: var(--muted); }
+        .redeem-status.is-error { color: #f87171; }
+        .redeem-status.is-ok { color: #4ade80; }
     </style>
 </head>
 <body class="tmr-site-shell" data-tmr-route="wallet-rewards">
@@ -44,7 +52,7 @@
             <div>
                 <p class="rewards-kicker"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">TMR Coin</p>
                 <h1>Rewards Catalog</h1>
-                <p class="rewards-subtitle">A preview of future rewards. None of these are available to redeem yet.</p>
+                <p class="rewards-subtitle" id="rewardsSubtitle">A preview of future rewards. Items marked Available can be redeemed now; the rest are previews.</p>
             </div>
             <a class="btn" href="/wallet/">My Wallet</a>
             <a class="btn" href="/how-tmr-coin-works/">How It Works</a>
@@ -61,17 +69,37 @@
     <script src="/static/js/backend-api.js?v=20260725coins1"></script>
     <script>
     (function () {
+        var isLoggedIn = typeof isUserLoggedIn === 'function' ? isUserLoggedIn() : (!!localStorage.getItem('accessToken') || !!localStorage.getItem('token'));
+        var ownedKeys = {}; // catalog_key -> true if the user has an active redemption
+
         function esc(value) {
             return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
                 return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
             });
         }
+
         function cardHtml(item) {
+            var owned = !!ownedKeys[item.key];
+            var badge = owned
+                ? '<span class="badge is-owned">Active</span>'
+                : (item.is_available ? '<span class="badge is-available">Available</span>' : '<span class="badge">Coming Soon</span>');
+            var actions = '';
+            if (owned) {
+                actions = '<div class="catalog-actions"><span class="redeem-status is-ok">You already have this.</span></div>';
+            } else if (item.is_available && isLoggedIn) {
+                actions = '<div class="catalog-actions">' +
+                    '<button type="button" class="redeem-btn" data-catalog-key="' + esc(item.key) + '" data-cost="' + Number(item.coins_cost) + '" onclick="tmrRedeemItem(this)">Redeem</button>' +
+                    '<span class="redeem-status" id="redeemStatus-' + esc(item.key) + '"></span>' +
+                    '</div>';
+            } else if (item.is_available && !isLoggedIn) {
+                actions = '<div class="catalog-actions"><a class="redeem-btn" style="text-decoration:none;display:inline-flex;align-items:center;" href="/login/">Log in to redeem</a></div>';
+            }
             return '<div class="catalog-card">' +
-                '<span class="badge">Coming Soon</span>' +
+                badge +
                 '<h3>' + esc(item.label) + '</h3>' +
                 '<p>' + esc(item.description || '') + '</p>' +
                 '<div class="catalog-cost"><img class="tmr-coin-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">' + Number(item.coins_cost).toLocaleString('en-US') + ' coins</div>' +
+                actions +
                 '</div>';
         }
 
@@ -80,8 +108,17 @@
             var empty = document.getElementById('catalogEmpty');
             var errorEl = document.getElementById('catalogError');
             try {
+                if (isLoggedIn) {
+                    try {
+                        var owned = await window.api.request('/coins/redemptions');
+                        (owned.redemptions || []).filter(function (r) { return r.is_active; }).forEach(function (r) { ownedKeys[r.catalog_key] = true; });
+                    } catch (e) { /* soft -- catalog still renders without owned-state */ }
+                }
                 var data = await window.api.getCoinCatalog();
                 if (data.disclaimer) document.getElementById('disclaimerText').textContent = data.disclaimer;
+                if (data.redemption_available) {
+                    document.getElementById('rewardsSubtitle').textContent = 'Items marked Available can be redeemed now for TMR Coin you\'ve earned.';
+                }
                 var items = data.items || [];
                 if (!items.length) { empty.hidden = false; return; }
                 grid.innerHTML = items.map(cardHtml).join('');
@@ -90,6 +127,34 @@
                 errorEl.hidden = false;
             }
         }
+
+        window.tmrRedeemItem = async function (btn) {
+            if (btn.disabled) return;
+            var key = btn.getAttribute('data-catalog-key');
+            var cost = parseInt(btn.getAttribute('data-cost'), 10);
+            var statusEl = document.getElementById('redeemStatus-' + key);
+            if (statusEl) { statusEl.className = 'redeem-status'; statusEl.textContent = ''; }
+            if (!window.confirm('Redeem this for ' + cost.toLocaleString('en-US') + ' TMR Coin?')) return;
+            btn.disabled = true;
+            var idemKey = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('redeem-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+            try {
+                await window.api.request('/coins/catalog/' + encodeURIComponent(key) + '/redeem', {
+                    method: 'POST',
+                    body: { idempotencyKey: idemKey },
+                });
+                if (statusEl) { statusEl.className = 'redeem-status is-ok'; statusEl.textContent = 'Redeemed!'; }
+                btn.closest('.catalog-card').querySelector('.badge').outerHTML = '<span class="badge is-owned">Active</span>';
+                var actionsEl = btn.closest('.catalog-actions');
+                if (actionsEl) actionsEl.innerHTML = '<span class="redeem-status is-ok">You already have this.</span>';
+            } catch (err) {
+                var msg = (err && err.data && err.data.available != null)
+                    ? ('Insufficient balance: needs ' + err.data.required + ' TMR, you have ' + err.data.available + '.')
+                    : ((err && err.message) || 'Failed to redeem.');
+                if (statusEl) { statusEl.className = 'redeem-status is-error'; statusEl.textContent = msg; }
+                btn.disabled = false;
+            }
+        };
+
         boot();
     })();
     </script>
