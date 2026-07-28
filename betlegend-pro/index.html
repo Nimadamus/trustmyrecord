@@ -519,8 +519,10 @@
                 ineligibleBanner.hidden = !!status.eligible;
                 var disabled = !!status.isFrozen || !status.eligible;
                 submitDisableEls.forEach(function (el) { el.disabled = disabled; });
+                return typeof status.balance === 'number' ? status.balance : null;
             } catch (err) {
                 balanceValue.textContent = '—';
+                return null;
             }
         }
 
@@ -947,6 +949,9 @@
             var idempotencyKey = (sig === matchupLastSig && matchupLastKey) ? matchupLastKey : uuid();
             matchupLastSig = sig; matchupLastKey = idempotencyKey;
 
+            var balanceBeforeSubmit = Number((balanceValue.textContent || '').replace(/,/g, ''));
+            if (!isFinite(balanceBeforeSubmit)) balanceBeforeSubmit = null;
+
             matchupSubmitBtn.disabled = true;
             matchupLoading.hidden = false;
             try {
@@ -962,10 +967,29 @@
                 loadHistory();
             } catch (err) {
                 var data = err && err.data;
-                if (err && err.status === 402) insufficientBalanceMessage(matchupError, data);
-                else if (err && (err.status === 403 || err.status === 400)) showError(matchupError, (data && data.error) || 'Please check your matchup inputs and try again.');
-                else showError(matchupError, 'BetLegend Pro could not complete this matchup analysis (' + ((data && data.error) || 'server error') + '). It was not charged — you can try again.');
-                await refreshBalance();
+                if (err && err.status === 402) {
+                    insufficientBalanceMessage(matchupError, data);
+                    await refreshBalance();
+                } else if (err && (err.status === 403 || err.status === 400)) {
+                    showError(matchupError, (data && data.error) || 'Please check your matchup inputs and try again.');
+                    await refreshBalance();
+                } else {
+                    // A request that times out or drops the connection client-side
+                    // may still be completing (and billing) on the server -- this
+                    // was reproduced live during production verification on
+                    // 2026-07-28 (a request outlived the client's timeout, the
+                    // server finished and charged 5 TMR Coin, and the UI told the
+                    // user "It was not charged", which was false). Confirm against
+                    // the real post-request balance instead of asserting a charge
+                    // outcome the client can't actually know.
+                    var balanceAfterErr = await refreshBalance();
+                    if (balanceBeforeSubmit != null && balanceAfterErr != null && balanceAfterErr < balanceBeforeSubmit) {
+                        showError(matchupError, 'BetLegend Pro lost connection while this request was completing, and it looks like it went through -- your balance dropped by ' + (balanceBeforeSubmit - balanceAfterErr) + ' TMR Coin. Check Saved Reports before resubmitting so you are not charged twice.');
+                        loadHistory();
+                    } else {
+                        showError(matchupError, 'BetLegend Pro could not complete this matchup analysis (' + ((data && data.error) || 'server error') + '). It was not charged — you can try again.');
+                    }
+                }
             } finally {
                 refreshMatchupSubmitEnabled();
                 matchupLoading.hidden = true;
