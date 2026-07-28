@@ -31,13 +31,13 @@
   ];
   var PRIMARY = [
     ['/contests/justbet-mlb/', 'Contest'],
+    ['/arena/', 'Arena'],
     ['/tools/', 'Tools'],
     ['/handicappers/', 'Find Handicappers']
   ];
   var COMMUNITY = [
     ['/sports-talk/', 'Sports Talk'],
     ['/feed/', 'Feed'],
-    ['/arena/', 'Arena'],
     ['/online-gaming/', 'MLB The Show'],
     ['/challenges/', 'Challenges'],
     ['/forum/', 'Forums'],
