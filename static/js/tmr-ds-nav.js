@@ -299,7 +299,7 @@
       // never flashes a stale/zero value; links to the wallet page.
       '<a class="v2nav-coins" id="navCoinPill" href="/wallet/" title="' +
         esc((window.TMR_TERMINOLOGY && window.TMR_TERMINOLOGY.full) || 'TMR Coin') + ' balance" hidden>' +
-        '<img class="v2nav-coins-icon" src="/static/branding/tmr-coin/tmr-coin-nav.svg" alt="" aria-hidden="true"><span id="navCoinBalance">—</span></a>' +
+        '<img class="v2nav-coins-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true"><span id="navCoinBalance">—</span></a>' +
       // Stays an <a href> so the bell is never a dead target if the alerts
       // engine has not finished loading.
       '<a class="v2nav-bell" id="homeNotifBtn" data-tmr-notifications href="/notifications/" aria-label="Alerts" title="Alerts" ' +
