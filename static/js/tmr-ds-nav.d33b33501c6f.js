@@ -41,7 +41,6 @@
   var HANDICAPPERS = [
     ['/handicappers/', 'Find Handicappers'],
     ['/leaderboards/', 'Leaderboards'],
-    ['/verified-handicapper-records/', 'Verified Records'],
     ['/marketplace/', 'Buy Picks'],
     ['/marketplace/sell/', 'Sell Your Picks']
   ];
@@ -53,13 +52,10 @@
     ['/polls/', 'Polls']
   ];
   var COMMUNITY = [
-    ['/forum/', 'Forums'],
     ['/community/', 'Community Home'],
-    ['/members/', 'Members'],
-    ['/feed/', 'Feed'],
+    ['/forum/', 'Forums'],
     ['/sports-talk/', 'Sports Talk'],
     ['/chat/', 'Chat'],
-    ['/online-gaming/', 'MLB The Show'],
     ['/messages/', 'Messages']
   ];
   var TOOLS = [

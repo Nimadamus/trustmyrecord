@@ -11,14 +11,13 @@
         ["/sportsbook/", "Make Picks"],
         ["/handicapping/", "Handicapping Hub"]
     ];
-    // Reconciled 2026-07-29 with static/js/tmr-ds-nav.js's route tables so every
-    // page shows the identical menu (same dropdowns, wording, order) regardless
-    // of which of the two nav scripts it loads. Union of every destination
-    // either script ever exposed -- nothing dropped, renamed, or redirected.
+    // Kept in sync with static/js/tmr-ds-nav.js's route tables so every page
+    // shows the identical, simplified menu regardless of which nav script it
+    // loads. Verified Records dropped (already reachable via handicapper
+    // profiles/discovery/leaderboards).
     const handicappersMenuRoutes = [
         ["/handicappers/", "Find Handicappers"],
         ["/leaderboards/", "Leaderboards"],
-        ["/verified-handicapper-records/", "Verified Records"],
         ["/marketplace/", "Buy Picks"],
         ["/marketplace/sell/", "Sell Your Picks"]
     ];
@@ -30,13 +29,10 @@
         ["/polls/", "Polls"]
     ];
     const communityRoutes = [
-        ["/forum/", "Forums"],
         ["/community/", "Community Home"],
-        ["/members/", "Members"],
-        ["/feed/", "Feed"],
+        ["/forum/", "Forums"],
         ["/sports-talk/", "Sports Talk"],
         ["/chat/", "Chat"],
-        ["/online-gaming/", "MLB The Show"],
         ["/messages/", "Messages"]
     ];
     const toolsMenuRoutes = [

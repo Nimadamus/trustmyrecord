@@ -384,7 +384,7 @@ body.tmr-site-shell > nav.nav:not(.tmr-global-nav) {
 }
 
 .tmr-global-nav__inner {
-    width: min(1680px, calc(100% - 34px));
+    width: min(1680px, calc(100% - 80px));
     min-height: 78px;
     margin: 0 auto;
     display: grid;
@@ -4910,7 +4910,7 @@ body.tmr-site-shell .tmr-global-nav__links a[aria-current="page"]:hover {
         grid-template-areas: none !important;
         grid-template-rows: none !important;
         row-gap: 0 !important;
-        width: min(1680px, calc(100% - 36px)) !important;
+        width: min(1680px, calc(100% - 72px)) !important;
         min-height: 78px !important;
     }
 
@@ -5273,5 +5273,31 @@ html body.tmr-site-shell .tmr-global-nav__bell .tmr-global-nav__bell-badge:empty
         max-width: 34px !important;
         max-height: 34px !important;
         margin-left: 8px !important;
+    }
+}
+
+/* ============================================================================
+   Nav centering - 2026-07-29
+   The single-row redesign above (2026-06-23) packs Sportsbook..TMR Coin flush
+   against the brand while .tmr-global-nav__actions{margin-left:auto} claims
+   ALL the row's free space for itself, hugging the whole link cluster to the
+   left. A second auto margin on the first item in that cluster splits the
+   same free space evenly on both sides of it (flexbox distributes free space
+   across every auto margin in a line) -- centering the nav group between the
+   brand and the account cluster without touching the flex:0 0 auto sizing
+   that the 2026-06-23 comment set specifically to prevent shrink-overflow.
+   Scoped to >=1340px only, matching the "Narrower desktops/laptops
+   (641-1339)" comment above: below 1340 the row can wrap onto two lines
+   (2026-07-12 overflow fix), and a single auto margin only centers within
+   one flex line -- applying it under wrap splits the group and account
+   cluster onto separate lines and pushes the group to hug the right edge
+   of its own line instead of centering, trading one lopsided layout for
+   another. Full-width, non-wrapped desktops keep the existing tight
+   641-1339 spacing untouched; only the wide/no-wrap layout gets centered.
+============================================================================ */
+@media (min-width: 1340px) {
+    body.tmr-site-shell .tmr-sportsbook-menu,
+    body.tmr-site-shell[data-tmr-route] .tmr-sportsbook-menu {
+        margin-left: auto !important;
     }
 }

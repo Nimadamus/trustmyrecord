@@ -50,6 +50,9 @@ body.tmr-ds{
 
   /* layout scale (approved homepage) */
   --wrap:1720px; --gutter:28px; --nav-h:70px; --gap:20px;
+  /* extra inset added on top of --gutter, nav row only: more breathing room
+     before the logo and after the account cluster than the shared content gutter */
+  --nav-edge:26px;
 
   /* type stacks */
   --font:Inter,'Segoe UI',Arial,sans-serif;
@@ -173,7 +176,8 @@ body.tmr-ds .ds-dim{color:var(--muted)}
    --------------------------------------------------------------------------- */
 body.tmr-ds .ds-nav{background:var(--navy);position:sticky;top:0;z-index:60}
 body.tmr-ds .ds-nav-in{
-  max-width:var(--wrap);margin:0 auto;padding:0 var(--gutter);
+  max-width:var(--wrap);margin:0 auto;
+  padding:0 calc(var(--gutter) + var(--nav-edge));
   height:var(--nav-h);display:flex;align-items:center;gap:26px;
 }
 body.tmr-ds .ds-logo{display:inline-flex;align-items:center;gap:11px;flex:none}
@@ -192,9 +196,17 @@ body.tmr-ds .ds-logo .wd em{font-style:normal;color:var(--brand-lt)}
 
 /* The panel holds the links and the right-hand cluster. On desktop it has to be
    a flex row itself — as a plain block it stacked "Log in / Start Free" onto a
-   second line under the links. It becomes a column inside the mobile sheet. */
+   second line under the links. It becomes a column inside the mobile sheet.
+   .ds-mainnav is the only flex-grow item in this row, so its box spans every
+   pixel between the logo and the account cluster; centering its links inside
+   that box is what visually centers the nav in the header instead of letting
+   it hug the logo with .ds-nav-right's old margin-left:auto pushed off to the
+   far right. */
 body.tmr-ds .ds-nav-panel{display:flex;align-items:center;gap:26px;flex:1 1 auto;min-width:0}
-body.tmr-ds .ds-mainnav{display:flex;align-items:center;gap:22px;min-width:0;flex-wrap:wrap}
+body.tmr-ds .ds-mainnav{
+  display:flex;align-items:center;justify-content:center;
+  gap:26px;min-width:0;flex-wrap:wrap;flex:1 1 auto;
+}
 body.tmr-ds .ds-mainnav a,
 body.tmr-ds .ds-menu>button{
   font-size:15.5px;font-weight:700;color:#AEC6DC;
@@ -214,7 +226,7 @@ body.tmr-ds .ds-menu>button::after{
   border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px);
 }
 body.tmr-ds .ds-menu-panel{
-  position:absolute;top:calc(100% + 12px);left:-14px;min-width:210px;
+  position:absolute;top:calc(100% + 12px);left:-14px;width:max-content;min-width:170px;
   background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);
   box-shadow:var(--sh-up);padding:8px;display:none;flex-direction:column;
 }
@@ -226,7 +238,7 @@ body.tmr-ds .ds-menu-panel a{
 body.tmr-ds .ds-menu-panel a:hover{background:var(--panel-2);color:var(--brand-dk)}
 body.tmr-ds .ds-menu-panel a[aria-current="page"]{background:var(--brand-soft);color:var(--brand-dk)}
 
-body.tmr-ds .ds-nav-right{margin-left:auto;display:flex;align-items:center;gap:12px;flex:none}
+body.tmr-ds .ds-nav-right{display:flex;align-items:center;gap:12px;flex:none}
 body.tmr-ds .ds-nav-right .login{font-size:15.5px;font-weight:800;color:#DFEBF6}
 body.tmr-ds .ds-nav-right .login:hover{color:#fff}
 
@@ -282,12 +294,13 @@ body.tmr-ds .ds-nav-toggle{
   color:#fff;cursor:pointer;align-items:center;justify-content:center;
 }
 @media(max-width:1180px){
+  body.tmr-ds{--nav-edge:14px}
   body.tmr-ds .ds-nav-toggle{display:inline-flex}
   body.tmr-ds .ds-nav-in{position:relative}
   body.tmr-ds .ds-nav-panel{
-    display:none;position:absolute;top:var(--nav-h);left:calc(var(--gutter) * -1);right:calc(var(--gutter) * -1);
+    display:none;position:absolute;top:var(--nav-h);left:0;right:0;
     background:var(--navy);border-top:1px solid rgba(255,255,255,.10);
-    padding:14px var(--gutter) 20px;flex-direction:column;gap:4px;
+    padding:14px calc(var(--gutter) + var(--nav-edge)) 20px;flex-direction:column;gap:4px;
     /* the panel sits under a position:sticky nav, so it stays pinned to the
        viewport rather than scrolling away with the page — without its own
        scroll region, every dropdown expanded inline (the mobile pattern below)
@@ -296,7 +309,7 @@ body.tmr-ds .ds-nav-toggle{
     max-height:calc(100vh - var(--nav-h));overflow-y:auto;-webkit-overflow-scrolling:touch;
   }
   body.tmr-ds .ds-nav.is-open .ds-nav-panel{display:flex;align-items:stretch;gap:4px}
-  body.tmr-ds .ds-mainnav{flex-direction:column;align-items:stretch;gap:0;flex-wrap:nowrap}
+  body.tmr-ds .ds-mainnav{flex:none;justify-content:flex-start;flex-direction:column;align-items:stretch;gap:0;flex-wrap:nowrap}
   body.tmr-ds .ds-mainnav a,body.tmr-ds .ds-menu>button{padding:11px 0;width:100%}
   body.tmr-ds .ds-menu-panel{position:static;display:flex;box-shadow:none;border:0;background:none;padding:0 0 6px 14px}
   body.tmr-ds .ds-menu-panel a{color:#AEC6DC;padding:8px 0}
@@ -582,7 +595,7 @@ body.tmr-ds .tmr-internal-cluster p{font-size:14px;color:var(--muted);line-heigh
   body.tmr-ds h2{font-size:30px}
 }
 @media(max-width:760px){
-  body.tmr-ds{--gutter:18px}
+  body.tmr-ds{--gutter:18px;--nav-edge:8px}
   body.tmr-ds h1{font-size:38px}
   body.tmr-ds h2{font-size:26px}
   body.tmr-ds .ds-h-lg{font-size:24px}
