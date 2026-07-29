@@ -11,37 +11,58 @@
         ["/sportsbook/", "Make Picks"],
         ["/handicapping/", "Handicapping Hub"]
     ];
-    const routes = [
-        ["/contests/justbet-mlb/", "Contest"],
-        ["/tools/", "Tools"],
-        ["/handicappers/", "Find Handicappers"]
+    // Reconciled 2026-07-29 with static/js/tmr-ds-nav.js's route tables so every
+    // page shows the identical menu (same dropdowns, wording, order) regardless
+    // of which of the two nav scripts it loads. Union of every destination
+    // either script ever exposed -- nothing dropped, renamed, or redirected.
+    const handicappersMenuRoutes = [
+        ["/handicappers/", "Find Handicappers"],
+        ["/leaderboards/", "Leaderboards"],
+        ["/verified-handicapper-records/", "Verified Records"],
+        ["/marketplace/", "Buy Picks"],
+        ["/marketplace/sell/", "Sell Your Picks"]
     ];
-    // Lower-priority links live in a compact "More" dropdown so the primary
-    // row never wraps on desktop.
-    const moreRoutes = [
-        ["/marketplace/", "Sell Your Picks"],
-        ["/tmr-coin/", "TMR Coin"],
-        ["/rules/", "Rules"]
+    const competeMenuRoutes = [
+        ["/contests/justbet-mlb/", "Contest"],
+        ["/arena/", "Arena"],
+        ["/challenges/", "Challenges"],
+        ["/trivia/", "Trivia"],
+        ["/polls/", "Polls"]
     ];
     const communityRoutes = [
-        ["/sports-talk/", "Sports Talk"],
-        ["/feed/", "Feed"],
-        ["/arena/", "Arena"],
-        ["/online-gaming/", "MLB The Show"],
-        ["/challenges/", "Challenges"],
         ["/forum/", "Forums"],
+        ["/community/", "Community Home"],
+        ["/members/", "Members"],
+        ["/feed/", "Feed"],
+        ["/sports-talk/", "Sports Talk"],
         ["/chat/", "Chat"],
-        ["/polls/", "Polls"],
-        ["/trivia/", "Trivia"]
+        ["/online-gaming/", "MLB The Show"]
     ];
-    const blockedNavHrefs = new Set(["/trendspotter/"]);
-    const visibleRoutes = routes.filter(([href]) => !blockedNavHrefs.has(href));
+    const toolsMenuRoutes = [
+        ["/tools/", "Tools Hub"],
+        ["/mlb-simulator/", "MLB Simulator"],
+        ["/nfl-simulator/", "NFL Simulator"],
+        ["/trendspotter/", "TrendSpotter"],
+        ["/betlegend-pro/", "BetLegend Pro"],
+        ["/handicapping/", "Handicapping Hub"]
+    ];
+    const supportMenuRoutes = [
+        ["/contact/", "Contact Us"],
+        ["/report-bug/", "Report a Bug"],
+        ["/rules/", "Rules"]
+    ];
+    // TMR Coin is the only remaining flat top-level link (still called
+    // "primaryRoutes" to match the template's existing flat-link loop).
+    const primaryRoutes = [
+        ["/tmr-coin/", "TMR Coin"]
+    ];
 
-    // Pages that should highlight Arena in the top nav even though they
-    // have their own URL.
-    const ARENA_GROUP = new Set(["arena.html"]);
-    const COMMUNITY_GROUP = new Set(["sports-talk.html", "feed.html", "online-gaming.html", "mlb-the-show-stat-league.html", "arena.html", "challenges.html", "forum.html", "chat.html", "polls.html", "trivia.html", "hangout.html"]);
-    const MORE_GROUP = new Set(["marketplace.html", "tmr-coin.html", "rules.html"]);
+    // Pages that should highlight each dropdown's trigger even when the page
+    // itself isn't one of the dropdown's own links.
+    const HANDICAPPERS_GROUP = new Set(["handicappers.html", "leaderboards.html", "verified-handicapper-records.html", "marketplace.html"]);
+    const COMPETE_GROUP = new Set(["arena.html", "challenges.html", "trivia.html", "polls.html"]);
+    const COMMUNITY_GROUP = new Set(["forum.html", "community.html", "members.html", "feed.html", "sports-talk.html", "chat.html", "online-gaming.html", "mlb-the-show-stat-league.html", "hangout.html"]);
+    const TOOLS_GROUP = new Set(["tools.html", "mlb-simulator.html", "nfl-simulator.html", "trendspotter.html", "betlegend-pro.html"]);
     const SPORTSBOOK_GROUP = new Set(["sportsbook.html", "handicapping.html"]);
 
     const routeMeta = {
@@ -415,18 +436,41 @@
                         }).join("")}
                     </div>
                 </div>
-                <div class="tmr-global-nav__links">
-                    ${visibleRoutes.filter(([href]) => href !== "profile.html").map(([href, label]) => {
-                        const hrefPath = href.split("#")[0].toLowerCase();
-                        const segs = hrefPath.split("/").filter(Boolean);
-                        const hrefFile = segs.length
-                            ? (segs[segs.length - 1].endsWith(".html")
-                                ? segs[segs.length - 1]
-                                : segs[segs.length - 1] + ".html")
-                            : "index.html";
-                        const active = href.includes("#") ? location.hash === href.slice(href.indexOf("#")) : currentFile === hrefFile;
-                        return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
-                    }).join("")}
+                <div class="tmr-support-menu tmr-handicappers-menu${HANDICAPPERS_GROUP.has(currentFile) ? " is-current" : ""}">
+                    <button class="tmr-support-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
+                        Handicappers
+                    </button>
+                    <div class="tmr-support-menu__panel" role="menu" aria-label="Handicappers links">
+                        ${handicappersMenuRoutes.map(([href, label]) => {
+                            const hrefPath = href.split("#")[0].toLowerCase();
+                            const segs = hrefPath.split("/").filter(Boolean);
+                            const hrefFile = segs.length
+                                ? (segs[segs.length - 1].endsWith(".html")
+                                    ? segs[segs.length - 1]
+                                    : segs[segs.length - 1] + ".html")
+                                : "index.html";
+                            const active = currentFile === hrefFile;
+                            return `<a href="${href}" role="menuitem"${active ? ' aria-current="page"' : ""}>${label}</a>`;
+                        }).join("")}
+                    </div>
+                </div>
+                <div class="tmr-support-menu tmr-compete-menu${COMPETE_GROUP.has(currentFile) ? " is-current" : ""}">
+                    <button class="tmr-support-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
+                        Compete
+                    </button>
+                    <div class="tmr-support-menu__panel" role="menu" aria-label="Compete links">
+                        ${competeMenuRoutes.map(([href, label]) => {
+                            const hrefPath = href.split("#")[0].toLowerCase();
+                            const segs = hrefPath.split("/").filter(Boolean);
+                            const hrefFile = segs.length
+                                ? (segs[segs.length - 1].endsWith(".html")
+                                    ? segs[segs.length - 1]
+                                    : segs[segs.length - 1] + ".html")
+                                : "index.html";
+                            const active = currentFile === hrefFile;
+                            return `<a href="${href}" role="menuitem"${active ? ' aria-current="page"' : ""}>${label}</a>`;
+                        }).join("")}
+                    </div>
                 </div>
                 <div class="tmr-community-menu${COMMUNITY_GROUP.has(currentFile) ? " is-current" : ""}">
                     <button class="tmr-community-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
@@ -441,26 +485,48 @@
                                     ? segs[segs.length - 1]
                                     : segs[segs.length - 1] + ".html")
                                 : "index.html";
-                            const active = currentFile === hrefFile || (hrefFile === "arena.html" && ARENA_GROUP.has(currentFile));
+                            const active = currentFile === hrefFile;
                             return `<a href="${href}" role="menuitem"${active ? ' aria-current="page"' : ""}>${label}</a>`;
                         }).join("")}
                     </div>
+                </div>
+                <div class="tmr-support-menu tmr-tools-menu${TOOLS_GROUP.has(currentFile) ? " is-current" : ""}">
+                    <button class="tmr-support-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
+                        Tools
+                    </button>
+                    <div class="tmr-support-menu__panel" role="menu" aria-label="Tools links">
+                        ${toolsMenuRoutes.map(([href, label]) => {
+                            const hrefPath = href.split("#")[0].toLowerCase();
+                            const segs = hrefPath.split("/").filter(Boolean);
+                            const hrefFile = segs.length
+                                ? (segs[segs.length - 1].endsWith(".html")
+                                    ? segs[segs.length - 1]
+                                    : segs[segs.length - 1] + ".html")
+                                : "index.html";
+                            const active = currentFile === hrefFile;
+                            return `<a href="${href}" role="menuitem"${active ? ' aria-current="page"' : ""}>${label}</a>`;
+                        }).join("")}
+                    </div>
+                </div>
+                <div class="tmr-global-nav__links">
+                    ${primaryRoutes.map(([href, label]) => {
+                        const hrefPath = href.split("#")[0].toLowerCase();
+                        const segs = hrefPath.split("/").filter(Boolean);
+                        const hrefFile = segs.length
+                            ? (segs[segs.length - 1].endsWith(".html")
+                                ? segs[segs.length - 1]
+                                : segs[segs.length - 1] + ".html")
+                            : "index.html";
+                        const active = href.includes("#") ? location.hash === href.slice(href.indexOf("#")) : currentFile === hrefFile;
+                        return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
+                    }).join("")}
                 </div>
                 <div class="tmr-support-menu">
                     <button class="tmr-support-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
                         Support
                     </button>
                     <div class="tmr-support-menu__panel" role="menu" aria-label="Support links">
-                        <a href="/contact/" role="menuitem">Contact Us</a>
-                        <a href="/report-bug/" role="menuitem">Report a Bug</a>
-                    </div>
-                </div>
-                <div class="tmr-support-menu tmr-more-menu${MORE_GROUP.has(currentFile) ? " is-current" : ""}">
-                    <button class="tmr-support-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
-                        More
-                    </button>
-                    <div class="tmr-support-menu__panel" role="menu" aria-label="More links">
-                        ${moreRoutes.map(([href, label]) => {
+                        ${supportMenuRoutes.map(([href, label]) => {
                             const hrefPath = href.split("#")[0].toLowerCase();
                             const segs = hrefPath.split("/").filter(Boolean);
                             const hrefFile = segs.length
@@ -478,13 +544,10 @@
         </div>
     `;
     document.body.prepend(nav);
-    nav.querySelectorAll('a[href*="trendspotter"]').forEach((element) => element.remove());
     const actions = nav.querySelector(".tmr-global-nav__actions");
     const toggleButton = nav.querySelector(".tmr-global-nav__toggle");
     const communityMenu = nav.querySelector(".tmr-community-menu");
     const communityTrigger = nav.querySelector(".tmr-community-menu__trigger");
-    const supportMenu = nav.querySelector(".tmr-support-menu");
-    const supportTrigger = nav.querySelector(".tmr-support-menu__trigger");
     const sportsbookMenu = nav.querySelector(".tmr-sportsbook-menu");
     const sportsbookTrigger = nav.querySelector(".tmr-sportsbook-menu__trigger");
     function closeSportsbookMenu() {
@@ -492,6 +555,25 @@
             sportsbookMenu.classList.remove("is-open");
             sportsbookTrigger.setAttribute("aria-expanded", "false");
         }
+    }
+    function closeCommunityMenu() {
+        if (communityMenu && communityTrigger) {
+            communityMenu.classList.remove("is-open");
+            communityTrigger.setAttribute("aria-expanded", "false");
+        }
+    }
+    // Handicappers/Compete/Tools/Support all share the .tmr-support-menu /
+    // .tmr-support-menu__trigger classes (reusing the same dropdown styling
+    // "More" used to), so they're handled as a group rather than one variable
+    // per dropdown -- closeAllSupportMenus(except) closes every one of them
+    // except the dropdown currently being opened (or all, if none given).
+    function closeAllSupportMenus(except) {
+        nav.querySelectorAll(".tmr-support-menu").forEach((menu) => {
+            if (menu === except) return;
+            menu.classList.remove("is-open");
+            const trigger = menu.querySelector(".tmr-support-menu__trigger");
+            if (trigger) trigger.setAttribute("aria-expanded", "false");
+        });
     }
 
     function setNavOpen(isOpen) {
@@ -829,8 +911,8 @@
         if (ev.key === "Escape") {
             closeUserMenu();
             closeSportsbookMenu();
-            if (communityMenu && communityTrigger) { communityMenu.classList.remove("is-open"); communityTrigger.setAttribute("aria-expanded", "false"); }
-            if (supportMenu && supportTrigger) { supportMenu.classList.remove("is-open"); supportTrigger.setAttribute("aria-expanded", "false"); }
+            closeCommunityMenu();
+            closeAllSupportMenus();
         }
     });
 
@@ -870,8 +952,8 @@
             const isOpen = sportsbookMenu && sportsbookMenu.classList.toggle("is-open");
             sportsbookToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
             if (isOpen) {
-                if (communityMenu && communityTrigger) { communityMenu.classList.remove("is-open"); communityTrigger.setAttribute("aria-expanded", "false"); }
-                if (supportMenu && supportTrigger) { supportMenu.classList.remove("is-open"); supportTrigger.setAttribute("aria-expanded", "false"); }
+                closeCommunityMenu();
+                closeAllSupportMenus();
                 const first = sportsbookMenu.querySelector(".tmr-sportsbook-menu__panel a");
                 if (first) { try { first.focus(); } catch (e) {} }
             }
@@ -880,12 +962,13 @@
         const supportToggle = event.target.closest(".tmr-support-menu__trigger");
         if (supportToggle) {
             event.preventDefault();
-            const isOpen = supportMenu && supportMenu.classList.toggle("is-open");
+            const menu = supportToggle.closest(".tmr-support-menu");
+            const isOpen = menu && menu.classList.toggle("is-open");
             supportToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-            if (isOpen) closeSportsbookMenu();
-            if (isOpen && communityMenu && communityTrigger) {
-                communityMenu.classList.remove("is-open");
-                communityTrigger.setAttribute("aria-expanded", "false");
+            if (isOpen) {
+                closeSportsbookMenu();
+                closeCommunityMenu();
+                closeAllSupportMenus(menu);
             }
             return;
         }
@@ -894,10 +977,9 @@
             event.preventDefault();
             const isOpen = communityMenu && communityMenu.classList.toggle("is-open");
             communityToggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
-            if (isOpen) closeSportsbookMenu();
-            if (isOpen && supportMenu && supportTrigger) {
-                supportMenu.classList.remove("is-open");
-                supportTrigger.setAttribute("aria-expanded", "false");
+            if (isOpen) {
+                closeSportsbookMenu();
+                closeAllSupportMenus();
             }
             return;
         }
@@ -934,14 +1016,8 @@
         if (navLink) {
             setNavOpen(false);
             closeSportsbookMenu();
-            if (communityMenu && communityTrigger) {
-                communityMenu.classList.remove("is-open");
-                communityTrigger.setAttribute("aria-expanded", "false");
-            }
-            if (supportMenu && supportTrigger) {
-                supportMenu.classList.remove("is-open");
-                supportTrigger.setAttribute("aria-expanded", "false");
-            }
+            closeCommunityMenu();
+            closeAllSupportMenus();
         }
     });
 
@@ -949,13 +1025,15 @@
         const userChip = event.target.closest(".tmr-user-chip-wrap");
         if (!userChip) closeUserMenu();
         if (communityMenu && communityTrigger && !communityMenu.contains(event.target)) {
-            communityMenu.classList.remove("is-open");
-            communityTrigger.setAttribute("aria-expanded", "false");
+            closeCommunityMenu();
         }
-        if (supportMenu && supportTrigger && !supportMenu.contains(event.target)) {
-            supportMenu.classList.remove("is-open");
-            supportTrigger.setAttribute("aria-expanded", "false");
-        }
+        nav.querySelectorAll(".tmr-support-menu").forEach((menu) => {
+            if (!menu.contains(event.target)) {
+                menu.classList.remove("is-open");
+                const trigger = menu.querySelector(".tmr-support-menu__trigger");
+                if (trigger) trigger.setAttribute("aria-expanded", "false");
+            }
+        });
         if (sportsbookMenu && sportsbookTrigger && !sportsbookMenu.contains(event.target)) {
             closeSportsbookMenu();
         }
