@@ -2203,6 +2203,33 @@
 
                 <!-- TAB: OVERVIEW (default) -->
                 <div class="profile-tab-panel active" data-panel="picks">
+
+                    <!-- PICKS FOR SALE: only shown for active marketplace sellers with published packages -->
+                    <section class="mppfs-section" id="mppfsSection" aria-label="Picks for sale" hidden>
+                      <div class="mppfs-head">
+                        <div>
+                          <div class="mppfs-title">Picks for Sale</div>
+                          <div class="mppfs-sub">Paid packages this handicapper is currently offering on the TrustMyRecord marketplace.</div>
+                        </div>
+                        <a class="mppfs-viewall" id="mppfsViewAll" href="#">View storefront &rarr;</a>
+                      </div>
+                      <div class="mppfs-grid" id="mppfsGrid"></div>
+                    </section>
+                    <style>
+                      .mppfs-section { background:var(--bg-card); border:1px solid var(--border-color); border-radius:14px; padding:20px; margin-bottom:20px; box-shadow:var(--shadow-soft); }
+                      .mppfs-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+                      .mppfs-title { font-family:'Barlow',Inter,sans-serif; font-weight:800; font-size:19px; text-transform:uppercase; letter-spacing:.02em; color:var(--text-primary); }
+                      .mppfs-sub { font-size:13px; color:var(--text-secondary); margin-top:3px; max-width:520px; }
+                      .mppfs-viewall { font-size:13px; font-weight:700; color:var(--accent-blue); white-space:nowrap; text-decoration:none; }
+                      .mppfs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; }
+                      .mppfs-pkg { background:var(--bg-card-hover); border:1px solid var(--border-color); border-radius:11px; padding:13px; display:flex; flex-direction:column; gap:6px; }
+                      .mppfs-pkg-name { font-weight:700; font-size:13px; color:var(--text-primary); }
+                      .mppfs-pkg-desc { font-size:11.5px; color:var(--text-secondary); }
+                      .mppfs-pkg-price { font-weight:800; font-size:19px; color:var(--text-primary); }
+                      .mppfs-pkg-price small { font-weight:500; font-size:10.5px; color:var(--text-secondary); display:block; }
+                      .mppfs-pkg-btn { margin-top:auto; text-align:center; padding:8px 10px; border-radius:8px; background:var(--accent-blue); color:#fff; font-weight:700; font-size:12px; text-decoration:none; }
+                    </style>
+
                     <!-- ===== TMRX REDESIGN moved to default tab so the wide
                          layout is what every visitor sees first. Same data,
                          same fill function, just front-and-center. ===== -->
@@ -16828,6 +16855,47 @@
 
     <script defer src="/static/js/tmr-fan-identity.js?v=20260709editmode"></script>
 <script src="/static/js/first-pick-onboarding.js?v=20260722fp6"></script>
+<script>
+(function(){
+  var API_BASE = (window.CONFIG && CONFIG.api && CONFIG.api.baseUrl) || 'https://trustmyrecord-api.onrender.com/api';
+  function durationText(l){
+    if (l.access_hours == null) return l.description || 'One pick, one-time.';
+    var days = l.access_hours / 24;
+    return l.description || ('Unlocks every pick for ' + (days === 1 ? '24 hours' : days + ' days') + '.');
+  }
+  function money(cents){ return '$' + (cents / 100).toFixed(2); }
+  function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  async function load(){
+    var qp = new URLSearchParams(location.search);
+    var username = (qp.get('user') || qp.get('username') || (typeof window.__TMR_PROFILE_USERNAME === 'string' ? window.__TMR_PROFILE_USERNAME : '') || '').trim();
+    if (!username) return;
+    var section = document.getElementById('mppfsSection');
+    var grid = document.getElementById('mppfsGrid');
+    var viewAll = document.getElementById('mppfsViewAll');
+    if (!section || !grid) return;
+    try {
+      var res = await fetch(API_BASE + '/marketplace/storefront/' + encodeURIComponent(username), { cache: 'no-store' });
+      if (!res.ok) return;
+      var data = await res.json();
+      var seller = data.seller || {};
+      var listings = Array.isArray(data.listings) ? data.listings : [];
+      if (!seller.storefront_active || listings.length === 0) return;
+      viewAll.href = '/marketplace/seller/?u=' + encodeURIComponent(username);
+      grid.innerHTML = listings.map(function(l){
+        return '<div class="mppfs-pkg">' +
+          '<div class="mppfs-pkg-name">' + esc(l.product_label || l.title || 'Package') + '</div>' +
+          '<div class="mppfs-pkg-desc">' + esc(durationText(l)) + '</div>' +
+          '<div class="mppfs-pkg-price">' + money(l.price_cents) + '</div>' +
+          '<a class="mppfs-pkg-btn" href="/marketplace/seller/?u=' + encodeURIComponent(username) + '">View Package</a>' +
+        '</div>';
+      }).join('');
+      section.hidden = false;
+    } catch (e) { /* leave section hidden on any failure */ }
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', load);
+  else load();
+})();
+</script>
 </body>
 </html>
 <!-- Deploy: Tue, Apr 14, 2026  8:02:00 PM -->

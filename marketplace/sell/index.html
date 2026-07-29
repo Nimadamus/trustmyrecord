@@ -80,8 +80,19 @@
         .pkg.err { border-color:rgba(248,113,113,.5); }
         .test-mode-banner { background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.4); border-radius:12px; padding:12px 16px; font-size:13px; color:#ffe6ad; margin-bottom:16px; line-height:1.5; }
         .test-mode-banner b { color:var(--amber); }
-        .pkg-toggle { display:flex; align-items:center; gap:7px; font-size:11.5px; color:#c5cee0; margin-top:9px; cursor:pointer; }
-        .pkg-status { margin-left:auto; font:700 9.5px/1 'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; }
+        .pkg-toggle-row { display:flex; align-items:center; justify-content:space-between; gap:8px; background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:9px; padding:9px 10px; margin-bottom:11px; }
+        .pkg-toggle-row.on { background:rgba(45,212,191,.1); border-color:rgba(45,212,191,.4); }
+        .pkg-switch { position:relative; display:inline-block; width:38px; height:22px; flex:none; cursor:pointer; }
+        .pkg-switch input { opacity:0; width:0; height:0; }
+        .pkg-switch-track { position:absolute; inset:0; background:rgba(148,163,184,.35); border-radius:999px; transition:.15s; }
+        .pkg-switch-track::before { content:''; position:absolute; width:16px; height:16px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.15s; }
+        .pkg-switch input:checked + .pkg-switch-track { background:var(--teal); }
+        .pkg-switch input:checked + .pkg-switch-track::before { transform:translateX(16px); }
+        .pkg-switch input:focus-visible + .pkg-switch-track { outline:2px solid var(--cyan); outline-offset:2px; }
+        .pkg-toggle-label { font-size:12.5px; font-weight:800; letter-spacing:.02em; }
+        .pkg-toggle-label .off-text { color:var(--muted); font-weight:600; }
+        .pkg-toggle-label .on-text { color:var(--green); }
+        .pkg-status { font:700 9.5px/1 'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; }
         .pkg-group-label { font-weight:800; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--cyan); margin:4px 0 8px; }
         .pkg-help { color:var(--muted); font-size:11px; line-height:1.45; margin-top:7px; }
         .next-action { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; background:rgba(34,211,238,.08); border:1px solid rgba(34,211,238,.3); border-radius:12px; padding:14px 16px; margin-bottom:16px; font-size:14px; }
@@ -89,6 +100,10 @@
         .next-action.next-green { background:rgba(74,222,128,.08); border-color:rgba(74,222,128,.35); }
         .next-action.next-red { background:rgba(248,113,113,.08); border-color:rgba(248,113,113,.35); }
         .pkg-status.live { color:var(--green); } .pkg-status.draft { color:var(--amber); } .pkg-status.off { color:var(--muted); }
+        .empty-picks-warn { display:flex; align-items:flex-start; gap:10px; background:rgba(251,191,36,.09); border:1px solid rgba(251,191,36,.4); border-radius:11px; padding:12px 14px; margin-bottom:14px; font-size:13px; color:#ffe6ad; line-height:1.5; }
+        .empty-picks-warn b { color:var(--amber); }
+        .publish-confirm { background:rgba(74,222,128,.09); border:1px solid rgba(74,222,128,.4); border-radius:12px; padding:14px 16px; margin-bottom:14px; font-size:13.5px; color:#d3ffe4; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+        .publish-confirm b { color:var(--green); }
         @media (max-width:560px) { .mp-shell { padding:20px 14px 56px; } }
     </style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">
@@ -117,7 +132,7 @@
 <script>
 (function () {
     const app = document.getElementById('app');
-    let elig = null, listing = null, listings = [], byType = {}, dash = null, status = null, mpStatus = null;
+    let elig = null, listing = null, listings = [], byType = {}, dash = null, status = null, mpStatus = null, justPublished = 0;
 
     const PKG = [
         { type: 'single_pick',   name: 'Single Pick',  dur: '1 PICK', ph: '20.00' },
@@ -166,9 +181,13 @@
         const status = !l ? '' : l.status === 'published' ? '<span class="pkg-status live">Live</span>' : '<span class="pkg-status draft">' + esc(l.status) + '</span>';
         return '<div class="pkg' + (on ? ' on' : '') + '" id="pkg-' + pk.type + '">' +
             '<div class="pkg-head"><span class="pkg-name">' + pk.name + '</span><span class="pkg-dur">' + pk.dur + '</span></div>' +
+            '<label class="pkg-toggle-row' + (on ? ' on' : '') + '" data-toggle-row="' + pk.type + '">' +
+                '<span class="pkg-toggle-label"><span class="' + (on ? 'on-text' : 'off-text') + '" data-offer-label="' + pk.type + '">' + (on ? 'Offering this package' : 'Not offered — click to enable') + '</span></span>' +
+                '<span class="pkg-switch"><input type="checkbox" data-offer="' + pk.type + '"' + (on ? ' checked' : '') + '><span class="pkg-switch-track"></span></span>' +
+            '</label>' +
             '<div class="pkg-price"><span>$</span><input type="number" step="0.01" min="1" placeholder="' + pk.ph + '" data-price="' + pk.type + '" value="' + price + '"></div>' +
             '<div class="pkg-keep" data-keep="' + pk.type + '"></div>' +
-            '<label class="pkg-toggle"><input type="checkbox" data-offer="' + pk.type + '"' + (on ? ' checked' : '') + '> Offer this' + status + '</label>' +
+            (status ? '<div style="margin-top:6px;">' + status + '</div>' : '') +
             '<div class="pkg-err" data-err="' + pk.type + '"></div>' +
             '<div class="pkg-help">' + esc(PKG_HELP[pk.type] || '') + '</div>' +
         '</div>';
@@ -263,9 +282,12 @@
 
         // Step 4: packages — seller picks which to offer and prices each one
         const anyLive = listings.some(function (l) { return l.status === 'published'; });
+        const storefrontUrl = '/marketplace/seller/?u=' + encodeURIComponent((window.auth && window.auth.user && window.auth.user.username) || (dash && dash._username) || '');
         html += '<div class="panel" id="step4"><h2><span class="step-num">4</span> Your Packages ' +
             (anyLive ? '<span class="status-pill pill-green">Live</span>' : listings.length ? '<span class="status-pill pill-amber">Draft</span>' : '') + '</h2>' +
-            '<p class="hint" style="margin-bottom:12px;">Offer any mix of packages. You set every price; on each sale TrustMyRecord keeps 20% and you receive 80%.</p>' +
+            (justPublished ? '<div class="publish-confirm"><span><b>Published.</b> Your package' + (justPublished > 1 ? 's are' : ' is') + ' now live on the marketplace and your public profile.</span><a class="btn btn-primary" href="' + storefrontUrl + '" target="_blank" rel="noopener">View Public Package &rarr;</a></div>' : '') +
+            (anyLive && dash && dash.pending_picks_count === 0 ? '<div class="empty-picks-warn"><span>&#9888;&#65039;</span><span><b>This package has no picks selected.</b> You have 0 pending picks right now, so buyers will see an empty storefront until you lock a new pick in the <a href="/sportsbook/" style="color:var(--cyan);">Sportsbook</a>.</span></div>' : '') +
+            '<p class="hint" style="margin-bottom:12px;">Offer any mix of packages. Toggle a package ON, set its price, then Save &amp; Publish. You set every price; on each sale TrustMyRecord keeps 20% and you receive 80%.</p>' +
             '<div class="pkg-group-label">Sell picks one at a time</div>' +
             '<div class="pkg-grid">' + renderPkgCard(PKG[0]) + '</div>' +
             '<div class="pkg-group-label" style="margin-top:14px;">Or sell access passes</div>' +
@@ -361,7 +383,17 @@
             const input = app.querySelector('[data-price="' + pk.type + '"]');
             if (input) { input.addEventListener('input', function(){ updateKeepLine(pk.type); }); updateKeepLine(pk.type); }
             const chk = app.querySelector('[data-offer="' + pk.type + '"]');
-            if (chk) chk.addEventListener('change', function(){ document.getElementById('pkg-' + pk.type).classList.toggle('on', chk.checked); });
+            if (chk) chk.addEventListener('change', function(){
+                document.getElementById('pkg-' + pk.type).classList.toggle('on', chk.checked);
+                const row = app.querySelector('[data-toggle-row="' + pk.type + '"]');
+                if (row) row.classList.toggle('on', chk.checked);
+                const label = app.querySelector('[data-offer-label="' + pk.type + '"]');
+                if (label) {
+                    label.textContent = chk.checked ? 'Offering this package' : 'Not offered — click to enable';
+                    label.className = chk.checked ? 'on-text' : 'off-text';
+                }
+                if (chk.checked) { const p = app.querySelector('[data-price="' + pk.type + '"]'); if (p && !p.value) p.focus(); }
+            });
         });
         const saveBtn = document.getElementById('saveListingBtn');
         if (saveBtn) saveBtn.addEventListener('click', async function () {
@@ -399,14 +431,16 @@
                 }
             }
 
+            justPublished = 0;
             if (savedCount === 0 && unpublishedCount === 0 && failedCount === 0) {
-                toast('Nothing to save — check "Offer this" on a package to save or publish it.');
+                toast('Nothing to save — toggle a package ON to save or publish it.');
             } else if (failedCount > 0 && savedCount === 0 && unpublishedCount === 0) {
                 toast('Could not save — see the error(s) below the package(s).');
             } else if (failedCount > 0) {
                 toast((elig.eligible ? 'Some packages saved and published, ' : 'Some packages saved as drafts, ') + failedCount + ' failed — see below.');
             } else {
                 toast(elig.eligible ? 'Packages saved and published.' : 'Packages saved as drafts.');
+                if (savedCount > 0 && elig.eligible) justPublished = savedCount;
             }
             saveBtn.disabled = false; saveBtn.textContent = label;
             if (savedCount > 0 || unpublishedCount > 0) boot();
