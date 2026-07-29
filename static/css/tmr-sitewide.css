@@ -5292,10 +5292,22 @@ html body.tmr-site-shell .tmr-global-nav__bell .tmr-global-nav__bell-badge:empty
    one flex line -- applying it under wrap splits the group and account
    cluster onto separate lines and pushes the group to hug the right edge
    of its own line instead of centering, trading one lopsided layout for
-   another. Full-width, non-wrapped desktops keep the existing tight
-   641-1339 spacing untouched; only the wide/no-wrap layout gets centered.
+   another.
+   UPDATE 2026-07-29: extended down to 641px too. Verified live at 1280px
+   (a common laptop width, logged-out) the row does not wrap -- confirmed
+   via getBoundingClientRect that .tmr-global-nav__actions still lands on
+   the same line as everything else, so the single-auto-margin math above
+   applies identically. In the narrow slice where the 2026-07-12 overflow
+   fix's wrap DOES engage (logged-in near ~1024px), each flex line resolves
+   its own auto-margin free space independently: if .tmr-global-nav__actions
+   drops to its own second line, .tmr-sportsbook-menu becomes the only
+   auto-margin item left on line 1 and absorbs that line's free space,
+   pushing the whole link cluster flush right on line 1 instead of centered.
+   Not identical to the >=1340px centered look, but still a large gap after
+   the logo instead of the crowded-left layout this rule replaces -- an
+   improvement, not a regression, so no wrap-detection workaround was added.
 ============================================================================ */
-@media (min-width: 1340px) {
+@media (min-width: 641px) {
     body.tmr-site-shell .tmr-sportsbook-menu,
     body.tmr-site-shell[data-tmr-route] .tmr-sportsbook-menu {
         margin-left: auto !important;
