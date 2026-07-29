@@ -24,6 +24,36 @@
 (function () {
   var un = window.__TMR_PROFILE_USERNAME;
   if (!un) return;
+
+  /* FLASH-OF-BAKED-CONTENT FIX (2026-07-29): this script is `defer`, so it
+     always runs after the baked static page has already been parsed — until
+     now that meant every visitor watched the baked SEO snapshot render, then
+     get replaced wholesale by the full app a moment later. Hiding the baked
+     body the instant this script starts (before the browser's first paint,
+     since deferred scripts run as one synchronous batch right after parsing
+     and before rendering) turns that into a brief blank/loading beat instead
+     of a visible swap. Only ever un-hidden on the fallback paths below —
+     the success path replaces the whole document anyway. */
+  var HIDE_STYLE_ID = 'tmr-u-boot-hide';
+  var revealed = false;
+  function hideBaked() {
+    if (document.getElementById(HIDE_STYLE_ID)) return;
+    var st = document.createElement('style');
+    st.id = HIDE_STYLE_ID;
+    st.textContent = 'body>*:not(script){visibility:hidden !important;}';
+    document.head.appendChild(st);
+  }
+  function revealBaked() {
+    if (revealed) return;
+    revealed = true;
+    var st = document.getElementById(HIDE_STYLE_ID);
+    if (st && st.parentNode) st.parentNode.removeChild(st);
+  }
+  hideBaked();
+  // Fail-safe: if the app-shell fetch never settles (slow/hung connection),
+  // don't leave visitors staring at a blank page forever.
+  var revealFailSafe = setTimeout(function () { runLegacyHydrateOnce(); }, 6000);
+
   var API = 'https://trustmyrecord-api.onrender.com/api';
   if (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl) API = window.CONFIG.api.baseUrl;
 
@@ -393,11 +423,23 @@
         // /u/ path (globals also persist across document.open, this is belt+braces).
         html = html.replace(/<head>/i, '<head><script>window.__TMR_PROFILE_USERNAME=' +
           JSON.stringify(un) + ';<\/script>');
+        clearTimeout(revealFailSafe);
         document.open();
         document.write(html);
         document.close();
       });
   }
 
-  swapToFullProfile().catch(function () { runLegacyHydrate(); });
+  var legacyStarted = false;
+  function runLegacyHydrateOnce() {
+    if (legacyStarted) return;
+    legacyStarted = true;
+    revealBaked();
+    runLegacyHydrate();
+  }
+
+  swapToFullProfile().catch(function () {
+    clearTimeout(revealFailSafe);
+    runLegacyHydrateOnce();
+  });
 })();
