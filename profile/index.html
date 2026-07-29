@@ -16080,7 +16080,7 @@
         body.profile-page.tmr-social-profile .tmrx-table-shell {
           margin: 14px 16px 18px !important;
           display: block !important;
-          max-width: calc(100vw - 60px) !important;
+          max-width: 100% !important;
           overflow-x: auto !important;
           overflow-y: hidden !important;
         }
@@ -16161,7 +16161,7 @@
           border-right: 0 !important;
         }
         body.profile-page.tmr-social-profile .tmrx-table-shell {
-          max-width: calc(100vw - 46px) !important;
+          max-width: 100% !important;
         }
       }
     </style>
@@ -16611,6 +16611,111 @@
   body.profile-page.tmr-social-profile [data-advanced-metric-card="max_drawdown"] .profile-advanced-metric__value {
     font-size: clamp(16px, 1.55vw, 25px) !important;
     letter-spacing: -0.02em !important;
+  }
+</style>
+<style id="tmrx-bestworst-streaks-alignment-fix-20260729">
+  /* Best & Worst Categories / Streaks & Rolling Form: the tables were pinned
+     to a min-width (1040px) wider than the card at common desktop widths,
+     so the shell silently horizontal-scrolled and the last ("Picks"/"ROI")
+     column sat flush against the right edge with no gutter. Desktop-only
+     (matches the >720px breakpoint used by the mobile card-list layout
+     below) fixed-width columns so Best and Worst line up column-for-column
+     and every row keeps the same left/right gutter as the card itself. */
+  @media (min-width: 721px) {
+    body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableBest),
+    body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableBestTop),
+    body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableWorst),
+    body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableWorstTop),
+    body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableForm),
+    body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableFormTop) {
+      box-sizing: border-box !important;
+      width: 100% !important;
+      overflow: hidden !important;
+    }
+    body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableBest) .tmrx-table-shell,
+    body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableBestTop) .tmrx-table-shell,
+    body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableWorst) .tmrx-table-shell,
+    body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableWorstTop) .tmrx-table-shell,
+    body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableForm) .tmrx-table-shell,
+    body.profile-page.tmr-social-profile .tmrx-section:has(#tmrxTableFormTop) .tmrx-table-shell {
+      box-sizing: border-box !important;
+      width: auto !important;
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+    }
+    #tmrxTableBest, #tmrxTableBestTop,
+    #tmrxTableWorst, #tmrxTableWorstTop,
+    #tmrxTableForm, #tmrxTableFormTop {
+      box-sizing: border-box !important;
+      width: 100% !important;
+      min-width: 0 !important;
+      table-layout: fixed !important;
+    }
+    #tmrxTableBest th, #tmrxTableBest td,
+    #tmrxTableBestTop th, #tmrxTableBestTop td,
+    #tmrxTableWorst th, #tmrxTableWorst td,
+    #tmrxTableWorstTop th, #tmrxTableWorstTop td,
+    #tmrxTableForm th, #tmrxTableForm td,
+    #tmrxTableFormTop th, #tmrxTableFormTop td {
+      box-sizing: border-box !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    /* Best / Worst: name, bucket, Net, ROI, Picks (5 cols) — identical widths
+       on both tables so headers and values line up exactly. */
+    #tmrxTableBest th:nth-child(1), #tmrxTableBest td:nth-child(1),
+    #tmrxTableBestTop th:nth-child(1), #tmrxTableBestTop td:nth-child(1),
+    #tmrxTableWorst th:nth-child(1), #tmrxTableWorst td:nth-child(1),
+    #tmrxTableWorstTop th:nth-child(1), #tmrxTableWorstTop td:nth-child(1) { width: 20% !important; }
+    #tmrxTableBest th:nth-child(2), #tmrxTableBest td:nth-child(2),
+    #tmrxTableBestTop th:nth-child(2), #tmrxTableBestTop td:nth-child(2),
+    #tmrxTableWorst th:nth-child(2), #tmrxTableWorst td:nth-child(2),
+    #tmrxTableWorstTop th:nth-child(2), #tmrxTableWorstTop td:nth-child(2) { width: 34% !important; }
+    #tmrxTableBest th:nth-child(3), #tmrxTableBest td:nth-child(3),
+    #tmrxTableBestTop th:nth-child(3), #tmrxTableBestTop td:nth-child(3),
+    #tmrxTableWorst th:nth-child(3), #tmrxTableWorst td:nth-child(3),
+    #tmrxTableWorstTop th:nth-child(3), #tmrxTableWorstTop td:nth-child(3) { width: 16% !important; }
+    #tmrxTableBest th:nth-child(4), #tmrxTableBest td:nth-child(4),
+    #tmrxTableBestTop th:nth-child(4), #tmrxTableBestTop td:nth-child(4),
+    #tmrxTableWorst th:nth-child(4), #tmrxTableWorst td:nth-child(4),
+    #tmrxTableWorstTop th:nth-child(4), #tmrxTableWorstTop td:nth-child(4) { width: 16% !important; }
+    #tmrxTableBest th:nth-child(5), #tmrxTableBest td:nth-child(5),
+    #tmrxTableBestTop th:nth-child(5), #tmrxTableBestTop td:nth-child(5),
+    #tmrxTableWorst th:nth-child(5), #tmrxTableWorst td:nth-child(5),
+    #tmrxTableWorstTop th:nth-child(5), #tmrxTableWorstTop td:nth-child(5) { width: 14% !important; }
+    /* Streaks & Rolling Form: Window, Picks, W-L, Win%, Net Units, ROI (6 cols). */
+    #tmrxTableForm th:nth-child(1), #tmrxTableForm td:nth-child(1),
+    #tmrxTableFormTop th:nth-child(1), #tmrxTableFormTop td:nth-child(1) { width: 20% !important; }
+    #tmrxTableForm th:nth-child(2), #tmrxTableForm td:nth-child(2),
+    #tmrxTableFormTop th:nth-child(2), #tmrxTableFormTop td:nth-child(2) { width: 14% !important; }
+    #tmrxTableForm th:nth-child(3), #tmrxTableForm td:nth-child(3),
+    #tmrxTableFormTop th:nth-child(3), #tmrxTableFormTop td:nth-child(3) { width: 15% !important; }
+    #tmrxTableForm th:nth-child(4), #tmrxTableForm td:nth-child(4),
+    #tmrxTableFormTop th:nth-child(4), #tmrxTableFormTop td:nth-child(4) { width: 15% !important; }
+    #tmrxTableForm th:nth-child(5), #tmrxTableForm td:nth-child(5),
+    #tmrxTableFormTop th:nth-child(5), #tmrxTableFormTop td:nth-child(5) { width: 18% !important; }
+    #tmrxTableForm th:nth-child(6), #tmrxTableForm td:nth-child(6),
+    #tmrxTableFormTop th:nth-child(6), #tmrxTableFormTop td:nth-child(6) { width: 18% !important; }
+    /* Equal left gutter on every row/header, matching the card's own inset,
+       and a full 28px right gutter on the final numeric column so it never
+       sits flush against the card border. */
+    #tmrxTableBest th:first-child, #tmrxTableBest td:first-child,
+    #tmrxTableBestTop th:first-child, #tmrxTableBestTop td:first-child,
+    #tmrxTableWorst th:first-child, #tmrxTableWorst td:first-child,
+    #tmrxTableWorstTop th:first-child, #tmrxTableWorstTop td:first-child,
+    #tmrxTableForm th:first-child, #tmrxTableForm td:first-child,
+    #tmrxTableFormTop th:first-child, #tmrxTableFormTop td:first-child {
+      padding-left: 22px !important;
+    }
+    #tmrxTableBest th:last-child, #tmrxTableBest td:last-child,
+    #tmrxTableBestTop th:last-child, #tmrxTableBestTop td:last-child,
+    #tmrxTableWorst th:last-child, #tmrxTableWorst td:last-child,
+    #tmrxTableWorstTop th:last-child, #tmrxTableWorstTop td:last-child,
+    #tmrxTableForm th:last-child, #tmrxTableForm td:last-child,
+    #tmrxTableFormTop th:last-child, #tmrxTableFormTop td:last-child {
+      padding-right: 28px !important;
+    }
   }
 </style>
 <script>
