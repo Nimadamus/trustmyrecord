@@ -8,8 +8,10 @@
   'use strict';
   var API = 'https://trustmyrecord-api.onrender.com/api';
 
-  function j(path) {
-    return fetch(API + path, { headers: { Accept: 'application/json' } })
+  function j(path, timeoutMs) {
+    var opts = { headers: { Accept: 'application/json' } };
+    if (timeoutMs) { try { opts.signal = AbortSignal.timeout(timeoutMs); } catch (e) {} }
+    return fetch(API + path, opts)
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; });
   }
@@ -521,50 +523,49 @@
   }
 
   /* ---------- 8. PLATFORM STRIP live counters ----------------------------- */
-  function platform(users) {
-    if (!users) return;
-    var verified = users.filter(function (u) {
-      return num(u.total_picks) > 0 && u.verification_status === 'verified'; }).length;
+  function platform(verifiedCount) {
+    if (verifiedCount == null) return;
     var badges = document.querySelectorAll('.explore .ei .badge2');
-    if (badges[2]) badges[2].innerHTML = '<span class="bl"></span>' + verified + ' public records';
+    if (badges[2]) badges[2].innerHTML = '<span class="bl"></span>' + verifiedCount + ' public records';
   }
 
-  /* ---------- boot -------------------------------------------------------- */
+  /* ---------- boot --------------------------------------------------------
+     Bridge stats, the leaderboard and the platform badge used to be computed
+     by paginating the entire users table client-side (up to 5 sequential
+     /users?limit=200 round trips) before any of them could render — on a slow
+     or cold backend that left last-deploy's baked-in numbers on screen for
+     several seconds. The backend already exposes purpose-built aggregate
+     endpoints for exactly this data, so this now fires two single round trips
+     in parallel (bounded with a timeout so a hung request can't stall these
+     modules) instead. Nothing else on the homepage ever depended on that
+     pagination, so it's a straight removal, not a rework. --------------- */
   function boot() {
     ticker();
     startTickerRefresh();
     sportsTalk();
     poll();
     arena();
-    var all = [], off = 0;
-    (function page() {
-      j('/users?limit=200&offset=' + off).then(function (d) {
-        if (!d) return finish();
-        var u = d.users || [];
-        all = all.concat(u);
-        if (u.length >= 200 && off < 1000) { off += 200; page(); } else finish();
-      });
-    })();
-    function finish() {
-      if (!all.length) return;
-      // bridge rail: derived from real users only
-      var picksTotal = 0, verified = 0;
-      all.forEach(function (u) {
-        var tp = num(u.total_picks);
-        picksTotal += tp;
-        if (tp > 0 && u.verification_status === 'verified') verified++;
-      });
+    capperOfWeek();
+    j('/users/trend-highlights').then(function (d) {
+      if (d && d.users && d.users.length) livePicks(d.users);
+    });
+
+    j('/users/directory-counts', 8000).then(function (d) {
+      var c = d && d.counts; if (!c) return;
       var cells = document.querySelectorAll('.bridge .s b');
-      if (cells[0]) cells[0].textContent = picksTotal.toLocaleString();
-      if (cells[1]) cells[1].textContent = String(verified);
-      if (cells[2]) cells[2].textContent = String(all.length);
-      leaderboard(all);
-      platform(all);
-      capperOfWeek();
-      j('/users/trend-highlights').then(function (d) {
-        if (d && d.users && d.users.length) livePicks(d.users);
-      });
-    }
+      if (cells[0]) cells[0].textContent = num(c.total_valid_picks).toLocaleString();
+      if (cells[2]) cells[2].textContent = String(num(c.total_users_with_at_least_1_pick));
+    });
+
+    j('/users/leaderboard?sortBy=net_units&limit=8', 8000).then(function (d) {
+      if (!d) return;
+      var rows = d.leaderboard || [];
+      if (rows.length) leaderboard(rows);
+      var eligible = num(d.total_eligible_handicappers);
+      platform(eligible);
+      var cells = document.querySelectorAll('.bridge .s b');
+      if (cells[1]) cells[1].textContent = String(eligible);
+    });
   }
 
   /* ---------- INTEGRITY SAFEGUARD -----------------------------------------
@@ -581,7 +582,7 @@
     var t = document.querySelector('.ticker');
     if (t && !t.querySelectorAll('.gm').length) t.style.display = 'none';
   }
-  setTimeout(integritySweep, 12000);
+  setTimeout(integritySweep, 9000);
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();

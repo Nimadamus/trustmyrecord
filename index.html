@@ -65,6 +65,17 @@ img{display:block;max-width:100%}
 .mainnav a{color:#AEC6DC;font-size:15.5px;font-weight:700;height:70px;display:flex;align-items:center;border-bottom:3px solid transparent}
 .mainnav a:hover{color:#fff}
 .mainnav a.on{color:#fff;border-bottom-color:var(--brand-lt)}
+.mainnav .nd{position:relative;height:70px}
+.mainnav .nd-btn{color:#AEC6DC;font-size:15.5px;font-weight:700;height:70px;display:flex;align-items:center;border:0;border-bottom:3px solid transparent;background:none;padding:0;cursor:pointer;font-family:inherit}
+.mainnav .nd-btn:hover{color:#fff}
+.mainnav .nd-btn.on,.mainnav .nd.is-open .nd-btn{color:#fff;border-bottom-color:var(--brand-lt)}
+.mainnav .nd-btn::after{content:'';width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);margin-left:8px;margin-top:-5px;transition:transform .15s}
+.mainnav .nd.is-open .nd-btn::after{transform:rotate(-135deg);margin-top:1px}
+.mainnav a:focus-visible,.mainnav .nd-btn:focus-visible{outline:2px solid var(--brand-lt);outline-offset:-2px;border-radius:3px}
+.nd-menu{display:none;position:absolute;top:100%;left:0;min-width:230px;background:var(--navy-2);border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:8px;box-shadow:0 14px 30px rgba(0,0,0,.4);flex-direction:column;gap:2px;z-index:70}
+.nd.is-open .nd-menu{display:flex}
+.nd-menu a{color:#AEC6DC;font-size:14.5px;font-weight:600;padding:10px 12px;border-radius:7px;white-space:nowrap;height:auto}
+.nd-menu a:hover,.nd-menu a:focus-visible{background:rgba(255,255,255,.09);color:#fff;outline:none}
 .nav-right{margin-left:auto;display:flex;align-items:center;gap:16px}
 .nav-right .login{color:#AEC6DC;font-size:15.5px;font-weight:700}
 .nav-right .login:hover{color:#fff}
@@ -83,6 +94,12 @@ img{display:block;max-width:100%}
   .mainnav a{height:52px;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.06);border-left:3px solid transparent}
   .mainnav a.on{border-left-color:var(--brand-lt);border-bottom-color:rgba(255,255,255,.06)}
   .nav-toggle{display:flex;width:34px;height:34px}
+  .mainnav .nd{height:auto}
+  .mainnav .nd-btn{width:100%;height:52px;padding:0 20px;border-left:3px solid transparent}
+  .mainnav .nd.is-open .nd-btn{border-left-color:var(--brand-lt);border-bottom-color:rgba(255,255,255,.06)}
+  .nd-menu{position:static;display:none;min-width:0;background:rgba(0,0,0,.18);border:0;border-radius:0;box-shadow:none;padding:0 0 6px}
+  .nd.is-open .nd-menu{display:flex}
+  .nd-menu a{height:44px;padding:0 36px;border-radius:0;display:flex;align-items:center}
 }
 @media (max-width:400px){
   .nav-right .login{display:none}
@@ -459,8 +476,45 @@ footer a:hover{color:#fff}
 <nav class="nav"><div class="nav-in">
   <a class="logo" href="/"><span class="mk">T</span><span class="wd">Trust<em>My</em>Record</span></a>
   <div class="mainnav" id="mainnav">
-    <a class="on" href="/sportsbook/">Sportsbook</a><a href="/handicappers/">Handicappers</a><a href="/leaderboards/">Leaderboards</a>
-    <a href="/contests/justbet-mlb/">Contest</a><a href="/arena/">Arena</a><a href="/community/">Community</a><a href="/tools/">Tools</a><a href="/tmr-coin/" style="white-space:nowrap">TMR Coin</a>
+    <a href="/sportsbook/">Sportsbook</a>
+    <div class="nd" data-nd>
+      <button type="button" class="nd-btn" id="ndBtnHandicappers" aria-expanded="false" aria-haspopup="true" aria-controls="ndMenuHandicappers">Handicappers</button>
+      <div class="nd-menu" id="ndMenuHandicappers" role="menu" aria-labelledby="ndBtnHandicappers">
+        <a href="/handicappers/" role="menuitem">Browse Handicappers</a>
+        <a href="/leaderboards/" role="menuitem">Leaderboards</a>
+        <a href="/verified-handicapper-records/" role="menuitem">Verified Records</a>
+        <a href="/marketplace/" role="menuitem">Sell Your Picks</a>
+      </div>
+    </div>
+    <div class="nd" data-nd>
+      <button type="button" class="nd-btn" id="ndBtnCompete" aria-expanded="false" aria-haspopup="true" aria-controls="ndMenuCompete">Compete</button>
+      <div class="nd-menu" id="ndMenuCompete" role="menu" aria-labelledby="ndBtnCompete">
+        <a href="/contests/justbet-mlb/" role="menuitem">Contest</a>
+        <a href="/arena/" role="menuitem">Arena</a>
+        <a href="/trivia/" role="menuitem">Trivia</a>
+        <a href="/polls/" role="menuitem">Polls</a>
+      </div>
+    </div>
+    <div class="nd" data-nd>
+      <button type="button" class="nd-btn" id="ndBtnCommunity" aria-expanded="false" aria-haspopup="true" aria-controls="ndMenuCommunity">Community</button>
+      <div class="nd-menu" id="ndMenuCommunity" role="menu" aria-labelledby="ndBtnCommunity">
+        <a href="/forum/" role="menuitem">Forums</a>
+        <a href="/community/" role="menuitem">Community Home</a>
+        <a href="/members/" role="menuitem">Members</a>
+        <a href="/feed/" role="menuitem">Feed</a>
+      </div>
+    </div>
+    <div class="nd" data-nd>
+      <button type="button" class="nd-btn" id="ndBtnTools" aria-expanded="false" aria-haspopup="true" aria-controls="ndMenuTools">Tools</button>
+      <div class="nd-menu" id="ndMenuTools" role="menu" aria-labelledby="ndBtnTools">
+        <a href="/mlb-simulator/" role="menuitem">MLB Simulator</a>
+        <a href="/nfl-simulator/" role="menuitem">NFL Simulator</a>
+        <a href="/trendspotter/" role="menuitem">TrendSpotter</a>
+        <a href="/handicapping/" role="menuitem">Handicapping Hub</a>
+        <a href="/betlegend-pro/" role="menuitem">BetLegend Pro</a>
+      </div>
+    </div>
+    <a href="/tmr-coin/" style="white-space:nowrap">TMR Coin</a>
   </div>
   <div class="nav-right"><a class="login" href="/login/">Log in</a><a class="btn p sm" href="/register/">Start Free</a></div>
   <button type="button" class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mainnav"><span></span><span></span><span></span></button>
@@ -479,6 +533,43 @@ footer a:hover{color:#fff}
   menu.addEventListener('click', function(e){ if (e.target.closest('a')) setOpen(false); });
   document.addEventListener('click', function(e){ if (nav.classList.contains('is-open') && !nav.contains(e.target)) setOpen(false); });
   document.addEventListener('keydown', function(e){ if (e.key === 'Escape') setOpen(false); });
+
+  /* Dropdown groups: click toggles, opening one closes the others, outside
+     click and Escape close, aria-expanded stays in sync. Same pattern as the
+     sitewide tmr-ds-nav.js dropdowns. */
+  var groups = Array.prototype.slice.call(document.querySelectorAll('[data-nd]'));
+  function closeAll(except){
+    groups.forEach(function(g){
+      if (g === except) return;
+      g.classList.remove('is-open');
+      g.querySelector('.nd-btn').setAttribute('aria-expanded', 'false');
+    });
+  }
+  groups.forEach(function(g){
+    var btn = g.querySelector('.nd-btn');
+    btn.addEventListener('click', function(e){
+      e.stopPropagation();
+      var open = g.classList.contains('is-open');
+      closeAll(open ? null : g);
+      g.classList.toggle('is-open', !open);
+      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+    });
+  });
+  document.addEventListener('click', function(){ closeAll(null); });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeAll(null); });
+
+  /* Highlight a dropdown's parent button (and any direct nav link) when the
+     visitor is on one of its pages. */
+  var path = location.pathname;
+  document.querySelectorAll('.mainnav > a[href]').forEach(function(a){
+    if (a.getAttribute('href') !== '/' && path.indexOf(a.getAttribute('href')) === 0) a.classList.add('on');
+  });
+  groups.forEach(function(g){
+    var hit = Array.prototype.some.call(g.querySelectorAll('.nd-menu a[href]'), function(a){
+      return path.indexOf(a.getAttribute('href')) === 0;
+    });
+    if (hit) g.querySelector('.nd-btn').classList.add('on');
+  });
 })();
 </script>
 <script>
@@ -700,8 +791,8 @@ footer a:hover{color:#fff}
 </div>
 <!-- END STATIC BRIDGE -->
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script>
-<script src="/static/js/tmr-home-auth.e9cf172b7d80.js"></script>
-<script src="/static/js/tmr-home-live.b4ece6ea1374.js"></script>
+<script src="/static/js/tmr-home-auth.6d1cd1a30c22.js"></script>
+<script src="/static/js/tmr-home-live.b85390f98421.js"></script>
 <!-- Alerts dropdown for the nav bell. Same engine every other page uses, so the
      bell shows the latest alerts in place instead of navigating away. These four
      touch no homepage markup (auth-persistent only binds selectors this page
