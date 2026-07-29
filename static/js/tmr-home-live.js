@@ -552,9 +552,24 @@
 
     j('/users/directory-counts', 8000).then(function (d) {
       var c = d && d.counts; if (!c) return;
+      var picksText = num(c.total_valid_picks).toLocaleString();
       var cells = document.querySelectorAll('.bridge .s b');
-      if (cells[0]) cells[0].textContent = num(c.total_valid_picks).toLocaleString();
-      if (cells[2]) cells[2].textContent = String(num(c.total_users_with_at_least_1_pick));
+      if (cells[0]) cells[0].textContent = picksText;
+      // Hero eyebrow duplicates the same "picks tracked" figure -- it must never
+      // drift from the counter below it, so it's set from the same response.
+      var eyebrow = document.getElementById('tmrEyebrowPicks');
+      if (eyebrow) eyebrow.textContent = picksText;
+    });
+
+    // Members: /users/directory-metrics is the same authoritative endpoint+field
+    // the Handicappers page reads (total_members = every eligible account,
+    // regardless of pick count). Previously this cell read directory-counts'
+    // total_users_with_at_least_1_pick -- a different, smaller definition -- which
+    // is why the homepage and Handicappers page used to show different totals.
+    j('/users/directory-metrics', 8000).then(function (d) {
+      var m = d && d.metrics; if (!m) return;
+      var cells = document.querySelectorAll('.bridge .s b');
+      if (cells[2]) cells[2].textContent = String(num(m.total_members));
     });
 
     j('/users/leaderboard?sortBy=net_units&limit=8', 8000).then(function (d) {

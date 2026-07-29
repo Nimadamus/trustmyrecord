@@ -24,33 +24,57 @@
 
   var API = 'https://trustmyrecord-api.onrender.com/api';
 
-  /* --- route tables: identical set to the previous sitewide nav ------------ */
+  /* --- route tables --------------------------------------------------------
+     Reconciled 2026-07-29: this nav had drifted from the homepage's own
+     grouping (Handicappers/Compete/Community/Tools/TMR Coin) despite the
+     header comment above saying it mirrors the approved homepage nav. This is
+     the union of every destination from both — nothing dropped, renamed, or
+     redirected — grouped to match the homepage's dropdown shape, with the
+     items that only existed here (Sports Talk, Chat, Challenges, Contact Us,
+     Report a Bug, Rules, the /tools/ hub itself) folded into the closest
+     matching dropdown, plus a new Support dropdown for the two that didn't
+     fit elsewhere. ------------------------------------------------------- */
   var SPORTSBOOK = [
     ['/sportsbook/', 'Make Picks'],
     ['/handicapping/', 'Handicapping Hub']
   ];
-  var PRIMARY = [
+  var HANDICAPPERS = [
+    ['/handicappers/', 'Find Handicappers'],
+    ['/leaderboards/', 'Leaderboards'],
+    ['/verified-handicapper-records/', 'Verified Records'],
+    ['/marketplace/', 'Buy Picks'],
+    ['/marketplace/sell/', 'Sell Your Picks']
+  ];
+  var COMPETE = [
     ['/contests/justbet-mlb/', 'Contest'],
     ['/arena/', 'Arena'],
-    ['/tools/', 'Tools'],
-    ['/handicappers/', 'Find Handicappers']
+    ['/challenges/', 'Challenges'],
+    ['/trivia/', 'Trivia'],
+    ['/polls/', 'Polls']
   ];
   var COMMUNITY = [
-    ['/sports-talk/', 'Sports Talk'],
-    ['/feed/', 'Feed'],
-    ['/online-gaming/', 'MLB The Show'],
-    ['/challenges/', 'Challenges'],
     ['/forum/', 'Forums'],
+    ['/community/', 'Community Home'],
+    ['/members/', 'Members'],
+    ['/feed/', 'Feed'],
+    ['/sports-talk/', 'Sports Talk'],
     ['/chat/', 'Chat'],
-    ['/polls/', 'Polls'],
-    ['/trivia/', 'Trivia']
+    ['/online-gaming/', 'MLB The Show']
+  ];
+  var TOOLS = [
+    ['/tools/', 'Tools Hub'],
+    ['/mlb-simulator/', 'MLB Simulator'],
+    ['/nfl-simulator/', 'NFL Simulator'],
+    ['/trendspotter/', 'TrendSpotter'],
+    ['/betlegend-pro/', 'BetLegend Pro'],
+    ['/handicapping/', 'Handicapping Hub']
+  ];
+  var TMR_COIN = [
+    ['/tmr-coin/', 'TMR Coin']
   ];
   var SUPPORT = [
     ['/contact/', 'Contact Us'],
-    ['/report-bug/', 'Report a Bug']
-  ];
-  var MORE = [
-    ['/marketplace/', 'Sell Your Picks'],
+    ['/report-bug/', 'Report a Bug'],
     ['/rules/', 'Rules']
   ];
 
@@ -135,15 +159,14 @@
         '<div class="ds-nav-panel">' +
           '<div class="ds-mainnav">' +
             menu('Sportsbook', SPORTSBOOK) +
-            links(PRIMARY) +
+            menu('Handicappers', HANDICAPPERS) +
+            menu('Compete', COMPETE) +
             menu('Community', COMMUNITY) +
+            menu('Tools', TOOLS) +
+            links(TMR_COIN) +
             menu('Support', SUPPORT) +
-            menu('More', MORE) +
           '</div>' +
-          '<div class="ds-nav-right">' +
-            '<a class="login" href="/login/">Log in</a>' +
-            '<a class="ds-btn p sm" href="/register/">Start Free</a>' +
-          '</div>' +
+          '<div class="ds-nav-right">' + initialNavRight() + '</div>' +
         '</div>' +
       '</div>';
     document.body.insertBefore(nav, document.body.firstChild);
@@ -186,7 +209,11 @@
 
   /* --- footer -------------------------------------------------------------- */
   function buildFooter() {
-    if (document.querySelector('.ds-footer')) return;
+    // Skip if the page already has ANY footer (not just a previous .ds-footer) --
+    // pages with their own bespoke footer (e.g. the homepage) keep it as-is when
+    // they opt into body.tmr-ds for the shared nav; this script's job here is
+    // nav consolidation, not replacing footers that already work.
+    if (document.querySelector('footer')) return;
     var f = document.createElement('footer');
     f.className = 'ds-footer';
     f.innerHTML =
@@ -213,13 +240,54 @@
     document.body.appendChild(f);
   }
 
-  /* --- signed-in state (same contract as the homepage nav) ----------------- */
+  /* --- signed-in state (same contract as the homepage nav) -----------------
+     tmr-session.js owns token reading and the refresh-then-retry flow so a
+     60-minute-old access token never renders as "logged out". The inline
+     fallbacks keep this nav working if that file fails to load.             */
+  var S = window.TMRSession || null;
+
   function token() {
+    if (S) return S.getAccessToken();
     try {
       return localStorage.getItem('trustmyrecord_token') ||
              localStorage.getItem('tmr_token') ||
              localStorage.getItem('accessToken') || null;
     } catch (e) { return null; }
+  }
+
+  function hasTokens() {
+    if (S) return S.hasTokens();
+    if (token()) return true;
+    try {
+      return !!(localStorage.getItem('trustmyrecord_refresh_token') ||
+                localStorage.getItem('refreshToken') ||
+                localStorage.getItem('refresh_token') ||
+                localStorage.getItem('tmr_refresh_token'));
+    } catch (e) { return false; }
+  }
+
+  function cachedUser() { return S ? S.getCachedUser() : null; }
+
+  var LOGGED_OUT_HTML =
+    '<a class="login" href="/login/">Log in</a>' +
+    '<a class="ds-btn p sm" href="/register/">Start Free</a>';
+
+  // Neutral placeholder: shown when we KNOW there is a session but have not
+  // resolved the identity yet. Never render "Log in / Start Free" in that
+  // window — an authenticated member must not see a logged-out header, not
+  // even for one frame. Inline styles so no CSS deploy is required.
+  var LOADING_HTML =
+    '<span class="ds-nav-authpending" aria-busy="true" aria-label="Loading account" ' +
+      'style="display:inline-flex;align-items:center;gap:8px;opacity:.55">' +
+      '<span style="width:26px;height:26px;border-radius:50%;background:currentColor;opacity:.18"></span>' +
+      '<span style="width:74px;height:10px;border-radius:5px;background:currentColor;opacity:.18"></span>' +
+    '</span>';
+
+  // Synchronous first paint of the header's right-hand cluster.
+  function initialNavRight() {
+    if (!hasTokens()) return LOGGED_OUT_HTML;
+    var u = cachedUser();
+    return u ? userHTML(u) : LOADING_HTML;
   }
   function initials(n) { return String(n || '?').replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase(); }
 
@@ -247,18 +315,20 @@
     document.head.appendChild(s);
   }
 
-  function renderUser(user) {
-    var right = document.querySelector('.ds-nav .ds-nav-right');
-    if (!right || !user) return;
-    var name = user.username || user.display_name || 'Account';
-    var src = user.avatar_url || (user.id ? API + '/users/' + user.id + '/avatar' : null);
+  function userHTML(user) {
+    var name = user.username || user.display_name || user.displayName || 'Account';
+    var src = user.avatar_url || user.avatarUrl || (user.id ? API + '/users/' + user.id + '/avatar' : null);
     var av = src
-      ? '<img class="v2nav-ava" src="' + src + '" alt="" onerror="this.outerHTML=\'<span class=&quot;v2nav-avl&quot;>' + initials(name) + '</span>\'">'
+      ? '<img class="v2nav-ava" src="' + esc(src) + '" alt="" onerror="this.outerHTML=\'<span class=&quot;v2nav-avl&quot;>' + initials(name) + '</span>\'">'
       : '<span class="v2nav-avl">' + initials(name) + '</span>';
 
-    right.innerHTML =
-      '<a class="v2nav-user" href="/u/' + encodeURIComponent(name) + '/" title="' + esc(name) + '">' +
+    return '<a class="v2nav-user" href="/u/' + encodeURIComponent(name) + '/" title="' + esc(name) + '">' +
         av + '<span class="v2nav-name">' + esc(name) + '</span></a>' +
+      // TMR Coin balance pill. Hidden until populated so it
+      // never flashes a stale/zero value; links to the wallet page.
+      '<a class="v2nav-coins" id="navCoinPill" href="/wallet/" title="' +
+        esc((window.TMR_TERMINOLOGY && window.TMR_TERMINOLOGY.full) || 'TMR Coin') + ' balance" hidden>' +
+        '<img class="v2nav-coins-icon" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true"><span id="navCoinBalance">—</span></a>' +
       // Stays an <a href> so the bell is never a dead target if the alerts
       // engine has not finished loading.
       '<a class="v2nav-bell" id="homeNotifBtn" data-tmr-notifications href="/notifications/" aria-label="Alerts" title="Alerts" ' +
@@ -267,29 +337,71 @@
         '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
         '<span class="v2nav-badge" id="homeNotifBadge" hidden></span></a>' +
       '<a class="ds-btn p sm" href="/my-record/">My Record</a>';
+  }
+
+  function renderUser(user) {
+    var right = document.querySelector('.ds-nav .ds-nav-right');
+    if (!right || !user) return;
+    right.innerHTML = userHTML(user);
 
     if (typeof window.toggleNotifications !== 'function') loadChain(NOTIF_CHAIN);
 
-    fetch(API + '/notifications/unread-count', {
-      headers: { Accept: 'application/json', Authorization: 'Bearer ' + token() }
-    }).then(function (r) { return r.ok ? r.json() : null; })
+    (S ? S.authFetch(API + '/notifications/unread-count')
+       : fetch(API + '/notifications/unread-count', {
+           headers: { Accept: 'application/json', Authorization: 'Bearer ' + token() }
+         }))
+      .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         var n = d && (d.unreadCount != null ? d.unreadCount : (d.count != null ? d.count : d.unread));
         var b = document.getElementById('homeNotifBadge');
         if (b && n > 0) { b.textContent = n > 99 ? '99+' : n; b.hidden = false; b.style.display = 'inline'; }
       }).catch(function () {});
+
+    (S ? S.authFetch(API + '/coins/balance')
+       : fetch(API + '/coins/balance', {
+           headers: { Accept: 'application/json', Authorization: 'Bearer ' + token() }
+         }))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || d.balance == null) return;
+        var pill = document.getElementById('navCoinPill');
+        var bal = document.getElementById('navCoinBalance');
+        if (bal) bal.textContent = Number(d.balance).toLocaleString('en-US');
+        if (pill) { pill.hidden = false; if (d.is_frozen) pill.classList.add('is-frozen'); }
+      }).catch(function () {});
+  }
+
+  function signOutHeader() {
+    var right = document.querySelector('.ds-nav .ds-nav-right');
+    if (right) right.innerHTML = LOGGED_OUT_HTML;
   }
 
   function init() {
     if (!document.body.classList.contains('tmr-ds')) return;   // opt-in only
     buildNav();
     buildFooter();
+
+    // A 60-minute-old ACCESS token is not a logged-out user — the refresh token
+    // is valid for a year. resolveUser() refreshes and retries, and only reports
+    // 'signed-out' when the server rejects the refresh token itself. 'unknown'
+    // (offline / CORS / Render cold-start 5xx) leaves the header untouched.
+    if (S) {
+      if (!S.hasTokens()) { signOutHeader(); return; }
+      S.resolveUser().then(function (res) {
+        if (res.state === 'ok') renderUser(res.user);
+        else if (res.state === 'signed-out') signOutHeader();
+        else if (!cachedUser()) signOutHeader();   // unknown + nothing cached: no permanent skeleton
+      });
+      return;
+    }
+
+    // --- fallback: tmr-session.js missing ---------------------------------
     var t = token();
-    if (!t) return;                       // logged out: nav stays as designed
+    if (!t) { signOutHeader(); return; }
     fetch(API + '/auth/me', { headers: { Accept: 'application/json', Authorization: 'Bearer ' + t } })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (d) { if (d) renderUser(d.user || d); })
-      .catch(function () {});
+      .then(function (d) { if (d) renderUser(d.user || d); else signOutHeader(); })
+      .catch(function () { signOutHeader(); });
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

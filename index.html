@@ -468,170 +468,11 @@ footer a:hover{color:#fff}
 <style>.loading{padding:22px 24px;color:#5E7590;font-size:14.5px;font-weight:600}</style>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">
 <script defer src="/static/js/tmr-linkhub.js?v=20260721nav4"></script>
+<link rel="stylesheet" href="/static/css/tmr-ds.43dc92169dc4.css">
 </head>
-<body>
+<body class="tmr-ds">
 
 
-
-<nav class="nav"><div class="nav-in">
-  <a class="logo" href="/"><span class="mk">T</span><span class="wd">Trust<em>My</em>Record</span></a>
-  <div class="mainnav" id="mainnav">
-    <a href="/sportsbook/">Sportsbook</a>
-    <div class="nd" data-nd>
-      <button type="button" class="nd-btn" id="ndBtnHandicappers" aria-expanded="false" aria-haspopup="true" aria-controls="ndMenuHandicappers">Handicappers</button>
-      <div class="nd-menu" id="ndMenuHandicappers" role="menu" aria-labelledby="ndBtnHandicappers">
-        <a href="/handicappers/" role="menuitem">Browse Handicappers</a>
-        <a href="/leaderboards/" role="menuitem">Leaderboards</a>
-        <a href="/verified-handicapper-records/" role="menuitem">Verified Records</a>
-        <a href="/marketplace/" role="menuitem">Buy Picks</a>
-        <a href="/marketplace/sell/" role="menuitem">Sell Your Picks</a>
-      </div>
-    </div>
-    <div class="nd" data-nd>
-      <button type="button" class="nd-btn" id="ndBtnCompete" aria-expanded="false" aria-haspopup="true" aria-controls="ndMenuCompete">Compete</button>
-      <div class="nd-menu" id="ndMenuCompete" role="menu" aria-labelledby="ndBtnCompete">
-        <a href="/contests/justbet-mlb/" role="menuitem">Contest</a>
-        <a href="/arena/" role="menuitem">Arena</a>
-        <a href="/trivia/" role="menuitem">Trivia</a>
-        <a href="/polls/" role="menuitem">Polls</a>
-      </div>
-    </div>
-    <div class="nd" data-nd>
-      <button type="button" class="nd-btn" id="ndBtnCommunity" aria-expanded="false" aria-haspopup="true" aria-controls="ndMenuCommunity">Community</button>
-      <div class="nd-menu" id="ndMenuCommunity" role="menu" aria-labelledby="ndBtnCommunity">
-        <a href="/forum/" role="menuitem">Forums</a>
-        <a href="/community/" role="menuitem">Community Home</a>
-        <a href="/members/" role="menuitem">Members</a>
-        <a href="/feed/" role="menuitem">Feed</a>
-      </div>
-    </div>
-    <div class="nd" data-nd>
-      <button type="button" class="nd-btn" id="ndBtnTools" aria-expanded="false" aria-haspopup="true" aria-controls="ndMenuTools">Tools</button>
-      <div class="nd-menu" id="ndMenuTools" role="menu" aria-labelledby="ndBtnTools">
-        <a href="/mlb-simulator/" role="menuitem">MLB Simulator</a>
-        <a href="/nfl-simulator/" role="menuitem">NFL Simulator</a>
-        <a href="/trendspotter/" role="menuitem">TrendSpotter</a>
-        <a href="/handicapping/" role="menuitem">Handicapping Hub</a>
-        <a href="/betlegend-pro/" role="menuitem">BetLegend Pro</a>
-      </div>
-    </div>
-    <a href="/tmr-coin/" style="white-space:nowrap">TMR Coin</a>
-  </div>
-  <div class="nav-right"><a class="login" href="/login/">Log in</a><a class="btn p sm" href="/register/">Start Free</a></div>
-  <button type="button" class="nav-toggle" id="navToggle" aria-label="Menu" aria-expanded="false" aria-controls="mainnav"><span></span><span></span><span></span></button>
-</div></nav>
-<script>
-(function(){
-  var nav = document.querySelector('.nav');
-  var toggle = document.getElementById('navToggle');
-  var menu = document.getElementById('mainnav');
-  if (!nav || !toggle || !menu) return;
-  function setOpen(open){
-    nav.classList.toggle('is-open', open);
-    toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
-  }
-  toggle.addEventListener('click', function(){ setOpen(!nav.classList.contains('is-open')); });
-  menu.addEventListener('click', function(e){ if (e.target.closest('a')) setOpen(false); });
-  document.addEventListener('click', function(e){ if (nav.classList.contains('is-open') && !nav.contains(e.target)) setOpen(false); });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') setOpen(false); });
-
-  /* Dropdown groups: click toggles, opening one closes the others, outside
-     click and Escape close, aria-expanded stays in sync. Same pattern as the
-     sitewide tmr-ds-nav.js dropdowns. */
-  var groups = Array.prototype.slice.call(document.querySelectorAll('[data-nd]'));
-  function closeAll(except){
-    groups.forEach(function(g){
-      if (g === except) return;
-      g.classList.remove('is-open');
-      g.querySelector('.nd-btn').setAttribute('aria-expanded', 'false');
-    });
-  }
-  groups.forEach(function(g){
-    var btn = g.querySelector('.nd-btn');
-    btn.addEventListener('click', function(e){
-      e.stopPropagation();
-      var open = g.classList.contains('is-open');
-      closeAll(open ? null : g);
-      g.classList.toggle('is-open', !open);
-      btn.setAttribute('aria-expanded', open ? 'false' : 'true');
-    });
-  });
-  document.addEventListener('click', function(){ closeAll(null); });
-  document.addEventListener('keydown', function(e){ if (e.key === 'Escape') closeAll(null); });
-
-  /* Highlight a dropdown's parent button (and any direct nav link) when the
-     visitor is on one of its pages. */
-  var path = location.pathname;
-  document.querySelectorAll('.mainnav > a[href]').forEach(function(a){
-    if (a.getAttribute('href') !== '/' && path.indexOf(a.getAttribute('href')) === 0) a.classList.add('on');
-  });
-  groups.forEach(function(g){
-    var hit = Array.prototype.some.call(g.querySelectorAll('.nd-menu a[href]'), function(a){
-      return path.indexOf(a.getAttribute('href')) === 0;
-    });
-    if (hit) g.querySelector('.nd-btn').classList.add('on');
-  });
-})();
-</script>
-<script>
-/* Signed-in header, resolved BEFORE first paint.
-   tmr-home-auth.js can only swap this block after /auth/me answers, which on a cold
-   Render backend is several seconds - so a logged-in member watched the logged-out
-   header sit there and then jump. This runs synchronously during parse, straight out
-   of localStorage (no network), so the correct header is in the very first frame.
-   tmr-home-auth.js still runs afterwards and reconciles against the real session,
-   including signing the header back out if the token turns out to be dead. */
-(function () {
-  'use strict';
-  try {
-    var get = function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } };
-    var firstOf = function (keys) {
-      for (var i = 0; i < keys.length; i++) { var v = get(keys[i]); if (v) return v; }
-      return null;
-    };
-    // A session exists if EITHER token is present. The access token expires after
-    // 60 minutes; the refresh token lasts a year, so its presence alone means the
-    // member is still signed in and the logged-out header must not be painted.
-    var tok = firstOf(['trustmyrecord_token', 'tmr_token', 'accessToken', 'access_token', 'token',
-                       'trustmyrecord_refresh_token', 'refreshToken', 'refresh_token', 'tmr_refresh_token']);
-    if (!tok) return;                       // logged out: approved nav stays as designed
-    var right = document.querySelector('.nav-right');
-    if (!right) return;
-    // Every key the site has ever cached an identity under. auth-persistent.js
-    // migrates `currentUser` into `trustmyrecord_session`, so reading only the
-    // former used to come up empty and flash the logged-out header.
-    var raw = firstOf(['currentUser', 'trustmyrecord_session', 'tmr_current_user', 'trustMyRecordProfile']);
-    var u = raw ? JSON.parse(raw) : null; u = u && (u.user || u);
-    var name = u && (u.username || u.display_name || u.displayName);
-    if (!name) {
-      // Session present, identity not cached yet: show a neutral placeholder
-      // until /auth/me answers. Never "Log in / Start Free" for a member.
-      right.innerHTML =
-        '<span class="v2nav-authpending" aria-busy="true" aria-label="Loading account" ' +
-          'style="display:inline-flex;align-items:center;gap:8px;opacity:.55">' +
-          '<span style="width:26px;height:26px;border-radius:50%;background:currentColor;opacity:.18"></span>' +
-          '<span style="width:74px;height:10px;border-radius:5px;background:currentColor;opacity:.18"></span>' +
-        '</span>';
-      return;
-    }
-    var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) {
-      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-    var initials = String(name).replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase();
-    var src = u.avatar_url || u.avatarUrl || (u.id ? 'https://trustmyrecord-api.onrender.com/api/users/' + u.id + '/avatar' : '');
-    right.innerHTML =
-      '<a class="v2nav-user" href="/u/' + encodeURIComponent(name) + '/" title="' + esc(name) + '">' +
-        (src ? '<img class="v2nav-ava" src="' + esc(src) + '" alt="" onerror="this.outerHTML=\'<span class=&quot;v2nav-avl&quot;>' + initials + '</span>\'">'
-             : '<span class="v2nav-avl">' + initials + '</span>') +
-        '<span class="v2nav-name">' + esc(name) + '</span></a>' +
-      '<a class="v2nav-bell" id="homeNotifBtn" data-tmr-notifications href="/notifications/" aria-label="Alerts" title="Alerts" ' +
-        'onclick="if(typeof toggleNotifications===\'function\'){toggleNotifications(event);return false;}">' +
-        '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-        '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
-        '<span class="v2nav-badge" id="homeNotifBadge" hidden></span></a>' +
-      '<a class="btn p sm" href="/my-record/">My Record</a>';
-  } catch (e) { /* any failure leaves the logged-out header exactly as designed */ }
-})();
-</script>
 
 <div class="ticker"><div class="ticker-in"><span class="tlbl"><span class="bl"></span>Today</span><button type="button" class="tk-nav tk-prev" aria-label="Previous games" hidden>&lsaquo;</button><div class="ticker-games" data-slate-date=""><div class="ticker-track"><div class="ticker-page"><span class="gm is-msg"><span class="st">Loading today&rsquo;s MLB slate&hellip;</span></span></div></div></div><button type="button" class="tk-nav tk-next" aria-label="Next games" hidden>&rsaquo;</button></div></div></div>
 
@@ -639,7 +480,7 @@ footer a:hover{color:#fff}
   <div class="grain"></div>
   <div class="wrap hero-in"><div class="hero-grid">
     <div>
-      <span class="eyebrow"><span class="bl"></span>1,878 picks tracked &middot; nothing deleted</span>
+      <span class="eyebrow"><span class="bl"></span><span id="tmrEyebrowPicks">2,092</span> picks tracked &middot; nothing deleted</span>
       <h1 class="hh">Track your picks.<br><em>Build a record nobody can fake.</em></h1>
       <p class="sub">Lock your pick before game time. TrustMyRecord grades it automatically and publishes the units, ROI, and streaks on a public profile that can't be edited or cherry-picked.</p>
       <div class="cta">
@@ -792,7 +633,11 @@ footer a:hover{color:#fff}
 </div>
 <!-- END STATIC BRIDGE -->
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script>
-<script src="/static/js/tmr-home-auth.6d1cd1a30c22.js"></script>
+<script src="/static/js/tmr-ds-nav.f6307e4c4ec2.js"></script>
+<!-- tmr-home-auth.js retired: tmr-ds-nav.js's own init()/resolveUser() flow now
+     renders the signed-in .ds-nav-right cluster (same v2nav-* markup, coin
+     balance + notif badge fetches) that this page used to duplicate for its
+     bespoke .nav-right container, which no longer exists. -->
 <script src="/static/js/tmr-home-live.b85390f98421.js"></script>
 <!-- Alerts dropdown for the nav bell. Same engine every other page uses, so the
      bell shows the latest alerts in place instead of navigating away. These four

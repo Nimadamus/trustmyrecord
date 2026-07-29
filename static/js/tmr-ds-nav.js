@@ -24,34 +24,57 @@
 
   var API = 'https://trustmyrecord-api.onrender.com/api';
 
-  /* --- route tables: identical set to the previous sitewide nav ------------ */
+  /* --- route tables --------------------------------------------------------
+     Reconciled 2026-07-29: this nav had drifted from the homepage's own
+     grouping (Handicappers/Compete/Community/Tools/TMR Coin) despite the
+     header comment above saying it mirrors the approved homepage nav. This is
+     the union of every destination from both — nothing dropped, renamed, or
+     redirected — grouped to match the homepage's dropdown shape, with the
+     items that only existed here (Sports Talk, Chat, Challenges, Contact Us,
+     Report a Bug, Rules, the /tools/ hub itself) folded into the closest
+     matching dropdown, plus a new Support dropdown for the two that didn't
+     fit elsewhere. ------------------------------------------------------- */
   var SPORTSBOOK = [
     ['/sportsbook/', 'Make Picks'],
     ['/handicapping/', 'Handicapping Hub']
   ];
-  var PRIMARY = [
+  var HANDICAPPERS = [
+    ['/handicappers/', 'Find Handicappers'],
+    ['/leaderboards/', 'Leaderboards'],
+    ['/verified-handicapper-records/', 'Verified Records'],
+    ['/marketplace/', 'Buy Picks'],
+    ['/marketplace/sell/', 'Sell Your Picks']
+  ];
+  var COMPETE = [
     ['/contests/justbet-mlb/', 'Contest'],
     ['/arena/', 'Arena'],
-    ['/tools/', 'Tools'],
-    ['/handicappers/', 'Find Handicappers']
+    ['/challenges/', 'Challenges'],
+    ['/trivia/', 'Trivia'],
+    ['/polls/', 'Polls']
   ];
   var COMMUNITY = [
-    ['/sports-talk/', 'Sports Talk'],
-    ['/feed/', 'Feed'],
-    ['/online-gaming/', 'MLB The Show'],
-    ['/challenges/', 'Challenges'],
     ['/forum/', 'Forums'],
+    ['/community/', 'Community Home'],
+    ['/members/', 'Members'],
+    ['/feed/', 'Feed'],
+    ['/sports-talk/', 'Sports Talk'],
     ['/chat/', 'Chat'],
-    ['/polls/', 'Polls'],
-    ['/trivia/', 'Trivia']
+    ['/online-gaming/', 'MLB The Show']
+  ];
+  var TOOLS = [
+    ['/tools/', 'Tools Hub'],
+    ['/mlb-simulator/', 'MLB Simulator'],
+    ['/nfl-simulator/', 'NFL Simulator'],
+    ['/trendspotter/', 'TrendSpotter'],
+    ['/betlegend-pro/', 'BetLegend Pro'],
+    ['/handicapping/', 'Handicapping Hub']
+  ];
+  var TMR_COIN = [
+    ['/tmr-coin/', 'TMR Coin']
   ];
   var SUPPORT = [
     ['/contact/', 'Contact Us'],
-    ['/report-bug/', 'Report a Bug']
-  ];
-  var MORE = [
-    ['/marketplace/', 'Sell Your Picks'],
-    ['/tmr-coin/', 'TMR Coin'],
+    ['/report-bug/', 'Report a Bug'],
     ['/rules/', 'Rules']
   ];
 
@@ -136,10 +159,12 @@
         '<div class="ds-nav-panel">' +
           '<div class="ds-mainnav">' +
             menu('Sportsbook', SPORTSBOOK) +
-            links(PRIMARY) +
+            menu('Handicappers', HANDICAPPERS) +
+            menu('Compete', COMPETE) +
             menu('Community', COMMUNITY) +
+            menu('Tools', TOOLS) +
+            links(TMR_COIN) +
             menu('Support', SUPPORT) +
-            menu('More', MORE) +
           '</div>' +
           '<div class="ds-nav-right">' + initialNavRight() + '</div>' +
         '</div>' +
@@ -184,7 +209,11 @@
 
   /* --- footer -------------------------------------------------------------- */
   function buildFooter() {
-    if (document.querySelector('.ds-footer')) return;
+    // Skip if the page already has ANY footer (not just a previous .ds-footer) --
+    // pages with their own bespoke footer (e.g. the homepage) keep it as-is when
+    // they opt into body.tmr-ds for the shared nav; this script's job here is
+    // nav consolidation, not replacing footers that already work.
+    if (document.querySelector('footer')) return;
     var f = document.createElement('footer');
     f.className = 'ds-footer';
     f.innerHTML =
