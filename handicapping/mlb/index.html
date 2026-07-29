@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/css/handicapping.css?v=20260720trendcards4">
+    <link rel="stylesheet" href="/static/css/handicapping.css?v=20260729cards1">
     <link rel="stylesheet" href="/static/css/tmr-ds.43dc92169dc4.css">
     <link rel="stylesheet" href="/static/css/tmr-ds-handicapping.a6df90e62bb5.css">
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">
@@ -30,7 +30,7 @@
             <div>
                 <span class="hh-kicker">MLB Research</span>
                 <h1>MLB Handicapping Hub</h1>
-                <p>Every game on the board with probable pitchers, starter and bullpen stats, team offense, verified trends you can audit down to the individual game, full-game and First 5 lines, and how the community is leaning. Expand any matchup for the full research dashboard.</p>
+                <p>Every game on the board, side by side: probable pitchers, team records and streaks, offense and bullpen stats, full-game and First 5 lines, verified trends you can audit down to the individual game, and how the community is leaning — visible immediately, no clicking required. Open "View Full Analysis" on any matchup for the complete research dashboard.</p>
             </div>
         </header>
 
@@ -53,31 +53,36 @@
 
     <template id="hh-game-tpl">
         <article class="hh-game" data-game>
-            <button type="button" class="hh-game__header" data-toggle aria-expanded="false">
-                <div class="hh-game__teams">
-                    <div class="hh-team hh-team--away">
-                        <img class="hh-team__logo" alt="" loading="lazy" data-away-logo>
-                        <div class="hh-team__meta"><span class="hh-team__side">Away</span><strong data-away-name></strong></div>
-                    </div>
-                    <div class="hh-game__at">
-                        <span data-time></span>
-                        <span class="hh-at">@</span>
-                        <span class="hh-venue" data-venue></span>
-                    </div>
-                    <div class="hh-team hh-team--home">
-                        <img class="hh-team__logo" alt="" loading="lazy" data-home-logo>
-                        <div class="hh-team__meta"><span class="hh-team__side">Home</span><strong data-home-name></strong></div>
-                    </div>
+            <div class="hhc-head">
+                <div class="hh-team hh-team--away">
+                    <img class="hh-team__logo" alt="" loading="lazy" data-away-logo>
+                    <div class="hh-team__meta"><span class="hh-team__side">Away</span><strong data-away-name></strong></div>
                 </div>
-                <div class="hh-game__quick" data-quicklines></div>
-                <span class="hh-game__chev" aria-hidden="true">▾</span>
-            </button>
+                <div class="hh-game__at">
+                    <span data-time></span>
+                    <span class="hh-at">@</span>
+                    <span class="hh-venue" data-venue></span>
+                </div>
+                <div class="hh-team hh-team--home">
+                    <img class="hh-team__logo" alt="" loading="lazy" data-home-logo>
+                    <div class="hh-team__meta"><span class="hh-team__side">Home</span><strong data-home-name></strong></div>
+                </div>
+            </div>
+            <div class="hhc-top" data-hhctop></div>
+            <div class="hh-actions">
+                <a class="hh-btn hh-btn--primary" href="/sportsbook/?sport=baseball_mlb#picks">Make Pick</a>
+                <button type="button" class="hh-btn hh-btn--ghost" data-share>Copy Matchup Link</button>
+                <button type="button" class="hh-btn hh-btn--ghost hh-btn--toggle" data-toggle aria-expanded="false">
+                    <span data-toggle-label>View Full Analysis</span>
+                    <span class="hh-game__chev" aria-hidden="true">▾</span>
+                </button>
+            </div>
             <div class="hh-game__body" data-body hidden></div>
         </article>
     </template>
 
     <script src="/static/js/config.js?v=20260716hub3"></script>
-    <script src="/static/js/handicapping-mlb.js?v=20260722label1"></script>
+    <script src="/static/js/handicapping-mlb.js?v=20260729cards1"></script>
 <script src="/static/js/tmr-session.63f50f4d0988.js"></script><script src="/static/js/tmr-ds-nav.f6307e4c4ec2.js"></script>
 </body>
 </html>
