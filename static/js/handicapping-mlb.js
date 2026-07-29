@@ -84,7 +84,37 @@
     var findEl = document.getElementById("hh-find");
     var dateSub = document.getElementById("hh-dateSub");
 
-    var STATE = { games: [], trendsByMatchup: {}, consensus: [], matchup: {} };
+    var STATE = { games: [], trendsByMatchup: {}, consensus: [], matchup: {}, matchupPromise: {} };
+
+    /** Every card's matchup fetch is a single shared promise, so the always-
+        visible comparison grid and the "View Full Analysis" deep dive never
+        issue two requests for the same game. */
+    function getMatchup(game) {
+        if (STATE.matchupPromise[game.id]) return STATE.matchupPromise[game.id];
+        var url = API + "/handicapping/mlb/matchup?away=" + encodeURIComponent(game.away_team) +
+            "&home=" + encodeURIComponent(game.home_team) +
+            "&date=" + encodeURIComponent(slateDateET(game.commence_time));
+        var p = getJSON(url, 25000).then(function (d) { STATE.matchup[game.id] = d; return d; });
+        STATE.matchupPromise[game.id] = p;
+        return p;
+    }
+    /** Runs `tasks` with bounded concurrency so a 15-game slate does not fire
+        15 simultaneous matchup fetches (each itself a multi-provider fan-out
+        on the backend) the instant the page loads. */
+    function runQueue(tasks, limit) {
+        var i = 0, active = 0;
+        return new Promise(function (resolve) {
+            function next() {
+                if (i >= tasks.length && active === 0) { resolve(); return; }
+                while (active < limit && i < tasks.length) {
+                    var t = tasks[i++];
+                    active++;
+                    t().catch(function () {}).then(function () { active--; next(); });
+                }
+            }
+            next();
+        });
+    }
 
     function getJSON(url, timeoutMs) {
         var ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
@@ -206,6 +236,225 @@
         return '<table class="hh-compare"><thead><tr>' +
             '<th>' + esc(awayLabel) + '</th><th>Stat</th><th>' + esc(homeLabel) + '</th>' +
             '</tr></thead><tbody>' + body + '</tbody></table>';
+    }
+
+    /* ================================================================
+       ALWAYS-VISIBLE MATCHUP COMPARISON CARD
+       Every stat a bettor needs to size up a game — records, offense,
+       starters, bullpen, lines, community read, trends — renders the
+       instant the matchup fetch resolves, with no click required. The
+       tabbed dashboard below it (Pitchers/Offense/Bullpens/Trends/
+       Markets/Community) still exists for the full research dive; this
+       section is a superset summary built from the exact same payload.
+       ================================================================ */
+    /** "67-40" -> 0.626. Returns null (no comparison, never a fake 50%) when
+        the record string cannot be parsed. */
+    function winPct(rec) {
+        var m = String(rec || "").match(/^(\d+)\s*-\s*(\d+)/);
+        if (!m) return null;
+        var w = Number(m[1]), l = Number(m[2]);
+        return (w + l) ? w / (w + l) : null;
+    }
+    /** "W4" -> 4, "L2" -> -2, so a longer win streak always compares as
+        "better" than a shorter one and any win streak beats any loss streak. */
+    function streakVal(s) {
+        var m = String(s || "").match(/^([WL])(\d+)$/);
+        return m ? (m[1] === "W" ? 1 : -1) * Number(m[2]) : null;
+    }
+    /** One row of the always-visible comparison grid. Display strings are
+        pre-formatted by the caller; aCmp/hCmp are the raw numbers used only to
+        decide which side gets the advantage highlight (they are frequently a
+        different value than what's displayed — win% drives the highlight on a
+        "67-40" record row, for example). */
+    function hhcRow(label, aDisplay, hDisplay, aCmp, hCmp, better) {
+        if (aDisplay === null && hDisplay === null) return "";
+        var an = Number(aCmp), hn = Number(hCmp);
+        var cmp = better && hasVal(aCmp) && hasVal(hCmp) && !isNaN(an) && !isNaN(hn);
+        var aAdv = cmp && (better === "high" ? an > hn : an < hn);
+        var hAdv = cmp && (better === "high" ? hn > an : hn < an);
+        return '<div class="hhc-row">' +
+            '<span class="hhc-cell' + (aAdv ? " is-adv" : "") + '">' + (aDisplay === null ? '<span class="hh-na">n/a</span>' : esc(aDisplay)) + '</span>' +
+            '<span class="hhc-lbl">' + esc(label) + '</span>' +
+            '<span class="hhc-cell' + (hAdv ? " is-adv" : "") + '">' + (hDisplay === null ? '<span class="hh-na">n/a</span>' : esc(hDisplay)) + '</span>' +
+            '</div>';
+    }
+    /** Odds are two-sided by design (vig), so a line row never gets an
+        advantage highlight — only real stat rows do. */
+    function hhcOddsRow(label, a, h) {
+        return '<div class="hhc-row">' +
+            '<span class="hhc-cell">' + (a ? esc(a) : '<span class="hh-na">n/a</span>') + '</span>' +
+            '<span class="hhc-lbl">' + esc(label) + '</span>' +
+            '<span class="hhc-cell">' + (h ? esc(h) : '<span class="hh-na">n/a</span>') + '</span>' +
+            '</div>';
+    }
+    function hhcDivider(label) { return '<div class="hhc-divider">' + esc(label) + '</div>'; }
+    function hhcPanel(title, srcNote, body) {
+        if (!body) return "";
+        return '<div class="hhc-panel"><h5 class="hhc-panel__title">' + esc(title) +
+            (srcNote ? ' <span class="hhc-src-inline">' + esc(srcNote) + '</span>' : "") + '</h5>' + body + '</div>';
+    }
+
+    function hhcStarterHtml(name, hand, pitcherStats) {
+        if (!name) return '<div class="hhc-sp"><strong>Not announced</strong></div>';
+        var bits = [];
+        if (pitcherStats && pitcherStats.available) {
+            if (hasVal(pitcherStats.era)) bits.push("ERA <b>" + esc(fmt2(pitcherStats.era)) + "</b>");
+            if (hasVal(pitcherStats.whip)) bits.push("WHIP <b>" + esc(fmt2(pitcherStats.whip)) + "</b>");
+            if (hasVal(pitcherStats.k_pct)) bits.push("K% <b>" + esc(fmtPct(pitcherStats.k_pct)) + "</b>");
+        }
+        return '<div class="hhc-sp"><strong>' + esc(name) + '</strong>' +
+            (hand ? '<span class="hh-hand">' + esc(hand) + 'HP</span>' : "") +
+            (bits.length ? '<span class="hhc-sp__line">' + bits.join(" · ") + '</span>'
+                         : '<span class="hhc-sp__line hhc-muted">Season stats not available for this starter.</span>') +
+            '</div>';
+    }
+
+    function hhcMarketPanel(game) {
+        function sideOdds(groupKey, side) {
+            var grp = groupByKey(game, groupKey);
+            var items = ((grp && grp.items) || []).filter(priced);
+            var teamShort = norm(shortTeam(side === "away" ? game.away_team : game.home_team));
+            var it = items.filter(function (x) { return norm(x.selection_label || x.selection || "").indexOf(teamShort) >= 0; })[0];
+            return it || null;
+        }
+        var mlA = sideOdds("full_game", "away"), mlH = sideOdds("full_game", "home");
+        var rlA = sideOdds("spread", "away"), rlH = sideOdds("spread", "home");
+        var totGrp = groupByKey(game, "total");
+        var totItem = ((totGrp && totGrp.items) || []).filter(priced)[0];
+
+        var rows = [];
+        if (mlA || mlH) rows.push(hhcOddsRow("Moneyline",
+            mlA ? (mlA.odds_display || fmtOdds(mlA.odds)) : null,
+            mlH ? (mlH.odds_display || fmtOdds(mlH.odds)) : null));
+        if (rlA || rlH) rows.push(hhcOddsRow("Run Line",
+            rlA ? String(rlA.line_display || rlA.line || "") + " " + (rlA.odds_display || fmtOdds(rlA.odds)) : null,
+            rlH ? String(rlH.line_display || rlH.line || "") + " " + (rlH.odds_display || fmtOdds(rlH.odds)) : null));
+        if (totItem) {
+            var totLine = String(totItem.line_display || totItem.line || "").replace(/^\+/, "");
+            rows.push('<div class="hhc-row"><span class="hhc-cell"></span><span class="hhc-lbl">Total</span><span class="hhc-cell">' + esc(totLine) + '</span></div>');
+        }
+        var book = pickBook(game);
+        var src = book && book.title ? "Source: " + book.title : "Source: sportsbook feed";
+        var body = rows.length
+            ? '<div class="hhc-grid">' + rows.join("") + '</div>'
+            : '<p class="hhc-empty-note">' + (game.lines_pending ? "Lines for this game are not posted yet." : "No sportsbook lines are available for this game right now.") + '</p>';
+        return hhcPanel("Betting Lines", src, body);
+    }
+
+    function hhcCommunityPanel(game) {
+        return hhcPanel("Community & Public Betting", null,
+            consensusFor(game) +
+            '<p class="hhc-flag">Public betting percentages: <b>not tracked yet</b> — TrustMyRecord does not currently have a licensed public-bet-percentage feed wired in. Shown above is real TMR/external community pick data, not sportsbook handle.</p>');
+    }
+
+    function hhcTrendsPanel(game, d, uid) {
+        var apiTrends = (d && d.trends) || [];
+        var legacy = STATE.trendsByMatchup[game.matchupKey] || [];
+        var reps = legacy.length ? rankTrends(legacy) : [];
+        var total = apiTrends.length + reps.length;
+        var top = apiTrends.length
+            ? apiTrends.slice(0, 2).map(function (t, i) { return apiTrendHtml(t, i, uid); }).join("")
+            : reps.slice(0, 2).map(trendCardHtml).join("");
+        var body = total
+            ? top + (total > 2 ? '<p class="hhc-empty-note">' + (total - 2) + ' more in the Trends tab below.</p>' : "")
+            : '<p class="hhc-empty-note">No trend cleared the engine\'s sample-size and edge thresholds for this matchup.</p>';
+        return hhcPanel("Verified Trends", total ? (total + " cleared the engine") : null, body);
+    }
+
+    function hhcLineupNote(name, lineup) {
+        if (lineup && lineup.available) {
+            var top = lineup.batters.slice(0, 3).map(function (b) { return b.order + ". " + b.name + (b.position ? " (" + b.position + ")" : ""); }).join(", ");
+            return '<div><b>' + esc(name) + '</b>: <span class="hhc-flag--ok">Confirmed — ' + esc(top) + (lineup.batters.length > 3 ? "…" : "") + '</span></div>';
+        }
+        return '<div><b>' + esc(name) + '</b>: <span class="hhc-muted">Not posted yet (usually 1-2 hrs before first pitch).</span></div>';
+    }
+
+    function hhcNotesPanel(game, d) {
+        var ov = d.overview && d.overview.available ? d.overview : null;
+        var lu = d.lineups || {};
+        var body = '<div class="hhc-notesgrid">' +
+            hhcLineupNote(shortTeam(game.away_team), lu.away) +
+            hhcLineupNote(shortTeam(game.home_team), lu.home) +
+            '</div>' +
+            '<p class="hhc-flag">Injuries / important lineup absences: <b>not tracked yet</b> on this page.</p>' +
+            '<p class="hhc-flag">Weather &amp; park factor: <b>not tracked yet</b>' + (ov && ov.venue ? " — venue: <b>" + esc(ov.venue) + "</b>" : "") + '.</p>';
+        return hhcPanel("Lineups & Game Notes", null, body);
+    }
+
+    /** The full always-visible card. `d` is null while the matchup fetch is
+        in flight, which paints a loading state rather than a blank card. */
+    function hhcTopHtml(game, d, uid) {
+        if (!d) return loadingHtml("Loading matchup research…");
+
+        var ov = d.overview && d.overview.available ? d.overview : null;
+        var rec = d.records || {}, ra = rec.away, rh = rec.home;
+        var off = d.offense || {}, oa = off.away, oh = off.home;
+        var tp = d.team_pitching || {}, tpa = tp.away, tph = tp.home;
+        var pit = d.pitchers || {}, pa = pit.away, ph = pit.home;
+        var bp = d.bullpens || {}, ba = bp.away, bh = bp.home;
+        function ok(s) { return s && s.available; }
+
+        var pitchersHtml = '<div class="hhc-pitchers">' +
+            hhcStarterHtml(ov && ov.away_starter && ov.away_starter.name, ov && ov.away_starter && ov.away_starter.hand, pa) +
+            '<span class="hh-vs">vs</span>' +
+            hhcStarterHtml(ov && ov.home_starter && ov.home_starter.name, ov && ov.home_starter && ov.home_starter.hand, ph) +
+            '</div>';
+
+        var gridRows = [];
+        if (ok(ra) || ok(rh)) {
+            var ra2 = ra || {}, rh2 = rh || {};
+            gridRows.push(hhcDivider("Record"));
+            gridRows.push(hhcRow("Record", ra2.record, rh2.record, winPct(ra2.record), winPct(rh2.record), "high"));
+            /* Each team's own split is the relevant one for THIS game — the away
+               team's road record next to the home team's home record — not a
+               like-for-like "away record vs away record" comparison. */
+            gridRows.push(hhcRow("Home / Road Split", ra2.away_record, rh2.home_record, winPct(ra2.away_record), winPct(rh2.home_record), "high"));
+            gridRows.push(hhcRow("Current Streak", ra2.streak, rh2.streak, streakVal(ra2.streak), streakVal(rh2.streak), "high"));
+            gridRows.push(hhcRow("Last 5", ra2.last5, rh2.last5, winPct(ra2.last5), winPct(rh2.last5), "high"));
+            gridRows.push(hhcRow("Last 10", ra2.last10, rh2.last10, winPct(ra2.last10), winPct(rh2.last10), "high"));
+        }
+        var offRows = [];
+        if (ok(oa) || ok(oh)) {
+            var oa2 = oa || {}, oh2 = oh || {};
+            offRows.push(hhcRow("Runs / Game", fmt2(oa2.runs_per_game), fmt2(oh2.runs_per_game), oa2.runs_per_game, oh2.runs_per_game, "high"));
+        }
+        if (ok(tpa) || ok(tph)) {
+            var tpa2 = tpa || {}, tph2 = tph || {};
+            offRows.push(hhcRow("Runs Allowed / Game", fmt2(tpa2.runs_allowed_per_game), fmt2(tph2.runs_allowed_per_game), tpa2.runs_allowed_per_game, tph2.runs_allowed_per_game, "low"));
+        }
+        if (ok(oa) || ok(oh)) {
+            var oa3 = oa || {}, oh3 = oh || {};
+            offRows.push(hhcRow("Batting AVG", fmtRate(oa3.avg), fmtRate(oh3.avg), oa3.avg, oh3.avg, "high"));
+            offRows.push(hhcRow("OPS", fmtRate(oa3.ops), fmtRate(oh3.ops), oa3.ops, oh3.ops, "high"));
+            offRows.push(hhcRow("Home Runs", oa3.home_runs, oh3.home_runs, oa3.home_runs, oh3.home_runs, "high"));
+        }
+        if (offRows.length) { gridRows.push(hhcDivider("Team Offense")); gridRows = gridRows.concat(offRows); }
+
+        var pitRows = [];
+        if (ok(pa) || ok(ph)) {
+            var pa2 = pa || {}, ph2 = ph || {};
+            pitRows.push(hhcRow("Starter ERA", fmt2(pa2.era), fmt2(ph2.era), pa2.era, ph2.era, "low"));
+            pitRows.push(hhcRow("Starter WHIP", fmt2(pa2.whip), fmt2(ph2.whip), pa2.whip, ph2.whip, "low"));
+            pitRows.push(hhcRow("Starter K%", fmtPct(pa2.k_pct), fmtPct(ph2.k_pct), pa2.k_pct, ph2.k_pct, "high"));
+        }
+        if (ok(ba) || ok(bh)) {
+            var ba2 = ba || {}, bh2 = bh || {};
+            pitRows.push(hhcRow("Bullpen ERA", fmt2(ba2.era), fmt2(bh2.era), ba2.era, bh2.era, "low"));
+            var baW = ba2.workload, bhW = bh2.workload;
+            if (ok(baW) || ok(bhW)) {
+                var baIp = ok(baW) ? baW.innings_last_3_games : null, bhIp = ok(bhW) ? bhW.innings_last_3_games : null;
+                pitRows.push(hhcRow("Bullpen IP, last 3 G", hasVal(baIp) ? String(baIp) : null, hasVal(bhIp) ? String(bhIp) : null, baIp, bhIp, "low"));
+            }
+        }
+        if (pitRows.length) { gridRows.push(hhcDivider("Pitching")); gridRows = gridRows.concat(pitRows); }
+
+        var gridBody = gridRows.length
+            ? '<div class="hhc-grid">' + gridRows.join("") + '</div>' +
+              '<p class="hhc-src">Records/streak/L5/L10 computed from completed-game results · runs allowed &amp; bullpen workload from team pitching lines and box scores · lower is better for ERA/WHIP/runs-allowed/bullpen-innings, higher for everything else. Source: MLB Stats API.</p>'
+            : '<p class="hhc-empty-note">Team and pitching statistics are not available for this matchup yet.</p>';
+        var gridPanel = hhcPanel("Team Comparison", null, gridBody);
+
+        return pitchersHtml + gridPanel + hhcMarketPanel(game) + hhcCommunityPanel(game) + hhcTrendsPanel(game, d, uid) + hhcNotesPanel(game, d);
     }
 
     /* ---------------- OVERVIEW ---------------- */
@@ -977,22 +1226,6 @@
         return blocks.join("") + fresh +
             notAvailableList([["opening_line", "line_movement", "steam_moves", "book_to_book_comparison"]]);
     }
-    function quickLinesHtml(game) {
-        var chips = [];
-        var ml = groupByKey(game, "full_game");
-        if (ml && ml.items) {
-            ml.items.slice(0, 2).forEach(function (it) {
-                chips.push('<span class="hh-chip">' + esc(shortTeam((it.selection_label || it.selection || "").replace(/ ML$/i, ""))) + ' <b>' + esc(it.odds_display || fmtOdds(it.odds)) + '</b></span>');
-            });
-        }
-        var tot = groupByKey(game, "total");
-        if (tot && tot.items && tot.items[0]) {
-            chips.push('<span class="hh-chip">O/U <b>' + esc((tot.items[0].line_display || tot.items[0].line || "").toString().replace(/^\+/, "")) + '</b></span>');
-        }
-        if (!chips.length) chips.push('<span class="hh-chip hh-chip--muted">' + (game.lines_pending ? "Lines pending" : "No line") + '</span>');
-        return chips.join("");
-    }
-
     /* ---------------- COMMUNITY ---------------- */
     function consensusFor(game) {
         var al = lastName(game.away_team), hl = lastName(game.home_team);
@@ -1086,19 +1319,12 @@
 
     /* ---------------- render one game body (lazy) ---------------- */
     var UID = 0;
-    function renderBody(game, bodyEl, node) {
+    function renderBody(game, bodyEl) {
         if (bodyEl.dataset.loaded === "1") return;
         bodyEl.dataset.loaded = "1";
         var uid = "g" + (++UID);
 
-        var sportsbookHref = "/sportsbook/?sport=baseball_mlb#picks";
-        var shareHref = location.pathname + "#game-" + encodeURIComponent(game.id);
-        var actions = '<div class="hh-actions">' +
-            '<a class="hh-btn hh-btn--primary" href="' + sportsbookHref + '">Make Pick</a>' +
-            '<button type="button" class="hh-btn hh-btn--ghost" data-share data-href="' + esc(shareHref) + '">Copy Matchup Link</button>' +
-            '</div>';
-
-        var P = buildTabs(bodyEl, uid, actions);
+        var P = buildTabs(bodyEl, uid, "");
 
         /* Board-derived tabs render immediately — no network needed. */
         P.markets.innerHTML = marketsHtml(game);
@@ -1132,45 +1358,42 @@
                 var more = P.trends.querySelector("[data-more]");
                 if (more) { more.hidden = false; viewall.remove(); }
             });
-            /* The board feed carries no venue; the research API does. */
-            var vEl = node && node.querySelector("[data-venue]");
-            if (vEl && !vEl.textContent && d.overview && d.overview.venue) vEl.textContent = d.overview.venue;
         }
         function load() {
             setLoading();
-            var url = API + "/handicapping/mlb/matchup?away=" + encodeURIComponent(game.away_team) +
-                "&home=" + encodeURIComponent(game.home_team) +
-                "&date=" + encodeURIComponent(slateDateET(game.commence_time));
-            var cached = STATE.matchup[game.id];
-            (cached ? Promise.resolve(cached) : getJSON(url).then(function (d) { STATE.matchup[game.id] = d; return d; }))
-                .then(paint)
-                .catch(function (e) {
-                    var msg = e && e.name === "AbortError"
-                        ? "The research API timed out. It may be waking up from idle, retry in a moment."
-                        : "The research API returned an error (" + esc(e && e.message ? e.message : "unknown") + ").";
-                    setError(msg);
-                });
+            getMatchup(game).then(paint).catch(function (e) {
+                var msg = e && e.name === "AbortError"
+                    ? "The research API timed out. It may be waking up from idle, retry in a moment."
+                    : "The research API returned an error (" + esc(e && e.message ? e.message : "unknown") + ").";
+                setError(msg);
+            });
         }
         load();
-
-        var share = bodyEl.querySelector("[data-share]");
-        if (share) share.addEventListener("click", function () {
-            var url = location.origin + share.getAttribute("data-href");
-            if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () {
-                share.textContent = "Link Copied";
-                setTimeout(function () { share.textContent = "Copy Matchup Link"; }, 1600);
-            });
-        });
     }
 
-    /* ---------------- game header render ---------------- */
+    /** Populates the always-visible comparison card once its matchup fetch
+        resolves (or shows a loading/error state while it's in flight). */
+    function paintTop(game, node, d) {
+        var topEl = node.querySelector("[data-hhctop]");
+        if (!topEl) return;
+        topEl.innerHTML = hhcTopHtml(game, d, "top" + game.id);
+        if (d && d.trends && d.trends.length) wireTrendGames(topEl, d.trends);
+        /* The board feed carries no venue; the research API does. */
+        var vEl = node.querySelector("[data-venue]");
+        if (vEl && !vEl.textContent && d && d.overview && d.overview.venue) vEl.textContent = d.overview.venue;
+    }
+
+    /* ---------------- game card render ---------------- */
     function gameEl(game) {
         var node = tpl.content.firstElementChild.cloneNode(true);
         node.id = "game-" + game.id;
         var t = new Date(game.commence_time);
         var timeStr = isNaN(t) ? "" : t.toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" });
-        node.querySelector("[data-away-name]").textContent = game.away_team;
-        node.querySelector("[data-home-name]").textContent = game.home_team;
+        var awayNameEl = node.querySelector("[data-away-name]"), homeNameEl = node.querySelector("[data-home-name]");
+        awayNameEl.textContent = game.away_team;
+        awayNameEl.title = game.away_team;
+        homeNameEl.textContent = game.home_team;
+        homeNameEl.title = game.home_team;
         var al = node.querySelector("[data-away-logo]"), hl = node.querySelector("[data-home-logo]");
         var alogo = logoFor(game.away_team), hlogo = logoFor(game.home_team);
         if (alogo) { al.src = alogo; al.alt = game.away_team + " logo"; } else al.remove();
@@ -1179,15 +1402,27 @@
         var venue = (game.venue || (game.simulation_inputs && game.simulation_inputs.venue) || "");
         node.querySelector("[data-venue]").textContent = venue;
         if (game.completed) node.classList.add("is-final");
-        node.querySelector("[data-quicklines]").innerHTML = quickLinesHtml(game);
+        node.querySelector("[data-hhctop]").innerHTML = hhcTopHtml(game, null);
 
-        var header = node.querySelector("[data-toggle]");
+        var shareHref = location.pathname + "#game-" + encodeURIComponent(game.id);
+        var share = node.querySelector("[data-share]");
+        share.setAttribute("data-href", shareHref);
+        share.addEventListener("click", function () {
+            var url = location.origin + share.getAttribute("data-href");
+            if (navigator.clipboard) navigator.clipboard.writeText(url).then(function () {
+                share.textContent = "Link Copied";
+                setTimeout(function () { share.textContent = "Copy Matchup Link"; }, 1600);
+            });
+        });
+
+        var toggle = node.querySelector("[data-toggle]");
         var body = node.querySelector("[data-body]");
-        header.addEventListener("click", function () {
+        toggle.addEventListener("click", function () {
             var open = node.classList.toggle("is-open");
-            header.setAttribute("aria-expanded", open ? "true" : "false");
+            toggle.setAttribute("aria-expanded", open ? "true" : "false");
+            toggle.querySelector("[data-toggle-label]").textContent = open ? "Hide Full Analysis" : "View Full Analysis";
             body.hidden = !open;
-            if (open) renderBody(game, body, node);
+            if (open) renderBody(game, body);
         });
         node._game = game;
         return node;
@@ -1219,7 +1454,24 @@
             return;
         }
         statusEl.style.display = "none";
-        list.forEach(function (g) { gamesEl.appendChild(gameEl(g)); });
+        var nodes = list.map(function (g) {
+            var node = gameEl(g);
+            gamesEl.appendChild(node);
+            return node;
+        });
+        /* Every card's comparison data starts loading immediately — the whole
+           point of this layout is that no click is required to see it. Bounded
+           concurrency keeps a full slate from firing every fetch at once. */
+        runQueue(nodes.map(function (node) {
+            return function () {
+                return getMatchup(node._game)
+                    .then(function (d) { paintTop(node._game, node, d); })
+                    .catch(function (e) {
+                        var topEl = node.querySelector("[data-hhctop]");
+                        if (topEl) topEl.innerHTML = errorHtml(e && e.message ? e.message : "The research API did not respond.");
+                    });
+            };
+        }), 4);
         if (location.hash.indexOf("#game-") === 0) {
             var target = document.getElementById(location.hash.slice(1));
             if (target) {
