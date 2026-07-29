@@ -751,6 +751,18 @@
             color: var(--muted);
         }
 
+        .hm-tier-more {
+            padding: 10px 12px 14px;
+            text-align: center;
+        }
+        .hm-tier-more .hm-action-btn {
+            min-height: 34px;
+            padding: 6px 16px;
+        }
+        @media (max-width: 720px) {
+            .hm-tier-more .hm-action-btn { width: 100%; }
+        }
+
         .hm-empty, .hm-error {
             padding: 26px 16px;
             text-align: center;
@@ -1107,8 +1119,8 @@
                 copy: 'Members who have started building a public record (1 to 4 graded picks). Shown as community activity, not ranked aggressively by ROI.'
             },
             joined: {
-                title: 'New Members',
-                copy: 'Members who joined but have not locked a pick yet.'
+                title: 'New Members — No Picks Yet',
+                copy: 'Members who joined but have not locked a pick yet. They move into the ranked tiers above the moment their first pick locks.'
             }
         };
         // Directory tab views: each maps to a set of tiers + a default sort.
@@ -1124,6 +1136,21 @@
         let tierView = 'all';
 
         let members = [];
+        // Members who have locked at least one pick (fetchBackendUsers source).
+        // Kept separate from the zero-pick `newMembers` list below so refreshing
+        // either source never clobbers the other; `members` is always their union
+        // (see composeMembers()).
+        let pickMakerMembers = [];
+        // Zero-locked-pick members for the "New Members" tier, sourced from
+        // GET /api/users/handicappers/new-members (same publicDirectoryUserWhere
+        // eligibility as the rest of the directory). Paginated client-side via
+        // newMembersOffset/newMembersHasMore + the "Show more" button in the
+        // joined-tier section.
+        let newMembers = [];
+        let newMembersOffset = 0;
+        let newMembersTotal = 0;
+        let newMembersHasMore = false;
+        const NEW_MEMBERS_PAGE_SIZE = 24;
         // Total registered/public users (production directory), INCLUDING members
         // with zero picks. Distinct from `members`, which is filtered to users with
         // at least one pick. Used for the "Total Members" summary card.
@@ -1796,6 +1823,46 @@
                 if (failed) throw failed.reason;
             }
             return uniqUsers(users).filter(isProductionDirectoryUser);
+        }
+
+        // Zero-locked-pick members for the "New Members" tier. Server-paginated;
+        // offset advances only via loadMoreNewMembers so a background refresh
+        // (which always re-requests from offset 0) never double-counts a page.
+        async function fetchNewMembersPage(offset) {
+            const data = await directoryRequest('/users/handicappers/new-members?limit=' + NEW_MEMBERS_PAGE_SIZE + '&offset=' + offset);
+            const rows = Array.isArray(data && data.members) ? data.members : [];
+            const pagination = (data && data.pagination) || {};
+            return {
+                rows,
+                total: Number(pagination.total || rows.length),
+                hasMore: !!pagination.has_more
+            };
+        }
+
+        function mapNewMemberRows(rows) {
+            return rows
+                .map(row => normalizeMember(row, defaultStats()))
+                .filter(member => member.username && isProductionDirectoryUser(member));
+        }
+
+        // `members` (used by every stat/filter/render function on this page) is
+        // always the union of pick-makers and zero-pick new members, deduped by
+        // username so the two independently-refreshed sources can never produce
+        // a duplicate row.
+        function composeMembers() {
+            const seen = new Set(pickMakerMembers.map(member => member.username.toLowerCase()));
+            members = pickMakerMembers.concat(newMembers.filter(member => !seen.has(member.username.toLowerCase())));
+        }
+
+        async function loadMoreNewMembers() {
+            if (!newMembersHasMore) return;
+            const page = await fetchNewMembersPage(newMembersOffset);
+            newMembers = newMembers.concat(mapNewMemberRows(page.rows));
+            newMembersOffset += page.rows.length;
+            newMembersTotal = page.total;
+            newMembersHasMore = page.hasMore;
+            composeMembers();
+            applyFilters();
         }
 
         async function mapWithConcurrency(items, limit, mapper) {
@@ -2733,10 +2800,16 @@
 
         function tierSectionHtml(tier, group) {
             const meta = TIER_META[tier];
+            const countLabel = (tier === 'joined' && newMembersTotal > group.length)
+                ? group.length + ' of ' + newMembersTotal
+                : String(group.length);
+            const moreHtml = (tier === 'joined' && newMembersHasMore)
+                ? '<div class="hm-tier-more"><button type="button" class="hm-action-btn" data-action="load-more-new-members">Show more new members (' + Math.max(newMembersTotal - newMembers.length, 0) + ' remaining)</button></div>'
+                : '';
             return '<div class="hm-tier-header hm-tier-header--' + tier + '" role="presentation">' +
-                '<h3>' + escapeHtml(meta.title) + ' <span class="hm-tier-count">' + group.length + '</span></h3>' +
+                '<h3>' + escapeHtml(meta.title) + ' <span class="hm-tier-count">' + countLabel + '</span></h3>' +
                 '<p>' + escapeHtml(meta.copy) + '</p>' +
-            '</div>' + group.map(memberRowHtml).join('');
+            '</div>' + group.map(memberRowHtml).join('') + moreHtml;
         }
 
         function renderRows() {
@@ -2812,43 +2885,6 @@
                 else followingSet.delete(String(member.username).toLowerCase());
             }
             applyFilters();
-        }
-
-        // Stale-while-revalidate cache. The /users + /users/leaderboard payloads
-        // are ~360KB each (≈98% inline base64 avatars), and a cold Render free
-        // instance can take many seconds for the first response. Persisting the
-        // last directory snapshot lets repeat/cold loads paint the full board
-        // instantly while fresh data revalidates in the background.
-        const DIRECTORY_CACHE_KEY = 'tmr_handicappers_directory_v1';
-        function serializeMemberForCache(m) {
-            const stats = Object.assign({}, m.stats);
-            delete stats._rawPicks;
-            return {
-                id: m.id, username: m.username, displayName: m.displayName,
-                avatar: m.avatar, createdAt: m.createdAt, lastActive: m.lastActive,
-                stats: stats, isFollowing: m.isFollowing
-            };
-        }
-        function writeDirectoryCache(list) {
-            try {
-                localStorage.setItem(DIRECTORY_CACHE_KEY, JSON.stringify({
-                    ts: Date.now(), totalRegistered: totalRegistered,
-                    members: (list || []).map(serializeMemberForCache)
-                }));
-            } catch (error) { /* quota/unavailable: caching is best-effort */ }
-        }
-        function readDirectoryCache() {
-            try {
-                const raw = localStorage.getItem(DIRECTORY_CACHE_KEY);
-                const data = raw ? JSON.parse(raw) : null;
-                if (!data || !Array.isArray(data.members)) return [];
-                if (Number(data.totalRegistered) > 0) totalRegistered = Number(data.totalRegistered);
-                return data.members.map(m => Object.assign({}, m, {
-                    stats: Object.assign(defaultStats(), m.stats || {}),
-                    rawPicks: [],
-                    _user: { username: m.username, id: m.id }
-                }));
-            } catch (error) { return []; }
         }
 
         // Authoritative followed-member set for the signed-in visitor: powers the
@@ -2941,27 +2977,35 @@
                 fetchDirectoryCounts();
                 fetchFeaturedStats();
                 loadNewestMember();
-                // Phase 0: instant paint from last cached snapshot (if any).
-                const cached = readDirectoryCache();
-                if (cached.length) {
-                    members = cached;
-                    renderSummary();
-                    fillSports();
-                    applyFilters();
-                }
-                const sourceUsers = await fetchBackendUsers();
-                // Total registered/public members = every production user with a
-                // username, regardless of pick count (sourceUsers is already
-                // test-account-filtered by fetchBackendUsers).
-                totalRegistered = sourceUsers.filter(user => normalizeUsername(user)).length;
+                // Single live paint: pick-makers and zero-pick new members fetch in
+                // parallel and render together. There is deliberately no
+                // instant-paint-from-cache step here -- the prerendered HTML this
+                // page ships already gives every visitor (including first-time,
+                // no-JS/crawler) a populated, non-blank table, so painting a second,
+                // independently-stale local snapshot on top of it only added a
+                // second stale-then-correct swap instead of preventing one.
+                const [sourceUsers, newMembersPage] = await Promise.all([
+                    fetchBackendUsers(),
+                    fetchNewMembersPage(0).catch(error => {
+                        console.warn('[Handicappers] New members load failed:', error);
+                        return { rows: [], total: 0, hasMore: false };
+                    })
+                ]);
+                newMembers = mapNewMemberRows(newMembersPage.rows);
+                newMembersOffset = newMembersPage.rows.length;
+                newMembersTotal = newMembersPage.total;
+                newMembersHasMore = newMembersPage.hasMore;
                 // Phase 1: render fresh aggregate stats (no per-user fetches).
-                members = sourceUsers
+                pickMakerMembers = sourceUsers
                     .map(user => normalizeMember(user, hydrateStats(user)))
                     .filter(member => member.username && isProductionDirectoryUser(member));
+                composeMembers();
+                // Total registered/public members = every production user with a
+                // username, regardless of pick count.
+                totalRegistered = members.length;
                 membersAreFresh = true;
                 applyFollowingSet();
                 syncFeaturedStatsIntoMembers();
-                writeDirectoryCache(members);
                 renderSummary();
                 fillSports();
                 applyFilters();
@@ -3042,6 +3086,14 @@
             renderRows();
         });
         els.rows.addEventListener('click', event => {
+            const loadMoreBtn = event.target.closest('[data-action="load-more-new-members"]');
+            if (loadMoreBtn) {
+                event.preventDefault();
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.textContent = 'Loading…';
+                loadMoreNewMembers().catch(error => console.warn('[Handicappers] Load more new members failed:', error));
+                return;
+            }
             const follow = event.target.closest('[data-follow]');
             if (follow) {
                 event.preventDefault();
@@ -3091,8 +3143,26 @@
             refreshing = true;
             try {
                 fetchDirectoryCounts();
-                const sourceUsers = await fetchBackendUsers();
-                totalRegistered = sourceUsers.filter(user => normalizeUsername(user)).length;
+                // Re-request however many new members were already loaded (base
+                // page, or more if the visitor clicked "Show more") so a silent
+                // background refresh never shrinks their expanded list back down.
+                const newMembersRefreshLimit = Math.max(NEW_MEMBERS_PAGE_SIZE, newMembers.length);
+                const [sourceUsers, newMembersPage] = await Promise.all([
+                    fetchBackendUsers(),
+                    directoryRequest('/users/handicappers/new-members?limit=' + newMembersRefreshLimit + '&offset=0')
+                        .catch(error => {
+                            console.warn('[Handicappers] New members refresh failed:', error);
+                            return null;
+                        })
+                ]);
+                if (newMembersPage) {
+                    const rows = Array.isArray(newMembersPage.members) ? newMembersPage.members : [];
+                    const pagination = newMembersPage.pagination || {};
+                    newMembers = mapNewMemberRows(rows);
+                    newMembersOffset = rows.length;
+                    newMembersTotal = Number(pagination.total || rows.length);
+                    newMembersHasMore = !!pagination.has_more;
+                }
                 // Preserve already-enriched picks so the Sport/Wager filters don't
                 // flicker back to aggregate-only between background refreshes.
                 const priorPicks = new Map();
@@ -3101,7 +3171,7 @@
                         priorPicks.set(String(member.username).toLowerCase(), member.rawPicks);
                     }
                 });
-                const next = sourceUsers
+                pickMakerMembers = sourceUsers
                     .map(user => {
                         const member = normalizeMember(user, hydrateStats(user));
                         const cached = priorPicks.get(String(member.username).toLowerCase());
@@ -3113,10 +3183,10 @@
                         return member;
                     })
                     .filter(member => member.username && isProductionDirectoryUser(member));
-                members = next;
+                composeMembers();
+                totalRegistered = members.length;
                 applyFollowingSet();
                 syncFeaturedStatsIntoMembers();
-                writeDirectoryCache(members);
                 fillSports();
                 applyFilters();
                 // Refresh the featured dataset alongside the member refresh so
