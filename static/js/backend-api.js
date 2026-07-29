@@ -842,6 +842,9 @@ class TrustMyRecordAPI {
     async unblockUser(userId) {
         return this.request(`/social/block/${userId}`, { method: 'DELETE' });
     }
+    async getBlockedUsers() {
+        return this.request(`/social/manage/blocked`);
+    }
 
     // ==================== MESSAGING ROUTES ====================
     // Note: These may need to be added to backend if not present

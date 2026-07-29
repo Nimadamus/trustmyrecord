@@ -6019,7 +6019,7 @@
     <script src="/static/js/config.js?v=20260330"></script>
     <script src="/static/js/tmr-team-logo.js?v=20260707logos1"></script>
     <script src="/static/js/analytics.js?v=20260719ft"></script>
-    <script src="/static/js/backend-api.js?v=20260725coins1"></script>
+    <script src="/static/js/backend-api.js?v=20260729block1"></script>
     <script src="/static/js/nav-badges.js"></script>
     <script src="/static/js/auth-persistent.js?v=20260525noautologout"></script>
     <script src="/static/js/auto-grader-fixed.js?v=20260405b"></script>
@@ -6034,6 +6034,8 @@
     let profileData = null;
     let isOwnProfile = false;
     let isFollowingProfile = false;
+    let isBlockedProfile = false;
+    let hasBlockedViewer = false;
     let profileUserId = null;
     let allLoadedPicks = [];
     let currentRenderedPicks = [];
@@ -6978,6 +6980,8 @@
 
             if (currentUser && !isOwnProfile) {
                 isFollowingProfile = !!profileData.is_following;
+                isBlockedProfile = !!profileData.is_blocked_by_viewer;
+                hasBlockedViewer = !!profileData.has_blocked_viewer;
             }
 
             renderProfileHeader(profileData);
@@ -10361,15 +10365,22 @@
         if (isOwnProfile) {
             primaryActions = '';
         } else if (currentUser) {
-            const followBtn = isFollowingProfile
-                ? '<span class="tmr-follow-wrap" style="position:relative;display:inline-block;">'
-                    + '<button class="btn btn-secondary" onclick="toggleFollowPrefs(' + profileUserId + ')"><i class="fas fa-check" style="margin-right:6px;"></i>Following <i class="fas fa-caret-down" style="margin-left:5px;"></i></button>'
-                    + '<div id="followPrefsPop" class="tmr-follow-pop" style="display:none;position:absolute;top:calc(100% + 8px);left:0;z-index:200;width:290px;background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;box-shadow:0 18px 48px rgba(0,0,0,0.45);"></div>'
-                    + '</span>'
-                : '<button class="btn btn-primary" onclick="doFollow(' + profileUserId + ')"><i class="fas fa-plus" style="margin-right:6px;"></i>Follow</button>';
-            primaryActions = followBtn +
-                '<button class="btn btn-secondary" onclick="location.href=\'/messages/?to=' + encodeURIComponent(p.username) + '\'">Send Message</button>' +
-                '<button class="btn btn-secondary" onclick="location.href=\'/arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button>';
+            if (hasBlockedViewer) {
+                primaryActions = '<span style="color:var(--text-muted,#9aacbf);font-size:0.85rem;">You can\'t interact with this profile.</span>';
+            } else if (isBlockedProfile) {
+                primaryActions = '<button class="btn btn-secondary" onclick="doUnblock(' + profileUserId + ')"><i class="fas fa-user-check" style="margin-right:6px;"></i>Unblock</button>';
+            } else {
+                const followBtn = isFollowingProfile
+                    ? '<span class="tmr-follow-wrap" style="position:relative;display:inline-block;">'
+                        + '<button class="btn btn-secondary" onclick="toggleFollowPrefs(' + profileUserId + ')"><i class="fas fa-check" style="margin-right:6px;"></i>Following <i class="fas fa-caret-down" style="margin-left:5px;"></i></button>'
+                        + '<div id="followPrefsPop" class="tmr-follow-pop" style="display:none;position:absolute;top:calc(100% + 8px);left:0;z-index:200;width:290px;background:#1c1f2a;border:1px solid #2a2e3d;border-radius:12px;box-shadow:0 18px 48px rgba(0,0,0,0.45);"></div>'
+                        + '</span>'
+                    : '<button class="btn btn-primary" onclick="doFollow(' + profileUserId + ')"><i class="fas fa-plus" style="margin-right:6px;"></i>Follow</button>';
+                primaryActions = followBtn +
+                    '<button class="btn btn-secondary" onclick="location.href=\'/messages/?to=' + encodeURIComponent(p.username) + '\'">Send Message</button>' +
+                    '<button class="btn btn-secondary" onclick="location.href=\'/arena/?challenge=' + encodeURIComponent(p.username) + '\'">Challenge</button>' +
+                    '<button class="btn btn-secondary" onclick="doBlock(' + profileUserId + ')" title="Block this user"><i class="fas fa-ban" style="margin-right:6px;"></i>Block</button>';
+            }
         }
         // PROFILE_SHARE_OWNER_ONLY_20260722: Share renders only on your OWN
         // profile. A visitor can still read, follow, message or challenge a
@@ -13473,6 +13484,27 @@
             isFollowingProfile = false;
             profileData.follower_count = Math.max(0, Number(profileData.follower_count || 0) - 1);
             showToast('Unfollowed', 'success');
+            renderProfileHeader(profileData);
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+
+    async function doBlock(id) {
+        if (!currentUser) return showToast('Log in first', 'error');
+        if (!confirm('Block this user? They will be unfollowed, can no longer message you, and their forum posts will be hidden from you.')) return;
+        try {
+            await api.blockUser(id);
+            isBlockedProfile = true;
+            isFollowingProfile = false;
+            showToast('User blocked', 'success');
+            renderProfileHeader(profileData);
+        } catch(e) { showToast(e.message, 'error'); }
+    }
+    async function doUnblock(id) {
+        if (!currentUser) return showToast('Log in first', 'error');
+        try {
+            await api.unblockUser(id);
+            isBlockedProfile = false;
+            showToast('User unblocked', 'success');
             renderProfileHeader(profileData);
         } catch(e) { showToast(e.message, 'error'); }
     }
