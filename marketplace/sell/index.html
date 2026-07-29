@@ -76,6 +76,10 @@
         .pkg-price input:focus { outline:none; border-color:var(--cyan); }
         .pkg-keep { color:var(--muted); font-size:10.5px; margin-top:6px; min-height:13px; }
         .pkg-keep b { color:var(--green); font-family:'JetBrains Mono',monospace; }
+        .pkg-err { color:var(--red); font-size:11px; margin-top:5px; min-height:0; font-weight:700; }
+        .pkg.err { border-color:rgba(248,113,113,.5); }
+        .test-mode-banner { background:rgba(251,191,36,.08); border:1px solid rgba(251,191,36,.4); border-radius:12px; padding:12px 16px; font-size:13px; color:#ffe6ad; margin-bottom:16px; line-height:1.5; }
+        .test-mode-banner b { color:var(--amber); }
         .pkg-toggle { display:flex; align-items:center; gap:7px; font-size:11.5px; color:#c5cee0; margin-top:9px; cursor:pointer; }
         .pkg-status { margin-left:auto; font:700 9.5px/1 'JetBrains Mono',monospace; letter-spacing:.08em; text-transform:uppercase; }
         .pkg-group-label { font-weight:800; font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--cyan); margin:4px 0 8px; }
@@ -113,7 +117,7 @@
 <script>
 (function () {
     const app = document.getElementById('app');
-    let elig = null, listing = null, listings = [], byType = {}, dash = null, status = null;
+    let elig = null, listing = null, listings = [], byType = {}, dash = null, status = null, mpStatus = null;
 
     const PKG = [
         { type: 'single_pick',   name: 'Single Pick',  dur: '1 PICK', ph: '20.00' },
@@ -165,6 +169,7 @@
             '<div class="pkg-price"><span>$</span><input type="number" step="0.01" min="1" placeholder="' + pk.ph + '" data-price="' + pk.type + '" value="' + price + '"></div>' +
             '<div class="pkg-keep" data-keep="' + pk.type + '"></div>' +
             '<label class="pkg-toggle"><input type="checkbox" data-offer="' + pk.type + '"' + (on ? ' checked' : '') + '> Offer this' + status + '</label>' +
+            '<div class="pkg-err" data-err="' + pk.type + '"></div>' +
             '<div class="pkg-help">' + esc(PKG_HELP[pk.type] || '') + '</div>' +
         '</div>';
     }
@@ -202,7 +207,11 @@
     }
 
     function render() {
-        let html = renderNextAction();
+        let html = '';
+        if (mpStatus && mpStatus.stripe_test_mode) {
+            html += '<div class="test-mode-banner"><b>Test mode.</b> Stripe is running in sandbox mode platform-wide right now. Any Stripe account connected here — including yours — is a test account: it will never receive real payouts and will not show up in your real Stripe dashboard. Purchases are also disabled until TrustMyRecord explicitly goes live.</div>';
+        }
+        html += renderNextAction();
 
         // Step 1: eligibility
         html += '<div class="panel" id="step1"><h2><span class="step-num">1</span> Eligibility ' +
@@ -244,8 +253,11 @@
         } else {
             html += '<p style="color:#c5cee0;font-size:13px;">Charges: ' + (elig.rules.stripe_charges_enabled ? 'enabled' : '<span style="color:var(--red)">disabled</span>') +
                 ' &middot; Payouts: ' + (elig.rules.stripe_payouts_enabled ? 'enabled' : '<span style="color:var(--red)">disabled</span>') + '</p>' +
-                '<p class="hint">Disconnecting stops new sales and unpublishes your packages. Your Stripe account, your balance, and past payouts are untouched.</p>' +
-                '<button class="btn" id="disconnectBtn" style="margin-top:4px;">Disconnect Stripe</button>';
+                '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;">' +
+                '<a class="btn btn-outline" href="https://dashboard.stripe.com/login" target="_blank" rel="noopener">Open Your Stripe Dashboard</a>' +
+                '<button class="btn" id="disconnectBtn">Disconnect Stripe</button>' +
+                '</div>' +
+                '<p class="hint" style="margin-top:8px;">Disconnecting stops new sales and unpublishes your packages. Your Stripe account, your balance, and past payouts are untouched. "Open Your Stripe Dashboard" logs into the Stripe account you connected directly on Stripe.com, using the email/password you set during onboarding — that is the authoritative place to verify your balance and payouts.</p>';
         }
         html += '</div>';
 
@@ -353,31 +365,51 @@
         });
         const saveBtn = document.getElementById('saveListingBtn');
         if (saveBtn) saveBtn.addEventListener('click', async function () {
-            saveBtn.disabled = true;
+            const label = saveBtn.textContent;
+            saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+            PKG.forEach(function (pk) { const err = app.querySelector('[data-err="' + pk.type + '"]'); if (err) err.textContent = ''; });
             const desc = document.getElementById('lsDesc').value;
             const sports = document.getElementById('lsSports').value.split(',').map(function(s){return s.trim();}).filter(Boolean);
-            try {
-                for (const pk of PKG) {
-                    const offered = app.querySelector('[data-offer="' + pk.type + '"]').checked;
-                    const cents = Math.round(parseFloat(app.querySelector('[data-price="' + pk.type + '"]').value || '0') * 100);
-                    const existing = byType[pk.type];
+
+            let savedCount = 0, unpublishedCount = 0, failedCount = 0;
+            for (const pk of PKG) {
+                const errSlot = app.querySelector('[data-err="' + pk.type + '"]');
+                const offered = app.querySelector('[data-offer="' + pk.type + '"]').checked;
+                const cents = Math.round(parseFloat(app.querySelector('[data-price="' + pk.type + '"]').value || '0') * 100);
+                const existing = byType[pk.type];
+                try {
                     if (offered) {
-                        if (!cents) throw new Error(pk.name + ': set a price first');
+                        if (!cents) { if (errSlot) errSlot.textContent = 'Set a price first.'; failedCount++; continue; }
                         const out = await api.request('/marketplace/me/listing', { method: 'PUT', body: {
                             product_type: pk.type, title: pk.name, description: desc, price_cents: cents, sports: sports,
                         } });
-                        if (out && out.error) throw new Error(pk.name + ': ' + out.error);
+                        if (out && out.error) throw new Error(out.error);
                         if (elig.eligible) {
                             const p = await api.request('/marketplace/me/listing/publish', { method: 'POST', body: { product_type: pk.type } });
-                            if (p && p.error) throw new Error(pk.name + ': ' + p.error);
+                            if (p && p.error) throw new Error(p.error);
                         }
+                        savedCount++;
                     } else if (existing && existing.status === 'published') {
                         await api.request('/marketplace/me/listing/unpublish', { method: 'POST', body: { product_type: pk.type } });
+                        unpublishedCount++;
                     }
+                } catch (e) {
+                    if (errSlot) errSlot.textContent = e.message || 'Failed to save';
+                    failedCount++;
                 }
+            }
+
+            if (savedCount === 0 && unpublishedCount === 0 && failedCount === 0) {
+                toast('Nothing to save — check "Offer this" on a package to save or publish it.');
+            } else if (failedCount > 0 && savedCount === 0 && unpublishedCount === 0) {
+                toast('Could not save — see the error(s) below the package(s).');
+            } else if (failedCount > 0) {
+                toast((elig.eligible ? 'Some packages saved and published, ' : 'Some packages saved as drafts, ') + failedCount + ' failed — see below.');
+            } else {
                 toast(elig.eligible ? 'Packages saved and published.' : 'Packages saved as drafts.');
-                boot();
-            } catch (e) { toast(e.message || 'Failed to save packages'); saveBtn.disabled = false; }
+            }
+            saveBtn.disabled = false; saveBtn.textContent = label;
+            if (savedCount > 0 || unpublishedCount > 0) boot();
         });
     }
 
@@ -387,6 +419,7 @@
         try {
             elig = await api.request('/marketplace/me/eligibility');
         } catch (e) { renderLoggedOut(); return; }
+        try { mpStatus = await api.request('/marketplace/status'); } catch (e) { mpStatus = null; }
         try {
             const l = await api.request('/marketplace/me/listing');
             listing = l && l.listing;
