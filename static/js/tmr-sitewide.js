@@ -36,7 +36,8 @@
         ["/feed/", "Feed"],
         ["/sports-talk/", "Sports Talk"],
         ["/chat/", "Chat"],
-        ["/online-gaming/", "MLB The Show"]
+        ["/online-gaming/", "MLB The Show"],
+        ["/messages/", "Messages"]
     ];
     const toolsMenuRoutes = [
         ["/tools/", "Tools Hub"],
@@ -45,11 +46,6 @@
         ["/trendspotter/", "TrendSpotter"],
         ["/betlegend-pro/", "BetLegend Pro"],
         ["/handicapping/", "Handicapping Hub"]
-    ];
-    const supportMenuRoutes = [
-        ["/contact/", "Contact Us"],
-        ["/report-bug/", "Report a Bug"],
-        ["/rules/", "Rules"]
     ];
     // TMR Coin is the only remaining flat top-level link (still called
     // "primaryRoutes" to match the template's existing flat-link loop).
@@ -284,11 +280,9 @@
                     <span class="tmr-user-menu-caret" aria-hidden="true">▾</span>
                 </button>
                 <div class="tmr-user-menu-panel" role="menu" aria-label="Account menu" hidden>
-                    <a class="tmr-user-menu-item" role="menuitem" href="${profileHref}"><i class="fas fa-user" aria-hidden="true"></i> View Profile</a>
-                    <button class="tmr-user-menu-item" role="menuitem" type="button" data-tmr-account-action="edit-profile" data-tmr-username="${escapeHtml(username)}"><i class="fas fa-pen" aria-hidden="true"></i> Edit Profile</button>
-                    <button class="tmr-user-menu-item" role="menuitem" type="button" data-tmr-account-action="change-avatar" data-tmr-username="${escapeHtml(username)}"><i class="fas fa-camera" aria-hidden="true"></i> Change Avatar</button>
-                    <button class="tmr-user-menu-item" role="menuitem" type="button" data-tmr-account-action="change-password"><i class="fas fa-key" aria-hidden="true"></i> Change Password</button>
-                    <a class="tmr-user-menu-item" role="menuitem" href="/messages/"><i class="fas fa-envelope" aria-hidden="true"></i> Messages</a>
+                    <a class="tmr-user-menu-item" role="menuitem" href="${profileHref}"><i class="fas fa-user" aria-hidden="true"></i> My Profile</a>
+                    <a class="tmr-user-menu-item" role="menuitem" href="/profile/?action=edit"><i class="fas fa-gear" aria-hidden="true"></i> Settings</a>
+                    <a class="tmr-user-menu-item" role="menuitem" href="/contact/"><i class="fas fa-circle-question" aria-hidden="true"></i> Help &amp; Support</a>
                     <div class="tmr-user-menu-divider" role="separator"></div>
                     <button class="tmr-user-menu-item tmr-user-menu-item--logout" role="menuitem" type="button" data-tmr-logout><i class="fas fa-sign-out-alt" aria-hidden="true"></i> Log Out</button>
                 </div>
@@ -520,24 +514,6 @@
                         const active = href.includes("#") ? location.hash === href.slice(href.indexOf("#")) : currentFile === hrefFile;
                         return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
                     }).join("")}
-                </div>
-                <div class="tmr-support-menu">
-                    <button class="tmr-support-menu__trigger" type="button" aria-expanded="false" aria-haspopup="true">
-                        Support
-                    </button>
-                    <div class="tmr-support-menu__panel" role="menu" aria-label="Support links">
-                        ${supportMenuRoutes.map(([href, label]) => {
-                            const hrefPath = href.split("#")[0].toLowerCase();
-                            const segs = hrefPath.split("/").filter(Boolean);
-                            const hrefFile = segs.length
-                                ? (segs[segs.length - 1].endsWith(".html")
-                                    ? segs[segs.length - 1]
-                                    : segs[segs.length - 1] + ".html")
-                                : "index.html";
-                            const active = currentFile === hrefFile;
-                            return `<a href="${href}" role="menuitem"${active ? ' aria-current="page"' : ""}>${label}</a>`;
-                        }).join("")}
-                    </div>
                 </div>
                 <div class="tmr-global-nav__actions"></div>
             </div>

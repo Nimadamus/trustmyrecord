@@ -59,7 +59,8 @@
     ['/feed/', 'Feed'],
     ['/sports-talk/', 'Sports Talk'],
     ['/chat/', 'Chat'],
-    ['/online-gaming/', 'MLB The Show']
+    ['/online-gaming/', 'MLB The Show'],
+    ['/messages/', 'Messages']
   ];
   var TOOLS = [
     ['/tools/', 'Tools Hub'],
@@ -71,11 +72,6 @@
   ];
   var TMR_COIN = [
     ['/tmr-coin/', 'TMR Coin']
-  ];
-  var SUPPORT = [
-    ['/contact/', 'Contact Us'],
-    ['/report-bug/', 'Report a Bug'],
-    ['/rules/', 'Rules']
   ];
 
   var FOOTER = [
@@ -164,25 +160,32 @@
             menu('Community', COMMUNITY) +
             menu('Tools', TOOLS) +
             links(TMR_COIN) +
-            menu('Support', SUPPORT) +
           '</div>' +
           '<div class="ds-nav-right">' + initialNavRight() + '</div>' +
         '</div>' +
       '</div>';
     document.body.insertBefore(nav, document.body.firstChild);
 
-    // dropdowns: click to open, click-away and Escape to close.
-    nav.querySelectorAll('.ds-menu').forEach(function (m) {
-      var btn = m.querySelector('button');
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        var open = m.classList.contains('is-open');
-        nav.querySelectorAll('.ds-menu.is-open').forEach(function (o) {
-          o.classList.remove('is-open');
-          o.querySelector('button').setAttribute('aria-expanded', 'false');
-        });
-        if (!open) { m.classList.add('is-open'); btn.setAttribute('aria-expanded', 'true'); }
+    // dropdowns: click to open, click-away and Escape to close. Delegated on
+    // the nav (rather than bound per-.ds-menu at build time) so the account
+    // dropdown — injected later by renderUser(), once identity resolves —
+    // opens correctly without a second wiring pass.
+    nav.addEventListener('click', function (e) {
+      var m = e.target.closest('.ds-menu');
+      if (!m) return;
+      var btn = e.target.closest('button');
+      if (!btn || btn.parentElement !== m) return;   // ignore clicks on panel items
+      e.stopPropagation();
+      var open = m.classList.contains('is-open');
+      nav.querySelectorAll('.ds-menu.is-open').forEach(function (o) {
+        o.classList.remove('is-open');
+        o.querySelector('button').setAttribute('aria-expanded', 'false');
       });
+      if (!open) { m.classList.add('is-open'); btn.setAttribute('aria-expanded', 'true'); }
+    });
+    nav.addEventListener('click', function (e) {
+      var lo = e.target.closest('[data-tmr-logout]');
+      if (lo) { e.stopPropagation(); doLogout(lo); }
     });
     document.addEventListener('click', function () {
       nav.querySelectorAll('.ds-menu.is-open').forEach(function (o) {
@@ -322,8 +325,17 @@
       ? '<img class="v2nav-ava" src="' + esc(src) + '" alt="" onerror="this.outerHTML=\'<span class=&quot;v2nav-avl&quot;>' + initials(name) + '</span>\'">'
       : '<span class="v2nav-avl">' + initials(name) + '</span>';
 
-    return '<a class="v2nav-user" href="/u/' + encodeURIComponent(name) + '/" title="' + esc(name) + '">' +
-        av + '<span class="v2nav-name">' + esc(name) + '</span></a>' +
+    return '<div class="ds-menu v2nav-menu">' +
+        '<button type="button" class="v2nav-user" aria-expanded="false" aria-haspopup="true" title="' + esc(name) + '">' +
+          av + '<span class="v2nav-name">' + esc(name) + '</span>' +
+        '</button>' +
+        '<div class="ds-menu-panel v2nav-menu-panel" role="menu" aria-label="Account menu">' +
+          '<a href="/u/' + encodeURIComponent(name) + '/" role="menuitem">My Profile</a>' +
+          '<a href="/profile/?action=edit" role="menuitem">Settings</a>' +
+          '<a href="/contact/" role="menuitem">Help &amp; Support</a>' +
+          '<button type="button" class="v2nav-logout" role="menuitem" data-tmr-logout>Log Out</button>' +
+        '</div>' +
+      '</div>' +
       // TMR Coin balance pill. Hidden until populated so it
       // never flashes a stale/zero value; links to the wallet page.
       '<a class="v2nav-coins" id="navCoinPill" href="/wallet/" title="' +
@@ -374,6 +386,30 @@
   function signOutHeader() {
     var right = document.querySelector('.ds-nav .ds-nav-right');
     if (right) right.innerHTML = LOGGED_OUT_HTML;
+  }
+
+  function clearStoredTokens() {
+    if (S && S.clearTokens) { S.clearTokens(); return; }
+    try {
+      ['trustmyrecord_token', 'tmr_token', 'accessToken', 'trustmyrecord_refresh_token',
+       'refreshToken', 'refresh_token', 'tmr_refresh_token'].forEach(function (k) {
+        localStorage.removeItem(k);
+      });
+    } catch (e) {}
+  }
+
+  function doLogout(btn) {
+    if (btn) { btn.disabled = true; btn.textContent = 'Logging Out…'; }
+    function done() {
+      clearStoredTokens();
+      window.dispatchEvent(new CustomEvent('tmr-auth-changed', { detail: { loggedIn: false } }));
+      window.location.href = '/';
+    }
+    try {
+      if (window.auth && typeof window.auth.logout === 'function') window.auth.logout().then(done, done);
+      else if (window.api && typeof window.api.logout === 'function') window.api.logout().then(done, done);
+      else done();
+    } catch (e) { done(); }
   }
 
   function init() {

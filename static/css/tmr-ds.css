@@ -232,7 +232,24 @@ body.tmr-ds .ds-nav-right .login:hover{color:#fff}
 
 /* signed-in cluster — identical markup contract to the homepage's v2nav-* so the
    existing auth script drives both without a fork. */
-body.tmr-ds .v2nav-user{display:inline-flex;align-items:center;gap:9px;color:#DFEBF6;font-weight:800;font-size:14.5px}
+body.tmr-ds .v2nav-menu{display:inline-flex;align-items:center}
+/* higher specificity than the generic ".ds-menu>button" rule above, so the
+   account trigger keeps its own look instead of inheriting the mainnav one */
+body.tmr-ds .v2nav-menu>.v2nav-user{
+  color:#DFEBF6;font-weight:800;font-size:14.5px;gap:9px;padding:4px 6px 4px 4px;
+  border-radius:var(--r-sm);
+}
+body.tmr-ds .v2nav-menu>.v2nav-user:hover{background:rgba(255,255,255,.08);color:#fff}
+body.tmr-ds .v2nav-menu-panel{left:auto;right:-8px;min-width:190px}
+/* the panel's other entries are <a>, styled by .ds-menu-panel a; Log Out is a
+   <button> (it triggers JS, not navigation) so it needs the same look spelled
+   out explicitly rather than inherited. */
+body.tmr-ds .v2nav-logout{
+  font:inherit;font-size:14.5px;font-weight:700;color:#C0392B;text-align:left;
+  padding:9px 12px;border-radius:var(--r-sm);border:0;background:none;
+  cursor:pointer;width:100%;white-space:nowrap;
+}
+body.tmr-ds .v2nav-logout:hover{background:rgba(197,57,43,.1)}
 body.tmr-ds .v2nav-ava,body.tmr-ds .v2nav-avl{width:32px;height:32px;border-radius:8px;object-fit:cover;flex:none}
 body.tmr-ds .v2nav-avl{
   display:grid;place-items:center;font-size:12.5px;font-weight:900;
@@ -244,10 +261,10 @@ body.tmr-ds .v2nav-bell{
 }
 body.tmr-ds .v2nav-bell:hover{color:#fff;background:rgba(255,255,255,.16)}
 body.tmr-ds .v2nav-coins{
-  display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border-radius:999px;
-  color:#F5D98B;background:rgba(245,217,139,.12);font-weight:600;font-size:14.5px;line-height:1;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 10px;border-radius:999px;
+  color:#F5D98B;background:rgba(245,217,139,.12);font-weight:600;font-size:13.5px;line-height:1;white-space:nowrap;
 }
-body.tmr-ds .v2nav-coins-icon{display:block;width:22px;height:22px;flex:0 0 auto}
+body.tmr-ds .v2nav-coins-icon{display:block;width:18px;height:18px;flex:0 0 auto}
 body.tmr-ds .v2nav-coins #navCoinBalance{display:inline-block;line-height:1}
 body.tmr-ds .v2nav-coins:hover{background:rgba(245,217,139,.22)}
 body.tmr-ds .v2nav-coins.is-frozen{color:#AEC6DC;background:rgba(255,255,255,.08)}
@@ -271,6 +288,12 @@ body.tmr-ds .ds-nav-toggle{
     display:none;position:absolute;top:var(--nav-h);left:calc(var(--gutter) * -1);right:calc(var(--gutter) * -1);
     background:var(--navy);border-top:1px solid rgba(255,255,255,.10);
     padding:14px var(--gutter) 20px;flex-direction:column;gap:4px;
+    /* the panel sits under a position:sticky nav, so it stays pinned to the
+       viewport rather than scrolling away with the page — without its own
+       scroll region, every dropdown expanded inline (the mobile pattern below)
+       can push the account cluster / My Record button past the bottom edge
+       with no way to reach them on a short viewport. */
+    max-height:calc(100vh - var(--nav-h));overflow-y:auto;-webkit-overflow-scrolling:touch;
   }
   body.tmr-ds .ds-nav.is-open .ds-nav-panel{display:flex;align-items:stretch;gap:4px}
   body.tmr-ds .ds-mainnav{flex-direction:column;align-items:stretch;gap:0;flex-wrap:nowrap}
@@ -278,7 +301,17 @@ body.tmr-ds .ds-nav-toggle{
   body.tmr-ds .ds-menu-panel{position:static;display:flex;box-shadow:none;border:0;background:none;padding:0 0 6px 14px}
   body.tmr-ds .ds-menu-panel a{color:#AEC6DC;padding:8px 0}
   body.tmr-ds .ds-menu-panel a:hover{background:none;color:#fff}
-  body.tmr-ds .ds-nav-right{margin-left:0;padding-top:12px;border-top:1px solid rgba(255,255,255,.10)}
+  body.tmr-ds .v2nav-logout{color:#E5726A;padding:8px 0;background:none;border-radius:0}
+  body.tmr-ds .v2nav-logout:hover{background:none;color:#fff}
+  body.tmr-ds .ds-nav-right{
+    margin-left:0;padding-top:12px;border-top:1px solid rgba(255,255,255,.10);
+    flex-wrap:wrap;row-gap:10px;
+  }
+  /* the account trigger + its now-inline (position:static) panel would otherwise
+     sit side-by-side as flex siblings — force it to its own full-width row so
+     the panel stacks underneath instead, same shape as every other dropdown. */
+  body.tmr-ds .v2nav-menu{display:block;flex:1 0 100%}
+  body.tmr-ds .v2nav-menu>.v2nav-user{width:100%;padding:11px 0;gap:9px}
 }
 @media(max-width:760px){ body.tmr-ds .v2nav-name{display:none} }
 
