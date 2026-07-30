@@ -83,8 +83,36 @@
     var tpl = document.getElementById("hh-game-tpl");
     var findEl = document.getElementById("hh-find");
     var dateSub = document.getElementById("hh-dateSub");
+    var dateMain = document.getElementById("hh-dateMain");
+    var prevBtn = document.getElementById("hh-prev");
+    var nextBtn = document.getElementById("hh-next");
+    var todayBtn = document.getElementById("hh-today");
+    var slateTitle = document.getElementById("hh-slate-title");
 
-    var STATE = { games: [], trendsByMatchup: {}, consensus: [], matchup: {}, matchupPromise: {} };
+    /** Today's MLB slate date = the current calendar date in America/New_York,
+        matching how each game's slate date is derived in slateDateET(). */
+    function todayET() {
+        try {
+            return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+        } catch (e) {
+            return new Date().toISOString().slice(0, 10);
+        }
+    }
+    /** "2026-07-31" -> "Fri, Jul 31" (parsed as a plain calendar date, no TZ shift). */
+    var MON_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    var DOW_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    function fmtSlateDate(iso) {
+        var m = String(iso || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+        if (!m) return iso;
+        var d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+        return DOW_SHORT[d.getUTCDay()] + ", " + MON_SHORT[d.getUTCMonth()] + " " + Number(m[3]);
+    }
+    function dayOffset(iso, base) {
+        var toN = function (s) { var p = String(s).split("-"); return Date.UTC(Number(p[0]), Number(p[1]) - 1, Number(p[2])); };
+        return Math.round((toN(iso) - toN(base)) / 86400000);
+    }
+
+    var STATE = { games: [], gamesByDate: {}, dates: [], selDate: null, trendsByMatchup: {}, consensus: [], matchup: {}, matchupPromise: {}, renderSeq: 0 };
 
     /** Every card's matchup fetch is a single shared promise, so the always-
         visible comparison grid and the "View Full Analysis" deep dive never
@@ -95,6 +123,9 @@
             "&home=" + encodeURIComponent(game.home_team) +
             "&date=" + encodeURIComponent(slateDateET(game.commence_time));
         var p = getJSON(url, 25000).then(function (d) { STATE.matchup[game.id] = d; return d; });
+        /* A failed fetch is NOT cached — otherwise every Retry button would
+           replay the same rejected promise instead of hitting the network. */
+        p.catch(function () { if (STATE.matchupPromise[game.id] === p) delete STATE.matchupPromise[game.id]; });
         STATE.matchupPromise[game.id] = p;
         return p;
     }
@@ -274,7 +305,7 @@
         var hAdv = cmp && (better === "high" ? hn > an : hn < an);
         return '<div class="hhc-row">' +
             '<span class="hhc-cell' + (aAdv ? " is-adv" : "") + '">' + (aDisplay === null ? '<span class="hh-na">n/a</span>' : esc(aDisplay)) + '</span>' +
-            '<span class="hhc-lbl">' + esc(label) + '</span>' +
+            '<span class="hhc-lbl"' + lblAttr(label) + '>' + esc(label) + '</span>' +
             '<span class="hhc-cell' + (hAdv ? " is-adv" : "") + '">' + (hDisplay === null ? '<span class="hh-na">n/a</span>' : esc(hDisplay)) + '</span>' +
             '</div>';
     }
@@ -290,9 +321,23 @@
     function hhcDivider(label) { return '<div class="hhc-divider">' + esc(label) + '</div>'; }
     function hhcPanel(title, srcNote, body) {
         if (!body) return "";
-        return '<div class="hhc-panel"><h5 class="hhc-panel__title">' + esc(title) +
-            (srcNote ? ' <span class="hhc-src-inline">' + esc(srcNote) + '</span>' : "") + '</h5>' + body + '</div>';
+        return '<div class="hhc-panel"><h3 class="hhc-panel__title">' + esc(title) +
+            (srcNote ? ' <span class="hhc-src-inline">' + esc(srcNote) + '</span>' : "") + '</h3>' + body + '</div>';
     }
+    /** Plain-language tooltips for stat abbreviations on the comparison grid. */
+    var LABEL_TIPS = {
+        "OPS": "On-base plus slugging",
+        "Starter WHIP": "Walks + hits per inning pitched by the starter",
+        "Starter K%": "Percentage of batters the starter strikes out",
+        "Starter ERA": "Earned runs per 9 innings for the starter",
+        "Bullpen ERA": "Earned runs per 9 innings for the relief corps",
+        "Bullpen IP, last 3 G": "Relief innings thrown over the last 3 games — higher means a more taxed bullpen",
+        "Last 5": "Record over the last 5 games",
+        "Last 10": "Record over the last 10 games",
+        "Home / Road Split": "Away team's road record next to the home team's home record",
+        "Batting AVG": "Team batting average"
+    };
+    function lblAttr(label) { return LABEL_TIPS[label] ? ' title="' + esc(LABEL_TIPS[label]) + '"' : ""; }
 
     function hhcStarterHtml(name, hand, pitcherStats) {
         if (!name) return '<div class="hhc-sp"><strong>Not announced</strong></div>';
@@ -382,9 +427,13 @@
     }
 
     /** The full always-visible card. `d` is null while the matchup fetch is
-        in flight, which paints a loading state rather than a blank card. */
+        in flight, which paints a card-shaped skeleton rather than a blank card. */
     function hhcTopHtml(game, d, uid) {
-        if (!d) return loadingHtml("Loading matchup research…");
+        if (!d) {
+            return '<div class="hhc-skel" role="status" aria-label="Loading matchup research">' +
+                '<div class="hh-skc__row"></div><div class="hh-skc__row"></div><div class="hh-skc__row hh-skc__row--short"></div>' +
+                '</div>';
+        }
 
         var ov = d.overview && d.overview.available ? d.overview : null;
         var rec = d.records || {}, ra = rec.away, rh = rec.home;
@@ -454,7 +503,15 @@
             : '<p class="hhc-empty-note">Team and pitching statistics are not available for this matchup yet.</p>';
         var gridPanel = hhcPanel("Team Comparison", null, gridBody);
 
-        return pitchersHtml + gridPanel + hhcMarketPanel(game) + hhcCommunityPanel(game) + hhcTrendsPanel(game, d, uid) + hhcNotesPanel(game, d);
+        /* Two deterministic columns on desktop: the tall comparison grid on the
+           left, market/community/trends/notes stacked on the right. They stack
+           back to one column below 1024px (CSS). Cuts card height roughly in
+           half without dropping a single data point. */
+        return pitchersHtml +
+            '<div class="hhc-cols">' +
+                '<div class="hhc-col">' + gridPanel + '</div>' +
+                '<div class="hhc-col">' + hhcMarketPanel(game) + hhcCommunityPanel(game) + hhcTrendsPanel(game, d, uid) + hhcNotesPanel(game, d) + '</div>' +
+            '</div>';
     }
 
     /* ---------------- OVERVIEW ---------------- */
@@ -1228,7 +1285,11 @@
     }
     /* ---------------- COMMUNITY ---------------- */
     function consensusFor(game) {
-        var al = lastName(game.away_team), hl = lastName(game.home_team);
+        /* Match on the full nickname ("red sox" / "white sox"), not the bare
+           last word — "sox" alone cross-matched Red Sox rows onto White Sox
+           games (and vice versa), attaching another game's community picks. */
+        var al = norm(teamNick(game.away_team)) || lastName(game.away_team);
+        var hl = norm(teamNick(game.home_team)) || lastName(game.home_team);
         var rows = STATE.consensus.filter(function (r) {
             var lbl = norm(r.event_label || r.event || "");
             return lbl.indexOf(al) >= 0 && lbl.indexOf(hl) >= 0;
@@ -1402,7 +1463,11 @@
         var venue = (game.venue || (game.simulation_inputs && game.simulation_inputs.venue) || "");
         node.querySelector("[data-venue]").textContent = venue;
         if (game.completed) node.classList.add("is-final");
-        node.querySelector("[data-hhctop]").innerHTML = hhcTopHtml(game, null);
+        /* Already-fetched matchup data paints synchronously, so re-renders
+           (date switch, search) never flash a loading skeleton over real data. */
+        var cached = STATE.matchup[game.id];
+        if (cached) paintTop(game, node, cached);
+        else node.querySelector("[data-hhctop]").innerHTML = hhcTopHtml(game, null);
 
         var shareHref = location.pathname + "#game-" + encodeURIComponent(game.id);
         var share = node.querySelector("[data-share]");
@@ -1445,12 +1510,54 @@
     }
     function matchupKeyForGame(g) { return teamKey(g.away_team) + "@" + teamKey(g.home_team); }
 
-    function render(list) {
+    /* ---------------- slate dates + rendering ---------------- */
+    function slateLabel(iso) {
+        var off = dayOffset(iso, todayET());
+        if (off === 0) return "Today’s Slate";
+        if (off === 1) return "Tomorrow’s Slate";
+        if (off === -1) return "Yesterday’s Slate";
+        return fmtSlateDate(iso);
+    }
+    function updateDatebar() {
+        var iso = STATE.selDate;
+        var idx = STATE.dates.indexOf(iso);
+        var count = (STATE.gamesByDate[iso] || []).length;
+        dateMain.textContent = slateLabel(iso);
+        dateSub.textContent = (count ? count + " game" + (count === 1 ? "" : "s") : "No games") + " · " + fmtSlateDate(iso);
+        prevBtn.disabled = idx <= 0;
+        nextBtn.disabled = idx < 0 || idx >= STATE.dates.length - 1;
+        var isToday = iso === todayET();
+        todayBtn.disabled = isToday;
+        if (isToday) todayBtn.setAttribute("aria-current", "date");
+        else todayBtn.removeAttribute("aria-current");
+        if (slateTitle) slateTitle.textContent = "MLB slate — " + fmtSlateDate(iso);
+    }
+    function selectDate(iso) {
+        if (STATE.dates.indexOf(iso) < 0 || iso === STATE.selDate) return;
+        STATE.selDate = iso;
+        updateDatebar();
+        renderSlate();
+    }
+    function emptyForDate(iso) {
+        var off = dayOffset(iso, todayET());
+        var when = off === 0 ? "today" : "on " + fmtSlateDate(iso);
+        var nextIso = STATE.dates[STATE.dates.indexOf(iso) + 1];
+        var jump = nextIso && (STATE.gamesByDate[nextIso] || []).length
+            ? '<br><button type="button" class="hh-status__cta" data-gonext data-date="' + esc(nextIso) + '">View ' + esc(slateLabel(nextIso).toLowerCase()) + ' →</button>'
+            : "";
+        return "No MLB games are scheduled " + esc(when) + "." + jump;
+    }
+
+    function render(list, emptyHtml) {
         gamesEl.innerHTML = "";
         if (!list.length) {
             statusEl.style.display = "";
             statusEl.className = "hh-status is-empty";
-            statusEl.innerHTML = "No MLB games match right now.";
+            statusEl.innerHTML = emptyHtml || "No MLB games match right now.";
+            var gn = statusEl.querySelector("[data-gonext]");
+            if (gn) gn.addEventListener("click", function () { selectDate(gn.getAttribute("data-date")); });
+            var cf = statusEl.querySelector("[data-clearfind]");
+            if (cf) cf.addEventListener("click", function () { findEl.value = ""; renderSlate(); });
             return;
         }
         statusEl.style.display = "none";
@@ -1461,14 +1568,35 @@
         });
         /* Every card's comparison data starts loading immediately — the whole
            point of this layout is that no click is required to see it. Bounded
-           concurrency keeps a full slate from firing every fetch at once. */
-        runQueue(nodes.map(function (node) {
+           concurrency keeps a full slate from firing every fetch at once, and
+           cards already painted from cache skip the queue entirely. A node that
+           left the DOM (date switch / new search) is never painted into. */
+        var pending = nodes.filter(function (node) { return !STATE.matchup[node._game.id]; });
+        function wireTopRetry(node, topEl) {
+            var btn = topEl.querySelector("[data-retry]");
+            if (!btn) return;
+            btn.addEventListener("click", function () {
+                topEl.innerHTML = hhcTopHtml(node._game, null);
+                getMatchup(node._game)
+                    .then(function (d) { if (node.isConnected) paintTop(node._game, node, d); })
+                    .catch(function (e) {
+                        if (!node.isConnected) return;
+                        topEl.innerHTML = errorHtml(e && e.message ? e.message : "The research API did not respond.");
+                        wireTopRetry(node, topEl);
+                    });
+            });
+        }
+        runQueue(pending.map(function (node) {
             return function () {
                 return getMatchup(node._game)
-                    .then(function (d) { paintTop(node._game, node, d); })
+                    .then(function (d) { if (node.isConnected) paintTop(node._game, node, d); })
                     .catch(function (e) {
+                        if (!node.isConnected) return;
                         var topEl = node.querySelector("[data-hhctop]");
-                        if (topEl) topEl.innerHTML = errorHtml(e && e.message ? e.message : "The research API did not respond.");
+                        if (topEl) {
+                            topEl.innerHTML = errorHtml(e && e.message ? e.message : "The research API did not respond.");
+                            wireTopRetry(node, topEl);
+                        }
                     });
             };
         }), 4);
@@ -1481,42 +1609,78 @@
         }
     }
 
-    function applyFilter() {
-        var q = norm(findEl.value);
-        if (!q) return render(STATE.games);
-        render(STATE.games.filter(function (g) { return norm(g.away_team + " " + g.home_team).indexOf(q) >= 0; }));
+    function renderSlate() {
+        var games = STATE.gamesByDate[STATE.selDate] || [];
+        var q = norm(findEl ? findEl.value : "");
+        if (!q) { render(games, emptyForDate(STATE.selDate)); return; }
+        var hits = games.filter(function (g) { return norm(g.away_team + " " + g.home_team).indexOf(q) >= 0; });
+        render(hits, hits.length ? null :
+            'No matchup on this slate matches “' + esc(findEl.value) + '”.' +
+            '<br><button type="button" class="hh-status__cta" data-clearfind>Clear search</button>');
     }
 
     function boot() {
-        Promise.all([
-            getJSON(API + "/games/board/baseball_mlb?limit=80").catch(function () { return { games: [] }; }),
-            getJSON(API + "/trendspotter/verified?sport=MLB").catch(function () { return { trends: [] }; }),
-            getJSON(API + "/external-picks/consensus?days=3").catch(function () { return { groups: [] }; })
-        ]).then(function (res) {
+        statusEl.style.display = "";
+        statusEl.className = "hh-status hh-status--sr";
+        statusEl.textContent = "Loading today’s MLB slate";
+        /* The board is required — its failure is a real error state with a
+           retry, never a fake "no games" empty state. Trends and consensus
+           stay fail-soft: they enrich cards but don't block the slate. */
+        getJSON(API + "/games/board/baseball_mlb?limit=80").then(function (board) {
+            return Promise.all([
+                board,
+                getJSON(API + "/trendspotter/verified?sport=MLB").catch(function () { return { trends: [] }; }),
+                getJSON(API + "/external-picks/consensus?days=3").catch(function () { return { groups: [] }; })
+            ]);
+        }).then(function (res) {
             var board = res[0] || {}, tr = res[1] || {}, cons = res[2] || {};
             var games = (board.games || []).slice().sort(function (a, b) { return new Date(a.commence_time) - new Date(b.commence_time); });
-            games.forEach(function (g) { g.matchupKey = matchupKeyForGame(g); });
+            STATE.gamesByDate = {};
+            games.forEach(function (g) {
+                g.matchupKey = matchupKeyForGame(g);
+                g.slateDate = slateDateET(g.commence_time);
+                (STATE.gamesByDate[g.slateDate] = STATE.gamesByDate[g.slateDate] || []).push(g);
+            });
             STATE.games = games;
+            var today = todayET();
+            var dates = Object.keys(STATE.gamesByDate);
+            if (dates.indexOf(today) < 0) dates.push(today);
+            dates.sort();
+            STATE.dates = dates;
             STATE.trendsByMatchup = buildMatchupIndex(tr.trends || []);
             /* The consensus endpoint returns {window_days, groups}. The old code read
                `.consensus || .rows`, which are keys it has never returned — community
                consensus was dead on every matchup. */
             STATE.consensus = cons.groups || [];
-            dateSub.textContent = games.length ? (games.length + " game" + (games.length === 1 ? "" : "s") + " on the board") : "No games posted";
-            if (!games.length) {
-                statusEl.className = "hh-status is-empty";
-                statusEl.innerHTML = "No MLB games are posted on the board right now.<br><a class=\"hh-status__cta\" href=\"/handicapping/\">Back to the Handicapping Hub →</a>";
-                return;
+            /* Land on today's slate. A deep link to a game on another date
+               switches to that date so the link actually resolves. */
+            STATE.selDate = today;
+            if (location.hash.indexOf("#game-") === 0) {
+                var gid = decodeURIComponent(location.hash.slice(6));
+                var target = games.filter(function (x) { return String(x.id) === gid; })[0];
+                if (target && target.slateDate !== STATE.selDate) STATE.selDate = target.slateDate;
             }
-            render(games);
+            updateDatebar();
+            renderSlate();
         }).catch(function () {
+            gamesEl.innerHTML = "";
+            dateSub.textContent = "—";
+            statusEl.style.display = "";
             statusEl.className = "hh-status is-empty";
-            statusEl.textContent = "Could not load the MLB slate. Please refresh in a moment.";
+            statusEl.innerHTML = "Could not load the MLB slate. The scores API may be waking from idle." +
+                '<br><button type="button" class="hh-status__cta" data-reboot>Retry</button>';
+            var rb = statusEl.querySelector("[data-reboot]");
+            if (rb) rb.addEventListener("click", boot);
         });
     }
 
-    if (findEl) findEl.addEventListener("input", function () { clearTimeout(findEl._t); findEl._t = setTimeout(applyFilter, 180); });
-    var todayBtn = document.getElementById("hh-today");
-    if (todayBtn) todayBtn.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
+    if (findEl) findEl.addEventListener("input", function () { clearTimeout(findEl._t); findEl._t = setTimeout(renderSlate, 180); });
+    function stepDate(d) {
+        var n = STATE.dates[STATE.dates.indexOf(STATE.selDate) + d];
+        if (n) selectDate(n);
+    }
+    if (prevBtn) prevBtn.addEventListener("click", function () { stepDate(-1); });
+    if (nextBtn) nextBtn.addEventListener("click", function () { stepDate(1); });
+    if (todayBtn) todayBtn.addEventListener("click", function () { selectDate(todayET()); });
     boot();
 })();
