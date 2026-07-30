@@ -1227,7 +1227,7 @@
     // and messages icons get unread-count badges without each page importing it.
     if (!document.querySelector('script[data-tmr-nav-badges]')) {
         const navBadgesScript = document.createElement("script");
-        navBadgesScript.src = "/static/js/nav-badges.js?v=20260725coins1";
+        navBadgesScript.src = "/static/js/nav-badges.js?v=e5bfe5d9e8b9";
         navBadgesScript.async = true;
         navBadgesScript.setAttribute("data-tmr-nav-badges", "1");
         document.head.appendChild(navBadgesScript);
@@ -1243,10 +1243,10 @@
     // they fetch in parallel; any already present on the page already ran
     // before this deferred script, so they're skipped.
     [
-        ["/static/js/config.js", "config.js"],
-        ["/static/js/backend-api.js", "backend-api.js"],
-        ["/static/js/auth-persistent.js", "auth-persistent.js"],
-        ["/static/js/notifications.js", "notifications.js"]
+        ["/static/js/config.js?v=62b943f8370a", "config.js"],
+        ["/static/js/backend-api.js?v=7af9e9d0c5e3", "backend-api.js"],
+        ["/static/js/auth-persistent.js?v=533b6a5999e2", "auth-persistent.js"],
+        ["/static/js/notifications.js?v=b237c77f13ca", "notifications.js"]
     ].forEach(([src, name]) => {
         if (document.querySelector('script[src*="' + name + '"]')) return;
         const depScript = document.createElement("script");

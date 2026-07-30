@@ -43,11 +43,11 @@ def main():
         raw = src.read_bytes()
         digest = hashlib.sha256(raw).hexdigest()[:12]
         hashed = src.with_name(f"{src.stem}.{digest}{src.suffix}")
-        # Drop older hashed builds of the same asset so they cannot be linked by
-        # accident and the directory does not grow without bound.
-        for old in src.parent.glob(f"{src.stem}.*{src.suffix}"):
-            if old != hashed and len(old.name.split(".")) == 3:
-                old.unlink()
+        # Older hashed builds are KEPT (matching build_home_critical.py): a
+        # document cached in a returning visitor's browser still references
+        # the hash it was built with, and pruning it turns the whole nav/data
+        # layer into a 404 for that visitor. Immutable files are cheap; a
+        # broken cached page is not.
         hashed.write_bytes(raw)
         key = str(src.relative_to(ROOT)).replace("\\", "/")
         mapping[key] = "/" + str(hashed.relative_to(ROOT)).replace("\\", "/")

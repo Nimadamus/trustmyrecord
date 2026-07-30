@@ -7,7 +7,7 @@
    Art: Twemoji 15.1 (CC-BY 4.0, (c) Twitter/jdecked contributors) for
    consistent cross-device rendering; Google Noto Animated Emoji
    (CC-BY 4.0, fonts.gstatic.com) for the animated reactions tab.
-   Data: /static/js/tmr-emoji-data.js (names from Unicode CLDR, MIT).
+   Data: /static/js/tmr-emoji-data.js?v=4f708f32d48e (names from Unicode CLDR, MIT).
 
    API (backwards compatible with v1):
      TMREmoji.attach(textarea, opts)  - add emoji/media bar to a textarea
@@ -21,9 +21,9 @@
   if (window.TMREmoji && window.TMREmoji.v2) return;
 
   var VER = '20260722a';
-  var TW_JS = '/static/js/twemoji.min.js?v=20260711b';
-  var DATA_JS = '/static/js/tmr-emoji-data.js?v=20260711b';
-  var SMILIE_JS = '/static/js/tmr-smilies.js?v=' + VER;
+  var TW_JS = '/static/js/twemoji.min.js?v=42c8dc3d94c5';
+  var DATA_JS = '/static/js/tmr-emoji-data.js?v=4f708f32d48e';
+  var SMILIE_JS = '/static/js/tmr-smilies.js?v=f2fe8a225336' + VER;
   var NOTO = 'https://fonts.gstatic.com/s/e/notoemoji/latest/';
   var TW_BASE = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/';
   var LS_RECENT = 'tmrEmojiRecent2';

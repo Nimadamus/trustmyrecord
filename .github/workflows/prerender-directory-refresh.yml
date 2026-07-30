@@ -77,6 +77,14 @@ jobs:
         # of the sitemap. A failure here stops the commit; the last good bake stays.
         run: python scripts/build_forum_threads.py
 
+      - name: Re-pin static asset refs to content hashes
+        # Any mutable /static/ JS/CSS whose bytes changed gets a new ?v tag in
+        # every referencing page (and loader JS) in the SAME commit, so
+        # returning visitors' browsers and the CF edge (4h TTL, query-keyed)
+        # fetch the new bytes immediately. Newly generated profile/forum pages
+        # inherit current tags too.
+        run: python scripts/version_static_refs.py
+
       - name: Commit only if generated output changed
         run: |
           # Stage every crawlable SEO surface, incl. NEW profile dirs for users
@@ -84,6 +92,7 @@ jobs:
           # `git add` before a --cached diff can see them) and NEW/renamed forum
           # thread dirs.
           git add -A handicappers/index.html leaderboards/index.html index.html u forum/thread sitemap.xml
+          git add -u
           if git diff --cached --quiet; then
             echo "No data change in generated output — skipping commit."
           else

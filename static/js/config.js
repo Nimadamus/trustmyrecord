@@ -65,7 +65,7 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof document === 'undefined') return;
     if (document.querySelector('script[data-contest-promo-modal]')) return;
     var s = document.createElement('script');
-    s.src = '/static/js/contest-promo-modal.js?v=20260709noautoopen';
+    s.src = '/static/js/contest-promo-modal.js?v=74cb0f4c0fb8';
     s.defer = true;
     s.setAttribute('data-contest-promo-modal', '1');
     (document.head || document.documentElement).appendChild(s);
@@ -76,7 +76,7 @@ if (typeof module !== 'undefined' && module.exports) {
     if (typeof document === 'undefined') return;
     if (document.querySelector('script[data-official-badge]')) return;
     var s = document.createElement('script');
-    s.src = '/static/js/official-badge.js?v=20260628';
+    s.src = '/static/js/official-badge.js?v=6da4328b0a8f';
     s.defer = true;
     s.setAttribute('data-official-badge', '1');
     (document.head || document.documentElement).appendChild(s);
