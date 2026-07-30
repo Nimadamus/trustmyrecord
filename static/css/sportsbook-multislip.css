@@ -1,0 +1,425 @@
+/* ============================================================================
+   TMR Multi-Pick Slip (MULTISLIP_20260730)
+   Loaded on /sportsbook/ but every rule is gated behind body.tmr-multislip,
+   which is only added when the feature flag (localStorage tmr_multislip=1 or
+   ?multislip=1) is on. With the flag off this file changes nothing.
+   ========================================================================== */
+
+/* --- Legacy single-pick UI suppressed while the multi slip owns the aside --- */
+body.tmr-multislip #tmrQuickBet { display: none !important; }
+body.tmr-multislip .tmr-slip-cue { display: none !important; }
+body.tmr-multislip .sportsbook-empty-slip { display: none !important; }
+
+/* --- Slip container -------------------------------------------------------- */
+.tmr-ms-root {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 14px;
+    color: #e2e8f0;
+}
+.tmr-ms-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.tmr-ms-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f4f7fb;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.tmr-ms-count {
+    background: rgba(34, 211, 238, 0.16);
+    border: 1px solid rgba(34, 211, 238, 0.5);
+    color: #7dd3fc;
+    border-radius: 999px;
+    min-width: 22px;
+    height: 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 0 6px;
+}
+.tmr-ms-clear {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 8px;
+}
+.tmr-ms-clear:hover { color: #f87171; background: rgba(248, 113, 113, 0.08); }
+
+/* --- Bulk units ------------------------------------------------------------ */
+.tmr-ms-bulk {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    background: rgba(148, 163, 184, 0.06);
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 10px;
+}
+.tmr-ms-bulk-label { font-size: 12px; color: #94a3b8; margin-right: 2px; }
+.tmr-ms-chip {
+    background: #1b1f27;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    color: #cbd5e1;
+    border-radius: 8px;
+    padding: 5px 9px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 28px;
+}
+.tmr-ms-chip:hover { border-color: #22d3ee; color: #7dd3fc; }
+
+/* --- Stake mode toggle ----------------------------------------------------- */
+.tmr-ms-mode {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+.tmr-ms-mode-btn {
+    flex: 1;
+    background: #1b1f27;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    color: #cbd5e1;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 32px;
+}
+.tmr-ms-mode-btn.active {
+    background: rgba(34, 211, 238, 0.14);
+    border-color: #22d3ee;
+    color: #7dd3fc;
+}
+
+/* --- Pick list ------------------------------------------------------------- */
+.tmr-ms-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 46vh;
+    overflow-y: auto;
+    padding-right: 2px;
+    scrollbar-width: thin;
+}
+.tmr-ms-empty {
+    padding: 22px 10px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.tmr-ms-card {
+    background: #22262e;
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-left: 3px solid #22d3ee;
+    border-radius: 10px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.tmr-ms-card.tmr-ms-unavailable { border-left-color: #f87171; opacity: 0.85; }
+.tmr-ms-card.tmr-ms-odds-moved { border-left-color: #f59e0b; }
+.tmr-ms-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 8px;
+}
+.tmr-ms-sel {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f4f7fb;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+}
+.tmr-ms-match { font-size: 12px; color: #94a3b8; }
+.tmr-ms-meta { font-size: 12px; color: #94a3b8; }
+.tmr-ms-meta .tmr-ms-odds { color: #e2e8f0; font-weight: 700; }
+.tmr-ms-remove {
+    background: none;
+    border: none;
+    color: #6c7380;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 6px;
+    border-radius: 8px;
+    min-width: 30px;
+    min-height: 30px;
+    flex: none;
+}
+.tmr-ms-remove:hover { color: #f87171; background: rgba(248, 113, 113, 0.08); }
+
+.tmr-ms-units-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.tmr-ms-units-label { font-size: 12px; color: #94a3b8; }
+.tmr-ms-step {
+    background: #1b1f27;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #e2e8f0;
+    border-radius: 8px;
+    width: 30px;
+    height: 30px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.tmr-ms-step:hover { border-color: #22d3ee; }
+.tmr-ms-step:disabled { opacity: 0.4; cursor: default; }
+.tmr-ms-units-input {
+    width: 56px !important;
+    min-width: 0 !important;
+    max-width: 56px !important;
+    flex: none !important;
+    height: 30px;
+    background: #12151b;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #f4f7fb;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+}
+.tmr-ms-units-input:focus { outline: 2px solid #22d3ee; outline-offset: 1px; }
+.tmr-ms-units-input.tmr-ms-invalid { border-color: #f87171; outline-color: #f87171; }
+.tmr-ms-mini-chips { display: inline-flex; gap: 4px; }
+.tmr-ms-mini-chips .tmr-ms-chip { padding: 3px 6px; min-height: 24px; font-size: 11px; }
+.tmr-ms-card-err {
+    font-size: 12px;
+    color: #fca5a5;
+    line-height: 1.4;
+}
+.tmr-ms-card-warn { font-size: 12px; color: #fcd34d; line-height: 1.4; }
+.tmr-ms-accept-odds {
+    background: rgba(245, 158, 11, 0.14);
+    border: 1px solid #f59e0b;
+    color: #fcd34d;
+    border-radius: 8px;
+    padding: 5px 9px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    min-height: 28px;
+}
+.tmr-ms-status { font-size: 12px; font-weight: 700; }
+.tmr-ms-status.ok { color: #34d399; }
+.tmr-ms-status.dup { color: #94a3b8; }
+.tmr-ms-status.fail { color: #f87171; }
+.tmr-ms-status.busy { color: #7dd3fc; }
+
+/* --- Footer / submit ------------------------------------------------------- */
+.tmr-ms-foot {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid rgba(148, 163, 184, 0.14);
+    padding-top: 10px;
+}
+.tmr-ms-totals {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #94a3b8;
+}
+.tmr-ms-totals strong { color: #f4f7fb; }
+.tmr-ms-submit {
+    background: linear-gradient(135deg, #06b6d4, #22d3ee);
+    border: none;
+    color: #06121a;
+    font-size: 14px;
+    font-weight: 800;
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    min-height: 44px;
+    width: 100%;
+}
+.tmr-ms-submit:hover:not(:disabled) { filter: brightness(1.08); }
+.tmr-ms-submit:disabled { opacity: 0.45; cursor: default; }
+.tmr-ms-note { font-size: 11px; color: #6c7380; text-align: center; line-height: 1.4; }
+.tmr-ms-live { font-size: 12px; color: #94a3b8; min-height: 16px; }
+.tmr-ms-success {
+    background: rgba(52, 211, 153, 0.1);
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    color: #6ee7b7;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+.tmr-ms-success a {
+    color: #34d399;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+/* --- Board button "in slip" indicator (not color-only: adds a check) ------- */
+body.tmr-multislip .tmr-ms-on {
+    background: rgba(34, 211, 238, 0.18) !important;
+    border-color: #22d3ee !important;
+    box-shadow: inset 0 0 0 1px #22d3ee;
+    position: relative;
+}
+body.tmr-multislip .tmr-ms-on::after {
+    content: "\2713";
+    position: absolute;
+    top: 1px;
+    right: 4px;
+    font-size: 10px;
+    color: #7dd3fc;
+    font-weight: 900;
+}
+
+/* --- Confirmation modal ---------------------------------------------------- */
+.tmr-ms-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(6, 9, 14, 0.72);
+    z-index: 10010;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+.tmr-ms-modal {
+    background: #171b22;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 14px;
+    width: min(480px, 96vw);
+    max-height: 86vh;
+    overflow-y: auto;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.tmr-ms-modal h3 { margin: 0; font-size: 16px; color: #f4f7fb; }
+.tmr-ms-modal-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 13px;
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+.tmr-ms-modal-line .sel { color: #e2e8f0; font-weight: 600; overflow-wrap: anywhere; }
+.tmr-ms-modal-line .nums { color: #94a3b8; white-space: nowrap; }
+.tmr-ms-disclaimer {
+    background: rgba(34, 211, 238, 0.08);
+    border: 1px solid rgba(34, 211, 238, 0.3);
+    color: #a5f3fc;
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+.tmr-ms-modal-btns { display: flex; gap: 8px; }
+.tmr-ms-btn-secondary {
+    flex: 1;
+    background: #1b1f27;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #cbd5e1;
+    border-radius: 10px;
+    padding: 11px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    min-height: 42px;
+}
+.tmr-ms-btn-secondary:hover { border-color: #94a3b8; }
+.tmr-ms-modal .tmr-ms-submit { flex: 1.4; }
+
+/* --- Mobile: hide aside, bottom pill + drawer ------------------------------ */
+.tmr-ms-pill {
+    display: none;
+    position: fixed;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    z-index: 10005;
+    background: linear-gradient(135deg, #06b6d4, #22d3ee);
+    color: #06121a;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 22px;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+    min-height: 44px;
+}
+.tmr-ms-drawer {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10008;
+}
+.tmr-ms-drawer.open { display: block; }
+.tmr-ms-drawer-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 9, 14, 0.7);
+}
+.tmr-ms-drawer-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    max-height: 88vh;
+    background: #171b22;
+    border-top: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 16px 16px 0 0;
+    padding: 14px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto;
+}
+.tmr-ms-drawer-handle {
+    width: 42px;
+    height: 4px;
+    border-radius: 4px;
+    background: rgba(148, 163, 184, 0.4);
+    margin: 0 auto 10px;
+}
+.tmr-ms-drawer .tmr-ms-head { padding-right: 40px; }
+.tmr-ms-drawer-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #1b1f27;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #cbd5e1;
+    border-radius: 8px;
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+@media (max-width: 1180px) {
+    body.tmr-multislip .sportsbook-ticket-preview { display: none !important; }
+    body.tmr-multislip .tmr-ms-pill.has-picks { display: inline-flex; align-items: center; gap: 6px; }
+    .tmr-ms-drawer .tmr-ms-list { max-height: 52vh; }
+}

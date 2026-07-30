@@ -23202,7 +23202,11 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260730myrecfix2&cb=20260730myrecfix2"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260730multislip1&cb=20260730multislip1"></script>
+<!-- MULTISLIP_20260730: flag-gated multi-pick slip. Inert unless
+     localStorage tmr_multislip === '1' (set via /sportsbook/?multislip=1;
+     ?multislip=0 turns it back off). Rollback = flag off, or remove this tag. -->
+<script src="/static/js/sportsbook-multislip.js?v=20260730multislip1" defer></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
@@ -31139,6 +31143,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     </style>
     <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=20260730navunify1">
+    <link rel="stylesheet" href="/static/css/sportsbook-multislip.css?v=20260730multislip1">
     <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=20260430hidedup1">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=20260501f">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=20260509logorestore1">

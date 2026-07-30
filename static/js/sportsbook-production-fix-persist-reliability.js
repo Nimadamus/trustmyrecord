@@ -2990,6 +2990,19 @@
         if (!option) return;
 
         state.selectedOption = option;
+
+        // MULTISLIP_20260730: when the flag-gated multi-pick slip is active it
+        // consumes the selection (toggle add/remove, its own slip UI) and the
+        // legacy single-pick slip path below must not run. With the flag off,
+        // window.__tmrMultiSlip is never installed and behavior is unchanged.
+        if (window.__tmrMultiSlip && typeof window.__tmrMultiSlip.onOptionSelected === 'function') {
+            try {
+                if (window.__tmrMultiSlip.onOptionSelected(option) === true) return;
+            } catch (multiSlipError) {
+                try { console.warn('[TMR][multislip] selection hook failed, falling back to legacy slip:', multiSlipError && multiSlipError.message); } catch (_) {}
+            }
+        }
+
         document.querySelectorAll('.tmr-option-btn.active').forEach(function(button) {
             button.classList.remove('active');
         });
@@ -4001,6 +4014,29 @@
         lockFunction(window, 'submitPick', lockInPick);
         lockFunction(window, 'lockInPick', lockInPick);
         window.__tmrProductionLockInPick = lockInPick;
+
+        // MULTISLIP_20260730: read-only reuse exports for the flag-gated
+        // multi-pick slip (static/js/sportsbook-multislip.js). Purely
+        // additive — nothing in this file reads this object. The multi slip
+        // reuses these EXACT helpers so its per-pick payloads are identical
+        // to the proven single-pick lockInPick path.
+        window.__tmrMultiSlipInternals = {
+            buildSubmittedSelection: buildSubmittedSelection,
+            getTeamTotalSubmitMeta: getTeamTotalSubmitMeta,
+            buildSubmittedGameSnapshot: buildSubmittedGameSnapshot,
+            hasGameStarted: hasGameStarted,
+            ensurePicksAccess: ensurePicksAccess,
+            getApiClientOrFallback: getApiClientOrFallback,
+            ensureBackendAccessToken: ensureBackendAccessToken,
+            calculateStakeValues: calculateStakeValues,
+            getSelectedStakeMode: getSelectedStakeMode,
+            getMarketLabel: getMarketLabel,
+            formatLine: formatLine,
+            refreshAfterSubmit: async function () {
+                await fetchCurrentUserPicks();
+                syncRecordWidgets(state.currentUserPicks);
+            }
+        };
 
         // Bridge: the legacy team-totals / F5 / fallback renderers in
         // sportsbook/index.html still emit odds buttons that call
