@@ -24802,7 +24802,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Calculate units won/lost for a pick
     function calculatePickUnits(pick) {
-        if (pick.result_units != null && pick.status !== 'pending') return pick.result_units;
+        // result_units arrives as a STRING from the backend (Postgres numeric
+        // serializes as text) - returning it raw turned every += accumulation
+        // into string concatenation and crashed the my-record render at
+        // unitsProfit.toFixed.
+        if (pick.result_units != null && pick.status !== 'pending') return parseFloat(pick.result_units) || 0;
         const units = parseFloat(pick.units) || 1;
         const odds = parseFloat(pick.odds_snapshot || pick.odds) || -110;
 
