@@ -53,15 +53,15 @@ const MLB = {
   homeWinPct: 54.3,             // home-field edge (mirror-pair isolation)
   // % of team-games scoring exactly k runs (7+ grouped); sums to 100.
   runDist: { 0: 6.8, 1: 11.5, 2: 12.7, 3: 13.8, 4: 13.4, 5: 10.6, 6: 8.5, '7+': 22.7 },
-  // Additional documented 2025 baselines (errors + CS are gated; BABIP and SB-success
-  // are documented references the harness does not yet measure directly):
+  // Additional documented 2025 baselines (errors, CS, SB-success, and BABIP are all
+  // gated below against measured engine output):
   errorsPerTeam: 0.504,
   csPerTeam: 0.203,
-  sbSuccessPct: 77.7,           // reference only (not gated)
-  babip: 0.291,                 // reference only (engine BABIP not directly measured)
+  sbSuccessPct: 77.7,           // gated below via TOL.pct (same tolerance as other team-flag %s)
+  babip: 0.291,                 // gated below via TOL.babip
   maxTeamRunsObserved: 24,      // reference only (real 2025 single-team max)
 };
-const TOL = { runs: 0.30, hr: 0.20, k: 1.0, bb: 0.70, sb: 0.25, cs: 0.15, err: 0.20, pct: 3.0, dist: 3.0, total: 0.6, homeWin: 3.0 };
+const TOL = { runs: 0.30, hr: 0.20, k: 1.0, bb: 0.70, sb: 0.25, cs: 0.15, err: 0.20, pct: 3.0, dist: 3.0, total: 0.6, homeWin: 3.0, babip: 0.03 };
 
 // ---- load the production engine with browser globals stubbed ------------------
 function fakeEl() {
@@ -138,7 +138,7 @@ function runEngineSample(n) {
   const inputs = ENG.buildEventInputs(away, home, neutralStarter(), neutralStarter(), MLB.runsPerTeam, MLB.runsPerTeam, null);
   const A = inputs.awaySide, H = inputs.homeSide;
   const viol = {};
-  const teamRuns = [], totals = [], hr = [], k = [], bb = [], sb = [], cs = [], err = [], hits = [];
+  const teamRuns = [], totals = [], hr = [], k = [], bb = [], sb = [], cs = [], err = [], hits = [], ab = [], sf = [];
   let shutoutTeam = 0, teamGames = 0, blowout = 0, extra = 0, maxTeam = 0, homeRunsSum = 0, awayRunsSum = 0;
   const runBuckets = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, '7+': 0 };
   for (let i = 0; i < n; i++) {
@@ -150,6 +150,7 @@ function runEngineSample(n) {
       hr.push(sum(s.lineup, b => b.acc.hr)); k.push(sum(s.lineup, b => b.acc.so));
       bb.push(sum(s.lineup, b => b.acc.bb)); sb.push(s.sb || 0); cs.push(s.cs || 0); err.push(errs || 0);
       hits.push(sum(s.lineup, b => b.acc.h));
+      ab.push(sum(s.lineup, b => b.acc.ab)); sf.push(sum(s.lineup, b => b.acc.sf || 0));
       if (runs === 0) shutoutTeam++;
       runBuckets[runs >= 7 ? '7+' : runs]++;
       if (runs > maxTeam) maxTeam = runs;
@@ -165,6 +166,10 @@ function runEngineSample(n) {
     hrPerTeam: sum(hr) / teamGames, kPerTeam: sum(k) / teamGames, bbPerTeam: sum(bb) / teamGames,
     sbPerTeam: sum(sb) / teamGames, csPerTeam: sum(cs) / teamGames, errorsPerTeam: sum(err) / teamGames,
     hitsPerTeam: sum(hits) / teamGames,
+    // aggregate ratios (sum-of-numerator / sum-of-denominator across the whole sample),
+    // not a mean of per-game ratios, since most team-games have few/zero SB attempts
+    sbSuccessPct: 100 * sum(sb) / (sum(sb) + sum(cs)),
+    babip: (sum(hits) - sum(hr)) / (sum(ab) - sum(k) - sum(hr) + sum(sf)),
     shutoutTeamPct: 100 * shutoutTeam / teamGames,
     gameTotalMean: sum(totals) / n, blowoutPct: 100 * blowout / n, extraInningPct: 100 * extra / n,
     maxTeam,
@@ -240,6 +245,8 @@ function main() {
     row('SB / team', R.sbPerTeam, MLB.sbPerTeam, TOL.sb),
     row('CS / team', R.csPerTeam, MLB.csPerTeam, TOL.cs),
     row('Errors / team', R.errorsPerTeam, MLB.errorsPerTeam, TOL.err),
+    row('SB success %', R.sbSuccessPct, MLB.sbSuccessPct, TOL.pct, '%'),
+    row('BABIP', R.babip, MLB.babip, TOL.babip),
     row('Shutout % (team=0)', R.shutoutTeamPct, MLB.shutoutTeamPct, TOL.pct, '%'),
     row('Blowout % (>=5)', R.blowoutPct, MLB.blowoutPct, TOL.pct, '%'),
     row('Extra-inning %', R.extraInningPct, MLB.extraInningPct, TOL.pct, '%'),
