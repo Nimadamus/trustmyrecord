@@ -1033,6 +1033,7 @@
         if (!user) {
             state.currentUserPicks = [];
             window._cachedBackendPicks = [];
+            window._tmrBackendPicksLoaded = true;
             return [];
         }
 
@@ -1070,6 +1071,12 @@
         });
         state.currentUserPicks = picks;
         window._cachedBackendPicks = picks;
+        // Marks the cache as REAL backend data. The legacy inline
+        // ensureBackendPicks seeds _cachedBackendPicks with a (now always
+        // empty) localStorage array early in boot, so Array.isArray alone
+        // cannot distinguish "loaded" from "legacy empty seed" - and the
+        // my-record page must not render a false 0-0-0 from the seed.
+        window._tmrBackendPicksLoaded = true;
         return picks;
     }
 
@@ -4470,9 +4477,9 @@
             // ever passing through showSection, so this boot fetch is the only
             // chance to fill its breakdown tables/secondary metrics with real
             // data instead of leaving the static loading placeholders up.
-            const myRecordSection = document.getElementById('my-record');
-            if (myRecordSection && myRecordSection.classList.contains('active') &&
-                typeof window.__tmrInlineMyRecordRender === 'function') {
+            // Rendering while the section is hidden is harmless and means the
+            // tab already shows real numbers the moment it becomes visible.
+            if (typeof window.__tmrInlineMyRecordRender === 'function') {
                 try { window.__tmrInlineMyRecordRender(); } catch (renderError) {}
             }
             syncRecordWidgets(picks);

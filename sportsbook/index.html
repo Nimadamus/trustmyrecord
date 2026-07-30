@@ -23202,7 +23202,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260730myrecfix1&cb=20260730myrecfix1"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260730myrecfix2&cb=20260730myrecfix2"></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
@@ -24853,12 +24853,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // itself seconds later. Keep the static loading placeholders, request
         // the real fetch, and re-render once the cache is an actual array
         // (which is also what a legitimately pick-less account gets: []).
-        if (!Array.isArray(window._cachedBackendPicks)) {
+        if (!window._tmrBackendPicksLoaded || !Array.isArray(window._cachedBackendPicks)) {
             if (!loadMyRecordPage._waiting && typeof window.ensureBackendPicks === 'function') {
                 loadMyRecordPage._waiting = true;
                 window.ensureBackendPicks(function () {
                     loadMyRecordPage._waiting = false;
-                    if (Array.isArray(window._cachedBackendPicks)) loadMyRecordPage();
+                    if (window._tmrBackendPicksLoaded && Array.isArray(window._cachedBackendPicks)) loadMyRecordPage();
                 });
             }
             return;
