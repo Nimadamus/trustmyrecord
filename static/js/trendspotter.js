@@ -945,8 +945,12 @@
     if (!EXTENDED_SPORTS.includes(sport)) return Promise.resolve(null);
     if (historyCache[sport]) return Promise.resolve(historyCache[sport]);
     if (historyLoading[sport]) return historyLoading[sport];
-    var path = "/static/data/" + sport.toLowerCase() + "/team-history.json?v=20260606a";
-    historyLoading[sport] = fetch(path, { cache: "force-cache" })
+    // No manual ?v= cache-buster: the origin already sends ETag/Last-Modified
+    // with a short max-age, so default fetch caching auto-revalidates this
+    // file (cheap 304 when unchanged) instead of relying on a human to bump a
+    // hardcoded version string whenever the backfill data is refreshed.
+    var path = "/static/data/" + sport.toLowerCase() + "/team-history.json";
+    historyLoading[sport] = fetch(path)
       .then(function (resp) { return resp.json(); })
       .then(function (data) { historyCache[sport] = data; historyLoading[sport] = null; return data; })
       .catch(function () { historyLoading[sport] = null; return null; });
