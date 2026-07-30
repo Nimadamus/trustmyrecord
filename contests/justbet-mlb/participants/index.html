@@ -182,17 +182,37 @@
         }
         async function fetchStats() {
             // Public, graded-only stats. Fail-open: table still renders without stats columns populated.
+            // /users/leaderboard only returns members with POSITIVE net units (its
+            // eligibility filter), so it must be merged with the /users directory
+            // (which carries the full wins/losses/pushes record for everyone) or a
+            // participant on a losing record would falsely render "No graded picks
+            // yet". Leaderboard rows win the merge; /users rows fill the rest.
+            var map = {};
+            function absorb(arr) {
+                (arr || []).forEach(function (m) {
+                    if (!m || !m.username) return;
+                    var k = String(m.username).toLowerCase();
+                    if (!map[k]) map[k] = m;
+                });
+            }
             try {
                 var r = await fetch(API_BASE + '/api/users/leaderboard?sortBy=net_units&limit=250');
-                if (!r.ok) return {};
-                var d = await r.json();
-                var arr = Array.isArray(d) ? d : (d.leaderboard || d.users || d.members || []);
-                var map = {};
-                arr.forEach(function (m) {
-                    if (m && m.username) map[String(m.username).toLowerCase()] = m;
-                });
-                return map;
-            } catch (e) { return {}; }
+                if (r.ok) {
+                    var d = await r.json();
+                    absorb(Array.isArray(d) ? d : (d.leaderboard || d.users || d.members || []));
+                }
+            } catch (e) {}
+            try {
+                for (var off = 0; off < 1000; off += 100) {
+                    var r2 = await fetch(API_BASE + '/api/users?limit=100&offset=' + off);
+                    if (!r2.ok) break;
+                    var d2 = await r2.json();
+                    var batch = (d2 && d2.users) || [];
+                    absorb(batch);
+                    if (batch.length < 100) break;
+                }
+            } catch (e) {}
+            return map;
         }
         async function load() {
             var tbody = $('#participants-tbody');

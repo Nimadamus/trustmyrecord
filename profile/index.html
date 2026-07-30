@@ -1823,47 +1823,47 @@
                 <div class="profile-advanced-metric-grid">
                     <article class="profile-advanced-metric" data-advanced-metric-card="record">
                         <span class="profile-advanced-metric__label">Record</span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvRecord">Not enough data yet</strong>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvRecord" aria-busy="true">…</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvRecordSub">Verified W-L-P</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="units">
                         <span class="profile-advanced-metric__label">Units</span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvUnits">Not enough data yet</strong>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvUnits" aria-busy="true">…</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvUnitsSub">Net settled units</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="roi">
                         <span class="profile-advanced-metric__label">ROI</span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvRoi">Not enough data yet</strong>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvRoi" aria-busy="true">…</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvRoiSub">Return on risked units</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="win_rate">
                         <span class="profile-advanced-metric__label">Win Rate</span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvWinRate">Not enough data yet</strong>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvWinRate" aria-busy="true">…</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvWinRateSub">Wins divided by decisions</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="avg_odds">
                         <span class="profile-advanced-metric__label">Avg Odds</span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgOdds">Not enough data yet</strong>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgOdds" aria-busy="true">…</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvAvgOddsSub">Average market price</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="avg_unit_size">
                         <span class="profile-advanced-metric__label">Avg Unit Size</span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgUnitSize">Not enough data yet</strong>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgUnitSize" aria-busy="true">…</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvAvgUnitSizeSub">Mean stake per graded pick</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="avg_daily_picks">
                         <span class="profile-advanced-metric__label">Picks Per Day</span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgDailyPicks">Not enough data yet</strong>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvAvgDailyPicks" aria-busy="true">…</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvAvgDailyPicksSub">Graded public picks over active dates</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="clv" hidden>
                         <span class="profile-advanced-metric__label">CLV</span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvClv">Coming once enough graded data is available</strong>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvClv" aria-busy="true">…</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvClvSub">Closing-line value</span>
                     </article>
                     <article class="profile-advanced-metric" data-advanced-metric-card="max_drawdown">
                         <span class="profile-advanced-metric__label">Max Drawdown</span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvMaxDrawdown">Not enough data yet</strong>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvMaxDrawdown" aria-busy="true">…</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvMaxDrawdownSub">Peak-to-trough units</span>
                     </article>
                     <!-- PICK_DIVERSITY_20260604: additive analytics layer. Computed client-side
@@ -1871,7 +1871,7 @@
                          contest picks live in a separate table and never reach this feed). -->
                     <article class="profile-advanced-metric" data-advanced-metric-card="pick_diversity">
                         <span class="profile-advanced-metric__label">Pick Diversity <span class="profile-diversity-info" id="profileDiversityInfo" role="button" tabindex="0" aria-label="What is Pick Diversity?" title="How broad this record actually is. 100 = opinions spread evenly across sports, market types, teams/players, and sides. It drops when a capper leans heavily on one category (e.g. mostly MLB overs) or stacks alternate lines on the same game. Click for the full breakdown.">?</span></span>
-                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvPickDiversity">Not enough data yet</strong>
+                        <strong class="profile-advanced-metric__value is-empty" id="profileAdvPickDiversity" aria-busy="true">…</strong>
                         <span class="profile-advanced-metric__sub" id="profileAdvPickDiversitySub">How broad the opinions are across sports, markets, teams, and sides</span>
                     </article>
                     <!-- PICK_CORRELATION_20260607: Correlated Picks moved to the TOP profile
@@ -6892,9 +6892,16 @@
         const statusEl = document.getElementById('profileAdvancedMetricsStatus');
         if (statusEl) statusEl.textContent = message || 'No verified metrics yet';
         document.querySelectorAll('.profile-advanced-metric__value').forEach(function(el) {
-            if (!el || !el.id || el.textContent.trim()) return;
+            if (!el || !el.id) return;
+            // The static shell now boots every tile as a loading ellipsis ("…")
+            // so visitors never see the "Not enough data yet" claim flash before
+            // real values land. That loading state (and true emptiness) is what
+            // this fallback replaces; anything else is real resolved content.
+            var current = el.textContent.trim();
+            if (current && current !== '…') return;
             el.textContent = 'Not enough data yet';
             el.className = 'profile-advanced-metric__value is-empty';
+            el.removeAttribute('aria-busy');
         });
     }
 
@@ -7633,6 +7640,7 @@
             const el = document.getElementById(id);
             const subEl = document.getElementById(id + 'Sub');
             if (!el) return;
+            el.removeAttribute('aria-busy');
             if (value == null || value === '') {
                 el.textContent = id === 'profileAdvClv'
                     ? 'Coming once enough graded data is available'
