@@ -3314,10 +3314,21 @@ function threadPagesHtml(t) {
     return out;
 }
 
+/* Success-only empty message for feed views (New Posts). Set by
+   tmrfhShowThreadFeed, cleared by loadThreads for category views. */
+var tmrfhFeedEmptyMsg = null;
+
 function renderThreads() {
     var body = document.getElementById('threadsBody');
     if (!body) return;
     if (!cachedThreads.length) {
+        if (tmrfhFeedEmptyMsg) {
+            body.innerHTML = '<tr><td class="fcell" colspan="5">'
+                + '<div class="fempty"><div class="fempty-cta-msg">' + escHtml(tmrfhFeedEmptyMsg) + '</div></div>'
+                + '</td></tr>';
+            updateForumJump();
+            return;
+        }
         var loggedIn = (typeof isUserLoggedIn === 'function') && isUserLoggedIn();
         var ctaMsg = loggedIn
             ? 'No threads here yet. Be the first to start the discussion.'
@@ -4909,6 +4920,7 @@ function handleForumJump(slug) {
 // ================================================================
 async function loadThreads() {
     var body = document.getElementById('threadsBody');
+    tmrfhFeedEmptyMsg = null; // category views keep the start-a-thread empty state
     body.innerHTML = '<tr><td colspan="5" class="empty-msg">Loading threads...</td></tr>';
 
     try {
@@ -5434,8 +5446,14 @@ async function tmrfhLoadMsgBadge() {
     } catch (e) {}
 }
 
-/* Thread-feed views reusing the existing #viewThreads table. */
+/* Thread-feed views reusing the existing #viewThreads table.
+   Same resilience contract as loadCategories(): bounded retries with backoff
+   for transient failures (Render cold start, DB crash-recovery window), a
+   success-only empty state, and an error state that is only shown after every
+   retry failed — never because of a momentary blip. */
+var _feedLoadGen = 0;
 async function tmrfhShowThreadFeed(title, filterFn) {
+    var myGen = ++_feedLoadGen;
     document.getElementById('viewCategories').style.display = 'none';
     document.getElementById('viewThreads').style.display = '';
     document.body.classList.remove('is-forum-home');
@@ -5448,16 +5466,40 @@ async function tmrfhShowThreadFeed(title, filterFn) {
     if (bc) bc.innerHTML = '<a onclick="showCategories()">TrustMyRecord Forums</a><span class="sep">&rsaquo;</span><span>' + escHtml(title) + '</span>';
     var body = document.getElementById('threadsBody');
     if (body) body.innerHTML = '<tr><td colspan="5" class="empty-msg">Loading threads...</td></tr>';
-    try {
-        var data = await api.getForumThreads({ limit: 40 });
-        var list = (data && data.threads) || [];
-        if (filterFn) list = list.filter(filterFn);
-        cachedThreads = list;
-        currentCategorySlug = null;
-        renderThreads();
-    } catch (err) {
-        if (body) body.innerHTML = '<tr><td colspan="5" class="empty-msg" style="color:var(--danger);">Could not load threads.</td></tr>';
-        console.error('Thread feed error:', err);
+
+    var maxAttempts = 3;
+    var lastErr = null;
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+        if (myGen !== _feedLoadGen) return; // superseded by newer navigation
+        try {
+            var data = await api.getForumThreads({ limit: 40 });
+            if (myGen !== _feedLoadGen) return;
+            var list = (data && Array.isArray(data.threads)) ? data.threads : null;
+            if (!list) throw new Error('Malformed threads response');
+            if (filterFn) list = list.filter(filterFn);
+            cachedThreads = list;
+            currentCategorySlug = null;
+            tmrfhFeedEmptyMsg = (title === 'New Posts') ? 'No new posts.' : null;
+            renderThreads();
+            window.history.replaceState({}, '', '/forum/');
+            return;
+        } catch (err) {
+            lastErr = err;
+            if (myGen !== _feedLoadGen) return;
+            console.warn('[Forum] thread feed attempt ' + attempt + '/' + maxAttempts + ' failed:', err && err.message);
+            if (attempt < maxAttempts) {
+                await new Promise(function (r) { setTimeout(r, 1500 * attempt); });
+            }
+        }
+    }
+    if (myGen !== _feedLoadGen) return;
+    console.error('Thread feed error:', lastErr);
+    if (body) {
+        // Retry re-invokes the named view so per-view filters are preserved.
+        var retryCall = { 'New Posts': 'showNewPosts()', 'My Threads': 'showMyThreads()', 'Subscribed Threads': 'showSubscribed()' }[title]
+            || ('tmrfhShowThreadFeed(' + JSON.stringify(title) + ')');
+        body.innerHTML = '<tr><td colspan="5" class="empty-msg" style="color:var(--danger);">Could not load threads. '
+            + '<a href="#" style="text-decoration:underline;" onclick="event.preventDefault();' + retryCall + ';">Retry</a></td></tr>';
     }
     window.history.replaceState({}, '', '/forum/');
 }
@@ -5614,6 +5656,12 @@ document.addEventListener('DOMContentLoaded', async function() {
         await loadCategories();
         var queryCatMatch = categories.find(function(item) { return item.slug === queryCategory; });
         await showThreadsList(queryCategory, queryCatMatch ? queryCatMatch.name : queryCategory, queryCatMatch ? queryCatMatch.id : null, true);
+        return;
+    }
+    // Deep link for the New Posts feed (/forum/new-posts/ redirects here).
+    if (params.get('view') === 'new') {
+        loadCategories(); // sidebar fills in parallel with the feed
+        await showNewPosts();
         return;
     }
 
