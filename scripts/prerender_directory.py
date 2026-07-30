@@ -344,7 +344,45 @@ def bake_handicappers(rows, now):
         f.write(t)
     return len(rows), total_graded, active_week
 
-def bake_leaderboards(rows):
+def collect_leaderboard_view():
+    """The EXACT row set the /leaderboards/ page renders after hydration.
+    Previously this page baked all `collect()` members (every verified user
+    with >0 picks), so the crawler/first paint showed ~35 rows that visibly
+    collapsed to the qualified handful when loadHandicappers() applied the
+    page's own rule (totalPicks >= 5 && net units > 0 from /users/leaderboard).
+    Mirror that pipeline instead so the baked table and hydrated table match
+    row-for-row."""
+    d = get(f"{API}/users/leaderboard?sortBy=net_units&limit=100")
+    entries = d.get("leaderboard", []) if isinstance(d, dict) else []
+    total_eligible = d.get("total_eligible_handicappers") if isinstance(d, dict) else None
+    rows = []
+    for u in entries:
+        r = {
+            "username": u.get("username") or "",
+            "display_name": u.get("display_name") or u.get("username") or "",
+            "avatar_url": clean_avatar(u.get("avatar_url")),
+            "wins": int(num(u.get("wins"))),
+            "losses": int(num(u.get("losses"))),
+            "pushes": int(num(u.get("pushes"))),
+            "total_picks": int(num(u.get("total_picks"))),
+            "net_units": num(u.get("net_units")),
+            "roi": num(u.get("roi")),
+            "win_rate": num(u.get("win_rate")),
+            "current_streak": int(num(u.get("current_streak"))),
+            "last_pick_at": u.get("last_pick_at") or "",
+        }
+        # loadHandicappers() visibility rule + default sampleFilter ('5')
+        if r["username"] and r["total_picks"] >= 5 and r["net_units"] > 0:
+            rows.append(r)
+    rows.sort(key=lambda r: r["net_units"], reverse=True)  # default sort 'units'
+    try:
+        total_eligible = int(total_eligible)
+    except (TypeError, ValueError):
+        total_eligible = None
+    return rows, total_eligible
+
+def bake_leaderboards():
+    rows, total_eligible = collect_leaderboard_view()
     with open(LEAD, encoding="utf-8") as f:
         t = f.read()
     body = "".join(lead_row(r, i) for i, r in enumerate(rows))
@@ -358,8 +396,24 @@ def bake_leaderboards(rows):
                   '<div id="leaderboardWrap" class="table-wrap" data-prerendered="1">')
     t = t.replace('<div id="leaderboardState" class="loading">Loading verified handicapper data...</div>',
                   '<div id="leaderboardState" class="loading" style="display:none;">Loading verified handicapper data...</div>')
-    t = set_text(t, r'(<div class="count-chip" id="resultCount">).*?(</div>)', f"{len(rows)} cappers")
-    t = set_text(t, r'(<b id="qsHandicappers">).*?(</b>)', str(len(rows)))
+    # Mirror renderLeaderboard()'s chip exactly (subset phrasing when the
+    # ranked view is smaller than the platform-eligible total).
+    chip = (f"{len(rows)} of {total_eligible} cappers match your filters"
+            if total_eligible is not None and total_eligible > len(rows)
+            else f"{len(rows)} cappers")
+    t = set_text(t, r'(<div class="count-chip" id="resultCount">).*?(</div>)', chip)
+    # setCount('handicappers', ...) hydrates BOTH of these to the platform
+    # total (total_eligible_handicappers), not the visible row count.
+    if total_eligible is not None:
+        t = set_text(t, r'(<b id="qsHandicappers">).*?(</b>)', str(total_eligible))
+        t = set_text(t, r'(<span class="lb-tab-count" id="tabCountHandicappers">).*?(</span>)', str(total_eligible))
+    # Trivia/Polls/Online counts are only known to the client JS; a baked "0"
+    # is a wrong number that visibly flips on hydrate. Bake a neutral skeleton.
+    for tab_id in ("tabCountTrivia", "tabCountPolls", "tabCountOnline"):
+        t = re.sub(rf'(<span class="lb-tab-count" id="{tab_id}"(?:\s+title="[^"]*")?>).*?(</span>)',
+                   r'\g<1>…\g<2>', t, count=1, flags=re.S)
+    for qs_id in ("qsTrivia", "qsPolls", "qsOnline"):
+        t = re.sub(rf'(<b id="{qs_id}">).*?(</b>)', r'\g<1>…\g<2>', t, count=1, flags=re.S)
     with open(LEAD, "w", encoding="utf-8", newline="\n") as f:
         f.write(t)
     return len(rows)
@@ -699,7 +753,7 @@ def main():
         print("\nSAMPLE leaderboard row:\n", lead_row(rows[0], 0)[:400])
         return
     n1, tp, act = bake_handicappers(rows, now)
-    n2 = bake_leaderboards(rows)
+    n2 = bake_leaderboards()
     n3 = bake_homepage(rows, now)
     print(f"handicappers: baked {n1} rows, {tp} total picks, {act} active")
     print(f"leaderboards: baked {n2} rows")
