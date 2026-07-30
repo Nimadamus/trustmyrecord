@@ -95,6 +95,11 @@ body.tmr-site-shell {
     overflow-x: hidden;
     font-family: var(--tmr-font);
     line-height: 1.5;
+    /* Pages without their own reset (e.g. /tmr-coin/) kept the browser's
+       default 8px body margin, offsetting the injected global nav and
+       causing an 8px horizontal scroll on mobile. The shared shell always
+       owns the full viewport. */
+    margin: 0;
 }
 
 body.tmr-site-shell,
