@@ -21,9 +21,9 @@
   if (window.TMREmoji && window.TMREmoji.v2) return;
 
   var VER = '20260722a';
-  var TW_JS = '/static/js/twemoji.min.js?v=42c8dc3d94c5';
+  var TW_JS = '/static/js/twemoji.min.js?v=a66c8ae9383e';
   var DATA_JS = '/static/js/tmr-emoji-data.js?v=4f708f32d48e';
-  var SMILIE_JS = '/static/js/tmr-smilies.js?v=f2fe8a225336' + VER;
+  var SMILIE_JS = '/static/js/tmr-smilies.js?v=89bc6c7d70d7' + VER;
   var NOTO = 'https://fonts.gstatic.com/s/e/notoemoji/latest/';
   var TW_BASE = 'https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/72x72/';
   var LS_RECENT = 'tmrEmojiRecent2';
