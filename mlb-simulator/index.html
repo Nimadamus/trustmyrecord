@@ -17,6 +17,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-page-polish.css">
     <link rel="stylesheet" href="/static/css/mlb-simulator.css?v=20260726d-touchtarget">
+    <link rel="stylesheet" href="/static/css/tmr-ds.043d7679ca91.css">
+    <link rel="stylesheet" href="/static/css/mlb-sim-landing-v2.css?v=20260730d">
     <script src="/static/js/config.js"></script>
     <script src="/static/js/backend-api.js"></script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "MLB Simulator", "applicationCategory": "SportsApplication", "operatingSystem": "Web", "url": "https://trustmyrecord.com/mlb-simulator/", "description": "Simulate MLB games, seasons, and playoff paths, then explore prediction data backed by transparent verified records on TrustMyRecord.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "publisher": {"@type": "Organization", "name": "TrustMyRecord", "url": "https://trustmyrecord.com/"}}</script>
@@ -25,41 +27,67 @@
 <script defer src="/static/js/tmr-linkhub.js?v=20260721nav4"></script>
 <script src="/static/js/tmr-analytics.js?v=20260722"></script>
 </head>
-<body class="tmr-polished-page mlb-simulator-page" data-mlb-simulator-build="mlb-simulator-blowout-calibration-20260727a">
-    <header class="sim-topbar" aria-label="TrustMyRecord navigation">
-        <a class="sim-brand" href="/">TrustMyRecord</a>
-        <nav class="sim-nav" aria-label="Primary">
-            <a href="/sportsbook/">Sportsbook</a>
-            <a href="/handicappers/">Handicappers</a>
-            <a href="/leaderboard/">Leaderboard</a>
-            <a href="/mlb-simulator/" aria-current="page">MLB Simulator</a>
-        </nav>
-    </header>
+<body class="tmr-ds tmr-polished-page mlb-simulator-page" data-mlb-simulator-build="mlb-simulator-blowout-calibration-20260727a">
 
     <main class="sim-shell">
-        <section class="sim-hero">
+        <section class="simv2-hero" aria-label="MLB Simulator overview">
             <div>
-                <p class="sim-kicker">Data Lab</p>
+                <p class="simv2-kicker">TrustMyRecord Data Lab</p>
                 <h1>MLB Simulator</h1>
-                <p class="sim-subtitle">A free MLB simulator and team builder: pick two teams, choose starters, and run a projected matchup. Use it to test MLB predictions before you bet.</p>
-                <p style="margin-top:10px;font-size:0.95rem;">After testing a matchup, <a href="/sportsbook/" style="color:#00aeff;font-weight:700;text-decoration:underline;">lock your pick</a> and <a href="/leaderboards/" style="color:#00aeff;font-weight:700;text-decoration:underline;">track your record on TrustMyRecord</a>.</p>
-                <p style="margin-top:8px;font-size:0.95rem;"><a href="/mlb-season-simulator/" style="color:#00aeff;font-weight:700;text-decoration:underline;">Read the MLB Season Simulator Guide &rarr;</a> <span style="opacity:0.7;">(predict division races, playoff teams, and the World Series)</span></p>
-            </div>
-            <div class="sim-status-card" aria-live="polite">
-                <span class="sim-status-dot" aria-hidden="true"></span>
-                <div>
-                    <strong id="simDataSourceTitle">Simulator dataset</strong>
-                    <span id="simDataSourceDetail">Preparing baseline team library...</span>
+                <p class="simv2-headline">Simulate Any MLB Matchup.<br>Then Put Your Prediction <em>on the Record.</em></p>
+                <p class="simv2-sub">Run data-driven MLB simulations using current teams, projected starters, verified inputs, and thousands of simulated outcomes. Create a free account to lock in your prediction and build a record nobody can fake.</p>
+                <div class="simv2-hero-ctas">
+                    <a id="simv2HeroPrimary" class="simv2-btn simv2-btn-primary" href="#todaysMatchups">Run Today's Matchups</a>
+                    <a id="simv2HeroSecondary" class="simv2-btn simv2-btn-ghost" href="/register/">Create Free Account</a>
                 </div>
+                <div class="simv2-trust">
+                    <span>Free to use</span>
+                    <span>No credit card required</span>
+                    <span>Picks are timestamped</span>
+                    <span>Records can't be edited afterward</span>
+                </div>
+                <p style="margin-top:16px;font-size:0.85rem;color:#7c8aa0;"><a href="/mlb-season-simulator/" style="color:#2dd4bf;font-weight:700;text-decoration:none;">Read the MLB Season Simulator Guide &rarr;</a></p>
             </div>
+            <aside class="simv2-hero-card" aria-live="polite">
+                <div class="simv2-hc-head">
+                    <strong id="simDataSourceTitle">Simulator dataset</strong>
+                    <span class="simv2-pill-live">LIVE INPUTS</span>
+                </div>
+                <span id="simDataSourceDetail">Preparing baseline team library...</span>
+                <div class="simv2-hc-rows">
+                    <div><span>Engine</span><b>Plate-appearance simulation</b></div>
+                    <div><span>Winner accuracy (out-of-sample)</span><b>~55&ndash;60%</b></div>
+                    <div><span>Probability calibration</span><b>Brier &asymp; 0.245</b></div>
+                </div>
+            </aside>
         </section>
 
-        <section class="sim-workflow" aria-label="Simulator workflow">
-            <div><span>Step 1</span><strong>Mode</strong><small>Choose format</small></div>
-            <div><span>Step 2</span><strong>Teams</strong><small>Away and home</small></div>
-            <div><span>Step 3</span><strong>Starters</strong><small>Pick pitchers</small></div>
-            <div><span>Step 4</span><strong>Run</strong><small>Simulate</small></div>
-            <div><span>Step 5</span><strong>Review</strong><small>Results</small></div>
+        <section id="todaysMatchups" class="simv2-slate" aria-label="Today's MLB matchups" hidden>
+            <div class="simv2-sechead">
+                <div>
+                    <p class="simv2-kicker">Today's Slate</p>
+                    <h2>Today's MLB Matchups</h2>
+                </div>
+                <small id="simv2SlateNote"></small>
+            </div>
+            <div id="simv2SlateGrid" class="simv2-slate-grid"></div>
+        </section>
+
+        <div class="simv2-sechead">
+            <div>
+                <p class="simv2-kicker">Simulator</p>
+                <h2>Build Your Matchup</h2>
+            </div>
+        </div>
+
+        <section class="simv2-steps" aria-label="Simulator progress">
+            <ol id="simv2Steps">
+                <li class="is-active"><button type="button" data-step="matchup" aria-current="step"><span class="n"><span>1</span></span>Matchup</button></li>
+                <li><button type="button" data-step="starters" aria-current="false"><span class="n"><span>2</span></span>Starters</button></li>
+                <li><button type="button" data-step="settings" aria-current="false"><span class="n"><span>3</span></span>Settings</button></li>
+                <li><button type="button" data-step="simulate" aria-current="false"><span class="n"><span>4</span></span>Simulate</button></li>
+                <li><button type="button" data-step="results" aria-current="false"><span class="n"><span>5</span></span>Results</button></li>
+            </ol>
         </section>
 
         <section class="sim-workspace" aria-label="MLB simulator controls">
@@ -77,6 +105,7 @@
                 <p id="modeHelpText" class="sim-mode-help">Current Teams mode compares two modern MLB baseline profiles.</p>
 
                 <div class="team-picker-grid">
+                    <button id="simv2SwapTeams" type="button" aria-label="Swap away and home teams" title="Swap teams">&#8644;</button>
                     <article class="team-picker-card">
                         <span class="team-side">Away Team</span>
                         <div id="awayPickerIdentity" class="team-picker-identity" aria-live="polite"></div>
@@ -438,6 +467,63 @@
             </section>
         </section>
 
+        <section id="simv2Contest" class="simv2-duo-contest" aria-label="MLB contest" hidden>
+            <div class="simv2-panel">
+                <p class="simv2-kicker simv2-kicker-gold">Live Contest</p>
+                <h3 id="simv2ContestName">MLB Contest</h3>
+                <p>Turn your MLB predictions into a real competition. Submit verified picks, compete on the leaderboard, and see how your record compares with the community.</p>
+                <div id="simv2ContestMeta" class="simv2-cmeta"></div>
+                <p id="simv2ContestElig" class="simv2-elig"></p>
+                <div class="simv2-convert-row" style="justify-content:flex-start;">
+                    <a class="simv2-btn simv2-btn-gold" href="/contests/justbet-mlb/">Join the Contest</a>
+                    <a class="simv2-btn simv2-btn-ghost" href="/contests/justbet-mlb/">Official Rules</a>
+                </div>
+            </div>
+        </section>
+
+        <div class="simv2-duo">
+            <section class="simv2-panel" aria-label="TMR Coin">
+                <p class="simv2-kicker simv2-kicker-gold">Community Rewards</p>
+                <h3>TMR Coin Powers the TrustMyRecord Community</h3>
+                <p>TMR Coin is TrustMyRecord's community reward token. Right now members earn it through the activities below, and TMR Coin also exists as a real on-chain token contract (ERC-20 on Base).</p>
+                <div class="simv2-coin-uses">
+                    <span>Signup bonus</span>
+                    <span>First-pick bonus</span>
+                    <span>First forum thread</span>
+                    <span>Daily thread reward</span>
+                </div>
+                <p class="simv2-coin-note">TMR Coin is a community feature, not an investment product.</p>
+                <a id="simv2CoinLearn" class="simv2-btn simv2-btn-ghost" href="/tmr-coin/" style="margin-top:10px;">Learn About TMR Coin</a>
+            </section>
+            <section id="simv2ReturnLoop" class="simv2-panel" aria-label="Your simulator activity" hidden>
+                <p class="simv2-kicker">Welcome Back</p>
+                <h3>Pick Up Where You Left Off</h3>
+                <p id="simv2ReturnSlate" class="simv2-muted"></p>
+                <div id="simv2RecentSims"></div>
+                <div class="simv2-return-row">
+                    <a class="simv2-btn simv2-btn-ghost" href="/mlb-simulator/saved/">My Simulations</a>
+                    <a class="simv2-btn simv2-btn-primary" href="/sportsbook/">Make Today's Picks</a>
+                </div>
+            </section>
+        </div>
+
+        <section class="simv2-proof" aria-label="TrustMyRecord community">
+            <h2>Don't Just Make Predictions. Build a Record.</h2>
+            <p>Live platform activity, straight from TrustMyRecord's canonical data.</p>
+            <div class="simv2-stats">
+                <div class="simv2-stat"><b id="simv2StatMembers">&mdash;</b><span>Members</span></div>
+                <div class="simv2-stat"><b id="simv2StatPicks">&mdash;</b><span>Picks recorded</span></div>
+                <div class="simv2-stat"><b id="simv2StatVerified">&mdash;</b><span>Verified handicappers</span></div>
+            </div>
+            <p class="simv2-kicker simv2-kicker-gold" hidden>Leaderboard &middot; Net Units</p>
+            <div id="simv2LeaderPreview" class="simv2-leaders" hidden></div>
+            <div class="simv2-bens">
+                <div class="simv2-ben"><i>&#9201;</i><b>Timestamp Every Pick</b><p>Every pick locks before first pitch and can never be edited or deleted afterward.</p></div>
+                <div class="simv2-ben"><i>&#128200;</i><b>Track Units, ROI, Streaks &amp; Accuracy</b><p>Your record is auto-graded and public &mdash; wins and losses both count.</p></div>
+                <div class="simv2-ben"><i>&#127942;</i><b>Compete With Verified Handicappers</b><p>Climb transparent leaderboards where losing picks can't be hidden.</p></div>
+            </div>
+        </section>
+
         <section class="data-notes-panel" aria-label="Data notes">
             <div class="data-mode-topline">
                 <span>Data Notes</span>
@@ -569,7 +655,16 @@
          any value to false + redeploy to disable instantly; the simulator
          above is fully independent of this and keeps working either way. -->
     <script>window.SIMULATOR_FLAGS = { conversionPanel: true, savedResults: true, teamFollowing: true };</script>
+    <!-- analytics.js provides window.TMRAnalytics; without it every
+         simulator_* funnel event is silently dropped by the guards. -->
+    <script src="/static/js/analytics.js?v=20260730simv2"></script>
     <script defer src="/static/js/mlb-simulator-conversion.js?v=20260728b"></script>
+    <!-- SIMV2_LANDING_20260730: landing/conversion layer. Kill switch:
+         set landing:false + redeploy; core simulator is independent. -->
+    <script>window.SIM_LANDING_FLAGS = { landing: true };</script>
+    <script defer src="/static/js/mlb-sim-landing.js?v=20260730a"></script>
+    <script src="/static/js/tmr-session.63f50f4d0988.js"></script>
+    <script src="/static/js/tmr-ds-nav.d33b33501c6f.js"></script>
 
 <!-- tmr-internal-cluster : SEO internal linking (insert-only) -->
 <section class="tmr-internal-cluster" aria-label="Related pages on TrustMyRecord" style="max-width:1140px;margin:46px auto 0;padding:26px 22px;background:#12121a;border:1px solid #2a2a4a;border-radius:18px;font-family:'Inter',system-ui,sans-serif;">

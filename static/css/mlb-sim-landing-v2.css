@@ -1,0 +1,697 @@
+/* =============================================================================
+   MLB SIMULATOR — v2 LANDING RESTYLE (mlb-sim-landing-v2.css)  simv2 20260730
+   Loads AFTER mlb-simulator.css and only overrides presentation. Removing this
+   file + the v2 sections restores the previous look; no simulator behavior
+   lives in CSS.
+   ============================================================================= */
+
+:root {
+    --sv2-bg: #0a0e16;
+    --sv2-card: rgba(255, 255, 255, 0.045);
+    --sv2-card2: rgba(255, 255, 255, 0.015);
+    --sv2-line: rgba(255, 255, 255, 0.09);
+    --sv2-ink: #f1f5fa;
+    --sv2-mut: #9fb0c7;
+    --sv2-dim: #7c8aa0;
+    --sv2-teal: #2dd4bf;
+    --sv2-teal-deep: #0ea5e9;
+    --sv2-gold: #f5c542;
+    --sv2-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.65);
+    --sv2-radius: 16px;
+}
+
+/* ---------- page frame / breadcrumb ---------- */
+body.mlb-simulator-page {
+    background:
+        radial-gradient(1000px 420px at 78% -120px, rgba(45, 212, 191, 0.10), transparent 62%),
+        radial-gradient(760px 340px at 8% 260px, rgba(56, 189, 248, 0.07), transparent 60%),
+        var(--sv2-bg);
+}
+body.mlb-simulator-page nav.tmrlh-crumbs {
+    max-width: 1200px;
+    margin: 10px auto 0 !important;
+    padding: 4px 0 !important;
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    font-size: 0.78rem !important;
+    opacity: 0.85;
+}
+body.mlb-simulator-page nav.tmrlh-crumbs a,
+body.mlb-simulator-page nav.tmrlh-crumbs span {
+    background: transparent !important;
+    border: 0 !important;
+    padding: 2px 4px !important;
+    font-size: 0.78rem !important;
+    color: var(--sv2-mut) !important;
+    font-weight: 600 !important;
+}
+body.mlb-simulator-page nav.tmrlh-crumbs img { display: none !important; }
+body.mlb-simulator-page .sim-shell {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+}
+
+/* ---------- HERO ---------- */
+.simv2-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    gap: 44px;
+    align-items: center;
+    padding: 46px 0 34px;
+}
+.simv2-hero::before {
+    content: '';
+    position: absolute;
+    inset: -40px 0 0;
+    pointer-events: none;
+    opacity: 0.32;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 56px 56px;
+    -webkit-mask-image: radial-gradient(680px 380px at 60% 0, #000, transparent 75%);
+    mask-image: radial-gradient(680px 380px at 60% 0, #000, transparent 75%);
+}
+.simv2-hero > div { position: relative; min-width: 0; }
+.simv2-hero .sim-kicker,
+.simv2-kicker {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sv2-teal);
+    margin: 0 0 6px;
+}
+body.tmr-ds.mlb-simulator-page .simv2-hero h1 {
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--sv2-dim);
+    margin: 0 0 10px;
+    line-height: 1.2;
+}
+.simv2-headline {
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.85rem, 4.3vw, 3.05rem);
+    line-height: 1.08;
+    color: var(--sv2-ink);
+    margin: 0 0 16px;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+.simv2-headline em { font-style: normal; color: var(--sv2-teal); }
+.simv2-sub {
+    color: var(--sv2-mut);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    max-width: 56ch;
+    margin: 0 0 22px;
+}
+.simv2-hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
+.simv2-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    border-radius: 12px;
+    padding: 13px 24px;
+    border: 0;
+    cursor: pointer;
+    text-decoration: none;
+    line-height: 1.1;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+}
+.simv2-btn:focus-visible { outline: 2px solid var(--sv2-teal); outline-offset: 2px; }
+.simv2-btn-primary {
+    background: linear-gradient(135deg, var(--sv2-teal), var(--sv2-teal-deep));
+    color: #04121a;
+}
+.simv2-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 22px -8px rgba(45, 212, 191, 0.55); }
+.simv2-btn-ghost {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: var(--sv2-ink);
+}
+.simv2-btn-ghost:hover { background: rgba(255, 255, 255, 0.09); }
+.simv2-btn-gold {
+    background: linear-gradient(135deg, #f5c542, #e0a90c);
+    color: #221a00;
+}
+.simv2-btn-gold:hover { transform: translateY(-1px); box-shadow: 0 8px 22px -8px rgba(245, 197, 66, 0.5); }
+.simv2-trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    margin-top: 20px;
+    font-size: 0.83rem;
+    color: var(--sv2-dim);
+    font-weight: 600;
+}
+.simv2-trust span::before { content: '✓'; color: var(--sv2-teal); margin-right: 7px; font-weight: 800; }
+
+/* hero side card wraps the existing #simDataSourceTitle/Detail status */
+.simv2-hero-card {
+    position: relative;
+    background: linear-gradient(180deg, var(--sv2-card), var(--sv2-card2));
+    border: 1px solid var(--sv2-line);
+    border-radius: 18px;
+    box-shadow: var(--sv2-shadow);
+    padding: 20px 22px;
+    min-width: 0;
+}
+.simv2-hero-card .simv2-hc-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.simv2-hero-card .simv2-hc-head strong { font-size: 0.95rem; color: var(--sv2-ink); }
+.simv2-pill-live {
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #4ade80;
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.4);
+    border-radius: 999px;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+.simv2-hero-card #simDataSourceDetail {
+    display: block;
+    color: var(--sv2-mut);
+    font-size: 0.84rem;
+    line-height: 1.5;
+}
+.simv2-hc-rows { margin-top: 12px; }
+.simv2-hc-rows > div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-top: 1px solid var(--sv2-line);
+    font-size: 0.85rem;
+    color: var(--sv2-mut);
+}
+.simv2-hc-rows b { color: var(--sv2-ink); font-variant-numeric: tabular-nums; text-align: right; }
+
+/* ---------- section headers ----------
+   body.tmr-ds h1-h3 rules in tmr-ds.css carry 0,1,2 specificity; every v2
+   heading override below must match or beat that. */
+body.tmr-ds.mlb-simulator-page .simv2-sechead h2 {
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-size: 1.45rem;
+    line-height: 1.2;
+    color: var(--sv2-ink);
+    margin: 0;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    opacity: 1;
+}
+body.tmr-ds.mlb-simulator-page .simv2-convert h2 {
+    font-size: 1.55rem;
+    line-height: 1.2;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    color: var(--sv2-ink);
+    margin: 0 0 10px;
+}
+body.tmr-ds.mlb-simulator-page .simv2-proof h2 {
+    font-size: 1.65rem;
+    line-height: 1.2;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    color: var(--sv2-ink);
+    margin: 0 0 8px;
+}
+body.tmr-ds.mlb-simulator-page .simv2-panel h3 {
+    font-size: 1.2rem;
+    line-height: 1.25;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    color: var(--sv2-ink);
+    margin: 6px 0 10px;
+}
+.simv2-sechead {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 38px 0 16px;
+    flex-wrap: wrap;
+}
+.simv2-sechead h2 {
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-size: 1.45rem;
+    color: var(--sv2-ink);
+    margin: 0;
+}
+.simv2-sechead small { color: var(--sv2-dim); font-size: 0.82rem; }
+
+/* ---------- TODAY'S MATCHUPS ---------- */
+.simv2-slate-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 14px;
+}
+.simv2-game {
+    background: linear-gradient(180deg, var(--sv2-card), var(--sv2-card2));
+    border: 1px solid var(--sv2-line);
+    border-radius: 14px;
+    box-shadow: var(--sv2-shadow);
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+}
+.simv2-game::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--sv2-teal), transparent 88%);
+}
+.simv2-g-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--sv2-dim);
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 11px;
+}
+.simv2-g-team { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
+.simv2-g-team b { font-size: 0.94rem; color: var(--sv2-ink); }
+.simv2-g-logo { width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.06); object-fit: contain; }
+.simv2-logo-fallback {
+    width: 30px; height: 30px; border-radius: 50%;
+    display: inline-grid; place-items: center;
+    background: rgba(255, 255, 255, 0.08);
+    font-size: 0.62rem; font-weight: 800; color: var(--sv2-mut);
+}
+.simv2-g-sp {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-top: 8px;
+    font-size: 0.78rem;
+    color: var(--sv2-mut);
+}
+.simv2-g-sp em { font-style: normal; color: var(--sv2-dim); font-size: 0.7rem; }
+.simv2-tag {
+    font-style: normal;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--sv2-gold);
+    background: rgba(245, 197, 66, 0.1);
+    border: 1px solid rgba(245, 197, 66, 0.32);
+    border-radius: 5px;
+    padding: 1px 6px;
+}
+.simv2-g-foot {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+    padding-top: 11px;
+    border-top: 1px solid var(--sv2-line);
+}
+.simv2-g-foot .simv2-btn { padding: 8px 16px; font-size: 0.85rem; border-radius: 9px; }
+.simv2-slate-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 30px 20px;
+    border: 1px dashed rgba(255, 255, 255, 0.16);
+    border-radius: 14px;
+    color: var(--sv2-mut);
+}
+.simv2-slate-empty strong { display: block; color: var(--sv2-ink); margin-bottom: 6px; font-family: 'Barlow', sans-serif; }
+.simv2-slate-empty p { margin: 0; font-size: 0.9rem; }
+
+/* ---------- STEP PROGRESS ---------- */
+.simv2-steps { margin: 30px 0 20px; }
+.simv2-steps ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    border: 1px solid var(--sv2-line);
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.02);
+}
+.simv2-steps li { flex: 1; display: flex; min-width: 0; }
+.simv2-steps li + li { border-left: 1px solid var(--sv2-line); }
+.simv2-steps button {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 12px 10px;
+    background: transparent;
+    border: 0;
+    color: var(--sv2-dim);
+    font: 700 0.85rem 'Inter', sans-serif;
+    cursor: pointer;
+    min-width: 0;
+    white-space: nowrap;
+}
+.simv2-steps button:focus-visible { outline: 2px solid var(--sv2-teal); outline-offset: -2px; }
+.simv2-steps .n {
+    width: 23px; height: 23px; flex: 0 0 23px;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 0.7rem; font-weight: 800;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+}
+.simv2-steps li.is-done button { color: var(--sv2-mut); }
+.simv2-steps li.is-done .n {
+    background: rgba(45, 212, 191, 0.14);
+    border-color: var(--sv2-teal);
+    color: var(--sv2-teal);
+}
+.simv2-steps li.is-done .n::before { content: '✓'; }
+.simv2-steps li.is-done .n span { display: none; }
+.simv2-steps li.is-active button {
+    color: #fff;
+    background: rgba(45, 212, 191, 0.08);
+    box-shadow: inset 0 -2px 0 var(--sv2-teal);
+}
+.simv2-steps li.is-active .n { background: var(--sv2-teal); color: #04121a; border-color: var(--sv2-teal); }
+
+/* ---------- WORKSPACE POLISH (overrides of existing classes) ---------- */
+.mlb-simulator-page .sim-panel {
+    background: linear-gradient(180deg, var(--sv2-card), var(--sv2-card2));
+    border: 1px solid var(--sv2-line);
+    border-radius: var(--sv2-radius);
+    box-shadow: var(--sv2-shadow);
+}
+.mlb-simulator-page .sim-toggle.three-up {
+    display: inline-flex;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--sv2-line);
+    border-radius: 12px;
+    padding: 4px;
+    gap: 4px;
+    width: auto;
+}
+.mlb-simulator-page .sim-toggle.three-up button {
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--sv2-mut);
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 9px 18px;
+    border-radius: 9px;
+}
+.mlb-simulator-page .sim-toggle.three-up button.active {
+    background: linear-gradient(135deg, rgba(45, 212, 191, 0.25), rgba(14, 165, 233, 0.2));
+    color: #fff;
+    border-color: rgba(45, 212, 191, 0.4);
+}
+.mlb-simulator-page .team-picker-grid { position: relative; gap: 18px; }
+.mlb-simulator-page .team-picker-card {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.018));
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+}
+.mlb-simulator-page .team-picker-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--team-primary, var(--sv2-teal)), transparent 85%);
+}
+#simv2SwapTeams {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    background: #101827;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: var(--sv2-mut);
+    font-size: 1.05rem;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 6px 18px -6px rgba(0, 0, 0, 0.7);
+}
+#simv2SwapTeams:hover { color: #fff; border-color: var(--sv2-teal); }
+#simv2SwapTeams:focus-visible { outline: 2px solid var(--sv2-teal); outline-offset: 2px; }
+
+.mlb-simulator-page .sim-button.primary {
+    background: linear-gradient(135deg, var(--sv2-teal), var(--sv2-teal-deep));
+    color: #04121a;
+    font-weight: 800;
+    border-radius: 12px;
+}
+.mlb-simulator-page .key-explanation {
+    border-left: 3px solid var(--sv2-teal);
+    background: rgba(45, 212, 191, 0.06);
+    border-radius: 0 10px 10px 0;
+    padding: 13px 15px;
+    color: var(--sv2-mut);
+    font-size: 0.95rem;
+}
+.mlb-simulator-page .probability-track {
+    height: 14px;
+    border-radius: 99px;
+    background: rgba(255, 255, 255, 0.06);
+}
+.mlb-simulator-page .probability-track span {
+    border-radius: 99px;
+    background: linear-gradient(90deg, var(--sv2-teal), var(--sv2-teal-deep));
+}
+
+/* ---------- PICK CONVERSION PANEL ---------- */
+.simv2-convert {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    padding: 30px 26px;
+    border-radius: 18px;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(45, 212, 191, 0.14), rgba(56, 189, 248, 0.08) 55%, rgba(245, 197, 66, 0.07));
+    border: 1px solid rgba(45, 212, 191, 0.3);
+}
+.simv2-convert h2 {
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-size: 1.55rem;
+    color: var(--sv2-ink);
+    margin: 0 0 10px;
+}
+.simv2-convert p {
+    color: var(--sv2-mut);
+    max-width: 66ch;
+    margin: 0 auto 18px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+.simv2-pickteam { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 18px; }
+.simv2-teamchoice {
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--sv2-mut);
+    font: 700 0.9rem 'Inter', sans-serif;
+    border-radius: 999px;
+    padding: 9px 20px;
+    cursor: pointer;
+}
+.simv2-teamchoice.is-on {
+    background: rgba(45, 212, 191, 0.18);
+    border-color: var(--sv2-teal);
+    color: #fff;
+}
+.simv2-teamchoice:focus-visible { outline: 2px solid var(--sv2-teal); outline-offset: 2px; }
+.simv2-convert-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+/* ---------- CONTEST + COIN DUO ---------- */
+.simv2-duo-contest { margin-top: 40px; }
+.simv2-duo {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 16px;
+    margin-top: 40px;
+}
+.simv2-panel {
+    background: linear-gradient(180deg, var(--sv2-card), var(--sv2-card2));
+    border: 1px solid var(--sv2-line);
+    border-radius: var(--sv2-radius);
+    box-shadow: var(--sv2-shadow);
+    padding: 24px;
+    min-width: 0;
+}
+.simv2-panel h3 {
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-size: 1.2rem;
+    color: var(--sv2-ink);
+    margin: 6px 0 10px;
+}
+.simv2-panel p { color: var(--sv2-mut); font-size: 0.92rem; line-height: 1.6; margin: 0 0 6px; }
+.simv2-kicker-gold { color: var(--sv2-gold); }
+.simv2-cmeta { display: flex; gap: 20px; flex-wrap: wrap; margin: 14px 0 16px; }
+.simv2-cmeta div b {
+    display: block;
+    font-size: 1.08rem;
+    color: var(--sv2-ink);
+    font-variant-numeric: tabular-nums;
+    font-family: 'Barlow', sans-serif;
+}
+.simv2-cmeta div span {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--sv2-dim);
+}
+.simv2-elig { font-size: 0.82rem; color: var(--sv2-dim); margin: 0 0 16px; }
+.simv2-coin-uses { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 16px; }
+.simv2-coin-uses span {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--sv2-gold);
+    background: rgba(245, 197, 66, 0.08);
+    border: 1px solid rgba(245, 197, 66, 0.25);
+    border-radius: 999px;
+    padding: 5px 12px;
+}
+.simv2-coin-note { font-size: 0.78rem; color: var(--sv2-dim); }
+
+/* ---------- SOCIAL PROOF ---------- */
+.simv2-proof { margin-top: 44px; text-align: center; }
+.simv2-proof h2 {
+    font-family: 'Barlow', 'Inter', sans-serif;
+    font-size: 1.65rem;
+    color: var(--sv2-ink);
+    margin: 0 0 8px;
+}
+.simv2-proof > p { color: var(--sv2-mut); margin: 0 0 22px; }
+.simv2-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.simv2-stat {
+    background: linear-gradient(180deg, var(--sv2-card), var(--sv2-card2));
+    border: 1px solid var(--sv2-line);
+    border-radius: 14px;
+    padding: 20px 14px;
+}
+.simv2-stat b {
+    display: block;
+    font-family: 'Barlow', sans-serif;
+    font-size: 1.65rem;
+    color: var(--sv2-teal);
+    font-variant-numeric: tabular-nums;
+}
+.simv2-stat span { font-size: 0.78rem; color: var(--sv2-dim); font-weight: 600; }
+.simv2-leaders { display: grid; gap: 8px; max-width: 560px; margin: 0 auto 22px; }
+.simv2-leader {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) auto auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px 16px;
+    background: linear-gradient(180deg, var(--sv2-card), var(--sv2-card2));
+    border: 1px solid var(--sv2-line);
+    border-radius: 12px;
+    text-decoration: none;
+}
+.simv2-leader i { font-style: normal; font-weight: 800; color: var(--sv2-gold); }
+.simv2-leader b { color: var(--sv2-ink); text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.simv2-leader span { color: var(--sv2-mut); font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.simv2-leader em { font-style: normal; color: var(--sv2-teal); font-weight: 700; font-variant-numeric: tabular-nums; }
+.simv2-bens {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 14px;
+    text-align: left;
+}
+.simv2-ben {
+    background: linear-gradient(180deg, var(--sv2-card), var(--sv2-card2));
+    border: 1px solid var(--sv2-line);
+    border-radius: 14px;
+    padding: 20px;
+}
+.simv2-ben i {
+    font-style: normal;
+    display: inline-grid;
+    place-items: center;
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    background: rgba(45, 212, 191, 0.13);
+    color: var(--sv2-teal);
+    font-weight: 800;
+    margin-bottom: 10px;
+}
+.simv2-ben b { display: block; color: var(--sv2-ink); margin-bottom: 5px; }
+.simv2-ben p { color: var(--sv2-mut); font-size: 0.87rem; line-height: 1.55; margin: 0; }
+
+/* ---------- RETURN LOOP ---------- */
+.simv2-return { margin-top: 40px; }
+.simv2-return .simv2-panel { display: flex; flex-direction: column; gap: 8px; }
+#simv2RecentSims { display: flex; flex-wrap: wrap; gap: 10px; }
+#simv2RecentSims a {
+    color: var(--sv2-teal);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 1px solid rgba(45, 212, 191, 0.3);
+    border-radius: 999px;
+    padding: 6px 14px;
+}
+#simv2RecentSims a:hover { background: rgba(45, 212, 191, 0.1); }
+.simv2-muted { color: var(--sv2-dim); font-size: 0.88rem; }
+.simv2-return-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; }
+
+/* ---------- existing lower sections: soften containers ---------- */
+.mlb-simulator-page .sim-explainer-section,
+.mlb-simulator-page .sim-accuracy-panel,
+.mlb-simulator-page .data-notes-panel {
+    background: linear-gradient(180deg, var(--sv2-card), var(--sv2-card2));
+    border: 1px solid var(--sv2-line);
+    border-radius: var(--sv2-radius);
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 980px) {
+    .simv2-hero { grid-template-columns: 1fr; gap: 26px; padding-top: 30px; }
+    .simv2-duo { grid-template-columns: 1fr; }
+}
+@media (max-width: 700px) {
+    body.mlb-simulator-page .sim-shell { padding: 0 16px 48px; }
+    .simv2-steps ol { overflow-x: auto; scrollbar-width: none; }
+    .simv2-steps ol::-webkit-scrollbar { display: none; }
+    .simv2-steps button { padding: 11px 12px; font-size: 0.78rem; }
+    .mlb-simulator-page .team-picker-grid { display: flex; flex-direction: column; }
+    .mlb-simulator-page .team-picker-grid .team-picker-card:first-of-type { order: 1; }
+    #simv2SwapTeams { position: static; transform: rotate(90deg); margin: -4px auto; order: 2; }
+    .mlb-simulator-page .team-picker-grid .team-picker-card:last-of-type { order: 3; }
+    .simv2-convert { padding: 24px 18px; }
+    .simv2-convert h2 { font-size: 1.3rem; }
+    .simv2-leader { grid-template-columns: 28px minmax(0, 1fr) auto; }
+    .simv2-leader span { display: none; }
+}
+
+/* ---------- reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+    .simv2-btn, .simv2-btn:hover { transition: none; transform: none; box-shadow: var(--sv2-shadow); }
+    * { scroll-behavior: auto !important; }
+}
