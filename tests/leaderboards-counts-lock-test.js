@@ -26,11 +26,13 @@ const HERO_IDS = ['qsHandicappers', 'qsTrivia', 'qsPolls', 'qsChallenges', 'qsH2
 const TAB_IDS = ['tabCountHandicappers', 'tabCountTrivia', 'tabCountPolls', 'tabCountOnline', 'tabCountH2H'];
 const ALL_IDS = HERO_IDS.concat(TAB_IDS);
 
-// ---- 1. hero defaults must be numeric, never "--" --------------------------
+// ---- 1. hero defaults: a number (fresh bake) or the honest "…" loading
+// state. Banned: "--", and hardcoded fake-looking counts (e.g. a literal 0)
+// that visibly flip when the live value lands — the 0 -> 1 first-paint swap.
 HERO_IDS.forEach(function (id) {
   const m = html.match(new RegExp('id="' + id + '">([^<]*)</b>'));
   assert(m, 'hero card #' + id + ' must exist');
-  assert(/^\d+$/.test(m[1].trim()), 'hero card #' + id + ' default must be a number, got "' + m[1] + '"');
+  assert(/^(\d+|…)$/.test(m[1].trim()), 'hero card #' + id + ' default must be a number or "…", got "' + m[1] + '"');
   assert(m[1].trim() !== '--', 'hero card #' + id + ' must not default to "--"');
 });
 
