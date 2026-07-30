@@ -20,8 +20,15 @@
   // prerendered region visually hidden until its live data has been applied or
   // its request has settled — visitors never see stale baked values swap to
   // current ones. On failure the baked snapshot is revealed as the fallback.
+  // Stats + capper card are no longer gated at all: their baked/edge-injected
+  // values show at first paint and are only touched if the live value differs.
   function lwReveal(cls) { document.documentElement.classList.remove(cls); }
   function lwCounter(n, cls) { return function () { if (--n <= 0) lwReveal(cls); }; }
+  // Write-if-different: never rewrite identical text, so an accurate first
+  // paint (edge-injected or freshly baked) produces ZERO visible swaps.
+  function setText(node, txt) {
+    if (node && txt != null && node.textContent !== String(txt)) node.textContent = String(txt);
+  }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
   function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
@@ -373,66 +380,74 @@
   }
 
   /* ---------- 4. CAPPER OF THE WEEK ---------------------------------------
-     Editorially designated (GET /users/capper-of-week), not the leaderboard
-     leader. Every figure shown here is fetched live from the same endpoints
-     his own profile page uses (/users/:username and
-     /users/:username/stats/advanced) — nothing is computed or cached in this
-     file, so the card can never drift from his real record. If no capper is
-     designated, the prerendered/baked markup is left exactly as-is. */
-  function capperOfWeek() {
-    var spotDone = lwCounter(2, 'tmr-lw-spot');
-    j('/users/capper-of-week').then(function (d) {
-      var username = d && d.username; if (!username) { lwReveal('tmr-lw-spot'); return; }
-      var spot = el('.spot'); if (!spot) { lwReveal('tmr-lw-spot'); return; }
+     Editorially designated. The complete card payload (record, units, ROI,
+     win rate, avg odds, streak, last graded picks) now arrives server-
+     assembled — from the SAME canonical sources his profile page reads — in
+     one response (home-bootstrap or /users/capper-of-week `card`), replacing
+     the old 4-request client waterfall that left this card blank for seconds
+     on a busy backend. If no capper is designated or the payload is missing,
+     the prerendered/baked markup is left exactly as-is. */
+  function applyCapper(card) {
+    try {
+      var username = card && card.username; if (!username) return;
+      var spot = el('.spot'); if (!spot) return;
 
       var nm = el('.spot .nmrow b', document);
-      if (nm) { nm.textContent = username;
+      if (nm) { setText(nm, username);
         var pl = nm.closest('.nmrow'); if (pl && !pl.dataset.linked) { pl.dataset.linked = '1';
           nm.outerHTML = '<a href="/profile/?user=' + encodeURIComponent(username) + '"><b>' + esc(username) + '</b></a>'; } }
       var fullProfile = el('.spot .hd a'); if (fullProfile) fullProfile.href = '/u/' + encodeURIComponent(username) + '/';
       var ledger = el('.spot .ft a'); if (ledger) ledger.href = '/u/' + encodeURIComponent(username) + '/';
-      var av = el('.spot .avbox'); if (av) av.textContent = initials(username);
+      var av = el('.spot .avbox'); if (av) setText(av, initials(username));
 
-      j('/users/' + encodeURIComponent(username)).then(function (du) {
-        var u = du && du.user; if (!u) { spotDone(); return; }
-        var cells = spot.querySelectorAll('.g3 b');
-        if (cells.length >= 3) {
-          var W = u.wins, L = u.losses, P = num(u.pushes);
-          cells[0].textContent = (W == null || L == null) ? num(u.total_picks) + ' picks' : (W + '-' + L + (P ? '-' + P : ''));
-          cells[1].textContent = sign(num(u.net_units)); cells[1].className = 'num ' + (num(u.net_units) >= 0 ? 'pos' : 'neg');
-          cells[2].textContent = num(u.roi).toFixed(1) + '%'; cells[2].className = 'num ' + (num(u.roi) >= 0 ? 'pos' : 'neg');
+      var u = card.user; if (!u) return;
+      var cells = spot.querySelectorAll('.g3 b');
+      if (cells.length >= 3) {
+        var W = u.wins, L = u.losses, P = num(u.pushes);
+        setText(cells[0], (W == null || L == null) ? num(u.total_picks) + ' picks' : (W + '-' + L + (P ? '-' + P : '')));
+        setText(cells[1], sign(num(u.net_units))); cells[1].className = 'num ' + (num(u.net_units) >= 0 ? 'pos' : 'neg');
+        setText(cells[2], num(u.roi).toFixed(1) + '%'); cells[2].className = 'num ' + (num(u.roi) >= 0 ? 'pos' : 'neg');
+      }
+      var ft = el('.spot .ft span'); if (ft) setText(ft, num(u.total_picks) + ' picks, every one locked pre-game');
+
+      var s = card.summary || {};
+      var winRate = num(s.win_rate);
+      var avgOdds = Math.round(num(s.avg_odds));
+      var streak = num(u.current_streak);
+      var streakTxt = streak > 0 ? 'W' + streak : streak < 0 ? 'L' + Math.abs(streak) : 'no active streak';
+      var sub2 = el('.spot .sub2');
+      if (sub2) setText(sub2, (u.favorite_sports && u.favorite_sports.length
+        ? u.favorite_sports.join(', ') : 'All sports') + ' · ' + num(u.total_picks) + ' tracked picks' +
+        ' · ' + winRate.toFixed(1) + '% win rate · ' + (avgOdds > 0 ? '+' : '') + avgOdds + ' avg odds · ' + streakTxt);
+
+      var picks = card.recent_graded || [];
+      var sp = el('.spot .spark');
+      if (sp) {
+        if (!picks.length) { sparkFallback(); }
+        else {
+          var mx = Math.max.apply(null, picks.map(function (p) { return Math.abs(num(p.result_units)) || 1; })) || 1;
+          var html = picks.map(function (p) {
+            var v = num(p.result_units), h = Math.max(18, Math.round(Math.abs(v) / mx * 100));
+            return '<i class="' + (v < 0 ? 'dn' : '') + '" style="height:' + h + '%"></i>';
+          }).join('');
+          if (sp.innerHTML !== html) sp.innerHTML = html;
+          var lb = el('.spot .lb');
+          if (lb) { var w2 = picks.filter(function (p) { return /won/i.test(p.status); }).length;
+            var lbHtml = '<span>Last ' + picks.length + ' graded picks</span><span>' + w2 + 'W &middot; ' + (picks.length - w2) + 'L</span>';
+            if (lb.innerHTML !== lbHtml) lb.innerHTML = lbHtml; }
         }
-        var ft = el('.spot .ft span'); if (ft) ft.textContent = num(u.total_picks) + ' picks, every one locked pre-game';
+      }
+    } finally {
+      lwReveal('tmr-lw-spot');
+    }
+  }
 
-        j('/users/' + encodeURIComponent(username) + '/stats/advanced').then(function (adv) {
-          var s = (adv && adv.summary) || {};
-          var winRate = num(s.win_rate);
-          var avgOdds = Math.round(num(s.avg_odds));
-          var streak = num(u.current_streak);
-          var streakTxt = streak > 0 ? 'W' + streak : streak < 0 ? 'L' + Math.abs(streak) : 'no active streak';
-          var sub2 = el('.spot .sub2');
-          if (sub2) sub2.textContent = (u.favorite_sports && u.favorite_sports.length
-            ? u.favorite_sports.join(', ') : 'All sports') + ' · ' + num(u.total_picks) + ' tracked picks' +
-            ' · ' + winRate.toFixed(1) + '% win rate · ' + (avgOdds > 0 ? '+' : '') + avgOdds + ' avg odds · ' + streakTxt;
-          spotDone();
-        });
-      });
-
-      j('/picks?username=' + encodeURIComponent(username) + '&limit=20').then(function (dp) {
-        var all = (dp && (dp.picks || dp.data)) || (Array.isArray(dp) ? dp : []);
-        var picks = all.filter(function (p) { return /won|lost/i.test(p.status || ''); }).slice(0, 12).reverse();
-        var sp = el('.spot .spark');
-        if (!sp) return;
-        if (!picks.length) { sparkFallback(); return; }
-        var mx = Math.max.apply(null, picks.map(function (p) { return Math.abs(num(p.result_units)) || 1; })) || 1;
-        sp.innerHTML = picks.map(function (p) {
-          var v = num(p.result_units), h = Math.max(18, Math.round(Math.abs(v) / mx * 100));
-          return '<i class="' + (v < 0 ? 'dn' : '') + '" style="height:' + h + '%"></i>';
-        }).join('');
-        var lb = el('.spot .lb');
-        if (lb) { var w2 = picks.filter(function (p) { return /won/i.test(p.status); }).length;
-          lb.innerHTML = '<span>Last ' + picks.length + ' graded picks</span><span>' + w2 + 'W &middot; ' + (picks.length - w2) + 'L</span>'; }
-      }).then(spotDone);
+  /* Fallback when home-bootstrap is unavailable: one request to the (also
+     server-assembled) capper-of-week endpoint. */
+  function capperOfWeek() {
+    j('/users/capper-of-week').then(function (d) {
+      if (d && d.card) { applyCapper(d.card); return; }
+      lwReveal('tmr-lw-spot');
     });
   }
 
@@ -537,22 +552,68 @@
     if (badges[2]) badges[2].innerHTML = '<span class="bl"></span>' + verifiedCount + ' public records';
   }
 
+  /* ---------- stats application (shared by bootstrap + legacy paths) ------
+     Picks tracked / verified cappers / members come from the same
+     authoritative aggregates every other page reads (directory-counts,
+     directory-metrics, leaderboard total), so no page can disagree. All
+     writes go through setText: an already-accurate first paint (edge-
+     injected or freshly baked) is never visibly rewritten. */
+  function applyStatCells(picksText, eligible, members) {
+    var cells = document.querySelectorAll('.bridge .s b');
+    if (picksText != null) {
+      if (cells[0]) setText(cells[0], picksText);
+      // Hero eyebrow duplicates the same "picks tracked" figure -- it must
+      // never drift from the counter below it.
+      setText(document.getElementById('tmrEyebrowPicks'), picksText);
+    }
+    if (eligible != null && cells[1]) setText(cells[1], String(eligible));
+    if (members != null && cells[2]) setText(cells[2], String(members));
+  }
+
   /* ---------- boot --------------------------------------------------------
-     Bridge stats, the leaderboard and the platform badge used to be computed
-     by paginating the entire users table client-side (up to 5 sequential
-     /users?limit=200 round trips) before any of them could render — on a slow
-     or cold backend that left last-deploy's baked-in numbers on screen for
-     several seconds. The backend already exposes purpose-built aggregate
-     endpoints for exactly this data, so this now fires two single round trips
-     in parallel (bounded with a timeout so a hung request can't stall these
-     modules) instead. Nothing else on the homepage ever depended on that
-     pagination, so it's a straight removal, not a rework. --------------- */
+     ONE bootstrap request carries everything the live modules need (stats,
+     leaderboard, trend highlights, the full capper card). It is served from
+     a shared 30s server-side aggregate cache, so it returns in well under a
+     second instead of queueing behind a burst of heavy per-endpoint queries
+     — the failure mode that used to leave gated regions blank for 7-10s.
+     If it fails, the legacy per-endpoint path runs as the fallback. -------- */
   function boot() {
     ticker();
     startTickerRefresh();
     sportsTalk();
     poll();
     arena();
+
+    j('/users/home-bootstrap', 6000).then(function (d) {
+      if (!d) { legacyBoot(); return; }
+
+      var c = d.counts || {};
+      var m = d.metrics || {};
+      var eligible = d.total_eligible_handicappers != null ? num(d.total_eligible_handicappers) : null;
+      applyStatCells(
+        // Always en-US: the baked snapshot and the edge injection format this
+        // number as "2,397"; a locale-dependent format would rewrite it for
+        // non-US visitors and cause a visible swap of an unchanged value.
+        c.total_valid_picks != null ? num(c.total_valid_picks).toLocaleString('en-US') : null,
+        eligible,
+        m.total_members != null ? num(m.total_members) : null
+      );
+      if (eligible != null) platform(eligible);
+      lwReveal('tmr-lw-stats');
+
+      if (d.trend_highlights && d.trend_highlights.length) livePicks(d.trend_highlights);
+      lwReveal('tmr-lw-b1');
+
+      var rows = d.leaderboard || [];
+      if (rows.length) leaderboard(rows);
+      lwReveal('tmr-lw-b2');
+
+      applyCapper(d.capper);
+    });
+  }
+
+  /* Legacy per-endpoint path, kept verbatim as the bootstrap fallback. */
+  function legacyBoot() {
     capperOfWeek();
     var statsDone = lwCounter(3, 'tmr-lw-stats');
 
@@ -563,25 +624,13 @@
 
     j('/users/directory-counts', 8000).then(function (d) {
       var c = d && d.counts; if (!c) { statsDone(); return; }
-      var picksText = num(c.total_valid_picks).toLocaleString();
-      var cells = document.querySelectorAll('.bridge .s b');
-      if (cells[0]) cells[0].textContent = picksText;
-      // Hero eyebrow duplicates the same "picks tracked" figure -- it must never
-      // drift from the counter below it, so it's set from the same response.
-      var eyebrow = document.getElementById('tmrEyebrowPicks');
-      if (eyebrow) eyebrow.textContent = picksText;
+      applyStatCells(num(c.total_valid_picks).toLocaleString('en-US'), null, null);
       statsDone();
     });
 
-    // Members: /users/directory-metrics is the same authoritative endpoint+field
-    // the Handicappers page reads (total_members = every eligible account,
-    // regardless of pick count). Previously this cell read directory-counts'
-    // total_users_with_at_least_1_pick -- a different, smaller definition -- which
-    // is why the homepage and Handicappers page used to show different totals.
     j('/users/directory-metrics', 8000).then(function (d) {
       var m = d && d.metrics; if (!m) { statsDone(); return; }
-      var cells = document.querySelectorAll('.bridge .s b');
-      if (cells[2]) cells[2].textContent = String(num(m.total_members));
+      applyStatCells(null, null, num(m.total_members));
       statsDone();
     });
 
@@ -591,8 +640,7 @@
       if (rows.length) leaderboard(rows);
       var eligible = num(d.total_eligible_handicappers);
       platform(eligible);
-      var cells = document.querySelectorAll('.bridge .s b');
-      if (cells[1]) cells[1].textContent = String(eligible);
+      applyStatCells(null, eligible, null);
       statsDone();
       lwReveal('tmr-lw-b2');
     });
@@ -604,8 +652,10 @@
      numbers. Runs after the data calls have had time to resolve.
      ----------------------------------------------------------------------- */
   function integritySweep() {
-    // Reveal failsafe: whatever regions are still gated after 9s show their
-    // baked snapshot rather than staying hidden.
+    // Reveal failsafe: whatever regions are still gated after 4s show their
+    // baked snapshot rather than staying hidden. (Was 9s when every module
+    // waited on its own heavy uncached endpoint; the single cached bootstrap
+    // normally settles in well under a second.)
     ['tmr-lw-stats', 'tmr-lw-spot', 'tmr-lw-b1', 'tmr-lw-b2', 'tmr-lw-b3'].forEach(lwReveal);
     document.querySelectorAll('.loading').forEach(function (n) {
       n.textContent = 'Data unavailable';
@@ -615,7 +665,7 @@
     var t = document.querySelector('.ticker');
     if (t && !t.querySelectorAll('.gm').length) t.style.display = 'none';
   }
-  setTimeout(integritySweep, 9000);
+  setTimeout(integritySweep, 4000);
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
