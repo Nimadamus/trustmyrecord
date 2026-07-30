@@ -23,7 +23,13 @@
 (function () {
     'use strict';
 
-    // ---- Feature flag -----------------------------------------------------
+    // ---- Feature flag / staged rollout ------------------------------------
+    // Explicit choice always wins: ?multislip=1 (or stored '1') forces ON,
+    // ?multislip=0 (or stored '0') forces OFF. Otherwise a stable per-browser
+    // bucket (0-99, assigned once) enables the slip for ROLLOUT_PERCENT% of
+    // browsers. Kill switch = deploy with ROLLOUT_PERCENT 0; explicit users
+    // can always opt out with ?multislip=0.
+    var ROLLOUT_PERCENT = 10;
     function resolveFlag() {
         try {
             var params = new URLSearchParams(window.location.search || '');
@@ -31,7 +37,15 @@
             if (q === '1') { try { localStorage.setItem('tmr_multislip', '1'); } catch (_) {} return !params.get('contest'); }
             if (q === '0') { try { localStorage.setItem('tmr_multislip', '0'); } catch (_) {} return false; }
             if (params.get('contest')) return false; // contest flow stays legacy
-            return localStorage.getItem('tmr_multislip') === '1';
+            var stored = localStorage.getItem('tmr_multislip');
+            if (stored === '1') return true;
+            if (stored === '0') return false;
+            var bucket = parseInt(localStorage.getItem('tmr_multislip_bucket'), 10);
+            if (!Number.isFinite(bucket) || bucket < 0 || bucket > 99) {
+                bucket = Math.floor(Math.random() * 100);
+                try { localStorage.setItem('tmr_multislip_bucket', String(bucket)); } catch (_) {}
+            }
+            return bucket < ROLLOUT_PERCENT;
         } catch (_) { return false; }
     }
     if (!resolveFlag()) return; // flag off: install nothing at all
@@ -58,6 +72,11 @@
     var successMsg = null;     // {count} shown after a submit run
 
     function internals() { return window.__tmrMultiSlipInternals || null; }
+    function track(name, params) {
+        try {
+            if (window.TMRAnalytics && typeof window.TMRAnalytics.track === 'function') window.TMRAnalytics.track(name, params || {});
+        } catch (_) {}
+    }
     function api() {
         var I = internals();
         return I && I.getApiClientOrFallback ? I.getApiClientOrFallback() : Promise.reject(new Error('API unavailable'));
@@ -750,10 +769,12 @@
                     if (response.duplicate) {
                         e.state = 'dup';
                         e.err = null;
+                        track('multislip_duplicate_refused', { market_type: payload.market_type, sport: payload.sport_key });
                     } else {
                         e.state = 'done';
                         okCount++;
                         try { window.dispatchEvent(new CustomEvent('tmr:pickLocked', { detail: { pick: response.pick } })); } catch (_) {}
+                        track('sportsbook_pick_created', { multislip: 1, market_type: payload.market_type, sport: payload.sport_key });
                     }
                     unhighlight(e);
                     save(); render();
@@ -762,6 +783,7 @@
                     var data = error && error.data;
                     var backendMsg = (data && (data.error || data.message)) || String(error && error.message || '');
                     var isAuth = status === 401 || status === 403 || /access token|unauthor|session|log ?in|verify your email/i.test(backendMsg);
+                    track('multislip_submit_failed', { status: status || 0, auth: isAuth ? 1 : 0 });
                     if (isAuth) {
                         authFailed = true;
                         e.state = 'ready';
