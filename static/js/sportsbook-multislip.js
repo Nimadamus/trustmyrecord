@@ -367,6 +367,16 @@
 
     function render() {
         ensureUi();
+        // KBD_FOCUS_20260730: root.innerHTML replacement destroys the focused
+        // units input, so the keypress after a re-render (number inputs fire
+        // 'change' per arrow step) landed on <body> and was swallowed. Capture
+        // which units input holds focus and restore it after the rebuild so
+        // rapid ArrowUp/ArrowDown runs land every step.
+        var refocusIdx = null;
+        var ae = document.activeElement;
+        if (ae && ae.classList && ae.classList.contains('tmr-ms-units-input') && root.contains(ae)) {
+            refocusIdx = ae.getAttribute('data-ms-i');
+        }
         var n = entries.length;
         var html = '';
         html += '<div class="tmr-ms-head"><span class="tmr-ms-title">Pick Slip <span class="tmr-ms-count" aria-label="' + n + ' picks selected">' + n + '</span></span>';
@@ -410,6 +420,10 @@
         root.innerHTML = html;
         listEl = root.querySelector('.tmr-ms-list');
         liveEl = root.querySelector('.tmr-ms-live');
+        if (refocusIdx != null) {
+            var again = root.querySelector('.tmr-ms-units-input[data-ms-i="' + refocusIdx + '"]');
+            if (again) { try { again.focus(); } catch (_) {} }
+        }
         if (pill) {
             pill.textContent = 'Pick Slip · ' + n;
             pill.classList.toggle('has-picks', n > 0);
