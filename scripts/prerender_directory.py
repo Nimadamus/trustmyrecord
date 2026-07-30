@@ -185,7 +185,35 @@ def lclass(v):        # leaderboards: pos/neg/neutral
     return "pos" if v > 0 else "neg" if v < 0 else "neutral"
 
 # ---------- row builders (match each page's JS markup) ----------
-def handi_row(r):
+def last_active_label(r, now):
+    """Mirror formatMemberActive() in handicappers/index.html exactly, so the
+    baked Last-active cell never visibly changes when the client JS repaints it
+    (the old coarse "Recent" label always swapped to e.g. "Active today"). The
+    JS buckets are duration-based (floor of elapsed days), not calendar-based,
+    so this is timezone-safe; only day-boundary drift between the 30-min bake
+    cron and view time can shift a bucket, and the next bake self-heals it."""
+    lp = r.get("last_pick_at")
+    if not lp:
+        return "No recent activity"
+    try:
+        t = datetime.datetime.fromisoformat(str(lp).replace("Z", "+00:00"))
+        if t.tzinfo is None:
+            t = t.replace(tzinfo=datetime.timezone.utc)
+    except Exception:
+        return "No recent activity"
+    days = int((now - t).total_seconds() // 86400)
+    if days <= 0:
+        return "Active today"
+    if days == 1:
+        return "Last pick: 1 day ago"
+    if days <= 30:
+        return f"Last pick: {days} days ago"
+    md = f"{t.strftime('%b')} {t.day}"
+    if t.year != now.year:
+        md += f", {t.year}"
+    return f"Last pick: {md}"
+
+def handi_row(r, now):
     href = f"/u/{e(r['username'])}/"
     label = f"View {r['username']} profile"
     has_graded = graded(r) > 0
@@ -210,7 +238,7 @@ def handi_row(r):
         f'<div class="hm-stat {wr_cls}" data-label="Win %">{e(pct(r["win_rate"]))}</div>'
         f'<div class="hm-stat" data-label="Total picks">{r["total_picks"]}</div>'
         f'<div class="hm-stat {sclass(r["current_streak"])}" data-label="Current streak">{e(streak(r["current_streak"]))}</div>'
-        f'<div class="hm-stat is-muted" data-label="Last active">{"Recent" if r["last_pick_at"] else "No recent activity"}</div>'
+        f'<div class="hm-stat is-muted" data-label="Last active">{e(last_active_label(r, now))}</div>'
         f'<div class="hm-actions"><a class="hm-action-btn hm-action-btn--view" href="{href}" aria-label="{e(label)}" title="{e(label)}">View</a></div>'
         f'</div>'
     )
@@ -278,7 +306,7 @@ def bake_handicappers(rows, now):
         if not group:
             continue
         body_parts.append(handi_tier_header(tier, len(group)))
-        body_parts.extend(handi_row(r) for r in group)
+        body_parts.extend(handi_row(r, now) for r in group)
     body = "".join(body_parts)
     # Static default view is grouped, so mark #hmRows to suppress global rank/medal
     # chips (the client JS toggles this class too). Idempotent.
@@ -655,7 +683,7 @@ def main():
         print(f"eligible members: {len(rows)}")
         for r in rows[:8]:
             print(f"  {r['username']:>20}  {rec(r):>9}  {units_u(r['net_units']):>9}  ROI {r['roi']:.2f}%  {r['total_picks']} picks  streak {streak(r['current_streak'])}")
-        print("\nSAMPLE handicappers row:\n", handi_row(rows[0])[:400])
+        print("\nSAMPLE handicappers row:\n", handi_row(rows[0], now)[:400])
         print("\nSAMPLE leaderboard row:\n", lead_row(rows[0], 0)[:400])
         return
     n1, tp, act = bake_handicappers(rows, now)
