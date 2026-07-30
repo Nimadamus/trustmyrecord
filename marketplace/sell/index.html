@@ -326,6 +326,8 @@
                 dash.recent_orders.map(function (o) {
                     return '<tr><td>' + new Date(o.created_at).toLocaleDateString() + '</td><td>@' + esc(o.buyer_username) + '</td><td>' + esc(String(o.product_type || '').replace(/_/g,' ')) + '</td><td>' + esc(o.status) + '</td><td class="mono">' + money(o.price_cents, o.currency) + '</td><td class="mono">' + money(o.seller_gross_cents, o.currency) + '</td></tr>';
                 }).join('') + '</tbody></table></div>';
+            } else {
+                html += '<h2 style="margin-top:18px;font-size:17px;">Recent Orders</h2><div style="text-align:center;color:var(--muted);padding:32px 18px;border:1px dashed var(--line);border-radius:13px;font-size:13.5px;">No orders yet.</div>';
             }
             html += '</div>';
         }
