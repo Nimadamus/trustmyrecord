@@ -722,6 +722,15 @@
     <script defer src="/static/js/tmr-share.js?v=20260722owner1"></script>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">
 <script defer src="/static/js/tmr-linkhub.js?v=20260721nav4"></script>
+<!-- Live-wait gate: the prerendered leaderboard table is up to 30 min old. Keep
+     it hidden until loadHandicappers() paints live rows (or fails, which reveals
+     the baked table as the fallback). No-JS visitors/crawlers never get the html
+     class, so they always see the baked rows. 10s timer = reveal failsafe. -->
+<style id="tmrLiveWaitCss">html.tmr-lw-lb #leaderboardWrap { visibility: hidden !important; }</style>
+<script>
+  document.documentElement.classList.add('tmr-lw-lb');
+  setTimeout(function () { document.documentElement.classList.remove('tmr-lw-lb'); }, 10000);
+</script>
 </head>
 <body class="tmr-ds tmr-site-shell">
     <main class="page">
@@ -1393,7 +1402,11 @@
                     .sort(function(a, b) { return b.totalPicks - a.totalPicks; })
                     .slice(0, 4));
                 applyHandicapperFilters();
+                // First live paint is on screen: drop the live-wait gate (see
+                // <head>) that was hiding the prerendered table.
+                document.documentElement.classList.remove('tmr-lw-lb');
             } catch (error) {
+                document.documentElement.classList.remove('tmr-lw-lb');
                 state.style.display = 'block';
                 setStateAsEmpty(state, emptyStateHtml({
                     icon: '!',

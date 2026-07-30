@@ -2748,8 +2748,13 @@
         const container = document.getElementById('gamesListContainer');
         const title = document.getElementById('selectedSportTitle');
         const badge = document.getElementById('gamesCountBadge');
-        const cachedBoard = getCachedBoard(sportKey);
-        const staleBoard = cachedBoard ? null : getStaleCachedBoard(sportKey);
+        // Never paint a cached board first: showing up-to-60s-old (or 10-min
+        // stale) odds and then swapping to live ones is the exact
+        // stale-then-correct flash this site must not do. Every board view
+        // fetches fresh; the stored boards remain available further down as a
+        // last-resort fallback when the live fetch chain fails outright.
+        const cachedBoard = null;
+        const staleBoard = null;
 
         if (title) title.textContent = sport + ' Markets';
         if (container && !cachedBoard && !staleBoard) {

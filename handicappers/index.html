@@ -892,6 +892,15 @@
     <script defer src="/static/js/tmr-share.js?v=20260722owner1"></script>
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">
 <script defer src="/static/js/tmr-linkhub.js?v=20260721nav4"></script>
+<!-- Live-wait gate: the prerendered member table (#hmRows) is up to 30 min old.
+     Keep it hidden until init()'s live fetch renders (or fails, which reveals the
+     baked table as the fallback). No-JS visitors/crawlers never get the html
+     class, so they always see the baked rows. 10s timer = reveal failsafe. -->
+<style id="tmrLiveWaitCss">html.tmr-lw-dir #hmRows { visibility: hidden !important; }</style>
+<script>
+  document.documentElement.classList.add('tmr-lw-dir');
+  setTimeout(function () { document.documentElement.classList.remove('tmr-lw-dir'); }, 10000);
+</script>
 </head>
 <body class="tmr-ds">
     <main class="hm-page">
@@ -3009,12 +3018,16 @@
                 renderSummary();
                 fillSports();
                 applyFilters();
+                // First live paint is on screen: drop the live-wait gate (see
+                // <head>) that was hiding the prerendered table.
+                document.documentElement.classList.remove('tmr-lw-dir');
                 // Phase 2: enrich with per-member picks in the background; pull
                 // the signed-in visitor's followed list in parallel.
                 loadFollowingList();
                 enrichMembersWithPicks();
             } catch (error) {
                 console.error('[Handicappers] Load failed:', error);
+                document.documentElement.classList.remove('tmr-lw-dir');
                 els.status.textContent = 'Unable to load members.';
                 els.rows.innerHTML = '<div class="hm-error"><strong>Member directory unavailable</strong>The page could not load profiles right now. Try refreshing in a moment.</div>';
             }

@@ -469,6 +469,20 @@ footer a:hover{color:#fff}
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">
 <script defer src="/static/js/tmr-linkhub.js?v=20260721nav4"></script>
 <link rel="stylesheet" href="/static/css/tmr-ds.043d7679ca91.css">
+<!-- Live-wait gate: the prerendered snapshot below is up to 30 min old. Hide the
+     volatile baked values until tmr-home-live.js applies live data (or its fetch
+     settles), so visitors never watch stale numbers swap to current ones. No-JS
+     visitors and crawlers never get the html classes, so they see the baked
+     content untouched. tmr-home-live.js removes each class as its region
+     resolves; its 9s integrity sweep is the reveal failsafe. -->
+<style id="tmrLiveWaitCss">
+  html.tmr-lw-stats #tmrEyebrowPicks, html.tmr-lw-stats .bridge .s b,
+  html.tmr-lw-spot .spot .bd,
+  html.tmr-lw-b1 .board .card:nth-of-type(1) .body,
+  html.tmr-lw-b2 .board .card:nth-of-type(2) .body,
+  html.tmr-lw-b3 .board .card:nth-of-type(3) .body { visibility: hidden !important; }
+</style>
+<script>document.documentElement.className += ' tmr-lw-stats tmr-lw-spot tmr-lw-b1 tmr-lw-b2 tmr-lw-b3';</script>
 </head>
 <body class="tmr-ds">
 
@@ -638,7 +652,7 @@ footer a:hover{color:#fff}
      renders the signed-in .ds-nav-right cluster (same v2nav-* markup, coin
      balance + notif badge fetches) that this page used to duplicate for its
      bespoke .nav-right container, which no longer exists. -->
-<script src="/static/js/tmr-home-live.a53f875527a5.js"></script>
+<script src="/static/js/tmr-home-live.99bd92082325.js"></script>
 <!-- Alerts dropdown for the nav bell. Same engine every other page uses, so the
      bell shows the latest alerts in place instead of navigating away. These four
      touch no homepage markup (auth-persistent only binds selectors this page
