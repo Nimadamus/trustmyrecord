@@ -459,14 +459,15 @@ body.tmr-site-shell {
    `display:contents` so its three children land straight in the parent grid —
    this gives table-like column alignment without a literal <table>, and the
    dashed divider between Record / Offense / Pitching spans the full width. */
-.hhc-grid { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 3px 10px; align-items: center; }
+.hhc-grid { display: grid; grid-template-columns: minmax(0,1fr) minmax(110px,auto) minmax(0,1fr); gap: 2px 8px; align-items: center; }
 .hhc-row { display: contents; }
 .hhc-cell {
-    padding: 7px 10px; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums;
-    border-radius: 8px; font-size: 0.92rem; color: var(--hh-text);
+    padding: 5px 8px; text-align: center; font-weight: 800; font-variant-numeric: tabular-nums;
+    border-radius: 7px; font-size: 0.85rem; color: var(--hh-text);
 }
 .hhc-cell.is-adv { background: rgba(45,212,191,0.14); color: var(--hh-teal); }
 .hhc-lbl { text-align: center; font-size: 0.72rem; color: var(--hh-muted); letter-spacing: 0.02em; padding: 0 4px; white-space: nowrap; }
+.hhc-lbl[title] { cursor: help; text-decoration: underline dotted rgba(148,163,184,0.5); text-underline-offset: 3px; }
 .hhc-divider {
     grid-column: 1 / -1; margin: 8px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--hh-line);
     font: 800 0.66rem/1 "Barlow Condensed", sans-serif; letter-spacing: 0.12em; text-transform: uppercase; color: var(--hh-muted);
@@ -506,4 +507,63 @@ body.tmr-site-shell {
     .hh-game__at .hh-venue { display: block; max-width: none; }
     .hh-team__logo { width: 34px; height: 34px; }
     .hh-team__meta strong { font-size: 0.82rem; }
+}
+
+/* ============================================================
+   Slate toolbar, skeleton loading, and two-column matchup body.
+   Added with the Jul 30 2026 polish pass.
+   ============================================================ */
+
+/* Visually-hidden helpers: real content for screen readers, no pixels. */
+.hh-vh,
+.hh-status--sr {
+    position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+/* Date toolbar: ‹ label › cluster, Today, search pushed right. */
+.hh-datenav { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.hh-datebtn--arrow { min-width: 38px; padding: 8px 0; text-align: center; font-size: 1rem; }
+.hh-datelabel { min-width: 128px; text-align: center; align-items: center; }
+.hh-datebtn:focus-visible,
+.hh-btn:focus-visible,
+.hh-status__cta:focus-visible { outline: 2px solid var(--hh-blue); outline-offset: 2px; }
+button.hh-status__cta { background: none; border: 0; cursor: pointer; font-size: inherit; font-family: inherit; padding: 0; }
+
+/* Skeleton shimmer primitives (shared by the boot skeleton cards and each
+   card's matchup-research placeholder). */
+.hh-skelbar {
+    display: inline-block; width: 88px; height: 10px; border-radius: 5px;
+    background: linear-gradient(90deg, rgba(148,163,184,0.14) 25%, rgba(148,163,184,0.28) 50%, rgba(148,163,184,0.14) 75%);
+    background-size: 200% 100%; animation: hh-shimmer 1.4s ease-in-out infinite;
+}
+.hh-skc {
+    border: 1px solid var(--hh-line); border-radius: 16px; background: var(--hh-panel);
+    padding: 18px; display: flex; flex-direction: column; gap: 12px;
+}
+.hh-skc__head { display: flex; align-items: center; gap: 12px; }
+.hh-skc__b, .hh-skc__row, .hhc-skel .hh-skc__row {
+    border-radius: 8px;
+    background: linear-gradient(90deg, rgba(148,163,184,0.10) 25%, rgba(148,163,184,0.22) 50%, rgba(148,163,184,0.10) 75%);
+    background-size: 200% 100%; animation: hh-shimmer 1.4s ease-in-out infinite;
+}
+.hh-skc__b--logo { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; }
+.hh-skc__b--name { height: 16px; flex: 1; }
+.hh-skc__b--mid { width: 60px; height: 12px; flex-shrink: 0; }
+.hh-skc__row { height: 52px; }
+.hh-skc__row--short { height: 52px; width: 62%; }
+.hhc-skel { display: flex; flex-direction: column; gap: 10px; padding: 2px 0 12px; }
+.hhc-skel .hh-skc__row { height: 44px; }
+@keyframes hh-shimmer { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) {
+    .hh-skelbar, .hh-skc__b, .hh-skc__row, .hhc-skel .hh-skc__row { animation: none; }
+}
+
+/* Matchup body: comparison grid beside markets/community/trends on desktop,
+   stacked on narrower screens. */
+.hhc-cols { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; align-items: start; }
+.hhc-cols .hhc-panel { margin-bottom: 12px; }
+.hhc-cols .hhc-col > .hhc-panel:last-child { margin-bottom: 0; }
+@media (max-width: 1023px) {
+    .hhc-cols { grid-template-columns: minmax(0,1fr); }
 }
