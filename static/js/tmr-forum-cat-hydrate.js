@@ -28,6 +28,29 @@
     if (new URLSearchParams(window.location.search).get('static') === '1') return;
   } catch (e) { /* continue */ }
 
+  /* FLASH-OF-BAKED-CONTENT FIX (2026-07-29, same pattern as
+     tmr-profile-hydrate.js): this script is `defer`, so without this the baked
+     SEO snapshot painted first and was then wholesale-replaced by the live
+     /forum/ app — a visible stale-then-correct swap. Hiding the baked body
+     before first paint turns that into a brief blank/loading beat. Revealed
+     only on the fallback paths; the success path replaces the document. */
+  var HIDE_STYLE_ID = 'tmr-forum-boot-hide';
+  function hideBaked() {
+    if (document.getElementById(HIDE_STYLE_ID)) return;
+    var st = document.createElement('style');
+    st.id = HIDE_STYLE_ID;
+    st.textContent = 'body>*:not(script){visibility:hidden !important;}';
+    document.head.appendChild(st);
+  }
+  function revealBaked() {
+    var st = document.getElementById(HIDE_STYLE_ID);
+    if (st && st.parentNode) st.parentNode.removeChild(st);
+  }
+  hideBaked();
+  // Fail-safe: never leave visitors staring at a hidden page if the shell
+  // fetch hangs — after 6s the baked page shows.
+  setTimeout(revealBaked, 6000);
+
   function attr(sel, name) {
     var el = document.querySelector(sel);
     return el ? el.getAttribute(name) : null;
@@ -80,6 +103,7 @@
     })
     .catch(function (err) {
       // Baked page stays; log for diagnostics only.
+      revealBaked();
       if (window.console && console.warn) console.warn('cat hydrate skipped:', err && err.message);
     });
 })();
