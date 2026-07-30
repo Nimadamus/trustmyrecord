@@ -531,16 +531,16 @@
 
         <!-- FILTER BAR + SORT + SEARCH -->
         <div class="pv-toolbar">
-            <nav class="pv-chips" role="tablist" id="pollsTabBar" aria-label="Poll filters">
-                <button type="button" class="pv-chip is-active" data-tab="all" onclick="switchTab('all')">All</button>
-                <button type="button" class="pv-chip" data-tab="MLB" onclick="switchTab('MLB')">MLB</button>
-                <button type="button" class="pv-chip" data-tab="NFL" onclick="switchTab('NFL')">NFL</button>
-                <button type="button" class="pv-chip" data-tab="NBA" onclick="switchTab('NBA')">NBA</button>
-                <button type="button" class="pv-chip" data-tab="NHL" onclick="switchTab('NHL')">NHL</button>
-                <button type="button" class="pv-chip" data-tab="Soccer" onclick="switchTab('Soccer')">Soccer</button>
-                <button type="button" class="pv-chip" data-tab="closing" onclick="switchTab('closing')">Closing Soon</button>
-                <button type="button" class="pv-chip" data-tab="voted" onclick="switchTab('voted')">Voted</button>
-                <button type="button" class="pv-chip" data-tab="completed" onclick="switchTab('completed')">Completed</button>
+            <nav class="pv-chips" role="group" id="pollsTabBar" aria-label="Poll filters">
+                <button type="button" class="pv-chip is-active" aria-pressed="true" data-tab="all" onclick="switchTab('all')">All</button>
+                <button type="button" class="pv-chip" aria-pressed="false" data-tab="MLB" onclick="switchTab('MLB')">MLB</button>
+                <button type="button" class="pv-chip" aria-pressed="false" data-tab="NFL" onclick="switchTab('NFL')">NFL</button>
+                <button type="button" class="pv-chip" aria-pressed="false" data-tab="NBA" onclick="switchTab('NBA')">NBA</button>
+                <button type="button" class="pv-chip" aria-pressed="false" data-tab="NHL" onclick="switchTab('NHL')">NHL</button>
+                <button type="button" class="pv-chip" aria-pressed="false" data-tab="Soccer" onclick="switchTab('Soccer')">Soccer</button>
+                <button type="button" class="pv-chip" aria-pressed="false" data-tab="closing" onclick="switchTab('closing')">Closing Soon</button>
+                <button type="button" class="pv-chip" aria-pressed="false" data-tab="voted" onclick="switchTab('voted')">Voted</button>
+                <button type="button" class="pv-chip" aria-pressed="false" data-tab="completed" onclick="switchTab('completed')">Completed</button>
             </nav>
             <div class="pv-tools">
                 <select class="tmr-fb-action-btn" id="pollSortSel" onchange="setSort(this.value)" aria-label="Sort polls">
@@ -1164,7 +1164,9 @@
     function switchTab(tab) {
         state.tab = tab;
         document.querySelectorAll('.pv-chip').forEach(function(b) {
-            b.classList.toggle('is-active', b.getAttribute('data-tab') === tab);
+            var sel = b.getAttribute('data-tab') === tab;
+            b.classList.toggle('is-active', sel);
+            b.setAttribute('aria-pressed', sel ? 'true' : 'false');
         });
         document.getElementById('pollDetail').innerHTML = '';
         state.currentPollId = null;
