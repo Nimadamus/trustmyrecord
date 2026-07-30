@@ -8,18 +8,39 @@ const root = path.resolve(__dirname, '..');
 const sportsbook = fs.readFileSync(path.join(root, 'sportsbook', 'index.html'), 'utf8');
 const reliability = fs.readFileSync(path.join(root, 'static', 'js', 'sportsbook-production-fix-persist-reliability.js'), 'utf8');
 
+// Since the sitewide content-hash versioning (version_static_refs.py, Jul 30)
+// the ref is `?v=<first 12 hex of sha256(file bytes)>` (an optional &cb= build
+// label may follow) — verify the hash matches the shipped file so browsers
+// can never load a stale build.
 const reliabilityScript = sportsbook.match(
-  /<script\s+src="\/static\/js\/sportsbook-production-fix-persist-reliability\.js\?v=([^"&]+)&cb=([^"&]+)"\s*><\/script>/
+  /<script\s+src="\/static\/js\/sportsbook-production-fix-persist-reliability\.js\?v=([^"&]+)(?:&cb=([^"&]+))?"\s*><\/script>/
 );
 
 assert(
   reliabilityScript,
   'sportsbook page must load the verified team-row layout runtime with versioned cache keys'
 );
+// Hash the git blob bytes, not the working tree: on Windows dev checkouts
+// core.autocrlf rewrites line endings, which would make a raw-file hash
+// diverge from what version_static_refs.py stamped in CI.
+let reliabilityBytes;
+try {
+  reliabilityBytes = require('child_process').execFileSync(
+    'git', ['show', ':static/js/sportsbook-production-fix-persist-reliability.js'],
+    { cwd: root, maxBuffer: 1 << 26 }
+  );
+} catch {
+  reliabilityBytes = fs.readFileSync(path.join(root, 'static', 'js', 'sportsbook-production-fix-persist-reliability.js'));
+}
+const actualHash = require('crypto')
+  .createHash('sha256')
+  .update(reliabilityBytes)
+  .digest('hex')
+  .slice(0, 12);
 assert.strictEqual(
   reliabilityScript[1],
-  reliabilityScript[2],
-  'sportsbook reliability runtime cache keys must match so browsers load the intended build'
+  actualHash,
+  'sportsbook reliability runtime ?v content hash must match the shipped file so browsers load the intended build (re-run scripts/version_static_refs.py)'
 );
 
 assert(

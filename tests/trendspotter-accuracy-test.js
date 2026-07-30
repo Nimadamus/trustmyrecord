@@ -11,8 +11,21 @@ const html = rawHtml
 const js = fs.readFileSync(path.join(root, 'static', 'js', 'trendspotter.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'static', 'css', 'trendspotter.css'), 'utf8');
 
-assert(/\/static\/css\/trendspotter\.css\?v=20260527b-plain-english/.test(rawHtml), 'Trend Spotter page uses the current stylesheet cache key');
-assert(/\/static\/js\/trendspotter\.js\?v=20260721-matchup-param/.test(rawHtml), 'Trend Spotter page uses the current script cache key');
+// Content-hash ?v refs (version_static_refs.py, Jul 30) replaced the old
+// literal cache keys — assert the hash matches the shipped file bytes.
+// Hash git blob bytes (not working tree) so Windows autocrlf checkouts
+// don't produce spurious mismatches vs the CI-stamped hash.
+const contentHash = (rel) => {
+  let bytes;
+  try {
+    bytes = require('child_process').execFileSync('git', ['show', `:${rel}`], { cwd: root, maxBuffer: 1 << 26 });
+  } catch {
+    bytes = fs.readFileSync(path.join(root, ...rel.split('/')));
+  }
+  return require('crypto').createHash('sha256').update(bytes).digest('hex').slice(0, 12);
+};
+assert(rawHtml.includes(`/static/css/trendspotter.css?v=${contentHash('static/css/trendspotter.css')}`), 'Trend Spotter stylesheet ?v must match the shipped file content hash');
+assert(rawHtml.includes(`/static/js/trendspotter.js?v=${contentHash('static/js/trendspotter.js')}`), 'Trend Spotter script ?v must match the shipped file content hash');
 assert(!/20260512labels1/.test(rawHtml + js + css), 'stale Trend Spotter deployment labels are removed');
 assert(!/Verified trend data source not connected yet/i.test(rawHtml + js + css), 'raw backend placeholder text must not ship in Trend Spotter UI');
 
@@ -224,7 +237,10 @@ function chooseTrendKind(doc, value) {
   assert(doc.querySelector('[data-market="first_half"]').disabled, 'first half trends must be disabled until verified source support exists');
   assert(doc.querySelector('[data-market="first_five"]').disabled, 'first five trends must be disabled until verified source support exists');
   assert(doc.querySelector('[data-market="props"]').disabled, 'unsupported props must be disabled');
-  assert.match(doc.querySelector('#rangeSelect').textContent, /Last 5 games - requires time-window dataset/, 'unsupported time-window filters should be visible but disabled');
+  // 9f3f8c14 (May 28) replaced the "requires time-window dataset" placeholder
+  // ranges with real extended-history ranges — lock the shipped behavior.
+  assert.match(doc.querySelector('#rangeSelect').textContent, /Last 50 games \(extended history/, 'extended-history range options should render');
+  assert.match(doc.querySelector('#rangeSelect').textContent, /Season long \(extended history/, 'season-long extended-history range should render');
   assert.match(doc.body.textContent, /Source-backed/, 'data policy should show source-backed classification');
   assert.match(doc.body.textContent, /Partial \/ blocked/, 'data policy should show partial and blocked classification');
   assert.match(doc.body.textContent, /Unsupported \/ estimated/, 'data policy should show unsupported and estimated classification');

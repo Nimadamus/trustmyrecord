@@ -78,6 +78,63 @@ test.describe('critical route visual baselines', () => {
   }
 });
 
+// APPROVED HOMEPAGE BASELINE (owner-locked 2026-07-30, commit f5ac1ca7).
+// Geometry, not screenshots: deterministic against live data changes. Fails
+// the deploy if the hero/stripe/card layout drifts at any common width.
+// Static-rule counterpart: tests/homepage-approved-baseline-lock-test.js.
+test.describe('homepage approved-baseline geometry', () => {
+  const WIDTHS = [1920, 1680, 1440, 1366, 1024, 768, 390];
+
+  for (const width of WIDTHS) {
+    test(`hero/stripe/card layout locked @ ${width}px`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name === 'mobile', 'widths are set explicitly; run once per width on desktop project');
+      await page.setViewportSize({ width, height: 1000 });
+      await gotoRoute(page, '/');
+      const m = await page.evaluate(() => {
+        const hero = document.querySelector('.hero');
+        const grid = document.querySelector('.hero-grid');
+        const stripe = document.querySelector('.bridge .bridge-in');
+        const card = document.querySelector('.spot');
+        const nav = document.querySelector('nav') || document.querySelector('.ds-nav');
+        if (!hero || !grid || !stripe) return { missing: true };
+        const hr = hero.getBoundingClientRect();
+        const sr = stripe.getBoundingClientRect();
+        const vw = document.documentElement.clientWidth;
+        return {
+          heroPadding: getComputedStyle(hero).padding,
+          gridCols: getComputedStyle(grid).gridTemplateColumns,
+          gapBelowStripe: hr.bottom - sr.bottom,
+          stripeLeftMargin: sr.left,
+          stripeRightMargin: vw - sr.right,
+          stripeRadius: getComputedStyle(stripe).borderTopLeftRadius,
+          heroFullBleed: Math.abs(hr.left) < 1 && Math.abs(vw - hr.right) < 1,
+          cardVisible: card ? card.getBoundingClientRect().width : 0,
+          navPresent: !!nav,
+        };
+      });
+      expect(m.missing, 'hero, hero-grid and stats stripe must all exist').toBeFalsy();
+      // stripe flush on the hero's bottom edge — zero dark gap beneath it
+      expect(m.heroPadding, 'hero padding must stay 28px 0 0 (bottom 0 = stripe flush)').toBe('28px 0px 0px');
+      expect(Math.abs(m.gapBelowStripe), 'stats stripe must sit flush on the hero bottom edge').toBeLessThanOrEqual(1);
+      // equal left/right margins, rounded corners
+      expect(Math.abs(m.stripeLeftMargin - m.stripeRightMargin), 'stripe must be centered with equal side margins').toBeLessThanOrEqual(1);
+      expect(m.stripeRadius, 'stripe rounded corners locked at 12px').toBe('12px');
+      expect(m.heroFullBleed, 'hero background must span the full viewport width').toBe(true);
+      // capper card column per approved breakpoints (520px > 1400, 460px to 1181, stacked below)
+      const cols = m.gridCols.trim().split(/\s+/);
+      if (width > 1400) {
+        expect(cols[cols.length - 1], `capper-card column must be 520px at ${width}px`).toBe('520px');
+      } else if (width > 1180) {
+        expect(cols[cols.length - 1], `capper-card column must be 460px at ${width}px`).toBe('460px');
+      } else {
+        expect(cols.length, `hero must stack to a single column at ${width}px`).toBe(1);
+      }
+      expect(m.cardVisible, 'Capper of the Week card must render').toBeGreaterThan(200);
+      expect(m.navPresent, 'navbar must be present').toBe(true);
+    });
+  }
+});
+
 test.describe('core route and content locks', () => {
   test('critical public routes render and do not 404 or blank', async ({ page }) => {
     for (const route of ROUTES) {

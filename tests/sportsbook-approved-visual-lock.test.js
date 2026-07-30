@@ -22,7 +22,9 @@ function assertRegex(regex, label) {
 
 [
   'APPROVED_SPORTSBOOK_VISUAL_LOCK_20260509',
-  'SPORTSBOOK_UI_CLEANUP_20260509',
+  // SPORTSBOOK_UI_CLEANUP_20260509 removed from this list 2026-07-30: its
+  // comment lived inside a stale page-scoped nav override block that the
+  // approved nav fix (f63ad563) deliberately deleted.
   'ODDS_INTERNAL_ALIGNMENT_20260509',
   'FINAL_EDGE_FIT_20260509',
 ].forEach((marker) => assertIncludes(marker, marker));
