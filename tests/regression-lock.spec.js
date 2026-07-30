@@ -158,6 +158,12 @@ test.describe('core route and content locks', () => {
       const toggle = nav.getByRole('button', { name: /toggle navigation|menu/i }).first();
       if (await toggle.count()) await toggle.click();
     }
+    if (!(await sportsbookLink.isVisible())) {
+      // Jul 29 nav reconciliation moved Sportsbook links inside a dropdown —
+      // open its trigger before asserting the destination link.
+      const trigger = nav.getByRole('button', { name: /^sportsbook$/i }).first();
+      if (await trigger.count()) await trigger.click();
+    }
     await expect(sportsbookLink).toBeVisible();
     await expect(loginLink).toBeVisible();
     const box = await nav.boundingBox();
@@ -199,7 +205,9 @@ test.describe('sportsbook functional locks', () => {
       await teamTotals.click();
       await expect(visibleBoard(page)).toContainText(/Team Totals|not posted|not offered|temporarily unavailable|Matchup|ML|O\s*\d|U\s*\d/i);
     }
-    await expect(page.locator('#picks')).not.toContainText(/player props|props board|prop market/i);
+    // PROPS_PICKABLE_20260608 made Player Props a real, pickable market tab —
+    // the old "props must not appear" lock inverted into: the tab must exist.
+    await expect(page.getByRole('tab', { name: /Player Props/i }).first()).toBeVisible({ timeout: 30000 });
   });
 
   test('wager buttons select a pick, odds are display-only, and logged-out submit requires login', async ({ page }) => {
