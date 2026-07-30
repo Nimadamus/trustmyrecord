@@ -1,0 +1,12 @@
+name = "tmr-home-ssr"
+main = "worker.mjs"
+compatibility_date = "2026-07-01"
+workers_dev = false
+
+# Homepage only. The worker injects CURRENT site stats + the Capper of the
+# Week card into the baked HTML at request time (fail-open on any error), so
+# the first meaningful paint is accurate with zero client-side swap.
+routes = [
+  { pattern = "trustmyrecord.com/", zone_name = "trustmyrecord.com" },
+  { pattern = "www.trustmyrecord.com/", zone_name = "trustmyrecord.com" },
+]
