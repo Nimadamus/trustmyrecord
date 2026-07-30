@@ -367,6 +367,7 @@
 
         /* Daily Prediction Challenge section */
         .tmr-quizsec { margin-top: 24px; }
+        .tmr-quizsec--lead { margin: 0 0 22px; padding-bottom: 22px; border-bottom: 1px solid var(--border); }
         .tmr-quizsec-divider { border-top: 1px solid var(--border); margin-bottom: 18px; }
         .tmr-quizsec .tmr-fquiz { background: linear-gradient(160deg, #141D28, #111A24); border-color: var(--border-strong); }
 
@@ -1213,6 +1214,12 @@
                 if (!da && !db) return 0; if (!da) return 1; if (!db) return -1; return da - db;
             });
             var body = '';
+            if (!mode && quizzes.length) {
+                body += '<div class="tmr-quizsec tmr-quizsec--lead" id="quizSection">' +
+                    sectionHead('Daily Prediction Challenge', 'Make all your picks before the deadline and earn leaderboard points.', '') +
+                    '<div id="featuredQuizSlot"><div class="tmr-loading">Loading challenge...</div></div>' +
+                '</div>';
+            }
             if (quick.length) {
                 body += listHtml(quick);
             } else if (mode === 'voted') {
@@ -1223,13 +1230,6 @@
                 body += emptyHtml('clock', 'Nothing is closing soon.', 'No open polls lock within the next 24 hours.', '');
             } else {
                 body += quickEmptyHtml();
-            }
-            if (!mode && quizzes.length) {
-                body += '<div class="tmr-quizsec" id="quizSection">' +
-                    '<div class="tmr-quizsec-divider"></div>' +
-                    sectionHead('Daily Prediction Challenge', 'Make all your picks before the deadline and earn leaderboard points.', '') +
-                    '<div id="featuredQuizSlot"><div class="tmr-loading">Loading challenge...</div></div>' +
-                '</div>';
             }
             renderSectionBody(body);
             animateBars(sec);
