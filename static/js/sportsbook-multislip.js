@@ -62,6 +62,19 @@
         var I = internals();
         return I && I.getApiClientOrFallback ? I.getApiClientOrFallback() : Promise.reject(new Error('API unavailable'));
     }
+    // The production-fix fallback client has createPick/getPicks but no
+    // .request — GET endpoints (pending, games) need the full backend-api
+    // client. Poll for it instead of throwing at boot.
+    function apiWithRequest(maxMs) {
+        return new Promise(function (resolve, reject) {
+            var t0 = Date.now();
+            (function poll() {
+                if (window.api && typeof window.api.request === 'function') return resolve(window.api);
+                if (Date.now() - t0 > (maxMs || 10000)) return reject(new Error('api client unavailable'));
+                setTimeout(poll, 300);
+            })();
+        });
+    }
 
     // ---- Small utils ------------------------------------------------------
     function esc(value) {
@@ -141,7 +154,7 @@
         if (stuck.length) reconcileStuck(stuck);
     }
     function reconcileStuck(stuck) {
-        api().then(function (client) {
+        apiWithRequest(15000).then(function (client) {
             return client.request('/picks/pending?limit=100', { method: 'GET' });
         }).then(function (res) {
             var pending = (res && res.picks) || [];
@@ -539,7 +552,7 @@
         var ids = {};
         entries.forEach(function (e) { if (e.state === 'ready' || e.newOdds != null) ids[e.opt.game_id] = true; });
         var idList = Object.keys(ids);
-        return api().then(function (client) {
+        return apiWithRequest(10000).then(function (client) {
             return Promise.all(idList.map(function (id) {
                 return client.request('/games/' + encodeURIComponent(id), { method: 'GET' })
                     .then(function (res) { return { id: id, game: res && res.game }; })
