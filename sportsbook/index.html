@@ -17569,19 +17569,19 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
         <!-- Primary Stats Row - Big Numbers -->
         <div class="primary-stats-row">
             <div class="big-stat-card record-card">
-                <div class="big-stat-value" id="advRecordDisplay">0-0-0</div>
+                <div class="big-stat-value" id="advRecordDisplay" aria-busy="true">&mdash;</div>
                 <div class="big-stat-label">RECORD (W-L-P)</div>
             </div>
             <div class="big-stat-card win-rate-card">
-                <div class="big-stat-value" id="advWinRate">0.0%</div>
+                <div class="big-stat-value" id="advWinRate" aria-busy="true">&mdash;</div>
                 <div class="big-stat-label">WIN RATE</div>
             </div>
             <div class="big-stat-card units-card">
-                <div class="big-stat-value" id="advUnitsProfit">+0.00</div>
+                <div class="big-stat-value" id="advUnitsProfit" aria-busy="true">&mdash;</div>
                 <div class="big-stat-label">UNITS +/-</div>
             </div>
             <div class="big-stat-card roi-card">
-                <div class="big-stat-value" id="advROI">0.0%</div>
+                <div class="big-stat-value" id="advROI" aria-busy="true">&mdash;</div>
                 <div class="big-stat-label">ROI</div>
             </div>
         </div>
@@ -17591,7 +17591,7 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
             <div class="adv-stat-box">
                 <div class="adv-stat-icon">📊</div>
                 <div class="adv-stat-data">
-                    <span class="adv-stat-value" id="advZScore">0.00</span>
+                    <span class="adv-stat-value" id="advZScore" aria-busy="true">&mdash;</span>
                     <span class="adv-stat-label">Z-Score</span>
                 </div>
                 <div class="adv-stat-info" title="Statistical significance. >1.96 = 95% confidence your edge is real">ℹ️</div>
@@ -17599,7 +17599,7 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
             <div class="adv-stat-box">
                 <div class="adv-stat-icon">🎯</div>
                 <div class="adv-stat-data">
-                    <span class="adv-stat-value" id="advAvgOdds">-110</span>
+                    <span class="adv-stat-value" id="advAvgOdds" aria-busy="true">&mdash;</span>
                     <span class="adv-stat-label">Avg Odds</span>
                 </div>
                 <div class="adv-stat-info" title="Average odds of all your picks">ℹ️</div>
@@ -17614,21 +17614,21 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
             <div class="adv-stat-box">
                 <div class="adv-stat-icon">🏆</div>
                 <div class="adv-stat-data">
-                    <span class="adv-stat-value" id="advBestStreak">0W</span>
+                    <span class="adv-stat-value" id="advBestStreak" aria-busy="true">&mdash;</span>
                     <span class="adv-stat-label">Best Win Streak</span>
                 </div>
             </div>
             <div class="adv-stat-box">
                 <div class="adv-stat-icon">💵</div>
                 <div class="adv-stat-data">
-                    <span class="adv-stat-value" id="advAvgUnits">1.0</span>
+                    <span class="adv-stat-value" id="advAvgUnits" aria-busy="true">&mdash;</span>
                     <span class="adv-stat-label">Avg Units/Pick</span>
                 </div>
             </div>
             <div class="adv-stat-box">
                 <div class="adv-stat-icon">📅</div>
                 <div class="adv-stat-data">
-                    <span class="adv-stat-value" id="advTotalPicks">0</span>
+                    <span class="adv-stat-value" id="advTotalPicks" aria-busy="true">&mdash;</span>
                     <span class="adv-stat-label">Total Picks</span>
                 </div>
             </div>
@@ -23202,7 +23202,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260718nrfifix1&cb=20260718nrfifix1"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=20260730myrecfix1&cb=20260730myrecfix1"></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
@@ -24848,7 +24848,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Main function to load advanced stats page
     function loadMyRecordPage() {
-        const picks = window._cachedBackendPicks || [];
+        // Backend picks not fetched yet: rendering now would paint a false
+        // 0-0-0 / 0.0% record from the empty cache that visibly corrects
+        // itself seconds later. Keep the static loading placeholders, request
+        // the real fetch, and re-render once the cache is an actual array
+        // (which is also what a legitimately pick-less account gets: []).
+        if (!Array.isArray(window._cachedBackendPicks)) {
+            if (!loadMyRecordPage._waiting && typeof window.ensureBackendPicks === 'function') {
+                loadMyRecordPage._waiting = true;
+                window.ensureBackendPicks(function () {
+                    loadMyRecordPage._waiting = false;
+                    if (Array.isArray(window._cachedBackendPicks)) loadMyRecordPage();
+                });
+            }
+            return;
+        }
+        const picks = window._cachedBackendPicks;
 
         // Basic counts - backend uses 'won'/'lost' not 'win'/'loss'
         const wins = picks.filter(p => p.status === 'won').length;
@@ -25401,6 +25416,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Export functions
     window.loadMyRecordPage = loadMyRecordPage;
+    // Un-lockable alias: sportsbook-production-fix-persist-reliability.js locks
+    // window.loadMyRecordPage to its own async fetch+sync version, which only
+    // updates the four record widgets. It calls this alias after the fetch so
+    // the breakdown tables and secondary metrics render from REAL picks too
+    // (deep-linked /sportsbook/#my-record previously left them zeroed forever).
+    window.__tmrInlineMyRecordRender = loadMyRecordPage;
     window.toggleFullHistory = toggleFullHistory;
     window.filterAdvHistory = filterAdvHistory;
     window.quickGradeAdv = quickGradeAdv;

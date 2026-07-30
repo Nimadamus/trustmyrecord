@@ -3702,6 +3702,13 @@
     async function loadMyRecordPage() {
         try {
             const picks = await fetchCurrentUserPicks();
+            // Full inline render first (breakdown tables + secondary metrics,
+            // reading the freshly-set window._cachedBackendPicks), then the
+            // canonical record widgets last so the four headline numbers always
+            // end on computeCanonicalRecordStats' math.
+            if (typeof window.__tmrInlineMyRecordRender === 'function') {
+                try { window.__tmrInlineMyRecordRender(); } catch (renderError) {}
+            }
             syncRecordWidgets(picks);
         } catch (error) {}
     }
@@ -4458,7 +4465,18 @@
             }).observe(myPicksSection, { attributes: true, attributeFilter: ['class'] });
         }
 
-        fetchCurrentUserPicks().then(syncRecordWidgets).catch(function() {});
+        fetchCurrentUserPicks().then(function(picks) {
+            // Deep-linked /sportsbook/#my-record activates the section without
+            // ever passing through showSection, so this boot fetch is the only
+            // chance to fill its breakdown tables/secondary metrics with real
+            // data instead of leaving the static loading placeholders up.
+            const myRecordSection = document.getElementById('my-record');
+            if (myRecordSection && myRecordSection.classList.contains('active') &&
+                typeof window.__tmrInlineMyRecordRender === 'function') {
+                try { window.__tmrInlineMyRecordRender(); } catch (renderError) {}
+            }
+            syncRecordWidgets(picks);
+        }).catch(function() {});
     }
 
     document.addEventListener('DOMContentLoaded', boot);
