@@ -119,6 +119,14 @@
       return '<a href="' + r[0] + '"' + (isCurrent(r[0]) ? ' aria-current="page"' : '') + '>' + esc(r[1]) + '</a>';
     }).join('');
   }
+  // TMR Coin keeps its flat top-level slot but carries the official coin mark
+  // (same asset as the balance pill) so it reads as one intentional button.
+  function coinLink() {
+    var r = TMR_COIN[0];
+    return '<a class="ds-coinlink" href="' + r[0] + '"' + (isCurrent(r[0]) ? ' aria-current="page"' : '') + '>' +
+      '<img class="ds-coinlink-ico" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">' +
+      esc(r[1]) + '</a>';
+  }
   function menu(label, list) {
     var on = list.some(function (r) { return isCurrent(r[0]); });
     return '<div class="ds-menu' + (on ? ' is-current' : '') + '">' +
@@ -155,7 +163,7 @@
             menu('Compete', COMPETE) +
             menu('Community', COMMUNITY) +
             menu('Tools', TOOLS) +
-            links(TMR_COIN) +
+            coinLink() +
           '</div>' +
           '<div class="ds-nav-right">' + initialNavRight() + '</div>' +
         '</div>' +

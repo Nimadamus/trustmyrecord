@@ -7,28 +7,34 @@
     <title>Sell Your Picks | Seller Setup & Dashboard | TrustMyRecord</title>
     <meta name="description" content="Become a verified pick seller on TrustMyRecord. Clear eligibility with your public record, connect Stripe payouts, set your price, and open your storefront.">
     <link rel="icon" type="image/png" href="/static/favicon.png">
-    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=20260729navclean2">
-    <script defer src="/static/js/tmr-sitewide.js?v=20260729navclean1"></script>
+    <!-- Global nav: same canonical component as the homepage (tmr-ds-nav.js).
+         tmr-sitewide.css/js dropped — the two nav systems cannot coexist. -->
+    <link rel="stylesheet" href="/static/css/tmr-ds.87c81a8f762d.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <style>
-        :root {
+        /* Page token block re-declared on the body.tmr-ds compound (not just
+           :root) so these page tokens beat tmr-ds.css's body-level tokens
+           (--panel/--line/--muted/--green/--red collide by name). */
+        :root, body.tmr-ds.tmr-ds--dark.mp-sell-page {
             --bg:#08111d; --panel:rgba(11,23,42,.92); --line:rgba(148,163,184,.18);
             --text:#eef4fb; --muted:#96a7bb; --teal:#2dd4bf; --cyan:#22d3ee;
             --amber:#fbbf24; --green:#4ade80; --red:#f87171;
         }
         * { box-sizing:border-box; margin:0; padding:0; }
-        body { background:linear-gradient(180deg,#07111d,#0a1422); color:var(--text); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
+        body.mp-sell-page { background:linear-gradient(180deg,#07111d,#0a1422); color:var(--text); font-family:'Inter',system-ui,sans-serif; min-height:100vh; }
         a { color:inherit; text-decoration:none; }
         .mp-shell { max-width:980px; margin:0 auto; padding:28px 24px 70px; }
         .crumb { color:var(--muted); font-size:12.5px; margin-bottom:14px; }
         .crumb a { color:var(--cyan); }
-        h1 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:clamp(28px,4vw,40px); letter-spacing:-.5px; }
+        body.mp-sell-page .mp-shell h1 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:clamp(28px,4vw,40px); letter-spacing:-.5px; line-height:1.1; }
         h1 .accent { background:linear-gradient(135deg,var(--teal),var(--cyan)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
-        .lede { color:var(--muted); font-size:14px; margin:8px 0 20px; max-width:680px; line-height:1.6; }
+        /* body.mp-sell-page prefixes outrank tmr-ds.css's element-level type +
+           p{margin:0} resets, keeping this page's own rhythm. */
+        body.mp-sell-page .lede { color:var(--muted); font-size:14px; margin:8px 0 20px; max-width:680px; line-height:1.6; }
         .panel { background:var(--panel); border:1px solid var(--line); border-radius:15px; padding:20px; margin-bottom:16px; }
-        .panel h2 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:21px; margin-bottom:12px; display:flex; align-items:center; gap:10px; }
+        body.mp-sell-page .panel h2 { font-family:'Barlow Condensed','Inter',sans-serif; font-weight:900; text-transform:uppercase; font-size:21px; margin-bottom:12px; display:flex; align-items:center; gap:10px; letter-spacing:normal; line-height:1.2; }
         .step-num { width:26px; height:26px; border-radius:8px; background:rgba(34,211,238,.12); border:1px solid rgba(34,211,238,.35); color:var(--cyan); font:800 12px/1 'JetBrains Mono',monospace; display:inline-flex; align-items:center; justify-content:center; }
         .btn { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 18px; border-radius:10px; font-weight:800; font-size:13.5px; cursor:pointer; border:1px solid transparent; transition:.15s; font-family:inherit; }
         .btn-primary { background:linear-gradient(135deg,var(--teal),var(--cyan)); color:#04111a; }
@@ -47,7 +53,7 @@
         }
         .field input:focus, .field textarea:focus { outline:none; border-color:var(--cyan); }
         .field textarea { min-height:90px; resize:vertical; }
-        .hint { color:var(--muted); font-size:12px; margin-top:5px; line-height:1.5; }
+        body.mp-sell-page .hint { color:var(--muted); font-size:12px; margin-top:5px; line-height:1.5; }
         .split-note { background:rgba(45,212,191,.07); border:1px solid rgba(45,212,191,.25); border-radius:10px; padding:12px 14px; font-size:12.5px; color:#c5f5ec; line-height:1.6; margin-top:10px; }
         .status-pill { display:inline-flex; align-items:center; gap:6px; padding:5px 12px; border-radius:999px; font:700 11px/1 'JetBrains Mono',monospace; letter-spacing:.1em; text-transform:uppercase; }
         .pill-green { background:rgba(74,222,128,.1); border:1px solid rgba(74,222,128,.4); color:var(--green); }
@@ -109,7 +115,7 @@
 <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=20260721nav4">
 <script defer src="/static/js/tmr-linkhub.js?v=20260721nav4"></script>
 </head>
-<body>
+<body class="mp-sell-page tmr-ds tmr-ds--dark">
 
 <main class="mp-shell">
     <div class="crumb"><a href="/marketplace/">&larr; Pick Marketplace</a></div>
@@ -487,5 +493,7 @@
 })();
 </script>
 <script src="/static/js/analytics.js?v=20260719ft"></script>
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script>
+<script src="/static/js/tmr-ds-nav.54d127e0254a.js"></script>
 </body>
 </html>

@@ -218,6 +218,8 @@ body.tmr-ds .ds-menu>button:hover{color:#fff}
 body.tmr-ds .ds-mainnav a.on,
 body.tmr-ds .ds-mainnav a[aria-current="page"],
 body.tmr-ds .ds-menu.is-current>button{color:#fff}
+/* the flat TMR Coin item's mark; the anchor is already inline-flex + gap:6px */
+body.tmr-ds .ds-coinlink-ico{display:block;width:18px;height:18px;flex:0 0 auto}
 
 /* dropdowns preserve every route the previous nav exposed */
 body.tmr-ds .ds-menu{position:relative}
@@ -292,6 +294,13 @@ body.tmr-ds .ds-nav-toggle{
   display:none;margin-left:auto;width:40px;height:40px;border-radius:var(--r-sm);
   background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);
   color:#fff;cursor:pointer;align-items:center;justify-content:center;
+}
+/* Narrow-desktop band just above the hamburger breakpoint: tighten the row's
+   gaps so the mainnav stays on one line instead of wrapping into the 70px bar. */
+@media(min-width:1181px) and (max-width:1320px){
+  body.tmr-ds .ds-nav-in{gap:18px}
+  body.tmr-ds .ds-nav-panel{gap:18px}
+  body.tmr-ds .ds-mainnav{gap:17px}
 }
 @media(max-width:1180px){
   body.tmr-ds{--nav-edge:14px}

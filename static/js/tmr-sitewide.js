@@ -508,7 +508,12 @@
                                 : segs[segs.length - 1] + ".html")
                             : "index.html";
                         const active = href.includes("#") ? location.hash === href.slice(href.indexOf("#")) : currentFile === hrefFile;
-                        return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${label}</a>`;
+                        // TMR Coin carries the official coin mark (same asset as
+                        // the balance chip) so it reads as one intentional button.
+                        const icon = href === "/tmr-coin/"
+                            ? '<img class="tmr-global-nav__coin-ico" src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true">'
+                            : "";
+                        return `<a href="${href}"${active ? ' aria-current="page"' : ""}>${icon}${label}</a>`;
                     }).join("")}
                 </div>
                 <div class="tmr-global-nav__actions"></div>
