@@ -16,7 +16,7 @@ Add --dry-run to print the eligible set + sample row without writing files.
 Idempotent: re-running replaces content between <!--MK:key--> markers, so a
 30-min cron/GitHub Action can call it repeatedly without drift.
 """
-import json, os, sys, re, html, datetime, urllib.request, urllib.parse
+import json, os, sys, re, html, math, datetime, urllib.request, urllib.parse
 
 API  = "https://trustmyrecord-api.onrender.com/api"
 SITE = "https://trustmyrecord.com"
@@ -155,21 +155,33 @@ def collect():
 def e(s):
     return html.escape(str(s), quote=True)
 
+def js_fixed(v, d):
+    """Number.prototype.toFixed semantics, NOT Python round(). Python f-strings
+    round half-to-even (26.25 -> "26.2") while JS toFixed picks the larger
+    candidate on an exact tie (26.25 -> "26.3", -26.25 -> "-26.2"). The page JS
+    formats every stat with toFixed, so baking Python-rounded values made e.g.
+    a 26.25 ROI first-paint as 26.2% then visibly flip to 26.3% on hydrate."""
+    scaled = v * (10 ** d)
+    n = math.floor(scaled + 0.5)
+    # Guard float noise: if scaled is not actually at/over the .5 boundary in
+    # the double JS sees, floor(scaled + 0.5) matches toFixed for our 1-2dp use.
+    return f"{n / (10 ** d):.{d}f}"
+
 def rec(r):
     s = f"{r['wins']}-{r['losses']}"
     return s + (f"-{r['pushes']}" if r["pushes"] else "")
 
 def units_plain(v):   # handicappers cell: "+20.66" / "-19.48"
-    return ("+" if v > 0 else "") + f"{v:.2f}"
+    return ("+" if v > 0 else "") + js_fixed(v, 2)
 
 def units_u(v):       # leaderboards cell: "+20.66u"
-    return ("+" if v > 0 else "") + f"{v:.2f}u"
+    return ("+" if v > 0 else "") + js_fixed(v, 2) + "u"
 
 def pct(v):
-    return f"{v:.1f}%"
+    return js_fixed(v, 1) + "%"
 
 def roi_pct(v):       # leaderboards signed %
-    return ("+" if v > 0 else "") + f"{v:.2f}%"
+    return ("+" if v > 0 else "") + js_fixed(v, 2) + "%"
 
 def streak(v):
     if not v:
@@ -496,10 +508,10 @@ def _wlr(picks):
     return w, n - w, n, (w / n if n else 0.0)
 
 def _su(v):   # signed units, "+7.01u"
-    return ("+" if v > 0 else "") + f"{v:.2f}u"
+    return ("+" if v > 0 else "") + js_fixed(v, 2) + "u"
 
 def _sroi(v): # signed pct, "+12.20%"
-    return ("+" if v > 0 else "") + f"{v:.2f}%"
+    return ("+" if v > 0 else "") + js_fixed(v, 2) + "%"
 
 def compute_home_highlight(picks, meta, now):
     """Single best sample-guarded highlight for one capper, or None.
