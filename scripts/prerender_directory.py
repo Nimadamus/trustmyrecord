@@ -16,7 +16,7 @@ Add --dry-run to print the eligible set + sample row without writing files.
 Idempotent: re-running replaces content between <!--MK:key--> markers, so a
 30-min cron/GitHub Action can call it repeatedly without drift.
 """
-import json, os, sys, re, html, math, datetime, urllib.request, urllib.parse
+import json, os, sys, re, html, math, time, datetime, urllib.request, urllib.parse
 
 API  = "https://trustmyrecord-api.onrender.com/api"
 SITE = "https://trustmyrecord.com"
@@ -37,10 +37,21 @@ def clean_avatar(url):
         return DEFAULT_AVATAR
     return url
 
-def get(url):
-    req = urllib.request.Request(url, headers={"Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=45) as r:
-        return json.load(r)
+def get(url, attempts=3):
+    # The Render free tier throws occasional transient 500s; without a retry a
+    # single hiccup aborts the whole bake run and the pages stay stale until
+    # the next cron tick. Retry briefly before giving up.
+    last = None
+    for i in range(attempts):
+        if i:
+            time.sleep(2 * i)
+        try:
+            req = urllib.request.Request(url, headers={"Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=45) as r:
+                return json.load(r)
+        except Exception as err:
+            last = err
+    raise last
 
 def num(v, d=0.0):
     try:
