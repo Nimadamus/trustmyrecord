@@ -354,7 +354,10 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
     stats = [
         stat(rec, f"Record (W-L{'-P' if p else ''})"),
         stat(fmt_units(units), "Net Units"),
-        stat(f"{roi:.2f}%", "ROI"),
+        # Signed, 1-decimal: the exact format the profile app's ROI tile uses
+        # (fmtSigned(s.roi,'%',1)), so the baked value never visibly flips
+        # (e.g. -10.41% -> -10.4%) when the app hydrates over this page.
+        stat(("+" if roi > 0 else "") + f"{roi:.1f}%", "ROI"),
         stat(f"{wr:.1f}%", "Win Rate"),
         stat(str(tp), "Graded Picks"),
         stat(("W" + str(cur)) if cur > 0 else ("L" + str(abs(cur))) if cur < 0 else "0", "Current Streak"),
