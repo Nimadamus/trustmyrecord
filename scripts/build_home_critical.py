@@ -39,6 +39,9 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
 
 
+BUILD_STAMP_RE = re.compile(rb"var BUILD = '[^']*'")
+
+
 def build(html):
     # 1. Inline the critical CSS, replacing either the <link> or a previous block.
     block = "%s\n<style>\n%s\n</style>\n%s" % (
@@ -56,8 +59,21 @@ def build(html):
     for rel in HASHED_JS:
         src = ROOT / rel
         stem, suffix = src.stem, src.suffix
-        hashed = "%s.%s%s" % (stem, digest(src), suffix)
-        (src.parent / hashed).write_bytes(src.read_bytes())
+        # Stamp the build id into the JS AND <html data-tmr-build> so the page
+        # can detect a document/script pairing from two different deployments
+        # (stale HTTP cache, restored session) and self-heal with one reload.
+        # The digest is computed with the stamp masked so it stays stable.
+        raw = src.read_bytes()
+        masked = BUILD_STAMP_RE.sub(b"var BUILD = ''", raw)
+        h = hashlib.sha256(masked).hexdigest()[:12]
+        stamped = BUILD_STAMP_RE.sub(("var BUILD = '%s'" % h).encode(), raw)
+        if stamped != raw:
+            src.write_bytes(stamped)
+        hashed = "%s.%s%s" % (stem, h, suffix)
+        (src.parent / hashed).write_bytes(stamped)
+        if 'data-tmr-build="' not in html:
+            sys.exit("index.html is missing the data-tmr-build attribute on <html>")
+        html = re.sub(r'data-tmr-build="[^"]*"', 'data-tmr-build="%s"' % h, html, count=1)
         pattern = re.compile(r'src="/%s/%s(\.[0-9a-f]{12})?%s(\?[^"]*)?"'
                              % (re.escape(str(src.parent.relative_to(ROOT)).replace("\\", "/")),
                                 re.escape(stem), re.escape(suffix)))
