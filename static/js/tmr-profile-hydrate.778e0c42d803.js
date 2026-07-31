@@ -432,7 +432,7 @@
           '<p class="u-awards-kicker">Performance awards and special recognition earned on TrustMyRecord.</p></div>' +
           '<span class="u-awards-count"></span></div><div class="u-award-grid"></div></section></main>');
         html = html.replace(/<\/body>/i,
-          '<script src="/static/js/tmr-public-awards.js" defer><\/script></body>');
+          '<script src="/static/js/tmr-public-awards.js?v=20260731awards1" defer><\/script></body>');
         clearTimeout(revealFailSafe);
         document.open();
         document.write(html);

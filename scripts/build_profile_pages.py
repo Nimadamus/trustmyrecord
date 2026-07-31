@@ -650,7 +650,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=Non
 </main>
 <script>window.__TMR_PROFILE_USERNAME={json.dumps(un)};</script>
 <script src="/static/js/tmr-profile-hydrate.778e0c42d803.js" defer></script>
-<script src="/static/js/tmr-public-awards.js" defer></script>
+<script src="/static/js/tmr-public-awards.js?v=20260731awards1" defer></script>
 {DS_FOOT}
 </body>
 </html>
@@ -771,7 +771,7 @@ def compact_html(un, awards=None):
 </main>
 <script>window.__TMR_PROFILE_USERNAME={json.dumps(un)};</script>
 <script src="/static/js/tmr-profile-hydrate.778e0c42d803.js" defer></script>
-<script src="/static/js/tmr-public-awards.js" defer></script>
+<script src="/static/js/tmr-public-awards.js?v=20260731awards1" defer></script>
 {DS_FOOT}
 </body>
 </html>
