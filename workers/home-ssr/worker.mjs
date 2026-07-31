@@ -118,7 +118,10 @@ function buildRewriter(data) {
     rw.on('.spot .nmrow b', new TextCell(username));
     rw.on('.spot .nmrow a', new HrefCell(`/profile/?user=${encodeURIComponent(username)}`));
     rw.on('.spot .hd a', new HrefCell(profileHref));
-    rw.on('.spot .ft a', new HrefCell(profileHref));
+    rw.on('.spot .ft a:not(#tmrCapperBuy)', new HrefCell(profileHref));
+    // Buy-picks link follows the featured capper to their marketplace storefront
+    // (keep in lockstep with tmr-home-live.js applyCapper).
+    rw.on('#tmrCapperBuy', new HrefCell(`/marketplace/seller/?u=${encodeURIComponent(username)}`));
 
     const W = u.wins, L = u.losses, P = num(u.pushes);
     const netUnits = num(u.net_units), roi = num(u.roi);
@@ -127,7 +130,7 @@ function buildRewriter(data) {
       { text: sign(netUnits), className: `num ${netUnits >= 0 ? 'pos' : 'neg'}` },
       { text: `${roi.toFixed(1)}%`, className: `num ${roi >= 0 ? 'pos' : 'neg'}` },
     ]));
-    rw.on('.spot .ft span', new TextCell(`${num(u.total_picks)} picks, every one locked pre-game`));
+    rw.on('.spot .ft span:not(.ftlinks)', new TextCell(`${num(u.total_picks)} picks, every one locked pre-game`));
 
     const s = card.summary || {};
     const winRate = num(s.win_rate);
