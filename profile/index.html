@@ -10403,7 +10403,10 @@
         const awardsPreview = '<section class="profile-awards-preview" id="profileAwardsPreview" aria-labelledby="profileAwardsPreviewTitle" aria-busy="true">' +
             '<div class="profile-awards-preview__head">' +
                 '<h2 id="profileAwardsPreviewTitle">Awards</h2>' +
-                '<a class="profile-awards-preview__all" id="profileAwardsPreviewAll" href="/profile/?user=' + encodeURIComponent(p.username || '') + '#awards">View all awards</a>' +
+                '<div class="profile-awards-preview__head-right">' +
+                    '<span class="profile-awards-preview__stat"><strong id="profileAwardsPreviewCount">&mdash;</strong> Awards</span>' +
+                    '<a class="profile-awards-preview__all" id="profileAwardsPreviewAll" href="/profile/?user=' + encodeURIComponent(p.username || '') + '#awards">View all awards</a>' +
+                '</div>' +
             '</div>' +
             '<div class="profile-awards-preview__grid" id="profileAwardsPreviewGrid">' +
                 '<span class="profile-awards-preview__skeleton"></span>' +
@@ -10759,6 +10762,26 @@
                 '<rect x="50" y="111.6" width="20" height="1.1" rx=".55" fill="rgba(255,255,255,.14)"/>' +
             '</svg>';
         }
+        function previewTrophySvg(type) {
+            const accent = type === 'best_roi' ? '#34d399'
+                : (type === 'most_active' ? '#38bdf8'
+                : (type === 'admin_discretion' ? '#c084fc' : '#ffd24a'));
+            const shadow = type === 'best_roi' ? '#047857'
+                : (type === 'most_active' ? '#075985'
+                : (type === 'admin_discretion' ? '#6d28d9' : '#a16207'));
+            return '<svg class="profile-awards-preview__trophy" viewBox="0 0 64 64" fill="none" aria-hidden="true">' +
+                '<path d="M20 13h24v10c0 10.2-5.1 18-12 18s-12-7.8-12-18V13Z" fill="' + accent + '"/>' +
+                '<path d="M22 15h20v8.2c0 8.8-4.1 15.1-10 15.1s-10-6.3-10-15.1V15Z" fill="url(#profileAwardMiniGold)" opacity=".92"/>' +
+                '<path d="M20.5 17H10c.2 8.7 4.1 14.1 11.7 16.1M43.5 17H54c-.2 8.7-4.1 14.1-11.7 16.1" stroke="' + accent + '" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+                '<path d="M20.5 17H10c.2 8.7 4.1 14.1 11.7 16.1M43.5 17H54c-.2 8.7-4.1 14.1-11.7 16.1" stroke="#fff7c2" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" opacity=".72"/>' +
+                '<path d="M26 42h12v7H26z" fill="' + shadow + '"/>' +
+                '<path d="M21 50h22l4 8H17l4-8Z" fill="' + shadow + '"/>' +
+                '<path d="M24 50h16M21 55h22" stroke="#fff7c2" stroke-width="2" stroke-linecap="round" opacity=".65"/>' +
+                '<path d="M32 18.7l2.3 4.7 5.2.8-3.8 3.7.9 5.2-4.6-2.4-4.6 2.4.9-5.2-3.8-3.7 5.2-.8 2.3-4.7Z" fill="#fff8d1"/>' +
+                '<path d="M26.5 17.5c-1 5.6-.2 10.7 2.4 15.4" stroke="#fffbe8" stroke-width="3" stroke-linecap="round" opacity=".62"/>' +
+                '<defs><linearGradient id="profileAwardMiniGold" x1="32" y1="15" x2="32" y2="41" gradientUnits="userSpaceOnUse"><stop stop-color="#fff8c9"/><stop offset=".48" stop-color="#ffd24a"/><stop offset="1" stop-color="#b7791f"/></linearGradient></defs>' +
+            '</svg>';
+        }
         function fmtDate(d) {
             try { return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); } catch (_) { return ''; }
         }
@@ -10786,10 +10809,12 @@
             const mount = document.getElementById('profileAwardsPreview');
             const grid = document.getElementById('profileAwardsPreviewGrid');
             const all = document.getElementById('profileAwardsPreviewAll');
+            const count = document.getElementById('profileAwardsPreviewCount');
             if (!mount || !grid) return;
             const awards = Array.isArray(list) ? list : [];
             const href = awardsHref();
             mount.setAttribute('aria-busy', 'false');
+            if (count) count.textContent = String(awards.length);
             if (all) {
                 all.href = href;
                 all.hidden = awards.length === 0;
@@ -10806,7 +10831,7 @@
                 const meta = awdEsc(a.period_label || (a.awarded_at ? 'Awarded ' + fmtDate(a.awarded_at) : 'Special Recognition'));
                 const label = title + (meta ? ' - ' + meta : '');
                 return '<a class="profile-awards-preview__item" href="' + href + '" title="' + label + '" aria-label="' + label + '">' +
-                    '<span class="profile-awards-preview__badge" role="img" aria-label="' + title + ' badge artwork">' + trophySvg(st, a.award_type) + '</span>' +
+                    '<span class="profile-awards-preview__badge" role="img" aria-label="' + title + ' trophy badge">' + previewTrophySvg(a.award_type) + '</span>' +
                     '<span><span class="profile-awards-preview__name">' + title + '</span>' +
                     '<span class="profile-awards-preview__meta">' + meta + '</span></span>' +
                 '</a>';
@@ -15791,6 +15816,36 @@
         letter-spacing: .12em !important;
         text-transform: uppercase !important;
       }
+      body.profile-page.tmr-social-profile .profile-awards-preview__head-right {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 10px !important;
+        flex-wrap: wrap !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__stat {
+        display: inline-flex !important;
+        align-items: baseline !important;
+        gap: 4px !important;
+        min-height: 22px !important;
+        padding: 5px 8px !important;
+        border: 1px solid rgba(117, 140, 173, .24) !important;
+        border-radius: 999px !important;
+        background: rgba(15, 23, 42, .52) !important;
+        color: #a9bbd1 !important;
+        font-size: 10.5px !important;
+        font-weight: 850 !important;
+        line-height: 1 !important;
+        letter-spacing: .05em !important;
+        text-transform: uppercase !important;
+        white-space: nowrap !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__stat strong {
+        color: #f8fbff !important;
+        font-size: 12px !important;
+        font-weight: 950 !important;
+        letter-spacing: 0 !important;
+      }
       body.profile-page.tmr-social-profile .profile-awards-preview__all {
         color: #67e8f9 !important;
         font: 850 11px/1.2 'Inter',sans-serif !important;
@@ -15836,14 +15891,19 @@
         place-items: center !important;
         width: 38px !important;
         height: 38px !important;
-        border-radius: 10px !important;
-        border: 1px solid rgba(255, 215, 0, .26) !important;
-        background: radial-gradient(circle at 35% 25%, rgba(255,244,180,.24), rgba(255,193,7,.07) 68%, transparent 69%) !important;
+        border-radius: 11px !important;
+        border: 1px solid rgba(255, 215, 0, .34) !important;
+        background:
+          radial-gradient(circle at 38% 20%, rgba(255,255,255,.35), transparent 30%),
+          radial-gradient(circle at 50% 62%, rgba(255, 210, 74, .26), rgba(180, 83, 9, .08) 67%, rgba(3,10,22,.2) 68%) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 7px 16px rgba(0,0,0,.24) !important;
       }
-      body.profile-page.tmr-social-profile .profile-awards-preview__badge .awd-trophy {
-        width: 31px !important;
-        height: 34px !important;
+      body.profile-page.tmr-social-profile .profile-awards-preview__trophy {
+        width: 35px !important;
+        height: 35px !important;
         margin: 0 !important;
+        filter: drop-shadow(0 2px 2px rgba(0,0,0,.38)) !important;
+        display: block !important;
       }
       body.profile-page.tmr-social-profile .profile-awards-preview__name {
         display: block !important;
