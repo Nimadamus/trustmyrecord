@@ -10400,6 +10400,18 @@
                 : '') +
             '<button class="btn btn-secondary" onclick="showEmbedModal()" title="Embed this profile on your site" data-tmr-embed-btn><i class="fas fa-code" style="margin-right:6px;"></i>Embed</button>';
         const actions = '<div class="profile-actions">' + primaryActions + shareActions + '</div>';
+        const awardsPreview = '<section class="profile-awards-preview" id="profileAwardsPreview" aria-labelledby="profileAwardsPreviewTitle" aria-busy="true">' +
+            '<div class="profile-awards-preview__head">' +
+                '<h2 id="profileAwardsPreviewTitle">Awards</h2>' +
+                '<a class="profile-awards-preview__all" id="profileAwardsPreviewAll" href="/profile/?user=' + encodeURIComponent(p.username || '') + '#awards">View all awards</a>' +
+            '</div>' +
+            '<div class="profile-awards-preview__grid" id="profileAwardsPreviewGrid">' +
+                '<span class="profile-awards-preview__skeleton"></span>' +
+                '<span class="profile-awards-preview__skeleton"></span>' +
+                '<span class="profile-awards-preview__skeleton"></span>' +
+                '<span class="profile-awards-preview__skeleton"></span>' +
+            '</div>' +
+        '</section>';
 
         // Headline (Twitter-style 140-char tagline). Always rendered; empty
         // state prompts own-profile owner to add one.
@@ -10445,6 +10457,7 @@
             '<button type="button" class="profile-meta-item" style="cursor:pointer;" onclick="openSocialList(\'following\')">View following</button>' +
             '</div>' +
             actions +
+            awardsPreview +
             emptyLedgerNote +
             '</div>' + rail;
 
@@ -10453,6 +10466,7 @@
         // Fill the top-rail Correlated Picks card if correlation data already
         // arrived (metrics fetch and profile render race; whichever lands last wins).
         try { applyRailCorrelation(); } catch (_) {}
+        try { if (window.TMRRenderProfileAwardsPreview) window.TMRRenderProfileAwardsPreview(); } catch (_) {}
     }
 
     // Populates the top-rail "Correlated Picks" stat (next to Avg Odds) from the
@@ -10748,6 +10762,10 @@
         function fmtDate(d) {
             try { return new Date(d).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }); } catch (_) { return ''; }
         }
+        function awardsHref() {
+            const u = awdUsername();
+            return '/profile/' + (u ? '?user=' + encodeURIComponent(u) : '') + '#awards';
+        }
         // Real winning stats from the award metadata (set by the monthly run)
         // so monthly trophies show WHY they were earned.
         function awdStatLine(a) {
@@ -10764,6 +10782,41 @@
             return '';
         }
         let awardsCache = [];
+        function renderPreview(list) {
+            const mount = document.getElementById('profileAwardsPreview');
+            const grid = document.getElementById('profileAwardsPreviewGrid');
+            const all = document.getElementById('profileAwardsPreviewAll');
+            if (!mount || !grid) return;
+            const awards = Array.isArray(list) ? list : [];
+            const href = awardsHref();
+            mount.setAttribute('aria-busy', 'false');
+            if (all) {
+                all.href = href;
+                all.hidden = awards.length === 0;
+                all.textContent = awards.length > 5 ? 'View all ' + awards.length + ' awards' : 'View all awards';
+            }
+            if (!awards.length) {
+                grid.innerHTML = '<div class="profile-awards-preview__empty">No awards earned yet.</div>';
+                return;
+            }
+            const preview = awards.slice(0, 5);
+            grid.innerHTML = preview.map(function (a) {
+                const st = STYLE_BY_TYPE[a.award_type] || STYLE_BY_TYPE.admin_discretion;
+                const title = awdEsc(a.title || 'TrustMyRecord Award');
+                const meta = awdEsc(a.period_label || (a.awarded_at ? 'Awarded ' + fmtDate(a.awarded_at) : 'Special Recognition'));
+                const label = title + (meta ? ' - ' + meta : '');
+                return '<a class="profile-awards-preview__item" href="' + href + '" title="' + label + '" aria-label="' + label + '">' +
+                    '<span class="profile-awards-preview__badge" role="img" aria-label="' + title + ' badge artwork">' + trophySvg(st, a.award_type) + '</span>' +
+                    '<span><span class="profile-awards-preview__name">' + title + '</span>' +
+                    '<span class="profile-awards-preview__meta">' + meta + '</span></span>' +
+                '</a>';
+            }).join('') + (awards.length > preview.length
+                ? '<a class="profile-awards-preview__item profile-awards-preview__item--more" href="' + href + '" aria-label="View all ' + awards.length + ' awards for this user"><span class="profile-awards-preview__badge" aria-hidden="true">+' + (awards.length - preview.length) + '</span><span><span class="profile-awards-preview__name">View all awards</span><span class="profile-awards-preview__meta">' + awards.length + ' total earned</span></span></a>'
+                : '');
+        }
+        window.TMRRenderProfileAwardsPreview = function () {
+            renderPreview(awardsCache);
+        };
         function openAwdModal(idx) {
             const a = awardsCache[idx];
             if (!a) return;
@@ -10783,8 +10836,9 @@
             const empty = document.getElementById('awdEmpty');
             const summary = document.getElementById('awdSummary');
             const badge = document.getElementById('profileAwardsBadge');
-            if (!grid) return;
             awardsCache = list;
+            renderPreview(list);
+            if (!grid) return;
             if (badge && list.length) { badge.textContent = String(list.length); badge.hidden = false; }
             if (!list.length) { empty.style.display = 'block'; grid.innerHTML = ''; summary.style.display = 'none'; return; }
             empty.style.display = 'none';
@@ -10807,7 +10861,7 @@
         }
         async function load() {
             const u = awdUsername();
-            if (!u) return;
+            if (!u) { render([]); return; }
             try {
                 const res = await fetch(API_BASE + '/awards/user/' + encodeURIComponent(u), {
                     cache: 'no-store',
@@ -10816,7 +10870,10 @@
                 if (!res.ok) { render([]); return; }
                 const data = await res.json();
                 render(Array.isArray(data.awards) ? data.awards : []);
-            } catch (_) { render([]); }
+            } catch (error) {
+                console.warn('Profile awards request failed', error);
+                render([]);
+            }
         }
         // The pick-ledger ("record") panel stays rendered in flow on this page
         // even when it is not the active tab, which buries the trophies under
@@ -15710,6 +15767,128 @@
         border-color: rgba(34, 211, 238, .5) !important;
         background: #22d3ee !important;
         color: #04111a !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview {
+        min-height: 116px !important;
+        margin-top: 14px !important;
+        padding: 13px 14px 14px !important;
+        border: 1px solid rgba(117, 140, 173, .24) !important;
+        border-radius: 14px !important;
+        background: rgba(3, 10, 22, .34) !important;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.04) !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__head {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        margin-bottom: 10px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__head h2 {
+        margin: 0 !important;
+        color: #7f9bbd !important;
+        font: 900 11px/1 'Barlow','Inter',sans-serif !important;
+        letter-spacing: .12em !important;
+        text-transform: uppercase !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__all {
+        color: #67e8f9 !important;
+        font: 850 11px/1.2 'Inter',sans-serif !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__all:hover,
+      body.profile-page.tmr-social-profile .profile-awards-preview__all:focus-visible {
+        color: #a7f3ff !important;
+        text-decoration: underline !important;
+        outline: 2px solid rgba(103,232,249,.55) !important;
+        outline-offset: 3px !important;
+        border-radius: 4px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__grid {
+        display: grid !important;
+        grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)) !important;
+        gap: 8px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__item {
+        display: grid !important;
+        grid-template-columns: 38px minmax(0, 1fr) !important;
+        align-items: center !important;
+        gap: 9px !important;
+        min-height: 58px !important;
+        padding: 9px !important;
+        border: 1px solid rgba(117, 140, 173, .2) !important;
+        border-radius: 10px !important;
+        background: rgba(15, 23, 42, .46) !important;
+        color: #f8fbff !important;
+        text-decoration: none !important;
+        overflow: hidden !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__item:hover,
+      body.profile-page.tmr-social-profile .profile-awards-preview__item:focus-visible {
+        border-color: rgba(103,232,249,.48) !important;
+        background: rgba(15, 23, 42, .68) !important;
+        outline: 2px solid rgba(103,232,249,.4) !important;
+        outline-offset: 2px !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__badge {
+        display: grid !important;
+        place-items: center !important;
+        width: 38px !important;
+        height: 38px !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(255, 215, 0, .26) !important;
+        background: radial-gradient(circle at 35% 25%, rgba(255,244,180,.24), rgba(255,193,7,.07) 68%, transparent 69%) !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__badge .awd-trophy {
+        width: 31px !important;
+        height: 34px !important;
+        margin: 0 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__name {
+        display: block !important;
+        color: #f8fbff !important;
+        font-size: 12px !important;
+        font-weight: 850 !important;
+        line-height: 1.22 !important;
+        overflow-wrap: anywhere !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__meta {
+        display: block !important;
+        margin-top: 3px !important;
+        color: #93a7c0 !important;
+        font-size: 10.5px !important;
+        font-weight: 700 !important;
+        line-height: 1.25 !important;
+        overflow-wrap: anywhere !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__empty,
+      body.profile-page.tmr-social-profile .profile-awards-preview__error {
+        grid-column: 1 / -1 !important;
+        min-height: 58px !important;
+        display: flex !important;
+        align-items: center !important;
+        padding: 0 2px !important;
+        color: #93a7c0 !important;
+        font-size: 13px !important;
+        font-weight: 700 !important;
+      }
+      body.profile-page.tmr-social-profile .profile-awards-preview__skeleton {
+        min-height: 58px !important;
+        border-radius: 10px !important;
+        border: 1px solid rgba(117, 140, 173, .14) !important;
+        background: linear-gradient(90deg, rgba(148,163,184,.08), rgba(148,163,184,.16), rgba(148,163,184,.08)) !important;
+        background-size: 220% 100% !important;
+        animation: profileAwardsPreviewPulse 1.25s ease-in-out infinite !important;
+      }
+      @keyframes profileAwardsPreviewPulse {
+        0% { background-position: 100% 0; }
+        100% { background-position: -100% 0; }
+      }
+      @media (max-width: 760px) {
+        body.profile-page.tmr-social-profile .profile-awards-preview__grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        }
       }
       body.profile-page.tmr-social-profile .profile-rail {
         align-self: stretch !important;

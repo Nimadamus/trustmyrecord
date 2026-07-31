@@ -423,16 +423,6 @@
         // /u/ path (globals also persist across document.open, this is belt+braces).
         html = html.replace(/<head>/i, '<head><script>window.__TMR_PROFILE_USERNAME=' +
           JSON.stringify(un) + ';<\/script>');
-        // /u/<username>/ must show awards in the normal page flow, not only in
-        // the profile app's optional Awards tab. The standalone renderer is
-        // scoped to this injected mount, so legacy /profile/ keeps its tabs.
-        html = html.replace(/<\/main>/i,
-          '<section id="uPublicAwards" class="u-awards" hidden>' +
-          '<div class="u-awards-head"><div><h2>Awards Received</h2>' +
-          '<p class="u-awards-kicker">Performance awards and special recognition earned on TrustMyRecord.</p></div>' +
-          '<span class="u-awards-count"></span></div><div class="u-award-grid"></div></section></main>');
-        html = html.replace(/<\/body>/i,
-          '<script src="/static/js/tmr-public-awards.js?v=98453db0c574" defer><\/script></body>');
         clearTimeout(revealFailSafe);
         document.open();
         document.write(html);
