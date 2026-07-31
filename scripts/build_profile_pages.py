@@ -239,6 +239,82 @@ def fetch_metrics(un):
     except Exception:
         return None
 
+def fetch_awards(un):
+    """Fetch the member's public awards and remove any repeated API rows."""
+    try:
+        data = get(f"{API}/awards/user/{urllib.parse.quote(un)}")
+    except Exception:
+        return []
+    out, seen = [], set()
+    for award in data.get("awards", []) or []:
+        key = ("id", award.get("id")) if award.get("id") is not None else (
+            "fallback", award.get("title"), award.get("period_label"), award.get("awarded_at"))
+        if key not in seen:
+            seen.add(key)
+            out.append(award)
+    return out
+
+def award_period(award):
+    if award.get("period_label"):
+        return str(award["period_label"])
+    month, year = award.get("awarded_for_month"), award.get("awarded_for_year")
+    if month and year:
+        try:
+            return f"{MONTHS[int(month)]} {int(year)}"
+        except (TypeError, ValueError, IndexError):
+            pass
+    return "Special Recognition"
+
+def award_details(award):
+    meta = award.get("metadata") or {}
+    details = []
+    if meta.get("record"):
+        details.append(str(meta["record"]))
+    elif meta.get("wins") is not None or meta.get("losses") is not None:
+        rec = f"{int(num(meta.get('wins')))}-{int(num(meta.get('losses')))}"
+        if meta.get("pushes") is not None:
+            rec += f"-{int(num(meta.get('pushes')))}"
+        details.append(f"{rec} record")
+    if meta.get("graded") is not None:
+        details.append(f"Record: {int(num(meta['graded']))} graded picks")
+    if meta.get("net_units") is not None:
+        units = num(meta["net_units"])
+        details.append(f"{'+' if units > 0 else ''}{units:.2f} units")
+    if meta.get("roi_pct") is not None:
+        roi = num(meta["roi_pct"])
+        details.append(f"{'+' if roi > 0 else ''}{roi:.2f}% ROI")
+    if not details and award.get("description"):
+        details.append(str(award["description"]))
+    return details
+
+def award_badge():
+    return ('<span class="u-award-badge" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none">'
+            '<path d="M19 10h26v14c0 9-5.8 16-13 16S19 33 19 24V10Z" fill="url(#uAwardGold)"/>'
+            '<path d="M19 15H9c0 8 3.4 13 10.4 14.7M45 15h10c0 8-3.4 13-10.4 14.7M29 40h6v8h-6zM21 50h22l3 7H18l3-7Z" stroke="#ffe58a" stroke-width="3" stroke-linejoin="round"/>'
+            '<path d="M25 50h14" stroke="#fff6c2" stroke-width="2" stroke-linecap="round"/>'
+            '<defs><linearGradient id="uAwardGold" x1="32" y1="10" x2="32" y2="40" gradientUnits="userSpaceOnUse"><stop stop-color="#fff2a6"/><stop offset=".45" stop-color="#f6c453"/><stop offset="1" stop-color="#a96b12"/></linearGradient></defs>'
+            '</svg></span>')
+
+def awards_html(awards):
+    if not awards:
+        return ""
+    e = html.escape
+    cards = []
+    for award in awards:
+        stats = award_details(award)
+        stats_html = ('<div class="u-award-stats">' +
+                      ''.join(f'<span class="u-award-stat">{e(x)}</span>' for x in stats) +
+                      '</div>' if stats else '')
+        cards.append(
+            '<article class="u-award-card">' + award_badge() +
+            f'<div><div class="u-award-name">{e(award.get("title") or "TrustMyRecord Award")}</div>'
+            f'<div class="u-award-period">{e(award_period(award))}</div>{stats_html}</div></article>')
+    return ('<section class="u-awards" id="uAwards">'
+            '<div class="u-awards-head"><div><h2>Awards Received</h2>'
+            '<p class="u-awards-kicker">Performance awards and special recognition earned on TrustMyRecord.</p></div>'
+            f'<span class="u-awards-count">{len(cards)} {"award" if len(cards) == 1 else "awards"}</span></div>'
+            f'<div class="u-award-grid">{"".join(cards)}</div></section>')
+
 def amer_to_dec(o):
     o = num(o)
     if o > 0:
@@ -291,7 +367,7 @@ def derive(picks):
     graded_sorted = sorted(graded, key=lambda p: p.get("graded_at") or "", reverse=True)
     return graded_sorted[:5], avg_amer, sport_rows, len(graded)
 
-def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
+def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None, awards=None):
     e = html.escape
     un    = d["username"]
     disp  = d.get("display_name") or un
@@ -503,6 +579,19 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
 .u-cta{{display:inline-block;margin-top:14px;background:#ffd700;color:#1a1200;font-family:'Barlow',sans-serif;
   font-weight:800;padding:12px 22px;border-radius:11px;}}
 .u-links{{margin-top:14px;font-size:14px;}}
+.u-awards{{margin-top:26px;background:linear-gradient(145deg,rgba(17,24,39,.98),rgba(7,10,18,.98));border:1px solid rgba(255,215,0,.24);border-radius:16px;padding:20px;}}
+.u-awards-head{{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}}
+.u-awards h2{{margin:0;font-family:'Barlow',Inter,sans-serif;font-size:21px;}}
+.u-awards-kicker{{color:#aab6c9;font-size:12px;margin:4px 0 0;}}
+.u-awards-count{{color:#ffd86a;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}}
+.u-award-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}}
+.u-award-card{{display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center;min-height:92px;padding:13px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid rgba(255,215,0,.18);}}
+.u-award-badge{{display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 25%,rgba(255,244,180,.28),rgba(255,193,7,.06) 62%,transparent 63%);border:1px solid rgba(255,215,0,.35);}}
+.u-award-badge svg{{width:42px;height:42px;}}
+.u-award-name{{color:#f8fafc;font-weight:800;font-size:15px;line-height:1.25;}}
+.u-award-period{{color:#ffd86a;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-top:4px;}}
+.u-award-stats{{color:#b7c2d4;font-size:12px;line-height:1.5;margin-top:5px;}}
+.u-award-stat{{white-space:nowrap;}}.u-award-stat + .u-award-stat::before{{content:" · ";color:#68758b;}}
 @media(max-width:640px){{.u-stats{{grid-template-columns:repeat(2,1fr);}}.u-table{{font-size:12.5px;}}}}
 </style>
 </head>
@@ -521,6 +610,7 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
   <section class="u-stats" id="uStats">
     {stats_html}
   </section>
+  {awards_html(awards or [])}
   <div id="uDeep">
   {sport_html}
   {recent_html}
@@ -560,12 +650,13 @@ def page_html(d, recent, avg_amer, sport_rows, m=None, siblings=None):
 </main>
 <script>window.__TMR_PROFILE_USERNAME={json.dumps(un)};</script>
 <script src="/static/js/tmr-profile-hydrate.778e0c42d803.js" defer></script>
+<script src="/static/js/tmr-public-awards.js" defer></script>
 {DS_FOOT}
 </body>
 </html>
 """
 
-def compact_html(un):
+def compact_html(un, awards=None):
     """Compact profile for an existing /u page below GRADED_MIN. A REAL profile
     for visitors: the same headline/#uStats + #uDeep mounts that
     tmr-profile-hydrate.js fills live from the metrics aggregator, so clicking
@@ -630,6 +721,19 @@ def compact_html(un):
 .u-note{{color:#8890ad;font-size:12px;margin:8px 0 0;}}
 .u-scroll{{overflow-x:auto;}}
 .u-building{{background:#13131c;border:1px solid #262636;border-radius:12px;padding:14px 16px;color:#a9b0c8;line-height:1.55;font-size:13.5px;margin-top:18px;}}
+.u-awards{{margin-top:26px;background:linear-gradient(145deg,rgba(17,24,39,.98),rgba(7,10,18,.98));border:1px solid rgba(255,215,0,.24);border-radius:16px;padding:20px;}}
+.u-awards-head{{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;}}
+.u-awards h2{{margin:0;font-family:'Barlow',Inter,sans-serif;font-size:21px;}}
+.u-awards-kicker{{color:#aab6c9;font-size:12px;margin:4px 0 0;}}
+.u-awards-count{{color:#ffd86a;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;}}
+.u-award-grid{{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;}}
+.u-award-card{{display:grid;grid-template-columns:58px 1fr;gap:12px;align-items:center;min-height:92px;padding:13px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid rgba(255,215,0,.18);}}
+.u-award-badge{{display:grid;place-items:center;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 35% 25%,rgba(255,244,180,.28),rgba(255,193,7,.06) 62%,transparent 63%);border:1px solid rgba(255,215,0,.35);}}
+.u-award-badge svg{{width:42px;height:42px;}}
+.u-award-name{{color:#f8fafc;font-weight:800;font-size:15px;line-height:1.25;}}
+.u-award-period{{color:#ffd86a;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;margin-top:4px;}}
+.u-award-stats{{color:#b7c2d4;font-size:12px;line-height:1.5;margin-top:5px;}}
+.u-award-stat{{white-space:nowrap;}}.u-award-stat + .u-award-stat::before{{content:" · ";color:#68758b;}}
 @media(max-width:640px){{.u-stats{{grid-template-columns:repeat(2,1fr);}}.u-table{{font-size:12.5px;}}}}
 </style>
 </head>
@@ -646,6 +750,7 @@ def compact_html(un):
   <section class="u-stats" id="uStats">
     <div class="u-stat"><b>&mdash;</b><span>Loading record</span></div>
   </section>
+  {awards_html(awards or [])}
   <div id="uDeep"></div>
   <p class="u-building">Building a public record. Full SEO feature listing unlocks at {GRADED_MIN} graded picks;
   the live stats above update automatically as picks settle.</p>
@@ -666,6 +771,7 @@ def compact_html(un):
 </main>
 <script>window.__TMR_PROFILE_USERNAME={json.dumps(un)};</script>
 <script src="/static/js/tmr-profile-hydrate.778e0c42d803.js" defer></script>
+<script src="/static/js/tmr-public-awards.js" defer></script>
 {DS_FOOT}
 </body>
 </html>
@@ -759,15 +865,16 @@ def main():
         un = d["username"]
         recent, avg_amer, sport_rows, _ = derive(fetch_picks(un))
         m = fetch_metrics(un)
+        awards = fetch_awards(un)
         ddir = os.path.join(UDIR, un)
         os.makedirs(ddir, exist_ok=True)
         with open(os.path.join(ddir, "index.html"), "w", encoding="utf-8", newline="\n") as f:
             sibs = [x for x in sorted(elig_names) if x != un]
-            f.write(page_html(d, recent, avg_amer, sport_rows, m, siblings=sibs))
+            f.write(page_html(d, recent, avg_amer, sport_rows, m, siblings=sibs, awards=awards))
     for un in to_compact:
         os.makedirs(os.path.join(UDIR, un), exist_ok=True)
         with open(os.path.join(UDIR, un, "index.html"), "w", encoding="utf-8", newline="\n") as f:
-            f.write(compact_html(un))
+            f.write(compact_html(un, awards=fetch_awards(un)))
     print(f"wrote {len(eligible_pages)} full + {len(to_compact)} compact pages under {UDIR} (ALL index, follow)")
 
     regen_sitemap(sorted(elig_names))
