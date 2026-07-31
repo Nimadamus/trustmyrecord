@@ -1,6 +1,10 @@
 #!/usr/bin/env node
 // APPROVED HOMEPAGE BASELINE LOCK — owner-approved layout frozen 2026-07-30
 // (commit f5ac1ca7, re-applying 835b1fe3 + b727c7be after the 7fb28b22 clobber).
+// Updated 2026-07-31: hero converted to a viewport-driven flex column so the
+// stats stripe (.bridge) stays flush to the hero's bottom edge at every
+// desktop viewport height, not just the content height the old fixed
+// margin-top happened to produce.
 // Every rule below must exist byte-exact in index.html. If a change here is
 // intentional, it requires Nima's explicit approval FIRST; then update this
 // list in the same commit.
@@ -13,9 +17,25 @@ const page = fs.readFileSync(path.resolve(__dirname, '..', 'index.html'), 'utf8'
 
 const REQUIRED = [
   'APPROVED HOMEPAGE BASELINE',
-  // hero shell — padding-bottom MUST be 0 so the stats stripe sits flush on
-  // the hero's bottom edge with no dark band beneath it
-  '.hero{position:relative;overflow:hidden;padding:28px 0 0;background:',
+  // 113px = measured nav(70) + live-scores ticker(43) height, the real stack
+  // rendered above .hero (there is no static <nav> in this document -- see
+  // the runtime measurement script below). This is a no-JS/first-paint
+  // fallback only; the inline script overrides it with the actual rendered
+  // value once tmr-ds-nav.js has run.
+  '--header-height:113px;',
+  // hero shell is a flex column filling the viewport below the injected nav,
+  // so .bridge (margin-top:auto below) always lands flush on the hero's
+  // bottom edge regardless of viewport height or content height
+  '.hero{position:relative;overflow:hidden;padding:28px 0 0;display:flex;flex-direction:column;',
+  'min-height:calc(100vh - var(--header-height));',
+  'min-height:calc(100dvh - var(--header-height));',
+  'min-height:calc(100svh - var(--header-height));',
+  '.hero-in{position:relative;z-index:3;flex:1}',
+  // runtime correction: nav is injected by tmr-ds-nav.js at runtime, so the
+  // static 113px fallback above must be replaced with the actual measured
+  // value once nav+ticker have rendered
+  "var top = hero.getBoundingClientRect().top + window.scrollY;",
+  "document.documentElement.style.setProperty('--header-height', top + 'px');",
   '.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:72px;align-items:center}',
   ".hero h1.hh{color:#fff;font-family:'Barlow Condensed',Inter,sans-serif;font-size:64px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:18px 0 16px}",
   '.hero .cta{display:flex;align-items:center;gap:26px;margin-top:24px;flex-wrap:wrap}',
@@ -33,8 +53,10 @@ const REQUIRED = [
   '.sparkwrap .lb{display:flex;justify-content:space-between;font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}',
   '.spark{display:flex;align-items:flex-end;gap:4px;height:50px}',
   '.spot .ft{padding:15px 24px;',
-  // white stats stripe (bridge) — rounded corners + equal side margins via .wrap
-  '.bridge{position:relative;z-index:20;margin-top:44px}',
+  // white stats stripe (bridge) — pushed to the hero's bottom edge by
+  // margin-top:auto inside the flex column (NOT a fixed offset); rounded
+  // corners + equal side margins via .wrap
+  '.bridge{position:relative;z-index:20;margin-top:auto;flex-shrink:0}',
   '.bridge-in{background:var(--panel);border:1px solid #E3E8EF;border-radius:12px;',
   '<div class="wrap bridge"',
   '<div class="bridge-in"',
@@ -51,6 +73,8 @@ const FORBIDDEN = [
   ['grid-template-columns:minmax(0,1fr) 450px', 'rejected shrunk capper-card column'],
   ['grid-template-columns:minmax(0,1fr) 400px', 'rejected shrunk capper-card column (1400px band)'],
   ['gap:72px;align-items:start', 'rejected hero-grid align-start'],
+  ['margin-top:44px', 'old fixed-offset stripe positioning (content-height dependent, not viewport-flush)'],
+  ['position:fixed', 'stripe/hero must scroll naturally, never position:fixed'],
 ];
 
 for (const required of REQUIRED) {

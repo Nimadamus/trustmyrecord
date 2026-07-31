@@ -45,6 +45,7 @@
   --r:10px; --r-sm:7px;
   --sh:0 1px 1px rgba(7,24,42,.05), 0 2px 8px rgba(7,24,42,.05);
   --sh-up:0 1px 2px rgba(7,24,42,.07), 0 10px 30px rgba(7,24,42,.10);
+  --header-height:113px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);color:var(--ink);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
@@ -177,11 +178,15 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
    Enforced by tests/homepage-approved-baseline-lock-test.js (every push) and
    the homepage geometry checks in tests/regression-lock.spec.js.
    ============================================================================ */
-.hero{position:relative;overflow:hidden;padding:28px 0 0;background:
+.hero{position:relative;overflow:hidden;padding:28px 0 0;display:flex;flex-direction:column;
+  min-height:calc(100vh - var(--header-height));
+  min-height:calc(100dvh - var(--header-height));
+  min-height:calc(100svh - var(--header-height));
+  background:
   radial-gradient(62rem 28rem at 82% -6rem, rgba(34,210,192,.20), transparent 60%),
   linear-gradient(174deg,var(--navy) 0%, var(--navy-2) 62%, var(--navy-3) 100%)}
 .hero .grain{position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(110deg,rgba(255,255,255,.028) 0 1.5px,transparent 1.5px 24px)}
-.hero-in{position:relative;z-index:3}
+.hero-in{position:relative;z-index:3;flex:1}
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:72px;align-items:center}
 .eyebrow{display:inline-flex;align-items:center;gap:10px;padding:7px 16px;border-radius:999px;background:rgba(34,210,192,.12);border:1px solid rgba(34,210,192,.34);color:#8DEDE0;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .eyebrow .bl{width:7px;height:7px;border-radius:50%;background:var(--brand-lt)}
@@ -215,7 +220,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 .spot .ft{padding:15px 24px;border-top:1px solid var(--line);background:var(--panel-2);display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--muted);font-weight:600}
 
 /* ---------- BRIDGE (dark -> light connector) ---------- */
-.bridge{position:relative;z-index:20;margin-top:44px}
+.bridge{position:relative;z-index:20;margin-top:auto;flex-shrink:0}
 .bridge-in{background:var(--panel);border:1px solid #E3E8EF;border-radius:12px;box-shadow:0 1px 2px rgba(3,10,20,.16), 0 14px 34px rgba(3,10,20,.24);display:grid;grid-template-columns:repeat(4,1fr) auto;align-items:stretch;overflow:hidden}
 .bridge .s{padding:14px 22px;border-right:1px solid var(--line)}
 .bridge .s b{display:block;font-size:26px;font-weight:900;letter-spacing:-.04em;line-height:1.08}
@@ -664,6 +669,28 @@ footer a:hover{color:#fff}
      renders the signed-in .ds-nav-right cluster (same v2nav-* markup, coin
      balance + notif badge fetches) that this page used to duplicate for its
      bespoke .nav-right container, which no longer exists. -->
+<script>
+(function(){
+  // tmr-ds-nav.js (just above) injects the real nav at runtime -- there is no
+  // static <nav> in this document -- and the live-scores ticker above .hero
+  // grows once tmr-home-live.js replaces its loading placeholder with real
+  // game cards. --header-height defaults to a measured nav+ticker fallback
+  // (113px, see tmr-home-v2.css) for no-JS/first paint, but the actual space
+  // above .hero can change size after that, so keep it in sync with a
+  // ResizeObserver instead of measuring once and drifting stale.
+  var hero = document.querySelector('.hero');
+  if (!hero) return;
+  function measure(){
+    var top = hero.getBoundingClientRect().top + window.scrollY;
+    if (top > 0) document.documentElement.style.setProperty('--header-height', top + 'px');
+  }
+  measure();
+  if ('ResizeObserver' in window) {
+    var ro = new ResizeObserver(measure);
+    for (var el = hero.previousElementSibling; el; el = el.previousElementSibling) ro.observe(el);
+  }
+})();
+</script>
 <script src="/static/js/tmr-home-live.79e0897d5b03.js"></script>
 <!-- Alerts dropdown for the nav bell. Same engine every other page uses, so the
      bell shows the latest alerts in place instead of navigating away. These four

@@ -78,32 +78,53 @@ test.describe('critical route visual baselines', () => {
   }
 });
 
-// APPROVED HOMEPAGE BASELINE (owner-locked 2026-07-30, commit f5ac1ca7).
+// APPROVED HOMEPAGE BASELINE (owner-locked 2026-07-30, commit f5ac1ca7;
+// hero converted to a viewport-driven flex column 2026-07-31 so the stripe
+// stays flush to the viewport bottom at every desktop height, not just the
+// content height a fixed margin-top happened to produce).
 // Geometry, not screenshots: deterministic against live data changes. Fails
 // the deploy if the hero/stripe/card layout drifts at any common width.
 // Static-rule counterpart: tests/homepage-approved-baseline-lock-test.js.
 test.describe('homepage approved-baseline geometry', () => {
-  const WIDTHS = [1920, 1680, 1440, 1366, 1024, 768, 390];
+  // real desktop resolutions (not just widths) so the viewport-height-driven
+  // hero is actually exercised — a fixed test height would have hidden this
+  // exact regression class
+  const SIZES = [
+    { width: 1920, height: 1080 },
+    { width: 1680, height: 1050 },
+    { width: 1600, height: 900 },
+    { width: 1440, height: 900 },
+    { width: 1366, height: 768 },
+    { width: 1024, height: 768 },
+    { width: 768, height: 1024 },
+    { width: 390, height: 844 },
+  ];
 
-  for (const width of WIDTHS) {
-    test(`hero/stripe/card layout locked @ ${width}px`, async ({ page }, testInfo) => {
-      test.skip(testInfo.project.name === 'mobile', 'widths are set explicitly; run once per width on desktop project');
-      await page.setViewportSize({ width, height: 1000 });
+  for (const { width, height } of SIZES) {
+    test(`hero/stripe/card layout locked @ ${width}x${height}`, async ({ page }, testInfo) => {
+      test.skip(testInfo.project.name === 'mobile', 'sizes are set explicitly; run once per size on desktop project');
+      await page.setViewportSize({ width, height });
       await gotoRoute(page, '/');
       const m = await page.evaluate(() => {
         const hero = document.querySelector('.hero');
         const grid = document.querySelector('.hero-grid');
         const stripe = document.querySelector('.bridge .bridge-in');
+        const dash = document.querySelector('.dash');
         const card = document.querySelector('.spot');
         const nav = document.querySelector('nav') || document.querySelector('.ds-nav');
-        if (!hero || !grid || !stripe) return { missing: true };
+        if (!hero || !grid || !stripe || !dash) return { missing: true };
         const hr = hero.getBoundingClientRect();
         const sr = stripe.getBoundingClientRect();
+        const dr = dash.getBoundingClientRect();
         const vw = document.documentElement.clientWidth;
+        const vh = document.documentElement.clientHeight;
         return {
           heroPadding: getComputedStyle(hero).padding,
+          heroDisplay: getComputedStyle(hero).display,
           gridCols: getComputedStyle(grid).gridTemplateColumns,
           gapBelowStripe: hr.bottom - sr.bottom,
+          stripeBottomVsViewport: sr.bottom - vh,
+          dashTopVsViewport: dr.top - vh,
           stripeLeftMargin: sr.left,
           stripeRightMargin: vw - sr.right,
           stripeRadius: getComputedStyle(stripe).borderTopLeftRadius,
@@ -112,10 +133,16 @@ test.describe('homepage approved-baseline geometry', () => {
           navPresent: !!nav,
         };
       });
-      expect(m.missing, 'hero, hero-grid and stats stripe must all exist').toBeFalsy();
+      expect(m.missing, 'hero, hero-grid, stats stripe and next section must all exist').toBeFalsy();
+      expect(m.heroDisplay, 'hero must be a flex column so the stripe can be pushed to its bottom edge').toBe('flex');
       // stripe flush on the hero's bottom edge — zero dark gap beneath it
       expect(m.heroPadding, 'hero padding must stay 28px 0 0 (bottom 0 = stripe flush)').toBe('28px 0px 0px');
       expect(Math.abs(m.gapBelowStripe), 'stats stripe must sit flush on the hero bottom edge').toBeLessThanOrEqual(1);
+      // the actual user-facing requirement: stripe bottom flush with the
+      // *viewport* bottom on initial load, and "Happening Right Now" (.dash)
+      // must not be visible without scrolling
+      expect(Math.abs(m.stripeBottomVsViewport), `stats stripe bottom must align with the viewport bottom at ${width}x${height}`).toBeLessThanOrEqual(1);
+      expect(m.dashTopVsViewport, `"Happening Right Now" must not be visible in the initial viewport at ${width}x${height}`).toBeGreaterThanOrEqual(-1);
       // equal left/right margins, rounded corners
       expect(Math.abs(m.stripeLeftMargin - m.stripeRightMargin), 'stripe must be centered with equal side margins').toBeLessThanOrEqual(1);
       expect(m.stripeRadius, 'stripe rounded corners locked at 12px').toBe('12px');
