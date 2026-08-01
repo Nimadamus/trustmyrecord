@@ -3,1480 +3,458 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BetLegend Pro | TrustMyRecord</title>
+    <title>BetLegend Pro — Situational Betting Analysis on 130,000+ Graded Games | TrustMyRecord</title>
     <meta name="robots" content="index, follow">
-    <meta name="description" content="BetLegend Pro combines live sports data, advanced analytics, simulations, and AI-generated handicapping reports. First inquiry free, then 5 TMR Coin per completed report.">
+    <meta name="description" content="BetLegend Pro runs any matchup, market and situation against a dataset of 130,000+ graded games and returns a verdict with the sample size behind it. Monthly, annual and lifetime plans.">
     <link rel="canonical" href="https://trustmyrecord.com/betlegend-pro/">
+    <meta property="og:title" content="BetLegend Pro — Situational Betting Analysis">
+    <meta property="og:description" content="Run any matchup, market and situation against 130,000+ graded games. Get a verdict, the sample size behind it, and an honest read on whether there is an edge.">
+    <meta property="og:url" content="https://trustmyrecord.com/betlegend-pro/">
+    <meta property="og:type" content="product">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=20260801c">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=03cf1db63c84"></script>
-    <style>
-        :root {
-            --page-bg: #05080d;
-            --panel: #0d1420;
-            --panel-2: #131b28;
-            --panel-3: #1a2434;
-            --line: rgba(148, 163, 184, 0.13);
-            --line-strong: rgba(148, 163, 184, 0.26);
-            --text: #f7fafc;
-            --muted: #93a2b8;
-            --muted-2: #61708a;
-            --gold: #facc15;
-            --green: #22c55e;
-            --red: #f87171;
-            --teal: #2dd4bf;
-            --r-lg: 16px;
-            --r-md: 12px;
-            --r-sm: 9px;
-            --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.035) inset, 0 1px 2px rgba(0, 0, 0, 0.3), 0 16px 40px -20px rgba(0, 0, 0, 0.65);
-            --shadow-pop: 0 24px 60px -24px rgba(0, 0, 0, 0.7);
-            --ease: cubic-bezier(0.22, 1, 0.36, 1);
-        }
-        * { box-sizing: border-box; }
-        ::selection { background: rgba(45, 212, 191, 0.28); color: #fff; }
-        body {
-            margin: 0;
-            min-height: 100vh;
-            background:
-                radial-gradient(circle at 10% -8%, rgba(45, 212, 191, 0.13), transparent 34%),
-                radial-gradient(circle at 105% 0%, rgba(56, 189, 248, 0.07), transparent 42%),
-                linear-gradient(180deg, #081422 0%, var(--page-bg) 42%, #020307 100%);
-            color: var(--text);
-            font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            -webkit-font-smoothing: antialiased;
-        }
-        .blp-page { width: min(940px, calc(100% - 32px)); margin: 0 auto; padding: 96px 0 64px; }
-        .blp-head { margin-bottom: 26px; }
-        .blp-kicker { margin: 0 0 12px; display: flex; align-items: center; gap: 8px; color: var(--teal); font-size: 11.5px; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; }
-        .blp-kicker::before { content: ''; width: 16px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, var(--teal), transparent); }
-        h1 {
-            margin: 0; font-family: Barlow, Inter, sans-serif; font-size: clamp(32px, 4.5vw, 50px); line-height: 0.98; letter-spacing: -0.01em;
-            background: linear-gradient(180deg, #ffffff, #cbd6e6); -webkit-background-clip: text; background-clip: text; color: transparent;
-        }
-        .blp-subtitle { margin: 14px 0 0; max-width: 700px; color: var(--muted); font-size: 14.5px; line-height: 1.6; }
-        .blp-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
-        .btn {
-            display: inline-flex; align-items: center; justify-content: center; min-height: 42px; padding: 0 16px;
-            border-radius: var(--r-sm); border: 1px solid var(--line-strong); color: #e2e9f3; background: rgba(255, 255, 255, 0.03);
-            text-decoration: none; font-weight: 700; font-size: 13px; cursor: pointer;
-            transition: transform 0.15s var(--ease), border-color 0.15s var(--ease), background 0.15s var(--ease), box-shadow 0.15s var(--ease);
-        }
-        .btn:hover { border-color: rgba(45, 212, 191, 0.45); background: rgba(45, 212, 191, 0.07); transform: translateY(-1px); }
-        .btn:active { transform: translateY(0); }
-        .btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.28); }
-        .btn.primary { border-color: transparent; color: #052018; background: linear-gradient(135deg, #2dd4bf, #38bdf8); font-weight: 800; box-shadow: 0 10px 26px -10px rgba(45, 212, 191, 0.5); }
-        .btn.primary:hover:not(:disabled) { box-shadow: 0 14px 32px -10px rgba(45, 212, 191, 0.65); transform: translateY(-1px); filter: brightness(1.05); }
-        .btn.primary:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; transform: none; }
-        .btn.ghost { background: transparent; border-color: var(--line); color: var(--muted); font-weight: 700; }
-        .btn.ghost:hover { color: var(--text); border-color: var(--line-strong); background: rgba(255, 255, 255, 0.03); }
-        .btn.small { min-height: 34px; padding: 0 12px; font-size: 12px; }
-        .pricing-card {
-            padding: 20px 24px; border: 1px solid rgba(250, 204, 21, 0.22); border-radius: var(--r-md);
-            background: linear-gradient(135deg, rgba(250, 204, 21, 0.09), rgba(250, 204, 21, 0.02));
-            margin: 22px 0 24px; display: flex; flex-wrap: wrap; gap: 18px; align-items: center; justify-content: space-between;
-            box-shadow: var(--shadow-card);
-        }
-        .pricing-rules { display: flex; flex-wrap: wrap; gap: 10px 24px; font-size: 13px; color: #fde68a; }
-        .pricing-rules strong { color: #fff; font-weight: 800; }
-        .balance-chip { padding: 9px 16px; border-radius: 999px; background: rgba(5, 8, 13, 0.65); border: 1px solid var(--line-strong); font-size: 13px; color: var(--muted); white-space: nowrap; }
-        .balance-chip strong { color: var(--gold); font-size: 15.5px; font-weight: 800; }
-        .frozen-banner, .ineligible-banner { margin: 0 0 18px; padding: 14px 16px; border: 1px solid rgba(248, 113, 113, 0.35); background: rgba(248, 113, 113, 0.08); border-radius: var(--r-md); color: #fecaca; font-size: 14px; font-weight: 700; }
-        .frozen-banner[hidden], .ineligible-banner[hidden] { display: none; }
-
-        .tabs { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-        .tab-btn {
-            padding: 11px 18px; border: none; background: transparent; color: var(--muted-2); font-weight: 700; font-size: 13px; cursor: pointer;
-            border-bottom: 2px solid transparent; margin-bottom: -1px; border-radius: 8px 8px 0 0;
-            transition: color 0.15s var(--ease), background 0.15s var(--ease);
-        }
-        .tab-btn:hover { color: var(--muted); background: rgba(255, 255, 255, 0.025); }
-        .tab-btn.active { color: var(--text); border-bottom-color: var(--teal); background: rgba(45, 212, 191, 0.06); }
-        .tab-panel { display: none; }
-        .tab-panel.active { display: block; animation: blpFadeIn 0.2s var(--ease); }
-        @keyframes blpFadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-
-        .form-card { padding: 26px 28px; border: 1px solid var(--line); border-radius: var(--r-lg); background: linear-gradient(180deg, var(--panel), #0a0f18); margin-bottom: 22px; box-shadow: var(--shadow-card); }
-        .form-card h2 { margin: 0 0 8px; font-family: Barlow, Inter, sans-serif; font-size: 21px; letter-spacing: -0.01em; }
-        .form-card .desc { margin: 0 0 20px; color: var(--muted); font-size: 13px; line-height: 1.6; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-        .form-field { display: flex; flex-direction: column; gap: 7px; }
-        .form-field.full { grid-column: 1 / -1; }
-        .form-field label { font-size: 11.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-        .form-field label .opt { text-transform: none; font-weight: 500; letter-spacing: 0; color: var(--muted-2); }
-        .form-field select, .form-field input, .form-field textarea {
-            padding: 0 14px; border-radius: var(--r-sm); border: 1px solid var(--line);
-            background: var(--panel-2); color: var(--text); font-size: 14px; font-family: inherit;
-            transition: border-color 0.15s var(--ease), box-shadow 0.15s var(--ease), background 0.15s var(--ease);
-        }
-        .form-field select:hover, .form-field input:hover, .form-field textarea:hover { border-color: var(--line-strong); }
-        .form-field select:focus-visible, .form-field input:focus-visible, .form-field textarea:focus-visible {
-            outline: none; border-color: rgba(45, 212, 191, 0.55); box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.14); background: var(--panel-3);
-        }
-        .form-field select {
-            height: 44px; appearance: none; -webkit-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%2393a2b8' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 14px center; padding-right: 34px;
-        }
-        .form-field select:disabled { opacity: 0.5; cursor: not-allowed; }
-        .form-field input { height: 44px; }
-        .form-field input::placeholder, .form-field textarea::placeholder { color: var(--muted-2); }
-        .form-field textarea { padding: 13px 14px; min-height: 88px; resize: vertical; line-height: 1.55; }
-        .form-note { margin: 0 0 18px; color: var(--muted-2); font-size: 12.5px; }
-        .submit-error { margin: 0 0 16px; padding: 13px 15px; border-radius: var(--r-md); border: 1px solid rgba(248, 113, 113, 0.35); background: rgba(248, 113, 113, 0.08); color: #fecaca; font-size: 13.5px; line-height: 1.55; }
-        .submit-error[hidden] { display: none; }
-        .submit-error a { color: #fecaca; text-decoration: underline; }
-        .clarify-note { margin: 0 0 16px; padding: 13px 15px; border-radius: var(--r-md); border: 1px solid rgba(45, 212, 191, 0.3); background: rgba(45, 212, 191, 0.07); color: #cffafe; font-size: 13.5px; line-height: 1.55; }
-        .clarify-note[hidden] { display: none; }
-
-        .result-card { padding: 26px 28px; border: 1px solid rgba(45, 212, 191, 0.25); border-radius: var(--r-lg); background: linear-gradient(165deg, rgba(12, 30, 32, 0.85), rgba(5, 9, 16, 0.98)); box-shadow: var(--shadow-pop); }
-        .result-card[hidden] { display: none; }
-        .result-billing { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
-        .billing-pill { padding: 6px 13px; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; }
-        .billing-pill.free { background: rgba(34, 197, 94, 0.16); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.4); }
-        .billing-pill.charged { background: rgba(250, 204, 21, 0.16); color: #fde68a; border: 1px solid rgba(250, 204, 21, 0.4); }
-        .billing-pill.not-charged { background: rgba(148, 163, 184, 0.14); color: var(--muted); border: 1px solid var(--line); }
-        .result-balances { color: var(--muted); font-size: 13px; }
-        .result-title { margin: 0 0 6px; font-family: Barlow, Inter, sans-serif; font-size: 23px; letter-spacing: -0.01em; }
-        .result-meta { margin: 0 0 18px; color: var(--muted); font-size: 13px; }
-        .result-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 14px; }
-        .stat-box { padding: 14px 12px; border-radius: var(--r-md); background: rgba(19, 27, 40, 0.6); border: 1px solid var(--line); text-align: center; transition: border-color 0.15s var(--ease), transform 0.15s var(--ease); }
-        .stat-box:hover { border-color: var(--line-strong); transform: translateY(-1px); }
-        .stat-box .v { font-family: Barlow, Inter, sans-serif; font-size: 23px; color: #99f6e4; letter-spacing: -0.01em; }
-        .stat-box .l { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 5px; }
-        .receipt-link { margin-top: 16px; font-size: 12.5px; color: var(--muted); }
-        .receipt-link a { color: #99f6e4; }
-
-        .report-sections { display: flex; flex-direction: column; gap: 14px; margin-top: 6px; }
-        .report-section { padding: 15px 17px; border-radius: var(--r-md); background: rgba(19, 27, 40, 0.5); border: 1px solid var(--line); }
-        .report-section h3 { margin: 0 0 7px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--teal); }
-        .report-section p { margin: 0; font-size: 14px; line-height: 1.6; color: #e7ecf3; }
-        .report-section p.unavailable { color: var(--muted-2); font-style: italic; }
-        .report-section.recommendation { border-color: rgba(250, 204, 21, 0.32); background: rgba(250, 204, 21, 0.055); }
-        .confidence-row { display: flex; align-items: center; gap: 12px; margin: 10px 0; }
-        .confidence-badge { padding: 6px 14px; border-radius: 999px; font-weight: 800; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
-        .confidence-badge.low { background: rgba(148, 163, 184, 0.14); color: var(--muted); }
-        .confidence-badge.moderate { background: rgba(250, 204, 21, 0.16); color: #fde68a; }
-        .confidence-badge.high { background: rgba(34, 197, 94, 0.16); color: #86efac; }
-        .risk-list { margin: 8px 0 0; padding-left: 18px; color: #e7ecf3; font-size: 13.5px; line-height: 1.6; }
-        .sources-line { margin-top: 12px; font-size: 12px; color: var(--muted-2); }
-        .timing-line { margin-top: 6px; font-size: 11px; color: #445064; }
-
-        /* ---- Matchup Analyzer specifics ---- */
-        .team-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: end; margin-bottom: 16px; }
-        .team-swap-btn {
-            min-height: 44px; min-width: 44px; padding: 0 10px; border-radius: 999px; border: 1px solid var(--line-strong);
-            background: var(--panel-2); color: var(--muted); cursor: pointer; font-weight: 800; font-size: 15px;
-            transition: transform 0.25s var(--ease), color 0.15s var(--ease), border-color 0.15s var(--ease);
-        }
-        .team-swap-btn:hover { color: var(--teal); border-color: rgba(45, 212, 191, 0.45); transform: rotate(180deg); }
-        .market-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-        .market-chip {
-            padding: 10px 16px; border-radius: var(--r-sm); border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02);
-            color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer;
-            transition: border-color 0.15s var(--ease), background 0.15s var(--ease), color 0.15s var(--ease), box-shadow 0.15s var(--ease), transform 0.15s var(--ease);
-        }
-        .market-chip:hover { border-color: var(--line-strong); color: var(--text); }
-        .market-chip.active { border-color: transparent; color: #052018; background: linear-gradient(135deg, #2dd4bf, #38bdf8); font-weight: 800; box-shadow: 0 8px 20px -8px rgba(45, 212, 191, 0.55); }
-        /* Up to 3 fields can be visible at once (Betting On + total/team-total value + optional
-           odds) -- auto-fit instead of the shared .form-row's fixed 1fr/1fr so a 3rd field doesn't
-           orphan onto its own half-empty row. */
-        #matchupSelectionRow { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
-        #matchupSelectionRow .form-field[hidden] { display: none; }
-        @media (max-width: 640px) {
-            #matchupSelectionRow { grid-template-columns: 1fr; }
-        }
-        .filter-chip-grid { display: flex; flex-wrap: wrap; gap: 7px; }
-        .filter-chip {
-            padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line); background: rgba(255, 255, 255, 0.02);
-            color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer;
-            transition: border-color 0.15s var(--ease), background 0.15s var(--ease), color 0.15s var(--ease), transform 0.1s var(--ease);
-        }
-        .filter-chip:hover:not(:disabled) { border-color: var(--line-strong); color: var(--text); }
-        .filter-chip.active { border-color: transparent; color: #052018; background: linear-gradient(135deg, #2dd4bf, #5eead4); font-weight: 700; }
-        .filter-chip.active::before { content: '✓ '; }
-        .filter-chip:disabled { opacity: 0.35; cursor: not-allowed; }
-        .clear-filters-btn {
-            margin-left: 10px; padding: 3px 11px; border-radius: 999px; border: 1px solid var(--line-strong); background: transparent;
-            color: var(--teal); font-size: 11px; font-weight: 700; text-transform: none; letter-spacing: 0; cursor: pointer; vertical-align: middle;
-            transition: background 0.15s var(--ease), border-color 0.15s var(--ease);
-        }
-        .clear-filters-btn:hover { background: rgba(45, 212, 191, 0.1); border-color: rgba(45, 212, 191, 0.45); }
-        .clear-filters-btn[hidden] { display: none; }
-        .situational-summary { margin-top: 12px; padding: 12px 14px; border-radius: var(--r-md); background: rgba(19, 27, 40, 0.55); border: 1px solid var(--line); font-size: 12.5px; color: #cbd5e1; }
-        .situational-summary .row { display: flex; justify-content: space-between; gap: 10px; padding: 3px 0; }
-        .situational-summary .ignored { color: #fda4af; margin-top: 7px; }
-        .assessment-card {
-            display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; padding: 18px 20px;
-            border-radius: var(--r-md); border: 1px solid var(--line); border-left: 4px solid var(--line-strong);
-            background: rgba(19, 27, 40, 0.55); margin-bottom: 18px; transition: border-left-color 0.2s var(--ease);
-        }
-        .assessment-card:has(.assessment-label.supports), .assessment-card:has(.assessment-label.slightly-supports) { border-left-color: var(--green); }
-        .assessment-card:has(.assessment-label.opposes), .assessment-card:has(.assessment-label.slightly-opposes) { border-left-color: var(--red); }
-        .assessment-label { font-family: Barlow, Inter, sans-serif; font-size: 23px; font-weight: 800; letter-spacing: -0.01em; }
-        .assessment-label.supports, .assessment-label.slightly-supports { color: var(--green); }
-        .assessment-label.opposes, .assessment-label.slightly-opposes { color: var(--red); }
-        .assessment-label.inconclusive { color: var(--muted); }
-        .assessment-basis { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); }
-        .team-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-        .team-card { padding: 15px 17px; border-radius: var(--r-md); background: rgba(19, 27, 40, 0.5); border: 1px solid var(--line); transition: border-color 0.15s var(--ease); }
-        .team-card:hover { border-color: var(--line-strong); }
-        .team-card h4 { margin: 0 0 9px; font-size: 14px; font-weight: 800; }
-        .team-card .row { display: flex; justify-content: space-between; font-size: 12.5px; color: #cbd5e1; padding: 4px 0; }
-        .team-card .row span:last-child { color: #99f6e4; font-weight: 700; }
-        @media (max-width: 640px) {
-            .team-row { grid-template-columns: 1fr; }
-            .team-swap-btn { justify-self: center; }
-            .team-cards { grid-template-columns: 1fr; }
-        }
-
-        .history-list { display: flex; flex-direction: column; gap: 8px; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 15px; border-radius: var(--r-md); background: var(--panel-2); border: 1px solid var(--line); transition: border-color 0.15s var(--ease); }
-        .history-item:hover { border-color: var(--line-strong); }
-        .history-item .h-main { min-width: 0; }
-        .history-item .h-title { font-size: 13.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .history-item .h-meta { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
-        .history-empty { color: var(--muted); font-size: 13px; padding: 8px 2px; }
-
-        .auth-state { padding: 48px 24px; text-align: center; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--panel); box-shadow: var(--shadow-card); }
-        .auth-state[hidden] { display: none; }
-        .loading-line { color: var(--teal); font-size: 13px; font-weight: 700; margin: 0 0 14px; display: flex; align-items: center; gap: 9px; }
-        .loading-line[hidden] { display: none; }
-        .spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(45, 212, 191, 0.25); border-top-color: var(--teal); animation: spin 0.8s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @media (max-width: 640px) {
-            .form-row { grid-template-columns: 1fr; }
-            .pricing-card { flex-direction: column; align-items: flex-start; }
-            .tabs { gap: 2px; }
-            .tab-btn { padding: 9px 10px; font-size: 12px; }
-        }
-    </style>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "BetLegend Pro",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "url": "https://trustmyrecord.com/betlegend-pro/",
+      "description": "Situational betting analysis against a dataset of graded games: matchup reports, plain-English handicapping reports, bankroll simulation and team trend search.",
+      "offers": [
+        { "@type": "Offer", "name": "Monthly", "price": "19.00", "priceCurrency": "USD" },
+        { "@type": "Offer", "name": "Annual", "price": "149.00", "priceCurrency": "USD" },
+        { "@type": "Offer", "name": "Lifetime", "price": "349.00", "priceCurrency": "USD" }
+      ]
+    }
+    </script>
 </head>
 <body class="tmr-site-shell" data-tmr-route="betlegend-pro">
-    <main class="blp-page">
-        <header class="blp-head">
-            <p class="blp-kicker">BetLegend Pro</p>
-            <h1>BetLegend Pro</h1>
-            <p class="blp-subtitle">BetLegend Pro combines live sports data, advanced analytics, simulations, and AI-generated handicapping reports.</p>
-            <nav class="blp-actions" aria-label="BetLegend Pro actions">
-                <a class="btn" href="/tools/">Back to Tools</a>
-                <a class="btn" href="/wallet/">Wallet</a>
-                <a class="btn" href="/how-tmr-coin-works/">How to Earn TMR Coin</a>
-            </nav>
-        </header>
+<main class="blp blp-shell">
 
-        <section id="authState" class="auth-state" hidden>
-            <h2 id="authHeading">Log in to use BetLegend Pro</h2>
-            <p id="authMessage">This tool is private to your account.</p>
-            <a id="authLoginBtn" class="btn" href="/login/?next=/betlegend-pro/">Log In</a>
-        </section>
+    <!-- Post-checkout banners. Rendered by script only when Stripe redirects
+         back — the redirect itself is never treated as proof of payment; the
+         entitlement is read from the API. -->
+    <div id="purchaseBanner"></div>
 
-        <div id="mainContent" hidden>
-            <div class="pricing-card">
-                <div class="pricing-rules">
-                    <span><strong>First successful inquiry:</strong> Free</span>
-                    <span><strong>Every inquiry after that:</strong> 5 TMR Coin</span>
-                    <span>Only charged when a real, complete result is returned.</span>
-                </div>
-                <div class="balance-chip"><img src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true" style="width:1em;height:1em;vertical-align:-0.15em;margin-right:0.3em;">Balance: <strong id="balanceValue">&mdash;</strong> TMR Coin</div>
-            </div>
-
-            <div id="frozenBanner" class="frozen-banner" hidden>Your TMR Coin wallet is frozen. Contact support to resolve this before submitting a paid inquiry.</div>
-            <div id="ineligibleBanner" class="ineligible-banner" hidden>This account is not eligible to submit a BetLegend Pro inquiry.</div>
-
-            <div class="tabs" role="tablist">
-                <button class="tab-btn active" data-tab="matchup" type="button">Matchup Analyzer</button>
-                <button class="tab-btn" data-tab="report" type="button">AI Handicapping Report</button>
-                <button class="tab-btn" data-tab="simulation" type="button">Monte Carlo Simulator</button>
-                <button class="tab-btn" data-tab="quick" type="button">Single-Team Trend Search</button>
-                <button class="tab-btn" data-tab="history" type="button">Saved Reports</button>
-            </div>
-
-            <!-- ==================== MATCHUP ANALYZER (primary) ==================== -->
-            <section class="tab-panel active" id="panel-matchup">
-                <form class="form-card" id="matchupForm">
-                    <h2>BetLegend Matchup Analyzer</h2>
-                    <p class="desc">Two teams, a specific market and line, real database figures — a full report on whether the wager is supported. Grounded only in what's actually in the historical dataset (MLB, NBA, NFL, NHL); no first-half/quarter/first-five-inning or NRFI/YRFI markets and no soccer, because no historical data exists for them here.</p>
-
-                    <div class="form-field" style="max-width:220px;margin-bottom:14px;">
-                        <label for="matchupSport">Sport</label>
-                        <select id="matchupSport" required>
-                            <option value="NBA">NBA</option>
-                            <option value="NFL">NFL</option>
-                            <option value="MLB">MLB</option>
-                            <option value="NHL">NHL</option>
-                        </select>
-                    </div>
-
-                    <div class="team-row">
-                        <div class="form-field">
-                            <label for="matchupAway">Away Team</label>
-                            <select id="matchupAway" required disabled><option value="">Loading teams…</option></select>
-                        </div>
-                        <button class="team-swap-btn" id="matchupSwapBtn" type="button" title="Swap teams">⇄</button>
-                        <div class="form-field">
-                            <label for="matchupHome">Home Team</label>
-                            <select id="matchupHome" required disabled><option value="">Loading teams…</option></select>
-                        </div>
-                    </div>
-
-                    <div class="form-field full" style="margin-bottom:14px;">
-                        <label>Market</label>
-                        <div class="market-grid" id="matchupMarketGrid">
-                            <button class="market-chip active" data-market="spread" type="button">Spread</button>
-                            <button class="market-chip" data-market="moneyline" type="button">Moneyline</button>
-                            <button class="market-chip" data-market="total" type="button">Game Total</button>
-                            <button class="market-chip" data-market="team_total_home" type="button">Home Team Total</button>
-                            <button class="market-chip" data-market="team_total_away" type="button">Away Team Total</button>
-                        </div>
-                    </div>
-
-                    <div class="form-row" id="matchupSelectionRow">
-                        <div class="form-field">
-                            <label for="matchupSelection">Betting On</label>
-                            <select id="matchupSelection"></select>
-                        </div>
-                        <div class="form-field" id="matchupLineField">
-                            <label id="matchupLineLabel" for="matchupLine">Spread</label>
-                            <input id="matchupLine" type="number" step="0.5" inputmode="decimal" placeholder="e.g. +6.5 or -6.5">
-                        </div>
-                        <div class="form-field" id="matchupOddsField">
-                            <label id="matchupOddsLabel" for="matchupOdds">Odds</label>
-                            <input id="matchupOdds" type="number" step="1" inputmode="numeric" placeholder="e.g. -120 or +135">
-                        </div>
-                    </div>
-
-                    <div class="form-field full" style="margin-bottom:14px;">
-                        <label>Situational filters <span class="opt">(applied to both teams, optional)</span>
-                            <button class="clear-filters-btn" id="matchupClearFiltersBtn" type="button" hidden>Clear Filters</button>
-                        </label>
-                        <!-- rest_advantage omitted entirely (not just disabled): matchup.py declines it
-                             server-side via an unbounded per-opponent full-dataset scan, reproduced live
-                             taking 90+s and crashing the free-tier service for a two-team MLB request --
-                             not safe to expose even as a disabled/explained button. Still available in
-                             the Single-Team Trend Search tab, unchanged.
-                             after_loss/after_win/three_game_win_streak/three_game_losing_streak ARE shown
-                             (disabled, with a tooltip) rather than omitted: matchup.py's basic query path
-                             can't evaluate sequence/streak logic at all (see _apply_situation_chain), so
-                             they're always declined -- disabling them here instead of leaving live-looking
-                             buttons that submit successfully but silently change nothing. -->
-                        <div class="filter-chip-grid" id="matchupFilterGrid">
-                            <button class="filter-chip" data-situation="home" type="button">Home Games</button>
-                            <button class="filter-chip" data-situation="away" type="button">Away Games</button>
-                            <button class="filter-chip" data-situation="home_favorite" type="button">Home Favorite</button>
-                            <button class="filter-chip" data-situation="road_underdog" type="button">Road Underdog</button>
-                            <button class="filter-chip" data-situation="as_favorite" type="button">As Favorite</button>
-                            <button class="filter-chip" data-situation="as_underdog" type="button">As Underdog</button>
-                            <button class="filter-chip" data-situation="after_loss" type="button" disabled title="Not available in the Matchup Analyzer: sequence/streak filters can't be evaluated by this report's query path.">After Loss</button>
-                            <button class="filter-chip" data-situation="after_win" type="button" disabled title="Not available in the Matchup Analyzer: sequence/streak filters can't be evaluated by this report's query path.">After Win</button>
-                            <button class="filter-chip" data-situation="three_game_win_streak" type="button" disabled title="Not available in the Matchup Analyzer: sequence/streak filters can't be evaluated by this report's query path.">3+ Game Winning Streak</button>
-                            <button class="filter-chip" data-situation="three_game_losing_streak" type="button" disabled title="Not available in the Matchup Analyzer: sequence/streak filters can't be evaluated by this report's query path.">3+ Game Losing Streak</button>
-                            <button class="filter-chip" data-situation="division_rival" type="button">Division Rivalry</button>
-                            <button class="filter-chip" data-situation="conference" type="button">Conference Games</button>
-                            <button class="filter-chip" data-situation="large_spread" type="button">Large Spread (7+)</button>
-                            <button class="filter-chip" data-situation="close_spread" type="button">Close Spread</button>
-                        </div>
-                    </div>
-
-                    <div class="form-field" style="max-width:220px;margin-bottom:14px;">
-                        <label for="matchupSampleSize">Recent-form sample size</label>
-                        <select id="matchupSampleSize">
-                            <option value="10">Last 10</option>
-                            <option value="20" selected>Last 20</option>
-                            <option value="30">Last 30</option>
-                            <option value="50">Last 50</option>
-                        </select>
-                    </div>
-
-                    <p class="form-note">Submitting only bills TMR Coin if a complete, real assessment is returned. A failed, timed-out, or unsupported request always costs 0.</p>
-                    <div id="matchupError" class="submit-error" hidden></div>
-                    <button class="btn primary" id="matchupSubmitBtn" type="submit" disabled>Analyze Matchup &mdash; <span class="report-cost">5 TMR Coin</span></button>
-                </form>
-
-                <p id="matchupLoading" class="loading-line" hidden><span class="spin"></span> Pulling matchup and situational history, running the assessment, writing the report — this takes 15&ndash;40 seconds…</p>
-
-                <section class="result-card" id="matchupResult" hidden>
-                    <div class="result-billing">
-                        <span class="billing-pill" id="matchupBillingPill"></span>
-                        <span class="result-balances" id="matchupBalances"></span>
-                    </div>
-                    <h2 class="result-title" id="matchupTitle"></h2>
-                    <p class="result-meta" id="matchupMeta"></p>
-
-                    <div class="assessment-card">
-                        <div>
-                            <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);">Overall Assessment</p>
-                            <p class="assessment-label" id="matchupAssessmentLabel"></p>
-                        </div>
-                        <div>
-                            <p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);text-align:right;">Confidence</p>
-                            <span class="confidence-badge" id="matchupConfidenceBadge"></span>
-                        </div>
-                    </div>
-                    <p class="assessment-basis" id="matchupAssessmentBasis"></p>
-
-                    <div class="team-cards" id="matchupTeamCards"></div>
-
-                    <div class="report-sections" id="matchupSections"></div>
-                    <p class="timing-line" id="matchupNotAvailableNote"></p>
-                    <p class="receipt-link" id="matchupReceipt"></p>
-                </section>
-            </section>
-
-            <!-- ==================== AI HANDICAPPING REPORT ==================== -->
-            <section class="tab-panel" id="panel-report">
-                <form class="form-card" id="reportForm">
-                    <h2>AI Handicapping Report</h2>
-                    <p class="desc">Ask one question in plain English — a matchup, a team situation, today's best bet, or a parlay. BetLegend Pro returns a full report: matchup overview, situational splits with real sample sizes, odds when a provider has a current line, a bet-or-pass recommendation, a confidence score, and risk factors. Sections with no real data in this dataset are labeled "Not available" rather than guessed.</p>
-                    <div class="form-field full" style="margin-bottom:14px;">
-                        <label for="reportQuery">Your question</label>
-                        <textarea id="reportQuery" name="query" maxlength="500" placeholder="e.g. Dodgers vs Padres tonight -- or -- Are the Celtics profitable as home favorites? -- or -- Best MLB bet today" required></textarea>
-                    </div>
-                    <p class="form-note">Submitting only bills TMR Coin if a complete report is generated. A clarification response, a timeout, or a failed request always costs 0.</p>
-                    <div id="reportError" class="submit-error" hidden></div>
-                    <div id="reportClarify" class="clarify-note" hidden></div>
-                    <button class="btn primary" id="reportSubmitBtn" type="submit">Submit &mdash; <span class="report-cost">5 TMR Coin</span></button>
-                </form>
-
-                <p id="reportLoading" class="loading-line" hidden><span class="spin"></span> Gathering historical data and generating your report — this takes 20&ndash;40 seconds…</p>
-
-                <section class="result-card" id="reportResult" hidden>
-                    <div class="result-billing">
-                        <span class="billing-pill" id="reportBillingPill"></span>
-                        <span class="result-balances" id="reportBalances"></span>
-                    </div>
-                    <h2 class="result-title" id="reportTitle"></h2>
-                    <p class="result-meta" id="reportMeta"></p>
-                    <div class="report-sections" id="reportSections"></div>
-                    <p class="sources-line" id="reportSources"></p>
-                    <p class="timing-line" id="reportTiming"></p>
-                    <p class="receipt-link" id="reportReceipt"></p>
-                </section>
-            </section>
-
-            <!-- ==================== MONTE CARLO SIMULATOR ==================== -->
-            <section class="tab-panel" id="panel-simulation">
-                <form class="form-card" id="simForm">
-                    <h2>Monte Carlo Bankroll Simulator</h2>
-                    <p class="desc">Scenario analysis, not a matchup prediction. Enter your own win-probability assumption and the odds you're getting, and BetLegend Pro runs thousands of simulated bet sequences to show the range of bankroll outcomes -- bust rate, drawdown, and profit probability. It does not validate your probability input.</p>
-                    <div class="form-row">
-                        <div class="form-field">
-                            <label for="simWinProb">Win probability (%)</label>
-                            <input id="simWinProb" type="number" min="1" max="99" step="1" value="55" required>
-                        </div>
-                        <div class="form-field">
-                            <label for="simOdds">American odds</label>
-                            <input id="simOdds" type="number" step="1" value="-110" required>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-field">
-                            <label for="simBankroll">Starting bankroll <span class="opt">(optional)</span></label>
-                            <input id="simBankroll" type="number" min="1" step="1" value="10000">
-                        </div>
-                        <div class="form-field">
-                            <label for="simStrategy">Staking strategy</label>
-                            <select id="simStrategy">
-                                <option value="flat">Flat (2% per bet)</option>
-                                <option value="kelly">Full Kelly</option>
-                                <option value="half_kelly">Half Kelly</option>
-                            </select>
-                        </div>
-                    </div>
-                    <p class="form-note">Submitting only bills TMR Coin if the simulation completes successfully. Invalid odds/probability are rejected before anything is charged.</p>
-                    <div id="simError" class="submit-error" hidden></div>
-                    <button class="btn primary" id="simSubmitBtn" type="submit">Run Simulation &mdash; <span class="report-cost">5 TMR Coin</span></button>
-                </form>
-
-                <p id="simLoading" class="loading-line" hidden><span class="spin"></span> Running simulations…</p>
-
-                <section class="result-card" id="simResult" hidden>
-                    <div class="result-billing">
-                        <span class="billing-pill" id="simBillingPill"></span>
-                        <span class="result-balances" id="simBalances"></span>
-                    </div>
-                    <h2 class="result-title" id="simTitle">Simulation Results</h2>
-                    <p class="result-meta" id="simMeta"></p>
-                    <div class="result-stats" id="simStats"></div>
-                    <p class="receipt-link" id="simReceipt"></p>
-                </section>
-            </section>
-
-            <!-- ==================== QUICK TREND QUERY (legacy tool, kept) ==================== -->
-            <section class="tab-panel" id="panel-quick">
-                <form class="form-card" id="inquiryForm">
-                    <h2>Quick Trend Query</h2>
-                    <p class="desc">Pick a team and a single filter for a fast situational record -- no AI synthesis, just the raw split.</p>
-                    <div class="form-row">
-                        <div class="form-field">
-                            <label for="sportSelect">Sport</label>
-                            <select id="sportSelect" name="sport" required>
-                                <option value="NBA">NBA</option>
-                                <option value="NFL">NFL</option>
-                                <option value="MLB">MLB</option>
-                                <option value="NHL">NHL</option>
-                                <option value="NCAAF">NCAAF</option>
-                                <option value="NCAAB">NCAAB</option>
-                            </select>
-                        </div>
-                        <div class="form-field">
-                            <label for="teamSelect">Team</label>
-                            <select id="teamSelect" name="team" required disabled>
-                                <option value="">Loading teams…</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-field full">
-                            <label for="situationSelect">Situation</label>
-                            <select id="situationSelect" name="situation" required>
-                                <option value="home_favorite">Home Favorites</option>
-                                <option value="road_underdog">Road Underdogs</option>
-                                <option value="after_loss">After a Loss</option>
-                                <option value="after_win">After a Win</option>
-                                <option value="three_game_win_streak">On 3+ Game Win Streak</option>
-                                <option value="three_game_losing_streak">On 3+ Game Losing Streak</option>
-                                <option value="division_rival">vs Division Rivals</option>
-                                <option value="rest_advantage">With Rest Advantage (2+ days)</option>
-                                <option value="large_spread">Large Spread (7+)</option>
-                                <option value="close_spread">Close Spread (within 3)</option>
-                                <option value="home">Home Games</option>
-                                <option value="away">Away Games</option>
-                                <option value="as_favorite">As Favorite</option>
-                                <option value="as_underdog">As Underdog</option>
-                                <option value="conference">Conference Games</option>
-                                <option value="day_game">Day Games</option>
-                                <option value="night_game">Night Games</option>
-                            </select>
-                        </div>
-                    </div>
-                    <p class="form-note">Submitting only bills TMR Coin if a real, non-empty result is returned. Failed, timed-out, canceled, or empty-result inquiries always cost 0.</p>
-                    <div id="submitError" class="submit-error" hidden></div>
-                    <button class="btn primary" id="submitBtn" type="submit">Submit Inquiry &mdash; <span class="report-cost">5 TMR Coin</span></button>
-                </form>
-
-                <section class="result-card" id="resultCard" hidden>
-                    <div class="result-billing">
-                        <span class="billing-pill" id="billingPill"></span>
-                        <span class="result-balances" id="resultBalances"></span>
-                    </div>
-                    <h2 class="result-title" id="resultTitle"></h2>
-                    <p class="result-meta" id="resultMeta"></p>
-                    <div class="result-stats" id="resultStats"></div>
-                    <p class="receipt-link" id="receiptLink"></p>
-                </section>
-            </section>
-
-            <!-- ==================== SAVED HISTORY ==================== -->
-            <section class="tab-panel" id="panel-history">
-                <div class="form-card">
-                    <h2>Saved Reports &amp; Simulations</h2>
-                    <p class="desc">Reopening a saved item shows exactly what you were charged for -- it never calls BetLegend Pro again and never charges again.</p>
-                    <div id="historyList" class="history-list"><p class="history-empty">Loading…</p></div>
-                </div>
-                <section class="result-card" id="historyDetail" hidden>
-                    <div class="result-billing">
-                        <span class="billing-pill charged">Reopened — not charged</span>
-                    </div>
-                    <h2 class="result-title" id="historyDetailTitle"></h2>
-                    <div id="historyDetailBody"></div>
-                </section>
-            </section>
+    <!-- ===================================================== hero -->
+    <section class="blp-hero">
+        <span class="blp-eyebrow">BetLegend Pro</span>
+        <h1>Know whether the bet is actually supported.</h1>
+        <p class="blp-hero-sub">
+            BetLegend Pro takes a matchup, a market and a line, checks it against a dataset of
+            130,000+ graded games, and tells you what the record actually is — with the sample
+            size, the break-even, and a straight answer on whether there's an edge.
+        </p>
+        <div class="blp-hero-cta">
+            <a class="blp-btn blp-btn--primary blp-btn--lg" href="#pricing">See plans</a>
+            <a class="blp-btn blp-btn--lg" id="tryBtn" href="/betlegend-pro/app/">Try it free</a>
         </div>
-    </main>
+        <p class="blp-hero-note" id="heroNote">Your first report is free — no card needed.</p>
 
-    <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
-    <script src="/static/js/backend-api.js?v=452944a54e5c"></script>
-    <script>
-    (function () {
-        var authState = document.getElementById('authState');
-        var mainContent = document.getElementById('mainContent');
-        var balanceValue = document.getElementById('balanceValue');
-        var frozenBanner = document.getElementById('frozenBanner');
-        var ineligibleBanner = document.getElementById('ineligibleBanner');
+        <div class="blp-facts">
+            <div class="blp-fact"><div class="blp-fact-v">130,785</div><div class="blp-fact-l">Graded games in the dataset</div></div>
+            <div class="blp-fact"><div class="blp-fact-v">4</div><div class="blp-fact-l">Leagues — MLB, NBA, NFL, NHL</div></div>
+            <div class="blp-fact"><div class="blp-fact-v">5</div><div class="blp-fact-l">Markets per matchup</div></div>
+            <div class="blp-fact"><div class="blp-fact-v">0</div><div class="blp-fact-l">Estimated lines used in a verdict</div></div>
+        </div>
+    </section>
 
-        function isLoggedIn() { return !!(window.api && window.api.isLoggedIn()); }
+    <!-- ================================================== features -->
+    <div class="blp-sectionhead" id="tools">
+        <h2>Four tools, one dataset</h2>
+        <p>Each one answers a different question. All of them refuse to answer when the data isn't there.</p>
+    </div>
+    <section class="blp-features">
+        <article class="blp-feature">
+            <div class="blp-feature-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4v16h16"/><path d="M8 15l3.5-4 3 2.5L20 7"/></svg></div>
+            <h3>Matchup Report</h3>
+            <p>Two teams, one market, your exact line. Get both sides' record at that number, your situational filters applied to each team independently, and a verdict with the confidence and sample size stated up front.</p>
+        </article>
+        <article class="blp-feature">
+            <div class="blp-feature-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.8.3-1.2.9-1.2 1.7v.4"/><path d="M11.5 17h.01"/></svg></div>
+            <h3>Ask BetLegend</h3>
+            <p>Ask in plain English — a matchup, a team situation, today's board. You get a structured report: form, splits with real sample sizes, market read, and a bet-or-pass call you can argue with.</p>
+        </article>
+        <article class="blp-feature">
+            <div class="blp-feature-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17c3-8 6 4 9-2s6 1 9-5"/><path d="M3 21h18"/></svg></div>
+            <h3>Bankroll Simulator</h3>
+            <p>Enter the win rate you believe in and the price you're getting. Thousands of simulated sequences show the median finish, the bust rate and the drawdown you'd have to sit through — before you stake anything.</p>
+        </article>
+        <article class="blp-feature">
+            <div class="blp-feature-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></div>
+            <h3>Team Trends</h3>
+            <p>One team, one situation, the raw split. After a loss, on a streak, with a rest edge, as a road dog — straight up, against the spread and over/under, with the game count attached.</p>
+        </article>
+    </section>
 
-        function uuid() {
-            if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
-                var r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-                return v.toString(16);
-            });
-        }
+    <!-- ============================================ interface preview -->
+    <div class="blp-sectionhead">
+        <h2>What a verdict looks like</h2>
+        <p>The answer first, the numbers that produced it second, the write-up last. This is the real interface, not a mock-up.</p>
+    </div>
+    <section class="blp-preview" aria-label="Example of a BetLegend Pro matchup report">
+        <div class="blp-preview-bar" aria-hidden="true"><i></i><i></i><i></i><span>Matchup Report — example output</span></div>
 
-        function esc(value) {
-            return String(value == null ? '' : value).replace(/[&<>"']/g, function (ch) {
-                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
-            });
-        }
+        <div class="blp-verdict" data-verdict="lean">
+            <div class="blp-verdict-top">
+                <div class="blp-verdict-main">
+                    <div class="blp-verdict-k">Verdict</div>
+                    <h3 class="blp-verdict-label">Lean</h3>
+                    <p class="blp-verdict-sel">Away −1.5 <span>· road favorite vs division rival · MLB</span></p>
+                </div>
+                <div class="blp-conf">
+                    <div class="blp-conf-row"><span class="blp-verdict-k">Confidence</span><span class="blp-conf-val">Moderate</span></div>
+                    <div class="blp-meter"><i style="width:58%"></i></div>
+                    <p class="blp-conf-note">Reflects sample size and consistency — not a probability of winning.</p>
+                </div>
+            </div>
+            <p class="blp-verdict-basis">Both sides clear the minimum sample on this market. The favourite has covered at a modest but consistent rate; the underdog is the weaker half of the same bucket. The edge survives situational filtering, but sits inside the range where variance still dominates.</p>
+        </div>
 
-        function fmtBal(n) { return typeof n === 'number' ? n.toLocaleString('en-US') : '—'; }
+        <div class="blp-cmp">
+            <div class="blp-cmp-head">
+                <span class="blp-cmp-title">Run line — hit rate at this number</span>
+                <span class="blp-cmp-sub">Break-even 52.4%</span>
+            </div>
+            <div class="blp-cmp-row">
+                <span class="blp-cmp-name">Away side</span>
+                <span class="blp-cmp-track"><span class="blp-cmp-fill" style="width:53.6%"></span><span class="blp-cmp-mark" style="left:52.4%"></span></span>
+                <span><span class="blp-cmp-val">53.6%</span><span class="blp-cmp-meta" style="display:block">97-84-3</span></span>
+            </div>
+            <div class="blp-cmp-row is-low">
+                <span class="blp-cmp-name">Home side</span>
+                <span class="blp-cmp-track"><span class="blp-cmp-fill" style="width:48.1%"></span><span class="blp-cmp-mark" style="left:52.4%"></span></span>
+                <span><span class="blp-cmp-val">48.1%</span><span class="blp-cmp-meta" style="display:block">76-82-2</span></span>
+            </div>
+            <div class="blp-cmp-legend"><i></i> Break-even at this price — a rate below the marker loses money long term.</div>
+        </div>
 
-        var submitDisableEls = [];
-        async function refreshBalance() {
-            try {
-                var status = await window.api.getBetLegendProStatus();
-                balanceValue.textContent = typeof status.balance === 'number' ? status.balance.toLocaleString('en-US') : '0';
-                frozenBanner.hidden = !status.isFrozen;
-                ineligibleBanner.hidden = !!status.eligible;
-                var disabled = !!status.isFrozen || !status.eligible;
-                submitDisableEls.forEach(function (el) { el.disabled = disabled; });
-                return typeof status.balance === 'number' ? status.balance : null;
-            } catch (err) {
-                balanceValue.textContent = '—';
-                return null;
-            }
-        }
+        <div class="blp-unavail" style="margin-top:14px">
+            <strong>Not carried in this dataset:</strong> starting pitchers, projected lineups, injuries. These are left blank rather than estimated.
+        </div>
+    </section>
 
-        function showError(el, message, links) {
-            var html = esc(message);
-            if (links) {
-                html += '<br>' + links.map(function (l) { return '<a href="' + l.href + '">' + esc(l.label) + '</a>'; }).join(' &middot; ');
-            }
-            el.innerHTML = html;
-            el.hidden = false;
-        }
+    <!-- ======================================================= who -->
+    <div class="blp-sectionhead">
+        <h2>Who it's for</h2>
+        <p>BetLegend Pro is a research tool. It is not a pick service and it does not tell you what to bet.</p>
+    </div>
+    <section class="blp-who">
+        <article class="blp-who-item">
+            <h3>Bettors who check before they bet</h3>
+            <p>If you already ask "has this actually been profitable?" before firing, this replaces the spreadsheet you'd otherwise keep by hand.</p>
+        </article>
+        <article class="blp-who-item">
+            <h3>Handicappers who publish a record</h3>
+            <p>If your picks are tracked in public, the situational backing matters. Pull the split, see the sample, decide whether it's worth posting.</p>
+        </article>
+        <article class="blp-who-item">
+            <h3>Anyone sizing a bankroll</h3>
+            <p>The simulator answers the question most staking advice skips: what the bad stretch actually looks like at your edge and your stake size.</p>
+        </article>
+        <article class="blp-who-item">
+            <h3>Not for you if…</h3>
+            <p>You want handed-over picks, guaranteed winners, or live in-play numbers. BetLegend Pro does none of those things.</p>
+        </article>
+    </section>
 
-        function billingPillHtml(pillEl, res) {
-            if (res.billed) { pillEl.className = 'billing-pill charged'; pillEl.textContent = 'Charged 5 TMR Coin'; }
-            else if (res.was_free_inquiry) { pillEl.className = 'billing-pill free'; pillEl.textContent = 'Free Inquiry'; }
-            else { pillEl.className = 'billing-pill not-charged'; pillEl.textContent = 'Not Charged'; }
-        }
+    <!-- =================================================== pricing -->
+    <div class="blp-sectionhead" id="pricing">
+        <h2>Pricing</h2>
+        <p>Every plan is the same product with unlimited use. No per-report charges, no credits to manage, nothing metered.</p>
+    </div>
+    <section class="blp-plans">
+        <article class="blp-plan">
+            <div class="blp-plan-name">Monthly</div>
+            <div class="blp-price"><span class="price-amt">$19</span><span class="blp-price-per">/month</span></div>
+            <p class="blp-price-sub">Billed monthly. Cancel anytime from your account.</p>
+            <ul class="blp-plan-feats">
+                <li><span class="tick">✓</span> Unlimited matchup reports</li>
+                <li><span class="tick">✓</span> Unlimited questions &amp; simulations</li>
+                <li><span class="tick">✓</span> Full report library, kept permanently</li>
+                <li><span class="tick">✓</span> No TMR Coin needed</li>
+            </ul>
+            <button class="blp-btn blp-btn--block" data-buy="monthly" type="button">Choose Monthly</button>
+            <p class="blp-plan-foot">Renews at $19/month until you cancel.</p>
+        </article>
 
-        function insufficientBalanceMessage(errEl, data) {
-            showError(errEl, 'Insufficient TMR Coin balance — this inquiry costs ' + (data && data.cost) + ' TMR Coin, you have ' + (data && data.balance) + '.', [
-                { href: (data && data.how_to_earn_url) || '/how-tmr-coin-works/', label: 'How to Earn TMR Coin' },
-                { href: (data && data.wallet_url) || '/wallet/', label: 'Wallet' },
-            ]);
-        }
+        <article class="blp-plan blp-plan--featured">
+            <span class="blp-plan-badge">Best Value</span>
+            <div class="blp-plan-name">Annual</div>
+            <div class="blp-price"><span class="price-amt">$149</span><span class="blp-price-per">/year</span></div>
+            <p class="blp-price-sub">Works out to <strong>$12.42/month</strong> — <span class="save">save $79 a year</span> versus monthly.</p>
+            <ul class="blp-plan-feats">
+                <li><span class="tick">✓</span> Everything in Monthly</li>
+                <li><span class="tick">✓</span> Two months and change, free</li>
+                <li><span class="tick">✓</span> One charge a year, not twelve</li>
+                <li><span class="tick">✓</span> Cancel anytime from your account</li>
+            </ul>
+            <button class="blp-btn blp-btn--primary blp-btn--block" data-buy="annual" type="button">Choose Annual</button>
+            <p class="blp-plan-foot">Renews at $149/year until you cancel.</p>
+        </article>
 
-        // ---------------- Tabs ----------------
-        var tabBtns = document.querySelectorAll('.tab-btn');
-        var tabPanels = document.querySelectorAll('.tab-panel');
-        tabBtns.forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                tabBtns.forEach(function (b) { b.classList.remove('active'); });
-                tabPanels.forEach(function (p) { p.classList.remove('active'); });
-                btn.classList.add('active');
-                document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-                if (btn.dataset.tab === 'history') loadHistory();
-            });
+        <article class="blp-plan blp-plan--launch">
+            <span class="blp-plan-badge">Limited launch offer</span>
+            <div class="blp-plan-name">Lifetime</div>
+            <div class="blp-price"><span class="price-amt">$349</span><span class="blp-price-per">once</span></div>
+            <p class="blp-price-sub">One payment, no renewal. Offered during launch; it won't be part of the permanent line-up.</p>
+            <ul class="blp-plan-feats">
+                <li><span class="tick">✓</span> Everything in Annual</li>
+                <li><span class="tick">✓</span> Access never expires</li>
+                <li><span class="tick">✓</span> Nothing to cancel, ever</li>
+                <li><span class="tick">✓</span> Cheaper than Annual from year three on</li>
+            </ul>
+            <button class="blp-btn blp-btn--block" data-buy="lifetime" type="button">Choose Lifetime</button>
+            <p class="blp-plan-foot">Single charge. No recurring billing.</p>
+        </article>
+    </section>
+
+    <div class="blp-note blp-note--err" id="buyError" hidden style="max-width:640px;margin:20px auto 0"></div>
+    <p class="blp-paynote">
+        <span>Payments handled by Stripe · card details never touch TrustMyRecord</span>
+    </p>
+    <p class="blp-paynote" id="freeTierNote">
+        <span>Not ready to buy? Your first report is free, and after that you can run reports with TMR Coin instead.</span>
+    </p>
+
+    <!-- ===================================================== trust -->
+    <div class="blp-sectionhead">
+        <h2>How it stays honest</h2>
+        <p>The constraints below are enforced in the engine, not promised in marketing copy.</p>
+    </div>
+    <section class="blp-trust">
+        <article class="blp-trust-item">
+            <span class="blp-trust-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6.5v5c0 4.6 3.2 8.3 8 9.5 4.8-1.2 8-4.9 8-9.5v-5z"/><path d="m9 12 2 2 4-4"/></svg></span>
+            <div><h3>No invented numbers</h3><p>Estimated totals and synthetic lines are excluded from every figure. A market with no real closing number returns nothing instead of a guess.</p></div>
+        </article>
+        <article class="blp-trust-item">
+            <span class="blp-trust-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H9v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M9 4h5.5A1.5 1.5 0 0 1 16 5.5v13a1.5 1.5 0 0 1-1.5 1.5H9"/></svg></span>
+            <div><h3>Sample size always shown</h3><p>Every rate comes with the record behind it. A 60% split on nine games is labelled as nine games, not presented as a trend.</p></div>
+        </article>
+        <article class="blp-trust-item">
+            <span class="blp-trust-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4.5"/><path d="M12 16h.01"/></svg></span>
+            <div><h3>Gaps are stated, not hidden</h3><p>Where an era or market has no coverage, the report says so. Older MLB totals and pre-2010 NFL moneylines are blocked outright rather than approximated.</p></div>
+        </article>
+        <article class="blp-trust-item">
+            <span class="blp-trust-ico" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5.5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+            <div><h3>No outcome is promised</h3><p>A verdict is a read on historical support at a price. It is not a prediction, and past splits do not carry forward.</p></div>
+        </article>
+    </section>
+
+    <!-- ======================================================= FAQ -->
+    <div class="blp-sectionhead">
+        <h2>Questions</h2>
+    </div>
+    <section class="blp-faq">
+        <details class="blp-sec"><summary>Does BetLegend Pro tell me what to bet?</summary><div class="blp-sec-body"><p>No. It reports what the historical record is for the exact bet you describe, how large the sample is, and how that compares to the break-even at your price. The call it gives is a read on that evidence — you decide what to do with it.</p></div></details>
+        <details class="blp-sec"><summary>What data is it actually using?</summary><div class="blp-sec-body"><p>A dataset of graded games across MLB, NBA, NFL and NHL with source-backed closing numbers. Estimated totals and synthetic lines are excluded from results. Soccer, first-half/quarter/first-five-inning markets and NRFI/YRFI are not covered because there is no historical data for them here.</p></div></details>
+        <details class="blp-sec"><summary>How current is it?</summary><div class="blp-sec-body"><p>The dataset covers completed, graded games and is refreshed on a schedule. It is a historical research tool, not a live odds feed — it will not price tonight's game for you.</p></div></details>
+        <details class="blp-sec"><summary>What's the difference between the plans?</summary><div class="blp-sec-body"><p>Nothing but the billing. Monthly, annual and lifetime all unlock the same unlimited access to all four tools and the full report library. Annual is the cheapest per month; lifetime is a single payment offered during launch.</p></div></details>
+        <details class="blp-sec"><summary>Can I cancel?</summary><div class="blp-sec-body"><p>Yes. Monthly and annual can be cancelled at any time from your account — you keep access until the end of the period you already paid for, and are not billed again. Lifetime has no recurring billing, so there is nothing to cancel.</p></div></details>
+        <details class="blp-sec"><summary>Do I need TMR Coin?</summary><div class="blp-sec-body"><p>No. Plans are bought with a card through Stripe. TMR Coin is the free on-ramp instead: your first report costs nothing, and after that you can keep running reports with coin if you'd rather not subscribe. Subscribers are never charged coin.</p></div></details>
+        <details class="blp-sec"><summary>Is this gambling?</summary><div class="blp-sec-body"><p>No. TrustMyRecord is not a sportsbook, no real money is wagered here, and BetLegend Pro is an analysis tool. If betting has stopped being fun, <a href="https://www.ncpgambling.org/help-treatment/" rel="noopener" target="_blank">help is available</a>.</p></div></details>
+    </section>
+
+    <!-- ================================================ final CTA -->
+    <section class="blp-finalcta">
+        <h2>Run one and see</h2>
+        <p>The first report is free. If it doesn't tell you something you didn't already know, you've lost nothing.</p>
+        <div class="blp-hero-cta">
+            <a class="blp-btn blp-btn--primary blp-btn--lg" href="/betlegend-pro/app/">Open BetLegend Pro</a>
+            <a class="blp-btn blp-btn--lg" href="#pricing">See plans</a>
+        </div>
+    </section>
+
+    <p class="blp-legal">
+        BetLegend Pro provides historical analysis for research purposes only. It does not guarantee any outcome,
+        does not accept wagers, and does not predict results. Nothing here is financial advice. TrustMyRecord is not
+        a gambling platform and no real money is wagered on this site. You must be of legal age to bet in your
+        jurisdiction. Prices in USD.
+    </p>
+</main>
+
+<script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+<script src="/static/js/backend-api.js?v=452944a54e5c"></script>
+<script>
+(function () {
+    'use strict';
+    var $ = function (id) { return document.getElementById(id); };
+    function esc(v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
         });
+    }
+    var loggedIn = function () { return !!(window.api && window.api.isLoggedIn()); };
 
-        // ==================== AI HANDICAPPING REPORT ====================
-        var reportForm = document.getElementById('reportForm');
-        var reportSubmitBtn = document.getElementById('reportSubmitBtn');
-        var reportError = document.getElementById('reportError');
-        var reportClarify = document.getElementById('reportClarify');
-        var reportLoading = document.getElementById('reportLoading');
-        var reportResult = document.getElementById('reportResult');
-        submitDisableEls.push(reportSubmitBtn);
+    function banner(kind, html) {
+        $('purchaseBanner').innerHTML =
+            '<div class="blp-note blp-note--' + kind + '" style="margin-bottom:22px">' + html + '</div>';
+    }
 
-        var REPORT_SECTION_LABELS = {
-            matchup_overview: 'Matchup Overview',
-            odds_and_line_movement: 'Odds & Line Movement',
-            starting_pitchers: 'Starting Pitchers',
-            projected_lineups: 'Projected Lineups',
-            injuries_rest_travel_weather_scheduling: 'Injuries, Rest, Travel & Weather',
-            recent_form: 'Recent Form',
-            home_away_and_situational_splits: 'Home/Away & Situational Splits',
-            betting_trends: 'Betting Trends',
-            advanced_stats_and_matchup_advantages: 'Advanced Stats & Matchup Advantages',
-            market_interpretation: 'Market Interpretation',
-            best_bet_or_pass: 'Best Bet or Pass',
-            recommended_line_and_max_price: 'Recommended Line & Max Price',
-        };
-        var UNAVAILABLE_RE = /not available/i;
+    // ------------------------------------------------- entitlement state
 
-        function renderReport(payload) {
-            var r = payload.result || {};
-            var rep = r.report || {};
-            document.getElementById('reportTitle').textContent = r.interpreted_as || r.query || 'Report';
-            document.getElementById('reportMeta').textContent = [r.sport, (r.teams || []).join(' vs ')].filter(Boolean).join(' · ');
+    async function paintAccess() {
+        if (!loggedIn()) return;
+        var a;
+        try { a = await window.api.getBetLegendProAccess(); } catch (err) { return; }
+        if (!a || !a.entitled) return;
 
-            var html = '';
-            Object.keys(REPORT_SECTION_LABELS).forEach(function (key) {
-                var text = rep[key];
-                if (!text) return;
-                var unavailable = UNAVAILABLE_RE.test(text);
-                var isReco = key === 'best_bet_or_pass';
-                html += '<div class="report-section' + (isReco ? ' recommendation' : '') + '">' +
-                    '<h3>' + esc(REPORT_SECTION_LABELS[key]) + '</h3>' +
-                    '<p class="' + (unavailable ? 'unavailable' : '') + '">' + esc(text) + '</p></div>';
-            });
-            if (rep.confidence_rating) {
-                var cr = rep.confidence_rating;
-                var level = String(cr.level || '').toLowerCase();
-                html += '<div class="report-section"><h3>Confidence</h3><div class="confidence-row">' +
-                    '<span class="confidence-badge ' + esc(level) + '">' + esc(cr.level || '—') + (typeof cr.score === 'number' ? ' · ' + cr.score : '') + '</span></div>' +
-                    (cr.basis ? '<p>' + esc(cr.basis) + '</p>' : '') + '</div>';
-            }
-            if (Array.isArray(rep.risk_factors) && rep.risk_factors.length) {
-                html += '<div class="report-section"><h3>Risk Factors</h3><ul class="risk-list">' +
-                    rep.risk_factors.map(function (rf) { return '<li>' + esc(rf) + '</li>'; }).join('') + '</ul></div>';
-            }
-            document.getElementById('reportSections').innerHTML = html;
+        // Already a customer: the page becomes an account surface rather than a
+        // sales pitch, and the buy buttons stop offering what they already own.
+        var planName = a.is_lifetime ? 'Lifetime' : a.plan === 'annual' ? 'Annual' : 'Monthly';
+        var ends = a.current_period_end ? new Date(a.current_period_end).toLocaleDateString() : null;
+        var detail = a.is_lifetime
+            ? 'Lifetime access — nothing renews and there is nothing to cancel.'
+            : a.cancel_at_period_end
+                ? 'Cancelled — your access runs until ' + esc(ends) + ' and will not renew.'
+                : ends ? 'Renews ' + esc(ends) + '.' : '';
+        banner('ok',
+            '<span><strong>You\'re on the ' + esc(planName) + ' plan.</strong> ' + detail + '</span>'
+            + '<a class="blp-btn blp-btn--sm blp-btn--primary" href="/betlegend-pro/app/">Open BetLegend Pro</a>'
+            + (a.manageable ? '<button class="blp-btn blp-btn--sm" id="portalBtn" type="button">Manage billing</button>' : ''));
 
-            var sources = Array.isArray(rep.sources) ? rep.sources : [];
-            document.getElementById('reportSources').textContent = sources.length
-                ? 'Sources: ' + sources.map(function (s) { return s.label + (s.timestamp ? ' (' + s.timestamp + ')' : ''); }).join(' · ')
-                : '';
-            var t = r.timing || {};
-            document.getElementById('reportTiming').textContent = (t.intent_seconds != null)
-                ? 'Generated in ' + [t.intent_seconds, t.gather_seconds, t.synthesis_seconds].filter(function(v){return v!=null;}).reduce(function(a,b){return a+b;},0).toFixed(1) + 's'
-                : '';
-
-            billingPillHtml(document.getElementById('reportBillingPill'), payload);
-            document.getElementById('reportBalances').textContent = 'Balance: ' + fmtBal(payload.balance_before) + ' → ' + fmtBal(payload.balance_after) + ' TMR Coin';
-            document.getElementById('reportReceipt').innerHTML = payload.ledger_entry_id
-                ? 'Receipt #' + esc(payload.ledger_entry_id) + (payload.was_replay ? ' (duplicate submission — not re-charged)' : '') + ' · <a href="/wallet/">View in Wallet</a>'
-                : '';
-            reportResult.hidden = false;
-        }
-
-        var reportLastKey = null, reportLastSig = null;
-        reportForm.addEventListener('submit', async function (ev) {
-            ev.preventDefault();
-            reportError.hidden = true;
-            reportClarify.hidden = true;
-            reportResult.hidden = true;
-            var query = document.getElementById('reportQuery').value.trim();
-            if (!query) return;
-
-            var sig = query;
-            var idempotencyKey = (sig === reportLastSig && reportLastKey) ? reportLastKey : uuid();
-            reportLastSig = sig; reportLastKey = idempotencyKey;
-
-            reportSubmitBtn.disabled = true;
-            reportLoading.hidden = false;
-            try {
-                var res = await window.api.submitBetLegendProReport({ query: query, idempotency_key: idempotencyKey });
-                reportLastSig = null; reportLastKey = null;
-                var r = res.result || {};
-                if (r.needs_clarification) {
-                    reportClarify.textContent = r.interpreted_as || 'Could not resolve that question to a report. Try naming a team or a specific matchup.';
-                    reportClarify.hidden = false;
-                } else {
-                    renderReport(res);
-                }
-                await refreshBalance();
-                loadHistory();
-            } catch (err) {
-                var data = err && err.data;
-                if (err && err.status === 402) insufficientBalanceMessage(reportError, data);
-                else if (err && (err.status === 403 || err.status === 400)) showError(reportError, (data && data.error) || 'Please check your question and try again.');
-                else showError(reportError, 'BetLegend Pro could not complete this report (' + ((data && data.error) || 'server error') + '). It was not charged — you can try again.');
-                await refreshBalance();
-            } finally {
-                reportSubmitBtn.disabled = false;
-                reportLoading.hidden = true;
-            }
-        });
-
-        // ==================== MATCHUP ANALYZER (primary) ====================
-        var matchupForm = document.getElementById('matchupForm');
-        var matchupSubmitBtn = document.getElementById('matchupSubmitBtn');
-        var matchupError = document.getElementById('matchupError');
-        var matchupLoading = document.getElementById('matchupLoading');
-        var matchupResult = document.getElementById('matchupResult');
-        var matchupSportEl = document.getElementById('matchupSport');
-        var matchupAwayEl = document.getElementById('matchupAway');
-        var matchupHomeEl = document.getElementById('matchupHome');
-        var matchupSelectionEl = document.getElementById('matchupSelection');
-        var matchupLineField = document.getElementById('matchupLineField');
-        var matchupLineLabelEl = document.getElementById('matchupLineLabel');
-        var matchupLineEl = document.getElementById('matchupLine');
-        var matchupOddsField = document.getElementById('matchupOddsField');
-        var matchupOddsLabelEl = document.getElementById('matchupOddsLabel');
-        var matchupOddsEl = document.getElementById('matchupOdds');
-        submitDisableEls.push(matchupSubmitBtn);
-
-        // "Betting On" (matchupSelectionEl) is always either the two selected teams (spread/
-        // moneyline) or Over/Under (total/team_total_*) -- never a market-specific label like the
-        // old "Team getting the line"/"Team's moneyline"/"Side" text, which stayed on screen
-        // regardless of market and didn't actually describe what was being asked. `line` is the
-        // market's own number (signed spread, or a total); `odds` is a separate American-odds price,
-        // required for moneyline (there's no other way to know its breakeven win%), optional for
-        // total/team_total (falls back to a flat assumption server-side if omitted), and not shown at
-        // all for spread (priced off the entered line, not a separate field).
-        var MARKET_CONFIG = {
-            spread: {
-                mode: 'team',
-                line: { show: true, label: 'Spread', placeholder: 'e.g. +6.5 or -6.5' },
-                odds: { show: false, required: false },
-            },
-            moneyline: {
-                mode: 'team',
-                line: { show: false },
-                odds: { show: true, required: true, label: 'Moneyline Odds', placeholder: 'e.g. -120 or +135' },
-            },
-            total: {
-                mode: 'over_under',
-                line: { show: true, label: 'Game Total', placeholder: 'e.g. 8.5' },
-                odds: { show: true, required: false, label: 'Odds', placeholder: 'e.g. -110' },
-            },
-            team_total_home: {
-                mode: 'over_under',
-                line: { show: true, label: null, placeholder: 'e.g. 4.5' }, // label computed from the selected home team, see lineFieldLabelFor
-                odds: { show: true, required: false, label: 'Odds', placeholder: 'e.g. -110' },
-            },
-            team_total_away: {
-                mode: 'over_under',
-                line: { show: true, label: null, placeholder: 'e.g. 3.5' }, // label computed from the selected away team, see lineFieldLabelFor
-                odds: { show: true, required: false, label: 'Odds', placeholder: 'e.g. -110' },
-            },
-        };
-
-        function lineFieldLabelFor(market) {
-            if (market === 'team_total_home') return (matchupHomeEl.value || 'Home Team') + ' Team Total';
-            if (market === 'team_total_away') return (matchupAwayEl.value || 'Away Team') + ' Team Total';
-            return MARKET_CONFIG[market].line.label;
-        }
-
-        function isValidAmericanOdds(v) {
-            if (v === '' || v === null || v === undefined) return false;
-            var n = Number(v);
-            return Number.isInteger(n) && (n <= -100 || n >= 100);
-        }
-        var matchupMarket = 'spread';
-        var matchupFilters = [];
-        var matchupTeamsCache = {};
-        var matchupClearFiltersBtn = document.getElementById('matchupClearFiltersBtn');
-
-        // Each situational filter's implied constraint(s). Two active filters conflict when they
-        // require a different value for the same dimension -- e.g. home_favorite forces
-        // homeAway:'home', road_underdog forces homeAway:'away'; ANDing both would always return
-        // zero games. Selecting a new filter auto-deselects any currently-active one it conflicts
-        // with, per spec item 4 ("Home Games and Away Games cannot both apply", "As Favorite and As
-        // Underdog cannot both apply", etc.) -- matches matchup.py::_situation_matches exactly.
-        var FILTER_CONSTRAINTS = {
-            home: { homeAway: 'home' },
-            away: { homeAway: 'away' },
-            home_favorite: { homeAway: 'home', side: 'favorite' },
-            road_underdog: { homeAway: 'away', side: 'underdog' },
-            as_favorite: { side: 'favorite' },
-            as_underdog: { side: 'underdog' },
-            large_spread: { magnitude: 'large' },
-            close_spread: { magnitude: 'close' },
-        };
-
-        function situationsConflict(a, b) {
-            var ca = FILTER_CONSTRAINTS[a], cb = FILTER_CONSTRAINTS[b];
-            if (!ca || !cb) return false;
-            return ['homeAway', 'side', 'magnitude'].some(function (dim) {
-                return ca[dim] && cb[dim] && ca[dim] !== cb[dim];
-            });
-        }
-
-        function refreshClearFiltersVisibility() {
-            matchupClearFiltersBtn.hidden = matchupFilters.length === 0;
-        }
-
-        function marketLabelFor(sport, market) {
-            if (market === 'spread' && sport === 'MLB') return 'Run Line';
-            if (market === 'spread' && sport === 'NHL') return 'Puck Line';
-            var labels = { spread: 'Spread', moneyline: 'Moneyline', total: 'Game Total', team_total_home: 'Home Team Total', team_total_away: 'Away Team Total' };
-            return labels[market] || market;
-        }
-
-        var matchupTeamsInFlight = {};
-
-        // Both team selects call this for the same sport at once on sport
-        // change/boot -- sharing one in-flight promise (rather than each
-        // firing its own request) avoids two redundant upstream calls, and
-        // means a transient failure on one no longer leaves ONE select stuck
-        // while the other loads fine. One retry on failure absorbs a single
-        // transient 502 (observed live against the Render free-tier proxy)
-        // without masking a genuinely broken upstream.
-        // Backoff schedule covers the free-tier API's observed transient-502
-        // window (measured live at ~50s during production verification on
-        // 2026-07-28) without making a genuinely-down backend hang the sport
-        // switch forever -- 3 retries at 800/2000/4000ms is real coverage for
-        // a blip, not an attempt to ride out a full outage.
-        var MATCHUP_TEAMS_RETRY_DELAYS_MS = [800, 2000, 4000];
-        function fetchMatchupTeams(sport) {
-            if (matchupTeamsCache[sport]) return Promise.resolve(matchupTeamsCache[sport]);
-            if (matchupTeamsInFlight[sport]) return matchupTeamsInFlight[sport];
-            var attempt = function (retryIndex) {
-                return window.api.getBetLegendProTeams(sport).then(function (res) {
-                    var teams = (res && res.teams) || [];
-                    matchupTeamsCache[sport] = teams;
-                    return teams;
-                }).catch(function (err) {
-                    if (retryIndex < MATCHUP_TEAMS_RETRY_DELAYS_MS.length) {
-                        var delay = MATCHUP_TEAMS_RETRY_DELAYS_MS[retryIndex];
-                        return new Promise(function (r) { setTimeout(r, delay); }).then(function () { return attempt(retryIndex + 1); });
-                    }
-                    throw err;
-                });
-            };
-            var p = attempt(0).finally(function () { delete matchupTeamsInFlight[sport]; });
-            matchupTeamsInFlight[sport] = p;
-            return p;
-        }
-
-        // Reproduced live: switching sport quickly (NBA -> NFL) let the
-        // slower/earlier NBA fetch resolve AFTER the newer NFL one and
-        // silently overwrite the team list with stale NBA options, with
-        // matchupSportEl.value already reading "NFL" -- the request succeeded
-        // (200), the UI just applied the wrong one. Guarded by checking the
-        // sport is still selected at resolution time, same pattern as
-        // NLReportPage.tsx's requestSeq guard in the React app for the exact
-        // same class of out-of-order-response bug.
-        async function loadMatchupTeams(sport, selectEl) {
-            selectEl.disabled = true;
-            selectEl.innerHTML = '<option value="">Loading teams…</option>';
-            try {
-                var teams = await fetchMatchupTeams(sport);
-                if (matchupSportEl.value !== sport) return; // superseded by a newer sport change
-                selectEl.innerHTML = '<option value="">Select team…</option>' + teams.map(function (t) {
-                    return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
-                }).join('');
-            } catch (err) {
-                if (matchupSportEl.value !== sport) return;
-                selectEl.innerHTML = '<option value="">Could not load teams — try again</option>';
-            } finally {
-                if (matchupSportEl.value === sport) {
-                    selectEl.disabled = false;
-                    refreshMatchupSelectionOptions();
-                    refreshMatchupSubmitEnabled();
-                }
-            }
-        }
-
-        function refreshMatchupSelectionOptions() {
-            var cfg = MARKET_CONFIG[matchupMarket];
-
-            // Betting On: the two selected teams for spread/moneyline, Over/Under for totals.
-            var prev = matchupSelectionEl.value;
-            if (cfg.mode === 'over_under') {
-                matchupSelectionEl.innerHTML = '<option value="over">Over</option><option value="under">Under</option>';
-                matchupSelectionEl.value = (prev === 'over' || prev === 'under') ? prev : 'over';
+        $('heroNote').textContent = 'You already have unlimited access.';
+        $('freeTierNote').hidden = true;
+        // Lifetime owners have nothing left to buy. Subscribers keep every OTHER
+        // plan live so they can switch — only the plan they are already on is
+        // disabled. Labelling a different plan "included" would be false and
+        // would block a legitimate upgrade.
+        var labels = { monthly: 'Monthly', annual: 'Annual', lifetime: 'Lifetime' };
+        document.querySelectorAll('[data-buy]').forEach(function (b) {
+            var plan = b.dataset.buy;
+            if (a.is_lifetime) {
+                b.disabled = true;
+                b.textContent = plan === 'lifetime' ? 'You own this' : 'Already covered by Lifetime';
+            } else if (plan === a.plan) {
+                b.disabled = true;
+                b.textContent = 'Your current plan';
             } else {
-                var away = matchupAwayEl.value, home = matchupHomeEl.value;
-                var opts = [];
-                if (away) opts.push(away);
-                if (home) opts.push(home);
-                matchupSelectionEl.innerHTML = opts.length
-                    ? opts.map(function (t) { return '<option value="' + esc(t) + '">' + esc(t) + '</option>'; }).join('')
-                    : '<option value="">Select both teams first</option>';
-                if (opts.indexOf(prev) !== -1) matchupSelectionEl.value = prev;
+                b.textContent = 'Switch to ' + labels[plan];
             }
+        });
 
-            // Line/total value -- hidden completely for moneyline (priced via odds, not a line).
-            matchupLineField.hidden = !cfg.line.show;
-            if (cfg.line.show) {
-                matchupLineLabelEl.textContent = lineFieldLabelFor(matchupMarket);
-                matchupLineEl.placeholder = cfg.line.placeholder;
-            }
-
-            // Odds -- required for moneyline, optional for total/team_total, hidden for spread.
-            matchupOddsField.hidden = !cfg.odds.show;
-            if (cfg.odds.show) {
-                matchupOddsLabelEl.innerHTML = esc(cfg.odds.label) + (cfg.odds.required ? '' : ' <span class="opt">(optional)</span>');
-                matchupOddsEl.placeholder = cfg.odds.placeholder;
-            }
-        }
-
-        function refreshMatchupSubmitEnabled() {
-            var away = matchupAwayEl.value, home = matchupHomeEl.value;
-            var cfg = MARKET_CONFIG[matchupMarket];
-            var lineOk = !cfg.line.show || (matchupLineEl.value !== '' && !isNaN(Number(matchupLineEl.value)));
-            var oddsVal = matchupOddsEl.value;
-            var oddsOk = !cfg.odds.show || (cfg.odds.required ? isValidAmericanOdds(oddsVal) : (oddsVal === '' || isValidAmericanOdds(oddsVal)));
-            var ok = !!away && !!home && away !== home && !!matchupSelectionEl.value && lineOk && oddsOk;
-            matchupSubmitBtn.disabled = !ok;
-        }
-
-        document.getElementById('matchupMarketGrid').querySelectorAll('.market-chip').forEach(function (chip) {
-            chip.addEventListener('click', function () {
-                matchupMarket = chip.dataset.market;
-                document.querySelectorAll('#matchupMarketGrid .market-chip').forEach(function (c) { c.classList.toggle('active', c === chip); });
-                // A value entered for one market's line/odds concept is never valid input for
-                // another's (a signed spread is not a total, a moneyline price is not a spread's
-                // odds-less line) -- clear both on every market switch rather than leave a stale,
-                // hidden-then-possibly-reshown value behind.
-                matchupLineEl.value = '';
-                matchupOddsEl.value = '';
-                refreshMatchupSelectionOptions();
-                refreshMatchupSubmitEnabled();
+        var portal = $('portalBtn');
+        if (portal) {
+            portal.addEventListener('click', async function () {
+                portal.disabled = true;
+                try {
+                    var r = await window.api.openBetLegendProBillingPortal();
+                    if (r && r.url) window.location.href = r.url;
+                    else portal.disabled = false;
+                } catch (err) {
+                    portal.disabled = false;
+                    banner('err', '<span>Could not open the billing portal. Try again in a moment.</span>');
+                }
             });
-        });
-        var matchupFilterChips = document.getElementById('matchupFilterGrid').querySelectorAll('.filter-chip');
-        matchupFilterChips.forEach(function (chip) {
-            if (chip.disabled) return; // sequence/streak filters: disabled with a tooltip, never wired to a click handler
-            chip.addEventListener('click', function () {
-                var s = chip.dataset.situation;
-                var idx = matchupFilters.indexOf(s);
-                if (idx !== -1) {
-                    matchupFilters.splice(idx, 1);
-                    chip.classList.remove('active');
-                } else {
-                    // Auto-deselect any active filter this one conflicts with (see FILTER_CONSTRAINTS)
-                    // rather than let two contradictory filters sit active and silently AND to zero games.
-                    matchupFilterChips.forEach(function (other) {
-                        var otherSituation = other.dataset.situation;
-                        if (otherSituation === s) return;
-                        if (matchupFilters.indexOf(otherSituation) !== -1 && situationsConflict(s, otherSituation)) {
-                            matchupFilters.splice(matchupFilters.indexOf(otherSituation), 1);
-                            other.classList.remove('active');
-                        }
-                    });
-                    matchupFilters.push(s);
-                    chip.classList.add('active');
-                }
-                refreshClearFiltersVisibility();
-            });
-        });
-        matchupClearFiltersBtn.addEventListener('click', function () {
-            matchupFilters.length = 0;
-            matchupFilterChips.forEach(function (c) { c.classList.remove('active'); });
-            refreshClearFiltersVisibility();
-        });
-        document.getElementById('matchupSwapBtn').addEventListener('click', function () {
-            var a = matchupAwayEl.value, h = matchupHomeEl.value;
-            matchupAwayEl.value = h; matchupHomeEl.value = a;
-            refreshMatchupSelectionOptions();
-            refreshMatchupSubmitEnabled();
-        });
-        matchupSportEl.addEventListener('change', function () {
-            matchupAwayEl.value = ''; matchupHomeEl.value = '';
-            loadMatchupTeams(matchupSportEl.value, matchupAwayEl);
-            loadMatchupTeams(matchupSportEl.value, matchupHomeEl);
-        });
-        matchupAwayEl.addEventListener('change', function () { refreshMatchupSelectionOptions(); refreshMatchupSubmitEnabled(); });
-        matchupHomeEl.addEventListener('change', function () { refreshMatchupSelectionOptions(); refreshMatchupSubmitEnabled(); });
-        matchupSelectionEl.addEventListener('change', refreshMatchupSubmitEnabled);
-        matchupLineEl.addEventListener('input', refreshMatchupSubmitEnabled);
-        matchupOddsEl.addEventListener('input', refreshMatchupSubmitEnabled);
-        loadMatchupTeams(matchupSportEl.value, matchupAwayEl);
-        loadMatchupTeams(matchupSportEl.value, matchupHomeEl);
-
-        var MATCHUP_SECTION_LABELS = {
-            executive_summary: 'Executive Summary',
-            home_team_analysis: 'Home Team Analysis',
-            away_team_analysis: 'Away Team Analysis',
-            head_to_head_analysis: 'Head-to-Head Analysis',
-            market_specific_trends: 'Market-Specific Trends',
-            situational_trends: 'Situational Trends',
-            sample_size_and_data_quality_notes: 'Sample Size & Data Quality Notes',
-            final_conclusion: 'Final Conclusion',
-        };
-        var CONFIDENCE_CLASS = { Low: 'low', Moderate: 'moderate', Strong: 'high', 'Very Strong': 'high' };
-
-        function teamBucketLine(bucket) {
-            if (!bucket) return null;
-            if (bucket.market === 'spread') return { l: 'ATS near ' + bucket.line, v: (bucket.trend && bucket.trend.ats_record) || '0-0-0' };
-            if (bucket.market === 'total') return { l: 'O/U near ' + bucket.line, v: (bucket.trend && bucket.trend.ou_record) || '0-0-0' };
-            if (bucket.market === 'team_total_home' || bucket.market === 'team_total_away') return { l: 'vs ' + bucket.line + ' team total', v: bucket.over_record || '0-0-0' };
-            if (bucket.market === 'moneyline') return { l: 'Fav / Dog SU', v: ((bucket.as_favorite && bucket.as_favorite.su_record) || '0-0-0') + ' / ' + ((bucket.as_underdog && bucket.as_underdog.su_record) || '0-0-0') };
-            return null;
         }
+    }
 
-        function teamCardHtml(name, form, bucket) {
-            var bl = teamBucketLine(bucket);
-            var rows = [
-                { l: 'Overall Record', v: (form && form.su_record) || '0-0-0' },
-                { l: 'ATS Record', v: (form && form.ats_record) || '0-0-0' },
-                { l: 'O/U Record', v: (form && form.ou_record) || '0-0-0' },
-            ];
-            if (bl) rows.push(bl);
-            return '<div class="team-card"><h4>' + esc(name) + '</h4>' +
-                rows.map(function (r) { return '<div class="row"><span>' + esc(r.l) + '</span><span>' + esc(r.v) + '</span></div>'; }).join('') +
-                '</div>';
-        }
+    // ------------------------------------------------------- checkout
 
-        function matchupSectionsHtml(r) {
-            var narrative = r.narrative;
-            var html = '';
-            if (!r.narrative_available) {
-                html += '<div class="report-section"><p class="unavailable">The written narrative is unavailable right now — every figure above is still real and complete; only the prose write-up could not be generated.</p></div>';
-            }
-            if (narrative) {
-                ['executive_summary', 'home_team_analysis', 'away_team_analysis', 'head_to_head_analysis', 'market_specific_trends', 'situational_trends'].forEach(function (key) {
-                    var text = narrative[key];
-                    if (!text) return;
-                    var unavailable = UNAVAILABLE_RE.test(text);
-                    html += '<div class="report-section"><h3>' + esc(MATCHUP_SECTION_LABELS[key]) + '</h3><p class="' + (unavailable ? 'unavailable' : '') + '">' + esc(text) + '</p></div>';
-                });
-                if (Array.isArray(narrative.key_supporting_factors) && narrative.key_supporting_factors.length) {
-                    html += '<div class="report-section"><h3>Key Supporting Factors</h3><ul class="risk-list">' +
-                        narrative.key_supporting_factors.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul></div>';
-                }
-                if (Array.isArray(narrative.key_risk_factors) && narrative.key_risk_factors.length) {
-                    html += '<div class="report-section"><h3>Key Risk Factors</h3><ul class="risk-list">' +
-                        narrative.key_risk_factors.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul></div>';
-                }
-                ['sample_size_and_data_quality_notes', 'final_conclusion'].forEach(function (key) {
-                    var text = narrative[key];
-                    if (!text) return;
-                    var unavailable = UNAVAILABLE_RE.test(text);
-                    html += '<div class="report-section' + (key === 'final_conclusion' ? ' recommendation' : '') + '"><h3>' + esc(MATCHUP_SECTION_LABELS[key]) + '</h3><p class="' + (unavailable ? 'unavailable' : '') + '">' + esc(text) + '</p></div>';
-                });
-            }
-            return html;
-        }
+    document.querySelectorAll('[data-buy]').forEach(function (btn) {
+        btn.addEventListener('click', async function () {
+            var plan = btn.dataset.buy;
+            var err = $('buyError');
+            err.hidden = true;
 
-        // Situational filters are evaluated independently against each team's OWN game list
-        // (matchup.py::_gather_matchup_report_sync calls _apply_situation_chain once for home,
-        // once for away) -- genuinely "applied to both teams," not just labeled that way. This
-        // surfaces what actually happened: which requested filters applied, how many games
-        // qualified per team, and which filters had no effect (and why) -- previously the backend
-        // already returned all of this but nothing on screen ever showed it.
-        function situationalFilterSummaryHtml(r) {
-            if (!r.situations_requested || !r.situations_requested.length) return '';
-            var appliedHome = (r.situations_applied && r.situations_applied.home) || [];
-            var appliedAway = (r.situations_applied && r.situations_applied.away) || [];
-            var appliedShared = appliedHome.filter(function (l) { return appliedAway.indexOf(l) !== -1; });
-            var notApplied = ((r.situations_not_applied && r.situations_not_applied.home) || [])
-                .concat((r.situations_not_applied && r.situations_not_applied.away) || []);
-            var ignoredByLabel = {};
-            notApplied.forEach(function (item) { ignoredByLabel[item.situation] = item.reason; });
-            var ignoredLabels = Object.keys(ignoredByLabel);
-
-            var html = '<div class="situational-summary">';
-            html += '<h3 style="margin:0 0 6px;font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--teal);">Situational Filters</h3>';
-            html += '<div class="row"><span>Applied</span><span>' + (appliedShared.length ? esc(appliedShared.join(', ')) : 'None') + '</span></div>';
-            html += '<div class="row"><span>' + esc(r.away_team || 'Away') + ' Qualifying Games</span><span>' + (r.away_situational ? r.away_situational.games : '—') + '</span></div>';
-            html += '<div class="row"><span>' + esc(r.home_team || 'Home') + ' Qualifying Games</span><span>' + (r.home_situational ? r.home_situational.games : '—') + '</span></div>';
-            if (ignoredLabels.length) {
-                html += '<div class="ignored">Ignored (no effect on this report): ' + ignoredLabels.map(function (label) {
-                    return '<strong>' + esc(label) + '</strong> — ' + esc(ignoredByLabel[label]);
-                }).join('; ') + '</div>';
-            }
-            html += '</div>';
-            return html;
-        }
-
-        function renderMatchupReport(payload) {
-            var r = payload.result || {};
-            document.getElementById('matchupTitle').textContent = (r.away_team || '') + ' @ ' + (r.home_team || '');
-            var marketLbl = marketLabelFor(r.sport, r.market);
-            var oddsTxt = r.odds != null ? ' (' + (r.odds > 0 ? '+' + r.odds : r.odds) + ')' : '';
-            var lineTxt = r.market === 'moneyline' ? (r.selection + ' ML' + oddsTxt)
-                : (r.market === 'total' || r.market === 'team_total_home' || r.market === 'team_total_away')
-                    ? ((r.selection === 'over' ? 'Over' : 'Under') + ' ' + r.line + oddsTxt)
-                    : (r.selection + ' ' + (r.line > 0 ? '+' + r.line : r.line));
-            document.getElementById('matchupMeta').textContent = [r.sport, marketLbl + ': ' + lineTxt].filter(Boolean).join(' · ');
-
-            var a = r.assessment || {};
-            var labelEl = document.getElementById('matchupAssessmentLabel');
-            labelEl.textContent = a.label || '—';
-            labelEl.className = 'assessment-label ' + String(a.label || '').toLowerCase().replace(/\s+/g, '-');
-            var confEl = document.getElementById('matchupConfidenceBadge');
-            confEl.textContent = a.confidence || '—';
-            confEl.className = 'confidence-badge ' + (CONFIDENCE_CLASS[a.confidence] || 'low');
-            document.getElementById('matchupAssessmentBasis').textContent = a.basis || '';
-
-            document.getElementById('matchupTeamCards').innerHTML =
-                teamCardHtml(r.away_team, r.away_form, r.away_market) + teamCardHtml(r.home_team, r.home_form, r.home_market);
-
-            document.getElementById('matchupSections').innerHTML = situationalFilterSummaryHtml(r) + matchupSectionsHtml(r);
-
-            billingPillHtml(document.getElementById('matchupBillingPill'), payload);
-            document.getElementById('matchupBalances').textContent = 'Balance: ' + fmtBal(payload.balance_before) + ' → ' + fmtBal(payload.balance_after) + ' TMR Coin';
-            document.getElementById('matchupReceipt').innerHTML = payload.ledger_entry_id
-                ? 'Receipt #' + esc(payload.ledger_entry_id) + (payload.was_replay ? ' (duplicate submission — not re-charged)' : '') + ' · <a href="/wallet/">View in Wallet</a>'
-                : '';
-            matchupResult.hidden = false;
-        }
-
-        var matchupLastKey = null, matchupLastSig = null;
-        matchupForm.addEventListener('submit', async function (ev) {
-            ev.preventDefault();
-            matchupError.hidden = true;
-            matchupResult.hidden = true;
-            var cfg = MARKET_CONFIG[matchupMarket];
-            var payload = {
-                sport: matchupSportEl.value,
-                home_team: matchupHomeEl.value,
-                away_team: matchupAwayEl.value,
-                market: matchupMarket,
-                selection: matchupSelectionEl.value,
-                situations: matchupFilters.slice(),
-                num_games: Number(document.getElementById('matchupSampleSize').value),
-            };
-            if (cfg.line.show) payload.line = Number(matchupLineEl.value);
-            if (cfg.odds.show && matchupOddsEl.value !== '') payload.odds = Number(matchupOddsEl.value);
-
-            var sig = JSON.stringify(payload);
-            var idempotencyKey = (sig === matchupLastSig && matchupLastKey) ? matchupLastKey : uuid();
-            matchupLastSig = sig; matchupLastKey = idempotencyKey;
-
-            var balanceBeforeSubmit = Number((balanceValue.textContent || '').replace(/,/g, ''));
-            if (!isFinite(balanceBeforeSubmit)) balanceBeforeSubmit = null;
-
-            matchupSubmitBtn.disabled = true;
-            matchupLoading.hidden = false;
-            try {
-                var res = await window.api.submitBetLegendProMatchupReport(Object.assign({ idempotency_key: idempotencyKey }, payload));
-                matchupLastSig = null; matchupLastKey = null;
-                if (!res.result || !res.result.assessment) {
-                    matchupError.textContent = (res.note) || 'BetLegend Pro could not produce a matchup assessment, so it was not charged.';
-                    matchupError.hidden = false;
-                } else {
-                    renderMatchupReport(res);
-                }
-                await refreshBalance();
-                loadHistory();
-            } catch (err) {
-                var data = err && err.data;
-                if (err && err.status === 402) {
-                    insufficientBalanceMessage(matchupError, data);
-                    await refreshBalance();
-                } else if (err && (err.status === 403 || err.status === 400)) {
-                    showError(matchupError, (data && data.error) || 'Please check your matchup inputs and try again.');
-                    await refreshBalance();
-                } else {
-                    // A request that times out or drops the connection client-side
-                    // may still be completing (and billing) on the server -- this
-                    // was reproduced live during production verification on
-                    // 2026-07-28 (a request outlived the client's timeout, the
-                    // server finished and charged 5 TMR Coin, and the UI told the
-                    // user "It was not charged", which was false). Confirm against
-                    // the real post-request balance instead of asserting a charge
-                    // outcome the client can't actually know.
-                    var balanceAfterErr = await refreshBalance();
-                    if (balanceBeforeSubmit != null && balanceAfterErr != null && balanceAfterErr < balanceBeforeSubmit) {
-                        showError(matchupError, 'BetLegend Pro lost connection while this request was completing, and it looks like it went through -- your balance dropped by ' + (balanceBeforeSubmit - balanceAfterErr) + ' TMR Coin. Check Saved Reports before resubmitting so you are not charged twice.');
-                        loadHistory();
-                    } else {
-                        showError(matchupError, 'BetLegend Pro could not complete this matchup analysis (' + ((data && data.error) || 'server error') + '). It was not charged — you can try again.');
-                    }
-                }
-            } finally {
-                refreshMatchupSubmitEnabled();
-                matchupLoading.hidden = true;
-            }
-        });
-
-        // ==================== MONTE CARLO SIMULATOR ====================
-        var simForm = document.getElementById('simForm');
-        var simSubmitBtn = document.getElementById('simSubmitBtn');
-        var simError = document.getElementById('simError');
-        var simLoading = document.getElementById('simLoading');
-        var simResult = document.getElementById('simResult');
-        submitDisableEls.push(simSubmitBtn);
-
-        var simLastKey = null, simLastSig = null;
-        simForm.addEventListener('submit', async function (ev) {
-            ev.preventDefault();
-            simError.hidden = true;
-            simResult.hidden = true;
-            var winProb = Number(document.getElementById('simWinProb').value) / 100;
-            var odds = Number(document.getElementById('simOdds').value);
-            var bankroll = Number(document.getElementById('simBankroll').value) || undefined;
-            var strategy = document.getElementById('simStrategy').value;
-
-            var sig = winProb + '|' + odds + '|' + bankroll + '|' + strategy;
-            var idempotencyKey = (sig === simLastSig && simLastKey) ? simLastKey : uuid();
-            simLastSig = sig; simLastKey = idempotencyKey;
-
-            simSubmitBtn.disabled = true;
-            simLoading.hidden = false;
-            try {
-                var res = await window.api.submitBetLegendProSimulation({
-                    win_probability: winProb, odds: odds, bankroll: bankroll, strategy: strategy, idempotency_key: idempotencyKey,
-                });
-                simLastSig = null; simLastKey = null;
-                var r = res.result || {};
-                var results = r.results || {};
-                document.getElementById('simMeta').textContent = (r.parameters ? (r.parameters.strategy + ' staking, ' + r.parameters.num_simulations.toLocaleString('en-US') + ' simulations') : '');
-                var stats = [
-                    { v: '$' + Math.round(results.mean_final_bankroll).toLocaleString('en-US'), l: 'Mean Final Bankroll' },
-                    { v: '$' + Math.round(results.median_final_bankroll).toLocaleString('en-US'), l: 'Median Final' },
-                    { v: (results.bust_rate * 100).toFixed(1) + '%', l: 'Bust Rate' },
-                    { v: (results.profit_probability * 100).toFixed(1) + '%', l: 'Profit Probability' },
-                    { v: (results.expected_roi).toFixed(1) + '%', l: 'Expected ROI' },
-                    { v: (results.avg_max_drawdown * 100).toFixed(1) + '%', l: 'Avg Max Drawdown' },
-                ];
-                document.getElementById('simStats').innerHTML = stats.map(function (st) {
-                    return '<div class="stat-box"><div class="v">' + esc(st.v) + '</div><div class="l">' + esc(st.l) + '</div></div>';
-                }).join('');
-                billingPillHtml(document.getElementById('simBillingPill'), res);
-                document.getElementById('simBalances').textContent = 'Balance: ' + fmtBal(res.balance_before) + ' → ' + fmtBal(res.balance_after) + ' TMR Coin';
-                document.getElementById('simReceipt').innerHTML = res.ledger_entry_id
-                    ? 'Receipt #' + esc(res.ledger_entry_id) + (res.was_replay ? ' (duplicate submission — not re-charged)' : '') + ' · <a href="/wallet/">View in Wallet</a>'
-                    : '';
-                simResult.hidden = false;
-                await refreshBalance();
-                loadHistory();
-            } catch (err) {
-                var data = err && err.data;
-                if (err && err.status === 402) insufficientBalanceMessage(simError, data);
-                else if (err && (err.status === 403 || err.status === 400)) showError(simError, (data && data.error) || 'Please check your inputs and try again.');
-                else showError(simError, 'The simulation could not complete (' + ((data && data.error) || 'server error') + '). It was not charged — you can try again.');
-                await refreshBalance();
-            } finally {
-                simSubmitBtn.disabled = false;
-                simLoading.hidden = true;
-            }
-        });
-
-        // ==================== QUICK TREND QUERY (legacy, kept) ====================
-        var form = document.getElementById('inquiryForm');
-        var submitBtn = document.getElementById('submitBtn');
-        var submitError = document.getElementById('submitError');
-        var resultCard = document.getElementById('resultCard');
-        var teamSelect = document.getElementById('teamSelect');
-        var sportSelectEl = document.getElementById('sportSelect');
-        submitDisableEls.push(submitBtn);
-
-        var teamsCache = {};
-        async function loadTeamsForSport(sport) {
-            teamSelect.disabled = true;
-            teamSelect.innerHTML = '<option value="">Loading teams…</option>';
-            try {
-                var teams = teamsCache[sport];
-                if (!teams) {
-                    var res = await window.api.getBetLegendProTeams(sport);
-                    teams = (res && res.teams) || [];
-                    teamsCache[sport] = teams;
-                }
-                teamSelect.innerHTML = teams.map(function (t) {
-                    return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
-                }).join('');
-            } catch (err) {
-                teamSelect.innerHTML = '<option value="">Could not load teams — try again</option>';
-            } finally {
-                teamSelect.disabled = false;
-            }
-        }
-        sportSelectEl.addEventListener('change', function () { loadTeamsForSport(sportSelectEl.value); });
-        loadTeamsForSport(sportSelectEl.value);
-
-        var lastKey = null, lastSignature = null;
-        form.addEventListener('submit', async function (ev) {
-            ev.preventDefault();
-            submitError.hidden = true;
-            resultCard.hidden = true;
-            var sport = sportSelectEl.value;
-            var team = teamSelect.value;
-            var situation = document.getElementById('situationSelect').value;
-            if (!team) return;
-
-            var signature = sport + '|' + team + '|' + situation;
-            var idempotencyKey = (signature === lastSignature && lastKey) ? lastKey : uuid();
-            lastSignature = signature; lastKey = idempotencyKey;
-
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting…';
-            try {
-                var res = await window.api.submitBetLegendProInquiry({ sport: sport, team: team, situation: situation, idempotency_key: idempotencyKey });
-                lastSignature = null; lastKey = null;
-                billingPillHtml(document.getElementById('billingPill'), res);
-                var balBefore = fmtBal(res.balance_before), balAfter = fmtBal(res.balance_after);
-                document.getElementById('resultBalances').textContent = 'Balance: ' + balBefore + ' → ' + balAfter + ' TMR Coin';
-                var r = res.result || {};
-                document.getElementById('resultTitle').textContent = (r.situation || situation) + ' — ' + (r.team || team);
-                var meta = (r.sport || sport) + ' · ' + (typeof r.total_games === 'number' ? r.total_games.toLocaleString('en-US') : '0') + ' games matched';
-                if (res.note) meta += ' · ' + res.note;
-                document.getElementById('resultMeta').textContent = meta;
-                var s = r.summary || {};
-                var stats = [];
-                if (s.su_record) stats.push({ v: s.su_record, l: 'Straight Up' });
-                if (typeof s.su_win_pct === 'number') stats.push({ v: (s.su_win_pct * 100).toFixed(1) + '%', l: 'SU Win %' });
-                if (s.ats_record) stats.push({ v: s.ats_record, l: 'Against the Spread' });
-                if (typeof s.ats_win_pct === 'number') stats.push({ v: (s.ats_win_pct * 100).toFixed(1) + '%', l: 'ATS Win %' });
-                if (s.ou_record) stats.push({ v: s.ou_record, l: 'Over/Under' });
-                if (typeof s.over_pct === 'number') stats.push({ v: (s.over_pct * 100).toFixed(1) + '%', l: 'Over %' });
-                document.getElementById('resultStats').innerHTML = stats.map(function (st) {
-                    return '<div class="stat-box"><div class="v">' + esc(st.v) + '</div><div class="l">' + esc(st.l) + '</div></div>';
-                }).join('');
-                document.getElementById('receiptLink').innerHTML = res.ledger_entry_id
-                    ? 'Receipt #' + esc(res.ledger_entry_id) + (res.was_replay ? ' (duplicate submission — not re-charged)' : '') + ' · <a href="/wallet/">View in Wallet</a>'
-                    : '';
-                resultCard.hidden = false;
-                await refreshBalance();
-                loadHistory();
-            } catch (err) {
-                var data = err && err.data;
-                if (err && err.status === 402) insufficientBalanceMessage(submitError, data);
-                else if (err && err.status === 403) showError(submitError, (data && data.error) || 'This request could not be processed.');
-                else if (err && err.status === 400) { showError(submitError, (data && data.error) || 'Please check your inquiry and try again.'); lastSignature = null; lastKey = null; }
-                else showError(submitError, 'BetLegend Pro could not complete this inquiry (' + ((data && data.error) || 'server error') + '). It was not charged — you can try again.');
-                await refreshBalance();
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit Inquiry';
-            }
-        });
-
-        // ==================== SAVED HISTORY ====================
-        var historyList = document.getElementById('historyList');
-        var historyDetail = document.getElementById('historyDetail');
-        var historyLoaded = false;
-        var KIND_LABEL = { report: 'AI Report', simulation: 'Monte Carlo Sim', inquiry: 'Single-Team Trend Search', matchup_report: 'Matchup Analyzer' };
-
-        async function loadHistory() {
-            try {
-                var res = await window.api.getBetLegendProHistory(25);
-                var items = res.items || [];
-                if (!items.length) {
-                    historyList.innerHTML = '<p class="history-empty">No saved reports yet — your first billed report or simulation will appear here.</p>';
-                    return;
-                }
-                historyList.innerHTML = items.map(function (it) {
-                    var when = it.created_at ? new Date(it.created_at).toLocaleString() : '';
-                    return '<div class="history-item"><div class="h-main"><div class="h-title">' + esc(it.title || '(untitled)') + '</div>' +
-                        '<div class="h-meta">' + esc(KIND_LABEL[it.kind] || it.kind) + ' · ' + esc(when) + '</div></div>' +
-                        '<button class="btn small ghost" data-history-id="' + it.id + '" type="button">Reopen</button></div>';
-                }).join('');
-                historyList.querySelectorAll('[data-history-id]').forEach(function (btn) {
-                    btn.addEventListener('click', function () { reopenHistory(btn.dataset.historyId); });
-                });
-            } catch (err) {
-                historyList.innerHTML = '<p class="history-empty">Could not load history.</p>';
-            }
-        }
-
-        async function reopenHistory(id) {
-            try {
-                var detail = await window.api.getBetLegendProHistoryDetail(id);
-                document.getElementById('historyDetailTitle').textContent = detail.title || (KIND_LABEL[detail.kind] || detail.kind);
-                var body = '';
-                if (detail.kind === 'report') {
-                    var rep = (detail.result && detail.result.report) || {};
-                    Object.keys(REPORT_SECTION_LABELS).forEach(function (key) {
-                        if (!rep[key]) return;
-                        body += '<div class="report-section"><h3>' + esc(REPORT_SECTION_LABELS[key]) + '</h3><p class="' + (UNAVAILABLE_RE.test(rep[key]) ? 'unavailable' : '') + '">' + esc(rep[key]) + '</p></div>';
-                    });
-                    body = '<div class="report-sections">' + body + '</div>';
-                } else if (detail.kind === 'matchup_report') {
-                    var mr = detail.result || {};
-                    var a = mr.assessment || {};
-                    body = '<div class="assessment-card"><div><p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);">Overall Assessment</p>' +
-                        '<p class="assessment-label ' + esc(String(a.label || '').toLowerCase().replace(/\s+/g, '-')) + '">' + esc(a.label || '—') + '</p></div>' +
-                        '<div><p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);text-align:right;">Confidence</p>' +
-                        '<span class="confidence-badge ' + esc(CONFIDENCE_CLASS[a.confidence] || 'low') + '">' + esc(a.confidence || '—') + '</span></div></div>' +
-                        '<p class="assessment-basis">' + esc(a.basis || '') + '</p>' +
-                        '<div class="team-cards">' + teamCardHtml(mr.away_team, mr.away_form, mr.away_market) + teamCardHtml(mr.home_team, mr.home_form, mr.home_market) + '</div>' +
-                        '<div class="report-sections">' + matchupSectionsHtml(mr) + '</div>';
-                } else {
-                    body = '<pre style="white-space:pre-wrap;font-size:12.5px;color:#c8d3e0;background:rgba(15,23,42,0.5);padding:12px;border-radius:8px;">' + esc(JSON.stringify(detail.result, null, 2)) + '</pre>';
-                }
-                document.getElementById('historyDetailBody').innerHTML = body;
-                historyDetail.hidden = false;
-                historyDetail.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } catch (err) {
-                document.getElementById('historyDetailBody').textContent = 'Could not load this saved report.';
-                historyDetail.hidden = false;
-            }
-        }
-
-        async function boot() {
-            if (!isLoggedIn()) {
-                authState.hidden = false;
+            if (!loggedIn()) {
+                // Purchases attach to a TMR account, so sign-in comes first —
+                // and the user returns straight to the plan they picked.
+                window.location.href = '/login/?next=' + encodeURIComponent('/betlegend-pro/?plan=' + plan);
                 return;
             }
-            mainContent.hidden = false;
-            await refreshBalance();
+            var original = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Opening checkout…';
+            try {
+                var res = await window.api.startBetLegendProCheckout(plan);
+                if (res && res.url) { window.location.href = res.url; return; }
+                throw new Error('no checkout url');
+            } catch (e) {
+                btn.disabled = false;
+                btn.textContent = original;
+                var data = e && e.data;
+                if (e && e.status === 409) {
+                    err.innerHTML = '<span>' + esc((data && data.error) || 'You already have access.') + '</span>'
+                        + '<a class="blp-btn blp-btn--sm" href="/betlegend-pro/app/">Open BetLegend Pro</a>';
+                } else if (e && e.status === 503) {
+                    err.innerHTML = '<span>' + esc((data && data.error) || 'Checkout isn\'t open yet.')
+                        + ' In the meantime your first report is free, and TMR Coin covers the rest.</span>'
+                        + '<a class="blp-btn blp-btn--sm" href="/betlegend-pro/app/">Open BetLegend Pro</a>';
+                } else {
+                    err.innerHTML = '<span>' + esc((data && data.error) || 'Could not start checkout. Nothing was charged — try again.') + '</span>';
+                }
+                err.hidden = false;
+                err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+    });
+
+    // --------------------------------------------------- return handling
+
+    /**
+     * Stripe redirects back here after checkout. The redirect proves nothing:
+     * the entitlement is granted by the webhook, so this polls the API until
+     * access actually appears rather than congratulating the user on a payment
+     * that may not have settled.
+     */
+    async function handleReturn() {
+        var params = new URLSearchParams(location.search);
+        var purchase = params.get('purchase');
+        if (!purchase) return;
+
+        if (purchase === 'canceled') {
+            banner('warn', '<span>Checkout was cancelled — you have not been charged.</span>');
+            history.replaceState(null, '', location.pathname + '#pricing');
+            return;
         }
-        boot();
+        if (purchase !== 'success') return;
+
+        banner('ok', '<span><span class="blp-spin" style="display:inline-block;vertical-align:-2px;margin-right:8px"></span>Payment received — activating your access…</span>');
+        var deadline = Date.now() + 30000;
+        while (Date.now() < deadline) {
+            try {
+                var a = await window.api.getBetLegendProAccess();
+                if (a && a.entitled) {
+                    history.replaceState(null, '', location.pathname);
+                    banner('ok', '<span><strong>You\'re in.</strong> Unlimited access is active on your account.</span>'
+                        + '<a class="blp-btn blp-btn--sm blp-btn--primary" href="/betlegend-pro/app/">Open BetLegend Pro</a>');
+                    // Straight into the product, which is what was bought.
+                    setTimeout(function () { window.location.href = '/betlegend-pro/app/'; }, 1600);
+                    return;
+                }
+            } catch (err) { /* keep polling; a transient failure is not a verdict */ }
+            await new Promise(function (r) { setTimeout(r, 2000); });
+        }
+        history.replaceState(null, '', location.pathname);
+        banner('warn', '<span><strong>Payment received, but your access hasn\'t activated yet.</strong> '
+            + 'This usually clears within a minute. Reload this page, and if it still hasn\'t appeared, '
+            + '<a href="/contact/">contact support</a> — your payment is safe and on record.</span>');
+    }
+
+    // ----------------------------------------------------------- boot
+
+    (async function boot() {
+        if (loggedIn()) {
+            $('tryBtn').textContent = 'Open BetLegend Pro';
+        }
+        // A plan carried through login goes straight back to pricing.
+        var wanted = new URLSearchParams(location.search).get('plan');
+        if (wanted && loggedIn() && window.CSS && CSS.escape) {
+            var target = document.querySelector('[data-buy="' + CSS.escape(wanted) + '"]');
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+        await handleReturn();
+        await paintAccess();
     })();
-    </script>
+})();
+</script>
 </body>
 </html>

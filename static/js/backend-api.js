@@ -1281,6 +1281,24 @@ class TrustMyRecordAPI {
         return this.request(`/betlegend-pro/teams/${encodeURIComponent(sport)}`);
     }
 
+    // --- BetLegend Pro paid access (Stripe). Purchases are card-only; TMR
+    // Coin is never a payment method for a plan.
+    async getBetLegendProPlans() {
+        return this.request('/betlegend-pro/billing/plans');
+    }
+
+    async getBetLegendProAccess() {
+        return this.request('/betlegend-pro/billing/access');
+    }
+
+    async startBetLegendProCheckout(plan) {
+        return this.request('/betlegend-pro/billing/checkout', { method: 'POST', body: { plan } });
+    }
+
+    async openBetLegendProBillingPortal() {
+        return this.request('/betlegend-pro/billing/portal', { method: 'POST' });
+    }
+
     async getMyReferrals() {
         return this.request('/referrals/me');
     }

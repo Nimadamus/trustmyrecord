@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BetLegend Pro Dashboard | TrustMyRecord</title>
+    <!-- The dashboard is a private, per-account tool: nothing here is useful in
+         search results, and the public sales page at /betlegend-pro/ is the
+         indexable surface. noindex is correct for a logged-in app screen and is
+         not an SEO suppression of public content. -->
+    <meta name="robots" content="noindex, follow">
+    <meta name="description" content="Run matchup reports, AI handicapping reports, bankroll simulations and team trend searches against BetLegend Pro's graded-game dataset.">
+    <link rel="canonical" href="https://trustmyrecord.com/betlegend-pro/app/">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=20260801c">
+    <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=03cf1db63c84"></script>
+</head>
+<body class="tmr-site-shell" data-tmr-route="betlegend-pro-app">
+<main class="blp blp-shell">
+
+    <!-- ================================================== product header -->
+    <header class="blp-topbar">
+        <div class="blp-brand">
+            <div class="blp-mark" aria-hidden="true">BL</div>
+            <div class="blp-brand-text">
+                <div class="blp-brand-name">BetLegend Pro</div>
+                <p class="blp-brand-sub">Situational analysis on graded games</p>
+            </div>
+        </div>
+        <div class="blp-topbar-right" id="topbarRight" hidden>
+            <span class="blp-chip blp-chip--data" id="dataChip" hidden></span>
+            <span class="blp-chip" id="planChip" hidden></span>
+            <span class="blp-chip" id="balanceChip" hidden>
+                <img src="/static/branding/tmr-coin/tmr-coin-logo.svg" alt="" aria-hidden="true" style="width:1em;height:1em">
+                <strong id="balanceValue">&mdash;</strong> TMR Coin
+            </span>
+            <a class="blp-btn blp-btn--sm" id="manageBtn" href="/betlegend-pro/" hidden>Manage plan</a>
+            <a class="blp-btn blp-btn--sm blp-btn--primary" id="upgradeBtn" href="/betlegend-pro/#pricing" hidden>Get unlimited</a>
+        </div>
+    </header>
+
+    <!-- ============================================== logged-out gate -->
+    <section class="blp-card" id="authGate" hidden>
+        <div class="blp-empty">
+            <div class="blp-empty-ico" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            </div>
+            <h3>Sign in to open BetLegend Pro</h3>
+            <p>Your reports, simulations and library are private to your TrustMyRecord account.</p>
+            <div class="blp-hero-cta">
+                <a class="blp-btn blp-btn--primary" href="/login/?next=/betlegend-pro/app/">Log in</a>
+                <a class="blp-btn" href="/betlegend-pro/">What is BetLegend Pro?</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================== the product -->
+    <div class="blp-layout" id="app" hidden>
+
+        <nav class="blp-rail" role="tablist" aria-label="BetLegend Pro tools">
+            <div class="blp-rail-label">Tools</div>
+            <button class="blp-navbtn" role="tab" data-tool="matchup" aria-selected="true" type="button">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4v16h16"/><path d="M8 15l3.5-4 3 2.5L20 7"/></svg>
+                <span><span class="nb-title">Matchup Report</span><span class="nb-desc">Two teams, one market, a verdict</span></span>
+            </button>
+            <button class="blp-navbtn" role="tab" data-tool="ask" aria-selected="false" type="button">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 1 1-3.2-6.4"/><path d="M9.5 9a2.5 2.5 0 1 1 3.2 2.4c-.8.3-1.2.9-1.2 1.7v.4"/><path d="M11.5 17h.01"/></svg>
+                <span><span class="nb-title">Ask BetLegend</span><span class="nb-desc">Any question, in plain English</span></span>
+            </button>
+            <button class="blp-navbtn" role="tab" data-tool="sim" aria-selected="false" type="button">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17c3-8 6 4 9-2s6 1 9-5"/><path d="M3 21h18"/></svg>
+                <span><span class="nb-title">Bankroll Simulator</span><span class="nb-desc">Model risk before you stake</span></span>
+            </button>
+            <button class="blp-navbtn" role="tab" data-tool="trends" aria-selected="false" type="button">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+                <span><span class="nb-title">Team Trends</span><span class="nb-desc">One team, one situation</span></span>
+            </button>
+            <button class="blp-navbtn" role="tab" data-tool="library" aria-selected="false" type="button">
+                <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H9v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M9 4h5.5A1.5 1.5 0 0 1 16 5.5v13a1.5 1.5 0 0 1-1.5 1.5H9"/><path d="M18 6.5 20.4 18"/></svg>
+                <span><span class="nb-title">Library</span><span class="nb-desc">Everything you've run</span></span>
+            </button>
+        </nav>
+
+        <div>
+            <div id="accountNotice"></div>
+
+            <!-- ======================================== MATCHUP REPORT -->
+            <section class="blp-panel is-active" id="panel-matchup" role="tabpanel" aria-label="Matchup Report">
+                <form class="blp-card" id="matchupForm" novalidate>
+                    <div class="blp-card-head">
+                        <h2>Matchup Report</h2>
+                        <p class="sub">Pick two teams and the exact bet you're looking at. BetLegend Pro pulls both sides' real records in that market, applies your situational filters, and returns a verdict with the sample size behind it.</p>
+                    </div>
+
+                    <div class="blp-step">
+                        <div class="blp-step-head"><span class="blp-step-n">1</span><span class="blp-step-title">The matchup</span></div>
+                        <div class="blp-field" style="max-width:220px;margin-bottom:12px">
+                            <label for="mSport">Sport</label>
+                            <select class="blp-select" id="mSport">
+                                <option value="MLB">MLB</option>
+                                <option value="NBA">NBA</option>
+                                <option value="NFL">NFL</option>
+                                <option value="NHL">NHL</option>
+                            </select>
+                        </div>
+                        <div class="blp-vs">
+                            <div class="blp-field">
+                                <label for="mAway">Away team</label>
+                                <select class="blp-select" id="mAway" disabled><option value="">Loading teams…</option></select>
+                            </div>
+                            <button class="blp-swap" id="mSwap" type="button" title="Swap home and away" aria-label="Swap home and away">⇄</button>
+                            <div class="blp-field">
+                                <label for="mHome">Home team</label>
+                                <select class="blp-select" id="mHome" disabled><option value="">Loading teams…</option></select>
+                            </div>
+                        </div>
+                        <div class="blp-note blp-note--err" id="mTeamsErr" hidden style="margin-top:12px">
+                            <span>Couldn't load the team list.</span>
+                            <button class="blp-btn blp-btn--sm" id="mTeamsRetry" type="button">Retry</button>
+                        </div>
+                    </div>
+
+                    <div class="blp-step">
+                        <div class="blp-step-head"><span class="blp-step-n">2</span><span class="blp-step-title">Market &amp; line</span></div>
+                        <div class="blp-chips" id="mMarkets" style="margin-bottom:14px">
+                            <button class="blp-chipbtn" data-market="spread" aria-pressed="true" type="button">Spread</button>
+                            <button class="blp-chipbtn" data-market="moneyline" aria-pressed="false" type="button">Moneyline</button>
+                            <button class="blp-chipbtn" data-market="total" aria-pressed="false" type="button">Game Total</button>
+                            <button class="blp-chipbtn" data-market="team_total_home" aria-pressed="false" type="button">Home Team Total</button>
+                            <button class="blp-chipbtn" data-market="team_total_away" aria-pressed="false" type="button">Away Team Total</button>
+                        </div>
+                        <div class="blp-grid blp-grid--3">
+                            <div class="blp-field">
+                                <label for="mSelection">Betting on</label>
+                                <select class="blp-select" id="mSelection"></select>
+                            </div>
+                            <div class="blp-field" id="mLineField">
+                                <label id="mLineLabel" for="mLine">Spread</label>
+                                <input class="blp-input" id="mLine" type="number" step="0.5" inputmode="decimal" placeholder="e.g. -1.5">
+                                <span class="blp-err-msg" id="mLineErr">Enter the number on the bet.</span>
+                            </div>
+                            <div class="blp-field" id="mOddsField">
+                                <label id="mOddsLabel" for="mOdds">Odds</label>
+                                <input class="blp-input" id="mOdds" type="number" step="1" inputmode="numeric" placeholder="e.g. -120">
+                                <span class="blp-err-msg" id="mOddsErr">American odds, like -120 or +135.</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="blp-step">
+                        <div class="blp-step-head">
+                            <span class="blp-step-n">3</span>
+                            <span class="blp-step-title">Situation <span class="blp-step-hint">optional — applied to both teams</span></span>
+                            <button class="blp-chipbtn blp-chipbtn--ghost" id="mClearFilters" type="button" hidden style="margin-left:auto">Clear</button>
+                        </div>
+                        <!-- Only filters this report's query path can actually evaluate are
+                             offered. The sequence/streak filters (after win/loss, streaks) and
+                             rest_advantage are omitted rather than shown disabled: a control
+                             that can never be used is noise, and all of them remain available
+                             in Team Trends, which uses a query path that supports them. -->
+                        <div class="blp-chips" id="mFilters">
+                            <button class="blp-chipbtn" data-situation="home" aria-pressed="false" type="button">Home games</button>
+                            <button class="blp-chipbtn" data-situation="away" aria-pressed="false" type="button">Away games</button>
+                            <button class="blp-chipbtn" data-situation="home_favorite" aria-pressed="false" type="button">Home favorite</button>
+                            <button class="blp-chipbtn" data-situation="road_underdog" aria-pressed="false" type="button">Road underdog</button>
+                            <button class="blp-chipbtn" data-situation="as_favorite" aria-pressed="false" type="button">As favorite</button>
+                            <button class="blp-chipbtn" data-situation="as_underdog" aria-pressed="false" type="button">As underdog</button>
+                            <button class="blp-chipbtn" data-situation="division_rival" aria-pressed="false" type="button">Division rivalry</button>
+                            <button class="blp-chipbtn" data-situation="conference" aria-pressed="false" type="button">Conference games</button>
+                            <button class="blp-chipbtn" data-situation="large_spread" aria-pressed="false" type="button">Large spread (7+)</button>
+                            <button class="blp-chipbtn" data-situation="close_spread" aria-pressed="false" type="button">Close spread</button>
+                        </div>
+                        <div class="blp-field" style="max-width:220px;margin-top:14px">
+                            <label for="mSample">Recent-form window</label>
+                            <select class="blp-select" id="mSample">
+                                <option value="10">Last 10 games</option>
+                                <option value="20" selected>Last 20 games</option>
+                                <option value="30">Last 30 games</option>
+                                <option value="50">Last 50 games</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="blp-note blp-note--err" id="mError" hidden style="margin-bottom:14px"></div>
+                    <div class="blp-submitrow">
+                        <button class="blp-btn blp-btn--primary blp-btn--lg" id="mSubmit" type="submit" disabled>
+                            Run matchup report <span class="cost" data-cost></span>
+                        </button>
+                        <p class="blp-submitnote">Nothing is charged unless a complete report comes back. Failed, timed-out or unsupported requests always cost 0.</p>
+                    </div>
+                </form>
+
+                <div id="mLoading" hidden></div>
+                <div class="blp-result" id="mResult" hidden></div>
+            </section>
+
+            <!-- ========================================= ASK BETLEGEND -->
+            <section class="blp-panel" id="panel-ask" role="tabpanel" aria-label="Ask BetLegend">
+                <form class="blp-card" id="askForm" novalidate>
+                    <div class="blp-card-head">
+                        <h2>Ask BetLegend</h2>
+                        <p class="sub">One question, plain English. You get a structured report: form, situational splits with real sample sizes, market read, and a bet-or-pass call. Anything the dataset doesn't hold is labelled as unavailable rather than guessed.</p>
+                    </div>
+                    <div class="blp-field">
+                        <label for="askQuery">Your question</label>
+                        <textarea class="blp-textarea" id="askQuery" maxlength="500" placeholder="Dodgers vs Padres tonight&#10;Are the Celtics profitable as home favorites?&#10;Best MLB bet today"></textarea>
+                        <span class="blp-err-msg" id="askErr">Type a question first.</span>
+                    </div>
+                    <div class="blp-chips" style="margin-top:12px">
+                        <button class="blp-chipbtn blp-chipbtn--ghost" data-example="Dodgers vs Padres tonight" type="button">Try: a matchup</button>
+                        <button class="blp-chipbtn blp-chipbtn--ghost" data-example="Are the Celtics profitable as home favorites?" type="button">Try: a team situation</button>
+                        <button class="blp-chipbtn blp-chipbtn--ghost" data-example="Best MLB bet today" type="button">Try: today's board</button>
+                    </div>
+                    <div class="blp-note blp-note--warn" id="askClarify" hidden style="margin-top:14px"></div>
+                    <div class="blp-note blp-note--err" id="askError" hidden style="margin-top:14px"></div>
+                    <div class="blp-submitrow" style="margin-top:16px">
+                        <button class="blp-btn blp-btn--primary blp-btn--lg" id="askSubmit" type="submit">
+                            Generate report <span class="cost" data-cost></span>
+                        </button>
+                        <p class="blp-submitnote">A clarification, a timeout or a failure always costs 0.</p>
+                    </div>
+                </form>
+                <div id="askLoading" hidden></div>
+                <div class="blp-result" id="askResult" hidden></div>
+            </section>
+
+            <!-- ====================================== BANKROLL SIMULATOR -->
+            <section class="blp-panel" id="panel-sim" role="tabpanel" aria-label="Bankroll Simulator">
+                <form class="blp-card" id="simForm" novalidate>
+                    <div class="blp-card-head">
+                        <h2>Bankroll Simulator</h2>
+                        <p class="sub">Scenario analysis, not a prediction. You supply the win probability you believe in and the price you're getting; BetLegend Pro runs thousands of bet sequences and reports the spread of outcomes. It does not check whether your probability is right.</p>
+                    </div>
+                    <div class="blp-grid blp-grid--2">
+                        <div class="blp-field">
+                            <label for="simProb">Win probability</label>
+                            <input class="blp-input" id="simProb" type="number" min="1" max="99" step="1" value="55">
+                            <span class="blp-err-msg" id="simProbErr">Enter a whole number between 1 and 99.</span>
+                        </div>
+                        <div class="blp-field">
+                            <label for="simOdds">American odds</label>
+                            <input class="blp-input" id="simOdds" type="number" step="1" value="-110">
+                            <span class="blp-err-msg" id="simOddsErr">American odds, like -110 or +150.</span>
+                        </div>
+                    </div>
+                    <div class="blp-grid blp-grid--2" style="margin-top:12px">
+                        <div class="blp-field">
+                            <label for="simBank">Starting bankroll <span class="opt">(optional)</span></label>
+                            <input class="blp-input" id="simBank" type="number" min="1" step="1" value="10000">
+                        </div>
+                        <div class="blp-field">
+                            <label for="simStrategy">Staking strategy</label>
+                            <select class="blp-select" id="simStrategy">
+                                <option value="flat">Flat — 2% per bet</option>
+                                <option value="half_kelly">Half Kelly</option>
+                                <option value="kelly">Full Kelly</option>
+                            </select>
+                        </div>
+                    </div>
+                    <p class="blp-note" id="simEdgeNote" style="margin-top:14px"></p>
+                    <div class="blp-note blp-note--err" id="simError" hidden style="margin-top:14px"></div>
+                    <div class="blp-submitrow" style="margin-top:16px">
+                        <button class="blp-btn blp-btn--primary blp-btn--lg" id="simSubmit" type="submit">
+                            Run simulation <span class="cost" data-cost></span>
+                        </button>
+                        <p class="blp-submitnote">Invalid inputs are rejected before anything is charged.</p>
+                    </div>
+                </form>
+                <div id="simLoading" hidden></div>
+                <div class="blp-result" id="simResult" hidden></div>
+            </section>
+
+            <!-- ============================================ TEAM TRENDS -->
+            <section class="blp-panel" id="panel-trends" role="tabpanel" aria-label="Team Trends">
+                <form class="blp-card" id="trendForm" novalidate>
+                    <div class="blp-card-head">
+                        <h2>Team Trends</h2>
+                        <p class="sub">One team, one situation, the raw split — straight up, against the spread and over/under. No narrative, no synthesis. This tool supports streak and rest filters that the Matchup Report can't evaluate.</p>
+                    </div>
+                    <div class="blp-grid blp-grid--2">
+                        <div class="blp-field">
+                            <label for="tSport">Sport</label>
+                            <select class="blp-select" id="tSport">
+                                <option value="MLB">MLB</option>
+                                <option value="NBA">NBA</option>
+                                <option value="NFL">NFL</option>
+                                <option value="NHL">NHL</option>
+                                <option value="NCAAF">NCAAF</option>
+                                <option value="NCAAB">NCAAB</option>
+                            </select>
+                        </div>
+                        <div class="blp-field">
+                            <label for="tTeam">Team</label>
+                            <select class="blp-select" id="tTeam" disabled><option value="">Loading teams…</option></select>
+                        </div>
+                    </div>
+                    <div class="blp-field" style="margin-top:12px">
+                        <label for="tSituation">Situation</label>
+                        <select class="blp-select" id="tSituation">
+                            <option value="home_favorite">Home favorites</option>
+                            <option value="road_underdog">Road underdogs</option>
+                            <option value="after_loss">After a loss</option>
+                            <option value="after_win">After a win</option>
+                            <option value="three_game_win_streak">On a 3+ game win streak</option>
+                            <option value="three_game_losing_streak">On a 3+ game losing streak</option>
+                            <option value="division_rival">vs division rivals</option>
+                            <option value="rest_advantage">With a rest advantage (2+ days)</option>
+                            <option value="large_spread">Large spread (7+)</option>
+                            <option value="close_spread">Close spread (within 3)</option>
+                            <option value="home">Home games</option>
+                            <option value="away">Away games</option>
+                            <option value="as_favorite">As favorite</option>
+                            <option value="as_underdog">As underdog</option>
+                            <option value="conference">Conference games</option>
+                            <option value="day_game">Day games</option>
+                            <option value="night_game">Night games</option>
+                        </select>
+                    </div>
+                    <div class="blp-note blp-note--err" id="tError" hidden style="margin-top:14px"></div>
+                    <div class="blp-submitrow" style="margin-top:16px">
+                        <button class="blp-btn blp-btn--primary blp-btn--lg" id="tSubmit" type="submit" disabled>
+                            Search trends <span class="cost" data-cost></span>
+                        </button>
+                        <p class="blp-submitnote">An empty or failed result always costs 0.</p>
+                    </div>
+                </form>
+                <div id="tLoading" hidden></div>
+                <div class="blp-result" id="tResult" hidden></div>
+            </section>
+
+            <!-- ================================================= LIBRARY -->
+            <section class="blp-panel" id="panel-library" role="tabpanel" aria-label="Library">
+                <div class="blp-card">
+                    <div class="blp-card-head">
+                        <h2>Library</h2>
+                        <p class="sub">Every report and simulation you've run. Reopening one shows exactly what you got — it never calls BetLegend Pro again and never charges again.</p>
+                    </div>
+                    <div id="libList"></div>
+                </div>
+                <div class="blp-result" id="libDetail" hidden></div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+<script src="/static/js/backend-api.js?v=452944a54e5c"></script>
+<script>
+(function () {
+    'use strict';
+
+    // ================================================================ utils
+
+    var $ = function (id) { return document.getElementById(id); };
+
+    function esc(v) {
+        return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+            return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+        });
+    }
+
+    function uuid() {
+        if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+    }
+
+    var fmtInt = function (n) { return typeof n === 'number' ? n.toLocaleString('en-US') : '—'; };
+    var pct = function (n, d) { return (n * 100).toFixed(d == null ? 1 : d) + '%'; };
+
+    /** "97-84-3" -> { w, l, p, n, rate }. Pushes are excluded from the
+     *  denominator, which is how a cover rate is conventionally quoted. */
+    function parseRecord(rec) {
+        if (typeof rec !== 'string') return null;
+        var m = rec.match(/^(\d+)\s*-\s*(\d+)(?:\s*-\s*(\d+))?$/);
+        if (!m) return null;
+        var w = +m[1], l = +m[2], p = +(m[3] || 0);
+        var decided = w + l;
+        return { w: w, l: l, p: p, n: w + l + p, rate: decided ? w / decided : null };
+    }
+
+    /** Break-even win rate implied by an American price. */
+    function breakEven(odds) {
+        if (typeof odds !== 'number' || !isFinite(odds)) return null;
+        return odds < 0 ? (-odds) / (-odds + 100) : 100 / (odds + 100);
+    }
+
+    function isValidAmericanOdds(v) {
+        if (v === '' || v == null) return false;
+        var n = Number(v);
+        return Number.isInteger(n) && (n <= -100 || n >= 100);
+    }
+
+    function setFieldError(fieldEl, on) {
+        if (!fieldEl) return;
+        fieldEl.classList.toggle('is-invalid', !!on);
+        var control = fieldEl.querySelector('input, select, textarea');
+        if (control) control.setAttribute('aria-invalid', on ? 'true' : 'false');
+    }
+
+    function showNote(el, html) { el.innerHTML = html; el.hidden = false; }
+    function hide(el) { if (el) el.hidden = true; }
+
+    // Loading skeleton shaped like the result it is standing in for, so the
+    // page does not jump when the real content lands.
+    function skeleton(kind, message) {
+        var body = kind === 'kpis'
+            ? '<div class="blp-kpis">' + new Array(6).fill('<div class="blp-skel-box"></div>').join('') + '</div>'
+            : '<div class="blp-skel" style="padding:22px;border:1px solid var(--line);border-radius:var(--r-l);background:var(--s-1)">'
+                + '<div class="blp-skel-line w-40" style="height:26px"></div>'
+                + '<div class="blp-skel-line w-60"></div>'
+                + '<div class="blp-skel-box" style="height:64px"></div>'
+                + '<div class="blp-skel-line w-80"></div>'
+                + '<div class="blp-skel-line w-60"></div>'
+                + '<div class="blp-skel-line w-80"></div></div>';
+        return '<div class="blp-skel-status"><span class="blp-spin"></span>' + esc(message) + '</div>' + body;
+    }
+
+    function emptyState(title, body, actionHtml) {
+        return '<div class="blp-empty"><div class="blp-empty-ico" aria-hidden="true">'
+            + '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">'
+            + '<path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H9v16H5.5A1.5 1.5 0 0 1 4 18.5z"/><path d="M9 4h5.5A1.5 1.5 0 0 1 16 5.5v13a1.5 1.5 0 0 1-1.5 1.5H9"/></svg>'
+            + '</div><h3>' + esc(title) + '</h3><p>' + esc(body) + '</p>' + (actionHtml || '') + '</div>';
+    }
+
+    // ============================================================== state
+
+    var ACCESS = { entitled: false, plan: null };
+    var COST = { cost: 5, freeAvailable: false };
+    var costEls = [].slice.call(document.querySelectorAll('[data-cost]'));
+    var submitButtons = [];
+
+    function costLabel() {
+        if (ACCESS.entitled) return '· Included';
+        if (COST.freeAvailable) return '· First one free';
+        return '· ' + COST.cost + ' TMR Coin';
+    }
+    function paintCosts() {
+        costEls.forEach(function (el) { el.textContent = costLabel(); });
+    }
+
+    /** Billing pill for a completed result — three genuinely different cases. */
+    function billingPill(res) {
+        if (res.included_in_plan) return '<span class="blp-pill blp-pill--plan">Included in your plan</span>';
+        if (res.was_free_inquiry) return '<span class="blp-pill blp-pill--free">Free inquiry</span>';
+        if (res.billed) return '<span class="blp-pill blp-pill--charged">Charged ' + esc(res.amount_charged) + ' TMR Coin</span>';
+        return '<span class="blp-pill">Not charged</span>';
+    }
+
+    function receiptRow(res) {
+        var bits = [billingPill(res)];
+        if (!res.included_in_plan && res.balance_after != null) {
+            bits.push('<span>Balance ' + fmtInt(res.balance_before) + ' → ' + fmtInt(res.balance_after) + '</span>');
+        }
+        if (res.ledger_entry_id) {
+            bits.push('<span>Receipt #' + esc(res.ledger_entry_id)
+                + (res.was_replay ? ' · duplicate submission, not re-charged' : '')
+                + ' · <a href="/wallet/">View in wallet</a></span>');
+        }
+        return '<div class="blp-receipt">' + bits.join('') + '</div>';
+    }
+
+    async function refreshStatus() {
+        try {
+            var s = await window.api.getBetLegendProStatus();
+            COST.cost = typeof s.cost === 'number' ? s.cost : 5;
+            COST.freeAvailable = !!s.freeAvailable;
+            ACCESS = (s.access && typeof s.access === 'object') ? s.access : { entitled: false, plan: null };
+
+            var planChip = $('planChip'), balanceChip = $('balanceChip');
+            if (ACCESS.entitled) {
+                var planName = ACCESS.is_lifetime ? 'Lifetime'
+                    : ACCESS.plan === 'annual' ? 'Annual' : ACCESS.plan === 'monthly' ? 'Monthly' : 'Pro';
+                planChip.className = 'blp-chip blp-chip--plan';
+                planChip.innerHTML = '<strong>' + esc(planName) + '</strong> · unlimited';
+                planChip.hidden = false;
+                balanceChip.hidden = true;
+                $('manageBtn').hidden = !ACCESS.manageable;
+                $('upgradeBtn').hidden = true;
+            } else {
+                planChip.className = 'blp-chip blp-chip--free';
+                planChip.textContent = COST.freeAvailable ? 'First report free' : 'Pay per report';
+                planChip.hidden = false;
+                balanceChip.hidden = false;
+                $('balanceValue').textContent = fmtInt(s.balance);
+                $('manageBtn').hidden = true;
+                $('upgradeBtn').hidden = false;
+            }
+            $('topbarRight').hidden = false;
+
+            // Wallet problems only matter on the coin path.
+            var notice = $('accountNotice');
+            notice.innerHTML = '';
+            if (!ACCESS.entitled && s.isFrozen) {
+                notice.innerHTML = '<div class="blp-note blp-note--warn" style="margin-bottom:16px"><span><strong>Your TMR Coin wallet is frozen.</strong> Contact support before running a paid report — or get unlimited access and skip coin entirely.</span><a class="blp-btn blp-btn--sm" href="/betlegend-pro/#pricing">See plans</a></div>';
+            } else if (!ACCESS.entitled && !s.eligible) {
+                notice.innerHTML = '<div class="blp-note blp-note--warn" style="margin-bottom:16px"><span>This account isn\'t eligible to run a coin-billed report.</span></div>';
+            }
+            var blocked = !ACCESS.entitled && (s.isFrozen || !s.eligible);
+            submitButtons.forEach(function (b) { if (blocked) b.disabled = true; });
+
+            paintCosts();
+            return typeof s.balance === 'number' ? s.balance : null;
+        } catch (err) {
+            $('balanceValue').textContent = '—';
+            return null;
+        }
+    }
+
+    // ========================================================= navigation
+
+    var TOOL_PANEL = { matchup: 'panel-matchup', ask: 'panel-ask', sim: 'panel-sim', trends: 'panel-trends', library: 'panel-library' };
+    var navBtns = [].slice.call(document.querySelectorAll('.blp-navbtn'));
+
+    function selectTool(tool, push) {
+        if (!TOOL_PANEL[tool]) tool = 'matchup';
+        navBtns.forEach(function (b) { b.setAttribute('aria-selected', String(b.dataset.tool === tool)); });
+        Object.keys(TOOL_PANEL).forEach(function (k) {
+            $(TOOL_PANEL[k]).classList.toggle('is-active', k === tool);
+        });
+        if (push && window.history && history.replaceState) {
+            history.replaceState(null, '', '#' + tool);
+        }
+        if (tool === 'library') loadLibrary();
+    }
+    navBtns.forEach(function (b) {
+        b.addEventListener('click', function () { selectTool(b.dataset.tool, true); });
+    });
+
+    // ==================================================== MATCHUP REPORT
+
+    var MARKETS = {
+        spread: { mode: 'team', line: { show: true, label: 'Spread', ph: 'e.g. -1.5' }, odds: { show: false } },
+        moneyline: { mode: 'team', line: { show: false }, odds: { show: true, required: true, label: 'Moneyline odds', ph: 'e.g. -120' } },
+        total: { mode: 'ou', line: { show: true, label: 'Game total', ph: 'e.g. 8.5' }, odds: { show: true, required: false, label: 'Odds', ph: 'e.g. -110' } },
+        team_total_home: { mode: 'ou', line: { show: true, label: null, ph: 'e.g. 4.5' }, odds: { show: true, required: false, label: 'Odds', ph: 'e.g. -110' } },
+        team_total_away: { mode: 'ou', line: { show: true, label: null, ph: 'e.g. 3.5' }, odds: { show: true, required: false, label: 'Odds', ph: 'e.g. -110' } }
+    };
+
+    // Two filters conflict when they demand different values on the same
+    // dimension; ANDing them would always return zero games, so selecting one
+    // deselects the other rather than silently producing an empty sample.
+    var CONSTRAINTS = {
+        home: { ha: 'home' }, away: { ha: 'away' },
+        home_favorite: { ha: 'home', side: 'fav' }, road_underdog: { ha: 'away', side: 'dog' },
+        as_favorite: { side: 'fav' }, as_underdog: { side: 'dog' },
+        large_spread: { mag: 'large' }, close_spread: { mag: 'close' }
+    };
+    function conflicts(a, b) {
+        var ca = CONSTRAINTS[a], cb = CONSTRAINTS[b];
+        if (!ca || !cb) return false;
+        return ['ha', 'side', 'mag'].some(function (d) { return ca[d] && cb[d] && ca[d] !== cb[d]; });
+    }
+
+    var mMarket = 'spread', mFilters = [], teamCache = {}, teamInFlight = {};
+    var mSport = $('mSport'), mAway = $('mAway'), mHome = $('mHome'), mSelection = $('mSelection');
+    var mLine = $('mLine'), mOdds = $('mOdds'), mSubmit = $('mSubmit');
+    submitButtons.push(mSubmit);
+
+    function marketLabel(sport, market) {
+        if (market === 'spread' && sport === 'MLB') return 'Run line';
+        if (market === 'spread' && sport === 'NHL') return 'Puck line';
+        return ({ spread: 'Spread', moneyline: 'Moneyline', total: 'Game total', team_total_home: 'Home team total', team_total_away: 'Away team total' })[market] || market;
+    }
+
+    function lineLabelFor(market) {
+        if (market === 'team_total_home') return (mHome.value || 'Home team') + ' total';
+        if (market === 'team_total_away') return (mAway.value || 'Away team') + ' total';
+        if (market === 'spread') return marketLabel(mSport.value, 'spread');
+        return MARKETS[market].line.label;
+    }
+
+    // One shared in-flight promise per sport: both selects ask at once, and a
+    // transient upstream 502 no longer leaves one select stuck while the other
+    // loads. Backoff covers the free-tier API's observed cold-start window.
+    var RETRY_MS = [800, 2000, 4000];
+    function fetchTeams(sport) {
+        if (teamCache[sport]) return Promise.resolve(teamCache[sport]);
+        if (teamInFlight[sport]) return teamInFlight[sport];
+        var attempt = function (i) {
+            return window.api.getBetLegendProTeams(sport).then(function (r) {
+                teamCache[sport] = (r && r.teams) || [];
+                return teamCache[sport];
+            }).catch(function (err) {
+                if (i < RETRY_MS.length) {
+                    return new Promise(function (r) { setTimeout(r, RETRY_MS[i]); }).then(function () { return attempt(i + 1); });
+                }
+                throw err;
+            });
+        };
+        var p = attempt(0).finally(function () { delete teamInFlight[sport]; });
+        teamInFlight[sport] = p;
+        return p;
+    }
+
+    // Guarded against out-of-order responses: a slow NBA fetch resolving after
+    // a newer NFL one must not repopulate the list with the wrong sport.
+    async function loadMatchupTeams(sport) {
+        [mAway, mHome].forEach(function (s) { s.disabled = true; s.innerHTML = '<option value="">Loading teams…</option>'; });
+        hide($('mTeamsErr'));
+        try {
+            var teams = await fetchTeams(sport);
+            if (mSport.value !== sport) return;
+            var opts = '<option value="">Select team…</option>' + teams.map(function (t) {
+                return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
+            }).join('');
+            mAway.innerHTML = opts;
+            mHome.innerHTML = opts;
+        } catch (err) {
+            if (mSport.value !== sport) return;
+            [mAway, mHome].forEach(function (s) { s.innerHTML = '<option value="">Unavailable</option>'; });
+            $('mTeamsErr').hidden = false;
+        } finally {
+            if (mSport.value === sport) {
+                mAway.disabled = false; mHome.disabled = false;
+                syncMarketFields(); validateMatchup();
+            }
+        }
+    }
+
+    function syncMarketFields() {
+        var cfg = MARKETS[mMarket];
+        var prev = mSelection.value;
+        if (cfg.mode === 'ou') {
+            mSelection.innerHTML = '<option value="over">Over</option><option value="under">Under</option>';
+            mSelection.value = (prev === 'over' || prev === 'under') ? prev : 'over';
+        } else {
+            var opts = [];
+            if (mAway.value) opts.push(mAway.value);
+            if (mHome.value) opts.push(mHome.value);
+            mSelection.innerHTML = opts.length
+                ? opts.map(function (t) { return '<option value="' + esc(t) + '">' + esc(t) + '</option>'; }).join('')
+                : '<option value="">Select both teams first</option>';
+            if (opts.indexOf(prev) !== -1) mSelection.value = prev;
+        }
+        $('mLineField').hidden = !cfg.line.show;
+        if (cfg.line.show) { $('mLineLabel').textContent = lineLabelFor(mMarket); mLine.placeholder = cfg.line.ph; }
+        $('mOddsField').hidden = !cfg.odds.show;
+        if (cfg.odds.show) {
+            $('mOddsLabel').innerHTML = esc(cfg.odds.label) + (cfg.odds.required ? '' : ' <span class="opt">(optional)</span>');
+            mOdds.placeholder = cfg.odds.ph;
+        }
+    }
+
+    function validateMatchup() {
+        var cfg = MARKETS[mMarket];
+        var lineOk = !cfg.line.show || (mLine.value !== '' && !isNaN(Number(mLine.value)));
+        var oddsOk = !cfg.odds.show || (cfg.odds.required
+            ? isValidAmericanOdds(mOdds.value)
+            : (mOdds.value === '' || isValidAmericanOdds(mOdds.value)));
+        setFieldError($('mLineField'), cfg.line.show && mLine.value !== '' && !lineOk);
+        setFieldError($('mOddsField'), cfg.odds.show && mOdds.value !== '' && !oddsOk);
+        var ok = !!mAway.value && !!mHome.value && mAway.value !== mHome.value
+            && !!mSelection.value && lineOk && oddsOk;
+        mSubmit.disabled = !ok;
+        return ok;
+    }
+
+    $('mMarkets').querySelectorAll('.blp-chipbtn').forEach(function (chip) {
+        chip.addEventListener('click', function () {
+            mMarket = chip.dataset.market;
+            $('mMarkets').querySelectorAll('.blp-chipbtn').forEach(function (c) {
+                c.setAttribute('aria-pressed', String(c === chip));
+            });
+            // A value entered for one market's line/odds is never valid input
+            // for another's, so both clear on every market switch.
+            mLine.value = ''; mOdds.value = '';
+            syncMarketFields(); validateMatchup();
+        });
+    });
+
+    var filterChips = [].slice.call($('mFilters').querySelectorAll('.blp-chipbtn'));
+    filterChips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+            var s = chip.dataset.situation, i = mFilters.indexOf(s);
+            if (i !== -1) {
+                mFilters.splice(i, 1);
+                chip.setAttribute('aria-pressed', 'false');
+            } else {
+                filterChips.forEach(function (other) {
+                    var os = other.dataset.situation;
+                    if (os !== s && mFilters.indexOf(os) !== -1 && conflicts(s, os)) {
+                        mFilters.splice(mFilters.indexOf(os), 1);
+                        other.setAttribute('aria-pressed', 'false');
+                    }
+                });
+                mFilters.push(s);
+                chip.setAttribute('aria-pressed', 'true');
+            }
+            $('mClearFilters').hidden = mFilters.length === 0;
+        });
+    });
+    $('mClearFilters').addEventListener('click', function () {
+        mFilters.length = 0;
+        filterChips.forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+        $('mClearFilters').hidden = true;
+    });
+    $('mSwap').addEventListener('click', function () {
+        var a = mAway.value; mAway.value = mHome.value; mHome.value = a;
+        syncMarketFields(); validateMatchup();
+    });
+    mSport.addEventListener('change', function () {
+        mAway.value = ''; mHome.value = '';
+        loadMatchupTeams(mSport.value);
+    });
+    $('mTeamsRetry').addEventListener('click', function () {
+        delete teamCache[mSport.value];
+        loadMatchupTeams(mSport.value);
+    });
+    [mAway, mHome].forEach(function (el) {
+        el.addEventListener('change', function () { syncMarketFields(); validateMatchup(); });
+    });
+    mSelection.addEventListener('change', validateMatchup);
+    [mLine, mOdds].forEach(function (el) { el.addEventListener('input', validateMatchup); });
+
+    // ------------------------------------------------ matchup rendering
+
+    var MATCHUP_SECTIONS = {
+        executive_summary: 'Executive summary',
+        home_team_analysis: 'Home team',
+        away_team_analysis: 'Away team',
+        head_to_head_analysis: 'Head to head',
+        market_specific_trends: 'Market trends',
+        situational_trends: 'Situational trends',
+        sample_size_and_data_quality_notes: 'Sample size & data quality',
+        final_conclusion: 'Conclusion'
+    };
+    var CONF_PCT = { Low: 30, Moderate: 58, Strong: 80, 'Very Strong': 94 };
+    var UNAVAILABLE_RE = /not available/i;
+
+    function verdictSlug(label) {
+        return String(label || '').toLowerCase().trim().replace(/\s+/g, '-');
+    }
+
+    /** Cover/hit rate for one side of the requested market, if the dataset
+     *  actually carries it. Returns null rather than inventing a figure. */
+    function marketRate(bucket) {
+        if (!bucket) return null;
+        var rec = null;
+        if (bucket.market === 'spread') rec = bucket.trend && bucket.trend.ats_record;
+        else if (bucket.market === 'total') rec = bucket.trend && bucket.trend.ou_record;
+        else if (bucket.market === 'team_total_home' || bucket.market === 'team_total_away') rec = bucket.over_record;
+        else if (bucket.market === 'moneyline') rec = bucket.as_favorite && bucket.as_favorite.su_record;
+        var parsed = parseRecord(rec);
+        return parsed && parsed.rate != null ? parsed : null;
+    }
+
+    function comparisonHtml(r) {
+        var away = marketRate(r.away_market), home = marketRate(r.home_market);
+        if (!away && !home) return '';
+        var be = breakEven(typeof r.odds === 'number' ? r.odds : (r.market === 'spread' ? -110 : null));
+        var label = marketLabel(r.sport, r.market);
+        var rows = [
+            { name: r.away_team, side: 'Away', d: away },
+            { name: r.home_team, side: 'Home', d: home }
+        ].filter(function (x) { return x.d; });
+
+        var html = '<div class="blp-cmp"><div class="blp-cmp-head">'
+            + '<span class="blp-cmp-title">' + esc(label) + ' — hit rate at this number</span>'
+            + '<span class="blp-cmp-sub">' + (be != null ? 'Break-even ' + pct(be) : 'No price supplied') + '</span></div>';
+
+        rows.forEach(function (row) {
+            var rate = row.d.rate;
+            var low = be != null && rate < be;
+            // Bars are scaled 0–100% of the track; the break-even marker is
+            // placed on the same scale so the two are directly comparable.
+            html += '<div class="blp-cmp-row' + (low ? ' is-low' : '') + '">'
+                + '<span class="blp-cmp-name" title="' + esc(row.name) + '">' + esc(row.name) + '</span>'
+                + '<span class="blp-cmp-track"><span class="blp-cmp-fill" style="width:' + (rate * 100).toFixed(1) + '%"></span>'
+                + (be != null ? '<span class="blp-cmp-mark" style="left:' + (be * 100).toFixed(1) + '%"></span>' : '')
+                + '</span>'
+                + '<span><span class="blp-cmp-val">' + pct(rate) + '</span>'
+                + '<span class="blp-cmp-meta" style="display:block">' + esc(row.d.w + '-' + row.d.l + (row.d.p ? '-' + row.d.p : '')) + '</span></span>'
+                + '</div>';
+        });
+        if (be != null) {
+            html += '<div class="blp-cmp-legend"><i></i> Break-even at this price — a rate below the marker loses money long term.</div>';
+        }
+        return html + '</div>';
+    }
+
+    function teamCardHtml(name, side, form, bucket) {
+        var rows = [
+            ['Overall', (form && form.su_record) || '—'],
+            ['Against the spread', (form && form.ats_record) || '—'],
+            ['Over / under', (form && form.ou_record) || '—']
+        ];
+        var mr = marketRate(bucket);
+        if (mr) rows.push(['In this market', mr.w + '-' + mr.l + (mr.p ? '-' + mr.p : '') + ' · ' + pct(mr.rate)]);
+        return '<div class="blp-team"><div class="blp-team-head">'
+            + '<span class="blp-team-name" title="' + esc(name) + '">' + esc(name) + '</span>'
+            + '<span class="blp-team-side">' + esc(side) + '</span></div>'
+            + rows.map(function (r) {
+                return '<div class="blp-team-row"><span>' + esc(r[0]) + '</span><span>' + esc(r[1]) + '</span></div>';
+            }).join('') + '</div>';
+    }
+
+    function situationsHtml(r) {
+        if (!r.situations_requested || !r.situations_requested.length) return '';
+        var ah = (r.situations_applied && r.situations_applied.home) || [];
+        var aa = (r.situations_applied && r.situations_applied.away) || [];
+        var shared = ah.filter(function (l) { return aa.indexOf(l) !== -1; });
+        var notApplied = ((r.situations_not_applied && r.situations_not_applied.home) || [])
+            .concat((r.situations_not_applied && r.situations_not_applied.away) || []);
+        var reasons = {};
+        notApplied.forEach(function (i) { reasons[i.situation] = i.reason; });
+        var ignored = Object.keys(reasons);
+
+        var html = '<div class="blp-cmp" style="margin-top:12px"><div class="blp-cmp-head">'
+            + '<span class="blp-cmp-title">Situational filters</span></div>'
+            + '<div class="blp-team-row"><span>Applied to both teams</span><span>' + (shared.length ? esc(shared.join(', ')) : 'None') + '</span></div>'
+            + '<div class="blp-team-row"><span>' + esc(r.away_team || 'Away') + ' qualifying games</span><span>' + esc(r.away_situational ? r.away_situational.games : '—') + '</span></div>'
+            + '<div class="blp-team-row"><span>' + esc(r.home_team || 'Home') + ' qualifying games</span><span>' + esc(r.home_situational ? r.home_situational.games : '—') + '</span></div>';
+        if (ignored.length) {
+            // Neutral styling, not an error colour: a filter that does not apply
+            // to a given side is an expected outcome, not a fault.
+            html += '<div class="blp-unavail">' + ignored.map(function (k) {
+                return '<strong>' + esc(k) + '</strong> had no effect — ' + esc(reasons[k]);
+            }).join('<br>') + '</div>';
+        }
+        return html + '</div>';
+    }
+
+    /** Narrative sections, with every "not available" one folded into a single
+     *  honest line instead of N empty cards. */
+    function narrativeHtml(n, labels, keyOrder, keySection) {
+        if (!n) return '';
+        var html = '', missing = [];
+        keyOrder.forEach(function (key) {
+            var text = n[key];
+            if (!text) return;
+            if (UNAVAILABLE_RE.test(text)) { missing.push(labels[key]); return; }
+            var isKey = key === keySection;
+            html += '<details class="blp-sec' + (isKey ? ' blp-sec--key' : '') + '"' + (isKey ? ' open' : '') + '>'
+                + '<summary>' + esc(labels[key]) + '</summary>'
+                + '<div class="blp-sec-body"><p>' + esc(text) + '</p></div></details>';
+        });
+        var lists = [
+            ['key_supporting_factors', 'Supporting factors', ''],
+            ['risk_factors', 'Risk factors', ' blp-list--risk'],
+            ['key_risk_factors', 'Risk factors', ' blp-list--risk']
+        ];
+        lists.forEach(function (l) {
+            var arr = n[l[0]];
+            if (!Array.isArray(arr) || !arr.length) return;
+            html += '<details class="blp-sec" open><summary>' + esc(l[1]) + '</summary><div class="blp-sec-body">'
+                + '<ul class="blp-list' + l[2] + '">' + arr.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div></details>';
+        });
+        if (missing.length) {
+            html += '<div class="blp-unavail"><strong>Not carried in this dataset:</strong> ' + esc(missing.join(', '))
+                + '. These are left blank rather than estimated.</div>';
+        }
+        return '<div class="blp-sections">' + html + '</div>';
+    }
+
+    function renderMatchup(res) {
+        var r = res.result || {};
+        var a = r.assessment || {};
+        var confPct = CONF_PCT[a.confidence] != null ? CONF_PCT[a.confidence] : 30;
+        var oddsTxt = typeof r.odds === 'number' ? ' (' + (r.odds > 0 ? '+' + r.odds : r.odds) + ')' : '';
+        var sel = r.market === 'moneyline' ? r.selection + ' ML' + oddsTxt
+            : (r.market === 'total' || r.market === 'team_total_home' || r.market === 'team_total_away')
+                ? (r.selection === 'over' ? 'Over ' : 'Under ') + r.line + oddsTxt
+                : r.selection + ' ' + (r.line > 0 ? '+' + r.line : r.line);
+
+        var html = '<section class="blp-verdict" data-verdict="' + esc(verdictSlug(a.label)) + '">'
+            + '<div class="blp-verdict-top"><div class="blp-verdict-main">'
+            + '<div class="blp-verdict-k">Verdict</div>'
+            + '<h2 class="blp-verdict-label">' + esc(a.label || 'No call') + '</h2>'
+            + '<p class="blp-verdict-sel">' + esc(sel) + ' <span>· ' + esc(r.away_team) + ' @ ' + esc(r.home_team) + ' · ' + esc(r.sport) + '</span></p>'
+            + '</div><div class="blp-conf">'
+            + '<div class="blp-conf-row"><span class="blp-verdict-k">Confidence</span><span class="blp-conf-val">' + esc(a.confidence || '—') + '</span></div>'
+            + '<div class="blp-meter"><i style="width:' + confPct + '%"></i></div>'
+            + '<p class="blp-conf-note">Confidence reflects sample size and how consistent the split is — not a probability of winning.</p>'
+            + '</div></div>'
+            + (a.basis ? '<p class="blp-verdict-basis">' + esc(a.basis) + '</p>' : '')
+            + '</section>';
+
+        html += comparisonHtml(r);
+        html += '<div class="blp-teams">'
+            + teamCardHtml(r.away_team, 'Away', r.away_form, r.away_market)
+            + teamCardHtml(r.home_team, 'Home', r.home_form, r.home_market) + '</div>';
+        html += situationsHtml(r);
+
+        if (!r.narrative_available) {
+            html += '<div class="blp-note blp-note--warn" style="margin-top:14px"><span>Every figure above is real and complete — only the written write-up could not be generated for this request.</span></div>';
+        }
+        html += narrativeHtml(r.narrative, MATCHUP_SECTIONS,
+            ['executive_summary', 'away_team_analysis', 'home_team_analysis', 'head_to_head_analysis', 'market_specific_trends', 'situational_trends', 'sample_size_and_data_quality_notes', 'final_conclusion'],
+            'final_conclusion');
+        html += receiptRow(res);
+        return html;
+    }
+
+    // ------------------------------------------------- matchup submit
+
+    var mLastKey = null, mLastSig = null;
+    $('matchupForm').addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        if (!validateMatchup()) return;
+        hide($('mError')); hide($('mResult'));
+
+        var cfg = MARKETS[mMarket];
+        var payload = {
+            sport: mSport.value, home_team: mHome.value, away_team: mAway.value,
+            market: mMarket, selection: mSelection.value,
+            situations: mFilters.slice(), num_games: Number($('mSample').value)
+        };
+        if (cfg.line.show) payload.line = Number(mLine.value);
+        if (cfg.odds.show && mOdds.value !== '') payload.odds = Number(mOdds.value);
+
+        var sig = JSON.stringify(payload);
+        var key = (sig === mLastSig && mLastKey) ? mLastKey : uuid();
+        mLastSig = sig; mLastKey = key;
+
+        var balanceBefore = Number(($('balanceValue').textContent || '').replace(/,/g, ''));
+        if (!isFinite(balanceBefore)) balanceBefore = null;
+
+        mSubmit.disabled = true;
+        $('mLoading').innerHTML = skeleton('report', 'Pulling both teams\' history and running the assessment — 15 to 40 seconds…');
+        $('mLoading').hidden = false;
+        try {
+            var res = await window.api.submitBetLegendProMatchupReport(Object.assign({ idempotency_key: key }, payload));
+            mLastSig = null; mLastKey = null;
+            if (!res.result || !res.result.assessment) {
+                showNote($('mError'), '<span>' + esc(res.note || 'BetLegend Pro could not produce an assessment for this matchup, so nothing was charged.') + '</span>');
+            } else {
+                $('mResult').innerHTML = renderMatchup(res);
+                $('mResult').hidden = false;
+            }
+            await refreshStatus();
+            loadLibrary();
+        } catch (err) {
+            await handleInquiryError(err, $('mError'), balanceBefore, 'matchup report');
+        } finally {
+            $('mLoading').hidden = true;
+            validateMatchup();
+        }
+    });
+
+    /**
+     * Shared error handling. A dropped connection is NOT proof the request
+     * failed — the server may have completed and billed it — so the balance is
+     * re-read and the user is told what actually happened rather than being
+     * assured they were not charged.
+     */
+    async function handleInquiryError(err, target, balanceBefore, what) {
+        var data = err && err.data;
+        if (err && err.status === 402) {
+            showNote(target, '<span><strong>Not enough TMR Coin.</strong> This costs '
+                + esc(data && data.cost) + ' and you have ' + esc(data && data.balance) + '. '
+                + 'Get unlimited access and skip coin entirely, or earn more.</span>'
+                + '<a class="blp-btn blp-btn--sm blp-btn--primary" href="/betlegend-pro/#pricing">See plans</a>');
+            await refreshStatus();
+            return;
+        }
+        if (err && (err.status === 400 || err.status === 403)) {
+            showNote(target, '<span>' + esc((data && data.error) || 'Check your inputs and try again.') + '</span>');
+            await refreshStatus();
+            return;
+        }
+        var after = await refreshStatus();
+        if (balanceBefore != null && after != null && after < balanceBefore) {
+            showNote(target, '<span><strong>The connection dropped while this was completing, and it looks like it went through</strong> — your balance fell by '
+                + esc(balanceBefore - after) + ' TMR Coin. Check your Library before running it again so you are not charged twice.</span>');
+            loadLibrary();
+        } else {
+            showNote(target, '<span>BetLegend Pro could not complete this ' + esc(what) + ' ('
+                + esc((data && data.error) || 'server error') + '). Nothing was charged — you can try again.</span>');
+        }
+    }
+
+    // ======================================================= ASK BETLEGEND
+
+    var REPORT_SECTIONS = {
+        matchup_overview: 'Matchup overview',
+        odds_and_line_movement: 'Odds & line movement',
+        starting_pitchers: 'Starting pitchers',
+        projected_lineups: 'Projected lineups',
+        injuries_rest_travel_weather_scheduling: 'Injuries, rest, travel & weather',
+        recent_form: 'Recent form',
+        home_away_and_situational_splits: 'Home/away & situational splits',
+        betting_trends: 'Betting trends',
+        advanced_stats_and_matchup_advantages: 'Advanced stats',
+        market_interpretation: 'Market interpretation',
+        best_bet_or_pass: 'Best bet or pass',
+        recommended_line_and_max_price: 'Recommended line & max price'
+    };
+
+    var askSubmit = $('askSubmit');
+    submitButtons.push(askSubmit);
+    document.querySelectorAll('[data-example]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            $('askQuery').value = b.dataset.example;
+            setFieldError($('askQuery').closest('.blp-field'), false);
+            $('askQuery').focus();
+        });
+    });
+
+    function renderAsk(res) {
+        var r = res.result || {}, rep = r.report || {};
+        var cr = rep.confidence_rating || {};
+        var confPct = typeof cr.score === 'number' ? Math.max(0, Math.min(100, cr.score)) : (CONF_PCT[cr.level] || 30);
+        var reco = rep.best_bet_or_pass || '';
+
+        var html = '<section class="blp-verdict" data-verdict="' + esc(verdictSlug(/pass/i.test(reco) ? 'pass' : 'lean')) + '">'
+            + '<div class="blp-verdict-top"><div class="blp-verdict-main">'
+            + '<div class="blp-verdict-k">Recommendation</div>'
+            + '<h2 class="blp-verdict-label" style="font-size:clamp(20px,2.6vw,27px);line-height:1.2">' + esc(reco || 'No call') + '</h2>'
+            + '<p class="blp-verdict-sel">' + esc(r.interpreted_as || r.query || '')
+            + '<span>' + (r.sport ? ' · ' + esc(r.sport) : '') + ((r.teams && r.teams.length) ? ' · ' + esc(r.teams.join(' vs ')) : '') + '</span></p>'
+            + '</div><div class="blp-conf">'
+            + '<div class="blp-conf-row"><span class="blp-verdict-k">Confidence</span><span class="blp-conf-val">'
+            + esc(cr.level || '—') + (typeof cr.score === 'number' ? ' · ' + cr.score : '') + '</span></div>'
+            + '<div class="blp-meter"><i style="width:' + confPct + '%"></i></div>'
+            + (cr.basis ? '<p class="blp-conf-note">' + esc(cr.basis) + '</p>' : '')
+            + '</div></div>'
+            + (rep.recommended_line_and_max_price ? '<p class="blp-verdict-basis">' + esc(rep.recommended_line_and_max_price) + '</p>' : '')
+            + '</section>';
+
+        var order = Object.keys(REPORT_SECTIONS).filter(function (k) {
+            return k !== 'best_bet_or_pass' && k !== 'recommended_line_and_max_price';
+        });
+        html += narrativeHtml(Object.assign({}, rep), REPORT_SECTIONS, order, null);
+
+        var sources = Array.isArray(rep.sources) ? rep.sources : [];
+        var t = r.timing || {};
+        var footBits = [];
+        if (sources.length) {
+            footBits.push('Sources: ' + sources.map(function (s) { return esc(s.label) + (s.timestamp ? ' (' + esc(s.timestamp) + ')' : ''); }).join(' · '));
+        }
+        if (t.intent_seconds != null) {
+            var total = [t.intent_seconds, t.gather_seconds, t.synthesis_seconds]
+                .filter(function (v) { return v != null; })
+                .reduce(function (x, y) { return x + y; }, 0);
+            footBits.push('Generated in ' + total.toFixed(1) + 's');
+        }
+        if (footBits.length) html += '<p class="blp-unavail" style="border-style:solid">' + footBits.join(' · ') + '</p>';
+        return html + receiptRow(res);
+    }
+
+    var askLastKey = null, askLastSig = null;
+    $('askForm').addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        var query = $('askQuery').value.trim();
+        var field = $('askQuery').closest('.blp-field');
+        if (!query) { setFieldError(field, true); $('askQuery').focus(); return; }
+        setFieldError(field, false);
+        hide($('askError')); hide($('askClarify')); hide($('askResult'));
+
+        var key = (query === askLastSig && askLastKey) ? askLastKey : uuid();
+        askLastSig = query; askLastKey = key;
+
+        var balanceBefore = Number(($('balanceValue').textContent || '').replace(/,/g, ''));
+        if (!isFinite(balanceBefore)) balanceBefore = null;
+
+        askSubmit.disabled = true;
+        $('askLoading').innerHTML = skeleton('report', 'Reading your question, gathering the data and writing the report — 20 to 40 seconds…');
+        $('askLoading').hidden = false;
+        try {
+            var res = await window.api.submitBetLegendProReport({ query: query, idempotency_key: key });
+            askLastSig = null; askLastKey = null;
+            var r = res.result || {};
+            if (r.needs_clarification) {
+                showNote($('askClarify'), '<span>' + esc(r.interpreted_as || 'That question could not be resolved to a report. Try naming a team or a specific matchup.') + '</span>');
+            } else {
+                $('askResult').innerHTML = renderAsk(res);
+                $('askResult').hidden = false;
+            }
+            await refreshStatus();
+            loadLibrary();
+        } catch (err) {
+            await handleInquiryError(err, $('askError'), balanceBefore, 'report');
+        } finally {
+            askSubmit.disabled = false;
+            $('askLoading').hidden = true;
+        }
+    });
+
+    // ==================================================== BANKROLL SIM
+
+    var simSubmit = $('simSubmit');
+    submitButtons.push(simSubmit);
+
+    /** Live edge read-out: whether the user's own inputs even carry a positive
+     *  expectation. Pure arithmetic on their two numbers — no dataset involved. */
+    function updateEdgeNote() {
+        var p = Number($('simProb').value) / 100;
+        var odds = Number($('simOdds').value);
+        var be = breakEven(odds);
+        var note = $('simEdgeNote');
+        if (!isFinite(p) || p <= 0 || p >= 1 || be == null) {
+            note.className = 'blp-note';
+            note.textContent = 'Enter a win probability and a price to see the implied edge.';
+            return;
+        }
+        var edge = p - be;
+        note.className = 'blp-note ' + (edge > 0 ? 'blp-note--ok' : 'blp-note--warn');
+        note.innerHTML = '<span>At ' + esc(odds > 0 ? '+' + odds : odds) + ' you need to win <strong>' + pct(be)
+            + '</strong> to break even. You entered <strong>' + pct(p) + '</strong> — '
+            + (edge > 0
+                ? 'an assumed edge of <strong>+' + pct(edge) + '</strong>. The simulation below shows how that plays out with variance.'
+                : 'that is <strong>' + pct(Math.abs(edge)) + '</strong> below break-even, so this is a losing proposition at this price.')
+            + '</span>';
+    }
+    ['simProb', 'simOdds'].forEach(function (id) { $(id).addEventListener('input', updateEdgeNote); });
+
+    function validateSim() {
+        var p = Number($('simProb').value), odds = $('simOdds').value;
+        var pOk = Number.isInteger(p) && p >= 1 && p <= 99;
+        var oOk = isValidAmericanOdds(odds);
+        setFieldError($('simProb').closest('.blp-field'), !pOk);
+        setFieldError($('simOdds').closest('.blp-field'), !oOk);
+        return pOk && oOk;
+    }
+
+    var simLastKey = null, simLastSig = null;
+    $('simForm').addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        if (!validateSim()) return;
+        hide($('simError')); hide($('simResult'));
+
+        var winProb = Number($('simProb').value) / 100;
+        var odds = Number($('simOdds').value);
+        var bankroll = Number($('simBank').value) || undefined;
+        var strategy = $('simStrategy').value;
+        var sig = winProb + '|' + odds + '|' + bankroll + '|' + strategy;
+        var key = (sig === simLastSig && simLastKey) ? simLastKey : uuid();
+        simLastSig = sig; simLastKey = key;
+
+        var balanceBefore = Number(($('balanceValue').textContent || '').replace(/,/g, ''));
+        if (!isFinite(balanceBefore)) balanceBefore = null;
+
+        simSubmit.disabled = true;
+        $('simLoading').innerHTML = skeleton('kpis', 'Running simulated bet sequences…');
+        $('simLoading').hidden = false;
+        try {
+            var res = await window.api.submitBetLegendProSimulation({
+                win_probability: winProb, odds: odds, bankroll: bankroll, strategy: strategy, idempotency_key: key
+            });
+            simLastSig = null; simLastKey = null;
+            var r = res.result || {}, out = r.results || {}, params = r.parameters || {};
+            var kpis = [
+                { v: '$' + fmtInt(Math.round(out.median_final_bankroll)), l: 'Median finish', h: 'The middle outcome — a better guide than the mean, which a few huge runs can drag upward.' },
+                { v: '$' + fmtInt(Math.round(out.mean_final_bankroll)), l: 'Mean finish', h: 'Average across every simulated run.' },
+                { v: pct(out.profit_probability), l: 'Finished ahead', h: 'Share of runs that ended above the starting bankroll.', tone: out.profit_probability >= 0.5 ? 'pos' : '' },
+                { v: pct(out.bust_rate), l: 'Bust rate', h: 'Share of runs that lost the bankroll entirely.', tone: out.bust_rate > 0.05 ? 'neg' : '' },
+                { v: (out.expected_roi > 0 ? '+' : '') + out.expected_roi.toFixed(1) + '%', l: 'Expected ROI', h: 'Return on total amount staked.', tone: out.expected_roi > 0 ? 'pos' : 'neg' },
+                { v: pct(out.avg_max_drawdown), l: 'Avg max drawdown', h: 'Typical worst peak-to-trough fall along the way.', tone: out.avg_max_drawdown > 0.3 ? 'neg' : '' }
+            ];
+            var html = '<section class="blp-card"><div class="blp-card-head"><h2>Simulation results</h2>'
+                + '<p class="sub">' + esc((params.strategy || strategy).replace('_', ' ')) + ' staking · '
+                + fmtInt(params.num_simulations) + ' simulated runs · '
+                + esc(pct(winProb)) + ' assumed win rate at ' + esc(odds > 0 ? '+' + odds : odds) + '</p></div>'
+                + '<div class="blp-kpis">' + kpis.map(function (k) {
+                    return '<div class="blp-kpi"><div class="blp-kpi-v' + (k.tone ? ' is-' + k.tone : '') + '">' + esc(k.v) + '</div>'
+                        + '<div class="blp-kpi-l">' + esc(k.l) + '</div><div class="blp-kpi-h">' + esc(k.h) + '</div></div>';
+                }).join('') + '</div>'
+                + '<div class="blp-unavail" style="border-style:solid">These outcomes follow entirely from the win probability you supplied. BetLegend Pro does not verify that assumption — if it is wrong, so is everything above.</div>'
+                + receiptRow(res) + '</section>';
+            $('simResult').innerHTML = html;
+            $('simResult').hidden = false;
+            await refreshStatus();
+            loadLibrary();
+        } catch (err) {
+            await handleInquiryError(err, $('simError'), balanceBefore, 'simulation');
+        } finally {
+            simSubmit.disabled = false;
+            $('simLoading').hidden = true;
+        }
+    });
+
+    // ====================================================== TEAM TRENDS
+
+    var tSubmit = $('tSubmit'), tTeam = $('tTeam'), tSport = $('tSport');
+    submitButtons.push(tSubmit);
+    var trendCache = {};
+
+    async function loadTrendTeams(sport) {
+        tTeam.disabled = true;
+        tTeam.innerHTML = '<option value="">Loading teams…</option>';
+        tSubmit.disabled = true;
+        try {
+            var teams = trendCache[sport];
+            if (!teams) {
+                var r = await window.api.getBetLegendProTeams(sport);
+                teams = (r && r.teams) || [];
+                trendCache[sport] = teams;
+            }
+            if (tSport.value !== sport) return;
+            tTeam.innerHTML = '<option value="">Select team…</option>' + teams.map(function (t) {
+                return '<option value="' + esc(t) + '">' + esc(t) + '</option>';
+            }).join('');
+        } catch (err) {
+            if (tSport.value !== sport) return;
+            tTeam.innerHTML = '<option value="">Unavailable — try again</option>';
+        } finally {
+            if (tSport.value === sport) { tTeam.disabled = false; tSubmit.disabled = !tTeam.value; }
+        }
+    }
+    tSport.addEventListener('change', function () { loadTrendTeams(tSport.value); });
+    tTeam.addEventListener('change', function () { tSubmit.disabled = !tTeam.value; });
+
+    var tLastKey = null, tLastSig = null;
+    $('trendForm').addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        if (!tTeam.value) return;
+        hide($('tError')); hide($('tResult'));
+
+        var sport = tSport.value, team = tTeam.value, situation = $('tSituation').value;
+        var sig = sport + '|' + team + '|' + situation;
+        var key = (sig === tLastSig && tLastKey) ? tLastKey : uuid();
+        tLastSig = sig; tLastKey = key;
+
+        var balanceBefore = Number(($('balanceValue').textContent || '').replace(/,/g, ''));
+        if (!isFinite(balanceBefore)) balanceBefore = null;
+
+        tSubmit.disabled = true;
+        $('tLoading').innerHTML = skeleton('kpis', 'Searching the graded-game dataset…');
+        $('tLoading').hidden = false;
+        try {
+            var res = await window.api.submitBetLegendProInquiry({ sport: sport, team: team, situation: situation, idempotency_key: key });
+            tLastSig = null; tLastKey = null;
+            var r = res.result || {}, s = r.summary || {};
+            var games = typeof r.total_games === 'number' ? r.total_games : 0;
+
+            if (!games) {
+                $('tResult').innerHTML = '<section class="blp-card">'
+                    + emptyState('No games match that situation',
+                        'The dataset holds no ' + sport + ' games for ' + team + ' in this situation, so there is nothing to report. You were not charged.',
+                        '') + '</section>';
+                $('tResult').hidden = false;
+            } else {
+                var tiles = [];
+                if (s.su_record) tiles.push({ v: s.su_record, l: 'Straight up', h: typeof s.su_win_pct === 'number' ? pct(s.su_win_pct) + ' win rate' : '' });
+                if (s.ats_record) tiles.push({ v: s.ats_record, l: 'Against the spread', h: typeof s.ats_win_pct === 'number' ? pct(s.ats_win_pct) + ' cover rate' : '' });
+                if (s.ou_record) tiles.push({ v: s.ou_record, l: 'Over / under', h: typeof s.over_pct === 'number' ? pct(s.over_pct) + ' went over' : '' });
+                var html = '<section class="blp-card"><div class="blp-card-head">'
+                    + '<h2>' + esc(team) + ' — ' + esc(r.situation || situation) + '</h2>'
+                    + '<p class="sub">' + esc(r.sport || sport) + ' · ' + fmtInt(games) + ' games matched'
+                    + (res.note ? ' · ' + esc(res.note) : '') + '</p></div>'
+                    + '<div class="blp-kpis">' + tiles.map(function (t) {
+                        return '<div class="blp-kpi"><div class="blp-kpi-v" style="font-size:22px">' + esc(t.v) + '</div>'
+                            + '<div class="blp-kpi-l">' + esc(t.l) + '</div>'
+                            + (t.h ? '<div class="blp-kpi-h">' + esc(t.h) + '</div>' : '') + '</div>';
+                    }).join('') + '</div>'
+                    + receiptRow(res) + '</section>';
+                $('tResult').innerHTML = html;
+                $('tResult').hidden = false;
+            }
+            await refreshStatus();
+            loadLibrary();
+        } catch (err) {
+            await handleInquiryError(err, $('tError'), balanceBefore, 'trend search');
+        } finally {
+            tSubmit.disabled = !tTeam.value;
+            $('tLoading').hidden = true;
+        }
+    });
+
+    // ========================================================== LIBRARY
+
+    var KIND = { report: 'AI report', simulation: 'Simulation', inquiry: 'Team trends', matchup_report: 'Matchup' };
+    var libLoading = false;
+
+    async function loadLibrary() {
+        if (libLoading) return;
+        libLoading = true;
+        var list = $('libList');
+        if (!list.dataset.loadedOnce) {
+            list.innerHTML = '<div class="blp-skel">' + new Array(3).fill('<div class="blp-skel-box" style="height:52px"></div>').join('') + '</div>';
+        }
+        try {
+            var res = await window.api.getBetLegendProHistory(25);
+            var items = res.items || [];
+            list.dataset.loadedOnce = '1';
+            if (!items.length) {
+                list.innerHTML = emptyState('Nothing saved yet',
+                    'Run a matchup report, a question or a simulation and it will be kept here — reopening one is always free.',
+                    '<button class="blp-btn blp-btn--primary" type="button" data-goto="matchup">Run your first report</button>');
+                list.querySelectorAll('[data-goto]').forEach(function (b) {
+                    b.addEventListener('click', function () { selectTool(b.dataset.goto, true); });
+                });
+                return;
+            }
+            list.innerHTML = '<div class="blp-lib">' + items.map(function (it) {
+                var when = it.created_at ? new Date(it.created_at).toLocaleString() : '';
+                return '<div class="blp-lib-item">'
+                    + '<span class="blp-lib-kind">' + esc(KIND[it.kind] || it.kind) + '</span>'
+                    + '<div class="blp-lib-main"><div class="blp-lib-title" title="' + esc(it.title || '') + '">' + esc(it.title || 'Untitled') + '</div>'
+                    + '<div class="blp-lib-meta">' + esc(when) + (it.ledger_entry_id ? ' · receipt #' + esc(it.ledger_entry_id) : ' · included in plan') + '</div></div>'
+                    + '<button class="blp-btn blp-btn--sm" data-lib-id="' + esc(it.id) + '" type="button">Open</button></div>';
+            }).join('') + '</div>';
+            list.querySelectorAll('[data-lib-id]').forEach(function (b) {
+                b.addEventListener('click', function () { openLibraryItem(b.dataset.libId); });
+            });
+        } catch (err) {
+            list.innerHTML = '<div class="blp-note blp-note--err"><span>Could not load your library.</span>'
+                + '<button class="blp-btn blp-btn--sm" type="button" id="libRetry">Retry</button></div>';
+            var retry = $('libRetry');
+            if (retry) retry.addEventListener('click', function () { delete list.dataset.loadedOnce; loadLibrary(); });
+        } finally {
+            libLoading = false;
+        }
+    }
+
+    async function openLibraryItem(id) {
+        var box = $('libDetail');
+        box.innerHTML = skeleton('report', 'Opening saved item — this is a stored copy, nothing is charged…');
+        box.hidden = false;
+        try {
+            var d = await window.api.getBetLegendProHistoryDetail(id);
+            // A stored item is replayed through the exact renderer that produced
+            // it, so a reopened report looks identical to the original.
+            var fake = { result: d.result, included_in_plan: false, billed: false, was_free_inquiry: false, ledger_entry_id: null };
+            var body;
+            if (d.kind === 'matchup_report') body = renderMatchup(fake);
+            else if (d.kind === 'report') body = renderAsk(fake);
+            else if (d.kind === 'simulation') {
+                var out = (d.result && d.result.results) || {};
+                body = '<section class="blp-card"><div class="blp-card-head"><h2>' + esc(d.title || 'Simulation') + '</h2></div><div class="blp-kpis">'
+                    + [['$' + fmtInt(Math.round(out.median_final_bankroll)), 'Median finish'],
+                       ['$' + fmtInt(Math.round(out.mean_final_bankroll)), 'Mean finish'],
+                       [pct(out.profit_probability), 'Finished ahead'],
+                       [pct(out.bust_rate), 'Bust rate'],
+                       [(out.expected_roi > 0 ? '+' : '') + Number(out.expected_roi).toFixed(1) + '%', 'Expected ROI'],
+                       [pct(out.avg_max_drawdown), 'Avg max drawdown']]
+                        .map(function (k) { return '<div class="blp-kpi"><div class="blp-kpi-v">' + esc(k[0]) + '</div><div class="blp-kpi-l">' + esc(k[1]) + '</div></div>'; }).join('')
+                    + '</div></section>';
+            } else {
+                var s = (d.result && d.result.summary) || {};
+                body = '<section class="blp-card"><div class="blp-card-head"><h2>' + esc(d.title || 'Saved item') + '</h2></div><div class="blp-kpis">'
+                    + [[s.su_record, 'Straight up'], [s.ats_record, 'Against the spread'], [s.ou_record, 'Over / under']]
+                        .filter(function (k) { return k[0]; })
+                        .map(function (k) { return '<div class="blp-kpi"><div class="blp-kpi-v" style="font-size:22px">' + esc(k[0]) + '</div><div class="blp-kpi-l">' + esc(k[1]) + '</div></div>'; }).join('')
+                    + '</div></section>';
+            }
+            box.innerHTML = '<div class="blp-note blp-note--ok" style="margin-bottom:14px"><span>Reopened from your library — not charged.</span></div>' + body;
+            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } catch (err) {
+            box.innerHTML = '<div class="blp-note blp-note--err"><span>Could not open that saved item.</span></div>';
+        }
+    }
+
+    // ============================================================= boot
+
+    async function boot() {
+        if (!(window.api && window.api.isLoggedIn())) {
+            $('authGate').hidden = false;
+            $('topbarRight').hidden = true;
+            return;
+        }
+        $('app').hidden = false;
+        var dataChip = $('dataChip');
+        dataChip.textContent = 'Graded games only';
+        dataChip.hidden = false;
+
+        selectTool((location.hash || '').replace('#', '') || 'matchup', false);
+        syncMarketFields();
+        updateEdgeNote();
+        loadMatchupTeams(mSport.value);
+        loadTrendTeams(tSport.value);
+        await refreshStatus();
+    }
+    boot();
+})();
+</script>
+</body>
+</html>
