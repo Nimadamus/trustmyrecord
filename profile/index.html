@@ -6948,11 +6948,21 @@
                 throw new Error('Profile service is unavailable. Please refresh and try again.');
             }
 
-            // Get current user from auth system
+            // Get current user from auth system. AuthSystem's own session hydration
+            // runs on DOMContentLoaded, which can fire AFTER this inline init() (both
+            // race the same event on script position/cache timing), so auth.isLoggedIn()
+            // can still read false here even though a session is already stored. Read
+            // the same localStorage key AuthSystem itself hydrates from as a direct
+            // fallback so ownership detection (isOwnProfile) doesn't depend on that race.
             if (typeof auth !== 'undefined' && auth.isLoggedIn()) {
                 currentUser = auth.getCurrentUser();
-                window.currentUser = currentUser;
+            } else {
+                try {
+                    const stored = localStorage.getItem('tmr_current_user') || localStorage.getItem('currentUser');
+                    if (stored) currentUser = JSON.parse(stored);
+                } catch (e) {}
             }
+            if (currentUser) window.currentUser = currentUser;
 
             if (!profileUsername && currentUser) profileUsername = currentUser.username;
 
@@ -7031,7 +7041,14 @@
                     teamRows.forEach(t => {
                         if (t.sport) profileData._fav_teams[t.sport] = t.team_name;
                     });
-                    profileData.favorite_teams = teamRows.map(t => t.team_name).filter(Boolean);
+                    // users.favorite_teams/favorite_sports (Sports Identity card, PUT
+                    // /users/profile) is the canonical source the public profile reads.
+                    // This legacy per-sport gaming table is only a fallback for older
+                    // accounts that never migrated -- it must never clobber real,
+                    // already-saved data with an empty/stale gaming-table result.
+                    if (!Array.isArray(profileData.favorite_teams) || profileData.favorite_teams.length === 0) {
+                        profileData.favorite_teams = teamRows.map(t => t.team_name).filter(Boolean);
+                    }
                     if (!Array.isArray(profileData.favorite_sports) || profileData.favorite_sports.length === 0) {
                         profileData.favorite_sports = Array.from(new Set(teamRows.map(t => t.sport).filter(Boolean)));
                     }
@@ -14223,11 +14240,6 @@
             '<label style="' + ls + '">Headline (one line, 140 chars)</label><input id="eHeadline" maxlength="140" placeholder="One-line public profile headline" value="' + ((profileData.headline || '').replace(/"/g,'&quot;')) + '" style="' + is + '">' +
             '<label style="' + ls + '">Bio</label><textarea id="eBio" rows="3" style="' + is + 'resize:vertical;">' + (profileData.bio || '') + '</textarea>' +
             '<label style="' + ls + '">Location</label><input id="eLoc" value="' + (profileData.location || '') + '" style="' + is + '">' +
-            '<div style="border-top:1px solid #353a4d;margin:20px 0 16px;padding-top:16px;"><h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#00aeff;">Favorite Teams</h3></div>' +
-            '<label style="' + ls + '">NFL Team</label><input id="eFavNFL" value="' + ((profileData._fav_teams && profileData._fav_teams.NFL) || '') + '" placeholder="Favorite NFL team" style="' + is + '">' +
-            '<label style="' + ls + '">NBA Team</label><input id="eFavNBA" value="' + ((profileData._fav_teams && profileData._fav_teams.NBA) || '') + '" placeholder="Favorite NBA team" style="' + is + '">' +
-            '<label style="' + ls + '">MLB Team</label><input id="eFavMLB" value="' + ((profileData._fav_teams && profileData._fav_teams.MLB) || '') + '" placeholder="Favorite MLB team" style="' + is + '">' +
-            '<label style="' + ls + '">NHL Team</label><input id="eFavNHL" value="' + ((profileData._fav_teams && profileData._fav_teams.NHL) || '') + '" placeholder="Favorite NHL team" style="' + is + '">' +
             '<div style="border-top:1px solid #353a4d;margin:20px 0 16px;padding-top:16px;"><h3 style="font-size:1rem;font-weight:700;margin-bottom:12px;color:#ffd700;">Gamer Profile</h3></div>' +
             '<label style="' + ls + '">PSN Username</label><input id="eGamerPSN" value="' + ((profileData._gamer && profileData._gamer.psn_username) || '') + '" placeholder="Your PlayStation Network ID" style="' + is + '">' +
             '<label style="' + ls + '">Xbox Gamertag</label><input id="eGamerXbox" value="' + ((profileData._gamer && profileData._gamer.xbox_gamertag) || '') + '" placeholder="Your Xbox Gamertag" style="' + is + '">' +
@@ -14287,26 +14299,10 @@
                         }
                     }
 
-                    // Save favorite teams
-                    try {
-                        const teams = [];
-                        const nfl = document.getElementById('eFavNFL').value.trim();
-                        const nba = document.getElementById('eFavNBA').value.trim();
-                        const mlb = document.getElementById('eFavMLB').value.trim();
-                        const nhl = document.getElementById('eFavNHL').value.trim();
-                        if (nfl) teams.push({ sport: 'NFL', team_name: nfl });
-                        if (nba) teams.push({ sport: 'NBA', team_name: nba });
-                        if (mlb) teams.push({ sport: 'MLB', team_name: mlb });
-                        if (nhl) teams.push({ sport: 'NHL', team_name: nhl });
-                        const currentTeams = profileData._fav_teams && typeof profileData._fav_teams === 'object' ? profileData._fav_teams : {};
-                        const nextTeamsObject = {};
-                        teams.forEach(function(team) { nextTeamsObject[team.sport] = team.team_name; });
-                        if (teams.length > 0 && JSON.stringify(currentTeams) !== JSON.stringify(nextTeamsObject)) {
-                            await api.request('/gaming/teams', { method: 'PUT', body: { teams } });
-                            profileData._fav_teams = nextTeamsObject;
-                            window.profileData = profileData;
-                        }
-                    } catch(err) { console.warn('Failed to save teams:', err); }
+                    // Favorite teams are managed in the Sports Identity card on the
+                    // profile itself (catalog-backed multi-team picker writing
+                    // favorite_teams/favorite_sports via PUT /users/profile) -- this
+                    // modal no longer owns a separate, disconnected copy of that data.
 
                     // Save gamer profile
                     try {
@@ -14335,19 +14331,8 @@
                     if (updates.bio !== undefined) localUpdates.bio = updates.bio;
                     if (updates.location !== undefined) localUpdates.location = updates.location;
                     if (updates.avatar_url) localUpdates.avatar = updates.avatar_url;
-                    // Store teams and gamer locally too
-                    const nextLocalTeams = {};
-                    const nfl = document.getElementById('eFavNFL').value.trim();
-                    const nba = document.getElementById('eFavNBA').value.trim();
-                    const mlb = document.getElementById('eFavMLB').value.trim();
-                    const nhl = document.getElementById('eFavNHL').value.trim();
-                    if (nfl) nextLocalTeams.NFL = nfl;
-                    if (nba) nextLocalTeams.NBA = nba;
-                    if (mlb) nextLocalTeams.MLB = mlb;
-                    if (nhl) nextLocalTeams.NHL = nhl;
-                    if (JSON.stringify(auth.currentUser._fav_teams || {}) !== JSON.stringify(nextLocalTeams)) {
-                        localUpdates._fav_teams = nextLocalTeams;
-                    }
+                    // Store gamer profile locally too (favorite teams are handled by
+                    // the Sports Identity card, not this modal -- see above).
                     const nextLocalGamer = {
                         psn_username: document.getElementById('eGamerPSN').value.trim(),
                         xbox_gamertag: document.getElementById('eGamerXbox').value.trim(),
@@ -14371,7 +14356,7 @@
                 }
                 analyticsTrack('profile_updated_manual', {
                     username: profileUsername || '',
-                    fields_updated: 'display_name,bio,location,teams,gamer_profile,avatar'
+                    fields_updated: 'display_name,bio,location,gamer_profile,avatar'
                 });
                 showToast('Profile updated!', 'success'); modal.remove();
                 profileData = { ...profileData, ...updates };
