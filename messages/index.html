@@ -371,7 +371,7 @@
             display: flex; gap: 4px; z-index: 2;
         }
         .msg-bubble.received .msg-bubble-actions { right: 6px; }
-        .msg-bubble-delete, .msg-bubble-react {
+        .msg-bubble-delete, .msg-bubble-react, .msg-bubble-reply {
             width: 22px; height: 22px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             background: rgba(0,0,0,0.28); border: 1px solid rgba(255,255,255,0.22);
@@ -379,17 +379,42 @@
             font-size: 0.8rem; line-height: 1; opacity: 0.55;
             transition: opacity 0.12s ease;
         }
-        .msg-bubble.received .msg-bubble-delete, .msg-bubble.received .msg-bubble-react {
+        .msg-bubble.received .msg-bubble-delete, .msg-bubble.received .msg-bubble-react, .msg-bubble.received .msg-bubble-reply {
             background: var(--msg-surface-2); border-color: var(--msg-border); color: var(--msg-text-muted);
         }
-        .msg-bubble:hover .msg-bubble-delete, .msg-bubble:hover .msg-bubble-react,
-        .msg-bubble:focus-within .msg-bubble-delete, .msg-bubble:focus-within .msg-bubble-react { opacity: 1; }
+        .msg-bubble:hover .msg-bubble-delete, .msg-bubble:hover .msg-bubble-react, .msg-bubble:hover .msg-bubble-reply,
+        .msg-bubble:focus-within .msg-bubble-delete, .msg-bubble:focus-within .msg-bubble-react, .msg-bubble:focus-within .msg-bubble-reply { opacity: 1; }
         .msg-bubble-delete svg { width: 13px; height: 13px; }
         .msg-bubble-delete:hover { color: var(--msg-danger); border-color: var(--msg-danger); opacity: 1; }
         .msg-bubble-react:hover { opacity: 1; }
+        .msg-bubble-reply svg { width: 13px; height: 13px; }
+        .msg-bubble-reply:hover { opacity: 1; color: var(--msg-accent); border-color: var(--msg-accent); }
         /* keep text clear of the action buttons */
         .msg-bubble.has-actions { padding-top: 9px; padding-right: 40px; }
         .msg-bubble.has-actions.two-actions { padding-right: 66px; }
+        .msg-bubble.has-actions.three-actions { padding-right: 92px; }
+        /* Quoted parent shown inside a reply bubble */
+        .msg-reply-quote {
+            display: block; width: 100%; text-align: left;
+            margin: 0 0 6px; padding: 5px 8px;
+            background: rgba(255,255,255,0.09);
+            border: none; border-left: 3px solid currentColor;
+            border-radius: 6px; color: inherit; font: inherit;
+            cursor: pointer; opacity: 0.85;
+        }
+        .msg-bubble.received .msg-reply-quote { background: rgba(255,255,255,0.06); }
+        .msg-reply-quote:hover { opacity: 1; }
+        .msg-reply-quote.unavailable { cursor: default; font-style: italic; }
+        .msg-reply-quote-name { display: block; font-size: 0.7rem; font-weight: 700; margin-bottom: 1px; }
+        .msg-reply-quote-text {
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; font-size: 0.78rem; line-height: 1.35; opacity: 0.9;
+        }
+        .msg-bubble.msg-flash { animation: msgFlash 1.2s ease-out; }
+        @keyframes msgFlash {
+            0%, 45% { box-shadow: 0 0 0 2px var(--msg-accent); }
+            100% { box-shadow: 0 0 0 0 transparent; }
+        }
         .msg-reactions { display: flex; gap: 4px; margin-top: 5px; flex-wrap: wrap; }
         .msg-reaction-chip {
             display: inline-flex; align-items: center; gap: 3px;
@@ -424,7 +449,7 @@
             padding-bottom: max(12px, env(safe-area-inset-bottom));
             display: grid;
             grid-template-columns: 1fr auto;
-            grid-template-areas: "input input" "tools send";
+            grid-template-areas: "reply reply" "input input" "tools send";
             gap: 8px 10px;
             align-items: end;
         }
@@ -461,6 +486,28 @@
         .send-btn:disabled { opacity: 0.55; cursor: not-allowed; }
         .send-btn:focus-visible { outline: 2px solid #7dd3fc; outline-offset: 2px; }
         .composer-hint { grid-area: tools; align-self: center; font-size: 0.72rem; color: var(--msg-text-muted); }
+
+        /* Reply-to strip above the composer */
+        #replyBar {
+            grid-area: reply;
+            align-items: center; gap: 10px;
+            padding: 7px 10px;
+            background: var(--msg-bg);
+            border: 1px solid var(--msg-border-strong);
+            border-left: 3px solid var(--msg-accent);
+            border-radius: var(--msg-radius);
+        }
+        .reply-bar-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+        .reply-bar-label { font-size: 0.7rem; font-weight: 700; color: var(--msg-accent); }
+        .reply-bar-text {
+            font-size: 0.78rem; color: var(--msg-text-muted);
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .reply-bar-cancel {
+            background: none; border: none; color: var(--msg-text-muted);
+            cursor: pointer; font-size: 0.95rem; line-height: 1; padding: 4px 6px; border-radius: 6px;
+        }
+        .reply-bar-cancel:hover { color: var(--msg-danger); }
 
         /* Emoji bar injected by TMREmoji into the composer: keep a single small icon */
         #chatInputArea .tmr-emoji-bar {
@@ -739,6 +786,7 @@
             </div>
 
             <div id="chatInputArea" style="display:none;">
+                <div id="replyBar" style="display:none;"></div>
                 <textarea id="messageInput" placeholder="Write a message…" rows="1" aria-label="Message text"></textarea>
                 <button class="send-btn" onclick="sendMessage()">Send</button>
             </div>
@@ -1108,6 +1156,7 @@
         }
 
         async function selectConversation(userId, username) {
+            cancelReply();
             activeConversationUserId = userId;
             activeConversationUsername = username;
             syncConversationUrl(username);
@@ -1183,6 +1232,9 @@
 
         function renderMessages(messages) {
             const container = document.getElementById('chatMessages');
+            currentMessages = messages || [];
+            // A reply target that vanished (deleted/cleared) must not be sent against
+            if (replyTarget && !currentMessages.some(m => idEq(m.id, replyTarget.id))) cancelReply();
             if (!messages || messages.length === 0) {
                 container.innerHTML =
                     '<div class="msg-empty">' +
@@ -1211,13 +1263,22 @@
                     '<button type="button" class="msg-bubble-react" title="React" aria-label="React to message" onclick="openReactionPalette(event, ' + jsStr(msg.id) + ')">' +
                         '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>' +
                     '</button>' : '';
-                const actionCount = (deleteBtn ? 1 : 0) + (reactBtn ? 1 : 0);
+                const canReply = msg.id && api && typeof api.request === 'function';
+                const replyBtn = canReply ?
+                    '<button type="button" class="msg-bubble-reply" title="Reply" aria-label="Reply to message" onclick="startReply(' + jsStr(msg.id) + ')">' +
+                        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 17 4 12 9 7"/><path d="M20 18v-2a4 4 0 0 0-4-4H4"/></svg>' +
+                    '</button>' : '';
+                const actionCount = (deleteBtn ? 1 : 0) + (reactBtn ? 1 : 0) + (replyBtn ? 1 : 0);
                 const actionsWrap = actionCount ?
-                    '<div class="msg-bubble-actions">' + deleteBtn + reactBtn + '</div>' : '';
-                const actionCls = actionCount ? ' has-actions' + (actionCount > 1 ? ' two-actions' : '') : '';
+                    '<div class="msg-bubble-actions">' + replyBtn + reactBtn + deleteBtn + '</div>' : '';
+                const actionCls = actionCount
+                    ? ' has-actions' + (actionCount > 2 ? ' three-actions' : actionCount > 1 ? ' two-actions' : '')
+                    : '';
                 parts.push(
-                    '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + actionCls + '">' +
+                    '<div class="msg-bubble ' + (isSent ? 'sent' : 'received') + actionCls + '"' +
+                        (msg.id ? ' id="msg-' + escapeAttr(msg.id) + '"' : '') + '>' +
                         actionsWrap +
+                        replyQuote(msg) +
                         '<div class="msg-bubble-content">' + linkify(msg.content) + '</div>' +
                         reactionChips(msg) +
                         '<div class="msg-bubble-time">' + escapeHtml(formatTime(msg.created_at)) + (isSent ? readTicks(msg) : '') + '</div>' +
@@ -1225,6 +1286,73 @@
                 );
             });
             container.innerHTML = parts.join('');
+        }
+
+        // ---- Replies ----
+        // currentMessages backs startReply() so the reply strip can quote the
+        // message without another round trip.
+        let currentMessages = [];
+        let replyTarget = null;
+
+        function replyQuote(msg) {
+            if (!msg.reply_to_id) return '';
+            if (!msg.reply_content) {
+                return '<div class="msg-reply-quote unavailable">' +
+                    '<span class="msg-reply-quote-text">Original message unavailable</span></div>';
+            }
+            const who = idEq(msg.reply_sender_id, currentUser.id)
+                ? 'You'
+                : (msg.reply_sender_username || activeConversationUsername || 'Them');
+            return '<button type="button" class="msg-reply-quote" ' +
+                    'title="Jump to the replied-to message" ' +
+                    'onclick="scrollToMessage(' + jsStr(msg.reply_to_id) + ')">' +
+                    '<span class="msg-reply-quote-name">' + escapeHtml(who) + '</span>' +
+                    '<span class="msg-reply-quote-text">' + escapeHtml(msg.reply_content) + '</span>' +
+                '</button>';
+        }
+
+        function scrollToMessage(messageId) {
+            const el = document.getElementById('msg-' + messageId);
+            if (!el) return;
+            el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+            el.classList.remove('msg-flash');
+            void el.offsetWidth; // restart the highlight animation
+            el.classList.add('msg-flash');
+            setTimeout(() => el.classList.remove('msg-flash'), 1400);
+        }
+
+        function startReply(messageId) {
+            const msg = currentMessages.find(m => idEq(m.id, messageId));
+            if (!msg) return;
+            replyTarget = msg;
+            renderReplyBar();
+            const input = document.getElementById('messageInput');
+            if (input) input.focus();
+        }
+
+        function cancelReply() {
+            replyTarget = null;
+            renderReplyBar();
+        }
+
+        function renderReplyBar() {
+            const bar = document.getElementById('replyBar');
+            if (!bar) return;
+            if (!replyTarget) {
+                bar.style.display = 'none';
+                bar.innerHTML = '';
+                return;
+            }
+            const who = idEq(replyTarget.sender_id, currentUser.id)
+                ? 'yourself'
+                : (activeConversationUsername || replyTarget.sender_username || 'them');
+            bar.innerHTML =
+                '<div class="reply-bar-body">' +
+                    '<span class="reply-bar-label">Replying to ' + escapeHtml(who) + '</span>' +
+                    '<span class="reply-bar-text">' + escapeHtml(String(replyTarget.content || '').slice(0, 180)) + '</span>' +
+                '</div>' +
+                '<button type="button" class="reply-bar-cancel" title="Cancel reply" aria-label="Cancel reply" onclick="cancelReply()">&#10005;</button>';
+            bar.style.display = 'flex';
         }
 
         async function sendMessage() {
@@ -1236,7 +1364,12 @@
             sendBtn.disabled = true;
             sendBtn.textContent = '…';
             try {
-                if (api && typeof api.sendMessage === 'function') {
+                if (api && replyTarget && typeof api.request === 'function') {
+                    await api.request('/messages', {
+                        method: 'POST',
+                        body: { recipientId: activeConversationUserId, content: content, replyToId: replyTarget.id }
+                    });
+                } else if (api && typeof api.sendMessage === 'function') {
                     await api.sendMessage(activeConversationUserId, content);
                 } else {
                     const allMsgs = JSON.parse(localStorage.getItem('trustmyrecord_messages') || '[]');
@@ -1247,6 +1380,7 @@
                 saveIdSet(SENT_KEY, sentIds);
                 input.value = '';
                 input.style.height = 'auto';
+                cancelReply();
                 await loadChatMessages(activeConversationUserId, true);
                 await loadConversations();
                 refreshMailboxBadge();
