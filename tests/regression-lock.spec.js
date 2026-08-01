@@ -143,9 +143,10 @@ test.describe('homepage approved-baseline geometry', () => {
       // must not be visible without scrolling
       expect(Math.abs(m.stripeBottomVsViewport), `stats stripe bottom must align with the viewport bottom at ${width}x${height}`).toBeLessThanOrEqual(1);
       expect(m.dashTopVsViewport, `"Happening Right Now" must not be visible in the initial viewport at ${width}x${height}`).toBeGreaterThanOrEqual(-1);
-      // equal left/right margins, rounded corners
-      expect(Math.abs(m.stripeLeftMargin - m.stripeRightMargin), 'stripe must be centered with equal side margins').toBeLessThanOrEqual(1);
-      expect(m.stripeRadius, 'stripe rounded corners locked at 12px').toBe('12px');
+      // full-width flush stripe (owner-requested 2026-08-01): no side margins, no rounded corners
+      expect(Math.abs(m.stripeLeftMargin), 'stripe must span the full viewport width (no left margin)').toBeLessThanOrEqual(1);
+      expect(Math.abs(m.stripeRightMargin), 'stripe must span the full viewport width (no right margin)').toBeLessThanOrEqual(1);
+      expect(m.stripeRadius, 'stripe must have no rounded corners (full-width flush design)').toBe('0px');
       expect(m.heroFullBleed, 'hero background must span the full viewport width').toBe(true);
       // capper card column per approved breakpoints (520px > 1400, 460px to 1181, stacked below)
       const cols = m.gridCols.trim().split(/\s+/);

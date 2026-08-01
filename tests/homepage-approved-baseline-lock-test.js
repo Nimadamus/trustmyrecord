@@ -5,6 +5,11 @@
 // stats stripe (.bridge) stays flush to the hero's bottom edge at every
 // desktop viewport height, not just the content height the old fixed
 // margin-top happened to produce.
+// Updated 2026-08-01: stats stripe (.bridge) is now full-width and flush to
+// the hero's edges — the .wrap side-inset + bridge-in rounded card/shadow
+// (approved 2026-07-30) were replaced per explicit owner instruction; the
+// full-width flush stripe is now the required design and the rounded/inset
+// version is FORBIDDEN below.
 // Every rule below must exist byte-exact in index.html. If a change here is
 // intentional, it requires Nima's explicit approval FIRST; then update this
 // list in the same commit.
@@ -54,11 +59,11 @@ const REQUIRED = [
   '.spark{display:flex;align-items:flex-end;gap:4px;height:50px}',
   '.spot .ft{padding:15px 24px;',
   // white stats stripe (bridge) — pushed to the hero's bottom edge by
-  // margin-top:auto inside the flex column (NOT a fixed offset); rounded
-  // corners + equal side margins via .wrap
-  '.bridge{position:relative;z-index:20;margin-top:auto;flex-shrink:0}',
-  '.bridge-in{background:var(--panel);border:1px solid #E3E8EF;border-radius:12px;',
-  '<div class="wrap bridge"',
+  // margin-top:auto inside the flex column (NOT a fixed offset); full-width,
+  // no side margins, no rounded card (owner-requested 2026-08-01)
+  '.bridge{position:relative;z-index:20;margin-top:auto;flex-shrink:0;width:100%}',
+  '.bridge-in{background:var(--panel);display:grid;grid-template-columns:repeat(4,1fr) auto;align-items:stretch;padding:0 28px}',
+  '<div class="bridge"',
   '<div class="bridge-in"',
   // responsive breakpoints — approved values
   '.hero-grid{grid-template-columns:minmax(0,1fr) 460px;gap:48px}',
@@ -75,6 +80,8 @@ const FORBIDDEN = [
   ['gap:72px;align-items:start', 'rejected hero-grid align-start'],
   ['margin-top:44px', 'old fixed-offset stripe positioning (content-height dependent, not viewport-flush)'],
   ['position:fixed', 'stripe/hero must scroll naturally, never position:fixed'],
+  ['<div class="wrap bridge"', 'rejected wrap-constrained bridge stripe (large side margins) — must be full-width, replaced 2026-08-01'],
+  ['border-radius:12px;box-shadow:0 1px 2px rgba(3,10,20,.16), 0 14px 34px rgba(3,10,20,.24);display:grid;grid-template-columns:repeat(4,1fr) auto;align-items:stretch;overflow:hidden}', 'rejected rounded-card bridge-in (replaced by full-width flush stripe 2026-08-01)'],
 ];
 
 for (const required of REQUIRED) {
