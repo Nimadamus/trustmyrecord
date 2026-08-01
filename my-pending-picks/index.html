@@ -348,6 +348,7 @@
                                 <th>To Win</th>
                                 <th>Time Submitted (ET)</th>
                                 <th>Status</th>
+                                <th>Ticket #</th>
                             </tr>
                         </thead>
                         <tbody id="pendingRows"></tbody>
@@ -555,6 +556,15 @@
             }
             return 'Unknown';
         }
+        // TICKET_ID_20260605: same plain sequential ticket number shown on
+        // the sportsbook confirmation screen / My Picks tab, derived from
+        // the pick's own backend id. This page has its own JS scope (it's
+        // a standalone route, not part of sportsbook/index.html), so it
+        // needs its own copy of the formatter rather than sharing window.TMR.
+        function ticketId(pick) {
+            var n = Number(pick && pick.id);
+            return Number.isFinite(n) && n > 0 ? String(Math.floor(n)).padStart(7, '0') : '';
+        }
         function rowHtml(pick) {
             var pickLabel = pickText(pick);
             var stake = stakeAmounts(pick);
@@ -568,6 +578,7 @@
                 + '<td>' + esc(fmtUnits(stake.toWin)) + '</td>'
                 + '<td>' + esc(fmtSubmittedAt(pick)) + '</td>'
                 + '<td><span class="status-pill">' + esc(statusText(pick)) + '</span></td>'
+                + '<td>' + esc(ticketId(pick)) + '</td>'
                 + '</tr>';
         }
         function cardRow(label, value) {
@@ -585,6 +596,7 @@
                 + cardRow('To Win', esc(fmtUnits(stake.toWin)))
                 + cardRow('Time Submitted', fmtSubmittedAt(pick))
                 + cardRow('Status', '<span class="status-pill">' + esc(statusText(pick)) + '</span>')
+                + cardRow('Ticket #', esc(ticketId(pick)))
                 + '</article>';
         }
         function render(picks) {

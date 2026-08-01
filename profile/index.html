@@ -11604,7 +11604,7 @@
         // TICKET_ID_20260605 (Nima): sportsbook-style ticket number derived
         // from the immutable backend pick id — shown on every wager row.
         const _ticketNum = Number(p.id);
-        const ticket = (Number.isFinite(_ticketNum) && _ticketNum > 0) ? 'TMR-' + String(Math.floor(_ticketNum)).padStart(7, '0') : '';
+        const ticket = (Number.isFinite(_ticketNum) && _ticketNum > 0) ? String(Math.floor(_ticketNum)).padStart(7, '0') : '';
         const date = p.locked_at || p.created_at || '';
         const _pd = date ? new Date(date) : null;
         const _pdET = _pd ? (function() {

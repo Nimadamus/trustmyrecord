@@ -2213,12 +2213,20 @@
     }
 
     // TICKET_ID_20260605 (Nima): every wager gets a sportsbook-style ticket
-    // number derived from its immutable backend pick id (e.g. TMR-0001144).
+    // number derived from its immutable backend pick id (e.g. 0001144).
     // No schema change — covers every past and future pick automatically.
     window.TMR = window.TMR || {};
     window.TMR.ticketId = function (id) {
         var n = Number(id);
-        return Number.isFinite(n) && n > 0 ? 'TMR-' + String(Math.floor(n)).padStart(7, '0') : '';
+        return Number.isFinite(n) && n > 0 ? String(Math.floor(n)).padStart(7, '0') : '';
+    };
+    // CONTEST_TICKET_ID_20260731: JustBet contest picks live in their own
+    // table (tmr_contest_picks) with their own sequential id, so they get
+    // their own C-prefixed series instead of sharing the plain sportsbook
+    // ticket format above.
+    window.TMR.contestTicketId = function (id) {
+        var n = Number(id);
+        return Number.isFinite(n) && n > 0 ? 'C-' + String(Math.floor(n)).padStart(6, '0') : '';
     };
 
     // PICK_CORRELATION_WARNING_20260607: warning-only correlation detector.
@@ -2439,9 +2447,16 @@
             if (el1) el1.textContent = displayPick;
             if (el2) el2.textContent = displayMeta;
 
-            // TICKET_ID_20260605: surface the ticket number on the
-            // confirmation screen once the backend has issued the pick id.
-            var ticket = (newPick._backendSynced && window.TMR && typeof window.TMR.ticketId === 'function') ? window.TMR.ticketId(newPick.id) : '';
+            // TICKET_ID_20260605 / CONTEST_TICKET_ID_20260731: surface the
+            // ticket number on the confirmation screen once the backend has
+            // issued the pick id. Contest-mode submissions (?contest=...)
+            // land in tmr_contest_picks, a separate id series, so they get
+            // the C-prefixed formatter instead of the plain sportsbook one.
+            var isContestPick = !!(window.TMR_CONTEST_MODE && window.TMR_CONTEST_MODE.active);
+            var ticketFn = isContestPick
+                ? (window.TMR && window.TMR.contestTicketId)
+                : (window.TMR && window.TMR.ticketId);
+            var ticket = (newPick._backendSynced && typeof ticketFn === 'function') ? ticketFn(newPick.id) : '';
             var tEl = document.getElementById('confirmTicketId');
             if (!tEl && el1 && el1.parentNode) {
                 tEl = document.createElement('div');
@@ -26503,6 +26518,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const sportEmojis = { NBA: '&#127936;', NFL: '&#127944;', NHL: '&#127954;', MLB: '&#9918;', NCAAF: '&#127891;', NCAAB: '&#127979;' };
 
+        // TICKET_ID_20260605: same ticket number shown on the confirmation
+        // screen and pending-picks panel, surfaced here too.
+        const ticket = (window.TMR && typeof window.TMR.ticketId === 'function') ? window.TMR.ticketId(pick.id) : '';
+        const ticketHtml = ticket ? '<div style="font-size: 12px; color: #ffd700; font-weight: 700; margin-top: 2px;">Ticket #' + ticket + '</div>' : '';
+
         // Score display for graded picks
         let scoreHtml = '';
         if (pick.home_score !== null && pick.home_score !== undefined && pick.away_score !== null && pick.away_score !== undefined) {
@@ -26527,6 +26547,7 @@ document.addEventListener('DOMContentLoaded', function() {
             + '<div style="margin-bottom: 8px;">'
             + '<div style="font-size: 18px; font-weight: 700; color: #fff;">' + pickDisplay + '</div>'
             + '<div style="font-size: 14px; color: #a0a8b8;">' + matchup + '</div>'
+            + ticketHtml
             + scoreHtml
             + '</div>'
             + '<div style="display: flex; gap: 20px; font-size: 13px; color: #6c7380;">'
