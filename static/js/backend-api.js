@@ -230,13 +230,14 @@ class TrustMyRecordAPI {
             // Default request timeout. Without this, a stalled Render cold-start
             // connection (socket accepted but no response) leaves the caller's
             // await hanging forever - which is exactly what left the forum
-            // sidebar stuck on "Loading forums..." indefinitely. A GET gets 40s
-            // (must exceed betlegendPro.js's own 35s upstream bridge timeout,
-            // or this client aborts before that route ever gets to respond);
-            // writes/uploads get 45s. Callers that pass their own options.signal
-            // keep full control.
+            // sidebar stuck on "Loading forums..." indefinitely. A GET gets 65s
+            // (must exceed betlegendPro.js's own 60s upstream bridge timeout -
+            // betlegend-pro-api cold starts measured live up to 53s - or this
+            // client aborts before that route ever gets to respond); writes/
+            // uploads get 45s. Callers that pass their own options.signal keep
+            // full control.
             if (!config.signal && typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function') {
-                config.signal = AbortSignal.timeout(_method === 'GET' ? 40000 : 45000);
+                config.signal = AbortSignal.timeout(_method === 'GET' ? 65000 : 45000);
             }
 
             try {
