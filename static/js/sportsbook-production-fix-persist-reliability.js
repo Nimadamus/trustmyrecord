@@ -3196,6 +3196,33 @@
         updateStakeModePreview();
     }
 
+    // HOTFIX 2026-08-01: showPickSlipError below assumes "the user is
+    // already looking" at #pickDetails — true for a submit-time failure,
+    // false for a guard that fires the instant a board button is clicked
+    // (e.g. the already-started check), before the slip has ever been
+    // opened. Without forcing it visible first, the error box gets written
+    // into a hidden container and the click looks like it did nothing at
+    // all. Mirrors the existing lobby step-transition reveal used elsewhere
+    // in sportsbook/index.html (team-totals/alt-line click delegates).
+    function ensurePickSlipVisible() {
+        try {
+            var pd = document.getElementById('pickDetails');
+            if (!pd) return;
+            pd.classList.add('active');
+            pd.style.display = 'block';
+            var rect = pd.getBoundingClientRect();
+            var vh = window.innerHeight || document.documentElement.clientHeight;
+            var topVisible = rect.top >= 0 && rect.top < vh - 100;
+            if (!topVisible) {
+                try {
+                    window.scrollTo({ top: Math.max(0, rect.top + window.scrollY - 110), behavior: 'smooth' });
+                } catch (e) {
+                    window.scrollTo(0, Math.max(0, rect.top + window.scrollY - 110));
+                }
+            }
+        } catch (e) { /* visibility nicety — never block the error message itself */ }
+    }
+
     // Inline error rendering for the pick slip. Replaces the legacy alert()
     // pop-ups so a failed lock surfaces inside the slip itself, where the
     // user is already looking. Cleared on the next click of any odds button
@@ -4097,6 +4124,7 @@
 
                 if (hasGameStarted(game)) {
                     showSubmitTrace('Selection blocked: game already started (' + (game.id || 'unknown') + ').');
+                    ensurePickSlipVisible();
                     showPickSlipError('This game has already started, so picks are locked.');
                     return;
                 }
@@ -4406,6 +4434,7 @@
                 };
                 if (hasGameStarted(game)) {
                     showSubmitTrace('Alt selection blocked: game already started (' + game.id + ').');
+                    ensurePickSlipVisible();
                     showPickSlipError('This game has already started, so picks are locked.');
                     return false;
                 }

@@ -1756,6 +1756,37 @@
         container.innerHTML = html;
     };
 
+    // Apr 30 2026 — single source of truth for "is this game still
+    // pickable from the UI". Backend's commence_time check is the legal
+    // gate; this filter just keeps started games off the board so the
+    // user never sees them in the first place. Same predicate used in
+    // every render path (NHL_MARKETS, ESPN, AN cache, NFL feed) so the
+    // user never gets the "Cannot submit pick for a game that has
+    // already started" error from a clickable game.
+    // HOTFIX 2026-08-01 (NPB dead-click bug): this used to be defined and
+    // registered only inside selectSportAndShowGames(), which the default
+    // lobby board (paintBoard/renderRow) never calls. Registering it here,
+    // unconditionally at script load, makes it available before the very
+    // first lobby paint for every sport, not just after a user happens to
+    // visit the legacy per-sport board view. Without this, an
+    // already-started game with still-live odds (NPB's Pinnacle feed keeps
+    // posting in-play prices well past first pitch) rendered as a normal
+    // clickable button; clicking it hit the already-started guard in
+    // sportsbook-production-fix-persist-reliability.js, which returned
+    // before any highlight/slip UI ran — so the click looked totally dead.
+    function _tmrFilterPickableGames(games) {
+        if (!Array.isArray(games)) return [];
+        var now = Date.now();
+        return games.filter(function(g) {
+            if (!g || g.completed) return false;
+            if (!g.commence_time) return true;
+            var ms = Date.parse(g.commence_time);
+            if (!Number.isFinite(ms)) return true;
+            return ms > now;
+        });
+    }
+    window.TMR._filterPickableGames = _tmrFilterPickableGames;
+
     window.selectSportAndShowGames = function(sport) {
         if (typeof window.__tmrSelectSportBoard === 'function') {
             return window.__tmrSelectSportBoard(sport);
@@ -1789,25 +1820,8 @@
         var sportKey = window.TMR.sportKeyMap[sport];
         if (!sportKey) { container.innerHTML = '<div class="no-games-message"><h4>Unknown sport</h4></div>'; return; }
 
-        // Apr 30 2026 — single source of truth for "is this game still
-        // pickable from the UI". Backend's commence_time check is the legal
-        // gate; this filter just keeps started games off the board so the
-        // user never sees them in the first place. Same predicate used in
-        // every render path (NHL_MARKETS, ESPN, AN cache, NFL feed) so the
-        // user never gets the "Cannot submit pick for a game that has
-        // already started" error from a clickable game.
-        function _tmrFilterPickableGames(games) {
-            if (!Array.isArray(games)) return [];
-            var now = Date.now();
-            return games.filter(function(g) {
-                if (!g || g.completed) return false;
-                if (!g.commence_time) return true;
-                var ms = Date.parse(g.commence_time);
-                if (!Number.isFinite(ms)) return true;
-                return ms > now;
-            });
-        }
-        window.TMR._filterPickableGames = _tmrFilterPickableGames;
+        // _tmrFilterPickableGames is now registered once, unconditionally,
+        // above (see HOTFIX 2026-08-01 comment) — closure below still sees it.
 
         // NHL: Use dedicated market module for correct puck lines (±1.5 always)
         if (sport === 'NHL' && window.NHL_MARKETS) {
