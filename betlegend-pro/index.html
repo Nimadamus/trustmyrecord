@@ -15,9 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=56391ba79849">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=20260801d">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
-    <script defer src="/static/js/tmr-sitewide.js?v=83794ad4cb4a"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=03cf1db63c84"></script>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -56,7 +56,7 @@
             <a class="blp-btn blp-btn--primary blp-btn--lg" href="#pricing">See plans</a>
             <a class="blp-btn blp-btn--lg" id="tryBtn" href="/betlegend-pro/app/">Try it free</a>
         </div>
-        <p class="blp-hero-note" id="heroNote">Your first report is free — no card needed.</p>
+        <p class="blp-hero-note" id="heroNote">One free report every day — no card needed.</p>
 
         <div class="blp-facts">
             <div class="blp-fact"><div class="blp-fact-v">130,785</div><div class="blp-fact-l">Graded games in the dataset</div></div>
@@ -221,7 +221,7 @@
         <span>Payments handled by Stripe · card details never touch TrustMyRecord</span>
     </p>
     <p class="blp-paynote" id="freeTierNote">
-        <span>Not ready to buy? Your first report is free, and after that you can run reports with TMR Coin instead.</span>
+        <span>Not ready to buy? You get one free report every day, and TMR Coin covers any extras.</span>
     </p>
 
     <!-- ===================================================== trust -->
@@ -258,14 +258,14 @@
         <details class="blp-sec"><summary>How current is it?</summary><div class="blp-sec-body"><p>The dataset covers completed, graded games and is refreshed on a schedule. It is a historical research tool, not a live odds feed — it will not price tonight's game for you.</p></div></details>
         <details class="blp-sec"><summary>What's the difference between the plans?</summary><div class="blp-sec-body"><p>Nothing but the billing. Monthly, annual and lifetime all unlock the same unlimited access to all four tools and the full report library. Annual is the cheapest per month; lifetime is a single payment offered during launch.</p></div></details>
         <details class="blp-sec"><summary>Can I cancel?</summary><div class="blp-sec-body"><p>Yes. Monthly and annual can be cancelled at any time from your account — you keep access until the end of the period you already paid for, and are not billed again. Lifetime has no recurring billing, so there is nothing to cancel.</p></div></details>
-        <details class="blp-sec"><summary>Do I need TMR Coin?</summary><div class="blp-sec-body"><p>No. Plans are bought with a card through Stripe. TMR Coin is the free on-ramp instead: your first report costs nothing, and after that you can keep running reports with coin if you'd rather not subscribe. Subscribers are never charged coin.</p></div></details>
+        <details class="blp-sec"><summary>Do I need TMR Coin?</summary><div class="blp-sec-body"><p>No. Plans are bought with a card through Stripe. TMR Coin is the free on-ramp instead: you get one free report every day, and beyond that you can keep running reports with coin if you'd rather not subscribe. Subscribers are never charged coin.</p></div></details>
         <details class="blp-sec"><summary>Is this gambling?</summary><div class="blp-sec-body"><p>No. TrustMyRecord is not a sportsbook, no real money is wagered here, and BetLegend Pro is an analysis tool. If betting has stopped being fun, <a href="https://www.ncpgambling.org/help-treatment/" rel="noopener" target="_blank">help is available</a>.</p></div></details>
     </section>
 
     <!-- ================================================ final CTA -->
     <section class="blp-finalcta">
         <h2>Run one and see</h2>
-        <p>The first report is free. If it doesn't tell you something you didn't already know, you've lost nothing.</p>
+        <p>You get one free report every day. If it doesn't tell you something you didn't already know, you've lost nothing.</p>
         <div class="blp-hero-cta">
             <a class="blp-btn blp-btn--primary blp-btn--lg" href="/betlegend-pro/app/">Open BetLegend Pro</a>
             <a class="blp-btn blp-btn--lg" href="#pricing">See plans</a>
@@ -281,7 +281,7 @@
 </main>
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
-<script src="/static/js/backend-api.js?v=961feaf5e096"></script>
+<script src="/static/js/backend-api.js?v=452944a54e5c"></script>
 <script>
 (function () {
     'use strict';
@@ -386,7 +386,7 @@
                         + '<a class="blp-btn blp-btn--sm" href="/betlegend-pro/app/">Open BetLegend Pro</a>';
                 } else if (e && e.status === 503) {
                     err.innerHTML = '<span>' + esc((data && data.error) || 'Checkout isn\'t open yet.')
-                        + ' In the meantime your first report is free, and TMR Coin covers the rest.</span>'
+                        + ' In the meantime you still get a free report every day, and TMR Coin covers the rest.</span>'
                         + '<a class="blp-btn blp-btn--sm" href="/betlegend-pro/app/">Open BetLegend Pro</a>';
                 } else {
                     err.innerHTML = '<span>' + esc((data && data.error) || 'Could not start checkout. Nothing was charged — try again.') + '</span>';

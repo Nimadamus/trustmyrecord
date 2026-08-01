@@ -15,9 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=56391ba79849">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=20260801d">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
-    <script defer src="/static/js/tmr-sitewide.js?v=83794ad4cb4a"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=03cf1db63c84"></script>
 </head>
 <body class="tmr-site-shell" data-tmr-route="betlegend-pro-app">
 <main class="blp blp-shell">
@@ -348,7 +348,7 @@
 </main>
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
-<script src="/static/js/backend-api.js?v=961feaf5e096"></script>
+<script src="/static/js/backend-api.js?v=452944a54e5c"></script>
 <script>
 (function () {
     'use strict';
@@ -438,7 +438,7 @@
 
     function costLabel() {
         if (ACCESS.entitled) return '· Included';
-        if (COST.freeAvailable) return '· First one free';
+        if (COST.freeAvailable) return "· Today's free one";
         return '· ' + COST.cost + ' TMR Coin';
     }
     function paintCosts() {
@@ -475,7 +475,10 @@
 
             var planChip = $('planChip'), balanceChip = $('balanceChip');
             if (ACCESS.entitled) {
-                var planName = ACCESS.is_lifetime ? 'Lifetime'
+                // 'comp' is an owner/complimentary grant, not a purchase — label
+                // it honestly rather than showing it as a bought Lifetime plan.
+                var planName = ACCESS.plan === 'comp' ? 'Owner'
+                    : ACCESS.is_lifetime ? 'Lifetime'
                     : ACCESS.plan === 'annual' ? 'Annual' : ACCESS.plan === 'monthly' ? 'Monthly' : 'Pro';
                 planChip.className = 'blp-chip blp-chip--plan';
                 planChip.innerHTML = '<strong>' + esc(planName) + '</strong> · unlimited';
@@ -485,7 +488,7 @@
                 $('upgradeBtn').hidden = true;
             } else {
                 planChip.className = 'blp-chip blp-chip--free';
-                planChip.textContent = COST.freeAvailable ? 'First report free' : 'Pay per report';
+                planChip.textContent = COST.freeAvailable ? 'Free report available' : 'Pay per report';
                 planChip.hidden = false;
                 balanceChip.hidden = false;
                 $('balanceValue').textContent = fmtInt(s.balance);
