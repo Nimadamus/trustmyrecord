@@ -12551,7 +12551,7 @@ window.toggleSportFamily = function (family) {
             '<div class="sportsbook-ticket-preview-row" style="align-items:center;">' +
                 '<span><label for="ttSlipUnits" style="cursor:pointer;">Units</label></span>' +
                 '<strong><input id="ttSlipUnits" type="number" min="0.5" max="5" step="0.5" value="1" aria-label="Stake units" oninput="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview()" onchange="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview()"' +
-                    ' style="width:64px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:4px 8px;color:#f8fafc;font-weight:800;text-align:right;"></strong>' +
+                    ' style="width:84px;min-width:84px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:4px 6px;color:#f8fafc;font-weight:800;font-size:15px;line-height:1.3;text-align:center;-webkit-appearance:none;-moz-appearance:textfield;overflow:visible;"></strong>' +
             '</div>' +
             '<div id="ttSlipStakePreview" class="sportsbook-ticket-preview-note tmr-ticket-stake-summary"><span class="tmr-ticket-stake-summary-cell"><span class="tmr-ticket-stake-summary-label">Risk</span><strong class="tmr-ticket-stake-summary-value">1 unit</strong></span><span class="tmr-ticket-stake-summary-divider" aria-hidden="true"></span><span class="tmr-ticket-stake-summary-cell"><span class="tmr-ticket-stake-summary-label">To Win</span><strong class="tmr-ticket-stake-summary-value">0.91 units</strong></span></div>' +
             '<div class="sportsbook-ticket-preview-note">Real DraftKings line. Tap Lock Pick to add it to your public record.</div>' +
@@ -15232,6 +15232,26 @@ body[data-tmr-auth="logged-in"] .make-picks-loggedout { display: none; }
 #unitsInput:focus {
     border-color: var(--neon-gold);
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+    outline: none;
+}
+
+#ttSlipUnits {
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+    text-align: center;
+    overflow: visible;
+}
+
+#unitsInput::-webkit-outer-spin-button,
+#unitsInput::-webkit-inner-spin-button,
+#ttSlipUnits::-webkit-outer-spin-button,
+#ttSlipUnits::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+#ttSlipUnits:focus {
+    border-color: var(--neon-gold, #ffd700);
     outline: none;
 }
 
@@ -23202,11 +23222,11 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=9b0d7c2146b9&cb=20260730multislip1"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=63ea41e074db&cb=20260730multislip1"></script>
 <!-- MULTISLIP_20260730: flag-gated multi-pick slip. Inert unless
      localStorage tmr_multislip === '1' (set via /sportsbook/?multislip=1;
      ?multislip=0 turns it back off). Rollback = flag off, or remove this tag. -->
-<script src="/static/js/sportsbook-multislip.js?v=10c01aa0cce2" defer></script>
+<script src="/static/js/sportsbook-multislip.js?v=a8fd0db25489" defer></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;
@@ -31143,7 +31163,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     </style>
     <link rel="stylesheet" href="/static/css/sportsbook-pro.css?v=10c33537f738">
-    <link rel="stylesheet" href="/static/css/sportsbook-multislip.css?v=828d89deb842">
+    <link rel="stylesheet" href="/static/css/sportsbook-multislip.css?v=0ccd38cbde7d">
     <link rel="stylesheet" href="/static/css/sportsbook-dk-polish.css?v=5c74b848a5fe">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides.css?v=443af57b7454">
     <link rel="stylesheet" href="/static/css/tmr-redesign-overrides-sportsbook.css?v=83e250b54787">
@@ -32588,11 +32608,23 @@ document.addEventListener('DOMContentLoaded', function() {
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #pickLineInput,
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #pickOddsInput,
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #unitsInput,
-    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #ttSlipUnits,
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #pickReasoning {
         min-height: 36px !important;
         padding: 8px 10px !important;
         font-size: 12.5px !important;
+    }
+
+    body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #ttSlipUnits {
+        width: 84px !important;
+        min-width: 84px !important;
+        min-height: 36px !important;
+        padding: 6px 6px !important;
+        font-size: 13px !important;
+        line-height: 1.3 !important;
+        text-align: center !important;
+        overflow: visible !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: textfield !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #modeRisk,
@@ -33547,15 +33579,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks #ttSlipUnits {
-        width: 92px !important;
+        width: 96px !important;
+        min-width: 96px !important;
         min-height: 36px !important;
-        padding: 7px 10px !important;
+        padding: 7px 8px !important;
         border-radius: 8px !important;
         background: #091322 !important;
         border: 1px solid rgba(148, 163, 184, 0.22) !important;
         color: #f8fafc !important;
         font-size: 13px !important;
         font-weight: 760 !important;
+        line-height: 1.3 !important;
+        text-align: center !important;
+        overflow: visible !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: textfield !important;
     }
 
     body.tmr-site-shell[data-tmr-route="sportsbook"] #picks .sportsbook-ticket-preview-note {

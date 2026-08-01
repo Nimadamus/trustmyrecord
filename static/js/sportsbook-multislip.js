@@ -461,7 +461,7 @@
         if (e.state === 'ready' || e.newOdds != null) {
             h += '<div class="tmr-ms-units-row"><span class="tmr-ms-units-label" id="msUnitsLabel' + i + '">Units:</span>' +
                 '<button type="button" class="tmr-ms-step" data-ms-act="dec" data-ms-i="' + i + '" aria-label="Decrease units"' + (e.units <= UNIT_MIN ? ' disabled' : '') + '>&minus;</button>' +
-                '<input class="tmr-ms-units-input" style="width:56px !important;max-width:56px !important;min-width:0 !important;flex:none !important;" data-ms-i="' + i + '" type="number" inputmode="decimal" min="' + UNIT_MIN + '" max="' + UNIT_MAX + '" step="' + UNIT_STEP + '" value="' + fmtUnits(e.units) + '" aria-labelledby="msUnitsLabel' + i + '">' +
+                '<input class="tmr-ms-units-input" style="width:64px !important;max-width:64px !important;min-width:64px !important;flex:none !important;" data-ms-i="' + i + '" type="number" inputmode="decimal" min="' + UNIT_MIN + '" max="' + UNIT_MAX + '" step="' + UNIT_STEP + '" value="' + fmtUnits(e.units) + '" aria-labelledby="msUnitsLabel' + i + '">' +
                 '<button type="button" class="tmr-ms-step" data-ms-act="inc" data-ms-i="' + i + '" aria-label="Increase units"' + (e.units >= UNIT_MAX ? ' disabled' : '') + '>+</button>' +
                 '<span class="tmr-ms-mini-chips">' + QUICK_UNITS.map(function (u) {
                     return '<button type="button" class="tmr-ms-chip" data-ms-act="setu" data-ms-i="' + i + '" data-u="' + u + '" aria-label="Set ' + u + ' units">' + u + '</button>';
