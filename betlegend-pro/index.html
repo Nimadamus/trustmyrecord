@@ -120,9 +120,23 @@
         .market-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
         .market-chip { padding: 9px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); font-size: 13px; font-weight: 700; cursor: pointer; }
         .market-chip.active { border-color: rgba(45, 212, 191, 0.5); color: var(--teal); background: rgba(45, 212, 191, 0.08); }
+        /* Up to 3 fields can be visible at once (Betting On + total/team-total value + optional
+           odds) -- auto-fit instead of the shared .form-row's fixed 1fr/1fr so a 3rd field doesn't
+           orphan onto its own half-empty row. */
+        #matchupSelectionRow { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+        #matchupSelectionRow .form-field[hidden] { display: none; }
+        @media (max-width: 640px) {
+            #matchupSelectionRow { grid-template-columns: 1fr; }
+        }
         .filter-chip-grid { display: flex; flex-wrap: wrap; gap: 6px; }
         .filter-chip { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; }
         .filter-chip.active { border-color: rgba(45, 212, 191, 0.5); color: var(--teal); background: rgba(45, 212, 191, 0.08); }
+        .filter-chip:disabled { opacity: 0.4; cursor: not-allowed; }
+        .clear-filters-btn { margin-left: 10px; padding: 2px 10px; border-radius: 999px; border: 1px solid var(--line); background: transparent; color: var(--teal); font-size: 11px; font-weight: 700; text-transform: none; letter-spacing: 0; cursor: pointer; vertical-align: middle; }
+        .clear-filters-btn[hidden] { display: none; }
+        .situational-summary { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: rgba(15, 23, 42, 0.4); border: 1px solid var(--line); font-size: 12.5px; color: #cbd5e1; }
+        .situational-summary .row { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; }
+        .situational-summary .ignored { color: #fda4af; margin-top: 6px; }
         .assessment-card { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; padding: 16px 18px; border-radius: 10px; border: 1px solid var(--line); background: rgba(15, 23, 42, 0.5); margin-bottom: 16px; }
         .assessment-label { font-family: Barlow, Inter, sans-serif; font-size: 22px; font-weight: 800; }
         .assessment-label.supports, .assessment-label.slightly-supports { color: var(--green); }
@@ -242,21 +256,33 @@
 
                     <div class="form-row" id="matchupSelectionRow">
                         <div class="form-field">
-                            <label id="matchupSelectionLabel" for="matchupSelection">Team getting the line</label>
+                            <label for="matchupSelection">Betting On</label>
                             <select id="matchupSelection"></select>
                         </div>
                         <div class="form-field" id="matchupLineField">
-                            <label for="matchupLine">Line</label>
-                            <input id="matchupLine" type="number" step="0.5" placeholder="6.5">
+                            <label id="matchupLineLabel" for="matchupLine">Spread</label>
+                            <input id="matchupLine" type="number" step="0.5" inputmode="decimal" placeholder="e.g. +6.5 or -6.5">
+                        </div>
+                        <div class="form-field" id="matchupOddsField">
+                            <label id="matchupOddsLabel" for="matchupOdds">Odds</label>
+                            <input id="matchupOdds" type="number" step="1" inputmode="numeric" placeholder="e.g. -120 or +135">
                         </div>
                     </div>
 
                     <div class="form-field full" style="margin-bottom:14px;">
-                        <label>Situational filters <span class="opt">(applied to both teams, optional)</span></label>
-                        <!-- rest_advantage intentionally omitted: matchup.py declines it server-side
-                             (unbounded per-opponent full-dataset scan, reproduced live taking 90+s
-                             and crashing the free-tier service for a two-team MLB request). Still
-                             available in the Single-Team Trend Search tab, unchanged. -->
+                        <label>Situational filters <span class="opt">(applied to both teams, optional)</span>
+                            <button class="clear-filters-btn" id="matchupClearFiltersBtn" type="button" hidden>Clear Filters</button>
+                        </label>
+                        <!-- rest_advantage omitted entirely (not just disabled): matchup.py declines it
+                             server-side via an unbounded per-opponent full-dataset scan, reproduced live
+                             taking 90+s and crashing the free-tier service for a two-team MLB request --
+                             not safe to expose even as a disabled/explained button. Still available in
+                             the Single-Team Trend Search tab, unchanged.
+                             after_loss/after_win/three_game_win_streak/three_game_losing_streak ARE shown
+                             (disabled, with a tooltip) rather than omitted: matchup.py's basic query path
+                             can't evaluate sequence/streak logic at all (see _apply_situation_chain), so
+                             they're always declined -- disabling them here instead of leaving live-looking
+                             buttons that submit successfully but silently change nothing. -->
                         <div class="filter-chip-grid" id="matchupFilterGrid">
                             <button class="filter-chip" data-situation="home" type="button">Home Games</button>
                             <button class="filter-chip" data-situation="away" type="button">Away Games</button>
@@ -264,10 +290,10 @@
                             <button class="filter-chip" data-situation="road_underdog" type="button">Road Underdog</button>
                             <button class="filter-chip" data-situation="as_favorite" type="button">As Favorite</button>
                             <button class="filter-chip" data-situation="as_underdog" type="button">As Underdog</button>
-                            <button class="filter-chip" data-situation="after_loss" type="button">After Loss</button>
-                            <button class="filter-chip" data-situation="after_win" type="button">After Win</button>
-                            <button class="filter-chip" data-situation="three_game_win_streak" type="button">3+ Win Streak</button>
-                            <button class="filter-chip" data-situation="three_game_losing_streak" type="button">3+ Lose Streak</button>
+                            <button class="filter-chip" data-situation="after_loss" type="button" disabled title="Not available in the Matchup Analyzer: sequence/streak filters can't be evaluated by this report's query path.">After Loss</button>
+                            <button class="filter-chip" data-situation="after_win" type="button" disabled title="Not available in the Matchup Analyzer: sequence/streak filters can't be evaluated by this report's query path.">After Win</button>
+                            <button class="filter-chip" data-situation="three_game_win_streak" type="button" disabled title="Not available in the Matchup Analyzer: sequence/streak filters can't be evaluated by this report's query path.">3+ Game Winning Streak</button>
+                            <button class="filter-chip" data-situation="three_game_losing_streak" type="button" disabled title="Not available in the Matchup Analyzer: sequence/streak filters can't be evaluated by this report's query path.">3+ Game Losing Streak</button>
                             <button class="filter-chip" data-situation="division_rival" type="button">Division Rivalry</button>
                             <button class="filter-chip" data-situation="conference" type="button">Conference Games</button>
                             <button class="filter-chip" data-situation="large_spread" type="button">Large Spread (7+)</button>
@@ -681,21 +707,94 @@
         var matchupAwayEl = document.getElementById('matchupAway');
         var matchupHomeEl = document.getElementById('matchupHome');
         var matchupSelectionEl = document.getElementById('matchupSelection');
-        var matchupSelectionLabelEl = document.getElementById('matchupSelectionLabel');
         var matchupLineField = document.getElementById('matchupLineField');
+        var matchupLineLabelEl = document.getElementById('matchupLineLabel');
         var matchupLineEl = document.getElementById('matchupLine');
+        var matchupOddsField = document.getElementById('matchupOddsField');
+        var matchupOddsLabelEl = document.getElementById('matchupOddsLabel');
+        var matchupOddsEl = document.getElementById('matchupOdds');
         submitDisableEls.push(matchupSubmitBtn);
 
+        // "Betting On" (matchupSelectionEl) is always either the two selected teams (spread/
+        // moneyline) or Over/Under (total/team_total_*) -- never a market-specific label like the
+        // old "Team getting the line"/"Team's moneyline"/"Side" text, which stayed on screen
+        // regardless of market and didn't actually describe what was being asked. `line` is the
+        // market's own number (signed spread, or a total); `odds` is a separate American-odds price,
+        // required for moneyline (there's no other way to know its breakeven win%), optional for
+        // total/team_total (falls back to a flat assumption server-side if omitted), and not shown at
+        // all for spread (priced off the entered line, not a separate field).
         var MARKET_CONFIG = {
-            spread: { needsLine: true, mode: 'team', label: 'Team getting the line' },
-            moneyline: { needsLine: false, mode: 'team', label: "Team's moneyline" },
-            total: { needsLine: true, mode: 'over_under', label: 'Side' },
-            team_total_home: { needsLine: true, mode: 'over_under', label: 'Side (home team total)' },
-            team_total_away: { needsLine: true, mode: 'over_under', label: 'Side (away team total)' },
+            spread: {
+                mode: 'team',
+                line: { show: true, label: 'Spread', placeholder: 'e.g. +6.5 or -6.5' },
+                odds: { show: false, required: false },
+            },
+            moneyline: {
+                mode: 'team',
+                line: { show: false },
+                odds: { show: true, required: true, label: 'Moneyline Odds', placeholder: 'e.g. -120 or +135' },
+            },
+            total: {
+                mode: 'over_under',
+                line: { show: true, label: 'Game Total', placeholder: 'e.g. 8.5' },
+                odds: { show: true, required: false, label: 'Odds', placeholder: 'e.g. -110' },
+            },
+            team_total_home: {
+                mode: 'over_under',
+                line: { show: true, label: null, placeholder: 'e.g. 4.5' }, // label computed from the selected home team, see lineFieldLabelFor
+                odds: { show: true, required: false, label: 'Odds', placeholder: 'e.g. -110' },
+            },
+            team_total_away: {
+                mode: 'over_under',
+                line: { show: true, label: null, placeholder: 'e.g. 3.5' }, // label computed from the selected away team, see lineFieldLabelFor
+                odds: { show: true, required: false, label: 'Odds', placeholder: 'e.g. -110' },
+            },
         };
+
+        function lineFieldLabelFor(market) {
+            if (market === 'team_total_home') return (matchupHomeEl.value || 'Home Team') + ' Team Total';
+            if (market === 'team_total_away') return (matchupAwayEl.value || 'Away Team') + ' Team Total';
+            return MARKET_CONFIG[market].line.label;
+        }
+
+        function isValidAmericanOdds(v) {
+            if (v === '' || v === null || v === undefined) return false;
+            var n = Number(v);
+            return Number.isInteger(n) && (n <= -100 || n >= 100);
+        }
         var matchupMarket = 'spread';
         var matchupFilters = [];
         var matchupTeamsCache = {};
+        var matchupClearFiltersBtn = document.getElementById('matchupClearFiltersBtn');
+
+        // Each situational filter's implied constraint(s). Two active filters conflict when they
+        // require a different value for the same dimension -- e.g. home_favorite forces
+        // homeAway:'home', road_underdog forces homeAway:'away'; ANDing both would always return
+        // zero games. Selecting a new filter auto-deselects any currently-active one it conflicts
+        // with, per spec item 4 ("Home Games and Away Games cannot both apply", "As Favorite and As
+        // Underdog cannot both apply", etc.) -- matches matchup.py::_situation_matches exactly.
+        var FILTER_CONSTRAINTS = {
+            home: { homeAway: 'home' },
+            away: { homeAway: 'away' },
+            home_favorite: { homeAway: 'home', side: 'favorite' },
+            road_underdog: { homeAway: 'away', side: 'underdog' },
+            as_favorite: { side: 'favorite' },
+            as_underdog: { side: 'underdog' },
+            large_spread: { magnitude: 'large' },
+            close_spread: { magnitude: 'close' },
+        };
+
+        function situationsConflict(a, b) {
+            var ca = FILTER_CONSTRAINTS[a], cb = FILTER_CONSTRAINTS[b];
+            if (!ca || !cb) return false;
+            return ['homeAway', 'side', 'magnitude'].some(function (dim) {
+                return ca[dim] && cb[dim] && ca[dim] !== cb[dim];
+            });
+        }
+
+        function refreshClearFiltersVisibility() {
+            matchupClearFiltersBtn.hidden = matchupFilters.length === 0;
+        }
 
         function marketLabelFor(sport, market) {
             if (market === 'spread' && sport === 'MLB') return 'Run Line';
@@ -771,8 +870,8 @@
 
         function refreshMatchupSelectionOptions() {
             var cfg = MARKET_CONFIG[matchupMarket];
-            matchupSelectionLabelEl.textContent = cfg.label;
-            matchupLineField.hidden = !cfg.needsLine;
+
+            // Betting On: the two selected teams for spread/moneyline, Over/Under for totals.
             var prev = matchupSelectionEl.value;
             if (cfg.mode === 'over_under') {
                 matchupSelectionEl.innerHTML = '<option value="over">Over</option><option value="under">Under</option>';
@@ -787,13 +886,29 @@
                     : '<option value="">Select both teams first</option>';
                 if (opts.indexOf(prev) !== -1) matchupSelectionEl.value = prev;
             }
+
+            // Line/total value -- hidden completely for moneyline (priced via odds, not a line).
+            matchupLineField.hidden = !cfg.line.show;
+            if (cfg.line.show) {
+                matchupLineLabelEl.textContent = lineFieldLabelFor(matchupMarket);
+                matchupLineEl.placeholder = cfg.line.placeholder;
+            }
+
+            // Odds -- required for moneyline, optional for total/team_total, hidden for spread.
+            matchupOddsField.hidden = !cfg.odds.show;
+            if (cfg.odds.show) {
+                matchupOddsLabelEl.innerHTML = esc(cfg.odds.label) + (cfg.odds.required ? '' : ' <span class="opt">(optional)</span>');
+                matchupOddsEl.placeholder = cfg.odds.placeholder;
+            }
         }
 
         function refreshMatchupSubmitEnabled() {
             var away = matchupAwayEl.value, home = matchupHomeEl.value;
             var cfg = MARKET_CONFIG[matchupMarket];
-            var lineOk = !cfg.needsLine || (matchupLineEl.value !== '' && !isNaN(Number(matchupLineEl.value)));
-            var ok = !!away && !!home && away !== home && !!matchupSelectionEl.value && lineOk;
+            var lineOk = !cfg.line.show || (matchupLineEl.value !== '' && !isNaN(Number(matchupLineEl.value)));
+            var oddsVal = matchupOddsEl.value;
+            var oddsOk = !cfg.odds.show || (cfg.odds.required ? isValidAmericanOdds(oddsVal) : (oddsVal === '' || isValidAmericanOdds(oddsVal)));
+            var ok = !!away && !!home && away !== home && !!matchupSelectionEl.value && lineOk && oddsOk;
             matchupSubmitBtn.disabled = !ok;
         }
 
@@ -801,17 +916,46 @@
             chip.addEventListener('click', function () {
                 matchupMarket = chip.dataset.market;
                 document.querySelectorAll('#matchupMarketGrid .market-chip').forEach(function (c) { c.classList.toggle('active', c === chip); });
+                // A value entered for one market's line/odds concept is never valid input for
+                // another's (a signed spread is not a total, a moneyline price is not a spread's
+                // odds-less line) -- clear both on every market switch rather than leave a stale,
+                // hidden-then-possibly-reshown value behind.
+                matchupLineEl.value = '';
+                matchupOddsEl.value = '';
                 refreshMatchupSelectionOptions();
                 refreshMatchupSubmitEnabled();
             });
         });
-        document.getElementById('matchupFilterGrid').querySelectorAll('.filter-chip').forEach(function (chip) {
+        var matchupFilterChips = document.getElementById('matchupFilterGrid').querySelectorAll('.filter-chip');
+        matchupFilterChips.forEach(function (chip) {
+            if (chip.disabled) return; // sequence/streak filters: disabled with a tooltip, never wired to a click handler
             chip.addEventListener('click', function () {
                 var s = chip.dataset.situation;
                 var idx = matchupFilters.indexOf(s);
-                if (idx === -1) { matchupFilters.push(s); chip.classList.add('active'); }
-                else { matchupFilters.splice(idx, 1); chip.classList.remove('active'); }
+                if (idx !== -1) {
+                    matchupFilters.splice(idx, 1);
+                    chip.classList.remove('active');
+                } else {
+                    // Auto-deselect any active filter this one conflicts with (see FILTER_CONSTRAINTS)
+                    // rather than let two contradictory filters sit active and silently AND to zero games.
+                    matchupFilterChips.forEach(function (other) {
+                        var otherSituation = other.dataset.situation;
+                        if (otherSituation === s) return;
+                        if (matchupFilters.indexOf(otherSituation) !== -1 && situationsConflict(s, otherSituation)) {
+                            matchupFilters.splice(matchupFilters.indexOf(otherSituation), 1);
+                            other.classList.remove('active');
+                        }
+                    });
+                    matchupFilters.push(s);
+                    chip.classList.add('active');
+                }
+                refreshClearFiltersVisibility();
             });
+        });
+        matchupClearFiltersBtn.addEventListener('click', function () {
+            matchupFilters.length = 0;
+            matchupFilterChips.forEach(function (c) { c.classList.remove('active'); });
+            refreshClearFiltersVisibility();
         });
         document.getElementById('matchupSwapBtn').addEventListener('click', function () {
             var a = matchupAwayEl.value, h = matchupHomeEl.value;
@@ -828,6 +972,7 @@
         matchupHomeEl.addEventListener('change', function () { refreshMatchupSelectionOptions(); refreshMatchupSubmitEnabled(); });
         matchupSelectionEl.addEventListener('change', refreshMatchupSubmitEnabled);
         matchupLineEl.addEventListener('input', refreshMatchupSubmitEnabled);
+        matchupOddsEl.addEventListener('input', refreshMatchupSubmitEnabled);
         loadMatchupTeams(matchupSportEl.value, matchupAwayEl);
         loadMatchupTeams(matchupSportEl.value, matchupHomeEl);
 
@@ -896,13 +1041,45 @@
             return html;
         }
 
+        // Situational filters are evaluated independently against each team's OWN game list
+        // (matchup.py::_gather_matchup_report_sync calls _apply_situation_chain once for home,
+        // once for away) -- genuinely "applied to both teams," not just labeled that way. This
+        // surfaces what actually happened: which requested filters applied, how many games
+        // qualified per team, and which filters had no effect (and why) -- previously the backend
+        // already returned all of this but nothing on screen ever showed it.
+        function situationalFilterSummaryHtml(r) {
+            if (!r.situations_requested || !r.situations_requested.length) return '';
+            var appliedHome = (r.situations_applied && r.situations_applied.home) || [];
+            var appliedAway = (r.situations_applied && r.situations_applied.away) || [];
+            var appliedShared = appliedHome.filter(function (l) { return appliedAway.indexOf(l) !== -1; });
+            var notApplied = ((r.situations_not_applied && r.situations_not_applied.home) || [])
+                .concat((r.situations_not_applied && r.situations_not_applied.away) || []);
+            var ignoredByLabel = {};
+            notApplied.forEach(function (item) { ignoredByLabel[item.situation] = item.reason; });
+            var ignoredLabels = Object.keys(ignoredByLabel);
+
+            var html = '<div class="situational-summary">';
+            html += '<h3 style="margin:0 0 6px;font-size:12px;font-weight:800;letter-spacing:0.05em;text-transform:uppercase;color:var(--teal);">Situational Filters</h3>';
+            html += '<div class="row"><span>Applied</span><span>' + (appliedShared.length ? esc(appliedShared.join(', ')) : 'None') + '</span></div>';
+            html += '<div class="row"><span>' + esc(r.away_team || 'Away') + ' Qualifying Games</span><span>' + (r.away_situational ? r.away_situational.games : '—') + '</span></div>';
+            html += '<div class="row"><span>' + esc(r.home_team || 'Home') + ' Qualifying Games</span><span>' + (r.home_situational ? r.home_situational.games : '—') + '</span></div>';
+            if (ignoredLabels.length) {
+                html += '<div class="ignored">Ignored (no effect on this report): ' + ignoredLabels.map(function (label) {
+                    return '<strong>' + esc(label) + '</strong> — ' + esc(ignoredByLabel[label]);
+                }).join('; ') + '</div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
         function renderMatchupReport(payload) {
             var r = payload.result || {};
             document.getElementById('matchupTitle').textContent = (r.away_team || '') + ' @ ' + (r.home_team || '');
             var marketLbl = marketLabelFor(r.sport, r.market);
-            var lineTxt = r.market === 'moneyline' ? (r.selection + ' ML')
+            var oddsTxt = r.odds != null ? ' (' + (r.odds > 0 ? '+' + r.odds : r.odds) + ')' : '';
+            var lineTxt = r.market === 'moneyline' ? (r.selection + ' ML' + oddsTxt)
                 : (r.market === 'total' || r.market === 'team_total_home' || r.market === 'team_total_away')
-                    ? ((r.selection === 'over' ? 'Over' : 'Under') + ' ' + r.line)
+                    ? ((r.selection === 'over' ? 'Over' : 'Under') + ' ' + r.line + oddsTxt)
                     : (r.selection + ' ' + (r.line > 0 ? '+' + r.line : r.line));
             document.getElementById('matchupMeta').textContent = [r.sport, marketLbl + ': ' + lineTxt].filter(Boolean).join(' · ');
 
@@ -918,7 +1095,7 @@
             document.getElementById('matchupTeamCards').innerHTML =
                 teamCardHtml(r.away_team, r.away_form, r.away_market) + teamCardHtml(r.home_team, r.home_form, r.home_market);
 
-            document.getElementById('matchupSections').innerHTML = matchupSectionsHtml(r);
+            document.getElementById('matchupSections').innerHTML = situationalFilterSummaryHtml(r) + matchupSectionsHtml(r);
 
             billingPillHtml(document.getElementById('matchupBillingPill'), payload);
             document.getElementById('matchupBalances').textContent = 'Balance: ' + fmtBal(payload.balance_before) + ' → ' + fmtBal(payload.balance_after) + ' TMR Coin';
@@ -943,7 +1120,8 @@
                 situations: matchupFilters.slice(),
                 num_games: Number(document.getElementById('matchupSampleSize').value),
             };
-            if (cfg.needsLine) payload.line = Number(matchupLineEl.value);
+            if (cfg.line.show) payload.line = Number(matchupLineEl.value);
+            if (cfg.odds.show && matchupOddsEl.value !== '') payload.odds = Number(matchupOddsEl.value);
 
             var sig = JSON.stringify(payload);
             var idempotencyKey = (sig === matchupLastSig && matchupLastKey) ? matchupLastKey : uuid();
