@@ -365,6 +365,20 @@
                     <input id="favTeamsValue" type="hidden" value="">
                 </div>
 
+                <div class="field">
+                    <label for="heardAboutValue">How did you hear about us? <span style="color:var(--muted);font-weight:500;">(optional)</span></label>
+                    <select id="heardAboutValue" style="width:100%;border-radius:14px;background:#e7eef9;color:#101625;padding:13px 14px;font-size:0.98rem;font-weight:600;border:1px solid rgba(255,255,255,0.1);">
+                        <option value="">Select one...</option>
+                        <option value="google_search">Google / search engine</option>
+                        <option value="ai_chatbot">ChatGPT or another AI chatbot</option>
+                        <option value="social_media">Social media</option>
+                        <option value="friend_referral">A friend or referral link</option>
+                        <option value="forum_reddit">Reddit / a forum</option>
+                        <option value="capper_content">A handicapper's content/link</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
                 <div class="field" style="margin-bottom:18px;padding:13px 15px;border-radius:14px;border:1px solid rgba(255,143,143,0.35);background:rgba(255,107,107,0.08);">
                     <div style="font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#ffd5d5;margin-bottom:5px;">Account Integrity Rule</div>
                     <div style="font-size:13px;line-height:1.55;color:var(--muted);">TrustMyRecord allows only <strong style="color:var(--text);">one account per person and one account per household</strong>. No exceptions. Duplicate accounts will be deleted. Confirmed duplicate or related household accounts are deleted, removed from contests, permanently banned, and voided from leaderboards, prizes, verified records, and contest results. <a href="/rules/" style="color:var(--cyan);font-weight:700;" target="_blank" rel="noopener">Read the Platform Rules</a>.</div>
@@ -521,7 +535,8 @@
                     var favoriteTeams = (typeof window.collectFavTeams === 'function') ? window.collectFavTeams() : [];
                     var signupSource = null;
                     try { signupSource = JSON.parse(localStorage.getItem('tmr_first_touch')); } catch (error) {}
-                    const data = await window.api.register({ username, email, password, headline, favoriteSports, favoriteTeams, signupSource });
+                    var heardAbout = (document.getElementById('heardAboutValue').value || '').trim() || undefined;
+                    const data = await window.api.register({ username, email, password, headline, favoriteSports, favoriteTeams, signupSource, heardAbout });
                     try {
                         if (window.TMRAnalytics) {
                             window.TMRAnalytics.signUpCompleted({

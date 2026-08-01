@@ -294,7 +294,7 @@
                 landing: (window.location.pathname + window.location.search).slice(0, 500),
                 ts: new Date().toISOString()
             };
-            ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(function (key) {
+            ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'gclid', 'fbclid'].forEach(function (key) {
                 const value = params.get(key);
                 if (value) touch[key] = value.slice(0, 500);
             });
