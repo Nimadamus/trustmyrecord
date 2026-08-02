@@ -233,7 +233,11 @@ try {
         Write-Warning "[stale-quarantine] Profile Embed Profile/Embed Stats label missing (profile redesign collapsed to a single Embed / Embed Widget button); ignored."
         $script:StaleQuarantineFailures += "Profile :: Embed Profile / Embed Stats"
     }
-    Assert-Match "Profile" $profile "platform-production-fix\.js\?v=20260415d" "known profile patch include changed; inspect before deploy."
+    # The include is cache-busted with a content hash by the deploy pipeline
+    # (?v=20260415d -> ?v=<hash>), so pinning one literal version made this guard
+    # fail on every asset rebuild. What must hold is that the patch script is
+    # still included at all, with SOME cache-buster.
+    Assert-Match "Profile" $profile "platform-production-fix\.js\?v=[0-9a-zA-Z]+" "known profile patch include is missing; inspect before deploy."
 
     Assert-MatchStaleQuarantine "Backend API" $backend "if \(isTotal \|\| /\\b\(over\|under\)\\b/\.test\(selection\)\)" "backend-api fmtLine was split into isTeamTotal-aware branches; the composite expression the regex pins is gone"
 
@@ -268,7 +272,13 @@ try {
     # scripts/prerender_directory.py wrote into, which froze the whole 30-min refresh
     # job AND shipped a homepage whose live regions were em-dash placeholders for ~8s
     # on every visit. These assertions fail the deploy if that happens again.
-    foreach ($mk in @("homeTicker", "homeStats", "homeCapper", "homeLivePicks", "homeLeaderboard", "homeSportsTalk")) {
+    # homeTicker is deliberately NOT in this list. scripts/prerender_home_snapshot.cjs
+    # says so in its own REGIONS comment ("Do not re-add it"): the MLB strip is tied to
+    # an America/Los_Angeles slate date, so anything baked goes stale the moment the
+    # date rolls over. It is rendered live from /api/nav/mlb-slate instead. Its anchor
+    # was removed with the 2026-07-21 real-slate rework (362fd7c8); asserting it here
+    # failed the guard on a change that was correct.
+    foreach ($mk in @("homeStats", "homeCapper", "homeLivePicks", "homeLeaderboard", "homeSportsTalk")) {
         Assert-Match "Homepage prerender" $homeIndex "<!--MK:$mk-->" "index.html lost the <!--MK:$mk--> prerender anchor - scripts/prerender_home_snapshot.cjs can no longer bake real data into the first paint."
         Assert-Match "Homepage prerender" $homeIndex "<!--/MK:$mk-->" "index.html lost the closing <!--/MK:$mk--> prerender anchor."
     }
@@ -277,9 +287,24 @@ try {
     # Ticker layout. The TODAY label must be its OWN static column with the games in a
     # separate scrolling container. It used to be position:sticky inside the scrolling
     # strip, which let the first game card render underneath it.
-    Assert-Match "Homepage ticker" $homeIndex '<span class="tlbl">.*?</span><!--MK:homeTicker--><div class="ticker-games">' "the TODAY label must sit outside <div class=\"ticker-games\"> - games would render under the label again."
+    # The requirement is that the TODAY label is its own static column OUTSIDE the
+    # scrolling games container. The old assertion pinned exact adjacency through the
+    # retired <!--MK:homeTicker--> anchor; the rework put prev/next nav buttons between
+    # them, which is fine. Assert the actual invariant instead: .tlbl exists, .ticker-games
+    # exists, the label comes first, and the label is not nested inside the scroller.
+    Assert-Match "Homepage ticker" $homeIndex '<span class="tlbl">' "the TODAY label column is gone from the ticker."
+    Assert-Match "Homepage ticker" $homeIndex '<div class="ticker-games"' "the ticker games scroller is gone."
+    if ($homeIndex.IndexOf('<span class="tlbl">') -ge $homeIndex.IndexOf('<div class="ticker-games"')) {
+        throw 'Homepage ticker guard failed: the TODAY label must come before the ticker-games scroller.'
+    }
+    Assert-NoMatch "Homepage ticker" $homeIndex '<div class="ticker-games"[^>]*>(?:(?!</div>).)*?<span class="tlbl">' "the TODAY label is nested inside the scrolling games container - games would render under the label again."
     Assert-NoMatch "Homepage ticker" $tickerCss "\.tlbl\{[^}]*position:sticky" "the TODAY label is position:sticky inside the scrolling ticker again - games will slide underneath it."
-    Assert-Match "Homepage ticker" $tickerCss "\.ticker-games\{[^}]*overflow-x:auto" "only .ticker-games may scroll; the label column must stay stationary."
+    # The 2026-07-21 real-slate rework (362fd7c8) replaced free horizontal scrolling
+    # with a paged strip (.ticker-track / .ticker-page moved by the tk-nav buttons), so
+    # .ticker-games is now overflow:hidden rather than overflow-x:auto. The invariant is
+    # unchanged and is what actually protects the label: the games container must CLIP
+    # its content so cards can never spill out over the stationary TODAY column.
+    Assert-Match "Homepage ticker" $tickerCss "\.ticker-games\{[^}]*overflow(-x)?:(hidden|auto|scroll)" "the ticker games container no longer clips its content - game cards can spill over the TODAY label."
     Assert-NoMatch "Homepage ticker" $homeLive "ticker-in'\)\.innerHTML" "tmr-home-live.js writes the ticker into .ticker-in again - that wipes the TODAY label column."
     Assert-NoMatch "Homepage prerender" $homeIndex '>—<' "homepage still ships em-dash placeholders - run: node scripts/prerender_home_snapshot.cjs"
 
