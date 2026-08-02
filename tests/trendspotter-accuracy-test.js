@@ -116,7 +116,11 @@ function priced(overrides) {
     provenance: {
       sport: 'MLB', dataset: 'mlb_historical_games', provider: 'ESPN-derived universal games corpus',
       last_updated: null, coverage: { from: '2024-04-05', to: '2026-07-29' },
-      grading: { convention: 'TrustMyRecord house units.', moneyline: 'Final score. Tied/suspended games settle as a push.' },
+      grading: [
+        { label: 'Settlement', detail: 'Final score. A tied or suspended game settles as a push, never a win or a loss.' },
+        { label: 'Units', detail: 'TrustMyRecord house convention: favorites risk to win 1 unit, underdogs risk 1 unit. A push stakes nothing.' },
+        { label: 'ROI', detail: 'Net units ÷ units risked × 100.' },
+      ],
     },
     timing_ms: 42,
   }, overrides || {});
@@ -272,7 +276,8 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
     assert.strictEqual(metrics['Avg closing price'], '-157');
     assert.strictEqual(metrics.Sample, '143');
 
-    assert($(doc, '.ts-chart'), 'a chart must render');
+    assert($(doc, '.ts-chart-plot svg'), 'a chart must render');
+    assert($$(doc, '.ts-chart-axis span').length === 3, 'the chart must carry legible HTML axis labels');
     assert.strictEqual($$(doc, '.ts-table tbody tr').length, 1, 'the evidence table lists the games');
     const row = txt(doc, '.ts-table tbody tr');
     assert(/2026-07-29/.test(row) && /Milwaukee Brewers/.test(row) && /-111/.test(row) && /16-3/.test(row) && /\+1\.00u/.test(row), row);
@@ -298,7 +303,10 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
     assert(/^—/.test(metrics.Units) && /no closing price recorded/.test(metrics.Units), metrics.Units);
     assert(/^—/.test(metrics.ROI) && /needs a recorded price/.test(metrics.ROI), metrics.ROI);
     assert(/0(\.00)?%/.test(metrics.ROI) === false, 'a missing ROI must never render as 0%');
-    assert(/Not recorded/.test(txt(doc, '.ts-table tbody tr')), 'the game row must say the price is not recorded');
+    // With no priced game in the sample the Price and Units columns are
+    // dropped entirely and the reason is stated once above the table.
+    assert(/no closing price recorded for this market/.test(txt(doc, '.ts-table-caption')), txt(doc, '.ts-table-caption'));
+    assert(!/Units/.test(txt(doc, '.ts-table thead')), 'an all-empty Units column must not be printed');
   });
 
   await test('pushes are shown separately and never folded into the record', async () => {

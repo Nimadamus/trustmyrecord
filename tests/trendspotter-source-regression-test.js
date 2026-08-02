@@ -98,7 +98,9 @@ assert(/not a prediction|not a betting recommendation/i.test(copy),
 // --- Honest gaps -------------------------------------------------------------
 assert(/no closing price recorded|needs a recorded price/.test(js),
   'a missing price must be reported, never replaced with a computed ROI');
-assert(/Not recorded/.test(js), 'per-game missing prices must be labelled in the evidence table');
+assert(/Not recorded/.test(js), 'a per-game missing price must be labelled in the evidence table');
+assert(/no closing price recorded for this market/.test(js),
+  'a market with no prices at all must say so above the table instead of printing an empty column');
 
 // --- Design system ----------------------------------------------------------
 assert(html.includes('class="tmr-ds ts-page"'), 'page must opt into the TrustMyRecord design system');

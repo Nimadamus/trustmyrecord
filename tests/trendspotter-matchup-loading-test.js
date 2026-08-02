@@ -174,7 +174,7 @@ const list = (doc) => doc.getElementById('matchupList');
   await test('a long slate is capped with an explicit "show all" control', async () => {
     const many = Array.from({ length: 15 }, (_, i) => game(i));
     const { doc, win } = await mount(ok({ available: true, matchups: many }));
-    assert.strictEqual(doc.querySelectorAll('.ts-matchup').length, 6, 'only the first six render by default');
+    assert.strictEqual(doc.querySelectorAll('.ts-matchup').length, 8, 'only the first eight render by default');
     const toggle = doc.getElementById('toggleSlate');
     assert(toggle && /Show all 15 games/.test(toggle.textContent), toggle && toggle.textContent);
     toggle.dispatchEvent(new win.Event('click', { bubbles: true }));

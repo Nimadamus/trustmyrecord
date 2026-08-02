@@ -32,7 +32,7 @@
   function visibleTableRows() { return isNarrow() ? 10 : 25; }
   // A full MLB slate is ~15 games; showing them all pushes the workspace below
   // the fold, which is the exact problem this redesign exists to fix.
-  function visibleMatchups() { return isNarrow() ? 4 : 6; }
+  function visibleMatchups() { return isNarrow() ? 4 : 8; }
 
   var EXAMPLES = [
     { label: 'Dodgers on the road as a favorite', note: 'Moneyline, since 2024',
@@ -267,7 +267,7 @@
 
     parts.push(field('Venue', 'f_venue', select('f_venue', [
       ['any', 'Home or away'], ['home', 'Home only'], ['away', 'Away only']
-    ], state.venue), { hint: 'Neutral-site games are not flagged in our data and count under the listed home team.' }));
+    ], state.venue), { hint: 'Neutral sites count as home.' }));
 
     var situations = c.situations.filter(function (s) {
       return !((s.id === 'vs_lhp' || s.id === 'vs_rhp') && state.sport !== 'MLB');
@@ -290,21 +290,21 @@
         esc(c.spread_label + ' range') + '</span><div class="ts-range" role="group" aria-labelledby="lbl_spread">' +
         numberInput('f_lineMin', state.lineMin, 'min', '0.5') + '<span>to</span>' +
         numberInput('f_lineMax', state.lineMax, 'max', '0.5') + '</div>' +
-        '<span class="ts-hint">Negative means the team was laying points.</span></div>');
+        '<span class="ts-hint">Negative means laying points.</span></div>');
     }
     if (state.market === 'total') {
       parts.push('<div class="ts-field"><span class="ts-field-label" id="lbl_total">Posted total range</span>' +
         '<div class="ts-range" role="group" aria-labelledby="lbl_total">' +
         numberInput('f_totalMin', state.totalMin, 'min', '0.5') + '<span>to</span>' +
         numberInput('f_totalMax', state.totalMax, 'max', '0.5') + '</div>' +
-        '<span class="ts-hint">Filters on the total each game actually closed at.</span></div>');
+        '<span class="ts-hint">The total each game closed at.</span></div>');
     }
     if (state.market === 'moneyline') {
       parts.push('<div class="ts-field"><span class="ts-field-label" id="lbl_price">Price range</span>' +
         '<div class="ts-range" role="group" aria-labelledby="lbl_price">' +
         numberInput('f_priceMin', state.priceMin, '-170', '5') + '<span>to</span>' +
         numberInput('f_priceMax', state.priceMax, '-110', '5') + '</div>' +
-        '<span class="ts-hint">American odds on the selected team.</span></div>');
+        '<span class="ts-hint">American odds on this team.</span></div>');
     }
 
     parts.push(field('Minimum games', 'f_minGames',
@@ -569,94 +569,176 @@
    * Cumulative units when the sample carries prices; otherwise a per-season
    * wins-out-of-games chart, because a units line would be a fiction.
    */
+  /**
+   * One chart, drawn inline as SVG so the page loads no charting library.
+   * Cumulative units when the sample carries prices; otherwise a per-season
+   * wins-out-of-games chart, because a units line would be a fiction.
+   *
+   * Axis labels are HTML, not SVG <text>: the plot stretches to the container
+   * with preserveAspectRatio="none", which would squash any text inside it to
+   * an unreadable smear on a phone.
+   */
   function chartHtml(summary) {
     var series = summary.cumulative_units || [];
     var priced = summary.priced_games > 0;
-    var w = 720, h = 190, padL = 46, padR = 12, padT = 14, padB = 26;
+    var w = 720, h = 170, padT = 6, padB = 6;
+
+    function frame(axisTop, axisMid, axisBottom, svg, foot, note) {
+      return '<div class="ts-chart-wrap">' +
+        '<div class="ts-chart-axis" aria-hidden="true">' +
+          '<span>' + esc(axisTop) + '</span>' +
+          '<span>' + esc(axisMid) + '</span>' +
+          '<span>' + esc(axisBottom) + '</span>' +
+        '</div>' +
+        '<div class="ts-chart-plot">' + svg +
+          (foot ? '<div class="ts-chart-foot" aria-hidden="true">' + foot + '</div>' : '') +
+        '</div></div>' +
+        '<p class="ts-chart-note">' + note + '</p>';
+    }
 
     if (priced && series.length > 1) {
       var vals = series.map(function (p) { return p.units; }).concat([0]);
       var min = Math.min.apply(null, vals);
       var max = Math.max.apply(null, vals);
       if (max === min) { max += 1; min -= 1; }
-      var x = function (i) { return padL + (i / (series.length - 1)) * (w - padL - padR); };
+      var x = function (i) { return (i / (series.length - 1)) * w; };
       var y = function (v) { return padT + (1 - (v - min) / (max - min)) * (h - padT - padB); };
-      var d = series.map(function (p, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.units).toFixed(1); }).join(' ');
-      var zero = y(0).toFixed(1);
+      var line = series.map(function (p, i) { return (i ? 'L' : 'M') + x(i).toFixed(1) + ' ' + y(p.units).toFixed(1); }).join(' ');
+      var zero = y(0);
+      // Area between the curve and the zero line, so gains and drawdowns read
+      // at a glance instead of as a bare squiggle.
+      var area = 'M0 ' + zero.toFixed(1) + ' L' + line.slice(1) + ' L' + w + ' ' + zero.toFixed(1) + ' Z';
       var last = series[series.length - 1].units;
-      return '<svg class="ts-chart" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" role="img"' +
-        ' aria-label="Cumulative units from ' + esc(series[0].date) + ' to ' + esc(series[series.length - 1].date) +
-        ', finishing at ' + last.toFixed(2) + ' units">' +
-        '<line x1="' + padL + '" x2="' + (w - padR) + '" y1="' + zero + '" y2="' + zero +
-        '" stroke="var(--line-2)" stroke-width="1" stroke-dasharray="4 4"/>' +
-        '<text x="6" y="' + (padT + 9) + '" font-size="11" fill="var(--muted)">' + max.toFixed(1) + 'u</text>' +
-        '<text x="6" y="' + (h - padB + 4) + '" font-size="11" fill="var(--muted)">' + min.toFixed(1) + 'u</text>' +
-        '<path d="' + d + '" fill="none" stroke="' + (last >= 0 ? 'var(--green)' : 'var(--red)') +
-        '" stroke-width="2.5" stroke-linejoin="round"/></svg>' +
-        '<p class="ts-chart-note">Cumulative units, oldest game on the left. Only the ' +
-        summary.priced_games + ' games with a recorded closing price move this line.</p>';
+      var stroke = last >= 0 ? 'var(--green)' : 'var(--red)';
+      var first = series[0].date;
+      var latest = series[series.length - 1].date;
+      // The area is split at the zero line: the stretch spent in profit is
+      // shaded green and the stretch spent under water red. Shading the whole
+      // area one colour would paint a winning run as if it were a loss.
+      var uid = 'tsclip' + Math.abs(Math.round(zero * 1000));
+
+      var svg = '<svg viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" role="img"' +
+        ' aria-label="Cumulative units from ' + esc(first) + ' to ' + esc(latest) +
+        ', peaking at ' + max.toFixed(2) + ' and finishing at ' + last.toFixed(2) + ' units">' +
+        '<defs>' +
+          '<clipPath id="' + uid + '-up"><rect x="0" y="0" width="' + w + '" height="' + zero.toFixed(1) + '"/></clipPath>' +
+          '<clipPath id="' + uid + '-dn"><rect x="0" y="' + zero.toFixed(1) + '" width="' + w + '" height="' + (h - zero).toFixed(1) + '"/></clipPath>' +
+        '</defs>' +
+        '<path d="' + area + '" fill="var(--green)" opacity="0.16" clip-path="url(#' + uid + '-up)"/>' +
+        '<path d="' + area + '" fill="var(--red)" opacity="0.16" clip-path="url(#' + uid + '-dn)"/>' +
+        '<line x1="0" x2="' + w + '" y1="' + zero.toFixed(1) + '" y2="' + zero.toFixed(1) +
+        '" stroke="var(--line-2)" stroke-width="1" stroke-dasharray="5 5" vector-effect="non-scaling-stroke"/>' +
+        '<path d="' + line + '" fill="none" stroke="' + stroke +
+        '" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>' +
+        '</svg>';
+
+      return frame(
+        max.toFixed(1) + 'u', '0u', min.toFixed(1) + 'u', svg,
+        '<span>' + esc(first) + '</span><span>' + esc(latest) + '</span>',
+        'Cumulative units, oldest game on the left.' + (summary.unpriced_games
+          ? ' Only the ' + summary.priced_games + ' games with a recorded closing price move this line.'
+          : '')
+      );
     }
 
     var seasons = summary.by_season || [];
     if (!seasons.length) return '';
-    var bw = (w - padL - padR) / seasons.length;
-    var maxG = Math.max.apply(null, seasons.map(function (s) { return s.wins + s.losses + s.pushes; }));
-    var bars = seasons.map(function (s, i) {
-      var total = s.wins + s.losses + s.pushes;
-      var bh = (h - padT - padB) * (total / maxG);
-      var winH = total ? bh * (s.wins / total) : 0;
-      var bx = padL + i * bw + bw * 0.16;
-      var bwid = bw * 0.68;
-      return '<rect x="' + bx.toFixed(1) + '" y="' + (h - padB - bh).toFixed(1) + '" width="' + bwid.toFixed(1) +
-        '" height="' + bh.toFixed(1) + '" fill="var(--panel-3)"/>' +
-        '<rect x="' + bx.toFixed(1) + '" y="' + (h - padB - winH).toFixed(1) + '" width="' + bwid.toFixed(1) +
-        '" height="' + winH.toFixed(1) + '" fill="var(--brand)"/>' +
-        '<text x="' + (bx + bwid / 2).toFixed(1) + '" y="' + (h - padB + 15) +
-        '" font-size="11" fill="var(--muted)" text-anchor="middle">' + esc(s.season) + '</text>';
+    // Bars are HTML, not SVG: a three-season sample stretched across a 720-unit
+    // viewBox produced enormous blocks, and the per-season record has to stay
+    // legible at any width.
+    var maxG = Math.max.apply(null, seasons.map(function (b) { return b.wins + b.losses + b.pushes; }));
+    var bars = seasons.map(function (b) {
+      var total = b.wins + b.losses + b.pushes;
+      var pct = maxG ? Math.round(100 * total / maxG) : 0;
+      var winPct = total ? Math.round(100 * b.wins / total) : 0;
+      var record = b.wins + '-' + b.losses + (b.pushes ? '-' + b.pushes : '');
+      return '<div class="ts-bar">' +
+        '<span class="ts-bar-val">' + esc(record) + '</span>' +
+        '<span class="ts-bar-track" style="height:' + pct + '%">' +
+          '<span class="ts-bar-fill" style="height:' + winPct + '%"></span>' +
+        '</span>' +
+        '<span class="ts-bar-label">' + esc(b.season) + '</span>' +
+      '</div>';
     }).join('');
-    return '<svg class="ts-chart" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none" role="img"' +
-      ' aria-label="Wins out of qualifying games by season: ' +
-      esc(seasons.map(function (s) { return s.season + ' ' + s.wins + '-' + s.losses; }).join(', ')) + '">' +
-      bars + '</svg><p class="ts-chart-note">Wins (teal) out of qualifying games, by season. ' +
+    return '<div class="ts-bars" role="img" aria-label="Record by season: ' +
+      esc(seasons.map(function (b) { return b.season + ' ' + b.wins + '-' + b.losses; }).join(', ')) + '">' +
+      bars + '</div>' +
+      '<p class="ts-chart-note">Wins (teal) out of qualifying games, by season. ' +
       'This market has no recorded closing price in our data, so there is no units line to draw.</p>';
   }
 
+  /**
+   * The evidence table. Columns that carry no information for this particular
+   * query are dropped rather than printed 200 times: a moneyline result has no
+   * closing line, and every row in a single result shares one market and one
+   * settlement status, both of which are already stated above the table.
+   */
   function tableHtml(games, marketLabel, isTotal) {
     var cap = visibleTableRows();
     var rows = tableExpanded ? games : games.slice(0, cap);
+    var hasLine = games.some(function (g) { return g.line !== null && g.line !== undefined; });
+    var hasPrice = games.some(function (g) { return g.price !== null && g.price !== undefined; });
+    var statuses = {};
+    games.forEach(function (g) { statuses[g.settlement_status] = 1; });
+    var oneStatus = Object.keys(statuses).length <= 1;
+
+    var cols = [
+      { key: 'Date', cell: function (g) { return esc(g.date) + (g.game_num > 1 ? ' <span class="ts-dh">G' + esc(g.game_num) + '</span>' : ''); } },
+      { key: 'Opponent', cell: function (g) { return esc((g.is_home ? 'vs ' : '@ ') + g.opponent); } },
+      { key: 'Venue', cell: function (g) { return esc(g.venue); } },
+    ];
+    if (hasLine) {
+      cols.push({ key: 'Closing line', num: true, cell: function (g) {
+        if (g.line === null || g.line === undefined) return '—';
+        return esc(!isTotal && Number(g.line) > 0 ? '+' + g.line : String(g.line));
+      } });
+    }
+    if (hasPrice) {
+      cols.push({ key: 'Price', num: true, cell: function (g) {
+        return (g.price === null || g.price === undefined) ? '<span class="ts-dim">Not recorded</span>' : esc(signed(g.price));
+      } });
+    }
+    cols.push({ key: 'Final', num: true, cell: function (g) { return esc(g.score); } });
+    cols.push({ key: 'Result', cell: function (g) {
+      var label = g.outcome === 'win' ? 'Win' : g.outcome === 'loss' ? 'Loss' : 'Push';
+      return '<span class="ts-outcome" data-o="' + esc(g.outcome) + '">' + label + '</span>';
+    } });
+    if (hasPrice) {
+      cols.push({ key: 'Units', num: true, cell: function (g) {
+        return (g.units === null || g.units === undefined) ? '—' : esc(fmtUnits(g.units));
+      } });
+    }
+    if (!oneStatus) {
+      cols.push({ key: 'Source', cell: function (g) { return esc(g.settlement_status); } });
+    }
+
+    var head = cols.map(function (c) { return '<th scope="col"' + (c.num ? ' class="num"' : '') + '>' + esc(c.key) + '</th>'; }).join('');
     var body = rows.map(function (g) {
-      var outcome = g.outcome === 'win' ? 'Win' : g.outcome === 'loss' ? 'Loss' : 'Push';
-      var line = g.line === null || g.line === undefined ? '—'
-        : (!isTotal && Number(g.line) > 0 ? '+' + g.line : String(g.line));
-      return '<tr>' +
-        '<td data-label="Date">' + esc(g.date) + (g.game_num > 1 ? ' (G' + esc(g.game_num) + ')' : '') + '</td>' +
-        '<td data-label="Opponent">' + esc((g.is_home ? 'vs ' : '@ ') + g.opponent) + '</td>' +
-        '<td data-label="Venue">' + esc(g.venue) + '</td>' +
-        '<td data-label="Market">' + esc(marketLabel) + '</td>' +
-        '<td data-label="Closing line" class="num">' + esc(line) + '</td>' +
-        '<td data-label="Price" class="num">' + (g.price === null || g.price === undefined ? 'Not recorded' : esc(signed(g.price))) + '</td>' +
-        '<td data-label="Final" class="num">' + esc(g.score) + '</td>' +
-        '<td data-label="Result"><span class="ts-outcome" data-o="' + esc(g.outcome) + '">' + outcome + '</span></td>' +
-        '<td data-label="Units" class="num">' + (g.units === null || g.units === undefined ? '—' : esc(fmtUnits(g.units))) + '</td>' +
-        '<td data-label="Source">' + esc(g.settlement_status === 'final' ? 'Final · verified' : g.settlement_status) + '</td>' +
-        '</tr>';
+      return '<tr>' + cols.map(function (c) {
+        return '<td data-label="' + esc(c.key) + '"' + (c.num ? ' class="num"' : '') + '>' + c.cell(g) + '</td>';
+      }).join('') + '</tr>';
     }).join('');
+
     var more = games.length > cap
       ? '<div class="ts-table-more"><button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="toggleTable">' +
         (tableExpanded ? 'Show first ' + cap + ' games' : 'Show all ' + games.length + ' games') + '</button></div>'
       : '';
-    return '<div class="ts-table-wrap"><table class="ts-table">' +
+
+    // Stated once, so it does not repeat on every row.
+    var caption = marketLabel + ' · ' + games.length + ' game' + (games.length === 1 ? '' : 's') +
+      (oneStatus && games.length ? ' · final scores verified' : '') +
+      (hasPrice ? '' : ' · no closing price recorded for this market, so there are no units');
+
+    return '<p class="ts-table-caption">' + esc(caption) + '</p>' +
+      '<div class="ts-table-wrap"><table class="ts-table">' +
       '<caption class="ts-sr">Every game included in this trend</caption>' +
-      '<thead><tr><th scope="col">Date</th><th scope="col">Opponent</th><th scope="col">Venue</th>' +
-      '<th scope="col">Market</th><th scope="col">Closing line</th><th scope="col">Price</th>' +
-      '<th scope="col">Final</th><th scope="col">Result</th><th scope="col">Units</th><th scope="col">Source</th></tr></thead>' +
-      '<tbody>' + body + '</tbody></table></div>' + more;
+      '<thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table></div>' + more;
   }
 
   function detailsHtml(data) {
     var p = data.provenance || {};
     var ex = data.exclusions || { total: 0, reasons: [] };
-    var grading = p.grading || {};
+    var grading = p.grading || [];
     return '<details class="ts-details"><summary>Data details</summary><div class="ts-details-body">' +
       '<dl>' +
       '<dt>Source</dt><dd>' + esc(p.provider || '—') + '</dd>' +
@@ -671,8 +753,8 @@
         return '<li>' + esc(r.count) + ' — ' + esc(r.label) + '</li>';
       }).join('') + '</ul>' : '') +
       '<p style="margin-top:12px"><strong>How results are settled</strong></p><ul>' +
-      Object.keys(grading).map(function (k) {
-        return '<li>' + esc(k.replace(/_/g, ' ')) + ': ' + esc(grading[k]) + '</li>';
+      (Array.isArray(grading) ? grading : []).map(function (g) {
+        return '<li><b>' + esc(g.label) + '</b> &mdash; ' + esc(g.detail) + '</li>';
       }).join('') +
       '</ul></div></details>';
   }
@@ -737,7 +819,7 @@
         '</div>' +
       '</div>' +
       '<dl class="ts-metrics">' + metrics + '</dl>' +
-      '<div class="ts-section"><h3>Performance over time</h3>' + chartHtml(s) + '</div>' +
+      '<div class="ts-section"><h3>' + (s.priced_games > 0 ? 'Performance over time' : 'Record by season') + '</h3>' + chartHtml(s) + '</div>' +
       '<div class="ts-section" id="gamesSection"><h3>Games in this trend</h3>' +
         tableHtml(data.games, marketLabel, q.market === 'total') + '</div>' +
       '<div class="ts-section"><h3>What this means</h3><ul class="ts-notes">' +
