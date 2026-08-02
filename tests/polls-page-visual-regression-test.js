@@ -31,7 +31,6 @@ for (const required of [
   'data-league="NBA"',
   'data-league="WNBA"',
   'data-league="NHL"',
-  'data-league="Soccer"',
   'data-league="Other"',
   'data-view="open"',
   'data-view="ending"',
@@ -122,3 +121,19 @@ assert(!html.includes('background-attachment: fixed'), 'polls page must not use 
 assert(!/noindex/i.test(html), 'polls page must never be noindexed');
 
 console.log('polls page visual regression test passed');
+
+// A TMR poll is a multi-question quiz on major AMERICAN sports — never a foreign
+// fixture (Nima, 2026-08-02; enforced server-side in services/pollPolicy.js).
+// The Soccer chip was removed as part of that rule, which is why the old
+// 'data-league="Soccer"' assertion was dropped from the required list above.
+// Guard the RULE instead of the removed marker, so the chip cannot come back.
+[
+  'data-league="Soccer"',
+  'data-league="NPB"',
+  'data-league="KBO"',
+].forEach((banned) => {
+  assert(
+    !html.includes(banned),
+    `polls board reintroduced a non-American league chip: ${banned}`
+  );
+});

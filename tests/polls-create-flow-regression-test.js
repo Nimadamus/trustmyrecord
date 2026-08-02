@@ -47,8 +47,12 @@ for (const required of [
   // Multi-select is a real poll_type now, not a '[multi-choice]' description tag.
   "payload.poll_type = 'prediction_multi';",
   'payload.numeric_target = Number(numericTargetRaw)',
-  // Empty board still invites the first poll instead of dead-ending.
-  "You're early. Start today's debate.",
+  // Empty board still invites the first poll instead of dead-ending. The copy
+  // was rewritten when polls became multi-question quizzes; the guarantee is
+  // unchanged, so assert the current invite and its primary action rather than
+  // the retired "You're early. Start today's debate." string.
+  'No open polls right now.',
+  '<i class="fas fa-plus" aria-hidden="true"></i> Create a Poll',
   'function templateChipsHtml(',
 ]) {
   assert(html.includes(required), `polls create-flow guard missing: ${required}`);

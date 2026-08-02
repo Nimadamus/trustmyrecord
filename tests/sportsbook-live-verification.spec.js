@@ -20,15 +20,64 @@ async function waitForBoardSettled(page) {
   await expect(page.locator('body')).not.toContainText(/Loading live odds/i, { timeout: 30000 });
 }
 
-test('live sportsbook NHL primary markets and pick slip are usable', async ({ page }) => {
+// Sport tab label -> the odds-API sport_key the board queries. This proof used
+// to hard-code NHL, so it failed every day between the Stanley Cup Final and
+// October: there is no NHL slate in the summer, so no cards, no prices, nothing
+// to click. That is the calendar, not a regression. Pick whichever sport
+// actually has posted lines right now and prove the SAME card/market/pick-slip
+// contract against it; if no sport anywhere has a slate, that IS an outage and
+// the proof still fails.
+const SPORT_KEYS = {
+  NHL: 'icehockey_nhl',
+  NBA: 'basketball_nba',
+  MLB: 'baseball_mlb',
+  NFL: 'americanfootball_nfl',
+  WNBA: 'basketball_wnba',
+};
+
+async function pickSportInSeason(page) {
+  const withGames = [];
+  for (const [tab, key] of Object.entries(SPORT_KEYS)) {
+    const count = await page.evaluate(async (sportKey) => {
+      try {
+        const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl)
+          || 'https://trustmyrecord-api.onrender.com/api';
+        const res = await fetch(base + '/games/odds/' + sportKey);
+        if (!res.ok) return 0;
+        const body = await res.json();
+        const games = Array.isArray(body) ? body : (body.games || []);
+        return games.filter((g) => (g.bookmakers || []).length > 0).length;
+      } catch (e) { return 0; }
+    }, key);
+    if (count > 0) withGames.push({ tab, count });
+  }
+  expect(
+    withGames.length,
+    'no sport has a posted slate at all -- the odds feed is down, not merely out of season'
+  ).toBeGreaterThan(0);
+  return withGames.sort((a, b) => b.count - a.count)[0].tab;
+}
+
+test('live sportsbook primary markets and pick slip are usable', async ({ page }) => {
   await page.goto(LIVE_URL, { waitUntil: 'domcontentloaded' });
   await waitForBoardSettled(page);
 
-  await clickSport(page, 'NHL');
+  const sport = await pickSportInSeason(page);
+  await clickSport(page, sport);
   await waitForBoardSettled(page);
+  // The board container is already on screen (showing the previous sport, or an
+  // empty-state panel), so container visibility alone settles instantly and the
+  // card assertions below would race the re-render. Wait for the new sport's
+  // cards to actually land.
+  await expect
+    .poll(
+      async () => page.locator('#lobbyBoardRows article, #gamesListContainer .tmr-market-card, main article').count(),
+      { message: sport + ' game cards should render after switching sports', timeout: 30000 }
+    )
+    .toBeGreaterThan(0);
 
   const cards = page.locator('#lobbyBoardRows article:visible, #gamesListContainer .tmr-market-card:visible, main article:visible');
-  await expect(cards.first(), 'at least one NHL game card should render').toBeVisible({ timeout: 30000 });
+  await expect(cards.first(), sport + ' board should render at least one game card').toBeVisible({ timeout: 30000 });
 
   const card = cards.first();
   await expect(card, 'card should keep the styled sportsbook card layout').toHaveCSS('display', /block|grid|flex/);
@@ -36,7 +85,7 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
   await expect(card.locator('table'), 'plain table markup should not replace the styled game card').toHaveCount(0);
 
   const primaryGrid = card;
-  await expect(primaryGrid, 'NHL card must expose the main markets directly on the card').toBeVisible({ timeout: 15000 });
+  await expect(primaryGrid, sport + ' card must expose the main markets directly on the card').toBeVisible({ timeout: 15000 });
 
   await expect(primaryGrid, 'Moneyline must be visible in the primary grid').toContainText(/Moneyline/i);
   await expect(primaryGrid, 'Spread/Puck Line must be visible in the primary grid').toContainText(/Puck Line|Spread/i);
@@ -87,8 +136,16 @@ test('live sportsbook NHL primary markets and pick slip are usable', async ({ pa
     await expect(visibleBoard(page), `${sport} board should not be blank after tab click`).toContainText(/Markets|No .*games|temporarily unavailable|game|Matchup|Board/i, { timeout: 15000 });
   }
 
-  await clickSport(page, 'NHL');
+  // Return to the in-season sport (not a hard-coded NHL, which has no summer
+  // slate) and prove the card survives the full tab sweep intact.
+  await clickSport(page, sport);
   await waitForBoardSettled(page);
-  await expect(primaryGrid).toBeVisible({ timeout: 15000 });
+  await expect
+    .poll(
+      async () => page.locator('#lobbyBoardRows article:visible, #gamesListContainer .tmr-market-card:visible, main article:visible').count(),
+      { message: sport + ' cards should return after sweeping every tab', timeout: 30000 }
+    )
+    .toBeGreaterThan(0);
+  await expect(cards.first()).toBeVisible({ timeout: 15000 });
   await page.screenshot({ path: ARTIFACT_PATH, fullPage: true });
 });

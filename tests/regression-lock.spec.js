@@ -49,6 +49,56 @@ async function clickSport(page, sport) {
   await expect(visibleBoard(page), `${sport} board should stay visible`).toBeVisible();
 }
 
+// Sport tab label -> the odds-API sport_key the board actually queries.
+const SPORT_KEYS = {
+  MLB: 'baseball_mlb',
+  NFL: 'americanfootball_nfl',
+  NBA: 'basketball_nba',
+  NHL: 'icehockey_nhl',
+  WNBA: 'basketball_wnba',
+};
+
+// The sportsbook opens on its default sport, which in the offseason legitimately
+// has no slate ("No NBA games scheduled today." on an August morning). Asserting
+// wager buttons against whatever the default happens to be made this lock fail
+// every day the default sport was out of season -- a calendar bug in the test,
+// not a product defect. Resolve an in-season sport from the live board feed
+// instead, and fail loudly only if NO sport anywhere has a posted slate, which
+// would be a real odds-feed outage and must still break the build.
+async function selectSportWithPostedLines(page) {
+  const withGames = [];
+  for (const [tab, key] of Object.entries(SPORT_KEYS)) {
+    const count = await page.evaluate(async (sportKey) => {
+      try {
+        const base = (window.CONFIG && window.CONFIG.api && window.CONFIG.api.baseUrl)
+          || 'https://trustmyrecord-api.onrender.com/api';
+        const res = await fetch(base + '/games/odds/' + sportKey);
+        if (!res.ok) return 0;
+        const body = await res.json();
+        const games = Array.isArray(body) ? body : (body.games || []);
+        return games.filter((g) => (g.bookmakers || []).length > 0).length;
+      } catch (e) { return 0; }
+    }, key);
+    if (count > 0) withGames.push({ tab, count });
+  }
+  expect(
+    withGames.length,
+    'no sport has a posted slate at all -- the odds feed is down, not merely out of season'
+  ).toBeGreaterThan(0);
+  const target = withGames.sort((a, b) => b.count - a.count)[0];
+  await clickSport(page, target.tab);
+  return target.tab;
+}
+
+// An out-of-season board must say so in plain language. It must never render
+// blank, and never sit in a permanent loading state.
+async function assertHonestEmptyBoard(page, sport) {
+  await expect(
+    visibleBoard(page),
+    sport + ' board with no slate must state that explicitly'
+  ).toContainText(/no .*games|not scheduled|no games scheduled|offseason|check back/i, { timeout: 30000 });
+}
+
 async function firstEnabledPickButton(page) {
   const button = page
     .locator('#lobbyBoardRows button:not([disabled]), #gamesListContainer button:not([disabled]), main article button:not([disabled])')
@@ -218,6 +268,11 @@ test.describe('sportsbook functional locks', () => {
       const boardText = await visibleBoard(page).innerText();
       expect(boardText.trim().length, `${sport} board should not collapse to empty`).toBeGreaterThan(20);
       expect(boardText).not.toMatch(/My Pick History/i);
+      // Out-of-season sports are expected to be empty -- but they must say so,
+      // never render a blank panel or a stuck "Loading..." state.
+      if (!/ML|[+-]\d|O\s*\d|U\s*\d/i.test(boardText)) {
+        await assertHonestEmptyBoard(page, sport);
+      }
     }
   });
 
@@ -240,6 +295,7 @@ test.describe('sportsbook functional locks', () => {
 
   test('wager buttons select a pick, odds are display-only, and logged-out submit requires login', async ({ page }) => {
     await waitForSportsbook(page);
+    await selectSportWithPostedLines(page);
     const pickButton = await firstEnabledPickButton(page);
     await pickButton.click();
     await expect(page.locator('#pickDetails, .sportsbook-ticket-preview, .tmr-slip-panel').first()).toBeVisible();
@@ -259,6 +315,7 @@ test.describe('sportsbook functional locks', () => {
 
   test('unit changes immediately update risk/to win preview', async ({ page }) => {
     await waitForSportsbook(page);
+    await selectSportWithPostedLines(page);
     const pickButton = await firstEnabledPickButton(page);
     await pickButton.click();
     const input = page.locator('#ttSlipUnits, #unitsInput').first();

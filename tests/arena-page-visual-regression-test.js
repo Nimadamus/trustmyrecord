@@ -14,12 +14,18 @@ for (const required of [
   // dashboard layout. Lock that redesign by its own marker and structure.
   'ARENA_PRO_20260711',
   'class="arena-head"',
-  'class="arena-actions-grid"',
-  'class="arena-action-card"',
+  // The Arena hub redesign (935918f7) replaced the old "actions grid"
+  // (.arena-actions-grid / .arena-action-card / .arena-action-icon and its
+  // scrollToChallenges handler) with a single subnav plus a grid of section
+  // links. Same guarantee — the hub must keep its navigation entry points —
+  // re-pointed at the components the page actually ships.
+  'class="arena-subnav"',
+  'class="arena-more-grid"',
+  'class="arena-more-link"',
+  'onclick="arenaNavTo(',
   'id="openChallengesSection"',
   'id="challengesList"',
   'onclick="openCreateChallenge()"',
-  'onclick="scrollToChallenges(event)"',
   'function renderOpenChallengesEmptyState(filtered)',
   'function renderOpenChallengesErrorState()',
 ]) {
@@ -29,9 +35,9 @@ for (const required of [
 for (const requiredStyle of [
   // Styles of the ARENA_PRO_20260711 dashboard that replaced arena-clean-*.
   '.arena-head {',
-  '.arena-actions-grid {',
-  '.arena-action-card {',
-  '.arena-action-icon {',
+  '.arena-subnav {',
+  '.arena-more-grid {',
+  '.arena-more-link {',
   '.arena-more-grid {',
   '.cc-status {',
   '.empty-state .arena-empty-action',

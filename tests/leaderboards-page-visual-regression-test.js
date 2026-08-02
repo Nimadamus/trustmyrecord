@@ -10,8 +10,11 @@ const html = fs.readFileSync(path.join(root, 'leaderboards', 'index.html'), 'utf
 for (const required of [
   'LEADERBOARDS_PREMIUM_DARK_UI_20260508',
   '<link rel="canonical" href="https://trustmyrecord.com/leaderboards/">',
-  'tmr-sitewide.css?v=',
-  'tmr-sitewide.js?v=',
+  // Migrated off the tmr-sitewide bundle to the canonical design-system nav
+  // shell in the 2026-07-29 nav+stats consolidation. Same guarantee: the page
+  // must not lose its shared nav/session bundle.
+  '/static/js/tmr-ds-nav',
+  '/static/js/tmr-session',
   'sortBy=net_units',
   'positive net units',
   '5 graded picks',
