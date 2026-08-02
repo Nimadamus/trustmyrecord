@@ -44,7 +44,7 @@ assert(reliability.includes("units_mode: stakeMode"), 'submitted payload should 
 assert(reliability.includes("risk_units: stakeValues.risk_units"), 'submitted payload should store calculated risk units');
 assert(reliability.includes("to_win_units: stakeValues.win_units"), 'submitted payload should store calculated to-win units');
 assert(
-  /const unitsValue = getCurrentStakeAmount\(\);[\s\S]*const stakeMode = getSelectedStakeMode\(\);[\s\S]*const stakeValues = calculateStakeValues\(stakeMode, unitsValue, oddsValue\);[\s\S]*units: unitsValue,[\s\S]*stake_mode: stakeMode,[\s\S]*units_mode: stakeMode,[\s\S]*risk_units: stakeValues\.risk_units,[\s\S]*to_win_units: stakeValues\.win_units,/.test(reliability),
+  /const unitsValue = getCurrentStakeAmount\(true\);[\s\S]*const stakeMode = getSelectedStakeMode\(\);[\s\S]*const stakeValues = calculateStakeValues\(stakeMode, unitsValue, oddsValue\);[\s\S]*units: unitsValue,[\s\S]*stake_mode: stakeMode,[\s\S]*units_mode: stakeMode,[\s\S]*risk_units: stakeValues\.risk_units,[\s\S]*to_win_units: stakeValues\.win_units,/.test(reliability),
   'lock payload must use the same live units input, selected stake mode, and calculated risk/to-win values'
 );
 assert(

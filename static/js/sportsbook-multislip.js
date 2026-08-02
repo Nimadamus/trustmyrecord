@@ -110,11 +110,18 @@
         var n = Math.round(Number(u) * 100) / 100;
         return Number.isInteger(n) ? String(n) : String(n);
     }
+    // SPORTSBOOK_UNITS_NORMALIZATION: one units rule for the whole sportsbook.
+    // Delegate to the reliability script's normalizer (the owner) so a multi
+    // slip entry, a restored draft, and the single-pick slip can never disagree
+    // about what "1.5" means. The inline fallback below is byte-identical and
+    // only runs if the owner script failed to load.
     function clampUnits(v) {
-        var n = parseFloat(v);
+        var I = window.TMR;
+        if (I && typeof I.normalizeStakeUnits === 'function') return I.normalizeStakeUnits(v);
+        var n = typeof v === 'number' ? v : (/^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(String(v == null ? '' : v).trim()) ? parseFloat(String(v).trim()) : NaN);
         if (!Number.isFinite(n)) n = 1;
-        n = Math.max(UNIT_MIN, Math.min(UNIT_MAX, Math.round(n * 2) / 2));
-        return n;
+        n = Math.round(n * 2) / 2;
+        return Math.max(UNIT_MIN, Math.min(UNIT_MAX, n));
     }
     function entryKey(opt) {
         return [opt.game_id, opt.market_type, String(opt.selection || '').toLowerCase(),

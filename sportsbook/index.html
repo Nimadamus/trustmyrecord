@@ -707,14 +707,41 @@
         console.log('[TMR] Units mode set to:', mode);
     };
 
+    // SPORTSBOOK_UNITS_NORMALIZATION (2026-08-02) — inline fallback copy of the
+    // ONE units rule. The reliability script owns and locks the production
+    // version (window.TMR.normalizeStakeUnits); this identical copy only runs
+    // if that script fails to load. Half units are first-class: 0.5 / 1.5 /
+    // 2.5 ... survive unchanged; blank or malformed text falls back to 1.
+    window.TMR.normalizeStakeUnits = window.TMR.normalizeStakeUnits || function(value) {
+        var n;
+        if (typeof value === 'number') {
+            n = value;
+        } else {
+            var raw = String(value == null ? '' : value).trim();
+            n = /^[+-]?(?:\d+\.?\d*|\.\d+)$/.test(raw) ? parseFloat(raw) : NaN;
+        }
+        if (!Number.isFinite(n)) n = 1;
+        n = Math.round(n * 2) / 2;
+        if (n < 0.5) n = 0.5;
+        if (n > 5) n = 5;
+        return n;
+    };
+
+    // The units every submit path must send. The reliability script overrides
+    // this with its own (identical) getCurrentStakeAmount(true).
+    window.TMR.getSubmissionUnits = window.TMR.getSubmissionUnits || function() {
+        var el = document.getElementById('ttSlipUnits') || document.getElementById('unitsInput');
+        var amount = window.TMR.normalizeStakeUnits(el ? el.value : 1);
+        if (el) el.value = String(amount);
+        var hidden = document.getElementById('unitsInput');
+        if (hidden) hidden.value = String(amount);
+        return amount;
+    };
+
     // Core function - Get Units Value from input
     window.TMR.getUnitsValue = function() {
         var input = document.getElementById('unitsInput');
-        var val = parseFloat(input ? input.value : '1');
-        if (isNaN(val) || val < 0.5) val = 0.5;
-        if (val > 5) val = 5;
-        val = Math.round(val * 2) / 2;
-        return val;
+        return window.TMR.normalizeStakeUnits(input ? input.value : 1);
     };
 
     window.TMR.roundStakeUnits = function(value) {
@@ -791,13 +818,8 @@
         var oddsEl = document.getElementById('pickOddsInput');
         var preview = document.getElementById('ttSlipStakePreview') || document.getElementById('unitsStakePreview');
         var hiddenUnits = document.getElementById('unitsInput');
-        var raw = unitsEl ? String(unitsEl.value == null ? '' : unitsEl.value).trim() : '';
-        var amount = parseFloat(raw === '' ? '1' : raw);
+        var amount = window.TMR.normalizeStakeUnits(unitsEl ? unitsEl.value : 1);
         var odds = oddsEl ? parseFloat(oddsEl.value || '') : NaN;
-        if (!Number.isFinite(amount) || amount <= 0) amount = 1;
-        if (amount < 0.5) amount = 0.5;
-        if (amount > 5) amount = 5;
-        amount = Math.round(amount * 2) / 2;
         if (commit === true && unitsEl && String(unitsEl.value) !== String(amount)) unitsEl.value = String(amount);
         if (hiddenUnits && (hiddenUnits !== unitsEl || commit === true)) hiddenUnits.value = String(amount);
         if (!preview) return;
@@ -2325,15 +2347,19 @@
             return;
         }
 
-        // Units: whole numbers 1..5. The CLAUDE.md formula treats stored
+        // SPORTSBOOK_UNITS_NORMALIZATION: units are 0.5..5 in 0.5 steps, and
+        // half units are real stakes — this used to parseInt() the field, which
+        // silently turned a 0.5 or 1.5 unit pick into 1. It now resolves through
+        // the SAME normalizer the ticket slip, quick-bet bar and multislip use,
+        // so no submit path can disagree. The CLAUDE.md formula treats stored
         // units as TO-WIN; this is the user-facing risk/to-win value before
         // any conversion the backend applies.
         var units = 1;
         try {
-            var inp = document.getElementById('unitsInput');
-            if (inp) units = parseInt(inp.value, 10) || 1;
-        } catch(e) {}
-        units = Math.max(1, Math.min(5, Math.round(units)));
+            units = window.TMR.getSubmissionUnits();
+        } catch(e) {
+            try { units = window.TMR.normalizeStakeUnits((document.getElementById('unitsInput') || {}).value); } catch(e2) {}
+        }
 
         // Read from the editable form (overrides stored pick data)
         var betType = window.TMR.selectedBetType || thePick.betType || 'ml';
@@ -12629,14 +12655,9 @@ window.toggleSportFamily = function (family) {
         if (submit) {
             submit.addEventListener('click', function (ev) {
                 ev.preventDefault();
-                var unitsEl = document.getElementById('ttSlipUnits');
-                var u = unitsEl ? parseFloat(unitsEl.value) : 1;
-                if (!Number.isFinite(u) || u <= 0) u = 1;
-                if (u < 0.5) u = 0.5;
-                if (u > 5)   u = 5;
-                u = Math.round(u * 2) / 2;
-                var hiddenUnits = document.getElementById('unitsInput');
-                if (hiddenUnits) hiddenUnits.value = String(u);
+                // SPORTSBOOK_UNITS_NORMALIZATION: same normalizer as every
+                // other submit path (this also mirrors into #unitsInput).
+                var u = window.TMR.getSubmissionUnits();
                 var modeEl = document.getElementById('ttSlipStakeMode');
                 if (window.TMR) window.TMR.selectedUnitsMode = (modeEl && modeEl.value === 'to_win') ? 'to_win' : 'risk';
                 if (typeof window.lockInPick !== 'function') {
@@ -23255,11 +23276,11 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=0d6e7318f034&cb=20260802unitsfix"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=135ca9f9dc69&cb=20260802unitsfix2"></script>
 <!-- MULTISLIP_20260730: flag-gated multi-pick slip. Inert unless
      localStorage tmr_multislip === '1' (set via /sportsbook/?multislip=1;
      ?multislip=0 turns it back off). Rollback = flag off, or remove this tag. -->
-<script src="/static/js/sportsbook-multislip.js?v=a8fd0db25489" defer></script>
+<script src="/static/js/sportsbook-multislip.js?v=926ebdef1a54" defer></script>
     <script>
     (function() {
         if (window.__tmrSportsbookLogoInlineRestore) return;

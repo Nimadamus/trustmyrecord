@@ -15,6 +15,7 @@ const allChecks = [
   ['unit/static: sportsbook F5 board layout lock', 'node', ['tests/sportsbook-f5-board-layout-lock-test.js'], 'static'],
   ['unit/static: sportsbook 1st-inning Yes/No lock', 'node', ['tests/sportsbook-first-inning-yesno-lock-test.js'], 'static'],
   ['unit/static: sportsbook stake mode guard', 'node', ['tests/sportsbook-stake-mode-ui-test.js'], 'static'],
+  ['unit/static: sportsbook units normalization', 'node', ['tests/sportsbook-units-normalization-test.js'], 'static'],
   ['unit/static: sportsbook submit flow guard', 'node', ['tests/sportsbook-submit-flow-guard-test.js'], 'static'],
   ['unit/static: sportsbook no game drop guard', 'node', ['tests/sportsbook-no-game-drop-regression-test.js'], 'static'],
   ['unit/static: sportsbook header guard', 'node', ['tests/sportsbook-header-regression-test.js'], 'static'],

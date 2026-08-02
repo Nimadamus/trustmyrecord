@@ -344,6 +344,34 @@
         return ticketInput || document.getElementById('unitsInput');
     }
 
+    // SPORTSBOOK_UNITS_NORMALIZATION (2026-08-02) — the ONE units rule for the
+    // whole sportsbook. Ticket slip, legacy pick slip, quick-bet bar, multislip
+    // and restored drafts all funnel through this so no path can round a stake
+    // differently from the one the user saw. Half units are first-class:
+    // 0.5 / 1 / 1.5 / 2 / 2.5 / 3 / 3.5 / 4 / 4.5 / 5 all survive unchanged.
+    // Blank or malformed text falls back to the safe default (1) instead of
+    // submitting NaN or a truncated integer.
+    const STAKE_UNITS_MIN = 0.5;
+    const STAKE_UNITS_MAX = 5;
+    const STAKE_UNITS_DEFAULT = 1;
+    const STAKE_UNITS_NUMERIC = /^[+-]?(?:\d+\.?\d*|\.\d+)$/;
+
+    function normalizeStakeUnits(value) {
+        let n;
+        if (typeof value === 'number') {
+            n = value;
+        } else {
+            const raw = String(value == null ? '' : value).trim();
+            // Strict parse: parseFloat('1.5abc') would silently accept junk.
+            n = STAKE_UNITS_NUMERIC.test(raw) ? parseFloat(raw) : NaN;
+        }
+        if (!Number.isFinite(n)) n = STAKE_UNITS_DEFAULT;
+        n = Math.round(n * 2) / 2;                       // snap to the 0.5 step
+        if (n < STAKE_UNITS_MIN) n = STAKE_UNITS_MIN;    // clamp AFTER snapping
+        if (n > STAKE_UNITS_MAX) n = STAKE_UNITS_MAX;
+        return n;
+    }
+
     // MOBILE STAKE EDIT FIX 2026-08-02: only write the clamped value back into
     // the field when commit === true (change/blur/submit). Mirroring on every
     // keystroke made the units field uneditable on mobile, where the number
@@ -355,9 +383,7 @@
         const ticketInput = document.getElementById('ttSlipUnits');
         const hiddenInput = document.getElementById('unitsInput');
         const input = ticketInput || hiddenInput;
-        const raw = input ? String(input.value == null ? '' : input.value).trim() : '';
-        const rawAmount = parseFloat(raw === '' ? '1' : raw);
-        const amount = Math.max(0.5, Math.min(5, Math.round((Number.isFinite(rawAmount) ? rawAmount : 1) * 2) / 2));
+        const amount = normalizeStakeUnits(input ? input.value : STAKE_UNITS_DEFAULT);
         [ticketInput, hiddenInput].forEach(function(el) {
             if (!el) return;
             if (el === input && commit !== true) return;
@@ -408,6 +434,13 @@
     window.TMR.formatLine = formatLine;
     window.TMR.updateStakeModePreview = updateStakeModePreview;
     window.TMR.getCurrentStakeAmount = getCurrentStakeAmount;
+    // SPORTSBOOK_UNITS_NORMALIZATION: every submit path must resolve its units
+    // through these two, never with its own parse/clamp.
+    window.TMR.normalizeStakeUnits = normalizeStakeUnits;
+    window.TMR.getSubmissionUnits = function() { return getCurrentStakeAmount(true); };
+    window.TMR.STAKE_UNITS_MIN = STAKE_UNITS_MIN;
+    window.TMR.STAKE_UNITS_MAX = STAKE_UNITS_MAX;
+    window.TMR.STAKE_UNITS_DEFAULT = STAKE_UNITS_DEFAULT;
     window.setUnitsMode = setStakeMode;
 
     function normalizePick(pick) {
@@ -4051,6 +4084,7 @@
         lockFunction(window.TMR, 'calculateStakeValues', calculateStakeValues);
         lockFunction(window.TMR, 'formatStakeDisplay', formatStakeDisplay);
         lockFunction(window.TMR, 'updateStakeModePreview', updateStakeModePreview);
+        lockFunction(window.TMR, 'normalizeStakeUnits', normalizeStakeUnits);
         lockFunction(window.TMR, 'resolveSportsbookTeamLogo', resolveTeamLogo);
         lockFunction(window.TMR, 'renderSportsbookTeamLogo', renderTeamLogo);
         lockFunction(window, 'selectSportAndShowGames', selectSportAndShowGames);
@@ -4072,6 +4106,7 @@
             getApiClientOrFallback: getApiClientOrFallback,
             ensureBackendAccessToken: ensureBackendAccessToken,
             calculateStakeValues: calculateStakeValues,
+            normalizeStakeUnits: normalizeStakeUnits,
             getSelectedStakeMode: getSelectedStakeMode,
             getMarketLabel: getMarketLabel,
             formatLine: formatLine,
@@ -4646,14 +4681,13 @@
         return document.getElementById('ttSlipUnits') || document.getElementById('unitsInput');
     }
 
+    // SPORTSBOOK_UNITS_NORMALIZATION: the quick-bet bar must not own a second
+    // units rule — it defers to window.TMR.normalizeStakeUnits so the value it
+    // pushes into the real input is byte-identical to what the slip submits.
     function clampUnits(v) {
-        var n = parseFloat(v);
-        if (!isFinite(n)) n = 1;
-        if (n < 0.5) n = 0.5;
-        if (n > 5) n = 5;
-        // snap to 0.5 step
-        n = Math.round(n * 2) / 2;
-        return n;
+        return (window.TMR && typeof window.TMR.normalizeStakeUnits === 'function')
+            ? window.TMR.normalizeStakeUnits(v)
+            : 1;
     }
 
     function buildBar() {
