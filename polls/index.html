@@ -633,6 +633,14 @@
         .tmr-q-model { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: var(--surface-3); color: var(--muted); border: 1px solid var(--border-strong); font-size: 0.6rem; font-weight: 650; white-space: nowrap; vertical-align: middle; }
         .tmr-game-submit-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); flex-wrap: wrap; }
         .tmr-game-submit-row.is-sticky { position: sticky; bottom: 10px; z-index: 30; background: rgba(16, 27, 44, 0.96); backdrop-filter: blur(8px); border: 1px solid var(--border-strong); border-radius: var(--r-md); padding: 12px 14px; margin-top: 18px; box-shadow: 0 -8px 28px rgba(0,0,0,0.35); }
+        /* Quiz progress tracking. A TMR poll is a multi-question quiz, so the
+           sticky answer bar reports how far through it the player is. */
+        .tmr-game-progress { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+        .tmr-game-progress-track { width: 120px; height: 6px; border-radius: 999px; background: var(--border-strong); overflow: hidden; flex: 0 0 auto; }
+        .tmr-game-progress-fill { display: block; height: 100%; width: 0%; border-radius: 999px; background: var(--cyan, #22d3ee); transition: width .22s ease; }
+        .tmr-game-progress-text { color: var(--text); font-size: 0.78rem; font-weight: 750; white-space: nowrap; }
+        .tmr-game-progress-text[data-complete="1"] { color: var(--green, #34d399); }
+        @media (max-width: 560px) { .tmr-game-progress-track { width: 84px; } }
         .tmr-game.is-solo { grid-template-columns: 1fr; }
         .tmr-resolve-box { margin-top: 14px; padding: 14px 16px; border: 1px dashed rgba(233,190,99,0.4); border-radius: var(--r-md); background: rgba(233,190,99,0.04); }
         .tmr-resolve-box h4 { color: var(--gold) !important; font-size: 0.84rem !important; font-weight: 700 !important; margin-bottom: 4px; }
@@ -2649,6 +2657,30 @@
         if (box) box.querySelectorAll('.tmr-q-opt').forEach(function(o){ o.classList.remove('is-checked'); });
         var li = input.closest('.tmr-q-opt');
         if (li) li.classList.add('is-checked');
+        updateGameProgress();
+    }
+
+    // Progress tracking for the quiz. A TMR poll is a multi-question quiz, so
+    // the answer bar has to say how far through it you are — "6 of 10
+    // answered" — not just "answer any or all". Counts distinct answered
+    // questions across every input type the quiz renders (option radios and
+    // closest-numeric fields on legacy quizzes).
+    function updateGameProgress() {
+        var host = document.getElementById('gameQuestions');
+        var bar = document.getElementById('gameProgress');
+        if (!host || !bar) return;
+        var groups = host.querySelectorAll('.tmr-q');
+        var total = groups.length;
+        var done = 0;
+        groups.forEach(function(card) {
+            if (card.querySelector('input[type=radio]:checked')) { done++; return; }
+            var num = card.querySelector('.tmr-q-numinput');
+            if (num && String(num.value).trim() !== '') done++;
+        });
+        bar.textContent = done + ' of ' + total + ' answered';
+        bar.setAttribute('data-complete', done === total && total > 0 ? '1' : '0');
+        var fill = document.getElementById('gameProgressFill');
+        if (fill) fill.style.width = (total ? Math.round((done / total) * 100) : 0) + '%';
     }
 
     function renderGame() {
@@ -2724,6 +2756,7 @@
             }
             return '<div class="tmr-q">' + head + body + '</div>';
         }).join('');
+        qsHtml = '<div id="gameQuestions">' + qsHtml + '</div>';
 
         var actionHtml = '';
         if (isResolved) {
@@ -2735,7 +2768,14 @@
             actionHtml = '<div class="tmr-game-submit-row"><span class="tmr-game-sub">Voting is closed. Waiting on the creator to grade.</span></div>';
         } else {
             var hasAny = questions.some(function(q){ return q.user_answer; });
-            actionHtml = '<div class="tmr-game-submit-row is-sticky"><span class="tmr-game-sub">Answer any or all &middot; one entry per player</span>' +
+            // Progress tracking: a TMR poll is a multi-question quiz, so the
+            // answer bar reports how many questions are done, not just "any or all".
+            actionHtml = '<div class="tmr-game-submit-row is-sticky">' +
+                '<span class="tmr-game-progress">' +
+                    '<span class="tmr-game-progress-track"><span id="gameProgressFill" class="tmr-game-progress-fill" style="width:0%"></span></span>' +
+                    '<span id="gameProgress" class="tmr-game-progress-text" data-complete="0">0 of ' + questions.length + ' answered</span>' +
+                    '<span class="tmr-game-sub">one entry per player</span>' +
+                '</span>' +
                 '<button class="tmr-poll-vote-btn" type="button" id="gameSubmitBtn" onclick="submitGameVote()"><i class="fas fa-check"></i> ' + (hasAny?'Update My Picks':'Submit All Picks') + '</button></div>';
         }
 
@@ -2836,6 +2876,11 @@
                 asideHtml +
             '</div>';
         animateBars(document.getElementById('pollDetail'));
+        // Seed the progress bar from any answers already locked in, and keep it
+        // live for the closest-numeric inputs (radios call markGameChoice).
+        updateGameProgress();
+        document.querySelectorAll('#gameQuestions .tmr-q-numinput')
+            .forEach(function(el){ el.addEventListener('input', updateGameProgress); });
         mountDiscussion(p.id);
     }
 
