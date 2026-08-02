@@ -20,6 +20,24 @@ async function captureRoot(name) {
   return out;
 }
 
+/**
+ * Find sentences that actually MAKE a forbidden claim.
+ *
+ * A flat regex over the whole page cannot tell "this is an official pick"
+ * from "outputs here are never counted as official picks" - and the
+ * simulator is required to carry exactly that disclaimer, so the flat
+ * version failed on the page that was doing the right thing. Split into
+ * sentences and skip the ones that negate; a page that genuinely claims a
+ * guaranteed winner still trips this.
+ */
+function forbiddenClaims(text, pattern) {
+  const NEGATED = /\b(never|not|no|non|isn't|aren't|won't|cannot|can't|don't|doesn't|without|instead of|rather than)\b/i;
+  return String(text)
+    .split(/(?<=[.!?])\s+|\n+/)
+    .map((s) => s.trim())
+    .filter((s) => pattern.test(s) && !NEGATED.test(s));
+}
+
 async function selectFirstOption(page, selector) {
   const value = await page.locator(selector).evaluate((select) => {
     const option = Array.from(select.options).find((item) => item.value);
@@ -79,8 +97,9 @@ async function verifyTrendspotter(page) {
   if (/source rows are connected|impossible combinations are blocked|Verified trend data source not connected yet/i.test(text)) {
     throw new Error('Trend Spotter showed internal engineering copy.');
   }
-  if (/fake ROI|fake win rate|fake records|fake predictions|verified betting edge|guaranteed/i.test(text)) {
-    throw new Error('Trend Spotter showed a forbidden verified/fake claim.');
+  const trendClaims = forbiddenClaims(text, /fake ROI|fake win rate|fake records|fake predictions|verified betting edge|guaranteed/i);
+  if (trendClaims.length) {
+    throw new Error(`Trend Spotter showed a forbidden verified/fake claim: ${trendClaims[0]}`);
   }
   if (!/not a prediction/i.test(text)) {
     throw new Error('Trend Spotter did not state that the result is descriptive, not predictive.');
@@ -119,7 +138,13 @@ async function verifyMlbSimulator(page) {
   if (!/Simulation-based estimate|simulation output/i.test(text)) throw new Error('MLB Simulator output was not labeled as simulation based.');
   if (!/Chicago White Sox|Colorado Rockies/i.test(text)) throw new Error('MLB Simulator proof matchup did not render selected teams.');
   if (!/Starting Pitchers/i.test(text)) throw new Error('MLB Simulator output did not render selected starting pitchers.');
-  if (/verified betting edge|official pick|guaranteed result|guaranteed winner/i.test(text)) throw new Error('MLB Simulator showed a forbidden verified/fake claim.');
+  // The claim to catch is the simulator presenting its own output AS an
+  // official or guaranteed pick. A bare /official pick/ also matched the
+  // required disclaimer and the line pointing users at the graded record
+  // system, which is where official picks legitimately live.
+  const simClaims = forbiddenClaims(text,
+    /verified betting edge|guaranteed result|guaranteed winner|(?:is|are|as)\s+(?:the|an?|our|your)?\s*official\s+picks?\b/i);
+  if (simClaims.length) throw new Error(`MLB Simulator showed a forbidden verified/fake claim: ${simClaims[0]}`);
   if (/First Five output|F5 lean|Team Total lean|props/i.test(text)) throw new Error('MLB Simulator exposed unsupported output.');
   return captureRoot('mlb-simulator-live-browser-addressbar-proof.png');
 }
