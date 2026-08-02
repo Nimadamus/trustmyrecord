@@ -310,7 +310,14 @@ test.describe('sportsbook functional locks', () => {
     expect(oddsReadonly, 'odds must not be manually editable').toBe(true);
     await expect(page.locator('#unitsStakePreview, #ttSlipStakePreview, .tmr-slip-panel').first()).toContainText(/Risk/i);
     await expect(page.locator('#unitsStakePreview, #ttSlipStakePreview, .tmr-slip-panel').first()).toContainText(/To Win/i);
-    await expect(page.locator('#pickDetails, .sportsbook-ticket-preview, .tmr-slip-panel').first()).toContainText(/Odds/i);
+    // The slip labels the market and prints the price ("Spread - -200"); it only
+    // prints the literal word "Odds" for some markets, so pinning that word made
+    // the check depend on which button happened to be first on the board. Assert
+    // the thing that actually matters: a real American price is shown in the slip.
+    await expect(
+      page.locator('#pickDetails, .sportsbook-ticket-preview, .tmr-slip-panel').first(),
+      'the slip must show the price of the selected wager'
+    ).toContainText(/(Odds|[+-]\d{2,4})/i);
     const submit = page.locator('.submit-pick-btn, .lock-pick-btn, button:has-text("Lock"), button:has-text("Submit")').first();
     if (await submit.count()) {
       await submit.click();
