@@ -402,7 +402,8 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
   });
 
   await test('a schedule outage still leaves the tool usable', async () => {
-    const { doc } = await mount({ '/capabilities': CAPABILITIES, '/matchups': { __status: 503 } });
+    // The slate retries a 5xx once, so this needs longer than the default settle.
+    const { doc } = await mount({ '/capabilities': CAPABILITIES, '/matchups': { __status: 503 } }, { settle: 300 });
     assert(/Schedule unavailable/i.test(txt(doc, '#matchupList')), txt(doc, '#matchupList').slice(0, 120));
     assert(/search for any team/i.test(txt(doc, '#matchupList')));
     assert($(doc, '#teamSearch'), 'the team search must still be there');
@@ -464,6 +465,31 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
     $$(doc, '.ts-metric').forEach((m) => { metrics[m.querySelector('dt').textContent] = m.querySelector('dd').firstChild.textContent; });
     assert.strictEqual(metrics['Win rate'], '—', JSON.stringify(metrics));
     assert.strictEqual(metrics['Avg closing price'], '—', JSON.stringify(metrics));
+  });
+
+  await test('arrow keys walk the tablists and keep focus after the re-render', async () => {
+    const { win, doc } = await mount({ ...base, '/query': priced() });
+    for (const [container, attr] of [['#leagueTabs', 'data-league'], ['#marketTabs', 'data-market']]) {
+      const tabs = $$(doc, `${container} button:not([disabled])`);
+      if (tabs.length < 2) continue;
+      tabs[0].focus();
+      const startId = tabs[0].getAttribute(attr);
+      doc.querySelector(container).dispatchEvent(
+        new win.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      await new Promise((r) => win.setTimeout(r, 30));
+      const active = doc.activeElement;
+      assert.ok(active && active.matches(`${container} button`),
+        `${container}: focus fell to <${active && active.tagName}> after arrowing`);
+      assert.notStrictEqual(active.getAttribute(attr), startId,
+        `${container}: arrow key did not move the selection`);
+      // A second press must keep moving; that only works if focus survived.
+      const secondFrom = active.getAttribute(attr);
+      doc.querySelector(container).dispatchEvent(
+        new win.KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      await new Promise((r) => win.setTimeout(r, 30));
+      assert.notStrictEqual(doc.activeElement.getAttribute(attr), secondFrom,
+        `${container}: a second arrow press did nothing, so focus was lost`);
+    }
   });
 
   // -------------------------------------------------------------------------

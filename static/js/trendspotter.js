@@ -916,7 +916,7 @@
     writeUrl(true);
   }
 
-  function arrowNav(container, selector) {
+  function arrowNav(container, selector, attr) {
     container.addEventListener('keydown', function (e) {
       if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
       var tabs = Array.prototype.slice.call(container.querySelectorAll(selector))
@@ -925,8 +925,14 @@
       if (i === -1) return;
       e.preventDefault();
       var next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      var id = next.getAttribute(attr);
       next.focus();
       next.click();
+      // Selecting a tab re-renders the tablist, which throws away the node we
+      // just focused and drops focus to <body> — so the next arrow press would
+      // do nothing. Put focus back on the replacement button.
+      var replacement = container.querySelector('[' + attr + '="' + id + '"]');
+      if (replacement && replacement !== document.activeElement) replacement.focus();
     });
   }
 
@@ -948,8 +954,8 @@
       renderEmptyState();
       loadMatchups();
     });
-    arrowNav(el.leagueTabs, 'button[data-league]');
-    arrowNav(el.marketTabs, 'button[data-market]');
+    arrowNav(el.leagueTabs, 'button[data-league]', 'data-league');
+    arrowNav(el.marketTabs, 'button[data-market]', 'data-market');
 
     el.marketTabs.addEventListener('click', function (e) {
       var b = e.target.closest('button[data-market]');
