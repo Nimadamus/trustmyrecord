@@ -27,25 +27,29 @@ for (const required of [
   'id="pollAllowMultiple"',
   'id="pollPublicResults"',
   'id="pollAnonymous"',
-  // The Jul 12 polls redesign moved the sport/league filters off standalone DOM
-  // ids and onto the `state` object, and replaced the single category filter
-  // with the shared #filterBar container. Guard the current shape.
+  // The Jul 12 redesign moved the sport/league filters onto `state`; the
+  // Aug 2 rebuild replaced #filterBar / #pollsTabBar with the sticky
+  // #pollsFilterBar (league chips + view chips). Guard the current shape.
   'state.sportFilter',
   'state.leagueFilter',
-  'id="filterBar"',
-  'id="pollsTabBar"',
-  // Same redesign replaced the 'newest' tab with Quick Polls / Prediction Quizzes.
-  "switchTab('quick')",
-  "switchTab('quiz')",
+  'id="pollsFilterBar"',
+  'id="leagueChips"',
+  'id="viewChips"',
+  // After publishing, the create flow still lands the author on the new poll.
+  "switchTab(isSeason ? 'quiz' : 'quick')",
+  'function switchTab(tab)',
   'openPoll(data.poll.id);',
   "api.request('/polls', { method: 'POST', body: payload })",
   "payload.options = options;",
   'scoring_mode: scoringMode',
   "if (!publicResults) descParts.push('[hide-results-until-vote]');",
-  "if (allowMultiple) descParts.push('[multi-choice]');",
   "if (anonymous) descParts.push('[anonymous]');",
+  // Multi-select is a real poll_type now, not a '[multi-choice]' description tag.
+  "payload.poll_type = 'prediction_multi';",
   'payload.numeric_target = Number(numericTargetRaw)',
-  'Be the first to lock in.',
+  // Empty board still invites the first poll instead of dead-ending.
+  "You're early. Start today's debate.",
+  'function templateChipsHtml(',
 ]) {
   assert(html.includes(required), `polls create-flow guard missing: ${required}`);
 }
