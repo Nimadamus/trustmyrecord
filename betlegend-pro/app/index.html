@@ -15,9 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=56391ba79849">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=20260802c">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
-    <script defer src="/static/js/tmr-sitewide.js?v=f319fbd5f8ff"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=03cf1db63c84"></script>
 </head>
 <body class="tmr-site-shell" data-tmr-route="betlegend-pro-app">
 <main class="blp blp-shell">
@@ -188,10 +188,13 @@
 
                     <div class="blp-note blp-note--err" id="mError" hidden style="margin-bottom:14px"></div>
                     <div class="blp-submitrow">
-                        <button class="blp-btn blp-btn--primary blp-btn--lg" id="mSubmit" type="submit" disabled>
+                        <button class="blp-btn blp-btn--primary blp-btn--lg" id="mSubmit" type="submit">
                             Run matchup report <span class="cost" data-cost></span>
                         </button>
-                        <p class="blp-submitnote">Nothing is charged unless a complete report comes back. Failed, timed-out or unsupported requests always cost 0.</p>
+                        <div>
+                            <p class="blp-needs" id="mSubmitHint" hidden></p>
+                            <p class="blp-submitnote">Nothing is charged unless a complete report comes back. Failed, timed-out or unsupported requests always cost 0.</p>
+                        </div>
                     </div>
                 </form>
 
@@ -349,7 +352,7 @@
 </main>
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
-<script src="/static/js/backend-api.js?v=7d848c59ca4b"></script>
+<script src="/static/js/backend-api.js?v=452944a54e5c"></script>
 <script>
 (function () {
     'use strict';
@@ -506,8 +509,20 @@
             } else if (!ACCESS.entitled && !s.eligible) {
                 notice.innerHTML = '<div class="blp-note blp-note--warn" style="margin-bottom:16px"><span>This account isn\'t eligible to run a coin-billed report.</span></div>';
             }
+            // The only legitimate reason to disable a submit button: the
+            // account cannot be billed at all. Never for an unfilled field --
+            // and even here the reason is on the button, not just in a banner.
             var blocked = !ACCESS.entitled && (s.isFrozen || !s.eligible);
-            submitButtons.forEach(function (b) { if (blocked) b.disabled = true; });
+            submitButtons.forEach(function (b) {
+                b.disabled = blocked;
+                if (blocked) {
+                    b.setAttribute('title', s.isFrozen
+                        ? 'Your TMR Coin wallet is frozen, so a paid report cannot run.'
+                        : 'This account is not eligible to run a coin-billed report.');
+                } else if (b.getAttribute('title') && !b.hasAttribute('data-incomplete')) {
+                    b.removeAttribute('title');
+                }
+            });
 
             paintCosts();
             return typeof s.balance === 'number' ? s.balance : null;
@@ -673,12 +688,23 @@
             if (opts.indexOf(prev) !== -1) mSelection.value = prev;
         }
         $('mLineField').hidden = !cfg.line.show;
-        if (cfg.line.show) { $('mLineLabel').textContent = lineLabelFor(mMarket); mLine.placeholder = cfg.line.ph; }
+        if (cfg.line.show) {
+            // The line is always required when it is shown. Say so on the
+            // label rather than letting the user discover it from a button
+            // that will not light up.
+            $('mLineLabel').innerHTML = esc(lineLabelFor(mMarket)) + ' <span class="req">required</span>';
+            mLine.placeholder = cfg.line.ph;
+            $('mLineErr').textContent = lineRequirementMessage(mMarket, mSport.value);
+        }
         var oc = oddsCfgFor(mMarket, mSport.value);
         $('mOddsField').hidden = !oc.show;
         if (oc.show) {
-            $('mOddsLabel').innerHTML = esc(oc.label) + (oc.required ? '' : ' <span class="opt">(optional)</span>');
+            $('mOddsLabel').innerHTML = esc(oc.label)
+                + (oc.required ? ' <span class="req">required</span>' : ' <span class="opt">(optional)</span>');
             mOdds.placeholder = oc.ph;
+            $('mOddsErr').textContent = oc.required
+                ? 'Enter moneyline odds, such as -120 or +135, to continue.'
+                : 'American odds, such as -120 or +135.';
         }
         // Explains WHY the price is being asked for, so it does not look like
         // an arbitrary extra field on two sports and not the others.
@@ -694,19 +720,97 @@
         }
     }
 
-    function validateMatchup() {
+    /** Human wording for the line each market needs, sport-aware. */
+    function lineRequirementMessage(market, sport) {
+        if (market === 'spread') {
+            var l = marketLabel(sport, 'spread').toLowerCase();
+            return 'Enter a ' + l + ', such as -1.5 or +1.5, to continue.';
+        }
+        if (market === 'total') return 'Enter a game total, such as 8.5, to continue.';
+        if (market === 'team_total_home' || market === 'team_total_away') {
+            return 'Enter a team total, such as 4.5, to continue.';
+        }
+        return 'Enter the number on the bet to continue.';
+    }
+
+    /**
+     * Everything still standing between the user and a report, in the order
+     * they would fix it. Returns [] when the form is submittable.
+     *
+     * This drives three things at once -- the helper line under the button,
+     * the button's tooltip, and (on submit) the inline field errors -- so a
+     * blocked submission can never be silent. The button itself is NEVER
+     * disabled for a validation reason; it stays clickable and explains
+     * itself, because a greyed-out control with no stated reason is exactly
+     * the bug this replaces.
+     */
+    function matchupBlockers() {
         var cfg = MARKETS[mMarket];
         var oc = oddsCfgFor(mMarket, mSport.value);
-        var lineOk = !cfg.line.show || (mLine.value !== '' && !isNaN(Number(mLine.value)));
-        var oddsOk = !oc.show || (oc.required
-            ? isValidAmericanOdds(mOdds.value)
-            : (mOdds.value === '' || isValidAmericanOdds(mOdds.value)));
-        setFieldError($('mLineField'), cfg.line.show && mLine.value !== '' && !lineOk);
-        setFieldError($('mOddsField'), oc.show && mOdds.value !== '' && !oddsOk);
-        var ok = !!mAway.value && !!mHome.value && mAway.value !== mHome.value
-            && !!mSelection.value && lineOk && oddsOk;
-        mSubmit.disabled = !ok;
-        return ok;
+        var out = [];
+        if (!mAway.value) out.push({ field: 'mAway', msg: 'Choose an away team.' });
+        if (!mHome.value) out.push({ field: 'mHome', msg: 'Choose a home team.' });
+        if (mAway.value && mHome.value && mAway.value === mHome.value) {
+            out.push({ field: 'mHome', msg: 'Pick two different teams.' });
+        }
+        if (cfg.mode === 'team' && mAway.value && mHome.value && !mSelection.value) {
+            out.push({ field: 'mSelection', msg: 'Choose which side you are betting.' });
+        }
+        if (cfg.line.show && (mLine.value === '' || isNaN(Number(mLine.value)))) {
+            out.push({ field: 'mLine', fieldWrap: 'mLineField',
+                msg: lineRequirementMessage(mMarket, mSport.value) });
+        }
+        if (oc.show) {
+            if (oc.required && !isValidAmericanOdds(mOdds.value)) {
+                out.push({ field: 'mOdds', fieldWrap: 'mOddsField',
+                    msg: 'Enter moneyline odds, such as -120 or +135, to continue.' });
+            } else if (!oc.required && mOdds.value !== '' && !isValidAmericanOdds(mOdds.value)) {
+                out.push({ field: 'mOdds', fieldWrap: 'mOddsField',
+                    msg: 'American odds look like -120 or +135. Leave it blank to skip the price.' });
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Keeps the button's explanation current on every keystroke. Field
+     * highlights are NOT applied here -- only on an attempted submit -- so the
+     * form does not turn red while the user is still filling it in.
+     */
+    function validateMatchup() {
+        var blockers = matchupBlockers();
+        var hint = $('mSubmitHint');
+        if (blockers.length) {
+            hint.textContent = blockers.length > 1
+                ? blockers[0].msg + ' (' + blockers.length + ' still needed)'
+                : blockers[0].msg;
+            hint.hidden = false;
+            mSubmit.setAttribute('title', blockers.map(function (b) { return b.msg; }).join(' '));
+            mSubmit.setAttribute('data-incomplete', '1');
+        } else {
+            hint.hidden = true;
+            mSubmit.removeAttribute('title');
+            mSubmit.removeAttribute('data-incomplete');
+            setFieldError($('mLineField'), false);
+            setFieldError($('mOddsField'), false);
+        }
+        return blockers.length === 0;
+    }
+
+    /** Applied only on an attempted submit: highlight and focus what is missing. */
+    function showMatchupBlockers(blockers) {
+        setFieldError($('mLineField'), false);
+        setFieldError($('mOddsField'), false);
+        blockers.forEach(function (b) {
+            if (b.fieldWrap) setFieldError($(b.fieldWrap), true);
+        });
+        blockers.forEach(function (b) {
+            if (b.fieldWrap === 'mLineField') $('mLineErr').textContent = b.msg;
+            if (b.fieldWrap === 'mOddsField') $('mOddsErr').textContent = b.msg;
+        });
+        showNote($('mError'), '<span>' + esc(blockers[0].msg) + '</span>');
+        var target = $(blockers[0].field);
+        if (target) { target.focus(); target.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
     }
 
     $('mMarkets').querySelectorAll('.blp-chipbtn').forEach(function (chip) {
@@ -982,7 +1086,10 @@
     var mLastKey = null, mLastSig = null;
     $('matchupForm').addEventListener('submit', async function (ev) {
         ev.preventDefault();
-        if (!validateMatchup()) return;
+        // The button is always clickable; a blocked submit says why, points at
+        // the field and focuses it, instead of doing nothing.
+        var blockers = matchupBlockers();
+        if (blockers.length) { showMatchupBlockers(blockers); return; }
         hide($('mError')); hide($('mResult'));
 
         var cfg = MARKETS[mMarket];
@@ -1024,6 +1131,7 @@
             await handleInquiryError(err, $('mError'), balanceBefore, 'matchup report');
         } finally {
             $('mLoading').hidden = true;
+            mSubmit.disabled = false;
             validateMatchup();
         }
     });
@@ -1285,11 +1393,19 @@
             if (tSport.value !== sport) return;
             tTeam.innerHTML = '<option value="">Unavailable — try again</option>';
         } finally {
-            if (tSport.value === sport) { tTeam.disabled = false; tSubmit.disabled = !tTeam.value; }
+            if (tSport.value === sport) { tTeam.disabled = false; syncTrendSubmit(); }
         }
     }
+    function syncTrendSubmit() {
+        var missing = !tTeam.value;
+        tSubmit.disabled = missing;
+        // Same principle as the Matchup Report: never a greyed button without
+        // a stated reason.
+        if (missing) tSubmit.setAttribute('title', 'Choose a team to search.');
+        else tSubmit.removeAttribute('title');
+    }
     tSport.addEventListener('change', function () { loadTrendTeams(tSport.value); });
-    tTeam.addEventListener('change', function () { tSubmit.disabled = !tTeam.value; });
+    tTeam.addEventListener('change', syncTrendSubmit);
 
     var tLastKey = null, tLastSig = null;
     $('trendForm').addEventListener('submit', async function (ev) {
@@ -1343,7 +1459,7 @@
         } catch (err) {
             await handleInquiryError(err, $('tError'), balanceBefore, 'trend search');
         } finally {
-            tSubmit.disabled = !tTeam.value;
+            syncTrendSubmit();
             $('tLoading').hidden = true;
         }
     });

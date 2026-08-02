@@ -205,8 +205,17 @@
     background-repeat: no-repeat; background-position: right 13px center;
 }
 
-.blp-err-msg { display: none; font-size: 12px; color: var(--neg); }
+.blp-err-msg { display: none; font-size: 12px; font-weight: 600; color: var(--neg); }
 .blp-field.is-invalid .blp-err-msg { display: block; }
+/* A flagged field has to be findable at a glance, not just outlined. */
+.blp-field.is-invalid .blp-input,
+.blp-field.is-invalid .blp-select,
+.blp-field.is-invalid .blp-textarea {
+    border-color: var(--neg);
+    background: rgba(248, 113, 113, .06);
+    box-shadow: 0 0 0 3px rgba(248, 113, 113, .14);
+}
+.blp-field.is-invalid > label { color: var(--neg); }
 
 /* Two teams with a swap control that stays put at every width. */
 .blp-vs { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 10px; align-items: end; }
@@ -247,20 +256,70 @@
 }
 .blp-btn:hover { border-color: rgba(45, 212, 191, .45); background: rgba(45, 212, 191, .08); }
 .blp-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(45, 212, 191, .3); }
-.blp-btn--primary {
+.blp .blp-btn.blp-btn--primary {
     border-color: transparent; color: #04211d; font-weight: 800;
     background: linear-gradient(135deg, var(--accent), var(--accent-2));
     box-shadow: 0 12px 30px -12px rgba(45, 212, 191, .75);
 }
-.blp-btn--primary:hover:not(:disabled) { filter: brightness(1.06); box-shadow: 0 16px 36px -12px rgba(45, 212, 191, .9); }
+.blp .blp-btn.blp-btn--primary:hover:not(:disabled) { filter: brightness(1.06); box-shadow: 0 16px 36px -12px rgba(45, 212, 191, .9); }
 .blp-btn--lg { min-height: 52px; padding: 0 28px; font-size: 15px; }
 .blp-btn--sm { min-height: 34px; padding: 0 13px; font-size: 12px; }
 .blp-btn--block { width: 100%; }
-.blp-btn:disabled { opacity: .42; cursor: not-allowed; box-shadow: none; filter: none; }
+/* NOTE: these button-state rules are scoped under .blp and double up the
+   class deliberately. tmr-sitewide.css carries
+   `body.tmr-site-shell button[type="submit"]` at specificity (0,2,2), which
+   otherwise repaints every submit button in this product with the site accent
+   and made the enabled, incomplete and disabled states render identically. */
+/* Disabled must be unmistakable, not just a dimmed primary: the gradient is
+   dropped entirely for a flat grey, so an enabled button never reads as
+   "maybe disabled". Enabled primaries keep their full-strength gradient. */
+.blp .blp-btn:disabled,
+.blp .blp-btn.blp-btn--primary:disabled {
+    opacity: 1;
+    cursor: not-allowed;
+    box-shadow: none;
+    filter: none;
+    /* !important is deliberate and narrow. tmr-sitewide.css paints every
+       `body.tmr-site-shell button[type="submit"]` with the site accent
+       gradient; without this a disabled button keeps that gradient and dark
+       text, which is exactly the "greyed out but still looks clickable"
+       confusion this change exists to remove. Scoped to :disabled only. */
+    background: rgba(148, 170, 200, .1) !important;
+    background-image: none !important;
+    border-color: var(--line) !important;
+    color: var(--ink-3) !important;
+}
+
+/* Submittable-but-incomplete: still clickable and still clearly a button,
+   visually distinct from both the ready state and the disabled state. */
+.blp .blp-btn.blp-btn--primary[data-incomplete] {
+    background: linear-gradient(135deg, rgba(45, 212, 191, .45), rgba(56, 189, 248, .38));
+    color: #04211d;
+    box-shadow: none;
+}
+.blp .blp-btn.blp-btn--primary[data-incomplete]:hover { filter: brightness(1.08); }
+
 .blp-btn .cost { font-weight: 700; opacity: .82; }
 
 .blp-submitrow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 4px; }
 .blp-submitnote { font-size: 12px; color: var(--ink-3); max-width: 46ch; line-height: 1.5; }
+
+/* What is still missing, shown next to the button rather than left implicit. */
+.blp-needs {
+    display: flex; align-items: flex-start; gap: 7px;
+    margin: 0 0 6px; max-width: 46ch;
+    font-size: 12.5px; font-weight: 600; line-height: 1.5; color: var(--warn);
+}
+.blp-needs::before { content: '!'; flex: none; display: grid; place-items: center;
+    width: 15px; height: 15px; margin-top: 1px; border-radius: 50%;
+    background: rgba(251, 191, 36, .16); color: var(--warn); font-size: 10px; font-weight: 800; }
+
+/* "required" marker on a field label. */
+.blp-field > label .req {
+    margin-left: 6px; padding: 1px 6px; border-radius: 4px;
+    background: rgba(251, 191, 36, .14); color: var(--warn);
+    font-size: 9.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase;
+}
 
 /* -------------------------------------------------------------- notices */
 
