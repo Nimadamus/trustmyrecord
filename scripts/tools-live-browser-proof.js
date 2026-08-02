@@ -170,23 +170,57 @@ async function verifyHubAndRoutes(page) {
 }
 
 async function verifyModelBuilder(page) {
+  // Rewritten 2026-08-02. The old flow drove a name/weights/save form
+  // (#modelName, #saveModelBtn, #modelCompare) that no longer exists on the
+  // page - every selector matched nothing, so this step could not pass. The
+  // shipped tool is a filter-and-backtest workspace.
   await page.goto(MODEL_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
-  await page.fill('#modelName', `MLB totals audit ${Date.now()}`);
-  await page.selectOption('#modelSport', 'baseball_mlb');
-  await page.selectOption('#modelMarket', 'totals');
-  await page.selectOption('#modelSide', 'under');
-  await page.fill('#factor_recent_form', '25');
-  await page.fill('#factor_market_line', '35');
-  await page.fill('#modelNotes', 'Audit draft: requires real source rows before scoring.');
-  await page.click('#saveModelBtn');
-  await page.locator('#modelBuilderList .model-card h3').first().waitFor({ state: 'visible', timeout: 10000 });
-  await page.locator('[data-action="compare"]').first().check();
-  const compareText = await page.locator('#modelCompare').innerText();
-  if (!/MLB|Total|Weights|Units/i.test(compareText)) throw new Error('Model Builder compare output did not render useful assumptions.');
+
+  const badges = await page.locator('#sourceBadges').innerText();
+  if (!/coverage|verified|graded/i.test(badges)) {
+    throw new Error(`Model Builder did not label its data source: ${badges}`);
+  }
+
+  const sport = await page.locator('#modelSport option').evaluateAll(
+    (options) => (options.find((option) => option.value) || {}).value || '');
+  if (!sport) throw new Error('Model Builder has no selectable sport.');
+  await page.selectOption('#modelSport', sport);
+  const chip = page.locator('#marketChips label, #marketChips button').first();
+  await chip.waitFor({ state: 'visible', timeout: 15000 });
+  await chip.click();
+  await page.click('#runBtn');
+
+  // A backtest must come back with a real record, not a spinner.
+  await page.waitForFunction(
+    () => /\d+-\d+/.test(document.getElementById('resultsBody').textContent),
+    null, { timeout: 45000 });
+  const results = await page.locator('#resultsBody').innerText();
+  for (const [label, pattern] of [
+    ['a win-loss record', /\d+-\d+/],
+    ['a units figure', /-?\d+(\.\d+)?u/],
+    ['an ROI percentage', /ROI/i],
+    ['a sample size', /Sample|graded|matching picks/i],
+  ]) {
+    if (!pattern.test(results)) throw new Error(`Model Builder backtest is missing ${label}.`);
+  }
+  // The comparison rows are what stop a bare record from reading as an edge.
+  if (!/Baseline/i.test(results) || !/Random control/i.test(results)) {
+    throw new Error('Model Builder returned a record with no baseline or control to judge it against.');
+  }
+
   const text = await page.locator('body').innerText();
-  if (/Login required|coming soon|placeholder|under construction|guaranteed winner|verified betting edge/i.test(text)) {
-    throw new Error('Model Builder exposed a blocked shell, placeholder, or forbidden claim.');
+  if (/Login required|Checking access/i.test(text)) {
+    throw new Error('Model Builder showed an access wall to a logged-out visitor.');
+  }
+  if (/lorem ipsum|under construction|coming soon/i.test(text)) {
+    throw new Error('Model Builder contains placeholder copy.');
+  }
+  const claims = forbiddenClaims(text, /guaranteed winner|verified betting edge|guaranteed result/i);
+  if (claims.length) throw new Error(`Model Builder showed a forbidden claim: ${claims[0]}`);
+  // Saving and forward-tracking still belong behind an account.
+  if ((await page.locator('a[href*="/login/"]').count()) === 0) {
+    throw new Error('Model Builder did not route saving through login.');
   }
   return captureRoot('model-builder-live-browser-addressbar-proof.png');
 }
