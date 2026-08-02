@@ -1157,8 +1157,13 @@
             });
         });
     }
+    // The API client owns auth state. A `trustmyrecord_session` blob outlives the
+    // token (it survives logout and expiry), so treating it as proof of login
+    // showed vote buttons and the comment composer to signed-out visitors whose
+    // writes then 401 instead of sending them to /login/. Only fall back to the
+    // blob if the client script itself failed to load.
     function isLoggedIn() {
-        if (window.api && api.isLoggedIn && api.isLoggedIn()) return true;
+        if (window.api && typeof api.isLoggedIn === 'function') return !!api.isLoggedIn();
         try { var s = JSON.parse(localStorage.getItem('trustmyrecord_session') || 'null'); if (s && (s.user || s).username) return true; } catch(e){}
         return false;
     }
