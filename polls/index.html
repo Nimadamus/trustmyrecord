@@ -327,6 +327,16 @@
         .pl-opt:active:not(:disabled) { transform: translateY(1px); }
         .pl-opt:disabled { cursor: default; }
         .pl-opt.is-busy { opacity: 0.7; cursor: wait; }
+        /* The option you currently hold, while changing a vote */
+        .pl-opt.is-current { border-color: var(--accent-border); background: rgba(34,211,238,0.10); color: #FFFFFF; }
+        .pl-opt.is-current::before { opacity: 0.45; }
+        .pl-optcur { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-size: 0.58rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; vertical-align: 1px; }
+        .pl-changerow { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 2px; color: var(--muted); font-size: 0.72rem; }
+        .pl-changecancel { background: none; border: none; padding: 0; color: var(--tmr-fb-link); font-size: 0.72rem; font-weight: 700; cursor: pointer; }
+        .pl-changecancel:hover { text-decoration: underline; }
+        .pl-changebtn { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--muted); font-size: 0.685rem; font-weight: 650; cursor: pointer; transition: color 0.13s ease, border-color 0.13s ease, background 0.13s ease; }
+        .pl-changebtn:hover { color: var(--accent); border-color: var(--accent-border); background: var(--accent-dim); }
+        .pl-changebtn i { font-size: 0.62rem; }
         .pl-feat .pl-opt { min-height: 54px; font-size: 0.95rem; font-weight: 700; }
 
         /* Result rows (after voting / closed) — the bar lives inside the option */
@@ -1012,7 +1022,7 @@
 
     <!-- Same global nav component as the homepage -->
     <script src="/static/js/tmr-session.63f50f4d0988.js"></script>
-    <script src="/static/js/tmr-ds-nav.920f295a9579.js"></script>
+    <script src="/static/js/tmr-ds-nav.6cb0456f7681.js"></script>
     <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
     <script src="/static/js/backend-api.js?v=7d848c59ca4b"></script>
     <script src="/static/js/auth-persistent.js?v=533b6a5999e2"></script>
@@ -1274,7 +1284,8 @@
         if (state.league === key) return;
         state.league = key;
         syncChips();
-        renderFromCache();
+        // Closed filtering happens server-side, so it needs a fresh page 1.
+        if (isClosedView()) loadSection(); else renderFromCache();
     }
     function setView(view) {
         if (state.view === view) return;
@@ -1312,7 +1323,7 @@
         if (si) { si.value = ''; si.focus(); }
         state.q = '';
         syncSearchUi();
-        renderFromCache();
+        if (isClosedView()) loadSection(); else renderFromCache();
     }
     function syncSearchUi() {
         var wrap = document.getElementById('pollSearchWrap');
@@ -1368,8 +1379,12 @@
         if (state.view !== 'closed') list = list.filter(isActiveOpen);
         if (state.view === 'ending') list = list.filter(isClosingSoon);
         if (state.view === 'voted') list = list.filter(function(p) { return !!p.user_voted; });
-        if (state.league !== 'all') list = list.filter(function(p) { return pollLeagueKey(p) === state.league; });
-        if (q) list = list.filter(function(p) { return matchesQuery(p, q); });
+        // The closed feed is filtered and searched server-side; re-applying the
+        // client matcher here would only ever remove rows the server matched.
+        if (!isClosedView()) {
+            if (state.league !== 'all') list = list.filter(function(p) { return pollLeagueKey(p) === state.league; });
+            if (q) list = list.filter(function(p) { return matchesQuery(p, q); });
+        }
         return sortForView(list);
     }
 
@@ -1379,20 +1394,29 @@
     // returns resolved / canceled / deadline-passed polls newest-closed-first
     // with real pagination metadata.
     var CLOSED_PAGE_SIZE = 24;
-    async function fetchPolls(status, limit, page) {
+    // The closed archive is far larger than one page, so its league filter and
+    // search run on the server — filtering only what happened to be loaded would
+    // report counts that quietly exclude most of the archive.
+    async function fetchPolls(status, limit, page, opts) {
+        opts = opts || {};
         // _ts defeats any intermediary cache so the board is never stale.
         var qs = ['status=' + status, 'limit=' + (limit || 120), 'page=' + (page || 1), '_ts=' + Date.now()];
         if (state.sportFilter) qs.push('sport=' + encodeURIComponent(state.sportFilter));
         if (state.leagueFilter) qs.push('league=' + encodeURIComponent(state.leagueFilter));
+        if (opts.leagueKey && opts.leagueKey !== 'all') qs.push('leagueKey=' + encodeURIComponent(opts.leagueKey));
+        if (opts.q) qs.push('q=' + encodeURIComponent(opts.q));
         var data = await api.request('/polls?' + qs.join('&'));
         return { polls: data.polls || [], pagination: data.pagination || null };
     }
+    function closedQueryKey() { return state.league + '|' + state.q; }
     async function ensureData(force) {
         if (state.view === 'closed') {
             var c = state.closed;
-            if (!force && c.rows.length && (Date.now() - c.at) < CACHE_TTL_MS) return c.rows;
-            var first = await fetchPolls('closed', CLOSED_PAGE_SIZE, 1);
-            state.closed = { rows: first.polls, page: 1, at: Date.now(),
+            var key = closedQueryKey();
+            var fresh = c.rows.length && (Date.now() - c.at) < CACHE_TTL_MS && c.key === key;
+            if (!force && fresh) return c.rows;
+            var first = await fetchPolls('closed', CLOSED_PAGE_SIZE, 1, { leagueKey: state.league, q: state.q });
+            state.closed = { rows: first.polls, page: 1, at: Date.now(), key: key, loading: false,
                 total: first.pagination ? parseInt(first.pagination.total) || first.polls.length : first.polls.length,
                 pages: first.pagination ? parseInt(first.pagination.pages) || 1 : 1 };
             return state.closed.rows;
@@ -1412,7 +1436,7 @@
         state.closed.loading = true;
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i> Loading…'; }
         try {
-            var next = await fetchPolls('closed', CLOSED_PAGE_SIZE, state.closed.page + 1);
+            var next = await fetchPolls('closed', CLOSED_PAGE_SIZE, state.closed.page + 1, { leagueKey: state.league, q: state.q });
             var seen = {};
             state.closed.rows.forEach(function(p) { seen[p.id] = true; });
             next.polls.forEach(function(p) { if (!seen[p.id]) state.closed.rows.push(p); });
@@ -1542,17 +1566,49 @@
         return '<button type="button" class="pl-open-link" onclick="openPoll(' + p.id + ')">' +
             escHtml(label) + ' <i class="fas fa-arrow-right" aria-hidden="true"></i></button>';
     }
-    function optionsHtml(p) {
+    function optionsHtml(p, changing) {
         var options = p.options || [];
         var n = options.length;
         var cols = (n === 3) ? 3 : 2;
         var colsM = (n === 3) ? 3 : 2;
+        var current = p.user_vote_option_id != null ? parseInt(p.user_vote_option_id) : null;
         return '<div class="pl-opts" style="--cols:' + cols + ';--cols-m:' + colsM + ';" role="group" aria-label="Voting options for: ' + escHtml(p.title) + '">' +
             options.map(function(o) {
-                return '<button type="button" class="pl-opt" data-oid="' + o.id + '" ' +
-                    'onclick="cardVote(' + p.id + ',' + o.id + ',this)" ' +
-                    'aria-label="Vote for ' + escHtml(o.option_text) + '"><span>' + escHtml(o.option_text) + '</span></button>';
-            }).join('') + '</div>';
+                var isCurrent = changing && current === parseInt(o.id);
+                return '<button type="button" class="pl-opt' + (isCurrent ? ' is-current' : '') + '" data-oid="' + o.id + '" ' +
+                    (isCurrent ? 'aria-current="true" ' : '') +
+                    'onclick="cardVote(' + p.id + ',' + o.id + ',this' + (changing ? ',true' : '') + ')" ' +
+                    'aria-label="' + (isCurrent ? 'Keep your vote for ' : (changing ? 'Change your vote to ' : 'Vote for ')) + escHtml(o.option_text) + '">' +
+                    '<span>' + escHtml(o.option_text) + (isCurrent ? ' <b class="pl-optcur">Your pick</b>' : '') + '</span></button>';
+            }).join('') + '</div>' +
+            (changing ? '<div class="pl-changerow"><span>Pick a different option to change your vote.</span>' +
+                '<button type="button" class="pl-changecancel" onclick="cancelVoteChange(' + p.id + ')">Keep my vote</button></div>' : '');
+    }
+    // A poll only offers vote changing when the poll itself allows it; the
+    // server rejects the second vote outright when allow_vote_change is false.
+    function canChangeVote(p) {
+        return !!p.user_voted && !isClosedPoll(p) && !isScheduled(p) &&
+            p.allow_vote_change !== false && inlineVotable(p) && isLoggedIn();
+    }
+    var changingVoteFor = {};
+    function startVoteChange(pollId) {
+        changingVoteFor[pollId] = true;
+        rerenderCard(pollId);
+        var card = document.getElementById('pcard-' + pollId);
+        var first = card && card.querySelector('.pl-opt:not(.is-current)');
+        if (first) first.focus();
+    }
+    function cancelVoteChange(pollId) {
+        delete changingVoteFor[pollId];
+        rerenderCard(pollId);
+    }
+    function rerenderCard(pollId, justVoted) {
+        var node = document.getElementById('pcard-' + pollId);
+        var p = findPoll(pollId);
+        if (!node || !p) return;
+        var isFeat = node.classList.contains('pl-feat');
+        node.outerHTML = isFeat ? featuredHtml(p, justVoted) : cardHtml(p, justVoted);
+        animateBars(document.getElementById('pcard-' + pollId));
     }
     function truthy(v) { return v === true || v === 't' || v === 'true' || v === 1; }
     function resultsHtml(p) {
@@ -1603,6 +1659,7 @@
         var complex = p.poll_type === 'prediction_multi' || p.scoring_mode === 'closest';
         if (isScheduled(p)) return openLinkHtml(p, 'Preview poll');
         if ((closed || voted) && (!hasOpts || complex)) return openLinkHtml(p, closed ? 'View final results' : 'View results');
+        if (voted && changingVoteFor[p.id] && canChangeVote(p)) return optionsHtml(p, true);
         if (closed || voted) return resultsHtml(p);
         if (!hasOpts) return openLinkHtml(p, 'Open poll');
         if (!inlineVotable(p)) {
@@ -1613,8 +1670,12 @@
         return optionsHtml(p);
     }
     function footNotesHtml(p, justVoted) {
-        if (justVoted) return '<span class="pl-voted-flag is-pop"><i class="fas fa-circle-check" aria-hidden="true"></i> Vote locked in</span>';
-        if (p.user_voted) return '<span class="pl-voted-flag"><i class="fas fa-circle-check" aria-hidden="true"></i> You voted</span>';
+        var change = canChangeVote(p) && !changingVoteFor[p.id]
+            ? '<button type="button" class="pl-changebtn" onclick="startVoteChange(' + p.id + ')" ' +
+              'aria-label="Change your vote on: ' + escHtml(p.title) + '"><i class="fas fa-rotate" aria-hidden="true"></i> Change vote</button>'
+            : '';
+        if (justVoted) return '<span class="pl-voted-flag is-pop"><i class="fas fa-circle-check" aria-hidden="true"></i> Vote locked in</span>' + change;
+        if (p.user_voted) return '<span class="pl-voted-flag"><i class="fas fa-circle-check" aria-hidden="true"></i> You voted</span>' + change;
         if (!isClosedPoll(p) && !isScheduled(p) && hidesResultsUntilVote(p)) return '<span class="pl-cardnote">Results after voting</span>';
         return '';
     }
@@ -1825,8 +1886,13 @@
         line.innerHTML = bits;
     }
     function updateChipCounts(all) {
-        var base = (all || []).filter(function(p) { return !isQuiz(p); });
-        if (!isClosedView()) base = base.filter(isActiveOpen);
+        // On the closed board only one league's rows are ever in hand (the
+        // server filtered them), so per-chip counts would be a lie. Drop them.
+        if (isClosedView()) {
+            document.querySelectorAll('#leagueChips .pl-chipn').forEach(function(n) { n.remove(); });
+            return;
+        }
+        var base = (all || []).filter(function(p) { return !isQuiz(p); }).filter(isActiveOpen);
         if (state.view === 'ending') base = base.filter(isClosingSoon);
         if (state.view === 'voted') base = base.filter(function(p) { return !!p.user_voted; });
         if (state.q) base = base.filter(function(p) { return matchesQuery(p, state.q); });
@@ -1881,17 +1947,15 @@
         var loaded = state.closed.rows.length;
         var total = state.closed.total;
         if (!loaded) return '';
-        var filtering = (state.league !== 'all' || state.q) && hasMoreClosed();
-        var note = filtering
-            ? '<p class="pl-pagenote">Filtering the <b>' + loaded + '</b> closed polls loaded so far. Load more to widen the search.</p>'
-            : '';
+        // League and search are applied by the server, so `total` is the whole
+        // matching archive — not just what has been fetched.
+        var scope = (state.league !== 'all' || state.q) ? ' matching' : '';
         if (!hasMoreClosed()) {
-            return note + '<p class="pl-pagenote">All <b>' + total + '</b> closed polls loaded.</p>';
+            return '<p class="pl-pagenote">All <b>' + total + '</b>' + scope + ' closed polls loaded.</p>';
         }
-        return note +
-            '<div class="pl-pager">' +
+        return '<div class="pl-pager">' +
                 '<button type="button" class="tmr-hbtn" id="closedLoadMore" onclick="loadMoreClosed(this)">' + closedLoadMoreLabel() + '</button>' +
-                '<span class="pl-pagecount">' + loaded + ' of ' + total + '</span>' +
+                '<span class="pl-pagecount">' + loaded + ' of ' + total + scope + '</span>' +
             '</div>';
     }
     function renderFromCache(justVotedId) {
@@ -2038,7 +2102,7 @@
     }
 
     // ============== INLINE CARD VOTE ==============
-    async function cardVote(pollId, optionId, btn) {
+    async function cardVote(pollId, optionId, btn, isChange) {
         if (!isLoggedIn()) { window.location.href = '/login/'; return; }
         var card = document.getElementById('pcard-' + pollId);
         if (card && card.getAttribute('data-voting') === '1') return;      // duplicate-submit guard
@@ -2048,7 +2112,18 @@
             loadSection({ force: true });
             return;
         }
-        if (p && p.user_voted) { showToast('You already voted in this poll.', ''); return; }
+        if (p && p.user_voted && !isChange) { showToast('You already voted in this poll.', ''); return; }
+        // Re-picking the option you already hold is a no-op, not a second vote.
+        if (isChange && p && parseInt(p.user_vote_option_id) === parseInt(optionId)) {
+            cancelVoteChange(pollId);
+            showToast('Your vote is unchanged.', '');
+            return;
+        }
+        if (isChange && p && p.allow_vote_change === false) {
+            showToast('This poll does not allow changing your vote.', 'error');
+            cancelVoteChange(pollId);
+            return;
+        }
         if (card) {
             card.setAttribute('data-voting', '1');
             card.querySelectorAll('.pl-opt').forEach(function(b) { b.disabled = true; });
@@ -2067,14 +2142,9 @@
             });
             if (d.poll && d.poll.status) patch.status = d.poll.status;
             updatePollEverywhere(pollId, patch);
-            var updated = findPoll(pollId);
-            var node = document.getElementById('pcard-' + pollId);
-            if (node && updated) {
-                var isFeat = node.classList.contains('pl-feat');
-                node.outerHTML = isFeat ? featuredHtml(updated, true) : cardHtml(updated, true);
-                animateBars(document.getElementById('pcard-' + pollId));
-            }
-            showToast('Vote locked in.', 'success');
+            delete changingVoteFor[pollId];
+            rerenderCard(pollId, true);
+            showToast(isChange ? 'Vote changed.' : 'Vote locked in.', 'success');
             loadStats();
         } catch (err) {
             console.error('cardVote', err);
@@ -2303,9 +2373,15 @@
         var deadline = p.voting_deadline ? new Date(p.voting_deadline) : null;
         var isExp = deadline && deadline < new Date();
         var isClosed = p.status === 'resolved' || isExp;
+        // Changing a vote is a first-class action when the poll allows it: the
+        // server replaces the existing row rather than adding one, so the total
+        // never moves. Gated behind an explicit "Change my vote" click so a stray
+        // tap on the results can never re-submit.
+        var canChange = !isClosed && !!userVote && isLoggedIn() && p.allow_vote_change !== false && !isMultiSelect;
+        var isChangingVote = canChange && state.detailChanging === p.id;
         var canVote = !isClosed && !userVote && isLoggedIn();
         var isPublicResults = p.description == null || p.description.indexOf('[hide-results-until-vote]') === -1;
-        var showVoteForm = canVote;
+        var showVoteForm = canVote || isChangingVote;
         var showResults = !showVoteForm && (userVote || isClosed || isPublicResults);
         var winningVotes = options.reduce(function(m, o) { return Math.max(m, parseInt(o.vote_count || 0)); }, 0);
         var uname = currentUsername();
@@ -2343,13 +2419,23 @@
                     '<button class="tmr-poll-vote-btn" type="submit" id="voteSubmitBtn" disabled><i class="fas fa-check"></i> Submit Vote</button>' +
                 '</div></form>';
         } else if (showVoteForm) {
+            var heldId = userVote ? parseInt(userVote.option_id) : null;
             optionsHtml = '<form id="voteForm" onsubmit="submitVote(event)"><div class="tmr-poll-options" role="radiogroup" aria-label="Poll options">' +
                 options.map(function(o) {
-                    return '<li class="tmr-poll-option"><label><input type="radio" name="pollOption" value="' + o.id + '" onchange="markPollChoice(this)" required> <span>' + escHtml(o.option_text) + '</span></label></li>';
+                    var held = heldId != null && heldId === parseInt(o.id);
+                    return '<li class="tmr-poll-option' + (held ? ' is-checked' : '') + '"><label><input type="radio" name="pollOption" value="' + o.id + '"' +
+                        (held ? ' checked' : '') + ' onchange="markPollChoice(this)" required> <span>' + escHtml(o.option_text) +
+                        (held ? '<span class="tmr-poll-result-tag user">Your vote</span>' : '') + '</span></label></li>';
                 }).join('') +
                 '</div><div class="tmr-poll-detail-footer">' +
-                    '<span>One vote per account &middot; ' + totalVotes + ' votes already</span>' +
-                    '<button class="tmr-poll-vote-btn" type="submit" id="voteSubmitBtn"><i class="fas fa-check"></i> Submit Vote</button>' +
+                    '<span>' + (isChangingVote
+                        ? 'Changing your vote replaces it &mdash; the total stays at ' + totalVotes + '.'
+                        : 'One vote per account &middot; ' + totalVotes + ' votes already') + '</span>' +
+                    '<span style="display:inline-flex;gap:8px;">' +
+                        (isChangingVote ? '<button class="tmr-btn tmr-btn-outline" type="button" onclick="cancelDetailVoteChange()">Keep my vote</button>' : '') +
+                        '<button class="tmr-poll-vote-btn" type="submit" id="voteSubmitBtn"><i class="fas fa-check"></i> ' +
+                            (isChangingVote ? 'Update my vote' : 'Submit Vote') + '</button>' +
+                    '</span>' +
                 '</div></form>';
         }
 
@@ -2382,7 +2468,8 @@
                 '<span><strong>' + totalVotes + '</strong> total vote' + (totalVotes === 1 ? '' : 's') +
                     (deadline ? ' &middot; ' + (isExp ? 'Closed ' : 'Closes ') + escHtml(fmtDate(deadline)) : '') +
                 '</span>' +
-                '<span style="display:inline-flex;gap:8px;">' +
+                '<span style="display:inline-flex;gap:8px;flex-wrap:wrap;">' +
+                    (canChange ? '<button class="tmr-btn tmr-btn-outline" type="button" onclick="startDetailVoteChange(' + p.id + ')"><i class="fas fa-rotate"></i> Change my vote</button>' : '') +
                     '<button class="tmr-btn tmr-btn-outline" type="button" onclick="sharePoll(' + p.id + ')"><i class="fas fa-share-nodes"></i> Share</button>' +
                     '<button class="tmr-btn tmr-btn-outline" type="button" onclick="closePollDetail()"><i class="fas fa-arrow-left"></i> Back to list</button>' +
                 '</span>' +
@@ -2424,6 +2511,8 @@
         mountDiscussion(p.id);
     }
 
+    function startDetailVoteChange(pollId) { state.detailChanging = pollId; renderPollDetail(); }
+    function cancelDetailVoteChange() { state.detailChanging = null; renderPollDetail(); }
     function sharePoll(pollId) {
         var url = window.location.origin + window.location.pathname + '#poll-' + pollId;
         function done() { showToast('Poll link copied.', 'success'); }
@@ -2476,12 +2565,14 @@
         var btn = document.getElementById('voteSubmitBtn');
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Submitting...'; }
         try {
+            var wasChanging = state.detailChanging === state.currentPollId;
             await api.request('/polls/' + state.currentPollId + '/vote', { method: 'POST', body: body });
-            showToast('Vote locked in.', 'success');
+            state.detailChanging = null;
+            showToast(wasChanging ? 'Vote changed.' : 'Vote locked in.', 'success');
             var data = await api.request('/polls/' + state.currentPollId);
             state.currentPollDetail = data;
             renderPollDetail();
-            loadSection();
+            loadSection({ force: true });
             loadStats(); refreshTabCounts();
         } catch(err) {
             console.error('submitVote', err);
@@ -3122,8 +3213,10 @@
                 if (v === state.q) return;
                 state.q = v;
                 syncSearchUi();
-                renderFromCache();
-            }, 140);
+                // Closed searches the whole archive server-side; the open board
+                // is already fully loaded, so it filters in place.
+                if (isClosedView()) loadSection(); else renderFromCache();
+            }, 220);
         });
         el.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && this.value) { e.preventDefault(); clearPollSearch(); }
