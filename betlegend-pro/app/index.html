@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=20260802h">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=20260802i">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=03cf1db63c84"></script>
 </head>
@@ -1195,10 +1195,17 @@
         return parsed && parsed.rate != null ? parsed : null;
     }
 
-    function comparisonHtml(r, input) {
+    /**
+     * `engineBe` is the engine's own breakeven_pct for this wager. It wins over
+     * the client's price resolution: for a spread the engine prices off the
+     * entered line at the standard price, so resolving to null here made the
+     * verdict bar say "Break-even 52.4%" while this panel said no break-even
+     * was possible. One number, one source.
+     */
+    function comparisonHtml(r, input, engineBe) {
         var away = marketRate(r.away_market), home = marketRate(r.home_market);
         if (!away && !home) return '';
-        var be = breakEven(resolvePrice(r, input));
+        var be = (typeof engineBe === 'number' && isFinite(engineBe)) ? engineBe : breakEven(resolvePrice(r, input));
         var label = marketLabel(r.sport, r.market);
         var rows = [
             { name: r.away_team, side: 'Away', d: away },
@@ -1215,7 +1222,9 @@
             // Bars are scaled 0–100% of the track; the break-even marker is
             // placed on the same scale so the two are directly comparable.
             html += '<div class="blp-cmp-row' + (low ? ' is-low' : '') + '">'
-                + '<span class="blp-cmp-name" title="' + esc(row.name) + '">' + esc(row.name) + '</span>'
+                + '<span class="blp-cmp-name" title="' + esc(row.name) + '">' + esc(row.name)
+                + (situationsFor(row.side === 'Away' ? 'away' : 'home').length
+                    ? ' <em class="blp-cmp-filtered">filtered</em>' : '') + '</span>'
                 + '<span class="blp-cmp-track"><span class="blp-cmp-fill" style="width:' + (rate * 100).toFixed(1) + '%"></span>'
                 + (be != null ? '<span class="blp-cmp-mark" style="left:' + (be * 100).toFixed(1) + '%"></span>' : '')
                 + '</span>'
@@ -1413,7 +1422,7 @@
             ]), false]);
 
         // ------------------------------- 3. team-specific trend comparison
-        sections.push(['Team trend comparison', comparisonHtml(r, input)
+        sections.push(['Team trend comparison', comparisonHtml(r, input, be)
             + '<div class="blp-teams">'
             + teamCardHtml(r.away_team, 'Away', r.away_form, r.away_market)
             + teamCardHtml(r.home_team, 'Home', r.home_form, r.home_market)
