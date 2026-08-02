@@ -137,7 +137,17 @@
         }
 
         try {
-            if (window.api && typeof window.api.getCurrentUser === "function") {
+            // Only ask the server who we are when we have something to ask with.
+            // api.getCurrentUser() hits /auth/me unconditionally, so on every
+            // logged-out page view this fired a credential-less request that can
+            // only ever 401 and logs a console error the page cannot suppress.
+            // A token that IS present and gets rejected still reaches the 401
+            // path below, so an expired session is not hidden by this guard.
+            // The canonical nav (tmr-ds-nav.js) already gates the same call.
+            const hasCredentials = !window.api
+                || typeof window.api.isLoggedIn !== "function"
+                || window.api.isLoggedIn();
+            if (window.api && typeof window.api.getCurrentUser === "function" && hasCredentials) {
                 const apiUser = window.api.getCurrentUser();
                 if (apiUser && typeof apiUser.then === "function") {
                     apiUser.catch(() => {});

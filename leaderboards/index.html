@@ -1778,7 +1778,23 @@
             }).join('');
         }
 
+        // True only when there is a credential to authenticate with. Without one
+        // the auth-only endpoints can only 401, so we answer locally instead of
+        // asking. A credential that IS present and gets rejected still goes down
+        // the normal error path, so an expired session is never masked.
+        function isSignedIn() {
+            try {
+                if (window.api && typeof window.api.isLoggedIn === 'function') return window.api.isLoggedIn();
+                if (window.auth && typeof window.auth.isLoggedIn === 'function') return window.auth.isLoggedIn();
+            } catch (error) { /* fall through to the storage probe */ }
+            try {
+                return !!(localStorage.getItem('trustmyrecord_token') || localStorage.getItem('accessToken')
+                    || localStorage.getItem('tmr_token') || localStorage.getItem('trustmyrecord_refresh_token'));
+            } catch (error) { return false; }
+        }
+
         async function loadH2H() {
+            if (!isSignedIn()) { renderH2H([]); return; }
             try {
                 const data = await window.api.request('/challenges?limit=50');
                 const entries = Array.isArray(data && data.challenges) ? data.challenges : [];
@@ -1814,9 +1830,14 @@
                         setCount('polls', l.length);
                     } catch (e) { setCount('polls', 0); }
                 })(),
-                // Handicapper challenges = currently active head-to-heads. Requires
-                // auth; logged-out visitors correctly see 0 (endpoint 401 -> catch).
+                // Handicapper challenges = currently active head-to-heads, and the
+                // endpoint is auth-only. This used to fire regardless and lean on
+                // the 401 -> catch to land on 0; the number was right but every
+                // logged-out visitor paid a guaranteed failing round trip and got
+                // a console error no page code can suppress. A signed-out visitor
+                // has no head-to-heads by definition, so answer 0 without asking.
                 (async function() {
+                    if (!isSignedIn()) { setCount('h2h', 0); return; }
                     try {
                         const d = await window.api.request('/challenges?limit=100');
                         const entries = Array.isArray(d && d.challenges) ? d.challenges : [];
