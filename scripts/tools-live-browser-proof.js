@@ -230,7 +230,12 @@ async function verifyLinkedWorkflow(page, url, requiredText) {
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
   const text = await page.locator('body').innerText();
   if (!new RegExp(requiredText, 'i').test(text)) throw new Error(`${url} did not render expected ${requiredText} workflow text.`);
-  if (/fake user|fake stats|lorem ipsum|placeholder|under construction/i.test(text)) throw new Error(`${url} contains forbidden placeholder/fake text.`);
+  // Sentence-scoped for the same reason as the claim checks: /placeholder/ over
+  // the whole body flagged the leaderboard explaining that it shows "a
+  // placeholder cell instead of fabricating a number", which is the honest
+  // behaviour this check exists to protect.
+  const junk = forbiddenClaims(text, /fake user|fake stats|lorem ipsum|placeholder|under construction/i);
+  if (junk.length) throw new Error(`${url} contains forbidden placeholder/fake text: ${junk[0]}`);
 }
 
 (async () => {
