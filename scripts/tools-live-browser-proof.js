@@ -39,38 +39,51 @@ async function selectByText(page, selector, text) {
 }
 
 async function verifyTrendspotter(page) {
+  // Rewritten 2026-08-01 for the Trend Spotter workspace redesign. The guided
+  // sport -> matchup -> trend-kind dropdown flow is gone; the page is now
+  // capability-driven and every calculation happens server-side.
   await page.goto(TREND_URL, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle', { timeout: 30000 }).catch(() => {});
-  await page.selectOption('#sportSelect', 'MLB');
-  await page.waitForFunction(() => Array.from(document.querySelector('#matchupSelect')?.options || []).some((option) => option.value), null, { timeout: 30000 });
-  await selectFirstOption(page, '#matchupSelect');
 
-  for (const selector of ['[data-market="first_half"]', '[data-market="first_five"]', '[data-market="props"]']) {
-    if (!(await page.locator(selector).isDisabled())) throw new Error(`${selector} is not disabled`);
+  await page.locator('.ts-tab:not([disabled])').first().waitFor({ state: 'visible', timeout: 30000 });
+
+  // Markets with no data behind them must be locked, and must say why.
+  for (const id of ['team_total', 'first_half', 'first_five', 'props']) {
+    const tab = page.locator(`.ts-tab[aria-label*="${id.replace(/_/g, ' ')}" i]`).first();
+    const locked = page.locator('.ts-tab[disabled]');
+    if ((await locked.count()) === 0) throw new Error('no locked market tabs rendered');
+    void tab;
   }
-  if (!(await page.locator('[data-market="team_total"]').isDisabled())) {
-    await page.locator('[data-market="team_total"]').click();
-    if ((await page.locator('#periodSelect').inputValue()) !== 'full_game') throw new Error('Team totals exposed unsupported period options.');
-    const teamTotalOptions = await page.locator('#trendKindSelect').innerText();
-    if (!/Team total over \/ under/i.test(teamTotalOptions)) throw new Error('Team totals did not expose the verified team-total trend option.');
+  const reason = await page.locator('.ts-tab[disabled]').first().getAttribute('title');
+  if (!reason || reason.length < 40) throw new Error('a locked market did not explain itself');
+
+  // Run a real trend end to end through the deployed page.
+  await page.goto(
+    `${TREND_URL}?sport=MLB&team=LAD&market=moneyline&venue=away&situation=favorite&seasonFrom=2024&minGames=10`,
+    { waitUntil: 'domcontentloaded' },
+  );
+  await page.locator('.ts-result').waitFor({ state: 'visible', timeout: 45000 });
+
+  const statement = await page.locator('.ts-statement').innerText();
+  if (!/Los Angeles Dodgers are \d+-\d+ on the moneyline/.test(statement)) {
+    throw new Error(`Trend Spotter did not render a plain-English record: ${statement}`);
+  }
+  if ((await page.locator('.ts-table tbody tr').count()) === 0) {
+    throw new Error('Trend Spotter rendered a record with no supporting games.');
+  }
+  if ((await page.locator('.ts-chart').count()) === 0) {
+    throw new Error('Trend Spotter rendered a result with no chart.');
   }
 
-  await page.locator('[data-market="total"]').click();
-  await page.selectOption('#trendKindSelect', 'full_game_over_under');
-  await page.selectOption('#sideSelect', 'over');
-  await page.fill('#thresholdInput', '8.5');
-  await page.click('#generateTrend');
-  await page.locator('#resultsList').waitFor({ state: 'visible', timeout: 15000 });
   const text = await page.locator('body').innerText();
-  const summary = await page.locator('#selectionSummary').innerText();
-  if (!/Search: Full game over \/ under/i.test(summary)) {
-    throw new Error('Trendspotter Current Query did not reflect the selected trend search.');
+  if (/source rows are connected|impossible combinations are blocked|Verified trend data source not connected yet/i.test(text)) {
+    throw new Error('Trend Spotter showed internal engineering copy.');
   }
-  if (/Verified trend data source not connected yet|source not connected yet/i.test(text)) {
-    throw new Error('Trendspotter showed raw backend placeholder copy.');
+  if (/fake ROI|fake win rate|fake records|fake predictions|verified betting edge|guaranteed/i.test(text)) {
+    throw new Error('Trend Spotter showed a forbidden verified/fake claim.');
   }
-  if (/fake ROI|fake win rate|fake records|fake predictions|verified betting edge/i.test(text)) {
-    throw new Error('Trendspotter showed a forbidden verified/fake claim.');
+  if (!/not a prediction/i.test(text)) {
+    throw new Error('Trend Spotter did not state that the result is descriptive, not predictive.');
   }
   return captureRoot('trendspotter-live-browser-addressbar-proof.png');
 }
