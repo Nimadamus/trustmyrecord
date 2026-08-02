@@ -15,9 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=56391ba79849">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=20260801e">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
-    <script defer src="/static/js/tmr-sitewide.js?v=83794ad4cb4a"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=03cf1db63c84"></script>
 </head>
 <body class="tmr-site-shell" data-tmr-route="betlegend-pro-app">
 <main class="blp blp-shell">
@@ -149,6 +149,7 @@
                                 <span class="blp-err-msg" id="mOddsErr">American odds, like -120 or +135.</span>
                             </div>
                         </div>
+                        <p class="blp-unavail" id="mOddsHint" hidden style="margin-top:12px"></p>
                     </div>
 
                     <div class="blp-step">
@@ -348,7 +349,7 @@
 </main>
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
-<script src="/static/js/backend-api.js?v=961feaf5e096"></script>
+<script src="/static/js/backend-api.js?v=452944a54e5c"></script>
 <script>
 (function () {
     'use strict';
@@ -539,7 +540,13 @@
     // ==================================================== MATCHUP REPORT
 
     var MARKETS = {
-        spread: { mode: 'team', line: { show: true, label: 'Spread', ph: 'e.g. -1.5' }, odds: { show: false } },
+        // `odds.show` for spread is decided per sport at runtime -- see
+        // SYNTHETIC_SPREAD_SPORTS below. Point spreads in NBA/NFL are
+        // conventionally priced near -110, but an MLB run line or NHL puck
+        // line is not: laying -1.5 routinely prices anywhere from +100 to
+        // +200, so assuming -110 there would draw a break-even marker that is
+        // simply wrong.
+        spread: { mode: 'team', line: { show: true, label: 'Spread', ph: 'e.g. -1.5' }, odds: { show: false, required: false, label: 'Price', ph: 'e.g. +150' } },
         moneyline: { mode: 'team', line: { show: false }, odds: { show: true, required: true, label: 'Moneyline odds', ph: 'e.g. -120' } },
         total: { mode: 'ou', line: { show: true, label: 'Game total', ph: 'e.g. 8.5' }, odds: { show: true, required: false, label: 'Odds', ph: 'e.g. -110' } },
         team_total_home: { mode: 'ou', line: { show: true, label: null, ph: 'e.g. 4.5' }, odds: { show: true, required: false, label: 'Odds', ph: 'e.g. -110' } },
@@ -565,6 +572,18 @@
     var mSport = $('mSport'), mAway = $('mAway'), mHome = $('mHome'), mSelection = $('mSelection');
     var mLine = $('mLine'), mOdds = $('mOdds'), mSubmit = $('mSubmit');
     submitButtons.push(mSubmit);
+
+    // MLB run lines and NHL puck lines are effectively always ±1.5, and the
+    // dataset stores no price for them (the only odds fields on a game record
+    // are the two moneylines and the total's over/under prices). So for these
+    // sports the line alone says nothing about whether a bet is priced well --
+    // the user must supply the price, and without one we show no break-even.
+    var SYNTHETIC_SPREAD_SPORTS = { MLB: true, NHL: true };
+    function spreadNeedsPrice(sport) { return !!SYNTHETIC_SPREAD_SPORTS[sport]; }
+
+    // NBA/NFL point spreads are conventionally priced at -110 and the product
+    // deliberately assumes that when no price is given.
+    var STANDARD_SPREAD_PRICE = -110;
 
     function marketLabel(sport, market) {
         if (market === 'spread' && sport === 'MLB') return 'Run line';
@@ -627,6 +646,17 @@
         }
     }
 
+    /** Effective odds config for the selected market + sport. */
+    function oddsCfgFor(market, sport) {
+        var cfg = MARKETS[market].odds;
+        if (market !== 'spread') return cfg;
+        // Shown (optional) for run/puck lines; hidden for NBA/NFL point
+        // spreads, which keep the -110 assumption.
+        return spreadNeedsPrice(sport)
+            ? { show: true, required: false, label: cfg.label, ph: cfg.ph }
+            : { show: false, required: false };
+    }
+
     function syncMarketFields() {
         var cfg = MARKETS[mMarket];
         var prev = mSelection.value;
@@ -644,21 +674,35 @@
         }
         $('mLineField').hidden = !cfg.line.show;
         if (cfg.line.show) { $('mLineLabel').textContent = lineLabelFor(mMarket); mLine.placeholder = cfg.line.ph; }
-        $('mOddsField').hidden = !cfg.odds.show;
-        if (cfg.odds.show) {
-            $('mOddsLabel').innerHTML = esc(cfg.odds.label) + (cfg.odds.required ? '' : ' <span class="opt">(optional)</span>');
-            mOdds.placeholder = cfg.odds.ph;
+        var oc = oddsCfgFor(mMarket, mSport.value);
+        $('mOddsField').hidden = !oc.show;
+        if (oc.show) {
+            $('mOddsLabel').innerHTML = esc(oc.label) + (oc.required ? '' : ' <span class="opt">(optional)</span>');
+            mOdds.placeholder = oc.ph;
+        }
+        // Explains WHY the price is being asked for, so it does not look like
+        // an arbitrary extra field on two sports and not the others.
+        var hint = $('mOddsHint');
+        if (hint) {
+            var needs = mMarket === 'spread' && spreadNeedsPrice(mSport.value);
+            hint.hidden = !needs;
+            if (needs) {
+                hint.textContent = marketLabel(mSport.value, 'spread')
+                    + ' prices vary a lot, and this dataset does not store them. '
+                    + 'Add the price you are getting and the report shows your break-even; leave it blank and it reports the record only.';
+            }
         }
     }
 
     function validateMatchup() {
         var cfg = MARKETS[mMarket];
+        var oc = oddsCfgFor(mMarket, mSport.value);
         var lineOk = !cfg.line.show || (mLine.value !== '' && !isNaN(Number(mLine.value)));
-        var oddsOk = !cfg.odds.show || (cfg.odds.required
+        var oddsOk = !oc.show || (oc.required
             ? isValidAmericanOdds(mOdds.value)
             : (mOdds.value === '' || isValidAmericanOdds(mOdds.value)));
         setFieldError($('mLineField'), cfg.line.show && mLine.value !== '' && !lineOk);
-        setFieldError($('mOddsField'), cfg.odds.show && mOdds.value !== '' && !oddsOk);
+        setFieldError($('mOddsField'), oc.show && mOdds.value !== '' && !oddsOk);
         var ok = !!mAway.value && !!mHome.value && mAway.value !== mHome.value
             && !!mSelection.value && lineOk && oddsOk;
         mSubmit.disabled = !ok;
@@ -710,6 +754,12 @@
     });
     mSport.addEventListener('change', function () {
         mAway.value = ''; mHome.value = '';
+        // Switching between a point-spread sport and a run/puck-line sport
+        // changes whether a price is asked for, and any price already typed
+        // belonged to the previous sport's market.
+        mOdds.value = '';
+        syncMarketFields();
+        validateMatchup();
         loadMatchupTeams(mSport.value);
     });
     $('mTeamsRetry').addEventListener('click', function () {
@@ -741,6 +791,26 @@
         return String(label || '').toLowerCase().trim().replace(/\s+/g, '-');
     }
 
+    /**
+     * The price this wager is actually getting, or null when it is unknown.
+     *
+     * Returning null is the important case: a null price means no break-even
+     * is computed and no marker is drawn, rather than a plausible-looking
+     * 52.4% that was never real. Only NBA/NFL point spreads fall back to
+     * -110, and only because that is the standing convention for that market.
+     */
+    function resolvePrice(r, input) {
+        if (typeof r.odds === 'number' && isFinite(r.odds)) return r.odds;
+        // The upstream result does not always echo the submitted price back.
+        // The saved report's input_json does carry it, so a reopened report
+        // shows the same break-even the live one did. Records saved before
+        // prices were collected simply have no odds here -- and correctly get
+        // no break-even rather than a back-filled guess.
+        if (input && typeof input.odds === 'number' && isFinite(input.odds)) return input.odds;
+        if (r.market === 'spread' && !spreadNeedsPrice(r.sport)) return STANDARD_SPREAD_PRICE;
+        return null;
+    }
+
     /** Cover/hit rate for one side of the requested market, if the dataset
      *  actually carries it. Returns null rather than inventing a figure. */
     function marketRate(bucket) {
@@ -754,10 +824,10 @@
         return parsed && parsed.rate != null ? parsed : null;
     }
 
-    function comparisonHtml(r) {
+    function comparisonHtml(r, input) {
         var away = marketRate(r.away_market), home = marketRate(r.home_market);
         if (!away && !home) return '';
-        var be = breakEven(typeof r.odds === 'number' ? r.odds : (r.market === 'spread' ? -110 : null));
+        var be = breakEven(resolvePrice(r, input));
         var label = marketLabel(r.sport, r.market);
         var rows = [
             { name: r.away_team, side: 'Away', d: away },
@@ -766,7 +836,7 @@
 
         var html = '<div class="blp-cmp"><div class="blp-cmp-head">'
             + '<span class="blp-cmp-title">' + esc(label) + ' — hit rate at this number</span>'
-            + '<span class="blp-cmp-sub">' + (be != null ? 'Break-even ' + pct(be) : 'No price supplied') + '</span></div>';
+            + '<span class="blp-cmp-sub">' + (be != null ? 'Break-even ' + pct(be) : 'Break-even not shown') + '</span></div>';
 
         rows.forEach(function (row) {
             var rate = row.d.rate;
@@ -784,6 +854,12 @@
         });
         if (be != null) {
             html += '<div class="blp-cmp-legend"><i></i> Break-even at this price — a rate below the marker loses money long term.</div>';
+        } else {
+            // Says plainly that the missing piece is the price, so a reader
+            // does not assume the hit rate alone settles the question.
+            html += '<div class="blp-unavail" style="margin-top:12px"><strong>No price recorded for this bet.</strong> '
+                + esc(label) + ' prices are not stored in this dataset, so a hit rate cannot be compared against a break-even. '
+                + 'Re-run with the price you are getting to see whether ' + pct(rows[0].d.rate) + ' actually clears it.</div>';
         }
         return html + '</div>';
     }
@@ -862,7 +938,7 @@
         return '<div class="blp-sections">' + html + '</div>';
     }
 
-    function renderMatchup(res) {
+    function renderMatchup(res, input) {
         var r = res.result || {};
         var a = r.assessment || {};
         var confPct = CONF_PCT[a.confidence] != null ? CONF_PCT[a.confidence] : 30;
@@ -885,7 +961,7 @@
             + (a.basis ? '<p class="blp-verdict-basis">' + esc(a.basis) + '</p>' : '')
             + '</section>';
 
-        html += comparisonHtml(r);
+        html += comparisonHtml(r, input);
         html += '<div class="blp-teams">'
             + teamCardHtml(r.away_team, 'Away', r.away_form, r.away_market)
             + teamCardHtml(r.home_team, 'Home', r.home_form, r.home_market) + '</div>';
@@ -916,7 +992,10 @@
             situations: mFilters.slice(), num_games: Number($('mSample').value)
         };
         if (cfg.line.show) payload.line = Number(mLine.value);
-        if (cfg.odds.show && mOdds.value !== '') payload.odds = Number(mOdds.value);
+        // Uses the sport-aware config, so a run/puck-line price is actually
+        // submitted (the static MARKETS.spread config hides odds by default).
+        var ocSubmit = oddsCfgFor(mMarket, mSport.value);
+        if (ocSubmit.show && mOdds.value !== '') payload.odds = Number(mOdds.value);
 
         var sig = JSON.stringify(payload);
         var key = (sig === mLastSig && mLastKey) ? mLastKey : uuid();
@@ -934,7 +1013,9 @@
             if (!res.result || !res.result.assessment) {
                 showNote($('mError'), '<span>' + esc(res.note || 'BetLegend Pro could not produce an assessment for this matchup, so nothing was charged.') + '</span>');
             } else {
-                $('mResult').innerHTML = renderMatchup(res);
+                // Pass the submitted payload so the price shows even when
+                // the upstream result does not echo it back.
+                $('mResult').innerHTML = renderMatchup(res, payload);
                 $('mResult').hidden = false;
             }
             await refreshStatus();
@@ -1323,7 +1404,7 @@
             // it, so a reopened report looks identical to the original.
             var fake = { result: d.result, included_in_plan: false, billed: false, was_free_inquiry: false, ledger_entry_id: null };
             var body;
-            if (d.kind === 'matchup_report') body = renderMatchup(fake);
+            if (d.kind === 'matchup_report') body = renderMatchup(fake, d.input);
             else if (d.kind === 'report') body = renderAsk(fake);
             else if (d.kind === 'simulation') {
                 var out = (d.result && d.result.results) || {};

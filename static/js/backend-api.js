@@ -1281,6 +1281,12 @@ class TrustMyRecordAPI {
         return this.request(`/betlegend-pro/teams/${encodeURIComponent(sport)}`);
     }
 
+    // Public: authoritative dataset size for the sales page, read from
+    // BetLegend Pro's live engine so the quoted figure cannot go stale.
+    async getBetLegendProDatasetStats() {
+        return this.request('/betlegend-pro/dataset-stats');
+    }
+
     // --- BetLegend Pro paid access (Stripe). Purchases are card-only; TMR
     // Coin is never a payment method for a plan.
     async getBetLegendProPlans() {

@@ -15,9 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=56391ba79849">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=20260801e">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
-    <script defer src="/static/js/tmr-sitewide.js?v=83794ad4cb4a"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=03cf1db63c84"></script>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -59,7 +59,7 @@
         <p class="blp-hero-note" id="heroNote">One free report every day — no card needed.</p>
 
         <div class="blp-facts">
-            <div class="blp-fact"><div class="blp-fact-v">130,785</div><div class="blp-fact-l">Graded games in the dataset</div></div>
+            <div class="blp-fact"><div class="blp-fact-v" id="factGames" data-pending="1">&mdash;</div><div class="blp-fact-l" id="factGamesLabel">Graded games in the dataset</div></div>
             <div class="blp-fact"><div class="blp-fact-v">4</div><div class="blp-fact-l">Leagues — MLB, NBA, NFL, NHL</div></div>
             <div class="blp-fact"><div class="blp-fact-v">5</div><div class="blp-fact-l">Markets per matchup</div></div>
             <div class="blp-fact"><div class="blp-fact-v">0</div><div class="blp-fact-l">Estimated lines used in a verdict</div></div>
@@ -281,7 +281,7 @@
 </main>
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
-<script src="/static/js/backend-api.js?v=961feaf5e096"></script>
+<script src="/static/js/backend-api.js?v=452944a54e5c"></script>
 <script>
 (function () {
     'use strict';
@@ -439,9 +439,40 @@
             + '<a href="/contact/">contact support</a> — your payment is safe and on record.</span>');
     }
 
+    // ------------------------------------------------- dataset headline
+
+    /**
+     * The graded-game count comes from BetLegend Pro's live engine at page
+     * load, never from a number typed into this file. A hardcoded figure went
+     * stale once already (it claimed 130,785 long after the dataset moved),
+     * and a stale count on a sales page is a false claim.
+     *
+     * If the call fails the tile keeps its em-dash and the label degrades to a
+     * qualitative statement. It must never fall back to a remembered number.
+     */
+    async function paintDatasetSize() {
+        var el = $('factGames'), label = $('factGamesLabel');
+        if (!el) return;
+        try {
+            var s = await window.api.getBetLegendProDatasetStats();
+            var n = s && Number(s.graded_games);
+            if (!Number.isFinite(n) || n <= 0) throw new Error('no count');
+            el.textContent = n.toLocaleString('en-US');
+            el.removeAttribute('data-pending');
+            if (s.latest_game_date) {
+                label.textContent = 'Graded games — through ' + String(s.latest_game_date).slice(0, 10);
+            }
+        } catch (err) {
+            el.textContent = 'Every';
+            el.style.fontSize = '20px';
+            label.textContent = 'graded game in MLB, NBA, NFL and NHL history we hold';
+        }
+    }
+
     // ----------------------------------------------------------- boot
 
     (async function boot() {
+        paintDatasetSize();
         if (loggedIn()) {
             $('tryBtn').textContent = 'Open BetLegend Pro';
         }
