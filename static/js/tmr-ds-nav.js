@@ -305,7 +305,7 @@
      chain the homepage loads, in order, and only what is actually missing. */
   var NOTIF_CHAIN = [
     '/static/js/config.js?v=7e4b853bbb3d',
-    '/static/js/backend-api.js?v=961feaf5e096',
+    '/static/js/backend-api.js?v=7d848c59ca4b',
     '/static/js/auth-persistent.js?v=533b6a5999e2',
     '/static/js/notifications.js?v=b237c77f13ca'
   ];
