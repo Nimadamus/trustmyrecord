@@ -90,15 +90,6 @@ async function selectSportWithPostedLines(page) {
   return target.tab;
 }
 
-// An out-of-season board must say so in plain language. It must never render
-// blank, and never sit in a permanent loading state.
-async function assertHonestEmptyBoard(page, sport) {
-  await expect(
-    visibleBoard(page),
-    sport + ' board with no slate must state that explicitly'
-  ).toContainText(/no .*games|not scheduled|no games scheduled|offseason|check back/i, { timeout: 30000 });
-}
-
 async function firstEnabledPickButton(page) {
   const button = page
     .locator('#lobbyBoardRows button:not([disabled]), #gamesListContainer button:not([disabled]), main article button:not([disabled])')
@@ -269,10 +260,24 @@ test.describe('sportsbook functional locks', () => {
       expect(boardText.trim().length, `${sport} board should not collapse to empty`).toBeGreaterThan(20);
       expect(boardText).not.toMatch(/My Pick History/i);
       // Out-of-season sports are expected to be empty -- but they must say so,
-      // never render a blank panel or a stuck "Loading..." state.
-      if (!/ML|[+-]\d|O\s*\d|U\s*\d/i.test(boardText)) {
-        await assertHonestEmptyBoard(page, sport);
-      }
+      // never render a blank panel or a stuck "Loading..." state. Poll rather
+      // than branch on the snapshot above: the board can still be filling in
+      // when innerText() is captured, and a slow-loading populated board would
+      // otherwise be misread as an empty one.
+      await expect
+        .poll(
+          async () => {
+            const text = await visibleBoard(page).innerText();
+            if (/ML|[+-]\d|O\s*\d|U\s*\d/i.test(text)) return 'priced';
+            if (/no .*games|not scheduled|offseason|check back/i.test(text)) return 'empty-stated';
+            return 'neither';
+          },
+          {
+            message: `${sport} board must either show priced markets or state that it has no games`,
+            timeout: 30000,
+          }
+        )
+        .not.toBe('neither');
     }
   });
 
