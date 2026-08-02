@@ -651,3 +651,77 @@
 @media (max-width: 420px) {
     .blp-shell { width: calc(100% - 20px); }
 }
+
+/* ==========================================================================
+   Segmented controls + live review (Matchup Report form)
+   --------------------------------------------------------------------------
+   Single-choice groups replace the old flat chip grid: a contradictory pair
+   (home+away, favorite+underdog, close+large) is unrepresentable rather than
+   being silently corrected after the fact.
+   ========================================================================== */
+
+.blp-seg {
+    display: inline-flex; flex-wrap: wrap; gap: 3px; padding: 3px;
+    border: 1px solid var(--line-2); border-radius: var(--r-m); background: var(--s-0);
+}
+.blp-segbtn {
+    flex: 1 1 auto; min-height: 38px; padding: 0 16px; white-space: nowrap;
+    border: 0; border-radius: 9px; background: transparent; color: var(--ink-2);
+    font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+    transition: background .14s var(--ease), color .14s var(--ease);
+}
+.blp-seg--sm .blp-segbtn { min-height: 34px; padding: 0 12px; font-size: 12.5px; }
+.blp-segbtn:hover { background: rgba(255, 255, 255, .05); color: var(--ink); }
+.blp-segbtn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(45, 212, 191, .32); }
+.blp-segbtn[aria-checked="true"] {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #04211d; font-weight: 800;
+    box-shadow: 0 6px 16px -8px rgba(45, 212, 191, .8);
+}
+
+/* Helper text under a field, distinct from an error. */
+.blp-field-help {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11.5px; line-height: 1.45; color: var(--ink-3);
+}
+.blp-info {
+    flex: none; width: 15px; height: 15px; padding: 0; border-radius: 50%;
+    border: 1px solid var(--line-2); background: transparent; color: var(--ink-3);
+    font-size: 9.5px; font-weight: 800; line-height: 1; cursor: pointer;
+}
+.blp-info:hover { color: var(--accent); border-color: rgba(45, 212, 191, .5); }
+
+/* Step 4: what the report will actually ask, updated on every change. */
+.blp-review {
+    padding: 16px 18px; border: 1px solid rgba(45, 212, 191, .28); border-radius: var(--r-l);
+    background: linear-gradient(135deg, rgba(45, 212, 191, .07), var(--s-1) 55%);
+}
+.blp-review-title {
+    margin-bottom: 10px; font-size: 10.5px; font-weight: 800;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
+}
+.blp-review-row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    padding: 6px 0; border-top: 1px solid var(--line); font-size: 13px;
+}
+.blp-review-row:first-of-type { border-top: 0; }
+.blp-review-row span:first-child {
+    flex: none; min-width: 74px; color: var(--ink-3);
+    font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+}
+.blp-review-row span:last-child { text-align: right; font-weight: 600; color: var(--ink); }
+.blp-review-empty { margin: 0; font-size: 13px; color: var(--ink-3); }
+
+@media (max-width: 720px) {
+    .blp-seg { width: 100%; }
+    .blp-segbtn { flex: 1 1 40%; padding: 0 10px; }
+    .blp-review-row { flex-direction: column; gap: 2px; }
+    .blp-review-row span:last-child { text-align: left; }
+}
+
+/* Info toggle sits inline with its helper text, not floated to the field edge. */
+.blp-field-help { flex-wrap: wrap; }
+.blp-field-help .blp-info { order: -1; }
+/* Keep a 3-option group on one row so "Away only" does not orphan. */
+.blp-seg--sm { flex-wrap: nowrap; }
+@media (max-width: 720px) { .blp-seg--sm { flex-wrap: wrap; } }
