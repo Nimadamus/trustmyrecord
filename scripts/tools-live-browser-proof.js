@@ -71,7 +71,7 @@ async function verifyTrendspotter(page) {
   if ((await page.locator('.ts-table tbody tr').count()) === 0) {
     throw new Error('Trend Spotter rendered a record with no supporting games.');
   }
-  if ((await page.locator('.ts-chart').count()) === 0) {
+  if ((await page.locator('.ts-chart-plot svg').count()) === 0) {
     throw new Error('Trend Spotter rendered a result with no chart.');
   }
 

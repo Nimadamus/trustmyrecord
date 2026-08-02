@@ -109,7 +109,23 @@ test('live Trend Spotter workspace returns source-backed results', async ({ page
 
   // Evidence, chart, interpretation, provenance.
   expect(await page.locator('.ts-table tbody tr').count()).toBeGreaterThan(0);
-  await expect(page.locator('.ts-chart')).toBeVisible();
+  await expect(page.locator('.ts-chart-plot svg')).toBeVisible();
+  // Axis labels are HTML precisely so they stay readable on a phone; guard the
+  // rendered font size, not just their presence.
+  const axis = await page.$$eval('.ts-chart-axis span', (els) =>
+    els.map((e) => ({ text: e.textContent, px: parseFloat(getComputedStyle(e).fontSize) })));
+  expect(axis.length, 'the chart must carry three axis labels').toBe(3);
+  expect(Math.min(...axis.map((a) => a.px)), 'axis labels must stay legible').toBeGreaterThanOrEqual(10);
+  // A column of dashes is not evidence: no column may be empty on every row.
+  const heads = await page.$$eval('.ts-table thead th', (els) => els.map((e) => e.textContent));
+  const rows = await page.$$eval('.ts-table tbody tr', (trs) =>
+    trs.map((tr) => Array.from(tr.children).map((td) => td.textContent.trim())));
+  heads.forEach((head, i) => {
+    const allEmpty = rows.every((r) => !r[i] || r[i] === '—');
+    expect(allEmpty, `column "${head}" is empty on every row and should not be rendered`).toBe(false);
+    const allSame = rows.length > 1 && rows.every((r) => r[i] === rows[0][i]);
+    expect(allSame, `column "${head}" repeats one value on every row`).toBe(false);
+  });
   expect(await page.locator('.ts-notes li').count()).toBeGreaterThan(1);
   await page.locator('.ts-details summary').click();
   await expect(page.locator('.ts-details-body')).toContainText(/Games excluded/i);
