@@ -925,3 +925,96 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 /* Keep the info toggle on the same line as its helper text. */
 .blp-field-help { flex-wrap: nowrap; align-items: flex-start; }
 .blp-field-help .blp-info { margin-top: 1px; }
+
+/* ==========================================================================
+   Results panel — verdict bar, stat grid, report sections
+   ========================================================================== */
+
+.blp-verdictbar {
+    position: relative; overflow: hidden;
+    padding: 20px 22px; margin-bottom: 14px;
+    border: 1px solid var(--line-2); border-radius: var(--r-xl);
+    background: linear-gradient(150deg, var(--s-2), var(--s-1) 62%);
+    box-shadow: var(--sh-pop);
+}
+.blp-verdictbar::before {
+    content: ''; position: absolute; inset: 0 auto 0 0; width: 4px; background: var(--ink-3);
+}
+.blp-verdictbar[data-tone="strong-lean"]::before { background: var(--pos); }
+.blp-verdictbar[data-tone="lean"]::before { background: #6ee7b7; }
+.blp-verdictbar[data-tone="neutral"]::before { background: var(--warn); }
+.blp-verdictbar[data-tone="against"]::before { background: #fb923c; }
+.blp-verdictbar[data-tone="avoid"]::before { background: var(--neg); }
+
+.blp-verdictbar-main { margin-bottom: 16px; }
+.blp-verdictbar-bet {
+    font-family: Barlow, sans-serif; font-size: 21px; font-weight: 800;
+    line-height: 1.15; color: var(--ink); margin: 6px 0 8px;
+}
+.blp-verdictbar-verdict {
+    font-family: Barlow, sans-serif; font-size: clamp(26px, 3.4vw, 34px);
+    font-weight: 800; line-height: 1; letter-spacing: -.02em;
+}
+.blp-verdictbar[data-tone="strong-lean"] .blp-verdictbar-verdict { color: var(--pos); }
+.blp-verdictbar[data-tone="lean"] .blp-verdictbar-verdict { color: #6ee7b7; }
+.blp-verdictbar[data-tone="neutral"] .blp-verdictbar-verdict { color: var(--warn); }
+.blp-verdictbar[data-tone="against"] .blp-verdictbar-verdict { color: #fb923c; }
+.blp-verdictbar[data-tone="avoid"] .blp-verdictbar-verdict { color: var(--neg); }
+.blp-verdictbar-conf { margin-top: 7px; font-size: 13px; color: var(--ink-2); }
+.blp-verdictbar-conf strong { color: var(--ink); }
+.blp-verdictbar-basis {
+    margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--line);
+    max-width: 80ch; font-size: 13.5px; line-height: 1.65; color: var(--ink-2);
+}
+.blp-freshness { margin: 10px 0 0; font-size: 11.5px; color: var(--ink-3); }
+
+/* Stat grid: the four numbers that decide the bet. */
+.blp-statgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.blp-stat {
+    padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r-m);
+    background: var(--s-0);
+}
+.blp-stat-l {
+    font-size: 10.5px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--ink-3);
+}
+.blp-stat-v {
+    margin-top: 5px; font-family: Barlow, sans-serif; font-size: 24px;
+    font-weight: 800; line-height: 1; color: var(--ink);
+}
+.blp-stat.is-pos .blp-stat-v { color: var(--pos); }
+.blp-stat.is-neg .blp-stat-v { color: var(--neg); }
+.blp-stat-h { margin-top: 6px; font-size: 11px; line-height: 1.4; color: var(--ink-3); }
+
+/* Aligned record rows inside report sections. */
+.blp-rows { display: grid; gap: 0; }
+.blp-row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 16px;
+    padding: 8px 0; border-top: 1px solid var(--line); font-size: 13.5px;
+}
+.blp-row:first-child { border-top: 0; }
+.blp-row span:first-child { color: var(--ink-2); }
+.blp-row span:last-child {
+    font-weight: 700; color: var(--ink);
+    font-variant-numeric: tabular-nums lining-nums;
+}
+.blp-sec-lead { margin: 0 0 10px; font-size: 13px; color: var(--ink-2); }
+.blp-nodata {
+    margin: 0; padding: 12px 14px; border: 1px dashed var(--line-2);
+    border-radius: var(--r-m); font-size: 12.5px; color: var(--ink-3);
+}
+.blp-final {
+    margin: 0 0 10px; font-family: Barlow, sans-serif;
+    font-size: 17px; font-weight: 800; color: var(--ink);
+}
+.blp-disclaim {
+    margin: 12px 0 0; padding-top: 10px; border-top: 1px solid var(--line);
+    font-size: 11.5px; line-height: 1.5; color: var(--ink-3);
+}
+
+@media (max-width: 720px) {
+    .blp-verdictbar { padding: 16px; }
+    .blp-statgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .blp-row { flex-direction: column; gap: 2px; }
+    .blp-row span:last-child { text-align: left; }
+}

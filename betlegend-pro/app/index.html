@@ -15,9 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=2e9e7445c211">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=20260802h">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
-    <script defer src="/static/js/tmr-sitewide.js?v=f319fbd5f8ff"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=03cf1db63c84"></script>
 </head>
 <body class="tmr-site-shell" data-tmr-route="betlegend-pro-app">
 <main class="blp blp-shell">
@@ -430,7 +430,7 @@
 </main>
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
-<script src="/static/js/backend-api.js?v=7d848c59ca4b"></script>
+<script src="/static/js/backend-api.js?v=452944a54e5c"></script>
 <script>
 (function () {
     'use strict';
@@ -1309,46 +1309,179 @@
         return '<div class="blp-sections">' + html + '</div>';
     }
 
+    /* ------------------------------------------------------------------
+       Verdict mapping. The engine emits Supports / Slightly Supports /
+       Inconclusive / Slightly Opposes / Opposes for the WAGER. Those are
+       rendered as a lean scale, and deliberately never as a prediction:
+       "Strong lean" is the strongest thing shown, because the underlying
+       claim is only that history at this number supports the bet.
+       ------------------------------------------------------------------ */
+    var VERDICT_MAP = {
+        'Supports':          { label: 'Strong lean',   tone: 'strong-lean' },
+        'Slightly Supports': { label: 'Lean',          tone: 'lean' },
+        'Inconclusive':      { label: 'Neutral / Pass', tone: 'neutral' },
+        'Slightly Opposes':  { label: 'Lean against',  tone: 'against' },
+        'Opposes':           { label: 'Avoid',         tone: 'avoid' }
+    };
+
+    function verdictFor(a) {
+        return VERDICT_MAP[a && a.label] || { label: a && a.label ? a.label : 'No call', tone: 'neutral' };
+    }
+
+    /** A stat tile. `hint` explains the number rather than leaving it bare. */
+    function statTile(label, value, hint, tone) {
+        return '<div class="blp-stat' + (tone ? ' is-' + tone : '') + '">'
+            + '<div class="blp-stat-l">' + esc(label) + '</div>'
+            + '<div class="blp-stat-v">' + esc(value) + '</div>'
+            + (hint ? '<div class="blp-stat-h">' + esc(hint) + '</div>' : '') + '</div>';
+    }
+
+    /** Rows of record data, aligned, with an explicit empty state. */
+    function recordRows(rows) {
+        var live = rows.filter(function (r) { return r[1] && r[1] !== '0-0-0' && r[1] !== '0-0'; });
+        if (!live.length) {
+            return '<p class="blp-nodata">No graded games in this split.</p>';
+        }
+        return '<div class="blp-rows">' + live.map(function (r) {
+            return '<div class="blp-row"><span>' + esc(r[0]) + '</span><span>' + esc(r[1]) + '</span></div>';
+        }).join('') + '</div>';
+    }
+
+    /** Any market_notes the engine attached, shown rather than swallowed. */
+    function dataNotes(form) {
+        var notes = (form && form.market_notes) || [];
+        if (!notes.length) return '';
+        return '<div class="blp-unavail">' + notes.map(esc).join('<br>') + '</div>';
+    }
+
     function renderMatchup(res, input) {
         var r = res.result || {};
         var a = r.assessment || {};
-        var confPct = CONF_PCT[a.confidence] != null ? CONF_PCT[a.confidence] : 30;
-        var oddsTxt = typeof r.odds === 'number' ? ' (' + (r.odds > 0 ? '+' + r.odds : r.odds) + ')' : '';
-        var sel = r.market === 'moneyline' ? r.selection + ' ML' + oddsTxt
-            : (r.market === 'total' || r.market === 'team_total_home' || r.market === 'team_total_away')
-                ? (r.selection === 'over' ? 'Over ' : 'Under ') + r.line + oddsTxt
-                : r.selection + ' ' + (r.line > 0 ? '+' + r.line : r.line);
+        var v = verdictFor(a);
+        var price = resolvePrice(r, input);
+        var be = a.breakeven_pct != null ? a.breakeven_pct / 100 : breakEven(price);
+        var est = a.win_pct != null ? a.win_pct / 100 : null;
+        var edge = (est != null && be != null) ? est - be : null;
+        var sample = a.sample_size;
 
-        var html = '<section class="blp-verdict" data-verdict="' + esc(verdictSlug(a.label)) + '">'
-            + '<div class="blp-verdict-top"><div class="blp-verdict-main">'
-            + '<div class="blp-verdict-k">Verdict</div>'
-            + '<h2 class="blp-verdict-label">' + esc(a.label || 'No call') + '</h2>'
-            + '<p class="blp-verdict-sel">' + esc(sel) + ' <span>· ' + esc(r.away_team) + ' @ ' + esc(r.home_team) + ' · ' + esc(r.sport) + '</span></p>'
-            + '</div><div class="blp-conf">'
-            + '<div class="blp-conf-row"><span class="blp-verdict-k">Confidence</span><span class="blp-conf-val">' + esc(a.confidence || '—') + '</span></div>'
-            + '<div class="blp-meter"><i style="width:' + confPct + '%"></i></div>'
-            + '<p class="blp-conf-note">Confidence reflects sample size and how consistent the split is — not a probability of winning.</p>'
-            + '</div></div>'
-            + (a.basis ? '<p class="blp-verdict-basis">' + esc(a.basis) + '</p>' : '')
+        var oddsTxt = typeof r.odds === 'number' ? (r.odds > 0 ? '+' + r.odds : String(r.odds)) : null;
+        var sel = r.market === 'moneyline' ? r.selection + ' ML' + (oddsTxt ? ' (' + oddsTxt + ')' : '')
+            : (r.market === 'total' || r.market === 'team_total_home' || r.market === 'team_total_away')
+                ? (r.selection === 'over' ? 'Over ' : 'Under ') + r.line + (oddsTxt ? ' (' + oddsTxt + ')' : '')
+                : r.selection + ' ' + (r.line > 0 ? '+' + r.line : r.line) + (oddsTxt ? ' (' + oddsTxt + ')' : '');
+
+        // ---------------------------------------------------- verdict header
+        var html = '<section class="blp-verdictbar" data-tone="' + esc(v.tone) + '">'
+            + '<div class="blp-verdictbar-main">'
+            + '<div class="blp-verdict-k">' + esc(r.away_team) + ' at ' + esc(r.home_team) + ' · ' + esc(r.sport) + '</div>'
+            + '<div class="blp-verdictbar-bet">' + esc(sel) + '</div>'
+            + '<div class="blp-verdictbar-verdict">' + esc(v.label) + '</div>'
+            + '<div class="blp-verdictbar-conf">Confidence: <strong>' + esc(a.confidence || '—') + '</strong></div>'
+            + '</div>'
+            + '<div class="blp-statgrid">'
+            + statTile('Historical rate', est != null ? pct(est) : '—',
+                       est != null ? 'This side, at this number' : 'Not enough graded games')
+            + statTile('Break-even', be != null ? pct(be) : '—',
+                       be != null ? (price != null ? 'At ' + (price > 0 ? '+' + price : price) : 'At a standard price')
+                                  : 'Add odds to compute')
+            + statTile('Edge', edge != null ? (edge >= 0 ? '+' : '') + (edge * 100).toFixed(1) + ' pts' : '—',
+                       edge != null ? 'Rate minus break-even' : 'Needs both figures',
+                       edge == null ? '' : (edge > 0 ? 'pos' : 'neg'))
+            + statTile('Sample', sample != null ? fmtInt(sample) : '—',
+                       sample != null ? 'Graded games behind it' : 'Unavailable')
+            + '</div>'
+            + (a.basis ? '<p class="blp-verdictbar-basis">' + esc(a.basis) + '</p>' : '')
+            + '<p class="blp-freshness">Dataset: graded games only'
+            + (r.data_through ? ' · through ' + esc(r.data_through) : '')
+            + ' · generated ' + esc(new Date().toLocaleString()) + '</p>'
             + '</section>';
 
-        html += comparisonHtml(r, input);
-        html += '<div class="blp-teams">'
-            + teamCardHtml(r.away_team, 'Away', r.away_form, r.away_market)
-            + teamCardHtml(r.home_team, 'Home', r.home_form, r.home_market) + '</div>';
-        html += situationsHtml(r);
+        // ------------------------------------------------ 1. exec summary
+        var sections = [];
+        var execText = (r.narrative && r.narrative.executive_summary) || a.basis || '';
+        if (execText) sections.push(['Executive summary', '<p>' + esc(execText) + '</p>', true]);
 
-        if (!r.narrative_available) {
-            html += '<div class="blp-note blp-note--warn" style="margin-top:14px"><span>Every figure above is real and complete — only the written write-up could not be generated for this request.</span></div>';
+        // ------------------------------- 2. historical matchup performance
+        var h2h = r.h2h || {};
+        var h2hTrend = h2h.trend || {};
+        sections.push(['Historical matchup performance',
+            (h2h.games_found ? '<p class="blp-sec-lead">' + fmtInt(h2h.games_found) + ' meetings in the dataset.</p>' : '')
+            + recordRows([
+                ['Straight up', h2hTrend.su_record],
+                ['Against the spread', h2hTrend.ats_record],
+                ['Over / under', h2hTrend.ou_record]
+            ]), false]);
+
+        // ------------------------------- 3. team-specific trend comparison
+        sections.push(['Team trend comparison', comparisonHtml(r, input)
+            + '<div class="blp-teams">'
+            + teamCardHtml(r.away_team, 'Away', r.away_form, r.away_market)
+            + teamCardHtml(r.home_team, 'Home', r.home_form, r.home_market)
+            + '</div>', true]);
+
+        // -------------------------------------------- 4. situational trends
+        sections.push(['Situational trends', situationsHtml(r)
+            || '<p class="blp-nodata">No situational filters were applied to this report.</p>', false]);
+
+        // ------------------------------------------------- 5. recent form
+        sections.push(['Recent form',
+            '<p class="blp-sec-lead">Last ' + esc(r.num_games) + ' games for each side.</p>'
+            + '<div class="blp-teams">'
+            + teamCardHtml(r.away_team, 'Away', r.away_form, null)
+            + teamCardHtml(r.home_team, 'Home', r.home_form, null)
+            + '</div>' + dataNotes(r.home_form), false]);
+
+        // ------------------------------------- 6. market & pricing analysis
+        var mk = r.market === 'moneyline' ? (r.away_market || {}) : (r.home_market || {});
+        sections.push(['Market and pricing analysis',
+            '<div class="blp-rows">'
+            + '<div class="blp-row"><span>Market</span><span>' + esc(marketLabel(r.sport, r.market)) + '</span></div>'
+            + '<div class="blp-row"><span>Line</span><span>' + esc(r.line != null ? r.line : '—') + '</span></div>'
+            + '<div class="blp-row"><span>Price entered</span><span>' + esc(oddsTxt || 'None') + '</span></div>'
+            + '<div class="blp-row"><span>Break-even at that price</span><span>' + esc(be != null ? pct(be) : 'Not computable') + '</span></div>'
+            + '<div class="blp-row"><span>Games in this line bucket</span><span>' + esc(mk.bucket_games != null ? fmtInt(mk.bucket_games) : '—') + '</span></div>'
+            + '</div>'
+            + (be == null ? '<div class="blp-unavail">No price was entered, so no break-even comparison is possible for this market.</div>' : ''), false]);
+
+        // --------------------------- 7 & 8. supporting / conflicting evidence
+        var n = r.narrative || {};
+        if (Array.isArray(n.key_supporting_factors) && n.key_supporting_factors.length) {
+            sections.push(['Supporting evidence',
+                '<ul class="blp-list">' + n.key_supporting_factors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>', false]);
         }
-        html += narrativeHtml(r.narrative, MATCHUP_SECTIONS,
-            ['executive_summary', 'away_team_analysis', 'home_team_analysis', 'head_to_head_analysis', 'market_specific_trends', 'situational_trends', 'sample_size_and_data_quality_notes', 'final_conclusion'],
-            'final_conclusion');
+        if (Array.isArray(n.key_risk_factors) && n.key_risk_factors.length) {
+            sections.push(['Conflicting evidence',
+                '<ul class="blp-list blp-list--risk">' + n.key_risk_factors.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>', false]);
+        }
+
+        // -------------------------------------- 9. risks and limitations
+        var limits = [];
+        if (sample != null && sample < 40) limits.push('Small sample: ' + fmtInt(sample) + ' graded games is inside the range where variance dominates.');
+        if (be == null) limits.push('No price was supplied, so no break-even or edge could be computed.');
+        if (!r.narrative_available) limits.push('The written narrative could not be generated for this request. Every figure above is still real and complete.');
+        var mn = (r.home_form && r.home_form.market_notes) || [];
+        mn.forEach(function (t) { limits.push(t); });
+        if (n.sample_size_and_data_quality_notes) limits.push(n.sample_size_and_data_quality_notes);
+        if (!limits.length) limits.push('No specific limitations were flagged for this query.');
+        sections.push(['Risks and limitations',
+            '<ul class="blp-list blp-list--risk">' + limits.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>', false]);
+
+        // ------------------------------------------------ 10. final verdict
+        var finalText = (n.final_conclusion) || a.basis || '';
+        sections.push(['Final verdict',
+            '<p class="blp-final">' + esc(v.label) + (a.confidence ? ' · ' + esc(a.confidence) + ' confidence' : '') + '</p>'
+            + (finalText ? '<p>' + esc(finalText) + '</p>' : '')
+            + '<p class="blp-disclaim">A verdict describes historical support at this price. It is not a prediction and past splits do not carry forward.</p>', true]);
+
+        html += '<div class="blp-sections">' + sections.map(function (sec) {
+            return '<details class="blp-sec' + (sec[2] ? ' blp-sec--key' : '') + '"' + (sec[2] ? ' open' : '') + '>'
+                + '<summary>' + esc(sec[0]) + '</summary>'
+                + '<div class="blp-sec-body">' + sec[1] + '</div></details>';
+        }).join('') + '</div>';
+
         html += receiptRow(res);
         return html;
     }
-
-    // ------------------------------------------------- matchup submit
 
     var mLastKey = null, mLastSig = null;
     $('matchupForm').addEventListener('submit', async function (ev) {
