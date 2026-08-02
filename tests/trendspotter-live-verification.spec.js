@@ -123,8 +123,13 @@ test('live Trend Spotter workspace returns source-backed results', async ({ page
   heads.forEach((head, i) => {
     const allEmpty = rows.every((r) => !r[i] || r[i] === '—');
     expect(allEmpty, `column "${head}" is empty on every row and should not be rendered`).toBe(false);
-    const allSame = rows.length > 1 && rows.every((r) => r[i] === rows[0][i]);
-    expect(allSame, `column "${head}" repeats one value on every row`).toBe(false);
+    // Price and Units can legitimately be constant (a sample all laid at -110);
+    // these four exist only to vary, so a single repeated value means the
+    // column should not have been rendered at all.
+    if (['Venue', 'Market', 'Source', 'Closing line'].includes(head)) {
+      const allSame = rows.length > 1 && rows.every((r) => r[i] === rows[0][i]);
+      expect(allSame, `column "${head}" repeats one value on every row`).toBe(false);
+    }
   });
   expect(await page.locator('.ts-notes li').count()).toBeGreaterThan(1);
   await page.locator('.ts-details summary').click();

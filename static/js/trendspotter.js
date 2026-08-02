@@ -685,8 +685,14 @@
     var cols = [
       { key: 'Date', cell: function (g) { return esc(g.date) + (g.game_num > 1 ? ' <span class="ts-dh">G' + esc(g.game_num) + '</span>' : ''); } },
       { key: 'Opponent', cell: function (g) { return esc((g.is_home ? 'vs ' : '@ ') + g.opponent); } },
-      { key: 'Venue', cell: function (g) { return esc(g.venue); } },
     ];
+    // Venue only earns a column when the sample actually mixes home and away.
+    // A venue-filtered query already says so in the statement above.
+    var venues = {};
+    games.forEach(function (g) { venues[g.venue] = 1; });
+    if (Object.keys(venues).length > 1) {
+      cols.push({ key: 'Venue', cell: function (g) { return esc(g.venue); } });
+    }
     if (hasLine) {
       cols.push({ key: 'Closing line', num: true, cell: function (g) {
         if (g.line === null || g.line === undefined) return '—';
