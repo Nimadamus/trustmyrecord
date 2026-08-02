@@ -68,6 +68,13 @@ for (const required of [
   'Poll Closed',
   'Final result',
   'Result pending',
+  // the closed board is paged server-side, never dumped in one go
+  "fetchPolls('closed'",
+  'var CLOSED_PAGE_SIZE = 24;',
+  'function closedPagerHtml(',
+  'async function loadMoreClosed(',
+  'function hasMoreClosed(',
+  'id="closedLoadMore"',
 ]) {
   assert(html.includes(required), `polls page missing required visual/function marker: ${required}`);
 }

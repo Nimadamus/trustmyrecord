@@ -356,6 +356,12 @@
         .pl-tag.you { background: var(--accent); color: var(--accent-ink); }
         .pl-tag.win { background: var(--green); color: #05261C; }
         .pl-tag.lead { border: 1px solid var(--border-strong); color: var(--text-2); }
+        /* Closed-board pager */
+        .pl-pager { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; margin-top: 18px; }
+        .pl-pager .tmr-hbtn { min-width: 210px; }
+        .pl-pagecount { color: var(--muted); font-size: 0.75rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+        .pl-pagenote { margin-top: 14px; text-align: center; color: var(--muted); font-size: 0.755rem; line-height: 1.5; }
+        .pl-pagenote b { color: var(--text-2); font-weight: 700; font-variant-numeric: tabular-nums; }
         .pl-nores { display: flex; flex-direction: column; gap: 5px; padding: 11px 12px; border: 1px dashed var(--border-strong); border-radius: var(--r-sm); color: var(--muted); font-size: 0.78rem; line-height: 1.5; }
         .pl-nores span { color: var(--text-2); font-size: 0.75rem; font-weight: 600; }
 
@@ -1181,8 +1187,12 @@
     function isScheduled(p) { var pub = p.publish_at ? new Date(p.publish_at) : null; return !!(pub && pub > new Date()); }
     function isExpired(p) { var dl = pollDeadline(p); return !!(dl && dl < new Date()); }
     function isResolvedPoll(p) { return p.status === 'resolved' || p.status === 'closed'; }
-    function isClosedPoll(p) { return isResolvedPoll(p) || isExpired(p); }
-    function isActiveOpen(p) { return !isScheduled(p) && !isExpired(p) && !isResolvedPoll(p); }
+    function isCanceledPoll(p) { return p.status === 'canceled'; }
+    // Mirrors the server's status=closed predicate: resolved, canceled, or the
+    // deadline has passed. A canceled poll is closed even if its deadline is
+    // still in the future.
+    function isClosedPoll(p) { return isResolvedPoll(p) || isCanceledPoll(p) || isExpired(p); }
+    function isActiveOpen(p) { return !isScheduled(p) && !isExpired(p) && !isResolvedPoll(p) && !isCanceledPoll(p); }
     function isClosingSoon(p) { var dl = pollDeadline(p); if (!dl || !isActiveOpen(p)) return false; var ms = dl - new Date(); return ms > 0 && ms < 24*3600*1000; }
     // "Closing Soon" badge threshold: under 60 minutes on the clock.
     function isClosingSoon60(p) { var dl = pollDeadline(p); if (!dl || !isActiveOpen(p)) return false; var ms = dl - new Date(); return ms > 0 && ms < 60*60*1000; }
@@ -1244,14 +1254,15 @@
     state.league = 'all';
     state.view = 'open';           // open | ending | most_voted | voted | closed
     state.q = '';
-    state.cache = { active: null, all: null, activeAt: 0, allAt: 0 };
+    state.cache = { active: null, activeAt: 0 };
+    state.closed = { rows: [], page: 0, pages: 0, total: 0, at: 0, loading: false };
     state.quizzes = [];
     state.stats = null;
     state.openAll = null;
     var CACHE_TTL_MS = 45000;
     var renderSeq = 0;
 
-    function needsAllStatus() { return state.view === 'closed'; }
+    function isClosedView() { return state.view === 'closed'; }
     function filtersActive() { return state.league !== 'all' || state.view !== 'open' || !!state.q; }
 
     function setLeague(key) {
@@ -1262,10 +1273,12 @@
     }
     function setView(view) {
         if (state.view === view) return;
-        var wasAll = needsAllStatus();
+        var wasClosed = isClosedView();
         state.view = view;
         syncChips();
-        if (needsAllStatus() !== wasAll) loadSection();   // different feed, must fetch
+        // Open <-> Closed are different server feeds; everything else is a
+        // client-side narrowing of the feed already in hand.
+        if (isClosedView() !== wasClosed) loadSection();
         else renderFromCache();
     }
     function syncChips() {
@@ -1344,8 +1357,10 @@
     function visiblePolls(all) {
         var q = state.q;
         var list = (all || []).filter(function(p) { return !isQuiz(p); });
-        if (state.view === 'closed') list = list.filter(isClosedPoll);
-        else list = list.filter(isActiveOpen);
+        // The closed feed is already narrowed server-side (resolved / canceled /
+        // deadline passed) — re-filtering here would drop canceled polls whose
+        // deadline has not arrived yet.
+        if (state.view !== 'closed') list = list.filter(isActiveOpen);
         if (state.view === 'ending') list = list.filter(isClosingSoon);
         if (state.view === 'voted') list = list.filter(function(p) { return !!p.user_voted; });
         if (state.league !== 'all') list = list.filter(function(p) { return pollLeagueKey(p) === state.league; });
@@ -1354,36 +1369,80 @@
     }
 
     // ============== DATA ==============
-    async function fetchPolls(status, limit) {
+    // The open board is small enough to hold in one fetch. The closed board is
+    // not (300+ rows and growing), so it is paged server-side: status=closed
+    // returns resolved / canceled / deadline-passed polls newest-closed-first
+    // with real pagination metadata.
+    var CLOSED_PAGE_SIZE = 24;
+    async function fetchPolls(status, limit, page) {
         // _ts defeats any intermediary cache so the board is never stale.
-        var qs = ['status=' + status, 'limit=' + (limit || 120), '_ts=' + Date.now()];
+        var qs = ['status=' + status, 'limit=' + (limit || 120), 'page=' + (page || 1), '_ts=' + Date.now()];
         if (state.sportFilter) qs.push('sport=' + encodeURIComponent(state.sportFilter));
         if (state.leagueFilter) qs.push('league=' + encodeURIComponent(state.leagueFilter));
         var data = await api.request('/polls?' + qs.join('&'));
-        return data.polls || [];
+        return { polls: data.polls || [], pagination: data.pagination || null };
     }
     async function ensureData(force) {
-        var key = needsAllStatus() ? 'all' : 'active';
-        var stamp = state.cache[key + 'At'] || 0;
-        if (!force && state.cache[key] && (Date.now() - stamp) < CACHE_TTL_MS) return state.cache[key];
-        var polls = await fetchPolls(key === 'all' ? 'all' : 'active', 120);
-        state.cache[key] = polls;
-        state.cache[key + 'At'] = Date.now();
-        return polls;
+        if (state.view === 'closed') {
+            var c = state.closed;
+            if (!force && c.rows.length && (Date.now() - c.at) < CACHE_TTL_MS) return c.rows;
+            var first = await fetchPolls('closed', CLOSED_PAGE_SIZE, 1);
+            state.closed = { rows: first.polls, page: 1, at: Date.now(),
+                total: first.pagination ? parseInt(first.pagination.total) || first.polls.length : first.polls.length,
+                pages: first.pagination ? parseInt(first.pagination.pages) || 1 : 1 };
+            return state.closed.rows;
+        }
+        if (!force && state.cache.active && (Date.now() - state.cache.activeAt) < CACHE_TTL_MS) return state.cache.active;
+        var res = await fetchPolls('active', 120, 1);
+        state.cache.active = res.polls;
+        state.cache.activeAt = Date.now();
+        return state.cache.active;
     }
-    function currentPolls() { return state.cache[needsAllStatus() ? 'all' : 'active'] || null; }
+    function currentPolls() {
+        return state.view === 'closed' ? (state.closed.rows.length ? state.closed.rows : null) : state.cache.active;
+    }
+    function hasMoreClosed() { return state.view === 'closed' && state.closed.page < state.closed.pages; }
+    async function loadMoreClosed(btn) {
+        if (!hasMoreClosed() || state.closed.loading) return;
+        state.closed.loading = true;
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin" aria-hidden="true"></i> Loading…'; }
+        try {
+            var next = await fetchPolls('closed', CLOSED_PAGE_SIZE, state.closed.page + 1);
+            var seen = {};
+            state.closed.rows.forEach(function(p) { seen[p.id] = true; });
+            next.polls.forEach(function(p) { if (!seen[p.id]) state.closed.rows.push(p); });
+            state.closed.page += 1;
+            if (next.pagination) {
+                state.closed.total = parseInt(next.pagination.total) || state.closed.total;
+                state.closed.pages = parseInt(next.pagination.pages) || state.closed.pages;
+            }
+            state.closed.loading = false;
+            renderFromCache();
+            var more = document.getElementById('closedLoadMore');
+            if (more) more.focus();
+        } catch (err) {
+            console.error('loadMoreClosed', err);
+            state.closed.loading = false;
+            showToast((err && err.message) ? err.message : 'Could not load more closed polls.', 'error');
+            if (btn && btn.isConnected) { btn.disabled = false; btn.innerHTML = closedLoadMoreLabel(); }
+        }
+    }
+    function closedLoadMoreLabel() {
+        var remaining = Math.max(0, state.closed.total - state.closed.rows.length);
+        return '<i class="fas fa-arrow-down" aria-hidden="true"></i> Load ' +
+            Math.min(CLOSED_PAGE_SIZE, remaining) + ' more <span style="opacity:0.65;font-weight:600;">(' + remaining + ' left)</span>';
+    }
+    function allLoadedPolls() {
+        return (state.cache.active || []).concat(state.closed.rows || []);
+    }
     function findPoll(id) {
         var hit = null;
-        ['active', 'all'].forEach(function(k) {
-            (state.cache[k] || []).forEach(function(p) { if (parseInt(p.id) === parseInt(id) && !hit) hit = p; });
-        });
+        allLoadedPolls().forEach(function(p) { if (parseInt(p.id) === parseInt(id) && !hit) hit = p; });
         return hit;
     }
     function updatePollEverywhere(id, patch) {
-        ['active', 'all'].forEach(function(k) {
-            (state.cache[k] || []).forEach(function(p) {
-                if (parseInt(p.id) === parseInt(id)) Object.keys(patch).forEach(function(f) { p[f] = patch[f]; });
-            });
+        allLoadedPolls().forEach(function(p) {
+            if (parseInt(p.id) === parseInt(id)) Object.keys(patch).forEach(function(f) { p[f] = patch[f]; });
         });
     }
 
@@ -1692,6 +1751,11 @@
                 actions: '<button type="button" class="tmr-hbtn" onclick="setView(\'open\')">See all open polls</button>' });
         }
         if (state.view === 'closed') {
+            if (hasMoreClosed()) {
+                return stateHtml({ icon: 'magnifying-glass', title: 'No ' + leagueTxt + 'polls in what is loaded yet.',
+                    sub: 'The closed board loads ' + CLOSED_PAGE_SIZE + ' at a time — load more to search further back.',
+                    actions: '<button type="button" class="tmr-hbtn" onclick="setLeague(\'all\')">Show all leagues</button>' });
+            }
             return stateHtml({ icon: 'flag-checkered', title: 'No closed ' + leagueTxt + 'polls yet.',
                 sub: 'Final results land here once a poll reaches its deadline.',
                 actions: '<button type="button" class="tmr-hbtn" onclick="setView(\'open\')">See open polls</button>' });
@@ -1743,7 +1807,12 @@
         };
         var pair = LABELS[state.view] || ['poll', 'polls'];
         var viewLabel = shown === 1 ? pair[0] : pair[1];
-        var bits = '<span>Showing <b>' + shown + '</b> ' + viewLabel +
+        // The closed board is paged, so say what is on screen out of the real
+        // server total rather than implying the whole archive is rendered.
+        var head = (isClosedView() && state.closed.total)
+            ? '<span>Showing <b>' + shown + '</b> of <b>' + state.closed.total + '</b> closed polls'
+            : '<span>Showing <b>' + shown + '</b> ' + viewLabel;
+        var bits = head +
             (state.league === 'all' ? '' : ' in <b>' + escHtml(state.league) + '</b>') +
             (state.q ? ' matching <b>&ldquo;' + escHtml(state.q) + '&rdquo;</b>' : '') + '</span>';
         if (quizCount) bits += '<span aria-hidden="true">&middot;</span><span><b>' + quizCount + '</b> prediction quiz' + (quizCount === 1 ? '' : 'zes') + ' below</span>';
@@ -1751,8 +1820,8 @@
         line.innerHTML = bits;
     }
     function updateChipCounts(all) {
-        var base = (all || []).filter(function(p) { return !isQuiz(p); })
-            .filter(state.view === 'closed' ? isClosedPoll : isActiveOpen);
+        var base = (all || []).filter(function(p) { return !isQuiz(p); });
+        if (!isClosedView()) base = base.filter(isActiveOpen);
         if (state.view === 'ending') base = base.filter(isClosingSoon);
         if (state.view === 'voted') base = base.filter(function(p) { return !!p.user_voted; });
         if (state.q) base = base.filter(function(p) { return matchesQuery(p, state.q); });
@@ -1799,6 +1868,27 @@
         row.innerHTML = bits.join('<span class="sep" aria-hidden="true">&middot;</span>');
         row.hidden = false;
     }
+    // Pager for the closed board. Also states plainly when a league/search
+    // filter is only narrowing the pages loaded so far, so the counts on screen
+    // are never mistaken for the whole archive.
+    function closedPagerHtml() {
+        if (!isClosedView()) return '';
+        var loaded = state.closed.rows.length;
+        var total = state.closed.total;
+        if (!loaded) return '';
+        var filtering = (state.league !== 'all' || state.q) && hasMoreClosed();
+        var note = filtering
+            ? '<p class="pl-pagenote">Filtering the <b>' + loaded + '</b> closed polls loaded so far. Load more to widen the search.</p>'
+            : '';
+        if (!hasMoreClosed()) {
+            return note + '<p class="pl-pagenote">All <b>' + total + '</b> closed polls loaded.</p>';
+        }
+        return note +
+            '<div class="pl-pager">' +
+                '<button type="button" class="tmr-hbtn" id="closedLoadMore" onclick="loadMoreClosed(this)">' + closedLoadMoreLabel() + '</button>' +
+                '<span class="pl-pagecount">' + loaded + ' of ' + total + '</span>' +
+            '</div>';
+    }
     function renderFromCache(justVotedId) {
         var polls = currentPolls();
         if (!polls) return loadSection();
@@ -1815,12 +1905,14 @@
         var rest = featured ? list.filter(function(p) { return p.id !== featured.id; }) : list;
         var sec = document.getElementById('pollsSection');
         if (sec) {
-            sec.innerHTML = rest.length
+            var gridHtml = rest.length
                 ? ('<div class="pl-grid">' + rest.map(function(p) { return cardHtml(p, p.id === justVotedId); }).join('') + '</div>')
                 : (featured ? '' : emptyStateForView());
+            sec.innerHTML = gridHtml + closedPagerHtml();
         }
 
-        var quizzes = polls.filter(isQuiz).filter(state.view === 'closed' ? isClosedPoll : isActiveOpen);
+        var quizzes = polls.filter(isQuiz);
+        if (!isClosedView()) quizzes = quizzes.filter(isActiveOpen);
         if (state.league !== 'all') quizzes = quizzes.filter(function(p) { return pollLeagueKey(p) === state.league; });
         if (state.q) quizzes = quizzes.filter(function(p) { return matchesQuery(p, state.q); });
         renderQuizBand(quizzes);
