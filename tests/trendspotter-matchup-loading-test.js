@@ -87,7 +87,9 @@ async function mount(matchupsResponder) {
   win.matchMedia = () => ({ matches: false, addListener() {}, removeListener() {} });
 
   win.eval(js);
-  const settle = async (ticks) => { for (let i = 0; i < (ticks || 40); i++) await new Promise((r) => win.setTimeout(r, 5)); };
+  // The slate retries a transient failure once with a backoff, so reaching the
+  // failure state legitimately takes longer than a single round trip.
+  const settle = async (ticks) => { for (let i = 0; i < (ticks || 240); i++) await new Promise((r) => win.setTimeout(r, 5)); };
   await settle();
   return { win, doc: win.document, calls, pageErrors, settle };
 }
@@ -142,15 +144,32 @@ const list = (doc) => doc.getElementById('matchupList');
     assert.strictEqual(doc.querySelectorAll('.ts-matchup').length, 1);
   });
 
-  await test('retrying after a failure recovers', async () => {
+  await test('a one-off gateway blip is absorbed without ever showing an error', async () => {
     let attempt = 0;
-    const { doc, win, settle } = await mount(() => {
+    const { doc, calls } = await mount(() => {
       attempt += 1;
       return attempt === 1
+        ? Promise.resolve({ ok: false, status: 502, json: () => Promise.resolve({}) })
+        : Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ available: true, matchups: [game(1)] }) });
+    });
+    assert.strictEqual(calls.filter((u) => u.includes('/matchups')).length, 2, 'the blip must be retried once');
+    assert.strictEqual(doc.querySelectorAll('.ts-matchup').length, 1, 'the slate must recover on its own');
+    assert(!doc.getElementById('retrySlate'), 'a recovered blip must not leave an error state behind');
+  });
+
+  await test('the automatic retry is bounded, then hands over to the manual one', async () => {
+    let attempt = 0;
+    const { doc, win, calls, settle } = await mount(() => {
+      attempt += 1;
+      // Fails the initial request and its one automatic retry; succeeds only
+      // once the user asks again.
+      return attempt <= 2
         ? Promise.resolve({ ok: false, status: 503, json: () => Promise.resolve({}) })
         : Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ available: true, matchups: [game(1)] }) });
     });
-    assert(doc.getElementById('retrySlate'), 'first attempt should fail');
+    assert.strictEqual(calls.filter((u) => u.includes('/matchups')).length, 2,
+      'the slate must stop after one automatic retry, not loop');
+    assert(doc.getElementById('retrySlate'), 'a sustained failure must offer the manual retry');
     doc.getElementById('retrySlate').dispatchEvent(new win.Event('click', { bubbles: true }));
     await settle();
     assert.strictEqual(doc.querySelectorAll('.ts-matchup').length, 1, 'retry must reload the slate');
