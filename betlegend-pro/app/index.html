@@ -15,9 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=4a275776955b">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=20260802g">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
-    <script defer src="/static/js/tmr-sitewide.js?v=f319fbd5f8ff"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=03cf1db63c84"></script>
 </head>
 <body class="tmr-site-shell" data-tmr-route="betlegend-pro-app">
 <main class="blp blp-shell">
@@ -90,32 +90,46 @@
 
             <!-- ======================================== MATCHUP REPORT -->
             <section class="blp-panel is-active" id="panel-matchup" role="tabpanel" aria-label="Matchup Report">
-                <form class="blp-card" id="matchupForm" novalidate>
-                    <div class="blp-card-head">
-                        <h2>Matchup Report</h2>
-                        <p class="sub">Pick two teams and the exact bet you're looking at. BetLegend Pro pulls both sides' real records in that market, applies your situational filters, and returns a verdict with the sample size behind it.</p>
+                <header class="blp-pagehead">
+                    <div>
+                        <div class="blp-pagehead-eyebrow">BetLegend Pro</div>
+                        <h1>Matchup Intelligence</h1>
+                        <p>Build a data-backed betting report in seconds.</p>
                     </div>
+                    <div class="blp-trustrow">
+                        <span class="blp-trust-pill">Historical trends</span>
+                        <span class="blp-trust-pill">Situational analysis</span>
+                        <span class="blp-trust-pill">Market-specific verdict</span>
+                    </div>
+                </header>
 
-                    <div class="blp-step">
-                        <div class="blp-step-head"><span class="blp-step-n">1</span><span class="blp-step-title">The matchup</span></div>
-                        <div class="blp-field" style="max-width:220px;margin-bottom:12px">
-                            <label for="mSport">Sport</label>
-                            <select class="blp-select" id="mSport">
+                <form id="matchupForm" novalidate>
+                    <!-- ============================ matchup builder -->
+                    <div class="blp-mcard" style="margin-bottom:14px">
+                        <div class="blp-mcard-top">
+                            <span class="blp-mcard-label">Sport</span>
+                            <select class="blp-select" id="mSport" aria-label="Sport">
                                 <option value="MLB">MLB</option>
                                 <option value="NBA">NBA</option>
                                 <option value="NFL">NFL</option>
                                 <option value="NHL">NHL</option>
                             </select>
+                            <span class="blp-mcard-label" id="mSportNote" style="margin-left:auto"></span>
                         </div>
-                        <div class="blp-vs">
-                            <div class="blp-field">
-                                <label for="mAway">Away team</label>
-                                <select class="blp-select" id="mAway" disabled><option value="">Loading teams…</option></select>
+                        <div class="blp-vsgrid">
+                            <div class="blp-teamslot" id="mAwaySlot">
+                                <div class="blp-teamslot-side">Away</div>
+                                <div class="blp-teamslot-name is-empty" id="mAwayName">Select a team</div>
+                                <select class="blp-select" id="mAway" aria-label="Away team" disabled><option value="">Loading teams…</option></select>
                             </div>
-                            <button class="blp-swap" id="mSwap" type="button" title="Swap home and away" aria-label="Swap home and away">⇄</button>
-                            <div class="blp-field">
-                                <label for="mHome">Home team</label>
-                                <select class="blp-select" id="mHome" disabled><option value="">Loading teams…</option></select>
+                            <div class="blp-vscol">
+                                <span class="blp-vsbadge">VS</span>
+                                <button class="blp-swap" id="mSwap" type="button" title="Swap home and away" aria-label="Swap home and away">⇄</button>
+                            </div>
+                            <div class="blp-teamslot" id="mHomeSlot">
+                                <div class="blp-teamslot-side">Home</div>
+                                <div class="blp-teamslot-name is-empty" id="mHomeName">Select a team</div>
+                                <select class="blp-select" id="mHome" aria-label="Home team" disabled><option value="">Loading teams…</option></select>
                             </div>
                         </div>
                         <div class="blp-note blp-note--err" id="mTeamsErr" hidden style="margin-top:12px">
@@ -124,33 +138,47 @@
                         </div>
                     </div>
 
-                    <div class="blp-step">
-                        <div class="blp-step-head"><span class="blp-step-n">2</span><span class="blp-step-title">Your bet</span></div>
-
-                        <div class="blp-field" style="margin-bottom:14px">
-                            <label>Market <span class="req">required</span></label>
-                            <div class="blp-seg" id="mMarkets" role="radiogroup" aria-label="Market">
-                                <button class="blp-segbtn" data-market="spread" role="radio" aria-checked="true" type="button">Spread</button>
-                                <button class="blp-segbtn" data-market="moneyline" role="radio" aria-checked="false" type="button">Moneyline</button>
-                                <button class="blp-segbtn" data-market="total" role="radio" aria-checked="false" type="button">Game Total</button>
-                                <button class="blp-segbtn" data-market="team_total_home" role="radio" aria-checked="false" type="button">Home Team Total</button>
-                                <button class="blp-segbtn" data-market="team_total_away" role="radio" aria-checked="false" type="button">Away Team Total</button>
-                            </div>
+                    <!-- ================================ bet details -->
+                    <div class="blp-card" style="margin-bottom:14px">
+                        <div class="blp-card-head" style="margin-bottom:14px">
+                            <h2 style="font-size:16px">What are you betting?</h2>
+                        </div>
+                        <div class="blp-tiles" id="mMarkets" role="radiogroup" aria-label="Market">
+                            <button class="blp-tile" data-market="spread" role="radio" aria-checked="true" type="button">
+                                <span class="blp-tile-name" data-tile-name>Spread</span>
+                                <span class="blp-tile-sub">Lay or take the number</span>
+                            </button>
+                            <button class="blp-tile" data-market="moneyline" role="radio" aria-checked="false" type="button">
+                                <span class="blp-tile-name">Moneyline</span>
+                                <span class="blp-tile-sub">Straight up</span>
+                            </button>
+                            <button class="blp-tile" data-market="total" role="radio" aria-checked="false" type="button">
+                                <span class="blp-tile-name">Game Total</span>
+                                <span class="blp-tile-sub">Over / under</span>
+                            </button>
+                            <button class="blp-tile" data-market="team_total_home" role="radio" aria-checked="false" type="button">
+                                <span class="blp-tile-name">Home Team Total</span>
+                                <span class="blp-tile-sub" data-tile-team>Home side only</span>
+                            </button>
+                            <button class="blp-tile" data-market="team_total_away" role="radio" aria-checked="false" type="button">
+                                <span class="blp-tile-name">Away Team Total</span>
+                                <span class="blp-tile-sub" data-tile-team>Away side only</span>
+                            </button>
                         </div>
 
-                        <div class="blp-grid blp-grid--3">
+                        <div class="blp-grid blp-grid--3" style="margin-top:16px">
                             <div class="blp-field" id="mSelectionField">
-                                <label id="mSelectionLabel" for="mSelection">Your selection <span class="req">required</span></label>
+                                <label id="mSelectionLabel" for="mSelection">Your selection <span class="req" aria-label="required"></span></label>
                                 <select class="blp-select" id="mSelection"></select>
                             </div>
                             <div class="blp-field" id="mLineField">
-                                <label id="mLineLabel" for="mLine">Spread <span class="req">required</span></label>
+                                <label id="mLineLabel" for="mLine">Spread <span class="req" aria-label="required"></span></label>
                                 <input class="blp-input" id="mLine" type="number" step="0.5" inputmode="decimal" placeholder="-1.5" list="mLineSuggest">
                                 <datalist id="mLineSuggest"></datalist>
                                 <span class="blp-err-msg" id="mLineErr">Enter the number on the bet to continue.</span>
                             </div>
                             <div class="blp-field" id="mOddsField">
-                                <label id="mOddsLabel" for="mOdds">Odds <span class="opt">(optional)</span></label>
+                                <label id="mOddsLabel" for="mOdds">Odds</label>
                                 <input class="blp-input" id="mOdds" type="number" step="1" inputmode="numeric" placeholder="-110">
                                 <span class="blp-field-help">Optional. Add your odds to calculate break-even and value.
                                     <button type="button" class="blp-info" id="mOddsInfo" aria-label="Why odds matter">i</button></span>
@@ -160,88 +188,75 @@
                         <p class="blp-unavail" id="mOddsHint" hidden style="margin-top:12px"></p>
                     </div>
 
-                    <div class="blp-step">
-                        <div class="blp-step-head">
-                            <span class="blp-step-n">3</span>
-                            <span class="blp-step-title">Optional filters</span>
-                            <button class="blp-chipbtn blp-chipbtn--ghost" id="mClearFilters" type="button" hidden style="margin-left:auto">Clear all</button>
-                        </div>
-
-                        <div class="blp-field" style="margin-bottom:16px">
-                            <label>Apply filters to</label>
-                            <div class="blp-seg" id="mFilterTarget" role="radiogroup" aria-label="Apply filters to">
-                                <button class="blp-segbtn" data-target="away" role="radio" aria-checked="false" type="button">Away team</button>
-                                <button class="blp-segbtn" data-target="home" role="radio" aria-checked="false" type="button">Home team</button>
-                                <button class="blp-segbtn" data-target="both" role="radio" aria-checked="true" type="button">Both teams</button>
+                    <!-- ============================ advanced filters -->
+                    <details class="blp-disclose" id="mFiltersDisclosure" style="margin-bottom:14px">
+                        <summary>
+                            <div>
+                                <div class="blp-disclose-title">Advanced situational filters <span class="blp-disclose-count" id="mFilterCount" hidden>0</span></div>
+                                <div class="blp-disclose-sub">Optional — narrow the historical sample used in the analysis.</div>
                             </div>
-                            <span class="blp-field-help" id="mTargetHelp"></span>
-                        </div>
-
-                        <!-- Single-choice groups, so contradictory pairs cannot be
-                             selected at all rather than being silently de-selected
-                             afterwards. Mirrors the desktop console's
-                             All Games / Home Only / Away Only model. -->
-                        <div class="blp-grid blp-grid--3" style="margin-bottom:14px">
-                            <div class="blp-field">
-                                <label>Venue</label>
-                                <div class="blp-seg blp-seg--sm" data-group="venue" role="radiogroup" aria-label="Venue">
-                                    <button class="blp-segbtn" data-situation="" role="radio" aria-checked="true" type="button">All games</button>
-                                    <button class="blp-segbtn" data-situation="home" role="radio" aria-checked="false" type="button">Home only</button>
-                                    <button class="blp-segbtn" data-situation="away" role="radio" aria-checked="false" type="button">Away only</button>
+                            <div class="blp-disclose-summary" id="mFilterSummary">All qualifying games · Both teams · Any venue · Any role</div>
+                        </summary>
+                        <div class="blp-disclose-body">
+                            <div class="blp-filtergrid">
+                                <div class="blp-field">
+                                    <label>Sample applies to</label>
+                                    <div class="blp-seg blp-seg--sm" id="mFilterTarget" role="radiogroup" aria-label="Sample applies to">
+                                        <button class="blp-segbtn" data-target="away" role="radio" aria-checked="false" type="button">Away</button>
+                                        <button class="blp-segbtn" data-target="home" role="radio" aria-checked="false" type="button">Home</button>
+                                        <button class="blp-segbtn" data-target="both" role="radio" aria-checked="true" type="button">Both</button>
+                                    </div>
+                                </div>
+                                <div class="blp-field">
+                                    <label>Venue</label>
+                                    <div class="blp-seg blp-seg--sm" data-group="venue" role="radiogroup" aria-label="Venue">
+                                        <button class="blp-segbtn" data-situation="" role="radio" aria-checked="true" type="button">Any</button>
+                                        <button class="blp-segbtn" data-situation="home" role="radio" aria-checked="false" type="button">Home</button>
+                                        <button class="blp-segbtn" data-situation="away" role="radio" aria-checked="false" type="button">Away</button>
+                                    </div>
+                                </div>
+                                <div class="blp-field">
+                                    <label>Favorite / underdog role</label>
+                                    <div class="blp-seg blp-seg--sm" data-group="role" role="radiogroup" aria-label="Role">
+                                        <button class="blp-segbtn" data-situation="" role="radio" aria-checked="true" type="button">Any</button>
+                                        <button class="blp-segbtn" data-situation="as_favorite" role="radio" aria-checked="false" type="button">Favorite</button>
+                                        <button class="blp-segbtn" data-situation="as_underdog" role="radio" aria-checked="false" type="button">Underdog</button>
+                                    </div>
+                                </div>
+                                <div class="blp-field">
+                                    <label>Line size</label>
+                                    <div class="blp-seg blp-seg--sm" data-group="magnitude" role="radiogroup" aria-label="Line size">
+                                        <button class="blp-segbtn" data-situation="" role="radio" aria-checked="true" type="button">Any</button>
+                                        <button class="blp-segbtn" data-situation="close_spread" role="radio" aria-checked="false" type="button">Close</button>
+                                        <button class="blp-segbtn" data-situation="large_spread" role="radio" aria-checked="false" type="button">Large</button>
+                                    </div>
+                                </div>
+                                <div class="blp-field">
+                                    <label>Opponent</label>
+                                    <div class="blp-chips" id="mOppFilters">
+                                        <button class="blp-chipbtn" data-situation="division_rival" aria-pressed="false" type="button">Division</button>
+                                        <button class="blp-chipbtn" data-situation="conference" aria-pressed="false" type="button">Conference</button>
+                                    </div>
+                                </div>
+                                <div class="blp-field">
+                                    <label>Sample size</label>
+                                    <div class="blp-seg blp-seg--sm" id="mSampleSeg" role="radiogroup" aria-label="Sample size">
+                                        <button class="blp-segbtn" data-sample="5" role="radio" aria-checked="false" type="button">5</button>
+                                        <button class="blp-segbtn" data-sample="10" role="radio" aria-checked="false" type="button">10</button>
+                                        <button class="blp-segbtn" data-sample="20" role="radio" aria-checked="true" type="button">20</button>
+                                        <button class="blp-segbtn" data-sample="50" role="radio" aria-checked="false" type="button">50</button>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="blp-field">
-                                <label>Role</label>
-                                <div class="blp-seg blp-seg--sm" data-group="role" role="radiogroup" aria-label="Role">
-                                    <button class="blp-segbtn" data-situation="" role="radio" aria-checked="true" type="button">Any</button>
-                                    <button class="blp-segbtn" data-situation="as_favorite" role="radio" aria-checked="false" type="button">Favorite</button>
-                                    <button class="blp-segbtn" data-situation="as_underdog" role="radio" aria-checked="false" type="button">Underdog</button>
-                                </div>
-                            </div>
-                            <div class="blp-field">
-                                <label>Spread size</label>
-                                <div class="blp-seg blp-seg--sm" data-group="magnitude" role="radiogroup" aria-label="Spread size">
-                                    <button class="blp-segbtn" data-situation="" role="radio" aria-checked="true" type="button">Any</button>
-                                    <button class="blp-segbtn" data-situation="close_spread" role="radio" aria-checked="false" type="button">Close</button>
-                                    <button class="blp-segbtn" data-situation="large_spread" role="radio" aria-checked="false" type="button">Large (7+)</button>
-                                </div>
+                            <p class="blp-field-help" id="mTargetHelp" style="margin-top:12px"></p>
+                            <div class="blp-filter-actions">
+                                <button class="blp-btn blp-btn--sm" id="mClearFilters" type="button">Clear all filters</button>
+                                <button class="blp-btn blp-btn--sm" id="mResetFilters" type="button">Reset to defaults</button>
                             </div>
                         </div>
-
-                        <div class="blp-field" style="margin-bottom:16px">
-                            <label>Opponent</label>
-                            <div class="blp-chips" id="mOppFilters">
-                                <button class="blp-chipbtn" data-situation="division_rival" aria-pressed="false" type="button">Division game</button>
-                                <button class="blp-chipbtn" data-situation="conference" aria-pressed="false" type="button">Conference game</button>
-                            </div>
-                        </div>
-
-                        <div class="blp-field">
-                            <label>Sample size</label>
-                            <div class="blp-seg blp-seg--sm" id="mSampleSeg" role="radiogroup" aria-label="Sample size" style="max-width:420px">
-                                <button class="blp-segbtn" data-sample="5" role="radio" aria-checked="false" type="button">Last 5</button>
-                                <button class="blp-segbtn" data-sample="10" role="radio" aria-checked="false" type="button">Last 10</button>
-                                <button class="blp-segbtn" data-sample="20" role="radio" aria-checked="true" type="button">Last 20</button>
-                                <button class="blp-segbtn" data-sample="50" role="radio" aria-checked="false" type="button">Last 50</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="blp-step">
-                        <div class="blp-step-head"><span class="blp-step-n">4</span><span class="blp-step-title">Review</span></div>
-                        <div class="blp-review" id="mReview"></div>
-                    </div>
+                    </details>
 
                     <div class="blp-note blp-note--err" id="mError" hidden style="margin-bottom:14px"></div>
-                    <div class="blp-submitrow">
-                        <button class="blp-btn blp-btn--primary blp-btn--lg" id="mSubmit" type="submit">
-                            Run matchup report <span class="cost" data-cost></span>
-                        </button>
-                        <div>
-                            <p class="blp-needs" id="mSubmitHint" hidden></p>
-                            <p class="blp-submitnote">Nothing is charged unless a complete report comes back. Failed, timed-out or unsupported requests always cost 0.</p>
-                        </div>
-                    </div>
                 </form>
 
                 <div id="mLoading" hidden></div>
@@ -394,11 +409,28 @@
                 <div class="blp-result" id="libDetail" hidden></div>
             </section>
         </div>
+
+        <aside class="blp-side" id="mSide">
+            <div class="blp-sidecard">
+                <div class="blp-sidecard-title">Report summary</div>
+                <div id="mSideBody">
+                    <p class="blp-review-empty">Pick both teams to see exactly what will be analyzed.</p>
+                </div>
+                <div class="blp-sidecta">
+                    <button class="blp-btn blp-btn--primary blp-btn--lg blp-btn--block" id="mSubmit" type="submit" form="matchupForm">
+                        Run Matchup Report <span class="cost" data-cost></span>
+                    </button>
+                    <p class="blp-needs" id="mSubmitHint" hidden style="margin-top:10px"></p>
+                    <p class="blp-sidenote">Usually ready in a few seconds.</p>
+                </div>
+            </div>
+            <p class="blp-sidenote" style="text-align:left;line-height:1.5">Nothing is charged unless a complete report comes back. Failed, timed-out or unsupported requests always cost 0.</p>
+        </aside>
     </div>
 </main>
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
-<script src="/static/js/backend-api.js?v=7d848c59ca4b"></script>
+<script src="/static/js/backend-api.js?v=452944a54e5c"></script>
 <script>
 (function () {
     'use strict';
@@ -736,7 +768,7 @@
             // The line is always required when it is shown. Say so on the
             // label rather than letting the user discover it from a button
             // that will not light up.
-            $('mLineLabel').innerHTML = esc(lineLabelFor(mMarket)) + ' <span class="req">required</span>';
+            $('mLineLabel').innerHTML = esc(lineLabelFor(mMarket)) + ' <span class="req" aria-label="required"></span>';
             mLine.placeholder = cfg.line.ph;
             $('mLineErr').textContent = lineRequirementMessage(mMarket, mSport.value);
         }
@@ -744,7 +776,7 @@
         $('mOddsField').hidden = !oc.show;
         if (oc.show) {
             $('mOddsLabel').innerHTML = esc(oc.label)
-                + (oc.required ? ' <span class="req">required</span>' : ' <span class="opt">(optional)</span>');
+                + (oc.required ? ' <span class="req" aria-label="required"></span>' : ' <span class="opt">(optional)</span>');
             mOdds.placeholder = oc.ph;
             $('mOddsErr').textContent = oc.required
                 ? 'Enter moneyline odds, such as -120 or +135, to continue.'
@@ -905,10 +937,12 @@
     }
 
     // ------------------------------------------------------------- market
-    $('mMarkets').querySelectorAll('.blp-segbtn').forEach(function (btn) {
+    $('mMarkets').querySelectorAll('.blp-tile').forEach(function (btn) {
         btn.addEventListener('click', function () {
             mMarket = btn.dataset.market;
-            segSelect($('mMarkets'), function (b) { return b === btn; });
+            $('mMarkets').querySelectorAll('.blp-tile').forEach(function (b) {
+                b.setAttribute('aria-checked', String(b === btn));
+            });
             // A value entered for one market's line/odds is never valid input
             // for another's, so both clear on every market switch.
             mLine.value = ''; mOdds.value = '';
@@ -965,6 +999,16 @@
 
     function refreshClearBtn() { $('mClearFilters').hidden = activeSituations().length === 0; }
 
+    var resetBtn = $('mResetFilters');
+    if (resetBtn) resetBtn.addEventListener('click', function () {
+        // Defaults = no situational filters, both teams, last 20.
+        filterTarget = 'both';
+        segSelect($('mFilterTarget'), function (b) { return b.dataset.target === 'both'; });
+        mSampleSize = 20;
+        segSelect($('mSampleSeg'), function (b) { return b.dataset.sample === '20'; });
+        $('mClearFilters').click();
+    });
+
     $('mClearFilters').addEventListener('click', function () {
         filterGroups = { venue: '', role: '', magnitude: '' };
         oppFilters.length = 0;
@@ -985,8 +1029,48 @@
     });
 
     // --------------------------------------------------------- live review
+
+    /** One-line description of the active filters, for the collapsed header. */
+    function filterSummaryLine() {
+        var ids = activeSituations();
+        var target = filterTarget === 'both' ? 'Both teams'
+            : (filterTarget === 'home' ? 'Home team' : 'Away team');
+        var venue = filterGroups.venue ? SITUATION_TEXT[filterGroups.venue] : 'Any venue';
+        var role = filterGroups.role ? SITUATION_TEXT[filterGroups.role] : 'Any role';
+        var head = ids.length ? 'Filtered sample' : 'All qualifying games';
+        return [head, target, venue, role].join(' · ');
+    }
+
+    function renderFilterHeader() {
+        var n = activeSituations().length;
+        var badge = $('mFilterCount');
+        if (badge) { badge.hidden = n === 0; badge.textContent = String(n); }
+        var sum = $('mFilterSummary');
+        if (sum) sum.textContent = filterSummaryLine();
+        var clear = $('mClearFilters');
+        if (clear) clear.disabled = n === 0;
+    }
+
+    /** Team slot headline names, so the card reads as a matchup once set. */
+    function renderTeamSlots() {
+        [['mAway', 'mAwayName', 'mAwaySlot'], ['mHome', 'mHomeName', 'mHomeSlot']].forEach(function (t) {
+            var val = $(t[0]).value, nameEl = $(t[1]), slot = $(t[2]);
+            if (val) {
+                nameEl.textContent = val;
+                nameEl.classList.remove('is-empty');
+                slot.classList.add('is-set');
+            } else {
+                nameEl.textContent = 'Select a team';
+                nameEl.classList.add('is-empty');
+                slot.classList.remove('is-set');
+            }
+        });
+    }
+
     function renderReview() {
-        var box = $('mReview');
+        renderFilterHeader();
+        renderTeamSlots();
+        var box = $('mSideBody');
         if (!box) return;
         if (!mAway.value || !mHome.value) {
             box.innerHTML = '<p class="blp-review-empty">Pick both teams to see exactly what will be analyzed.</p>';
@@ -996,16 +1080,15 @@
         var lineTxt = mLine.value === '' ? '—' : (Number(mLine.value) > 0 ? '+' + mLine.value : mLine.value);
         var bet;
         if (cfg.mode === 'ou') {
-            bet = (mSelection.value === 'under' ? 'Under ' : 'Over ') + lineTxt
-                + ' — ' + marketLabel(mSport.value, mMarket);
+            bet = (mSelection.value === 'under' ? 'Under ' : 'Over ') + lineTxt;
         } else if (mMarket === 'moneyline') {
-            bet = (mSelection.value || '—') + ' moneyline';
+            bet = (mSelection.value || '—') + ' ML';
         } else {
             bet = (mSelection.value || '—') + ' ' + lineTxt;
         }
         var oddsTxt = mOdds.value === ''
-            ? 'Not entered — record-only analysis'
-            : (Number(mOdds.value) > 0 ? '+' + mOdds.value : mOdds.value) + ' — break-even shown';
+            ? 'Not entered'
+            : (Number(mOdds.value) > 0 ? '+' + mOdds.value : mOdds.value);
         var filterTxt = activeSituations().length
             ? (filterTarget === 'both'
                 ? filterPhrase('away') + '; ' + filterPhrase('home')
@@ -1013,15 +1096,15 @@
             : 'None — all qualifying games';
 
         var rows = [
-            ['Bet', bet],
-            ['Matchup', mAway.value + ' at ' + mHome.value],
-            ['Filter', filterTxt],
-            ['Sample', 'Last ' + mSampleSize + ' qualifying games per team'],
+            ['Market', marketLabel(mSport.value, mMarket)],
+            ['Filters', filterTxt],
+            ['Sample', 'Last ' + mSampleSize + ' per team'],
             ['Odds', oddsTxt]
         ];
-        box.innerHTML = '<div class="blp-review-title">Report setup</div>'
+        box.innerHTML = '<div class="blp-sidebet">' + esc(bet) + '</div>'
+            + '<div class="blp-sidematch">' + esc(mAway.value) + ' at ' + esc(mHome.value) + '</div>'
             + rows.map(function (r) {
-                return '<div class="blp-review-row"><span>' + esc(r[0]) + '</span><span>' + esc(r[1]) + '</span></div>';
+                return '<div class="blp-siderow"><span>' + esc(r[0]) + '</span><span>' + esc(r[1]) + '</span></div>';
             }).join('');
     }
 

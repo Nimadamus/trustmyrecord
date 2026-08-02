@@ -12,17 +12,21 @@
    ========================================================================== */
 
 .blp {
-    /* Surfaces: a 4-step ramp so cards can nest without losing separation. */
-    --s-0: #05080e;
-    --s-1: #0b111b;
-    --s-2: #111a27;
-    --s-3: #182333;
-    --line: rgba(148, 170, 200, 0.14);
-    --line-2: rgba(148, 170, 200, 0.26);
+    /* Navy, not near-black. A 4-step ramp so cards read as elevated surfaces
+       against the page rather than as outlines drawn on a void. */
+    --s-0: #0a1020;
+    --s-1: #111a2e;
+    --s-2: #16233b;
+    --s-3: #1d2c47;
+    --line: rgba(148, 176, 214, 0.16);
+    --line-2: rgba(148, 176, 214, 0.30);
 
-    --ink: #f4f8fd;
-    --ink-2: #a9bbd1;
-    --ink-3: #6d7f96;
+    /* Body text was failing contrast at --ink-3 on dark. Every step is
+       lifted; --ink-3 is now reserved for genuinely de-emphasised text and
+       still clears 4.5:1 on --s-1. */
+    --ink: #f7faff;
+    --ink-2: #c3d2e6;
+    --ink-3: #8ea3bf;
 
     /* Accent: TMR's cyan, plus a warmer signal colour the site doesn't use, so
        BetLegend Pro reads as its own product without leaving the palette. */
@@ -35,12 +39,12 @@
 
     --r-s: 8px;
     --r-m: 12px;
-    --r-l: 18px;
-    --r-xl: 24px;
+    --r-l: 14px;
+    --r-xl: 16px;
 
-    --sh-1: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 1px 2px rgba(0, 0, 0, .35);
-    --sh-2: 0 1px 0 rgba(255, 255, 255, .05) inset, 0 18px 44px -24px rgba(0, 0, 0, .8);
-    --sh-pop: 0 28px 70px -28px rgba(0, 0, 0, .85);
+    --sh-1: 0 1px 0 rgba(255, 255, 255, .05) inset, 0 2px 6px rgba(4, 8, 18, .5);
+    --sh-2: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 10px 30px -12px rgba(4, 8, 18, .8);
+    --sh-pop: 0 24px 56px -20px rgba(4, 8, 18, .9);
     --ease: cubic-bezier(.22, 1, .36, 1);
 
     color: var(--ink);
@@ -72,7 +76,14 @@
 
 /* ---------------------------------------------------------------- shell */
 
-.blp-shell { width: min(1240px, calc(100% - 32px)); margin: 0 auto; padding: 84px 0 72px; }
+body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
+    background:
+        radial-gradient(1200px 600px at 12% -6%, rgba(45, 212, 191, .07), transparent 60%),
+        radial-gradient(1000px 500px at 100% 0%, rgba(56, 189, 248, .05), transparent 55%),
+        linear-gradient(180deg, #0c1424 0%, #0a1020 45%, #080d1a 100%);
+    background-attachment: fixed;
+}
+.blp-shell { width: min(1320px, calc(100% - 40px)); margin: 0 auto; padding: 74px 0 64px; }
 .blp-shell--narrow { width: min(1080px, calc(100% - 32px)); }
 
 /* ------------------------------------------------------- product header */
@@ -113,7 +124,8 @@
 
 /* --------------------------------------------------------------- layout */
 
-.blp-layout { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 22px; align-items: start; }
+.blp-layout { display: grid; grid-template-columns: 196px minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+@media (max-width: 1180px) { .blp-layout { grid-template-columns: 196px minmax(0, 1fr); } }
 
 .blp-rail {
     position: sticky; top: 88px;
@@ -138,8 +150,16 @@
 }
 .blp-navbtn .ico { flex: none; width: 18px; height: 18px; margin-top: 1px; opacity: .95; }
 .blp-navbtn[aria-selected="true"] .ico { color: var(--accent); }
-.blp-navbtn .nb-title { display: block; font-size: 13.5px; font-weight: 700; line-height: 1.25; }
-.blp-navbtn .nb-desc { display: block; margin-top: 2px; font-size: 11px; color: var(--ink-3); line-height: 1.3; }
+.blp-navbtn .nb-title { display: block; font-size: 13px; font-weight: 700; line-height: 1.25; }
+/* Descriptions removed from the rail: they doubled its height and competed
+   with the tool actually open. */
+.blp-navbtn .nb-desc { display: none; }
+.blp-navbtn { padding: 9px 10px; align-items: center; }
+.blp-navbtn[aria-selected="true"] {
+    background: rgba(45, 212, 191, .12);
+    border-color: rgba(45, 212, 191, .4);
+    box-shadow: inset 2px 0 0 var(--accent);
+}
 
 /* ----------------------------------------------------------- panels */
 
@@ -725,3 +745,183 @@
 /* Keep a 3-option group on one row so "Away only" does not orphan. */
 .blp-seg--sm { flex-wrap: nowrap; }
 @media (max-width: 720px) { .blp-seg--sm { flex-wrap: wrap; } }
+
+/* ==========================================================================
+   Matchup Intelligence — page header, matchup card, market tiles,
+   collapsible filters, sticky summary rail
+   ========================================================================== */
+
+/* ---------------------------------------------------------- page header */
+.blp-pagehead {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 20px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.blp-pagehead-eyebrow {
+    font-size: 10.5px; font-weight: 800; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--accent);
+}
+.blp-pagehead h1 {
+    margin: 5px 0 0; font-size: 27px; font-weight: 800; letter-spacing: -.02em; line-height: 1.1;
+}
+.blp-pagehead p { margin: 5px 0 0; font-size: 13.5px; color: var(--ink-2); }
+.blp-trustrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.blp-trust-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 11px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--s-1);
+    font-size: 11.5px; font-weight: 600; color: var(--ink-2); white-space: nowrap;
+}
+.blp-trust-pill::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--accent);
+}
+
+/* ------------------------------------------------------- matchup card */
+.blp-mcard {
+    padding: 18px; border: 1px solid var(--line); border-radius: var(--r-xl);
+    background: linear-gradient(160deg, var(--s-2), var(--s-1) 65%);
+    box-shadow: var(--sh-2);
+}
+.blp-mcard-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.blp-mcard-top .blp-select { max-width: 150px; }
+.blp-mcard-label {
+    font-size: 10.5px; font-weight: 800; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--ink-3);
+}
+.blp-vsgrid {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 14px; align-items: center;
+}
+.blp-teamslot {
+    padding: 14px; border: 1px solid var(--line); border-radius: var(--r-l);
+    background: var(--s-0); transition: border-color .15s var(--ease), background .15s var(--ease);
+}
+.blp-teamslot:focus-within { border-color: rgba(45, 212, 191, .5); }
+.blp-teamslot.is-set { background: var(--s-1); border-color: var(--line-2); }
+.blp-teamslot-side {
+    font-size: 10px; font-weight: 800; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 8px;
+}
+.blp-teamslot-name {
+    font-family: Barlow, sans-serif; font-size: 19px; font-weight: 800;
+    line-height: 1.15; color: var(--ink); margin-bottom: 8px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.blp-teamslot-name.is-empty { color: var(--ink-3); font-weight: 600; font-size: 15px; }
+.blp-vsbadge {
+    display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%;
+    border: 1px solid var(--line-2); background: var(--s-0);
+    font-family: Barlow, sans-serif; font-size: 12px; font-weight: 800;
+    letter-spacing: .04em; color: var(--ink-3);
+}
+.blp-vscol { display: grid; justify-items: center; gap: 8px; }
+
+/* ---------------------------------------------------------- market tiles */
+.blp-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 8px; }
+.blp-tile {
+    display: grid; gap: 3px; padding: 11px 12px; text-align: left;
+    border: 1px solid var(--line-2); border-radius: var(--r-m);
+    background: var(--s-0); color: var(--ink-2); cursor: pointer;
+    font-family: inherit; transition: all .14s var(--ease);
+}
+.blp-tile:hover { border-color: rgba(148, 176, 214, .45); background: var(--s-2); color: var(--ink); }
+.blp-tile:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(45, 212, 191, .34); }
+.blp-tile-name { font-size: 13px; font-weight: 700; }
+.blp-tile-sub { font-size: 10.5px; color: var(--ink-3); }
+/* Selected is a quiet tinted panel with one accent edge, not a full cyan
+   fill: the saturated accent is reserved for the primary action. */
+.blp-tile[aria-checked="true"] {
+    background: rgba(45, 212, 191, .1);
+    border-color: rgba(45, 212, 191, .55);
+    color: var(--ink);
+    box-shadow: inset 0 -2px 0 var(--accent);
+}
+.blp-tile[aria-checked="true"] .blp-tile-sub { color: var(--accent); }
+
+/* Required marker: a small asterisk, not a yellow slab. */
+.blp-field > label .req {
+    margin-left: 5px; padding: 0; background: none; color: var(--warn);
+    font-size: 13px; font-weight: 800; letter-spacing: 0; text-transform: none;
+    vertical-align: middle;
+}
+.blp-field > label .req::before { content: '*'; }
+
+/* ------------------------------------------------------ filter disclosure */
+.blp-disclose { border: 1px solid var(--line); border-radius: var(--r-l); background: var(--s-1); }
+.blp-disclose > summary {
+    display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+    cursor: pointer; list-style: none;
+}
+.blp-disclose > summary::-webkit-details-marker { display: none; }
+.blp-disclose > summary:hover { background: rgba(255, 255, 255, .03); }
+.blp-disclose > summary:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(45, 212, 191, .5); }
+.blp-disclose-title { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.blp-disclose-sub { margin-top: 2px; font-size: 11.5px; color: var(--ink-3); }
+.blp-disclose-summary {
+    margin-left: auto; text-align: right; font-size: 11.5px; color: var(--ink-2);
+    max-width: 46ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.blp-disclose-count {
+    display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px;
+    border-radius: 999px; background: rgba(45, 212, 191, .18); color: var(--accent);
+    font-size: 11px; font-weight: 800;
+}
+.blp-disclose > summary::after {
+    content: ''; flex: none; width: 8px; height: 8px;
+    border-right: 2px solid var(--ink-3); border-bottom: 2px solid var(--ink-3);
+    transform: rotate(45deg) translateY(-2px); transition: transform .2s var(--ease);
+}
+.blp-disclose[open] > summary::after { transform: rotate(225deg) translateY(-2px); }
+.blp-disclose-body { padding: 4px 16px 16px; border-top: 1px solid var(--line); }
+.blp-filtergrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.blp-filter-actions {
+    display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;
+    padding-top: 12px; border-top: 1px solid var(--line);
+}
+
+/* ------------------------------------------------------- sticky summary */
+.blp-side { position: sticky; top: 88px; display: grid; gap: 12px; }
+@media (max-width: 1180px) { .blp-side { position: static; } }
+.blp-sidecard {
+    padding: 16px; border: 1px solid rgba(45, 212, 191, .28); border-radius: var(--r-xl);
+    background: linear-gradient(160deg, rgba(45, 212, 191, .08), var(--s-1) 55%);
+    box-shadow: var(--sh-2);
+}
+.blp-sidecard-title {
+    margin-bottom: 12px; font-size: 10.5px; font-weight: 800;
+    letter-spacing: .14em; text-transform: uppercase; color: var(--accent);
+}
+.blp-sidebet {
+    font-family: Barlow, sans-serif; font-size: 20px; font-weight: 800;
+    line-height: 1.2; color: var(--ink); margin-bottom: 3px;
+}
+.blp-sidematch { font-size: 12.5px; color: var(--ink-2); margin-bottom: 12px; }
+.blp-siderow {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+    padding: 6px 0; border-top: 1px solid var(--line); font-size: 12.5px;
+}
+.blp-siderow span:first-child {
+    flex: none; color: var(--ink-3); font-size: 10.5px; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+}
+.blp-siderow span:last-child { text-align: right; color: var(--ink); font-weight: 600; }
+.blp-sidecta { margin-top: 14px; }
+.blp-sidenote { margin-top: 8px; text-align: center; font-size: 11.5px; color: var(--ink-3); }
+
+@media (max-width: 720px) {
+    .blp-vsgrid { grid-template-columns: 1fr; }
+    .blp-pagehead { align-items: flex-start; }
+    .blp-disclose-summary { display: none; }
+    .blp-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* The big team name is the display; the select is the control that changes
+   it. Once a team is chosen the select recedes so the slot reads as a
+   matchup rather than repeating the name twice at equal weight. */
+.blp-teamslot .blp-select { min-height: 36px; font-size: 12.5px; color: var(--ink-3); background: transparent; }
+.blp-teamslot.is-set .blp-select { border-color: transparent; }
+.blp-teamslot.is-set .blp-select:hover,
+.blp-teamslot.is-set .blp-select:focus { border-color: var(--line-2); color: var(--ink-2); background: var(--s-0); }
+
+/* Keep the info toggle on the same line as its helper text. */
+.blp-field-help { flex-wrap: nowrap; align-items: flex-start; }
+.blp-field-help .blp-info { margin-top: 1px; }
