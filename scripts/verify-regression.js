@@ -27,13 +27,15 @@ const allChecks = [
   ['unit/static: leaderboards hero/tab count lock', 'node', ['tests/leaderboards-counts-lock-test.js'], 'static'],
   ['unit/static: profile market-type stats lock', 'node', ['tests/profile-market-type-stats-lock.test.js'], 'static'],
   ['unit/static: model builder shell', 'node', ['tests/model-builder-shell-test.js'], 'static'],
-  // DISABLED 2026-07-30 (kept out of the blocking gate, NOT deleted): the
-  // guided-flow assertions drifted from the shipped trendspotter UI starting
-  // with 9f3f8c14 (May 28) and had silently kept this whole gate red — a red
-  // gate protects nothing. The page still has live coverage via
-  // trendspotter-live-verification.yml. Needs a dedicated rehab pass syncing
-  // tests/trendspotter-accuracy-test.js to the approved UI, then re-enable.
-  // ['unit/static: trend spotter guided flow', 'node', ['tests/trendspotter-accuracy-test.js'], 'static'],
+  // RE-ENABLED 2026-08-01. Quarantined on 2026-07-30 because the old
+  // guided-flow assertions had drifted from the shipped UI since 9f3f8c14.
+  // The workspace redesign moved every calculation server-side (covered by the
+  // backend's 62-case fixture suite), and this file was rewritten to assert
+  // what a static front-end test can actually guarantee: that the page renders
+  // the engine's answers faithfully and never invents a number.
+  ['unit/static: trend spotter UI contract', 'node', ['tests/trendspotter-accuracy-test.js'], 'static'],
+  ['unit/static: trend spotter matchup loading', 'node', ['tests/trendspotter-matchup-loading-test.js'], 'static'],
+  ['unit/static: trend spotter source integrity', 'node', ['tests/trendspotter-source-regression-test.js'], 'static'],
   ['unit/static: recursion/retry-pattern guard', 'node', ['tests/recursion-retry-guard-test.js'], 'static'],
   ['live static: sportsbook public loading', 'node', ['tests/sportsbook-public-loading-regression-test.js'], 'static'],
   ['forbidden text scan', 'node', ['scripts/forbidden-text-scan.js'], 'static'],

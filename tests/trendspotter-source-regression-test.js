@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 
-// Reconciled 2026-05-23 to the current post-rollback Trend Spotter product.
-// The pre-rollback MLB-only "researchMode / verifiedRoi / openSourceModal"
-// design was removed in emergency rollback e1ceda97 (restore tree to bf85e9a1).
-// This regression test now guards the live multi-sport, source-gated build
-// served at /trendspotter/ so the real verified-data guarantees cannot silently
-// regress. Reference: trendspotter/index.html (?v=20260518-generate2),
-// static/js/trendspotter.js, static/css/trendspotter.css.
+// Trend Spotter source-integrity regression.
+//
+// Rewritten 2026-08-01 for the workspace redesign. The page no longer computes
+// anything in the browser: it renders whatever the audited backend engine
+// (services/trendQueryEngine.js) returns, and that engine has its own 62-case
+// fixture suite. This guard therefore protects the two things a redesign can
+// quietly break on the client:
+//
+//   1. The page never grades, re-grades, or estimates a result client-side.
+//   2. The user-facing copy stays product language, not engineering notes.
+//
+// Reference: trendspotter/index.html, static/js/trendspotter.js,
+// static/css/trendspotter.css.
 
 const assert = require('assert');
 const fs = require('fs');
@@ -17,63 +23,94 @@ const html = fs.readFileSync(path.join(root, 'trendspotter', 'index.html'), 'utf
 const js = fs.readFileSync(path.join(root, 'static', 'js', 'trendspotter.js'), 'utf8');
 const css = fs.readFileSync(path.join(root, 'static', 'css', 'trendspotter.css'), 'utf8');
 
-// --- Page must keep the current filter controls (sport -> matchup -> market -> run) ---
+// --- Structural contract: the workspace the redesign shipped ----------------
 for (const id of [
-  'sportSelect',
-  'matchupSelect',
-  'marketOptions',
-  'trendKindSelect',
-  'sideSelect',
-  'teamSelect',
-  'periodSelect',
-  'rangeSelect',
-  'sampleInput',
-  'thresholdInput',
-  'locationSelect',
-  'generateTrend',
-  'resultsList',
-  'dataStatus',
+  'leagueTabs',        // league segmented control
+  'teamSearch',        // team combobox
+  'teamSuggest',
+  'matchupList',       // matchup cards
+  'marketTabs',        // market tabs, including the locked ones
+  'filterFields',      // conditionally-rendered filters
   'validationMessage',
-  'selectionSummary',
+  'runTrend',
+  'resetFilters',
+  'querySummary',      // live query sentence
+  'results',
+  'resultsBody',
+  'sourceStatus',
 ]) {
-  assert(html.includes(`id="${id}"`), `Trendspotter page must keep #${id}`);
+  assert(html.includes(`id="${id}"`), `Trend Spotter must keep the #${id} control`);
 }
 
-assert(html.includes('/static/js/trendspotter.js?v=20260526-recordbasis'), 'Trendspotter page must load the current cache-busted script');
-assert(html.includes('/static/css/trendspotter.css?v=20260518-generate2'), 'Trendspotter page must load the current cache-busted stylesheet');
+// --- The page must talk to the audited engine, not improvise ---------------
+assert(js.includes('/trendspotter/capabilities'), 'UI must render itself from the capabilities endpoint');
+assert(js.includes('/trendspotter/matchups'), 'UI must load matchups from the matchups endpoint');
+assert(js.includes('/trendspotter/query'), 'UI must run trends through the query endpoint');
 
-// --- Multi-sport, board-key driven sourcing (current product, not MLB-only) ---
-assert(js.includes('var SPORTS = ["MLB", "NBA", "NFL", "NHL", "NCAAB", "NCAAF"];'), 'Trendspotter must keep the multi-sport list');
-assert(js.includes('var BOARD_KEYS = {') && js.includes('MLB: "baseball_mlb"'), 'Trendspotter must keep the sport->board-key map');
-
-// --- Real verified data sources only ---
-assert(js.includes('/trendspotter/verified?sport='), 'Trendspotter must fetch the verified trend artifact endpoint');
-assert(js.includes('/games/board/'), 'Trendspotter must fetch the live games board for matchups');
-
-// --- Source gating: only render source-backed trends with real source rows ---
-assert(js.includes('function sourceRows(trend)'), 'Trendspotter must keep the source-rows accessor');
-assert(js.includes('function marketMatches(trend, market)'), 'Trendspotter must keep market matching');
-assert(
-  js.includes('if (trend.source_classification !== "source_backed" || !marketMatches(trend, market) || !sourceRows(trend).length) return false;'),
-  'Trendspotter must drop any trend that is not source-backed, market-matched, and backed by real source rows'
-);
-assert(js.includes('source_backed: { key: "source-backed", label: "Source-backed" }'), 'Trendspotter must keep source classification labels');
-
-// --- No fake/guessed output: no RNG, and forbidden claim words are filtered out ---
-assert(!js.includes('Math.random'), 'Trendspotter must not generate fake/random confidence or stats');
-assert(js.includes('var FORBIDDEN_OUTPUT = ['), 'Trendspotter must keep the forbidden-output guard list');
-for (const pattern of ['/\\broi\\b/i', '/\\bwin rate\\b/i', '/\\brecord\\b/i', '/\\bprediction\\b/i', '/\\bbetting edge\\b/i']) {
-  assert(js.includes(pattern), `Forbidden-output guard must keep ${pattern}`);
+// No client-side settlement. These are the exact shapes the previous build used
+// to grade games in the browser; none of them may come back.
+const BANNED_CLIENT_MATH = [
+  /perRowOutcome/,
+  /function\s+resultCounts/,
+  /market_result/,
+  /raw_game_log/,
+  /thresholdMatchesTrend/,
+  /extendedTrendForQuery/,
+];
+for (const pattern of BANNED_CLIENT_MATH) {
+  assert(!pattern.test(js), `Trend Spotter must not settle games in the browser (matched ${pattern})`);
 }
-assert(js.includes('function safeText(value)') && js.includes('FORBIDDEN_OUTPUT.some('), 'safeText must strip any forbidden claim language before rendering');
+assert(!js.includes('Math.random'), 'Trend Spotter must never generate a random value');
 
-// --- Verified-trend cards expose the underlying source rows (drilldown / transparency) ---
-assert(js.includes('class=\\"ts-result-item\\"') && js.includes('data-result=\\"verified-trend\\"'), 'Verified trend cards must render as source-labeled result items');
-assert(js.includes('function sourceRowsHtml(rows)'), 'Trendspotter must render the per-trend verified source-row table');
-assert(js.includes('var SAFE_MESSAGES = {'), 'Trendspotter must keep safe fallback messaging for missing/empty data');
+// --- Copy: product language, not internal engineering notes ----------------
+const copy = html + js;
+const BANNED_COPY = [
+  [/source rows are connected/i, 'internal "source rows are connected" phrasing'],
+  [/impossible combinations are blocked before generation/i, 'internal validation phrasing'],
+  [/artifacts when available/i, 'internal artifact phrasing'],
+  [/Unsupported \/ estimated/i, 'internal data-policy table copy'],
+  [/Partial \/ blocked/i, 'internal data-policy table copy'],
+  [/Configure Variables/i, 'the old "Configure Variables" label'],
+  [/Trend search/i, 'the old "Trend search" label'],
+  [/Minimum sample/i, 'the old "Minimum sample" label'],
+  [/Verified trend data source not connected yet/i, 'raw backend placeholder text'],
+  [/>\s*Step [1-5]\s*</, 'the removed five-step strip'],
+];
+for (const [pattern, why] of BANNED_COPY) {
+  assert(!pattern.test(copy), `Trend Spotter copy must not reintroduce ${why}`);
+}
 
-// --- Styling guards ---
-assert(css.includes('@media (max-width: 860px)'), 'Trendspotter mobile layout guard must remain');
-assert(css.includes('.ts-modal') && css.includes('.ts-result-item'), 'Trendspotter modal and result-card styles must remain');
+// --- Required product copy --------------------------------------------------
+assert(html.includes('Verified Sports Research'), 'hero eyebrow must be present');
+assert(html.includes('Build source-backed matchup trends in seconds.'), 'hero subtitle must be present');
+assert(html.includes('Set conditions'), 'the filter card must be labelled "Set conditions"');
+assert(html.includes('Run Trend'), 'the primary action must be "Run Trend"');
+assert(/Minimum games/.test(js), 'the sample control must be labelled "Minimum games"');
+assert(/Data details/.test(js), 'the provenance drawer must be present');
+
+// --- The result must always be able to show its evidence -------------------
+assert(/ts-table/.test(js) && /Closing line/.test(js) && /Units/.test(js),
+  'the evidence table must carry the closing line and units per game');
+assert(/interpretation/.test(js), 'the neutral interpretation block must be rendered');
+assert(/not a prediction|not a betting recommendation/i.test(copy),
+  'the result must state that it is descriptive, not predictive');
+
+// --- Honest gaps -------------------------------------------------------------
+assert(/no closing price recorded|needs a recorded price/.test(js),
+  'a missing price must be reported, never replaced with a computed ROI');
+assert(/Not recorded/.test(js), 'per-game missing prices must be labelled in the evidence table');
+
+// --- Design system ----------------------------------------------------------
+assert(html.includes('class="tmr-ds ts-page"'), 'page must opt into the TrustMyRecord design system');
+assert(html.includes('tmr-ds-nav'), 'page must load the shared TrustMyRecord header and footer');
+assert(!/^\s*:root\s*\{/m.test(css), 'design-system contract: page stylesheets must not declare :root');
+assert(!/#05070d|--ts-bg\b/.test(css), 'the old dark navy-on-navy palette must be gone');
+
+// --- Accessibility ----------------------------------------------------------
+assert(/role="tablist"/.test(html), 'market and league tabs must be a tablist');
+assert(/role="combobox"/.test(html), 'team search must be an accessible combobox');
+assert(/aria-live="polite"/.test(html), 'results must announce themselves to screen readers');
+assert(/aria-busy/.test(copy), 'the loading state must be announced');
+assert(/focus-visible/.test(css), 'focus states must be visible');
 
 console.log('trendspotter source regression test passed');

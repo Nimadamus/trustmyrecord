@@ -26,7 +26,7 @@ jobs:
       - run: npx playwright test --config=playwright.trendspotter.config.cjs
         env:
           TMR_TRENDSPOTTER_URL: https://trustmyrecord.com/trendspotter/
-          TMR_TRENDSPOTTER_API_URL: https://trustmyrecord-api.onrender.com/api/trendspotter/verified?sport=MLB
+          TMR_TRENDSPOTTER_API_BASE: https://trustmyrecord-api.onrender.com/api/trendspotter
       - run: xvfb-run --auto-servernum node scripts/tools-live-browser-proof.js
         env:
           TMR_ONLY_TRENDSPOTTER: "1"
