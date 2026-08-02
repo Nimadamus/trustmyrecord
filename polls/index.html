@@ -836,7 +836,6 @@
                 <button type="button" class="pl-chip" data-league="NBA" aria-pressed="false" onclick="setLeague('NBA')">NBA</button>
                 <button type="button" class="pl-chip" data-league="WNBA" aria-pressed="false" onclick="setLeague('WNBA')">WNBA</button>
                 <button type="button" class="pl-chip" data-league="NHL" aria-pressed="false" onclick="setLeague('NHL')">NHL</button>
-                <button type="button" class="pl-chip" data-league="Soccer" aria-pressed="false" onclick="setLeague('Soccer')">Soccer</button>
                 <button type="button" class="pl-chip" data-league="Other" aria-pressed="false" onclick="setLeague('Other')">Other</button>
             </div>
             <div class="pl-chiprow pl-chiprow--views" id="viewChips" role="group" aria-label="Filter and sort polls">
@@ -888,18 +887,24 @@
             </div>
             <div class="tmr-modal-body">
                 <!-- STEP 1: choose type -->
+                <!--
+                    TMR polls are multi-question multiple-choice quizzes centered on
+                    major American sports. Individual betting markets and obscure
+                    international games must never be published as polls.
+
+                    The "Quick Poll" (one question) option was removed here on
+                    2026-08-02: the server rejects single-question polls outright
+                    (services/pollPolicy.js), so offering the choice only produced a
+                    filled-in form and a 400. Sportsbook markets belong on the
+                    sportsbook. Do not add it back.
+                -->
                 <div id="createTypeStep">
-                    <p style="color:#A9B9CC;font-size:0.88rem;margin-bottom:14px;">What do you want to build?</p>
+                    <p style="color:#A9B9CC;font-size:0.88rem;margin-bottom:14px;">A TMR poll is a multi-question quiz on NFL, NBA, MLB, NHL, WNBA or major college football and basketball. Single betting markets belong on the <a href="/sportsbook/" style="color:var(--tmr-fb-cyan,#22d3ee);">sportsbook</a>.</p>
                     <div class="tmr-typegrid">
-                        <button type="button" class="tmr-typebtn" onclick="setCreateType('quick')">
-                            <span class="ic"><i class="fas fa-check-to-slot"></i></span>
-                            <b>Quick Poll</b>
-                            <small>One question, a few answer choices. Members vote and see the consensus instantly.</small>
-                        </button>
                         <button type="button" class="tmr-typebtn" onclick="setCreateType('quiz')">
                             <span class="ic"><i class="fas fa-trophy"></i></span>
                             <b>Multi-Question Quiz</b>
-                            <small>Bundle up to 10 predictions into one scored competition with a leaderboard.</small>
+                            <small>Bundle 3 to 10 predictions into one scored competition with a leaderboard. Every question needs at least two answer choices.</small>
                         </button>
                     </div>
                 </div>
@@ -1050,19 +1055,21 @@
         createType: 'quick'
     };
 
-    var SPORT_OPTIONS = ['Basketball', 'Baseball', 'Football', 'Hockey', 'Soccer', 'Tennis', 'Golf', 'MMA', 'Boxing', 'Esports', 'Other'];
+    // TMR polls are multi-question multiple-choice quizzes centered on major
+    // American sports. Individual betting markets and obscure international
+    // games must never be published as polls.
+    //
+    // These lists are the create-form mirror of the server allowlist in
+    // services/pollPolicy.js. Soccer, tennis, golf, MMA, boxing, esports, and
+    // the minor/foreign leagues (MiLB, KBO, NPB, UFL, CFL, EuroLeague, AHL)
+    // were removed on 2026-08-02 — the server rejects them, so offering them
+    // here only produced a filled-in form and a 400.
+    var SPORT_OPTIONS = ['Football', 'Basketball', 'Baseball', 'Hockey'];
     var LEAGUES_BY_SPORT = {
-        Baseball: ['MLB', 'MiLB', 'NCAA Baseball', 'KBO', 'NPB', 'Other'],
-        Football: ['NFL', 'NCAAF', 'UFL', 'CFL', 'Other'],
-        Basketball: ['NBA', 'WNBA', 'NCAAB', 'EuroLeague', 'Other'],
-        Hockey: ['NHL', 'NCAAH', 'AHL', 'Other'],
-        Soccer: ['EPL', 'MLS', 'Champions League', 'La Liga', 'Serie A', 'Bundesliga', 'Ligue 1', 'World Cup', 'Other'],
-        Tennis: ['ATP', 'WTA', 'Grand Slam', 'Other'],
-        Golf: ['PGA Tour', 'LPGA', 'LIV Golf', 'Other'],
-        MMA: ['UFC', 'Bellator', 'PFL', 'ONE', 'Other'],
-        Boxing: ['WBC', 'WBA', 'IBF', 'WBO', 'Other'],
-        Esports: ['League of Legends', 'CS2', 'Valorant', 'Dota 2', 'Call of Duty League', 'Other'],
-        Other: ['Other']
+        Football: ['NFL', 'NCAAF'],
+        Basketball: ['NBA', 'WNBA', 'NCAAB'],
+        Baseball: ['MLB'],
+        Hockey: ['NHL']
     };
 
     var TEAM_DATA = {"MLB":{"Arizona Diamondbacks":{"a":"ARI","c":"ari","h":"#A71930"},"Atlanta Braves":{"a":"ATL","c":"atl","h":"#CE1141"},"Baltimore Orioles":{"a":"BAL","c":"bal","h":"#DF4601"},"Boston Red Sox":{"a":"BOS","c":"bos","h":"#BD3039"},"Chicago Cubs":{"a":"CHC","c":"chc","h":"#0E3386"},"Chicago White Sox":{"a":"CWS","c":"chw","h":"#27251F"},"Cincinnati Reds":{"a":"CIN","c":"cin","h":"#C6011F"},"Cleveland Guardians":{"a":"CLE","c":"cle","h":"#00385D"},"Colorado Rockies":{"a":"COL","c":"col","h":"#333366"},"Detroit Tigers":{"a":"DET","c":"det","h":"#0C2340"},"Houston Astros":{"a":"HOU","c":"hou","h":"#EB6E1F"},"Kansas City Royals":{"a":"KC","c":"kc","h":"#004687"},"Los Angeles Angels":{"a":"LAA","c":"laa","h":"#BA0021"},"Los Angeles Dodgers":{"a":"LAD","c":"lad","h":"#005A9C"},"Miami Marlins":{"a":"MIA","c":"mia","h":"#00A3E0"},"Milwaukee Brewers":{"a":"MIL","c":"mil","h":"#12284B"},"Minnesota Twins":{"a":"MIN","c":"min","h":"#002B5C"},"New York Mets":{"a":"NYM","c":"nym","h":"#002D72"},"New York Yankees":{"a":"NYY","c":"nyy","h":"#003087"},"Athletics":{"a":"ATH","c":"oak","h":"#003831"},"Oakland Athletics":{"a":"OAK","c":"oak","h":"#003831"},"Philadelphia Phillies":{"a":"PHI","c":"phi","h":"#E81828"},"Pittsburgh Pirates":{"a":"PIT","c":"pit","h":"#FDB827"},"San Diego Padres":{"a":"SD","c":"sd","h":"#2F241D"},"Seattle Mariners":{"a":"SEA","c":"sea","h":"#0C2C56"},"San Francisco Giants":{"a":"SF","c":"sf","h":"#FD5A1E"},"St. Louis Cardinals":{"a":"STL","c":"stl","h":"#C41E3A"},"Tampa Bay Rays":{"a":"TB","c":"tb","h":"#092C5C"},"Texas Rangers":{"a":"TEX","c":"tex","h":"#003278"},"Toronto Blue Jays":{"a":"TOR","c":"tor","h":"#134A8E"},"Washington Nationals":{"a":"WSH","c":"wsh","h":"#AB0003"}},"NFL":{"Arizona Cardinals":{"a":"ARI","c":"ari","h":"#97233F"},"Atlanta Falcons":{"a":"ATL","c":"atl","h":"#A71930"},"Baltimore Ravens":{"a":"BAL","c":"bal","h":"#241773"},"Buffalo Bills":{"a":"BUF","c":"buf","h":"#00338D"},"Carolina Panthers":{"a":"CAR","c":"car","h":"#0085CA"},"Chicago Bears":{"a":"CHI","c":"chi","h":"#0B162A"},"Cincinnati Bengals":{"a":"CIN","c":"cin","h":"#FB4F14"},"Cleveland Browns":{"a":"CLE","c":"cle","h":"#311D00"},"Dallas Cowboys":{"a":"DAL","c":"dal","h":"#003594"},"Denver Broncos":{"a":"DEN","c":"den","h":"#FB4F14"},"Detroit Lions":{"a":"DET","c":"det","h":"#0076B6"},"Green Bay Packers":{"a":"GB","c":"gb","h":"#203731"},"Houston Texans":{"a":"HOU","c":"hou","h":"#03202F"},"Indianapolis Colts":{"a":"IND","c":"ind","h":"#002C5F"},"Jacksonville Jaguars":{"a":"JAX","c":"jax","h":"#006778"},"Kansas City Chiefs":{"a":"KC","c":"kc","h":"#E31837"},"Las Vegas Raiders":{"a":"LV","c":"lv","h":"#000000"},"Los Angeles Chargers":{"a":"LAC","c":"lac","h":"#0080C6"},"Los Angeles Rams":{"a":"LAR","c":"lar","h":"#003594"},"Miami Dolphins":{"a":"MIA","c":"mia","h":"#008E97"},"Minnesota Vikings":{"a":"MIN","c":"min","h":"#4F2683"},"New England Patriots":{"a":"NE","c":"ne","h":"#002244"},"New Orleans Saints":{"a":"NO","c":"no","h":"#D3BC8D"},"New York Giants":{"a":"NYG","c":"nyg","h":"#0B2265"},"New York Jets":{"a":"NYJ","c":"nyj","h":"#125740"},"Philadelphia Eagles":{"a":"PHI","c":"phi","h":"#004C54"},"Pittsburgh Steelers":{"a":"PIT","c":"pit","h":"#FFB612"},"San Francisco 49ers":{"a":"SF","c":"sf","h":"#AA0000"},"Seattle Seahawks":{"a":"SEA","c":"sea","h":"#002244"},"Tampa Bay Buccaneers":{"a":"TB","c":"tb","h":"#D50A0A"},"Tennessee Titans":{"a":"TEN","c":"ten","h":"#0C2340"},"Washington Commanders":{"a":"WSH","c":"wsh","h":"#5A1414"}},"NBA":{"Atlanta Hawks":{"a":"ATL","c":"atl","h":"#E03A3E"},"Boston Celtics":{"a":"BOS","c":"bos","h":"#007A33"},"Brooklyn Nets":{"a":"BKN","c":"bkn","h":"#000000"},"Charlotte Hornets":{"a":"CHA","c":"cha","h":"#1D1160"},"Chicago Bulls":{"a":"CHI","c":"chi","h":"#CE1141"},"Cleveland Cavaliers":{"a":"CLE","c":"cle","h":"#860038"},"Dallas Mavericks":{"a":"DAL","c":"dal","h":"#00538C"},"Denver Nuggets":{"a":"DEN","c":"den","h":"#0E2240"},"Detroit Pistons":{"a":"DET","c":"det","h":"#C8102E"},"Golden State Warriors":{"a":"GSW","c":"gs","h":"#1D428A"},"Houston Rockets":{"a":"HOU","c":"hou","h":"#CE1141"},"Indiana Pacers":{"a":"IND","c":"ind","h":"#002D62"},"Los Angeles Clippers":{"a":"LAC","c":"lac","h":"#C8102E"},"Los Angeles Lakers":{"a":"LAL","c":"lal","h":"#552583"},"Memphis Grizzlies":{"a":"MEM","c":"mem","h":"#5D76A9"},"Miami Heat":{"a":"MIA","c":"mia","h":"#98002E"},"Milwaukee Bucks":{"a":"MIL","c":"mil","h":"#00471B"},"Minnesota Timberwolves":{"a":"MIN","c":"min","h":"#0C2340"},"New Orleans Pelicans":{"a":"NO","c":"no","h":"#0C2340"},"New York Knicks":{"a":"NYK","c":"ny","h":"#006BB6"},"Oklahoma City Thunder":{"a":"OKC","c":"okc","h":"#007AC1"},"Orlando Magic":{"a":"ORL","c":"orl","h":"#0077C0"},"Philadelphia 76ers":{"a":"PHI","c":"phi","h":"#006BB6"},"Phoenix Suns":{"a":"PHX","c":"phx","h":"#1D1160"},"Portland Trail Blazers":{"a":"POR","c":"por","h":"#E03A3E"},"Sacramento Kings":{"a":"SAC","c":"sac","h":"#5A2D81"},"San Antonio Spurs":{"a":"SA","c":"sa","h":"#C4CED4"},"Toronto Raptors":{"a":"TOR","c":"tor","h":"#CE1141"},"Utah Jazz":{"a":"UTA","c":"utah","h":"#002B5C"},"Washington Wizards":{"a":"WSH","c":"wsh","h":"#002B5C"}},"NHL":{"Anaheim Ducks":{"a":"ANA","c":"ana","h":"#F47A38"},"Boston Bruins":{"a":"BOS","c":"bos","h":"#FFB81C"},"Buffalo Sabres":{"a":"BUF","c":"buf","h":"#003087"},"Calgary Flames":{"a":"CGY","c":"cgy","h":"#D2001C"},"Carolina Hurricanes":{"a":"CAR","c":"car","h":"#CE1126"},"Chicago Blackhawks":{"a":"CHI","c":"chi","h":"#CF0A2C"},"Colorado Avalanche":{"a":"COL","c":"col","h":"#6F263D"},"Columbus Blue Jackets":{"a":"CBJ","c":"cbj","h":"#002654"},"Dallas Stars":{"a":"DAL","c":"dal","h":"#006847"},"Detroit Red Wings":{"a":"DET","c":"det","h":"#CE1126"},"Edmonton Oilers":{"a":"EDM","c":"edm","h":"#041E42"},"Florida Panthers":{"a":"FLA","c":"fla","h":"#C8102E"},"Los Angeles Kings":{"a":"LA","c":"la","h":"#111111"},"Minnesota Wild":{"a":"MIN","c":"min","h":"#154734"},"Montreal Canadiens":{"a":"MTL","c":"mtl","h":"#AF1E2D"},"Nashville Predators":{"a":"NSH","c":"nsh","h":"#FFB81C"},"New Jersey Devils":{"a":"NJ","c":"nj","h":"#CE1126"},"New York Islanders":{"a":"NYI","c":"nyi","h":"#00539B"},"New York Rangers":{"a":"NYR","c":"nyr","h":"#0038A8"},"Ottawa Senators":{"a":"OTT","c":"ott","h":"#C52032"},"Philadelphia Flyers":{"a":"PHI","c":"phi","h":"#F74902"},"Pittsburgh Penguins":{"a":"PIT","c":"pit","h":"#FCB514"},"San Jose Sharks":{"a":"SJ","c":"sj","h":"#006D75"},"Seattle Kraken":{"a":"SEA","c":"sea","h":"#99D9D9"},"St. Louis Blues":{"a":"STL","c":"stl","h":"#002F87"},"Tampa Bay Lightning":{"a":"TB","c":"tb","h":"#002868"},"Toronto Maple Leafs":{"a":"TOR","c":"tor","h":"#00205B"},"Utah Mammoth":{"a":"UTA","c":"utah","h":"#71AFE5"},"Vancouver Canucks":{"a":"VAN","c":"van","h":"#00205B"},"Vegas Golden Knights":{"a":"VGK","c":"vgk","h":"#B4975A"},"Winnipeg Jets":{"a":"WPG","c":"wpg","h":"#041E42"},"Washington Capitals":{"a":"WSH","c":"wsh","h":"#041E42"}}};
@@ -1230,16 +1237,21 @@
     // ============== LEAGUE MATCHING ==============
     // Live poll rows carry the competition name in `sport` and leave `league`
     // empty (bot-created), while user-created polls fill both. Match on either.
-    // Order matters: WNBA before NBA, Soccer last (it is the widest net).
-    var LEAGUE_KEYS = ['WNBA', 'NBA', 'NFL', 'NHL', 'MLB', 'Soccer'];
+    // Order matters: WNBA before NBA (WNBA is the narrower match).
+    //
+    // The Soccer bucket was removed on 2026-08-02 along with its chip: TMR
+    // polls are multi-question multiple-choice quizzes centered on major
+    // American sports, so no poll can carry a soccer competition any more and
+    // the chip could only ever render an empty grid. Keep this list in step
+    // with utils/pollLeagues.js on the backend — the closed board filters
+    // server-side and a mismatch silently drops rows.
+    var LEAGUE_KEYS = ['WNBA', 'NBA', 'NFL', 'NHL', 'MLB'];
     var LEAGUE_MATCH = {
         WNBA:   { exact: ['wnba'], re: /\bwnba\b/i },
-        NBA:    { exact: ['nba', 'basketball', 'ncaab', 'euroleague', 'g league'], re: /\bnba\b|summer league/i },
-        NFL:    { exact: ['nfl', 'football', 'ncaaf', 'ufl', 'cfl'], re: /\bnfl\b/i },
-        NHL:    { exact: ['nhl', 'hockey', 'ahl', 'ncaah'], re: /\bnhl\b/i },
-        MLB:    { exact: ['mlb', 'baseball', 'milb', 'ncaa baseball'], re: /\bmlb\b/i },
-        Soccer: { exact: ['soccer', 'mls', 'nwsl', 'epl', 'la liga', 'serie a', 'bundesliga', 'ligue 1', 'champions league', 'world cup'],
-                  re: /soccer|f[uú]tbol|premier|\bliga\b|liga\s|serie\s?a\b|bundesliga|ligue\s*1|eredivisie|\bmls\b|\bnwsl\b|\buefa\b|champions league|world cup|copa|primeira|s[uü]per\s?lig|a-league|allsvenskan/i }
+        NBA:    { exact: ['nba', 'basketball', 'ncaab'], re: /\bnba\b|\bncaab\b|college basketball/i },
+        NFL:    { exact: ['nfl', 'football', 'ncaaf'], re: /\bnfl\b|\bncaaf\b|college football/i },
+        NHL:    { exact: ['nhl', 'hockey'], re: /\bnhl\b/i },
+        MLB:    { exact: ['mlb', 'baseball'], re: /\bmlb\b/i }
     };
     function pollLeagueKey(p) {
         var fields = [String((p && p.league) || '').trim(), String((p && p.sport) || '').trim()].filter(Boolean);
@@ -1769,23 +1781,27 @@
             (opts.extra || '') +
         '</div>';
     }
+    // TMR polls are multi-question multiple-choice quizzes centered on major
+    // American sports. Individual betting markets and obscure international
+    // games must never be published as polls.
+    //
+    // These starters used to be "Game Winner" / "Over / Under" / "Best Bet" —
+    // one-question sportsbook markets, seeded straight into a quick poll. They
+    // are now quiz starters: each opens the multi-question form with a title
+    // the author fills out with several related questions.
     var POLL_TEMPLATES = {
-        winner:  { label: 'Game Winner', icon: 'trophy', title: 'Who wins tonight?', question: 'Which side takes this game?' },
-        total:   { label: 'Over / Under', icon: 'arrows-up-down', title: 'Over or under tonight?', question: 'Does this game go over or under the total?' },
-        best:    { label: 'Best Bet', icon: 'fire', title: 'Best bet on the board today', question: 'Which of these is the strongest play today?' },
-        player:  { label: 'Player Comparison', icon: 'user-group', title: 'Who is having the better season?', question: 'Which player takes it?' },
-        debate:  { label: 'Community Debate', icon: 'comments', title: 'Settle the debate', question: 'Where do you stand?' }
+        slate:   { label: 'Today’s Slate', icon: 'calendar-day', title: 'Today’s slate: call every game' },
+        player:  { label: 'Player Props', icon: 'user-group', title: 'Player prop challenge: who hits their number?' },
+        weekend: { label: 'Weekend Card', icon: 'trophy', title: 'Weekend card: the full board, question by question' },
+        season:  { label: 'Season Outlook', icon: 'chart-line', title: 'Season outlook: division, awards and win totals' }
     };
     function openCreateFromTemplate(key) {
         var t = POLL_TEMPLATES[key];
         openCreatePollModal();
         if (!t || !document.getElementById('createPollModal').classList.contains('is-open')) return;
-        setCreateType('quick');
+        setCreateType('quiz');
         var titleEl = document.getElementById('pollTitle');
-        var qEl = document.getElementById('pollQuestion');
-        if (titleEl) titleEl.value = t.title;
-        if (qEl) qEl.value = t.question;
-        if (titleEl) { titleEl.focus(); titleEl.select(); }
+        if (titleEl) { titleEl.value = t.title; titleEl.focus(); titleEl.select(); }
     }
     function templateChipsHtml() {
         return '<div class="tmr-tpl-row">' + Object.keys(POLL_TEMPLATES).map(function(k) {
@@ -1828,12 +1844,12 @@
         }
         if (state.league !== 'all') {
             return stateHtml({ icon: 'square-poll-vertical', title: 'No open ' + state.league + ' polls right now.',
-                sub: 'New polls go up every day. Check every league, or start the debate yourself.',
+                sub: 'The daily prediction quiz covers the live American slate. Check every league, or build your own multi-question quiz.',
                 actions: '<button type="button" class="tmr-hbtn" onclick="setLeague(\'all\')">Show all leagues</button>' +
                          '<button type="button" class="tmr-hbtn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus" aria-hidden="true"></i> Create a Poll</button>' });
         }
-        return stateHtml({ icon: 'square-poll-vertical', title: "You're early. Start today's debate.",
-            sub: 'New polls are added throughout the day. Start one yourself, or catch up on final results.',
+        return stateHtml({ icon: 'square-poll-vertical', title: "No open polls right now.",
+            sub: 'The daily prediction quiz goes up each morning and locks at first pitch or kickoff. Build your own multi-question quiz, or catch up on final results.',
             actions: '<button type="button" class="tmr-hbtn is-primary" onclick="openCreatePollModal()"><i class="fas fa-plus" aria-hidden="true"></i> Create a Poll</button>' +
                      '<button type="button" class="tmr-hbtn" onclick="setView(\'closed\')">View closed polls</button>',
             extra: templateChipsHtml() });
