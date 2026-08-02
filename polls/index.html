@@ -669,9 +669,11 @@
         .tmr-leader:nth-child(1) .tmr-leader-rank { color: var(--gold); }
         .tmr-leader:nth-child(2) .tmr-leader-rank { color: #CBD5E1; }
         .tmr-leader:nth-child(3) .tmr-leader-rank { color: #D9A06B; }
-        .tmr-leader-name { color: var(--text); font-weight: 650; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tmr-leader { min-width: 0; }
+        .tmr-leader > span:nth-child(2) { min-width: 0; display: block; }
+        .tmr-leader-name { display: block; color: var(--text); font-weight: 650; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .tmr-leader-name a { color: var(--text); }
-        .tmr-leader-sub { color: var(--muted); font-size: 0.68rem; font-weight: 500; }
+        .tmr-leader-sub { display: block; color: var(--muted); font-size: 0.68rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .tmr-leader-pts { color: var(--accent); font-weight: 750; font-size: 0.86rem; text-align: right; font-variant-numeric: tabular-nums; }
         .tmr-sharp-badge { display: inline-block; margin-left: 5px; padding: 0 5px; border-radius: 4px; background: rgba(168,85,247,0.16); color: #D8B4FE; border: 1px solid rgba(168,85,247,0.32); font-size: 0.58rem; font-weight: 750; letter-spacing: 0.04em; }
         .tmr-leaders-empty { padding: 26px 16px; text-align: center; color: var(--muted); font-size: var(--fs-sm); }
@@ -2094,9 +2096,18 @@
                      : '<span class="chal4-you">Log in to enter and score points</span>';
         var side;
         if (leaders.length) {
-            side = '<div class="chal4-side-head"><i class="fas fa-ranking-star" aria-hidden="true"></i> Leaderboard</div>' +
+            var gstate = (game && game.grading) || {};
+            var headLabel = gstate.state === 'final' ? 'Final standings'
+                          : gstate.state === 'partial' ? ('Live &middot; ' + gstate.questions_resolved + '/' + gstate.total_questions + ' resolved')
+                          : 'Entries &middot; awaiting results';
+            side = '<div class="chal4-side-head"><i class="fas fa-ranking-star" aria-hidden="true"></i> ' + headLabel + '</div>' +
                 leaders.slice(0, 4).map(function(l) {
-                    var right = l.provisional ? (l.questions_answered + '/' + total) : (l.final_points + ' pts');
+                    // No correctness ratio until something actually resolves —
+                    // "N/total answered" reads as a score and must never ship.
+                    var st = l.state || (l.provisional ? 'awaiting' : 'final');
+                    var right = st === 'awaiting' ? ((l.questions_answered || 0) + ' picks')
+                              : st === 'partial' ? (l.correct_answers + '/' + l.questions_resolved)
+                              : (l.final_points + ' pts');
                     return '<div class="chal4-lbrow"><span class="rk">' + (l.rank || '') + '</span><span class="nm">' + escHtml(l.username) + '</span><span class="pt">' + escHtml(String(right)) + '</span></div>';
                 }).join('') +
                 (leaders.length > 4 ? '<div class="chal4-more">+' + (leaders.length - 4) + ' more</div>' : '');
@@ -2408,6 +2419,10 @@
         var showVoteForm = canVote || isChangingVote;
         var showResults = !showVoteForm && (userVote || isClosed || isPublicResults);
         var winningVotes = options.reduce(function(m, o) { return Math.max(m, parseInt(o.vote_count || 0)); }, 0);
+        // "Winner" means the graded, officially-correct option — never the
+        // most-voted one. A poll whose deadline passed but whose result is not
+        // in yet is CLOSED, not decided, and must show no winner at all.
+        var isGraded = p.status === 'resolved' && (options.some(function(o) { return truthy(o.is_correct); }) || p.numeric_target != null);
         var uname = currentUsername();
         var isCreator = isLoggedIn() && uname && p.username && uname.toLowerCase() === String(p.username).toLowerCase();
 
@@ -2417,11 +2432,13 @@
                 var votes = parseInt(o.vote_count || 0);
                 var pct = totalVotes > 0 ? (votes / totalVotes) * 100 : 0;
                 var pctText = (parseFloat(o.vote_percentage || pct) || 0).toFixed(1);
-                var isWinner = isClosed && (isMultiSelect ? !!o.is_correct : (votes === winningVotes && winningVotes > 0));
+                var isWinner = isGraded && truthy(o.is_correct);
+                var isMostPicked = !isGraded && isClosed && votes === winningVotes && winningVotes > 0;
                 var isUser = isMultiSelect ? selectedIds.indexOf(parseInt(o.id)) !== -1 : (userVote && parseInt(userVote.option_id) === parseInt(o.id));
                 var rowClass = 'tmr-poll-result' + (isWinner ? ' is-winner' : '') + (isUser ? ' is-user-pick' : '');
                 var tagHtml = '';
                 if (isWinner) tagHtml += '<span class="tmr-poll-result-tag winner">Winner</span>';
+                else if (isMostPicked) tagHtml += '<span class="tmr-poll-result-tag">Most picked</span>';
                 if (isUser) tagHtml += '<span class="tmr-poll-result-tag user">' + (isMultiSelect ? 'Your Selection' : 'Your Vote') + '</span>';
                 return '<li class="tmr-poll-option is-disabled"><div class="' + rowClass + '">' +
                     '<div class="tmr-poll-result-row">' +
@@ -2690,6 +2707,16 @@
         var questions = g.questions || [];
         var leaders = g.leaderboard || [];
         var isResolved = p.status === 'resolved';
+        // Contest-level resolution state from the backend (services/pollGrading.js).
+        // Fallback derives it locally so an older cached payload still degrades
+        // to "awaiting", never to a fake score.
+        var grading = g.grading || {
+            total_questions: questions.length,
+            questions_resolved: questions.filter(function(q){ return q.graded; }).length,
+            questions_pending: questions.filter(function(q){ return !q.graded; }).length,
+            contest_resolved: isResolved,
+            state: isResolved ? 'final' : (questions.some(function(q){ return q.graded; }) ? 'partial' : 'awaiting')
+        };
         var deadline = p.voting_deadline ? new Date(p.voting_deadline) : null;
         var isExp = deadline && deadline < new Date();
         var loggedIn = isLoggedIn();
@@ -2704,11 +2731,21 @@
         var qsHtml = questions.map(function(q, qi) {
             var worth = parseInt(q.base_points) || 0;
             var ua = q.user_answer || null;
-            var head = '<div class="tmr-q-head"><div><span class="tmr-q-num">Q' + (qi+1) + '</span> <span class="tmr-q-title">' + escHtml(q.title) + '</span></div>' +
+            // `q.graded` is the backend's answer: resolved AND a real result
+            // exists. status==='resolved' alone also covers VOIDs (postponed
+            // game / player DNP), which have no answer and score for nobody.
+            var qGraded = (q.graded === true) ||
+                (q.graded === undefined && String(q.status) === 'resolved' &&
+                 (q.numeric_target != null || (q.options||[]).some(function(o){ return truthy(o.is_correct); })));
+            var qVoided = String(q.status) === 'resolved' && !qGraded;
+            var qBadge = qGraded ? '<span class="tmr-q-tag correct" style="margin-left:6px;">Resolved</span>'
+                       : qVoided ? '<span class="tmr-q-tag" style="margin-left:6px;background:rgba(148,163,184,.18);color:#CBD5E1;">Voided</span>'
+                       : '<span class="tmr-q-tag" style="margin-left:6px;background:rgba(148,163,184,.14);color:#93A4BA;">Pending</span>';
+            var head = '<div class="tmr-q-head"><div><span class="tmr-q-num">Q' + (qi+1) + '</span> <span class="tmr-q-title">' + escHtml(q.title) + '</span>' + qBadge + '</div>' +
                        '<span class="tmr-q-worth">' + worth + ' pts</span></div>';
             var body = '';
             if (q.scoring_mode === 'closest') {
-                if (isResolved) {
+                if (qGraded) {
                     var truth = (q.numeric_target != null) ? q.numeric_target : '-';
                     var guess = ua && ua.numeric_value != null ? ua.numeric_value : null;
                     var pts = ua && ua.points_earned != null ? ua.points_earned : null;
@@ -2728,11 +2765,14 @@
                         var vc = parseInt(o.vote_count||0);
                         var pct = totalV>0 ? (vc/totalV*100) : 0;
                         var pctText = (parseFloat(o.vote_percentage||pct)||0).toFixed(0);
-                        var correct = isResolved && o.is_correct;
+                        // Per-QUESTION grading, not the parent's status: a
+                        // question resolves (or voids) independently, and a
+                        // voided one carries no correct option at all.
+                        var correct = qGraded && truthy(o.is_correct);
                         var you = yourOpt === parseInt(o.id);
                         var cls = 'tmr-q-opt' + (correct?' is-correct':'') + (you?' is-yourpick':'');
                         var tags = (correct?'<span class="tmr-q-tag correct">Correct</span>':'') + (you?'<span class="tmr-q-tag you">You</span>':'');
-                        var ptsTag = (isResolved && you && ua && ua.points_earned!=null) ? '<span class="tmr-q-tag pts">+' + ua.points_earned + '</span>' : '';
+                        var ptsTag = (qGraded && you && ua && ua.points_earned!=null) ? '<span class="tmr-q-tag pts">+' + ua.points_earned + '</span>' : '';
                         var modelBadge = (o.model_prob!=null) ? '<span class="tmr-q-model" title="Model implied probability">' + Math.round(o.model_prob*100) + '%' + ((o.longshot_mult&&o.longshot_mult>1.05)?' &middot; x'+o.longshot_mult:'') + '</span>' : '';
                         return '<div class="' + cls + '"><div class="tmr-q-res-row"><span class="tmr-q-res-text">' + escHtml(o.option_text) + tags + ptsTag + modelBadge + '</span>' +
                                '<span class="tmr-q-res-pct">' + pctText + '% &middot; ' + vc + '</span></div>' +
@@ -2804,17 +2844,32 @@
         if (hasLeaders) {
             leadersHtml = '<ul class="tmr-leaders-list">' + topLeaders.map(function(l){
                 var right, sub;
-                if (l.provisional) {
-                    right = '<span class="tmr-leader-pts" style="color:#93A4BA;">' + l.questions_answered + '/' + questions.length + '</span>';
-                    sub = 'answered';
+                // The backend classifies every entry: 'awaiting' (nothing
+                // resolved), 'partial' (some questions graded), 'final'.
+                // NEVER render a correct-answer ratio outside partial/final —
+                // "10/10 answered" reads as a perfect score, which is what this
+                // whole flow exists to prevent.
+                var state = l.state || (l.provisional ? 'awaiting' : 'final');
+                if (state === 'awaiting') {
+                    right = '<span class="tmr-leader-pts" style="color:#93A4BA;white-space:nowrap;">' + (l.questions_answered || 0) +
+                            '<span style="font-size:.6rem;font-weight:800;color:#7C8CA3;"> picks</span></span>';
+                    sub = 'Entry locked &middot; awaiting results';
+                } else if (state === 'partial') {
+                    right = '<span class="tmr-leader-pts" style="color:#FBBF24;">' + l.correct_answers + '<span style="font-size:.62rem;color:#93A4BA;">/' + l.questions_resolved + '</span></span>';
+                    sub = l.correct_answers + ' correct of ' + l.questions_resolved + ' resolved' +
+                          (l.questions_pending ? ' &middot; ' + l.questions_pending + ' still pending' : '');
                 } else {
                     right = '<span class="tmr-leader-pts">' + l.final_points + '</span>';
-                    var parts = [l.correct_count + '/' + questions.length + ' correct'];
+                    // Denominator is what actually GRADED, not the raw question
+                    // count — a voided question is nobody's miss.
+                    var den = (l.questions_resolved != null) ? l.questions_resolved : questions.length;
+                    var parts = [l.correct_count + '/' + den + ' correct'];
+                    if (l.questions_pending) parts.push(l.questions_pending + ' voided');
                     if (l.placement_bonus) parts.push('+' + l.placement_bonus + ' place');
                     if (l.perfect_bonus) parts.push('+' + l.perfect_bonus + ' perfect');
                     sub = parts.join(' &middot; ');
                 }
-                var sharp = (!l.provisional && l.avg_rarity >= 1.6) ? '<span class="tmr-sharp-badge" title="High-value contrarian correct picks">SHARP</span>' : '';
+                var sharp = (state === 'final' && l.avg_rarity >= 1.6) ? '<span class="tmr-sharp-badge" title="High-value contrarian correct picks">SHARP</span>' : '';
                 return '<li class="tmr-leader"><span class="tmr-leader-rank">' + (l.rank||'') + '</span>' +
                        '<span><span class="tmr-leader-name"><a href="/profile/?user=' + encodeURIComponent(l.username) + '">' + escHtml(l.username) + '</a>' + sharp + '</span>' +
                        '<span class="tmr-leader-sub">' + sub + '</span></span>' + right + '</li>';
@@ -2822,10 +2877,12 @@
             (leaders.length > 5 ? '<div class="tmr-leaders-more">+' + (leaders.length - 5) + ' more player' + (leaders.length - 5 === 1 ? '' : 's') + '</div>' : '');
         }
 
+        // A winner only exists once the contest is settled AND real results
+        // were graded. Never crown anyone off submission counts.
         var champHtml = '';
-        if (isResolved && leaders.length && !leaders[0].provisional) {
+        if (isResolved && leaders.length && leaders[0].state === 'final' && leaders[0].questions_resolved > 0) {
             var w = leaders[0];
-            var wsub = w.correct_count + '/' + questions.length + ' correct';
+            var wsub = w.correct_count + '/' + w.questions_resolved + ' correct';
             if (w.perfect_bonus) wsub += ' &middot; PERFECT';
             champHtml = '<div class="tmr-champ">' +
                 '<div class="tmr-champ-label"><i class="fas fa-crown"></i> Winner</div>' +
@@ -2843,6 +2900,35 @@
             '<li>Base pool for this quiz: ' + basePool + ' points.</li>' +
         '</ul></details>';
 
+        // States the contest's own grading progress in plain language, so
+        // "you answered everything" is never mistaken for "you got everything
+        // right". Your own resolved tally sits alongside it.
+        var myEntry = null;
+        if (uname) {
+            for (var mi = 0; mi < leaders.length; mi++) {
+                if (String(leaders[mi].username).toLowerCase() === String(uname).toLowerCase()) { myEntry = leaders[mi]; break; }
+            }
+        }
+        var myLine = myEntry
+            ? ' <strong>Your entry:</strong> ' + myEntry.questions_answered + ' pick' + (myEntry.questions_answered === 1 ? '' : 's') + ' submitted' +
+              (grading.state === 'awaiting' ? ' &middot; no results yet'
+               : ' &middot; ' + myEntry.correct_answers + ' correct of ' + myEntry.questions_resolved + ' resolved' +
+                 (myEntry.questions_pending ? ' &middot; ' + myEntry.questions_pending + ' still pending' : ''))
+            : '';
+        var gradingBanner =
+            grading.state === 'awaiting'
+              ? '<div class="tmr-empty-msg" style="padding:12px 14px;margin:10px 0 0;text-align:left;"><i class="fas fa-hourglass-half"></i> <strong>Awaiting results.</strong> ' +
+                'None of the ' + grading.total_questions + ' questions have an official result yet, so no scores or rankings are available.' + myLine + '</div>'
+              : grading.state === 'partial'
+              ? '<div class="tmr-empty-msg" style="padding:12px 14px;margin:10px 0 0;text-align:left;"><i class="fas fa-spinner"></i> <strong>Partially resolved.</strong> ' +
+                grading.questions_resolved + ' of ' + grading.total_questions + ' questions are official; ' + grading.questions_pending + ' still pending. ' +
+                'Standings are provisional until every question resolves.' + myLine + '</div>'
+              : (grading.questions_pending
+                  ? '<div class="tmr-empty-msg" style="padding:12px 14px;margin:10px 0 0;text-align:left;"><i class="fas fa-flag-checkered"></i> <strong>Final.</strong> ' +
+                    grading.questions_resolved + ' of ' + grading.total_questions + ' questions graded; ' + grading.questions_pending +
+                    ' voided (no usable result) and scored for nobody.' + myLine + '</div>'
+                  : '');
+
         var noEntriesNote = (!hasLeaders && !isResolved)
             ? '<div class="tmr-leaders-inline-empty"><i class="fas fa-ranking-star"></i> No entries yet. The leaderboard appears once the first player locks in.</div>'
             : '';
@@ -2850,8 +2936,11 @@
         var asideHtml = hasLeaders
             ? '<aside class="tmr-leaders">' +
                   champHtml +
-                  '<div class="tmr-leaders-head"><h3><i class="fas fa-ranking-star"></i> Leaders</h3>' +
-                      '<span>' + (isResolved ? 'Final standings' : 'Live &middot; ' + g.total_players + ' in') + '</span></div>' +
+                  '<div class="tmr-leaders-head"><h3><i class="fas fa-ranking-star"></i> ' +
+                      (grading.state === 'awaiting' ? 'Entries' : 'Leaders') + '</h3>' +
+                      '<span>' + (grading.state === 'final' ? 'Final standings'
+                                : grading.state === 'partial' ? (grading.questions_resolved + ' of ' + grading.total_questions + ' resolved')
+                                : 'Awaiting results &middot; ' + g.total_players + ' in') + '</span></div>' +
                   leadersHtml +
               '</aside>'
             : '';
@@ -2866,6 +2955,7 @@
                             ' &middot; ' + questions.length + ' questions</div>' +
                     '</div><span class="tmr-poll-status ' + statusClass + '">' + statusLabel + '</span></div>' +
                     (p.description ? '<div class="tmr-poll-detail-desc" style="margin:8px 0;">' + escHtml(String(p.description).replace('[hide-results-until-vote]','').replace('[multi-choice]','').replace('[anonymous]','').trim()) + '</div>' : '') +
+                    gradingBanner +
                     rules +
                     noEntriesNote +
                     qsHtml +

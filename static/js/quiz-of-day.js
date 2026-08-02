@@ -136,12 +136,18 @@
 
   function questionHTML(q, mode) {
     // mode: 'answer' (open, logged in) | 'results' (voted/resolved/logged out)
-    var resolved = q.status === 'resolved';
+    // GRADED, not merely "resolved": a voided question (postponed game, player
+    // DNP) is status='resolved' with no correct option and pays nobody, so it
+    // must never render a result or a points tag.
+    var resolved = q.graded === true || (q.graded === undefined && q.status === 'resolved' &&
+      (q.numeric_target != null || (q.options || []).some(function (o) { return o.is_correct === true; })));
+    var voided = q.status === 'resolved' && !resolved;
     var ua = q.user_answer || null;
     var yourOpt = ua ? ua.option_id : null;
     var showResults = mode === 'results' || resolved || !!ua;
     var head = '<div class="tmr-qotd-qtitle">' + esc(q.title) +
       (ua && resolved && ua.points_earned != null ? ' <span class="tmr-qotd-tag pts">+' + ua.points_earned + '</span>' : '') +
+      (voided ? ' <span class="tmr-qotd-tag">Voided</span>' : '') +
       '</div>';
 
     var body;
@@ -182,9 +188,21 @@
     var answerMode = isOpen && loggedIn;
     var entries = f.total_players || 0;
 
-    var chip = resolved ? '<span class="tmr-qotd-chip done">Final Results</span>' :
+    // Grading state is authoritative over the answering-window state: a quiz can
+    // be open for answers while some questions have already resolved, and can be
+    // long closed with nothing resolved at all.
+    var gstate = (f.state) || (resolved ? 'final' : 'awaiting');
+    var chip = gstate === 'final' ? '<span class="tmr-qotd-chip done">Final Results</span>' :
+      gstate === 'partial' ? '<span class="tmr-qotd-chip done">' + (f.questions_resolved || 0) + '/' + (f.total_questions || qs.length) + ' resolved</span>' :
       pending ? '<span class="tmr-qotd-chip done">Awaiting Results</span>' :
       '<span class="tmr-qotd-chip live">Live</span>';
+
+    // Never let a submission count read as a score.
+    var myPicks = qs.filter(function (q) { return q.user_answer; }).length;
+    var entryNote = (myPicks > 0 && gstate !== 'final')
+      ? '<div class="tmr-qotd-note" style="margin-bottom:10px;"><strong>' + myPicks + ' pick' + (myPicks === 1 ? '' : 's') + ' submitted</strong>' +
+        (gstate === 'awaiting' ? ' &middot; awaiting results' : ' &middot; ' + (f.questions_resolved || 0) + ' of ' + (f.total_questions || qs.length) + ' questions resolved') + '</div>'
+      : '';
 
     var facts = '<div class="tmr-qotd-facts">' +
       '<span><i class="fas fa-baseball"></i>' + esc(f.sport || 'Sports') + '</span>' +
@@ -224,6 +242,7 @@
         '<div><span class="tmr-qotd-eyebrow"><i class="fas fa-trophy"></i> Prediction Quiz of the Day</span>' + chip + '</div>' +
         '<div class="tmr-qotd-title">' + esc(f.title) + '</div>' +
         facts +
+        entryNote +
         qsHtml +
         '<div class="tmr-qotd-err" data-err></div>' +
         actions +

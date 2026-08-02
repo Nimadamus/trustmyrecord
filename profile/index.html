@@ -7410,6 +7410,7 @@
             var pts = parseInt(o.total_points || 0) || 0;
             var voted = parseInt(o.polls_voted || 0) || 0;
             var correct = parseInt(o.polls_correct || 0) || 0;
+            var pending = parseInt(o.pending_predictions || 0) || 0;
             if (pts <= 0 && voted <= 0) return; // keep the empty state
             var qualified = !!o.qualified;
             var accRaw = (o.prediction_accuracy != null) ? (Math.round(parseFloat(o.prediction_accuracy) * 10) / 10) : (voted > 0 ? Math.round(correct / voted * 1000) / 10 : 0);
@@ -7435,6 +7436,10 @@
                         '<div class="pollpts-stat"><span class="pollpts-num" style="color:#67E8F9;">' + pts.toLocaleString() + '</span><span class="pollpts-lbl">Poll Points</span></div>' +
                         '<div class="pollpts-stat"><span class="pollpts-num">' + voted.toLocaleString() + '</span><span class="pollpts-lbl">Scored Predictions</span></div>' +
                         '<div class="pollpts-stat"><span class="pollpts-num">' + correct.toLocaleString() + '</span><span class="pollpts-lbl">Correct Predictions</span></div>' +
+                        // Submitted but not yet resolved (or voided). Kept as its
+                        // own number so a pending pick is never silently counted
+                        // as a miss, nor as a point already banked.
+                        (pending > 0 ? '<div class="pollpts-stat"><span class="pollpts-num" style="color:#93A4BA;">' + pending.toLocaleString() + '</span><span class="pollpts-lbl">Awaiting Results</span></div>' : '') +
                         '<div class="pollpts-stat"><span class="pollpts-num">' + accDisplay + '</span><span class="pollpts-lbl">Prediction Accuracy' + (qualified ? '' : ' &middot; not yet qualified') + '</span></div>' +
                     '</div>' + catHtml +
                     '<a class="pollpts-link" href="/polls/">Play today\'s prediction quiz <i class="fas fa-arrow-right"></i></a>' +
