@@ -783,19 +783,23 @@
             '</span>';
     };
 
-    window.TMR.updateStakeModePreview = function() {
+    // Fallback copy (the reliability script overrides + locks this). Same
+    // MOBILE STAKE EDIT FIX: only rewrite the field the user is typing in when
+    // commit === true (change/blur), never on every keystroke.
+    window.TMR.updateStakeModePreview = function(commit) {
         var unitsEl = document.getElementById('ttSlipUnits') || document.getElementById('unitsInput');
         var oddsEl = document.getElementById('pickOddsInput');
         var preview = document.getElementById('ttSlipStakePreview') || document.getElementById('unitsStakePreview');
         var hiddenUnits = document.getElementById('unitsInput');
-        var amount = unitsEl ? parseFloat(unitsEl.value || '1') : 1;
+        var raw = unitsEl ? String(unitsEl.value == null ? '' : unitsEl.value).trim() : '';
+        var amount = parseFloat(raw === '' ? '1' : raw);
         var odds = oddsEl ? parseFloat(oddsEl.value || '') : NaN;
         if (!Number.isFinite(amount) || amount <= 0) amount = 1;
         if (amount < 0.5) amount = 0.5;
         if (amount > 5) amount = 5;
         amount = Math.round(amount * 2) / 2;
-        if (unitsEl && String(unitsEl.value) !== String(amount)) unitsEl.value = String(amount);
-        if (hiddenUnits) hiddenUnits.value = String(amount);
+        if (commit === true && unitsEl && String(unitsEl.value) !== String(amount)) unitsEl.value = String(amount);
+        if (hiddenUnits && (hiddenUnits !== unitsEl || commit === true)) hiddenUnits.value = String(amount);
         if (!preview) return;
         var values = window.TMR.calculateStakeValues(window.TMR.selectedUnitsMode || 'risk', amount, odds);
         if (values.risk_units && values.win_units) {
@@ -10908,7 +10912,7 @@
                 <div class="option-group">
                     <label>Units</label>
                     <div style="display: flex; align-items: center; gap: 12px; margin-top: 8px;">
-<input type="number" id="unitsInput" min="0.5" max="5" step="0.5" value="1" inputmode="decimal" oninput="if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview()" style="width: 90px; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 18px; font-weight: 700; text-align: center; font-family: 'Barlow', sans-serif;" />
+<input type="number" id="unitsInput" min="0.5" max="5" step="0.5" value="1" inputmode="decimal" oninput="if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview()" onchange="if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview(true)" onblur="if (window.TMR && typeof window.TMR.updateStakeModePreview === 'function') window.TMR.updateStakeModePreview(true)" style="width: 90px; padding: 12px 14px; background: var(--card-bg); border: 2px solid var(--glass-border); border-radius: 10px; color: var(--text-primary); font-size: 18px; font-weight: 700; text-align: center; font-family: 'Barlow', sans-serif;" />
                         <div id="unitsModeToggle" style="display: flex; border-radius: 10px; overflow: hidden; border: 2px solid var(--glass-border);">
                             <button type="button" id="modeRisk" class="units-mode-btn active" onclick="setUnitsMode('risk')" style="padding: 12px 18px; background: var(--gradient-gold); border: none; color: var(--dark-bg); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;">RISK</button>
                             <button type="button" id="modeToWin" class="units-mode-btn" onclick="setUnitsMode('towin')" style="padding: 12px 18px; background: var(--card-bg); border: none; color: var(--text-primary); font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s;">TO WIN</button>
@@ -12579,7 +12583,7 @@ window.toggleSportFamily = function (family) {
             '</div>' +
             '<div class="sportsbook-ticket-preview-row" style="align-items:center;">' +
                 '<span><label for="ttSlipUnits" style="cursor:pointer;">Units</label></span>' +
-                '<strong><input id="ttSlipUnits" type="number" min="0.5" max="5" step="0.5" value="1" aria-label="Stake units" oninput="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview()" onchange="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview()"' +
+                '<strong><input id="ttSlipUnits" type="number" min="0.5" max="5" step="0.5" value="1" aria-label="Stake units" oninput="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview()" onchange="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview(true)" onblur="window.TMR && window.TMR.updateStakeModePreview && window.TMR.updateStakeModePreview(true)"' +
                     ' style="width:84px;min-width:84px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.18);border-radius:6px;padding:4px 6px;color:#f8fafc;font-weight:800;font-size:15px;line-height:1.3;text-align:center;-webkit-appearance:none;-moz-appearance:textfield;overflow:visible;"></strong>' +
             '</div>' +
             '<div id="ttSlipStakePreview" class="sportsbook-ticket-preview-note tmr-ticket-stake-summary"><span class="tmr-ticket-stake-summary-cell"><span class="tmr-ticket-stake-summary-label">Risk</span><strong class="tmr-ticket-stake-summary-value">1 unit</strong></span><span class="tmr-ticket-stake-summary-divider" aria-hidden="true"></span><span class="tmr-ticket-stake-summary-cell"><span class="tmr-ticket-stake-summary-label">To Win</span><strong class="tmr-ticket-stake-summary-value">0.91 units</strong></span></div>' +
@@ -23251,7 +23255,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- SPORTSBOOK_RELIABILITY_OWNERSHIP: this production script owns team logo rows,
          pick option selectors, the Risk / To Win stake mode, and submit payloads.
          Do not bypass it with inline sportsbook UI rewrites. -->
-<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=9ee0eb57bf23&cb=20260730multislip1"></script>
+<script src="/static/js/sportsbook-production-fix-persist-reliability.js?v=9ee0eb57bf23&cb=20260802unitsfix"></script>
 <!-- MULTISLIP_20260730: flag-gated multi-pick slip. Inert unless
      localStorage tmr_multislip === '1' (set via /sportsbook/?multislip=1;
      ?multislip=0 turns it back off). Rollback = flag off, or remove this tag. -->

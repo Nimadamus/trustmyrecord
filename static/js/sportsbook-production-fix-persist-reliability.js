@@ -344,21 +344,31 @@
         return ticketInput || document.getElementById('unitsInput');
     }
 
-    function getCurrentStakeAmount() {
+    // MOBILE STAKE EDIT FIX 2026-08-02: only write the clamped value back into
+    // the field when commit === true (change/blur/submit). Mirroring on every
+    // keystroke made the units field uneditable on mobile, where the number
+    // spinners are hidden and typing is the only input: backspacing to clear
+    // snapped straight back to "1", and typing "2" after "1" became "12" and
+    // was instantly clamped to "5". The hidden #unitsInput mirror still syncs
+    // on every keystroke so the submit payload can never drift.
+    function getCurrentStakeAmount(commit) {
         const ticketInput = document.getElementById('ttSlipUnits');
         const hiddenInput = document.getElementById('unitsInput');
         const input = ticketInput || hiddenInput;
-        const rawAmount = input ? parseFloat(input.value || '1') : 1;
+        const raw = input ? String(input.value == null ? '' : input.value).trim() : '';
+        const rawAmount = parseFloat(raw === '' ? '1' : raw);
         const amount = Math.max(0.5, Math.min(5, Math.round((Number.isFinite(rawAmount) ? rawAmount : 1) * 2) / 2));
         [ticketInput, hiddenInput].forEach(function(el) {
-            if (el && String(el.value) !== String(amount)) el.value = String(amount);
+            if (!el) return;
+            if (el === input && commit !== true) return;
+            if (String(el.value) !== String(amount)) el.value = String(amount);
         });
         return amount;
     }
 
-    function updateStakeModePreview() {
+    function updateStakeModePreview(commit) {
         const oddsInput = document.getElementById('pickOddsInput');
-        const amount = getCurrentStakeAmount();
+        const amount = getCurrentStakeAmount(commit);
         const odds = oddsInput ? parseInt(oddsInput.value, 10) : NaN;
         const values = calculateStakeValues(getSelectedStakeMode(), amount, odds);
         ['unitsStakePreview', 'ttSlipStakePreview'].forEach(function(id) {
@@ -1244,6 +1254,12 @@
         unitsInput.removeAttribute('pattern');
         unitsInput.oninput = function() {
             updateStakeModePreview();
+        };
+        unitsInput.onchange = function() {
+            updateStakeModePreview(true);
+        };
+        unitsInput.onblur = function() {
+            updateStakeModePreview(true);
         };
         unitsInput.style.width = '';
 
@@ -3368,7 +3384,7 @@
         // half units. Read from the visible ticket input when present, then
         // mirror to #unitsInput so preview text and submit payload cannot
         // drift apart.
-        const unitsValue = getCurrentStakeAmount();
+        const unitsValue = getCurrentStakeAmount(true);
         const submittedSelection = buildSubmittedSelection(option, lineValue);
 
         if (Number.isNaN(oddsValue) || (oddsValue > -100 && oddsValue < 100)) {
