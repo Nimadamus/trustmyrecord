@@ -126,7 +126,15 @@ function priced(overrides) {
   }, overrides || {});
 }
 
-async function mount(routes) {
+/**
+ * options.failFirst — { '<url fragment>': { times: n, status: 502 } }. The
+ * first n requests matching the fragment fail with that status (or reject as a
+ * network error when status is omitted) before the normal stub takes over.
+ * Used to exercise the transient-failure retry path.
+ * options.settle — how many 5 ms ticks to wait; the retry backoff needs more
+ * than the default.
+ */
+async function mount(routes, options = {}) {
   const virtualConsole = new VirtualConsole();
   const consoleErrors = [];
   virtualConsole.on('jsdomError', (e) => consoleErrors.push(e.message));
@@ -141,9 +149,21 @@ async function mount(routes) {
   const dom = new JSDOM(html, { runScripts: 'dangerously', url: 'https://trustmyrecord.com/trendspotter/', virtualConsole });
   const win = dom.window;
   const requested = [];
+  const failFirst = options.failFirst || {};
+  const failed = {};
 
   win.fetch = (url) => {
     requested.push(String(url));
+    const failKey = Object.keys(failFirst).find((k) => String(url).includes(k));
+    if (failKey) {
+      failed[failKey] = failed[failKey] || 0;
+      if (failed[failKey] < failFirst[failKey].times) {
+        failed[failKey] += 1;
+        const status = failFirst[failKey].status;
+        if (!status) return Promise.reject(new TypeError('Failed to fetch'));
+        return Promise.resolve({ ok: false, status, json: () => Promise.resolve(null) });
+      }
+    }
     const key = Object.keys(routes).find((k) => String(url).includes(k));
     const body = key ? routes[key] : null;
     if (!body) return Promise.reject(new Error('no stub for ' + url));
@@ -156,7 +176,8 @@ async function mount(routes) {
 
   win.eval(js);
   // Let the capabilities -> matchups -> query chain settle.
-  for (let i = 0; i < 40; i++) await new Promise((r) => win.setTimeout(r, 5));
+  const ticks = options.settle || 40;
+  for (let i = 0; i < ticks; i++) await new Promise((r) => win.setTimeout(r, 5));
   return { win, doc: win.document, requested, consoleErrors };
 }
 
@@ -443,6 +464,57 @@ const txt = (doc, sel) => ($(doc, sel) || {}).textContent || '';
     $$(doc, '.ts-metric').forEach((m) => { metrics[m.querySelector('dt').textContent] = m.querySelector('dd').firstChild.textContent; });
     assert.strictEqual(metrics['Win rate'], '—', JSON.stringify(metrics));
     assert.strictEqual(metrics['Avg closing price'], '—', JSON.stringify(metrics));
+  });
+
+  // -------------------------------------------------------------------------
+  // Transient-gateway handling. A GitHub Pages redeploy briefly 502s the edge,
+  // which on 2026-08-02 was enough to log a failed resource. A blip must not
+  // leave the workspace dead.
+  // -------------------------------------------------------------------------
+  await test('a transient 502 on capabilities is retried and the page still boots', async () => {
+    const { doc, requested } = await mount(
+      { ...base, '/query': priced() },
+      { failFirst: { '/capabilities': { times: 1, status: 502 } }, settle: 400 }
+    );
+    const capsCalls = requested.filter((u) => u.includes('/capabilities')).length;
+    assert.strictEqual(capsCalls, 2, `expected one retry, saw ${capsCalls} calls`);
+    assert.ok($$(doc, '#leagueTabs button').length > 0, 'league tabs never rendered');
+    assert.ok(!doc.body.textContent.includes('Research service unavailable'),
+      'page showed the outage state despite recovering');
+  });
+
+  await test('a dropped connection is retried the same way as a 502', async () => {
+    const { doc, requested } = await mount(
+      { ...base, '/query': priced() },
+      { failFirst: { '/capabilities': { times: 2 } }, settle: 500 }
+    );
+    assert.strictEqual(requested.filter((u) => u.includes('/capabilities')).length, 3);
+    assert.ok($$(doc, '#leagueTabs button').length > 0, 'league tabs never rendered');
+  });
+
+  await test('a sustained outage stops retrying and offers Try again in place', async () => {
+    const { win, doc, requested } = await mount(
+      { ...base, '/query': priced() },
+      { failFirst: { '/capabilities': { times: 99, status: 502 } }, settle: 500 }
+    );
+    const before = requested.filter((u) => u.includes('/capabilities')).length;
+    assert.strictEqual(before, 3, `retries are bounded at 2; saw ${before} calls`);
+    assert.ok(doc.body.textContent.includes('Research service unavailable'));
+    const retry = doc.getElementById('retryBoot');
+    assert.ok(retry, 'no Try again button on the outage state');
+    retry.dispatchEvent(new win.Event('click', { bubbles: true }));
+    for (let i = 0; i < 500; i++) await new Promise((r) => win.setTimeout(r, 5));
+    assert.ok(requested.filter((u) => u.includes('/capabilities')).length > before,
+      'Try again did not re-request capabilities');
+  });
+
+  await test('a 4xx is never retried', async () => {
+    const { requested } = await mount(
+      { ...base, '/query': priced() },
+      { failFirst: { '/capabilities': { times: 99, status: 404 } }, settle: 200 }
+    );
+    const capsCalls = requested.filter((u) => u.includes('/capabilities')).length;
+    assert.strictEqual(capsCalls, 1, `a 404 must not be retried; saw ${capsCalls} calls`);
   });
 
   await test('no page errors are raised while all of the above runs', async () => {

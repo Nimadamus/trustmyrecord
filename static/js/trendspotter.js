@@ -98,8 +98,18 @@
   }
 
   // --- fetching ------------------------------------------------------------
-  function fetchJson(url, opts) {
-    var options = opts || {};
+
+  // A momentary gateway hiccup at the edge must not leave the page dead. Only
+  // these are worth a second attempt: a 4xx will fail again, and a user abort
+  // means the answer is no longer wanted.
+  function isTransient(error) {
+    if (!error) return false;
+    if (error.name === 'AbortError') return false;
+    if (!error.status) return true;                 // network / DNS / TLS drop
+    return error.status === 502 || error.status === 503 || error.status === 504;
+  }
+
+  function attemptJson(url, options) {
     var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
     var timer = controller ? setTimeout(function () { controller.abort(); }, options.timeout || 20000) : null;
     if (options.register && controller) options.register(controller);
@@ -123,6 +133,20 @@
       if (timer) clearTimeout(timer);
       throw error;
     });
+  }
+
+  function fetchJson(url, opts) {
+    var options = opts || {};
+    var left = options.retries || 0;
+    function run() {
+      return attemptJson(url, options).catch(function (error) {
+        if (left <= 0 || !isTransient(error)) throw error;
+        left -= 1;
+        var wait = (options.retries - left) * 600;
+        return new Promise(function (resolve) { setTimeout(resolve, wait); }).then(run);
+      });
+    }
+    return run();
   }
 
   // --- league tabs ---------------------------------------------------------
@@ -867,7 +891,7 @@
   function loadMatchups() {
     matchupStatus = 'loading';
     renderSlate();
-    return fetchJson(apiBase() + '/trendspotter/matchups?sport=' + encodeURIComponent(state.sport), { timeout: 15000 })
+    return fetchJson(apiBase() + '/trendspotter/matchups?sport=' + encodeURIComponent(state.sport), { timeout: 15000, retries: 1 })
       .then(function (data) {
         matchups = (data && data.matchups) || [];
         matchupStatus = (data && data.available) ? 'ok' : 'empty';
@@ -1000,6 +1024,7 @@
         return;
       }
       if (e.target.closest('#retryQuery')) { lastRunKey = ''; runQuery(); return; }
+      if (e.target.closest('#retryBoot')) { loadCapabilities(); return; }
       var copyBtn = e.target.closest('#copyResult');
       if (copyBtn) { copyToClipboard(shareText(), copyBtn, 'Copied'); return; }
       var shareBtn = e.target.closest('#shareResult');
@@ -1134,8 +1159,13 @@
 
     renderEmptyState();
     bind();
+    loadCapabilities();
+  }
 
-    fetchJson(apiBase() + '/trendspotter/capabilities', { timeout: 15000 }).then(function (data) {
+  // Split out of boot() so the retry re-runs the failed call only; re-running
+  // boot() would bind every listener a second time.
+  function loadCapabilities() {
+    fetchJson(apiBase() + '/trendspotter/capabilities', { timeout: 15000, retries: 2 }).then(function (data) {
       caps = data;
       capsBySport = {};
       caps.sports.forEach(function (s) { capsBySport[s.id] = s; });
@@ -1152,9 +1182,13 @@
       // result rather than as an empty form.
       if (state.team) runQuery();
     }, function () {
+      // Reached only after the retries above, so this is a real outage rather
+      // than a blip. Offer the retry in place: a visitor should not have to
+      // know that reloading is the fix.
       setStatus('error', 'Research service unavailable');
       renderState('error', 'Research service unavailable',
-        'We could not reach the Trend Spotter data service. Please refresh in a moment.');
+        'We could not reach the Trend Spotter data service.',
+        '<button class="ts-btn ts-btn-ghost ts-btn-sm" type="button" id="retryBoot">Try again</button>');
     });
   }
 
