@@ -47,7 +47,19 @@ const REQUIRED = [
   "var top = Math.round(hero.getBoundingClientRect().top + window.scrollY);",
   "document.documentElement.style.setProperty('--header-height', top + 'px');",
   '.hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:72px;align-items:center}',
-  ".hero h1.hh{color:#fff;font-family:'Barlow Condensed',Inter,sans-serif;font-size:64px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:18px 0 16px}",
+  // The typeface, size, weight, case, tracking and margins are the approved
+  // ones and are locked below exactly as before. What sits between 'Barlow
+  // Condensed' and Inter now is a chain of metric-compatible FALLBACK faces —
+  // the same system fonts the browser was already using while the webfont
+  // loads, re-declared with size-adjust so they occupy Barlow Condensed's
+  // width. Nothing about the rendered headline changes; the frame before it
+  // arrives just stops being 60% wider and two lines taller.
+  ".hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:64px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:18px 0 16px}",
+  // The fallback faces themselves, and the tuned ratios. Measured, not guessed
+  // — see tests/hero-fallback-width-sweep.cjs.
+  "@font-face{font-family:'Barlow Cond Fallback W';src:local('Segoe UI');",
+  "size-adjust:78.8%;ascent-override:126.9%;descent-override:25.4%;line-gap-override:0%}",
+  "size-adjust:70.8%;ascent-override:141.2%;descent-override:28.2%;line-gap-override:0%}",
   '.hero .cta{display:flex;align-items:center;gap:26px;margin-top:24px;flex-wrap:wrap}',
   // Capper of the Week card (.spot) — approved full-size layout
   '.spot .hd{padding:15px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:var(--panel-2)}',

@@ -233,24 +233,14 @@ async function run(browser, scenario, opts) {
     }
   }
 
-  /* WEBFONT SWAP, not data. On a phone the hero headline is four lines in the
-     fallback face and three in Barlow Condensed, so when the Google font
-     arrives the H1 loses ~102px and everything under it rises by that much.
-     It has nothing to do with the loading architecture this suite exists to
-     check — it happens identically whether the data is instant or absent — and
-     the fix for it is a metric-matched fallback (size-adjust/ascent-override)
-     or font-display:optional, both of which change how the approved type
-     renders. Measured and reported, not silently dropped. */
-  const fontSwap = [];
-  if (opts.viewport.width < 500) {
-    const isSwap = (m) => /^hero headline\.height/.test(m) ||
-      (/\.top /.test(m) && ['CTA buttons', 'capper card', 'stats stripe', 'section below hero']
-        .some((n) => m.startsWith(n + '.')));
-    for (let i = moved.length - 1; i >= 0; i--) {
-      if (isSwap(moved[i])) fontSwap.push(moved.splice(i, 1)[0]);
-    }
-  }
-  if (fontSwap.length) console.log(`      (webfont swap reflow: ${fontSwap.join('; ')})`);
+  /* The webfont-swap reflow that used to live here is GONE. Barlow Condensed
+     and Inter now have metric-compatible fallbacks (size-adjust + ascent/
+     descent overrides, tuned per platform face in static/css/tmr-home-v2.css),
+     so the hero headline breaks into the same number of lines before and after
+     the font arrives. This suite therefore holds every anchor to the same 2px
+     it holds on desktop, at every viewport, with no exemption. If a font or a
+     string changes and the headline starts re-wrapping again, this fails —
+     which is the point. */
   if (opts.firstEver) {
     // Documented exception, and the only one: on a browser that has never
     // asked, whether the first-pick reminder applies is not knowable before
@@ -262,8 +252,7 @@ async function run(browser, scenario, opts) {
   } else {
     check(scenario, 'no anchor moves after the data lands', !moved.length, moved.join('; '));
   }
-  // Phones absorb the webfont-swap reflow above; desktop has no excuse.
-  const clsBudget = opts.viewport.width < 500 ? 0.15 : 0.1;
+  const clsBudget = 0.1;
   check(scenario, `CLS under ${clsBudget}`, opts.firstEver || cls < clsBudget, `CLS ${cls.toFixed(4)}`);
 
   /* 7. console clean */

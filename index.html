@@ -28,6 +28,56 @@
    source. Visual reference of record: approved/NEW-HOMEPAGE.png
    (sha256 c4075d9f...). NO selector rewriting - values are the approved ones. */
 
+/* ---------------------------------------------------------------------------
+   METRIC-COMPATIBLE FALLBACK FACES
+   -----------------------------------------------------------------------------
+   Barlow Condensed 900 is, as the name says, condensed: the hero headline set
+   in it is 60% narrower than the same string in the system sans the browser
+   draws while the webfont is in flight. On a phone that is the difference
+   between three lines and five, so the H1 collapsed by 102px at 390px wide and
+   153px at 430px the moment the font landed, dragging the CTA buttons, the
+   capper card and the stats stripe up with it. Measured CLS 0.079-0.114.
+
+   These faces are the SAME system fonts the browser was already falling back
+   to, re-declared with `size-adjust` so their glyphs occupy the width Barlow
+   Condensed will occupy, and with ascent/descent overrides so anything on a
+   `normal` line-height keeps its box too. Nothing about the final, webfont
+   rendering changes - this only reshapes the frame or two before it arrives.
+
+   Ratios were measured, not guessed: each family's advance width for the real
+   hero strings at weight 900 was compared against Barlow Condensed's, in the
+   browser, with the webfont loaded (see tests/homepage-font-swap-cls-probe.cjs
+   and the numbers in the commit message). One face per platform's default UI
+   sans, chained so each platform matches its own:
+       Segoe UI  -> Windows        69.9%
+       Roboto    -> Android/Linux  69.3%
+       Arial     -> macOS/iOS      62.7%   (Helvetica measures identically)
+   A platform without a given local() font simply skips that face and falls to
+   the next, which is the whole mechanism.
+
+   `font-weight` is deliberately NOT declared: these families ship a single
+   upright weight, so the browser synthesises the 900 exactly as it does today,
+   and the measurements above were taken with that synthesis in place. Adding a
+   weight range would tell the browser to stop synthesising and render the
+   headline noticeably lighter.
+   --------------------------------------------------------------------------- */
+@font-face{font-family:'Barlow Cond Fallback W';src:local('Segoe UI');
+  size-adjust:78.8%;ascent-override:126.9%;descent-override:25.4%;line-gap-override:0%}
+@font-face{font-family:'Barlow Cond Fallback A';src:local('Roboto');
+  size-adjust:77.8%;ascent-override:128.5%;descent-override:25.7%;line-gap-override:0%}
+@font-face{font-family:'Barlow Cond Fallback M';src:local('Arial'),local('Helvetica');
+  size-adjust:70.8%;ascent-override:141.2%;descent-override:28.2%;line-gap-override:0%}
+
+/* Inter is the body face and runs the other way - it is WIDER than the system
+   sans, so the sub-copy under the headline reflowed too (it was named in the
+   same layout-shift entries). Same treatment, same measurement method. */
+@font-face{font-family:'Inter Fallback W';src:local('Segoe UI');
+  size-adjust:109.0%;ascent-override:88.9%;descent-override:22.1%;line-gap-override:0%}
+@font-face{font-family:'Inter Fallback A';src:local('Roboto');
+  size-adjust:118.8%;ascent-override:81.6%;descent-override:20.3%;line-gap-override:0%}
+@font-face{font-family:'Inter Fallback M';src:local('Arial'),local('Helvetica');
+  size-adjust:108.5%;ascent-override:89.3%;descent-override:22.2%;line-gap-override:0%}
+
 
 
 :root{
@@ -56,7 +106,7 @@
   --header-height:165px;
 }
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:var(--page);color:var(--ink);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+body{font-family:Inter,'Inter Fallback W','Inter Fallback A','Inter Fallback M','Segoe UI',Arial,sans-serif;background:var(--page);color:var(--ink);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
 a{text-decoration:none;color:inherit}
 img{display:block;max-width:100%}
 .wrap{max-width:1720px;margin:0 auto;padding:0 28px}
@@ -254,7 +304,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 .hero-grid{display:grid;grid-template-columns:minmax(0,1fr) 520px;gap:72px;align-items:center}
 .eyebrow{display:inline-flex;align-items:center;gap:10px;padding:7px 16px;border-radius:999px;background:rgba(34,210,192,.12);border:1px solid rgba(34,210,192,.34);color:#8DEDE0;font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
 .eyebrow .bl{width:7px;height:7px;border-radius:50%;background:var(--brand-lt)}
-.hero h1.hh{color:#fff;font-family:'Barlow Condensed',Inter,sans-serif;font-size:64px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:18px 0 16px}
+.hero h1.hh{color:#fff;font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;font-size:64px;line-height:1.02;font-weight:900;text-transform:uppercase;letter-spacing:.004em;margin:18px 0 16px}
 .hero h1.hh em{font-style:normal;color:var(--brand-lt)}
 .hero p.sub{color:#B7CEE4;font-size:18px;line-height:1.6;max-width:600px;font-weight:450}
 .hero .cta{display:flex;align-items:center;gap:26px;margin-top:24px;flex-wrap:wrap}
@@ -296,14 +346,14 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 /* ---------- SECTIONS ---------- */
 .dash{padding-top:48px}
 .sec-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin:0 0 18px;flex-wrap:wrap}
-.sec-head h2{font-family:'Barlow Condensed',Inter,sans-serif;text-transform:uppercase;font-size:36px;font-weight:900;letter-spacing:.006em;line-height:1;display:flex;align-items:center;gap:13px;color:var(--ink)}
+.sec-head h2{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:36px;font-weight:900;letter-spacing:.006em;line-height:1;display:flex;align-items:center;gap:13px;color:var(--ink)}
 .sec-head h2::before{content:"";width:6px;height:30px;border-radius:2px;background:linear-gradient(180deg,var(--brand-lt),var(--brand))}
 .sec-head p{color:var(--muted);font-size:15.5px;margin-top:9px;font-weight:500;padding-left:19px}
 
 .board{display:grid;grid-template-columns:minmax(0,1.72fr) minmax(0,1.04fr) minmax(0,1.04fr);gap:20px;align-items:stretch}
 .card{background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);box-shadow:var(--sh);display:flex;flex-direction:column;overflow:hidden}
 .chd{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:18px 24px;border-bottom:2px solid var(--panel-3);flex:0 0 auto}
-.chd h3{font-family:'Barlow Condensed',Inter,sans-serif;text-transform:uppercase;font-size:25px;font-weight:900;letter-spacing:.008em;display:flex;align-items:center;gap:11px;line-height:1}
+.chd h3{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:25px;font-weight:900;letter-spacing:.008em;display:flex;align-items:center;gap:11px;line-height:1}
 .chd h3 .pulse{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 5px var(--green-soft)}
 .chd .cnt{color:var(--muted);font-size:13.5px;font-weight:700}
 .card .body{flex:1}
@@ -373,7 +423,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 .cch{display:flex;align-items:center;gap:12px;padding:17px 22px;border-bottom:1px solid var(--line)}
 .ccard.feat .cch{border-bottom-color:rgba(255,255,255,.13)}
 .cch .ic{width:40px;height:40px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:19px;flex:0 0 auto}
-.cch h4{font-family:'Barlow Condensed',Inter,sans-serif;text-transform:uppercase;font-size:26px;font-weight:900;letter-spacing:.008em;line-height:1}
+.cch h4{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:26px;font-weight:900;letter-spacing:.008em;line-height:1}
 .ccard.feat .cch h4{color:#fff}
 .ccard.feat .cch h4 em{font-style:normal;color:var(--gold-b)}
 .cch .st{margin-left:auto;font-size:11.5px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;padding:4px 10px;border-radius:4px;background:var(--green-soft);color:var(--green)}
@@ -406,7 +456,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 /* ---------- PLATFORM STRIP ---------- */
 .explore{margin-top:20px;background:var(--panel);border:1px solid var(--edge);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden}
 .explore .eh{padding:18px 24px;border-bottom:2px solid var(--panel-3);display:flex;align-items:center;justify-content:space-between;gap:16px}
-.explore .eh h3{font-family:'Barlow Condensed',Inter,sans-serif;text-transform:uppercase;font-size:26px;font-weight:900;letter-spacing:.008em;display:flex;align-items:center;gap:12px}
+.explore .eh h3{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:26px;font-weight:900;letter-spacing:.008em;display:flex;align-items:center;gap:12px}
 .explore .eh h3::before{content:"";width:5px;height:22px;border-radius:2px;background:linear-gradient(180deg,var(--brand-lt),var(--brand))}
 .egrid{display:grid;grid-template-columns:repeat(4,1fr)}
 .ei{padding:24px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:9px}
@@ -422,7 +472,7 @@ a.gm:hover .gm-sp,a.gm:focus-visible .gm-sp,.gm.is-active .gm-sp,.gm[aria-curren
 
 /* ---------- FINAL ---------- */
 .final{margin-top:20px;border-radius:var(--r);background:linear-gradient(150deg,var(--navy),var(--navy-2));padding:44px 44px;display:flex;align-items:center;justify-content:space-between;gap:36px;flex-wrap:wrap;box-shadow:var(--sh-up)}
-.final h3{font-family:'Barlow Condensed',Inter,sans-serif;text-transform:uppercase;font-size:38px;font-weight:900;line-height:1;color:#fff;letter-spacing:.006em}
+.final h3{font-family:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;text-transform:uppercase;font-size:38px;font-weight:900;line-height:1;color:#fff;letter-spacing:.006em}
 body.tmr-ds .final h3{color:#fff}
 .final p{color:#A9C3DA;font-size:16px;margin-top:11px;line-height:1.55}
 footer{margin-top:52px;background:var(--navy);color:#93AEC7;padding:32px 0}
@@ -559,6 +609,23 @@ footer a:hover{color:#fff}
      crawlers never get the html classes. tmr-home-live.js removes each class
      as its region resolves; its 4s integrity sweep is the reveal failsafe. -->
 <style id="tmrLiveWaitCss">
+  /* Metric-compatible fallbacks, applied to the design-system tokens.
+     The faces themselves are declared in the critical CSS above (see the
+     METRIC-COMPATIBLE FALLBACK FACES block in static/css/tmr-home-v2.css) —
+     these two lines are what actually puts them in front of the text that
+     tmr-ds.css styles. That stylesheet loads AFTER the inlined critical CSS
+     and sets `font-family: var(--font)` on body.tmr-ds, so the homepage's own
+     body rule never reached the hero sub-copy: it measured as
+     `Inter, "Segoe UI", Arial, sans-serif` and still grew a line (29px, taking
+     the CTA buttons and everything under them with it) when Inter arrived.
+     Redefining the tokens here — same specificity, later in the document —
+     hands the whole design system the adjusted fallbacks on this page only.
+     tmr-ds.css is referenced by content hash from 97 other pages and is not
+     this change's business. */
+  body.tmr-ds{
+    --font:Inter,'Inter Fallback W','Inter Fallback A','Inter Fallback M','Segoe UI',Arial,sans-serif;
+    --display:'Barlow Condensed','Barlow Cond Fallback W','Barlow Cond Fallback A','Barlow Cond Fallback M',Inter,sans-serif;
+  }
   html.tmr-lw-b1 .board .card:nth-of-type(1) .body,
   html.tmr-lw-b2 .board .card:nth-of-type(2) .body,
   html.tmr-lw-b3 .board .card:nth-of-type(3) .body { visibility: hidden !important; }
