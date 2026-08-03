@@ -3,27 +3,29 @@ main = "worker.mjs"
 compatibility_date = "2026-07-01"
 workers_dev = false
 
-# Homepage only. The worker injects CURRENT site stats, the Capper of the Week
-# card and today's MLB slate into the document at request time (fail-open on any
-# error), so the first meaningful paint is accurate with zero client-side swap.
+# The worker injects CURRENT site stats + the Capper of the Week card into the
+# baked homepage HTML at request time (fail-open on any error), so the first
+# meaningful paint is accurate with zero client-side swap.
 #
-# A Cloudflare route pattern is matched against the FULL URL, query string
-# included, so a bare `trustmyrecord.com/` route does NOT match
-# `trustmyrecord.com/?utm_source=…` (verified live: that URL returns no
-# x-tmr-ssr header). `/index.html` did not match either. Both are added here.
+# The routes are WILDCARDS, and the worker's own isHomepage() guard decides what
+# it actually rewrites. This is deliberate: a wildcard-free route such as
+# "trustmyrecord.com/" is matched against the FULL request URL including the
+# query string, so it covered a bare visit but NOT "/?utm_source=...",
+# "/?gclid=..." or "/?fbclid=..." — i.e. every visitor from an ad, a social
+# share or any UTM-tagged campaign silently bypassed the worker and got the
+# un-injected bake. Cloudflare will not accept "?" inside a route pattern
+# (API error 10022), so wildcard route + in-worker path guard is the only way
+# to cover both. Do not narrow these back to "/" without re-testing a
+# query-string URL for the "x-tmr-ssr: injected" response header.
 #
-# The query-string shapes CANNOT be routed: Cloudflare rejects any pattern
-# containing "?" with `Route pattern should not have query parameters
-# [code: 10022]`, and the only pattern that would cover them is
-# `trustmyrecord.com/*`, which puts this worker in front of every asset on the
-# site. That is not worth it, because the document no longer depends on the
-# injection to be CORRECT — it ships skeletons, never stale numbers. An ad click
-# carrying a utm_source gets placeholders that fill from the API a moment later,
-# which is the same honest sequence as a slow first visit. What it must never do
-# again is show 2,348 and then 2,707.
+# More specific routes on this zone (/pick/*, /forum/thread/*,
+# /mlb-simulator/simulations/*) still take precedence and keep their own
+# workers; everything else is passed straight through by the guard.
 routes = [
+  { pattern = "trustmyrecord.com/*", zone_name = "trustmyrecord.com" },
+  { pattern = "www.trustmyrecord.com/*", zone_name = "trustmyrecord.com" },
   { pattern = "trustmyrecord.com/", zone_name = "trustmyrecord.com" },
-  { pattern = "trustmyrecord.com/index.html", zone_name = "trustmyrecord.com" },
   { pattern = "www.trustmyrecord.com/", zone_name = "trustmyrecord.com" },
+  { pattern = "trustmyrecord.com/index.html", zone_name = "trustmyrecord.com" },
   { pattern = "www.trustmyrecord.com/index.html", zone_name = "trustmyrecord.com" },
 ]
