@@ -7,7 +7,7 @@
    window.selectGameBet bridge a user click uses — the slip opens prefilled, the
    user still enters units and presses the normal submit. Nothing here submits,
    auto-confirms, or touches any other sportsbook behavior; with no ?simpick=1
-   this file is a no-op. Straight picks only (moneyline), never a parlay.
+   this file is a no-op. Moneyline only.
    ============================================================================= */
 (function () {
     'use strict';
@@ -127,7 +127,7 @@
         }
         if (!games || !games.length) {
             if (tries < 100) { setTimeout(attempt, 400); return; }   // ~40s window for slow API
-            showBanner('Your simulated pick (' + intent.pick_team + ' ML) is saved — the game board has not loaded it yet. Find the matchup below to place it. Picks are straight picks, submitted one at a time.', false);
+            showBanner('Your simulated pick (' + intent.pick_team + ' ML) is saved — the game board has not loaded it yet. Find the matchup below to place it.', false);
             return;
         }
         armSubmitObserver();
@@ -149,7 +149,7 @@
         }
         if (price != null && typeof window.selectGameBet === 'function') {
             window.selectGameBet(idx, 'ml', intent.pick_team, '', String(price), game.away_team, game.home_team);
-            showBanner('From your simulation: ' + intent.pick_team + ' ML is pre-selected. Set your units and confirm to lock it — nothing is submitted until you do. Straight pick only, not a parlay.', true);
+            showBanner('From your simulation: ' + intent.pick_team + ' ML is pre-selected. Set your units and confirm to lock it — nothing is submitted until you do.', true);
         } else {
             showBanner('Your simulated pick (' + intent.pick_team + ') is ready — moneyline price is loading. Select it on the board to confirm; nothing is submitted automatically.', false);
         }

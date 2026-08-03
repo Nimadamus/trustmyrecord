@@ -2,9 +2,9 @@
  * TMR Multi-Pick Slip (MULTISLIP_20260730)
  *
  * Feature-flagged replacement for the single-pick slip on /sportsbook/.
- * Every selection stays an INDEPENDENT STRAIGHT PICK — grouped submission
+ * Every selection stays an INDEPENDENT PICK — grouped submission
  * POSTs each one separately through the existing proven /api/picks endpoint
- * (via backend-api.js api.createPick). Nothing here is a parlay.
+ * (via backend-api.js api.createPick).
  *
  * Flag:
  *   ON  : localStorage.tmr_multislip === '1'  (set once via /sportsbook/?multislip=1)
@@ -396,7 +396,7 @@
         }
 
         if (!n) {
-            html += '<div class="tmr-ms-empty">Select any available line to add a straight pick.</div>';
+            html += '<div class="tmr-ms-empty">Select any available line to add a pick.</div>';
         } else {
             html += '<div class="tmr-ms-bulk"><span class="tmr-ms-bulk-label">Apply units to all:</span>' +
                 QUICK_UNITS.map(function (u) {
@@ -416,11 +416,10 @@
             html += '</div>';
 
             html += '<div class="tmr-ms-foot">' +
-                '<div class="tmr-ms-totals"><span>' + n + ' straight pick' + (n === 1 ? '' : 's') + '</span>' +
+                '<div class="tmr-ms-totals"><span>' + n + ' pick' + (n === 1 ? '' : 's') + '</span>' +
                 '<span>Total: <strong>' + fmtUnits(totalUnits()) + ' units</strong></span></div>' +
                 '<button type="button" class="tmr-ms-submit" data-ms-act="submit"' + (busy ? ' disabled' : '') + '>' +
                 (busy ? 'Submitting&hellip;' : 'Submit ' + n + ' Pick' + (n === 1 ? '' : 's')) + '</button>' +
-                '<div class="tmr-ms-note">Each pick is recorded individually on your public record. This is not a parlay.</div>' +
                 '</div>';
         }
         html += '<div class="tmr-ms-live" role="status" aria-live="polite"></div>';
@@ -653,10 +652,9 @@
         }
         var total = ready.reduce(function (s, e) { return s + clampUnits(e.units); }, 0);
         ov.innerHTML = '<div class="tmr-ms-modal">' +
-            '<h3>Confirm ' + ready.length + ' Straight Pick' + (ready.length === 1 ? '' : 's') + '</h3>' +
+            '<h3>Confirm ' + ready.length + ' Pick' + (ready.length === 1 ? '' : 's') + '</h3>' +
             lines + blockers +
             '<div class="tmr-ms-totals"><span>Total units</span><strong>' + fmtUnits(total) + '</strong></div>' +
-            '<div class="tmr-ms-disclaimer">These picks will be recorded individually. This is not a parlay.</div>' +
             '<div class="tmr-ms-modal-btns">' +
             '<button type="button" class="tmr-ms-btn-secondary" data-ms-modal="back">Back</button>' +
             (ready.length && !moved.length
