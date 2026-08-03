@@ -1057,10 +1057,13 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 #panel-matchup td, #panel-matchup th, #panel-matchup li, #panel-matchup dt, #panel-matchup dd {
     color: inherit;
 }
+/* The shell declares `.tmr-site-shell h1,h2 { color: ... !important }` for its
+   dark theme. Only !important can override !important, so these match its
+   weight; the scope is one panel, so nothing else on the site is affected. */
 #panel-matchup .hx-head h1,
 #panel-matchup .hx-step-head h2,
 #panel-matchup .hx-card-head h2,
-#panel-matchup .hx-card-head h3 { color: var(--hx-ink); }
+#panel-matchup .hx-card-head h3 { color: var(--hx-ink) !important; }
 #panel-matchup .hx-group > legend,
 #panel-matchup .hx-kpi span { color: var(--hx-ink-3); }
 #panel-matchup .hx-kpi strong { color: var(--hx-ink); }
