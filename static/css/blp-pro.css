@@ -125,6 +125,13 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 /* --------------------------------------------------------------- layout */
 
 .blp-layout { display: grid; grid-template-columns: 196px minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
+/* A grid item defaults to min-width:auto, so it refuses to shrink below its
+   content and overflows its own track. The qualifying-games table carries a
+   620px min-width, so on a phone the panel grew to 788px inside a 355px
+   column and `body { overflow-x: hidden }` CLIPPED the excess -- half the
+   report unreachable rather than scrollable. min-width:0 lets the item
+   shrink so .hx-tablewrap's own overflow-x does the scrolling instead. */
+.blp-layout > * { min-width: 0; }
 @media (max-width: 1180px) { .blp-layout { grid-template-columns: 196px minmax(0, 1fr); } }
 
 .blp-rail {
@@ -635,7 +642,7 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 /* ---------------------------------------------------------- responsive */
 
 @media (max-width: 1000px) {
-    .blp-layout { grid-template-columns: 1fr; }
+    .blp-layout { grid-template-columns: minmax(0, 1fr); }
     .blp-rail {
         position: static; display: flex; gap: 6px; padding: 6px;
         overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
@@ -1298,7 +1305,10 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 .hx-run-note { margin: 10px 0 0; text-align: center; font-size: 13px; color: var(--hx-ink-3); }
 
 /* --- results ------------------------------------------------------------ */
-.hx-two { display: grid; gap: 16px; grid-template-columns: 1fr; }
+.hx-two { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+/* Same min-width:auto trap one level down: without this the team card is
+   sized by the table inside it rather than by the column. */
+.hx-two > .hx-card, #panel-matchup .hx-card, #libDetail .hx-card { min-width: 0; }
 @media (min-width: 1000px) { .hx-two { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 .hx-card {
