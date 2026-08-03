@@ -1472,3 +1472,23 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
     outline: 2px solid var(--hx-accent);
     outline-offset: 2px;
 }
+
+/* --------------------------------------------- allowance subscribe prompt
+   The one button in this notice is a primary conversion action, and it was
+   inheriting .blp-btn--sm -- 34px asked for, 39px rendered once the shell's
+   own 38px floor and the line-box were applied. That is under every common
+   touch-target floor, on the control a phone user is most likely to aim at.
+   44px is the Apple HIG minimum and is what this needs to clear.
+   Measured on the live page, not assumed. */
+#allowanceNotice #allowanceSubscribe {
+    min-height: 44px;
+    padding: 0 18px;
+    font-size: 13px;
+    flex: 0 0 auto;
+}
+/* On a phone the notice stacks, so the button gets its own full-width row
+   rather than being squeezed against the copy. */
+@media (max-width: 560px) {
+    #allowanceNotice .blp-note { flex-wrap: wrap; }
+    #allowanceNotice #allowanceSubscribe { width: 100%; }
+}
