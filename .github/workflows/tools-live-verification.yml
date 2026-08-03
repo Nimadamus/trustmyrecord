@@ -8,6 +8,17 @@ on:
       - 'mlb-simulator/**'
       - 'model-builder/**'
       - 'tools/**'
+      # This job also drives /handicappers/, /sportsbook/ and /leaderboards/ via
+      # verifyLinkedWorkflow, and every page it visits loads the shared nav. None
+      # of that was in the filter, so a change to any of it shipped without this
+      # gate running — which is how two logged-out 401s reached production.
+      - 'handicappers/**'
+      - 'sportsbook/**'
+      - 'leaderboards/**'
+      - 'static/js/tmr-sitewide.js'
+      - 'static/js/tmr-ds-nav.js'
+      - 'static/js/backend-api.js'
+      - 'tests/logged-out-session-regression-test.js'
       - 'static/js/trendspotter.js'
       - 'static/js/mlb-simulator.js'
       - 'static/js/model-builder-shell.js'
