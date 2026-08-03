@@ -1492,3 +1492,110 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
     #allowanceNotice .blp-note { flex-wrap: wrap; }
     #allowanceNotice #allowanceSubscribe { width: 100%; }
 }
+
+/* ================================================ expanded filter library
+   Rendered from the server's library, so the styling has to cope with a
+   variable number of groups and with rows that are deliberately disabled. */
+#panel-matchup .hx-ftools {
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px;
+}
+#panel-matchup .hx-fsearch {
+    flex: 1 1 15rem; min-height: 40px; padding: 0 12px;
+    border: 1px solid var(--hx-line); border-radius: 8px;
+    background: var(--hx-surface); color: var(--hx-ink) !important; font-size: 14px;
+}
+#panel-matchup .hx-fsample { flex: 0 1 15rem; }
+#panel-matchup .hx-fcount {
+    margin-left: auto; font-size: 12px; font-weight: 700;
+    color: var(--hx-ink-3) !important; white-space: nowrap;
+}
+#panel-matchup .hx-fhelpnote {
+    margin: 0 0 12px; padding: 10px 12px; border-radius: 8px;
+    background: var(--hx-surface-2); border: 1px solid var(--hx-line);
+    font-size: 13px; line-height: 1.5; color: var(--hx-ink-2) !important;
+}
+
+#panel-matchup .hx-fgroup {
+    border: 1px solid var(--hx-line); border-radius: 10px;
+    margin-bottom: 8px; background: var(--hx-surface); overflow: hidden;
+}
+#panel-matchup .hx-fgroup-head {
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    min-height: 46px; padding: 0 14px; border: 0; background: none;
+    cursor: pointer; text-align: left; font: 700 14px/1.2 inherit;
+    color: var(--hx-ink) !important;
+}
+#panel-matchup .hx-fgroup-title { flex: 1 1 auto; }
+#panel-matchup .hx-fbadge {
+    min-width: 20px; padding: 2px 7px; border-radius: 999px;
+    background: var(--hx-accent); color: #fff !important;
+    font-size: 11px; font-weight: 800; text-align: center;
+}
+#panel-matchup .hx-fcaret { font-size: 16px; color: var(--hx-ink-3) !important; }
+#panel-matchup .hx-fgroup-body { padding: 0 14px 12px; }
+#panel-matchup .hx-fgroup-help {
+    margin: 0 0 10px; font-size: 12px; color: var(--hx-ink-3) !important;
+}
+
+#panel-matchup .hx-frow {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    gap: 6px 14px; align-items: center;
+    padding: 8px 0; border-top: 1px solid var(--hx-line);
+}
+#panel-matchup .hx-frow:first-of-type { border-top: 0; }
+#panel-matchup .hx-flabel { display: flex; align-items: center; gap: 6px; min-width: 0; }
+#panel-matchup .hx-fname { font-size: 13px; font-weight: 600; color: var(--hx-ink-2) !important; }
+#panel-matchup .hx-fhelp {
+    flex: 0 0 auto; width: 18px; height: 18px; padding: 0;
+    border: 1px solid var(--hx-line); border-radius: 50%;
+    background: none; cursor: pointer; font: 700 11px/1 inherit;
+    color: var(--hx-ink-3) !important;
+}
+#panel-matchup .hx-fnote {
+    grid-column: 1 / -1; margin: 0; font-size: 11.5px; line-height: 1.45;
+    color: var(--hx-ink-3) !important;
+}
+/* Unavailable is a stated fact with a reason, never a broken-looking control. */
+#panel-matchup .hx-frow.is-unavailable .hx-fname,
+#panel-matchup .hx-frow.is-unavailable .hx-fctl { opacity: 0.55; }
+#panel-matchup .hx-fnote--off { color: #7a5308 !important; }
+
+#panel-matchup .hx-fsel, #panel-matchup .hx-fnum, #panel-matchup .hx-ftext {
+    width: 100%; min-height: 38px; padding: 0 10px;
+    border: 1px solid var(--hx-line); border-radius: 8px;
+    background: var(--hx-surface); color: var(--hx-ink) !important; font-size: 13px;
+}
+#panel-matchup .hx-frange { display: flex; align-items: center; gap: 6px; }
+#panel-matchup .hx-frange-to,
+#panel-matchup .hx-funit { font-size: 12px; color: var(--hx-ink-3) !important; white-space: nowrap; }
+#panel-matchup .hx-tag--x {
+    border: 0; cursor: pointer; font: inherit; font-size: 12px;
+}
+@media (max-width: 620px) {
+    /* One column on a phone: a 2-up grid puts a number pair in ~90px. */
+    #panel-matchup .hx-frow { grid-template-columns: 1fr; }
+    #panel-matchup .hx-fcount { margin-left: 0; width: 100%; }
+}
+
+/* The narrowing trail. Deliberately a table, not prose: the reader is
+   comparing four numbers per row and prose makes that harder, not easier. */
+#panel-matchup .hx-trail {
+    margin-top: 12px; padding: 12px 14px;
+    border: 1px solid var(--hx-line); border-radius: 10px;
+    background: var(--hx-surface-2);
+}
+#panel-matchup .hx-trail strong {
+    display: block; margin-bottom: 8px; font-size: 13px; color: var(--hx-ink) !important;
+}
+#panel-matchup .hx-trail-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+#panel-matchup .hx-trail-table th {
+    text-align: left; padding: 4px 8px 6px; font-weight: 700;
+    color: var(--hx-ink-3) !important; border-bottom: 1px solid var(--hx-line);
+}
+#panel-matchup .hx-trail-table td {
+    padding: 5px 8px; color: var(--hx-ink-2) !important;
+    border-bottom: 1px solid var(--hx-line);
+}
+#panel-matchup .hx-trail-table th.hx-num,
+#panel-matchup .hx-trail-table td.hx-num { text-align: right; font-variant-numeric: tabular-nums; }
+#panel-matchup .hx-trail-table tr:last-child td { border-bottom: 0; }

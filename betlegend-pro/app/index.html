@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=60d284843ea9">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=f74b018d2b60">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=7e2882746866"></script>
 </head>
@@ -149,9 +149,23 @@
                         <div class="hx-step-head">
                             <span class="hx-step-num" aria-hidden="true">3</span>
                             <h2 id="hxStep3">Choose situational filters</h2>
+                            <span class="hx-fcount" id="hxFilterCount">No filters</span>
                             <button class="hx-clear" id="hxClear" type="button" hidden>Clear all</button>
                         </div>
-                        <p class="hx-step-sub">Optional. Every filter narrows the historical sample for both teams, and the report lists exactly which ones it applied.</p>
+                        <p class="hx-step-sub">Optional. Conditions combine with AND — a game must satisfy every one. The report lists exactly which ones applied, and how many games each removed.</p>
+                        <div class="hx-ftools">
+                            <label class="hx-sr-only" for="hxFilterSearch">Search filters</label>
+                            <input class="hx-fsearch" id="hxFilterSearch" type="search" placeholder="Search filters — pitcher, rest, weather…" autocomplete="off">
+                            <label class="hx-sr-only" for="hxSampleSize">Sample size</label>
+                            <select class="hx-fsel hx-fsample" id="hxSampleSize">
+                                <option value="5">Last 5 qualifying games</option>
+                                <option value="10">Last 10 qualifying games</option>
+                                <option value="20" selected>Last 20 qualifying games</option>
+                                <option value="50">Last 50 qualifying games</option>
+                                <option value="all">All qualifying games</option>
+                            </select>
+                        </div>
+                        <p class="hx-fhelpnote" id="hxHelpNote" hidden></p>
                         <div class="hx-filters" id="hxFilters"></div>
                         <div class="hx-chosen" id="hxChosen" hidden></div>
                     </section>
@@ -324,7 +338,7 @@
 </main>
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
-<script src="/static/js/backend-api.js?v=fef48e9b6da4"></script>
+<script src="/static/js/backend-api.js?v=5e470de2f834"></script>
 <script>
 (function () {
     'use strict';
@@ -632,107 +646,309 @@
     // `name` is the engine's own condition field. A group carrying `sports` is
     // offered only for those leagues, rather than shown everywhere and then
     // declined by the server.
-    var FILTER_GROUPS = [
-        { title: 'Venue', name: 'venue', kind: 'one', options: [
-            { value: 'home', label: 'Home games only' },
-            { value: 'away', label: 'Away games only' } ] },
-        { title: 'Favorite / underdog role', name: 'role', kind: 'one', options: [
-            { value: 'favorite', label: 'When favored' },
-            { value: 'underdog', label: 'When an underdog' } ] },
-        { title: 'Opponent', name: 'opponent_type', kind: 'one', options: [
-            { value: 'division', label: 'Division opponents' },
-            { value: 'conference', label: 'Conference opponents' } ] },
-        { title: 'Head-to-head', name: 'head_to_head_only', kind: 'bool', options: [
-            { value: '1', label: 'Only games against this opponent' } ] },
-        // NFL/NBA only. MLB's run line and NHL's puck line are fixed at ±1.5,
-        // so measured against the shipped dataset every single MLB and NHL game
-        // falls in "close" and none in "moderate"/"large" — a control that
-        // either does nothing or empties the report. The engine declines it for
-        // those sports (LINE_CATEGORY_SPORTS in historical_matchup.py); this
-        // stops the UI offering it in the first place.
-        { title: 'Closing line size', name: 'line_category', kind: 'one', sports: ['NFL', 'NBA'], options: [
-            { value: 'close', label: 'Close line (within 3)' },
-            { value: 'moderate', label: 'Moderate line (3 to 7)' },
-            { value: 'large', label: 'Large line (7+)' } ] },
-        { title: 'Rest', name: 'min_rest_days', kind: 'one', options: [
-            { value: '1', label: '1+ days rest' },
-            { value: '2', label: '2+ days rest' },
-            { value: '3', label: '3+ days rest' } ] },
-        // Only NFL and NBA rows carry a trustworthy regular/postseason marker.
-        { title: 'Season type', name: 'season_type', kind: 'one', sports: ['NFL', 'NBA'], options: [
-            { value: 'regular', label: 'Regular season only' },
-            { value: 'postseason', label: 'Postseason only' } ] },
-        { title: 'Sample size', name: 'sample_size', kind: 'one', options: [
-            { value: '5', label: 'Last 5 qualifying games' },
-            { value: '10', label: 'Last 10 qualifying games' },
-            { value: '20', label: 'Last 20 qualifying games' },
-            { value: '50', label: 'Last 50 qualifying games' },
-            { value: 'all', label: 'All qualifying games' } ] }
-    ];
+    // ------------------------------------------------------------- filters
+    //
+    // The filter library is fetched from the server, never hard-coded here.
+    // The engine is the only thing that knows which conditions its datasets can
+    // actually support -- MLB has no varying spread, NFL weather starts in
+    // 1999, NHL carries a full box score and NBA does not -- so a list written
+    // in this file would drift the moment the data changed, and drift silently.
+    //
+    // A condition that is not honest for the selected sport arrives already
+    // marked unavailable WITH its reason, and renders as a disabled row that
+    // says why. It never renders as a live-looking control that does nothing.
 
+    var LEGACY_IDS = {
+        venue: 1, role: 1, opponent_type: 1, season_type: 1,
+        head_to_head_only: 1, min_rest_days: 1
+    };
+
+    var library = null;        // { groups: [...], rejected: [...] }
+    var libraryFor = null;     // which sport `library` describes
     var filters = { sample_size: '20' };
+    var openGroups = { matchup: true, market: true };
+    var filterSearch = '';
 
-    function groupsForSport(sport) {
-        return FILTER_GROUPS.filter(function (g) {
-            return !g.sports || g.sports.indexOf(sport) !== -1;
+    function activeFilterCount() {
+        var n = 0;
+        Object.keys(filters).forEach(function (k) {
+            if (k === 'sample_size') return;
+            var v = filters[k];
+            if (v === undefined || v === null || v === false || v === '' || v === 'any') return;
+            if (typeof v === 'object' && v.min == null && v.max == null) return;
+            n++;
         });
+        return n;
+    }
+
+    function matchesSearch(spec) {
+        if (!filterSearch) return true;
+        var q = filterSearch.toLowerCase();
+        return spec.label.toLowerCase().indexOf(q) !== -1
+            || (spec.help || '').toLowerCase().indexOf(q) !== -1;
+    }
+
+    /** One control. Shape follows the spec's `kind`, which the server sets. */
+    function renderControl(spec) {
+        var v = filters[spec.id];
+        var dis = spec.available ? '' : ' disabled';
+
+        if (spec.kind === 'enum') {
+            return '<select class="hx-fsel" data-fid="' + esc(spec.id) + '"' + dis + '>'
+                + '<option value="">Any</option>'
+                + spec.options.map(function (o) {
+                    return '<option value="' + esc(o.value) + '"'
+                        + (v === o.value ? ' selected' : '') + '>' + esc(o.label) + '</option>';
+                }).join('') + '</select>';
+        }
+        if (spec.kind === 'bool') {
+            var id = 'hxf-' + spec.id;
+            return '<label class="hx-check' + (v === true ? ' is-on' : '') + '" for="' + id + '">'
+                + '<input type="checkbox" id="' + id + '" data-fid="' + esc(spec.id) + '"'
+                + (v === true ? ' checked' : '') + dis + '><span>Yes</span></label>';
+        }
+        if (spec.kind === 'int') {
+            return '<input class="hx-fnum" type="number" data-fid="' + esc(spec.id) + '"'
+                + ' data-bound="value" placeholder="Any"'
+                + (spec.min != null ? ' min="' + spec.min + '"' : '')
+                + (spec.max != null ? ' max="' + spec.max + '"' : '')
+                + (v != null && v !== '' ? ' value="' + esc(v) + '"' : '') + dis + '>';
+        }
+        if (spec.kind === 'text') {
+            return '<input class="hx-ftext" type="text" data-fid="' + esc(spec.id) + '"'
+                + ' data-bound="value" placeholder="Any"'
+                + (v ? ' value="' + esc(v) + '"' : '') + dis + '>';
+        }
+        // range
+        var r = (v && typeof v === 'object') ? v : {};
+        var attrs = (spec.min != null ? ' min="' + spec.min + '"' : '')
+            + (spec.max != null ? ' max="' + spec.max + '"' : '')
+            + (spec.step != null ? ' step="' + spec.step + '"' : '');
+        return '<span class="hx-frange">'
+            + '<input class="hx-fnum" type="number" data-fid="' + esc(spec.id) + '" data-bound="min"'
+            + ' placeholder="Min"' + attrs + (r.min != null ? ' value="' + esc(r.min) + '"' : '') + dis + '>'
+            + '<span class="hx-frange-to">to</span>'
+            + '<input class="hx-fnum" type="number" data-fid="' + esc(spec.id) + '" data-bound="max"'
+            + ' placeholder="Max"' + attrs + (r.max != null ? ' value="' + esc(r.max) + '"' : '') + dis + '>'
+            + (spec.unit ? '<span class="hx-funit">' + esc(spec.unit) + '</span>' : '')
+            + '</span>';
     }
 
     function renderFilters() {
-        $('hxFilters').innerHTML = groupsForSport(mSport.value).map(function (g) {
-            var rows = g.options.map(function (o) {
-                var on = g.kind === 'bool' ? filters[g.name] === true : filters[g.name] === o.value;
-                var id = 'hxf-' + g.name + '-' + o.value;
-                return '<label class="hx-check' + (on ? ' is-on' : '') + '" for="' + id + '">'
-                    + '<input type="checkbox" id="' + id + '" data-group="' + esc(g.name) + '"'
-                    + ' data-kind="' + esc(g.kind) + '" data-value="' + esc(o.value) + '"'
-                    + (on ? ' checked' : '') + '>'
-                    + '<span>' + esc(o.label) + '</span></label>';
+        var host = $('hxFilters');
+        if (!library) {
+            host.innerHTML = '<p class="hx-note">Loading the filter library&hellip;</p>';
+            return;
+        }
+
+        var html = library.groups.map(function (g) {
+            var specs = g.filters.filter(matchesSearch);
+            if (!specs.length) return '';
+            // A search narrows to matches, so forcing every matching group open
+            // is what the user just asked for.
+            var open = filterSearch ? true : !!openGroups[g.id];
+            var setInGroup = specs.filter(function (s) {
+                var v = filters[s.id];
+                if (v === undefined || v === null || v === false || v === '' || v === 'any') return false;
+                if (typeof v === 'object' && v.min == null && v.max == null) return false;
+                return true;
+            }).length;
+
+            var rows = specs.map(function (spec) {
+                var cls = 'hx-frow' + (spec.available ? '' : ' is-unavailable');
+                return '<div class="' + cls + '">'
+                    + '<div class="hx-flabel">'
+                    + '<span class="hx-fname">' + esc(spec.label) + '</span>'
+                    + '<button type="button" class="hx-fhelp" data-help="' + esc(spec.help)
+                    + (spec.era_note ? ' ' + esc(spec.era_note) : '')
+                    + '" aria-label="What does ' + esc(spec.label) + ' mean?">?</button>'
+                    + '</div>'
+                    + '<div class="hx-fctl">' + renderControl(spec) + '</div>'
+                    + (spec.available
+                        ? (spec.era_note ? '<p class="hx-fnote">' + esc(spec.era_note) + '</p>' : '')
+                        : '<p class="hx-fnote hx-fnote--off">' + esc(spec.unavailable_reason) + '</p>')
+                    + '</div>';
             }).join('');
-            return '<fieldset class="hx-group"><legend>' + esc(g.title) + '</legend>'
-                + '<div class="hx-group-rows">' + rows + '</div></fieldset>';
+
+            return '<section class="hx-fgroup" data-group="' + esc(g.id) + '">'
+                + '<button type="button" class="hx-fgroup-head" aria-expanded="' + (open ? 'true' : 'false') + '">'
+                + '<span class="hx-fgroup-title">' + esc(g.label) + '</span>'
+                + (setInGroup ? '<span class="hx-fbadge">' + setInGroup + '</span>' : '')
+                + '<span class="hx-fcaret" aria-hidden="true">' + (open ? '&minus;' : '+') + '</span>'
+                + '</button>'
+                + (open ? '<div class="hx-fgroup-body"><p class="hx-fgroup-help">'
+                    + esc(g.help) + '</p>' + rows + '</div>' : '')
+                + '</section>';
         }).join('');
+
+        host.innerHTML = html || '<p class="hx-note">No filter matches that search.</p>';
         renderChosen();
     }
 
-    function chosenLabels() {
+    /** Plain-English label for one set value, used by the chips. */
+    function chipFor(spec, v) {
+        if (spec.kind === 'bool') return spec.label;
+        if (spec.kind === 'enum') {
+            for (var i = 0; i < spec.options.length; i++) {
+                if (spec.options[i].value === v) return spec.options[i].label;
+            }
+            return spec.label + ': ' + v;
+        }
+        if (spec.kind === 'range') {
+            if (v.min != null && v.max != null) return spec.label + ' ' + v.min + '–' + v.max;
+            if (v.min != null) return spec.label + ' ' + v.min + '+';
+            return spec.label + ' up to ' + v.max;
+        }
+        return spec.label + ': ' + v;
+    }
+
+    function chosenChips() {
+        if (!library) return [];
         var out = [];
-        groupsForSport(mSport.value).forEach(function (g) {
-            if (g.name === 'sample_size') return;
-            var v = filters[g.name];
-            if (v === undefined || v === null || v === false) return;
-            if (g.kind === 'bool') { out.push(g.options[0].label); return; }
-            g.options.forEach(function (o) { if (o.value === v) out.push(o.label); });
+        library.groups.forEach(function (g) {
+            g.filters.forEach(function (spec) {
+                var v = filters[spec.id];
+                if (v === undefined || v === null || v === false || v === '' || v === 'any') return;
+                if (typeof v === 'object' && v.min == null && v.max == null) return;
+                out.push({ id: spec.id, label: chipFor(spec, v) });
+            });
         });
         return out;
     }
 
     function renderChosen() {
-        var picked = chosenLabels();
-        $('hxClear').hidden = picked.length === 0;
+        var picked = chosenChips();
+        var count = picked.length;
+        $('hxClear').hidden = count === 0;
+        var counter = $('hxFilterCount');
+        if (counter) {
+            counter.textContent = count ? count + (count === 1 ? ' filter' : ' filters') : 'No filters';
+        }
         var box = $('hxChosen');
-        if (!picked.length) { box.hidden = true; box.innerHTML = ''; return; }
+        if (!count) { box.hidden = true; box.innerHTML = ''; return; }
         box.innerHTML = '<span class="hx-chosen-label">Applied:</span>'
-            + picked.map(function (l) { return '<span class="hx-tag">' + esc(l) + '</span>'; }).join('');
+            + picked.map(function (p) {
+                return '<button type="button" class="hx-tag hx-tag--x" data-remove="' + esc(p.id) + '">'
+                    + esc(p.label) + '<span aria-hidden="true"> ×</span></button>';
+            }).join('');
         box.hidden = false;
+    }
+
+    async function loadFilterLibrary(sport) {
+        if (libraryFor === sport && library) { renderFilters(); return; }
+        library = null;
+        libraryFor = sport;
+        renderFilters();
+        try {
+            var lib = await window.api.getBetLegendProMatchupFilters(sport);
+            if (libraryFor !== sport) return;      // sport changed mid-flight
+            library = lib;
+        } catch (err) {
+            library = null;
+            $('hxFilters').innerHTML = '<p class="hx-note hx-fnote--off">The filter library could '
+                + 'not be loaded, so only the basic report is available right now.</p>';
+            return;
+        }
+        renderFilters();
+    }
+
+    // --- input wiring -------------------------------------------------------
+    function setFilter(fid, bound, raw) {
+        if (bound === 'min' || bound === 'max') {
+            var cur = (filters[fid] && typeof filters[fid] === 'object') ? filters[fid] : {};
+            var next = { min: cur.min, max: cur.max };
+            next[bound] = (raw === '' || raw == null) ? null : Number(raw);
+            if (next.min == null && next.max == null) delete filters[fid];
+            else filters[fid] = next;
+            return;
+        }
+        if (raw === '' || raw == null || raw === false) delete filters[fid];
+        else filters[fid] = raw;
     }
 
     $('hxFilters').addEventListener('change', function (ev) {
         var el = ev.target;
-        if (!el || el.tagName !== 'INPUT') return;
-        var group = el.getAttribute('data-group');
-        var kind = el.getAttribute('data-kind');
-        var value = el.getAttribute('data-value');
-        // One choice per group: checking a second option replaces the first
-        // rather than sending two mutually exclusive conditions.
-        filters[group] = el.checked ? (kind === 'bool' ? true : value) : undefined;
+        if (!el || !el.getAttribute) return;
+        var fid = el.getAttribute('data-fid');
+        if (!fid) return;
+        if (el.type === 'checkbox') setFilter(fid, null, el.checked);
+        else setFilter(fid, el.getAttribute('data-bound'), el.value);
+        renderChosen();
+    });
+
+    // Number and text inputs update the chips as they are typed, so the count
+    // never lags what is on screen.
+    $('hxFilters').addEventListener('input', function (ev) {
+        var el = ev.target;
+        if (!el || !el.getAttribute) return;
+        var fid = el.getAttribute('data-fid');
+        if (!fid || el.type === 'checkbox' || el.tagName === 'SELECT') return;
+        setFilter(fid, el.getAttribute('data-bound'), el.value);
+        renderChosen();
+    });
+
+    $('hxFilters').addEventListener('click', function (ev) {
+        var head = ev.target.closest && ev.target.closest('.hx-fgroup-head');
+        if (head) {
+            var gid = head.parentNode.getAttribute('data-group');
+            openGroups[gid] = !openGroups[gid];
+            renderFilters();
+            return;
+        }
+        var help = ev.target.closest && ev.target.closest('.hx-fhelp');
+        if (help) {
+            var note = $('hxHelpNote');
+            note.textContent = help.getAttribute('data-help');
+            note.hidden = false;
+        }
+    });
+
+    $('hxChosen').addEventListener('click', function (ev) {
+        var btn = ev.target.closest && ev.target.closest('[data-remove]');
+        if (!btn) return;
+        delete filters[btn.getAttribute('data-remove')];
         renderFilters();
     });
 
+    var sampleBox = $('hxSampleSize');
+    if (sampleBox) {
+        sampleBox.addEventListener('change', function () {
+            filters.sample_size = sampleBox.value;
+        });
+    }
+
+    var searchBox = $('hxFilterSearch');
+    if (searchBox) {
+        searchBox.addEventListener('input', function () {
+            filterSearch = searchBox.value.trim();
+            renderFilters();
+        });
+    }
+
     $('hxClear').addEventListener('click', function () {
-        filters = { sample_size: '20' };
+        filters = { sample_size: filters.sample_size || '20' };
+        filterSearch = '';
+        if (searchBox) searchBox.value = '';
+        $('hxHelpNote').hidden = true;
         renderFilters();
     });
+
+    /** Split the flat filter state into the request shape: the conditions this
+     *  endpoint has always taken as top-level fields stay there, everything
+     *  from the expanded library goes in `filters`. */
+    function filterPayload() {
+        var body = {};
+        var extra = {};
+        Object.keys(filters).forEach(function (k) {
+            var v = filters[k];
+            if (v === undefined || v === null || v === false || v === '' || v === 'any') return;
+            if (k === 'sample_size') { return; }
+            if (LEGACY_IDS[k]) { body[k] = v; return; }
+            extra[k] = v;
+        });
+        if (Object.keys(extra).length) body.filters = extra;
+        return body;
+    }
 
     // --------------------------------------------------------------- sport
     var sportBtns = [].slice.call(document.querySelectorAll('.hx-sport'));
@@ -749,7 +965,8 @@
             // A condition that exists for one sport may not for the next, so
             // the selection resets rather than carrying across silently.
             filters = { sample_size: filters.sample_size || '20' };
-            renderFilters();
+            $('hxHelpNote').hidden = true;
+            loadFilterLibrary(sport);
             loadMatchupTeams(sport);
             validateMatchup();
         });
@@ -956,6 +1173,9 @@
         var noun = SCORE_NOUN[d.sport] || 'points';
         var applied = d.filters_applied || [];
         var declined = d.filters_not_applied || [];
+        var unavailable = d.unavailable_filters || [];
+        var warnings = d.filter_warnings || [];
+        var trail = (d.games_after_each_filter && d.games_after_each_filter.team_1) || [];
 
         // Scope and sample size are conditions too, and both were invisible.
         var SCOPE_TEXT = {
@@ -988,6 +1208,40 @@
                 : '')
             // Engine-level caveats (e.g. "all qualifying games" being capped).
             // Silently dropping these made a truncated sample look complete.
+            // What each condition actually cost. A qualifying count on its own
+            // is unreadable: 412 of 900 means nothing until you know which
+            // condition removed the other 488.
+            + (trail.length
+                ? '<div class="hx-trail"><strong>How the sample narrowed</strong>'
+                    + '<table class="hx-trail-table"><thead><tr><th>Condition</th>'
+                    + '<th>Before</th><th>After</th><th>Removed</th></tr></thead><tbody>'
+                    + trail.map(function (t) {
+                        return '<tr><td>' + esc(t.filter) + '</td>'
+                            + '<td class="hx-num">' + fmtInt(t.games_before) + '</td>'
+                            + '<td class="hx-num">' + fmtInt(t.games_after) + '</td>'
+                            + '<td class="hx-num">' + (t.removed ? '&minus;' + fmtInt(t.removed) : '0') + '</td></tr>';
+                    }).join('')
+                    + '</tbody></table>'
+                    + '<p class="hx-note">Applied in this order, each to what the one above it left.</p>'
+                    + '</div>'
+                : '')
+            // Requested, understood, and deliberately not run because the data
+            // behind it does not exist for this sport. Distinct from
+            // "not applied", which means nothing in this sample to apply it to.
+            + (unavailable.length
+                ? '<div class="hx-declined"><strong>Not available for ' + esc(d.sport) + '</strong><ul>'
+                    + unavailable.map(function (n) {
+                        return '<li>' + esc(n.filter) + ': ' + esc(n.reason) + '</li>';
+                    }).join('')
+                    + '</ul></div>'
+                : '')
+            + (warnings.length
+                ? '<div class="hx-declined"><strong>Check these conditions</strong><ul>'
+                    + warnings.map(function (w) {
+                        return '<li>' + esc(w.filter) + ': ' + esc(w.reason) + '</li>';
+                    }).join('')
+                    + '</ul></div>'
+                : '')
             + ((d.notes || []).length
                 ? '<div class="hx-declined"><strong>About this sample</strong><ul>'
                     + d.notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('')
@@ -1029,12 +1283,9 @@
             team_2: mHome.value,
             sample_size: sample === 'all' ? null : Number(sample || 20)
         };
-        groupsForSport(mSport.value).forEach(function (g) {
-            if (g.name === 'sample_size') return;
-            var v = filters[g.name];
-            if (v === undefined || v === null || v === false) return;
-            body[g.name] = (g.kind === 'bool') ? true
-                : (g.name === 'min_rest_days' ? Number(v) : v);
+        var chosen = filterPayload();
+        Object.keys(chosen).forEach(function (k) {
+            body[k] = (k === 'min_rest_days') ? Number(chosen[k]) : chosen[k];
         });
         return body;
     }
@@ -1551,7 +1802,8 @@
         renderFilters();
         validateMatchup();
         updateEdgeNote();
-        loadMatchupTeams(mSport.value);
+        loadFilterLibrary(mSport.value);
+    loadMatchupTeams(mSport.value);
         loadTrendTeams(tSport.value);
         await refreshStatus();
     }

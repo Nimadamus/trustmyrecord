@@ -1270,6 +1270,13 @@ class TrustMyRecordAPI {
         return this.request('/betlegend-pro/matchup-historical', { method: 'POST', body: payload });
     }
 
+    // The filter library for a sport. A catalogue, not an inquiry: it runs no
+    // engine scan, returns no research, and is never billed -- so the filter
+    // panel can load without spending the user's daily free inquiry.
+    async getBetLegendProMatchupFilters(sport) {
+        return this.request(`/betlegend-pro/matchup-filters?sport=${encodeURIComponent(sport)}`);
+    }
+
     async submitBetLegendProSimulation(payload) {
         return this.request('/betlegend-pro/simulation', { method: 'POST', body: payload });
     }
