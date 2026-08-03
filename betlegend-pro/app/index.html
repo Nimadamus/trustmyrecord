@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=d6193c14555e">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=27bc837408aa">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=7e2882746866"></script>
 </head>
@@ -87,6 +87,10 @@
 
         <div>
             <div id="accountNotice"></div>
+            <!-- Daily free-inquiry allowance. One bar for the whole product:
+                 the grant is per account per day across every tool on the rail,
+                 not per tool, so it does not belong inside any one panel. -->
+            <div id="allowanceNotice"></div>
 
             <!-- ======================================== MATCHUP REPORT -->
             <section class="blp-panel is-active" id="panel-matchup" role="tabpanel" aria-label="Matchup Report">
@@ -162,8 +166,6 @@
                             Generate Matchup Report <span class="cost" data-cost></span>
                         </button>
                         <p class="hx-run-note" id="mSubmitHint">Choose a sport and two different teams to continue.</p>
-                        <p class="hx-allowance" id="mAllowance" hidden></p>
-                        <div class="hx-paywall" id="mPaywall" hidden></div>
                     </section>
                 </form>
 
@@ -406,17 +408,67 @@
     // ============================================================== state
 
     var ACCESS = { entitled: false, plan: null };
-    var COST = { cost: 5, freeAvailable: false };
+    var COST = { cost: 5, freeAvailable: false, resetsAt: null, balance: 0, perDay: 1 };
     var costEls = [].slice.call(document.querySelectorAll('[data-cost]'));
     var submitButtons = [];
+    // Account-level gate, set by refreshStatus. Every per-form validator and
+    // every submit `finally` has to honour it, or a tool re-enables its own
+    // button moments after the allowance that blocked it was consumed.
+    var SUBMIT_BLOCKED = false;
 
     function costLabel() {
         if (ACCESS.entitled) return '· Included';
-        if (COST.freeAvailable) return "· Today's free one";
+        if (COST.freeAvailable) return "· Today's free inquiry";
         return '· ' + COST.cost + ' TMR Coin';
     }
     function paintCosts() {
         costEls.forEach(function (el) { el.textContent = costLabel(); });
+    }
+
+    /** When the free allowance next resets, in the viewer's own clock. The
+     *  boundary itself is decided server-side (America/New_York) and sent as an
+     *  absolute instant, so this only formats it — it never computes it. */
+    function resetText() {
+        if (!COST.resetsAt) return '';
+        var d = new Date(COST.resetsAt);
+        if (isNaN(d.getTime())) return '';
+        return ' Your next one unlocks ' + d.toLocaleString([], {
+            weekday: 'short', hour: 'numeric', minute: '2-digit'
+        }) + ' your time.';
+    }
+
+    /** The three allowance states the product promises, plus the subscriber
+     *  case. The subscribe prompt appears in exactly one of them — after
+     *  today's free inquiry has been consumed — never before. */
+    function paintAllowance() {
+        var box = $('allowanceNotice');
+        if (!box) return;
+        if (ACCESS.entitled) {
+            box.innerHTML = '<div class="blp-note blp-note--ok" style="margin-bottom:16px">'
+                + '<span><strong>Unlimited inquiries.</strong> Your plan covers every tool here — '
+                + 'no TMR Coin is deducted and the daily free allowance does not apply to you.</span></div>';
+            return;
+        }
+        if (COST.freeAvailable) {
+            box.innerHTML = '<div class="blp-note blp-note--ok" style="margin-bottom:16px">'
+                + '<span><strong>Free inquiry available today.</strong> '
+                + '1 free inquiry per day, shared across every BetLegend Pro tool — '
+                + 'Matchup Research, Ask BetLegend, the Bankroll Simulator and Team Trends. '
+                + 'Use it on whichever one you want.</span></div>';
+            return;
+        }
+        // Consumed. Keep whatever is already on screen; state the position and
+        // offer the plan. Coin remains a valid way through for anyone holding a
+        // balance — this prompt is an offer, not a wall.
+        var canCoin = COST.balance >= COST.cost;
+        box.innerHTML = '<div class="blp-note blp-note--warn" style="margin-bottom:16px">'
+            + '<span><strong>Today’s free inquiry used.</strong> '
+            + '1 free inquiry per day, shared across every BetLegend Pro tool.' + esc(resetText()) + ' '
+            + (canCoin
+                ? 'Until then each inquiry costs ' + esc(COST.cost) + ' TMR Coin, or go unlimited with a plan.'
+                : 'You need an active plan (or ' + esc(COST.cost) + ' TMR Coin) to run another one today.')
+            + '</span>'
+            + '<a class="blp-btn blp-btn--sm blp-btn--primary" href="/betlegend-pro/#pricing">See plans</a></div>';
     }
 
     /** Billing pill for a completed result — three genuinely different cases. */
@@ -440,60 +492,17 @@
         return '<div class="blp-receipt">' + bits.join('') + '</div>';
     }
 
-    // Allowance + paywall copy. Reads ONLY the server's flags -- freeAvailable
-    // is decided inside the wallet row lock, so anything computed here could
-    // disagree with what the charge path actually does.
-    function renderAllowance() {
-        var box = $('mAllowance'), wall = $('mPaywall');
-        if (!box || !wall) return;
-
-        if (ACCESS.entitled) {
-            box.textContent = 'Unlimited Matchup Reports included with BetLegend Pro';
-            box.hidden = false;
-            wall.hidden = true; wall.innerHTML = '';
-            return;
-        }
-
-        box.textContent = '1 free inquiry per day — '
-            + (COST.freeAvailable ? 'free inquiry available today' : "today's free inquiry used");
-        box.hidden = false;
-
-        // The prompt appears only once the free inquiry is actually spent, and
-        // never replaces a report already on screen.
-        if (COST.freeAvailable) {
-            wall.hidden = true; wall.innerHTML = '';
-            return;
-        }
-        wall.innerHTML = '<p class="hx-paywall-title">Today&rsquo;s free inquiry is used</p>'
-            + '<p class="hx-paywall-body">BetLegend Pro includes unlimited Matchup Reports, '
-            + 'plus Ask BetLegend, Team Trends and the Bankroll Simulator. Your allowance resets '
-            + 'tomorrow.</p>'
-            + '<div class="hx-paywall-actions">'
-            + '<button type="button" class="hx-paywall-cta" id="mSubscribe">Subscribe</button>'
-            + '<a class="hx-paywall-alt" href="/betlegend-pro/#pricing">See plans</a>'
-            + '</div>';
-        wall.hidden = false;
-        var sub = $('mSubscribe');
-        if (sub) {
-            sub.addEventListener('click', function () {
-                sub.disabled = true;
-                // The real checkout, not a marketing link.
-                window.api.startBetLegendProCheckout('monthly').then(function (r) {
-                    if (r && r.url) window.location.href = r.url;
-                    else { sub.disabled = false; window.location.href = '/betlegend-pro/#pricing'; }
-                }).catch(function () {
-                    sub.disabled = false;
-                    window.location.href = '/betlegend-pro/#pricing';
-                });
-            });
-        }
-    }
-
     async function refreshStatus() {
         try {
             var s = await window.api.getBetLegendProStatus();
             COST.cost = typeof s.cost === 'number' ? s.cost : 5;
+            // Server-decided, never computed here: the same value the charge
+            // path enforces inside its row lock. A client-side "has it been 24h"
+            // guess would drift from it the moment the two disagree.
             COST.freeAvailable = !!s.freeAvailable;
+            COST.resetsAt = s.freeResetsAt || null;
+            COST.balance = typeof s.balance === 'number' ? s.balance : 0;
+            COST.perDay = typeof s.freeInquiriesPerDay === 'number' ? s.freeInquiriesPerDay : 1;
             ACCESS = (s.access && typeof s.access === 'object') ? s.access : { entitled: false, plan: null };
 
             var planChip = $('planChip'), balanceChip = $('balanceChip');
@@ -511,7 +520,9 @@
                 $('upgradeBtn').hidden = true;
             } else {
                 planChip.className = 'blp-chip blp-chip--free';
-                planChip.textContent = COST.freeAvailable ? 'Free report available' : 'Pay per report';
+                planChip.textContent = COST.freeAvailable
+                    ? 'Free inquiry available today'
+                    : "Today's free inquiry used";
                 planChip.hidden = false;
                 balanceChip.hidden = false;
                 $('balanceValue').textContent = fmtInt(s.balance);
@@ -519,7 +530,6 @@
                 $('upgradeBtn').hidden = false;
             }
             $('topbarRight').hidden = false;
-            renderAllowance();
 
             // Wallet problems only matter on the coin path.
             var notice = $('accountNotice');
@@ -529,22 +539,29 @@
             } else if (!ACCESS.entitled && !s.eligible) {
                 notice.innerHTML = '<div class="blp-note blp-note--warn" style="margin-bottom:16px"><span>This account isn\'t eligible to run a coin-billed report.</span></div>';
             }
-            // The only legitimate reason to disable a submit button: the
-            // account cannot be billed at all. Never for an unfilled field --
-            // and even here the reason is on the button, not just in a banner.
-            var blocked = !ACCESS.entitled && (s.isFrozen || !s.eligible);
+            // The only legitimate reasons to disable a submit button: the
+            // account cannot be billed at all, or today's free inquiry is spent
+            // and there is no entitlement and no coin to fall back on. Never
+            // for an unfilled field -- and even here the reason is on the
+            // button, not just in a banner.
+            var allowanceSpent = !ACCESS.entitled && !COST.freeAvailable && s.balance < COST.cost;
+            var blocked = !ACCESS.entitled && (s.isFrozen || !s.eligible || allowanceSpent);
+            SUBMIT_BLOCKED = blocked;
             submitButtons.forEach(function (b) {
                 b.disabled = blocked;
                 if (blocked) {
                     b.setAttribute('title', s.isFrozen
                         ? 'Your TMR Coin wallet is frozen, so a paid report cannot run.'
-                        : 'This account is not eligible to run a coin-billed report.');
+                        : allowanceSpent
+                            ? "Today's free inquiry is used. A plan (or TMR Coin) is needed to run another one today."
+                            : 'This account is not eligible to run a coin-billed report.');
                 } else if (b.getAttribute('title') && !b.hasAttribute('data-incomplete')) {
                     b.removeAttribute('title');
                 }
             });
 
             paintCosts();
+            paintAllowance();
             return typeof s.balance === 'number' ? s.balance : null;
         } catch (err) {
             $('balanceValue').textContent = '—';
@@ -608,7 +625,13 @@
             { value: 'conference', label: 'Conference opponents' } ] },
         { title: 'Head-to-head', name: 'head_to_head_only', kind: 'bool', options: [
             { value: '1', label: 'Only games against this opponent' } ] },
-        { title: 'Closing line size', name: 'line_category', kind: 'one', options: [
+        // NFL/NBA only. MLB's run line and NHL's puck line are fixed at ±1.5,
+        // so measured against the shipped dataset every single MLB and NHL game
+        // falls in "close" and none in "moderate"/"large" — a control that
+        // either does nothing or empties the report. The engine declines it for
+        // those sports (LINE_CATEGORY_SPORTS in historical_matchup.py); this
+        // stops the UI offering it in the first place.
+        { title: 'Closing line size', name: 'line_category', kind: 'one', sports: ['NFL', 'NBA'], options: [
             { value: 'close', label: 'Close line (within 3)' },
             { value: 'moderate', label: 'Moderate line (3 to 7)' },
             { value: 'large', label: 'Large line (7+)' } ] },
@@ -782,13 +805,15 @@
         var same = !!away && away === home;
         $('mSameTeam').hidden = !same;
         var ready = !!away && !!home && !same;
-        mSubmit.disabled = !ready;
+        mSubmit.disabled = !ready || SUBMIT_BLOCKED;
         $('mSubmitHint').textContent = same
             ? 'Away and home must be two different teams.'
-            : (ready
-                ? 'Ready. Nothing is charged unless a complete report comes back.'
-                : 'Choose a sport and two different teams to continue.');
-        return ready;
+            : SUBMIT_BLOCKED
+                ? "Today's free inquiry is used. A plan (or TMR Coin) is needed to run another one today."
+                : (ready
+                    ? 'Ready. Nothing is charged unless a complete report comes back.'
+                    : 'Choose a sport and two different teams to continue.');
+        return ready && !SUBMIT_BLOCKED;
     }
 
     // ------------------------------------------------------------- results
@@ -802,6 +827,58 @@
         return (v > 0 ? '+' : '') + esc(v);
     }
 
+    /** "1,842 on file → 214 matched your conditions → 20 listed below."
+     *  All three numbers come straight off the response
+     *  (`games_in_dataset` / `total_qualifying_games` / `qualifying_games`)
+     *  and none of them used to be shown, so a reader could not tell a narrow
+     *  filter from a thin dataset. */
+    function funnelLine(r) {
+        var inDataset = r.games_in_dataset;
+        var qualified = (r.total_qualifying_games != null) ? r.total_qualifying_games : r.qualifying_games;
+        var shown = (r.games || []).length;
+        if (inDataset == null && qualified == null) return '';
+        var bits = [];
+        if (inDataset != null) {
+            bits.push('<span><strong>' + fmtInt(inDataset) + '</strong> games in the dataset before filtering</span>');
+        }
+        if (qualified != null) {
+            bits.push('<span class="hx-funnel-arrow" aria-hidden="true">&rarr;</span>'
+                + '<span><strong>' + fmtInt(qualified) + '</strong> matched '
+                + (r.conditions_applied === false ? 'no conditions (unfiltered side)' : 'your conditions') + '</span>');
+        }
+        bits.push('<span class="hx-funnel-arrow" aria-hidden="true">&rarr;</span>'
+            + '<span><strong>' + fmtInt(shown) + '</strong> listed below and used for every figure here</span>');
+        return '<div class="hx-funnel">' + bits.join('') + '</div>';
+    }
+
+    /** ATS, over/under and the recent qualifying-games trend. The response has
+     *  always carried them; nothing rendered them. Each states its own
+     *  eligible-game count, because ATS/OU are graded only on games with a
+     *  real closing number on file. */
+    function splitsLine(r) {
+        var out = [];
+        var ats = r.ats, ou = r.ou, trend = r.recent_trend;
+        if (ats && ats.eligible_games) {
+            out.push('<span><span class="hx-split-label">ATS</span> <span class="hx-split-val">' + esc(ats.record)
+                + (ats.cover_pct != null ? ' (' + esc(ats.cover_pct) + '%)' : '') + '</span> · '
+                + esc(ats.eligible_games) + ' graded</span>');
+        }
+        if (ou && ou.eligible_games) {
+            out.push('<span><span class="hx-split-label">O/U</span> <span class="hx-split-val">' + esc(ou.record)
+                + (ou.over_pct != null ? ' (' + esc(ou.over_pct) + '% over)' : '') + '</span> · '
+                + esc(ou.eligible_games) + ' graded</span>');
+        }
+        if (trend && trend.label) {
+            out.push('<span><span class="hx-split-label">Recent</span> <span class="hx-split-val">'
+                + esc(trend.label) + '</span></span>');
+        }
+        if (r.home_games != null && r.away_games != null && (r.home_games || r.away_games)) {
+            out.push('<span><span class="hx-split-label">Split</span> <span class="hx-split-val">'
+                + esc(r.home_games) + ' home / ' + esc(r.away_games) + ' away</span></span>');
+        }
+        return out.length ? '<div class="hx-splits">' + out.join('') + '</div>' : '';
+    }
+
     function teamBlock(r, noun) {
         if (!r) return '';
         var warn = r.sample_note ? '<p class="hx-warn">' + esc(r.sample_note) + '</p>' : '';
@@ -809,23 +886,26 @@
             ? '<span class="hx-range">' + esc(r.date_range.from) + ' &rarr; ' + esc(r.date_range.to) + '</span>'
             : '';
         var games = r.games || [];
-        var rows = games.slice(0, 25).map(function (g) {
+        // Every returned game is listed, not the first 25. "Why it qualified"
+        // is the whole point of this table, so truncating it hid exactly the
+        // evidence the report exists to show. The wrapper scrolls.
+        var rows = games.map(function (g) {
+            var why = (g.qualified_because || []);
             return '<tr><td>' + esc(g.date || '') + '</td><td>' + esc(g.opponent || '') + '</td>'
                 + '<td>' + esc(g.venue || '') + '</td><td>' + esc(g.score || '') + '</td>'
                 + '<td><span class="hx-res hx-res--' + esc(String(g.result || '').toLowerCase()) + '">'
                 + esc(g.result || '') + '</span></td>'
-                + '<td>' + (g.role ? esc(g.role) : DASH) + '</td>'
-                + '<td class="hx-why">' + esc((g.qualified_because || []).join(' / ')) + '</td></tr>';
+                + '<td>' + (g.role ? esc(g.role) + (g.closing_line != null ? ' ' + signed(g.closing_line) : '') : DASH) + '</td>'
+                + '<td>' + (g.rest_days != null ? esc(g.rest_days) : DASH) + '</td>'
+                + '<td class="hx-why">' + (why.length ? esc(why.join(' · ')) : DASH) + '</td></tr>';
         }).join('');
         var table = rows
             ? '<div class="hx-tablewrap"><table class="hx-table">'
-                + '<caption class="hx-sr-only">Qualifying games for ' + esc(r.team) + '</caption>'
+                + '<caption class="hx-sr-only">Qualifying games for ' + esc(r.team)
+                + ', with the conditions each one satisfied</caption>'
                 + '<thead><tr><th>Date</th><th>Opponent</th><th>Venue</th><th>Score</th>'
-                + '<th>Result</th><th>Role</th><th>Why it qualified</th></tr></thead>'
+                + '<th>Result</th><th>Role &amp; line</th><th>Rest</th><th>Why it qualified</th></tr></thead>'
                 + '<tbody>' + rows + '</tbody></table>'
-                + (games.length > 25
-                    ? '<p class="hx-note">Showing the 25 most recent of ' + esc(games.length) + ' returned.</p>'
-                    : '')
                 + '</div>'
             : '<p class="hx-note">No qualifying games found for these conditions.</p>';
 
@@ -838,12 +918,14 @@
             + '<div class="hx-kpi"><span>Avg ' + esc(noun) + ' for</span><strong>' + num(r.avg_scored) + '</strong></div>'
             + '<div class="hx-kpi"><span>Avg ' + esc(noun) + ' against</span><strong>' + num(r.avg_allowed) + '</strong></div>'
             + '<div class="hx-kpi"><span>Avg margin</span><strong>' + signed(r.avg_margin) + '</strong></div>'
-            + '<div class="hx-kpi"><span>Games before filtering</span><strong>'
-            + (r.games_in_dataset != null ? esc(r.games_in_dataset) : DASH) + '</strong></div>'
-            + '<div class="hx-kpi"><span>Qualifying games</span><strong>' + esc(total)
-            + '</strong>' + (r.games_in_dataset ? '<em class="hx-kpi-sub">of ' + esc(r.games_in_dataset) + '</em>' : '')
+            + '<div class="hx-kpi"><span>Qualifying games</span><strong>' + esc(total) + '</strong></div>'
             + '</div>'
-            + '</div>' + warn + table + '</section>';
+            + splitsLine(r)
+            + funnelLine(r)
+            + (r.conditions_applied === false
+                ? '<p class="hx-note">Your conditions were <strong>not</strong> applied to this team — the scope you chose targets the other side only.</p>'
+                : '')
+            + warn + table + '</section>';
     }
 
     function renderReport(res) {
@@ -852,26 +934,43 @@
         var applied = d.filters_applied || [];
         var declined = d.filters_not_applied || [];
 
+        // Scope and sample size are conditions too, and both were invisible.
+        var SCOPE_TEXT = {
+            both: 'Conditions applied to both teams',
+            team_1: 'Conditions applied to ' + (d.team_1 || 'team 1') + ' only',
+            team_2: 'Conditions applied to ' + (d.team_2 || 'team 2') + ' only'
+        };
+        var context = [];
+        if (d.scope) context.push(SCOPE_TEXT[d.scope] || ('Scope: ' + d.scope));
+        context.push(d.sample_size_requested == null
+            ? 'Sample: all qualifying games'
+            : 'Sample: the ' + d.sample_size_requested + ' most recent qualifying games');
+        if (d.data_through) context.push('Latest completed game in this sample: ' + d.data_through);
+
         var head = '<section class="hx-card hx-card--head">'
             + '<div class="hx-card-head"><h2>' + esc(d.team_1) + ' vs ' + esc(d.team_2) + '</h2>'
             + '<span class="hx-range">' + esc(d.sport) + '</span></div>'
-            + '<div class="hx-applied-block">'
-            + '<h3 class="hx-applied-title">Applied Situational Filters</h3>'
+            + '<p class="hx-step-sub">Conditions applied to this report</p>'
             + '<div class="hx-applied">'
             + (applied.length
                 ? applied.map(function (a) { return '<span class="hx-tag">' + esc(a) + '</span>'; }).join('')
-                : '<span class="hx-tag">No conditions &mdash; every completed game counts</span>')
-            + '</div></div>'
+                : '<span class="hx-tag">No conditions &mdash; every completed game</span>')
+            + '</div>'
             + (declined.length
-                ? '<div class="hx-declined"><strong>Conditions not applied</strong><ul>'
+                ? '<div class="hx-declined"><strong>Conditions requested but not applied</strong><ul>'
                     + declined.map(function (n) {
                         return '<li>' + esc(n.filter) + ': ' + esc(n.reason) + '</li>';
                     }).join('')
                     + '</ul></div>'
                 : '')
-            + (d.data_through
-                ? '<p class="hx-note">Latest completed game in this sample: ' + esc(d.data_through) + '.</p>'
+            // Engine-level caveats (e.g. "all qualifying games" being capped).
+            // Silently dropping these made a truncated sample look complete.
+            + ((d.notes || []).length
+                ? '<div class="hx-declined"><strong>About this sample</strong><ul>'
+                    + d.notes.map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('')
+                    + '</ul></div>'
                 : '')
+            + '<p class="hx-note">' + context.map(esc).join(' · ') + '.</p>'
             + '<div class="hx-receipt">' + receiptRow(res) + '</div>'
             + '</section>';
 
@@ -947,6 +1046,8 @@
         } catch (err) {
             await handleInquiryError(err, $('mError'), balanceBefore, 'matchup report');
         } finally {
+            // validateMatchup re-applies the account gate as well as form
+            // readiness, so a just-consumed allowance stays enforced here.
             mSubmit.disabled = false;
             $('mLoading').hidden = true;
             validateMatchup();
@@ -1120,7 +1221,7 @@
         } catch (err) {
             await handleInquiryError(err, $('askError'), balanceBefore, 'report');
         } finally {
-            askSubmit.disabled = false;
+            askSubmit.disabled = SUBMIT_BLOCKED;
             $('askLoading').hidden = true;
         }
     });
@@ -1213,7 +1314,7 @@
         } catch (err) {
             await handleInquiryError(err, $('simError'), balanceBefore, 'simulation');
         } finally {
-            simSubmit.disabled = false;
+            simSubmit.disabled = SUBMIT_BLOCKED;
             $('simLoading').hidden = true;
         }
     });
@@ -1248,11 +1349,16 @@
     }
     function syncTrendSubmit() {
         var missing = !tTeam.value;
-        tSubmit.disabled = missing;
+        tSubmit.disabled = missing || SUBMIT_BLOCKED;
         // Same principle as the Matchup Report: never a grayed button without
         // a stated reason.
-        if (missing) tSubmit.setAttribute('title', 'Choose a team to search.');
-        else tSubmit.removeAttribute('title');
+        if (SUBMIT_BLOCKED) {
+            tSubmit.setAttribute('title', "Today's free inquiry is used. A plan (or TMR Coin) is needed to run another one today.");
+        } else if (missing) {
+            tSubmit.setAttribute('title', 'Choose a team to search.');
+        } else {
+            tSubmit.removeAttribute('title');
+        }
     }
     tSport.addEventListener('change', function () { loadTrendTeams(tSport.value); });
     tTeam.addEventListener('change', syncTrendSubmit);

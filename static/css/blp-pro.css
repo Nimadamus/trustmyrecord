@@ -1066,36 +1066,53 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 #panel-matchup .hx-card-head h3 { color: var(--hx-ink) !important; }
 #panel-matchup .hx-group > legend,
 #panel-matchup .hx-kpi span { color: var(--hx-ink-3); }
+#panel-matchup .hx-kpi strong { color: var(--hx-ink); }
+#panel-matchup .hx-label { color: var(--hx-ink-2); }
 
-/* Report body text. Measured on the live page before this rule: table cells
-   rendered rgb(233,241,251) on white (~1.1:1) and headers rgb(220,231,245) on
-   the sunken surface -- dates, scores, opponents and venues were effectively
-   invisible. It was never opacity (computed opacity was 1 throughout); the
-   shell's own table/prose colours simply won the cascade on a light panel it
-   was never written for. Pinned at the same weight the shell uses, scoped to
-   this panel only. Win/loss keep their own colours below. */
-#panel-matchup .hx-table td,
-#panel-matchup .hx-table td.hx-td-strong,
-#panel-matchup .hx-detail-value,
-#panel-matchup .hx-reason-list li { color: var(--hx-ink-2) !important; }
+/* The same cascade problem as the headings above, one layer deeper, and this
+   time it hit the RESULTS rather than the form. Measured on the live page
+   2026-08-03 with getComputedStyle, against these white cards:
+
+     .tmr-site-shell table td  { color:#e9f1fb !important }  -> every date,
+       opponent, venue, final score and "why it qualified" cell computed
+       rgb(233,241,251) on #fff. About 1.05:1 -- not dimmed, gone.
+     .tmr-site-shell table th  { color:#dce7f5 !important }  -> the header row,
+       rgb(220,231,245), same story.
+     .tmr-site-shell p, li     { color:#a9b8ca !important }  -> every note,
+       caveat, method line and declined-condition reason: rgb(169,184,202) on
+       #fff, about 2.1:1. That is the "greyed out" the report reads as.
+
+   The `color: inherit` block above cannot win this: it is id-specificity but
+   not !important, and !important beats specificity outright. Only !important
+   answers !important. The scope stays inside this one panel, so no other page
+   on the site changes. Values are the panel's own ink ramp, every one of them
+   >= 4.5:1 on #fff. */
+#panel-matchup p,
+#panel-matchup li { color: var(--hx-ink-2) !important; }
+#panel-matchup .hx-table td { color: var(--hx-ink) !important; }
 #panel-matchup .hx-table th { color: var(--hx-ink-3) !important; }
-#panel-matchup .hx-table td.hx-td-strong { color: var(--hx-ink) !important; font-weight: 600; }
-#panel-matchup .hx-why { color: var(--hx-ink-3) !important; }
+#panel-matchup .hx-table td.hx-why { color: var(--hx-ink-2) !important; }
 #panel-matchup .hx-note,
 #panel-matchup .hx-method,
 #panel-matchup .hx-step-sub,
 #panel-matchup .hx-run-note { color: var(--hx-ink-3) !important; }
-#panel-matchup .hx-range { color: var(--hx-ink-3) !important; }
-#panel-matchup .hx-declined,
+#panel-matchup .hx-head p { color: var(--hx-ink-2) !important; }
+#panel-matchup .hx-warn,
+#panel-matchup .hx-declined strong { color: #7a5308 !important; }
 #panel-matchup .hx-declined li { color: var(--hx-ink-2) !important; }
+#panel-matchup .hx-inline-err { color: var(--hx-loss) !important; }
+/* Win and loss stay visually distinct without fading the rest of the row. */
+#panel-matchup .hx-table .hx-res--w { color: var(--hx-win) !important; }
+#panel-matchup .hx-table .hx-res--l { color: var(--hx-loss) !important; }
+#panel-matchup .hx-table .hx-res--t { color: var(--hx-ink-3) !important; }
 #panel-matchup .hx-tag { color: #0b5c56 !important; }
-#panel-matchup .hx-warn { color: #7a5308 !important; }
-/* Result letters stay distinct without fading the row they sit in. */
-#panel-matchup .hx-res--w { color: var(--hx-win) !important; }
-#panel-matchup .hx-res--l { color: var(--hx-loss) !important; }
-#panel-matchup .hx-res--t { color: var(--hx-push) !important; }
-#panel-matchup .hx-kpi strong { color: var(--hx-ink); }
-#panel-matchup .hx-label { color: var(--hx-ink-2); }
+#panel-matchup .hx-range,
+#panel-matchup .hx-chosen-label { color: var(--hx-ink-3) !important; }
+#panel-matchup .hx-funnel { color: var(--hx-ink-2) !important; }
+#panel-matchup .hx-funnel strong,
+#panel-matchup .hx-split-val { color: var(--hx-ink) !important; }
+#panel-matchup .hx-funnel-arrow,
+#panel-matchup .hx-split-label { color: var(--hx-ink-3) !important; }
 
 #panel-matchup {
     --hx-ink: #1b1f23;
@@ -1282,6 +1299,27 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 .hx-method { margin: 4px 0 0; font-size: 12.5px; color: var(--hx-ink-3); line-height: 1.6; }
 .hx-receipt { margin-top: 14px; }
 
+/* Dataset funnel: total on file -> matched the conditions -> listed below.
+   Three numbers the response has always carried and the page never printed,
+   so a reader could not tell a narrow filter from a thin dataset. */
+.hx-funnel {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px;
+    margin-top: 14px; padding: 10px 12px; border-radius: 9px;
+    background: var(--hx-sunken); border: 1px solid var(--hx-line);
+    font-size: 12.5px; line-height: 1.5; color: var(--hx-ink-2);
+}
+.hx-funnel strong { font-variant-numeric: tabular-nums; color: var(--hx-ink); }
+.hx-funnel-arrow { color: var(--hx-ink-3); }
+
+/* Supplemental splits (ATS, over/under, recent qualifying form). Deliberately
+   a quiet row under the headline KPIs, not a card of their own. */
+.hx-splits {
+    display: flex; flex-wrap: wrap; gap: 8px 18px;
+    margin-top: 12px; font-size: 12.5px; line-height: 1.5;
+}
+.hx-split-label { font-weight: 700; color: var(--hx-ink-3); }
+.hx-split-val { font-variant-numeric: tabular-nums; color: var(--hx-ink); }
+
 .hx-tablewrap { margin-top: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .hx-table { width: 100%; border-collapse: collapse; font-size: 12.5px; min-width: 620px; }
 .hx-table th {
@@ -1309,46 +1347,4 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 
 @media (prefers-reduced-motion: reduce) {
     #panel-matchup * { transition-duration: .01ms !important; animation-duration: .01ms !important; }
-}
-
-/* Applied-filters section and the qualifying-games sub-count. */
-#panel-matchup .hx-applied-block { margin-top: 4px; }
-#panel-matchup .hx-applied-title {
-    margin: 0 0 8px; font-size: 11px; font-weight: 800; letter-spacing: .07em;
-    text-transform: uppercase; color: var(--hx-ink-3) !important;
-}
-#panel-matchup .hx-kpi-sub {
-    display: block; margin-top: 2px; font-style: normal;
-    font-size: 11px; font-weight: 600; color: var(--hx-ink-3) !important;
-}
-
-/* Allowance line + subscription prompt. The prompt sits BELOW the run action
-   and never covers the report above it -- a user who just spent their free
-   inquiry keeps the thing they spent it on. */
-#panel-matchup .hx-allowance {
-    margin: 8px 0 0; text-align: center; font-size: 13px; font-weight: 600;
-    color: var(--hx-ink-2) !important;
-}
-#panel-matchup .hx-paywall {
-    margin-top: 14px; padding: 16px 18px; border-radius: 10px;
-    background: var(--hx-accent-soft); border: 1px solid var(--hx-accent-line);
-}
-#panel-matchup .hx-paywall-title {
-    margin: 0 0 6px; font-size: 15px; font-weight: 700; color: var(--hx-ink) !important;
-}
-#panel-matchup .hx-paywall-body {
-    margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--hx-ink-2) !important;
-}
-#panel-matchup .hx-paywall-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-#panel-matchup .hx-paywall-cta {
-    min-height: 44px; padding: 0 22px; cursor: pointer;
-    border: 1px solid var(--hx-accent); border-radius: 10px;
-    background: var(--hx-accent); color: #fff !important;
-    font: inherit; font-size: 14px; font-weight: 700;
-}
-#panel-matchup .hx-paywall-cta:hover:not(:disabled) { background: #0b5c56; border-color: #0b5c56; }
-#panel-matchup .hx-paywall-cta:disabled { opacity: .7; cursor: progress; }
-#panel-matchup .hx-paywall-alt {
-    min-height: 44px; display: inline-flex; align-items: center;
-    font-size: 13px; font-weight: 600; color: var(--hx-accent) !important;
 }
