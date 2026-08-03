@@ -15,9 +15,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=3fc7817d1851">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=167676456ac9">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
-    <script defer src="/static/js/tmr-sitewide.js?v=7e2882746866"></script>
+    <script defer src="/static/js/tmr-sitewide.js?v=5c9155c05b4d"></script>
 </head>
 <body class="tmr-site-shell" data-tmr-route="betlegend-pro-app">
 <main class="blp blp-shell">
@@ -262,6 +262,8 @@
                                 <option value="NBA">NBA</option>
                                 <option value="NFL">NFL</option>
                                 <option value="NHL">NHL</option>
+                                <option value="NCAAF">NCAAF</option>
+                                <option value="NCAAB">NCAAB</option>
                             </select>
                         </div>
                         <div class="blp-field">
@@ -320,7 +322,7 @@
 </main>
 
 <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
-<script src="/static/js/backend-api.js?v=fef48e9b6da4"></script>
+<script src="/static/js/backend-api.js?v=7d848c59ca4b"></script>
 <script>
 (function () {
     'use strict';
@@ -731,10 +733,8 @@
         $('mSameTeam').hidden = !same;
         var ready = !!away && !!home && !same;
         mSubmit.disabled = !ready;
-        // The same-team case is already stated inline next to the selects, so
-        // the run hint says something different rather than repeating it.
         $('mSubmitHint').textContent = same
-            ? 'Pick a different opponent to continue.'
+            ? 'Away and home must be two different teams.'
             : (ready
                 ? 'Ready. Nothing is charged unless a complete report comes back.'
                 : 'Choose a sport and two different teams to continue.');
@@ -745,7 +745,7 @@
     var SCORE_NOUN = { MLB: 'runs', NHL: 'goals', NBA: 'points', NFL: 'points' };
     var DASH = '&mdash;';
 
-    function pct(v) { return (v === null || v === undefined) ? DASH : esc(v) + '%'; }
+    function hxPct(v) { return (v === null || v === undefined) ? DASH : esc(v) + '%'; }
     function num(v) { return (v === null || v === undefined) ? DASH : esc(v); }
     function signed(v) {
         if (v === null || v === undefined) return DASH;
@@ -784,7 +784,7 @@
             + '<div class="hx-card-head"><h3>' + esc(r.team) + '</h3>' + range + '</div>'
             + '<div class="hx-kpis">'
             + '<div class="hx-kpi"><span>Record</span><strong>' + (r.record ? esc(r.record) : DASH) + '</strong></div>'
-            + '<div class="hx-kpi"><span>Win rate</span><strong>' + pct(r.win_pct) + '</strong></div>'
+            + '<div class="hx-kpi"><span>Win rate</span><strong>' + hxPct(r.win_pct) + '</strong></div>'
             + '<div class="hx-kpi"><span>Avg ' + esc(noun) + ' for</span><strong>' + num(r.avg_scored) + '</strong></div>'
             + '<div class="hx-kpi"><span>Avg ' + esc(noun) + ' against</span><strong>' + num(r.avg_allowed) + '</strong></div>'
             + '<div class="hx-kpi"><span>Avg margin</span><strong>' + signed(r.avg_margin) + '</strong></div>'
@@ -827,7 +827,7 @@
                 + '<div class="hx-kpi"><span>Meetings</span><strong>' + esc(h2h.games_in_dataset) + '</strong></div>'
                 + '<div class="hx-kpi"><span>' + esc(d.team_1) + ' record</span><strong>'
                 + (h2h.record ? esc(h2h.record) : DASH) + '</strong></div>'
-                + '<div class="hx-kpi"><span>Win rate</span><strong>' + pct(h2h.win_pct) + '</strong></div>'
+                + '<div class="hx-kpi"><span>Win rate</span><strong>' + hxPct(h2h.win_pct) + '</strong></div>'
                 + '<div class="hx-kpi"><span>Avg margin</span><strong>' + signed(h2h.avg_margin) + '</strong></div>'
                 + '</div></section>'
             : '';

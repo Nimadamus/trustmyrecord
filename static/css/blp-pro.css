@@ -1048,6 +1048,24 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
    pushed the page 200px past the viewport. */
 #panel-matchup select.hx-sr-only { display: none; }
 
+/* The site shell colours headings near-white for its dark theme, so every
+   heading inside these white cards rendered white-on-white and was invisible in
+   production. Setting them explicitly here (id specificity) is the fix; the
+   panel is a light surface and owns its own type colours. */
+#panel-matchup h1, #panel-matchup h2, #panel-matchup h3,
+#panel-matchup legend, #panel-matchup label, #panel-matchup p,
+#panel-matchup td, #panel-matchup th, #panel-matchup li, #panel-matchup dt, #panel-matchup dd {
+    color: inherit;
+}
+#panel-matchup .hx-head h1,
+#panel-matchup .hx-step-head h2,
+#panel-matchup .hx-card-head h2,
+#panel-matchup .hx-card-head h3 { color: var(--hx-ink); }
+#panel-matchup .hx-group > legend,
+#panel-matchup .hx-kpi span { color: var(--hx-ink-3); }
+#panel-matchup .hx-kpi strong { color: var(--hx-ink); }
+#panel-matchup .hx-label { color: var(--hx-ink-2); }
+
 #panel-matchup {
     --hx-ink: #1b1f23;
     --hx-ink-2: #4b5158;
