@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=a8f89044bb90">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=5158a8c1b93e">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=7e2882746866"></script>
 </head>
@@ -548,12 +548,7 @@
             var blocked = !ACCESS.entitled && (s.isFrozen || !s.eligible || allowanceSpent);
             SUBMIT_BLOCKED = blocked;
             submitButtons.forEach(function (b) {
-                // Account state may only ever ADD a reason to disable. A button
-                // its own form has already gated as incomplete stays disabled --
-                // assigning `blocked` straight through undid that gate, so the
-                // moment status resolved the run button went live with no teams
-                // picked.
-                b.disabled = blocked || b.hasAttribute('data-incomplete');
+                b.disabled = blocked;
                 if (blocked) {
                     b.setAttribute('title', s.isFrozen
                         ? 'Your TMR Coin wallet is frozen, so a paid report cannot run.'
@@ -810,10 +805,6 @@
         var same = !!away && away === home;
         $('mSameTeam').hidden = !same;
         var ready = !!away && !!home && !same;
-        // The marker is what survives a status refresh; the disabled property
-        // alone does not.
-        if (ready) mSubmit.removeAttribute('data-incomplete');
-        else mSubmit.setAttribute('data-incomplete', '');
         mSubmit.disabled = !ready || SUBMIT_BLOCKED;
         $('mSubmitHint').textContent = same
             ? 'Away and home must be two different teams.'
