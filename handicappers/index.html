@@ -2369,60 +2369,45 @@
         // computed only from settled (won/lost/push) PUBLIC picks keyed on the
         // graded/settlement date. Pending and void picks are excluded. Lifetime
         // units are never used here.
+        // SINGLE SOURCE: /api/users/featured-stats, the same trailing-30-day aggregate the
+        // leaderboard ranks on. ROI is units / risk * 100 over that window, computed once,
+        // server-side.
+        //
+        // There used to be a second, client-side computation here that rebuilt the same
+        // window from member.rawPicks whenever the server row was missing. It produced a
+        // DIFFERENT number, because the two disagreed on both ends of the fraction:
+        //   * the window — the server pins the boundary when it builds the aggregate, the
+        //     client used a rolling Date.now() evaluated at render time;
+        //   * the denominator — the server sums risk_units, the client fell back to
+        //     synthesising risk from odds (stake * |odds| / 100) whenever risk_units was
+        //     absent, so a pick with no stored risk contributed to one sum and not the other.
+        // Because renderFeaturedLeaders() could paint before featured-stats resolved (see the
+        // gate there), the Hot card rendered from the client figure and was then re-rendered
+        // from the server figure seconds later — the visible ROI 0.1% -> 0.2% flip.
+        //
+        // The fallback is deleted rather than repaired: two implementations of one number
+        // will always drift. If the endpoint is unavailable there is simply no 30-day
+        // aggregate, this returns null, the Hot category yields no card, and the grid falls
+        // back to Most Active exactly as it already does when nobody qualifies.
         function hotStats30d(member) {
-            // Prefer the server-computed 30-day window (same math, one request,
-            // available on first paint); fall back to local pick history only
-            // when the featured-stats endpoint is unavailable.
             const row = featuredRowFor(member);
-            if (row) {
-                const graded = Number(row.graded_30d || 0);
-                if (!graded) return null;
-                const units = Number(row.units_30d || 0);
-                const risk = Number(row.risk_30d || 0);
-                const wins = Number(row.wins_30d || 0);
-                const losses = Number(row.losses_30d || 0);
-                const decisions = wins + losses;
-                return {
-                    units,
-                    graded,
-                    roi: risk > 0 ? (units / risk) * 100 : null,
-                    winRate: decisions > 0 ? (wins / decisions) * 100 : null,
-                    lastGraded: getTime(row.last_graded_at),
-                    recent: !!row.hot_recent
-                };
-            }
-            const now = Date.now();
-            const windowStart = now - (HOT_WINDOW_DAYS * 24 * 60 * 60 * 1000);
-            const recentStart = now - (HOT_RECENT_DAYS * 24 * 60 * 60 * 1000);
-            const picks = (member.rawPicks || [])
-                .filter(pick => pick && pick.is_public !== false)
-                .filter(pick => ['won', 'lost', 'push'].includes(pick._status))
-                .filter(pick => { const t = pickGradedTime(pick); return t >= windowStart && t <= now; });
-            if (!picks.length) return null;
-            let units = 0, risk = 0, wins = 0, losses = 0, latest = 0;
-            picks.forEach(pick => {
-                units += pickPL(pick);
-                const rk = Number(pick.risk_units);
-                if (Number.isFinite(rk) && rk > 0) {
-                    risk += rk;
-                } else {
-                    const stake = Number(pick.units || pick.stake || 1);
-                    const odds = Number(pick.odds_snapshot || pick.odds || pick.price || -110);
-                    risk += odds < 0 ? stake * Math.abs(odds) / 100 : stake;
-                }
-                if (pick._status === 'won') wins++;
-                else if (pick._status === 'lost') losses++;
-                const gt = pickGradedTime(pick);
-                if (gt > latest) latest = gt;
-            });
+            if (!row) return null;
+            const graded = Number(row.graded_30d || 0);
+            if (!graded) return null;
+            const units = Number(row.units_30d || 0);
+            const risk = Number(row.risk_30d || 0);
+            const wins = Number(row.wins_30d || 0);
+            const losses = Number(row.losses_30d || 0);
             const decisions = wins + losses;
             return {
                 units,
-                graded: picks.length,
+                graded,
+                // Zero/absent risk yields null, never Infinity or NaN — formatPercent()
+                // renders that as the neutral placeholder rather than a bogus percentage.
                 roi: risk > 0 ? (units / risk) * 100 : null,
                 winRate: decisions > 0 ? (wins / decisions) * 100 : null,
-                lastGraded: latest,
-                recent: latest >= recentStart
+                lastGraded: getTime(row.last_graded_at),
+                recent: !!row.hot_recent
             };
         }
 
@@ -2498,7 +2483,15 @@
             // down, the fallback is the full pick-history enrichment, and the
             // grid still waits for it to COMPLETE before the first paint.
             if (!membersAreFresh) return;
-            if (!((featuredStatsSettled && featuredStatsById) || enrichmentComplete)) return;
+            // Wait for the featured-stats request to SETTLE, always. This used to be
+            // `(featuredStatsSettled && featuredStatsById) || enrichmentComplete`, an OR that
+            // let the per-member pick enrichment paint the grid first whenever it finished
+            // ahead of the aggregate. The Hot card then showed a locally recomputed 30-day
+            // ROI and was re-rendered from the server aggregate when it arrived — the visible
+            // 0.1% -> 0.2% swap. featuredStatsSettled is set in the fetch's finally block, so
+            // it flips true even when the endpoint errors; this waits for an answer, not for
+            // success, and cannot hang the grid.
+            if (!featuredStatsSettled) return;
             const pool = displayMembers.length ? displayMembers : members;
             const qualified = pool.filter(isQualifiedTopPerformer);
 
