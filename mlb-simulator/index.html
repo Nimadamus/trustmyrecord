@@ -654,7 +654,7 @@
     <!-- MLB_SIM_CONVERSION_20260728: post-result save/signup panel. Flip
          any value to false + redeploy to disable instantly; the simulator
          above is fully independent of this and keeps working either way. -->
-    <script>window.SIMULATOR_FLAGS = { conversionPanel: true, savedResults: true, teamFollowing: true };</script>
+    <script>window.SIMULATOR_FLAGS = { conversionPanel: true, savedResults: true, teamFollowing: true, publicHistory: true };</script>
     <!-- analytics.js provides window.TMRAnalytics; without it every
          simulator_* funnel event is silently dropped by the guards. -->
     <script src="/static/js/analytics.js?v=471dc3fea1e5"></script>
@@ -663,6 +663,12 @@
          set landing:false + redeploy; core simulator is independent. -->
     <script>window.SIM_LANDING_FLAGS = { landing: true };</script>
     <script defer src="/static/js/mlb-sim-landing.js?v=6098060b6112"></script>
+    <!-- MLB_SIM_HISTORY_20260803: records a COMPLETED run to the public
+         daily consensus feed and adds the "View All Simulations Today"
+         link to the existing result-card action row. Kill switch:
+         publicHistory:false above + redeploy. The simulator above is
+         fully independent of this and keeps working either way. -->
+    <script defer src="/static/js/mlb-sim-history-record.js?v=6f3b7287c6c8"></script>
     <script src="/static/js/tmr-session.63f50f4d0988.js"></script>
     <script src="/static/js/tmr-ds-nav.6cb0456f7681.js"></script>
 

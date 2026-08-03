@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--
+      MLB_SIM_HISTORY_20260803 - matchup aggregate shell.
+
+      This one file backs every /mlb-simulator/simulations/YYYY-MM-DD/<away>-vs-<home>/
+      URL. The tmr-sim-history Cloudflare Worker serves it for those paths and
+      rewrites the <title>, description, canonical and robots tags in place from
+      /api/mlb-sim-history/meta before a crawler sees them - so there are never
+      thousands of baked, thin, near-empty matchup files in the repo, and a page
+      with too little content is marked noindex rather than published as filler.
+
+      The defaults below are deliberately conservative: if the Worker is ever
+      bypassed, this page is noindex and canonicalises to the parent index.
+    -->
+    <title>MLB Simulator Matchup Results | TrustMyRecord</title>
+    <meta name="description" content="Aggregated MLB Simulator results for a single matchup: average simulated score, win share, run-line and total splits.">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://trustmyrecord.com/mlb-simulator/simulations/">
+    <meta property="og:type" content="article">
+    <link rel="icon" type="image/png" href="/static/favicon.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/tmr-ds.87c81a8f762d.css">
+    <link rel="stylesheet" href="/static/css/mlb-sim-history.css?v=d1d34db116d4">
+    <link rel="stylesheet" href="/static/css/tmr-linkhub.css?v=37caa790256d">
+    <script src="/static/js/config.js?v=7e4b853bbb3d"></script>
+    <script src="/static/js/backend-api.js?v=7d848c59ca4b"></script>
+    <script defer src="/static/js/tmr-linkhub.js?v=f34371a91b66"></script>
+</head>
+<body class="simhist-page tmr-ds tmr-ds--dark">
+
+<main class="sh-shell">
+    <nav class="sh-crumbs" aria-label="Breadcrumb">
+        <a href="/">TrustMyRecord</a><span class="sep" aria-hidden="true">&rsaquo;</span>
+        <a href="/mlb-simulator/">MLB Simulator</a><span class="sep" aria-hidden="true">&rsaquo;</span>
+        <a href="/mlb-simulator/simulations/">Simulation Results</a><span class="sep" aria-hidden="true">&rsaquo;</span>
+        <span aria-current="page" id="shCrumbCurrent">Matchup</span>
+    </nav>
+
+    <div id="shMatchupRoot">
+        <div class="sh-loading">Loading matchup results&hellip;</div>
+    </div>
+</main>
+
+<script src="/static/js/tmr-session.63f50f4d0988.js"></script>
+<script src="/static/js/tmr-ds-nav.6cb0456f7681.js"></script>
+<script defer src="/static/js/mlb-sim-history-matchup.js?v=51e5ee33fc34"></script>
+</body>
+</html>

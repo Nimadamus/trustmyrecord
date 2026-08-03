@@ -1,0 +1,17 @@
+name = "tmr-sim-history"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+workers_dev = false
+
+# Only the DEEP matchup URLs reach this Worker. Everything else on the site -
+# including /mlb-simulator/ itself and /mlb-simulator/simulations/ - is served
+# straight from the origin and is never in its path.
+#   /mlb-simulator/simulations/YYYY-MM-DD/<away>-vs-<home>/  -> shell + injected SEO head
+#
+# The route pattern below also matches the index and the run page; the Worker
+# returns those to the origin untouched (resolveTarget -> null), so the blast
+# radius stays at "one extra fetch hop" even for them.
+routes = [
+  { pattern = "trustmyrecord.com/mlb-simulator/simulations/*", zone_name = "trustmyrecord.com" },
+  { pattern = "www.trustmyrecord.com/mlb-simulator/simulations/*", zone_name = "trustmyrecord.com" },
+]

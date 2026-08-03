@@ -1,0 +1,555 @@
+/* =============================================================================
+   MLB_SIM_HISTORY_20260803 — /mlb-simulator/simulations/ and the matchup
+   aggregate pages.
+
+   Built on the tmr-ds design system, deep-navy sports-media surface, restrained
+   teal accents, one token ramp — the same visual language as the rebuilt
+   /polls/ board so the two read as one site.
+
+   Two documented tmr-ds traps are handled here on purpose:
+     1. tmr-ds.css paints bare h1–h4 as huge uppercase display type with high
+        specificity. Every content heading below is re-declared on the
+        `html body.simhist-page ...` compound WITH !important, or it renders as
+        25–36px ALL CAPS.
+     2. `background-attachment: fixed` leaves everything below the fold on the
+        UA white. The page background is a plain gradient with px stops and a
+        solid colour is also set on `html`, so no white band can appear.
+   ============================================================================= */
+
+:root,
+html body.simhist-page {
+    --sh-bg: #0A1322;
+    --sh-bg-deep: #071020;
+    --sh-s1: #101B2C;
+    --sh-s2: #152134;
+    --sh-s3: #1C2B42;
+    --sh-border: rgba(146, 176, 214, 0.13);
+    --sh-border-strong: rgba(146, 176, 214, 0.26);
+    --sh-text: #E8F0FA;
+    --sh-text-2: #A7BAD1;
+    --sh-muted: #7C90AB;
+    --sh-accent: #22D3EE;
+    --sh-accent-2: #38BDF8;
+    --sh-accent-dim: rgba(34, 211, 238, 0.11);
+    --sh-accent-border: rgba(34, 211, 238, 0.32);
+    --sh-accent-ink: #04222B;
+    --sh-win: #34D399;
+    --sh-warn: #FBBF24;
+    --sh-radius: 10px;
+    --sh-radius-sm: 7px;
+}
+
+html { background: #0A1322; }
+
+html body.simhist-page {
+    background: linear-gradient(180deg, #071020 0px, #0A1322 520px, #0A1322 100%);
+    color: var(--sh-text);
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.sh-shell {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 22px 18px 64px;
+}
+
+/* ---------------------------------------------------------------- Header -- */
+
+.sh-crumbs {
+    font-size: 0.78rem;
+    color: var(--sh-muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+.sh-crumbs a { color: var(--sh-text-2); text-decoration: none; }
+.sh-crumbs a:hover { color: var(--sh-accent); }
+.sh-crumbs .sep { color: var(--sh-muted); opacity: 0.6; }
+
+html body.simhist-page .sh-head h1 {
+    font-size: clamp(1.35rem, 2.6vw, 1.9rem) !important;
+    line-height: 1.18 !important;
+    letter-spacing: -0.01em !important;
+    text-transform: none !important;
+    color: var(--sh-text) !important;
+    margin: 0 0 6px !important;
+    font-weight: 800 !important;
+}
+.sh-head .sh-sub {
+    color: var(--sh-text-2);
+    font-size: 0.92rem;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 68ch;
+}
+.sh-head .sh-sub a { color: var(--sh-accent); text-decoration: none; }
+.sh-head .sh-sub a:hover { text-decoration: underline; }
+
+.sh-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 22px;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--sh-border);
+    margin-bottom: 18px;
+}
+
+/* Headline metric strip — the four numbers that must be visible instantly. */
+.sh-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+    gap: 8px;
+    margin: 0 0 18px;
+}
+.sh-metric {
+    background: var(--sh-s1);
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-radius);
+    padding: 11px 13px;
+}
+.sh-metric b {
+    display: block;
+    font-size: 1.28rem;
+    font-weight: 800;
+    color: var(--sh-text);
+    line-height: 1.12;
+    font-variant-numeric: tabular-nums;
+}
+.sh-metric span {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--sh-muted);
+    margin-top: 4px;
+}
+.sh-metric.is-accent b { color: var(--sh-accent); }
+
+/* ----------------------------------------------------------------- Layout -- */
+
+.sh-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 20px;
+    align-items: start;
+}
+
+.sh-rail { position: sticky; top: 16px; }
+
+@media (max-width: 1040px) {
+    .sh-layout { grid-template-columns: minmax(0, 1fr); }
+    /* Mobile: the schedule panel drops BELOW the results. It never scrolls
+       sideways and it is never a horizontally-scrolling strip. */
+    .sh-rail { position: static; order: 2; }
+    .sh-main { order: 1; }
+}
+
+/* ------------------------------------------------------------------ Panel -- */
+
+.sh-panel {
+    background: var(--sh-s1);
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-radius);
+    overflow: hidden;
+}
+.sh-panel + .sh-panel { margin-top: 16px; }
+
+.sh-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--sh-border);
+    background: var(--sh-bg-deep);
+}
+html body.simhist-page .sh-panel-head h2,
+html body.simhist-page .sh-panel-head h3 {
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.08em !important;
+    text-transform: uppercase !important;
+    color: var(--sh-text-2) !important;
+    margin: 0 !important;
+    line-height: 1.2 !important;
+}
+.sh-panel-head .sh-count {
+    font-size: 0.74rem;
+    color: var(--sh-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---------------------------------------------------------------- Filters -- */
+
+.sh-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--sh-border);
+    background: var(--sh-s2);
+}
+.sh-field { display: flex; flex-direction: column; gap: 3px; }
+.sh-field label {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--sh-muted);
+}
+.sh-filters select,
+.sh-filters input {
+    background: var(--sh-bg-deep);
+    border: 1px solid var(--sh-border-strong);
+    color: var(--sh-text);
+    border-radius: var(--sh-radius-sm);
+    padding: 7px 9px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    min-height: 34px;
+    min-width: 128px;
+}
+.sh-filters select:focus,
+.sh-filters input:focus {
+    outline: 2px solid var(--sh-accent-border);
+    outline-offset: 1px;
+}
+
+/* ------------------------------------------------------------------- Rows -- */
+
+.sh-rows { display: block; }
+
+.sh-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px 14px;
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--sh-border);
+    align-items: center;
+}
+.sh-row:last-child { border-bottom: 0; }
+.sh-row:hover { background: var(--sh-s2); }
+
+.sh-row-main { min-width: 0; }
+
+.sh-matchup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--sh-text);
+    flex-wrap: wrap;
+}
+.sh-matchup img { width: 18px; height: 18px; object-fit: contain; flex: 0 0 auto; }
+.sh-matchup .sh-at { color: var(--sh-muted); font-weight: 500; }
+.sh-matchup .sh-score {
+    font-variant-numeric: tabular-nums;
+    color: var(--sh-text);
+    background: var(--sh-s3);
+    border: 1px solid var(--sh-border);
+    border-radius: 6px;
+    padding: 1px 7px;
+    font-size: 0.86rem;
+}
+.sh-matchup .sh-winner {
+    color: var(--sh-win);
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.sh-meta {
+    margin-top: 4px;
+    font-size: 0.76rem;
+    color: var(--sh-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    font-variant-numeric: tabular-nums;
+}
+.sh-meta b { color: var(--sh-text-2); font-weight: 600; }
+
+.sh-row-actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.sh-tag {
+    display: inline-block;
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--sh-border-strong);
+    color: var(--sh-muted);
+    white-space: nowrap;
+}
+.sh-tag.is-custom { color: var(--sh-warn); border-color: rgba(251, 191, 36, 0.34); }
+.sh-tag.is-member { color: var(--sh-accent); border-color: var(--sh-accent-border); }
+
+/* ----------------------------------------------------------------- Buttons -- */
+
+.sh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border-radius: var(--sh-radius-sm);
+    border: 1px solid var(--sh-border-strong);
+    background: var(--sh-s3);
+    color: var(--sh-text);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 7px 11px;
+    min-height: 34px;
+    cursor: pointer;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.sh-btn:hover { border-color: var(--sh-accent-border); color: var(--sh-accent); }
+.sh-btn.is-primary {
+    background: var(--sh-accent);
+    border-color: var(--sh-accent);
+    color: var(--sh-accent-ink);
+}
+.sh-btn.is-primary:hover { background: var(--sh-accent-2); border-color: var(--sh-accent-2); color: var(--sh-accent-ink); }
+.sh-btn.is-quiet { background: transparent; }
+.sh-btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.sh-btn.is-block { width: 100%; }
+
+.sh-more { padding: 13px 14px; text-align: center; border-top: 1px solid var(--sh-border); }
+
+/* ---------------------------------------------------------------- The rail -- */
+
+.sh-game {
+    display: block;
+    padding: 10px 13px;
+    border-bottom: 1px solid var(--sh-border);
+    text-decoration: none;
+    color: inherit;
+}
+.sh-game:last-child { border-bottom: 0; }
+.sh-game:hover { background: var(--sh-s2); }
+.sh-game:focus-visible { outline: 2px solid var(--sh-accent); outline-offset: -2px; }
+
+.sh-game-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.sh-game-teams {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    min-width: 0;
+}
+.sh-game-teams img { width: 16px; height: 16px; object-fit: contain; }
+.sh-game-time {
+    font-size: 0.72rem;
+    color: var(--sh-muted);
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+.sh-game-status {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--sh-border-strong);
+    color: var(--sh-muted);
+}
+.sh-game-status.is-off { color: var(--sh-warn); border-color: rgba(251, 191, 36, 0.34); }
+.sh-game-status.is-live { color: var(--sh-win); border-color: rgba(52, 211, 153, 0.34); }
+
+.sh-game-stats {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.74rem;
+    color: var(--sh-text-2);
+    font-variant-numeric: tabular-nums;
+    flex-wrap: wrap;
+}
+.sh-game-stats .sh-none { color: var(--sh-muted); }
+
+/* Win-share bar: two segments, always summing to the rendered sample. */
+.sh-bar {
+    margin-top: 6px;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--sh-s3);
+    overflow: hidden;
+    display: flex;
+}
+.sh-bar i { display: block; height: 100%; }
+.sh-bar .sh-bar-away { background: var(--sh-accent-2); }
+.sh-bar .sh-bar-home { background: var(--sh-win); }
+
+/* ------------------------------------------------------------ Empty states -- */
+
+.sh-empty {
+    padding: 26px 16px;
+    text-align: center;
+    color: var(--sh-muted);
+    font-size: 0.88rem;
+    line-height: 1.6;
+}
+.sh-empty b { display: block; color: var(--sh-text-2); font-size: 0.94rem; margin-bottom: 5px; }
+.sh-empty .sh-btn { margin-top: 12px; }
+
+.sh-loading { padding: 22px 16px; color: var(--sh-muted); font-size: 0.86rem; text-align: center; }
+
+/* ------------------------------------------------------------- Disclosures -- */
+
+.sh-note {
+    margin-top: 16px;
+    padding: 11px 13px;
+    border: 1px solid var(--sh-border);
+    border-left: 3px solid var(--sh-accent-border);
+    border-radius: var(--sh-radius-sm);
+    background: var(--sh-s1);
+    color: var(--sh-text-2);
+    font-size: 0.78rem;
+    line-height: 1.55;
+}
+
+/* ---------------------------------------------------- Matchup aggregate page -- */
+
+.sh-teams {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.sh-teams img { width: 34px; height: 34px; object-fit: contain; }
+html body.simhist-page .sh-teams h1 {
+    font-size: clamp(1.2rem, 2.4vw, 1.6rem) !important;
+    text-transform: none !important;
+    margin: 0 !important;
+    font-weight: 800 !important;
+    color: var(--sh-text) !important;
+    letter-spacing: -0.01em !important;
+}
+
+.sh-split {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 10px;
+    padding: 13px 14px;
+}
+.sh-split-card {
+    background: var(--sh-bg-deep);
+    border: 1px solid var(--sh-border);
+    border-radius: var(--sh-radius-sm);
+    padding: 11px 12px;
+}
+html body.simhist-page .sh-split-card h3 {
+    font-size: 0.7rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.07em !important;
+    color: var(--sh-muted) !important;
+    margin: 0 0 8px !important;
+    font-weight: 700 !important;
+}
+.sh-kv {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    font-size: 0.82rem;
+    padding: 3px 0;
+    font-variant-numeric: tabular-nums;
+}
+.sh-kv span { color: var(--sh-text-2); }
+.sh-kv b { color: var(--sh-text); font-weight: 700; }
+
+.sh-winsplit { padding: 13px 14px; }
+.sh-winsplit-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.86rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+.sh-winsplit-row .sh-away { color: var(--sh-accent-2); }
+.sh-winsplit-row .sh-home { color: var(--sh-win); }
+
+.sh-dist { display: flex; flex-direction: column; gap: 5px; padding: 13px 14px; }
+.sh-dist-row {
+    display: grid;
+    grid-template-columns: 78px minmax(0, 1fr) 46px;
+    align-items: center;
+    gap: 9px;
+    font-size: 0.78rem;
+    color: var(--sh-text-2);
+    font-variant-numeric: tabular-nums;
+}
+.sh-dist-bar { height: 6px; border-radius: 3px; background: var(--sh-s3); overflow: hidden; }
+.sh-dist-bar i { display: block; height: 100%; background: var(--sh-accent); }
+.sh-dist-row.is-top { color: var(--sh-text); font-weight: 700; }
+
+/* A wide table must scroll inside its own box, never the page. */
+.sh-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+.sh-table {
+    width: 100%;
+    min-width: 520px;
+    border-collapse: collapse;
+    font-size: 0.79rem;
+    font-variant-numeric: tabular-nums;
+}
+.sh-table caption {
+    text-align: left;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--sh-muted);
+    padding-bottom: 6px;
+}
+.sh-table th,
+.sh-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--sh-border);
+    text-align: right;
+    white-space: nowrap;
+}
+.sh-table th:first-child,
+.sh-table td:first-child { text-align: left; }
+.sh-table thead th {
+    color: var(--sh-muted);
+    font-weight: 600;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom-color: var(--sh-border-strong);
+}
+.sh-table tbody td { color: var(--sh-text-2); }
+.sh-table tbody td:first-child { color: var(--sh-text); font-weight: 600; }
+
+@media (max-width: 620px) {
+    .sh-shell { padding: 16px 13px 52px; }
+    .sh-row { grid-template-columns: minmax(0, 1fr); }
+    .sh-row-actions { justify-content: flex-start; }
+    .sh-filters { gap: 7px; }
+    .sh-filters select, .sh-filters input { min-width: 0; flex: 1 1 132px; }
+    .sh-field { flex: 1 1 132px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    html body.simhist-page * { transition: none !important; animation: none !important; }
+}
