@@ -1264,6 +1264,12 @@ class TrustMyRecordAPI {
         return this.request('/betlegend-pro/matchup-report', { method: 'POST', body: payload });
     }
 
+    // The two-team research tool: historical conditions in, every qualifying
+    // game out. No market, line or odds -- see the route's own comment.
+    async submitBetLegendProHistoricalMatchup(payload) {
+        return this.request('/betlegend-pro/matchup-historical', { method: 'POST', body: payload });
+    }
+
     async submitBetLegendProSimulation(payload) {
         return this.request('/betlegend-pro/simulation', { method: 'POST', body: payload });
     }
