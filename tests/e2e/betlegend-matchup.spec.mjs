@@ -14,6 +14,14 @@ import path from 'node:path';
 // Absolute so the spec can be run by a Playwright install in another project
 // (this repo ships no node_modules of its own).
 const APP = process.env.BLP_APP_DIR || 'C:/Users/Nima/tmrfe-main/betlegend-pro/app';
+// The page links its CSS with absolute /static/ paths, which resolve to
+// file:///C:/static/... and 404 under this harness, so every layout assertion
+// below was measuring UNSTYLED markup -- the overflow checks in particular meant
+// nothing, because without the stylesheet there is no min-width to overflow.
+// The real files are injected in open() instead.
+const STATIC = process.env.BLP_STATIC_DIR || path.join(APP, '..', '..', 'static', 'css');
+const STYLESHEETS = ['tmr-sitewide.css', 'blp-pro.css'];
+
 const SPORTS = ['MLB', 'NHL', 'NBA', 'NFL'];
 
 const TEAMS = {
@@ -76,10 +84,25 @@ async function open(page, opts = {}) {
     window.api = {
       isLoggedIn: () => true,
       getBetLegendProTeams: async (sport) => ({ teams: teams[sport] || [] }),
+      // The REAL shape of GET /api/betlegend-pro/status. This stub used to
+      // invent a nested `cost: { cost, free_available }` and omit `eligible`
+      // entirely, which meant the page under test was reading undefined for
+      // every billing field. It happened to pass while the account gate only
+      // set `disabled` and the form's own validator cleared it again; once the
+      // validator started honouring that gate -- as it must, or the paywall is
+      // one keystroke away -- the fiction disabled every submit button and 13
+      // tests failed. Keep this in step with routes/betlegendPro.js's /status.
       getBetLegendProStatus: async () => ({
-        access: { entitled: false, plan: null },
-        cost: { cost: 5, free_available: true },
-        balance: 25, wallet_frozen: false,
+        eligible: true,
+        balance: 25,
+        isFrozen: false,
+        freeAvailable: true,
+        freeInquiriesPerDay: 1,
+        freeInquiryTimezone: 'America/New_York',
+        freeResetsAt: null,
+        cost: 0,
+        canAfford: true,
+        access: { entitled: false, plan: null, status: 'none', is_lifetime: false, manageable: false },
       }),
       getBetLegendProHistory: async () => ({ items: [] }),
       submitBetLegendProHistoricalMatchup: async (payload) => {
@@ -95,6 +118,12 @@ async function open(page, opts = {}) {
   }, { teams: TEAMS, fail: !!opts.fail });
 
   await page.goto('file:///' + path.join(APP, 'index.html').replace(/\\/g, '/'));
+
+  for (const sheet of STYLESHEETS) {
+
+    await page.addStyleTag({ path: path.join(STATIC, sheet) });
+
+  }
   await page.evaluate((r) => { window.__report = r; }, opts.report || report('MLB', 'Chicago Cubs', 'St. Louis Cardinals'));
   await expect(page.getByRole('heading', { name: 'Matchup Research' })).toBeVisible();
   return submissions;
@@ -237,7 +266,7 @@ test.describe('Matchup Research panel', () => {
     // The sport's own scoring noun, and the qualifying-game table beneath it.
     await expect(page.getByText('Avg runs for').first()).toBeVisible();
     await expect(page.getByRole('table').first()).toBeVisible();
-    await expect(page.getByText('Home game / Favorite at -1.5').first()).toBeVisible();
+    await expect(page.getByText('Home game · Favorite at -1.5').first()).toBeVisible();
   });
 
   test('an empty sample says so instead of rendering a blank table', async ({ page }) => {
