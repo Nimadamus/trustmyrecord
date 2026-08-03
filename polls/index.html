@@ -615,6 +615,9 @@
             background: rgba(148,163,184,0.08); color: #A8B6C8; font-size: 0.74rem; line-height: 1.35; }
         .tmr-q-reason i { color: #7C8CA3; font-size: 0.7rem; }
         .tmr-grade-why { display: block; margin-top: 6px; color: #A8B6C8; font-size: 0.76rem; }
+        /* Final standings list the whole field; cap the height so a big contest
+           scrolls inside the aside instead of stretching the page. */
+        .tmr-leaders-list.is-final { max-height: 420px; overflow-y: auto; }
         .tmr-q-opts { display: flex; flex-direction: column; gap: 7px; }
         .tmr-q-opt { border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface-1); overflow: hidden; transition: border-color 0.12s ease, background 0.12s ease; }
         .tmr-q-opt label { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; font-weight: 550; font-size: var(--fs-base); }
@@ -2877,12 +2880,16 @@
         }
 
         // Leaderboard: hidden entirely until at least one entry exists (no dead
-        // column); when entries exist, top five in a compact aside.
+        // column); while the contest is live, the top five in a compact aside.
+        // Once it is FINAL, every contestant is listed with their place and
+        // total score — a finished contest should show the whole field, not a
+        // truncated top five with the rest hidden behind "+N more".
         var hasLeaders = leaders.length > 0;
-        var topLeaders = leaders.slice(0, 5);
+        var showAll = grading.state === 'final';
+        var topLeaders = showAll ? leaders : leaders.slice(0, 5);
         var leadersHtml = '';
         if (hasLeaders) {
-            leadersHtml = '<ul class="tmr-leaders-list">' + topLeaders.map(function(l){
+            leadersHtml = '<ul class="tmr-leaders-list' + (showAll ? ' is-final' : '') + '">' + topLeaders.map(function(l){
                 var right, sub;
                 // The backend classifies every entry: 'awaiting' (nothing
                 // resolved), 'partial' (some questions graded), 'final'.
@@ -2914,7 +2921,9 @@
                        '<span><span class="tmr-leader-name"><a href="/profile/?user=' + encodeURIComponent(l.username) + '">' + escHtml(l.username) + '</a>' + sharp + '</span>' +
                        '<span class="tmr-leader-sub">' + sub + '</span></span>' + right + '</li>';
             }).join('') + '</ul>' +
-            (leaders.length > 5 ? '<div class="tmr-leaders-more">+' + (leaders.length - 5) + ' more player' + (leaders.length - 5 === 1 ? '' : 's') + '</div>' : '');
+            (showAll
+                ? '<div class="tmr-leaders-more">Final field &middot; ' + leaders.length + ' contestant' + (leaders.length === 1 ? '' : 's') + '</div>'
+                : (leaders.length > 5 ? '<div class="tmr-leaders-more">+' + (leaders.length - 5) + ' more player' + (leaders.length - 5 === 1 ? '' : 's') + '</div>' : ''));
         }
 
         // A winner only exists once the contest is settled AND real results
