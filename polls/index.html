@@ -609,6 +609,12 @@
         .tmr-q-title { font-weight: 650; color: var(--text); font-size: var(--fs-base); }
         .tmr-q-num { color: var(--accent); font-weight: 800; font-size: 0.67rem; letter-spacing: 0.08em; text-transform: uppercase; }
         .tmr-q-worth { color: var(--gold); font-weight: 700; font-size: 0.72rem; white-space: nowrap; }
+        /* The real reason a question has no result yet, from the grader. */
+        .tmr-q-reason { display: flex; align-items: center; gap: 7px; margin: -4px 0 10px; padding: 6px 9px;
+            border-left: 2px solid rgba(148,163,184,0.45); border-radius: 0 6px 6px 0;
+            background: rgba(148,163,184,0.08); color: #A8B6C8; font-size: 0.74rem; line-height: 1.35; }
+        .tmr-q-reason i { color: #7C8CA3; font-size: 0.7rem; }
+        .tmr-grade-why { display: block; margin-top: 6px; color: #A8B6C8; font-size: 0.76rem; }
         .tmr-q-opts { display: flex; flex-direction: column; gap: 7px; }
         .tmr-q-opt { border: 1px solid var(--border-strong); border-radius: var(--r-sm); background: var(--surface-1); overflow: hidden; transition: border-color 0.12s ease, background 0.12s ease; }
         .tmr-q-opt label { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; font-weight: 550; font-size: var(--fs-base); }
@@ -2741,8 +2747,17 @@
             var qBadge = qGraded ? '<span class="tmr-q-tag correct" style="margin-left:6px;">Resolved</span>'
                        : qVoided ? '<span class="tmr-q-tag" style="margin-left:6px;background:rgba(148,163,184,.18);color:#CBD5E1;">Voided</span>'
                        : '<span class="tmr-q-tag" style="margin-left:6px;background:rgba(148,163,184,.14);color:#93A4BA;">Pending</span>';
+            // The ACTUAL reason this question has no result yet, straight from
+            // the grader (services/pollAutoGrade.js writes it per question).
+            // A bare "Pending" with no explanation is exactly what hid the
+            // Aug 2 2026 quiz sitting stuck for a full day.
+            var pr = q.pending_reason || null;
+            var reasonLine = (!qGraded && pr && pr.message)
+                ? '<div class="tmr-q-reason"><i class="fas fa-' + (pr.state === 'void' ? 'ban' : 'clock') + '"></i> ' +
+                  escHtml(pr.message) + '</div>'
+                : '';
             var head = '<div class="tmr-q-head"><div><span class="tmr-q-num">Q' + (qi+1) + '</span> <span class="tmr-q-title">' + escHtml(q.title) + '</span>' + qBadge + '</div>' +
-                       '<span class="tmr-q-worth">' + worth + ' pts</span></div>';
+                       '<span class="tmr-q-worth">' + worth + ' pts</span></div>' + reasonLine;
             var body = '';
             if (q.scoring_mode === 'closest') {
                 if (qGraded) {
@@ -2836,6 +2851,31 @@
                 '<button class="tmr-poll-vote-btn" type="button" id="gameResolveBtn" onclick="resolveGame()" style="margin-top:8px;"><i class="fas fa-flag-checkered"></i> Score Game</button></div>';
         }
 
+        // Manual recovery. Re-reads every official source with the upstream
+        // caches cleared, re-grades every question (so an official stat
+        // correction lands), and rebuilds the standings, points and ranks.
+        // Safe to press repeatedly — settlement is idempotent server-side.
+        // Shown to the poll's owner; admins are authorised by the API itself.
+        var regradeHtml = '';
+        if (isCreator || isFounderAccount()) {
+            regradeHtml = '<div class="tmr-resolve-box" style="margin-top:10px;">' +
+                '<h4><i class="fas fa-rotate"></i> Regrade poll</h4>' +
+                '<div class="tmr-game-sub" style="margin-bottom:8px;">' +
+                    'Re-fetch the official results and recompute every score, rank and point total for this poll.' +
+                    (grading.questions_pending
+                        ? ' ' + grading.questions_pending + ' question' + (grading.questions_pending === 1 ? '' : 's') + ' still without a result.'
+                        : '') +
+                '</div>' +
+                '<button class="tmr-poll-vote-btn" type="button" id="gameRegradeBtn" onclick="regradePoll(false)">' +
+                    '<i class="fas fa-rotate"></i> Regrade Poll</button>' +
+                (grading.questions_pending
+                    ? ' <button class="tmr-poll-vote-btn" type="button" id="gameRegradeForceBtn" ' +
+                      'style="background:rgba(148,163,184,.18);color:#CBD5E1;" onclick="regradePoll(true)">' +
+                      '<i class="fas fa-ban"></i> Regrade &amp; void what cannot be graded</button>'
+                    : '') +
+            '</div>';
+        }
+
         // Leaderboard: hidden entirely until at least one entry exists (no dead
         // column); when entries exist, top five in a compact aside.
         var hasLeaders = leaders.length > 0;
@@ -2915,14 +2955,32 @@
                : ' &middot; ' + myEntry.correct_answers + ' correct of ' + myEntry.questions_resolved + ' resolved' +
                  (myEntry.questions_pending ? ' &middot; ' + myEntry.questions_pending + ' still pending' : ''))
             : '';
+        // Why is it not graded yet? Group the grader's real per-question
+        // reasons ("3 games still in progress", "1 waiting on the official box
+        // score") instead of printing a generic line that says nothing and
+        // hides a stuck pipeline.
+        function pendingReasonSummary() {
+            var list = grading.pending_reasons || [];
+            if (!list.length) return '';
+            var byMsg = {};
+            list.forEach(function (r) {
+                var m = r && r.message ? r.message : 'Waiting on the official result';
+                byMsg[m] = (byMsg[m] || 0) + 1;
+            });
+            var parts = Object.keys(byMsg).map(function (m) {
+                return byMsg[m] + ' × ' + escHtml(m);
+            });
+            return ' <span class="tmr-grade-why">Why: ' + parts.join('; ') + '.</span>';
+        }
+        var whyLine = pendingReasonSummary();
         var gradingBanner =
             grading.state === 'awaiting'
               ? '<div class="tmr-empty-msg" style="padding:12px 14px;margin:10px 0 0;text-align:left;"><i class="fas fa-hourglass-half"></i> <strong>Awaiting results.</strong> ' +
-                'None of the ' + grading.total_questions + ' questions have an official result yet, so no scores or rankings are available.' + myLine + '</div>'
+                'None of the ' + grading.total_questions + ' questions have an official result yet, so no scores or rankings are available.' + whyLine + myLine + '</div>'
               : grading.state === 'partial'
               ? '<div class="tmr-empty-msg" style="padding:12px 14px;margin:10px 0 0;text-align:left;"><i class="fas fa-spinner"></i> <strong>Partially resolved.</strong> ' +
                 grading.questions_resolved + ' of ' + grading.total_questions + ' questions are official; ' + grading.questions_pending + ' still pending. ' +
-                'Standings are provisional until every question resolves.' + myLine + '</div>'
+                'Standings are provisional until every question resolves.' + whyLine + myLine + '</div>'
               : (grading.questions_pending
                   ? '<div class="tmr-empty-msg" style="padding:12px 14px;margin:10px 0 0;text-align:left;"><i class="fas fa-flag-checkered"></i> <strong>Final.</strong> ' +
                     grading.questions_resolved + ' of ' + grading.total_questions + ' questions graded; ' + grading.questions_pending +
@@ -2961,6 +3019,7 @@
                     qsHtml +
                     actionHtml +
                     resolveHtml +
+                    regradeHtml +
                     discussionShellHtml(p.id) +
                 '</div>' +
                 asideHtml +
@@ -3036,6 +3095,46 @@
             console.error('resolveGame', err);
             showToast(err && err.message ? err.message : 'Could not score game.', 'error');
             if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-flag-checkered"></i> Score Game'; }
+        }
+    }
+
+    // The founder account is an admin server-side (middleware/adminOnly), so it
+    // gets the recovery control on any poll, not just ones it created.
+    function isFounderAccount() {
+        var u = currentUsername();
+        return !!(u && String(u).toLowerCase() === 'betlegend');
+    }
+
+    /**
+     * Manual recovery: re-read the official sources and recompute everything.
+     * `force` additionally voids questions that still have no usable result, so
+     * a contest can be closed out by hand. Server-side this is idempotent, so a
+     * double-click cannot double-score anyone or inflate the Elo ladder.
+     */
+    async function regradePoll(force) {
+        var id = state.currentPollId;
+        if (!id) return;
+        if (force && !confirm('Void every question that still has no official result, then settle this poll? This cannot be undone automatically.')) return;
+        var btnId = force ? 'gameRegradeForceBtn' : 'gameRegradeBtn';
+        var btn = document.getElementById(btnId);
+        var original = btn ? btn.innerHTML : '';
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Regrading...'; }
+        try {
+            var res = await api.request('/polls/' + id + '/regrade' + (force ? '?force=1' : ''), { method: 'POST', body: {} });
+            var r = (res && res.regrade) || {};
+            var msg = r.status === 'settled'
+                ? 'Regraded and settled: ' + (r.questions_graded_now || 0) + ' graded, ' +
+                  (r.voided || 0) + ' voided, ' + (r.players_scored || 0) + ' entrant' + (r.players_scored === 1 ? '' : 's') + ' scored.'
+                : 'Regraded: ' + (r.questions_graded_now || 0) + ' graded, ' +
+                  (r.questions_pending || 0) + ' still waiting on official results.';
+            showToast(msg, r.status === 'settled' ? 'success' : null);
+            if (res && res.game) { state.currentGame = res.game; renderGame(); }
+            else { await openPoll(id); }
+            loadSection();
+        } catch (err) {
+            console.error('regradePoll', err);
+            showToast(err && err.message ? err.message : 'Could not regrade this poll.', 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = original; }
         }
     }
 
