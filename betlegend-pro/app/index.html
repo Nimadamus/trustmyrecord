@@ -15,7 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/tmr-sitewide.css?v=87b1b137e000">
-    <link rel="stylesheet" href="/static/css/blp-pro.css?v=887318fcfb35">
+    <link rel="stylesheet" href="/static/css/blp-pro.css?v=2542ede53f70">
     <script defer src="/static/js/tmr-terminology.js?v=366f6ce637b4"></script>
     <script defer src="/static/js/tmr-sitewide.js?v=7e2882746866"></script>
 </head>
@@ -166,8 +166,6 @@
                             Generate Matchup Report <span class="cost" data-cost></span>
                         </button>
                         <p class="hx-run-note" id="mSubmitHint">Choose a sport and two different teams to continue.</p>
-                        <p class="hx-allowance" id="mAllowance" hidden></p>
-                        <div class="hx-paywall" id="mPaywall" hidden></div>
                     </section>
                 </form>
 
@@ -418,55 +416,6 @@
     // button moments after the allowance that blocked it was consumed.
     var SUBMIT_BLOCKED = false;
 
-    /** The daily allowance, stated before it is spent and after.
-     *
-     *  Every branch reads a server flag. `freeAvailable` is decided inside the
-     *  wallet row lock on the charge path, so anything recomputed here from a
-     *  local counter could disagree with what the server actually did -- and
-     *  the copy would be the thing that was wrong.
-     *
-     *  The subscription prompt appears only once the free inquiry is spent, and
-     *  sits below the run action. It never covers, blurs or replaces a report
-     *  the user just spent their inquiry on. */
-    function renderAllowance() {
-        var box = $('mAllowance'), wall = $('mPaywall');
-        if (!box || !wall) return;
-
-        if (ACCESS.entitled) {
-            box.textContent = 'Unlimited Matchup Reports included with BetLegend Pro';
-            box.hidden = false;
-            wall.hidden = true; wall.innerHTML = '';
-            return;
-        }
-
-        box.textContent = '1 free inquiry per day — '
-            + (COST.freeAvailable ? 'free inquiry available today' : "today's free inquiry used");
-        box.hidden = false;
-
-        if (COST.freeAvailable) {
-            wall.hidden = true; wall.innerHTML = '';
-            return;
-        }
-        wall.innerHTML =
-            '<p class="hx-paywall-copy">Today’s free inquiry is used. Subscribe to BetLegend Pro '
-            + 'for unlimited reports, or spend ' + esc(COST.cost) + ' TMR Coin to run another one today.</p>'
-            + '<button type="button" class="hx-paywall-btn" id="mSubscribe">Subscribe</button>';
-        wall.hidden = false;
-        $('mSubscribe').addEventListener('click', function () {
-            // The real checkout. The pricing page is only the fallback for when
-            // that call cannot be made, not the default path.
-            try {
-                var r = window.api && window.api.startBetLegendProCheckout
-                    && window.api.startBetLegendProCheckout('monthly');
-                if (r && typeof r.catch === 'function') {
-                    r.catch(function () { window.location.href = '/betlegend-pro/'; });
-                    return;
-                }
-                if (!r) window.location.href = '/betlegend-pro/';
-            } catch (err) { window.location.href = '/betlegend-pro/'; }
-        });
-    }
-
     function costLabel() {
         if (ACCESS.entitled) return '· Included';
         if (COST.freeAvailable) return "· Today's free inquiry";
@@ -474,7 +423,6 @@
     }
     function paintCosts() {
         costEls.forEach(function (el) { el.textContent = costLabel(); });
-        renderAllowance();
     }
 
     /** When the free allowance next resets, in the viewer's own clock. The
@@ -520,7 +468,21 @@
                 ? 'Until then each inquiry costs ' + esc(COST.cost) + ' TMR Coin, or go unlimited with a plan.'
                 : 'You need an active plan (or ' + esc(COST.cost) + ' TMR Coin) to run another one today.')
             + '</span>'
-            + '<a class="blp-btn blp-btn--sm blp-btn--primary" href="/betlegend-pro/#pricing">See plans</a></div>';
+            + '<button type="button" class="blp-btn blp-btn--sm blp-btn--primary" id="allowanceSubscribe">Subscribe</button></div>';
+        // The real checkout, not a link to the pricing page -- that is only the
+        // fallback for when the call cannot be made.
+        var btn = $('allowanceSubscribe');
+        if (btn) btn.addEventListener('click', function () {
+            try {
+                var r = window.api && window.api.startBetLegendProCheckout
+                    && window.api.startBetLegendProCheckout('monthly');
+                if (r && typeof r.catch === 'function') {
+                    r.catch(function () { window.location.href = '/betlegend-pro/#pricing'; });
+                    return;
+                }
+                if (!r) window.location.href = '/betlegend-pro/#pricing';
+            } catch (err) { window.location.href = '/betlegend-pro/#pricing'; }
+        });
     }
 
     /** Billing pill for a completed result — three genuinely different cases. */

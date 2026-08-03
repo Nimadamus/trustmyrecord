@@ -1145,7 +1145,12 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 #panel-matchup .hx-funnel-arrow,
 #panel-matchup .hx-split-label { color: var(--hx-ink-3) !important; }
 
-#panel-matchup {
+/* #libDetail replays a saved report through the SAME renderer, so it needs
+   the same surface. Without the variables it inherited nothing: the cards
+   lost their white background and the condition tags rendered dark teal on
+   navy at 2.49:1. The code comment on openLibraryItem promises a reopened
+   report looks identical to the original -- this is what makes that true. */
+#panel-matchup, #libDetail {
     --hx-ink: #1b1f23;
     --hx-ink-2: #4b5158;
     --hx-ink-3: #676d74;
@@ -1370,6 +1375,38 @@ body.tmr-site-shell[data-tmr-route="betlegend-pro-app"] {
 .hx-res--w { background: #e8f3ed; color: var(--hx-win); }
 .hx-res--l { background: #fbecea; color: var(--hx-loss); }
 .hx-res--t { background: var(--hx-sunken); color: var(--hx-ink-3); }
+
+/* The results half of the overrides above, mirrored for the Library replay.
+   Form-only rules are deliberately not repeated -- a saved report has no form. */
+#libDetail .hx-card p,
+#libDetail .hx-card li { color: var(--hx-ink-2) !important; }
+#libDetail .hx-table td { color: var(--hx-ink) !important; }
+#libDetail .hx-table th { color: var(--hx-ink-3) !important; }
+#libDetail .hx-table td.hx-why { color: var(--hx-ink-2) !important; }
+#libDetail .hx-note,
+#libDetail .hx-step-sub { color: var(--hx-ink-3) !important; }
+#libDetail .hx-method { color: var(--ink-3) !important; }
+#libDetail .hx-warn,
+#libDetail .hx-declined strong { color: #7a5308 !important; }
+#libDetail .hx-declined li { color: var(--hx-ink-2) !important; }
+#libDetail .hx-card-head h2,
+#libDetail .hx-card-head h3 { color: var(--hx-ink) !important; }
+#libDetail .hx-table .hx-res--w { color: var(--hx-win) !important; }
+#libDetail .hx-table .hx-res--l { color: var(--hx-loss) !important; }
+#libDetail .hx-table .hx-res--t { color: var(--hx-ink-3) !important; }
+#libDetail .hx-tag { color: #0b5c56 !important; }
+#libDetail .hx-range,
+#libDetail .hx-funnel { color: var(--hx-ink-2) !important; }
+#libDetail .hx-funnel strong,
+#libDetail .hx-split-val,
+#libDetail .hx-kpi strong { color: var(--hx-ink) !important; }
+#libDetail .hx-funnel-arrow,
+#libDetail .hx-split-label,
+#libDetail .hx-kpi span { color: var(--hx-ink-3) !important; }
+#libDetail .hx-receipt .blp-receipt,
+#libDetail .hx-receipt .blp-receipt span,
+#libDetail .hx-receipt .blp-receipt a { color: var(--hx-ink-2) !important; }
+#libDetail .hx-receipt .blp-pill { color: var(--hx-ink) !important; }
 
 /* Visible focus on every control in the panel. */
 #panel-matchup :is(button, select, input, a):focus-visible {
